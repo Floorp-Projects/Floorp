@@ -1,6 +1,204 @@
 {
   "data": [
     {
+      "schema": 1626335919550,
+      "derHash": "YoBqPZQu1PbAkaEx5jY7E43WOlw830QT0AzIoMMzqfg=",
+      "subject": "CN=CERTDATA SSL OV CA  [Run by the Issuer],O=CERTDATA SERVICOS DE INFORMACAO LTDA,C=BR",
+      "subjectDN": "MG4xCzAJBgNVBAYTAkJSMS0wKwYDVQQKEyRDRVJUREFUQSBTRVJWSUNPUyBERSBJTkZPUk1BQ0FPIExUREExMDAuBgNVBAMMJ0NFUlREQVRBIFNTTCBPViBDQSAgW1J1biBieSB0aGUgSXNzdWVyXQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2f80f47c488ec7412b055557852db65a46130e869818968c2e1abd16dfde9038",
+        "size": 2129,
+        "filename": "j329Y60dfipsfu2WQjIJzo3bfYjWBMO0L6-erwtRMEM=.pem",
+        "location": "security-state-staging/intermediates/ac48c1cf-d260-4b4a-beb7-599ef5ee1de8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "j329Y60dfipsfu2WQjIJzo3bfYjWBMO0L6+erwtRMEM=",
+      "crlite_enrolled": true,
+      "id": "538da95e-219e-4f04-9887-5ef9291a70ab",
+      "last_modified": 1626335941622
+    },
+    {
+      "schema": 1626272918987,
+      "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
+      "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a02a5c8205e62c2ef5dc42345a1585558c86f166ed9875d861601a465bcc4651",
+        "size": 2016,
+        "filename": "0JA1q1ctk_4J8qS0t-GhJaG5egVDq9SB33oMY7SMpfs=.pem",
+        "location": "security-state-staging/intermediates/caec957d-379a-4c23-bf42-3bd122e7cf33.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
+      "crlite_enrolled": false,
+      "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
+      "last_modified": 1626335941602
+    },
+    {
+      "schema": 1626335918943,
+      "derHash": "ClUqZfIv+CDn7D1Du/iLAqvDS9JH4MNQWJG2NC8WpfI=",
+      "subject": "CN=SHECA RSA Domain Validation Server CA G3,O=UniTrust,C=CN",
+      "subjectDN": "MFMxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDExMC8GA1UEAwwoU0hFQ0EgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "42516b0068507cb60d6383aaefa05ac169921cff9e4616761151efe098d3e1fe",
+        "size": 2008,
+        "filename": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS_84dpbLl_qNOnU=.pem",
+        "location": "security-state-staging/intermediates/525578e5-a94b-4525-b9e7-801be6e0ff89.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS/84dpbLl/qNOnU=",
+      "crlite_enrolled": false,
+      "id": "4b6a2421-1677-41c0-8103-bc13fb7e09f9",
+      "last_modified": 1626335941581
+    },
+    {
+      "schema": 1626228253330,
+      "derHash": "raWnGvISG1aRBL44XnRvqXVhfoHb+vb3IuYjUkcb2Dg=",
+      "subject": "CN=AgID CA1,OU=Area Soluzioni per la Pubblica Amministrazione,O=Agenzia per l'Italia Digitale,L=Roma,C=IT",
+      "subjectDN": "MIGQMQswCQYDVQQGEwJJVDENMAsGA1UEBwwEUm9tYTEmMCQGA1UECgwdQWdlbnppYSBwZXIgbCdJdGFsaWEgRGlnaXRhbGUxNzA1BgNVBAsMLkFyZWEgU29sdXppb25pIHBlciBsYSBQdWJibGljYSBBbW1pbmlzdHJhemlvbmUxETAPBgNVBAMMCEFnSUQgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "7f6a4095e6a1f9d0f9b7e2de305eef7cff7478f950efd315a9665102a43aa6c0",
+        "size": 6310,
+        "filename": "OePGxvE8liB3UXJpTSD4HtrVWoYTk0zap8N5Om0muGs=.pem",
+        "location": "security-state-staging/intermediates/42dbb094-d738-4ff4-aa18-71ef8cdd4861.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "OePGxvE8liB3UXJpTSD4HtrVWoYTk0zap8N5Om0muGs=",
+      "crlite_enrolled": true,
+      "id": "ceb499de-3182-4247-b2de-449be078c0c8",
+      "last_modified": 1626231490714
+    },
+    {
+      "schema": 1626228255133,
+      "derHash": "QEorI7JSAERspyE+GvVmNcuT3fe+8Nh2ZLpBG39MjlY=",
+      "subject": "CN=AgID CA1,OU=Area Soluzioni per la Pubblica Amministrazione,O=Agenzia per l'Italia Digitale,L=Roma,C=IT",
+      "subjectDN": "MIGQMQswCQYDVQQGEwJJVDENMAsGA1UEBwwEUm9tYTEmMCQGA1UECgwdQWdlbnppYSBwZXIgbCdJdGFsaWEgRGlnaXRhbGUxNzA1BgNVBAsMLkFyZWEgU29sdXppb25pIHBlciBsYSBQdWJibGljYSBBbW1pbmlzdHJhemlvbmUxETAPBgNVBAMMCEFnSUQgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "91820d99356f7a589d0d2151351e8526fc7daac72414b01d6bc2a4cd653510cb",
+        "size": 6574,
+        "filename": "OePGxvE8liB3UXJpTSD4HtrVWoYTk0zap8N5Om0muGs=.pem",
+        "location": "security-state-staging/intermediates/94224e58-131e-45f6-898d-2b06a4307683.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "OePGxvE8liB3UXJpTSD4HtrVWoYTk0zap8N5Om0muGs=",
+      "crlite_enrolled": true,
+      "id": "286df146-c769-48e4-8f16-4a7567ef7baa",
+      "last_modified": 1626231490701
+    },
+    {
+      "schema": 1626228256837,
+      "derHash": "97Ce6nkJakSY9qK41vEYMiijdp6piAUNGzKjgOq8T54=",
+      "subject": "CN=AgID CA1,OU=Area Soluzioni per la Pubblica Amministrazione,O=Agenzia per l'Italia Digitale,L=Roma,C=IT",
+      "subjectDN": "MIGQMQswCQYDVQQGEwJJVDENMAsGA1UEBwwEUm9tYTEmMCQGA1UECgwdQWdlbnppYSBwZXIgbCdJdGFsaWEgRGlnaXRhbGUxNzA1BgNVBAsMLkFyZWEgU29sdXppb25pIHBlciBsYSBQdWJibGljYSBBbW1pbmlzdHJhemlvbmUxETAPBgNVBAMMCEFnSUQgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "33cc3cfbbfc2a843674615cd50dfb4fa62da0da9c94ddda3d50cbaf036bf1be7",
+        "size": 6468,
+        "filename": "OePGxvE8liB3UXJpTSD4HtrVWoYTk0zap8N5Om0muGs=.pem",
+        "location": "security-state-staging/intermediates/608cdae9-6370-44b3-aaed-14343688f3b3.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "OePGxvE8liB3UXJpTSD4HtrVWoYTk0zap8N5Om0muGs=",
+      "crlite_enrolled": true,
+      "id": "56d70739-72a2-485c-88c5-801e16b7c76a",
+      "last_modified": 1626231490688
+    },
+    {
+      "schema": 1626228258512,
+      "derHash": "15PZNN0bn/n2p21DjHYO1EtyvN5mC0mnfbz4HsfOs6k=",
+      "subject": "CN=AgID CA1,OU=Area Soluzioni per la Pubblica Amministrazione,O=Agenzia per l'Italia Digitale,L=Roma,C=IT",
+      "subjectDN": "MIGQMQswCQYDVQQGEwJJVDENMAsGA1UEBwwEUm9tYTEmMCQGA1UECgwdQWdlbnppYSBwZXIgbCdJdGFsaWEgRGlnaXRhbGUxNzA1BgNVBAsMLkFyZWEgU29sdXppb25pIHBlciBsYSBQdWJibGljYSBBbW1pbmlzdHJhemlvbmUxETAPBgNVBAMMCEFnSUQgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "66a089673ef49cbf1b9622d90d796824b48dfd344fbb9b98dff73865498b710c",
+        "size": 6456,
+        "filename": "OePGxvE8liB3UXJpTSD4HtrVWoYTk0zap8N5Om0muGs=.pem",
+        "location": "security-state-staging/intermediates/679ddf15-effb-4144-ac94-40402f6165f8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "OePGxvE8liB3UXJpTSD4HtrVWoYTk0zap8N5Om0muGs=",
+      "crlite_enrolled": true,
+      "id": "41b043e8-97e5-4ae9-a327-3caa8087c470",
+      "last_modified": 1626231490675
+    },
+    {
+      "schema": 1626228260281,
+      "derHash": "5/oPZ8m22IbIaECJltvfw2gOi57Ediju+0gkwjoodpM=",
+      "subject": "CN=AgID CA1,OU=Area Soluzioni per la Pubblica Amministrazione,O=Agenzia per l'Italia Digitale,L=Roma,C=IT",
+      "subjectDN": "MIGQMQswCQYDVQQGEwJJVDENMAsGA1UEBwwEUm9tYTEmMCQGA1UECgwdQWdlbnppYSBwZXIgbCdJdGFsaWEgRGlnaXRhbGUxNzA1BgNVBAsMLkFyZWEgU29sdXppb25pIHBlciBsYSBQdWJibGljYSBBbW1pbmlzdHJhemlvbmUxETAPBgNVBAMMCEFnSUQgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "84cbbe4b788218f1597d9cb6bda736fd33786a81839d16846159e165d535e28b",
+        "size": 6440,
+        "filename": "OePGxvE8liB3UXJpTSD4HtrVWoYTk0zap8N5Om0muGs=.pem",
+        "location": "security-state-staging/intermediates/5f736ca5-dce2-4dfa-bdd7-58ab7e4f224c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "OePGxvE8liB3UXJpTSD4HtrVWoYTk0zap8N5Om0muGs=",
+      "crlite_enrolled": true,
+      "id": "b0569307-0dd3-4b38-9256-867b1a333c1b",
+      "last_modified": 1626231490661
+    },
+    {
+      "schema": 1626184476813,
+      "derHash": "/yAcoSyHpvDLpkPpq7PJVMkVWt0xObLi6u0RS/n3XTE=",
+      "subject": "CN=COMODO RSA Domain Validation Secure Server CA 2,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB",
+      "subjectDN": "MIGSMQswCQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDE4MDYGA1UEAxMvQ09NT0RPIFJTQSBEb21haW4gVmFsaWRhdGlvbiBTZWN1cmUgU2VydmVyIENBIDI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c3af80c298bee7bb78b92a6907c2737f0f2499d7469ab1445b6ac2c3afca282e",
+        "size": 2154,
+        "filename": "EULHwYvGhknyznoBvyvgbidiBH3JX3eFHHlIO3YK8Ek=.pem",
+        "location": "security-state-staging/intermediates/8acfb92a-ce66-4fb5-b98b-4972b2012e02.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "EULHwYvGhknyznoBvyvgbidiBH3JX3eFHHlIO3YK8Ek=",
+      "crlite_enrolled": true,
+      "id": "d7edf4f6-8ea9-48ae-8d08-69ed5736f29e",
+      "last_modified": 1626209888341
+    },
+    {
+      "schema": 1626206586409,
+      "derHash": "zWwQig5kHyyhIqqm0D+CZ1nK58b4AOq/dtxItnzQg84=",
+      "subject": "CN=COMODO ECC Domain Validation Secure Server CA 2,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB",
+      "subjectDN": "MIGSMQswCQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDE4MDYGA1UEAxMvQ09NT0RPIEVDQyBEb21haW4gVmFsaWRhdGlvbiBTZWN1cmUgU2VydmVyIENBIDI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "7facb26c244929edfadc101e9d19a9d34d32396b62ea53c5d23503e6bc13eb7d",
+        "size": 1317,
+        "filename": "x9SZw6TwIqfmvrLZ_kz1o0Ossjmn728BnBKpUFqGNVM=.pem",
+        "location": "security-state-staging/intermediates/fffcaf3e-173f-4e58-b6c4-9954f5874559.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "x9SZw6TwIqfmvrLZ/kz1o0Ossjmn728BnBKpUFqGNVM=",
+      "crlite_enrolled": true,
+      "id": "c6b2463c-5d7d-46a7-81b3-08d470deb2cb",
+      "last_modified": 1626209888300
+    },
+    {
+      "schema": 1626097822652,
+      "derHash": "WkmxWuYP9ifaJyqHQ9ZxYrrKEJYWggMhOs+CJ69MSUI=",
+      "subject": "CN=Herritar eta Erakundeen CA - CA de Ciudadanos y Entidades (3),OU=NZZ Ziurtagiri publikoa - Certificado publico SCI,O=IZENPE S.A.,C=ES",
+      "subjectDN": "MIGnMQswCQYDVQQGEwJFUzEUMBIGA1UEChMLSVpFTlBFIFMuQS4xOjA4BgNVBAsTMU5aWiBaaXVydGFnaXJpIHB1Ymxpa29hIC0gQ2VydGlmaWNhZG8gcHVibGljbyBTQ0kxRjBEBgNVBAMTPUhlcnJpdGFyIGV0YSBFcmFrdW5kZWVuIENBIC0gQ0EgZGUgQ2l1ZGFkYW5vcyB5IEVudGlkYWRlcyAoMyk=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "d85bcef74f09e1dbd2ce16da48da2ee5fc7a20a7fff9caa5dc49af6709f5f48c",
+        "size": 2576,
+        "filename": "bMhIINBfI65xm4qrUlaPfhKn2U2zsWEE7sOwUjKeoT8=.pem",
+        "location": "security-state-staging/intermediates/d89eb328-693b-4b24-90f8-34bf2e499dca.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "bMhIINBfI65xm4qrUlaPfhKn2U2zsWEE7sOwUjKeoT8=",
+      "crlite_enrolled": false,
+      "id": "fb272741-7da4-469b-ab59-52ece6f412f9",
+      "last_modified": 1626098298877
+    },
+    {
       "schema": 1625799458757,
       "derHash": "lRQaNVpaKqPgESIcq5/nOBD9tdiBNYZPA+TYUr0Lvts=",
       "subject": "CN=Thawte RSA CN CA G2,O=DigiCert Inc,C=US",
@@ -37,24 +235,6 @@
       "last_modified": 1625799457732
     },
     {
-      "schema": 1625756246880,
-      "derHash": "ClUqZfIv+CDn7D1Du/iLAqvDS9JH4MNQWJG2NC8WpfI=",
-      "subject": "CN=SHECA RSA Domain Validation Server CA G3,O=UniTrust,C=CN",
-      "subjectDN": "MFMxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDExMC8GA1UEAwwoU0hFQ0EgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "42516b0068507cb60d6383aaefa05ac169921cff9e4616761151efe098d3e1fe",
-        "size": 2008,
-        "filename": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS_84dpbLl_qNOnU=.pem",
-        "location": "security-state-staging/intermediates/525578e5-a94b-4525-b9e7-801be6e0ff89.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS/84dpbLl/qNOnU=",
-      "crlite_enrolled": true,
-      "id": "4b6a2421-1677-41c0-8103-bc13fb7e09f9",
-      "last_modified": 1625799457694
-    },
-    {
       "schema": 1625752994733,
       "derHash": "RcKL5DQvByzWIZaYw+8qxtunPxngTazyBE0vaZPjQrQ=",
       "subject": "CN=eMudhra RSA Extended Validation Secure Server CA,OU=Controlled by Sectigo exclusively for eMudhra Technologies Ltd.,O=eMudhra Technologies Limited,L=Bengaluru,ST=Karnataka,C=IN",
@@ -71,24 +251,6 @@
       "crlite_enrolled": false,
       "id": "29d99702-edc8-413c-b8ca-77c56ea0181f",
       "last_modified": 1625756245856
-    },
-    {
-      "schema": 1625497069764,
-      "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
-      "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a02a5c8205e62c2ef5dc42345a1585558c86f166ed9875d861601a465bcc4651",
-        "size": 2016,
-        "filename": "0JA1q1ctk_4J8qS0t-GhJaG5egVDq9SB33oMY7SMpfs=.pem",
-        "location": "security-state-staging/intermediates/caec957d-379a-4c23-bf42-3bd122e7cf33.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
-      "crlite_enrolled": true,
-      "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
-      "last_modified": 1625536683824
     },
     {
       "schema": 1625493640735,
@@ -2177,24 +2339,6 @@
       "crlite_enrolled": true,
       "id": "e05d537c-e98a-4c16-8476-344896c66748",
       "last_modified": 1618905524441
-    },
-    {
-      "schema": 1618628262151,
-      "derHash": "zWwQig5kHyyhIqqm0D+CZ1nK58b4AOq/dtxItnzQg84=",
-      "subject": "CN=COMODO ECC Domain Validation Secure Server CA 2,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB",
-      "subjectDN": "MIGSMQswCQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDE4MDYGA1UEAxMvQ09NT0RPIEVDQyBEb21haW4gVmFsaWRhdGlvbiBTZWN1cmUgU2VydmVyIENBIDI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "7facb26c244929edfadc101e9d19a9d34d32396b62ea53c5d23503e6bc13eb7d",
-        "size": 1317,
-        "filename": "x9SZw6TwIqfmvrLZ_kz1o0Ossjmn728BnBKpUFqGNVM=.pem",
-        "location": "security-state-staging/intermediates/fffcaf3e-173f-4e58-b6c4-9954f5874559.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "x9SZw6TwIqfmvrLZ/kz1o0Ossjmn728BnBKpUFqGNVM=",
-      "crlite_enrolled": false,
-      "id": "c6b2463c-5d7d-46a7-81b3-08d470deb2cb",
-      "last_modified": 1618840742230
     },
     {
       "schema": 1618559912446,
@@ -5345,24 +5489,6 @@
       "crlite_enrolled": true,
       "id": "7b27ee50-2ac9-4b60-8255-99ebce21e4cd",
       "last_modified": 1616097514386
-    },
-    {
-      "schema": 1615989542676,
-      "derHash": "/yAcoSyHpvDLpkPpq7PJVMkVWt0xObLi6u0RS/n3XTE=",
-      "subject": "CN=COMODO RSA Domain Validation Secure Server CA 2,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB",
-      "subjectDN": "MIGSMQswCQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDE4MDYGA1UEAxMvQ09NT0RPIFJTQSBEb21haW4gVmFsaWRhdGlvbiBTZWN1cmUgU2VydmVyIENBIDI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c3af80c298bee7bb78b92a6907c2737f0f2499d7469ab1445b6ac2c3afca282e",
-        "size": 2154,
-        "filename": "EULHwYvGhknyznoBvyvgbidiBH3JX3eFHHlIO3YK8Ek=.pem",
-        "location": "security-state-staging/intermediates/8acfb92a-ce66-4fb5-b98b-4972b2012e02.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "EULHwYvGhknyznoBvyvgbidiBH3JX3eFHHlIO3YK8Ek=",
-      "crlite_enrolled": false,
-      "id": "d7edf4f6-8ea9-48ae-8d08-69ed5736f29e",
-      "last_modified": 1616011113921
     },
     {
       "schema": 1615971506062,
@@ -21365,24 +21491,6 @@
       "crlite_enrolled": false,
       "id": "581603f2-07f6-428c-bee1-1efb081ee0c2",
       "last_modified": 1591199862149
-    },
-    {
-      "schema": 1591166900577,
-      "derHash": "YoBqPZQu1PbAkaEx5jY7E43WOlw830QT0AzIoMMzqfg=",
-      "subject": "CN=CERTDATA SSL OV CA  [Run by the Issuer],O=CERTDATA SERVICOS DE INFORMACAO LTDA,C=BR",
-      "subjectDN": "MG4xCzAJBgNVBAYTAkJSMS0wKwYDVQQKEyRDRVJUREFUQSBTRVJWSUNPUyBERSBJTkZPUk1BQ0FPIExUREExMDAuBgNVBAMMJ0NFUlREQVRBIFNTTCBPViBDQSAgW1J1biBieSB0aGUgSXNzdWVyXQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2f80f47c488ec7412b055557852db65a46130e869818968c2e1abd16dfde9038",
-        "size": 2129,
-        "filename": "j329Y60dfipsfu2WQjIJzo3bfYjWBMO0L6-erwtRMEM=.pem",
-        "location": "security-state-staging/intermediates/ac48c1cf-d260-4b4a-beb7-599ef5ee1de8.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "j329Y60dfipsfu2WQjIJzo3bfYjWBMO0L6+erwtRMEM=",
-      "crlite_enrolled": false,
-      "id": "538da95e-219e-4f04-9887-5ef9291a70ab",
-      "last_modified": 1591199862143
     },
     {
       "schema": 1591166887418,
@@ -43559,24 +43667,6 @@
       "crlite_enrolled": true,
       "id": "2e96e934-bc60-4e45-b1ae-6ac3cd4d7192",
       "last_modified": 1562025051685
-    },
-    {
-      "schema": 1562025050182,
-      "derHash": "WkmxWuYP9ifaJyqHQ9ZxYrrKEJYWggMhOs+CJ69MSUI=",
-      "subject": "CN=Herritar eta Erakundeen CA - CA de Ciudadanos y Entidades (3),OU=NZZ Ziurtagiri publikoa - Certificado publico SCI,O=IZENPE S.A.,C=ES",
-      "subjectDN": "MIGnMQswCQYDVQQGEwJFUzEUMBIGA1UEChMLSVpFTlBFIFMuQS4xOjA4BgNVBAsTMU5aWiBaaXVydGFnaXJpIHB1Ymxpa29hIC0gQ2VydGlmaWNhZG8gcHVibGljbyBTQ0kxRjBEBgNVBAMTPUhlcnJpdGFyIGV0YSBFcmFrdW5kZWVuIENBIC0gQ0EgZGUgQ2l1ZGFkYW5vcyB5IEVudGlkYWRlcyAoMyk=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d85bcef74f09e1dbd2ce16da48da2ee5fc7a20a7fff9caa5dc49af6709f5f48c",
-        "size": 2576,
-        "filename": "bMhIINBfI65xm4qrUlaPfhKn2U2zsWEE7sOwUjKeoT8=.pem",
-        "location": "security-state-staging/intermediates/d89eb328-693b-4b24-90f8-34bf2e499dca.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "bMhIINBfI65xm4qrUlaPfhKn2U2zsWEE7sOwUjKeoT8=",
-      "crlite_enrolled": true,
-      "id": "fb272741-7da4-469b-ab59-52ece6f412f9",
-      "last_modified": 1562025050930
     },
     {
       "schema": 1562025048669,
