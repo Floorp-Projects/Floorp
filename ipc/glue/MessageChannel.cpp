@@ -709,8 +709,7 @@ bool MessageChannel::CanSend() const {
 }
 
 void MessageChannel::Clear() {
-  // Don't clear mWorkerThread; we use it in AssertLinkThread() and
-  // AssertWorkerThread().
+  // Don't clear mWorkerThread; we use it in AssertWorkerThread().
   //
   // Also don't clear mListener.  If we clear it, then sending a message
   // through this channel after it's Clear()'ed can cause this process to
@@ -1042,7 +1041,6 @@ class CancelMessage : public IPC::Message {
 };
 
 bool MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg) {
-  AssertLinkThread();
   mMonitor->AssertCurrentThreadOwns();
 
   if (MSG_ROUTING_NONE == aMsg.routing_id()) {
@@ -1124,10 +1122,11 @@ bool MessageChannel::ShouldDeferMessage(const Message& aMsg) {
 }
 
 void MessageChannel::OnMessageReceivedFromLink(Message&& aMsg) {
-  AssertLinkThread();
   mMonitor->AssertCurrentThreadOwns();
 
-  if (MaybeInterceptSpecialIOMessage(aMsg)) return;
+  if (MaybeInterceptSpecialIOMessage(aMsg)) {
+    return;
+  }
 
   mListener->OnChannelReceivedMessage(aMsg);
 
@@ -1204,8 +1203,8 @@ void MessageChannel::OnMessageReceivedFromLink(Message&& aMsg) {
   // before returning.
   bool shouldPostTask = !shouldWakeUp || wakeUpSyncSend;
 
-  IPC_LOG("Receive on link thread; seqno=%d, xid=%d, shouldWakeUp=%d",
-          aMsg.seqno(), aMsg.transaction_id(), shouldWakeUp);
+  IPC_LOG("Receive from link; seqno=%d, xid=%d, shouldWakeUp=%d", aMsg.seqno(),
+          aMsg.transaction_id(), shouldWakeUp);
 
   if (reuseTask) {
     return;
@@ -2257,7 +2256,7 @@ bool MessageChannel::WaitResponse(bool aWaitTimedOut) {
 #ifndef OS_WIN
 bool MessageChannel::WaitForSyncNotify(bool /* aHandleWindowsMessages */) {
 #  ifdef DEBUG
-  // WARNING: We don't release the lock here. We can't because the link thread
+  // WARNING: We don't release the lock here. We can't because the link
   // could signal at this time and we would miss it. Instead we require
   // ArtificialTimeout() to be extremely simple.
   if (mListener->ArtificialTimeout()) {
@@ -2425,7 +2424,6 @@ bool MessageChannel::MaybeHandleError(Result code, const Message& aMsg,
 }
 
 void MessageChannel::OnChannelErrorFromLink() {
-  AssertLinkThread();
   mMonitor->AssertCurrentThreadOwns();
 
   IPC_LOG("OnChannelErrorFromLink");
