@@ -19,7 +19,7 @@
    just some random |id|.
 */
 
-@protocol mozAccessible
+@protocol mozAccessible <NSObject>
 
 // returns whether this accessible is the root accessible. there is one
 // root accessible per window.
