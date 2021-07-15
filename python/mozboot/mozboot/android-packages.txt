@@ -1,4 +1,3 @@
 platform-tools
 build-tools;30.0.2
 platforms;android-30
-emulator
