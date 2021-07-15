@@ -265,7 +265,6 @@ class Bootstrapper(object):
             self.instance.ensure_sccache_packages(state_dir, checkout_root)
             self.instance.ensure_lucetc_packages(state_dir, checkout_root)
             self.instance.ensure_wasi_sysroot_packages(state_dir, checkout_root)
-            self.instance.ensure_dump_syms_packages(state_dir, checkout_root)
 
     def check_code_submission(self, checkout_root):
         if self.instance.no_interactive or which("moz-phab"):

@@ -357,12 +357,6 @@ class BaseBootstrapper(object):
             "%s does not yet implement ensure_node_packages()" % __name__
         )
 
-    def ensure_dump_syms_packages(self, state_dir, checkout_root):
-        """
-        Install dump_syms.
-        """
-        pass
-
     def ensure_fix_stacks_packages(self, state_dir, checkout_root):
         """
         Install fix-stacks.
@@ -676,10 +670,7 @@ class BaseBootstrapper(object):
         if our is None:
             return False, None
 
-        modern = {
-            2: MODERN_PYTHON2_VERSION,
-            3: MODERN_PYTHON3_VERSION,
-        }
+        modern = {2: MODERN_PYTHON2_VERSION, 3: MODERN_PYTHON3_VERSION}
         return our >= modern[major], our
 
     def ensure_python_modern(self):
@@ -767,13 +758,7 @@ class BaseBootstrapper(object):
             # is appropriate there.
             cargo_bin = self.win_to_msys_path(cargo_bin)
             cmd = "export PATH=%s:$PATH" % cargo_bin
-        print(
-            template
-            % {
-                "cargo_bin": cargo_bin,
-                "cmd": cmd,
-            }
-        )
+        print(template % {"cargo_bin": cargo_bin, "cmd": cmd})
 
     def ensure_rust_modern(self):
         cargo_home, cargo_bin = self.cargo_home()
