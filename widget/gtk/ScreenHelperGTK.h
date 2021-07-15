@@ -18,12 +18,16 @@
 namespace mozilla {
 namespace widget {
 
-class ScreenHelperGTK final : public ScreenManager::Helper {
+class ScreenGetter {
  public:
-  ScreenHelperGTK();
-  ~ScreenHelperGTK() override;
+  ScreenGetter() = default;
+  virtual ~ScreenGetter(){};
+};
 
-  static gint GetGTKMonitorScaleFactor(gint aMonitorNum = 0);
+class ScreenGetterGtk : public ScreenGetter {
+ public:
+  ScreenGetterGtk();
+  ~ScreenGetterGtk();
 
 #ifdef MOZ_X11
   Atom NetWorkareaAtom() { return mNetWorkareaAtom; }
@@ -37,6 +41,17 @@ class ScreenHelperGTK final : public ScreenManager::Helper {
 #ifdef MOZ_X11
   Atom mNetWorkareaAtom;
 #endif
+};
+
+class ScreenHelperGTK final : public ScreenManager::Helper {
+ public:
+  ScreenHelperGTK();
+  ~ScreenHelperGTK() = default;
+
+  static gint GetGTKMonitorScaleFactor(gint aMonitorNum = 0);
+
+ private:
+  UniquePtr<ScreenGetter> mGetter;
 };
 
 }  // namespace widget
