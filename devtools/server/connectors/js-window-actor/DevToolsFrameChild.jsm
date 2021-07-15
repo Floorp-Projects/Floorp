@@ -42,22 +42,23 @@ function shouldNotifyWindowGlobal(
     windowGlobal.innerWindowId
   );
 
-  // For some unknown reason, the print preview of PDFs generates an about:blank
-  // document, which, on the parent process, has windowGlobal.documentURI.spec
-  // set to the pdf's URL. So that Frame target helper accepts this WindowGlobal
-  // and instantiates a target for it.
-  // Which is great as this is a valuable document to debug.
-  // But in the content process, this ends up being an about:blank document, and
-  // hasLoadedNonBlankURI is always false. Nonetheless, this isn't a real empty
-  // about:blank. We end up loading resource://pdf.js/web/viewer.html.
-  // But `window.location` is set to about:blank, while `document.documentURI`
-  // is set to the pretty printed PDF...
-  // So we end up checking the documentURI in order to see if that's a special
-  // not-really-blank about:blank document!
-  if (
-    !window.docShell.hasLoadedNonBlankURI &&
-    window.document?.documentURI === "about:blank"
-  ) {
+  // By default, before loading the actual document (even an about:blank document),
+  // we do load immediately "the initial about:blank document".
+  // This is expected by the spec. Typically when creating a new BrowsingContext/DocShell/iframe,
+  // we would have such transient initial document.
+  // `Document.isInitialDocument` helps identifying this transcient document, which
+  // we want to ignore as it would instantiate a very short lived target which
+  // confuses many tests and triggers race conditions by spamming many targets.
+  //
+  // We also ignore some other transient empty documents created while using `window.open()`
+  // When using this API with cross process loads, we may create up to three documents/WindowGlobals.
+  // We get a first initial about:blank document, and a second document created
+  // for moving the document in the right principal.
+  // The third document will be the actual document we expect to debug.
+  // The second document is an implementation artifact which ideally wouldn't exist
+  // and isn't expected by the spec.
+  // Note that `window.print` and print preview are using `window.open` and are going throught this.
+  if (window.document.isInitialDocument) {
     return false;
   }
 

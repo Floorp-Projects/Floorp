@@ -280,7 +280,7 @@ async function testBrowserFrames() {
   }
 
   info("Open a tab loaded in content process");
-  await addTabAndAssertNewTarget("data:text/html,conten-process-page");
+  await addTabAndAssertNewTarget("data:text/html,content-process-page");
 
   info("Open a tab loaded in the parent process");
   const parentProcessTab = await addTabAndAssertNewTarget("about:robots");
@@ -289,6 +289,41 @@ async function testBrowserFrames() {
     -1,
     "The tab is loaded in the parent process"
   );
+
+  info("Open a new content window via window.open");
+  info("First open a tab on .org domain");
+  const tabUrl = "https://example.org/document-builder.sjs?html=org";
+  await addTabAndAssertNewTarget(tabUrl);
+  const previousTargetCount = targets.length;
+
+  info("Then open a popup on .com domain");
+  const popupUrl = "https://example.com/document-builder.sjs?html=com";
+  const onPopupOpened = BrowserTestUtils.waitForNewTab(gBrowser, popupUrl);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [popupUrl], async url => {
+    content.window.open(url, "_blank");
+  });
+  await onPopupOpened;
+
+  await waitFor(
+    () => targets.length == previousTargetCount + 1,
+    "Wait for all expected targets after window.open()"
+  );
+  is(
+    targets.length,
+    previousTargetCount + 1,
+    "Opening a new content window reported a new frame"
+  );
+  is(
+    targets[targets.length - 1].url,
+    popupUrl,
+    "This frame target is about the new content window"
+  );
+
+  // About:blank are a bit special because we ignore a transcient about:blank
+  // document when navigating to another process. But we should not ignore
+  // tabs, loading a real, final about:blank document.
+  info("Open a tab with about:blank");
+  await addTabAndAssertNewTarget("about:blank");
 
   // Until we start spawning target for all WindowGlobals,
   // including the one running in the same process as their parent,
