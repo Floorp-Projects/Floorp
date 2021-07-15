@@ -638,7 +638,7 @@ class nsWindow final : public nsBaseWidget {
   void UpdateWaylandPopupHierarchy();
   void WaylandPopupHierarchyHideByLayout(
       nsTArray<nsIWidget*>* aLayoutWidgetHierarchy);
-  void WaylandPopupHierarchyMarkByLayout(
+  void WaylandPopupHierarchyValidateByLayout(
       nsTArray<nsIWidget*>* aLayoutWidgetHierarchy);
   void CloseAllPopupsBeforeRemotePopup();
   void WaylandPopupHideClosedPopups();
