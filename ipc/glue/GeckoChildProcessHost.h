@@ -48,18 +48,6 @@ struct LaunchError {};
 typedef mozilla::MozPromise<base::ProcessHandle, LaunchError, false>
     ProcessHandlePromise;
 
-struct LaunchResults {
-  base::ProcessHandle mHandle = 0;
-#ifdef XP_MACOSX
-  task_t mChildTask = MACH_PORT_NULL;
-#endif
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-  RefPtr<AbstractSandboxBroker> mSandboxBroker;
-#endif
-};
-typedef mozilla::MozPromise<LaunchResults, LaunchError, false>
-    ProcessLaunchPromise;
-
 class GeckoChildProcessHost : public ChildProcessHost,
                               public LinkedListElement<GeckoChildProcessHost> {
  protected:
