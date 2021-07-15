@@ -57,6 +57,9 @@ extern mozilla::LazyLogModule gWidgetPopupLog;
 #  define LOGDRAG(args) MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, args)
 #  define LOG_POPUP(args) \
     MOZ_LOG(gWidgetPopupLog, mozilla::LogLevel::Debug, args)
+#  define LOG_ENABLED()                                         \
+    (MOZ_LOG_TEST(gWidgetPopupLog, mozilla::LogLevel::Debug) || \
+     MOZ_LOG_TEST(gWidgetLog, mozilla::LogLevel::Debug))
 
 #else
 
@@ -64,6 +67,7 @@ extern mozilla::LazyLogModule gWidgetPopupLog;
 #  define LOGW(args)
 #  define LOGDRAG(args)
 #  define LOG_POPUP(args)
+#  define LOG_ENABLED() false
 
 #endif /* MOZ_LOGGING */
 
