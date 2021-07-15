@@ -238,9 +238,7 @@ void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
     RecordShutdownEndTimeStamp();
     MaybeDoRestart();
 
-#ifdef MOZ_GECKO_PROFILER
     profiler_shutdown(IsFastShutdown::Yes);
-#endif
 
 #ifdef MOZ_BACKGROUNDTASKS
     // We must unlock the profile, or else the lock file `parent.lock` will

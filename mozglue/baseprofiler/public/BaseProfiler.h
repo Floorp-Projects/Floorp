@@ -72,6 +72,11 @@ static inline bool profiler_capture_backtrace_into(
 static inline UniquePtr<ProfileChunkedBuffer> profiler_capture_backtrace() {
   return nullptr;
 }
+
+static inline void profiler_init(void* stackTop) {}
+
+static inline void profiler_shutdown() {}
+
 }  // namespace baseprofiler
 }  // namespace mozilla
 

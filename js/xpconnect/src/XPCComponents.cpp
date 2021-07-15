@@ -2074,9 +2074,7 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::ExitIfInAutomation() {
   NS_ENSURE_TRUE(xpc::IsInAutomation(), NS_ERROR_FAILURE);
 
-#ifdef MOZ_GECKO_PROFILER
   profiler_shutdown(IsFastShutdown::Yes);
-#endif
 
   mozilla::AppShutdown::DoImmediateExit();
   return NS_OK;

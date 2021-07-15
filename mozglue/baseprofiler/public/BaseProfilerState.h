@@ -32,6 +32,8 @@ namespace baseprofiler {
 
 inline int profiler_main_thread_id() { return 0; }
 
+inline bool profiler_is_active() { return false; }
+
 }  // namespace baseprofiler
 }  // namespace mozilla
 
