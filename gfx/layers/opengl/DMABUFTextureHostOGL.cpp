@@ -57,7 +57,7 @@ bool DMABUFTextureHostOGL::Lock() {
     mTextureSource = CreateTextureSourceForPlane(0);
 
     RefPtr<TextureSource> prev = mTextureSource;
-    for (size_t i = 1; i < mSurface->GetTextureCount(); i++) {
+    for (int i = 1; i < mSurface->GetTextureCount(); i++) {
       RefPtr<TextureSource> next = CreateTextureSourceForPlane(i);
       prev->SetNextSibling(next);
       prev = next;
