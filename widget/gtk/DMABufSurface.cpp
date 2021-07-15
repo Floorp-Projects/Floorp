@@ -24,6 +24,8 @@
 
 #include "mozilla/widget/gbm.h"
 #include "mozilla/widget/va_drmcommon.h"
+#include "YCbCrUtils.h"
+#include "mozilla/gfx/2D.h"
 #include "GLContextTypes.h"  // for GLContext, etc
 #include "GLContextEGL.h"
 #include "GLContextProvider.h"
@@ -60,7 +62,20 @@ using namespace mozilla::layers;
 #  define VA_FOURCC_YV12 0x32315659
 #endif
 
+static RefPtr<GLContext> sSnapshotContext;
 static Atomic<int> gNewSurfaceUID(1);
+
+bool EnsureSnapshotGLContext() {
+  if (!sSnapshotContext) {
+    nsCString discardFailureId;
+    sSnapshotContext = GLContextProvider::CreateHeadless({}, &discardFailureId);
+    if (!sSnapshotContext) {
+      NS_WARNING("Failed to create snapshot GLContext");
+      return false;
+    }
+  }
+  return true;
+}
 
 bool DMABufSurface::IsGlobalRefSet() const {
   if (!mGlobalRefCountFd) {
@@ -189,7 +204,9 @@ already_AddRefed<DMABufSurface> DMABufSurface::CreateDMABufSurface(
 }
 
 void DMABufSurface::FenceDelete() {
-  if (!mGL) return;
+  if (!mGL) {
+    return;
+  }
   const auto& gle = gl::GLContextEGL::Cast(mGL);
   const auto& egl = gle->mEgl;
 
@@ -229,7 +246,9 @@ void DMABufSurface::FenceSet() {
 }
 
 void DMABufSurface::FenceWait() {
-  if (!mGL) return;
+  if (!mGL) {
+    return;
+  }
   const auto& gle = gl::GLContextEGL::Cast(mGL);
   const auto& egl = gle->mEgl;
 
@@ -245,7 +264,9 @@ void DMABufSurface::FenceWait() {
 }
 
 bool DMABufSurface::FenceImportFromFd() {
-  if (!mGL) return false;
+  if (!mGL) {
+    return false;
+  }
   const auto& gle = gl::GLContextEGL::Cast(mGL);
   const auto& egl = gle->mEgl;
 
@@ -569,7 +590,9 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
 void DMABufSurfaceRGBA::ReleaseTextures() {
   FenceDelete();
 
-  if (!mGL) return;
+  if (!mGL) {
+    return;
+  }
   const auto& gle = gl::GLContextEGL::Cast(mGL);
   const auto& egl = gle->mEgl;
 
@@ -755,7 +778,7 @@ void DMABufSurfaceRGBA::DumpToFile(const char* pFile) {
 #  include "GLBlitHelper.h"
 
 bool DMABufSurfaceRGBA::CopyFrom(class DMABufSurface* aSourceSurface,
-                                        GLContext* aGLContext) {
+                                 GLContext* aGLContext) {
   MOZ_ASSERT(aSourceSurface->GetTexture());
   MOZ_ASSERT(GetTexture());
 
@@ -775,7 +798,7 @@ void DMABufSurfaceRGBA::Clear() {
 }
 
 bool DMABufSurfaceRGBA::HasAlpha() {
-  return mGmbFormat ? mGmbFormat->mHasAlpha : true;
+  return !mGmbFormat || mGmbFormat->mHasAlpha;
 }
 
 gfx::SurfaceFormat DMABufSurfaceRGBA::GetFormat() {
@@ -839,9 +862,12 @@ bool DMABufSurfaceYUV::OpenFileDescriptorForPlane(
     return true;
   }
 
-  MOZ_RELEASE_ASSERT(mGbmBufferObject[aPlane] != nullptr,
-                     "DMABufSurfaceYUV::OpenFileDescriptorForPlane: Missing "
-                     "mGbmBufferObject object!");
+  if (mGbmBufferObject[aPlane] == nullptr) {
+    LOGDMABUF(
+        ("DMABufSurfaceYUV::OpenFileDescriptorForPlane: Missing "
+         "mGbmBufferObject object!"));
+    return false;
+  }
 
   mDmabufFds[aPlane] = nsGbmLib::GetFd(mGbmBufferObject[aPlane]);
   if (mDmabufFds[aPlane] < 0) {
@@ -1000,10 +1026,10 @@ bool DMABufSurfaceYUV::Create(int aWidth, int aHeight, void** aPixelData,
   if (!CreateYUVPlane(2, aWidth >> 1, aHeight >> 1, GBM_FORMAT_R8)) {
     return false;
   }
-
-  return aPixelData != nullptr && aLineSizes != nullptr
-             ? UpdateYUVData(aPixelData, aLineSizes)
-             : true;
+  if (!aPixelData || !aLineSizes) {
+    return true;
+  }
+  return UpdateYUVData(aPixelData, aLineSizes);
 }
 
 bool DMABufSurfaceYUV::Create(const SurfaceDescriptor& aDesc) {
@@ -1169,7 +1195,9 @@ void DMABufSurfaceYUV::ReleaseTextures() {
     }
   }
 
-  if (!mGL) return;
+  if (!mGL) {
+    return;
+  }
   const auto& gle = gl::GLContextEGL::Cast(mGL);
   const auto& egl = gle->mEgl;
 
@@ -1204,7 +1232,7 @@ gfx::SurfaceFormat DMABufSurfaceYUV::GetFormat() {
 // GL uses swapped R and B components so report accordingly.
 gfx::SurfaceFormat DMABufSurfaceYUV::GetFormatGL() { return GetFormat(); }
 
-uint32_t DMABufSurfaceYUV::GetTextureCount() {
+int DMABufSurfaceYUV::GetTextureCount() {
   switch (mSurfaceType) {
     case SURFACE_NV12:
       return 2;

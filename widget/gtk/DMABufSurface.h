@@ -18,6 +18,9 @@ typedef void* EGLSyncKHR;
 #define DMABUF_BUFFER_PLANES 4
 
 namespace mozilla {
+namespace gfx {
+class SourceSurface;
+}
 namespace layers {
 class SurfaceDescriptor;
 class SurfaceDescriptorDMABuf;
@@ -74,7 +77,7 @@ class DMABufSurface {
   virtual EGLImageKHR GetEGLImage(int aPlane = 0) = 0;
 
   SurfaceType GetSurfaceType() { return mSurfaceType; };
-  virtual uint32_t GetTextureCount() = 0;
+  virtual int GetTextureCount() = 0;
 
   bool IsMapped(int aPlane = 0) { return (mMappedRegion[aPlane] != nullptr); };
   void Unmap(int aPlane = 0);
@@ -218,7 +221,7 @@ class DMABufSurfaceRGBA : public DMABufSurface {
   void ReleaseWlBuffer();
   wl_buffer* GetWlBuffer() { return mWlBuffer; };
 
-  uint32_t GetTextureCount() { return 1; };
+  int GetTextureCount() { return 1; };
 
 #ifdef DEBUG
   virtual void DumpToFile(const char* pFile);
@@ -278,7 +281,7 @@ class DMABufSurfaceYUV : public DMABufSurface {
   GLuint GetTexture(int aPlane = 0) { return mTexture[aPlane]; };
   EGLImageKHR GetEGLImage(int aPlane = 0) { return mEGLImage[aPlane]; };
 
-  uint32_t GetTextureCount();
+  int GetTextureCount();
 
   void SetYUVColorSpace(mozilla::gfx::YUVColorSpace aColorSpace) {
     mColorSpace = aColorSpace;

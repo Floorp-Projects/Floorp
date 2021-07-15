@@ -58,6 +58,10 @@ class SurfaceTextureImage;
 #ifdef XP_MACOSX
 class MacIOSurfaceImage;
 #endif
+
+#ifdef MOZ_WAYLAND
+class DMABUFSurfaceImage;
+#endif
 }  // namespace layers
 
 namespace gl {
@@ -177,6 +181,10 @@ class GLBlitHelper final {
 #endif
 #ifdef XP_MACOSX
   bool BlitImage(layers::MacIOSurfaceImage* srcImage,
+                 const gfx::IntSize& destSize, OriginPos destOrigin) const;
+#endif
+#ifdef MOZ_WAYLAND
+  bool BlitImage(layers::DMABUFSurfaceImage* srcImage,
                  const gfx::IntSize& destSize, OriginPos destOrigin) const;
 #endif
 
