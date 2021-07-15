@@ -22,7 +22,7 @@
         android:lines="1"
         android:ellipsize="end"
         android:text="@string/menu_whats_new"
-        style="@android:style/TextAppearance.Material.Menu"/>
+        style="@style/MenuItem"/>
 
     <ImageView
         android:id="@+id/dot"

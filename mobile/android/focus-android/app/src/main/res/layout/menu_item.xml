@@ -14,5 +14,5 @@
     android:background="?android:attr/selectableItemBackground"
     android:lines="1"
     android:ellipsize="end"
-    style="@android:style/TextAppearance.Material.Menu"
+    style="@style/MenuItem"
     android:focusable="true" />

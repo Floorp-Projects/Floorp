@@ -7,10 +7,12 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-
         <item name="android:windowContentTransitions">true</item>
-
         <item name="popupMenuStyle">@style/PopupMenu</item>
+
+        <!-- Use the same colors for both themes until light theme it will be implemented -->
+        <item name="colorControlNormal">@color/photonWhite</item>
+        <item name="android:textColorSecondary">@color/photonWhite</item>
 
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
@@ -22,6 +24,10 @@
         <item name="android:layout">@layout/fragment_settings</item>
         <item name="android:listPreferredItemPaddingLeft">@dimen/activity_horizontal_margin</item>
         <item name="android:listPreferredItemPaddingRight">@dimen/activity_horizontal_margin</item>
+
+        <!-- Use the same colors for both themes until light theme it will be implemented -->
+        <item name="android:textColor">@color/photonWhite</item>
+        <item name="titleTextColor">@color/photonWhite</item>
     </style>
 
     <style name="DialogTitleStyle" parent="TextAppearance.AppCompat.Title">
@@ -50,7 +56,7 @@
         <item name="android:fontFamily">@string/font_roboto_medium</item>
     </style>
 
-    <style name="SettingsTheme" parent="Theme.AppCompat.NoActionBar">
+    <style name="SettingsTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
         <item name="android:textColorSecondary">@color/settings_summary_text</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:windowTitleStyle">@style/DialogTitleStyle</item>
@@ -90,6 +96,11 @@
 
     <style name="PopupMenu" parent="@style/Widget.AppCompat.Light.PopupMenu">
         <item name="overlapAnchor">true</item>
+    </style>
+
+    <!-- Add new style to be able to use the same color for both themes until light theme it will be implemented -->
+    <style name="MenuItem" parent="@android:style/TextAppearance.Material.Menu">
+        <item name="android:textColor">@color/photonWhite</item>
     </style>
 
     <style name="AppTheme.ContextMenuItem">
