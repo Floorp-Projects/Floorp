@@ -985,6 +985,15 @@ class WorkerPrivate final : public RelativeTimeline {
     return data->mCurrentTimerNestingLevel;
   }
 
+  void IncreaseTopLevelWorkerFinishedRunnableCount() {
+    ++mTopLevelWorkerFinishedRunnableCount;
+  }
+  void DecreaseTopLevelWorkerFinishedRunnableCount() {
+    --mTopLevelWorkerFinishedRunnableCount;
+  }
+  void IncreaseWorkerFinishedRunnableCount() { ++mWorkerFinishedRunnableCount; }
+  void DecreaseWorkerFinishedRunnableCount() { --mWorkerFinishedRunnableCount; }
+
  private:
   WorkerPrivate(
       WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -1380,6 +1389,9 @@ class WorkerPrivate final : public RelativeTimeline {
    * as on the worker thread itself. When bug 1443925 is fixed allowing
    * nsIPrincipal to be used OMT, it may be possible to remove this flag. */
   bool mIsPrivilegedAddonGlobal;
+
+  Atomic<uint32_t> mTopLevelWorkerFinishedRunnableCount;
+  Atomic<uint32_t> mWorkerFinishedRunnableCount;
 };
 
 class AutoSyncLoopHolder {
