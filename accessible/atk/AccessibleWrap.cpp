@@ -636,6 +636,10 @@ AtkRole getRoleCB(AtkObject* aAtkObj) {
 }
 
 static AtkAttributeSet* ConvertToAtkAttributeSet(AccAttributes* aAttributes) {
+  if (!aAttributes) {
+    return nullptr;
+  }
+
   AtkAttributeSet* objAttributeSet = nullptr;
 
   for (auto iter : *aAttributes) {
