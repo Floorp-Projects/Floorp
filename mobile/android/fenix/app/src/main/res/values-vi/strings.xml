@@ -1578,7 +1578,7 @@
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Đồng bộ thông tin thẻ tín dụng trên các thiết bị</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
-    <string name="preferences_credit_cards_sync_cards">Đồng bộ hóa các thẻ tín dụng</string>
+    <string name="preferences_credit_cards_sync_cards">Đồng bộ hóa thẻ tín dụng</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Thêm thẻ tín dụng</string>
 

@@ -892,7 +892,7 @@
     <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_3">Eliminar carpetas seleccionadas</string>
     <!-- Bookmark undo button for deletion snackbar action -->
-    <string name="bookmark_undo_deletion">UNDO</string>
+    <string name="bookmark_undo_deletion">DESHACER</string>
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
