@@ -621,24 +621,6 @@ static void TestMatchingProxyReceiver(CacheIRWriter& writer, ProxyObject* obj,
   writer.guardShapeForClass(objId, obj->shape());
 }
 
-static bool ProtoChainSupportsTeleporting(JSObject* obj, NativeObject* holder) {
-  // The receiver should already have been handled since its checks are always
-  // required.
-  MOZ_ASSERT(obj->isUsedAsPrototype());
-
-  // Prototype chain must have cacheable prototypes to ensure the cached
-  // holder is the current holder.
-  for (JSObject* tmp = obj; tmp != holder; tmp = tmp->staticPrototype()) {
-    if (tmp->hasUncacheableProto()) {
-      return false;
-    }
-  }
-
-  // The holder itself only gets reshaped by teleportation if it is not
-  // marked UncacheableProto. See: ReshapeForProtoMutation.
-  return !holder->hasUncacheableProto();
-}
-
 static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
                                     NativeObject* holder, ObjOperandId objId) {
   // Assuming target property is on |holder|, generate appropriate guards to
@@ -695,8 +677,8 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
   JSObject* pobj = obj->staticPrototype();
   MOZ_ASSERT(pobj->isUsedAsPrototype());
 
-  // If teleporting is supported for this prototype chain, we are done.
-  if (ProtoChainSupportsTeleporting(pobj, holder)) {
+  // If teleporting is supported for this holder, we are done.
+  if (!holder->hasUncacheableProto()) {
     return;
   }
 
