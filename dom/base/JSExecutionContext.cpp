@@ -53,12 +53,9 @@ JSExecutionContext::JSExecutionContext(
     JS::CompileOptions& aCompileOptions,
     JS::Handle<JS::Value> aDebuggerPrivateValue,
     JS::Handle<JSScript*> aDebuggerIntroductionScript)
-    :
-#ifdef MOZ_GECKO_PROFILER
-      mAutoProfilerLabel("JSExecutionContext",
+    : mAutoProfilerLabel("JSExecutionContext",
                          /* dynamicStr */ nullptr,
                          JS::ProfilingCategoryPair::JS),
-#endif
       mCx(aCx),
       mRealm(aCx, aGlobal),
       mRetValue(aCx),

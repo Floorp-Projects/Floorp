@@ -7,13 +7,13 @@
 #ifndef DOM_BASE_JSEXECUTIONCONTEXT_H_
 #define DOM_BASE_JSEXECUTIONCONTEXT_H_
 
-#include "GeckoProfiler.h"
 #include "js/GCVector.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "jsapi.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/Vector.h"
 #include "nsStringFwd.h"
 #include "nscore.h"
@@ -29,10 +29,8 @@ union Utf8Unit;
 namespace dom {
 
 class MOZ_STACK_CLASS JSExecutionContext final {
-#ifdef MOZ_GECKO_PROFILER
   // Register stack annotations for the Gecko profiler.
   mozilla::AutoProfilerLabel mAutoProfilerLabel;
-#endif
 
   JSContext* mCx;
 

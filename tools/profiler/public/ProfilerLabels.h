@@ -13,41 +13,24 @@
 
 #include "mozilla/ProfilerState.h"
 
-#ifndef MOZ_GECKO_PROFILER
+#include "js/ProfilingCategory.h"
+#include "js/ProfilingStack.h"
+#include "js/RootingAPI.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/ThreadLocal.h"
+#include "nsString.h"
 
-#  define AUTO_PROFILER_LABEL(label, categoryPair)
-#  define AUTO_PROFILER_LABEL_CATEGORY_PAIR(categoryPair)
-#  define AUTO_PROFILER_LABEL_DYNAMIC_CSTR(label, categoryPair, cStr)
-#  define AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(label, categoryPair, \
-                                                        cStr)
-#  define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(label, categoryPair, nsCStr)
-#  define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE( \
-      label, categoryPair, nsCStr)
-#  define AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(label, categoryPair, nsStr)
-#  define AUTO_PROFILER_LABEL_FAST(label, categoryPair, ctx)
-#  define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, categoryPair, \
-                                           ctx, flags)
-
-#else  // !MOZ_GECKO_PROFILER
-
-#  include "js/ProfilingCategory.h"
-#  include "js/ProfilingStack.h"
-#  include "js/RootingAPI.h"
-#  include "mozilla/Assertions.h"
-#  include "mozilla/Atomics.h"
-#  include "mozilla/Attributes.h"
-#  include "mozilla/Maybe.h"
-#  include "mozilla/ThreadLocal.h"
-#  include "nsString.h"
-
-#  include <stdint.h>
+#include <stdint.h>
 
 struct JSContext;
 
 // Macros used by the AUTO_PROFILER_* macros below.
-#  define PROFILER_RAII_PASTE(id, line) id##line
-#  define PROFILER_RAII_EXPAND(id, line) PROFILER_RAII_PASTE(id, line)
-#  define PROFILER_RAII PROFILER_RAII_EXPAND(raiiObject, __LINE__)
+#define PROFILER_RAII_PASTE(id, line) id##line
+#define PROFILER_RAII_EXPAND(id, line) PROFILER_RAII_PASTE(id, line)
+#define PROFILER_RAII PROFILER_RAII_EXPAND(raiiObject, __LINE__)
 
 // Insert an RAII object in this scope to enter a label stack frame. Any
 // samples collected in this scope will contain this label in their stack.
@@ -59,19 +42,19 @@ struct JSContext;
 //
 // Use AUTO_PROFILER_LABEL_DYNAMIC_* if you want to add additional / dynamic
 // information to the label stack frame.
-#  define AUTO_PROFILER_LABEL(label, categoryPair) \
-    mozilla::AutoProfilerLabel PROFILER_RAII(      \
-        label, nullptr, JS::ProfilingCategoryPair::categoryPair)
+#define AUTO_PROFILER_LABEL(label, categoryPair) \
+  mozilla::AutoProfilerLabel PROFILER_RAII(      \
+      label, nullptr, JS::ProfilingCategoryPair::categoryPair)
 
 // Similar to AUTO_PROFILER_LABEL, but with only one argument: the category
 // pair. The label string is taken from the category pair. This is convenient
 // for labels like AUTO_PROFILER_LABEL_CATEGORY_PAIR(GRAPHICS_LayerBuilding)
 // which would otherwise just repeat the string.
-#  define AUTO_PROFILER_LABEL_CATEGORY_PAIR(categoryPair)     \
-    mozilla::AutoProfilerLabel PROFILER_RAII(                 \
-        "", nullptr, JS::ProfilingCategoryPair::categoryPair, \
-        uint32_t(js::ProfilingStackFrame::Flags::             \
-                     LABEL_DETERMINED_BY_CATEGORY_PAIR))
+#define AUTO_PROFILER_LABEL_CATEGORY_PAIR(categoryPair)     \
+  mozilla::AutoProfilerLabel PROFILER_RAII(                 \
+      "", nullptr, JS::ProfilingCategoryPair::categoryPair, \
+      uint32_t(                                             \
+          js::ProfilingStackFrame::Flags::LABEL_DETERMINED_BY_CATEGORY_PAIR))
 
 // Similar to AUTO_PROFILER_LABEL, but with an additional string. The inserted
 // RAII object stores the cStr pointer in a field; it does not copy the string.
@@ -92,18 +75,18 @@ struct JSContext;
 // profile buffer can just store the raw pointers to the literal strings.
 // Consequently, AUTO_PROFILER_LABEL frames take up considerably less space in
 // the profile buffer than AUTO_PROFILER_LABEL_DYNAMIC_* frames.
-#  define AUTO_PROFILER_LABEL_DYNAMIC_CSTR(label, categoryPair, cStr) \
-    mozilla::AutoProfilerLabel PROFILER_RAII(                         \
-        label, cStr, JS::ProfilingCategoryPair::categoryPair)
+#define AUTO_PROFILER_LABEL_DYNAMIC_CSTR(label, categoryPair, cStr) \
+  mozilla::AutoProfilerLabel PROFILER_RAII(                         \
+      label, cStr, JS::ProfilingCategoryPair::categoryPair)
 
 // Like AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but with the NONSENSITIVE flag to
 // note that it does not contain sensitive information (so we can include it
 // in, for example, the BackgroundHangMonitor)
-#  define AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(label, categoryPair, \
-                                                        cStr)                \
-    mozilla::AutoProfilerLabel PROFILER_RAII(                                \
-        label, cStr, JS::ProfilingCategoryPair::categoryPair,                \
-        uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE))
+#define AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(label, categoryPair, \
+                                                      cStr)                \
+  mozilla::AutoProfilerLabel PROFILER_RAII(                                \
+      label, cStr, JS::ProfilingCategoryPair::categoryPair,                \
+      uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE))
 
 // Similar to AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but takes an nsACString.
 //
@@ -112,34 +95,34 @@ struct JSContext;
 // cost of the string assignment unless the profiler is active. Therefore,
 // unlike AUTO_PROFILER_LABEL and AUTO_PROFILER_LABEL_DYNAMIC_CSTR, this macro
 // doesn't push/pop a label when the profiler is inactive.
-#  define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(label, categoryPair, nsCStr) \
-    mozilla::Maybe<nsAutoCString> autoCStr;                                  \
-    mozilla::Maybe<mozilla::AutoProfilerLabel> raiiObjectNsCString;          \
-    if (profiler_is_active()) {                                              \
-      autoCStr.emplace(nsCStr);                                              \
-      raiiObjectNsCString.emplace(label, autoCStr->get(),                    \
-                                  JS::ProfilingCategoryPair::categoryPair);  \
-    }
+#define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(label, categoryPair, nsCStr) \
+  mozilla::Maybe<nsAutoCString> autoCStr;                                  \
+  mozilla::Maybe<mozilla::AutoProfilerLabel> raiiObjectNsCString;          \
+  if (profiler_is_active()) {                                              \
+    autoCStr.emplace(nsCStr);                                              \
+    raiiObjectNsCString.emplace(label, autoCStr->get(),                    \
+                                JS::ProfilingCategoryPair::categoryPair);  \
+  }
 
 // Match the conditions for MOZ_ENABLE_BACKGROUND_HANG_MONITOR
-#  if defined(NIGHTLY_BUILD) && !defined(MOZ_DEBUG) && !defined(MOZ_TSAN) && \
-      !defined(MOZ_ASAN)
-#    define SHOULD_CREATE_ALL_NONSENSITIVE_LABEL_FRAMES true
-#  else
-#    define SHOULD_CREATE_ALL_NONSENSITIVE_LABEL_FRAMES profiler_is_active()
-#  endif
+#if defined(NIGHTLY_BUILD) && !defined(MOZ_DEBUG) && !defined(MOZ_TSAN) && \
+    !defined(MOZ_ASAN)
+#  define SHOULD_CREATE_ALL_NONSENSITIVE_LABEL_FRAMES true
+#else
+#  define SHOULD_CREATE_ALL_NONSENSITIVE_LABEL_FRAMES profiler_is_active()
+#endif
 
 // See note above AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE
-#  define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(              \
-      label, categoryPair, nsCStr)                                         \
-    mozilla::Maybe<nsAutoCString> autoCStr;                                \
-    mozilla::Maybe<mozilla::AutoProfilerLabel> raiiObjectNsCString;        \
-    if (SHOULD_CREATE_ALL_NONSENSITIVE_LABEL_FRAMES) {                     \
-      autoCStr.emplace(nsCStr);                                            \
-      raiiObjectNsCString.emplace(                                         \
-          label, autoCStr->get(), JS::ProfilingCategoryPair::categoryPair, \
-          uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE));         \
-    }
+#define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(              \
+    label, categoryPair, nsCStr)                                         \
+  mozilla::Maybe<nsAutoCString> autoCStr;                                \
+  mozilla::Maybe<mozilla::AutoProfilerLabel> raiiObjectNsCString;        \
+  if (SHOULD_CREATE_ALL_NONSENSITIVE_LABEL_FRAMES) {                     \
+    autoCStr.emplace(nsCStr);                                            \
+    raiiObjectNsCString.emplace(                                         \
+        label, autoCStr->get(), JS::ProfilingCategoryPair::categoryPair, \
+        uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE));         \
+  }
 
 // Similar to AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but takes an nsString that is
 // is lossily converted to an ASCII string.
@@ -149,15 +132,14 @@ struct JSContext;
 // the runtime cost of the string conversion unless the profiler is active.
 // Therefore, unlike AUTO_PROFILER_LABEL and AUTO_PROFILER_LABEL_DYNAMIC_CSTR,
 // this macro doesn't push/pop a label when the profiler is inactive.
-#  define AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(label, categoryPair,   \
-                                                     nsStr)                 \
-    mozilla::Maybe<NS_LossyConvertUTF16toASCII> asciiStr;                   \
-    mozilla::Maybe<mozilla::AutoProfilerLabel> raiiObjectLossyNsString;     \
-    if (profiler_is_active()) {                                             \
-      asciiStr.emplace(nsStr);                                              \
-      raiiObjectLossyNsString.emplace(                                      \
-          label, asciiStr->get(), JS::ProfilingCategoryPair::categoryPair); \
-    }
+#define AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(label, categoryPair, nsStr) \
+  mozilla::Maybe<NS_LossyConvertUTF16toASCII> asciiStr;                        \
+  mozilla::Maybe<mozilla::AutoProfilerLabel> raiiObjectLossyNsString;          \
+  if (profiler_is_active()) {                                                  \
+    asciiStr.emplace(nsStr);                                                   \
+    raiiObjectLossyNsString.emplace(label, asciiStr->get(),                    \
+                                    JS::ProfilingCategoryPair::categoryPair);  \
+  }
 
 // Similar to AUTO_PROFILER_LABEL, but accepting a JSContext* parameter, and a
 // no-op if the profiler is disabled.
@@ -165,18 +147,18 @@ struct JSContext;
 // noticeable. It avoids overhead from the TLS lookup because it can get the
 // ProfilingStack from the JS context, and avoids almost all overhead in the
 // case where the profiler is disabled.
-#  define AUTO_PROFILER_LABEL_FAST(label, categoryPair, ctx) \
-    mozilla::AutoProfilerLabel PROFILER_RAII(                \
-        ctx, label, nullptr, JS::ProfilingCategoryPair::categoryPair)
+#define AUTO_PROFILER_LABEL_FAST(label, categoryPair, ctx) \
+  mozilla::AutoProfilerLabel PROFILER_RAII(                \
+      ctx, label, nullptr, JS::ProfilingCategoryPair::categoryPair)
 
 // Similar to AUTO_PROFILER_LABEL_FAST, but also takes an extra string and an
 // additional set of flags. The flags parameter should carry values from the
 // js::ProfilingStackFrame::Flags enum.
-#  define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, categoryPair, \
-                                           ctx, flags)                         \
-    mozilla::AutoProfilerLabel PROFILER_RAII(                                  \
-        ctx, label, dynamicString, JS::ProfilingCategoryPair::categoryPair,    \
-        flags)
+#define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, categoryPair, \
+                                         ctx, flags)                         \
+  mozilla::AutoProfilerLabel PROFILER_RAII(                                  \
+      ctx, label, dynamicString, JS::ProfilingCategoryPair::categoryPair,    \
+      flags)
 
 class TLSRegisteredThread;  // Needed for friendship in ProfilingStackOwnerTLS.
 
@@ -213,6 +195,30 @@ class ProfilingStackOwner {
 
   mutable Atomic<int32_t, MemoryOrdering::ReleaseAcquire> mRefCnt;
 };
+
+#ifndef MOZ_GECKO_PROFILER
+
+class MOZ_RAII AutoProfilerLabel {
+ public:
+  // This is the AUTO_PROFILER_LABEL and AUTO_PROFILER_LABEL_DYNAMIC variant.
+  AutoProfilerLabel(const char* aLabel, const char* aDynamicString,
+                    JS::ProfilingCategoryPair aCategoryPair,
+                    uint32_t aFlags = 0) {}
+
+  // This is the AUTO_PROFILER_LABEL_FAST variant.
+  AutoProfilerLabel(JSContext* aJSContext, const char* aLabel,
+                    const char* aDynamicString,
+                    JS::ProfilingCategoryPair aCategoryPair, uint32_t aFlags) {}
+
+  ~AutoProfilerLabel() {}
+
+  class ProfilingStackOwnerTLS {
+   public:
+    static ProfilingStackOwner* Get() { return nullptr; }
+  };
+};
+
+#else  // !MOZ_GECKO_PROFILER
 
 // This class creates a non-owning ProfilingStack reference. Objects of this
 // class are stack-allocated, and so exist within a thread, and are thus bounded
@@ -300,8 +306,8 @@ class MOZ_RAII AutoProfilerLabel {
   };
 };
 
-}  // namespace mozilla
-
 #endif  // !MOZ_GECKO_PROFILER
+
+}  // namespace mozilla
 
 #endif  // ProfilerLabels_h

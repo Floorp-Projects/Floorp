@@ -95,7 +95,6 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-#ifdef MOZ_GECKO_PROFILER
   NS_ConvertUTF16toUTF8 nameOrScriptURL(mWorkerPrivate->WorkerName().IsEmpty()
                                             ? mWorkerPrivate->ScriptURL()
                                             : mWorkerPrivate->WorkerName());
@@ -107,7 +106,6 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   mozilla::AutoProfilerLabel PROFILER_RAII(
       "Worker.postMessage", nameOrScriptURL.get(),
       JS::ProfilingCategoryPair::DOM, flags);
-#endif
 
   RefPtr<MessageEventRunnable> runnable = new MessageEventRunnable(
       mWorkerPrivate, WorkerRunnable::WorkerThreadModifyBusyCount);

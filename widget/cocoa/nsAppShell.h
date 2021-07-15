@@ -66,10 +66,8 @@ class nsAppShell : public nsBaseAppShell {
   // and exits the waiting state.
   CFRunLoopObserverRef mCFRunLoopObserver;
 
-#ifdef MOZ_GECKO_PROFILER
   // Non-null while the native event loop is in the waiting state.
   mozilla::ProfilingStackOwner* mProfilingStackOwnerWhileWaiting = nullptr;
-#endif
 
   bool mRunningEventLoop;
   bool mStarted;
