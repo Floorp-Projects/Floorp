@@ -5,7 +5,6 @@ package org.mozilla.focus.activity
 
 import androidx.test.espresso.IdlingRegistry
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.R
@@ -58,29 +57,36 @@ class SearchTest {
         }
     }
 
-    @Ignore("Failing on master: https://github.com/mozilla-mobile/focus-android/issues/4825")
     @Test
     fun enableSearchSuggestionOnFirstRunTest() {
         val searchString = "mozilla "
 
         searchScreen {
-            // Search on blank spaces should not do anything
-            typeInSearchBar(" ")
-            pressEnterKey()
-            verifySearchBarIsDisplayed()
             // type and check search suggestions are displayed
             typeInSearchBar(searchString)
             allowEnableSearchSuggestions()
 
             searchSuggestionsIdlingResources =
-                RecyclerViewIdlingResource(
-                    mActivityTestRule.activity.findViewById(R.id.suggestionList),
-                    1
-                )
+                    RecyclerViewIdlingResource(
+                            mActivityTestRule.activity.findViewById(R.id.suggestionList),
+                            1
+                    )
             IdlingRegistry.getInstance().register(searchSuggestionsIdlingResources!!)
 
             verifyHintForSearch(searchString)
             verifySearchSuggestionsAreShown()
+        }
+    }
+
+    @Test
+    fun testBlankSearchDoesNothing() {
+        searchScreen {
+            // Search on blank spaces should not do anything
+            typeInSearchBar(" ")
+            pressEnterKey()
+            homeScreen {
+                verifyNavBarIsDisplayed()
+            }
         }
     }
 

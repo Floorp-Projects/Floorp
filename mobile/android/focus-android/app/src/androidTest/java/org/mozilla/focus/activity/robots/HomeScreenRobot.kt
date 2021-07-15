@@ -20,8 +20,12 @@ import org.mozilla.focus.helpers.TestHelper.waitingTime
 class HomeScreenRobot {
 
     fun verifyEmptySearchBar() {
-        searchBar.waitForExists(waitingTime)
-        assertTrue(searchBar.text.equals(getStringResource(R.string.urlbar_hint)))
+        editURLBar.waitForExists(waitingTime)
+        assertTrue(editURLBar.text.equals(getStringResource(R.string.urlbar_hint)))
+    }
+
+    fun verifyNavBarIsDisplayed() {
+        assertTrue(navURLBar.waitForExists(waitingTime))
     }
 
     fun skipFirstRun() = onView(withId(R.id.skip)).perform(click())
@@ -59,7 +63,7 @@ class HomeScreenRobot {
 
     class Transition {
         fun openMainMenu(interact: ThreeDotMainMenuRobot.() -> Unit): ThreeDotMainMenuRobot.Transition {
-            searchBar.waitForExists(waitingTime)
+            editURLBar.waitForExists(waitingTime)
             mainMenu
                 .check(matches(isDisplayed()))
                 .perform(click())
@@ -75,9 +79,14 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
     return HomeScreenRobot.Transition()
 }
 
-private val searchBar =
+private val editURLBar =
         mDevice.findObject(
                 UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view")
+        )
+
+private val navURLBar =
+        mDevice.findObject(
+                UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view")
         )
 
 private val mainMenu = onView(withId(R.id.menuView))
