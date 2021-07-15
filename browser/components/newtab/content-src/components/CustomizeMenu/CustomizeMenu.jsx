@@ -38,9 +38,9 @@ export class _CustomizeMenu extends React.PureComponent {
           appear={true}
         >
           <button
-            className="personalize-button"
+            className="icon icon-settings personalize-button"
             onClick={() => this.props.onOpen()}
-            data-l10n-id="newtab-personalize-button-label"
+            data-l10n-id="newtab-personalize-icon-label"
             ref={c => (this.openButton = c)}
           />
         </CSSTransition>
