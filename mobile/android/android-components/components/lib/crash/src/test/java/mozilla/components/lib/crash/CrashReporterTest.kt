@@ -9,11 +9,10 @@ import android.app.PendingIntent
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
+import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.CrashTelemetryService
-import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.expectException
@@ -41,11 +40,10 @@ import java.lang.reflect.Modifier
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class CrashReporterTest {
-    private val testDispatcher = TestCoroutineDispatcher()
-    private val scope = TestCoroutineScope(testDispatcher)
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
 
     @Before
     fun setUp() {

@@ -16,7 +16,6 @@ import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
@@ -44,10 +43,10 @@ import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
 class AddonInstallationDialogFragmentTest {
-    private val testDispatcher = TestCoroutineDispatcher()
-    private val scope = TestCoroutineScope(testDispatcher)
+
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
 
     @Test
     fun `build dialog`() {

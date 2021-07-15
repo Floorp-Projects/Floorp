@@ -6,7 +6,6 @@ package mozilla.components.lib.crash.handler
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
@@ -27,11 +26,10 @@ import org.mockito.Mockito.verify
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class ExceptionHandlerTest {
-    private val testDispatcher = TestCoroutineDispatcher()
-    private val scope = TestCoroutineScope(testDispatcher)
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
 
     @Test
     fun `ExceptionHandler forwards crashes to CrashReporter`() {

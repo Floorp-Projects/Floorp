@@ -16,32 +16,31 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
+import mozilla.components.feature.addons.ui.AddonsManagerAdapter.DifferCallback
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter.NotYetSupportedSection
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter.Section
-import mozilla.components.feature.addons.ui.AddonsManagerAdapter.DifferCallback
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.fail
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.any
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.any
 import java.io.IOException
 import java.util.Locale
 
@@ -49,10 +48,9 @@ import java.util.Locale
 @RunWith(AndroidJUnit4::class)
 class AddonsManagerAdapterTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
-    private val scope = TestCoroutineScope(testDispatcher)
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
 
     @Test
     fun `createListWithSections`() {

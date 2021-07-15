@@ -8,11 +8,8 @@ import android.app.SearchManager
 import android.content.Intent
 import android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.engine.EngineMiddleware
@@ -33,11 +30,13 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.anyBoolean
@@ -47,8 +46,10 @@ import org.mockito.Mockito.doReturn
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class TabIntentProcessorTest {
-    private val testDispatcher = TestCoroutineDispatcher()
-    private val scope = TestCoroutineScope(testDispatcher)
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
 
     private lateinit var middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>
 
@@ -63,8 +64,6 @@ class TabIntentProcessorTest {
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
-
         searchEngine = createSearchEngine(
             name = "Test",
             url = "https://localhost/?q={searchTerms}",

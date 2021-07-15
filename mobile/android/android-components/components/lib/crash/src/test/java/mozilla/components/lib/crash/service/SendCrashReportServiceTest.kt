@@ -8,11 +8,10 @@ import android.content.ComponentName
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
+import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
-import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -34,11 +33,10 @@ import org.robolectric.Robolectric
 @RunWith(AndroidJUnit4::class)
 class SendCrashReportServiceTest {
     private var service: SendCrashReportService? = null
-    private val testDispatcher = TestCoroutineDispatcher()
-    private val scope = TestCoroutineScope(testDispatcher)
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
 
     @Before
     fun setUp() {

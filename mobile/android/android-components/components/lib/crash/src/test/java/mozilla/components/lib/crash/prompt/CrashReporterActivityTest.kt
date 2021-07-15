@@ -14,12 +14,10 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ActivityScenario.launch
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
-import mozilla.components.lib.crash.R
 import mozilla.components.lib.crash.prompt.CrashReporterActivity.Companion.PREFERENCE_KEY_SEND_REPORT
 import mozilla.components.lib.crash.prompt.CrashReporterActivity.Companion.SHARED_PREFERENCES_NAME
 import mozilla.components.lib.crash.service.CrashReporterService
@@ -40,11 +38,10 @@ import org.mockito.MockitoAnnotations.initMocks
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class CrashReporterActivityTest {
-    private val testDispatcher = TestCoroutineDispatcher()
-    private val scope = TestCoroutineScope(testDispatcher)
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
 
     @Mock
     lateinit var service: CrashReporterService

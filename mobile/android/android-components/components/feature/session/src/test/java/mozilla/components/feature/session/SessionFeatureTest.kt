@@ -5,19 +5,14 @@
 package mozilla.components.feature.session
 
 import android.view.View
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.BrowserAction
-import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
@@ -29,10 +24,10 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.doReturn
@@ -41,21 +36,11 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 class SessionFeatureTest {
-    private val testDispatcher = TestCoroutineDispatcher()
-    private val scope = TestCoroutineScope(testDispatcher)
 
-    @Before
-    @ExperimentalCoroutinesApi
-    fun setUp() {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @After
-    @ExperimentalCoroutinesApi
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
-    }
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `start renders selected session`() {
