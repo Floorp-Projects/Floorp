@@ -267,8 +267,9 @@ class SmokeTest {
         }
     }
 
-    // Could be removed when more smoke tests from the Settings category are added
     @Test
+    // Test running on beta/release builds in CI:
+    // caution when making changes to it, so they don't block the builds
     // Verifies the Settings menu opens from a tab's 3 dot menu
     fun openMainMenuSettingsItemTest() {
         homeScreen {
@@ -518,6 +519,8 @@ class SmokeTest {
     }
 
     @Test
+    // Test running on beta/release builds in CI:
+    // caution when making changes to it, so they don't block the builds
     // Goes through the settings and changes the search suggestion toggle, then verifies it changes.
     fun toggleSearchSuggestions() {
 
@@ -992,6 +995,8 @@ class SmokeTest {
     }
 
     @Test
+    // Test running on beta/release builds in CI:
+    // caution when making changes to it, so they don't block the builds
     fun deleteCollectionTest() {
         val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -1116,6 +1121,8 @@ class SmokeTest {
     }
 
     @Test
+    // Test running on beta/release builds in CI:
+    // caution when making changes to it, so they don't block the builds
     fun noHistoryInPrivateBrowsingTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 

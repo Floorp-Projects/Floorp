@@ -74,6 +74,8 @@ class HistoryTest {
     }
 
     @Test
+    // Test running on beta/release builds in CI:
+    // caution when making changes to it, so they don't block the builds
     fun visitedUrlHistoryTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
