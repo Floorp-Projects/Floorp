@@ -1383,6 +1383,12 @@ BasePrincipal::CreateReferrerInfo(mozilla::dom::ReferrerPolicy aReferrerPolicy,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+BasePrincipal::GetPrecursorPrincipal(nsIPrincipal** aPrecursor) {
+  *aPrecursor = nullptr;
+  return NS_OK;
+}
+
 NS_IMPL_ADDREF(BasePrincipal::Deserializer)
 NS_IMPL_RELEASE(BasePrincipal::Deserializer)
 

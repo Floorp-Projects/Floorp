@@ -48,6 +48,7 @@ class NullPrincipal final : public BasePrincipal {
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
+  NS_IMETHOD GetPrecursorPrincipal(nsIPrincipal** aPrecursor) override;
 
   static already_AddRefed<NullPrincipal> CreateWithInheritedAttributes(
       nsIPrincipal* aInheritFrom);

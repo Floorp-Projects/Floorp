@@ -294,3 +294,46 @@ already_AddRefed<BasePrincipal> NullPrincipal::FromProperties(
 
   return NullPrincipal::Create(attrs, uri);
 }
+
+NS_IMETHODIMP
+NullPrincipal::GetPrecursorPrincipal(nsIPrincipal** aPrincipal) {
+  *aPrincipal = nullptr;
+
+  nsAutoCString query;
+  if (NS_FAILED(mURI->GetQuery(query)) || query.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> precursorURI;
+  if (NS_FAILED(NS_NewURI(getter_AddRefs(precursorURI), query))) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Failed to parse precursor from nullprincipal query");
+    return NS_OK;
+  }
+
+  // If our precursor is another null principal, re-construct it. This can
+  // happen if a null principal without a precursor causes another principal to
+  // be created.
+  if (precursorURI->SchemeIs(NS_NULLPRINCIPAL_SCHEME)) {
+#ifdef DEBUG
+    nsAutoCString precursorQuery;
+    precursorURI->GetQuery(precursorQuery);
+    MOZ_ASSERT(precursorQuery.IsEmpty(),
+               "Null principal with nested precursors?");
+#endif
+    *aPrincipal =
+        NullPrincipal::Create(OriginAttributesRef(), precursorURI).take();
+    return NS_OK;
+  }
+
+  RefPtr<BasePrincipal> contentPrincipal =
+      BasePrincipal::CreateContentPrincipal(precursorURI,
+                                            OriginAttributesRef());
+  // If `CreateContentPrincipal` failed, it will create a new NullPrincipal and
+  // return that instead. We only want to return real content principals here.
+  if (!contentPrincipal || !contentPrincipal->Is<ContentPrincipal>()) {
+    return NS_OK;
+  }
+  contentPrincipal.forget(aPrincipal);
+  return NS_OK;
+}
