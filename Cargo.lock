@@ -157,7 +157,7 @@ dependencies = [
  "iovec",
  "libc",
  "log",
- "memmap2",
+ "memmap2 0.2.3",
  "mio",
  "mio-named-pipes",
  "mio-uds",
@@ -508,7 +508,7 @@ dependencies = [
  "cstr",
  "log",
  "malloc_size_of_derive",
- "memmap",
+ "memmap2 0.3.0",
  "moz_task",
  "nserror",
  "nsstring",
@@ -2847,7 +2847,7 @@ source = "git+https://github.com/jfkthame/mapped_hyph.git?rev=746743227485a83123
 dependencies = [
  "arrayref",
  "log",
- "memmap2",
+ "memmap2 0.2.3",
 ]
 
 [[package]]
@@ -2908,6 +2908,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "memmap2"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20ff203f7bdc401350b1dbaa0355135777d25f41c0bbc601851bbd6cf61e8ff5"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "memoffset"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2954,7 +2963,7 @@ dependencies = [
  "byteorder",
  "goblin",
  "libc",
- "memmap2",
+ "memmap2 0.2.3",
  "memoffset",
  "nix",
  "tempfile",

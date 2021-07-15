@@ -9,7 +9,7 @@ byteorder = "1.2.7"
 crossbeam-utils = "0.8"
 cstr = "0.2"
 log = "0.4"
-memmap = "0.7"
+memmap2 = "0.3"
 moz_task = { path = "../../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }

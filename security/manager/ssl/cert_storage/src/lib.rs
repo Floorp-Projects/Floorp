@@ -9,7 +9,7 @@ extern crate crossbeam_utils;
 extern crate cstr;
 #[macro_use]
 extern crate log;
-extern crate memmap;
+extern crate memmap2;
 extern crate moz_task;
 extern crate nserror;
 extern crate nsstring;
@@ -33,7 +33,7 @@ use wr_malloc_size_of as malloc_size_of;
 use byteorder::{LittleEndian, NetworkEndian, ReadBytesExt, WriteBytesExt};
 use crossbeam_utils::atomic::AtomicCell;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
-use memmap::Mmap;
+use memmap2::Mmap;
 use moz_task::{create_background_task_queue, is_main_thread, Task, TaskRunnable};
 use nserror::{
     nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD, NS_ERROR_NO_AGGREGATION,
