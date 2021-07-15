@@ -382,8 +382,6 @@ void ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
   map = Nothing();
 
   if (readSurf != dest) {
-    MOZ_ASSERT(readFormat == LOCAL_GL_RGBA);
-    MOZ_ASSERT(readType == LOCAL_GL_UNSIGNED_BYTE);
     gfx::Factory::CopyDataSourceSurface(readSurf, dest);
   }
 }
