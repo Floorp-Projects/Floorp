@@ -29,7 +29,6 @@ namespace frontend {
 struct CompilationStencil;
 struct ExtensibleCompilationStencil;
 struct CompilationStencilMerger;
-struct CompilationInput;
 }  // namespace frontend
 
 class LifoAlloc;
@@ -534,7 +533,7 @@ class XDRStencilDecoder : public XDRDecoderBase {
     MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
   }
 
-  XDRResult codeStencil(frontend::CompilationInput& input,
+  XDRResult codeStencil(const JS::ReadOnlyCompileOptions& options,
                         frontend::CompilationStencil& stencil);
 
   bool hasOptions() const override { return !!options_; }
@@ -547,6 +546,8 @@ class XDRStencilDecoder : public XDRDecoderBase {
   const JS::ReadOnlyCompileOptions* options_ = nullptr;
 };
 
+class XDRIncrementalStencilEncoder;
+
 class XDRStencilEncoder : public XDREncoder {
  public:
   XDRStencilEncoder(JSContext* cx, JS::TranscodeBuffer& buffer)
@@ -558,16 +559,12 @@ class XDRStencilEncoder : public XDREncoder {
   }
 
  private:
-  XDRResult codeStencil(const JS::ReadOnlyCompileOptions* options,
-                        const RefPtr<ScriptSource>& source,
-                        const frontend::CompilationStencil& stencil);
-
- public:
-  XDRResult codeStencil(const frontend::CompilationInput& input,
-                        const frontend::CompilationStencil& stencil);
-
   XDRResult codeStencil(const RefPtr<ScriptSource>& source,
                         const frontend::CompilationStencil& stencil);
+  friend class XDRIncrementalStencilEncoder;
+
+ public:
+  XDRResult codeStencil(const frontend::CompilationStencil& stencil);
 };
 
 class XDRIncrementalStencilEncoder {
