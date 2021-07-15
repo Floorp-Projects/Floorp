@@ -39,10 +39,9 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class DrawableMenuIconViewHoldersTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     private lateinit var parent: ConstraintLayout
     private lateinit var layoutInflater: LayoutInflater

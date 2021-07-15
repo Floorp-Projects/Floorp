@@ -45,10 +45,8 @@ class TabCounterToolbarButtonTest {
 
     private lateinit var lifecycleOwner: MockedLifecycleOwner
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     internal class MockedLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
         val lifecycleRegistry = LifecycleRegistry(this).apply {

@@ -45,10 +45,9 @@ import org.junit.runner.RunWith
 @kotlinx.coroutines.ExperimentalCoroutinesApi
 class WebExtensionBrowserMenuTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Before
     fun setup() {

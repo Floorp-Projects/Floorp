@@ -26,10 +26,8 @@ private const val SELECTED_TAB_ID = "1"
 
 class SearchFeatureTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     private lateinit var performSearch: (SearchRequest, String) -> Unit
     private lateinit var store: BrowserStore

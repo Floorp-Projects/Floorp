@@ -44,21 +44,9 @@ import kotlin.coroutines.CoroutineContext
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class FragmentKtTest {
-    private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
-
-    @Before
-    fun setup() {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @After
-    fun teardown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
-    }
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     @Synchronized

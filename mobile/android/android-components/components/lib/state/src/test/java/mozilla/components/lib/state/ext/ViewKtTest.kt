@@ -30,10 +30,9 @@ import java.util.concurrent.TimeUnit
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class ViewKtTest {
-    private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     @Synchronized

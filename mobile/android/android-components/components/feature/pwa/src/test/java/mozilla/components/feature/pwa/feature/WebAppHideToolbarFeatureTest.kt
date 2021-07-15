@@ -41,11 +41,10 @@ import org.junit.runner.RunWith
 class WebAppHideToolbarFeatureTest {
 
     private val customTabId = "custom-id"
-    private val testDispatcher = TestCoroutineDispatcher()
     private var toolbarVisible = false
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Before
     fun setup() {

@@ -48,12 +48,12 @@ class ShareDownloadFeatureTest {
     // When creating new directories use class' context property#cacheDir as a parent
     // This will ensure the effectiveness of @After. Otherwise leftover files may be left on the machine running tests.
 
-    private val testDispatcher = TestCoroutineDispatcher()
     private lateinit var context: Context
     private val testCacheDirName = "testCacheDir"
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Before
     fun setup() {

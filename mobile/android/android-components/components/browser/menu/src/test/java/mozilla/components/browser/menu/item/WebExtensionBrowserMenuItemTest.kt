@@ -37,10 +37,9 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class WebExtensionBrowserMenuItemTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `web extension menu item is visible by default`() {

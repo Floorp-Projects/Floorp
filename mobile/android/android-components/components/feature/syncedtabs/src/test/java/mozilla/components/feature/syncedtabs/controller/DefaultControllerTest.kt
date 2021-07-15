@@ -36,21 +36,9 @@ class DefaultControllerTest {
     private val storage: SyncedTabsStorage = mock()
     private val accountManager: FxaAccountManager = mock()
     private val view: SyncedTabsView = mock()
-    private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
-
-    @Before
-    fun setup() {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @After
-    fun teardown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
-    }
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     fun `update view only when no account available`() = runBlockingTest {

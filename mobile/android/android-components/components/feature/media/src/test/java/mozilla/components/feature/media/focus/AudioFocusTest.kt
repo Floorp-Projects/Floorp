@@ -6,7 +6,6 @@ package mozilla.components.feature.media.focus
 
 import android.media.AudioManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.MediaSessionState
 import mozilla.components.browser.state.state.createTab
@@ -29,11 +28,10 @@ import org.mockito.Mockito.verifyNoMoreInteractions
 
 @RunWith(AndroidJUnit4::class)
 class AudioFocusTest {
-    private val dispatcher: TestCoroutineDispatcher = TestCoroutineDispatcher()
     private lateinit var audioManager: AudioManager
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(dispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Before
     fun setUp() {

@@ -23,10 +23,9 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class WebExtensionPopupFeatureTest {
-    private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     fun `observes and forwards request to open popup`() {

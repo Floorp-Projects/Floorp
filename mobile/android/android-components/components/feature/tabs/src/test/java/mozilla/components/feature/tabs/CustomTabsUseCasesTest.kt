@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.tabs
 
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.createCustomTab
@@ -26,15 +25,13 @@ import org.mockito.ArgumentMatchers.anyBoolean
 
 class CustomTabsUseCasesTest {
 
-    private val dispatcher: TestCoroutineDispatcher = TestCoroutineDispatcher()
-
     private lateinit var store: BrowserStore
     private lateinit var tabsUseCases: CustomTabsUseCases
     private lateinit var engine: Engine
     private lateinit var engineSession: EngineSession
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(dispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Before
     fun setup() {

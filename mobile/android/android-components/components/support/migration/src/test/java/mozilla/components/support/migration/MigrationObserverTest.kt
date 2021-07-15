@@ -26,10 +26,9 @@ import org.mockito.Mockito.verifyZeroInteractions
 @RunWith(AndroidJUnit4::class)
 class MigrationObserverTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `listener is invoked on state observation`() {

@@ -43,15 +43,9 @@ class ConstellationObserverTest {
     private val context: Context = mock()
     private val account: OAuthAccount = mock()
     private val crashReporter: CrashReporting = mock()
-    private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
-
-    @Before
-    fun setup() {
-        Dispatchers.setMain(testDispatcher)
-    }
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     fun `do nothing if subscription has not expired`() {

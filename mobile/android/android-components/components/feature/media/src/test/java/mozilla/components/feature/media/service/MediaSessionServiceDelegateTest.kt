@@ -5,7 +5,6 @@
 package mozilla.components.feature.media.service
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.MediaSessionState
@@ -17,9 +16,12 @@ import mozilla.components.feature.media.session.MediaSessionCallback
 import mozilla.components.support.test.any
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext import mozilla.components.support.test.rule.MainCoroutineRule import org.junit.Rule import org.junit.Test
+import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.never
@@ -29,10 +31,10 @@ import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class MediaSessionServiceDelegateTest {
-    private val dispatcher: TestCoroutineDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(dispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `media session state starts service in foreground`() {

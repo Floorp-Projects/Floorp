@@ -24,8 +24,6 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 class ContainerToolbarFeatureTest {
-    private val testDispatcher = TestCoroutineDispatcher()
-
     // Test container
     private val container = ContainerState(
         contextId = "1",
@@ -35,7 +33,8 @@ class ContainerToolbarFeatureTest {
     )
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `render a container action from browser state`() {

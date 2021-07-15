@@ -33,21 +33,9 @@ import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class ThumbnailLoaderTest {
-    private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
-
-    @Before
-    fun setup() {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @After
-    fun teardown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
-    }
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     fun `automatically load thumbnails into image view`() {

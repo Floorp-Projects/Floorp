@@ -30,10 +30,9 @@ import org.mockito.Mockito.verify
 @ExperimentalCoroutinesApi
 class UnsupportedAddonsAdapterTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `removing successfully notifies the adapter item changed`() {

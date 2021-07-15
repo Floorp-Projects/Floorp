@@ -33,21 +33,9 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class TabsToolbarFeatureTest {
-    private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
-
-    @Before
-    fun setup() {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @After
-    fun teardown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
-    }
+    val coroutinesTestRule = MainCoroutineRule()
 
     private val showTabs: () -> Unit = mock()
     private val tabCounterMenu: TabCounterMenu = mock()

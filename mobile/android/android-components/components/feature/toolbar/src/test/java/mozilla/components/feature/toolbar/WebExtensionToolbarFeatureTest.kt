@@ -39,10 +39,10 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 class WebExtensionToolbarFeatureTest {
-    private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `render web extension actions from browser state`() {
