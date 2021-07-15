@@ -1472,7 +1472,7 @@ bool nsWindow::IsPopupInLayoutPopupChain(
 // Hide popups which are not in popup chain.
 void nsWindow::WaylandPopupHierarchyHideByLayout(
     nsTArray<nsIWidget*>* aLayoutWidgetHierarchy) {
-  LOG_POPUP(("nsWindow::WaylandPopupHierarchyMarkByLayout"));
+  LOG_POPUP(("nsWindow::WaylandPopupHierarchyHideByLayout"));
   MOZ_ASSERT(mWaylandToplevel == nullptr, "Should be called on toplevel only!");
 
   // Hide all popups which are not in layout popup chain
@@ -1491,8 +1491,9 @@ void nsWindow::WaylandPopupHierarchyHideByLayout(
 }
 
 // Mark popups outside of layout hierarchy
-void nsWindow::WaylandPopupHierarchyMarkByLayout(
+void nsWindow::WaylandPopupHierarchyValidateByLayout(
     nsTArray<nsIWidget*>* aLayoutWidgetHierarchy) {
+  LOG_POPUP(("nsWindow::WaylandPopupHierarchyValidateByLayout"));
   nsWindow* popup = mWaylandPopupNext;
   while (popup) {
     if (popup->mPopupType == ePopupTypeTooltip) {
@@ -1835,7 +1836,8 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
   GetLayoutPopupWidgetChain(&layoutPopupWidgetChain);
 
   mWaylandToplevel->WaylandPopupHierarchyHideByLayout(&layoutPopupWidgetChain);
-  mWaylandToplevel->WaylandPopupHierarchyMarkByLayout(&layoutPopupWidgetChain);
+  mWaylandToplevel->WaylandPopupHierarchyValidateByLayout(
+      &layoutPopupWidgetChain);
 
   // Now we have Popup hierarchy complete.
   // Find first unchanged (and still open) popup to start with hierarchy
@@ -1883,7 +1885,8 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
   }
 
   GetLayoutPopupWidgetChain(&layoutPopupWidgetChain);
-  mWaylandToplevel->WaylandPopupHierarchyMarkByLayout(&layoutPopupWidgetChain);
+  mWaylandToplevel->WaylandPopupHierarchyValidateByLayout(
+      &layoutPopupWidgetChain);
 
   changedPopup->WaylandPopupHierarchyCalculatePositions();
 
