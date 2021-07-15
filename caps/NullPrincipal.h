@@ -66,7 +66,10 @@ class NullPrincipal final : public BasePrincipal {
 
   static already_AddRefed<NullPrincipal> CreateWithoutOriginAttributes();
 
-  static already_AddRefed<nsIURI> CreateURI();
+  // Generates a new unique `moz-nullprincipal:` URI. If `aPrecursor` is
+  // specified, it will be included in the generated URI as the null principal's
+  // precursor.
+  static already_AddRefed<nsIURI> CreateURI(nsIPrincipal* aPrecursor = nullptr);
 
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
 
@@ -109,13 +112,13 @@ class NullPrincipal final : public BasePrincipal {
   FRIEND_TEST(OriginAttributes, NullPrincipal);
 
   // If aIsFirstParty is true, this NullPrincipal will be initialized based on
-  // the aOriginAttributes with FirstPartyDomain set to a unique value.
-  // This value is generated from mURI.path, with ".mozilla" appended at the
-  // end. aURI is used for testing purpose to assign specific UUID rather than
-  // random generated one.
+  // the aOriginAttributes with FirstPartyDomain set to a unique value.  This
+  // value is generated from mURI.filePath, with ".mozilla" appended at the end.
+  // aURI is used for testing purpose to assign a specific UUID rather than a
+  // randomly generated one.
   static already_AddRefed<NullPrincipal> CreateInternal(
       const OriginAttributes& aOriginAttributes, bool aIsFirstParty,
-      nsIURI* aURI = nullptr);
+      nsIURI* aURI = nullptr, nsIPrincipal* aPrecursor = nullptr);
 };
 
 }  // namespace mozilla
