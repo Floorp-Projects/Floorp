@@ -33,6 +33,11 @@ inline MsaaAccessible* sdnAccessible::GetMsaa() {
   // may preserve object identity.
   AccessibleWrap* wrap = static_cast<AccessibleWrap*>(
       document->GetAccessibleEvenIfNotInMap(mNode));
+
+  if (!wrap) {
+    return nullptr;
+  }
+
   wrap->GetNativeInterface(getter_AddRefs(mMsaa));
   return mMsaa;
 }
