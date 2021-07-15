@@ -209,7 +209,8 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   template <typename CharT>
   static BigInt* parseLiteral(JSContext* cx,
                               const mozilla::Range<const CharT> chars,
-                              bool* haveParseError);
+                              bool* haveParseError,
+                              js::gc::InitialHeap heap = js::gc::DefaultHeap);
   template <typename CharT>
   static BigInt* parseLiteralDigits(
       JSContext* cx, const mozilla::Range<const CharT> chars, unsigned radix,
