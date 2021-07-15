@@ -1573,15 +1573,17 @@ void nsWindow::WaylandPopupHierarchyCalculatePositions() {
                (int)(popup->mBounds.width / FractionalScaleFactor()),
                (int)(popup->mBounds.height / FractionalScaleFactor())));
 #ifdef MOZ_LOGGING
-    nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
-    if (popupFrame) {
-      auto pos = popupFrame->GetPosition();
-      auto size = popupFrame->GetSize();
-      int32_t p2a =
-          AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
-      LOG_POPUP(("  popup [%p] layout [%d, %d] -> [%d x %d]", popup,
-                 pos.x / p2a, pos.y / p2a, size.width / p2a,
-                 size.height / p2a));
+    if (LOG_ENABLED()) {
+      nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
+      if (popupFrame) {
+        auto pos = popupFrame->GetPosition();
+        auto size = popupFrame->GetSize();
+        int32_t p2a =
+            AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
+        LOG_POPUP(("  popup [%p] layout [%d, %d] -> [%d x %d]", popup,
+                   pos.x / p2a, pos.y / p2a, size.width / p2a,
+                   size.height / p2a));
+      }
     }
 #endif
     if (popup->mPopupContextMenu && !popup->mPopupAnchored) {
@@ -1712,6 +1714,10 @@ void nsWindow::GetParentPosition(int* aX, int* aY) {
 
 #ifdef MOZ_LOGGING
 void nsWindow::LogPopupHierarchy() {
+  if (!LOG_ENABLED()) {
+    return;
+  }
+
   LOG_POPUP(("Widget Popup Hierarchy:\n"));
   if (!mWaylandToplevel->mWaylandPopupNext) {
     LOG_POPUP(("    Empty\n"));
