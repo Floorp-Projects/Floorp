@@ -1,6 +1,7 @@
 extern crate libc;
 
-use std::os::unix::io::RawFd;
+use std::fs::File;
+use std::os::unix::io::{AsRawFd, RawFd};
 use std::{io, ptr};
 
 #[cfg(any(
@@ -71,53 +72,53 @@ impl MmapInner {
         }
     }
 
-    pub fn map(len: usize, file: RawFd, offset: u64, populate: bool) -> io::Result<MmapInner> {
+    pub fn map(len: usize, file: &File, offset: u64, populate: bool) -> io::Result<MmapInner> {
         let populate = if populate { MAP_POPULATE } else { 0 };
         MmapInner::new(
             len,
             libc::PROT_READ,
             libc::MAP_SHARED | populate,
-            file,
+            file.as_raw_fd(),
             offset,
         )
     }
 
-    pub fn map_exec(len: usize, file: RawFd, offset: u64, populate: bool) -> io::Result<MmapInner> {
+    pub fn map_exec(len: usize, file: &File, offset: u64, populate: bool) -> io::Result<MmapInner> {
         let populate = if populate { MAP_POPULATE } else { 0 };
         MmapInner::new(
             len,
             libc::PROT_READ | libc::PROT_EXEC,
             libc::MAP_SHARED | populate,
-            file,
+            file.as_raw_fd(),
             offset,
         )
     }
 
-    pub fn map_mut(len: usize, file: RawFd, offset: u64, populate: bool) -> io::Result<MmapInner> {
+    pub fn map_mut(len: usize, file: &File, offset: u64, populate: bool) -> io::Result<MmapInner> {
         let populate = if populate { MAP_POPULATE } else { 0 };
         MmapInner::new(
             len,
             libc::PROT_READ | libc::PROT_WRITE,
             libc::MAP_SHARED | populate,
-            file,
+            file.as_raw_fd(),
             offset,
         )
     }
 
-    pub fn map_copy(len: usize, file: RawFd, offset: u64, populate: bool) -> io::Result<MmapInner> {
+    pub fn map_copy(len: usize, file: &File, offset: u64, populate: bool) -> io::Result<MmapInner> {
         let populate = if populate { MAP_POPULATE } else { 0 };
         MmapInner::new(
             len,
             libc::PROT_READ | libc::PROT_WRITE,
             libc::MAP_PRIVATE | populate,
-            file,
+            file.as_raw_fd(),
             offset,
         )
     }
 
     pub fn map_copy_read_only(
         len: usize,
-        file: RawFd,
+        file: &File,
         offset: u64,
         populate: bool,
     ) -> io::Result<MmapInner> {
@@ -126,7 +127,7 @@ impl MmapInner {
             len,
             libc::PROT_READ,
             libc::MAP_PRIVATE | populate,
-            file,
+            file.as_raw_fd(),
             offset,
         )
     }
@@ -231,17 +232,4 @@ unsafe impl Send for MmapInner {}
 
 fn page_size() -> usize {
     unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize }
-}
-
-pub fn file_len(file: RawFd) -> io::Result<usize> {
-    unsafe {
-        let mut stat: libc::stat = std::mem::zeroed();
-
-        let result = libc::fstat(file, &mut stat);
-        if result == 0 {
-            Ok(stat.st_size as usize)
-        } else {
-            Err(io::Error::last_os_error())
-        }
-    }
 }
