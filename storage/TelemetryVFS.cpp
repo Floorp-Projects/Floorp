@@ -78,7 +78,7 @@ class IOThreadAutoTimer {
       IOInterposeObserver::Operation aOp = IOInterposeObserver::OpNone)
       : start(TimeStamp::Now()),
         id(aId)
-#if defined(MOZ_GECKO_PROFILER) && !defined(XP_WIN)
+#if !defined(XP_WIN)
         ,
         op(aOp)
 #endif
@@ -94,7 +94,7 @@ class IOThreadAutoTimer {
   explicit IOThreadAutoTimer(IOInterposeObserver::Operation aOp)
       : start(TimeStamp::Now()),
         id(Telemetry::HistogramCount)
-#if defined(MOZ_GECKO_PROFILER) && !defined(XP_WIN)
+#if !defined(XP_WIN)
         ,
         op(aOp)
 #endif
@@ -111,7 +111,7 @@ class IOThreadAutoTimer {
     // We don't report SQLite I/O on Windows because we have a comprehensive
     // mechanism for intercepting I/O on that platform that captures a superset
     // of the data captured here.
-#if defined(MOZ_GECKO_PROFILER) && !defined(XP_WIN)
+#if !defined(XP_WIN)
     if (IOInterposer::IsObservedOperation(op)) {
       const char* main_ref = "sqlite-mainthread";
       const char* other_ref = "sqlite-otherthread";
@@ -122,13 +122,13 @@ class IOThreadAutoTimer {
       // Report observation
       IOInterposer::Report(ob);
     }
-#endif /* defined(MOZ_GECKO_PROFILER) && !defined(XP_WIN) */
+#endif /* !defined(XP_WIN) */
   }
 
  private:
   const TimeStamp start;
   const Telemetry::HistogramID id;
-#if defined(MOZ_GECKO_PROFILER) && !defined(XP_WIN)
+#if !defined(XP_WIN)
   IOInterposeObserver::Operation op;
 #endif
 };

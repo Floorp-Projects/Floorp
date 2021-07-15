@@ -23,25 +23,22 @@ namespace mozilla {
 // path.
 class AudioThreadRegistry final {
  public:
-  AudioThreadRegistry()
-#ifdef MOZ_GECKO_PROFILER
-      : mThreadIds("AudioThreadId")
-#endif  // MOZ_GECKO_PROFILER
-  {
-  }
+  AudioThreadRegistry() : mThreadIds("AudioThreadId") {}
 
-#ifdef MOZ_GECKO_PROFILER
   ~AudioThreadRegistry() {
     // It would be nice to be able to assert that all threads have be
     // unregistered, but we can't: it's legal to suspend an audio stream, so
     // that the callback isn't called, and then immediately destroy it.
   }
-#endif  // MOZ_GECKO_PROFILER
 
   // This is intended to be called when an object starts an audio callback
   // thread.
   void Register(int aThreadId) {
-#ifdef MOZ_GECKO_PROFILER
+    if (aThreadId == 0) {
+      // profiler_current_thread_id returns 0 on unsupported platforms.
+      return;
+    }
+
     auto threadIds = mThreadIds.Lock();
     for (uint32_t i = 0; i < threadIds->Length(); i++) {
       if ((*threadIds)[i].mId == aThreadId) {
@@ -54,12 +51,15 @@ class AudioThreadRegistry final {
     tuc.mUserCount = 1;
     threadIds->AppendElement(tuc);
     PROFILER_REGISTER_THREAD("NativeAudioCallback");
-#endif  // MOZ_GECKO_PROFILER
   }
 
   // This is intended to be called when an object stops an audio callback thread
   void Unregister(int aThreadId) {
-#ifdef MOZ_GECKO_PROFILER
+    if (aThreadId == 0) {
+      // profiler_current_thread_id returns 0 on unsupported platforms.
+      return;
+    }
+
     auto threadIds = mThreadIds.Lock();
     for (uint32_t i = 0; i < threadIds->Length(); i++) {
       if ((*threadIds)[i].mId == aThreadId) {
@@ -74,7 +74,6 @@ class AudioThreadRegistry final {
       }
     }
     MOZ_ASSERT(false);
-#endif  // MOZ_GECKO_PROFILER
   }
 
  private:
@@ -83,13 +82,11 @@ class AudioThreadRegistry final {
   AudioThreadRegistry(AudioThreadRegistry&&) = delete;
   AudioThreadRegistry& operator=(AudioThreadRegistry&&) = delete;
 
-#ifdef MOZ_GECKO_PROFILER
   struct ThreadUserCount {
     int mId;  // from profiler_current_thread_id
     int mUserCount;
   };
   DataMutex<nsTArray<ThreadUserCount>> mThreadIds;
-#endif  // MOZ_GECKO_PROFILER
 };
 
 }  // namespace mozilla
