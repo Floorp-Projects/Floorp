@@ -3,6 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 config = {
-    "stage_platform": "android-arm",
-    "src_mozconfig": "mobile/android/config/mozconfigs/android-arm/profile-generate",
+    "stage_platform": "android-x86",
+    "src_mozconfig": "mobile/android/config/mozconfigs/android-x86/profile-generate",
 }
