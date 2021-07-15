@@ -180,7 +180,7 @@ void moz_container_wayland_init(MozContainerWayland* container) {
   container->opaque_region_subtract_corners = false;
   container->opaque_region_used = false;
   container->surface_needs_clear = true;
-  container->container_remapped = true;
+  container->container_remapped = false;
   container->subsurface_dx = 0;
   container->subsurface_dy = 0;
   container->before_first_size_alloc = true;
@@ -295,6 +295,7 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
   g_clear_pointer(&wl_container->viewport, wp_viewport_destroy);
   g_clear_pointer(&wl_container->frame_callback_handler, wl_callback_destroy);
 
+  wl_container->initial_draw_cbs.clear();
   wl_container->surface_needs_clear = true;
   wl_container->ready_to_draw = false;
   wl_container->buffer_scale = 1;
@@ -603,6 +604,13 @@ gboolean moz_container_wayland_get_and_reset_remapped(MozContainer* container) {
   int ret = container->wl_container.container_remapped;
   container->wl_container.container_remapped = false;
   return ret;
+}
+
+gboolean moz_container_wayland_is_inactive(MozContainer* container) {
+  MozContainerWayland* wl_container = &container->wl_container;
+  return !wl_container->ready_to_draw &&
+         !wl_container->frame_callback_handler &&
+         wl_container->initial_draw_cbs.size() == 0;
 }
 
 void moz_container_wayland_update_opaque_region(MozContainer* container,
