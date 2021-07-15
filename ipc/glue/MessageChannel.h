@@ -553,24 +553,6 @@ class MessageChannel : HasResultCodes {
                        "not on worker thread!");
   }
 
-  // The "link" thread is either the I/O thread (ProcessLink), the other
-  // actor's work thread (ThreadLink), or the worker thread (same-thread
-  // channels).
-  void AssertLinkThread() const {
-    if (mIsSameThreadChannel) {
-      // If we're a same-thread channel, we have to be on our worker
-      // thread.
-      AssertWorkerThread();
-      return;
-    }
-
-    // If we aren't a same-thread channel, our "link" thread is _not_ our
-    // worker thread!
-    MOZ_ASSERT(mWorkerThread, "Channel hasn't been opened yet");
-    MOZ_RELEASE_ASSERT(mWorkerThread && !mWorkerThread->IsOnCurrentThread(),
-                       "on worker thread but should not be!");
-  }
-
  private:
   class MessageTask : public CancelableRunnable,
                       public LinkedListElement<RefPtr<MessageTask>>,
