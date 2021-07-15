@@ -48,7 +48,7 @@ interface nsIProxyInfo : nsISupports
    * This attribute specifies flags that were used by nsIProxyProtocolService when
    * creating this ProxyInfo element.
    */
-  attribute unsigned long resolveFlags;
+  readonly attribute unsigned long resolveFlags;
 
   /**
    * Specifies a proxy username.

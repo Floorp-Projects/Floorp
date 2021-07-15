@@ -232,11 +232,14 @@ class nsAsyncResolveRequest final : public nsIRunnable,
   };
 
   void EnsureResolveFlagsMatch() {
-    nsCOMPtr<nsIProxyInfo> proxyInfo = mProxyInfo;
-    while (proxyInfo) {
-      proxyInfo->SetResolveFlags(mResolveFlags);
-      proxyInfo->GetFailoverProxy(getter_AddRefs(proxyInfo));
+    nsCOMPtr<nsProxyInfo> pi = do_QueryInterface(mProxyInfo);
+    if (!pi || pi->ResolveFlags() == mResolveFlags) {
+      return;
     }
+
+    nsCOMPtr<nsIProxyInfo> proxyInfo =
+        pi->CloneProxyInfoWithNewResolveFlags(mResolveFlags);
+    mProxyInfo.swap(proxyInfo);
   }
 
  public:
