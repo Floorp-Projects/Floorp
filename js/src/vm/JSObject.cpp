@@ -1719,8 +1719,8 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
   //
   // (2) The object is marked IsUsedAsPrototype. This implies the object may be
   //     participating in shape teleporting. To invalidate JIT ICs depending on
-  //     the proto chain being unchanged, set the UncacheableProto shape flag
-  //     for this object and objects on its proto chain.
+  //     the proto chain being unchanged, set the InvalidatedTeleporting shape
+  //     flag for this object and objects on its proto chain.
   //
   //     This flag disables future shape teleporting attempts, so next time this
   //     happens the loop below will be a no-op.
@@ -1739,8 +1739,8 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
   RootedObject pobj(cx, obj);
 
   while (pobj && pobj->is<NativeObject>()) {
-    if (!pobj->hasUncacheableProto()) {
-      if (!JSObject::setUncacheableProto(cx, pobj)) {
+    if (!pobj->hasInvalidatedTeleporting()) {
+      if (!JSObject::setInvalidatedTeleporting(cx, pobj)) {
         return false;
       }
     }
@@ -3218,8 +3218,8 @@ void JSObject::dump(js::GenericPrinter& out) const {
   if (obj->isUnqualifiedVarObj()) {
     out.put(" unqualified_varobj");
   }
-  if (obj->hasUncacheableProto()) {
-    out.put(" has_uncacheable_proto");
+  if (obj->hasInvalidatedTeleporting()) {
+    out.put(" invalidated_teleporting");
   }
   if (obj->hasStaticPrototype() && obj->staticPrototypeIsImmutable()) {
     out.put(" immutable_prototype");
