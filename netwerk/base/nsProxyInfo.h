@@ -60,6 +60,9 @@ class nsProxyInfo final : public nsIProxyInfo {
   static nsProxyInfo* DeserializeProxyInfo(
       const nsTArray<ProxyInfoCloneArgs>& aArgs);
 
+  already_AddRefed<nsProxyInfo> CloneProxyInfoWithNewResolveFlags(
+      uint32_t aResolveFlags);
+
  private:
   friend class nsProtocolProxyService;
 
