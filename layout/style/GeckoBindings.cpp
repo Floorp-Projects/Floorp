@@ -10,7 +10,6 @@
 
 #include "ChildIterator.h"
 #include "ErrorReporter.h"
-#include "GeckoProfiler.h"
 #include "gfxFontFeatures.h"
 #include "gfxTextRun.h"
 #include "imgLoader.h"
@@ -52,6 +51,7 @@
 #include "mozilla/Keyframe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ShadowParts.h"
 #include "mozilla/StaticPresData.h"
@@ -1559,7 +1559,6 @@ void Gecko_AddPropertyToSet(nsCSSPropertyIDSet* aPropertySet,
     ptr->~nsStyle##name();                                             \
   }
 
-#ifdef MOZ_GECKO_PROFILER
 void Gecko_Construct_AutoProfilerLabel(AutoProfilerLabel* aAutoLabel,
                                        JS::ProfilingCategoryPair aCatPair) {
   new (aAutoLabel) AutoProfilerLabel(
@@ -1571,7 +1570,6 @@ void Gecko_Construct_AutoProfilerLabel(AutoProfilerLabel* aAutoLabel,
 void Gecko_Destroy_AutoProfilerLabel(AutoProfilerLabel* aAutoLabel) {
   aAutoLabel->~AutoProfilerLabel();
 }
-#endif
 
 bool Gecko_DocumentRule_UseForPresentation(
     const Document* aDocument, const nsACString* aPattern,
