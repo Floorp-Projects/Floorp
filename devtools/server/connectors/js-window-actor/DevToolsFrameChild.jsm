@@ -386,9 +386,12 @@ class DevToolsFrameChild extends JSWindowActorChild {
   }
 
   receiveMessage(message) {
-    // All messages but "packet" one pass `browserId` and are expected
-    // to match shouldNotifyWindowGlobal result.
-    if (message.name != "DevToolsFrameParent:packet") {
+    // When debugging only a given tab, all messages but "packet" one pass `browserId`
+    // and are expected to match shouldNotifyWindowGlobal result.
+    if (
+      message.data.browserId &&
+      message.name != "DevToolsFrameParent:packet"
+    ) {
       const { browserId } = message.data;
       // Re-check here, just to ensure that both parent and content processes agree
       // on what should or should not be watched.
@@ -399,7 +402,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
         })
       ) {
         throw new Error(
-          "Mismatch between DevToolsFrameParent and DevToolsFrameChild  " +
+          "Mismatch between DevToolsFrameParent and DevToolsFrameChild " +
             (this.manager.browsingContext.browserId == browserId
               ? "window global shouldn't be notified (shouldNotifyWindowGlobal mismatch)"
               : `expected browsing context with browserId ${browserId}, but got ${this.manager.browsingContext.browserId}`)
