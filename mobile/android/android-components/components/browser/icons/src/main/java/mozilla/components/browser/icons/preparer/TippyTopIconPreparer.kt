@@ -6,6 +6,7 @@ package mozilla.components.browser.icons.preparer
 
 import android.content.Context
 import android.content.res.AssetManager
+import android.net.Uri
 import androidx.core.net.toUri
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.base.log.Log
@@ -17,6 +18,21 @@ import org.json.JSONException
 import org.json.JSONObject
 
 private const val LIST_FILE_PATH = "mozac.browser.icons/icons-top200.json"
+
+// Make sure domain added here have the corresponding image_url in icons-top200.json
+private val commonDomain = listOf("wikipedia.org")
+
+/**
+ * Returns the host's common domain if found, else null is returned
+ */
+private val Uri.hostWithCommonDomain: String?
+    get() {
+        val host = host ?: return null
+        for (domain in commonDomain) {
+            if (host.endsWith(domain)) return domain
+        }
+        return null
+    }
 
 /**
  * [IconPreprarer] implementation that looks up the host in our "tippy top" list. If it can find a match then it inserts
@@ -36,7 +52,7 @@ class TippyTopIconPreparer(
             return request
         }
 
-        val host = request.url.toUri().hostWithoutCommonPrefixes
+        val host = uri.hostWithCommonDomain ?: uri.hostWithoutCommonPrefixes
 
         return if (host != null && iconMap.containsKey(host)) {
             val resource = IconRequest.Resource(

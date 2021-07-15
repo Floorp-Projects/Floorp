@@ -216,4 +216,59 @@ class TippyTopIconPreparerTest {
         assertEquals("https://images-eu.ssl-images-amazon.com/images/G/29/anywhere/a_smile_196x196._CB368246716_.png", resource.url)
         assertEquals(IconRequest.Resource.Type.TIPPY_TOP, resource.type)
     }
+
+    @Test
+    fun `WHEN url is Wikipedia THEN prefix is ignored`() {
+        val preparer = TippyTopIconPreparer(testContext.assets)
+
+        var request = IconRequest("https://www.wikipedia.org")
+        assertEquals(0, request.resources.size)
+
+        var preparedRequest = preparer.prepare(testContext, request)
+        assertEquals(1, preparedRequest.resources.size)
+
+        var resource = preparedRequest.resources[0]
+
+        assertEquals("https://www.wikipedia.org/static/apple-touch/wikipedia.png", resource.url)
+        assertEquals(IconRequest.Resource.Type.TIPPY_TOP, resource.type)
+
+        request = IconRequest("https://en.wikipedia.org")
+        assertEquals(0, request.resources.size)
+
+        preparedRequest = preparer.prepare(testContext, request)
+        assertEquals(1, preparedRequest.resources.size)
+
+        resource = preparedRequest.resources[0]
+
+        assertEquals("https://www.wikipedia.org/static/apple-touch/wikipedia.png", resource.url)
+        assertEquals(IconRequest.Resource.Type.TIPPY_TOP, resource.type)
+
+        request = IconRequest("https://de.wikipedia.org")
+        assertEquals(0, request.resources.size)
+
+        preparedRequest = preparer.prepare(testContext, request)
+        assertEquals(1, preparedRequest.resources.size)
+
+        resource = preparedRequest.resources[0]
+
+        assertEquals("https://www.wikipedia.org/static/apple-touch/wikipedia.png", resource.url)
+        assertEquals(IconRequest.Resource.Type.TIPPY_TOP, resource.type)
+
+        request = IconRequest("https://de.m.wikipedia.org")
+        assertEquals(0, request.resources.size)
+
+        preparedRequest = preparer.prepare(testContext, request)
+        assertEquals(1, preparedRequest.resources.size)
+
+        resource = preparedRequest.resources[0]
+
+        assertEquals("https://www.wikipedia.org/static/apple-touch/wikipedia.png", resource.url)
+        assertEquals(IconRequest.Resource.Type.TIPPY_TOP, resource.type)
+
+        request = IconRequest("https://abc.wikipedia.org.com")
+        assertEquals(0, request.resources.size)
+
+        preparedRequest = preparer.prepare(testContext, request)
+        assertEquals(0, preparedRequest.resources.size)
+    }
 }
