@@ -86,10 +86,11 @@ deb8-gcc-7:
         using: debian-package
         dist: jessie
         dsc:
-            url: http://snapshot.debian.org/archive/debian/20180125T222959Z/pool/main/g/gcc-7/gcc-7_7.3.0-1.dsc
-            sha256: b4f37b2075a68e2c7ab65834bc944640f28cd05df5c87ddbee756e1173e09898
+            url: http://snapshot.debian.org/archive/debian/20200323T214010Z/pool/main/g/gcc-7/gcc-7_7.5.0-6.dsc
+            sha256: 94f2c35ddcf84a62ae152f2f290be2bba1263157b3970776d0c8b43dec4e6fd5
         # autoconf2.64 and quilt necessary to run the `debian/rules control` command to
         # generate an updated debian/control.
+        # uncommenting `with_common_libs` makes the packaging create the libstdc++6 package.
         # `libstdcxx_abi = new` overrides the default that disables the new ABI on jessie
         # `BINUTILSBDV=2.25-3~` and `ISL_BUILD_DEP=libisl-dev,` override wrong versions
         # in build dependencies for jessie.
@@ -98,6 +99,7 @@ deb8-gcc-7:
         # `NT=` overrides the use of `:native` which is not supported by dpkg on jessie.
         pre-build-command: >-
             apt install autoconf2.64 quilt &&
+            sed -i 's/#with_common_libs/with_common_libs/' debian/rules.defs &&
             echo libstdcxx_abi = new >> debian/rules.defs &&
             echo BINUTILSBDV=2.25-3~ >> debian/rules.conf &&
             echo ISL_BUILD_DEP=libisl-dev, >> debian/rules.conf &&
@@ -118,10 +120,11 @@ deb8-32-gcc-7:
         using: debian-package
         dist: jessie
         dsc:
-            url: http://snapshot.debian.org/archive/debian/20180125T222959Z/pool/main/g/gcc-7/gcc-7_7.3.0-1.dsc
-            sha256: b4f37b2075a68e2c7ab65834bc944640f28cd05df5c87ddbee756e1173e09898
+            url: http://snapshot.debian.org/archive/debian/20200323T214010Z/pool/main/g/gcc-7/gcc-7_7.5.0-6.dsc
+            sha256: 94f2c35ddcf84a62ae152f2f290be2bba1263157b3970776d0c8b43dec4e6fd5
         pre-build-command: >-
             apt install autoconf2.64 quilt &&
+            sed -i 's/#with_common_libs/with_common_libs/' debian/rules.defs &&
             echo libstdcxx_abi = new >> debian/rules.defs &&
             echo GCC_MULTILIB_BUILD_DEP='$(DPKG_BUILD_DEP)' >> debian/rules.conf &&
             echo BINUTILSBDV=2.25-3~ >> debian/rules.conf &&
