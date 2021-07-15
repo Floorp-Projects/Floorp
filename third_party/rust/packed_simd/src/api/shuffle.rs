@@ -79,20 +79,18 @@ macro_rules! shuffle {
     ($vec0:expr, $vec1:expr, [$l0:expr, $l1:expr]) => {{
         #[allow(unused_unsafe)]
         unsafe {
-            $crate::Simd($crate::__shuffle_vector2(
+            $crate::Simd($crate::__shuffle_vector2::<{[$l0, $l1]}, _, _>(
                 $vec0.0,
                 $vec1.0,
-                [$l0, $l1],
             ))
         }
     }};
     ($vec0:expr, $vec1:expr, [$l0:expr, $l1:expr, $l2:expr, $l3:expr]) => {{
         #[allow(unused_unsafe)]
         unsafe {
-            $crate::Simd($crate::__shuffle_vector4(
+            $crate::Simd($crate::__shuffle_vector4::<{[$l0, $l1, $l2, $l3]}, _, _>(
                 $vec0.0,
                 $vec1.0,
-                [$l0, $l1, $l2, $l3],
             ))
         }
     }};
@@ -101,10 +99,9 @@ macro_rules! shuffle {
       $l4:expr, $l5:expr, $l6:expr, $l7:expr]) => {{
         #[allow(unused_unsafe)]
         unsafe {
-            $crate::Simd($crate::__shuffle_vector8(
+            $crate::Simd($crate::__shuffle_vector8::<{[$l0, $l1, $l2, $l3, $l4, $l5, $l6, $l7]}, _, _>(
                 $vec0.0,
                 $vec1.0,
-                [$l0, $l1, $l2, $l3, $l4, $l5, $l6, $l7],
             ))
         }
     }};
@@ -115,13 +112,14 @@ macro_rules! shuffle {
       $l12:expr, $l13:expr, $l14:expr, $l15:expr]) => {{
         #[allow(unused_unsafe)]
         unsafe {
-            $crate::Simd($crate::__shuffle_vector16(
-                $vec0.0,
-                $vec1.0,
+            $crate::Simd($crate::__shuffle_vector16::<{
                 [
                     $l0, $l1, $l2, $l3, $l4, $l5, $l6, $l7, $l8, $l9, $l10,
                     $l11, $l12, $l13, $l14, $l15,
-                ],
+                ]
+            }, _, _>(
+                $vec0.0,
+                $vec1.0,
             ))
         }
     }};
@@ -136,15 +134,16 @@ macro_rules! shuffle {
       $l28:expr, $l29:expr, $l30:expr, $l31:expr]) => {{
         #[allow(unused_unsafe)]
         unsafe {
-            $crate::Simd($crate::__shuffle_vector32(
-                $vec0.0,
-                $vec1.0,
+            $crate::Simd($crate::__shuffle_vector32::<{
                 [
                     $l0, $l1, $l2, $l3, $l4, $l5, $l6, $l7, $l8, $l9, $l10,
                     $l11, $l12, $l13, $l14, $l15, $l16, $l17, $l18, $l19,
                     $l20, $l21, $l22, $l23, $l24, $l25, $l26, $l27, $l28,
                     $l29, $l30, $l31,
-                ],
+                ]
+            }, _, _>(
+                $vec0.0,
+                $vec1.0,
             ))
         }
     }};
@@ -167,18 +166,17 @@ macro_rules! shuffle {
       $l60:expr, $l61:expr, $l62:expr, $l63:expr]) => {{
         #[allow(unused_unsafe)]
         unsafe {
-            $crate::Simd($crate::__shuffle_vector64(
+            $crate::Simd($crate::__shuffle_vector64::<{[
+                $l0, $l1, $l2, $l3, $l4, $l5, $l6, $l7, $l8, $l9, $l10,
+                $l11, $l12, $l13, $l14, $l15, $l16, $l17, $l18, $l19,
+                $l20, $l21, $l22, $l23, $l24, $l25, $l26, $l27, $l28,
+                $l29, $l30, $l31, $l32, $l33, $l34, $l35, $l36, $l37,
+                $l38, $l39, $l40, $l41, $l42, $l43, $l44, $l45, $l46,
+                $l47, $l48, $l49, $l50, $l51, $l52, $l53, $l54, $l55,
+                $l56, $l57, $l58, $l59, $l60, $l61, $l62, $l63,
+            ]}, _, _>(
                 $vec0.0,
                 $vec1.0,
-                [
-                    $l0, $l1, $l2, $l3, $l4, $l5, $l6, $l7, $l8, $l9, $l10,
-                    $l11, $l12, $l13, $l14, $l15, $l16, $l17, $l18, $l19,
-                    $l20, $l21, $l22, $l23, $l24, $l25, $l26, $l27, $l28,
-                    $l29, $l30, $l31, $l32, $l33, $l34, $l35, $l36, $l37,
-                    $l38, $l39, $l40, $l41, $l42, $l43, $l44, $l45, $l46,
-                    $l47, $l48, $l49, $l50, $l51, $l52, $l53, $l54, $l55,
-                    $l56, $l57, $l58, $l59, $l60, $l61, $l62, $l63,
-                ],
             ))
         }
      }};

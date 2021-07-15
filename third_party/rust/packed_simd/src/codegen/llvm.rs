@@ -7,52 +7,73 @@ use crate::sealed::Simd;
 
 // Shuffle intrinsics: expanded in users' crates, therefore public.
 extern "platform-intrinsic" {
-    // FIXME: Passing this intrinsics an `idx` array with an index that is
-    // out-of-bounds will produce a monomorphization-time error.
-    // https://github.com/rust-lang-nursery/packed_simd/issues/21
-    #[rustc_args_required_const(2)]
-    pub fn simd_shuffle2<T, U>(x: T, y: T, idx: [u32; 2]) -> U
-    where
-        T: Simd,
-        <T as Simd>::Element: Shuffle<[u32; 2], Output = U>;
-
-    #[rustc_args_required_const(2)]
-    pub fn simd_shuffle4<T, U>(x: T, y: T, idx: [u32; 4]) -> U
-    where
-        T: Simd,
-        <T as Simd>::Element: Shuffle<[u32; 4], Output = U>;
-
-    #[rustc_args_required_const(2)]
-    pub fn simd_shuffle8<T, U>(x: T, y: T, idx: [u32; 8]) -> U
-    where
-        T: Simd,
-        <T as Simd>::Element: Shuffle<[u32; 8], Output = U>;
-
-    #[rustc_args_required_const(2)]
-    pub fn simd_shuffle16<T, U>(x: T, y: T, idx: [u32; 16]) -> U
-    where
-        T: Simd,
-        <T as Simd>::Element: Shuffle<[u32; 16], Output = U>;
-
-    #[rustc_args_required_const(2)]
-    pub fn simd_shuffle32<T, U>(x: T, y: T, idx: [u32; 32]) -> U
-    where
-        T: Simd,
-        <T as Simd>::Element: Shuffle<[u32; 32], Output = U>;
-
-    #[rustc_args_required_const(2)]
-    pub fn simd_shuffle64<T, U>(x: T, y: T, idx: [u32; 64]) -> U
-    where
-        T: Simd,
-        <T as Simd>::Element: Shuffle<[u32; 64], Output = U>;
+    pub fn simd_shuffle2<T, U>(x: T, y: T, idx: [u32; 2]) -> U;
+    pub fn simd_shuffle4<T, U>(x: T, y: T, idx: [u32; 4]) -> U;
+    pub fn simd_shuffle8<T, U>(x: T, y: T, idx: [u32; 8]) -> U;
+    pub fn simd_shuffle16<T, U>(x: T, y: T, idx: [u32; 16]) -> U;
+    pub fn simd_shuffle32<T, U>(x: T, y: T, idx: [u32; 32]) -> U;
+    pub fn simd_shuffle64<T, U>(x: T, y: T, idx: [u32; 64]) -> U;
 }
 
-pub use self::simd_shuffle16 as __shuffle_vector16;
-pub use self::simd_shuffle2 as __shuffle_vector2;
-pub use self::simd_shuffle32 as __shuffle_vector32;
-pub use self::simd_shuffle4 as __shuffle_vector4;
-pub use self::simd_shuffle64 as __shuffle_vector64;
-pub use self::simd_shuffle8 as __shuffle_vector8;
+#[allow(clippy::missing_safety_doc)]
+#[inline]
+pub unsafe fn __shuffle_vector2<const IDX: [u32; 2], T, U>(x: T, y: T) -> U
+where
+    T: Simd,
+    <T as Simd>::Element: Shuffle<[u32; 2], Output = U>,
+{
+    simd_shuffle2(x, y, IDX)
+}
+
+#[allow(clippy::missing_safety_doc)]
+#[inline]
+pub unsafe fn __shuffle_vector4<const IDX: [u32; 4], T, U>(x: T, y: T) -> U
+where
+    T: Simd,
+    <T as Simd>::Element: Shuffle<[u32; 4], Output = U>,
+{
+    simd_shuffle4(x, y, IDX)
+}
+
+#[allow(clippy::missing_safety_doc)]
+#[inline]
+pub unsafe fn __shuffle_vector8<const IDX: [u32; 8], T, U>(x: T, y: T) -> U
+where
+    T: Simd,
+    <T as Simd>::Element: Shuffle<[u32; 8], Output = U>,
+{
+    simd_shuffle8(x, y, IDX)
+}
+
+#[allow(clippy::missing_safety_doc)]
+#[inline]
+pub unsafe fn __shuffle_vector16<const IDX: [u32; 16], T, U>(x: T, y: T) -> U
+where
+    T: Simd,
+    <T as Simd>::Element: Shuffle<[u32; 16], Output = U>,
+{
+    simd_shuffle16(x, y, IDX)
+}
+
+#[allow(clippy::missing_safety_doc)]
+#[inline]
+pub unsafe fn __shuffle_vector32<const IDX: [u32; 32], T, U>(x: T, y: T) -> U
+where
+    T: Simd,
+    <T as Simd>::Element: Shuffle<[u32; 32], Output = U>,
+{
+    simd_shuffle32(x, y, IDX)
+}
+
+#[allow(clippy::missing_safety_doc)]
+#[inline]
+pub unsafe fn __shuffle_vector64<const IDX: [u32; 64], T, U>(x: T, y: T) -> U
+where
+    T: Simd,
+    <T as Simd>::Element: Shuffle<[u32; 64], Output = U>,
+{
+    simd_shuffle64(x, y, IDX)
+}
 
 extern "platform-intrinsic" {
     crate fn simd_eq<T, U>(x: T, y: T) -> U;

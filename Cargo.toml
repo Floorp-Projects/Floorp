@@ -78,7 +78,7 @@ opt-level = 2
 chardetng = { git = "https://github.com/hsivonen/chardetng", rev="302c995f91f44cf26e77dc4758ad56c3ff0153ad" }
 chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
-packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="0917fe780032a6bbb23d71be545f9c1834128d75" }
+packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="6a16f954950401b92b4e220fbf2dfaf6f00e1fb2" }
 rlbox_lucet_sandbox = { git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/", rev="5c8e79048d3ff6f434109e19d4aee4ff8624d3d7" }
 nix = { git = "https://github.com/shravanrn/nix/", rev="4af6c367603869a30fddb5ffb0aba2b9477ba92e" }
 spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu5" }

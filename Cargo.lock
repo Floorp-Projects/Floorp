@@ -3521,7 +3521,7 @@ dependencies = [
 [[package]]
 name = "packed_simd"
 version = "0.3.4"
-source = "git+https://github.com/hsivonen/packed_simd?rev=0917fe780032a6bbb23d71be545f9c1834128d75#0917fe780032a6bbb23d71be545f9c1834128d75"
+source = "git+https://github.com/hsivonen/packed_simd?rev=6a16f954950401b92b4e220fbf2dfaf6f00e1fb2#6a16f954950401b92b4e220fbf2dfaf6f00e1fb2"
 dependencies = [
  "cfg-if 0.1.10",
 ]
