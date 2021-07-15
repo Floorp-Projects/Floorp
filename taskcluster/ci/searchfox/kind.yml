@@ -100,6 +100,7 @@ jobs:
                 - linux64-dump_syms
                 - linux64-lucetc
                 - macosx64-sdk-10.12
+                - sysroot-x86_64-linux-gnu
                 - wasi-sysroot
 
     win64-searchfox/debug:
@@ -148,6 +149,7 @@ jobs:
                 - linux64-wine
                 - linux64-liblowercase
                 - linux64-winchecksec
+                - sysroot-x86_64-linux-gnu
             fetch:
                 - nsis-3.01-win
                 - upx-3.95-win
@@ -191,3 +193,4 @@ jobs:
                 - linux64-sccache
                 - linux64-nasm
                 - linux64-node
+                - sysroot-x86_64-linux-gnu

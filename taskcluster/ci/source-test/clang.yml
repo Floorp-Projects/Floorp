@@ -97,6 +97,7 @@ external:
             - linux64-clang
             - linux64-clang-tidy-external
             - linux64-rust
+            - sysroot-x86_64-linux-gnu
     worker:
         artifacts:
             - type: file
@@ -121,6 +122,7 @@ linux64-non-unified:
             - linux64-clang
             - linux64-clang-tidy
             - linux64-rust
+            - sysroot-x86_64-linux-gnu
 
 macosx64-non-unified:
     description: Run syntax test for non-unified build on C/C++ files.
@@ -144,3 +146,4 @@ macosx64-non-unified:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - macosx64-sdk-10.12
+            - sysroot-x86_64-linux-gnu
