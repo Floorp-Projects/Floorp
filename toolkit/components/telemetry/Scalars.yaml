@@ -7566,6 +7566,18 @@ telemetry.test:
     products: ["firefox", "thunderbird"]
     record_in_processes: ["all"]
 
+  mirror_for_rate:
+    bug_numbers: [1694496]
+    description: >
+      Test only. This is a mirror probe for a Glean rate metric.
+      Keys are 'numerator' and 'denominator'.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails: [glean-team@mozilla.com]
+    products: ["firefox", "thunderbird"]
+    record_in_processes: ["all"]
+
 
 # The following section contains counters for corruption of internal omni jar files.
 corroborate:

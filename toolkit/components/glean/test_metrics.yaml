@@ -644,6 +644,7 @@ test_only.ipc:
     expires: never
     send_in_pings:
       - store1
+    telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_RATE
   rate_with_external_denominator:
     type: rate
     denominator_metric: test_only.ipc.an_external_denominator
