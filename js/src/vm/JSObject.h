@@ -227,16 +227,23 @@ class JSObject
   // exist on the scope chain) are kept.
   inline bool isUnqualifiedVarObj() const;
 
-  // An object with the "invalidated teleporting" flag is a prototype object
-  // that either had its own proto mutated or it was on the proto chain of an
-  // object that had its proto mutated.
+  // Once the "invalidated teleporting" flag is set for an object, it is never
+  // cleared and it may cause the JITs to insert additional guards when
+  // accessing properties on this object. While the flag remains clear, the
+  // shape teleporting optimization can be used to avoid those extra checks.
   //
-  // Once this flag is set, it is never cleared and it may cause the JITs to
-  // insert additional guards when accessing properties on this object. While
-  // the flag remains clear, the shape teleporting optimization can be used to
-  // avoid those extra checks.
+  // The flag is set on the object if either:
   //
-  // See: ReshapeForProtoMutation, ProtoChainSupportsTeleporting.
+  // * Its own proto was mutated or it was on the proto chain of an object that
+  //   had its proto mutated.
+  //
+  // * It was on the proto chain of an object that started shadowing a property
+  //   on this object.
+  //
+  // See:
+  // - ReshapeForProtoMutation
+  // - ReshapeForShadowedProp
+  // - ProtoChainSupportsTeleporting
   inline bool hasInvalidatedTeleporting() const;
   static bool setInvalidatedTeleporting(JSContext* cx, JS::HandleObject obj) {
     MOZ_ASSERT(obj->isUsedAsPrototype());
