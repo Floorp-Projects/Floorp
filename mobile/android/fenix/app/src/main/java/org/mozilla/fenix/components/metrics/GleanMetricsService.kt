@@ -197,6 +197,9 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ChangedToDefaultBrowser -> EventWrapper<NoExtraKeys>(
             { Events.defaultBrowserChanged.record(it) }
         )
+        is Event.DefaultBrowserNotifTapped -> EventWrapper<NoExtraKeys>(
+            { Events.defaultBrowserNotifTapped.record(it) }
+        )
         is Event.OpenedBookmark -> EventWrapper<NoExtraKeys>(
             { BookmarksManagement.open.record(it) }
         )

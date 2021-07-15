@@ -161,7 +161,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             StartSearchIntentProcessor(components.analytics.metrics),
             OpenBrowserIntentProcessor(this, ::getIntentSessionId),
             OpenSpecificTabIntentProcessor(this),
-            DefaultBrowserIntentProcessor(this)
+            DefaultBrowserIntentProcessor(this, components.analytics.metrics)
         )
     }
 

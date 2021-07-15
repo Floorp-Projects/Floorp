@@ -259,4 +259,15 @@ class GleanMetricsServiceTest {
         gleanService.track(Event.TabsTrayCfrTapped)
         assertTrue(TabsTrayCfr.goToSettings.testHasValue())
     }
+
+    @Test
+    fun `default browser events are correctly recorded`() {
+        assertFalse(Events.defaultBrowserChanged.testHasValue())
+        gleanService.track(Event.ChangedToDefaultBrowser)
+        assertTrue(Events.defaultBrowserChanged.testHasValue())
+
+        assertFalse(Events.defaultBrowserNotifTapped.testHasValue())
+        gleanService.track(Event.DefaultBrowserNotifTapped)
+        assertTrue(Events.defaultBrowserNotifTapped.testHasValue())
+    }
 }

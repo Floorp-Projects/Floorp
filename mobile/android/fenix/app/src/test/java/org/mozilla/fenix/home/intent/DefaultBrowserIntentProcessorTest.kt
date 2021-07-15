@@ -15,6 +15,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -24,7 +25,8 @@ class DefaultBrowserIntentProcessorTest {
     fun `do not process blank intents`() {
         val navController: NavController = mockk()
         val out: Intent = mockk()
-        val result = DefaultBrowserIntentProcessor(mockk()).process(Intent(), navController, out)
+        val result = DefaultBrowserIntentProcessor(mockk(), mockk())
+            .process(Intent(), navController, out)
 
         assertFalse(result)
         verify { navController wasNot Called }
@@ -36,16 +38,20 @@ class DefaultBrowserIntentProcessorTest {
         val navController: NavController = mockk(relaxed = true)
         val out: Intent = mockk()
         val activity: HomeActivity = mockk()
+        val metrics: MetricController = mockk()
 
         val intent = Intent().apply {
             putExtra("org.mozilla.fenix.default.browser.intent", true)
         }
         every { activity.startActivity(any()) } returns Unit
         every { activity.applicationContext } returns testContext
+        every { metrics.track(any()) } returns Unit
 
-        val result = DefaultBrowserIntentProcessor(activity).process(intent, navController, out)
+        val result = DefaultBrowserIntentProcessor(activity, metrics)
+            .process(intent, navController, out)
 
         assert(result)
+        verify { metrics.track(any()) }
         verify { navController wasNot Called }
         verify { out wasNot Called }
     }
