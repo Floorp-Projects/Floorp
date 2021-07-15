@@ -13,12 +13,9 @@
 #include "jsapi.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/ScriptSettings.h"
-
-#ifdef MOZ_GECKO_PROFILER
-#  include "mozilla/ProfilerLabels.h"
-#endif
 
 class nsIGlobalObject;
 class nsIPrincipal;
@@ -114,9 +111,7 @@ class MOZ_STACK_CLASS AutoEntryScript : public AutoJSAPI {
   Maybe<DocshellEntryMonitor> mDocShellEntryMonitor;
   Maybe<xpc::AutoScriptActivity> mScriptActivity;
   JS::AutoHideScriptedCaller mCallerOverride;
-#ifdef MOZ_GECKO_PROFILER
   AutoProfilerLabel mAutoProfilerLabel;
-#endif
   AutoRequestJSThreadExecution mJSThreadExecution;
 };
 

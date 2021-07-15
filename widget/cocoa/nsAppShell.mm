@@ -284,7 +284,6 @@ void nsAppShell::OnRunLoopActivityChanged(CFRunLoopActivity aActivity) {
     mozilla::BackgroundHangMonitor().NotifyWait();
   }
 
-#ifdef MOZ_GECKO_PROFILER
   // When the event loop is in its waiting state, we would like the profiler to know that the thread
   // is idle. The usual way to notify the profiler of idleness would be to place a profiler label
   // frame with the IDLE category on the stack, for the duration of the function that does the
@@ -312,7 +311,6 @@ void nsAppShell::OnRunLoopActivityChanged(CFRunLoopActivity aActivity) {
       mProfilingStackOwnerWhileWaiting = nullptr;
     }
   }
-#endif
 }
 
 // Init
