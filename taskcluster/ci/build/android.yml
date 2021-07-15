@@ -42,6 +42,7 @@ job-defaults:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
+            - sysroot-x86_64-linux-gnu
 
 android-arm/debug:
     description: "Android 4.0 Arm Debug"
