@@ -28,6 +28,7 @@ class WebDriverBiDi {
    */
   constructor(agent) {
     this.agent = agent;
+    this._running = false;
   }
 
   get address() {
@@ -38,6 +39,12 @@ class WebDriverBiDi {
    * Starts the WebDriver BiDi support.
    */
   start() {
+    if (this._running) {
+      return;
+    }
+
+    this._running = true;
+
     Services.obs.notifyObservers(
       null,
       "remote-listening",
@@ -48,5 +55,11 @@ class WebDriverBiDi {
   /**
    * Stops the WebDriver BiDi support.
    */
-  stop() {}
+  stop() {
+    if (!this._running) {
+      return;
+    }
+
+    this._running = false;
+  }
 }
