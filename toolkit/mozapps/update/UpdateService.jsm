@@ -3668,10 +3668,23 @@ UpdateService.prototype = {
     );
   },
 
+  // This property reflects any state that should cause the update service to
+  // behave as if it were disabled by policy. This includes the policy itself,
+  // but also other runtime conditions which should in effect disable updates.
+  // This may be distinct from how some of these cases are presented to the
+  // user; for instance, user interfaces should only indicate that policies are
+  // set when policies are actually set, and not under any other condition.
   get disabledByPolicy() {
+    let hasWinPackageId = false;
+    try {
+      hasWinPackageId = Services.sysinfo.getProperty("hasWinPackageId");
+    } catch (_ex) {
+      // The hasWinPackageId property doesn't exist; assume it would be false.
+    }
     return (
       (Services.policies && !Services.policies.isAllowed("appUpdate")) ||
-      this.disabledForTesting
+      this.disabledForTesting ||
+      hasWinPackageId
     );
   },
 
