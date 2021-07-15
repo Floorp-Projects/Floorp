@@ -637,12 +637,9 @@ MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags) {
   //   DLLs.  Given that the base profiler is used outside the typical use
   //   cases, it's ok not to check user32.dll in this scenario.
   const bool skipUser32Check =
-      (sInitFlags & eDllBlocklistInitFlagWasBootstrapped)
-#ifdef MOZ_GECKO_PROFILER
-      ||
-      (!IsWin10AnniversaryUpdateOrLater() && baseprofiler::profiler_is_active())
-#endif
-      ;
+      (sInitFlags & eDllBlocklistInitFlagWasBootstrapped) ||
+      (!IsWin10AnniversaryUpdateOrLater() &&
+       baseprofiler::profiler_is_active());
 
   // In order to be effective against AppInit DLLs, the blocklist must be
   // initialized before user32.dll is loaded into the process (bug 932100).
