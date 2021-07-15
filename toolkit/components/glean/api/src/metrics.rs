@@ -94,6 +94,14 @@ pub(crate) mod __glean_metric_maps {
     pub static QUANTITY_MAP: Lazy<HashMap<MetricId, &Lazy<QuantityMetric>>> =
         Lazy::new(HashMap::new);
 
+    pub static RATE_MAP: Lazy<HashMap<MetricId, &Lazy<RateMetric>>> = Lazy::new(HashMap::new);
+
+    pub static DENOMINATOR_MAP: Lazy<HashMap<MetricId, &Lazy<DenominatorMetric>>> =
+        Lazy::new(HashMap::new);
+
+    pub static NUMERATOR_MAP: Lazy<HashMap<MetricId, &Lazy<NumeratorMetric>>> =
+        Lazy::new(HashMap::new);
+
     pub(crate) fn record_event_by_id(
         _metric_id: u32,
         _extra: Option<HashMap<i32, String>>,

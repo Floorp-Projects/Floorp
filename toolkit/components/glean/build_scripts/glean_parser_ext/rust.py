@@ -15,6 +15,19 @@ import jinja2
 
 from util import generate_metric_ids, generate_ping_ids
 from glean_parser import util
+from glean_parser.metrics import Rate
+
+# The list of all args to CommonMetricData.
+# No particular order is required, but I have these in common_metric_data.rs
+# order just to be organized.
+common_metric_data_args = [
+    "name",
+    "category",
+    "send_in_pings",
+    "lifetime",
+    "disabled",
+    "dynamic_label",
+]
 
 
 def rust_datatypes_filter(value):
@@ -28,6 +41,8 @@ def rust_datatypes_filter(value):
       - lists to vec![] (used in send_in_pings)
       - null to None
       - strings to "value".into()
+      - Rate objects to a CommonMetricData initializer
+        (for external Denominators' Numerators lists)
     """
 
     class RustEncoder(json.JSONEncoder):
@@ -58,6 +73,14 @@ def rust_datatypes_filter(value):
                 yield "None"
             elif isinstance(value, str):
                 yield '"' + value + '".into()'
+            elif isinstance(value, Rate):
+                yield "CommonMetricData {"
+                for arg_name in common_metric_data_args:
+                    if hasattr(value, arg_name):
+                        yield f"{arg_name}: "
+                        yield from self.iterencode(getattr(value, arg_name))
+                        yield ", "
+                yield " ..Default::default()}"
             else:
                 yield from super().iterencode(value)
 
@@ -221,18 +244,6 @@ def output_rust(objs, output_fd, options={}):
             ("ping_id", get_ping_id),
         ),
     )
-
-    # The list of all args to CommonMetricData (besides category and name).
-    # No particular order is required, but I have these in common_metric_data.rs
-    # order just to be organized.
-    common_metric_data_args = [
-        "name",
-        "category",
-        "send_in_pings",
-        "lifetime",
-        "disabled",
-        "dynamic_label",
-    ]
 
     output_fd.write(
         template.render(
