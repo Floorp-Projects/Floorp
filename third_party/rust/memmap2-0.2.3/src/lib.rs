@@ -1,20 +1,16 @@
 //! A cross-platform Rust API for memory mapped buffers.
 
-#![doc(html_root_url = "https://docs.rs/memmap2/0.3.0")]
+#![doc(html_root_url = "https://docs.rs/memmap2/0.2.3")]
 
 #[cfg(windows)]
 mod windows;
 #[cfg(windows)]
-use crate::windows::file_len;
-#[cfg(windows)]
-use crate::windows::MmapInner;
+use windows::MmapInner;
 
 #[cfg(unix)]
 mod unix;
 #[cfg(unix)]
-use crate::unix::file_len;
-#[cfg(unix)]
-use crate::unix::MmapInner;
+use unix::MmapInner;
 
 #[cfg(not(any(unix, windows)))]
 mod stub;
@@ -25,41 +21,8 @@ use std::fmt;
 use std::fs::File;
 use std::io::{Error, ErrorKind, Result};
 use std::ops::{Deref, DerefMut};
-#[cfg(unix)]
-use std::os::unix::io::AsRawFd;
 use std::slice;
 use std::usize;
-
-#[cfg(windows)]
-pub struct MmapRawDescriptor<'a>(&'a File);
-
-#[cfg(unix)]
-pub struct MmapRawDescriptor(std::os::unix::io::RawFd);
-
-pub trait MmapAsRawDesc {
-    fn as_raw_desc(&self) -> MmapRawDescriptor;
-}
-
-#[cfg(windows)]
-impl MmapAsRawDesc for &File {
-    fn as_raw_desc(&self) -> MmapRawDescriptor {
-        MmapRawDescriptor(self)
-    }
-}
-
-#[cfg(unix)]
-impl MmapAsRawDesc for &File {
-    fn as_raw_desc(&self) -> MmapRawDescriptor {
-        MmapRawDescriptor(self.as_raw_fd())
-    }
-}
-
-#[cfg(unix)]
-impl MmapAsRawDesc for std::os::unix::io::RawFd {
-    fn as_raw_desc(&self) -> MmapRawDescriptor {
-        MmapRawDescriptor(*self)
-    }
-}
 
 /// A memory map builder, providing advanced options and flags for specifying memory map behavior.
 ///
@@ -172,11 +135,9 @@ impl MmapOptions {
     }
 
     /// Returns the configured length, or the length of the provided file.
-    fn get_len<T: MmapAsRawDesc>(&self, file: &T) -> Result<usize> {
+    fn get_len(&self, file: &File) -> Result<usize> {
         self.len.map(Ok).unwrap_or_else(|| {
-            let desc = file.as_raw_desc();
-            let file_len = file_len(desc.0)?;
-            let len = file_len as u64 - self.offset;
+            let len = file.metadata()?.len() - self.offset;
             if len > (usize::MAX as u64) {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
@@ -264,10 +225,8 @@ impl MmapOptions {
     /// # Ok(())
     /// # }
     /// ```
-    pub unsafe fn map<T: MmapAsRawDesc>(&self, file: T) -> Result<Mmap> {
-        let desc = file.as_raw_desc();
-
-        MmapInner::map(self.get_len(&file)?, desc.0, self.offset, self.populate)
+    pub unsafe fn map(&self, file: &File) -> Result<Mmap> {
+        MmapInner::map(self.get_len(file)?, file, self.offset, self.populate)
             .map(|inner| Mmap { inner })
     }
 
@@ -277,11 +236,9 @@ impl MmapOptions {
     ///
     /// This method returns an error when the underlying system call fails, which can happen for a
     /// variety of reasons, such as when the file is not open with read permissions.
-    pub unsafe fn map_exec<T: MmapAsRawDesc>(&self, file: T) -> Result<Mmap> {
-        let desc = file.as_raw_desc();
-
-        MmapInner::map_exec(self.get_len(&file)?, desc.0, self.offset, self.populate)
-            .map(|inner| Mmap { inner: inner })
+    pub unsafe fn map_exec(&self, file: &File) -> Result<Mmap> {
+        MmapInner::map_exec(self.get_len(file)?, file, self.offset, self.populate)
+            .map(|inner| Mmap { inner })
     }
 
     /// Creates a writeable memory map backed by a file.
@@ -317,11 +274,9 @@ impl MmapOptions {
     /// # Ok(())
     /// # }
     /// ```
-    pub unsafe fn map_mut<T: MmapAsRawDesc>(&self, file: T) -> Result<MmapMut> {
-        let desc = file.as_raw_desc();
-
-        MmapInner::map_mut(self.get_len(&file)?, desc.0, self.offset, self.populate)
-            .map(|inner| MmapMut { inner: inner })
+    pub unsafe fn map_mut(&self, file: &File) -> Result<MmapMut> {
+        MmapInner::map_mut(self.get_len(file)?, file, self.offset, self.populate)
+            .map(|inner| MmapMut { inner })
     }
 
     /// Creates a copy-on-write memory map backed by a file.
@@ -348,11 +303,9 @@ impl MmapOptions {
     /// # Ok(())
     /// # }
     /// ```
-    pub unsafe fn map_copy<T: MmapAsRawDesc>(&self, file: T) -> Result<MmapMut> {
-        let desc = file.as_raw_desc();
-
-        MmapInner::map_copy(self.get_len(&file)?, desc.0, self.offset, self.populate)
-            .map(|inner| MmapMut { inner: inner })
+    pub unsafe fn map_copy(&self, file: &File) -> Result<MmapMut> {
+        MmapInner::map_copy(self.get_len(file)?, file, self.offset, self.populate)
+            .map(|inner| MmapMut { inner })
     }
 
     /// Creates a copy-on-write read-only memory map backed by a file.
@@ -383,11 +336,9 @@ impl MmapOptions {
     /// # Ok(())
     /// # }
     /// ```
-    pub unsafe fn map_copy_read_only<T: MmapAsRawDesc>(&self, file: T) -> Result<Mmap> {
-        let desc = file.as_raw_desc();
-
-        MmapInner::map_copy_read_only(self.get_len(&file)?, desc.0, self.offset, self.populate)
-            .map(|inner| Mmap { inner: inner })
+    pub unsafe fn map_copy_read_only(&self, file: &File) -> Result<Mmap> {
+        MmapInner::map_copy_read_only(self.get_len(file)?, file, self.offset, self.populate)
+            .map(|inner| Mmap { inner })
     }
 
     /// Creates an anonymous memory map.
@@ -408,11 +359,9 @@ impl MmapOptions {
     ///
     /// This method returns an error when the underlying system call fails, which can happen for a
     /// variety of reasons, such as when the file is not open with read and write permissions.
-    pub fn map_raw<T: MmapAsRawDesc>(&self, file: T) -> Result<MmapRaw> {
-        let desc = file.as_raw_desc();
-
-        MmapInner::map_mut(self.get_len(&file)?, desc.0, self.offset, self.populate)
-            .map(|inner| MmapRaw { inner: inner })
+    pub fn map_raw(&self, file: &File) -> Result<MmapRaw> {
+        MmapInner::map_mut(self.get_len(file)?, file, self.offset, self.populate)
+            .map(|inner| MmapRaw { inner })
     }
 }
 
@@ -493,7 +442,7 @@ impl Mmap {
     /// # Ok(())
     /// # }
     /// ```
-    pub unsafe fn map<T: MmapAsRawDesc>(file: T) -> Result<Mmap> {
+    pub unsafe fn map(file: &File) -> Result<Mmap> {
         MmapOptions::new().map(file)
     }
 
@@ -582,7 +531,7 @@ impl MmapRaw {
     ///
     /// This method returns an error when the underlying system call fails, which can happen for a
     /// variety of reasons, such as when the file is not open with read and write permissions.
-    pub fn map_raw<T: MmapAsRawDesc>(file: T) -> Result<MmapRaw> {
+    pub fn map_raw(file: &File) -> Result<MmapRaw> {
         MmapOptions::new().map_raw(file)
     }
 
@@ -695,7 +644,7 @@ impl MmapMut {
     /// # Ok(())
     /// # }
     /// ```
-    pub unsafe fn map_mut<T: MmapAsRawDesc>(file: T) -> Result<MmapMut> {
+    pub unsafe fn map_mut(file: &File) -> Result<MmapMut> {
         MmapOptions::new().map_mut(file)
     }
 
@@ -875,8 +824,6 @@ mod test {
 
     use std::fs::OpenOptions;
     use std::io::{Read, Write};
-    #[cfg(unix)]
-    use std::os::unix::io::AsRawFd;
     #[cfg(windows)]
     use std::os::windows::fs::OpenOptionsExt;
 
@@ -901,39 +848,6 @@ mod test {
         file.set_len(expected_len as u64).unwrap();
 
         let mut mmap = unsafe { MmapMut::map_mut(&file).unwrap() };
-        let len = mmap.len();
-        assert_eq!(expected_len, len);
-
-        let zeros = vec![0; len];
-        let incr: Vec<u8> = (0..len as u8).collect();
-
-        // check that the mmap is empty
-        assert_eq!(&zeros[..], &mmap[..]);
-
-        // write values into the mmap
-        (&mut mmap[..]).write_all(&incr[..]).unwrap();
-
-        // read values back
-        assert_eq!(&incr[..], &mmap[..]);
-    }
-
-    #[test]
-    #[cfg(unix)]
-    fn map_fd() {
-        let expected_len = 128;
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
-        let path = tempdir.path().join("mmap");
-
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .open(&path)
-            .unwrap();
-
-        file.set_len(expected_len as u64).unwrap();
-
-        let mut mmap = unsafe { MmapMut::map_mut(file.as_raw_fd()).unwrap() };
         let len = mmap.len();
         assert_eq!(expected_len, len);
 
