@@ -295,7 +295,6 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
   g_clear_pointer(&wl_container->viewport, wp_viewport_destroy);
   g_clear_pointer(&wl_container->frame_callback_handler, wl_callback_destroy);
 
-  wl_container->initial_draw_cbs.clear();
   wl_container->surface_needs_clear = true;
   wl_container->ready_to_draw = false;
   wl_container->buffer_scale = 1;
@@ -541,15 +540,13 @@ static bool moz_container_wayland_surface_create_locked(
 }
 
 struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container) {
-  // Temporary disabled to avoid log noise
-  LOGWAYLAND(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__,
-              (void*)container, (void*)container->wl_container.surface,
-              container->wl_container.ready_to_draw));
+  // LOGWAYLAND(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__,
+  //           (void*)container, (void*)container->wl_container.surface,
+  //           container->wl_container.ready_to_draw));
   if (!container->wl_container.surface ||
       !container->wl_container.ready_to_draw) {
     return nullptr;
   }
-
   container->wl_container.container_lock->Lock();
 
   moz_container_wayland_set_scale_factor_locked(container);
@@ -559,12 +556,33 @@ struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container) {
 void moz_container_wayland_surface_unlock(MozContainer* container,
                                           struct wl_surface** surface) {
   // Temporary disabled to avoid log noise
-  LOGWAYLAND(("%s [%p] surface %p\n", __FUNCTION__, (void*)container,
-              (void*)container->wl_container.surface));
+  // LOGWAYLAND(("%s [%p] surface %p\n", __FUNCTION__, (void*)container,
+  //            (void*)container->wl_container.surface));
   if (*surface) {
     container->wl_container.container_lock->Unlock();
     *surface = nullptr;
   }
+}
+
+struct wl_surface* moz_container_wayland_get_surface_locked(
+    MozContainer* container) {
+  LOGWAYLAND(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__,
+              (void*)container, (void*)container->wl_container.surface,
+              container->wl_container.ready_to_draw));
+  if (!container->wl_container.surface ||
+      !container->wl_container.ready_to_draw) {
+    return nullptr;
+  }
+  moz_container_wayland_set_scale_factor_locked(container);
+  return container->wl_container.surface;
+}
+
+void moz_container_wayland_lock(MozContainer* container) {
+  container->wl_container.container_lock->Lock();
+}
+
+void moz_container_wayland_unlock(MozContainer* container) {
+  container->wl_container.container_lock->Unlock();
 }
 
 struct wl_egl_window* moz_container_wayland_get_egl_window(
@@ -608,9 +626,7 @@ gboolean moz_container_wayland_get_and_reset_remapped(MozContainer* container) {
 
 gboolean moz_container_wayland_is_inactive(MozContainer* container) {
   MozContainerWayland* wl_container = &container->wl_container;
-  return !wl_container->ready_to_draw &&
-         !wl_container->frame_callback_handler &&
-         wl_container->initial_draw_cbs.size() == 0;
+  return !wl_container->ready_to_draw && !wl_container->frame_callback_handler;
 }
 
 void moz_container_wayland_update_opaque_region(MozContainer* container,

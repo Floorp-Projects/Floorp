@@ -633,6 +633,7 @@ class nsWindow final : public nsBaseWidget {
   void WaylandPopupHierarchyHideTemporary();
   void WaylandPopupHierarchyShowTemporaryHidden();
   void WaylandPopupHierarchyCalculatePositions();
+  bool IsTooltipWithNegativeRelativePositionRemoved();
   bool IsInPopupHierarchy();
   void AddWindowToPopupHierarchy();
   void UpdateWaylandPopupHierarchy();
