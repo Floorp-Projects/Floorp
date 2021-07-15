@@ -8,11 +8,11 @@ import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.rule.createTestCoroutinesDispatcher
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -26,7 +26,7 @@ import org.mockito.Mockito.spy
 @RunWith(AndroidJUnit4::class)
 class ThumbnailStorageTest {
 
-    val testDispatcher = createTestCoroutinesDispatcher()
+    private val testDispatcher = TestCoroutineDispatcher()
 
     @Before
     @After

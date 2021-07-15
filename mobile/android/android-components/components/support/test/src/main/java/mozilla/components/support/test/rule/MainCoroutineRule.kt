@@ -19,6 +19,7 @@ import mozilla.components.support.base.utils.NamedThreadFactory
 /**
  * Create single threaded dispatcher for test environment.
  */
+@Deprecated("Use `TestCoroutineDispatcher()` from the kotlinx-coroutines-test library", ReplaceWith("TestCoroutineDispatcher()"))
 fun createTestCoroutinesDispatcher(): CoroutineDispatcher = Executors.newSingleThreadExecutor(
     NamedThreadFactory("TestCoroutinesDispatcher")
 ).asCoroutineDispatcher()
@@ -27,7 +28,7 @@ fun createTestCoroutinesDispatcher(): CoroutineDispatcher = Executors.newSingleT
  * JUnit rule to change Dispatchers.Main in coroutines.
  */
 @ExperimentalCoroutinesApi
-class MainCoroutineRule(val testDispatcher: CoroutineDispatcher = createTestCoroutinesDispatcher()) : TestWatcher() {
+class MainCoroutineRule(val testDispatcher: CoroutineDispatcher = TestCoroutineDispatcher()) : TestWatcher() {
 
     override fun starting(description: Description?) {
         super.starting(description)
