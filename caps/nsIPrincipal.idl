@@ -538,6 +538,20 @@ interface nsIPrincipal : nsISupports
      */
     [infallible] readonly attribute boolean isLocalIpAddress;
 
+    /**
+     * If this principal is a null principal, reconstruct the precursor
+     * principal which this null principal was derived from. This may be null,
+     * in which case this is not a null principal, there is no known precursor
+     * to this null principal, it was created by a privileged context, or there
+     * was a bugged origin in the precursor string.
+     *
+     * WARNING: Be careful when using this principal, as it is not part of the
+     * security properties of the null principal, and should NOT be used to
+     * grant a resource with a null principal access to resources from its
+     * precursor origin. This is only to be used for places where tracking how
+     * null principals were created is necessary.
+     */
+    [infallible] readonly attribute nsIPrincipal precursorPrincipal;
 };
 
 /**
