@@ -105,7 +105,7 @@ class AvdInfo(object):
    and the parameters for each reflect those used in mozharness.
 """
 AVD_DICT = {
-    "arm-4.3": AvdInfo(
+    "arm": AvdInfo(
         "Android 4.3",
         "mozemulator-4.3",
         "testing/config/tooltool-manifests/androidarm_4_3/mach-emulator.manifest",
@@ -113,7 +113,7 @@ AVD_DICT = {
         ["-skip-adb-auth", "-verbose", "-show-kernel"],
         False,
     ),
-    "x86-7.0": AvdInfo(
+    "x86_64": AvdInfo(
         "Android 7.0 x86/x86_64",
         "mozemulator-x86-7.0",
         "testing/config/tooltool-manifests/androidx86_7_0/mach-emulator.manifest",
@@ -859,10 +859,10 @@ class AndroidEmulator(object):
             return requested
         if self.substs:
             if not self.substs["TARGET_CPU"].startswith("arm"):
-                return "x86-7.0"
+                return "x86_64"
             else:
-                return "arm-4.3"
-        return "x86-7.0"
+                return "arm"
+        return "x86_64"
 
 
 def _find_sdk_exe(substs, exe, tools):
