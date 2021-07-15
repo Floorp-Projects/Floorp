@@ -735,8 +735,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   bool SupportsApzAutoscrolling() const;
   bool SupportsApzZooming() const;
 
-  virtual void FlushContentDrawing() {}
-
   // If a device reset has occurred, schedule any necessary paints in the
   // widget. This should only be used within nsRefreshDriver.
   virtual void SchedulePaintIfDeviceReset() {}
