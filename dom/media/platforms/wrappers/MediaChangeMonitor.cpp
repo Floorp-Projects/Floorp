@@ -263,29 +263,36 @@ RefPtr<PlatformDecoderModule::CreateDecoderPromise> MediaChangeMonitor::Create(
                            CreateDecoderParams::Option::FullH264Parsing));
   }
 
+  // The change monitor may have an updated track config. E.g. the h264 monitor
+  // may update the config after parsing extra data in the VideoInfo. Create a
+  // new set of params with the updated track info from our monitor and the
+  // other params for aParams and use that going forward.
+  const CreateDecoderParams updatedParams{changeMonitor->Config(), aParams};
+
   if (!changeMonitor->CanBeInstantiated()) {
     // nothing found yet, will try again later
     return PlatformDecoderModule::CreateDecoderPromise::CreateAndResolve(
         new MediaChangeMonitor(aPDM, std::move(changeMonitor), nullptr,
-                               aParams),
+                               updatedParams),
         __func__);
   }
 
   RefPtr<PlatformDecoderModule::CreateDecoderPromise> p =
-      aPDM->AsyncCreateDecoder(aParams)->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [params = CreateDecoderParamsForAsync(aParams), pdm = RefPtr{aPDM},
-           changeMonitor = std::move(changeMonitor)](
-              RefPtr<MediaDataDecoder>&& aDecoder) mutable {
-            RefPtr<MediaDataDecoder> decoder = new MediaChangeMonitor(
-                pdm, std::move(changeMonitor), aDecoder, params);
-            return PlatformDecoderModule::CreateDecoderPromise::
-                CreateAndResolve(decoder, __func__);
-          },
-          [](MediaResult aError) {
-            return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
-                aError, __func__);
-          });
+      aPDM->AsyncCreateDecoder(updatedParams)
+          ->Then(
+              GetCurrentSerialEventTarget(), __func__,
+              [params = CreateDecoderParamsForAsync(updatedParams),
+               pdm = RefPtr{aPDM}, changeMonitor = std::move(changeMonitor)](
+                  RefPtr<MediaDataDecoder>&& aDecoder) mutable {
+                RefPtr<MediaDataDecoder> decoder = new MediaChangeMonitor(
+                    pdm, std::move(changeMonitor), aDecoder, params);
+                return PlatformDecoderModule::CreateDecoderPromise::
+                    CreateAndResolve(decoder, __func__);
+              },
+              [](MediaResult aError) {
+                return PlatformDecoderModule::CreateDecoderPromise::
+                    CreateAndReject(aError, __func__);
+              });
   return p;
 }
 
