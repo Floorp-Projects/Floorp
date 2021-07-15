@@ -319,3 +319,43 @@ test.nested:
     data_reviews:
       - https://example.com
     telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_QUANTITY
+
+  rate_metric:
+    type: rate
+    expires: never
+    description: |
+      A multi-line
+      description
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1704846/
+    data_reviews:
+      - https://example.com
+
+  rate_with_external_denominator:
+    type: rate
+    denominator_metric: test.nested.external_denominator
+    expires: never
+    description: |
+      A multi-line
+      description
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1704846/
+    data_reviews:
+      - https://example.com
+
+  external_denominator:
+    type: counter
+    expires: never
+    description: |
+      A multi-line
+      description
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1704846/
+    data_reviews:
+      - https://example.com
