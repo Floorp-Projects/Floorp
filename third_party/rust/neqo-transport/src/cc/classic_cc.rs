@@ -209,6 +209,7 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
                 min_rtt,
                 now,
             );
+            debug_assert!(bytes_for_increase > 0);
             // If enough credit has been accumulated already, apply them gradually.
             // If we have sudden increase in allowed rate we actually increase cwnd gently.
             if self.acked_bytes >= bytes_for_increase {
