@@ -380,6 +380,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     IsAnonymousContentCreatorContent,
     // The item will be the rendered legend of a <fieldset>.
     IsForRenderedLegend,
+    // This will be an outside ::marker.
+    IsForOutsideMarker,
   };
 
   using ItemFlags = mozilla::EnumSet<ItemFlag>;
@@ -472,7 +474,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                   nsContainerFrame* aParentFrame,
                                   Element& aOriginatingElement, ComputedStyle&,
                                   PseudoStyleType aPseudoElement,
-                                  FrameConstructionItemList& aItems);
+                                  FrameConstructionItemList& aItems,
+                                  ItemFlags aExtraFlags = {});
 
   // This method is called by ContentAppended() and ContentRangeInserted() when
   // appending flowed frames to a parent's principal child list. It handles the
