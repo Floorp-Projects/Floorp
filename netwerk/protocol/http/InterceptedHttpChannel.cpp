@@ -5,9 +5,9 @@
  *  file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "InterceptedHttpChannel.h"
+#include "NetworkMarker.h"
 #include "nsContentSecurityManager.h"
 #include "nsEscape.h"
-#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/ChannelInfo.h"
@@ -622,7 +622,6 @@ InterceptedHttpChannel::ResetInterception(bool aBypass) {
                             mLoadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
@@ -648,7 +647,6 @@ InterceptedHttpChannel::ResetInterception(bool aBypass) {
         std::move(mSource), Some(nsDependentCString(contentType.get())), mURI,
         flags, newBaseChannel->ChannelId());
   }
-#endif
 
   rv = SetupReplacementChannel(mURI, newChannel, true, flags);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1113,7 +1111,6 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   // Register entry to the PerformanceStorage resource timing
   MaybeReportTimingData();
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     // These do allocations/frees/etc; avoid if not active
     nsAutoCString requestMethod;
@@ -1135,7 +1132,6 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
         mLoadInfo->GetInnerWindowID(), &mTransactionTimings, std::move(mSource),
         Some(nsDependentCString(contentType.get())));
   }
-#endif
 
   nsresult rv = NS_OK;
   if (mListener) {
