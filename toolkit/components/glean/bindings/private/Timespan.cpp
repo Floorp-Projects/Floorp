@@ -6,6 +6,7 @@
 
 #include "mozilla/glean/bindings/Timespan.h"
 
+#include "Common.h"
 #include "nsString.h"
 #include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
