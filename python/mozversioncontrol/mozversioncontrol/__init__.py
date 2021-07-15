@@ -10,9 +10,7 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 
-from mozbuild.util import ensure_subprocess_env
 from mozfile import which
 from mozpack.files import FileListFinder
 
@@ -90,17 +88,7 @@ class Repository(object):
         self._tool = get_tool_path(tool)
         self._version = None
         self._valid_diff_filter = ("m", "a", "d")
-
-        if os.name == "nt" and sys.version_info[0] == 2:
-            self._env = {}
-            for k, v in os.environ.iteritems():
-                if isinstance(k, unicode):
-                    k = k.encode("utf8")
-                if isinstance(v, unicode):
-                    v = v.encode("utf8")
-                self._env[k] = v
-        else:
-            self._env = os.environ.copy()
+        self._env = os.environ.copy()
 
     def __enter__(self):
         return self
@@ -114,10 +102,7 @@ class Repository(object):
         cmd = (self._tool,) + args
         try:
             return subprocess.check_output(
-                cmd,
-                cwd=self.path,
-                env=ensure_subprocess_env(self._env),
-                universal_newlines=True,
+                cmd, cwd=self.path, env=self._env, universal_newlines=True
             )
         except subprocess.CalledProcessError as e:
             if e.returncode in return_codes:
@@ -301,7 +286,7 @@ class HgRepository(Repository):
         import hglib.client
 
         super(HgRepository, self).__init__(path, tool=hg)
-        self._env[b"HGPLAIN"] = b"1"
+        self._env["HGPLAIN"] = "1"
 
         # Setting this modifies a global variable and makes all future hglib
         # instances use this binary. Since the tool path was validated, this
@@ -312,11 +297,8 @@ class HgRepository(Repository):
         # Without connect=False this spawns a persistent process. We want
         # the process lifetime tied to a context manager.
         self._client = hglib.client.hgclient(
-            self.path, encoding=b"UTF-8", configs=None, connect=False
+            self.path, encoding="UTF-8", configs=None, connect=False
         )
-
-        # Work around py3 compat issues in python-hglib
-        self._client._env = ensure_subprocess_env(self._client._env)
 
     @property
     def name(self):
@@ -511,9 +493,7 @@ class HgRepository(Repository):
     def push_to_try(self, message):
         try:
             subprocess.check_call(
-                (self._tool, "push-to-try", "-m", message),
-                cwd=self.path,
-                env=ensure_subprocess_env(self._env),
+                (self._tool, "push-to-try", "-m", message), cwd=self.path, env=self._env
             )
         except subprocess.CalledProcessError:
             try:
