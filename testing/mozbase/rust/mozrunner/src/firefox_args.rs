@@ -6,8 +6,8 @@
 //!
 //! Which arguments Firefox accepts and in what style depends on the platform.
 //! On Windows only, arguments can be prefixed with `/` (slash), such as
-//! `/foreground`.  Elsewhere, including Windows, arguments may be prefixed
-//! with both single (`-foreground`) and double (`--foreground`) dashes.
+//! `/screenshot`.  Elsewhere, including Windows, arguments may be prefixed
+//! with both single (`-screenshot`) and double (`--screenshot`) dashes.
 //!
 //! An argument's name is determined by a space or an assignment operator (`=`)
 //! so that for the string `-foo=bar`, `foo` is considered the argument's
@@ -91,7 +91,7 @@ fn name_end_char(c: char) -> bool {
 #[derive(Debug, PartialEq)]
 pub enum Arg {
     /// `-foreground` ensures application window gets focus, which is not the
-    /// default on macOS.
+    /// default on macOS. As such Firefox only supports it on MacOS.
     Foreground,
 
     /// `-no-remote` prevents remote commands to this instance of Firefox, and
