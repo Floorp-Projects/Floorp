@@ -5919,6 +5919,7 @@ void nsWindow::NativeShow(bool aAction) {
   if (aAction) {
     // unset our flag now that our window has been shown
     mNeedsShow = false;
+    LOG(("nsWindow::NativeShow show [%p]\n", this));
 
     if (mIsTopLevel) {
       // Set up usertime/startupID metadata for the created window.
@@ -5926,7 +5927,6 @@ void nsWindow::NativeShow(bool aAction) {
         SetUserTimeAndStartupIDForActivatedWindow(mShell);
       }
       if (IsWaylandPopup()) {
-        LOG_POPUP(("nsWindow::NativeShow show Popup [%p]\n", this));
         if (WaylandPopupNeedsTrackInHierarchy()) {
           AddWindowToPopupHierarchy();
           UpdateWaylandPopupHierarchy();
@@ -5954,10 +5954,10 @@ void nsWindow::NativeShow(bool aAction) {
     // resized because parent could be moved meanwhile.
     mPreferredPopupRect = nsRect(0, 0, 0, 0);
     mPreferredPopupRectFlushed = false;
+    LOG(("nsWindow::NativeShow hide [%p]\n", this));
     if (GdkIsWaylandDisplay()) {
       WaylandStopVsync();
       if (IsWaylandPopup()) {
-        LOG_POPUP(("nsWindow::NativeShow hide Popup [%p]\n", this));
         // We can't close tracked popups directly as they may have visible
         // child popups. Just mark is as closed and let
         // UpdateWaylandPopupHierarchy() do the job.
