@@ -26,6 +26,28 @@ function getMacAccessible(accOrElmOrID) {
 }
 
 /**
+ * Test a11yUtils announcements are exposed to VO
+ */
+add_task(async () => {
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "data:text/html,"
+  );
+  const alert = document.getElementById("a11y-announcement");
+  ok(alert, "Found alert to send announcements");
+
+  const alerted = waitForMacEvent("AXAnnouncementRequested", (iface, data) => {
+    return data.AXAnnouncementKey == "hello world";
+  });
+
+  A11yUtils.announce({
+    raw: "hello world",
+  });
+  await alerted;
+  await BrowserTestUtils.removeTab(tab);
+});
+
+/**
  * Test browser tabs
  */
 add_task(async () => {

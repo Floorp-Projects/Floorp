@@ -41,6 +41,7 @@ using namespace mozilla::a11y;
 - (BOOL)providesLabelNotTitle;
 
 - (void)maybePostLiveRegionChanged;
+- (void)maybePostA11yUtilNotification;
 @end
 
 @implementation mozAccessible
@@ -971,6 +972,55 @@ struct RoleDescrComparator {
   }
 }
 
+- (void)maybePostA11yUtilNotification {
+  MOZ_ASSERT(!mGeckoAccessible.IsNull());
+  // Sometimes we use a special live region to make announcements to the user.
+  // This region is a child of the root document, but doesn't contain any
+  // content. If we try to fire regular AXLiveRegion changed events through it,
+  // VoiceOver clips the notifications because it (rightfully) doesn't detect
+  // focus within the region. We get around this by firing an
+  // AXAnnouncementRequested notification here instead.
+  // Verify we're trying to send a notification for the a11yUtils alert (and not
+  // a random acc with the same ID) by checking:
+  //  - The gecko acc is local, our a11y-announcement lives in browser.xhtml
+  //  - The ID of the gecko acc is "a11y-announcement"
+  //  - The native acc is a direct descendent of the root
+  if (mGeckoAccessible.IsAccessible() &&
+      [[self moxDOMIdentifier] isEqualToString:@"a11y-announcement"] &&
+      [[self moxParent] isKindOfClass:[mozRootAccessible class]]) {
+    // Our actual announcement should be stored as a child of the alert,
+    // so we verify a child exists, and then query that child below.
+    NSArray* children = [self moxChildren];
+    MOZ_ASSERT([children count] == 1 && children[0],
+               "A11yUtil event recieved, but no announcement found?");
+
+    mozAccessible* announcement = children[0];
+    NSString* key;
+    if ([announcement providesLabelNotTitle]) {
+      key = [announcement moxLabel];
+    } else {
+      key = [announcement moxTitle];
+    }
+
+    NSDictionary* info = @{
+      NSAccessibilityAnnouncementKey : key ? key : @(""),
+      NSAccessibilityPriorityKey : @(NSAccessibilityPriorityMedium)
+    };
+
+    id window = [self moxWindow];
+
+    // This sends events via nsIObserverService to be consumed by our
+    // mochitests. Normally we'd fire these events through moxPostNotification
+    // which takes care of this, but because the window we fetch above isn't
+    // derrived from MOXAccessibleBase, we do this (and post the notification)
+    // manually.
+    xpcAccessibleMacEvent::FireEvent(
+        window, NSAccessibilityAnnouncementRequestedNotification, info);
+    NSAccessibilityPostNotificationWithUserInfo(
+        window, NSAccessibilityAnnouncementRequestedNotification, info);
+  }
+}
+
 - (NSArray<mozAccessible*>*)getRelationsByType:(RelationType)relationType {
   if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     NSMutableArray<mozAccessible*>* relations =
@@ -998,6 +1048,9 @@ struct RoleDescrComparator {
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {
   switch (eventType) {
+    case nsIAccessibleEvent::EVENT_ALERT:
+      [self maybePostA11yUtilNotification];
+      break;
     case nsIAccessibleEvent::EVENT_FOCUS:
       [self moxPostNotification:
                 NSAccessibilityFocusedUIElementChangedNotification];
