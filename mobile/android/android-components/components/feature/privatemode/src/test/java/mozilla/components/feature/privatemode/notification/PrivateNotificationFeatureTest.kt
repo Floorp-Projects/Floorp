@@ -32,7 +32,7 @@ import org.mockito.Mockito.verify
 class PrivateNotificationFeatureTest {
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule()
 
     private lateinit var context: Context
     private lateinit var store: BrowserStore

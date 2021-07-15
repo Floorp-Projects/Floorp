@@ -38,7 +38,7 @@ import org.mockito.Mockito.verifyZeroInteractions
 class CustomTabWindowFeatureTest {
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule()
 
     private lateinit var store: BrowserStore
     private val sessionId = "session-uuid"

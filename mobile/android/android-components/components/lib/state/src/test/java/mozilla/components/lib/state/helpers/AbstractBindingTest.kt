@@ -24,7 +24,7 @@ import org.junit.Test
 class AbstractBindingTest {
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     fun `binding onState is invoked when a flow is created`() {

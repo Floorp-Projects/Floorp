@@ -26,7 +26,7 @@ import org.mockito.Mockito.verify
 class SecureWindowFeatureTest {
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule()
 
     private lateinit var window: Window
     private val tabId = "test-tab"
