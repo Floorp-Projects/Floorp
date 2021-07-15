@@ -8,7 +8,6 @@ import android.view.Window
 import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore

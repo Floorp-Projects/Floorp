@@ -13,7 +13,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.test.argumentCaptor

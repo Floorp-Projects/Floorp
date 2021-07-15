@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.toolbar
 
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContainerState

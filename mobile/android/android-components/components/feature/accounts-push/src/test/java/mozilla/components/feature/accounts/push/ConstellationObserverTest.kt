@@ -8,9 +8,6 @@ package mozilla.components.feature.accounts.push
 
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.setMain
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.push.exceptions.SubscriptionException
 import mozilla.components.concept.sync.ConstellationState
@@ -24,7 +21,6 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test

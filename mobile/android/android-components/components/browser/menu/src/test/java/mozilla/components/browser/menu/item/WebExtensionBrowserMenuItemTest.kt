@@ -14,7 +14,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.menu.R
 import mozilla.components.browser.menu.WebExtensionBrowserMenu
 import mozilla.components.concept.engine.webextension.Action

@@ -7,7 +7,6 @@ package mozilla.components.feature.addons.ui
 import android.widget.ImageButton
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.support.test.any

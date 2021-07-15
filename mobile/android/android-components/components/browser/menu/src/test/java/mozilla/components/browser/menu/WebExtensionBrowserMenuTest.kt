@@ -11,7 +11,6 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.menu.WebExtensionBrowserMenu.Companion.getOrUpdateWebExtensionMenuItems
 import mozilla.components.browser.menu.WebExtensionBrowserMenu.Companion.webExtensionBrowserActions
 import mozilla.components.browser.menu.WebExtensionBrowserMenu.Companion.webExtensionPageActions

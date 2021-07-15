@@ -5,7 +5,6 @@
 package mozilla.components.feature.tabs
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState

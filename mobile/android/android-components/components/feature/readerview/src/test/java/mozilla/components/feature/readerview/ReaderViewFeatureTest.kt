@@ -7,7 +7,6 @@ package mozilla.components.feature.readerview
 import android.content.Context
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.ReaderAction

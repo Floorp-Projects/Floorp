@@ -7,7 +7,6 @@
 package mozilla.components.support.migration
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.support.migration.state.MigrationAction
 import mozilla.components.support.migration.state.MigrationProgress
 import mozilla.components.support.migration.state.MigrationStore

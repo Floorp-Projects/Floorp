@@ -9,7 +9,6 @@ import android.graphics.Color
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState

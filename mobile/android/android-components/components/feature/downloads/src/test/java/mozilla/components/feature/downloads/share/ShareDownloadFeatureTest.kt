@@ -8,7 +8,6 @@ import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.state.action.ShareInternetResourceAction
 import mozilla.components.browser.state.state.BrowserState

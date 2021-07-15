@@ -5,7 +5,6 @@
 package mozilla.components.support.webextensions
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.WebExtensionState

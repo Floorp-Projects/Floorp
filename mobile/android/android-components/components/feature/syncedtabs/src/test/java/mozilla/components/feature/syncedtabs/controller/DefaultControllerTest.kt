@@ -5,11 +5,7 @@
 package mozilla.components.feature.syncedtabs.controller
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceConstellation
@@ -21,8 +17,6 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith

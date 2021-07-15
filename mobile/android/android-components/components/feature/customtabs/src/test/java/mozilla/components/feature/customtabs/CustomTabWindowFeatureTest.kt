@@ -10,7 +10,6 @@ import android.graphics.Color
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabActionButtonConfig

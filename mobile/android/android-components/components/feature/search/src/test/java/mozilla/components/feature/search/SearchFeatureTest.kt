@@ -1,6 +1,5 @@
 package mozilla.components.feature.search
 
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.selectedTab
