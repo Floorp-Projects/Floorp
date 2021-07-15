@@ -48,15 +48,6 @@ function shouldNotifyWindowGlobal(
     return false;
   }
 
-  // Ignore about:blank which are quickly replaced and destroyed by the final URI
-  // bug 1625026 aims at removing this workaround and allow debugging any about:blank load
-  if (
-    windowGlobal.documentURI &&
-    windowGlobal.documentURI.spec == "about:blank"
-  ) {
-    return false;
-  }
-
   if (watchedBrowserId && browsingContext.browserId != watchedBrowserId) {
     return false;
   }

@@ -33,6 +33,10 @@ add_task(async function() {
   // Test what happens with documents running in the parent process
   await testOpeningOnParentProcessDocument();
   await testNavigationToParentProcessDocument();
+
+  // Test what happens with about:blank documents
+  await testOpeningOnAboutBlankDocument();
+  await testNavigationToAboutBlankDocument();
 });
 
 async function testOpeningOnParentProcessDocument() {
@@ -107,8 +111,82 @@ async function testNavigationToParentProcessDocument() {
   );
 }
 
+async function testOpeningOnAboutBlankDocument() {
+  info("Test opening against about:blank document");
+  const tab = await addTab("about:blank");
+
+  const commands = await CommandsFactory.forTab(tab);
+  const targetCommand = commands.targetCommand;
+  await targetCommand.startListening();
+
+  const frames = await targetCommand.getAllTargets([targetCommand.TYPES.FRAME]);
+  is(frames.length, 1);
+  is(frames[0].url, "about:blank", "target url is correct");
+  is(
+    frames[0],
+    targetCommand.targetFront,
+    "the target is the current top level one"
+  );
+}
+
+async function testNavigationToAboutBlankDocument() {
+  info("Test navigating to about:blank");
+  const firstLocation = "data:text/html,foo";
+  const secondLocation = "about:blank";
+
+  const tab = await addTab(firstLocation);
+  const commands = await CommandsFactory.forTab(tab);
+  const targetCommand = commands.targetCommand;
+  // When the first top level target is created from the server,
+  // `startListening` emits a spurious switched-target event
+  // which isn't necessarily emited before it resolves.
+  // So ensure waiting for it, otherwise we may resolve too eagerly
+  // in our expected listener.
+  const onSwitchedTarget1 = targetCommand.once("switched-target");
+  await targetCommand.startListening();
+  if (isServerTargetSwitchingEnabled()) {
+    info("wait for first top level target");
+    await onSwitchedTarget1;
+  }
+
+  const firstTarget = targetCommand.targetFront;
+  is(firstTarget.url, firstLocation, "first target url is correct");
+
+  info("Navigate to about:blank page");
+  const onSwitchedTarget = targetCommand.once("switched-target");
+  const browser = tab.linkedBrowser;
+  const onLoaded = BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.loadURI(browser, secondLocation);
+  await onLoaded;
+
+  if (isServerTargetSwitchingEnabled()) {
+    await onSwitchedTarget;
+    isnot(targetCommand.targetFront, firstTarget, "got a new target");
+
+    // Check that calling getAllTargets([frame]) return the same target instances
+    const frames = await targetCommand.getAllTargets([
+      targetCommand.TYPES.FRAME,
+    ]);
+    is(frames.length, 1);
+    is(frames[0].url, secondLocation, "second target url is correct");
+    is(
+      frames[0],
+      targetCommand.targetFront,
+      "second target is the current top level one"
+    );
+  } else {
+    is(
+      targetCommand.targetFront,
+      firstTarget,
+      "without server target switching, we stay on the same top level target"
+    );
+  }
+}
+
 async function testBrowserFrames() {
   info("Test TargetCommand against frames via the parent process target");
+
+  const aboutBlankTab = await addTab("about:blank");
 
   const commands = await CommandsFactory.forMainProcess();
   const targetCommand = commands.targetCommand;
@@ -121,6 +199,13 @@ async function testBrowserFrames() {
     frameTarget => frameTarget.url == window.location.href
   );
   ok(hasBrowserDocument, "retrieve the target for the browser document");
+
+  const hasAboutBlankDocument = frames.find(
+    frameTarget =>
+      frameTarget.browsingContextID ==
+      aboutBlankTab.linkedBrowser.browsingContext.id
+  );
+  ok(hasAboutBlankDocument, "retrieve the target for the about:blank tab");
 
   // Check that calling getAllTargets([frame]) return the same target instances
   const frames2 = await targetCommand.getAllTargets([TYPES.FRAME]);
