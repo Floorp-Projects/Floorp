@@ -22,7 +22,7 @@ fuzzy(0-1,0-75) fuzzy-if(Android,254-255,273680-273807) == ../reftest_video.html
 skip-if(!webrender||Android) fuzzy(16-48,8349-8818) fuzzy-if(winWidget&&swgl,31-38,8240-184080) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.av1.webm  ../reftest_img.html?src=color_quads/720p.png
 skip-if(!webrender||Android) fuzzy-if(Android,255-255,273726-273726) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.vp9.webm  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.av1.webm
 skip-if(!webrender||Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.av1.mp4   ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.av1.webm
-skip-if(!webrender||Android) skip-if(winWidget&&swgl) fuzzy-if(Android,255-255,273726-273726) fuzzy-if(OSX||winWidget,2-34,184281-187407) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.h264.mp4  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.av1.webm
+skip-if(!webrender||Android) skip-if(winWidget&&swgl) fuzzy-if(Android,255-255,273726-273726) fuzzy-if(OSX,2-34,184281-187407) fuzzy-if(winWidget,0-1,0-7) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.h264.mp4  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.av1.webm
 skip-if(!webrender||Android) fuzzy-if(Android,255-255,273726-273726) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.vp9.mp4   ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.av1.webm
 
 # -
