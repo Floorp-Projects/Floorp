@@ -46,8 +46,8 @@ NullPrincipal::NullPrincipal(nsIURI* aURI, const nsACString& aOriginNoSuffix,
 already_AddRefed<NullPrincipal> NullPrincipal::CreateWithInheritedAttributes(
     nsIPrincipal* aInheritFrom) {
   MOZ_ASSERT(aInheritFrom);
-  return CreateWithInheritedAttributes(
-      Cast(aInheritFrom)->OriginAttributesRef(), false);
+  return CreateInternal(Cast(aInheritFrom)->OriginAttributesRef(), false,
+                        nullptr, aInheritFrom);
 }
 
 /* static */
