@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <time.h>  // for clockid_t
 
+#include "GeckoProfiler.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticMutex.h"
@@ -237,6 +238,9 @@ void SandboxReporter::ThreadMain(void) {
   // Create a nsThread wrapper for the current platform thread, and register it
   // with the thread manager.
   (void)NS_GetCurrentThread();
+
+  PlatformThread::SetName("SandboxReporter");
+  AUTO_PROFILER_REGISTER_THREAD("SandboxReporter");
 
   for (;;) {
     SandboxReport rep;
