@@ -172,7 +172,7 @@ td {
   unicode-bidi: plaintext; /* Make sure file paths will be LTR */
 }
 
-#update-row > td:dir(rtl),
+#update-dir-row > td:dir(rtl),
 #profile-row > td:dir(rtl) {
   unicode-bidi: normal;
 }
