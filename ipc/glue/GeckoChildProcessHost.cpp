@@ -122,6 +122,18 @@ static bool ShouldHaveDirectoryService() {
 namespace mozilla {
 namespace ipc {
 
+struct LaunchResults {
+  base::ProcessHandle mHandle = 0;
+#ifdef XP_MACOSX
+  task_t mChildTask = MACH_PORT_NULL;
+#endif
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  RefPtr<AbstractSandboxBroker> mSandboxBroker;
+#endif
+};
+typedef mozilla::MozPromise<LaunchResults, LaunchError, true>
+    ProcessLaunchPromise;
+
 static Atomic<int32_t> gChildCounter;
 
 static inline nsISerialEventTarget* IOThread() {
@@ -689,7 +701,7 @@ bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
           this)
           ->Then(
               IOThread(), __func__,
-              [this](const LaunchResults& aResults) {
+              [this](LaunchResults&& aResults) {
                 {
                   if (!OpenPrivilegedHandle(base::GetProcId(aResults.mHandle))
 #ifdef XP_WIN
@@ -706,12 +718,18 @@ bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
                   ) {
                     MOZ_CRASH("cannot open handle to child process");
                   }
+                  // The original handle is no longer needed; it must
+                  // be closed to prevent a resource leak.
+                  base::CloseProcessHandle(aResults.mHandle);
+                  // FIXME (bug 1720523): define a cross-platform
+                  // "safe" invalid value to use in places like this.
+                  aResults.mHandle = 0;
 
 #ifdef XP_MACOSX
                   this->mChildTask = aResults.mChildTask;
 #endif
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-                  this->mSandboxBroker = aResults.mSandboxBroker;
+                  this->mSandboxBroker = std::move(aResults.mSandboxBroker);
 #endif
 
                   MonitorAutoLock lock(mMonitor);
@@ -722,8 +740,8 @@ bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
                   }
                   lock.Notify();
                 }
-                return ProcessHandlePromise::CreateAndResolve(aResults.mHandle,
-                                                              __func__);
+                return ProcessHandlePromise::CreateAndResolve(
+                    mChildProcessHandle, __func__);
               },
               [this](const LaunchError aError) {
                 // WaitUntilConnected might be waiting for us to signal.
