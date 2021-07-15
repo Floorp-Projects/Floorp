@@ -244,10 +244,6 @@ panelview .toolbaritem-combined-buttons,
   max-width: @standaloneSubviewWidth@;
 }
 
-#BMB_bookmarksPopup::part(arrowscrollbox) {
-  border: 0;
-}
-
 #BMB_bookmarksPopup menupopup {
   --panel-border-radius: var(--arrowpanel-border-radius);
   --panel-padding: var(--panel-subview-body-padding);
