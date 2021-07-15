@@ -77,7 +77,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SaveToPocket: "chrome://pocket/content/SaveToPocket.jsm",
-  ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.jsm",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
@@ -2393,14 +2392,6 @@ BrowserGlue.prototype = {
       {
         task: () => {
           this._maybeShowDefaultBrowserPrompt();
-        },
-      },
-
-      {
-        task: () => {
-          if(Services.prefs.getBoolPref("screenshots.browser.component.enabled")) {
-            ScreenshotsUtils.initialize();
-          }
         },
       },
 
