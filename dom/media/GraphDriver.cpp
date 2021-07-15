@@ -834,13 +834,11 @@ AudioCallbackDriver::AutoInCallback::~AutoInCallback() {
 }
 
 bool AudioCallbackDriver::CheckThreadIdChanged() {
-#ifdef MOZ_GECKO_PROFILER
   auto id = profiler_current_thread_id();
   if (id != mAudioThreadId) {
     mAudioThreadId = id;
     return true;
   }
-#endif
   return false;
 }
 

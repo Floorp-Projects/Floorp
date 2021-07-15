@@ -291,15 +291,15 @@ UniquePtr<AudioStream::Chunk> AudioSink::PopFrames(uint32_t aFrames) {
              mCurrentData->mTime.ToMicroseconds(),
              mCurrentData->Frames() - mCursor->Available(), framesToPop);
 
-#ifdef MOZ_GECKO_PROFILER
-  mOwnerThread->Dispatch(NS_NewRunnableFunction(
-      "AudioSink:AddMarker",
-      [startTime = mCurrentData->mTime.ToMicroseconds(),
-       endTime = mCurrentData->GetEndTime().ToMicroseconds()] {
-        PROFILER_MARKER("PlayAudio", MEDIA_PLAYBACK, {}, MediaSampleMarker,
-                        startTime, endTime);
-      }));
-#endif  // MOZ_GECKO_PROFILER
+  if (profiler_can_accept_markers()) {
+    mOwnerThread->Dispatch(NS_NewRunnableFunction(
+        "AudioSink:AddMarker",
+        [startTime = mCurrentData->mTime.ToMicroseconds(),
+         endTime = mCurrentData->GetEndTime().ToMicroseconds()] {
+          PROFILER_MARKER("PlayAudio", MEDIA_PLAYBACK, {}, MediaSampleMarker,
+                          startTime, endTime);
+        }));
+  }
 
   UniquePtr<AudioStream::Chunk> chunk =
       MakeUnique<Chunk>(mCurrentData, framesToPop, mCursor->Ptr());

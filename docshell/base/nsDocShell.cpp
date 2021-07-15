@@ -7837,13 +7837,13 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (!parentSite.Equals(thisSite)) {
-#ifdef MOZ_GECKO_PROFILER
-        nsCOMPtr<nsIURI> prinURI;
-        BasePrincipal::Cast(thisPrincipal)->GetURI(getter_AddRefs(prinURI));
-        nsPrintfCString marker("Iframe loaded in background: %s",
-                               prinURI->GetSpecOrDefault().get());
-        PROFILER_MARKER_TEXT("Background Iframe", DOM, {}, marker);
-#endif
+        if (profiler_can_accept_markers()) {
+          nsCOMPtr<nsIURI> prinURI;
+          BasePrincipal::Cast(thisPrincipal)->GetURI(getter_AddRefs(prinURI));
+          nsPrintfCString marker("Iframe loaded in background: %s",
+                                 prinURI->GetSpecOrDefault().get());
+          PROFILER_MARKER_TEXT("Background Iframe", DOM, {}, marker);
+        }
         SetBackgroundLoadIframe();
       }
     }
