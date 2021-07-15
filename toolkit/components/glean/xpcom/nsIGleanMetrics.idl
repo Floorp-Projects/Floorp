@@ -516,3 +516,102 @@ interface nsIGleanQuantity : nsISupports
    */
   jsval testGetValue([optional] in AUTF8String aPingName);
 };
+
+[scriptable, uuid(394d9d3b-9e7e-48cc-b76c-a89a51830da3)]
+interface nsIGleanDenominator : nsISupports
+{
+  /*
+  * Increases the counter by `amount`.
+  *
+  * @param amount The amount to increase by. Should be positive.
+  */
+  void add(in int32_t amount);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value as an integer.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or undefined if there is no value.
+   */
+  jsval testGetValue([optional] in AUTF8String aPingName);
+};
+
+[scriptable, uuid(153fff71-7edd-49b4-a166-4697aa89c7a1)]
+interface nsIGleanNumerator : nsISupports
+{
+  /*
+  * Increases the numerator by `amount`.
+  *
+  * @param amount The amount to increase by. Should be positive.
+  */
+  void addToNumerator(in int32_t amount);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value in the form {numerator: n, denominator: d}
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or undefined if there is no value.
+   */
+  [implicit_jscontext]
+  jsval testGetValue([optional] in AUTF8String aPingName);
+};
+
+[scriptable, uuid(920cf631-2b1e-4efe-ae2e-f03277c3112a)]
+interface nsIGleanRate : nsISupports
+{
+  /*
+  * Increases the numerator by `amount`.
+  *
+  * @param amount The amount to increase by. Should be positive.
+  */
+  void addToNumerator(in int32_t amount);
+
+  /*
+  * Increases the denominator by `amount`.
+  *
+  * @param amount The amount to increase by. Should be positive.
+  */
+  void addToDenominator(in int32_t amount);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value in the form {numerator: n, denominator: d}
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or undefined if there is no value.
+   */
+  [implicit_jscontext]
+  jsval testGetValue([optional] in AUTF8String aPingName);
+};
