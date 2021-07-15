@@ -19,7 +19,6 @@
 #include "nsTextEquivUtils.h"
 #include "DocAccessibleChild.h"
 #include "EventTree.h"
-#include "GeckoProfiler.h"
 #include "Pivot.h"
 #include "Relation.h"
 #include "Role.h"
@@ -74,6 +73,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/Element.h"
@@ -810,7 +810,6 @@ void LocalAccessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
 nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
   NS_ENSURE_ARG_POINTER(aEvent);
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_thread_is_being_profiled()) {
     nsAutoCString strEventType;
     GetAccService()->GetStringEventType(aEvent->GetEventType(), strEventType);
@@ -819,7 +818,6 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
     strMarker.Append(strEventType);
     PROFILER_MARKER_UNTYPED(strMarker, OTHER);
   }
-#endif
 
   if (IPCAccessibilityActive() && Document()) {
     DocAccessibleChild* ipcDoc = mDoc->IPCDoc();
