@@ -128,6 +128,9 @@ add_task({ skip_if: () => runningInParent }, async function run_child_stuff() {
   );
 
   Glean.testOnly.mabelsBathroomCounters.InvalidLabel.add(INVALID_COUNTERS);
+
+  Glean.testOnlyIpc.irate.addToNumerator(44);
+  Glean.testOnlyIpc.irate.addToDenominator(14);
 });
 
 add_task(
@@ -201,6 +204,11 @@ add_task(
       () => Glean.testOnly.mabelsBathroomCounters.__other__.testGetValue(),
       /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
       "Invalid labels record errors, which throw"
+    );
+
+    Assert.deepEqual(
+      { numerator: 44, denominator: 14 },
+      Glean.testOnlyIpc.irate.testGetValue()
     );
   }
 );
