@@ -14789,9 +14789,9 @@ class CustomizeMenu_CustomizeMenu extends external_React_default.a.PureComponent
       in: !this.props.showing,
       appear: true
     }, /*#__PURE__*/external_React_default.a.createElement("button", {
-      className: "personalize-button",
+      className: "icon icon-settings personalize-button",
       onClick: () => this.props.onOpen(),
-      "data-l10n-id": "newtab-personalize-button-label",
+      "data-l10n-id": "newtab-personalize-icon-label",
       ref: c => this.openButton = c
     })), /*#__PURE__*/external_React_default.a.createElement(external_ReactTransitionGroup_["CSSTransition"], {
       timeout: 250,
