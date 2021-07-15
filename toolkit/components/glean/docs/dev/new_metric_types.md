@@ -110,8 +110,8 @@ Each metric type has six pieces you'll need to cover:
 ### 1. MLA FFI
 
 - Using our convenient macros,
-  define the Multi-Language Architecture's FFI layer above the Rust API in
-  [`api/src/ffi/mod.rs`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/api/src/ffi/mod.rs).
+  define the metric type's Multi-Language Architecture FFI layer above the Rust API in
+  [`api/src/ffi/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/api/src/ffi/).
 
 ### 2. C++ Impl
 
