@@ -36,7 +36,6 @@
 #include "nsStyleTransformMatrix.h"
 #include "mozilla/PresState.h"
 #include "nsContentUtils.h"
-#include "nsDisplayList.h"
 #include "nsHTMLDocument.h"
 #include "nsLayoutUtils.h"
 #include "nsBidiPresUtils.h"

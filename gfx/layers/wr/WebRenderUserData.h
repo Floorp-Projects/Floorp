@@ -18,10 +18,9 @@
 #include "ImageTypes.h"
 #include "DisplayItemClip.h"
 
-namespace mozilla {
-
 class nsDisplayItemGeometry;
 
+namespace mozilla {
 namespace webgpu {
 class WebGPUChild;
 }
@@ -35,7 +34,6 @@ class SourceSurface;
 }
 
 namespace layers {
-
 class BasicLayerManager;
 class CanvasLayer;
 class ImageClient;

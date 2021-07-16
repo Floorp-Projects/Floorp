@@ -10,10 +10,6 @@
 #include "mozilla/Span.h"
 #include "PLDHashTable.h"
 
-class nsIFrame;
-
-namespace mozilla {
-
 struct DisplayItemKey {
   bool operator==(const DisplayItemKey& aOther) const {
     return mFrame == aOther.mFrame && mPerFrameKey == aOther.mPerFrameKey;
@@ -181,7 +177,5 @@ struct OldItemInfo {
 
 bool AnyContentAncestorModified(nsIFrame* aFrame,
                                 nsIFrame* aStopAtFrame = nullptr);
-
-}  // namespace mozilla
 
 #endif  // RETAINEDDISPLAYLISTHELPERS_H_

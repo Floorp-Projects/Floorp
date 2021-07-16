@@ -701,8 +701,6 @@ void nsMathMLmencloseFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
 
 //////////////////
 
-namespace mozilla {
-
 class nsDisplayNotation final : public nsPaintedDisplayItem {
  public:
   nsDisplayNotation(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
@@ -815,8 +813,6 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
           "nsDisplayNotation");
   }
 }
-
-}  // namespace mozilla
 
 void nsMathMLmencloseFrame::DisplayNotation(nsDisplayListBuilder* aBuilder,
                                             nsIFrame* aFrame,

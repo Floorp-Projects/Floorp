@@ -13,8 +13,6 @@
 
 class nsWindowSizes;
 
-namespace mozilla {
-
 /**
  * RetainedDisplayListData contains frame invalidation information. It is stored
  * in root frames, and used by RetainedDisplayListBuilder.
@@ -259,7 +257,5 @@ struct RetainedDisplayListBuilder {
   WeakFrame mPreviousCaret;
   RetainedDisplayListMetrics mMetrics;
 };
-
-}  // namespace mozilla
 
 #endif  // RETAINEDDISPLAYLISTBUILDER_H_

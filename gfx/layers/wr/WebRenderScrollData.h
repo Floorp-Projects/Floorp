@@ -24,10 +24,11 @@
 #include "mozilla/Maybe.h"
 #include "nsTArrayForwardDeclare.h"
 
+class nsDisplayListBuilder;
+class nsDisplayItem;
+
 namespace mozilla {
 
-class nsDisplayItem;
-class nsDisplayListBuilder;
 struct ActiveScrolledRoot;
 
 namespace layers {

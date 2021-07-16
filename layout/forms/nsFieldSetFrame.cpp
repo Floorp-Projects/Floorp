@@ -95,8 +95,6 @@ nsIFrame* nsFieldSetFrame::GetLegend() const {
   return nullptr;
 }
 
-namespace mozilla {
-
 class nsDisplayFieldSetBorder final : public nsPaintedDisplayItem {
  public:
   nsDisplayFieldSetBorder(nsDisplayListBuilder* aBuilder,
@@ -219,8 +217,6 @@ bool nsDisplayFieldSetBorder::CreateWebRenderCommands(
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, drawResult);
   return true;
 };
-
-}  // namespace mozilla
 
 void nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                        const nsDisplayListSet& aLists) {

@@ -12,15 +12,11 @@
 #include "nsRect.h"
 
 class nsIFrame;
+class nsDisplayListBuilder;
 
 namespace mozilla {
 
-class nsDisplayListBuilder;
 struct ActiveScrolledRoot;
-
-namespace wr {
-class DisplayListBuilder;
-}  // namespace wr
 
 /**
  * A helper class that manages compositor hit testing information.
