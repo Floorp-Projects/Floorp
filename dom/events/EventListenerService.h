@@ -10,6 +10,7 @@
 #include "jsapi.h"
 #include "mozilla/Attributes.h"
 #include "nsCycleCollectionParticipant.h"
+#include "EventListenerManager.h"
 #include "nsIEventListenerService.h"
 #include "nsString.h"
 #include "nsTObserverArray.h"
@@ -43,11 +44,12 @@ class EventListenerChange final : public nsIEventListenerChange {
 
 class EventListenerInfo final : public nsIEventListenerInfo {
  public:
-  EventListenerInfo(const nsAString& aType,
+  EventListenerInfo(EventListenerManager* aListenerManager,
+                    const nsAString& aType,
                     JS::Handle<JSObject*> aScriptedListener,
                     JS::Handle<JSObject*> aScriptedListenerGlobal,
                     bool aCapturing, bool aAllowsUntrusted,
-                    bool aInSystemEventGroup);
+                    bool aInSystemEventGroup, bool aIsHandler);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(EventListenerInfo)
@@ -59,6 +61,7 @@ class EventListenerInfo final : public nsIEventListenerInfo {
   bool GetJSVal(JSContext* aCx, Maybe<JSAutoRealm>& aAr,
                 JS::MutableHandle<JS::Value> aJSVal);
 
+  RefPtr<EventListenerManager> mListenerManager;
   nsString mType;
   JS::Heap<JSObject*> mScriptedListener;  // May be null.
   // mScriptedListener may be a cross-compartment wrapper so we cannot use it
@@ -69,6 +72,7 @@ class EventListenerInfo final : public nsIEventListenerInfo {
   bool mCapturing;
   bool mAllowsUntrusted;
   bool mInSystemEventGroup;
+  bool mIsHandler;
 };
 
 class EventListenerService final : public nsIEventListenerService {

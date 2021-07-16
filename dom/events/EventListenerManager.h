@@ -221,6 +221,7 @@ class EventListenerManager final : public EventListenerManagerBase {
     bool mHandlerIsString : 1;
     bool mAllEvents : 1;
     bool mIsChrome : 1;
+    bool mEnabled : 1;
 
     EventListenerFlags mFlags;
 
@@ -236,7 +237,8 @@ class EventListenerManager final : public EventListenerManagerBase {
           mListenerIsHandler(false),
           mHandlerIsString(false),
           mAllEvents(false),
-          mIsChrome(false) {}
+          mIsChrome(false),
+          mEnabled(true) {}
 
     Listener(Listener&& aOther)
         : mSignalFollower(std::move(aOther.mSignalFollower)),
@@ -247,13 +249,15 @@ class EventListenerManager final : public EventListenerManagerBase {
           mListenerIsHandler(aOther.mListenerIsHandler),
           mHandlerIsString(aOther.mHandlerIsString),
           mAllEvents(aOther.mAllEvents),
-          mIsChrome(aOther.mIsChrome) {
+          mIsChrome(aOther.mIsChrome),
+          mEnabled(aOther.mEnabled) {
       aOther.mEventMessage = eVoidEvent;
       aOther.mListenerType = eNoListener;
       aOther.mListenerIsHandler = false;
       aOther.mHandlerIsString = false;
       aOther.mAllEvents = false;
       aOther.mIsChrome = false;
+      aOther.mEnabled = true;
     }
 
     ~Listener() {
@@ -444,6 +448,16 @@ class EventListenerManager final : public EventListenerManagerBase {
    */
   nsresult GetListenerInfo(nsTArray<RefPtr<nsIEventListenerInfo>>& aList);
 
+  nsresult IsListenerEnabled(nsAString& aType, JSObject* aListener,
+                             bool aCapturing, bool aAllowsUntrusted,
+                             bool aInSystemEventGroup, bool aIsHandler,
+                             bool* aEnabled);
+
+  nsresult SetListenerEnabled(nsAString& aType, JSObject* aListener,
+                              bool aCapturing, bool aAllowsUntrusted,
+                              bool aInSystemEventGroup, bool aIsHandler,
+                              bool aEnabled);
+
   uint32_t GetIdentifierForEvent(nsAtom* aEvent);
 
   /**
@@ -573,6 +587,10 @@ class EventListenerManager final : public EventListenerManagerBase {
 
   bool HasListenersForInternal(nsAtom* aEventNameWithOn,
                                bool aIgnoreSystemGroup) const;
+
+  Listener* GetListenerFor(nsAString& aType, JSObject* aListener,
+                           bool aCapturing, bool aAllowsUntrusted,
+                           bool aInSystemEventGroup, bool aIsHandler);
 
  public:
   /**
