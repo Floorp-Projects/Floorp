@@ -65,7 +65,7 @@ class TestCommandLineArguments(MarionetteTestCase):
               const { RemoteAgent } = ChromeUtils.import(
                 "chrome://remote/content/components/RemoteAgent.jsm"
               );
-              return !!RemoteAgent.webdriverBiDi;
+              return !!RemoteAgent.webDriverBiDi;
             """
             )
 
