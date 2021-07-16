@@ -1250,9 +1250,22 @@ struct WasmTryNote {
 
 WASM_DECLARE_POD_VECTOR(WasmTryNote, WasmTryNoteVector)
 
+// The kind of limits to decode or convert from JS.
+
+enum class LimitsKind {
+  Memory,
+  Table,
+};
+
 // Represents the resizable limits of memories and tables.
 
 struct Limits {
+  // `indexType` will always be I32 for tables, but may be I64 for memories
+  // when memory64 is enabled.
+  IndexType indexType;
+
+  // The initial and maximum limit. The unit is pages for memories and elements
+  // for tables.
   uint64_t initial;
   Maybe<uint64_t> maximum;
 
@@ -1266,15 +1279,9 @@ struct Limits {
       : initial(initial), maximum(maximum), shared(shared) {}
 };
 
-// Memories can be 32-bit (indices are 32 bits and the max is 4GB) or 64-bit
-// (indices are 64 bits and the max is XXX).
-
-enum class MemoryKind { Memory32, Memory64 };
-
 // MemoryDesc describes a memory.
 
 struct MemoryDesc {
-  MemoryKind kind;
   Limits limits;
 
   bool isShared() const { return limits.shared == Shareable::True; }
@@ -1290,6 +1297,8 @@ struct MemoryDesc {
            limits.maximum.value() < (0x100000000 / PageSize);
   }
 
+  IndexType indexType() const { return limits.indexType; }
+
   // The initial length of this memory in pages.
   Pages initialPages() const { return Pages(limits.initial); }
 
@@ -1300,13 +1309,13 @@ struct MemoryDesc {
 
   // The initial length of this memory in bytes. Only valid for memory32.
   uint64_t initialLength32() const {
-    MOZ_ASSERT(kind == MemoryKind::Memory32);
+    MOZ_ASSERT(indexType() == IndexType::I32);
     // See static_assert after MemoryDesc for why this is safe.
     return limits.initial * PageSize;
   }
 
   MemoryDesc() = default;
-  explicit MemoryDesc(MemoryKind kind, Limits limits) : kind(kind), limits(limits) {}
+  explicit MemoryDesc(Limits limits) : limits(limits) {}
 };
 
 // We don't need to worry about overflow with a Memory32 field when

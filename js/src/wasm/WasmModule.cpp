@@ -705,11 +705,16 @@ bool Module::instantiateMemory(JSContext* cx,
   }
 
   MemoryDesc desc = *metadata().memory;
-  MOZ_ASSERT(desc.kind == MemoryKind::Memory32);
-
   if (memory) {
     MOZ_ASSERT_IF(metadata().isAsmJS(), memory->buffer().isPreparedForAsmJS());
     MOZ_ASSERT_IF(!metadata().isAsmJS(), memory->buffer().isWasm());
+
+    if (memory->indexType() != desc.indexType()) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_WASM_BAD_IMP_INDEX,
+                               ToString(memory->indexType()));
+      return false;
+    }
 
     if (!CheckLimits(cx, desc.initialPages(), desc.maximumPages(),
                      /* defaultMax */ MaxMemory32Pages(),

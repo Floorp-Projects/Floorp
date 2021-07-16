@@ -26,6 +26,16 @@
 namespace js {
 namespace wasm {
 
+// Limits are parameterized by an IndexType which is used to index the
+// underlying resource (either a Memory or a Table). Tables are restricted to
+// I32, while memories may use I64 when memory64 is enabled.
+
+enum class IndexType : uint8_t { I32, I64 };
+
+extern bool ToIndexType(JSContext* cx, HandleValue value, IndexType* indexType);
+
+extern const char* ToString(IndexType indexType);
+
 // Pages is a typed unit representing a multiple of wasm::PageSize. We
 // generally use pages as the unit of length when representing linear memory
 // lengths so as to avoid overflow when the specified initial or maximum pages

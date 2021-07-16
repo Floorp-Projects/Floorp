@@ -862,12 +862,14 @@ static bool EnforceRangeU32(JSContext* cx, HandleValue v, const char* kind,
 }
 
 static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
-                      const char* kind, Limits* limits, Shareable allowShared) {
+                      LimitsKind kind, Limits* limits) {
   JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
   if (!initialAtom) {
     return false;
   }
   RootedId initialId(cx, AtomToId(initialAtom));
+
+  const char* noun = (kind == LimitsKind::Memory ? "Memory" : "Table");
 
   RootedValue initialVal(cx);
   if (!GetProperty(cx, obj, obj, initialId, &initialVal)) {
@@ -876,14 +878,14 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
 
   uint32_t initial = 0;
   if (!initialVal.isUndefined() &&
-      !EnforceRangeU32(cx, initialVal, kind, "initial size", &initial)) {
+      !EnforceRangeU32(cx, initialVal, noun, "initial size", &initial)) {
     return false;
   }
   limits->initial = initial;
 
   if (limits->initial > maximumField) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_RANGE,
-                             kind, "initial size");
+                             noun, "initial size");
     return false;
   }
 
@@ -902,7 +904,7 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
 
   uint32_t minimum = 0;
   if (!minimumVal.isUndefined() &&
-      !EnforceRangeU32(cx, minimumVal, kind, "initial size", &minimum)) {
+      !EnforceRangeU32(cx, minimumVal, noun, "initial size", &minimum)) {
     return false;
   }
   if (!minimumVal.isUndefined()) {
@@ -925,21 +927,24 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
   // maxVal does not have a default value.
   if (!maxVal.isUndefined()) {
     uint32_t maximum = 0;
-    if (!EnforceRangeU32(cx, maxVal, kind, "maximum size", &maximum)) {
+    if (!EnforceRangeU32(cx, maxVal, noun, "maximum size", &maximum)) {
       return false;
     }
     limits->maximum = Some(maximum);
 
     if (*limits->maximum > maximumField || limits->initial > *limits->maximum) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_WASM_BAD_RANGE, kind, "maximum size");
+                               JSMSG_WASM_BAD_RANGE, noun, "maximum size");
       return false;
     }
   }
 
+  limits->indexType = IndexType::I32;
   limits->shared = Shareable::False;
 
-  if (allowShared == Shareable::True) {
+  // Memory limits may be shared or specify an alternate index type
+  if (kind == LimitsKind::Memory) {
+    // Get the shared field
     JSAtom* sharedAtom = Atomize(cx, "shared", strlen("shared"));
     if (!sharedAtom) {
       return false;
@@ -959,7 +964,7 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
       if (limits->shared == Shareable::True) {
         if (maxVal.isUndefined()) {
           JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                    JSMSG_WASM_MISSING_MAXIMUM, kind);
+                                    JSMSG_WASM_MISSING_MAXIMUM, noun);
           return false;
         }
 
@@ -972,6 +977,33 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
         }
       }
     }
+
+#ifdef ENABLE_WASM_MEMORY64
+    // Get the index type field
+    JSAtom* indexTypeAtom = Atomize(cx, "index", strlen("index"));
+    if (!indexTypeAtom) {
+      return false;
+    }
+    RootedId indexTypeId(cx, AtomToId(indexTypeAtom));
+
+    RootedValue indexTypeVal(cx);
+    if (!GetProperty(cx, obj, obj, indexTypeId, &indexTypeVal)) {
+      return false;
+    }
+
+    // The index type has a default value
+    if (!indexTypeVal.isUndefined()) {
+      if (!ToIndexType(cx, indexTypeVal, &limits->indexType)) {
+        return false;
+      }
+
+      if (limits->indexType == IndexType::I64 && !Memory64Available(cx)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_WASM_NO_MEM64_LINK);
+        return false;
+      }
+    }
+#endif
   }
 
 #ifdef ENABLE_WASM_TYPE_REFLECTIONS
@@ -2337,6 +2369,7 @@ WasmMemoryObject* WasmMemoryObject::create(
 
   obj->initReservedSlot(BUFFER_SLOT, ObjectValue(*buffer));
   MOZ_ASSERT(!obj->hasObservers());
+
   return obj;
 }
 
@@ -2360,8 +2393,7 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedObject obj(cx, &args[0].toObject());
   Limits limits;
-  if (!GetLimits(cx, obj, MaxMemory32LimitField, "Memory", &limits,
-                 Shareable::True)) {
+  if (!GetLimits(cx, obj, MaxMemory32LimitField, LimitsKind::Memory, &limits)) {
     return false;
   }
 
@@ -2370,7 +2402,7 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
                              JSMSG_WASM_MEM_IMP_LIMIT);
     return false;
   }
-  MemoryDesc memory(MemoryKind::Memory32, limits);
+  MemoryDesc memory(limits);
 
   RootedArrayBufferObjectMaybeShared buffer(cx);
   if (!CreateWasmBuffer32(cx, memory, &buffer)) {
@@ -2556,6 +2588,13 @@ Maybe<wasm::Pages> WasmMemoryObject::maxPages() const {
     return Some(sharedArrayRawBuffer()->wasmMaxPages());
   }
   return buffer().wasmMaxPages();
+}
+
+wasm::IndexType WasmMemoryObject::indexType() const {
+  if (isShared()) {
+    return sharedArrayRawBuffer()->wasmIndexType();
+  }
+  return buffer().wasmIndexType();
 }
 
 bool WasmMemoryObject::isShared() const {
@@ -2910,10 +2949,12 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Limits limits;
-  if (!GetLimits(cx, obj, MaxTableLimitField, "Table", &limits,
-                 Shareable::False)) {
+  if (!GetLimits(cx, obj, MaxTableLimitField, LimitsKind::Table, &limits)) {
     return false;
   }
+
+  // Converting limits for a table only supports i32
+  MOZ_ASSERT(limits.indexType == IndexType::I32);
 
   if (limits.initial > MaxTableLength) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
