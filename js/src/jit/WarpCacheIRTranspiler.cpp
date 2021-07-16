@@ -156,8 +156,11 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   const wasm::FuncExport* wasmFuncExportField(uint32_t offset) {
     return reinterpret_cast<const wasm::FuncExport*>(readStubWord(offset));
   }
-  gc::AllocSite* allocSiteStubField(uint32_t offset) {
-    return reinterpret_cast<gc::AllocSite*>(readStubWord(offset));
+  gc::InitialHeap allocSiteInitialHeapField(uint32_t offset) {
+    uintptr_t word = readStubWord(offset);
+    MOZ_ASSERT(word == uintptr_t(gc::DefaultHeap) ||
+               word == uintptr_t(gc::TenuredHeap));
+    return gc::InitialHeap(word);
   }
   const void* rawPointerField(uint32_t offset) {
     return reinterpret_cast<const void*>(readStubWord(offset));
@@ -4727,9 +4730,7 @@ bool WarpCacheIRTranspiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
                                                      uint32_t shapeOffset,
                                                      uint32_t siteOffset) {
   Shape* shape = shapeStubField(shapeOffset);
-  gc::AllocSite* site = allocSiteStubField(siteOffset);
-
-  gc::InitialHeap heap = site->initialHeap();
+  gc::InitialHeap heap = allocSiteInitialHeapField(siteOffset);
 
   auto* shapeConstant = MConstant::NewShape(alloc(), shape);
   add(shapeConstant);
@@ -4746,9 +4747,7 @@ bool WarpCacheIRTranspiler::emitNewArrayObjectResult(uint32_t length,
                                                      uint32_t shapeOffset,
                                                      uint32_t siteOffset) {
   Shape* shape = shapeStubField(shapeOffset);
-  gc::AllocSite* site = allocSiteStubField(siteOffset);
-
-  gc::InitialHeap heap = site->initialHeap();
+  gc::InitialHeap heap = allocSiteInitialHeapField(siteOffset);
 
   auto* shapeConstant = MConstant::NewShape(alloc(), shape);
   add(shapeConstant);

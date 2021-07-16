@@ -6,6 +6,7 @@
 
 #include "jit/WarpSnapshot.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
 #include <type_traits>
@@ -367,9 +368,10 @@ void WarpCacheIR::traceData(JSTracer* trc) {
           break;
         }
         case StubField::Type::AllocSite: {
-          uintptr_t word = stubInfo_->getStubRawWord(stubData_, offset);
-          auto* site = reinterpret_cast<gc::AllocSite*>(word);
-          site->trace(trc);
+          mozilla::DebugOnly<uintptr_t> word =
+              stubInfo_->getStubRawWord(stubData_, offset);
+          MOZ_ASSERT(word == uintptr_t(gc::DefaultHeap) ||
+                     word == uintptr_t(gc::TenuredHeap));
           break;
         }
         case StubField::Type::Limit:
