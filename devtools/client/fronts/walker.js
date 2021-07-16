@@ -433,6 +433,13 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
             nodeType === Node.DOCUMENT_NODE
           );
         });
+
+        // The iframe selector might have matched an element which is not an
+        // iframe in the new page (or an iframe with no document?). In this
+        // case, bail out and fallback to the root body element.
+        if (!nodeFront) {
+          return null;
+        }
       }
       return querySelectors(nodeFront) || nodeFront;
     };
