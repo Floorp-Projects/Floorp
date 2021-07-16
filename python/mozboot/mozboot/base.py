@@ -143,9 +143,7 @@ ac_add_options --enable-application=js
 # This should match the OLDEST_NON_LEGACY_VERSION in
 # version-control-tools/hgext/configwizard/__init__.py.
 MODERN_MERCURIAL_VERSION = LooseVersion("4.9")
-
-MODERN_PYTHON2_VERSION = LooseVersion("2.7.3")
-MODERN_PYTHON3_VERSION = LooseVersion("3.6.0")
+MODERN_PYTHON_VERSION = LooseVersion("3.6.0")
 
 # Upgrade rust older than this.
 MODERN_RUST_VERSION = LooseVersion(MINIMUM_RUST_VERSION)
@@ -645,53 +643,18 @@ class BaseBootstrapper(object):
         """
         print(MERCURIAL_UNABLE_UPGRADE % (current, MODERN_MERCURIAL_VERSION))
 
-    def is_python_modern(self, major):
-        assert major in (2, 3)
-
-        our = None
-
-        if major == 3:
-            our = LooseVersion(platform.python_version())
-        else:
-            for test in ("python2.7", "python"):
-                python = which(test)
-                if python:
-                    candidate_version = self._parse_version(python, "Python")
-                    if candidate_version and candidate_version.version[0] == major:
-                        our = candidate_version
-                        break
-
-        if our is None:
-            return False, None
-
-        modern = {2: MODERN_PYTHON2_VERSION, 3: MODERN_PYTHON3_VERSION}
-        return our >= modern[major], our
-
     def ensure_python_modern(self):
-        modern, version = self.is_python_modern(3)
-        if modern:
-            print("Your version of Python 3 (%s) is new enough." % version)
+        version = LooseVersion(platform.python_version())
+        if version >= MODERN_PYTHON_VERSION:
+            print("Your version of Python (%s) is new enough." % version)
         else:
             print(
-                "ERROR: Your version of Python 3 (%s) is not new enough. You "
+                "ERROR: Your version of Python (%s) is not new enough. You "
                 "must have Python >= %s to build Firefox."
-                % (version, MODERN_PYTHON3_VERSION)
+                % (version, MODERN_PYTHON_VERSION)
             )
             print(self.INSTALL_PYTHON_GUIDANCE)
             sys.exit(1)
-        modern, version = self.is_python_modern(2)
-        if modern:
-            print("Your version of Python 2 (%s) is new enough." % version)
-        else:
-            print(
-                "WARNING: Your version of Python 2 (%s) is not new enough. "
-                "You must have Python >= %s to build Firefox. Python 2 is "
-                "not required to build, so we will proceed. However, Python "
-                "2 is required for other development tasks, like running "
-                "tests; you may like to have Python 2 installed for that "
-                "reason." % (version, MODERN_PYTHON2_VERSION)
-            )
-            print(self.INSTALL_PYTHON_GUIDANCE)
 
     def warn_if_pythonpath_is_set(self):
         if "PYTHONPATH" in os.environ:
