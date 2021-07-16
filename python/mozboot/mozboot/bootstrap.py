@@ -227,6 +227,13 @@ class Bootstrapper(object):
         self.instance = cls(**args)
 
     def create_state_dir(self):
+        # Global build system and mach state is stored in a central directory. By
+        # default, this is ~/.mozbuild. However, it can be defined via an
+        # environment variable. We detect first run (by lack of this directory
+        # existing) and notify the user that it will be created. The logic for
+        # creation is much simpler for the "advanced" environment variable use
+        # case. For default behavior, we educate users and give them an opportunity
+        # to react.
         state_dir = get_state_dir()
 
         if not os.path.exists(state_dir):
