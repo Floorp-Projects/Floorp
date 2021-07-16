@@ -234,7 +234,8 @@ class Instance {
 #endif
   static void* arrayNew(Instance* instance, uint32_t length, void* arrayDescr);
   static int32_t refTest(Instance* instance, void* refPtr, void* rttPtr);
-  static void* rttSub(Instance* instance, void* rttPtr);
+  static void* rttSub(Instance* instance, void* rttParentPtr,
+                      void* rttSubCanonPtr);
 };
 
 using UniqueInstance = UniquePtr<Instance>;

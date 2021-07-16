@@ -11,6 +11,7 @@
 #include "mozilla/Maybe.h"
 
 #include "gc/Allocator.h"
+#include "gc/WeakMap.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
 #include "wasm/WasmTypes.h"
@@ -31,18 +32,19 @@ class RttValue : public NativeObject {
   static const JSClass class_;
 
   enum Slot {
-    Handle = 0,  // Type handle index
-    Kind = 1,    // Kind of type
-    Size = 2,    // Size of struct, or size of array element
-    Proto = 3,   // Prototype for instances, if any
-    Parent = 4,  // Parent rtt for runtime casting
+    Handle = 0,    // Type handle index
+    Kind = 1,      // Kind of type
+    Size = 2,      // Size of struct, or size of array element
+    Proto = 3,     // Prototype for instances, if any
+    Parent = 4,    // Parent rtt for runtime casting
+    Children = 5,  // Child rtts for rtt.sub caching
     // Maximum number of slots
-    SlotCount = 5,
+    SlotCount = 6,
   };
 
   static RttValue* createFromHandle(JSContext* cx, wasm::TypeHandle handle);
-  static RttValue* createFromParent(JSContext* cx,
-                                    js::Handle<RttValue*> parent);
+  static RttValue* rttSub(JSContext* cx, js::Handle<RttValue*> parent,
+                          js::Handle<RttValue*> subCanon);
 
   wasm::TypeHandle handle() const {
     return wasm::TypeHandle(uint32_t(getReservedSlot(Slot::Handle).toInt32()));
@@ -62,6 +64,12 @@ class RttValue : public NativeObject {
     return (RttValue*)getReservedSlot(Slot::Parent).toObjectOrNull();
   }
 
+  ObjectWeakMap* maybeChildren() const {
+    return (ObjectWeakMap*)getReservedSlot(Slot::Children).toPrivate();
+  }
+  ObjectWeakMap& children() const { return *maybeChildren(); }
+  bool ensureChildren(JSContext* cx);
+
   const wasm::TypeDef& getType(JSContext* cx) const;
 
   [[nodiscard]] bool lookupProperty(JSContext* cx,
@@ -73,6 +81,9 @@ class RttValue : public NativeObject {
     wasm::FieldType type;
     return lookupProperty(cx, object, id, &offset, &type);
   }
+
+  static void trace(JSTracer* trc, JSObject* obj);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
 };
 
 using HandleRttValue = Handle<RttValue*>;
