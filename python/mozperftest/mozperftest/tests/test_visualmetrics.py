@@ -10,7 +10,6 @@ from mozperftest.tests.support import (
     EXAMPLE_TEST,
     temp_file,
     BT_DATA_VIDEO,
-    mocked_browser_meta_wrapper,
 )
 from mozperftest.environment import METRICS
 
@@ -47,24 +46,17 @@ def mocked_executable():
 @mock.patch("mozperftest.metrics.visualmetrics.which", new=lambda path: "ok")
 @mock.patch("mozbuild.nodeutil.find_node_executable", new=mocked_executable)
 @mock.patch("subprocess.check_output", new=get_res)
-@mock.patch(
-    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
-    new=mocked_browser_meta_wrapper(),
-)
 def test_visual_metrics(device):
     os.environ["VISUALMETRICS_PY"] = ""
     mach_cmd, metadata, env = get_running_env(
-        visualmetrics=True, perfherder=True, verbose=True, tests=[EXAMPLE_TEST]
+        visualmetrics=True,
+        perfherder=True,
+        verbose=True,
+        tests=[EXAMPLE_TEST],
     )
     metrics = env.layers[METRICS]
 
-    metadata.add_result(
-        {
-            "results": str(BT_DATA_VIDEO.parent),
-            "name": "browsertime",
-            "binary": "example-path/firefox",
-        }
-    )
+    metadata.add_result({"results": str(BT_DATA_VIDEO.parent), "name": "browsertime"})
 
     with temp_file() as output:
         env.set_arg("output", output)
@@ -93,16 +85,13 @@ def test_visual_metrics(device):
 def test_visual_metrics_no_ffmpeg(device):
     os.environ["VISUALMETRICS_PY"] = ""
     mach_cmd, metadata, env = get_running_env(
-        visualmetrics=True, perfherder=True, verbose=True, tests=[EXAMPLE_TEST]
+        visualmetrics=True,
+        perfherder=True,
+        verbose=True,
+        tests=[EXAMPLE_TEST],
     )
     metrics = env.layers[METRICS]
-    metadata.add_result(
-        {
-            "results": str(BT_DATA_VIDEO.parent),
-            "name": "browsertime",
-            "binary": "example-path/firefox",
-        }
-    )
+    metadata.add_result({"results": str(BT_DATA_VIDEO.parent), "name": "browsertime"})
 
     with pytest.raises(FileNotFoundError):
         with metrics as m:
