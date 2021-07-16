@@ -917,9 +917,6 @@ def provided_program(env_var, when=None):
     return provided
 
 
-# We'll re-evaluate later, but for now, don't use the sysroot automatically
-# even if it exists, unless --enable-bootstrap was passed explicitly, or when
-# building on automation.
 @template
 def sysroot_path(host_or_target):
     if host_or_target is host:
@@ -964,7 +961,7 @@ def sysroot_path(host_or_target):
             path = sysroot_input[0]
         elif sysroot_input is not None and sysroot_input.origin != "default":
             return
-        elif (bootstrap and bootstrap.origin != "default") or automation:
+        elif bootstrap or automation:
             bootstrapped = True
         if sysroot_input or bootstrapped:
             if path:
