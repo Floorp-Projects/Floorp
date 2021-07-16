@@ -20,6 +20,7 @@
 #define wasm_type_def_h
 
 #include "wasm/WasmCompileArgs.h"
+#include "wasm/WasmConstants.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmUtility.h"
 #include "wasm/WasmValType.h"
@@ -96,12 +97,12 @@ class FuncType {
     return args_.appendAll(src.args_) && results_.appendAll(src.results_);
   }
 
-  void renumber(const RenumberMap& map) {
+  void renumber(const RenumberVector& renumbering) {
     for (auto& arg : args_) {
-      arg.renumber(map);
+      arg.renumber(renumbering);
     }
     for (auto& result : results_) {
-      result.renumber(map);
+      result.renumber(renumbering);
     }
   }
   void offsetTypeIndex(uint32_t offsetBy) {
@@ -212,9 +213,9 @@ class StructType {
     return true;
   }
 
-  void renumber(const RenumberMap& map) {
+  void renumber(const RenumberVector& renumbering) {
     for (auto& field : fields_) {
-      field.type.renumber(map);
+      field.type.renumber(renumbering);
     }
   }
   void offsetTypeIndex(uint32_t offsetBy) {
@@ -262,7 +263,9 @@ class ArrayType {
     return true;
   }
 
-  void renumber(const RenumberMap& map) { elementType_.renumber(map); }
+  void renumber(const RenumberVector& renumbering) {
+    elementType_.renumber(renumbering);
+  }
   void offsetTypeIndex(uint32_t offsetBy) {
     elementType_.offsetTypeIndex(offsetBy);
   }
@@ -416,16 +419,16 @@ class TypeDef {
     return arrayType_;
   }
 
-  void renumber(const RenumberMap& map) {
+  void renumber(const RenumberVector& renumbering) {
     switch (kind_) {
       case TypeDefKind::Func:
-        funcType_.renumber(map);
+        funcType_.renumber(renumbering);
         break;
       case TypeDefKind::Struct:
-        structType_.renumber(map);
+        structType_.renumber(renumbering);
         break;
       case TypeDefKind::Array:
-        arrayType_.renumber(map);
+        arrayType_.renumber(renumbering);
         break;
       case TypeDefKind::None:
         break;
@@ -739,6 +742,114 @@ class TypeHandle {
 
   uint32_t index() const { return index_; }
 };
+
+// [SMDOC] Signatures and runtime types
+//
+// TypeIdDesc describes the runtime representation of a TypeDef suitable for
+// type equality checks. The kind of representation depends on whether the type
+// is a function or a GC type. This design is in flux and will evolve.
+//
+// # Function types
+//
+// For functions in the general case, a FuncType is allocated and stored in a
+// process-wide hash table, so that pointer equality implies structural
+// equality. This process does not correctly handle type references (which would
+// require hash-consing of infinite-trees), but that's okay while
+// function-references and gc-types are experimental.
+//
+// A pointer to the hash table entry is stored in the global data
+// area for each instance, and TypeIdDesc gives the offset to this entry.
+//
+// ## Immediate function types
+//
+// As an optimization for the 99% case where the FuncType has a small number of
+// parameters, the FuncType is bit-packed into a uint32 immediate value so that
+// integer equality implies structural equality. Both cases can be handled with
+// a single comparison by always setting the LSB for the immediates
+// (the LSB is necessarily 0 for allocated FuncType pointers due to alignment).
+//
+// # GC types
+//
+// For GC types, an entry is always created in the global data area and a
+// unique RttValue (see wasm/TypedObject.h) is stored there. This RttValue
+// is the value given by 'rtt.canon $t' for each type definition. As each entry
+// is given a unique value and no canonicalization is done (which would require
+// hash-consing of infinite-trees), this is not yet spec compliant.
+//
+// # wasm::Metadata and renumbering
+//
+// Once module compilation is finished, types are transfered to wasm::Metadata
+// for use during runtime. Only non-immediate function and GC types are
+// transfered, creating a new index space for types. Types are 'renumbered' to
+// account for this. The map from source type index to renumbered type index is
+// transferred with wasm::Metadata and used for constant expressions that have
+// encoded source type indices. All other uses of type indices, such as in
+// function, global, and table types are renumbered.
+//
+// The renumbering map itself is an array from source type index to renumbered
+// type index. For types that are immediates, the renumbered type index is
+// UINT32_MAX.
+//
+// # wasm::Instance and the global type context
+//
+// As GC objects (aka TypedObject) may outlive the module they are created in,
+// types are additionally transferred to a wasm::Context (which is part of
+// JSContext) upon instantiation. This wasm::Context contains the
+// 'global type context' that RTTValues refer to by type index. Types are never
+// freed from the global type context as that would shift the index space. In
+// the future, this will be fixed.
+
+class TypeIdDesc {
+ public:
+  static const uintptr_t ImmediateBit = 0x1;
+
+ private:
+  TypeIdDescKind kind_;
+  size_t bits_;
+
+  TypeIdDesc(TypeIdDescKind kind, size_t bits) : kind_(kind), bits_(bits) {}
+
+ public:
+  TypeIdDescKind kind() const { return kind_; }
+  static bool isGlobal(const TypeDef& type);
+
+  TypeIdDesc() : kind_(TypeIdDescKind::None), bits_(0) {}
+  static TypeIdDesc global(const TypeDef& type, uint32_t globalDataOffset);
+  static TypeIdDesc immediate(const TypeDef& type);
+
+  bool isGlobal() const { return kind_ == TypeIdDescKind::Global; }
+
+  size_t immediate() const {
+    MOZ_ASSERT(kind_ == TypeIdDescKind::Immediate);
+    return bits_;
+  }
+  uint32_t globalDataOffset() const {
+    MOZ_ASSERT(kind_ == TypeIdDescKind::Global);
+    return bits_;
+  }
+};
+
+using TypeIdDescVector = Vector<TypeIdDesc, 0, SystemAllocPolicy>;
+
+// TypeDefWithId pairs a FuncType with TypeIdDesc, describing either how to
+// compile code that compares this signature's id or, at instantiation what
+// signature ids to allocate in the global hash and where to put them.
+
+struct TypeDefWithId : public TypeDef {
+  TypeIdDesc id;
+
+  TypeDefWithId() = default;
+  explicit TypeDefWithId(TypeDef&& typeDef)
+      : TypeDef(std::move(typeDef)), id() {}
+  TypeDefWithId(TypeDef&& typeDef, TypeIdDesc id)
+      : TypeDef(std::move(typeDef)), id(id) {}
+
+  WASM_DECLARE_SERIALIZABLE(TypeDefWithId)
+};
+
+using TypeDefWithIdVector = Vector<TypeDefWithId, 0, SystemAllocPolicy>;
+using TypeDefWithIdPtrVector =
+    Vector<const TypeDefWithId*, 0, SystemAllocPolicy>;
 
 }  // namespace wasm
 }  // namespace js

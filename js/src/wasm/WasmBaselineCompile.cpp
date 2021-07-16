@@ -11806,6 +11806,7 @@ bool BaseCompiler::emitGetGlobal() {
       pushF64(rv);
       break;
     }
+    case ValType::Rtt:
     case ValType::Ref: {
       RegRef rv = needRef();
       ScratchI32 tmp(*this);
@@ -11871,6 +11872,7 @@ bool BaseCompiler::emitSetGlobal() {
       freeF64(rv);
       break;
     }
+    case ValType::Rtt:
     case ValType::Ref: {
       RegPtr valueAddr(PreBarrierReg);
       needPtr(valueAddr);

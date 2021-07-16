@@ -934,6 +934,7 @@ bool MetadataTier::clone(const MetadataTier& src) {
 
 size_t Metadata::serializedSize() const {
   return sizeof(pod()) + SerializedVectorSize(types) +
+         SerializedPodVectorSize(typesRenumbering) +
          SerializedVectorSize(globals) + SerializedPodVectorSize(tables) +
 #ifdef ENABLE_WASM_EXCEPTIONS
          SerializedPodVectorSize(events) +
@@ -947,6 +948,7 @@ uint8_t* Metadata::serialize(uint8_t* cursor) const {
              debugFuncReturnTypes.empty());
   cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
   cursor = SerializeVector(cursor, types);
+  cursor = SerializePodVector(cursor, typesRenumbering);
   cursor = SerializeVector(cursor, globals);
   cursor = SerializePodVector(cursor, tables);
 #ifdef ENABLE_WASM_EXCEPTIONS
@@ -962,6 +964,7 @@ uint8_t* Metadata::serialize(uint8_t* cursor) const {
 /* static */ const uint8_t* Metadata::deserialize(const uint8_t* cursor) {
   (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
       (cursor = DeserializeVector(cursor, &types)) &&
+      (cursor = DeserializePodVector(cursor, &typesRenumbering)) &&
       (cursor = DeserializeVector(cursor, &globals)) &&
       (cursor = DeserializePodVector(cursor, &tables)) &&
 #ifdef ENABLE_WASM_EXCEPTIONS
@@ -979,6 +982,7 @@ uint8_t* Metadata::serialize(uint8_t* cursor) const {
 
 size_t Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return SizeOfVectorExcludingThis(types, mallocSizeOf) +
+         typesRenumbering.sizeOfExcludingThis(mallocSizeOf) +
          globals.sizeOfExcludingThis(mallocSizeOf) +
          tables.sizeOfExcludingThis(mallocSizeOf) +
 #ifdef ENABLE_WASM_EXCEPTIONS

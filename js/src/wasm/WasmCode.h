@@ -340,6 +340,7 @@ using FuncReturnTypesVector = Vector<ValTypeVector, 0, SystemAllocPolicy>;
 
 struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   TypeDefWithIdVector types;
+  RenumberVector typesRenumbering;
   GlobalDescVector globals;
   TableDescVector tables;
 #ifdef ENABLE_WASM_EXCEPTIONS
