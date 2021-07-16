@@ -78,7 +78,6 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
             if "abs_work_dir" in parent_abs_dirs:
                 abs_dirs["abs_work_dir"] = parent_abs_dirs["abs_work_dir"]
 
-        abs_dirs["abs_avds_dir"] = os.path.join(abs_dirs["abs_work_dir"], "avds")
         abs_dirs["abs_blob_upload_dir"] = os.path.join(abs_dirs["abs_work_dir"], "logs")
         abs_dirs["abs_apk_path"] = os.environ.get(
             "WRENCH_APK", "gfx/wr/target/android-artifacts/debug/apk/wrench.apk"
@@ -90,9 +89,13 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
             fetches_dir = os.environ.get("MOZ_FETCHES_DIR")
             if self.is_emulator and fetches_dir:
                 abs_dirs["abs_sdk_dir"] = os.path.join(fetches_dir, "android-sdk-linux")
+                abs_dirs["abs_avds_dir"] = os.path.join(fetches_dir, "android-device")
             else:
                 abs_dirs["abs_sdk_dir"] = os.path.join(
                     abs_dirs["abs_work_dir"], "android-sdk-linux"
+                )
+                abs_dirs["abs_avds_dir"] = os.path.join(
+                    abs_dirs["abs_work_dir"], "android-device"
                 )
         else:
             mozbuild_path = os.environ.get(
@@ -102,6 +105,10 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
                 "ANDROID_SDK_HOME", os.path.join(mozbuild_path, "android-sdk-linux")
             )
             abs_dirs["abs_sdk_dir"] = mozbuild_sdk
+            avds_dir = os.environ.get(
+                "ANDROID_EMULATOR_HOME", os.path.join(mozbuild_path, "android-device")
+            )
+            abs_dirs["abs_avds_dir"] = avds_dir
 
         self.abs_dirs = abs_dirs
         return self.abs_dirs
@@ -232,22 +239,16 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
             self.info("(see logcat artifact for full logcat")
 
     def setup_emulator(self):
-        # Running setup_avds will clobber the existing AVD and redownload it.
-        # For local testing that's kinda expensive, so we omit that if we
-        # already have that dir.
-        if not os.path.exists(self.query_abs_dirs()["abs_avds_dir"]):
-            self.setup_avds()
+        avds_dir = self.query_abs_dirs()["abs_avds_dir"]
+        if not os.path.exists(avds_dir):
+            self.error("Unable to find android AVDs at %s" % avds_dir)
+            return
 
         sdk_path = self.query_abs_dirs()["abs_sdk_dir"]
         if not os.path.exists(sdk_path):
             self.error("Unable to find android SDK at %s" % sdk_path)
             return
-        if os.environ.get("MOZ_AUTOMATION", "0") == "1":
-            self.start_emulator()
-        else:
-            # Can't use start_emulator because it tries to download a non-public
-            # artifact. Instead we just manually run the launch.
-            self._launch_emulator()
+        self.start_emulator()
 
     def do_test(self):
         if self.is_emulator:
