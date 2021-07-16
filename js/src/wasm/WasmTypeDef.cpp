@@ -159,6 +159,26 @@ size_t StructType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return fields_.sizeOfExcludingThis(mallocSizeOf);
 }
 
+size_t ArrayType::serializedSize() const {
+  return sizeof(elementType_) + sizeof(isMutable_);
+}
+
+uint8_t* ArrayType::serialize(uint8_t* cursor) const {
+  cursor = WriteBytes(cursor, &elementType_, sizeof(elementType_));
+  cursor = WriteBytes(cursor, &isMutable_, sizeof(isMutable_));
+  return cursor;
+}
+
+const uint8_t* ArrayType::deserialize(const uint8_t* cursor) {
+  (cursor = ReadBytes(cursor, &elementType_, sizeof(elementType_))) &&
+      (cursor = ReadBytes(cursor, &isMutable_, sizeof(isMutable_)));
+  return cursor;
+}
+
+size_t ArrayType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+  return 0;
+}
+
 size_t TypeDef::serializedSize() const {
   size_t size = sizeof(kind_);
   switch (kind_) {
@@ -168,6 +188,10 @@ size_t TypeDef::serializedSize() const {
     }
     case TypeDefKind::Func: {
       size += funcType_.serializedSize();
+      break;
+    }
+    case TypeDefKind::Array: {
+      size += arrayType_.serializedSize();
       break;
     }
     case TypeDefKind::None: {
@@ -188,6 +212,10 @@ uint8_t* TypeDef::serialize(uint8_t* cursor) const {
     }
     case TypeDefKind::Func: {
       cursor = funcType_.serialize(cursor);
+      break;
+    }
+    case TypeDefKind::Array: {
+      cursor = arrayType_.serialize(cursor);
       break;
     }
     case TypeDefKind::None: {
@@ -213,6 +241,10 @@ const uint8_t* TypeDef::deserialize(const uint8_t* cursor) {
       cursor = funcType->deserialize(cursor);
       break;
     }
+    case TypeDefKind::Array: {
+      cursor = arrayType_.deserialize(cursor);
+      break;
+    }
     case TypeDefKind::None: {
       break;
     }
@@ -229,6 +261,9 @@ size_t TypeDef::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
     }
     case TypeDefKind::Func: {
       return funcType_.sizeOfExcludingThis(mallocSizeOf);
+    }
+    case TypeDefKind::Array: {
+      return arrayType_.sizeOfExcludingThis(mallocSizeOf);
     }
     case TypeDefKind::None: {
       return 0;
