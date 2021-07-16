@@ -72,6 +72,7 @@ linux64-toolchain-sysroot:
             # For clang
             - binutils-dev
             - gcc-multilib
+            - lib32stdc++-7-dev
             - libxml2-dev
             # For minidump-stackwalk
             - libcurl4-openssl-dev
