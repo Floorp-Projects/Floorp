@@ -52,6 +52,8 @@ class SharedArrayRawBuffer {
   mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> refcount_;
   mozilla::Atomic<size_t, mozilla::SequentiallyConsistent> length_;
   Mutex growLock_;
+  // The index type of this buffer if it is a wasm buffer.
+  wasm::IndexType wasmIndexType_;
   // The maximum size of this buffer in wasm pages. If this buffer was not
   // prepared for wasm, then this is zero.
   wasm::Pages wasmMaxPages_;
@@ -69,11 +71,13 @@ class SharedArrayRawBuffer {
   }
 
  protected:
-  SharedArrayRawBuffer(uint8_t* buffer, size_t length, wasm::Pages wasmMaxPages,
+  SharedArrayRawBuffer(wasm::IndexType wasmIndexType, uint8_t* buffer,
+                       size_t length, wasm::Pages wasmMaxPages,
                        size_t mappedSize, bool preparedForWasm)
       : refcount_(1),
         length_(length),
         growLock_(mutexid::SharedArrayGrow),
+        wasmIndexType_(wasmIndexType),
         wasmMaxPages_(wasmMaxPages),
         mappedSize_(mappedSize),
         preparedForWasm_(preparedForWasm),
@@ -85,7 +89,8 @@ class SharedArrayRawBuffer {
   // `wasmMaxPages` must always be something for wasm and nothing for other
   // users.
   static SharedArrayRawBuffer* AllocateInternal(
-      size_t length, const mozilla::Maybe<wasm::Pages>& wasmMaxPages,
+      wasm::IndexType wasmIndexType, size_t length,
+      const mozilla::Maybe<wasm::Pages>& wasmMaxPages,
       const mozilla::Maybe<size_t>& wasmMappedSize);
 
  public:
@@ -104,7 +109,8 @@ class SharedArrayRawBuffer {
 
   static SharedArrayRawBuffer* Allocate(size_t length);
   static SharedArrayRawBuffer* AllocateWasm(
-      wasm::Pages initialPages, const mozilla::Maybe<wasm::Pages>& maxPages,
+      wasm::IndexType indexType, wasm::Pages initialPages,
+      const mozilla::Maybe<wasm::Pages>& maxPages,
       const mozilla::Maybe<size_t>& mappedSize);
 
   // This may be called from multiple threads.  The caller must take
@@ -125,6 +131,8 @@ class SharedArrayRawBuffer {
     return reinterpret_cast<const SharedArrayRawBuffer*>(
         dataPtr - sizeof(SharedArrayRawBuffer));
   }
+
+  wasm::IndexType wasmIndexType() const { return wasmIndexType_; }
 
   size_t volatileByteLength() const { return length_; }
 

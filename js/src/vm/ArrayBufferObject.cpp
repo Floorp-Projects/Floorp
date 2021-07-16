@@ -68,6 +68,7 @@
 
 using JS::ToInt32;
 
+using js::wasm::IndexType;
 using js::wasm::Pages;
 using mozilla::Atomic;
 using mozilla::CheckedInt;
@@ -629,7 +630,7 @@ void WasmArrayRawBuffer::tryGrowMaxPagesInPlace(Pages deltaMaxPages) {
 
 /* static */
 WasmArrayRawBuffer* WasmArrayRawBuffer::AllocateWasm(
-    Pages initialPages, const Maybe<Pages>& maxPages,
+    IndexType indexType, Pages initialPages, const Maybe<Pages>& maxPages,
     const Maybe<size_t>& mapped) {
   // Prior code has asserted that initial pages is within our implementation
   // limits (wasm::MaxMemory32Pages) and we can assume it is a valid size_t.
@@ -659,8 +660,8 @@ WasmArrayRawBuffer* WasmArrayRawBuffer::AllocateWasm(
   uint8_t* base = reinterpret_cast<uint8_t*>(data) + gc::SystemPageSize();
   uint8_t* header = base - sizeof(WasmArrayRawBuffer);
 
-  auto rawBuf =
-      new (header) WasmArrayRawBuffer(base, maxPages, mappedSize, numBytes);
+  auto rawBuf = new (header)
+      WasmArrayRawBuffer(indexType, base, maxPages, mappedSize, numBytes);
   return rawBuf;
 }
 
@@ -744,7 +745,8 @@ static bool CreateSpecificWasmBuffer32(
   }
 #endif
 
-  RawbufT* buffer = RawbufT::AllocateWasm(initialPages, maxPages, mappedSize);
+  RawbufT* buffer = RawbufT::AllocateWasm(memory.limits.indexType, initialPages,
+                                          maxPages, mappedSize);
   if (!buffer) {
     if (useHugeMemory) {
       WarnNumberASCII(cx, JSMSG_WASM_HUGE_MEMORY_FAILED);
@@ -767,8 +769,8 @@ static bool CreateSpecificWasmBuffer32(
 
     uint64_t cur = maxPages->value() / 2;
     for (; Pages(cur) > initialPages; cur /= 2) {
-      buffer =
-          RawbufT::AllocateWasm(initialPages, Some(Pages(cur)), mappedSize);
+      buffer = RawbufT::AllocateWasm(memory.limits.indexType, initialPages,
+                                     Some(Pages(cur)), mappedSize);
       if (buffer) {
         break;
       }
@@ -838,7 +840,6 @@ static bool CreateSpecificWasmBuffer32(
 
 bool js::CreateWasmBuffer32(JSContext* cx, const wasm::MemoryDesc& memory,
                             MutableHandleArrayBufferObjectMaybeShared buffer) {
-  MOZ_ASSERT(memory.kind == wasm::MemoryKind::Memory32);
   MOZ_RELEASE_ASSERT(memory.initialPages() <= wasm::MaxMemory32Pages());
   MOZ_RELEASE_ASSERT(cx->wasm().haveSignalHandlers);
 
@@ -1003,6 +1004,14 @@ size_t ArrayBufferObject::wasmMappedSize() const {
   return byteLength();
 }
 
+IndexType ArrayBufferObject::wasmIndexType() const {
+  if (isWasm()) {
+    return contents().wasmBuffer()->indexType();
+  }
+  MOZ_ASSERT(isPreparedForAsmJS());
+  return wasm::IndexType::I32;
+}
+
 Pages ArrayBufferObject::wasmPages() const {
   if (isWasm()) {
     return contents().wasmBuffer()->pages();
@@ -1026,6 +1035,13 @@ size_t js::WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf) {
   return buf->as<SharedArrayBufferObject>().wasmMappedSize();
 }
 
+IndexType js::WasmArrayBufferIndexType(
+    const ArrayBufferObjectMaybeShared* buf) {
+  if (buf->is<ArrayBufferObject>()) {
+    return buf->as<ArrayBufferObject>().wasmIndexType();
+  }
+  return buf->as<SharedArrayBufferObject>().wasmIndexType();
+}
 Pages js::WasmArrayBufferPages(const ArrayBufferObjectMaybeShared* buf) {
   if (buf->is<ArrayBufferObject>()) {
     return buf->as<ArrayBufferObject>().wasmPages();
@@ -1128,8 +1144,8 @@ bool ArrayBufferObject::wasmMovingGrowToPages(
     return false;
   }
 
-  WasmArrayRawBuffer* newRawBuf =
-      WasmArrayRawBuffer::AllocateWasm(newPages, Nothing(), Nothing());
+  WasmArrayRawBuffer* newRawBuf = WasmArrayRawBuffer::AllocateWasm(
+      oldBuf->wasmIndexType(), newPages, Nothing(), Nothing());
   if (!newRawBuf) {
     return false;
   }

@@ -553,6 +553,40 @@ const CodeRange* wasm::LookupInSorted(const CodeRangeVector& codeRanges,
   return &codeRanges[match];
 }
 
+const char* wasm::ToString(IndexType indexType) {
+  switch (indexType) {
+    case IndexType::I32:
+      return "i32";
+    case IndexType::I64:
+      return "i64";
+    default:
+      MOZ_CRASH();
+  }
+}
+
+bool wasm::ToIndexType(JSContext* cx, HandleValue value, IndexType* indexType) {
+  RootedString typeStr(cx, ToString(cx, value));
+  if (!typeStr) {
+    return false;
+  }
+
+  RootedLinearString typeLinearStr(cx, typeStr->ensureLinear(cx));
+  if (!typeLinearStr) {
+    return false;
+  }
+
+  if (StringEqualsLiteral(typeLinearStr, "i32")) {
+    *indexType = IndexType::I32;
+  } else if (StringEqualsLiteral(typeLinearStr, "i64")) {
+    *indexType = IndexType::I64;
+  } else {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_STRING_IDX_TYPE);
+    return false;
+  }
+  return true;
+}
+
 void wasm::Log(JSContext* cx, const char* fmt, ...) {
   MOZ_ASSERT(!cx->isExceptionPending());
 
