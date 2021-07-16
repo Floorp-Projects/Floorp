@@ -224,8 +224,6 @@ void nsTextBoxFrame::UpdateAttributes(nsAtom* aAttribute, bool& aResize,
   }
 }
 
-namespace mozilla {
-
 class nsDisplayXULTextBox final : public nsPaintedDisplayItem {
  public:
   nsDisplayXULTextBox(nsDisplayListBuilder* aBuilder, nsTextBoxFrame* aFrame)
@@ -323,8 +321,6 @@ nsRect nsDisplayXULTextBox::GetComponentAlphaBounds(
   return static_cast<nsTextBoxFrame*>(mFrame)->GetComponentAlphaBounds() +
          ToReferenceFrame();
 }
-
-}  // namespace mozilla
 
 void nsTextBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                       const nsDisplayListSet& aLists) {

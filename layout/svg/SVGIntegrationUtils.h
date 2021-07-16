@@ -17,6 +17,8 @@
 
 class gfxContext;
 class gfxDrawable;
+class nsDisplayList;
+class nsDisplayListBuilder;
 class nsIFrame;
 struct nsPoint;
 struct nsRect;
@@ -31,8 +33,6 @@ struct WrFiltersHolder {
 };
 
 namespace mozilla {
-class nsDisplayList;
-class nsDisplayListBuilder;
 
 namespace gfx {
 class DrawTarget;

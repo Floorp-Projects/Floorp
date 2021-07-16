@@ -12,7 +12,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Text.h"
-#include "nsDisplayList.h"
 #include "nsIFrame.h"
 #include "nsFrameSelection.h"
 #include "nsSplittableFrame.h"
@@ -39,7 +38,6 @@ class SVGTextFrame;
 }  // namespace mozilla
 
 class nsTextFrame : public nsIFrame {
-  using nsDisplayText = mozilla::nsDisplayText;
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
   typedef mozilla::SelectionTypeMask SelectionTypeMask;
   typedef mozilla::SelectionType SelectionType;
@@ -781,8 +779,8 @@ class nsTextFrame : public nsIFrame {
  protected:
   virtual ~nsTextFrame();
 
-  friend class mozilla::nsDisplayTextGeometry;
-  friend class mozilla::nsDisplayText;
+  friend class nsDisplayTextGeometry;
+  friend class nsDisplayText;
 
   RefPtr<nsFontMetrics> mFontMetrics;
   RefPtr<gfxTextRun> mTextRun;
