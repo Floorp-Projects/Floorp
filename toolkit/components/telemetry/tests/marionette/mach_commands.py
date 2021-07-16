@@ -80,17 +80,17 @@ class TelemetryTest(MachCommandBase):
             for obj in kwargs["test_objects"]:
                 tests.append(obj["file_relpath"])
             del kwargs["test_objects"]
-        if not kwargs.get("binary") and conditions.is_firefox(self):
+        if not kwargs.get("binary") and conditions.is_firefox(command_context):
             try:
-                kwargs["binary"] = self.get_binary_path("app")
+                kwargs["binary"] = command_context.get_binary_path("app")
             except BinaryNotFoundException as e:
-                self.log(
+                command_context.log(
                     logging.ERROR,
                     "telemetry-tests-client",
                     {"error": str(e)},
                     "ERROR: {error}",
                 )
-                self.log(
+                command_context.log(
                     logging.INFO, "telemetry-tests-client", {"help": e.help()}, "{help}"
                 )
                 return 1
@@ -98,4 +98,4 @@ class TelemetryTest(MachCommandBase):
             kwargs[
                 "server_root"
             ] = "toolkit/components/telemetry/tests/marionette/harness/www"
-        return run_telemetry(tests, topsrcdir=self.topsrcdir, **kwargs)
+        return run_telemetry(tests, topsrcdir=command_context.topsrcdir, **kwargs)

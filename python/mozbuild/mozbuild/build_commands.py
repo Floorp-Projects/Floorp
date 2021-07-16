@@ -91,9 +91,9 @@ class Build(MachCommandBase):
         """
         from mozbuild.controller.building import BuildDriver
 
-        self.log_manager.enable_all_structured_loggers()
+        command_context.log_manager.enable_all_structured_loggers()
 
-        loader = MozconfigLoader(self.topsrcdir)
+        loader = MozconfigLoader(command_context.topsrcdir)
         mozconfig = loader.read_mozconfig(loader.AUTODETECT)
         configure_args = mozconfig["configure_args"]
         doing_pgo = configure_args and "MOZ_PGO=1" in configure_args
@@ -104,19 +104,19 @@ class Build(MachCommandBase):
                 raise Exception(
                     "Cannot specify targets (%s) in MOZ_PGO=1 builds" % what
                 )
-            instr = self._spawn(BuildDriver)
+            instr = command_context._spawn(BuildDriver)
             orig_topobjdir = instr._topobjdir
             instr._topobjdir = mozpath.join(instr._topobjdir, "instrumented")
 
             append_env = {"MOZ_PROFILE_GENERATE": "1"}
             status = instr.build(
-                self.metrics,
+                command_context.metrics,
                 what=what,
                 jobs=jobs,
                 directory=directory,
                 verbose=verbose,
                 keep_going=keep_going,
-                mach_context=self._mach_context,
+                mach_context=command_context._mach_context,
                 append_env=append_env,
             )
             if status != 0:
@@ -142,22 +142,22 @@ class Build(MachCommandBase):
             pgo_env["JARLOG_FILE"] = mozpath.join(orig_topobjdir, "jarlog/en-US.log")
             pgo_cmd = [
                 instr.virtualenv_manager.python_path,
-                mozpath.join(self.topsrcdir, "build/pgo/profileserver.py"),
+                mozpath.join(command_context.topsrcdir, "build/pgo/profileserver.py"),
             ]
             subprocess.check_call(pgo_cmd, cwd=instr.topobjdir, env=pgo_env)
 
             # Set the default build to MOZ_PROFILE_USE
             append_env = {"MOZ_PROFILE_USE": "1"}
 
-        driver = self._spawn(BuildDriver)
+        driver = command_context._spawn(BuildDriver)
         return driver.build(
-            self.metrics,
+            command_context.metrics,
             what=what,
             jobs=jobs,
             directory=directory,
             verbose=verbose,
             keep_going=keep_going,
-            mach_context=self._mach_context,
+            mach_context=command_context._mach_context,
             append_env=append_env,
         )
 
@@ -179,11 +179,11 @@ class Build(MachCommandBase):
     ):
         from mozbuild.controller.building import BuildDriver
 
-        self.log_manager.enable_all_structured_loggers()
-        driver = self._spawn(BuildDriver)
+        command_context.log_manager.enable_all_structured_loggers()
+        driver = command_context._spawn(BuildDriver)
 
         return driver.configure(
-            self.metrics,
+            command_context.metrics,
             options=options,
             buildstatus_messages=buildstatus_messages,
             line_handler=line_handler,
@@ -222,7 +222,7 @@ class Build(MachCommandBase):
         if url:
             server.add_resource_json_url("url", url)
         else:
-            last = self._get_state_filename("build_resources.json")
+            last = command_context._get_state_filename("build_resources.json")
             if not os.path.exists(last):
                 print(
                     "Build resources not available. If you have performed a "
@@ -271,8 +271,8 @@ class Build(MachCommandBase):
     def build_backend(
         self, command_context, backend, diff=False, verbose=False, dry_run=False
     ):
-        python = self.virtualenv_manager.python_path
-        config_status = os.path.join(self.topobjdir, "config.status")
+        python = command_context.virtualenv_manager.python_path
+        config_status = os.path.join(command_context.topobjdir, "config.status")
 
         if not os.path.exists(config_status):
             print(
@@ -292,6 +292,6 @@ class Build(MachCommandBase):
         if dry_run:
             args.append("--dry-run")
 
-        return self._run_command_in_objdir(
+        return command_context._run_command_in_objdir(
             args=args, pass_thru=True, ensure_exit_code=False
         )

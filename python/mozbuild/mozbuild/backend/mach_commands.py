@@ -34,13 +34,13 @@ class MachCommands(MachCommandBase):
             backend = "Clangd"
 
         if ide == "eclipse" and not which("eclipse"):
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "ide",
                 {},
                 "Eclipse CDT 8.4 or later must be installed in your PATH.",
             )
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "ide",
                 {},
@@ -50,12 +50,15 @@ class MachCommands(MachCommandBase):
 
         if ide == "vscode":
             # Verify if platform has VSCode installed
-            if not self.found_vscode_path():
-                self.log(logging.ERROR, "ide", {}, "VSCode cannot be found, abording!")
+            vscode_cmd = self.found_vscode_path(command_context)
+            if vscode_cmd is None:
+                command_context.log(
+                    logging.ERROR, "ide", {}, "VSCode cannot be found, aborting!"
+                )
                 return 1
 
             # Create the Build environment to configure the tree
-            builder = Build(self._mach_context, None)
+            builder = Build(command_context._mach_context, None)
 
             rc = builder.configure(command_context)
             if rc != 0:
@@ -63,7 +66,9 @@ class MachCommands(MachCommandBase):
 
             # First install what we can through install manifests.
             rc = builder._run_make(
-                directory=self.topobjdir, target="pre-export", line_handler=None
+                directory=command_context.topobjdir,
+                target="pre-export",
+                line_handler=None,
             )
             if rc != 0:
                 return rc
@@ -72,7 +77,9 @@ class MachCommands(MachCommandBase):
             # export target, because we can't do anything better.
             for target in ("export", "pre-compile"):
                 rc = builder._run_make(
-                    directory=self.topobjdir, target=target, line_handler=None
+                    directory=command_context.topobjdir,
+                    target=target,
+                    line_handler=None,
                 )
                 if rc != 0:
                     return rc
@@ -80,47 +87,53 @@ class MachCommands(MachCommandBase):
             # Here we refresh the whole build. 'build export' is sufficient here and is
             # probably more correct but it's also nice having a single target to get a fully
             # built and indexed project (gives a easy target to use before go out to lunch).
-            res = self._mach_context.commands.dispatch("build", self._mach_context)
+            res = command_context._mach_context.commands.dispatch(
+                "build", command_context._mach_context
+            )
             if res != 0:
                 return 1
 
         # Generate or refresh the IDE backend.
-        python = self.virtualenv_manager.python_path
-        config_status = os.path.join(self.topobjdir, "config.status")
+        python = command_context.virtualenv_manager.python_path
+        config_status = os.path.join(command_context.topobjdir, "config.status")
         args = [python, config_status, "--backend=%s" % backend]
-        res = self._run_command_in_objdir(
+        res = command_context._run_command_in_objdir(
             args=args, pass_thru=True, ensure_exit_code=False
         )
         if res != 0:
             return 1
 
         if ide == "eclipse":
-            eclipse_workspace_dir = self.get_eclipse_workspace_path()
+            eclipse_workspace_dir = self.get_eclipse_workspace_path(command_context)
             subprocess.check_call(["eclipse", "-data", eclipse_workspace_dir])
         elif ide == "visualstudio":
-            visual_studio_workspace_dir = self.get_visualstudio_workspace_path()
+            visual_studio_workspace_dir = self.get_visualstudio_workspace_path(
+                command_context
+            )
             subprocess.check_call(["explorer.exe", visual_studio_workspace_dir])
         elif ide == "vscode":
-            return self.setup_vscode()
+            return self.setup_vscode(command_context, vscode_cmd)
 
-    def get_eclipse_workspace_path(self):
+    def get_eclipse_workspace_path(self, command_context):
         from mozbuild.backend.cpp_eclipse import CppEclipseBackend
 
-        return CppEclipseBackend.get_workspace_path(self.topsrcdir, self.topobjdir)
+        return CppEclipseBackend.get_workspace_path(
+            command_context.topsrcdir, command_context.topobjdir
+        )
 
-    def get_visualstudio_workspace_path(self):
-        return os.path.join(self.topobjdir, "msvc", "mozilla.sln")
+    def get_visualstudio_workspace_path(self, command_context):
+        return os.path.join(command_context.topobjdir, "msvc", "mozilla.sln")
 
-    def found_vscode_path(self):
+    def found_vscode_path(self, command_context):
 
-        if "linux" in self.platform[0]:
+        if "linux" in command_context.platform[0]:
             cmd_and_path = [
                 {"path": "/usr/local/bin/code", "cmd": ["/usr/local/bin/code"]},
                 {"path": "/snap/bin/code", "cmd": ["/snap/bin/code"]},
                 {"path": "/usr/bin/code", "cmd": ["/usr/bin/code"]},
                 {"path": "/usr/bin/code-insiders", "cmd": ["/usr/bin/code-insiders"]},
             ]
-        elif "macos" in self.platform[0]:
+        elif "macos" in command_context.platform[0]:
             cmd_and_path = [
                 {"path": "/usr/local/bin/code", "cmd": ["/usr/local/bin/code"]},
                 {
@@ -136,7 +149,7 @@ class MachCommands(MachCommandBase):
                     ],
                 },
             ]
-        elif "win64" in self.platform[0]:
+        elif "win64" in command_context.platform[0]:
             from pathlib import Path
 
             vscode_path = mozpath.join(
@@ -163,42 +176,44 @@ class MachCommands(MachCommandBase):
         # Did we guess the path?
         for element in cmd_and_path:
             if os.path.exists(element["path"]):
-                self.vscode_cmd = element["cmd"]
-                return True
+                return element["cmd"]
 
         for _ in range(5):
             vscode_path = input(
                 "Could not find the VSCode binary. Please provide the full path to it:\n"
             )
             if os.path.exists(vscode_path):
-                self.vscode_cmd = [vscode_path]
-                return True
+                return [vscode_path]
 
         # Path cannot be found
-        return False
+        return None
 
-    def setup_vscode(self):
-        vscode_settings = mozpath.join(self.topsrcdir, ".vscode", "settings.json")
+    def setup_vscode(self, command_context, vscode_cmd):
+        vscode_settings = mozpath.join(
+            command_context.topsrcdir, ".vscode", "settings.json"
+        )
 
-        clangd_cc_path = mozpath.join(self.topobjdir, "clangd")
+        clangd_cc_path = mozpath.join(command_context.topobjdir, "clangd")
 
         # Verify if the required files are present
-        clang_tools_path = mozpath.join(self._mach_context.state_dir, "clang-tools")
+        clang_tools_path = mozpath.join(
+            command_context._mach_context.state_dir, "clang-tools"
+        )
         clang_tidy_bin = mozpath.join(clang_tools_path, "clang-tidy", "bin")
 
         clangd_path = mozpath.join(
             clang_tidy_bin,
-            "clangd" + self.config_environment.substs.get("BIN_SUFFIX", ""),
+            "clangd" + command_context.config_environment.substs.get("BIN_SUFFIX", ""),
         )
 
         if not os.path.exists(clangd_path):
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "ide",
                 {},
                 "Unable to locate clangd in {}.".format(clang_tidy_bin),
             )
-            rc = self._get_clang_tools(clang_tools_path)
+            rc = self._get_clang_tools(command_context, clang_tools_path)
 
             if rc != 0:
                 return rc
@@ -207,7 +222,7 @@ class MachCommands(MachCommandBase):
         import json
         from mozbuild.code_analysis.utils import ClangTidyConfig
 
-        clang_tidy_cfg = ClangTidyConfig(self.topsrcdir)
+        clang_tidy_cfg = ClangTidyConfig(command_context.topsrcdir)
 
         clangd_json = json.loads(
             """
@@ -285,21 +300,21 @@ class MachCommands(MachCommandBase):
             fh.write(json.dumps(settings, indent=4))
 
         # Open vscode with new configuration
-        rc = subprocess.call(self.vscode_cmd + [self.topsrcdir])
+        rc = subprocess.call(vscode_cmd + [command_context.topsrcdir])
 
         if rc != 0:
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "ide",
                 {},
                 "Unable to open VS Code. Please open VS Code manually and load "
-                "directory: {}".format(self.topsrcdir),
+                "directory: {}".format(command_context.topsrcdir),
             )
             return rc
 
         return 0
 
-    def _get_clang_tools(self, clang_tools_path):
+    def _get_clang_tools(self, command_context, clang_tools_path):
 
         import shutil
 
@@ -311,12 +326,12 @@ class MachCommands(MachCommandBase):
 
         from mozbuild.artifact_commands import PackageFrontend
 
-        self._artifact_manager = PackageFrontend(self._mach_context)
+        _artifact_manager = PackageFrontend(command_context._mach_context)
 
-        job, _ = self.platform
+        job, _ = command_context.platform
 
         if job is None:
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "ide",
                 {},
@@ -331,8 +346,8 @@ class MachCommands(MachCommandBase):
         # We want to unpack data in the clang-tidy mozbuild folder
         currentWorkingDir = os.getcwd()
         os.chdir(clang_tools_path)
-        rc = self._artifact_manager.artifact_toolchain(
-            self, verbose=False, from_build=[job], no_unpack=False, retry=0
+        rc = _artifact_manager.artifact_toolchain(
+            command_context, verbose=False, from_build=[job], no_unpack=False, retry=0
         )
         # Change back the cwd
         os.chdir(currentWorkingDir)

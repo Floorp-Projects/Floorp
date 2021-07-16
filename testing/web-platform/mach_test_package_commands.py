@@ -76,11 +76,11 @@ class WebPlatformTestsRunnerSetup(object):
 class MachCommands(MachCommandBase):
     @Command("web-platform-tests", category="testing", parser=create_parser_wpt)
     def run_web_platform_tests(self, command_context, **kwargs):
-        self._mach_context.activate_mozharness_venv()
+        command_context._mach_context.activate_mozharness_venv()
         return WebPlatformTestsRunner(
-            WebPlatformTestsRunnerSetup(self._mach_context)
+            WebPlatformTestsRunnerSetup(command_context._mach_context)
         ).run(**kwargs)
 
     @Command("wpt", category="testing", parser=create_parser_wpt)
     def run_wpt(self, command_context, **params):
-        return self.run_web_platform_tests(**params)
+        return command_context.run_web_platform_tests(**params)

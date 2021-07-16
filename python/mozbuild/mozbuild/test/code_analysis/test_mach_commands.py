@@ -39,25 +39,31 @@ class TestStaticAnalysis(unittest.TestCase):
         context.cwd = config.topsrcdir
 
         cmd = StaticAnalysis(context)
-        cmd.topsrcdir = os.path.join("/root", "dir")
+        command_context = mock.MagicMock()
+        command_context.topsrcdir = os.path.join("/root", "dir")
         path = os.path.join("/root", "dir", "path1")
 
         ignored_dirs_re = r"path1|path2/here|path3\there"
-        self.assertTrue(cmd._is_ignored_path(ignored_dirs_re, path) is not None)
+        self.assertTrue(
+            cmd._is_ignored_path(command_context, ignored_dirs_re, path) is not None
+        )
 
         # simulating a win32 env
         win32_path = "\\root\\dir\\path1"
-        cmd.topsrcdir = "\\root\\dir"
+        command_context.topsrcdir = "\\root\\dir"
         old_sep = os.sep
         os.sep = "\\"
         try:
             self.assertTrue(
-                cmd._is_ignored_path(ignored_dirs_re, win32_path) is not None
+                cmd._is_ignored_path(command_context, ignored_dirs_re, win32_path)
+                is not None
             )
         finally:
             os.sep = old_sep
 
-        self.assertTrue(cmd._is_ignored_path(ignored_dirs_re, "path2") is None)
+        self.assertTrue(
+            cmd._is_ignored_path(command_context, ignored_dirs_re, "path2") is None
+        )
 
     def test_get_files(self):
         from mozbuild.code_analysis.mach_commands import StaticAnalysis
@@ -67,14 +73,17 @@ class TestStaticAnalysis(unittest.TestCase):
         context.cwd = config.topsrcdir
 
         cmd = StaticAnalysis(context)
-        cmd.topsrcdir = mozpath.join("/root", "dir")
-        source = cmd.get_abspath_files(["file1", mozpath.join("directory", "file2")])
+        command_context = mock.MagicMock()
+        command_context.topsrcdir = mozpath.join("/root", "dir")
+        source = cmd.get_abspath_files(
+            command_context, ["file1", mozpath.join("directory", "file2")]
+        )
 
         self.assertTrue(
             source
             == [
-                mozpath.join(cmd.topsrcdir, "file1"),
-                mozpath.join(cmd.topsrcdir, "directory", "file2"),
+                mozpath.join(command_context.topsrcdir, "file1"),
+                mozpath.join(command_context.topsrcdir, "directory", "file2"),
             ]
         )
 
