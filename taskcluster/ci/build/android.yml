@@ -117,7 +117,6 @@ android-x86-fuzzing/debug:
 
 android-x86-shippable/opt:
     description: "Android 4.2 x86 Shippable"
-    use-pgo: true
     attributes:
         enable-full-crashsymbols: true
         shippable: true
@@ -172,7 +171,7 @@ android-arm/opt:
 
 android-arm-shippable/opt:
     description: "Android 4.0 Arm Shippable"
-    use-pgo: android-x86-shippable/opt
+    use-pgo: true
     attributes:
         enable-full-crashsymbols: true
         shippable: true
@@ -199,7 +198,6 @@ android-arm-shippable/opt:
     fetches:
         toolchain:
             - linux64-clang
-            - android-gradle-dependencies
 
 android-aarch64/opt:
     description: "Android 5.0 AArch64 Opt"
@@ -252,7 +250,7 @@ android-aarch64/debug:
 
 android-aarch64-shippable/opt:
     description: "Android 5.0 AArch64 Shippable"
-    use-pgo: android-x86_64-shippable/opt
+    use-pgo: android-arm-shippable/opt
     attributes:
         enable-full-crashsymbols: true
         shippable: true
@@ -279,7 +277,6 @@ android-aarch64-shippable/opt:
     fetches:
         toolchain:
             - linux64-clang
-            - android-gradle-dependencies
 
 android-x86_64/opt:
     description: "Android 5.0 x86-64 Opt"
@@ -308,7 +305,6 @@ android-x86_64/opt:
 
 android-x86_64-shippable/opt:
     description: "Android 5.0 x86-64 Shippable"
-    use-pgo: true
     attributes:
         enable-full-crashsymbols: true
         shippable: true
