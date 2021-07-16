@@ -19,10 +19,11 @@ class MachCommands(MachCommandBase):
     @CommandArgument("--dest", default=None, help="Where to write add-on.")
     def build(self, command_context, dest):
         src = os.path.join(
-            self.topsrcdir, "services", "sync", "tps", "extensions", "tps"
+            command_context.topsrcdir, "services", "sync", "tps", "extensions", "tps"
         )
         dest = os.path.join(
-            dest or os.path.join(self.topobjdir, "services", "sync"), "tps.xpi"
+            dest or os.path.join(command_context.topobjdir, "services", "sync"),
+            "tps.xpi",
         )
 
         if not os.path.exists(os.path.dirname(dest)):

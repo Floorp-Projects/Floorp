@@ -128,6 +128,6 @@ class GtestCommands(MachCommandBase):
         parser=setup_argument_parser,
     )
     def gtest(self, command_context, **kwargs):
-        self._mach_context.activate_mozharness_venv()
-        result = run_gtest(self._mach_context, **kwargs)
+        command_context._mach_context.activate_mozharness_venv()
+        result = run_gtest(command_context._mach_context, **kwargs)
         return 0 if result else 1

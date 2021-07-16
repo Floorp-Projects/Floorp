@@ -165,7 +165,7 @@ class MochitestRunner(MozbuildObject):
         from mozrunner.devices.android_device import get_adb_path
 
         if not kwargs["adbPath"]:
-            kwargs["adbPath"] = get_adb_path(self)
+            kwargs["adbPath"] = get_adb_path(command_context)
 
         options = Namespace(**kwargs)
 
@@ -321,11 +321,11 @@ class MachCommands(MachCommandBase):
 
         # TODO: This is only strictly necessary while mochitest is using Python
         # 2 and can be removed once the command is migrated to Python 3.
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
 
         buildapp = None
         for app in SUPPORTED_APPS:
-            if conditions.is_buildapp_in(self, apps=[app]):
+            if conditions.is_buildapp_in(command_context, apps=[app]):
                 buildapp = app
                 break
 
@@ -346,7 +346,7 @@ class MachCommands(MachCommandBase):
 
         from mozbuild.controller.building import BuildDriver
 
-        self._ensure_state_subdir_exists(".")
+        command_context._ensure_state_subdir_exists(".")
 
         test_paths = kwargs["test_paths"]
         kwargs["test_paths"] = []
@@ -357,21 +357,23 @@ class MachCommands(MachCommandBase):
             if not mozdebug.get_debugger_info(kwargs.get("debugger")):
                 sys.exit(1)
 
-        mochitest = self._spawn(MochitestRunner)
+        mochitest = command_context._spawn(MochitestRunner)
         tests = []
         if resolve_tests:
             tests = mochitest.resolve_tests(
-                test_paths, test_objects, cwd=self._mach_context.cwd
+                test_paths, test_objects, cwd=command_context._mach_context.cwd
             )
 
         if not kwargs.get("log"):
             # Create shared logger
-            format_args = {"level": self._mach_context.settings["test"]["level"]}
+            format_args = {
+                "level": command_context._mach_context.settings["test"]["level"]
+            }
             if len(tests) == 1:
                 format_args["verbose"] = True
                 format_args["compact"] = False
 
-            default_format = self._mach_context.settings["test"]["format"]
+            default_format = command_context._mach_context.settings["test"]["format"]
             kwargs["log"] = setup_logging(
                 "mach-mochitest", kwargs, {default_format: sys.stdout}, format_args
             )
@@ -379,7 +381,7 @@ class MachCommands(MachCommandBase):
                 if isinstance(handler, StreamHandler):
                     handler.formatter.inner.summary_on_shutdown = True
 
-        driver = self._spawn(BuildDriver)
+        driver = command_context._spawn(BuildDriver)
         driver.install_tests()
 
         subsuite = kwargs.get("subsuite")
@@ -423,12 +425,14 @@ class MachCommands(MachCommandBase):
                 "websocketprocessbridge",
                 "websocketprocessbridge_requirements_3.txt",
             )
-            self.virtualenv_manager.activate()
-            self.virtualenv_manager.install_pip_requirements(req, require_hashes=False)
+            command_context.virtualenv_manager.activate()
+            command_context.virtualenv_manager.install_pip_requirements(
+                req, require_hashes=False
+            )
 
             # sys.executable is used to start the websocketprocessbridge, though for some
             # reason it doesn't get set when calling `activate_this.py` in the virtualenv.
-            sys.executable = self.virtualenv_manager.python_path
+            sys.executable = command_context.virtualenv_manager.python_path
 
         # This is a hack to introduce an option in mach to not send
         # filtered tests to the mochitest harness. Mochitest harness will read
@@ -480,7 +484,7 @@ class MachCommands(MachCommandBase):
 
             # verify installation
             verify_android_device(
-                self,
+                command_context,
                 install=install,
                 xre=False,
                 network=True,
@@ -504,7 +508,9 @@ class MachCommands(MachCommandBase):
             # specific mochitest suite has to be loaded. See Bug 1637463.
             harness_args.update({"suite_name": suite_name})
 
-            result = run_mochitest(self._mach_context, tests=tests, **harness_args)
+            result = run_mochitest(
+                command_context._mach_context, tests=tests, **harness_args
+            )
 
             if result:
                 overall = result
@@ -537,7 +543,7 @@ class GeckoviewJunitCommands(MachCommandBase):
         default=False,
     )
     def run_junit(self, command_context, no_install, **kwargs):
-        self._ensure_state_subdir_exists(".")
+        command_context._ensure_state_subdir_exists(".")
 
         from mozrunner.devices.android_device import (
             get_adb_path,
@@ -549,7 +555,7 @@ class GeckoviewJunitCommands(MachCommandBase):
         app = kwargs.get("app")
         device_serial = kwargs.get("deviceSerial")
         verify_android_device(
-            self,
+            command_context,
             install=InstallIntent.NO if no_install else InstallIntent.YES,
             xre=False,
             app=app,
@@ -557,16 +563,20 @@ class GeckoviewJunitCommands(MachCommandBase):
         )
 
         if not kwargs.get("adbPath"):
-            kwargs["adbPath"] = get_adb_path(self)
+            kwargs["adbPath"] = get_adb_path(command_context)
 
         if not kwargs.get("log"):
             from mozlog.commandline import setup_logging
 
-            format_args = {"level": self._mach_context.settings["test"]["level"]}
-            default_format = self._mach_context.settings["test"]["format"]
+            format_args = {
+                "level": command_context._mach_context.settings["test"]["level"]
+            }
+            default_format = command_context._mach_context.settings["test"]["format"]
             kwargs["log"] = setup_logging(
                 "mach-mochitest", kwargs, {default_format: sys.stdout}, format_args
             )
 
-        mochitest = self._spawn(MochitestRunner)
-        return mochitest.run_geckoview_junit_test(self._mach_context, **kwargs)
+        mochitest = command_context._spawn(MochitestRunner)
+        return mochitest.run_geckoview_junit_test(
+            command_context._mach_context, **kwargs
+        )

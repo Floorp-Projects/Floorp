@@ -57,10 +57,12 @@ class GeckoDriver(MachCommandBase):
     )
     def run(self, command_context, binary, params, debug, debugger, debugger_args):
         try:
-            binpath = self.get_binary_path("geckodriver")
+            binpath = command_context.get_binary_path("geckodriver")
         except BinaryNotFoundException as e:
-            self.log(logging.ERROR, "geckodriver", {"error": str(e)}, "ERROR: {error}")
-            self.log(
+            command_context.log(
+                logging.ERROR, "geckodriver", {"error": str(e)}, "ERROR: {error}"
+            )
+            command_context.log(
                 logging.INFO,
                 "geckodriver",
                 {},
@@ -78,19 +80,21 @@ class GeckoDriver(MachCommandBase):
 
         if binary is None:
             try:
-                binary = self.get_binary_path("app")
+                binary = command_context.get_binary_path("app")
             except BinaryNotFoundException as e:
-                self.log(
+                command_context.log(
                     logging.ERROR, "geckodriver", {"error": str(e)}, "ERROR: {error}"
                 )
-                self.log(logging.INFO, "geckodriver", {"help": e.help()}, "{help}")
+                command_context.log(
+                    logging.INFO, "geckodriver", {"help": e.help()}, "{help}"
+                )
                 return 1
 
         args.extend(["--binary", binary])
 
         if debug or debugger or debugger_args:
             if "INSIDE_EMACS" in os.environ:
-                self.log_manager.terminal_handler.setLevel(logging.WARNING)
+                command_context.log_manager.terminal_handler.setLevel(logging.WARNING)
 
             import mozdebug
 
@@ -102,8 +106,8 @@ class GeckoDriver(MachCommandBase):
                 )
 
             if debugger:
-                self.debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
-                if not self.debuggerInfo:
+                debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
+                if not debuggerInfo:
                     print("Could not find a suitable debugger in your PATH.")
                     return 1
 
@@ -122,6 +126,8 @@ class GeckoDriver(MachCommandBase):
                     return 1
 
             # Prepend the debugger args.
-            args = [self.debuggerInfo.path] + self.debuggerInfo.args + args
+            args = [debuggerInfo.path] + debuggerInfo.args + args
 
-        return self.run_process(args=args, ensure_exit_code=False, pass_thru=True)
+        return command_context.run_process(
+            args=args, ensure_exit_code=False, pass_thru=True
+        )

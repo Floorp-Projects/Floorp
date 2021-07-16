@@ -132,7 +132,7 @@ class MachCommands(MachCommandBase):
         parser=create_parser,
     )
     def run_talos_test(self, command_context, **kwargs):
-        talos = self._spawn(TalosRunner)
+        talos = command_context._spawn(TalosRunner)
 
         try:
             return talos.run_test(sys.argv[2:])

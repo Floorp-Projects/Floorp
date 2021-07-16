@@ -155,17 +155,19 @@ host_fetches = {
 
 @CommandProvider
 class MachBrowsertime(MachCommandBase):
-    def artifact_cache_path(self):
+    def artifact_cache_path(self, command_context):
         r"""Downloaded artifacts will be kept here."""
         # The convention is $MOZBUILD_STATE_PATH/cache/$FEATURE.
-        return mozpath.join(self._mach_context.state_dir, "cache", "browsertime")
+        return mozpath.join(
+            command_context._mach_context.state_dir, "cache", "browsertime"
+        )
 
-    def state_path(self):
+    def state_path(self, command_context):
         r"""Unpacked artifacts will be kept here."""
         # The convention is $MOZBUILD_STATE_PATH/$FEATURE.
-        return mozpath.join(self._mach_context.state_dir, "browsertime")
+        return mozpath.join(command_context._mach_context.state_dir, "browsertime")
 
-    def setup_prerequisites(self):
+    def setup_prerequisites(self, command_context):
         r"""Install browsertime and visualmetrics.py prerequisites."""
 
         from mozbuild.action.tooltool import unpack_file
@@ -191,7 +193,9 @@ class MachBrowsertime(MachCommandBase):
 
         # Download the visualmetrics.py requirements.
         artifact_cache = ArtifactCache(
-            self.artifact_cache_path(), log=self.log, skip_cache=False
+            self.artifact_cache_path(command_context),
+            log=command_context.log,
+            skip_cache=False,
         )
 
         fetches = host_fetches[host_platform()]
@@ -202,9 +206,9 @@ class MachBrowsertime(MachCommandBase):
             if fetch.get("unpack", True):
                 cwd = os.getcwd()
                 try:
-                    mkdir(self.state_path())
-                    os.chdir(self.state_path())
-                    self.log(
+                    mkdir(self.state_path(command_context))
+                    os.chdir(self.state_path(command_context))
+                    command_context.log(
                         logging.INFO,
                         "browsertime",
                         {"path": archive},
@@ -215,14 +219,20 @@ class MachBrowsertime(MachCommandBase):
                         # Windows archive does not contain a subfolder
                         # so we make one for it here
                         mkdir(fetch.get("path"))
-                        os.chdir(os.path.join(self.state_path(), fetch.get("path")))
+                        os.chdir(
+                            os.path.join(
+                                self.state_path(command_context), fetch.get("path")
+                            )
+                        )
                         unpack_file(archive)
-                        os.chdir(self.state_path())
+                        os.chdir(self.state_path(command_context))
                     else:
                         unpack_file(archive)
 
                     # Make sure the expected path exists after extraction
-                    path = os.path.join(self.state_path(), fetch.get("path"))
+                    path = os.path.join(
+                        self.state_path(command_context), fetch.get("path")
+                    )
                     if not os.path.exists(path):
                         raise Exception("Cannot find an extracted directory: %s" % path)
 
@@ -246,19 +256,21 @@ class MachBrowsertime(MachCommandBase):
                 finally:
                     os.chdir(cwd)
 
-    def setup(self, should_clobber=False, new_upstream_url=""):
+    def setup(self, command_context, should_clobber=False, new_upstream_url=""):
         r"""Install browsertime and visualmetrics.py prerequisites and the Node.js package."""
 
-        sys.path.append(mozpath.join(self.topsrcdir, "tools", "lint", "eslint"))
+        sys.path.append(
+            mozpath.join(command_context.topsrcdir, "tools", "lint", "eslint")
+        )
         import setup_helper
 
         if not new_upstream_url:
-            self.setup_prerequisites()
+            self.setup_prerequisites(command_context)
 
         if new_upstream_url:
             package_json_path = os.path.join(BROWSERTIME_ROOT, "package.json")
 
-            self.log(
+            command_context.log(
                 logging.INFO,
                 "browsertime",
                 {
@@ -299,7 +311,7 @@ class MachBrowsertime(MachCommandBase):
             os.environ["CHROMEDRIVER_SKIP_DOWNLOAD"] = "true"
             os.environ["GECKODRIVER_SKIP_DOWNLOAD"] = "true"
 
-        self.log(
+        command_context.log(
             logging.INFO,
             "browsertime",
             {"package_json": mozpath.join(BROWSERTIME_ROOT, "package.json")},
@@ -319,19 +331,19 @@ class MachBrowsertime(MachCommandBase):
         if new_upstream_url or AUTOMATION:
             return 0
 
-        return self.check()
+        return self.check(command_context)
 
-    def node(self, args):
+    def node(self, command_context, args):
         r"""Invoke node (interactively) with the given arguments."""
-        return self.run_process(
+        return command_context.run_process(
             [node_path()] + args,
-            append_env=self.append_env(),
+            append_env=self.append_env(command_context),
             pass_thru=True,  # Allow user to run Node interactively.
             ensure_exit_code=False,  # Don't throw on non-zero exit code.
-            cwd=mozpath.join(self.topsrcdir),
+            cwd=mozpath.join(command_context.topsrcdir),
         )
 
-    def append_env(self, append_path=True):
+    def append_env(self, command_context, append_path=True):
         fetches = host_fetches[host_platform()]
 
         # Ensure that bare `ffmpeg` and ImageMagick commands
@@ -339,12 +351,14 @@ class MachBrowsertime(MachCommandBase):
         # script doesn't take these as configuration, so we do this (for now).
         # We should update the script itself to accept this configuration.
         path = os.environ.get("PATH", "").split(os.pathsep) if append_path else []
-        path_to_ffmpeg = mozpath.join(self.state_path(), fetches["ffmpeg"]["path"])
+        path_to_ffmpeg = mozpath.join(
+            self.state_path(command_context), fetches["ffmpeg"]["path"]
+        )
 
         path_to_imagemagick = None
         if "ImageMagick" in fetches:
             path_to_imagemagick = mozpath.join(
-                self.state_path(), fetches["ImageMagick"]["path"]
+                self.state_path(command_context), fetches["ImageMagick"]["path"]
             )
 
         if path_to_imagemagick:
@@ -352,7 +366,7 @@ class MachBrowsertime(MachCommandBase):
             # want to ensure that our ffmpeg goes first, just in case.
             path.insert(
                 0,
-                self.state_path()
+                self.state_path(command_context)
                 if host_platform().startswith("win")
                 else mozpath.join(path_to_imagemagick, "bin"),
             )  # noqa
@@ -403,7 +417,7 @@ class MachBrowsertime(MachCommandBase):
             #
             # Our fork of browsertime supports a `PYTHON` environment variable
             # that points to the exact python executable to use.
-            "PYTHON": self.virtualenv_manager.python_path,
+            "PYTHON": command_context.virtualenv_manager.python_path,
         }
 
         if path_to_imagemagick:
@@ -419,7 +433,7 @@ class MachBrowsertime(MachCommandBase):
 
         return append_env
 
-    def _need_install(self, package):
+    def _need_install(self, command_context, package):
         from pip._internal.req.constructors import install_req_from_line
 
         req = install_req_from_line(package)
@@ -427,38 +441,41 @@ class MachBrowsertime(MachCommandBase):
         if req.satisfied_by is None:
             return True
         venv_site_lib = os.path.abspath(
-            os.path.join(self.virtualenv_manager.bin_path, "..", "lib")
+            os.path.join(command_context.virtualenv_manager.bin_path, "..", "lib")
         )
         site_packages = os.path.abspath(req.satisfied_by.location)
         return not site_packages.startswith(venv_site_lib)
 
-    def activate_virtualenv(self, *args, **kwargs):
+    def activate_browsertime_virtualenv(self, command_context, *args, **kwargs):
         r"""Activates virtualenv.
 
         This function will also install Pillow and pyssim if needed.
         It will raise an error in case the install failed.
         """
-        MachCommandBase.activate_virtualenv(self, *args, **kwargs)
+        MachCommandBase.activate_virtualenv(command_context, *args, **kwargs)
 
         # installing Python deps on the fly
         for dep in ("Pillow==%s" % PILLOW_VERSION, "pyssim==%s" % PYSSIM_VERSION):
-            if self._need_install(dep):
-                self.virtualenv_manager._run_pip(["install", dep])
+            if self._need_install(command_context, dep):
+                command_context.virtualenv_manager._run_pip(["install", dep])
 
-    def check(self):
+    def check(self, command_context):
         r"""Run `visualmetrics.py --check`."""
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
 
         args = ["--check"]
-        status = self.run_process(
-            [self.virtualenv_manager.python_path, visualmetrics_path()] + args,
+        status = command_context.run_process(
+            [command_context.virtualenv_manager.python_path, visualmetrics_path()]
+            + args,
             # For --check, don't allow user's path to interfere with
             # path testing except on Linux, where ImageMagick needs to
             # be installed manually.
-            append_env=self.append_env(append_path=host_platform().startswith("linux")),
+            append_env=self.append_env(
+                command_context, append_path=host_platform().startswith("linux")
+            ),
             pass_thru=True,
             ensure_exit_code=False,  # Don't throw on non-zero exit code.
-            cwd=mozpath.join(self.topsrcdir),
+            cwd=mozpath.join(command_context.topsrcdir),
         )
 
         sys.stdout.flush()
@@ -468,15 +485,15 @@ class MachBrowsertime(MachCommandBase):
             return status
 
         # Avoid logging the command (and, on Windows, the environment).
-        self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
+        command_context.log_manager.terminal_handler.setLevel(logging.CRITICAL)
         print("browsertime version:", end=" ")
 
         sys.stdout.flush()
         sys.stderr.flush()
 
-        return self.node([browsertime_path()] + ["--version"])
+        return self.node(command_context, [browsertime_path()] + ["--version"])
 
-    def extra_default_args(self, args=[]):
+    def extra_default_args(self, command_context, args=[]):
         # Add Mozilla-specific default arguments.  This is tricky because browsertime is quite
         # loose about arguments; repeat arguments are generally accepted but then produce
         # difficult to interpret type errors.
@@ -527,15 +544,17 @@ class MachBrowsertime(MachCommandBase):
 
             if not specifies_binaryPath:
                 try:
-                    extra_args.extend(("--firefox.binaryPath", self.get_binary_path()))
+                    extra_args.extend(
+                        ("--firefox.binaryPath", command_context.get_binary_path())
+                    )
                 except BinaryNotFoundException as e:
-                    self.log(
+                    command_context.log(
                         logging.ERROR,
                         "browsertime",
                         {"error": str(e)},
                         "ERROR: {error}",
                     )
-                    self.log(
+                    command_context.log(
                         logging.INFO,
                         "browsertime",
                         {},
@@ -545,7 +564,7 @@ class MachBrowsertime(MachCommandBase):
                     return 1
 
         if extra_args:
-            self.log(
+            command_context.log(
                 logging.DEBUG,
                 "browsertime",
                 {"extra_args": extra_args},
@@ -554,9 +573,11 @@ class MachBrowsertime(MachCommandBase):
 
         return extra_args
 
-    def _verify_node_install(self):
+    def _verify_node_install(self, command_context):
         # check if Node is installed
-        sys.path.append(mozpath.join(self.topsrcdir, "tools", "lint", "eslint"))
+        sys.path.append(
+            mozpath.join(command_context.topsrcdir, "tools", "lint", "eslint")
+        )
         import setup_helper
 
         with silence():
@@ -614,13 +635,13 @@ class MachBrowsertime(MachCommandBase):
         check=False,
         browsertime_help=False,
     ):
-        self._set_log_level(verbose)
+        command_context._set_log_level(verbose)
 
         # Output a message before going further to make sure the
         # user knows that this tool is unsupported by the perftest
         # team and point them to our supported tools. Pause a bit to
         # make sure the user sees this message.
-        self.log(
+        command_context.log(
             logging.INFO,
             "browsertime",
             {},
@@ -637,21 +658,21 @@ class MachBrowsertime(MachCommandBase):
         time.sleep(5)
 
         if update_upstream_url:
-            return self.setup(new_upstream_url=update_upstream_url)
+            return self.setup(command_context, new_upstream_url=update_upstream_url)
         elif setup:
-            return self.setup(should_clobber=clobber)
+            return self.setup(command_context, should_clobber=clobber)
         else:
-            if not self._verify_node_install():
+            if not self._verify_node_install(command_context):
                 return 1
 
         if check:
-            return self.check()
+            return self.check(command_context)
 
         if browsertime_help:
             args.append("--help")
 
-        self.activate_virtualenv()
-        default_args = self.extra_default_args(args)
+        self.activate_browsertime_virtualenv(command_context)
+        default_args = self.extra_default_args(command_context, args)
         if default_args == 1:
             return 1
-        return self.node([browsertime_path()] + default_args + args)
+        return self.node(command_context, [browsertime_path()] + default_args + args)
