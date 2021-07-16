@@ -163,15 +163,7 @@ void TLSFilterTransaction::Close(nsresult aReason) {
   mTransaction->Close(aReason);
   mTransaction = nullptr;
 
-  if (gHttpHandler->Bug1563538()) {
-    if (NS_FAILED(aReason)) {
-      mCloseReason = aReason;
-    } else {
-      mCloseReason = NS_BASE_STREAM_CLOSED;
-    }
-  } else {
-    MOZ_ASSERT(NS_ERROR_UNEXPECTED == mCloseReason);
-  }
+  mCloseReason = NS_FAILED(aReason) ? aReason : NS_BASE_STREAM_CLOSED;
 }
 
 nsresult TLSFilterTransaction::OnReadSegment(const char* aData, uint32_t aCount,
@@ -1989,33 +1981,30 @@ SocketTransportShim::Close(nsresult aReason) {
     LOG(("SocketTransportShim::Close %p", this));
   }
 
-  if (gHttpHandler->Bug1563538()) {
-    // Must always post, because mSession->CloseTransaction releases the
-    // Http2Stream which is still on stack.
-    RefPtr<SocketTransportShim> self(this);
+  // Must always post, because mSession->CloseTransaction releases the
+  // Http2Stream which is still on stack.
+  RefPtr<SocketTransportShim> self(this);
 
-    nsCOMPtr<nsIEventTarget> sts =
-        do_GetService("@mozilla.org/network/socket-transport-service;1");
-    Unused << sts->Dispatch(NS_NewRunnableFunction(
-        "SocketTransportShim::Close", [self = std::move(self), aReason]() {
-          RefPtr<NullHttpTransaction> baseTrans =
-              self->mWeakTrans->QueryTransaction();
-          if (!baseTrans) {
-            return;
-          }
-          SpdyConnectTransaction* trans =
-              baseTrans->QuerySpdyConnectTransaction();
-          MOZ_ASSERT(trans);
-          if (!trans) {
-            return;
-          }
+  nsCOMPtr<nsIEventTarget> sts =
+      do_GetService("@mozilla.org/network/socket-transport-service;1");
+  Unused << sts->Dispatch(NS_NewRunnableFunction(
+      "SocketTransportShim::Close", [self = std::move(self), aReason]() {
+        RefPtr<NullHttpTransaction> baseTrans =
+            self->mWeakTrans->QueryTransaction();
+        if (!baseTrans) {
+          return;
+        }
+        SpdyConnectTransaction* trans =
+            baseTrans->QuerySpdyConnectTransaction();
+        MOZ_ASSERT(trans);
+        if (!trans) {
+          return;
+        }
 
-          trans->mSession->CloseTransaction(trans, aReason);
-        }));
-    return NS_OK;
-  }
+        trans->mSession->CloseTransaction(trans, aReason);
+      }));
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

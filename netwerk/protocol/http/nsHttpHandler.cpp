@@ -1712,13 +1712,6 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
-  if (PREF_CHANGED(HTTP_PREF("spdy.bug1563538"))) {
-    rv = Preferences::GetBool(HTTP_PREF("spdy.bug1563538"), &cVar);
-    if (NS_SUCCEEDED(rv)) {
-      mBug1563538 = cVar;
-    }
-  }
-
   if (PREF_CHANGED(HTTP_PREF("http3.enabled"))) {
     rv = Preferences::GetBool(HTTP_PREF("http3.enabled"), &cVar);
     if (NS_SUCCEEDED(rv)) {
