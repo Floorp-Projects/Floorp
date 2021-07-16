@@ -81,8 +81,9 @@ enum class TypeCode {
   // Type constructor for non-nullable reference types.
   Ref = 0x6b,  // SLEB128(-0x15)
 
-  // Type constructor for rtt types.
-  Rtt = 0x69,  // SLEB128(-0x17)
+  // Type constructors for rtt types.
+  RttWithDepth = 0x69,  // SLEB128(-0x17)
+  Rtt = 0x68,           // SLEB128(-0x18)
 
   // Type constructor for function types
   Func = 0x60,  // SLEB128(-0x20)
@@ -114,6 +115,11 @@ static constexpr TypeCode AbstractReferenceTypeCode = TypeCode::ExternRef;
 // is encoded with 'Ref' or 'NullableRef'.
 
 static constexpr TypeCode AbstractReferenceTypeIndexCode = TypeCode::Ref;
+
+// A type code used to represent (rtt depth? typeindex) whether or not the type
+// is encoded with 'Rtt' or 'RttWithDepth'.
+
+static constexpr TypeCode AbstractRttCode = TypeCode::Rtt;
 
 enum class TypeIdDescKind { None, Immediate, Global };
 
@@ -1000,19 +1006,11 @@ static const unsigned PageMask = ((1u << PageBits) - 1);
 // These limits are agreed upon with other engines for consistency.
 
 static const unsigned MaxTypes = 1000000;
-#ifdef JS_64BIT
-static const unsigned MaxTypeIndex = 1000000;
-#else
-static const unsigned MaxTypeIndex = 15000;
-#endif
-static const unsigned MaxRttDepth = 127;
 static const unsigned MaxFuncs = 1000000;
 static const unsigned MaxTables = 100000;
 static const unsigned MaxImports = 100000;
 static const unsigned MaxExports = 100000;
 static const unsigned MaxGlobals = 1000000;
-static const unsigned MaxEvents =
-    1000000;  // TODO: get this into the shared limits spec
 static const unsigned MaxDataSegments = 100000;
 static const unsigned MaxDataSegmentLengthPages = 16384;
 static const unsigned MaxElemSegments = 10000000;
@@ -1027,6 +1025,21 @@ static const unsigned MaxMemory32LimitField = 65536;
 static const unsigned MaxStringBytes = 100000;
 static const unsigned MaxModuleBytes = 1024 * 1024 * 1024;
 static const unsigned MaxFunctionBytes = 7654321;
+
+// These limits pertain to our WebAssembly implementation only, but may make
+// sense to get into the shared limits spec eventually.
+
+// See PackedTypeCode for exact bits available for these fields depending on
+// platform
+#ifdef JS_64BIT
+static const unsigned MaxTypeIndex = 1000000;
+static const unsigned MaxRttDepth = 1000;
+#else
+static const unsigned MaxTypeIndex = 15000;
+static const unsigned MaxRttDepth = 100;
+#endif
+
+static const unsigned MaxEvents = 1000000;
 
 // These limits pertain to our WebAssembly implementation only.
 
@@ -1043,6 +1056,10 @@ static const unsigned MaxRegisterResults = 1;
 // on the format restrict it further to the largest pseudo-ARM-immediate.
 // See IsValidAsmJSHeapLength().
 static const uint64_t MaxAsmJSHeapLength = 0x7f000000;
+
+// A magic value of rtt depth to signify that it was not specified.
+
+static const uint32_t RttDepthNone = MaxRttDepth + 1;
 
 // A magic value of the FramePointer to indicate after a return to the entry
 // stub that an exception has been caught and that we should throw.

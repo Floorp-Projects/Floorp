@@ -267,7 +267,7 @@ class ResultType {
     InvalidKind = Tagged::PointerKind2,
   };
 
-  ResultType(Kind kind, uint32_t imm) : tagged_(Tagged::Kind(kind), imm) {}
+  ResultType(Kind kind, uintptr_t imm) : tagged_(Tagged::Kind(kind), imm) {}
   explicit ResultType(const ValTypeVector* ptr)
       : tagged_(Tagged::Kind(VectorKind), ptr) {}
 
@@ -286,7 +286,7 @@ class ResultType {
  public:
   ResultType() : tagged_(Tagged::Kind(InvalidKind), nullptr) {}
 
-  static ResultType Empty() { return ResultType(EmptyKind, uint32_t(0)); }
+  static ResultType Empty() { return ResultType(EmptyKind, uintptr_t(0)); }
   static ResultType Single(ValType vt) {
     return ResultType(SingleKind, vt.bitsUnsafe());
   }
@@ -380,7 +380,7 @@ class BlockType {
     FuncResultsKind = Tagged::PointerKind2
   };
 
-  BlockType(Kind kind, uint32_t imm) : tagged_(Tagged::Kind(kind), imm) {}
+  BlockType(Kind kind, uintptr_t imm) : tagged_(Tagged::Kind(kind), imm) {}
   BlockType(Kind kind, const FuncType& type)
       : tagged_(Tagged::Kind(kind), &type) {}
 
@@ -398,7 +398,7 @@ class BlockType {
                 PackedTypeCode::invalid().bits()) {}
 
   static BlockType VoidToVoid() {
-    return BlockType(VoidToVoidKind, uint32_t(0));
+    return BlockType(VoidToVoidKind, uintptr_t(0));
   }
   static BlockType VoidToSingle(ValType vt) {
     return BlockType(VoidToSingleKind, vt.bitsUnsafe());

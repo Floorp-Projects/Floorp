@@ -2861,7 +2861,7 @@ inline bool OpIter<Policy>::readStructNewWithRtt(uint32_t* typeIndex,
   }
 
   const StructType& str = env_.types.structType(*typeIndex);
-  const ValType rttType = ValType::fromRtt(*typeIndex, 0);
+  const ValType rttType = ValType::fromRtt(*typeIndex, RttDepthNone);
 
   if (!popWithType(rttType, rtt)) {
     return false;
@@ -2892,7 +2892,7 @@ inline bool OpIter<Policy>::readStructNewDefaultWithRtt(uint32_t* typeIndex,
   }
 
   const StructType& str = env_.types.structType(*typeIndex);
-  const ValType rttType = ValType::fromRtt(*typeIndex, 0);
+  const ValType rttType = ValType::fromRtt(*typeIndex, RttDepthNone);
 
   if (!popWithType(rttType, rtt)) {
     return false;
@@ -2984,7 +2984,7 @@ inline bool OpIter<Policy>::readArrayNewWithRtt(uint32_t* typeIndex, Value* rtt,
   }
 
   const ArrayType& arr = env_.types.arrayType(*typeIndex);
-  const ValType rttType = ValType::fromRtt(*typeIndex, 0);
+  const ValType rttType = ValType::fromRtt(*typeIndex, RttDepthNone);
 
   if (!popWithType(rttType, rtt)) {
     return false;
@@ -3012,7 +3012,7 @@ inline bool OpIter<Policy>::readArrayNewDefaultWithRtt(uint32_t* typeIndex,
   }
 
   const ArrayType& arr = env_.types.arrayType(*typeIndex);
-  const ValType rttType = ValType::fromRtt(*typeIndex, 0);
+  const ValType rttType = ValType::fromRtt(*typeIndex, RttDepthNone);
 
   if (!popWithType(rttType, rtt)) {
     return false;
@@ -3139,10 +3139,16 @@ inline bool OpIter<Policy>::readRttSub(Value* parentRtt,
     return false;
   }
 
-  if (rttParentDepth >= MaxRttDepth) {
-    return fail("rtt depth is too deep");
+  uint32_t subRttDepth;
+  if (rttParentDepth == RttDepthNone) {
+    subRttDepth = RttDepthNone;
+  } else {
+    if (rttParentDepth >= MaxRttDepth) {
+      return fail("rtt depth is too deep");
+    }
+    subRttDepth = rttParentDepth + 1;
   }
-  return push(ValType::fromRtt(*rttSubTypeIndex, rttParentDepth + 1));
+  return push(ValType::fromRtt(*rttSubTypeIndex, subRttDepth));
 }
 
 template <typename Policy>
