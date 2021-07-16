@@ -4118,7 +4118,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       int32_t zIndex = MaxZIndexInListOfItemsContainedInFrame(
           scrolledContent.PositionedDescendants(), mOuter);
       if (aBuilder->IsPartialUpdate()) {
-        for (nsDisplayItemBase* item : mScrolledFrame->DisplayItems()) {
+        for (nsDisplayItem* item : mScrolledFrame->DisplayItems()) {
           if (item->GetType() ==
               DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
             auto* hitTestItem =

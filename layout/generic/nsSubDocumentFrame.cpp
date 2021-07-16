@@ -1122,7 +1122,7 @@ void nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther) {
 }
 
 void nsSubDocumentFrame::ClearDisplayItems() {
-  for (nsDisplayItemBase* i : DisplayItems()) {
+  for (nsDisplayItem* i : DisplayItems()) {
     if (i->GetType() == DisplayItemType::TYPE_SUBDOCUMENT) {
       nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
       MOZ_ASSERT(displayRoot);

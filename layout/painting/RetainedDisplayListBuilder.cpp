@@ -598,7 +598,7 @@ class MergeState {
     // the same item.
     uint32_t outerKey = mOuterItem ? mOuterItem->GetPerFrameKey() : 0;
     nsIFrame* frame = aItem->Frame();
-    for (nsDisplayItemBase* i : frame->DisplayItems()) {
+    for (nsDisplayItem* i : frame->DisplayItems()) {
       if (i != aItem && i->Frame() == frame &&
           i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
         if (i->GetOldListIndex(mOldList, outerKey, aOutIndex)) {
@@ -629,7 +629,7 @@ class MergeState {
     aItem->NotifyUsed(mBuilder->Builder());
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    for (nsDisplayItemBase* i : aItem->Frame()->DisplayItems()) {
+    for (nsDisplayItem* i : aItem->Frame()->DisplayItems()) {
       if (i->Frame() == aItem->Frame() &&
           i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
         MOZ_DIAGNOSTIC_ASSERT(!i->IsMergedItem());
@@ -914,7 +914,7 @@ static void GetModifiedAndFramesWithProps(
 #endif
 
 static nsDisplayItem* GetFirstDisplayItemWithChildren(nsIFrame* aFrame) {
-  for (nsDisplayItemBase* i : aFrame->DisplayItems()) {
+  for (nsDisplayItem* i : aFrame->DisplayItems()) {
     if (i->HasChildren()) {
       return static_cast<nsDisplayItem*>(i);
     }
