@@ -338,12 +338,6 @@ class BaseBootstrapper(object):
         """
         pass
 
-    def ensure_lucetc_packages(self, state_dir, checkout_root):
-        """
-        Install lucetc.
-        """
-        pass
-
     def ensure_wasi_sysroot_packages(self, state_dir, checkout_root):
         """
         Install the wasi sysroot.
