@@ -12,10 +12,11 @@
 class nsIFrame;
 class nsIContent;
 class nsCSSPropertyIDSet;
-class nsDisplayListBuilder;
 class nsDOMCSSDeclaration;
 
 namespace mozilla {
+
+class nsDisplayListBuilder;
 
 /**
  * This class receives various notifications about style changes and content

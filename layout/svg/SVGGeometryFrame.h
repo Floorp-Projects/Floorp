@@ -157,9 +157,8 @@ class DisplaySVGGeometry final : public nsPaintedDisplayItem {
     MOZ_COUNT_CTOR(DisplaySVGGeometry);
     MOZ_ASSERT(aFrame, "Must have a frame!");
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~DisplaySVGGeometry() { MOZ_COUNT_DTOR(DisplaySVGGeometry); }
-#endif
+
+  MOZ_COUNTED_DTOR_OVERRIDE(DisplaySVGGeometry)
 
   NS_DISPLAY_DECL_NAME("DisplaySVGGeometry", TYPE_SVG_GEOMETRY)
 
@@ -210,6 +209,7 @@ class DisplaySVGGeometry final : public nsPaintedDisplayItem {
     return result;
   }
 };
+
 }  // namespace mozilla
 
 #endif  // LAYOUT_SVG_SVGGEOMETRYFRAME_H_

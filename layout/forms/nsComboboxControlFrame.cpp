@@ -1464,6 +1464,8 @@ int32_t nsComboboxControlFrame::UpdateRecentIndex(int32_t aIndex) {
   return index;
 }
 
+namespace mozilla {
+
 class nsDisplayComboboxFocus : public nsPaintedDisplayItem {
  public:
   nsDisplayComboboxFocus(nsDisplayListBuilder* aBuilder,
@@ -1482,6 +1484,8 @@ void nsDisplayComboboxFocus::Paint(nsDisplayListBuilder* aBuilder,
   static_cast<nsComboboxControlFrame*>(mFrame)->PaintFocus(
       *aCtx->GetDrawTarget(), ToReferenceFrame());
 }
+
+}  // namespace mozilla
 
 void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                               const nsDisplayListSet& aLists) {

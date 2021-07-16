@@ -49,67 +49,6 @@ void nsTreeColFrame::DestroyFrom(nsIFrame* aDestructRoot,
   nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-class nsDisplayXULTreeColSplitterTarget final : public nsDisplayItem {
- public:
-  nsDisplayXULTreeColSplitterTarget(nsDisplayListBuilder* aBuilder,
-                                    nsIFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplayXULTreeColSplitterTarget);
-  }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayXULTreeColSplitterTarget)
-
-  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                       HitTestState* aState,
-                       nsTArray<nsIFrame*>* aOutFrames) override;
-  NS_DISPLAY_DECL_NAME("XULTreeColSplitterTarget",
-                       TYPE_XUL_TREE_COL_SPLITTER_TARGET)
-};
-
-void nsDisplayXULTreeColSplitterTarget::HitTest(
-    nsDisplayListBuilder* aBuilder, const nsRect& aRect, HitTestState* aState,
-    nsTArray<nsIFrame*>* aOutFrames) {
-  nsRect rect = aRect - ToReferenceFrame();
-  // If we are in either in the first 4 pixels or the last 4 pixels, we're going
-  // to do something really strange.  Check for an adjacent splitter.
-  bool left = false;
-  bool right = false;
-  if (mFrame->GetSize().width - nsPresContext::CSSPixelsToAppUnits(4) <=
-      rect.XMost()) {
-    right = true;
-  } else if (nsPresContext::CSSPixelsToAppUnits(4) > rect.x) {
-    left = true;
-  }
-
-  // Swap left and right for RTL trees in order to find the correct splitter
-  if (mFrame->StyleVisibility()->mDirection == StyleDirection::Rtl) {
-    std::swap(left, right);
-  }
-
-  if (left || right) {
-    nsIFrame* child = nsBoxFrame::SlowOrdinalGroupAwareSibling(mFrame, right);
-    // We are a header. Look for the correct splitter.
-    if (child && child->GetContent()->IsXULElement(nsGkAtoms::splitter)) {
-      aOutFrames->AppendElement(child);
-    }
-  }
-}
-
-void nsTreeColFrame::BuildDisplayListForChildren(
-    nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
-  if (!aBuilder->IsForEventDelivery()) {
-    nsBoxFrame::BuildDisplayListForChildren(aBuilder, aLists);
-    return;
-  }
-
-  nsDisplayListCollection set(aBuilder);
-  nsBoxFrame::BuildDisplayListForChildren(aBuilder, set);
-
-  WrapListsInRedirector(aBuilder, set, aLists);
-
-  aLists.Content()->AppendNewToTop<nsDisplayXULTreeColSplitterTarget>(aBuilder,
-                                                                      this);
-}
-
 nsresult nsTreeColFrame::AttributeChanged(int32_t aNameSpaceID,
                                           nsAtom* aAttribute,
                                           int32_t aModType) {
@@ -162,4 +101,69 @@ void nsTreeColFrame::InvalidateColumns(bool aCanWalkFrameTree) {
   }
 
   columns->InvalidateColumns();
+}
+
+namespace mozilla {
+
+class nsDisplayXULTreeColSplitterTarget final : public nsDisplayItem {
+ public:
+  nsDisplayXULTreeColSplitterTarget(nsDisplayListBuilder* aBuilder,
+                                    nsIFrame* aFrame)
+      : nsDisplayItem(aBuilder, aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayXULTreeColSplitterTarget);
+  }
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayXULTreeColSplitterTarget)
+
+  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                       HitTestState* aState,
+                       nsTArray<nsIFrame*>* aOutFrames) override;
+  NS_DISPLAY_DECL_NAME("XULTreeColSplitterTarget",
+                       TYPE_XUL_TREE_COL_SPLITTER_TARGET)
+};
+
+void nsDisplayXULTreeColSplitterTarget::HitTest(
+    nsDisplayListBuilder* aBuilder, const nsRect& aRect, HitTestState* aState,
+    nsTArray<nsIFrame*>* aOutFrames) {
+  nsRect rect = aRect - ToReferenceFrame();
+  // If we are in either in the first 4 pixels or the last 4 pixels, we're going
+  // to do something really strange.  Check for an adjacent splitter.
+  bool left = false;
+  bool right = false;
+  if (mFrame->GetSize().width - nsPresContext::CSSPixelsToAppUnits(4) <=
+      rect.XMost()) {
+    right = true;
+  } else if (nsPresContext::CSSPixelsToAppUnits(4) > rect.x) {
+    left = true;
+  }
+
+  // Swap left and right for RTL trees in order to find the correct splitter
+  if (mFrame->StyleVisibility()->mDirection == StyleDirection::Rtl) {
+    std::swap(left, right);
+  }
+
+  if (left || right) {
+    nsIFrame* child = nsBoxFrame::SlowOrdinalGroupAwareSibling(mFrame, right);
+    // We are a header. Look for the correct splitter.
+    if (child && child->GetContent()->IsXULElement(nsGkAtoms::splitter)) {
+      aOutFrames->AppendElement(child);
+    }
+  }
+}
+
+}  // namespace mozilla
+
+void nsTreeColFrame::BuildDisplayListForChildren(
+    nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
+  if (!aBuilder->IsForEventDelivery()) {
+    nsBoxFrame::BuildDisplayListForChildren(aBuilder, aLists);
+    return;
+  }
+
+  nsDisplayListCollection set(aBuilder);
+  nsBoxFrame::BuildDisplayListForChildren(aBuilder, set);
+
+  WrapListsInRedirector(aBuilder, set, aLists);
+
+  aLists.Content()->AppendNewToTop<nsDisplayXULTreeColSplitterTarget>(aBuilder,
+                                                                      this);
 }

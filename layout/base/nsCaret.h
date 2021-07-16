@@ -18,7 +18,6 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 
-class nsDisplayListBuilder;
 class nsFrameSelection;
 class nsIContent;
 class nsIFrame;

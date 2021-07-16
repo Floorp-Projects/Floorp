@@ -15,8 +15,6 @@
 #include "mozilla/gfx/Polygon.h"
 #include "nsTArray.h"
 
-class nsDisplayTransform;
-
 namespace mozilla {
 namespace layers {
 

@@ -9,6 +9,8 @@
 #include "nsIFrame.h"
 #include "nsTableFrame.h"
 
+namespace mozilla {
+
 nsDisplayItemGeometry::nsDisplayItemGeometry(nsDisplayItem* aItem,
                                              nsDisplayListBuilder* aBuilder) {
   MOZ_COUNT_CTOR(nsDisplayItemGeometry);
@@ -120,3 +122,5 @@ nsDisplayTableItemGeometry::nsDisplayTableItemGeometry(
     : nsDisplayItemGenericGeometry(aItem, aBuilder),
       nsImageGeometryMixin(aItem, aBuilder),
       mFrameOffsetToViewport(aFrameOffsetToViewport) {}
+
+}  // namespace mozilla

@@ -16,9 +16,8 @@
 class imgRequestProxy;
 class nsImageBoxFrame;
 
-class nsDisplayXULImage;
-
 namespace mozilla {
+class nsDisplayXULImage;
 class PresShell;
 }  // namespace mozilla
 
@@ -43,7 +42,7 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::LayerManager LayerManager;
 
-  friend class nsDisplayXULImage;
+  friend class mozilla::nsDisplayXULImage;
   NS_DECL_FRAMEARENA_HELPERS(nsImageBoxFrame)
   NS_DECL_QUERYFRAME
 
@@ -155,6 +154,7 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
   bool mSuppressStyleCheck;
 };  // class nsImageBoxFrame
 
+namespace mozilla {
 class nsDisplayXULImage final : public nsDisplayImageContainer {
  public:
   nsDisplayXULImage(nsDisplayListBuilder* aBuilder, nsImageBoxFrame* aFrame)
@@ -194,5 +194,7 @@ class nsDisplayXULImage final : public nsDisplayImageContainer {
 
   NS_DISPLAY_DECL_NAME("XULImage", TYPE_XUL_IMAGE)
 };
+
+}  // namespace mozilla
 
 #endif /* nsImageBoxFrame_h___ */
