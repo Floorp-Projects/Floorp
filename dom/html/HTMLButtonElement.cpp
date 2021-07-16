@@ -179,6 +179,7 @@ void HTMLButtonElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
         !aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented) {
       aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
       aVisitor.mItemFlags |= NS_IN_SUBMIT_CLICK;
+      aVisitor.mItemData = static_cast<Element*>(mForm);
       // tell the form that we are about to enter a click handler.
       // that means that if there are scripted submissions, the
       // latest one will be deferred until after the exit point of the handler.
@@ -218,14 +219,15 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     }
   }
 
-  // mForm is null if the event handler removed us from the document (bug
-  // 194582).
-  if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) && mForm) {
+  if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK)) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
+    RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
+    MOZ_ASSERT(form);
     // tell the form that we are about to exit a click handler
     // so the form knows not to defer subsequent submissions
     // the pending ones that were created during the handler
     // will be flushed or forgoten.
-    mForm->OnSubmitClickEnd();
+    form->OnSubmitClickEnd();
   }
 
   if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
@@ -243,16 +245,22 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         }
         // https://html.spec.whatwg.org/multipage/form-elements.html#attr-button-type-button-state
         // NS_FORM_BUTTON_BUTTON do nothing.
+        return rv;
       }
     }
-  } else if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) && mForm) {
+  }
+
+  if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK)) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
+    RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
+    MOZ_ASSERT(form);
     // Tell the form to flush a possible pending submission.
     // the reason is that the script returned false (the event was
     // not ignored) so if there is a stored submission, it needs to
     // be submitted immediatelly.
     // Note, NS_IN_SUBMIT_CLICK is set only when we're in outer activate event.
-    mForm->FlushPendingSubmission();
-  }  // if
+    form->FlushPendingSubmission();
+  }
 
   return rv;
 }
