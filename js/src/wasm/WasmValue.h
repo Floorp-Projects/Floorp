@@ -210,7 +210,8 @@ class WasmValueBox : public NativeObject {
 // need to, but it probably could.
 
 class FuncRef {
-  JSFunction* value_;
+  // mutable so that tracing may access a JSFunction* from a `const FuncRef`
+  mutable JSFunction* value_;
 
   explicit FuncRef() : value_((JSFunction*)-1) {}
   explicit FuncRef(JSFunction* p) : value_(p) {
@@ -235,6 +236,8 @@ class FuncRef {
   JSFunction* asJSFunction() { return value_; }
 
   bool isNull() { return value_ == nullptr; }
+
+  void trace(JSTracer* trc) const;
 };
 
 using RootedFuncRef = Rooted<FuncRef>;
@@ -314,7 +317,7 @@ class LitVal {
   explicit LitVal(V128 v128) : type_(ValType::V128) { cell_.v128_ = v128; }
 
   explicit LitVal(ValType type, AnyRef any) : type_(type) {
-    MOZ_ASSERT(type.isReference());
+    MOZ_ASSERT(type.isReference() || type.isRtt());
     MOZ_ASSERT(any.isNull(),
                "use Val for non-nullptr ref types to get tracing");
     cell_.ref_ = any;
@@ -343,7 +346,7 @@ class LitVal {
     return cell_.f64_;
   }
   AnyRef ref() const {
-    MOZ_ASSERT(type_.isReference());
+    MOZ_ASSERT(type_.isReference() || type_.isRtt());
     return cell_.ref_;
   }
   const V128& v128() const {
@@ -366,7 +369,7 @@ class MOZ_NON_PARAM Val : public LitVal {
   explicit Val(double f64) : LitVal(f64) {}
   explicit Val(V128 v128) : LitVal(v128) {}
   explicit Val(ValType type, AnyRef val) : LitVal(type, AnyRef::null()) {
-    MOZ_ASSERT(type.isReference());
+    MOZ_ASSERT(type.isReference() || type.isRtt());
     cell_.ref_ = val;
   }
   explicit Val(ValType type, FuncRef val) : LitVal(type, AnyRef::null()) {
@@ -402,7 +405,8 @@ class MOZ_NON_PARAM Val : public LitVal {
   bool operator!=(const Val& rhs) const { return !(*this == rhs); }
 
   bool isJSObject() const {
-    return type_.isValid() && type_.isReference() && !cell_.ref_.isNull();
+    return type_.isValid() && (type_.isReference() || type_.isRtt()) &&
+           !cell_.ref_.isNull();
   }
 
   JSObject* asJSObject() const {

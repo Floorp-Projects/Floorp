@@ -599,6 +599,12 @@ wasm::FuncRef wasm::FuncRef::fromAnyRefUnchecked(AnyRef p) {
 #endif
 }
 
+void wasm::FuncRef::trace(JSTracer* trc) const {
+  if (value_) {
+    TraceManuallyBarrieredEdge(trc, &value_, "wasm funcref referent");
+  }
+}
+
 Value wasm::UnboxFuncRef(FuncRef val) {
   JSFunction* fn = val.asJSFunction();
   Value result;

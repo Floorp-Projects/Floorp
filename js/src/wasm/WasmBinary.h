@@ -529,7 +529,9 @@ class Decoder {
   // Instruction immediates for constant instructions
 
   [[nodiscard]] bool readBinary() { return true; }
-  [[nodiscard]] bool readGetGlobal(uint32_t* id);
+  [[nodiscard]] bool readTypeIndex(uint32_t* typeIndex);
+  [[nodiscard]] bool readGlobalIndex(uint32_t* globalIndex);
+  [[nodiscard]] bool readFuncIndex(uint32_t* funcIndex);
   [[nodiscard]] bool readI32Const(int32_t* i32);
   [[nodiscard]] bool readI64Const(int64_t* i64);
   [[nodiscard]] bool readF32Const(float* f32);
@@ -537,7 +539,6 @@ class Decoder {
 #ifdef ENABLE_WASM_SIMD
   [[nodiscard]] bool readV128Const(V128* value);
 #endif
-  [[nodiscard]] bool readRefFunc(uint32_t* funcIndex);
   [[nodiscard]] bool readRefNull(const TypeContext& types,
                                  const FeatureArgs& features, RefType* type);
   [[nodiscard]] bool readRefNull(const FeatureArgs& features, RefType* type);
@@ -911,9 +912,23 @@ inline bool Decoder::readOp(OpBytes* op) {
 
 // Instruction immediates for constant instructions
 
-inline bool Decoder::readGetGlobal(uint32_t* id) {
-  if (!readVarU32(id)) {
+inline bool Decoder::readTypeIndex(uint32_t* typeIndex) {
+  if (!readVarU32(typeIndex)) {
+    return fail("unable to read type index");
+  }
+  return true;
+}
+
+inline bool Decoder::readGlobalIndex(uint32_t* globalIndex) {
+  if (!readVarU32(globalIndex)) {
     return fail("unable to read global index");
+  }
+  return true;
+}
+
+inline bool Decoder::readFuncIndex(uint32_t* funcIndex) {
+  if (!readVarU32(funcIndex)) {
+    return fail("unable to read function index");
   }
   return true;
 }
@@ -954,13 +969,6 @@ inline bool Decoder::readV128Const(V128* value) {
   return true;
 }
 #endif
-
-inline bool Decoder::readRefFunc(uint32_t* funcIndex) {
-  if (!readVarU32(funcIndex)) {
-    return fail("unable to read function index");
-  }
-  return true;
-}
 
 inline bool Decoder::readRefNull(const TypeContext& types,
                                  const FeatureArgs& features, RefType* type) {

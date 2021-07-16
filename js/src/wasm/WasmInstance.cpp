@@ -1265,7 +1265,79 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     table.functionBase = tables_[i]->functionBase();
   }
 
-  // Initialize globals in the tls data
+  // Add observer if our memory base may grow
+  if (memory_ && memory_->movingGrowable() &&
+      !memory_->addMovingGrowObserver(cx, object_)) {
+    return false;
+  }
+
+  // Add observers if our tables may grow
+  for (const SharedTable& table : tables_) {
+    if (table->movingGrowable() && !table->addMovingGrowObserver(cx, object_)) {
+      return false;
+    }
+  }
+
+  // Allocate in the global type sets for structural type checks
+  if (!metadata().types.empty()) {
+#ifdef ENABLE_WASM_GC
+    if (GcAvailable(cx)) {
+      // Transfer and allocate type objects for the struct types in the module
+      uint32_t baseGcTypeIndex = 0;
+      if (!cx->wasm().typeContext->transferTypes(metadata().types,
+                                                 &baseGcTypeIndex)) {
+        return false;
+      }
+
+      for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
+           typeIndex++) {
+        const TypeDefWithId& typeDef = metadata().types[typeIndex];
+        if (!typeDef.isStructType() && !typeDef.isArrayType()) {
+          continue;
+        }
+        uint32_t globalTypeIndex = baseGcTypeIndex + typeIndex;
+        Rooted<RttValue*> rttValue(
+            cx, RttValue::createFromHandle(cx, TypeHandle(globalTypeIndex)));
+
+        if (!rttValue) {
+          return false;
+        }
+        *((GCPtrObject*)addressOfTypeId(typeDef.id)) = rttValue;
+        hasGcTypes_ = true;
+      }
+    }
+#endif
+
+    // Handle functions specially (for now) as they're guaranteed to be
+    // acyclical and can use simpler hash-consing logic.
+    ExclusiveData<FuncTypeIdSet>::Guard lockedFuncTypeIdSet =
+        funcTypeIdSet.lock();
+
+    for (const TypeDefWithId& typeDef : metadata().types) {
+      switch (typeDef.kind()) {
+        case TypeDefKind::Func: {
+          const FuncType& funcType = typeDef.funcType();
+          const void* funcTypeId;
+          if (!lockedFuncTypeIdSet->allocateFuncTypeId(cx, funcType,
+                                                       &funcTypeId)) {
+            return false;
+          }
+          *addressOfTypeId(typeDef.id) = funcTypeId;
+          break;
+        }
+        case TypeDefKind::Struct:
+        case TypeDefKind::Array:
+          continue;
+        default:
+          MOZ_CRASH();
+      }
+    }
+  }
+
+  // Initialize globals in the tls data.
+  //
+  // This must be performed after we have initialized runtime types as a global
+  // initializer may reference them.
   for (size_t i = 0; i < metadata().globals.length(); i++) {
     const GlobalDesc& global = metadata().globals[i];
 
@@ -1305,77 +1377,6 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
       }
       case GlobalKind::Constant: {
         MOZ_CRASH("skipped at the top");
-      }
-    }
-  }
-
-  // Add observer if our memory base may grow
-  if (memory_ && memory_->movingGrowable() &&
-      !memory_->addMovingGrowObserver(cx, object_)) {
-    return false;
-  }
-
-  // Add observers if our tables may grow
-  for (const SharedTable& table : tables_) {
-    if (table->movingGrowable() && !table->addMovingGrowObserver(cx, object_)) {
-      return false;
-    }
-  }
-
-  // Allocate in the global type sets for structural type checks
-  if (!metadata().types.empty()) {
-    // Transfer and allocate type objects for the struct types in the module
-    if (GcAvailable(cx)) {
-      uint32_t baseIndex = 0;
-      if (!cx->wasm().typeContext->transferTypes(metadata().types,
-                                                 &baseIndex)) {
-        return false;
-      }
-
-      for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
-           typeIndex++) {
-        const TypeDefWithId& typeDef = metadata().types[typeIndex];
-        if (!typeDef.isStructType() && !typeDef.isArrayType()) {
-          continue;
-        }
-#ifndef ENABLE_WASM_GC
-        MOZ_CRASH("Should not have seen any gc types");
-#else
-        uint32_t globalTypeIndex = baseIndex + typeIndex;
-        Rooted<RttValue*> rttValue(
-            cx, RttValue::createFromHandle(cx, TypeHandle(globalTypeIndex)));
-
-        if (!rttValue) {
-          return false;
-        }
-        *((GCPtrObject*)addressOfTypeId(typeDef.id)) = rttValue;
-        hasGcTypes_ = true;
-#endif
-      }
-    }
-
-    // Handle functions specially (for now) as they're guaranteed to be
-    // acyclical and can use simpler hash-consing logic.
-    ExclusiveData<FuncTypeIdSet>::Guard lockedFuncTypeIdSet =
-        funcTypeIdSet.lock();
-
-    for (const TypeDefWithId& typeDef : metadata().types) {
-      switch (typeDef.kind()) {
-        case TypeDefKind::Func: {
-          const FuncType& funcType = typeDef.funcType();
-          const void* funcTypeId;
-          if (!lockedFuncTypeIdSet->allocateFuncTypeId(cx, funcType,
-                                                       &funcTypeId)) {
-            return false;
-          }
-          *addressOfTypeId(typeDef.id) = funcTypeId;
-          break;
-        }
-        case TypeDefKind::Struct:
-        case TypeDefKind::Array:
-          continue;
-        default:
-          MOZ_CRASH();
       }
     }
   }
@@ -2024,6 +2025,48 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   }
   DebugCodegen(DebugChannel::Function, "]\n");
 
+  return true;
+}
+
+bool Instance::constantRefFunc(uint32_t funcIndex,
+                               MutableHandleFuncRef result) {
+  void* fnref = Instance::refFunc(this, funcIndex);
+  if (fnref == AnyRef::invalid().forCompiledCode()) {
+    return false;  // OOM, which has already been reported.
+  }
+  result.set(FuncRef::fromCompiledCode(fnref));
+  return true;
+}
+
+bool Instance::constantRttCanon(JSContext* cx, uint32_t sourceTypeIndex,
+                                MutableHandleRttValue result) {
+  // Get the renumbered type index from the source type index
+  uint32_t renumberedTypeIndex = metadata().typesRenumbering[sourceTypeIndex];
+  // The original type definition cannot have been a function type, so it
+  // could not have been an immediate type
+  MOZ_ASSERT(renumberedTypeIndex != UINT32_MAX);
+  // Get the TypeIdDesc to find the canonical RttValue
+  const TypeDefWithId& typeDef = metadata().types[renumberedTypeIndex];
+  MOZ_ASSERT(typeDef.isStructType() || typeDef.isArrayType());
+  // Cast from untyped storage to RttValue
+  result.set(*(RttValue**)addressOfTypeId(typeDef.id));
+  return true;
+}
+
+bool Instance::constantRttSub(JSContext* cx, HandleRttValue parentRtt,
+                              uint32_t sourceChildTypeIndex,
+                              MutableHandleRttValue result) {
+  RootedRttValue subCanonRtt(cx, nullptr);
+  // Get the canonical rtt value from the child type index, this is used to
+  // memoize results of rtt.sub
+  if (!constantRttCanon(cx, sourceChildTypeIndex, &subCanonRtt)) {
+    return false;
+  }
+  result.set(RttValue::rttSub(cx, parentRtt, subCanonRtt));
+  if (!result) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
   return true;
 }
 

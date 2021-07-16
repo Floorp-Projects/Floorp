@@ -172,8 +172,37 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
         break;
       }
 #endif
+#ifdef ENABLE_WASM_GC
+      case uint16_t(Op::GcPrefix): {
+        if (!env->gcEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        switch (op.b1) {
+          case uint16_t(GcOp::RttCanon): {
+            ValType unusedTy;
+            if (!iter.readRttCanon(&unusedTy)) {
+              return false;
+            }
+            *literal = Nothing();
+            break;
+          }
+          case uint16_t(GcOp::RttSub): {
+            uint32_t unusedRttTypeIndex;
+            if (!iter.readRttSub(&nothing, &unusedRttTypeIndex)) {
+              return false;
+            }
+            *literal = Nothing();
+            break;
+          }
+          default: {
+            return iter.unrecognizedOpcode(&op);
+          }
+        }
+        break;
+      }
+#endif
       default: {
-        return d.fail("unexpected initializer opcode");
+        return iter.unrecognizedOpcode(&op);
       }
     }
   }
@@ -189,7 +218,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
         globalImportValues(globalImportValues),
         instanceObj(cx, instanceObj) {}
 
-  bool evaluate(Decoder& d);
+  bool evaluate(JSContext* cx, Decoder& d);
 
   Val result() {
     MOZ_ASSERT(stack.length() == 1);
@@ -202,6 +231,8 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   const ValVector& globalImportValues;
   RootedWasmInstanceObject instanceObj;
 
+  Instance& instance() { return instanceObj->instance(); }
+
   bool pushI32(int32_t c) { return stack.append(Val(uint32_t(c))); }
   bool pushI64(int64_t c) { return stack.append(Val(uint64_t(c))); }
   bool pushF32(float c) { return stack.append(Val(c)); }
@@ -210,8 +241,12 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   bool pushRef(ValType type, AnyRef ref) {
     return stack.append(Val(type, ref));
   }
-  bool pushFuncRef(FuncRef ref) {
+  bool pushFuncRef(HandleFuncRef ref) {
     return stack.append(Val(RefType::func(), ref));
+  }
+  bool pushRtt(HandleRttValue rtt) {
+    // The exact rtt type is not important, evaluation won't use it
+    return stack.append(Val(ValType::fromRtt(0, 0), AnyRef::fromJSObject(rtt)));
   }
 
 #ifdef ENABLE_WASM_EXTENDED_CONST
@@ -226,6 +261,13 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     return int64_t(result);
   }
 #endif
+#ifdef ENABLE_WASM_GC
+  RttValue* popRtt(JSContext* cx) {
+    RootedAnyRef result(cx, stack.back().ref());
+    stack.popBack();
+    return &result.get().asJSObject()->as<RttValue>();
+  }
+#endif
 
   bool evalGetGlobal(uint32_t index) {
     return stack.append(globalImportValues[index]);
@@ -235,12 +277,12 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   bool evalF32Const(float c) { return pushF32(c); }
   bool evalF64Const(double c) { return pushF64(c); }
   bool evalV128Const(V128 c) { return pushV128(c); }
-  bool evalRefFunc(uint32_t funcIndex) {
-    void* fnref = Instance::refFunc(&instanceObj->instance(), funcIndex);
-    if (fnref == AnyRef::invalid().forCompiledCode()) {
-      return false;  // OOM, which has already been reported.
+  bool evalRefFunc(JSContext* cx, uint32_t funcIndex) {
+    RootedFuncRef func(cx, FuncRef::fromJSFunction(nullptr));
+    if (!instance().constantRefFunc(funcIndex, &func)) {
+      return false;
     }
-    return pushFuncRef(FuncRef::fromCompiledCode(fnref));
+    return pushFuncRef(func);
   }
   bool evalRefNull(RefType type) { return pushRef(type, AnyRef::null()); }
 #ifdef ENABLE_WASM_EXTENDED_CONST
@@ -281,9 +323,26 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     return true;
   }
 #endif
+#ifdef ENABLE_WASM_GC
+  bool evalRttCanon(JSContext* cx, uint32_t typeIndex) {
+    RootedRttValue result(cx, nullptr);
+    if (!instance().constantRttCanon(cx, typeIndex, &result)) {
+      return false;
+    }
+    return pushRtt(result);
+  }
+  bool evalRttSub(JSContext* cx, uint32_t typeIndex) {
+    RootedRttValue parentRtt(cx, popRtt(cx));
+    RootedRttValue result(cx, nullptr);
+    if (!instance().constantRttSub(cx, parentRtt, typeIndex, &result)) {
+      return false;
+    }
+    return pushRtt(result);
+  }
+#endif
 };
 
-bool InitExprInterpreter::evaluate(Decoder& d) {
+bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
 #define CHECK(c)          \
   if (!(c)) return false; \
   break
@@ -300,7 +359,7 @@ bool InitExprInterpreter::evaluate(Decoder& d) {
       }
       case uint16_t(Op::GetGlobal): {
         uint32_t index;
-        if (!d.readGetGlobal(&index)) {
+        if (!d.readGlobalIndex(&index)) {
           return false;
         }
         CHECK(evalGetGlobal(index));
@@ -345,10 +404,10 @@ bool InitExprInterpreter::evaluate(Decoder& d) {
 #endif
       case uint16_t(Op::RefFunc): {
         uint32_t funcIndex;
-        if (!d.readRefFunc(&funcIndex)) {
+        if (!d.readFuncIndex(&funcIndex)) {
           return false;
         }
-        CHECK(evalRefFunc(funcIndex));
+        CHECK(evalRefFunc(cx, funcIndex));
       }
       case uint16_t(Op::RefNull): {
         RefType type;
@@ -393,6 +452,32 @@ bool InitExprInterpreter::evaluate(Decoder& d) {
           return false;
         }
         CHECK(evalI64Mul());
+      }
+#endif
+#ifdef ENABLE_WASM_GC
+      case uint16_t(Op::GcPrefix): {
+        switch (op.b1) {
+          case uint16_t(GcOp::RttCanon): {
+            uint32_t typeIndex;
+            if (!d.readTypeIndex(&typeIndex)) {
+              return false;
+            }
+            CHECK(evalRttCanon(cx, typeIndex));
+            break;
+          }
+          case uint16_t(GcOp::RttSub): {
+            uint32_t typeIndex;
+            if (!d.readTypeIndex(&typeIndex)) {
+              return false;
+            }
+            CHECK(evalRttSub(cx, typeIndex));
+            break;
+          }
+          default: {
+            MOZ_CRASH();
+          }
+        }
+        break;
       }
 #endif
       default: {
@@ -441,7 +526,7 @@ bool InitExpr::evaluate(JSContext* cx, const ValVector& globalImportValues,
   UniqueChars error;
   Decoder d(bytecode_.begin(), bytecode_.end(), 0, &error);
   InitExprInterpreter interp(cx, globalImportValues, instanceObj);
-  if (!interp.evaluate(d)) {
+  if (!interp.evaluate(cx, d)) {
     // This expression should have been validated already. So we should only be
     // able to OOM, which is reported by having no error message.
     MOZ_RELEASE_ASSERT(!error);
