@@ -1673,20 +1673,26 @@ NS_IMETHODIMP
 nsProtocolProxyService::GetFailoverForProxy(nsIProxyInfo* aProxy, nsIURI* aURI,
                                             nsresult aStatus,
                                             nsIProxyInfo** aResult) {
-  // We only support failover when a PAC file is configured, either
-  // directly or via system settings
-  if (mProxyConfig != PROXYCONFIG_PAC && mProxyConfig != PROXYCONFIG_WPAD &&
-      mProxyConfig != PROXYCONFIG_SYSTEM) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  // Failover is supported through a variety of methods including:
+  // * PAC scripts (PROXYCONFIG_PAC and PROXYCONFIG_WPAD)
+  // * System proxy
+  // * Extensions
+  // With extensions the mProxyConfig can be any type and the extension
+  // is still involved in the proxy filtering.  It may have also supplied
+  // any number of failover proxies.  We cannot determine what the mix is
+  // here, so we will attempt to get a failover regardless of the config
+  // type.  MANUAL configuration will not disable a proxy.
 
   // Verify that |aProxy| is one of our nsProxyInfo objects.
   nsCOMPtr<nsProxyInfo> pi = do_QueryInterface(aProxy);
   NS_ENSURE_ARG(pi);
   // OK, the QI checked out.  We can proceed.
 
-  // Remember that this proxy is down.
-  DisableProxy(pi);
+  // Remember that this proxy is down.  If the user has manually configured some
+  // proxies we do not want to disable them.
+  if (mProxyConfig != PROXYCONFIG_MANUAL) {
+    DisableProxy(pi);
+  }
 
   // NOTE: At this point, we might want to prompt the user if we have
   //       not already tried going DIRECT.  This is something that the
