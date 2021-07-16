@@ -80,6 +80,33 @@ void PlainObject::assertHasNoNonWritableOrAccessorPropExclProto() const {
 }
 #endif
 
+JS::Result<PlainObject*, JS::OOM>
+PlainObject::createWithTemplateFromDifferentRealm(
+    JSContext* cx, HandlePlainObject templateObject) {
+  MOZ_ASSERT(cx->realm() != templateObject->realm(),
+             "Use createWithTemplate() for same-realm objects");
+
+  // Currently only implemented for null-proto.
+  MOZ_ASSERT(templateObject->staticPrototype() == nullptr);
+
+  // The object mustn't be in dictionary mode.
+  MOZ_ASSERT(!templateObject->shape()->isDictionary());
+
+  TaggedProto proto = TaggedProto(nullptr);
+  Shape* templateShape = templateObject->shape();
+  Rooted<SharedPropMap*> map(cx, templateShape->propMap()->asShared());
+
+  RootedShape shape(
+      cx, SharedShape::getInitialOrPropMapShape(
+              cx, &PlainObject::class_, cx->realm(), proto,
+              templateShape->numFixedSlots(), map,
+              templateShape->propMapLength(), templateShape->objectFlags()));
+  if (!shape) {
+    return nullptr;
+  }
+  return createWithShape(cx, shape);
+}
+
 static bool AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
                                      IdValuePair* properties,
                                      size_t nproperties) {
