@@ -369,6 +369,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool popWithRefType(Value* value, StackType* type);
   [[nodiscard]] bool popWithRttType(Value* rtt, uint32_t* rttTypeIndex,
                                     uint32_t* rttDepth);
+  [[nodiscard]] bool popWithRttType(Value* rtt, uint32_t rttTypeIndex,
+                                    uint32_t* rttDepth);
   [[nodiscard]] bool popThenPushType(ResultType expected, ValueVector* values);
   [[nodiscard]] bool topWithType(ResultType expected, ValueVector* values);
 
@@ -411,6 +413,11 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 
   inline bool checkIsSubtypeOf(ValType actual, ValType expected);
   inline bool checkIsSubtypeOf(ResultType params, ResultType results);
+
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  inline bool checkIsSubtypeOf(uint32_t actualTypeIndex,
+                               uint32_t expectedTypeIndex);
+#endif
 
  public:
 #ifdef DEBUG
@@ -613,7 +620,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                   Value* ptr);
   [[nodiscard]] bool readArrayLen(uint32_t* typeIndex, Value* ptr);
   [[nodiscard]] bool readRttCanon(ValType* rttType);
-  [[nodiscard]] bool readRttSub(Value* parentRtt);
+  [[nodiscard]] bool readRttSub(Value* parentRtt, uint32_t* rttSubTypeIndex);
   [[nodiscard]] bool readRefTest(Value* rtt, uint32_t* rttTypeIndex,
                                  uint32_t* rttDepth, Value* ref);
   [[nodiscard]] bool readRefCast(Value* rtt, uint32_t* rttTypeIndex,
@@ -729,6 +736,17 @@ inline bool OpIter<Policy>::checkIsSubtypeOf(ResultType params,
   }
   return true;
 }
+
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+template <typename Policy>
+inline bool OpIter<Policy>::checkIsSubtypeOf(uint32_t actualTypeIndex,
+                                             uint32_t expectedTypeIndex) {
+  return CheckIsSubtypeOf(
+      d_, env_, lastOpcodeOffset(),
+      ValType(RefType::fromTypeIndex(actualTypeIndex, true)),
+      ValType(RefType::fromTypeIndex(expectedTypeIndex, true)), &cache_);
+}
+#endif
 
 template <typename Policy>
 inline bool OpIter<Policy>::unrecognizedOpcode(const OpBytes* expr) {
@@ -3103,19 +3121,28 @@ inline bool OpIter<Policy>::readRttCanon(ValType* rttType) {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readRttSub(Value* parentRtt) {
+inline bool OpIter<Policy>::readRttSub(Value* parentRtt,
+                                       uint32_t* rttSubTypeIndex) {
   MOZ_ASSERT(Classify(op_) == OpKind::RttSub);
 
-  uint32_t rttTypeIndex;
-  uint32_t rttDepth;
-  if (!popWithRttType(parentRtt, &rttTypeIndex, &rttDepth)) {
+  if (!readGcTypeIndex(rttSubTypeIndex)) {
     return false;
   }
 
-  if (rttDepth >= MaxRttDepth) {
+  uint32_t rttParentTypeIndex;
+  uint32_t rttParentDepth;
+  if (!popWithRttType(parentRtt, &rttParentTypeIndex, &rttParentDepth)) {
+    return false;
+  }
+
+  if (!checkIsSubtypeOf(*rttSubTypeIndex, rttParentTypeIndex)) {
+    return false;
+  }
+
+  if (rttParentDepth >= MaxRttDepth) {
     return fail("rtt depth is too deep");
   }
-  return push(ValType::fromRtt(rttTypeIndex, rttDepth + 1));
+  return push(ValType::fromRtt(*rttSubTypeIndex, rttParentDepth + 1));
 }
 
 template <typename Policy>

@@ -69,21 +69,23 @@ TypedProto* TypedProto::create(JSContext* cx) {
 }
 
 static const JSClassOps RttValueClassOps = {
-    nullptr,  // addProperty
-    nullptr,  // delProperty
-    nullptr,  // enumerate
-    nullptr,  // newEnumerate
-    nullptr,  // resolve
-    nullptr,  // mayResolve
-    nullptr,  // finalize
-    nullptr,  // call
-    nullptr,  // hasInstance
-    nullptr,  // construct
-    nullptr,  // trace
+    nullptr,             // addProperty
+    nullptr,             // delProperty
+    nullptr,             // enumerate
+    nullptr,             // newEnumerate
+    nullptr,             // resolve
+    nullptr,             // mayResolve
+    RttValue::finalize,  // finalize
+    nullptr,             // call
+    nullptr,             // hasInstance
+    nullptr,             // construct
+    RttValue::trace,     // trace
 };
 
 const JSClass js::RttValue::class_ = {
-    "RttValue", JSCLASS_HAS_RESERVED_SLOTS(RttValue::SlotCount),
+    "RttValue",
+    JSCLASS_FOREGROUND_FINALIZE |
+        JSCLASS_HAS_RESERVED_SLOTS(RttValue::SlotCount),
     &RttValueClassOps};
 
 RttValue* RttValue::createFromHandle(JSContext* cx, TypeHandle handle) {
@@ -112,6 +114,7 @@ RttValue* RttValue::createFromHandle(JSContext* cx, TypeHandle handle) {
   }
   rtt->initReservedSlot(RttValue::Proto, ObjectValue(*proto));
   rtt->initReservedSlot(RttValue::Parent, NullValue());
+  rtt->initReservedSlot(RttValue::Children, PrivateValue(nullptr));
 
   if (!cx->zone()->addRttValueObject(cx, rtt)) {
     ReportOutOfMemory(cx);
@@ -121,14 +124,59 @@ RttValue* RttValue::createFromHandle(JSContext* cx, TypeHandle handle) {
   return rtt;
 }
 
-RttValue* RttValue::createFromParent(JSContext* cx, HandleRttValue parent) {
+RttValue* RttValue::rttSub(JSContext* cx, HandleRttValue parent,
+                           HandleRttValue subCanon) {
+  if (!parent->ensureChildren(cx)) {
+    return nullptr;
+  }
+
+  ObjectWeakMap& parentChildren = parent->children();
+  if (JSObject* child = parentChildren.lookup(subCanon)) {
+    return &child->as<RttValue>();
+  }
+
   wasm::TypeHandle parentHandle = parent->handle();
   Rooted<RttValue*> rtt(cx, createFromHandle(cx, parentHandle));
   if (!rtt) {
     return nullptr;
   }
   rtt->setReservedSlot(RttValue::Parent, ObjectValue(*parent.get()));
+  if (!parentChildren.add(cx, subCanon, rtt)) {
+    return nullptr;
+  }
   return rtt;
+}
+
+bool RttValue::ensureChildren(JSContext* cx) {
+  if (maybeChildren()) {
+    return true;
+  }
+  Rooted<UniquePtr<ObjectWeakMap>> children(cx,
+                                            cx->make_unique<ObjectWeakMap>(cx));
+  if (!children) {
+    return false;
+  }
+  setReservedSlot(Slot::Children, PrivateValue(children.release()));
+  AddCellMemory(this, sizeof(ObjectWeakMap), MemoryUse::WasmRttValueChildren);
+  return true;
+}
+
+/* static */
+void RttValue::trace(JSTracer* trc, JSObject* obj) {
+  auto rttValue = &obj->as<RttValue>();
+
+  if (ObjectWeakMap* children = rttValue->maybeChildren()) {
+    children->trace(trc);
+  }
+}
+
+/* static */
+void RttValue::finalize(JSFreeOp* fop, JSObject* obj) {
+  auto rttValue = &obj->as<RttValue>();
+
+  if (ObjectWeakMap* children = rttValue->maybeChildren()) {
+    fop->delete_(obj, children, MemoryUse::WasmRttValueChildren);
+  }
 }
 
 /******************************************************************************
