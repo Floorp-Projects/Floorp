@@ -97,7 +97,7 @@ private fun goBackButton() =
 private fun assertDefaultView() = onView(ViewMatchers.withText("Sync logins across devices"))
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun assertDefaultValueAutofillLogins() = onView(ViewMatchers.withText("Autofill"))
+private fun assertDefaultValueAutofillLogins() = onView(ViewMatchers.withText("Autofill websites"))
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertDefaultValueExceptions() = onView(ViewMatchers.withText("Exceptions"))
