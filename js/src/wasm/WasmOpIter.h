@@ -1882,7 +1882,7 @@ inline bool OpIter<Policy>::readMemorySize() {
     return fail("failed to read memory flags");
   }
 
-  if (flags != uint8_t(MemoryTableFlags::Default)) {
+  if (flags != uint8_t(0)) {
     return fail("unexpected flags");
   }
 
@@ -1902,7 +1902,7 @@ inline bool OpIter<Policy>::readMemoryGrow(Value* input) {
     return fail("failed to read memory flags");
   }
 
-  if (flags != uint8_t(MemoryTableFlags::Default)) {
+  if (flags != uint8_t(0)) {
     return fail("unexpected flags");
   }
 

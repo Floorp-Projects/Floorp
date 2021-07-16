@@ -182,13 +182,22 @@ enum class DefinitionKind {
 
 enum class GlobalTypeImmediate { IsMutable = 0x1, AllowedMask = 0x1 };
 
-enum class MemoryTableFlags {
+enum class LimitsFlags {
   Default = 0x0,
   HasMaximum = 0x1,
   IsShared = 0x2,
+  IsI64 = 0x4,
 };
 
-enum class MemoryMasks { AllowUnshared = 0x1, AllowShared = 0x3 };
+enum class LimitsMask {
+  Table = uint8_t(LimitsFlags::HasMaximum),
+#ifdef ENABLE_WASM_MEMORY64
+  Memory = uint8_t(LimitsFlags::HasMaximum) | uint8_t(LimitsFlags::IsShared) |
+           uint8_t(LimitsFlags::IsI64),
+#else
+  Memory = uint8_t(LimitsFlags::HasMaximum) | uint8_t(LimitsFlags::IsShared),
+#endif
+};
 
 enum class DataSegmentKind {
   Active = 0x00,

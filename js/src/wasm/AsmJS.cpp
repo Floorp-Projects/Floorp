@@ -2065,7 +2065,8 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
                                                            : Shareable::False;
       limits.initial = memory_.minPages();
       limits.maximum = Nothing();
-      moduleEnv_.memory = Some(MemoryDesc(MemoryKind::Memory32, limits));
+      limits.indexType = IndexType::I32;
+      moduleEnv_.memory = Some(MemoryDesc(limits));
     }
     MOZ_ASSERT(moduleEnv_.funcs.empty());
     if (!moduleEnv_.funcs.resize(funcImportMap_.count() + funcDefs_.length())) {

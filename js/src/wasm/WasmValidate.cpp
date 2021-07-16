@@ -1691,16 +1691,14 @@ static bool DecodeFuncTypeIndex(Decoder& d, const TypeContext& types,
   return true;
 }
 
-static bool DecodeLimits(Decoder& d, Limits* limits,
-                         Shareable allowShared = Shareable::False) {
+static bool DecodeLimits(Decoder& d, LimitsKind kind, Limits* limits) {
   uint8_t flags;
   if (!d.readFixedU8(&flags)) {
     return d.fail("expected flags");
   }
 
-  uint8_t mask = allowShared == Shareable::True
-                     ? uint8_t(MemoryMasks::AllowShared)
-                     : uint8_t(MemoryMasks::AllowUnshared);
+  uint8_t mask = kind == LimitsKind::Memory ? uint8_t(LimitsMask::Memory)
+                                            : uint8_t(LimitsMask::Table);
 
   if (flags & ~uint8_t(mask)) {
     return d.failf("unexpected bits set in flags: %" PRIu32,
@@ -1713,7 +1711,7 @@ static bool DecodeLimits(Decoder& d, Limits* limits,
   }
   limits->initial = initial;
 
-  if (flags & uint8_t(MemoryTableFlags::HasMaximum)) {
+  if (flags & uint8_t(LimitsFlags::HasMaximum)) {
     uint32_t maximum;
     if (!d.readVarU32(&maximum)) {
       return d.fail("expected maximum length");
@@ -1730,16 +1728,27 @@ static bool DecodeLimits(Decoder& d, Limits* limits,
   }
 
   limits->shared = Shareable::False;
+  limits->indexType = IndexType::I32;
 
-  if (allowShared == Shareable::True) {
-    if ((flags & uint8_t(MemoryTableFlags::IsShared)) &&
-        !(flags & uint8_t(MemoryTableFlags::HasMaximum))) {
+  // Memory limits may be shared or specify an alternate index type
+  if (kind == LimitsKind::Memory) {
+    if ((flags & uint8_t(LimitsFlags::IsShared)) &&
+        !(flags & uint8_t(LimitsFlags::HasMaximum))) {
       return d.fail("maximum length required for shared memory");
     }
 
-    limits->shared = (flags & uint8_t(MemoryTableFlags::IsShared))
+    limits->shared = (flags & uint8_t(LimitsFlags::IsShared))
                          ? Shareable::True
                          : Shareable::False;
+
+#ifdef ENABLE_WASM_MEMORY64
+    limits->indexType =
+        (flags & uint8_t(LimitsFlags::IsI64)) ? IndexType::I64 : IndexType::I32;
+#else
+    if (flags & uint8_t(LimitsFlags::IsI64)) {
+      return d.fail("i64 is not supported for memory limits");
+    }
+#endif
   }
 
   return true;
@@ -1757,9 +1766,12 @@ static bool DecodeTableTypeAndLimits(Decoder& d, const FeatureArgs& features,
   }
 
   Limits limits;
-  if (!DecodeLimits(d, &limits)) {
+  if (!DecodeLimits(d, LimitsKind::Table, &limits)) {
     return false;
   }
+
+  // Decoding limits for a table only supports i32
+  MOZ_ASSERT(limits.indexType == IndexType::I32);
 
   // If there's a maximum, check it is in range.  The check to exclude
   // initial > maximum is carried out by the DecodeLimits call above, so
@@ -1841,13 +1853,13 @@ static bool DecodeGlobalType(Decoder& d, const TypeContext& types,
   return true;
 }
 
-static bool DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env) {
+static bool DecodeMemoryTypeAndLimits(Decoder& d, ModuleEnvironment* env) {
   if (env->usesMemory()) {
     return d.fail("already have default memory");
   }
 
   Limits limits;
-  if (!DecodeLimits(d, &limits, Shareable::True)) {
+  if (!DecodeLimits(d, LimitsKind::Memory, &limits)) {
     return false;
   }
 
@@ -1864,7 +1876,11 @@ static bool DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env) {
     return d.fail("shared memory is disabled");
   }
 
-  env->memory = Some(MemoryDesc(MemoryKind::Memory32, limits));
+  if (limits.indexType == IndexType::I64 && !env->memory64Enabled()) {
+    return d.fail("memory64 is disabled");
+  }
+
+  env->memory = Some(MemoryDesc(limits));
   return true;
 }
 
@@ -1987,7 +2003,7 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env,
       break;
     }
     case DefinitionKind::Memory: {
-      if (!DecodeMemoryLimits(d, env)) {
+      if (!DecodeMemoryTypeAndLimits(d, env)) {
         return false;
       }
       break;
@@ -2160,7 +2176,7 @@ static bool DecodeMemorySection(Decoder& d, ModuleEnvironment* env) {
   }
 
   for (uint32_t i = 0; i < numMemories; ++i) {
-    if (!DecodeMemoryLimits(d, env)) {
+    if (!DecodeMemoryTypeAndLimits(d, env)) {
       return false;
     }
   }

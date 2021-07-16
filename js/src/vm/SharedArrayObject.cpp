@@ -49,7 +49,8 @@ static size_t SharedArrayMappedSize(size_t length) {
 // `wasmMaxPages` must always be something for wasm and nothing for other
 // users.
 SharedArrayRawBuffer* SharedArrayRawBuffer::AllocateInternal(
-    size_t length, const Maybe<wasm::Pages>& wasmMaxPages,
+    wasm::IndexType wasmIndexType, size_t length,
+    const Maybe<wasm::Pages>& wasmMaxPages,
     const Maybe<size_t>& wasmMappedSize) {
   MOZ_RELEASE_ASSERT(length <= ArrayBufferObject::maxBufferByteLength());
 
@@ -80,25 +81,28 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::AllocateInternal(
 
   uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + gc::SystemPageSize();
   uint8_t* base = buffer - sizeof(SharedArrayRawBuffer);
-  SharedArrayRawBuffer* rawbuf = new (base)
-      SharedArrayRawBuffer(buffer, length, wasmMaxPages.valueOr(Pages(0)),
-                           computedMappedSize, preparedForWasm);
+  SharedArrayRawBuffer* rawbuf = new (base) SharedArrayRawBuffer(
+      wasmIndexType, buffer, length, wasmMaxPages.valueOr(Pages(0)),
+      computedMappedSize, preparedForWasm);
   MOZ_ASSERT(rawbuf->length_ == length);  // Deallocation needs this
   return rawbuf;
 }
 
 SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(size_t length) {
-  return SharedArrayRawBuffer::AllocateInternal(length, Nothing(), Nothing());
+  return SharedArrayRawBuffer::AllocateInternal(wasm::IndexType::I32, length,
+                                                Nothing(), Nothing());
 }
 
 SharedArrayRawBuffer* SharedArrayRawBuffer::AllocateWasm(
-    Pages initialPages, const mozilla::Maybe<wasm::Pages>& maxPages,
+    wasm::IndexType indexType, Pages initialPages,
+    const mozilla::Maybe<wasm::Pages>& maxPages,
     const mozilla::Maybe<size_t>& mappedSize) {
   // Prior code has asserted that initial pages is within our implementation
   // limits (wasm::MaxMemory32Pages) and we can assume it is a valid size_t.
   MOZ_ASSERT(initialPages.hasByteLength());
   size_t length = initialPages.byteLength();
-  return SharedArrayRawBuffer::AllocateInternal(length, maxPages, mappedSize);
+  return SharedArrayRawBuffer::AllocateInternal(indexType, length, maxPages,
+                                                mappedSize);
 }
 
 void SharedArrayRawBuffer::tryGrowMaxPagesInPlace(Pages deltaMaxPages) {
