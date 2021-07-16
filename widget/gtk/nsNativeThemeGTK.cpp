@@ -1091,7 +1091,10 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   // to provide crisper and faster drawing.
   // Don't snap if it's a non-unit scale factor. We're going to have to take
   // slow paths then in any case.
-  bool snapped = ctx->UserToDevicePixelSnapped(rect);
+  // We prioritize the size when snapping in order to avoid distorting widgets
+  // that should be square, which can occur if edges are snapped independently.
+  bool snapped = ctx->UserToDevicePixelSnapped(
+      rect, gfxContext::SnapOption::PrioritizeSize);
   if (snapped) {
     // Leave rect in device coords but make dirtyRect consistent.
     dirtyRect = ctx->UserToDevice(dirtyRect);

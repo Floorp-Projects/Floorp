@@ -247,7 +247,7 @@ void gfxContext::Rectangle(const gfxRect& rect, bool snapToPixels) {
 
   if (snapToPixels) {
     gfxRect newRect(rect);
-    if (UserToDevicePixelSnapped(newRect, true)) {
+    if (UserToDevicePixelSnapped(newRect, SnapOption::IgnoreScale)) {
       gfxMatrix mat = ThebesMatrix(mTransform);
       if (mat.Invert()) {
         // We need the user space rect.
@@ -277,7 +277,7 @@ void gfxContext::SnappedClip(const gfxRect& rect) {
   Rect rec = ToRect(rect);
 
   gfxRect newRect(rect);
-  if (UserToDevicePixelSnapped(newRect, true)) {
+  if (UserToDevicePixelSnapped(newRect, SnapOption::IgnoreScale)) {
     gfxMatrix mat = ThebesMatrix(mTransform);
     if (mat.Invert()) {
       // We need the user space rect.
@@ -347,8 +347,10 @@ gfxRect gfxContext::UserToDevice(const gfxRect& rect) const {
 }
 
 bool gfxContext::UserToDevicePixelSnapped(gfxRect& rect,
-                                          bool ignoreScale) const {
-  if (mDT->GetUserData(&sDisablePixelSnapping)) return false;
+                                          SnapOptions aOptions) const {
+  if (mDT->GetUserData(&sDisablePixelSnapping)) {
+    return false;
+  }
 
   // if we're not at 1.0 scale, don't snap, unless we're
   // ignoring the scale.  If we're not -just- a scale,
@@ -356,9 +358,11 @@ bool gfxContext::UserToDevicePixelSnapped(gfxRect& rect,
   const gfxFloat epsilon = 0.0000001;
 #define WITHIN_E(a, b) (fabs((a) - (b)) < epsilon)
   Matrix mat = mTransform;
-  if (!ignoreScale && (!WITHIN_E(mat._11, 1.0) || !WITHIN_E(mat._22, 1.0) ||
-                       !WITHIN_E(mat._12, 0.0) || !WITHIN_E(mat._21, 0.0)))
+  if (!aOptions.contains(SnapOption::IgnoreScale) &&
+      (!WITHIN_E(mat._11, 1.0) || !WITHIN_E(mat._22, 1.0) ||
+       !WITHIN_E(mat._12, 0.0) || !WITHIN_E(mat._21, 0.0))) {
     return false;
+  }
 #undef WITHIN_E
 
   gfxPoint p1 = UserToDevice(rect.TopLeft());
@@ -371,22 +375,41 @@ bool gfxContext::UserToDevicePixelSnapped(gfxRect& rect,
   // define an axis-aligned rectangle whose other corners are p2 and p4.
   // We actually only need to check one of p2 and p4, since an affine
   // transform maps parallelograms to parallelograms.
-  if (p2 == gfxPoint(p1.x, p3.y) || p2 == gfxPoint(p3.x, p1.y)) {
+  if (!(p2 == gfxPoint(p1.x, p3.y) || p2 == gfxPoint(p3.x, p1.y))) {
+    return false;
+  }
+
+  if (aOptions.contains(SnapOption::PrioritizeSize)) {
+    // Snap the dimensions of the rect, to minimize distortion; only after that
+    // will we snap its position. In particular, this guarantees that a square
+    // remains square after snapping, which may not be the case if each edge is
+    // independently snapped to device pixels.
+
+    // Use the same rounding approach as gfx::BasePoint::Round.
+    rect.SizeTo(std::floor(rect.width + 0.5), std::floor(rect.height + 0.5));
+
+    // Find the top-left corner based on the original center and the snapped
+    // size, then snap this new corner to the grid.
+    gfxPoint center = (p1 + p3) / 2;
+    gfxPoint topLeft = center - gfxPoint(rect.width / 2.0, rect.height / 2.0);
+    topLeft.Round();
+    rect.MoveTo(topLeft);
+  } else {
     p1.Round();
     p3.Round();
-
     rect.MoveTo(gfxPoint(std::min(p1.x, p3.x), std::min(p1.y, p3.y)));
     rect.SizeTo(gfxSize(std::max(p1.x, p3.x) - rect.X(),
                         std::max(p1.y, p3.y) - rect.Y()));
-    return true;
   }
 
-  return false;
+  return true;
 }
 
 bool gfxContext::UserToDevicePixelSnapped(gfxPoint& pt,
                                           bool ignoreScale) const {
-  if (mDT->GetUserData(&sDisablePixelSnapping)) return false;
+  if (mDT->GetUserData(&sDisablePixelSnapping)) {
+    return false;
+  }
 
   // if we're not at 1.0 scale, don't snap, unless we're
   // ignoring the scale.  If we're not -just- a scale,
@@ -395,8 +418,9 @@ bool gfxContext::UserToDevicePixelSnapped(gfxPoint& pt,
 #define WITHIN_E(a, b) (fabs((a) - (b)) < epsilon)
   Matrix mat = mTransform;
   if (!ignoreScale && (!WITHIN_E(mat._11, 1.0) || !WITHIN_E(mat._22, 1.0) ||
-                       !WITHIN_E(mat._12, 0.0) || !WITHIN_E(mat._21, 0.0)))
+                       !WITHIN_E(mat._12, 0.0) || !WITHIN_E(mat._21, 0.0))) {
     return false;
+  }
 #undef WITHIN_E
 
   pt = UserToDevice(pt);
