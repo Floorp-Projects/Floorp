@@ -51,10 +51,6 @@ menucaption[disabled="true"] {
   color: GrayText;
 }
 
-menubar {
-  color: -moz-menubartext;
-}
-
 menubar > menu {
   padding: 0 4px;
 }
