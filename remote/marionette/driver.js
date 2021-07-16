@@ -147,8 +147,8 @@ Object.defineProperty(GeckoDriver.prototype, "context", {
  */
 Object.defineProperty(GeckoDriver.prototype, "currentSession", {
   get() {
-    if (RemoteAgent.webdriverBiDi) {
-      return RemoteAgent.webdriverBiDi.session;
+    if (RemoteAgent.webDriverBiDi) {
+      return RemoteAgent.webDriverBiDi.session;
     }
 
     return this._currentSession;
@@ -427,8 +427,8 @@ GeckoDriver.prototype.newSession = async function(cmd) {
     // to handle the WebDriver session. If it's not the case then Marionette
     // itself needs to handle it, and has to nullify the "webSocketUrl"
     // capability.
-    if (RemoteAgent.webdriverBiDi) {
-      RemoteAgent.webdriverBiDi.createSession(capabilities);
+    if (RemoteAgent.webDriverBiDi) {
+      RemoteAgent.webDriverBiDi.createSession(capabilities);
     } else {
       this._currentSession = new WebDriverSession(capabilities);
       this._currentSession.capabilities.delete("webSocketUrl");
@@ -2142,8 +2142,8 @@ GeckoDriver.prototype.deleteSession = function() {
   unregisterCommandsActor();
   unregisterEventsActor();
 
-  if (RemoteAgent.webdriverBiDi) {
-    RemoteAgent.webdriverBiDi.deleteSession();
+  if (RemoteAgent.webDriverBiDi) {
+    RemoteAgent.webDriverBiDi.deleteSession();
   } else {
     this.currentSession.destroy();
     this._currentSession = null;

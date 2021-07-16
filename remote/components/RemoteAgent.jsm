@@ -43,10 +43,10 @@ class RemoteAgentClass {
     this.server = null;
 
     if ((activeProtocols & WEBDRIVER_BIDI_ACTIVE) === WEBDRIVER_BIDI_ACTIVE) {
-      this.webdriverBiDi = new WebDriverBiDi(this);
+      this.webDriverBiDi = new WebDriverBiDi(this);
       logger.debug("WebDriver BiDi enabled");
     } else {
-      this.webdriverBiDi = null;
+      this.webDriverBiDi = null;
     }
 
     if ((activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
@@ -124,7 +124,7 @@ class RemoteAgentClass {
       this.server._start(port, host);
 
       await this.cdp?.start();
-      await this.webdriverBiDi?.start();
+      await this.webDriverBiDi?.start();
     } catch (e) {
       await this.close();
       logger.error(`Unable to start remote agent: ${e.message}`, e);
@@ -136,7 +136,7 @@ class RemoteAgentClass {
       // Stop the CDP support before stopping the server.
       // Otherwise the HTTP server will fail to stop.
       this.cdp?.stop();
-      this.webdriverBiDi?.stop();
+      this.webDriverBiDi?.stop();
 
       if (this.listening) {
         return this.server.stop();
