@@ -35,9 +35,15 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "patterns-gnome-devel_gnome",
     ]
 
-    BROWSER_GROUP_PACKAGES = ["devel_C_C++", "devel_gnome"]
+    BROWSER_GROUP_PACKAGES = [
+        "devel_C_C++",
+        "devel_gnome",
+    ]
 
-    MOBILE_ANDROID_COMMON_PACKAGES = ["java-1_8_0-openjdk", "wget"]
+    MOBILE_ANDROID_COMMON_PACKAGES = [
+        "java-1_8_0-openjdk",
+        "wget",
+    ]
 
     def __init__(self, version, dist_id, **kwargs):
         print("Using an experimental bootstrapper for openSUSE.")
@@ -54,6 +60,12 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.ensure_browser_packages(artifact_mode=True)
+
+    def install_mobile_android_packages(self, mozconfig_builder):
+        self.ensure_mobile_android_packages()
+
+    def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
+        self.ensure_mobile_android_packages(artifact_mode=True)
 
     def install_mercurial(self):
         self(["pip", "install", "--upgrade", "pip", "--user"])
@@ -74,7 +86,7 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         # TODO: Figure out what not to install for artifact mode
         self.zypper_patterninstall(*self.BROWSER_GROUP_PACKAGES)
 
-    def install_mobile_android_packages(self, artifact_mode=False):
+    def ensure_mobile_android_packages(self, artifact_mode=False):
         # Multi-part process:
         # 1. System packages.
         # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
@@ -93,7 +105,7 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             raise e
 
         # 2. Android pieces.
-        super().install_mobile_android_packages(artifact_mode=artifact_mode)
+        super().ensure_mobile_android_packages(artifact_mode=artifact_mode)
 
     def _update_package_manager(self):
         self.zypper_update
