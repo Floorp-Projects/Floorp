@@ -81,10 +81,6 @@
         {
             "properties": {
                 "results": {"$ref": "#/definitions/results-schema"},
-                "binary": {
-                    "type": "string",
-                    "title": "Holds the binary path of the application being tested"
-                },
                 "transformer": {
                     "title": "Transformer to use on the data",
                     "type": "string"
@@ -110,7 +106,7 @@
             }
         }
     ],
-    "required": ["results", "name", "binary"],
+    "required": ["results", "name"],
     "description": "Intermediate results for a single type of metric or suite (i.e. browsertime, and adb results shouldn't be mixed in the same entry)",
     "title": "MozPerftest Intermediate Results Schema",
     "type": "object"

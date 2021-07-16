@@ -86,7 +86,7 @@ def test_browser(*mocked):
 
     results = metadata.get_results()
     assert len(results) == 1
-    assert set(list(results[0].keys())) - set(["name", "results", "binary"]) == set()
+    assert set(list(results[0].keys())) - set(["name", "results"]) == set()
     assert results[0]["name"] == "Example"
 
 
@@ -300,7 +300,8 @@ def test_install_url(*mocked):
 )
 def test_install_url_bad(*mocked):
     mach, metadata, env = get_running_env(
-        browsertime_install_url="meh", tests=[EXAMPLE_TEST]
+        browsertime_install_url="meh",
+        tests=[EXAMPLE_TEST],
     )
     browser = env.layers[TEST]
     sys = env.layers[SYSTEM]

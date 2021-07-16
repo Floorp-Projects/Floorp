@@ -404,18 +404,8 @@ class BrowsertimeRunner(NodeRunner):
         if exit_code != 0:
             raise NodeException(exit_code)
 
-        # XXX Provide a single interface for obtaining the binary used.
-        if self.get_arg("android"):
-            binary_path = self.get_arg("android-app-name")
-        else:
-            binary_path = self.get_arg("binary") or self.get_binary_path()
-
         metadata.add_result(
-            {
-                "results": str(result_dir),
-                "name": self._test_script["name"],
-                "binary": binary_path,
-            }
+            {"results": str(result_dir), "name": self._test_script["name"]}
         )
 
         return metadata

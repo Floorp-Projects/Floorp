@@ -19,13 +19,7 @@ def setup_env(options):
     mach_cmd.run_process = _run_process
     metrics = env.layers[METRICS]
     env.set_arg("tests", [EXAMPLE_TEST])
-    metadata.add_result(
-        {
-            "results": str(BT_DATA),
-            "name": "browsertime",
-            "binary": "example-path/firefox",
-        }
-    )
+    metadata.add_result({"results": str(BT_DATA), "name": "browsertime"})
     return metrics, metadata, env
 
 
