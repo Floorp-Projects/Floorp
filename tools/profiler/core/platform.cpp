@@ -5794,63 +5794,6 @@ void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
   delete aBacktrace;
 }
 
-// This is a simplified version of profiler_add_marker that can be easily passed
-// into the JS engine.
-void profiler_add_js_marker(const char* aMarkerName, const char* aMarkerText) {
-  PROFILER_MARKER_TEXT(
-      ProfilerString8View::WrapNullTerminatedString(aMarkerName), JS, {},
-      ProfilerString8View::WrapNullTerminatedString(aMarkerText));
-}
-
-void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
-  if (!profiler_can_accept_markers()) {
-    return;
-  }
-
-  struct JsAllocationMarker {
-    static constexpr mozilla::Span<const char> MarkerTypeName() {
-      return mozilla::MakeStringSpan("JS allocation");
-    }
-    static void StreamJSONMarkerData(
-        mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-        const mozilla::ProfilerString16View& aTypeName,
-        const mozilla::ProfilerString8View& aClassName,
-        const mozilla::ProfilerString16View& aDescriptiveTypeName,
-        const mozilla::ProfilerString8View& aCoarseType, uint64_t aSize,
-        bool aInNursery) {
-      if (aClassName.Length() != 0) {
-        aWriter.StringProperty("className", aClassName);
-      }
-      if (aTypeName.Length() != 0) {
-        aWriter.StringProperty(
-            "typeName",
-            NS_ConvertUTF16toUTF8(aTypeName.Data(), aTypeName.Length()));
-      }
-      if (aDescriptiveTypeName.Length() != 0) {
-        aWriter.StringProperty(
-            "descriptiveTypeName",
-            NS_ConvertUTF16toUTF8(aDescriptiveTypeName.Data(),
-                                  aDescriptiveTypeName.Length()));
-      }
-      aWriter.StringProperty("coarseType", aCoarseType);
-      aWriter.IntProperty("size", aSize);
-      aWriter.BoolProperty("inNursery", aInNursery);
-    }
-    static mozilla::MarkerSchema MarkerTypeDisplay() {
-      return mozilla::MarkerSchema::SpecialFrontendLocation{};
-    }
-  };
-
-  profiler_add_marker(
-      "JS allocation", geckoprofiler::category::JS, MarkerStack::Capture(),
-      JsAllocationMarker{},
-      ProfilerString16View::WrapNullTerminatedString(info.typeName),
-      ProfilerString8View::WrapNullTerminatedString(info.className),
-      ProfilerString16View::WrapNullTerminatedString(info.descriptiveTypeName),
-      ProfilerString8View::WrapNullTerminatedString(info.coarseType), info.size,
-      info.inNursery);
-}
-
 bool profiler_is_locked_on_current_thread() {
   // This function is used to help users avoid calling `profiler_...` functions
   // when the profiler may already have a lock in place, which would prevent a
@@ -5865,47 +5808,6 @@ bool profiler_is_locked_on_current_thread() {
          CorePS::CoreBuffer().IsThreadSafeAndLockedOnCurrentThread() ||
          ProfilerParent::IsLockedOnCurrentThread() ||
          ProfilerChild::IsLockedOnCurrentThread();
-}
-
-bool profiler_add_native_allocation_marker(int64_t aSize,
-                                           uintptr_t aMemoryAddress) {
-  if (!profiler_can_accept_markers()) {
-    return false;
-  }
-
-  // Because native allocations may be intercepted anywhere, blocking while
-  // locking the profiler mutex here could end up causing a deadlock if another
-  // mutex is taken, which the profiler may indirectly need elsewhere.
-  // See bug 1642726 for such a scenario.
-  // So instead we bail out if the mutex is already locked. Native allocations
-  // are statistically sampled anyway, so missing a few because of this is
-  // acceptable.
-  if (PSAutoLock::IsLockedOnCurrentThread()) {
-    return false;
-  }
-
-  struct NativeAllocationMarker {
-    static constexpr mozilla::Span<const char> MarkerTypeName() {
-      return mozilla::MakeStringSpan("Native allocation");
-    }
-    static void StreamJSONMarkerData(
-        mozilla::baseprofiler::SpliceableJSONWriter& aWriter, int64_t aSize,
-        uintptr_t aMemoryAddress, int aThreadId) {
-      aWriter.IntProperty("size", aSize);
-      aWriter.IntProperty("memoryAddress",
-                          static_cast<int64_t>(aMemoryAddress));
-      aWriter.IntProperty("threadId", aThreadId);
-    }
-    static mozilla::MarkerSchema MarkerTypeDisplay() {
-      return mozilla::MarkerSchema::SpecialFrontendLocation{};
-    }
-  };
-
-  profiler_add_marker("Native allocation", geckoprofiler::category::OTHER,
-                      {MarkerThreadId::MainThread(), MarkerStack::Capture()},
-                      NativeAllocationMarker{}, aSize, aMemoryAddress,
-                      profiler_current_thread_id());
-  return true;
 }
 
 void profiler_set_js_context(JSContext* aCx) {
