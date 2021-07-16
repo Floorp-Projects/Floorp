@@ -109,11 +109,6 @@ def is_windefender_affecting_srcdir(srcdir):
 class MozillaBuildBootstrapper(BaseBootstrapper):
     """Bootstrapper for MozillaBuild to install rustup."""
 
-    INSTALL_PYTHON_GUIDANCE = (
-        "Python is provided by MozillaBuild; ensure your MozillaBuild "
-        "installation is up to date."
-    )
-
     def __init__(self, no_interactive=False, no_system_changes=False):
         BaseBootstrapper.__init__(
             self, no_interactive=no_interactive, no_system_changes=no_system_changes
