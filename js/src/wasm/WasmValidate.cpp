@@ -1705,26 +1705,26 @@ static bool DecodeLimits(Decoder& d, LimitsKind kind, Limits* limits) {
                    uint32_t(flags & ~uint8_t(mask)));
   }
 
-  uint32_t initial;
-  if (!d.readVarU32(&initial)) {
+  uint64_t initial;
+  if (!d.readVarU64(&initial)) {
     return d.fail("expected initial length");
   }
   limits->initial = initial;
 
   if (flags & uint8_t(LimitsFlags::HasMaximum)) {
-    uint32_t maximum;
-    if (!d.readVarU32(&maximum)) {
+    uint64_t maximum;
+    if (!d.readVarU64(&maximum)) {
       return d.fail("expected maximum length");
     }
 
     if (limits->initial > maximum) {
       return d.failf(
           "memory size minimum must not be greater than maximum; "
-          "maximum length %" PRIu32 " is less than initial length %" PRIu64,
+          "maximum length %" PRIu64 " is less than initial length %" PRIu64,
           maximum, limits->initial);
     }
 
-    limits->maximum.emplace(uint64_t(maximum));
+    limits->maximum.emplace(maximum);
   }
 
   limits->shared = Shareable::False;
@@ -1863,11 +1863,13 @@ static bool DecodeMemoryTypeAndLimits(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
 
-  if (limits.initial > MaxMemory32LimitField) {
+  uint64_t maxField = MaxMemoryLimitField(limits.indexType);
+
+  if (limits.initial > maxField) {
     return d.fail("initial memory size too big");
   }
 
-  if (limits.maximum && *limits.maximum > MaxMemory32LimitField) {
+  if (limits.maximum && *limits.maximum > maxField) {
     return d.fail("maximum memory size too big");
   }
 
