@@ -71,27 +71,25 @@ class MachCommands(MachCommandBase):
     )
     def lint(self, command_context, *runargs, **lintargs):
         """Run linters."""
-        command_context.activate_virtualenv()
+        self.activate_virtualenv()
         from mozlint import cli, parser
 
         try:
             buildargs = {}
-            buildargs["substs"] = copy.deepcopy(dict(command_context.substs))
-            buildargs["defines"] = copy.deepcopy(dict(command_context.defines))
-            buildargs["topobjdir"] = command_context.topobjdir
+            buildargs["substs"] = copy.deepcopy(dict(self.substs))
+            buildargs["defines"] = copy.deepcopy(dict(self.defines))
+            buildargs["topobjdir"] = self.topobjdir
             lintargs.update(buildargs)
         except BuildEnvironmentNotFoundException:
             pass
 
-        lintargs.setdefault("root", command_context.topsrcdir)
+        lintargs.setdefault("root", self.topsrcdir)
         lintargs["exclude"] = get_global_excludes(lintargs["root"])
         lintargs["config_paths"].insert(0, here)
-        lintargs["virtualenv_bin_path"] = command_context.virtualenv_manager.bin_path
-        lintargs["virtualenv_manager"] = command_context.virtualenv_manager
+        lintargs["virtualenv_bin_path"] = self.virtualenv_manager.bin_path
+        lintargs["virtualenv_manager"] = self.virtualenv_manager
         for path in EXCLUSION_FILES:
-            parser.GLOBAL_SUPPORT_FILES.append(
-                os.path.join(command_context.topsrcdir, path)
-            )
+            parser.GLOBAL_SUPPORT_FILES.append(os.path.join(self.topsrcdir, path))
         return cli.run(*runargs, **lintargs)
 
     @Command(
@@ -127,9 +125,9 @@ class MachCommands(MachCommandBase):
         help="Extra args that will be forwarded to eslint.",
     )
     def eslint(self, command_context, paths, extra_args=[], **kwargs):
-        command_context._mach_context.commands.dispatch(
+        self._mach_context.commands.dispatch(
             "lint",
-            command_context._mach_context,
+            self._mach_context,
             linters=["eslint"],
             paths=paths,
             argv=extra_args,
@@ -160,10 +158,6 @@ class MachCommands(MachCommandBase):
         kwargs["linters"] = list(linters)
 
         kwargs["fix"] = True
-        command_context._mach_context.commands.dispatch(
-            "lint",
-            command_context._mach_context,
-            paths=paths,
-            argv=extra_args,
-            **kwargs
+        self._mach_context.commands.dispatch(
+            "lint", self._mach_context, paths=paths, argv=extra_args, **kwargs
         )

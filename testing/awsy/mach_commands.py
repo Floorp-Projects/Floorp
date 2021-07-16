@@ -44,7 +44,7 @@ class MachCommands(MachCommandBase):
         sys.path.append(AWSY_PATH)
     from awsy import ITERATIONS, PER_TAB_PAUSE, SETTLE_WAIT_TIME, MAX_TABS
 
-    def run_awsy(self, command_context, tests, binary=None, **kwargs):
+    def run_awsy(self, tests, binary=None, **kwargs):
         import json
         from mozlog.structured import commandline
 
@@ -52,7 +52,7 @@ class MachCommands(MachCommandBase):
 
         parser = setup_awsy_argument_parser()
 
-        awsy_source_dir = os.path.join(command_context.topsrcdir, "testing", "awsy")
+        awsy_source_dir = os.path.join(self.topsrcdir, "testing", "awsy")
         if not tests:
             tests = [os.path.join(awsy_source_dir, "awsy", "test_memory_usage.py")]
 
@@ -88,7 +88,7 @@ class MachCommands(MachCommandBase):
                 runtime_testvars[arg] = kwargs[arg]
 
         if "webRootDir" not in runtime_testvars:
-            awsy_tests_dir = os.path.join(command_context.topobjdir, "_tests", "awsy")
+            awsy_tests_dir = os.path.join(self.topobjdir, "_tests", "awsy")
             web_root_dir = os.path.join(awsy_tests_dir, "html")
             runtime_testvars["webRootDir"] = web_root_dir
         else:
@@ -122,16 +122,15 @@ class MachCommands(MachCommandBase):
         tooltool_args = {
             "args": [
                 sys.executable,
-                os.path.join(command_context.topsrcdir, "mach"),
+                os.path.join(self.topsrcdir, "mach"),
                 "artifact",
                 "toolchain",
                 "-v",
                 "--tooltool-manifest=%s" % manifest_file,
-                "--cache-dir=%s"
-                % os.path.join(command_context.topsrcdir, "tooltool-cache"),
+                "--cache-dir=%s" % os.path.join(self.topsrcdir, "tooltool-cache"),
             ]
         }
-        command_context.run_process(cwd=page_load_test_dir, **tooltool_args)
+        self.run_process(cwd=page_load_test_dir, **tooltool_args)
         tp5nzip = os.path.join(page_load_test_dir, "tp5n.zip")
         tp5nmanifest = os.path.join(page_load_test_dir, "tp5n", "tp5n.manifest")
         if not os.path.exists(tp5nmanifest):
@@ -139,7 +138,7 @@ class MachCommands(MachCommandBase):
                 "args": ["unzip", "-q", "-o", tp5nzip, "-d", page_load_test_dir]
             }
             try:
-                command_context.run_process(**unzip_args)
+                self.run_process(**unzip_args)
             except Exception as exc:
                 troubleshoot = ""
                 if mozinfo.os == "win":
@@ -148,7 +147,7 @@ class MachCommands(MachCommandBase):
                         "directory closer to the drive root."
                     )
 
-                command_context.log(
+                self.log(
                     logging.ERROR,
                     "awsy",
                     {"directory": page_load_test_dir, "exception": exc},
@@ -173,7 +172,7 @@ class MachCommands(MachCommandBase):
             # Work around a startup crash with DMD on windows
             if mozinfo.os == "win":
                 kwargs["pref"] = "security.sandbox.content.level:0"
-                command_context.log(
+                self.log(
                     logging.WARNING,
                     "awsy",
                     {},
@@ -345,13 +344,11 @@ class MachCommands(MachCommandBase):
                 tests.append(obj["file_relpath"])
             del kwargs["test_objects"]
 
-        if not kwargs.get("binary") and conditions.is_firefox(command_context):
+        if not kwargs.get("binary") and conditions.is_firefox(self):
             try:
-                kwargs["binary"] = command_context.get_binary_path("app")
+                kwargs["binary"] = self.get_binary_path("app")
             except BinaryNotFoundException as e:
-                command_context.log(
-                    logging.ERROR, "awsy", {"error": str(e)}, "ERROR: {error}"
-                )
-                command_context.log(logging.INFO, "awsy", {"help": e.help()}, "{help}")
+                self.log(logging.ERROR, "awsy", {"error": str(e)}, "ERROR: {error}")
+                self.log(logging.INFO, "awsy", {"help": e.help()}, "{help}")
                 return 1
-        return self.run_awsy(command_context, tests, **kwargs)
+        return self.run_awsy(tests, **kwargs)

@@ -470,9 +470,8 @@ def create_parser_testpaths():
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-    @staticmethod
-    def setup(command_context):
-        command_context.activate_virtualenv()
+    def setup(self):
+        self.activate_virtualenv()
 
     @Command(
         "web-platform-tests",
@@ -482,9 +481,9 @@ class MachCommands(MachCommandBase):
         parser=create_parser_wpt,
     )
     def run_web_platform_tests(self, command_context, **params):
-        self.setup(command_context)
+        self.setup()
         if params["product"] is None:
-            if conditions.is_android(command_context):
+            if conditions.is_android(self):
                 params["product"] = "firefox_android"
             else:
                 params["product"] = "firefox"
@@ -504,16 +503,13 @@ class MachCommands(MachCommandBase):
             if not mozdebug.get_debugger_info(params.get("debugger")):
                 sys.exit(1)
 
-        wpt_setup = command_context._spawn(WebPlatformTestsRunnerSetup)
-        wpt_setup._mach_context = command_context._mach_context
+        wpt_setup = self._spawn(WebPlatformTestsRunnerSetup)
+        wpt_setup._mach_context = self._mach_context
         wpt_runner = WebPlatformTestsRunner(wpt_setup)
 
         logger = wpt_runner.setup_logging(**params)
 
-        if (
-            conditions.is_android(command_context)
-            and params["product"] != "firefox_android"
-        ):
+        if conditions.is_android(self) and params["product"] != "firefox_android":
             logger.warning(
                 "Must specify --product=firefox_android in Android environment."
             )
@@ -537,12 +533,12 @@ class MachCommands(MachCommandBase):
         parser=create_parser_update,
     )
     def update_web_platform_tests(self, command_context, **params):
-        self.setup(command_context)
-        command_context.virtualenv_manager.install_pip_package("html5lib==1.0.1")
-        command_context.virtualenv_manager.install_pip_package("ujson")
-        command_context.virtualenv_manager.install_pip_package("requests")
+        self.setup()
+        self.virtualenv_manager.install_pip_package("html5lib==1.0.1")
+        self.virtualenv_manager.install_pip_package("ujson")
+        self.virtualenv_manager.install_pip_package("requests")
 
-        wpt_updater = command_context._spawn(WebPlatformTestsUpdater)
+        wpt_updater = self._spawn(WebPlatformTestsUpdater)
         logger = wpt_updater.setup_logging(**params)
         return wpt_updater.run_update(logger, **params)
 
@@ -562,8 +558,8 @@ class MachCommands(MachCommandBase):
         parser=create_parser_manifest_update,
     )
     def wpt_manifest_update(self, command_context, **params):
-        self.setup(command_context)
-        wpt_setup = command_context._spawn(WebPlatformTestsRunnerSetup)
+        self.setup()
+        wpt_setup = self._spawn(WebPlatformTestsRunnerSetup)
         wpt_runner = WebPlatformTestsRunner(wpt_setup)
         logger = wpt_runner.setup_logging(**params)
         logger.warning(
@@ -579,12 +575,12 @@ class MachCommands(MachCommandBase):
         parser=create_parser_serve,
     )
     def wpt_serve(self, command_context, **params):
-        self.setup(command_context)
+        self.setup()
         import logging
 
         logger = logging.getLogger("web-platform-tests")
         logger.addHandler(logging.StreamHandler(sys.stdout))
-        wpt_serve = command_context._spawn(WebPlatformTestsServeRunner)
+        wpt_serve = self._spawn(WebPlatformTestsServeRunner)
         return wpt_serve.run(**params)
 
     @Command(
@@ -596,7 +592,7 @@ class MachCommands(MachCommandBase):
     def wpt_summary(self, command_context, **params):
         import metasummary
 
-        wpt_setup = command_context._spawn(WebPlatformTestsRunnerSetup)
+        wpt_setup = self._spawn(WebPlatformTestsRunnerSetup)
         return metasummary.run(wpt_setup.topsrcdir, wpt_setup.topobjdir, **params)
 
     @Command(
@@ -616,9 +612,9 @@ class MachCommands(MachCommandBase):
         parser=create_parser_unittest,
     )
     def wpt_unittest(self, command_context, **params):
-        self.setup(command_context)
-        command_context.virtualenv_manager.install_pip_package("tox")
-        runner = command_context._spawn(WebPlatformTestsUnittestRunner)
+        self.setup()
+        self.virtualenv_manager.install_pip_package("tox")
+        runner = self._spawn(WebPlatformTestsUnittestRunner)
         return 0 if runner.run(**params) else 1
 
     @Command(
@@ -628,7 +624,7 @@ class MachCommands(MachCommandBase):
         parser=create_parser_testpaths,
     )
     def wpt_test_paths(self, command_context, **params):
-        runner = command_context._spawn(WebPlatformTestsTestPathsRunner)
+        runner = self._spawn(WebPlatformTestsTestPathsRunner)
         runner.run(**params)
         return 0
 
@@ -639,6 +635,6 @@ class MachCommands(MachCommandBase):
         parser=create_parser_fission_regressions,
     )
     def wpt_fission_regressions(self, command_context, **params):
-        runner = command_context._spawn(WebPlatformTestsFissionRegressionsRunner)
+        runner = self._spawn(WebPlatformTestsFissionRegressionsRunner)
         runner.run(**params)
         return 0

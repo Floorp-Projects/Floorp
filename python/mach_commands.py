@@ -63,7 +63,7 @@ class MachCommands(MachCommandBase):
         args,
     ):
         # Avoid logging the command
-        command_context.log_manager.terminal_handler.setLevel(logging.CRITICAL)
+        self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
         # Note: subprocess requires native strings in os.environ on Windows.
         append_env = {"PYTHONDONTWRITEBYTECODE": str("1")}
@@ -75,16 +75,14 @@ class MachCommands(MachCommandBase):
             from mach_bootstrap import mach_sys_path
 
             python_path = sys.executable
-            append_env["PYTHONPATH"] = os.pathsep.join(
-                mach_sys_path(command_context.topsrcdir)
-            )
+            append_env["PYTHONPATH"] = os.pathsep.join(mach_sys_path(self.topsrcdir))
         else:
-            command_context.virtualenv_manager.ensure()
+            self.virtualenv_manager.ensure()
             if not no_activate:
-                command_context.virtualenv_manager.activate()
-            python_path = command_context.virtualenv_manager.python_path
+                self.virtualenv_manager.activate()
+            python_path = self.virtualenv_manager.python_path
             if requirements:
-                command_context.virtualenv_manager.install_pip_requirements(
+                self.virtualenv_manager.install_pip_requirements(
                     requirements, require_hashes=False
                 )
 
@@ -99,14 +97,14 @@ class MachCommands(MachCommandBase):
                 if not no_virtualenv:
                     # Use `_run_pip` directly rather than `install_pip_package` to bypass
                     # `req.check_if_exists()` which may detect a system installed ipython.
-                    command_context.virtualenv_manager._run_pip(["install", "ipython"])
+                    self.virtualenv_manager._run_pip(["install", "ipython"])
                     python_path = which("ipython", path=bindir)
 
                 if not python_path:
                     print("error: could not detect or install ipython")
                     return 1
 
-        return command_context.run_process(
+        return self.run_process(
             [python_path] + args,
             pass_thru=True,  # Allow user to run Python interactively.
             ensure_exit_code=False,  # Don't throw on non-zero exit code.
@@ -171,7 +169,7 @@ class MachCommands(MachCommandBase):
                 os.environ[b"PYTHON_TEST_TMP"] = tempdir
             else:
                 os.environ["PYTHON_TEST_TMP"] = tempdir
-            return self.run_python_tests(command_context, *args, **kwargs)
+            return self.run_python_tests(*args, **kwargs)
         finally:
             import mozfile
 
@@ -179,7 +177,6 @@ class MachCommands(MachCommandBase):
 
     def run_python_tests(
         self,
-        command_context,
         tests=None,
         test_objects=None,
         subsuite=None,
@@ -190,11 +187,11 @@ class MachCommands(MachCommandBase):
         **kwargs
     ):
 
-        command_context.activate_virtualenv()
+        self.activate_virtualenv()
         if test_objects is None:
             from moztest.resolve import TestResolver
 
-            resolver = command_context._spawn(TestResolver)
+            resolver = self._spawn(TestResolver)
             # If we were given test paths, try to find tests matching them.
             test_objects = resolver.resolve_tests(paths=tests, flavor="python")
         else:
@@ -215,7 +212,7 @@ class MachCommands(MachCommandBase):
         tests = mp.active_tests(
             filters=filters,
             disabled=False,
-            python=command_context.virtualenv_manager.version_info()[0],
+            python=self.virtualenv_manager.version_info()[0],
             **mozinfo.info
         )
 
@@ -225,7 +222,7 @@ class MachCommands(MachCommandBase):
                 "TEST-UNEXPECTED-FAIL | No tests collected "
                 + "{}(Not in PYTHON_UNITTEST_MANIFESTS?)".format(submsg)
             )
-            command_context.log(logging.WARN, "python-test", {}, message)
+            self.log(logging.WARN, "python-test", {}, message)
             return 1
 
         parallel = []
@@ -241,7 +238,7 @@ class MachCommands(MachCommandBase):
                 test.get("requirements")
                 and test["requirements"] not in installed_requirements
             ):
-                command_context.virtualenv_manager.install_pip_requirements(
+                self.virtualenv_manager.install_pip_requirements(
                     test["requirements"], quiet=True
                 )
                 installed_requirements.add(test["requirements"])
@@ -256,7 +253,9 @@ class MachCommands(MachCommandBase):
                 else:
                     parallel.append(test)
 
-        jobs = jobs or cpu_count()
+        self.jobs = jobs or cpu_count()
+        self.terminate = False
+        self.verbose = verbose
 
         return_code = 0
 
@@ -264,12 +263,10 @@ class MachCommands(MachCommandBase):
             output, ret, test_path = result
 
             for line in output:
-                command_context.log(
-                    logging.INFO, "python-test", {"line": line.rstrip()}, "{line}"
-                )
+                self.log(logging.INFO, "python-test", {"line": line.rstrip()}, "{line}")
 
             if ret and not return_code:
-                command_context.log(
+                self.log(
                     logging.ERROR,
                     "python-test",
                     {"test_path": test_path, "ret": ret},
@@ -277,12 +274,9 @@ class MachCommands(MachCommandBase):
                 )
             return return_code or ret
 
-        with ThreadPoolExecutor(max_workers=jobs) as executor:
+        with ThreadPoolExecutor(max_workers=self.jobs) as executor:
             futures = [
-                executor.submit(
-                    self._run_python_test, command_context, test, jobs, verbose
-                )
-                for test in parallel
+                executor.submit(self._run_python_test, test) for test in parallel
             ]
 
             try:
@@ -296,13 +290,11 @@ class MachCommands(MachCommandBase):
                 raise
 
         for test in sequential:
-            return_code = on_test_finished(
-                self._run_python_test(command_context, test, jobs, verbose)
-            )
+            return_code = on_test_finished(self._run_python_test(test))
             if return_code and exitfirst:
                 break
 
-        command_context.log(
+        self.log(
             logging.INFO,
             "python-test",
             {"return_code": return_code},
@@ -310,19 +302,17 @@ class MachCommands(MachCommandBase):
         )
         return return_code
 
-    def _run_python_test(self, command_context, test, jobs, verbose):
+    def _run_python_test(self, test):
         from mozprocess import ProcessHandler
 
         output = []
 
         def _log(line):
             # Buffer messages if more than one worker to avoid interleaving
-            if jobs > 1:
+            if self.jobs > 1:
                 output.append(line)
             else:
-                command_context.log(
-                    logging.INFO, "python-test", {"line": line.rstrip()}, "{line}"
-                )
+                self.log(logging.INFO, "python-test", {"line": line.rstrip()}, "{line}")
 
         file_displayed_test = []  # used as boolean
 
@@ -342,7 +332,7 @@ class MachCommands(MachCommandBase):
             _log(line)
 
         _log(test["path"])
-        python = command_context.virtualenv_manager.python_path
+        python = self.virtualenv_manager.python_path
         cmd = [python, test["path"]]
         env = os.environ.copy()
         if six.PY2:
@@ -363,7 +353,7 @@ class MachCommands(MachCommandBase):
                 "call?): {}".format(test["path"])
             )
 
-        if verbose:
+        if self.verbose:
             if return_code != 0:
                 _log("Test failed: {}".format(test["path"]))
             else:

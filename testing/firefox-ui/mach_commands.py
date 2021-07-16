@@ -100,21 +100,19 @@ class MachCommands(MachCommandBase):
     )
     def run_firefox_ui_functional(self, command_context, **kwargs):
         try:
-            kwargs["binary"] = kwargs["binary"] or command_context.get_binary_path(
-                "app"
-            )
+            kwargs["binary"] = kwargs["binary"] or self.get_binary_path("app")
         except BinaryNotFoundException as e:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "firefox-ui-functional",
                 {"error": str(e)},
                 "ERROR: {error}",
             )
-            command_context.log(
+            self.log(
                 logging.INFO, "firefox-ui-functional", {"help": e.help()}, "{help}"
             )
             return 1
 
         return run_firefox_ui_test(
-            testtype="functional", topsrcdir=command_context.topsrcdir, **kwargs
+            testtype="functional", topsrcdir=self.topsrcdir, **kwargs
         )
