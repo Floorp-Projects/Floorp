@@ -148,7 +148,7 @@ android-x86-fuzzing/debug:
     index:
         job-name: android-x86-fuzzing-debug
     treeherder:
-        platform: android-4-2-x86/debug
+        platform: android-4-1-x86/debug
         symbol: Bf
     worker-type: b-linux
     worker:
