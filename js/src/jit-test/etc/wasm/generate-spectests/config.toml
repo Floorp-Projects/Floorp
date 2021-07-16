@@ -9,6 +9,7 @@ excluded_tests = [
   # bulk-memory-operations/issues/133 (data.wast:161)
   "data.wast",
   # memory limits can be encoded with more bytes now
+  "binary.wast",
   "binary-leb128.wast",
   # testing that multiple tables fail (imports.wast:309)
   "imports.wast",

@@ -2542,7 +2542,7 @@ bool WasmMemoryObject::typeImpl(JSContext* cx, const CallArgs& args) {
       cx, &args.thisv().toObject().as<WasmMemoryObject>());
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
 
-  Maybe<Pages> maxPages = memoryObj->maxPages();
+  Maybe<Pages> maxPages = memoryObj->sourceMaxPages();
   if (maxPages.isSome()) {
     uint32_t maxPages32 = mozilla::AssertedCast<uint32_t>(maxPages->value());
     if (!props.append(IdValuePair(NameToId(cx->names().maximum),
@@ -2592,11 +2592,18 @@ wasm::Pages WasmMemoryObject::volatilePages() const {
   return buffer().wasmPages();
 }
 
-Maybe<wasm::Pages> WasmMemoryObject::maxPages() const {
+wasm::Pages WasmMemoryObject::clampedMaxPages() const {
   if (isShared()) {
-    return Some(sharedArrayRawBuffer()->wasmMaxPages());
+    return sharedArrayRawBuffer()->wasmClampedMaxPages();
   }
-  return buffer().wasmMaxPages();
+  return buffer().wasmClampedMaxPages();
+}
+
+Maybe<wasm::Pages> WasmMemoryObject::sourceMaxPages() const {
+  if (isShared()) {
+    return Some(sharedArrayRawBuffer()->wasmSourceMaxPages());
+  }
+  return buffer().wasmSourceMaxPages();
 }
 
 wasm::IndexType WasmMemoryObject::indexType() const {
@@ -2649,7 +2656,7 @@ bool WasmMemoryObject::isHuge() const {
 }
 
 bool WasmMemoryObject::movingGrowable() const {
-  return !isHuge() && !buffer().wasmMaxPages();
+  return !isHuge() && !buffer().wasmSourceMaxPages();
 }
 
 size_t WasmMemoryObject::boundsCheckLimit() const {
@@ -2701,16 +2708,6 @@ uint32_t WasmMemoryObject::growShared(HandleWasmMemoryObject memory,
     return -1;
   }
 
-  // Always check against the max here, do not rely on the buffer resizers to
-  // use the correct limit, they don't have enough context.
-  if (newPages > MaxMemoryPages()) {
-    return -1;
-  }
-
-  if (newPages > rawBuf->wasmMaxPages()) {
-    return -1;
-  }
-
   if (!rawBuf->wasmGrowToPagesInPlace(lock, newPages)) {
     return -1;
   }
@@ -2747,12 +2744,6 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
     return -1;
   }
 
-  // Always check against the max here, do not rely on the buffer resizers to
-  // use the correct limit, they don't have enough context.
-  if (newPages > MaxMemoryPages()) {
-    return -1;
-  }
-
   RootedArrayBufferObject newBuf(cx);
 
   if (memory->movingGrowable()) {
@@ -2761,17 +2752,9 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
                                                   cx)) {
       return -1;
     }
-  } else {
-    if (Maybe<Pages> maxPages = oldBuf->wasmMaxPages()) {
-      if (newPages > *maxPages) {
-        return -1;
-      }
-    }
-
-    if (!ArrayBufferObject::wasmGrowToPagesInPlace(newPages, oldBuf, &newBuf,
-                                                   cx)) {
-      return -1;
-    }
+  } else if (!ArrayBufferObject::wasmGrowToPagesInPlace(newPages, oldBuf,
+                                                        &newBuf, cx)) {
+    return -1;
   }
 
   memory->setReservedSlot(BUFFER_SLOT, ObjectValue(*newBuf));
@@ -4849,3 +4832,53 @@ wasm::Pages wasm::MaxMemoryPages() {
 
 size_t wasm::MaxMemoryBoundsCheckLimit() { return size_t(INT32_MAX) + 1; }
 #endif
+
+Pages wasm::ClampedMaxPages(Pages initialPages,
+                            const Maybe<Pages>& sourceMaxPages,
+                            bool useHugeMemory) {
+  Pages clampedMaxPages;
+
+  if (sourceMaxPages.isSome()) {
+    // There is a specified maximum, clamp it to the implementation limit of
+    // maximum pages
+    clampedMaxPages = std::min(*sourceMaxPages, wasm::MaxMemoryPages());
+
+#if defined(JS_64BIT) && defined(ENABLE_WASM_CRANELIFT)
+    // On 64-bit platforms when we aren't using huge memory and we're using
+    // Cranelift, we must satisfy the 32-bit invariants that:
+    //    clampedMaxSize + wasm::PageSize < UINT32_MAX
+    // This is ensured by clamping sourceMaxPages to wasm::MaxMemoryPages(),
+    // which has special logic for cranelift.
+    MOZ_ASSERT_IF(!useHugeMemory,
+                  clampedMaxPages.byteLength() + wasm::PageSize < UINT32_MAX);
+#endif
+
+#ifndef JS_64BIT
+    static_assert(sizeof(uintptr_t) == 4, "assuming not 64 bit implies 32 bit");
+
+    // On 32-bit platforms, prevent applications specifying a large max
+    // (like MaxMemory32Pages) from unintentially OOMing the browser: they just
+    // want "a lot of memory". Maintain the invariant that
+    // initialPages <= clampedMaxPages.
+    static const uint64_t OneGib = 1 << 30;
+    static const Pages OneGibPages = Pages(OneGib >> wasm::PageBits);
+    static_assert(wasm::HighestValidARMImmediate > OneGib,
+                  "computing mapped size on ARM requires clamped max size");
+
+    Pages clampedPages = std::max(OneGibPages, initialPages);
+    clampedMaxPages = std::min(clampedPages, clampedMaxPages);
+#endif
+  } else {
+    // There is not a specified maximum, fill it in with the implementation
+    // limit of maximum pages
+    clampedMaxPages = wasm::MaxMemoryPages();
+  }
+
+  // Double-check our invariants
+  MOZ_RELEASE_ASSERT(sourceMaxPages.isNothing() ||
+                     clampedMaxPages <= *sourceMaxPages);
+  MOZ_RELEASE_ASSERT(clampedMaxPages <= wasm::MaxMemoryPages());
+  MOZ_RELEASE_ASSERT(initialPages <= clampedMaxPages);
+
+  return clampedMaxPages;
+}
