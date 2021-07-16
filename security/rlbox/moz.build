@@ -4,9 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-WASM_SOURCES += [
-    "/third_party/rust/rlbox_lucet_sandbox/c_src/lucet_sandbox_wrapper.c",
-]
+if CONFIG["LUCETC"]:
+    WASM_SOURCES += [
+        "/third_party/rust/rlbox_lucet_sandbox/c_src/lucet_sandbox_wrapper.c",
+    ]
+else:
+    LOCAL_INCLUDES += ["/third_party/wasm2c/wasm2c/"]
+
+    EXPORTS += ["/third_party/wasm2c/wasm2c/wasm-rt.h"]
+
+    SOURCES += [
+        "/third_party/wasm2c/wasm2c/wasm-rt-impl.c",
+        "/third_party/wasm2c/wasm2c/wasm-rt-os-unix.c",
+        "/third_party/wasm2c/wasm2c/wasm-rt-os-win.c",
+        "/third_party/wasm2c/wasm2c/wasm-rt-wasi.c",
+    ]
 
 WASM_DEFINES["MOZILLA_CLIENT"] = True
 
