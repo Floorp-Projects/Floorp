@@ -969,8 +969,8 @@ void FontList::SetAliases(
   Family* aliases = static_cast<Family*>(ptr.ToPtr(this));
   for (size_t i = 0; i < count; i++) {
     (void)new (&aliases[i]) Family(this, aliasArray[i]);
-    LOG_FONTLIST(("(shared-fontlist) alias family %u (%s)", (unsigned)i,
-                  aliasArray[i].mName.get()));
+    LOG_FONTLIST(("(shared-fontlist) alias family %u (%s: %s)", (unsigned)i,
+                  aliasArray[i].mKey.get(), aliasArray[i].mName.get()));
     aliases[i].SetFacePtrs(this, aAliasTable.Get(aliasArray[i].mKey)->mFaces);
     if (LOG_FONTLIST_ENABLED()) {
       const auto& faces = aAliasTable.Get(aliasArray[i].mKey)->mFaces;

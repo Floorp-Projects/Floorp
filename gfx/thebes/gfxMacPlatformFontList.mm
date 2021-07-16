@@ -741,8 +741,8 @@ void gfxMacFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
 
 class gfxSingleFaceMacFontFamily final : public gfxFontFamily {
  public:
-  explicit gfxSingleFaceMacFontFamily(const nsACString& aName)
-      : gfxFontFamily(aName, FontVisibility::Unknown) {
+  gfxSingleFaceMacFontFamily(const nsACString& aName, FontVisibility aVisibility)
+      : gfxFontFamily(aName, aVisibility) {
     mFaceNamesInitialized = true;  // omit from face name lists
   }
 
@@ -1038,7 +1038,7 @@ void gfxMacPlatformFontList::InitSharedFontListForPlatform() {
 }
 
 void gfxMacPlatformFontList::InitAliasesForSingleFaceList() {
-  for (auto& familyName : mSingleFaceFonts) {
+  for (const auto& familyName : mSingleFaceFonts) {
     LOG_FONTLIST(("(fontlist-singleface) face name: %s\n", familyName.get()));
     // Each entry in the "single face families" list is expected to be a
     // colon-separated pair of FaceName:Family,
@@ -1071,7 +1071,7 @@ void gfxMacPlatformFontList::InitAliasesForSingleFaceList() {
 
     // Truncate the entry from prefs at the colon, so now it is just the
     // desired single-face-family name.
-    familyName.Truncate(colon);
+    nsAutoCString aliasName(Substring(familyName, 0, colon));
 
     // Look through the family's faces to see if this one is present.
     fontlist::FontList* list = SharedFontList();
@@ -1081,9 +1081,9 @@ void gfxMacPlatformFontList::InitAliasesForSingleFaceList() {
         continue;
       }
       auto face = static_cast<const fontlist::Face*>(facePtrs[i].ToPtr(list));
-      if (face->mDescriptor.AsString(list).Equals(familyName)) {
+      if (face->mDescriptor.AsString(list).Equals(aliasName)) {
         // Found it! Create an entry in the Alias table.
-        GenerateFontListKey(familyName, key);
+        GenerateFontListKey(aliasName, key);
         if (SharedFontList()->FindFamily(key) || mAliasTable.Get(key)) {
           // If the family name is already known, something's misconfigured;
           // just ignore it.
@@ -1094,7 +1094,8 @@ void gfxMacPlatformFontList::InitAliasesForSingleFaceList() {
         // The "alias" here isn't based on an existing family, so we don't call
         // aliasData->InitFromFamily(); the various flags are left as defaults.
         aliasData->mFaces.AppendElement(facePtrs[i]);
-        aliasData->mBaseFamily = familyName;
+        aliasData->mBaseFamily = aliasName;
+        aliasData->mVisibility = family->Visibility();
         break;
       }
     }
@@ -1107,7 +1108,7 @@ void gfxMacPlatformFontList::InitAliasesForSingleFaceList() {
 }
 
 void gfxMacPlatformFontList::InitSingleFaceList() {
-  for (auto& familyName : mSingleFaceFonts) {
+  for (const auto& familyName : mSingleFaceFonts) {
     LOG_FONTLIST(("(fontlist-singleface) face name: %s\n", familyName.get()));
     // Each entry in the "single face families" list is expected to be a
     // colon-separated pair of FaceName:Family,
@@ -1133,12 +1134,12 @@ void gfxMacPlatformFontList::InitSingleFaceList() {
 
     // Truncate the entry from prefs at the colon, so now it is just the
     // desired single-face-family name.
-    familyName.Truncate(colon);
+    nsAutoCString aliasName(Substring(familyName, 0, colon));
 
     // Look through the family's faces to see if this one is present.
     const gfxFontEntry* fe = nullptr;
     for (const auto& face : family->GetFontList()) {
-      if (face->Name().Equals(familyName)) {
+      if (face->Name().Equals(aliasName)) {
         fe = face;
         break;
       }
@@ -1148,12 +1149,13 @@ void gfxMacPlatformFontList::InitSingleFaceList() {
     }
 
     // We found the correct face, so create the single-face family record.
-    GenerateFontListKey(familyName, key);
-    LOG_FONTLIST(("(fontlist-singleface) family name: %s, key: %s\n", familyName.get(), key.get()));
+    GenerateFontListKey(aliasName, key);
+    LOG_FONTLIST(("(fontlist-singleface) family name: %s, key: %s\n", aliasName.get(), key.get()));
 
     // add only if doesn't exist already
     if (!mFontFamilies.GetWeak(key)) {
-      RefPtr<gfxFontFamily> familyEntry = new gfxSingleFaceMacFontFamily(familyName);
+      RefPtr<gfxFontFamily> familyEntry =
+          new gfxSingleFaceMacFontFamily(aliasName, family->Visibility());
       // We need a separate font entry, because its family name will
       // differ from the one we found in the main list.
       MacOSFontEntry* fontEntry = new MacOSFontEntry(
@@ -1162,7 +1164,7 @@ void gfxMacPlatformFontList::InitSingleFaceList() {
       familyEntry->SetHasStyles(true);
       mFontFamilies.InsertOrUpdate(key, std::move(familyEntry));
       LOG_FONTLIST(
-          ("(fontlist-singleface) added new family: %s, key: %s\n", familyName.get(), key.get()));
+          ("(fontlist-singleface) added new family: %s, key: %s\n", aliasName.get(), key.get()));
     }
   }
 }
