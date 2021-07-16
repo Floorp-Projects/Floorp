@@ -1,0 +1,48 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: "General"
+
+origin:
+  name: wasm2c_sandbox_compiler
+  description: wasm2c fork used for rlbox sandboxing
+  url: https://github.com/PLSysSec/wasm2c_sandbox_compiler
+
+  release: commit 2f6b5609cd47bdbc6cba1d8b50c5411fb546ad9e (2021-06-10T02:22:42Z).
+  revision: 2f6b5609cd47bdbc6cba1d8b50c5411fb546ad9e
+
+  license: Apache-2.0
+  license-file: LICENSE
+
+vendoring:
+  url: https://github.com/PLSysSec/wasm2c_sandbox_compiler.git
+  source-hosting: github
+  vendor-directory: third_party/wasm2c
+
+  # ideally we would have exclude *, and the explicitly include certain folders, but this does not work
+  # so just explicitly exclude what we don't want for now
+  exclude:
+    # dirs
+    - .github
+    - cmake
+    - docs
+    - fuzz-in
+    - man
+    - scripts
+    - test
+    - third_party
+    - src/interp
+    - wasm2c/examples
+    # files
+    - .clang-format
+    - .flake8
+    - .gitattributes
+    - .gitignore
+    - .gitmodules
+    - .style.yapf
+    - CMakeLists.txt
+    - Contributing.md
+    - Makefile
+    - README.md
+    - ubsan.blacklist

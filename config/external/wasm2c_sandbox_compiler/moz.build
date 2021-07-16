@@ -1,0 +1,69 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+LOCAL_INCLUDES += ["/third_party/wasm2c/"]
+
+GeneratedFile(
+    "config.h",
+    script="preprocess_wasm2c_config.py",
+    entry_point="generate_config",
+    inputs=["/third_party/wasm2c/src/config.h.in"],
+)
+
+# Wabt sources
+HOST_SOURCES += [
+    "/third_party/wasm2c/src/apply-names.cc",
+    "/third_party/wasm2c/src/binary-reader-ir.cc",
+    "/third_party/wasm2c/src/binary-reader-logging.cc",
+    "/third_party/wasm2c/src/binary-reader.cc",
+    "/third_party/wasm2c/src/binary-writer-spec.cc",
+    "/third_party/wasm2c/src/binary-writer.cc",
+    "/third_party/wasm2c/src/binary.cc",
+    "/third_party/wasm2c/src/binding-hash.cc",
+    "/third_party/wasm2c/src/color.cc",
+    "/third_party/wasm2c/src/common.cc",
+    "/third_party/wasm2c/src/config.cc",
+    "/third_party/wasm2c/src/decompiler.cc",
+    "/third_party/wasm2c/src/error-formatter.cc",
+    "/third_party/wasm2c/src/expr-visitor.cc",
+    "/third_party/wasm2c/src/feature.cc",
+    "/third_party/wasm2c/src/filenames.cc",
+    "/third_party/wasm2c/src/generate-names.cc",
+    "/third_party/wasm2c/src/hash-util.cc",
+    "/third_party/wasm2c/src/ir-util.cc",
+    "/third_party/wasm2c/src/ir.cc",
+    "/third_party/wasm2c/src/leb128.cc",
+    "/third_party/wasm2c/src/lexer-source-line-finder.cc",
+    "/third_party/wasm2c/src/lexer-source.cc",
+    "/third_party/wasm2c/src/literal.cc",
+    "/third_party/wasm2c/src/opcode-code-table.c",
+    "/third_party/wasm2c/src/opcode.cc",
+    "/third_party/wasm2c/src/option-parser.cc",
+    "/third_party/wasm2c/src/resolve-names.cc",
+    "/third_party/wasm2c/src/shared-validator.cc",
+    "/third_party/wasm2c/src/stream.cc",
+    "/third_party/wasm2c/src/string-view.cc",
+    "/third_party/wasm2c/src/token.cc",
+    "/third_party/wasm2c/src/tracing.cc",
+    "/third_party/wasm2c/src/type-checker.cc",
+    "/third_party/wasm2c/src/utf8.cc",
+    "/third_party/wasm2c/src/validator.cc",
+    "/third_party/wasm2c/src/wast-lexer.cc",
+    "/third_party/wasm2c/src/wast-parser.cc",
+    "/third_party/wasm2c/src/wat-writer.cc",
+]
+
+# wasm2c sources
+HOST_SOURCES += [
+    "/third_party/wasm2c/src/c-writer.cc",
+    "/third_party/wasm2c/src/tools/wasm2c.cc",
+]
+
+HOST_CXXFLAGS += [
+    "-Wno-implicit-fallthrough",
+]
+
+HostProgram("wasm2c")
