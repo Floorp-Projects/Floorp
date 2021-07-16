@@ -171,6 +171,7 @@ linux64-plain-clang-trunk/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - linux64-toolchain-sysroot
+            - sysroot-x86_64-linux-gnu
     optimization:
         skip-unless-expanded: null
 
