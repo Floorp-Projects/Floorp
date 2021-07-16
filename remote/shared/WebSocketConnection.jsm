@@ -29,7 +29,7 @@ class WebSocketConnection {
   /**
    * @param {WebSocket} webSocket
    *     The WebSocket server connection to wrap.
-   * @param {HttpServer} httpdConnection
+   * @param {Connection} httpdConnection
    *     Reference to the httpd.js's connection needed for clean-up.
    */
   constructor(webSocket, httpdConnection) {
