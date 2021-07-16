@@ -12,9 +12,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
+
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
   browser: "chrome://remote/content/marionette/browser.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
+  TimedPromise: "chrome://remote/content/marionette/sync.js",
   waitForEvent: "chrome://remote/content/marionette/sync.js",
   waitForObserverTopic: "chrome://remote/content/marionette/sync.js",
 });
@@ -267,6 +269,68 @@ class WindowManager {
           `openWindow() not supported in ${AppInfo.name}`
         );
     }
+  }
+
+  /**
+   * Wait until the initial application window has been opened and loaded.
+   *
+   * @return {Promise<WindowProxy>}
+   *     A promise that resolved to the application window.
+   */
+  waitForInitialApplicationWindow() {
+    return new TimedPromise(
+      resolve => {
+        const waitForWindow = () => {
+          let windowTypes;
+          if (AppInfo.isThunderbird) {
+            windowTypes = ["mail:3pane"];
+          } else {
+            // We assume that an app either has GeckoView windows, or
+            // Firefox/Fennec windows, but not both.
+            windowTypes = ["navigator:browser", "navigator:geckoview"];
+          }
+
+          let win;
+          for (const windowType of windowTypes) {
+            win = Services.wm.getMostRecentWindow(windowType);
+            if (win) {
+              break;
+            }
+          }
+
+          if (!win) {
+            // if the window isn't even created, just poll wait for it
+            let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(
+              Ci.nsITimer
+            );
+            checkTimer.initWithCallback(
+              waitForWindow,
+              100,
+              Ci.nsITimer.TYPE_ONE_SHOT
+            );
+          } else if (win.document.readyState != "complete") {
+            // otherwise, wait for it to be fully loaded before proceeding
+            let listener = ev => {
+              // ensure that we proceed, on the top level document load event
+              // (not an iframe one...)
+              if (ev.target != win.document) {
+                return;
+              }
+              win.removeEventListener("load", listener);
+              waitForWindow();
+            };
+            win.addEventListener("load", listener, true);
+          } else {
+            resolve(win);
+          }
+        };
+
+        waitForWindow();
+      },
+      {
+        errorMessage: "No applicable application windows found",
+      }
+    );
   }
 }
 
