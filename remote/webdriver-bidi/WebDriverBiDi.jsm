@@ -71,11 +71,19 @@ class WebDriverBiDi {
 
     this._session = new WebDriverSession(capabilities);
 
-    // Only register the path handler when the Remote Agent is active.
-    if (this.agent.listening) {
+    // When the Remote Agent is listening, and a BiDi WebSocket connection
+    // has been requested, register a path handler for the session.
+    let webSocketUrl = null;
+    if (this.agent.listening && this.session.capabilities.get("webSocketUrl")) {
       this.agent.server.registerPathHandler(this.session.path, this.session);
+      webSocketUrl = `${this.address}${this.session.path}`;
+
       logger.debug(`Registered session handler: ${this.session.path}`);
     }
+
+    // Also update the webSocketUrl capability to contain the session URL if
+    // a path handler has been registered. Otherwise set its value to null.
+    this.session.capabilities.set("webSocketUrl", webSocketUrl);
 
     return {
       sessionId: this.session.id,
@@ -91,8 +99,9 @@ class WebDriverBiDi {
       return;
     }
 
-    // Only unregister the path handler when the Remote Agent is active.
-    if (this.agent.listening) {
+    // When the Remote Agent is listening, and a BiDi WebSocket is active,
+    // unregister the path handler for the session.
+    if (this.agent.listening && this.session.capabilities.get("webSocketUrl")) {
       this.agent.server.registerPathHandler(this.session.path, null);
       logger.debug(`Unregistered session handler: ${this.session.path}`);
     }

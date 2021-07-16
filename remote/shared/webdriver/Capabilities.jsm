@@ -433,6 +433,7 @@ class Capabilities extends Map {
       ["timeouts", new Timeouts()],
       ["strictFileInteractability", false],
       ["unhandledPromptBehavior", UnhandledPromptBehavior.DismissAndNotify],
+      ["webSocketUrl", null],
 
       // proprietary
       ["moz:accessibilityChecks", false],
@@ -572,9 +573,14 @@ class Capabilities extends Map {
           break;
 
         case "webSocketUrl":
-          throw new error.InvalidArgumentError(
-            "webSocketURL is not supported yet"
-          );
+          assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
+
+          if (!v) {
+            throw new error.InvalidArgumentError(
+              pprint`Expected ${k} to be true, got ${v}`
+            );
+          }
+          break;
 
         case "moz:accessibilityChecks":
           assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);

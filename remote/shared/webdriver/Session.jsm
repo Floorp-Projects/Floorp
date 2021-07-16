@@ -166,7 +166,7 @@ class WebDriverSession {
     this.path = `/session/${this.id}`;
 
     try {
-      this.capabilities = Capabilities.fromJSON(capabilities);
+      this.capabilities = Capabilities.fromJSON(capabilities, this.path);
     } catch (e) {
       throw new error.SessionNotCreatedError(e);
     }

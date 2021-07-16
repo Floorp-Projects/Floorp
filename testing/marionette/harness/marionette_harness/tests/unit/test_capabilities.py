@@ -251,7 +251,6 @@ class TestCapabilityMatching(MarionetteTestCase):
                 self.marionette.start_session({"unhandledPromptBehavior": behavior})
 
     def test_web_socket_url(self):
-        with self.assertRaisesRegexp(
-            SessionNotCreatedException, "InvalidArgumentError"
-        ):
-            self.marionette.start_session({"webSocketUrl": True})
+        self.marionette.start_session({"webSocketUrl": True})
+        # Remote Agent is not active by default
+        self.assertNotIn("webSocketUrl", self.marionette.session_capabilities)

@@ -417,6 +417,7 @@ add_test(function test_Capabilities_ctor() {
   ok(caps.get("proxy") instanceof Proxy);
   equal(caps.get("setWindowRect"), !AppInfo.isAndroid);
   equal(caps.get("strictFileInteractability"), false);
+  equal(caps.get("webSocketUrl"), null);
 
   equal(false, caps.get("moz:accessibilityChecks"));
   ok(caps.has("moz:buildID"));
@@ -449,6 +450,7 @@ add_test(function test_Capabilities_toJSON() {
   deepEqual(caps.get("timeouts").toJSON(), json.timeouts);
   equal(caps.get("setWindowRect"), json.setWindowRect);
   equal(caps.get("strictFileInteractability"), json.strictFileInteractability);
+  equal(caps.get("webSocketUrl"), json.webSocketUrl);
 
   equal(caps.get("moz:accessibilityChecks"), json["moz:accessibilityChecks"]);
   equal(caps.get("moz:buildID"), json["moz:buildID"]);
@@ -527,6 +529,17 @@ add_test(function test_Capabilities_fromJSON() {
   caps = fromJSON({ strictFileInteractability: true });
   equal(true, caps.get("strictFileInteractability"));
 
+  caps = fromJSON({ webSocketUrl: true });
+  equal(true, caps.get("webSocketUrl"));
+  Assert.throws(
+    () => fromJSON({ webSocketUrl: false }),
+    /InvalidArgumentError/
+  );
+  Assert.throws(
+    () => fromJSON({ webSocketUrl: "foo" }),
+    /InvalidArgumentError/
+  );
+
   caps = fromJSON({ "moz:accessibilityChecks": true });
   equal(true, caps.get("moz:accessibilityChecks"));
   caps = fromJSON({ "moz:accessibilityChecks": false });
@@ -573,7 +586,6 @@ add_test(function test_Capabilities_fromJSON() {
     () => fromJSON({ "moz:webdriverClick": 1 }),
     /InvalidArgumentError/
   );
-  Assert.throws(() => fromJSON({ webSocketUrl: true }), /InvalidArgumentError/);
 
   run_next_test();
 });
