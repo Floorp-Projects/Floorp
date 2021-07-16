@@ -29,7 +29,8 @@
             android:theme="@style/Theme.AppCompat.Translucent" />
 
         <activity android:name=".autofill.AutofillSearchActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/DialogActivityTheme" />
 
         <service
             android:name=".autofill.AutofillService"

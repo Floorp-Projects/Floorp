@@ -5,6 +5,8 @@
 package org.mozilla.fenix.autofill
 
 import android.os.Build
+import android.os.Bundle
+import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.feature.autofill.ui.AbstractAutofillSearchActivity
@@ -17,4 +19,15 @@ import org.mozilla.fenix.ext.components
 @RequiresApi(Build.VERSION_CODES.O)
 class AutofillSearchActivity : AbstractAutofillSearchActivity() {
     override val configuration: AutofillConfiguration by lazy { components.autofillConfiguration }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // To avoid the dialog constantly resizing horizontally while typing, let's always use
+        // the full width of the screen for the dialog.
+        window.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
 }
