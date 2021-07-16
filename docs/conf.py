@@ -130,6 +130,6 @@ def setup(app):
         },
         True,
     )
-    app.add_stylesheet("custom_theme.css")
+    app.add_css_file("custom_theme.css")
     app.add_transform(AutoStructify)
     app.connect("html-page-context", install_sphinx_panels)
