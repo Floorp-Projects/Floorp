@@ -1306,7 +1306,7 @@ struct MemoryDesc {
   }
 
   MemoryDesc() = default;
-  MemoryDesc(MemoryKind kind, Limits limits) : kind(kind), limits(limits) {}
+  explicit MemoryDesc(MemoryKind kind, Limits limits) : kind(kind), limits(limits) {}
 };
 
 // We don't need to worry about overflow with a Memory32 field when
