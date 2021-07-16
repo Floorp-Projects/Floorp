@@ -953,7 +953,6 @@ def sysroot_path(host_or_target):
         sysroot_input,
         bootstrap_path(
             depends(host_or_target)(lambda t: "sysroot-{}".format(t.toolchain)),
-            context=host_or_target,
             when=bootstrap_sysroot,
         ),
         "--enable-bootstrap",

@@ -247,47 +247,28 @@ def original_path():
     return environ["PATH"].split(os.pathsep)
 
 
-@template
-def bootstrap_toolchain_tasks(host_or_target):
-    @depends(host_or_target, when="--enable-bootstrap")
-    @imports("os")
-    @imports(_from="mozbuild.toolchains", _import="toolchain_task_definitions")
-    @imports(_from="__builtin__", _import="Exception")
-    def bootstrap_toolchain_tasks(host_or_target):
-        prefix = {
-            ("x86", "GNU", "Linux"): "linux32",
-            ("x86_64", "GNU", "Linux"): "linux64",
-            ("aarch64", "GNU", "Linux"): "linux64-aarch64",
-            ("x86_64", "OSX", "Darwin"): "macosx64",
-            ("aarch64", "OSX", "Darwin"): "macosx64-aarch64",
-            ("x86_64", "WINNT", "WINNT"): "win64",
-        }.get((host_or_target.cpu, host_or_target.os, host_or_target.kernel))
-        if prefix:
-            try:
-                return namespace(prefix=prefix, tasks=toolchain_task_definitions())
-            except Exception:
-                return None
-
-    return bootstrap_toolchain_tasks
-
-
-host_bootstrap_toolchain_tasks = bootstrap_toolchain_tasks(host)
-target_bootstrap_toolchain_tasks = bootstrap_toolchain_tasks(target)
+@depends(host, when="--enable-bootstrap")
+@imports("os")
+@imports(_from="mozbuild.toolchains", _import="toolchain_task_definitions")
+@imports(_from="__builtin__", _import="Exception")
+def bootstrap_toolchain_tasks(host):
+    prefix = {
+        ("x86_64", "GNU", "Linux"): "linux64",
+        ("x86_64", "OSX", "Darwin"): "macosx64",
+        ("aarch64", "OSX", "Darwin"): "macosx64-aarch64",
+        ("x86_64", "WINNT", "WINNT"): "win64",
+    }.get((host.cpu, host.os, host.kernel))
+    try:
+        return namespace(prefix=prefix, tasks=toolchain_task_definitions())
+    except Exception:
+        return None
 
 
 @template
 def bootstrap_path(path, **kwargs):
     when = kwargs.pop("when", None)
-    context = kwargs.pop("context", host)
     if kwargs:
-        configure_error(
-            "bootstrap_path only takes `when` or `context` as keyword arguments"
-        )
-
-    bootstrap_toolchain_tasks = {
-        host: host_bootstrap_toolchain_tasks,
-        target: target_bootstrap_toolchain_tasks,
-    }[context]
+        configure_error("bootstrap_path only takes `when` as a keyword argument")
 
     @depends(
         "--enable-bootstrap",
@@ -309,7 +290,10 @@ def bootstrap_path(path, **kwargs):
         def try_bootstrap(exists):
             if not tasks:
                 return False
-            for prefix in ("{}-".format(tasks.prefix), ""):
+            prefixes = [""]
+            if tasks.prefix:
+                prefixes.insert(0, "{}-".format(tasks.prefix))
+            for prefix in prefixes:
                 label = "toolchain-{}{}".format(prefix, path_parts[0])
                 task = tasks.tasks.get(label)
                 if task:
