@@ -1,5 +1,20 @@
-commit 6d353a4436747e2de8820efac27ae5ef7e601b60
+commit afe217b318df5f197e64b30a8b5a4b391c777359
 Author: jugglinmike <mike@mikepennisi.com>
-Date:   Fri May 14 13:33:06 2021 -0400
+Date:   Thu Jul 15 08:49:12 2021 -0400
 
-    Remove invalid test (#2990)
+    Add tests for "Class Static Init. Blocks" proposal (#2968)
+    
+    * Add tests for "Class Static Init. Blocks" proposal
+    
+    This proposal is currently at "stage 3" in TC39's standardization
+    process.
+    
+    * fixup! Add tests for "Class Static Init. Blocks" proposal
+    
+    * Correct identifier reference
+    
+    * Update tests for grammar
+    
+    * Update tests for identifiers
+    
+    * Add tests for scope derivation

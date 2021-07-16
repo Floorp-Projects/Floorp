@@ -145,7 +145,8 @@ compareArray.format = function(array) {
   return `[${array.map(String).join(', ')}]`;
 };
 
-assert.compareArray = function(actual, expected, message = '') {
+assert.compareArray = function(actual, expected, message) {
+  message  = message === undefined ? '' : message;
   assert(actual != null, `First argument shouldn't be nullish. ${message}`);
   assert(expected != null, `Second argument shouldn't be nullish. ${message}`);
   var format = compareArray.format;
@@ -411,8 +412,8 @@ Test262Error.prototype.toString = function () {
   return "Test262Error: " + this.message;
 };
 
-Test262Error.thrower = (...args) => {
-  throw new Test262Error(...args);
+Test262Error.thrower = (message) => {
+  throw new Test262Error(message);
 };
 
 var $ERROR = Test262Error.thrower;
