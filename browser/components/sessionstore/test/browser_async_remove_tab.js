@@ -83,11 +83,8 @@ add_task(async function save_worthy_tabs_remote_final() {
 
   // Replace about:blank with a new remote page.
   let entryReplaced = promiseOnHistoryReplaceEntry(browser);
-  await SpecialPowers.spawn(browser, [], async () => {
-    let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
-    webNavigation.loadURI("https://example.com/", {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+  browser.loadURI("https://example.com/", {
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
   await entryReplaced;
 
@@ -141,9 +138,16 @@ add_task(async function dont_save_empty_tabs_final() {
 
   // Replace the current page with an about:blank entry.
   let entryReplaced = promiseOnHistoryReplaceEntry(browser);
-  await SpecialPowers.spawn(browser, [], async () => {
-    content.location.replace("about:blank");
+
+  // We're doing a cross origin navigation, so we can't reliably use a
+  // SpecialPowers task here. Instead we just emulate a location.replace() call.
+  browser.loadURI("about:blank", {
+    loadFlags:
+      Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT |
+      Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
+
   await entryReplaced;
 
   // Remove the tab before the update arrives.
