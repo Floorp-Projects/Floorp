@@ -241,6 +241,8 @@ class RaptorGatherer(FrameworkGatherer):
                         f"{description[key].replace('{subtest}', description['name'])}\n"
                     )
                 else:
+                    if "\n" in description[key]:
+                        description[key] = description[key].replace("\n", " ")
                     result += f"   * **{sub_title}**: {description[key]}\n"
 
             if self._task_list.get(title, []):
