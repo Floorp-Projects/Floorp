@@ -44,7 +44,6 @@ enum class SectionId {
 #ifdef ENABLE_WASM_EXCEPTIONS
   Event = 13,
 #endif
-  GcFeatureOptIn = 42  // Arbitrary, but fits in 7 bits
 };
 
 // WebAssembly type encodings are all single-byte negative SLEB128s, hence:
