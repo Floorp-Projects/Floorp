@@ -59,6 +59,8 @@ class nsAutoCauseReflowNotifier;
 class nsCanvasFrame;
 class nsCaret;
 class nsCSSFrameConstructor;
+class nsDisplayList;
+class nsDisplayListBuilder;
 class nsDocShell;
 class nsFrameSelection;
 class nsIDocShell;
@@ -87,9 +89,6 @@ class ZoomConstraintsClient;
 struct nsCallbackEventRequest;
 
 namespace mozilla {
-class nsDisplayList;
-class nsDisplayListBuilder;
-
 class AccessibleCaretEventHub;
 class EventStates;
 class GeckoMVMContext;
@@ -1697,6 +1696,7 @@ class PresShell final : public nsStubDocumentObserver,
 
   void SetIsActive(bool aIsActive);
   bool ShouldBeActive() const;
+
 
   /**
    * Refresh observer management.

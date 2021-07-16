@@ -28,14 +28,13 @@
 #include "Units.h"
 
 class gfxContext;
+class nsDisplayItem;
+class nsPaintedDisplayItem;
+class nsDisplayTransform;
 
 #undef None
 
 namespace mozilla {
-
-class nsDisplayItem;
-class nsPaintedDisplayItem;
-class nsDisplayTransform;
 
 struct ActiveScrolledRoot;
 

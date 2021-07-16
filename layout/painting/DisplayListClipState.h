@@ -14,10 +14,9 @@
 
 class nsIFrame;
 class nsIScrollableFrame;
+class nsDisplayListBuilder;
 
 namespace mozilla {
-
-class nsDisplayListBuilder;
 
 /**
  * All clip coordinates are in appunits relative to the reference frame

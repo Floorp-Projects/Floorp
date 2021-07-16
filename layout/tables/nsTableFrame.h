@@ -16,7 +16,6 @@
 #include "TableArea.h"
 
 struct BCPaintBorderAction;
-struct BCPropertyData;
 class nsTableCellFrame;
 class nsTableCellMap;
 class nsTableColFrame;
@@ -24,17 +23,17 @@ class nsTableRowGroupFrame;
 class nsTableRowFrame;
 class nsTableColGroupFrame;
 class nsITableLayoutStrategy;
-
 namespace mozilla {
-
 class LogicalMargin;
 class PresShell;
 class WritingMode;
 struct TableReflowInput;
-
 namespace layers {
 class StackingContextHelper;
 }
+}  // namespace mozilla
+
+struct BCPropertyData;
 
 class nsDisplayTableItem : public nsPaintedDisplayItem {
  public:
@@ -111,8 +110,6 @@ class nsDisplayTableBackgroundSet {
   nsPoint mToReferenceFrame;
   nsRect mDirtyRect;
 };
-
-}  // namespace mozilla
 
 /* ========================================================================== */
 

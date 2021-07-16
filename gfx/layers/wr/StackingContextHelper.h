@@ -13,9 +13,10 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "Units.h"
 
+class nsDisplayTransform;
+
 namespace mozilla {
 
-class nsDisplayTransform;
 struct ActiveScrolledRoot;
 
 namespace layers {

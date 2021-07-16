@@ -602,8 +602,6 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
   return NS_OK;
 }
 
-namespace mozilla {
-
 class nsDisplayMathMLSlash : public nsPaintedDisplayItem {
  public:
   nsDisplayMathMLSlash(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
@@ -652,8 +650,6 @@ void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
   RefPtr<Path> path = builder->Finish();
   aDrawTarget.Fill(path, color);
 }
-
-}  // namespace mozilla
 
 void nsMathMLmfracFrame::DisplaySlash(nsDisplayListBuilder* aBuilder,
                                       const nsRect& aRect, nscoord aThickness,

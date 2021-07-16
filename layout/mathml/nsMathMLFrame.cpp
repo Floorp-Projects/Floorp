@@ -257,7 +257,6 @@ void nsMathMLFrame::ParseNumericValue(const nsString& aString,
       CalcLength(aPresContext, aComputedStyle, cssValue, aFontSizeInflation);
 }
 
-namespace mozilla {
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
 class nsDisplayMathMLBoundingMetrics final : public nsDisplayItem {
  public:
@@ -326,8 +325,6 @@ void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
       mFrame->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor)));
   drawTarget->FillRect(rect, color);
 }
-
-}  // namespace mozilla
 
 void nsMathMLFrame::DisplayBar(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                                const nsRect& aRect,
