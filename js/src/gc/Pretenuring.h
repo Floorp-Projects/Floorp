@@ -62,8 +62,7 @@ class AllocSite {
   // Number of nursery allocations that survived. Used during collection.
   uint32_t nurseryTenuredCount = 0;
 
-  // The state is atomic as it can be read off-thread by warp transpilation.
-  mozilla::Atomic<State, mozilla::ReleaseAcquire> state_{State::Unknown};
+  State state_ = State::Unknown;
 
   // Number of times the script has been invalidated.
   uint32_t invalidationCount = 0;
