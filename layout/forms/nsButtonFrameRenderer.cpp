@@ -30,6 +30,12 @@ using namespace mozilla;
 using namespace mozilla::image;
 using namespace mozilla::layers;
 
+namespace mozilla {
+class nsDisplayButtonBoxShadowOuter;
+class nsDisplayButtonBorder;
+class nsDisplayButtonForeground;
+}  // namespace mozilla
+
 nsButtonFrameRenderer::nsButtonFrameRenderer() : mFrame(nullptr) {
   MOZ_COUNT_CTOR(nsButtonFrameRenderer);
 }
@@ -57,6 +63,165 @@ void nsButtonFrameRenderer::SetDisabled(bool aDisabled, bool aNotify) {
 bool nsButtonFrameRenderer::isDisabled() {
   return mFrame->GetContent()->AsElement()->IsDisabled();
 }
+
+nsresult nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
+                                              nsDisplayList* aBackground,
+                                              nsDisplayList* aForeground) {
+  if (!mFrame->StyleEffects()->mBoxShadow.IsEmpty()) {
+    aBackground->AppendNewToTop<nsDisplayButtonBoxShadowOuter>(aBuilder,
+                                                               GetFrame());
+  }
+
+  nsRect buttonRect =
+      mFrame->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(mFrame);
+
+  const AppendedBackgroundType result =
+      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+          aBuilder, mFrame, buttonRect, aBackground);
+  if (result == AppendedBackgroundType::None) {
+    aBuilder->BuildCompositorHitTestInfoIfNeeded(GetFrame(), aBackground);
+  }
+
+  aBackground->AppendNewToTop<nsDisplayButtonBorder>(aBuilder, GetFrame(),
+                                                     this);
+
+  // Only display focus rings if we actually have them. Since at most one
+  // button would normally display a focus ring, most buttons won't have them.
+  const auto* disp = mFrame->StyleDisplay();
+  nsPresContext* pc = mFrame->PresContext();
+  if (mInnerFocusStyle && mInnerFocusStyle->StyleBorder()->HasBorder() &&
+      mFrame->IsThemed(disp) &&
+      pc->Theme()->ThemeWantsButtonInnerFocusRing(
+          disp->EffectiveAppearance())) {
+    aForeground->AppendNewToTop<nsDisplayButtonForeground>(aBuilder, GetFrame(),
+                                                           this);
+  }
+  return NS_OK;
+}
+
+void nsButtonFrameRenderer::GetButtonInnerFocusRect(const nsRect& aRect,
+                                                    nsRect& aResult) {
+  aResult = aRect;
+  aResult.Deflate(mFrame->GetUsedBorderAndPadding());
+
+  if (mInnerFocusStyle) {
+    nsMargin innerFocusPadding(0, 0, 0, 0);
+    mInnerFocusStyle->StylePadding()->GetPadding(innerFocusPadding);
+
+    nsMargin framePadding = mFrame->GetUsedPadding();
+
+    innerFocusPadding.top = std::min(innerFocusPadding.top, framePadding.top);
+    innerFocusPadding.right =
+        std::min(innerFocusPadding.right, framePadding.right);
+    innerFocusPadding.bottom =
+        std::min(innerFocusPadding.bottom, framePadding.bottom);
+    innerFocusPadding.left =
+        std::min(innerFocusPadding.left, framePadding.left);
+
+    aResult.Inflate(innerFocusPadding);
+  }
+}
+
+ImgDrawResult nsButtonFrameRenderer::PaintInnerFocusBorder(
+    nsDisplayListBuilder* aBuilder, nsPresContext* aPresContext,
+    gfxContext& aRenderingContext, const nsRect& aDirtyRect,
+    const nsRect& aRect) {
+  // we draw the -moz-focus-inner border just inside the button's
+  // normal border and padding, to match Windows themes.
+
+  nsRect rect;
+
+  PaintBorderFlags flags = aBuilder->ShouldSyncDecodeImages()
+                               ? PaintBorderFlags::SyncDecodeImages
+                               : PaintBorderFlags();
+
+  ImgDrawResult result = ImgDrawResult::SUCCESS;
+
+  if (mInnerFocusStyle) {
+    GetButtonInnerFocusRect(aRect, rect);
+
+    result &=
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
+                                    aDirtyRect, rect, mInnerFocusStyle, flags);
+  }
+
+  return result;
+}
+
+Maybe<nsCSSBorderRenderer>
+nsButtonFrameRenderer::CreateInnerFocusBorderRenderer(
+    nsDisplayListBuilder* aBuilder, nsPresContext* aPresContext,
+    gfxContext* aRenderingContext, const nsRect& aDirtyRect,
+    const nsRect& aRect, bool* aBorderIsEmpty) {
+  if (mInnerFocusStyle) {
+    nsRect rect;
+    GetButtonInnerFocusRect(aRect, rect);
+
+    gfx::DrawTarget* dt =
+        aRenderingContext ? aRenderingContext->GetDrawTarget() : nullptr;
+    return nsCSSRendering::CreateBorderRenderer(
+        aPresContext, dt, mFrame, aDirtyRect, rect, mInnerFocusStyle,
+        aBorderIsEmpty);
+  }
+
+  return Nothing();
+}
+
+ImgDrawResult nsButtonFrameRenderer::PaintBorder(nsDisplayListBuilder* aBuilder,
+                                                 nsPresContext* aPresContext,
+                                                 gfxContext& aRenderingContext,
+                                                 const nsRect& aDirtyRect,
+                                                 const nsRect& aRect) {
+  // get the button rect this is inside the focus and outline rects
+  nsRect buttonRect = aRect;
+  ComputedStyle* context = mFrame->Style();
+
+  PaintBorderFlags borderFlags = aBuilder->ShouldSyncDecodeImages()
+                                     ? PaintBorderFlags::SyncDecodeImages
+                                     : PaintBorderFlags();
+
+  nsCSSRendering::PaintBoxShadowInner(aPresContext, aRenderingContext, mFrame,
+                                      buttonRect);
+
+  ImgDrawResult result =
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
+                                  aDirtyRect, buttonRect, context, borderFlags);
+
+  return result;
+}
+
+/**
+ * Call this when styles change
+ */
+void nsButtonFrameRenderer::ReResolveStyles(nsPresContext* aPresContext) {
+  // get all the styles
+  ServoStyleSet* styleSet = aPresContext->StyleSet();
+
+  // get styles assigned to -moz-focus-inner (ie dotted border on Windows)
+  mInnerFocusStyle = styleSet->ProbePseudoElementStyle(
+      *mFrame->GetContent()->AsElement(), PseudoStyleType::mozFocusInner,
+      mFrame->Style());
+}
+
+ComputedStyle* nsButtonFrameRenderer::GetComputedStyle(int32_t aIndex) const {
+  switch (aIndex) {
+    case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
+      return mInnerFocusStyle;
+    default:
+      return nullptr;
+  }
+}
+
+void nsButtonFrameRenderer::SetComputedStyle(int32_t aIndex,
+                                             ComputedStyle* aComputedStyle) {
+  switch (aIndex) {
+    case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
+      mInnerFocusStyle = aComputedStyle;
+      break;
+  }
+}
+
+namespace mozilla {
 
 class nsDisplayButtonBoxShadowOuter : public nsPaintedDisplayItem {
  public:
@@ -108,11 +273,7 @@ bool nsDisplayButtonBoxShadowOuter::CanBuildWebRenderDisplayItems() {
 
   // We don't support native themed things yet like box shadows around
   // input buttons.
-  if (nativeTheme) {
-    return false;
-  }
-
-  return true;
+  return !nativeTheme;
 }
 
 bool nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
@@ -370,159 +531,4 @@ bool nsDisplayButtonForeground::CreateWebRenderCommands(
   return true;
 }
 
-nsresult nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
-                                              nsDisplayList* aBackground,
-                                              nsDisplayList* aForeground) {
-  if (!mFrame->StyleEffects()->mBoxShadow.IsEmpty()) {
-    aBackground->AppendNewToTop<nsDisplayButtonBoxShadowOuter>(aBuilder,
-                                                               GetFrame());
-  }
-
-  nsRect buttonRect =
-      mFrame->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(mFrame);
-
-  const AppendedBackgroundType result =
-      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-          aBuilder, mFrame, buttonRect, aBackground);
-  if (result == AppendedBackgroundType::None) {
-    aBuilder->BuildCompositorHitTestInfoIfNeeded(GetFrame(), aBackground);
-  }
-
-  aBackground->AppendNewToTop<nsDisplayButtonBorder>(aBuilder, GetFrame(),
-                                                     this);
-
-  // Only display focus rings if we actually have them. Since at most one
-  // button would normally display a focus ring, most buttons won't have them.
-  const auto* disp = mFrame->StyleDisplay();
-  nsPresContext* pc = mFrame->PresContext();
-  if (mInnerFocusStyle && mInnerFocusStyle->StyleBorder()->HasBorder() &&
-      mFrame->IsThemed(disp) &&
-      pc->Theme()->ThemeWantsButtonInnerFocusRing(
-          disp->EffectiveAppearance())) {
-    aForeground->AppendNewToTop<nsDisplayButtonForeground>(aBuilder, GetFrame(),
-                                                           this);
-  }
-  return NS_OK;
-}
-
-void nsButtonFrameRenderer::GetButtonInnerFocusRect(const nsRect& aRect,
-                                                    nsRect& aResult) {
-  aResult = aRect;
-  aResult.Deflate(mFrame->GetUsedBorderAndPadding());
-
-  if (mInnerFocusStyle) {
-    nsMargin innerFocusPadding(0, 0, 0, 0);
-    mInnerFocusStyle->StylePadding()->GetPadding(innerFocusPadding);
-
-    nsMargin framePadding = mFrame->GetUsedPadding();
-
-    innerFocusPadding.top = std::min(innerFocusPadding.top, framePadding.top);
-    innerFocusPadding.right =
-        std::min(innerFocusPadding.right, framePadding.right);
-    innerFocusPadding.bottom =
-        std::min(innerFocusPadding.bottom, framePadding.bottom);
-    innerFocusPadding.left =
-        std::min(innerFocusPadding.left, framePadding.left);
-
-    aResult.Inflate(innerFocusPadding);
-  }
-}
-
-ImgDrawResult nsButtonFrameRenderer::PaintInnerFocusBorder(
-    nsDisplayListBuilder* aBuilder, nsPresContext* aPresContext,
-    gfxContext& aRenderingContext, const nsRect& aDirtyRect,
-    const nsRect& aRect) {
-  // we draw the -moz-focus-inner border just inside the button's
-  // normal border and padding, to match Windows themes.
-
-  nsRect rect;
-
-  PaintBorderFlags flags = aBuilder->ShouldSyncDecodeImages()
-                               ? PaintBorderFlags::SyncDecodeImages
-                               : PaintBorderFlags();
-
-  ImgDrawResult result = ImgDrawResult::SUCCESS;
-
-  if (mInnerFocusStyle) {
-    GetButtonInnerFocusRect(aRect, rect);
-
-    result &=
-        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
-                                    aDirtyRect, rect, mInnerFocusStyle, flags);
-  }
-
-  return result;
-}
-
-Maybe<nsCSSBorderRenderer>
-nsButtonFrameRenderer::CreateInnerFocusBorderRenderer(
-    nsDisplayListBuilder* aBuilder, nsPresContext* aPresContext,
-    gfxContext* aRenderingContext, const nsRect& aDirtyRect,
-    const nsRect& aRect, bool* aBorderIsEmpty) {
-  if (mInnerFocusStyle) {
-    nsRect rect;
-    GetButtonInnerFocusRect(aRect, rect);
-
-    gfx::DrawTarget* dt =
-        aRenderingContext ? aRenderingContext->GetDrawTarget() : nullptr;
-    return nsCSSRendering::CreateBorderRenderer(
-        aPresContext, dt, mFrame, aDirtyRect, rect, mInnerFocusStyle,
-        aBorderIsEmpty);
-  }
-
-  return Nothing();
-}
-
-ImgDrawResult nsButtonFrameRenderer::PaintBorder(nsDisplayListBuilder* aBuilder,
-                                                 nsPresContext* aPresContext,
-                                                 gfxContext& aRenderingContext,
-                                                 const nsRect& aDirtyRect,
-                                                 const nsRect& aRect) {
-  // get the button rect this is inside the focus and outline rects
-  nsRect buttonRect = aRect;
-  ComputedStyle* context = mFrame->Style();
-
-  PaintBorderFlags borderFlags = aBuilder->ShouldSyncDecodeImages()
-                                     ? PaintBorderFlags::SyncDecodeImages
-                                     : PaintBorderFlags();
-
-  nsCSSRendering::PaintBoxShadowInner(aPresContext, aRenderingContext, mFrame,
-                                      buttonRect);
-
-  ImgDrawResult result =
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
-                                  aDirtyRect, buttonRect, context, borderFlags);
-
-  return result;
-}
-
-/**
- * Call this when styles change
- */
-void nsButtonFrameRenderer::ReResolveStyles(nsPresContext* aPresContext) {
-  // get all the styles
-  ServoStyleSet* styleSet = aPresContext->StyleSet();
-
-  // get styles assigned to -moz-focus-inner (ie dotted border on Windows)
-  mInnerFocusStyle = styleSet->ProbePseudoElementStyle(
-      *mFrame->GetContent()->AsElement(), PseudoStyleType::mozFocusInner,
-      mFrame->Style());
-}
-
-ComputedStyle* nsButtonFrameRenderer::GetComputedStyle(int32_t aIndex) const {
-  switch (aIndex) {
-    case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
-      return mInnerFocusStyle;
-    default:
-      return nullptr;
-  }
-}
-
-void nsButtonFrameRenderer::SetComputedStyle(int32_t aIndex,
-                                             ComputedStyle* aComputedStyle) {
-  switch (aIndex) {
-    case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
-      mInnerFocusStyle = aComputedStyle;
-      break;
-  }
-}
+}  // namespace mozilla

@@ -28,7 +28,64 @@ nsContainerFrame* NS_NewSelectsAreaFrame(PresShell* aShell,
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSelectsAreaFrame)
 
-//---------------------------------------------------------
+static nsListControlFrame* GetEnclosingListFrame(nsIFrame* aSelectsAreaFrame) {
+  nsIFrame* frame = aSelectsAreaFrame->GetParent();
+  while (frame) {
+    if (frame->IsListControlFrame())
+      return static_cast<nsListControlFrame*>(frame);
+    frame = frame->GetParent();
+  }
+  return nullptr;
+}
+
+void nsSelectsAreaFrame::Reflow(nsPresContext* aPresContext,
+                                ReflowOutput& aDesiredSize,
+                                const ReflowInput& aReflowInput,
+                                nsReflowStatus& aStatus) {
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
+  nsListControlFrame* list = GetEnclosingListFrame(this);
+  NS_ASSERTION(list,
+               "Must have an nsListControlFrame!  Frame constructor is "
+               "broken");
+
+  bool isInDropdownMode = list->IsInDropDownMode();
+
+  // See similar logic in nsListControlFrame::Reflow and
+  // nsListControlFrame::ReflowAsDropdown.  We need to match it here.
+  WritingMode wm = aReflowInput.GetWritingMode();
+  nscoord oldBSize;
+  if (isInDropdownMode) {
+    // Store the block size now in case it changes during
+    // nsBlockFrame::Reflow for some odd reason.
+    if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
+      oldBSize = BSize(wm);
+    } else {
+      oldBSize = NS_UNCONSTRAINEDSIZE;
+    }
+  }
+
+  nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
+
+  // Check whether we need to suppress scrollbar updates.  We want to do
+  // that if we're in a possible first pass and our block size of a row
+  // has changed.
+  if (list->MightNeedSecondPass()) {
+    nscoord newBSizeOfARow = list->CalcBSizeOfARow();
+    // We'll need a second pass if our block size of a row changed.  For
+    // comboboxes, we'll also need it if our block size changed.  If
+    // we're going to do a second pass, suppress scrollbar updates for
+    // this pass.
+    if (newBSizeOfARow != mBSizeOfARow ||
+        (isInDropdownMode &&
+         (oldBSize != aDesiredSize.BSize(wm) || oldBSize != BSize(wm)))) {
+      mBSizeOfARow = newBSizeOfARow;
+      list->SetSuppressScrollbarUpdate(true);
+    }
+  }
+}
+
+namespace mozilla {
 /**
  * This wrapper class lets us redirect mouse hits from the child frame of
  * an option element to the element's own frame.
@@ -94,16 +151,6 @@ class nsOptionEventGrabberWrapper : public nsDisplayItemWrapper {
   }
 };
 
-static nsListControlFrame* GetEnclosingListFrame(nsIFrame* aSelectsAreaFrame) {
-  nsIFrame* frame = aSelectsAreaFrame->GetParent();
-  while (frame) {
-    if (frame->IsListControlFrame())
-      return static_cast<nsListControlFrame*>(frame);
-    frame = frame->GetParent();
-  }
-  return nullptr;
-}
-
 class nsDisplayListFocus : public nsPaintedDisplayItem {
  public:
   nsDisplayListFocus(nsDisplayListBuilder* aBuilder, nsSelectsAreaFrame* aFrame)
@@ -131,6 +178,8 @@ class nsDisplayListFocus : public nsPaintedDisplayItem {
   NS_DISPLAY_DECL_NAME("ListFocus", TYPE_LIST_FOCUS)
 };
 
+}  // namespace mozilla
+
 void nsSelectsAreaFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                           const nsDisplayListSet& aLists) {
   if (!aBuilder->IsForEventDelivery()) {
@@ -155,52 +204,5 @@ void nsSelectsAreaFrame::BuildDisplayListInternal(
     // because then the list's scrollframe won't clip it (the scrollframe
     // only clips contained descendants).
     aLists.Outlines()->AppendNewToTop<nsDisplayListFocus>(aBuilder, this);
-  }
-}
-
-void nsSelectsAreaFrame::Reflow(nsPresContext* aPresContext,
-                                ReflowOutput& aDesiredSize,
-                                const ReflowInput& aReflowInput,
-                                nsReflowStatus& aStatus) {
-  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
-
-  nsListControlFrame* list = GetEnclosingListFrame(this);
-  NS_ASSERTION(list,
-               "Must have an nsListControlFrame!  Frame constructor is "
-               "broken");
-
-  bool isInDropdownMode = list->IsInDropDownMode();
-
-  // See similar logic in nsListControlFrame::Reflow and
-  // nsListControlFrame::ReflowAsDropdown.  We need to match it here.
-  WritingMode wm = aReflowInput.GetWritingMode();
-  nscoord oldBSize;
-  if (isInDropdownMode) {
-    // Store the block size now in case it changes during
-    // nsBlockFrame::Reflow for some odd reason.
-    if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
-      oldBSize = BSize(wm);
-    } else {
-      oldBSize = NS_UNCONSTRAINEDSIZE;
-    }
-  }
-
-  nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
-
-  // Check whether we need to suppress scrollbar updates.  We want to do
-  // that if we're in a possible first pass and our block size of a row
-  // has changed.
-  if (list->MightNeedSecondPass()) {
-    nscoord newBSizeOfARow = list->CalcBSizeOfARow();
-    // We'll need a second pass if our block size of a row changed.  For
-    // comboboxes, we'll also need it if our block size changed.  If
-    // we're going to do a second pass, suppress scrollbar updates for
-    // this pass.
-    if (newBSizeOfARow != mBSizeOfARow ||
-        (isInDropdownMode &&
-         (oldBSize != aDesiredSize.BSize(wm) || oldBSize != BSize(wm)))) {
-      mBSizeOfARow = newBSizeOfARow;
-      list->SetSuppressScrollbarUpdate(true);
-    }
   }
 }

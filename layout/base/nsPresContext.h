@@ -58,8 +58,6 @@ class gfxUserFontSet;
 class gfxTextPerfMetrics;
 class nsCSSFontFeatureValuesRule;
 class nsCSSFrameConstructor;
-class nsDisplayList;
-class nsDisplayListBuilder;
 class nsTransitionManager;
 class nsAnimationManager;
 class nsRefreshDriver;

@@ -8,7 +8,12 @@
 #include "mozilla/gfx/Polygon.h"
 
 namespace mozilla {
+
+class nsDisplayTransform;
+
 namespace layers {
+
+class Layer;
 
 template <typename T>
 void BSPTree<T>::BuildDrawOrder(BSPTreeNode<T>* aNode,

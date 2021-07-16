@@ -113,10 +113,6 @@ class nsISelectionController;
 class nsBoxLayoutState;
 class nsBoxLayout;
 class nsILineIterator;
-class nsDisplayItem;
-class nsDisplayListBuilder;
-class nsDisplayListSet;
-class nsDisplayList;
 class gfxSkipChars;
 class gfxSkipCharsIterator;
 class gfxContext;
@@ -136,6 +132,12 @@ namespace mozilla {
 
 enum class PseudoStyleType : uint8_t;
 enum class TableSelectionMode : uint32_t;
+
+class nsDisplayItem;
+class nsDisplayList;
+class nsDisplayListBuilder;
+class nsDisplayListSet;
+
 class EventStates;
 class ServoRestyleState;
 class DisplayItemData;
@@ -618,6 +620,11 @@ class nsIFrame : public nsQueryFrame {
   using ReflowOutput = mozilla::ReflowOutput;
   using Visibility = mozilla::Visibility;
   using LengthPercentage = mozilla::LengthPercentage;
+
+  using nsDisplayItem = mozilla::nsDisplayItem;
+  using nsDisplayList = mozilla::nsDisplayList;
+  using nsDisplayListSet = mozilla::nsDisplayListSet;
+  using nsDisplayListBuilder = mozilla::nsDisplayListBuilder;
 
   typedef mozilla::ComputedStyle ComputedStyle;
   typedef mozilla::FrameProperties FrameProperties;

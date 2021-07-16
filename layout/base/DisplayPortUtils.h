@@ -16,11 +16,11 @@
 
 class nsIContent;
 class nsIFrame;
-class nsDisplayListBuilder;
 class nsPresContext;
 
 namespace mozilla {
 
+class nsDisplayListBuilder;
 class PresShell;
 
 // For GetDisplayPort
