@@ -726,7 +726,8 @@ template <typename ObjT, typename RawbufT>
 static bool CreateSpecificWasmBuffer32(
     JSContext* cx, const wasm::MemoryDesc& memory,
     MutableHandleArrayBufferObjectMaybeShared maybeSharedObject) {
-  bool useHugeMemory = wasm::IsHugeMemoryEnabled();
+  bool useHugeMemory =
+      memory.indexType() == IndexType::I32 && wasm::IsHugeMemoryEnabled();
   Pages initialPages = memory.initialPages();
   Maybe<Pages> maxPages = memory.maximumPages();
 
