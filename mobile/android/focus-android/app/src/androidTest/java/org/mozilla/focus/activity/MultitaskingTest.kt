@@ -10,6 +10,7 @@ import mozilla.components.browser.state.selector.privateTabs
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -53,6 +54,7 @@ class MultitaskingTest {
         webServer.shutdown()
     }
 
+    @Ignore("Failing on Firebase, see: https://github.com/mozilla-mobile/focus-android/issues/4996")
     @Test
     fun testVisitingMultipleSites() {
         val firstPageUrl = webServer.url("tab1.html").toString()
