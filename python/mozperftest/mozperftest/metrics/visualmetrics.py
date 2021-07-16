@@ -86,12 +86,6 @@ class VisualMetrics(Layer):
 
         self.info(f"Treated {treated} videos.")
 
-        # XXX Provide a single interface for obtaining the binary used.
-        if self.get_arg("android"):
-            binary_path = self.get_arg("android-app-name")
-        else:
-            binary_path = self.get_arg("binary") or self.mach_cmd.get_binary_path()
-
         if len(self.metrics) > 0:
             metadata.add_result(
                 {
@@ -99,7 +93,6 @@ class VisualMetrics(Layer):
                     "framework": {"name": "mozperftest"},
                     "transformer": "mozperftest.metrics.visualmetrics:VisualData",
                     "results": list(self.metrics.values()),
-                    "binary": binary_path,
                 }
             )
 
@@ -188,7 +181,9 @@ class VisualMetrics(Layer):
                     continue
 
                 for name, value in output.items():
-                    if name.endswith("Progress"):
+                    if name.endswith(
+                        "Progress",
+                    ):
                         self._expand_visual_progress(index, name, value, **extra)
                     else:
                         self.append_metrics(index, name, value, **extra)

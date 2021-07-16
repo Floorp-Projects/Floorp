@@ -49,19 +49,12 @@ class AndroidLog(Layer):
             "transform-subtest-name": self.get_arg("subtest-name"),
         }
 
-        # XXX Provide a single interface for obtaining the binary used.
-        if self.get_arg("android"):
-            binary_path = self.get_arg("android-app-name")
-        else:
-            binary_path = self.get_arg("binary") or self.mach_cmd.get_binary_path()
-
         metadata.add_result(
             {
                 "results": str(self._get_logcat()),
                 "transformer": "LogCatTimeTransformer",
                 "transformer-options": options,
                 "name": "LogCat",
-                "binary": binary_path,
             }
         )
 
