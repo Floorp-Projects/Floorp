@@ -116,10 +116,12 @@ class Documentation(MachCommandBase):
     ):
 
         # TODO: Bug 1704891 - move the ESLint setup tools to a shared place.
-        sys.path.append(mozpath.join(self.topsrcdir, "tools", "lint", "eslint"))
+        sys.path.append(
+            mozpath.join(command_context.topsrcdir, "tools", "lint", "eslint")
+        )
         import setup_helper
 
-        setup_helper.set_project_root(self.topsrcdir)
+        setup_helper.set_project_root(command_context.topsrcdir)
 
         if not setup_helper.check_node_executables_valid():
             return 1
@@ -129,15 +131,15 @@ class Documentation(MachCommandBase):
         # Set the path so that Sphinx can find jsdoc, unfortunately there isn't
         # a way to pass this to Sphinx itself at the moment.
         os.environ["PATH"] = (
-            mozpath.join(self.topsrcdir, "node_modules", ".bin")
+            mozpath.join(command_context.topsrcdir, "node_modules", ".bin")
             + os.pathsep
             + self._node_path()
             + os.pathsep
             + os.environ["PATH"]
         )
 
-        self.activate_virtualenv()
-        self.virtualenv_manager.install_pip_requirements(
+        command_context.activate_virtualenv()
+        command_context.virtualenv_manager.install_pip_requirements(
             os.path.join(here, "requirements.txt")
         )
 
@@ -147,10 +149,10 @@ class Documentation(MachCommandBase):
 
         unique_id = "%s/%s" % (self.project(), str(uuid.uuid1()))
 
-        outdir = outdir or os.path.join(self.topobjdir, "docs")
+        outdir = outdir or os.path.join(command_context.topobjdir, "docs")
         savedir = os.path.join(outdir, fmt)
 
-        path = path or self.topsrcdir
+        path = path or command_context.topsrcdir
         path = os.path.normpath(os.path.abspath(path))
 
         docdir = self._find_doc_dir(path)
@@ -393,7 +395,12 @@ class Documentation(MachCommandBase):
             for handler in Registrar.command_handlers.values()
             if handler.metrics_path is not None
         ]
-        args.extend([os.path.join(self.topsrcdir, path) for path in set(metrics_paths)])
+        args.extend(
+            [
+                os.path.join(command_context.topsrcdir, path)
+                for path in set(metrics_paths)
+            ]
+        )
         subprocess.check_call(args)
 
 

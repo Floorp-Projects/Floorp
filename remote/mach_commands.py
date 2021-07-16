@@ -54,15 +54,15 @@ def setup():
 
 @CommandProvider
 class RemoteCommands(MachCommandBase):
-    def remotedir(self):
-        return os.path.join(self.topsrcdir, "remote")
+    def remotedir(self, command_context):
+        return os.path.join(command_context.topsrcdir, "remote")
 
     @Command(
         "remote", category="misc", description="Remote protocol related operations."
     )
     def remote(self, command_context):
         """The remote subcommands all relate to the remote protocol."""
-        self._sub_mach(["help", "remote"])
+        command_context._sub_mach(["help", "remote"])
         return 1
 
     @SubCommand(
@@ -88,11 +88,14 @@ class RemoteCommands(MachCommandBase):
         help="Do not install the just-pulled Puppeteer package,",
     )
     def vendor_puppeteer(self, command_context, repository, commitish, install):
-        puppeteer_dir = os.path.join(self.remotedir(), "test", "puppeteer")
+        puppeteer_dir = os.path.join(
+            self.remotedir(command_context), "test", "puppeteer"
+        )
 
         # Preserve our custom mocha reporter
         shutil.move(
-            os.path.join(puppeteer_dir, "json-mocha-reporter.js"), self.remotedir()
+            os.path.join(puppeteer_dir, "json-mocha-reporter.js"),
+            self.remotedir(command_context),
         )
         shutil.rmtree(puppeteer_dir, ignore_errors=True)
         os.makedirs(puppeteer_dir)
@@ -123,7 +126,8 @@ class RemoteCommands(MachCommandBase):
                 shutil.rmtree(dir_path)
 
         shutil.move(
-            os.path.join(self.remotedir(), "json-mocha-reporter.js"), puppeteer_dir
+            os.path.join(self.remotedir(command_context), "json-mocha-reporter.js"),
+            puppeteer_dir,
         )
 
         import yaml
@@ -153,7 +157,11 @@ class RemoteCommands(MachCommandBase):
 
         if install:
             env = {"PUPPETEER_SKIP_DOWNLOAD": "1"}
-            npm("install", cwd=os.path.join(self.topsrcdir, puppeteer_dir), env=env)
+            npm(
+                "install",
+                cwd=os.path.join(command_context.topsrcdir, puppeteer_dir),
+                env=env,
+            )
 
 
 def git(*args, **kwargs):
@@ -602,8 +610,6 @@ class PuppeteerTest(MachCommandBase):
         **kwargs
     ):
 
-        self.ci = ci
-
         logger = mozlog.commandline.setup_logging(
             "puppeteer-test", kwargs, {"mach": sys.stdout}
         )
@@ -648,7 +654,7 @@ class PuppeteerTest(MachCommandBase):
         if verbosity > 2:
             prefs["remote.log.truncate"] = False
 
-        self.install_puppeteer(product)
+        self.install_puppeteer(command_context, product, ci)
 
         params = {
             "binary": binary,
@@ -660,7 +666,7 @@ class PuppeteerTest(MachCommandBase):
             "write_results": write_results,
             "subset": subset,
         }
-        puppeteer = self._spawn(PuppeteerRunner)
+        puppeteer = command_context._spawn(PuppeteerRunner)
         try:
             return puppeteer.run_test(logger, *tests, **params)
         except BinaryNotFoundException as e:
@@ -670,12 +676,12 @@ class PuppeteerTest(MachCommandBase):
         except Exception as e:
             exit(EX_SOFTWARE, e)
 
-    def install_puppeteer(self, product):
+    def install_puppeteer(self, command_context, product, ci):
         setup()
         env = {}
         from mozversioncontrol import get_repository_object
 
-        repo = get_repository_object(self.topsrcdir)
+        repo = get_repository_object(command_context.topsrcdir)
         puppeteer_dir = os.path.join("remote", "test", "puppeteer")
         changed_files = False
         for f in repo.get_changed_files():
@@ -685,13 +691,15 @@ class PuppeteerTest(MachCommandBase):
 
         if product != "chrome":
             env["PUPPETEER_SKIP_DOWNLOAD"] = "1"
-        lib_dir = os.path.join(self.topsrcdir, puppeteer_dir, "lib")
+        lib_dir = os.path.join(command_context.topsrcdir, puppeteer_dir, "lib")
         if changed_files and os.path.isdir(lib_dir):
             # clobber lib to force `tsc compile` step
             shutil.rmtree(lib_dir)
 
-        command = "ci" if self.ci else "install"
-        npm(command, cwd=os.path.join(self.topsrcdir, puppeteer_dir), env=env)
+        command = "ci" if ci else "install"
+        npm(
+            command, cwd=os.path.join(command_context.topsrcdir, puppeteer_dir), env=env
+        )
 
 
 def exit(code, error=None):

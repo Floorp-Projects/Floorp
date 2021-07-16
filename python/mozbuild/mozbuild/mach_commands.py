@@ -85,21 +85,21 @@ class Watch(MachCommandBase):
     )
     def watch(self, command_context, verbose=False):
         """Watch and re-build (parts of) the source tree."""
-        if not conditions.is_artifact_build(self):
+        if not conditions.is_artifact_build(command_context):
             print(
                 "WARNING: mach watch only rebuilds the `mach build faster` parts of the tree!"
             )
 
-        if not self.substs.get("WATCHMAN", None):
+        if not command_context.substs.get("WATCHMAN", None):
             print(
                 "mach watch requires watchman to be installed and found at configure time. See "
                 "https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Incremental_builds_with_filesystem_watching"  # noqa
             )
             return 1
 
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
         try:
-            self.virtualenv_manager.install_pip_package("pywatchman==1.4.1")
+            command_context.virtualenv_manager.install_pip_package("pywatchman==1.4.1")
         except Exception:
             print(
                 "Could not install pywatchman from pip. See "
@@ -109,7 +109,7 @@ class Watch(MachCommandBase):
 
         from mozbuild.faster_daemon import Daemon
 
-        daemon = Daemon(self.config_environment)
+        daemon = Daemon(command_context.config_environment)
 
         try:
             return daemon.watch()
@@ -183,7 +183,7 @@ class CargoProvider(MachCommandBase):
                 "force-cargo-host-program-check",
             ]
 
-            ret = self._run_make(
+            ret = command_context._run_make(
                 srcdir=False,
                 directory=root,
                 ensure_exit_code=0,
@@ -220,11 +220,14 @@ class Doctor(MachCommandBase):
         help="Print verbose information found by checks.",
     )
     def doctor(self, command_context, fix=False, verbose=False):
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
         from mozbuild.doctor import run_doctor
 
         return run_doctor(
-            topsrcdir=self.topsrcdir, topobjdir=self.topobjdir, fix=fix, verbose=verbose
+            topsrcdir=command_context.topsrcdir,
+            topobjdir=command_context.topobjdir,
+            fix=fix,
+            verbose=verbose,
         )
 
 
@@ -282,16 +285,18 @@ class Clobber(MachCommandBase):
             from mozbuild.controller.clobber import Clobberer
 
             try:
-                substs = self.substs
+                substs = command_context.substs
             except BuildEnvironmentNotFoundException:
                 substs = {}
 
             try:
-                Clobberer(self.topsrcdir, self.topobjdir, substs).remove_objdir(full)
+                Clobberer(
+                    command_context.topsrcdir, command_context.topobjdir, substs
+                ).remove_objdir(full)
             except OSError as e:
                 if sys.platform.startswith("win"):
                     if isinstance(e, WindowsError) and e.winerror in (5, 32):
-                        self.log(
+                        command_context.log(
                             logging.ERROR,
                             "file_access_error",
                             {"error": e},
@@ -302,7 +307,7 @@ class Clobber(MachCommandBase):
                 raise
 
         if "python" in what:
-            if conditions.is_hg(self):
+            if conditions.is_hg(command_context):
                 cmd = [
                     "hg",
                     "--config",
@@ -314,11 +319,11 @@ class Clobber(MachCommandBase):
                     "-I",
                     "glob:**/__pycache__",
                 ]
-            elif conditions.is_git(self):
+            elif conditions.is_git(command_context):
                 cmd = ["git", "clean", "-d", "-f", "-x", "*.py[cdo]", "*/__pycache__/*"]
             else:
                 cmd = ["find", ".", "-type", "f", "-name", "*.py[cdo]", "-delete"]
-                subprocess.call(cmd, cwd=self.topsrcdir)
+                subprocess.call(cmd, cwd=command_context.topsrcdir)
                 cmd = [
                     "find",
                     ".",
@@ -329,13 +334,16 @@ class Clobber(MachCommandBase):
                     "-empty",
                     "-delete",
                 ]
-            ret = subprocess.call(cmd, cwd=self.topsrcdir)
+            ret = subprocess.call(cmd, cwd=command_context.topsrcdir)
             shutil.rmtree(
-                mozpath.join(self.topobjdir, "_virtualenvs"), ignore_errors=True
+                mozpath.join(command_context.topobjdir, "_virtualenvs"),
+                ignore_errors=True,
             )
 
         if "gradle" in what:
-            shutil.rmtree(mozpath.join(self.topobjdir, "gradle"), ignore_errors=True)
+            shutil.rmtree(
+                mozpath.join(command_context.topobjdir, "gradle"), ignore_errors=True
+            )
 
         return ret
 
@@ -356,7 +364,7 @@ class Logs(MachCommandBase):
     )
     def show_log(self, command_context, log_file=None):
         if not log_file:
-            path = self._get_state_filename("last_log.json")
+            path = command_context._get_state_filename("last_log.json")
             log_file = open(path, "rb")
 
         if os.isatty(sys.stdout.fileno()):
@@ -378,21 +386,23 @@ class Logs(MachCommandBase):
             created, action, params = json.loads(line)
             if not startTime:
                 startTime = created
-                self.log_manager.terminal_handler.formatter.start_time = created
+                command_context.log_manager.terminal_handler.formatter.start_time = (
+                    created
+                )
             if "line" in params:
                 record = logging.makeLogRecord(
                     {
                         "created": created,
-                        "name": self._logger.name,
+                        "name": command_context._logger.name,
                         "levelno": logging.INFO,
                         "msg": "{line}",
                         "params": params,
                         "action": action,
                     }
                 )
-                self._logger.handle(record)
+                command_context._logger.handle(record)
 
-        if self.log_manager.terminal:
+        if command_context.log_manager.terminal:
             # Close less's input so that it knows that we're done sending data.
             less.stdin.close()
             # Since the less's input file descriptor is now also the stdout
@@ -408,13 +418,13 @@ class Logs(MachCommandBase):
 class Warnings(MachCommandBase):
     """Provide commands for inspecting warnings."""
 
-    def database_path(self):
-        return self._get_state_filename("warnings.json")
+    def database_path(self, command_context):
+        return command_context._get_state_filename("warnings.json")
 
-    def database(self):
+    def database(self, command_context):
         from mozbuild.compilation.warnings import WarningsDatabase
 
-        path = self.database_path()
+        path = self.database_path(command_context)
 
         database = WarningsDatabase()
 
@@ -442,10 +452,10 @@ class Warnings(MachCommandBase):
         "recent report.",
     )
     def summary(self, command_context, directory=None, report=None):
-        database = self.database()
+        database = self.database(command_context)
 
         if directory:
-            dirpath = self.join_ensure_dir(self.topsrcdir, directory)
+            dirpath = self.join_ensure_dir(command_context.topsrcdir, directory)
             if not dirpath:
                 return 1
         else:
@@ -483,11 +493,11 @@ class Warnings(MachCommandBase):
         "recent report.",
     )
     def list(self, command_context, directory=None, flags=None, report=None):
-        database = self.database()
+        database = self.database(command_context)
 
         by_name = sorted(database.warnings)
 
-        topsrcdir = mozpath.normpath(self.topsrcdir)
+        topsrcdir = mozpath.normpath(command_context.topsrcdir)
 
         if directory:
             directory = mozpath.normsep(directory)
@@ -664,29 +674,29 @@ class GTestCommands(MachCommandBase):
 
         # We lazy build gtest because it's slow to link
         try:
-            self.config_environment
+            command_context.config_environment
         except Exception:
             print("Please run |./mach build| before |./mach gtest|.")
             return 1
 
-        res = self._mach_context.commands.dispatch(
-            "build", self._mach_context, what=["recurse_gtest"]
+        res = command_context._mach_context.commands.dispatch(
+            "build", command_context._mach_context, what=["recurse_gtest"]
         )
         if res:
             print("Could not build xul-gtest")
             return res
 
-        if self.substs.get("MOZ_WIDGET_TOOLKIT") == "cocoa":
-            self._run_make(
+        if command_context.substs.get("MOZ_WIDGET_TOOLKIT") == "cocoa":
+            command_context._run_make(
                 directory="browser/app", target="repackage", ensure_exit_code=True
             )
 
-        cwd = os.path.join(self.topobjdir, "_tests", "gtest")
+        cwd = os.path.join(command_context.topobjdir, "_tests", "gtest")
 
         if not os.path.isdir(cwd):
             os.makedirs(cwd)
 
-        if conditions.is_android(self):
+        if conditions.is_android(command_context):
             if jobs != 1:
                 print("--jobs is not supported on Android and will be ignored")
             if debug or debugger or debugger_args:
@@ -696,6 +706,7 @@ class GTestCommands(MachCommandBase):
             from mozrunner.devices.android_device import InstallIntent
 
             return self.android_gtest(
+                command_context,
                 cwd,
                 shuffle,
                 gtest_filter,
@@ -718,10 +729,13 @@ class GTestCommands(MachCommandBase):
         ):
             print("One or more Android-only options will be ignored")
 
-        app_path = self.get_binary_path("app")
+        app_path = command_context.get_binary_path("app")
         args = [app_path, "-unittest", "--gtest_death_test_style=threadsafe"]
 
-        if sys.platform.startswith("win") and "MOZ_LAUNCHER_PROCESS" in self.defines:
+        if (
+            sys.platform.startswith("win")
+            and "MOZ_LAUNCHER_PROCESS" in command_context.defines
+        ):
             args.append("--wait-for-browser")
 
         if list_tests:
@@ -740,7 +754,9 @@ class GTestCommands(MachCommandBase):
         # Note: we must normalize the path here so that gtest on Windows sees
         # a MOZ_GMP_PATH which has only Windows dir seperators, because
         # nsIFile cannot open the paths with non-Windows dir seperators.
-        xre_path = os.path.join(os.path.normpath(self.topobjdir), "dist", "bin")
+        xre_path = os.path.join(
+            os.path.normpath(command_context.topobjdir), "dist", "bin"
+        )
         gtest_env["MOZ_XRE_DIR"] = xre_path
         gtest_env["MOZ_GMP_PATH"] = os.pathsep.join(
             os.path.join(xre_path, p, "1.0") for p in ("gmp-fake", "gmp-fakeopenh264")
@@ -761,7 +777,7 @@ class GTestCommands(MachCommandBase):
             gtest_env["MOZ_WEBRENDER"] = "0"
 
         if jobs == 1:
-            return self.run_process(
+            return command_context.run_process(
                 args=args,
                 append_env=gtest_env,
                 cwd=cwd,
@@ -775,7 +791,7 @@ class GTestCommands(MachCommandBase):
         def handle_line(job_id, line):
             # Prepend the jobId
             line = "[%d] %s" % (job_id + 1, line.strip())
-            self.log(logging.INFO, "GTest", {"line": line}, "{line}")
+            command_context.log(logging.INFO, "GTest", {"line": line}, "{line}")
 
         gtest_env["GTEST_TOTAL_SHARDS"] = str(jobs)
         processes = {}
@@ -805,6 +821,7 @@ class GTestCommands(MachCommandBase):
 
     def android_gtest(
         self,
+        command_context,
         test_dir,
         shuffle,
         gtest_filter,
@@ -819,22 +836,22 @@ class GTestCommands(MachCommandBase):
         # setup logging for mozrunner
         from mozlog.commandline import setup_logging
 
-        format_args = {"level": self._mach_context.settings["test"]["level"]}
-        default_format = self._mach_context.settings["test"]["format"]
+        format_args = {"level": command_context._mach_context.settings["test"]["level"]}
+        default_format = command_context._mach_context.settings["test"]["format"]
         setup_logging("mach-gtest", {}, {default_format: sys.stdout}, format_args)
 
         # ensure that a device is available and test app is installed
         from mozrunner.devices.android_device import verify_android_device, get_adb_path
 
         verify_android_device(
-            self, install=install, app=package, device_serial=device_serial
+            command_context, install=install, app=package, device_serial=device_serial
         )
 
         if not adb_path:
-            adb_path = get_adb_path(self)
+            adb_path = get_adb_path(command_context)
         if not libxul_path:
             libxul_path = os.path.join(
-                self.topobjdir, "dist", "bin", "gtest", "libxul.so"
+                command_context.topobjdir, "dist", "bin", "gtest", "libxul.so"
             )
 
         # run gtest via remotegtests.py
@@ -881,11 +898,11 @@ class Package(MachCommandBase):
         help="Verbose output for what commands the packaging process is running.",
     )
     def package(self, command_context, verbose=False):
-        ret = self._run_make(
+        ret = command_context._run_make(
             directory=".", target="package", silent=not verbose, ensure_exit_code=False
         )
         if ret == 0:
-            self.notify("Packaging complete")
+            command_context.notify("Packaging complete")
         return ret
 
 
@@ -924,20 +941,25 @@ class Install(MachCommandBase):
         description="Install the package on the machine (or device in the case of Android).",
     )
     def install(self, command_context, **kwargs):
-        if conditions.is_android(self):
+        if conditions.is_android(command_context):
             from mozrunner.devices.android_device import (
                 verify_android_device,
                 InstallIntent,
             )
 
-            ret = verify_android_device(self, install=InstallIntent.YES, **kwargs) == 0
+            ret = (
+                verify_android_device(
+                    command_context, install=InstallIntent.YES, **kwargs
+                )
+                == 0
+            )
         else:
-            ret = self._run_make(
+            ret = command_context._run_make(
                 directory=".", target="install", ensure_exit_code=False
             )
 
         if ret == 0:
-            self.notify("Install complete")
+            command_context.notify("Install complete")
         return ret
 
 
@@ -1233,14 +1255,15 @@ class RunProgram(MachCommandBase):
         description="Run the compiled program, possibly under a debugger or DMD.",
     )
     def run(self, command_context, **kwargs):
-        if conditions.is_android(self):
-            return self._run_android(**kwargs)
-        if conditions.is_jsshell(self):
-            return self._run_jsshell(**kwargs)
-        return self._run_desktop(**kwargs)
+        if conditions.is_android(command_context):
+            return self._run_android(command_context, **kwargs)
+        if conditions.is_jsshell(command_context):
+            return self._run_jsshell(command_context, **kwargs)
+        return self._run_desktop(command_context, **kwargs)
 
     def _run_android(
         self,
+        command_context,
         app="org.mozilla.geckoview_example",
         intent=None,
         env=[],
@@ -1280,7 +1303,7 @@ class RunProgram(MachCommandBase):
 
         # `verify_android_device` respects `DEVICE_SERIAL` if it is set and sets it otherwise.
         verify_android_device(
-            self,
+            command_context,
             app=app,
             debugger=debug,
             install=InstallIntent.NO if no_install else InstallIntent.YES,
@@ -1290,13 +1313,13 @@ class RunProgram(MachCommandBase):
             print("No ADB devices connected.")
             return 1
 
-        device = _get_device(self.substs, device_serial=device_serial)
+        device = _get_device(command_context.substs, device_serial=device_serial)
 
         if debug:
             # This will terminate any existing processes, so we skip it when we
             # want to attach to an existing one.
             if not use_existing_process:
-                self.log(
+                command_context.log(
                     logging.INFO,
                     "run",
                     {"app": app},
@@ -1318,7 +1341,7 @@ class RunProgram(MachCommandBase):
                     target_profile = "/data/local/tmp/{}-profile".format(app)
                     device.rm(target_profile, recursive=True, force=True)
                     device.push(host_profile, target_profile)
-                    self.log(
+                    command_context.log(
                         logging.INFO,
                         "run",
                         {
@@ -1330,7 +1353,7 @@ class RunProgram(MachCommandBase):
                     )
                 else:
                     target_profile = profile
-                    self.log(
+                    command_context.log(
                         logging.INFO,
                         "run",
                         {"target_profile": target_profile},
@@ -1353,7 +1376,7 @@ class RunProgram(MachCommandBase):
 
             if restart:
                 fail_if_running = False
-                self.log(
+                command_context.log(
                     logging.INFO,
                     "run",
                     {"app": app},
@@ -1363,7 +1386,7 @@ class RunProgram(MachCommandBase):
 
             # We'd prefer to log the actual `am start ...` command, but it's not trivial
             # to wire the device's logger to mach's logger.
-            self.log(
+            command_context.log(
                 logging.INFO,
                 "run",
                 {"app": app, "activity_name": activity_name},
@@ -1385,9 +1408,9 @@ class RunProgram(MachCommandBase):
 
         from mozrunner.devices.android_device import run_lldb_server
 
-        socket_file = run_lldb_server(app, self.substs, device_serial)
+        socket_file = run_lldb_server(app, command_context.substs, device_serial)
         if not socket_file:
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "run",
                 {"msg": "Failed to obtain a socket file!"},
@@ -1396,7 +1419,7 @@ class RunProgram(MachCommandBase):
             return 1
 
         # Give lldb-server a chance to start
-        self.log(
+        command_context.log(
             logging.INFO,
             "run",
             {"msg": "Pausing to ensure lldb-server has started..."},
@@ -1429,7 +1452,7 @@ class RunProgram(MachCommandBase):
             ]
 
             if not proc_list:
-                self.log(
+                command_context.log(
                     logging.ERROR,
                     "run",
                     {"app": app},
@@ -1451,14 +1474,16 @@ class RunProgram(MachCommandBase):
                     response = int(input(prompt).strip())
                     if response in valid_range:
                         break
-                    self.log(logging.ERROR, "run", {"msg": "Invalid response"}, "{msg}")
+                    command_context.log(
+                        logging.ERROR, "run", {"msg": "Invalid response"}, "{msg}"
+                    )
                 pid = proc_list[response - 1][0]
         else:
             # We're not using an existing process, so there should only be our
             # parent process at this time.
             pids = device.pidof(app_name=app)
             if len(pids) != 1:
-                self.log(
+                command_context.log(
                     logging.ERROR,
                     "run",
                     {"msg": "Not sure which pid to attach to!"},
@@ -1467,19 +1492,21 @@ class RunProgram(MachCommandBase):
                 return 1
             pid = pids[0]
 
-        self.log(logging.INFO, "run", {"pid": str(pid)}, "Debuggee pid set to {pid}...")
+        command_context.log(
+            logging.INFO, "run", {"pid": str(pid)}, "Debuggee pid set to {pid}..."
+        )
 
         lldb_connect_url = "unix-abstract-connect://" + socket_file
         local_jdb_port = device.forward("tcp:0", "jdwp:%d" % pid)
 
         if no_attach:
-            self.log(
+            command_context.log(
                 logging.INFO,
                 "run",
                 {"pid": str(pid), "url": lldb_connect_url},
                 "To debug native code, connect lldb to {url} and attach to pid {pid}",
             )
-            self.log(
+            command_context.log(
                 logging.INFO,
                 "run",
                 {"port": str(local_jdb_port)},
@@ -1490,7 +1517,9 @@ class RunProgram(MachCommandBase):
         # Beyond this point we want to be able to automatically clean up after ourselves,
         # so we enter the following try block.
         try:
-            self.log(logging.INFO, "run", {"msg": "Starting debugger..."}, "{msg}")
+            command_context.log(
+                logging.INFO, "run", {"msg": "Starting debugger..."}, "{msg}"
+            )
 
             if not use_existing_process:
                 # The app is waiting for jdb to attach and will not continue running
@@ -1527,9 +1556,11 @@ platform connect {connect_url}
 process attach {continue_flag}-p {pid!s}
 """.lstrip()
 
-            obj_xul = os.path.join(self.topobjdir, "toolkit", "library", "build")
-            obj_mozglue = os.path.join(self.topobjdir, "mozglue", "build")
-            obj_nss = os.path.join(self.topobjdir, "security")
+            obj_xul = os.path.join(
+                command_context.topobjdir, "toolkit", "library", "build"
+            )
+            obj_mozglue = os.path.join(command_context.topobjdir, "mozglue", "build")
+            obj_nss = os.path.join(command_context.topobjdir, "security")
 
             if use_existing_process:
                 continue_flag = ""
@@ -1568,7 +1599,7 @@ process attach {continue_flag}-p {pid!s}
                 if not args:
                     return 1
 
-                return self.run_process(
+                return command_context.run_process(
                     args=args, ensure_exit_code=False, pass_thru=True
                 )
             finally:
@@ -1579,12 +1610,14 @@ process attach {continue_flag}-p {pid!s}
             if not use_existing_process:
                 device.shell("am clear-debug-app")
 
-    def _run_jsshell(self, params, debug, debugger, debugger_args):
+    def _run_jsshell(self, command_context, params, debug, debugger, debugger_args):
         try:
-            binpath = self.get_binary_path("app")
+            binpath = command_context.get_binary_path("app")
         except BinaryNotFoundException as e:
-            self.log(logging.ERROR, "run", {"error": str(e)}, "ERROR: {error}")
-            self.log(logging.INFO, "run", {"help": e.help()}, "{help}")
+            command_context.log(
+                logging.ERROR, "run", {"error": str(e)}, "ERROR: {error}"
+            )
+            command_context.log(logging.INFO, "run", {"help": e.help()}, "{help}")
             return 1
 
         args = [binpath]
@@ -1596,7 +1629,7 @@ process attach {continue_flag}-p {pid!s}
 
         if debug or debugger or debugger_args:
             if "INSIDE_EMACS" in os.environ:
-                self.log_manager.terminal_handler.setLevel(logging.WARNING)
+                command_context.log_manager.terminal_handler.setLevel(logging.WARNING)
 
             import mozdebug
 
@@ -1608,21 +1641,22 @@ process attach {continue_flag}-p {pid!s}
                 )
 
             if debugger:
-                self.debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
+                debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
 
-            if not debugger or not self.debuggerInfo:
+            if not debugger or not debuggerInfo:
                 print("Could not find a suitable debugger in your PATH.")
                 return 1
 
             # Prepend the debugger args.
-            args = [self.debuggerInfo.path] + self.debuggerInfo.args + args
+            args = [debuggerInfo.path] + debuggerInfo.args + args
 
-        return self.run_process(
+        return command_context.run_process(
             args=args, ensure_exit_code=False, pass_thru=True, append_env=extra_env
         )
 
     def _run_desktop(
         self,
+        command_context,
         params,
         packaged,
         app,
@@ -1647,13 +1681,15 @@ process attach {continue_flag}-p {pid!s}
 
         try:
             if packaged:
-                binpath = self.get_binary_path(where="staged-package")
+                binpath = command_context.get_binary_path(where="staged-package")
             else:
-                binpath = app or self.get_binary_path("app")
+                binpath = app or command_context.get_binary_path("app")
         except BinaryNotFoundException as e:
-            self.log(logging.ERROR, "run", {"error": str(e)}, "ERROR: {error}")
+            command_context.log(
+                logging.ERROR, "run", {"error": str(e)}, "ERROR: {error}"
+            )
             if packaged:
-                self.log(
+                command_context.log(
                     logging.INFO,
                     "run",
                     {
@@ -1663,7 +1699,7 @@ process attach {continue_flag}-p {pid!s}
                     "{help}",
                 )
             else:
-                self.log(logging.INFO, "run", {"help": e.help()}, "{help}")
+                command_context.log(logging.INFO, "run", {"help": e.help()}, "{help}")
             return 1
 
         args = []
@@ -1697,7 +1733,10 @@ process attach {continue_flag}-p {pid!s}
         if not background and sys.platform == "darwin":
             args.append("-foreground")
 
-        if sys.platform.startswith("win") and "MOZ_LAUNCHER_PROCESS" in self.defines:
+        if (
+            sys.platform.startswith("win")
+            and "MOZ_LAUNCHER_PROCESS" in command_context.defines
+        ):
             args.append("-wait-for-browser")
 
         no_profile_option_given = all(
@@ -1709,12 +1748,12 @@ process attach {continue_flag}-p {pid!s}
                 "browser.shell.checkDefaultBrowser": False,
                 "general.warnOnAboutConfig": False,
             }
-            prefs.update(self._mach_context.settings.runprefs)
+            prefs.update(command_context._mach_context.settings.runprefs)
             prefs.update([p.split("=", 1) for p in setpref])
             for pref in prefs:
                 prefs[pref] = Preferences.cast(prefs[pref])
 
-            tmpdir = os.path.join(self.topobjdir, "tmp")
+            tmpdir = os.path.join(command_context.topobjdir, "tmp")
             if not os.path.exists(tmpdir):
                 os.makedirs(tmpdir)
 
@@ -1754,8 +1793,8 @@ process attach {continue_flag}-p {pid!s}
             args.append("-attach-console")
 
         extra_env = {
-            "MOZ_DEVELOPER_REPO_DIR": self.topsrcdir,
-            "MOZ_DEVELOPER_OBJ_DIR": self.topobjdir,
+            "MOZ_DEVELOPER_REPO_DIR": command_context.topsrcdir,
+            "MOZ_DEVELOPER_OBJ_DIR": command_context.topobjdir,
             "RUST_BACKTRACE": "full",
         }
 
@@ -1766,7 +1805,7 @@ process attach {continue_flag}-p {pid!s}
 
         if disable_e10s:
             version_file = os.path.join(
-                self.topsrcdir, "browser", "config", "version.txt"
+                command_context.topsrcdir, "browser", "config", "version.txt"
             )
             f = open(version_file, "r")
             extra_env["MOZ_FORCE_DISABLE_E10S"] = f.read().strip()
@@ -1776,7 +1815,7 @@ process attach {continue_flag}-p {pid!s}
 
         if some_debugging_option:
             if "INSIDE_EMACS" in os.environ:
-                self.log_manager.terminal_handler.setLevel(logging.WARNING)
+                command_context.log_manager.terminal_handler.setLevel(logging.WARNING)
 
             import mozdebug
 
@@ -1788,9 +1827,9 @@ process attach {continue_flag}-p {pid!s}
                 )
 
             if debugger:
-                self.debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
+                debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
 
-            if not debugger or not self.debuggerInfo:
+            if not debugger or not debuggerInfo:
                 print("Could not find a suitable debugger in your PATH.")
                 return 1
 
@@ -1809,7 +1848,7 @@ process attach {continue_flag}-p {pid!s}
                     return 1
 
             # Prepend the debugger args.
-            args = [self.debuggerInfo.path] + self.debuggerInfo.args + args
+            args = [debuggerInfo.path] + debuggerInfo.args + args
 
         if dmd:
             dmd_params = []
@@ -1826,7 +1865,7 @@ process attach {continue_flag}-p {pid!s}
             else:
                 extra_env["DMD"] = "1"
 
-        return self.run_process(
+        return command_context.run_process(
             args=args, ensure_exit_code=False, pass_thru=True, append_env=extra_env
         )
 
@@ -1841,7 +1880,7 @@ class Buildsymbols(MachCommandBase):
         description="Produce a package of Breakpad-format symbols.",
     )
     def buildsymbols(self, command_context):
-        return self._run_make(
+        return command_context._run_make(
             directory=".", target="buildsymbols", ensure_exit_code=False
         )
 
@@ -1872,43 +1911,43 @@ class MachDebug(MachCommandBase):
             from mozbuild.util import FileAvoidWrite
 
             with FileAvoidWrite(output) as out:
-                return func(out, verbose)
-        return func(sys.stdout, verbose)
+                return func(command_context, out, verbose)
+        return func(command_context, sys.stdout, verbose)
 
-    def _environment_pretty(self, out, verbose):
-        state_dir = self._mach_context.state_dir
+    def _environment_pretty(self, command_context, out, verbose):
+        state_dir = command_context._mach_context.state_dir
 
         print("platform:\n\t%s" % platform.platform(), file=out)
         print("python version:\n\t%s" % sys.version, file=out)
         print("python prefix:\n\t%s" % sys.prefix, file=out)
-        print("mach cwd:\n\t%s" % self._mach_context.cwd, file=out)
+        print("mach cwd:\n\t%s" % command_context._mach_context.cwd, file=out)
         print("os cwd:\n\t%s" % os.getcwd(), file=out)
-        print("mach directory:\n\t%s" % self._mach_context.topdir, file=out)
+        print("mach directory:\n\t%s" % command_context._mach_context.topdir, file=out)
         print("state directory:\n\t%s" % state_dir, file=out)
 
-        print("object directory:\n\t%s" % self.topobjdir, file=out)
+        print("object directory:\n\t%s" % command_context.topobjdir, file=out)
 
-        if self.mozconfig["path"]:
-            print("mozconfig path:\n\t%s" % self.mozconfig["path"], file=out)
-            if self.mozconfig["configure_args"]:
+        if command_context.mozconfig["path"]:
+            print("mozconfig path:\n\t%s" % command_context.mozconfig["path"], file=out)
+            if command_context.mozconfig["configure_args"]:
                 print("mozconfig configure args:", file=out)
-                for arg in self.mozconfig["configure_args"]:
+                for arg in command_context.mozconfig["configure_args"]:
                     print("\t%s" % arg, file=out)
 
-            if self.mozconfig["make_extra"]:
+            if command_context.mozconfig["make_extra"]:
                 print("mozconfig extra make args:", file=out)
-                for arg in self.mozconfig["make_extra"]:
+                for arg in command_context.mozconfig["make_extra"]:
                     print("\t%s" % arg, file=out)
 
-            if self.mozconfig["make_flags"]:
+            if command_context.mozconfig["make_flags"]:
                 print("mozconfig make flags:", file=out)
-                for arg in self.mozconfig["make_flags"]:
+                for arg in command_context.mozconfig["make_flags"]:
                     print("\t%s" % arg, file=out)
 
         config = None
 
         try:
-            config = self.config_environment
+            config = command_context.config_environment
 
         except Exception:
             pass
@@ -1926,7 +1965,7 @@ class MachDebug(MachCommandBase):
                 for k in sorted(config.defines):
                     print("\t%s" % k, file=out)
 
-    def _environment_json(self, out, verbose):
+    def _environment_json(self, command_context, out, verbose):
         import json
 
         class EnvironmentEncoder(json.JSONEncoder):
@@ -1945,7 +1984,7 @@ class MachDebug(MachCommandBase):
                     return list(obj)
                 return json.JSONEncoder.default(self, obj)
 
-        json.dump(self, cls=EnvironmentEncoder, sort_keys=True, fp=out)
+        json.dump(command_context, cls=EnvironmentEncoder, sort_keys=True, fp=out)
 
 
 @CommandProvider
@@ -1975,7 +2014,7 @@ class Repackage(MachCommandBase):
             print("Input file does not exist: %s" % input)
             return 1
 
-        if not os.path.exists(os.path.join(self.topobjdir, "config.status")):
+        if not os.path.exists(os.path.join(command_context.topobjdir, "config.status")):
             print(
                 "config.status not found.  Please run |mach configure| "
                 "prior to |mach repackage|."
@@ -2037,7 +2076,7 @@ class Repackage(MachCommandBase):
         from mozbuild.repackaging.installer import repackage_installer
 
         repackage_installer(
-            topsrcdir=self.topsrcdir,
+            topsrcdir=command_context.topsrcdir,
             tag=tag,
             setupexe=setupexe,
             package=package,
@@ -2089,7 +2128,7 @@ class Repackage(MachCommandBase):
         from mozbuild.repackaging.msi import repackage_msi
 
         repackage_msi(
-            topsrcdir=self.topsrcdir,
+            topsrcdir=command_context.topsrcdir,
             wsx=wsx,
             version=version,
             locale=locale,
@@ -2112,7 +2151,12 @@ class Repackage(MachCommandBase):
         from mozbuild.repackaging.mar import repackage_mar
 
         repackage_mar(
-            self.topsrcdir, input, mar, output, arch=arch, mar_channel_id=mar_channel_id
+            command_context.topsrcdir,
+            input,
+            mar,
+            output,
+            arch=arch,
+            mar_channel_id=mar_channel_id,
         )
 
 
@@ -2135,7 +2179,7 @@ class L10NCommands(MachCommandBase):
         "--verbose", action="store_true", help="Log informative status messages."
     )
     def package_l10n(self, command_context, verbose=False, locales=[]):
-        if "RecursiveMake" not in self.substs["BUILD_BACKENDS"]:
+        if "RecursiveMake" not in command_context.substs["BUILD_BACKENDS"]:
             print(
                 "Artifact builds do not support localization. "
                 "If you know what you are doing, you can use:\n"
@@ -2146,7 +2190,7 @@ class L10NCommands(MachCommandBase):
             return 1
 
         if "en-US" not in locales:
-            self.log(
+            command_context.log(
                 logging.WARN,
                 "package-multi-locale",
                 {"locales": locales},
@@ -2165,7 +2209,7 @@ class L10NCommands(MachCommandBase):
 
         for locale in locales:
             if locale == "en-US":
-                self.log(
+                command_context.log(
                     logging.INFO,
                     "package-multi-locale",
                     {"locale": locale},
@@ -2173,80 +2217,90 @@ class L10NCommands(MachCommandBase):
                 )
                 continue
 
-            self.log(
+            command_context.log(
                 logging.INFO,
                 "package-multi-locale",
                 {"locale": locale},
                 "Processing chrome Gecko resources for locale {locale}",
             )
-            self.run_process(
+            command_context.run_process(
                 [
-                    mozpath.join(self.topsrcdir, "mach"),
+                    mozpath.join(command_context.topsrcdir, "mach"),
                     "build",
                     "chrome-{}".format(locale),
                 ],
                 append_env=append_env,
                 pass_thru=True,
                 ensure_exit_code=True,
-                cwd=mozpath.join(self.topsrcdir),
+                cwd=mozpath.join(command_context.topsrcdir),
             )
 
-        if self.substs["MOZ_BUILD_APP"] == "mobile/android":
-            self.log(
+        if command_context.substs["MOZ_BUILD_APP"] == "mobile/android":
+            command_context.log(
                 logging.INFO,
                 "package-multi-locale",
                 {},
                 "Invoking `mach android assemble-app`",
             )
-            self.run_process(
-                [mozpath.join(self.topsrcdir, "mach"), "android", "assemble-app"],
+            command_context.run_process(
+                [
+                    mozpath.join(command_context.topsrcdir, "mach"),
+                    "android",
+                    "assemble-app",
+                ],
                 append_env=append_env,
                 pass_thru=True,
                 ensure_exit_code=True,
-                cwd=mozpath.join(self.topsrcdir),
+                cwd=mozpath.join(command_context.topsrcdir),
             )
 
-        if self.substs["MOZ_BUILD_APP"] == "browser":
-            self.log(logging.INFO, "package-multi-locale", {}, "Repackaging browser")
-            self._run_make(
-                directory=mozpath.join(self.topobjdir, "browser", "app"),
+        if command_context.substs["MOZ_BUILD_APP"] == "browser":
+            command_context.log(
+                logging.INFO, "package-multi-locale", {}, "Repackaging browser"
+            )
+            command_context._run_make(
+                directory=mozpath.join(command_context.topobjdir, "browser", "app"),
                 target=["tools"],
                 append_env=append_env,
                 pass_thru=True,
                 ensure_exit_code=True,
             )
 
-        self.log(
+        command_context.log(
             logging.INFO,
             "package-multi-locale",
             {},
             "Invoking multi-locale `mach package`",
         )
         target = ["package"]
-        if self.substs["MOZ_BUILD_APP"] == "mobile/android":
+        if command_context.substs["MOZ_BUILD_APP"] == "mobile/android":
             target.append("AB_CD=multi")
 
-        self._run_make(
-            directory=self.topobjdir,
+        command_context._run_make(
+            directory=command_context.topobjdir,
             target=target,
             append_env=append_env,
             pass_thru=True,
             ensure_exit_code=True,
         )
 
-        if self.substs["MOZ_BUILD_APP"] == "mobile/android":
-            self.log(
+        if command_context.substs["MOZ_BUILD_APP"] == "mobile/android":
+            command_context.log(
                 logging.INFO,
                 "package-multi-locale",
                 {},
                 "Invoking `mach android archive-geckoview`",
             )
-            self.run_process(
-                [mozpath.join(self.topsrcdir, "mach"), "android", "archive-geckoview"],
+            command_context.run_process(
+                [
+                    mozpath.join(command_context.topsrcdir, "mach"),
+                    "android",
+                    "archive-geckoview",
+                ],
                 append_env=append_env,
                 pass_thru=True,
                 ensure_exit_code=True,
-                cwd=mozpath.join(self.topsrcdir),
+                cwd=mozpath.join(command_context.topsrcdir),
             )
 
         return 0
@@ -2303,10 +2357,12 @@ class CreateMachEnvironment(MachCommandBase):
             return 1
 
         manager = VirtualenvManager(
-            self.topsrcdir,
+            command_context.topsrcdir,
             virtualenv_path,
             sys.stdout,
-            os.path.join(self.topsrcdir, "build", "mach_virtualenv_packages.txt"),
+            os.path.join(
+                command_context.topsrcdir, "build", "mach_virtualenv_packages.txt"
+            ),
             populate_local_paths=False,
         )
 
@@ -2319,7 +2375,9 @@ class CreateMachEnvironment(MachCommandBase):
             # `mach` can handle it perfectly fine if `psutil` is missing, so
             # there's no reason to freak out in this case.
             manager.install_pip_requirements(
-                os.path.join(self.topsrcdir, "build", "psutil_requirements.txt")
+                os.path.join(
+                    command_context.topsrcdir, "build", "psutil_requirements.txt"
+                )
             )
         except subprocess.CalledProcessError:
             print(
@@ -2328,14 +2386,18 @@ class CreateMachEnvironment(MachCommandBase):
             )
 
         manager.install_pip_requirements(
-            os.path.join(self.topsrcdir, "build", "zstandard_requirements.txt")
+            os.path.join(
+                command_context.topsrcdir, "build", "zstandard_requirements.txt"
+            )
         )
 
         # This can fail on some platforms. See
         # https://bugzilla.mozilla.org/show_bug.cgi?id=1660120
         try:
             manager.install_pip_requirements(
-                os.path.join(self.topsrcdir, "build", "glean_requirements.txt")
+                os.path.join(
+                    command_context.topsrcdir, "build", "glean_requirements.txt"
+                )
             )
         except subprocess.CalledProcessError:
             print(

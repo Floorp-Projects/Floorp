@@ -59,7 +59,7 @@ class MachCommands(MachCommandBase):
         from six import string_types
         from valgrind.output_handler import OutputHandler
 
-        build_dir = os.path.join(self.topsrcdir, "build")
+        build_dir = os.path.join(command_context.topsrcdir, "build")
 
         # XXX: currently we just use the PGO inputs for Valgrind runs.  This may
         # change in the future.
@@ -68,7 +68,9 @@ class MachCommands(MachCommandBase):
 
         with TemporaryDirectory() as profilePath:
             # TODO: refactor this into mozprofile
-            profile_data_dir = os.path.join(self.topsrcdir, "testing", "profiles")
+            profile_data_dir = os.path.join(
+                command_context.topsrcdir, "testing", "profiles"
+            )
             with open(os.path.join(profile_data_dir, "profiles.json"), "r") as fh:
                 base_profiles = json.load(fh)["valgrind"]
 
@@ -89,7 +91,7 @@ class MachCommands(MachCommandBase):
                 prefs[k] = Preferences.cast(v)
 
             quitter = os.path.join(
-                self.topsrcdir, "tools", "quitter", "quitter@mozilla.org.xpi"
+                command_context.topsrcdir, "tools", "quitter", "quitter@mozilla.org.xpi"
             )
 
             locations = ServerLocations()
@@ -113,7 +115,7 @@ class MachCommands(MachCommandBase):
             env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
             env["XPCOM_DEBUG_BREAK"] = "warn"
 
-            outputHandler = OutputHandler(self.log)
+            outputHandler = OutputHandler(command_context.log)
             kp_kwargs = {
                 "processOutputLine": [outputHandler],
                 "universal_newlines": True,
@@ -171,7 +173,7 @@ class MachCommands(MachCommandBase):
             try:
                 runner = FirefoxRunner(
                     profile=profile,
-                    binary=self.get_binary_path(),
+                    binary=command_context.get_binary_path(),
                     cmdargs=firefox_args,
                     env=env,
                     process_args=kp_kwargs,
@@ -185,7 +187,7 @@ class MachCommands(MachCommandBase):
                 supps = outputHandler.suppression_count
                 if errs != supps:
                     status = 1  # turns the TBPL job orange
-                    self.log(
+                    command_context.log(
                         logging.ERROR,
                         "valgrind-fail-parsing",
                         {"errs": errs, "supps": supps},
@@ -195,7 +197,7 @@ class MachCommands(MachCommandBase):
 
                 elif errs == 0:
                     status = 0
-                    self.log(
+                    command_context.log(
                         logging.INFO,
                         "valgrind-pass",
                         {},
@@ -207,13 +209,13 @@ class MachCommands(MachCommandBase):
 
                 if binary_not_found_exception:
                     status = 2  # turns the TBPL job red
-                    self.log(
+                    command_context.log(
                         logging.ERROR,
                         "valgrind-fail-errors",
                         {"error": str(binary_not_found_exception)},
                         "TEST-UNEXPECTED-FAIL | valgrind-test | {error}",
                     )
-                    self.log(
+                    command_context.log(
                         logging.INFO,
                         "valgrind-fail-errors",
                         {"help": binary_not_found_exception.help()},
@@ -221,7 +223,7 @@ class MachCommands(MachCommandBase):
                     )
                 elif exitcode is None:
                     status = 2  # turns the TBPL job red
-                    self.log(
+                    command_context.log(
                         logging.ERROR,
                         "valgrind-fail-timeout",
                         {"timeout": timeout},
@@ -230,7 +232,7 @@ class MachCommands(MachCommandBase):
                     )
                 elif exitcode != 0:
                     status = 2  # turns the TBPL job red
-                    self.log(
+                    command_context.log(
                         logging.ERROR,
                         "valgrind-fail-errors",
                         {"exitcode": exitcode},

@@ -232,7 +232,7 @@ class AddTest(MachCommandBase):
             print("Sorry, `addtest` doesn't currently know how to add {}".format(suite))
             return 1
 
-        creator = creator_cls(self.topsrcdir, test, suite, doc, **kwargs)
+        creator = creator_cls(command_context.topsrcdir, test, suite, doc, **kwargs)
 
         creator.check_args()
 
@@ -391,7 +391,7 @@ class Test(MachCommandBase):
         from mozlog.handlers import StreamHandler
         from moztest.resolve import get_suite_definition, TestResolver, TEST_SUITES
 
-        resolver = self._spawn(TestResolver)
+        resolver = command_context._spawn(TestResolver)
         run_suites, run_tests = resolver.resolve_metadata(what)
 
         if not run_suites and not run_tests:
@@ -412,12 +412,12 @@ class Test(MachCommandBase):
                 extra_args = [extra_args_debugger_notation]
 
         # Create shared logger
-        format_args = {"level": self._mach_context.settings["test"]["level"]}
+        format_args = {"level": command_context._mach_context.settings["test"]["level"]}
         if not run_suites and len(run_tests) == 1:
             format_args["verbose"] = True
             format_args["compact"] = False
 
-        default_format = self._mach_context.settings["test"]["format"]
+        default_format = command_context._mach_context.settings["test"]["format"]
         log = setup_logging(
             "mach-test", log_args, {default_format: sys.stdout}, format_args
         )
@@ -433,8 +433,11 @@ class Test(MachCommandBase):
             kwargs.setdefault("subsuite", None)
 
             if "mach_command" in suite:
-                res = self._mach_context.commands.dispatch(
-                    suite["mach_command"], self._mach_context, argv=extra_args, **kwargs
+                res = command_context._mach_context.commands.dispatch(
+                    suite["mach_command"],
+                    command_context._mach_context,
+                    argv=extra_args,
+                    **kwargs
                 )
                 if res:
                     status = res
@@ -456,9 +459,9 @@ class Test(MachCommandBase):
             kwargs["log"] = log
             kwargs.setdefault("subsuite", None)
 
-            res = self._mach_context.commands.dispatch(
+            res = command_context._mach_context.commands.dispatch(
                 m["mach_command"],
-                self._mach_context,
+                command_context._mach_context,
                 argv=extra_args,
                 test_objects=tests,
                 **kwargs
@@ -498,34 +501,38 @@ class MachCommands(MachCommandBase):
             log = commandline.setup_logging("cppunittest", {}, {"tbpl": sys.stdout})
 
         # See if we have crash symbols
-        symbols_path = os.path.join(self.distdir, "crashreporter-symbols")
+        symbols_path = os.path.join(command_context.distdir, "crashreporter-symbols")
         if not os.path.isdir(symbols_path):
             symbols_path = None
 
         # If no tests specified, run all tests in main manifest
         tests = params["test_files"]
         if not tests:
-            tests = [os.path.join(self.distdir, "cppunittests")]
-            manifest_path = os.path.join(self.topsrcdir, "testing", "cppunittest.ini")
+            tests = [os.path.join(command_context.distdir, "cppunittests")]
+            manifest_path = os.path.join(
+                command_context.topsrcdir, "testing", "cppunittest.ini"
+            )
         else:
             manifest_path = None
 
-        utility_path = self.bindir
+        utility_path = command_context.bindir
 
-        if conditions.is_android(self):
+        if conditions.is_android(command_context):
             from mozrunner.devices.android_device import (
                 verify_android_device,
                 InstallIntent,
             )
 
-            verify_android_device(self, install=InstallIntent.NO)
+            verify_android_device(command_context, install=InstallIntent.NO)
             return self.run_android_test(tests, symbols_path, manifest_path, log)
 
         return self.run_desktop_test(
             tests, symbols_path, manifest_path, utility_path, log
         )
 
-    def run_desktop_test(self, tests, symbols_path, manifest_path, utility_path, log):
+    def run_desktop_test(
+        self, command_context, tests, symbols_path, manifest_path, utility_path, log
+    ):
         import runcppunittests as cppunittests
         from mozlog import commandline
 
@@ -536,7 +543,7 @@ class MachCommands(MachCommandBase):
         options.symbols_path = symbols_path
         options.manifest_path = manifest_path
         options.utility_path = utility_path
-        options.xre_path = self.bindir
+        options.xre_path = command_context.bindir
 
         try:
             result = cppunittests.run_test_harness(options, tests)
@@ -547,7 +554,9 @@ class MachCommands(MachCommandBase):
 
         return 0 if result else 1
 
-    def run_android_test(self, tests, symbols_path, manifest_path, log):
+    def run_android_test(
+        self, command_context, tests, symbols_path, manifest_path, log
+    ):
         import remotecppunittests as remotecppunittests
         from mozlog import commandline
 
@@ -558,14 +567,16 @@ class MachCommands(MachCommandBase):
         if not options.adb_path:
             from mozrunner.devices.android_device import get_adb_path
 
-            options.adb_path = get_adb_path(self)
+            options.adb_path = get_adb_path(command_context)
         options.symbols_path = symbols_path
         options.manifest_path = manifest_path
-        options.xre_path = self.bindir
-        options.local_lib = self.bindir.replace("bin", "fennec")
-        for file in os.listdir(os.path.join(self.topobjdir, "dist")):
+        options.xre_path = command_context.bindir
+        options.local_lib = command_context.bindir.replace("bin", "fennec")
+        for file in os.listdir(os.path.join(command_context.topobjdir, "dist")):
             if file.endswith(".apk") and file.startswith("fennec"):
-                options.local_apk = os.path.join(self.topobjdir, "dist", file)
+                options.local_apk = os.path.join(
+                    command_context.topobjdir, "dist", file
+                )
                 log.info("using APK: " + options.local_apk)
                 break
 
@@ -599,13 +610,13 @@ class SpiderMonkeyTests(MachCommandBase):
     def run_jstests(self, command_context, shell, params):
         import subprocess
 
-        self.virtualenv_manager.ensure()
-        python = self.virtualenv_manager.python_path
+        command_context.virtualenv_manager.ensure()
+        python = command_context.virtualenv_manager.python_path
 
-        js = shell or os.path.join(self.bindir, executable_name("js"))
+        js = shell or os.path.join(command_context.bindir, executable_name("js"))
         jstest_cmd = [
             python,
-            os.path.join(self.topsrcdir, "js", "src", "tests", "jstests.py"),
+            os.path.join(command_context.topsrcdir, "js", "src", "tests", "jstests.py"),
             js,
         ] + params
 
@@ -632,13 +643,15 @@ class SpiderMonkeyTests(MachCommandBase):
     def run_jittests(self, command_context, shell, cgc, params):
         import subprocess
 
-        self.virtualenv_manager.ensure()
-        python = self.virtualenv_manager.python_path
+        command_context.virtualenv_manager.ensure()
+        python = command_context.virtualenv_manager.python_path
 
-        js = shell or os.path.join(self.bindir, executable_name("js"))
+        js = shell or os.path.join(command_context.bindir, executable_name("js"))
         jittest_cmd = [
             python,
-            os.path.join(self.topsrcdir, "js", "src", "jit-test", "jit_test.py"),
+            os.path.join(
+                command_context.topsrcdir, "js", "src", "jit-test", "jit_test.py"
+            ),
             js,
         ] + params
 
@@ -661,24 +674,28 @@ class SpiderMonkeyTests(MachCommandBase):
     def run_jsapitests(self, command_context, test_name=None):
         import subprocess
 
-        jsapi_tests_cmd = [os.path.join(self.bindir, executable_name("jsapi-tests"))]
+        jsapi_tests_cmd = [
+            os.path.join(command_context.bindir, executable_name("jsapi-tests"))
+        ]
         if test_name:
             jsapi_tests_cmd.append(test_name)
 
         test_env = os.environ.copy()
-        test_env["TOPSRCDIR"] = self.topsrcdir
+        test_env["TOPSRCDIR"] = command_context.topsrcdir
 
         return subprocess.call(jsapi_tests_cmd, env=test_env)
 
-    def run_check_js_msg(self):
+    def run_check_js_msg(self, command_context):
         import subprocess
 
-        self.virtualenv_manager.ensure()
-        python = self.virtualenv_manager.python_path
+        command_context.virtualenv_manager.ensure()
+        python = command_context.virtualenv_manager.python_path
 
         check_cmd = [
             python,
-            os.path.join(self.topsrcdir, "config", "check_js_msg_encoding.py"),
+            os.path.join(
+                command_context.topsrcdir, "config", "check_js_msg_encoding.py"
+            ),
         ]
 
         return subprocess.call(check_cmd)
@@ -699,7 +716,7 @@ class JsShellTests(MachCommandBase):
         description="Run benchmarks in the SpiderMonkey JS shell.",
     )
     def run_jsshelltests(self, command_context, **kwargs):
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
         from jsshell import benchmark
 
         return benchmark.run(**kwargs)
@@ -728,14 +745,14 @@ class CramTest(MachCommandBase):
     def cramtest(
         self, command_context, cram_args=None, test_paths=None, test_objects=None
     ):
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
         import mozinfo
         from manifestparser import TestManifest
 
         if test_objects is None:
             from moztest.resolve import TestResolver
 
-            resolver = self._spawn(TestResolver)
+            resolver = command_context._spawn(TestResolver)
             if test_paths:
                 # If we were given test paths, try to find tests matching them.
                 test_objects = resolver.resolve_tests(paths=test_paths, flavor="cram")
@@ -745,16 +762,16 @@ class CramTest(MachCommandBase):
 
         if not test_objects:
             message = "No tests were collected, check spelling of the test paths."
-            self.log(logging.WARN, "cramtest", {}, message)
+            command_context.log(logging.WARN, "cramtest", {}, message)
             return 1
 
         mp = TestManifest()
         mp.tests.extend(test_objects)
         tests = mp.active_tests(disabled=False, **mozinfo.info)
 
-        python = self.virtualenv_manager.python_path
+        python = command_context.virtualenv_manager.python_path
         cmd = [python, "-m", "cram"] + cram_args + [t["relpath"] for t in tests]
-        return subprocess.call(cmd, cwd=self.topsrcdir)
+        return subprocess.call(cmd, cwd=command_context.topsrcdir)
 
 
 @CommandProvider
@@ -898,10 +915,10 @@ class TestInfoCommand(MachCommandBase):
         from mozbuild.build_commands import Build
 
         try:
-            self.config_environment
+            command_context.config_environment
         except BuildEnvironmentNotFoundException:
             print("Looks like configure has not run yet, running it now...")
-            builder = Build(self._mach_context, None)
+            builder = Build(command_context._mach_context, None)
             builder.configure(command_context)
 
         ti = testinfo.TestInfoReport(verbose)
@@ -955,9 +972,9 @@ class RustTests(MachCommandBase):
         description="Run rust unit tests (via cargo test).",
     )
     def run_rusttests(self, command_context, **kwargs):
-        return self._mach_context.commands.dispatch(
+        return command_context._mach_context.commands.dispatch(
             "build",
-            self._mach_context,
+            command_context._mach_context,
             what=["pre-export", "export", "recurse_rusttests"],
         )
 
@@ -973,7 +990,7 @@ class TestFluentMigration(MachCommandBase):
     def run_migration_tests(self, command_context, test_paths=None, **kwargs):
         if not test_paths:
             test_paths = []
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
         from test_fluent_migrations import fmt
 
         rv = 0
@@ -982,7 +999,7 @@ class TestFluentMigration(MachCommandBase):
             try:
                 context = fmt.inspect_migration(to_test)
                 for issue in context["issues"]:
-                    self.log(
+                    command_context.log(
                         logging.ERROR,
                         "fluent-migration-test",
                         {
@@ -1000,14 +1017,14 @@ class TestFluentMigration(MachCommandBase):
                     }
                 )
             except Exception as e:
-                self.log(
+                command_context.log(
                     logging.ERROR,
                     "fluent-migration-test",
                     {"error": str(e), "file": to_test},
                     "ERROR in {file}: {error}",
                 )
                 rv |= 1
-        obj_dir = fmt.prepare_object_dir(self)
+        obj_dir = fmt.prepare_object_dir(command_context)
         for context in with_context:
-            rv |= fmt.test_migration(self, obj_dir, **context)
+            rv |= fmt.test_migration(command_context, obj_dir, **context)
         return rv

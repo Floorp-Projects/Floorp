@@ -62,8 +62,8 @@ class Vendor(MachCommandBase):
         library = library[0]
         assert library not in ["rust", "python"]
 
-        self.populate_logger()
-        self.log_manager.enable_unstructured()
+        command_context.populate_logger()
+        command_context.log_manager.enable_unstructured()
         if check_for_update:
             logging.disable()
 
@@ -77,26 +77,26 @@ class Vendor(MachCommandBase):
             sys.exit(1)
 
         if not ignore_modified and not check_for_update:
-            self.check_modified_files()
+            self.check_modified_files(command_context)
         if not revision:
             revision = "HEAD"
 
         from mozbuild.vendor.vendor_manifest import VendorManifest
 
-        vendor_command = self._spawn(VendorManifest)
+        vendor_command = command_context._spawn(VendorManifest)
         vendor_command.vendor(library, manifest, revision, check_for_update)
 
         sys.exit(0)
 
-    def check_modified_files(self):
+    def check_modified_files(self, command_context):
         """
         Ensure that there aren't any uncommitted changes to files
         in the working copy, since we're going to change some state
         on the user.
         """
-        modified = self.repository.get_changed_files("M")
+        modified = command_context.repository.get_changed_files("M")
         if modified:
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "modified_files",
                 {},
@@ -137,7 +137,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
     def vendor_rust(self, command_context, **kwargs):
         from mozbuild.vendor.vendor_rust import VendorRust
 
-        vendor_command = self._spawn(VendorRust)
+        vendor_command = command_context._spawn(VendorRust)
         vendor_command.vendor(**kwargs)
 
     # =====================================================================
@@ -168,5 +168,5 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             )
             return 1
 
-        vendor_command = self._spawn(VendorPython)
+        vendor_command = command_context._spawn(VendorPython)
         vendor_command.vendor(**kwargs)
