@@ -26,6 +26,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.home.HomeFragmentAction.RecentTabsChange
@@ -114,6 +115,7 @@ class RecentTabsListFeatureTest {
         assertEquals(1, homeStore.state.recentTabs.size)
     }
 
+    @Ignore("Temporarily disabled. See #20402.")
     @Test
     fun `GIVEN a valid inProgressMediaTabId and another selected tab exists WHEN the feature starts THEN dispatch both as as a recent tabs list`() {
         val mediaTab = createTab("https://mozilla.com", id = "42", lastMediaAccess = 123)
@@ -191,6 +193,7 @@ class RecentTabsListFeatureTest {
         assertEquals(tab2, homeStore.state.recentTabs[0])
     }
 
+    @Ignore("Temporarily disabled. See #20402.")
     @Test
     fun `WHEN the browser state has an in progress media tab THEN dispatch the new recent tab list`() {
         val initialMediaTab = createTab(url = "https://mozilla.com", id = "1", lastMediaAccess = 123)

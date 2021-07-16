@@ -19,11 +19,12 @@ fun BrowserState.asRecentTabs(): List<TabSessionState> {
     return mutableListOf<TabSessionState>().apply {
         val lastOpenedNormalTab = lastOpenedNormalTab
         lastOpenedNormalTab?.let { add(it) }
-        inProgressMediaTab
-            ?.takeUnless { it == lastOpenedNormalTab }
-            ?.let {
-                add(it)
-            }
+        // disabled to avoid a nightly crash in #20402
+//        inProgressMediaTab
+//            ?.takeUnless { it == lastOpenedNormalTab }
+//            ?.let {
+//                add(it)
+//            }
     }
 }
 

@@ -9,6 +9,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Ignore
 import org.junit.Test
 
 class BrowserStateTest {
@@ -61,6 +62,7 @@ class BrowserStateTest {
         assertEquals(lastAccessedNormalTab, result[0])
     }
 
+    @Ignore("Temporarily disabled. See #20402.")
     @Test
     fun `GIVEN the selected tab is a normal tab and another media tab exists WHEN asRecentTabs is called THEN return a list of these tabs`() {
         val selectedTab = createTab(url = "url", id = "3")
@@ -77,6 +79,7 @@ class BrowserStateTest {
         assertEquals(mediaTab, result[1])
     }
 
+    @Ignore("Temporarily disabled. See #20402.")
     @Test
     fun `GIVEN the selected tab is a private tab and another media tab exists WHEN asRecentTabs is called THEN return a list of the last normal tab and the media tab`() {
         val lastAccessedNormalTab = createTab(url = "url2", id = "2", lastAccess = 2)
