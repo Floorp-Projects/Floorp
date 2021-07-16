@@ -179,7 +179,7 @@ static void PrintDisplayListTo(nsDisplayListBuilder* aBuilder,
     aStream << "<ul>";
   }
 
-  for (nsDisplayItem* i = aList.GetBottom(); i != nullptr; i = i->GetAbove()) {
+  for (nsDisplayItem* i : aList) {
     if (aDumpHtml) {
       aStream << "<li>";
     }
