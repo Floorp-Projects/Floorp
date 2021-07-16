@@ -6,10 +6,17 @@
 
 from __future__ import absolute_import, print_function
 
-from mach.decorators import CommandArgument, CommandProvider, Command
+from mach.decorators import (
+    CommandArgument,
+    CommandProvider,
+    Command,
+)
 
 from mozbuild.base import MachCommandBase
-from mozbuild.shellutil import split as shell_split, quote as shell_quote
+from mozbuild.shellutil import (
+    split as shell_split,
+    quote as shell_quote,
+)
 
 
 @CommandProvider
@@ -28,13 +35,13 @@ class Introspection(MachCommandBase):
         from mozbuild.util import resolve_target_to_make
         from mozbuild.compilation import util
 
-        if not util.check_top_objdir(command_context.topobjdir):
+        if not util.check_top_objdir(self.topobjdir):
             return 1
 
-        path_arg = command_context._wrap_path_argument(what)
+        path_arg = self._wrap_path_argument(what)
 
         make_dir, make_target = resolve_target_to_make(
-            command_context.topobjdir, path_arg.relpath()
+            self.topobjdir, path_arg.relpath()
         )
 
         if make_dir is None and make_target is None:

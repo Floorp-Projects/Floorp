@@ -18,7 +18,6 @@ import tarfile
 import tempfile
 import xml.etree.ElementTree as ET
 import yaml
-from types import SimpleNamespace
 
 import six
 from six.moves import input
@@ -34,7 +33,7 @@ from mozbuild.nodeutil import find_node_executable
 
 import mozpack.path as mozpath
 
-from mozbuild.util import memoize
+from mozbuild.util import memoized_property
 
 from mozversioncontrol import get_repository_object
 
@@ -191,19 +190,6 @@ class StaticAnalysis(MachCommandBase):
 
     _cov_config = None
 
-    # (TOOLS) Function return codes
-    TOOLS_SUCCESS = 0
-    TOOLS_FAILED_DOWNLOAD = 1
-    TOOLS_UNSUPORTED_PLATFORM = 2
-    TOOLS_CHECKER_NO_TEST_FILE = 3
-    TOOLS_CHECKER_RETURNED_NO_ISSUES = 4
-    TOOLS_CHECKER_RESULT_FILE_NOT_FOUND = 5
-    TOOLS_CHECKER_DIFF_FAILED = 6
-    TOOLS_CHECKER_NOT_FOUND = 7
-    TOOLS_CHECKER_FAILED_FILE = 8
-    TOOLS_CHECKER_LIST_EMPTY = 9
-    TOOLS_GRADLE_FAILED = 10
-
     @Command(
         "static-analysis",
         category="testing",
@@ -218,7 +204,7 @@ class StaticAnalysis(MachCommandBase):
 
         def populate_context(key=None):
             if key == "topdir":
-                return command_context.topsrcdir
+                return self.topsrcdir
 
         mach.populate_context_handler = populate_context
         mach.run(["static-analysis", "--help"])
@@ -312,32 +298,30 @@ class StaticAnalysis(MachCommandBase):
             StaticAnalysisOutputManager,
         )
 
-        command_context._set_log_level(verbose)
-        command_context.activate_virtualenv()
-        command_context.log_manager.enable_unstructured()
+        self._set_log_level(verbose)
+        self.activate_virtualenv()
+        self.log_manager.enable_unstructured()
 
-        rc, clang_paths = self._get_clang_tools(command_context, verbose=verbose)
+        rc = self._get_clang_tools(verbose=verbose)
         if rc != 0:
             return rc
 
-        if not self._is_version_eligible(command_context, clang_paths):
+        if not self._is_version_eligible():
             return 1
 
-        rc, _compile_db, compilation_commands_path = self._build_compile_db(
-            command_context, verbose=verbose
-        )
-        rc = rc or self._build_export(command_context, jobs=jobs, verbose=verbose)
+        rc = self._build_compile_db(verbose=verbose)
+        rc = rc or self._build_export(jobs=jobs, verbose=verbose)
         if rc != 0:
             return rc
 
         # Use outgoing files instead of source files
         if outgoing:
-            repo = get_repository_object(command_context.topsrcdir)
+            repo = get_repository_object(self.topsrcdir)
             files = repo.get_outgoing_files()
-            source = self.get_abspath_files(command_context, files)
+            source = self.get_abspath_files(files)
 
         # Split in several chunks to avoid hitting Python's limit of 100 groups in re
-        compile_db = json.loads(open(_compile_db, "r").read())
+        compile_db = json.loads(open(self._compile_db, "r").read())
         total = 0
         import re
 
@@ -352,10 +336,10 @@ class StaticAnalysis(MachCommandBase):
                     total = total + 1
 
         # Filter source to remove excluded files
-        source = self._generate_path_list(command_context, source, verbose=verbose)
+        source = self._generate_path_list(source, verbose=verbose)
 
         if not total or not source:
-            command_context.log(
+            self.log(
                 logging.INFO,
                 "static-analysis",
                 {},
@@ -367,19 +351,19 @@ class StaticAnalysis(MachCommandBase):
         # Escape the files from source
         source = [re.escape(f) for f in source]
 
-        cwd = command_context.topobjdir
+        cwd = self.topobjdir
 
         monitor = StaticAnalysisMonitor(
-            command_context.topsrcdir,
-            command_context.topobjdir,
-            self.get_clang_tidy_config(command_context).checks_with_data,
+            self.topsrcdir,
+            self.topobjdir,
+            self.get_clang_tidy_config.checks_with_data,
             total,
         )
 
-        footer = StaticAnalysisFooter(command_context.log_manager.terminal, monitor)
+        footer = StaticAnalysisFooter(self.log_manager.terminal, monitor)
 
         with StaticAnalysisOutputManager(
-            command_context.log_manager, monitor, footer
+            self.log_manager, monitor, footer
         ) as output_manager:
             import math
 
@@ -388,23 +372,20 @@ class StaticAnalysis(MachCommandBase):
             )
             for i in range(0, len(source), batch_size):
                 args = self._get_clang_tidy_command(
-                    command_context,
-                    clang_paths,
-                    compilation_commands_path,
                     checks=checks,
                     header_filter=header_filter,
                     sources=source[i : (i + batch_size)],
                     jobs=jobs,
                     fix=fix,
                 )
-                rc = command_context.run_process(
+                rc = self.run_process(
                     args=args,
                     ensure_exit_code=False,
                     line_handler=output_manager.on_line,
                     cwd=cwd,
                 )
 
-            command_context.log(
+            self.log(
                 logging.WARNING,
                 "warning_summary",
                 {"count": len(monitor.warnings_db)},
@@ -419,10 +400,8 @@ class StaticAnalysis(MachCommandBase):
             return rc
         # if we are building firefox for android it might be nice to
         # also analyze the java code base
-        if command_context.substs["MOZ_BUILD_APP"] == "mobile/android":
-            rc = self.check_java(
-                command_context, source, jobs, strip, verbose, skip_export=True
-            )
+        if self.substs["MOZ_BUILD_APP"] == "mobile/android":
+            rc = self.check_java(source, jobs, strip, verbose, skip_export=True)
         return rc
 
     @StaticAnalysisSubCommand(
@@ -475,12 +454,12 @@ class StaticAnalysis(MachCommandBase):
         full_build=False,
         verbose=False,
     ):
-        command_context._set_log_level(verbose)
-        command_context.activate_virtualenv()
-        command_context.log_manager.enable_unstructured()
+        self._set_log_level(verbose)
+        self.activate_virtualenv()
+        self.log_manager.enable_unstructured()
 
         if "MOZ_AUTOMATION" not in os.environ:
-            command_context.log(
+            self.log(
                 logging.INFO,
                 "static-analysis",
                 {},
@@ -489,7 +468,7 @@ class StaticAnalysis(MachCommandBase):
             return
 
         if full_build and outgoing:
-            command_context.log(
+            self.log(
                 logging.INFO,
                 "static-analysis",
                 {},
@@ -499,13 +478,13 @@ class StaticAnalysis(MachCommandBase):
 
         # Use outgoing files instead of source files
         if outgoing:
-            repo = get_repository_object(command_context.topsrcdir)
+            repo = get_repository_object(self.topsrcdir)
             files = repo.get_outgoing_files()
-            source = self.get_abspath_files(command_context, files)
+            source = self.get_abspath_files(files)
 
         # Verify that we have source files or we are dealing with a full-build
         if len(source) == 0 and not full_build:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -516,16 +495,16 @@ class StaticAnalysis(MachCommandBase):
         # Load the configuration file for coverity static-analysis
         # For the moment we store only the reliability index for each checker
         # as the rest is managed on the https://github.com/mozilla/release-services side.
-        cov_config = self._get_cov_config(command_context)
+        self._cov_config = self._get_cov_config()
 
-        rc, cov = self.setup_coverity(command_context)
+        rc = self.setup_coverity()
         if rc != 0:
             return rc
 
         # First run cov-run-desktop --setup in order to setup the analysis env
         # We need this in both cases, per patch analysis or full tree build
-        cmd = [cov.cov_run_desktop, "--setup"]
-        if self.run_cov_command(command_context, cmd, cov.cov_path):
+        cmd = [self.cov_run_desktop, "--setup"]
+        if self.run_cov_command(cmd, self.cov_path):
             # Avoiding a bug in Coverity where snapshot is not identified
             # as beeing built with the current analysis binary.
             if not full_build:
@@ -534,26 +513,27 @@ class StaticAnalysis(MachCommandBase):
         # Run cov-configure for clang, javascript and python
         langs = ["clang", "javascript", "python"]
         for lang in langs:
-            cmd = [cov.cov_configure, "--{}".format(lang)]
+            cmd = [self.cov_configure, "--{}".format(lang)]
 
-            if self.run_cov_command(command_context, cmd):
+            if self.run_cov_command(cmd):
                 return 1
 
         if full_build:
             # 1. Build the model file that is going to be used for analysis
             model_path = mozpath.join("tools", "coverity", "model.cpp")
-            cmd = [cov.cov_make_library, "-sf", cov.cov_lic_path, model_path]
+            cmd = [self.cov_make_library, "-sf", self.cov_lic_path, model_path]
 
-            if self.run_cov_command(command_context, cmd):
+            if self.run_cov_command(cmd):
                 return 1
 
             # 2. Run cov-build
 
             # Add cov_build command
-            cmd = [cov.cov_build, "--dir", "cov-int"]
+            cmd = [self.cov_build, "--dir", "cov-int"]
             # Add fs capture search paths for languages that are not nuilt
             cmd += [
-                "--fs-capture-search={}".format(path) for path in cov.cov_capture_search
+                "--fs-capture-search={}".format(path)
+                for path in self.cov_capture_search
             ]
 
             # Add the exclude criteria for test cases
@@ -564,96 +544,92 @@ class StaticAnalysis(MachCommandBase):
                 "--log-no-times",
                 "build",
             ]
-            if self.run_cov_command(command_context, cmd):
+            if self.run_cov_command(cmd):
                 return 1
 
             # 3. Run cov-analyze and exclude disabled checkers
             cmd = [
-                cov.cov_analyze,
+                self.cov_analyze,
                 "--dir",
                 "cov-int",
                 "--all",
                 "--enable-virtual",
-                "--strip-path={}".format(command_context.topsrcdir),
+                "--strip-path={}".format(self.topsrcdir),
                 "-sf",
-                cov.cov_lic_path,
+                self.cov_lic_path,
             ]
 
             cmd += [
                 "--disable={}".format(key)
-                for key, checker in cov_config["coverity_checkers"].items()
+                for key, checker in self._cov_config["coverity_checkers"].items()
                 if checker.get("publish", True) is False
             ]
 
-            if self.run_cov_command(command_context, cmd):
+            if self.run_cov_command(cmd):
                 return 1
 
             # 4. Run cov-commit-defects
-            protocol = "https" if cov.cov_server_ssl else "http"
-            server_url = "{0}://{1}:{2}".format(protocol, cov.cov_url, cov.cov_port)
+            protocol = "https" if self.cov_server_ssl else "http"
+            server_url = "{0}://{1}:{2}".format(protocol, self.cov_url, self.cov_port)
             cmd = [
-                cov.cov_commit_defects,
+                self.cov_commit_defects,
                 "--auth-key-file",
-                cov.cov_auth_path,
+                self.cov_auth_path,
                 "--stream",
-                cov.cov_stream,
+                self.cov_stream,
                 "--dir",
                 "cov-int",
                 "--url",
                 server_url,
                 "-sf",
-                cov.cov_lic_path,
+                self.cov_lic_path,
             ]
 
-            if self.run_cov_command(command_context, cmd):
+            if self.run_cov_command(cmd):
                 return 1
 
             return 0
 
         # TEMP Fix for Case# 00847671
         cmd = [
-            cov.cov_configure,
+            self.cov_configure,
             "--delete-compiler-config",
             "template-clangcc-config-0",
             "coverity_config.xml",
         ]
-        if self.run_cov_command(command_context, cmd):
+        if self.run_cov_command(cmd):
             return 1
 
         cmd = [
-            cov.cov_configure,
+            self.cov_configure,
             "--delete-compiler-config",
             "template-clangcxx-config-0",
             "coverity_config.xml",
         ]
-        if self.run_cov_command(command_context, cmd):
+        if self.run_cov_command(cmd):
             return 1
 
         cmd = [
-            cov.cov_configure,
+            self.cov_configure,
             "--clang",
             "--xml-option",
             "append_arg:--ppp_translator",
             "--xml-option",
             "append_arg:replace/\{([a-zA-Z]+::None\(\))\}/=$1",
         ]
-        if self.run_cov_command(command_context, cmd):
+        if self.run_cov_command(cmd):
             return 1
         # End for Case# 00847671
 
-        rc, compile_db, compilation_commands_path = self._build_compile_db(
-            command_context, verbose=verbose
-        )
-        rc = rc or self._build_export(command_context, jobs=2, verbose=verbose)
+        rc = self._build_compile_db(verbose=verbose)
+        rc = rc or self._build_export(jobs=2, verbose=verbose)
 
         if rc != 0:
             return rc
 
-        commands_list = self.get_files_with_commands(
-            command_context, compile_db, source
-        )
+        commands_list = self.get_files_with_commands(source)
         if len(commands_list) == 0:
-            command_context.log(
+            self.log(
                 logging.INFO,
                 "static-analysis",
                 {},
@@ -671,52 +647,48 @@ class StaticAnalysis(MachCommandBase):
 
             build_command = element["command"].split(" ")
 
-            cmd = [cov.cov_translate, "--dir", cov.cov_idir_path] + transform_cmd(
+            cmd = [self.cov_translate, "--dir", self.cov_idir_path] + transform_cmd(
                 build_command
             )
 
-            if self.run_cov_command(command_context, cmd, element["directory"]):
+            if self.run_cov_command(cmd, element["directory"]):
                 return 1
 
         if coverity_output_path is None:
-            cov_result = mozpath.join(cov.cov_state_path, "cov-results.json")
+            cov_result = mozpath.join(self.cov_state_path, "cov-results.json")
         else:
             cov_result = mozpath.join(coverity_output_path, "cov-results.json")
 
         # Once the capture is performed we need to do the actual Coverity Desktop analysis
         cmd = [
-            cov.cov_run_desktop,
+            self.cov_run_desktop,
             "--json-output-v6",
             cov_result,
             "--analyze-captured-source",
         ]
 
-        if self.run_cov_command(command_context, cmd, cov.cov_state_path):
+        if self.run_cov_command(cmd, self.cov_state_path):
             return 1
 
         if output is not None:
-            self.dump_cov_artifact(
-                command_context, cov_config, cov_result, source, output
-            )
+            self.dump_cov_artifact(cov_result, source, output)
 
-    def get_abspath_files(self, command_context, files):
-        return [mozpath.join(command_context.topsrcdir, f) for f in files]
+    def get_abspath_files(self, files):
+        return [mozpath.join(self.topsrcdir, f) for f in files]
 
-    def run_cov_command(self, command_context, cmd, path=None):
+    def run_cov_command(self, cmd, path=None):
         if path is None:
             # We want to run it in topsrcdir
-            path = command_context.topsrcdir
+            path = self.topsrcdir
 
-        command_context.log(
-            logging.INFO, "static-analysis", {}, "Running " + " ".join(cmd)
-        )
+        self.log(logging.INFO, "static-analysis", {}, "Running " + " ".join(cmd))
 
-        rc = command_context.run_process(
+        rc = self.run_process(
             args=cmd, cwd=path, pass_thru=True, ensure_exit_code=False
         )
 
         if rc != 0:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -725,11 +697,9 @@ class StaticAnalysis(MachCommandBase):
             return rc
         return 0
 
-    def get_reliability_index_for_cov_checker(
-        self, command_context, cov_config, checker_name
-    ):
-        if cov_config is None:
-            command_context.log(
+    def get_reliability_index_for_cov_checker(self, checker_name):
+        if self._cov_config is None:
+            self.log(
                 logging.INFO,
                 "static-analysis",
                 {},
@@ -740,9 +710,9 @@ class StaticAnalysis(MachCommandBase):
             )
             return "medium"
 
-        checkers = cov_config["coverity_checkers"]
+        checkers = self._cov_config["coverity_checkers"]
         if checker_name not in checkers:
-            command_context.log(
+            self.log(
                 logging.INFO,
                 "static-analysis",
                 {},
@@ -755,7 +725,7 @@ class StaticAnalysis(MachCommandBase):
 
         if "reliability" not in checkers[checker_name]:
             # This checker doesn't have a reliability index
-            command_context.log(
+            self.log(
                 logging.INFO,
                 "static-analysis",
                 {},
@@ -769,9 +739,7 @@ class StaticAnalysis(MachCommandBase):
 
         return checkers[checker_name]["reliability"]
 
-    def dump_cov_artifact(
-        self, command_context, cov_config, cov_results, source, output
-    ):
+    def dump_cov_artifact(self, cov_results, source, output):
         # Parse Coverity json into structured issues
 
         with open(cov_results) as f:
@@ -793,7 +761,7 @@ class StaticAnalysis(MachCommandBase):
                     "flag": issue["checkerName"],
                     "message": event_path["eventDescription"],
                     "reliability": self.get_reliability_index_for_cov_checker(
-                        command_context, cov_config, issue["checkerName"]
+                        issue["checkerName"]
                     ),
                     "extra": {
                         "category": issue["checkerProperties"]["category"],
@@ -807,7 +775,7 @@ class StaticAnalysis(MachCommandBase):
                     dict_issue["extra"]["stack"].append(
                         {
                             "file_path": build_repo_relative_path(
-                                event["strippedFilePathname"], command_context.topsrcdir
+                                event["strippedFilePathname"], self.topsrcdir
                             ),
                             "line_number": event["lineNumber"],
                             "path_type": event["eventTag"],
@@ -819,7 +787,7 @@ class StaticAnalysis(MachCommandBase):
 
             for issue in result["issues"]:
                 path = build_repo_relative_path(
-                    issue["strippedMainEventFilePathname"], command_context.topsrcdir
+                    issue["strippedMainEventFilePathname"], self.topsrcdir
                 )
                 # Skip clang diagnostic messages
                 if issue["checkerName"].startswith("RW.CLANG"):
@@ -827,7 +795,7 @@ class StaticAnalysis(MachCommandBase):
 
                 if path is None:
                     # Since we skip a result we should log it
-                    command_context.log(
+                    self.log(
                         logging.INFO,
                         "static-analysis",
                         {},
@@ -846,13 +814,13 @@ class StaticAnalysis(MachCommandBase):
             with open(output, "w") as f:
                 json.dump(issues_dict, f)
 
-    def get_coverity_secrets(self, command_context):
+    def get_coverity_secrets(self):
         from taskgraph.util.taskcluster import get_root_url
 
         secret_name = "project/relman/coverity"
         secrets_url = "{}/secrets/v1/secret/{}".format(get_root_url(True), secret_name)
 
-        command_context.log(
+        self.log(
             logging.INFO,
             "static-analysis",
             {},
@@ -868,41 +836,39 @@ class StaticAnalysis(MachCommandBase):
         secret = res.json()
         cov_config = secret["secret"] if "secret" in secret else None
 
-        cov = SimpleNamespace()
-
         if cov_config is None:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
                 "ERROR: Ill formatted secret for Coverity. Aborting analysis.",
             )
-            return 1, cov
+            return 1
 
-        cov.cov_analysis_url = cov_config.get("package_url")
-        cov.cov_package_name = cov_config.get("package_name")
-        cov.cov_url = cov_config.get("server_url")
-        cov.cov_server_ssl = cov_config.get("server_ssl", True)
+        self.cov_analysis_url = cov_config.get("package_url")
+        self.cov_package_name = cov_config.get("package_name")
+        self.cov_url = cov_config.get("server_url")
+        self.cov_server_ssl = cov_config.get("server_ssl", True)
         # In case we don't have a port in the secret we use the default one,
         # for a default coverity deployment.
-        cov.cov_port = cov_config.get("server_port", 8443)
-        cov.cov_auth = cov_config.get("auth_key")
-        cov.cov_package_ver = cov_config.get("package_ver")
-        cov.cov_lic_name = cov_config.get("lic_name")
-        cov.cov_capture_search = cov_config.get("fs_capture_search", None)
-        cov.cov_full_stack = cov_config.get("full_stack", False)
-        cov.cov_stream = cov_config.get("stream", False)
+        self.cov_port = cov_config.get("server_port", 8443)
+        self.cov_auth = cov_config.get("auth_key")
+        self.cov_package_ver = cov_config.get("package_ver")
+        self.cov_lic_name = cov_config.get("lic_name")
+        self.cov_capture_search = cov_config.get("fs_capture_search", None)
+        self.cov_full_stack = cov_config.get("full_stack", False)
+        self.cov_stream = cov_config.get("stream", False)
 
-        return 0, cov
+        return 0
 
-    def download_coverity(self, command_context, cov):
+    def download_coverity(self):
         if (
-            cov.cov_url is None
-            or cov.cov_port is None
-            or cov.cov_analysis_url is None
-            or cov.cov_auth is None
+            self.cov_url is None
+            or self.cov_port is None
+            or self.cov_analysis_url is None
+            or self.cov_auth is None
         ):
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -931,85 +897,87 @@ class StaticAnalysis(MachCommandBase):
         }
         """
         # Generate the coverity.conf and auth files
-        cov.cov_auth_path = mozpath.join(cov.cov_state_path, "auth")
-        cov_setup_path = mozpath.join(cov.cov_state_path, "coverity.conf")
-        cov_conf = COVERITY_CONFIG % (cov.cov_url, cov.cov_port, cov.cov_auth_path)
+        self.cov_auth_path = mozpath.join(self.cov_state_path, "auth")
+        cov_setup_path = mozpath.join(self.cov_state_path, "coverity.conf")
+        cov_conf = COVERITY_CONFIG % (self.cov_url, self.cov_port, self.cov_auth_path)
 
         def download(artifact_url, target):
             import requests
 
-            command_context.log_manager.enable_unstructured()
+            self.log_manager.enable_unstructured()
             resp = requests.get(artifact_url, verify=False, stream=True)
-            command_context.log_manager.disable_unstructured()
+            self.log_manager.disable_unstructured()
             resp.raise_for_status()
 
             # Extract archive into destination
             with tarfile.open(fileobj=io.BytesIO(resp.content)) as tar:
                 tar.extractall(target)
 
-        download(cov.cov_analysis_url, cov.cov_state_path)
+        download(self.cov_analysis_url, self.cov_state_path)
 
-        with open(cov.cov_auth_path, "w") as f:
-            f.write(cov.cov_auth)
+        with open(self.cov_auth_path, "w") as f:
+            f.write(self.cov_auth)
 
         # Modify it's permission to 600
-        os.chmod(cov.cov_auth_path, 0o600)
+        os.chmod(self.cov_auth_path, 0o600)
 
         with open(cov_setup_path, "a") as f:
             f.write(cov_conf)
 
-    def setup_coverity(self, command_context, force_download=True):
-        rc, config, _ = self._get_config_environment(command_context)
-        rc, cov = rc or self.get_coverity_secrets(command_context)
+    def setup_coverity(self, force_download=True):
+        rc, config, _ = self._get_config_environment()
+        rc = rc or self.get_coverity_secrets()
 
         if rc != 0:
-            return rc, cov
+            return rc
 
         # Create a directory in mozbuild where we setup coverity
-        cov.cov_state_path = mozpath.join(
-            command_context._mach_context.state_dir, "coverity"
-        )
+        self.cov_state_path = mozpath.join(self._mach_context.state_dir, "coverity")
 
-        if force_download is True and os.path.exists(cov.cov_state_path):
-            shutil.rmtree(cov.cov_state_path)
+        if force_download is True and os.path.exists(self.cov_state_path):
+            shutil.rmtree(self.cov_state_path)
 
-        os.mkdir(cov.cov_state_path)
+        os.mkdir(self.cov_state_path)
 
         # Download everything that we need for Coverity from out private instance
-        self.download_coverity(command_context, cov)
+        self.download_coverity()
 
-        cov.cov_path = mozpath.join(cov.cov_state_path, cov.cov_package_name)
-        cov.cov_run_desktop = mozpath.join(cov.cov_path, "bin", "cov-run-desktop")
-        cov.cov_configure = mozpath.join(cov.cov_path, "bin", "cov-configure")
-        cov.cov_make_library = mozpath.join(cov.cov_path, "bin", "cov-make-library")
-        cov.cov_build = mozpath.join(cov.cov_path, "bin", "cov-build")
-        cov.cov_analyze = mozpath.join(cov.cov_path, "bin", "cov-analyze")
-        cov.cov_commit_defects = mozpath.join(cov.cov_path, "bin", "cov-commit-defects")
-        cov.cov_translate = mozpath.join(cov.cov_path, "bin", "cov-translate")
-        cov.cov_configure = mozpath.join(cov.cov_path, "bin", "cov-configure")
-        cov.cov_work_path = mozpath.join(cov.cov_state_path, "data-coverity")
-        cov.cov_idir_path = mozpath.join(cov.cov_work_path, cov.cov_package_ver, "idir")
-        cov.cov_lic_path = mozpath.join(
-            cov.cov_work_path, cov.cov_package_ver, "lic", cov.cov_lic_name
+        self.cov_path = mozpath.join(self.cov_state_path, self.cov_package_name)
+        self.cov_run_desktop = mozpath.join(self.cov_path, "bin", "cov-run-desktop")
+        self.cov_configure = mozpath.join(self.cov_path, "bin", "cov-configure")
+        self.cov_make_library = mozpath.join(self.cov_path, "bin", "cov-make-library")
+        self.cov_build = mozpath.join(self.cov_path, "bin", "cov-build")
+        self.cov_analyze = mozpath.join(self.cov_path, "bin", "cov-analyze")
+        self.cov_commit_defects = mozpath.join(
+            self.cov_path, "bin", "cov-commit-defects"
+        )
+        self.cov_translate = mozpath.join(self.cov_path, "bin", "cov-translate")
+        self.cov_configure = mozpath.join(self.cov_path, "bin", "cov-configure")
+        self.cov_work_path = mozpath.join(self.cov_state_path, "data-coverity")
+        self.cov_idir_path = mozpath.join(
+            self.cov_work_path, self.cov_package_ver, "idir"
+        )
+        self.cov_lic_path = mozpath.join(
+            self.cov_work_path, self.cov_package_ver, "lic", self.cov_lic_name
         )
 
-        if not os.path.exists(cov.cov_path):
-            command_context.log(
+        if not os.path.exists(self.cov_path):
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
-                "ERROR: Missing Coverity in {}".format(cov.cov_path),
+                "ERROR: Missing Coverity in {}".format(self.cov_path),
             )
-            return 1, cov
+            return 1
 
-        return 0, cov
+        return 0
 
-    def get_files_with_commands(self, command_context, compile_db, source):
+    def get_files_with_commands(self, source):
         """
         Returns an array of dictionaries having file_path with build command
         """
 
-        compile_db = json.load(open(compile_db, "r"))
+        compile_db = json.load(open(self._compile_db, "r"))
 
         commands_list = []
 
@@ -1018,11 +986,9 @@ class StaticAnalysis(MachCommandBase):
             _, ext = os.path.splitext(f)
 
             if ext.lower() not in self._format_include_extensions:
-                command_context.log(
-                    logging.INFO, "static-analysis", {}, "Skipping {}".format(f)
-                )
+                self.log(logging.INFO, "static-analysis", {}, "Skipping {}".format(f))
                 continue
-            file_with_abspath = os.path.join(command_context.topsrcdir, f)
+            file_with_abspath = os.path.join(self.topsrcdir, f)
             for f in compile_db:
                 # Found for a file that we are looking
                 if file_with_abspath == f["file"]:
@@ -1088,25 +1054,25 @@ class StaticAnalysis(MachCommandBase):
         outgoing=False,
         output=None,
     ):
-        command_context._set_log_level(verbose)
-        command_context.activate_virtualenv()
-        command_context.log_manager.enable_unstructured()
+        self._set_log_level(verbose)
+        self.activate_virtualenv()
+        self.log_manager.enable_unstructured()
 
-        if command_context.substs["MOZ_BUILD_APP"] != "mobile/android":
-            command_context.log(
+        if self.substs["MOZ_BUILD_APP"] != "mobile/android":
+            self.log(
                 logging.WARNING,
                 "static-analysis",
                 {},
                 "Cannot check java source code unless you are building for android!",
             )
             return 1
-        rc = self._check_for_java(command_context)
+        rc = self._check_for_java()
         if rc != 0:
             return 1
         if output is not None:
             output = os.path.abspath(output)
             if not os.path.isdir(os.path.dirname(output)):
-                command_context.log(
+                self.log(
                     logging.WARNING,
                     "static-analysis",
                     {},
@@ -1119,12 +1085,10 @@ class StaticAnalysis(MachCommandBase):
         # gather all java sources from the source variable
         java_sources = []
         if outgoing:
-            repo = get_repository_object(command_context.topsrcdir)
-            java_sources = self._get_java_files(
-                command_context, repo.get_outgoing_files()
-            )
+            repo = get_repository_object(self.topsrcdir)
+            java_sources = self._get_java_files(repo.get_outgoing_files())
             if not java_sources:
-                command_context.log(
+                self.log(
                     logging.WARNING,
                     "static-analysis",
                     {},
@@ -1132,16 +1096,16 @@ class StaticAnalysis(MachCommandBase):
                 )
                 return 0
         elif not check_all:
-            java_sources = self._get_java_files(command_context, source)
+            java_sources = self._get_java_files(source)
             if not java_sources:
                 return 0
         if not skip_export:
-            rc = self._build_export(command_context, jobs=jobs, verbose=verbose)
+            rc = self._build_export(jobs=jobs, verbose=verbose)
             if rc != 0:
                 return rc
-        rc, infer_path = self._get_infer(command_context, verbose=verbose)
+        rc = self._get_infer(verbose=verbose)
         if rc != 0:
-            command_context.log(
+            self.log(
                 logging.WARNING,
                 "static-analysis",
                 {},
@@ -1149,36 +1113,28 @@ class StaticAnalysis(MachCommandBase):
             )
             return rc
         # which checkers to use, and which folders to exclude
-        all_checkers, third_party_path, generated_path = self._get_infer_config(
-            command_context
-        )
+        all_checkers, third_party_path, generated_path = self._get_infer_config()
         checkers, excludes = self._get_infer_args(
             checks or all_checkers, third_party_path, generated_path
         )
-        rc = rc or self._gradle(
-            command_context, ["clean"]
-        )  # clean so that we can recompile
+        rc = rc or self._gradle(["clean"])  # clean so that we can recompile
         # infer capture command
-        capture_cmd = [infer_path, "capture"] + excludes + ["--"]
-        rc = rc or self._gradle(
-            command_context, [task], infer_args=capture_cmd, verbose=verbose
-        )
+        capture_cmd = [self._infer_path, "capture"] + excludes + ["--"]
+        rc = rc or self._gradle([task], infer_args=capture_cmd, verbose=verbose)
         tmp_file, args = self._get_infer_source_args(java_sources)
         # infer analyze command
-        analysis_cmd = [infer_path, "analyze", "--keep-going"] + checkers + args
-        rc = rc or command_context.run_process(
-            args=analysis_cmd, cwd=command_context.topsrcdir, pass_thru=True
+        analysis_cmd = [self._infer_path, "analyze", "--keep-going"] + checkers + args
+        rc = rc or self.run_process(
+            args=analysis_cmd, cwd=self.topsrcdir, pass_thru=True
         )
         if tmp_file:
             tmp_file.close()
 
         # Copy the infer report
-        report_path = os.path.join(
-            command_context.topsrcdir, "infer-out", "report.json"
-        )
+        report_path = os.path.join(self.topsrcdir, "infer-out", "report.json")
         if output is not None and os.path.exists(report_path):
             shutil.copy(report_path, output)
-            command_context.log(
+            self.log(
                 logging.INFO,
                 "static-analysis",
                 {},
@@ -1187,10 +1143,10 @@ class StaticAnalysis(MachCommandBase):
 
         return rc
 
-    def _get_java_files(self, command_context, sources):
+    def _get_java_files(self, sources):
         java_sources = []
         for i in sources:
-            f = mozpath.join(command_context.topsrcdir, i)
+            f = mozpath.join(self.topsrcdir, i)
             if os.path.isdir(f):
                 for root, dirs, files in os.walk(f):
                     dirs.sort()
@@ -1213,22 +1169,18 @@ class StaticAnalysis(MachCommandBase):
         f.flush()
         return (f, ["--changed-files-index", f.name])
 
-    def _get_infer_config(self, command_context):
+    def _get_infer_config(self):
         """Load the infer config file."""
         checkers = []
         tp_path = ""
-        with open(
-            mozpath.join(command_context.topsrcdir, "tools", "infer", "config.yaml")
-        ) as f:
+        with open(mozpath.join(self.topsrcdir, "tools", "infer", "config.yaml")) as f:
             try:
                 config = yaml.safe_load(f)
                 for item in config["infer_checkers"]:
                     if item["publish"]:
                         checkers.append(item["name"])
-                tp_path = mozpath.join(command_context.topsrcdir, config["third_party"])
-                generated_path = mozpath.join(
-                    command_context.topsrcdir, config["generated"]
-                )
+                tp_path = mozpath.join(self.topsrcdir, config["third_party"])
+                generated_path = mozpath.join(self.topsrcdir, config["generated"])
             except Exception:
                 print(
                     "Looks like config.yaml is not valid, so we are unable "
@@ -1251,22 +1203,20 @@ class StaticAnalysis(MachCommandBase):
                     excludes.append(line.strip("\n"))
         return checkers, excludes
 
-    @memoize
-    def get_clang_tidy_config(self, command_context):
+    @memoized_property
+    def get_clang_tidy_config(self):
         from mozbuild.code_analysis.utils import ClangTidyConfig
 
-        return ClangTidyConfig(command_context.topsrcdir)
+        return ClangTidyConfig(self.topsrcdir)
 
-    def _get_cov_config(self, command_context):
+    def _get_cov_config(self):
         try:
             file_handler = open(
-                mozpath.join(
-                    command_context.topsrcdir, "tools", "coverity", "config.yaml"
-                )
+                mozpath.join(self.topsrcdir, "tools", "coverity", "config.yaml")
             )
             config = yaml.safe_load(file_handler)
         except Exception:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -1276,10 +1226,10 @@ class StaticAnalysis(MachCommandBase):
             return None
         return config
 
-    def _get_required_version(self, command_context):
-        version = self.get_clang_tidy_config(command_context).version
+    def _get_required_version(self):
+        version = self.get_clang_tidy_config.version
         if version is None:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -1287,12 +1237,12 @@ class StaticAnalysis(MachCommandBase):
             )
         return version
 
-    def _get_current_version(self, command_context, clang_paths):
+    def _get_current_version(self):
         # Because the fact that we ship together clang-tidy and clang-format
         # we are sure that these two will always share the same version.
         # Thus in order to determine that the version is compatible we only
         # need to check one of them, going with clang-format
-        cmd = [clang_paths._clang_format_path, "--version"]
+        cmd = [self._clang_format_path, "--version"]
         version_info = None
         try:
             version_info = (
@@ -1303,17 +1253,15 @@ class StaticAnalysis(MachCommandBase):
 
             if "MOZ_AUTOMATION" in os.environ:
                 # Only show it in the CI
-                command_context.log(
+                self.log(
                     logging.INFO,
                     "static-analysis",
                     {},
-                    "{} Version = {} ".format(
-                        clang_paths._clang_format_path, version_info
-                    ),
+                    "{} Version = {} ".format(self._clang_format_path, version_info),
                 )
 
         except subprocess.CalledProcessError as e:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -1322,50 +1270,39 @@ class StaticAnalysis(MachCommandBase):
             )
         return version_info
 
-    def _is_version_eligible(self, command_context, clang_paths):
-        version = self._get_required_version(command_context)
+    def _is_version_eligible(self):
+        version = self._get_required_version()
         if version is None:
             return False
 
-        current_version = self._get_current_version(command_context, clang_paths)
+        current_version = self._get_current_version()
         if current_version is None:
             return False
         version = "clang-format version " + version
         if version in current_version:
             return True
-        command_context.log(
+        self.log(
             logging.ERROR,
             "static-analysis",
             {},
             "ERROR: You're using an old or incorrect version ({}) of clang-format binary. "
             "Please update to a more recent one (at least > {}) "
             "by running: './mach bootstrap' ".format(
-                self._get_current_version(command_context, clang_paths),
-                self._get_required_version(command_context),
+                self._get_current_version(), self._get_required_version()
             ),
         )
         return False
 
-    def _get_clang_tidy_command(
-        self,
-        command_context,
-        clang_paths,
-        compilation_commands_path,
-        checks,
-        header_filter,
-        sources,
-        jobs,
-        fix,
-    ):
+    def _get_clang_tidy_command(self, checks, header_filter, sources, jobs, fix):
 
         if checks == "-*":
-            checks = ",".join(self.get_clang_tidy_config(command_context).checks)
+            checks = ",".join(self.get_clang_tidy_config.checks)
 
         common_args = [
             "-clang-tidy-binary",
-            clang_paths._clang_tidy_path,
+            self._clang_tidy_path,
             "-clang-apply-replacements-binary",
-            clang_paths._clang_apply_replacements,
+            self._clang_apply_replacements,
             "-checks=%s" % checks,
             "-extra-arg=-std=c++17",
             "-extra-arg=-DMOZ_CLANG_PLUGIN",
@@ -1383,7 +1320,7 @@ class StaticAnalysis(MachCommandBase):
         # From our configuration file, config.yaml, we build the configuration list, for
         # the checkers that are used. These configuration options are used to better fit
         # the checkers to our code.
-        cfg = self.get_clang_tidy_config(command_context).checks_config
+        cfg = self.get_clang_tidy_config.checks_config
         if cfg:
             common_args += ["-config=%s" % yaml.dump(cfg)]
 
@@ -1392,22 +1329,22 @@ class StaticAnalysis(MachCommandBase):
 
         return (
             [
-                command_context.virtualenv_manager.python_path,
-                clang_paths._run_clang_tidy_path,
+                self.virtualenv_manager.python_path,
+                self._run_clang_tidy_path,
                 "-j",
                 str(jobs),
                 "-p",
-                compilation_commands_path,
+                self._compilation_commands_path,
             ]
             + common_args
             + sources
         )
 
-    def _check_for_java(self, command_context):
+    def _check_for_java(self):
         """Check if javac can be found."""
         import distutils.spawn
 
-        java = command_context.substs.get("JAVA")
+        java = self.substs.get("JAVA")
         java = java or os.getenv("JAVA_HOME")
         java = java or distutils.spawn.find_executable("javac")
         error = (
@@ -1416,26 +1353,20 @@ class StaticAnalysis(MachCommandBase):
         error += "set JAVA_HOME, or add the following to your mozconfig:\n"
         error += "  --with-java-bin-path=/path/to/java/bin/"
         if not java:
-            command_context.log(logging.ERROR, "ERROR: static-analysis", {}, error)
+            self.log(logging.ERROR, "ERROR: static-analysis", {}, error)
             return 1
         return 0
 
     def _gradle(
-        self,
-        command_context,
-        args,
-        infer_args=None,
-        verbose=False,
-        autotest=False,
-        suppress_output=True,
+        self, args, infer_args=None, verbose=False, autotest=False, suppress_output=True
     ):
         infer_args = infer_args or []
         if autotest:
-            cwd = mozpath.join(command_context.topsrcdir, "tools", "infer", "test")
+            cwd = mozpath.join(self.topsrcdir, "tools", "infer", "test")
             gradle = mozpath.join(cwd, "gradlew")
         else:
-            gradle = command_context.substs["GRADLE"]
-            cwd = command_context.topsrcdir
+            gradle = self.substs["GRADLE"]
+            cwd = self.topsrcdir
         extra_env = {
             "GRADLE_OPTS": "-Dfile.encoding=utf-8",  # see mobile/android/mach_commands.py
             "JAVA_TOOL_OPTIONS": "-Dfile.encoding=utf-8",
@@ -1451,7 +1382,7 @@ class StaticAnalysis(MachCommandBase):
                 close_fds=True,
             )
 
-        return command_context.run_process(
+        return self.run_process(
             infer_args + [gradle] + args,
             append_env=extra_env,
             pass_thru=True,  # Allow user to run gradle interactively.
@@ -1498,17 +1429,29 @@ class StaticAnalysis(MachCommandBase):
         # If 'dump_results' is True than we just want to generate the issues files for each
         # checker in particulat and thus 'force_download' becomes 'False' since we want to
         # do this on a local trusted clang-tidy package.
-        command_context._set_log_level(verbose)
-        command_context.activate_virtualenv()
-        dump_results = dump_results
+        self._set_log_level(verbose)
+        self.activate_virtualenv()
+        self._dump_results = dump_results
 
-        force_download = not dump_results
+        force_download = not self._dump_results
+
+        # Function return codes
+        self.TOOLS_SUCCESS = 0
+        self.TOOLS_FAILED_DOWNLOAD = 1
+        self.TOOLS_UNSUPORTED_PLATFORM = 2
+        self.TOOLS_CHECKER_NO_TEST_FILE = 3
+        self.TOOLS_CHECKER_RETURNED_NO_ISSUES = 4
+        self.TOOLS_CHECKER_RESULT_FILE_NOT_FOUND = 5
+        self.TOOLS_CHECKER_DIFF_FAILED = 6
+        self.TOOLS_CHECKER_NOT_FOUND = 7
+        self.TOOLS_CHECKER_FAILED_FILE = 8
+        self.TOOLS_CHECKER_LIST_EMPTY = 9
+        self.TOOLS_GRADLE_FAILED = 10
 
         # Configure the tree or download clang-tidy package, depending on the option that we choose
         if intree_tool:
-            clang_paths = SimpleNamespace()
             if "MOZ_AUTOMATION" not in os.environ:
-                command_context.log(
+                self.log(
                     logging.INFO,
                     "static-analysis",
                     {},
@@ -1516,7 +1459,7 @@ class StaticAnalysis(MachCommandBase):
                 )
                 return 1
             if "MOZ_FETCHES_DIR" not in os.environ:
-                command_context.log(
+                self.log(
                     logging.INFO,
                     "static-analysis",
                     {},
@@ -1524,42 +1467,40 @@ class StaticAnalysis(MachCommandBase):
                 )
                 return 1
 
-            _, config, _ = self._get_config_environment(command_context)
+            _, config, _ = self._get_config_environment()
             clang_tools_path = os.environ["MOZ_FETCHES_DIR"]
-            clang_paths._clang_tidy_path = mozpath.join(
+            self._clang_tidy_path = mozpath.join(
                 clang_tools_path,
                 "clang-tidy",
                 "bin",
                 "clang-tidy" + config.substs.get("BIN_SUFFIX", ""),
             )
-            clang_paths._clang_format_path = mozpath.join(
+            self._clang_format_path = mozpath.join(
                 clang_tools_path,
                 "clang-tidy",
                 "bin",
                 "clang-format" + config.substs.get("BIN_SUFFIX", ""),
             )
-            clang_paths._clang_apply_replacements = mozpath.join(
+            self._clang_apply_replacements = mozpath.join(
                 clang_tools_path,
                 "clang-tidy",
                 "bin",
                 "clang-apply-replacements" + config.substs.get("BIN_SUFFIX", ""),
             )
-            clang_paths._run_clang_tidy_path = mozpath.join(
+            self._run_clang_tidy_path = mozpath.join(
                 clang_tools_path, "clang-tidy", "share", "clang", "run-clang-tidy.py"
             )
-            clang_paths._clang_format_diff = mozpath.join(
+            self._clang_format_diff = mozpath.join(
                 clang_tools_path, "clang-tidy", "share", "clang", "clang-format-diff.py"
             )
 
             # Ensure that clang-tidy is present
-            rc = not os.path.exists(clang_paths._clang_tidy_path)
+            rc = not os.path.exists(self._clang_tidy_path)
         else:
-            rc, clang_paths = self._get_clang_tools(
-                command_context, force=force_download, verbose=verbose
-            )
+            rc = self._get_clang_tools(force=force_download, verbose=verbose)
 
         if rc != 0:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "ERROR: static-analysis",
                 {},
@@ -1567,15 +1508,13 @@ class StaticAnalysis(MachCommandBase):
             )
             return self.TOOLS_FAILED_DOWNLOAD
 
-        clang_paths._clang_tidy_base_path = mozpath.join(
-            command_context.topsrcdir, "tools", "clang-tidy"
-        )
+        self._clang_tidy_base_path = mozpath.join(self.topsrcdir, "tools", "clang-tidy")
 
         # For each checker run it
-        platform, _ = command_context.platform
+        platform, _ = self.platform
 
-        if platform not in self.get_clang_tidy_config(command_context).platforms:
-            command_context.log(
+        if platform not in self.get_clang_tidy_config.platforms:
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -1587,7 +1526,7 @@ class StaticAnalysis(MachCommandBase):
 
         max_workers = multiprocessing.cpu_count()
 
-        command_context.log(
+        self.log(
             logging.INFO,
             "static-analysis",
             {},
@@ -1597,20 +1536,20 @@ class StaticAnalysis(MachCommandBase):
         )
 
         # List all available checkers
-        cmd = [clang_paths._clang_tidy_path, "-list-checks", "-checks=*"]
+        cmd = [self._clang_tidy_path, "-list-checks", "-checks=*"]
         clang_output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode(
             "utf-8"
         )
         available_checks = clang_output.split("\n")[1:]
-        clang_tidy_checks = [c.strip() for c in available_checks if c]
+        self._clang_tidy_checks = [c.strip() for c in available_checks if c]
 
         # Build the dummy compile_commands.json
-        compilation_commands_path = self._create_temp_compilation_db(command_context)
+        self._compilation_commands_path = self._create_temp_compilation_db()
         checkers_test_batch = []
         checkers_results = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = []
-            for item in self.get_clang_tidy_config(command_context).checks_with_data:
+            for item in self.get_clang_tidy_config.checks_with_data:
                 # Skip if any of the following statements is true:
                 # 1. Checker attribute 'publish' is False.
                 not_published = not bool(item.get("publish", True))
@@ -1635,16 +1574,7 @@ class StaticAnalysis(MachCommandBase):
                     continue
                 checkers_test_batch.append(item["name"])
                 futures.append(
-                    executor.submit(
-                        self._verify_checker,
-                        command_context,
-                        clang_paths,
-                        compilation_commands_path,
-                        dump_results,
-                        clang_tidy_checks,
-                        item,
-                        checkers_results,
-                    )
+                    executor.submit(self._verify_checker, item, checkers_results)
                 )
 
             error_code = self.TOOLS_SUCCESS
@@ -1659,7 +1589,7 @@ class StaticAnalysis(MachCommandBase):
 
             if error_code != self.TOOLS_SUCCESS:
 
-                command_context.log(
+                self.log(
                     logging.INFO,
                     "static-analysis",
                     {},
@@ -1707,46 +1637,27 @@ class StaticAnalysis(MachCommandBase):
                     print("\n" + message_to_log)
 
                 # Also delete the tmp folder
-                shutil.rmtree(compilation_commands_path)
+                shutil.rmtree(self._compilation_commands_path)
                 return error_code
 
             # Run the analysis on all checkers at the same time only if we don't dump results.
-            if not dump_results:
-                ret_val = self._run_analysis_batch(
-                    command_context,
-                    clang_paths,
-                    compilation_commands_path,
-                    checkers_test_batch,
-                )
+            if not self._dump_results:
+                ret_val = self._run_analysis_batch(checkers_test_batch)
                 if ret_val != self.TOOLS_SUCCESS:
-                    shutil.rmtree(compilation_commands_path)
+                    shutil.rmtree(self._compilation_commands_path)
                     return ret_val
 
-        command_context.log(
+        self.log(
             logging.INFO, "static-analysis", {}, "SUCCESS: clang-tidy all tests passed."
         )
         # Also delete the tmp folder
-        shutil.rmtree(compilation_commands_path)
-        return self._autotest_infer(
-            command_context, dump_results, intree_tool, force_download, verbose
-        )
+        shutil.rmtree(self._compilation_commands_path)
+        return self._autotest_infer(intree_tool, force_download, verbose)
 
     def _run_analysis(
-        self,
-        command_context,
-        clang_paths,
-        compilation_commands_path,
-        checks,
-        header_filter,
-        sources,
-        jobs=1,
-        fix=False,
-        print_out=False,
+        self, checks, header_filter, sources, jobs=1, fix=False, print_out=False
     ):
         cmd = self._get_clang_tidy_command(
-            command_context,
-            clang_paths,
-            compilation_commands_path,
             checks=checks,
             header_filter=header_filter,
             sources=sources,
@@ -1761,19 +1672,17 @@ class StaticAnalysis(MachCommandBase):
         except subprocess.CalledProcessError as e:
             print(e.output)
             return None
-        return self._parse_issues(command_context, clang_output), clang_output
+        return self._parse_issues(clang_output), clang_output
 
-    def _run_analysis_batch(
-        self, command_context, clang_paths, compilation_commands_path, items
-    ):
-        command_context.log(
+    def _run_analysis_batch(self, items):
+        self.log(
             logging.INFO,
             "static-analysis",
             {},
             "RUNNING: clang-tidy checker batch analysis.",
         )
         if not len(items):
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -1782,14 +1691,10 @@ class StaticAnalysis(MachCommandBase):
             return self.TOOLS_CHECKER_LIST_EMPTY
 
         issues, clang_output = self._run_analysis(
-            command_context,
-            clang_paths,
-            compilation_commands_path,
             checks="-*," + ",".join(items),
             header_filter="",
             sources=[
-                mozpath.join(clang_paths._clang_tidy_base_path, "test", checker)
-                + ".cpp"
+                mozpath.join(self._clang_tidy_base_path, "test", checker) + ".cpp"
                 for checker in items
             ],
             print_out=True,
@@ -1802,8 +1707,7 @@ class StaticAnalysis(MachCommandBase):
         failed_checks_baseline = []
         for checker in items:
             test_file_path_json = (
-                mozpath.join(clang_paths._clang_tidy_base_path, "test", checker)
-                + ".json"
+                mozpath.join(self._clang_tidy_base_path, "test", checker) + ".json"
             )
             # Read the pre-determined issues
             baseline_issues = self._get_autotest_stored_issues(test_file_path_json)
@@ -1820,7 +1724,7 @@ class StaticAnalysis(MachCommandBase):
                 failed_checks_baseline.append(baseline_issues)
 
         if len(failed_checks) > 0:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -1846,16 +1750,14 @@ class StaticAnalysis(MachCommandBase):
 
         return self.TOOLS_SUCCESS
 
-    def _create_temp_compilation_db(self, command_context):
+    def _create_temp_compilation_db(self):
         directory = tempfile.mkdtemp(prefix="cc")
         with open(
             mozpath.join(directory, "compile_commands.json"), "w"
         ) as file_handler:
             compile_commands = []
-            director = mozpath.join(
-                command_context.topsrcdir, "tools", "clang-tidy", "test"
-            )
-            for item in self.get_clang_tidy_config(command_context).checks:
+            director = mozpath.join(self.topsrcdir, "tools", "clang-tidy", "test")
+            for item in self.get_clang_tidy_config.checks:
                 if item in ["-*", "mozilla-*"]:
                     continue
                 file = item + ".cpp"
@@ -1870,48 +1772,43 @@ class StaticAnalysis(MachCommandBase):
 
             return directory
 
-    def _autotest_infer(
-        self, command_context, dump_results, intree_tool, force_download, verbose
-    ):
+    def _autotest_infer(self, intree_tool, force_download, verbose):
         # infer is not available on other platforms, but autotest should work even without
         # it being installed
-        if command_context.platform[0] == "linux64":
-            rc = self._check_for_java(command_context)
+        if self.platform[0] == "linux64":
+            rc = self._check_for_java()
             if rc != 0:
                 return 1
-            rc, infer_path = self._get_infer(
-                command_context,
-                force=force_download,
-                verbose=verbose,
-                intree_tool=intree_tool,
+            rc = self._get_infer(
+                force=force_download, verbose=verbose, intree_tool=intree_tool
             )
             if rc != 0:
-                command_context.log(
+                self.log(
                     logging.ERROR,
                     "ERROR: static-analysis",
                     {},
                     "ERROR: infer unable to locate package.",
                 )
                 return self.TOOLS_FAILED_DOWNLOAD
-            infer_tool = mozpath.join(command_context.topsrcdir, "tools", "infer")
-            infer_test_folder = mozpath.join(infer_tool, "test")
+            self.__infer_tool = mozpath.join(self.topsrcdir, "tools", "infer")
+            self.__infer_test_folder = mozpath.join(self.__infer_tool, "test")
 
             max_workers = multiprocessing.cpu_count()
-            command_context.log(
+            self.log(
                 logging.INFO,
                 "static-analysis",
                 {},
                 "RUNNING: infer autotest for platform {0} with {1} workers.".format(
-                    command_context.platform[0], max_workers
+                    self.platform[0], max_workers
                 ),
             )
             # clean previous autotest if it exists
-            rc = self._gradle(command_context, ["autotest:clean"], autotest=True)
+            rc = self._gradle(["autotest:clean"], autotest=True)
             if rc != 0:
                 return rc
             import yaml
 
-            with open(mozpath.join(infer_tool, "config.yaml")) as f:
+            with open(mozpath.join(self.__infer_tool, "config.yaml")) as f:
                 config = yaml.safe_load(f)
             with concurrent.futures.ThreadPoolExecutor(
                 max_workers=max_workers
@@ -1920,37 +1817,21 @@ class StaticAnalysis(MachCommandBase):
                 for item in config["infer_checkers"]:
                     if item["publish"]:
                         futures.append(
-                            executor.submit(
-                                self._verify_infer_checker,
-                                command_context,
-                                infer_path,
-                                dump_results,
-                                infer_tool,
-                                infer_test_folder,
-                                item,
-                            )
+                            executor.submit(self._verify_infer_checker, item)
                         )
                 # this is always included in check-java, but not in config.yaml
                 futures.append(
-                    executor.submit(
-                        self._verify_infer_checker,
-                        command_context,
-                        infer_path,
-                        dump_results,
-                        infer_tool,
-                        infer_test_folder,
-                        {"name": "checkers"},
-                    )
+                    executor.submit(self._verify_infer_checker, {"name": "checkers"})
                 )
                 for future in concurrent.futures.as_completed(futures):
                     ret_val = future.result()
                     if ret_val != self.TOOLS_SUCCESS:
                         return ret_val
-            command_context.log(
+            self.log(
                 logging.INFO, "static-analysis", {}, "SUCCESS: infer all tests passed."
             )
         else:
-            command_context.log(
+            self.log(
                 logging.WARNING,
                 "static-analysis",
                 {},
@@ -1958,15 +1839,7 @@ class StaticAnalysis(MachCommandBase):
             )
         return self.TOOLS_SUCCESS
 
-    def _verify_infer_checker(
-        self,
-        command_context,
-        infer_path,
-        dump_results,
-        infer_tool,
-        infer_test_folder,
-        item,
-    ):
+    def _verify_infer_checker(self, item):
         """Given a checker, this method verifies the following:
           1. if there is a `checker`.json and `checker`.java file in
              `tools/infer/test/autotest/src`
@@ -1980,11 +1853,17 @@ class StaticAnalysis(MachCommandBase):
 
         check = item["name"]
         test_file_path = mozpath.join(
-            infer_tool, "test", "autotest", "src", "main", "java", to_camelcase(check)
+            self.__infer_tool,
+            "test",
+            "autotest",
+            "src",
+            "main",
+            "java",
+            to_camelcase(check),
         )
         test_file_path_java = test_file_path + ".java"
         test_file_path_json = test_file_path + ".json"
-        command_context.log(
+        self.log(
             logging.INFO,
             "static-analysis",
             {},
@@ -1992,7 +1871,7 @@ class StaticAnalysis(MachCommandBase):
         )
         # Verify if the test file exists for this checker
         if not os.path.exists(test_file_path_java):
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -2000,18 +1879,18 @@ class StaticAnalysis(MachCommandBase):
             )
             return self.TOOLS_CHECKER_NO_TEST_FILE
         # run infer on a particular test file
-        out_folder = mozpath.join(infer_test_folder, "test-infer-{}".format(check))
+        out_folder = mozpath.join(
+            self.__infer_test_folder, "test-infer-{}".format(check)
+        )
         if check == "checkers":
             check_arg = ["-a", "checkers"]
         else:
             check_arg = ["--{}-only".format(check)]
-        infer_args = [infer_path, "run"] + check_arg + ["-o", out_folder, "--"]
+        infer_args = [self._infer_path, "run"] + check_arg + ["-o", out_folder, "--"]
         gradle_args = ["autotest:compileInferTest{}".format(to_camelcase(check))]
-        rc = self._gradle(
-            command_context, gradle_args, infer_args=infer_args, autotest=True
-        )
+        rc = self._gradle(gradle_args, infer_args=infer_args, autotest=True)
         if rc != 0:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -2023,7 +1902,7 @@ class StaticAnalysis(MachCommandBase):
         shutil.rmtree(out_folder)
         # Verify to see if we got any issues, if not raise exception
         if not issues:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -2033,12 +1912,12 @@ class StaticAnalysis(MachCommandBase):
                 ),
             )
             return self.TOOLS_CHECKER_RETURNED_NO_ISSUES
-        if dump_results:
+        if self._dump_results:
             self._build_autotest_result(test_file_path_json, json.dumps(issues))
         else:
             if not os.path.exists(test_file_path_json):
                 # Result file for test not found maybe regenerate it?
-                command_context.log(
+                self.log(
                     logging.ERROR,
                     "static-analysis",
                     {},
@@ -2060,7 +1939,7 @@ class StaticAnalysis(MachCommandBase):
                 error_str = "ERROR: in check {} Expected: ".format(check)
                 error_str += "\n" + json.dumps(baseline_issues, indent=2)
                 error_str += "\n Got:\n" + json.dumps(issues, indent=2)
-                command_context.log(
+                self.log(
                     logging.ERROR,
                     "static-analysis",
                     {},
@@ -2111,20 +1990,14 @@ class StaticAnalysis(MachCommandBase):
         minimal_install=False,
         verbose=False,
     ):
-        command_context._set_log_level(verbose)
-        rc, clang_paths = self._get_clang_tools(
-            command_context,
-            force=force,
-            skip_cache=skip_cache,
-            source=source,
-            verbose=verbose,
+        self._set_log_level(verbose)
+        rc = self._get_clang_tools(
+            force=force, skip_cache=skip_cache, source=source, verbose=verbose
         )
         if rc == 0 and not minimal_install:
             # XXX ignore the return code because if it fails or not, infer is
             # not mandatory, but clang-tidy is
-            self._get_infer(
-                command_context, force=force, skip_cache=skip_cache, verbose=verbose
-            )
+            self._get_infer(force=force, skip_cache=skip_cache, verbose=verbose)
         return rc
 
     @StaticAnalysisSubCommand(
@@ -2133,34 +2006,23 @@ class StaticAnalysis(MachCommandBase):
         "Delete local helpers and reset static analysis helper tool cache",
     )
     def clear_cache(self, command_context, verbose=False):
-        command_context._set_log_level(verbose)
-        rc, clang_paths = self._get_clang_tools(
-            command_context,
-            force=True,
-            download_if_needed=True,
-            skip_cache=True,
-            verbose=verbose,
+        self._set_log_level(verbose)
+        rc = self._get_clang_tools(
+            force=True, download_if_needed=True, skip_cache=True, verbose=verbose
         )
 
         if rc != 0:
             return rc
 
-        job, _ = command_context.platform
+        job, _ = self.platform
         if job == "linux64":
-            rc, infer_path = self._get_infer(
-                command_context,
-                force=True,
-                download_if_needed=True,
-                skip_cache=True,
-                verbose=verbose,
+            rc = self._get_infer(
+                force=True, download_if_needed=True, skip_cache=True, verbose=verbose
             )
             if rc != 0:
                 return rc
 
-        from mozbuild.atifact_commands import PackageFrontend
-
-        artifact_manager = PackageFrontend(command_context._mach_context)
-        return artifact_manager.artifact_clear_cache(command_context)
+        return self._artifact_manager.artifact_clear_cache(command_context)
 
     @StaticAnalysisSubCommand(
         "static-analysis",
@@ -2168,32 +2030,31 @@ class StaticAnalysis(MachCommandBase):
         "Print a list of the static analysis checks performed by default",
     )
     def print_checks(self, command_context, verbose=False):
-        command_context._set_log_level(verbose)
-        rc, clang_paths = self._get_clang_tools(command_context, verbose=verbose)
+        self._set_log_level(verbose)
+        rc = self._get_clang_tools(verbose=verbose)
 
         if rc != 0:
             return rc
 
         args = [
-            clang_paths._clang_tidy_path,
+            self._clang_tidy_path,
             "-list-checks",
-            "-checks=%s" % self.get_clang_tidy_config(command_context).checks,
+            "-checks=%s" % self.get_clang_tidy_config.checks,
         ]
 
-        rc = command_context.run_process(args=args, pass_thru=True)
+        rc = self.run_process(args=args, pass_thru=True)
         if rc != 0:
             return rc
 
-        job, _ = command_context.platform
+        job, _ = self.platform
         if job != "linux64":
             return 0
 
-        rc, infer_path = self._get_infer(command_context, verbose=verbose)
+        rc = self._get_infer(verbose=verbose)
         if rc != 0:
             return rc
 
-        checkers, _, _ = self._get_infer_config(command_context)
-
+        checkers, _, _ = self._get_infer_config()
         print("Infer checks:")
         for checker in checkers:
             print(" " * 4 + checker)
@@ -2226,15 +2087,13 @@ class StaticAnalysis(MachCommandBase):
 
         binary, _ = find_node_executable()
         prettier = os.path.join(
-            command_context.topsrcdir, "node_modules", "prettier", "bin-prettier.js"
+            self.topsrcdir, "node_modules", "prettier", "bin-prettier.js"
         )
-        path = os.path.join(command_context.topsrcdir, path[0])
+        path = os.path.join(self.topsrcdir, path[0])
 
         # Bug 1564824. Prettier fails on patches with moved files where the
         # original directory also does not exist.
-        assume_dir = os.path.dirname(
-            os.path.join(command_context.topsrcdir, assume_filename[0])
-        )
+        assume_dir = os.path.dirname(os.path.join(self.topsrcdir, assume_filename[0]))
         assume_filename = assume_filename[0] if os.path.isdir(assume_dir) else path
 
         # We use --stdin-filepath in order to better determine the path for
@@ -2258,12 +2117,12 @@ class StaticAnalysis(MachCommandBase):
         "source", nargs="*", help="Source files to be compiled checked (regex on path)."
     )
     def check_syntax(self, command_context, source, verbose=False):
-        command_context._set_log_level(verbose)
-        command_context.log_manager.enable_unstructured()
+        self._set_log_level(verbose)
+        self.log_manager.enable_unstructured()
 
         # Verify that we have a valid `source`
         if len(source) == 0:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
@@ -2271,36 +2130,34 @@ class StaticAnalysis(MachCommandBase):
             )
             return
 
-        rc, _compile_db, compilation_commands_path = self._build_compile_db(
-            command_context, verbose=verbose
-        )
+        rc = self._build_compile_db(verbose=verbose)
         if rc != 0:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
                 "ERROR: Unable to build the `compile_commands.json`.",
             )
             return rc
-        rc = self._build_export(command_context, jobs=2, verbose=verbose)
+        rc = self._build_export(jobs=2, verbose=verbose)
 
         if rc != 0:
-            command_context.log(
+            self.log(
                 logging.ERROR, "static-analysis", {}, "ERROR: Unable to build export."
             )
             return rc
 
         # Build the list with all files from source
-        path_list = self._generate_path_list(command_context, source)
+        path_list = self._generate_path_list(source)
 
-        compile_db = json.load(open(_compile_db, "r"))
+        compile_db = json.load(open(self._compile_db, "r"))
 
         if compile_db is None:
-            command_context.log(
+            self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
-                "ERROR: Loading {}".format(_compile_db),
+                "ERROR: Loading {}".format(self._compile_db),
             )
             return 1
 
@@ -2313,11 +2170,11 @@ class StaticAnalysis(MachCommandBase):
             ext = mozpath.splitext(file)[-1]
 
             if ext.lower() not in self._check_syntax_include_extensions:
-                command_context.log(
+                self.log(
                     logging.INFO, "static-analysis", {}, "Skipping {}".format(file)
                 )
                 continue
-            file_with_abspath = mozpath.join(command_context.topsrcdir, file)
+            file_with_abspath = mozpath.join(self.topsrcdir, file)
             # Found for a file that we are looking
 
             entry = compile_dict.get(file_with_abspath, None)
@@ -2343,9 +2200,9 @@ class StaticAnalysis(MachCommandBase):
             for command in commands:
                 futures.append(
                     executor.submit(
-                        command_context.run_process,
+                        self.run_process,
                         args=command,
-                        cwd=command_context.topsrcdir,
+                        cwd=self.topsrcdir,
                         pass_thru=True,
                         ensure_exit_code=False,
                     )
@@ -2432,17 +2289,17 @@ class StaticAnalysis(MachCommandBase):
         # Run clang-format or clang-format-diff on the local changes
         # or files/directories
         if path is None and outgoing:
-            repo = get_repository_object(command_context.topsrcdir)
+            repo = get_repository_object(self.topsrcdir)
             path = repo.get_outgoing_files()
 
         if path:
             # Create the full path list
             def path_maker(f_name):
-                return os.path.join(command_context.topsrcdir, f_name)
+                return os.path.join(self.topsrcdir, f_name)
 
             path = map(path_maker, path)
 
-        os.chdir(command_context.topsrcdir)
+        os.chdir(self.topsrcdir)
 
         # Load output file handle, either stdout or a file handle in write mode
         output = None
@@ -2457,56 +2314,43 @@ class StaticAnalysis(MachCommandBase):
         # have already been downloaded via './mach bootstrap' or directly via
         # './mach static-analysis install'
         if assume_filename:
-            rc, clang_paths = self._set_clang_tools_paths(command_context)
+            rc = self._set_clang_tools_paths()
             if rc != 0:
                 print("clang-format: Unable to set path to clang-format tools.")
                 return rc
 
-            if not self._do_clang_tools_exist(clang_paths):
+            if not self._do_clang_tools_exist():
                 print("clang-format: Unable to set locate clang-format tools.")
                 return 1
         else:
-            rc, clang_paths = self._get_clang_tools(command_context, verbose=verbose)
+            rc = self._get_clang_tools(verbose=verbose)
             if rc != 0:
                 return rc
 
-        if not self._is_version_eligible(command_context, clang_paths):
+        if not self._is_version_eligible():
             return 1
 
         if path is None:
             return self._run_clang_format_diff(
-                command_context,
-                clang_paths._clang_format_diff,
-                clang_paths._clang_format_path,
-                commit,
-                output,
+                self._clang_format_diff, self._clang_format_path, commit, output
             )
 
         if assume_filename:
             return self._run_clang_format_in_console(
-                command_context, clang_paths._clang_format_path, path, assume_filename
+                self._clang_format_path, path, assume_filename
             )
 
         return self._run_clang_format_path(
-            command_context, clang_paths._clang_format_path, path, output, output_format
+            self._clang_format_path, path, output, output_format
         )
 
-    def _verify_checker(
-        self,
-        command_context,
-        clang_paths,
-        compilation_commands_path,
-        dump_results,
-        clang_tidy_checks,
-        item,
-        checkers_results,
-    ):
+    def _verify_checker(self, item, checkers_results):
         check = item["name"]
-        test_file_path = mozpath.join(clang_paths._clang_tidy_base_path, "test", check)
+        test_file_path = mozpath.join(self._clang_tidy_base_path, "test", check)
         test_file_path_cpp = test_file_path + ".cpp"
         test_file_path_json = test_file_path + ".json"
 
-        command_context.log(
+        self.log(
             logging.INFO,
             "static-analysis",
             {},
@@ -2523,7 +2367,7 @@ class StaticAnalysis(MachCommandBase):
         }
 
         # Verify if this checker actually exists
-        if check not in clang_tidy_checks:
+        if check not in self._clang_tidy_checks:
             checker_error["checker-error"] = self.TOOLS_CHECKER_NOT_FOUND
             checkers_results.append(checker_error)
             return self.TOOLS_CHECKER_NOT_FOUND
@@ -2535,12 +2379,7 @@ class StaticAnalysis(MachCommandBase):
             return self.TOOLS_CHECKER_NO_TEST_FILE
 
         issues, clang_output = self._run_analysis(
-            command_context,
-            clang_paths,
-            compilation_commands_path,
-            checks="-*," + check,
-            header_filter="",
-            sources=[test_file_path_cpp],
+            checks="-*," + check, header_filter="", sources=[test_file_path_cpp]
         )
         if issues is None:
             return self.TOOLS_CHECKER_FAILED_FILE
@@ -2555,7 +2394,7 @@ class StaticAnalysis(MachCommandBase):
         # Also store the 'reliability' index for this checker
         issues.append({"reliability": item["reliability"]})
 
-        if dump_results:
+        if self._dump_results:
             self._build_autotest_result(test_file_path_json, json.dumps(issues))
         else:
             if not os.path.exists(test_file_path_json):
@@ -2588,7 +2427,7 @@ class StaticAnalysis(MachCommandBase):
         with open(file) as f:
             return json.load(f)
 
-    def _parse_issues(self, command_context, clang_output):
+    def _parse_issues(self, clang_output):
         """
         Parse clang-tidy output into structured issues
         """
@@ -2598,7 +2437,7 @@ class StaticAnalysis(MachCommandBase):
         if end is not None:
             clang_output = clang_output[: end.start() - 1]
 
-        platform, _ = command_context.platform
+        platform, _ = self.platform
         re_strip_colors = re.compile(r"\x1b\[[\d;]+m", re.MULTILINE)
         filtered = re_strip_colors.sub("", clang_output)
         # Starting with clang 8, for the diagnostic messages we have multiple `LF CR`
@@ -2623,22 +2462,22 @@ class StaticAnalysis(MachCommandBase):
             issues.append(element)
         return issues
 
-    def _get_config_environment(self, command_context):
+    def _get_config_environment(self):
         ran_configure = False
         config = None
-        builder = Build(command_context._mach_context, None)
+        builder = Build(self._mach_context, None)
 
         try:
-            config = command_context.config_environment
+            config = self.config_environment
         except Exception:
-            command_context.log(
+            self.log(
                 logging.WARNING,
                 "static-analysis",
                 {},
                 "Looks like configure has not run yet, running it now...",
             )
 
-            clobber = Clobberer(command_context.topsrcdir, command_context.topobjdir)
+            clobber = Clobberer(self.topsrcdir, self.topobjdir)
 
             if clobber.clobber_needed():
                 choice = prompt_bool(
@@ -2646,7 +2485,7 @@ class StaticAnalysis(MachCommandBase):
                     "Do you want to proceed?"
                 )
                 if not choice:
-                    command_context.log(
+                    self.log(
                         logging.ERROR,
                         "static-analysis",
                         {},
@@ -2655,58 +2494,60 @@ class StaticAnalysis(MachCommandBase):
                     return (1, None, None)
                 os.environ["AUTOCLOBBER"] = "1"
 
-            rc = builder.configure(command_context)
+            rc = builder.configure(self)
             if rc != 0:
                 return (rc, config, ran_configure)
             ran_configure = True
             try:
-                config = command_context.config_environment
+                config = self.config_environment
             except Exception:
                 pass
 
         return (0, config, ran_configure)
 
-    def _build_compile_db(self, command_context, verbose=False):
-        compilation_commands_path = mozpath.join(
-            command_context.topobjdir, "static-analysis"
+    def _build_compile_db(self, verbose=False):
+        self._compilation_commands_path = mozpath.join(
+            self.topobjdir, "static-analysis"
         )
-        compile_db = mozpath.join(compilation_commands_path, "compile_commands.json")
+        self._compile_db = mozpath.join(
+            self._compilation_commands_path, "compile_commands.json"
+        )
 
-        if os.path.exists(compile_db):
-            return 0, compile_db, compilation_commands_path
+        if os.path.exists(self._compile_db):
+            return 0
 
-        rc, config, ran_configure = self._get_config_environment(command_context)
+        rc, config, ran_configure = self._get_config_environment()
         if rc != 0:
-            return rc, compile_db, compilation_commands_path
+            return rc
 
         if ran_configure:
             # Configure may have created the compilation database if the
             # mozconfig enables building the CompileDB backend by default,
             # So we recurse to see if the file exists once again.
-            return self._build_compile_db(command_context, verbose=verbose)
+            return self._build_compile_db(verbose=verbose)
 
         if config:
             print(
                 "Looks like a clang compilation database has not been "
                 "created yet, creating it now..."
             )
-            builder = Build(command_context._mach_context, None)
+            builder = Build(self._mach_context, None)
             rc = builder.build_backend(
-                command_context._mach_context, ["StaticAnalysis"], verbose=verbose
+                self._mach_context, ["StaticAnalysis"], verbose=verbose
             )
             if rc != 0:
-                return rc, compile_db, compilation_commands_path
-            assert os.path.exists(compile_db)
-            return 0, compile_db, compilation_commands_path
+                return rc
+            assert os.path.exists(self._compile_db)
+            return 0
 
-    def _build_export(self, command_context, jobs, verbose=False):
+    def _build_export(self, jobs, verbose=False):
         def on_line(line):
-            command_context.log(logging.INFO, "build_output", {"line": line}, "{line}")
+            self.log(logging.INFO, "build_output", {"line": line}, "{line}")
 
-        builder = Build(command_context._mach_context, None)
+        builder = Build(self._mach_context, None)
         # First install what we can through install manifests.
         rc = builder._run_make(
-            directory=command_context.topobjdir,
+            directory=self.topobjdir,
             target="pre-export",
             line_handler=None,
             silent=not verbose,
@@ -2718,7 +2559,7 @@ class StaticAnalysis(MachCommandBase):
         # export target, because we can't do anything better.
         for target in ("export", "pre-compile"):
             rc = builder._run_make(
-                directory=command_context.topobjdir,
+                directory=self.topobjdir,
                 target=target,
                 line_handler=None,
                 silent=not verbose,
@@ -2729,62 +2570,55 @@ class StaticAnalysis(MachCommandBase):
 
         return 0
 
-    def _set_clang_tools_paths(self, command_context):
-        rc, config, _ = self._get_config_environment(command_context)
-
-        clang_paths = SimpleNamespace()
+    def _set_clang_tools_paths(self):
+        rc, config, _ = self._get_config_environment()
 
         if rc != 0:
-            return rc, clang_paths
+            return rc
 
-        clang_paths._clang_tools_path = mozpath.join(
-            command_context._mach_context.state_dir, "clang-tools"
+        self._clang_tools_path = mozpath.join(
+            self._mach_context.state_dir, "clang-tools"
         )
-        clang_paths._clang_tidy_path = mozpath.join(
-            clang_paths._clang_tools_path,
+        self._clang_tidy_path = mozpath.join(
+            self._clang_tools_path,
             "clang-tidy",
             "bin",
             "clang-tidy" + config.substs.get("BIN_SUFFIX", ""),
         )
-        clang_paths._clang_format_path = mozpath.join(
-            clang_paths._clang_tools_path,
+        self._clang_format_path = mozpath.join(
+            self._clang_tools_path,
             "clang-tidy",
             "bin",
             "clang-format" + config.substs.get("BIN_SUFFIX", ""),
         )
-        clang_paths._clang_apply_replacements = mozpath.join(
-            clang_paths._clang_tools_path,
+        self._clang_apply_replacements = mozpath.join(
+            self._clang_tools_path,
             "clang-tidy",
             "bin",
             "clang-apply-replacements" + config.substs.get("BIN_SUFFIX", ""),
         )
-        clang_paths._run_clang_tidy_path = mozpath.join(
-            clang_paths._clang_tools_path,
-            "clang-tidy",
-            "share",
-            "clang",
-            "run-clang-tidy.py",
+        self._run_clang_tidy_path = mozpath.join(
+            self._clang_tools_path, "clang-tidy", "share", "clang", "run-clang-tidy.py"
         )
-        clang_paths._clang_format_diff = mozpath.join(
-            clang_paths._clang_tools_path,
+        self._clang_format_diff = mozpath.join(
+            self._clang_tools_path,
             "clang-tidy",
             "share",
             "clang",
             "clang-format-diff.py",
         )
-        return 0, clang_paths
+        return 0
 
-    def _do_clang_tools_exist(self, clang_paths):
+    def _do_clang_tools_exist(self):
         return (
-            os.path.exists(clang_paths._clang_tidy_path)
-            and os.path.exists(clang_paths._clang_format_path)
-            and os.path.exists(clang_paths._clang_apply_replacements)
-            and os.path.exists(clang_paths._run_clang_tidy_path)
+            os.path.exists(self._clang_tidy_path)
+            and os.path.exists(self._clang_format_path)
+            and os.path.exists(self._clang_apply_replacements)
+            and os.path.exists(self._run_clang_tidy_path)
         )
 
     def _get_clang_tools(
         self,
-        command_context,
         force=False,
         skip_cache=False,
         source=None,
@@ -2792,20 +2626,19 @@ class StaticAnalysis(MachCommandBase):
         verbose=False,
     ):
 
-        rc, clang_paths = self._set_clang_tools_paths(command_context)
+        rc = self._set_clang_tools_paths()
 
         if rc != 0:
-            return rc, clang_paths
+            return rc
 
-        if self._do_clang_tools_exist(clang_paths) and not force:
-            return 0, clang_paths
+        if self._do_clang_tools_exist() and not force:
+            return 0
 
-        if os.path.isdir(clang_paths._clang_tools_path) and download_if_needed:
+        if os.path.isdir(self._clang_tools_path) and download_if_needed:
             # The directory exists, perhaps it's corrupted?  Delete it
             # and start from scratch.
-            shutil.rmtree(clang_paths._clang_tools_path)
+            shutil.rmtree(self._clang_tools_path)
             return self._get_clang_tools(
-                command_context,
                 force=force,
                 skip_cache=skip_cache,
                 source=source,
@@ -2814,21 +2647,19 @@ class StaticAnalysis(MachCommandBase):
             )
 
         # Create base directory where we store clang binary
-        os.mkdir(clang_paths._clang_tools_path)
+        os.mkdir(self._clang_tools_path)
 
         if source:
-            return self._get_clang_tools_from_source(
-                command_context, clang_paths, source
-            )
+            return self._get_clang_tools_from_source(source)
 
         from mozbuild.artifact_commands import PackageFrontend
 
-        artifact_manager = PackageFrontend(command_context._mach_context)
+        self._artifact_manager = PackageFrontend(self._mach_context)
 
         if not download_if_needed:
-            return 0, clang_paths
+            return 0
 
-        job, _ = command_context.platform
+        job, _ = self.platform
 
         if job is None:
             raise Exception(
@@ -2841,9 +2672,9 @@ class StaticAnalysis(MachCommandBase):
 
         # We want to unpack data in the clang-tidy mozbuild folder
         currentWorkingDir = os.getcwd()
-        os.chdir(clang_paths._clang_tools_path)
-        rc = artifact_manager.artifact_toolchain(
-            command_context,
+        os.chdir(self._clang_tools_path)
+        rc = self._artifact_manager.artifact_toolchain(
+            self,
             verbose=verbose,
             skip_cache=skip_cache,
             from_build=[job],
@@ -2853,14 +2684,12 @@ class StaticAnalysis(MachCommandBase):
         # Change back the cwd
         os.chdir(currentWorkingDir)
 
-        return rc, clang_paths
+        return rc
 
-    def _get_clang_tools_from_source(self, command_context, clang_paths, filename):
+    def _get_clang_tools_from_source(self, filename):
         from mozbuild.action.tooltool import unpack_file
 
-        clang_tidy_path = mozpath.join(
-            command_context._mach_context.state_dir, "clang-tools"
-        )
+        clang_tidy_path = mozpath.join(self._mach_context.state_dir, "clang-tools")
 
         currentWorkingDir = os.getcwd()
         os.chdir(clang_tidy_path)
@@ -2877,14 +2706,14 @@ class StaticAnalysis(MachCommandBase):
                 "Extracted the archive but didn't find " "the expected output"
             )
 
-        assert os.path.exists(clang_paths._clang_tidy_path)
-        assert os.path.exists(clang_paths._clang_format_path)
-        assert os.path.exists(clang_paths._clang_apply_replacements)
-        assert os.path.exists(clang_paths._run_clang_tidy_path)
-        return 0, clang_paths
+        assert os.path.exists(self._clang_tidy_path)
+        assert os.path.exists(self._clang_format_path)
+        assert os.path.exists(self._clang_apply_replacements)
+        assert os.path.exists(self._run_clang_tidy_path)
+        return 0
 
-    def _get_clang_format_diff_command(self, command_context, commit):
-        if command_context.repository.name == "hg":
+    def _get_clang_format_diff_command(self, commit):
+        if self.repository.name == "hg":
             args = ["hg", "diff", "-U0"]
             if commit:
                 args += ["-c", commit]
@@ -2920,35 +2749,33 @@ class StaticAnalysis(MachCommandBase):
 
     def _get_infer(
         self,
-        command_context,
         force=False,
         skip_cache=False,
         download_if_needed=True,
         verbose=False,
         intree_tool=False,
     ):
-        rc, config, _ = self._get_config_environment(command_context)
+        rc, config, _ = self._get_config_environment()
         if rc != 0:
-            return rc, ""
+            return rc
         infer_path = (
             os.environ["MOZ_FETCHES_DIR"]
             if intree_tool
-            else mozpath.join(command_context._mach_context.state_dir, "infer")
+            else mozpath.join(self._mach_context.state_dir, "infer")
         )
-        _infer_path = mozpath.join(
+        self._infer_path = mozpath.join(
             infer_path, "infer", "bin", "infer" + config.substs.get("BIN_SUFFIX", "")
         )
         if intree_tool:
-            return (not os.path.exists(_infer_path)), _infer_path
-        if os.path.exists(_infer_path) and not force:
-            return 0, _infer_path
+            return not os.path.exists(self._infer_path)
+        if os.path.exists(self._infer_path) and not force:
+            return 0
 
         if os.path.isdir(infer_path) and download_if_needed:
             # The directory exists, perhaps it's corrupted?  Delete it
             # and start from scratch.
             shutil.rmtree(infer_path)
             return self._get_infer(
-                command_context,
                 force=force,
                 skip_cache=skip_cache,
                 verbose=verbose,
@@ -2957,19 +2784,19 @@ class StaticAnalysis(MachCommandBase):
         os.mkdir(infer_path)
         from mozbuild.artifact_commands import PackageFrontend
 
-        artifact_manager = PackageFrontend(command_context._mach_context)
+        self._artifact_manager = PackageFrontend(self._mach_context)
         if not download_if_needed:
-            return 0, _infer_path
-        job, _ = command_context.platform
+            return 0
+        job, _ = self.platform
         if job != "linux64":
-            return -1, _infer_path
+            return -1
         else:
             job += "-infer"
         # We want to unpack data in the infer mozbuild folder
         currentWorkingDir = os.getcwd()
         os.chdir(infer_path)
-        rc = artifact_manager.artifact_toolchain(
-            command_context,
+        rc = self._artifact_manager.artifact_toolchain(
+            self,
             verbose=verbose,
             skip_cache=skip_cache,
             from_build=[job],
@@ -2978,18 +2805,16 @@ class StaticAnalysis(MachCommandBase):
         )
         # Change back the cwd
         os.chdir(currentWorkingDir)
-        return rc, _infer_path
+        return rc
 
     def _run_clang_format_diff(
-        self, command_context, clang_format_diff, clang_format, commit, output_file
+        self, clang_format_diff, clang_format, commit, output_file
     ):
         # Run clang-format on the diff
         # Note that this will potentially miss a lot things
         from subprocess import Popen, PIPE, check_output, CalledProcessError
 
-        diff_process = Popen(
-            self._get_clang_format_diff_command(command_context, commit), stdout=PIPE
-        )
+        diff_process = Popen(self._get_clang_format_diff_command(commit), stdout=PIPE)
         args = [sys.executable, clang_format_diff, "-p1", "-binary=%s" % clang_format]
 
         if not output_file:
@@ -3006,18 +2831,16 @@ class StaticAnalysis(MachCommandBase):
             print("clang-format: An error occured while running clang-format-diff.")
             return e.returncode
 
-    def _is_ignored_path(self, command_context, ignored_dir_re, f):
+    def _is_ignored_path(self, ignored_dir_re, f):
         # path needs to be relative to the src root
-        root_dir = command_context.topsrcdir + os.sep
+        root_dir = self.topsrcdir + os.sep
         if f.startswith(root_dir):
             f = f[len(root_dir) :]
         # the ignored_dir_re regex uses / on all platforms
         return re.match(ignored_dir_re, f.replace(os.sep, "/"))
 
-    def _generate_path_list(self, command_context, paths, verbose=True):
-        path_to_third_party = os.path.join(
-            command_context.topsrcdir, self._format_ignore_file
-        )
+    def _generate_path_list(self, paths, verbose=True):
+        path_to_third_party = os.path.join(self.topsrcdir, self._format_ignore_file)
         ignored_dir = []
         with open(path_to_third_party, "r") as fh:
             for line in fh:
@@ -3033,7 +2856,7 @@ class StaticAnalysis(MachCommandBase):
 
         path_list = []
         for f in paths:
-            if self._is_ignored_path(command_context, ignored_dir_re, f):
+            if self._is_ignored_path(ignored_dir_re, f):
                 # Early exit if we have provided an ignored directory
                 if verbose:
                     print("static-analysis: Ignored third party code '{0}'".format(f))
@@ -3046,7 +2869,7 @@ class StaticAnalysis(MachCommandBase):
                     for filename in sorted(files):
                         f_in_dir = os.path.join(folder, filename)
                         if f_in_dir.endswith(extensions) and not self._is_ignored_path(
-                            command_context, ignored_dir_re, f_in_dir
+                            ignored_dir_re, f_in_dir
                         ):
                             # Supported extension and accepted path
                             path_list.append(f_in_dir)
@@ -3057,10 +2880,8 @@ class StaticAnalysis(MachCommandBase):
 
         return path_list
 
-    def _run_clang_format_in_console(
-        self, command_context, clang_format, paths, assume_filename
-    ):
-        path_list = self._generate_path_list(command_context, assume_filename, False)
+    def _run_clang_format_in_console(self, clang_format, paths, assume_filename):
+        path_list = self._generate_path_list(assume_filename, False)
 
         if path_list == []:
             return 0
@@ -3077,33 +2898,31 @@ class StaticAnalysis(MachCommandBase):
             process.wait()
             return process.returncode
 
-    def _get_clang_format_cfg(self, command_context, current_dir):
+    def _get_clang_format_cfg(self, current_dir):
         clang_format_cfg_path = mozpath.join(current_dir, ".clang-format")
 
         if os.path.exists(clang_format_cfg_path):
             # Return found path for .clang-format
             return clang_format_cfg_path
 
-        if current_dir != command_context.topsrcdir:
+        if current_dir != self.topsrcdir:
             # Go to parent directory
-            return self._get_clang_format_cfg(
-                command_context, os.path.split(current_dir)[0]
-            )
-        # We have reached command_context.topsrcdir so return None
+            return self._get_clang_format_cfg(os.path.split(current_dir)[0])
+        # We have reached self.topsrcdir so return None
         return None
 
     def _copy_clang_format_for_show_diff(
-        self, command_context, current_dir, cached_clang_format_cfg, tmpdir
+        self, current_dir, cached_clang_format_cfg, tmpdir
     ):
         # Lookup for .clang-format first in cache
         clang_format_cfg = cached_clang_format_cfg.get(current_dir, None)
 
         if clang_format_cfg is None:
             # Go through top directories
-            clang_format_cfg = self._get_clang_format_cfg(command_context, current_dir)
+            clang_format_cfg = self._get_clang_format_cfg(current_dir)
 
             # This is unlikely to happen since we must have .clang-format from
-            # command_context.topsrcdir but in any case we should handle a potential error
+            # self.topsrcdir but in any case we should handle a potential error
             if clang_format_cfg is None:
                 print("Cannot find corresponding .clang-format.")
                 return 1
@@ -3115,9 +2934,7 @@ class StaticAnalysis(MachCommandBase):
         shutil.copy(clang_format_cfg, tmpdir)
         return 0
 
-    def _run_clang_format_path(
-        self, command_context, clang_format, paths, output_file, output_format
-    ):
+    def _run_clang_format_path(self, clang_format, paths, output_file, output_format):
 
         # Run clang-format on files or directories directly
         from subprocess import check_output, CalledProcessError
@@ -3130,11 +2947,11 @@ class StaticAnalysis(MachCommandBase):
 
         if output_file:
             # We just want to show the diff, we create the directory to copy it
-            tmpdir = os.path.join(command_context.topobjdir, "tmp")
+            tmpdir = os.path.join(self.topobjdir, "tmp")
             if not os.path.exists(tmpdir):
                 os.makedirs(tmpdir)
 
-        path_list = self._generate_path_list(command_context, paths)
+        path_list = self._generate_path_list(paths)
 
         if path_list == []:
             return
@@ -3161,7 +2978,7 @@ class StaticAnalysis(MachCommandBase):
                 l[0] = target_file
 
                 ret = self._copy_clang_format_for_show_diff(
-                    command_context, current_dir, cached_clang_format_cfg, faketmpdir
+                    current_dir, cached_clang_format_cfg, faketmpdir
                 )
                 if ret != 0:
                     return ret
@@ -3171,9 +2988,7 @@ class StaticAnalysis(MachCommandBase):
                     output = check_output(args + l)
                     if output and output_format == "json":
                         # Output a relative path in json patch list
-                        relative_path = os.path.relpath(
-                            original_path, command_context.topsrcdir
-                        )
+                        relative_path = os.path.relpath(original_path, self.topsrcdir)
                         patches[relative_path] = self._parse_xml_output(
                             original_path, output
                         )
@@ -3195,7 +3010,7 @@ class StaticAnalysis(MachCommandBase):
                             # Replace the temp path by the path relative to the repository to
                             # display a valid patch
                             relative_path = os.path.relpath(
-                                original_path, command_context.topsrcdir
+                                original_path, self.topsrcdir
                             )
                             # We must modify the paths in order to be compatible with the
                             # `diff` format.

@@ -323,7 +323,7 @@ class MachRaptor(MachCommandBase):
         # stop |mach bootstrap| from running
         from raptor.power import enable_charging, disable_charging
 
-        build_obj = command_context
+        build_obj = self
 
         is_android = (
             Conditions.is_android(build_obj) or kwargs["app"] in ANDROID_BROWSERS
@@ -369,7 +369,7 @@ class MachRaptor(MachCommandBase):
             if arg.startswith("raptor"):
                 in_mach = False
 
-        raptor = command_context._spawn(RaptorRunner)
+        raptor = self._spawn(RaptorRunner)
         device = None
 
         try:
@@ -378,10 +378,8 @@ class MachRaptor(MachCommandBase):
                 disable_charging(device)
             return raptor.run_test(argv, kwargs)
         except BinaryNotFoundException as e:
-            command_context.log(
-                logging.ERROR, "raptor", {"error": str(e)}, "ERROR: {error}"
-            )
-            command_context.log(logging.INFO, "raptor", {"help": e.help()}, "{help}")
+            self.log(logging.ERROR, "raptor", {"error": str(e)}, "ERROR: {error}")
+            self.log(logging.INFO, "raptor", {"help": e.help()}, "{help}")
             return 1
         except Exception as e:
             print(repr(e))
