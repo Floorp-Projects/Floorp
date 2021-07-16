@@ -39,7 +39,7 @@ class DefaultDeleteBrowsingDataController(
 
     override suspend fun deleteTabs() {
         withContext(coroutineContext) {
-            removeAllTabs.invoke()
+            removeAllTabs.invoke(false)
         }
     }
 

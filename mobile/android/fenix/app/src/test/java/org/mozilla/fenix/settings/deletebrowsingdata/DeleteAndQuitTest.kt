@@ -75,7 +75,7 @@ class DeleteAndQuitTest {
 
         verifyOrder {
             snackbar.show()
-            removeAllTabsUseCases.invoke()
+            removeAllTabsUseCases.invoke(false)
             activity.finishAndRemoveTask()
         }
 

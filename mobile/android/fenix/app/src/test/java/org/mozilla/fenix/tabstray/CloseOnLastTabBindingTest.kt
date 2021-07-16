@@ -106,7 +106,7 @@ class CloseOnLastTabBindingTest {
 
         binding.start()
 
-        browserStore.dispatch(TabListAction.RemoveAllTabsAction)
+        browserStore.dispatch(TabListAction.RemoveAllTabsAction())
 
         browserStore.waitUntilIdle()
 

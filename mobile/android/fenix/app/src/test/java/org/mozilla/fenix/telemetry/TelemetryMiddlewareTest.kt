@@ -135,7 +135,7 @@ class TelemetryMiddlewareTest {
         assertEquals(2, settings.openTabsCount)
         verify(exactly = 1) { metrics.track(Event.HaveOpenTabs) }
 
-        store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
+        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
         assertEquals(0, settings.openTabsCount)
         verify(exactly = 1) { metrics.track(Event.HaveNoOpenTabs) }
     }
