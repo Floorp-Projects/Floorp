@@ -10,7 +10,7 @@ mkdir -p $HOME/artifacts $UPLOAD_DIR
 
 # Populate /builds/worker/.mozbuild/android-emulator-linux.
 cd $GECKO_PATH
-./mach python python/mozboot/mozboot/android.py --emulator-only --no-interactive --list-packages
+./mach python python/mozboot/mozboot/android.py --emulator-only --no-interactive
 
 # Remove extra files we don't need
 rm -rfv /builds/worker/.mozbuild/android-sdk-linux/tools
