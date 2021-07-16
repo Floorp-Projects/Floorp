@@ -15,6 +15,7 @@
 #include "gfxPattern.h"
 #include "nsTArray.h"
 
+#include "mozilla/EnumSet.h"
 #include "mozilla/gfx/2D.h"
 
 typedef struct _cairo cairo_t;
@@ -227,11 +228,21 @@ class gfxContext final {
    * fails, the method will return false, and the rect will not be
    * changed.
    *
-   * If ignoreScale is true, then snapping will take place even if
-   * the CTM has a scale applied.  Snapping never takes place if
-   * there is a rotation in the CTM.
+   * aOptions parameter:
+   *   If IgnoreScale is set, then snapping will take place even if the CTM
+   *   has a scale applied. Snapping never takes place if there is a rotation
+   *   in the CTM.
+   *
+   *   If PrioritizeSize is set, the rect's dimensions will first be snapped
+   *   and then its position aligned to device pixels, rather than snapping
+   *   the position of each edge independently.
    */
-  bool UserToDevicePixelSnapped(gfxRect& rect, bool ignoreScale = false) const;
+  enum class SnapOption : uint8_t {
+    IgnoreScale = 1,
+    PrioritizeSize = 2,
+  };
+  using SnapOptions = mozilla::EnumSet<SnapOption>;
+  bool UserToDevicePixelSnapped(gfxRect& rect, SnapOptions aOptions = {}) const;
 
   /**
    * Takes the given point and tries to align it to device pixels.  If
