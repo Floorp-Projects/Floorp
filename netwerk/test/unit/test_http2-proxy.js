@@ -108,20 +108,10 @@ class AuthRequestor {
   }
 }
 
-function createPrincipal(url) {
-  var ssm = Services.scriptSecurityManager;
-  try {
-    return ssm.createContentPrincipal(Services.io.newURI(url), {});
-  } catch (e) {
-    return null;
-  }
-}
-
 function make_channel(url) {
   return NetUtil.newChannel({
     uri: url,
-    loadingPrincipal: createPrincipal(url),
-    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
+    loadUsingSystemPrincipal: true,
     // Using TYPE_DOCUMENT for the authentication dialog test, it'd be blocked for other types
     contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   });

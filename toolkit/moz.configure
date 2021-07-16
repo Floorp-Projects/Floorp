@@ -1288,25 +1288,6 @@ def proxy_bypass_protection(_):
 set_config("MOZ_PROXY_BYPASS_PROTECTION", proxy_bypass_protection)
 set_define("MOZ_PROXY_BYPASS_PROTECTION", proxy_bypass_protection)
 
-# Proxy direct failover
-# ==============================================================
-
-option(
-    "--enable-proxy-direct-failover",
-    default=True,
-    help="{Enable|Disable} direct failover for system requests",
-)
-
-
-@depends_if("--enable-proxy-direct-failover")
-def proxy_direct_failover(value):
-    if value:
-        return True
-
-
-set_config("MOZ_PROXY_DIRECT_FAILOVER", proxy_direct_failover)
-set_define("MOZ_PROXY_DIRECT_FAILOVER", proxy_direct_failover)
-
 # MIDL
 # ==============================================================
 
