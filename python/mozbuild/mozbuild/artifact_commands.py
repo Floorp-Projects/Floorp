@@ -13,9 +13,17 @@ import six
 
 from collections import OrderedDict
 
-from mach.decorators import CommandArgument, CommandProvider, Command, SubCommand
+from mach.decorators import (
+    CommandArgument,
+    CommandProvider,
+    Command,
+    SubCommand,
+)
 from mozbuild.artifact_builds import JOB_CHOICES
-from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
+from mozbuild.base import (
+    MachCommandBase,
+    MachCommandConditions as conditions,
+)
 from mozbuild.util import ensureParentDir
 import mozversioncontrol
 
@@ -80,7 +88,6 @@ class PackageFrontend(MachCommandBase):
 
     def _make_artifacts(
         self,
-        command_context,
         tree=None,
         job=None,
         skip_cache=False,
@@ -90,21 +97,19 @@ class PackageFrontend(MachCommandBase):
         download_maven_zip=False,
         no_process=False,
     ):
-        state_dir = command_context._mach_context.state_dir
+        state_dir = self._mach_context.state_dir
         cache_dir = os.path.join(state_dir, "package-frontend")
 
         hg = None
-        if conditions.is_hg(command_context):
-            hg = command_context.substs["HG"]
+        if conditions.is_hg(self):
+            hg = self.substs["HG"]
 
         git = None
-        if conditions.is_git(command_context):
-            git = command_context.substs["GIT"]
+        if conditions.is_git(self):
+            git = self.substs["GIT"]
 
         # If we're building Thunderbird, we should be checking for comm-central artifacts.
-        topsrcdir = command_context.substs.get(
-            "commtopsrcdir", command_context.topsrcdir
-        )
+        topsrcdir = self.substs.get("commtopsrcdir", self.topsrcdir)
 
         if download_maven_zip:
             if download_tests:
@@ -120,10 +125,10 @@ class PackageFrontend(MachCommandBase):
 
         artifacts = Artifacts(
             tree,
-            command_context.substs,
-            command_context.defines,
+            self.substs,
+            self.defines,
             job,
-            log=command_context.log,
+            log=self.log,
             cache_dir=cache_dir,
             skip_cache=skip_cache,
             hg=hg,
@@ -134,7 +139,7 @@ class PackageFrontend(MachCommandBase):
             download_host_bins=download_host_bins,
             download_maven_zip=download_maven_zip,
             no_process=no_process,
-            mozbuild=command_context,
+            mozbuild=self,
         )
         return artifacts
 
@@ -184,9 +189,8 @@ class PackageFrontend(MachCommandBase):
         no_process=False,
         maven_zip=False,
     ):
-        command_context._set_log_level(verbose)
+        self._set_log_level(verbose)
         artifacts = self._make_artifacts(
-            command_context,
             tree=tree,
             job=job,
             skip_cache=skip_cache,
@@ -197,7 +201,7 @@ class PackageFrontend(MachCommandBase):
             no_process=no_process,
         )
 
-        return artifacts.install_from(source, distdir or command_context.distdir)
+        return artifacts.install_from(source, distdir or self.distdir)
 
     @ArtifactSubCommand(
         "artifact",
@@ -205,8 +209,8 @@ class PackageFrontend(MachCommandBase):
         "Delete local artifacts and reset local artifact cache.",
     )
     def artifact_clear_cache(self, command_context, tree=None, job=None, verbose=False):
-        command_context._set_log_level(verbose)
-        artifacts = self._make_artifacts(command_context, tree=tree, job=job)
+        self._set_log_level(verbose)
+        artifacts = self._make_artifacts(tree=tree, job=job)
         artifacts.clear_cache()
         return 0
 
@@ -269,7 +273,11 @@ class PackageFrontend(MachCommandBase):
     ):
         """Download, cache and install pre-built toolchains."""
         from mozbuild.artifacts import ArtifactCache
-        from mozbuild.action.tooltool import FileRecord, open_manifest, unpack_file
+        from mozbuild.action.tooltool import (
+            FileRecord,
+            open_manifest,
+            unpack_file,
+        )
         import redo
         import requests
         import time
@@ -277,26 +285,22 @@ class PackageFrontend(MachCommandBase):
         from taskgraph.util.taskcluster import get_artifact_url
 
         start = time.time()
-        command_context._set_log_level(verbose)
-        # Normally, we'd use command_context.log_manager.enable_unstructured(),
+        self._set_log_level(verbose)
+        # Normally, we'd use self.log_manager.enable_unstructured(),
         # but that enables all logging, while we only really want tooltool's
         # and it also makes structured log output twice.
         # So we manually do what it does, and limit that to the tooltool
         # logger.
-        if command_context.log_manager.terminal_handler:
+        if self.log_manager.terminal_handler:
             logging.getLogger("mozbuild.action.tooltool").addHandler(
-                command_context.log_manager.terminal_handler
+                self.log_manager.terminal_handler
             )
-            logging.getLogger("redo").addHandler(
-                command_context.log_manager.terminal_handler
-            )
-            command_context.log_manager.terminal_handler.addFilter(
-                command_context.log_manager.structured_filter
+            logging.getLogger("redo").addHandler(self.log_manager.terminal_handler)
+            self.log_manager.terminal_handler.addFilter(
+                self.log_manager.structured_filter
             )
         if not cache_dir:
-            cache_dir = os.path.join(
-                command_context._mach_context.state_dir, "toolchains"
-            )
+            cache_dir = os.path.join(self._mach_context.state_dir, "toolchains")
 
         tooltool_host = os.environ.get("TOOLTOOL_HOST", "tooltool.mozilla-releng.net")
         taskcluster_proxy_url = os.environ.get("TASKCLUSTER_PROXY_URL")
@@ -305,9 +309,7 @@ class PackageFrontend(MachCommandBase):
         else:
             tooltool_url = "https://{}".format(tooltool_host)
 
-        cache = ArtifactCache(
-            cache_dir=cache_dir, log=command_context.log, skip_cache=skip_cache
-        )
+        cache = ArtifactCache(cache_dir=cache_dir, log=self.log, skip_cache=skip_cache)
 
         class DownloadRecord(FileRecord):
             def __init__(self, url, *args, **kwargs):
@@ -374,7 +376,7 @@ class PackageFrontend(MachCommandBase):
 
         if from_build:
             if "MOZ_AUTOMATION" in os.environ:
-                command_context.log(
+                self.log(
                     logging.ERROR,
                     "artifact",
                     {},
@@ -395,7 +397,7 @@ class PackageFrontend(MachCommandBase):
 
                 task = tasks.get(b)
                 if not task:
-                    command_context.log(
+                    self.log(
                         logging.ERROR,
                         "artifact",
                         {"build": user_value},
@@ -408,7 +410,7 @@ class PackageFrontend(MachCommandBase):
                 # are built on trunk projects, so the task will be available to
                 # install here.
                 if bootstrap and not task.attributes.get("local-toolchain"):
-                    command_context.log(
+                    self.log(
                         logging.ERROR,
                         "artifact",
                         {"build": user_value},
@@ -417,7 +419,7 @@ class PackageFrontend(MachCommandBase):
                     return 1
 
                 artifact_name = task.attributes.get("toolchain-artifact")
-                command_context.log(
+                self.log(
                     logging.DEBUG,
                     "artifact",
                     {
@@ -431,21 +433,19 @@ class PackageFrontend(MachCommandBase):
                     task, {}, deadline, task.optimization.get("index-search", [])
                 )
                 if task_id in (True, False) or not artifact_name:
-                    command_context.log(
+                    self.log(
                         logging.ERROR,
                         "artifact",
                         {"build": user_value},
                         _COULD_NOT_FIND_ARTIFACTS_TEMPLATE,
                     )
                     # Get and print some helpful info for diagnosis.
-                    repo = mozversioncontrol.get_repository_object(
-                        command_context.topsrcdir
-                    )
+                    repo = mozversioncontrol.get_repository_object(self.topsrcdir)
                     changed_files = set(repo.get_outgoing_files()) | set(
                         repo.get_changed_files()
                     )
                     if changed_files:
-                        command_context.log(
+                        self.log(
                             logging.ERROR,
                             "artifact",
                             {},
@@ -453,7 +453,7 @@ class PackageFrontend(MachCommandBase):
                             "to the following files: %s" % sorted(changed_files),
                         )
                     if "TASKCLUSTER_ROOT_URL" in os.environ:
-                        command_context.log(
+                        self.log(
                             logging.ERROR,
                             "artifact",
                             {"build": user_value},
@@ -466,7 +466,7 @@ class PackageFrontend(MachCommandBase):
                         )
                     return 1
 
-                command_context.log(
+                self.log(
                     logging.DEBUG,
                     "artifact",
                     {"name": artifact_name, "task_id": task_id},
@@ -477,7 +477,7 @@ class PackageFrontend(MachCommandBase):
                 records[record.filename] = record
 
         for record in six.itervalues(records):
-            command_context.log(
+            self.log(
                 logging.INFO,
                 "artifact",
                 {"name": record.basename},
@@ -507,11 +507,11 @@ class PackageFrontend(MachCommandBase):
                         level = logging.WARN
                     else:
                         level = logging.ERROR
-                    command_context.log(level, "artifact", {}, str(e))
+                    self.log(level, "artifact", {}, str(e))
                     if not should_retry:
                         break
                     if attempt < retry:
-                        command_context.log(
+                        self.log(
                             logging.INFO, "artifact", {}, "Will retry in a moment..."
                         )
                     continue
@@ -522,7 +522,7 @@ class PackageFrontend(MachCommandBase):
                 if not valid:
                     os.unlink(record.filename)
                     if attempt < retry:
-                        command_context.log(
+                        self.log(
                             logging.INFO,
                             "artifact",
                             {},
@@ -534,7 +534,7 @@ class PackageFrontend(MachCommandBase):
                 break
 
             if not valid:
-                command_context.log(
+                self.log(
                     logging.ERROR,
                     "artifact",
                     {"name": record.basename},
@@ -566,13 +566,15 @@ class PackageFrontend(MachCommandBase):
                         if not data:
                             break
                         h.update(data)
-                artifacts[record.url] = {"sha256": h.hexdigest()}
+                artifacts[record.url] = {
+                    "sha256": h.hexdigest(),
+                }
             if record.unpack and not no_unpack:
                 unpack_file(local)
                 os.unlink(local)
 
         if not downloaded:
-            command_context.log(logging.ERROR, "artifact", {}, "Nothing to download")
+            self.log(logging.ERROR, "artifact", {}, "Nothing to download")
 
         if artifacts:
             ensureParentDir(artifact_manifest)
@@ -594,7 +596,7 @@ class PackageFrontend(MachCommandBase):
                     }
                 ],
             }
-            command_context.log(
+            self.log(
                 logging.INFO,
                 "perfherder",
                 {"data": json.dumps(perfherder_data)},

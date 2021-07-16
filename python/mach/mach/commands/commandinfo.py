@@ -13,9 +13,14 @@ from itertools import chain
 
 import attr
 
-from mach.decorators import CommandProvider, Command, CommandArgument, SubCommand
+from mach.decorators import (
+    CommandProvider,
+    Command,
+    CommandArgument,
+    SubCommand,
+)
 from mozbuild.base import MachCommandBase
-from mozbuild.util import memoize
+from mozbuild.util import memoize, memoized_property
 
 here = os.path.abspath(os.path.dirname(__file__))
 COMPLETION_TEMPLATES_DIR = os.path.join(here, "completion_templates")
@@ -39,15 +44,15 @@ def render_template(shell, context):
 
 @CommandProvider
 class BuiltinCommands(MachCommandBase):
-    @memoize
-    def command_handlers(self, command_context):
+    @memoized_property
+    def command_handlers(self):
         """A dictionary of command handlers keyed by command name."""
-        return command_context._mach_context.commands.command_handlers
+        return self._mach_context.commands.command_handlers
 
-    @memoize
-    def commands(self, command_context):
+    @memoized_property
+    def commands(self):
         """A sorted list of all command names."""
-        return sorted(self.command_handlers(command_context))
+        return sorted(self.command_handlers)
 
     def _get_parser_options(self, parser):
         options = {}
@@ -63,13 +68,13 @@ class BuiltinCommands(MachCommandBase):
             options[tuple(action.option_strings)] = action.help or ""
         return options
 
-    @memoize
-    def global_options(self, command_context):
+    @memoized_property
+    def global_options(self):
         """Return a dict of global options.
 
         Of the form `{("-o", "--option"): "description"}`.
         """
-        for group in command_context._mach_context.global_parser._action_groups:
+        for group in self._mach_context.global_parser._action_groups:
             if group.title == "Global Arguments":
                 return self._get_parser_options(group)
 
@@ -112,21 +117,19 @@ class BuiltinCommands(MachCommandBase):
             subcommand=handler.subcommand,
         )
 
-    @memoize
-    def commands_info(self, command_context):
+    @memoized_property
+    def commands_info(self):
         """Return a list of CommandInfo objects for each command."""
         commands_info = []
-        # Loop over self.commands() rather than self.command_handlers().items() for
+        # Loop over self.commands rather than self.command_handlers.items() for
         # alphabetical order.
-        for c in self.commands(command_context):
-            commands_info.append(
-                self._get_handler_info(self.command_handlers(command_context)[c])
-            )
+        for c in self.commands:
+            commands_info.append(self._get_handler_info(self.command_handlers[c]))
         return commands_info
 
     @Command("mach-commands", category="misc", description="List all mach commands.")
     def run_commands(self, command_context):
-        print("\n".join(self.commands(command_context)))
+        print("\n".join(self.commands))
 
     @Command(
         "mach-debug-commands",
@@ -143,7 +146,7 @@ class BuiltinCommands(MachCommandBase):
     def run_debug_commands(self, command_context, match=None):
         import inspect
 
-        for command, handler in self.command_handlers(command_context).items():
+        for command, handler in self.command_handlers.items():
             if match and match not in command:
                 continue
 
@@ -168,23 +171,23 @@ class BuiltinCommands(MachCommandBase):
     )
     def run_completion(self, command_context, args):
         if not args:
-            print("\n".join(self.commands(command_context)))
+            print("\n".join(self.commands))
             return
 
         is_help = "help" in args
         command = None
         for i, arg in enumerate(args):
-            if arg in self.commands(command_context):
+            if arg in self.commands:
                 command = arg
                 args = args[i + 1 :]
                 break
 
         # If no command is typed yet, just offer the commands.
         if not command:
-            print("\n".join(self.commands(command_context)))
+            print("\n".join(self.commands))
             return
 
-        handler = self.command_handlers(command_context)[command]
+        handler = self.command_handlers[command]
         # If a subcommand was typed, update the handler.
         for arg in args:
             if arg in handler.subcommand_handlers:
@@ -232,7 +235,7 @@ class BuiltinCommands(MachCommandBase):
         commands_subcommands = []
         case_options = []
         case_subcommands = []
-        for i, cmd in enumerate(self.commands_info(command_context)):
+        for i, cmd in enumerate(self.commands_info):
             # Build case statement for options.
             options = []
             for opt_strs, description in cmd.options.items():
@@ -298,13 +301,11 @@ class BuiltinCommands(MachCommandBase):
                     )
                 )
 
-        globalopts = [
-            opt for opt_strs in self.global_options(command_context) for opt in opt_strs
-        ]
+        globalopts = [opt for opt_strs in self.global_options for opt in opt_strs]
         context = {
             "case_options": "\n".join(case_options),
             "case_subcommands": "\n".join(case_subcommands),
-            "commands": " ".join(self.commands(command_context)),
+            "commands": " ".join(self.commands),
             "commands_subcommands": " ".join(sorted(commands_subcommands)),
             "globalopts": " ".join(sorted(globalopts)),
         }
@@ -329,7 +330,7 @@ class BuiltinCommands(MachCommandBase):
         commands_subcommands = []
         case_options = []
         case_subcommands = []
-        for i, cmd in enumerate(self.commands_info(command_context)):
+        for i, cmd in enumerate(self.commands_info):
             commands_descriptions.append(self._zsh_describe(cmd.name, cmd.description))
 
             # Build case statement for options.
@@ -392,7 +393,7 @@ class BuiltinCommands(MachCommandBase):
                 )
 
         globalopts = []
-        for opt_strings, description in self.global_options(command_context).items():
+        for opt_strings, description in self.global_options.items():
             for opt in opt_strings:
                 globalopts.append(self._zsh_describe(opt, description))
 
@@ -429,7 +430,7 @@ class BuiltinCommands(MachCommandBase):
             return comp
 
         globalopts = []
-        for opt_strs, description in self.global_options(command_context).items():
+        for opt_strs, description in self.global_options.items():
             comp = (
                 "complete -c mach -n '__fish_mach_complete_no_command' "
                 "-d '{}'".format(description.replace("'", "\\'"))
@@ -439,10 +440,13 @@ class BuiltinCommands(MachCommandBase):
 
         cmds = []
         cmds_opts = []
-        for i, cmd in enumerate(self.commands_info(command_context)):
+        for i, cmd in enumerate(self.commands_info):
             cmds.append(
                 "complete -c mach -f -n '__fish_mach_complete_no_command' "
-                "-a {} -d '{}'".format(cmd.name, cmd.description.replace("'", "\\'"))
+                "-a {} -d '{}'".format(
+                    cmd.name,
+                    cmd.description.replace("'", "\\'"),
+                )
             )
 
             cmds_opts += ["# {}".format(cmd.name)]
@@ -480,11 +484,11 @@ class BuiltinCommands(MachCommandBase):
                 )
                 cmds_opts.append(comp)
 
-            if i < len(self.commands(command_context)) - 1:
+            if i < len(self.commands) - 1:
                 cmds_opts.append("")
 
         context = {
-            "commands": " ".join(self.commands(command_context)),
+            "commands": " ".join(self.commands),
             "command_completions": "\n".join(cmds),
             "command_option_completions": "\n".join(cmds_opts),
             "global_option_completions": "\n".join(globalopts),
