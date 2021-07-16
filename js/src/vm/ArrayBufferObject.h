@@ -112,7 +112,9 @@ class ArrayBufferObjectMaybeShared;
 wasm::IndexType WasmArrayBufferIndexType(
     const ArrayBufferObjectMaybeShared* buf);
 wasm::Pages WasmArrayBufferPages(const ArrayBufferObjectMaybeShared* buf);
-mozilla::Maybe<wasm::Pages> WasmArrayBufferMaxPages(
+wasm::Pages WasmArrayBufferClampedMaxPages(
+    const ArrayBufferObjectMaybeShared* buf);
+mozilla::Maybe<wasm::Pages> WasmArrayBufferSourceMaxPages(
     const ArrayBufferObjectMaybeShared* buf);
 size_t WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf);
 
@@ -130,8 +132,11 @@ class ArrayBufferObjectMaybeShared : public NativeObject {
     return WasmArrayBufferIndexType(this);
   }
   wasm::Pages wasmPages() const { return WasmArrayBufferPages(this); }
-  mozilla::Maybe<wasm::Pages> wasmMaxPages() const {
-    return WasmArrayBufferMaxPages(this);
+  wasm::Pages wasmClampedMaxPages() const {
+    return WasmArrayBufferClampedMaxPages(this);
+  }
+  mozilla::Maybe<wasm::Pages> wasmSourceMaxPages() const {
+    return WasmArrayBufferSourceMaxPages(this);
   }
   size_t wasmMappedSize() const { return WasmArrayBufferMappedSize(this); }
 
@@ -456,7 +461,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   wasm::IndexType wasmIndexType() const;
   wasm::Pages wasmPages() const;
-  mozilla::Maybe<wasm::Pages> wasmMaxPages() const;
+  wasm::Pages wasmClampedMaxPages() const;
+  mozilla::Maybe<wasm::Pages> wasmSourceMaxPages() const;
 
   [[nodiscard]] static bool wasmGrowToPagesInPlace(
       wasm::Pages newPages, Handle<ArrayBufferObject*> oldBuf,
@@ -587,16 +593,19 @@ class MutableWrappedPtrOperations<InnerViewTable, Wrapper>
 
 class WasmArrayRawBuffer {
   wasm::IndexType indexType_;
-  mozilla::Maybe<wasm::Pages> maxPages_;
+  wasm::Pages clampedMaxPages_;
+  mozilla::Maybe<wasm::Pages> sourceMaxPages_;
   size_t mappedSize_;  // Not including the header page
   size_t length_;
 
  protected:
   WasmArrayRawBuffer(wasm::IndexType indexType, uint8_t* buffer,
-                     const mozilla::Maybe<wasm::Pages>& maxPages,
+                     wasm::Pages clampedMaxPages,
+                     const mozilla::Maybe<wasm::Pages>& sourceMaxPages,
                      size_t mappedSize, size_t length)
       : indexType_(indexType),
-        maxPages_(maxPages),
+        clampedMaxPages_(clampedMaxPages),
+        sourceMaxPages_(sourceMaxPages),
         mappedSize_(mappedSize),
         length_(length) {
     MOZ_ASSERT(buffer == dataPointer());
@@ -605,7 +614,8 @@ class WasmArrayRawBuffer {
  public:
   static WasmArrayRawBuffer* AllocateWasm(
       wasm::IndexType indexType, wasm::Pages initialPages,
-      const mozilla::Maybe<wasm::Pages>& maxPages,
+      wasm::Pages clampedMaxPages,
+      const mozilla::Maybe<wasm::Pages>& sourceMaxPages,
       const mozilla::Maybe<size_t>& mappedSize);
   static void Release(void* mem);
 
@@ -631,7 +641,9 @@ class WasmArrayRawBuffer {
     return wasm::Pages::fromByteLengthExact(length_);
   }
 
-  mozilla::Maybe<wasm::Pages> maxPages() const { return maxPages_; }
+  wasm::Pages clampedMaxPages() const { return clampedMaxPages_; }
+
+  mozilla::Maybe<wasm::Pages> sourceMaxPages() const { return sourceMaxPages_; }
 
   [[nodiscard]] bool growToPagesInPlace(wasm::Pages newPages);
 

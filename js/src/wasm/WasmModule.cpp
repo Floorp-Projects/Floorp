@@ -719,7 +719,7 @@ bool Module::instantiateMemory(JSContext* cx,
     if (!CheckLimits(cx, desc.initialPages(), desc.maximumPages(),
                      /* defaultMax */ MaxMemoryPages(),
                      /* actualLength */
-                     memory->volatilePages(), memory->maxPages(),
+                     memory->volatilePages(), memory->sourceMaxPages(),
                      metadata().isAsmJS(), "Memory")) {
       return false;
     }
