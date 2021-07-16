@@ -424,12 +424,14 @@ GeckoDriver.prototype.newSession = async function(cmd) {
     this.mainFrame = win;
 
     // If the WebDriver BiDi protocol is active always use the Remote Agent
-    // to handle the WebDriver session. If it's not the case Marionette itself
-    // needs to handle it.
+    // to handle the WebDriver session. If it's not the case then Marionette
+    // itself needs to handle it, and has to nullify the "webSocketUrl"
+    // capability.
     if (RemoteAgent.webdriverBiDi) {
       RemoteAgent.webdriverBiDi.createSession(capabilities);
     } else {
       this._currentSession = new WebDriverSession(capabilities);
+      this._currentSession.capabilities.delete("webSocketUrl");
     }
 
     registerCommandsActor();
