@@ -6016,6 +6016,13 @@
     mirror: always
 #endif
 
+#if defined(ENABLE_WASM_MEMORY64)
+-   name: javascript.options.wasm_memory64
+    type: bool
+    value: true
+    mirror: always
+#endif  // defined(ENABLE_WASM_MEMORY64)
+
 # Support for ArrayBuffers larger than 2 GB on 64-bit systems
 - name: javascript.options.large_arraybuffers
   type: bool
