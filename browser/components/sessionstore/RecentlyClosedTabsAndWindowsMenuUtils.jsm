@@ -223,7 +223,10 @@ function createEntry(
     element.setAttribute("targetURI", tabData.entries[activeIndex].url);
   }
 
-  if (!aIsWindowsFragment) {
+  // Windows don't open in new tabs and menuitems dispatch command events on
+  // middle click, so we only need to manually handle middle clicks for
+  // toolbarbuttons.
+  if (!aIsWindowsFragment && aTagName != "menuitem") {
     element.addEventListener(
       "click",
       RecentlyClosedTabsAndWindowsMenuUtils._undoCloseMiddleClick
