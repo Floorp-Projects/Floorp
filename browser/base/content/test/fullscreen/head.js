@@ -1,6 +1,10 @@
 const { ContentTaskUtils } = ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );
+
+const TEST_URL =
+  "https://example.com/browser/browser/base/content/test/fullscreen/open_and_focus_helper.html";
+
 function waitForFullScreenState(browser, state) {
   return new Promise(resolve => {
     let eventReceived = false;
@@ -105,8 +109,8 @@ function jsElementFocus(browser, iframeId) {
 async function jsWindowOpen(browser, isPopup, iframeId) {
   //let windowOpened = BrowserTestUtils.waitForNewWindow();
   let windowOpened = isPopup
-    ? BrowserTestUtils.waitForNewWindow()
-    : BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+    ? BrowserTestUtils.waitForNewWindow({ url: TEST_URL })
+    : BrowserTestUtils.waitForNewTab(gBrowser, TEST_URL, true);
   ContentTask.spawn(browser, { isPopup, iframeId }, async args => {
     let destWin = content;
     if (args.iframeId) {
