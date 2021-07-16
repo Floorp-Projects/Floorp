@@ -323,6 +323,7 @@ sm-linux64-wasi/opt:
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump_syms
+            - sysroot-x86_64-linux-gnu
             - wasi-sysroot-12
 
 sm-msan-linux64/opt:
