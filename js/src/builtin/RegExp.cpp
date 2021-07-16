@@ -47,6 +47,17 @@ static PlainObject* CreateGroupsObject(JSContext* cx,
     return NewObjectWithGivenProto<PlainObject>(cx, nullptr);
   }
 
+  // The groups template object is stored in RegExpShared, which is shared
+  // across compartments and realms. So watch out for the case when the template
+  // object's realm is different from the current realm.
+  if (cx->realm() != groupsTemplate->realm()) {
+    PlainObject* result;
+    JS_TRY_VAR_OR_RETURN_NULL(
+        cx, result,
+        PlainObject::createWithTemplateFromDifferentRealm(cx, groupsTemplate));
+    return result;
+  }
+
   PlainObject* result;
   JS_TRY_VAR_OR_RETURN_NULL(
       cx, result, PlainObject::createWithTemplate(cx, groupsTemplate));
