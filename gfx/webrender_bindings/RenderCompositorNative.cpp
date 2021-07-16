@@ -52,6 +52,9 @@ bool RenderCompositorNative::BeginFrame() {
 
   gfx::IntSize bufferSize = GetBufferSize().ToUnknownSize();
   if (!ShouldUseNativeCompositor()) {
+    if (bufferSize.IsEmpty()) {
+      return false;
+    }
     if (mNativeLayerForEntireWindow &&
         mNativeLayerForEntireWindow->GetSize() != bufferSize) {
       mNativeLayerRoot->RemoveLayer(mNativeLayerForEntireWindow);
