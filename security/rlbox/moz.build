@@ -9,6 +9,10 @@ if CONFIG["LUCETC"]:
         "/third_party/rust/rlbox_lucet_sandbox/c_src/lucet_sandbox_wrapper.c",
     ]
 else:
+    WASM_SOURCES += [
+        "/third_party/rlbox_wasm2c_sandbox/c_src/wasm2c_sandbox_wrapper.c",
+    ]
+
     LOCAL_INCLUDES += ["/third_party/wasm2c/wasm2c/"]
 
     EXPORTS += ["/third_party/wasm2c/wasm2c/wasm-rt.h"]
@@ -18,6 +22,12 @@ else:
         "/third_party/wasm2c/wasm2c/wasm-rt-os-unix.c",
         "/third_party/wasm2c/wasm2c/wasm-rt-os-win.c",
         "/third_party/wasm2c/wasm2c/wasm-rt-wasi.c",
+    ]
+
+    NoVisibilityFlags()
+
+    CFLAGS += [
+        "-Wno-error=unused-function",
     ]
 
 WASM_DEFINES["MOZILLA_CLIENT"] = True
