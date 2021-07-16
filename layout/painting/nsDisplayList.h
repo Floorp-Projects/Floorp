@@ -2067,7 +2067,6 @@ class nsDisplayListBuilder {
 };
 
 class nsDisplayItem;
-class nsDisplayItemBase;
 class nsPaintedDisplayItem;
 class nsDisplayList;
 class RetainedDisplayList;
@@ -2215,9 +2214,25 @@ class nsDisplayItemLink {
  * Display items belong to a list at all times (except temporarily as they
  * move from one list to another).
  */
-class nsDisplayItemBase : public nsDisplayItemLink {
+class nsDisplayItem : public nsDisplayItemLink {
  public:
-  nsDisplayItemBase() = delete;
+  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
+  typedef mozilla::DisplayItemClip DisplayItemClip;
+  typedef mozilla::DisplayItemClipChain DisplayItemClipChain;
+  typedef mozilla::ActiveScrolledRoot ActiveScrolledRoot;
+  typedef mozilla::layers::FrameMetrics FrameMetrics;
+  typedef mozilla::layers::ScrollMetadata ScrollMetadata;
+  typedef mozilla::layers::ScrollableLayerGuid::ViewID ViewID;
+  typedef mozilla::layers::Layer Layer;
+  typedef mozilla::layers::LayerManager LayerManager;
+  typedef mozilla::layers::StackingContextHelper StackingContextHelper;
+  typedef mozilla::layers::WebRenderCommand WebRenderCommand;
+  typedef mozilla::layers::WebRenderParentCommand WebRenderParentCommand;
+  typedef mozilla::LayerState LayerState;
+  typedef mozilla::image::imgDrawingParams imgDrawingParams;
+  typedef mozilla::image::ImgDrawResult ImgDrawResult;
+  typedef class mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::CompositorHitTestInfo CompositorHitTestInfo;
 
   /**
    * Downcasts this item to nsPaintedDisplayItem, if possible.
@@ -2246,7 +2261,7 @@ class nsDisplayItemBase : public nsDisplayItemLink {
    */
   virtual void Destroy(nsDisplayListBuilder* aBuilder) {
     const DisplayItemType type = GetType();
-    this->~nsDisplayItemBase();
+    this->~nsDisplayItem();
     aBuilder->Destroy(type, this);
   }
 
@@ -2317,40 +2332,38 @@ class nsDisplayItemBase : public nsDisplayItemLink {
   /**
    * Returns true if this item was reused during display list merging.
    */
-  bool IsReused() const {
-    return mItemFlags.contains(ItemBaseFlag::ReusedItem);
-  }
+  bool IsReused() const { return mItemFlags.contains(ItemFlag::ReusedItem); }
 
-  void SetReused(bool aReused) {
-    if (aReused) {
-      mItemFlags += ItemBaseFlag::ReusedItem;
-    } else {
-      mItemFlags -= ItemBaseFlag::ReusedItem;
-    }
-  }
+  void SetReused(bool aReused) { SetItemFlag(ItemFlag::ReusedItem, aReused); }
 
   /**
    * Returns true if this item can be reused during display list merging.
    */
   bool CanBeReused() const {
-    return !mItemFlags.contains(ItemBaseFlag::CantBeReused);
+    return !mItemFlags.contains(ItemFlag::CantBeReused);
   }
 
-  void SetCantBeReused() { mItemFlags += ItemBaseFlag::CantBeReused; }
+  void SetCantBeReused() { mItemFlags += ItemFlag::CantBeReused; }
 
   bool CanBeCached() const {
-    return !mItemFlags.contains(ItemBaseFlag::CantBeCached);
+    return !mItemFlags.contains(ItemFlag::CantBeCached);
   }
 
-  void SetCantBeCached() { mItemFlags += ItemBaseFlag::CantBeCached; }
+  void SetCantBeCached() { mItemFlags += ItemFlag::CantBeCached; }
 
   bool IsOldItem() const { return !!mOldList; }
 
   /**
    * Returns true if the frame of this display item is in a modified subtree.
    */
-  bool HasModifiedFrame() const;
-  void SetModifiedFrame(bool aModified);
+  bool HasModifiedFrame() const {
+    return mItemFlags.contains(ItemFlag::ModifiedFrame);
+  }
+
+  void SetModifiedFrame(bool aModified) {
+    SetItemFlag(ItemFlag::ModifiedFrame, aModified);
+  }
+
   bool HasDeletedFrame() const;
 
   /**
@@ -2401,28 +2414,49 @@ class nsDisplayItemBase : public nsDisplayItemLink {
   virtual bool CreatesStackingContextHelper() { return false; }
 
  protected:
-  nsDisplayItemBase(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : mFrame(aFrame), mType(DisplayItemType::TYPE_ZERO) {
-    MOZ_COUNT_CTOR(nsDisplayItemBase);
-    MOZ_ASSERT(mFrame);
+  // This is never instantiated directly (it has pure virtual methods), so no
+  // need to count constructors and destructors.
+  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
+  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                const ActiveScrolledRoot* aActiveScrolledRoot);
 
-    if (aBuilder->IsRetainingDisplayList()) {
-      mFrame->AddDisplayItem(this);
-    }
-  }
-
-  nsDisplayItemBase(nsDisplayListBuilder* aBuilder,
-                    const nsDisplayItemBase& aOther)
+  /**
+   * The custom copy-constructor is implemented to prevent copying the saved
+   * state of the item.
+   * This is currently only used when creating temporary items for merging.
+   */
+  nsDisplayItem(nsDisplayListBuilder* aBuilder, const nsDisplayItem& aOther)
       : mFrame(aOther.mFrame),
         mItemFlags(aOther.mItemFlags),
         mType(aOther.mType),
         mExtraPageForPageNum(aOther.mExtraPageForPageNum),
-        mPerFrameIndex(aOther.mPerFrameIndex) {
-    MOZ_COUNT_CTOR(nsDisplayItemBase);
+        mPerFrameIndex(aOther.mPerFrameIndex),
+        mBuildingRect(aOther.mBuildingRect),
+        mPaintRect(aOther.mPaintRect),
+        mReferenceFrame(aOther.mReferenceFrame),
+        mToReferenceFrame(aOther.mToReferenceFrame),
+        mAnimatedGeometryRoot(aOther.mAnimatedGeometryRoot),
+        mActiveScrolledRoot(aOther.mActiveScrolledRoot),
+        mClipChain(aOther.mClipChain),
+        mClip(aOther.mClip) {
+    MOZ_COUNT_CTOR(nsDisplayItem);
+    // TODO: It might be better to remove the flags that aren't copied.
+    if (aOther.ForceNotVisible()) {
+      mItemFlags += ItemFlag::ForceNotVisible;
+    }
+    if (aOther.IsSubpixelAADisabled()) {
+      mItemFlags += ItemFlag::DisableSubpixelAA;
+    }
+    if (mFrame->In3DContextAndBackfaceIsHidden()) {
+      mItemFlags += ItemFlag::BackfaceHidden;
+    }
+    if (aOther.Combines3DTransformWithAncestors()) {
+      mItemFlags += ItemFlag::Combines3DTransformWithAncestors;
+    }
   }
 
-  virtual ~nsDisplayItemBase() {
-    MOZ_COUNT_DTOR(nsDisplayItemBase);
+  virtual ~nsDisplayItem() {
+    MOZ_COUNT_DTOR(nsDisplayItem);
     if (mFrame) {
       mFrame->RemoveDisplayItem(this);
     }
@@ -2442,122 +2476,6 @@ class nsDisplayItemBase : public nsDisplayItemLink {
   }
 
   void SetDeletedFrame();
-
-  nsIFrame* mFrame;  // 8
-
- private:
-  enum class ItemBaseFlag : uint8_t {
-    CantBeReused,
-    CantBeCached,
-    DeletedFrame,
-    ModifiedFrame,
-    ReusedItem,
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    MergedItem,
-    PreProcessedItem,
-#endif
-  };
-
-  mozilla::EnumSet<ItemBaseFlag, uint8_t> mItemFlags;  // 1
-  DisplayItemType mType;                               // 1
-  uint8_t mExtraPageForPageNum = 0;                    // 1
-  uint16_t mPerFrameIndex;                             // 2
-  OldListIndex mOldListIndex;                          // 4
-  uintptr_t mOldList = 0;                              // 8
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
- public:
-  bool IsMergedItem() const {
-    return mItemFlags.contains(ItemBaseFlag::MergedItem);
-  }
-
-  bool IsPreProcessedItem() const {
-    return mItemFlags.contains(ItemBaseFlag::PreProcessedItem);
-  }
-
-  void SetMergedPreProcessed(bool aMerged, bool aPreProcessed) {
-    if (aMerged) {
-      mItemFlags += ItemBaseFlag::MergedItem;
-    } else {
-      mItemFlags -= ItemBaseFlag::MergedItem;
-    }
-
-    if (aPreProcessed) {
-      mItemFlags += ItemBaseFlag::PreProcessedItem;
-    } else {
-      mItemFlags -= ItemBaseFlag::PreProcessedItem;
-    }
-  }
-
-  uint32_t mOldListKey = 0;
-  uint32_t mOldNestingDepth = 0;
-#endif
-};
-
-/**
- * This is the unit of rendering and event testing. Each instance of this
- * class represents an entity that can be drawn on the screen, e.g., a
- * frame's CSS background, or a frame's text string.
- */
-class nsDisplayItem : public nsDisplayItemBase {
- public:
-  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
-  typedef mozilla::DisplayItemClip DisplayItemClip;
-  typedef mozilla::DisplayItemClipChain DisplayItemClipChain;
-  typedef mozilla::ActiveScrolledRoot ActiveScrolledRoot;
-  typedef mozilla::layers::FrameMetrics FrameMetrics;
-  typedef mozilla::layers::ScrollMetadata ScrollMetadata;
-  typedef mozilla::layers::ScrollableLayerGuid::ViewID ViewID;
-  typedef mozilla::layers::Layer Layer;
-  typedef mozilla::layers::LayerManager LayerManager;
-  typedef mozilla::layers::StackingContextHelper StackingContextHelper;
-  typedef mozilla::layers::WebRenderCommand WebRenderCommand;
-  typedef mozilla::layers::WebRenderParentCommand WebRenderParentCommand;
-  typedef mozilla::LayerState LayerState;
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
-  typedef mozilla::image::ImgDrawResult ImgDrawResult;
-  typedef class mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::gfx::CompositorHitTestInfo CompositorHitTestInfo;
-
- protected:
-  // This is never instantiated directly (it has pure virtual methods), so no
-  // need to count constructors and destructors.
-  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
-  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                const ActiveScrolledRoot* aActiveScrolledRoot);
-
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayItem)
-
-  /**
-   * The custom copy-constructor is implemented to prevent copying the saved
-   * state of the item.
-   * This is currently only used when creating temporary items for merging.
-   */
-  nsDisplayItem(nsDisplayListBuilder* aBuilder, const nsDisplayItem& aOther)
-      : nsDisplayItemBase(aBuilder, aOther),
-        mClipChain(aOther.mClipChain),
-        mClip(aOther.mClip),
-        mActiveScrolledRoot(aOther.mActiveScrolledRoot),
-        mReferenceFrame(aOther.mReferenceFrame),
-        mAnimatedGeometryRoot(aOther.mAnimatedGeometryRoot),
-        mToReferenceFrame(aOther.mToReferenceFrame),
-        mBuildingRect(aOther.mBuildingRect),
-        mPaintRect(aOther.mPaintRect) {
-    MOZ_COUNT_CTOR(nsDisplayItem);
-    // TODO: It might be better to remove the flags that aren't copied.
-    if (aOther.ForceNotVisible()) {
-      mItemFlags += ItemFlag::ForceNotVisible;
-    }
-    if (aOther.IsSubpixelAADisabled()) {
-      mItemFlags += ItemFlag::DisableSubpixelAA;
-    }
-    if (mFrame->In3DContextAndBackfaceIsHidden()) {
-      mItemFlags += ItemFlag::BackfaceHidden;
-    }
-    if (aOther.Combines3DTransformWithAncestors()) {
-      mItemFlags += ItemFlag::Combines3DTransformWithAncestors;
-    }
-  }
 
  public:
   nsDisplayItem() = delete;
@@ -3149,37 +3067,19 @@ class nsDisplayItem : public nsDisplayItemBase {
     return mozilla::HitTestInfo::Empty();
   }
 
- protected:
-  typedef bool (*PrefFunc)(void);
-  void SetHasHitTestInfo() { mItemFlags += ItemFlag::HasHitTestInfo; }
-
-  RefPtr<const DisplayItemClipChain> mClipChain;
-  const DisplayItemClip* mClip;
-  RefPtr<const ActiveScrolledRoot> mActiveScrolledRoot;
-  // Result of FindReferenceFrameFor(mFrame), if mFrame is non-null
-  const nsIFrame* mReferenceFrame;
-  RefPtr<struct AnimatedGeometryRoot> mAnimatedGeometryRoot;
-
-  struct {
-    RefPtr<const DisplayItemClipChain> mClipChain;
-    const DisplayItemClip* mClip;
-  } mState;
-
-  // Result of ToReferenceFrame(mFrame), if mFrame is non-null
-  nsPoint mToReferenceFrame;
+  nsIFrame* mFrame;  // 8
 
  private:
-  // This is the rectangle that nsDisplayListBuilder was using as the visible
-  // rect to decide which items to construct.
-  nsRect mBuildingRect;
-
-  // nsDisplayList::ComputeVisibility sets this to the visible region
-  // of the item by intersecting the visible region with the bounds
-  // of the item. Paint implementations can use this to limit their drawing.
-  // Guaranteed to be contained in GetBounds().
-  nsRect mPaintRect;
-
-  enum class ItemFlag : uint8_t {
+  enum class ItemFlag : uint16_t {
+    CantBeReused,
+    CantBeCached,
+    DeletedFrame,
+    ModifiedFrame,
+    ReusedItem,
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    MergedItem,
+    PreProcessedItem,
+#endif
     BackfaceHidden,
     Combines3DTransformWithAncestors,
     DisableSubpixelAA,
@@ -3193,7 +3093,67 @@ class nsDisplayItem : public nsDisplayItemBase {
 #endif
   };
 
-  mozilla::EnumSet<ItemFlag, uint8_t> mItemFlags;
+  mozilla::EnumSet<ItemFlag, uint16_t> mItemFlags;     // 2
+  DisplayItemType mType = DisplayItemType::TYPE_ZERO;  // 1
+  uint8_t mExtraPageForPageNum = 0;                    // 1
+  uint16_t mPerFrameIndex = 0;                         // 2
+  // 2 free bytes here
+  OldListIndex mOldListIndex;  // 4
+  uintptr_t mOldList = 0;      // 8
+
+  // This is the rectangle that nsDisplayListBuilder was using as the visible
+  // rect to decide which items to construct.
+  nsRect mBuildingRect;
+
+  // nsDisplayList::ComputeVisibility sets this to the visible region
+  // of the item by intersecting the visible region with the bounds
+  // of the item. Paint implementations can use this to limit their drawing.
+  // Guaranteed to be contained in GetBounds().
+  nsRect mPaintRect;
+
+ protected:
+  void SetItemFlag(ItemFlag aFlag, const bool aValue) {
+    if (aValue) {
+      mItemFlags += aFlag;
+    } else {
+      mItemFlags -= aFlag;
+    }
+  }
+
+  void SetHasHitTestInfo() { mItemFlags += ItemFlag::HasHitTestInfo; }
+
+  // Result of ToReferenceFrame(mFrame), if mFrame is non-null
+  const nsIFrame* mReferenceFrame;
+  nsPoint mToReferenceFrame;
+
+  RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRoot;
+  RefPtr<const ActiveScrolledRoot> mActiveScrolledRoot;
+  RefPtr<const DisplayItemClipChain> mClipChain;
+  const DisplayItemClip* mClip = nullptr;
+
+  struct {
+    RefPtr<const DisplayItemClipChain> mClipChain;
+    const DisplayItemClip* mClip;
+  } mState;
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+ public:
+  bool IsMergedItem() const {
+    return mItemFlags.contains(ItemFlag::MergedItem);
+  }
+
+  bool IsPreProcessedItem() const {
+    return mItemFlags.contains(ItemFlag::PreProcessedItem);
+  }
+
+  void SetMergedPreProcessed(bool aMerged, bool aPreProcessed) {
+    SetItemFlag(ItemFlag::MergedItem, aMerged);
+    SetItemFlag(ItemFlag::PreProcessedItem, aPreProcessed);
+  }
+
+  uint32_t mOldListKey = 0;
+  uint32_t mOldNestingDepth = 0;
+#endif
 };
 
 class nsPaintedDisplayItem : public nsDisplayItem {

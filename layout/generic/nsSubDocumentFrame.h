@@ -219,7 +219,7 @@ class nsDisplayRemote final : public nsPaintedDisplayItem {
   NS_DISPLAY_DECL_NAME("Remote", TYPE_REMOTE)
 
  private:
-  friend class nsDisplayItemBase;
+  friend class nsDisplayItem;
   nsFrameLoader* GetFrameLoader() const;
 
   TabId mTabId;
