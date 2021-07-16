@@ -6,6 +6,8 @@ package org.mozilla.focus.exceptions
 
 import android.content.Context
 import android.content.SharedPreferences
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW
@@ -18,15 +20,18 @@ class GeckoExceptionsMigrator(
     private val runtime: GeckoRuntime
 ) {
     private val logger = Logger("GeckoExceptionsMigrator")
-    private val storageController = runtime.storageController
+    private val storageController by lazy { runtime.storageController }
 
-    fun start(context: Context) {
+    suspend fun start(context: Context) {
         if (!isOver(context)) {
             logger.info("Starting tracking protection exceptions migration")
+
             val exceptions = fetchExceptions(context)
-            exceptions.forEach {
-                migrate(it)
+
+            withContext(Dispatchers.Main) {
+                exceptions.forEach { migrate(it) }
             }
+
             logger.info("Finished tracking protection exceptions migration")
 
             // We are not removing the domains yet because GeckoView does not seem to persist them.

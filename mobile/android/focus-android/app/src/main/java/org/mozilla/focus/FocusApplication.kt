@@ -60,8 +60,6 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             storeLink.start()
 
             ProcessLifecycleOwner.get().lifecycle.addObserver(lockObserver)
-
-            components.migrateTrackingProtectionExceptions(this@FocusApplication)
         }
     }
 

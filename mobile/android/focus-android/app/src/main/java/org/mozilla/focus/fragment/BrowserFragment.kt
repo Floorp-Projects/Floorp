@@ -36,7 +36,6 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
@@ -500,10 +499,6 @@ class BrowserFragment :
         }
 
         requireComponents.tabsUseCases.removeTab(tab.id)
-
-        // Temporary workaround until we get https://bugzilla.mozilla.org/show_bug.cgi?id=1644156
-        // See comment in TabUtils.createTab().
-        requireComponents.engine.clearData(Engine.BrowsingData.all())
     }
 
     private fun shareCurrentUrl() {

@@ -7,9 +7,6 @@ package org.mozilla.focus
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.DefaultSettings
@@ -42,6 +39,7 @@ import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.ClientWrapper
 import org.mozilla.focus.engine.LocalizedContentInterceptor
 import org.mozilla.focus.engine.SanityCheckMiddleware
+import org.mozilla.focus.exceptions.ExceptionMigrationMiddleware
 import org.mozilla.focus.locale.LocaleManager
 import org.mozilla.focus.notification.PrivateNotificationMiddleware
 import org.mozilla.focus.search.SearchFilterMiddleware
@@ -106,6 +104,7 @@ class Components(
     val store by lazy {
         BrowserStore(
             middleware = listOf(
+                ExceptionMigrationMiddleware(context),
                 PrivateNotificationMiddleware(context),
                 TelemetryMiddleware(),
                 DownloadMiddleware(context, DownloadService::class.java),
@@ -148,20 +147,6 @@ class Components(
     val crashReporter: CrashReporter by lazy { createCrashReporter(context) }
 
     val metrics: GleanMetricsService by lazy { GleanMetricsService(context) }
-
-    fun migrateTrackingProtectionExceptions(context: Context) {
-        if (engineOverride != null) {
-            // If there's an engine override (for testing) then we do not want to migrate any
-            // exceptions and potentially try to launch GeckoView on a plain JVM (which will blow up).
-            return
-        }
-
-        val exceptionsMigrator = EngineProvider.provideTrackingProtectionMigrator(context)
-
-        GlobalScope.launch(Dispatchers.IO) {
-            exceptionsMigrator.start(context)
-        }
-    }
 }
 
 private fun determineInitialScreen(context: Context): Screen {
