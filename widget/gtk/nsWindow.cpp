@@ -5696,6 +5696,7 @@ void nsWindow::SetWindowClass(const nsAString& xulWinType) {
   if (!role) role = res_name;
 
   mGtkWindowAppName = res_name;
+  mGtkWindowRoleName = role;
   free(res_name);
 
   RefreshWindowClass();
