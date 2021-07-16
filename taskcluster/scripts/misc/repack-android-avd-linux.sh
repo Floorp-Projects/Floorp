@@ -23,7 +23,7 @@ mkdir -p $HOME/artifacts $UPLOAD_DIR
 
 # Populate /builds/worker/.mozbuild/android-device
 cd $GECKO_PATH
-./mach python python/mozboot/mozboot/android.py --artifact-mode --prewarm-avd --avd-manifest="$AVD_JSON_CONFIG" --no-interactive
+./mach python python/mozboot/mozboot/android.py --artifact-mode --prewarm-avd --avd-manifest="$AVD_JSON_CONFIG" --no-interactive --list-packages
 
 tar cavf $UPLOAD_DIR/android-avd-linux.tar.zst -C /builds/worker/.mozbuild android-device
 
