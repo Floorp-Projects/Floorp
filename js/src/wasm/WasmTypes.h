@@ -1305,16 +1305,6 @@ struct MemoryDesc {
     return limits.initial * PageSize;
   }
 
-  // The maximum length of this memory in bytes. Only valid for memory32.
-  Maybe<uint64_t> maximumLength32() const {
-    MOZ_ASSERT(kind == MemoryKind::Memory32);
-    if (limits.maximum) {
-      // See static_assert after MemoryDesc for why this is safe.
-      return Some(*limits.maximum * PageSize);
-    }
-    return Nothing();
-  }
-
   MemoryDesc() = default;
   MemoryDesc(MemoryKind kind, Limits limits) : kind(kind), limits(limits) {}
 };
