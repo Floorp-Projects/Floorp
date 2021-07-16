@@ -1950,13 +1950,6 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     request->SetScriptMode(aElement->GetScriptDeferred(),
                            aElement->GetScriptAsync(), false);
 
-    // The request will be added to another list or set as
-    // mParserBlockingRequest below.
-    if (request->mInCompilingList) {
-      mOffThreadCompilingRequests.Remove(request);
-      request->mInCompilingList = false;
-    }
-
     AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::Used);
   } else {
     // No usable preload found.
@@ -4432,7 +4425,11 @@ void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
 void ScriptLoader::AddDeferRequest(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsDeferredScript());
   MOZ_ASSERT(!aRequest->mInDeferList && !aRequest->mInAsyncList);
-  MOZ_ASSERT(!aRequest->mInCompilingList);
+
+  if (aRequest->mInCompilingList) {
+    mOffThreadCompilingRequests.Remove(aRequest);
+    aRequest->mInCompilingList = false;
+  }
 
   aRequest->mInDeferList = true;
   mDeferRequests.AppendElement(aRequest);
@@ -4447,7 +4444,11 @@ void ScriptLoader::AddDeferRequest(ScriptLoadRequest* aRequest) {
 void ScriptLoader::AddAsyncRequest(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsAsyncScript());
   MOZ_ASSERT(!aRequest->mInDeferList && !aRequest->mInAsyncList);
-  MOZ_ASSERT(!aRequest->mInCompilingList);
+
+  if (aRequest->mInCompilingList) {
+    mOffThreadCompilingRequests.Remove(aRequest);
+    aRequest->mInCompilingList = false;
+  }
 
   aRequest->mInAsyncList = true;
   if (aRequest->IsReadyToRun()) {
