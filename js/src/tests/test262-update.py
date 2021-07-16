@@ -24,9 +24,12 @@ UNSUPPORTED_FEATURES = set(
         "tail-call-optimization",
         "Intl.DateTimeFormat-quarter",
         "Intl.Segmenter",
+        "Intl.Locale-info",
         "Atomics.waitAsync",
         "legacy-regexp",
         "import-assertions",
+        "resizable-arraybuffer",
+        "Temporal",
     ]
 )
 FEATURE_CHECK_NEEDED = {
@@ -38,6 +41,7 @@ FEATURE_CHECK_NEEDED = {
 RELEASE_OR_BETA = set([])
 SHELL_OPTIONS = {
     "top-level-await": "--enable-top-level-await",
+    "class-static-block": "--enable-class-static-blocks",
 }
 
 
