@@ -546,14 +546,14 @@ class PackedType : public T {
     return RefType(tc_).kind();
   }
 
-  void renumber(const RenumberMap& map) {
+  void renumber(const RenumberVector& renumbering) {
     if (!isTypeIndex()) {
       return;
     }
 
-    if (RenumberMap::Ptr p = map.lookup(refType().typeIndex())) {
-      *this = RefType::fromTypeIndex(p->value(), isNullable());
-    }
+    uint32_t newIndex = renumbering[typeIndex()];
+    MOZ_ASSERT(newIndex != UINT32_MAX);
+    *this = RefType::fromTypeIndex(newIndex, isNullable());
   }
 
   void offsetTypeIndex(uint32_t offsetBy) {

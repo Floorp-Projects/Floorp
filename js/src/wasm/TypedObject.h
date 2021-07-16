@@ -86,6 +86,7 @@ class RttValue : public NativeObject {
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };
 
+using MutableHandleRttValue = MutableHandle<RttValue*>;
 using HandleRttValue = Handle<RttValue*>;
 using RootedRttValue = Rooted<RttValue*>;
 

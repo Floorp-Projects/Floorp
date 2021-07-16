@@ -2038,7 +2038,7 @@ template <typename Policy>
 inline bool OpIter<Policy>::readGetGlobal(uint32_t* id) {
   MOZ_ASSERT(Classify(op_) == OpKind::GetGlobal);
 
-  if (!d_.readGetGlobal(id)) {
+  if (!d_.readGlobalIndex(id)) {
     return false;
   }
 
@@ -2060,8 +2060,8 @@ template <typename Policy>
 inline bool OpIter<Policy>::readSetGlobal(uint32_t* id, Value* value) {
   MOZ_ASSERT(Classify(op_) == OpKind::SetGlobal);
 
-  if (!readVarU32(id)) {
-    return fail("unable to read global index");
+  if (!d_.readGlobalIndex(id)) {
+    return false;
   }
 
   if (*id >= env_.globals.length()) {
@@ -2079,8 +2079,8 @@ template <typename Policy>
 inline bool OpIter<Policy>::readTeeGlobal(uint32_t* id, Value* value) {
   MOZ_ASSERT(Classify(op_) == OpKind::TeeGlobal);
 
-  if (!readVarU32(id)) {
-    return fail("unable to read global index");
+  if (!d_.readGlobalIndex(id)) {
+    return false;
   }
 
   if (*id >= env_.globals.length()) {
@@ -2149,7 +2149,7 @@ template <typename Policy>
 inline bool OpIter<Policy>::readRefFunc(uint32_t* funcIndex) {
   MOZ_ASSERT(Classify(op_) == OpKind::RefFunc);
 
-  if (!d_.readRefFunc(funcIndex)) {
+  if (!d_.readFuncIndex(funcIndex)) {
     return false;
   }
   if (*funcIndex >= env_.funcs.length()) {
@@ -2786,8 +2786,8 @@ inline bool OpIter<Policy>::readTableSize(uint32_t* tableIndex) {
 
 template <typename Policy>
 inline bool OpIter<Policy>::readGcTypeIndex(uint32_t* typeIndex) {
-  if (!readVarU32(typeIndex)) {
-    return fail("unable to read type index");
+  if (!d_.readTypeIndex(typeIndex)) {
+    return false;
   }
 
   if (*typeIndex >= env_.types.length()) {
