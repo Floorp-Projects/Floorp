@@ -77,9 +77,7 @@ impl Crypto {
         }
         let extension = match version {
             QuicVersion::Version1 => 0x39,
-            QuicVersion::Draft27
-            | QuicVersion::Draft28
-            | QuicVersion::Draft29
+            QuicVersion::Draft29
             | QuicVersion::Draft30
             | QuicVersion::Draft31
             | QuicVersion::Draft32 => 0xffa5,
@@ -418,10 +416,6 @@ impl CryptoDxState {
             0x38, 0x76, 0x2c, 0xf7, 0xf5, 0x59, 0x34, 0xb3, 0x4d, 0x17, 0x9a, 0xe6, 0xa4, 0xc8,
             0x0c, 0xad, 0xcc, 0xbb, 0x7f, 0x0a,
         ];
-        const INITIAL_SALT_27: &[u8] = &[
-            0xc3, 0xee, 0xf7, 0x12, 0xc7, 0x2e, 0xbb, 0x5a, 0x11, 0xa7, 0xd2, 0x43, 0x2b, 0xb4,
-            0x63, 0x65, 0xbe, 0xf9, 0xf5, 0x02,
-        ];
         const INITIAL_SALT_29_32: &[u8] = &[
             0xaf, 0xbf, 0xec, 0x28, 0x99, 0x93, 0xd2, 0x4c, 0x9e, 0x97, 0x86, 0xf1, 0x9c, 0x61,
             0x11, 0xe0, 0x43, 0x90, 0xa8, 0x99,
@@ -429,7 +423,6 @@ impl CryptoDxState {
         qtrace!("new_initial for {:?}", quic_version);
         let salt = match quic_version {
             QuicVersion::Version1 => INITIAL_SALT_V1,
-            QuicVersion::Draft27 | QuicVersion::Draft28 => INITIAL_SALT_27,
             QuicVersion::Draft29
             | QuicVersion::Draft30
             | QuicVersion::Draft31

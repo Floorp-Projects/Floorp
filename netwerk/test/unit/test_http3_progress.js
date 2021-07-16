@@ -105,7 +105,7 @@ registerCleanupFunction(async () => {
 });
 
 add_task(async function setup() {
-  await http3_setup_tests("h3-27");
+  await http3_setup_tests("h3-29");
 });
 
 function chanPromise(uri, statusArg) {
