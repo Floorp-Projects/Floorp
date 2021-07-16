@@ -12,7 +12,15 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
+
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
+  Log: "chrome://remote/content/shared/Log.jsm",
+  WebDriverSession: "chrome://remote/content/shared/webdriver/Session.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.get(Log.TYPES.WEBDRIVER_BIDI)
+);
 
 /**
  * Entry class for the WebDriver BiDi support.
@@ -29,10 +37,68 @@ class WebDriverBiDi {
   constructor(agent) {
     this.agent = agent;
     this._running = false;
+
+    this._session = null;
   }
 
   get address() {
     return `ws://${this.agent.host}:${this.agent.port}`;
+  }
+
+  get session() {
+    return this._session;
+  }
+
+  /**
+   * Create a new WebDriver session.
+   *
+   * @param {Object.<string, *>=} capabilities
+   *     JSON Object containing any of the recognised capabilities as listed
+   *     on the `WebDriverSession` class.
+   *
+   * @return {Object<String, Capabilities>}
+   *     Object containing the current session ID, and all its capabilities.
+   *
+   * @throws {SessionNotCreatedError}
+   *     If, for whatever reason, a session could not be created.
+   */
+  createSession(capabilities) {
+    if (this.session) {
+      throw new error.SessionNotCreatedError(
+        "Maximum number of active sessions"
+      );
+    }
+
+    this._session = new WebDriverSession(capabilities);
+
+    // Only register the path handler when the Remote Agent is active.
+    if (this.agent.listening) {
+      this.agent.server.registerPathHandler(this.session.path, this.session);
+      logger.debug(`Registered session handler: ${this.session.path}`);
+    }
+
+    return {
+      sessionId: this.session.id,
+      capabilities: this.session.capabilities,
+    };
+  }
+
+  /**
+   * Delete the current WebDriver session.
+   */
+  deleteSession() {
+    if (!this.session) {
+      return;
+    }
+
+    // Only unregister the path handler when the Remote Agent is active.
+    if (this.agent.listening) {
+      this.agent.server.registerPathHandler(this.session.path, null);
+      logger.debug(`Unregistered session handler: ${this.session.path}`);
+    }
+
+    this.session.destroy();
+    this._session = null;
   }
 
   /**
@@ -60,6 +126,10 @@ class WebDriverBiDi {
       return;
     }
 
-    this._running = false;
+    try {
+      this.deleteSession();
+    } finally {
+      this._running = false;
+    }
   }
 }
