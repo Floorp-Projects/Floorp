@@ -638,6 +638,14 @@ class TypeContext {
 #ifdef ENABLE_WASM_GC
     // An rtt may be a equal to another rtt
     if (one.isRtt() && two.isRtt()) {
+      // Equivalent rtts must both have depths or not have depths
+      if (one.hasRttDepth() != two.hasRttDepth()) {
+        return TypeResult::False;
+      }
+      // Equivalent rtts must have the same depth, if any
+      if (two.hasRttDepth() && one.rttDepth() != two.rttDepth()) {
+        return TypeResult::False;
+      }
       return isTypeIndexEquivalent(one.typeIndex(), two.typeIndex(), cache);
     }
 #endif
@@ -680,6 +688,14 @@ class TypeContext {
     // An rtt may be a subtype of another rtt
 #ifdef ENABLE_WASM_GC
     if (one.isRtt() && two.isRtt()) {
+      // A subtype must have a depth if the supertype has depth
+      if (!one.hasRttDepth() && two.hasRttDepth()) {
+        return TypeResult::False;
+      }
+      // A subtype must have the same depth as the supertype, if it has any
+      if (two.hasRttDepth() && one.rttDepth() != two.rttDepth()) {
+        return TypeResult::False;
+      }
       return isTypeIndexEquivalent(one.typeIndex(), two.typeIndex(), cache);
     }
 #endif
