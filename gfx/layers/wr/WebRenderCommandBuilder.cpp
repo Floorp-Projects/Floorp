@@ -646,8 +646,8 @@ struct DIGroup {
     // Reset mHitInfo, it will get updated inside PaintItemRange
     mHitInfo = CompositorHitTestInvisibleToHit;
 
-    PaintItemRange(aGrouper, aStartItem, aEndItem, context, recorder,
-                   rootManager, aResources);
+    PaintItemRange(aGrouper, nsDisplayList::Range(aStartItem, aEndItem),
+                   context, recorder, rootManager, aResources);
 
     // XXX: set this correctly perhaps using
     // aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).
@@ -743,14 +743,16 @@ struct DIGroup {
                        wr::AsImageKey(*mKey));
   }
 
-  void PaintItemRange(Grouper* aGrouper, nsDisplayItem* aStartItem,
-                      nsDisplayItem* aEndItem, gfxContext* aContext,
+  void PaintItemRange(Grouper* aGrouper, nsDisplayList::Iterator aIter,
+                      gfxContext* aContext,
                       WebRenderDrawEventRecorder* aRecorder,
                       RenderRootStateManager* aRootManager,
                       wr::IpcResourceUpdateQueue& aResources) {
     LayerIntSize size = mVisibleRect.Size();
-    for (nsDisplayItem* item = aStartItem; item != aEndItem;
-         item = item->GetAbove()) {
+    while (aIter.HasNext()) {
+      nsDisplayItem* item = aIter.GetNext();
+      MOZ_ASSERT(item);
+
       BlobItemData* data = GetBlobItemData(item);
       IntRect bounds = data->mRect;
       auto bottomRight = bounds.BottomRight();
@@ -915,8 +917,8 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
         aContext->GetDrawTarget()->FlushItem(aItemBounds);
       } else {
         aContext->Multiply(ThebesMatrix(trans2d));
-        aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext,
-                               aRecorder, aRootManager, aResources);
+        aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren),
+                               aContext, aRecorder, aRootManager, aResources);
       }
 
       if (currentClip.HasClip()) {
@@ -938,7 +940,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
-      aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext,
+      aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren), aContext,
                              aRecorder, aRootManager, aResources);
       aContext->GetDrawTarget()->PopLayer();
       GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
@@ -955,7 +957,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
-      aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext,
+      aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren), aContext,
                              aRecorder, aRootManager, aResources);
       aContext->GetDrawTarget()->PopLayer();
       GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
@@ -969,7 +971,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
-      aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext,
+      aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren), aContext,
                              aRecorder, aRootManager, aResources);
       aContext->GetDrawTarget()->PopLayer();
       GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
@@ -987,7 +989,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
               GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
                  aItem->GetPerFrameKey());
               aContext->GetDrawTarget()->FlushItem(aItemBounds);
-              aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr,
+              aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren),
                                      aContext, aRecorder, aRootManager,
                                      aResources);
               GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
@@ -1020,7 +1022,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
     }
 
     default:
-      aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext,
+      aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren), aContext,
                              aRecorder, aRootManager, aResources);
       break;
   }
@@ -1052,8 +1054,8 @@ static bool HasActiveChildren(const nsDisplayList& aList,
                               const mozilla::layers::StackingContextHelper& aSc,
                               mozilla::layers::RenderRootStateManager* aManager,
                               nsDisplayListBuilder* aDisplayListBuilder) {
-  for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
-    if (IsItemProbablyActive(i, aBuilder, aResources, aSc, aManager,
+  for (nsDisplayItem* item : aList) {
+    if (IsItemProbablyActive(item, aBuilder, aResources, aSc, aManager,
                              aDisplayListBuilder, false)) {
       return true;
     }
@@ -1143,15 +1145,20 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
                               wr::IpcResourceUpdateQueue& aResources,
                               DIGroup* aGroup, nsDisplayList* aList,
                               const StackingContextHelper& aSc) {
-  DIGroup* currentGroup = aGroup;
-
-  nsDisplayItem* item = aList->GetBottom();
-  nsDisplayItem* startOfCurrentGroup = item;
   RenderRootStateManager* manager =
       aCommandBuilder->mManager->GetRenderRootStateManager();
+
+  nsDisplayItem* startOfCurrentGroup = nullptr;
+  DIGroup* currentGroup = aGroup;
+
   // We need to track whether we have active siblings for mixed blend mode.
   bool encounteredActiveItem = false;
-  while (item) {
+
+  for (nsDisplayItem* item : *aList) {
+    if (!startOfCurrentGroup) {
+      startOfCurrentGroup = item;
+    }
+
     if (IsItemProbablyActive(item, aBuilder, aResources, aSc, manager,
                              mDisplayListBuilder, encounteredActiveItem)) {
       encounteredActiveItem = true;
@@ -1225,15 +1232,12 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
         sIndent--;
       }
 
+      startOfCurrentGroup = nullptr;
       currentGroup = &groupData->mFollowingGroup;
-
-      startOfCurrentGroup = item->GetAbove();
     } else {  // inactive item
       ConstructItemInsideInactive(aCommandBuilder, aBuilder, aResources,
                                   currentGroup, item, aSc);
     }
-
-    item = item->GetAbove();
   }
 
   currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder,
@@ -1247,12 +1251,10 @@ bool Grouper::ConstructGroupInsideInactive(
     WebRenderCommandBuilder* aCommandBuilder, wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResources, DIGroup* aGroup,
     nsDisplayList* aList, const StackingContextHelper& aSc) {
-  nsDisplayItem* item = aList->GetBottom();
   bool invalidated = false;
-  while (item) {
+  for (nsDisplayItem* item : *aList) {
     invalidated |= ConstructItemInsideInactive(aCommandBuilder, aBuilder,
                                                aResources, aGroup, item, aSc);
-    item = item->GetAbove();
   }
   return invalidated;
 }

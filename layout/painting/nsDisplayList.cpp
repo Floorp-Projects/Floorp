@@ -3970,13 +3970,19 @@ nsDisplayBackgroundImage::ShouldCreateOwnLayer(nsDisplayListBuilder* aBuilder,
 }
 
 static void CheckForBorderItem(nsDisplayItem* aItem, uint32_t& aFlags) {
-  nsDisplayItem* nextItem = aItem->GetAbove();
-  while (nextItem && nextItem->GetType() == DisplayItemType::TYPE_BACKGROUND) {
-    nextItem = nextItem->GetAbove();
-  }
-  if (nextItem && nextItem->Frame() == aItem->Frame() &&
-      nextItem->GetType() == DisplayItemType::TYPE_BORDER) {
-    aFlags |= nsCSSRendering::PAINTBG_WILL_PAINT_BORDER;
+  // TODO(miko): Iterating over the display list like this is suspicious.
+  for (nsDisplayList::Iterator it(aItem); it.HasNext(); ++it) {
+    nsDisplayItem* next = *it;
+
+    if (next->GetType() == DisplayItemType::TYPE_BACKGROUND) {
+      continue;
+    }
+
+    if (next->GetType() == DisplayItemType::TYPE_BORDER) {
+      aFlags |= nsCSSRendering::PAINTBG_WILL_PAINT_BORDER;
+    }
+
+    break;
   }
 }
 
@@ -5530,11 +5536,11 @@ nsDisplayWrapList::nsDisplayWrapList(
     return;
   }
 
-  nsDisplayItem* i = mListPtr->GetBottom();
-  if (i &&
-      (!i->GetAbove() || i->GetType() == DisplayItemType::TYPE_TRANSFORM) &&
-      i->Frame() == mFrame) {
-    MOZ_ASSERT(mReferenceFrame == i->ReferenceFrame());
+  nsDisplayItem* item = mListPtr->GetBottom();
+  if (item && item->Frame() == mFrame &&
+      (mListPtr->Count() == 1 ||
+       item->GetType() == DisplayItemType::TYPE_TRANSFORM)) {
+    MOZ_ASSERT(mReferenceFrame == item->ReferenceFrame());
   }
 #endif
 }

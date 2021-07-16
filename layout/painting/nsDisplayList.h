@@ -3319,40 +3319,75 @@ class nsDisplayList {
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::PaintedLayer PaintedLayer;
 
-  template <typename T>
   class Iterator {
    public:
-    Iterator() : mItem(nullptr) {}
+    constexpr Iterator() : mCurrent(nullptr), mEnd(nullptr) {}
     ~Iterator() = default;
     Iterator(const Iterator& aOther) = default;
     Iterator& operator=(const Iterator& aOther) = default;
 
-    explicit Iterator(const nsDisplayList* aList) : mItem(aList->GetBottom()) {}
-    explicit Iterator(const nsDisplayItem* aItem) : mItem(aItem) {}
+    explicit Iterator(const nsDisplayList* aList)
+        : mCurrent(aList->GetBottom()), mEnd(nullptr) {}
+    explicit Iterator(nsDisplayItem* aStart)
+        : mCurrent(aStart), mEnd(nullptr) {}
 
     Iterator& operator++() {
-      mItem = mItem ? mItem->GetAbove() : mItem;
+      mCurrent = Next();
       return *this;
     }
 
+    nsDisplayItem* operator*() {
+      MOZ_ASSERT(mCurrent);
+      return mCurrent;
+    }
+
     bool operator==(const Iterator& aOther) const {
-      return mItem == aOther.mItem;
+      return mCurrent == aOther.mCurrent;
     }
 
     bool operator!=(const Iterator& aOther) const {
       return !operator==(aOther);
     }
 
-    T* operator*() { return mItem; }
+    bool HasNext() const { return mCurrent != nullptr; }
+
+    nsDisplayItem* GetNext() {
+      MOZ_ASSERT(HasNext());
+      auto* next = mCurrent;
+      operator++();
+      return next;
+    }
+
+   protected:
+    Iterator(nsDisplayItem* aStart, nsDisplayItem* aEnd)
+        : mCurrent(aStart), mEnd(aEnd) {}
+
+    nsDisplayItem* Next() const {
+      if (!mCurrent) {
+        return nullptr;
+      }
+
+      auto* next = mCurrent->GetAbove();
+      if (next == mEnd) {
+        return nullptr;
+      }
+
+      return next;
+    }
 
    private:
-    T* mItem;
+    nsDisplayItem* mCurrent;
+    nsDisplayItem* mEnd;
   };
 
-  using DisplayItemIterator = Iterator<nsDisplayItem>;
+  class Range final : public Iterator {
+   public:
+    Range(nsDisplayItem* aStart, nsDisplayItem* aEnd)
+        : Iterator(aStart, aEnd) {}
+  };
 
-  DisplayItemIterator begin() const { return DisplayItemIterator(this); }
-  DisplayItemIterator end() const { return DisplayItemIterator(); }
+  Iterator begin() const { return Iterator(this); }
+  constexpr Iterator end() const { return Iterator(); }
 
   /**
    * Create an empty list.

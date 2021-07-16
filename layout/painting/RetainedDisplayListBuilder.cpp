@@ -74,7 +74,7 @@ RetainedDisplayListData* GetOrSetRetainedDisplayListData(nsIFrame* aRootFrame) {
 }
 
 static void MarkFramesWithItemsAndImagesModified(nsDisplayList* aList) {
-  for (nsDisplayItem* i = aList->GetBottom(); i != nullptr; i = i->GetAbove()) {
+  for (nsDisplayItem* i : *aList) {
     if (!i->HasDeletedFrame() && i->CanBeReused() &&
         !i->Frame()->IsFrameModified()) {
       // If we have existing cached geometry for this item, then check that for
@@ -758,8 +758,7 @@ class MergeState {
 
 #ifdef DEBUG
 void VerifyNotModified(nsDisplayList* aList) {
-  for (nsDisplayItem* item = aList->GetBottom(); item;
-       item = item->GetAbove()) {
+  for (nsDisplayItem* item : *aList) {
     MOZ_ASSERT(!AnyContentAncestorModified(item->FrameForInvalidation()));
 
     if (item->GetChildren()) {
