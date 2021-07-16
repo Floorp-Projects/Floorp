@@ -48,6 +48,16 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">ເລືອກແລ້ວ</string>
 
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">ຫາກໍບັນທຶກໄວ້</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">ບຸກມາກທີ່ຫາກໍໄດ້ບັນທຶກໄວ້</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">ສະແດງທັງໝົດ</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">ສະແດງປຸ່ມບຸກມາກທີ່ໄດ້ບັນທຶກໄວ້ທັງໝົດ</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ແມ່ນຜະລິດຂື້ນໂດຍ Mozilla.</string>
 
@@ -94,6 +104,9 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">ເວັບໄຊທຍອດນິຍົມ</string>
+
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">ສະແດງທັງໝົດ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -165,6 +178,15 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">ແກ້ໄຂມຸມມອງຜູ້ອ່ານ</string>
+
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">ເພີ່ມ</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">ແກ້ໄຂ</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">ໜ້າທຳອິດ</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -286,6 +308,8 @@
     <string name="preferences_theme">ຊຸດປັບແຕ່ງ</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">ຫນ້າທຳອິດ</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">ທ່າທາງ</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ການປັບແຕ່ງ</string>
     <!-- Preference description for banner about signing in -->
@@ -343,6 +367,12 @@
     <!-- Hint displayed on input field for custom collection name -->
     <string name="customize_addon_collection_hint">ຊື່ການເກັບສະສົມ</string>
 
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Add-on ນີ້ແມ່ນບໍ່ໄດ້ຮັບການຊັບພອດ</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Add-on ນີ້ແມ່ນຖືກຕິດຕັ້ງຢູ່ແລ້ວ</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sync ຕອນນີ້</string>
@@ -378,6 +408,11 @@
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s ໃນ %2$s %3$s</string>
+
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">ບັດເຄດິດ</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">ທີ່ຢູ່</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -947,6 +982,11 @@
     <string name="notification_pbm_action_delete_and_open">ລົບ ແລະ ເປີດ</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">ຂັບເຄື່ອນໂດຍ</string>
+
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">ການຕະຫຼາດ</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">ລົບການສະສົມແລ້ວ</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1031,6 +1071,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">ເພີ່ມພື້ນທີ່ເກັບຂໍ້ມູນ</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">ສິດທິໃນເວັບໄຊທ</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">ດາວໂຫລດ</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">ລຶບຂໍ້ມູນການທ່ອງເວັບ</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1241,12 +1283,28 @@
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">ຕົວຕິດຕາມເນື້ອຫາ</string>
 
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">ເວັບໄຊທ</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">ນຳທາງຍ້ອນກັບ</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">ສະຫນັບສະຫນູນ</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
     <string name="about_crashes">ຂໍ້ຂັດຂ້ອງ</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ</string>
+
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">ຂໍ້ມູນກ່ຽວກັບລາຍເຊັນ</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">ໄລແບຣລີທີ່ພວກເຮົານຳໃຊ້</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 ແທັບ</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d ແທັບ</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
