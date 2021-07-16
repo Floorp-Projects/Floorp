@@ -146,8 +146,6 @@ skip script test262/language/computed-property-names/class/static/method-symbol.
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1286997
 # Bug 1286997 probably doesn't cover all spec violations.
 skip script test262/language/expressions/assignment/S11.13.1_A5_T5.js
-skip script test262/language/expressions/assignment/S11.13.1_A7_T1.js
-skip script test262/language/expressions/assignment/S11.13.1_A7_T2.js
 skip script test262/language/expressions/assignment/S11.13.1_A7_T3.js
 skip script test262/language/expressions/compound-assignment/S11.13.2_A5.10_T5.js
 skip script test262/language/expressions/compound-assignment/S11.13.2_A5.11_T5.js
