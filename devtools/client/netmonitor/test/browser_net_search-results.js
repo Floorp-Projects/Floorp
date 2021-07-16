@@ -25,14 +25,9 @@ add_task(async function() {
   const SEARCH_STRING = "test";
   // Execute two XHRs and wait until they are finished.
   const URLS = [SEARCH_SJS + "?value=test1", SEARCH_SJS + "?value=test2"];
+
   const wait = waitForNetworkEvents(monitor, 2);
-  for (const url of URLS) {
-    await SpecialPowers.spawn(tab.linkedBrowser, [url], async function(
-      requestUrl
-    ) {
-      content.wrappedJSObject.performRequests(1, requestUrl);
-    });
-  }
+  await SpecialPowers.spawn(tab.linkedBrowser, [URLS], makeRequests);
   await wait;
 
   // Open the Search panel
@@ -50,7 +45,7 @@ add_task(async function() {
   type(SEARCH_STRING);
   EventUtils.synthesizeKey("KEY_Enter");
 
-  // Wait till there are two resources rendered in the results.
+  // Wait until there are two resources rendered in the results
   await waitForDOMIfNeeded(
     document,
     ".search-panel-content .treeRow.resourceRow",
@@ -61,27 +56,20 @@ add_task(async function() {
     ".search-panel-content .treeRow .treeIcon"
   );
 
-  // Click both matches to expand them
-  AccessibilityUtils.setEnv({
-    // Keyboard users use arrow keys to expand/collapse tree items.
-    // Accessibility is handled on the container level.
-    mustHaveAccessibleRule: false,
-  });
-  for (let i = 0; i < searchMatchContents.length; i++) {
-    EventUtils.sendMouseEvent({ type: "click" }, searchMatchContents[i]);
+  for (let i = searchMatchContents.length - 1; i >= 0; i--) {
+    clickElement(searchMatchContents[i], monitor);
   }
-  AccessibilityUtils.resetEnv();
+
+  // Wait until there are two resources rendered in the results
+  await waitForDOMIfNeeded(
+    document,
+    ".search-panel-content .treeRow.resultRow",
+    12
+  );
 
   // Check the matches
   const matches = document.querySelectorAll(
     ".search-panel-content .treeRow.resultRow"
-  );
-
-  // Wait till there are two resources rendered in the results
-  await waitForDOMIfNeeded(
-    document,
-    ".search-panel-content .treeRow.resourceRow",
-    2
   );
 
   await checkSearchResult(
@@ -184,6 +172,14 @@ add_task(async function() {
   await teardown(monitor);
 });
 
+async function makeRequests(urls) {
+  content.wrappedJSObject.get(urls[0], () => {
+    content.wrappedJSObject.get(urls[1], () => {
+      info("XHR Requests executed");
+    });
+  });
+}
+
 /**
  * Check whether the search result is correctly linked with the related information
  */
@@ -197,8 +193,11 @@ async function checkSearchResult(
 ) {
   const { document } = monitor.panelWin;
 
-  // Click on the first match to show it
-  EventUtils.sendMouseEvent({ type: "click" }, match);
+  // Scroll the match into view so that it's clickable
+  match.scrollIntoView();
+
+  // Click on the match to show it
+  clickElement(match, monitor);
 
   console.log(`${panelSelector} ${panelContentSelector}`);
   await waitFor(() =>
