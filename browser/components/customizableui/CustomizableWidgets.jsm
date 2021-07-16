@@ -195,14 +195,15 @@ const CustomizableWidgets = [
       let panelview = event.target;
       let document = event.target.ownerDocument;
       let window = document.defaultView;
-      let viewType =
-        panelview.id == this.recentlyClosedTabsPanel ? "Tabs" : "Windows";
 
       this._panelMenuView.clearAllContents(panelview);
 
-      let utils = RecentlyClosedTabsAndWindowsMenuUtils;
-      let method = `get${viewType}Fragment`;
-      let fragment = utils[method](window, "toolbarbutton", true);
+      let getFragment =
+        panelview.id == this.recentlyClosedTabsPanel
+          ? RecentlyClosedTabsAndWindowsMenuUtils.getTabsFragment
+          : RecentlyClosedTabsAndWindowsMenuUtils.getWindowsFragment;
+
+      let fragment = getFragment(window, "toolbarbutton", true);
       let elementCount = fragment.childElementCount;
       this._panelMenuView._setEmptyPopupStatus(panelview, !elementCount);
       if (!elementCount) {
