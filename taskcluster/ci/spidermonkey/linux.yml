@@ -314,10 +314,9 @@ sm-linux64-wasi/opt:
     treeherder:
         platform: linux64/opt
         symbol: SM(wasi)
-        tier: 3
+        tier: 2
     run:
         spidermonkey-variant: wasi
-    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-clang
