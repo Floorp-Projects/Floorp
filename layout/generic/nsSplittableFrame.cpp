@@ -194,6 +194,12 @@ nscoord nsSplittableFrame::CalcAndCacheConsumedBSize() {
   const auto wm = GetWritingMode();
   nscoord bSize = 0;
   for (; prev; prev = prev->GetPrevContinuation()) {
+    if (prev->IsTrueOverflowContainer()) {
+      // Overflow containers might not get reflowed, and they have no bSize
+      // anyways.
+      continue;
+    }
+
     bSize += prev->ContentSize(wm).BSize(wm);
     bool found = false;
     nscoord consumed = prev->GetProperty(ConsumedBSizeProperty(), &found);
