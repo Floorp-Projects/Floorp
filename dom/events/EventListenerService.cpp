@@ -75,15 +75,18 @@ EventListenerChange::GetCountOfEventListenerChangesAffectingAccessibility(
  ******************************************************************************/
 
 EventListenerInfo::EventListenerInfo(
-    const nsAString& aType, JS::Handle<JSObject*> aScriptedListener,
+    EventListenerManager* aListenerManager, const nsAString& aType,
+    JS::Handle<JSObject*> aScriptedListener,
     JS::Handle<JSObject*> aScriptedListenerGlobal, bool aCapturing,
-    bool aAllowsUntrusted, bool aInSystemEventGroup)
-    : mType(aType),
+    bool aAllowsUntrusted, bool aInSystemEventGroup, bool aIsHandler)
+    : mListenerManager(aListenerManager),
+      mType(aType),
       mScriptedListener(aScriptedListener),
       mScriptedListenerGlobal(aScriptedListenerGlobal),
       mCapturing(aCapturing),
       mAllowsUntrusted(aAllowsUntrusted),
-      mInSystemEventGroup(aInSystemEventGroup) {
+      mInSystemEventGroup(aInSystemEventGroup),
+      mIsHandler(aIsHandler) {
   if (aScriptedListener) {
     MOZ_ASSERT(JS_IsGlobalObject(aScriptedListenerGlobal));
     js::AssertSameCompartment(aScriptedListener, aScriptedListenerGlobal);
@@ -97,9 +100,11 @@ EventListenerInfo::~EventListenerInfo() { DropJSObjects(this); }
 NS_IMPL_CYCLE_COLLECTION_CLASS(EventListenerInfo)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EventListenerInfo)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListenerManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EventListenerInfo)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mListenerManager)
   tmp->mScriptedListener = nullptr;
   tmp->mScriptedListenerGlobal = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -139,6 +144,22 @@ NS_IMETHODIMP
 EventListenerInfo::GetInSystemEventGroup(bool* aInSystemEventGroup) {
   *aInSystemEventGroup = mInSystemEventGroup;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+EventListenerInfo::GetEnabled(bool* aEnabled) {
+  NS_ENSURE_STATE(mListenerManager);
+  return mListenerManager->IsListenerEnabled(
+      mType, mScriptedListener, mCapturing, mAllowsUntrusted,
+      mInSystemEventGroup, mIsHandler, aEnabled);
+}
+
+NS_IMETHODIMP
+EventListenerInfo::SetEnabled(bool aEnabled) {
+  NS_ENSURE_STATE(mListenerManager);
+  return mListenerManager->SetListenerEnabled(
+      mType, mScriptedListener, mCapturing, mAllowsUntrusted,
+      mInSystemEventGroup, mIsHandler, aEnabled);
 }
 
 NS_IMETHODIMP
