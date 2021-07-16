@@ -960,20 +960,43 @@ def sysroot_path(host_or_target):
         "MOZ_AUTOMATION",
     )
     def sysroot_path(sysroot_input, path, bootstrap, automation):
+        bootstrapped = False
         if sysroot_input:
             path = sysroot_input[0]
         elif sysroot_input is not None and sysroot_input.origin != "default":
             return
-        if sysroot_input or (bootstrap and bootstrap.origin != "default") or automation:
+        elif (bootstrap and bootstrap.origin != "default") or automation:
+            bootstrapped = True
+        if sysroot_input or bootstrapped:
             if path:
                 log.info("Using %s sysroot in %s", host_or_target_str, path)
-            return path
+            return namespace(path=path, bootstrapped=bootstrapped)
 
     return sysroot_path
 
 
-host_sysroot_path = sysroot_path(host)
 target_sysroot_path = sysroot_path(target)
+
+
+# Use `system_lib_option` instead of `option` for options that enable building
+# with a system library for which the development headers are not available in
+# the bootstrapped sysroots.
+@template
+def system_lib_option(name, *args, **kwargs):
+    option(name, *args, **kwargs)
+
+    @depends(name, target_sysroot_path.bootstrapped)
+    def no_system_lib_in_sysroot(value, bootstrapped):
+        if bootstrapped and value:
+            die(
+                "%s is not supported with bootstrapped sysroot. "
+                "Drop the option, or use --without-sysroot or --disable-bootstrap",
+                value.format(name),
+            )
+
+
+host_sysroot_path = sysroot_path(host).path
+target_sysroot_path = target_sysroot_path.path
 
 
 @template

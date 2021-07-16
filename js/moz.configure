@@ -957,7 +957,7 @@ set_define(
 
 # ECMAScript Internationalization API Support (uses ICU)
 # ======================================================
-option("--with-system-icu", help="Use system ICU")
+system_lib_option("--with-system-icu", help="Use system ICU")
 
 system_icu = pkg_check_modules("MOZ_ICU", "icu-i18n >= 69.1", when="--with-system-icu")
 
