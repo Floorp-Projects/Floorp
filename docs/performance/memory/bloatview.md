@@ -220,7 +220,7 @@ modify are listed below:
 -   Linux: `unittests/linux_unittest.py`
 -   Mac: `unittests/mac_unittest.py`
 -   Windows: `unittests/win_unittest.py`
--   Android: `android/androidarm_4_3.py`
+-   Android: `android/androidarm.py`
 
 ## How to instrument your objects for BloatView
 
