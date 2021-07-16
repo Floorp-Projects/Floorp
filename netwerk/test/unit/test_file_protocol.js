@@ -39,10 +39,14 @@ function new_file_input_stream(file, buffered) {
 }
 
 function new_file_channel(file) {
+  var ssm = Services.scriptSecurityManager;
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  let uri = ios.newFileURI(file);
   return NetUtil.newChannel({
-    uri: ios.newFileURI(file),
-    loadUsingSystemPrincipal: true,
+    uri,
+    loadingPrincipal: ssm.createContentPrincipal(uri, {}),
+    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   });
 }
 
