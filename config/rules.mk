@@ -214,6 +214,11 @@ WASM_LIBRARY :=
 endif
 
 WASM_ARCHIVE = $(addsuffix .$(WASM_OBJ_SUFFIX),$(WASM_LIBRARY))
+ifndef LUCETC
+ifneq (,$(WASM_ARCHIVE))
+CSRCS += $(addsuffix .c,$(WASM_ARCHIVE))
+endif
+endif
 
 ifdef MACH
 ifndef NO_BUILDSTATUS_MESSAGES
@@ -271,9 +276,9 @@ endif
 #
 
 ifeq ($(OS_ARCH),Darwin)
-ifdef SHARED_LIBRARY
+ifneq (,$(SHARED_LIBRARY)$(WASM_LIBRARY))
 _LOADER_PATH := @executable_path
-EXTRA_DSO_LDOPTS	+= -dynamiclib -install_name $(_LOADER_PATH)/$(SHARED_LIBRARY) -compatibility_version 1 -current_version 1 -single_module
+EXTRA_DSO_LDOPTS	+= -dynamiclib -install_name $(_LOADER_PATH)/$@ -compatibility_version 1 -current_version 1 -single_module
 endif
 endif
 
@@ -497,9 +502,10 @@ $(LIBRARY): $(OBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 
 $(WASM_ARCHIVE): $(CWASMOBJS) $(CPPWASMOBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD_VERBOSE)
-	$(RM) $(WASM_LIBRARY).$(WASM_OBJ_SUFFIX)
-	$(WASM_CXX) $(OUTOPTION)$@ -Wl,--export-all $(CWASMOBJS) $(CPPWASMOBJS)
+	$(RM) $(WASM_ARCHIVE)
+	$(WASM_CXX) $(OUTOPTION)$@ -Wl,--export-all $(if $(LUCETC),,-Wl,--no-entry -Wl,--growable-table) $(CWASMOBJS) $(CPPWASMOBJS)
 
+ifdef LUCETC
 lucet_options := \
     --target $(LUCETC_TARGET) \
     --target-cpu baseline \
@@ -513,6 +519,17 @@ $(WASM_LIBRARY): $(WASM_LIBRARY).$(WASM_OBJ_SUFFIX)
 	$(REPORT_BUILD)
 	$(RM) $(WASM_LIBRARY)
 	env LD="$(CC)" LDFLAGS="$(LUCETC_LDFLAGS)" $(LUCETC) $(lucet_options) $(WASM_LIBRARY).$(WASM_OBJ_SUFFIX) -o $(WASM_LIBRARY)
+else
+$(addsuffix .c,$(WASM_ARCHIVE)): $(WASM_ARCHIVE)
+	$(DIST)/host/bin/wasm2c -o $@ $<
+
+$(WASM_LIBRARY): DSO_SONAME=$@
+$(WASM_LIBRARY): $(filter %.$(OBJ_SUFFIX),$(OBJS))
+	$(REPORT_BUILD)
+	$(RM) $(WASM_LIBRARY)
+	$(MKCSHLIB) $(filter %.$(OBJ_SUFFIX),$(OBJS)) $(LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(OS_LIBS)
+	$(call py_action,check_binary,--target $@)
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 # Import libraries are created by the rules creating shared libraries.
