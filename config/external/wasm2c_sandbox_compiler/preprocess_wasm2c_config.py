@@ -84,6 +84,7 @@ replaced_variables = """
 #endif
 """
 
+
 def generate_config(output, config_h_in):
     file_config_h_in = open(config_h_in, "r")
     lines = file_config_h_in.readlines()
