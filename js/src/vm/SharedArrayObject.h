@@ -56,7 +56,8 @@ class SharedArrayRawBuffer {
   wasm::IndexType wasmIndexType_;
   // The maximum size of this buffer in wasm pages. If this buffer was not
   // prepared for wasm, then this is zero.
-  wasm::Pages wasmMaxPages_;
+  wasm::Pages wasmClampedMaxPages_;
+  wasm::Pages wasmSourceMaxPages_;
   size_t mappedSize_;  // Does not include the page for the header
   bool preparedForWasm_;
 
@@ -72,13 +73,15 @@ class SharedArrayRawBuffer {
 
  protected:
   SharedArrayRawBuffer(wasm::IndexType wasmIndexType, uint8_t* buffer,
-                       size_t length, wasm::Pages wasmMaxPages,
-                       size_t mappedSize, bool preparedForWasm)
+                       size_t length, wasm::Pages wasmClampedMaxPages,
+                       wasm::Pages wasmSourceMaxPages, size_t mappedSize,
+                       bool preparedForWasm)
       : refcount_(1),
         length_(length),
         growLock_(mutexid::SharedArrayGrow),
         wasmIndexType_(wasmIndexType),
-        wasmMaxPages_(wasmMaxPages),
+        wasmClampedMaxPages_(wasmClampedMaxPages),
+        wasmSourceMaxPages_(wasmSourceMaxPages),
         mappedSize_(mappedSize),
         preparedForWasm_(preparedForWasm),
         waiters_(nullptr) {
@@ -86,11 +89,12 @@ class SharedArrayRawBuffer {
   }
 
   // Allocate a SharedArrayRawBuffer for either Wasm or other users.
-  // `wasmMaxPages` must always be something for wasm and nothing for other
-  // users.
+  // `wasmClampedMaxPages` and `wasmSourceMaxPages` must always be something
+  // for wasm and nothing for other users.
   static SharedArrayRawBuffer* AllocateInternal(
       wasm::IndexType wasmIndexType, size_t length,
-      const mozilla::Maybe<wasm::Pages>& wasmMaxPages,
+      const mozilla::Maybe<wasm::Pages>& wasmClampedMaxPages,
+      const mozilla::Maybe<wasm::Pages>& wasmSourceMaxPages,
       const mozilla::Maybe<size_t>& wasmMappedSize);
 
  public:
@@ -110,7 +114,8 @@ class SharedArrayRawBuffer {
   static SharedArrayRawBuffer* Allocate(size_t length);
   static SharedArrayRawBuffer* AllocateWasm(
       wasm::IndexType indexType, wasm::Pages initialPages,
-      const mozilla::Maybe<wasm::Pages>& maxPages,
+      wasm::Pages clampedMaxPages,
+      const mozilla::Maybe<wasm::Pages>& sourceMaxPages,
       const mozilla::Maybe<size_t>& mappedSize);
 
   // This may be called from multiple threads.  The caller must take
@@ -140,7 +145,8 @@ class SharedArrayRawBuffer {
     return wasm::Pages::fromByteLengthExact(length_);
   }
 
-  wasm::Pages wasmMaxPages() const { return wasmMaxPages_; }
+  wasm::Pages wasmClampedMaxPages() const { return wasmClampedMaxPages_; }
+  wasm::Pages wasmSourceMaxPages() const { return wasmSourceMaxPages_; }
 
   size_t mappedSize() const { return mappedSize_; }
 
@@ -261,7 +267,12 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
   wasm::Pages volatileWasmPages() const {
     return rawBufferObject()->volatileWasmPages();
   }
-  wasm::Pages wasmMaxPages() const { return rawBufferObject()->wasmMaxPages(); }
+  wasm::Pages wasmClampedMaxPages() const {
+    return rawBufferObject()->wasmClampedMaxPages();
+  }
+  wasm::Pages wasmSourceMaxPages() const {
+    return rawBufferObject()->wasmSourceMaxPages();
+  }
 
   size_t wasmMappedSize() const { return rawBufferObject()->mappedSize(); }
 

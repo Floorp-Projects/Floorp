@@ -375,7 +375,8 @@ bool wasm::IsValidBoundsCheckImmediate(uint32_t i) {
 }
 
 size_t wasm::ComputeMappedSize(wasm::Pages maxPages) {
-  // TODO: memory64 maximum size may overflow size_t
+  // Caller is responsible to ensure that maxPages has been clamped to
+  // implementation limits.
   size_t maxSize = maxPages.byteLength();
 
   // It is the bounds-check limit, not the mapped size, that gets baked into
