@@ -648,10 +648,14 @@ inline ValType Decoder::uncheckedReadValType() {
     case uint8_t(TypeCode::FuncRef):
     case uint8_t(TypeCode::ExternRef):
       return RefType::fromTypeCode(TypeCode(code), true);
-    case uint8_t(TypeCode::Rtt): {
+    case uint8_t(TypeCode::RttWithDepth): {
       uint32_t rttDepth = uncheckedReadVarU32();
       int32_t typeIndex = uncheckedReadVarS32();
       return ValType::fromRtt(typeIndex, rttDepth);
+    }
+    case uint8_t(TypeCode::Rtt): {
+      int32_t typeIndex = uncheckedReadVarS32();
+      return ValType::fromRtt(typeIndex, RttDepthNone);
     }
     case uint8_t(TypeCode::Ref):
     case uint8_t(TypeCode::NullableRef): {
@@ -715,14 +719,16 @@ inline bool Decoder::readPackedType(uint32_t numTypes,
       break;
 #endif
     }
-    case uint8_t(TypeCode::Rtt): {
+    case uint8_t(TypeCode::Rtt):
+    case uint8_t(TypeCode::RttWithDepth): {
 #ifdef ENABLE_WASM_GC
       if (!features.gc) {
         return fail("gc types not enabled");
       }
 
-      uint32_t rttDepth;
-      if (!readVarU32(&rttDepth) || uint32_t(rttDepth) >= MaxRttDepth) {
+      uint32_t rttDepth = RttDepthNone;
+      if (code == uint8_t(TypeCode::RttWithDepth) &&
+          (!readVarU32(&rttDepth) || uint32_t(rttDepth) >= MaxRttDepth)) {
         return fail("invalid rtt depth");
       }
 

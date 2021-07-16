@@ -39,33 +39,34 @@ union PackedTypeCode {
 
  private:
 #ifdef JS_64BIT
-  static constexpr size_t PointerTagBits = 2;
   static constexpr size_t TypeCodeBits = 8;
   static constexpr size_t TypeIndexBits = 21;
   static constexpr size_t NullableBits = 1;
   static constexpr size_t RttDepthBits = 10;
-#else
   static constexpr size_t PointerTagBits = 2;
+#else
   static constexpr size_t TypeCodeBits = 8;
   static constexpr size_t TypeIndexBits = 14;
   static constexpr size_t NullableBits = 1;
   static constexpr size_t RttDepthBits = 7;
+  static constexpr size_t PointerTagBits = 2;
 #endif
 
-  static_assert(PointerTagBits + TypeCodeBits + TypeIndexBits + NullableBits +
-                        RttDepthBits <=
+  static_assert(TypeCodeBits + TypeIndexBits + NullableBits + RttDepthBits +
+                        PointerTagBits <=
                     (sizeof(PackedRepr) * 8),
                 "enough bits");
   static_assert(MaxTypeIndex < (1 << TypeIndexBits), "enough bits");
   static_assert(MaxRttDepth < (1 << RttDepthBits), "enough bits");
+  static_assert(RttDepthNone < (1 << RttDepthBits), "enough bits");
 
   PackedRepr bits_;
   struct {
-    PackedRepr pointerTag_ : PointerTagBits;
     PackedRepr typeCode_ : TypeCodeBits;
     PackedRepr typeIndex_ : TypeIndexBits;
     PackedRepr nullable_ : NullableBits;
     PackedRepr rttDepth_ : RttDepthBits;
+    PackedRepr pointerTag_ : PointerTagBits;
   };
 
  public:
@@ -87,12 +88,13 @@ union PackedTypeCode {
   static constexpr PackedTypeCode pack(TypeCode tc, uint32_t refTypeIndex,
                                        bool isNullable, uint32_t rttDepth) {
     MOZ_ASSERT(uint32_t(tc) <= ((1 << TypeCodeBits) - 1));
-    MOZ_ASSERT_IF(tc != AbstractReferenceTypeIndexCode && tc != TypeCode::Rtt,
+    MOZ_ASSERT_IF(tc != AbstractReferenceTypeIndexCode && tc != AbstractRttCode,
                   refTypeIndex == NoTypeIndex);
-    MOZ_ASSERT_IF(tc == AbstractReferenceTypeIndexCode || tc == TypeCode::Rtt,
+    MOZ_ASSERT_IF(tc == AbstractReferenceTypeIndexCode || tc == AbstractRttCode,
                   refTypeIndex <= MaxTypeIndex);
-    MOZ_ASSERT_IF(tc != TypeCode::Rtt, rttDepth == 0);
-    MOZ_ASSERT_IF(tc == TypeCode::Rtt, rttDepth <= MaxRttDepth);
+    MOZ_ASSERT_IF(tc != AbstractRttCode, rttDepth == 0);
+    MOZ_ASSERT_IF(tc == AbstractRttCode,
+                  rttDepth <= MaxRttDepth || rttDepth == RttDepthNone);
     PackedTypeCode ptc = {};
     ptc.typeCode_ = PackedRepr(tc);
     ptc.typeIndex_ = refTypeIndex;
@@ -141,7 +143,7 @@ union PackedTypeCode {
   TypeCode typeCodeAbstracted() const {
     MOZ_ASSERT(isValid());
     TypeCode tc = TypeCode(typeCode_);
-    return (tc < LowestPrimitiveTypeCode && tc != TypeCode::Rtt)
+    return (tc < LowestPrimitiveTypeCode && tc != AbstractRttCode)
                ? AbstractReferenceTypeCode
                : tc;
   }
@@ -159,6 +161,11 @@ union PackedTypeCode {
   bool isNullable() const {
     MOZ_ASSERT(isValid());
     return bool(nullable_);
+  }
+
+  bool hasRttDepth() const {
+    MOZ_ASSERT(isValid());
+    return uint32_t(rttDepth_) != RttDepthNone;
   }
 
   uint32_t rttDepth() const {
@@ -290,7 +297,7 @@ class FieldTypeTraits {
     F32 = uint8_t(TypeCode::F32),
     F64 = uint8_t(TypeCode::F64),
     V128 = uint8_t(TypeCode::V128),
-    Rtt = uint8_t(TypeCode::Rtt),
+    Rtt = uint8_t(AbstractRttCode),
     Ref = uint8_t(AbstractReferenceTypeCode),
   };
 
@@ -311,7 +318,7 @@ class FieldTypeTraits {
       case TypeCode::ExternRef:
 #ifdef ENABLE_WASM_GC
       case TypeCode::EqRef:
-      case TypeCode::Rtt:
+      case AbstractRttCode:
 #endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       case AbstractReferenceTypeIndexCode:
@@ -331,7 +338,7 @@ class ValTypeTraits {
     F32 = uint8_t(TypeCode::F32),
     F64 = uint8_t(TypeCode::F64),
     V128 = uint8_t(TypeCode::V128),
-    Rtt = uint8_t(TypeCode::Rtt),
+    Rtt = uint8_t(AbstractRttCode),
     Ref = uint8_t(AbstractReferenceTypeCode),
   };
 
@@ -348,7 +355,7 @@ class ValTypeTraits {
       case TypeCode::ExternRef:
 #ifdef ENABLE_WASM_GC
       case TypeCode::EqRef:
-      case TypeCode::Rtt:
+      case AbstractRttCode:
 #endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       case AbstractReferenceTypeIndexCode:
@@ -438,7 +445,7 @@ class PackedType : public T {
 
   static PackedType fromRtt(uint32_t typeIndex, uint32_t rttDepth) {
     return PackedType(
-        PackedTypeCode::pack(TypeCode::Rtt, typeIndex, false, rttDepth));
+        PackedTypeCode::pack(AbstractRttCode, typeIndex, false, rttDepth));
   }
 
   static PackedType fromBitsUnsafe(uint64_t bits) {
@@ -486,7 +493,7 @@ class PackedType : public T {
     return tc_.isReference();
   }
 
-  bool isRtt() const { return tc_.typeCode() == TypeCode::Rtt; }
+  bool isRtt() const { return tc_.typeCode() == AbstractRttCode; }
 
   // Returns whether the type has a default value.
   bool isDefaultable() const {
@@ -512,6 +519,11 @@ class PackedType : public T {
   uint32_t typeIndex() const {
     MOZ_ASSERT(isValid());
     return tc_.typeIndex();
+  }
+
+  bool hasRttDepth() const {
+    MOZ_ASSERT(isValid());
+    return tc_.hasRttDepth();
   }
 
   uint32_t rttDepth() const {
@@ -583,7 +595,7 @@ class PackedType : public T {
         return 8;
       case TypeCode::V128:
         return 16;
-      case TypeCode::Rtt:
+      case AbstractRttCode:
       case AbstractReferenceTypeCode:
         return sizeof(void*);
       default:
