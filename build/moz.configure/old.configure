@@ -73,7 +73,16 @@ def prepare_configure(mozconfig, old_configure_assignments):
 @template
 def old_configure_options(*options):
     for opt in options:
-        option(opt, nargs="*", help="Help missing for old configure options")
+        if opt in (
+            "--enable-system-cairo",
+            "--enable-system-png",
+            "--with-system-libevent",
+            "--with-system-png",
+        ):
+            cb = system_lib_option
+        else:
+            cb = option
+        cb(opt, nargs="*", help="Help missing for old configure options")
 
     @dependable
     def all_options():

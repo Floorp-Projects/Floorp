@@ -985,7 +985,9 @@ def skia_includes(skia):
 
 set_config("SKIA_INCLUDES", skia_includes)
 
-option("--with-system-webp", help="Use system libwebp (located with pkgconfig)")
+system_lib_option(
+    "--with-system-webp", help="Use system libwebp (located with pkgconfig)"
+)
 
 system_webp = pkg_check_modules(
     "MOZ_WEBP", "libwebp >= 1.0.2 libwebpdemux >= 1.0.2", when="--with-system-webp"
@@ -1640,7 +1642,9 @@ with only_when(compile_environment):
 # ===
 
 with only_when(compile_environment):
-    option("--with-system-libvpx", help="Use system libvpx (located with pkgconfig)")
+    system_lib_option(
+        "--with-system-libvpx", help="Use system libvpx (located with pkgconfig)"
+    )
 
     with only_when("--with-system-libvpx"):
         vpx = pkg_check_modules("MOZ_LIBVPX", "vpx >= 1.8.0")
@@ -1722,7 +1726,7 @@ with only_when(compile_environment):
 # ====
 
 with only_when(compile_environment):
-    option(
+    system_lib_option(
         "--with-system-jpeg",
         nargs="?",
         help="Use system libjpeg (installed at given prefix)",

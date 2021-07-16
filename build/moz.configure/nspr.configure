@@ -19,7 +19,7 @@ def enable_nspr_build(enable):
         return enable
 
 
-option("--with-system-nspr", help="Use system NSPR")
+system_lib_option("--with-system-nspr", help="Use system NSPR")
 
 
 @depends(enable_nspr_build, "--with-system-nspr", js_standalone)
