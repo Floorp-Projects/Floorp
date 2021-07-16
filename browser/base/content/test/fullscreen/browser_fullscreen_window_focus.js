@@ -14,8 +14,6 @@ async function pause() {
 // error.
 SimpleTest.ignoreAllUncaughtExceptions(true);
 
-const TEST_URL =
-  "http://example.com/browser/browser/base/content/test/fullscreen/open_and_focus_helper.html";
 const IFRAME_ID = "testIframe";
 
 async function testWindowFocus(isPopup, iframeID) {
