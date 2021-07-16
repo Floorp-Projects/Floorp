@@ -11,6 +11,7 @@
 #include "ThreadInfo.h"
 
 #include "mozilla/NotNull.h"
+#include "mozilla/ProfilerLabels.h"  // for ProfilingStackOwner
 #include "mozilla/RefPtr.h"
 #include "nsIEventTarget.h"
 #include "nsIThread.h"
