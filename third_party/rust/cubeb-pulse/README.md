@@ -2,4 +2,5 @@
 
 Implementation of PulseAudio backend for Cubeb written in Rust.
 
-[![Build Status](https://github.com/mozilla/cubeb-pulse-rs/actions/workflows/build.yml/badge.svg)](https://github.com/mozilla/cubeb-pulse-rs/actions/workflows/build.yml)
+[![Travis Build Status](https://travis-ci.org/djg/cubeb-pulse-rs.svg?branch=master)](https://travis-ci.org/djg/cubeb-pulse-rs)
+[![Travis Build Status](https://travis-ci.org/djg/cubeb-pulse-rs.svg?branch=dev)](https://travis-ci.org/djg/cubeb-pulse-rs)
