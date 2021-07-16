@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import hashlib
 import os
-import platform
 import re
 import subprocess
 import sys
@@ -143,7 +142,6 @@ ac_add_options --enable-application=js
 # This should match the OLDEST_NON_LEGACY_VERSION in
 # version-control-tools/hgext/configwizard/__init__.py.
 MODERN_MERCURIAL_VERSION = LooseVersion("4.9")
-MODERN_PYTHON_VERSION = LooseVersion("3.6.0")
 
 # Upgrade rust older than this.
 MODERN_RUST_VERSION = LooseVersion(MINIMUM_RUST_VERSION)
@@ -154,13 +152,6 @@ MODERN_NASM_VERSION = LooseVersion("2.14")
 
 class BaseBootstrapper(object):
     """Base class for system bootstrappers."""
-
-    INSTALL_PYTHON_GUIDANCE = (
-        "We do not have specific instructions for your platform on how to "
-        "install Python. You may find Pyenv (https://github.com/pyenv/pyenv) "
-        "helpful, if your system package manager does not provide a way to "
-        "install a recent enough Python 3 and 2."
-    )
 
     def __init__(self, no_interactive=False, no_system_changes=False):
         self.package_manager_updated = False
@@ -642,19 +633,6 @@ class BaseBootstrapper(object):
         performed.
         """
         print(MERCURIAL_UNABLE_UPGRADE % (current, MODERN_MERCURIAL_VERSION))
-
-    def ensure_python_modern(self):
-        version = LooseVersion(platform.python_version())
-        if version >= MODERN_PYTHON_VERSION:
-            print("Your version of Python (%s) is new enough." % version)
-        else:
-            print(
-                "ERROR: Your version of Python (%s) is not new enough. You "
-                "must have Python >= %s to build Firefox."
-                % (version, MODERN_PYTHON_VERSION)
-            )
-            print(self.INSTALL_PYTHON_GUIDANCE)
-            sys.exit(1)
 
     def warn_if_pythonpath_is_set(self):
         if "PYTHONPATH" in os.environ:
