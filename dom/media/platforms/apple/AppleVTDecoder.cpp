@@ -527,12 +527,14 @@ MediaResult AppleVTDecoder::InitializeSession() {
       mSession,
       kVTDecompressionPropertyKey_UsingHardwareAcceleratedVideoDecoder,
       kCFAllocatorDefault, &isUsingHW);
-  if (rv != noErr) {
-    LOG("AppleVTDecoder: system doesn't support hardware acceleration");
+  if (rv == noErr) {
+    mIsHardwareAccelerated = isUsingHW == kCFBooleanTrue;
+    LOG("AppleVTDecoder: %s hardware accelerated decoding",
+        mIsHardwareAccelerated ? "using" : "not using");
+  } else {
+    LOG("AppleVTDecoder: maybe hardware accelerated decoding "
+        "(VTSessionCopyProperty query failed)");
   }
-  mIsHardwareAccelerated = rv == noErr && isUsingHW == kCFBooleanTrue;
-  LOG("AppleVTDecoder: %s hardware accelerated decoding",
-      mIsHardwareAccelerated ? "using" : "not using");
 
   return NS_OK;
 }
