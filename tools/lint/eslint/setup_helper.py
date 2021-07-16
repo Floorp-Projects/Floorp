@@ -19,7 +19,6 @@ from mozbuild.nodeutil import (
     NPM_MIN_VERSION,
     NODE_MIN_VERSION,
 )
-from mozbuild.util import ensure_subprocess_env
 from mozfile.mozfile import remove as mozfileremove
 
 
@@ -167,9 +166,8 @@ def package_setup(
         os.chdir(orig_cwd)
 
 
-def call_process(name, cmd, cwd=None, append_env={}):
+def call_process(name, cmd, cwd=None):
     env = dict(os.environ)
-    env.update(ensure_subprocess_env(append_env))
 
     try:
         with open(os.devnull, "w") as fnull:
