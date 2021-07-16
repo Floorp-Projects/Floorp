@@ -7,6 +7,7 @@
 #placesToolbar {
   appearance: auto;
   -moz-default-appearance: menubar;
+  color: -moz-menubartext;
 }
 
 @media (-moz-menubar-drag) {
