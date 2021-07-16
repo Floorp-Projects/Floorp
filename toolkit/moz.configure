@@ -2077,7 +2077,24 @@ set_config("MOZ_USING_WASM_SANDBOXING", requires_wasm_sandboxing)
 set_define("MOZ_USING_WASM_SANDBOXING", requires_wasm_sandboxing)
 
 with only_when(requires_wasm_sandboxing & compile_environment):
-    lucetc = check_prog("LUCETC", ["lucetc"], bootstrap="lucetc")
+    option(env="LUCETC", nargs=1, help="Location of the lucet compiler")
+
+    @depends("LUCETC")
+    def lucetc(value):
+        return value
+
+    # Allow setting LUCETC to an explicit empty value to force building
+    # with wasm2c.
+    @depends("LUCETC")
+    def lucetc_not_empty(lucetc):
+        if lucetc.origin != "default" and not lucetc:
+            return False
+        return True
+
+    lucetc = check_prog(
+        "LUCETC", ["lucetc"], input=lucetc, bootstrap="lucetc", when=lucetc_not_empty
+    )
+    set_define("LUCETC_WASM_SANDBOXING", True, when=lucetc)
 
     option(
         "--with-wasi-sysroot",
