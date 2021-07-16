@@ -3384,12 +3384,6 @@ class XREMain {
   ~XREMain() {
     mScopedXPCOM = nullptr;
     mAppData = nullptr;
-#if defined(MOZ_WIDGET_GTK)
-    if (mGdkDisplay) {
-      gdk_display_close(mGdkDisplay);
-      mGdkDisplay = nullptr;
-    }
-#endif
   }
 
   int XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig);
