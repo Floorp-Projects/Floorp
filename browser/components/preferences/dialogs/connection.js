@@ -119,23 +119,32 @@ var gConnectionsDialog = {
     let dnsOverHttpsResolverChoice = document.getElementById(
       "networkDnsOverHttpsResolverChoices"
     ).value;
+    let writeURIandMode = uri => {
+      Services.prefs.setStringPref("network.trr.uri", uri);
+      // When writing the URI, also write the mode. This is needed in addition
+      // to the mode reacting in realtime to the checkbox state because of the
+      // case when the checkbox was ticked due to the rollout being enabled at
+      // the time of clicking "Accept".
+      Services.prefs.setIntPref(
+        "network.trr.mode",
+        this.writeDnsOverHttpsMode()
+      );
+    };
+    // We treat clicking "Accept" as a user choice, and set both the TRR
+    // URI and mode here. This will cause DoHController to permanently
+    // disable heuristics and the values at the time of accept will persist.
+    // This includes the case when no changes were made.
     if (dnsOverHttpsResolverChoice == "custom") {
       let customValue = document
         .getElementById("networkCustomDnsOverHttpsInput")
         .value.trim();
       if (customValue) {
-        Services.prefs.setStringPref("network.trr.uri", customValue);
+        writeURIandMode(customValue);
       } else {
-        Services.prefs.setStringPref(
-          "network.trr.uri",
-          DoHConfigController.currentConfig.fallbackProviderURI
-        );
+        writeURIandMode(DoHConfigController.currentConfig.fallbackProviderURI);
       }
-    } else if (this.isDnsOverHttpsEnabled()) {
-      Services.prefs.setStringPref(
-        "network.trr.uri",
-        dnsOverHttpsResolverChoice
-      );
+    } else {
+      writeURIandMode(dnsOverHttpsResolverChoice);
     }
 
     var proxyTypePref = Preferences.get("network.proxy.type");
