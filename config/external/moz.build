@@ -19,6 +19,7 @@ if CONFIG["MOZ_USING_WASM_SANDBOXING"]:
         ]
     else:
         DIRS += [
+            "rlbox_wasm2c_sandbox",
             "wasm2c_sandbox_compiler",
         ]
 
