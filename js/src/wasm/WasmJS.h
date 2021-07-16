@@ -163,6 +163,11 @@ static inline size_t MaxMemory32Bytes() {
   return MaxMemory32Pages().byteLength();
 }
 
+static inline uint64_t MaxMemoryLimitField(IndexType indexType) {
+  return indexType == IndexType::I32 ? MaxMemory32LimitField
+                                     : MaxMemory64LimitField;
+}
+
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 

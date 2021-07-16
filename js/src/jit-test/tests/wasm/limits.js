@@ -51,9 +51,11 @@ function testMemoryFailConstruct(initial, maximum, shared, pattern) {
   }), RangeError, pattern);
 }
 
+// Test initial length, giving a maximum only if required due to being shared
 testMemoryFailConstruct(MemoryMaxValid + 1, undefined, false, /bad Memory initial size/);
+testMemoryFailConstruct(MemoryMaxValid + 1, MemoryMaxValid + 1, true, /bad Memory initial size/);
+// Test maximum length
 testMemoryFailConstruct(0, MemoryMaxValid + 1, false, /bad Memory maximum size/);
-testMemoryFailConstruct(MemoryMaxValid + 1, undefined, true, /bad Memory initial size/);
 testMemoryFailConstruct(0, MemoryMaxValid + 1, true, /bad Memory maximum size/);
 
 // Test that a memory type can be instantiated within a module or constructed
