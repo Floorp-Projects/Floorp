@@ -114,7 +114,6 @@ class nsBoxLayoutState;
 class nsBoxLayout;
 class nsILineIterator;
 class nsDisplayItem;
-class nsDisplayItemBase;
 class nsDisplayListBuilder;
 class nsDisplayListSet;
 class nsDisplayList;
@@ -635,7 +634,7 @@ class nsIFrame : public nsQueryFrame {
   typedef mozilla::LogicalSides LogicalSides;
   typedef mozilla::SmallPointerArray<mozilla::DisplayItemData>
       DisplayItemDataArray;
-  typedef mozilla::SmallPointerArray<nsDisplayItemBase> DisplayItemArray;
+  typedef mozilla::SmallPointerArray<nsDisplayItem> DisplayItemArray;
 
   typedef nsQueryFrame::ClassID ClassID;
 
@@ -4868,11 +4867,11 @@ class nsIFrame : public nsQueryFrame {
   DisplayItemArray& DisplayItems() { return mDisplayItems; }
   const DisplayItemArray& DisplayItems() const { return mDisplayItems; }
 
-  void AddDisplayItem(nsDisplayItemBase* aItem);
-  bool RemoveDisplayItem(nsDisplayItemBase* aItem);
+  void AddDisplayItem(nsDisplayItem* aItem);
+  bool RemoveDisplayItem(nsDisplayItem* aItem);
   void RemoveDisplayItemDataForDeletion();
   bool HasDisplayItems();
-  bool HasDisplayItem(nsDisplayItemBase* aItem);
+  bool HasDisplayItem(nsDisplayItem* aItem);
   bool HasDisplayItem(uint32_t aKey);
 
   static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
