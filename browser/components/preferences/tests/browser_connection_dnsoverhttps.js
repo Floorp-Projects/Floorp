@@ -340,7 +340,7 @@ add_task(async function default_values() {
 
 let testVariations = [
   // verify state with defaults
-  { name: "default", expectedModePref: 5, expectedUriValue: "" },
+  { name: "default", expectedModePref: 0, expectedUriValue: "" },
 
   // verify each of the modes maps to the correct checked state
   { name: "mode 0", [TRR_MODE_PREF]: 0, expectedModeChecked: false },
@@ -428,14 +428,6 @@ let testVariations = [
   {
     name: "Select NextDNS as TRR provider",
     [TRR_MODE_PREF]: 2,
-    selectResolver: SECOND_RESOLVER_VALUE,
-    expectedFinalUriPref: SECOND_RESOLVER_VALUE,
-  },
-  // Test selecting non-default, non-custom TRR provider, NextDNS,
-  // with DoH not enabled. The provider selection should stick.
-  {
-    name: "Select NextDNS as TRR provider in mode 0",
-    [TRR_MODE_PREF]: 0,
     selectResolver: SECOND_RESOLVER_VALUE,
     expectedFinalUriPref: SECOND_RESOLVER_VALUE,
   },
@@ -553,7 +545,6 @@ add_task(async function testRemoteSettingsEnable() {
         ok(true, "Heuristics remained enabled.");
       }
       is(Services.prefs.getStringPref("network.trr.uri"), "");
-      ok(!Services.prefs.prefHasUserValue("network.trr.mode"));
     } else {
       // If accepting, the chosen provider is persisted to network.trr.uri
       // and heuristics should get disabled.
@@ -568,7 +559,6 @@ add_task(async function testRemoteSettingsEnable() {
         Services.prefs.getStringPref("network.trr.uri"),
         DEFAULT_RESOLVER_VALUE
       );
-      is(Services.prefs.getIntPref("network.trr.mode"), 2);
     }
   };
 
