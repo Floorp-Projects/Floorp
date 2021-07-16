@@ -144,7 +144,6 @@ class AndroidEmulatorTest(
             config_options=self.config_options,
             all_actions=[
                 "clobber",
-                "setup-avds",
                 "download-and-extract",
                 "create-virtualenv",
                 "start-emulator",
@@ -204,13 +203,16 @@ class AndroidEmulatorTest(
         dirs["abs_xpcshell_dir"] = os.path.join(
             dirs["abs_test_install_dir"], "xpcshell"
         )
-        dirs["abs_avds_dir"] = os.path.join(abs_dirs["abs_work_dir"], ".android")
         fetches_dir = os.environ.get("MOZ_FETCHES_DIR")
         if fetches_dir:
             dirs["abs_sdk_dir"] = os.path.join(fetches_dir, "android-sdk-linux")
+            dirs["abs_avds_dir"] = os.path.join(fetches_dir, "android-device")
         else:
             dirs["abs_sdk_dir"] = os.path.join(
                 abs_dirs["abs_work_dir"], "android-sdk-linux"
+            )
+            dirs["abs_avds_dir"] = os.path.join(
+                abs_dirs["abs_work_dir"], "android-device"
             )
 
         for key in dirs.keys():

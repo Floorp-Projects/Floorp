@@ -1,0 +1,9 @@
+{
+    "emulator_package": "system-images;android-24;default;x86_64",
+    "emulator_avd_name": "mozemulator-x86_64",
+    "emulator_extra_config": {
+        "hw.lcd.density": "320",
+        "disk.dataPartition.size": "4000MB",
+        "sdcard.size": "600M"
+    }
+}
