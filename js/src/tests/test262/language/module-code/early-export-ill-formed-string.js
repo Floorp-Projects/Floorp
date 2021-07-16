@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError
+// |reftest| error:SyntaxError module
 // Copyright (C) 2020 Bradley Farias. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -9,8 +9,8 @@ info: |
     ModuleExportName : StringLiteral
 
     It is a Syntax Error if IsStringWellFormedUnicode of the StringValue of StringLiteral is *false*.
+flags: [module]
 negative:
-  flags: module
   phase: parse
   type: SyntaxError
 features: [arbitrary-module-namespace-names]

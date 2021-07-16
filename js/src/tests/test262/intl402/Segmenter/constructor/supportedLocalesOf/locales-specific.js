@@ -20,6 +20,6 @@ assert.sameValue(typeof Intl.Segmenter.supportedLocalesOf, "function",
 assert.compareArray(Intl.Segmenter.supportedLocalesOf("sr"), ["sr"]);
 
 const multiLocale = ["sr-Thai-RS", "de", "zh-CN"];
-assert.compareArray(Intl.Segmenter.supportedLocalesOf(multiLocale), multiLocale);
+assert.compareArray(Intl.Segmenter.supportedLocalesOf(multiLocale, {localeMatcher: "lookup"}), multiLocale);
 
 reportCompare(0, 0);
