@@ -633,7 +633,7 @@ WasmArrayRawBuffer* WasmArrayRawBuffer::AllocateWasm(
     IndexType indexType, Pages initialPages, const Maybe<Pages>& maxPages,
     const Maybe<size_t>& mapped) {
   // Prior code has asserted that initial pages is within our implementation
-  // limits (wasm::MaxMemory32Pages) and we can assume it is a valid size_t.
+  // limits (wasm::MaxMemoryPages) and we can assume it is a valid size_t.
   MOZ_ASSERT(initialPages.hasByteLength());
   size_t numBytes = initialPages.byteLength();
 
@@ -643,8 +643,7 @@ WasmArrayRawBuffer* WasmArrayRawBuffer::AllocateWasm(
 
   MOZ_RELEASE_ASSERT(mappedSize <= SIZE_MAX - gc::SystemPageSize());
   MOZ_RELEASE_ASSERT(numBytes <= SIZE_MAX - gc::SystemPageSize());
-  MOZ_RELEASE_ASSERT(initialPages <=
-                     maxPages.valueOr(wasm::MaxMemory32Pages()));
+  MOZ_RELEASE_ASSERT(initialPages <= maxPages.valueOr(wasm::MaxMemoryPages()));
   MOZ_ASSERT(numBytes % gc::SystemPageSize() == 0);
   MOZ_ASSERT(mappedSize % gc::SystemPageSize() == 0);
 
@@ -841,7 +840,7 @@ static bool CreateSpecificWasmBuffer32(
 
 bool js::CreateWasmBuffer32(JSContext* cx, const wasm::MemoryDesc& memory,
                             MutableHandleArrayBufferObjectMaybeShared buffer) {
-  MOZ_RELEASE_ASSERT(memory.initialPages() <= wasm::MaxMemory32Pages());
+  MOZ_RELEASE_ASSERT(memory.initialPages() <= wasm::MaxMemoryPages());
   MOZ_RELEASE_ASSERT(cx->wasm().haveSignalHandlers);
 
   if (memory.isShared()) {
