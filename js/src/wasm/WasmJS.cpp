@@ -861,8 +861,8 @@ static bool EnforceRangeU32(JSContext* cx, HandleValue v, const char* kind,
   return true;
 }
 
-static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
-                      LimitsKind kind, Limits* limits) {
+static bool GetLimits(JSContext* cx, HandleObject obj, LimitsKind kind,
+                      Limits* limits) {
   JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
   if (!initialAtom) {
     return false;
@@ -882,12 +882,6 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
     return false;
   }
   limits->initial = initial;
-
-  if (limits->initial > maximumField) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_RANGE,
-                             noun, "initial size");
-    return false;
-  }
 
 #ifdef ENABLE_WASM_TYPE_REFLECTIONS
   // Get minimum parameter.
@@ -931,12 +925,6 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
       return false;
     }
     limits->maximum = Some(maximum);
-
-    if (*limits->maximum > maximumField || limits->initial > *limits->maximum) {
-      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_WASM_BAD_RANGE, noun, "maximum size");
-      return false;
-    }
   }
 
   limits->indexType = IndexType::I32;
@@ -1021,6 +1009,25 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
   }
 #endif
 
+  return true;
+}
+
+static bool CheckLimits(JSContext* cx, uint64_t maximumField, LimitsKind kind,
+                        Limits* limits) {
+  const char* noun = (kind == LimitsKind::Memory ? "Memory" : "Table");
+
+  if (limits->initial > maximumField) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_RANGE,
+                             noun, "initial size");
+    return false;
+  }
+
+  if (limits->maximum.isSome() &&
+      (*limits->maximum > maximumField || limits->initial > *limits->maximum)) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_RANGE,
+                             noun, "maximum size");
+    return false;
+  }
   return true;
 }
 
@@ -2393,7 +2400,9 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedObject obj(cx, &args[0].toObject());
   Limits limits;
-  if (!GetLimits(cx, obj, MaxMemory32LimitField, LimitsKind::Memory, &limits)) {
+  if (!GetLimits(cx, obj, LimitsKind::Memory, &limits) ||
+      !CheckLimits(cx, MaxMemoryLimitField(limits.indexType),
+                   LimitsKind::Memory, &limits)) {
     return false;
   }
 
@@ -2949,7 +2958,8 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Limits limits;
-  if (!GetLimits(cx, obj, MaxTableLimitField, LimitsKind::Table, &limits)) {
+  if (!GetLimits(cx, obj, LimitsKind::Table, &limits) ||
+      !CheckLimits(cx, MaxTableLimitField, LimitsKind::Table, &limits)) {
     return false;
   }
 

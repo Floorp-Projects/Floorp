@@ -1,5 +1,6 @@
 // Basic tests around creating and linking memories with i64 indices
 
+const MaxMemory64Field = 0x1000000000000;
 const MaxUint32 = 0xFFFF_FFFF;
 
 // test the validity of different i64 memory types in validation, compilation,
@@ -44,6 +45,12 @@ invalidMemoryType(false, 2, 1, /minimum must not be greater than maximum/, /bad 
 validMemoryType(true, 1, 2);
 // invalid to define shared memory without max with i64
 invalidMemoryType(true, 1, undefined, /maximum length required for shared memory/, /maximum is not specified/);
+
+// test the limits of memory64
+validMemoryType(false, 0, MaxMemory64Field);
+invalidMemoryType(false, 0, MaxMemory64Field + 1, /maximum memory size too big/, /bad Memory maximum/);
+validMemoryType(true, 0, MaxMemory64Field);
+invalidMemoryType(true, 0, MaxMemory64Field + 1, /maximum memory size too big/, /bad Memory maximum/);
 
 // test that linking requires index types to be equal
 function testLink(importedIndexType, importIndexType) {
