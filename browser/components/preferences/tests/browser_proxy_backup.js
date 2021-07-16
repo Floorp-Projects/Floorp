@@ -26,6 +26,10 @@ function test() {
         "network.proxy.backup." + proxyType + "_port"
       );
     }
+    // On accepting the dialog, we also write TRR values, so we need to clear
+    // them. They are tested separately in browser_connect_dnsoverhttps.js.
+    Services.prefs.clearUserPref("network.trr.mode");
+    Services.prefs.clearUserPref("network.trr.uri");
   });
 
   let connectionURL =
