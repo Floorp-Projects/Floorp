@@ -9,10 +9,10 @@
 extern crate cubeb_backend;
 extern crate pulse;
 extern crate pulse_ffi;
-extern crate semver;
 extern crate ringbuf;
+extern crate semver;
 
-mod capi;
 mod backend;
+mod capi;
 
 pub use capi::pulse_rust_init;
