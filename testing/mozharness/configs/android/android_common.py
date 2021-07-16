@@ -5,7 +5,7 @@
 # Shared/common mozharness configuration for Android unit tests.
 #
 # This configuration should be combined with platform-specific mozharness
-# configuration such as androidx86_7_0.py, android_hw, or similar.
+# configuration such as android-x86_64.py, android_hw, or similar.
 
 from __future__ import absolute_import
 import os
