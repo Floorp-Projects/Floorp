@@ -235,41 +235,26 @@
     ...
 }
 {
-    gtk leak, likely related to https://gitlab.gnome.org/GNOME/gtk/-/issues/3113
+    gtk leaks from not using gdk_display_close because it causes crashes in _gtk_settings_get_style_cascade
     Memcheck:Leak
     match-leak-kinds: definite
-    fun:malloc
-    fun:g_malloc
-    fun:g_slice_alloc
-    fun:g_slice_alloc0
-    fun:g_type_create_instance
-    fun:g_object_new_internal
-    fun:g_object_new_valist
-    fun:g_object_new
-    fun:create_core_pointer
-    fun:gdk_x11_device_manager_core_constructed
-    fun:g_object_new_internal
-    fun:g_object_new_valist
-    fun:g_object_new
-    fun:_gdk_x11_device_manager_new
+    ...
+    fun:__glXInitialize
+    fun:__glXInitialize
+    fun:GetGLXPrivScreenConfig
+    fun:glXQueryServerString
+    fun:epoxy_glx_version
+    fun:gdk_x11_screen_init_gl
+    fun:_gdk_x11_screen_update_visuals_for_gl
+    fun:_gdk_x11_screen_init_visuals
+    fun:_gdk_x11_screen_new
     fun:_gdk_x11_display_open
     fun:gdk_display_manager_open_display
-}
-{
-    gtk leak, likely related to https://gitlab.gnome.org/GNOME/gtk/-/issues/3113
-    Memcheck:Leak
-    match-leak-kinds: definite
-    fun:malloc
-    fun:g_malloc
-    fun:g_slice_alloc
-    fun:g_slice_alloc0
-    fun:g_type_create_instance
-    fun:g_object_new_internal
-    fun:g_object_new_with_properties
-    fun:g_object_new
-    fun:gdk_window_new
-    fun:_gdk_x11_display_open
-    fun:gdk_display_manager_open_display
+    fun:_ZN7XREMain15XRE_mainStartupEPb
+    fun:_ZN7XREMain8XRE_mainEiPPcRKN7mozilla15BootstrapConfigE
+    fun:_Z8XRE_mainiPPcRKN7mozilla15BootstrapConfigE
+    fun:do_main
+    fun:main
 }
 
 ###################################
