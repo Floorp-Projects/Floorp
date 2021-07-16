@@ -21,6 +21,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448602
 
 var els, root, l2, l3;
 
+var handlerCalled = false;
+var capturingListenerCalled = false;
+var bubblingListenerCalled = false;
+
+function clearListenerStates() {
+  handlerCalled = false;
+  capturingListenerCalled = false;
+  bubblingListenerCalled = false;
+}
+
 function runTests() {
   els = SpecialPowers.Cc["@mozilla.org/eventlistenerservice;1"]
                      .getService(SpecialPowers.Ci.nsIEventListenerService);
@@ -30,7 +40,7 @@ function runTests() {
   var infos = els.getListenerInfoFor(root);
   is(infos.length, 0, "Element shouldn't have listeners (1)");
 
-  var listenerSource = 'alert(event);';
+  var listenerSource = 'handlerCalled = true;';
   root.setAttribute("onclick", listenerSource);
   infos = els.getListenerInfoFor(root);
   is(infos.length, 1, "Element should have listeners (1)");
@@ -42,7 +52,72 @@ function runTests() {
   is(SpecialPowers.unwrap(infos[0].listenerObject), root.onclick,
      "Should have the right listener object (1)");
 
+  // Test disabling and enabling the listener.
+  ok(!handlerCalled);
+  root.click();
+  ok(handlerCalled);
+
+  clearListenerStates()
+  infos[0].enabled = false;
+  root.click();
+  ok(!handlerCalled);
+
+  clearListenerStates()
+  infos[0].enabled = true;
+  root.click();
+  ok(handlerCalled);
+  clearListenerStates();
+
+  function capturingListener() {
+    capturingListenerCalled = true;
+  }
+  function bubblingListener() {
+    bubblingListenerCalled = true;
+  }
+  root.addEventListener("click", capturingListener, true);
+  root.addEventListener("click", bubblingListener);
+  root.addEventListener("fooevent", capturingListener, true);
+  root.addEventListener("fooevent", bubblingListener);
+  infos = els.getListenerInfoFor(root);
+  // Use a child node to dispatch events so that both capturing and bubbling
+  // listeners get called.
+  l2 = document.getElementById("testlevel2");
+  l2.click();
+  ok(handlerCalled);
+  ok(capturingListenerCalled);
+  ok(bubblingListenerCalled);
+  clearListenerStates();
+
+  infos[0].enabled = false;
+  l2.click();
+  ok(!handlerCalled);
+  ok(capturingListenerCalled);
+  ok(bubblingListenerCalled);
+  clearListenerStates();
+  infos[0].enabled = true;
+
+  infos[1].enabled = false;
+  l2.click();
+  ok(handlerCalled);
+  ok(!capturingListenerCalled);
+  ok(bubblingListenerCalled);
+  clearListenerStates();
+  infos[1].enabled = true;
+
+  infos[2].enabled = false;
+  l2.click();
+  ok(handlerCalled);
+  ok(capturingListenerCalled);
+  ok(!bubblingListenerCalled);
+  clearListenerStates();
+  infos[2].enabled = true;
+
+  root.removeEventListener("click", capturingListener, true);
+  root.removeEventListener("click", bubblingListener);
+  root.removeEventListener("fooevent", capturingListener, true);
+  root.removeEventListener("fooevent", bubblingListener);
   root.removeAttribute("onclick");
+
   root.setAttribute("onclick", "...invalid script...");
   SimpleTest.expectUncaughtException(true);
   infos = els.getListenerInfoFor(root);
@@ -91,7 +166,6 @@ function runTests() {
      "Should have the right listener object (4)");
 
   // Event target chain tests
-  l2 = document.getElementById("testlevel2");
   l3 = document.getElementById("testlevel3");
   var textnode = l3.firstChild;
   var chain = els.getEventTargetChainFor(textnode, true);
