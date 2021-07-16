@@ -4,8 +4,10 @@
 // accompanying file LICENSE for details.
 
 use backend::*;
-use cubeb_backend::{ffi, log_enabled, Context, ContextOps, DeviceCollectionRef, DeviceId,
-                    DeviceType, Error, Ops, Result, Stream, StreamParams, StreamParamsRef};
+use cubeb_backend::{
+    ffi, log_enabled, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceType, Error, Ops,
+    Result, Stream, StreamParams, StreamParamsRef,
+};
 use pulse::{self, ProplistExt};
 use pulse_ffi::*;
 use semver;
@@ -92,17 +94,8 @@ impl PulseContext {
         }))
     }
 
-    fn server_info_cb(
-        context: &pulse::Context,
-        info: Option<&pulse::ServerInfo>,
-        u: *mut c_void,
-    ) {
-        fn sink_info_cb(
-            _: &pulse::Context,
-            i: *const pulse::SinkInfo,
-            eol: i32,
-            u: *mut c_void,
-        ) {
+    fn server_info_cb(context: &pulse::Context, info: Option<&pulse::ServerInfo>, u: *mut c_void) {
+        fn sink_info_cb(_: &pulse::Context, i: *const pulse::SinkInfo, eol: i32, u: *mut c_void) {
             let ctx = unsafe { &mut *(u as *mut PulseContext) };
             if eol == 0 {
                 let info = unsafe { &*i };
@@ -220,11 +213,13 @@ impl PulseContext {
                     }
                 }
             } else if (f == pulse::SubscriptionEventFacility::Server)
-                       && (t == pulse::SubscriptionEventType::Change) {
+                && (t == pulse::SubscriptionEventType::Change)
+            {
                 cubeb_log!("Server changed {}", index as i32);
                 let user_data: *mut c_void = ctx as *mut _ as *mut _;
                 if let Some(ref context) = ctx.context {
-                    if let Err(e) = context.get_server_info(PulseContext::server_info_cb, user_data) {
+                    if let Err(e) = context.get_server_info(PulseContext::server_info_cb, user_data)
+                    {
                         cubeb_log!("get_server_info ignored failure: {}", e);
                     }
                 }
