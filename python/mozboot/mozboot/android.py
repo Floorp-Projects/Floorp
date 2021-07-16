@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
+import json
 import os
 import stat
 import subprocess
@@ -184,12 +185,24 @@ def get_paths(os_name):
         "ANDROID_NDK_HOME",
         os.path.join(mozbuild_path, "android-ndk-{0}".format(NDK_VERSION)),
     )
-    return (mozbuild_path, sdk_path, ndk_path)
+    avd_path = os.environ.get(
+        "ANDROID_AVD_HOME", os.path.join(mozbuild_path, "android-device", "avd")
+    )
+    emulator_path = os.environ.get(
+        "ANDROID_EMULATOR_HOME", os.path.join(mozbuild_path, "android-device")
+    )
+    return (mozbuild_path, sdk_path, ndk_path, avd_path, emulator_path)
 
 
 def sdkmanager_tool(sdk_path):
     # sys.platform is win32 even if Python/Win64.
     sdkmanager = "sdkmanager.bat" if sys.platform.startswith("win") else "sdkmanager"
+    return os.path.join(sdk_path, "tools", "bin", sdkmanager)
+
+
+def avdmanager_tool(sdk_path):
+    # sys.platform is win32 even if Python/Win64.
+    sdkmanager = "avdmanager.bat" if sys.platform.startswith("win") else "avdmanager"
     return os.path.join(sdk_path, "tools", "bin", sdkmanager)
 
 
@@ -207,7 +220,9 @@ def ensure_android(
     os_name,
     artifact_mode=False,
     ndk_only=False,
+    system_images_only=False,
     emulator_only=False,
+    avd_manifest_path=None,
     no_interactive=False,
 ):
     """
@@ -222,12 +237,10 @@ def ensure_android(
     # save them a lengthy download), or they may have already
     # completed the download. We unpack to
     # ~/.mozbuild/{android-sdk-$OS_NAME, android-ndk-$VER}.
-    mozbuild_path, sdk_path, ndk_path = get_paths(os_name)
+    mozbuild_path, sdk_path, ndk_path, avd_path, emulator_path = get_paths(os_name)
     os_tag = "darwin" if os_name == "macosx" else os_name
-    sdk_url = (
-        "https://dl.google.com/android/repository/sdk-tools-{0}-4333796.zip".format(
-            os_tag
-        )
+    sdk_url = "https://dl.google.com/android/repository/sdk-tools-{0}-4333796.zip".format(
+        os_tag
     )
     ndk_url = android_ndk_url(os_name)
 
@@ -246,12 +259,30 @@ def ensure_android(
     if ndk_only:
         return
 
+    avd_manifest = None
+    if avd_manifest_path is not None:
+        with open(avd_manifest_path) as f:
+            avd_manifest = json.load(f)
+
     # We expect the |sdkmanager| tool to be at
     # ~/.mozbuild/android-sdk-$OS_NAME/tools/bin/sdkmanager.
     ensure_android_packages(
         sdkmanager_tool=sdkmanager_tool(sdk_path),
         emulator_only=emulator_only,
+        system_images_only=system_images_only,
+        avd_manifest=avd_manifest,
         no_interactive=no_interactive,
+    )
+
+    if emulator_only or system_images_only:
+        return
+
+    ensure_android_avd(
+        avdmanager_tool=avdmanager_tool(sdk_path),
+        avd_path=avd_path,
+        sdk_path=sdk_path,
+        no_interactive=no_interactive,
+        avd_manifest=avd_manifest,
     )
 
 
@@ -311,27 +342,79 @@ def ensure_android_sdk_and_ndk(
         )
 
 
-def get_packages_to_install(packages_file_name):
+def get_packages_to_install(packages_file_content, avd_manifest):
+    packages = []
+    packages += map(lambda package: package.strip(), packages_file_content)
+    if avd_manifest is not None:
+        packages += [avd_manifest["emulator_package"]]
+    return packages
+
+
+def ensure_android_avd(
+    avdmanager_tool, avd_path, sdk_path, no_interactive=False, avd_manifest=None
+):
     """
-    sdkmanager version 26.1.1 (current) and some versions below have a bug that makes
-    the following command fail:
-        args = [sdkmanager_tool, '--package_file={0}'.format(package_file_name)]
+    Use the given sdkmanager tool (like 'sdkmanager') to install required
+    Android packages.
+    """
+    if avd_manifest is None:
+        return
+
+    ensure_dir(avd_path)
+    # The AVD needs this folder to boot, so make sure it exists here.
+    ensure_dir(os.path.join(sdk_path, "platforms"))
+
+    avd_name = avd_manifest["emulator_avd_name"]
+    args = [
+        avdmanager_tool,
+        "--verbose",
+        "create",
+        "avd",
+        "--force",
+        "--name",
+        avd_name,
+        "--package",
+        avd_manifest["emulator_package"],
+    ]
+
+    if not no_interactive:
         subprocess.check_call(args)
-    The error is in the sdkmanager, where the --package_file param isn't recognized.
-        The error is being tracked here https://issuetracker.google.com/issues/66465833
-    Meanwhile, this workaround achives installing all required Android packages by reading
-    them out of the same file that --package_file would have used, and passing them as strings.
-    So from here: https://developer.android.com/studio/command-line/sdkmanager
-    Instead of:
-        sdkmanager --package_file=package_file [options]
-    We're doing:
-        sdkmanager "platform-tools" "platforms;android-26"
-    """
-    with open(packages_file_name) as package_file:
-        return map(lambda package: package.strip(), package_file.readlines())
+        return
+
+    # Flush outputs before running sdkmanager.
+    sys.stdout.flush()
+    env = os.environ.copy()
+    env["ANDROID_AVD_HOME"] = avd_path
+    proc = subprocess.Popen(args, stdin=subprocess.PIPE, env=env)
+    proc.communicate("no\n".encode("UTF-8"))
+
+    retcode = proc.poll()
+    if retcode:
+        cmd = args[0]
+        e = subprocess.CalledProcessError(retcode, cmd)
+        raise e
+
+    config_file_name = os.path.join(avd_path, avd_name + ".avd", "config.ini")
+
+    print("Writing config at %s" % config_file_name)
+
+    if os.path.isfile(config_file_name):
+        with open(config_file_name, "a") as config:
+            for key, value in avd_manifest["emulator_extra_config"].items():
+                config.write("%s=%s\n" % (key, value))
+    else:
+        raise NotImplementedError(
+            "Could not find config file at %s, something went wrong" % config_file_name
+        )
 
 
-def ensure_android_packages(sdkmanager_tool, emulator_only=False, no_interactive=False):
+def ensure_android_packages(
+    sdkmanager_tool,
+    emulator_only=False,
+    system_images_only=False,
+    avd_manifest=None,
+    no_interactive=False,
+):
     """
     Use the given sdkmanager tool (like 'sdkmanager') to install required
     Android packages.
@@ -339,18 +422,24 @@ def ensure_android_packages(sdkmanager_tool, emulator_only=False, no_interactive
 
     # This tries to install all the required Android packages.  The user
     # may be prompted to agree to the Android license.
-    if emulator_only:
-        package_file_name = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "android-emulator-packages.txt")
-        )
+    if system_images_only:
+        packages_file_name = "android-system-images-packages.txt"
+    elif emulator_only:
+        packages_file_name = "android-emulator-packages.txt"
     else:
-        package_file_name = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "android-packages.txt")
-        )
-    print(INSTALLING_ANDROID_PACKAGES % open(package_file_name, "rt").read())
+        packages_file_name = "android-packages.txt"
+
+    packages_file_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), packages_file_name)
+    )
+    with open(packages_file_path) as packages_file:
+        packages_file_content = packages_file.readlines()
+
+    packages = get_packages_to_install(packages_file_content, avd_manifest)
+    print(INSTALLING_ANDROID_PACKAGES % "\n".join(packages))
 
     args = [sdkmanager_tool]
-    args.extend(get_packages_to_install(package_file_name))
+    args.extend(packages)
 
     if not no_interactive:
         subprocess.check_call(args)
@@ -373,7 +462,7 @@ def ensure_android_packages(sdkmanager_tool, emulator_only=False, no_interactive
 
 
 def generate_mozconfig(os_name, artifact_mode=False):
-    moz_state_dir, sdk_path, ndk_path = get_paths(os_name)
+    moz_state_dir, sdk_path, ndk_path, avd_path, emulator_path = get_paths(os_name)
 
     extra_lines = []
     if extra_lines:
@@ -387,6 +476,7 @@ def generate_mozconfig(os_name, artifact_mode=False):
     kwargs = dict(
         sdk_path=sdk_path,
         ndk_path=ndk_path,
+        avd_path=avd_path,
         moz_state_dir=moz_state_dir,
         extra_lines="\n".join(extra_lines),
     )
@@ -429,6 +519,12 @@ def main(argv):
         help="If true, install only the Android NDK (and not the Android SDK).",
     )
     parser.add_option(
+        "--system-images-only",
+        dest="system_images_only",
+        action="store_true",
+        help="If true, install only the system images for the AVDs.",
+    )
+    parser.add_option(
         "--no-interactive",
         dest="no_interactive",
         action="store_true",
@@ -439,6 +535,11 @@ def main(argv):
         dest="emulator_only",
         action="store_true",
         help="If true, install only the Android emulator (and not the SDK or NDK).",
+    )
+    parser.add_option(
+        "--avd-manifest",
+        dest="avd_manifest_path",
+        help="If present, generate AVD from the manifest pointed by this argument.",
     )
 
     options, _ = parser.parse_args(argv)
@@ -466,7 +567,9 @@ def main(argv):
         os_name,
         artifact_mode=options.artifact_mode,
         ndk_only=options.ndk_only,
+        system_images_only=options.system_images_only,
         emulator_only=options.emulator_only,
+        avd_manifest_path=options.avd_manifest_path,
         no_interactive=options.no_interactive,
     )
     mozconfig = generate_mozconfig(os_name, options.artifact_mode)
