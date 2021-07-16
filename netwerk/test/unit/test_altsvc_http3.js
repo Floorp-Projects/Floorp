@@ -102,7 +102,7 @@ function h1Server(metadata, response) {
   response.setHeader("Access-Control-Allow-Headers", "x-altsvc", false);
 
   try {
-    var hval = "h3-27=" + metadata.getHeader("x-altsvc");
+    var hval = "h3-29=" + metadata.getHeader("x-altsvc");
     response.setHeader("Alt-Svc", hval, false);
   } catch (e) {}
 
@@ -256,7 +256,7 @@ function doTest() {
 // which is always explicit, so it needs to be changed after the channel is created but before the
 // listener is invoked
 
-// http://foo served from h3-27=:port
+// http://foo served from h3-29=:port
 function doTest1() {
   dump("doTest1()\n");
   origin = httpFooOrigin;
@@ -267,7 +267,7 @@ function doTest1() {
   xaltsvc = h3FooRoute;
 }
 
-// http://foo served from h3-27=foo:port
+// http://foo served from h3-29=foo:port
 function doTest2() {
   dump("doTest2()\n");
   origin = httpFooOrigin;
@@ -277,7 +277,7 @@ function doTest2() {
   doTest();
 }
 
-// http://foo served from h3-27=bar:port
+// http://foo served from h3-29=bar:port
 // requires cert for foo
 function doTest3() {
   dump("doTest3()\n");
@@ -314,7 +314,7 @@ function doTest5() {
   doTest();
 }
 
-// http://bar served from h3-27=:port, which is like the bar route in 8
+// http://bar served from h3-29=:port, which is like the bar route in 8
 function doTest6() {
   dump("doTest6()\n");
   origin = httpBarOrigin;
@@ -338,7 +338,7 @@ function doTest7() {
   doTest();
 }
 
-// http://bar served from h3-27=foo, should fail because host foo only has
+// http://bar served from h3-29=foo, should fail because host foo only has
 // cert for foo. Fail in this case means alt-svc is not used, but content
 // is served
 function doTest8() {
@@ -353,7 +353,7 @@ function doTest8() {
 }
 
 // Test 9-12:
-// Insert a cache of http://foo served from h3-27=:port with origin attributes.
+// Insert a cache of http://foo served from h3-29=:port with origin attributes.
 function doTest9() {
   dump("doTest9()\n");
   origin = httpFooOrigin;

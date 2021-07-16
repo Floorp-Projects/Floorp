@@ -6,11 +6,10 @@
 
 #![deny(clippy::pedantic)]
 
-use super::{
-    Connection, ConnectionError, ConnectionId, ConnectionIdRef, Output, State, LOCAL_IDLE_TIMEOUT,
-};
+use super::{Connection, ConnectionError, ConnectionId, Output, State, LOCAL_IDLE_TIMEOUT};
 use crate::addr_valid::{AddressValidation, ValidateAddress};
 use crate::cc::{CWND_INITIAL_PKTS, CWND_MIN};
+use crate::cid::ConnectionIdRef;
 use crate::events::ConnectionEvent;
 use crate::path::PATH_MTU_V6;
 use crate::recovery::ACK_ONLY_SIZE_LIMIT;

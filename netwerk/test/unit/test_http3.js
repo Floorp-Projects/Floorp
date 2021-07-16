@@ -111,7 +111,7 @@ function h1Response(metadata, response) {
   response.setHeader("Access-Control-Allow-Headers", "x-altsvc", false);
 
   try {
-    let hval = "h3-27=" + metadata.getHeader("x-altsvc");
+    let hval = "h3-29=" + metadata.getHeader("x-altsvc");
     response.setHeader("Alt-Svc", hval, false);
   } catch (e) {}
 
@@ -177,9 +177,9 @@ Http3CheckListener.prototype = {
       try {
         httpVersion = request.protocolVersion;
       } catch (e) {}
-      Assert.equal(httpVersion, "h3-27");
+      Assert.equal(httpVersion, "h3-29");
       Assert.equal(this.onDataAvailableFired, true);
-      Assert.equal(request.getResponseHeader("X-Firefox-Http3"), "h3-27");
+      Assert.equal(request.getResponseHeader("X-Firefox-Http3"), "h3-29");
     }
     run_next_test();
     do_test_finished();
@@ -212,7 +212,7 @@ WaitForHttp3Listener.prototype.onStopRequest = function testOnStopRequest(
 
   if (routed == this.expectedRoute) {
     Assert.equal(routed, this.expectedRoute); // always true, but a useful log
-    Assert.equal(httpVersion, "h3-27");
+    Assert.equal(httpVersion, "h3-29");
     run_next_test();
   } else {
     dump("poll later for alt svc mapping\n");
@@ -240,7 +240,7 @@ function doTest(uri, expectedRoute, altSvc) {
 }
 
 // Test Alt-Svc for http3.
-// H2 server returns alt-svc=h3-27=:h3port
+// H2 server returns alt-svc=h3-29=:h3port
 function test_https_alt_svc() {
   dump("test_https_alt_svc()\n");
   do_test_pending();
@@ -295,7 +295,7 @@ MultipleListener.prototype = {
       try {
         httpVersion = request.protocolVersion;
       } catch (e) {}
-      Assert.equal(httpVersion, "h3-27");
+      Assert.equal(httpVersion, "h3-29");
     }
 
     if (!Components.isSuccessCode(request.status)) {
@@ -498,7 +498,7 @@ SlowReceiverListener.prototype.onStopRequest = function(request, status) {
     try {
       httpVersion = request.protocolVersion;
     } catch (e) {}
-    Assert.equal(httpVersion, "h3-27");
+    Assert.equal(httpVersion, "h3-29");
     Assert.equal(this.onDataAvailableFired, true);
   }
   run_next_test();

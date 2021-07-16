@@ -133,7 +133,7 @@ Http3CheckListener.prototype = {
     try {
       httpVersion = request.protocolVersion;
     } catch (e) {}
-    Assert.equal(httpVersion, "h3-27");
+    Assert.equal(httpVersion, "h3-29");
     Assert.equal(this.onDataAvailableFired, true);
   },
 };
@@ -163,7 +163,7 @@ WaitForHttp3Listener.prototype.onStopRequest = function testOnStopRequest(
     try {
       httpVersion = request.protocolVersion;
     } catch (e) {}
-    Assert.equal(httpVersion, "h3-27");
+    Assert.equal(httpVersion, "h3-29");
     run_next_test();
   } else {
     dump("poll later for alt svc mapping\n");
@@ -187,7 +187,7 @@ function doTest(uri, expectedRoute, altSvc) {
 }
 
 // Test Alt-Svc for http3.
-// H2 server returns alt-svc=h3-27=:h3port
+// H2 server returns alt-svc=h3-29=:h3port
 function test_https_alt_svc() {
   dump("test_https_alt_svc()\n");
 

@@ -581,7 +581,7 @@ add_task(async function testH3Connection() {
           priority: 1,
           name: "www.h3.com",
           values: [
-            { key: "alpn", value: "h3-27" },
+            { key: "alpn", value: "h3-29" },
             { key: "port", value: h3Port },
             { key: "echconfig", value: "456..." },
           ],
@@ -608,7 +608,7 @@ add_task(async function testH3Connection() {
 
   let chan = makeChan(`https://test.h3.com`);
   let [req] = await channelOpenPromise(chan);
-  Assert.equal(req.protocolVersion, "h3-27");
+  Assert.equal(req.protocolVersion, "h3-29");
   let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h3Port);
 
@@ -645,7 +645,7 @@ add_task(async function testFastfallbackToH2() {
           priority: 1,
           name: "test.fastfallback1.com",
           values: [
-            { key: "alpn", value: "h3-27" },
+            { key: "alpn", value: "h3-29" },
             { key: "port", value: h3NoResponsePort },
             { key: "echconfig", value: "456..." },
           ],
@@ -733,7 +733,7 @@ add_task(async function testFailedH3Connection() {
           priority: 1,
           name: "www.h3.org",
           values: [
-            { key: "alpn", value: "h3-27" },
+            { key: "alpn", value: "h3-29" },
             { key: "port", value: h3Port },
             { key: "echconfig", value: "456..." },
           ],
@@ -771,7 +771,7 @@ add_task(async function testHttp3ExcludedList() {
 
   Services.prefs.setCharPref(
     "network.http.http3.alt-svc-mapping-for-testing",
-    "www.h3_fail.org;h3-27=:" + h3Port
+    "www.h3_fail.org;h3-29=:" + h3Port
   );
 
   // This will fail because there is no address record for www.h3_fail.org.
@@ -791,7 +791,7 @@ add_task(async function testHttp3ExcludedList() {
           priority: 1,
           name: "www.h3_fail.org",
           values: [
-            { key: "alpn", value: "h3-27" },
+            { key: "alpn", value: "h3-29" },
             { key: "port", value: h3Port },
           ],
         },
@@ -805,7 +805,7 @@ add_task(async function testHttp3ExcludedList() {
           priority: 2,
           name: "foo.example.com",
           values: [
-            { key: "alpn", value: "h3-27" },
+            { key: "alpn", value: "h3-29" },
             { key: "port", value: h3Port },
           ],
         },
@@ -819,7 +819,7 @@ add_task(async function testHttp3ExcludedList() {
 
   chan = makeChan(`https://test.h3_excluded.org`);
   let [req] = await channelOpenPromise(chan);
-  Assert.equal(req.protocolVersion, "h3-27");
+  Assert.equal(req.protocolVersion, "h3-29");
   let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h3Port);
 
@@ -843,7 +843,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
 
   Services.prefs.setCharPref(
     "network.http.http3.alt-svc-mapping-for-testing",
-    "www.h3_fail1.org;h3-27=:" + h3Port
+    "www.h3_fail1.org;h3-29=:" + h3Port
   );
 
   await trrServer.registerDoHAnswers("www.h3_all_excluded.org", "A", {
@@ -874,7 +874,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
 
   Services.prefs.setCharPref(
     "network.http.http3.alt-svc-mapping-for-testing",
-    "www.h3_fail2.org;h3-27=:" + h3Port
+    "www.h3_fail2.org;h3-29=:" + h3Port
   );
 
   // This will fail because there is no address record for www.h3_fail2.org.
@@ -892,7 +892,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
           priority: 1,
           name: "www.h3_fail1.org",
           values: [
-            { key: "alpn", value: "h3-27" },
+            { key: "alpn", value: "h3-29" },
             { key: "port", value: h3Port },
             { key: "echconfig", value: "456..." },
           ],
@@ -907,7 +907,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
           priority: 2,
           name: "www.h3_fail2.org",
           values: [
-            { key: "alpn", value: "h3-27" },
+            { key: "alpn", value: "h3-29" },
             { key: "port", value: h3Port },
             { key: "echconfig", value: "456..." },
           ],
@@ -945,7 +945,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
   // give the first record one more shot.
   chan = makeChan(`https://www.h3_all_excluded.org`);
   [req] = await channelOpenPromise(chan);
-  Assert.equal(req.protocolVersion, "h3-27");
+  Assert.equal(req.protocolVersion, "h3-29");
   let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h3Port);
 

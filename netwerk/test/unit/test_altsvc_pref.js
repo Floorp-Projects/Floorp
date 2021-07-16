@@ -121,7 +121,7 @@ function test_altsvc_pref() {
 
   prefs.setCharPref(
     "network.http.http3.alt-svc-mapping-for-testing",
-    "foo.example.com;h3-27=" + h3AltSvc
+    "foo.example.com;h3-29=" + h3AltSvc
   );
 
   let chan = makeChan(httpsOrigin + "http3-test");

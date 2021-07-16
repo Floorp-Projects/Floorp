@@ -52,7 +52,7 @@ add_task(async function test_setup() {
   // Set AltSvc to point to not existing HTTP3 server on port 443
   Services.prefs.setCharPref(
     "network.http.http3.alt-svc-mapping-for-testing",
-    "foo.example.com;h3-27=:" + h3Port
+    "foo.example.com;h3-29=:" + h3Port
   );
   Services.prefs.setIntPref("network.http.http3.backup_timer_delay", 0);
 
