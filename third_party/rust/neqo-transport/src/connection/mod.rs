@@ -33,6 +33,7 @@ use crate::cid::{
     ConnectionId, ConnectionIdEntry, ConnectionIdGenerator, ConnectionIdManager, ConnectionIdRef,
     ConnectionIdStore, LOCAL_ACTIVE_CID_LIMIT,
 };
+
 use crate::crypto::{Crypto, CryptoDxState, CryptoSpace};
 use crate::dump::*;
 use crate::events::{ConnectionEvent, ConnectionEvents};
@@ -2205,34 +2206,6 @@ impl Connection {
     }
 
     fn validate_cids(&mut self) -> Res<()> {
-        match self.version() {
-            QuicVersion::Draft27 => self.validate_cids_draft_27(),
-            _ => self.validate_cids_draft_28_plus(),
-        }
-    }
-
-    fn validate_cids_draft_27(&mut self) -> Res<()> {
-        if let AddressValidationInfo::Retry { token, .. } = &self.address_validation {
-            debug_assert!(!token.is_empty());
-            let tph = self.tps.borrow();
-            let tp = tph
-                .remote
-                .as_ref()
-                .unwrap()
-                .get_bytes(tparams::ORIGINAL_DESTINATION_CONNECTION_ID);
-            if self
-                .original_destination_cid
-                .as_ref()
-                .map(ConnectionId::as_cid_ref)
-                != tp.map(ConnectionIdRef::from)
-            {
-                return Err(Error::InvalidRetry);
-            }
-        }
-        Ok(())
-    }
-
-    fn validate_cids_draft_28_plus(&mut self) -> Res<()> {
         let tph = self.tps.borrow();
         let remote_tps = tph.remote.as_ref().unwrap();
 
