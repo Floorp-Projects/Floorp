@@ -7320,7 +7320,7 @@ bool js::IsValidAsmJSHeapLength(size_t length) {
   }
 
   // The heap length is limited by what wasm can handle.
-  if (length > MaxMemory32Bytes()) {
+  if (length > MaxMemoryBytes()) {
     return false;
   }
 

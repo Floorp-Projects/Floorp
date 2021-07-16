@@ -156,12 +156,10 @@ void ReportSimdAnalysis(const char* data);
 // options can support try/catch, throw, rethrow, and branch_on_exn (evolving).
 bool ExceptionsAvailable(JSContext* cx);
 
-Pages MaxMemory32Pages();
-size_t MaxMemory32BoundsCheckLimit();
+Pages MaxMemoryPages();
+size_t MaxMemoryBoundsCheckLimit();
 
-static inline size_t MaxMemory32Bytes() {
-  return MaxMemory32Pages().byteLength();
-}
+static inline size_t MaxMemoryBytes() { return MaxMemoryPages().byteLength(); }
 
 static inline uint64_t MaxMemoryLimitField(IndexType indexType) {
   return indexType == IndexType::I32 ? MaxMemory32LimitField
