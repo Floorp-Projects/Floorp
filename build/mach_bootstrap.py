@@ -195,7 +195,6 @@ install a recent enough Python 3.
 def bootstrap(topsrcdir):
     # Ensure we are running Python 3.6+. We run this check as soon as
     # possible to avoid a cryptic import/usage error.
-    major = sys.version_info[:2][0]
     if sys.version_info < (3, 6):
         print("Python 3.6+ is required to run mach.")
         print("You are running Python", platform.python_version())
@@ -216,12 +215,9 @@ def bootstrap(topsrcdir):
     if os.path.exists(deleted_dir):
         shutil.rmtree(deleted_dir, ignore_errors=True)
 
-    if major == 3 and sys.prefix == sys.base_prefix:
+    if sys.prefix == sys.base_prefix:
         # We are not in a virtualenv. Remove global site packages
         # from sys.path.
-        # Note that we don't ever invoke mach from a Python 2 virtualenv,
-        # and "sys.base_prefix" doesn't exist before Python 3.3, so we
-        # guard with the "major == 3" check.
         site_paths = set(site.getsitepackages() + [site.getusersitepackages()])
         sys.path = [path for path in sys.path if path not in site_paths]
 
