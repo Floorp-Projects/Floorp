@@ -56,10 +56,7 @@ class WindowsBootstrapper(BaseBootstrapper):
         "mingw-w64-i686-toolchain",
     ]
 
-    BROWSER_PACKAGES = [
-        "mingw-w64-x86_64-nasm",
-        "mingw-w64-i686-nsis",
-    ]
+    BROWSER_PACKAGES = ["mingw-w64-x86_64-nasm", "mingw-w64-i686-nsis"]
 
     MOBILE_ANDROID_COMMON_PACKAGES = ["wget"]
 
@@ -92,6 +89,11 @@ class WindowsBootstrapper(BaseBootstrapper):
         self.pacman_install(*self.BROWSER_PACKAGES)
 
     def install_mobile_android_packages(self, mozconfig_builder):
+        raise NotImplementedError(
+            "We do not support building Android on Windows. Sorry!"
+        )
+
+    def ensure_mobile_android_packages(self, state_dir, checkout_root):
         raise NotImplementedError(
             "We do not support building Android on Windows. Sorry!"
         )
