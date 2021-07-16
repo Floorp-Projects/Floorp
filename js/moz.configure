@@ -872,6 +872,24 @@ def wasm_relaxed_simd(value, wasm_simd):
 set_config("ENABLE_WASM_RELAXED_SIMD", wasm_relaxed_simd)
 set_define("ENABLE_WASM_RELAXED_SIMD", wasm_relaxed_simd)
 
+# Support for WebAssembly Memory64.
+# ===========================
+
+option(
+    "--enable-wasm-memory64",
+    default=False,
+    help="{Enable|Disable} WebAssembly Memory64",
+)
+
+
+@depends("--enable-wasm-memory64")
+def wasm_memory64(value):
+    if value:
+        return True
+
+
+set_config("ENABLE_WASM_MEMORY64", wasm_memory64)
+set_define("ENABLE_WASM_MEMORY64", wasm_memory64)
 
 # Options for generating the shell as a script
 # ============================================
