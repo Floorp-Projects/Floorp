@@ -160,6 +160,85 @@ class UndoMiddlewareTest {
     }
 
     @Test
+    fun `Undo scenario - Removing all tabs`() {
+        val store = BrowserStore(
+            middleware = listOf(
+                UndoMiddleware(clearAfterMillis = 60000)
+            ),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                    createTab("https://getpocket.com", id = "pocket"),
+                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true)
+                ),
+                selectedTabId = "pocket"
+            )
+        )
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
+
+        store.dispatch(
+            TabListAction.RemoveAllTabsAction()
+        ).joinBlocking()
+
+        assertEquals(0, store.state.tabs.size)
+        assertNull(store.state.selectedTab)
+
+        testDispatcher.withDispatchingPaused {
+            // We need to pause the test dispatcher here to avoid it dispatching immediately.
+            // Otherwise we deadlock the test here when we wait for the store to complete and
+            // at the same time the middleware dispatches a coroutine on the dispatcher which will
+            // also block on the store in SessionManager.restore().
+            store.dispatch(UndoAction.RestoreRecoverableTabs).joinBlocking()
+        }
+
+        store.waitUntilIdle()
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
+    }
+
+    @Test
+    fun `Undo scenario - Removing all tabs non-recoverable`() {
+        val store = BrowserStore(
+            middleware = listOf(
+                UndoMiddleware(clearAfterMillis = 60000)
+            ),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                    createTab("https://getpocket.com", id = "pocket"),
+                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true)
+                ),
+                selectedTabId = "pocket"
+            )
+        )
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
+
+        store.dispatch(
+            TabListAction.RemoveAllTabsAction(false)
+        ).joinBlocking()
+
+        assertEquals(0, store.state.tabs.size)
+        assertNull(store.state.selectedTab)
+
+        testDispatcher.withDispatchingPaused {
+            // We need to pause the test dispatcher here to avoid it dispatching immediately.
+            // Otherwise we deadlock the test here when we wait for the store to complete and
+            // at the same time the middleware dispatches a coroutine on the dispatcher which will
+            // also block on the store in SessionManager.restore().
+            store.dispatch(UndoAction.RestoreRecoverableTabs).joinBlocking()
+        }
+
+        store.waitUntilIdle()
+
+        assertEquals(0, store.state.tabs.size)
+    }
+
+    @Test
     fun `Undo History in State is written`() {
         val store = BrowserStore(
             middleware = listOf(

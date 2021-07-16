@@ -356,7 +356,7 @@ class DownloadMiddlewareTest {
             middleware = listOf(downloadMiddleware)
         )
 
-        val actions = listOf(TabListAction.RemoveAllTabsAction, TabListAction.RemoveAllPrivateTabsAction)
+        val actions = listOf(TabListAction.RemoveAllTabsAction(), TabListAction.RemoveAllPrivateTabsAction)
 
         actions.forEach {
             store.dispatch(it).joinBlocking()

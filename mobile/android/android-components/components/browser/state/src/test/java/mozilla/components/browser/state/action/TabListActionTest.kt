@@ -579,7 +579,7 @@ class TabListActionTest {
         )
 
         val store = BrowserStore(state)
-        store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
+        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
 
         assertTrue(store.state.tabs.isEmpty())
         assertNull(store.state.selectedTabId)

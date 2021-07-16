@@ -228,7 +228,7 @@ class RecentlyClosedMiddlewareTest {
             middleware = listOf(UndoMiddleware(mainScope = scope), middleware)
         )
 
-        store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
+        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
         store.dispatch(UndoAction.ClearRecoverableTabs(store.state.undoHistory.tag)).joinBlocking()
 
         dispatcher.advanceUntilIdle()

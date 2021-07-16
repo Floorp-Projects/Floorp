@@ -292,7 +292,7 @@ class SessionUseCasesTest {
         var createdTab: TabSessionState? = null
         var tabCreatedForUrl: String? = null
 
-        store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
+        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
 
         val loadUseCase = SessionUseCases.DefaultLoadUrlUseCase(store) { url ->
             tabCreatedForUrl = url
@@ -316,7 +316,7 @@ class SessionUseCasesTest {
         var createdTab: TabSessionState? = null
         var tabCreatedForUrl: String? = null
 
-        store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
+        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
         store.waitUntilIdle()
 
         val loadUseCase = SessionUseCases.LoadDataUseCase(store) { url ->

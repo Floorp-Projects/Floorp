@@ -164,7 +164,7 @@ class TabsRemovedMiddlewareTest {
         val engineSession2 = linkEngineSession(store, tab2.id)
         val engineSession3 = linkEngineSession(store, tab3.id)
 
-        store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
+        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
 

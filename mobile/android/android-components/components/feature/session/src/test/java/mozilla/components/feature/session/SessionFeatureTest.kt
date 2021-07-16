@@ -213,7 +213,7 @@ class SessionFeatureTest {
         verify(view).render(engineSession)
         verify(view, never()).release()
 
-        store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
+        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
         verify(view).release()
     }
 

@@ -187,8 +187,9 @@ sealed class TabListAction : BrowserAction() {
 
     /**
      * Removes both private and normal [TabSessionState]s.
+     * @property recoverable Indicates whether removed tabs should be recoverable.
      */
-    object RemoveAllTabsAction : TabListAction()
+    data class RemoveAllTabsAction(val recoverable: Boolean = true) : TabListAction()
 
     /**
      * Removes all private [TabSessionState]s.

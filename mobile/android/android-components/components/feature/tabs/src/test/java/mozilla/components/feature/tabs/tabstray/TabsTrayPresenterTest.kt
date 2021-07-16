@@ -192,7 +192,7 @@ class TabsTrayPresenterTest {
 
         assertEquals(2, tabsTray.updateTabs!!.list.size)
 
-        store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
+        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
         testDispatcher.advanceUntilIdle()
 
         assertEquals(0, tabsTray.updateTabs!!.list.size)
@@ -270,7 +270,7 @@ class TabsTrayPresenterTest {
 
         assertFalse(closed)
 
-        store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
+        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
         testDispatcher.advanceUntilIdle()
 
         assertTrue(closed)

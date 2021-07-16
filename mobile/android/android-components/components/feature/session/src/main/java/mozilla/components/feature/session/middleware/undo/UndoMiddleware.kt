@@ -55,9 +55,11 @@ class UndoMiddleware(
             is TabListAction.RemoveAllPrivateTabsAction -> onTabsRemoved(
                 context, state.privateTabs, state.selectedTabId
             )
-            is TabListAction.RemoveAllTabsAction -> onTabsRemoved(
-                context, state.tabs, state.selectedTabId
-            )
+            is TabListAction.RemoveAllTabsAction -> {
+                if (action.recoverable) {
+                    onTabsRemoved(context, state.tabs, state.selectedTabId)
+                }
+            }
             is TabListAction.RemoveTabAction -> state.findTab(action.tabId)?.let {
                 onTabsRemoved(context, listOf(it), state.selectedTabId)
             }

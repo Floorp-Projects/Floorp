@@ -85,7 +85,7 @@ class ThumbnailsMiddlewareTest {
             middleware = listOf(ThumbnailsMiddleware(thumbnailStorage))
         )
 
-        store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
+        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
         verify(thumbnailStorage).clearThumbnails()
     }
 
