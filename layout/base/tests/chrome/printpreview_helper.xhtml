@@ -1255,6 +1255,20 @@ async function runTest44() {
   let test = "print_page_size3.html";
   let ref = "print_page_size3_ref.html";
   await compareFiles(test, ref, fuzz);
+  requestAnimationFrame(() => setTimeout(runTest45));
+}
+
+// Test that @page{ size: ... } results in scaling down the contents to fit on
+// a smaller paper size.
+// This depends on Firefox's current behavior of scaling oversized pages down
+// to fit onto the paper size.
+async function runTest45() {
+  if (navigator.platform.includes("Mac")) {
+    var fuzz = { maxDifferent: 15, maxDifference: 8 };
+  }
+  let test = "print_page_size4.html";
+  let ref = "print_page_size4_ref.html";
+  await compareFiles(test, ref, fuzz);
   finish();
 }
 
