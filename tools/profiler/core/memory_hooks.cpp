@@ -67,6 +67,49 @@ namespace mozilla::profiler {
 // Utilities
 //---------------------------------------------------------------------------
 
+// Returns true or or false depending on whether the marker was actually added
+// or not.
+static bool profiler_add_native_allocation_marker(int64_t aSize,
+                                                  uintptr_t aMemoryAddress) {
+  if (!profiler_can_accept_markers()) {
+    return false;
+  }
+
+  // Because native allocations may be intercepted anywhere, blocking while
+  // locking the profiler mutex here could end up causing a deadlock if another
+  // mutex is taken, which the profiler may indirectly need elsewhere.
+  // See bug 1642726 for such a scenario.
+  // So instead we bail out if the mutex is already locked. Native allocations
+  // are statistically sampled anyway, so missing a few because of this is
+  // acceptable.
+  if (profiler_is_locked_on_current_thread()) {
+    return false;
+  }
+
+  struct NativeAllocationMarker {
+    static constexpr mozilla::Span<const char> MarkerTypeName() {
+      return mozilla::MakeStringSpan("Native allocation");
+    }
+    static void StreamJSONMarkerData(
+        mozilla::baseprofiler::SpliceableJSONWriter& aWriter, int64_t aSize,
+        uintptr_t aMemoryAddress, int aThreadId) {
+      aWriter.IntProperty("size", aSize);
+      aWriter.IntProperty("memoryAddress",
+                          static_cast<int64_t>(aMemoryAddress));
+      aWriter.IntProperty("threadId", aThreadId);
+    }
+    static mozilla::MarkerSchema MarkerTypeDisplay() {
+      return mozilla::MarkerSchema::SpecialFrontendLocation{};
+    }
+  };
+
+  profiler_add_marker("Native allocation", geckoprofiler::category::OTHER,
+                      {MarkerThreadId::MainThread(), MarkerStack::Capture()},
+                      NativeAllocationMarker{}, aSize, aMemoryAddress,
+                      profiler_current_thread_id());
+  return true;
+}
+
 static malloc_table_t gMallocTable;
 
 // This is only needed because of the |const void*| vs |void*| arg mismatch.

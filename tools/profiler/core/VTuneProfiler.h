@@ -40,6 +40,12 @@ class VTuneProfiler {
   static void Initialize();
   static void Shutdown();
 
+  enum TracingKind {
+    TRACING_EVENT,
+    TRACING_INTERVAL_START,
+    TRACING_INTERVAL_END,
+  };
+
   static void Trace(const char* aName, TracingKind aKind) {
     if (mInstance) {
       mInstance->TraceInternal(aName, aKind);
