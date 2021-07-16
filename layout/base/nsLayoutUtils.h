@@ -50,11 +50,7 @@ class nsIWidget;
 class nsAtom;
 class nsIScrollableFrame;
 class nsRegion;
-class nsDisplayListBuilder;
-enum class nsDisplayListBuilderMode : uint8_t;
 enum nsChangeHint : uint32_t;
-class nsDisplayItem;
-class nsDisplayList;
 class nsFontMetrics;
 class nsFontFaceList;
 class nsIImageLoadingContent;
@@ -67,6 +63,10 @@ class imgIRequest;
 struct nsStyleFont;
 
 namespace mozilla {
+class nsDisplayItem;
+class nsDisplayList;
+class nsDisplayListBuilder;
+enum class nsDisplayListBuilderMode : uint8_t;
 struct AspectRatio;
 class ComputedStyle;
 class DisplayPortUtils;
@@ -166,6 +166,11 @@ class nsLayoutUtils {
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
+
+  using nsDisplayItem = mozilla::nsDisplayItem;
+  using nsDisplayList = mozilla::nsDisplayList;
+  using nsDisplayListBuilder = mozilla::nsDisplayListBuilder;
+  using nsDisplayListBuilderMode = mozilla::nsDisplayListBuilderMode;
 
  public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;

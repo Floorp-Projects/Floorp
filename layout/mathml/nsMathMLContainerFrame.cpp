@@ -68,6 +68,8 @@ nsresult nsMathMLContainerFrame::ReflowError(DrawTarget* aDrawTarget,
   return NS_OK;
 }
 
+namespace mozilla {
+
 class nsDisplayMathMLError : public nsPaintedDisplayItem {
  public:
   nsDisplayMathMLError(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
@@ -100,6 +102,8 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
   nsLayoutUtils::DrawUniDirString(errorMsg.get(), uint32_t(errorMsg.Length()),
                                   nsPoint(pt.x, pt.y + ascent), *fm, *aCtx);
 }
+
+}  // namespace mozilla
 
 /* /////////////
  * nsIMathMLFrame - support methods for stretchy elements

@@ -16,6 +16,8 @@
 #include "nsTableCellFrame.h"
 
 namespace mozilla {
+class nsDisplayListBuilder;
+class nsDisplayListSet;
 class PresShell;
 }  // namespace mozilla
 
@@ -227,9 +229,9 @@ class nsMathMLmtdFrame final : public nsTableCellFrame {
                                     int32_t aModType) override;
 
   virtual mozilla::StyleVerticalAlignKeyword GetVerticalAlign() const override;
-  virtual nsresult ProcessBorders(nsTableFrame* aFrame,
-                                  nsDisplayListBuilder* aBuilder,
-                                  const nsDisplayListSet& aLists) override;
+  virtual nsresult ProcessBorders(
+      nsTableFrame* aFrame, mozilla::nsDisplayListBuilder* aBuilder,
+      const mozilla::nsDisplayListSet& aLists) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
     return nsTableCellFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));

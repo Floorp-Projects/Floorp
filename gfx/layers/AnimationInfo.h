@@ -18,11 +18,11 @@
 struct RawServoAnimationValue;
 class nsIContent;
 class nsIFrame;
-class nsDisplayListBuilder;
-class nsDisplayItem;
 
 namespace mozilla {
 
+class nsDisplayItem;
+class nsDisplayListBuilder;
 class EffectSet;
 struct AnimationProperty;
 

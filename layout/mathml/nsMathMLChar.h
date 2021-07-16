@@ -18,15 +18,15 @@
 class gfxContext;
 class nsGlyphTable;
 class nsIFrame;
-class nsDisplayListBuilder;
-class nsDisplayListSet;
 class nsPresContext;
 struct nsBoundingMetrics;
 struct nsFont;
 
 namespace mozilla {
+class nsDisplayListBuilder;
+class nsDisplayListSet;
 class ComputedStyle;
-}
+}  // namespace mozilla
 
 // Hints for Stretch() to indicate criteria for stretching
 enum {
@@ -95,8 +95,8 @@ class nsMathMLChar {
   // not a virtual destructor: this class is not intended to be subclassed
   ~nsMathMLChar();
 
-  void Display(nsDisplayListBuilder* aBuilder, nsIFrame* aForFrame,
-               const nsDisplayListSet& aLists, uint32_t aIndex,
+  void Display(mozilla::nsDisplayListBuilder* aBuilder, nsIFrame* aForFrame,
+               const mozilla::nsDisplayListSet& aLists, uint32_t aIndex,
                const nsRect* aSelectedRect = nullptr);
 
   void PaintForeground(nsIFrame* aForFrame, gfxContext& aRenderingContext,

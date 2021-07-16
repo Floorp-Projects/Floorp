@@ -1331,6 +1331,8 @@ already_AddRefed<mozilla::layers::Layer> nsDisplayRemote::BuildLayer(
   return layer.forget();
 }
 
+namespace mozilla {
+
 void nsDisplayRemote::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   nsPresContext* pc = mFrame->PresContext();
   nsFrameLoader* fl = GetFrameLoader();
@@ -1448,3 +1450,5 @@ nsFrameLoader* nsDisplayRemote::GetFrameLoader() const {
   return mFrame ? static_cast<nsSubDocumentFrame*>(mFrame)->FrameLoader()
                 : nullptr;
 }
+
+}  // namespace mozilla

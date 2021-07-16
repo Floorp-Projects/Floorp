@@ -10,11 +10,11 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsTArray.h"
 
+namespace mozilla {
+
 class nsDisplayList;
 class nsDisplayListBuilder;
 class nsPaintedDisplayItem;
-
-namespace mozilla {
 
 namespace wr {
 class DisplayListBuilder;

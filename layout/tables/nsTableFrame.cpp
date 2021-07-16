@@ -1128,118 +1128,12 @@ void nsTableFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
   mColGroups.AppendIfNonempty(aLists, kColGroupList);
 }
 
-nsRect nsDisplayTableItem::GetBounds(nsDisplayListBuilder* aBuilder,
-                                     bool* aSnap) const {
-  *aSnap = false;
-  return mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
-}
-
-void nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame) {
-  ComputedStyle* bgSC;
-  if (!nsCSSRendering::FindBackground(aFrame, &bgSC)) return;
-  if (!bgSC->StyleBackground()->HasFixedBackground(aFrame)) return;
-
-  mPartHasFixedBackground = true;
-}
-
-nsDisplayItemGeometry* nsDisplayTableItem::AllocateGeometry(
-    nsDisplayListBuilder* aBuilder) {
-  return new nsDisplayTableItemGeometry(
-      this, aBuilder, mFrame->GetOffsetTo(mFrame->PresShell()->GetRootFrame()));
-}
-
-void nsDisplayTableItem::ComputeInvalidationRegion(
-    nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
-    nsRegion* aInvalidRegion) const {
-  auto geometry = static_cast<const nsDisplayTableItemGeometry*>(aGeometry);
-
-  bool invalidateForAttachmentFixed = false;
-  if (mDrawsBackground && mPartHasFixedBackground) {
-    nsPoint frameOffsetToViewport =
-        mFrame->GetOffsetTo(mFrame->PresShell()->GetRootFrame());
-    invalidateForAttachmentFixed =
-        frameOffsetToViewport != geometry->mFrameOffsetToViewport;
-  }
-
-  if (invalidateForAttachmentFixed ||
-      (aBuilder->ShouldSyncDecodeImages() &&
-       geometry->ShouldInvalidateToSyncDecodeImages())) {
-    bool snap;
-    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
-  }
-
-  nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
-}
-
-nsDisplayTableBackgroundSet::nsDisplayTableBackgroundSet(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aTable)
-    : mBuilder(aBuilder) {
-  mPrevTableBackgroundSet = mBuilder->SetTableBackgroundSet(this);
-  mozilla::DebugOnly<const nsIFrame*> reference =
-      mBuilder->FindReferenceFrameFor(aTable, &mToReferenceFrame);
-  MOZ_ASSERT(nsLayoutUtils::FindNearestCommonAncestorFrame(reference, aTable));
-  mDirtyRect = mBuilder->GetDirtyRect();
-}
-
-// A display item that draws all collapsed borders for a table.
-// At some point, we may want to find a nicer partitioning for dividing
-// border-collapse segments into their own display items.
-class nsDisplayTableBorderCollapse final : public nsDisplayTableItem {
- public:
-  nsDisplayTableBorderCollapse(nsDisplayListBuilder* aBuilder,
-                               nsTableFrame* aFrame)
-      : nsDisplayTableItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplayTableBorderCollapse);
-  }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayTableBorderCollapse)
-
-  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
-  bool CreateWebRenderCommands(
-      wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
-      const StackingContextHelper& aSc,
-      layers::RenderRootStateManager* aManager,
-      nsDisplayListBuilder* aDisplayListBuilder) override;
-  NS_DISPLAY_DECL_NAME("TableBorderCollapse", TYPE_TABLE_BORDER_COLLAPSE)
-};
-
-void nsDisplayTableBorderCollapse::Paint(nsDisplayListBuilder* aBuilder,
-                                         gfxContext* aCtx) {
-  nsPoint pt = ToReferenceFrame();
-  DrawTarget* drawTarget = aCtx->GetDrawTarget();
-
-  gfxPoint devPixelOffset = nsLayoutUtils::PointToGfxPoint(
-      pt, mFrame->PresContext()->AppUnitsPerDevPixel());
-
-  // XXX we should probably get rid of this translation at some stage
-  // But that would mean modifying PaintBCBorders, ugh
-  AutoRestoreTransform autoRestoreTransform(drawTarget);
-  drawTarget->SetTransform(
-      drawTarget->GetTransform().PreTranslate(ToPoint(devPixelOffset)));
-
-  static_cast<nsTableFrame*>(mFrame)->PaintBCBorders(*drawTarget,
-                                                     GetPaintRect() - pt);
-}
-
-bool nsDisplayTableBorderCollapse::CreateWebRenderCommands(
-    wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc,
-    mozilla::layers::RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder) {
-  static_cast<nsTableFrame*>(mFrame)->CreateWebRenderCommandsForBCBorders(
-      aBuilder, aSc, GetPaintRect(), ToReferenceFrame());
-  return true;
-}
-
 static inline bool FrameHasBorder(nsIFrame* f) {
   if (!f->StyleVisibility()->IsVisible()) {
     return false;
   }
 
-  if (f->StyleBorder()->HasBorder()) {
-    return true;
-  }
-
-  return false;
+  return f->StyleBorder()->HasBorder();
 }
 
 void nsTableFrame::CalcHasBCBorders() {
@@ -1297,6 +1191,10 @@ void nsTableFrame::CalcHasBCBorders() {
   }
 
   SetHasBCBorders(false);
+}
+
+namespace mozilla {
+class nsDisplayTableBorderCollapse;
 }
 
 // table paint code is concerned primarily with borders and bg color
@@ -7562,3 +7460,109 @@ void nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
   MOZ_ASSERT(!aWrapperFrame->HasAnyStateBits(NS_FRAME_OWNS_ANON_BOXES),
              "Wrapper frame doesn't have any anon boxes of its own!");
 }
+
+namespace mozilla {
+
+nsRect nsDisplayTableItem::GetBounds(nsDisplayListBuilder* aBuilder,
+                                     bool* aSnap) const {
+  *aSnap = false;
+  return mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
+}
+
+void nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame) {
+  ComputedStyle* bgSC;
+  if (!nsCSSRendering::FindBackground(aFrame, &bgSC)) return;
+  if (!bgSC->StyleBackground()->HasFixedBackground(aFrame)) return;
+
+  mPartHasFixedBackground = true;
+}
+
+nsDisplayItemGeometry* nsDisplayTableItem::AllocateGeometry(
+    nsDisplayListBuilder* aBuilder) {
+  return new nsDisplayTableItemGeometry(
+      this, aBuilder, mFrame->GetOffsetTo(mFrame->PresShell()->GetRootFrame()));
+}
+
+void nsDisplayTableItem::ComputeInvalidationRegion(
+    nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
+    nsRegion* aInvalidRegion) const {
+  auto geometry = static_cast<const nsDisplayTableItemGeometry*>(aGeometry);
+
+  bool invalidateForAttachmentFixed = false;
+  if (mDrawsBackground && mPartHasFixedBackground) {
+    nsPoint frameOffsetToViewport =
+        mFrame->GetOffsetTo(mFrame->PresShell()->GetRootFrame());
+    invalidateForAttachmentFixed =
+        frameOffsetToViewport != geometry->mFrameOffsetToViewport;
+  }
+
+  if (invalidateForAttachmentFixed ||
+      (aBuilder->ShouldSyncDecodeImages() &&
+       geometry->ShouldInvalidateToSyncDecodeImages())) {
+    bool snap;
+    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
+  }
+
+  nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
+}
+
+nsDisplayTableBackgroundSet::nsDisplayTableBackgroundSet(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aTable)
+    : mBuilder(aBuilder) {
+  mPrevTableBackgroundSet = mBuilder->SetTableBackgroundSet(this);
+  mozilla::DebugOnly<const nsIFrame*> reference =
+      mBuilder->FindReferenceFrameFor(aTable, &mToReferenceFrame);
+  MOZ_ASSERT(nsLayoutUtils::FindNearestCommonAncestorFrame(reference, aTable));
+  mDirtyRect = mBuilder->GetDirtyRect();
+}
+
+// A display item that draws all collapsed borders for a table.
+// At some point, we may want to find a nicer partitioning for dividing
+// border-collapse segments into their own display items.
+class nsDisplayTableBorderCollapse final : public nsDisplayTableItem {
+ public:
+  nsDisplayTableBorderCollapse(nsDisplayListBuilder* aBuilder,
+                               nsTableFrame* aFrame)
+      : nsDisplayTableItem(aBuilder, aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayTableBorderCollapse);
+  }
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayTableBorderCollapse)
+
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+  bool CreateWebRenderCommands(
+      wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
+      const StackingContextHelper& aSc,
+      layers::RenderRootStateManager* aManager,
+      nsDisplayListBuilder* aDisplayListBuilder) override;
+  NS_DISPLAY_DECL_NAME("TableBorderCollapse", TYPE_TABLE_BORDER_COLLAPSE)
+};
+
+void nsDisplayTableBorderCollapse::Paint(nsDisplayListBuilder* aBuilder,
+                                         gfxContext* aCtx) {
+  nsPoint pt = ToReferenceFrame();
+  DrawTarget* drawTarget = aCtx->GetDrawTarget();
+
+  gfxPoint devPixelOffset = nsLayoutUtils::PointToGfxPoint(
+      pt, mFrame->PresContext()->AppUnitsPerDevPixel());
+
+  // XXX we should probably get rid of this translation at some stage
+  // But that would mean modifying PaintBCBorders, ugh
+  AutoRestoreTransform autoRestoreTransform(drawTarget);
+  drawTarget->SetTransform(
+      drawTarget->GetTransform().PreTranslate(ToPoint(devPixelOffset)));
+
+  static_cast<nsTableFrame*>(mFrame)->PaintBCBorders(*drawTarget,
+                                                     GetPaintRect() - pt);
+}
+
+bool nsDisplayTableBorderCollapse::CreateWebRenderCommands(
+    wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
+    const StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder) {
+  static_cast<nsTableFrame*>(mFrame)->CreateWebRenderCommandsForBCBorders(
+      aBuilder, aSc, GetPaintRect(), ToReferenceFrame());
+  return true;
+}
+
+}  // namespace mozilla
