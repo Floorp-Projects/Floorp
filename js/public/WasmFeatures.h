@@ -77,6 +77,11 @@
 #else
 #  define WASM_GC_ENABLED 0
 #endif
+#ifdef ENABLE_WASM_MEMORY64
+#  define WASM_MEMORY64_ENABLED 1
+#else
+#  define WASM_MEMORY64_ENABLED 0
+#endif
 
 // clang-format off
 #define JS_FOR_WASM_FEATURES(DEFAULT, EXPERIMENTAL)                           \
@@ -125,7 +130,15 @@
                /* flag predicate     */ !IsFuzzingCranelift(cx) &&            \
                js::jit::JitSupportsWasmSimd(),                                \
                /* shell flag         */ "relaxed-simd",                       \
-               /* preference name    */ "relaxed_simd")
+               /* preference name    */ "relaxed_simd")                       \
+  EXPERIMENTAL(/* capitalized name   */ Memory64,                             \
+               /* lower case name    */ memory64,                             \
+               /* compile predicate  */ WASM_MEMORY64_ENABLED,                \
+               /* compiler predicate */ BaselineAvailable(cx),                \
+               /* flag predicate     */ !IsFuzzingIon(cx) &&                  \
+                   !IsFuzzingCranelift(cx),                                   \
+               /* shell flag         */ "memory64",                           \
+               /* preference name    */ "memory64")
 
 // clang-format on
 
