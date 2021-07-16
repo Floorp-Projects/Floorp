@@ -22,7 +22,7 @@ job-defaults:
             by-test-platform:
                 android-em-7.*:
                     - android/android_common.py
-                    - android/android-x86_64.py
+                    - android/androidx86_7_0.py
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -101,8 +101,6 @@ xpcshell:
                     - win32-minidump-stackwalk
                     - win32-fix-stacks
                 android-em-7.*:
-                    - android-system-image-x86_64-linux
-                    - android-avd-x86_64-linux
                     - android-emulator-linux
                     - linux64-node
                     - linux64-minidump-stackwalk
