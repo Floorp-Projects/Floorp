@@ -8648,6 +8648,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitRefCast();
   [[nodiscard]] bool emitBrOnCast();
 
+  void emitGcCanon(uint32_t typeIndex);
   void emitGcNullCheck(RegRef rp);
   RegPtr emitGcArrayGetData(RegRef rp);
   RegI32 emitGcArrayGetLength(RegPtr rdata, bool adjustDataPointer);
@@ -13419,6 +13420,14 @@ bool BaseCompiler::emitTableInit() {
                                       });
 }
 
+void BaseCompiler::emitGcCanon(uint32_t typeIndex) {
+  const TypeIdDesc& typeId = moduleEnv_.typeIds[typeIndex];
+  RegRef rp = needRef();
+  fr.loadTlsPtr(WasmTlsReg);
+  masm.loadWasmGlobalPtr(typeId.globalDataOffset(), rp);
+  pushRef(rp);
+}
+
 void BaseCompiler::emitGcNullCheck(RegRef rp) {
   Label ok;
   masm.branchTestPtr(Assembler::NonZero, rp, rp, &ok);
@@ -14098,21 +14107,32 @@ bool BaseCompiler::emitRttCanon() {
     return true;
   }
 
-  const TypeIdDesc& typeId = moduleEnv_.typeIds[rttType.typeIndex()];
-  RegRef rp = needRef();
-  fr.loadTlsPtr(WasmTlsReg);
-  masm.loadWasmGlobalPtr(typeId.globalDataOffset(), rp);
-  pushRef(rp);
+  emitGcCanon(rttType.typeIndex());
   return true;
 }
 
 bool BaseCompiler::emitRttSub() {
-  // rttSub builtin has same signature as rtt.sub instruction, stack is
-  // guaranteed to be in the right condition due to validation.
-  return emitInstanceCallOp(SASigRttSub, [this]() -> bool {
-    Nothing nothing;
-    return iter_.readRttSub(&nothing);
-  });
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  Nothing nothing;
+  uint32_t rttSubTypeIndex;
+  if (!iter_.readRttSub(&nothing, &rttSubTypeIndex)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  // rtt.sub $t; [(rtt $t' _)] -> [(rtt $t _)]
+  // Push (rtt.canon $t) so that we can cache the result and yield the
+  // same rtt value for the same $t operand.
+  emitGcCanon(rttSubTypeIndex);
+
+  if (!emitInstanceCall(lineOrBytecode, SASigRttSub)) {
+    return false;
+  }
+  return true;
 }
 
 bool BaseCompiler::emitRefTest() {

@@ -1090,14 +1090,19 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return int32_t(ref->isRuntimeSubtype(rtt));
 }
 
-/* static */ void* Instance::rttSub(Instance* instance, void* rttPtr) {
+/* static */ void* Instance::rttSub(Instance* instance, void* rttParentPtr,
+                                    void* rttSubCanonPtr) {
   MOZ_ASSERT(SASigRttSub.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = TlsContext.get();
 
   ASSERT_ANYREF_IS_JSOBJECT;
   RootedRttValue parentRtt(
-      cx, &AnyRef::fromCompiledCode(rttPtr).asJSObject()->as<RttValue>());
-  RootedRttValue subRtt(cx, RttValue::createFromParent(cx, parentRtt));
+      cx, &AnyRef::fromCompiledCode(rttParentPtr).asJSObject()->as<RttValue>());
+  RootedRttValue subCanonRtt(
+      cx,
+      &AnyRef::fromCompiledCode(rttSubCanonPtr).asJSObject()->as<RttValue>());
+
+  RootedRttValue subRtt(cx, RttValue::rttSub(cx, parentRtt, subCanonRtt));
   return AnyRef::fromJSObject(subRtt.get()).forCompiledCode();
 }
 

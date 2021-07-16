@@ -614,7 +614,8 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readRttCanon(&unusedTy));
           }
           case uint16_t(GcOp::RttSub): {
-            CHECK(iter.readRttSub(&nothing));
+            uint32_t unusedRttTypeIndex;
+            CHECK(iter.readRttSub(&nothing, &unusedRttTypeIndex));
           }
           case uint16_t(GcOp::RefTest): {
             uint32_t unusedRttTypeIndex;
