@@ -11,11 +11,7 @@ mkdir -p $HOME/artifacts $UPLOAD_DIR
 
 # Populate /builds/worker/.mozbuild/android-sdk-linux.
 cd $GECKO_PATH
-./mach python python/mozboot/mozboot/android.py --artifact-mode --system-images-only --avd-manifest="$AVD_JSON_CONFIG" --no-interactive
-
-# It's nice to have the build logs include the state of the world upon
-# completion.
-/builds/worker/.mozbuild/android-sdk-linux/tools/bin/sdkmanager --list
+./mach python python/mozboot/mozboot/android.py --artifact-mode --system-images-only --avd-manifest="$AVD_JSON_CONFIG" --no-interactive --list-packages
 
 tar cavf $UPLOAD_DIR/android-system-images-linux.tar.zst -C /builds/worker/.mozbuild android-sdk-linux/system-images
 

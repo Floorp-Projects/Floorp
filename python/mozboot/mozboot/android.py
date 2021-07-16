@@ -18,6 +18,8 @@ import time
 from mozboot.bootstrap import MOZCONFIG_SUGGESTION_TEMPLATE
 
 NDK_VERSION = "r21d"
+CMDLINE_TOOLS_VERSION_STRING = "4.0"
+CMDLINE_TOOLS_VERSION = "7302050"
 
 ANDROID_NDK_EXISTS = """
 Looks like you have the correct version of the Android NDK installed at:
@@ -198,13 +200,17 @@ def get_paths(os_name):
 def sdkmanager_tool(sdk_path):
     # sys.platform is win32 even if Python/Win64.
     sdkmanager = "sdkmanager.bat" if sys.platform.startswith("win") else "sdkmanager"
-    return os.path.join(sdk_path, "tools", "bin", sdkmanager)
+    return os.path.join(
+        sdk_path, "cmdline-tools", CMDLINE_TOOLS_VERSION_STRING, "bin", sdkmanager
+    )
 
 
 def avdmanager_tool(sdk_path):
     # sys.platform is win32 even if Python/Win64.
     sdkmanager = "avdmanager.bat" if sys.platform.startswith("win") else "avdmanager"
-    return os.path.join(sdk_path, "tools", "bin", sdkmanager)
+    return os.path.join(
+        sdk_path, "cmdline-tools", CMDLINE_TOOLS_VERSION_STRING, "bin", sdkmanager
+    )
 
 
 def adb_tool(sdk_path):
@@ -236,6 +242,7 @@ def ensure_android(
     avd_manifest_path=None,
     prewarm_avd=False,
     no_interactive=False,
+    list_packages=False,
 ):
     """
     Ensure the Android SDK (and NDK, if `artifact_mode` is falsy) are
@@ -243,16 +250,23 @@ def ensure_android(
     given URLs.  Ensure the required Android SDK packages are
     installed.
 
-    `os_name` can be 'linux' or 'macosx'.
+    `os_name` can be 'linux', 'macosx' or 'windows'.
     """
     # The user may have an external Android SDK (in which case we
     # save them a lengthy download), or they may have already
     # completed the download. We unpack to
     # ~/.mozbuild/{android-sdk-$OS_NAME, android-ndk-$VER}.
     mozbuild_path, sdk_path, ndk_path, avd_path, emulator_path = get_paths(os_name)
-    os_tag = "darwin" if os_name == "macosx" else os_name
-    sdk_url = "https://dl.google.com/android/repository/sdk-tools-{0}-4333796.zip".format(
-        os_tag
+
+    if os_name == "macosx":
+        os_tag = "mac"
+    elif os_name == "windows":
+        os_tag = "win"
+    else:
+        os_tag = os_name
+
+    sdk_url = "https://dl.google.com/android/repository/commandlinetools-{0}-{1}_latest.zip".format(  # NOQA: E501
+        os_tag, CMDLINE_TOOLS_VERSION
     )
     ndk_url = android_ndk_url(os_name)
 
@@ -277,13 +291,14 @@ def ensure_android(
             avd_manifest = json.load(f)
 
     # We expect the |sdkmanager| tool to be at
-    # ~/.mozbuild/android-sdk-$OS_NAME/tools/bin/sdkmanager.
+    # ~/.mozbuild/android-sdk-$OS_NAME/tools/cmdline-tools/$CMDLINE_TOOLS_VERSION_STRING/bin/sdkmanager. # NOQA: E501
     ensure_android_packages(
         sdkmanager_tool=sdkmanager_tool(sdk_path),
         emulator_only=emulator_only,
         system_images_only=system_images_only,
         avd_manifest=avd_manifest,
         no_interactive=no_interactive,
+        list_packages=list_packages,
     )
 
     if emulator_only or system_images_only:
@@ -353,8 +368,15 @@ def ensure_android_sdk_and_ndk(
         # android-sdk-$OS_NAME directory; it no longer does so.  We
         # preserve the old convention to smooth detecting existing SDK
         # installations.
-        install_mobile_android_sdk_or_ndk(
-            sdk_url, os.path.join(mozbuild_path, "android-sdk-{0}".format(os_name))
+        cmdline_tools_path = os.path.join(
+            mozbuild_path, "android-sdk-{0}".format(os_name), "cmdline-tools"
+        )
+        install_mobile_android_sdk_or_ndk(sdk_url, cmdline_tools_path)
+        # The tools package *really* wants to be in
+        # <sdk>/cmdline-tools/$CMDLINE_TOOLS_VERSION_STRING
+        os.rename(
+            os.path.join(cmdline_tools_path, "cmdline-tools"),
+            os.path.join(cmdline_tools_path, CMDLINE_TOOLS_VERSION_STRING),
         )
 
 
@@ -479,6 +501,7 @@ def ensure_android_packages(
     system_images_only=False,
     avd_manifest=None,
     no_interactive=False,
+    list_packages=False,
 ):
     """
     Use the given sdkmanager tool (like 'sdkmanager') to install required
@@ -524,6 +547,8 @@ def ensure_android_packages(
         cmd = args[0]
         e = subprocess.CalledProcessError(retcode, cmd)
         raise e
+    if list_packages:
+        subprocess.check_call([sdkmanager_tool, "--list"])
 
 
 def generate_mozconfig(os_name, artifact_mode=False):
@@ -612,6 +637,12 @@ def main(argv):
         action="store_true",
         help="If true, boot the AVD and wait until completed to speed up subsequent boots.",
     )
+    parser.add_option(
+        "--list-packages",
+        dest="list_packages",
+        action="store_true",
+        help="If true, list installed packages.",
+    )
 
     options, _ = parser.parse_args(argv)
 
@@ -643,6 +674,7 @@ def main(argv):
         avd_manifest_path=options.avd_manifest_path,
         prewarm_avd=options.prewarm_avd,
         no_interactive=options.no_interactive,
+        list_packages=options.list_packages,
     )
     mozconfig = generate_mozconfig(os_name, options.artifact_mode)
 
