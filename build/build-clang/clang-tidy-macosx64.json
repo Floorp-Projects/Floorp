@@ -5,7 +5,6 @@
     "assertions": false,
     "build_clang_tidy": true,
     "osx_cross_compile": true,
-    "python_path": "/usr/bin/python2.7",
     "cc": "{MOZ_FETCHES_DIR}/clang/bin/clang",
     "cxx": "{MOZ_FETCHES_DIR}/clang/bin/clang++",
     "as": "{MOZ_FETCHES_DIR}/clang/bin/clang",
