@@ -320,7 +320,8 @@ promise_test(async t => {
   });
 
   // Flush should have been synchronously rejected.
-  await promise_rejects_dom(t, 'AbortError', flushDone);
+  // TODO(sandersd): The promise should be rejected with AbortError.
+  await promise_rejects_exactly(t, undefined, flushDone);
 
   assert_equals(outputs, 1, 'outputs');
 }, 'Test reset during flush');

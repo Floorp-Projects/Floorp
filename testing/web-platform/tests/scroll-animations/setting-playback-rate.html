@@ -20,16 +20,9 @@
 </style>
 <body>
 <script>
-  'use strict';
-
-  // TODO(crbug.com/1216655): Remove time range. Once time range is removed, all
-  // functions that include ...WithTimeRange() should be replaced with the same
-  // function but without that ending. For example:
-  //
-  // createScrollLinkedAnimationWithTimeRange() => createScrollLinkedAnimation()
-
+'use strict';
   promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     // this forces a layout which results in an active timeline
     scroller.scrollTop = 0;
@@ -46,7 +39,7 @@
        'animation is in idle state.');
 
   promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     // this forces a layout which results in an active timeline
     scroller.scrollTop = 0;
@@ -63,7 +56,7 @@
       'animation is in play-pending state.');
 
   promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     const timeRange = animation.timeline.timeRange;
@@ -81,7 +74,7 @@
       'scroll-linked animation is in running state.');
 
   promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     const timeRange = animation.timeline.timeRange;
@@ -102,7 +95,7 @@
       'scroll-linked animation is in play state.');
 
   promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     const timeRange = animation.timeline.timeRange;
@@ -122,7 +115,7 @@
       'affects the rate of progress of the current time');
 
   promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     animation.play();
@@ -144,7 +137,7 @@
     ' when scrolling');
 
     promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     scroller.scrollTop = 0.25 * maxScroll;
@@ -162,7 +155,7 @@
     ' from scrollTimeline.');
 
   test(t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     animation.play();
     animation.currentTime = 250;
     animation.playbackRate = 2;
@@ -174,7 +167,7 @@
     ' time.');
 
   promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     scroller.scrollTop = 0.25 * maxScroll;
@@ -191,7 +184,7 @@
     ' from scrollTimeline.');
 
   promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
 
     /* Wait for animation frame is here for now to avoid a renderer crash
     caused by crbug.com/1042924. Once that is fixed, these can be removed */
@@ -207,7 +200,7 @@
   }, 'Setting the playback rate while playing preserves the set current time.');
 
   promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     const range = animation.timeline.timeRange;
@@ -225,7 +218,7 @@
     ' time.');
 
   promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     scroller.scrollTop = 0.5 * maxScroll;
@@ -260,7 +253,7 @@
     ' time during future scrolls');
 
   promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     const range = animation.timeline.timeRange;
@@ -277,7 +270,7 @@
     ' time.');
 
   promise_test(async t => {
-    const animation = createScrollLinkedAnimationWithTimeRange(t);
+    const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     scroller.scrollTop = 0.2 * maxScroll;
