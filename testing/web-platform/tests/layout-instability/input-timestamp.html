@@ -58,12 +58,12 @@
         observer.observe({ entryTypes: ['layout-shift'] });
         // User input event
         clickAndBlockMain('button').then(() => {
-          // 600ms delay
+          // 500ms delay
           step_timeout(function() {
             timeAfterClick = performance.now();
             // Modify the position of the div.
             document.getElementById('myDiv').style = "top: 60px";
-          }, 600);
+          }, 500);
         });
       });
     }, 'Layout shift right after user input is observable via PerformanceObserver.');

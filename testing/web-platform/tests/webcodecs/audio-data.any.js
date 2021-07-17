@@ -18,56 +18,30 @@ createDefaultAudioData() {
 }
 
 test(t => {
-  let local_data = new Float32Array(defaultInit.channels * defaultInit.frames);
-
-  let audio_data_init = {
-    timestamp: defaultInit.timestamp,
-    data: local_data,
-    numberOfFrames: defaultInit.frames,
+  let localBuffer = new AudioBuffer({
+    length: defaultInit.frames,
     numberOfChannels: defaultInit.channels,
-    sampleRate: defaultInit.sampleRate,
-    format: 'FLTP',
-  }
+    sampleRate: defaultInit.sampleRate
+  });
 
-  let data = new AudioData(audio_data_init);
+  let audioDataInit = {timestamp: defaultInit.timestamp, buffer: localBuffer}
+
+  let data = new AudioData(audioDataInit);
 
   assert_equals(data.timestamp, defaultInit.timestamp, 'timestamp');
-  assert_equals(data.numberOfFrames, defaultInit.frames, 'frames');
-  assert_equals(data.numberOfChannels, defaultInit.channels, 'channels');
-  assert_equals(data.sampleRate, defaultInit.sampleRate, 'sampleRate');
+  assert_equals(data.buffer.length, defaultInit.frames, 'frames');
   assert_equals(
-      data.duration, defaultInit.frames / defaultInit.sampleRate * 1_000_000,
-      'duration');
-  assert_equals(data.format, 'FLTP', 'format');
+      data.buffer.numberOfChannels, defaultInit.channels, 'channels');
+  assert_equals(data.buffer.sampleRate, defaultInit.sampleRate, 'sampleRate');
 
-  // Create an Int16 array of the right length.
-  let small_data = new Int16Array(defaultInit.channels * defaultInit.frames);
+  assert_throws_js(
+      TypeError, () => {let data = new AudioData({buffer: localBuffer})},
+      'AudioData requires \'timestamp\'')
 
-  let wrong_format_init = {...audio_data_init};
-  wrong_format_init.data = small_data;
-
-  // Creating FLTP AudioData from Int16 from should throw.
-  assert_throws_js(TypeError, () => {
-    let data = new AudioData(wrong_format_init);
-  }, `AudioDataInit.data needs to be big enough`);
-
-  var members = [
-    'timestamp',
-    'data',
-    'numberOfFrames',
-    'numberOfChannels',
-    'sampleRate',
-    'format',
-  ];
-
-  for (const member of members) {
-    let incomplete_init = {... audio_data_init};
-    delete incomplete_init[member];
-
-    assert_throws_js(
-      TypeError, () => {let data = new AudioData(incomplete_init)},
-      "AudioData requires '" + member + "'");
-  }
+  assert_throws_js(
+      TypeError,
+      () => {let data = new AudioData({timestamp: defaultInit.timestamp})},
+      'AudioData requires \'buffer\'')
 }, 'Verify AudioData constructors');
 
 test(t => {
@@ -77,35 +51,59 @@ test(t => {
 
   // Verify the parameters match.
   assert_equals(data.timestamp, clone.timestamp, 'timestamp');
-  assert_equals(data.numberOfFrames, clone.numberOfFrames, 'frames');
+  assert_equals(data.buffer.length, clone.buffer.length, 'frames');
   assert_equals(
-      data.numberOfChannels, clone.numberOfChannels, 'channels');
-  assert_equals(data.sampleRate, clone.sampleRate, 'sampleRate');
-  assert_equals(data.format, clone.format, 'format');
-
-  const data_copyDest = new Float32Array(defaultInit.frames);
-  const clone_copyDest = new Float32Array(defaultInit.frames);
+      data.buffer.numberOfChannels, clone.buffer.numberOfChannels, 'channels');
+  assert_equals(data.buffer.sampleRate, clone.buffer.sampleRate, 'sampleRate');
 
   // Verify the data matches.
-  for (var channel = 0; channel < defaultInit.channels; channel++) {
-    data.copyTo(data_copyDest, {planeIndex: channel});
-    clone.copyTo(clone_copyDest, {planeIndex: channel});
+  for (var channel = 0; channel < data.buffer.numberOfChannels; channel++) {
+    var orig_ch = data.buffer.getChannelData(channel);
+    var cloned_ch = clone.buffer.getChannelData(channel);
 
-    assert_array_equals(
-        data_copyDest, clone_copyDest, 'Cloned data ch=' + channel);
+    assert_array_equals(orig_ch, cloned_ch, 'Cloned data ch=' + channel);
   }
 
   // Verify closing the original data doesn't close the clone.
   data.close();
-  assert_equals(data.numberOfFrames, 0, 'data.buffer (closed)');
-  assert_not_equals(clone.numberOfFrames, 0, 'clone.buffer (not closed)');
+  assert_equals(data.buffer, null, 'data.buffer (closed)');
+  assert_not_equals(clone.buffer, null, 'clone.buffer (not closed)');
 
   clone.close();
-  assert_equals(clone.numberOfFrames, 0, 'clone.buffer (closed)');
+  assert_equals(clone.buffer, null, 'clone.buffer (closed)');
 
   // Verify closing a closed AudioData does not throw.
   data.close();
 }, 'Verify closing and cloning AudioData');
+
+test(t => {
+  let data = createDefaultAudioData();
+
+  // Get a copy of the original data.
+  let pre_modification_clone = data.clone();
+
+  for (var channel = 0; channel < data.buffer.numberOfChannels; channel++) {
+    var orig_ch = data.buffer.getChannelData(channel);
+
+    // Flip the polarity of the original data's buffer.
+    for (let i = 0; i < orig_ch.length; ++i) {
+      orig_ch.buffer[i] = -orig_ch.buffer[i];
+    }
+  }
+
+  // The data in 'data' should have been snapshotted internally, and
+  // despite changes to data.buffer, post_modification_clone should not contain
+  // modified data.
+  let post_modification_clone = data.clone();
+
+  // Verify the data matches.
+  for (var channel = 0; channel < data.buffer.numberOfChannels; channel++) {
+    var pre_ch = pre_modification_clone.buffer.getChannelData(channel);
+    var post_ch = post_modification_clone.buffer.getChannelData(channel);
+
+    assert_array_equals(pre_ch, post_ch, 'Cloned data ch=' + channel);
+  }
+}, 'Verify AudioData is snapshotted and internally immutable');
 
 test(t => {
   let data = make_audio_data(

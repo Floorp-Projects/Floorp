@@ -283,12 +283,10 @@ class FakeDevice {
 
     return {
       status: mojom.UsbTransferStatus.OK,
-      data: {
-        buffer: [
-          length >> 8, length & 0xff, params.request, params.value >> 8,
-          params.value & 0xff, params.index >> 8, params.index & 0xff
-        ]
-      }
+      data: [
+        length >> 8, length & 0xff, params.request, params.value >> 8,
+        params.value & 0xff, params.index >> 8, params.index & 0xff
+      ]
     };
   }
 
@@ -313,8 +311,7 @@ class FakeDevice {
     let data = new Array(length);
     for (let i = 0; i < length; ++i)
       data[i] = i & 0xff;
-    return Promise.resolve(
-        {status: mojom.UsbTransferStatus.OK, data: {buffer: data}});
+    return Promise.resolve({status: mojom.UsbTransferStatus.OK, data: data});
   }
 
   genericTransferOut(endpointNumber, data, timeout) {
@@ -341,7 +338,7 @@ class FakeDevice {
         status: mojom.UsbTransferStatus.OK
       };
     }
-    return Promise.resolve({data: {buffer: data}, packets: packets});
+    return Promise.resolve({ data: data, packets: packets });
   }
 
   isochronousTransferOut(endpointNumber, data, packetLengths, timeout) {
