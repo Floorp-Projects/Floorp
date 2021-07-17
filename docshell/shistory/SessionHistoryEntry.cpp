@@ -1371,7 +1371,7 @@ SHEntrySharedParentState* SessionHistoryEntry::SharedInfo() const {
 }
 
 void SessionHistoryEntry::SetFrameLoader(nsFrameLoader* aFrameLoader) {
-  MOZ_ASSERT_IF(aFrameLoader, !SharedInfo()->mFrameLoader);
+  MOZ_DIAGNOSTIC_ASSERT(!aFrameLoader || !SharedInfo()->mFrameLoader);
   // If the pref is disabled, we still allow evicting the existing entries.
   MOZ_RELEASE_ASSERT(!aFrameLoader || mozilla::BFCacheInParent());
   SharedInfo()->SetFrameLoader(aFrameLoader);
