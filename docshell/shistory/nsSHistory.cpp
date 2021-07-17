@@ -1256,7 +1256,8 @@ void nsSHistory::LoadURIOrBFCache(LoadEntryResult& aLoadEntry) {
     MOZ_ASSERT(she);
     RefPtr<nsFrameLoader> frameLoader = she->GetFrameLoader();
     if (frameLoader &&
-        (!currentShe || she->SharedInfo() != currentShe->SharedInfo())) {
+        (!currentShe || (she->SharedInfo() != currentShe->SharedInfo() &&
+                         !currentShe->GetFrameLoader()))) {
       bool canSave = (!currentShe || currentShe->GetSaveLayoutStateFlag()) &&
                      canonicalBC->AllowedInBFCache(Nothing());
 
