@@ -144,6 +144,9 @@
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">Adaugă</string>
 
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Editează</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Imposibil de conectat. Schemă URL nerecunoscută.</string>

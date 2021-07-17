@@ -1044,6 +1044,16 @@
     <string name="notification_pbm_action_delete_and_open">Lašowaś a wócyniś</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Spěchowany wót</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Marketing</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s jo malsny a priwatny</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">%1$s k wašomu standardnemu wobglědowakoju cyniś</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Zběrka jo se wulašowała</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1592,9 +1602,9 @@
     <string name="credit_cards_card_number">Kórtowy numer</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Datum płaśiwosći</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Datum płaśiwosći (mjasec)</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Datum płaśiwosći (lěto)</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Mě na kórśe</string>

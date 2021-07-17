@@ -1289,6 +1289,9 @@
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">ນຳທາງຍ້ອນກັບ</string>
 
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">ສິ່ງໃໝ່ໆໃນ %s</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">ສະຫນັບສະຫນູນ</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1314,17 +1317,32 @@
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">ວາງ</string>
 
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">ເພີ່ມເຂົ້າໃສ່ໜ້າທຳອິດ</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">ຍົກເລີກ</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">ເພີ່ມ</string>
 
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">ດຳເນີນການຕໍ່ໄປທີ່ເວັບໄຊທ</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">ຊື່ທາງລັດ</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">ລັອກອິນ ແລະ ລະຫັດຜ່ານ</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">ບັນທຶກການລັອກອິນ ແລະ ລະຫັດຜ່ານ</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">ຖາມເພື່ອບັນທຶກ</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">ບໍ່ຕ້ອງບັນທຶກ</string>
     <!-- Preference for autofilling saved logins in Fenix -->
     <string name="preferences_passwords_autofill">ຕື່ມຂໍ້ມູນອັດຕະໂນມັດ</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Sync ລັອກອິນ</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sync ລັອກອິນລະຫວ່າງອຸປະກອນຕ່າງໆ</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">ເຊື່ອມຕໍ່ຄືນໃຫມ່</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1332,27 +1350,246 @@
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">ບັກທຶກການລັອກອິນໄວ້</string>
 
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">ການລັອກອິນທີ່ທ່ານບັນທຶກໄວ້ ຫລື sync ກັບ %s ຈະສະແດງຢູ່ທີ່ນີ້</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">ຮຽນຮູ້ເພີ່ມເຕີມກ່ຽວກັບ Sync</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">ຍົກເວັ້ນ</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">ການລັອກອິນ ແລະ ລະຫັດຜ່ານທີ່ທ່ານບໍ່ໄດ້ບັນທຶກໄວ້ຈະສະແດງຢູ່ທີ່ນີ້</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">ການລັອກອິນ ແລະ ລະຫັດຜ່ານຈະບໍ່ໄດ້ຮັບການບັນທຶກໄວ້ສຳລັບເວັບໄຊທເຫລົ່ານີ້</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">ລຶບທຸກຂໍ້ຍົກເວັ້ນ</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">ຄົ້ນຫາການລັອກອິນ</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">ຕາມຕົວອັກສອນ</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">ທີ່ຫາກໍນຳໃຊ້ໄປ</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">ເວັບ​ໄຊ​ທ</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">ຊື່ຜູ້ໃຊ້</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">ລະຫັດຜ່ານ</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">ໃສ່ລະຫັດ PIN ຂອງທ່ານຄືນໃໝ່</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">ປົດລັອກເພື່ອເບິ່ງການລັອກອິນຂອງທ່ານທີ່ໄດ້ບັນທຶກໄວ້</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">ການເຊື່ອມຕໍ່ນີ້ບໍ່ປອດໄພ. ຂໍ້ມູນການເຂົ້າສູ່ລະບົບອາດຈະຖືກດັກຈັບໄດ້.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">ທ່ານຕ້ອງການໃຫ້ %s ບັນທຶກການເຂົ້າສູ່ລະບົບນີ້ໄວ້ບໍ?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">ບັນທຶກ</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">ບໍ່ບັນທຶກ</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">ລະຫັດຜ່ານໄດ້ຖືກກັອບປີ້ໄປໄວ້ທີ່ clipboard</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">ຊື່ຜູ້ໃຊ້ໄດ້ຖືກກັອບປີ້ໄປໄວ້ທີ່ clipboard</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">ເວັບໄຊທໄດ້ຖືກກັອບປີ້ໄປໄວ້ທີ່ clipboard</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">ກັອບປີ້ລະຫັດຜ່ານ</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">ລົບລ້າງລະຫັດຜ່ານ</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">ກັອບປີ້ຊື່ຜູ້ໃຊ້</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">ລົບລ້າງຊື່ຜູ້ໃຊ້</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">ກັອບປີ້ເວັບໄຊທ</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">ເປີດເວັບໄຊທໃນບຣາວເຊີ</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">ສະແດງລະຫັດຜ່ານ</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">ເຊື່ອງລະຫັດຜ່ານ</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">ປົດລັອກເພື່ອເບິ່ງການລັອກອິນຂອງທ່ານທີ່ໄດ້ບັນທຶກໄວ້</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">ຮັກສາຄວາມປອດໄພການລັອກອິນ ແລະ ລະຫັດຜ່ານຂອງທ່ານ</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">ຕິດຕັ້ງຮູບແບບການລັອກອຸປະກອນ, PIN ຫລື ລະຫັດຜ່ານເພື່ອຮັກສາການລັອກອິນ ແລະ ລະຫັດຜ່ານຂອງທ່ານຈາກການຖືກນຳໃຊ້ໂດຍຄົນອື່ນຖ້າຫາກວ່າເຂົາສາມາດເຂົ້າມາອຸປະກອນຂອງທ່ານໄດ້</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">ພາຍຫຼັງ</string>
 
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">ຕິດຕັ້ງດ່ຽວນີ້</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">ປົດລັອກອຸປະກອນຂອງທ່ານ</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">ຊູມໃນທຸກເວັບໄຊທ</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">ຊື່ (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">ໃຊ້ຄັ້ງສຸດທ້າຍ</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ລຽງລຳດັບເມນູການລັອກອິນ</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">ບັດເຄດິດ</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">ບັນທຶກ ແລະ ຕືມຂໍ້ມູນບັດແບບອັດຕະໂນມັດ</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">ຂໍ້ມູນຖືກເຂົ້າລະຫັດ</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Sync ຂໍ້ມູນບັດລະຫວ່າງອຸປະກອນຕ່າງໆ</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sync ບັດ</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">ເພີ່ມບັດເຄດິດ</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">ຈັດການບັດທີ່ໄດ້ບັນທຶກໄວ້</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">ເພີ່ມບັດ</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">ແກ້ໄຂບັດ</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">ເລກບັດ</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">ວັນ​ຫມົດ​ອາ​ຍຸ</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">ເດືອນຫມົດອາຍຸ</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">ປີຫມົດອາຍຸ</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">ຊື່ໃນບັດ</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">ຊື່ຫລີ້ນບັດ</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">ລຶບບັດ</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">ລຶບບັດ</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">ບັນທຶກ</string>
     <!-- The text for the "Save" button for saving a credit card -->
     <string name="credit_cards_save_button">ບັນທຶກ</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">ຍົກເລີກ</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">ບັນທຶກບັດໄວ້ແລ້ວ</string>
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">ກະລຸນາປ້ອນເລກບັດເຄດິດທີ່ຖືກຕ້ອງ</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">ກະລຸນາຕື່ມໃສ່ຫ້ອງນີ້</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">ປົດລັອກເພື່ອເບິ່ງບັດທີ່ທ່ານໄດ້ບັນທຶກໄວ້</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">ຮັກສາບັດເຄດິດຂອງທ່ານ</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_later">ພາຍຫຼັງ</string>
 
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">ເພີ່ມ</string>
 
-    </resources>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">ບັນທຶກ</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">ແກ້ໄຂ</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">ລຶບ</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">ອື່ນໆ</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">ຊື່</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">ຂໍ້ຄວາມທີ່ຈະໃຊ້ໃນການຄົ້ນຫາ</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">ແທນທີ່ຄິວລີດ້ວຍ “%s”. ຕົວຢ່າ: \nhttps://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s ສ້າງແລ້ວ</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%s ບັນທຶກໄວ້ແລ້ວ</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s ລຶບແລ້ວ</string>
+
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">ກຳລັງອັບເດດ %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">ເລີ່ມ %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">ການຍ້າຍສຳເລັດແລ້ວ</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">ລະຫັດຜ່ານ</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">ເພື່ອຕ້ອງການອະນຸຍາດ:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. ໄປທີ່ການຕັ້ງຄ່າ Android</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. ແຕະທີ່ <b>ສິດ</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. ສະລັບ <b>%1$s</b> ເປັນເປີດ]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">ການເຊື່ອມຕໍ່ທີປອດໄພ</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">ການເຊື່ອມຕໍ່ທີບໍ່ປອດໄພ</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">ເພີ່ມເຂົ້າໄປໃນເວັບຍອດນິຍົມແລ້ວ</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">ໄດ້ຮັບການຢັ້ງຢືນໂດຍ: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">ລຶບ</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">ແກ້ໄຂ</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">ທ່ານແນ່ໃຈແລ້ວບໍ່ວ່າທ່ານຕ້ອງການລັອກອິນນີ້?</string>
+
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">ລຶບ</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">ຍົກເລີກການປ່ຽນແປງ</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">ແກ້ໄຂ</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">ຕ້ອງມີລະຫັດຜ່ານ</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">ຄົ້ນຫາດ້ວຍສຽງ</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">ເວົ້າຕອນນີ້</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">ເຊື່ອມຕໍ່ອຸປະກອນອື່ນ.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">ກະລຸນາຮັບຮອງຄວາມຖືກຕ້ອງອີກຄັ້ງຫນຶ່ງ.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">ເຂົ້າສູ່ລະບົບເພື່ອ Sync</string>
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">ບໍ່ມີແທັບທີ່ເປີດຢູ່</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">ສະແດງເວັບໄຊທທີ່ໄດ້ເຂົ້າໄປຫຼາຍທີ່ສຸດ</string>
+	<!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">ຊື່</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">ຊື່ເວັບໄຊທຍອດນິຍົມ</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">ໂອເຄ</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">ຍົກເລີກ</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">ລົບ</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">ຄຣິກສຳລັບລາຍລະອຽດເພີ່ມເຕີມ</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">ປິດ</string>
+
+</resources>
