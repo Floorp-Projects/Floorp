@@ -13,11 +13,7 @@
 
   if (channelName) {
     let bc = new BroadcastChannel(channelName);
-
-    // Broadcast only once the DOM is loaded, so that the caller can
-    // access reliably this document's body.
-    window.addEventListener("DOMContentLoaded", () =>
-    bc.postMessage("loaded"));
+    bc.postMessage("loaded");
 
     // The page can also be restored from the back-forward cache:
     window.addEventListener('pageshow', function(event) {
