@@ -65,7 +65,7 @@
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">Să acceseze istoricul de navigare</string>
     <!-- Description for devtools permission. -->
-    <string name="mozac_feature_addons_permissions_devtools_description">Să extindă uneltele de dezvoltare pentru a-ți accesa datele în filele deschise</string>
+    <string name="mozac_feature_addons_permissions_devtools_description">Să extindă instrumentele pentru dezvoltatori pentru a-ți accesa datele în filele deschise</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Versiune</string>
     <!-- The authors of an add-on. -->
