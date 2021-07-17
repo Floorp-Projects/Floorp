@@ -215,7 +215,6 @@ def build_one_stage(
     osx_cross_compile,
     build_type,
     assertions,
-    python_path,
     libcxx_include_dir,
     build_wasm,
     compiler_rt_source_dir=None,
@@ -263,7 +262,6 @@ def build_one_stage(
             "-DCMAKE_INSTALL_PREFIX=%s" % inst_dir,
             "-DLLVM_TARGETS_TO_BUILD=%s" % machine_targets,
             "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
-            "-DPYTHON_EXECUTABLE=%s" % slashify_path(python_path),
             "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
             "-DLLVM_ENABLE_BINDINGS=OFF",
         ]
@@ -711,10 +709,6 @@ if __name__ == "__main__":
         assertions = config["assertions"]
         if assertions not in (True, False):
             raise ValueError("Only boolean values are accepted for assertions.")
-    python_path = None
-    if "python_path" not in config:
-        raise ValueError("Config file needs to set python_path")
-    python_path = config["python_path"]
     ndk_dir = None
     android_targets = None
     if "android_targets" in config:
@@ -884,7 +878,6 @@ if __name__ == "__main__":
         osx_cross_compile,
         build_type,
         assertions,
-        python_path,
         libcxx_include_dir,
         build_wasm,
         is_final_stage=(stages == 1),
@@ -913,7 +906,6 @@ if __name__ == "__main__":
             osx_cross_compile,
             build_type,
             assertions,
-            python_path,
             libcxx_include_dir,
             build_wasm,
             compiler_rt_source_dir,
@@ -945,7 +937,6 @@ if __name__ == "__main__":
             osx_cross_compile,
             build_type,
             assertions,
-            python_path,
             libcxx_include_dir,
             build_wasm,
             compiler_rt_source_dir,
@@ -986,7 +977,6 @@ if __name__ == "__main__":
             osx_cross_compile,
             build_type,
             assertions,
-            python_path,
             libcxx_include_dir,
             build_wasm,
             compiler_rt_source_dir,
