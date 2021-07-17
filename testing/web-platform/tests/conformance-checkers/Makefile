@@ -29,7 +29,7 @@ README.md: index.html
 
 messages.json: .FORCE
 	$(CURL) $(CURLFLAGS) -O -L \
-	  https://github.com/validator/validator/releases/download/jar/vnu.jar
+	  https://github.com/validator/validator/releases/download/latest/vnu.jar
 	$(JAVA) $(JAVAFLAGS) -cp vnu.jar nu.validator.client.TestRunner \
 	  --ignore=html-its --write-messages $@
 	$(PYTHON) $(PYTHONFLAGS) -mjson.tool --sort-keys $@ > $@.tmp
