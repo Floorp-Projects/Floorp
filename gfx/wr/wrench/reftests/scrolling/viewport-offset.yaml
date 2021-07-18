@@ -9,6 +9,7 @@ root:
       items:
         - type: scroll-frame
           bounds: 0 0 1000 1000
+          clip-to-frame: true
           items:
             - type: sticky-frame
               bounds: 0 -50 1000 50

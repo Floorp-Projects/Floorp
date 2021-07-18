@@ -4,6 +4,7 @@ root:
     - type: scroll-frame
       bounds: [9, 9, 10, 10]
       content-size: [95, 88]
+      clip-to-frame: true
       items:
         - type: scroll-frame
           bounds: [0, 0, 100, 100]
