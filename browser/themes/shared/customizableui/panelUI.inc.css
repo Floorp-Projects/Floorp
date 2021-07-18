@@ -189,19 +189,6 @@ toolbarseparator + .panel-subview-body,
   -moz-box-flex: 1;
 }
 
-.subviewbutton.panel-subview-footer {
-  box-sizing: border-box;
-  min-height: 41px;
-}
-
-.cui-widget-panelview menuitem.subviewbutton.panel-subview-footer {
-  margin: 4px 0 0;
-}
-
-.cui-widget-panelview .subviewbutton.panel-subview-footer > .menu-text {
-  -moz-box-flex: 1;
-}
-
 .panel-info-button {
   appearance: none;
   padding: 0;
@@ -383,7 +370,7 @@ panelview[id^=PanelUI-webext-] {
 
 .cui-widget-panel,
 .cui-widget-panel::part(arrowcontent) {
-  --arrowpanel-padding: 4px 0;
+  --arrowpanel-padding: var(--panel-subview-body-padding);
 }
 
 #appMenu-popup panelview,
@@ -406,10 +393,6 @@ panelview[id^=PanelUI-webext-] {
 /* Add 2 * 16px extra width for touch mode button padding. */
 #appMenu-popup[touchmode] panelview {
   min-width: calc(@menuPanelWidth@ + 32px);
-}
-
-.cui-widget-panel.cui-widget-panelWithFooter::part(content) {
-  padding-bottom: 0;
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon {
@@ -1202,24 +1185,15 @@ panelview .toolbarbutton-1,
   margin-bottom: 6px;
 }
 
-.subviewbutton.panel-subview-footer > .menu-text {
+.subviewbutton > .menu-text {
   appearance: none;
   padding-inline-start: 0 !important; /* to override menu.css on Windows */
-  padding-inline-end: 6px;
-  -moz-box-flex: 0;
-}
-
-.subviewbutton.panel-subview-footer > .toolbarbutton-text {
-  padding-inline-start: 0;
-}
-
-.subviewbutton.panel-subview-footer > .menu-accel-container {
-  padding-inline-start: 6px;
 }
 
 .subviewbutton > .menu-accel-container > .menu-iconic-accel,
 .subviewbutton > .menu-accel-container > .menu-accel {
   margin-inline-end: 0 !important; /* to override menu.css on Windows */
+  color: var(--panel-shortcut-color);
 }
 
 .subviewbutton[shortcut]::after {
@@ -1432,24 +1406,6 @@ menuitem.subviewbutton@menuStateActive@,
 #PlacesToolbar menuitem,
 #PlacesToolbar menu {
   color: var(--arrowpanel-color);
-}
-
-.subviewbutton.panel-subview-footer {
-  margin: 0;
-  background-color: var(--arrowpanel-dimmed);
-  border-top: 1px solid var(--panel-separator-color);
-  border-radius: 0;
-}
-
-menuitem.panel-subview-footer@menuStateHover@,
-.subviewbutton.panel-subview-footer@buttonStateHoverOrFocus@ {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
-menuitem.panel-subview-footer@menuStateActive@,
-.subviewbutton.panel-subview-footer@buttonStateActive@ {
-  background-color: var(--arrowpanel-dimmed-even-further);
-  box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
 #BMB_bookmarksPopup .subviewbutton:not([disabled="true"]) {
