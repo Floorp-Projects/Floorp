@@ -6,6 +6,7 @@ root:
       id: 2
       "content-size": [500, 100]
       bounds: [0, 0, 500, 100]
+      clip-to-frame: true
       items:
         -
           type: "stacking-context"

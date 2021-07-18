@@ -1752,20 +1752,18 @@ impl DisplayListBuilder {
 
     pub fn define_scroll_frame(
         &mut self,
-        parent_space_and_clip: &di::SpaceAndClipInfo,
+        parent_space: di::SpatialId,
         external_id: di::ExternalScrollId,
         content_rect: LayoutRect,
-        clip_rect: LayoutRect,
+        frame_rect: LayoutRect,
         scroll_sensitivity: di::ScrollSensitivity,
         external_scroll_offset: LayoutVector2D,
-    ) -> di::SpaceAndClipInfo {
-        let clip_id = self.generate_clip_index();
+    ) -> di::SpatialId {
         let scroll_frame_id = self.generate_spatial_index();
         let item = di::DisplayItem::ScrollFrame(di::ScrollFrameDisplayItem {
             content_rect,
-            clip_rect,
-            parent_space_and_clip: *parent_space_and_clip,
-            clip_id,
+            frame_rect,
+            parent_space,
             scroll_frame_id,
             external_id,
             scroll_sensitivity,
@@ -1774,10 +1772,7 @@ impl DisplayListBuilder {
 
         self.push_item(&item);
 
-        di::SpaceAndClipInfo {
-            spatial_id: scroll_frame_id,
-            clip_id,
-        }
+        scroll_frame_id
     }
 
     pub fn define_clip_chain<I>(

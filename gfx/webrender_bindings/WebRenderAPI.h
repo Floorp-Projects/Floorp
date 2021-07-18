@@ -472,13 +472,12 @@ class DisplayListBuilder final {
                                     const StickyOffsetBounds& aHorizontalBounds,
                                     const wr::LayoutVector2D& aAppliedOffset);
 
-  Maybe<wr::WrSpaceAndClip> GetScrollIdForDefinedScrollLayer(
+  Maybe<wr::WrSpatialId> GetScrollIdForDefinedScrollLayer(
       layers::ScrollableLayerGuid::ViewID aViewId) const;
-  wr::WrSpaceAndClip DefineScrollLayer(
+  wr::WrSpatialId DefineScrollLayer(
       const layers::ScrollableLayerGuid::ViewID& aViewId,
-      const Maybe<wr::WrSpaceAndClip>& aParent,
-      const wr::LayoutRect& aContentRect, const wr::LayoutRect& aClipRect,
-      const wr::LayoutPoint& aScrollOffset);
+      const Maybe<wr::WrSpatialId>& aParent, const wr::LayoutRect& aContentRect,
+      const wr::LayoutRect& aClipRect, const wr::LayoutPoint& aScrollOffset);
 
   void PushRect(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
                 bool aIsBackfaceVisible, const wr::ColorF& aColor);
@@ -725,7 +724,7 @@ class DisplayListBuilder final {
   // Track each scroll id that we encountered. We use this structure to
   // ensure that we don't define a particular scroll layer multiple times,
   // as that results in undefined behaviour in WR.
-  std::unordered_map<layers::ScrollableLayerGuid::ViewID, wr::WrSpaceAndClip>
+  std::unordered_map<layers::ScrollableLayerGuid::ViewID, wr::WrSpatialId>
       mScrollIds;
 
   wr::WrSpaceAndClipChain mCurrentSpaceAndClipChain;

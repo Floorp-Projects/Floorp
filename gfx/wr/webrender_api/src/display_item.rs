@@ -298,15 +298,13 @@ pub enum ScrollSensitivity {
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct ScrollFrameDisplayItem {
-    /// The id of the clip this scroll frame creates
-    pub clip_id: ClipId,
     /// The id of the space this scroll frame creates
     pub scroll_frame_id: SpatialId,
     /// The size of the contents this contains (so the backend knows how far it can scroll).
     // FIXME: this can *probably* just be a size? Origin seems to just get thrown out.
     pub content_rect: LayoutRect,
-    pub clip_rect: LayoutRect,
-    pub parent_space_and_clip: SpaceAndClipInfo,
+    pub frame_rect: LayoutRect,
+    pub parent_space: SpatialId,
     pub external_id: ExternalScrollId,
     pub scroll_sensitivity: ScrollSensitivity,
     /// The amount this scrollframe has already been scrolled by, in the caller.

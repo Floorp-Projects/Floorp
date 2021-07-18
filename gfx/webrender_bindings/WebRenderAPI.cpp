@@ -1125,7 +1125,7 @@ wr::WrSpatialId DisplayListBuilder::DefineStickyFrame(
   return spatialId;
 }
 
-Maybe<wr::WrSpaceAndClip> DisplayListBuilder::GetScrollIdForDefinedScrollLayer(
+Maybe<wr::WrSpatialId> DisplayListBuilder::GetScrollIdForDefinedScrollLayer(
     layers::ScrollableLayerGuid::ViewID aViewId) const {
   if (aViewId == layers::ScrollableLayerGuid::NULL_SCROLL_ID) {
     return Some(wr::RootScrollNode());
@@ -1139,32 +1139,29 @@ Maybe<wr::WrSpaceAndClip> DisplayListBuilder::GetScrollIdForDefinedScrollLayer(
   return Some(it->second);
 }
 
-wr::WrSpaceAndClip DisplayListBuilder::DefineScrollLayer(
+wr::WrSpatialId DisplayListBuilder::DefineScrollLayer(
     const layers::ScrollableLayerGuid::ViewID& aViewId,
-    const Maybe<wr::WrSpaceAndClip>& aParent,
-    const wr::LayoutRect& aContentRect, const wr::LayoutRect& aClipRect,
-    const wr::LayoutPoint& aScrollOffset) {
+    const Maybe<wr::WrSpatialId>& aParent, const wr::LayoutRect& aContentRect,
+    const wr::LayoutRect& aClipRect, const wr::LayoutPoint& aScrollOffset) {
   auto it = mScrollIds.find(aViewId);
   if (it != mScrollIds.end()) {
     return it->second;
   }
 
   // We haven't defined aViewId before, so let's define it now.
-  wr::WrSpaceAndClip defaultParent = wr::RootScrollNode();
-  // Note: we are currently ignoring the clipId on the stack here
-  defaultParent.space = mCurrentSpaceAndClipChain.space;
+  wr::WrSpatialId defaultParent = mCurrentSpaceAndClipChain.space;
 
-  auto spaceAndClip = wr_dp_define_scroll_layer(
+  auto space = wr_dp_define_scroll_layer(
       mWrState, aViewId, aParent ? aParent.ptr() : &defaultParent, aContentRect,
       aClipRect, aScrollOffset);
 
   WRDL_LOG("DefineScrollLayer id=%" PRIu64 "/%zu p=%s co=%s cl=%s\n", mWrState,
-           aViewId, spaceAndClip.space.id,
+           aViewId, space->id,
            aParent ? ToString(aParent->space.id).c_str() : "(nil)",
            ToString(aContentRect).c_str(), ToString(aClipRect).c_str());
 
-  mScrollIds[aViewId] = spaceAndClip;
-  return spaceAndClip;
+  mScrollIds[aViewId] = space;
+  return space;
 }
 
 void DisplayListBuilder::PushRect(const wr::LayoutRect& aBounds,
@@ -1257,12 +1254,14 @@ void DisplayListBuilder::PushBackdropFilter(
            ToString(aBounds).c_str(), ToString(clip).c_str());
 
   auto clipId = DefineRoundedRectClip(Nothing(), aRegion);
-  auto spaceAndClip = WrSpaceAndClip{mCurrentSpaceAndClipChain.space, clipId};
+  auto clipChainId = DefineClipChain({clipId}, true);
+  auto spaceAndClip =
+      WrSpaceAndClipChain{mCurrentSpaceAndClipChain.space, clipChainId.id};
 
-  wr_dp_push_backdrop_filter_with_parent_clip(
-      mWrState, aBounds, clip, aIsBackfaceVisible, &spaceAndClip,
-      aFilters.Elements(), aFilters.Length(), aFilterDatas.Elements(),
-      aFilterDatas.Length());
+  wr_dp_push_backdrop_filter(mWrState, aBounds, clip, aIsBackfaceVisible,
+                             &spaceAndClip, aFilters.Elements(),
+                             aFilters.Length(), aFilterDatas.Elements(),
+                             aFilterDatas.Length());
 }
 
 void DisplayListBuilder::PushLinearGradient(

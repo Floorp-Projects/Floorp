@@ -19,6 +19,7 @@ pipelines:
         type: "scroll-frame"
         id: 2
         bounds: [0, 0, 1887, 1971]
+        clip-to-frame: true
       -
         "clip-and-scroll": 2
         type: "stacking-context"
