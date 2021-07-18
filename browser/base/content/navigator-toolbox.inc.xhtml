@@ -589,7 +589,7 @@
       <menupopup id="BMB_bookmarksPopup"
                  type="arrow"
                  is="places-popup-arrow"
-                 class="cui-widget-panel cui-widget-panelview cui-widget-panelWithFooter PanelUI-subView"
+                 class="cui-widget-panel cui-widget-panelview PanelUI-subView"
                  placespopup="true"
                  context="placesContext"
                  openInTabs="children"
@@ -601,19 +601,19 @@
                                  BookmarkingUI.attachPlacesView(event, this);"
                  tooltip="bhTooltip" popupsinherittooltip="true">
         <menuitem id="BMB_viewBookmarksSidebar"
-                  class="menuitem-iconic subviewbutton"
+                  class="subviewbutton"
                   data-l10n-id="bookmarks-tools-sidebar-visibility"
                   data-l10n-args='{ "isVisible": false }'
                   oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
         <!-- NB: temporary solution for bug 985024, this should go away soon. -->
         <menuitem id="BMB_bookmarksShowAllTop"
-                  class="menuitem-iconic subviewbutton"
+                  class="subviewbutton"
                   data-l10n-id="bookmarks-manage-bookmarks"
                   command="Browser:ShowAllBookmarks"
                   key="manBookmarkKb"/>
         <menuseparator/>
         <menu id="BMB_bookmarksToolbar"
-              class="menu-iconic bookmark-item subviewbutton"
+              class="bookmark-item subviewbutton"
               data-l10n-id="bookmarks-toolbar-menu"
               container="true">
           <menupopup id="BMB_bookmarksToolbarPopup"
@@ -625,7 +625,7 @@
                                        new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`,
                                                       PlacesUIUtils.getViewForNode(this.parentNode.parentNode).options);">
             <menuitem id="BMB_viewBookmarksToolbar"
-                      class="menuitem-iconic subviewbutton"
+                      class="subviewbutton"
                       data-l10n-id="bookmarks-tools-toolbar-visibility-menuitem"
                       data-l10n-args='{ "isVisible": false }'
                       oncommand="BookmarkingUI.toggleBookmarksToolbar('bookmarks-widget');"/>
@@ -634,7 +634,7 @@
           </menupopup>
         </menu>
         <menu id="BMB_unsortedBookmarks"
-              class="menu-iconic bookmark-item subviewbutton"
+              class="bookmark-item subviewbutton"
               data-l10n-id="bookmarks-other-bookmarks-menu"
               container="true">
           <menupopup id="BMB_unsortedBookmarksPopup"
@@ -664,7 +664,7 @@
         <menuseparator/>
         <!-- Bookmarks menu items will go here -->
         <menuitem id="BMB_bookmarksShowAll"
-                  class="subviewbutton panel-subview-footer-button"
+                  class="subviewbutton"
                   data-l10n-id="bookmarks-manage-bookmarks"
                   command="Browser:ShowAllBookmarks"
                   key="manBookmarkKb"/>
