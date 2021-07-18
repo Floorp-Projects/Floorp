@@ -9,6 +9,7 @@ root:
           bounds: [100, 100, 100, 100]
           content-size: [260, 260]
           scroll-offset: [0, 60]
+          clip-to-frame: true
           items:
             - type: rect
               color: green

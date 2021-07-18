@@ -3,6 +3,7 @@ root:
     - type: scroll-frame
       bounds: [10, 10, 50, 50]
       content-size: [100, 100]
+      clip-to-frame: true
       items:
         - type: rect
           bounds: [10, 10, 500, 500]
@@ -10,6 +11,7 @@ root:
     - type: scroll-frame
       bounds: [70, 10, 50, 50]
       content-size: [100, 100]
+      clip-to-frame: true
       items:
         - type: rect
           bounds: [70, 10, 100, 100]

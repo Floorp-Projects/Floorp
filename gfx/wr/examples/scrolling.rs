@@ -54,14 +54,18 @@ impl Example for App {
                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
             );
             // set the scrolling clip
-            let space_and_clip1 = builder.define_scroll_frame(
-                &root_space_and_clip,
+            let space1 = builder.define_scroll_frame(
+                root_space_and_clip.spatial_id,
                 ExternalScrollId(EXT_SCROLL_ID_ROOT, PipelineId::dummy()),
                 (0, 0).by(1000, 1000),
                 scrollbox,
                 ScrollSensitivity::ScriptAndInputEvents,
                 LayoutVector2D::zero(),
             );
+            let space_and_clip1 = SpaceAndClipInfo {
+                spatial_id: space1,
+                clip_id: root_space_and_clip.clip_id,
+            };
 
             // now put some content into it.
             // start with a white background
@@ -86,14 +90,18 @@ impl Example for App {
             // Below the above rectangles, set up a nested scrollbox. It's still in
             // the same stacking context, so note that the rects passed in need to
             // be relative to the stacking context.
-            let space_and_clip2 = builder.define_scroll_frame(
-                &space_and_clip1,
+            let space2 = builder.define_scroll_frame(
+                space1,
                 ExternalScrollId(EXT_SCROLL_ID_CONTENT, PipelineId::dummy()),
                 (0, 100).to(300, 1000),
                 (0, 100).to(200, 300),
                 ScrollSensitivity::ScriptAndInputEvents,
                 LayoutVector2D::zero(),
             );
+            let space_and_clip2 = SpaceAndClipInfo {
+                spatial_id: space2,
+                clip_id: root_space_and_clip.clip_id,
+            };
 
             // give it a giant gray background just to distinguish it and to easily
             // visually identify the nested scrollbox

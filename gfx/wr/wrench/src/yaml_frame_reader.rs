@@ -1823,8 +1823,19 @@ impl YamlFrameReader {
             self.scroll_offsets.insert(external_id, LayoutPoint::new(size.x, size.y));
         }
 
-        let space_and_clip = dl.define_scroll_frame(
-            &self.top_space_and_clip(),
+        let clip_to_frame = yaml["clip-to-frame"].as_bool().unwrap_or(false);
+
+        let clip_id = if clip_to_frame {
+            Some(dl.define_clip_rect(
+                &self.top_space_and_clip(),
+                clip_rect,
+            ))
+        } else {
+            None
+        };
+
+        let spatial_id = dl.define_scroll_frame(
+            self.top_space_and_clip().spatial_id,
             external_id,
             content_rect,
             clip_rect,
@@ -1832,15 +1843,21 @@ impl YamlFrameReader {
             external_scroll_offset,
         );
         if let Some(numeric_id) = numeric_id {
-            self.add_spatial_id_mapping(numeric_id, space_and_clip.spatial_id);
-            self.add_clip_id_mapping(numeric_id, space_and_clip.clip_id);
+            self.add_spatial_id_mapping(numeric_id, spatial_id);
+            if let Some(clip_id) = clip_id {
+                self.add_clip_id_mapping(numeric_id, clip_id);
+            }
         }
 
         if !yaml["items"].is_badvalue() {
-            self.spatial_id_stack.push(space_and_clip.spatial_id);
-            self.clip_id_stack.push(space_and_clip.clip_id);
+            self.spatial_id_stack.push(spatial_id);
+            if let Some(clip_id) = clip_id {
+                self.clip_id_stack.push(clip_id);
+            }
             self.add_display_list_items_from_yaml(dl, wrench, &yaml["items"]);
-            self.clip_id_stack.pop().unwrap();
+            if let Some(_) = clip_id {
+                self.clip_id_stack.pop().unwrap();
+            }
             self.spatial_id_stack.pop().unwrap();
         }
     }

@@ -111,28 +111,6 @@ type WrColorDepth = ColorDepth;
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrColorRange = ColorRange;
 
-#[repr(C)]
-pub struct WrSpaceAndClip {
-    space: WrSpatialId,
-    clip: WrClipId,
-}
-
-impl WrSpaceAndClip {
-    fn from_webrender(sac: SpaceAndClipInfo) -> Self {
-        WrSpaceAndClip {
-            space: WrSpatialId { id: sac.spatial_id.0 },
-            clip: WrClipId::from_webrender(sac.clip_id),
-        }
-    }
-
-    fn to_webrender(&self, pipeline_id: WrPipelineId) -> SpaceAndClipInfo {
-        SpaceAndClipInfo {
-            spatial_id: self.space.to_webrender(pipeline_id),
-            clip_id: self.clip.to_webrender(pipeline_id),
-        }
-    }
-}
-
 #[inline]
 fn clip_chain_id_to_webrender(id: u64, pipeline_id: WrPipelineId) -> ClipId {
     if id == ROOT_CLIP_CHAIN {
@@ -2764,15 +2742,15 @@ pub extern "C" fn wr_dp_define_sticky_frame(
 pub extern "C" fn wr_dp_define_scroll_layer(
     state: &mut WrState,
     external_scroll_id: u64,
-    parent: &WrSpaceAndClip,
+    parent: &WrSpatialId,
     content_rect: LayoutRect,
     clip_rect: LayoutRect,
     scroll_offset: LayoutPoint,
-) -> WrSpaceAndClip {
+) -> WrSpatialId {
     assert!(unsafe { is_in_main_thread() });
 
     let space_and_clip = state.frame_builder.dl_builder.define_scroll_frame(
-        &parent.to_webrender(state.pipeline_id),
+        parent.to_webrender(state.pipeline_id),
         ExternalScrollId(external_scroll_id, state.pipeline_id),
         content_rect,
         clip_rect,
@@ -2782,7 +2760,7 @@ pub extern "C" fn wr_dp_define_scroll_layer(
         scroll_offset.to_vector(),
     );
 
-    WrSpaceAndClip::from_webrender(space_and_clip)
+    WrSpatialId::from_webrender(space_and_clip)
 }
 
 #[no_mangle]
@@ -2899,35 +2877,12 @@ pub extern "C" fn wr_dp_push_rect_with_animation(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_rect_with_parent_clip(
-    state: &mut WrState,
-    rect: LayoutRect,
-    clip_rect: LayoutRect,
-    is_backface_visible: bool,
-    parent: &WrSpaceAndClip,
-    color: ColorF,
-) {
-    debug_assert!(unsafe { !is_in_render_thread() });
-
-    let space_and_clip = parent.to_webrender(state.pipeline_id);
-
-    let prim_info = CommonItemProperties {
-        clip_rect,
-        clip_id: space_and_clip.clip_id,
-        spatial_id: space_and_clip.spatial_id,
-        flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
-    };
-
-    state.frame_builder.dl_builder.push_rect(&prim_info, rect, color);
-}
-
-#[no_mangle]
-pub extern "C" fn wr_dp_push_backdrop_filter_with_parent_clip(
+pub extern "C" fn wr_dp_push_backdrop_filter(
     state: &mut WrState,
     rect: LayoutRect,
     clip: LayoutRect,
     is_backface_visible: bool,
-    parent: &WrSpaceAndClip,
+    parent: &WrSpaceAndClipChain,
     filters: *const FilterOp,
     filter_count: usize,
     filter_datas: *const WrFilterData,
@@ -3916,6 +3871,12 @@ pub struct WrSpatialId {
 impl WrSpatialId {
     fn to_webrender(&self, pipeline_id: WrPipelineId) -> SpatialId {
         SpatialId::new(self.id, pipeline_id)
+    }
+
+    fn from_webrender(id: SpatialId) -> Self {
+        WrSpatialId {
+            id: id.0,
+        }
     }
 }
 

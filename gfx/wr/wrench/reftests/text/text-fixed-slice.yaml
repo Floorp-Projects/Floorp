@@ -5,6 +5,7 @@ root:
     - type: scroll-frame
       bounds: [0, 0, 500, 200]
       content-size: [500, 500]
+      clip-to-frame: true
       id: 2
       items:
       - type: rect

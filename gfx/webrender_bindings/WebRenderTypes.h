@@ -755,7 +755,7 @@ struct WrClipChainId {
   }
 };
 
-WrSpaceAndClip RootScrollNode();
+WrSpatialId RootScrollNode();
 WrSpaceAndClipChain RootScrollNodeWithChain();
 WrSpaceAndClipChain InvalidScrollNodeWithChain();
 

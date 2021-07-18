@@ -10,6 +10,7 @@ root:
       bounds: [10, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 50]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [10, 10, 50, 50]
@@ -26,6 +27,7 @@ root:
       bounds: [10, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 50]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [10, 70, 50, 50]
@@ -43,6 +45,7 @@ root:
       bounds: [10, 130, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 40]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [10, 130, 50, 50]
@@ -60,6 +63,7 @@ root:
       bounds: [10, 190, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, -10]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [10, 190, 50, 50]
@@ -76,6 +80,7 @@ root:
       bounds: [10, 250, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, -10]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [10, 250, 50, 50]
@@ -93,6 +98,7 @@ root:
       bounds: [70, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, -50]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [70, 10, 50, 50]
@@ -107,6 +113,7 @@ root:
       bounds: [70, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, -50]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [70, 70, 50, 50]
@@ -121,6 +128,7 @@ root:
       bounds: [70, 130, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, -40]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [70, 130, 50, 50]
@@ -135,6 +143,7 @@ root:
       bounds: [70, 190, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 10]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [70, 190, 50, 50]
@@ -149,6 +158,7 @@ root:
       bounds: [70, 250, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 10]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [70, 250, 50, 50]
@@ -166,6 +176,7 @@ root:
       bounds: [130, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [50, 0]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [130, 10, 50, 50]
@@ -180,6 +191,7 @@ root:
       bounds: [130, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [50, 0]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [130, 70, 50, 50]
@@ -194,6 +206,7 @@ root:
       bounds: [130, 130, 50, 50]
       content-size: [200, 200]
       scroll-offset: [40, 0]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [130, 130, 50, 50]
@@ -208,6 +221,7 @@ root:
       bounds: [130, 190, 50, 50]
       content-size: [200, 200]
       scroll-offset: [-10, 0]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [130, 190, 50, 50]
@@ -222,6 +236,7 @@ root:
       bounds: [130, 250, 50, 50]
       content-size: [200, 200]
       scroll-offset: [-10, 0]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [130, 250, 50, 50]
@@ -239,6 +254,7 @@ root:
       bounds: [190, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [-50, 0]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [190, 10, 50, 50]
@@ -253,6 +269,7 @@ root:
       bounds: [190, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [-50, 0]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [190, 70, 50, 50]
@@ -267,6 +284,7 @@ root:
       bounds: [190, 130, 50, 50]
       content-size: [200, 200]
       scroll-offset: [-40, 0]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [190, 130, 50, 50]
@@ -281,6 +299,7 @@ root:
       bounds: [190, 190, 50, 50]
       content-size: [200, 200]
       scroll-offset: [10, 0]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [190, 190, 50, 50]
@@ -295,6 +314,7 @@ root:
       bounds: [190, 250, 50, 50]
       content-size: [200, 200]
       scroll-offset: [10, 0]
+      clip-to-frame: true
       items:
       - type: sticky-frame
         bounds: [190, 250, 50, 50]
