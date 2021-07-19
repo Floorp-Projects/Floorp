@@ -45,7 +45,8 @@ add_task(async function run_test() {
   Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 1);
   const result = await NetworkHelper.parseSecurityInfo(
     MockSecurityInfo,
-    MockHttpInfo
+    MockHttpInfo,
+    new Map()
   );
   equal(result.hpkp, true, "Static HPKP detected.");
 });

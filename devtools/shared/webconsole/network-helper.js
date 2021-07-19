@@ -555,6 +555,9 @@ var NetworkHelper = {
    * @param object httpActivity
    *        The httpActivity object for the request with at least members
    *        { private, hostname }.
+   * @param Map decodedCertificateCache
+   *        A Map of certificate fingerprints to decoded certificates, to avoid
+   *        repeatedly decoding previously-seen certificates.
    *
    * @return object
    *         Returns an object containing following members:
@@ -578,7 +581,11 @@ var NetworkHelper = {
    *            - weaknessReasons: list of reasons that cause the request to be
    *                               considered weak. See getReasonsForWeakness.
    */
-  parseSecurityInfo: async function(securityInfo, httpActivity) {
+  parseSecurityInfo: async function(
+    securityInfo,
+    httpActivity,
+    decodedCertificateCache
+  ) {
     const info = {
       state: "insecure",
     };
@@ -672,7 +679,10 @@ var NetworkHelper = {
       );
 
       // Certificate.
-      info.cert = await this.parseCertificateInfo(securityInfo.serverCert);
+      info.cert = await this.parseCertificateInfo(
+        securityInfo.serverCert,
+        decodedCertificateCache
+      );
 
       // Certificate transparency status.
       info.certificateTransparency = securityInfo.certificateTransparencyStatus;
@@ -723,6 +733,9 @@ var NetworkHelper = {
    *
    * @param nsIX509Cert cert
    *        The certificate to extract the information from.
+   * @param Map decodedCertificateCache
+   *        A Map of certificate fingerprints to decoded certificates, to avoid
+   *        repeatedly decoding previously-seen certificates.
    * @return object
    *         An object with following format:
    *           {
@@ -732,7 +745,7 @@ var NetworkHelper = {
    *             fingerprint: { sha1, sha256 }
    *           }
    */
-  parseCertificateInfo: async function(cert) {
+  parseCertificateInfo: async function(cert, decodedCertificateCache) {
     function getDNComponent(dn, componentType) {
       for (const [type, value] of dn.entries) {
         if (type == componentType) {
@@ -744,9 +757,14 @@ var NetworkHelper = {
 
     const info = {};
     if (cert) {
-      const parsedCert = await certDecoder.parse(
-        certDecoder.pemToDER(cert.getBase64DERString())
-      );
+      const certHash = cert.sha256Fingerprint;
+      let parsedCert = decodedCertificateCache.get(certHash);
+      if (!parsedCert) {
+        parsedCert = await certDecoder.parse(
+          certDecoder.pemToDER(cert.getBase64DERString())
+        );
+        decodedCertificateCache.set(certHash, parsedCert);
+      }
       info.subject = {
         commonName: getDNComponent(parsedCert.subject, "Common Name"),
         organization: getDNComponent(parsedCert.subject, "Organization"),
