@@ -450,6 +450,7 @@ class nsWindow final : public nsBaseWidget {
   bool mWindowScaleFactorChanged;
   int mWindowScaleFactor;
   bool mCompositedScreen;
+  bool mIsAccelerated;
 
  private:
   void UpdateAlpha(mozilla::gfx::SourceSurface* aSourceSurface,
