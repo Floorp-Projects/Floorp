@@ -30,7 +30,10 @@ const DUMMY_CERT = {
 add_task(async function run_test() {
   info("Testing NetworkHelper.parseCertificateInfo.");
 
-  const result = await NetworkHelper.parseCertificateInfo(DUMMY_CERT);
+  const result = await NetworkHelper.parseCertificateInfo(
+    DUMMY_CERT,
+    new Map()
+  );
 
   // Subject
   equal(

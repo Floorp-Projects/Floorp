@@ -45,8 +45,11 @@ loader.lazyGetter(
  * @param object httpActivity
  *        HttpActivity object associated with this request. See NetworkObserver
  *        for more information.
+ * @param Map decodedCertificateCache
+ *        A Map of certificate fingerprints to decoded certificates, to avoid
+ *        repeatedly decoding previously-seen certificates.
  */
-function NetworkResponseListener(owner, httpActivity) {
+function NetworkResponseListener(owner, httpActivity, decodedCertificateCache) {
   this.owner = owner;
   this.receivedData = "";
   this.httpActivity = httpActivity;
@@ -58,6 +61,7 @@ function NetworkResponseListener(owner, httpActivity) {
   const channel = this.httpActivity.channel;
   this._wrappedNotificationCallbacks = channel.notificationCallbacks;
   channel.notificationCallbacks = this;
+  this._decodedCertificateCache = decodedCertificateCache;
 }
 
 exports.NetworkResponseListener = NetworkResponseListener;
@@ -116,6 +120,12 @@ NetworkResponseListener.prototype = {
    * so that we can forward getInterface requests to that object.
    */
   _wrappedNotificationCallbacks: null,
+
+  /**
+   * A Map of certificate fingerprints to decoded certificates, to avoid repeatedly
+   * decoding previously-seen certificates.
+   */
+  _decodedCertificateCache: null,
 
   /**
    * The response listener owner.
@@ -330,7 +340,8 @@ NetworkResponseListener.prototype = {
     }
     const info = await NetworkHelper.parseSecurityInfo(
       secinfo,
-      this.httpActivity
+      this.httpActivity,
+      this._decodedCertificateCache
     );
     let isRacing = false;
     try {
