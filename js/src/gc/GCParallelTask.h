@@ -25,6 +25,10 @@
 
 namespace js {
 
+namespace gcstats {
+enum class PhaseKind : uint8_t;
+}
+
 namespace gc {
 class GCRuntime;
 }
@@ -38,6 +42,9 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
                        public HelperThreadTask {
  public:
   gc::GCRuntime* const gc;
+
+  // This can be PhaseKind::NONE for tasks that take place outside a GC.
+  const gcstats::PhaseKind phaseKind;
 
  private:
   // The state of the parallel computation.
@@ -70,10 +77,15 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
   mozilla::Atomic<bool, mozilla::MemoryOrdering::ReleaseAcquire> cancel_;
 
  public:
-  explicit GCParallelTask(gc::GCRuntime* gc)
-      : gc(gc), state_(State::Idle), duration_(nullptr), cancel_(false) {}
+  explicit GCParallelTask(gc::GCRuntime* gc, gcstats::PhaseKind phaseKind)
+      : gc(gc),
+        phaseKind(phaseKind),
+        state_(State::Idle),
+        duration_(nullptr),
+        cancel_(false) {}
   GCParallelTask(GCParallelTask&& other)
       : gc(other.gc),
+        phaseKind(other.phaseKind),
         state_(other.state_),
         duration_(nullptr),
         cancel_(false) {}

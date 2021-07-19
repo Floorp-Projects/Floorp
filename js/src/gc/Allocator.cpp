@@ -848,9 +848,11 @@ TenuredChunk* GCRuntime::pickChunk(AutoLockGCBgAlloc& lock) {
 }
 
 BackgroundAllocTask::BackgroundAllocTask(GCRuntime* gc, ChunkPool& pool)
-    : GCParallelTask(gc),
+    : GCParallelTask(gc, gcstats::PhaseKind::NONE),
       chunkPool_(pool),
-      enabled_(CanUseExtraThreads() && GetCPUCount() >= 2) {}
+      enabled_(CanUseExtraThreads() && GetCPUCount() >= 2) {
+  // This can occur outside GCs so doesn't have a stats phase.
+}
 
 void BackgroundAllocTask::run(AutoLockHelperThreadState& lock) {
   AutoUnlockHelperThreadState unlock(lock);
