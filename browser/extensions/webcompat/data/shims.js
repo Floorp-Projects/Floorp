@@ -117,6 +117,14 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "AmazonTAM",
+    platform: "all",
+    name: "Amazon Transparent Ad Marketplace",
+    bug: "1713698",
+    file: "apstag.js",
+    matches: ["*://c.amazon-adsystem.com/aax2/apstag.js"],
+  },
+  {
     id: "BmAuth",
     platform: "all",
     name: "BmAuth by 9c9media",
