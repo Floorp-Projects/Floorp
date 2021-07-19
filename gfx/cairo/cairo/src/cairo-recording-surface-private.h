@@ -120,10 +120,6 @@ typedef struct _cairo_command_tag {
     cairo_bool_t                 begin;
     char                        *tag_name;
     char                        *attributes;
-    cairo_pattern_union_t	 source;
-    cairo_stroke_style_t	 style;
-    cairo_matrix_t		 ctm;
-    cairo_matrix_t		 ctm_inverse;
 } cairo_command_tag_t;
 
 typedef union _cairo_command {

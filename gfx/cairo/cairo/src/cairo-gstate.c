@@ -1644,44 +1644,10 @@ cairo_status_t
 _cairo_gstate_tag_begin (cairo_gstate_t *gstate,
 			 const char *tag_name, const char *attributes)
 {
-    cairo_pattern_union_t source_pattern;
-    cairo_stroke_style_t style;
-    double dash[2];
-    cairo_status_t status;
-    cairo_matrix_t aggregate_transform;
-    cairo_matrix_t aggregate_transform_inverse;
-
-    status = _cairo_gstate_get_pattern_status (gstate->source);
-    if (unlikely (status))
-	return status;
-
-    cairo_matrix_multiply (&aggregate_transform,
-                           &gstate->ctm,
-                           &gstate->target->device_transform);
-    cairo_matrix_multiply (&aggregate_transform_inverse,
-                           &gstate->target->device_transform_inverse,
-                           &gstate->ctm_inverse);
-
-    memcpy (&style, &gstate->stroke_style, sizeof (gstate->stroke_style));
-    if (_cairo_stroke_style_dash_can_approximate (&gstate->stroke_style, &aggregate_transform, gstate->tolerance)) {
-        style.dash = dash;
-        _cairo_stroke_style_dash_approximate (&gstate->stroke_style, &gstate->ctm, gstate->tolerance,
-					      &style.dash_offset,
-					      style.dash,
-					      &style.num_dashes);
-    }
-
-    _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
-
     return _cairo_surface_tag (gstate->target,
 			       TRUE, /* begin */
 			       tag_name,
-			       attributes ? attributes : "",
-			       &source_pattern.base,
-			       &style,
-			       &aggregate_transform,
-			       &aggregate_transform_inverse,
-			       gstate->clip);
+			       attributes ? attributes : "");
 }
 
 cairo_status_t
@@ -1691,12 +1657,7 @@ _cairo_gstate_tag_end (cairo_gstate_t *gstate,
     return _cairo_surface_tag (gstate->target,
 			       FALSE, /* begin */
 			       tag_name,
-			       NULL, /* attributes */
-			       NULL, /* source */
-			       NULL, /* stroke_style */
-			       NULL, /* ctm */
-			       NULL, /* ctm_inverse*/
-			       NULL); /* clip */
+			       NULL); /* attributes */
 }
 
 static void
