@@ -13,10 +13,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 
-class nsDisplayItem;
-
 namespace mozilla {
 
+class nsDisplayItem;
 struct ActiveScrolledRoot;
 struct DisplayItemClipChain;
 

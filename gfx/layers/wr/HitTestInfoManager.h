@@ -11,12 +11,11 @@
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsRect.h"
-#include "nsTArray.h"
-
-class nsPaintedDisplayItem;
-class nsDisplayListBuilder;
 
 namespace mozilla {
+
+class nsDisplayItem;
+class nsDisplayListBuilder;
 
 namespace wr {
 class DisplayListBuilder;

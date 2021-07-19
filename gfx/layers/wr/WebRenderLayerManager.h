@@ -36,12 +36,12 @@
 #include "nsTHashSet.h"
 
 class gfxContext;
-class nsDisplayList;
-class nsDisplayListBuilder;
 class nsIWidget;
 
 namespace mozilla {
 
+class nsDisplayList;
+class nsDisplayListBuilder;
 struct ActiveScrolledRoot;
 
 namespace layers {

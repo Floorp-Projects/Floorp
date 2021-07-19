@@ -227,6 +227,8 @@ nsresult nsSliderFrame::AttributeChanged(int32_t aNameSpaceID,
   return rv;
 }
 
+namespace mozilla {
+
 // Draw any tick marks that show the position of find in page results.
 class nsDisplaySliderMarks final : public nsPaintedDisplayItem {
  public:
@@ -354,6 +356,8 @@ void nsDisplaySliderMarks::Paint(nsDisplayListBuilder* aBuilder,
                                  gfxContext* aCtx) {
   PaintMarks(aBuilder, nullptr, aCtx);
 }
+
+}  // namespace mozilla
 
 void nsSliderFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                      const nsDisplayListSet& aLists) {

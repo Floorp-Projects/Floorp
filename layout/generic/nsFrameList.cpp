@@ -18,11 +18,9 @@
 using namespace mozilla;
 
 namespace mozilla {
-namespace layout {
 namespace detail {
 const AlignedFrameListBytes gEmptyFrameListBytes = {0};
 }  // namespace detail
-}  // namespace layout
 }  // namespace mozilla
 
 void* nsFrameList::operator new(size_t sz, mozilla::PresShell* aPresShell) {

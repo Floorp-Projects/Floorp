@@ -45,8 +45,9 @@
  * matched items can be inserted into the merged list in any order.
  */
 
-using namespace mozilla;
 using mozilla::dom::Document;
+
+namespace mozilla {
 
 void RetainedDisplayListData::AddModifiedFrame(nsIFrame* aFrame) {
   MOZ_ASSERT(!aFrame->IsFrameModified());
@@ -1479,3 +1480,5 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
   mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), List());
   return result;
 }
+
+}  // namespace mozilla

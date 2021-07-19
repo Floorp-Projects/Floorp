@@ -19,7 +19,6 @@
 #  include "mozilla/gfx/Rect.h"
 #  include "mozilla/layers/LayersTypes.h"
 
-class nsDisplayListBuilder;
 class nsICanvasRenderingContextInternal;
 class nsIInputStream;
 class nsITimerCallback;
@@ -27,6 +26,7 @@ enum class gfxAlphaType;
 
 namespace mozilla {
 
+class nsDisplayListBuilder;
 class ClientWebGLContext;
 
 namespace layers {

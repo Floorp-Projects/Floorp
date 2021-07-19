@@ -36,17 +36,18 @@
 #include "nscore.h"    // for nsrefcnt
 
 class gfxContext;
+class nsIFrame;
+class nsPresContext;
+class nsRootPresContext;
+
+namespace mozilla {
 class nsDisplayItem;
 class nsDisplayItemGeometry;
 class nsDisplayList;
 class nsDisplayListBuilder;
 class nsDisplayMasksAndClipPaths;
-class nsIFrame;
 class nsPaintedDisplayItem;
-class nsPresContext;
-class nsRootPresContext;
 
-namespace mozilla {
 struct ActiveScrolledRoot;
 struct DisplayItemClipChain;
 class TransformClipNode;

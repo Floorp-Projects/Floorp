@@ -130,6 +130,7 @@ class nsCanvasFrame final : public nsContainerFrame,
   nsCOMPtr<Element> mTooltipContent;
 };
 
+namespace mozilla {
 /**
  * Override nsDisplayBackground methods so that we pass aBGClipRect to
  * PaintBackground, covering the whole overflow area.
@@ -217,5 +218,7 @@ class nsDisplayCanvasThemedBackground : public nsDisplayThemedBackground {
 
   NS_DISPLAY_DECL_NAME("CanvasThemedBackground", TYPE_CANVAS_THEMED_BACKGROUND)
 };
+
+}  // namespace mozilla
 
 #endif /* nsCanvasFrame_h___ */
