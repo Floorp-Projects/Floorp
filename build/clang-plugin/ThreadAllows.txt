@@ -63,6 +63,7 @@ RemoteLzyStream
 RWLockTester
 RacingServMan
 RemVidChild
+Renderer
 ResetCleanup
 Sandbox Testing
 SaveScripts
