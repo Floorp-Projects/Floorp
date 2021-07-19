@@ -13,27 +13,9 @@ const TEST_ENGINE_NAME = "Test";
 const TEST_ENGINE_ALIAS = "@test";
 const TEST_ENGINE_DOMAIN = "example.com";
 
-function copyToClipboard(str) {
-  return new Promise((resolve, reject) => {
-    waitForClipboard(
-      str,
-      () => {
-        Cc["@mozilla.org/widget/clipboardhelper;1"]
-          .getService(Ci.nsIClipboardHelper)
-          .copyString(str);
-      },
-      resolve,
-      reject
-    );
-  });
-}
-
 // Each test is a function that executes an urlbar action and returns the
-// expected event object, or null if no event is expected.
+// expected event object.
 const tests = [
-  /*
-   * Engagement tests.
-   */
   async function(win) {
     info("Type something, press Enter.");
     win.gURLBar.select();
@@ -132,7 +114,7 @@ const tests = [
       .selectedButton;
     selectedOneOff.click();
     await searchPromise;
-    await UrlbarTestUtils.assertSearchMode(window, {
+    await UrlbarTestUtils.assertSearchMode(win, {
       engineName: selectedOneOff.engine.name,
       entry: "oneoff",
     });
@@ -304,7 +286,7 @@ const tests = [
     win.gURLBar.select();
     const promise = BrowserTestUtils.waitForDocLoadAndStopIt(
       "https://www.example.com/",
-      gBrowser.selectedBrowser
+      win.gBrowser.selectedBrowser
     );
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
@@ -543,7 +525,7 @@ const tests = [
       value: `${alias} `,
     });
 
-    await UrlbarTestUtils.assertSearchMode(window, {
+    await UrlbarTestUtils.assertSearchMode(win, {
       engineName: "AliasTest",
       entry: "typed",
     });
@@ -876,7 +858,7 @@ const tests = [
     info("Open search mode with a keyboard shortcut.");
     let defaultEngine = await Services.search.getDefault();
     win.gURLBar.select();
-    EventUtils.synthesizeKey("k", { accelKey: true });
+    EventUtils.synthesizeKey("k", { accelKey: true }, win);
     await UrlbarTestUtils.assertSearchMode(win, {
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engineName: defaultEngine.name,
@@ -935,9 +917,9 @@ const tests = [
     );
 
     // Select the tab-to-search result.
-    EventUtils.synthesizeKey("KEY_ArrowDown");
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     let searchPromise = UrlbarTestUtils.promiseSearchComplete(win);
-    EventUtils.synthesizeKey("KEY_Enter");
+    EventUtils.synthesizeKey("KEY_Enter", {}, win);
     await searchPromise;
     await UrlbarTestUtils.assertSearchMode(win, {
       engineName: TEST_ENGINE_NAME,
@@ -1122,248 +1104,6 @@ const tests = [
       },
     };
   },
-
-  /*
-   * Abandonment tests.
-   */
-
-  async function(win) {
-    info("Type something, blur.");
-    win.gURLBar.select();
-    EventUtils.synthesizeKey("x", {}, win);
-    win.gURLBar.blur();
-    return {
-      category: "urlbar",
-      method: "abandonment",
-      object: "blur",
-      value: "typed",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "1",
-        numWords: "1",
-      },
-    };
-  },
-
-  async function(win) {
-    info("Open the panel with DOWN, don't type, blur it.");
-    await addTopSite("http://example.org/");
-    win.gURLBar.value = "";
-    win.gURLBar.select();
-    await UrlbarTestUtils.promisePopupOpen(win, () => {
-      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-    });
-    win.gURLBar.blur();
-    return {
-      category: "urlbar",
-      method: "abandonment",
-      object: "blur",
-      value: "topsites",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "0",
-        numWords: "0",
-      },
-    };
-  },
-
-  async function(win) {
-    info("With pageproxystate=valid, autoopen the panel, don't type, blur it.");
-    win.gURLBar.value = "";
-    await UrlbarTestUtils.promisePopupOpen(win, () => {
-      win.document.getElementById("Browser:OpenLocation").doCommand();
-    });
-    win.gURLBar.blur();
-    return {
-      category: "urlbar",
-      method: "abandonment",
-      object: "blur",
-      value: "topsites",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "0",
-        numWords: "0",
-      },
-    };
-  },
-
-  async function(win) {
-    info("Enter search mode from Top Sites.");
-    await updateTopSites(sites => true, /* enableSearchShorcuts */ true);
-
-    win.gURLBar.value = "";
-    win.gURLBar.select();
-    await UrlbarTestUtils.promisePopupOpen(win, () => {
-      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-    });
-    while (win.gURLBar.searchMode?.engineName != "Google") {
-      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-    }
-    let element = UrlbarTestUtils.getSelectedRow(win);
-    Assert.ok(
-      element.result.source == UrlbarUtils.RESULT_SOURCE.SEARCH,
-      "The selected result is a search Top Site."
-    );
-
-    let engine = element.result.payload.engine;
-    let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
-    EventUtils.synthesizeMouseAtCenter(element, {}, win);
-    await searchPromise;
-    await UrlbarTestUtils.assertSearchMode(win, {
-      engineName: engine,
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-      entry: "topsites_urlbar",
-    });
-
-    await UrlbarTestUtils.exitSearchMode(win);
-
-    // To avoid needing to add a custom search shortcut Top Site, we just
-    // abandon this interaction.
-    await UrlbarTestUtils.promisePopupClose(win, () => {
-      win.gURLBar.blur();
-    });
-
-    return {
-      category: "urlbar",
-      method: "abandonment",
-      object: "blur",
-      value: "topsites",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "0",
-        numWords: "0",
-      },
-    };
-  },
-
-  async function(win) {
-    info("Open search mode from a tab-to-search result.");
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
-    });
-
-    await PlacesUtils.history.clear();
-    for (let i = 0; i < 3; i++) {
-      await PlacesTestUtils.addVisits([`https://${TEST_ENGINE_DOMAIN}/`]);
-    }
-
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window: win,
-      value: TEST_ENGINE_DOMAIN.slice(0, 4),
-    });
-
-    let tabToSearchResult = (
-      await UrlbarTestUtils.waitForAutocompleteResultAt(win, 1)
-    ).result;
-    Assert.equal(
-      tabToSearchResult.providerName,
-      "TabToSearch",
-      "The second result is a tab-to-search result."
-    );
-
-    // Select the tab-to-search result.
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    let searchPromise = UrlbarTestUtils.promiseSearchComplete(win);
-    EventUtils.synthesizeKey("KEY_Enter");
-    await searchPromise;
-    await UrlbarTestUtils.assertSearchMode(win, {
-      engineName: TEST_ENGINE_NAME,
-      entry: "tabtosearch",
-    });
-
-    // Abandon the interaction since simply entering search mode is not
-    // considered the end of an engagement.
-    await UrlbarTestUtils.promisePopupClose(win, () => {
-      win.gURLBar.blur();
-    });
-
-    await PlacesUtils.history.clear();
-    await SpecialPowers.popPrefEnv();
-
-    return {
-      category: "urlbar",
-      method: "abandonment",
-      object: "blur",
-      value: "typed",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "0",
-        numWords: "0",
-      },
-    };
-  },
-
-  async function(win) {
-    info(
-      "With pageproxystate=invalid, open retained results, don't type, blur it."
-    );
-    win.gURLBar.value = "mochi.test";
-    win.gURLBar.setPageProxyState("invalid");
-    await UrlbarTestUtils.promisePopupOpen(win, () => {
-      win.document.getElementById("Browser:OpenLocation").doCommand();
-    });
-    win.gURLBar.blur();
-    return {
-      category: "urlbar",
-      method: "abandonment",
-      object: "blur",
-      value: "returned",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "10",
-        numWords: "1",
-      },
-    };
-  },
-];
-
-const noEventTests = [
-  async function(win) {
-    info("Type something, click on search settings.");
-    await BrowserTestUtils.withNewTab(
-      { gBrowser: win.gBrowser, url: "about:blank" },
-      async browser => {
-        win.gURLBar.select();
-        let promise = BrowserTestUtils.browserLoaded(browser);
-        await UrlbarTestUtils.promiseAutocompleteResultPopup({
-          window: win,
-          value: "x",
-          fireInputEvent: true,
-        });
-        UrlbarTestUtils.getOneOffSearchButtons(
-          win
-        ).settingsButtonCompact.click();
-        await promise;
-      }
-    );
-    return null;
-  },
-
-  async function(win) {
-    info("Type something, Up, Enter on search settings.");
-    await BrowserTestUtils.withNewTab(
-      { gBrowser: win.gBrowser, url: "about:blank" },
-      async browser => {
-        win.gURLBar.select();
-        let promise = BrowserTestUtils.browserLoaded(browser);
-        await UrlbarTestUtils.promiseAutocompleteResultPopup({
-          window: win,
-          value: "x",
-          fireInputEvent: true,
-        });
-        EventUtils.synthesizeKey("KEY_ArrowUp", {}, win);
-        Assert.ok(
-          UrlbarTestUtils.getOneOffSearchButtons(
-            win
-          ).selectedButton.classList.contains("search-setting-button"),
-          "Should have selected the settings button"
-        );
-        EventUtils.synthesizeKey("VK_RETURN", {}, win);
-        await promise;
-      }
-    );
-    return null;
-  },
 ];
 
 add_task(async function test() {
@@ -1400,35 +1140,15 @@ add_task(async function test() {
     keyword: "kw",
     url: "http://example.com/?q=%s",
   });
-  await PlacesTestUtils.addVisits([
-    {
-      uri: "http://mochi.test:8888/",
-      transition: PlacesUtils.history.TRANSITIONS.TYPED,
-    },
-  ]);
 
-  // This test used to rely on the initial timer of
-  // TestUtils.waitForCondition. See bug 1667216.
-  let originalWaitForCondition = TestUtils.waitForCondition;
-  TestUtils.waitForCondition = async function(
-    condition,
-    msg,
-    interval = 100,
-    maxTries = 50
-  ) {
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    return originalWaitForCondition(condition, msg, interval, maxTries);
-  };
+  const win = await BrowserTestUtils.openNewBrowserWindow();
 
   registerCleanupFunction(async function() {
     await Services.search.setDefault(oldDefaultEngine);
     await PlacesUtils.keywords.remove("kw");
     await PlacesUtils.bookmarks.remove(bm);
     await PlacesUtils.history.clear();
-    await UrlbarTestUtils.formHistory.clear(window);
-    TestUtils.waitForCondition = originalWaitForCondition;
+    await UrlbarTestUtils.formHistory.clear(win);
   });
 
   // This is not necessary after each loop, because assertEvents does it.
@@ -1436,24 +1156,18 @@ add_task(async function test() {
 
   for (let i = 0; i < tests.length; i++) {
     info(`Running test at index ${i}`);
-    let events = await tests[i](window);
+    let events = await tests[i](win);
     if (!Array.isArray(events)) {
       events = [events];
     }
     // Always blur to ensure it's not accounted as an additional abandonment.
-    window.gURLBar.setSearchMode({});
-    gURLBar.blur();
+    win.gURLBar.setSearchMode({});
+    win.gURLBar.blur();
     TelemetryTestUtils.assertEvents(events, { category: "urlbar" });
-    await UrlbarTestUtils.formHistory.clear(window);
+    await UrlbarTestUtils.formHistory.clear(win);
   }
 
-  for (let i = 0; i < noEventTests.length; i++) {
-    info(`Running no event test at index ${i}`);
-    await noEventTests[i](window);
-    // Always blur to ensure it's not accounted as an additional abandonment.
-    gURLBar.blur();
-    TelemetryTestUtils.assertEvents([], { category: "urlbar" });
-  }
+  await BrowserTestUtils.closeWindow(win);
 });
 
 /**
