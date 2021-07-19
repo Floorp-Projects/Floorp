@@ -431,6 +431,7 @@ nsWindow::nsWindow()
       mWindowScaleFactorChanged(true),
       mWindowScaleFactor(1),
       mCompositedScreen(gdk_screen_is_composited(gdk_screen_get_default())),
+      mIsAccelerated(false),
       mShell(nullptr),
       mContainer(nullptr),
       mGdkWindow(nullptr),
@@ -5209,9 +5210,9 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       }
 
       bool isGLVisualSet = false;
-      bool isAccelerated = ComputeShouldAccelerate();
+      mIsAccelerated = ComputeShouldAccelerate();
 #ifdef MOZ_X11
-      if (isAccelerated) {
+      if (mIsAccelerated) {
         isGLVisualSet = ConfigureX11GLVisual(popupNeedsAlphaVisual ||
                                              toplevelNeedsAlphaVisual);
       }
@@ -5368,7 +5369,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       GtkWidget* container = moz_container_new();
       mContainer = MOZ_CONTAINER(container);
 #ifdef MOZ_WAYLAND
-      if (GdkIsWaylandDisplay() && isAccelerated) {
+      if (GdkIsWaylandDisplay() && mIsAccelerated) {
         mCompositorInitiallyPaused = true;
         RefPtr<nsWindow> self(this);
         moz_container_wayland_add_initial_draw_callback(
@@ -5436,7 +5437,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       // the drawing window
       mGdkWindow = gtk_widget_get_window(eventWidget);
 
-      if (GdkIsX11Display() && gfx::gfxVars::UseEGL() && isAccelerated) {
+      if (GdkIsX11Display() && gfx::gfxVars::UseEGL() && mIsAccelerated) {
         mCompositorInitiallyPaused = true;
         mNeedsCompositorResume = true;
         MaybeResumeCompositor();
@@ -5892,37 +5893,36 @@ void nsWindow::MaybeResumeCompositor() {
 }
 
 void nsWindow::PauseCompositor() {
-  if (!mIsDestroyed) {
-    if (mContainer) {
-      // Because wl_egl_window is destroyed on moz_container_unmap(),
-      // the current compositor cannot use it anymore. To avoid crash,
-      // pause the compositor and destroy EGLSurface & resume the compositor
-      // and re-create EGLSurface on next expose event.
+  // Because wl_egl_window is destroyed on moz_container_unmap(),
+  // the current compositor cannot use it anymore. To avoid crash,
+  // pause the compositor and destroy EGLSurface & resume the compositor
+  // and re-create EGLSurface on next expose event.
 
-      // moz_container_wayland_has_egl_window() could not be used here, since
-      // there is a case that resume compositor is not completed yet.
+  // moz_container_wayland_has_egl_window() could not be used here, since
+  // there is a case that resume compositor is not completed yet.
+  if (!mIsAccelerated || mIsDestroyed) {
+    return;
+  }
 
-      CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
-      bool needsCompositorPause = !mNeedsCompositorResume && !!remoteRenderer &&
-                                  mCompositorWidgetDelegate;
-      if (needsCompositorPause) {
-        // XXX slow sync IPC
-        remoteRenderer->SendPause();
+  CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
+  bool needsCompositorPause =
+      !mNeedsCompositorResume && !!remoteRenderer && mCompositorWidgetDelegate;
+  if (needsCompositorPause) {
+    // XXX slow sync IPC
+    remoteRenderer->SendPause();
 #ifdef MOZ_WAYLAND
-        if (GdkIsWaylandDisplay()) {
-          // Re-request initial draw callback
-          RefPtr<nsWindow> self(this);
-          moz_container_wayland_add_initial_draw_callback(
-              mContainer, [self]() -> void {
-                self->mNeedsCompositorResume = true;
-                self->MaybeResumeCompositor();
-              });
-        }
-#endif
-      } else {
-        DestroyLayerManager();
-      }
+    if (GdkIsWaylandDisplay()) {
+      // Re-request initial draw callback
+      RefPtr<nsWindow> self(this);
+      moz_container_wayland_add_initial_draw_callback(
+          mContainer, [self]() -> void {
+            self->mNeedsCompositorResume = true;
+            self->MaybeResumeCompositor();
+          });
     }
+#endif
+  } else {
+    DestroyLayerManager();
   }
 }
 
