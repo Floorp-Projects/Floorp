@@ -1440,7 +1440,25 @@ void nsLookAndFeel::PerThemeData::Init() {
   }
 
   style = GetStyleContext(MOZ_GTK_MENUPOPUP);
-  mMenuBackground = GetBackgroundColor(style, mMenuText);
+  mMenuBackground = [&] {
+    nscolor color = GetBackgroundColor(style, mMenuText);
+    if (NS_GET_A(color)) {
+      return color;
+    }
+    // Some themes only style menupopups with the backdrop pseudo-class. Since a
+    // context / popup menu always seems to match that, try that before giving
+    // up.
+    color = GetBackgroundColor(style, mMenuText, GTK_STATE_FLAG_BACKDROP);
+    if (NS_GET_A(color)) {
+      return color;
+    }
+    // If we get here we couldn't figure out the right color to use. Rather than
+    // falling back to transparent, fall back to the window background.
+    NS_WARNING(
+        "Couldn't find menu background color, falling back to window "
+        "background");
+    return mMozWindowBackground;
+  }();
 
   style = GetStyleContext(MOZ_GTK_MENUITEM);
   gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
