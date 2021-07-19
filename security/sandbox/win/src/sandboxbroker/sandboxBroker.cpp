@@ -652,8 +652,8 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     }
   }
 
-  if (StaticPrefs::security_sandbox_content_shadow_stacks_strict()) {
-    mitigations |= sandbox::MITIGATION_CET_STRICT_MODE;
+  if (StaticPrefs::security_sandbox_content_shadow_stack_enabled()) {
+    mitigations |= sandbox::MITIGATION_CET_COMPAT_MODE;
   }
 
   result = mPolicy->SetProcessMitigations(mitigations);
@@ -887,8 +887,8 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_DEP_NO_ATL_THUNK |
       sandbox::MITIGATION_DEP;
 
-  if (StaticPrefs::security_sandbox_gpu_shadow_stacks_strict()) {
-    mitigations |= sandbox::MITIGATION_CET_STRICT_MODE;
+  if (StaticPrefs::security_sandbox_gpu_shadow_stack_enabled()) {
+    mitigations |= sandbox::MITIGATION_CET_COMPAT_MODE;
   }
 
   result = mPolicy->SetProcessMitigations(mitigations);
@@ -1037,8 +1037,8 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
     mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
   }
 
-  if (StaticPrefs::security_sandbox_rdd_shadow_stacks_strict()) {
-    mitigations |= sandbox::MITIGATION_CET_STRICT_MODE;
+  if (StaticPrefs::security_sandbox_rdd_shadow_stack_enabled()) {
+    mitigations |= sandbox::MITIGATION_CET_COMPAT_MODE;
   }
 
   result = mPolicy->SetProcessMitigations(mitigations);
@@ -1144,8 +1144,8 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
       sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
 
-  if (StaticPrefs::security_sandbox_socket_shadow_stacks_strict()) {
-    mitigations |= sandbox::MITIGATION_CET_STRICT_MODE;
+  if (StaticPrefs::security_sandbox_socket_shadow_stack_enabled()) {
+    mitigations |= sandbox::MITIGATION_CET_COMPAT_MODE;
   }
 
   result = mPolicy->SetProcessMitigations(mitigations);
@@ -1239,8 +1239,8 @@ bool SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP;
 
-  if (StaticPrefs::security_sandbox_gmp_shadow_stacks_strict()) {
-    mitigations |= sandbox::MITIGATION_CET_STRICT_MODE;
+  if (StaticPrefs::security_sandbox_gmp_shadow_stack_enabled()) {
+    mitigations |= sandbox::MITIGATION_CET_COMPAT_MODE;
   }
 
   result = mPolicy->SetProcessMitigations(mitigations);

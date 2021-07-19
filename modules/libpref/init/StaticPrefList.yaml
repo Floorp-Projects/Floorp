@@ -10615,32 +10615,29 @@
     value: true
     mirror: always
 
-  # Whether CET Shadow Stacks Strict mode is enabled for the content processes.
--   name: security.sandbox.content.shadow-stacks-strict
+  # Whether CET User Shadow Stack compatible modules only is enabled for the
+  # relevant process type.
+-   name: security.sandbox.content.shadow-stack.enabled
     type: RelaxedAtomicBool
     value: false
     mirror: always
 
-  # Whether CET Shadow Stacks Strict mode is enabled for the RDD processes.
--   name: security.sandbox.rdd.shadow-stacks-strict
+-   name: security.sandbox.rdd.shadow-stack.enabled
     type: RelaxedAtomicBool
     value: false
     mirror: always
 
-  # Whether CET Shadow Stacks Strict mode is enabled for the socket processes.
--   name: security.sandbox.socket.shadow-stacks-strict
+-   name: security.sandbox.socket.shadow-stack.enabled
     type: RelaxedAtomicBool
     value: false
     mirror: always
 
-  # Whether CET Shadow Stacks Strict mode is enabled for the GPU processes.
--   name: security.sandbox.gpu.shadow-stacks-strict
+-   name: security.sandbox.gpu.shadow-stack.enabled
     type: RelaxedAtomicBool
     value: false
     mirror: always
 
-  # Whether CET Shadow Stacks Strict mode is enabled for the GMP processes.
--   name: security.sandbox.gmp.shadow-stacks-strict
+-   name: security.sandbox.gmp.shadow-stack.enabled
     type: RelaxedAtomicBool
     value: false
     mirror: always
