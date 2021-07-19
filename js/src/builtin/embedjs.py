@@ -48,7 +48,6 @@ import shlex
 import buildconfig
 import mozpack.path as mozpath
 from mozfile import which
-from mozbuild.util import ensure_bytes
 
 
 def ToCAsciiArray(lines):
@@ -115,7 +114,7 @@ def embed(
     js_out.write(processed)
     import zlib
 
-    compressed = zlib.compress(ensure_bytes(processed))
+    compressed = zlib.compress(processed.encode("utf-8"))
     data = ToCArray(compressed)
     c_out.write(
         HEADER_TEMPLATE
@@ -144,7 +143,7 @@ def preprocess(cxx, preprocessorOption, source, args=[]):
     outputArg = shlex.split(preprocessorOption + tmpOut)
 
     with open(tmpIn, "wb") as input:
-        input.write(ensure_bytes(source))
+        input.write(source.encode("utf-8"))
     print(" ".join(cxx + outputArg + args + [tmpIn]))
     result = subprocess.Popen(cxx + outputArg + args + [tmpIn]).wait()
     if result != 0:
