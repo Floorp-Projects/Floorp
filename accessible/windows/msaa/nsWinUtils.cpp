@@ -19,7 +19,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "nsXULAppAPI.h"
-#include "ProxyWrappers.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -146,8 +145,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
           DocAccessibleParent* docParent = static_cast<DocAccessibleParent*>(
               ::GetPropW(hWnd, kPropNameDocAccParent));
           if (docParent) {
-            auto wrapper = WrapperFor(docParent);
-            wrapper->GetNativeInterface(
+            docParent->GetCOMInterface(
                 (void**)&msaaAccessible);  // does an addref
           }
         }
