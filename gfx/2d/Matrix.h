@@ -1432,7 +1432,7 @@ class Matrix4x4Typed {
     }
 
     // Extract rotation
-    rotation.SetFromRotationMatrix(*this);
+    rotation.SetFromRotationMatrix(this->ToUnknownMatrix());
     return true;
   }
 
