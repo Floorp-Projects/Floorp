@@ -254,7 +254,7 @@ cairo_type1_font_subset_find_segments (cairo_type1_font_subset_t *font)
 	font->eexec_segment = (char *) p + font->header_segment_size;
 	font->eexec_segment_is_ascii = TRUE;
 	for (i = 0; i < 4; i++) {
-	    if (!isxdigit(font->eexec_segment[i]))
+	    if (!_cairo_isxdigit (font->eexec_segment[i]))
 		font->eexec_segment_is_ascii = FALSE;
 	}
     }
