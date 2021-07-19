@@ -271,6 +271,7 @@ class Talos(
 
         self.run_local = self.config.get("run_local")
         self.installer_url = self.config.get("installer_url")
+        self.test_packages_url = self.config.get("test_packages_url")
         self.talos_json_url = self.config.get("talos_json_url")
         self.talos_json = self.config.get("talos_json")
         self.talos_json_config = self.config.get("talos_json_config")
