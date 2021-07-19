@@ -4081,9 +4081,10 @@ bool IsWaylandEnabled() {
     return false;
   }
 
+  const char* x11Display = PR_GetEnv("DISPLAY");
   // MOZ_ENABLE_WAYLAND is our primary Wayland on/off switch.
   const char* waylandPref = PR_GetEnv("MOZ_ENABLE_WAYLAND");
-  bool enableWayland = (waylandPref && *waylandPref);
+  bool enableWayland = !x11Display || (waylandPref && *waylandPref);
   if (!enableWayland) {
     const char* backendPref = PR_GetEnv("GDK_BACKEND");
     enableWayland = (backendPref && strncmp(backendPref, "wayland", 7) == 0);
