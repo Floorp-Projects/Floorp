@@ -19,6 +19,7 @@
 #include "sdnAccessible.h"
 
 #include "mozilla/mscom/AsyncInvoker.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -209,24 +210,27 @@ void AccessibleWrap::InvalidateHandlers() {
   }
 }
 
-bool AccessibleWrap::DispatchTextChangeToHandler(bool aIsInsert,
+/* static */
+bool AccessibleWrap::DispatchTextChangeToHandler(Accessible* aAcc,
+                                                 bool aIsInsert,
                                                  const nsString& aText,
                                                  int32_t aStart,
                                                  uint32_t aLen) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
 
   if (!sHandlerControllers || sHandlerControllers->IsEmpty()) {
     return false;
   }
 
-  HWND hwnd = MsaaAccessible::GetHWNDFor(this);
+  HWND hwnd = MsaaAccessible::GetHWNDFor(aAcc);
   MOZ_ASSERT(hwnd);
   if (!hwnd) {
     return false;
   }
 
-  long msaaId = MsaaAccessible::GetChildIDFor(this);
+  long msaaId = MsaaAccessible::GetChildIDFor(aAcc);
 
   DWORD ourPid = ::GetCurrentProcessId();
 
