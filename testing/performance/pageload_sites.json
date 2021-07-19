@@ -16,12 +16,6 @@
       "test_url": "https://www.amazon.com/s/ref=nb_sb_noss_2/139-6317191-5622045?url=search-alias%3Daps&field-keywords=mobile+phone"
     },
     {
-      "login": true,
-      "comment": "not login test but fails to load",
-      "name": "bbc",
-      "test_url": "https://www.bbc.com/news/business-47245877"
-    },
-    {
       "login": false,
       "name": "bing",
       "test_url": "https://www.bing.com/"
@@ -45,6 +39,11 @@
       "login": false,
       "name": "cnn-ampstories",
       "test_url": "https://cnn.com/ampstories/us/why-hurricane-michael-is-a-monster-unlike-any-other"
+    },
+    {
+      "login": false,
+      "name": "dailymail",
+      "test_url": "https://www.dailymail.co.uk/sciencetech/article-9749081/Experts-say-Hubble-repair-despite-NASA-insisting-multiple-options-fix.html"
     },
     {
       "login": false,
