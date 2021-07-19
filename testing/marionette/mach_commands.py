@@ -80,33 +80,37 @@ class MarionetteTest(MachCommandBase):
             del kwargs["test_objects"]
 
         if not tests:
-            if conditions.is_thunderbird(self):
+            if conditions.is_thunderbird(command_context):
                 tests = [
                     os.path.join(
-                        self.topsrcdir, "comm/testing/marionette/unit-tests.ini"
+                        command_context.topsrcdir,
+                        "comm/testing/marionette/unit-tests.ini",
                     )
                 ]
             else:
                 tests = [
                     os.path.join(
-                        self.topsrcdir,
+                        command_context.topsrcdir,
                         "testing/marionette/harness/marionette_harness/tests/unit-tests.ini",
                     )
                 ]
 
         if not kwargs.get("binary") and (
-            conditions.is_firefox(self) or conditions.is_thunderbird(self)
+            conditions.is_firefox(command_context)
+            or conditions.is_thunderbird(command_context)
         ):
             try:
-                kwargs["binary"] = self.get_binary_path("app")
+                kwargs["binary"] = command_context.get_binary_path("app")
             except BinaryNotFoundException as e:
-                self.log(
+                command_context.log(
                     logging.ERROR,
                     "marionette-test",
                     {"error": str(e)},
                     "ERROR: {error}",
                 )
-                self.log(logging.INFO, "marionette-test", {"help": e.help()}, "{help}")
+                command_context.log(
+                    logging.INFO, "marionette-test", {"help": e.help()}, "{help}"
+                )
                 return 1
 
-        return run_marionette(tests, topsrcdir=self.topsrcdir, **kwargs)
+        return run_marionette(tests, topsrcdir=command_context.topsrcdir, **kwargs)

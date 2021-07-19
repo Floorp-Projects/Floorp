@@ -36,7 +36,7 @@ class WebIDLProvider(MachCommandBase):
     def webidl_example(self, command_context, interface):
         from mozwebidlcodegen import BuildSystemWebIDL
 
-        manager = self._spawn(BuildSystemWebIDL).manager
+        manager = command_context._spawn(BuildSystemWebIDL).manager
         for i in interface:
             manager.generate_example_files(i)
 
@@ -47,15 +47,17 @@ class WebIDLProvider(MachCommandBase):
         description="Run WebIDL tests (Interface Browser parser).",
     )
     def webidl_test(self, command_context, **kwargs):
-        sys.path.insert(0, os.path.join(self.topsrcdir, "other-licenses", "ply"))
+        sys.path.insert(
+            0, os.path.join(command_context.topsrcdir, "other-licenses", "ply")
+        )
 
         # Ensure the topobjdir exists. On a Taskcluster test run there won't be
         # an objdir yet.
-        mkdir(self.topobjdir)
+        mkdir(command_context.topobjdir)
 
         # Make sure we drop our cached grammar bits in the objdir, not
         # wherever we happen to be running from.
-        os.chdir(self.topobjdir)
+        os.chdir(command_context.topobjdir)
 
         if kwargs["verbose"] is None:
             kwargs["verbose"] = False
@@ -64,7 +66,7 @@ class WebIDLProvider(MachCommandBase):
         # objdir.  But we're going to try loading it as a python
         # module, so we need to make sure the objdir is in our search
         # path.
-        sys.path.insert(0, self.topobjdir)
+        sys.path.insert(0, command_context.topobjdir)
 
         import runtests
 

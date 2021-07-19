@@ -173,35 +173,35 @@ class MachCommands(MachCommandBase):
         "taskgraph", "tasks", description="Show all tasks in the taskgraph"
     )
     def taskgraph_tasks(self, command_context, **options):
-        return self.show_taskgraph("full_task_set", options)
+        return self.show_taskgraph(command_context, "full_task_set", options)
 
     @ShowTaskGraphSubCommand("taskgraph", "full", description="Show the full taskgraph")
     def taskgraph_full(self, command_context, **options):
-        return self.show_taskgraph("full_task_graph", options)
+        return self.show_taskgraph(command_context, "full_task_graph", options)
 
     @ShowTaskGraphSubCommand(
         "taskgraph", "target", description="Show the target task set"
     )
     def taskgraph_target(self, command_context, **options):
-        return self.show_taskgraph("target_task_set", options)
+        return self.show_taskgraph(command_context, "target_task_set", options)
 
     @ShowTaskGraphSubCommand(
         "taskgraph", "target-graph", description="Show the target taskgraph"
     )
     def taskgraph_target_taskgraph(self, command_context, **options):
-        return self.show_taskgraph("target_task_graph", options)
+        return self.show_taskgraph(command_context, "target_task_graph", options)
 
     @ShowTaskGraphSubCommand(
         "taskgraph", "optimized", description="Show the optimized taskgraph"
     )
     def taskgraph_optimized(self, command_context, **options):
-        return self.show_taskgraph("optimized_task_graph", options)
+        return self.show_taskgraph(command_context, "optimized_task_graph", options)
 
     @ShowTaskGraphSubCommand(
         "taskgraph", "morphed", description="Show the morphed taskgraph"
     )
     def taskgraph_morphed(self, command_context, **options):
-        return self.show_taskgraph("morphed_task_graph", options)
+        return self.show_taskgraph(command_context, "morphed_task_graph", options)
 
     @SubCommand("taskgraph", "actions", description="Write actions.json to stdout")
     @CommandArgument(
@@ -224,7 +224,7 @@ class MachCommands(MachCommandBase):
         "`taskcluster/docs/parameters.rst`)`",
     )
     def taskgraph_actions(self, command_context, **options):
-        return self.show_actions(options)
+        return self.show_actions(command_context, options)
 
     @SubCommand("taskgraph", "decision", description="Run the decision task")
     @CommandArgument(
@@ -349,7 +349,7 @@ class MachCommands(MachCommandBase):
         import taskgraph.decision
 
         try:
-            self.setup_logging()
+            self.setup_logging(command_context)
             start = time.monotonic()
             ret = taskgraph.decision.taskgraph_decision(options)
             end = time.monotonic()
@@ -403,7 +403,7 @@ class MachCommands(MachCommandBase):
         from taskgraph.actions.util import get_parameters
 
         try:
-            self.setup_logging()
+            self.setup_logging(command_context)
 
             # the target task for this action (or null if it's a group action)
             task_id = json.loads(os.environ.get("ACTION_TASK_ID", "null"))
@@ -471,7 +471,7 @@ class MachCommands(MachCommandBase):
                     raise Exception("unknown filename {}".format(filename))
 
         try:
-            self.setup_logging()
+            self.setup_logging(command_context)
             task_id = options["task_id"]
 
             if options["input"]:
@@ -502,19 +502,19 @@ class MachCommands(MachCommandBase):
             traceback.print_exc()
             sys.exit(1)
 
-    def setup_logging(self, quiet=False, verbose=True):
+    def setup_logging(self, command_context, quiet=False, verbose=True):
         """
         Set up Python logging for all loggers, sending results to stderr (so
         that command output can be redirected easily) and adding the typical
         mach timestamp.
         """
         # remove the old terminal handler
-        old = self.log_manager.replace_terminal_handler(None)
+        old = command_context.log_manager.replace_terminal_handler(None)
 
         # re-add it, with level and fh set appropriately
         if not quiet:
             level = logging.DEBUG if verbose else logging.INFO
-            self.log_manager.add_terminal_logging(
+            command_context.log_manager.add_terminal_logging(
                 fh=sys.stderr,
                 level=level,
                 write_interval=old.formatter.write_interval,
@@ -522,10 +522,12 @@ class MachCommands(MachCommandBase):
             )
 
         # all of the taskgraph logging is unstructured logging
-        self.log_manager.enable_unstructured()
+        command_context.log_manager.enable_unstructured()
 
-    def show_taskgraph(self, graph_attr, options):
-        self.setup_logging(quiet=options["quiet"], verbose=options["verbose"])
+    def show_taskgraph(self, command_context, graph_attr, options):
+        self.setup_logging(
+            command_context, quiet=options["quiet"], verbose=options["verbose"]
+        )
         vcs = None
         base_out = ""
         base_ref = None
@@ -534,7 +536,7 @@ class MachCommands(MachCommandBase):
         if options["diff"]:
             from mozversioncontrol import get_repository_object
 
-            vcs = get_repository_object(self.topsrcdir)
+            vcs = get_repository_object(command_context.topsrcdir)
             with vcs:
                 if not vcs.working_directory_clean():
                     print("abort: can't diff taskgraph with dirty working directory")
@@ -571,7 +573,7 @@ class MachCommands(MachCommandBase):
                 finally:
                     vcs.update(cur_ref)
 
-            diffcmd = self._mach_context.settings["taskgraph"]["diffcmd"]
+            diffcmd = command_context._mach_context.settings["taskgraph"]["diffcmd"]
             diffcmd = diffcmd.format(attr=graph_attr, base=base_ref, cur=cur_ref)
 
             with tempfile.NamedTemporaryFile(mode="w") as base:
@@ -677,14 +679,16 @@ class MachCommands(MachCommandBase):
         )
         return filtered_taskgraph
 
-    def show_actions(self, options):
+    def show_actions(self, command_context, options):
         import taskgraph
         import taskgraph.actions
         import taskgraph.generator
         import taskgraph.parameters
 
         try:
-            self.setup_logging(quiet=options["quiet"], verbose=options["verbose"])
+            self.setup_logging(
+                command_context, quiet=options["quiet"], verbose=options["verbose"]
+            )
             parameters = taskgraph.parameters.parameters_loader(options["parameters"])
 
             tgg = taskgraph.generator.TaskGraphGenerator(

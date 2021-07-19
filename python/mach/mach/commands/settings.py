@@ -7,11 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from textwrap import TextWrapper
 
 from mach.config import TYPE_CLASSES
-from mach.decorators import (
-    CommandArgument,
-    CommandProvider,
-    Command,
-)
+from mach.decorators import CommandArgument, CommandProvider, Command
 from mozbuild.base import MachCommandBase
 
 
@@ -38,12 +34,14 @@ class Settings(MachCommandBase):
         """List available settings."""
         types = {v: k for k, v in TYPE_CLASSES.items()}
         wrapper = TextWrapper(initial_indent="# ", subsequent_indent="# ")
-        for i, section in enumerate(sorted(self._mach_context.settings)):
+        for i, section in enumerate(sorted(command_context._mach_context.settings)):
             if not short:
                 print("%s[%s]" % ("" if i == 0 else "\n", section))
 
-            for option in sorted(self._mach_context.settings[section]._settings):
-                meta = self._mach_context.settings[section].get_meta(option)
+            for option in sorted(
+                command_context._mach_context.settings[section]._settings
+            ):
+                meta = command_context._mach_context.settings[section].get_meta(option)
                 desc = meta["description"]
 
                 if short:

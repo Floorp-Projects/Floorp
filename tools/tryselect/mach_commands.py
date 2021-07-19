@@ -70,13 +70,13 @@ class TryConfig:
 
 @CommandProvider
 class TrySelect(MachCommandBase):
-    def init(self):
+    def init(self, command_context):
         from tryselect import push
 
-        push.MAX_HISTORY = self._mach_context.settings["try"]["maxhistory"]
+        push.MAX_HISTORY = command_context._mach_context.settings["try"]["maxhistory"]
 
     @memoize
-    def presets(self):
+    def presets(self, command_context):
         from tryselect.preset import MergedHandler
 
         # Create our handler using both local and in-tree presets. The first
@@ -88,12 +88,16 @@ class TrySelect(MachCommandBase):
         else:
             preset_paths = [
                 os.path.join(get_state_dir(), "try_presets.yml"),
-                os.path.join(self.topsrcdir, "tools", "tryselect", "try_presets.yml"),
+                os.path.join(
+                    command_context.topsrcdir, "tools", "tryselect", "try_presets.yml"
+                ),
             ]
 
         return MergedHandler(*preset_paths)
 
-    def handle_presets(self, preset_action=None, save=None, preset=None, **kwargs):
+    def handle_presets(
+        self, command_context, preset_action=None, save=None, preset=None, **kwargs
+    ):
         """Handle preset related arguments.
 
         This logic lives here so that the underlying selectors don't need
@@ -102,23 +106,25 @@ class TrySelect(MachCommandBase):
         """
         from tryselect.util.dicttools import merge
 
-        user_presets = self.presets().handlers[0]
+        user_presets = self.presets(command_context).handlers[0]
         if preset_action == "list":
-            self.presets().list()
+            self.presets(command_context).list()
             sys.exit()
 
         if preset_action == "edit":
             user_presets.edit()
             sys.exit()
 
-        parser = self._mach_context.handler.parser
-        subcommand = self._mach_context.handler.subcommand
+        parser = command_context._mach_context.handler.parser
+        subcommand = command_context._mach_context.handler.subcommand
         if "preset" not in parser.common_groups:
             return kwargs
 
         default = parser.get_default
         if save:
-            selector = subcommand or self._mach_context.settings["try"]["default"]
+            selector = (
+                subcommand or command_context._mach_context.settings["try"]["default"]
+            )
 
             # Only save non-default values for simplicity.
             kwargs = {k: v for k, v in kwargs.items() if v != default(k)}
@@ -127,13 +133,13 @@ class TrySelect(MachCommandBase):
             sys.exit()
 
         if preset:
-            if preset not in self.presets():
-                self._mach_context.parser.error(
+            if preset not in self.presets(command_context):
+                command_context._mach_context.parser.error(
                     "preset '{}' does not exist".format(preset)
                 )
 
             name = preset
-            preset = self.presets()[name]
+            preset = self.presets(command_context)[name]
             selector = preset.pop("selector")
             preset.pop("description", None)  # description isn't used by any selectors
 
@@ -162,12 +168,12 @@ class TrySelect(MachCommandBase):
 
         return kwargs
 
-    def handle_try_config(self, **kwargs):
+    def handle_try_config(self, command_context, **kwargs):
         from tryselect.util.dicttools import merge
 
         to_validate = []
         kwargs.setdefault("try_config", {})
-        for cls in self._mach_context.handler.parser.task_configs.values():
+        for cls in command_context._mach_context.handler.parser.task_configs.values():
             try_config = cls.try_config(**kwargs)
             if try_config is not None:
                 to_validate.append(cls)
@@ -182,14 +188,16 @@ class TrySelect(MachCommandBase):
             cls.validate(**kwargs)
         return kwargs
 
-    def run(self, **kwargs):
-        kwargs = self.handle_presets(**kwargs)
+    def run(self, command_context, **kwargs):
+        kwargs = self.handle_presets(command_context, **kwargs)
 
-        if self._mach_context.handler.parser.task_configs:
-            kwargs = self.handle_try_config(**kwargs)
+        if command_context._mach_context.handler.parser.task_configs:
+            kwargs = self.handle_try_config(command_context, **kwargs)
 
         mod = importlib.import_module(
-            "tryselect.selectors.{}".format(self._mach_context.handler.subcommand)
+            "tryselect.selectors.{}".format(
+                command_context._mach_context.handler.subcommand
+            )
         )
         return mod.run(**kwargs)
 
@@ -211,22 +219,22 @@ class TrySelect(MachCommandBase):
         default. Run |mach try auto --help| for more information on
         scheduling with the `auto` selector.
         """
-        self.init()
-        subcommand = self._mach_context.handler.subcommand
+        self.init(command_context)
+        subcommand = command_context._mach_context.handler.subcommand
         # We do special handling of presets here so that `./mach try --preset foo`
         # works no matter what subcommand 'foo' was saved with.
         preset = kwargs["preset"]
         if preset:
-            if preset not in self.presets():
-                self._mach_context.handler.parser.error(
+            if preset not in self.presets(command_context):
+                command_context._mach_context.handler.parser.error(
                     "preset '{}' does not exist".format(preset)
                 )
 
-            subcommand = self.presets()[preset]["selector"]
+            subcommand = self.presets(command_context)[preset]["selector"]
 
-        sub = subcommand or self._mach_context.settings["try"]["default"]
-        return self._mach_context.commands.dispatch(
-            "try", self._mach_context, subcommand=sub, argv=argv, **kwargs
+        sub = subcommand or command_context._mach_context.settings["try"]["default"]
+        return command_context._mach_context.commands.dispatch(
+            "try", command_context._mach_context, subcommand=sub, argv=argv, **kwargs
         )
 
     @SubCommand(
@@ -310,7 +318,7 @@ class TrySelect(MachCommandBase):
         For more detailed documentation, please see:
         https://firefox-source-docs.mozilla.org/tools/try/selectors/fuzzy.html
         """
-        self.init()
+        self.init(command_context)
         if kwargs.pop("interactive"):
             kwargs["query"].append("INTERACTIVE")
 
@@ -324,14 +332,14 @@ class TrySelect(MachCommandBase):
             kwargs_copy = kwargs.copy()
             kwargs_copy["push"] = False
             kwargs_copy["save"] = None
-            kwargs["query"] = self.run(save_query=True, **kwargs_copy)
+            kwargs["query"] = self.run(command_context, save_query=True, **kwargs_copy)
             if not kwargs["query"]:
                 return
 
         if kwargs.get("paths"):
             kwargs["test_paths"] = kwargs["paths"]
 
-        return self.run(**kwargs)
+        return self.run(command_context, **kwargs)
 
     @SubCommand(
         "try",
@@ -347,14 +355,14 @@ class TrySelect(MachCommandBase):
         has been made, pressing the 'Push' button will automatically push the
         selection to try.
         """
-        self.init()
-        self.activate_virtualenv()
+        self.init(command_context)
+        command_context.activate_virtualenv()
         path = os.path.join(
             "tools", "tryselect", "selectors", "chooser", "requirements.txt"
         )
-        self.virtualenv_manager.install_pip_requirements(path, quiet=True)
+        command_context.virtualenv_manager.install_pip_requirements(path, quiet=True)
 
-        return self.run(**kwargs)
+        return self.run(command_context, **kwargs)
 
     @SubCommand(
         "try",
@@ -365,8 +373,8 @@ class TrySelect(MachCommandBase):
         parser=get_parser("auto"),
     )
     def try_auto(self, command_context, **kwargs):
-        self.init()
-        return self.run(**kwargs)
+        self.init(command_context)
+        return self.run(command_context, **kwargs)
 
     @SubCommand(
         "try",
@@ -375,8 +383,8 @@ class TrySelect(MachCommandBase):
         parser=get_parser("again"),
     )
     def try_again(self, command_context, **kwargs):
-        self.init()
-        return self.run(**kwargs)
+        self.init(command_context)
+        return self.run(command_context, **kwargs)
 
     @SubCommand(
         "try",
@@ -393,8 +401,8 @@ class TrySelect(MachCommandBase):
         via Treeherder's Add New Jobs feature, located in the per-push
         menu.
         """
-        self.init()
-        return self.run(**kwargs)
+        self.init(command_context)
+        return self.run(command_context, **kwargs)
 
     @SubCommand(
         "try",
@@ -440,9 +448,9 @@ class TrySelect(MachCommandBase):
         (installable from mach vcs-setup).
 
         """
-        self.init()
+        self.init(command_context)
         try:
-            if self.substs.get("MOZ_ARTIFACT_BUILDS"):
+            if command_context.substs.get("MOZ_ARTIFACT_BUILDS"):
                 kwargs["local_artifact_build"] = True
         except BuildEnvironmentNotFoundException:
             # If we don't have a build locally, we can't tell whether
@@ -450,12 +458,12 @@ class TrySelect(MachCommandBase):
             # command to succeed, if possible.
             pass
 
-        config_status = os.path.join(self.topobjdir, "config.status")
+        config_status = os.path.join(command_context.topobjdir, "config.status")
         if (kwargs["paths"] or kwargs["tags"]) and not config_status:
             print(CONFIG_ENVIRONMENT_NOT_FOUND)
             sys.exit(1)
 
-        return self.run(**kwargs)
+        return self.run(command_context, **kwargs)
 
     @SubCommand(
         "try",
@@ -465,8 +473,8 @@ class TrySelect(MachCommandBase):
     )
     def try_coverage(self, command_context, **kwargs):
         """Select which tasks to use using coverage data."""
-        self.init()
-        return self.run(**kwargs)
+        self.init(command_context)
+        return self.run(command_context, **kwargs)
 
     @SubCommand(
         "try",
@@ -476,8 +484,8 @@ class TrySelect(MachCommandBase):
     )
     def try_release(self, command_context, **kwargs):
         """Push the current tree to try, configured for a staging release."""
-        self.init()
-        return self.run(**kwargs)
+        self.init(command_context)
+        return self.run(command_context, **kwargs)
 
     @SubCommand(
         "try",
@@ -490,5 +498,5 @@ class TrySelect(MachCommandBase):
 
         Requires VPN and shipit access.
         """
-        self.init()
-        return self.run(**kwargs)
+        self.init(command_context)
+        return self.run(command_context, **kwargs)
