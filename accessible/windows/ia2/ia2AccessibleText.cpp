@@ -13,7 +13,6 @@
 
 #include "HyperTextAccessibleWrap.h"
 #include "HyperTextAccessible-inl.h"
-#include "ProxyWrappers.h"
 #include "mozilla/ClearOnShutdown.h"
 
 using namespace mozilla::a11y;

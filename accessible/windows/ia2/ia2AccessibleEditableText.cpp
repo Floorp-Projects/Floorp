@@ -11,7 +11,6 @@
 #include "AccessibleEditableText_i.c"
 #include "HyperTextAccessible-inl.h"
 #include "HyperTextAccessibleWrap.h"
-#include "ProxyWrappers.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
