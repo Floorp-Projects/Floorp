@@ -465,6 +465,15 @@ class LinkFlags(BaseCompileFlags):
                 ),
                 ("LDFLAGS",),
             ),
+            (
+                "CETCOMPAT",
+                (
+                    context.config.substs.get("MOZ_CETCOMPAT_LDFLAGS")
+                    if context.config.substs.get("NIGHTLY_BUILD")
+                    else []
+                ),
+                ("LDFLAGS",),
+            ),
         )
         BaseCompileFlags.__init__(self, context)
 

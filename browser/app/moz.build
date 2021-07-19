@@ -94,6 +94,10 @@ if CONFIG["OS_ARCH"] == "WINNT":
         libpath_flag + OBJDIR + "/winlauncher/freestanding",
     ]
 
+    # Don't build firefox.exe with CETCOMPAT, because we need to be able to
+    # only enable it for processes that are not using JIT in xul.dll.
+    LINK_FLAGS["CETCOMPAT"] = []
+
 if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "Darwin":
     USE_LIBS += [
         "mozsandbox",
