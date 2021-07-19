@@ -1,9 +1,0 @@
-[
-  {
-    "algorithm": "sha512",
-    "digest": "83c6c843cf03c98db5fceb11051643b955c881c1226578697f37b5066f889ac3c090dfd86d298bd11391b47d904ace59b17f7d0fbe4249b8249bf317a2721a90",
-    "filename": "mitm4-pixel2-fennec-jianshu.zip",
-    "size": 10055373,
-    "visibility": "public"
-  }
-]
