@@ -101,7 +101,7 @@ void RenderThread::Start() {
 
   RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<RenderThread>(sRenderThread.get()), &RenderThread::InitDeviceTask);
-  sRenderThread->Loop()->PostTask(runnable.forget());
+  sRenderThread->PostRunnable(runnable.forget());
 }
 
 // static
@@ -118,7 +118,7 @@ void RenderThread::ShutDown() {
   RefPtr<Runnable> runnable =
       WrapRunnable(RefPtr<RenderThread>(sRenderThread.get()),
                    &RenderThread::ShutDownTask, &task);
-  sRenderThread->Loop()->PostTask(runnable.forget());
+  sRenderThread->PostRunnable(runnable.forget());
   task.Wait();
 
   layers::SharedSurfacesParent::Shutdown();
@@ -148,11 +148,6 @@ void RenderThread::ShutDownTask(layers::SynchronousTask* aTask) {
   ClearAllBlobImageResources();
   ClearSingletonGL();
   ClearSharedSurfacePool();
-}
-
-// static
-MessageLoop* RenderThread::Loop() {
-  return sRenderThread ? sRenderThread->mThread->message_loop() : nullptr;
 }
 
 // static
@@ -196,7 +191,7 @@ RefPtr<MemoryReportPromise> RenderThread::AccumulateMemoryReport(
   RefPtr<MemoryReportPromise::Private> p =
       new MemoryReportPromise::Private(__func__);
   MOZ_ASSERT(!IsInRenderThread());
-  if (!Get() || !Get()->Loop()) {
+  if (!Get()) {
     // This happens when the GPU process fails to start and we fall back to the
     // basic compositor in the parent process. We could assert against this if
     // we made the webrender detection code in gfxPlatform.cpp smarter. See bug
@@ -206,7 +201,7 @@ RefPtr<MemoryReportPromise> RenderThread::AccumulateMemoryReport(
     return p;
   }
 
-  Get()->Loop()->PostTask(
+  Get()->PostRunnable(
       NewRunnableMethod<MemoryReport, RefPtr<MemoryReportPromise::Private>>(
           "wr::RenderThread::DoAccumulateMemoryReport", Get(),
           &RenderThread::DoAccumulateMemoryReport, aInitial, p));
@@ -301,7 +296,7 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
   }
 
   if (!IsInRenderThread()) {
-    Loop()->PostTask(NewRunnableMethod<wr::WindowId, bool>(
+    PostRunnable(NewRunnableMethod<wr::WindowId, bool>(
         "wr::RenderThread::HandleFrameOneDoc", this,
         &RenderThread::HandleFrameOneDoc, aWindowId, aRender));
     return;
@@ -366,7 +361,7 @@ void RenderThread::SetClearColor(wr::WindowId aWindowId, wr::ColorF aColor) {
   }
 
   if (!IsInRenderThread()) {
-    Loop()->PostTask(NewRunnableMethod<wr::WindowId, wr::ColorF>(
+    PostRunnable(NewRunnableMethod<wr::WindowId, wr::ColorF>(
         "wr::RenderThread::SetClearColor", this, &RenderThread::SetClearColor,
         aWindowId, aColor));
     return;
@@ -389,7 +384,7 @@ void RenderThread::SetProfilerUI(wr::WindowId aWindowId, const nsCString& aUI) {
   }
 
   if (!IsInRenderThread()) {
-    Loop()->PostTask(NewRunnableMethod<wr::WindowId, nsCString>(
+    PostRunnable(NewRunnableMethod<wr::WindowId, nsCString>(
         "wr::RenderThread::SetProfilerUI", this, &RenderThread::SetProfilerUI,
         aWindowId, aUI));
     return;
@@ -404,10 +399,9 @@ void RenderThread::SetProfilerUI(wr::WindowId aWindowId, const nsCString& aUI) {
 void RenderThread::RunEvent(wr::WindowId aWindowId,
                             UniquePtr<RendererEvent> aEvent) {
   if (!IsInRenderThread()) {
-    Loop()->PostTask(
-        NewRunnableMethod<wr::WindowId, UniquePtr<RendererEvent>&&>(
-            "wr::RenderThread::RunEvent", this, &RenderThread::RunEvent,
-            aWindowId, std::move(aEvent)));
+    PostRunnable(NewRunnableMethod<wr::WindowId, UniquePtr<RendererEvent>&&>(
+        "wr::RenderThread::RunEvent", this, &RenderThread::RunEvent, aWindowId,
+        std::move(aEvent)));
     return;
   }
 
@@ -668,7 +662,7 @@ void RenderThread::UnregisterExternalImage(uint64_t aExternalImageId) {
     RefPtr<RenderTextureHost> texture = it->second;
     mRenderTextures.erase(it);
     mRenderTexturesDeferred.emplace_back(std::move(texture));
-    Loop()->PostTask(NewRunnableMethod(
+    PostRunnable(NewRunnableMethod(
         "RenderThread::DeferredRenderTextureHostDestroy", this,
         &RenderThread::DeferredRenderTextureHostDestroy));
   } else {
@@ -702,9 +696,8 @@ void RenderThread::AddRenderTextureOp(RenderTextureOp aOp,
 
   RefPtr<RenderTextureHost> texture = it->second;
   mRenderTextureOps.emplace_back(aOp, std::move(texture));
-  Loop()->PostTask(NewRunnableMethod("RenderThread::HandleRenderTextureOps",
-                                     this,
-                                     &RenderThread::HandleRenderTextureOps));
+  PostRunnable(NewRunnableMethod("RenderThread::HandleRenderTextureOps", this,
+                                 &RenderThread::HandleRenderTextureOps));
 }
 
 void RenderThread::HandleRenderTextureOps() {
@@ -784,6 +777,11 @@ void RenderThread::InitDeviceTask() {
   SingletonGL();
 }
 
+void RenderThread::PostRunnable(already_AddRefed<nsIRunnable> aRunnable) {
+  nsCOMPtr<nsIRunnable> runnable = aRunnable;
+  mThread->message_loop()->PostTask(runnable.forget());
+}
+
 #ifndef XP_WIN
 static DeviceResetReason GLenumToResetReason(GLenum aReason) {
   switch (aReason) {
@@ -855,9 +853,8 @@ bool RenderThread::IsHandlingDeviceReset() {
 
 void RenderThread::SimulateDeviceReset() {
   if (!IsInRenderThread()) {
-    Loop()->PostTask(NewRunnableMethod("RenderThread::SimulateDeviceReset",
-                                       this,
-                                       &RenderThread::SimulateDeviceReset));
+    PostRunnable(NewRunnableMethod("RenderThread::SimulateDeviceReset", this,
+                                   &RenderThread::SimulateDeviceReset));
   } else {
     // When this function is called GPUProcessManager::SimulateDeviceReset()
     // already triggers destroying all CompositorSessions before re-creating
