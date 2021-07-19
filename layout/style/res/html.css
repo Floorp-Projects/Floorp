@@ -681,20 +681,12 @@ frameset {
   border: none ! important;
 }
 
-link {
-  display: none;
-}
-
 frame {
   border-radius: 0 ! important;
 }
 
 iframe {
   border: 2px inset;
-}
-
-noframes {
-  display: none;
 }
 
 spacer {
@@ -714,9 +706,18 @@ html:focus-visible {
   outline-style: none;
 }
 
-/* hidden elements */
-base, basefont, datalist, head, meta, script, style, title,
-noembed, param, template {
+/* hidden elements: https://html.spec.whatwg.org/#hidden-elements
+ *
+ * Exceptions:
+ *
+ *  * area declaration needs to be !important, see below / bug 135040.  That's
+ *    hacky and broken.
+ *
+ *  * [hidden] is implemented as a presentation attribute to avoid a global
+ *    selector in a UA sheet.
+ */
+base, basefont, datalist, head, link, meta, noembed,
+noframes, param, rp, script, source, style, template, track, title {
    display: none;
 }
 
@@ -875,9 +876,6 @@ ruby {
 rb {
   display: ruby-base;
   white-space: nowrap;
-}
-rp {
-  display: none;
 }
 rt {
   display: ruby-text;
