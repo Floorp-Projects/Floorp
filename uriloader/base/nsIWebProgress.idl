@@ -9,6 +9,7 @@
 interface mozIDOMWindowProxy;
 interface nsIEventTarget;
 interface nsIWebProgressListener;
+webidl BrowsingContext;
 
 /**
  * The nsIWebProgress interface is used to add or remove nsIWebProgressListener
@@ -27,7 +28,7 @@ interface nsIWebProgressListener;
  * notifications from any nsIWebProgress instances that are children of that
  * nsIWebProgress instance.
  */
-[scriptable, uuid(c4d64640-b332-4db6-a2a5-e08566000dc9)]
+[scriptable, builtinclass, uuid(c4d64640-b332-4db6-a2a5-e08566000dc9)]
 interface nsIWebProgress : nsISupports
 {
   /**
@@ -129,6 +130,15 @@ interface nsIWebProgress : nsISupports
    *        Indicates that aListener was not registered.
    */
   void removeProgressListener(in nsIWebProgressListener aListener);
+
+  /**
+   * BrowsingContext associated with this nsIWebProgress instance, or `null` if
+   * there is no BrowsingContext.
+   */
+  [binaryname(BrowsingContextXPCOM)]
+  readonly attribute BrowsingContext browsingContext;
+
+  [noscript,notxpcom,nostdcall] BrowsingContext getBrowsingContext();
 
   /**
    * The DOM window associated with this nsIWebProgress instance.
