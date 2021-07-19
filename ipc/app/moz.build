@@ -57,6 +57,10 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "xul.dll",
     ]
 
+    # Don't build plugin-container.exe with CETCOMPAT for the moment, so that
+    # we can enable it using a pref during testing.
+    LINK_FLAGS["CETCOMPAT"] = []
+
 if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_TARGET"] == "Darwin":
     # For sandbox includes and the include dependencies those have
     LOCAL_INCLUDES += [
