@@ -154,8 +154,12 @@ void main(void) {
     //
     // for some t. So we can let `t = k1/(k0 + k1)` and effectively evaluate
     // Equation 1 with a single texture lookup.
-
-    for (int i = 1; i <= vSupport; i += 2) {
+    //
+    // Clamp loop condition variable to a statically known value to workaround
+    // driver bug on Adreno 3xx. vSupport should not exceed 300 anyway, due to
+    // the max blur radius being 100. See bug 1720841 for details.
+    int support = min(vSupport, 300);
+    for (int i = 1; i <= support; i += 2) {
         gauss_coefficient.xy *= gauss_coefficient.yz;
 
         float gauss_coefficient_subtotal = gauss_coefficient.x;
