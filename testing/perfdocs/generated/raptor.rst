@@ -3581,120 +3581,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-geckoview-amazon-search-e10s: None
 
 
-.. dropdown:: bbc (BT, GV, FE, RB, CH-M)
-   :container: + anchor-id-bbc-m
-
-   * **alert on**: fcp, loadtime
-   * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m
-   * **browser cycles**: 15
-   * **expected**: pass
-   * **lower is better**: true
-   * **page cycles**: 25
-   * **page timeout**: 60000
-   * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-bbc.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-bbc.mp
-   * **playback version**: 6.0.2
-   * **test url**: `<https://www.bbc.com/news/business-47245877>`__
-   * **type**: pageload
-   * **unit**: ms
-   * **use live sites**: false
-   * **Test Task**:
-      * test-android-hw-g5-7-0-arm7-qr/opt
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: None
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-g5-7-0-arm7-shippable-qr/opt
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: mozilla-beta, trunk
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-g5-7-0-arm7-shippable/opt
-            * browsertime-tp6m-chrome-m-bbc-e10s: None
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: None
-            * browsertime-tp6m-live-chrome-m-bbc-e10s: None
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-g5-7-0-arm7/opt
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: None
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-p2-8-0-android-aarch64-qr/opt
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: None
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-p2-8-0-android-aarch64-shippable-qr/opt
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: mozilla-beta, trunk
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-p2-8-0-android-aarch64-shippable/opt
-            * browsertime-tp6m-chrome-m-bbc-e10s: None
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: None
-            * browsertime-tp6m-live-chrome-m-bbc-e10s: None
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-p2-8-0-android-aarch64/opt
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: None
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-p2-8-0-arm7-shippable/opt
-            * browsertime-tp6m-chrome-m-bbc-e10s: None
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: None
-            * browsertime-tp6m-live-chrome-m-bbc-e10s: None
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-p2-8-0-arm7/opt
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: None
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-s7-8-0-android-aarch64-qr/opt
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: None
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: None
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
-            * browsertime-tp6m-chrome-m-bbc-e10s: None
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: None
-            * browsertime-tp6m-live-chrome-m-bbc-e10s: None
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-      * test-android-hw-s7-8-0-android-aarch64/opt
-            * browsertime-tp6m-fenix-bbc-e10s: None
-            * browsertime-tp6m-geckoview-bbc-e10s: None
-            * browsertime-tp6m-live-fenix-bbc-e10s: None
-            * browsertime-tp6m-live-geckoview-bbc-e10s: None
-            * browsertime-tp6m-refbrow-bbc-e10s: None
-
-
 .. dropdown:: bing (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-bing-m
 
@@ -4263,6 +4149,120 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-cnn-ampstories-e10s: None
             * browsertime-tp6m-live-geckoview-cnn-ampstories-e10s: None
             * browsertime-tp6m-refbrow-cnn-ampstories-e10s: None
+
+
+.. dropdown:: dailymail (BT, GV, FE, RB, CH-M)
+   :container: + anchor-id-dailymail-m
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy-android
+   * **playback pageset manifest**: mitm6-android-fenix-dailymail.manifest
+   * **playback recordings**: mitm6-android-fenix-dailymail.mp
+   * **playback version**: 6.0.2
+   * **test url**: `<https://www.dailymail.co.uk/sciencetech/article-9749081/Experts-say-Hubble-repair-despite-NASA-insisting-multiple-options-fix.html>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+      * test-android-hw-g5-7-0-arm7-qr/opt
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-g5-7-0-arm7-shippable-qr/opt
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: mozilla-beta, trunk
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-g5-7-0-arm7-shippable/opt
+            * browsertime-tp6m-chrome-m-dailymail-e10s: None
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-live-chrome-m-dailymail-e10s: None
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-g5-7-0-arm7/opt
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-p2-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-p2-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: mozilla-beta, trunk
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-p2-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-dailymail-e10s: None
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-live-chrome-m-dailymail-e10s: None
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-p2-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-p2-8-0-arm7-shippable/opt
+            * browsertime-tp6m-chrome-m-dailymail-e10s: None
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-live-chrome-m-dailymail-e10s: None
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-dailymail-e10s: None
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-live-chrome-m-dailymail-e10s: None
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-dailymail-e10s: None
+            * browsertime-tp6m-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-live-fenix-dailymail-e10s: None
+            * browsertime-tp6m-live-geckoview-dailymail-e10s: None
+            * browsertime-tp6m-refbrow-dailymail-e10s: None
 
 
 .. dropdown:: ebay-kleinanzeigen (BT, GV, FE, RB, CH-M)
