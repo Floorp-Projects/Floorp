@@ -87,7 +87,7 @@ toolbarbutton:-moz-lwtheme:not(:hover, [checked="true"], [open="true"], [disable
   margin: -5px 0 0 !important;
   margin-inline-end: -4px !important;
   min-width: 14px;
-  max-width: 24px;
+  max-width: 20px;
   line-height: 10px;
   text-align: center;
   align-self: start;
