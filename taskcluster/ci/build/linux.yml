@@ -356,7 +356,7 @@ linux64/codeql-cpp:
     run-on-projects: []
     fetches:
         fetch:
-            - codeql-2.0.3
+            - codeql-2.5.7
         toolchain:
             - linux64-binutils
             - linux64-clang
