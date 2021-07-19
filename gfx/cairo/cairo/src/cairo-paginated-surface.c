@@ -737,20 +737,12 @@ static cairo_int_status_t
 _cairo_paginated_surface_tag (void			 *abstract_surface,
 			      cairo_bool_t                begin,
 			      const char                 *tag_name,
-			      const char                 *attributes,
-			      const cairo_pattern_t	 *source,
-			      const cairo_stroke_style_t *style,
-			      const cairo_matrix_t	 *ctm,
-			      const cairo_matrix_t	 *ctm_inverse,
-			      const cairo_clip_t	 *clip)
+			      const char                 *attributes)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
     return _cairo_surface_tag (surface->recording_surface,
-			       begin, tag_name, attributes,
-			       source, style,
-			       ctm, ctm_inverse,
-			       clip);
+			       begin, tag_name, attributes);
 }
 
 static cairo_surface_t *

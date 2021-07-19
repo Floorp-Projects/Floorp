@@ -8440,12 +8440,7 @@ static cairo_int_status_t
 _cairo_pdf_surface_tag (void			   *abstract_surface,
 			cairo_bool_t                begin,
 			const char                 *tag_name,
-			const char                 *attributes,
-			const cairo_pattern_t	   *source,
-			const cairo_stroke_style_t *style,
-			const cairo_matrix_t	   *ctm,
-			const cairo_matrix_t	   *ctm_inverse,
-			const cairo_clip_t	   *clip)
+			const char                 *attributes)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_int_status_t status = 0;

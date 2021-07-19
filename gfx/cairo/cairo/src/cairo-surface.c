@@ -2986,12 +2986,7 @@ cairo_status_t
 _cairo_surface_tag (cairo_surface_t	        *surface,
 		    cairo_bool_t                 begin,
 		    const char                  *tag_name,
-		    const char                  *attributes,
-		    const cairo_pattern_t	*source,
-		    const cairo_stroke_style_t	*stroke_style,
-		    const cairo_matrix_t	*ctm,
-		    const cairo_matrix_t	*ctm_inverse,
-		    const cairo_clip_t	        *clip)
+		    const char                  *attributes)
 {
     cairo_int_status_t status;
 
@@ -3004,15 +2999,7 @@ _cairo_surface_tag (cairo_surface_t	        *surface,
     if (surface->backend->tag == NULL)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (begin) {
-	status = _pattern_has_error (source);
-	if (unlikely (status))
-	    return status;
-    }
-
-    status = surface->backend->tag (surface, begin, tag_name, attributes,
-				    source, stroke_style,
-				    ctm, ctm_inverse, clip);
+    status = surface->backend->tag (surface, begin, tag_name, attributes);
     surface->is_clear = FALSE;
 
     return _cairo_surface_set_error (surface, status);
