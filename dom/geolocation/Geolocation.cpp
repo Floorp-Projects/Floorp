@@ -862,6 +862,18 @@ Geolocation::Update(nsIDOMGeoPosition* aSomewhere) {
     return NS_OK;
   }
 
+  // Don't update position if window is not fully active or the document is
+  // hidden. We keep the pending callaback and watchers waiting for the next
+  // update.
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(this->GetOwner());
+  if (window) {
+    nsCOMPtr<Document> document = window->GetDoc();
+    bool isHidden = document && document->Hidden();
+    if (isHidden || !window->IsFullyActive()) {
+      return NS_OK;
+    }
+  }
+
   if (aSomewhere) {
     nsCOMPtr<nsIDOMGeoPositionCoords> coords;
     aSomewhere->GetCoords(getter_AddRefs(coords));
