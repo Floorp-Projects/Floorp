@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef HTMLEditUtils_h
-#define HTMLEditUtils_h
+#ifndef mozilla_HTMLEditUtils_h
+#define mozilla_HTMLEditUtils_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EditorBase.h"
@@ -1817,4 +1817,4 @@ class MOZ_STACK_CLASS SelectedTableCellScanner final {
 
 }  // namespace mozilla
 
-#endif  // #ifndef HTMLEditUtils_h
+#endif  // #ifndef mozilla_HTMLEditUtils_h
