@@ -17,10 +17,11 @@ import {
 
 import { initialBreakpointsState } from "./reducers/breakpoints";
 import { initialSourcesState } from "./reducers/sources";
+const { sanitizeBreakpoints } = require("devtools/client/shared/thread-utils");
 
 async function syncBreakpoints() {
   const breakpoints = await asyncStore.pendingBreakpoints;
-  const breakpointValues = Object.values(breakpoints);
+  const breakpointValues = Object.values(sanitizeBreakpoints(breakpoints));
   return Promise.all(
     breakpointValues.map(({ disabled, options, generatedLocation }) => {
       if (!disabled) {
@@ -50,7 +51,9 @@ function setPauseOnExceptions() {
 }
 
 async function loadInitialState() {
-  const pendingBreakpoints = await asyncStore.pendingBreakpoints;
+  const pendingBreakpoints = sanitizeBreakpoints(
+    await asyncStore.pendingBreakpoints
+  );
   const tabs = { tabs: await asyncStore.tabs };
   const xhrBreakpoints = await asyncStore.xhrBreakpoints;
   const tabsBlackBoxed = await asyncStore.tabsBlackBoxed;

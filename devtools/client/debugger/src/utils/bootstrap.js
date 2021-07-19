@@ -22,6 +22,7 @@ import * as selectors from "../selectors";
 import App from "../components/App";
 import { asyncStore, prefs } from "./prefs";
 import { persistTabs } from "../utils/tabs";
+const { sanitizeBreakpoints } = require("devtools/client/shared/thread-utils");
 
 let parser;
 
@@ -108,7 +109,9 @@ function updatePrefs(state, oldState) {
     selector(oldState) && selector(oldState) !== selector(state);
 
   if (hasChanged(selectors.getPendingBreakpoints)) {
-    asyncStore.pendingBreakpoints = selectors.getPendingBreakpoints(state);
+    asyncStore.pendingBreakpoints = sanitizeBreakpoints(
+      selectors.getPendingBreakpoints(state)
+    );
   }
 
   if (

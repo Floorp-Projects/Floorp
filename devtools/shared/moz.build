@@ -72,6 +72,7 @@ DevToolsModules(
     "system.js",
     "ThreadSafeDevToolsUtils.js",
     "throttle.js",
+    "validate-breakpoint.jsm",
 )
 
 with Files("**"):

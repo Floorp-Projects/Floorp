@@ -5,6 +5,9 @@
 
 var Services = require("Services");
 const asyncStoreHelper = require("devtools/client/shared/async-store-helper");
+const {
+  validateBreakpointLocation,
+} = require("devtools/shared/validate-breakpoint.jsm");
 
 const asyncStore = asyncStoreHelper("debugger", {
   pendingBreakpoints: ["pending-breakpoints", {}],
@@ -40,7 +43,7 @@ exports.getThreadOptions = async function() {
     ),
     // This option is always true. See Bug 1654590 for removal.
     observeAsmJS: true,
-    breakpoints: await asyncStore.pendingBreakpoints,
+    breakpoints: sanitizeBreakpoints(await asyncStore.pendingBreakpoints),
     // XXX: `event-listener-breakpoints` is a copy of the event-listeners state
     // of the debugger panel. The `active` property is therefore linked to
     // the `active` property of the state.
@@ -49,3 +52,39 @@ exports.getThreadOptions = async function() {
       ((await asyncStore.eventListenerBreakpoints) || {}).active || [],
   };
 };
+
+/**
+ * Bug 1720512 - We used to store invalid breakpoints, leading to blank debugger.
+ * Filter out only the one that look invalid.
+ */
+function sanitizeBreakpoints(breakpoints) {
+  if (typeof breakpoints != "object") {
+    return {};
+  }
+  // We are not doing any assertion against keys,
+  // as it looks like we are never using them anywhere in frontend, nor backend.
+  const validBreakpoints = {};
+  for (const key in breakpoints) {
+    const bp = breakpoints[key];
+    try {
+      if (!bp) {
+        throw new Error("Undefined breakpoint");
+      }
+      // Debugger's main.js's `syncBreakpoints` will only use generatedLocation
+      // when restoring breakpoints.
+      validateBreakpointLocation(bp.generatedLocation);
+      // But Toolbox will still pass location to thread actor's reconfigure
+      // for target that don't support watcher+BreakpointListActor
+      validateBreakpointLocation(bp.location);
+      validBreakpoints[key] = bp;
+    } catch (e) {
+      console.error(
+        "Ignore invalid breakpoint from debugger store",
+        bp,
+        e.message
+      );
+    }
+  }
+  return validBreakpoints;
+}
+exports.sanitizeBreakpoints = sanitizeBreakpoints;
