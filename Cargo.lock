@@ -1527,7 +1527,6 @@ dependencies = [
  "cstr",
  "fog",
  "glean",
- "glean-core",
  "log",
  "nserror",
  "nsstring",
