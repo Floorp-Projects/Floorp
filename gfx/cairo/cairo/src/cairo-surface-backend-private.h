@@ -205,12 +205,7 @@ struct _cairo_surface_backend {
     (*tag)			(void			*surface,
 				 cairo_bool_t            begin,
 				 const char             *tag_name,
-				 const char             *attributes,
-				 const cairo_pattern_t	*source,
-				 const cairo_stroke_style_t	*style,
-				 const cairo_matrix_t	*ctm,
-				 const cairo_matrix_t	*ctm_inverse,
-				 const cairo_clip_t	*clip);
+				 const char             *attributes);
 
 };
 
