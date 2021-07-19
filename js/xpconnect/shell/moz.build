@@ -59,6 +59,10 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "xul.dll",
     ]
 
+    # Don't build xpcshell.exe with CETCOMPAT, because we need to be able to
+    # only enable it for processes that are not using JIT in xul.dll.
+    LINK_FLAGS["CETCOMPAT"] = []
+
 CFLAGS += CONFIG["TK_CFLAGS"]
 CXXFLAGS += CONFIG["TK_CFLAGS"]
 OS_LIBS += CONFIG["TK_LIBS"]
