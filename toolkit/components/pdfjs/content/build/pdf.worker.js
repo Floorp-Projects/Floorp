@@ -125,7 +125,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.10.316';
+    const workerVersion = '2.10.339';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -1662,13 +1662,6 @@ const Name = function NameClosure() {
     static get(name) {
       const nameValue = nameCache[name];
       return nameValue ? nameValue : nameCache[name] = new Name(name);
-    }
-
-    static get empty() {
-      const emptyName = new Name({
-        empty: true
-      });
-      return (0, _util.shadow)(this, "empty", emptyName);
     }
 
     static _clearCache() {
@@ -3746,10 +3739,11 @@ class Page {
         };
       }
 
+      const annotationIntent = intent.startsWith("oplist-") ? intent.split("-")[1] : intent;
       const opListPromises = [];
 
       for (const annotation of annotations) {
-        if (intent === "display" && annotation.mustBeViewed(annotationStorage) || intent === "print" && annotation.mustBePrinted(annotationStorage)) {
+        if (annotationIntent === "display" && annotation.mustBeViewed(annotationStorage) || annotationIntent === "print" && annotation.mustBePrinted(annotationStorage)) {
           opListPromises.push(annotation.getOperatorList(partialEvaluator, task, renderInteractiveForms, annotationStorage).catch(function (reason) {
             (0, _util.warn)("getOperatorList - ignoring annotation data during " + `"${task.name}" task: "${reason}".`);
             return null;
@@ -5215,7 +5209,7 @@ class Annotation {
     const transform = getTransformMatrix(data.rect, bbox, matrix);
     return resourcesPromise.then(resources => {
       const opList = new _operator_list.OperatorList();
-      opList.addOp(_util.OPS.beginAnnotation, [data.rect, transform, matrix]);
+      opList.addOp(_util.OPS.beginAnnotation, [data.id, data.rect, transform, matrix]);
       return evaluator.getOperatorList({
         stream: appearance,
         task,
@@ -5662,7 +5656,7 @@ class WidgetAnnotation extends Annotation {
       const matrix = [1, 0, 0, 1, 0, 0];
       const bbox = [0, 0, this.data.rect[2] - this.data.rect[0], this.data.rect[3] - this.data.rect[1]];
       const transform = getTransformMatrix(this.data.rect, bbox, matrix);
-      operatorList.addOp(_util.OPS.beginAnnotation, [this.data.rect, transform, matrix]);
+      operatorList.addOp(_util.OPS.beginAnnotation, [this.data.id, this.data.rect, transform, matrix]);
       const stream = new _stream.StringStream(content);
       return evaluator.getOperatorList({
         stream,
@@ -6299,6 +6293,10 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
 
     if (!exportValues.includes("Off")) {
       exportValues.push("Off");
+    }
+
+    if (!exportValues.includes(this.data.fieldValue)) {
+      this.data.fieldValue = null;
     }
 
     if (exportValues.length !== 2) {
@@ -9557,7 +9555,7 @@ class PartialEvaluator {
       task.ensureNotTerminated();
       timeSlotManager.reset();
       const operation = {};
-      let stop, i, ii, cs, name;
+      let stop, i, ii, cs, name, isValidName;
 
       while (!(stop = timeSlotManager.check())) {
         operation.args = null;
@@ -9571,9 +9569,10 @@ class PartialEvaluator {
 
         switch (fn | 0) {
           case _util.OPS.paintXObject:
+            isValidName = args[0] instanceof _primitives.Name;
             name = args[0].name;
 
-            if (name) {
+            if (isValidName) {
               const localImage = localImageCache.getByName(name);
 
               if (localImage) {
@@ -9584,7 +9583,7 @@ class PartialEvaluator {
             }
 
             next(new Promise(function (resolveXObject, rejectXObject) {
-              if (!name) {
+              if (!isValidName) {
                 throw new _util.FormatError("XObject must be referred to by name.");
               }
 
@@ -9897,9 +9896,10 @@ class PartialEvaluator {
             break;
 
           case _util.OPS.setGState:
+            isValidName = args[0] instanceof _primitives.Name;
             name = args[0].name;
 
-            if (name) {
+            if (isValidName) {
               const localGStateObj = localGStateCache.getByName(name);
 
               if (localGStateObj) {
@@ -9913,7 +9913,7 @@ class PartialEvaluator {
             }
 
             next(new Promise(function (resolveGState, rejectGState) {
-              if (!name) {
+              if (!isValidName) {
                 throw new _util.FormatError("GState must be referred to by name.");
               }
 
@@ -10697,14 +10697,15 @@ class PartialEvaluator {
               xobjs = resources.get("XObject") || _primitives.Dict.empty;
             }
 
+            var isValidName = args[0] instanceof _primitives.Name;
             var name = args[0].name;
 
-            if (name && emptyXObjectCache.getByName(name)) {
+            if (isValidName && emptyXObjectCache.getByName(name)) {
               break;
             }
 
             next(new Promise(function (resolveXObject, rejectXObject) {
-              if (!name) {
+              if (!isValidName) {
                 throw new _util.FormatError("XObject must be referred to by name.");
               }
 
@@ -10800,14 +10801,15 @@ class PartialEvaluator {
             return;
 
           case _util.OPS.setGState:
+            isValidName = args[0] instanceof _primitives.Name;
             name = args[0].name;
 
-            if (name && emptyGStateCache.getByName(name)) {
+            if (isValidName && emptyGStateCache.getByName(name)) {
               break;
             }
 
             next(new Promise(function (resolveGState, rejectGState) {
-              if (!name) {
+              if (!isValidName) {
                 throw new _util.FormatError("GState must be referred to by name.");
               }
 
@@ -14539,7 +14541,6 @@ class Lexer {
       (0, _util.warn)(`Name token is longer than allowed by the spec: ${strBuf.length}`);
     } else if (strBuf.length === 0) {
       (0, _util.warn)("Name token is empty.");
-      return _primitives.Name.empty;
     }
 
     return _primitives.Name.get(strBuf.join(""));
@@ -33409,506 +33410,410 @@ function toNumberArray(arr) {
   return arr;
 }
 
-const PDFFunction = function PDFFunctionClosure() {
-  const CONSTRUCT_SAMPLED = 0;
-  const CONSTRUCT_INTERPOLATED = 2;
-  const CONSTRUCT_STICHED = 3;
-  const CONSTRUCT_POSTSCRIPT = 4;
-  return {
-    getSampleArray(size, outputSize, bps, stream) {
-      let i, ii;
-      let length = 1;
-
-      for (i = 0, ii = size.length; i < ii; i++) {
-        length *= size[i];
-      }
-
-      length *= outputSize;
-      const array = new Array(length);
-      let codeSize = 0;
-      let codeBuf = 0;
-      const sampleMul = 1.0 / (2.0 ** bps - 1);
-      const strBytes = stream.getBytes((length * bps + 7) / 8);
-      let strIdx = 0;
-
-      for (i = 0; i < length; i++) {
-        while (codeSize < bps) {
-          codeBuf <<= 8;
-          codeBuf |= strBytes[strIdx++];
-          codeSize += 8;
-        }
-
-        codeSize -= bps;
-        array[i] = (codeBuf >> codeSize) * sampleMul;
-        codeBuf &= (1 << codeSize) - 1;
-      }
-
-      return array;
-    },
-
-    getIR({
-      xref,
-      isEvalSupported,
-      fn
-    }) {
-      let dict = fn.dict;
-
-      if (!dict) {
-        dict = fn;
-      }
-
-      const types = [this.constructSampled, null, this.constructInterpolated, this.constructStiched, this.constructPostScript];
-      const typeNum = dict.get("FunctionType");
-      const typeFn = types[typeNum];
-
-      if (!typeFn) {
-        throw new _util.FormatError("Unknown type of function");
-      }
-
-      return typeFn.call(this, {
-        xref,
-        isEvalSupported,
-        fn,
-        dict
-      });
-    },
-
-    fromIR({
-      xref,
-      isEvalSupported,
-      IR
-    }) {
-      const type = IR[0];
-
-      switch (type) {
-        case CONSTRUCT_SAMPLED:
-          return this.constructSampledFromIR({
-            xref,
-            isEvalSupported,
-            IR
-          });
-
-        case CONSTRUCT_INTERPOLATED:
-          return this.constructInterpolatedFromIR({
-            xref,
-            isEvalSupported,
-            IR
-          });
-
-        case CONSTRUCT_STICHED:
-          return this.constructStichedFromIR({
-            xref,
-            isEvalSupported,
-            IR
-          });
-
-        default:
-          return this.constructPostScriptFromIR({
-            xref,
-            isEvalSupported,
-            IR
-          });
-      }
-    },
-
-    parse({
-      xref,
-      isEvalSupported,
-      fn
-    }) {
-      const IR = this.getIR({
-        xref,
-        isEvalSupported,
-        fn
-      });
-      return this.fromIR({
-        xref,
-        isEvalSupported,
-        IR
-      });
-    },
-
-    parseArray({
-      xref,
-      isEvalSupported,
-      fnObj
-    }) {
-      if (!Array.isArray(fnObj)) {
-        return this.parse({
-          xref,
-          isEvalSupported,
-          fn: fnObj
-        });
-      }
-
-      const fnArray = [];
-
-      for (let j = 0, jj = fnObj.length; j < jj; j++) {
-        fnArray.push(this.parse({
-          xref,
-          isEvalSupported,
-          fn: xref.fetchIfRef(fnObj[j])
-        }));
-      }
-
-      return function (src, srcOffset, dest, destOffset) {
-        for (let i = 0, ii = fnArray.length; i < ii; i++) {
-          fnArray[i](src, srcOffset, dest, destOffset + i);
-        }
-      };
-    },
-
-    constructSampled({
-      xref,
-      isEvalSupported,
-      fn,
-      dict
-    }) {
-      function toMultiArray(arr) {
-        const inputLength = arr.length;
-        const out = [];
-        let index = 0;
-
-        for (let i = 0; i < inputLength; i += 2) {
-          out[index] = [arr[i], arr[i + 1]];
-          ++index;
-        }
-
-        return out;
-      }
-
-      let domain = toNumberArray(dict.getArray("Domain"));
-      let range = toNumberArray(dict.getArray("Range"));
-
-      if (!domain || !range) {
-        throw new _util.FormatError("No domain or range");
-      }
-
-      const inputSize = domain.length / 2;
-      const outputSize = range.length / 2;
-      domain = toMultiArray(domain);
-      range = toMultiArray(range);
-      const size = toNumberArray(dict.getArray("Size"));
-      const bps = dict.get("BitsPerSample");
-      const order = dict.get("Order") || 1;
-
-      if (order !== 1) {
-        (0, _util.info)("No support for cubic spline interpolation: " + order);
-      }
-
-      let encode = toNumberArray(dict.getArray("Encode"));
-
-      if (!encode) {
-        encode = [];
-
-        for (let i = 0; i < inputSize; ++i) {
-          encode.push([0, size[i] - 1]);
-        }
-      } else {
-        encode = toMultiArray(encode);
-      }
-
-      let decode = toNumberArray(dict.getArray("Decode"));
-
-      if (!decode) {
-        decode = range;
-      } else {
-        decode = toMultiArray(decode);
-      }
-
-      const samples = this.getSampleArray(size, outputSize, bps, fn);
-      return [CONSTRUCT_SAMPLED, inputSize, domain, encode, decode, samples, size, outputSize, 2 ** bps - 1, range];
-    },
-
-    constructSampledFromIR({
-      xref,
-      isEvalSupported,
-      IR
-    }) {
-      function interpolate(x, xmin, xmax, ymin, ymax) {
-        return ymin + (x - xmin) * ((ymax - ymin) / (xmax - xmin));
-      }
-
-      return function constructSampledFromIRResult(src, srcOffset, dest, destOffset) {
-        const m = IR[1];
-        const domain = IR[2];
-        const encode = IR[3];
-        const decode = IR[4];
-        const samples = IR[5];
-        const size = IR[6];
-        const n = IR[7];
-        const range = IR[9];
-        const cubeVertices = 1 << m;
-        const cubeN = new Float64Array(cubeVertices);
-        const cubeVertex = new Uint32Array(cubeVertices);
-        let i, j;
-
-        for (j = 0; j < cubeVertices; j++) {
-          cubeN[j] = 1;
-        }
-
-        let k = n,
-            pos = 1;
-
-        for (i = 0; i < m; ++i) {
-          const domain_2i = domain[i][0];
-          const domain_2i_1 = domain[i][1];
-          const xi = Math.min(Math.max(src[srcOffset + i], domain_2i), domain_2i_1);
-          let e = interpolate(xi, domain_2i, domain_2i_1, encode[i][0], encode[i][1]);
-          const size_i = size[i];
-          e = Math.min(Math.max(e, 0), size_i - 1);
-          const e0 = e < size_i - 1 ? Math.floor(e) : e - 1;
-          const n0 = e0 + 1 - e;
-          const n1 = e - e0;
-          const offset0 = e0 * k;
-          const offset1 = offset0 + k;
-
-          for (j = 0; j < cubeVertices; j++) {
-            if (j & pos) {
-              cubeN[j] *= n1;
-              cubeVertex[j] += offset1;
-            } else {
-              cubeN[j] *= n0;
-              cubeVertex[j] += offset0;
-            }
-          }
-
-          k *= size_i;
-          pos <<= 1;
-        }
-
-        for (j = 0; j < n; ++j) {
-          let rj = 0;
-
-          for (i = 0; i < cubeVertices; i++) {
-            rj += samples[cubeVertex[i] + j] * cubeN[i];
-          }
-
-          rj = interpolate(rj, 0, 1, decode[j][0], decode[j][1]);
-          dest[destOffset + j] = Math.min(Math.max(rj, range[j][0]), range[j][1]);
-        }
-      };
-    },
-
-    constructInterpolated({
-      xref,
-      isEvalSupported,
-      fn,
-      dict
-    }) {
-      const c0 = toNumberArray(dict.getArray("C0")) || [0];
-      const c1 = toNumberArray(dict.getArray("C1")) || [1];
-      const n = dict.get("N");
-      const length = c0.length;
-      const diff = [];
-
-      for (let i = 0; i < length; ++i) {
-        diff.push(c1[i] - c0[i]);
-      }
-
-      return [CONSTRUCT_INTERPOLATED, c0, diff, n];
-    },
-
-    constructInterpolatedFromIR({
-      xref,
-      isEvalSupported,
-      IR
-    }) {
-      const c0 = IR[1];
-      const diff = IR[2];
-      const n = IR[3];
-      const length = diff.length;
-      return function constructInterpolatedFromIRResult(src, srcOffset, dest, destOffset) {
-        const x = n === 1 ? src[srcOffset] : src[srcOffset] ** n;
-
-        for (let j = 0; j < length; ++j) {
-          dest[destOffset + j] = c0[j] + x * diff[j];
-        }
-      };
-    },
-
-    constructStiched({
-      xref,
-      isEvalSupported,
-      fn,
-      dict
-    }) {
-      const domain = toNumberArray(dict.getArray("Domain"));
-
-      if (!domain) {
-        throw new _util.FormatError("No domain");
-      }
-
-      const inputSize = domain.length / 2;
-
-      if (inputSize !== 1) {
-        throw new _util.FormatError("Bad domain for stiched function");
-      }
-
-      const fnRefs = dict.get("Functions");
-      const fns = [];
-
-      for (let i = 0, ii = fnRefs.length; i < ii; ++i) {
-        fns.push(this.parse({
-          xref,
-          isEvalSupported,
-          fn: xref.fetchIfRef(fnRefs[i])
-        }));
-      }
-
-      const bounds = toNumberArray(dict.getArray("Bounds"));
-      const encode = toNumberArray(dict.getArray("Encode"));
-      return [CONSTRUCT_STICHED, domain, bounds, encode, fns];
-    },
-
-    constructStichedFromIR({
-      xref,
-      isEvalSupported,
-      IR
-    }) {
-      const domain = IR[1];
-      const bounds = IR[2];
-      const encode = IR[3];
-      const fns = IR[4];
-      const tmpBuf = new Float32Array(1);
-      return function constructStichedFromIRResult(src, srcOffset, dest, destOffset) {
-        const clip = function constructStichedFromIRClip(v, min, max) {
-          if (v > max) {
-            v = max;
-          } else if (v < min) {
-            v = min;
-          }
-
-          return v;
-        };
-
-        const v = clip(src[srcOffset], domain[0], domain[1]);
-        const length = bounds.length;
-        let i;
-
-        for (i = 0; i < length; ++i) {
-          if (v < bounds[i]) {
-            break;
-          }
-        }
-
-        let dmin = domain[0];
-
-        if (i > 0) {
-          dmin = bounds[i - 1];
-        }
-
-        let dmax = domain[1];
-
-        if (i < bounds.length) {
-          dmax = bounds[i];
-        }
-
-        const rmin = encode[2 * i];
-        const rmax = encode[2 * i + 1];
-        tmpBuf[0] = dmin === dmax ? rmin : rmin + (v - dmin) * (rmax - rmin) / (dmax - dmin);
-        fns[i](tmpBuf, 0, dest, destOffset);
-      };
-    },
-
-    constructPostScript({
-      xref,
-      isEvalSupported,
-      fn,
-      dict
-    }) {
-      const domain = toNumberArray(dict.getArray("Domain"));
-      const range = toNumberArray(dict.getArray("Range"));
-
-      if (!domain) {
-        throw new _util.FormatError("No domain.");
-      }
-
-      if (!range) {
-        throw new _util.FormatError("No range.");
-      }
-
-      const lexer = new _ps_parser.PostScriptLexer(fn);
-      const parser = new _ps_parser.PostScriptParser(lexer);
-      const code = parser.parse();
-      return [CONSTRUCT_POSTSCRIPT, domain, range, code];
-    },
-
-    constructPostScriptFromIR({
-      xref,
-      isEvalSupported,
-      IR
-    }) {
-      const domain = IR[1];
-      const range = IR[2];
-      const code = IR[3];
-
-      if (isEvalSupported && _util.IsEvalSupportedCached.value) {
-        const compiled = new PostScriptCompiler().compile(code, domain, range);
-
-        if (compiled) {
-          return new Function("src", "srcOffset", "dest", "destOffset", compiled);
-        }
-      }
-
-      (0, _util.info)("Unable to compile PS function");
-      const numOutputs = range.length >> 1;
-      const numInputs = domain.length >> 1;
-      const evaluator = new PostScriptEvaluator(code);
-      const cache = Object.create(null);
-      const MAX_CACHE_SIZE = 2048 * 4;
-      let cache_available = MAX_CACHE_SIZE;
-      const tmpBuf = new Float32Array(numInputs);
-      return function constructPostScriptFromIRResult(src, srcOffset, dest, destOffset) {
-        let i, value;
-        let key = "";
-        const input = tmpBuf;
-
-        for (i = 0; i < numInputs; i++) {
-          value = src[srcOffset + i];
-          input[i] = value;
-          key += value + "_";
-        }
-
-        const cachedValue = cache[key];
-
-        if (cachedValue !== undefined) {
-          dest.set(cachedValue, destOffset);
-          return;
-        }
-
-        const output = new Float32Array(numOutputs);
-        const stack = evaluator.execute(input);
-        const stackIndex = stack.length - numOutputs;
-
-        for (i = 0; i < numOutputs; i++) {
-          value = stack[stackIndex + i];
-          let bound = range[i * 2];
-
-          if (value < bound) {
-            value = bound;
-          } else {
-            bound = range[i * 2 + 1];
-
-            if (value > bound) {
-              value = bound;
-            }
-          }
-
-          output[i] = value;
-        }
-
-        if (cache_available > 0) {
-          cache_available--;
-          cache[key] = output;
-        }
-
-        dest.set(output, destOffset);
-      };
+class PDFFunction {
+  static getSampleArray(size, outputSize, bps, stream) {
+    let i, ii;
+    let length = 1;
+
+    for (i = 0, ii = size.length; i < ii; i++) {
+      length *= size[i];
     }
 
-  };
-}();
+    length *= outputSize;
+    const array = new Array(length);
+    let codeSize = 0;
+    let codeBuf = 0;
+    const sampleMul = 1.0 / (2.0 ** bps - 1);
+    const strBytes = stream.getBytes((length * bps + 7) / 8);
+    let strIdx = 0;
+
+    for (i = 0; i < length; i++) {
+      while (codeSize < bps) {
+        codeBuf <<= 8;
+        codeBuf |= strBytes[strIdx++];
+        codeSize += 8;
+      }
+
+      codeSize -= bps;
+      array[i] = (codeBuf >> codeSize) * sampleMul;
+      codeBuf &= (1 << codeSize) - 1;
+    }
+
+    return array;
+  }
+
+  static parse({
+    xref,
+    isEvalSupported,
+    fn
+  }) {
+    const dict = fn.dict || fn;
+    const typeNum = dict.get("FunctionType");
+
+    switch (typeNum) {
+      case 0:
+        return this.constructSampled({
+          xref,
+          isEvalSupported,
+          fn,
+          dict
+        });
+
+      case 1:
+        break;
+
+      case 2:
+        return this.constructInterpolated({
+          xref,
+          isEvalSupported,
+          dict
+        });
+
+      case 3:
+        return this.constructStiched({
+          xref,
+          isEvalSupported,
+          dict
+        });
+
+      case 4:
+        return this.constructPostScript({
+          xref,
+          isEvalSupported,
+          fn,
+          dict
+        });
+    }
+
+    throw new _util.FormatError("Unknown type of function");
+  }
+
+  static parseArray({
+    xref,
+    isEvalSupported,
+    fnObj
+  }) {
+    if (!Array.isArray(fnObj)) {
+      return this.parse({
+        xref,
+        isEvalSupported,
+        fn: fnObj
+      });
+    }
+
+    const fnArray = [];
+
+    for (let j = 0, jj = fnObj.length; j < jj; j++) {
+      fnArray.push(this.parse({
+        xref,
+        isEvalSupported,
+        fn: xref.fetchIfRef(fnObj[j])
+      }));
+    }
+
+    return function (src, srcOffset, dest, destOffset) {
+      for (let i = 0, ii = fnArray.length; i < ii; i++) {
+        fnArray[i](src, srcOffset, dest, destOffset + i);
+      }
+    };
+  }
+
+  static constructSampled({
+    xref,
+    isEvalSupported,
+    fn,
+    dict
+  }) {
+    function toMultiArray(arr) {
+      const inputLength = arr.length;
+      const out = [];
+      let index = 0;
+
+      for (let i = 0; i < inputLength; i += 2) {
+        out[index++] = [arr[i], arr[i + 1]];
+      }
+
+      return out;
+    }
+
+    function interpolate(x, xmin, xmax, ymin, ymax) {
+      return ymin + (x - xmin) * ((ymax - ymin) / (xmax - xmin));
+    }
+
+    let domain = toNumberArray(dict.getArray("Domain"));
+    let range = toNumberArray(dict.getArray("Range"));
+
+    if (!domain || !range) {
+      throw new _util.FormatError("No domain or range");
+    }
+
+    const inputSize = domain.length / 2;
+    const outputSize = range.length / 2;
+    domain = toMultiArray(domain);
+    range = toMultiArray(range);
+    const size = toNumberArray(dict.getArray("Size"));
+    const bps = dict.get("BitsPerSample");
+    const order = dict.get("Order") || 1;
+
+    if (order !== 1) {
+      (0, _util.info)("No support for cubic spline interpolation: " + order);
+    }
+
+    let encode = toNumberArray(dict.getArray("Encode"));
+
+    if (!encode) {
+      encode = [];
+
+      for (let i = 0; i < inputSize; ++i) {
+        encode.push([0, size[i] - 1]);
+      }
+    } else {
+      encode = toMultiArray(encode);
+    }
+
+    let decode = toNumberArray(dict.getArray("Decode"));
+
+    if (!decode) {
+      decode = range;
+    } else {
+      decode = toMultiArray(decode);
+    }
+
+    const samples = this.getSampleArray(size, outputSize, bps, fn);
+    return function constructSampledFn(src, srcOffset, dest, destOffset) {
+      const cubeVertices = 1 << inputSize;
+      const cubeN = new Float64Array(cubeVertices);
+      const cubeVertex = new Uint32Array(cubeVertices);
+      let i, j;
+
+      for (j = 0; j < cubeVertices; j++) {
+        cubeN[j] = 1;
+      }
+
+      let k = outputSize,
+          pos = 1;
+
+      for (i = 0; i < inputSize; ++i) {
+        const domain_2i = domain[i][0];
+        const domain_2i_1 = domain[i][1];
+        const xi = Math.min(Math.max(src[srcOffset + i], domain_2i), domain_2i_1);
+        let e = interpolate(xi, domain_2i, domain_2i_1, encode[i][0], encode[i][1]);
+        const size_i = size[i];
+        e = Math.min(Math.max(e, 0), size_i - 1);
+        const e0 = e < size_i - 1 ? Math.floor(e) : e - 1;
+        const n0 = e0 + 1 - e;
+        const n1 = e - e0;
+        const offset0 = e0 * k;
+        const offset1 = offset0 + k;
+
+        for (j = 0; j < cubeVertices; j++) {
+          if (j & pos) {
+            cubeN[j] *= n1;
+            cubeVertex[j] += offset1;
+          } else {
+            cubeN[j] *= n0;
+            cubeVertex[j] += offset0;
+          }
+        }
+
+        k *= size_i;
+        pos <<= 1;
+      }
+
+      for (j = 0; j < outputSize; ++j) {
+        let rj = 0;
+
+        for (i = 0; i < cubeVertices; i++) {
+          rj += samples[cubeVertex[i] + j] * cubeN[i];
+        }
+
+        rj = interpolate(rj, 0, 1, decode[j][0], decode[j][1]);
+        dest[destOffset + j] = Math.min(Math.max(rj, range[j][0]), range[j][1]);
+      }
+    };
+  }
+
+  static constructInterpolated({
+    xref,
+    isEvalSupported,
+    dict
+  }) {
+    const c0 = toNumberArray(dict.getArray("C0")) || [0];
+    const c1 = toNumberArray(dict.getArray("C1")) || [1];
+    const n = dict.get("N");
+    const diff = [];
+
+    for (let i = 0, ii = c0.length; i < ii; ++i) {
+      diff.push(c1[i] - c0[i]);
+    }
+
+    const length = diff.length;
+    return function constructInterpolatedFn(src, srcOffset, dest, destOffset) {
+      const x = n === 1 ? src[srcOffset] : src[srcOffset] ** n;
+
+      for (let j = 0; j < length; ++j) {
+        dest[destOffset + j] = c0[j] + x * diff[j];
+      }
+    };
+  }
+
+  static constructStiched({
+    xref,
+    isEvalSupported,
+    dict
+  }) {
+    const domain = toNumberArray(dict.getArray("Domain"));
+
+    if (!domain) {
+      throw new _util.FormatError("No domain");
+    }
+
+    const inputSize = domain.length / 2;
+
+    if (inputSize !== 1) {
+      throw new _util.FormatError("Bad domain for stiched function");
+    }
+
+    const fnRefs = dict.get("Functions");
+    const fns = [];
+
+    for (let i = 0, ii = fnRefs.length; i < ii; ++i) {
+      fns.push(this.parse({
+        xref,
+        isEvalSupported,
+        fn: xref.fetchIfRef(fnRefs[i])
+      }));
+    }
+
+    const bounds = toNumberArray(dict.getArray("Bounds"));
+    const encode = toNumberArray(dict.getArray("Encode"));
+    const tmpBuf = new Float32Array(1);
+    return function constructStichedFn(src, srcOffset, dest, destOffset) {
+      const clip = function constructStichedFromIRClip(v, min, max) {
+        if (v > max) {
+          v = max;
+        } else if (v < min) {
+          v = min;
+        }
+
+        return v;
+      };
+
+      const v = clip(src[srcOffset], domain[0], domain[1]);
+      const length = bounds.length;
+      let i;
+
+      for (i = 0; i < length; ++i) {
+        if (v < bounds[i]) {
+          break;
+        }
+      }
+
+      let dmin = domain[0];
+
+      if (i > 0) {
+        dmin = bounds[i - 1];
+      }
+
+      let dmax = domain[1];
+
+      if (i < bounds.length) {
+        dmax = bounds[i];
+      }
+
+      const rmin = encode[2 * i];
+      const rmax = encode[2 * i + 1];
+      tmpBuf[0] = dmin === dmax ? rmin : rmin + (v - dmin) * (rmax - rmin) / (dmax - dmin);
+      fns[i](tmpBuf, 0, dest, destOffset);
+    };
+  }
+
+  static constructPostScript({
+    xref,
+    isEvalSupported,
+    fn,
+    dict
+  }) {
+    const domain = toNumberArray(dict.getArray("Domain"));
+    const range = toNumberArray(dict.getArray("Range"));
+
+    if (!domain) {
+      throw new _util.FormatError("No domain.");
+    }
+
+    if (!range) {
+      throw new _util.FormatError("No range.");
+    }
+
+    const lexer = new _ps_parser.PostScriptLexer(fn);
+    const parser = new _ps_parser.PostScriptParser(lexer);
+    const code = parser.parse();
+
+    if (isEvalSupported && _util.IsEvalSupportedCached.value) {
+      const compiled = new PostScriptCompiler().compile(code, domain, range);
+
+      if (compiled) {
+        return new Function("src", "srcOffset", "dest", "destOffset", compiled);
+      }
+    }
+
+    (0, _util.info)("Unable to compile PS function");
+    const numOutputs = range.length >> 1;
+    const numInputs = domain.length >> 1;
+    const evaluator = new PostScriptEvaluator(code);
+    const cache = Object.create(null);
+    const MAX_CACHE_SIZE = 2048 * 4;
+    let cache_available = MAX_CACHE_SIZE;
+    const tmpBuf = new Float32Array(numInputs);
+    return function constructPostScriptFn(src, srcOffset, dest, destOffset) {
+      let i, value;
+      let key = "";
+      const input = tmpBuf;
+
+      for (i = 0; i < numInputs; i++) {
+        value = src[srcOffset + i];
+        input[i] = value;
+        key += value + "_";
+      }
+
+      const cachedValue = cache[key];
+
+      if (cachedValue !== undefined) {
+        dest.set(cachedValue, destOffset);
+        return;
+      }
+
+      const output = new Float32Array(numOutputs);
+      const stack = evaluator.execute(input);
+      const stackIndex = stack.length - numOutputs;
+
+      for (i = 0; i < numOutputs; i++) {
+        value = stack[stackIndex + i];
+        let bound = range[i * 2];
+
+        if (value < bound) {
+          value = bound;
+        } else {
+          bound = range[i * 2 + 1];
+
+          if (value > bound) {
+            value = bound;
+          }
+        }
+
+        output[i] = value;
+      }
+
+      if (cache_available > 0) {
+        cache_available--;
+        cache[key] = output;
+      }
+
+      dest.set(output, destOffset);
+    };
+  }
+
+}
 
 function isPDFFunction(v) {
   let fnDict;
@@ -35009,7 +34914,7 @@ class BaseLocalCache {
 
 class LocalImageCache extends BaseLocalCache {
   set(name, ref = null, data) {
-    if (!name) {
+    if (typeof name !== "string") {
       throw new Error('LocalImageCache.set - expected "name" argument.');
     }
 
@@ -35038,7 +34943,7 @@ exports.LocalImageCache = LocalImageCache;
 
 class LocalColorSpaceCache extends BaseLocalCache {
   set(name = null, ref = null, data) {
-    if (!name && !ref) {
+    if (typeof name !== "string" && !ref) {
       throw new Error('LocalColorSpaceCache.set - expected "name" and/or "ref" argument.');
     }
 
@@ -35047,7 +34952,7 @@ class LocalColorSpaceCache extends BaseLocalCache {
         return;
       }
 
-      if (name) {
+      if (name !== null) {
         this._nameRefMap.set(name, ref);
       }
 
@@ -35096,7 +35001,7 @@ exports.LocalFunctionCache = LocalFunctionCache;
 
 class LocalGStateCache extends BaseLocalCache {
   set(name, ref = null, data) {
-    if (!name) {
+    if (typeof name !== "string") {
       throw new Error('LocalGStateCache.set - expected "name" argument.');
     }
 
@@ -35125,7 +35030,7 @@ exports.LocalGStateCache = LocalGStateCache;
 
 class LocalTilingPatternCache extends BaseLocalCache {
   set(name, ref = null, data) {
-    if (!name) {
+    if (typeof name !== "string") {
       throw new Error('LocalTilingPatternCache.set - expected "name" argument.');
     }
 
@@ -39488,7 +39393,7 @@ class OperatorList {
   }
 
   static get CHUNK_SIZE_ABOUT() {
-    return (0, _util.shadow)(this, "CHUNK_SIZE_ABOUT", OperatorList.CHUNK_SIZE - 5);
+    return (0, _util.shadow)(this, "CHUNK_SIZE_ABOUT", this.CHUNK_SIZE - 5);
   }
 
   constructor(intent, streamSink) {
@@ -39496,7 +39401,7 @@ class OperatorList {
     this.fnArray = [];
     this.argsArray = [];
 
-    if (streamSink && intent !== "oplist") {
+    if (streamSink && !(intent && intent.startsWith("oplist-"))) {
       this.optimizer = new QueueOptimizer(this);
     } else {
       this.optimizer = new NullOptimizer(this);
@@ -47576,7 +47481,7 @@ class Binder {
         if (dataChildren.length > 0) {
           this._bindOccurrences(child, [dataChildren[0]], null);
         } else if (this.emptyMerge) {
-          const dataChild = new _xfa_object.XmlObject(dataNode[_xfa_object.$namespaceId], child.name || "root");
+          const dataChild = child[_xfa_object.$data] = new _xfa_object.XmlObject(dataNode[_xfa_object.$namespaceId], child.name || "root");
 
           dataNode[_xfa_object.$appendChild](dataChild);
 
@@ -47689,7 +47594,7 @@ class Binder {
           match = dataNode[_xfa_object.$getRealChildrenByNameIt](child.name, false, this.emptyMerge).next().value;
 
           if (!match) {
-            match = new _xfa_object.XmlObject(dataNode[_xfa_object.$namespaceId], child.name);
+            match = child[_xfa_object.$data] = new _xfa_object.XmlObject(dataNode[_xfa_object.$namespaceId], child.name);
 
             if (this.emptyMerge) {
               match[_xfa_object.$consumed] = true;
@@ -47764,6 +47669,10 @@ const TEMPLATE_NS_ID = _namespaces.NamespaceIds.template.id;
 const SVG_NS = "http://www.w3.org/2000/svg";
 const MAX_ATTEMPTS_FOR_LRTB_LAYOUT = 2;
 const MAX_EMPTY_PAGES = 3;
+
+function hasMargin(node) {
+  return node.margin && (node.margin.topInset || node.margin.rightInset || node.margin.bottomInset || node.margin.leftInset);
+}
 
 function _setValue(templateNode, value) {
   if (!templateNode.value) {
@@ -47996,15 +47905,15 @@ class Arc extends _xfa_object.XFAObject {
       style.fill = "transparent";
     }
 
-    style.strokeWidth = (0, _html_utils.measureToString)(edge.presence === "visible" ? Math.round(edge.thickness) : 0);
+    style.strokeWidth = (0, _html_utils.measureToString)(edge.presence === "visible" ? edge.thickness : 0);
     style.stroke = edgeStyle.color;
     let arc;
     const attributes = {
       xmlns: SVG_NS,
       style: {
-        position: "absolute",
         width: "100%",
-        height: "100%"
+        height: "100%",
+        overflow: "visible"
       }
     };
 
@@ -48040,11 +47949,30 @@ class Arc extends _xfa_object.XFAObject {
       });
     }
 
-    return _utils.HTMLResult.success({
+    const svg = {
       name: "svg",
       children: [arc],
       attributes
-    });
+    };
+
+    const parent = this[_xfa_object.$getParent]()[_xfa_object.$getParent]();
+
+    if (hasMargin(parent)) {
+      return _utils.HTMLResult.success({
+        name: "div",
+        attributes: {
+          style: {
+            display: "inline",
+            width: "100%",
+            height: "100%"
+          }
+        },
+        children: [svg]
+      });
+    }
+
+    svg.attributes.style.position = "absolute";
+    return _utils.HTMLResult.success(svg);
   }
 
 }
@@ -48672,11 +48600,11 @@ class CheckButton extends _xfa_object.XFAObject {
       groupId = container[_xfa_object.$uid];
       type = "radio";
       className = "xfaRadio";
-      dataId = container[_xfa_object.$data] && container[_xfa_object.$data][_xfa_object.$uid];
+      dataId = container[_xfa_object.$data] && container[_xfa_object.$data][_xfa_object.$uid] || container[_xfa_object.$uid];
     } else {
       type = "checkbox";
       className = "xfaCheckbox";
-      dataId = field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid];
+      dataId = field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid] || field[_xfa_object.$uid];
     }
 
     const input = {
@@ -48782,7 +48710,7 @@ class ChoiceList extends _xfa_object.XFAObject {
     const selectAttributes = {
       class: ["xfaSelect"],
       fieldId: field[_xfa_object.$uid],
-      dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid],
+      dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid] || field[_xfa_object.$uid],
       style
     };
 
@@ -48993,7 +48921,7 @@ class DateTimeEdit extends _xfa_object.XFAObject {
       attributes: {
         type: "text",
         fieldId: field[_xfa_object.$uid],
-        dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid],
+        dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid] || field[_xfa_object.$uid],
         class: ["xfaTextfield"],
         style
       }
@@ -50571,7 +50499,7 @@ class Line extends _xfa_object.XFAObject {
     const edgeStyle = edge[_xfa_object.$toStyle]();
 
     const style = Object.create(null);
-    const thickness = edge.presence === "visible" ? Math.round(edge.thickness) : 0;
+    const thickness = edge.presence === "visible" ? edge.thickness : 0;
     style.strokeWidth = (0, _html_utils.measureToString)(thickness);
     style.stroke = edgeStyle.color;
     let x1, y1, x2, y2;
@@ -50603,7 +50531,7 @@ class Line extends _xfa_object.XFAObject {
         style
       }
     };
-    return _utils.HTMLResult.success({
+    const svg = {
       name: "svg",
       children: [line],
       attributes: {
@@ -50611,10 +50539,27 @@ class Line extends _xfa_object.XFAObject {
         width,
         height,
         style: {
-          position: "absolute"
+          overflow: "visible"
         }
       }
-    });
+    };
+
+    if (hasMargin(parent)) {
+      return _utils.HTMLResult.success({
+        name: "div",
+        attributes: {
+          style: {
+            display: "inline",
+            width: "100%",
+            height: "100%"
+          }
+        },
+        children: [svg]
+      });
+    }
+
+    svg.attributes.style.position = "absolute";
+    return _utils.HTMLResult.success(svg);
   }
 
 }
@@ -50756,7 +50701,7 @@ class NumericEdit extends _xfa_object.XFAObject {
       attributes: {
         type: "text",
         fieldId: field[_xfa_object.$uid],
-        dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid],
+        dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid] || field[_xfa_object.$uid],
         class: ["xfaTextfield"],
         style
       }
@@ -51411,7 +51356,7 @@ class Rectangle extends _xfa_object.XFAObject {
       style.fill = "transparent";
     }
 
-    style.strokeWidth = (0, _html_utils.measureToString)(edge.presence === "visible" ? 2 * edge.thickness : 0);
+    style.strokeWidth = (0, _html_utils.measureToString)(edge.presence === "visible" ? edge.thickness : 0);
     style.stroke = edgeStyle.color;
     const corner = this.corner.children.length ? this.corner.children[0] : new Corner({});
 
@@ -51430,18 +51375,37 @@ class Rectangle extends _xfa_object.XFAObject {
         style
       }
     };
-    return _utils.HTMLResult.success({
+    const svg = {
       name: "svg",
       children: [rect],
       attributes: {
         xmlns: SVG_NS,
         style: {
-          position: "absolute"
+          overflow: "visible"
         },
         width: "100%",
         height: "100%"
       }
-    });
+    };
+
+    const parent = this[_xfa_object.$getParent]()[_xfa_object.$getParent]();
+
+    if (hasMargin(parent)) {
+      return _utils.HTMLResult.success({
+        name: "div",
+        attributes: {
+          style: {
+            display: "inline",
+            width: "100%",
+            height: "100%"
+          }
+        },
+        children: [svg]
+      });
+    }
+
+    svg.attributes.style.position = "absolute";
+    return _utils.HTMLResult.success(svg);
   }
 
 }
@@ -52454,7 +52418,7 @@ class TextEdit extends _xfa_object.XFAObject {
       html = {
         name: "textarea",
         attributes: {
-          dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid],
+          dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid] || field[_xfa_object.$uid],
           fieldId: field[_xfa_object.$uid],
           class: ["xfaTextfield"],
           style
@@ -52465,7 +52429,7 @@ class TextEdit extends _xfa_object.XFAObject {
         name: "input",
         attributes: {
           type: "text",
-          dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid],
+          dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid] || field[_xfa_object.$uid],
           fieldId: field[_xfa_object.$uid],
           class: ["xfaTextfield"],
           style
@@ -59874,8 +59838,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.10.316';
-const pdfjsBuild = 'a17bd1302';
+const pdfjsVersion = '2.10.339';
+const pdfjsBuild = '07955fa1d';
 })();
 
 /******/ 	return __webpack_exports__;
