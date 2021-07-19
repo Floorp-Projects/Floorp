@@ -95,6 +95,7 @@ Editor.modes = {
   css: { name: "css" },
   fs: { name: "x-shader/x-fragment" },
   haxe: { name: "haxe" },
+  http: { name: "http" },
   html: { name: "htmlmixed" },
   js: { name: "javascript" },
   text: { name: "text" },
