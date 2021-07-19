@@ -4934,8 +4934,8 @@ void nsTableFrame::ExpandBCDamageArea(TableArea& aArea) const {
         }
       }
       // check for spanners on the left and right
-      int32_t iterStartY = -1;
-      int32_t iterEndY = -1;
+      int32_t iterStartY;
+      int32_t iterEndY;
       if ((dStartY >= rgStartY) && (dStartY <= rgEndY)) {
         // the damage area starts in the row group
         iterStartY = dStartY;
@@ -4948,22 +4948,25 @@ void nsTableFrame::ExpandBCDamageArea(TableArea& aArea) const {
         // the damage area contains the row group
         iterStartY = rgStartY;
         iterEndY = rgEndY;
+      } else {
+        // the damage area does not overlap the row group
+        continue;
       }
-      if ((iterStartY >= 0) && (iterEndY >= 0)) {
-        for (int32_t y = iterStartY; y <= iterEndY; y++) {
-          if (uint32_t(y - rgStartY) >= cellMap->mRows.Length()) ABORT0();
-          const nsCellMap::CellDataArray& row = cellMap->mRows[y - rgStartY];
-          CellData* cellData = row.SafeElementAt(dStartX);
+      NS_ASSERTION(iterStartY >= 0 && iterEndY >= 0,
+                   "table index values are expected to be nonnegative");
+      for (int32_t y = iterStartY; y <= iterEndY; y++) {
+        if (uint32_t(y - rgStartY) >= cellMap->mRows.Length()) ABORT0();
+        const nsCellMap::CellDataArray& row = cellMap->mRows[y - rgStartY];
+        CellData* cellData = row.SafeElementAt(dStartX);
+        if (cellData && (cellData->IsColSpan())) {
+          haveSpanner = true;
+          break;
+        }
+        if (dEndX < (numCols - 1)) {
+          cellData = row.SafeElementAt(dEndX + 1);
           if (cellData && (cellData->IsColSpan())) {
             haveSpanner = true;
             break;
-          }
-          if (dEndX < (numCols - 1)) {
-            cellData = row.SafeElementAt(dEndX + 1);
-            if (cellData && (cellData->IsColSpan())) {
-              haveSpanner = true;
-              break;
-            }
           }
         }
       }
