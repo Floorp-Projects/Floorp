@@ -32,11 +32,10 @@ bool RemoteAccessible::GetCOMInterface(void** aOutAccessible) const {
   }
 
   if (!mCOMProxy && mSafeToRecurse) {
-    // See if we can lazily obtain a COM proxy
-    AccessibleWrap* wrap = WrapperFor(this);
-    MsaaAccessible* msaa = wrap->GetMsaa();
-    bool isDefunct = false;
     RemoteAccessible* thisPtr = const_cast<RemoteAccessible*>(this);
+    // See if we can lazily obtain a COM proxy
+    MsaaAccessible* msaa = MsaaAccessible::GetFrom(thisPtr);
+    bool isDefunct = false;
     // NB: Don't pass CHILDID_SELF here, use the absolute MSAA ID. Otherwise
     // GetIAccessibleFor will recurse into this function and we will just
     // overflow the stack.

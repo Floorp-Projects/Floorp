@@ -25,7 +25,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "ProxyWrappers.h"
 
 #if defined(MOZ_TELEMETRY_REPORTING)
 #  include "mozilla/Telemetry.h"
@@ -73,53 +72,24 @@ void a11y::PlatformShutdown() {
 }
 
 void a11y::ProxyCreated(RemoteAccessible* aProxy) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    MsaaAccessible* msaa = MsaaAccessible::Create(aProxy);
-    msaa->AddRef();
-    aProxy->SetWrapper(reinterpret_cast<uintptr_t>(msaa));
-    return;
-  }
-
-  AccessibleWrap* wrapper = nullptr;
-  if (aProxy->IsDoc()) {
-    wrapper = new DocRemoteAccessibleWrap(aProxy);
-  } else if (aProxy->IsHyperText()) {
-    wrapper = new HyperTextRemoteAccessibleWrap(aProxy);
-  } else {
-    wrapper = new RemoteAccessibleWrap(aProxy);
-  }
-
-  wrapper->AddRef();
-  aProxy->SetWrapper(reinterpret_cast<uintptr_t>(wrapper));
+  MsaaAccessible* msaa = MsaaAccessible::Create(aProxy);
+  msaa->AddRef();
+  aProxy->SetWrapper(reinterpret_cast<uintptr_t>(msaa));
 }
 
 void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
+  MsaaAccessible* msaa =
+      reinterpret_cast<MsaaAccessible*>(aProxy->GetWrapper());
+  if (!msaa) {
+    return;
+  }
+  msaa->MsaaShutdown();
+  aProxy->SetWrapper(0);
+  msaa->Release();
+
   if (aProxy->IsDoc() && nsWinUtils::IsWindowEmulationStarted()) {
     aProxy->AsDoc()->SetEmulatedWindowHandle(nullptr);
   }
-
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    MsaaAccessible* msaa =
-        reinterpret_cast<MsaaAccessible*>(aProxy->GetWrapper());
-    if (!msaa) {
-      return;
-    }
-    msaa->MsaaShutdown();
-    aProxy->SetWrapper(0);
-    msaa->Release();
-    return;
-  }
-
-  AccessibleWrap* wrapper =
-      reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
-
-  // If aProxy is a document that was created, but
-  // RecvPDocAccessibleConstructor failed then aProxy->GetWrapper() will be
-  // null.
-  if (!wrapper) return;
-  wrapper->Shutdown();
-  aProxy->SetWrapper(0);
-  wrapper->Release();
 }
 
 void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
@@ -160,35 +130,19 @@ void a11y::ProxyTextChangeEvent(RemoteAccessible* aText, const nsString& aStr,
                                 bool) {
   uint32_t eventType = aInsert ? nsIAccessibleEvent::EVENT_TEXT_INSERTED
                                : nsIAccessibleEvent::EVENT_TEXT_REMOVED;
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    // XXX Call ia2AccessibleText::UpdateTextChangeData once this works for
-    // RemoteAccessible.
-    MsaaAccessible::FireWinEvent(aText, eventType);
-    return;
-  }
-
-  AccessibleWrap* wrapper = WrapperFor(aText);
-  MOZ_ASSERT(wrapper);
-  if (!wrapper) {
-    return;
-  }
-
   static const bool useHandler =
+      !StaticPrefs::accessibility_cache_enabled_AtStartup() &&
       Preferences::GetBool("accessibility.handler.enabled", false) &&
       IsHandlerRegistered();
-
   if (useHandler) {
-    AccessibleWrap::DispatchTextChangeToHandler(wrapper, aInsert, aStr, aStart,
+    AccessibleWrap::DispatchTextChangeToHandler(aText, aInsert, aStr, aStart,
                                                 aLen);
     return;
   }
 
-  auto text = static_cast<HyperTextAccessibleWrap*>(wrapper->AsHyperText());
-  if (text) {
-    ia2AccessibleText::UpdateTextChangeData(text, aInsert, aStr, aStart, aLen);
-  }
-
-  MsaaAccessible::FireWinEvent(wrapper, eventType);
+  // XXX Call ia2AccessibleText::UpdateTextChangeData once that works for
+  // RemoteAccessible.
+  MsaaAccessible::FireWinEvent(aText, eventType);
 }
 
 void a11y::ProxyShowHideEvent(RemoteAccessible* aTarget, RemoteAccessible*,

@@ -242,10 +242,9 @@ class DocAccessibleParent : public RemoteAccessible,
    * DocAccessibleParent or vice versa. Therefore, this must be conditionally
    * called when either of these is created.
    * @param aOuterDoc The OuterDocAccessible to be returned as the parent of
-   *        this document. Only GetNativeInterface() is called on this, so it
-   *        may be a RemoteAccessibleWrap or similar.
+   *        this document.
    */
-  void SendParentCOMProxy(LocalAccessible* aOuterDoc);
+  void SendParentCOMProxy(Accessible* aOuterDoc);
 
   /**
    * Set emulated native window handle for a document.
