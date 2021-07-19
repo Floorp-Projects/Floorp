@@ -938,10 +938,15 @@ function failed_script_callback(pi) {
   obs = obs.QueryInterface(Ci.nsIObserverService);
   obs.addObserver(directFilterListener, "http-on-modify-request");
 
+  var ssm = Services.scriptSecurityManager;
+  let uri = "http://127.0.0.1:7247";
   var chan = NetUtil.newChannel({
-    uri: "http://127.0.0.1:7247",
-    loadUsingSystemPrincipal: true,
+    uri,
+    loadingPrincipal: ssm.createContentPrincipal(Services.io.newURI(uri), {}),
+    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   });
+
   chan.asyncOpen(directFilterListener);
 }
 

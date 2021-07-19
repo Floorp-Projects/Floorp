@@ -30,12 +30,7 @@ var dnsRequestObserver = {
 
   observe(subject, topic, data) {
     if (topic == "dns-resolution-request") {
-      info(data);
-      if (data.indexOf("dnsleak.example.com") > -1) {
-        try {
-          Assert.ok(false);
-        } catch (e) {}
-      }
+      Assert.ok(!data.includes("dnsleak.example.com"), `no dnsleak: ${data}`);
     }
   },
 };
@@ -68,15 +63,15 @@ function run_test() {
     Ci.nsIWebSocketChannel
   );
 
+  var uri = ioService.newURI(url);
   chan.initLoadInfo(
     null, // aLoadingNode
-    Services.scriptSecurityManager.getSystemPrincipal(),
+    Services.scriptSecurityManager.createContentPrincipal(uri, {}),
     null, // aTriggeringPrincipal
     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     Ci.nsIContentPolicy.TYPE_WEBSOCKET
   );
 
-  var uri = ioService.newURI(url);
   chan.asyncOpen(uri, url, 0, listener, null);
   do_test_pending();
 }

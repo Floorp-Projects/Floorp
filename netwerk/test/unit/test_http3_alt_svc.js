@@ -52,10 +52,21 @@ function run_test() {
   run_next_test();
 }
 
+function createPrincipal(url) {
+  var ssm = Services.scriptSecurityManager;
+  try {
+    return ssm.createContentPrincipal(Services.io.newURI(url), {});
+  } catch (e) {
+    return null;
+  }
+}
+
 function makeChan(uri) {
   let chan = NetUtil.newChannel({
     uri,
-    loadUsingSystemPrincipal: true,
+    loadingPrincipal: createPrincipal(uri),
+    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   }).QueryInterface(Ci.nsIHttpChannel);
   chan.loadFlags = Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
   return chan;
