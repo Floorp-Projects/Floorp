@@ -258,6 +258,9 @@ const COMMON_PREFERENCES = new Map([
 
   // Prevent starting into safe mode after application crashes
   ["toolkit.startup.max_resumed_crashes", -1],
+
+  // Make sure Topsites doesn't hit the network to retrieve tiles from Contile.
+  ["browser.topsites.contile.enabled", false],
 ]);
 
 const RecommendedPreferences = {
