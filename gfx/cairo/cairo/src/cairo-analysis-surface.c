@@ -755,12 +755,7 @@ static cairo_int_status_t
 _cairo_analysis_surface_tag (void	                *abstract_surface,
 			     cairo_bool_t                begin,
 			     const char                 *tag_name,
-			     const char                 *attributes,
-			     const cairo_pattern_t	*source,
-			     const cairo_stroke_style_t	*stroke_style,
-			     const cairo_matrix_t	*ctm,
-			     const cairo_matrix_t	*ctm_inverse,
-			     const cairo_clip_t	        *clip)
+			     const char                 *attributes)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_int_status_t	     backend_status;
@@ -771,12 +766,7 @@ _cairo_analysis_surface_tag (void	                *abstract_surface,
 	    surface->target->backend->tag (surface->target,
 					   begin,
 					   tag_name,
-					   attributes,
-					   source,
-					   stroke_style,
-					   ctm,
-					   ctm_inverse,
-					   clip);
+					   attributes);
         if (backend_status == CAIRO_INT_STATUS_SUCCESS)
             surface->has_supported = TRUE;
     }
