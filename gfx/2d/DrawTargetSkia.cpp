@@ -706,7 +706,7 @@ void DrawTargetSkia::DrawSurface(SourceSurface* aSurface, const Rect& aDest,
   }
 
   SkRect destRect = RectToSkRect(aDest);
-  SkRect sourceRect = RectToSkRect(aSource);
+  SkRect sourceRect = RectToSkRect(aSource - aSurface->GetRect().TopLeft());
   bool forceGroup =
       image->isAlphaOnly() && aOptions.mCompositionOp != CompositionOp::OP_OVER;
 
