@@ -89,11 +89,11 @@ MsaaRootAccessible::accNavigate(
     return CO_E_OBJNOTCONNECTED;
   }
 
-  LocalAccessible* target = nullptr;
+  Accessible* target = nullptr;
   // Get the document in the active tab.
   RemoteAccessible* docProxy = rootAcc->GetPrimaryRemoteTopLevelContentDoc();
   if (docProxy) {
-    target = WrapperFor(docProxy);
+    target = docProxy;
   } else {
     // The base implementation could handle this, but we may as well
     // just handle it here.
@@ -138,11 +138,7 @@ MsaaRootAccessible::get_accFocus(
   if (!docProxy) {
     return hr;
   }
-  LocalAccessible* docAcc = WrapperFor(docProxy);
-  if (!docAcc) {
-    return E_FAIL;
-  }
-  RefPtr<IDispatch> docDisp = NativeAccessible(docAcc);
+  RefPtr<IDispatch> docDisp = NativeAccessible(docProxy);
   if (!docDisp) {
     return E_FAIL;
   }
