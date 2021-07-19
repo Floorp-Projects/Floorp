@@ -66,6 +66,18 @@ nsBrowserStatusFilter::RemoveProgressListener(
 }
 
 NS_IMETHODIMP
+nsBrowserStatusFilter::GetBrowsingContextXPCOM(
+    mozilla::dom::BrowsingContext** aResult) {
+  MOZ_ASSERT_UNREACHABLE("nsBrowserStatusFilter::GetBrowsingContextXPCOM");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+mozilla::dom::BrowsingContext* nsBrowserStatusFilter::GetBrowsingContext() {
+  MOZ_ASSERT_UNREACHABLE("nsBrowserStatusFilter::GetBrowsingContext");
+  return nullptr;
+}
+
+NS_IMETHODIMP
 nsBrowserStatusFilter::GetDOMWindow(mozIDOMWindowProxy** aResult) {
   MOZ_ASSERT_UNREACHABLE("nsBrowserStatusFilter::GetDOMWindow");
   return NS_ERROR_NOT_IMPLEMENTED;

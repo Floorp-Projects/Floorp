@@ -1007,6 +1007,14 @@ nsDocLoader::RemoveProgressListener(nsIWebProgressListener* aListener) {
 }
 
 NS_IMETHODIMP
+nsDocLoader::GetBrowsingContextXPCOM(BrowsingContext** aResult) {
+  *aResult = nullptr;
+  return NS_OK;
+}
+
+BrowsingContext* nsDocLoader::GetBrowsingContext() { return nullptr; }
+
+NS_IMETHODIMP
 nsDocLoader::GetDOMWindow(mozIDOMWindowProxy** aResult) {
   return CallGetInterface(this, aResult);
 }
