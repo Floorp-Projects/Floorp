@@ -57,12 +57,10 @@ def test_register_command_with_metrics_path(registrar):
     class CommandFoo(MachCommandBase):
         @Command("cmd_foo", category="testing", metrics_path=metrics_path)
         def run_foo(self, command_context):
-            assert self.metrics == metrics_mock
             assert command_context.metrics == metrics_mock
 
         @SubCommand("cmd_foo", "sub_foo", metrics_path=metrics_path + "2")
         def run_subfoo(self, command_context):
-            assert self.metrics == metrics_mock
             assert command_context.metrics == metrics_mock
 
     registrar.dispatch("cmd_foo", context)
@@ -87,9 +85,6 @@ def test_register_command_sets_up_class_at_runtime(registrar):
         @Command("cmd_foo", category="testing", virtualenv_name="env_foo")
         def run_foo(self, command_context):
             assert (
-                os.path.basename(self.virtualenv_manager.virtualenv_root) == "env_foo"
-            )
-            assert (
                 os.path.basename(command_context.virtualenv_manager.virtualenv_root)
                 == "env_foo"
             )
@@ -97,9 +92,6 @@ def test_register_command_sets_up_class_at_runtime(registrar):
 
         @Command("cmd_bar", category="testing", virtualenv_name="env_bar")
         def run_bar(self, command_context):
-            assert (
-                os.path.basename(self.virtualenv_manager.virtualenv_root) == "env_bar"
-            )
             assert (
                 os.path.basename(command_context.virtualenv_manager.virtualenv_root)
                 == "env_bar"

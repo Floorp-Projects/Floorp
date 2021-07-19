@@ -77,7 +77,7 @@ class BustedProvider(MachCommandBase):
 
         if (
             against != "general"
-            and against not in self._mach_context.commands.command_handlers
+            and against not in command_context._mach_context.commands.command_handlers
         ):
             print(
                 "%s is not a valid value for `against`. `against` must be "
@@ -95,10 +95,12 @@ class BustedProvider(MachCommandBase):
 
             # Look up the file implementing that command, then cross-refernce
             # moz.build files to get the product/component.
-            handler = self._mach_context.commands.command_handlers[against]
+            handler = command_context._mach_context.commands.command_handlers[against]
             method = getattr(handler.cls, handler.method)
-            sourcefile = mozpath.relpath(inspect.getsourcefile(method), self.topsrcdir)
-            reader = self.mozbuild_reader(config_mode="empty")
+            sourcefile = mozpath.relpath(
+                inspect.getsourcefile(method), command_context.topsrcdir
+            )
+            reader = command_context.mozbuild_reader(config_mode="empty")
             try:
                 res = reader.files_info([sourcefile])[sourcefile]["BUG_COMPONENT"]
                 product, component = res.product, res.component
@@ -439,7 +441,7 @@ class MozregressionCommand(MachCommandBase):
         parser=mozregression_create_parser,
     )
     def run(self, command_context, **options):
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
         mozregression = PypiBasedTool("mozregression")
         mozregression.run(**options)
 
@@ -456,11 +458,11 @@ class NodeCommands(MachCommandBase):
         from mozbuild.nodeutil import find_node_executable
 
         # Avoid logging the command
-        self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
+        command_context.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
         node_path, _ = find_node_executable()
 
-        return self.run_process(
+        return command_context.run_process(
             [node_path] + args,
             pass_thru=True,  # Allow user to run Node interactively.
             ensure_exit_code=False,  # Don't throw on non-zero exit code.
@@ -476,7 +478,7 @@ class NodeCommands(MachCommandBase):
         from mozbuild.nodeutil import find_npm_executable
 
         # Avoid logging the command
-        self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
+        command_context.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
         import os
 
@@ -492,7 +494,7 @@ class NodeCommands(MachCommandBase):
         path = os.path.abspath(os.path.dirname(npm_path))
         os.environ["PATH"] = "{}:{}".format(path, os.environ["PATH"])
 
-        return self.run_process(
+        return command_context.run_process(
             [npm_path, "--scripts-prepend-node-path=auto"] + args,
             pass_thru=True,  # Avoid eating npm output/error messages
             ensure_exit_code=False,  # Don't throw on non-zero exit code.
@@ -522,18 +524,18 @@ class LogspamCommand(MachCommandBase):
 
     @SubCommand("logspam", "report", parser=partial(logspam_create_parser, "report"))
     def report(self, command_context, **options):
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
         logspam = PypiBasedTool("logspam")
         logspam.run(command="report", **options)
 
     @SubCommand("logspam", "bisect", parser=partial(logspam_create_parser, "bisect"))
     def bisect(self, command_context, **options):
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
         logspam = PypiBasedTool("logspam")
         logspam.run(command="bisect", **options)
 
     @SubCommand("logspam", "file", parser=partial(logspam_create_parser, "file"))
     def create(self, command_context, **options):
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
         logspam = PypiBasedTool("logspam")
         logspam.run(command="file", **options)

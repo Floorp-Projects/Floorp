@@ -79,13 +79,13 @@ class MachCommands(MachCommandBase):
     def gcc_dir(self):
         return os.path.join(self.tools_dir(), "gcc")
 
-    def script_dir(self):
-        return os.path.join(self.topsrcdir, "js/src/devtools/rootAnalysis")
+    def script_dir(self, command_context):
+        return os.path.join(command_context.topsrcdir, "js/src/devtools/rootAnalysis")
 
-    def work_dir(self, application, given):
+    def work_dir(self, command_context, application, given):
         if given is not None:
             return given
-        return os.path.join(self.topsrcdir, "haz-" + application)
+        return os.path.join(command_context.topsrcdir, "haz-" + application)
 
     def ensure_dir_exists(self, dir):
         os.makedirs(dir, exist_ok=True)
@@ -122,8 +122,11 @@ class MachCommands(MachCommandBase):
         os.chdir(self.ensure_dir_exists(self.tools_dir()))
         try:
             kwargs["from_build"] = ("linux64-gcc-sixgill", "linux64-gcc-9")
-            self._mach_context.commands.dispatch(
-                "artifact", self._mach_context, subcommand="toolchain", **kwargs
+            command_context._mach_context.commands.dispatch(
+                "artifact",
+                command_context._mach_context,
+                subcommand="toolchain",
+                **kwargs
             )
         finally:
             os.chdir(orig_dir)
@@ -152,8 +155,8 @@ class MachCommands(MachCommandBase):
             or os.environ.get("MOZCONFIG")
             or default_mozconfig
         )
-        mozconfig_path = os.path.join(self.topsrcdir, mozconfig_path)
-        loader = MozconfigLoader(self.topsrcdir)
+        mozconfig_path = os.path.join(command_context.topsrcdir, mozconfig_path)
+        loader = MozconfigLoader(command_context.topsrcdir)
         mozconfig = loader.read_mozconfig(mozconfig_path)
 
         # Validate the mozconfig settings in case the user overrode the default.
@@ -170,20 +173,20 @@ class MachCommands(MachCommandBase):
 
         # Set a default objdir for the shell, for developer builds.
         os.environ.setdefault(
-            "MOZ_OBJDIR", os.path.join(self.topsrcdir, "obj-haz-shell")
+            "MOZ_OBJDIR", os.path.join(command_context.topsrcdir, "obj-haz-shell")
         )
 
-        return self._mach_context.commands.dispatch(
-            "build", self._mach_context, **kwargs
+        return command_context._mach_context.commands.dispatch(
+            "build", command_context._mach_context, **kwargs
         )
 
     def read_json_file(self, filename):
         with open(filename) as fh:
             return json.load(fh)
 
-    def ensure_shell(self, objdir):
+    def ensure_shell(self, command_context, objdir):
         if objdir is None:
-            objdir = os.path.join(self.topsrcdir, "obj-haz-shell")
+            objdir = os.path.join(command_context.topsrcdir, "obj-haz-shell")
 
         try:
             binaries = self.read_json_file(os.path.join(objdir, "binaries.json"))
@@ -218,9 +221,11 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         if objdir is None:
             objdir = os.environ.get("HAZ_OBJDIR")
         if objdir is None:
-            objdir = os.path.join(self.topsrcdir, "obj-analyzed-" + application)
+            objdir = os.path.join(
+                command_context.topsrcdir, "obj-analyzed-" + application
+            )
 
-        work_dir = self.work_dir(application, kwargs["work_dir"])
+        work_dir = self.work_dir(command_context, application, kwargs["work_dir"])
         self.ensure_dir_exists(work_dir)
         with open(os.path.join(work_dir, "defaults.py"), "wt") as fh:
             data = textwrap.dedent(
@@ -233,9 +238,9 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
                 gcc_bin = "{gcc_dir}/bin"
             """
             ).format(
-                script_dir=self.script_dir(),
+                script_dir=self.script_dir(command_context),
                 objdir=objdir,
-                srcdir=self.topsrcdir,
+                srcdir=command_context.topsrcdir,
                 sixgill_dir=self.sixgill_dir(),
                 gcc_dir=self.gcc_dir(),
             )
@@ -243,14 +248,14 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
 
         buildscript = " ".join(
             [
-                self.topsrcdir + "/mach hazards compile",
+                command_context.topsrcdir + "/mach hazards compile",
                 "--application=" + application,
                 "--haz-objdir=" + objdir,
             ]
         )
         args = [
             sys.executable,
-            os.path.join(self.script_dir(), "analyze.py"),
+            os.path.join(self.script_dir(command_context), "analyze.py"),
             "dbs",
             "--upto",
             "dbs",
@@ -258,7 +263,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
             "--buildcommand=" + buildscript,
         ]
 
-        return self.run_process(args=args, cwd=work_dir, pass_thru=True)
+        return command_context.run_process(args=args, cwd=work_dir, pass_thru=True)
 
     @inherit_command_args("build")
     @SubCommand("hazards", "compile", description=argparse.SUPPRESS)
@@ -295,13 +300,13 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         mozconfig_path = (
             kwargs.pop("mozconfig", None) or env.get("MOZCONFIG") or default_mozconfig
         )
-        mozconfig_path = os.path.join(self.topsrcdir, mozconfig_path)
+        mozconfig_path = os.path.join(command_context.topsrcdir, mozconfig_path)
 
         # Validate the mozconfig.
 
         # Require an explicit --enable-application=APP (even if you just
         # want to build the default browser application.)
-        loader = MozconfigLoader(self.topsrcdir)
+        loader = MozconfigLoader(command_context.topsrcdir)
         mozconfig = loader.read_mozconfig(mozconfig_path)
         configure_args = mozconfig["configure_args"]
         if "--enable-application=%s" % app not in configure_args:
@@ -310,7 +315,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
             raise Exception("mozconfig must wrap compiles")
 
         # Communicate mozconfig to build subprocesses.
-        env["MOZCONFIG"] = os.path.join(self.topsrcdir, mozconfig_path)
+        env["MOZCONFIG"] = os.path.join(command_context.topsrcdir, mozconfig_path)
 
         # hazard mozconfigs need to find binaries in .mozbuild
         env["MOZBUILD_STATE_PATH"] = self.state_dir()
@@ -323,8 +328,8 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         if "haz_objdir" in kwargs:
             env["MOZ_OBJDIR"] = kwargs.pop("haz_objdir")
 
-        return self._mach_context.commands.dispatch(
-            "build", self._mach_context, **kwargs
+        return command_context._mach_context.commands.dispatch(
+            "build", command_context._mach_context, **kwargs
         )
 
     @SubCommand(
@@ -346,9 +351,9 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
     def analyze(self, command_context, application, shell_objdir, work_dir):
         """Analyzed gathered data for rooting hazards"""
 
-        shell = self.ensure_shell(shell_objdir)
+        shell = self.ensure_shell(command_context, shell_objdir)
         args = [
-            os.path.join(self.script_dir(), "analyze.py"),
+            os.path.join(self.script_dir(command_context), "analyze.py"),
             "--js",
             shell,
             "gcTypes",
@@ -358,8 +363,8 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         self.setup_env_for_tools(os.environ)
         os.environ["LD_LIBRARY_PATH"] += ":" + os.path.dirname(shell)
 
-        work_dir = self.work_dir(application, work_dir)
-        return self.run_process(args=args, cwd=work_dir, pass_thru=True)
+        work_dir = self.work_dir(command_context, application, work_dir)
+        return command_context.run_process(args=args, cwd=work_dir, pass_thru=True)
 
     @SubCommand(
         "hazards",
@@ -373,9 +378,9 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
     )
     def self_test(self, command_context, shell_objdir):
         """Analyzed gathered data for rooting hazards"""
-        shell = self.ensure_shell(shell_objdir)
+        shell = self.ensure_shell(command_context, shell_objdir)
         args = [
-            os.path.join(self.script_dir(), "run-test.py"),
+            os.path.join(self.script_dir(command_context), "run-test.py"),
             "-v",
             "--js",
             shell,
@@ -387,4 +392,4 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
 
         self.setup_env_for_tools(os.environ)
         os.environ["LD_LIBRARY_PATH"] += ":" + os.path.dirname(shell)
-        return self.run_process(args=args, pass_thru=True)
+        return command_context.run_process(args=args, pass_thru=True)

@@ -31,7 +31,7 @@ class PhabricatorCommandProvider(MachCommandBase):
 
         existing = mozfile.which("moz-phab")
         if existing and not force:
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "already_installed",
                 {},
@@ -44,7 +44,7 @@ class PhabricatorCommandProvider(MachCommandBase):
         # if pip3 is missing.
         pip3 = mozfile.which("pip3")
         if not pip3:
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "pip3_not_installed",
                 {},
@@ -74,7 +74,7 @@ class PhabricatorCommandProvider(MachCommandBase):
 
         else:
             # Unsupported, default to --user.
-            self.log(
+            command_context.log(
                 logging.WARNING,
                 "unsupported_platform",
                 {},
@@ -88,7 +88,7 @@ class PhabricatorCommandProvider(MachCommandBase):
             # installation if we're not within one.
             command.append("--user")
 
-        self.log(logging.INFO, "run", {}, "Installing moz-phab")
+        command_context.log(logging.INFO, "run", {}, "Installing moz-phab")
         subprocess.run(command)
 
         # There isn't an elegant way of determining the CLI location of a pip-installed package.
@@ -110,7 +110,7 @@ class PhabricatorCommandProvider(MachCommandBase):
         ).findall(info)
 
         if len(potential_cli_paths) != 1:
-            self.log(
+            command_context.log(
                 logging.WARNING,
                 "no_mozphab_console_script",
                 {},

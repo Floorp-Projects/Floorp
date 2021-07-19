@@ -70,7 +70,7 @@ class MachCommands(MachCommandBase):
     def android_assemble_app(self, command_context, args):
         ret = self.gradle(
             command_context,
-            self.substs["GRADLE_ANDROID_APP_TASKS"] + ["-x", "lint"] + args,
+            command_context.substs["GRADLE_ANDROID_APP_TASKS"] + ["-x", "lint"] + args,
             verbose=True,
         )
 
@@ -103,7 +103,7 @@ class MachCommands(MachCommandBase):
 
         ret = self.gradle(
             command_context,
-            self.substs["GRADLE_ANDROID_GENERATE_SDK_BINDINGS_TASKS"]
+            command_context.substs["GRADLE_ANDROID_GENERATE_SDK_BINDINGS_TASKS"]
             + [bindings_args]
             + args,
             verbose=True,
@@ -120,7 +120,10 @@ class MachCommands(MachCommandBase):
     def android_generate_generated_jni_wrappers(self, command_context, args):
         ret = self.gradle(
             command_context,
-            self.substs["GRADLE_ANDROID_GENERATE_GENERATED_JNI_WRAPPERS_TASKS"] + args,
+            command_context.substs[
+                "GRADLE_ANDROID_GENERATE_GENERATED_JNI_WRAPPERS_TASKS"
+            ]
+            + args,
             verbose=True,
         )
 
@@ -179,7 +182,9 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
         # can change the outputs for those processes.
         self.gradle(
             command_context,
-            self.substs["GRADLE_ANDROID_DEPENDENCIES_TASKS"] + ["--continue"] + args,
+            command_context.substs["GRADLE_ANDROID_DEPENDENCIES_TASKS"]
+            + ["--continue"]
+            + args,
             verbose=True,
         )
 
@@ -195,7 +200,7 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
     def android_archive_geckoview(self, command_context, args):
         ret = self.gradle(
             command_context,
-            self.substs["GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS"] + args,
+            command_context.substs["GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS"] + args,
             verbose=True,
         )
 
@@ -206,7 +211,8 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
     def android_build_geckoview_example(self, command_context, args):
         self.gradle(
             command_context,
-            self.substs["GRADLE_ANDROID_BUILD_GECKOVIEW_EXAMPLE_TASKS"] + args,
+            command_context.substs["GRADLE_ANDROID_BUILD_GECKOVIEW_EXAMPLE_TASKS"]
+            + args,
             verbose=True,
         )
 
@@ -224,7 +230,8 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
     def android_install_geckoview_example(self, command_context, args):
         self.gradle(
             command_context,
-            self.substs["GRADLE_ANDROID_INSTALL_GECKOVIEW_EXAMPLE_TASKS"] + args,
+            command_context.substs["GRADLE_ANDROID_INSTALL_GECKOVIEW_EXAMPLE_TASKS"]
+            + args,
             verbose=True,
         )
 
@@ -278,9 +285,9 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
     ):
 
         tasks = (
-            self.substs["GRADLE_ANDROID_GECKOVIEW_DOCS_ARCHIVE_TASKS"]
+            command_context.substs["GRADLE_ANDROID_GECKOVIEW_DOCS_ARCHIVE_TASKS"]
             if archive or upload
-            else self.substs["GRADLE_ANDROID_GECKOVIEW_DOCS_TASKS"]
+            else command_context.substs["GRADLE_ANDROID_GECKOVIEW_DOCS_TASKS"]
         )
 
         ret = self.gradle(command_context, tasks, verbose=True)
@@ -321,7 +328,7 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
         branch = upload_branch.format(**fmt)
         repo_url = "git@github.com:%s.git" % upload
         repo_path = mozpath.abspath("gv-docs-repo")
-        self.run_process(
+        command_context.run_process(
             [
                 "git",
                 "clone",
@@ -345,7 +352,7 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
 
         # Extract new javadoc to specified directory inside repo.
         src_tar = mozpath.join(
-            self.topobjdir,
+            command_context.topobjdir,
             "gradle",
             "build",
             "mobile",
@@ -359,9 +366,11 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
         mozfile.extract_zip(src_tar, dst_path)
 
         # Commit and push.
-        self.run_process(["git", "add", "--all"], append_env=env, pass_thru=True)
+        command_context.run_process(
+            ["git", "add", "--all"], append_env=env, pass_thru=True
+        )
         if (
-            self.run_process(
+            command_context.run_process(
                 ["git", "diff", "--cached", "--quiet"],
                 append_env=env,
                 pass_thru=True,
@@ -370,12 +379,12 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
             != 0
         ):
             # We have something to commit.
-            self.run_process(
+            command_context.run_process(
                 ["git", "commit", "--message", upload_message.format(**fmt)],
                 append_env=env,
                 pass_thru=True,
             )
-            self.run_process(
+            command_context.run_process(
                 ["git", "push", "origin", branch], append_env=env, pass_thru=True
             )
 
@@ -400,14 +409,14 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
     def gradle(self, command_context, args, verbose=False):
         if not verbose:
             # Avoid logging the command
-            self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
+            command_context.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
         # In automation, JAVA_HOME is set via mozconfig, which needs
         # to be specially handled in each mach command. This turns
         # $JAVA_HOME/bin/java into $JAVA_HOME.
-        java_home = os.path.dirname(os.path.dirname(self.substs["JAVA"]))
+        java_home = os.path.dirname(os.path.dirname(command_context.substs["JAVA"]))
 
-        gradle_flags = self.substs.get("GRADLE_FLAGS", "") or os.environ.get(
+        gradle_flags = command_context.substs.get("GRADLE_FLAGS", "") or os.environ.get(
             "GRADLE_FLAGS", ""
         )
         gradle_flags = shell_split(gradle_flags)
@@ -430,7 +439,7 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
         # https://discuss.gradle.org/t/unmappable-character-for-encoding-ascii-when-building-a-utf-8-project/10692/11  # NOQA: E501
         # and especially https://stackoverflow.com/a/21755671.
 
-        if self.substs.get("MOZ_AUTOMATION"):
+        if command_context.substs.get("MOZ_AUTOMATION"):
             gradle_flags += ["--console=plain"]
 
         env = os.environ.copy()
@@ -443,16 +452,16 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
         )
         # Set ANDROID_SDK_ROOT if --with-android-sdk was set.
         # See https://bugzilla.mozilla.org/show_bug.cgi?id=1576471
-        android_sdk_root = self.substs.get("ANDROID_SDK_ROOT", "")
+        android_sdk_root = command_context.substs.get("ANDROID_SDK_ROOT", "")
         if android_sdk_root:
             env["ANDROID_SDK_ROOT"] = android_sdk_root
 
-        return self.run_process(
-            [self.substs["GRADLE"]] + gradle_flags + args,
+        return command_context.run_process(
+            [command_context.substs["GRADLE"]] + gradle_flags + args,
             explicit_env=env,
             pass_thru=True,  # Allow user to run gradle interactively.
             ensure_exit_code=False,  # Don't throw on non-zero exit code.
-            cwd=mozpath.join(self.topsrcdir),
+            cwd=mozpath.join(command_context.topsrcdir),
         )
 
     @Command("gradle-install", category="devenv", conditions=[REMOVED])
@@ -511,7 +520,10 @@ class AndroidEmulatorCommands(MachCommandBase):
         from mozrunner.devices.android_device import AndroidEmulator
 
         emulator = AndroidEmulator(
-            version, verbose, substs=self.substs, device_serial="emulator-5554"
+            version,
+            verbose,
+            substs=command_context.substs,
+            device_serial="emulator-5554",
         )
         if emulator.is_running():
             # It is possible to run multiple emulators simultaneously, but:
@@ -520,7 +532,7 @@ class AndroidEmulatorCommands(MachCommandBase):
             #  - additional parameters must be specified when running tests,
             #    to select a specific device.
             # To avoid these complications, allow just one emulator at a time.
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "emulator",
                 {},
@@ -530,7 +542,7 @@ class AndroidEmulatorCommands(MachCommandBase):
             return 1
 
         if not emulator.is_available():
-            self.log(
+            command_context.log(
                 logging.WARN,
                 "emulator",
                 {},
@@ -540,7 +552,7 @@ class AndroidEmulatorCommands(MachCommandBase):
             return 2
 
         if not emulator.check_avd(force_update):
-            self.log(
+            command_context.log(
                 logging.INFO,
                 "emulator",
                 {},
@@ -548,7 +560,7 @@ class AndroidEmulatorCommands(MachCommandBase):
             )
             emulator.update_avd(force_update)
 
-        self.log(
+        command_context.log(
             logging.INFO,
             "emulator",
             {},
@@ -556,25 +568,27 @@ class AndroidEmulatorCommands(MachCommandBase):
         )
         emulator.start(gpu)
         if emulator.wait_for_start():
-            self.log(logging.INFO, "emulator", {}, "Android emulator is running.")
+            command_context.log(
+                logging.INFO, "emulator", {}, "Android emulator is running."
+            )
         else:
             # This is unusual but the emulator may still function.
-            self.log(
+            command_context.log(
                 logging.WARN,
                 "emulator",
                 {},
                 "Unable to verify that emulator is running.",
             )
 
-        if conditions.is_android(self):
-            self.log(
+        if conditions.is_android(command_context):
+            command_context.log(
                 logging.INFO,
                 "emulator",
                 {},
                 "Use 'mach install' to install or update Firefox on your emulator.",
             )
         else:
-            self.log(
+            command_context.log(
                 logging.WARN,
                 "emulator",
                 {},
@@ -584,19 +598,19 @@ class AndroidEmulatorCommands(MachCommandBase):
             )
 
         if wait:
-            self.log(
+            command_context.log(
                 logging.INFO, "emulator", {}, "Waiting for Android emulator to close..."
             )
             rc = emulator.wait()
             if rc is not None:
-                self.log(
+                command_context.log(
                     logging.INFO,
                     "emulator",
                     {},
                     "Android emulator completed with return code %d." % rc,
                 )
             else:
-                self.log(
+                command_context.log(
                     logging.WARN,
                     "emulator",
                     {},

@@ -56,7 +56,7 @@ class Perftest(MachCommandBase):
             from moztest.resolve import TestResolver
             from mozperftest.fzf.fzf import select
 
-            resolver = self._spawn(TestResolver)
+            resolver = command_context._spawn(TestResolver)
             test_objects = list(resolver.resolve_tests(paths=None, flavor="perftest"))
             selected = select(test_objects)
 
@@ -64,7 +64,7 @@ class Perftest(MachCommandBase):
                 __, script_name, __, location = selection.split(" ")
                 return str(
                     Path(
-                        self.topsrcdir.rstrip(os.sep),
+                        command_context.topsrcdir.rstrip(os.sep),
                         location.strip(os.sep),
                         script_name,
                     )
@@ -102,7 +102,7 @@ class Perftest(MachCommandBase):
 
         push_to_try = kwargs.pop("push_to_try", False)
         if push_to_try:
-            sys.path.append(str(Path(self.topsrcdir, "tools", "tryselect")))
+            sys.path.append(str(Path(command_context.topsrcdir, "tools", "tryselect")))
 
             from tryselect.push import push_to_try
 
@@ -126,8 +126,8 @@ class Perftest(MachCommandBase):
                     )
 
             def relative(path):
-                if path.startswith(self.topsrcdir):
-                    return path[len(self.topsrcdir) :].lstrip(os.sep)
+                if path.startswith(command_context.topsrcdir):
+                    return path[len(command_context.topsrcdir) :].lstrip(os.sep)
                 return path
 
             for name, value in args.items():
@@ -156,18 +156,14 @@ class Perftest(MachCommandBase):
 
         from mozperftest.runner import run_tests
 
-        run_tests(self, kwargs, original_parser.get_user_args(kwargs))
+        run_tests(command_context, kwargs, original_parser.get_user_args(kwargs))
 
         print("\nFirefox. Fast For Good.\n")
 
 
 @CommandProvider
 class PerftestTests(MachCommandBase):
-    @Command(
-        "perftest-test",
-        category="testing",
-        description="Run perftest tests",
-    )
+    @Command("perftest-test", category="testing", description="Run perftest tests")
     @CommandArgument(
         "tests", default=None, nargs="*", help="Tests to run. By default will run all"
     )
@@ -179,14 +175,10 @@ class PerftestTests(MachCommandBase):
         help="Skip flake8 and black",
     )
     @CommandArgument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Verbose mode",
+        "-v", "--verbose", action="store_true", default=False, help="Verbose mode"
     )
     def run_tests(self, command_context, **kwargs):
-        MachCommandBase.activate_virtualenv(self)
+        command_context.activate_virtualenv()
 
         from pathlib import Path
         from mozperftest.utils import temporary_env
@@ -194,9 +186,9 @@ class PerftestTests(MachCommandBase):
         with temporary_env(
             COVERAGE_RCFILE=str(Path(HERE, ".coveragerc")), RUNNING_TESTS="YES"
         ):
-            self._run_tests(**kwargs)
+            self._run_tests(command_context, **kwargs)
 
-    def _run_tests(self, **kwargs):
+    def _run_tests(self, command_context, **kwargs):
         from pathlib import Path
         from mozperftest.runner import _setup_path
         from mozperftest.utils import (
@@ -206,7 +198,7 @@ class PerftestTests(MachCommandBase):
             checkout_python_script,
         )
 
-        venv = self.virtualenv_manager
+        venv = command_context.virtualenv_manager
         skip_linters = kwargs.get("skip_linters", False)
         verbose = kwargs.get("verbose", False)
 
@@ -215,14 +207,16 @@ class PerftestTests(MachCommandBase):
         try:
             import coverage  # noqa
         except ImportError:
-            pydeps = Path(self.topsrcdir, "third_party", "python")
+            pydeps = Path(command_context.topsrcdir, "third_party", "python")
             vendors = ["coverage"]
             if not ON_TRY:
                 vendors.append("attrs")
 
             # pip-installing dependencies that require compilation or special setup
             for dep in vendors:
-                install_package(self.virtualenv_manager, str(Path(pydeps, dep)))
+                install_package(
+                    command_context.virtualenv_manager, str(Path(pydeps, dep))
+                )
 
         if not ON_TRY and not skip_linters:
             cmd = "./mach lint "
@@ -270,14 +264,7 @@ class PerftestTests(MachCommandBase):
             assert checkout_python_script(
                 venv, "coverage", ["erase"], label="remove old coverage data"
             )
-        args = [
-            "run",
-            pytest.__file__,
-            options,
-            "--duration",
-            "10",
-            tests,
-        ]
+        args = ["run", pytest.__file__, options, "--duration", "10", tests]
         assert checkout_python_script(
             venv, "coverage", args, label="running tests", verbose=verbose
         )

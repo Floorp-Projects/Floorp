@@ -91,7 +91,7 @@ class PullRequestImporter(MachCommandBase):
                 break
 
         if repository is None:
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "unrecognized_repo",
                 {},
@@ -100,7 +100,7 @@ class PullRequestImporter(MachCommandBase):
             )
             sys.exit(1)
 
-        self.log(
+        command_context.log(
             logging.INFO,
             "import_pr",
             {"pr_url": pull_request},
@@ -108,22 +108,24 @@ class PullRequestImporter(MachCommandBase):
         )
         dirty = [
             f
-            for f in self.repository.get_changed_files(mode="all")
+            for f in command_context.repository.get_changed_files(mode="all")
             if f.startswith(repository["path"])
         ]
         if dirty:
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "dirty_tree",
                 repository,
                 "Local {path} tree is dirty; aborting!",
             )
             sys.exit(1)
-        target_dir = mozpath.join(self.topsrcdir, os.path.normpath(repository["path"]))
+        target_dir = mozpath.join(
+            command_context.topsrcdir, os.path.normpath(repository["path"])
+        )
 
         if bug_number is None:
             if bugzilla_token is None:
-                self.log(
+                command_context.log(
                     logging.WARNING,
                     "no_token",
                     {},
@@ -131,9 +133,11 @@ class PullRequestImporter(MachCommandBase):
                     "be added to commit messages.",
                 )
             else:
-                bug_number = self._file_bug(bugzilla_token, repository, pr_number)
+                bug_number = self._file_bug(
+                    command_context, bugzilla_token, repository, pr_number
+                )
         elif bugzilla_token is not None:
-            self.log(
+            command_context.log(
                 logging.WARNING,
                 "too_much_bug",
                 {},
@@ -146,7 +150,7 @@ class PullRequestImporter(MachCommandBase):
         for patch in self._split_patches(
             pr_patch.content, bug_number, pull_request, reviewer
         ):
-            self.log(
+            command_context.log(
                 logging.INFO,
                 "commit_msg",
                 patch,
@@ -159,19 +163,21 @@ class PullRequestImporter(MachCommandBase):
             patch_cmd.stdin.close()
             patch_cmd.wait()
             if patch_cmd.returncode != 0:
-                self.log(
+                command_context.log(
                     logging.ERROR,
                     "commit_fail",
                     {},
                     'Error applying diff from commit via "patch -p1 -s". Aborting...',
                 )
                 sys.exit(patch_cmd.returncode)
-            self.repository.commit(
+            command_context.repository.commit(
                 patch["commit_msg"], patch["author"], patch["date"], [target_dir]
             )
-            self.log(logging.INFO, "commit_pass", {}, "Committed successfully.")
+            command_context.log(
+                logging.INFO, "commit_pass", {}, "Committed successfully."
+            )
 
-    def _file_bug(self, token, repo, pr_number):
+    def _file_bug(self, command_context, token, repo, pr_number):
         import requests
 
         bug = requests.post(
@@ -185,9 +191,9 @@ class PullRequestImporter(MachCommandBase):
             },
         )
         bug.raise_for_status()
-        self.log(logging.DEBUG, "new_bug", {}, bug.content)
+        command_context.log(logging.DEBUG, "new_bug", {}, bug.content)
         bugnumber = json.loads(bug.content)["id"]
-        self.log(
+        command_context.log(
             logging.INFO, "new_bug", {"bugnumber": bugnumber}, "Filed bug {bugnumber}"
         )
         return bugnumber

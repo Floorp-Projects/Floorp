@@ -116,6 +116,6 @@ class ReftestCommands(MachCommandBase):
         parser=setup_argument_parser,
     )
     def reftest(self, command_context, **kwargs):
-        self._mach_context.activate_mozharness_venv()
+        command_context._mach_context.activate_mozharness_venv()
         kwargs["suite"] = "reftest"
-        return run_reftest(self._mach_context, **kwargs)
+        return run_reftest(command_context._mach_context, **kwargs)
