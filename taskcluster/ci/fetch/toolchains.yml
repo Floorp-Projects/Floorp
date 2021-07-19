@@ -532,13 +532,13 @@ winchecksec:
         repo: https://github.com/trailofbits/winchecksec/
         revision: 93ffe67dbfc757bf6f440d80b8acf88e652ed60a
 
-codeql-2.0.3:
+codeql-2.5.7:
     description: CodeQL query tools
     fetch:
         type: static-url
-        url: https://github.com/github/codeql-cli-binaries/releases/download/v2.0.3/codeql.zip
-        sha256: 094ff1ffc7211e8222c148e375fdd53b58bd4c0fe20875d9d7abf2a5e6c341a5
-        size: 473738719
+        url: https://github.com/github/codeql-cli-binaries/releases/download/v2.5.7/codeql-linux64.zip
+        sha256: b60a5f2929ac69ffdca85b666c50eadde60ad3387bf6953a7bfcd80b59ee4cff
+        size: 261487494
         artifact-name: codeql.zip
 
 sonatype-nexus:
