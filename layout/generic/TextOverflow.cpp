@@ -159,11 +159,9 @@ class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
         mAscent(aAscent) {
     MOZ_COUNT_CTOR(nsDisplayTextOverflowMarker);
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayTextOverflowMarker() {
-    MOZ_COUNT_DTOR(nsDisplayTextOverflowMarker);
-  }
-#endif
+
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayTextOverflowMarker)
+
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
     *aSnap = false;

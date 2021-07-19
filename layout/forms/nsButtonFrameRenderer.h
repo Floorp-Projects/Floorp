@@ -12,16 +12,22 @@
 
 class gfxContext;
 class nsIFrame;
-class nsDisplayList;
-class nsDisplayListBuilder;
 class nsPresContext;
 struct nsRect;
+
+namespace mozilla {
+class nsDisplayList;
+class nsDisplayListBuilder;
+}  // namespace mozilla
 
 #define NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX 0
 #define NS_BUTTON_RENDERER_LAST_CONTEXT_INDEX \
   NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX
 
 class nsButtonFrameRenderer {
+  using nsDisplayList = mozilla::nsDisplayList;
+  using nsDisplayListBuilder = mozilla::nsDisplayListBuilder;
+
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
   typedef mozilla::ComputedStyle ComputedStyle;
 

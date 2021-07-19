@@ -26,13 +26,13 @@ class nsFontMetrics;
 class nsImageMap;
 class nsIURI;
 class nsILoadGroup;
-class nsDisplayImage;
 class nsPresContext;
 class nsImageFrame;
 class nsTransform2D;
 class nsImageLoadingContent;
 
 namespace mozilla {
+class nsDisplayImage;
 class PresShell;
 namespace layers {
 class ImageContainer;
@@ -434,10 +434,11 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   // singleton pattern: one LoadIcons instance is used
   static mozilla::StaticRefPtr<IconLoad> gIconLoad;
 
-  friend class nsDisplayImage;
+  friend class mozilla::nsDisplayImage;
   friend class nsDisplayGradient;
 };
 
+namespace mozilla {
 /**
  * Note that nsDisplayImage does not receive events. However, an image element
  * is replaced content so its background will be z-adjacent to the
@@ -503,5 +504,7 @@ class nsDisplayImage final : public nsDisplayImageContainer {
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgIContainer> mPrevImage;
 };
+
+}  // namespace mozilla
 
 #endif /* nsImageFrame_h___ */

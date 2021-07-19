@@ -956,7 +956,7 @@ void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // Wrap the list to make it its own layer
     aLists.Content()->AppendNewToTopWithIndex<nsDisplayOwnLayer>(
         aBuilder, this, /* aIndex = */ nsDisplayOwnLayer::OwnLayerForBoxFrame,
-        &masterList, ownLayerASR, nsDisplayOwnLayerFlags::None,
+        &masterList, ownLayerASR, mozilla::nsDisplayOwnLayerFlags::None,
         mozilla::layers::ScrollbarData{}, true, true);
   }
 }
@@ -1004,6 +1004,8 @@ nsresult nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIFrame* aBox,
 
   return NS_OK;
 }
+
+namespace mozilla {
 
 /**
  * This wrapper class lets us redirect mouse hits from descendant frames
@@ -1086,6 +1088,8 @@ void nsDisplayXULEventRedirector::HitTest(nsDisplayListBuilder* aBuilder,
     }
   }
 }
+
+}  // namespace mozilla
 
 class nsXULEventRedirectorWrapper final : public nsDisplayItemWrapper {
  public:

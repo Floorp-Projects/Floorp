@@ -32,11 +32,12 @@ class nsIScrollPositionListener;
 class nsIFrame;
 class nsPresContext;
 class nsIContent;
-class nsDisplayListBuilder;
 
 namespace mozilla {
 struct ContainerLayerParameters;
 class DisplayItemClip;
+class nsDisplayListBuilder;
+
 namespace layers {
 struct ScrollMetadata;
 class Layer;
@@ -538,7 +539,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * aSetBase is only allowed to be false if there has been a call with it
    * set to true before on the same paint.
    */
-  virtual bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
+  virtual bool DecideScrollableLayer(mozilla::nsDisplayListBuilder* aBuilder,
                                      nsRect* aVisibleRect, nsRect* aDirtyRect,
                                      bool aSetBase) = 0;
 

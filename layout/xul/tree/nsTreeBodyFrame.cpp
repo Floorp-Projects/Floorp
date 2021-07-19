@@ -2480,6 +2480,8 @@ nsresult nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+namespace mozilla {
+
 class nsDisplayTreeBody final : public nsPaintedDisplayItem {
  public:
   nsDisplayTreeBody(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
@@ -2540,6 +2542,8 @@ class nsDisplayTreeBody final : public nsPaintedDisplayItem {
     return GetBounds(aBuilder, &snap);
   }
 };
+
+}  // namespace mozilla
 
 #ifdef XP_MACOSX
 static bool IsInSourceList(nsIFrame* aFrame) {

@@ -69,15 +69,9 @@
 
 class gfxContext;
 class nsIContent;
-class nsDisplayList;
-class nsDisplayTableItem;
 class nsIScrollableFrame;
 class nsSubDocumentFrame;
-class nsDisplayCompositorHitTestInfo;
-class nsDisplayScrollInfoLayer;
-class nsDisplayTableBackgroundSet;
 class nsCaret;
-enum class nsDisplayOwnLayerFlags;
 struct WrFiltersHolder;
 
 namespace nsStyleTransformMatrix {
@@ -85,9 +79,14 @@ class TransformReferenceBox;
 }
 
 namespace mozilla {
+
+enum class nsDisplayOwnLayerFlags;
+class nsDisplayCompositorHitTestInfo;
+class nsDisplayScrollInfoLayer;
 class FrameLayerBuilder;
 class PresShell;
 class StickyScrollContainer;
+
 namespace layers {
 struct FrameMetrics;
 class RenderRootStateManager;
@@ -99,9 +98,11 @@ class WebRenderCommand;
 class WebRenderScrollData;
 class WebRenderLayerScrollData;
 }  // namespace layers
+
 namespace wr {
 class DisplayListBuilder;
 }  // namespace wr
+
 namespace dom {
 class Selection;
 }  // namespace dom
@@ -112,8 +113,6 @@ enum class DisplayListArenaObjectId {
 #undef DISPLAY_LIST_ARENA_OBJECT
   COUNT
 };
-
-}  // namespace mozilla
 
 /*
  * An nsIFrame can have many different visual parts. For example an image frame
@@ -249,8 +248,6 @@ struct AnimatedGeometryRoot {
   }
 };
 
-namespace mozilla {
-
 /**
  * An active scrolled root (ASR) is similar to an animated geometry root (AGR).
  * The differences are:
@@ -338,7 +335,6 @@ struct ActiveScrolledRoot {
   uint32_t mDepth;
   bool mRetained;
 };
-}  // namespace mozilla
 
 enum class nsDisplayListBuilderMode : uint8_t {
   Painting,
@@ -349,7 +345,10 @@ enum class nsDisplayListBuilderMode : uint8_t {
   GenerateGlyph,
 };
 
+class nsDisplayList;
 class nsDisplayWrapList;
+class nsDisplayTableBackgroundSet;
+class nsDisplayTableItem;
 
 /**
  * This manages a display list and is passed as a parameter to
@@ -2082,15 +2081,16 @@ class RetainedDisplayList;
   }                                                                          \
                                                                              \
   template <typename T, typename F, typename... Args>                        \
-  friend T* ::MakeDisplayItemWithIndex(nsDisplayListBuilder* aBuilder,       \
-                                       F* aFrame, const uint16_t aIndex,     \
-                                       Args&&... aArgs);                     \
+  friend T* mozilla::MakeDisplayItemWithIndex(                               \
+      nsDisplayListBuilder* aBuilder, F* aFrame, const uint16_t aIndex,      \
+      Args&&... aArgs);                                                      \
                                                                              \
  public:
 
 #define NS_DISPLAY_ALLOW_CLONING()                                          \
   template <typename T>                                                     \
-  friend T* MakeClone(nsDisplayListBuilder* aBuilder, const T* aItem);      \
+  friend T* mozilla::MakeClone(nsDisplayListBuilder* aBuilder,              \
+                               const T* aItem);                             \
                                                                             \
   nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override { \
     return MakeClone(aBuilder, this);                                       \
@@ -4096,9 +4096,8 @@ class nsDisplayGeneric : public nsPaintedDisplayItem {
   }
 
   template <typename T, typename F, typename... Args>
-  friend T* ::MakeDisplayItemWithIndex(nsDisplayListBuilder* aBuilder,
-                                       F* aFrame, const uint16_t aIndex,
-                                       Args&&... aArgs);
+  friend T* MakeDisplayItemWithIndex(nsDisplayListBuilder* aBuilder, F* aFrame,
+                                     const uint16_t aIndex, Args&&... aArgs);
 
   PaintCallback mPaint;
   OldPaintCallback mOldPaint;  // XXX: should be removed eventually
@@ -7217,6 +7216,8 @@ class nsDisplayPerspective : public nsPaintedDisplayItem {
   mutable RetainedDisplayList mList;
 };
 
+class nsDisplayTextGeometry;
+
 /**
  * This class adds basic support for limiting the rendering (in the inline axis
  * of the writing mode) to the part inside the specified edges.
@@ -7540,8 +7541,6 @@ class FlattenedDisplayListIterator {
   nsDisplayItem* mNext;
   AutoTArray<nsDisplayItem*, 16> mStack;
 };
-
-namespace mozilla {
 
 class PaintTelemetry {
  public:
