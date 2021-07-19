@@ -181,24 +181,24 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, bool validPromotionRate,
 }
 
 bool AllocSite::invalidateScript(GCRuntime* gc) {
-  CancelOffThreadIonCompile(script_);
+  CancelOffThreadIonCompile(script());
 
-  if (!script_->hasIonScript()) {
+  if (!script()->hasIonScript()) {
     return false;
   }
 
   if (invalidationLimitReached()) {
-    MOZ_ASSERT(state_ == State::Unknown);
+    MOZ_ASSERT(state() == State::Unknown);
     return false;
   }
 
   invalidationCount++;
   if (invalidationLimitReached()) {
-    state_ = State::Unknown;
+    setState(State::Unknown);
   }
 
   JSContext* cx = gc->rt->mainContextFromOwnThread();
-  jit::Invalidate(cx, script_,
+  jit::Invalidate(cx, script(),
                   /* resetUses = */ false,
                   /* cancelOffThread = */ true);
   return true;
@@ -247,31 +247,31 @@ void AllocSite::updateStateOnMinorGC(double promotionRate) {
   // to avoid pretenuring sites that we've recently observed being short-lived.
 
   if (invalidationLimitReached()) {
-    MOZ_ASSERT(state_ == State::Unknown);
+    MOZ_ASSERT(state() == State::Unknown);
     return;
   }
 
   bool highPromotionRate = promotionRate >= 0.9;
 
-  switch (state_) {
+  switch (state()) {
     case State::Unknown:
       if (highPromotionRate) {
-        state_ = State::LongLived;
+        setState(State::LongLived);
       } else {
-        state_ = State::ShortLived;
+        setState(State::ShortLived);
       }
       break;
 
     case State::ShortLived: {
       if (highPromotionRate) {
-        state_ = State::Unknown;
+        setState(State::Unknown);
       }
       break;
     }
 
     case State::LongLived: {
       if (!highPromotionRate) {
-        state_ = State::Unknown;
+        setState(State::Unknown);
       }
       break;
     }
@@ -280,18 +280,19 @@ void AllocSite::updateStateOnMinorGC(double promotionRate) {
 
 bool AllocSite::maybeResetState() {
   if (invalidationLimitReached()) {
-    MOZ_ASSERT(state_ == State::Unknown);
+    MOZ_ASSERT(state() == State::Unknown);
     return false;
   }
 
   invalidationCount++;
-  state_ = State::Unknown;
+  setState(State::Unknown);
   return true;
 }
 
 void AllocSite::trace(JSTracer* trc) {
-  if (script_) {
-    TraceManuallyBarrieredEdge(trc, &script_, "AllocSite script");
+  if (JSScript* s = script()) {
+    TraceManuallyBarrieredEdge(trc, &s, "AllocSite script");
+    setScript(s);
   }
 }
 
@@ -401,7 +402,7 @@ void AllocSite::printInfo(bool hasPromotionRate, double promotionRate,
 }
 
 const char* AllocSite::stateName() const {
-  switch (state_) {
+  switch (state()) {
     case State::ShortLived:
       return "ShortLived";
     case State::Unknown:
