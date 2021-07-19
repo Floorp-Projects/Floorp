@@ -202,8 +202,8 @@ class MochitestCommands(MachCommandBase):
         parser=setup_mochitest_argument_parser,
     )
     def mochitest(self, command_context, **kwargs):
-        self._mach_context.activate_mozharness_venv()
-        return run_test(self._mach_context, False, **kwargs)
+        command_context._mach_context.activate_mozharness_venv()
+        return run_test(command_context._mach_context, False, **kwargs)
 
     @Command(
         "geckoview-junit",
@@ -212,5 +212,5 @@ class MochitestCommands(MachCommandBase):
         parser=setup_junit_argument_parser,
     )
     def geckoview_junit(self, command_context, **kwargs):
-        self._mach_context.activate_mozharness_venv()
-        return run_test(self._mach_context, True, **kwargs)
+        command_context._mach_context.activate_mozharness_venv()
+        return run_test(command_context._mach_context, True, **kwargs)

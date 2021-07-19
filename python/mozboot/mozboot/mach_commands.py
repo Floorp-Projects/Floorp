@@ -7,11 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import errno
 import sys
 
-from mach.decorators import (
-    CommandArgument,
-    CommandProvider,
-    Command,
-)
+from mach.decorators import CommandArgument, CommandProvider, Command
 from mozbuild.base import MachCommandBase
 from mozboot.bootstrap import APPLICATIONS
 
@@ -39,20 +35,17 @@ class Bootstrap(MachCommandBase):
         help="Only execute actions that leave the system " "configuration alone.",
     )
     def bootstrap(
-        self,
-        command_context,
-        application_choice=None,
-        no_system_changes=False,
+        self, command_context, application_choice=None, no_system_changes=False
     ):
         from mozboot.bootstrap import Bootstrapper
 
         bootstrapper = Bootstrapper(
             choice=application_choice,
-            no_interactive=not self._mach_context.is_interactive,
+            no_interactive=not command_context._mach_context.is_interactive,
             no_system_changes=no_system_changes,
-            mach_context=self._mach_context,
+            mach_context=command_context._mach_context,
         )
-        bootstrapper.bootstrap(self.settings)
+        bootstrapper.bootstrap(command_context.settings)
 
 
 @CommandProvider
@@ -87,7 +80,9 @@ class VersionControlCommands(MachCommandBase):
         import mozversioncontrol
         from mozfile import which
 
-        repo = mozversioncontrol.get_repository_object(self._mach_context.topdir)
+        repo = mozversioncontrol.get_repository_object(
+            command_context._mach_context.topdir
+        )
         tool = "hg"
         if repo.name == "git":
             tool = "git"
@@ -105,17 +100,21 @@ class VersionControlCommands(MachCommandBase):
         if update_only:
             if repo.name == "git":
                 bootstrap.update_git_tools(
-                    vcs, self._mach_context.state_dir, self._mach_context.topdir
+                    vcs,
+                    command_context._mach_context.state_dir,
+                    command_context._mach_context.topdir,
                 )
             else:
-                bootstrap.update_vct(vcs, self._mach_context.state_dir)
+                bootstrap.update_vct(vcs, command_context._mach_context.state_dir)
         else:
             if repo.name == "git":
                 bootstrap.configure_git(
                     vcs,
                     which("git-cinnabar"),
-                    self._mach_context.state_dir,
-                    self._mach_context.topdir,
+                    command_context._mach_context.state_dir,
+                    command_context._mach_context.topdir,
                 )
             else:
-                bootstrap.configure_mercurial(vcs, self._mach_context.state_dir)
+                bootstrap.configure_mercurial(
+                    vcs, command_context._mach_context.state_dir
+                )

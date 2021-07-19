@@ -238,7 +238,7 @@ class MachCommands(MachCommandBase):
     )
     def run_reftest(self, command_context, **kwargs):
         kwargs["suite"] = "reftest"
-        return self._run_reftest(**kwargs)
+        return self._run_reftest(command_context, **kwargs)
 
     @Command(
         "jstestbrowser",
@@ -247,15 +247,15 @@ class MachCommands(MachCommandBase):
         parser=get_parser,
     )
     def run_jstestbrowser(self, command_context, **kwargs):
-        if "--enable-js-shell" not in self.mozconfig["configure_args"]:
+        if "--enable-js-shell" not in command_context.mozconfig["configure_args"]:
             raise Exception(
                 "jstestbrowser requires --enable-js-shell be specified in mozconfig."
             )
-        self._mach_context.commands.dispatch(
-            "build", self._mach_context, what=["stage-jstests"]
+        command_context._mach_context.commands.dispatch(
+            "build", command_context._mach_context, what=["stage-jstests"]
         )
         kwargs["suite"] = "jstestbrowser"
-        return self._run_reftest(**kwargs)
+        return self._run_reftest(command_context, **kwargs)
 
     @Command(
         "crashtest",
@@ -265,16 +265,16 @@ class MachCommands(MachCommandBase):
     )
     def run_crashtest(self, command_context, **kwargs):
         kwargs["suite"] = "crashtest"
-        return self._run_reftest(**kwargs)
+        return self._run_reftest(command_context, **kwargs)
 
-    def _run_reftest(self, **kwargs):
-        kwargs["topsrcdir"] = self.topsrcdir
+    def _run_reftest(self, command_context, **kwargs):
+        kwargs["topsrcdir"] = command_context.topsrcdir
         process_test_objects(kwargs)
-        reftest = self._spawn(ReftestRunner)
+        reftest = command_context._spawn(ReftestRunner)
         # Unstructured logging must be enabled prior to calling
         # adb which uses an unstructured logger in its constructor.
         reftest.log_manager.enable_unstructured()
-        if conditions.is_android(self):
+        if conditions.is_android(command_context):
             from mozrunner.devices.android_device import (
                 verify_android_device,
                 InstallIntent,
@@ -292,7 +292,7 @@ class MachCommands(MachCommandBase):
             ):
                 verbose = True
             verify_android_device(
-                self,
+                command_context,
                 install=install,
                 xre=True,
                 network=True,

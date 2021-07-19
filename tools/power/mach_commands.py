@@ -47,7 +47,7 @@ class MachCommands(MachCommandBase):
         import re
         import subprocess
 
-        rapl = os.path.join(self.topobjdir, "dist", "bin", "rapl")
+        rapl = os.path.join(command_context.topobjdir, "dist", "bin", "rapl")
 
         interval = str(interval)
 

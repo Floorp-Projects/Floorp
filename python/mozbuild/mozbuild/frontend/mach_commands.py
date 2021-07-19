@@ -44,8 +44,8 @@ class MozbuildFileCommands(MachCommandBase):
     def reference(self, command_context, symbol, name_only=False):
         # mozbuild.sphinx imports some Sphinx modules, so we need to be sure
         # the optional Sphinx package is installed.
-        self.activate_virtualenv()
-        self.virtualenv_manager.install_pip_package("Sphinx==1.1.3")
+        command_context.activate_virtualenv()
+        command_context.virtualenv_manager.install_pip_package("Sphinx==1.1.3")
 
         from mozbuild.sphinx import (
             format_module,
@@ -127,7 +127,7 @@ class MozbuildFileCommands(MachCommandBase):
         """
         components = defaultdict(set)
         try:
-            for p, m in self._get_files_info(paths, rev=rev).items():
+            for p, m in self._get_files_info(command_context, paths, rev=rev).items():
                 components[m.get("BUG_COMPONENT")].add(p)
         except InvalidPathException as e:
             print(e)
@@ -179,7 +179,7 @@ class MozbuildFileCommands(MachCommandBase):
         missing = set()
 
         try:
-            for p, m in self._get_files_info(paths, rev=rev).items():
+            for p, m in self._get_files_info(command_context, paths, rev=rev).items():
                 if "BUG_COMPONENT" not in m:
                     missing.add(p)
         except InvalidPathException as e:
@@ -218,7 +218,7 @@ class MozbuildFileCommands(MachCommandBase):
         # TODO operate in VCS space. This requires teaching the VCS reader
         # to understand wildcards and/or for the relative path issue in the
         # VCS finder to be worked out.
-        for p, m in sorted(self._get_files_info(["**"]).items()):
+        for p, m in sorted(self._get_files_info(command_context, ["**"]).items()):
             if "BUG_COMPONENT" not in m:
                 missing_component.add(p)
                 print(
@@ -284,17 +284,17 @@ class MozbuildFileCommands(MachCommandBase):
         if missing_component:
             return 1
 
-    def _get_files_info(self, paths, rev=None):
-        reader = self.mozbuild_reader(config_mode="empty", vcs_revision=rev)
+    def _get_files_info(self, command_context, paths, rev=None):
+        reader = command_context.mozbuild_reader(config_mode="empty", vcs_revision=rev)
 
         # Normalize to relative from topsrcdir.
         relpaths = []
         for p in paths:
             a = mozpath.abspath(p)
-            if not mozpath.basedir(a, [self.topsrcdir]):
+            if not mozpath.basedir(a, [command_context.topsrcdir]):
                 raise InvalidPathException("path is outside topsrcdir: %s" % p)
 
-            relpaths.append(mozpath.relpath(a, self.topsrcdir))
+            relpaths.append(mozpath.relpath(a, command_context.topsrcdir))
 
         # Expand wildcards.
         # One variable is for ordering. The other for membership tests.
@@ -304,7 +304,7 @@ class MozbuildFileCommands(MachCommandBase):
         for p in relpaths:
             if "*" not in p:
                 if p not in all_paths_set:
-                    if not os.path.exists(mozpath.join(self.topsrcdir, p)):
+                    if not os.path.exists(mozpath.join(command_context.topsrcdir, p)):
                         print("(%s does not exist; ignoring)" % p, file=sys.stderr)
                         continue
 
@@ -319,9 +319,9 @@ class MozbuildFileCommands(MachCommandBase):
 
             # finder is rooted at / for now.
             # TODO bug 1171069 tracks changing to relative.
-            search = mozpath.join(self.topsrcdir, p)[1:]
+            search = mozpath.join(command_context.topsrcdir, p)[1:]
             for path, f in reader.finder.find(search):
-                path = path[len(self.topsrcdir) :]
+                path = path[len(command_context.topsrcdir) :]
                 if path not in all_paths_set:
                     all_paths_set.add(path)
                     allpaths.append(path)

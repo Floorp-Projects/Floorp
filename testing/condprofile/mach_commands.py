@@ -15,9 +15,9 @@ requirements = os.path.join(os.path.dirname(__file__), "requirements", "base.txt
 
 @CommandProvider
 class CondprofileCommandProvider(MachCommandBase):
-    def _init(self):
-        self.activate_virtualenv()
-        self.virtualenv_manager.install_pip_requirements(
+    def _init(self, command_context):
+        command_context.activate_virtualenv()
+        command_context.virtualenv_manager.install_pip_requirements(
             requirements, require_hashes=False
         )
 
@@ -45,7 +45,7 @@ class CondprofileCommandProvider(MachCommandBase):
         download_cache,
         repo,
     ):
-        self._init()
+        self._init(command_context)
         from condprof.client import get_profile
         from condprof.util import get_current_platform
 
@@ -91,19 +91,21 @@ class CondprofileCommandProvider(MachCommandBase):
     @CommandArgument("--device-name", help="Name of the device", type=str, default=None)
     def run(self, command_context, **kw):
         os.environ["MANUAL_MACH_RUN"] = "1"
-        self._init()
+        self._init(command_context)
 
         if kw["firefox"] is None:
             try:
-                kw["firefox"] = self.get_binary_path()
+                kw["firefox"] = command_context.get_binary_path()
             except BinaryNotFoundException as e:
-                self.log(
+                command_context.log(
                     logging.ERROR,
                     "run-condprofile",
                     {"error": str(e)},
                     "ERROR: {error}",
                 )
-                self.log(logging.INFO, "run-condprofile", {"help": e.help()}, "{help}")
+                command_context.log(
+                    logging.INFO, "run-condprofile", {"help": e.help()}, "{help}"
+                )
                 return 1
 
         from condprof.runner import run

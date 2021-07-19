@@ -79,12 +79,12 @@ class MachCommands(MachCommandBase):
     def generate_test_certs(self, command_context, specifications):
         """Generate test certificates and keys from specifications."""
 
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
         import pycert
         import pykey
 
         if not specifications:
-            specifications = self.find_all_specifications()
+            specifications = self.find_all_specifications(command_context)
 
         for specification in specifications:
             if is_certspec_file(specification):
@@ -98,7 +98,7 @@ class MachCommands(MachCommandBase):
             run_module_main_on(module, os.path.abspath(specification))
         return 0
 
-    def find_all_specifications(self):
+    def find_all_specifications(self, command_context):
         """Searches the source tree for all specification files
         and returns them as a list."""
         specifications = []
@@ -109,11 +109,11 @@ class MachCommands(MachCommandBase):
             "testing/xpcshell/moz-http2",
         ]
         exclusions = ["security/manager/ssl/tests/unit/test_signed_apps"]
-        finder = FileFinder(self.topsrcdir)
+        finder = FileFinder(command_context.topsrcdir)
         for inclusion_path in inclusions:
             for f, _ in finder.find(inclusion_path):
                 if basedir(f, exclusions):
                     continue
                 if is_specification_file(f):
-                    specifications.append(os.path.join(self.topsrcdir, f))
+                    specifications.append(os.path.join(command_context.topsrcdir, f))
         return specifications

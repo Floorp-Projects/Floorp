@@ -10,12 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import sys
 import logging
 
-from mach.decorators import (
-    CommandArgument,
-    CommandProvider,
-    Command,
-    SubCommand,
-)
+from mach.decorators import CommandArgument, CommandProvider, Command, SubCommand
 
 from mozbuild.base import MachCommandBase
 from mozilla_version.gecko import GeckoVersion
@@ -48,7 +43,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument("--repo", help="The repo being built.")
     @CommandArgument("--revision", required=True, help="The revision being built.")
     def buglist(self, command_context, version, product, revision, repo):
-        self.setup_logging()
+        self.setup_logging(command_context)
         from mozrelease.buglist_creator import create_bugs_url
 
         print(
@@ -85,7 +80,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument("--build-number", required=True, help="The build number")
     @CommandArgument("--task-group-id", help="The task group of the build.")
     def buglist_email(self, command_context, **options):
-        self.setup_logging()
+        self.setup_logging(command_context)
         from mozrelease.buglist_creator import email_release_drivers
 
         email_release_drivers(**options)
@@ -118,7 +113,7 @@ class MachCommands(MachCommandBase):
     def push_scriptworker_canary(
         self, command_context, scriptworkers, addresses, ssh_key_secret
     ):
-        self.setup_logging()
+        self.setup_logging(command_context)
         from mozrelease.scriptworker_canary import push_canary
 
         push_canary(
@@ -127,19 +122,19 @@ class MachCommands(MachCommandBase):
             ssh_key_secret=ssh_key_secret,
         )
 
-    def setup_logging(self, quiet=False, verbose=True):
+    def setup_logging(self, command_context, quiet=False, verbose=True):
         """
         Set up Python logging for all loggers, sending results to stderr (so
         that command output can be redirected easily) and adding the typical
         mach timestamp.
         """
         # remove the old terminal handler
-        old = self.log_manager.replace_terminal_handler(None)
+        old = command_context.log_manager.replace_terminal_handler(None)
 
         # re-add it, with level and fh set appropriately
         if not quiet:
             level = logging.DEBUG if verbose else logging.INFO
-            self.log_manager.add_terminal_logging(
+            command_context.log_manager.add_terminal_logging(
                 fh=sys.stderr,
                 level=level,
                 write_interval=old.formatter.write_interval,
@@ -147,4 +142,4 @@ class MachCommands(MachCommandBase):
             )
 
         # all of the taskgraph logging is unstructured logging
-        self.log_manager.enable_unstructured()
+        command_context.log_manager.enable_unstructured()
