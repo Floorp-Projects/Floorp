@@ -226,6 +226,24 @@ class DevToolsFrameParent extends JSWindowActorParent {
           watcher.notifyTargetDestroyed(form);
         }
         return this._closeAllConnections();
+      case "DevToolsFrameChild:bf-cache-navigation-pageshow":
+        for (const watcherActor of WatcherRegistry.getWatchersForBrowserId(
+          this.browsingContext.browserId
+        )) {
+          watcherActor.emit("bf-cache-navigation-pageshow", {
+            windowGlobal: this.browsingContext.currentWindowGlobal,
+          });
+        }
+        return null;
+      case "DevToolsFrameChild:bf-cache-navigation-pagehide":
+        for (const watcherActor of WatcherRegistry.getWatchersForBrowserId(
+          this.browsingContext.browserId
+        )) {
+          watcherActor.emit("bf-cache-navigation-pagehide", {
+            windowGlobal: this.browsingContext.currentWindowGlobal,
+          });
+        }
+        return null;
       default:
         throw new Error(
           "Unsupported message in DevToolsFrameParent: " + message.name

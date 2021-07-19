@@ -53,6 +53,12 @@ async function testNavigation(shallCleanup = false) {
   // wait for storage tree refresh, and check host
   info("Checking storage tree…");
   await waitUntil(() => isInTree(doc, ["indexedDB", "http://example.net"]));
+
+  ok(
+    !isInTree(doc, ["indexedDB", "http://example.com"]),
+    "example.com item is not in the tree anymore"
+  );
+
   // TODO: select tree and check on storage data.
   // We cannot do it yet since we do not detect newly created indexed db's when
   // navigating. See Bug 1273802
@@ -62,6 +68,13 @@ async function testNavigation(shallCleanup = false) {
   // wait for storage tree refresh, and check host
   info("Checking storage tree…");
   await waitUntil(() => isInTree(doc, ["indexedDB", "http://example.net"]));
+
+  info("Check that the indexedDB node still has the expected label");
+  is(
+    getTreeNodeLabel(doc, ["indexedDB"]),
+    "Indexed DB",
+    "indexedDB item is properly displayed"
+  );
 
   // clean up if needed
   if (shallCleanup) {

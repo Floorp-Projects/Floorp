@@ -300,8 +300,14 @@ StorageActors.defaults = function(typeName, observationTopics) {
      *
      * @param {window} window
      *        The window which was removed.
+     * @param {Object} options
+     * @param {Boolean} options.dontCheckHost
+     *        If set to true, the function won't check if the host still is in this.hosts.
+     *        This is helpful in the case of the StorageActorMock, as the `hosts` getter
+     *        uses its `windows` getter, and at this point in time the window which is
+     *        going to be destroyed still exists.
      */
-    onWindowDestroyed(window) {
+    onWindowDestroyed(window, { dontCheckHost } = {}) {
       if (!this.hostVsStores) {
         return;
       }
@@ -310,7 +316,7 @@ StorageActors.defaults = function(typeName, observationTopics) {
         return;
       }
       const host = this.getHostName(window.location);
-      if (host && !this.hosts.has(host)) {
+      if (host && (!this.hosts.has(host) || dontCheckHost)) {
         this.hostVsStores.delete(host);
         const data = {};
         data[host] = [];

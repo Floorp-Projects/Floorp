@@ -314,6 +314,9 @@ class StorageUI {
 
   async _onResourceListAvailable(resources) {
     for (const resource of resources) {
+      if (resource.isDestroyed()) {
+        continue;
+      }
       const { resourceKey } = resource;
 
       // NOTE: We might be getting more than 1 resource per storage type when
