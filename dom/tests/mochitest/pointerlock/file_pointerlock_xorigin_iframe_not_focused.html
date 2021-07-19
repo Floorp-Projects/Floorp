@@ -66,13 +66,25 @@ async function exitPointerLock(aWin) {
   });
 }
 
-function waitForEvent(aWin, aEvent) {
+function addEventListenerOnRemote(aWin, aEvent) {
   return SpecialPowers.spawn(aWin, [aEvent], async (aEvent) => {
-    info(`wait for ${aEvent} event`);
-    return new Promise((aResolve) => {
-      content.document.addEventListener(aEvent, function(e) {
+    info(`wait for ${aEvent} event on remote`);
+    content.document.addEventListener(aEvent, function(e) {
+      info(`get ${aEvent} event on remote`);
+      content.parent.postMessage(aEvent, "*");
+    });
+  });
+}
+
+function waitForMessage(aWin, aMessage) {
+  return new Promise((aResolve) => {
+    info(`wait for ${aMessage} message`);
+    window.addEventListener("message", function handler(e) {
+      info(`get ${e.data} message`);
+      if (e.data === aMessage) {
+        window.removeEventListener("message", handler);
         aResolve();
-      }, { once: true });
+      }
     });
   });
 }
@@ -84,8 +96,9 @@ async function start() {
   let iframe = document.querySelector("iframe");
   let win = iframe.contentWindow;
   await requestPointerLock(win);
+  await addEventListenerOnRemote(win, "mousemove");
 
-  let promise = waitForEvent(win, "mousemove");
+  let promise = waitForMessage(win, "mousemove");
   let div = document.querySelector("div");
   synthesizeMouseAtCenter(div, { type: "mousemove" });
   await promise;
