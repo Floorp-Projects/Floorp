@@ -74,6 +74,10 @@ function getGlobalScriptIncludes(scriptPath) {
           "chrome://browser/content/search/",
           "browser/components/search/content/"
         )
+        .replace(
+          "chrome://browser/content/screenshots/",
+          "browser/components/screenshots/content/"
+        )
         .replace("chrome://browser/content/", "browser/base/content/")
         .replace("chrome://global/content/", "toolkit/content/");
 
