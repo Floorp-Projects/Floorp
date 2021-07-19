@@ -293,6 +293,12 @@ _cairo_isdigit (int c)
 }
 
 static inline int cairo_const
+_cairo_isxdigit (int c)
+{
+    return ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'));
+}
+
+static inline int cairo_const
 _cairo_isalpha (int c)
 {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
