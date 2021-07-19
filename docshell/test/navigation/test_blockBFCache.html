@@ -98,6 +98,30 @@ const blockBFCacheTests = [
   },
 ];
 
+if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+  blockBFCacheTests.push({
+    name: "Loading OOP iframe",
+    test: () => {
+      return new Promise((resolve) => {
+        const el = document.body.appendChild(document.createElement("iframe"));
+        el.id = "frame";
+        addEventListener("message", ({ data }) => {
+          if (data == "onload") {
+            resolve();
+          }
+        });
+        el.src = "https://example.com/tests/docshell/test/navigation/iframe_slow_onload.html";
+      });
+    },
+    waitForDone: () => {
+      SimpleTest.requestFlakyTimeout("Test has a loop in an onload handler that runs for 5000ms, we need to make sure the loop is done before moving to the next test.");
+      return new Promise(resolve => {
+        setTimeout(resolve, 5000);
+      });
+    },
+  });
+}
+
 const dontBlockBFCacheTests = [
   {
     name: "getUserMedia",
@@ -158,7 +182,7 @@ function promisePageShowNotFromBFCache(e) {
 }
 
 function runTests(testArray, shouldBlockBFCache) {
-  for (const { name, prefs = {}, test } of testArray) {
+  for (const { name, prefs = {}, test, waitForDone } of testArray) {
     add_task(async function() {
       await SpecialPowers.pushPrefEnv(prefs, async function() {
         // Load a mostly blank page that we can communicate with over
@@ -188,6 +212,15 @@ function runTests(testArray, shouldBlockBFCache) {
         bc.postMessage({ message: "forward" });
         let result = await goneForward;
         ok(result, `Page ${shouldBlockBFCache ? "should" : "should not"} have been blocked from going into the BFCache (${name})`);
+
+        // If the test will keep running after navigation, then we need to make
+        // sure it's completely done before moving to the next test, to avoid
+        // interfering with any following tests. If waitForDone is defined then
+        // it'll return a Promise that we can use to wait for the end of the
+        // test.
+        if (waitForDone) {
+          await waitForDone();
+        }
 
         bc.postMessage({ message: "close" });
 

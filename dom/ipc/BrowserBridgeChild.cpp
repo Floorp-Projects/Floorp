@@ -43,14 +43,11 @@ already_AddRefed<BrowserBridgeHost> BrowserBridgeChild::FinishInit(
   mFrameLoader = aFrameLoader;
 
   RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(owner->GetOwnerGlobal());
-  MOZ_DIAGNOSTIC_ASSERT(docShell);
-
-  nsDocShell::Cast(docShell)->OOPChildLoadStarted(this);
+  Document* doc = owner->OwnerDoc();
+  doc->OOPChildLoadStarted(this);
 
 #if defined(ACCESSIBILITY)
-  if (a11y::DocAccessible* docAcc =
-          a11y::GetExistingDocAccessible(owner->OwnerDoc())) {
+  if (a11y::DocAccessible* docAcc = a11y::GetExistingDocAccessible(doc)) {
     if (a11y::LocalAccessible* ownerAcc = docAcc->GetAccessible(owner)) {
       if (a11y::OuterDocAccessible* outerAcc = ownerAcc->AsOuterDoc()) {
         outerAcc->SendEmbedderAccessible(this);
@@ -230,9 +227,9 @@ void BrowserBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
 void BrowserBridgeChild::UnblockOwnerDocsLoadEvent() {
   if (!mHadInitialLoad) {
     mHadInitialLoad = true;
-    if (auto* docShell =
-            nsDocShell::Cast(mBrowsingContext->GetParent()->GetDocShell())) {
-      docShell->OOPChildLoadDone(this);
+
+    if (Document* doc = mBrowsingContext->GetParent()->GetExtantDocument()) {
+      doc->OOPChildLoadDone(this);
     }
   }
 }
