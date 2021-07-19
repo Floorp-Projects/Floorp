@@ -10,9 +10,6 @@
 #include "DocAccessible-inl.h"
 #include "mozilla/a11y/DocAccessibleChild.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
-#if defined(XP_WIN)
-#  include "mozilla/a11y/ProxyWrappers.h"
-#endif
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "Role.h"
@@ -89,16 +86,8 @@ LocalAccessible* OuterDocAccessible::LocalChildAtPoint(
   NS_ENSURE_TRUE(child, nullptr);
 
   if (aWhichChild == Accessible::EWhichChildAtPoint::DeepestChild) {
-#if defined(XP_WIN)
-    // On Windows, OuterDocAccessible::GetChildAt can return a proxy wrapper
-    // for a remote document. These aren't real Accessibles and
-    // shouldn't be returned except to the Windows a11y code (which doesn't use
-    // eDeepestChild). Calling ChildAtPoint on these will crash!
-    return nullptr;
-#else
     return child->LocalChildAtPoint(
         aX, aY, Accessible::EWhichChildAtPoint::DeepestChild);
-#endif  // defined(XP_WIN)
   }
   return child;
 }
@@ -192,69 +181,18 @@ bool OuterDocAccessible::IsAcceptableChild(nsIContent* aEl) const {
   return false;
 }
 
-#if defined(XP_WIN)
-
-LocalAccessible* OuterDocAccessible::RemoteChildDocAccessible() const {
-  RemoteAccessible* docProxy = RemoteChildDoc();
-  if (docProxy) {
-    // We're in the parent process, but we're embedding a remote document.
-    return WrapperFor(docProxy);
-  }
-
-  if (IPCAccessibilityActive()) {
-    auto bridge = dom::BrowserBridgeChild::GetFrom(mContent);
-    if (bridge) {
-      // We're an iframe in a content process and we're embedding a remote
-      // document (in another content process). The COM proxy for the embedded
-      // document accessible was sent to us from the parent via PBrowserBridge.
-      return bridge->GetEmbeddedDocAccessible();
-    }
-  }
-
-  return nullptr;
-}
-
-// On Windows e10s, since we don't cache in the chrome process, LocalChildAt
-// must be implemented so that we properly cross the chrome-to-content
-// boundary when traversing.
-
-LocalAccessible* OuterDocAccessible::LocalChildAt(uint32_t aIndex) const {
-  LocalAccessible* result = AccessibleWrap::LocalChildAt(aIndex);
-  if (result || aIndex) {
-    return result;
-  }
-  // If we are asking for child 0 and GetChildAt doesn't return anything, try
-  // to get the remote child doc and return that instead.
-  return RemoteChildDocAccessible();
-}
-
-#endif  // defined(XP_WIN)
-
 // Accessible
 
 uint32_t OuterDocAccessible::ChildCount() const {
   uint32_t result = mChildren.Length();
-  if (!result &&
-#if defined(XP_WIN)
-      ((StaticPrefs::accessibility_cache_enabled_AtStartup() &&
-        RemoteChildDoc()) ||
-       // On Windows with the cache disabled, as well as returning 1 for a
-       // remote document in the parent process, we also need to return 1 in a
-       // content process for an OOP iframe.
-       RemoteChildDocAccessible())
-#else
-      RemoteChildDoc()
-#endif
-  ) {
+  if (!result && RemoteChildDoc()) {
     result = 1;
   }
   return result;
 }
 
 Accessible* OuterDocAccessible::ChildAt(uint32_t aIndex) const {
-  // We deliberately bypass OuterDocAccessible::LocalChildAt on Windows because
-  // it will return a RemoteAccessibleWrap for a remote document.
-  LocalAccessible* result = AccessibleWrap::LocalChildAt(aIndex);
+  LocalAccessible* result = LocalChildAt(aIndex);
   if (result || aIndex) {
     return result;
   }
