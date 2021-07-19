@@ -411,13 +411,11 @@ class TextServicesDocument final : public nsIEditActionListener {
   nsresult GetFirstTextNodeInPrevBlock(nsIContent** aContent);
   nsresult GetFirstTextNodeInNextBlock(nsIContent** aContent);
 
-  static bool IsBlockNode(nsIContent* aContent);
-
   static bool DidSkip(FilteredContentIterator* aFilteredIter);
   static void ClearDidSkip(FilteredContentIterator* aFilteredIter);
 
-  static bool HasSameBlockNodeParent(nsIContent* aContent1,
-                                     nsIContent* aContent2);
+  static bool HasSameBlockNodeParent(dom::Text& aTextNode1,
+                                     dom::Text& aTextNode2);
 
   MOZ_CAN_RUN_SCRIPT nsresult SetSelectionInternal(uint32_t aOffset,
                                                    uint32_t aLength,

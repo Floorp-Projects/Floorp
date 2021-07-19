@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"       // for MOZ_ASSERT, etc
 #include "mozilla/EditorBase.h"       // for EditorBase
 #include "mozilla/EditorUtils.h"      // for AutoTransactionBatchExternal
+#include "mozilla/HTMLEditUtils.h"    // for HTMLEditUtils
 #include "mozilla/mozalloc.h"         // for operator new, etc
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/UniquePtr.h"  // for UniquePtr
@@ -1580,70 +1581,21 @@ void TextServicesDocument::ClearDidSkip(
 }
 
 // static
-bool TextServicesDocument::IsBlockNode(nsIContent* aContent) {
-  if (!aContent) {
-    NS_ERROR("How did a null pointer get passed to IsBlockNode?");
-    return false;
-  }
+bool TextServicesDocument::HasSameBlockNodeParent(Text& aTextNode1,
+                                                  Text& aTextNode2) {
+  nsIContent* container1 = aTextNode1.GetParent();
+  nsIContent* container2 = aTextNode1.GetParent();
 
-  // XXX Shouldn't we use `HTMLEditUtils::IsBlockElement()` here?
-
-  nsAtom* atom = aContent->NodeInfo()->NameAtom();
-
-  // clang-format off
-  return (nsGkAtoms::a       != atom &&
-          nsGkAtoms::address != atom &&
-          nsGkAtoms::big     != atom &&
-          nsGkAtoms::b       != atom &&
-          nsGkAtoms::cite    != atom &&
-          nsGkAtoms::code    != atom &&
-          nsGkAtoms::dfn     != atom &&
-          nsGkAtoms::em      != atom &&
-          nsGkAtoms::font    != atom &&
-          nsGkAtoms::i       != atom &&
-          nsGkAtoms::kbd     != atom &&
-          nsGkAtoms::nobr    != atom &&
-          nsGkAtoms::s       != atom &&
-          nsGkAtoms::samp    != atom &&
-          nsGkAtoms::small   != atom &&
-          nsGkAtoms::spacer  != atom &&
-          nsGkAtoms::span    != atom &&
-          nsGkAtoms::strike  != atom &&
-          nsGkAtoms::strong  != atom &&
-          nsGkAtoms::sub     != atom &&
-          nsGkAtoms::sup     != atom &&
-          nsGkAtoms::tt      != atom &&
-          nsGkAtoms::u       != atom &&
-          nsGkAtoms::var     != atom &&
-          nsGkAtoms::wbr     != atom);
-  // clang-format on
-}
-
-// static
-bool TextServicesDocument::HasSameBlockNodeParent(nsIContent* aContent1,
-                                                  nsIContent* aContent2) {
-  nsIContent* p1 = aContent1->GetParent();
-  nsIContent* p2 = aContent2->GetParent();
-
-  // Quick test:
-
-  if (p1 == p2) {
+  if (container1 == container2) {
     return true;
   }
-
-  // Walk up the parent hierarchy looking for closest block boundary node:
-  // XXX If we use `HTMLEditUtils::IsBlockElement()`, we can use
-  //     `HTMLEditUtils::GetAncestorBlockElement()` here.
-
-  while (p1 && !IsBlockNode(p1)) {
-    p1 = p1->GetParent();
-  }
-
-  while (p2 && !IsBlockNode(p2)) {
-    p2 = p2->GetParent();
-  }
-
-  return p1 == p2;
+  Element* parentBlockElement1 =
+      container1 ? HTMLEditUtils::GetInclusiveAncestorBlockElement(*container1)
+                 : nullptr;
+  Element* parentBlockElement2 =
+      container2 ? HTMLEditUtils::GetInclusiveAncestorBlockElement(*container2)
+                 : nullptr;
+  return parentBlockElement1 == parentBlockElement2;
 }
 
 Result<EditorRawDOMRangeInTexts, nsresult>
@@ -2282,12 +2234,12 @@ nsresult TextServicesDocument::FirstTextNodeInCurrentBlock(
         aFilteredIter->GetCurrentNode()->IsContent()
             ? aFilteredIter->GetCurrentNode()->AsContent()
             : nullptr;
-    if (lastTextNode && IsBlockNode(content)) {
+    if (lastTextNode && content && HTMLEditUtils::IsBlockElement(*content)) {
       break;
     }
     if (content && content->IsText()) {
-      if (lastTextNode &&
-          !HasSameBlockNodeParent(content->AsText(), lastTextNode)) {
+      if (lastTextNode && !TextServicesDocument::HasSameBlockNodeParent(
+                              *content->AsText(), *lastTextNode)) {
         // We're done, the current text node is in a
         // different block.
         break;
@@ -2349,20 +2301,21 @@ nsresult TextServicesDocument::FirstTextNodeInNextBlock(
 
   RefPtr<Text> previousTextNode;
   while (!aFilteredIter->IsDone()) {
-    nsCOMPtr<nsIContent> content =
-        aFilteredIter->GetCurrentNode()->IsContent()
-            ? aFilteredIter->GetCurrentNode()->AsContent()
-            : nullptr;
-
-    if (content && content->IsText()) {
-      if (crossedBlockBoundary ||
-          (previousTextNode &&
-           !HasSameBlockNodeParent(previousTextNode, content->AsText()))) {
-        break;
+    if (nsCOMPtr<nsIContent> content =
+            aFilteredIter->GetCurrentNode()->IsContent()
+                ? aFilteredIter->GetCurrentNode()->AsContent()
+                : nullptr) {
+      if (content->IsText()) {
+        if (crossedBlockBoundary ||
+            (previousTextNode && !TextServicesDocument::HasSameBlockNodeParent(
+                                     *previousTextNode, *content->AsText()))) {
+          break;
+        }
+        previousTextNode = content->AsText();
+      } else if (!crossedBlockBoundary &&
+                 HTMLEditUtils::IsBlockElement(*content)) {
+        crossedBlockBoundary = true;
       }
-      previousTextNode = content->AsText();
-    } else if (!crossedBlockBoundary && IsBlockNode(content)) {
-      crossedBlockBoundary = true;
     }
 
     aFilteredIter->Next();
@@ -2484,69 +2437,68 @@ TextServicesDocument::OffsetEntryArray::Init(
   uint32_t offset = 0;
   RefPtr<Text> firstTextNode, previousTextNode;
   while (!aFilteredIter.IsDone()) {
-    nsCOMPtr<nsIContent> content =
-        aFilteredIter.GetCurrentNode()->IsContent()
-            ? aFilteredIter.GetCurrentNode()->AsContent()
-            : nullptr;
-    if (content && content->IsText()) {
-      if (previousTextNode && !TextServicesDocument::HasSameBlockNodeParent(
-                                  previousTextNode, content->AsText())) {
+    if (nsCOMPtr<nsIContent> content =
+            aFilteredIter.GetCurrentNode()->IsContent()
+                ? aFilteredIter.GetCurrentNode()->AsContent()
+                : nullptr) {
+      if (HTMLEditUtils::IsBlockElement(*content)) {
         break;
       }
+      if (content->IsText()) {
+        if (previousTextNode && !TextServicesDocument::HasSameBlockNodeParent(
+                                    *previousTextNode, *content->AsText())) {
+          break;
+        }
 
-      nsString str;
-      content->AsText()->GetNodeValue(str);
+        nsString str;
+        content->AsText()->GetNodeValue(str);
 
-      // Add an entry for this text node into the offset table:
+        // Add an entry for this text node into the offset table:
 
-      UniquePtr<OffsetEntry>& entry = *AppendElement(
-          MakeUnique<OffsetEntry>(*content->AsText(), offset, str.Length()));
+        UniquePtr<OffsetEntry>& entry = *AppendElement(
+            MakeUnique<OffsetEntry>(*content->AsText(), offset, str.Length()));
 
-      // If one or both of the endpoints of the iteration range
-      // are in the text node for this entry, make sure the entry
-      // only accounts for the portion of the text node that is
-      // in the range.
+        // If one or both of the endpoints of the iteration range
+        // are in the text node for this entry, make sure the entry
+        // only accounts for the portion of the text node that is
+        // in the range.
 
-      uint32_t startOffset = 0;
-      uint32_t endOffset = str.Length();
-      bool adjustStr = false;
+        uint32_t startOffset = 0;
+        uint32_t endOffset = str.Length();
+        bool adjustStr = false;
 
-      if (entry->mTextNode == rngStartNode) {
-        entry->mOffsetInTextNode = startOffset = rngStartOffset;
-        adjustStr = true;
-      }
+        if (entry->mTextNode == rngStartNode) {
+          entry->mOffsetInTextNode = startOffset = rngStartOffset;
+          adjustStr = true;
+        }
 
-      if (entry->mTextNode == rngEndNode) {
-        endOffset = rngEndOffset;
-        adjustStr = true;
-      }
+        if (entry->mTextNode == rngEndNode) {
+          endOffset = rngEndOffset;
+          adjustStr = true;
+        }
 
-      if (adjustStr) {
-        entry->mLength = endOffset - startOffset;
-        str = Substring(str, startOffset, entry->mLength);
-      }
+        if (adjustStr) {
+          entry->mLength = endOffset - startOffset;
+          str = Substring(str, startOffset, entry->mLength);
+        }
 
-      offset += str.Length();
+        offset += str.Length();
 
-      if (aAllTextInBlock) {
-        // Append the text node's string to the output string:
+        if (aAllTextInBlock) {
+          // Append the text node's string to the output string:
+          if (!firstTextNode) {
+            *aAllTextInBlock = str;
+          } else {
+            *aAllTextInBlock += str;
+          }
+        }
+
+        previousTextNode = content->AsText();
+
         if (!firstTextNode) {
-          *aAllTextInBlock = str;
-        } else {
-          *aAllTextInBlock += str;
+          firstTextNode = content->AsText();
         }
       }
-
-      previousTextNode = content->AsText();
-
-      if (!firstTextNode) {
-        firstTextNode = content->AsText();
-      }
-    }
-    // XXX This should be checked before content->IsText(), but IsBlockNode()
-    //     returns true even if content is a text node.  See bug 1311934.
-    else if (TextServicesDocument::IsBlockNode(content)) {
-      break;
     }
 
     aFilteredIter.Next();
