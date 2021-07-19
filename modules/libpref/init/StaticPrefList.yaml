@@ -9420,6 +9420,14 @@
   value: 4
   mirror: always
 
+# Whether to force failover to direct for system requests.
+#ifdef MOZ_PROXY_DIRECT_FAILOVER
+- name: network.proxy.failover_direct
+  type: bool
+  value: true
+  mirror: always
+#endif
+
 # Some requests during a page load are marked as "tail", mainly trackers, but not only.
 # This pref controls whether such requests are put to the tail, behind other requests
 # emerging during page loading process.
