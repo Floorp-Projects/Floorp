@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<head>
+  <style>
+    .outer {
+       transform: scale(0.5) translate(200px, 200px);
+    }
+    .parent {
+       width: 200px;
+       height: 200px;
+       isolation: isolate;
+    }
+    .child {
+      width: 200px;
+      height: 200px;
+      background: #7775b6;
+    }
+  </style>
+</head>
+<body>
+ <div class="outer">
+  <div class="parent">
+   <div class="child">
+   </div>
+  </div>
+ </div>
+</body>

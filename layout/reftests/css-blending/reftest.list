@@ -95,6 +95,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-16408) fuzzy-if(Androi
 == background-blending-moz-element.html background-blending-moz-element-ref.html
 
 fuzzy(0-1,0-40000) == mix-blend-mode-soft-light.html mix-blend-mode-soft-light-ref.html
+fuzzy(0-1,0-40000) == mix-blend-mode-transformed.html mix-blend-mode-transformed-ref.html
 
 # Test plan 4.4.2 element with isolation:isolate creates an isolated group for blended children
 == blend-isolation.html blend-isolation-ref.html
