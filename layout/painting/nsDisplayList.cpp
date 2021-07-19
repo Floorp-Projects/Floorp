@@ -6164,24 +6164,18 @@ void nsDisplayBlendMode::Paint(nsDisplayListBuilder* aBuilder,
   // been implemented for all DrawTarget backends.
   DrawTarget* dt = aCtx->GetDrawTarget();
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  IntRect rect =
-      IntRect::RoundOut(NSRectToRect(GetPaintRect(), appUnitsPerDevPixel));
+  Rect rect = NSRectToRect(GetPaintRect(), appUnitsPerDevPixel);
+  rect.RoundOut();
 
-  // Compute the device space rect that we'll draw to, and allocate
-  // a temporary draw target of that size.
-  Rect deviceRect = dt->GetTransform().TransformBounds(Rect(rect));
-  if (deviceRect.IsEmpty()) {
-    return;
-  }
-
+  // Create a temporary DrawTarget that is clipped to the area that
+  // we're going to draw to. This will include the same transform as
+  // is currently on |dt|.
   RefPtr<DrawTarget> temp =
-      dt->CreateClippedDrawTarget(deviceRect, SurfaceFormat::B8G8R8A8);
+      dt->CreateClippedDrawTarget(rect, SurfaceFormat::B8G8R8A8);
   if (!temp) {
     return;
   }
 
-  // Copy the transform across to the temporary DT so that we
-  // draw in device space.
   RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(temp);
 
   GetChildren()->Paint(aBuilder, ctx,
@@ -6194,7 +6188,8 @@ void nsDisplayBlendMode::Paint(nsDisplayListBuilder* aBuilder,
   gfxContextMatrixAutoSaveRestore saveMatrix(aCtx);
   dt->SetTransform(Matrix());
   dt->DrawSurface(
-      surface, deviceRect, deviceRect, DrawSurfaceOptions(),
+      surface, Rect(surface->GetRect()), Rect(surface->GetRect()),
+      DrawSurfaceOptions(),
       DrawOptions(1.0f, nsCSSRendering::GetGFXBlendMode(mBlendMode)));
 }
 
