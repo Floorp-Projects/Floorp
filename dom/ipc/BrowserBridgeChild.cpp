@@ -5,10 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef ACCESSIBILITY
-#  ifdef XP_WIN
-#    include "mozilla/a11y/RemoteAccessible.h"
-#    include "mozilla/a11y/ProxyWrappers.h"
-#  endif
 #  include "mozilla/a11y/DocAccessible.h"
 #  include "mozilla/a11y/DocManager.h"
 #  include "mozilla/a11y/OuterDocAccessible.h"
@@ -39,13 +35,7 @@ BrowserBridgeChild::BrowserBridgeChild(BrowsingContext* aBrowsingContext,
                                        TabId aId, const LayersId& aLayersId)
     : mId{aId}, mLayersId{aLayersId}, mBrowsingContext(aBrowsingContext) {}
 
-BrowserBridgeChild::~BrowserBridgeChild() {
-#if defined(ACCESSIBILITY) && defined(XP_WIN)
-  if (mEmbeddedDocAccessible) {
-    mEmbeddedDocAccessible->Shutdown();
-  }
-#endif
-}
+BrowserBridgeChild::~BrowserBridgeChild() {}
 
 already_AddRefed<BrowserBridgeHost> BrowserBridgeChild::FinishInit(
     nsFrameLoader* aFrameLoader) {
@@ -158,12 +148,7 @@ BrowserBridgeChild::RecvSetEmbeddedDocAccessibleCOMProxy(
     const a11y::IDispatchHolder& aCOMProxy) {
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
   MOZ_ASSERT(!aCOMProxy.IsNull());
-  if (mEmbeddedDocAccessible) {
-    mEmbeddedDocAccessible->Shutdown();
-  }
-  RefPtr<IDispatch> comProxy(aCOMProxy.Get());
-  mEmbeddedDocAccessible =
-      new a11y::RemoteIframeDocRemoteAccessibleWrap(comProxy);
+  mEmbeddedDocAccessible = aCOMProxy.Get();
 #endif
   return IPC_OK();
 }

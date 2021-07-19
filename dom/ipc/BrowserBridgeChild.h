@@ -13,10 +13,6 @@
 
 namespace mozilla {
 
-namespace a11y {
-class RemoteIframeDocRemoteAccessibleWrap;
-}
-
 namespace dom {
 class BrowsingContext;
 class ContentChild;
@@ -58,8 +54,8 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   already_AddRefed<BrowserBridgeHost> FinishInit(nsFrameLoader* aFrameLoader);
 
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
-  a11y::RemoteIframeDocRemoteAccessibleWrap* GetEmbeddedDocAccessible() {
-    return mEmbeddedDocAccessible;
+  already_AddRefed<IDispatch> GetEmbeddedDocAccessible() {
+    return RefPtr{mEmbeddedDocAccessible}.forget();
   }
 #endif
 
@@ -111,7 +107,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<BrowsingContext> mBrowsingContext;
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
-  RefPtr<a11y::RemoteIframeDocRemoteAccessibleWrap> mEmbeddedDocAccessible;
+  RefPtr<IDispatch> mEmbeddedDocAccessible;
 #endif
 };
 
