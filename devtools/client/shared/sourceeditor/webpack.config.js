@@ -23,6 +23,7 @@ module.exports = (env, argv) => {
       "./codemirror/mode/css/css.js",
       "./codemirror/mode/clojure/clojure.js",
       "./codemirror/mode/haxe/haxe.js",
+      "./codemirror/mode/http/http.js",
       "./codemirror/mode/htmlmixed/htmlmixed.js",
       "./codemirror/mode/jsx/jsx.js",
       "./codemirror/mode/coffeescript/coffeescript.js",
