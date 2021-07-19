@@ -826,7 +826,8 @@ void DrawTargetCairo::DrawSurface(SourceSurface* aSurface, const Rect& aDest,
   float sy = aSource.Height() / aDest.Height();
 
   cairo_matrix_t src_mat;
-  cairo_matrix_init_translate(&src_mat, aSource.X(), aSource.Y());
+  cairo_matrix_init_translate(&src_mat, aSource.X() - aSurface->GetRect().x,
+                              aSource.Y() - aSurface->GetRect().y);
   cairo_matrix_scale(&src_mat, sx, sy);
 
   cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(aSurface);
