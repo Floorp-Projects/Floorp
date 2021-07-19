@@ -48,6 +48,7 @@ function runNextTest() {
 
     info(`Testing ${file}`);
     gTestWindow = window.open(file, "", "width=500,height=500");
+    info(`Test finish`);
   } else {
     SimpleTest.finish();
   }
