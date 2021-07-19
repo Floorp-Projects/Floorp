@@ -54,7 +54,20 @@ async function testNavigation() {
   await waitUntil(() =>
     isInTree(doc, ["sessionStorage", "http://example.net"])
   );
+
+  ok(
+    !isInTree(doc, ["sessionStorage", "http://example.com"]),
+    "example.com item is not in the tree anymore"
+  );
+
   // check the table for values
   await selectTreeItem(["sessionStorage", "http://example.net"]);
   checkStorageData("foo", "bar");
+
+  info("Check that the sessionStorage node still has the expected label");
+  is(
+    getTreeNodeLabel(doc, ["sessionStorage"]),
+    "Session Storage",
+    "sessionStorage item is properly displayed"
+  );
 }

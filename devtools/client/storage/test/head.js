@@ -1107,6 +1107,18 @@ function isInTree(doc, path) {
 }
 
 /**
+ * Returns the label of the node for the provided tree path
+ * @param {Document} doc
+ * @param {Array} path
+ * @returns {String}
+ */
+function getTreeNodeLabel(doc, path) {
+  const treeId = JSON.stringify(path);
+  return doc.querySelector(`[data-id='${treeId}'] .tree-widget-item`)
+    .textContent;
+}
+
+/**
  * Checks that the pair <name, value> is displayed at the data table
  * @param {String} name
  * @param {any} value

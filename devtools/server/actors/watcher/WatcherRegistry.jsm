@@ -145,6 +145,23 @@ const WatcherRegistry = {
   },
 
   /**
+   * Return an array of the watcher actors that match the passed browserId
+   *
+   * @param {Number} browserId
+   * @returns {Array<WatcherActor>} An array of the matching watcher actors
+   */
+  getWatchersForBrowserId(browserId) {
+    const watchers = [];
+    for (const watcherActor of watcherActors.values()) {
+      if (watcherActor.browserId === browserId) {
+        watchers.push(watcherActor);
+      }
+    }
+
+    return watchers;
+  },
+
+  /**
    * Notify that a given watcher added an entry in a given data type.
    *
    * @param WatcherActor watcher
