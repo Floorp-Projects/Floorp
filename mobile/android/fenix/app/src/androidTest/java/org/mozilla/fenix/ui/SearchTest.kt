@@ -48,6 +48,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Temporarily disabled - See https://github.com/mozilla-mobile/fenix/issues/20420")
     @Test
     fun shortcutButtonTest() {
         homeScreen {
