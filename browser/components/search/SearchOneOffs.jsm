@@ -70,7 +70,7 @@ class SearchOneOffs {
 
     this.header = this.querySelector(".search-panel-one-offs-header");
 
-    this.settingsButtonCompact = this.querySelector(".search-setting-button");
+    this.settingsButton = this.querySelector(".search-setting-button");
 
     this.spacerCompact = this.querySelector(".search-one-offs-spacer");
 
@@ -271,7 +271,7 @@ class SearchOneOffs {
           "searchbar-engine-one-off-item"
         ) &&
         !(
-          this.selectedButton == this.settingsButtonCompact &&
+          this.selectedButton == this.settingsButton &&
           this.hasAttribute("is_searchbar")
         );
       // Typing de-selects the settings or opensearch buttons at the bottom
@@ -467,7 +467,7 @@ class SearchOneOffs {
 
     // Ensure we can refer to the settings buttons by ID:
     let origin = this.telemetryOrigin;
-    this.settingsButtonCompact.id = origin + "-anon-search-settings";
+    this.settingsButton.id = origin + "-anon-search-settings";
 
     if (this.popup) {
       let buttonsWidth = this.popup.clientWidth;
@@ -485,7 +485,7 @@ class SearchOneOffs {
       }
 
       // 8 is for the margin-inline of the setting button.
-      buttonsWidth -= this.settingsButtonCompact.clientWidth + 8;
+      buttonsWidth -= this.settingsButton.clientWidth + 8;
 
       // If the header string is very long, then the searchbar buttons will
       // overflow their container unless max-width is set.
@@ -570,7 +570,7 @@ class SearchOneOffs {
     ];
 
     if (aIncludeNonEngineButtons) {
-      buttons.push(this.settingsButtonCompact);
+      buttons.push(this.settingsButton);
     }
 
     return buttons;
@@ -1024,7 +1024,7 @@ class SearchOneOffs {
   _on_command(event) {
     let target = event.target;
 
-    if (target == this.settingsButtonCompact) {
+    if (target == this.settingsButton) {
       this.window.openPreferences("paneSearch");
 
       // If the preference tab was already selected, the panel doesn't
