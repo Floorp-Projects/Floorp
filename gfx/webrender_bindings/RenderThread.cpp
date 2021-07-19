@@ -9,8 +9,10 @@
 #include "gfxPlatform.h"
 #include "GLContext.h"
 #include "RenderThread.h"
+#include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "transport/runnable_utils.h"
+#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
@@ -58,9 +60,10 @@ MOZ_DEFINE_MALLOC_SIZE_OF(WebRenderRendererMallocSizeOf)
 namespace mozilla::wr {
 
 static StaticRefPtr<RenderThread> sRenderThread;
+static mozilla::BackgroundHangMonitor* sBackgroundHangMonitor;
 
-RenderThread::RenderThread(base::Thread* aThread)
-    : mThread(aThread),
+RenderThread::RenderThread(RefPtr<nsIThread> aThread)
+    : mThread(std::move(aThread)),
       mThreadPool(false),
       mThreadPoolLP(true),
       mSingletonGLIsForHardwareWebRender(true),
@@ -70,10 +73,7 @@ RenderThread::RenderThread(base::Thread* aThread)
       mHandlingDeviceReset(false),
       mHandlingWebRenderError(false) {}
 
-RenderThread::~RenderThread() {
-  MOZ_ASSERT(mRenderTexturesDeferred.empty());
-  delete mThread;
-}
+RenderThread::~RenderThread() { MOZ_ASSERT(mRenderTexturesDeferred.empty()); }
 
 // static
 RenderThread* RenderThread::Get() { return sRenderThread; }
@@ -83,13 +83,26 @@ void RenderThread::Start() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sRenderThread);
 
-  base::Thread* thread = new base::Thread("Renderer");
+  RefPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread(
+      "Renderer", getter_AddRefs(thread),
+      NS_NewRunnableFunction("Renderer::BackgroundHanSetup", []() {
+        sBackgroundHangMonitor = new mozilla::BackgroundHangMonitor(
+            "Render",
+            /* Timeout values are powers-of-two to enable us get better
+               data. 128ms is chosen for transient hangs because 8Hz should
+               be the minimally acceptable goal for Render
+               responsiveness (normal goal is 60Hz). */
+            128,
+            /* 2048ms is chosen for permanent hangs because it's longer than
+             * most Render hangs seen in the wild, but is short enough
+             * to not miss getting native hang stacks. */
+            2048);
+        nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
+        static_cast<nsThread*>(thread.get())->SetUseHangMonitor(true);
+      }));
 
-  base::Thread::Options options;
-  // TODO(nical): The compositor thread has a bunch of specific options, see
-  // which ones make sense here.
-  if (!thread->StartWithOptions(options)) {
-    delete thread;
+  if (NS_FAILED(rv)) {
     return;
   }
 
@@ -152,8 +165,7 @@ void RenderThread::ShutDownTask(layers::SynchronousTask* aTask) {
 
 // static
 bool RenderThread::IsInRenderThread() {
-  return sRenderThread &&
-         sRenderThread->mThread->thread_id() == PlatformThread::CurrentId();
+  return sRenderThread && sRenderThread->mThread == NS_GetCurrentThread();
 }
 
 void RenderThread::DoAccumulateMemoryReport(
@@ -779,7 +791,7 @@ void RenderThread::InitDeviceTask() {
 
 void RenderThread::PostRunnable(already_AddRefed<nsIRunnable> aRunnable) {
   nsCOMPtr<nsIRunnable> runnable = aRunnable;
-  mThread->message_loop()->PostTask(runnable.forget());
+  mThread->Dispatch(runnable.forget());
 }
 
 #ifndef XP_WIN
