@@ -6,3 +6,4 @@ remote.jar:
 % content remote %content/
 
   content/webdriver-bidi/WebDriverBiDi.jsm (WebDriverBiDi.jsm)
+  content/webdriver-bidi/WebDriverBiDiConnection.jsm (WebDriverBiDiConnection.jsm)
