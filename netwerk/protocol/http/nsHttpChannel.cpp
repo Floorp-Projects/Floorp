@@ -2647,7 +2647,25 @@ nsresult nsHttpChannel::ProxyFailover() {
   nsCOMPtr<nsIProxyInfo> pi;
   rv = pps->GetFailoverForProxy(mConnectionInfo->ProxyInfo(), mURI, mStatus,
                                 getter_AddRefs(pi));
-  if (NS_FAILED(rv)) return rv;
+#ifdef MOZ_PROXY_DIRECT_FAILOVER
+  if (NS_FAILED(rv)) {
+    if (!StaticPrefs::network_proxy_failover_direct()) {
+      return rv;
+    }
+    // If this request used a failed proxy and there is no failover available,
+    // fallback to DIRECT connections for system principal requests.
+    if (mLoadInfo->GetLoadingPrincipal() &&
+        mLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal()) {
+      rv = pps->NewProxyInfo("direct"_ns, ""_ns, 0, ""_ns, ""_ns, 0, UINT32_MAX,
+                             nullptr, getter_AddRefs(pi));
+    }
+#endif
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+#ifdef MOZ_PROXY_DIRECT_FAILOVER
+  }
+#endif
 
   // XXXbz so where does this codepath remove us from the loadgroup,
   // exactly?
