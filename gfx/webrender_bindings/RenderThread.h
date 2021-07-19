@@ -119,8 +119,8 @@ class RendererEvent {
 /// The render thread owns the different RendererOGLs (one per window) and
 /// implements the RenderNotifier api exposed by the WebRender bindings.
 ///
-/// We should generally avoid posting tasks to the render thread's event loop
-/// directly and instead use the RendererEvent mechanism which avoids races
+/// Callers are not allowed to post tasks to the render thread's event loop
+/// directly and must instead use the RendererEvent mechanism which avoids races
 /// between the events and WebRender's own messages.
 ///
 /// The GL context(s) should be created and used on this thread only.
@@ -142,12 +142,6 @@ class RenderThread final {
 
   /// Can only be called from the main thread.
   static void ShutDown();
-
-  /// Can be called from any thread.
-  /// In most cases it is best to post RendererEvents through WebRenderAPI
-  /// instead of scheduling directly to this message loop (so as to preserve the
-  /// ordering of the messages).
-  static MessageLoop* Loop();
 
   /// Can be called from any thread.
   static bool IsInRenderThread();
@@ -308,6 +302,7 @@ class RenderThread final {
   void DeferredRenderTextureHostDestroy();
   void ShutDownTask(layers::SynchronousTask* aTask);
   void InitDeviceTask();
+  void PostRunnable(already_AddRefed<nsIRunnable> aRunnable);
 
   void DoAccumulateMemoryReport(MemoryReport,
                                 const RefPtr<MemoryReportPromise::Private>&);
