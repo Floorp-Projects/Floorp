@@ -1356,6 +1356,13 @@ void nsWindow::HideWaylandPopupWindow(bool aTemporaryHide,
   if (visible) {
     HideWaylandWindow();
   }
+
+  // Clear rendering transactions of closed window and disable rendering to it
+  // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1717451#c27
+  // for details).
+  if (mPopupClosed) {
+    RevokeTransactionIdAllocator();
+  }
 }
 
 void nsWindow::HideWaylandToplevelWindow() {
