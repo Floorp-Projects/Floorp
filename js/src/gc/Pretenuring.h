@@ -43,14 +43,23 @@ enum class CatchAllAllocSite { Unknown, Optimized };
 // code.
 class AllocSite {
  public:
-  enum class State : uint32_t { ShortLived, Unknown, LongLived };
+  enum class State : uint32_t { ShortLived = 0, Unknown = 1, LongLived = 2 };
+
+  // The JIT depends on being able to tell the states apart by checking a single
+  // bit.
+  static constexpr int32_t LONG_LIVED_BIT = int32_t(State::LongLived);
+  static_assert((LONG_LIVED_BIT & int32_t(State::Unknown)) == 0);
+  static_assert((AllocSite::LONG_LIVED_BIT & int32_t(State::ShortLived)) == 0);
 
  private:
   JS::Zone* const zone_;
 
-  // Pointer to the JSScript that owns this allocation site or null for unknown
-  // sites. This is used when we need to invalidate the script.
-  JSScript* script_ = nullptr;
+  // Word storing JSScript pointer and site state.
+  //
+  // The script pointer is the script that owns this allocation site or null for
+  // unknown sites. This is used when we need to invalidate the script.
+  uintptr_t scriptAndState = uintptr_t(State::Unknown);
+  static constexpr uintptr_t STATE_MASK = BitMask(2);
 
   // Next pointer forming a linked list of sites at which nursery allocation
   // happened since the last nursery collection.
@@ -60,12 +69,10 @@ class AllocSite {
   uint32_t nurseryAllocCount = 0;
 
   // Number of nursery allocations that survived. Used during collection.
-  uint32_t nurseryTenuredCount = 0;
-
-  State state_ = State::Unknown;
+  uint32_t nurseryTenuredCount : 24;
 
   // Number of times the script has been invalidated.
-  uint32_t invalidationCount = 0;
+  uint32_t invalidationCount : 8;
 
   static AllocSite* const EndSentinel;
 
@@ -74,26 +81,32 @@ class AllocSite {
 
  public:
   // Create a dummy site to use for unknown allocations.
-  explicit AllocSite(JS::Zone* zone) : zone_(zone) {}
+  explicit AllocSite(JS::Zone* zone)
+      : zone_(zone), nurseryTenuredCount(0), invalidationCount(0) {}
 
   // Create a site for an opcode in the given script.
-  AllocSite(JS::Zone* zone, JSScript* script) : zone_(zone), script_(script) {}
+  AllocSite(JS::Zone* zone, JSScript* script) : AllocSite(zone) {
+    setScript(script);
+  }
 
   JS::Zone* zone() const { return zone_; }
-  bool hasScript() const { return script_; }
-  JSScript* script() const { return script_; }
+
+  State state() const { return State(scriptAndState & STATE_MASK); }
+
+  JSScript* script() const {
+    return reinterpret_cast<JSScript*>(scriptAndState & ~STATE_MASK);
+  }
+  bool hasScript() const { return script(); }
 
   enum class Kind : uint32_t { Normal, Unknown, Optimized };
   Kind kind() const;
 
   bool isInAllocatedList() const { return nextNurseryAllocated; }
 
-  State state() const { return state_; }
-
   // Whether allocations at this site should be allocated in the nursery or the
   // tenured heap.
   InitialHeap initialHeap() const {
-    return state_ == State::LongLived ? TenuredHeap : DefaultHeap;
+    return state() == State::LongLived ? TenuredHeap : DefaultHeap;
   }
 
   bool hasNurseryAllocations() const {
@@ -105,7 +118,12 @@ class AllocSite {
   }
 
   void incAllocCount() { nurseryAllocCount++; }
-  void incTenuredCount() { nurseryTenuredCount++; }
+
+  void incTenuredCount() {
+    // The nursery is not large enough for this to overflow.
+    nurseryTenuredCount++;
+    MOZ_ASSERT(nurseryTenuredCount != 0);
+  }
 
   void updateStateOnMinorGC(double promotionRate);
 
@@ -124,8 +142,8 @@ class AllocSite {
   void printInfo(bool hasPromotionRate, double promotionRate,
                  bool wasInvalidated) const;
 
-  static constexpr size_t offsetOfState() {
-    return offsetof(AllocSite, state_);
+  static constexpr size_t offsetOfScriptAndState() {
+    return offsetof(AllocSite, scriptAndState);
   }
   static constexpr size_t offsetOfNurseryAllocCount() {
     return offsetof(AllocSite, nurseryAllocCount);
@@ -135,6 +153,16 @@ class AllocSite {
   }
 
  private:
+  void setScript(JSScript* newScript) {
+    MOZ_ASSERT((uintptr_t(newScript) & STATE_MASK) == 0);
+    scriptAndState = uintptr_t(newScript) | uintptr_t(state());
+  }
+
+  void setState(State newState) {
+    MOZ_ASSERT((uintptr_t(newState) & ~STATE_MASK) == 0);
+    scriptAndState = uintptr_t(script()) | uintptr_t(newState);
+  }
+
   const char* stateName() const;
 };
 
