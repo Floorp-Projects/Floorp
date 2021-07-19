@@ -67,6 +67,16 @@ NS_IMETHODIMP BrowsingContextWebProgress::RemoveProgressListener(
   return mListenerInfoList.RemoveElement(listener) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP BrowsingContextWebProgress::GetBrowsingContextXPCOM(
+    BrowsingContext** aBrowsingContext) {
+  NS_IF_ADDREF(*aBrowsingContext = mCurrentBrowsingContext);
+  return NS_OK;
+}
+
+BrowsingContext* BrowsingContextWebProgress::GetBrowsingContext() {
+  return mCurrentBrowsingContext;
+}
+
 NS_IMETHODIMP BrowsingContextWebProgress::GetDOMWindow(
     mozIDOMWindowProxy** aDOMWindow) {
   return NS_ERROR_NOT_AVAILABLE;
