@@ -516,9 +516,9 @@ void ConvertProcessMitigationsToPolicy(MitigationFlags flags,
   // Mitigations >= Win10 20H1
   //----------------------------------------------------------------------------
   if (version >= base::win::Version::WIN10_20H1) {
-    if (flags & MITIGATION_CET_STRICT_MODE && IsUserCetWin32Available()) {
+    if (flags & MITIGATION_CET_COMPAT_MODE && IsUserCetWin32Available()) {
       *policy_value_2 |=
-          PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_STRICT_MODE;
+          PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_ALWAYS_ON;
     }
   }
 
