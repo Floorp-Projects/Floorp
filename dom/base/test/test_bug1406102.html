@@ -24,8 +24,11 @@
 <script type="application/javascript">
 
   let observer = new IntersectionObserver(function (changes) {
-    ok(changes[0].intersectionRatio > 0, 'intersectionRatio should be greater than zero');
-    SimpleTest.finish();
+    ok(changes[0].intersectionRatio >= 0,
+       'intersectionRatio should be equal to or greater than zero');
+    if (changes[0].intersectionRatio > 0) {
+      SimpleTest.finish();
+    }
   });
   observer.observe(document.body);
   SimpleTest.waitForExplicitFinish();
