@@ -82,12 +82,12 @@ browsertime-tp6m:
         treeherder-symbol: Btime(tp6m)
     raptor-subtests:
         - amazon
-        - bbc
         - bing
         - [bing-search-restaurants, bing-s-r]
         - booking
         - cnn
         - [cnn-ampstories, cnn-amp]
+        - dailymail
         - [ebay-kleinanzeigen, ebay-k]
         - [ebay-kleinanzeigen-search, ebay-k-s]
         - [facebook-cristiano, fb-cris]
@@ -198,13 +198,13 @@ browsertime-tp6m-live:
         - allrecipes
         - amazon
         - [amazon-search, amazon-s]
-        - bbc
         - bing
         - [bing-search-restaurants, bing-s-r]
         - booking
         - booking-sf
         - cnn
         - [cnn-ampstories, cnn-amp]
+        - dailymail
         - discord
         - [ebay-kleinanzeigen, ebay-k]
         - [ebay-kleinanzeigen-search, ebay-k-s]
