@@ -7123,12 +7123,6 @@
   value: true
   mirror: always
 
-# Is support for -moz-prefixed multi-column properties (including column-gap) enabled?
-- name: layout.css.prefixes.columns
-  type: bool
-  value: false
-  mirror: always
-
 # Is support for -moz-prefixed font feature properties enabled?
 - name: layout.css.prefixes.font-features
   type: bool

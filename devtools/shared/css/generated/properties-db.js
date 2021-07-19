@@ -11157,34 +11157,6 @@ exports.PREFERENCES = [
     "layout.css.prefixes.transforms"
   ],
   [
-    "-moz-column-width",
-    "layout.css.prefixes.columns"
-  ],
-  [
-    "-moz-column-count",
-    "layout.css.prefixes.columns"
-  ],
-  [
-    "-moz-column-fill",
-    "layout.css.prefixes.columns"
-  ],
-  [
-    "-moz-column-rule-width",
-    "layout.css.prefixes.columns"
-  ],
-  [
-    "-moz-column-rule-color",
-    "layout.css.prefixes.columns"
-  ],
-  [
-    "-moz-column-span",
-    "layout.css.prefixes.columns"
-  ],
-  [
-    "-moz-column-rule-style",
-    "layout.css.prefixes.columns"
-  ],
-  [
     "-moz-font-feature-settings",
     "layout.css.prefixes.font-features"
   ],
@@ -11197,10 +11169,6 @@ exports.PREFERENCES = [
     "layout.css.prefixes.box-sizing"
   ],
   [
-    "-moz-column-gap",
-    "layout.css.prefixes.columns"
-  ],
-  [
     "-moz-border-image",
     "layout.css.prefixes.border-image"
   ],
@@ -11211,13 +11179,5 @@ exports.PREFERENCES = [
   [
     "-moz-animation",
     "layout.css.prefixes.animations"
-  ],
-  [
-    "-moz-columns",
-    "layout.css.prefixes.columns"
-  ],
-  [
-    "-moz-column-rule",
-    "layout.css.prefixes.columns"
   ]
 ];
