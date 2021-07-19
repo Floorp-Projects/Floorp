@@ -20,9 +20,16 @@
 #include "gfxUtils.h"
 
 struct nsBorderColors;
-class nsDisplayBorder;
 
 namespace mozilla {
+class nsDisplayItem;
+class nsDisplayList;
+class nsDisplayListBuilder;
+
+class nsDisplayBorder;
+class nsDisplayButtonBorder;
+class nsDisplayButtonForeground;
+class nsDisplayOutline;
 
 enum class StyleBorderStyle : uint8_t;
 enum class StyleBorderImageRepeat : uint8_t;
@@ -80,10 +87,9 @@ class nsCSSBorderRenderer final {
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
 
-  friend class nsDisplayBorder;
-  friend class nsDisplayOutline;
-  friend class nsDisplayButtonBorder;
-  friend class nsDisplayButtonForeground;
+  friend class mozilla::nsDisplayOutline;
+  friend class mozilla::nsDisplayButtonBorder;
+  friend class mozilla::nsDisplayButtonForeground;
 
  public:
   nsCSSBorderRenderer(nsPresContext* aPresContext, DrawTarget* aDrawTarget,
@@ -97,7 +103,7 @@ class nsCSSBorderRenderer final {
   void DrawBorders();
 
   void CreateWebRenderCommands(
-      nsDisplayItem* aItem, mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::nsDisplayItem* aItem, mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc);
 
@@ -268,12 +274,12 @@ class nsCSSBorderImageRenderer final {
                                                 nsIFrame* aForFrame,
                                                 const nsRect& aDirtyRect);
   mozilla::image::ImgDrawResult CreateWebRenderCommands(
-      nsDisplayItem* aItem, nsIFrame* aForFrame,
+      mozilla::nsDisplayItem* aItem, nsIFrame* aForFrame,
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
-      nsDisplayListBuilder* aDisplayListBuilder);
+      mozilla::nsDisplayListBuilder* aDisplayListBuilder);
 
   nsCSSBorderImageRenderer(const nsCSSBorderImageRenderer& aRhs);
   nsCSSBorderImageRenderer& operator=(const nsCSSBorderImageRenderer& aRhs);
@@ -295,7 +301,7 @@ class nsCSSBorderImageRenderer final {
   mozilla::StyleBorderImageRepeat mRepeatModeVertical;
   bool mFill;
 
-  friend class nsDisplayBorder;
+  friend class mozilla::nsDisplayBorder;
   friend struct nsCSSRendering;
 };
 

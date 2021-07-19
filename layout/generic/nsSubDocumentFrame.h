@@ -176,6 +176,8 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   bool mCallingShow;
 };
 
+namespace mozilla {
+
 /**
  * A nsDisplayRemote will graft a remote frame's shadow layer tree (for a given
  * nsFrameLoader) into its parent frame's layer tree.
@@ -227,5 +229,7 @@ class nsDisplayRemote final : public nsPaintedDisplayItem {
   LayoutDevicePoint mOffset;
   EventRegionsOverride mEventRegionsOverride;
 };
+
+}  // namespace mozilla
 
 #endif /* NSSUBDOCUMENTFRAME_H_ */

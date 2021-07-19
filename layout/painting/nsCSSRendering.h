@@ -208,27 +208,27 @@ struct nsCSSRendering {
                                           mozilla::ComputedStyle* aStyle);
 
   static ImgDrawResult CreateWebRenderCommandsForBorder(
-      nsDisplayItem* aItem, nsIFrame* aForFrame, const nsRect& aBorderArea,
-      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::nsDisplayItem* aItem, nsIFrame* aForFrame,
+      const nsRect& aBorderArea, mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
-      nsDisplayListBuilder* aDisplayListBuilder);
+      mozilla::nsDisplayListBuilder* aDisplayListBuilder);
 
   static void CreateWebRenderCommandsForNullBorder(
-      nsDisplayItem* aItem, nsIFrame* aForFrame, const nsRect& aBorderArea,
-      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::nsDisplayItem* aItem, nsIFrame* aForFrame,
+      const nsRect& aBorderArea, mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
       const nsStyleBorder& aStyleBorder);
 
   static ImgDrawResult CreateWebRenderCommandsForBorderWithStyleBorder(
-      nsDisplayItem* aItem, nsIFrame* aForFrame, const nsRect& aBorderArea,
-      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::nsDisplayItem* aItem, nsIFrame* aForFrame,
+      const nsRect& aBorderArea, mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
-      nsDisplayListBuilder* aDisplayListBuilder,
+      mozilla::nsDisplayListBuilder* aDisplayListBuilder,
       const nsStyleBorder& aStyleBorder);
 
   /**
@@ -512,14 +512,16 @@ struct nsCSSRendering {
       const PaintBGParams& aParams, mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::RenderRootStateManager* aManager, nsDisplayItem* aItem);
+      mozilla::layers::RenderRootStateManager* aManager,
+      mozilla::nsDisplayItem* aItem);
 
   static ImgDrawResult BuildWebRenderDisplayItemsForStyleImageLayerWithSC(
       const PaintBGParams& aParams, mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
-      mozilla::ComputedStyle* mBackgroundSC, const nsStyleBorder& aBorder);
+      mozilla::layers::RenderRootStateManager* aManager,
+      mozilla::nsDisplayItem* aItem, mozilla::ComputedStyle* mBackgroundSC,
+      const nsStyleBorder& aBorder);
 
   /**
    * Returns the rectangle covered by the given background layer image, taking
