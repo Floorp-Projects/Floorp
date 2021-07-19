@@ -37,7 +37,11 @@ const MockSecurityInfo = {
 };
 
 add_task(async function run_test() {
-  const result = await NetworkHelper.parseSecurityInfo(MockSecurityInfo, {});
+  const result = await NetworkHelper.parseSecurityInfo(
+    MockSecurityInfo,
+    {},
+    new Map()
+  );
 
   equal(result.state, "secure", "State is correct.");
 
@@ -51,7 +55,7 @@ add_task(async function run_test() {
 
   deepEqual(
     result.cert,
-    await NetworkHelper.parseCertificateInfo(MockCertificate),
+    await NetworkHelper.parseCertificateInfo(MockCertificate, new Map()),
     "Certificate information is correct."
   );
 
