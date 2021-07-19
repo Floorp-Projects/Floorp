@@ -28,7 +28,7 @@ javascript:
     shipping-product: firefox
     fetches:
         fetch:
-            - codeql-2.0.3
+            - codeql-2.5.7
         toolchain:
             - linux64-node
     notifications:
