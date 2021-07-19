@@ -365,7 +365,7 @@ add_task(async function testDetailsObjects() {
   await promiseAnimationFrame();
 
   // The initial icon should be the default icon since no icon is in the manifest.
-  const DEFAULT_ICON = "chrome://browser/content/extension.svg";
+  const DEFAULT_ICON = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
   let browserActionButton = browserActionWidget.forWindow(window).node;
   let pageActionImage = document.getElementById(pageActionId);
   is(
