@@ -37,9 +37,10 @@ class ParallelWorker : public GCParallelTask {
  public:
   using WorkFunc = ParallelWorkFunc<WorkItem>;
 
-  ParallelWorker(GCRuntime* gc, WorkFunc func, WorkItemIterator& work,
-                 const SliceBudget& budget, AutoLockHelperThreadState& lock)
-      : GCParallelTask(gc),
+  ParallelWorker(GCRuntime* gc, gcstats::PhaseKind phaseKind, WorkFunc func,
+                 WorkItemIterator& work, const SliceBudget& budget,
+                 AutoLockHelperThreadState& lock)
+      : GCParallelTask(gc, phaseKind),
         func_(func),
         work_(work),
         budget_(budget),
@@ -110,8 +111,8 @@ class MOZ_RAII AutoRunParallelWork {
     MOZ_ASSERT_IF(workerCount == 0, work.done());
 
     for (size_t i = 0; i < workerCount && !work.done(); i++) {
-      tasks[i].emplace(gc, func, work, budget, lock);
-      gc->startTask(*tasks[i], phaseKind, lock);
+      tasks[i].emplace(gc, phaseKind, func, work, budget, lock);
+      gc->startTask(*tasks[i], lock);
       tasksStarted++;
     }
   }
@@ -120,7 +121,7 @@ class MOZ_RAII AutoRunParallelWork {
     gHelperThreadLock.assertOwnedByCurrentThread();
 
     for (size_t i = 0; i < tasksStarted; i++) {
-      gc->joinTask(*tasks[i], phaseKind, lock);
+      gc->joinTask(*tasks[i], lock);
     }
     for (size_t i = tasksStarted; i < MaxParallelWorkers; i++) {
       MOZ_ASSERT(tasks[i].isNothing());

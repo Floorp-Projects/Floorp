@@ -132,8 +132,7 @@ class ChunkPool {
 
 class BackgroundMarkTask : public GCParallelTask {
  public:
-  explicit BackgroundMarkTask(GCRuntime* gc)
-      : GCParallelTask(gc), budget(SliceBudget::unlimited()) {}
+  explicit BackgroundMarkTask(GCRuntime* gc);
   void setBudget(const SliceBudget& budget) { this->budget = budget; }
   void run(AutoLockHelperThreadState& lock) override;
 
@@ -143,7 +142,7 @@ class BackgroundMarkTask : public GCParallelTask {
 
 class BackgroundUnmarkTask : public GCParallelTask {
  public:
-  explicit BackgroundUnmarkTask(GCRuntime* gc) : GCParallelTask(gc) {}
+  explicit BackgroundUnmarkTask(GCRuntime* gc);
   void initZones();
   void run(AutoLockHelperThreadState& lock) override;
 
@@ -155,13 +154,13 @@ class BackgroundUnmarkTask : public GCParallelTask {
 
 class BackgroundSweepTask : public GCParallelTask {
  public:
-  explicit BackgroundSweepTask(GCRuntime* gc) : GCParallelTask(gc) {}
+  explicit BackgroundSweepTask(GCRuntime* gc);
   void run(AutoLockHelperThreadState& lock) override;
 };
 
 class BackgroundFreeTask : public GCParallelTask {
  public:
-  explicit BackgroundFreeTask(GCRuntime* gc) : GCParallelTask(gc) {}
+  explicit BackgroundFreeTask(GCRuntime* gc);
   void run(AutoLockHelperThreadState& lock) override;
 };
 
@@ -183,8 +182,7 @@ class BackgroundAllocTask : public GCParallelTask {
 // Search the provided chunks for free arenas and decommit them.
 class BackgroundDecommitTask : public GCParallelTask {
  public:
-  explicit BackgroundDecommitTask(GCRuntime* gc) : GCParallelTask(gc) {}
-
+  explicit BackgroundDecommitTask(GCRuntime* gc);
   void run(AutoLockHelperThreadState& lock) override;
 };
 
@@ -609,11 +607,8 @@ class GCRuntime {
   /*
    * Concurrent sweep infrastructure.
    */
-  void startTask(GCParallelTask& task, gcstats::PhaseKind phase,
-                 AutoLockHelperThreadState& locked);
-  void joinTask(GCParallelTask& task, gcstats::PhaseKind phase,
-                AutoLockHelperThreadState& locked);
-  void joinTask(GCParallelTask& task, gcstats::PhaseKind phase);
+  void startTask(GCParallelTask& task, AutoLockHelperThreadState& lock);
+  void joinTask(GCParallelTask& task, AutoLockHelperThreadState& lock);
   void updateHelperThreadCount();
   size_t parallelWorkerCount() const;
 

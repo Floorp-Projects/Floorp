@@ -3581,6 +3581,9 @@ void GCRuntime::startDecommit() {
   decommitTask.runFromMainThread();
 }
 
+BackgroundDecommitTask::BackgroundDecommitTask(GCRuntime* gc)
+    : GCParallelTask(gc, gcstats::PhaseKind::DECOMMIT) {}
+
 void js::gc::BackgroundDecommitTask::run(AutoLockHelperThreadState& lock) {
   {
     AutoUnlockHelperThreadState unlock(lock);
@@ -3749,6 +3752,9 @@ void GCRuntime::queueZonesAndStartBackgroundSweep(ZoneList& zones) {
   }
 }
 
+BackgroundSweepTask::BackgroundSweepTask(GCRuntime* gc)
+    : GCParallelTask(gc, gcstats::PhaseKind::SWEEP) {}
+
 void BackgroundSweepTask::run(AutoLockHelperThreadState& lock) {
   AutoTraceLog logSweeping(TraceLoggerForCurrentThread(),
                            TraceLogger_GCSweeping);
@@ -3812,6 +3818,11 @@ void GCRuntime::queueBuffersForFreeAfterMinorGC(Nursery::BufferSet& buffers) {
 void GCRuntime::startBackgroundFree() {
   AutoLockHelperThreadState lock;
   freeTask.startOrRunIfIdle(lock);
+}
+
+BackgroundFreeTask::BackgroundFreeTask(GCRuntime* gc)
+    : GCParallelTask(gc, gcstats::PhaseKind::NONE) {
+  // This can occur outside GCs so doesn't have a stats phase.
 }
 
 void BackgroundFreeTask::run(AutoLockHelperThreadState& lock) {
@@ -4022,17 +4033,16 @@ class MOZ_RAII AutoRunParallelTask : public GCParallelTask {
   using TaskFunc = JS_MEMBER_FN_PTR_TYPE(GCRuntime, void);
 
   TaskFunc func_;
-  gcstats::PhaseKind phase_;
   AutoLockHelperThreadState& lock_;
 
  public:
   AutoRunParallelTask(GCRuntime* gc, TaskFunc func, gcstats::PhaseKind phase,
                       AutoLockHelperThreadState& lock)
-      : GCParallelTask(gc), func_(func), phase_(phase), lock_(lock) {
-    gc->startTask(*this, phase_, lock_);
+      : GCParallelTask(gc, phase), func_(func), lock_(lock) {
+    gc->startTask(*this, lock_);
   }
 
-  ~AutoRunParallelTask() { gc->joinTask(*this, phase_, lock_); }
+  ~AutoRunParallelTask() { gc->joinTask(*this, lock_); }
 
   void run(AutoLockHelperThreadState& lock) override {
     AutoUnlockHelperThreadState unlock(lock);
@@ -4451,6 +4461,9 @@ bool GCRuntime::beginPreparePhase(JS::GCReason reason, AutoGCSession& session) {
 
   return true;
 }
+
+BackgroundUnmarkTask::BackgroundUnmarkTask(GCRuntime* gc)
+    : GCParallelTask(gc, gcstats::PhaseKind::UNMARK) {}
 
 void BackgroundUnmarkTask::initZones() {
   MOZ_ASSERT(isIdle());
@@ -5027,7 +5040,7 @@ void GCRuntime::getNextSweepGroup() {
   }
 
   if (abortSweepAfterCurrentGroup) {
-    joinTask(markTask, gcstats::PhaseKind::SWEEP_MARK);
+    markTask.join();
 
     // Abort collection of subsequent sweep groups.
     for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
@@ -5428,7 +5441,9 @@ class ImmediateSweepWeakCacheTask : public GCParallelTask {
  public:
   ImmediateSweepWeakCacheTask(GCRuntime* gc, Zone* zone,
                               JS::detail::WeakCacheBase& wc)
-      : GCParallelTask(gc), zone(zone), cache(wc) {}
+      : GCParallelTask(gc, gcstats::PhaseKind::SWEEP_WEAK_CACHES),
+        zone(zone),
+        cache(wc) {}
 
   ImmediateSweepWeakCacheTask(ImmediateSweepWeakCacheTask&& other)
       : GCParallelTask(std::move(other)),
@@ -5536,46 +5551,22 @@ void GCRuntime::sweepFinalizationRegistriesOnMainThread() {
   }
 }
 
-void GCRuntime::startTask(GCParallelTask& task, gcstats::PhaseKind phase,
+void GCRuntime::startTask(GCParallelTask& task,
                           AutoLockHelperThreadState& lock) {
   if (!CanUseExtraThreads()) {
     AutoUnlockHelperThreadState unlock(lock);
     task.runFromMainThread();
-    stats().recordParallelPhase(phase, task.duration());
+    stats().recordParallelPhase(task.phaseKind, task.duration());
     return;
   }
 
   task.startWithLockHeld(lock);
 }
 
-void GCRuntime::joinTask(GCParallelTask& task, gcstats::PhaseKind phase,
+void GCRuntime::joinTask(GCParallelTask& task,
                          AutoLockHelperThreadState& lock) {
-  // This is similar to GCParallelTask::joinWithLockHeld but handles recording
-  // execution and wait time.
-
-  if (task.isIdle(lock)) {
-    return;
-  }
-
-  if (task.isDispatched(lock)) {
-    // If the task was dispatched but has not yet started then cancel the task
-    // and run it from the main thread. This stops us from blocking here when
-    // the helper threads are busy with other tasks.
-    task.cancelDispatchedTask(lock);
-    AutoUnlockHelperThreadState unlock(lock);
-    task.runFromMainThread();
-  } else {
-    // Otherwise wait for the task to complete.
-    gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::JOIN_PARALLEL_TASKS);
-    task.joinRunningOrFinishedTask(lock);
-  }
-
-  stats().recordParallelPhase(phase, task.duration());
-}
-
-void GCRuntime::joinTask(GCParallelTask& task, gcstats::PhaseKind phase) {
-  AutoLockHelperThreadState lock;
-  joinTask(task, phase, lock);
+  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::JOIN_PARALLEL_TASKS);
+  task.joinWithLockHeld(lock);
 }
 
 void GCRuntime::sweepDebuggerOnMainThread(JSFreeOp* fop) {
@@ -5799,7 +5790,7 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
     if (canSweepWeakCachesOffThread) {
       weakCachesToSweep.ref().emplace(currentSweepGroup);
       for (auto& task : sweepCacheTasks) {
-        startTask(task, PhaseKind::SWEEP_WEAK_CACHES, lock);
+        startTask(task, lock);
       }
     }
 
@@ -5814,7 +5805,7 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
     }
 
     for (auto& task : sweepCacheTasks) {
-      joinTask(task, PhaseKind::SWEEP_WEAK_CACHES, lock);
+      joinTask(task, lock);
     }
   }
 
@@ -6013,6 +6004,10 @@ bool ArenaLists::foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
   return true;
 }
 
+BackgroundMarkTask::BackgroundMarkTask(GCRuntime* gc)
+    : GCParallelTask(gc, gcstats::PhaseKind::SWEEP_MARK),
+      budget(SliceBudget::unlimited()) {}
+
 void js::gc::BackgroundMarkTask::run(AutoLockHelperThreadState& lock) {
   AutoUnlockHelperThreadState unlock(lock);
 
@@ -6027,7 +6022,7 @@ IncrementalProgress GCRuntime::joinBackgroundMarkTask() {
     return Finished;
   }
 
-  joinTask(markTask, gcstats::PhaseKind::SWEEP_MARK, lock);
+  joinTask(markTask, lock);
 
   IncrementalProgress result = sweepMarkResult;
   sweepMarkResult = Finished;

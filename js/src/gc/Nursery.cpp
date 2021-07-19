@@ -126,7 +126,9 @@ inline js::NurseryChunk* js::NurseryChunk::fromChunk(TenuredChunk* chunk) {
 }
 
 js::NurseryDecommitTask::NurseryDecommitTask(gc::GCRuntime* gc)
-    : GCParallelTask(gc) {}
+    : GCParallelTask(gc, gcstats::PhaseKind::NONE) {
+  // This can occur outside GCs so doesn't have a stats phase.
+}
 
 bool js::NurseryDecommitTask::isEmpty(
     const AutoLockHelperThreadState& lock) const {
