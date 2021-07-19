@@ -51,7 +51,7 @@ add_task(async function testTabSwitchContext() {
     },
 
     getTests: function(tabs) {
-      let defaultIcon = "chrome://browser/content/extension.svg";
+      let defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
       let details = [
         {
           icon: browser.runtime.getURL("default.png"),

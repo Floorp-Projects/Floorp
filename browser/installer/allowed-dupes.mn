@@ -107,10 +107,7 @@ browser/chrome/browser/search-extensions/yandex/yandex-en.ico
 browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/yandex-ru.png
 browser/chrome/browser/search-extensions/yandex/yandex-ru.ico
 
-# Bug 1708008 - De-duplicate extension icons
-browser/chrome/browser/content/browser/extension.svg
-chrome/toolkit/skin/classic/mozapps/extensions/extension.svg
-chrome/toolkit/skin/classic/mozapps/extensions/extensionGeneric.svg
+# Bug 1720584 - De-duplicate theme and customize icons
 chrome/toolkit/skin/classic/mozapps/extensions/themeGeneric.svg
 browser/chrome/browser/skin/classic/browser/customize.svg
 
