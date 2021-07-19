@@ -1628,13 +1628,13 @@ MsaaAccessible::accHitTest(
     return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
   }
 
-  LocalAccessible* accessible = localAcc->LocalChildAtPoint(
+  Accessible* accessible = mAcc->ChildAtPoint(
       xLeft, yTop, Accessible::EWhichChildAtPoint::DirectChild);
 
   // if we got a child
   if (accessible) {
     // if the child is us
-    if (accessible == localAcc) {
+    if (accessible == mAcc) {
       pvarChild->vt = VT_I4;
       pvarChild->lVal = CHILDID_SELF;
     } else {  // its not create a LocalAccessible for it.
