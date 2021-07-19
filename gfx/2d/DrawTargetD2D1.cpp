@@ -201,25 +201,27 @@ void DrawTargetD2D1::DrawSurface(SourceSurface* aSurface, const Rect& aDest,
     return;
   }
 
+  Rect source = aSource - aSurface->GetRect().TopLeft();
+
   D2D1_RECT_F samplingBounds;
 
   if (aSurfOptions.mSamplingBounds == SamplingBounds::BOUNDED) {
-    samplingBounds = D2DRect(aSource);
+    samplingBounds = D2DRect(source);
   } else {
     samplingBounds = D2D1::RectF(0, 0, Float(aSurface->GetSize().width),
                                  Float(aSurface->GetSize().height));
   }
 
-  Float xScale = aDest.Width() / aSource.Width();
-  Float yScale = aDest.Height() / aSource.Height();
+  Float xScale = aDest.Width() / source.Width();
+  Float yScale = aDest.Height() / source.Height();
 
   RefPtr<ID2D1ImageBrush> brush;
 
   // Here we scale the source pattern up to the size and position where we want
   // it to be.
   Matrix transform;
-  transform.PreTranslate(aDest.X() - aSource.X() * xScale,
-                         aDest.Y() - aSource.Y() * yScale);
+  transform.PreTranslate(aDest.X() - source.X() * xScale,
+                         aDest.Y() - source.Y() * yScale);
   transform.PreScale(xScale, yScale);
 
   RefPtr<ID2D1Image> image =
@@ -241,7 +243,7 @@ void DrawTargetD2D1::DrawSurface(SourceSurface* aSurface, const Rect& aDest,
   if (SUCCEEDED(hr) && bitmap &&
       aSurfOptions.mSamplingBounds == SamplingBounds::UNBOUNDED) {
     mDC->DrawBitmap(bitmap, D2DRect(aDest), aOptions.mAlpha,
-                    D2DFilter(aSurfOptions.mSamplingFilter), D2DRect(aSource));
+                    D2DFilter(aSurfOptions.mSamplingFilter), D2DRect(source));
   } else {
     // This has issues ignoring the alpha channel on windows 7 with images
     // marked opaque.
