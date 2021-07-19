@@ -8,18 +8,12 @@ Transforms for adding appropriate scopes to scriptworker tasks.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from taskgraph.util.scriptworker import (
-    get_balrog_action_scope,
-    get_balrog_server_scope,
-)
+from taskgraph.util.scriptworker import get_balrog_server_scope
 
 
 def add_balrog_scopes(config, jobs):
     for job in jobs:
-        worker = job["worker"]
-
         server_scope = get_balrog_server_scope(config)
-        action_scope = get_balrog_action_scope(config, action=worker["balrog-action"])
-        job["scopes"] = [server_scope, action_scope]
+        job["scopes"] = [server_scope]
 
         yield job

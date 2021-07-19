@@ -1052,14 +1052,20 @@ def build_balrog_payload(config, task, task_def):
     if "b" in release_config["version"]:
         beta_number = release_config["version"].split("b")[-1]
 
+    task_def["payload"] = {
+        "behavior": worker["balrog-action"],
+    }
+
     if (
         worker["balrog-action"] == "submit-locale"
         or worker["balrog-action"] == "v2-submit-locale"
     ):
-        task_def["payload"] = {
-            "upstreamArtifacts": worker["upstream-artifacts"],
-            "suffixes": worker["suffixes"],
-        }
+        task_def["payload"].update(
+            {
+                "upstreamArtifacts": worker["upstream-artifacts"],
+                "suffixes": worker["suffixes"],
+            }
+        )
     else:
         for prop in (
             "archive-domain",
@@ -1081,11 +1087,13 @@ def build_balrog_payload(config, task, task_def):
                         "beta-number": beta_number,
                     }
                 )
-        task_def["payload"] = {
-            "build_number": release_config["build_number"],
-            "product": worker["product"],
-            "version": release_config["version"],
-        }
+        task_def["payload"].update(
+            {
+                "build_number": release_config["build_number"],
+                "product": worker["product"],
+                "version": release_config["version"],
+            }
+        )
         for prop in (
             "blob-suffix",
             "complete-mar-filename-pattern",

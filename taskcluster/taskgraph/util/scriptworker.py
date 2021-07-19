@@ -322,12 +322,6 @@ def get_phase_from_target_method(config, alias_to_tasks_map, alias_to_phase_map)
     return alias_to_phase_map["default"]
 
 
-@with_scope_prefix
-def get_balrog_action_scope(config, action="submit"):
-    assert action in BALROG_ACTIONS
-    return "balrog:action:{}".format(action)
-
-
 get_signing_cert_scope = functools.partial(
     get_scope_from_project,
     alias_to_project_map=SIGNING_SCOPE_ALIAS_TO_PROJECT,
