@@ -129,7 +129,7 @@
   },
   "applications": {
     "gecko": {
-      "id": "firefox-infobar-ui-bergamot-browser-extension@browser.mt",
+      "id": "firefox-translations@mozilla.org",
       "strict_min_version": "90.0a1"
     }
   }
