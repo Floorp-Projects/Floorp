@@ -1539,6 +1539,7 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
    * Create a similar DrawTarget in the same space as this DrawTarget whose
    * device size may be clipped based on the active clips intersected with
    * aBounds (if it is not empty).
+   * aRect is a rectangle in user space.
    */
   virtual RefPtr<DrawTarget> CreateClippedDrawTarget(const Rect& aBounds,
                                                      SurfaceFormat aFormat) = 0;
