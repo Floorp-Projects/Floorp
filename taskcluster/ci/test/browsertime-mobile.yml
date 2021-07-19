@@ -95,8 +95,8 @@ browsertime-tp6m:
         - [google-search-restaurants, gsearch-r]
         - instagram
         - imdb
-        - jianshu
         - reddit
+        - sina
         - [stackoverflow, stacko]
         - web-de
         - wikipedia

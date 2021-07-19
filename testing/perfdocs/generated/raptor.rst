@@ -5409,88 +5409,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-refbrow-instagram-e10s: None
 
 
-.. dropdown:: jianshu (BT, GV, FE, RB, CH-M)
-   :container: + anchor-id-jianshu-m
-
-   * **alert on**: fcp, loadtime
-   * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m
-   * **browser cycles**: 15
-   * **expected**: pass
-   * **lower is better**: true
-   * **page cycles**: 25
-   * **page timeout**: 60000
-   * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-jianshu.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-jianshu.mp
-   * **playback version**: 6.0.2
-   * **test url**: `<https://www.jianshu.com/>`__
-   * **type**: pageload
-   * **unit**: ms
-   * **use live sites**: false
-   * **Test Task**:
-      * test-android-hw-g5-7-0-arm7-qr/opt
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: None
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-g5-7-0-arm7-shippable-qr/opt
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: mozilla-beta, trunk
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-g5-7-0-arm7-shippable/opt
-            * browsertime-tp6m-chrome-m-jianshu-e10s: None
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: None
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-g5-7-0-arm7/opt
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: None
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-p2-8-0-android-aarch64-qr/opt
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: None
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-p2-8-0-android-aarch64-shippable-qr/opt
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: mozilla-beta, trunk
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-p2-8-0-android-aarch64-shippable/opt
-            * browsertime-tp6m-chrome-m-jianshu-e10s: None
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: None
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-p2-8-0-android-aarch64/opt
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: None
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-p2-8-0-arm7-shippable/opt
-            * browsertime-tp6m-chrome-m-jianshu-e10s: None
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: None
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-p2-8-0-arm7/opt
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: None
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-s7-8-0-android-aarch64-qr/opt
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: None
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: None
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
-            * browsertime-tp6m-chrome-m-jianshu-e10s: None
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: None
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-      * test-android-hw-s7-8-0-android-aarch64/opt
-            * browsertime-tp6m-fenix-jianshu-e10s: None
-            * browsertime-tp6m-geckoview-jianshu-e10s: None
-            * browsertime-tp6m-refbrow-jianshu-e10s: None
-
-
 .. dropdown:: microsoft-support (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-microsoft-support-m
 
@@ -5717,6 +5635,88 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-reddit-e10s: None
             * browsertime-tp6m-live-geckoview-reddit-e10s: None
             * browsertime-tp6m-refbrow-reddit-e10s: None
+
+
+.. dropdown:: sina (BT, GV, FE, RB, CH-M)
+   :container: + anchor-id-sina-m
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy-android
+   * **playback pageset manifest**: mitm6-android-fenix-sina.manifest
+   * **playback recordings**: mitm6-android-fenix-sina.mp
+   * **playback version**: 6.0.2
+   * **test url**: `<https://www.sina.com.cn/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+      * test-android-hw-g5-7-0-arm7-qr/opt
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: None
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-g5-7-0-arm7-shippable-qr/opt
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: mozilla-beta, trunk
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-g5-7-0-arm7-shippable/opt
+            * browsertime-tp6m-chrome-m-sina-e10s: None
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: None
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-g5-7-0-arm7/opt
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: None
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-p2-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: None
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-p2-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: mozilla-beta, trunk
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-p2-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-sina-e10s: None
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: None
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-p2-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: None
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-p2-8-0-arm7-shippable/opt
+            * browsertime-tp6m-chrome-m-sina-e10s: None
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: None
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: None
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: None
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: None
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-sina-e10s: None
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: None
+            * browsertime-tp6m-refbrow-sina-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-sina-e10s: None
+            * browsertime-tp6m-geckoview-sina-e10s: None
+            * browsertime-tp6m-refbrow-sina-e10s: None
 
 
 .. dropdown:: stackoverflow (BT, GV, FE, RB, CH-M)

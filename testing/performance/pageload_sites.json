@@ -97,10 +97,9 @@
       "test_url": "https://www.instagram.com"
     },
     {
-      "login": true,
-      "comment": "not login test but fails to load properly",
-      "name": "jianshu",
-      "test_url": "https://www.jianshu.com/"
+      "login": false,
+      "name": "sina",
+      "test_url": "https://www.sina.com.cn/"
     },
     {
       "login": false,
