@@ -178,7 +178,8 @@ void a11y::ProxyTextChangeEvent(RemoteAccessible* aText, const nsString& aStr,
       IsHandlerRegistered();
 
   if (useHandler) {
-    wrapper->DispatchTextChangeToHandler(aInsert, aStr, aStart, aLen);
+    AccessibleWrap::DispatchTextChangeToHandler(wrapper, aInsert, aStr, aStart,
+                                                aLen);
     return;
   }
 
