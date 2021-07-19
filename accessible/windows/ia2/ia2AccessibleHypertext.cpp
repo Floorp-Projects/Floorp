@@ -57,7 +57,6 @@ ia2AccessibleHypertext::get_nHyperlinks(long* aHyperlinkCount) {
 
   HyperTextAccessibleWrap* hyperText = TextAcc();
   if (!hyperText) return CO_E_OBJNOTCONNECTED;
-  MOZ_ASSERT(!hyperText->IsProxy());
 
   *aHyperlinkCount = hyperText->LinkCount();
   return S_OK;
@@ -75,7 +74,6 @@ ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
   if (!hyperText) {
     return CO_E_OBJNOTCONNECTED;
   }
-  MOZ_ASSERT(!hyperText->IsProxy());
 
   hyperLink = hyperText->LinkAt(aLinkIndex);
 
@@ -98,7 +96,6 @@ ia2AccessibleHypertext::get_hyperlinkIndex(long aCharIndex,
 
   HyperTextAccessibleWrap* hyperAcc = TextAcc();
   if (!hyperAcc) return CO_E_OBJNOTCONNECTED;
-  MOZ_ASSERT(!hyperAcc->IsProxy());
 
   *aHyperlinkIndex = hyperAcc->LinkIndexAtOffset(aCharIndex);
   return S_OK;
@@ -118,7 +115,6 @@ ia2AccessibleHypertext::get_hyperlinks(IAccessibleHyperlink*** aHyperlinks,
   if (!hyperText) {
     return CO_E_OBJNOTCONNECTED;
   }
-  MOZ_ASSERT(!hyperText->IsProxy());
 
   uint32_t count = hyperText->LinkCount();
   *aNHyperlinks = count;

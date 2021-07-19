@@ -234,7 +234,6 @@ ia2Accessible::scrollToPoint(enum IA2CoordinateType aCoordType, long aX,
           ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
           : nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
-  MOZ_ASSERT(!acc->IsProxy());
   acc->ScrollToPoint(geckoCoordType, aX, aY);
 
   return S_OK;
@@ -289,7 +288,6 @@ ia2Accessible::get_states(AccessibleStates* aStates) {
   }
 
   uint64_t state;
-  MOZ_ASSERT(!acc->IsProxy());
   state = acc->State();
 
   if (state & states::INVALID) *aStates |= IA2_STATE_INVALID_ENTRY;
@@ -468,13 +466,8 @@ ia2Accessible::get_attributes(BSTR* aAttributes) {
 
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
-  if (!acc->IsProxy()) {
-    RefPtr<AccAttributes> attributes = acc->Attributes();
-    return ConvertToIA2Attributes(attributes, aAttributes);
-  }
-
-  MOZ_ASSERT(!acc->IsProxy());
-  return E_UNEXPECTED;
+  RefPtr<AccAttributes> attributes = acc->Attributes();
+  return ConvertToIA2Attributes(attributes, aAttributes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -546,7 +539,6 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType, long aMaxTargets,
   }
 
   nsTArray<LocalAccessible*> targets;
-  MOZ_ASSERT(!acc->IsProxy());
   Relation rel = acc->RelationByType(*relationType);
   LocalAccessible* target = nullptr;
   while (

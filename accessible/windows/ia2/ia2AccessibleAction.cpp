@@ -26,7 +26,7 @@ ia2AccessibleAction::QueryInterface(REFIID iid, void** ppv) {
 
   *ppv = nullptr;
 
-  if (IID_IAccessibleAction == iid && LocalAcc() && !LocalAcc()->IsProxy()) {
+  if (IID_IAccessibleAction == iid && LocalAcc()) {
     *ppv = static_cast<IAccessibleAction*>(this);
     (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;

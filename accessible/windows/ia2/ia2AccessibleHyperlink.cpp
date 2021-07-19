@@ -28,8 +28,7 @@ ia2AccessibleHyperlink::QueryInterface(REFIID iid, void** ppv) {
 
   if (IID_IAccessibleHyperlink == iid) {
     auto accWrap = LocalAcc();
-    if (!accWrap || (accWrap->IsProxy() ? !accWrap->Proxy()->IsLink()
-                                        : !accWrap->IsLink())) {
+    if (!accWrap || !accWrap->IsLink()) {
       return E_NOINTERFACE;
     }
 
@@ -53,7 +52,6 @@ ia2AccessibleHyperlink::get_anchor(long aIndex, VARIANT* aAnchor) {
   if (!thisObj) {
     return CO_E_OBJNOTCONNECTED;
   }
-  MOZ_ASSERT(!thisObj->IsProxy());
 
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
     return E_INVALIDARG;
@@ -84,7 +82,6 @@ ia2AccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT* aAnchorTarget) {
     return CO_E_OBJNOTCONNECTED;
   }
   nsAutoCString uriStr;
-  MOZ_ASSERT(!thisObj->IsProxy());
 
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount())) {
     return E_INVALIDARG;
@@ -123,7 +120,6 @@ ia2AccessibleHyperlink::get_startIndex(long* aIndex) {
   if (!thisObj) {
     return CO_E_OBJNOTCONNECTED;
   }
-  MOZ_ASSERT(!thisObj->IsProxy());
 
   if (!thisObj->IsLink()) return S_FALSE;
 
@@ -141,7 +137,6 @@ ia2AccessibleHyperlink::get_endIndex(long* aIndex) {
   if (!thisObj) {
     return CO_E_OBJNOTCONNECTED;
   }
-  MOZ_ASSERT(!thisObj->IsProxy());
 
   if (!thisObj->IsLink()) return S_FALSE;
 
@@ -159,7 +154,6 @@ ia2AccessibleHyperlink::get_valid(boolean* aValid) {
   if (!thisObj) {
     return CO_E_OBJNOTCONNECTED;
   }
-  MOZ_ASSERT(!thisObj->IsProxy());
 
   if (!thisObj->IsLink()) return S_FALSE;
 

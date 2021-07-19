@@ -56,7 +56,6 @@ ia2AccessibleValue::get_currentValue(VARIANT* aCurrentValue) {
     return CO_E_OBJNOTCONNECTED;
   }
   double currentValue;
-  MOZ_ASSERT(!valueAcc->IsProxy());
 
   currentValue = valueAcc->CurValue();
 
@@ -75,7 +74,6 @@ ia2AccessibleValue::setCurrentValue(VARIANT aValue) {
   if (!valueAcc) {
     return CO_E_OBJNOTCONNECTED;
   }
-  MOZ_ASSERT(!valueAcc->IsProxy());
 
   return valueAcc->SetCurValue(aValue.dblVal) ? S_OK : E_FAIL;
 }
@@ -91,7 +89,6 @@ ia2AccessibleValue::get_maximumValue(VARIANT* aMaximumValue) {
     return CO_E_OBJNOTCONNECTED;
   }
   double maximumValue;
-  MOZ_ASSERT(!valueAcc->IsProxy());
 
   maximumValue = valueAcc->MaxValue();
 
@@ -113,7 +110,6 @@ ia2AccessibleValue::get_minimumValue(VARIANT* aMinimumValue) {
     return CO_E_OBJNOTCONNECTED;
   }
   double minimumValue;
-  MOZ_ASSERT(!valueAcc->IsProxy());
 
   minimumValue = valueAcc->MinValue();
 
