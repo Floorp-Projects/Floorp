@@ -7,6 +7,8 @@ package mozilla.components.support.utils
 import android.net.Uri
 import android.text.TextUtils
 import androidx.annotation.VisibleForTesting
+import androidx.core.text.TextDirectionHeuristicCompat
+import androidx.core.text.TextDirectionHeuristicsCompat.FIRSTSTRONG_LTR
 import java.util.regex.Pattern
 
 object URLStringUtils {
@@ -95,10 +97,22 @@ object URLStringUtils {
     /**
      * Generates a shorter version of the provided URL for display purposes by stripping it of
      * https/http and/or WWW prefixes and/or trailing slash when applicable.
+     *
+     * The returned text will always be displayed from left to right.
+     * If the directionality would otherwise be RTL "\u200E" will be prepended to the result to force LTR.
      */
-    fun toDisplayUrl(originalUrl: CharSequence) =
-        "\u200E" + // use the left-to-right mark to always enforce LTR for displayed URLs
-        maybeStripTrailingSlash(maybeStripUrlProtocol(originalUrl))
+    fun toDisplayUrl(
+        originalUrl: CharSequence,
+        textDirectionHeuristic: TextDirectionHeuristicCompat = FIRSTSTRONG_LTR
+    ): CharSequence {
+        val strippedText = maybeStripTrailingSlash(maybeStripUrlProtocol(originalUrl))
+
+        return if (textDirectionHeuristic.isRtl(strippedText, 0, 1)) {
+            "\u200E" + strippedText
+        } else {
+            strippedText
+        }
+    }
 
     private fun maybeStripUrlProtocol(url: CharSequence): CharSequence {
         var noPrefixUrl = url

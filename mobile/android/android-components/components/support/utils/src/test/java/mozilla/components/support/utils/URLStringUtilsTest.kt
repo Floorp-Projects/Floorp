@@ -4,6 +4,7 @@
 
 package mozilla.components.support.utils
 
+import androidx.core.text.TextDirectionHeuristicCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.utils.URLStringUtils.isSearchTerm
 import mozilla.components.support.utils.URLStringUtils.isURLLike
@@ -14,6 +15,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
+import kotlin.random.Random
 
 @RunWith(AndroidJUnit4::class)
 class URLStringUtilsTest {
@@ -130,48 +134,75 @@ class URLStringUtilsTest {
     @Test
     fun stripUrlSchemeUrlWithHttps() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("https://mozilla.com")
-        assertEquals("\u200Emozilla.com", testDisplayUrl)
+        assertEquals("mozilla.com", testDisplayUrl)
     }
 
     @Test
     fun stripTrailingSlash() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("mozilla.com/")
-        assertEquals("\u200Emozilla.com", testDisplayUrl)
+        assertEquals("mozilla.com", testDisplayUrl)
     }
 
     @Test
     fun stripUrlSchemeUrlWithHttpsAndTrailingSlash() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("https://mozilla.com/")
-        assertEquals("\u200Emozilla.com", testDisplayUrl)
+        assertEquals("mozilla.com", testDisplayUrl)
     }
 
     @Test
     fun stripUrlSchemeUrlWithHttp() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("http://mozilla.com")
-        assertEquals("\u200Emozilla.com", testDisplayUrl)
+        assertEquals("mozilla.com", testDisplayUrl)
     }
 
     @Test
     fun stripUrlSubdomainUrlWithHttps() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("https://www.mozilla.com")
-        assertEquals("\u200Emozilla.com", testDisplayUrl)
+        assertEquals("mozilla.com", testDisplayUrl)
     }
 
     @Test
     fun stripUrlSubdomainUrlWithHttp() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("http://www.mozilla.com")
-        assertEquals("\u200Emozilla.com", testDisplayUrl)
+        assertEquals("mozilla.com", testDisplayUrl)
     }
 
     @Test
     fun stripUrlSchemeAndSubdomainUrlNoMatch() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("zzz://www.mozillahttp://.com")
-        assertEquals("\u200Ezzz://www.mozillahttp://.com", testDisplayUrl)
+        assertEquals("zzz://www.mozillahttp://.com", testDisplayUrl)
     }
 
     @Test
-    fun alwaysShowDisplayUrlAsLTR() {
+    fun showDisplayUrlAsLTREvenIfTextStartsWithArabicCharacters() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("http://ختار.ار/www.mozilla.org/1")
         assertEquals("\u200Eختار.ار/www.mozilla.org/1", testDisplayUrl)
+    }
+
+    @Test
+    fun toDisplayUrlAlwaysUseATextDirectionHeuristicToDetermineDirectionality() {
+        val textHeuristic = spy(TestTextDirectionHeuristicCompat())
+
+        URLStringUtils.toDisplayUrl("http://ختار.ار/www.mozilla.org/1", textHeuristic)
+        verify(textHeuristic).isRtl("ختار.ار/www.mozilla.org/1", 0, 1)
+
+        URLStringUtils.toDisplayUrl("http://www.mozilla.org/1", textHeuristic)
+        verify(textHeuristic).isRtl("mozilla.org/1", 0, 1)
+    }
+}
+
+/**
+ * Custom [TextDirectionHeuristicCompat] used only in tests to make possible testing of RTL checks.
+ * Overcomes the limitations not allowing Mockito to mock platform implementations.
+ *
+ * The return of both [isRtl] is non-deterministic. Setup a different behavior if needed.
+ */
+private open class TestTextDirectionHeuristicCompat : TextDirectionHeuristicCompat {
+    override fun isRtl(array: CharArray?, start: Int, count: Int): Boolean {
+        return Random.nextBoolean()
+    }
+
+    override fun isRtl(cs: CharSequence?, start: Int, count: Int): Boolean {
+        return Random.nextBoolean()
     }
 }
