@@ -297,7 +297,7 @@ class RenderThread final {
     NotifyNotUsed,
   };
 
-  explicit RenderThread(base::Thread* aThread);
+  explicit RenderThread(RefPtr<nsIThread> aThread);
 
   void DeferredRenderTextureHostDestroy();
   void ShutDownTask(layers::SynchronousTask* aTask);
@@ -313,7 +313,7 @@ class RenderThread final {
 
   ~RenderThread();
 
-  base::Thread* const mThread;
+  RefPtr<nsIThread> const mThread;
 
   WebRenderThreadPool mThreadPool;
   WebRenderThreadPool mThreadPoolLP;
