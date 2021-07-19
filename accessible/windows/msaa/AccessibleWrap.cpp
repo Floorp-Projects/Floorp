@@ -13,8 +13,8 @@
 #include "nsIAccessibleEvent.h"
 #include "nsIWidget.h"
 #include "nsWindowsHelpers.h"
+#include "mozilla/a11y/HyperTextAccessible.h"
 #include "mozilla/a11y/RemoteAccessible.h"
-#include "ProxyWrappers.h"
 #include "ServiceProvider.h"
 #include "sdnAccessible.h"
 
