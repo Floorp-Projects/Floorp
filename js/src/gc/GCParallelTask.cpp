@@ -82,17 +82,21 @@ void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock) {
     return;
   }
 
-  // If the task was dispatched but has not yet started then cancel the task and
-  // run it from the main thread. This stops us from blocking here when the
-  // helper threads are busy with other tasks.
   if (isDispatched(lock)) {
+    // If the task was dispatched but has not yet started then cancel the task
+    // and run it from the main thread. This stops us from blocking here when
+    // the helper threads are busy with other tasks.
     cancelDispatchedTask(lock);
     AutoUnlockHelperThreadState unlock(lock);
     runFromMainThread();
-    return;
+  } else {
+    // Otherwise wait for the task to complete.
+    joinRunningOrFinishedTask(lock);
   }
 
-  joinRunningOrFinishedTask(lock);
+  if (phaseKind != gcstats::PhaseKind::NONE) {
+    gc->stats().recordParallelPhase(phaseKind, duration());
+  }
 }
 
 void js::GCParallelTask::joinRunningOrFinishedTask(
