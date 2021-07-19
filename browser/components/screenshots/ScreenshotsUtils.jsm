@@ -4,5 +4,16 @@
 
 "use strict";
 
-// TODO: will be utils functions for screenshots
+var EXPORTED_SYMBOLS = ["ScreenshotsUtils"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+var ScreenshotsUtils = {
+  initialize() {
+    Services.obs.addObserver(this, "menuitem-screenshot");
+  },
+  observe(subj, topic, data) {
+    let document = subj.document;
+    document.createXULElement("screenshots-div");
+  },
+};
