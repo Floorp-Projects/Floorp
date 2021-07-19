@@ -4,7 +4,7 @@
 #      Thu Jan 28 15:55:21 2021 +0000
 # Node ID c9195d88e6c67ef2c23c12e307bc16b94d696f50
 # Parent  37557864a6845bb8068904e44e8a7dd16746d211
-Bug 1689398 p1: Add MITIGATION_CET_STRICT_MODE to chromium sandbox code. r=handyman!
+Bug 1716024 p1: Add MITIGATION_CET_COMPAT_MODE to chromium sandbox code. r=handyman!
 
 diff --git a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc b/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
 --- a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
@@ -59,9 +59,9 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc b/
 +  // Mitigations >= Win10 20H1
 +  //----------------------------------------------------------------------------
 +  if (version >= base::win::Version::WIN10_20H1) {
-+    if (flags & MITIGATION_CET_STRICT_MODE && IsUserCetWin32Available()) {
++    if (flags & MITIGATION_CET_COMPAT_MODE && IsUserCetWin32Available()) {
 +      *policy_value_2 |=
-+          PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_STRICT_MODE;
++          PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_ALWAYS_ON;
 +    }
 +  }
 +
@@ -85,9 +85,9 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/security_level.h b/securi
  // PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_ON.
  const MitigationFlags MITIGATION_CONTROL_FLOW_GUARD_DISABLE = 0x80000000;
  
-+// Corresponds to
-+// PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_STRICT_MODE.
-+const MitigationFlags MITIGATION_CET_STRICT_MODE = 0x40000000;
++// This enables CET User Shadow Stack for compatible modules and corresponds to
++// PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_ALWAYS_ON.
++const MitigationFlags MITIGATION_CET_COMPAT_MODE = 0x40000000;
 +
  }  // namespace sandbox
  
