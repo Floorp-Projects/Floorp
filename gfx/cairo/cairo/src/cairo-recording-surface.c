@@ -487,8 +487,6 @@ _cairo_recording_surface_finish (void *abstract_surface)
 	    free (command->tag.tag_name);
 	    if (command->tag.begin) {
 		free (command->tag.attributes);
-		_cairo_pattern_fini (&command->tag.source.base);
-		_cairo_stroke_style_fini (&command->tag.style);
 	    }
 	    break;
 
@@ -649,14 +647,14 @@ _command_init (cairo_recording_surface_t *surface,
     command->op = op;
     command->region = CAIRO_RECORDING_REGION_ALL;
 
-    command->extents = composite->unbounded;
+    command->extents = composite ? composite->unbounded : _cairo_empty_rectangle;
     command->chain = NULL;
     command->index = surface->commands.num_elements;
 
     /* steal the clip */
     command->clip = NULL;
-    if (! _cairo_composite_rectangles_can_reduce_clip (composite,
-						       composite->clip))
+    if (composite && ! _cairo_composite_rectangles_can_reduce_clip (composite,
+								    composite->clip))
     {
 	command->clip = composite->clip;
 	composite->clip = NULL;
@@ -1090,37 +1088,22 @@ static cairo_int_status_t
 _cairo_recording_surface_tag (void			 *abstract_surface,
 			      cairo_bool_t                begin,
 			      const char                 *tag_name,
-			      const char                 *attributes,
-			      const cairo_pattern_t	 *source,
-			      const cairo_stroke_style_t *style,
-			      const cairo_matrix_t	 *ctm,
-			      const cairo_matrix_t	 *ctm_inverse,
-			      const cairo_clip_t	 *clip)
+			      const char                 *attributes)
 {
     cairo_status_t status;
     cairo_recording_surface_t *surface = abstract_surface;
     cairo_command_tag_t *command;
-    cairo_composite_rectangles_t composite;
 
     TRACE ((stderr, "%s: surface=%d\n", __FUNCTION__, surface->base.unique_id));
 
-    status = _cairo_composite_rectangles_init_for_paint (&composite,
-							 &surface->base,
-							 CAIRO_OPERATOR_SOURCE,
-							 source ? source : &_cairo_pattern_black.base,
-							 clip);
-    if (unlikely (status))
-	return status;
-
     command = calloc (1, sizeof (cairo_command_tag_t));
     if (unlikely (command == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto CLEANUP_COMPOSITE;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     status = _command_init (surface,
 			    &command->header, CAIRO_COMMAND_TAG, CAIRO_OPERATOR_SOURCE,
-			    &composite);
+			    NULL);
     if (unlikely (status))
 	goto CLEANUP_COMMAND;
 
@@ -1138,44 +1121,22 @@ _cairo_recording_surface_tag (void			 *abstract_surface,
 		goto CLEANUP_STRINGS;
 	    }
 	}
-
-	status = _cairo_pattern_init_snapshot (&command->source.base, source);
-	if (unlikely (status))
-	    goto CLEANUP_STRINGS;
-
-	status = _cairo_stroke_style_init_copy (&command->style, style);
-	if (unlikely (status))
-	    goto CLEANUP_SOURCE;
-
-	command->ctm = *ctm;
-	command->ctm_inverse = *ctm_inverse;
     }
 
     status = _cairo_recording_surface_commit (surface, &command->header);
-    if (unlikely (status)) {
-	if (begin)
-	    goto CLEANUP_STYLE;
-	else
-	    goto CLEANUP_STRINGS;
-    }
+    if (unlikely (status))
+	goto CLEANUP_STRINGS;
 
     _cairo_recording_surface_destroy_bbtree (surface);
 
-    _cairo_composite_rectangles_fini (&composite);
     return CAIRO_STATUS_SUCCESS;
 
-  CLEANUP_STYLE:
-    _cairo_stroke_style_fini (&command->style);
-  CLEANUP_SOURCE:
-    _cairo_pattern_fini (&command->source.base);
   CLEANUP_STRINGS:
     free (command->tag_name);
     free (command->attributes);
   CLEANUP_COMMAND:
     _cairo_clip_destroy (command->header.clip);
     free (command);
-  CLEANUP_COMPOSITE:
-    _cairo_composite_rectangles_fini (&composite);
     return status;
 }
 
@@ -1473,35 +1434,14 @@ _cairo_recording_surface_copy__tag (cairo_recording_surface_t *surface,
 		goto err_command;
 	    }
 	}
-
-	status = _cairo_pattern_init_copy (&command->source.base,
-					   &src->tag.source.base);
-	if (unlikely (status))
-	    goto err_command;
-
-	status = _cairo_stroke_style_init_copy (&command->style,
-						&src->tag.style);
-	if (unlikely (status))
-	    goto err_source;
-
-	command->ctm = src->tag.ctm;
-	command->ctm_inverse = src->tag.ctm_inverse;
     }
 
     status = _cairo_recording_surface_commit (surface, &command->header);
-    if (unlikely (status)) {
-	if (src->tag.begin)
-	    goto err_style;
-	else
-	    goto err_command;
-    }
+    if (unlikely (status))
+	goto err_command;
 
     return CAIRO_STATUS_SUCCESS;
 
-err_style:
-    _cairo_stroke_style_fini (&command->style);
-err_source:
-    _cairo_pattern_fini (&command->source.base);
 err_command:
     free(command->tag_name);
     free(command->attributes);
@@ -1902,8 +1842,10 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
 	if (! replay_all && command->header.region != region)
 	    continue;
 
-	if (! _cairo_rectangle_intersects (&extents, &command->header.extents))
-	    continue;
+	if (! _cairo_rectangle_intersects (&extents, &command->header.extents)) {
+	    if (command->header.type != CAIRO_COMMAND_TAG)
+		continue;
+	}
 
 	switch (command->header.type) {
 	case CAIRO_COMMAND_PAINT:
@@ -2040,12 +1982,7 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
 	    status = _cairo_surface_wrapper_tag (&wrapper,
 						 command->tag.begin,
 						 command->tag.tag_name,
-						 command->tag.attributes,
-						 &command->tag.source.base,
-						 &command->tag.style,
-						 &command->tag.ctm,
-						 &command->tag.ctm_inverse,
-						 command->header.clip);
+						 command->tag.attributes);
 	    break;
 
 	default:
@@ -2159,12 +2096,7 @@ _cairo_recording_surface_replay_one (cairo_recording_surface_t	*surface,
 	status = _cairo_surface_wrapper_tag (&wrapper,
 					     command->tag.begin,
 					     command->tag.tag_name,
-					     command->tag.attributes,
-					     &command->tag.source.base,
-					     &command->tag.style,
-					     &command->tag.ctm,
-					     &command->tag.ctm_inverse,
-					     command->header.clip);
+					     command->tag.attributes);
 	break;
 
     default:
