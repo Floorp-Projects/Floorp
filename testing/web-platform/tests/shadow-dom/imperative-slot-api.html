@@ -214,8 +214,8 @@ test(() => {
   assert_array_equals(tTree.s2.assignedNodes(), []);
 
   tTree.shadow_root.insertBefore(tTree.s1, tTree.s2);
-  assert_array_equals(tTree.s1.assignedNodes(), []);
-}, 'Previously assigned node should not be assigned if slot moved to a new shadow root. The slot remains empty when moved back, trigger recalc.');
+  assert_array_equals(tTree.s1.assignedNodes(), [tTree.c1]);
+}, 'Previously assigned node should not be assigned if slot moved to a new shadow root. The node is re-assigned when moved back.');
 
 test(() => {
   let tTree = createTestTree(test_assign);
