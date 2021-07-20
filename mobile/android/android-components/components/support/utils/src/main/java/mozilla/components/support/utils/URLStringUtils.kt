@@ -107,7 +107,10 @@ object URLStringUtils {
     ): CharSequence {
         val strippedText = maybeStripTrailingSlash(maybeStripUrlProtocol(originalUrl))
 
-        return if (textDirectionHeuristic.isRtl(strippedText, 0, 1)) {
+        return if (
+            strippedText.isNotBlank() &&
+            textDirectionHeuristic.isRtl(strippedText, 0, 1)
+        ) {
             "\u200E" + strippedText
         } else {
             strippedText

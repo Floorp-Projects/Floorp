@@ -189,6 +189,13 @@ class URLStringUtilsTest {
         URLStringUtils.toDisplayUrl("http://www.mozilla.org/1", textHeuristic)
         verify(textHeuristic).isRtl("mozilla.org/1", 0, 1)
     }
+
+    @Test
+    fun toDisplayUrlHandlesBlankStrings() {
+        assertEquals("", URLStringUtils.toDisplayUrl(""))
+
+        assertEquals("  ", URLStringUtils.toDisplayUrl("  "))
+    }
 }
 
 /**
