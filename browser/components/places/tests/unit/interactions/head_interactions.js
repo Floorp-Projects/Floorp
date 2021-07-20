@@ -11,12 +11,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
 // Initialize profile.
 var gProfD = do_get_profile(true);
+
+// Observer notifications.
+const TOPIC_ADDED = "places-snapshots-added";
+const TOPIC_DELETED = "places-snapshots-deleted";
 
 /**
  * Adds a test interaction to the database.
@@ -41,6 +46,60 @@ async function addInteractions(interactions) {
     });
   }
   await Interactions.store.flush();
+}
+
+/**
+ * Executes an async task and verifies that the given notification was sent with
+ * the given list of urls.
+ *
+ * @param {string} topic
+ * @param {string[]} expected
+ * @param {function} task
+ */
+async function assertUrlNotification(topic, expected, task) {
+  let seen = false;
+
+  let listener = (subject, _, data) => {
+    try {
+      let arr = JSON.parse(data);
+      if (arr.length != expected.length) {
+        return;
+      }
+
+      if (expected.every(url => arr.includes(url))) {
+        seen = true;
+      }
+    } catch (e) {
+      Assert.ok(false, e);
+    }
+  };
+
+  Services.obs.addObserver(listener, topic);
+  await task();
+  Services.obs.removeObserver(listener, topic);
+
+  Assert.ok(seen, `Should have seen ${topic} notification.`);
+}
+
+/**
+ * Executes an async task and verifies that the given observer notification was
+ * not sent.
+ *
+ * @param {string} topic
+ * @param {function} task
+ */
+async function assertTopicNotObserved(topic, task) {
+  let seen = false;
+
+  let listener = () => {
+    seen = true;
+  };
+
+  Services.obs.addObserver(listener, topic);
+  await task();
+  Services.obs.removeObserver(listener, topic);
+
+  Assert.ok(!seen, `Should not have seen ${topic} notification.`);
 }
 
 /**
@@ -124,4 +183,12 @@ async function assertSnapshots(expected, options) {
   for (let i = 0; i < expected.length; i++) {
     assertSnapshot(snapshots[i], expected[i]);
   }
+}
+
+/**
+ * Clears all data from the snapshots and metadata tables.
+ */
+async function reset() {
+  await Snapshots.reset();
+  await Interactions.reset();
 }
