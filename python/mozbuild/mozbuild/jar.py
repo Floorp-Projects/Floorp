@@ -23,6 +23,7 @@ from time import localtime
 from MozZipFile import ZipFile
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.action.buildlist import addEntriesToListFile
+from mozbuild.util import ensure_bytes
 from mozpack.files import FileFinder
 import mozpack.path as mozpath
 
@@ -50,7 +51,7 @@ class ZipEntry(object):
     def write(self, content):
         """Append the given content to this zip entry"""
 
-        self._inner.write(content.encode("utf-8"))
+        self._inner.write(ensure_bytes(content))
         return
 
     def close(self):
@@ -604,7 +605,7 @@ class JarMaker(object):
                 os.symlink(src, out)
             else:
                 # On Win32, use ctypes to create a hardlink
-                rv = CreateHardLink(out.encode("utf-8"), src.encode("utf-8"), None)
+                rv = CreateHardLink(ensure_bytes(out), ensure_bytes(src), None)
                 if rv == 0:
                     raise WinError()
 
