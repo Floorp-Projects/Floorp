@@ -113,7 +113,7 @@ class MapObject : public NativeObject {
   static const JSClass class_;
   static const JSClass protoClass_;
 
-  enum { NurseryKeysSlot, HasNurseryMemorySlot, SlotCount };
+  enum { DataSlot, NurseryKeysSlot, HasNurseryMemorySlot, SlotCount };
 
   [[nodiscard]] static bool getKeysAndValuesInterleaved(
       HandleObject obj, JS::MutableHandle<GCVector<JS::Value>> entries);
@@ -157,7 +157,8 @@ class MapObject : public NativeObject {
 
   static bool finishInit(JSContext* cx, HandleObject ctor, HandleObject proto);
 
-  ValueMap* getData() { return static_cast<ValueMap*>(getPrivate()); }
+  ValueMap* getData() { return maybePtrFromReservedSlot<ValueMap>(DataSlot); }
+
   static ValueMap& extract(HandleObject o);
   static ValueMap& extract(const CallArgs& args);
   static void trace(JSTracer* trc, JSObject* obj);
@@ -244,7 +245,7 @@ class SetObject : public NativeObject {
   static const JSClass class_;
   static const JSClass protoClass_;
 
-  enum { NurseryKeysSlot, HasNurseryMemorySlot, SlotCount };
+  enum { DataSlot, NurseryKeysSlot, HasNurseryMemorySlot, SlotCount };
 
   [[nodiscard]] static bool keys(JSContext* cx, HandleObject obj,
                                  JS::MutableHandle<GCVector<JS::Value>> keys);
@@ -282,7 +283,8 @@ class SetObject : public NativeObject {
 
   static bool finishInit(JSContext* cx, HandleObject ctor, HandleObject proto);
 
-  ValueSet* getData() { return static_cast<ValueSet*>(getPrivate()); }
+  ValueSet* getData() { return maybePtrFromReservedSlot<ValueSet>(DataSlot); }
+
   static ValueSet& extract(HandleObject o);
   static ValueSet& extract(const CallArgs& args);
   static void trace(JSTracer* trc, JSObject* obj);
