@@ -541,6 +541,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
     HookCount
   };
   enum {
+    JSSLOT_DEBUG_DEBUGGER,
     JSSLOT_DEBUG_PROTO_START,
     JSSLOT_DEBUG_FRAME_PROTO = JSSLOT_DEBUG_PROTO_START,
     JSSLOT_DEBUG_ENV_PROTO,
