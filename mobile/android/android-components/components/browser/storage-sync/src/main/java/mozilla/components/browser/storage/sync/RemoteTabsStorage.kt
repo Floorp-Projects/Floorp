@@ -10,6 +10,7 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.withContext
 import mozilla.appservices.remotetabs.RemoteTab
 import mozilla.appservices.remotetabs.TabsStore as RemoteTabsProvider
+import mozilla.appservices.remotetabs.InternalException as RemoteTabProviderException
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.Storage
 import mozilla.components.concept.sync.Device
@@ -35,7 +36,6 @@ open class RemoteTabsStorage(
      * Store the locally opened tabs.
      * @param tabs The list of opened tabs, for all opened non-private windows, on this device.
      */
-    @Suppress("TooGenericExceptionCaught")
     suspend fun store(tabs: List<Tab>) {
         return withContext(scope.coroutineContext) {
             try {
@@ -44,7 +44,7 @@ open class RemoteTabsStorage(
                     val urlHistory = listOf(activeTab.url) + it.previous().reversed().map { it.url }
                     RemoteTab(activeTab.title, urlHistory, activeTab.iconUrl, it.lastUsed)
                 })
-            } catch (e: Exception) {
+            } catch (e: RemoteTabProviderException) {
                 crashReporter?.submitCaughtException(e)
             }
         }
@@ -54,7 +54,6 @@ open class RemoteTabsStorage(
      * Get all remote devices tabs.
      * @return A mapping of opened tabs per device.
      */
-    @Suppress("TooGenericExceptionCaught")
     suspend fun getAll(): Map<SyncClient, List<Tab>> {
         return withContext(scope.coroutineContext) {
             try {
@@ -70,7 +69,7 @@ open class RemoteTabsStorage(
                     // Map device to tabs
                     SyncClient(device.clientId) to tabs
                 }.toMap()
-            } catch (e: Exception) {
+            } catch (e: RemoteTabProviderException) {
                 crashReporter?.submitCaughtException(e)
                 return@withContext emptyMap()
             }
@@ -106,7 +105,7 @@ data class SyncClient(val id: String)
 data class Tab(
     val history: List<TabEntry>,
     val active: Int,
-    val lastUsed: ULong
+    val lastUsed: Long
 ) {
     /**
      * The current active tab entry. In other words, this is the page that's currently shown for a

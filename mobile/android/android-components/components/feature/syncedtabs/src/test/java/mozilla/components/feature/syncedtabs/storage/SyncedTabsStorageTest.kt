@@ -72,8 +72,8 @@ class SyncedTabsStorageTest {
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
 
         verify(tabsStorage).store(listOf(
-            Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123u),
-            Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124u)
+            Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
+            Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
             // Private tab is absent.
         ))
     }
@@ -90,8 +90,8 @@ class SyncedTabsStorageTest {
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
 
         verify(tabsStorage).store(listOf(
-            Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123u),
-            Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124u)
+            Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
+            Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
         ))
 
         feature.stop()
@@ -131,12 +131,12 @@ class SyncedTabsStorageTest {
             subscription = null
         )
         doReturn(listOf(device1, device2)).`when`(feature).syncClients()
-        val tabsClient1 = listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0u))
-        val tabsClient2 = listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0u))
+        val tabsClient1 = listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0))
+        val tabsClient2 = listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0))
         whenever(tabsStorage.getAll()).thenReturn(mapOf(
             SyncClient("client1") to tabsClient1,
             SyncClient("client2") to tabsClient2,
-            SyncClient("client-unknown") to listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0u))
+            SyncClient("client-unknown") to listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0))
         ))
 
         val result = feature.getSyncedDeviceTabs()

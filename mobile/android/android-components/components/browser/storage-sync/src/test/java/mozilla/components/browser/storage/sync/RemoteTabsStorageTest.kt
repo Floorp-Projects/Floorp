@@ -9,8 +9,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.remotetabs.ClientRemoteTabs
 import mozilla.appservices.remotetabs.RemoteTab
-// import mozilla.appservices.remotetabs.RemoteTabProviderException
 import mozilla.appservices.remotetabs.TabsStore as RemoteTabsProvider
+import mozilla.appservices.remotetabs.InternalException as RemoteTabProviderException
 import mozilla.appservices.remotetabs.DeviceType
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.test.any
@@ -51,23 +51,23 @@ class RemoteTabsStorageTest {
         remoteTabs.store(listOf(
             Tab(listOf(
                 TabEntry("Bar", "https://bar", null)
-            ), 0, 1574458165555u),
+            ), 0, 1574458165555),
             Tab(listOf(
                 TabEntry("Foo bar", "https://foo.bar", null),
                 TabEntry("Foo bar 1", "https://foo.bar/1", null),
                 TabEntry("Foo bar 2", "https://foo.bar/2", null)
-            ), 2, 0u),
+            ), 2, 0),
             Tab(listOf(
                 TabEntry("Foo 1", "https://foo", "https://foo/icon"),
                 TabEntry("Foo 2", "https://foo/1", "https://foo/icon2"),
                 TabEntry("Foo 3", "https://foo/1/1", "https://foo/icon3")
-            ), 1, 1574457405635u)
+            ), 1, 1574457405635)
         ))
 
         verify(apiMock).setLocalTabs(listOf(
-            RemoteTab("Bar", listOf("https://bar"), null, 1574458165555u),
-            RemoteTab("Foo bar 2", listOf("https://foo.bar/2", "https://foo.bar/1", "https://foo.bar"), null, 0u),
-            RemoteTab("Foo 2", listOf("https://foo/1", "https://foo"), "https://foo/icon2", 1574457405635u)
+            RemoteTab("Bar", listOf("https://bar"), null, 1574458165555),
+            RemoteTab("Foo bar 2", listOf("https://foo.bar/2", "https://foo.bar/1", "https://foo.bar"), null, 0),
+            RemoteTab("Foo 2", listOf("https://foo/1", "https://foo"), "https://foo/icon2", 1574457405635)
         ))
     }
 
@@ -75,11 +75,11 @@ class RemoteTabsStorageTest {
     fun `getAll() translates tabs to our format`() = runBlocking {
         `when`(apiMock.getAll()).thenReturn(listOf(
             ClientRemoteTabs("client1", "", DeviceType.MOBILE, listOf(
-                RemoteTab("Foo", listOf("https://foo/1/1", "https://foo/1", "https://foo"), "https://foo/icon", 1574457405635u)
+                RemoteTab("Foo", listOf("https://foo/1/1", "https://foo/1", "https://foo"), "https://foo/icon", 1574457405635)
             )),
             ClientRemoteTabs("client2", "", DeviceType.MOBILE, listOf(
-                RemoteTab("Bar", listOf("https://bar"), null, 1574458165555u),
-                RemoteTab("Foo Bar", listOf("https://foo.bar"), "https://foo.bar/icon", 0u)
+                RemoteTab("Bar", listOf("https://bar"), null, 1574458165555),
+                RemoteTab("Foo Bar", listOf("https://foo.bar"), "https://foo.bar/icon", 0)
             ))
         ))
 
@@ -89,22 +89,22 @@ class RemoteTabsStorageTest {
                     TabEntry("Foo", "https://foo", "https://foo/icon"),
                     TabEntry("Foo", "https://foo/1", "https://foo/icon"),
                     TabEntry("Foo", "https://foo/1/1", "https://foo/icon")
-                ), 2, 1574457405635u)
+                ), 2, 1574457405635)
             ),
             SyncClient("client2") to listOf(
                 Tab(listOf(
                     TabEntry("Bar", "https://bar", null)
-                ), 0, 1574458165555u),
+                ), 0, 1574458165555),
                 Tab(listOf(
                     TabEntry("Foo Bar", "https://foo.bar", "https://foo.bar/icon")
-                ), 0, 0u)
+                ), 0, 0)
             )
         ), remoteTabs.getAll())
     }
 
     @Test
     fun `exceptions from getAll are propagated to the crash reporter`() = runBlocking {
-        val throwable = Exception("test")
+        val throwable = RemoteTabProviderException("test")
         `when`(apiMock.getAll()).thenAnswer { throw throwable }
 
         remoteTabs.getAll()
