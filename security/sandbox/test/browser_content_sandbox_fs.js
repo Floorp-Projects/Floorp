@@ -468,6 +468,18 @@ async function testFileAccess() {
       func: readDir,
       cleanup: unpopulateFakeXdgConfigHome,
     });
+
+    let homeDir = GetHomeDir();
+    let cacheFontConfigDir = homeDir.clone();
+    cacheFontConfigDir.appendRelativePath(".cache/fontconfig");
+    tests.push({
+      desc: "$HOME/.cache/fontconfig/",
+      ok: true,
+      browser: webBrowser,
+      file: cacheFontConfigDir,
+      minLevel: minHomeReadSandboxLevel(),
+      func: readDir,
+    });
   }
 
   if (isMac()) {
