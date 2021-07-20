@@ -271,6 +271,8 @@ jobs:
                 - android-gradle-dependencies
                 - android-ndk-linux
                 - android-sdk-linux
+                - android-system-image-x86_64-linux
+                - android-avd-x86_64-linux
                 - linux64-rust-android
                 - wrench-deps
         treeherder:
@@ -311,6 +313,8 @@ jobs:
                 - android-gradle-dependencies
                 - android-ndk-linux
                 - android-sdk-linux
+                - android-system-image-x86_64-linux
+                - android-avd-x86_64-linux
                 - linux64-rust-android
                 - wrench-deps
         treeherder:
@@ -347,6 +351,8 @@ jobs:
                 - 'wrench-debug.apk'
             toolchain:
                 - android-sdk-linux
+                - android-system-image-x86_64-linux
+                - android-avd-x86_64-linux
         run:
             using: run-task
             tooltool-downloads: internal
@@ -389,6 +395,8 @@ jobs:
                 - 'wrench-release.apk'
             toolchain:
                 - android-sdk-linux
+                - android-system-image-x86_64-linux
+                - android-avd-x86_64-linux
         run:
             using: run-task
             tooltool-downloads: internal
