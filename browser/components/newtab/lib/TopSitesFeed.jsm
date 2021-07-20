@@ -337,6 +337,12 @@ this.TopSitesFeed = class TopSitesFeed {
           sponsored_impression_url: site.impression_url,
           sponsored_tile_id: site.id,
         };
+        if (site.image_url && site.image_size >= MIN_FAVICON_SIZE) {
+          // Only use the image from Contile if it's hi-res, otherwise, fallback
+          // to the built-in favicons.
+          link.favicon = site.image_url;
+          link.faviconSize = site.image_size;
+        }
         DEFAULT_TOP_SITES.push(link);
       }
       hasContileTiles = sponsoredPosition > 1;

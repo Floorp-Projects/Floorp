@@ -2190,7 +2190,7 @@ describe("Top Sites Feed", () => {
         { url: "https://bar.com", title: "bar", sponsored_position: 2 },
         { url: "https://test.com", title: "test", sponsored_position: 3 },
       ]);
-      global.Services.prefs.getStringPref
+      global.Services.prefs.getBoolPref
         .withArgs(CONTILE_ENABLED_PREF)
         .returns(true);
 
@@ -2211,6 +2211,46 @@ describe("Top Sites Feed", () => {
 
       assert.equal(DEFAULT_TOP_SITES.length, 1);
       assert.equal(DEFAULT_TOP_SITES[0].label, "foo");
+    });
+
+    it("should take the image from Contile if it's a hi-res one", async () => {
+      global.Services.prefs.getBoolPref
+        .withArgs(CONTILE_ENABLED_PREF)
+        .returns(true);
+      sandbox.stub(feed, "_getRemoteConfig").resolves([]);
+
+      sandbox.stub(feed._contile, "sites").get(() => [
+        {
+          url: "https://test.com",
+          image_url: "https://images.test.com/test-com.png",
+          image_size: 192,
+          click_url: "https://www.test-click.com",
+          impression_url: "https://www.test-impression.com",
+          name: "test",
+        },
+        {
+          url: "https://test1.com",
+          image_url: "https://images.test1.com/test1-com.png",
+          image_size: 32,
+          click_url: "https://www.test1-click.com",
+          impression_url: "https://www.test1-impression.com",
+          name: "test1",
+        },
+      ]);
+
+      await feed._readDefaults();
+
+      const [site1, site2] = DEFAULT_TOP_SITES;
+      assert.propertyVal(
+        site1,
+        "favicon",
+        "https://images.test.com/test-com.png"
+      );
+      assert.propertyVal(site1, "faviconSize", 192);
+
+      // Should not be taken as it's not hi-res
+      assert.isUndefined(site2.favicon);
+      assert.isUndefined(site2.faviconSize);
     });
   });
 });
