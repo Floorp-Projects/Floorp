@@ -58,5 +58,8 @@ site-data-removing-dialog =
 site-data-removing-header = Removing Cookies and Site Data
 
 site-data-removing-desc = Removing cookies and site data may log you out of websites. Are you sure you want to make the changes?
+# Variables:
+#   $baseDomain (String) - The single domain for which data is being removed
+site-data-removing-single-desc = Removing cookies and site data may log you out of websites. Are you sure you want to remove cookies and site data for <strong>{ $baseDomain }</strong>?
 
 site-data-removing-table = Cookies and site data for the following websites will be removed

@@ -29,8 +29,20 @@
  * Confirmation dialog of removing sites selected
  */
 #SiteDataRemoveSelectedDialog {
-  min-height: 36em;
   padding: 16px;
+  width: 50px;
+}
+
+#SiteDataRemoveSelectedDialog.single-entry {
+  min-height: 8em;
+}
+
+#SiteDataRemoveSelectedDialog.single-entry .multi-site {
+  display: none;
+}
+
+#SiteDataRemoveSelectedDialog.multi-entry {
+  min-height: 36em;
 }
 
 #SiteDataRemoveSelectedDialog > dialog {
