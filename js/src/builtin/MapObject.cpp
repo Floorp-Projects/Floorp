@@ -394,7 +394,7 @@ const ClassSpec MapObject::classSpec_ = {
 
 const JSClass MapObject::class_ = {
     "Map",
-    JSCLASS_HAS_PRIVATE | JSCLASS_DELAY_METADATA_BUILDER |
+    JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(MapObject::SlotCount) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_Map) | JSCLASS_FOREGROUND_FINALIZE |
         JSCLASS_SKIP_NURSERY_FINALIZE,
@@ -640,7 +640,7 @@ MapObject* MapObject::create(JSContext* cx,
     return nullptr;
   }
 
-  InitObjectPrivate(mapObj, map.release(), MemoryUse::MapObjectTable);
+  InitReservedSlot(mapObj, DataSlot, map.release(), MemoryUse::MapObjectTable);
   mapObj->initReservedSlot(NurseryKeysSlot, PrivateValue(nullptr));
   mapObj->initReservedSlot(HasNurseryMemorySlot,
                            JS::BooleanValue(insideNursery));
@@ -716,11 +716,12 @@ bool MapObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
 bool MapObject::is(HandleValue v) {
   return v.isObject() && v.toObject().hasClass(&class_) &&
-         v.toObject().as<MapObject>().getPrivate();
+         !v.toObject().as<MapObject>().getReservedSlot(DataSlot).isUndefined();
 }
 
 bool MapObject::is(HandleObject o) {
-  return o->hasClass(&class_) && o->as<MapObject>().getPrivate();
+  return o->hasClass(&class_) &&
+         !o->as<MapObject>().getReservedSlot(DataSlot).isUndefined();
 }
 
 #define ARG0_KEY(cx, args, key)  \
@@ -1180,7 +1181,7 @@ const ClassSpec SetObject::classSpec_ = {
 
 const JSClass SetObject::class_ = {
     "Set",
-    JSCLASS_HAS_PRIVATE | JSCLASS_DELAY_METADATA_BUILDER |
+    JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(SetObject::SlotCount) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_Set) | JSCLASS_FOREGROUND_FINALIZE |
         JSCLASS_SKIP_NURSERY_FINALIZE,
@@ -1300,7 +1301,7 @@ SetObject* SetObject::create(JSContext* cx,
     return nullptr;
   }
 
-  InitObjectPrivate(obj, set.release(), MemoryUse::MapObjectTable);
+  InitReservedSlot(obj, DataSlot, set.release(), MemoryUse::MapObjectTable);
   obj->initReservedSlot(NurseryKeysSlot, PrivateValue(nullptr));
   obj->initReservedSlot(HasNurseryMemorySlot, JS::BooleanValue(insideNursery));
   return obj;
@@ -1416,11 +1417,12 @@ bool SetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
 bool SetObject::is(HandleValue v) {
   return v.isObject() && v.toObject().hasClass(&class_) &&
-         v.toObject().as<SetObject>().getPrivate();
+         !v.toObject().as<SetObject>().getReservedSlot(DataSlot).isUndefined();
 }
 
 bool SetObject::is(HandleObject o) {
-  return o->hasClass(&class_) && o->as<SetObject>().getPrivate();
+  return o->hasClass(&class_) &&
+         !o->as<SetObject>().getReservedSlot(DataSlot).isUndefined();
 }
 
 ValueSet& SetObject::extract(HandleObject o) {
