@@ -1,0 +1,1 @@
+|jit-test| test-also=--wasm-compiler=optimizing; include:wasm.js

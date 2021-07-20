@@ -73,10 +73,12 @@ class Tiers {
 // available under prefs.)
 
 struct FeatureOptions {
-  FeatureOptions() : simdWormhole(false) {}
+  FeatureOptions() : simdWormhole(false), intrinsics(false) {}
 
   // May be set if javascript.options.wasm_simd_wormhole==true.
   bool simdWormhole;
+  // Enables intrinsic opcodes, only set in WasmIntrinsic.cpp.
+  bool intrinsics;
 };
 
 // Describes the features that control wasm compilation.
@@ -89,7 +91,8 @@ struct FeatureArgs {
 #undef WASM_FEATURE
             sharedMemory(Shareable::False),
         hugeMemory(false),
-        simdWormhole(false) {
+        simdWormhole(false),
+        intrinsics(false) {
   }
   FeatureArgs(const FeatureArgs&) = default;
   FeatureArgs& operator=(const FeatureArgs&) = default;
@@ -104,6 +107,7 @@ struct FeatureArgs {
   Shareable sharedMemory;
   bool hugeMemory;
   bool simdWormhole;
+  bool intrinsics;
 };
 
 // Describes the JS scripted caller of a request to compile a wasm module.
