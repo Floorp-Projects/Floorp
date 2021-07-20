@@ -5065,6 +5065,19 @@ static bool SharedAddress(JSContext* cx, unsigned argc, Value* vp) {
 }
 #endif
 
+static bool HasInvalidatedTeleporting(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1 || !args[0].isObject()) {
+    RootedObject callee(cx, &args.callee());
+    ReportUsageErrorASCII(cx, callee, "Expected single object argument");
+    return false;
+  }
+
+  args.rval().setBoolean(args[0].toObject().hasInvalidatedTeleporting());
+  return true;
+}
+
 static bool DumpBacktrace(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   DumpBacktrace(cx);
@@ -8122,6 +8135,10 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
 "sharedAddress(obj)",
 "  Return the address of the shared storage of a SharedArrayBuffer."),
 #endif
+
+    JS_FN_HELP("hasInvalidatedTeleporting", HasInvalidatedTeleporting, 1, 0,
+"hasInvalidatedTeleporting(obj)",
+"  Return true if the shape teleporting optimization has been disabled for |obj|."),
 
     JS_FN_HELP("evalReturningScope", EvalReturningScope, 1, 0,
 "evalReturningScope(scriptStr, [global])",
