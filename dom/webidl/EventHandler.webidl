@@ -93,7 +93,6 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler onwaiting;
 
            attribute EventHandler onselectstart;
-           attribute EventHandler onselectionchange;
 
            attribute EventHandler ontoggle;
 
