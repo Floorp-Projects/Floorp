@@ -45,8 +45,8 @@ ub18-mercurial:
         symbol: Ub18(hg)
     run:
         tarball:
-            url: https://www.mercurial-scm.org/release/mercurial-4.8.1.tar.gz
-            sha256: 48a45f5cde9104fbc2daf310d710d4ebf286d879b89fa327d24b005434b0fa21
+            url: https://www.mercurial-scm.org/release/mercurial-5.8.1.tar.gz
+            sha256: 81baa3fe2087bdda2dd119d7ea948f6badebaeb7b528a7d18b277e2ceb22b19b
         pre-build-command: >-
             cp -r contrib/packaging/debian debian &&
             sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.ub18moz1/" \
@@ -71,11 +71,10 @@ ub20-mercurial:
         symbol: Ub20(hg)
     run:
         tarball:
-            url: https://www.mercurial-scm.org/release/mercurial-4.8.1.tar.gz
-            sha256: 48a45f5cde9104fbc2daf310d710d4ebf286d879b89fa327d24b005434b0fa21
+            url: https://www.mercurial-scm.org/release/mercurial-5.8.1.tar.gz
+            sha256: 81baa3fe2087bdda2dd119d7ea948f6badebaeb7b528a7d18b277e2ceb22b19b
         dist: focal
         pre-build-command: >-
-            apt-get install python-is-python2 &&
             cp -r contrib/packaging/debian debian &&
             sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.ub20moz1/" \
                          -e "s/__DATE__/$(date --rfc-2822)/" \
