@@ -20,8 +20,6 @@ pth:testing/condprofile
 pth:testing/firefox-ui/harness
 pth:testing/marionette/client
 pth:testing/marionette/harness
-pth:testing/marionette/harness/marionette_harness/runner/mixins/browsermob-proxy-py
-pth:testing/marionette/puppeteer/firefox
 pth:testing/mozbase/manifestparser
 pth:testing/mozbase/mozcrash
 pth:testing/mozbase/mozdebug
@@ -46,7 +44,6 @@ pth:testing/mozbase/mozversion
 pth:testing/raptor
 pth:testing/talos
 pth:testing/web-platform
-pth:testing/web-platform/tests/tools/six
 pth:testing/web-platform/tests/tools/third_party/certifi
 pth:testing/web-platform/tests/tools/third_party/h2
 pth:testing/web-platform/tests/tools/third_party/hpack
