@@ -499,11 +499,6 @@ class AndroidEmulatorCommands(MachCommandBase):
     @CommandArgument(
         "--wait", action="store_true", help="Wait for emulator to be closed."
     )
-    @CommandArgument(
-        "--force-update",
-        action="store_true",
-        help="Update AVD definition even when AVD is already installed.",
-    )
     @CommandArgument("--gpu", help="Over-ride the emulator -gpu argument.")
     @CommandArgument(
         "--verbose", action="store_true", help="Log informative status messages."
@@ -513,7 +508,6 @@ class AndroidEmulatorCommands(MachCommandBase):
         command_context,
         version,
         wait=False,
-        force_update=False,
         gpu=None,
         verbose=False,
     ):
@@ -550,15 +544,6 @@ class AndroidEmulatorCommands(MachCommandBase):
                 "Install the Android SDK and make sure 'emulator' is in your PATH.",
             )
             return 2
-
-        if not emulator.check_avd(force_update):
-            command_context.log(
-                logging.INFO,
-                "emulator",
-                {},
-                "Fetching and installing AVD. This may take a few minutes...",
-            )
-            emulator.update_avd(force_update)
 
         command_context.log(
             logging.INFO,

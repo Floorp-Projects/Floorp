@@ -21,6 +21,24 @@ NDK_VERSION = "r21d"
 CMDLINE_TOOLS_VERSION_STRING = "4.0"
 CMDLINE_TOOLS_VERSION = "7302050"
 
+# We expect the emulator AVD definitions to be platform agnostic
+LINUX_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
+LINUX_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
+
+MACOS_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
+MACOS_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
+
+# We don't currently support bootstrapping on Windows yet.
+# WINDOWS_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
+# WINDOWS_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
+
+AVD_MANIFEST_X86_64 = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "android-avds/x86_64.json")
+)
+AVD_MANIFEST_ARM = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "android-avds/arm.json")
+)
+
 ANDROID_NDK_EXISTS = """
 Looks like you have the correct version of the Android NDK installed at:
 %s

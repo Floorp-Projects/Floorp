@@ -199,6 +199,14 @@ class BaseBootstrapper(object):
             "%s does not yet implement install_browser_packages()" % __name__
         )
 
+    def ensure_browser_packages(self, state_dir, checkout_root):
+        """
+        Install pre-built packages needed to build Firefox for Desktop (application 'browser')
+
+        Currently this is not needed and kept for compatibility with Firefox for Android.
+        """
+        pass
+
     def generate_browser_mozconfig(self):
         """
         Print a message to the console detailing what the user's mozconfig
@@ -245,12 +253,21 @@ class BaseBootstrapper(object):
 
     def install_mobile_android_packages(self, mozconfig_builder):
         """
-        Install packages required to build Firefox for Android (application
-        'mobile/android', also known as Fennec).
+        Install packages required to build GeckoView (application
+        'mobile/android').
         """
         raise NotImplementedError(
             "Cannot bootstrap GeckoView/Firefox for Android: "
             "%s does not yet implement install_mobile_android_packages()" % __name__
+        )
+
+    def ensure_mobile_android_packages(self, state_dir, checkout_root):
+        """
+        Install pre-built packages required to run GeckoView (application 'mobile/android')
+        """
+        raise NotImplementedError(
+            "Cannot bootstrap GeckoView/Firefox for Android: "
+            "%s does not yet implement ensure_mobile_android_packages()" % __name__
         )
 
     def generate_mobile_android_mozconfig(self):
