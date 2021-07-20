@@ -177,12 +177,6 @@ section:not(.active) {
   margin-bottom: 2em;
 }
 
-.no-search-results-image {
-  background-image: url("chrome://browser/skin/preferences/no-search-results.svg");
-  width: 380px;
-  height: 293px;
-}
-
 .hidden {
   display: none !important;
 }
