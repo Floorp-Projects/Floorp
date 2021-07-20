@@ -62,10 +62,6 @@ if CONFIG["OS_TARGET"] == "Android":
         "log"
     ]
 
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/audio_device/opensl/single_rw_fifo.cc"
-    ]
-
 if CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["WEBRTC_MAC"] = True
@@ -99,10 +95,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     OS_LIBS += [
         "dl",
         "rt"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/audio_device/opensl/single_rw_fifo.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
