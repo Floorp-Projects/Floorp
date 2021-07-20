@@ -232,6 +232,11 @@ panelview .toolbaritem-combined-buttons,
 }
 
 #BMB_bookmarksPopup menupopup {
+  appearance: none;
+  background-color: transparent;
+  --panel-background: var(--arrowpanel-background);
+  --panel-color: var(--arrowpanel-color);
+  --panel-border-color: var(--arrowpanel-border-color);
   --panel-border-radius: var(--arrowpanel-border-radius);
   --panel-padding: var(--panel-subview-body-padding);
 }
