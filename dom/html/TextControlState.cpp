@@ -2104,7 +2104,7 @@ void TextControlState::SetSelectionRange(
   // XXX(krosylight): Shouldn't it fire before select event?
   // Currently Gecko and Blink both fire selectionchange after select.
   if (IsSelectionCached() &&
-      StaticPrefs::dom_select_events_textcontrols_enabled()) {
+      StaticPrefs::dom_select_events_textcontrols_selectionchange_enabled()) {
     asyncDispatcher = new AsyncEventDispatcher(
         mTextCtrlElement, eSelectionChange, CanBubble::eNo);
     asyncDispatcher->PostDOMEvent();
