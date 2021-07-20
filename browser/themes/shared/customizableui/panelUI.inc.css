@@ -1087,6 +1087,7 @@ panelview .toolbarbutton-1,
   padding-block: 0;
 }
 
+#BMB_bookmarksPopup .subviewbutton > .menu-iconic-text,
 #PlacesToolbar menu > .menu-iconic-text,
 #PlacesToolbar menuitem > .menu-iconic-text,
 .addon-banner-item > .toolbarbutton-text,
@@ -1415,10 +1416,6 @@ menuitem.subviewbutton@menuStateActive@,
 
 #BMB_bookmarksPopup .subviewbutton:not([disabled="true"]) {
   color: inherit;
-}
-
-#BMB_bookmarksPopup .subviewbutton > .menu-iconic-left {
-  margin-inline-end: 3px;
 }
 
 /* Disabled (empty) item is always alone and never has an icon, so fix its left padding */
