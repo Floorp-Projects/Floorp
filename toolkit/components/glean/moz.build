@@ -6,10 +6,6 @@
 
 SPHINX_TREES["/toolkit/components/glean"] = "docs"
 
-PYTHON_UNITTEST_MANIFESTS += [
-    "pytest/python.ini",
-]
-
 # Needed so that we can include IPC things.
 include("/ipc/chromium/chromium-config.mozbuild")
 
@@ -89,12 +85,6 @@ UNIFIED_SOURCES += [
 SOURCES += [
     "!EventExtraGIFFTMaps.cpp",
 ]
-
-TEST_DIRS += [
-    "gtest",
-]
-
-XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.ini"]
 
 # Provides us the list of dependent metrics|pings.yaml.
 include("metrics_index.py")
@@ -194,6 +184,7 @@ GeneratedFile(
 )
 
 DIRS += [
+    "tests",  # Must be in DIRS, not TEST_DIRS or python-test won't find it.
     "xpcom",
 ]
 

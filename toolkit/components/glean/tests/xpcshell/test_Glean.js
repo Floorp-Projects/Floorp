@@ -1,12 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* FIXME: Remove these global markers.
- * FOG doesn't follow the stricter naming patterns as expected by tool configuration yet.
- * See https://searchfox.org/mozilla-central/source/.eslintrc.js#24
- * Reorganizing the directory structure will take this into account.
- */
-/* global add_task, Assert, do_get_profile */
 "use strict";
 
 Cu.importGlobalProperties(["Glean", "GleanPings"]);

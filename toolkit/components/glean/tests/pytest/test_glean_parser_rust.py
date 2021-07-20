@@ -12,7 +12,9 @@ import sys
 from expect_helper import expect
 
 # Shenanigans to import the rust outputter extension
-FOG_ROOT_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir))
+FOG_ROOT_PATH = path.abspath(
+    path.join(path.dirname(__file__), path.pardir, path.pardir)
+)
 sys.path.append(path.join(FOG_ROOT_PATH, "build_scripts", "glean_parser_ext"))
 import run_glean_parser
 import rust

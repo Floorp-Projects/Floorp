@@ -7,12 +7,11 @@ testing FOG is a matter of choosing the right tool for the situation.
 
 To run all the things, here's the tl;dr:
 
-`MOZ_LOG="timestamp,sync,glean::*:5,fog::*:5,fog_control::*:5,glean_core::*:5"
-./mach build && ./mach lint -Ww -o --fix
+`./mach build && ./mach lint -Ww -o --fix
 && ./mach lint --linter clippy toolkit/components/glean/api/src
 && ./mach rusttests && ./mach gtest FOG*
-&& python3 ./mach python-test toolkit/components/glean/pytest
-&& ./mach test toolkit/components/glean/xpcshell
+&& python3 ./mach python-test toolkit/components/glean/tests/pytest
+&& ./mach test toolkit/components/glean/tests/xpcshell
 && ./mach telemetry-tests-client toolkit/components/telemetry/tests/marionette/tests/client/test_fog* --gecko-log "-"`
 
 ## Logging
@@ -92,18 +91,18 @@ Because Gecko symbols aren't built for the
 `rusttests` build,
 any test that is written for code that uses Gecko symbols should be written as a
 [`gtest`](https://github.com/google/googletest)
-in `toolkit/components/glean/gtest/`.
+in `toolkit/components/glean/tests/gtest/`.
 You can write the actual test code in Rust.
 It needs to be accompanied by a C++ GTest that calls a C FFI-exported Rust function.
 See [Testing & Debugging Rust Code](/testing-rust-code/) for more.
-See [`toolkit/components/glean/gtest/TestFog.cpp`](https://searchfox.org/mozilla-central/source/toolkit/components/glean/gtest/TestFog.cpp)
-and [`toolkit/components/glean/gtest/test.rs`](https://searchfox.org/mozilla-central/source/toolkit/components/glean/gtest/test.rs)
+See [`toolkit/components/glean/tests/gtest/TestFog.cpp`](https://searchfox.org/mozilla-central/source/toolkit/components/glean/tests/gtest/TestFog.cpp)
+and [`toolkit/components/glean/tests/gtest/test.rs`](https://searchfox.org/mozilla-central/source/toolkit/components/glean/tests/gtest/test.rs)
 for an example.
 
 By necessity these can only be integration tests against the compiled crate.
 
 **Note:** When adding a new test file, don't forget to add it to
-`toolkit/components/glean/gtest/moz.build` and use the
+`toolkit/components/glean/tests/gtest/moz.build` and use the
 `FOG` prefix in your test names
 (e.g. `TEST(FOG, YourTestName) { ... }`).
 
@@ -115,18 +114,18 @@ The [Glean Parser](https://github.com/mozilla/glean_parser/)
 has been augmented to generate FOG-specific APIs for Glean metrics.
 This augmentation is tested by running:
 
-`mach test toolkit/components/glean/pytest`
+`mach test toolkit/components/glean/tests/pytest`
 
 These tests require Python 3+.
 If your default Python is Python 2, you may need to instead run:
 
-`python3 mach python-test toolkit/components/glean/pytest`
+`python3 mach python-test toolkit/components/glean/tests/pytest`
 
 These tests check the code generator output against known good file contents.
 If you change the code generator the files will need an update.
 Run the test suite with the `UPDATE_EXPECT` environment variable set to do that automatically:
 
-`UPDATE_EXPECT=1 mach test toolkit/components/glean/pytest`
+`UPDATE_EXPECT=1 mach test toolkit/components/glean/tests/pytest`
 
 ## C++ (Treeherder symbol `GTest` (a build task))
 
@@ -134,11 +133,11 @@ To test the C++ parts of FOG's implementation
 (like metric types)
 you should use `gtest`.
 FOG's `gtest` tests are in
-[`gtest/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/gtest/).
+[`gtest/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/gtest/).
 
 You can either add a test case to an existing file or add a new file.
 If you add a new file, remember to add it to the
-[`moz.build`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/gtest/moz.build))
+[`moz.build`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/gtest/moz.build))
 or the test runner won't be able to find it.
 
 All tests should start with `FOG` so that all tests are run with
@@ -150,15 +149,15 @@ To test the JS parts of FOG's implementation
 (like metric types)
 you should use `xpcshell`.
 FOG's `xpcshell` tests are in
-[`xpcshell/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcshell).
+[`xpcshell/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/xpcshell).
 
 You can either add a test case to an existing file or add a new file.
 If you add a new file, remember to add it to the
-[`xpcshell.ini`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcshell/xpcshell.ini)
+[`xpcshell.ini`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/xpcshell/xpcshell.ini)
 or the test runner will not be able to find it.
 
 To run FOG's JS tests, run:
-`./mach test toolkit/components/glean/xpcshell`
+`./mach test toolkit/components/glean/tests/xpcshell`
 
 ## Integration (Marionette, borrowing `telemetry-tests-client` Treeherder symbol `tt(c)`)
 
