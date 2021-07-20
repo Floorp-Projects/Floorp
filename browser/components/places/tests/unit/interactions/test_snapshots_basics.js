@@ -8,8 +8,6 @@
 const TEST_URL1 = "https://example.com/";
 const TEST_URL2 = "https://example.com/12345";
 const TEST_URL3 = "https://example.com/14235";
-const TOPIC_ADDED = "places-snapshot-added";
-const TOPIC_DELETED = "places-snapshot-deleted";
 
 add_task(async function setup() {
   let now = Date.now();
@@ -28,19 +26,13 @@ add_task(async function setup() {
 });
 
 add_task(async function test_add_simple_snapshot() {
-  let promise = TestUtils.topicObserved(
-    TOPIC_ADDED,
-    (subject, data) => !subject && data == TEST_URL1
+  await assertUrlNotification(TOPIC_ADDED, [TEST_URL1], () =>
+    Snapshots.add({ url: TEST_URL1 })
   );
-  await Snapshots.add({ url: TEST_URL1 });
-  await promise;
 
-  promise = TestUtils.topicObserved(
-    TOPIC_ADDED,
-    (subject, data) => !subject && data == TEST_URL2
+  await assertUrlNotification(TOPIC_ADDED, [TEST_URL2], () =>
+    Snapshots.add({ url: TEST_URL2, userPersisted: true })
   );
-  await Snapshots.add({ url: TEST_URL2, userPersisted: true });
-  await promise;
 
   await assertSnapshots([
     { url: TEST_URL2, userPersisted: true },
@@ -64,7 +56,9 @@ add_task(async function test_add_duplicate_snapshot() {
 
   let initialSnapshot = await Snapshots.get(TEST_URL3);
 
-  await Snapshots.add({ url: TEST_URL3 });
+  await assertTopicNotObserved(TOPIC_ADDED, () =>
+    Snapshots.add({ url: TEST_URL3 })
+  );
 
   let newSnapshot = await Snapshots.get(TEST_URL3);
   Assert.deepEqual(
@@ -109,12 +103,9 @@ add_task(async function test_get_snapshot_not_found() {
 add_task(async function test_delete_snapshot() {
   let removedAt = new Date();
 
-  let promise = TestUtils.topicObserved(
-    TOPIC_DELETED,
-    (subject, data) => !subject && data == TEST_URL1
+  await assertUrlNotification(TOPIC_DELETED, [TEST_URL1], () =>
+    Snapshots.delete(TEST_URL1)
   );
-  await Snapshots.delete(TEST_URL1);
-  await promise;
 
   let snapshot = await Snapshots.get(TEST_URL1);
   Assert.ok(!snapshot, "Tombstone snapshots should not be returned by default");
