@@ -930,7 +930,7 @@ gl::GLContext* RenderThread::SingletonGL(nsACString& aError) {
     CreateSingletonGL(aError);
     mShaders = nullptr;
   }
-  if (mSingletonGL && !mShaders) {
+  if (mSingletonGL && mSingletonGLIsForHardwareWebRender && !mShaders) {
     mShaders = MakeUnique<WebRenderShaders>(mSingletonGL, mProgramCache.get());
   }
 
