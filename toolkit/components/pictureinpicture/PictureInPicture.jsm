@@ -385,11 +385,6 @@ var PictureInPicture = {
    * @param {Window} window
    */
   unload(window) {
-    TelemetryStopwatch.finish(
-      "FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION",
-      window
-    );
-
     let reason = gCloseReasons.get(window) || "other";
     Services.telemetry.keyedScalarAdd(
       "pictureinpicture.closed_method",
@@ -438,14 +433,6 @@ var PictureInPicture = {
       null,
       features,
       null
-    );
-
-    TelemetryStopwatch.start(
-      "FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION",
-      pipWindow,
-      {
-        inSeconds: true,
-      }
     );
 
     return new Promise(resolve => {
