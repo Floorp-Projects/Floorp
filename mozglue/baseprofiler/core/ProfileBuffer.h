@@ -8,6 +8,7 @@
 
 #include "ProfileBufferEntry.h"
 
+#include "BaseProfiler.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PowerOfTwo.h"
 #include "mozilla/ProfileBufferChunkManagerSingle.h"

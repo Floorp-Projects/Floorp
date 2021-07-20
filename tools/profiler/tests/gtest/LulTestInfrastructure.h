@@ -61,6 +61,8 @@
 #ifndef LUL_TEST_INFRASTRUCTURE_H
 #define LUL_TEST_INFRASTRUCTURE_H
 
+#include "LulDwarfExt.h"
+
 #include <string>
 #include <vector>
 
