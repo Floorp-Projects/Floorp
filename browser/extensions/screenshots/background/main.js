@@ -170,7 +170,7 @@ this.main = (function() {
       ]);
       return browser.notifications.create(id, {
         type: "basic",
-        iconUrl: "chrome://browser/content/screenshots/copied-notification.svg",
+        iconUrl: "../icons/copied-notification.svg",
         title,
         message,
       });
@@ -209,7 +209,7 @@ this.main = (function() {
     catcher.watchPromise(incrementCount("copy"));
     return browser.notifications.create({
       type: "basic",
-      iconUrl: "chrome://browser/content/screenshots/copied-notification.svg",
+      iconUrl: "../icons/copied-notification.svg",
       title,
       message,
     });
