@@ -602,9 +602,6 @@ void ShadowRoot::MaybeReassignElement(Element& aElement) {
     }
     assignment.mSlot->EnqueueSlotChangeEvent();
   }
-
-  SlotAssignedNodeChanged(oldSlot, aElement);
-  SlotAssignedNodeChanged(assignment.mSlot, aElement);
 }
 
 Element* ShadowRoot::GetActiveElement() {
@@ -700,7 +697,6 @@ void ShadowRoot::MaybeSlotHostChild(nsIContent& aChild) {
     assignment.mSlot->AppendAssignedNode(aChild);
   }
   assignment.mSlot->EnqueueSlotChangeEvent();
-  SlotAssignedNodeChanged(assignment.mSlot, aChild);
 }
 
 ServoStyleRuleMap& ShadowRoot::ServoStyleRuleMap() {
