@@ -19876,8 +19876,6 @@
                 "//modules/audio_device/dummy/file_audio_device.cc",
                 "//modules/audio_device/dummy/file_audio_device.h",
                 "//modules/audio_device/include/fake_audio_device.h",
-                "//modules/audio_device/opensl/single_rw_fifo.cc",
-                "//modules/audio_device/opensl/single_rw_fifo.h",
                 "//modules/audio_device/dummy/file_audio_device_factory.cc",
                 "//modules/audio_device/dummy/file_audio_device_factory.h"
             ],
