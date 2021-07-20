@@ -24,7 +24,12 @@ enum class ObjectFlag : uint16_t {
   HasInterestingSymbol = 1 << 3,
   // (1 << 4) is unused.
   FrozenElements = 1 << 5,  // See ObjectElements::FROZEN comment.
-  UncacheableProto = 1 << 6,
+
+  // If set, the shape teleporting optimization can no longer be used for
+  // accessing properties on this object.
+  // See: JSObject::hasInvalidatedTeleporting, ProtoChainSupportsTeleporting.
+  InvalidatedTeleporting = 1 << 6,
+
   ImmutablePrototype = 1 << 7,
 
   // See JSObject::isQualifiedVarObj().
