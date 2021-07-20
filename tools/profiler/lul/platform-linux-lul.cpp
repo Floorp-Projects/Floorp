@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "mozilla/ProfilerState.h"
 #include "platform.h"
 #include "PlatformMacros.h"
 #include "LulMain.h"
