@@ -365,23 +365,19 @@ struct NativeIterator {
 class PropertyIteratorObject : public NativeObject {
   static const JSClassOps classOps_;
 
-  enum { IteratorSlot, SlotCount };
-
  public:
   static const JSClass class_;
 
+  // We don't use the fixed slot but the JITs use this constant to load the
+  // private value (the NativeIterator*).
+  static const uint32_t NUM_FIXED_SLOTS = 1;
+
   NativeIterator* getNativeIterator() const {
-    return maybePtrFromReservedSlot<NativeIterator>(IteratorSlot);
+    return static_cast<js::NativeIterator*>(getPrivate());
   }
-  void initNativeIterator(js::NativeIterator* ni) {
-    initReservedSlot(IteratorSlot, PrivateValue(ni));
-  }
+  void setNativeIterator(js::NativeIterator* ni) { setPrivate(ni); }
 
   size_t sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf) const;
-
-  static size_t offsetOfIteratorSlot() {
-    return getFixedSlotOffset(IteratorSlot);
-  }
 
  private:
   static void trace(JSTracer* trc, JSObject* obj);

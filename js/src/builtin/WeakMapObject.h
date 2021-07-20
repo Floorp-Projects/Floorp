@@ -17,10 +17,8 @@ class GlobalObject;
 // Abstract base class for WeakMapObject and WeakSetObject.
 class WeakCollectionObject : public NativeObject {
  public:
-  enum { DataSlot, SlotCount };
-
   ObjectValueWeakMap* getMap() {
-    return maybePtrFromReservedSlot<ObjectValueWeakMap>(DataSlot);
+    return static_cast<ObjectValueWeakMap*>(getPrivate());
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) {

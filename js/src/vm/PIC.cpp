@@ -339,8 +339,7 @@ static const JSClassOps ForOfPICClassOps = {
 };
 
 const JSClass ForOfPICObject::class_ = {
-    "ForOfPIC",
-    JSCLASS_HAS_RESERVED_SLOTS(SlotCount) | JSCLASS_BACKGROUND_FINALIZE,
+    "ForOfPIC", JSCLASS_HAS_PRIVATE | JSCLASS_BACKGROUND_FINALIZE,
     &ForOfPICClassOps};
 
 /* static */
@@ -356,7 +355,8 @@ NativeObject* js::ForOfPIC::createForOfPICObject(JSContext* cx,
   if (!chain) {
     return nullptr;
   }
-  InitReservedSlot(obj, ForOfPICObject::ChainSlot, chain, MemoryUse::ForOfPIC);
+  InitObjectPrivate(obj, chain, MemoryUse::ForOfPIC);
+  obj->setPrivate(chain);
   return obj;
 }
 
