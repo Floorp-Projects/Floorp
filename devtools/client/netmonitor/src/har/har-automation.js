@@ -13,6 +13,9 @@ const {
   HarExporter,
 } = require("devtools/client/netmonitor/src/har/har-exporter");
 const { HarUtils } = require("devtools/client/netmonitor/src/har/har-utils");
+const {
+  getLongStringFullText,
+} = require("devtools/client/shared/string-utils");
 
 const prefDomain = "devtools.netmonitor.har.";
 
@@ -213,8 +216,11 @@ HarAutomation.prototype = {
    * Fetches the full text of a string.
    */
   getString: async function(stringGrip) {
-    const webConsoleFront = await this.toolbox.target.getFront("console");
-    return webConsoleFront.getString(stringGrip);
+    const fullText = await getLongStringFullText(
+      this.commands.client,
+      stringGrip
+    );
+    return fullText;
   },
 };
 
