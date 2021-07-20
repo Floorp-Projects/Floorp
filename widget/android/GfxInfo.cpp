@@ -595,7 +595,15 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     }
 
     if (aFeature == FEATURE_WEBRENDER) {
-      *aStatus = nsIGfxInfo::FEATURE_ALLOW_QUALIFIED;
+      const bool isMali4xx =
+          mGLStrings->Renderer().Find("Mali-4", /*ignoreCase*/ true) >= 0;
+      if (isMali4xx) {
+        // Mali 4xx does not support GLES 3.
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        aFailureId = "FEATURE_FAILURE_NO_GLES_3";
+      } else {
+        *aStatus = nsIGfxInfo::FEATURE_ALLOW_QUALIFIED;
+      }
       return NS_OK;
     }
 
