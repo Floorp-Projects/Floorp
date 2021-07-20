@@ -101,6 +101,7 @@ struct ModuleEnvironment {
            memory->indexType() == IndexType::I32;
   }
   bool simdWormholeEnabled() const { return features.simdWormhole; }
+  bool intrinsicsEnabled() const { return features.intrinsics; }
 
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }
 
