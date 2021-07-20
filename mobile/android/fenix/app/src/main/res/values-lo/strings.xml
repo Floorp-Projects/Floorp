@@ -105,6 +105,9 @@
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">ເວັບໄຊທຍອດນິຍົມ</string>
 
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">ກັບເຂົ້າໄປ</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">ສະແດງທັງໝົດ</string>
 
@@ -354,6 +357,8 @@
     <string name="preferences_enable_autocomplete_urls">ເຕີມ URLs ແບບອັດຕະໂນມັດ</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ເປີດລີ້ງໃນແອັບ</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">ຕົວຈັດການດາວໂຫລດພາຍນອກ</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Add-ons</string>
 
@@ -458,6 +463,8 @@
     <string name="preferences_marketing_data_description">ແບ່ງປັນຂໍ້ມູນກ່ຽວກັບຟິວເຈີທີ່ທ່ານໃຊ້ຢູ່ໃນ %1$s ກັບ Leanplum ຊຶ່ງເປັນຜູ້ໃຫ້ບໍລິການດ້ານການຕະລາດມືຖືຂອງພວກເຮົາ.</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">ການສຶກສາ</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">ອະນຸຍາດໃຫ້ Mozilla ຕິດຕັ້ງ ແລະ ເປີດໃຊ້ການສຶກສາ</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">ການທົດລອງ</string>
     <!-- Summary for experiments preferences -->
@@ -508,6 +515,13 @@
 
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">ຕາມຊຸດຕົກແຕ່ງອຸປະກອນ</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">ດຶງເພື່ອລີເຟລສ</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">ເລື່ອນເພື່ອເຊື່ອງແທັບເຄືອງມື</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -574,6 +588,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ຫຼັງຈາກໜຶ່ງເດືອນ</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">ເລີ່ມທີ່ຫນ້າທຳອິດ</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">ຫລັງຈາກສີຊົ່ວໂມງ</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">ທຸກຄັ້ງ</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">ບໍ່ເລີຍ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">ປິດດ້ວຍຕົນເອງ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -590,6 +613,8 @@
     <string name="tabs_header_private_title">ເຊດຊັນສ່ວນຕົວ</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">ແທັບສ່ວນຕົວ</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">ແທັບທີ່ Sync ແລ້ວ</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">ເພີ່ມແທັບ</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -728,6 +753,8 @@
     <!-- Downloads -->
     <!-- Text for the button to clear all downloads -->
     <string name="download_delete_all">ລົບການດາວໂຫລດ</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">ທ່ານຕ້ອງການລົບລ້າງການດາວໂຫລດຂອງທ່ານແທ້ບໍ?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">ລຶບການດາວໂຫລດແລ້ວ</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -770,6 +797,8 @@
     <string name="bookmark_select_folder">ເລືອກໂຟລເດີ</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">ທ່ານແນ່ໃຈບໍ່ວ່າທ່ານຕ້ອງການລຶບໂຟລເດີນີ້?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s ຈະລຶບລາຍການທີ່ໄດ້ເລືອກໄວ້</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">ລຶບ %1$s ແລ້ວ</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -826,6 +855,8 @@
     <string name="bookmark_deletion_snackbar_message">ລຶບ %1$s ແລ້ວ</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">ລຶບບຸກມາກແລ້ວ</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">ກຳລັງລຶບໂຟລເດີທິ່ໄດ້ເລືອກໄວ້</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ເອົາກັບຄືນ</string>
 
@@ -859,6 +890,10 @@
     <string name="preference_phone_feature_location">ຕໍາ​ແໜ່​ງທີ່​ຕັ້ງ</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">ການແຈ້ງເຕືອນ</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">ສະຕໍເລດຖາວອນ</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">ເນື້ອຫາທີ່ຄວບຄຸມດ້ວຍ DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">ຖາມເພື່ອອະນຸຍາດ</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -876,14 +911,20 @@
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">ອະນຸຍາດໃຫ້ເປີດສຽງ ແລະ ວີດີໂອ</string>
 
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">ອະນຸຍາດສຽງ ແລະ ວິດີໂອ</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">ບັອກສຽງ ແລະ ວິດີໂອໃນການນໍາໃຊ້ຂໍ້ມູນອິນເຕີເນັດໃນໂທລະສັບມືຖືເທົ່ານັ້ນ</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">ສຽງ ແລະ ວິດີໂອຈະເປີດໃນ Wi-Fi</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">ບັອກສຽງເທົ່ານັ້ນ</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">ບັອກສຽງຢ່າງດ່ຽວ</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">ບັອກສຽງ ແລະ ວີດີໂອ</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">ບັອກສຽງ ແລະ ວິດີໂອ</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">ເປີດ</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -945,6 +986,8 @@
     <string name="share_link_all_apps_subheader">ການກະທຳທັງຫມົດ</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">ທີ່ຫາກໍນຳໃຊ້ໄປ</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">ເຂົ້າສູ່ລະບົບເພື່ອ Sync</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">ລົງຊື່ເຂົ້າໃຊ້ເພື່ອ Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -986,6 +1029,13 @@
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">ການຕະຫຼາດ</string>
 
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s ແມ່ນໄວ ແລະ ເປັນສ່ວນໂຕ</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">ກຳນົດ %1$s ເປັນບຣາວເຊີຫລັກຂອງທ່ານ</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">ລົບການສະສົມແລ້ວ</string>
@@ -999,6 +1049,10 @@
     <string name="snackbar_tab_closed">ປິດແທັບແລ້ວ</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">ປິດແທັບແລ້ວ</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">ປິດແທັບແລ້ວ!</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">ບັນທຶກບຸກມາກແລ້ວ!</string>
     <!-- Text shown in snackbar action for viewing bookmarks -->
     <string name="snackbar_message_bookmarks_view">ວິວ</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
@@ -1027,6 +1081,8 @@
     <string name="qr_scanner_dialog_negative">ປະຕິເສດ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">ທ່ານແນ່ໃຈແລ້ວບໍ່ວ່າທ່ານຕ້ອງການລຶບ %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">ການລຶບແທັບນີ້ຈະລຶບແທັບທີ່ເກັບສະສົມໄວ້ອອກຫມົດ. ທ່ານສາມາດສ້າງການເກັບສະສົມຂື້ນມາໃຫມ່ໄດ້ທຸກເວລາ.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">ລຶບ %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -1289,8 +1345,14 @@
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">ນຳທາງຍ້ອນກັບ</string>
 
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">ສິດທິຂອງທ່ານ</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">ສິ່ງໃໝ່ໆໃນ %s</string>
+
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | ໄລບຣາລີ OSS</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">ສະຫນັບສະຫນູນ</string>
@@ -1299,10 +1361,16 @@
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ</string>
 
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">ຮັບຮູ້ສິດທິຂອງທ່ານ</string>
     <!-- About page link text to open licensing information link -->
     <string name="about_licensing_information">ຂໍ້ມູນກ່ຽວກັບລາຍເຊັນ</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">ໄລແບຣລີທີ່ພວກເຮົານຳໃຊ້</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">ເມນູດີບັກ: ຄຣິກດ້ານຊ້າຍ %1$d ເພື່ອເປີດໃຊ້ງານ</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 ແທັບ</string>
