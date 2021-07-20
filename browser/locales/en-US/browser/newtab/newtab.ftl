@@ -40,6 +40,7 @@ newtab-search-box-search-the-web-input =
     .title = Search the Web
     .aria-label = Search the Web
 
+newtab-search-box-text = Search the web
 newtab-search-box-input =
     .placeholder = Search the web
     .aria-label = Search the web

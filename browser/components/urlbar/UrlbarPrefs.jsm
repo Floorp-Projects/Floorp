@@ -402,6 +402,13 @@ class Preferences {
     }
     this._observerWeakRefs = [];
     this.addObserver(this);
+    // These prefs control the value of the shouldHandOffToSearchMode pref. They
+    // are exposed as a class variable so UrlbarPrefs observers can watch for
+    // changes in these prefs.
+    this.shouldHandOffToSearchModePrefs = [
+      "keyword.enabled",
+      "suggest.searches",
+    ];
     NimbusFeatures.urlbar.onUpdate(() => this._onNimbusUpdate());
   }
 
@@ -544,6 +551,10 @@ class Preferences {
     if (pref.startsWith("suggest.")) {
       this._map.delete("defaultBehavior");
     }
+
+    if (this.shouldHandOffToSearchModePrefs.includes(pref)) {
+      this._map.delete("shouldHandOffToSearchMode");
+    }
   }
 
   /**
@@ -608,6 +619,10 @@ class Preferences {
         return makeResultBuckets({
           showSearchSuggestionsFirst: this.get("showSearchSuggestionsFirst"),
         });
+      case "shouldHandOffToSearchMode":
+        return this.shouldHandOffToSearchModePrefs.some(
+          prefName => !this.get(prefName)
+        );
     }
     return this._readPref(pref);
   }
