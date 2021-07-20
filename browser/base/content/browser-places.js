@@ -919,7 +919,7 @@ var BookmarksEventHandler = {
     var cropped = false;
     var targetURI;
 
-    if (aTooltip.triggerNode == "treechildren") {
+    if (aTooltip.triggerNode.localName == "treechildren") {
       var tree = aTooltip.triggerNode.parentNode;
       var cell = tree.getCellAt(aEvent.clientX, aEvent.clientY);
       if (cell.row == -1) {
