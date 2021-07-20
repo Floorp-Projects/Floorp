@@ -121,10 +121,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "winmm"
     ]
 
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
@@ -151,6 +147,18 @@ if CONFIG["CPU_ARCH"] == "arm":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_neon.cc"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86":
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64":
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
     ]
 
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
@@ -192,28 +200,16 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "android_support"
     ]
 
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
 
     CXXFLAGS += [
         "-msse2"
     ]
 
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
 
     CXXFLAGS += [
         "-msse2"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
@@ -229,10 +225,6 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["CR_SYSROOT_HASH"] = "d967bcef40477dbc39acef141ff22bf73f3e7cdb"
 
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     CXXFLAGS += [
@@ -240,9 +232,5 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     ]
 
     DEFINES["CR_SYSROOT_HASH"] = "5f64b417e1018dcf8fcc81dc2714e0f264b9b911"
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
-    ]
 
 Library("fft_size_128_gn")
