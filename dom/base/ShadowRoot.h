@@ -52,12 +52,13 @@ class ShadowRoot final : public DocumentFragment,
   NS_DECL_ISUPPORTS_INHERITED
 
   ShadowRoot(Element* aElement, ShadowRootMode aMode,
+             SlotAssignmentMode aSlotAssignment,
              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   void AddSizeOfExcludingThis(nsWindowSizes&, size_t* aNodeSize) const final;
 
-  // Try to reassign an element to a slot.
-  void MaybeReassignElement(Element&);
+  // Try to reassign an element or text to a slot.
+  void MaybeReassignContent(nsIContent& aElementOrText);
   // Called when an element is inserted as a direct child of our host. Tries to
   // slot the child in one of our slots.
   void MaybeSlotHostChild(nsIContent&);
@@ -74,6 +75,7 @@ class ShadowRoot final : public DocumentFragment,
   }
 
   ShadowRootMode Mode() const { return mMode; }
+  SlotAssignmentMode SlotAssignment() const { return mSlotAssignment; }
   bool IsClosed() const { return mMode == ShadowRootMode::Closed; }
 
   void RemoveSheetFromStyles(StyleSheet&);
@@ -104,35 +106,6 @@ class ShadowRoot final : public DocumentFragment,
   // connected.
   nsresult Bind();
 
- private:
-  void InsertSheetIntoAuthorData(size_t aIndex, StyleSheet&,
-                                 const nsTArray<RefPtr<StyleSheet>>&);
-
-  void AppendStyleSheet(StyleSheet& aSheet) {
-    InsertSheetAt(SheetCount(), aSheet);
-  }
-
-  /**
-   * Represents the insertion point in a slot for a given node.
-   */
-  struct SlotAssignment {
-    HTMLSlotElement* mSlot = nullptr;
-    Maybe<uint32_t> mIndex;
-
-    SlotAssignment() = default;
-    SlotAssignment(HTMLSlotElement* aSlot, const Maybe<uint32_t>& aIndex)
-        : mSlot(aSlot), mIndex(aIndex) {}
-  };
-
-  /**
-   * Return the assignment corresponding to the content node at this particular
-   * point in time.
-   *
-   * It's the caller's responsibility to actually call InsertAssignedNode /
-   * AppendAssignedNode in the slot as needed.
-   */
-  SlotAssignment SlotAssignmentFor(nsIContent&);
-
   /**
    * Explicitly invalidates the style and layout of the flattened-tree subtree
    * rooted at the element.
@@ -148,6 +121,35 @@ class ShadowRoot final : public DocumentFragment,
    * around, so that layout knows the actual tree that it needs to invalidate.
    */
   void InvalidateStyleAndLayoutOnSubtree(Element*);
+
+ private:
+  void InsertSheetIntoAuthorData(size_t aIndex, StyleSheet&,
+                                 const nsTArray<RefPtr<StyleSheet>>&);
+
+  void AppendStyleSheet(StyleSheet& aSheet) {
+    InsertSheetAt(SheetCount(), aSheet);
+  }
+
+  /**
+   * Represents the insertion point in a slot for a given node.
+   */
+  struct SlotInsertionPoint {
+    HTMLSlotElement* mSlot = nullptr;
+    Maybe<uint32_t> mIndex;
+
+    SlotInsertionPoint() = default;
+    SlotInsertionPoint(HTMLSlotElement* aSlot, const Maybe<uint32_t>& aIndex)
+        : mSlot(aSlot), mIndex(aIndex) {}
+  };
+
+  /**
+   * Return the assignment corresponding to the content node at this particular
+   * point in time.
+   *
+   * It's the caller's responsibility to actually call InsertAssignedNode /
+   * AppendAssignedNode in the slot as needed.
+   */
+  SlotInsertionPoint SlotInsertionPointFor(nsIContent&);
 
  public:
   void AddSlot(HTMLSlotElement* aSlot);
@@ -259,6 +261,8 @@ class ShadowRoot final : public DocumentFragment,
   virtual ~ShadowRoot();
 
   const ShadowRootMode mMode;
+
+  const SlotAssignmentMode mSlotAssignment;
 
   // The computed data from the style sheets.
   UniquePtr<RawServoAuthorStyles> mServoStyles;

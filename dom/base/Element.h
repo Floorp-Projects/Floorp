@@ -1266,7 +1266,8 @@ class Element : public FragmentOrElement {
   bool CanAttachShadowDOM() const;
 
   already_AddRefed<ShadowRoot> AttachShadowWithoutNameChecks(
-      ShadowRootMode aMode);
+      ShadowRootMode aMode,
+      SlotAssignmentMode aSlotAssignmentMode = SlotAssignmentMode::Named);
 
   // Attach UA Shadow Root if it is not attached.
   enum class NotifyUAWidgetSetup : bool { No, Yes };

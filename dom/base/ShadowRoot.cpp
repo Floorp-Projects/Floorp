@@ -14,6 +14,7 @@
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLSlotElement.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/dom/TreeOrderedArrayInlines.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IdentifierMapEntry.h"
@@ -47,10 +48,12 @@ NS_IMPL_ADDREF_INHERITED(ShadowRoot, DocumentFragment)
 NS_IMPL_RELEASE_INHERITED(ShadowRoot, DocumentFragment)
 
 ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
+                       SlotAssignmentMode aSlotAssignment,
                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : DocumentFragment(std::move(aNodeInfo)),
       DocumentOrShadowRoot(this),
       mMode(aMode),
+      mSlotAssignment(aSlotAssignment),
       mIsUAWidget(false) {
   SetHost(aElement);
 
@@ -197,48 +200,72 @@ void ShadowRoot::AddSlot(HTMLSlotElement* aSlot) {
   SlotArray& currentSlots = *mSlotMap.GetOrInsertNew(name);
 
   size_t index = currentSlots.Insert(*aSlot);
-  if (index != 0) {
+
+  // For Named slots, slottables are inserted into the other slot
+  // which has the same name already, however it's not the case
+  // for manual slots
+  if (index != 0 && SlotAssignment() == SlotAssignmentMode::Named) {
     return;
   }
 
   HTMLSlotElement* oldSlot = currentSlots->SafeElementAt(1);
-  if (oldSlot) {
-    MOZ_DIAGNOSTIC_ASSERT(oldSlot != aSlot);
+  if (SlotAssignment() == SlotAssignmentMode::Named) {
+    if (oldSlot) {
+      MOZ_DIAGNOSTIC_ASSERT(oldSlot != aSlot);
 
-    // Move assigned nodes from old slot to new slot.
-    InvalidateStyleAndLayoutOnSubtree(oldSlot);
-    const nsTArray<RefPtr<nsINode>>& assignedNodes = oldSlot->AssignedNodes();
-    bool doEnqueueSlotChange = false;
-    while (assignedNodes.Length() > 0) {
-      nsINode* assignedNode = assignedNodes[0];
+      // Move assigned nodes from old slot to new slot.
+      InvalidateStyleAndLayoutOnSubtree(oldSlot);
+      const nsTArray<RefPtr<nsINode>>& assignedNodes = oldSlot->AssignedNodes();
+      bool doEnqueueSlotChange = false;
+      while (assignedNodes.Length() > 0) {
+        nsINode* assignedNode = assignedNodes[0];
 
-      oldSlot->RemoveAssignedNode(*assignedNode->AsContent());
-      aSlot->AppendAssignedNode(*assignedNode->AsContent());
-      doEnqueueSlotChange = true;
-    }
+        oldSlot->RemoveAssignedNode(*assignedNode->AsContent());
+        aSlot->AppendAssignedNode(*assignedNode->AsContent());
+        doEnqueueSlotChange = true;
+      }
 
-    if (doEnqueueSlotChange) {
-      oldSlot->EnqueueSlotChangeEvent();
-      aSlot->EnqueueSlotChangeEvent();
-      SlotStateChanged(oldSlot);
-      SlotStateChanged(aSlot);
+      if (doEnqueueSlotChange) {
+        oldSlot->EnqueueSlotChangeEvent();
+        aSlot->EnqueueSlotChangeEvent();
+        SlotStateChanged(oldSlot);
+        SlotStateChanged(aSlot);
+      }
+    } else {
+      bool doEnqueueSlotChange = false;
+      // Otherwise add appropriate nodes to this slot from the host.
+      for (nsIContent* child = GetHost()->GetFirstChild(); child;
+           child = child->GetNextSibling()) {
+        nsAutoString slotName;
+        if (auto* element = Element::FromNode(*child)) {
+          element->GetAttr(nsGkAtoms::slot, slotName);
+        }
+        if (!child->IsSlotable() || !slotName.Equals(name)) {
+          continue;
+        }
+        doEnqueueSlotChange = true;
+        aSlot->AppendAssignedNode(*child);
+      }
+
+      if (doEnqueueSlotChange) {
+        aSlot->EnqueueSlotChangeEvent();
+        SlotStateChanged(aSlot);
+      }
     }
   } else {
     bool doEnqueueSlotChange = false;
-    // Otherwise add appropriate nodes to this slot from the host.
-    for (nsIContent* child = GetHost()->GetFirstChild(); child;
-         child = child->GetNextSibling()) {
-      nsAutoString slotName;
-      if (auto* element = Element::FromNode(*child)) {
-        element->GetAttr(nsGkAtoms::slot, slotName);
-      }
-      if (!child->IsSlotable() || !slotName.Equals(name)) {
+    for (const auto& node : aSlot->ManuallyAssignedNodes()) {
+      if (GetHost() != node->GetParent()) {
         continue;
       }
-      doEnqueueSlotChange = true;
-      aSlot->AppendAssignedNode(*child);
-    }
 
+      MOZ_ASSERT(node->IsContent(),
+                 "Manually assigned nodes should be an element or a text");
+      nsIContent* content = node->AsContent();
+
+      aSlot->AppendAssignedNode(*content);
+      doEnqueueSlotChange = true;
+    }
     if (doEnqueueSlotChange) {
       aSlot->EnqueueSlotChangeEvent();
       SlotStateChanged(aSlot);
@@ -258,7 +285,8 @@ void ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot) {
   MOZ_DIAGNOSTIC_ASSERT(currentSlots->Contains(aSlot),
                         "Slot to de-register wasn't found?");
   if (currentSlots->Length() == 1) {
-    MOZ_ASSERT(currentSlots->ElementAt(0) == aSlot);
+    MOZ_ASSERT_IF(SlotAssignment() == SlotAssignmentMode::Named,
+                  currentSlots->ElementAt(0) == aSlot);
 
     InvalidateStyleAndLayoutOnSubtree(aSlot);
 
@@ -270,10 +298,17 @@ void ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot) {
 
     return;
   }
+  if (SlotAssignment() == SlotAssignmentMode::Manual) {
+    InvalidateStyleAndLayoutOnSubtree(aSlot);
+    if (!aSlot->AssignedNodes().IsEmpty()) {
+      aSlot->ClearAssignedNodes();
+      aSlot->EnqueueSlotChangeEvent();
+    }
+  }
 
   const bool wasFirstSlot = currentSlots->ElementAt(0) == aSlot;
   currentSlots.RemoveElement(*aSlot);
-  if (!wasFirstSlot) {
+  if (!wasFirstSlot || SlotAssignment() == SlotAssignmentMode::Manual) {
     return;
   }
 
@@ -531,76 +566,123 @@ void ShadowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   }
 }
 
-ShadowRoot::SlotAssignment ShadowRoot::SlotAssignmentFor(nsIContent& aContent) {
-  nsAutoString slotName;
-  // Note that if slot attribute is missing, assign it to the first default
-  // slot, if exists.
-  if (Element* element = Element::FromNode(aContent)) {
-    element->GetAttr(nsGkAtoms::slot, slotName);
+ShadowRoot::SlotInsertionPoint ShadowRoot::SlotInsertionPointFor(
+    nsIContent& aContent) {
+  HTMLSlotElement* slot = nullptr;
+
+  if (SlotAssignment() == SlotAssignmentMode::Manual) {
+    slot = aContent.GetManualSlotAssignment();
+    if (!slot || slot->GetContainingShadow() != this) {
+      return {};
+    }
+  } else {
+    nsAutoString slotName;
+    // Note that if slot attribute is missing, assign it to the first default
+    // slot, if exists.
+    if (Element* element = Element::FromNode(aContent)) {
+      element->GetAttr(nsGkAtoms::slot, slotName);
+    }
+
+    SlotArray* slots = mSlotMap.Get(slotName);
+    if (!slots) {
+      return {};
+    }
+    slot = (*slots)->ElementAt(0);
   }
 
-  SlotArray* slots = mSlotMap.Get(slotName);
-  if (!slots) {
-    return {};
-  }
-
-  HTMLSlotElement* slot = (*slots)->ElementAt(0);
   MOZ_ASSERT(slot);
 
-  if (!aContent.GetNextSibling()) {
-    // aContent is the last child, no need to loop through the assigned nodes,
-    // we're necessarily the last one.
-    //
-    // This prevents multiple appends into the host from getting quadratic.
-    return {slot, Nothing()};
+  if (SlotAssignment() == SlotAssignmentMode::Named) {
+    if (!aContent.GetNextSibling()) {
+      // aContent is the last child, no need to loop through the assigned nodes,
+      // we're necessarily the last one.
+      //
+      // This prevents multiple appends into the host from getting quadratic.
+      return {slot, Nothing()};
+    }
+  } else {
+    // For manual slots, if aContent is the last element, we return Nothing
+    // because we just need to append the element to the assigned nodes. No need
+    // to return an index.
+    if (slot->ManuallyAssignedNodes().SafeLastElement(nullptr) == &aContent) {
+      return {slot, Nothing()};
+    }
   }
 
   // Find the appropriate position in the assigned node list for the newly
   // assigned content.
-  const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
-  nsIContent* currentContent = GetHost()->GetFirstChild();
-  for (uint32_t i = 0; i < assignedNodes.Length(); i++) {
-    // Seek through the host's explicit children until the
-    // assigned content is found.
-    while (currentContent && currentContent != assignedNodes[i]) {
-      if (currentContent == &aContent) {
-        return {slot, Some(i)};
+  if (SlotAssignment() == SlotAssignmentMode::Manual) {
+    const nsTArray<nsINode*>& manuallyAssignedNodes =
+        slot->ManuallyAssignedNodes();
+    auto index = manuallyAssignedNodes.IndexOf(&aContent);
+    if (index != manuallyAssignedNodes.NoIndex) {
+      return {slot, Some(index)};
+    }
+  } else {
+    const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
+    nsIContent* currentContent = GetHost()->GetFirstChild();
+    for (uint32_t i = 0; i < assignedNodes.Length(); i++) {
+      // Seek through the host's explicit children until the
+      // assigned content is found.
+      while (currentContent && currentContent != assignedNodes[i]) {
+        if (currentContent == &aContent) {
+          return {slot, Some(i)};
+        }
+        currentContent = currentContent->GetNextSibling();
       }
-      currentContent = currentContent->GetNextSibling();
     }
   }
 
   return {slot, Nothing()};
 }
 
-void ShadowRoot::MaybeReassignElement(Element& aElement) {
-  MOZ_ASSERT(aElement.GetParent() == GetHost());
-  HTMLSlotElement* oldSlot = aElement.GetAssignedSlot();
-  SlotAssignment assignment = SlotAssignmentFor(aElement);
+void ShadowRoot::MaybeReassignContent(nsIContent& aElementOrText) {
+  MOZ_ASSERT(aElementOrText.GetParent() == GetHost());
+  MOZ_ASSERT(aElementOrText.IsElement() || aElementOrText.IsText());
+  HTMLSlotElement* oldSlot = aElementOrText.GetAssignedSlot();
+
+  SlotInsertionPoint assignment = SlotInsertionPointFor(aElementOrText);
 
   if (assignment.mSlot == oldSlot) {
     // Nothing to do here.
     return;
   }
 
-  if (Document* doc = GetComposedDoc()) {
-    if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
-      presShell->SlotAssignmentWillChange(aElement, oldSlot, assignment.mSlot);
+  // The layout invalidation piece for Manual slots is handled in
+  // HTMLSlotElement::Assign
+  if (aElementOrText.IsElement() &&
+      SlotAssignment() == SlotAssignmentMode::Named) {
+    if (Document* doc = GetComposedDoc()) {
+      if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
+        presShell->SlotAssignmentWillChange(*aElementOrText.AsElement(),
+                                            oldSlot, assignment.mSlot);
+      }
     }
   }
 
   if (oldSlot) {
-    oldSlot->RemoveAssignedNode(aElement);
-    oldSlot->EnqueueSlotChangeEvent();
+    if (SlotAssignment() == SlotAssignmentMode::Named) {
+      oldSlot->RemoveAssignedNode(aElementOrText);
+      // Don't need to EnqueueSlotChangeEvent for Manual slots because it
+      // needs to be done in tree order, so
+      // HTMLSlotElement::Assign will handle it explicitly.
+      oldSlot->EnqueueSlotChangeEvent();
+    } else {
+      oldSlot->RemoveManuallyAssignedNode(aElementOrText);
+    }
   }
 
   if (assignment.mSlot) {
     if (assignment.mIndex) {
-      assignment.mSlot->InsertAssignedNode(*assignment.mIndex, aElement);
+      assignment.mSlot->InsertAssignedNode(*assignment.mIndex, aElementOrText);
     } else {
-      assignment.mSlot->AppendAssignedNode(aElement);
+      assignment.mSlot->AppendAssignedNode(aElementOrText);
     }
-    assignment.mSlot->EnqueueSlotChangeEvent();
+    // Similar as above, HTMLSlotElement::Assign handles enqueuing
+    // slotchange event.
+    if (SlotAssignment() == SlotAssignmentMode::Named) {
+      assignment.mSlot->EnqueueSlotChangeEvent();
+    }
   }
 }
 
@@ -680,7 +762,7 @@ void ShadowRoot::MaybeSlotHostChild(nsIContent& aChild) {
     return;
   }
 
-  SlotAssignment assignment = SlotAssignmentFor(aChild);
+  SlotInsertionPoint assignment = SlotInsertionPointFor(aChild);
   if (!assignment.mSlot) {
     return;
   }

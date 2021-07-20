@@ -3667,6 +3667,12 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+# Is the 'assign' API for slot element enabled?
+- name: dom.shadowdom.slot.assign.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # NOTE: This preference is used in unit tests. If it is removed or its default
 # value changes, please update test_sharedMap_static_prefs.js accordingly.
 - name: dom.webcomponents.shadowdom.report_usage

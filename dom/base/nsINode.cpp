@@ -652,6 +652,14 @@ void nsINode::LastRelease() {
                                          NodeWillBeDestroyed, (this));
     }
 
+    if (IsContent()) {
+      nsIContent* content = AsContent();
+      if (HTMLSlotElement* slot = content->GetManualSlotAssignment()) {
+        content->SetManualSlotAssignment(nullptr);
+        slot->RemoveManuallyAssignedNode(*content);
+      }
+    }
+
     delete slots;
     mSlots = nullptr;
   }
