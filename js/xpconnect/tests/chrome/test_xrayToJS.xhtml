@@ -225,10 +225,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                       "getOwnPropertyNames", "getOwnPropertySymbols",
                       "preventExtensions", "freeze", "fromEntries", "isFrozen", "seal",
                       "isSealed", "assign", "getPrototypeOf", "values",
-                      "entries", "isExtensible"]);
-  if (isNightlyBuild) {
-    gConstructorProperties['Object'].push("hasOwn");
-  }
+                      "entries", "isExtensible", "hasOwn"]);
   gPrototypeProperties['Array'] =
     ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
