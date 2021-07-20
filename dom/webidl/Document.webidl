@@ -191,6 +191,8 @@ partial interface Document {
                 attribute EventHandler onbeforescriptexecute;
                 attribute EventHandler onafterscriptexecute;
 
+                attribute EventHandler onselectionchange;
+
   /**
    * True if this document is synthetic : stand alone image, video, audio file,
    * etc.
