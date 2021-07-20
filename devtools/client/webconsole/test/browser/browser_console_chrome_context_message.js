@@ -14,7 +14,6 @@ add_task(async function() {
   await pushPref("devtools.browserconsole.contentMessages", true);
 
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
-  await clearOutput(hud);
   await openNewTabAndConsole(
     `data:text/html,<script>console.log("hello from content")</script>`
   );
@@ -23,6 +22,8 @@ add_task(async function() {
     `Cu.reportError`, // bug 1561930
   ];
 
+  info("Set the focus on the Browser Console");
+  hud.iframeWindow.focus();
   execute(hud, `Cu.reportError("Cu.reportError");`); // bug 1561930
   info("Wait for expected message are shown on browser console");
   await waitFor(() =>
