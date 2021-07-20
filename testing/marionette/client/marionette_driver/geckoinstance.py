@@ -112,6 +112,8 @@ class GeckoInstance(object):
         "toolkit.startup.max_resumed_crashes": -1,
         # Enabling the support for File object creation in the content process.
         "dom.file.createInChild": True,
+        # Don't pull Top Sites content from the network
+        "browser.topsites.contile.enabled": False,
     }
 
     def __init__(
