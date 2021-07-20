@@ -884,7 +884,9 @@ nsresult Selection::AddRangesForUserSelectableNodes(
       // pref, disabled by default.
       // See https://github.com/w3c/selection-api/issues/53.
       const bool executeDefaultAction = MaybeDispatchSelectstartEvent(
-          *aRange, StaticPrefs::dom_select_events_textcontrols_enabled(), doc);
+          *aRange,
+          StaticPrefs::dom_select_events_textcontrols_selectstart_enabled(),
+          doc);
 
       if (!executeDefaultAction) {
         return NS_OK;
