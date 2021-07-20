@@ -488,16 +488,21 @@ class AndroidEmulatorCommands(MachCommandBase):
     @CommandArgument(
         "--version",
         metavar="VERSION",
-        choices=["arm", "x86_64"],
+        choices=["arm-4.3", "x86-7.0"],
         help="Specify which AVD to run in emulator. "
-        'One of "arm" (Android supporting armv7 binaries), or '
-        '"x86_64" (Android supporting x86 or x86_64 binaries, '
+        'One of "arm-4.3" (Android 4.3 supporting armv7 binaries), or '
+        '"x86-7.0" (Android 7.0 supporting x86 or x86_64 binaries, '
         "recommended for most applications). "
-        'By default, "arm" will be used if the current build environment '
-        'architecture is arm; otherwise "x86_64".',
+        'By default, "arm-4.3" will be used if the current build environment '
+        'architecture is arm; otherwise "x86-7.0".',
     )
     @CommandArgument(
         "--wait", action="store_true", help="Wait for emulator to be closed."
+    )
+    @CommandArgument(
+        "--force-update",
+        action="store_true",
+        help="Update AVD definition even when AVD is already installed.",
     )
     @CommandArgument("--gpu", help="Over-ride the emulator -gpu argument.")
     @CommandArgument(
@@ -508,6 +513,7 @@ class AndroidEmulatorCommands(MachCommandBase):
         command_context,
         version,
         wait=False,
+        force_update=False,
         gpu=None,
         verbose=False,
     ):
@@ -544,6 +550,15 @@ class AndroidEmulatorCommands(MachCommandBase):
                 "Install the Android SDK and make sure 'emulator' is in your PATH.",
             )
             return 2
+
+        if not emulator.check_avd(force_update):
+            command_context.log(
+                logging.INFO,
+                "emulator",
+                {},
+                "Fetching and installing AVD. This may take a few minutes...",
+            )
+            emulator.update_avd(force_update)
 
         command_context.log(
             logging.INFO,

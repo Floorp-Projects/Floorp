@@ -72,6 +72,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         super(AndroidProfileRun, self).__init__(
             config_options=self.config_options,
             all_actions=[
+                "setup-avds",
                 "download",
                 "create-virtualenv",
                 "start-emulator",
@@ -102,17 +103,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         dirs["abs_test_install_dir"] = os.path.join(abs_dirs["abs_src_dir"], "testing")
         dirs["abs_xre_dir"] = os.path.join(abs_dirs["abs_work_dir"], "hostutils")
         dirs["abs_blob_upload_dir"] = "/builds/worker/artifacts/blobber_upload_dir"
-        fetches_dir = os.environ.get("MOZ_FETCHES_DIR")
-        if fetches_dir:
-            dirs["abs_sdk_dir"] = os.path.join(fetches_dir, "android-sdk-linux")
-            dirs["abs_avds_dir"] = os.path.join(fetches_dir, "android-device")
-        else:
-            dirs["abs_sdk_dir"] = os.path.join(
-                abs_dirs["abs_work_dir"], "android-sdk-linux"
-            )
-            dirs["abs_avds_dir"] = os.path.join(
-                abs_dirs["abs_work_dir"], "android-device"
-            )
+        dirs["abs_avds_dir"] = os.path.join(abs_dirs["abs_work_dir"], ".android")
 
         for key in dirs.keys():
             if key not in abs_dirs:
