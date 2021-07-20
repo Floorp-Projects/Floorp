@@ -79,6 +79,8 @@ class PICChain {
 // Class for object that holds ForOfPIC chain.
 class ForOfPICObject : public NativeObject {
  public:
+  enum { ChainSlot, SlotCount };
+
   static const JSClass class_;
 };
 
@@ -225,7 +227,7 @@ struct ForOfPIC {
 
   static inline Chain* fromJSObject(NativeObject* obj) {
     MOZ_ASSERT(obj->is<ForOfPICObject>());
-    return (ForOfPIC::Chain*)obj->getPrivate();
+    return obj->maybePtrFromReservedSlot<Chain>(ForOfPICObject::ChainSlot);
   }
   static inline Chain* getOrCreate(JSContext* cx) {
     NativeObject* obj = cx->global()->getForOfPICObject();
