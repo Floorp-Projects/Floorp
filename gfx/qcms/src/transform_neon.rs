@@ -1,8 +1,14 @@
 use crate::transform::{qcms_transform, Format, BGRA, CLAMPMAXVAL, FLOATSCALE, RGB, RGBA};
 #[cfg(target_arch = "aarch64")]
-use core::arch::aarch64::{float32x4_t, int32x4_t, vaddq_f32};
+use core::arch::aarch64::{
+    float32x4_t, int32x4_t, vaddq_f32, vcvtq_s32_f32, vgetq_lane_s32, vld1q_dup_f32, vld1q_f32,
+    vmaxq_f32, vminq_f32, vmulq_f32,
+};
 #[cfg(target_arch = "arm")]
-use core::arch::arm::{float32x4_t, int32x4_t, vaddq_f32};
+use core::arch::arm::{
+    float32x4_t, int32x4_t, vaddq_f32, vcvtq_s32_f32, vgetq_lane_s32, vld1q_dup_f32, vld1q_f32,
+    vmaxq_f32, vminq_f32, vmulq_f32,
+};
 use std::mem::zeroed;
 
 static mut floatScale: f32 = FLOATSCALE;
@@ -149,107 +155,4 @@ pub unsafe fn qcms_transform_data_bgra_out_lut_neon(
     length: usize,
 ) {
     qcms_transform_data_template_lut_neon::<BGRA>(transform, src, dest, length);
-}
-
-use std::mem::transmute;
-
-#[inline]
-#[target_feature(enable = "neon")]
-#[cfg(target_arch = "aarch64")]
-pub unsafe fn vld1q_f32(addr: *const f32) -> float32x4_t {
-    transmute([*addr, *addr.offset(1), *addr.offset(2), *addr.offset(3)])
-}
-
-#[inline]
-#[cfg(target_arch = "arm")]
-#[target_feature(enable = "neon")]
-#[target_feature(enable = "v7")]
-pub unsafe fn vld1q_f32(addr: *const f32) -> float32x4_t {
-    vld1q_v4f32(addr as *const u8, 4)
-}
-
-#[cfg(target_arch = "arm")]
-#[allow(improper_ctypes)]
-extern "C" {
-    #[cfg_attr(target_arch = "arm", link_name = "llvm.arm.neon.vld1.v4f32.p0i8")]
-    fn vld1q_v4f32(addr: *const u8, align: u32) -> float32x4_t;
-}
-
-#[cfg(target_arch = "aarch64")]
-#[allow(improper_ctypes)]
-extern "C" {
-    #[link_name = "llvm.aarch64.neon.fcvtzs.v4.v4f32"]
-    fn vcvtq_s32_f32_(a: float32x4_t) -> int32x4_t;
-}
-
-#[allow(improper_ctypes)]
-extern "C" {
-    #[cfg_attr(target_arch = "arm", link_name = "llvm.arm.neon.vmaxs.v4f32")]
-    #[cfg_attr(target_arch = "aarch64", link_name = "llvm.aarch64.neon.fmax.v4f32")]
-    fn vmaxq_f32_(a: float32x4_t, b: float32x4_t) -> float32x4_t;
-    #[cfg_attr(target_arch = "arm", link_name = "llvm.arm.neon.vmins.v4f32")]
-    #[cfg_attr(target_arch = "aarch64", link_name = "llvm.aarch64.neon.fmin.v4f32")]
-    fn vminq_f32_(a: float32x4_t, b: float32x4_t) -> float32x4_t;
-}
-
-/// Move vector element to general-purpose register
-#[inline]
-#[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
-pub unsafe fn vgetq_lane_s32(v: int32x4_t, imm5: i32) -> i32 {
-    assert!(imm5 >= 0 && imm5 <= 3);
-    simd_extract(v, imm5 as u32)
-}
-
-/// Multiply
-#[inline]
-#[target_feature(enable = "neon")]
-#[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
-pub unsafe fn vmulq_f32(a: float32x4_t, b: float32x4_t) -> float32x4_t {
-    simd_mul(a, b)
-}
-
-/// Floating-point minimum (vector).
-#[inline]
-#[target_feature(enable = "neon")]
-#[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
-pub unsafe fn vminq_f32(a: float32x4_t, b: float32x4_t) -> float32x4_t {
-    vminq_f32_(a, b)
-}
-
-/// Floating-point maxmimum (vector).
-#[inline]
-#[target_feature(enable = "neon")]
-#[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
-pub unsafe fn vmaxq_f32(a: float32x4_t, b: float32x4_t) -> float32x4_t {
-    vmaxq_f32_(a, b)
-}
-
-#[inline]
-#[cfg(target_arch = "aarch64")]
-#[target_feature(enable = "neon")]
-pub unsafe fn vcvtq_s32_f32(a: float32x4_t) -> int32x4_t {
-    vcvtq_s32_f32_(a)
-}
-/// Floating-point Convert to Signed fixed-point, rounding toward Zero (vector)
-#[inline]
-#[cfg(target_arch = "arm")]
-#[target_feature(enable = "neon")]
-#[target_feature(enable = "v7")]
-pub unsafe fn vcvtq_s32_f32(a: float32x4_t) -> int32x4_t {
-    simd_cast::<_, int32x4_t>(a)
-}
-
-/// Load one single-element structure and Replicate to all lanes (of one register).
-#[inline]
-#[target_feature(enable = "neon")]
-#[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
-pub unsafe fn vld1q_dup_f32(addr: *const f32) -> float32x4_t {
-    let v = *addr;
-    transmute([v, v, v, v])
-}
-
-extern "platform-intrinsic" {
-    pub fn simd_mul<T>(x: T, y: T) -> T;
-    pub fn simd_extract<T, U>(x: T, idx: u32) -> U;
-    pub fn simd_cast<T, U>(x: T) -> U;
 }
