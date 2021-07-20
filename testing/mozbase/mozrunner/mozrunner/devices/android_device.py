@@ -98,11 +98,28 @@ class AvdInfo(object):
 """
 AVD_DICT = {
     "arm": AvdInfo(
-        "Android 4.3",
-        "mozemulator-4.3",
-        "testing/config/tooltool-manifests/androidarm_4_3/mach-emulator.manifest",
-        None,
-        ["-skip-adb-auth", "-verbose", "-show-kernel"],
+        "Android arm",
+        "mozemulator-armeabi-v7a",
+        [
+            "-skip-adb-auth",
+            "-verbose",
+            "-show-kernel",
+            "-ranchu",
+            "-selinux",
+            "permissive",
+            "-memory",
+            "3072",
+            "-cores",
+            "4",
+            "-skin",
+            "800x1280",
+            "-gpu",
+            "on",
+            "-no-snapstorage",
+            "-no-snapshot",
+            "-prop",
+            "ro.test_harness=true",
+        ],
         False,
     ),
     "x86_64": AvdInfo(
