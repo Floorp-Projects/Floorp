@@ -866,6 +866,8 @@ _cairo_strtod (const char *nptr, char **endptr)
 	    bufptr += decimal_point_len;
 	    delta -= decimal_point_len - 1;
 	    have_dp = TRUE;
+	} else if (bufptr == buf && (*p == '-' || *p == '+')) {
+	    *bufptr++ = *p;
 	} else {
 	    break;
 	}
