@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "js/Object.h"              // JS::GetPrivate, JS::SetPrivate
+#include "js/Object.h"              // JS::GetReservedSlot, JS::SetReservedSlot
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById
 #include "jsapi-tests/tests.h"
 
@@ -28,15 +28,15 @@ BEGIN_TEST(testResolveRecursion) {
       nullptr,     // trace
   };
 
-  static const JSClass my_resolve_class = {"MyResolve", JSCLASS_HAS_PRIVATE,
-                                           &my_resolve_classOps};
+  static const JSClass my_resolve_class = {
+      "MyResolve", JSCLASS_HAS_RESERVED_SLOTS(SlotCount), &my_resolve_classOps};
 
   obj1.init(cx, JS_NewObject(cx, &my_resolve_class));
   CHECK(obj1);
   obj2.init(cx, JS_NewObject(cx, &my_resolve_class));
   CHECK(obj2);
-  JS::SetPrivate(obj1, this);
-  JS::SetPrivate(obj2, this);
+  JS::SetReservedSlot(obj1, TestSlot, JS::PrivateValue(this));
+  JS::SetReservedSlot(obj2, TestSlot, JS::PrivateValue(this));
 
   JS::RootedValue obj1Val(cx, JS::ObjectValue(*obj1));
   JS::RootedValue obj2Val(cx, JS::ObjectValue(*obj2));
@@ -57,6 +57,8 @@ BEGIN_TEST(testResolveRecursion) {
   obj2 = nullptr;
   return true;
 }
+
+enum Slots { TestSlot, SlotCount };
 
 JS::PersistentRootedObject obj1;
 JS::PersistentRootedObject obj2;
@@ -133,8 +135,9 @@ bool doResolve(JS::HandleObject obj, JS::HandleId id, bool* resolvedp) {
 
 static bool my_resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
                        bool* resolvedp) {
-  return static_cast<cls_testResolveRecursion*>(JS::GetPrivate(obj))
-      ->doResolve(obj, id, resolvedp);
+  void* p = JS::GetReservedSlot(obj, TestSlot).toPrivate();
+  return static_cast<cls_testResolveRecursion*>(p)->doResolve(obj, id,
+                                                              resolvedp);
 }
 END_TEST(testResolveRecursion)
 
