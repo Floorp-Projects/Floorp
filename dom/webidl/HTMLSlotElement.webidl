@@ -18,6 +18,8 @@ interface HTMLSlotElement : HTMLElement {
   [CEReactions, SetterThrows] attribute DOMString name;
   sequence<Node> assignedNodes(optional AssignedNodesOptions options = {});
   sequence<Element> assignedElements(optional AssignedNodesOptions options = {});
+  [Pref="dom.shadowdom.slot.assign.enabled"]
+  void assign((Element or Text)... nodes);
 };
 
 dictionary AssignedNodesOptions {

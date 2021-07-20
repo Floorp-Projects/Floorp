@@ -1186,11 +1186,11 @@ already_AddRefed<ShadowRoot> Element::AttachShadow(const ShadowRootInit& aInit,
     OwnerDoc()->ReportShadowDOMUsage();
   }
 
-  return AttachShadowWithoutNameChecks(aInit.mMode);
+  return AttachShadowWithoutNameChecks(aInit.mMode, aInit.mSlotAssignment);
 }
 
 already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
-    ShadowRootMode aMode) {
+    ShadowRootMode aMode, SlotAssignmentMode aSlotAssignment) {
   nsAutoScriptBlocker scriptBlocker;
 
   RefPtr<mozilla::dom::NodeInfo> nodeInfo =
@@ -1219,7 +1219,7 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
    */
   auto* nim = nodeInfo->NodeInfoManager();
   RefPtr<ShadowRoot> shadowRoot =
-      new (nim) ShadowRoot(this, aMode, nodeInfo.forget());
+      new (nim) ShadowRoot(this, aMode, aSlotAssignment, nodeInfo.forget());
 
   if (NodeOrAncestorHasDirAuto()) {
     shadowRoot->SetAncestorHasDirAuto();
@@ -2628,7 +2628,7 @@ nsresult Element::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       MOZ_ASSERT(HasPartAttribute() == isPart);
     } else if (aName == nsGkAtoms::slot && GetParent()) {
       if (ShadowRoot* shadow = GetParent()->GetShadowRoot()) {
-        shadow->MaybeReassignElement(*this);
+        shadow->MaybeReassignContent(*this);
       }
     }
   }
