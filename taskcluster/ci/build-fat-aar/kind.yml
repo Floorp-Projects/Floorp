@@ -49,7 +49,6 @@ job-defaults:
         secrets: true
         mozconfig-variant: null
         tooltool-downloads: internal
-        custom-build-variant-cfg: arm
         # Note: These settings are only honored by nightly (i.e. shipping) builds
         update-channel:
             by-release-type:
@@ -67,7 +66,6 @@ job-defaults:
                         default: null
     fetches:
         toolchain:
-            - android-gradle-dependencies
             - android-ndk-linux
             - android-sdk-linux
             - linux64-clang
@@ -92,7 +90,7 @@ jobs:
             job-name: android-geckoview-fat-aar-opt
             type: shippable-with-multi-l10n
         treeherder:
-            platform: android-4-0-geckoview-fat-aar-shippable/opt
+            platform: android-5-0-geckoview-fat-aar-shippable/opt
             symbol: Bgv
         dependencies:
             android-x86-shippable: build-android-x86-shippable/opt
@@ -107,5 +105,43 @@ jobs:
             config:
                 - builds/releng_base_android_64_builds.py
                 - taskcluster_nightly.py
+            custom-build-variant-cfg: arm
+        fetches:
+            toolchain:
+                - android-gradle-dependencies
+        optimization:
+            skip-unless-backstop: null
+
+    android-geckoview-fat-aar-shippable-lite/opt:
+        description: "Android GeckoView Lite multi-architecture fat AAR Shippable"
+        attributes:
+            shippable: true
+            enable-full-crashsymbols: true
+            disable-push-apk: true
+        shipping-phase: build
+        shipping-product: fennec
+        index:
+            job-name: android-geckoview-fat-aar-opt-lite
+            type: shippable-with-multi-l10n
+        treeherder:
+            platform: android-4-1-geckoview-fat-aar-shippable/opt
+            symbol: Bgvl
+        dependencies:
+            android-x86-shippable-lite: build-android-x86-shippable-lite/opt
+            android-x86_64-shippable-lite: build-android-x86_64-shippable-lite/opt
+            android-arm-shippable-lite: build-android-arm-shippable-lite/opt
+            android-aarch64-shippable-lite: build-android-aarch64-shippable-lite/opt
+        worker:
+            env:
+                PERFHERDER_EXTRA_OPTIONS: android-geckoview-fat-aar-nightly-lite
+        run:
+            actions: [get-secrets, build, multi-l10n]
+            config:
+                - builds/releng_base_android_64_builds.py
+                - taskcluster_nightly.py
+            custom-build-variant-cfg: arm-lite
+        fetches:
+            toolchain:
+                - android-gradle-dependencies-lite
         optimization:
             skip-unless-backstop: null
