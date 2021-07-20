@@ -82,6 +82,7 @@ let ContentDispatchChooserTelemetry = {
     pcast: "PODCAST",
     podcast: "PODCAST",
     podcasts: "PODCAST",
+    "roblox-player": "ROBLOX",
     search: "SEARCH",
     "search-ms": "SEARCH",
     sip: "SIP",
