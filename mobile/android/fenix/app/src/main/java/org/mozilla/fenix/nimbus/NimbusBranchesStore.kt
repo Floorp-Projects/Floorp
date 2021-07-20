@@ -50,6 +50,11 @@ sealed class NimbusBranchesAction : Action {
      * @param selectedBranch The selected [Branch] slug for a Nimbus experiment.
      */
     data class UpdateSelectedBranch(val selectedBranch: String) : NimbusBranchesAction()
+
+    /**
+     * Opts out of the branches.
+     */
+    object UpdateUnselectBranch : NimbusBranchesAction()
 }
 
 /**
@@ -74,6 +79,9 @@ private fun nimbusBranchesFragmentStateReducer(
         }
         is NimbusBranchesAction.UpdateSelectedBranch -> {
             state.copy(selectedBranch = action.selectedBranch)
+        }
+        is NimbusBranchesAction.UpdateUnselectBranch -> {
+            state.copy(selectedBranch = "")
         }
     }
 }

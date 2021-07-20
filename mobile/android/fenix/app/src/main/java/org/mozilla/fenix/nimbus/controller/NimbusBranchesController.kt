@@ -26,7 +26,14 @@ class NimbusBranchesController(
 ) : NimbusBranchesAdapterDelegate {
 
     override fun onBranchItemClicked(branch: Branch) {
-        experiments.optInWithBranch(experimentId, branch.slug)
-        nimbusBranchesStore.dispatch(NimbusBranchesAction.UpdateSelectedBranch(branch.slug))
+        nimbusBranchesStore.dispatch(
+            if (experiments.getExperimentBranch(experimentId) != branch.slug) {
+                experiments.optInWithBranch(experimentId, branch.slug)
+                NimbusBranchesAction.UpdateSelectedBranch(branch.slug)
+            } else {
+                experiments.optOut(experimentId)
+                NimbusBranchesAction.UpdateUnselectBranch
+            }
+        )
     }
 }

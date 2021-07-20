@@ -14,24 +14,33 @@
                   }
               },
               {
-                  "slug": "a1",
+                  "slug": "fancy-settings",
                   "ratio": 0,
                   "feature": {
                       "value": {
-                          "settings-title": "settings_title",
-                          "settings-title-punctuation": "…"
+                          "settings-title": "Fancy Settings"
                       },
                       "enabled": true,
                       "featureId": "nimbus-validation"
                   }
               },
               {
-                  "slug": "a2",
+                  "slug": "smiley",
                   "ratio": 0,
                   "feature": {
                       "value": {
-                          "settings-title": "preferences_category_general",
-                          "settings-title-punctuation": "!"
+                          "settings-title-punctuation": "\uD83D\uDE03"
+                      },
+                      "enabled": true,
+                      "featureId": "nimbus-validation"
+                  }
+              },
+              {
+                  "slug": "bundled-text",
+                  "ratio": 0,
+                  "feature": {
+                      "value": {
+                          "settings-title": "preferences_category_general"
                       },
                       "enabled": true,
                       "featureId": "nimbus-validation"
@@ -78,11 +87,11 @@
                   }
               },
               {
-                  "slug": "treatment",
+                  "slug": "edit-menu-icon",
                   "ratio": 0,
                   "feature": {
                       "value": {
-                          "settings-title": "Fancy Settings",
+                          "settings-title": "preferences_category_general",
                           "settings-icon": "ic_edit"
                       },
                       "enabled": true,
