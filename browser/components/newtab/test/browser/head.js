@@ -15,16 +15,101 @@ ChromeUtils.defineModuleGetter(
   "QueryCache",
   "resource://activity-stream/lib/ASRouterTargeting.jsm"
 );
-
+// eslint-disable-next-line no-unused-vars
+const { FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
 // We import sinon here to make it available across all mochitest test files
 // eslint-disable-next-line no-unused-vars
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+// Set the content pref to make it available across tests
+const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF = "browser.aboutwelcome.screens";
+// Test differently for windows 7 as theme screens are removed.
+// eslint-disable-next-line no-unused-vars
+const win7Content = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
 
 function popPrefs() {
   return SpecialPowers.popPrefEnv();
 }
 function pushPrefs(...prefs) {
   return SpecialPowers.pushPrefEnv({ set: prefs });
+}
+// eslint-disable-next-line no-unused-vars
+async function getAboutWelcomeParent(browser) {
+  let windowGlobalParent = browser.browsingContext.currentWindowGlobal;
+  return windowGlobalParent.getActor("AboutWelcome");
+}
+// eslint-disable-next-line no-unused-vars
+async function setAboutWelcomeMultiStage(value = "") {
+  return pushPrefs([ABOUT_WELCOME_OVERRIDE_CONTENT_PREF, value]);
+}
+// eslint-disable-next-line no-unused-vars
+async function setProton(value = false) {
+  return pushPrefs(["browser.aboutwelcome.protonDesign", value]);
+}
+
+/**
+ * Setup functions to test welcome UI
+ */
+// eslint-disable-next-line no-unused-vars
+async function test_screen_content(
+  browser,
+  experiment,
+  expectedSelectors = [],
+  unexpectedSelectors = []
+) {
+  await ContentTask.spawn(
+    browser,
+    { expectedSelectors, experiment, unexpectedSelectors },
+    async ({
+      expectedSelectors: expected,
+      experiment: experimentName,
+      unexpectedSelectors: unexpected,
+    }) => {
+      for (let selector of expected) {
+        await ContentTaskUtils.waitForCondition(
+          () => content.document.querySelector(selector),
+          `Should render ${selector} in ${experimentName}`
+        );
+      }
+      for (let selector of unexpected) {
+        ok(
+          !content.document.querySelector(selector),
+          `Should not render ${selector} in ${experimentName}`
+        );
+      }
+
+      if (experimentName === "home") {
+        Assert.equal(
+          content.document.location.href,
+          "about:home",
+          "Navigated to about:home"
+        );
+      } else {
+        Assert.equal(
+          content.document.location.href,
+          "about:welcome",
+          "Navigated to a welcome screen"
+        );
+      }
+    }
+  );
+}
+
+// eslint-disable-next-line no-unused-vars
+async function onButtonClick(browser, elementId) {
+  await ContentTask.spawn(
+    browser,
+    { elementId },
+    async ({ elementId: buttonId }) => {
+      await ContentTaskUtils.waitForCondition(
+        () => content.document.querySelector(buttonId),
+        buttonId
+      );
+      let button = content.document.querySelector(buttonId);
+      button.click();
+    }
+  );
 }
 
 // Toggle the feed off and on as a workaround to read the new prefs.
@@ -71,11 +156,6 @@ async function setTestTopSites() {
 // eslint-disable-next-line no-unused-vars
 async function setAboutWelcomePref(value) {
   return pushPrefs(["browser.aboutwelcome.enabled", value]);
-}
-
-// eslint-disable-next-line no-unused-vars
-async function setProton(value = false) {
-  return pushPrefs(["browser.aboutwelcome.protonDesign", value]);
 }
 
 // eslint-disable-next-line no-unused-vars
