@@ -50,6 +50,16 @@ set_config(
     depends_if("MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS")(lambda x: True),
 )
 
+option(
+    "--enable-geckoview-lite",
+    help="Build GeckoView in Lite mode. Lite mode removes all unnecessary dependencies like Glean.",
+)
+
+set_config("MOZ_ANDROID_GECKOVIEW_LITE", True, when="--enable-geckoview-lite")
+add_old_configure_assignment(
+    "MOZ_ANDROID_GECKOVIEW_LITE", True, when="--enable-geckoview-lite"
+)
+
 imply_option("MOZ_NORMANDY", False)
 imply_option("MOZ_SERVICES_HEALTHREPORT", True)
 imply_option("MOZ_ANDROID_HISTORY", True)

@@ -93,6 +93,19 @@ configurations.all { config ->
         'geckoview-beta-x86_64',
     ]
 
+    def geckoviewOmniModules = [
+        'geckoview-nightly-omni',
+        'geckoview-nightly-omni-armeabi-v7a',
+        'geckoview-nightly-omni-arm64-v8a',
+        'geckoview-nightly-omni-x86',
+        'geckoview-nightly-omni-x86_64',
+        'geckoview-beta-omni',
+        'geckoview-beta-omni-armeabi-v7a',
+        'geckoview-beta-omni-arm64-v8a',
+        'geckoview-beta-omni-x86',
+        'geckoview-beta-omni-x86_64',
+    ]
+
     if (config.isCanBeResolved()) {
         config.resolutionStrategy { strategy ->
             dependencySubstitution {
@@ -107,8 +120,15 @@ configurations.all { config ->
                     }
 
                     def group = dependency.requested.group
-                    if (group == 'org.mozilla.geckoview' && geckoviewModules.contains(dependency.requested.module)) {
-                        def name = 'geckoview-default'
+                    def module = dependency.requested.module
+                    if (group == 'org.mozilla.geckoview'
+                          && (geckoviewModules.contains(module) || geckoviewOmniModules.contains(module))) {
+                        def name = ''
+                        if (geckoviewOmniModules.contains(module)) {
+                          name = 'geckoview-default-omni'
+                        } else {
+                          name = 'geckoview-default'
+                        }
                         log("Substituting ${group}:${dependency.requested.module} with local GeckoView ${group}:${name} in ${config}")
 
                         dependency.useTarget([group: group, name: name, version: '+'])
