@@ -240,38 +240,30 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Setup the search hand-off box.
   let btn = document.getElementById("search-handoff-button");
-  RPMSendQuery("ShouldShowSearch", {}).then(
-    ([engineName, shouldHandOffToSearchMode]) => {
-      let input = document.querySelector(".fake-textbox");
-      if (shouldHandOffToSearchMode) {
-        document.l10n.setAttributes(btn, "about-private-browsing-search-btn");
-        document.l10n.setAttributes(
-          input,
-          "about-private-browsing-search-placeholder"
-        );
-      } else if (engineName) {
-        document.l10n.setAttributes(btn, "about-private-browsing-handoff", {
+  RPMSendQuery("ShouldShowSearch", {}).then(engineName => {
+    let input = document.querySelector(".fake-textbox");
+    if (engineName) {
+      document.l10n.setAttributes(btn, "about-private-browsing-handoff", {
+        engine: engineName,
+      });
+      document.l10n.setAttributes(
+        input,
+        "about-private-browsing-handoff-text",
+        {
           engine: engineName,
-        });
-        document.l10n.setAttributes(
-          input,
-          "about-private-browsing-handoff-text",
-          {
-            engine: engineName,
-          }
-        );
-      } else {
-        document.l10n.setAttributes(
-          btn,
-          "about-private-browsing-handoff-no-engine"
-        );
-        document.l10n.setAttributes(
-          input,
-          "about-private-browsing-handoff-text-no-engine"
-        );
-      }
+        }
+      );
+    } else {
+      document.l10n.setAttributes(
+        btn,
+        "about-private-browsing-handoff-no-engine"
+      );
+      document.l10n.setAttributes(
+        input,
+        "about-private-browsing-handoff-text-no-engine"
+      );
     }
-  );
+  });
 
   let editable = document.getElementById("fake-editable");
   let DISABLE_SEARCH_TOPIC = "DisableSearch";
