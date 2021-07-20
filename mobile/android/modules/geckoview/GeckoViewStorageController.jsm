@@ -150,9 +150,13 @@ const GeckoViewStorageController = {
       }
       case "GeckoView:SetPermission": {
         const principal = E10SUtils.deserializePrincipal(aData.principal);
+        let key = aData.perm;
+        if (key == "storage-access") {
+          key = "3rdPartyStorage^" + aData.thirdPartyOrigin;
+        }
         Services.perms.addFromPrincipal(
           principal,
-          aData.perm,
+          key,
           aData.newValue,
           Ci.nsIPermissionManager.EXPIRE_NEVER
         );
