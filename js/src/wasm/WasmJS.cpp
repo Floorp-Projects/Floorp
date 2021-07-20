@@ -3681,7 +3681,7 @@ const JSClassOps WasmRuntimeExceptionObject::classOps_ = {
 const JSClass WasmRuntimeExceptionObject::class_ = {
     "WebAssembly.RuntimeException",
     JSCLASS_HAS_RESERVED_SLOTS(WasmRuntimeExceptionObject::RESERVED_SLOTS) |
-        JSCLASS_HAS_PRIVATE | JSCLASS_FOREGROUND_FINALIZE,
+        JSCLASS_FOREGROUND_FINALIZE,
     &WasmRuntimeExceptionObject::classOps_,
     &WasmRuntimeExceptionObject::classSpec_};
 
