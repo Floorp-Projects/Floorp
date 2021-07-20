@@ -17,6 +17,7 @@ import sys
 
 IS_NATIVE_WIN = sys.platform == "win32" and os.sep == "\\"
 IS_CYGWIN = sys.platform == "cygwin"
+PTH_FILENAME = "mach.pth"
 
 
 UPGRADE_WINDOWS = """
@@ -180,6 +181,28 @@ class VirtualenvManager(VirtualenvHelper):
         if (python != self.python_path) and (hexversion != orig_version):
             return False
 
+        if env_requirements.pth_requirements and self.populate_local_paths:
+            try:
+                with open(
+                    os.path.join(self._site_packages_dir(), PTH_FILENAME)
+                ) as file:
+                    pth_lines = file.read().strip().split("\n")
+            except FileNotFoundError:
+                return False
+
+            current_paths = [
+                os.path.abspath(os.path.join(self._site_packages_dir(), path))
+                for path in pth_lines
+            ]
+
+            required_paths = [
+                os.path.abspath(os.path.join(self.topsrcdir, pth.path))
+                for pth in env_requirements.pth_requirements
+            ]
+
+            if current_paths != required_paths:
+                return False
+
         if env_requirements.pypi_requirements:
             pip_json = self._run_pip(
                 ["list", "--format", "json"], capture_output=True
@@ -328,7 +351,7 @@ class VirtualenvManager(VirtualenvHelper):
             env_requirements = self._requirements()
             if self.populate_local_paths:
                 python_lib = distutils.sysconfig.get_python_lib()
-                with open(os.path.join(python_lib, "mach.pth"), "a") as f:
+                with open(os.path.join(python_lib, PTH_FILENAME), "a") as f:
                     for pth_requirement in env_requirements.pth_requirements:
                         path = os.path.join(self.topsrcdir, pth_requirement.path)
                         # This path is relative to the .pth file.  Using a
@@ -540,22 +563,7 @@ class VirtualenvManager(VirtualenvHelper):
 
         https://github.com/pypa/pip/blob/5ee933aab81273da3691c97f2a6e7016ecbe0ef9/src/pip/_internal/self_outdated_check.py#L100-L101 # noqa F401
         """
-
-        # Defer "distutils" import until this function is called so that
-        # "mach bootstrap" doesn't fail due to Linux distro python-distutils
-        # package not being installed.
-        # By the time this function is called, "distutils" must be installed
-        # because it's needed by the "virtualenv" package.
-        from distutils import dist
-
-        distribution = dist.Distribution({"script_args": "--no-user-cfg"})
-        installer = distribution.get_command_obj("install")
-        installer.prefix = os.path.normpath(self.virtualenv_root)
-        installer.finalize_options()
-
-        # Path to virtualenv's "site-packages" directory
-        site_packages = installer.install_purelib
-
+        site_packages = self._site_packages_dir()
         pip_dist_info = next(
             (
                 file
@@ -587,6 +595,22 @@ class VirtualenvManager(VirtualenvHelper):
         return subprocess.run(
             [pip] + args, cwd=self.topsrcdir, env=env, universal_newlines=True, **kwargs
         )
+
+    def _site_packages_dir(self):
+        # Defer "distutils" import until this function is called so that
+        # "mach bootstrap" doesn't fail due to Linux distro python-distutils
+        # package not being installed.
+        # By the time this function is called, "distutils" must be installed
+        # because it's needed by the "virtualenv" package.
+        from distutils import dist
+
+        distribution = dist.Distribution({"script_args": "--no-user-cfg"})
+        installer = distribution.get_command_obj("install")
+        installer.prefix = os.path.normpath(self.virtualenv_root)
+        installer.finalize_options()
+
+        # Path to virtualenv's "site-packages" directory
+        return installer.install_purelib
 
 
 def get_archflags():
