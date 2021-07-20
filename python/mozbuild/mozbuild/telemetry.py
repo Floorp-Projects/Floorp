@@ -92,11 +92,9 @@ def get_cpu_brand():
 
 
 def get_os_name():
-    return {
-        "Linux": "linux",
-        "Windows": "windows",
-        "Darwin": "macos",
-    }.get(platform.system(), "other")
+    return {"Linux": "linux", "Windows": "windows", "Darwin": "macos"}.get(
+        platform.system(), "other"
+    )
 
 
 def get_psutil_stats():
@@ -124,9 +122,7 @@ def get_system_info():
     """
     # Normalize OS names a bit, and bucket non-tier-1 platforms into "other".
     has_psutil, logical_cores, physical_cores, memory_total = get_psutil_stats()
-    info = {
-        "os": get_os_name(),
-    }
+    info = {"os": get_os_name()}
     if has_psutil:
         # `total` on Linux is gathered from /proc/meminfo's `MemTotal`, which is the
         # total amount of physical memory minus some kernel usage, so round up to the
@@ -236,6 +232,7 @@ def get_distro_and_version():
 def get_shell_info():
     """Returns if the current shell was opened by vscode and if it's a SSH connection"""
 
-    return True if "vscode" in os.getenv("TERM_PROGRAM", "") else False, os.getenv(
-        "SSH_CLIENT", False
+    return (
+        True if "vscode" in os.getenv("TERM_PROGRAM", "") else False,
+        bool(os.getenv("SSH_CLIENT", False)),
     )
