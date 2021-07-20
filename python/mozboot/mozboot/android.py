@@ -10,6 +10,7 @@ import os
 import stat
 import subprocess
 import sys
+import time
 
 # We need the NDK version in multiple different places, and it's inconvenient
 # to pass down the NDK version to all relevant places, so we have this global
@@ -206,6 +207,16 @@ def avdmanager_tool(sdk_path):
     return os.path.join(sdk_path, "tools", "bin", sdkmanager)
 
 
+def adb_tool(sdk_path):
+    adb = "adb.bat" if sys.platform.startswith("win") else "adb"
+    return os.path.join(sdk_path, "platform-tools", adb)
+
+
+def emulator_tool(sdk_path):
+    emulator = "emulator.bat" if sys.platform.startswith("win") else "emulator"
+    return os.path.join(sdk_path, "emulator", emulator)
+
+
 def ensure_dir(dir):
     """Ensures the given directory exists"""
     if dir and not os.path.exists(dir):
@@ -223,6 +234,7 @@ def ensure_android(
     system_images_only=False,
     emulator_only=False,
     avd_manifest_path=None,
+    prewarm_avd=False,
     no_interactive=False,
 ):
     """
@@ -279,10 +291,14 @@ def ensure_android(
 
     ensure_android_avd(
         avdmanager_tool=avdmanager_tool(sdk_path),
+        adb_tool=adb_tool(sdk_path),
+        emulator_tool=emulator_tool(sdk_path),
         avd_path=avd_path,
         sdk_path=sdk_path,
+        emulator_path=emulator_path,
         no_interactive=no_interactive,
         avd_manifest=avd_manifest,
+        prewarm_avd=prewarm_avd,
     )
 
 
@@ -351,7 +367,15 @@ def get_packages_to_install(packages_file_content, avd_manifest):
 
 
 def ensure_android_avd(
-    avdmanager_tool, avd_path, sdk_path, no_interactive=False, avd_manifest=None
+    avdmanager_tool,
+    adb_tool,
+    emulator_tool,
+    avd_path,
+    sdk_path,
+    emulator_path,
+    no_interactive=False,
+    avd_manifest=None,
+    prewarm_avd=False,
 ):
     """
     Use the given sdkmanager tool (like 'sdkmanager') to install required
@@ -406,6 +430,47 @@ def ensure_android_avd(
         raise NotImplementedError(
             "Could not find config file at %s, something went wrong" % config_file_name
         )
+    if prewarm_avd:
+        run_prewarm_avd(
+            adb_tool, emulator_tool, env, avd_name, avd_manifest, no_interactive
+        )
+
+
+def run_prewarm_avd(
+    adb_tool, emulator_tool, env, avd_name, avd_manifest, no_interactive=False
+):
+    """
+    Ensures the emulator is fully booted to save time on future iterations.
+    """
+    args = [emulator_tool, "-avd", avd_name] + avd_manifest["emulator_extra_args"]
+
+    # Flush outputs before running emulator.
+    sys.stdout.flush()
+    proc = subprocess.Popen(args, env=env)
+
+    booted = False
+    for i in range(100):
+        boot_completed_cmd = [adb_tool, "shell", "getprop", "sys.boot_completed"]
+        completed_proc = subprocess.Popen(
+            boot_completed_cmd, env=env, stdout=subprocess.PIPE
+        )
+        try:
+            out, err = completed_proc.communicate(timeout=30)
+            boot_completed = out.decode("UTF-8").strip()
+            print("sys.boot_completed = %s" % boot_completed)
+            time.sleep(30)
+            if boot_completed == "1":
+                booted = True
+                break
+        except subprocess.TimeoutExpired:
+            # Sometimes the adb command hangs, that's ok
+            print("sys.boot_completed = Timeout")
+
+    if not booted:
+        raise NotImplementedError("Could not prewarm emulator")
+
+    # We can kill the emulator now
+    proc.terminate()
 
 
 def ensure_android_packages(
@@ -541,6 +606,12 @@ def main(argv):
         dest="avd_manifest_path",
         help="If present, generate AVD from the manifest pointed by this argument.",
     )
+    parser.add_option(
+        "--prewarm-avd",
+        dest="prewarm_avd",
+        action="store_true",
+        help="If true, boot the AVD and wait until completed to speed up subsequent boots.",
+    )
 
     options, _ = parser.parse_args(argv)
 
@@ -570,6 +641,7 @@ def main(argv):
         system_images_only=options.system_images_only,
         emulator_only=options.emulator_only,
         avd_manifest_path=options.avd_manifest_path,
+        prewarm_avd=options.prewarm_avd,
         no_interactive=options.no_interactive,
     )
     mozconfig = generate_mozconfig(os_name, options.artifact_mode)
