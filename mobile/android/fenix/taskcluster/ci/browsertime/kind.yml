@@ -110,7 +110,7 @@ jobs:
             - wikipedia
             - booking
             - [cnn-ampstories, cnn-amp]
-            - bbc
+            - dailymail
             - imdb
             - [facebook-cristiano, fb-cris]
             - youtube
@@ -118,8 +118,8 @@ jobs:
             - [ebay-kleinanzeigen, ebay-k]
             - [google-maps, gmaps]
             - reddit
+            - sina
             - [stackoverflow, stacko]
-            - jianshu
             - web-de
             - cnn
             - [google-search-restaurants, gsearch-r]
