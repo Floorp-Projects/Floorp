@@ -5,13 +5,13 @@
 package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.LastAccessAction
+import mozilla.components.browser.state.action.LastAccessAction.ResetLastMediaAccessAction
 import mozilla.components.browser.state.action.LastAccessAction.UpdateLastAccessAction
 import mozilla.components.browser.state.action.LastAccessAction.UpdateLastMediaAccessAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 
 internal object LastAccessReducer {
-
     /**
      * [LastAccessAction] Reducer function for modifying [TabSessionState.lastAccess] state.
      */
@@ -25,7 +25,22 @@ internal object LastAccessReducer {
         is UpdateLastMediaAccessAction -> {
             state.updateTabState(action.tabId) { sessionState ->
                 val tabSessionState = sessionState as TabSessionState
-                tabSessionState.copy(lastMediaAccess = action.lastMediaAccess)
+                tabSessionState.copy(
+                    lastMediaAccessState = tabSessionState.lastMediaAccessState.copy(
+                        lastMediaUrl = sessionState.content.url,
+                        lastMediaAccess = action.lastMediaAccess
+                    )
+                )
+            }
+        }
+        is ResetLastMediaAccessAction -> {
+            state.updateTabState(action.tabId) { sessionState ->
+                val tabSessionState = sessionState as TabSessionState
+                tabSessionState.copy(
+                    lastMediaAccessState = tabSessionState.lastMediaAccessState.copy(
+                        lastMediaAccess = 0
+                    )
+                )
             }
         }
     }

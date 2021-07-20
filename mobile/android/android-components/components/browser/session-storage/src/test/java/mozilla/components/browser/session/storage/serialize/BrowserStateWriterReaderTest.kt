@@ -9,6 +9,7 @@ import android.util.JsonReader
 import android.util.JsonWriter
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.EngineState
+import mozilla.components.browser.state.state.LastMediaAccessState
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
@@ -155,7 +156,7 @@ class BrowserStateWriterReaderTest {
             url = "https://www.mozilla.org",
             title = "Mozilla",
             contextId = "work",
-            lastMediaAccess = 333L
+            lastMediaAccessState = LastMediaAccessState(lastMediaAccess = 333L)
         )
 
         val writer = BrowserStateWriter()
@@ -170,7 +171,7 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
-        assertEquals(333L, restoredTab.lastMediaAccess)
+        assertEquals(333L, restoredTab.lastMediaAccessState.lastMediaAccess)
     }
 }
 

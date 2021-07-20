@@ -7,6 +7,7 @@ package mozilla.components.feature.media.middleware
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.LastMediaAccessState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
@@ -19,13 +20,14 @@ class LastMediaAccessMiddlewareTest {
 
     @Test
     fun `GIVEN a normal tab WHEN media started playing THEN then lastMediaAccess is updated`() {
-        val tabId = "42"
+        val mediaTabId = "42"
+        val mediaTabUrl = "https://mozilla.org/2"
         val browserState = BrowserState(
             tabs = listOf(
                 TabSessionState(content = ContentState("https://mozilla.org/1", private = true)),
                 TabSessionState(
-                    content = ContentState("https://mozilla.org/2", private = false),
-                    id = tabId
+                    content = ContentState(mediaTabUrl, private = false),
+                    id = mediaTabId
                 ),
                 TabSessionState(content = ContentState("https://mozilla.org/3", private = false))
             )
@@ -36,22 +38,27 @@ class LastMediaAccessMiddlewareTest {
         )
 
         store
-            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(tabId, MediaSession.PlaybackState.PLAYING))
+            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(mediaTabId, MediaSession.PlaybackState.PLAYING))
             .joinBlocking()
 
-        val updatesLastMediaAccess = store.state.tabs[1].lastMediaAccess
-        assertTrue("expected lastMediaAccess ($updatesLastMediaAccess) > 0", updatesLastMediaAccess > 0)
+        val updatedMediaState = store.state.tabs[1].lastMediaAccessState
+        assertTrue(
+            "expected lastMediaAccess (${updatedMediaState.lastMediaAccess}) > 0",
+            updatedMediaState.lastMediaAccess > 0
+        )
+        assertEquals(mediaTabUrl, updatedMediaState.lastMediaUrl)
     }
 
     @Test
     fun `GIVEN a private tab WHEN media started playing THEN then lastMediaAccess is updated`() {
-        val tabId = "43"
+        val mediaTabId = "43"
+        val mediaTabUrl = "https://mozilla.org/2"
         val browserState = BrowserState(
             tabs = listOf(
                 TabSessionState(content = ContentState("https://mozilla.org/1", private = true)),
                 TabSessionState(
-                    content = ContentState("https://mozilla.org/2", private = true),
-                    id = tabId
+                    content = ContentState(mediaTabUrl, private = true),
+                    id = mediaTabId
                 ),
                 TabSessionState(content = ContentState("https://mozilla.org/3", private = false))
             )
@@ -62,22 +69,27 @@ class LastMediaAccessMiddlewareTest {
         )
 
         store
-            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(tabId, MediaSession.PlaybackState.PLAYING))
+            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(mediaTabId, MediaSession.PlaybackState.PLAYING))
             .joinBlocking()
 
-        val updatesLastMediaAccess = store.state.tabs[1].lastMediaAccess
-        assertTrue("expected lastMediaAccess ($updatesLastMediaAccess) > 0", updatesLastMediaAccess > 0)
+        val updatedMediaState = store.state.tabs[1].lastMediaAccessState
+        assertTrue(
+            "expected lastMediaAccess (${updatedMediaState.lastMediaAccess}) > 0",
+            updatedMediaState.lastMediaAccess > 0
+        )
+        assertEquals(mediaTabUrl, updatedMediaState.lastMediaUrl)
     }
 
     @Test
     fun `GIVEN a normal tab WHEN media is paused THEN then lastMediaAccess is not changed`() {
-        val tabId = "42"
+        val mediaTabId = "42"
+        val mediaTabUrl = "https://mozilla.org/2"
         val browserState = BrowserState(
             tabs = listOf(
                 TabSessionState(
-                    content = ContentState("https://mozilla.org/2", private = false),
-                    id = tabId,
-                    lastMediaAccess = 222
+                    content = ContentState(mediaTabUrl, private = false),
+                    id = mediaTabId,
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222)
                 )
             )
         )
@@ -87,21 +99,22 @@ class LastMediaAccessMiddlewareTest {
         )
 
         store
-            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(tabId, MediaSession.PlaybackState.PAUSED))
+            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(mediaTabId, MediaSession.PlaybackState.PAUSED))
             .joinBlocking()
 
-        assertEquals(222, store.state.tabs[0].lastMediaAccess)
+        assertEquals(222, store.state.tabs[0].lastMediaAccessState.lastMediaAccess)
     }
 
     @Test
     fun `GIVEN a private tab WHEN media is paused THEN then lastMediaAccess is not changed`() {
-        val tabId = "43"
+        val mediaTabId = "43"
+        val mediaTabUrl = "https://mozilla.org/2"
         val browserState = BrowserState(
             tabs = listOf(
                 TabSessionState(
-                    content = ContentState("https://mozilla.org/2", private = true),
-                    id = tabId,
-                    lastMediaAccess = 333
+                    content = ContentState(mediaTabUrl, private = true),
+                    id = mediaTabId,
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333)
                 )
             )
         )
@@ -111,21 +124,22 @@ class LastMediaAccessMiddlewareTest {
         )
 
         store
-            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(tabId, MediaSession.PlaybackState.PAUSED))
+            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(mediaTabId, MediaSession.PlaybackState.PAUSED))
             .joinBlocking()
 
-        assertEquals(333, store.state.tabs[0].lastMediaAccess)
+        assertEquals(333, store.state.tabs[0].lastMediaAccessState.lastMediaAccess)
     }
 
     @Test
     fun `GIVEN a normal tab WHEN media is stopped THEN then lastMediaAccess is not changed`() {
-        val tabId = "42"
+        val mediaTabId = "42"
+        val mediaTabUrl = "https://mozilla.org/2"
         val browserState = BrowserState(
             tabs = listOf(
                 TabSessionState(
-                    content = ContentState("https://mozilla.org/2", private = false),
-                    id = tabId,
-                    lastMediaAccess = 222
+                    content = ContentState(mediaTabUrl, private = false),
+                    id = mediaTabId,
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222)
                 )
             )
         )
@@ -135,21 +149,22 @@ class LastMediaAccessMiddlewareTest {
         )
 
         store
-            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(tabId, MediaSession.PlaybackState.STOPPED))
+            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(mediaTabId, MediaSession.PlaybackState.STOPPED))
             .joinBlocking()
 
-        assertEquals(222, store.state.tabs[0].lastMediaAccess)
+        assertEquals(222, store.state.tabs[0].lastMediaAccessState.lastMediaAccess)
     }
 
     @Test
     fun `GIVEN a private tab WHEN media is stopped THEN then lastMediaAccess is not changed`() {
-        val tabId = "43"
+        val mediaTabId = "43"
+        val mediaTabUrl = "https://mozilla.org/2"
         val browserState = BrowserState(
             tabs = listOf(
                 TabSessionState(
-                    content = ContentState("https://mozilla.org/2", private = true),
-                    id = tabId,
-                    lastMediaAccess = 333
+                    content = ContentState(mediaTabUrl, private = true),
+                    id = mediaTabId,
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333)
                 )
             )
         )
@@ -159,21 +174,22 @@ class LastMediaAccessMiddlewareTest {
         )
 
         store
-            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(tabId, MediaSession.PlaybackState.STOPPED))
+            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(mediaTabId, MediaSession.PlaybackState.STOPPED))
             .joinBlocking()
 
-        assertEquals(333, store.state.tabs[0].lastMediaAccess)
+        assertEquals(333, store.state.tabs[0].lastMediaAccessState.lastMediaAccess)
     }
 
     @Test
     fun `GIVEN a normal tab WHEN media status is unknown THEN then lastMediaAccess is not changed`() {
-        val tabId = "42"
+        val mediaTabId = "42"
+        val mediaTabUrl = "https://mozilla.org/2"
         val browserState = BrowserState(
             tabs = listOf(
                 TabSessionState(
-                    content = ContentState("https://mozilla.org/2", private = false),
-                    id = tabId,
-                    lastMediaAccess = 222
+                    content = ContentState(mediaTabUrl, private = false),
+                    id = mediaTabId,
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222)
                 )
             )
         )
@@ -183,21 +199,22 @@ class LastMediaAccessMiddlewareTest {
         )
 
         store
-            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(tabId, MediaSession.PlaybackState.UNKNOWN))
+            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(mediaTabId, MediaSession.PlaybackState.UNKNOWN))
             .joinBlocking()
 
-        assertEquals(222, store.state.tabs[0].lastMediaAccess)
+        assertEquals(222, store.state.tabs[0].lastMediaAccessState.lastMediaAccess)
     }
 
     @Test
     fun `GIVEN a private tab WHEN media status is unknown THEN then lastMediaAccess is not changed`() {
-        val tabId = "43"
+        val mediaTabId = "43"
+        val mediaTabUrl = "https://mozilla.org/2"
         val browserState = BrowserState(
             tabs = listOf(
                 TabSessionState(
-                    content = ContentState("https://mozilla.org/2", private = true),
-                    id = tabId,
-                    lastMediaAccess = 333
+                    content = ContentState(mediaTabUrl, private = true),
+                    id = mediaTabId,
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333)
                 )
             )
         )
@@ -207,21 +224,22 @@ class LastMediaAccessMiddlewareTest {
         )
 
         store
-            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(tabId, MediaSession.PlaybackState.UNKNOWN))
+            .dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(mediaTabId, MediaSession.PlaybackState.UNKNOWN))
             .joinBlocking()
 
-        assertEquals(333, store.state.tabs[0].lastMediaAccess)
+        assertEquals(333, store.state.tabs[0].lastMediaAccessState.lastMediaAccess)
     }
 
     @Test
     fun `GIVEN lastMediaAccess is set for a normal tab WHEN media session is deactivated THEN reset lastMediaAccess to 0`() {
-        val tabId = "42"
+        val mediaTabId = "42"
+        val mediaTabUrl = "https://mozilla.org/2"
         val browserState = BrowserState(
             tabs = listOf(
                 TabSessionState(
-                    content = ContentState("https://mozilla.org/2", private = false),
-                    id = tabId,
-                    lastMediaAccess = 222
+                    content = ContentState(mediaTabUrl, private = false),
+                    id = mediaTabId,
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222)
                 )
             )
         )
@@ -231,21 +249,22 @@ class LastMediaAccessMiddlewareTest {
         )
 
         store
-            .dispatch(MediaSessionAction.DeactivatedMediaSessionAction(tabId))
+            .dispatch(MediaSessionAction.DeactivatedMediaSessionAction(mediaTabId))
             .joinBlocking()
 
-        assertEquals(0, store.state.tabs[0].lastMediaAccess)
+        assertEquals(0, store.state.tabs[0].lastMediaAccessState.lastMediaAccess)
     }
 
     @Test
     fun `GIVEN lastMediaAccess is set for a private tab WHEN media session is deactivated THEN reset lastMediaAccess to 0`() {
-        val tabId = "43"
+        val mediaTabId = "43"
+        val mediaTabUrl = "https://mozilla.org/2"
         val browserState = BrowserState(
             tabs = listOf(
                 TabSessionState(
-                    content = ContentState("https://mozilla.org/2", private = true),
-                    id = tabId,
-                    lastMediaAccess = 333
+                    content = ContentState(mediaTabUrl, private = true),
+                    id = mediaTabId,
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333)
                 )
             )
         )
@@ -255,9 +274,9 @@ class LastMediaAccessMiddlewareTest {
         )
 
         store
-            .dispatch(MediaSessionAction.DeactivatedMediaSessionAction(tabId))
+            .dispatch(MediaSessionAction.DeactivatedMediaSessionAction(mediaTabId))
             .joinBlocking()
 
-        assertEquals(0, store.state.tabs[0].lastMediaAccess)
+        assertEquals(0, store.state.tabs[0].lastMediaAccessState.lastMediaAccess)
     }
 }

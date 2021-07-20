@@ -244,17 +244,24 @@ sealed class LastAccessAction : BrowserAction() {
     ) : LastAccessAction()
 
     /**
-     * Updates [TabSessionState.lastMediaAccess] for when media started playing in the tab identified by [tabId]
-     * or [MediaSession] is destroyed
+     * Updates [TabSessionState.lastMediaAccessState] for when media started playing in the tab identified by [tabId].
      *
      * @property tabId the ID of the tab to update.
      * @property lastMediaAccess the value to signify when the tab last started playing media.
      * Defaults to [System.currentTimeMillis].
-     * Use [0] to indicate media state of the current tab is reset (eg: when web document changed).
      */
     data class UpdateLastMediaAccessAction(
         val tabId: String,
         val lastMediaAccess: Long = System.currentTimeMillis()
+    ) : LastAccessAction()
+
+    /**
+     * Updates [TabSessionState.lastMediaAccessState] when the media session of this tab is deactivated.
+     *
+     * @property tabId the ID of the tab to update.
+     */
+    data class ResetLastMediaAccessAction(
+        val tabId: String
     ) : LastAccessAction()
 }
 

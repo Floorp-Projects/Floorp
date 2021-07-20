@@ -26,8 +26,7 @@ import java.util.UUID
  * @property readerState the [ReaderState] of this tab.
  * @property contextId the session context ID of this tab.
  * @property lastAccess The last time this tab was selected (requires LastAccessMiddleware).
- * @property lastMediaAccess The last time media started playing in the current web document.
- * Defaults to [0] if media hasn't started playing.
+ * @property lastMediaAccessState - [LastMediaAccessState] detailing the tab state when media started playing.
  * Requires [LastMediaAccessMiddleware] to update the value when playback starts.
  */
 data class TabSessionState(
@@ -41,7 +40,7 @@ data class TabSessionState(
     override val source: SessionState.Source = SessionState.Source.NONE,
     val parentId: String? = null,
     val lastAccess: Long = 0L,
-    val lastMediaAccess: Long = 0L,
+    val lastMediaAccessState: LastMediaAccessState = LastMediaAccessState(),
     val readerState: ReaderState = ReaderState(),
     val historyMetadata: HistoryMetadataKey? = null
 ) : SessionState {
@@ -81,7 +80,7 @@ fun createTab(
     thumbnail: Bitmap? = null,
     contextId: String? = null,
     lastAccess: Long = 0L,
-    lastMediaAccess: Long = 0L,
+    lastMediaAccessState: LastMediaAccessState = LastMediaAccessState(),
     source: SessionState.Source = SessionState.Source.NONE,
     engineSession: EngineSession? = null,
     engineSessionState: EngineSessionState? = null,
@@ -107,7 +106,7 @@ fun createTab(
         readerState = readerState,
         contextId = contextId,
         lastAccess = lastAccess,
-        lastMediaAccess = lastMediaAccess,
+        lastMediaAccessState = lastMediaAccessState,
         source = source,
         engineState = EngineState(
             engineSession = engineSession,

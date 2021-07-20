@@ -14,8 +14,9 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 
 /**
- * [Middleware] that updates [TabSessionState.lastMediaAccess] everytime the user start playing media
- * or navigates to another page in the last tab that was playing media.
+ * [Middleware] that updates [TabSessionState.lastMediaAccessState] everytime the user starts playing media or
+ * the [MediaSession] gets deactivated as when the user navigates to other URL or starts playing media
+ * in another tab.
  */
 class LastMediaAccessMiddleware : Middleware<BrowserState, BrowserAction> {
     @Suppress("ComplexCondition")
@@ -31,7 +32,7 @@ class LastMediaAccessMiddleware : Middleware<BrowserState, BrowserAction> {
         ) {
             context.dispatch(LastAccessAction.UpdateLastMediaAccessAction(action.tabId))
         } else if (action is MediaSessionAction.DeactivatedMediaSessionAction) {
-            context.dispatch(LastAccessAction.UpdateLastMediaAccessAction(action.tabId, 0))
+            context.dispatch(LastAccessAction.ResetLastMediaAccessAction(action.tabId))
         }
     }
 }

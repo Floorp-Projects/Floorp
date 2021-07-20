@@ -18,3 +18,11 @@ internal fun TabSessionState.toTab() = Tab(
     mediaSessionState?.controller,
     lastAccess
 )
+
+/**
+ * Check whether this tab has played media before - any media which started playing in this HTML document,
+ * irrespective of it's current state (eg: playing, paused, stopped).
+ */
+fun TabSessionState.hasMediaPlayed(): Boolean {
+    return (lastMediaAccessState.lastMediaUrl == content.url) || lastMediaAccessState.lastMediaAccess > 0
+}

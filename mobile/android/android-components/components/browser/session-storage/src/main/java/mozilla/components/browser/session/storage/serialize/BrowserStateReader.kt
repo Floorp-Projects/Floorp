@@ -9,6 +9,7 @@ import android.util.JsonReader
 import android.util.JsonToken
 import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.LastMediaAccessState
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.RecoverableTab
@@ -218,6 +219,6 @@ private fun JsonReader.tabSession(): RecoverableTab? {
         },
         private = false, // We never serialize private sessions
         lastAccess = lastAccess ?: 0,
-        lastMediaAccess = lastMediaAccess ?: 0
+        lastMediaAccessState = LastMediaAccessState(lastMediaAccess = lastMediaAccess ?: 0)
     )
 }

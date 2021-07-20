@@ -92,7 +92,7 @@ private fun JsonWriter.tab(
         value(tab.lastAccess)
 
         name(Keys.SESSION_LAST_MEDIA_ACCESS)
-        value(tab.lastMediaAccess)
+        value(tab.lastMediaAccessState.lastMediaAccess)
 
         if (tab.readerState.active && tab.readerState.activeUrl != null) {
             name(Keys.SESSION_READER_MODE_ACTIVE_URL_KEY)
