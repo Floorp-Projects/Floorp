@@ -250,14 +250,22 @@ LoadInfo::LoadInfo(
         (nsContentUtils::IsPreloadType(mInternalContentPolicyType) &&
          aLoadingContext->OwnerDoc()->GetBlockAllMixedContent(true));
 
-    // if the document forces all requests to be upgraded from http to https,
-    // then we should do that for all requests. If it only forces preloads to be
-    // upgraded then we should enforce upgrade insecure requests only for
-    // preloads.
-    mUpgradeInsecureRequests =
-        aLoadingContext->OwnerDoc()->GetUpgradeInsecureRequests(false) ||
-        (nsContentUtils::IsPreloadType(mInternalContentPolicyType) &&
-         aLoadingContext->OwnerDoc()->GetUpgradeInsecureRequests(true));
+    if (mLoadingPrincipal && BasePrincipal::Cast(mTriggeringPrincipal)
+                                 ->OverridesCSP(mLoadingPrincipal)) {
+      // if the load is triggered by an addon which potentially overrides the
+      // CSP of the document, then do not force insecure requests to be
+      // upgraded.
+      mUpgradeInsecureRequests = false;
+    } else {
+      // if the document forces all requests to be upgraded from http to https,
+      // then we should do that for all requests. If it only forces preloads to
+      // be upgraded then we should enforce upgrade insecure requests only for
+      // preloads.
+      mUpgradeInsecureRequests =
+          aLoadingContext->OwnerDoc()->GetUpgradeInsecureRequests(false) ||
+          (nsContentUtils::IsPreloadType(mInternalContentPolicyType) &&
+           aLoadingContext->OwnerDoc()->GetUpgradeInsecureRequests(true));
+    }
 
     if (nsContentUtils::IsUpgradableDisplayType(externalType)) {
       if (mLoadingPrincipal->SchemeIs("https")) {
@@ -485,11 +493,19 @@ LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
   // store that bit for all requests on the loadinfo.
   mBlockAllMixedContent = aParentWGP->GetDocumentBlockAllMixedContent();
 
-  // if the document forces all requests to be upgraded from http to https,
-  // then we should do that for all requests. If it only forces preloads to be
-  // upgraded then we should enforce upgrade insecure requests only for
-  // preloads.
-  mUpgradeInsecureRequests = aParentWGP->GetDocumentUpgradeInsecureRequests();
+  if (mTopLevelPrincipal && BasePrincipal::Cast(mTriggeringPrincipal)
+                                ->OverridesCSP(mTopLevelPrincipal)) {
+    // if the load is triggered by an addon which potentially overrides the
+    // CSP of the document, then do not force insecure requests to be
+    // upgraded.
+    mUpgradeInsecureRequests = false;
+  } else {
+    // if the document forces all requests to be upgraded from http to https,
+    // then we should do that for all requests. If it only forces preloads to
+    // be upgraded then we should enforce upgrade insecure requests only for
+    // preloads.
+    mUpgradeInsecureRequests = aParentWGP->GetDocumentUpgradeInsecureRequests();
+  }
   mOriginAttributes = mLoadingPrincipal->OriginAttributesRef();
 
   // We need to do this after inheriting the document's origin attributes
