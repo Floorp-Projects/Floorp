@@ -159,12 +159,14 @@ void HTMLSlotElement::InsertAssignedNode(uint32_t aIndex, nsIContent& aNode) {
   MOZ_ASSERT(!aNode.GetAssignedSlot(), "Losing track of a slot");
   mAssignedNodes.InsertElementAt(aIndex, &aNode);
   aNode.SetAssignedSlot(this);
+  SlotAssignedNodeChanged(this, aNode);
 }
 
 void HTMLSlotElement::AppendAssignedNode(nsIContent& aNode) {
   MOZ_ASSERT(!aNode.GetAssignedSlot(), "Losing track of a slot");
   mAssignedNodes.AppendElement(&aNode);
   aNode.SetAssignedSlot(this);
+  SlotAssignedNodeChanged(this, aNode);
 }
 
 void HTMLSlotElement::RemoveAssignedNode(nsIContent& aNode) {
@@ -174,6 +176,7 @@ void HTMLSlotElement::RemoveAssignedNode(nsIContent& aNode) {
              "How exactly?");
   mAssignedNodes.RemoveElement(&aNode);
   aNode.SetAssignedSlot(nullptr);
+  SlotAssignedNodeChanged(this, aNode);
 }
 
 void HTMLSlotElement::ClearAssignedNodes() {
