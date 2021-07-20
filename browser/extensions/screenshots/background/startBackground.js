@@ -88,8 +88,9 @@ this.startBackground = (function() {
       .then(() => {
         browser.tabs
           .query({ currentWindow: true, active: true })
-          .then(tabs => {
+          .then(async tabs => {
             const activeTab = tabs[0];
+            zoomFactor = await browser.tabs.getZoom(activeTab.id);
             main.onCommand(activeTab);
           })
           .catch(error => {
