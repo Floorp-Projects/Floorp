@@ -146,8 +146,9 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
   nsCOMPtr<nsINode> target = textControl ? textControl : aDoc;
 
   if (target) {
+    CanBubble canBubble = textControl ? CanBubble::eYes : CanBubble::eNo;
     RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(target, eSelectionChange, CanBubble::eNo);
+        new AsyncEventDispatcher(target, eSelectionChange, canBubble);
     asyncDispatcher->PostDOMEvent();
   }
 }
