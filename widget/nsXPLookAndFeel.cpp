@@ -1095,6 +1095,10 @@ uint32_t LookAndFeel::GetPasswordMaskDelay() {
   return delay;
 }
 
+void LookAndFeel::GetThemeInfo(nsACString& aOut) {
+  nsLookAndFeel::GetInstance()->GetThemeInfo(aOut);
+}
+
 // static
 void LookAndFeel::Refresh() {
   nsLookAndFeel::GetInstance()->RefreshImpl();

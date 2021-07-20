@@ -1810,6 +1810,12 @@ char16_t nsLookAndFeel::GetPasswordCharacterImpl() {
 
 bool nsLookAndFeel::GetEchoPasswordImpl() { return false; }
 
+void nsLookAndFeel::GetThemeInfo(nsACString& aInfo) {
+  aInfo.Append(mSystemTheme.mName);
+  aInfo.Append(" / ");
+  aInfo.Append(mAltTheme.mName);
+}
+
 bool nsLookAndFeel::WidgetUsesImage(WidgetNodeType aNodeType) {
   static constexpr GtkStateFlags sFlagsToCheck[]{
       GTK_STATE_FLAG_NORMAL, GTK_STATE_FLAG_PRELIGHT,
