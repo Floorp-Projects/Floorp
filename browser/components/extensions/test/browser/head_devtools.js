@@ -78,19 +78,9 @@ async function openToolboxForTab(tab, panelId = TOOLBOX_BLANK_PANEL_ID) {
 }
 
 async function closeToolboxForTab(tab) {
-  const toolbox = await gDevTools.getToolboxForTab(tab);
-  const target = toolbox.target;
-  const { url, outerWindowID } = target.form;
-
   await gDevTools.closeToolboxForTab(tab);
-  await target.destroy();
-
-  info(
-    `Developer toolbox closed for target ${JSON.stringify({
-      url,
-      outerWindowID,
-    })}`
-  );
+  const tabUrl = tab.linkedBrowser.currentURI.spec;
+  info(`Developer toolbox closed for tab "${tabUrl}"`);
 }
 
 function assertDevToolsExtensionEnabled(uuid, enabled) {
