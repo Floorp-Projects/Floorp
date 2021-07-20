@@ -22,6 +22,8 @@ class ScreenGetter {
  public:
   ScreenGetter() = default;
   virtual ~ScreenGetter(){};
+
+  virtual void RefreshScreens(){};
 };
 
 class ScreenGetterGtk : public ScreenGetter {
@@ -43,15 +45,45 @@ class ScreenGetterGtk : public ScreenGetter {
 #endif
 };
 
+class ScreenGetterWayland;
+
+struct MonitorConfig {
+  int id = 0;
+  int x = 0;
+  int y = 0;
+  int width_mm = 0;
+  int height_mm = 0;
+  int width = 0;
+  int height = 0;
+  int scale = 0;
+
+ public:
+  MonitorConfig(int aId) : id(aId){};
+};
+
+class ScreenGetterWayland : public ScreenGetter {
+ public:
+  ScreenGetterWayland();
+  ~ScreenGetterWayland();
+
+  MonitorConfig* AddMonitorConfig(int aId);
+  bool RemoveMonitorConfig(int aId);
+  already_AddRefed<Screen> MakeScreenWayland(gint aMonitorNum);
+
+  // For internal use from signal callback functions
+  void RefreshScreens();
+
+ private:
+  void* mRegistry;
+  AutoTArray<MonitorConfig, 4> mMonitors;
+};
+
 class ScreenHelperGTK final : public ScreenManager::Helper {
  public:
   ScreenHelperGTK();
-  ~ScreenHelperGTK() = default;
+  ~ScreenHelperGTK();
 
   static gint GetGTKMonitorScaleFactor(gint aMonitorNum = 0);
-
- private:
-  UniquePtr<ScreenGetter> mGetter;
 };
 
 }  // namespace widget
