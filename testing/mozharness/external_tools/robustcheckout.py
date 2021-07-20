@@ -41,7 +41,7 @@ from mercurial import (
 # Causes worker to purge caches on process exit and for task to retry.
 EXIT_PURGE_CACHE = 72
 
-testedwith = b"4.5 4.6 4.7 4.8 4.9 5.0 5.1 5.2 5.3 5.4 5.5"
+testedwith = b"4.5 4.6 4.7 4.8 4.9 5.0 5.1 5.2 5.3 5.4 5.5 5.6 5.7 5.8"
 minimumhgversion = b"4.5"
 
 cmdtable = {}
@@ -709,7 +709,9 @@ def _docheckout(
     # guaranteed to not have conflicts on `hg update`.
     if purge and not created:
         ui.write(b"(purging working directory)\n")
-        purgeext = extensions.find(b"purge")
+        purge = getattr(commands, "purge", None)
+        if not purge:
+            purge = extensions.find(b"purge").purge
 
         # Mercurial 4.3 doesn't purge files outside the sparse checkout.
         # See https://bz.mercurial-scm.org/show_bug.cgi?id=5626. Force
@@ -727,7 +729,7 @@ def _docheckout(
                     )
 
             with timeit("purge", "purge"):
-                if purgeext.purge(
+                if purge(
                     ui,
                     repo,
                     all=True,
