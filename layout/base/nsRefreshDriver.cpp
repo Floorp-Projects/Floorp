@@ -2885,6 +2885,8 @@ void nsRefreshDriver::Disconnect() {
 
   StopTimer();
 
+  mEarlyRunners.Clear();
+
   if (mPresContext) {
     mPresContext = nullptr;
     if (--sRefreshDriverCount == 0) {
