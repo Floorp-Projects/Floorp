@@ -65,6 +65,7 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   virtual void NativeInit() = 0;
 
   virtual void GetGtkContentTheme(LookAndFeelTheme&) {}
+  virtual void GetThemeInfo(nsACString&) {}
 
  protected:
   nsXPLookAndFeel() = default;

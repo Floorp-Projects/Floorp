@@ -538,6 +538,9 @@ class LookAndFeel {
    */
   static uint32_t GetPasswordMaskDelay();
 
+  /** Gets theme information for about:support */
+  static void GetThemeInfo(nsACString&);
+
   /**
    * When system look and feel is changed, Refresh() must be called.  Then,
    * cached data would be released.

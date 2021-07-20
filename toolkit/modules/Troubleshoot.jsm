@@ -230,8 +230,10 @@ var dataProviders = {
       );
     } catch (e) {}
 
-    // MacOSX: Check for rosetta status, if it exists
+    data.osTheme = Services.sysinfo.getProperty("osThemeInfo");
+
     try {
+      // MacOSX: Check for rosetta status, if it exists
       data.rosetta = Services.sysinfo.getProperty("rosettaStatus");
     } catch (e) {}
 

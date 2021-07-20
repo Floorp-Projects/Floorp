@@ -38,6 +38,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   void InitializeAltTheme();
 
   void GetGtkContentTheme(LookAndFeelTheme&) override;
+  void GetThemeInfo(nsACString&) override;
 
   static void ConfigureTheme(const LookAndFeelTheme& aTheme);
 
