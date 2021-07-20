@@ -34,6 +34,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF_USING_AGGREGATOR(CSSFontFaceRuleDecl, ContainingRule())
 NS_IMPL_RELEASE_USING_AGGREGATOR(CSSFontFaceRuleDecl, ContainingRule())
 
+void CSSFontFaceRuleDecl::SetRawAfterClone(RefPtr<RawServoFontFaceRule> aRaw) {
+  mRawRule = std::move(aRaw);
+}
+
 // helper for string GetPropertyValue and RemovePropertyValue
 void CSSFontFaceRuleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
                                            nsACString& aResult) const {
@@ -195,6 +199,10 @@ void CSSFontFaceRule::List(FILE* out, int32_t aIndent) const {
 
 uint16_t CSSFontFaceRule::Type() const {
   return CSSRule_Binding::FONT_FACE_RULE;
+}
+
+void CSSFontFaceRule::SetRawAfterClone(RefPtr<RawServoFontFaceRule> aRaw) {
+  mDecl.SetRawAfterClone(std::move(aRaw));
 }
 
 void CSSFontFaceRule::GetCssText(nsACString& aCssText) const {
