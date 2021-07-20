@@ -122,4 +122,6 @@ gfx/ycbcr/
 hal/
 image/
 ipc/glue/
+mozglue/baseprofiler
 netwerk/cache2/
+tools/profiler
