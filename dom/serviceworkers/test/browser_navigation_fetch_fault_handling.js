@@ -160,6 +160,10 @@ async function do_fault_injection_test({
     );
   }
 
+  // Make sure the test is listening on the ServiceWorker unregistration, since
+  // we expect it happens after navigation fault threshold reached.
+  const unregisteredPromise = waitForUnregister(reg.scope);
+
   // ## Inject faults in a loop until expected mitigation.
   sw.testingInjectCancellation = useError;
   for (let iFault = 0; iFault < FAULTS_BEFORE_MITIGATION; iFault++) {
@@ -189,17 +193,8 @@ async function do_fault_injection_test({
     );
   }
 
-  // The (unregistering) mitigations should have happened now, if they are going
-  // to happen.
-
-  // INITIALLY THERE ARE NO MITIGATIONS, SO WE ARE EXPECTING FAILURES (which we
-  // explicitly encode into the tests).  THE NEXT PATCHES WILL CHANGE THE
-  // EXPECTATIONS.
-
-  // We won't actually have been unregistered, unfortunately.
-  // (When fixed, we will actually instead want to wait for this value to
-  // change, as the unregister process is async.)
-  is(reg.unregistered, false, "registration should still exist.");
+  await unregisteredPromise;
+  is(reg.unregistered, true, "registration should not exist.");
 
   if (consumeQuotaOrigin) {
     // Check that there is no longer any storage usaged by the origin in this

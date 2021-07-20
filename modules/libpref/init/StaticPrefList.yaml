@@ -3135,6 +3135,15 @@
   value: true
   mirror: always
 
+# Additional ServiceWorker navigation mitigation control to unregister the
+# ServiceWorker after multiple faults are encountered. The mitigation is
+# disabled when this is set to zero, otherwise this is the number of faults that
+# need to occur for a specific ServiceWorker before it will be unregistered.
+- name: dom.serviceWorkers.mitigations.navigation_fault_threshold
+  type: uint32_t
+  value: 3
+  mirror: always
+
 - name: dom.serviceWorkers.testing.enabled
   type: RelaxedAtomicBool
   value: false
