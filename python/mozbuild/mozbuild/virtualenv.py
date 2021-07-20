@@ -205,7 +205,7 @@ class VirtualenvManager(VirtualenvHelper):
 
         if env_requirements.pypi_requirements:
             pip_json = self._run_pip(
-                ["list", "--format", "json"], capture_output=True
+                ["list", "--format", "json"], stdout=subprocess.PIPE
             ).stdout
             installed_packages = json.loads(pip_json)
             installed_packages = {
