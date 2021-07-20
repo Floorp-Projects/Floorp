@@ -342,6 +342,30 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ResizeObserverEntry)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+void ResizeObserverEntry::GetBorderBoxSize(
+    nsTArray<RefPtr<ResizeObserverSize>>& aRetVal) const {
+  // In the resize-observer-1 spec, there will only be a single
+  // ResizeObserverSize returned in the FrozenArray for now.
+  //
+  // Note: the usage of FrozenArray is to support elements that have multiple
+  // fragments, which occur in multi-column scenarios.
+  // https://drafts.csswg.org/resize-observer/#resize-observer-entry-interface
+  aRetVal.Clear();
+  aRetVal.AppendElement(mBorderBoxSize);
+}
+
+void ResizeObserverEntry::GetContentBoxSize(
+    nsTArray<RefPtr<ResizeObserverSize>>& aRetVal) const {
+  // In the resize-observer-1 spec, there will only be a single
+  // ResizeObserverSize returned in the FrozenArray for now.
+  //
+  // Note: the usage of FrozenArray is to support elements that have multiple
+  // fragments, which occur in multi-column scenarios.
+  // https://drafts.csswg.org/resize-observer/#resize-observer-entry-interface
+  aRetVal.Clear();
+  aRetVal.AppendElement(mContentBoxSize);
+}
+
 void ResizeObserverEntry::SetBorderBoxSize(const nsSize& aSize) {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
