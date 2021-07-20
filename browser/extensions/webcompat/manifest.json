@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "24.5.0",
+  "version": "24.6.0",
 
   "applications": {
     "gecko": {
@@ -106,6 +106,7 @@
     "shims/google-publisher-tags.js",
     "shims/google-safeframe.html",
     "shims/live-test-shim.js",
+    "shims/moat.js",
     "shims/mochitest-shim-1.js",
     "shims/mochitest-shim-2.js",
     "shims/mochitest-shim-3.js",
