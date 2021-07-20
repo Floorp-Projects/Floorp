@@ -2800,7 +2800,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
     // XXXzpao This should probably be localized
     nsAutoCString desc(aFileExt);
     desc.AppendLiteral(" File");
-    (*_retval)->SetDescription(NS_ConvertUTF8toUTF16(desc));
+    (*_retval)->SetDescription(NS_ConvertASCIItoUTF16(desc));
     LOG(("Falling back to 'File' file description\n"));
   }
 
