@@ -26,16 +26,16 @@ job-defaults:
                 macosx.*:
                     - web_platform_tests/prod_config_mac.py
                 android-em.*:
-                    - android/android-x86_64.py
+                    - android/androidx86_7_0.py
                     - web_platform_tests/prod_config_android.py
                 default:
                     - web_platform_tests/prod_config.py
                     - remove_executables.py
     target:
         by-test-platform:
-            android-em-7.0-x86_64-shippable(-qr|-lite)?/opt: geckoview-androidTest.apk
-            android-em-7.0-x86_64(-qr|-lite)?/opt: geckoview-androidTest.apk
-            android-em-7.0-x86_64(-qr|-lite)?/debug(-isolated-process)?: geckoview-androidTest.apk
+            android-em-7.0-x86_64-shippable(-qr)?/opt: geckoview-androidTest.apk
+            android-em-7.0-x86_64(-qr)?/opt: geckoview-androidTest.apk
+            android-em-7.0-x86_64(-qr)?/debug(-isolated-process)?: geckoview-androidTest.apk
             default: null
     python-3: true
 

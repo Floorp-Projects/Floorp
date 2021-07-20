@@ -14,7 +14,14 @@ from mozboot.linux_common import LinuxBootstrapper
 
 class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
-    PACKAGES = ["clang", "make", "mercurial", "nodejs", "unzip", "zip"]
+    PACKAGES = [
+        "clang",
+        "make",
+        "mercurial",
+        "nodejs",
+        "unzip",
+        "zip",
+    ]
 
     BROWSER_PACKAGES = [
         "dbus-devel",
@@ -77,10 +84,16 @@ class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.ensure_browser_packages(artifact_mode=True)
 
+    def install_mobile_android_packages(self, mozconfig_builder):
+        self.ensure_mobile_android_packages(mozconfig_builder)
+
+    def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
+        self.ensure_mobile_android_packages(mozconfig_builder, artifact_mode=True)
+
     def ensure_browser_packages(self, artifact_mode=False):
         self.xbps_install(*self.browser_packages)
 
-    def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
+    def ensure_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
         # Multi-part process:
         # 1. System packages.
         # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
@@ -88,7 +101,7 @@ class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
         # 2. Android pieces.
         self.ensure_java(mozconfig_builder)
-        super().install_mobile_android_packages(artifact_mode=artifact_mode)
+        super().ensure_mobile_android_packages(artifact_mode=artifact_mode)
 
     def _update_package_manager(self):
         self.xbps_update()
