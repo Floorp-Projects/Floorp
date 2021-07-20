@@ -66,7 +66,7 @@ function step1(event)
   div.style.backgroundColor = "blue";
 }
 
-function step2(event)
+async function step2(event)
 {
   ok(true, "step2 reached: " + print_event(event));
   window.removeEventListener("MozAfterPaint", step2);
@@ -81,7 +81,9 @@ function step2(event)
   // When there was previously another page in our window, we seem to
   // get duplicate events, simultaneously, so we need to register our
   // next listener after a zero timeout.
-  SpecialPowers.pushPrefEnv({'set': [['dom.send_after_paint_to_content', false]]}, function() {setTimeout(step3, 0, timeout);});
+  await SpecialPowers.pushPrefEnv({'set': [['dom.send_after_paint_to_content', false]]});
+  await SpecialPowers.promiseTimeout(0);
+  setTimeout(step3, 0, timeout);
 }
 function step3(timeout)
 {
