@@ -319,6 +319,9 @@ const SNAPSHOT_SCHEMA = {
           required: true,
           type: "string",
         },
+        osTheme: {
+          type: "string",
+        },
         rosetta: {
           required: false,
           type: "boolean",

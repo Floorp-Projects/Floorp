@@ -13,6 +13,7 @@
 #include "mozilla/SSE.h"
 #include "mozilla/arm.h"
 #include "mozilla/LazyIdleThread.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/Sprintf.h"
 #include "jsapi.h"
 #include "js/PropertyAndElement.h"  // JS_SetProperty
@@ -992,6 +993,12 @@ nsresult nsSystemInfo::Init() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 #endif
+
+  {
+    nsAutoCString themeInfo;
+    LookAndFeel::GetThemeInfo(themeInfo);
+    MOZ_TRY(SetPropertyAsACString(u"osThemeInfo"_ns, themeInfo));
+  }
 
 #if defined(MOZ_WIDGET_GTK)
   // This must be done here because NSPR can only separate OS's when compiled,
