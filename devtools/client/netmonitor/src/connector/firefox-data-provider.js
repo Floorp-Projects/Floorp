@@ -14,6 +14,10 @@ const {
   fetchHeaders,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 
+const {
+  getLongStringFullText,
+} = require("devtools/client/shared/string-utils");
+
 /**
  * This object is responsible for fetching additional HTTP
  * data from the backend over RDP protocol.
@@ -289,10 +293,10 @@ class FirefoxDataProvider {
    *         are available, or rejected if something goes wrong.
    */
   async getLongString(stringGrip) {
-    const webConsoleFront = await this.commands.targetCommand.targetFront.getFront(
-      "console"
+    const payload = await getLongStringFullText(
+      this.commands.client,
+      stringGrip
     );
-    const payload = await webConsoleFront.getString(stringGrip);
     this.emitForTests(TEST_EVENTS.LONGSTRING_RESOLVED, { payload });
     return payload;
   }

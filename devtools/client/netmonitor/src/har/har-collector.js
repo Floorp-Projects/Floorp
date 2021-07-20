@@ -5,6 +5,9 @@
 "use strict";
 
 const Services = require("Services");
+const {
+  getLongStringFullText,
+} = require("devtools/client/shared/string-utils");
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
@@ -440,10 +443,6 @@ HarCollector.prototype = {
     }
   },
 
-  async getWebConsoleFront() {
-    return this.commands.targetCommand.targetFront.getFront("console");
-  },
-
   /**
    * Fetches the full text of a string.
    *
@@ -456,8 +455,7 @@ HarCollector.prototype = {
    *         are available, or rejected if something goes wrong.
    */
   getString: async function(stringGrip) {
-    const webConsoleFront = await this.getWebConsoleFront();
-    const promise = webConsoleFront.getString(stringGrip);
+    const promise = getLongStringFullText(this.commands.client, stringGrip);
     this.requests.push(promise);
     return promise;
   },
