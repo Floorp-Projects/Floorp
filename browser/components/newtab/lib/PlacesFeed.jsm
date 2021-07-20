@@ -27,6 +27,11 @@ ChromeUtils.defineModuleGetter(
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 const LINK_BLOCKED_EVENT = "newtab-linkBlocked";
 const PLACES_LINKS_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for places links changed events
@@ -385,14 +390,23 @@ class PlacesFeed {
     });
   }
 
+  _getDefaultSearchEngine(isPrivateWindow) {
+    return Services.search[
+      isPrivateWindow ? "defaultPrivateEngine" : "defaultEngine"
+    ];
+  }
+
   handoffSearchToAwesomebar({ _target, data, meta }) {
+    const searchEngine = this._getDefaultSearchEngine(
+      PrivateBrowsingUtils.isBrowserPrivate(_target.browser)
+    );
     const urlBar = _target.browser.ownerGlobal.gURLBar;
     let isFirstChange = true;
 
     if (!data || !data.text) {
       urlBar.setHiddenFocus();
     } else {
-      urlBar.search(data.text);
+      urlBar.handoff(data.text, searchEngine);
       isFirstChange = false;
     }
 
@@ -403,7 +417,7 @@ class PlacesFeed {
       if (isFirstChange) {
         isFirstChange = false;
         urlBar.removeHiddenFocus(true);
-        urlBar.search("");
+        urlBar.handoff("", searchEngine);
         this.store.dispatch(
           ac.OnlyToOneContent({ type: at.DISABLE_SEARCH }, meta.fromTarget)
         );

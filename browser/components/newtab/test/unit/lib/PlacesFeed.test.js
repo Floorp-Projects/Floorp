@@ -653,7 +653,7 @@ describe("PlacesFeed", () => {
     beforeEach(() => {
       fakeUrlBar = {
         focus: sinon.spy(),
-        search: sinon.spy(),
+        handoff: sinon.spy(),
         setHiddenFocus: sinon.spy(),
         removeHiddenFocus: sinon.spy(),
         addEventListener: (ev, cb) => {
@@ -670,12 +670,12 @@ describe("PlacesFeed", () => {
         meta: { fromTarget: {} },
       });
       assert.calledOnce(fakeUrlBar.setHiddenFocus);
-      assert.notCalled(fakeUrlBar.search);
+      assert.notCalled(fakeUrlBar.handoff);
       assert.notCalled(feed.store.dispatch);
 
       // Now type a character.
       listeners.keydown({ key: "f" });
-      assert.calledOnce(fakeUrlBar.search);
+      assert.calledOnce(fakeUrlBar.handoff);
       assert.calledOnce(fakeUrlBar.removeHiddenFocus);
       assert.calledOnce(feed.store.dispatch);
       assert.calledWith(feed.store.dispatch, {
@@ -694,8 +694,12 @@ describe("PlacesFeed", () => {
         data: { text: "foo" },
         meta: { fromTarget: {} },
       });
-      assert.calledOnce(fakeUrlBar.search);
-      assert.calledWith(fakeUrlBar.search, "foo");
+      assert.calledOnce(fakeUrlBar.handoff);
+      assert.calledWith(
+        fakeUrlBar.handoff,
+        "foo",
+        global.Services.search.defaultEngine
+      );
       assert.notCalled(fakeUrlBar.focus);
       assert.notCalled(fakeUrlBar.setHiddenFocus);
 
@@ -719,8 +723,12 @@ describe("PlacesFeed", () => {
         data: { text: "foo" },
         meta: { fromTarget: {} },
       });
-      assert.calledOnce(fakeUrlBar.search);
-      assert.calledWith(fakeUrlBar.search, "foo");
+      assert.calledOnce(fakeUrlBar.handoff);
+      assert.calledWith(
+        fakeUrlBar.handoff,
+        "foo",
+        global.Services.search.defaultPrivateEngine
+      );
       assert.notCalled(fakeUrlBar.focus);
       assert.notCalled(fakeUrlBar.setHiddenFocus);
 
@@ -744,8 +752,12 @@ describe("PlacesFeed", () => {
         data: { text: "foo" },
         meta: { fromTarget: {} },
       });
-      assert.calledOnce(fakeUrlBar.search);
-      assert.calledWithExactly(fakeUrlBar.search, "foo");
+      assert.calledOnce(fakeUrlBar.handoff);
+      assert.calledWithExactly(
+        fakeUrlBar.handoff,
+        "foo",
+        global.Services.search.defaultEngine
+      );
       assert.notCalled(fakeUrlBar.focus);
 
       // Now call ESC keydown.
