@@ -8,7 +8,9 @@ from pathlib import Path
 import sys
 
 # Shenanigans to import the metrics index's list of metrics.yamls
-FOG_ROOT_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir))
+FOG_ROOT_PATH = path.abspath(
+    path.join(path.dirname(__file__), path.pardir, path.pardir)
+)
 sys.path.append(FOG_ROOT_PATH)
 from metrics_index import metrics_yamls
 

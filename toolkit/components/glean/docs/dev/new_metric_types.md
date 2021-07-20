@@ -64,7 +64,7 @@ documenting the compatibility in
 
 If you add a GIFFT mirror, don't forget to test that the mirror works.
 You should be able to do this by adding a task to
-[`toolkit/components/glean/xpcshell/test_GIFFT.js`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcshell/test_GIFFT.js).
+[`toolkit/components/glean/tests/xpcshell/test_GIFFT.js`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/xpcshell/test_GIFFT.js).
 
 ## Rust
 
@@ -164,14 +164,14 @@ Each metric type has six pieces you'll need to cover:
 Two languages means two test suites.
 
 - Add a never-expiring test-only metric of your type to
-  [`test_metrics.yaml`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/test_metrics.yaml).
+  [`test_metrics.yaml`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/test_metrics.yaml).
     - Feel free to be clever with the name,
       but be sure to make clear that it is test-only.
 - **C++ Tests (GTest)** - Add a small test case to
-  [`gtest/TestFog.cpp`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/gtest/TestFog.cpp).
+  [`gtest/TestFog.cpp`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/gtest/TestFog.cpp).
     - For more details, peruse the [testing docs](testing.md).
 - **JS Tests (xpcshell)** - Add a small test case to
-  [`xpcshell/test_Glean.js`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcshell/test_Glean.js).
+  [`xpcshell/test_Glean.js`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/xpcshell/test_Glean.js).
     - For more details, peruse the [testing docs](testing.md).
 
 ### 7. API Documentation

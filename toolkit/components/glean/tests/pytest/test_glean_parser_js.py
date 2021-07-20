@@ -10,10 +10,12 @@ import sys
 
 from expect_helper import expect
 
-# Shenanigans to import the cpp outputter extension
-FOG_ROOT_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir))
+# Shenanigans to import the js outputter extension
+FOG_ROOT_PATH = path.abspath(
+    path.join(path.dirname(__file__), path.pardir, path.pardir)
+)
 sys.path.append(path.join(FOG_ROOT_PATH, "build_scripts", "glean_parser_ext"))
-import cpp
+import js
 
 # Shenanigans to import the in-tree glean_parser
 GECKO_PATH = path.join(FOG_ROOT_PATH, path.pardir, path.pardir, path.pardir)
@@ -39,10 +41,10 @@ def test_all_metric_types():
     assert not lint.lint_metrics(all_objs.value, options)
 
     output_fd = io.StringIO()
-    cpp.output_cpp(all_objs.value, output_fd, options)
+    js.output_js(all_objs.value, output_fd, options)
 
     expect(
-        path.join(path.dirname(__file__), "metrics_test_output_cpp"),
+        path.join(path.dirname(__file__), "metrics_test_output_js"),
         output_fd.getvalue(),
     )
 
@@ -50,7 +52,7 @@ def test_all_metric_types():
 def test_fake_pings():
     """Another similarly-fragile test.
     It generates C++ for pings_test.yaml, comparing it byte-for-byte
-    with an expected output C++ file `pings_test_output_cpp`.
+    with an expected output C++ file `pings_test_output_js`.
     Expect it to be fragile.
     To generate new expected output files, set `UPDATE_EXPECT=1` when running the test suite:
 
@@ -65,10 +67,10 @@ def test_fake_pings():
     assert not lint.lint_metrics(all_objs.value, options)
 
     output_fd = io.StringIO()
-    cpp.output_cpp(all_objs.value, output_fd, options)
+    js.output_js(all_objs.value, output_fd, options)
 
     expect(
-        path.join(path.dirname(__file__), "pings_test_output_cpp"), output_fd.getvalue()
+        path.join(path.dirname(__file__), "pings_test_output_js"), output_fd.getvalue()
     )
 
 
