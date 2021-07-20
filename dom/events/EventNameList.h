@@ -348,8 +348,8 @@ TOUCH_EVENT(touchcancel, eTouchCancel, EventNameType_All, eTouchEventClass)
 
 DOCUMENT_ONLY_EVENT(readystatechange, eReadyStateChange, EventNameType_HTMLXUL,
                     eBasicEventClass)
-DOCUMENT_ONLY_EVENT(selectionchange, eSelectionChange, EventNameType_HTMLXUL,
-                    eBasicEventClass)
+EVENT(selectionchange, eSelectionChange, EventNameType_HTMLXUL,
+      eBasicEventClass)
 DOCUMENT_ONLY_EVENT(visibilitychange, eVisibilityChange, EventNameType_HTMLXUL,
                     eBasicEventClass)
 
