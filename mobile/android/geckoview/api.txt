@@ -1023,6 +1023,7 @@ package org.mozilla.geckoview {
     field public static final int PERMISSION_GEOLOCATION = 0;
     field public static final int PERMISSION_MEDIA_KEY_SYSTEM_ACCESS = 6;
     field public static final int PERMISSION_PERSISTENT_STORAGE = 2;
+    field public static final int PERMISSION_STORAGE_ACCESS = 8;
     field public static final int PERMISSION_TRACKING = 7;
     field public static final int PERMISSION_XR = 3;
   }
@@ -1042,6 +1043,7 @@ package org.mozilla.geckoview {
     field @Nullable public final String contextId;
     field public final int permission;
     field public final boolean privateMode;
+    field @Nullable public final String thirdPartyOrigin;
     field @NonNull public final String uri;
     field public final int value;
   }
