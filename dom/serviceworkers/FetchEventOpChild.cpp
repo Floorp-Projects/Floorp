@@ -471,6 +471,10 @@ void FetchEventOpChild::CancelInterception(nsresult aStatus) {
   RefPtr<ServiceWorkerInfo> mActive = mRegistration->GetActive();
   if (mActive && mArgs.isNonSubresourceRequest()) {
     mActive->ReportNavigationFault();
+    // Additional mitigations such as unregistering the registration are handled
+    // in ServiceWorkerRegistrationInfo::MaybeScheduleUpdate which will be
+    // called by MaybeScheduleRegistrationUpdate which gets called by our call
+    // to ResetInterception.
     if (StaticPrefs::dom_serviceWorkers_mitigations_bypass_on_fault()) {
       ResetInterception(true);
       return;

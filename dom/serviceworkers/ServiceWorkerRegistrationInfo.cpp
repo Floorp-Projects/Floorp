@@ -12,6 +12,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 namespace mozilla {
 namespace dom {
@@ -504,6 +505,21 @@ void ServiceWorkerRegistrationInfo::MaybeScheduleUpdate() {
   if (!swm) {
     // shutting down, do nothing
     return;
+  }
+
+  // When reach the navigation fault threshold, calling unregister instead of
+  // scheduling update.
+  if (mActiveWorker) {
+    uint32_t navigationFaultCount;
+    mActiveWorker->GetNavigationFaultCount(&navigationFaultCount);
+    const auto navigationFaultThreshold = StaticPrefs::
+        dom_serviceWorkers_mitigations_navigation_fault_threshold();
+    // Disable unregister mitigation when navigation fault threshold is 0.
+    if (navigationFaultThreshold <= navigationFaultCount &&
+        navigationFaultThreshold != 0) {
+      swm->Unregister(mPrincipal, nullptr, NS_ConvertUTF8toUTF16(Scope()));
+      return;
+    }
   }
 
   mUpdateState = NeedUpdate;
