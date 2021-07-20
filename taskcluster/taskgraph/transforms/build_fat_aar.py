@@ -16,9 +16,13 @@ transforms = TransformSequence()
 
 MOZ_ANDROID_FAT_AAR_ENV_MAP = {
     "android-arm-shippable": "MOZ_ANDROID_FAT_AAR_ARMEABI_V7A",
+    "android-arm-shippable-lite": "MOZ_ANDROID_FAT_AAR_ARMEABI_V7A",
     "android-aarch64-shippable": "MOZ_ANDROID_FAT_AAR_ARM64_V8A",
+    "android-aarch64-shippable-lite": "MOZ_ANDROID_FAT_AAR_ARM64_V8A",
     "android-x86-shippable": "MOZ_ANDROID_FAT_AAR_X86",
+    "android-x86-shippable-lite": "MOZ_ANDROID_FAT_AAR_X86",
     "android-x86_64-shippable": "MOZ_ANDROID_FAT_AAR_X86_64",
+    "android-x86_64-shippable-lite": "MOZ_ANDROID_FAT_AAR_X86_64",
     "android-arm-opt": "MOZ_ANDROID_FAT_AAR_ARMEABI_V7A",
     "android-aarch64-opt": "MOZ_ANDROID_FAT_AAR_ARM64_V8A",
     "android-x86-opt": "MOZ_ANDROID_FAT_AAR_X86",
