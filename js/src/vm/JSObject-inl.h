@@ -212,8 +212,8 @@ inline bool JSObject::isBoundFunction() const {
   return is<JSFunction>() && as<JSFunction>().isBoundFunction();
 }
 
-inline bool JSObject::hasUncacheableProto() const {
-  return hasFlag(js::ObjectFlag::UncacheableProto);
+inline bool JSObject::hasInvalidatedTeleporting() const {
+  return hasFlag(js::ObjectFlag::InvalidatedTeleporting);
 }
 
 MOZ_ALWAYS_INLINE bool JSObject::maybeHasInterestingSymbolProperty() const {
