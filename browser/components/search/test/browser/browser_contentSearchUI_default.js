@@ -22,6 +22,12 @@ add_task(async function setup() {
 
   addedEngine = await Services.search.getEngineByName(TEST_ENGINE_NAME);
 
+  // Enable suggestions in this test. Otherwise, the string in the content
+  // search box changes.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.searches", true]],
+  });
+
   registerCleanupFunction(async () => {
     await Services.search.setDefault(defaultEngine);
   });
@@ -96,6 +102,16 @@ async function runNewTabTest(isHandoff) {
     await ensurePlaceholder(tab, "newtab-search-box-handoff-input-no-engine");
   }
 
+  // Disable suggestions in the Urlbar. This should update the placeholder
+  // string since handoff will now enter search mode.
+  if (isHandoff) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.suggest.searches", false]],
+    });
+    await ensurePlaceholder(tab, "newtab-search-box-input");
+    await SpecialPowers.popPrefEnv();
+  }
+
   await Services.search.setDefault(defaultEngine);
 
   BrowserTestUtils.removeTab(tab);
@@ -139,6 +155,15 @@ add_task(async function test_content_search_attributes_in_private_window() {
   // a default. xref https://bugzilla.mozilla.org/show_bug.cgi?id=1449338#c19
   await ensureIcon(tab, "chrome://global/skin/icons/search-glass.svg");
   await ensurePlaceholder(tab, "about-private-browsing-handoff-no-engine");
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.searches", false]],
+  });
+  await ensurePlaceholder(tab, "about-private-browsing-search-btn");
+  await SpecialPowers.popPrefEnv(
+    tab,
+    "about-private-browsing-search-placeholder"
+  );
 
   await Services.search.setDefault(defaultEngine);
 
