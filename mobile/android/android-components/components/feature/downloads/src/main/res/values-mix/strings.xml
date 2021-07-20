@@ -11,7 +11,7 @@
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">Kunchatu</string>
     <!-- Button that opens the downloaded file when pressed -->
-
+    <string name="mozac_feature_downloads_button_open">Kuna</string>
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">Kasi</string>

@@ -15,12 +15,12 @@
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">Laadi alla</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
-
+    <string name="mozac_feature_downloads_dialog_cancel">Loobu</string>
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
     <string name="mozac_feature_downloads_file_not_supported2">%1$sil pole võimalik seda tüüpi faile alla laadida</string>
 
     <!-- Message that appears when the downloaded file could not be opened-->
-
+    <string name="mozac_feature_downloads_could_not_open_file">Faili avamine ebaõnnestus.</string>
 
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">Paus</string>
@@ -29,7 +29,7 @@
     <!-- Button that cancels the download when pressed -->
     <string name="mozac_feature_downloads_button_cancel">Katkesta</string>
     <!-- Button that opens the downloaded file when pressed -->
-
+    <string name="mozac_feature_downloads_button_open">Ava</string>
     <!-- Button that restarts the download after a failed attempt -->
     <string name="mozac_feature_downloads_button_try_again">Proovi uuesti</string>
 

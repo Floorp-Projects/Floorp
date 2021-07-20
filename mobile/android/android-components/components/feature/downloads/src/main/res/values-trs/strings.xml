@@ -17,12 +17,12 @@
     <string name="mozac_feature_downloads_dialog_download">Nādunïnj</string>
 
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
-
+    <string name="mozac_feature_downloads_dialog_cancel">Dūyichin\'</string>
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
     <string name="mozac_feature_downloads_file_not_supported2">%1$s na\'uēj nādūnïnj archibô huā dānanj</string>
 
     <!-- Message that appears when the downloaded file could not be opened-->
-
+    <string name="mozac_feature_downloads_could_not_open_file">Nu ga\'ue nāyī\'nin archîbo</string>
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
     <string name="mozac_feature_downloads_open_not_supported1">Nitāj aplikasiûn nikājt da\' nā\'nïn riña nej archibô %1$s</string>
@@ -34,7 +34,7 @@
     <!-- Button that cancels the download when pressed -->
     <string name="mozac_feature_downloads_button_cancel">Dūyichin\'</string>
     <!-- Button that opens the downloaded file when pressed -->
-
+    <string name="mozac_feature_downloads_button_open">Nā\'nīn</string>
     <!-- Button that restarts the download after a failed attempt -->
     <string name="mozac_feature_downloads_button_try_again">Ginùn huin ñû</string>
 
