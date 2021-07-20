@@ -406,7 +406,7 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
     for (const auto& dir : extraConfDirs) {
       rv = homeDir->Clone(getter_AddRefs(confDir));
       if (NS_SUCCEEDED(rv)) {
-        rv = confDir->AppendNative(nsDependentCString(dir));
+        rv = confDir->AppendRelativeNativePath(nsDependentCString(dir));
         if (NS_SUCCEEDED(rv)) {
           nsAutoCString tmpPath;
           rv = confDir->GetNativePath(tmpPath);
