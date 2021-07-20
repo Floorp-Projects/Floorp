@@ -4277,10 +4277,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   template <typename T>
   void storeObjPrivate(T src, const Address& address);
 
-  void loadObjPrivate(Register obj, uint32_t nfixed, Register dest) {
-    loadPtr(Address(obj, NativeObject::getPrivateDataOffset(nfixed)), dest);
-  }
-
   void loadObjProto(Register obj, Register dest) {
     loadPtr(Address(obj, JSObject::offsetOfShape()), dest);
     loadPtr(Address(dest, Shape::offsetOfBaseShape()), dest);
