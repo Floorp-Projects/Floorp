@@ -181,15 +181,7 @@ var PrintEventHandler = {
     this.printFrameOnly = args.getProperty("printFrameOnly");
     this.printSelectionOnly = args.getProperty("printSelectionOnly");
     this.isArticle = args.getProperty("isArticle");
-    try {
-      this.hasSelection = await this.checkForSelection(sourceBrowsingContext);
-    } catch (e) {
-      // In tests we sometimes close the dialog immediately, which can cause
-      // checkForSelection to fail. Just stop any work here and we should get
-      // cleaned up as the dialog closes.
-      Cu.reportError(e);
-      return;
-    }
+    this.hasSelection = await this.checkForSelection(sourceBrowsingContext);
 
     let sourcePrincipal =
       sourceBrowsingContext.currentWindowGlobal.documentPrincipal;
@@ -370,13 +362,17 @@ var PrintEventHandler = {
     await initialPreviewDone;
   },
 
-  checkForSelection(browsingContext) {
-    let { currentWindowGlobal } = browsingContext;
-    if (!currentWindowGlobal) {
-      throw new Error("Unable to check selection, window likely closed");
+  async checkForSelection(browsingContext) {
+    try {
+      let sourceActor = browsingContext.currentWindowGlobal.getActor(
+        "PrintingSelection"
+      );
+      // Need the await for the try to trigger...
+      return await sourceActor.sendQuery("PrintingSelection:HasSelection", {});
+    } catch (e) {
+      Cu.reportError(e);
     }
-    let sourceActor = currentWindowGlobal.getActor("PrintingSelection");
-    return sourceActor.sendQuery("PrintingSelection:HasSelection", {});
+    return false;
   },
 
   async print(systemDialogSettings) {
