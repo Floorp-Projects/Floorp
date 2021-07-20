@@ -22,15 +22,13 @@ using namespace js;
 
 static void resc_finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
-  RegExpStatics* res =
-      static_cast<RegExpStatics*>(obj->as<RegExpStaticsObject>().getPrivate());
+  RegExpStatics* res = obj->as<RegExpStaticsObject>().regExpStatics();
   fop->delete_(obj, res, MemoryUse::RegExpStatics);
 }
 
 static void resc_trace(JSTracer* trc, JSObject* obj) {
-  void* pdata = obj->as<RegExpStaticsObject>().getPrivate();
-  if (pdata) {
-    static_cast<RegExpStatics*>(pdata)->trace(trc);
+  if (RegExpStatics* data = obj->as<RegExpStaticsObject>().regExpStatics()) {
+    data->trace(trc);
   }
 }
 
@@ -49,7 +47,8 @@ static const JSClassOps RegExpStaticsObjectClassOps = {
 };
 
 const JSClass RegExpStaticsObject::class_ = {
-    "RegExpStatics", JSCLASS_HAS_PRIVATE | JSCLASS_FOREGROUND_FINALIZE,
+    "RegExpStatics",
+    JSCLASS_HAS_RESERVED_SLOTS(SlotCount) | JSCLASS_FOREGROUND_FINALIZE,
     &RegExpStaticsObjectClassOps};
 
 RegExpStaticsObject* RegExpStatics::create(JSContext* cx) {
@@ -64,7 +63,8 @@ RegExpStaticsObject* RegExpStatics::create(JSContext* cx) {
   }
   // TODO: This doesn't account for match vector heap memory used if there are
   // more 10 matches. This is likely to be rare.
-  InitObjectPrivate(obj, res, MemoryUse::RegExpStatics);
+  InitReservedSlot(obj, RegExpStaticsObject::StaticsSlot, res,
+                   MemoryUse::RegExpStatics);
   return obj;
 }
 
