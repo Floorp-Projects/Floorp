@@ -972,7 +972,9 @@ void nsWindow::RegisterTouchWindow() {
 }
 
 void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
-  if (!mIsTopLevel || !mShell) return;
+  if (!mIsTopLevel || !mShell || GdkIsWaylandDisplay()) {
+    return;
+  }
 
   double dpiScale = GetDefaultScale().scale;
 
@@ -6870,6 +6872,16 @@ void nsWindow::PerformFullscreenTransition(FullscreenTransitionStage aStage,
 }
 
 already_AddRefed<nsIScreen> nsWindow::GetWidgetScreen() {
+  LOG(("nsWindow::GetWidgetScreen() [%p]", this));
+  // Wayland can read screen directly
+  if (GdkIsWaylandDisplay()) {
+    RefPtr<nsIScreen> screen = ScreenHelperGTK::GetScreenForWindow(this);
+    if (screen) {
+      return screen.forget();
+    }
+  }
+
+  LOG(("  fallback to Gtk code"));
   nsCOMPtr<nsIScreenManager> screenManager;
   screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
   if (!screenManager) {
@@ -9144,37 +9156,20 @@ void nsWindow::UnlockNativePointer() {
 }
 
 nsresult nsWindow::GetScreenRect(LayoutDeviceIntRect* aRect) {
-  using GdkMonitor = struct _GdkMonitor;
-  static auto s_gdk_display_get_monitor_at_window =
-      (GdkMonitor * (*)(GdkDisplay*, GdkWindow*))
-          dlsym(RTLD_DEFAULT, "gdk_display_get_monitor_at_window");
-
-  static auto s_gdk_monitor_get_workarea =
-      (void (*)(GdkMonitor*, GdkRectangle*))dlsym(RTLD_DEFAULT,
-                                                  "gdk_monitor_get_workarea");
-
-  if (!s_gdk_display_get_monitor_at_window || !s_gdk_monitor_get_workarea) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   GtkWindow* topmostParentWindow = GetCurrentTopmostWindow();
-  GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(topmostParentWindow));
-
-  GdkMonitor* monitor =
-      s_gdk_display_get_monitor_at_window(gdk_display_get_default(), gdkWindow);
-  if (monitor) {
-    GdkRectangle workArea;
-    s_gdk_monitor_get_workarea(monitor, &workArea);
-    // The monitor offset won't help us in Wayland, because we can't get the
-    // absolute position of our window.
-    aRect->x = aRect->y = 0;
-    aRect->width = workArea.width;
-    aRect->height = workArea.height;
-    LOG(("  workarea for [%p], monitor %p: x%d y%d w%d h%d\n", this, monitor,
-         workArea.x, workArea.y, workArea.width, workArea.height));
-    return NS_OK;
+  nsWindow* window = get_window_for_gtk_widget(GTK_WIDGET(topmostParentWindow));
+  if (!window) {
+    return NS_ERROR_FAILURE;
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+  GdkRectangle rect;
+  ScreenHelperGTK::GetScreenRectForWindow(window, &rect);
+
+  aRect->x = aRect->y = 0;
+  aRect->width = rect.width;
+  aRect->height = rect.height;
+
+  return NS_OK;
 }
 #endif
 
