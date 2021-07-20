@@ -11,14 +11,24 @@
 
 namespace js {
 
+class RegExpStatics;
+
 class RegExpStaticsObject : public NativeObject {
+  friend class js::RegExpStatics;
+
+  enum { StaticsSlot, SlotCount };
+
  public:
   static const JSClass class_;
+
+  RegExpStatics* regExpStatics() const {
+    return maybePtrFromReservedSlot<RegExpStatics>(StaticsSlot);
+  }
 
   size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
     // XXX: should really call RegExpStatics::sizeOfIncludingThis() here
     // instead, but the extra memory it would measure is insignificant.
-    return mallocSizeOf(getPrivate());
+    return mallocSizeOf(regExpStatics());
   }
 };
 
