@@ -97,7 +97,7 @@ def ChromiumRunner(*args, **kwargs):
 
 
 def FennecEmulatorRunner(
-    avd="mozemulator-4.3",
+    avd="mozemulator-arm",
     adb_path=None,
     avd_home=None,
     logdir=None,
