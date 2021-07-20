@@ -138,7 +138,8 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
   // controls, so for now we only support doing that under a pref, disabled by
   // default.
   // See https://github.com/w3c/selection-api/issues/53.
-  if (textControl && !StaticPrefs::dom_select_events_textcontrols_enabled()) {
+  if (textControl &&
+      !StaticPrefs::dom_select_events_textcontrols_selectionchange_enabled()) {
     return;
   }
 
