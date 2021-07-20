@@ -14,6 +14,7 @@
    In addition, the following options must be selected in the VS2019 installer:
    - C++ ATL for latest v142 build tools (ARM64)
    - Windows 10 SDK (10.0.19041.0)
+   - MSVC v142 - VS2019 C++ ARM64 build tools
 
    "Debugging Tools for Windows" is also required.
    - Under `Settings -> Apps` search for "Windows Software Development Kit" with the version
