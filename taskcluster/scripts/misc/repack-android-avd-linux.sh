@@ -1,6 +1,18 @@
 #!/bin/bash
 set -x -e -v
 
+# Initialize XVFB for the AVD
+. /builds/worker/scripts/xvfb.sh
+
+cleanup() {
+    local rv=$?
+    cleanup_xvfb
+    exit $rv
+}
+trap cleanup EXIT INT
+
+start_xvfb '1024x768x24' 2
+
 # This script is for fetching and repacking the Android SDK (for
 # Linux), the tools required to produce Android packages.
 

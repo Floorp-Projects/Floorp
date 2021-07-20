@@ -31,6 +31,8 @@ RUN apt-get update && \
       uuid \
       valgrind \
       vim \
+      x11-utils \
+      xvfb \
       wget \
       zip \
       zstd
