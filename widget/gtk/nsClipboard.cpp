@@ -189,11 +189,13 @@ nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
   GtkClipboard* gtkClipboard =
       gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
 
-  gint numTargets;
+  gint numTargets = 0;
   GtkTargetEntry* gtkTargets =
       gtk_target_table_new_from_list(list, &numTargets);
-  if (!gtkTargets) {
-    LOGCLIP(("    gtk_clipboard_set_with_data() failed!\n"));
+  if (!gtkTargets || numTargets == 0) {
+    LOGCLIP(
+        ("    gtk_target_table_new_from_list() failed or empty list of "
+         "targets!\n"));
     // Clear references to the any old data and let GTK know that it is no
     // longer available.
     EmptyClipboard(aWhichClipboard);
