@@ -53,15 +53,18 @@
         var cancel = false;
         var selectstartTarget = null;
 
-        async function UpdateSelectEventsOnTextControlsPref(aEnabled) {
+        async function UpdateSelectEventsOnTextControlsPref({ selectstart, selectionchange }) {
           await SpecialPowers.pushPrefEnv({
             'set': [
-              ['dom.select_events.textcontrols.selectstart.enabled', aEnabled],
-              ['dom.select_events.textcontrols.selectionchange.enabled', aEnabled]
+              ['dom.select_events.textcontrols.selectstart.enabled', !!selectstart],
+              ['dom.select_events.textcontrols.selectionchange.enabled', !!selectionchange]
             ]
           });
         }
-        await UpdateSelectEventsOnTextControlsPref(false);
+        await UpdateSelectEventsOnTextControlsPref({
+          selectstart: false,
+          selectionchange: false
+        });
 
         document.addEventListener('selectstart', function(aEvent) {
           console.log("originaltarget", aEvent.originalTarget, "new", selectstartTarget);
@@ -343,50 +346,57 @@
         // Releasing the mouse shouldn't do anything
         await mouseAction(elt("input"), 50, "mouseup", 0, 0, 0, 0);
 
-        await UpdateSelectEventsOnTextControlsPref(true);
+        for (const selectstart of [1, 0]) {
+          await UpdateSelectEventsOnTextControlsPref({
+            selectstart,
+            selectionchange: true
+          });
 
-        await mouseAction(elt("input"), 50, "mousedown", 0, 0, 0, 0);
+          await mouseAction(elt("input"), 40, "mousedown", 0, 1, 1, 0);
 
-        selectstartTarget = elt("input");
-        await mouseAction(elt("input"), 100, "mousemove", 1, 1, 1, 0);
+          selectstartTarget = elt("input");
+          await mouseAction(elt("input"), 100, "mousemove", selectstart, 1, 1, 0);
 
-        // Moving it more shouldn't trigger a start (move back to empty)
-        await mouseAction(elt("input"), 75, "mousemove", 0, 1, 1, 0);
-        await mouseAction(elt("input"), 50, "mousemove", 0, 1, 1, 0);
+          // Moving it more shouldn't trigger a start (move back to empty)
+          await mouseAction(elt("input"), 75, "mousemove", 0, 1, 1, 0);
+          await mouseAction(elt("input"), 40, "mousemove", 0, 1, 1, 0);
 
-        // Wiggling the mouse a little such that it doesn't select any
-        // characters shouldn't trigger a selection
-        await mouseAction(elt("input"), 50, "mousemove", 0, 0, 0, 0, 11);
+          // Wiggling the mouse a little such that it doesn't select any
+          // characters shouldn't trigger a selection
+          await mouseAction(elt("input"), 40, "mousemove", 0, 0, 0, 0, 11);
 
-        // Moving the mouse again from an empty selection should trigger a
-        // selectstart
-        selectstartTarget = elt("input");
-        await mouseAction(elt("input"), 25, "mousemove", 1, 1, 1, 0);
+          // Moving the mouse again from an empty selection should trigger a
+          // selectstart
+          selectstartTarget = elt("input");
+          await mouseAction(elt("input"), 25, "mousemove", selectstart, 1, 1, 0);
 
-        // Releasing the mouse shouldn't do anything
-        await mouseAction(elt("input"), 25, "mouseup", 0, 0, 0, 0);
+          // Releasing the mouse shouldn't do anything
+          await mouseAction(elt("input"), 25, "mouseup", 0, 0, 0, 0);
 
-        // And neither should moving your mouse around when the mouse
-        // button isn't pressed
-        await mouseAction(elt("input"), 50, "mousemove", 0, 0, 0, 0);
+          // And neither should moving your mouse around when the mouse
+          // button isn't pressed
+          await mouseAction(elt("input"), 50, "mousemove", 0, 0, 0, 0);
 
-        // Clicking in an random location should move the selection, but
-        // not perform a selectstart
-        await mouseAction(elt("input"), 50, "click", 0, 1, 1, 0);
+          // Clicking in an random location should move the selection, but
+          // not perform a selectstart
+          await mouseAction(elt("input"), 50, "click", 0, 1, 1, 0);
 
-        // Clicking there again should do nothing
-        await mouseAction(elt("input"), 50, "click", 0, 0, 0, 0);
+          // Clicking there again should do nothing
+          await mouseAction(elt("input"), 50, "click", 0, 0, 0, 0);
 
-        // Selecting a region, and canceling the selectstart should mean that the
-        // selection remains collapsed
-        await mouseAction(elt("input"), 75, "mousedown", 0, 1, 1, 0);
-        cancel = true;
-        selectstartTarget = elt("input");
-        await mouseAction(elt("input"), 100, "mousemove", 1, 1, 1, 0);
-        await mouseAction(elt("input"), 100, "mouseup", 0, 0, 0, 0);
+          // Selecting a region, and canceling the selectstart should mean that the
+          // selection remains collapsed
+          await mouseAction(elt("input"), 75, "mousedown", 0, 1, 1, 0);
+          cancel = true;
+          selectstartTarget = elt("input");
+          await mouseAction(elt("input"), 100, "mousemove", selectstart, 1, 1, 0);
+          await mouseAction(elt("input"), 100, "mouseup", 0, 0, 0, 0);
+        }
 
-
-        await UpdateSelectEventsOnTextControlsPref(false);
+        await UpdateSelectEventsOnTextControlsPref({
+          selectstart: false,
+          selectionchange: false
+        });
 
         // Without the dom.select_events.textcontrols.enabled pref,
         // pressing the mouse shouldn't do anything.
@@ -397,48 +407,52 @@
         // Releasing the mouse shouldn't do anything
         await mouseAction(elt("textarea"), 50, "mouseup", 0, 0, 0, 0);
 
-        await UpdateSelectEventsOnTextControlsPref(true);
+        for (const selectstart of [1, 0]) {
+          await UpdateSelectEventsOnTextControlsPref({
+            selectstart,
+            selectionchange: true
+          });
+          // Select a region
+          await mouseAction(elt("textarea"), 40, "mousedown", 0, 1, 0, 1);
 
-        // Select a region
-        await mouseAction(elt("textarea"), 50, "mousedown", 0, 0, 0, 0);
+          selectstartTarget = elt("textarea");
+          await mouseAction(elt("textarea"), 100, "mousemove", selectstart, 1, 0, 1);
 
-        selectstartTarget = elt("textarea");
-        await mouseAction(elt("textarea"), 100, "mousemove", 1, 1, 0, 1);
+          // Moving it more shouldn't trigger a start (move back to empty)
+          await mouseAction(elt("textarea"), 75, "mousemove", 0, 1, 0, 1);
+          await mouseAction(elt("textarea"), 40, "mousemove", 0, 1, 0, 1);
 
-        // Moving it more shouldn't trigger a start (move back to empty)
-        await mouseAction(elt("textarea"), 75, "mousemove", 0, 1, 0, 1);
-        await mouseAction(elt("textarea"), 50, "mousemove", 0, 1, 0, 1);
+          // Wiggling the mouse a little such that it doesn't select any
+          // characters shouldn't trigger a selection
+          await mouseAction(elt("textarea"), 40, "mousemove", 0, 0, 0, 0, 11);
 
-        // Wiggling the mouse a little such that it doesn't select any
-        // characters shouldn't trigger a selection
-        await mouseAction(elt("textarea"), 50, "mousemove", 0, 0, 0, 0, 11);
+          // Moving the mouse again from an empty selection should trigger a
+          // selectstart
+          selectstartTarget = elt("textarea");
+          await mouseAction(elt("textarea"), 25, "mousemove", selectstart, 1, 0, 1);
 
-        // Moving the mouse again from an empty selection should trigger a
-        // selectstart
-        selectstartTarget = elt("textarea");
-        await mouseAction(elt("textarea"), 25, "mousemove", 1, 1, 0, 1);
+          // Releasing the mouse shouldn't do anything
+          await mouseAction(elt("textarea"), 25, "mouseup", 0, 0, 0, 0);
 
-        // Releasing the mouse shouldn't do anything
-        await mouseAction(elt("textarea"), 25, "mouseup", 0, 0, 0, 0);
+          // And neither should moving your mouse around when the mouse
+          // button isn't pressed
+          await mouseAction(elt("textarea"), 50, "mousemove", 0, 0, 0, 0);
 
-        // And neither should moving your mouse around when the mouse
-        // button isn't pressed
-        await mouseAction(elt("textarea"), 50, "mousemove", 0, 0, 0, 0);
+          // Clicking in an random location should move the selection, but not perform a
+          // selectstart
+          await mouseAction(elt("textarea"), 50, "click", 0, 1, 0, 1);
 
-        // Clicking in an random location should move the selection, but not perform a
-        // selectstart
-        await mouseAction(elt("textarea"), 50, "click", 0, 1, 0, 1);
+          // Clicking there again should do nothing
+          await mouseAction(elt("textarea"), 50, "click", 0, 0, 0, 0);
 
-        // Clicking there again should do nothing
-        await mouseAction(elt("textarea"), 50, "click", 0, 0, 0, 0);
-
-        // Selecting a region, and canceling the selectstart should mean that the
-        // selection remains collapsed
-        await mouseAction(elt("textarea"), 75, "mousedown", 0, 1, 0, 1);
-        cancel = true;
-        selectstartTarget = elt("textarea");
-        await mouseAction(elt("textarea"), 100, "mousemove", 1, 1, 0, 1);
-        await mouseAction(elt("textarea"), 100, "mouseup", 0, 0, 0, 0);
+          // Selecting a region, and canceling the selectstart should mean that the
+          // selection remains collapsed
+          await mouseAction(elt("textarea"), 75, "mousedown", 0, 1, 0, 1);
+          cancel = true;
+          selectstartTarget = elt("textarea");
+          await mouseAction(elt("textarea"), 100, "mousemove", selectstart, 1, 0, 1);
+          await mouseAction(elt("textarea"), 100, "mouseup", 0, 0, 0, 0);
+        }
 
         // Marking the input and textarea as display: none and then as visible again
         // shouldn't trigger any changes, although the nodes will be re-framed
