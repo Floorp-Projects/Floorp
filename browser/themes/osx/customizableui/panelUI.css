@@ -65,6 +65,14 @@ panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
   display: none;
 }
 
+#BMB_bookmarksPopup .subviewbutton > .menu-iconic-left {
+  margin-inline-end: 3px;
+}
+
+#BMB_bookmarksPopup .subviewbutton > .menu-iconic-text {
+  padding-inline-start: 0;
+}
+
 /* Override OSX-specific toolkit styles for the bookmarks panel */
 menu.subviewbutton > .menu-right {
   margin-inline-end: -4px;
