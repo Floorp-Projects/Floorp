@@ -1,5 +1,5 @@
 Building and testing SpiderMonkey
-=====================
+=================================
 
 **The first step is to run our “bootstrap” script to help ensure you have the
 right build tools for your operating system. This will also help you get a copy
