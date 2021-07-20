@@ -4518,8 +4518,7 @@ static void LoadNativeIterator(MacroAssembler& masm, Register obj,
 #endif
 
   // Load NativeIterator object.
-  Address slotAddr(obj, PropertyIteratorObject::offsetOfIteratorSlot());
-  masm.loadPrivate(slotAddr, dest);
+  masm.loadObjPrivate(obj, PropertyIteratorObject::NUM_FIXED_SLOTS, dest);
 }
 
 void MacroAssembler::iteratorMore(Register obj, ValueOperand output,

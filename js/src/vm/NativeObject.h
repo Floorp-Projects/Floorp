@@ -1179,12 +1179,6 @@ class NativeObject : public JSObject {
     fixedSlots()[slot].init(this, HeapSlot::Slot, slot, value);
   }
 
-  template <typename T>
-  T* maybePtrFromReservedSlot(uint32_t slot) const {
-    Value v = getReservedSlot(slot);
-    return v.isUndefined() ? nullptr : static_cast<T*>(v.toPrivate());
-  }
-
   /*
    * Calculate the number of dynamic slots to allocate to cover the properties
    * in an object with the given number of fixed slots and slot span.
