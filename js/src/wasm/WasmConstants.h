@@ -450,7 +450,8 @@ enum class Op {
   // GC (experimental)
   RefEq = 0xd5,
 
-  FirstPrefix = 0xfb,
+  FirstPrefix = 0xfa,
+  IntrinsicPrefix = 0xfa,
   GcPrefix = 0xfb,
   MiscPrefix = 0xfc,
   SimdPrefix = 0xfd,
@@ -933,6 +934,21 @@ enum class ThreadOp {
   I64AtomicCmpXchg8U = 0x4c,
   I64AtomicCmpXchg16U = 0x4d,
   I64AtomicCmpXchg32U = 0x4e,
+
+  Limit
+};
+
+enum class IntrinsicOp {
+  // ------------------------------------------------------------------------
+  // These operators are emitted internally when compiling intrinsic modules
+  // and are rejected by wasm validation.  They are prefixed by
+  // IntrinsicPrefix.
+
+  // i8vecmul(dest: i32, src1: i32, src2: i32, len: i32)
+  //  Performs pairwise multiplication of two i8 vectors of 'len' specified at
+  //  'src1' and 'src2'. Output is written to 'dest'. This is used as a
+  //  basic self-test for intrinsics.
+  I8VecMul = 0x0,
 
   Limit
 };

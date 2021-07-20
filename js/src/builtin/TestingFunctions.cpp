@@ -125,6 +125,7 @@
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCraneliftCompile.h"
 #include "wasm/WasmInstance.h"
+#include "wasm/WasmIntrinsic.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
@@ -1944,6 +1945,23 @@ static bool WasmHasTier2CompilationCompleted(JSContext* cx, unsigned argc,
 
 static bool WasmLoadedFromCache(JSContext* cx, unsigned argc, Value* vp) {
   return WasmReturnFlag(cx, argc, vp, Flag::Deserialized);
+}
+
+static bool WasmIntrinsicI8VecMul(JSContext* cx, unsigned argc, Value* vp) {
+  if (!wasm::HasSupport(cx)) {
+    JS_ReportErrorASCII(cx, "wasm support unavailable");
+    return false;
+  }
+
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RootedWasmModuleObject module(cx);
+  if (!wasm::CompileIntrinsicModule(cx, wasm::IntrinsicOp::I8VecMul, &module)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  args.rval().set(ObjectValue(*module.get()));
+  return true;
 }
 
 static bool LargeArrayBufferEnabled(JSContext* cx, unsigned argc, Value* vp) {
@@ -7947,6 +7965,10 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
 "wasmLoadedFromCache(module)",
 "  Returns a boolean indicating whether a given module was deserialized directly from a\n"
 "  cache (as opposed to compiled from bytecode)."),
+
+    JS_FN_HELP("wasmIntrinsicI8VecMul", WasmIntrinsicI8VecMul, 0, 0,
+"wasmIntrinsicI8VecMul()",
+"  Returns a module that implements an i8 vector pairwise multiplication intrinsic."),
 
     JS_FN_HELP("largeArrayBufferEnabled", LargeArrayBufferEnabled, 0, 0,
 "largeArrayBufferEnabled()",

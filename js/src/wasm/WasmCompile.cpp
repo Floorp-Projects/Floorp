@@ -100,6 +100,7 @@ FeatureArgs FeatureArgs::build(JSContext* cx, const FeatureOptions& options) {
   if (wormholeOverride) {
     features.v128 = true;
   }
+  features.intrinsics = options.intrinsics;
 
   return features;
 }

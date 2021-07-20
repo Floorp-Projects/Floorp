@@ -1526,6 +1526,8 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
     case SymbolicAddress::js_jit_gAtomic64Lock:
       MOZ_CRASH();
 #endif
+    case SymbolicAddress::IntrI8VecMul:
+      return "call to native i8 vector multiplication intrinsic (in wasm)";
 #ifdef WASM_CODEGEN_DEBUG
     case SymbolicAddress::PrintI32:
     case SymbolicAddress::PrintPtr:

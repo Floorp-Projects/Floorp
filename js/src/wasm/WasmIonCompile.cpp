@@ -31,6 +31,7 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmGC.h"
 #include "wasm/WasmGenerator.h"
+#include "wasm/WasmIntrinsic.h"
 #include "wasm/WasmOpIter.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmStubs.h"
@@ -1379,6 +1380,19 @@ class FunctionCompiler {
         MOZ_ASSERT_UNREACHABLE("Uninitialized ABIArg kind");
     }
     MOZ_CRASH("Unknown ABIArg kind.");
+  }
+
+  template <typename SpanT>
+  bool passArgs(const DefVector& argDefs, SpanT types, CallCompileState* call) {
+    MOZ_ASSERT(argDefs.length() == types.size());
+    for (uint32_t i = 0; i < argDefs.length(); i++) {
+      MDefinition* def = argDefs[i];
+      ValType type = types[i];
+      if (!passArg(def, type, call)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   bool passArg(MDefinition* argDef, MIRType type, CallCompileState* call) {
@@ -4502,6 +4516,36 @@ static bool EmitStoreLaneSimd128(FunctionCompiler& f, uint32_t laneSize) {
 }
 #endif
 
+static bool EmitIntrinsic(FunctionCompiler& f, IntrinsicOp op) {
+  const Intrinsic& intrinsic = Intrinsic::getFromOp(op);
+
+  DefVector params;
+  if (!f.iter().readIntrinsic(intrinsic, &params)) {
+    return false;
+  }
+
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  const SymbolicAddressSignature& callee = intrinsic.signature;
+
+  CallCompileState args;
+  if (!f.passInstance(callee.argTypes[0], &args)) {
+    return false;
+  }
+
+  if (!f.passArgs(params, intrinsic.params, &args)) {
+    return false;
+  }
+
+  MDefinition* memoryBase = f.memoryBase();
+  if (!f.passArg(memoryBase, MIRType::Pointer, &args)) {
+    return false;
+  }
+
+  f.finishCall(&args);
+
+  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
+}
+
 static bool EmitBodyExprs(FunctionCompiler& f) {
   if (!f.iter().startFunction(f.funcIndex())) {
     return false;
@@ -4994,7 +5038,15 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       case uint16_t(Op::I64Extend32S):
         CHECK(EmitSignExtend(f, 4, 8));
 
-        // Gc operations
+      case uint16_t(Op::IntrinsicPrefix): {
+        if (!f.moduleEnv().intrinsicsEnabled() ||
+            op.b1 >= uint32_t(IntrinsicOp::Limit)) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitIntrinsic(f, IntrinsicOp(op.b1)));
+      }
+
+      // Gc operations
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::GcPrefix): {
         return f.iter().unrecognizedOpcode(&op);
