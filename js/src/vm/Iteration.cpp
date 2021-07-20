@@ -598,6 +598,8 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
   // CodeGenerator::visitIteratorStartO assumes the iterator object is not
   // inside the nursery when deciding whether a barrier is necessary.
   MOZ_ASSERT(!js::gc::IsInsideNursery(res));
+
+  MOZ_ASSERT(res->numFixedSlots() == PropertyIteratorObject::NUM_FIXED_SLOTS);
   return res;
 }
 
@@ -714,7 +716,7 @@ NativeIterator::NativeIterator(JSContext* cx,
   //       because it has GCPtr fields whose barriers have already fired; the
   //       store buffer has pointers to them. Only the GC can free `this` (via
   //       PropertyIteratorObject::finalize).
-  propIter->initNativeIterator(this);
+  propIter->setNativeIterator(this);
 
   // The GC asserts on finalization that `this->allocationSize()` matches the
   // `nbytes` passed to `AddCellMemory`. So once these lines run, we must make
@@ -1112,8 +1114,7 @@ const JSClassOps PropertyIteratorObject::classOps_ = {
 };
 
 const JSClass PropertyIteratorObject::class_ = {
-    "Iterator",
-    JSCLASS_HAS_RESERVED_SLOTS(SlotCount) | JSCLASS_BACKGROUND_FINALIZE,
+    "Iterator", JSCLASS_HAS_PRIVATE | JSCLASS_BACKGROUND_FINALIZE,
     &PropertyIteratorObject::classOps_};
 
 static const JSClass ArrayIteratorPrototypeClass = {"Array Iterator", 0};
