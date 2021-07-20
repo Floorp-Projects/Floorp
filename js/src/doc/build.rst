@@ -1,4 +1,4 @@
-Building SpiderMonkey
+Building and testing SpiderMonkey
 =====================
 
 **The first step is to run our “bootstrap” script to help ensure you have the
@@ -94,13 +94,22 @@ to do your build:
 Once you have successfully built the shell, you can run it using ``mach run``.
 
 Testing
---------
+~~~~~~~
 
 Once built, you can then use ``mach`` to run the ``jit-tests``:
 
 .. code::
 
     $ ./mach jit-test
+
+Similarly you can use also run ``jstests``. These include a local,
+intermittently updated, copy of all `test262 <https://github.com/tc39/test262/>`_
+tests.
+
+.. code::
+
+    $ ./mach jstests
+
 
 Optimized Builds
 ~~~~~~~~~~~~~~~~
