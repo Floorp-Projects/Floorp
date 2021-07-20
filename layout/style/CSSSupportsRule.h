@@ -25,6 +25,7 @@ class CSSSupportsRule : public css::ConditionRule {
 #endif
 
   RawServoSupportsRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<RawServoSupportsRule>);
 
   // WebIDL interface
   uint16_t Type() const override { return CSSRule_Binding::SUPPORTS_RULE; }
