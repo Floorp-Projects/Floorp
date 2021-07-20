@@ -39,6 +39,10 @@
 
 #include "LulTestInfrastructure.h"
 
+#include "LulDwarfInt.h"
+
+#include <cassert>
+
 namespace lul_test {
 namespace test_assembler {
 

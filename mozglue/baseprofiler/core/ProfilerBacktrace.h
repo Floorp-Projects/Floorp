@@ -7,13 +7,13 @@
 #ifndef __PROFILER_BACKTRACE_H
 #define __PROFILER_BACKTRACE_H
 
-#include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/ProfileChunkedBuffer.h"
+#include "mozilla/UniquePtr.h"
 
 #include <string>
 
 namespace mozilla {
 
-class ProfileChunkedBuffer;
 class TimeStamp;
 
 namespace baseprofiler {
