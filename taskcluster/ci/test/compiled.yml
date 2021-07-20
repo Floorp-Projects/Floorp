@@ -51,8 +51,8 @@ gtest:
     instance-size: xlarge
     run-on-projects:
         by-test-platform:
-            windows.*-shippable/.*: []  # permafails on shippable
-            windows.*-nightly/.*: []  # permafails on nightly too
+            windows.*-shippable-qr/.*: []  # permafails on shippable
+            windows.*-nightly-qr/.*: []  # permafails on nightly too
             .*-devedition/.*: []  # don't run on devedition
             linux1804-32-qr/debug: ['mozilla-central']  # try and m-c
             linux1804-32-qr/opt: []  # try only, shippable on m-c
