@@ -136,38 +136,11 @@ class MobileAndroidBootstrapper(object):
     def __init__(self, **kwargs):
         pass
 
-    def install_mobile_android_packages(self, artifact_mode=False):
+    def ensure_mobile_android_packages(self, artifact_mode=False):
         from mozboot import android
 
         android.ensure_android(
             "linux", artifact_mode=artifact_mode, no_interactive=self.no_interactive
-        )
-        android.ensure_android(
-            "linux",
-            artifact_mode=artifact_mode,
-            no_interactive=self.no_interactive,
-            system_images_only=True,
-            avd_manifest_path=android.AVD_MANIFEST_X86_64,
-        )
-        android.ensure_android(
-            "linux",
-            artifact_mode=artifact_mode,
-            no_interactive=self.no_interactive,
-            system_images_only=True,
-            avd_manifest_path=android.AVD_MANIFEST_ARM,
-        )
-
-    def install_mobile_android_artifact_mode_packages(self):
-        self.install_mobile_android_packages(artifact_mode=True)
-
-    def ensure_mobile_android_packages(self, state_dir, checkout_root):
-        from mozboot import android
-
-        self.install_toolchain_artifact(
-            state_dir, checkout_root, android.LINUX_X86_64_ANDROID_AVD
-        )
-        self.install_toolchain_artifact(
-            state_dir, checkout_root, android.LINUX_ARM_ANDROID_AVD
         )
 
     def generate_mobile_android_mozconfig(self, artifact_mode=False):
