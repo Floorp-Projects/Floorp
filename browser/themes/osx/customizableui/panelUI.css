@@ -65,14 +65,6 @@ panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
   display: none;
 }
 
-#BMB_bookmarksPopup menupopup[placespopup=true] {
-  appearance: none;
-  background: transparent;
-  --panel-background: var(--arrowpanel-background);
-  --panel-border-color: var(--arrowpanel-border-color);
-  --panel-color: var(--arrowpanel-color);
-}
-
 /* Override OSX-specific toolkit styles for the bookmarks panel */
 menu.subviewbutton > .menu-right {
   margin-inline-end: -4px;

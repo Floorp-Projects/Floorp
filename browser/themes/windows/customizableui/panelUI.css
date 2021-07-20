@@ -32,36 +32,31 @@
   margin-top: -2px;
 }
 
-#PlacesToolbar menupopup[placespopup=true],
-#BMB_bookmarksPopup menupopup[placespopup=true] {
+#PlacesToolbar menupopup,
+#BMB_bookmarksPopup menupopup {
   appearance: none;
   border: none;
   padding-inline-start: 3px;
 }
 
-#BMB_bookmarksPopup menupopup[placespopup=true] {
-  background-color: transparent;
+#BMB_bookmarksPopup menupopup {
   -moz-window-shadow: none;
-
-  --panel-background: var(--arrowpanel-background);
-  --panel-color: var(--arrowpanel-color);
-  --panel-border-color: var(--arrowpanel-border-color);
   margin-top: -13px; /* 8px of padding, 4px of shadow margin, 1px of border */
 }
 
-#PlacesToolbar menupopup[placespopup=true] {
+#PlacesToolbar menupopup {
   background: transparent;
   padding-top: 4px;
   margin-inline-start: -3px;
 }
 
-#BMB_bookmarksPopup menupopup[placespopup=true]::part(content) {
+#BMB_bookmarksPopup menupopup::part(content) {
   /* emulating MozPlacesPopupArrow but without the arrow */
   box-shadow: var(--windows-panel-box-shadow);
   margin: 4px;
 }
 
-#PlacesToolbar menupopup[placespopup=true]::part(content) {
+#PlacesToolbar menupopup::part(content) {
   box-shadow: 0 0 4px rgba(0,0,0,0.2);
   background: var(--arrowpanel-background);
   color: var(--arrowpanel-color);
@@ -72,7 +67,7 @@
 
 /* Add border-radius on Windows 7 */
 @media (-moz-os-version: windows-win7) {
-  #BMB_bookmarksPopup menupopup[placespopup=true]::part(content) {
+  #BMB_bookmarksPopup menupopup::part(content) {
     border-radius: 3.5px;
   }
 }

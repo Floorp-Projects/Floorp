@@ -27,9 +27,6 @@
 }
 
 #BMB_bookmarksPopup menupopup {
-  --panel-background: var(--arrowpanel-background);
-  --panel-color: var(--arrowpanel-color);
-  --panel-border-color: var(--arrowpanel-border-color);
   margin-top: -9px; /* The top component of --panel-subview-body-padding and the 1px border */
  }
 
@@ -39,7 +36,7 @@
   margin-top: -4px;
 }
 
-#PlacesToolbar menupopup[placespopup=true]::part(content) {
+#PlacesToolbar menupopup::part(content) {
   box-shadow: 0 0 4px hsla(0, 0%, 0%, 0.2);
   background: var(--arrowpanel-background);
   border: 1px solid var(--arrowpanel-border-color);
