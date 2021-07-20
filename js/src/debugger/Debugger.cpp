@@ -4015,9 +4015,7 @@ const JSClassOps DebuggerInstanceObject::classOps_ = {
 };
 
 const JSClass DebuggerInstanceObject::class_ = {
-    "Debugger",
-    JSCLASS_HAS_PRIVATE |
-        JSCLASS_HAS_RESERVED_SLOTS(Debugger::JSSLOT_DEBUG_COUNT),
+    "Debugger", JSCLASS_HAS_RESERVED_SLOTS(Debugger::JSSLOT_DEBUG_COUNT),
     &classOps_};
 
 static Debugger* Debugger_fromThisValue(JSContext* cx, const CallArgs& args,
@@ -4635,7 +4633,7 @@ bool Debugger::construct(JSContext* cx, unsigned argc, Value* vp) {
 
     // The object owns the released pointer.
     debugger = dbg.release();
-    InitObjectPrivate(obj, debugger, MemoryUse::Debugger);
+    InitReservedSlot(obj, JSSLOT_DEBUG_DEBUGGER, debugger, MemoryUse::Debugger);
   }
 
   // Add the initial debuggees, if any.
