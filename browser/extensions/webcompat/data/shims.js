@@ -316,6 +316,20 @@ const AVAILABLE_SHIMS = [
     matches: ["*://cdn.adsafeprotected.com/iasPET.1.js"],
   },
   {
+    id: "Moat",
+    platform: "all",
+    name: "Moat",
+    bug: "1713704",
+    file: "moat.js",
+    matches: [
+      "*://*.moatads.com/*/moatad.js*",
+      "*://*.moatads.com/*/moatapi.js*",
+      "*://*.moatads.com/*/moatheader.js*",
+      "*://*.moatads.com/*/yi.js*",
+    ],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "Rambler",
     platform: "all",
     name: "Rambler Authenticator",
