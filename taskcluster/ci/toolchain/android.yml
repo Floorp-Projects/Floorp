@@ -8,23 +8,45 @@ job-defaults:
         docker-image: {in-tree: android-build}
         max-run-time: 1800
 
+# In automation, we generate the AVD using the linux64-android-avd jobs. On
+# developers' machines, bootstrap will download the artifact from the avd job
+# instead of generating it.
+#
+# The Android AVD needs the corresponding system image generated in the
+# linux64-android-system-image TL job. System images are not redistributable,
+# so locally bootstrap will use sdkmanager to download the corresponding system
+# images.
 linux64-android-avd-x86_64-repack:
+    attributes:
+        local-toolchain: true
     description: "Android AVD (Linux) repack toolchain build"
     treeherder:
         symbol: TL(avd-x86_64-linux)
-    worker:
-        artifacts:
-            - name: project/gecko/android-avd
-              path: /builds/worker/project/gecko/android-avd/
-              type: directory
+    run-on-projects: [trunk]
     run:
         script: repack-android-avd-linux.sh
         arguments:
             - 'python/mozboot/mozboot/android-avds/x86_64.json'
         resources:
             - 'python/mozboot/**/*android*'
-        toolchain-artifact: project/gecko/android-avd/android-avd-linux.tar.zst
+        toolchain-artifact: public/build/android-avd-linux.tar.zst
         toolchain-alias: android-avd-x86_64-linux
+
+linux64-android-avd-arm-repack:
+    attributes:
+        local-toolchain: true
+    description: "Android AVD (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(avd-arm-linux)
+    run-on-projects: [trunk]
+    run:
+        script: repack-android-avd-linux.sh
+        arguments:
+            - 'python/mozboot/mozboot/android-avds/arm.json'
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: public/build/android-avd-linux.tar.zst
+        toolchain-alias: android-avd-arm-linux
 
 linux64-android-system-image-x86_64-repack:
     description: "Android System Images (Linux) repack toolchain build"

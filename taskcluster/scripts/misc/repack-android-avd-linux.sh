@@ -16,7 +16,7 @@ start_xvfb '1024x768x24' 2
 # This script is for fetching and repacking the Android SDK (for
 # Linux), the tools required to produce Android packages.
 
-UPLOAD_DIR=$HOME/project/gecko/android-avd
+UPLOAD_DIR=/builds/worker/artifacts/
 AVD_JSON_CONFIG="$1"
 
 mkdir -p $HOME/artifacts $UPLOAD_DIR
