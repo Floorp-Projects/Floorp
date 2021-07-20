@@ -537,7 +537,9 @@ void nsIContent::nsExtendedContentSlots::TraverseExtendedSlots(
 
 nsIContent::nsExtendedContentSlots::nsExtendedContentSlots() = default;
 
-nsIContent::nsExtendedContentSlots::~nsExtendedContentSlots() = default;
+nsIContent::nsExtendedContentSlots::~nsExtendedContentSlots() {
+  MOZ_ASSERT(!mManualSlotAssignment);
+}
 
 size_t nsIContent::nsExtendedContentSlots::SizeOfExcludingThis(
     MallocSizeOf aMallocSizeOf) const {

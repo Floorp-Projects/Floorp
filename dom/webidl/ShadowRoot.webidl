@@ -16,12 +16,16 @@ enum ShadowRootMode {
   "closed"
 };
 
+enum SlotAssignmentMode { "manual", "named" };
+
 // https://dom.spec.whatwg.org/#shadowroot
 [Exposed=Window]
 interface ShadowRoot : DocumentFragment
 {
   // Shadow DOM v1
   readonly attribute ShadowRootMode mode;
+  [Pref="dom.shadowdom.slot.assign.enabled"]
+  readonly attribute SlotAssignmentMode slotAssignment;
   readonly attribute Element host;
 
   Element? getElementById(DOMString elementId);

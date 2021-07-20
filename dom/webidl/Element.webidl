@@ -260,6 +260,8 @@ partial interface Element {
 // https://dom.spec.whatwg.org/#dictdef-shadowrootinit
 dictionary ShadowRootInit {
   required ShadowRootMode mode;
+  [Pref="dom.shadowdom.slot.assign.enabled"]
+  SlotAssignmentMode slotAssignment = "named";
 };
 
 // https://dom.spec.whatwg.org/#element
