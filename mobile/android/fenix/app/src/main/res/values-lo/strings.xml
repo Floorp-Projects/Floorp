@@ -1571,7 +1571,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ຂໍ້ຄວາມທີ່ຈະໃຊ້ໃນການຄົ້ນຫາ</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">ແທນທີ່ຄິວລີດ້ວຍ “%s”. ຕົວຢ່າ: \nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">ແທນທີ່ຄິວລີດ້ວຍ “%s”. ຕົວຢ່າ: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
 

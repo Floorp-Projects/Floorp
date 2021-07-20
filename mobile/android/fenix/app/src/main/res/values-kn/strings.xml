@@ -1296,7 +1296,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ಬಳಸಲು ಸ್ಟ್ರಿಂಗ್ ಹುಡುಕಿ</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">ಪ್ರಶ್ನೆಯನ್ನು “%s” ನೊಂದಿಗೆ ಬದಲಾಯಿಸಿ. ಉದಾಹರಣೆ: \n https://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">ಪ್ರಶ್ನೆಯನ್ನು “%s” ನೊಂದಿಗೆ ಬದಲಾಯಿಸಿ. ಉದಾಹರಣೆ: \n https://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->

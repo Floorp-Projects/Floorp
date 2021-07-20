@@ -1584,7 +1584,7 @@ en llinia y con nós.</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">La cadena de busca a usar</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Troca la consulta por «%s». Exemplu:\nhttps://www.duckduckgo.com/?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Troca la consulta por «%s». Exemplu:\nhttps://www.duckduckgo.com/?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Deprender más</string>
 

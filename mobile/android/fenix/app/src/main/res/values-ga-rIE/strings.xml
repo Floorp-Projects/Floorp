@@ -1163,7 +1163,7 @@
     <string name="search_add_custom_engine_search_string_hint">Teaghrán cuardaigh</string>
 
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Cuir “%s” in áit an iarratais. Mar shampla:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Cuir “%s” in áit an iarratais. Mar shampla:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Tuilleadh Eolais</string>
 
