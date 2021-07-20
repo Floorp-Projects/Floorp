@@ -17,7 +17,7 @@ object Versions {
 
     const val mockwebserver = "3.10.0"
 
-    const val android_gradle_plugin = "7.0.0-beta05"
+    const val android_gradle_plugin = "7.0.0-rc01"
     const val android_maven_publish_plugin = "3.6.2"
     const val lint = "27.0.1"
     const val detekt = "1.17.1"
