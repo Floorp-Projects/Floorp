@@ -46,10 +46,15 @@
         var cancel = false;
         var selectstartTarget = null;
 
-        async function UpdateSelectEventsOntextControlsPref(aEnabled) {
-          await SpecialPowers.pushPrefEnv({'set': [['dom.select_events.textcontrols.enabled', aEnabled]]});
+        async function UpdateSelectEventsOnTextControlsPref(aEnabled) {
+          await SpecialPowers.pushPrefEnv({
+            'set': [
+              ['dom.select_events.textcontrols.selectstart.enabled', aEnabled],
+              ['dom.select_events.textcontrols.selectionchange.enabled', aEnabled]
+            ]
+          });
         }
-        await UpdateSelectEventsOntextControlsPref(false);
+        await UpdateSelectEventsOnTextControlsPref(false);
 
         document.addEventListener('selectstart', function(aEvent) {
           console.log("originaltarget", aEvent.originalTarget, "new", selectstartTarget);
@@ -331,7 +336,7 @@
         // Releasing the mouse shouldn't do anything
         await mouseAction(elt("input"), 50, "mouseup", 0, 0, 0, 0);
 
-        await UpdateSelectEventsOntextControlsPref(true);
+        await UpdateSelectEventsOnTextControlsPref(true);
 
         await mouseAction(elt("input"), 50, "mousedown", 0, 0, 0, 0);
 
@@ -374,7 +379,7 @@
         await mouseAction(elt("input"), 100, "mouseup", 0, 0, 0, 0);
 
 
-        await UpdateSelectEventsOntextControlsPref(false);
+        await UpdateSelectEventsOnTextControlsPref(false);
 
         // Without the dom.select_events.textcontrols.enabled pref,
         // pressing the mouse shouldn't do anything.
@@ -385,7 +390,7 @@
         // Releasing the mouse shouldn't do anything
         await mouseAction(elt("textarea"), 50, "mouseup", 0, 0, 0, 0);
 
-        await UpdateSelectEventsOntextControlsPref(true);
+        await UpdateSelectEventsOnTextControlsPref(true);
 
         // Select a region
         await mouseAction(elt("textarea"), 50, "mousedown", 0, 0, 0, 0);
