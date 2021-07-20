@@ -113,6 +113,12 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
     if sparse:
         cache_name += "-sparse"
 
+    # Workers using Mercurial >= 5.8 will enable revlog-compression-zstd, which
+    # workers using older versions can't understand, so they can't share cache.
+    # At the moment, only docker workers use the newer version.
+    if is_docker:
+        cache_name += "-hg58"
+
     add_cache(job, taskdesc, cache_name, checkoutdir)
 
     taskdesc["worker"].setdefault("env", {}).update(
