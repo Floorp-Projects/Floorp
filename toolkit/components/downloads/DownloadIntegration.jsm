@@ -369,6 +369,7 @@ var DownloadIntegration = {
             createAncestors: false,
           });
         } catch (ex) {
+          Cu.reportError(ex);
           // Either the preference isn't set or the directory cannot be created.
           directoryPath = await this.getSystemDownloadsDirectory();
         }
