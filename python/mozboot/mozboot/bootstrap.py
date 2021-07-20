@@ -256,7 +256,9 @@ class Bootstrapper(object):
 
         return state_dir
 
-    def maybe_install_private_packages_or_exit(self, state_dir, checkout_root):
+    def maybe_install_private_packages_or_exit(
+        self, state_dir, checkout_root, application
+    ):
         # Install the clang packages needed for building the style system, as
         # well as the version of NodeJS that we currently support.
         # Also install the clang static-analysis package by default
@@ -271,6 +273,10 @@ class Bootstrapper(object):
             self.instance.ensure_nasm_packages(state_dir, checkout_root)
             self.instance.ensure_sccache_packages(state_dir, checkout_root)
             self.instance.ensure_wasi_sysroot_packages(state_dir, checkout_root)
+        # Like 'ensure_browser_packages' or 'ensure_mobile_android_packages'
+        getattr(self.instance, "ensure_%s_packages" % application)(
+            state_dir, checkout_root
+        )
 
     def check_code_submission(self, checkout_root):
         if self.instance.no_interactive or which("moz-phab"):
@@ -387,7 +393,9 @@ class Bootstrapper(object):
                     which("git"), which("git-cinnabar"), state_dir, checkout_root
                 )
 
-        self.maybe_install_private_packages_or_exit(state_dir, checkout_root)
+        self.maybe_install_private_packages_or_exit(
+            state_dir, checkout_root, application
+        )
         self.check_code_submission(checkout_root)
         # Wait until after moz-phab setup to check telemetry so that employees
         # will be automatically opted-in.
