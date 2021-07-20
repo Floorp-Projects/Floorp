@@ -138,13 +138,13 @@ jobs:
                 - wasi-sysroot
 
     android-x86-shippable/opt:
-        description: "Android 4.0 x86 PGO instrumented"
+        description: "Android 5.0 x86 PGO instrumented"
         index:
             product: mobile
             job-name: instrumented-android-x86
         shipping-product: fennec
         treeherder:
-            platform: android-4-0-x86/pgo
+            platform: android-5-0-x86/pgo
         worker-type: b-linux
         worker:
             docker-image: {in-tree: android-build}

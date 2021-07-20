@@ -86,14 +86,14 @@ jobs:
                 - linux64-minidump-stackwalk
 
     android-x86-shippable/opt:
-        description: "Android 4.0 x86 Profile Generation"
+        description: "Android 5.0 x86 Profile Generation"
         shipping-phase: build
         shipping-product: fennec
         index:
             product: mobile
             job-name: android-x86-profile
         treeherder:
-            platform: android-4-0-x86/pgo
+            platform: android-5-0-x86/pgo
         worker-type: t-linux-xlarge-pgo
         worker:
             chain-of-trust: true
