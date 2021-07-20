@@ -760,9 +760,6 @@ class NativeObject : public JSObject {
   [[nodiscard]] static bool generateNewDictionaryShape(JSContext* cx,
                                                        HandleNativeObject obj);
 
-  [[nodiscard]] static bool reshapeForShadowedProp(JSContext* cx,
-                                                   HandleNativeObject obj);
-
   // The maximum number of slots in an object.
   // |MAX_SLOTS_COUNT * sizeof(JS::Value)| shouldn't overflow
   // int32_t (see slotsSizeMustNotOverflow).

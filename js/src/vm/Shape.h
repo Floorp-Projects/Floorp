@@ -84,9 +84,6 @@
 //   - Removing a property other than the object's last property.
 //   - The object has many properties. See maybeConvertToDictionaryForAdd for
 //     the heuristics.
-//   - For prototype objects: when a shadowing property is added to an object
-//     with this object on its prototype chain. This is used to invalidate the
-//     shape teleporting optimization. See reshapeForShadowedProp.
 //
 //   Dictionary shapes are unshared, private to a single object, and always have
 //   a DictionaryPropMap that's similarly unshared. Dictionary shape mutations

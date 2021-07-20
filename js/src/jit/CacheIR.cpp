@@ -633,7 +633,7 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
   //
   //
   // [SMDOC] Shape Teleporting Optimization
-  // ------------------------------
+  // --------------------------------------
   //
   // Starting with the assumption (and guideline to developers) that mutating
   // prototypes is an uncommon and fair-to-penalize operation we move cost
@@ -647,23 +647,24 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
   // "holder". To optimize this access we need to ensure that neither D nor C
   // has since defined a shadowing property 'x'. Since C is a prototype that
   // we assume is rarely mutated we would like to avoid checking each time if
-  // new properties are added. To do this we require that everytime C is
-  // mutated that in addition to generating a new shape for itself, it will
-  // walk the proto chain and generate new shapes for those objects on the
-  // chain (B and A). As a result, checking the shape of D and B is
-  // sufficient. Note that we do not care if the shape or properties of A
-  // change since the lookup of 'x' will stop at B.
+  // new properties are added. To do this we require that whenever C starts
+  // shadowing a property on its proto chain, we invalidate (and opt out of) the
+  // teleporting optimization by setting the InvalidatedTeleporting flag on the
+  // object we're shadowing, triggering a shape change of that object. As a
+  // result, checking the shape of D and B is sufficient. Note that we do not
+  // care if the shape or properties of A change since the lookup of 'x' will
+  // stop at B.
   //
   // The second condition we must verify is that the prototype chain was not
   // mutated. The same mechanism as above is used. When the prototype link is
   // changed, we generate a new shape for the object. If the object whose
   // link we are mutating is itself a prototype, we regenerate shapes down
-  // the chain by setting the UncacheableProto flag on them. This means the same
-  // two shape checks as above are sufficient.
+  // the chain by setting the InvalidatedTeleporting flag on them. This means
+  // the same two shape checks as above are sufficient.
   //
-  // Once the UncacheableProto flag is set, it means the shape will no longer be
-  // updated by ReshapeForProtoMutation. If any shape from receiver to holder
-  // (inclusive) is UncacheableProto, we don't apply the optimization.
+  // Once the InvalidatedTeleporting flag is set, it means the shape will no
+  // longer be changed by ReshapeForProtoMutation and ReshapeForShadowedProp.
+  // In this case we can no longer apply the optimization.
   //
   // See:
   //  - ReshapeForProtoMutation
@@ -691,13 +692,12 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
   MOZ_ASSERT(pobj == obj->staticPrototype());
   ObjOperandId protoId = writer.loadProto(objId);
 
-  // Guard prototype links from |pobj| to |holder|.
+  // Shape guard each prototype object between receiver and holder. This guards
+  // against both proto changes and shadowing properties.
   while (pobj != holder) {
-    pobj = pobj->staticPrototype();
+    writer.guardShape(protoId, pobj->shape());
 
-    // The object's proto could be nullptr so we must use GuardProto before
-    // LoadProto (LoadProto asserts the proto is non-null).
-    writer.guardProto(protoId, pobj);
+    pobj = pobj->staticPrototype();
     protoId = writer.loadProto(protoId);
   }
 }
