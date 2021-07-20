@@ -1138,7 +1138,7 @@ static bool ReshapeForShadowedPropSlow(JSContext* cx, HandleNativeObject obj,
     }
 
     if (proto->as<NativeObject>().contains(cx, id)) {
-      return NativeObject::reshapeForShadowedProp(cx, proto.as<NativeObject>());
+      return JSObject::setInvalidatedTeleporting(cx, proto);
     }
 
     proto = proto->staticPrototype();
@@ -1162,15 +1162,6 @@ static MOZ_ALWAYS_INLINE bool ReshapeForShadowedProp(JSContext* cx,
   }
 
   return ReshapeForShadowedPropSlow(cx, obj.as<NativeObject>(), id);
-}
-
-/* static */
-bool NativeObject::reshapeForShadowedProp(JSContext* cx,
-                                          HandleNativeObject obj) {
-  if (!obj->inDictionaryMode()) {
-    return toDictionaryMode(cx, obj);
-  }
-  return generateNewDictionaryShape(cx, obj);
 }
 
 static bool ChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
