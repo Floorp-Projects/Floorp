@@ -928,7 +928,7 @@ RegExpStatics* GlobalObject::getRegExpStatics(JSContext* cx,
   } else {
     resObj = &val.toObject().as<RegExpStaticsObject>();
   }
-  return static_cast<RegExpStatics*>(resObj->getPrivate(/* nfixed = */ 1));
+  return resObj->regExpStatics();
 }
 
 /* static */
