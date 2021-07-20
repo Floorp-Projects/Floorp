@@ -38,8 +38,8 @@ class ResizeObservation final : public LinkedListElement<ResizeObservation> {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ResizeObservation)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ResizeObservation)
 
-  ResizeObservation(Element&, ResizeObserver&,
-                    ResizeObserverBoxOptions, WritingMode);
+  ResizeObservation(Element&, ResizeObserver&, ResizeObserverBoxOptions,
+                    WritingMode);
 
   Element* Target() const { return mTarget; }
 
@@ -207,8 +207,8 @@ class ResizeObserverEntry final : public nsISupports, public nsWrapperCache {
    * Returns target's logical border-box size and content-box size as
    * ResizeObserverSize.
    */
-  ResizeObserverSize* BorderBoxSize() const { return mBorderBoxSize; }
-  ResizeObserverSize* ContentBoxSize() const { return mContentBoxSize; }
+  void GetBorderBoxSize(nsTArray<RefPtr<ResizeObserverSize>>& aRetVal) const;
+  void GetContentBoxSize(nsTArray<RefPtr<ResizeObserverSize>>& aRetVal) const;
 
  private:
   ~ResizeObserverEntry() = default;
