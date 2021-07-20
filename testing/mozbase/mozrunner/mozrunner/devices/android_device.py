@@ -19,7 +19,6 @@ import time
 from distutils.spawn import find_executable
 from enum import Enum
 
-from mozbuild.base import MozbuildObject
 from mozdevice import ADBHost, ADBDeviceFactory
 from six.moves import input, urllib
 
@@ -84,16 +83,9 @@ class AvdInfo(object):
     Simple class to contain an AVD description.
     """
 
-    def __init__(
-        self, description, name, tooltool_manifest, toolchain_job, extra_args, x86
-    ):
-        assert not (tooltool_manifest and toolchain_job), (
-            "%s: specify manifest or toolchain job, not both" % description
-        )
+    def __init__(self, description, name, extra_args, x86):
         self.description = description
         self.name = name
-        self.tooltool_manifest = tooltool_manifest
-        self.toolchain_job = toolchain_job
         self.extra_args = extra_args
         self.x86 = x86
 
@@ -114,10 +106,8 @@ AVD_DICT = {
         False,
     ),
     "x86_64": AvdInfo(
-        "Android 7.0 x86/x86_64",
-        "mozemulator-x86-7.0",
-        "testing/config/tooltool-manifests/androidx86_7_0/mach-emulator.manifest",
-        None,
+        "Android x86_64",
+        "mozemulator-x86_64",
         [
             "-skip-adb-auth",
             "-verbose",
@@ -129,6 +119,12 @@ AVD_DICT = {
             "3072",
             "-cores",
             "4",
+            "-skin",
+            "800x1280",
+            "-prop",
+            "ro.test_harness=true",
+            "-no-snapstorage",
+            "-no-snapshot",
         ],
         True,
     ),
@@ -283,8 +279,8 @@ def verify_android_device(
         ).strip()
         if response.lower().startswith("y") or response == "":
             if not emulator.check_avd():
-                _log_info("Fetching AVD...")
-                emulator.update_avd()
+                _log_info("Android AVD not found, please run |mach bootstrap|")
+                return
             _log_info(
                 "Starting emulator running %s..." % emulator.get_avd_description()
             )
@@ -531,7 +527,7 @@ class AndroidEmulator(object):
         emulator = AndroidEmulator()
         if not emulator.is_running() and emulator.is_available():
             if not emulator.check_avd():
-                emulator.update_avd()
+                print("Android Emulator AVD not found, please run |mach bootstrap|")
             emulator.start()
             emulator.wait_for_start()
             emulator.wait()
@@ -581,55 +577,17 @@ class AndroidEmulator(object):
             found = True
         return found
 
-    def check_avd(self, force=False):
+    def check_avd(self):
         """
         Determine if the AVD is already installed locally.
-        (This is usually used to determine if update_avd() is likely
-        to require a download.)
 
         Returns True if the AVD is installed.
         """
         avd = os.path.join(EMULATOR_HOME_DIR, "avd", self.avd_info.name + ".avd")
-        if force and os.path.exists(avd):
-            shutil.rmtree(avd)
         if os.path.exists(avd):
             _log_debug("AVD found at %s" % avd)
             return True
         return False
-
-    def update_avd(self, force=False):
-        """
-        If required, update the AVD via tooltool.
-
-        If the AVD directory is not found, or "force" is requested,
-        download the tooltool manifest associated with the AVD and then
-        invoke tooltool.py on the manifest. tooltool.py will download the
-        required archive (unless already present in the local tooltool
-        cache) and install the AVD.
-        """
-        avd = os.path.join(EMULATOR_HOME_DIR, "avd", self.avd_info.name + ".avd")
-        ini_file = os.path.join(EMULATOR_HOME_DIR, "avd", self.avd_info.name + ".ini")
-        if force and os.path.exists(avd):
-            shutil.rmtree(avd)
-        if force:
-            for f in glob.glob(os.path.join(EMULATOR_HOME_DIR, "AVD*.checksum")):
-                os.remove(f)
-        if not os.path.exists(avd):
-            if os.path.exists(ini_file):
-                os.remove(ini_file)
-            if self.avd_info.tooltool_manifest:
-                path = self.avd_info.tooltool_manifest
-                _get_tooltool_manifest(
-                    self.substs, path, EMULATOR_HOME_DIR, "releng.manifest"
-                )
-                _tooltool_fetch(self.substs)
-            elif self.avd_info.toolchain_job:
-                _install_toolchain_artifact(self.avd_info.toolchain_job)
-            else:
-                raise Exception(
-                    "either a tooltool manifest or a toolchain job is required"
-                )
-            self._update_avd_paths()
 
     def start(self, gpu_arg=None):
         """
@@ -645,6 +603,7 @@ class AndroidEmulator(object):
         auth_file.close()
 
         env = os.environ
+        env["ANDROID_EMULATOR_HOME"] = EMULATOR_HOME_DIR
         env["ANDROID_AVD_HOME"] = os.path.join(EMULATOR_HOME_DIR, "avd")
         command = [self.emulator_path, "-avd", self.avd_info.name]
         override = os.environ.get("MOZ_EMULATOR_COMMAND_ARGS")
@@ -1010,34 +969,6 @@ def _tooltool_fetch(substs):
         _log_debug(response)
     except Exception as e:
         _log_warning(str(e))
-
-
-def _install_toolchain_artifact(toolchain_job, no_unpack=False):
-    build_obj = MozbuildObject.from_environment()
-    mach_binary = os.path.join(build_obj.topsrcdir, "mach")
-    mach_binary = os.path.abspath(mach_binary)
-    if not os.path.exists(mach_binary):
-        raise ValueError("mach not found at %s" % mach_binary)
-
-    # If Python can't figure out what its own executable is, there's little
-    # chance we're going to be able to execute mach on its own, particularly
-    # on Windows.
-    if not sys.executable:
-        raise ValueError("cannot determine path to Python executable")
-
-    cmd = [
-        sys.executable,
-        mach_binary,
-        "artifact",
-        "toolchain",
-        "--from-build",
-        toolchain_job,
-    ]
-
-    if no_unpack:
-        cmd += ["--no-unpack"]
-
-    subprocess.check_call(cmd, cwd=EMULATOR_HOME_DIR)
 
 
 def _get_host_platform():
