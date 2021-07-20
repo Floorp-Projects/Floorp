@@ -42,4 +42,4 @@ jobs:
             using: run-task
             command: >-
                 cd $MOZ_FETCHES_DIR &&
-                python tools/fuzzing/smoke/smoke.py
+                python3 tools/fuzzing/smoke/smoke.py
