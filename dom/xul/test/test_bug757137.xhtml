@@ -17,7 +17,7 @@ SimpleTest.waitForExplicitFinish();
 // Force off out-of-process mozbrowser because we need to grab its
 // |window| synchronously from here.  Out-of-process docshell creation
 // for mozbrowser haves entirely differently.
-SpecialPowers.pushPrefEnv({"set":[["dom.ipc.tabs.disabled", true]]}, startTest);
+SpecialPowers.pushPrefEnv({"set":[["dom.ipc.tabs.disabled", true]]}).then(startTest);
 
 function startTest() {
   var otherWindow = window.browsingContext.topChromeWindow.open("window_bug757137.xhtml", "", "chrome");
