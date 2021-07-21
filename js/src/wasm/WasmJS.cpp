@@ -3705,6 +3705,10 @@ void WasmExceptionObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
+static bool IsException(HandleValue v) {
+  return v.isObject() && v.toObject().is<WasmExceptionObject>();
+}
+
 bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -3832,12 +3836,115 @@ const JSPropertySpec WasmExceptionObject::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "WebAssembly.Exception", JSPROP_READONLY),
     JS_PS_END};
 
-const JSFunctionSpec WasmExceptionObject::methods[] = {JS_FS_END};
+/* static */
+bool WasmExceptionObject::isImpl(JSContext* cx, const CallArgs& args) {
+  RootedWasmExceptionObject exnObj(
+      cx, &args.thisv().toObject().as<WasmExceptionObject>());
+
+  if (!args.requireAtLeast(cx, "WebAssembly.Exception.is", 1)) {
+    return false;
+  }
+
+  if (!args[0].isObject() || !IsTagObject(&args[0].toObject())) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_EXN_ARG);
+    return false;
+  }
+
+  RootedWasmTagObject exnTag(cx, &args.get(0).toObject().as<WasmTagObject>());
+  args.rval().setBoolean(&exnTag->tag() == &exnObj->tag());
+
+  return true;
+}
+
+/* static  */
+bool WasmExceptionObject::isMethod(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsException, isImpl>(cx, args);
+}
+
+/* static */
+bool WasmExceptionObject::getArgImpl(JSContext* cx, const CallArgs& args) {
+  RootedWasmExceptionObject exnObj(
+      cx, &args.thisv().toObject().as<WasmExceptionObject>());
+
+  if (!args.requireAtLeast(cx, "WebAssembly.Exception.getArg", 2)) {
+    return false;
+  }
+
+  if (!args[0].isObject() || !IsTagObject(&args[0].toObject())) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_EXN_ARG);
+    return false;
+  }
+
+  RootedWasmTagObject exnTag(cx, &args.get(0).toObject().as<WasmTagObject>());
+  if (&exnTag->tag() != &exnObj->tag()) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_EXN_TAG);
+    return false;
+  }
+
+  uint32_t index;
+  if (!EnforceRangeU32(cx, args.get(1), "Exception", "getArg index", &index)) {
+    return false;
+  }
+
+  wasm::ValTypeVector& params = exnTag->valueTypes();
+  if (index >= params.length()) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_RANGE,
+                             "Exception", "getArg index");
+    return false;
+  }
+
+  RootedValue result(cx);
+  if (params[index].isReference()) {
+    uint32_t refIndex = 0;
+    for (size_t i = 0; i < index; i++) {
+      if (params[i].isReference()) {
+        refIndex++;
+      }
+    }
+    JSObject* ref = &exnObj->refs().getDenseElement(refIndex).toObject();
+    if (!ToJSValue(cx, &ref, params[index], &result)) {
+      return false;
+    }
+  } else {
+    uint32_t offset = 0;
+    for (size_t i = 0; i < index; i++) {
+      if (!params[i].isReference()) {
+        offset += SizeOf(params[i]);
+      }
+    }
+    if (!ToJSValue(cx, exnObj->values().dataPointer() + offset, params[index],
+                   &result)) {
+      return false;
+    }
+  }
+
+  args.rval().set(result);
+  return true;
+}
+
+/* static  */
+bool WasmExceptionObject::getArg(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsException, getArgImpl>(cx, args);
+}
+
+const JSFunctionSpec WasmExceptionObject::methods[] = {
+    JS_FN("is", WasmExceptionObject::isMethod, 1, JSPROP_ENUMERATE),
+    JS_FN("getArg", WasmExceptionObject::getArg, 2, JSPROP_ENUMERATE),
+    JS_FS_END};
 
 const JSFunctionSpec WasmExceptionObject::static_methods[] = {JS_FS_END};
 
 ExceptionTag& WasmExceptionObject::tag() const {
   return *(ExceptionTag*)getReservedSlot(TAG_SLOT).toPrivate();
+}
+
+ArrayBufferObject& WasmExceptionObject::values() const {
+  return getReservedSlot(VALUES_SLOT).toObject().as<ArrayBufferObject>();
 }
 
 ArrayObject& WasmExceptionObject::refs() const {
