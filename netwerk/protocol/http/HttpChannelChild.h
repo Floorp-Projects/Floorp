@@ -137,9 +137,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   mozilla::ipc::IPCResult RecvReportSecurityMessage(
       const nsString& messageTag, const nsString& messageCategory) override;
 
-  mozilla::ipc::IPCResult RecvIssueDeprecationWarning(
-      const uint32_t& warning, const bool& asError) override;
-
   mozilla::ipc::IPCResult RecvSetPriority(const int16_t& aPriority) override;
 
   mozilla::ipc::IPCResult RecvOriginalCacheInputStreamAvailable(

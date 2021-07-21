@@ -109,9 +109,6 @@ child:
   // avoid races: see bug 591708).
   async DeleteSelf();
 
-  // Tell the child to issue a deprecation warning.
-  async IssueDeprecationWarning(uint32_t warning, bool asError);
-
   // When CORS blocks the request in the parent process, it doesn't have the
   // correct window ID, so send the message to the child for logging to the web
   // console.

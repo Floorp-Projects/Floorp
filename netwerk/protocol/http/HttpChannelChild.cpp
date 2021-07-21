@@ -53,7 +53,6 @@
 #include "InterceptedChannel.h"
 #include "nsContentSecurityManager.h"
 #include "nsICompressConvStats.h"
-#include "nsIDeprecationWarner.h"
 #include "mozilla/dom/Document.h"
 #include "nsIScriptError.h"
 #include "nsISerialEventTarget.h"
@@ -2865,16 +2864,6 @@ void HttpChannelChild::CancelOnMainThread(nsresult aRv) {
         self->Cancel(aRv);
       }));
   mEventQ->Resume();
-}
-
-mozilla::ipc::IPCResult HttpChannelChild::RecvIssueDeprecationWarning(
-    const uint32_t& warning, const bool& asError) {
-  nsCOMPtr<nsIDeprecationWarner> warner;
-  GetCallback(warner);
-  if (warner) {
-    warner->IssueWarning(warning, asError);
-  }
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvSetPriority(
