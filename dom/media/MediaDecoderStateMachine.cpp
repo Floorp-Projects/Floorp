@@ -592,9 +592,7 @@ class MediaDecoderStateMachine::DecodingState
   }
 
   void HandleVideoDecoded(VideoData* aVideo, TimeStamp aDecodeStart) override {
-    const auto currentTime = mMaster->mMediaSink->IsStarted()
-                                 ? mMaster->GetClock()
-                                 : mMaster->GetMediaTime();
+    const auto currentTime = mMaster->GetMediaTime();
     if (aVideo->GetEndTime() < currentTime) {
       SLOG("video %" PRId64 " is too late (current=%" PRId64 ")",
            aVideo->GetEndTime().ToMicroseconds(), currentTime.ToMicroseconds());
