@@ -5,10 +5,6 @@
 
 const CC = Components.Constructor;
 
-const TEST_DOMAIN = "http://example.net/";
-const TEST_PATH =
-  TEST_DOMAIN + "browser/browser/components/resistfingerprinting/test/browser/";
-
 let gMaxAvailWidth;
 let gMaxAvailHeight;
 

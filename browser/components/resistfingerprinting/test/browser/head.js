@@ -4,6 +4,96 @@
 
 "use strict";
 
+const TEST_PATH =
+  "http://example.net/browser/browser/" +
+  "components/resistfingerprinting/test/browser/";
+
+const PERFORMANCE_TIMINGS = [
+  "navigationStart",
+  "unloadEventStart",
+  "unloadEventEnd",
+  "redirectStart",
+  "redirectEnd",
+  "fetchStart",
+  "domainLookupStart",
+  "domainLookupEnd",
+  "connectStart",
+  "connectEnd",
+  "secureConnectionStart",
+  "requestStart",
+  "responseStart",
+  "responseEnd",
+  "domLoading",
+  "domInteractive",
+  "domContentLoadedEventStart",
+  "domContentLoadedEventEnd",
+  "domComplete",
+  "loadEventStart",
+  "loadEventEnd",
+];
+
+/**
+ * Sets up tests for making sure that performance APIs have been correctly
+ * spoofed or disabled.
+ */
+let setupPerformanceAPISpoofAndDisableTest = async function(
+  resistFingerprinting,
+  reduceTimerPrecision,
+  crossOriginIsolated,
+  expectedPrecision,
+  runTests,
+  workerCall
+) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", resistFingerprinting],
+      ["privacy.reduceTimerPrecision", reduceTimerPrecision],
+      [
+        "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
+        expectedPrecision * 1000,
+      ],
+      ["browser.tabs.remote.useCrossOriginOpenerPolicy", crossOriginIsolated],
+      ["browser.tabs.remote.useCrossOriginEmbedderPolicy", crossOriginIsolated],
+    ],
+  });
+
+  let url = crossOriginIsolated
+    ? `https://example.com/browser/browser/components/resistfingerprinting` +
+      `/test/browser/coop_header.sjs?crossOriginIsolated=${crossOriginIsolated}`
+    : TEST_PATH + "file_dummy.html";
+
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
+
+  // No matter what we set the precision to, if we're in ResistFingerprinting mode
+  // we use the larger of the precision pref and the constant 100ms
+  if (resistFingerprinting) {
+    expectedPrecision = expectedPrecision < 100 ? 100 : expectedPrecision;
+  }
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [
+      {
+        list: PERFORMANCE_TIMINGS,
+        precision: expectedPrecision,
+        isRoundedFunc: isTimeValueRounded.toString(),
+        workerCall,
+      },
+    ],
+    runTests
+  );
+
+  if (crossOriginIsolated) {
+    let remoteType = tab.linkedBrowser.remoteType;
+    ok(
+      remoteType.startsWith(E10SUtils.WEB_REMOTE_COOP_COEP_TYPE_PREFIX),
+      `${remoteType} expected to be coop+coep`
+    );
+  }
+
+  await BrowserTestUtils.closeWindow(win);
+};
+
 let isTimeValueRounded = (x, expectedPrecision) => {
   let rounded = Math.floor(x / expectedPrecision) * expectedPrecision;
   // First we do the perfectly normal check that should work just fine
@@ -412,10 +502,6 @@ class RoundedWindowTest {
     });
   }
 
-  get TEST_PATH() {
-    return "http://example.net/browser/browser/components/resistfingerprinting/test/browser/";
-  }
-
   constructor(testCases) {
     this.testCases = testCases;
   }
@@ -445,7 +531,7 @@ class RoundedWindowTest {
     // Open a tab to test.
     this.tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      this.TEST_PATH + "file_dummy.html"
+      TEST_PATH + "file_dummy.html"
     );
 
     for (let test of this.testCases) {
