@@ -412,29 +412,6 @@ void test_new_visit_adds_place_guid() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//// IPC-only Tests
-
-void test_two_null_links_same_uri() {
-  // Tests that we do not crash when we have had two nullptr Links passed to
-  // RegisterVisitedCallback and then the visit occurs (bug 607469).  This only
-  // happens in IPC builds.
-  nsCOMPtr<nsIURI> testURI = new_test_uri();
-
-  nsCOMPtr<IHistory> history = do_get_IHistory();
-  history->RegisterVisitedCallback(testURI, nullptr);
-  history->RegisterVisitedCallback(testURI, nullptr);
-
-  nsresult rv = history->VisitURI(nullptr, testURI, nullptr,
-                                  mozilla::IHistory::TOP_LEVEL);
-  do_check_success(rv);
-
-  RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
-  finisher->WaitForNotification();
-
-  run_next_test();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 //// Test Harness
 
 /**
@@ -457,9 +434,6 @@ Test gTests[] = {
     PTEST(test_visituri_transition_typed),
     PTEST(test_visituri_transition_embed),
     PTEST(test_new_visit_adds_place_guid),
-
-    // The rest of these tests are tests that are only run in IPC builds.
-    PTEST(test_two_null_links_same_uri),
 };
 
 #define TEST_NAME "IHistory"
