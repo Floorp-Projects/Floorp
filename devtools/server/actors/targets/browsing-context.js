@@ -1350,7 +1350,10 @@ const browsingContextTargetPrototype = {
       navigationStart: Date.now(),
     });
 
-    this._windowDestroyed(this.window, null, true);
+    this._windowDestroyed(this.window, {
+      isFrozen: true,
+      isFrameSwitching: true,
+    });
 
     // Immediately change the window as this window, if in process of unload
     // may already be non working on the next cycle and start throwing
@@ -1399,7 +1402,9 @@ const browsingContextTargetPrototype = {
     // If this follows WindowGlobal lifecycle, a new Target actor will be spawn for the top level
     // target document. Only notify about in-process iframes.
     // Note that OOP iframes won't emit window-ready and will also have their dedicated target.
-    if (this.followWindowGlobalLifeCycle && isTopLevel) {
+    // Also, we allow window-ready to be fired for iframe switching of top level documents,
+    // otherwise the iframe dropdown no longer works with server side targets.
+    if (this.followWindowGlobalLifeCycle && isTopLevel && !isFrameSwitching) {
       return;
     }
 
@@ -1412,13 +1417,18 @@ const browsingContextTargetPrototype = {
     });
   },
 
-  _windowDestroyed(window, id = null, isFrozen = false) {
+  _windowDestroyed(
+    window,
+    { id = null, isFrozen = false, isFrameSwitching = false }
+  ) {
     const isTopLevel = window == this.window;
 
     // If this follows WindowGlobal lifecycle, this target will be destroyed, alongside its top level document.
     // Only notify about in-process iframes.
     // Note that OOP iframes won't emit window-ready and will also have their dedicated target.
-    if (this.followWindowGlobalLifeCycle && isTopLevel) {
+    // Also, we allow window-destroyed to be fired for iframe switching of top level documents,
+    // otherwise the iframe dropdown no longer works with server side targets.
+    if (this.followWindowGlobalLifeCycle && isTopLevel && !isFrameSwitching) {
       return;
     }
 
@@ -1787,7 +1797,7 @@ DebuggerProgressListener.prototype = {
       return;
     }
 
-    this._targetActor._windowDestroyed(window, null, true);
+    this._targetActor._windowDestroyed(window, { isFrozen: true });
     this._knownWindowIDs.delete(getWindowID(window));
   }, "DebuggerProgressListener.prototype.onWindowHidden"),
 
@@ -1803,7 +1813,7 @@ DebuggerProgressListener.prototype = {
     const window = this._knownWindowIDs.get(innerID);
     if (window) {
       this._knownWindowIDs.delete(innerID);
-      this._targetActor._windowDestroyed(window, innerID);
+      this._targetActor._windowDestroyed(window, { id: innerID });
     }
 
     // Bug 1598364: when debugging browser.xhtml from the Browser Toolbox
