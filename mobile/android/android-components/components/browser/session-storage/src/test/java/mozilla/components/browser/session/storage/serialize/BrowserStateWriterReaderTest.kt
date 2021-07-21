@@ -156,7 +156,7 @@ class BrowserStateWriterReaderTest {
             url = "https://www.mozilla.org",
             title = "Mozilla",
             contextId = "work",
-            lastMediaAccessState = LastMediaAccessState("https://www.mozilla.org", lastMediaAccess = 333L)
+            lastMediaAccessState = LastMediaAccessState("https://www.mozilla.org", lastMediaAccess = 333L, true)
         )
 
         val writer = BrowserStateWriter()
@@ -173,6 +173,7 @@ class BrowserStateWriterReaderTest {
 
         assertEquals("https://www.mozilla.org", restoredTab.lastMediaAccessState.lastMediaUrl)
         assertEquals(333L, restoredTab.lastMediaAccessState.lastMediaAccess)
+        assertTrue(restoredTab.lastMediaAccessState.mediaSessionActive)
     }
 }
 

@@ -12,6 +12,8 @@ import mozilla.components.browser.state.state.LastMediaAccessState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LastAccessReducerTest {
@@ -42,9 +44,11 @@ class LastAccessReducerTest {
 
         assertEquals(2, updatedState.tabs.size)
         assertEquals(345, updatedState.tabs[0].lastMediaAccessState.lastMediaAccess)
+        assertTrue(updatedState.tabs[0].lastMediaAccessState.mediaSessionActive)
         assertEquals("https://mozilla.org", updatedState.tabs[0].lastMediaAccessState.lastMediaUrl)
         assertEquals(0, updatedState.tabs[1].lastMediaAccessState.lastMediaAccess)
         assertEquals("", updatedState.tabs[1].lastMediaAccessState.lastMediaUrl)
+        assertFalse(updatedState.tabs[1].lastMediaAccessState.mediaSessionActive)
     }
 
     @Test
@@ -68,32 +72,33 @@ class LastAccessReducerTest {
     }
 
     @Test
-    fun `WHEN the reducer is called for ResetLastMediaAccessAction THEN a new state with empty LastMediaAccessState is returned`() {
+    fun `WHEN the reducer is called for ResetLastMediaSessionAction THEN a new state with a false mediaSessionActive is returned`() {
         val tab1 = TabSessionState(id = "tab1", content = mock())
         val tab2 = TabSessionState(
             id = "tab2",
             content = mock(),
-            lastMediaAccessState = LastMediaAccessState("https://mozilla.org", 222)
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.org", 222, true)
         )
         val browserState = BrowserState(tabs = listOf(tab1, tab2))
 
         val updatedState = LastAccessReducer.reduce(
-            browserState, LastAccessAction.ResetLastMediaAccessAction(tabId = "tab2")
+            browserState, LastAccessAction.ResetLastMediaSessionAction(tabId = "tab2")
         )
 
         assertEquals(2, updatedState.tabs.size)
         assertEquals(0, updatedState.tabs[0].lastMediaAccessState.lastMediaAccess)
         assertEquals("", updatedState.tabs[0].lastMediaAccessState.lastMediaUrl)
-        assertEquals(0, updatedState.tabs[1].lastMediaAccessState.lastMediaAccess)
+        assertEquals(222, updatedState.tabs[1].lastMediaAccessState.lastMediaAccess)
         assertEquals("https://mozilla.org", updatedState.tabs[1].lastMediaAccessState.lastMediaUrl)
+        assertFalse(updatedState.tabs[1].lastMediaAccessState.mediaSessionActive)
     }
 
     @Test
-    fun `WHEN the reducer is called for ResetLastMediaAccessAction on a custom tab THEN the BrowserState is not updated`() {
+    fun `WHEN the reducer is called for ResetLastMediaSessionAction on a custom tab THEN the BrowserState is not updated`() {
         val normalTab = TabSessionState(
             id = "tab2",
             content = mock(),
-            lastMediaAccessState = LastMediaAccessState("https://mozilla.org", 222)
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.org", 222, true)
         )
         val privateTab = TabSessionState(id = "tab2", content = ContentState(url = "https:mozilla.org", private = true))
         val customTab = CustomTabSessionState(

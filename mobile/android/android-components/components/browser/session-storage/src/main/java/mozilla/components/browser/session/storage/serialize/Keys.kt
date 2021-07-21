@@ -24,6 +24,7 @@ internal object Keys {
     const val SESSION_LAST_ACCESS = "lastAccess"
     const val SESSION_LAST_MEDIA_URL = "lastMediaUrl"
     const val SESSION_LAST_MEDIA_ACCESS = "lastMediaAccess"
+    const val SESSION_LAST_MEDIA_SESSION_ACTIVE = "mediaSessionActive"
     const val SESSION_SOURCE_KEY = "source"
 
     const val SESSION_HISTORY_METADATA_URL = "historyMetadataUrl"

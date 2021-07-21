@@ -167,6 +167,7 @@ private fun JsonReader.tabSession(): RecoverableTab? {
     var lastAccess: Long? = null
     var lastMediaUrl: String? = null
     var lastMediaAccess: Long? = null
+    var mediaSessionActive: Boolean? = null
 
     var readerStateActive: Boolean? = null
     var readerActiveUrl: String? = null
@@ -191,6 +192,7 @@ private fun JsonReader.tabSession(): RecoverableTab? {
             Keys.SESSION_HISTORY_METADATA_REFERRER_URL -> historyMetadataReferrerUrl = nextStringOrNull()
             Keys.SESSION_LAST_ACCESS -> lastAccess = nextLong()
             Keys.SESSION_LAST_MEDIA_URL -> lastMediaUrl = nextString()
+            Keys.SESSION_LAST_MEDIA_SESSION_ACTIVE -> mediaSessionActive = nextBoolean()
             Keys.SESSION_LAST_MEDIA_ACCESS -> lastMediaAccess = nextLong()
             Keys.SESSION_SOURCE_KEY -> nextString()
             else -> throw IllegalArgumentException("Unknown session key: $name")
@@ -221,6 +223,10 @@ private fun JsonReader.tabSession(): RecoverableTab? {
         },
         private = false, // We never serialize private sessions
         lastAccess = lastAccess ?: 0,
-        lastMediaAccessState = LastMediaAccessState(lastMediaUrl ?: "", lastMediaAccess = lastMediaAccess ?: 0)
+        lastMediaAccessState = LastMediaAccessState(
+            lastMediaUrl ?: "",
+            lastMediaAccess = lastMediaAccess ?: 0,
+            mediaSessionActive = mediaSessionActive ?: false
+        )
     )
 }

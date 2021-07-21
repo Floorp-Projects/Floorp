@@ -13,6 +13,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -231,7 +232,7 @@ class LastMediaAccessMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN lastMediaAccess is set for a normal tab WHEN media session is deactivated THEN reset lastMediaAccess to 0`() {
+    fun `GIVEN lastMediaAccess is set for a normal tab WHEN media session is deactivated THEN reset mediaSessionActive to false`() {
         val mediaTabId = "42"
         val mediaTabUrl = "https://mozilla.org/2"
         val browserState = BrowserState(
@@ -239,7 +240,7 @@ class LastMediaAccessMiddlewareTest {
                 TabSessionState(
                     content = ContentState(mediaTabUrl, private = false),
                     id = mediaTabId,
-                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222)
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 222, true)
                 )
             )
         )
@@ -252,7 +253,9 @@ class LastMediaAccessMiddlewareTest {
             .dispatch(MediaSessionAction.DeactivatedMediaSessionAction(mediaTabId))
             .joinBlocking()
 
-        assertEquals(0, store.state.tabs[0].lastMediaAccessState.lastMediaAccess)
+        assertEquals(mediaTabUrl, store.state.tabs[0].lastMediaAccessState.lastMediaUrl)
+        assertEquals(222, store.state.tabs[0].lastMediaAccessState.lastMediaAccess)
+        assertFalse(store.state.tabs[0].lastMediaAccessState.mediaSessionActive)
     }
 
     @Test
@@ -264,7 +267,7 @@ class LastMediaAccessMiddlewareTest {
                 TabSessionState(
                     content = ContentState(mediaTabUrl, private = true),
                     id = mediaTabId,
-                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333)
+                    lastMediaAccessState = LastMediaAccessState(mediaTabUrl, 333, true)
                 )
             )
         )
@@ -277,6 +280,8 @@ class LastMediaAccessMiddlewareTest {
             .dispatch(MediaSessionAction.DeactivatedMediaSessionAction(mediaTabId))
             .joinBlocking()
 
-        assertEquals(0, store.state.tabs[0].lastMediaAccessState.lastMediaAccess)
+        assertEquals(mediaTabUrl, store.state.tabs[0].lastMediaAccessState.lastMediaUrl)
+        assertEquals(333, store.state.tabs[0].lastMediaAccessState.lastMediaAccess)
+        assertFalse(store.state.tabs[0].lastMediaAccessState.mediaSessionActive)
     }
 }

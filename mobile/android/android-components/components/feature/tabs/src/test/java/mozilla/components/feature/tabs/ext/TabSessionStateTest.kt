@@ -13,30 +13,30 @@ import org.junit.Test
 
 class TabSessionStateTest {
     @Test
-    fun `GIVEN lastMediaUrl is the same as the current tab url and lastMediaAccess is 0 WHEN hasMediaPlayed is called THEN return true`() {
+    fun `GIVEN lastMediaUrl is the same as the current tab url and mediaSessionActive is true WHEN hasMediaPlayed is called THEN return true`() {
         val tab = TabSessionState(
             content = ContentState(url = "https://mozilla.org"),
-            lastMediaAccessState = LastMediaAccessState("https://mozilla.org", 0)
+            lastMediaAccessState = LastMediaAccessState(lastMediaUrl = "https://mozilla.org", mediaSessionActive = true)
         )
 
         assertTrue(tab.hasMediaPlayed())
     }
 
     @Test
-    fun `GIVEN lastMediaUrl is the same as the current tab url and lastMediaAccess has a positive value WHEN hasMediaPlayed is called THEN return true`() {
+    fun `GIVEN lastMediaUrl is the same as the current tab url and and mediaSessionActive is false WHEN hasMediaPlayed is called THEN return true`() {
         val tab = TabSessionState(
             content = ContentState(url = "https://mozilla.org"),
-            lastMediaAccessState = LastMediaAccessState("https://mozilla.org", 3)
+            lastMediaAccessState = LastMediaAccessState(lastMediaUrl = "https://mozilla.org", mediaSessionActive = false)
         )
 
         assertTrue(tab.hasMediaPlayed())
     }
 
     @Test
-    fun `GIVEN lastMediaUrl is different than the current tab url and lastMediaAccess is 0 WHEN hasMediaPlayed is called THEN return false`() {
+    fun `GIVEN lastMediaUrl is different than the current tab url and mediaSessionActive is false WHEN hasMediaPlayed is called THEN return false`() {
         val tab = TabSessionState(
             content = ContentState(url = "https://mozilla.org"),
-            lastMediaAccessState = LastMediaAccessState("https://firefox.com", 0)
+            lastMediaAccessState = LastMediaAccessState(lastMediaUrl = "https://firefox.com", mediaSessionActive = false)
         )
 
         assertFalse(tab.hasMediaPlayed())

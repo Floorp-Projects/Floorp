@@ -260,7 +260,7 @@ sealed class LastAccessAction : BrowserAction() {
      *
      * @property tabId the ID of the tab to update.
      */
-    data class ResetLastMediaAccessAction(
+    data class ResetLastMediaSessionAction(
         val tabId: String
     ) : LastAccessAction()
 }

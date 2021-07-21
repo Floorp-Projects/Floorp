@@ -24,5 +24,5 @@ internal fun TabSessionState.toTab() = Tab(
  * irrespective of it's current state (eg: playing, paused, stopped).
  */
 fun TabSessionState.hasMediaPlayed(): Boolean {
-    return (lastMediaAccessState.lastMediaUrl == content.url) || lastMediaAccessState.lastMediaAccess > 0
+    return lastMediaAccessState.lastMediaUrl == content.url || lastMediaAccessState.mediaSessionActive
 }

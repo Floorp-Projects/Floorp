@@ -5,7 +5,7 @@
 package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.LastAccessAction
-import mozilla.components.browser.state.action.LastAccessAction.ResetLastMediaAccessAction
+import mozilla.components.browser.state.action.LastAccessAction.ResetLastMediaSessionAction
 import mozilla.components.browser.state.action.LastAccessAction.UpdateLastAccessAction
 import mozilla.components.browser.state.action.LastAccessAction.UpdateLastMediaAccessAction
 import mozilla.components.browser.state.state.BrowserState
@@ -27,16 +27,17 @@ internal object LastAccessReducer {
                 sessionState.copy(
                     lastMediaAccessState = sessionState.lastMediaAccessState.copy(
                         lastMediaUrl = sessionState.content.url,
-                        lastMediaAccess = action.lastMediaAccess
+                        lastMediaAccess = action.lastMediaAccess,
+                        mediaSessionActive = true
                     )
                 )
             }
         }
-        is ResetLastMediaAccessAction -> {
+        is ResetLastMediaSessionAction -> {
             state.updateTabState(action.tabId) { sessionState ->
                 sessionState.copy(
                     lastMediaAccessState = sessionState.lastMediaAccessState.copy(
-                        lastMediaAccess = 0
+                        mediaSessionActive = false
                     )
                 )
             }

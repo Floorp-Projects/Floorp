@@ -32,7 +32,7 @@ class LastMediaAccessMiddleware : Middleware<BrowserState, BrowserAction> {
         ) {
             context.dispatch(LastAccessAction.UpdateLastMediaAccessAction(action.tabId))
         } else if (action is MediaSessionAction.DeactivatedMediaSessionAction) {
-            context.dispatch(LastAccessAction.ResetLastMediaAccessAction(action.tabId))
+            context.dispatch(LastAccessAction.ResetLastMediaSessionAction(action.tabId))
         }
     }
 }
