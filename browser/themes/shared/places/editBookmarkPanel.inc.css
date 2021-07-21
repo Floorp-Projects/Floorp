@@ -153,6 +153,37 @@ html|img#editBookmarkPanelFavicon[src] {
   min-width: 27em;
 }
 
+#editBMPanel_newFolderButton {
+  appearance: none;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--button-bgcolor);
+  color: var(--button-color, inherit);
+  font-weight: 600;
+  min-width: 0;
+  padding: 8px 16px;
+
+  /* This button is deeper in the visual hierarchy than others (notably the
+     buttons at the bottom of the panel), so it should be slightly smaller. */
+  font-size: 90%;
+
+  /* This button needs to align with the tree above it. */
+  margin-inline-start: 4px;
+}
+
+#editBMPanel_newFolderButton:focus-visible {
+  outline: 2px solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset, 2px);
+}
+
+#editBMPanel_newFolderButton:hover {
+  background-color: var(--button-hover-bgcolor);
+}
+
+#editBMPanel_newFolderButton:hover:active {
+  background-color: var(--button-active-bgcolor);
+}
+
 #editBookmarkPanelBottomButtons {
   display: flex;
 }
