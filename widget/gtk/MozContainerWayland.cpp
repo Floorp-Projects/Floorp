@@ -55,6 +55,7 @@
 #include <stdio.h>
 #include <wayland-egl.h>
 
+#include "mozilla/gfx/gfxVars.h"
 #include "nsGtkUtils.h"
 #include "nsWaylandDisplay.h"
 
@@ -441,6 +442,11 @@ static void moz_container_wayland_set_opaque_region(MozContainer* container) {
 
 static void moz_container_wayland_set_scale_factor_locked(
     MozContainer* container) {
+  if (gfx::gfxVars::UseWebRenderCompositor()) {
+    // the compositor backend handles scaling itself
+    return;
+  }
+
   MozContainerWayland* wl_container = &container->wl_container;
   nsWindow* window = moz_container_get_nsWindow(container);
 
