@@ -488,10 +488,10 @@ class WasmTableObject : public NativeObject {
 #endif
 };
 
-// The class of WebAssembly.Exception. This class is used to track exception
+// The class of WebAssembly.Tag. This class is used to track exception tag
 // types for exports and imports.
 
-class WasmExceptionObject : public NativeObject {
+class WasmTagObject : public NativeObject {
   static const unsigned TAG_SLOT = 0;
   static const unsigned TYPE_SLOT = 1;
 
@@ -509,9 +509,8 @@ class WasmExceptionObject : public NativeObject {
   static const JSFunctionSpec static_methods[];
   static bool construct(JSContext*, unsigned, Value*);
 
-  static WasmExceptionObject* create(JSContext* cx,
-                                     const wasm::ValTypeVector& type,
-                                     HandleObject proto);
+  static WasmTagObject* create(JSContext* cx, const wasm::ValTypeVector& type,
+                               HandleObject proto);
   bool isNewborn() const;
 
   wasm::ValTypeVector& valueTypes() const;
@@ -519,11 +518,11 @@ class WasmExceptionObject : public NativeObject {
   wasm::ExceptionTag& tag() const;
 };
 
-// The class of WebAssembly.RuntimeException. This class is used for
+// The class of WebAssembly.Exception. This class is used for
 // representing exceptions thrown from Wasm in JS. (it is also used as
 // the internal representation for exceptions in Wasm)
 
-class WasmRuntimeExceptionObject : public NativeObject {
+class WasmExceptionObject : public NativeObject {
   static const unsigned TAG_SLOT = 0;
   static const unsigned VALUES_SLOT = 1;
   static const unsigned REFS_SLOT = 2;
@@ -542,10 +541,10 @@ class WasmRuntimeExceptionObject : public NativeObject {
   static const JSFunctionSpec static_methods[];
   static bool construct(JSContext*, unsigned, Value*);
 
-  static WasmRuntimeExceptionObject* create(JSContext* cx,
-                                            wasm::SharedExceptionTag tag,
-                                            Handle<ArrayBufferObject*> values,
-                                            HandleArrayObject refs);
+  static WasmExceptionObject* create(JSContext* cx,
+                                     wasm::SharedExceptionTag tag,
+                                     Handle<ArrayBufferObject*> values,
+                                     HandleArrayObject refs);
   bool isNewborn() const;
 
   wasm::ExceptionTag& tag() const;

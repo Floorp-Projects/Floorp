@@ -755,15 +755,16 @@ bool Module::instantiateMemory(JSContext* cx,
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-bool Module::instantiateImportedException(
-    JSContext* cx, Handle<WasmExceptionObject*> exnObj,
-    WasmExceptionObjectVector& exnObjs, SharedExceptionTagVector* tags) const {
-  MOZ_ASSERT(exnObj);
-  // The check whether the EventDesc signature matches the exnObj value types
+bool Module::instantiateImportedTag(JSContext* cx,
+                                    Handle<WasmTagObject*> tagObj,
+                                    WasmTagObjectVector& tagObjs,
+                                    SharedExceptionTagVector* tags) const {
+  MOZ_ASSERT(tagObj);
+  // The check whether the EventDesc signature matches the tagObj value types
   // is done by js::wasm::GetImports().
 
-  // Collects the exception tag from the imported exception.
-  ExceptionTag& tag = exnObj->tag();
+  // Collects the exception tag from the imported tag.
+  ExceptionTag& tag = tagObj->tag();
 
   if (!tags->append(&tag)) {
     ReportOutOfMemory(cx);
@@ -773,40 +774,39 @@ bool Module::instantiateImportedException(
   return true;
 }
 
-bool Module::instantiateLocalException(JSContext* cx, const EventDesc& ed,
-                                       WasmExceptionObjectVector& exnObjs,
-                                       SharedExceptionTagVector* tags,
-                                       uint32_t exnIndex) const {
+bool Module::instantiateLocalTag(JSContext* cx, const EventDesc& ed,
+                                 WasmTagObjectVector& tagObjs,
+                                 SharedExceptionTagVector* tags,
+                                 uint32_t tagIndex) const {
   SharedExceptionTag tag;
-  // Extend exnObjs in anticipation of an exported exception object.
-  if (exnObjs.length() <= exnIndex && !exnObjs.resize(exnIndex + 1)) {
+  // Extend tagObjs in anticipation of an exported tag object.
+  if (tagObjs.length() <= tagIndex && !tagObjs.resize(tagIndex + 1)) {
     ReportOutOfMemory(cx);
     return false;
   }
 
   if (ed.isExport) {
-    // If the exception description is exported, create an export exception
+    // If the tag description is exported, create an export tag
     // object for it.
-    RootedObject proto(
-        cx, &cx->global()->getPrototype(JSProto_WasmException).toObject());
-    RootedWasmExceptionObject exnObj(
-        cx, WasmExceptionObject::create(cx, ed.type, proto));
-    if (!exnObj) {
+    RootedObject proto(cx,
+                       &cx->global()->getPrototype(JSProto_WasmTag).toObject());
+    RootedWasmTagObject tagObj(cx, WasmTagObject::create(cx, ed.type, proto));
+    if (!tagObj) {
       return false;
     }
-    // Take the exception tag that was created inside the WasmExceptionObject.
-    tag = &exnObj->tag();
-    // Save the new export exception object.
-    exnObjs[exnIndex] = exnObj;
+    // Take the exception tag that was created inside the WasmTagObject.
+    tag = &tagObj->tag();
+    // Save the new export tag object.
+    tagObjs[tagIndex] = tagObj;
   } else {
-    // Create a new tag for every non exported exception.
+    // Create a new exception tag for every non exported tag.
     tag = SharedExceptionTag(cx->new_<ExceptionTag>());
     if (!tag) {
       return false;
     }
-    // The exnObj is null if the exception is neither exported nor imported.
+    // The tagObj is null if the tag is neither exported nor imported.
   }
-  // Collect a tag for every exception.
+  // Collect an exception tag for every tag.
   if (!tags->emplaceBack(tag)) {
     ReportOutOfMemory(cx);
     return false;
@@ -815,22 +815,21 @@ bool Module::instantiateLocalException(JSContext* cx, const EventDesc& ed,
   return true;
 }
 
-bool Module::instantiateExceptions(JSContext* cx,
-                                   WasmExceptionObjectVector& exnObjs,
-                                   SharedExceptionTagVector* tags) const {
-  uint32_t exnIndex = 0;
+bool Module::instantiateTags(JSContext* cx, WasmTagObjectVector& tagObjs,
+                             SharedExceptionTagVector* tags) const {
+  uint32_t tagIndex = 0;
   for (const EventDesc& ed : metadata().events) {
-    if (exnIndex < exnObjs.length()) {
-      Rooted<WasmExceptionObject*> exnObj(cx, exnObjs[exnIndex]);
-      if (!instantiateImportedException(cx, exnObj, exnObjs, tags)) {
+    if (tagIndex < tagObjs.length()) {
+      Rooted<WasmTagObject*> tagObj(cx, tagObjs[tagIndex]);
+      if (!instantiateImportedTag(cx, tagObj, tagObjs, tags)) {
         return false;
       }
     } else {
-      if (!instantiateLocalException(cx, ed, exnObjs, tags, exnIndex)) {
+      if (!instantiateLocalTag(cx, ed, tagObjs, tags, tagIndex)) {
         return false;
       }
     }
-    exnIndex++;
+    tagIndex++;
   }
   return true;
 }
@@ -1111,15 +1110,12 @@ static bool GetGlobalExport(JSContext* cx, HandleWasmInstanceObject instanceObj,
   return true;
 }
 
-static bool CreateExportObject(JSContext* cx,
-                               HandleWasmInstanceObject instanceObj,
-                               const JSFunctionVector& funcImports,
-                               const WasmTableObjectVector& tableObjs,
-                               HandleWasmMemoryObject memoryObj,
-                               const WasmExceptionObjectVector& exceptionObjs,
-                               const ValVector& globalImportValues,
-                               const WasmGlobalObjectVector& globalObjs,
-                               const ExportVector& exports) {
+static bool CreateExportObject(
+    JSContext* cx, HandleWasmInstanceObject instanceObj,
+    const JSFunctionVector& funcImports, const WasmTableObjectVector& tableObjs,
+    HandleWasmMemoryObject memoryObj, const WasmTagObjectVector& tagObjs,
+    const ValVector& globalImportValues,
+    const WasmGlobalObjectVector& globalObjs, const ExportVector& exports) {
   const Instance& instance = instanceObj->instance();
   const Metadata& metadata = instance.metadata();
   const GlobalDescVector& globals = metadata.globals;
@@ -1186,7 +1182,7 @@ static bool CreateExportObject(JSContext* cx,
       }
 #ifdef ENABLE_WASM_EXCEPTIONS
       case DefinitionKind::Event: {
-        val = ObjectValue(*exceptionObjs[exp.eventIndex()]);
+        val = ObjectValue(*tagObjs[exp.eventIndex()]);
         break;
       }
 #endif
@@ -1230,7 +1226,7 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
 
   SharedExceptionTagVector tags;
 #ifdef ENABLE_WASM_EXCEPTIONS
-  if (!instantiateExceptions(cx, imports.exceptionObjs, &tags)) {
+  if (!instantiateTags(cx, imports.tagObjs, &tags)) {
     return false;
   }
 #endif
@@ -1281,7 +1277,7 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
   }
 
   if (!CreateExportObject(cx, instance, imports.funcs, tableObjs.get(), memory,
-                          imports.exceptionObjs, imports.globalValues,
+                          imports.tagObjs, imports.globalValues,
                           imports.globalObjs, exports_)) {
     return false;
   }
