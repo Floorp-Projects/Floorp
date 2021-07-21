@@ -974,6 +974,9 @@ pub struct Capabilities {
     /// Whether we are able to ue glClear to clear regions of an alpha render target.
     /// If false, we must use a shader to clear instead.
     pub supports_alpha_target_clears: bool,
+    /// Whether we must perform a full unscissored glClear on alpha targets
+    /// prior to rendering.
+    pub requires_alpha_target_full_clear: bool,
     /// Whether the driver can reliably upload data to R8 format textures.
     pub supports_r8_texture_upload: bool,
     /// Whether clip-masking is supported natively by the GL implementation
@@ -1707,6 +1710,11 @@ impl Device {
         // Using a shader to clear the regions avoids the crash. See bug 1638593.
         let supports_alpha_target_clears = !is_mali_t;
 
+        // On Adreno 4xx devices with older drivers we have seen render tasks to alpha targets have
+        // no effect unless the target is fully cleared prior to rendering. See bug 1714227.
+        let is_adreno_4xx = renderer_name.starts_with("Adreno (TM) 4");
+        let requires_alpha_target_full_clear = is_adreno_4xx;
+
         // On Linux we we have seen uploads to R8 format textures result in
         // corruption on some AMD cards.
         // See https://bugzilla.mozilla.org/show_bug.cgi?id=1687554#c13
@@ -1750,6 +1758,7 @@ impl Device {
                 supports_shader_storage_object,
                 requires_batched_texture_uploads,
                 supports_alpha_target_clears,
+                requires_alpha_target_full_clear,
                 supports_r8_texture_upload,
                 uses_native_clip_mask,
                 uses_native_antialiasing,
