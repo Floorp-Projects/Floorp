@@ -505,8 +505,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
 
       if (tryNote) {
         cx->clearPendingException();
-        if (!exn.isObject() ||
-            !exn.toObject().is<WasmRuntimeExceptionObject>()) {
+        if (!exn.isObject() || !exn.toObject().is<WasmExceptionObject>()) {
           RootedObject obj(cx, WasmJSExceptionObject::create(cx, &exn));
           if (!obj) {
             MOZ_ASSERT(cx->isThrowingOutOfMemory());

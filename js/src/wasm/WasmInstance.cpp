@@ -1003,8 +1003,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return nullptr;
   }
 
-  return AnyRef::fromJSObject(
-             WasmRuntimeExceptionObject::create(cx, tag, buf, refs))
+  return AnyRef::fromJSObject(WasmExceptionObject::create(cx, tag, buf, refs))
       .forCompiledCode();
 }
 
@@ -1032,8 +1031,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   MOZ_ASSERT(SASigGetLocalExceptionIndex.failureMode ==
              FailureMode::Infallible);
 
-  if (exn->is<WasmRuntimeExceptionObject>()) {
-    ExceptionTag& exnTag = exn->as<WasmRuntimeExceptionObject>().tag();
+  if (exn->is<WasmExceptionObject>()) {
+    ExceptionTag& exnTag = exn->as<WasmExceptionObject>().tag();
     for (size_t i = 0; i < instance->exceptionTags().length(); i++) {
       ExceptionTag& tag = *instance->exceptionTags()[i];
       if (&tag == &exnTag) {
@@ -1053,9 +1052,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
   JSContext* cx = TlsContext.get();
 
-  MOZ_ASSERT(exn->is<WasmRuntimeExceptionObject>());
-  RootedWasmRuntimeExceptionObject exnObj(
-      cx, &exn->as<WasmRuntimeExceptionObject>());
+  MOZ_ASSERT(exn->is<WasmExceptionObject>());
+  RootedWasmExceptionObject exnObj(cx, &exn->as<WasmExceptionObject>());
 
   // TODO/AnyRef-boxing: With boxed immediates and strings, this may need to
   // handle other kinds of values.

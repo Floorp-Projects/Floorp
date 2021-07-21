@@ -7,7 +7,7 @@ function assertWasmThrowsExn(thunk) {
     thunk();
   } catch (exn) {
     thrown = true;
-    assertEq(exn instanceof WebAssembly.RuntimeException, true);
+    assertEq(exn instanceof WebAssembly.Exception, true);
   }
 
   assertEq(thrown, true, "missing exception");
