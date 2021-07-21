@@ -114,7 +114,7 @@ linux64-base-toolchains-clang/opt:
         need-xvfb: true
     fetches:
         toolchain:
-            - linux64-binutils
+            - linux64-binutils-2.31.1
             - linux64-clang-5.0
             - linux64-rust-1.51
             - linux64-cbindgen
@@ -153,7 +153,7 @@ linux64-base-toolchains-clang/debug:
         need-xvfb: true
     fetches:
         toolchain:
-            - linux64-binutils
+            - linux64-binutils-2.31.1
             - linux64-clang-5.0
             - linux64-rust-1.51
             - linux64-cbindgen
