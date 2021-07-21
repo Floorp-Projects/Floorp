@@ -31,8 +31,19 @@ loader.lazyRequireGetter(
  * Commands are implemented by modules defined in devtools/shared/commands.
  */
 exports.CommandsFactory = {
-  async forTab(tab) {
-    const client = await createLocalClient();
+  /**
+   * Create commands for a given local tab.
+   *
+   * @param {Tab} tab: A local Firefox tab, running in this process.
+   * @param {Object} options
+   * @param {DevToolsClient} options.client: An optional DevToolsClient. If none is passed,
+   *        a new one will be created.
+   * @returns {Object} Commands
+   */
+  async forTab(tab, { client } = {}) {
+    if (!client) {
+      client = await createLocalClient();
+    }
 
     const descriptor = await client.mainRoot.getTab({ tab });
     const commands = await createCommandsDictionary(descriptor);

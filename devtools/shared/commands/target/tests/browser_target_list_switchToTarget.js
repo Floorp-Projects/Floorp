@@ -5,22 +5,14 @@
 
 // Test the TargetCommand API switchToTarget function
 
-add_task(async function() {
-  const commands = await CommandsFactory.forTab(gBrowser.selectedTab);
-
-  await testSwitchToTarget(commands);
-
-  await commands.destroy();
-});
-
-async function testSwitchToTarget(commands) {
+add_task(async function testSwitchToTarget() {
   info("Test TargetCommand.switchToTarget method");
 
   // Create a first target to switch from, a new tab with an iframe
   const firstTab = await addTab(
     `data:text/html,<iframe src="data:text/html,foo"></iframe>`
   );
-
+  const commands = await CommandsFactory.forTab(firstTab);
   const targetCommand = commands.targetCommand;
   const { TYPES } = targetCommand;
   await targetCommand.startListening();
@@ -29,10 +21,14 @@ async function testSwitchToTarget(commands) {
   const secondTab = await addTab(
     `data:text/html,<iframe src="data:text/html,bar"></iframe>`
   );
-  const secondDescriptor = await commands.client.mainRoot.getTab({
-    tab: gBrowser.selectedTab,
+  // We have to spawn a new distinct `commands` object for this new tab,
+  // but we will otherwise consider the first one as the main one.
+  // From this second one, we will only retrieve a new target.
+  const secondCommands = await CommandsFactory.forTab(secondTab, {
+    client: commands.client,
   });
-  const secondTarget = await secondDescriptor.getTarget();
+  await secondCommands.targetCommand.startListening();
+  const secondTarget = secondCommands.targetCommand.targetFront;
 
   const frameTargets = [];
   const firstTarget = targetCommand.targetFront;
@@ -135,7 +131,8 @@ async function testSwitchToTarget(commands) {
   targetCommand.destroy();
 
   await commands.destroy();
+  await secondCommands.destroy();
 
   BrowserTestUtils.removeTab(firstTab);
   BrowserTestUtils.removeTab(secondTab);
-}
+});
