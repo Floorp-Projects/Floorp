@@ -176,7 +176,6 @@
   background-position: center;
   -moz-context-properties: fill, fill-opacity;
   fill: var(--toolbarbutton-icon-fill);
-  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
 #urlbar.searchButton > #urlbar-input-container[pageproxystate="invalid"] > #urlbar-search-button {

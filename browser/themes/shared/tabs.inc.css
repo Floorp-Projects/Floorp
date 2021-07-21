@@ -446,7 +446,6 @@
 
 .tab-close-button {
   -moz-context-properties: fill, fill-opacity;
-  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
   margin-inline-end: calc(var(--inline-tab-padding) / -2);
   width: 24px;
   height: 24px;
@@ -683,7 +682,6 @@
 #tabbrowser-arrowscrollbox::part(scrollbutton-up),
 #tabbrowser-arrowscrollbox::part(scrollbutton-down) {
   fill: var(--toolbarbutton-icon-fill);
-  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
 /* New tab button */
@@ -707,7 +705,6 @@
   display: block;
   -moz-context-properties: fill, fill-opacity, stroke;
   fill: currentColor;
-  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
   stroke: transparent;
   /* "!important" is necessary to override the rule in toolbarbutton.css */
   margin: -7px 0 0 !important;

@@ -24,7 +24,6 @@
 .permission-popup-permission-icon {
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
 .blocked-permission-icon:-moz-focusring,
