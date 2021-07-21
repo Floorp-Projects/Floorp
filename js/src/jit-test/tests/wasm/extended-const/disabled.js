@@ -2,7 +2,7 @@
 
 const { CompileError, validate } = WebAssembly;
 
-const DISABLED = /extended constant expressions not enabled|unexpected initializer opcode/;
+const DISABLED = /extended constant expressions not enabled|unrecognized opcode/;
 
 let tests = [
     "(module (global i32 i32.const 0 i32.const 0 i32.add))",

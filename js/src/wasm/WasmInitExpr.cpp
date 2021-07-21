@@ -118,7 +118,7 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
           return d.fail("v128 not enabled");
         }
         if (op.b1 != uint32_t(SimdOp::V128Const)) {
-          return d.fail("unexpected initializer opcode");
+          return iter.unrecognizedOpcode(&op);
         }
         V128 c;
         if (!iter.readV128Const(&c)) {
@@ -151,7 +151,7 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
       case uint16_t(Op::I32Sub):
       case uint16_t(Op::I32Mul): {
         if (!env->extendedConstEnabled()) {
-          return d.fail("unexpected initializer opcode");
+          return iter.unrecognizedOpcode(&op);
         }
         if (!iter.readBinary(ValType::I32, &nothing, &nothing)) {
           return false;
@@ -163,7 +163,7 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
       case uint16_t(Op::I64Sub):
       case uint16_t(Op::I64Mul): {
         if (!env->extendedConstEnabled()) {
-          return d.fail("unexpected initializer opcode");
+          return iter.unrecognizedOpcode(&op);
         }
         if (!iter.readBinary(ValType::I64, &nothing, &nothing)) {
           return false;
