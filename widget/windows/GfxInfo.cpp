@@ -1276,7 +1276,7 @@ static OperatingSystem WindowsVersionToOperatingSystem(
   }
 }
 
-static bool OnlyAllowFeatureOnAllowlistedVendor(int32_t aFeature) {
+static bool OnlyAllowFeatureOnWhitelistedVendor(int32_t aFeature) {
   switch (aFeature) {
     // The GPU process doesn't need hardware acceleration and can run on
     // devices that we normally block from not being on our whitelist.
@@ -1939,66 +1939,65 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       return NS_OK;
     }
 
-    if (OnlyAllowFeatureOnAllowlistedVendor(aFeature)) {
-      if (!adapterVendorID.Equals(
-              GfxDriverInfo::GetDeviceVendor(DeviceVendor::Intel),
-              nsCaseInsensitiveStringComparator) &&
-          !adapterVendorID.Equals(
-              GfxDriverInfo::GetDeviceVendor(DeviceVendor::NVIDIA),
-              nsCaseInsensitiveStringComparator) &&
-          !adapterVendorID.Equals(
-              GfxDriverInfo::GetDeviceVendor(DeviceVendor::ATI),
-              nsCaseInsensitiveStringComparator) &&
-          !adapterVendorID.Equals(
-              GfxDriverInfo::GetDeviceVendor(DeviceVendor::Microsoft),
-              nsCaseInsensitiveStringComparator) &&
-          !adapterVendorID.Equals(
-              GfxDriverInfo::GetDeviceVendor(DeviceVendor::Parallels),
-              nsCaseInsensitiveStringComparator) &&
-          !adapterVendorID.Equals(
-              GfxDriverInfo::GetDeviceVendor(DeviceVendor::Qualcomm),
-              nsCaseInsensitiveStringComparator) &&
-          // FIXME - these special hex values are currently used in xpcshell
-          // tests introduced by bug 625160 patch 8/8. Maybe these tests need to
-          // be adjusted now that we're only whitelisting intel/ati/nvidia.
-          !adapterVendorID.LowerCaseEqualsLiteral("0xabcd") &&
-          !adapterVendorID.LowerCaseEqualsLiteral("0xdcba") &&
-          !adapterVendorID.LowerCaseEqualsLiteral("0xabab") &&
-          !adapterVendorID.LowerCaseEqualsLiteral("0xdcdc")) {
-        if (adapterVendorID.Equals(
-                GfxDriverInfo::GetDeviceVendor(DeviceVendor::MicrosoftHyperV),
-                nsCaseInsensitiveStringComparator) ||
-            adapterVendorID.Equals(
-                GfxDriverInfo::GetDeviceVendor(DeviceVendor::VMWare),
-                nsCaseInsensitiveStringComparator) ||
-            adapterVendorID.Equals(
-                GfxDriverInfo::GetDeviceVendor(DeviceVendor::VirtualBox),
-                nsCaseInsensitiveStringComparator)) {
-          aFailureId = "FEATURE_FAILURE_VM_VENDOR";
-        } else if (adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(
-                                              DeviceVendor::MicrosoftBasic),
-                                          nsCaseInsensitiveStringComparator)) {
-          aFailureId = "FEATURE_FAILURE_MICROSOFT_BASIC_VENDOR";
-        } else if (adapterVendorID.IsEmpty()) {
-          aFailureId = "FEATURE_FAILURE_EMPTY_DEVICE_VENDOR";
-        } else {
-          aFailureId = "FEATURE_FAILURE_UNKNOWN_DEVICE_VENDOR";
-        }
-        *aStatus = FEATURE_BLOCKED_DEVICE;
-        return NS_OK;
+    if (OnlyAllowFeatureOnWhitelistedVendor(aFeature) &&
+        !adapterVendorID.Equals(
+            GfxDriverInfo::GetDeviceVendor(DeviceVendor::Intel),
+            nsCaseInsensitiveStringComparator) &&
+        !adapterVendorID.Equals(
+            GfxDriverInfo::GetDeviceVendor(DeviceVendor::NVIDIA),
+            nsCaseInsensitiveStringComparator) &&
+        !adapterVendorID.Equals(
+            GfxDriverInfo::GetDeviceVendor(DeviceVendor::ATI),
+            nsCaseInsensitiveStringComparator) &&
+        !adapterVendorID.Equals(
+            GfxDriverInfo::GetDeviceVendor(DeviceVendor::Microsoft),
+            nsCaseInsensitiveStringComparator) &&
+        !adapterVendorID.Equals(
+            GfxDriverInfo::GetDeviceVendor(DeviceVendor::Parallels),
+            nsCaseInsensitiveStringComparator) &&
+        !adapterVendorID.Equals(
+            GfxDriverInfo::GetDeviceVendor(DeviceVendor::Qualcomm),
+            nsCaseInsensitiveStringComparator) &&
+        // FIXME - these special hex values are currently used in xpcshell tests
+        // introduced by bug 625160 patch 8/8. Maybe these tests need to be
+        // adjusted now that we're only whitelisting intel/ati/nvidia.
+        !adapterVendorID.LowerCaseEqualsLiteral("0xabcd") &&
+        !adapterVendorID.LowerCaseEqualsLiteral("0xdcba") &&
+        !adapterVendorID.LowerCaseEqualsLiteral("0xabab") &&
+        !adapterVendorID.LowerCaseEqualsLiteral("0xdcdc")) {
+      if (adapterVendorID.Equals(
+              GfxDriverInfo::GetDeviceVendor(DeviceVendor::MicrosoftHyperV),
+              nsCaseInsensitiveStringComparator) ||
+          adapterVendorID.Equals(
+              GfxDriverInfo::GetDeviceVendor(DeviceVendor::VMWare),
+              nsCaseInsensitiveStringComparator) ||
+          adapterVendorID.Equals(
+              GfxDriverInfo::GetDeviceVendor(DeviceVendor::VirtualBox),
+              nsCaseInsensitiveStringComparator)) {
+        aFailureId = "FEATURE_FAILURE_VM_VENDOR";
+      } else if (adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(
+                                            DeviceVendor::MicrosoftBasic),
+                                        nsCaseInsensitiveStringComparator)) {
+        aFailureId = "FEATURE_FAILURE_MICROSOFT_BASIC_VENDOR";
+      } else if (adapterVendorID.IsEmpty()) {
+        aFailureId = "FEATURE_FAILURE_EMPTY_DEVICE_VENDOR";
+      } else {
+        aFailureId = "FEATURE_FAILURE_UNKNOWN_DEVICE_VENDOR";
       }
+      *aStatus = FEATURE_BLOCKED_DEVICE;
+      return NS_OK;
+    }
 
-      uint64_t driverVersion;
-      if (!ParseDriverVersion(adapterDriverVersionString, &driverVersion)) {
-        aFailureId = "FEATURE_FAILURE_PARSE_DRIVER";
-        *aStatus = FEATURE_BLOCKED_DRIVER_VERSION;
-        return NS_OK;
-      }
+    uint64_t driverVersion;
+    if (!ParseDriverVersion(adapterDriverVersionString, &driverVersion)) {
+      aFailureId = "FEATURE_FAILURE_PARSE_DRIVER";
+      *aStatus = FEATURE_BLOCKED_DRIVER_VERSION;
+      return NS_OK;
+    }
 
-      if (mHasDriverVersionMismatch) {
-        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_MISMATCHED_VERSION;
-        return NS_OK;
-      }
+    if (mHasDriverVersionMismatch) {
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_MISMATCHED_VERSION;
+      return NS_OK;
     }
   }
 
