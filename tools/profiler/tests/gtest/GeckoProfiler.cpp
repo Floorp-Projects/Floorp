@@ -44,6 +44,17 @@
 
 using namespace mozilla;
 
+TEST(GeckoProfiler, ProfilerUtils)
+{
+  static_assert(std::is_same_v<decltype(profiler_current_process_id()),
+                               ProfilerProcessId>);
+#ifdef MOZ_GECKO_PROFILER
+  MOZ_RELEASE_ASSERT(profiler_current_process_id().IsSpecified());
+#else
+  MOZ_RELEASE_ASSERT(!profiler_current_process_id().IsSpecified());
+#endif
+}
+
 TEST(BaseProfiler, BlocksRingBuffer)
 {
   constexpr uint32_t MBSize = 256;

@@ -74,7 +74,9 @@
 
 using namespace mozilla;
 
-int profiler_current_process_id() { return getpid(); }
+ProfilerProcessId profiler_current_process_id() {
+  return ProfilerProcessId::FromNumber(getpid());
+}
 
 int profiler_current_thread_id() {
 #if defined(GP_OS_linux)
@@ -389,7 +391,7 @@ void Sampler::SuspendAndSampleAndResumeThread(
   // Send message 1 to the samplee (the thread to be sampled), by
   // signalling at it.
   // This could fail if the thread doesn't exist anymore.
-  int r = tgkill(mMyPid, sampleeTid, SIGPROF);
+  int r = tgkill(mMyPid.ToNumber(), sampleeTid, SIGPROF);
   if (r == 0) {
     // Wait for message 2 from the samplee, indicating that the context
     // is available and that the thread is suspended.
