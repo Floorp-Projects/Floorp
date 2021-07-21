@@ -266,7 +266,6 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelParent)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIParentChannel)
   NS_INTERFACE_MAP_ENTRY(nsIParentRedirectingChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIDeprecationWarner)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectReadyCallback)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIRedirectResultListener)
@@ -1870,12 +1869,6 @@ nsresult HttpChannelParent::ReportSecurityMessage(
                         nsString(aMessageTag), nsString(aMessageCategory)))) {
     return NS_ERROR_UNEXPECTED;
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HttpChannelParent::IssueWarning(uint32_t aWarning, bool aAsError) {
-  Unused << SendIssueDeprecationWarning(aWarning, aAsError);
   return NS_OK;
 }
 
