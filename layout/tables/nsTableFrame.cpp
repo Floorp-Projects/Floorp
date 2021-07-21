@@ -6898,8 +6898,8 @@ static void AdjustAndPushBevel(wr::DisplayListBuilder& aBuilder,
       bevelRect.max.x += aRect.width() - offset;
     }
     aRect.max.x -= offset;
-    bevelRect.max.y += aRect.height() - bevelRect.height();
-    bevelRect.max.x += offset - bevelRect.width();
+    bevelRect.max.y = bevelRect.min.y + aRect.height();
+    bevelRect.max.x = bevelRect.min.x + offset;
     if (aBevel.mSide == eSideTop) {
       borderWidths.bottom = aRect.height();
     } else {
@@ -6914,8 +6914,8 @@ static void AdjustAndPushBevel(wr::DisplayListBuilder& aBuilder,
       bevelRect.max.y += aRect.height() - offset;
     }
     aRect.max.y -= offset;
-    bevelRect.max.x += aRect.width() - bevelRect.width();
-    bevelRect.max.y += offset - bevelRect.height();
+    bevelRect.max.x = bevelRect.min.x + aRect.width();
+    bevelRect.max.y = bevelRect.min.y + offset;
     if (aBevel.mSide == eSideLeft) {
       borderWidths.right = aRect.width();
     } else {
