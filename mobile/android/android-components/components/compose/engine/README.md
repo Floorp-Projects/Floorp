@@ -1,4 +1,4 @@
-# [Android Components](../../../README.md) > Compose > Browser Toolbar
+# [Android Components](../../../README.md) > Compose > Engine
 
 A component for integrating a `concept-engine` implementation into Jetpack Compose UI.
 
