@@ -2,6 +2,66 @@
 
 load(libdir + "eqArrayHelper.js");
 
+// WebAssembly.Tag tests.
+assertErrorMessage(
+  () => WebAssembly.Tag(),
+  TypeError,
+  /calling a builtin Tag constructor without new is forbidden/
+);
+
+assertErrorMessage(
+  () => new WebAssembly.Tag(),
+  TypeError,
+  /At least 1 argument required/
+);
+
+assertErrorMessage(
+  () => new WebAssembly.Tag(3),
+  TypeError,
+  /first argument must be a tag descriptor/
+);
+
+assertErrorMessage(
+  () => new WebAssembly.Tag({ parameters: ["foobar"] }),
+  TypeError,
+  /bad value type/
+);
+
+new WebAssembly.Tag({ parameters: [] });
+new WebAssembly.Tag({ parameters: ["i32"] });
+new WebAssembly.Tag({ parameters: ["i32", "externref"] });
+
+wasmEvalText(`(module (import "m" "e" (event)))`, {
+  m: { e: new WebAssembly.Tag({ parameters: [] }) },
+});
+
+wasmEvalText(`(module (import "m" "e" (event (param i32))))`, {
+  m: { e: new WebAssembly.Tag({ parameters: ["i32"] }) },
+});
+
+wasmEvalText(`(module (import "m" "e" (event (param i32 i64))))`, {
+  m: { e: new WebAssembly.Tag({ parameters: ["i32", "i64"] }) },
+});
+
+assertErrorMessage(
+  () =>
+    wasmEvalText(`(module (import "m" "e" (event (param i32))))`, {
+      m: { e: new WebAssembly.Tag({ parameters: [] }) },
+    }),
+  WebAssembly.LinkError,
+  /imported tag 'm.e' signature mismatch/
+);
+
+assertErrorMessage(
+  () =>
+    wasmEvalText(`(module (import "m" "e" (event (param))))`, {
+      m: { e: new WebAssembly.Tag({ parameters: ["i32"] }) },
+    }),
+  WebAssembly.LinkError,
+  /imported tag 'm.e' signature mismatch/
+);
+
+// WebAssembly.Exception tests.
 assertErrorMessage(
   () => WebAssembly.Exception(),
   TypeError,
@@ -231,3 +291,58 @@ assertEq(
   ).exports.f(),
   1
 );
+
+{
+  const exn = new WebAssembly.Tag({ parameters: ["i32"] });
+  assertEq(
+    wasmEvalText(
+      `(module
+         (import "m" "exn" (event $exn (param i32)))
+         (import "m" "f" (func $f))
+         (func (export "f") (result i32)
+           try (result i32)
+             call $f
+             (i32.const 0)
+           catch $exn
+           end))`,
+      {
+        m: {
+          exn: exn,
+          f: () => {
+            throw new WebAssembly.Exception(exn, [42]);
+          },
+        },
+      }
+    ).exports.f(),
+    42
+  );
+}
+
+{
+  const exn1 = new WebAssembly.Tag({ parameters: ["i32"] });
+  const exn2 = new WebAssembly.Tag({ parameters: ["i32"] });
+  assertEq(
+    wasmEvalText(
+      `(module
+         (import "m" "exn" (event $exn (param i32)))
+         (import "m" "f" (func $f))
+         (func (export "f") (result i32)
+           try (result i32)
+             call $f
+             (i32.const 0)
+           catch $exn
+           catch_all
+             (i32.const 1)
+           end))`,
+      {
+        m: {
+          exn: exn1,
+          f: () => {
+            throw new WebAssembly.Exception(exn2, [42]);
+          },
+        },
+      }
+    ).exports.f(),
+    1
+  );
+}

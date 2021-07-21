@@ -1,15 +1,5 @@
 // Tests for Wasm exception import and export.
 
-// The WebAssembly.Tag constructor cannot be called for now until the
-// JS API specifies the behavior. Same with WebAssembly.Exception.
-function testException() {
-  assertErrorMessage(
-    () => new WebAssembly.Tag(),
-    WebAssembly.RuntimeError,
-    /cannot call WebAssembly.Tag/
-  );
-}
-
 function testImports() {
   var mod = `
     (module
@@ -104,7 +94,6 @@ function testDescriptions() {
   assertEq(exports[0].kind, "tag");
 }
 
-testException();
 testImports();
 testExports();
 testImportExport();
