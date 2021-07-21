@@ -62,6 +62,11 @@ impl Default for PlaneSplitAnchor {
 /// A concrete plane splitter type used in WebRender.
 pub type PlaneSplitter = BspSplitter<f64, WorldPixel, PlaneSplitAnchor>;
 
+/// An index into the scene's list of plane splitters
+#[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+pub struct PlaneSplitterIndex(pub usize);
+
 /// An arbitrary number which we assume opacity is invisible below.
 const OPACITY_EPSILON: f32 = 0.001;
 

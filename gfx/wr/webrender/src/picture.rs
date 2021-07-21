@@ -113,7 +113,8 @@ use euclid::{vec2, vec3, Point2D, Scale, Vector2D, Box2D, Transform3D, SideOffse
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
 use crate::intern::ItemUid;
-use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, Filter, PlaneSplitAnchor, TextureSource};
+use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, Filter};
+use crate::internal_types::{PlaneSplitterIndex, PlaneSplitAnchor, TextureSource};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{UvRectKind, ZBufferId};
@@ -4274,6 +4275,8 @@ pub enum Picture3DContext<C> {
         /// See CSS spec draft for more details:
         /// https://drafts.csswg.org/css-transforms-2/#accumulated-3d-transformation-matrix-computation
         ancestor_index: SpatialNodeIndex,
+        /// Index in the built scene's array of plane splitters.
+        plane_splitter_index: PlaneSplitterIndex,
     },
 }
 
@@ -4509,9 +4512,6 @@ pub struct PicturePrimitive {
     /// List of primitives, and associated info for this picture.
     pub prim_list: PrimitiveList,
 
-    #[cfg_attr(feature = "capture", serde(skip))]
-    pub state: Option<PictureState>,
-
     /// If true, apply the local clip rect to primitive drawn
     /// in this picture.
     pub apply_local_clip_rect: bool,
@@ -4657,7 +4657,6 @@ impl PicturePrimitive {
     ) -> Self {
         PicturePrimitive {
             prim_list,
-            state: None,
             primary_render_task_id: None,
             secondary_render_task_id: None,
             composite_mode,
@@ -4744,18 +4743,6 @@ impl PicturePrimitive {
             frame_context.global_screen_world_rect,
             frame_context.spatial_tree,
         );
-
-        let plane_splitter = match self.context_3d {
-            Picture3DContext::Out => {
-                None
-            }
-            Picture3DContext::In { root_data: Some(_), .. } => {
-                Some(PlaneSplitter::new())
-            }
-            Picture3DContext::In { root_data: None, .. } => {
-                None
-            }
-        };
 
         match self.raster_config {
             Some(RasterConfig { surface_index, composite_mode: PictureCompositeMode::TileCache { slice_id }, .. }) => {
@@ -5837,7 +5824,6 @@ impl PicturePrimitive {
             map_pic_to_world,
             map_pic_to_raster,
             map_raster_to_world,
-            plane_splitter,
         };
 
         let mut dirty_region_count = 0;
@@ -5933,7 +5919,6 @@ impl PicturePrimitive {
         &mut self,
         prim_list: PrimitiveList,
         context: PictureContext,
-        state: PictureState,
         frame_state: &mut FrameBuildingState,
     ) {
         // Pop any dirty regions this picture set
@@ -5942,11 +5927,6 @@ impl PicturePrimitive {
         }
 
         self.prim_list = prim_list;
-        self.state = Some(state);
-    }
-
-    pub fn take_state(&mut self) -> PictureState {
-        self.state.take().expect("bug: no state present!")
     }
 
     /// Add a primitive instance to the plane splitter. The function would generate
@@ -6437,9 +6417,9 @@ impl PicturePrimitive {
         frame_state: &mut FrameBuildingState,
         data_stores: &mut DataStores,
     ) -> bool {
-        let mut pic_state_for_children = self.take_state();
+        if let Picture3DContext::In { root_data: Some(..), plane_splitter_index, .. } = self.context_3d {
+            let splitter = &mut frame_state.plane_splitters[plane_splitter_index.0];
 
-        if let Some(ref mut splitter) = pic_state_for_children.plane_splitter {
             self.resolve_split_planes(
                 splitter,
                 &mut frame_state.gpu_cache,

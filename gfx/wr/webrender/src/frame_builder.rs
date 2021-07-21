@@ -33,6 +33,7 @@ use crate::segment::SegmentBuilder;
 use std::{f32, mem};
 use crate::util::{VecHelper, Recycler, Preallocator};
 use crate::visibility::{update_primitive_visibility, FrameVisibilityState, FrameVisibilityContext};
+use plane_split::Splitter;
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -190,6 +191,7 @@ pub struct FrameBuildingState<'a> {
     pub dirty_region_stack: Vec<DirtyRegion>,
     pub composite_state: &'a mut CompositeState,
     pub num_visible_primitives: u32,
+    pub plane_splitters: &'a mut [PlaneSplitter],
 }
 
 impl<'a> FrameBuildingState<'a> {
@@ -299,9 +301,6 @@ pub struct PictureState {
     pub map_pic_to_world: SpaceMapper<PicturePixel, WorldPixel>,
     pub map_pic_to_raster: SpaceMapper<PicturePixel, RasterPixel>,
     pub map_raster_to_world: SpaceMapper<RasterPixel, WorldPixel>,
-    /// If the plane splitter, the primitives get added to it instead of
-    /// batching into their parent pictures.
-    pub plane_splitter: Option<PlaneSplitter>,
 }
 
 impl FrameBuilder {
@@ -338,6 +337,12 @@ impl FrameBuilder {
         let root_spatial_node_index = scene.spatial_tree.root_reference_frame_index();
 
         const MAX_CLIP_COORD: f32 = 1.0e9;
+
+        // Reset all plane splitters. These are retained from frame to frame to reduce
+        // per-frame allocations
+        for splitter in &mut scene.plane_splitters {
+            splitter.reset();
+        }
 
         let frame_context = FrameBuildingContext {
             global_device_pixel_scale,
@@ -444,6 +449,7 @@ impl FrameBuilder {
             dirty_region_stack: scratch.frame.dirty_region_stack.take(),
             composite_state,
             num_visible_primitives: 0,
+            plane_splitters: &mut scene.plane_splitters,
         };
 
         // Push a default dirty region which culls primitives
@@ -495,7 +501,6 @@ impl FrameBuilder {
                 pic.restore_context(
                     prim_list,
                     pic_context,
-                    pic_state,
                     &mut frame_state,
                 );
             }

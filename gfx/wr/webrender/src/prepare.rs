@@ -22,7 +22,7 @@ use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
 use crate::gpu_types::{BrushFlags};
 use crate::internal_types::{FastHashMap, PlaneSplitAnchor};
 use crate::picture::{PicturePrimitive, SliceId, TileCacheLogger, ClusterFlags, SurfaceRenderTasks};
-use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, TileCacheInstance, SubpixelMode};
+use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, TileCacheInstance, SubpixelMode, Picture3DContext};
 use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
 use crate::prim_store::*;
 use crate::render_backend::DataStores;
@@ -194,7 +194,6 @@ fn prepare_prim_for_render(
                     .restore_context(
                         prim_list,
                         pic_context_for_children,
-                        pic_state_for_children,
                         frame_state,
                     );
             }
@@ -247,7 +246,6 @@ fn prepare_prim_for_render(
         cluster,
         plane_split_anchor,
         pic_context,
-        pic_state,
         frame_context,
         frame_state,
         data_stores,
@@ -266,7 +264,6 @@ fn prepare_interned_prim_for_render(
     cluster: &mut PrimitiveCluster,
     plane_split_anchor: PlaneSplitAnchor,
     pic_context: &PictureContext,
-    pic_state: &mut PictureState,
     frame_context: &FrameBuildingContext,
     frame_state: &mut FrameBuildingState,
     data_stores: &mut DataStores,
@@ -781,14 +778,17 @@ fn prepare_interned_prim_for_render(
                 frame_state,
                 data_stores,
             ) {
-                if let Some(ref mut splitter) = pic_state.plane_splitter {
+                if let Picture3DContext::In { root_data: None, plane_splitter_index, .. } = pic.context_3d {
+                    let dirty_rect = frame_state.current_dirty_region().combined;
+                    let splitter = &mut frame_state.plane_splitters[plane_splitter_index.0];
+
                     PicturePrimitive::add_split_plane(
                         splitter,
                         frame_context.spatial_tree,
                         prim_spatial_node_index,
                         pic.precise_local_rect,
                         &prim_instance.vis.combined_local_clip_rect,
-                        frame_state.current_dirty_region().combined,
+                        dirty_rect,
                         plane_split_anchor,
                     );
                 }
