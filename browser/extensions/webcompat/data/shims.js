@@ -98,6 +98,22 @@ const AVAILABLE_SHIMS = [
     ],
   },
   {
+    id: "AdNexus",
+    platform: "all",
+    name: "AdNexus",
+    bug: "1713696",
+    file: "empty-script.js",
+    matches: [
+      "*://acdn.adnxs.com/ast/ast.js",
+      {
+        patterns: ["*://*.adnxs.com/*/pb.js", "*://*.adnxs.com/*/prebid"],
+        target: "adnexus-prebid.js",
+        types: ["script"],
+      },
+    ],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "AdSafeProtectedGoogleIMAAdapter",
     platform: "all",
     branches: ["nightly:android"],

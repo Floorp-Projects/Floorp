@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
-  assert: "chrome://remote/content/marionette/assert.js",
+  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   capture: "chrome://remote/content/marionette/capture.js",
   Log: "chrome://remote/content/shared/Log.jsm",
   navigate: "chrome://remote/content/marionette/navigate.js",

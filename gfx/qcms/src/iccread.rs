@@ -440,9 +440,7 @@ pub const LUT_MBA_TYPE: u32 = 0x6d424120; // 'mBA '
 pub const CHROMATIC_TYPE: u32 = 0x73663332; // 'sf32'
 
 fn read_tag_s15Fixed16ArrayType(src: &mut MemSource, tag: &Tag) -> Matrix {
-    let mut matrix: Matrix = Matrix {
-        m: [[0.; 3]; 3],
-    };
+    let mut matrix: Matrix = Matrix { m: [[0.; 3]; 3] };
     let offset: u32 = tag.offset;
     let type_0: u32 = read_u32(src, offset as usize);
     // Check mandatory type signature for s16Fixed16ArrayType

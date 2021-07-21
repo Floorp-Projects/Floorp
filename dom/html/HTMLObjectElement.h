@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLFormSubmission;
+class FormData;
 template <typename T>
 struct Nullable;
 class WindowProxyHolder;
@@ -49,9 +49,7 @@ class HTMLObjectElement final : public nsGenericHTMLFormElement,
   // Overriden nsIFormControl methods
   NS_IMETHOD Reset() override { return NS_OK; }
 
-  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override {
-    return NS_OK;
-  }
+  NS_IMETHOD SubmitNamesValues(FormData* aFormData) override { return NS_OK; }
 
   virtual void DoneAddingChildren(bool aHaveNotified) override;
   virtual bool IsDoneAddingChildren() override;

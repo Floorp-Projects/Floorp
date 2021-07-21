@@ -170,9 +170,7 @@ pub(crate) fn build_input_gamma_table(TRC: Option<&curveType>) -> Option<Box<[f3
     })
 }
 pub fn build_colorant_matrix(p: &Profile) -> Matrix {
-    let mut result: Matrix = Matrix {
-        m: [[0.; 3]; 3],
-    };
+    let mut result: Matrix = Matrix { m: [[0.; 3]; 3] };
     result.m[0][0] = s15Fixed16Number_to_float(p.redColorant.X);
     result.m[0][1] = s15Fixed16Number_to_float(p.greenColorant.X);
     result.m[0][2] = s15Fixed16Number_to_float(p.blueColorant.X);
@@ -199,8 +197,8 @@ struct Param {
 
 impl Param {
     fn new(params: &[f32]) -> Param {
-	// convert from the variable number of parameters
-	// contained in profiles to a unified representation.
+        // convert from the variable number of parameters
+        // contained in profiles to a unified representation.
         let g: f32 = params[0];
         match params[1..] {
             [] => Param {

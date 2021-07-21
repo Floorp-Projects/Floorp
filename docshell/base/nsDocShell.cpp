@@ -596,7 +596,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocShell)
   NS_INTERFACE_MAP_ENTRY(nsILoadContext)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsINetworkInterceptController,
                                      mInterceptController)
-  NS_INTERFACE_MAP_ENTRY(nsIDeprecationWarner)
 NS_INTERFACE_MAP_END_INHERITING(nsDocLoader)
 
 NS_IMETHODIMP
@@ -13151,17 +13150,6 @@ bool nsDocShell::InFrameSwap() {
 
 UniquePtr<ClientSource> nsDocShell::TakeInitialClientSource() {
   return std::move(mInitialClientSource);
-}
-
-NS_IMETHODIMP
-nsDocShell::IssueWarning(uint32_t aWarning, bool aAsError) {
-  if (mContentViewer) {
-    RefPtr<Document> doc = mContentViewer->GetDocument();
-    if (doc) {
-      doc->WarnOnceAbout(DeprecatedOperations(aWarning), aAsError);
-    }
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP

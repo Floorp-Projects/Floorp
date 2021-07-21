@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
   Addon: "chrome://remote/content/marionette/addon.js",
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
-  assert: "chrome://remote/content/marionette/assert.js",
+  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   atom: "chrome://remote/content/marionette/atom.js",
   browser: "chrome://remote/content/marionette/browser.js",
   capture: "chrome://remote/content/marionette/capture.js",

@@ -4,15 +4,17 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["WebDriverBiDiConnection"];
+var EXPORTED_SYMBOLS = ["splitMethod", "WebDriverBiDiConnection"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
+  RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
   truncate: "chrome://remote/content/shared/Format.jsm",
   WebSocketConnection: "chrome://remote/content/shared/WebSocketConnection.jsm",
 });
@@ -47,6 +49,7 @@ class WebDriverBiDiConnection extends WebSocketConnection {
     }
 
     this.session = session;
+    logger.debug(`Connection ${this.id} attached to session ${session.id}`);
   }
 
   /**
@@ -68,9 +71,18 @@ class WebDriverBiDiConnection extends WebSocketConnection {
    * @param {Number} id
    *     Id of the packet which lead to an error.
    * @param {Error} err
-   *     Error object with `message` and `stack` attributes.
+   *     Error object with `status`, `message` and `stack` attributes.
    */
-  sendError(id, error) {}
+  sendError(id, err) {
+    const webDriverError = error.wrap(err);
+
+    this.send({
+      id,
+      error: webDriverError.status,
+      message: webDriverError.message,
+      stacktrace: webDriverError.stack,
+    });
+  }
 
   /**
    * Send an event coming from a module to the WebDriver BiDi client.
@@ -118,7 +130,7 @@ class WebDriverBiDiConnection extends WebSocketConnection {
     const payload = JSON.stringify(packet, null, Log.verbose ? "\t" : null);
     logger.trace(truncate`${this.constructor.name} ${this.id} -> ${payload}`);
 
-    const { id, method /* params */ } = packet;
+    const { id, method, params } = packet;
 
     try {
       // First check for mandatory field in the packets
@@ -129,11 +141,47 @@ class WebDriverBiDiConnection extends WebSocketConnection {
         throw new TypeError("Message missing 'method' field");
       }
 
+      // Extract the module and the command name out of `method` attribute
+      const { module, command } = splitMethod(method);
       let result;
+
+      // Handle static commands first
+      if (module === "session" && command === "new") {
+        // TODO: Needs capability matching code
+        result = RemoteAgent.webDriverBiDi.createSession(params, this);
+      } else {
+        assert.session(this.session);
+
+        // Finally, instruct the session to execute the command
+        // result = await this.session.execute(id, domain, command, params);
+      }
 
       this.sendResult(id, result);
     } catch (e) {
       this.sendError(packet.id, e);
     }
   }
+}
+
+/**
+ * Splits a WebDriver BiDi method into module and command components.
+ *
+ * @param {String} method
+ *     Name of the method to split, e.g. "session.subscribe".
+ *
+ * @returns {Object<String, String>}
+ *     Object with the module ("session") and command ("subscribe")
+ *     as properties.
+ */
+function splitMethod(method) {
+  const parts = method.split(".");
+
+  if (parts.length != 2 || parts[0].length == 0 || parts[1].length == 0) {
+    throw new TypeError(`Invalid method format: '${method}'`);
+  }
+
+  return {
+    module: parts[0],
+    command: parts[1],
+  };
 }

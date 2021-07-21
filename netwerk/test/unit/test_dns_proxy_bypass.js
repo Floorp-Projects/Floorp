@@ -72,6 +72,6 @@ function run_test() {
     Ci.nsIContentPolicy.TYPE_WEBSOCKET
   );
 
-  chan.asyncOpen(uri, url, 0, listener, null);
+  chan.asyncOpen(uri, url, {}, 0, listener, null);
   do_test_pending();
 }

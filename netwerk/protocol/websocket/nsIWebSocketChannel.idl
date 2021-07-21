@@ -19,6 +19,10 @@ webidl Node;
 #include "nsISupports.idl"
 #include "nsIContentPolicy.idl"
 
+
+
+[ref] native OriginAttributes(const mozilla::OriginAttributes);
+
 /**
  * Low-level websocket API: handles network protocol.
  *
@@ -128,15 +132,26 @@ interface nsIWebSocketChannel : nsISupports
      *
      * @param aURI the uri of the websocket protocol - may be redirected
      * @param aOrigin the uri of the originating resource
+     * @param aOriginAttributes attributes of the originating resource.
      * @param aInnerWindowID the inner window ID
      * @param aListener the nsIWebSocketListener implementation
      * @param aContext an opaque parameter forwarded to aListener's methods
      */
-    [must_use] void asyncOpen(in nsIURI aURI,
-                              in ACString aOrigin,
-                              in unsigned long long aInnerWindowID,
-                              in nsIWebSocketListener aListener,
-                              in nsISupports aContext);
+    [implicit_jscontext]
+    void asyncOpen(in nsIURI aURI,
+                   in ACString aOrigin,
+                   in jsval aOriginAttributes,
+                   in unsigned long long aInnerWindowID,
+                   in nsIWebSocketListener aListener,
+                   in nsISupports aContext);
+
+    [must_use]
+    void asyncOpenNative(in nsIURI aURI,
+                         in ACString aOrigin,
+                         in OriginAttributes aOriginAttributes,
+                         in unsigned long long aInnerWindowID,
+                         in nsIWebSocketListener aListener,
+                         in nsISupports aContext);
 
     /*
      * Close the websocket connection for writing - no more calls to sendMsg

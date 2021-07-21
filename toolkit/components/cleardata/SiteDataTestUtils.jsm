@@ -105,7 +105,9 @@ var SiteDataTestUtils = {
       );
       host = principal.host;
       path = principal.URI.pathQueryRef;
-      originAttributes = principal.originAttributes;
+      originAttributes = Object.keys(originAttributes).length
+        ? originAttributes
+        : principal.originAttributes;
     }
 
     Services.cookies.add(

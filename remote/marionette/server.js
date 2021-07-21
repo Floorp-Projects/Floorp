@@ -11,7 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  assert: "chrome://remote/content/marionette/assert.js",
+  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   Command: "chrome://remote/content/marionette/message.js",
   DebuggerTransport: "chrome://remote/content/marionette/transport.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",

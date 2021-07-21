@@ -687,11 +687,10 @@ nsresult FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
 
 HTMLFormSubmission::HTMLFormSubmission(
     nsIURI* aActionURL, const nsAString& aTarget,
-    mozilla::NotNull<const mozilla::Encoding*> aEncoding, Element* aSubmitter)
+    mozilla::NotNull<const mozilla::Encoding*> aEncoding)
     : mActionURL(aActionURL),
       mTarget(aTarget),
       mEncoding(aEncoding),
-      mSubmitter(aSubmitter),
       mInitiatedFromUserInput(UserActivation::IsHandlingUserInput()) {
   MOZ_COUNT_CTOR(HTMLFormSubmission);
 }
@@ -699,7 +698,7 @@ HTMLFormSubmission::HTMLFormSubmission(
 EncodingFormSubmission::EncodingFormSubmission(
     nsIURI* aActionURL, const nsAString& aTarget,
     NotNull<const Encoding*> aEncoding, Element* aSubmitter)
-    : HTMLFormSubmission(aActionURL, aTarget, aEncoding, aSubmitter) {
+    : HTMLFormSubmission(aActionURL, aTarget, aEncoding) {
   if (!aEncoding->CanEncodeEverything()) {
     nsAutoCString name;
     aEncoding->Name(name);
@@ -847,8 +846,8 @@ nsresult HTMLFormSubmission::GetFromForm(HTMLFormElement* aForm,
     if (aSubmitter) {
       aSubmitter->ResultForDialogSubmit(result);
     }
-    *aFormSubmission = new DialogFormSubmission(result, actionURL, target,
-                                                aEncoding, aSubmitter, dialog);
+    *aFormSubmission =
+        new DialogFormSubmission(result, actionURL, target, aEncoding, dialog);
     return NS_OK;
   }
 

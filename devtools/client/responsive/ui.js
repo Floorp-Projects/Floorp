@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
@@ -867,9 +866,8 @@ class ResponsiveUI {
 
   /**
    * Set or clear touch simulation. When setting to true, this method will
-   * additionally set meta viewport override if the pref
-   * "devtools.responsive.metaViewport.enabled" is true. When setting to
-   * false, this method will clear all touch simulation and meta viewport
+   * additionally set meta viewport override.
+   * When setting to false, this method will clear all touch simulation and meta viewport
    * overrides, returning to default behavior for both settings.
    *
    * @param {boolean} enabled
@@ -877,22 +875,6 @@ class ResponsiveUI {
    *        if the touch simulation state changes.
    */
   async updateTouchSimulation(enabled, reloadOnTouchSimulationToggle) {
-    // Call setMetaViewportOverride so the server would be in the expected state when/if
-    // the document reloads (as part of the call to updateConfiguration).
-    if (enabled) {
-      const metaViewportEnabled = Services.prefs.getBoolPref(
-        "devtools.responsive.metaViewport.enabled",
-        false
-      );
-      if (metaViewportEnabled) {
-        await this.responsiveFront.setMetaViewportOverride(
-          Ci.nsIDocShell.META_VIEWPORT_OVERRIDE_ENABLED
-        );
-      }
-    } else {
-      await this.responsiveFront.clearMetaViewportOverride();
-    }
-
     await this.commands.targetConfigurationCommand.updateConfiguration({
       touchEventsOverride: enabled ? "enabled" : null,
       reloadOnTouchSimulationToggle,

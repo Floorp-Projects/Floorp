@@ -23,6 +23,7 @@ namespace mozilla {
 namespace dom {
 
 class Blob;
+class DialogFormSubmission;
 class Directory;
 class Element;
 class HTMLFormElement;
@@ -93,8 +94,6 @@ class HTMLFormSubmission {
    */
   void GetCharset(nsACString& aCharset) { mEncoding->Name(aCharset); }
 
-  Element* GetSubmitterElement() const { return mSubmitter.get(); }
-
   /**
    * Get the action URI that will be used for submission.
    */
@@ -117,11 +116,9 @@ class HTMLFormSubmission {
    * Can only be constructed by subclasses.
    *
    * @param aEncoding the character encoding of the form
-   * @param aSubmitter the submitter element (can be null)
    */
   HTMLFormSubmission(nsIURI* aActionURL, const nsAString& aTarget,
-                     mozilla::NotNull<const mozilla::Encoding*> aEncoding,
-                     Element* aSubmitter);
+                     mozilla::NotNull<const mozilla::Encoding*> aEncoding);
 
   // The action url.
   nsCOMPtr<nsIURI> mActionURL;
@@ -131,9 +128,6 @@ class HTMLFormSubmission {
 
   // The character encoding of this form submission
   mozilla::NotNull<const mozilla::Encoding*> mEncoding;
-
-  // Submitter element.
-  RefPtr<Element> mSubmitter;
 
   // Keep track of whether this form submission was user-initiated or not
   bool mInitiatedFromUserInput;
@@ -177,9 +171,9 @@ class DialogFormSubmission final : public HTMLFormSubmission {
  public:
   DialogFormSubmission(nsAString& aResult, nsIURI* aActionURL,
                        const nsAString& aTarget,
-                       NotNull<const Encoding*> aEncoding, Element* aSubmitter,
+                       NotNull<const Encoding*> aEncoding,
                        HTMLDialogElement* aDialogElement)
-      : HTMLFormSubmission(aActionURL, aTarget, aEncoding, aSubmitter),
+      : HTMLFormSubmission(aActionURL, aTarget, aEncoding),
         mDialogElement(aDialogElement),
         mReturnValue(aResult) {}
   nsresult AddNameValuePair(const nsAString& aName,
