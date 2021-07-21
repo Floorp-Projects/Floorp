@@ -16,6 +16,20 @@ import mozilla.components.browser.state.store.BrowserStore
  * The toolbar can switch between two modes: display and edit. The display mode displays the current
  * URL and controls for navigation. In edit mode the current URL can be edited. Those two modes are
  * implemented by the [BrowserDisplayToolbar] and [BrowserEditToolbar] composables.
+ *
+ * @param store The store to observe the [target] from.
+ * @param target The target tab to observe.
+ * @param onDisplayMenuClicked Function to get executed when the user clicks on the menu button in
+ * "display" mode.
+ * @param onTextEdit Function to get executed whenever the user edits the text in the toolbar in
+ * "edit" mode.
+ * @param onTextCommit Function to get executed when the user has finished editing the URL and wants
+ * to load the entered text.
+ * @param onDisplayToolbarClick Function to get executed when the user clicks on the URL in "display"
+ * mode.
+ * @param hint Text displayed in the toolbar when there's no URL to display (no tab or empty URL)
+ * @param editMode Whether the toolbar is in "edit" or "display" mode.
+ * @param editText The text the user is editing in "edit" mode.
  */
 @Composable
 @Suppress("LongParameterList")
