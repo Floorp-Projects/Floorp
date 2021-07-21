@@ -1887,7 +1887,7 @@ static bool DecodeMemoryTypeAndLimits(Decoder& d, ModuleEnvironment* env) {
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-static bool EventIsJSCompatible(Decoder& d, const ValTypeVector& type) {
+static bool TagIsJSCompatible(Decoder& d, const ValTypeVector& type) {
   for (auto t : type) {
     if (t.isTypeIndex()) {
       return d.fail("cannot expose indexed reference type");
@@ -1897,29 +1897,29 @@ static bool EventIsJSCompatible(Decoder& d, const ValTypeVector& type) {
   return true;
 }
 
-static bool DecodeEvent(Decoder& d, ModuleEnvironment* env,
-                        EventKind* eventKind, uint32_t* funcTypeIndex) {
-  uint32_t eventCode;
-  if (!d.readVarU32(&eventCode)) {
-    return d.fail("expected event kind");
+static bool DecodeTag(Decoder& d, ModuleEnvironment* env, TagKind* tagKind,
+                      uint32_t* funcTypeIndex) {
+  uint32_t tagCode;
+  if (!d.readVarU32(&tagCode)) {
+    return d.fail("expected tag kind");
   }
 
-  if (EventKind(eventCode) != EventKind::Exception) {
-    return d.fail("illegal event kind");
+  if (TagKind(tagCode) != TagKind::Exception) {
+    return d.fail("illegal tag kind");
   }
-  *eventKind = EventKind(eventCode);
+  *tagKind = TagKind(tagCode);
 
   if (!d.readVarU32(funcTypeIndex)) {
-    return d.fail("expected function index in event");
+    return d.fail("expected function index in tag");
   }
   if (*funcTypeIndex >= env->numTypes()) {
-    return d.fail("function type index in event out of bounds");
+    return d.fail("function type index in tag out of bounds");
   }
   if (!env->types[*funcTypeIndex].isFuncType()) {
     return d.fail("function type index must index a function type");
   }
   if (env->types[*funcTypeIndex].funcType().results().length() != 0) {
-    return d.fail("exception function types must not return anything");
+    return d.fail("tag function types must not return anything");
   }
   return true;
 }
@@ -2029,27 +2029,27 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env,
       break;
     }
 #ifdef ENABLE_WASM_EXCEPTIONS
-    case DefinitionKind::Event: {
-      EventKind eventKind;
+    case DefinitionKind::Tag: {
+      TagKind tagKind;
       uint32_t funcTypeIndex;
-      if (!DecodeEvent(d, env, &eventKind, &funcTypeIndex)) {
+      if (!DecodeTag(d, env, &tagKind, &funcTypeIndex)) {
         return false;
       }
       const ValTypeVector& args = env->types[funcTypeIndex].funcType().args();
 #  ifdef WASM_PRIVATE_REFTYPES
-      if (!EventIsJSCompatible(d, args)) {
+      if (!TagIsJSCompatible(d, args)) {
         return false;
       }
 #  endif
-      ValTypeVector eventArgs;
-      if (!eventArgs.appendAll(args)) {
+      ValTypeVector tagArgs;
+      if (!tagArgs.appendAll(args)) {
         return false;
       }
-      if (!env->events.emplaceBack(eventKind, std::move(eventArgs))) {
+      if (!env->tags.emplaceBack(tagKind, std::move(tagArgs))) {
         return false;
       }
-      if (env->events.length() > MaxEvents) {
-        return d.fail("too many events");
+      if (env->tags.length() > MaxTags) {
+        return d.fail("too many tags");
       }
       break;
     }
@@ -2230,9 +2230,9 @@ static bool DecodeGlobalSection(Decoder& d, ModuleEnvironment* env) {
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-static bool DecodeEventSection(Decoder& d, ModuleEnvironment* env) {
+static bool DecodeTagSection(Decoder& d, ModuleEnvironment* env) {
   MaybeSectionRange range;
-  if (!d.startSection(SectionId::Event, env, &range, "event")) {
+  if (!d.startSection(SectionId::Tag, env, &range, "tag")) {
     return false;
   }
   if (!range) {
@@ -2245,34 +2245,34 @@ static bool DecodeEventSection(Decoder& d, ModuleEnvironment* env) {
 
   uint32_t numDefs;
   if (!d.readVarU32(&numDefs)) {
-    return d.fail("expected number of events");
+    return d.fail("expected number of tags");
   }
 
-  CheckedInt<uint32_t> numEvents = env->events.length();
-  numEvents += numDefs;
-  if (!numEvents.isValid() || numEvents.value() > MaxEvents) {
-    return d.fail("too many events");
+  CheckedInt<uint32_t> numTags = env->tags.length();
+  numTags += numDefs;
+  if (!numTags.isValid() || numTags.value() > MaxTags) {
+    return d.fail("too many tags");
   }
 
-  if (!env->events.reserve(numEvents.value())) {
+  if (!env->tags.reserve(numTags.value())) {
     return false;
   }
 
   for (uint32_t i = 0; i < numDefs; i++) {
-    EventKind eventKind;
+    TagKind tagKind;
     uint32_t funcTypeIndex;
-    if (!DecodeEvent(d, env, &eventKind, &funcTypeIndex)) {
+    if (!DecodeTag(d, env, &tagKind, &funcTypeIndex)) {
       return false;
     }
     const ValTypeVector& args = env->types[funcTypeIndex].funcType().args();
-    ValTypeVector eventArgs;
-    if (!eventArgs.appendAll(args)) {
+    ValTypeVector tagArgs;
+    if (!tagArgs.appendAll(args)) {
       return false;
     }
-    env->events.infallibleEmplaceBack(eventKind, std::move(eventArgs));
+    env->tags.infallibleEmplaceBack(tagKind, std::move(tagArgs));
   }
 
-  return d.finishSection(*range, "event");
+  return d.finishSection(*range, "tag");
 }
 #endif
 
@@ -2378,24 +2378,24 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env,
                                       DefinitionKind::Global);
     }
 #ifdef ENABLE_WASM_EXCEPTIONS
-    case DefinitionKind::Event: {
-      uint32_t eventIndex;
-      if (!d.readVarU32(&eventIndex)) {
-        return d.fail("expected event index");
+    case DefinitionKind::Tag: {
+      uint32_t tagIndex;
+      if (!d.readVarU32(&tagIndex)) {
+        return d.fail("expected tag index");
       }
-      if (eventIndex >= env->events.length()) {
-        return d.fail("exported event index out of bounds");
+      if (tagIndex >= env->tags.length()) {
+        return d.fail("exported tag index out of bounds");
       }
 
 #  ifdef WASM_PRIVATE_REFTYPES
-      if (!EventIsJSCompatible(d, env->events[eventIndex].type)) {
+      if (!TagIsJSCompatible(d, env->tags[tagIndex].type)) {
         return false;
       }
 #  endif
 
-      env->events[eventIndex].isExport = true;
-      return env->exports.emplaceBack(std::move(fieldName), eventIndex,
-                                      DefinitionKind::Event);
+      env->tags[tagIndex].isExport = true;
+      return env->exports.emplaceBack(std::move(fieldName), tagIndex,
+                                      DefinitionKind::Tag);
     }
 #endif
     default:
@@ -2776,7 +2776,7 @@ bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
   }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-  if (!DecodeEventSection(d, env)) {
+  if (!DecodeTagSection(d, env)) {
     return false;
   }
 #endif

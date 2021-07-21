@@ -28,7 +28,7 @@ function testValidateDecode() {
     moduleWithSections([
       sigSection([emptyType]),
       declSection([0]),
-      eventSection([{ type: 0 }]),
+      tagSection([{ type: 0 }]),
       bodySection([
         funcBody({
           locals: [],
@@ -49,12 +49,12 @@ function testValidateDecode() {
     /bad type/
   );
 
-  // Catch must have an event index.
+  // Catch must have a tag index.
   wasmInvalid(
     moduleWithSections([
       sigSection([emptyType]),
       declSection([0]),
-      eventSection([{ type: 0 }]),
+      tagSection([{ type: 0 }]),
       bodySection([
         funcBody(
           {
@@ -72,7 +72,7 @@ function testValidateDecode() {
         ),
       ]),
     ]),
-    /expected event index/
+    /expected tag index/
   );
 
   // Rethrow must have a depth argument.
@@ -80,7 +80,7 @@ function testValidateDecode() {
     moduleWithSections([
       sigSection([emptyType]),
       declSection([0]),
-      eventSection([{ type: 0 }]),
+      tagSection([{ type: 0 }]),
       bodySection([
         funcBody(
           {
@@ -102,7 +102,7 @@ function testValidateDecode() {
     moduleWithSections([
       sigSection([emptyType]),
       declSection([0]),
-      eventSection([{ type: 0 }]),
+      tagSection([{ type: 0 }]),
       bodySection([
         funcBody(
           {
@@ -153,7 +153,7 @@ function testValidateThrow() {
                   i32.const 0
                   throw 1)
                 (event $exn1 (type 0)))`;
-  error2 = /event index out of range/;
+  error2 = /tag index out of range/;
 
   wasmValidateText(valid);
   wasmFailValidateText(invalid0, error0);
@@ -166,7 +166,7 @@ function testValidateTryCatch() {
     return moduleWithSections([
       sigSection([emptyType, i32Type, i32i32Toi32Type]),
       declSection([0]),
-      eventSection([{ type: 0 }, { type: 1 }]),
+      tagSection([{ type: 0 }, { type: 1 }]),
       bodySection([
         funcBody({
           locals: [],
@@ -254,7 +254,7 @@ function testValidateCatch() {
         }),
       ]),
     ]),
-    /event index out of range/
+    /tag index out of range/
   );
 }
 
@@ -318,7 +318,7 @@ function testValidateExnPayload() {
     sigSection([i32Type, i32Toi32Type]),
     declSection([1]),
     // (event $exn (param i32))
-    eventSection([{ type: 0 }]),
+    tagSection([{ type: 0 }]),
     bodySection([
       // (func (param i32) (result i32) ...
       funcBody({
@@ -352,7 +352,7 @@ function testValidateExnPayload() {
     sigSection([i32Type, toi32Type]),
     declSection([1]),
     // (event $exn (param i32))
-    eventSection([{ type: 0 }]),
+    tagSection([{ type: 0 }]),
     bodySection([
       // (func (result i32) ...
       funcBody({
@@ -384,7 +384,7 @@ function testValidateExnPayload() {
     sigSection([i32Type, i32Toi64Type]),
     declSection([1]),
     // (event $exn (param i32))
-    eventSection([{ type: 0 }]),
+    tagSection([{ type: 0 }]),
     bodySection([
       // (func (param i32) (result i64) ...
       funcBody({
@@ -413,7 +413,7 @@ function testValidateExnPayload() {
     sigSection([emptyType]),
     declSection([0]),
     // (event $exn (type 0))
-    eventSection([{ type: 0 }]),
+    tagSection([{ type: 0 }]),
     bodySection([
       // (func ...
       funcBody({
@@ -433,7 +433,7 @@ function testValidateExnPayload() {
   wasmValid(valid0);
   wasmValid(valid1);
   wasmInvalid(invalid0, /has type i32 but expected i64/);
-  wasmInvalid(invalid1, /event index out of range/);
+  wasmInvalid(invalid1, /tag index out of range/);
 }
 
 function testValidateRethrow() {

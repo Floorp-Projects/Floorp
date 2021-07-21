@@ -127,7 +127,7 @@ class Module : public JS::WasmModule {
   bool instantiateImportedTag(JSContext* cx, Handle<WasmTagObject*> tagObj,
                               WasmTagObjectVector& tagObjs,
                               SharedExceptionTagVector* tags) const;
-  bool instantiateLocalTag(JSContext* cx, const EventDesc& ed,
+  bool instantiateLocalTag(JSContext* cx, const TagDesc& ed,
                            WasmTagObjectVector& tagObjs,
                            SharedExceptionTagVector* tags,
                            uint32_t tagIndex) const;

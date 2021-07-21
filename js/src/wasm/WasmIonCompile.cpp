@@ -2597,10 +2597,10 @@ static bool EmitTry(FunctionCompiler& f) {
 
 static bool EmitCatch(FunctionCompiler& f) {
   LabelKind kind;
-  uint32_t eventIndex;
+  uint32_t tagIndex;
   ResultType paramType, resultType;
   DefVector tryValues;
-  if (!f.iter().readCatch(&kind, &eventIndex, &paramType, &resultType,
+  if (!f.iter().readCatch(&kind, &tagIndex, &paramType, &resultType,
                           &tryValues)) {
     return false;
   }

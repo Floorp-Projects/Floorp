@@ -57,7 +57,7 @@ struct ModuleEnvironment {
 
   GlobalDescVector globals;
 #ifdef ENABLE_WASM_EXCEPTIONS
-  EventDescVector events;
+  TagDescVector tags;
 #endif
   TableDescVector tables;
   Uint32Vector asmJSSigToTableIndex;

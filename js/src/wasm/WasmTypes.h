@@ -534,7 +534,7 @@ class Export {
   DefinitionKind kind() const { return pod.kind_; }
   uint32_t funcIndex() const;
 #ifdef ENABLE_WASM_EXCEPTIONS
-  uint32_t eventIndex() const;
+  uint32_t tagIndex() const;
 #endif
   uint32_t globalIndex() const;
   uint32_t tableIndex() const;
@@ -704,22 +704,22 @@ class GlobalDesc {
 
 using GlobalDescVector = Vector<GlobalDesc, 0, SystemAllocPolicy>;
 
-// An EventDesc describes a single event for non-local control flow, such as
-// for exceptions.
+// A TagDesc represents fresh per-instance tags that are used for the
+// exception handling proposal and potentially other future proposals.
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-struct EventDesc {
-  EventKind kind;
+struct TagDesc {
+  TagKind kind;
   ValTypeVector type;
   bool isExport;
 
-  EventDesc(EventKind kind, ValTypeVector&& type, bool isExport = false)
+  TagDesc(TagKind kind, ValTypeVector&& type, bool isExport = false)
       : kind(kind), type(std::move(type)), isExport(isExport) {}
 
   ResultType resultType() const { return ResultType::Vector(type); }
 };
 
-using EventDescVector = Vector<EventDesc, 0, SystemAllocPolicy>;
+using TagDescVector = Vector<TagDesc, 0, SystemAllocPolicy>;
 #endif
 
 // When a ElemSegment is "passive" it is shared between a wasm::Module and its

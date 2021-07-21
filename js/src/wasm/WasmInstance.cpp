@@ -1231,8 +1231,8 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
                     const ElemSegmentVector& elemSegments) {
   MOZ_ASSERT(!!maybeDebug_ == metadata().debugEnabled);
 #ifdef ENABLE_WASM_EXCEPTIONS
-  // Currently the only events are exceptions.
-  MOZ_ASSERT(exceptionTags_.length() == metadata().events.length());
+  // Currently the only tags are exception tags.
+  MOZ_ASSERT(exceptionTags_.length() == metadata().tags.length());
 #else
   MOZ_ASSERT(exceptionTags_.length() == 0);
 #endif
