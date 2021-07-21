@@ -7069,9 +7069,22 @@ static const char* DescribeBudget(const SliceBudget& budget) {
 }
 #endif
 
+static bool ShouldPauseMutatorWhileWaiting(const SliceBudget& budget,
+                                           JS::GCReason reason,
+                                           bool budgetWasIncreased) {
+  // When we're nearing the incremental limit at which we will finish the
+  // collection synchronously, pause the main thread if there is only background
+  // GC work happening. This allows the GC to catch up and avoid hitting the
+  // limit.
+  return budget.isTimeBudget() &&
+         (reason == JS::GCReason::ALLOC_TRIGGER ||
+          reason == JS::GCReason::TOO_MUCH_MALLOC) &&
+         budgetWasIncreased;
+}
+
 void GCRuntime::incrementalSlice(SliceBudget& budget,
                                  const MaybeGCOptions& options,
-                                 JS::GCReason reason) {
+                                 JS::GCReason reason, bool budgetWasIncreased) {
   MOZ_ASSERT_IF(isIncrementalGCInProgress(), isIncremental);
 
   AutoSetThreadIsPerformingGC performingGC;
@@ -7109,6 +7122,9 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
     budget = SliceBudget::unlimited();
   }
 
+  bool shouldPauseMutator =
+      ShouldPauseMutatorWhileWaiting(budget, reason, budgetWasIncreased);
+
   switch (incrementalState) {
     case State::NotActive:
       MOZ_ASSERT(marker.isDrained());
@@ -7140,7 +7156,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       [[fallthrough]];
 
     case State::Prepare:
-      if (waitForBackgroundTask(unmarkTask, budget,
+      if (waitForBackgroundTask(unmarkTask, budget, shouldPauseMutator,
                                 DontTriggerSliceWhenFinished) == NotFinished) {
         break;
       }
@@ -7244,8 +7260,8 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       [[fallthrough]];
 
     case State::Finalize:
-      if (waitForBackgroundTask(sweepTask, budget, TriggerSliceWhenFinished) ==
-          NotFinished) {
+      if (waitForBackgroundTask(sweepTask, budget, shouldPauseMutator,
+                                TriggerSliceWhenFinished) == NotFinished) {
         break;
       }
 
@@ -7294,7 +7310,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       [[fallthrough]];
 
     case State::Decommit:
-      if (waitForBackgroundTask(decommitTask, budget,
+      if (waitForBackgroundTask(decommitTask, budget, shouldPauseMutator,
                                 TriggerSliceWhenFinished) == NotFinished) {
         break;
       }
@@ -7340,10 +7356,23 @@ bool GCRuntime::hasForegroundWork() const {
 }
 
 IncrementalProgress GCRuntime::waitForBackgroundTask(
-    GCParallelTask& task, const SliceBudget& budget,
+    GCParallelTask& task, const SliceBudget& budget, bool shouldPauseMutator,
     ShouldTriggerSliceWhenFinished triggerSlice) {
-  // In incremental collections, yield if the task has not finished and request
-  // a slice to notify us when this happens.
+  // Wait here in non-incremental collections, or if we want to pause the
+  // mutator to let the GC catch up.
+  if (budget.isUnlimited() || shouldPauseMutator) {
+    gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
+    Maybe<TimeStamp> deadline;
+    if (budget.isTimeBudget()) {
+      deadline.emplace(budget.deadline());
+    }
+    if (task.join(deadline) && triggerSlice) {
+      cancelRequestedGCAfterBackgroundTask();
+    }
+  }
+
+  // In incremental collections, yield if the task has not finished and
+  // optionally request a slice to notify us when this happens.
   if (!budget.isUnlimited()) {
     AutoLockHelperThreadState lock;
     if (task.wasStarted(lock)) {
@@ -7352,15 +7381,11 @@ IncrementalProgress GCRuntime::waitForBackgroundTask(
       }
       return NotFinished;
     }
+
+    task.joinWithLockHeld(lock);
   }
 
-  // Otherwise in non-incremental collections, wait here.
-  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
-  task.join();
-  if (triggerSlice) {
-    cancelRequestedGCAfterBackgroundTask();
-  }
-
+  MOZ_ASSERT(task.isIdle());
   return Finished;
 }
 
@@ -7485,23 +7510,29 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
   return IncrementalResult::Ok;
 }
 
-void GCRuntime::maybeIncreaseSliceBudget(SliceBudget& budget) {
+bool GCRuntime::maybeIncreaseSliceBudget(SliceBudget& budget) {
   if (js::SupportDifferentialTesting()) {
-    return;
+    return false;
   }
 
   if (!budget.isTimeBudget() || !isIncrementalGCInProgress()) {
-    return;
+    return false;
   }
 
-  maybeIncreaseSliceBudgetForLongCollections(budget);
-  maybeIncreaseSliceBudgetForUrgentCollections(budget);
+  bool wasIncreasedForLongCollections =
+      maybeIncreaseSliceBudgetForLongCollections(budget);
+  bool wasIncreasedForUgentCollections =
+      maybeIncreaseSliceBudgetForUrgentCollections(budget);
+
+  return wasIncreasedForLongCollections || wasIncreasedForUgentCollections;
 }
 
-void GCRuntime::maybeIncreaseSliceBudgetForLongCollections(
+bool GCRuntime::maybeIncreaseSliceBudgetForLongCollections(
     SliceBudget& budget) {
   // For long-running collections, enforce a minimum time budget that increases
   // linearly with time up to a maximum.
+
+  bool wasIncreased = false;
 
   // All times are in milliseconds.
   struct BudgetAtTime {
@@ -7519,13 +7550,18 @@ void GCRuntime::maybeIncreaseSliceBudgetForLongCollections(
 
   if (budget.timeBudget() < minBudget) {
     budget = SliceBudget(TimeBudget(minBudget));
+    wasIncreased = true;
   }
+
+  return wasIncreased;
 }
 
-void GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
+bool GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
     SliceBudget& budget) {
   // Enforce a minimum time budget based on how close we are to the incremental
   // limit.
+
+  bool wasIncreased = false;
 
   size_t minBytesRemaining = SIZE_MAX;
   for (AllZonesIter zone(this); !zone.done(); zone.next()) {
@@ -7549,8 +7585,11 @@ void GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
     double minBudget = double(defaultSliceBudgetMS()) / fractionRemaining;
     if (budget.timeBudget() < minBudget) {
       budget = SliceBudget(TimeBudget(minBudget));
+      wasIncreased = true;
     }
   }
+
+  return wasIncreased;
 }
 
 static void ScheduleZones(GCRuntime* gc) {
@@ -7662,7 +7701,7 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   // Increase slice budget for long running collections before it is recorded by
   // AutoGCSlice.
   SliceBudget budget(budgetArg);
-  maybeIncreaseSliceBudget(budget);
+  bool budgetWasIncreased = maybeIncreaseSliceBudget(budget);
 
   ScheduleZones(this);
   gcstats::AutoGCSlice agc(stats(), scanZonesBeforeGC(),
@@ -7687,7 +7726,7 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   incGcSliceNumber();
 
   gcprobes::MajorGCStart();
-  incrementalSlice(budget, options, reason);
+  incrementalSlice(budget, options, reason, budgetWasIncreased);
   gcprobes::MajorGCEnd();
 
   MOZ_ASSERT_IF(result == IncrementalResult::ResetIncremental,
