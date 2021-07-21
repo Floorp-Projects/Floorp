@@ -488,8 +488,8 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
   const Metadata& metadata = module.metadata();
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-  uint32_t eventIndex = 0;
-  const EventDescVector& events = metadata.events;
+  uint32_t tagIndex = 0;
+  const TagDescVector& tags = metadata.tags;
 #endif
   uint32_t globalIndex = 0;
   const GlobalDescVector& globals = metadata.globals;
@@ -553,8 +553,8 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
         break;
       }
 #ifdef ENABLE_WASM_EXCEPTIONS
-      case DefinitionKind::Event: {
-        const uint32_t index = eventIndex++;
+      case DefinitionKind::Tag: {
+        const uint32_t index = tagIndex++;
         if (!v.isObject() || !v.toObject().is<WasmTagObject>()) {
           return ThrowBadImportType(cx, import.field.get(), "Tag");
         }
@@ -562,8 +562,8 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
         RootedWasmTagObject obj(cx, &v.toObject().as<WasmTagObject>());
 
         // Checks whether the signature of the imported exception object matches
-        // the signature declared in the exception import's EventDesc.
-        if (obj->resultType() != events[index].resultType()) {
+        // the signature declared in the exception import's TagDesc.
+        if (obj->resultType() != tags[index].resultType()) {
           JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                    JSMSG_WASM_BAD_TAG_SIG, import.module.get(),
                                    import.field.get());
@@ -1130,11 +1130,11 @@ struct KindNames {
   RootedPropertyName kind;
   RootedPropertyName table;
   RootedPropertyName memory;
-  RootedPropertyName event;
+  RootedPropertyName tag;
   RootedPropertyName signature;
 
   explicit KindNames(JSContext* cx)
-      : kind(cx), table(cx), memory(cx), event(cx), signature(cx) {}
+      : kind(cx), table(cx), memory(cx), tag(cx), signature(cx) {}
 };
 
 static bool InitKindNames(JSContext* cx, KindNames* names) {
@@ -1157,11 +1157,11 @@ static bool InitKindNames(JSContext* cx, KindNames* names) {
   names->memory = memory->asPropertyName();
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-  JSAtom* event = Atomize(cx, "event", strlen("event"));
-  if (!event) {
+  JSAtom* tag = Atomize(cx, "tag", strlen("tag"));
+  if (!tag) {
     return false;
   }
-  names->event = event->asPropertyName();
+  names->tag = tag->asPropertyName();
 #endif
 
   JSAtom* signature = Atomize(cx, "signature", strlen("signature"));
@@ -1185,8 +1185,8 @@ static JSString* KindToString(JSContext* cx, const KindNames& names,
     case DefinitionKind::Global:
       return cx->names().global;
 #ifdef ENABLE_WASM_EXCEPTIONS
-    case DefinitionKind::Event:
-      return names.event;
+    case DefinitionKind::Tag:
+      return names.tag;
 #endif
   }
 

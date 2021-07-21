@@ -3096,13 +3096,13 @@ class BaseCompiler final : public BaseCompilerInterface {
   // landing pads.
 
   struct CatchInfo {
-    uint32_t eventIndex;      // Index for the associated exception.
+    uint32_t tagIndex;        // Index for the associated exception.
     NonAssertingLabel label;  // The entry label for the handler.
 
     static const uint32_t CATCH_ALL_INDEX = UINT32_MAX;
-    static_assert(CATCH_ALL_INDEX > MaxEvents);
+    static_assert(CATCH_ALL_INDEX > MaxTags);
 
-    explicit CatchInfo(uint32_t eventIndex_) : eventIndex(eventIndex_) {}
+    explicit CatchInfo(uint32_t tagIndex_) : tagIndex(tagIndex_) {}
   };
 
   using CatchInfoVector = Vector<CatchInfo, 0, SystemAllocPolicy>;
@@ -10557,11 +10557,11 @@ void BaseCompiler::emitCatchSetup(LabelKind kind, Control& tryCatch,
 
 bool BaseCompiler::emitCatch() {
   LabelKind kind;
-  uint32_t eventIndex;
+  uint32_t tagIndex;
   ResultType paramType, resultType;
   NothingVector unused_tryValues{};
 
-  if (!iter_.readCatch(&kind, &eventIndex, &paramType, &resultType,
+  if (!iter_.readCatch(&kind, &tagIndex, &paramType, &resultType,
                        &unused_tryValues)) {
     return false;
   }
@@ -10575,7 +10575,7 @@ bool BaseCompiler::emitCatch() {
   }
 
   // Construct info used for the exception landing pad.
-  CatchInfo catchInfo(eventIndex);
+  CatchInfo catchInfo(tagIndex);
   if (!tryCatch.catchInfos.emplaceBack(catchInfo)) {
     return false;
   }
@@ -10583,7 +10583,7 @@ bool BaseCompiler::emitCatch() {
   masm.bind(&tryCatch.catchInfos.back().label);
 
   // Extract the arguments in the exception package and push them.
-  const ResultType params = moduleEnv_.events[eventIndex].resultType();
+  const ResultType params = moduleEnv_.tags[tagIndex].resultType();
 
   uint32_t refCount = 0;
   for (uint32_t i = 0; i < params.length(); i++) {
@@ -10891,10 +10891,9 @@ bool BaseCompiler::endTryCatch(ResultType type) {
 
   bool hasCatchAll = false;
   for (CatchInfo& info : tryCatch.catchInfos) {
-    if (info.eventIndex != CatchInfo::CATCH_ALL_INDEX) {
+    if (info.tagIndex != CatchInfo::CATCH_ALL_INDEX) {
       MOZ_ASSERT(!hasCatchAll);
-      masm.branch32(Assembler::Equal, index, Imm32(info.eventIndex),
-                    &info.label);
+      masm.branch32(Assembler::Equal, index, Imm32(info.tagIndex), &info.label);
     } else {
       masm.jump(&info.label);
       hasCatchAll = true;
@@ -10939,7 +10938,7 @@ bool BaseCompiler::emitThrow() {
     return true;
   }
 
-  const ResultType& params = moduleEnv_.events[exnIndex].resultType();
+  const ResultType& params = moduleEnv_.tags[exnIndex].resultType();
 
   // Measure space we need for all the args to put in the exception.
   uint32_t exnBytes = 0;
