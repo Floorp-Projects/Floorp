@@ -66,9 +66,9 @@ class ProfilerBacktrace {
   // That is, markers that contain backtraces should not need their own stack,
   // frame, and string tables. They should instead reuse their parent
   // profile's tables.
-  int StreamJSON(SpliceableJSONWriter& aWriter,
-                 const TimeStamp& aProcessStartTime,
-                 UniqueStacks& aUniqueStacks);
+  BaseProfilerThreadId StreamJSON(SpliceableJSONWriter& aWriter,
+                                  const TimeStamp& aProcessStartTime,
+                                  UniqueStacks& aUniqueStacks);
 
  private:
   // Used to de/serialize a ProfilerBacktrace.

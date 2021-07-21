@@ -78,16 +78,19 @@ BaseProfilerProcessId profiler_current_process_id() {
   return BaseProfilerProcessId::FromNumber(getpid());
 }
 
-int profiler_current_thread_id() {
+BaseProfilerThreadId profiler_current_thread_id() {
 #if defined(GP_OS_linux)
   // glibc doesn't provide a wrapper for gettid() until 2.30
-  return static_cast<int>(static_cast<pid_t>(syscall(SYS_gettid)));
+  return BaseProfilerThreadId::FromNumber(
+      static_cast<BaseProfilerThreadId::NumberType>(syscall(SYS_gettid)));
 #elif defined(GP_OS_android)
-  return gettid();
+  return BaseProfilerThreadId::FromNumber(
+      static_cast<BaseProfilerThreadId::NumberType>(gettid()));
 #elif defined(GP_OS_freebsd)
   long id;
   (void)thr_self(&id);
-  return static_cast<int>(id);
+  return BaseProfilerThreadId::FromNumber(
+      static_cast<BaseProfilerThreadId::NumberType>(id));
 #else
 #  error "bad platform"
 #endif
@@ -162,7 +165,7 @@ int tgkill(pid_t tgid, pid_t tid, int signalno) {
 
 class PlatformData {
  public:
-  explicit PlatformData(int aThreadId) {}
+  explicit PlatformData(BaseProfilerThreadId aThreadId) {}
 
   ~PlatformData() {}
 };
@@ -279,13 +282,7 @@ static void SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext) {
   errno = savedErrno;
 }
 
-Sampler::Sampler(PSLockRef aLock)
-    : mMyPid(profiler_current_process_id())
-      // We don't know what the sampler thread's ID will be until it runs, so
-      // set mSamplerTid to a dummy value and fill it in for real in
-      // SuspendAndSampleAndResumeThread().
-      ,
-      mSamplerTid(-1) {
+Sampler::Sampler(PSLockRef aLock) : mMyPid(profiler_current_process_id()) {
 #if defined(USE_EHABI_STACKWALK)
   EHABIStackWalkInit();
 #endif
@@ -319,10 +316,10 @@ void Sampler::SuspendAndSampleAndResumeThread(
   // complete control over |sSigHandlerCoordinator|.
   MOZ_ASSERT(!sSigHandlerCoordinator);
 
-  if (mSamplerTid == -1) {
+  if (!mSamplerTid.IsSpecified()) {
     mSamplerTid = profiler_current_thread_id();
   }
-  int sampleeTid = aRegisteredThread.Info()->ThreadId();
+  BaseProfilerThreadId sampleeTid = aRegisteredThread.Info()->ThreadId();
   MOZ_RELEASE_ASSERT(sampleeTid != mSamplerTid);
 
   //----------------------------------------------------------------//
@@ -334,7 +331,7 @@ void Sampler::SuspendAndSampleAndResumeThread(
   // Send message 1 to the samplee (the thread to be sampled), by
   // signalling at it.
   // This could fail if the thread doesn't exist anymore.
-  int r = tgkill(mMyPid.ToNumber(), sampleeTid, SIGPROF);
+  int r = tgkill(mMyPid.ToNumber(), sampleeTid.ToNumber(), SIGPROF);
   if (r == 0) {
     // Wait for message 2 from the samplee, indicating that the context
     // is available and that the thread is suspended.

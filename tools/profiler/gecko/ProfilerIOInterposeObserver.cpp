@@ -23,7 +23,7 @@ struct FileIOMarker {
       aWriter.StringProperty("filename", aFilename);
     }
     if (!aOperationThreadId.IsUnspecified()) {
-      aWriter.IntProperty("threadId", aOperationThreadId.ThreadId());
+      aWriter.IntProperty("threadId", aOperationThreadId.ThreadId().ToNumber());
     }
   }
   static MarkerSchema MarkerTypeDisplay() {

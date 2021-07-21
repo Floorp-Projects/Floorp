@@ -12,16 +12,10 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PlatformMutex.h"
+#include "mozilla/BaseProfilerUtils.h"
 
 namespace mozilla {
 namespace baseprofiler {
-
-#ifdef MOZ_GECKO_PROFILER
-// Implemented in platform.cpp
-MFBT_API int profiler_current_thread_id();
-#else
-inline int profiler_current_thread_id() { return 0; }
-#endif  // MOZ_GECKO_PROFILER
 
 namespace detail {
 
@@ -38,11 +32,15 @@ class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
   BaseProfilerMutex& operator=(BaseProfilerMutex&&) = delete;
 
 #ifdef DEBUG
-  ~BaseProfilerMutex() { MOZ_ASSERT(mOwningThreadId == 0); }
+  ~BaseProfilerMutex() {
+    MOZ_ASSERT(!BaseProfilerThreadId::FromNumber(mOwningThreadId).IsSpecified(),
+               "BaseProfilerMutex should have been unlocked when destroyed");
+  }
 #endif  // DEBUG
 
   [[nodiscard]] bool IsLockedOnCurrentThread() const {
-    return mOwningThreadId == baseprofiler::profiler_current_thread_id();
+    return BaseProfilerThreadId::FromNumber(mOwningThreadId) ==
+           baseprofiler::profiler_current_thread_id();
   }
 
   void AssertCurrentThreadOwns() const {
@@ -50,24 +48,26 @@ class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
   }
 
   void Lock() {
-    const int tid = baseprofiler::profiler_current_thread_id();
-    MOZ_ASSERT(tid != 0);
+    const BaseProfilerThreadId tid = baseprofiler::profiler_current_thread_id();
+    MOZ_ASSERT(tid.IsSpecified());
     MOZ_ASSERT(!IsLockedOnCurrentThread(), "Recursive locking");
     ::mozilla::detail::MutexImpl::lock();
-    MOZ_ASSERT(mOwningThreadId == 0, "Not unlocked properly");
-    mOwningThreadId = tid;
+    MOZ_ASSERT(!BaseProfilerThreadId::FromNumber(mOwningThreadId).IsSpecified(),
+               "Not unlocked properly");
+    mOwningThreadId = tid.ToNumber();
   }
 
   [[nodiscard]] bool TryLock() {
-    const int tid = baseprofiler::profiler_current_thread_id();
-    MOZ_ASSERT(tid != 0);
+    const BaseProfilerThreadId tid = baseprofiler::profiler_current_thread_id();
+    MOZ_ASSERT(tid.IsSpecified());
     MOZ_ASSERT(!IsLockedOnCurrentThread(), "Recursive locking");
     if (!::mozilla::detail::MutexImpl::tryLock()) {
       // Failed to lock, nothing more to do.
       return false;
     }
-    MOZ_ASSERT(mOwningThreadId == 0, "Not unlocked properly");
-    mOwningThreadId = tid;
+    MOZ_ASSERT(!BaseProfilerThreadId::FromNumber(mOwningThreadId).IsSpecified(),
+               "Not unlocked properly");
+    mOwningThreadId = tid.ToNumber();
     return true;
   }
 
@@ -75,7 +75,7 @@ class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
     MOZ_ASSERT(IsLockedOnCurrentThread(), "Unlocking when not locked here");
     // We're still holding the mutex here, so it's safe to just reset
     // `mOwningThreadId`.
-    mOwningThreadId = 0;
+    mOwningThreadId = BaseProfilerThreadId{}.ToNumber();
     ::mozilla::detail::MutexImpl::unlock();
   }
 
@@ -88,7 +88,8 @@ class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
   // - If it's their id, only *they* wrote that value with a locked mutex.
   // - If it's different from their thread id it doesn't matter what other
   //   number it is (0 or another id) and that it can change again at any time.
-  Atomic<int, MemoryOrdering::Relaxed> mOwningThreadId{0};
+  Atomic<typename BaseProfilerThreadId::NumberType, MemoryOrdering::Relaxed>
+      mOwningThreadId;
 
   const char* mName = nullptr;
 };

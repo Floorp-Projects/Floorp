@@ -277,7 +277,14 @@ class MarkerThreadId {
   constexpr MarkerThreadId() = default;
 
   // Constructor from a given thread id.
-  constexpr explicit MarkerThreadId(int aThreadId) : mThreadId(aThreadId) {}
+  constexpr explicit MarkerThreadId(
+      baseprofiler::BaseProfilerThreadId aThreadId)
+      : mThreadId(aThreadId) {}
+
+  // Temporary until the Gecko Profiler switches to BaseProfilerThreadId.
+  // TODO: Remove!
+  constexpr explicit MarkerThreadId(int aThreadId)
+      : mThreadId(baseprofiler::BaseProfilerThreadId::FromNumber(aThreadId)) {}
 
   // Use the current thread's id.
   static MarkerThreadId CurrentThread() {
@@ -290,12 +297,16 @@ class MarkerThreadId {
     return MarkerThreadId(baseprofiler::profiler_main_thread_id());
   }
 
-  [[nodiscard]] constexpr int ThreadId() const { return mThreadId; }
+  [[nodiscard]] constexpr baseprofiler::BaseProfilerThreadId ThreadId() const {
+    return mThreadId;
+  }
 
-  [[nodiscard]] constexpr bool IsUnspecified() const { return mThreadId == 0; }
+  [[nodiscard]] constexpr bool IsUnspecified() const {
+    return !mThreadId.IsSpecified();
+  }
 
  private:
-  int mThreadId = 0;
+  baseprofiler::BaseProfilerThreadId mThreadId;
 };
 
 // This marker option contains marker timing information.

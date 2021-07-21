@@ -38,7 +38,7 @@ class ProfileBuffer final {
 
   // Add to the buffer a sample start (ThreadId) entry for aThreadId.
   // Returns the position of the entry.
-  uint64_t AddThreadIdEntry(int aThreadId);
+  uint64_t AddThreadIdEntry(BaseProfilerThreadId aThreadId);
 
   void CollectCodeLocation(const char* aLabel, const char* aStr,
                            uint32_t aFrameFlags, uint64_t aInnerWindowID,
@@ -55,10 +55,13 @@ class ProfileBuffer final {
   // after aSinceTime. If ID is 0, ignore the stored thread ID; this should only
   // be used when the buffer contains only one sample.
   // Return the thread ID of the streamed sample(s), or 0.
-  int StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
-                          double aSinceTime, UniqueStacks& aUniqueStacks) const;
+  BaseProfilerThreadId StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
+                                           BaseProfilerThreadId aThreadId,
+                                           double aSinceTime,
+                                           UniqueStacks& aUniqueStacks) const;
 
-  void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
+  void StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
+                           BaseProfilerThreadId aThreadId,
                            const TimeStamp& aProcessStartTime,
                            double aSinceTime,
                            UniqueStacks& aUniqueStacks) const;
@@ -75,7 +78,8 @@ class ProfileBuffer final {
   // |aThreadId| and clone it, patching in the current time as appropriate.
   // Mutate |aLastSample| to point to the newly inserted sample.
   // Returns whether duplication was successful.
-  bool DuplicateLastSample(int aThreadId, const TimeStamp& aProcessStartTime,
+  bool DuplicateLastSample(BaseProfilerThreadId aThreadId,
+                           const TimeStamp& aProcessStartTime,
                            Maybe<uint64_t>& aLastSample);
 
   void DiscardSamplesBeforeTime(double aTime);
@@ -102,7 +106,8 @@ class ProfileBuffer final {
   // `static` because it may be used to add an entry to a `ProfileChunkedBuffer`
   // that is not attached to a `ProfileBuffer`.
   static ProfileBufferBlockIndex AddThreadIdEntry(
-      ProfileChunkedBuffer& aProfileChunkedBuffer, int aThreadId);
+      ProfileChunkedBuffer& aProfileChunkedBuffer,
+      BaseProfilerThreadId aThreadId);
 
   // The storage in which this ProfileBuffer stores its entries.
   ProfileChunkedBuffer& mEntries;
