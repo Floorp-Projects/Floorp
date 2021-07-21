@@ -5902,7 +5902,12 @@ void nsWindow::PauseCompositor() {
 
   // moz_container_wayland_has_egl_window() could not be used here, since
   // there is a case that resume compositor is not completed yet.
-  if (!mIsAccelerated || mIsDestroyed) {
+
+  // TODO: The compositor backend currently relies on the pause event to work
+  // around a Gnome specific bug. Remove again once the fix is widely available.
+  // See bug 1721298
+  if ((!mIsAccelerated && !gfx::gfxVars::UseWebRenderCompositor()) ||
+      mIsDestroyed) {
     return;
   }
 
