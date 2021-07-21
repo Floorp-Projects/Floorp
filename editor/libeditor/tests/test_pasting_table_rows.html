@@ -115,13 +115,13 @@
         const targetElement = document.getElementById(kTargetElementId);
         is(targetElement.children.length, 1,
           "Target element has exactly one child.");
-        is(targetElement.children[0].tagName, kTableTagName,
+        is(targetElement.children[0]?.tagName, kTableTagName,
           "Target element has a table child.");
 
         // Linebreaks and whitespace after tags are irrelevant, hence stripping
         // them.
         is(SimpleTest.stripLinebreaksAndWhitespaceAfterTags(
-          targetElement.children[0].outerHTML), expectedPastedHTML,
+          targetElement.children[0]?.outerHTML), expectedPastedHTML,
           "Pasted table (" + this._toString() + ") has expected outerHTML.");
       }
 
@@ -133,6 +133,7 @@
 
         const targetElement = document.getElementById(kTargetElementId);
         targetElement.innerHTML = this._innerHTMLOfTargetBeforeTestRun;
+        targetElement.getBoundingClientRect();
 
         SimpleTest.info(
           "Restored the state of the document before the test run.");
@@ -252,20 +253,31 @@
       async _copyToClipboard(aExpectedPastedHTML) {
         const flavor = "text/html";
 
-        function validatorFn(aData) {
+        const expectedPastedHTML = (() => {
           if (navigator.platform.includes(kPlatformWindows)) {
             // TODO: ideally, this should be factored out, see bug 1669963.
 
             // Windows wraps the pasted HTML, see
             // https://searchfox.org/mozilla-central/rev/8f7b017a31326515cb467e69eef1f6c965b4f00e/widget/windows/nsDataObj.cpp#1798-1805,1839-1840,1842.
-            aExpectedPastedHTML = kTextHtmlPrefixClipboardDataWindows +
+            return kTextHtmlPrefixClipboardDataWindows +
               aExpectedPastedHTML + kTextHtmlSuffixClipboardDataWindows;
           }
+          return aExpectedPastedHTML;
+        })();
 
+        function validatorFn(aData) {
           // The data's format doesn't specify whether there should be line
           // breaks or whitspace between tags. Hence, remove them.
-          return SimpleTest.stripLinebreaksAndWhitespaceAfterTags(aData) ==
-            SimpleTest.stripLinebreaksAndWhitespaceAfterTags(aExpectedPastedHTML);
+          if (SimpleTest.stripLinebreaksAndWhitespaceAfterTags(aData) ==
+                SimpleTest.stripLinebreaksAndWhitespaceAfterTags(expectedPastedHTML)) {
+              return true;
+          }
+          info(`Waiting clipboard data: expected:\n"${
+            SimpleTest.stripLinebreaksAndWhitespaceAfterTags(expectedPastedHTML)
+          }"\n, but got:\n"${
+            SimpleTest.stripLinebreaksAndWhitespaceAfterTags(aData)
+          }"`);
+          return false;
         }
 
         return SimpleTest.promiseClipboardChange(validatorFn,
@@ -295,6 +307,7 @@
         synthesizeMouseAtCenter(targetElement, {});
         synthesizeKey("v", { accelKey: true } /* aEvent */);
 
+        info("Waiting for paste...");
         await promiseTargetElementChanged;
       }
     }
@@ -363,7 +376,13 @@
 
               const test = new Test(tableName, rowsToSelect, editabilityMode,
                                     testGroup.selectionMode);
-              await test._run();
+              try {
+                await test._run();
+              } catch (ex) {
+                ok(false, `Aborting the following tests due to unexpected error: ${ex.message}`);
+                SimpleTest.finish();
+                return;
+              }
               test._restoreStateOfDocumentBeforeRun();
             }
           }
