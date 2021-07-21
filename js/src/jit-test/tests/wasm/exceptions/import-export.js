@@ -8,12 +8,6 @@ function testException() {
     WebAssembly.RuntimeError,
     /cannot call WebAssembly.Tag/
   );
-
-  assertErrorMessage(
-    () => new WebAssembly.Exception(),
-    WebAssembly.RuntimeError,
-    /cannot call WebAssembly.Exception/
-  );
 }
 
 function testImports() {

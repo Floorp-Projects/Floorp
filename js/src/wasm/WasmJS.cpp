@@ -3584,6 +3584,8 @@ void WasmTagObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
+static bool IsTagObject(JSObject* obj) { return obj->is<WasmTagObject>(); }
+
 bool WasmTagObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -3710,12 +3712,88 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // FIXME: When the JS API is finalized, it may be possible to construct
-  // WebAssembly.Exception instances from JS, but not for now.
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           JSMSG_WASM_EXN_CONSTRUCTOR, "WebAssembly.Exception");
+  if (!args.requireAtLeast(cx, "WebAssembly.Exception", 2)) {
+    return false;
+  }
 
-  return false;
+  if (!args[0].isObject() || !IsTagObject(&args[0].toObject())) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_EXN_ARG);
+    return false;
+  }
+
+  RootedWasmTagObject exnTag(cx, &args[0].toObject().as<WasmTagObject>());
+
+  if (!args.get(1).isObject()) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_EXN_PAYLOAD);
+    return false;
+  }
+
+  JS::ForOfIterator iterator(cx);
+  if (!iterator.init(args.get(1), JS::ForOfIterator::ThrowOnNonIterable)) {
+    return false;
+  }
+
+  wasm::ValTypeVector& params = exnTag->valueTypes();
+
+  // This is pre-sizing the data buffer for the exception object.
+  size_t nbytes = 0;
+  for (const ValType param : params) {
+    if (!param.isReference()) {
+      nbytes += SizeOf(param);
+    }
+  }
+
+  RootedArrayBufferObject buf(cx, ArrayBufferObject::createZeroed(cx, nbytes));
+  if (!buf) {
+    return false;
+  }
+
+  RootedArrayObject refs(cx, NewDenseEmptyArray(cx));
+  if (!refs) {
+    return false;
+  }
+
+  uint8_t* bufPtr = buf->dataPointer();
+  RootedValue nextArg(cx);
+  for (size_t i = 0; i < params.length(); i++) {
+    bool done;
+    if (!iterator.next(&nextArg, &done)) {
+      return false;
+    }
+    if (done) {
+      UniqueChars expected(JS_smprintf("%zu", params.length()));
+      UniqueChars got(JS_smprintf("%zu", i));
+
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_WASM_BAD_EXN_PAYLOAD_LEN, expected.get(),
+                               got.get());
+      return false;
+    }
+
+    if (params[i].isReference()) {
+      RootedObject objPtr(cx);
+      if (!ToWebAssemblyValue(cx, nextArg, params[i], objPtr.address(), true)) {
+        return false;
+      }
+      if (!NewbornArrayPush(cx, refs, ObjectValue(*objPtr))) {
+        return false;
+      }
+    } else {
+      if (!ToWebAssemblyValue(cx, nextArg, params[i], bufPtr, true)) {
+        return false;
+      }
+      bufPtr += SizeOf(params[i]);
+    }
+  }
+
+  RootedWasmExceptionObject exnObj(
+      cx, WasmExceptionObject::create(cx, SharedExceptionTag(&exnTag->tag()),
+                                      buf, refs));
+
+  args.rval().setObject(*exnObj);
+  return true;
 }
 
 /* static */
