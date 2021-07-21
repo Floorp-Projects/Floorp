@@ -144,11 +144,7 @@ CATEGORIES = {
 
 def search_path(mozilla_dir, packages_txt):
     with open(os.path.join(mozilla_dir, packages_txt)) as f:
-        packages = [
-            line.strip().split(":", maxsplit=1)
-            for line in f
-            if not line.lstrip().startswith("#")
-        ]
+        packages = [line.rstrip().split(":", maxsplit=1) for line in f]
 
     def handle_package(action, package):
         if action == "packages.txt":
