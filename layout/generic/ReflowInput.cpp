@@ -1459,7 +1459,7 @@ bool ReflowInput::IsInlineSizeComputableByBlockSizeAndAspectRatio(
                  !mStylePosition->mOffset.GetBEnd(wm).IsAuto(),
              "If any of the block-start and block-end are auto, aBlockSize "
              "doesn't make sense");
-  MOZ_ASSERT(
+  NS_WARNING_ASSERTION(
       aBlockSize >= 0 && aBlockSize != NS_UNCONSTRAINEDSIZE,
       "The caller shouldn't give us an unresolved or invalid block size");
 
@@ -1772,9 +1772,13 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
       nscoord autoISize = cbSize.ISize(cbwm) - margin.IStartEnd(cbwm) -
                           borderPadding.IStartEnd(cbwm) -
                           offsets.IStartEnd(cbwm);
-      if (autoISize < 0) {
-        autoISize = 0;
-      }
+      autoISize = std::max(autoISize, 0);
+      // FIXME: Bug 1602669: if |autoISize| happens to be numerically equal to
+      // NS_UNCONSTRAINEDSIZE, we may get some unexpected behavior. We need a
+      // better way to distinguish between unconstrained size and resolved
+      // size.
+      NS_WARNING_ASSERTION(autoISize != NS_UNCONSTRAINEDSIZE,
+                           "Unexpected size from inline-start and inline-end");
 
       nscoord autoBSizeInWM = autoISize;
       LogicalSize computedSizeInWM =
@@ -1824,9 +1828,12 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     // Neither block-start nor -end is 'auto'.
     nscoord autoBSize = cbSize.BSize(cbwm) - margin.BStartEnd(cbwm) -
                         borderPadding.BStartEnd(cbwm) - offsets.BStartEnd(cbwm);
-    if (autoBSize < 0) {
-      autoBSize = 0;
-    }
+    autoBSize = std::max(autoBSize, 0);
+    // FIXME: Bug 1602669: if |autoBSize| happens to be numerically equal to
+    // NS_UNCONSTRAINEDSIZE, we may get some unexpected behavior. We need a
+    // better way to distinguish between unconstrained size and resolved size.
+    NS_WARNING_ASSERTION(autoBSize != NS_UNCONSTRAINEDSIZE,
+                         "Unexpected size from block-start and block-end");
 
     // For orthogonal case, the inline size in |wm| should have been handled by
     // ComputeSize(). In other words, we only have to apply |autoBSize| to
