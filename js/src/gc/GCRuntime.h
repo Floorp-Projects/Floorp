@@ -666,9 +666,9 @@ class GCRuntime {
 
   void requestMajorGC(JS::GCReason reason);
   SliceBudget defaultBudget(JS::GCReason reason, int64_t millis);
-  void maybeIncreaseSliceBudget(SliceBudget& budget);
-  void maybeIncreaseSliceBudgetForLongCollections(SliceBudget& budget);
-  void maybeIncreaseSliceBudgetForUrgentCollections(SliceBudget& budget);
+  bool maybeIncreaseSliceBudget(SliceBudget& budget);
+  bool maybeIncreaseSliceBudgetForLongCollections(SliceBudget& budget);
+  bool maybeIncreaseSliceBudgetForUrgentCollections(SliceBudget& budget);
   IncrementalResult budgetIncrementalGC(bool nonincrementalByAPI,
                                         JS::GCReason reason,
                                         SliceBudget& budget);
@@ -708,7 +708,7 @@ class GCRuntime {
   bool shouldRepeatForDeadZone(JS::GCReason reason);
 
   void incrementalSlice(SliceBudget& budget, const MaybeGCOptions& options,
-                        JS::GCReason reason);
+                        JS::GCReason reason, bool budgetWasIncreased);
 
   void waitForBackgroundTasksBeforeSlice();
   bool mightSweepInThisSlice(bool nonIncremental);
@@ -846,7 +846,7 @@ class GCRuntime {
   };
 
   IncrementalProgress waitForBackgroundTask(
-      GCParallelTask& task, const SliceBudget& budget,
+      GCParallelTask& task, const SliceBudget& budget, bool shouldPauseMutator,
       ShouldTriggerSliceWhenFinished triggerSlice);
 
   void maybeRequestGCAfterBackgroundTask(const AutoLockHelperThreadState& lock);

@@ -7,6 +7,7 @@
 #include "gc/GCParallelTask.h"
 
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 
 #include "gc/ParallelWork.h"
 #include "vm/HelperThreadState.h"
@@ -16,6 +17,7 @@
 using namespace js;
 using namespace js::gc;
 
+using mozilla::Maybe;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
@@ -71,18 +73,19 @@ void js::GCParallelTask::cancelAndWait() {
   cancel_ = false;
 }
 
-void js::GCParallelTask::join() {
+bool js::GCParallelTask::join(Maybe<TimeStamp> deadline) {
   AutoLockHelperThreadState lock;
-  joinWithLockHeld(lock);
+  return joinWithLockHeld(lock, deadline);
 }
 
-void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock) {
+bool js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock,
+                                          Maybe<TimeStamp> deadline) {
   // Task has not been started; there's nothing to do.
   if (isIdle(lock)) {
-    return;
+    return true;
   }
 
-  if (isDispatched(lock)) {
+  if (isDispatched(lock) && deadline.isNothing()) {
     // If the task was dispatched but has not yet started then cancel the task
     // and run it from the main thread. This stops us from blocking here when
     // the helper threads are busy with other tasks.
@@ -91,24 +94,38 @@ void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock) {
     runFromMainThread();
   } else {
     // Otherwise wait for the task to complete.
-    joinRunningOrFinishedTask(lock);
+    joinNonIdleTask(deadline, lock);
   }
 
-  if (phaseKind != gcstats::PhaseKind::NONE) {
-    gc->stats().recordParallelPhase(phaseKind, duration());
+  if (isIdle(lock)) {
+    if (phaseKind != gcstats::PhaseKind::NONE) {
+      gc->stats().recordParallelPhase(phaseKind, duration());
+    }
   }
+
+  return isIdle(lock);
 }
 
-void js::GCParallelTask::joinRunningOrFinishedTask(
-    AutoLockHelperThreadState& lock) {
-  MOZ_ASSERT(isRunning(lock) || isFinished(lock));
+void js::GCParallelTask::joinNonIdleTask(Maybe<TimeStamp> deadline,
+                                         AutoLockHelperThreadState& lock) {
+  MOZ_ASSERT(!isIdle(lock));
 
-  // Wait for the task to run to completion.
   while (!isFinished(lock)) {
-    HelperThreadState().wait(lock);
+    TimeDuration timeout = TimeDuration::Forever();
+    if (deadline) {
+      TimeStamp now = ReallyNow();
+      if (*deadline <= now) {
+        break;
+      }
+      timeout = *deadline - now;
+    }
+
+    HelperThreadState().wait(lock, timeout);
   }
 
-  setIdle(lock);
+  if (isFinished(lock)) {
+    setIdle(lock);
+  }
 }
 
 void js::GCParallelTask::cancelDispatchedTask(AutoLockHelperThreadState& lock) {
