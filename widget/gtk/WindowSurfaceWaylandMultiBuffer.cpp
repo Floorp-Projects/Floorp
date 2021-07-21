@@ -154,11 +154,163 @@ using gfx::DataSourceSurface;
 WindowSurfaceWaylandMB::WindowSurfaceWaylandMB(nsWindow* aWindow)
     : mSurfaceLock("WindowSurfaceWayland lock"),
       mWindow(aWindow),
-      mWaylandDisplay(WaylandDisplayGet()),
-      mWaylandBuffer(nullptr) {}
+      mFrameInProcess(false),
+      mCallbackRequested(false) {}
+
+already_AddRefed<DrawTarget> WindowSurfaceWaylandMB::Lock(
+    const LayoutDeviceIntRegion& aInvalidRegion) {
+  MutexAutoLock lock(mSurfaceLock);
+
+#ifdef MOZ_LOGGING
+  gfx::IntRect lockRect = aInvalidRegion.GetBounds().ToUnknownRect();
+  LOGWAYLAND(
+      ("WindowSurfaceWaylandMB::Lock [%p] [%d,%d] -> [%d x %d] rects %d "
+       "MozContainer size [%d x %d]\n",
+       (void*)this, lockRect.x, lockRect.y, lockRect.width, lockRect.height,
+       aInvalidRegion.GetNumRects(), mMozContainerSize.width,
+       mMozContainerSize.height));
+#endif
+
+  if (mWindow->WindowType() == eWindowType_invisible) {
+    return nullptr;
+  }
+  mFrameInProcess = true;
+
+  CollectPendingSurfaces(lock);
+
+  LayoutDeviceIntSize newMozContainerSize = mWindow->GetMozContainerSize();
+  if (mMozContainerSize != newMozContainerSize) {
+    mMozContainerSize = newMozContainerSize;
+    if (mInProgressBuffer) {
+      ReturnBufferToPool(lock, mInProgressBuffer);
+      mInProgressBuffer = nullptr;
+    }
+    if (mFrontBuffer) {
+      ReturnBufferToPool(lock, mFrontBuffer);
+      mFrontBuffer = nullptr;
+    }
+    mAvailableBuffers.Clear();
+  }
+
+  if (!mInProgressBuffer) {
+    if (mFrontBuffer && !mFrontBuffer->IsAttached()) {
+      mInProgressBuffer = mFrontBuffer;
+    } else {
+      mInProgressBuffer = ObtainBufferFromPool(lock, mMozContainerSize);
+      if (mFrontBuffer) {
+        HandlePartialUpdate(lock, aInvalidRegion);
+        ReturnBufferToPool(lock, mFrontBuffer);
+      }
+    }
+    mFrontBuffer = nullptr;
+    mFrontBufferInvalidRegion.SetEmpty();
+  }
+
+  RefPtr<DrawTarget> dt = mInProgressBuffer->Lock();
+  return dt.forget();
+}
+
+void WindowSurfaceWaylandMB::HandlePartialUpdate(
+    const MutexAutoLock& aProofOfLock,
+    const LayoutDeviceIntRegion& aInvalidRegion) {
+  LayoutDeviceIntRegion copyRegion;
+  if (mInProgressBuffer->GetBufferAge() == 2) {
+    copyRegion.Sub(mFrontBufferInvalidRegion, aInvalidRegion);
+  } else {
+    LayoutDeviceIntSize frontBufferSize = mFrontBuffer->GetSize();
+    copyRegion = LayoutDeviceIntRegion(LayoutDeviceIntRect(
+        0, 0, frontBufferSize.width, frontBufferSize.height));
+    copyRegion.SubOut(aInvalidRegion);
+  }
+
+  if (!copyRegion.IsEmpty()) {
+    RefPtr<DataSourceSurface> dataSourceSurface =
+        mozilla::gfx::CreateDataSourceSurfaceFromData(
+            mFrontBuffer->GetSize().ToUnknownSize(),
+            mFrontBuffer->GetSurfaceFormat(),
+            (const uint8_t*)mFrontBuffer->GetShmPool()->GetImageData(),
+            mFrontBuffer->GetSize().width *
+                BytesPerPixel(mFrontBuffer->GetSurfaceFormat()));
+    RefPtr<DrawTarget> dt = mInProgressBuffer->Lock();
+
+    for (auto iter = copyRegion.RectIter(); !iter.Done(); iter.Next()) {
+      LayoutDeviceIntRect r = iter.Get();
+      dt->CopySurface(dataSourceSurface, r.ToUnknownRect(),
+                      gfx::IntPoint(r.x, r.y));
+    }
+  }
+}
+
+void WindowSurfaceWaylandMB::Commit(
+    const LayoutDeviceIntRegion& aInvalidRegion) {
+  MutexAutoLock lock(mSurfaceLock);
+  Commit(lock, aInvalidRegion);
+}
+
+void WindowSurfaceWaylandMB::Commit(
+    const MutexAutoLock& aProofOfLock,
+    const LayoutDeviceIntRegion& aInvalidRegion) {
+#ifdef MOZ_LOGGING
+  gfx::IntRect invalidRect = aInvalidRegion.GetBounds().ToUnknownRect();
+  LOGWAYLAND(
+      ("WindowSurfaceWaylandMB::Commit [%p] damage rect [%d, %d] -> [%d x %d] "
+       "MozContainer [%d x %d]\n",
+       (void*)this, invalidRect.x, invalidRect.y, invalidRect.width,
+       invalidRect.height, mMozContainerSize.width, mMozContainerSize.height));
+#endif
+
+  if (!mInProgressBuffer) {
+    // invisible window
+    return;
+  }
+  mFrameInProcess = false;
+
+  MozContainer* container = mWindow->GetMozContainer();
+  wl_surface* waylandSurface = moz_container_wayland_surface_lock(container);
+  if (!waylandSurface) {
+    LOGWAYLAND(
+        ("WindowSurfaceWaylandMB::Commit [%p] frame queued: can't lock "
+         "wl_surface\n",
+         (void*)this));
+    if (!mCallbackRequested) {
+      RefPtr<WindowSurfaceWaylandMB> self(this);
+      moz_container_wayland_add_initial_draw_callback(
+          container, [self, aInvalidRegion]() -> void {
+            MutexAutoLock lock(self->mSurfaceLock);
+            if (!self->mFrameInProcess) {
+              self->Commit(lock, aInvalidRegion);
+            }
+            self->mCallbackRequested = false;
+          });
+      mCallbackRequested = true;
+    }
+    return;
+  }
+
+  for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+    LayoutDeviceIntRect r = iter.Get();
+    wl_surface_damage_buffer(waylandSurface, r.x, r.y, r.width, r.height);
+  }
+
+  mInProgressBuffer->AttachAndCommit(waylandSurface);
+  moz_container_wayland_surface_unlock(container, &waylandSurface);
+
+  mInProgressBuffer->ResetBufferAge();
+  mFrontBuffer = mInProgressBuffer;
+  mFrontBufferInvalidRegion = aInvalidRegion;
+  mInProgressBuffer = nullptr;
+
+  EnforcePoolSizeLimit(aProofOfLock);
+  IncrementBufferAge(aProofOfLock);
+
+  if (wl_display_flush(WaylandDisplayGet()->GetDisplay()) == -1) {
+    LOGWAYLAND(
+        ("WindowSurfaceWaylandMB::Commit [%p] flush failed\n", (void*)this));
+  }
+}
 
 RefPtr<WaylandShmBuffer> WindowSurfaceWaylandMB::ObtainBufferFromPool(
-    const LayoutDeviceIntSize& aSize) {
+    const MutexAutoLock& aProofOfLock, const LayoutDeviceIntSize& aSize) {
   if (!mAvailableBuffers.IsEmpty()) {
     RefPtr<WaylandShmBuffer> buffer = mAvailableBuffers.PopLastElement();
     mInUseBuffers.AppendElement(buffer);
@@ -166,28 +318,21 @@ RefPtr<WaylandShmBuffer> WindowSurfaceWaylandMB::ObtainBufferFromPool(
   }
 
   RefPtr<WaylandShmBuffer> buffer =
-      WaylandShmBuffer::Create(GetWaylandDisplay(), aSize);
+      WaylandShmBuffer::Create(WaylandDisplayGet(), aSize);
   mInUseBuffers.AppendElement(buffer);
-
-  buffer->SetBufferReleaseFunc(
-      &WindowSurfaceWaylandMB::BufferReleaseCallbackHandler);
-  buffer->SetBufferReleaseData(this);
 
   return buffer;
 }
 
 void WindowSurfaceWaylandMB::ReturnBufferToPool(
+    const MutexAutoLock& aProofOfLock,
     const RefPtr<WaylandShmBuffer>& aBuffer) {
-  for (const RefPtr<WaylandShmBuffer>& buffer : mInUseBuffers) {
-    if (buffer == aBuffer) {
-      if (buffer->IsMatchingSize(mMozContainerSize)) {
-        mAvailableBuffers.AppendElement(buffer);
-      }
-      mInUseBuffers.RemoveElement(buffer);
-      return;
-    }
+  if (aBuffer->IsAttached()) {
+    mPendingBuffers.AppendElement(aBuffer);
+  } else if (aBuffer->IsMatchingSize(mMozContainerSize)) {
+    mAvailableBuffers.AppendElement(aBuffer);
   }
-  MOZ_RELEASE_ASSERT(false, "Returned buffer not in use");
+  mInUseBuffers.RemoveElement(aBuffer);
 }
 
 void WindowSurfaceWaylandMB::EnforcePoolSizeLimit(
@@ -198,177 +343,36 @@ void WindowSurfaceWaylandMB::EnforcePoolSizeLimit(
     mAvailableBuffers.RemoveElementAt(0);
   }
 
-  NS_WARNING_ASSERTION(mInUseBuffers.Length() < 10, "We are leaking buffers");
+  NS_WARNING_ASSERTION(mPendingBuffers.Length() < BACK_BUFFER_NUM,
+                       "Are we leaking pending buffers?");
+  NS_WARNING_ASSERTION(mInUseBuffers.Length() < BACK_BUFFER_NUM,
+                       "Are we leaking in-use buffers?");
 }
 
-void WindowSurfaceWaylandMB::PrepareBufferForFrame(
+void WindowSurfaceWaylandMB::CollectPendingSurfaces(
     const MutexAutoLock& aProofOfLock) {
-  if (mWindow->WindowType() == eWindowType_invisible) {
-    return;
-  }
-
-  LayoutDeviceIntSize newMozContainerSize = mWindow->GetMozContainerSize();
-  if (mMozContainerSize != newMozContainerSize) {
-    mMozContainerSize = newMozContainerSize;
-    mPreviousWaylandBuffer = nullptr;
-    mPreviousInvalidRegion.SetEmpty();
-    mAvailableBuffers.Clear();
-  }
-
-  LOGWAYLAND(
-      ("WindowSurfaceWaylandMB::PrepareBufferForFrame [%p] MozContainer "
-       "size [%d x %d]\n",
-       (void*)this, mMozContainerSize.width, mMozContainerSize.height));
-
-  MOZ_ASSERT(!mWaylandBuffer);
-  mWaylandBuffer = ObtainBufferFromPool(mMozContainerSize);
-}
-
-already_AddRefed<DrawTarget> WindowSurfaceWaylandMB::Lock(
-    const LayoutDeviceIntRegion& aRegion) {
-  MutexAutoLock lock(mSurfaceLock);
-
-#ifdef MOZ_LOGGING
-  gfx::IntRect lockRect = aRegion.GetBounds().ToUnknownRect();
-  LOGWAYLAND(
-      ("WindowSurfaceWaylandMB::Lock [%p] [%d,%d] -> [%d x %d] rects %d "
-       "MozContainer size [%d x %d]\n",
-       (void*)this, lockRect.x, lockRect.y, lockRect.width, lockRect.height,
-       aRegion.GetNumRects(), mMozContainerSize.width,
-       mMozContainerSize.height));
-#endif
-
-  PrepareBufferForFrame(lock);
-  if (!mWaylandBuffer) {
-    return nullptr;
-  }
-
-  RefPtr<DrawTarget> dt = mWaylandBuffer->Lock();
-  return dt.forget();
-}
-
-void WindowSurfaceWaylandMB::HandlePartialUpdate(
-    const MutexAutoLock& aProofOfLock,
-    const LayoutDeviceIntRegion& aInvalidRegion) {
-  if (!mPreviousWaylandBuffer || mPreviousWaylandBuffer == mWaylandBuffer) {
-    mPreviousWaylandBuffer = mWaylandBuffer;
-    mPreviousInvalidRegion = aInvalidRegion;
-    return;
-  }
-
-  LayoutDeviceIntRegion copyRegion;
-  if (mWaylandBuffer->GetBufferAge() == 2) {
-    copyRegion.Sub(mPreviousInvalidRegion, aInvalidRegion);
-  } else {
-    LayoutDeviceIntSize size = mPreviousWaylandBuffer->GetSize();
-    copyRegion = LayoutDeviceIntRegion(
-        LayoutDeviceIntRect(0, 0, size.width, size.height));
-    copyRegion.SubOut(aInvalidRegion);
-  }
-
-  if (!copyRegion.IsEmpty()) {
-    RefPtr<DataSourceSurface> dataSourceSurface =
-        mozilla::gfx::CreateDataSourceSurfaceFromData(
-            mPreviousWaylandBuffer->GetSize().ToUnknownSize(),
-            mPreviousWaylandBuffer->GetSurfaceFormat(),
-            (const uint8_t*)mPreviousWaylandBuffer->GetShmPool()
-                ->GetImageData(),
-            mPreviousWaylandBuffer->GetSize().width *
-                BytesPerPixel(mPreviousWaylandBuffer->GetSurfaceFormat()));
-    RefPtr<DrawTarget> dt = mWaylandBuffer->Lock();
-
-    for (auto iter = copyRegion.RectIter(); !iter.Done(); iter.Next()) {
-      LayoutDeviceIntRect r = iter.Get();
-      dt->CopySurface(dataSourceSurface, r.ToUnknownRect(), IntPoint(r.x, r.y));
+  mPendingBuffers.RemoveElementsBy([&](auto& buffer) {
+    if (!buffer->IsAttached()) {
+      if (buffer->IsMatchingSize(mMozContainerSize)) {
+        mAvailableBuffers.AppendElement(std::move(buffer));
+      }
+      return true;
     }
-  }
-
-  mPreviousWaylandBuffer = mWaylandBuffer;
-  mPreviousInvalidRegion = aInvalidRegion;
+    return false;
+  });
 }
 
-void WindowSurfaceWaylandMB::Commit(
-    const LayoutDeviceIntRegion& aInvalidRegion) {
-  MutexAutoLock lock(mSurfaceLock);
-
-#ifdef MOZ_LOGGING
-  gfx::IntRect invalidRect = aInvalidRegion.GetBounds().ToUnknownRect();
-  LOGWAYLAND(
-      ("WindowSurfaceWaylandMB::Commit [%p] damage rect [%d, %d] -> [%d x %d] "
-       "MozContainer [%d x %d]\n",
-       (void*)this, invalidRect.x, invalidRect.y, invalidRect.width,
-       invalidRect.height, mMozContainerSize.width, mMozContainerSize.height));
-#endif
-
-  if (!mWaylandBuffer) {
-    LOGWAYLAND(
-        ("WindowSurfaceWaylandMB::Commit [%p] frame skipped: no buffer\n",
-         (void*)this));
-    IncrementBufferAge();
-    return;
-  }
-
-  MozContainer* container = mWindow->GetMozContainer();
-  wl_surface* waylandSurface = moz_container_wayland_surface_lock(container);
-  if (!waylandSurface) {
-    LOGWAYLAND(
-        ("WindowSurfaceWaylandMB::Commit [%p] frame skipped: can't lock "
-         "wl_surface\n",
-         (void*)this));
-    ReturnBufferToPool(mWaylandBuffer);
-    mWaylandBuffer = nullptr;
-    IncrementBufferAge();
-    return;
-  }
-
-  HandlePartialUpdate(lock, aInvalidRegion);
-
-  for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
-    LayoutDeviceIntRect r = iter.Get();
-    wl_surface_damage_buffer(waylandSurface, r.x, r.y, r.width, r.height);
-  }
-
-  mWaylandBuffer->AttachAndCommit(waylandSurface);
-
-  moz_container_wayland_surface_unlock(container, &waylandSurface);
-
-  mWaylandBuffer->ResetBufferAge();
-  mWaylandBuffer = nullptr;
-
-  EnforcePoolSizeLimit(lock);
-
-  IncrementBufferAge();
-
-  if (wl_display_flush(GetWaylandDisplay()->GetDisplay()) == -1) {
-    LOGWAYLAND(
-        ("WindowSurfaceWaylandMB::Commit [%p] flush failed\n", (void*)this));
-  }
-}
-
-void WindowSurfaceWaylandMB::IncrementBufferAge() {
+void WindowSurfaceWaylandMB::IncrementBufferAge(
+    const MutexAutoLock& aProofOfLock) {
   for (const RefPtr<WaylandShmBuffer>& buffer : mInUseBuffers) {
+    buffer->IncrementBufferAge();
+  }
+  for (const RefPtr<WaylandShmBuffer>& buffer : mPendingBuffers) {
     buffer->IncrementBufferAge();
   }
   for (const RefPtr<WaylandShmBuffer>& buffer : mAvailableBuffers) {
     buffer->IncrementBufferAge();
   }
-}
-
-void WindowSurfaceWaylandMB::BufferReleaseCallbackHandler(wl_buffer* aBuffer) {
-  MutexAutoLock lock(mSurfaceLock);
-
-  for (const RefPtr<WaylandShmBuffer>& buffer : mInUseBuffers) {
-    if (buffer->GetWlBuffer() == aBuffer) {
-      ReturnBufferToPool(buffer);
-      break;
-    }
-  }
-}
-
-void WindowSurfaceWaylandMB::BufferReleaseCallbackHandler(void* aData,
-                                                          wl_buffer* aBuffer) {
-  auto* surface = reinterpret_cast<WindowSurfaceWaylandMB*>(aData);
-  surface->BufferReleaseCallbackHandler(aBuffer);
 }
 
 }  // namespace mozilla::widget
