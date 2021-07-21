@@ -58,6 +58,7 @@ use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions};
 use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList};
+use crate::picture_graph::PictureGraph;
 use crate::prim_store::{PrimitiveInstance, register_prim_chase_id};
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
 use crate::prim_store::{InternablePrimitive, SegmentInstanceIndex, PictureIndex};
@@ -510,6 +511,12 @@ pub struct SceneBuilder<'a> {
     /// edge cases (e.g. SVG filter) where we can accept slightly incorrect
     /// behaviour in favour of getting the common case right.
     snap_to_device: SpaceSnapper,
+
+    /// A DAG that represents dependencies between picture primitives. This builds
+    /// a set of passes to run various picture processing passes in during frame
+    /// building, in a way that pictures are processed before (or after) their
+    /// dependencies, without relying on recursion for those passes.
+    picture_graph: PictureGraph,
 }
 
 impl<'a> SceneBuilder<'a> {
@@ -560,6 +567,7 @@ impl<'a> SceneBuilder<'a> {
             quality_settings: view.quality_settings,
             tile_cache_builder: TileCacheBuilder::new(),
             snap_to_device,
+            picture_graph: PictureGraph::new(),
         };
 
         builder.build_all(&root_pipeline);
@@ -571,6 +579,11 @@ impl<'a> SceneBuilder<'a> {
             &mut builder.prim_store,
             builder.interners,
         );
+
+        // Add all the tile cache pictures as roots of the picture graph
+        for pic_index in &tile_cache_pictures {
+            builder.picture_graph.add_root(*pic_index);
+        }
 
         BuiltScene {
             has_root_pipeline: scene.has_root_pipeline(),
@@ -584,6 +597,7 @@ impl<'a> SceneBuilder<'a> {
             config: builder.config,
             tile_cache_config,
             tile_cache_pictures,
+            picture_graph: builder.picture_graph,
         }
     }
 
@@ -3520,7 +3534,7 @@ impl<'a> SceneBuilder<'a> {
         }
 
         let (pic_index, instance) = flattened_items?;
-        self.prim_store.pictures[pic_index.0].requested_composite_mode = Some(PictureCompositeMode::Blit(BlitReason::BACKDROP));
+        self.prim_store.pictures[pic_index.0].composite_mode = Some(PictureCompositeMode::Blit(BlitReason::BACKDROP));
         backdrop_root.expect("no backdrop root found")
             .prim_list
             .add_prim(
