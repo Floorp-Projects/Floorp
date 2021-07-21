@@ -273,8 +273,8 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 #editBMPanel_newFolderBox {
   background-color: var(--arrowpanel-field-background);
   color: inherit;
-  border-radius: 0 2px;
   border: 1px solid var(--panel-separator-color);
+  border-radius: 0 0 2px 2px;
   margin: 0;
   padding: 0;
   height: 24px;
@@ -287,6 +287,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   fill: currentColor;
   fill-opacity: 0.8;
   border: none;
+  border-radius: 0;
   padding: 0 9px;
   margin: 0;
   min-height: 24px;
@@ -344,8 +345,8 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 
 #editBMPanel_folderTree {
   border-bottom: none;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
   /* Implements editBookmarkPanel resizing on folderTree un-collapse. */
   margin: 0 !important;
   min-width: 27em;
