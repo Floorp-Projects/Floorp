@@ -156,6 +156,7 @@ EXPORTS.mozilla += [
     "public/ProfilerMarkersPrerequisites.h",
     "public/ProfilerMarkerTypes.h",
     "public/ProfilerState.h",
+    "public/ProfilerUtils.h",
 ]
 
 FINAL_LIBRARY = "xul"

@@ -22,13 +22,13 @@
 // It is safe to include unconditionally, but uses of structs and functions must
 // be guarded by `#ifdef MOZ_GECKO_PROFILER`.
 
+#include "mozilla/BaseProfilerUtils.h"
+
 #ifndef MOZ_GECKO_PROFILER
 
 #  define AUTO_PROFILER_STATS(name)
 
 namespace mozilla::baseprofiler {
-
-[[nodiscard]] inline int profiler_main_thread_id() { return 0; }
 
 [[nodiscard]] inline bool profiler_is_active() { return false; }
 
@@ -342,26 +342,6 @@ MFBT_API bool IsThreadBeingProfiled();
 // can become immediately out-of-date, much like the return value of
 // profiler_is_active().
 [[nodiscard]] MFBT_API bool profiler_feature_active(uint32_t aFeature);
-
-// Get the current process's ID.
-[[nodiscard]] MFBT_API int profiler_current_process_id();
-
-// Get the current thread's ID.
-[[nodiscard]] MFBT_API int profiler_current_thread_id();
-
-namespace detail {
-// Statically initialized to 0, then set once from profiler_init(), which should
-// be called from the main thread before any other use of the profiler.
-extern MFBT_DATA int scProfilerMainThreadId;
-}  // namespace detail
-
-[[nodiscard]] inline int profiler_main_thread_id() {
-  return detail::scProfilerMainThreadId;
-}
-
-[[nodiscard]] inline bool profiler_is_main_thread() {
-  return profiler_current_thread_id() == profiler_main_thread_id();
-}
 
 // Returns true if any of the profiler mutexes are currently locked *on the
 // current thread*. This may be used by re-entrant code that may call profiler
