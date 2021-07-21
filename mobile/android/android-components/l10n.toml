@@ -113,7 +113,7 @@ locales = [
 # Expose the following branches to localization
 # Changes to this list should be announced to the l10n team ahead of time.
 branches = [
-    "master",
+    "main",
 ]
 
 [env]
