@@ -33,6 +33,7 @@ var SiteDataManager = {
   //     quota storage).
   //   - persisted: the persistent-storage status.
   //   - quotaUsage: the usage of indexedDB and localStorage.
+  //   - containersData: a map containing cookiesBlocked,lastAccessed and quotaUsage by userContextID.
   _sites: new Map(),
 
   _getCacheSizeObserver: null,
@@ -111,6 +112,23 @@ var SiteDataManager = {
       this._sites.set(baseDomainOrHost, site);
     }
     return site;
+  },
+
+  _getOrInsertContainersData(site, userContextId) {
+    if (!site.containersData) {
+      site.containersData = new Map();
+    }
+
+    let containerData = site.containersData.get(userContextId);
+    if (!containerData) {
+      containerData = {
+        cookiesBlocked: 0,
+        lastAccessed: new Date(0),
+        quotaUsage: 0,
+      };
+      site.containersData.set(userContextId, containerData);
+    }
+    return containerData;
   },
 
   /**
@@ -195,6 +213,17 @@ var SiteDataManager = {
               if (site.lastAccessed < item.lastAccessed) {
                 site.lastAccessed = item.lastAccessed;
               }
+              if (Number.isInteger(principal.userContextId)) {
+                let containerData = this._getOrInsertContainersData(
+                  site,
+                  principal.userContextId
+                );
+                containerData.quotaUsage = item.usage;
+                let itemTime = item.lastAccessed / 1000;
+                if (containerData.lastAccessed.getTime() < itemTime) {
+                  containerData.lastAccessed.setTime(itemTime);
+                }
+              }
               site.principals.push(principal);
               site.quotaUsage += item.usage;
               if (entryUpdatedCallback) {
@@ -233,6 +262,17 @@ var SiteDataManager = {
         entryUpdatedCallback(baseDomainOrHost, site);
       }
       site.cookies.push(cookie);
+      if (Number.isInteger(cookie.originAttributes.userContextId)) {
+        let containerData = this._getOrInsertContainersData(
+          site,
+          cookie.originAttributes.userContextId
+        );
+        containerData.cookiesBlocked += 1;
+        let cookieTime = cookie.lastAccessed / 1000;
+        if (containerData.lastAccessed.getTime() < cookieTime) {
+          containerData.lastAccessed.setTime(cookieTime);
+        }
+      }
       if (site.lastAccessed < cookie.lastAccessed) {
         site.lastAccessed = cookie.lastAccessed;
       }
@@ -330,6 +370,7 @@ var SiteDataManager = {
       baseDomain: site.baseDomainOrHost,
       cookies: site.cookies,
       usage: site.quotaUsage,
+      containersData: site.containersData,
       persisted: site.persisted,
       lastAccessed: new Date(site.lastAccessed / 1000),
     }));
@@ -358,6 +399,7 @@ var SiteDataManager = {
       baseDomain: site.baseDomainOrHost,
       cookies: site.cookies,
       usage: site.quotaUsage,
+      containersData: site.containersData,
       persisted: site.persisted,
       lastAccessed: new Date(site.lastAccessed / 1000),
     };
