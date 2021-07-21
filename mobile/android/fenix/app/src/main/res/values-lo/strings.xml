@@ -1093,11 +1093,16 @@
     <string name="full_screen_notification">ເຂົ້າສູ່ໂມດເຕັມຫນ້າຈໍ</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">ສຳເນົາ URL ແລ້ວ</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">ກຳນົດໃຫ້ຕົວຫນັງສືໃນເວັບໄຊທໃຫຍ່ຂື້ນ ຫລື ນ້ອຍລົງ</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">ຂະໜາດຟັອນ</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">ການປັບຂະໜາດຟັອນແບບອັດຕະໂນມັດ</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">ຂະຫນດຂອງຟັອນຈະກົງກັບການຕັ້ງຄ່າ Android ຂອງທ່ານ. ປິດນຳໃຊ້ເພື່ອຈັດການກັບຂະຫນາດຂອງຟັອນຢູ່ນີ້.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">ລຶບຂໍ້ມູນການທ່ອງເວັບ</string>
@@ -1194,6 +1199,14 @@
     <string name="onboarding_whats_new_description">ມີຄຳຖາມກ່ຽວກັບການອອກແບບ %s ຄືນໃຫມ່ບໍ່? ຕ້ອງການຢາກຮູ້ຈັກວ່າມີຫຍັງປ່ຽນແປງແດ່ບໍ່?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">ພົບຄຳຕອບໄດ້ທີ່ນີ້</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Sync Firefox ລະຫວ່າງອຸປະກອນ</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">ນຳເອົ່າບຸກມາກ, ປະຫວັດ ແລະ ລະຫັດຜ່ານເຂົ້າໄປ Firefox ໃນອຸປະກອນນີ້</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">ທ່ານໄດ້ລົງຊື່ເຂົ້າໃຊ້ດ້ວຍຊື່ %s ໃນບຣາວເຊີ Firefox ອື່ນໃນອຸປະກອນນີ້. ທ່ານຕ້ອງການຈະລົງຊື່ເຂົ້າໃຊ້ດ້ວຍບັນຊີນີ້ຫລືບໍ?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">ຖືກຕ້ອງ, ໃຫ້ຂ້ອຍເຂົ້າສູ່ລະບົບ</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1571,7 +1584,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ຂໍ້ຄວາມທີ່ຈະໃຊ້ໃນການຄົ້ນຫາ</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example" formatted="false">ແທນທີ່ຄິວລີດ້ວຍ “%s”. ຕົວຢ່າ: \nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example">ແທນທີ່ຄິວລີດ້ວຍ “%s”. ຕົວຢ່າ: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
 

@@ -1352,7 +1352,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Kadenâ nana\'ui\' huū gārasunt</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example" formatted="false">Nādūnā sa nana\'uî\'t ngà “%s”. dàj rû\':\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example">Nādūnā sa nana\'uî\'t ngà “%s”. dàj rû\':\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Gāhuin chrūn doj</string>
 
