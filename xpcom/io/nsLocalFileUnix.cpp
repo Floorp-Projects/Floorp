@@ -484,6 +484,7 @@ static int do_mkdir(const char* aPath, int aFlags, mode_t aMode,
 
 nsresult nsLocalFile::CreateAndKeepOpen(uint32_t aType, int aFlags,
                                         uint32_t aPermissions,
+                                        bool aSkipAncestors,
                                         PRFileDesc** aResult) {
   if (!FilePreferences::IsAllowedPath(mPath)) {
     return NS_ERROR_FILE_ACCESS_DENIED;
@@ -497,7 +498,7 @@ nsresult nsLocalFile::CreateAndKeepOpen(uint32_t aType, int aFlags,
       (aType == NORMAL_FILE_TYPE) ? do_create : do_mkdir;
 
   int result = createFunc(mPath.get(), aFlags, aPermissions, aResult);
-  if (result == -1 && errno == ENOENT) {
+  if (result == -1 && errno == ENOENT && !aSkipAncestors) {
     /*
      * If we failed because of missing ancestor components, try to create
      * them and then retry the original creation.
@@ -536,7 +537,8 @@ nsresult nsLocalFile::CreateAndKeepOpen(uint32_t aType, int aFlags,
 }
 
 NS_IMETHODIMP
-nsLocalFile::Create(uint32_t aType, uint32_t aPermissions) {
+nsLocalFile::Create(uint32_t aType, uint32_t aPermissions,
+                    bool aSkipAncestors) {
   if (!FilePreferences::IsAllowedPath(mPath)) {
     return NS_ERROR_FILE_ACCESS_DENIED;
   }
@@ -544,7 +546,7 @@ nsLocalFile::Create(uint32_t aType, uint32_t aPermissions) {
   PRFileDesc* junk = nullptr;
   nsresult rv = CreateAndKeepOpen(
       aType, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE | PR_EXCL, aPermissions,
-      &junk);
+      aSkipAncestors, &junk);
   if (junk) {
     PR_Close(junk);
   }
@@ -877,7 +879,7 @@ nsLocalFile::CopyToNative(nsIFile* aNewParent, const nsACString& aNewName) {
     }
 
     // get the old permissions
-    uint32_t myPerms;
+    uint32_t myPerms = 0;
     rv = GetPermissions(&myPerms);
     if (NS_FAILED(rv)) {
       return rv;
@@ -890,9 +892,9 @@ nsLocalFile::CopyToNative(nsIFile* aNewParent, const nsACString& aNewName) {
     // open it successfully for writing.
 
     PRFileDesc* newFD;
-    rv = newFile->CreateAndKeepOpen(NORMAL_FILE_TYPE,
-                                    PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
-                                    myPerms, &newFD);
+    rv = newFile->CreateAndKeepOpen(
+        NORMAL_FILE_TYPE, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, myPerms,
+        /* aSkipAncestors = */ false, &newFD);
     if (NS_FAILED(rv)) {
       return rv;
     }
