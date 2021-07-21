@@ -13,39 +13,18 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
-  evaluate: "chrome://remote/content/marionette/evaluate.js",
   pprint: "chrome://remote/content/marionette/format.js",
 });
 
 /**
- * Shorthands for common assertions made in Marionette.
+ * Shorthands for common assertions made in WebDriver.
  *
  * @namespace
  */
 this.assert = {};
 
 /**
- * Asserts that an arbitrary object is not acyclic.
- *
- * @param {*} obj
- *     Object to test.  This assertion is only meaningful if passed
- *     an actual object or array.
- * @param {Error=} [error=JavaScriptError] error
- *     Error to throw if assertion fails.
- * @param {string=} message
- *     Custom message to use for `error` if assertion fails.
- *
- * @throws {JavaScriptError}
- *     If the object is cyclic.
- */
-assert.acyclic = function(obj, msg = "", err = error.JavaScriptError) {
-  if (evaluate.isCyclic(obj)) {
-    throw new err(msg || "Cyclic object value");
-  }
-};
-
-/**
- * Asserts that Marionette has an active session.
+ * Asserts that WebDriver has an active session.
  *
  * @param {WebDriverSession} session
  *     WebDriver session instance.
