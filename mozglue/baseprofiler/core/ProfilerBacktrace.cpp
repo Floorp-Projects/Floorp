@@ -71,10 +71,10 @@ ProfilerBacktrace::ProfilerBacktrace(
 
 ProfilerBacktrace::~ProfilerBacktrace() {}
 
-int ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
-                                  const TimeStamp& aProcessStartTime,
-                                  UniqueStacks& aUniqueStacks) {
-  int processedThreadId = 0;
+BaseProfilerThreadId ProfilerBacktrace::StreamJSON(
+    SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime,
+    UniqueStacks& aUniqueStacks) {
+  BaseProfilerThreadId processedThreadId;
 
   // Unlike ProfiledThreadData::StreamJSON, we don't need to call
   // ProfileBuffer::AddJITInfoForRange because ProfileBuffer does not contain
@@ -82,14 +82,16 @@ int ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
   // at sample time.
   if (mProfileBuffer) {
     processedThreadId = StreamSamplesAndMarkers(
-        mName.c_str(), 0, *mProfileBuffer, aWriter, "", "", aProcessStartTime,
+        mName.c_str(), BaseProfilerThreadId{}, *mProfileBuffer, aWriter, "", "",
+        aProcessStartTime,
         /* aRegisterTime */ TimeStamp(),
         /* aUnregisterTime */ TimeStamp(),
         /* aSinceTime */ 0, aUniqueStacks);
   } else if (mProfileChunkedBuffer) {
     ProfileBuffer profileBuffer(*mProfileChunkedBuffer);
     processedThreadId = StreamSamplesAndMarkers(
-        mName.c_str(), 0, profileBuffer, aWriter, "", "", aProcessStartTime,
+        mName.c_str(), BaseProfilerThreadId{}, profileBuffer, aWriter, "", "",
+        aProcessStartTime,
         /* aRegisterTime */ TimeStamp(),
         /* aUnregisterTime */ TimeStamp(),
         /* aSinceTime */ 0, aUniqueStacks);

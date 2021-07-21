@@ -186,6 +186,45 @@ void TestProfilerUtils() {
     static_assert(!std::is_assignable_v<BaseProfilerThreadId, Number>);
     static_assert(!std::is_constructible_v<Number, BaseProfilerThreadId>);
     static_assert(!std::is_assignable_v<Number, BaseProfilerThreadId>);
+
+    static_assert(std::is_same_v<
+                  decltype(mozilla::baseprofiler::profiler_current_thread_id()),
+                  BaseProfilerThreadId>);
+#ifdef MOZ_GECKO_PROFILER
+    BaseProfilerThreadId mainTestThreadId =
+        mozilla::baseprofiler::profiler_current_thread_id();
+    MOZ_RELEASE_ASSERT(mainTestThreadId.IsSpecified());
+
+    BaseProfilerThreadId mainThreadId =
+        mozilla::baseprofiler::profiler_main_thread_id();
+    if (!mainThreadId.IsSpecified()) {
+      // Special case: This may happen if the profiler has not yet been
+      // initialized. We only need to set scProfilerMainThreadId.
+      mozilla::baseprofiler::detail::scProfilerMainThreadId = mainTestThreadId;
+      // After which `profiler_main_thread_id` should work.
+      mainThreadId = mozilla::baseprofiler::profiler_main_thread_id();
+    }
+    MOZ_RELEASE_ASSERT(mainThreadId.IsSpecified());
+
+    MOZ_RELEASE_ASSERT(mainThreadId == mainTestThreadId,
+                       "Test should run on the main thread");
+    MOZ_RELEASE_ASSERT(mozilla::baseprofiler::profiler_is_main_thread());
+
+    std::thread testThread([&]() {
+      const BaseProfilerThreadId testThreadId =
+          mozilla::baseprofiler::profiler_current_thread_id();
+      MOZ_RELEASE_ASSERT(testThreadId.IsSpecified());
+      MOZ_RELEASE_ASSERT(testThreadId != mainThreadId);
+      MOZ_RELEASE_ASSERT(!mozilla::baseprofiler::profiler_is_main_thread());
+    });
+    testThread.join();
+#else
+    MOZ_RELEASE_ASSERT(
+        !mozilla::baseprofiler::profiler_current_thread_id().IsSpecified());
+    MOZ_RELEASE_ASSERT(
+        !mozilla::baseprofiler::profiler_main_thread_id().IsSpecified());
+    MOZ_RELEASE_ASSERT(!mozilla::baseprofiler::profiler_is_main_thread());
+#endif
   }
 
   // No conversions between processes and threads.
@@ -3758,7 +3797,7 @@ MOZ_NEVER_INLINE unsigned long long Fibonacci(unsigned long long n) {
 void TestProfiler() {
   printf("TestProfiler starting -- pid: %d, tid: %d\n",
          int(baseprofiler::profiler_current_process_id().ToNumber()),
-         baseprofiler::profiler_current_thread_id());
+         int(baseprofiler::profiler_current_thread_id().ToNumber()));
   // ::SleepMilli(10000);
 
   TestProfilerDependencies();
@@ -3771,7 +3810,7 @@ void TestProfiler() {
     MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_being_profiled());
     MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_sleeping());
 
-    const int mainThreadId =
+    const baseprofiler::BaseProfilerThreadId mainThreadId =
         mozilla::baseprofiler::profiler_current_thread_id();
 
     MOZ_RELEASE_ASSERT(mozilla::baseprofiler::profiler_main_thread_id() ==
@@ -3779,7 +3818,7 @@ void TestProfiler() {
     MOZ_RELEASE_ASSERT(mozilla::baseprofiler::profiler_is_main_thread());
 
     std::thread testThread([&]() {
-      const int testThreadId =
+      const baseprofiler::BaseProfilerThreadId testThreadId =
           mozilla::baseprofiler::profiler_current_thread_id();
       MOZ_RELEASE_ASSERT(testThreadId != mainThreadId);
 
@@ -4231,7 +4270,9 @@ void StreamMarkers(const mozilla::ProfileChunkedBuffer& aBuffer,
 
       const bool success =
           mozilla::base_profiler_markers_detail::DeserializeAfterKindAndStream(
-              aEntryReader, aWriter, 0, [&](mozilla::ProfileChunkedBuffer&) {
+              aEntryReader, aWriter,
+              mozilla::baseprofiler::BaseProfilerThreadId{},
+              [&](mozilla::ProfileChunkedBuffer&) {
                 aWriter.StringElement("Real backtrace would be here");
               });
       MOZ_RELEASE_ASSERT(success);
@@ -4326,8 +4367,14 @@ void TestMarkerThreadId() {
   MOZ_RELEASE_ASSERT(!MarkerThreadId::MainThread().IsUnspecified());
   MOZ_RELEASE_ASSERT(!MarkerThreadId::CurrentThread().IsUnspecified());
 
-  MOZ_RELEASE_ASSERT(!MarkerThreadId{42}.IsUnspecified());
-  MOZ_RELEASE_ASSERT(MarkerThreadId{42}.ThreadId() == 42);
+  MOZ_RELEASE_ASSERT(!MarkerThreadId{
+      mozilla::baseprofiler::BaseProfilerThreadId::FromNumber(42)}
+                          .IsUnspecified());
+  MOZ_RELEASE_ASSERT(
+      MarkerThreadId{
+          mozilla::baseprofiler::BaseProfilerThreadId::FromNumber(42)}
+          .ThreadId()
+          .ToNumber() == 42);
 
   // We'll assume that this test runs in the main thread (which should be true
   // when called from the `main` function).
@@ -4428,8 +4475,9 @@ void TestUserMarker() {
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
-      mozilla::MarkerThreadId(123), MarkerTypeTestMinimal{},
-      std::string("ThreadId(123)")));
+      mozilla::MarkerThreadId(
+          mozilla::baseprofiler::BaseProfilerThreadId::FromNumber(123)),
+      MarkerTypeTestMinimal{}, std::string("ThreadId(123)")));
 
   auto start = mozilla::TimeStamp::Now();
 
@@ -4513,7 +4561,7 @@ void TestPredefinedMarkers() {
 void TestProfilerMarkers() {
   printf("TestProfilerMarkers -- pid: %d, tid: %d\n",
          int(mozilla::baseprofiler::profiler_current_process_id().ToNumber()),
-         mozilla::baseprofiler::profiler_current_thread_id());
+         int(mozilla::baseprofiler::profiler_current_thread_id().ToNumber()));
   // ::SleepMilli(10000);
 
   TestUniqueJSONStrings();
@@ -4593,7 +4641,7 @@ int main()
 #ifdef MOZ_GECKO_PROFILER
   printf("BaseTestProfiler -- pid: %d, tid: %d\n",
          int(baseprofiler::profiler_current_process_id().ToNumber()),
-         baseprofiler::profiler_current_thread_id());
+         int(baseprofiler::profiler_current_thread_id().ToNumber()));
   // ::SleepMilli(10000);
 #endif  // MOZ_GECKO_PROFILER
 

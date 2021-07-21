@@ -58,7 +58,9 @@ void PrintToConsole(const char* aFmt, ...) MOZ_FORMAT_PRINTF(1, 2);
           "[I %d/%d] " arg "\n",                                     \
           int(::mozilla::baseprofiler::profiler_current_process_id() \
                   .ToNumber()),                                      \
-          profiler_current_thread_id(), ##__VA_ARGS__);              \
+          int(::mozilla::baseprofiler::profiler_current_thread_id()  \
+                  .ToNumber()),                                      \
+          ##__VA_ARGS__);                                            \
     }                                                                \
   } while (0)
 
@@ -72,7 +74,9 @@ void PrintToConsole(const char* aFmt, ...) MOZ_FORMAT_PRINTF(1, 2);
           "[D %d/%d] " arg "\n",                                     \
           int(::mozilla::baseprofiler::profiler_current_process_id() \
                   .ToNumber()),                                      \
-          profiler_current_thread_id(), ##__VA_ARGS__);              \
+          int(::mozilla::baseprofiler::profiler_current_thread_id()  \
+                  .ToNumber()),                                      \
+          ##__VA_ARGS__);                                            \
     }                                                                \
   } while (0)
 
@@ -86,7 +90,9 @@ void PrintToConsole(const char* aFmt, ...) MOZ_FORMAT_PRINTF(1, 2);
           "[V %d/%d] " arg "\n",                                     \
           int(::mozilla::baseprofiler::profiler_current_process_id() \
                   .ToNumber()),                                      \
-          profiler_current_thread_id(), ##__VA_ARGS__);              \
+          int(::mozilla::baseprofiler::profiler_current_thread_id()  \
+                  .ToNumber()),                                      \
+          ##__VA_ARGS__);                                            \
     }                                                                \
   } while (0)
 
@@ -107,7 +113,7 @@ struct PlatformDataDestructor {
 };
 
 typedef UniquePtr<PlatformData, PlatformDataDestructor> UniquePlatformData;
-UniquePlatformData AllocPlatformData(int aThreadId);
+UniquePlatformData AllocPlatformData(BaseProfilerThreadId aThreadId);
 
 // Convert the array of strings to a bitfield.
 uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
