@@ -8,6 +8,8 @@
     It may be possible to use the [Command Line Tools for Xcode 12.2](https://download.developer.apple.com/Developer_Tools/Command_Line_Tools_for_Xcode_12.2/Command_Line_Tools_for_Xcode_12.2.dmg)
     for a smaller download.
 
+   In addition the aarch64 Rust target will need to be installed via: `rustup target add aarch64-apple-darwin`
+
 2. If generating on Windows 10, Visual Studio 2019 is required.  Please follow
    the install instructions from [here](https://firefox-source-docs.mozilla.org/setup/windows_build.html)
 
