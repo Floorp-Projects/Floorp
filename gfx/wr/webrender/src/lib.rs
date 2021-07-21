@@ -105,6 +105,7 @@ mod hit_test;
 mod internal_types;
 mod lru_cache;
 mod picture;
+mod picture_graph;
 mod prepare;
 mod prim_store;
 mod print_tree;
