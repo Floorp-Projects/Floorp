@@ -28,7 +28,7 @@ internal inline fun updateTheContentState(
     tabId: String,
     crossinline update: (ContentState) -> ContentState
 ): BrowserState {
-    return state.updateTabState(tabId) { current ->
+    return state.updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(content = update(current.content))
     }
 }

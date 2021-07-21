@@ -39,7 +39,7 @@ private inline fun BrowserState.copyWithTrackingProtectionState(
     tabId: String,
     crossinline update: (TrackingProtectionState) -> TrackingProtectionState
 ): BrowserState {
-    return updateTabState(tabId) { current ->
+    return updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(trackingProtection = update(current.trackingProtection))
     }
 }

@@ -69,7 +69,7 @@ private inline fun BrowserState.copyWithEngineState(
     tabId: String,
     crossinline update: (EngineState) -> EngineState
 ): BrowserState {
-    return updateTabState(tabId) { current ->
+    return updateTabOrCustomTabState(tabId) { current ->
         current.createCopy(engineState = update(current.engineState))
     }
 }
