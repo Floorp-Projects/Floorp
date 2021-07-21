@@ -40,14 +40,10 @@
 
 #rightBox {
   margin-inline: 30px;
-  padding-top: 48px;
+  padding-top: 64px;
 }
 
 #bottomBox {
   background-color: #1d1133;
   padding: 15px 10px 15px;
-}
-
-#version {
-  margin-top: 30px;
 }

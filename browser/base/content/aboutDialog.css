@@ -37,7 +37,6 @@
 
 #version {
   font-weight: bold;
-  margin-top: 10px;
   margin-inline-start: 0;
   user-select: text;
   -moz-user-focus: normal;
@@ -46,11 +45,6 @@
 
 #version.update {
   font-weight: normal;
-  margin-top: 0;
-}
-
-#releasenotes {
-  margin-top: 10px;
 }
 
 #distribution,
