@@ -1238,7 +1238,7 @@ static nsresult do_mkdir(nsIFile*, const nsString& aPath, uint32_t) {
 }
 
 NS_IMETHODIMP
-nsLocalFile::Create(uint32_t aType, uint32_t aAttributes) {
+nsLocalFile::Create(uint32_t aType, uint32_t aAttributes, bool aSkipAncestors) {
   if (aType != NORMAL_FILE_TYPE && aType != DIRECTORY_TYPE) {
     return NS_ERROR_FILE_UNKNOWN_TYPE;
   }
@@ -1247,7 +1247,8 @@ nsLocalFile::Create(uint32_t aType, uint32_t aAttributes) {
 
   nsresult rv = createFunc(this, mWorkingPath, aAttributes);
 
-  if (NS_SUCCEEDED(rv) || NS_ERROR_FILE_ALREADY_EXISTS == rv) {
+  if (NS_SUCCEEDED(rv) || NS_ERROR_FILE_ALREADY_EXISTS == rv ||
+      aSkipAncestors) {
     return rv;
   }
 

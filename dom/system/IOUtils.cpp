@@ -1261,43 +1261,29 @@ Result<Ok, IOUtils::IOError> IOUtils::MakeDirectorySync(nsIFile* aFile,
                                                         int32_t aMode) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  // nsIFile::Create will create ancestor directories by default.
-  // If the caller does not want this behaviour, then check and possibly
-  // return an error.
-  if (!aCreateAncestors) {
-    nsCOMPtr<nsIFile> parent;
-    MOZ_TRY(aFile->GetParent(getter_AddRefs(parent)));
-    if (parent) {
-      bool parentExists = false;
-      MOZ_TRY(parent->Exists(&parentExists));
-      if (!parentExists) {
-        return Err(IOError(NS_ERROR_FILE_NOT_FOUND)
-                       .WithMessage("Could not create directory at %s because "
-                                    "the path has missing "
-                                    "ancestor components",
-                                    aFile->HumanReadablePath().get()));
-      }
-    } else {
-      // If we don't have a parent directory, which means this was called with a
-      // root directory. If the directory doesn't already exist (e.g., asking
-      // for a drive on Windows that does not exist), we will not be able to
-      // create it.
-      //
-      // Calling `nsLocalFile::Create()` on Windows can fail with
-      // `NS_ERROR_ACCESS_DENIED` trying to create a root directory, but we
-      // would rather the call succeed, so return early if the directory exists.
-      //
-      // Otherwise, we fall through to `nsiFile::Create()` and let it fail there
-      // instead.
-      bool exists = false;
-      MOZ_TRY(aFile->Exists(&exists));
-      if (exists) {
-        return Ok();
-      }
+  nsCOMPtr<nsIFile> parent;
+  MOZ_TRY(aFile->GetParent(getter_AddRefs(parent)));
+  if (!parent) {
+    // If we don't have a parent directory, we were called with a
+    // root directory. If the directory doesn't already exist (e.g., asking
+    // for a drive on Windows that does not exist), we will not be able to
+    // create it.
+    //
+    // Calling `nsLocalFile::Create()` on Windows can fail with
+    // `NS_ERROR_ACCESS_DENIED` trying to create a root directory, but we
+    // would rather the call succeed, so return early if the directory exists.
+    //
+    // Otherwise, we fall through to `nsiFile::Create()` and let it fail there
+    // instead.
+    bool exists = false;
+    MOZ_TRY(aFile->Exists(&exists));
+    if (exists) {
+      return Ok();
     }
   }
 
-  nsresult rv = aFile->Create(nsIFile::DIRECTORY_TYPE, aMode);
+  nsresult rv =
+      aFile->Create(nsIFile::DIRECTORY_TYPE, aMode, !aCreateAncestors);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
       // NB: We may report a success only if the target is an existing

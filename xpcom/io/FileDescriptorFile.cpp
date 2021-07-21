@@ -146,7 +146,8 @@ NS_IMETHODIMP
 FileDescriptorFile::Normalize() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-FileDescriptorFile::Create(uint32_t aType, uint32_t aPermissions) {
+FileDescriptorFile::Create(uint32_t aType, uint32_t aPermissions,
+                           bool aSkipAncestors) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
