@@ -951,7 +951,7 @@ def sysroot_path(host_or_target):
         bootstrap_path(
             depends(host_or_target)(lambda t: "sysroot-{}".format(t.toolchain)),
             when=bootstrap_sysroot,
-        )
+        ),
     )
     def sysroot_path(sysroot_input, path):
         if sysroot_input:
