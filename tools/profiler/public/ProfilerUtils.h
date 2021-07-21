@@ -12,6 +12,9 @@
 
 #include "mozilla/BaseProfilerUtils.h"
 
+using ProfilerProcessId = mozilla::baseprofiler::BaseProfilerProcessId;
+using ProfilerThreadId = mozilla::baseprofiler::BaseProfilerThreadId;
+
 #ifndef MOZ_GECKO_PROFILER
 
 [[nodiscard]] inline int profiler_current_process_id() { return 0; }
