@@ -24,7 +24,7 @@ describe("<isAllowedCSS>", () => {
     assert.isTrue(
       isAllowedCSS(
         "background-image",
-        `url("chrome://activity-stream/content/data/content/assets/glyph-info-16.svg")`
+        `url("chrome://global/skin/icons/info.svg")`
       )
     );
   });
