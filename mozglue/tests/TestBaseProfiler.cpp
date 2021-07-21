@@ -109,6 +109,18 @@ void TestProfilerUtils() {
     static_assert(!std::is_assignable_v<BaseProfilerProcessId, Number>);
     static_assert(!std::is_constructible_v<Number, BaseProfilerProcessId>);
     static_assert(!std::is_assignable_v<Number, BaseProfilerProcessId>);
+
+    static_assert(
+        std::is_same_v<
+            decltype(mozilla::baseprofiler::profiler_current_process_id()),
+            BaseProfilerProcessId>);
+#ifdef MOZ_GECKO_PROFILER
+    MOZ_RELEASE_ASSERT(
+        mozilla::baseprofiler::profiler_current_process_id().IsSpecified());
+#else
+    MOZ_RELEASE_ASSERT(
+        !mozilla::baseprofiler::profiler_current_process_id().IsSpecified());
+#endif
   }
 
   {
@@ -3745,7 +3757,7 @@ MOZ_NEVER_INLINE unsigned long long Fibonacci(unsigned long long n) {
 
 void TestProfiler() {
   printf("TestProfiler starting -- pid: %d, tid: %d\n",
-         baseprofiler::profiler_current_process_id(),
+         int(baseprofiler::profiler_current_process_id().ToNumber()),
          baseprofiler::profiler_current_thread_id());
   // ::SleepMilli(10000);
 
@@ -4500,7 +4512,7 @@ void TestPredefinedMarkers() {
 
 void TestProfilerMarkers() {
   printf("TestProfilerMarkers -- pid: %d, tid: %d\n",
-         mozilla::baseprofiler::profiler_current_process_id(),
+         int(mozilla::baseprofiler::profiler_current_process_id().ToNumber()),
          mozilla::baseprofiler::profiler_current_thread_id());
   // ::SleepMilli(10000);
 
@@ -4580,7 +4592,7 @@ int main()
 {
 #ifdef MOZ_GECKO_PROFILER
   printf("BaseTestProfiler -- pid: %d, tid: %d\n",
-         baseprofiler::profiler_current_process_id(),
+         int(baseprofiler::profiler_current_process_id().ToNumber()),
          baseprofiler::profiler_current_thread_id());
   // ::SleepMilli(10000);
 #endif  // MOZ_GECKO_PROFILER

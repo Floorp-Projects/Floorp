@@ -51,37 +51,43 @@ void PrintToConsole(const char* aFmt, ...) MOZ_FORMAT_PRINTF(1, 2);
 // These are for MOZ_BASE_PROFILER_LOGGING and above. It's the default logging
 // level for the profiler, and should be used sparingly.
 #define LOG_TEST ::mozilla::baseprofiler::LogTest(3)
-#define LOG(arg, ...)                                           \
-  do {                                                          \
-    if (LOG_TEST) {                                             \
-      ::mozilla::baseprofiler::PrintToConsole(                  \
-          "[I %d/%d] " arg "\n", profiler_current_process_id(), \
-          profiler_current_thread_id(), ##__VA_ARGS__);         \
-    }                                                           \
+#define LOG(arg, ...)                                                \
+  do {                                                               \
+    if (LOG_TEST) {                                                  \
+      ::mozilla::baseprofiler::PrintToConsole(                       \
+          "[I %d/%d] " arg "\n",                                     \
+          int(::mozilla::baseprofiler::profiler_current_process_id() \
+                  .ToNumber()),                                      \
+          profiler_current_thread_id(), ##__VA_ARGS__);              \
+    }                                                                \
   } while (0)
 
 // These are for MOZ_BASE_PROFILER_DEBUG_LOGGING. It should be used for logging
 // that is somewhat more verbose than LOG.
 #define DEBUG_LOG_TEST ::mozilla::baseprofiler::LogTest(4)
-#define DEBUG_LOG(arg, ...)                                     \
-  do {                                                          \
-    if (DEBUG_LOG_TEST) {                                       \
-      ::mozilla::baseprofiler::PrintToConsole(                  \
-          "[D %d/%d] " arg "\n", profiler_current_process_id(), \
-          profiler_current_thread_id(), ##__VA_ARGS__);         \
-    }                                                           \
+#define DEBUG_LOG(arg, ...)                                          \
+  do {                                                               \
+    if (DEBUG_LOG_TEST) {                                            \
+      ::mozilla::baseprofiler::PrintToConsole(                       \
+          "[D %d/%d] " arg "\n",                                     \
+          int(::mozilla::baseprofiler::profiler_current_process_id() \
+                  .ToNumber()),                                      \
+          profiler_current_thread_id(), ##__VA_ARGS__);              \
+    }                                                                \
   } while (0)
 
 // These are for MOZ_BASE_PROFILER_VERBOSE_LOGGING. It should be used for
 // logging that is somewhat more verbose than DEBUG_LOG.
 #define VERBOSE_LOG_TEST ::mozilla::baseprofiler::LogTest(5)
-#define VERBOSE_LOG(arg, ...)                                   \
-  do {                                                          \
-    if (VERBOSE_LOG_TEST) {                                     \
-      ::mozilla::baseprofiler::PrintToConsole(                  \
-          "[V %d/%d] " arg "\n", profiler_current_process_id(), \
-          profiler_current_thread_id(), ##__VA_ARGS__);         \
-    }                                                           \
+#define VERBOSE_LOG(arg, ...)                                        \
+  do {                                                               \
+    if (VERBOSE_LOG_TEST) {                                          \
+      ::mozilla::baseprofiler::PrintToConsole(                       \
+          "[V %d/%d] " arg "\n",                                     \
+          int(::mozilla::baseprofiler::profiler_current_process_id() \
+                  .ToNumber()),                                      \
+          profiler_current_thread_id(), ##__VA_ARGS__);              \
+    }                                                                \
   } while (0)
 
 namespace mozilla {

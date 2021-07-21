@@ -36,7 +36,9 @@
 namespace mozilla {
 namespace baseprofiler {
 
-int profiler_current_process_id() { return getpid(); }
+BaseProfilerProcessId profiler_current_process_id() {
+  return BaseProfilerProcessId::FromNumber(getpid());
+}
 
 int profiler_current_thread_id() {
   uint64_t tid;
