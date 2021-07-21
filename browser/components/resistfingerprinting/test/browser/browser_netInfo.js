@@ -3,10 +3,6 @@
  *   spoofed correctly when 'privacy.resistFingerprinting' is true;
  */
 
-const TEST_PATH =
-  "http://example.net/browser/browser/" +
-  "components/resistfingerprinting/test/browser/";
-
 async function testWindow() {
   // Open a tab to test network information in a content.
   let tab = await BrowserTestUtils.openNewForegroundTab(
