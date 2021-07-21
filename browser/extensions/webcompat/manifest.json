@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "24.6.0",
+  "version": "24.7.0",
 
   "applications": {
     "gecko": {
@@ -90,6 +90,7 @@
   },
 
   "web_accessible_resources": [
+    "shims/adnexus-prebid.js",
     "shims/adsafeprotected-ima.js",
     "shims/apstag.js",
     "shims/bmauth.js",
