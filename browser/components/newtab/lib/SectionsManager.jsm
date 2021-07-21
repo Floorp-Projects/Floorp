@@ -137,7 +137,7 @@ const BUILT_IN_SECTIONS = ({
     },
     shouldHidePref: false,
     eventSource: "HIGHLIGHTS",
-    icon: "highlights",
+    icon: "chrome://global/skin/icons/highlights.svg",
     title: {
       id:
         newNewtabExperienceEnabled || customizationMenuEnabled
@@ -149,7 +149,7 @@ const BUILT_IN_SECTIONS = ({
     maxRows: 4,
     emptyState: {
       message: { id: "newtab-empty-section-highlights" },
-      icon: "highlights",
+      icon: "chrome://global/skin/icons/highlights.svg",
     },
     shouldSendImpressionStats: false,
   }),
