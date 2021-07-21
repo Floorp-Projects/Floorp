@@ -8,8 +8,8 @@
 %include ../shared/browser-custom-colors.inc.css
 
 :root {
-  --toolbar-non-lwt-bgcolor: #f9f9fb;
-  --toolbar-non-lwt-textcolor: #0c0c0d;
+  --toolbar-non-lwt-bgcolor: -moz-dialog;
+  --toolbar-non-lwt-textcolor: -moz-dialogtext;
   --toolbar-non-lwt-bgimage: none;
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
@@ -35,9 +35,17 @@
 #navigator-toolbox {
   appearance: none;
 }
+
 #navigator-toolbox:not(:-moz-lwtheme) {
-  background-color: #f0f0f4;
+  background-color: window;
 }
+
+@media not (prefers-contrast) {
+  #navigator-toolbox:not(:-moz-lwtheme) {
+    background-color: #f0f0f4;
+  }
+}
+
 /*
   This is a workaround for Bug 1482157
   -moz-default-appearance: toolbox; makes the macOS sheets attached to the
@@ -189,6 +197,17 @@
   }
   :root[lwt-default-theme-in-dark-mode] #urlbar:not([focused="true"]) {
     --urlbar-box-bgcolor: var(--lwt-toolbar-field-focus);
+  }
+}
+
+@media (prefers-contrast) {
+  /* The "increase contrast" preference on macOS draws a 1px black line around
+     panels, including the separate search bar. Since the Urlbar is not
+     implemented as a panel, it does not get this outline. This outline rule
+     resembles the system outline, bringing the Urlbar in line with panels and
+     other Mac apps. */
+  #urlbar[open] > #urlbar-background {
+    outline: 1px solid var(--focus-outline-color)
   }
 }
 
