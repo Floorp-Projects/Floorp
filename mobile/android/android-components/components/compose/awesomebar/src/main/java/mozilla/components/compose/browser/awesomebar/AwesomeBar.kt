@@ -7,10 +7,8 @@ package mozilla.components.compose.browser.awesomebar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,12 +25,12 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 @Composable
 fun AwesomeBar(
     text: String,
-    providers: List<AwesomeBar.SuggestionProvider>
+    providers: List<AwesomeBar.SuggestionProvider>,
+    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit
 ) {
     Column(
         modifier = Modifier
-            .width(IntrinsicSize.Max)
-            .height(IntrinsicSize.Max)
+            .fillMaxWidth()
             .background(Color.White)
     ) {
         val suggestions = remember { mutableStateOf(emptyList<AwesomeBar.Suggestion>()) }
@@ -41,17 +39,21 @@ fun AwesomeBar(
             suggestions.value = providers.flatMap { provider -> provider.onInputChanged(text) }
         }
 
-        Suggestions(suggestions.value)
+        Suggestions(suggestions.value, onSuggestionClicked)
     }
 }
 
 @Composable
-private fun Suggestions(suggestions: List<AwesomeBar.Suggestion>) {
+private fun Suggestions(
+    suggestions: List<AwesomeBar.Suggestion>,
+    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit
+) {
     suggestions.forEach { suggestion ->
         Text(
             text = suggestion.title ?: "",
             modifier = Modifier.padding(8.dp)
-                .clickable { suggestion.onSuggestionClicked?.invoke() }
+                .fillMaxWidth()
+                .clickable { onSuggestionClicked(suggestion) }
         )
     }
 }

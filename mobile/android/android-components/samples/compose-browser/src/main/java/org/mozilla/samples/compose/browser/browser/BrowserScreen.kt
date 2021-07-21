@@ -7,16 +7,21 @@ package org.mozilla.samples.compose.browser.browser
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import mozilla.components.browser.state.helper.Target
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.engine.WebContent
 import mozilla.components.concept.awesomebar.AwesomeBar
-import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.SearchActionProvider
+import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.lib.state.ext.composableStore
+import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.samples.compose.browser.components
-import java.util.UUID
 
 /**
  * The main browser screen.
@@ -60,30 +65,65 @@ fun BrowserScreen(navController: NavController) {
 
             val url = editUrl.value
             if (editState.value == true && url != null) {
-                AwesomeBar(url, providers = listOf(
-                    FakeProvider()
-                ))
+                Suggestions(
+                    url,
+                    onSuggestionClicked = { suggestion ->
+                        store.dispatch(BrowserScreenAction.ToggleEditMode(false))
+                        suggestion.onSuggestionClicked?.invoke()
+                    }
+                )
             }
         }
     }
 }
 
-// For testing purposes - to be replaced with actual providers later
-@Suppress("MagicNumber")
-private class FakeProvider : AwesomeBar.SuggestionProvider {
-    override val id: String = UUID.randomUUID().toString()
-    override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
-        val suggestions = mutableListOf<AwesomeBar.Suggestion>()
+@Composable
+private fun Suggestions(
+    url: String,
+    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit
+) {
+    val context = LocalContext.current
+    val components = components()
 
-        repeat(10) {
-            suggestions.add(
-                AwesomeBar.Suggestion(
-                this,
-                    title = text + UUID.randomUUID().toString()
-                )
-            )
-        }
-
-        return suggestions
+    val sessionSuggestionProvider = remember(context) {
+        SessionSuggestionProvider(
+            context.resources,
+            components.store,
+            components.tabsUseCases.selectTab
+        )
     }
+
+    val searchActionProvider = remember {
+        SearchActionProvider(components.store, components.searchUseCases.defaultSearch)
+    }
+
+    val searchSuggestionProvider = remember(context) {
+        SearchSuggestionProvider(
+            context,
+            components.store,
+            components.searchUseCases.defaultSearch,
+            components.client,
+            mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
+            engine = components.engine,
+            filterExactMatch = true
+        )
+    }
+
+    val clipboardSuggestionProvider = remember(context) {
+        ClipboardSuggestionProvider(
+            context,
+            components.sessionUseCases.loadUrl
+        )
+    }
+
+    AwesomeBar(
+        url,
+        providers = listOf(
+            sessionSuggestionProvider,
+            searchActionProvider,
+            searchSuggestionProvider,
+            clipboardSuggestionProvider
+        ),
+        onSuggestionClicked = { suggestion -> onSuggestionClicked(suggestion) }
+    )
 }

@@ -55,15 +55,20 @@ dependencies {
     implementation project(':concept-engine')
     implementation project(':concept-awesomebar')
 
-    implementation project(':feature-search')
     implementation project(':browser-engine-gecko')
     implementation project(':browser-state')
+    implementation project(':browser-icons')
 
     implementation project(':compose-awesomebar')
     implementation project(':compose-browser-toolbar')
     implementation project(':compose-engine')
 
+    implementation project(':feature-awesomebar')
+    implementation project(':feature-search')
     implementation project(':feature-session')
+    implementation project(':feature-tabs')
+
+    implementation project(':service-location')
 
     implementation Dependencies.kotlin_stdlib
 
