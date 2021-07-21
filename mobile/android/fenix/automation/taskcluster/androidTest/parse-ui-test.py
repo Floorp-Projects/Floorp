@@ -55,7 +55,7 @@ def main():
     print("| matrix | result | logs | details \n")
     print("| --- | --- | --- | --- |\n")
     for matrix, matrix_result in matrix_ids.items():
-        print("| {matrixId} | {outcome} | [logs]({webLink}) | {testAxises[0][details]}\n".format(**matrix_result))
+        print("| {matrixId} | {outcome} | [logs]({webLink}) | {axes[0][details]}\n".format(**matrix_result))
 
 
 if __name__ == "__main__":
