@@ -68,9 +68,18 @@ class WebDriverBiDiConnection extends WebSocketConnection {
    * @param {Number} id
    *     Id of the packet which lead to an error.
    * @param {Error} err
-   *     Error object with `message` and `stack` attributes.
+   *     Error object with `status`, `message` and `stack` attributes.
    */
-  sendError(id, error) {}
+  sendError(id, err) {
+    const webDriverError = error.wrap(err);
+
+    this.send({
+      id,
+      error: webDriverError.status,
+      message: webDriverError.message,
+      stacktrace: webDriverError.stack,
+    });
+  }
 
   /**
    * Send an event coming from a module to the WebDriver BiDi client.
