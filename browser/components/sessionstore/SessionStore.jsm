@@ -336,6 +336,12 @@ var SessionStore = {
     return SessionStoreInternal.getClosedWindowData(aAsString);
   },
 
+  maybeDontSaveTabs(aWindow) {
+    if (this.willAutoRestore) {
+      aWindow._dontSaveTabs = true;
+    }
+  },
+
   undoCloseWindow: function ss_undoCloseWindow(aIndex) {
     return SessionStoreInternal.undoCloseWindow(aIndex);
   },
@@ -496,6 +502,7 @@ var SessionStore = {
    *        The given object will be modified.
    */
   keepOnlyWorthSavingTabs(aState) {
+    let closedWindowShouldRestore = null;
     for (let i = aState.windows.length - 1; i >= 0; i--) {
       let win = aState.windows[i];
       for (let j = win.tabs.length - 1; j >= 0; j--) {
@@ -507,7 +514,17 @@ var SessionStore = {
           }
         }
       }
-      if (!win.tabs.length) {
+
+      // If it's the last window (and no closedWindow that will restore), keep the window state with no tabs.
+      if (
+        !win.tabs.length &&
+        (aState.windows.length > 1 ||
+          closedWindowShouldRestore ||
+          (closedWindowShouldRestore == null &&
+            (closedWindowShouldRestore = aState._closedWindows.some(
+              w => w._shouldRestore
+            ))))
+      ) {
         aState.windows.splice(i, 1);
         if (aState.selectedWindow > i) {
           aState.selectedWindow--;
@@ -1797,6 +1814,15 @@ var SessionStoreInternal = {
       for (let [tab, tabData] of tabMap) {
         let permanentKey = tab.linkedBrowser.permanentKey;
         this._closedWindowTabs.set(permanentKey, tabData);
+        if (aWindow._dontSaveTabs && !tabData.isPrivate) {
+          // Close remaining tabs.
+          this.maybeSaveClosedTab(aWindow, tab, tabData);
+        }
+      }
+
+      if (aWindow._dontSaveTabs) {
+        winData.tabs.splice(0, winData.tabs.length);
+        winData.selected = -1;
       }
 
       if (isFullyLoaded) {
@@ -2419,22 +2445,33 @@ var SessionStoreInternal = {
     // Get the latest data for this tab (generally, from the cache)
     let tabState = TabState.collect(aTab, TAB_CUSTOM_VALUES.get(aTab));
 
+    // Store closed-tab data for undo.
+    this.maybeSaveClosedTab(aWindow, aTab, tabState);
+  },
+
+  /**
+   * Save a closed tab if needed.
+   * @param aWindow
+   *        Window reference.
+   * @param aTab
+   *        Tab reference.
+   * @param tabState
+   *        Tab state.
+   */
+  maybeSaveClosedTab(aWindow, aTab, tabState) {
     // Don't save private tabs
     let isPrivateWindow = PrivateBrowsingUtils.isWindowPrivate(aWindow);
     if (!isPrivateWindow && tabState.isPrivate) {
       return;
     }
 
-    // Store closed-tab data for undo.
-    let tabbrowser = aWindow.gBrowser;
-    let tabTitle = aTab.label;
-    let { permanentKey } = aTab.linkedBrowser;
+    let permanentKey = aTab.linkedBrowser.permanentKey;
 
     let tabData = {
       permanentKey,
       state: tabState,
-      title: tabTitle,
-      image: tabbrowser.getIcon(aTab),
+      title: aTab.label,
+      image: aWindow.gBrowser.getIcon(aTab),
       pos: aTab._tPos,
       closedAt: Date.now(),
     };
@@ -4048,11 +4085,13 @@ var SessionStoreInternal = {
       this._prefBranch.getBoolPref("sessionstore.restore_tabs_lazily") &&
       this._restore_on_demand;
 
-    var tabs = tabbrowser.addMultipleTabs(
-      restoreTabsLazily,
-      selectTab,
-      winData.tabs
-    );
+    if (winData.tabs.length) {
+      var tabs = tabbrowser.addMultipleTabs(
+        restoreTabsLazily,
+        selectTab,
+        winData.tabs
+      );
+    }
 
     // Move the originally open tabs to the end.
     if (initialTabs) {
