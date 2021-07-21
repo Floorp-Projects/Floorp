@@ -36,7 +36,9 @@
 #include "mozilla/StackWalk_windows.h"
 #include "mozilla/WindowsVersion.h"
 
-int profiler_current_process_id() { return _getpid(); }
+ProfilerProcessId profiler_current_process_id() {
+  return ProfilerProcessId::FromNumber(_getpid());
+}
 
 int profiler_current_thread_id() {
   DWORD threadId = GetCurrentThreadId();
