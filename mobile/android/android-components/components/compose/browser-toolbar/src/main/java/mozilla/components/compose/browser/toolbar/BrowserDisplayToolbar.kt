@@ -4,12 +4,16 @@
 
 package mozilla.components.compose.browser.toolbar
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.Button
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.contentColorFor
+import androidx.compose.material.primarySurface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,15 +31,23 @@ fun BrowserDisplayToolbar(
     onUrlClicked: () -> Unit = {},
     onMenuClicked: () -> Unit = {}
 ) {
-    Text(
-        url,
-        modifier = Modifier
-            .clickable { onUrlClicked() }
-            .padding(8.dp)
-            .width(IntrinsicSize.Max),
-        maxLines = 1
-    )
-    Button(onClick = { onMenuClicked() }) {
-        Text(":")
+    val backgroundColor = MaterialTheme.colors.primarySurface
+    val foregroundColor = contentColorFor(backgroundColor)
+
+    Row(
+        Modifier.background(backgroundColor)
+    ) {
+        Text(
+            url,
+            color = foregroundColor,
+            modifier = Modifier
+                .clickable { onUrlClicked() }
+                .padding(8.dp)
+                .fillMaxWidth(),
+            maxLines = 1
+        )
+        Button(onClick = { onMenuClicked() }) {
+            Text(":")
+        }
     }
 }

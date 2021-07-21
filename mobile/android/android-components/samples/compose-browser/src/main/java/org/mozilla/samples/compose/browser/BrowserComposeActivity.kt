@@ -7,6 +7,7 @@ package org.mozilla.samples.compose.browser
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.material.MaterialTheme
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -28,9 +29,11 @@ class BrowserComposeActivity : AppCompatActivity() {
         setContent {
             val navController = rememberNavController()
 
-            NavHost(navController, startDestination = ROUTE_BROWSER) {
-                composable(ROUTE_BROWSER) { BrowserScreen(navController) }
-                composable(ROUTE_SETTINGS) { SettingsScreen() }
+            MaterialTheme {
+                NavHost(navController, startDestination = ROUTE_BROWSER) {
+                    composable(ROUTE_BROWSER) { BrowserScreen(navController) }
+                    composable(ROUTE_SETTINGS) { SettingsScreen() }
+                }
             }
         }
     }

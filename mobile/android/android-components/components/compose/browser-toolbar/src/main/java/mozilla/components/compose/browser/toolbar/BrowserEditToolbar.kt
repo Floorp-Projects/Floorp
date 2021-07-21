@@ -7,7 +7,10 @@ package mozilla.components.compose.browser.toolbar
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -27,11 +30,18 @@ fun BrowserEditToolbar(
     onUrlEdit: (String) -> Unit = {},
     onUrlCommitted: (String) -> Unit = {}
 ) {
+    val backgroundColor = MaterialTheme.colors.surface
+    val foregroundColor = contentColorFor(backgroundColor)
+
     TextField(
         url,
         onValueChange = { value ->
             onUrlEdit(value)
         },
+        colors = TextFieldDefaults.textFieldColors(
+            textColor = foregroundColor,
+            backgroundColor = backgroundColor
+        ),
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go),
         keyboardActions = KeyboardActions(
