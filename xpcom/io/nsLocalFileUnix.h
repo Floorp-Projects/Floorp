@@ -84,7 +84,7 @@ class nsLocalFile final
   bool FillStatCache();
 
   nsresult CreateAndKeepOpen(uint32_t aType, int aFlags, uint32_t aPermissions,
-                             PRFileDesc** aResult);
+                             bool aSkipAncestors, PRFileDesc** aResult);
 
   nsresult SetLastModifiedTimeImpl(PRTime aLastModTime, bool aFollowLinks);
   nsresult GetLastModifiedTimeImpl(PRTime* aLastModTime, bool aFollowLinks);

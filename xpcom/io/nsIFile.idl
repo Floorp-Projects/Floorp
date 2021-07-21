@@ -99,8 +99,13 @@ interface nsIFile : nsISupports
      *       The unix style octal permissions.  This may
      *       be ignored on systems that do not need to do
      *       permissions.
+     *
+     *   @param skipAncestors
+     *       Optional; if set to true, we'll skip creating
+     *       ancestor directories (and return an error instead).
      */
-    [must_use] void create(in unsigned long type, in unsigned long permissions);
+    [must_use] void create(in unsigned long type, in unsigned long permissions,
+                           [optional,default(false)] in bool skipAncestors);
 
     /**
      *  Accessor to the leaf name of the file itself.
