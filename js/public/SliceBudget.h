@@ -95,6 +95,10 @@ class JS_PUBLIC_API SliceBudget {
   int64_t timeBudget() const { return budget.as<TimeBudget>().budget; }
   int64_t workBudget() const { return budget.as<WorkBudget>().budget; }
 
+  mozilla::TimeStamp deadline() const {
+    return budget.as<TimeBudget>().deadline;
+  }
+
   int describe(char* buffer, size_t maxlen) const;
 };
 
