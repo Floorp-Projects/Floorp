@@ -54,9 +54,7 @@ impl Matrix {
      * less efficient and not as numerically stable. See Mathematics for
      * Game Programmers. */
     pub fn invert(&self) -> Option<Matrix> {
-        let mut dest_mat: Matrix = Matrix {
-            m: [[0.; 3]; 3],
-        };
+        let mut dest_mat: Matrix = Matrix { m: [[0.; 3]; 3] };
         let mut i: i32;
 
         const a: [i32; 3] = [2, 2, 1];
@@ -90,9 +88,7 @@ impl Matrix {
         Some(dest_mat)
     }
     pub fn identity() -> Matrix {
-        let mut i: Matrix = Matrix {
-            m: [[0.; 3]; 3],
-        };
+        let mut i: Matrix = Matrix { m: [[0.; 3]; 3] };
         i.m[0][0] = 1.;
         i.m[0][1] = 0.;
         i.m[0][2] = 0.;
@@ -110,9 +106,7 @@ impl Matrix {
     /* from pixman */
     /* MAT3per... */
     pub fn multiply(a: Matrix, b: Matrix) -> Matrix {
-        let mut result: Matrix = Matrix {
-            m: [[0.; 3]; 3],
-        };
+        let mut result: Matrix = Matrix { m: [[0.; 3]; 3] };
         let mut dx: i32;
 
         let mut o: i32;
