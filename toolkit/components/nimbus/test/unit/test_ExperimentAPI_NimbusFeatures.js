@@ -120,6 +120,11 @@ add_task(async function has_sync_value_before_ready() {
     JSON.stringify(REMOTE_CONFIGURATION.configurations[0])
   );
 
+  Services.prefs.setBoolPref(
+    "nimbus.syncdefaultsstore.aboutwelcome.remoteValue",
+    REMOTE_CONFIGURATION.configurations[0].variables.remoteValue
+  );
+
   Assert.equal(
     feature.getValue().remoteValue,
     REMOTE_CONFIGURATION.configurations[0].variables.remoteValue,

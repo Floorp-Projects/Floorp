@@ -1,7 +1,7 @@
 "use strict";
 
-const { ExperimentAPI } = ChromeUtils.import(
-  "resource://nimbus/ExperimentAPI.jsm"
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/NimbusTestUtils.jsm"
 );
 
 /**
@@ -13,44 +13,31 @@ const { ExperimentAPI } = ChromeUtils.import(
  * @param {NewTabTest} test A new tab test compatible with test_newtab (see head.js)
  */
 async function testWithExperimentFeatureValue(slug, featureValue, test) {
+  let doExperimentCleanup;
   test_newtab({
     async before() {
       Services.prefs.setBoolPref(
         "browser.newtabpage.activity-stream.newNewtabExperience.enabled",
         false
       );
-      let updatePromise = new Promise(resolve =>
-        ExperimentAPI._store.once(`update:${slug}`, resolve)
-      );
-
-      ExperimentAPI._store.addExperiment({
-        slug,
-        branch: {
-          slug: `${slug}-treatment`,
-          feature: {
-            enabled: true,
-            featureId: "newtab",
-            value: featureValue,
-          },
-        },
-        active: true,
+      doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+        featureId: "newtab",
+        enabled: true,
+        value: featureValue,
       });
-
-      await updatePromise;
     },
     test,
     async after() {
       Services.prefs.clearUserPref(
         "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
       );
-      ExperimentAPI._store._deleteForTests(slug);
-      is(ExperimentAPI._store.getAll().includes(slug), false, "Cleanup done");
+      await doExperimentCleanup();
     },
   });
 }
 
 /**
- * Test the ExperimentAPI overrides default values.
+ * Test the newtab NimbusFeature overrides default values.
  */
 testWithExperimentFeatureValue(
   `mochitest-newtab-${Date.now()}`,
@@ -70,7 +57,7 @@ testWithExperimentFeatureValue(
 );
 
 /**
- * Test the ExperimentAPI uses default values for an empty feature config.
+ * Test the newtab NimbusFeature uses default values for an empty feature config.
  */
 testWithExperimentFeatureValue(
   `mochitest-newtab-${Date.now()}`,
