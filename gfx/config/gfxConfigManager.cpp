@@ -294,9 +294,6 @@ void gfxConfigManager::ConfigureWebRender() {
     mFeatureWr->ForceDisable(FeatureStatus::UnavailableInSafeMode,
                              "Safe-mode is enabled",
                              "FEATURE_FAILURE_SAFE_MODE"_ns);
-    mFeatureWrSoftware->ForceDisable(FeatureStatus::UnavailableInSafeMode,
-                                     "Safe-mode is enabled",
-                                     "FEATURE_FAILURE_SAFE_MODE"_ns);
   }
 
   if (mXRenderEnabled) {
