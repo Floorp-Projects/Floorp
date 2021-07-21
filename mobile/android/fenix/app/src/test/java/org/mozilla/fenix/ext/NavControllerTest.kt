@@ -9,17 +9,11 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import io.mockk.MockKAnnotations
-import io.mockk.Runs
-import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
-import io.mockk.just
-import io.mockk.mockkStatic
 import io.mockk.verify
-import io.sentry.Sentry
 import org.junit.Before
 import org.junit.Test
-import org.mozilla.fenix.components.isSentryEnabled
 
 class NavControllerTest {
 
@@ -32,12 +26,9 @@ class NavControllerTest {
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        mockkStatic("io.sentry.Sentry", "org.mozilla.fenix.components.AnalyticsKt")
 
         every { navController.currentDestination } returns mockDestination
         every { mockDestination.id } returns currentDestId
-        every { isSentryEnabled() } returns true
-        every { Sentry.capture(any<String>()) } just Runs
     }
 
     @Test
@@ -52,22 +43,5 @@ class NavControllerTest {
         navController.nav(currentDestId, navDirections, mockOptions)
         verify { navController.currentDestination }
         verify { navController.navigate(navDirections, mockOptions) }
-    }
-
-    @Test
-    fun `Test error response for id exception in-block`() {
-        navController.nav(7, navDirections)
-        verify { navController.currentDestination }
-        verify { Sentry.capture("Fragment id 4 did not match expected 7") }
-        confirmVerified(navController)
-    }
-
-    @Test
-    fun `Test record id exception fun`() {
-        val actual = 7
-        val expected = 4
-
-        recordIdException(actual, expected)
-        verify { Sentry.capture("Fragment id 7 did not match expected 4") }
     }
 }
