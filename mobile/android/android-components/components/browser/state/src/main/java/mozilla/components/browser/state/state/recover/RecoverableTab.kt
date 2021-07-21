@@ -27,7 +27,7 @@ import mozilla.components.concept.storage.HistoryMetadataKey
  * @property state The [EngineSessionState] needed for restoring the previous state of this tab.
  * @property readerState The last [ReaderState] of the tab.
  * @property lastAccess The last time this tab was selected.
- * @property lastMediaAccess The last time media started playing in this tab.
+ * @property lastMediaAccessState Details about the last time was playing in this tab.
  * @property private If tab was private.
  */
 data class RecoverableTab(

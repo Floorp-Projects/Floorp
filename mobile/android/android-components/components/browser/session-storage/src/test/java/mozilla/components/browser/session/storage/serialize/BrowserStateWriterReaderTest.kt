@@ -148,7 +148,7 @@ class BrowserStateWriterReaderTest {
     }
 
     @Test
-    fun `Read and write tab with lastMediaAccess`() {
+    fun `Read and write tab with LastMediaAccessState`() {
         val engineState = createFakeEngineState()
         val engine = createFakeEngine(engineState)
 
@@ -156,7 +156,7 @@ class BrowserStateWriterReaderTest {
             url = "https://www.mozilla.org",
             title = "Mozilla",
             contextId = "work",
-            lastMediaAccessState = LastMediaAccessState(lastMediaAccess = 333L)
+            lastMediaAccessState = LastMediaAccessState("https://www.mozilla.org", lastMediaAccess = 333L)
         )
 
         val writer = BrowserStateWriter()
@@ -171,6 +171,7 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
+        assertEquals("https://www.mozilla.org", restoredTab.lastMediaAccessState.lastMediaUrl)
         assertEquals(333L, restoredTab.lastMediaAccessState.lastMediaAccess)
     }
 }

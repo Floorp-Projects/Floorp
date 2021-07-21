@@ -91,6 +91,9 @@ private fun JsonWriter.tab(
         name(Keys.SESSION_LAST_ACCESS)
         value(tab.lastAccess)
 
+        name(Keys.SESSION_LAST_MEDIA_URL)
+        value(tab.lastMediaAccessState.lastMediaUrl)
+
         name(Keys.SESSION_LAST_MEDIA_ACCESS)
         value(tab.lastMediaAccessState.lastMediaAccess)
 
