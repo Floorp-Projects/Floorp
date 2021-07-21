@@ -36,6 +36,8 @@ TEST_COLD_VIEW_FF = 'cold_view_first_frame'
 TEST_COLD_VIEW_NAV_START = 'cold_view_nav_start'
 TESTS = [TEST_COLD_MAIN_FF, TEST_COLD_MAIN_RESTORE, TEST_COLD_VIEW_FF, TEST_COLD_VIEW_NAV_START]
 
+TEST_URI = 'https://example.com'
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description=DESC, formatter_class=argparse.RawTextHelpFormatter)
@@ -73,8 +75,12 @@ def validate_args(args):
             raise Exception("Given `path` unexpectedly exists: pick a new path or use --force to overwrite.")
 
 
+def get_adb_shell_args():
+    return ['adb', 'shell']
+
+
 def get_activity_manager_args():
-    return ['adb', 'shell', 'am']
+    return get_adb_shell_args() + ['am']
 
 
 def force_stop(pkg_id):
@@ -90,18 +96,38 @@ def disable_startup_profiling():
     subprocess.run(args, check=True)
 
 
+def get_component_name_for_intent(pkg_id, intent):
+    resolve_component_args = (get_adb_shell_args()
+                              + ['cmd', 'package', 'resolve-activity', '--brief']
+                              + intent + [pkg_id])
+    proc = subprocess.run(resolve_component_args, capture_output=True)
+    stdout = proc.stdout.splitlines()
+    assert len(stdout) == 2, 'expected 2 lines. Got: {}'.format(stdout)
+    return stdout[1]
+
+
 def get_start_cmd(test_name, pkg_id):
-    args_prefix = get_activity_manager_args() + ['start-activity', '-W', '-n']
+    intent_action_prefix = 'android.intent.action.{}'
     if test_name in [TEST_COLD_MAIN_FF, TEST_COLD_MAIN_RESTORE]:
-        cmd = args_prefix + ['{}/.App'.format(pkg_id)]
-    elif test_name in [TEST_COLD_VIEW_FF, TEST_COLD_VIEW_NAV_START]:
-        pkg_activity = '{}/org.mozilla.fenix.IntentReceiverActivity'.format(pkg_id)
-        cmd = args_prefix + [
-            pkg_activity,
-            '-d', 'https://example.com',
-            '-a', 'android.intent.action.VIEW'
+        intent = [
+            '-a', intent_action_prefix.format('MAIN'),
+            '-c', 'android.intent.category.LAUNCHER',
         ]
-    else: raise NotImplementedError('method unexpectedly undefined for test_name {}'.format(test_name))
+    elif test_name in [TEST_COLD_VIEW_FF, TEST_COLD_VIEW_NAV_START]:
+        intent = [
+            '-a', intent_action_prefix.format('VIEW'),
+            '-d', TEST_URI
+        ]
+
+    # You can't launch an app without an pkg_id/activity pair. Instead of
+    # hard-coding the activity, which could break on app updates, we ask the
+    # system to resolve it for us.
+    component_name = get_component_name_for_intent(pkg_id, intent)
+    cmd = get_activity_manager_args() + [
+        'start-activity',  # this would change to `start` on older API levels like GS5.
+        '-W',  # wait for app launch to complete before returning
+        '-n', component_name
+        ] + intent
     return cmd
 
 
