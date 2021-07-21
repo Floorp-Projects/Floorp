@@ -6,6 +6,9 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { ExperimentStore } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentStore.jsm"
 );
+const { FeatureManifest } = ChromeUtils.import(
+  "resource://nimbus/FeatureManifest.js"
+);
 
 const { SYNC_DATA_PREF_BRANCH, SYNC_DEFAULTS_PREF_BRANCH } = ExperimentStore;
 const { cleanupStorePrefCache } = ExperimentFakes;
@@ -262,7 +265,11 @@ add_task(async function test_sync_access_update() {
   store.updateExperiment("foo", {
     branch: {
       ...experiment.branch,
-      feature: { featureId: "aboutwelcome", enabled: true, value: "bar" },
+      feature: {
+        featureId: "aboutwelcome",
+        enabled: true,
+        value: { bar: "bar" },
+      },
     },
   });
 
@@ -270,9 +277,9 @@ add_task(async function test_sync_access_update() {
   let cachedExperiment = store.getExperimentForFeature("aboutwelcome");
 
   Assert.ok(cachedExperiment, "Got back 1 experiment");
-  Assert.equal(
+  Assert.deepEqual(
     cachedExperiment.branch.feature.value,
-    "bar",
+    { bar: "bar" },
     "Got updated value"
   );
 });
@@ -518,4 +525,163 @@ add_task(async function test_getAllExistingRemoteConfigIds() {
   );
 
   cleanupStorePrefCache();
+});
+
+add_task(async function test_storeValuePerPref_noVariables() {
+  const store = ExperimentFakes.store();
+  const experiment = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "variant",
+      feature: {
+        // Ensure it gets saved to prefs
+        isEarlyStartup: true,
+        featureId: "purple",
+        enabled: true,
+      },
+    },
+  });
+
+  await store.init();
+  store.addExperiment(experiment);
+
+  let branch = Services.prefs.getBranch(`${SYNC_DATA_PREF_BRANCH}purple.`);
+
+  Assert.ok(
+    Services.prefs.getStringPref(`${SYNC_DATA_PREF_BRANCH}purple`, ""),
+    "Experiment metadata saved to prefs"
+  );
+
+  Assert.equal(branch.getChildList("").length, 0, "No variables to store");
+
+  store._updateSyncStore({ ...experiment, active: false });
+  Assert.ok(
+    !Services.prefs.getStringPref(`${SYNC_DATA_PREF_BRANCH}purple`, ""),
+    "Experiment cleanup"
+  );
+});
+
+add_task(async function test_storeValuePerPref_withVariables() {
+  const store = ExperimentFakes.store();
+  const experiment = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "variant",
+      feature: {
+        // Ensure it gets saved to prefs
+        isEarlyStartup: true,
+        featureId: "purple",
+        value: { color: "purple", enabled: true },
+      },
+    },
+  });
+
+  await store.init();
+  store.addExperiment(experiment);
+
+  let branch = Services.prefs.getBranch(`${SYNC_DATA_PREF_BRANCH}purple.`);
+
+  Assert.equal(
+    Services.prefs
+      .getStringPref(`${SYNC_DATA_PREF_BRANCH}purple`)
+      .indexOf("color"),
+    -1,
+    "Experiment metadata does not contain variables"
+  );
+
+  Assert.equal(branch.getChildList("").length, 2, "Enabled and color");
+
+  store._updateSyncStore({ ...experiment, active: false });
+  Assert.ok(
+    !Services.prefs.getStringPref(`${SYNC_DATA_PREF_BRANCH}purple`, ""),
+    "Experiment cleanup"
+  );
+  Assert.equal(branch.getChildList("").length, 0, "Variables are also removed");
+});
+
+add_task(async function test_storeValuePerPref_returnsSameValue() {
+  let store = ExperimentFakes.store();
+  const experiment = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "variant",
+      feature: {
+        // Ensure it gets saved to prefs
+        isEarlyStartup: true,
+        featureId: "purple",
+        value: { color: "purple", enabled: true },
+      },
+    },
+  });
+
+  await store.init();
+  store.addExperiment(experiment);
+  let branch = Services.prefs.getBranch(`${SYNC_DATA_PREF_BRANCH}purple.`);
+
+  store = ExperimentFakes.store();
+  Assert.deepEqual(
+    store.getExperimentForFeature("purple"),
+    experiment,
+    "Returns the same value"
+  );
+
+  // Cleanup
+  store._updateSyncStore({ ...experiment, active: false });
+  Assert.ok(
+    !Services.prefs.getStringPref(`${SYNC_DATA_PREF_BRANCH}purple`, ""),
+    "Experiment cleanup"
+  );
+  Assert.deepEqual(branch.getChildList(""), [], "Variables are also removed");
+});
+
+add_task(async function test_storeValuePerPref_returnsSameValue_allTypes() {
+  let store = ExperimentFakes.store();
+  // Add a fake feature that matches the variables we're testing
+  FeatureManifest.purple = {
+    variables: {
+      string: { type: "string" },
+      bool: { type: "boolean" },
+      array: { type: "json" },
+      number1: { type: "int" },
+      number2: { type: "int" },
+      number3: { type: "int" },
+      json: { type: "json" },
+    },
+  };
+  const experiment = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "variant",
+      feature: {
+        // Ensure it gets saved to prefs
+        isEarlyStartup: true,
+        featureId: "purple",
+        value: {
+          string: "string",
+          bool: true,
+          array: [1, 2, 3],
+          number1: 42,
+          number2: 0,
+          number3: -5,
+          json: { jsonValue: true },
+        },
+      },
+    },
+  });
+
+  await store.init();
+  store.addExperiment(experiment);
+  let branch = Services.prefs.getBranch(`${SYNC_DATA_PREF_BRANCH}purple.`);
+
+  store = ExperimentFakes.store();
+  Assert.deepEqual(
+    store.getExperimentForFeature("purple").branch.feature.value,
+    experiment.branch.feature.value,
+    "Returns the same value"
+  );
+
+  // Cleanup
+  store._updateSyncStore({ ...experiment, active: false });
+  Assert.ok(
+    !Services.prefs.getStringPref(`${SYNC_DATA_PREF_BRANCH}purple`, ""),
+    "Experiment cleanup"
+  );
+  Assert.deepEqual(branch.getChildList(""), [], "Variables are also removed");
+  delete FeatureManifest.purple;
 });
