@@ -12,6 +12,7 @@ import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.LastMediaAccessState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
@@ -26,7 +27,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.home.HomeFragmentAction.RecentTabsChange
@@ -115,10 +115,12 @@ class RecentTabsListFeatureTest {
         assertEquals(1, homeStore.state.recentTabs.size)
     }
 
-    @Ignore("Temporarily disabled. See #20402.")
     @Test
     fun `GIVEN a valid inProgressMediaTabId and another selected tab exists WHEN the feature starts THEN dispatch both as as a recent tabs list`() {
-        val mediaTab = createTab("https://mozilla.com", id = "42", lastMediaAccess = 123)
+        val mediaTab = createTab(
+            url = "https://mozilla.com", id = "42",
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 123)
+        )
         val selectedTab = createTab("https://mozilla.com", id = "43")
         val browserStore = BrowserStore(BrowserState(
             tabs = listOf(mediaTab, selectedTab),
@@ -139,7 +141,10 @@ class RecentTabsListFeatureTest {
 
     @Test
     fun `GIVEN a valid inProgressMediaTabId exists and that is the selected tab WHEN the feature starts THEN dispatch just one tab as the recent tabs list`() {
-        val selectedMediaTab = createTab("https://mozilla.com", id = "42", lastMediaAccess = 123)
+        val selectedMediaTab = createTab(
+            "https://mozilla.com", id = "42",
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 123)
+        )
         val browserStore = BrowserStore(BrowserState(
             tabs = listOf(selectedMediaTab),
             selectedTabId = "42"
@@ -193,11 +198,16 @@ class RecentTabsListFeatureTest {
         assertEquals(tab2, homeStore.state.recentTabs[0])
     }
 
-    @Ignore("Temporarily disabled. See #20402.")
     @Test
     fun `WHEN the browser state has an in progress media tab THEN dispatch the new recent tab list`() {
-        val initialMediaTab = createTab(url = "https://mozilla.com", id = "1", lastMediaAccess = 123)
-        val newMediaTab = createTab(url = "http://mozilla.org", id = "2", lastMediaAccess = 100)
+        val initialMediaTab = createTab(
+            url = "https://mozilla.com", id = "1",
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 123)
+        )
+        val newMediaTab = createTab(
+            url = "http://mozilla.org", id = "2",
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 100)
+        )
         val browserStore = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(initialMediaTab, newMediaTab),
@@ -222,10 +232,15 @@ class RecentTabsListFeatureTest {
         assertEquals(2, homeStore.state.recentTabs.size)
         assertEquals(initialMediaTab, homeStore.state.recentTabs[0])
         // UpdateMediaPlaybackStateAction would set the current timestamp as the new value for lastMediaAccess
-        val updatedLastMediaAccess = homeStore.state.recentTabs[1].lastMediaAccess
+        val updatedLastMediaAccess = homeStore.state.recentTabs[1].lastMediaAccessState.lastMediaAccess
         assertTrue("expected lastMediaAccess ($updatedLastMediaAccess) > 100", updatedLastMediaAccess > 100)
+        assertEquals("http://mozilla.org", homeStore.state.recentTabs[1].lastMediaAccessState.lastMediaUrl)
         // Check that the media tab is updated ignoring just the lastMediaAccess property.
-        assertEquals(newMediaTab, homeStore.state.recentTabs[1].copy(lastMediaAccess = 100))
+        assertEquals(
+            newMediaTab, homeStore.state.recentTabs[1].copy(
+                lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 100)
+            )
+        )
     }
 
     @Test

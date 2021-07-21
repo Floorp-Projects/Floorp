@@ -6,17 +6,20 @@ package org.mozilla.fenix.ext
 
 import io.mockk.mockk
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.LastMediaAccessState
 import mozilla.components.browser.state.state.createTab
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Ignore
 import org.junit.Test
 
 class BrowserStateTest {
 
     @Test
     fun `GIVEN a tab which had media playing WHEN inProgressMediaTab is called THEN return that tab`() {
-        val inProgressMediaTab = createTab(url = "mediaUrl", id = "2", lastMediaAccess = 123)
+        val inProgressMediaTab = createTab(
+            url = "mediaUrl", id = "2",
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 123, true)
+        )
         val browserState = BrowserState(
             tabs = listOf(mockk(relaxed = true), inProgressMediaTab, mockk(relaxed = true))
         )
@@ -27,17 +30,17 @@ class BrowserStateTest {
     @Test
     fun `GIVEN no tab which had media playing exists WHEN inProgressMediaTab is called THEN return null`() {
         val browserState = BrowserState(
-            tabs = listOf(mockk(relaxed = true), mockk(relaxed = true), mockk(relaxed = true))
+            tabs = listOf(createTab("tab1"), createTab("tab2"), createTab("tab3"))
         )
 
         assertNull(browserState.inProgressMediaTab)
     }
 
     @Test
-    fun `GIVEN the selected tab is a normal tab and no media tab WHEN asRecentTabs is called THEN return a list of that tab`() {
+    fun `GIVEN the selected tab is a normal tab and no media tab exists WHEN asRecentTabs is called THEN return a list of that tab`() {
         val selectedTab = createTab(url = "url", id = "3")
         val browserState = BrowserState(
-            tabs = listOf(mockk(relaxed = true), selectedTab, mockk(relaxed = true)),
+            tabs = listOf(createTab("tab1"), selectedTab, createTab("tab3")),
             selectedTabId = selectedTab.id
         )
 
@@ -48,11 +51,15 @@ class BrowserStateTest {
     }
 
     @Test
-    fun `GIVEN the selected tab is a private tab and no media tab WHEN asRecentTabs is called THEN return a list of the last accessed normal tab`() {
+    fun `GIVEN the selected tab is a private tab and no media tab exists WHEN asRecentTabs is called THEN return a list of the last accessed normal tab`() {
         val selectedPrivateTab = createTab(url = "url", id = "1", lastAccess = 1, private = true)
         val lastAccessedNormalTab = createTab(url = "url2", id = "2", lastAccess = 2)
         val browserState = BrowserState(
-            tabs = listOf(mockk(relaxed = true), lastAccessedNormalTab, selectedPrivateTab),
+            tabs = listOf(
+                createTab("https://mozilla.org"),
+                lastAccessedNormalTab,
+                selectedPrivateTab
+            ),
             selectedTabId = selectedPrivateTab.id
         )
 
@@ -62,11 +69,13 @@ class BrowserStateTest {
         assertEquals(lastAccessedNormalTab, result[0])
     }
 
-    @Ignore("Temporarily disabled. See #20402.")
     @Test
     fun `GIVEN the selected tab is a normal tab and another media tab exists WHEN asRecentTabs is called THEN return a list of these tabs`() {
         val selectedTab = createTab(url = "url", id = "3")
-        val mediaTab = createTab("mediaUrl", id = "23", lastMediaAccess = 123)
+        val mediaTab = createTab(
+            "mediaUrl", id = "23",
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 123, true)
+        )
         val browserState = BrowserState(
             tabs = listOf(mockk(relaxed = true), selectedTab, mediaTab),
             selectedTabId = selectedTab.id
@@ -79,14 +88,21 @@ class BrowserStateTest {
         assertEquals(mediaTab, result[1])
     }
 
-    @Ignore("Temporarily disabled. See #20402.")
     @Test
     fun `GIVEN the selected tab is a private tab and another media tab exists WHEN asRecentTabs is called THEN return a list of the last normal tab and the media tab`() {
         val lastAccessedNormalTab = createTab(url = "url2", id = "2", lastAccess = 2)
         val selectedPrivateTab = createTab(url = "url", id = "1", lastAccess = 1, private = true)
-        val mediaTab = createTab("mediaUrl", id = "12", lastAccess = 0, lastMediaAccess = 123)
+        val mediaTab = createTab(
+            "mediaUrl", id = "12", lastAccess = 0,
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 123, true)
+        )
         val browserState = BrowserState(
-            tabs = listOf(mockk(relaxed = true), lastAccessedNormalTab, selectedPrivateTab, mediaTab),
+            tabs = listOf(
+                mockk(relaxed = true),
+                lastAccessedNormalTab,
+                selectedPrivateTab,
+                mediaTab
+            ),
             selectedTabId = selectedPrivateTab.id
         )
 
@@ -101,7 +117,10 @@ class BrowserStateTest {
     fun `GIVEN the selected tab is a private tab and the media tab is the last accessed normal tab WHEN asRecentTabs is called THEN a list of the media tab`() {
         val selectedPrivateTab = createTab(url = "url", id = "1", lastAccess = 1, private = true)
         val normalTab = createTab(url = "url2", id = "2", lastAccess = 2)
-        val mediaTab = createTab("mediaUrl", id = "12", lastAccess = 20, lastMediaAccess = 123)
+        val mediaTab = createTab(
+            "mediaUrl", id = "12", lastAccess = 20,
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 123, true)
+        )
         val browserState = BrowserState(
             tabs = listOf(mockk(relaxed = true), normalTab, selectedPrivateTab, mediaTab),
             selectedTabId = selectedPrivateTab.id

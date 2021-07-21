@@ -8,6 +8,7 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.selectedNormalTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.feature.tabs.ext.hasMediaPlayed
 
 /**
  * Get the last opened normal tab and the last tab with in progress media, if available.
@@ -19,12 +20,11 @@ fun BrowserState.asRecentTabs(): List<TabSessionState> {
     return mutableListOf<TabSessionState>().apply {
         val lastOpenedNormalTab = lastOpenedNormalTab
         lastOpenedNormalTab?.let { add(it) }
-        // disabled to avoid a nightly crash in #20402
-//        inProgressMediaTab
-//            ?.takeUnless { it == lastOpenedNormalTab }
-//            ?.let {
-//                add(it)
-//            }
+        inProgressMediaTab
+            ?.takeUnless { it == lastOpenedNormalTab }
+            ?.let {
+                add(it)
+            }
     }
 }
 
@@ -40,5 +40,5 @@ val BrowserState.lastOpenedNormalTab: TabSessionState?
  */
 val BrowserState.inProgressMediaTab: TabSessionState?
     get() = normalTabs
-        .filter { it.lastMediaAccess > 0 }
-        .maxByOrNull { it.lastMediaAccess }
+        .filter { it.hasMediaPlayed() }
+        .maxByOrNull { it.lastMediaAccessState.lastMediaAccess }
