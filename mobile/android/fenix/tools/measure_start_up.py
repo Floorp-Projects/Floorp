@@ -53,14 +53,15 @@ Measurements to first frame are a reimplementation of
 https://medium.com/androiddevelopers/testing-app-startup-performance-36169c27ee55
 
 See https://wiki.mozilla.org/Performance/Fenix#Terminology for descriptions of cold/warm/hot and main/view""".format(
-    cold_main_ff=TEST_COLD_MAIN_FF, cold_main_restore=TEST_COLD_MAIN_RESTORE,
-    cold_view_ff=TEST_COLD_VIEW_FF, cold_view_nav_start=TEST_COLD_VIEW_NAV_START,
-))
+            cold_main_ff=TEST_COLD_MAIN_FF, cold_main_restore=TEST_COLD_MAIN_RESTORE,
+            cold_view_ff=TEST_COLD_VIEW_FF, cold_view_nav_start=TEST_COLD_VIEW_NAV_START,
+        ))
     parser.add_argument("path", help="the path to save the measurement results; will abort if file exists")
 
     parser.add_argument("-c", "--iter-count", default=DEFAULT_ITER_COUNT, type=int,
                         help="the number of iterations to run. defaults to {}".format(DEFAULT_ITER_COUNT))
-    parser.add_argument("-f", "--force", action="store_true", help="overwrite the given path rather than stopping on file existence")
+    parser.add_argument("-f", "--force", action="store_true",
+                        help="overwrite the given path rather than stopping on file existence")
 
     return parser.parse_args()
 
@@ -112,7 +113,7 @@ def measure(test_name, pkg_id, start_cmd_args, iter_count):
     # After an (re)installation, we've observed the app starts up more slowly than subsequent runs.
     # As such, we start it once beforehand to let it settle.
     force_stop(pkg_id)
-    subprocess.run(start_cmd_args, check=True, capture_output=True)  # capture_output so it doesn't print to the console.
+    subprocess.run(start_cmd_args, check=True, capture_output=True)  # capture_output so no print to stdout.
     time.sleep(5)  # To hopefully reach visual completeness.
 
     measurements = []
@@ -137,7 +138,6 @@ def get_measurement(test_name, pkg_id, stdout):
         time.sleep(4)  # We must sleep until the navigation start event occurs.
         proc = subprocess.run(['adb', 'logcat', '-d'], check=True, capture_output=True)
         measurement = get_measurement_from_nav_start_logcat(pkg_id, proc.stdout)
-    else: raise NotImplementedError('method unexpectedly undefined for test_name {}'.format(test_name))
     return measurement
 
 
@@ -162,8 +162,8 @@ def get_measurement_from_am_start_log(stdout):
 
 def get_measurement_from_nav_start_logcat(pkg_id, logcat_bytes):
     # Relevant lines:
-    # 05-18 14:32:47.366  1759  6003 I ActivityManager: START u0 {act=android.intent.action.VIEW dat=https://example.com/... typ=text/html flg=0x10000000 cmp=org.mozilla.fenix/.IntentReceiverActivity} from uid 2000
-    # 05-18 14:32:47.402  1759  6003 I ActivityManager: Start proc 9007:org.mozilla.fenix/u0a170 for activity org.mozilla.fenix/.IntentReceiverActivity
+    # 05-18 14:32:47.366  1759  6003 I ActivityManager: START u0 {act=android.intent.action.VIEW dat=https://example.com/... typ=text/html flg=0x10000000 cmp=org.mozilla.fenix/.IntentReceiverActivity} from uid 2000  # noqa
+    # 05-18 14:32:47.402  1759  6003 I ActivityManager: Start proc 9007:org.mozilla.fenix/u0a170 for activity org.mozilla.fenix/.IntentReceiverActivity  # noqa
     # 05-18 14:32:50.809  9007  9007 I GeckoSession: handleMessage GeckoView:PageStart uri=
     # 05-18 14:32:50.821  9007  9007 I GeckoSession: handleMessage GeckoView:PageStop uri=null
     def line_to_datetime(line):
@@ -175,7 +175,7 @@ def get_measurement_from_nav_start_logcat(pkg_id, logcat_bytes):
     def get_proc_start_datetime():
         # This regex may not work on older versions of Android: we don't care
         # yet because supporting older versions isn't in our requirements.
-        proc_start_re = re.compile('ActivityManager: Start proc \d+:{}/'.format(pkg_id))
+        proc_start_re = re.compile(r'ActivityManager: Start proc \d+:{}/'.format(pkg_id))
         proc_start_lines = [line for line in lines if proc_start_re.search(line)]
         assert len(proc_start_lines) == 1
         return line_to_datetime(proc_start_lines[0])
@@ -183,7 +183,7 @@ def get_measurement_from_nav_start_logcat(pkg_id, logcat_bytes):
     def get_page_start_datetime():
         page_start_re = re.compile('GeckoSession: handleMessage GeckoView:PageStart uri=')
         page_start_lines = [line for line in lines if page_start_re.search(line)]
-        assert len(page_start_lines) == 2, 'found len=' + str(len(page_start_lines))  # One for about:blank & one for target URL.
+        assert len(page_start_lines) == 2, 'found len=' + str(len(page_start_lines))  # Lines: about:blank & target URL.
         return line_to_datetime(page_start_lines[1])  # 2nd PageStart is for target URL.
 
     logcat = logcat_bytes.decode('UTF-8')  # Easier to work with and must for strptime.
@@ -194,7 +194,9 @@ def get_measurement_from_nav_start_logcat(pkg_id, logcat_bytes):
     # before our process starts. If we wanted to put in more time, we could
     # double-check this assumption by seeing what values `am start -W` returns
     # compared to the time stamps.
-    elapsed_seconds = (get_page_start_datetime() - get_proc_start_datetime()).total_seconds()  # values < 1s are expressed in decimal.
+    #
+    # For total_seconds(), values < 1s are expressed in decimal (e.g. .001 is 1ms).
+    elapsed_seconds = (get_page_start_datetime() - get_proc_start_datetime()).total_seconds()
     elapsed_millis = round(elapsed_seconds * 1000)
     return elapsed_millis
 
