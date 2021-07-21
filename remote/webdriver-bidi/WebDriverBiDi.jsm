@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
+  WebDriverNewSessionHandler:
+    "chrome://remote/content/webdriver-bidi/NewSessionHandler.jsm",
   WebDriverSession: "chrome://remote/content/shared/webdriver/Session.jsm",
 });
 
@@ -39,6 +41,7 @@ class WebDriverBiDi {
     this._running = false;
 
     this._session = null;
+    this._sessionlessConnections = new Set();
   }
 
   get address() {
@@ -50,11 +53,25 @@ class WebDriverBiDi {
   }
 
   /**
+   * Add a new connection that is not yet attached to a WebDriver session.
+   *
+   * @param {WebDriverBiDiConnection} connection
+   *     The connection without an accociated WebDriver session.
+   */
+  addSessionlessConnection(connection) {
+    this._sessionlessConnections.add(connection);
+  }
+
+  /**
    * Create a new WebDriver session.
    *
    * @param {Object.<string, *>=} capabilities
    *     JSON Object containing any of the recognised capabilities as listed
    *     on the `WebDriverSession` class.
+   *
+   * @param {WebDriverBiDiConnection=} sessionlessConnection
+   *     Optional connection that is not yet accociated with a WebDriver
+   *     session, and has to be associated with the new WebDriver session.
    *
    * @return {Object<String, Capabilities>}
    *     Object containing the current session ID, and all its capabilities.
@@ -62,23 +79,31 @@ class WebDriverBiDi {
    * @throws {SessionNotCreatedError}
    *     If, for whatever reason, a session could not be created.
    */
-  createSession(capabilities) {
+  createSession(capabilities, sessionlessConnection) {
     if (this.session) {
       throw new error.SessionNotCreatedError(
         "Maximum number of active sessions"
       );
     }
 
-    this._session = new WebDriverSession(capabilities);
+    this._session = new WebDriverSession(capabilities, sessionlessConnection);
 
     // When the Remote Agent is listening, and a BiDi WebSocket connection
     // has been requested, register a path handler for the session.
     let webSocketUrl = null;
-    if (this.agent.listening && this.session.capabilities.get("webSocketUrl")) {
+    if (
+      this.agent.listening &&
+      (this.session.capabilities.get("webSocketUrl") || sessionlessConnection)
+    ) {
       this.agent.server.registerPathHandler(this.session.path, this.session);
       webSocketUrl = `${this.address}${this.session.path}`;
 
       logger.debug(`Registered session handler: ${this.session.path}`);
+
+      if (sessionlessConnection) {
+        // Remove temporary session-less connection
+        this._sessionlessConnections.delete(sessionlessConnection);
+      }
     }
 
     // Also update the webSocketUrl capability to contain the session URL if
@@ -120,6 +145,12 @@ class WebDriverBiDi {
 
     this._running = true;
 
+    // Install a HTTP handler for direct WebDriver BiDi connection requests.
+    this.agent.server.registerPathHandler(
+      "/session",
+      new WebDriverNewSessionHandler(this)
+    );
+
     Services.obs.notifyObservers(
       null,
       "remote-listening",
@@ -137,6 +168,12 @@ class WebDriverBiDi {
 
     try {
       this.deleteSession();
+
+      this.agent.server.registerPathHandler("/session", null);
+
+      // Close all open session-less connections
+      this._sessionlessConnections.forEach(connection => connection.close());
+      this._sessionlessConnections.clear();
     } finally {
       this._running = false;
     }
