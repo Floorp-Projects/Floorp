@@ -49,17 +49,6 @@ FINAL_TARGET_FILES.features["screenshots@mozilla.org"]["experiments"][
     "screenshots"
 ] += ["experiments/screenshots/api.js", "experiments/screenshots/schema.json"]
 
-FINAL_TARGET_FILES.features["screenshots@mozilla.org"]["icons"] += [
-    "icons/cancel.svg",
-    "icons/copied-notification.svg",
-    "icons/copy.svg",
-    "icons/download-white.svg",
-    "icons/download.svg",
-    "icons/icon-welcome-face-without-eyes.svg",
-    "icons/menu-fullpage.svg",
-    "icons/menu-visible.svg",
-]
-
 FINAL_TARGET_FILES.features["screenshots@mozilla.org"]["selector"] += [
     "selector/callBackground.js",
     "selector/documentMetadata.js",
