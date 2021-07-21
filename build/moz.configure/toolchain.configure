@@ -943,7 +943,7 @@ def sysroot_path(host_or_target):
 
     sysroot_input = depends(opt, when=when)(lambda x: x)
     bootstrap_sysroot = depends(bootstrap_when, sysroot_input)(
-        lambda bootstrap, input: bootstrap and not input and input.origin == "default"
+        lambda bootstrap, input: bootstrap and not input
     )
 
     @depends(
@@ -951,22 +951,14 @@ def sysroot_path(host_or_target):
         bootstrap_path(
             depends(host_or_target)(lambda t: "sysroot-{}".format(t.toolchain)),
             when=bootstrap_sysroot,
-        ),
-        "--enable-bootstrap",
-        "MOZ_AUTOMATION",
+        )
     )
-    def sysroot_path(sysroot_input, path, bootstrap, automation):
-        bootstrapped = False
+    def sysroot_path(sysroot_input, path):
         if sysroot_input:
             path = sysroot_input[0]
-        elif sysroot_input is not None and sysroot_input.origin != "default":
-            return
-        elif bootstrap or automation:
-            bootstrapped = True
-        if sysroot_input or bootstrapped:
-            if path:
-                log.info("Using %s sysroot in %s", host_or_target_str, path)
-            return namespace(path=path, bootstrapped=bootstrapped)
+        if path:
+            log.info("Using %s sysroot in %s", host_or_target_str, path)
+        return namespace(path=path, bootstrapped=bool(sysroot_input))
 
     return sysroot_path
 
