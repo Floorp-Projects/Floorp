@@ -13,7 +13,7 @@ use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, ZBufferIdGenerator};
 use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter};
-use crate::picture::{DirtyRegion, PictureUpdateState, SliceId, TileCacheInstance};
+use crate::picture::{DirtyRegion, SliceId, TileCacheInstance};
 use crate::picture::{SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX, SurfaceRenderTasks, SubSliceIndex};
 use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger, RasterConfig, PictureCompositeMode};
 use crate::prepare::prepare_primitives;
@@ -366,26 +366,24 @@ impl FrameBuilder {
         let mut surfaces = scratch.frame.surfaces.take();
         surfaces.push(root_surface);
 
-        // The first major pass of building a frame is to walk the picture
-        // tree. This pass must be quick (it should never touch individual
-        // primitives). For now, all we do here is determine which pictures
-        // will create surfaces. In the future, this will be expanded to
-        // set up render tasks, determine scaling of surfaces, and detect
-        // which surfaces have valid cached surfaces that don't need to
-        // be rendered this frame.
-        for pic_index in &scene.tile_cache_pictures {
-            PictureUpdateState::update_all(
-                &mut scratch.picture,
-                &mut surfaces,
-                *pic_index,
-                &mut scene.prim_store.pictures,
-                &frame_context,
-                gpu_cache,
-                &scene.clip_store,
-                data_stores,
-                tile_caches,
-            );
-        }
+        scene.picture_graph.build_update_passes(
+            &mut scene.prim_store.pictures,
+            &frame_context,
+        );
+
+        scene.picture_graph.assign_surfaces(
+            &mut scene.prim_store.pictures,
+            &mut surfaces,
+            tile_caches,
+            &frame_context,
+        );
+
+        scene.picture_graph.propagate_bounding_rects(
+            &mut scene.prim_store.pictures,
+            &mut surfaces,
+            &frame_context,
+            data_stores,
+        );
 
         {
             profile_scope!("UpdateVisibility");
