@@ -58,7 +58,7 @@ class AsyncLogger {
     // event in microseconds. Else, the value is not used.
     uint32_t mDurationUs;
     // The thread on which this tracepoint was gathered.
-    int mTID;
+    ProfilerThreadId mTID;
     // An arbitrary string, usually containing a function signature or a
     // recognizable tag of some sort, to be displayed when analyzing the
     // profile.

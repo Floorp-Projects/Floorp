@@ -128,8 +128,8 @@ class ProfiledThreadData final {
 // Stream all samples and markers from aBuffer with the given aThreadId (or 0
 // for everything, which is assumed to be a single backtrace sample.)
 // Returns the thread id of the output sample(s), or 0 if none was present.
-int StreamSamplesAndMarkers(
-    const char* aName, int aThreadId, const ProfileBuffer& aBuffer,
+ProfilerThreadId StreamSamplesAndMarkers(
+    const char* aName, ProfilerThreadId aThreadId, const ProfileBuffer& aBuffer,
     mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
     const nsACString& aProcessName, const nsACString& aETLDplus1,
     const mozilla::TimeStamp& aProcessStartTime,

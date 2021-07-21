@@ -47,7 +47,7 @@ void ProfilerScreenshots::SubmitScreenshot(
     return;
   }
 
-  int sourceThread = profiler_current_thread_id();
+  ProfilerThreadId sourceThread = profiler_current_thread_id();
   uintptr_t windowIdentifier = aWindowIdentifier;
   IntSize originalSize = aOriginalSize;
   IntSize scaledSize = aScaledSize;

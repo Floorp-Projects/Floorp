@@ -83,7 +83,7 @@ struct PlatformDataDestructor {
 
 typedef mozilla::UniquePtr<PlatformData, PlatformDataDestructor>
     UniquePlatformData;
-UniquePlatformData AllocPlatformData(int aThreadId);
+UniquePlatformData AllocPlatformData(ProfilerThreadId aThreadId);
 
 namespace mozilla {
 class JSONWriter;

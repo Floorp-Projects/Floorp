@@ -38,14 +38,15 @@ ProfilerProcessId profiler_current_process_id() {
   return ProfilerProcessId::FromNumber(getpid());
 }
 
-int profiler_current_thread_id() {
+ProfilerThreadId profiler_current_thread_id() {
   uint64_t tid;
   pthread_threadid_np(nullptr, &tid);
-  // Cast the uint64_t value to an int.
+  // Cast the uint64_t value to NumberType, which is an int.
   // In theory, this risks truncating the value. It's unknown if such large
   // values occur in reality.
   // It may be worth changing our cross-platform tid type to 64 bits.
-  return static_cast<int>(tid);
+  return ProfilerThreadId::FromNumber(
+      static_cast<ProfilerThreadId::NumberType>(tid));
 }
 
 void* GetStackTop(void* aGuess) {
@@ -55,7 +56,8 @@ void* GetStackTop(void* aGuess) {
 
 class PlatformData {
  public:
-  explicit PlatformData(int aThreadId) : mProfiledThread(mach_thread_self()) {
+  explicit PlatformData(ProfilerThreadId aThreadId)
+      : mProfiledThread(mach_thread_self()) {
     MOZ_COUNT_CTOR(PlatformData);
   }
 

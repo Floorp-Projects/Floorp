@@ -47,12 +47,12 @@ uint64_t ProfileBuffer::AddEntry(const ProfileBufferEntry& aEntry) {
 
 /* static */
 ProfileBufferBlockIndex ProfileBuffer::AddThreadIdEntry(
-    ProfileChunkedBuffer& aProfileChunkedBuffer, int aThreadId) {
+    ProfileChunkedBuffer& aProfileChunkedBuffer, ProfilerThreadId aThreadId) {
   return AddEntry(aProfileChunkedBuffer,
-                  ProfileBufferEntry::ThreadId(aThreadId));
+                  ProfileBufferEntry::ThreadId(aThreadId.ToNumber()));
 }
 
-uint64_t ProfileBuffer::AddThreadIdEntry(int aThreadId) {
+uint64_t ProfileBuffer::AddThreadIdEntry(ProfilerThreadId aThreadId) {
   return AddThreadIdEntry(mEntries, aThreadId).ConvertToProfileBufferIndex();
 }
 

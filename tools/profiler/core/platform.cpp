@@ -188,7 +188,7 @@ LazyLogModule gProfilerLog("prof");
 namespace mozilla::profiler::detail {
 // Statically initialized to 0, then set once from profiler_init(), which should
 // be called from the main thread before any other use of the profiler.
-int scProfilerMainThreadId;
+ProfilerThreadId scProfilerMainThreadId;
 }  // namespace mozilla::profiler::detail
 
 #if defined(GP_OS_android)
@@ -1604,7 +1604,8 @@ void AutoProfilerLabel::ProfilingStackOwnerTLS::Init() {
 void ProfilingStackOwner::DumpStackAndCrash() const {
   fprintf(stderr,
           "ProfilingStackOwner::DumpStackAndCrash() thread id: %d, size: %u\n",
-          profiler_current_thread_id(), unsigned(mProfilingStack.stackSize()));
+          int(profiler_current_thread_id().ToNumber()),
+          unsigned(mProfilingStack.stackSize()));
   js::ProfilingStackFrame* allFrames = mProfilingStack.frames;
   for (uint32_t i = 0; i < mProfilingStack.stackSize(); i++) {
     js::ProfilingStackFrame& frame = allFrames[i];
@@ -2926,7 +2927,7 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
 
   // Pass the samples
   // FIXME(bug 1618560): We are currently only profiling the Android UI thread.
-  constexpr int threadId = 0;
+  constexpr ProfilerThreadId threadId;
   int sampleId = 0;
   while (true) {
     // Gets the data from the Android UI thread only.
@@ -3089,8 +3090,9 @@ static void locked_profiler_stream_json_for_this_process(
       // tid that doesn't conflict with it for the Java side. So we just use 0.
       // Once we add support for profiling of other java threads, we'll have to
       // get their thread id and name via JNI.
-      RefPtr<ThreadInfo> threadInfo = new ThreadInfo(
-          "AndroidUI (JVM)", 0, false, CorePS::ProcessStartTime());
+      RefPtr<ThreadInfo> threadInfo =
+          new ThreadInfo("AndroidUI (JVM)", ProfilerThreadId{}, false,
+                         CorePS::ProcessStartTime());
       ProfiledThreadData profiledThreadData(threadInfo, nullptr);
       profiledThreadData.StreamJSON(
           javaBuffer, nullptr, aWriter, CorePS::ProcessName(aLock),
@@ -3349,7 +3351,7 @@ class Sampler {
 
   // The sampler thread's ID.  Used to assert that it is not sampling itself,
   // which would lead to deadlock.
-  int mSamplerTid;
+  ProfilerThreadId mSamplerTid;
 
  public:
   // This is the one-and-only variable used to communicate between the sampler
@@ -4079,7 +4081,7 @@ void SamplerThread::Run() {
 #  error "bad platform"
 #endif
 
-UniquePlatformData AllocPlatformData(int aThreadId) {
+UniquePlatformData AllocPlatformData(ProfilerThreadId aThreadId) {
   return UniquePlatformData(new PlatformData(aThreadId));
 }
 
@@ -4970,7 +4972,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   bool isMainThreadBeingProfiled = false;
 #endif
-  int tid = profiler_current_thread_id();
+  ProfilerThreadId tid = profiler_current_thread_id();
   const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
       CorePS::RegisteredThreads(aLock);
   for (auto& registeredThread : registeredThreads) {
@@ -5175,7 +5177,7 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   RegisterProfilerLabelEnterExit(nullptr, nullptr);
 
   // Stop sampling live threads.
-  int tid = profiler_current_thread_id();
+  ProfilerThreadId tid = profiler_current_thread_id();
   const Vector<LiveProfiledThreadData>& liveProfiledThreads =
       ActivePS::LiveProfiledThreads(aLock);
   for (auto& thread : liveProfiledThreads) {
@@ -5476,12 +5478,13 @@ ProfilingStack* profiler_register_thread(const char* aName,
         thread->Info()->ThreadId() == profiler_current_thread_id(),
         "Thread being re-registered has changed its TID");
     LOG("profiler_register_thread(%s) - thread %d already registered as %s",
-        aName, profiler_current_thread_id(), thread->Info()->Name());
+        aName, int(profiler_current_thread_id().ToNumber()),
+        thread->Info()->Name());
     // TODO: Use new name. This is currently not possible because the
     // RegisteredThread's ThreadInfo cannot be changed.
     // In the meantime, we record a marker that could be used in the frontend.
     nsCString text("Thread ");
-    text.AppendInt(profiler_current_thread_id());
+    text.AppendInt(profiler_current_thread_id().ToNumber());
     text.AppendLiteral(" \"");
     text.AppendASCII(thread->Info()->Name());
     text.AppendLiteral("\" attempted to re-register as \"");
@@ -5559,15 +5562,15 @@ void profiler_unregister_thread() {
     // - We've already called profiler_unregister_thread() for this thread.
     //   (Whether or not it should, this does happen in practice.)
     LOG("profiler_unregister_thread() - thread %d already unregistered",
-        profiler_current_thread_id());
+        int(profiler_current_thread_id().ToNumber()));
     // We cannot record a marker on this thread because it was already
     // unregistered. Send it to the main thread (unless this *is* already the
     // main thread, which has been unregistered); this may be useful to catch
     // mismatched register/unregister pairs in Firefox.
-    if (int tid = profiler_current_thread_id();
+    if (ProfilerThreadId tid = profiler_current_thread_id();
         tid != profiler_main_thread_id()) {
       nsCString threadIdString;
-      threadIdString.AppendInt(tid);
+      threadIdString.AppendInt(tid.ToNumber());
       PROFILER_MARKER_TEXT("profiler_unregister_thread again", OTHER_Profiling,
                            MarkerThreadId::MainThread(), threadIdString);
     }
@@ -5885,12 +5888,13 @@ void profiler_clear_js_context() {
 // NOTE: aCollector's methods will be called while the target thread is paused.
 // Doing things in those methods like allocating -- which may try to claim
 // locks -- is a surefire way to deadlock.
-void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
+void profiler_suspend_and_sample_thread(ProfilerThreadId aThreadId,
+                                        uint32_t aFeatures,
                                         ProfilerStackCollector& aCollector,
                                         bool aSampleNative /* = true */) {
   const bool isSynchronous = [&aThreadId]() {
-    const int currentThreadId = profiler_current_thread_id();
-    if (aThreadId == 0) {
+    const ProfilerThreadId currentThreadId = profiler_current_thread_id();
+    if (!aThreadId.IsSpecified()) {
       aThreadId = currentThreadId;
       return true;
     }

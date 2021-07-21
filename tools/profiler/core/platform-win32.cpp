@@ -40,10 +40,11 @@ ProfilerProcessId profiler_current_process_id() {
   return ProfilerProcessId::FromNumber(_getpid());
 }
 
-int profiler_current_thread_id() {
+ProfilerThreadId profiler_current_thread_id() {
   DWORD threadId = GetCurrentThreadId();
   MOZ_ASSERT(threadId <= INT32_MAX, "native thread ID is > INT32_MAX");
-  return int(threadId);
+  return ProfilerThreadId::FromNumber(
+      static_cast<ProfilerThreadId::NumberType>(threadId));
 }
 
 void* GetStackTop(void* aGuess) {
@@ -91,9 +92,9 @@ class PlatformData {
   // Get a handle to the calling thread. This is the thread that we are
   // going to profile. We need a real handle because we are going to use it in
   // the sampler thread.
-  explicit PlatformData(int aThreadId)
+  explicit PlatformData(ProfilerThreadId aThreadId)
       : mProfiledThread(GetRealCurrentThreadHandleForProfiling()) {
-    MOZ_ASSERT(aThreadId == ::GetCurrentThreadId());
+    MOZ_ASSERT(aThreadId == profiler_current_thread_id());
     MOZ_COUNT_CTOR(PlatformData);
   }
 

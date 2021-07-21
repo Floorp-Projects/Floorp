@@ -83,7 +83,7 @@ class ThreadStackHelper : public ProfilerStackCollector {
   /**
    * Retrieve the thread's profiler thread ID.
    */
-  int GetThreadId() const { return mThreadId; }
+  ProfilerThreadId GetThreadId() const { return mThreadId; }
 
  protected:
   /**
@@ -101,7 +101,7 @@ class ThreadStackHelper : public ProfilerStackCollector {
   void TryAppendFrame(mozilla::HangEntry aFrame);
 
   // The profiler's unique thread identifier for the target thread.
-  int mThreadId;
+  ProfilerThreadId mThreadId;
 };
 
 }  // namespace mozilla

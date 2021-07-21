@@ -33,9 +33,9 @@ class AudioThreadRegistry final {
 
   // This is intended to be called when an object starts an audio callback
   // thread.
-  void Register(int aThreadId) {
-    if (aThreadId == 0) {
-      // profiler_current_thread_id returns 0 on unsupported platforms.
+  void Register(ProfilerThreadId aThreadId) {
+    if (!aThreadId.IsSpecified()) {
+      // profiler_current_thread_id is unspecified on unsupported platforms.
       return;
     }
 
@@ -54,9 +54,9 @@ class AudioThreadRegistry final {
   }
 
   // This is intended to be called when an object stops an audio callback thread
-  void Unregister(int aThreadId) {
-    if (aThreadId == 0) {
-      // profiler_current_thread_id returns 0 on unsupported platforms.
+  void Unregister(ProfilerThreadId aThreadId) {
+    if (!aThreadId.IsSpecified()) {
+      // profiler_current_thread_id is unspedified on unsupported platforms.
       return;
     }
 
@@ -83,7 +83,7 @@ class AudioThreadRegistry final {
   AudioThreadRegistry& operator=(AudioThreadRegistry&&) = delete;
 
   struct ThreadUserCount {
-    int mId;  // from profiler_current_thread_id
+    ProfilerThreadId mId;  // from profiler_current_thread_id
     int mUserCount;
   };
   DataMutex<nsTArray<ThreadUserCount>> mThreadIds;
