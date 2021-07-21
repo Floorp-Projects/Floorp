@@ -421,6 +421,17 @@ typedef enum JSGCParamKey {
    * This parameter is read-only.
    */
   JSGC_SYSTEM_PAGE_SIZE_KB = 47,
+
+  /**
+   * In an incremental GC, this determines the point at which to start
+   * increasing the slice budget and frequency of allocation triggered slices to
+   * try to avoid reaching the incremental limit and finishing the collection
+   * synchronously.
+   *
+   * The threshold is calculated by subtracting this value from the heap's
+   * incremental limit.
+   */
+  JSGC_URGENT_THRESHOLD_BYTES = 48,
 } JSGCParamKey;
 
 /*
