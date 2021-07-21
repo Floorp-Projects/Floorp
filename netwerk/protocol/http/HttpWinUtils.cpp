@@ -62,7 +62,7 @@ void AddWindowsSSO(nsHttpChannel* channel) {
   nsAutoCString host;
   uri->GetHost(host);
   bool addCookies = false;
-  if (host.Equals("login.live.com")) {
+  if (StringEndsWith(host, ".live.com"_ns)) {
     addCookies = true;
   }
 
