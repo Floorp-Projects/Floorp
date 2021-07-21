@@ -21,7 +21,6 @@
 
   --toolbarbutton-border-radius: 4px;
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
-  --toolbarbutton-icon-fill-opacity: 1;
 
   --panel-separator-color: ThreeDShadow;
 
