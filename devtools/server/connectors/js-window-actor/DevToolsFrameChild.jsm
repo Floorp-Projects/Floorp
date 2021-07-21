@@ -188,7 +188,12 @@ class DevToolsFrameChild extends JSWindowActorChild {
           return;
         }
 
-        this._createTargetActor(watcherActorID, connectionPrefix, watchedData);
+        this._createTargetActor({
+          watcherActorID,
+          parentConnectionPrefix: connectionPrefix,
+          watchedData,
+          isDocumentCreation: true,
+        });
       }
     }
   }
@@ -196,17 +201,26 @@ class DevToolsFrameChild extends JSWindowActorChild {
   /**
    * Instantiate a new WindowGlobalTarget for the given connection.
    *
-   * @param String watcherActorID
+   * @param Object options
+   * @param String options.watcherActorID
    *        The ID of the WatcherActor who requested to observe and create these target actors.
-   * @param String parentConnectionPrefix
+   * @param String options.parentConnectionPrefix
    *        The prefix of the DevToolsServerConnection of the Watcher Actor.
    *        This is used to compute a unique ID for the target actor.
-   * @param Object watchedData
+   * @param Object options.watchedData
    *        All data managed by the Watcher Actor and WatcherRegistry.jsm, containing
    *        target types, resources types to be listened as well as breakpoints and any
    *        other data meant to be shared across processes and threads.
+   * @param Boolean options.isDocumentCreation
+   *        Set to true if the function is called from `instantiate`, i.e. when we're
+   *        handling a new document being created.
    */
-  _createTargetActor(watcherActorID, parentConnectionPrefix, watchedData) {
+  _createTargetActor({
+    watcherActorID,
+    parentConnectionPrefix,
+    watchedData,
+    isDocumentCreation,
+  }) {
     if (this._connections.get(watcherActorID)) {
       throw new Error(
         "DevToolsFrameChild _createTargetActor was called more than once" +
@@ -269,7 +283,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       if (!Array.isArray(entries) || entries.length == 0) {
         continue;
       }
-      targetActor.addWatcherDataEntry(type, entries);
+      targetActor.addWatcherDataEntry(type, entries, isDocumentCreation);
     }
   }
 
@@ -414,11 +428,11 @@ class DevToolsFrameChild extends JSWindowActorChild {
       case "DevToolsFrameParent:instantiate-already-available": {
         const { watcherActorID, connectionPrefix, watchedData } = message.data;
 
-        return this._createTargetActor(
+        return this._createTargetActor({
           watcherActorID,
-          connectionPrefix,
-          watchedData
-        );
+          parentConnectionPrefix: connectionPrefix,
+          watchedData,
+        });
       }
       case "DevToolsFrameParent:destroy": {
         const { watcherActorID } = message.data;

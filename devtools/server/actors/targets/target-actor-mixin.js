@@ -41,8 +41,11 @@ module.exports = function(targetType, targetActorSpec, implementation) {
      *        The type of data to be added
      * @param Array<Object> entries
      *        The values to be added to this type of data
+     * @param Boolean isDocumentCreation
+     *        Set to true if this function is called just after a new document (and its
+     *        associated target) is created.
      */
-    async addWatcherDataEntry(type, entries) {
+    async addWatcherDataEntry(type, entries, isDocumentCreation = false) {
       if (type == RESOURCES) {
         await this._watchTargetResources(entries);
       } else if (type == BREAKPOINTS) {
@@ -79,7 +82,7 @@ module.exports = function(targetType, targetActorSpec, implementation) {
           for (const { key, value } of entries) {
             options[key] = value;
           }
-          this.updateTargetConfiguration(options);
+          this.updateTargetConfiguration(options, isDocumentCreation);
         }
       } else if (type == THREAD_CONFIGURATION) {
         if (typeof this.attach == "function") {
