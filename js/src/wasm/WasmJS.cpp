@@ -3585,7 +3585,9 @@ void WasmTagObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
-static bool IsTagObject(JSObject* obj) { return obj->is<WasmTagObject>(); }
+static bool IsTag(HandleValue v) {
+  return v.isObject() && v.toObject().is<WasmTagObject>();
+}
 
 bool WasmTagObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -3691,7 +3693,55 @@ const JSPropertySpec WasmTagObject::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "WebAssembly.Tag", JSPROP_READONLY),
     JS_PS_END};
 
-const JSFunctionSpec WasmTagObject::methods[] = {JS_FS_END};
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
+/* static */
+bool WasmTagObject::typeImpl(JSContext* cx, const CallArgs& args) {
+  RootedWasmTagObject tag(cx, &args.thisv().toObject().as<WasmTagObject>());
+  Rooted<IdValueVector> props(cx, IdValueVector(cx));
+
+  RootedArrayObject params(cx, NewDenseEmptyArray(cx));
+  if (!params) {
+    return false;
+  }
+
+  const wasm::ValTypeVector& valTypes = tag->valueTypes();
+  for (const ValType valType : valTypes) {
+    JSString* typeString = UTF8CharsToString(cx, ToString(valType).get());
+    if (!typeString) {
+      return false;
+    }
+    if (!NewbornArrayPush(cx, params, StringValue(typeString))) {
+      return false;
+    }
+  }
+
+  if (!props.append(IdValuePair(NameToId(cx->names().parameters),
+                                ObjectValue(*params)))) {
+    return false;
+  }
+
+  JSObject* tagType = NewPlainObjectWithProperties(
+      cx, props.begin(), props.length(), GenericObject);
+  if (!tagType) {
+    return false;
+  }
+
+  args.rval().setObject(*tagType);
+  return true;
+}
+
+/* static  */
+bool WasmTagObject::type(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsTag, typeImpl>(cx, args);
+}
+#endif
+
+const JSFunctionSpec WasmTagObject::methods[] = {
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
+    JS_FN("type", WasmTagObject::type, 0, JSPROP_ENUMERATE),
+#endif
+    JS_FS_END};
 
 const JSFunctionSpec WasmTagObject::static_methods[] = {JS_FS_END};
 
@@ -3767,7 +3817,7 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!args[0].isObject() || !IsTagObject(&args[0].toObject())) {
+  if (!IsTag(args[0])) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_EXN_ARG);
     return false;
@@ -3892,7 +3942,7 @@ bool WasmExceptionObject::isImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  if (!args[0].isObject() || !IsTagObject(&args[0].toObject())) {
+  if (!IsTag(args[0])) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_EXN_ARG);
     return false;
@@ -3919,7 +3969,7 @@ bool WasmExceptionObject::getArgImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  if (!args[0].isObject() || !IsTagObject(&args[0].toObject())) {
+  if (!IsTag(args[0])) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_EXN_ARG);
     return false;

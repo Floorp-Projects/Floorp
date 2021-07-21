@@ -499,6 +499,8 @@ class WasmTagObject : public NativeObject {
   static const ClassSpec classSpec_;
   static void finalize(JSFreeOp*, JSObject* obj);
   static void trace(JSTracer* trc, JSObject* obj);
+  static bool typeImpl(JSContext* cx, const CallArgs& args);
+  static bool type(JSContext* cx, unsigned argc, Value* vp);
 
  public:
   static const unsigned RESERVED_SLOTS = 2;
