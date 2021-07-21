@@ -5718,17 +5718,11 @@ class MPhi final : public MDefinition,
 
   // Assuming this phi is in a loop header with a unique loop entry, return
   // the phi operand along the loop entry.
-  MDefinition* getLoopPredecessorOperand() const {
-    assertLoopPhi();
-    return getOperand(0);
-  }
+  MDefinition* getLoopPredecessorOperand() const;
 
   // Assuming this phi is in a loop header with a unique loop entry, return
   // the phi operand along the loop backedge.
-  MDefinition* getLoopBackedgeOperand() const {
-    assertLoopPhi();
-    return getOperand(1);
-  }
+  MDefinition* getLoopBackedgeOperand() const;
 
   // Whether this phi's type already includes information for def.
   bool typeIncludes(MDefinition* def);
