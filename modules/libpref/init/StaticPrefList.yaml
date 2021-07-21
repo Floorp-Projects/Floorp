@@ -10445,6 +10445,12 @@
   value: false
   mirror: always
 
+#  Partition the websocket pending connection queue by OriginAttributes.
+- name: privacy.partition.network_state.ws_connection_queue
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The global switch to control the URL query sting stripping which strips query
 # parameters from loading URIs to prevent bounce (redirect) tracking.
 - name: privacy.query_stripping.enabled

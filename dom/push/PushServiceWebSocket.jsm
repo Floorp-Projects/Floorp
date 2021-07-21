@@ -537,7 +537,7 @@ var PushServiceWebSocket = {
     try {
       // Grab a wakelock before we open the socket to ensure we don't go to
       // sleep before connection the is opened.
-      this._ws.asyncOpen(uri, uri.spec, 0, this._wsListener, null);
+      this._ws.asyncOpen(uri, uri.spec, {}, 0, this._wsListener, null);
       this._currentState = STATE_WAITING_FOR_WS_START;
     } catch (e) {
       console.error(
