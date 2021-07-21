@@ -73,6 +73,66 @@ assertErrorMessage(
   /second argument must be an object/
 );
 
+// Test Exception methods.
+{
+  const exn1 = new WebAssembly.Exception(tag1, []);
+  assertEq(exn1.is(tag1), true);
+  assertEq(exn1.is(tag2), false);
+  assertErrorMessage(
+    () => exn1.is(),
+    TypeError,
+    /At least 1 argument required/
+  );
+  assertErrorMessage(
+    () => exn1.is(5),
+    TypeError,
+    /first argument must be a WebAssembly.Tag/
+  );
+
+  const exn2 = new WebAssembly.Exception(tag2, [3]);
+  assertEq(exn2.getArg(tag2, 0), 3);
+
+  assertEq(
+    new WebAssembly.Exception(tag2, [undefined]).getArg(tag2, 0),
+    0
+  );
+
+  const exn4 = new WebAssembly.Exception(tag4, [3, "foo", 4]);
+  assertEq(exn4.getArg(tag4, 0), 3);
+  assertEq(exn4.getArg(tag4, 1), "foo");
+  assertEq(exn4.getArg(tag4, 2), 4);
+
+  const exn5 = new WebAssembly.Exception(
+    tag5,
+    [3,
+    "foo",
+    4,
+    "bar"]
+  );
+  assertEq(exn5.getArg(tag5, 3), "bar");
+
+  assertErrorMessage(
+    () => exn2.getArg(),
+    TypeError,
+    /At least 2 arguments required/
+  );
+  assertErrorMessage(
+    () => exn2.getArg(5, 0),
+    TypeError,
+    /first argument must be a WebAssembly.Tag/
+  );
+  assertErrorMessage(
+    () => exn2.getArg(tag2, "foo"),
+    TypeError,
+    /bad Exception getArg index/
+  );
+  assertErrorMessage(
+    () => exn2.getArg(tag2, 10),
+    RangeError,
+    /bad Exception getArg index/
+  );
+}
+
 // Test throwing a JS constructed exception to Wasm.
 assertEq(
   wasmEvalText(

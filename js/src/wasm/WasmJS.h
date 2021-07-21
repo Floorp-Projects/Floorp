@@ -531,6 +531,11 @@ class WasmExceptionObject : public NativeObject {
   static const ClassSpec classSpec_;
   static void finalize(JSFreeOp*, JSObject* obj);
   static void trace(JSTracer* trc, JSObject* obj);
+  // Named isMethod instead of is to avoid name conflict.
+  static bool isMethod(JSContext* cx, unsigned argc, Value* vp);
+  static bool isImpl(JSContext* cx, const CallArgs& args);
+  static bool getArg(JSContext* cx, unsigned argc, Value* vp);
+  static bool getArgImpl(JSContext* cx, const CallArgs& args);
 
  public:
   static const unsigned RESERVED_SLOTS = 3;
@@ -548,6 +553,7 @@ class WasmExceptionObject : public NativeObject {
   bool isNewborn() const;
 
   wasm::ExceptionTag& tag() const;
+  ArrayBufferObject& values() const;
   ArrayObject& refs() const;
 
   static size_t offsetOfValues() {
