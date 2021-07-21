@@ -99,7 +99,6 @@
 #include "nsIHttpPushListener.h"
 #include "nsIX509Cert.h"
 #include "ScopedNSSTypes.h"
-#include "nsIDeprecationWarner.h"
 #include "nsIDNSRecord.h"
 #include "mozilla/dom/Document.h"
 #include "nsICompressConvStats.h"

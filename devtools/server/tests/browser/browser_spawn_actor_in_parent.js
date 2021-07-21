@@ -13,6 +13,15 @@ const ACTOR_URL =
 const { InContentFront, InParentFront } = require(ACTOR_URL);
 
 add_task(async function() {
+  // `spawnActorInParentProcess` is only used by `WebConsoleActor.startListeners(NetworkActivity)` via `spawnInParent`.
+  // VsCode adapter isn't using this, but may be some important other tool is?
+  //
+  // WebConsoleActor.startListeners(NetworkActivity) is still called from:
+  // * legacy network event listener (should only be used by the non-multiprocess browser toolbox)
+  // * responsive actor (https://searchfox.org/mozilla-central/rev/699174544b058f13f02e7586b3c8fdbf438f084b/devtools/server/actors/emulation/responsive.js#114)
+  //   This probably need some refactoring to implement the throttling in the parent process directly.
+  await pushPref("devtools.target-switching.server.enabled", false);
+
   const browser = await addTab("data:text/html;charset=utf-8,foo");
 
   info("Register target-scoped actor in the content process");

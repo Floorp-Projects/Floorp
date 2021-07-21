@@ -35,6 +35,7 @@
 #include "xpc_make_class.h"
 #include "XPCWrapper.h"
 #include "Crypto.h"
+#include "mozilla/dom/AbortControllerBinding.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -844,7 +845,10 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
     if (!nameStr) {
       return false;
     }
-    if (JS_LinearStringEqualsLiteral(nameStr, "Blob")) {
+
+    if (JS_LinearStringEqualsLiteral(nameStr, "AbortController")) {
+      AbortController = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "Blob")) {
       Blob = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "ChromeUtils")) {
       ChromeUtils = true;
@@ -947,6 +951,11 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
   // This function holds common properties not exposed automatically but able
   // to be requested either in |Cu.importGlobalProperties| or
   // |wantGlobalProperties| of a sandbox.
+  if (AbortController &&
+      !dom::AbortController_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
+
   if (Blob && !dom::Blob_Binding::GetConstructorObject(cx)) return false;
 
   if (ChromeUtils && !dom::ChromeUtils_Binding::GetConstructorObject(cx)) {

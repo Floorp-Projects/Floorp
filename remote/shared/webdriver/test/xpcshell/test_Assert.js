@@ -6,33 +6,11 @@
 /* eslint-disable no-array-constructor, no-new-object */
 
 const { assert } = ChromeUtils.import(
-  "chrome://remote/content/marionette/assert.js"
+  "chrome://remote/content/shared/webdriver/Assert.jsm"
 );
 const { error } = ChromeUtils.import(
   "chrome://remote/content/shared/webdriver/Errors.jsm"
 );
-
-add_test(function test_acyclic() {
-  assert.acyclic({});
-
-  Assert.throws(() => {
-    let obj = {};
-    obj.reference = obj;
-    assert.acyclic(obj);
-  }, /JavaScriptError/);
-
-  // custom message
-  let cyclic = {};
-  cyclic.reference = cyclic;
-  Assert.throws(() => assert.acyclic(cyclic, "", RangeError), RangeError);
-  Assert.throws(() => assert.acyclic(cyclic, "foo"), /JavaScriptError: foo/);
-  Assert.throws(
-    () => assert.acyclic(cyclic, "bar", RangeError),
-    /RangeError: bar/
-  );
-
-  run_next_test();
-});
 
 add_test(function test_session() {
   assert.session({ id: "foo" });

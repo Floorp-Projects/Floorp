@@ -185,9 +185,8 @@ menuitem.bookmark-item {
   }
 }
 
-#urlbar:not(:-moz-lwtheme, [focused="true"]) > #urlbar-background,
-#searchbar:not(:-moz-lwtheme, :focus-within) {
-  border-color: ThreeDShadow;
+:root {
+  --toolbar-field-border-color: ThreeDShadow;
 }
 
 %include ../shared/identity-block/identity-block.inc.css

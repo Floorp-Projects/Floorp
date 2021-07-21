@@ -14,7 +14,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  assert: "chrome://remote/content/marionette/assert.js",
   element: "chrome://remote/content/marionette/element.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
@@ -33,6 +32,26 @@ const FINISH = "finish";
 
 /** @namespace */
 this.evaluate = {};
+
+/**
+ * Asserts that an arbitrary object is not cyclic.
+ *
+ * @param {Object} obj
+ *     Object to test.  This assertion is only meaningful if passed
+ *     an actual object or array.
+ * @param {String=} msg
+ *     Custom message to use for `error` if assertion fails.
+ * @param {Error=} [error=JavaScriptError] error
+ *     Error to throw if assertion fails.
+ *
+ * @throws {JavaScriptError}
+ *     If the object is cyclic.
+ */
+evaluate.assertAcyclic = function(obj, msg = "", err = error.JavaScriptError) {
+  if (evaluate.isCyclic(obj)) {
+    throw new err(msg || "Cyclic object value");
+  }
+};
 
 /**
  * Evaluate a script in given sandbox.
@@ -300,7 +319,7 @@ evaluate.toJSON = function(obj, seenEls) {
 
     // Array, NodeList, HTMLCollection, et al.
   } else if (element.isCollection(obj)) {
-    assert.acyclic(obj);
+    evaluate.assertAcyclic(obj);
     return [...obj].map(el => evaluate.toJSON(el, seenEls));
 
     // WebElement
@@ -336,7 +355,7 @@ evaluate.toJSON = function(obj, seenEls) {
   // arbitrary objects + files
   let rv = {};
   for (let prop in obj) {
-    assert.acyclic(obj[prop]);
+    evaluate.assertAcyclic(obj[prop]);
 
     try {
       rv[prop] = evaluate.toJSON(obj[prop], seenEls);

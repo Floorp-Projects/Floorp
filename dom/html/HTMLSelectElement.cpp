@@ -12,7 +12,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/HTMLFormSubmission.h"
+#include "mozilla/dom/FormData.h"
 #include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSelectElementBinding.h"
@@ -1388,7 +1388,7 @@ HTMLSelectElement::Reset() {
 }
 
 NS_IMETHODIMP
-HTMLSelectElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
+HTMLSelectElement::SubmitNamesValues(FormData* aFormData) {
   // Disabled elements don't submit
   if (IsDisabled()) {
     return NS_OK;
@@ -1423,7 +1423,7 @@ HTMLSelectElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
     nsString value;
     option->GetValue(value);
 
-    aFormSubmission->AddNameValuePair(name, value);
+    aFormData->AddNameValuePair(name, value);
   }
 
   return NS_OK;

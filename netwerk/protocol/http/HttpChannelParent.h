@@ -19,7 +19,6 @@
 #include "nsIRedirectResultListener.h"
 #include "nsHttpChannel.h"
 #include "mozilla/dom/ipc/IdType.h"
-#include "nsIDeprecationWarner.h"
 #include "nsIMultiPartChannel.h"
 
 class nsICacheEntry;
@@ -51,7 +50,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
                                 public PHttpChannelParent,
                                 public nsIParentRedirectingChannel,
                                 public nsIProgressEventSink,
-                                public nsIDeprecationWarner,
                                 public HttpChannelSecurityWarningReporter,
                                 public nsIAsyncVerifyRedirectReadyCallback,
                                 public nsIChannelEventSink,
@@ -67,7 +65,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   NS_DECL_NSIPARENTREDIRECTINGCHANNEL
   NS_DECL_NSIPROGRESSEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSIDEPRECATIONWARNER
   NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIREDIRECTRESULTLISTENER

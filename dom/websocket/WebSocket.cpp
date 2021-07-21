@@ -1213,7 +1213,7 @@ class AsyncOpenRunnable final : public WebSocketMainThreadRunnable {
       return true;
     }
 
-    nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+    nsCOMPtr<nsIPrincipal> principal = doc->PartitionedPrincipal();
     if (!principal) {
       mErrorCode = NS_ERROR_FAILURE;
       return true;
@@ -1233,8 +1233,9 @@ class AsyncOpenRunnable final : public WebSocketMainThreadRunnable {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aTopLevelWorkerPrivate && !aTopLevelWorkerPrivate->GetWindow());
 
-    mErrorCode = mImpl->AsyncOpen(aTopLevelWorkerPrivate->GetPrincipal(), 0,
-                                  nullptr, ""_ns, nullptr);
+    mErrorCode =
+        mImpl->AsyncOpen(aTopLevelWorkerPrivate->GetPartitionedPrincipal(), 0,
+                         nullptr, ""_ns, nullptr);
     return true;
   }
 
@@ -1256,6 +1257,7 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     const nsACString& aNegotiatedExtensions, ErrorResult& aRv) {
   MOZ_ASSERT_IF(!aTransportProvider, aNegotiatedExtensions.IsEmpty());
   nsCOMPtr<nsIPrincipal> principal;
+  nsCOMPtr<nsIPrincipal> partitionedPrincipal;
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   if (NS_WARN_IF(!global)) {
@@ -1272,7 +1274,8 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     }
 
     principal = scriptPrincipal->GetPrincipal();
-    if (!principal) {
+    partitionedPrincipal = scriptPrincipal->PartitionedPrincipal();
+    if (!principal || !partitionedPrincipal) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
@@ -1420,6 +1423,7 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
 
   if (NS_IsMainThread()) {
     MOZ_ASSERT(principal);
+    MOZ_ASSERT(partitionedPrincipal);
 
     nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(global);
 
@@ -1437,8 +1441,9 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
       }
     }
 
-    aRv = webSocket->mImpl->AsyncOpen(principal, windowID, aTransportProvider,
-                                      aNegotiatedExtensions, std::move(stack));
+    aRv = webSocket->mImpl->AsyncOpen(partitionedPrincipal, windowID,
+                                      aTransportProvider, aNegotiatedExtensions,
+                                      std::move(stack));
   } else {
     MOZ_ASSERT(!aTransportProvider && aNegotiatedExtensions.IsEmpty(),
                "not yet implemented");
@@ -1748,7 +1753,9 @@ nsresult WebSocketImpl::AsyncOpen(
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  rv = mChannel->AsyncOpen(uri, asciiOrigin, aInnerWindowID, this, nullptr);
+  rv = mChannel->AsyncOpenNative(uri, asciiOrigin,
+                                 aPrincipal->OriginAttributesRef(),
+                                 aInnerWindowID, this, nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_CONTENT_BLOCKED;
   }

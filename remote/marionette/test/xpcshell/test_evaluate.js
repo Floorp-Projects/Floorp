@@ -67,6 +67,34 @@ const xulElId = { id: 3, browsingContextId: 6, webElRef: xulWebEl.toJSON() };
 
 const elementIdCache = new element.ReferenceStore();
 
+add_test(function test_acyclic() {
+  evaluate.assertAcyclic({});
+
+  Assert.throws(() => {
+    let obj = {};
+    obj.reference = obj;
+    evaluate.assertAcyclic(obj);
+  }, /JavaScriptError/);
+
+  // custom message
+  let cyclic = {};
+  cyclic.reference = cyclic;
+  Assert.throws(
+    () => evaluate.assertAcyclic(cyclic, "", RangeError),
+    RangeError
+  );
+  Assert.throws(
+    () => evaluate.assertAcyclic(cyclic, "foo"),
+    /JavaScriptError: foo/
+  );
+  Assert.throws(
+    () => evaluate.assertAcyclic(cyclic, "bar", RangeError),
+    /RangeError: bar/
+  );
+
+  run_next_test();
+});
+
 add_test(function test_toJSON_types() {
   // null
   equal(null, evaluate.toJSON(undefined));

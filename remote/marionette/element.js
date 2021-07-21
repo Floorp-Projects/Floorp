@@ -20,7 +20,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
 
-  assert: "chrome://remote/content/marionette/assert.js",
+  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   atom: "chrome://remote/content/marionette/atom.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   PollPromise: "chrome://remote/content/marionette/sync.js",

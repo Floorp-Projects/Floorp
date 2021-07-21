@@ -114,11 +114,6 @@ nsIHTMLCollection* HTMLFieldSetElement::Elements() {
 
 nsresult HTMLFieldSetElement::Reset() { return NS_OK; }
 
-NS_IMETHODIMP
-HTMLFieldSetElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
-  return NS_OK;
-}
-
 void HTMLFieldSetElement::InsertChildBefore(nsIContent* aChild,
                                             nsIContent* aBeforeThis,
                                             bool aNotify, ErrorResult& aRv) {

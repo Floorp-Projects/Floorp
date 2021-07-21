@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/net/WebSocketEventService.h"
 
@@ -317,10 +318,11 @@ class nsWSAdmissionManager {
 
     // If there is already another WS channel connecting to this IP address,
     // defer BeginOpen and mark as waiting in queue.
-    bool found = (sManager->IndexOf(ws->mAddress) >= 0);
+    bool found = (sManager->IndexOf(ws->mAddress, ws->mOriginSuffix) >= 0);
 
     // Always add ourselves to queue, even if we'll connect immediately
-    UniquePtr<nsOpenConn> newdata(new nsOpenConn(ws->mAddress, ws));
+    UniquePtr<nsOpenConn> newdata(
+        new nsOpenConn(ws->mAddress, ws->mOriginSuffix, ws));
     sManager->mQueue.AppendElement(std::move(newdata));
 
     if (found) {
@@ -357,7 +359,7 @@ class nsWSAdmissionManager {
     // Check for queued connections to same host.
     // Note: still need to check for failures, since next websocket with same
     // host may have different port
-    sManager->ConnectNext(aChannel->mAddress);
+    sManager->ConnectNext(aChannel->mAddress, aChannel->mOriginSuffix);
   }
 
   // Called every time a websocket channel ends its session (including going
@@ -409,7 +411,7 @@ class nsWSAdmissionManager {
       LOG(("Websocket: changing state to NOT_CONNECTING"));
       aChannel->mConnecting = NOT_CONNECTING;
       if (wasNotQueued) {
-        sManager->ConnectNext(aChannel->mAddress);
+        sManager->ConnectNext(aChannel->mAddress, aChannel->mOriginSuffix);
       }
     }
   }
@@ -447,20 +449,22 @@ class nsWSAdmissionManager {
 
   class nsOpenConn {
    public:
-    nsOpenConn(nsCString& addr, WebSocketChannel* channel)
-        : mAddress(addr), mChannel(channel) {
+    nsOpenConn(nsCString& addr, nsCString& originSuffix,
+               WebSocketChannel* channel)
+        : mAddress(addr), mOriginSuffix(originSuffix), mChannel(channel) {
       MOZ_COUNT_CTOR(nsOpenConn);
     }
     MOZ_COUNTED_DTOR(nsOpenConn)
 
     nsCString mAddress;
+    nsCString mOriginSuffix;
     WebSocketChannel* mChannel;
   };
 
-  void ConnectNext(nsCString& hostName) {
+  void ConnectNext(nsCString& hostName, nsCString& originSuffix) {
     MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
-    int32_t index = IndexOf(hostName);
+    int32_t index = IndexOf(hostName, originSuffix);
     if (index >= 0) {
       WebSocketChannel* chan = mQueue[index]->mChannel;
 
@@ -481,9 +485,15 @@ class nsWSAdmissionManager {
     }
   }
 
-  int32_t IndexOf(nsCString& aStr) {
+  int32_t IndexOf(nsCString& aAddress, nsCString& aOriginSuffix) {
     for (uint32_t i = 0; i < mQueue.Length(); i++) {
-      if (aStr == (mQueue[i])->mAddress) return i;
+      bool isPartitioned =
+          StaticPrefs::privacy_partition_network_state() &&
+          StaticPrefs::privacy_partition_network_state_ws_connection_queue();
+      if (aAddress == (mQueue[i])->mAddress &&
+          (!isPartitioned || aOriginSuffix == (mQueue[i])->mOriginSuffix)) {
+        return i;
+      }
     }
     return -1;
   }
@@ -3241,10 +3251,27 @@ WebSocketChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
 
 NS_IMETHODIMP
 WebSocketChannel::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
+                            JS::HandleValue aOriginAttributes,
                             uint64_t aInnerWindowID,
                             nsIWebSocketListener* aListener,
-                            nsISupports* aContext) {
+                            nsISupports* aContext, JSContext* aCx) {
+  OriginAttributes attrs;
+  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return AsyncOpenNative(aURI, aOrigin, attrs, aInnerWindowID, aListener,
+                         aContext);
+}
+
+NS_IMETHODIMP
+WebSocketChannel::AsyncOpenNative(nsIURI* aURI, const nsACString& aOrigin,
+                                  const OriginAttributes& aOriginAttributes,
+                                  uint64_t aInnerWindowID,
+                                  nsIWebSocketListener* aListener,
+                                  nsISupports* aContext) {
   LOG(("WebSocketChannel::AsyncOpen() %p\n", this));
+
+  aOriginAttributes.CreateSuffix(mOriginSuffix);
 
   if (!NS_IsMainThread()) {
     MOZ_ASSERT(false, "not main thread");

@@ -25,7 +25,7 @@ var EXPORTED_SYMBOLS = ["TargetingContext"];
 
 const TARGETING_EVENT_CATEGORY = "messaging_experiments";
 const TARGETING_EVENT_METHOD = "targeting";
-const DEFAULT_TIMEOUT = 3000;
+const DEFAULT_TIMEOUT = 5000;
 const ERROR_TYPES = {
   ATTRIBUTE_ERROR: "attribute_error",
   TIMEOUT: "attribute_timeout",
