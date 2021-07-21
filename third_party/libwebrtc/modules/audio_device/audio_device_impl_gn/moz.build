@@ -71,10 +71,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/audio_device/opensl/single_rw_fifo.cc"
-    ]
-
 if CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_AURA"] = "1"
