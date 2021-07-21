@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/OriginAttributes.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -289,6 +290,14 @@ bool OriginAttributes::PopulateFromSuffix(const nsACString& aStr) {
   // to the suffix. Set to default before iterating to fix this.
   mPrivateBrowsingId = nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID;
 
+  // Checking that we are in a pristine state
+
+  MOZ_RELEASE_ASSERT(mUserContextId == 0);
+  MOZ_RELEASE_ASSERT(mPrivateBrowsingId == 0);
+  MOZ_RELEASE_ASSERT(mFirstPartyDomain.IsEmpty());
+  MOZ_RELEASE_ASSERT(mGeckoViewSessionContextId.IsEmpty());
+  MOZ_RELEASE_ASSERT(mPartitionKey.IsEmpty());
+
   return URLParams::Parse(
       Substring(aStr, 1, aStr.Length() - 1),
       [this](const nsAString& aName, const nsAString& aValue) {
@@ -328,7 +337,6 @@ bool OriginAttributes::PopulateFromSuffix(const nsACString& aStr) {
         }
 
         if (aName.EqualsLiteral("firstPartyDomain")) {
-          MOZ_RELEASE_ASSERT(mFirstPartyDomain.IsEmpty());
           nsAutoString firstPartyDomain(aValue);
           firstPartyDomain.ReplaceChar(kSanitizedChar, kSourceChar);
           mFirstPartyDomain.Assign(firstPartyDomain);
@@ -336,13 +344,11 @@ bool OriginAttributes::PopulateFromSuffix(const nsACString& aStr) {
         }
 
         if (aName.EqualsLiteral("geckoViewUserContextId")) {
-          MOZ_RELEASE_ASSERT(mGeckoViewSessionContextId.IsEmpty());
           mGeckoViewSessionContextId.Assign(aValue);
           return true;
         }
 
         if (aName.EqualsLiteral("partitionKey")) {
-          MOZ_RELEASE_ASSERT(mPartitionKey.IsEmpty());
           nsAutoString partitionKey(aValue);
           partitionKey.ReplaceChar(kSanitizedChar, kSourceChar);
           mPartitionKey.Assign(partitionKey);
