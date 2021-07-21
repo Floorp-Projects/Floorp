@@ -30,6 +30,20 @@ binutils-2.31.1:
         strip-components: 1
         add-prefix: binutils-source/
 
+binutils-2.36.1:
+    description: binutils 2.36.1 source code
+    fetch:
+        type: static-url
+        url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.36.1.tar.xz
+        sha256: e81d9edf373f193af428a0f256674aea62a9d74dfe93f65192d4eae030b0f3b0
+        size: 22772248
+        gpg-signature:
+            sig-url: "{url}.sig"
+            key-path: build/unix/build-binutils/3A24BC1E8FB409FA9F14371813FCEF89DD9E3C4F.key
+        artifact-name: binutils-source.tar.zst
+        strip-components: 1
+        add-prefix: binutils-source/
+
 gcc-6.5.0:
     description: GCC 6.5.0 source code
     fetch:
