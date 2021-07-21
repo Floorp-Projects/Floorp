@@ -83,7 +83,7 @@ add_task(async function open_wss_when_h3_is_active() {
   var wsListener = new WebSocketListener();
   await new Promise(resolve => {
     wsListener.finish = resolve;
-    chan.asyncOpen(uri, wssUri, 0, wsListener, null);
+    chan.asyncOpen(uri, wssUri, {}, 0, wsListener, null);
   });
 
   // Try to use https protocol, it should sttill use HTTP/3
