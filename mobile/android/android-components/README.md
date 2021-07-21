@@ -324,8 +324,8 @@ You are expected to both add tests for code that you write and make sure that yo
 cause existing tests to fail. You may find these command lines helpful:
 
 ```
-./gradlew test                            # Run all tests
-./gradlew :support-ktx:testdebugunittest  # Run unit tests for a specified module
+./gradlew test                             # Run all tests
+./gradlew :support-ktx:testdebugunittest   # Run unit tests for a specified module
 ```
 
 See also [how to measure code coverage](https://mozac.org/contributing/code-coverage).
