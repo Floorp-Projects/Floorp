@@ -21,6 +21,7 @@ remote.jar:
   content/shared/WindowManager.jsm (shared/WindowManager.jsm)
 
   # shared modules (WebDriver HTTP / BiDi only)
+  content/shared/webdriver/Assert.jsm (shared/webdriver/Assert.jsm)
   content/shared/webdriver/Capabilities.jsm (shared/webdriver/Capabilities.jsm)
   content/shared/webdriver/Errors.jsm (shared/webdriver/Errors.jsm)
   content/shared/webdriver/Session.jsm (shared/webdriver/Session.jsm)
