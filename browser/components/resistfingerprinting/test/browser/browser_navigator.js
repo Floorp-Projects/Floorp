@@ -13,10 +13,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-const TEST_PATH =
-  "http://example.net/browser/browser/" +
-  "components/resistfingerprinting/test/browser/";
-
 let expectedResults;
 
 let osVersion = Services.sysinfo.get("version");
