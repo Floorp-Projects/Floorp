@@ -79,12 +79,9 @@
   "repository": "mozilla/activity-stream",
   "config": {
     "mc_root": "../../..",
-    "newtab_path": "browser/components/newtab",
-    "mc_dir": "../mozilla-central"
+    "newtab_path": "browser/components/newtab"
   },
   "scripts": {
-    "mochitest": "(cd $npm_package_config_mc_dir && ./mach mochitest browser/components/newtab/test/browser --headless)",
-    "mochitest-debug": "(cd $npm_package_config_mc_dir && ./mach mochitest --jsdebugger browser/components/newtab/test/browser)",
     "bundle": "npm-run-all bundle:*",
     "bundle:webpack": "webpack --config webpack.system-addon.config.js",
     "bundle:css": "sass content-src/styles:css --no-source-map",
