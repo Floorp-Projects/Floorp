@@ -9,7 +9,6 @@
 #include "mozAutoDocUpdate.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/HTMLFormElement.h"
-#include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/HTMLOutputElementBinding.h"
 #include "nsContentUtils.h"
 #include "nsDOMTokenList.h"
@@ -52,12 +51,6 @@ NS_IMETHODIMP
 HTMLOutputElement::Reset() {
   mValueModeFlag = eModeDefault;
   return nsContentUtils::SetNodeTextContent(this, mDefaultValue, true);
-}
-
-NS_IMETHODIMP
-HTMLOutputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
-  // The output element is not submittable.
-  return NS_OK;
 }
 
 bool HTMLOutputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,

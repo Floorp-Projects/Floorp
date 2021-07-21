@@ -32,7 +32,9 @@ namespace mozilla {
 class EventChainPostVisitor;
 class EventChainPreVisitor;
 namespace dom {
+class DialogFormSubmission;
 class HTMLFormControlsCollection;
+class HTMLFormSubmission;
 class HTMLImageElement;
 class FormData;
 

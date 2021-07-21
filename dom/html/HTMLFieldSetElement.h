@@ -10,13 +10,13 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIConstraintValidation.h"
-#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/ValidityState.h"
 
 namespace mozilla {
 class ErrorResult;
 class EventChainPreVisitor;
 namespace dom {
+class FormData;
 
 class HTMLFieldSetElement final : public nsGenericHTMLFormElement,
                                   public nsIConstraintValidation {
@@ -47,7 +47,7 @@ class HTMLFieldSetElement final : public nsGenericHTMLFormElement,
 
   // nsIFormControl
   NS_IMETHOD Reset() override;
-  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
+  NS_IMETHOD SubmitNamesValues(FormData* aFormData) override { return NS_OK; }
   virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
