@@ -34,6 +34,7 @@ async function addInteractions(interactions) {
   for (let interaction of interactions) {
     await Interactions.store.add({
       url: interaction.url,
+      title: interaction.title,
       documentType:
         interaction.documentType ?? Interactions.DOCUMENT_TYPE.GENERIC,
       totalViewTime: interaction.totalViewTime ?? 0,
@@ -127,6 +128,8 @@ function assertRecentDate(date) {
  */
 function assertSnapshot(actual, expected) {
   Assert.equal(actual.url, expected.url, "Should have the expected URL");
+  let expectedTitle = expected.title || `test visit for ${expected.url}`;
+  Assert.equal(actual.title, expectedTitle, "Should have the expected title");
   // Avoid falsey-types that we might get from the database.
   Assert.strictEqual(
     actual.userPersisted,
