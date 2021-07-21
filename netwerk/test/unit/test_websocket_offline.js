@@ -42,7 +42,7 @@ function run_test() {
     );
 
     var uri = Services.io.newURI(url);
-    chan.asyncOpen(uri, url, 0, listener, null);
+    chan.asyncOpen(uri, url, {}, 0, listener, null);
     do_test_pending();
   } catch (x) {
     dump("throwing " + x);

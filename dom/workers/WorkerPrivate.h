@@ -716,6 +716,11 @@ class WorkerPrivate final : public RelativeTimeline {
     return mLoadInfo.mLoadingPrincipal;
   }
 
+  nsIPrincipal* GetPartitionedPrincipal() const {
+    AssertIsOnMainThread();
+    return mLoadInfo.mPartitionedPrincipal;
+  }
+
   const nsAString& OriginNoSuffix() const { return mLoadInfo.mOriginNoSuffix; }
 
   const nsACString& Origin() const { return mLoadInfo.mOrigin; }

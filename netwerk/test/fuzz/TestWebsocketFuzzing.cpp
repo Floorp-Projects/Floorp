@@ -164,8 +164,9 @@ static int FuzzingRunNetworkWebsocket(const uint8_t* data, size_t size) {
 
     gWebSocketListener = new FuzzingWebSocketListener();
 
-    rv =
-        gWebSocketChannel->AsyncOpen(url, spec, 0, gWebSocketListener, nullptr);
+    OriginAttributes attrs;
+    rv = gWebSocketChannel->AsyncOpenNative(url, spec, attrs, 0,
+                                            gWebSocketListener, nullptr);
 
     if (rv == NS_OK) {
       FUZZING_LOG(("Successful call to AsyncOpen"));
