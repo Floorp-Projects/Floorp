@@ -11,6 +11,9 @@ const {
 const {
   createEditContextMenu,
 } = require("devtools/client/framework/toolbox-context-menu");
+const {
+  getLongStringFullText,
+} = require("devtools/client/shared/string-utils");
 
 function setupServiceContainer({
   webConsoleUI,
@@ -41,7 +44,7 @@ function setupServiceContainer({
     resendNetworkRequest: requestId => hud.resendNetworkRequest(requestId),
     focusInput: () => hud.focusInput(),
     setInputValue: value => hud.setInputValue(value),
-    getLongString: grip => webConsoleUI.getLongString(grip),
+    getLongString: grip => getLongStringFullText(hud.commands.client, grip),
     getJsTermTooltipAnchor: () => webConsoleUI.getJsTermTooltipAnchor(),
     emitForTests: (event, value) => webConsoleUI.emitForTests(event, value),
     attachRefToWebConsoleUI: (id, node) => webConsoleUI.attachRef(id, node),

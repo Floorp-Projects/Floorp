@@ -687,10 +687,6 @@ class WebConsoleUI {
     }
   }
 
-  getLongString(grip) {
-    return this.getProxy().webConsoleFront.getString(grip);
-  }
-
   /**
    * Sets the focus to JavaScript input field when the web console tab is
    * selected or when there is a split console present.
