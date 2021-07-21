@@ -55,10 +55,6 @@ var gExceptionPaths = [
   // Paths from this folder are constructed in NetErrorParent.jsm based on
   // the type of cert or net error the user is encountering.
   "chrome://browser/content/certerror/supportpages/",
-
-  // Exclude all screenshots files that have been moved out of the extension to
-  // browser/component, see bug 1696573.
-  "resource://app/features/screenshots",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running

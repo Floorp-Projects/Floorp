@@ -411,14 +411,20 @@ this.ui = (function() {
                     <div class="preview-image">
                       <div class="preview-buttons">
                         <button class="highlight-button-cancel" title="${cancelTitle}">
-                          <img src="chrome://browser/content/screenshots/cancel.svg"/>
+                          <img src="${browser.runtime.getURL(
+                            "icons/cancel.svg"
+                          )}" />
                         </button>
                         <button class="highlight-button-copy" title="${copyTitle}">
-                          <img src="chrome://browser/content/screenshots/copy.svg"/>
+                          <img src="${browser.runtime.getURL(
+                            "icons/copy.svg"
+                          )}" />
                           <span data-l10n-id="screenshots-copy-button"/>
                         </button>
                         <button class="highlight-button-download" title="${downloadTitle}">
-                          <img src="chrome://browser/content/screenshots/download-white.svg"/>
+                          <img src="${browser.runtime.getURL(
+                            "icons/download-white.svg"
+                          )}" />
                           <span data-l10n-id="screenshots-download-button"/>
                       </button>
                     </div>
@@ -725,7 +731,7 @@ this.ui = (function() {
       const buttons = makeEl("div", "highlight-buttons");
       const cancel = makeEl("button", "highlight-button-cancel");
       const cancelImg = makeEl("img");
-      cancelImg.src = "chrome://browser/content/screenshots/cancel.svg";
+      cancelImg.src = browser.runtime.getURL("icons/cancel.svg");
       cancel.title = cancelTitle;
       cancel.appendChild(cancelImg);
       buttons.appendChild(cancel);
@@ -735,15 +741,14 @@ this.ui = (function() {
       const copyImg = makeEl("img");
       const copyString = makeEl("span");
       copyString.textContent = copyText;
-      copyImg.src = "chrome://browser/content/screenshots/copy.svg";
+      copyImg.src = browser.runtime.getURL("icons/copy.svg");
       copy.appendChild(copyImg);
       copy.appendChild(copyString);
       buttons.appendChild(copy);
 
       const download = makeEl("button", "highlight-button-download");
       const downloadImg = makeEl("img");
-      downloadImg.src =
-        "chrome://browser/content/screenshots/download-white.svg";
+      downloadImg.src = browser.runtime.getURL("icons/download-white.svg");
       download.appendChild(downloadImg);
       download.append(downloadText);
       download.title = downloadTitle;
