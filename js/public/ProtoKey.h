@@ -121,8 +121,8 @@
   REAL(WasmMemory, OCLASP(WasmMemory))                                        \
   REAL(WasmTable, OCLASP(WasmTable))                                          \
   REAL(WasmGlobal, OCLASP(WasmGlobal))                                        \
+  REAL(WasmTag, OCLASP(WasmTag))                                              \
   REAL(WasmException, OCLASP(WasmException))                                  \
-  REAL(WasmRuntimeException, OCLASP(WasmRuntimeException))                    \
   REAL(FinalizationRegistry, OCLASP(FinalizationRegistry))                    \
   REAL(WeakRef, OCLASP(WeakRef))                                              \
   REAL(Iterator, OCLASP(Iterator))                                            \

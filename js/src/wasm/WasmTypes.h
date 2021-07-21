@@ -81,12 +81,16 @@ class Instance;
 class Table;
 
 // Exception tags are used to uniquely identify exceptions. They are stored
-// in a vector in Instances and used by both WebAssembly.Exception for import
-// and export, and by the representation of thrown exceptions.
+// in a vector in Instances and used by both WebAssembly.Tag for import
+// and export, and by WebAssembly.Exception for thrown exceptions.
 //
 // Since an exception tag is a (trivial) substructure of AtomicRefCounted, the
-// RefPtr SharedExceptionTag can have many instances/modules referencing a
-// single constant exception tag.
+// RefPtr SharedTag can have many instances/modules referencing a single
+// constant exception tag.
+//
+// It is possible that other proposals will start using tags as well, in which
+// case it may be worth generalizing this representation for other kinds of
+// tags.
 
 struct ExceptionTag : AtomicRefCounted<ExceptionTag> {
   ExceptionTag() = default;
@@ -97,7 +101,7 @@ using SharedExceptionTagVector =
 
 // WasmJSExceptionObject wraps a JS Value in order to provide a uniform
 // method of handling JS thrown exceptions. Exceptions originating in Wasm
-// are WebAssemby.RuntimeException objects, whereas exceptions from JS are
+// are WebAssemby.Exception objects, whereas exceptions from JS are
 // wrapped as WasmJSExceptionObject objects.
 class WasmJSExceptionObject : public NativeObject {
   static const unsigned VALUE_SLOT = 0;

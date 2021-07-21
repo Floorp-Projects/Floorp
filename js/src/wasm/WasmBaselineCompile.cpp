@@ -10602,10 +10602,8 @@ bool BaseCompiler::emitCatch() {
   RegRef values = needRef();
   RegRef refs = needRef();
 
-  masm.unboxObject(Address(exn, WasmRuntimeExceptionObject::offsetOfValues()),
-                   values);
-  masm.unboxObject(Address(exn, WasmRuntimeExceptionObject::offsetOfRefs()),
-                   refs);
+  masm.unboxObject(Address(exn, WasmExceptionObject::offsetOfValues()), values);
+  masm.unboxObject(Address(exn, WasmExceptionObject::offsetOfRefs()), refs);
 
 #  ifdef DEBUG
   Label ok;
@@ -10964,7 +10962,7 @@ bool BaseCompiler::emitThrow() {
   const uint32_t dataOffset =
       NativeObject::getFixedSlotOffset(ArrayBufferObject::DATA_SLOT);
 
-  Address exnValuesAddress(exn, WasmRuntimeExceptionObject::offsetOfValues());
+  Address exnValuesAddress(exn, WasmExceptionObject::offsetOfValues());
   masm.unboxObject(exnValuesAddress, scratch);
   masm.loadPtr(Address(scratch, dataOffset), scratch);
 
