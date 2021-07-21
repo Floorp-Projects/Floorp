@@ -9,7 +9,7 @@ assertErrorMessage(() => wasmEvalText(`(module (global (mut i32)))`), WebAssembl
 // Initializer expressions.
 wasmFailValidateText(`(module (global i32 (f32.const 13.37)))`, /type mismatch/);
 wasmFailValidateText(`(module (global f64 (f32.const 13.37)))`, /type mismatch/);
-wasmFailValidateText(`(module (global i32 (i32.add (i32.const 13) (i32.const 37))))`, /unexpected initializer opcode/);
+wasmFailValidateText(`(module (global i32 (i32.add (i32.const 13) (i32.const 37))))`, /unrecognized opcode/);
 
 wasmFailValidateText(`(module (global i32 (global.get 0)))`, /out of range/);
 wasmFailValidateText(`(module (global i32 (global.get 1)) (global i32 (i32.const 1)))`, /out of range/);
