@@ -7490,25 +7490,63 @@ void GCRuntime::maybeIncreaseSliceBudget(SliceBudget& budget) {
     return;
   }
 
-  // Increase time budget for long-running incremental collections. Enforce a
-  // minimum time budget that increases linearly with time/slice count up to a
-  // maximum.
+  if (!budget.isTimeBudget() || !isIncrementalGCInProgress()) {
+    return;
+  }
 
-  if (budget.isTimeBudget() && isIncrementalGCInProgress()) {
-    // All times are in milliseconds.
-    struct BudgetAtTime {
-      double time;
-      double budget;
-    };
-    const BudgetAtTime MinBudgetStart{1500, 0.0};
-    const BudgetAtTime MinBudgetEnd{2500, 100.0};
+  maybeIncreaseSliceBudgetForLongCollections(budget);
+  maybeIncreaseSliceBudgetForUrgentCollections(budget);
+}
 
-    double totalTime = (ReallyNow() - lastGCStartTime()).ToMilliseconds();
+void GCRuntime::maybeIncreaseSliceBudgetForLongCollections(
+    SliceBudget& budget) {
+  // For long-running collections, enforce a minimum time budget that increases
+  // linearly with time up to a maximum.
 
-    double minBudget =
-        LinearInterpolate(totalTime, MinBudgetStart.time, MinBudgetStart.budget,
-                          MinBudgetEnd.time, MinBudgetEnd.budget);
+  // All times are in milliseconds.
+  struct BudgetAtTime {
+    double time;
+    double budget;
+  };
+  const BudgetAtTime MinBudgetStart{1500, 0.0};
+  const BudgetAtTime MinBudgetEnd{2500, 100.0};
 
+  double totalTime = (ReallyNow() - lastGCStartTime()).ToMilliseconds();
+
+  double minBudget =
+      LinearInterpolate(totalTime, MinBudgetStart.time, MinBudgetStart.budget,
+                        MinBudgetEnd.time, MinBudgetEnd.budget);
+
+  if (budget.timeBudget() < minBudget) {
+    budget = SliceBudget(TimeBudget(minBudget));
+  }
+}
+
+void GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
+    SliceBudget& budget) {
+  // Enforce a minimum time budget based on how close we are to the incremental
+  // limit.
+
+  size_t minBytesRemaining = SIZE_MAX;
+  for (AllZonesIter zone(this); !zone.done(); zone.next()) {
+    if (!zone->wasGCStarted()) {
+      continue;
+    }
+    size_t gcBytesRemaining =
+        zone->gcHeapThreshold.incrementalBytesRemaining(zone->gcHeapSize);
+    minBytesRemaining = std::min(minBytesRemaining, gcBytesRemaining);
+    size_t mallocBytesRemaining =
+        zone->mallocHeapThreshold.incrementalBytesRemaining(
+            zone->mallocHeapSize);
+    minBytesRemaining = std::min(minBytesRemaining, mallocBytesRemaining);
+  }
+
+  if (minBytesRemaining < tunables.urgentThresholdBytes() &&
+      minBytesRemaining != 0) {
+    // Increase budget based on the reciprocal of the fraction remaining.
+    double fractionRemaining =
+        double(minBytesRemaining) / double(tunables.urgentThresholdBytes());
+    double minBudget = double(defaultSliceBudgetMS()) / fractionRemaining;
     if (budget.timeBudget() < minBudget) {
       budget = SliceBudget(TimeBudget(minBudget));
     }

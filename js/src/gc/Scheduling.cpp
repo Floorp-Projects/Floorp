@@ -71,7 +71,8 @@ GCSchedulingTunables::GCSchedulingTunables()
       minLastDitchGCPeriod_(
           TimeDuration::FromSeconds(TuningDefaults::MinLastDitchGCPeriod)),
       mallocThresholdBase_(TuningDefaults::MallocThresholdBase),
-      mallocGrowthFactor_(TuningDefaults::MallocGrowthFactor) {}
+      mallocGrowthFactor_(TuningDefaults::MallocGrowthFactor),
+      urgentThresholdBytes_(TuningDefaults::UrgentThresholdBytes) {}
 
 bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
                                         const AutoLockGC& lock) {
@@ -230,6 +231,9 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       mallocGrowthFactor_ = newGrowth;
       break;
     }
+    case JSGC_URGENT_THRESHOLD_BYTES:
+      urgentThresholdBytes_ = value * 1024 * 1024;
+      break;
     default:
       MOZ_CRASH("Unknown GC parameter.");
   }
@@ -371,6 +375,9 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
     case JSGC_MALLOC_GROWTH_FACTOR:
       mallocGrowthFactor_ = TuningDefaults::MallocGrowthFactor;
       break;
+    case JSGC_URGENT_THRESHOLD_BYTES:
+      urgentThresholdBytes_ = TuningDefaults::UrgentThresholdBytes;
+      break;
     default:
       MOZ_CRASH("Unknown GC parameter.");
   }
@@ -420,9 +427,30 @@ double HeapThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
 void HeapThreshold::setSliceThreshold(ZoneAllocator* zone,
                                       const HeapSize& heapSize,
                                       const GCSchedulingTunables& tunables) {
-  sliceBytes_ = ToClampedSize(
-      std::min(uint64_t(heapSize.bytes()) + tunables.zoneAllocDelayBytes(),
-               uint64_t(incrementalLimitBytes_)));
+  // Reduce the slice threshold to increase the slice frequency as we approach
+  // the incremental limit, in the hope that we never reach it.
+
+  size_t bytesRemaining = incrementalBytesRemaining(heapSize);
+
+  size_t delayBeforeNextSlice = tunables.zoneAllocDelayBytes();
+  if (bytesRemaining < tunables.urgentThresholdBytes()) {
+    double fractionRemaining =
+        double(bytesRemaining) / double(tunables.urgentThresholdBytes());
+    delayBeforeNextSlice =
+        size_t(double(delayBeforeNextSlice) * fractionRemaining);
+  }
+
+  MOZ_ASSERT(delayBeforeNextSlice <= tunables.zoneAllocDelayBytes());
+  sliceBytes_ = heapSize.bytes() + delayBeforeNextSlice;
+}
+
+size_t HeapThreshold::incrementalBytesRemaining(
+    const HeapSize& heapSize) const {
+  if (heapSize.bytes() >= incrementalLimitBytes_) {
+    return 0;
+  }
+
+  return incrementalLimitBytes_ - heapSize.bytes();
 }
 
 /* static */
