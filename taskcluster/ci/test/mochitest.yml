@@ -273,14 +273,14 @@ mochitest-devtools-chrome:
     loopback-video: true
     variants:
         by-test-platform:
-            linux.*64(-shippable)?/opt: ['fission', 'a11y-checks', 'wayland']
+            linux.*64(-shippable)?-qr/opt: ['fission', 'a11y-checks', 'wayland']
             linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland']
             default: ['fission']
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
-                    linux.*64(-shippable)?/(opt|debug): ['trunk']
+                    linux.*64(-shippable)?-qr/(opt|debug): ['trunk']
                     windows10-64(-shippable)?-qr/(opt|debug): ['trunk']
                     default: []
             default:
@@ -291,8 +291,8 @@ mochitest-devtools-chrome:
         by-variant:
             fission:
                 by-test-platform:
-                    linux.*64(-shippable)?(-qr)?/(opt|debug): 1
-                    windows10-64(-shippable)?(-qr)?/(opt|debug): 1
+                    linux.*64(-shippable)?-qr/(opt|debug): 1
+                    windows10-64(-shippable)?-qr/(opt|debug): 1
                     default: 2
             default: default
     max-run-time:
@@ -305,8 +305,8 @@ mochitest-devtools-chrome:
     chunks:
         by-test-platform:
             .*-ccov.*/.*: 16
-            linux.*64/debug: 12
-            macosx.*64/debug: 8
+            linux.*64-qr/debug: 12
+            macosx.*64-qr/debug: 8
             .*-asan(-qr)?/opt: 8
             .*-tsan/opt: 16
             default: 5
@@ -315,7 +315,7 @@ mochitest-devtools-chrome:
         chunked: true
     instance-size:
         by-test-platform:
-            linux.*64-[at]san/opt: xlarge  # runs out of memory on default/m3.large
+            linux.*64-[at]san(-qr)?/opt: xlarge  # runs out of memory on default/m3.large
             default: default
     # Bug 1296086: high number of intermittents observed with software GL and large instances
     allow-software-gl-layers: false

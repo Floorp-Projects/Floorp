@@ -17,8 +17,8 @@
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/FileSystemUtils.h"
+#include "mozilla/dom/FormData.h"
 #include "mozilla/dom/GetFilesHelper.h"
-#include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/InputType.h"
 #include "mozilla/dom/UserActivation.h"
@@ -5656,7 +5656,7 @@ HTMLInputElement::Reset() {
 }
 
 NS_IMETHODIMP
-HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
+HTMLInputElement::SubmitNamesValues(FormData* aFormData) {
   // Disabled elements don't submit
   // For type=reset, and type=button, we just never submit, period.
   // For type=image and type=button, we only submit if we were the button
@@ -5666,7 +5666,7 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
       mType == FormControlType::InputButton ||
       ((mType == FormControlType::InputSubmit ||
         mType == FormControlType::InputImage) &&
-       aFormSubmission->GetSubmitterElement() != this) ||
+       aFormData->GetSubmitterElement() != this) ||
       ((mType == FormControlType::InputRadio ||
         mType == FormControlType::InputCheckbox) &&
        !mChecked)) {
@@ -5696,13 +5696,13 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
     yVal.AppendInt(y);
 
     if (!name.IsEmpty()) {
-      aFormSubmission->AddNameValuePair(name + u".x"_ns, xVal);
-      aFormSubmission->AddNameValuePair(name + u".y"_ns, yVal);
+      aFormData->AddNameValuePair(name + u".x"_ns, xVal);
+      aFormData->AddNameValuePair(name + u".y"_ns, yVal);
     } else {
       // If the Image Element has no name, simply return x and y
       // to Nav and IE compatibility.
-      aFormSubmission->AddNameValuePair(u"x"_ns, xVal);
-      aFormSubmission->AddNameValuePair(u"y"_ns, yVal);
+      aFormData->AddNameValuePair(u"x"_ns, xVal);
+      aFormData->AddNameValuePair(u"y"_ns, yVal);
     }
 
     return NS_OK;
@@ -5730,7 +5730,7 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
       RefPtr<File> file = blob->ToFile(u""_ns, rv);
 
       if (!rv.Failed()) {
-        aFormSubmission->AddNameBlobPair(name, file);
+        aFormData->AddNameBlobPair(name, file);
       }
 
       return rv.StealNSResult();
@@ -5738,10 +5738,10 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
 
     for (uint32_t i = 0; i < files.Length(); ++i) {
       if (files[i].IsFile()) {
-        aFormSubmission->AddNameBlobPair(name, files[i].GetAsFile());
+        aFormData->AddNameBlobPair(name, files[i].GetAsFile());
       } else {
         MOZ_ASSERT(files[i].IsDirectory());
-        aFormSubmission->AddNameDirectoryPair(name, files[i].GetAsDirectory());
+        aFormData->AddNameDirectoryPair(name, files[i].GetAsDirectory());
       }
     }
 
@@ -5751,9 +5751,8 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
   if (mType == FormControlType::InputHidden &&
       name.LowerCaseEqualsLiteral("_charset_")) {
     nsCString charset;
-    aFormSubmission->GetCharset(charset);
-    return aFormSubmission->AddNameValuePair(name,
-                                             NS_ConvertASCIItoUTF16(charset));
+    aFormData->GetCharset(charset);
+    return aFormData->AddNameValuePair(name, NS_ConvertASCIItoUTF16(charset));
   }
 
   //
@@ -5773,7 +5772,7 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
     value = defaultValue;
   }
 
-  return aFormSubmission->AddNameValuePair(name, value);
+  return aFormData->AddNameValuePair(name, value);
 }
 
 static nsTArray<FileContentData> SaveFileContentData(

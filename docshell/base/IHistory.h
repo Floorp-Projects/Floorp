@@ -9,6 +9,7 @@
 
 #include "nsISupports.h"
 #include "nsURIHashKey.h"
+#include "nsTHashSet.h"
 #include "nsTObserverArray.h"
 
 class nsIURI;
@@ -17,6 +18,7 @@ class nsIWidget;
 namespace mozilla {
 
 namespace dom {
+class ContentParent;
 class Document;
 class Link;
 }  // namespace dom
@@ -32,6 +34,8 @@ class Link;
 class IHistory : public nsISupports {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(IHISTORY_IID)
+
+  using ContentParentSet = nsTHashSet<RefPtr<dom::ContentParent>>;
 
   /**
    * Registers the Link for notifications about the visited-ness of aURI.
@@ -57,6 +61,15 @@ class IHistory : public nsISupports {
   virtual void RegisterVisitedCallback(nsIURI* aURI, dom::Link* aLink) = 0;
 
   /**
+   * Schedules a single visited query from a given child process.
+   *
+   * @param aURI the URI to query.
+   * @param ContentParent the process interested in knowing about the visited
+   *                      state of this URI.
+   */
+  virtual void ScheduleVisitedQuery(nsIURI* aURI, dom::ContentParent*) = 0;
+
+  /**
    * Unregisters a previously registered Link object.  This must be called
    * before destroying the registered object, and asserts when misused.
    *
@@ -79,8 +92,13 @@ class IHistory : public nsISupports {
   /**
    * Notifies about the visited status of a given URI. The visited status cannot
    * be unknown, otherwise there's no point in notifying of anything.
+   *
+   * @param ContentParentSet a set of content processes that are interested on
+   *                         this change. If null, it is broadcasted to all
+   *                         child processes.
    */
-  virtual void NotifyVisited(nsIURI*, VisitedStatus) = 0;
+  virtual void NotifyVisited(nsIURI*, VisitedStatus,
+                             const ContentParentSet* = nullptr) = 0;
 
   enum VisitFlags {
     /**

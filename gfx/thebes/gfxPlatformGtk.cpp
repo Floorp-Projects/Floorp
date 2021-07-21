@@ -99,12 +99,6 @@ gfxPlatformGtk::gfxPlatformGtk() {
   mMaxGenericSubstitutions = UNINITIALIZED_VALUE;
   mIsX11Display = gfxPlatform::IsHeadless() ? false : GdkIsX11Display();
   if (XRE_IsParentProcess()) {
-#ifdef MOZ_X11
-    if (mIsX11Display && mozilla::Preferences::GetBool("gfx.xrender.enabled")) {
-      gfxVars::SetUseXRender(true);
-    }
-#endif
-
     InitX11EGLConfig();
     if (IsWaylandDisplay() || gfxConfig::IsEnabled(Feature::X11_EGL)) {
       gfxVars::SetUseEGL(true);
@@ -227,6 +221,16 @@ void gfxPlatformGtk::InitWebRenderConfig() {
   if (!XRE_IsParentProcess()) {
     return;
   }
+
+#ifdef MOZ_X11
+  // We only support XRender if the user has disabled both WebRender and
+  // Software WebRender.
+  if (mIsX11Display && mozilla::Preferences::GetBool("gfx.xrender.enabled") &&
+      !(gfxConfig::IsEnabled(Feature::WEBRENDER) ||
+        gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE))) {
+    gfxVars::SetUseXRender(true);
+  }
+#endif
 
   FeatureState& feature = gfxConfig::GetFeature(Feature::WEBRENDER_COMPOSITOR);
   if (feature.IsEnabled()) {

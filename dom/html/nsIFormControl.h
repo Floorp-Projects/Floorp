@@ -14,9 +14,8 @@ namespace mozilla {
 class PresState;
 namespace dom {
 class Element;
+class FormData;
 class HTMLFieldSetElement;
-class HTMLFormSubmission;
-class DialogFormSubmission;
 class HTMLFormElement;
 }  // namespace dom
 }  // namespace mozilla
@@ -139,13 +138,13 @@ class nsIFormControl : public nsISupports {
   NS_IMETHOD Reset() = 0;
 
   /**
-   * Tells the form control to submit its names and values to the form
-   * submission object
-   * @param aFormSubmission the form submission to notify of names/values/files
-   *                       to submit
+   * Tells the form control to submit its names and values to the form data
+   * object
+   *
+   * @param aFormData the form data to notify of names/values/files to submit
    */
   NS_IMETHOD
-  SubmitNamesValues(mozilla::dom::HTMLFormSubmission* aFormSubmission) = 0;
+  SubmitNamesValues(mozilla::dom::FormData* aFormData) = 0;
 
   /**
    * Save to presentation state.  The form control will determine whether it

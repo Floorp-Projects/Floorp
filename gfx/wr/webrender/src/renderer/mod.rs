@@ -3714,6 +3714,16 @@ impl Renderer {
             let zero_color = [0.0, 0.0, 0.0, 0.0];
             let one_color = [1.0, 1.0, 1.0, 1.0];
 
+            // On some Adreno 4xx devices we have seen render tasks to alpha targets have no
+            // effect unless the target is fully cleared prior to rendering. See bug 1714227.
+            if self.device.get_capabilities().requires_alpha_target_full_clear {
+                self.device.clear_target(
+                    Some(zero_color),
+                    None,
+                    None,
+                );
+            }
+
             // On some Mali-T devices we have observed crashes in subsequent draw calls
             // immediately after clearing the alpha render target regions with glClear().
             // Using the shader to clear the regions avoids the crash. See bug 1638593.

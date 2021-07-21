@@ -148,10 +148,14 @@ class WebDriverSession {
    *     JSON Object containing any of the recognised capabilities listed
    *     above.
    *
+   * @param {WebDriverBiDiConnection=} connection
+   *     An optional existing WebDriver BiDi connection to associate with the
+   *     new session.
+   *
    * @throws {SessionNotCreatedError}
    *     If, for whatever reason, a session could not be created.
    */
-  constructor(capabilities) {
+  constructor(capabilities, connection) {
     // WebSocket connections that use this session. This also accounts for
     // possible disconnects due to network outages, which require clients
     // to reconnect.
@@ -185,6 +189,13 @@ class WebDriverSession {
     // services hanging around.
     if (this.a11yChecks && accessibility.service) {
       logger.info("Preemptively starting accessibility service in Chrome");
+    }
+
+    // If a connection without an associated session has been specified
+    // immediately register the newly created session for it.
+    if (connection) {
+      connection.registerSession(this);
+      this._connections.add(connection);
     }
   }
 
@@ -222,6 +233,10 @@ class WebDriverSession {
 
   get unhandledPromptBehavior() {
     return this.capabilities.get("unhandledPromptBehavior");
+  }
+
+  toString() {
+    return `[object ${this.constructor.name} ${this.id}]`;
   }
 
   // nsIHttpRequestHandler

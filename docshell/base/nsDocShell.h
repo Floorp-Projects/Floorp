@@ -22,7 +22,6 @@
 #include "nsDocLoader.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBaseWindow.h"
-#include "nsIDeprecationWarner.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestor.h"
@@ -101,7 +100,6 @@ class nsDocShell final : public nsDocLoader,
                          public nsIAuthPromptProvider,
                          public nsILoadContext,
                          public nsINetworkInterceptController,
-                         public nsIDeprecationWarner,
                          public mozilla::SupportsWeakPtr {
  public:
   enum InternalLoad : uint32_t {
@@ -173,7 +171,6 @@ class nsDocShell final : public nsDocLoader,
   NS_DECL_NSIWEBPAGEDESCRIPTOR
   NS_DECL_NSIAUTHPROMPTPROVIDER
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
-  NS_DECL_NSIDEPRECATIONWARNER
 
   // Create a new nsDocShell object.
   static already_AddRefed<nsDocShell> Create(

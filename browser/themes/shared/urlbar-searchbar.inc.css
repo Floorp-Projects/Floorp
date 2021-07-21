@@ -16,6 +16,7 @@
 
 @media not (prefers-contrast) {
   :root {
+    --toolbar-field-border-color: transparent;
     --toolbar-field-focus-border-color: color-mix(in srgb, var(--focus-outline-color) 50%, transparent);
   }
 }
@@ -44,7 +45,6 @@
   background-clip: border-box;
   border: 1px solid var(--toolbar-field-border-color);
   border-radius: var(--toolbarbutton-border-radius);
-  border-color: transparent;
 }
 
 #urlbar:not([focused="true"], [open]) > #urlbar-background,

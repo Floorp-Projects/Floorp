@@ -53,7 +53,7 @@ gtest:
         by-test-platform:
             windows.*-shippable-qr/.*: []  # permafails on shippable
             windows.*-nightly-qr/.*: []  # permafails on nightly too
-            .*-devedition/.*: []  # don't run on devedition
+            .*-devedition.*/.*: []  # don't run on devedition
             linux1804-32-qr/debug: ['mozilla-central']  # try and m-c
             linux1804-32-qr/opt: []  # try only, shippable on m-c
             linux1804-32-shippable-qr/opt: ['mozilla-central']  # try and m-c

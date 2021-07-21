@@ -196,8 +196,8 @@ const Snapshots = new (class Snapshots {
 
     let rows = await db.executeCached(
       `
-      SELECT h.url AS url, created_at, removed_at, document_type,
-             first_interaction_at, last_interaction_at,
+      SELECT h.url AS url, h.title AS title, created_at, removed_at,
+             document_type, first_interaction_at, last_interaction_at,
              user_persisted FROM moz_places_metadata_snapshots s
       JOIN moz_places h ON h.id = s.place_id
       WHERE h.url_hash = hash(:url) AND h.url = :url
@@ -235,8 +235,8 @@ const Snapshots = new (class Snapshots {
 
     let rows = await db.executeCached(
       `
-      SELECT h.url AS url, created_at, removed_at, document_type,
-             first_interaction_at, last_interaction_at,
+      SELECT h.url AS url, h.title AS title, created_at, removed_at,
+             document_type, first_interaction_at, last_interaction_at,
              user_persisted FROM moz_places_metadata_snapshots s
       JOIN moz_places h ON h.id = s.place_id
       ${whereStatement}
@@ -259,6 +259,7 @@ const Snapshots = new (class Snapshots {
   #translateRow(row) {
     return {
       url: row.getResultByName("url"),
+      title: row.getResultByName("title"),
       createdAt: this.#toDate(row.getResultByName("created_at")),
       removedAt: this.#toDate(row.getResultByName("removed_at")),
       firstInteractionAt: this.#toDate(

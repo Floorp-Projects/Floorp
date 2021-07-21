@@ -39,7 +39,6 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
 
   destroy() {
     this.clearNetworkThrottling();
-    this.clearMetaViewportOverride();
 
     this.targetActor.off("window-ready", this.onWindowReady);
 
@@ -179,33 +178,6 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
    */
   setElementPickerState(state, pickerType) {
     this.targetActor.touchSimulator.setElementPickerState(state, pickerType);
-  },
-
-  /* Meta viewport override */
-
-  _previousMetaViewportOverride: undefined,
-
-  setMetaViewportOverride(flag) {
-    if (this.getMetaViewportOverride() == flag) {
-      return false;
-    }
-    if (this._previousMetaViewportOverride === undefined) {
-      this._previousMetaViewportOverride = this.getMetaViewportOverride();
-    }
-
-    this.docShell.metaViewportOverride = flag;
-    return true;
-  },
-
-  getMetaViewportOverride() {
-    return this.docShell.metaViewportOverride;
-  },
-
-  clearMetaViewportOverride() {
-    if (this._previousMetaViewportOverride !== undefined) {
-      return this.setMetaViewportOverride(this._previousMetaViewportOverride);
-    }
-    return false;
   },
 
   /**

@@ -50,6 +50,7 @@ class DispatchChangeEventCallback;
 class File;
 class FileList;
 class FileSystemEntry;
+class FormData;
 class GetFilesHelper;
 class InputType;
 
@@ -151,7 +152,7 @@ class HTMLInputElement final : public TextControlElement,
   // Overriden nsIFormControl methods
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Reset() override;
-  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
+  NS_IMETHOD SubmitNamesValues(FormData* aFormData) override;
   NS_IMETHOD SaveState() override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual bool RestoreState(PresState* aState) override;
