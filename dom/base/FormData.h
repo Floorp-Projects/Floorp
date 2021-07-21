@@ -149,8 +149,13 @@ class FormData final : public nsISupports,
 
   nsresult CopySubmissionDataTo(HTMLFormSubmission* aFormSubmission) const;
 
+  Element* GetSubmitterElement() const { return mSubmitter.get(); }
+
  private:
   nsCOMPtr<nsISupports> mOwner;
+
+  // Submitter element.
+  RefPtr<Element> mSubmitter;
 
   nsTArray<FormDataTuple> mFormData;
 };

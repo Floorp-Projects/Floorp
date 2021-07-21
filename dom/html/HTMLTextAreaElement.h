@@ -32,7 +32,7 @@ class PresState;
 
 namespace dom {
 
-class HTMLFormSubmission;
+class FormData;
 
 class HTMLTextAreaElement final : public TextControlElement,
                                   public nsStubMutationObserver,
@@ -59,7 +59,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   // nsIFormControl
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Reset() override;
-  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
+  NS_IMETHOD SubmitNamesValues(FormData* aFormData) override;
   NS_IMETHOD SaveState() override;
   virtual bool RestoreState(PresState* aState) override;
   virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;
