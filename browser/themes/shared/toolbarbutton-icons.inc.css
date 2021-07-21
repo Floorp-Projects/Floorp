@@ -7,7 +7,6 @@
 }
 
 :root:-moz-lwtheme {
-  --toolbarbutton-icon-fill-opacity: 1;
   --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,97,224));
 }
 
@@ -21,7 +20,6 @@ toolbar[brighttext]:-moz-lwtheme {
   color: inherit !important;
   -moz-context-properties: fill, fill-opacity;
   fill: var(--toolbarbutton-icon-fill);
-  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
 .toolbarbutton-animatable-box {
@@ -420,7 +418,6 @@ toolbar[brighttext] #panic-button[open] {
 #save-to-pocket-button {
   list-style-image: url("chrome://browser/skin/pocket-outline.svg");
   fill: var(--toolbarbutton-icon-fill);
-  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
 #save-to-pocket-button[open="true"],
@@ -440,7 +437,6 @@ toolbar[brighttext] #panic-button[open] {
 toolbarbutton.bookmark-item {
   -moz-context-properties: fill, fill-opacity;
   fill: var(--toolbarbutton-icon-fill);
-  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
 .bookmark-item[container] {

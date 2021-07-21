@@ -216,7 +216,6 @@ toolbarseparator + .panel-subview-body,
   list-style-image: url(chrome://global/skin/icons/info.svg);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
   padding: 4px;
 }
 
