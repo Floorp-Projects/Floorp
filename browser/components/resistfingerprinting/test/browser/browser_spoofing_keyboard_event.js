@@ -11,10 +11,6 @@ const SHOULD_DELIVER_ALL_FOR_PRINTABLE =
 const SHOULD_DELIVER_ALL_FOR_NON_PRINTABLE =
   SHOULD_DELIVER_KEYDOWN | SHOULD_DELIVER_KEYUP;
 
-const TEST_PATH =
-  "http://example.net/browser/browser/" +
-  "components/resistfingerprinting/test/browser/";
-
 // The test cases for english content.
 const TEST_CASES_EN = [
   {

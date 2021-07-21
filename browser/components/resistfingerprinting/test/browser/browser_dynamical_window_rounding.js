@@ -10,8 +10,6 @@
  * example.
  */
 
-const TEST_PATH =
-  "http://example.net/browser/browser/components/resistfingerprinting/test/browser/";
 const { RFPHelper } = ChromeUtils.import(
   "resource://gre/modules/RFPHelper.jsm"
 );
