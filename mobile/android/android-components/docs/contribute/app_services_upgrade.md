@@ -31,6 +31,6 @@ The next step is to build a [local version of Android Components][local_build] a
  - Sending tabs
  - Synced Tabs shows results from another device and vice versa
 
-[as_version]: https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt#L33
+[as_version]: https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Dependencies.kt#L33
 [local_build]: /contributing/testing-components-inside-app
 [fenix]: https://github.com/mozilla-mobile/fenix

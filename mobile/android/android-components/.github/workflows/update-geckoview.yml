@@ -32,12 +32,12 @@ jobs:
     name: "Update GeckoView"
     runs-on: ubuntu-20.04
     steps:
-      - name: "Update GV (On Master)"
+      - name: "Update GV (On Main)"
         uses: mozilla-mobile/relbot@master
         if: github.repository == 'mozilla-mobile/android-components'
         with:
           project: android-components
-          command: update-master
+          command: update-main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Update GV (On Releases)"

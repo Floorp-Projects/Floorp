@@ -14,7 +14,7 @@ open class GitHubPlugin : Plugin<Project> {
     companion object {
         private const val REPO_OWNER = "mozilla-mobile"
         private const val REPO_NAME = "android-components"
-        private const val BASE_BRANCH_NAME = "master"
+        private const val BASE_BRANCH_NAME = "main"
         private const val HEAD = "MickeyMoz"
         private const val TOKEN_FILE_PATH = ".github_token"
     }

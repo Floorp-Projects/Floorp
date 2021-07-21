@@ -57,7 +57,7 @@ lifecycle.addObservers(findInPageFeature)
 findInPageFeature.bind(session)
 ```
 
-🦊 A practical example of using feature find in page can be found in [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
+🦊 A practical example of using feature find in page can be found in [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/main/samples/browser).
 
 ## Facts
 

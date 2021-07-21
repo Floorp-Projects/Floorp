@@ -1,6 +1,6 @@
 # Android components
 
-[![Task Status](https://firefox-ci-tc.services.mozilla.com/api/github/v1/repository/mozilla-mobile/android-components/master/badge.svg)](https://firefox-ci-tc.services.mozilla.com/api/github/v1/repository/mozilla-mobile/android-components/master/latest)
+[![Task Status](https://firefox-ci-tc.services.mozilla.com/api/github/v1/repository/mozilla-mobile/android-components/main/badge.svg)](https://firefox-ci-tc.services.mozilla.com/api/github/v1/repository/mozilla-mobile/android-components/main/latest)
 [![Mergify Status](https://img.shields.io/endpoint.svg?url=https://gh.mergify.io/badges/mozilla-mobile/android-components&style=flat)](https://mergify.io)
 [![chat.mozilla.org](https://img.shields.io/badge/chat-on%20matrix-51bb9c)](https://chat.mozilla.org/#/room/#android-components:mozilla.org)
 
@@ -27,7 +27,7 @@ Before you attempt to make a contribution please read the [Community Participati
 # Maven repository
 
 All components are getting published on [maven.mozilla.org](https://maven.mozilla.org/).
-To use them, you need to add the following to your project's top-level build file, in the `allprojects` block (see e.g. the [reference-browser](https://github.com/mozilla-mobile/reference-browser/blob/master/build.gradle)):
+To use them, you need to add the following to your project's top-level build file, in the `allprojects` block (see e.g. the [reference-browser](https://github.com/mozilla-mobile/reference-browser/blob/main/build.gradle)):
 
 ```groovy
 repositories {
@@ -47,7 +47,7 @@ dependencies {
 
 ## Nightly builds
 
-Nightly builds are created every day from the `master` branch and published on [nightly.maven.mozilla.org](https://nightly.maven.mozilla.org).
+Nightly builds are created every day from the `main` branch and published on [nightly.maven.mozilla.org](https://nightly.maven.mozilla.org).
 
 # API Reference
 
@@ -317,7 +317,7 @@ We use `README.md` files and [Dokka](https://github.com/Kotlin/dokka), which you
 ./gradlew :browser-icons:dokka           # Generate dokka for a specified module
 ```
 
-If you fix a bug or change an API, you should update [docs/changelog.md](https://github.com/mozilla-mobile/android-components/blob/master/docs/changelog.md).
+If you fix a bug or change an API, you should update [docs/changelog.md](https://github.com/mozilla-mobile/android-components/blob/main/docs/changelog.md).
 
 ## Testing ##
 You are expected to both add tests for code that you write and make sure that your changes do not
@@ -331,7 +331,7 @@ cause existing tests to fail. You may find these command lines helpful:
 See also [how to measure code coverage](https://mozac.org/contributing/code-coverage).
 
 ## Accessibility ##
-If your code has user-facing changes, follow [Android accessibility best practices](https://github.com/mozilla-mobile/shared-docs/blob/master/android/accessibility_guide.md).
+If your code has user-facing changes, follow [Android accessibility best practices](https://github.com/mozilla-mobile/shared-docs/blob/main/android/accessibility_guide.md).
 
 # License
 

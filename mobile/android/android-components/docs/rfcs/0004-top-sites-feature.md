@@ -116,7 +116,7 @@ class TopSitesFeature(
 ## Prior art
 
 * Fenix abstraction of Top Sites: [TopSiteStorage.kt](https://github.com/mozilla-mobile/fenix/blob/3d3153039ce794df09a243968b888ae7cb856d9b/app/src/main/java/org/mozilla/fenix/components/TopSiteStorage.kt)
-* The RFC structure can be see in other components such as, [FindInPageFeature](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/FindInPageFeature.kt)  & [SyncedTabsFeature](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/SyncedTabsFeature.kt).
+* The RFC structure can be see in other components such as, [FindInPageFeature](https://github.com/mozilla-mobile/android-components/blob/main/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/FindInPageFeature.kt)  & [SyncedTabsFeature](https://github.com/mozilla-mobile/android-components/blob/main/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/SyncedTabsFeature.kt).
 
 ## Unresolved questions
 

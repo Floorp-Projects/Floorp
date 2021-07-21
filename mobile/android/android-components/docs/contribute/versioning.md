@@ -10,7 +10,7 @@ The *Android components* project uses a similar [versioning and release process 
 
 * Major releases happen at fixed intervals (currently on Tuesday every week)
 * Every release increments the major version (e.g. 1.0.0 -> 2.0.0 -> 3.0.0)
-* Major releases are tagged on and shipped from the `master` branch.
+* Major releases are tagged on and shipped from the `main` branch.
 
 ## Point releases
 

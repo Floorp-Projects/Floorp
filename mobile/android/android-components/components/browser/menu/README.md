@@ -13,7 +13,7 @@ implementation "org.mozilla.components:browser-menu:{latest-version}"
 ```
 
 ### BrowserMenu
-Sample code can be found in [Sample Toolbar app](https://github.com/mozilla-mobile/android-components/tree/master/samples/toolbar).
+Sample code can be found in [Sample Toolbar app](https://github.com/mozilla-mobile/android-components/tree/main/samples/toolbar).
 
 There are multiple properties that you customize of the menu browser by just adding them into your dimens.xml file.
 

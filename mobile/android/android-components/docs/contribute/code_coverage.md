@@ -10,7 +10,7 @@ permalink: /contributing/code-coverage
 
 # Automated reports
 
-For pull requests and master pushes we generate code coverage reports on taskcluster and they can be accessed via the GitHub checks.
+For pull requests and main pushes we generate code coverage reports on taskcluster and they can be accessed via the GitHub checks.
 
 # Generating reports locally
 

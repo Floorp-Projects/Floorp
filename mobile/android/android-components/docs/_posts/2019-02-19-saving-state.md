@@ -11,7 +11,7 @@ Losing open tabs in a browser can be a painful experience for the user. By itsel
 
 ## SessionStorage
 
-The [SessionStorage](https://mozac.org/api/mozilla.components.browser.session.storage/-session-storage/) class that comes with the [browser-session](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/session) component saves the state as a file on disk (using [AtomicFile](https://developer.android.com/reference/android/util/AtomicFile) under the hood). It can be used for a browser that wants to have a single state that gets saved and restored (like Fennec or Chrome).
+The [SessionStorage](https://mozac.org/api/mozilla.components.browser.session.storage/-session-storage/) class that comes with the [browser-session](https://github.com/mozilla-mobile/android-components/tree/main/components/browser/session) component saves the state as a file on disk (using [AtomicFile](https://developer.android.com/reference/android/util/AtomicFile) under the hood). It can be used for a browser that wants to have a single state that gets saved and restored (like Fennec or Chrome).
 
 ```kotlin
 val sessionStorage SessionStorage(applicationContext, engine)
@@ -78,7 +78,7 @@ sessionStorage.autoSave(sessionManager)
 
 If neither [SessionStorage](https://mozac.org/api/mozilla.components.browser.session.storage/-session-storage/) nor [SessionBundleStorage](https://mozac.org/api/mozilla.components.feature.session.bundling/-session-bundle-storage/) satisfy the requirements of your app (e.g. you want to save the state in your favorite database or in a cloud-enabled storage) then it is possible to implement a custom storage.
 
-The [AutoSave.Storage](https://mozac.org/api/mozilla.components.browser.session.storage/-auto-save/-storage/) interface from the [browser-session](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/session) component defines the methods that are expected from a session storage. Technically it is not required to implement the interface if your app code is the only one interacting with the session store; but implementing the interface makes your implementation compatible with other components code. Specifically you can use [AutoSave](https://mozac.org/api/mozilla.components.browser.session.storage/-auto-save/) with any class implementing SessionStorage without any additional code.
+The [AutoSave.Storage](https://mozac.org/api/mozilla.components.browser.session.storage/-auto-save/-storage/) interface from the [browser-session](https://github.com/mozilla-mobile/android-components/tree/main/components/browser/session) component defines the methods that are expected from a session storage. Technically it is not required to implement the interface if your app code is the only one interacting with the session store; but implementing the interface makes your implementation compatible with other components code. Specifically you can use [AutoSave](https://mozac.org/api/mozilla.components.browser.session.storage/-auto-save/) with any class implementing SessionStorage without any additional code.
 
 The [SnapshotSerializer](https://mozac.org/api/mozilla.components.browser.session.storage/-snapshot-serializer/) class is helpful when translating snapshots from and to JSON.
 

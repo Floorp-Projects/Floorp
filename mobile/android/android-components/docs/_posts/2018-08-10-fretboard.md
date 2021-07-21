@@ -12,10 +12,10 @@ To avoid this Firefox moved to using [Kinto](https://github.com/Kinto/kinto) as 
 
 The purpose of this Google Summer of Code project, which is called Fretboard, was to develop an A/B testing framework written in Kotlin based on the existing code from Fennec, but making it independent of both the server used and the local storage mechanism, allowing it to be used on other apps, such as Firefox Focus, which started to need to do some A/B tests.
 
-The source code implemented as part of this project is located at the [android-components](https://github.com/mozilla-mobile/android-components) GitHub repo, more specifically [here](https://github.com/mozilla-mobile/android-components/tree/master/components/service/fretboard)
+The source code implemented as part of this project is located at the [android-components](https://github.com/mozilla-mobile/android-components) GitHub repo, more specifically [here](https://github.com/mozilla-mobile/android-components/tree/main/components/service/fretboard)
 
 ## Features
-This is a basic and non-exhaustive list of features, for all details you can view the README [here](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/README.md)
+This is a basic and non-exhaustive list of features, for all details you can view the README [here](https://github.com/mozilla-mobile/android-components/blob/main/components/service/fretboard/README.md)
 
 * Query if a device is part of a specific experiment
 * Get experiment associated metadata

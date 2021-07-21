@@ -22,9 +22,9 @@ In order to enable data upload for testing purposes, change the `Glean.setUpload
 
 Glean will send metrics from any Glean-enabled component used in this sample application:
 
-- [engine-gecko-nightly](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/docs/metrics.md);
-- [engine-gecko-beta](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/docs/metrics.md);
-- [engine-gecko](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko/docs/metrics.md);
+- [engine-gecko-nightly](https://github.com/mozilla-mobile/android-components/blob/main/components/browser/engine-gecko-nightly/docs/metrics.md);
+- [engine-gecko-beta](https://github.com/mozilla-mobile/android-components/blob/main/components/browser/engine-gecko-beta/docs/metrics.md);
+- [engine-gecko](https://github.com/mozilla-mobile/android-components/blob/main/components/browser/engine-gecko/docs/metrics.md);
 
 Data review for enabling the Glean SDK for this application can be found [here](https://bugzilla.mozilla.org/show_bug.cgi?id=1592935#c6).
 

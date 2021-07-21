@@ -15,12 +15,12 @@ author: sebastian
     * Beta: **62.0b13** (dd92dec96711e60a8c6a49ebe584fa23a453a292) 🔺
     * Release: 61.0 (785d242a5b01d5f1094882aa2144d8e5e2791e06)
 
-* **support-base**: New base component containing small building blocks for other components. Added a [simple logging API](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/README.md) that allows components to log messages/exceptions but lets the consuming app decide what gets logged and how.
+* **support-base**: New base component containing small building blocks for other components. Added a [simple logging API](https://github.com/mozilla-mobile/android-components/blob/main/components/support/base/README.md) that allows components to log messages/exceptions but lets the consuming app decide what gets logged and how.
 * **support-utils**: Some classes have been moved to the new _support-base_ component.
 * **service-fretboard**: ⚠️ Breaking change: `ExperimentDescriptor` instances now operate on the experiment name instead of the ID.
 * **ui-icons**: Added new icons (used in _Firefox Focus_ UI refresh): `mozac_ic_arrowhead_down`, `mozac_ic_arrowhead_up`, `mozac_ic_check`, `mozac_ic_device_desktop`, `mozac_ic_mozilla`, `mozac_ic_open_in`, `mozac_ic_reorder`.
-* **service-firefox-accounts**: Added [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/README.md).
-* **service-fretboard**: Updated [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/README.md).
+* **service-firefox-accounts**: Added [documentation](https://github.com/mozilla-mobile/android-components/blob/main/components/service/firefox-accounts/README.md).
+* **service-fretboard**: Updated [documentation](https://github.com/mozilla-mobile/android-components/blob/main/components/service/fretboard/README.md).
 * **browser-toolbar**: Fixed an issue where the toolbar content disappeared if a padding value was set on the toolbar.
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.16.1...v0.17), [Milestone](https://github.com/mozilla-mobile/android-components/milestone/15?closed=1)

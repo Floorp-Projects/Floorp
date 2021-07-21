@@ -130,11 +130,11 @@ def loader(kind, path, config, params, loaded_tasks):
     elif params["tasks_for"] == "github-push":
         if params["base_rev"] in _GIT_ZERO_HASHES:
             logger.warn("base_rev is a zero hash, meaning there is no previous push. Building every component...")
-        elif params["head_ref"] == "refs/heads/master":
+        elif params["head_ref"] == "refs/heads/main":
             # Disable the affected_components optimization to make sure we execute all tests to get
-            # a complete code coverage report for pushes to 'master'.
+            # a complete code coverage report for pushes to 'main'.
             # See https://github.com/mozilla-mobile/android-components/issues/9382#issuecomment-760506327
-            logger.info("head_ref is refs/heads/master. Building every component...")
+            logger.info("head_ref is refs/heads/main. Building every component...")
         else:
             logger.info("Processing push for commit range {} -> {}".format(params["base_rev"], params["head_rev"]))
             files_changed = get_files_changed_push(params["base_repository"], params["base_rev"], params["head_rev"])

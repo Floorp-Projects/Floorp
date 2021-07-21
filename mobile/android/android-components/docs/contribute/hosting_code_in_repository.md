@@ -34,7 +34,7 @@ The *Android components* team releases frequently (currently weekly) and the pro
 
 Release artifacts are automatically published on maven.mozilla.org and are immediately available to consumers.
 
-The *Android components* team is planning to release SNAPSHOT builds for every successfull *master* merge. This will allow consuming apps to test approved changes immediately after merge without needing to wait for a release.
+The *Android components* team is planning to release SNAPSHOT builds for every successfull *main* merge. This will allow consuming apps to test approved changes immediately after merge without needing to wait for a release.
 
 #### Consistent versioning and compatibility
 
@@ -59,7 +59,7 @@ Currently we are using:
 * [ktlint](https://github.com/shyiko/ktlint) - *"An anti-bikeshedding Kotlin linter with built-in formatter"*
 * [detekt](https://github.com/arturbosch/detekt) - *"A static code analysis tool for the Kotlin programming language"*
 
-In addition to that the *Android components* team started to write [custom lint rules](https://github.com/mozilla-mobile/android-components/tree/master/components/tooling/lint) that enforce component related rules (e.g. "Use the provided logging class in components instead of android.util.Log").
+In addition to that the *Android components* team started to write [custom lint rules](https://github.com/mozilla-mobile/android-components/tree/main/components/tooling/lint) that enforce component related rules (e.g. "Use the provided logging class in components instead of android.util.Log").
 
 ## Services
 

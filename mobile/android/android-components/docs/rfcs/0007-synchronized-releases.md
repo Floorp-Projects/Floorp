@@ -12,7 +12,7 @@ permalink: /rfc/0007-synchronized-releases
 Synchronizing the branching and versioning of Android Components with the Mozilla release trains (GeckoView) to simplify release processes and integration by:
 
 * Having just one component implementing `concept-engine` with GeckoView
-* Having the `master` branch track only GeckoView Nightly
+* Having the `main` branch track only GeckoView Nightly
 * Creating branches and releases tracking matching GeckoView releases (e.g. GeckoView 89.0 -> Android Components 89.0)
 
 ## Motivation
@@ -31,7 +31,7 @@ This flexibility comes at a cost and makes our release process and maintenance m
 
 ### One GeckoView component
 
-Instead of having three components using GeckoView (`browser-engine-gecko-nightly`, `browser-engine-gecko-beta`, `browser-engine-gecko`), we will have just one (`browser-engine-gecko`) and on `master` it will track the latest GeckoView Nightly from `mozilla-central`.
+Instead of having three components using GeckoView (`browser-engine-gecko-nightly`, `browser-engine-gecko-beta`, `browser-engine-gecko`), we will have just one (`browser-engine-gecko`) and on `main` it will track the latest GeckoView Nightly from `mozilla-central`.
 
 ### Releases
 
@@ -41,23 +41,23 @@ For every major version from the Mozilla repositories, we will have a major vers
 
 ### Branches
 
-On the Android Components side we will continue to have a `master` branch, which will track GeckoView Nightly and from which we will ship Android Components Nightly versions.
+On the Android Components side we will continue to have a `main` branch, which will track GeckoView Nightly and from which we will ship Android Components Nightly versions.
 
-For every GeckoView version we will have a matching Android Components release branch (e.g. `releases/89.0`), that we cut from master the day the GeckoView Nightly version becomes Beta. This branch will continue to track the matching GeckoView version from beta builds to release builds.
+For every GeckoView version we will have a matching Android Components release branch (e.g. `releases/89.0`), that we cut from `main` the day the GeckoView Nightly version becomes Beta. This branch will continue to track the matching GeckoView version from beta builds to release builds.
 
 ### Merge day
 
-On merge day the current Nightly version of GeckoView will become the new Beta version. At this point we will cut a matching Android Components release branch, which will continue to track the GeckoView version, while `master` will move on to track the next Nightly version.
+On merge day the current Nightly version of GeckoView will become the new Beta version. At this point we will cut a matching Android Components release branch, which will continue to track the GeckoView version, while `main` will move on to track the next Nightly version.
 
 Moving code between components will no longer be needed and the merge day procedure will be reduced to branching and versioning, which will be easier to automate.
 
-Example: On the day GeckoView 89 Nightly becomes GeckoView Beta 89, we will cut an Android Components 89 release branch which will track GeckoView Beta 89 (which will eventually become the release version of GeckoView 89). The `master` branch of Android Components will continue to track GeckoView Nightly 90.
+Example: On the day GeckoView 89 Nightly becomes GeckoView Beta 89, we will cut an Android Components 89 release branch which will track GeckoView Beta 89 (which will eventually become the release version of GeckoView 89). The `main` branch of Android Components will continue to track GeckoView Nightly 90.
 
 ### Automation & Bots
 
 We can continue to bump GeckoView and Android Component versions with our bots. The aligned version numbers simplify the process and even allow us to automate releasing and branching too.
 
-* On `master` a bot will continue to update to the latest GeckoView Nightly version. With this change no other version bumps on `master` are needed.
+* On `main` a bot will continue to update to the latest GeckoView Nightly version. With this change no other version bumps on `main` are needed.
 * On a release branch (e.g. `releases/89.0`) a bot can update to the latest matching GeckoView version. Over time the branch will be bumped from Beta (e.g. 89.0 Beta) to Release versions of GeckoView (e.g. 89.0 release).
 
 Additionally we could automate:
@@ -68,10 +68,10 @@ Additionally we could automate:
 
 The localization workflow will be very similar to the process in Fenix. We would do the following:
 
-* Frequently import strings to `master` through the `mozilla-l10n-bot`.
-* Sync strings from `master` to `releases_v89.0` while `89` is in _Beta_. We would do this up to the merge day.
+* Frequently import strings to `main` through the `mozilla-l10n-bot`.
+* Sync strings from `main` to `releases_v89.0` while `89` is in _Beta_. We would do this up to the merge day.
 
-For the import to `master` no changes are needed. For the string sync between `master` and the _Beta branch_ we should be able to use the same code as we use for Fenix. (As of this writing, that code is in progress - having more similarity between Fenix and A-C would definitely simplify it.)
+For the import to `main` no changes are needed. For the string sync between `main` and the _Beta branch_ we should be able to use the same code as we use for Fenix. (As of this writing, that code is in progress - having more similarity between Fenix and A-C would definitely simplify it.)
 
 ### Fenix integration
 
@@ -87,11 +87,11 @@ In theory release branching (for code freeze and releases) could be automated on
 
 ![](/assets/images/rfc/release-trains.png)
 
-* `master` tracks GeckoView Nightly 89.0 (`browser-engine-gecko`)
-* We ship AC 89.x Nightly versions from `master` every day
+* `main` tracks GeckoView Nightly 89.0 (`browser-engine-gecko`)
+* We ship AC 89.x Nightly versions from `main` every day
 * On merge day:
   * We cut a `releases/89.0` release branch, which will continue to track GeckoView 89, now as a Beta version.
-  * `master` continues with the next Nightly version (90.0)
+  * `main` continues with the next Nightly version (90.0)
 * On the `releases/89.0` branch:
   * We update to the latest GeckoView 89.0 beta versions and eventually to GeckoView 89.0 release versions.
   * We ship AC 89.0.x versions from the release branch. Initially those will come with Beta versions of GeckoView 89.0 and eventually release versions.

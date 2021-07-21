@@ -20,11 +20,11 @@ jobs:
       - name: "Discover A-C Version"
         id: ac-version-for-fenix-beta
         uses: mozilla-mobile/ac-version-for-fenix-beta@1.1.0
-      - name: "Checkout Master Branch"
+      - name: "Checkout Main Branch"
         uses: actions/checkout@v2
         with:
           path: main
-          ref: master
+          ref: main
       - name: "Checkout Work Branch"
         uses: actions/checkout@v2
         with:
@@ -41,6 +41,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: work
           branch: automation/sync-strings-${{ steps.ac-version-for-fenix-beta.outputs.major-ac-version }}
-          title: "Uplift Strings from master to releases/${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}.0"
-          body: "This (automated) PR sync strings from `master` to `releases/${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}.0`"
+          title: "Uplift Strings from main to releases/${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}.0"
+          body: "This (automated) PR sync strings from `main` to `releases/${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}.0`"
           labels: "🕵️‍♀️ needs review"

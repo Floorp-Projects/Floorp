@@ -30,4 +30,4 @@ Android vector drawable versions of the [icons](https://design.firefox.com/icons
 
 ## More
 
-[List of all components in the android-components repository](https://github.com/mozilla-mobile/android-components/blob/master/README.md)
+[List of all components in the android-components repository](https://github.com/mozilla-mobile/android-components/blob/main/README.md)

@@ -5,7 +5,7 @@ date: 2021-07-05 14:00:00 +0200
 author: sebastian
 ---
 
-After 2+ years slowly and incrementally working towards this goal, we [completed the migration](https://github.com/mozilla-mobile/android-components/pull/10436) from the `browser-session` component to the `browser-state` component for state handling. Finally, we were able to delete `browser-session` and all state is now maintained and updated by the [redux](https://redux.js.org/introduction/core-concepts)-like [`BrowserStore`](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/store/BrowserStore.kt#L22).
+After 2+ years slowly and incrementally working towards this goal, we [completed the migration](https://github.com/mozilla-mobile/android-components/pull/10436) from the `browser-session` component to the `browser-state` component for state handling. Finally, we were able to delete `browser-session` and all state is now maintained and updated by the [redux](https://redux.js.org/introduction/core-concepts)-like [`BrowserStore`](https://github.com/mozilla-mobile/android-components/blob/main/components/browser/state/src/main/java/mozilla/components/browser/state/store/BrowserStore.kt#L22).
 
 The following blog posting describes some of the possible follow-up changes to the architecture that we would consider, depending on the outcome of further discussions and prototyping.
 

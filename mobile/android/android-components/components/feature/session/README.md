@@ -15,7 +15,7 @@ implementation "org.mozilla.components:feature-session:{latest-version}"
 ```
 
 ### SwipeRefreshFeature
-Sample code can be found in [Sample Browser app](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
+Sample code can be found in [Sample Browser app](https://github.com/mozilla-mobile/android-components/tree/main/samples/browser).
 
 Class to add pull to refresh functionality to browsers. You should pass it a reference to a [`SwipeRefreshLayout`](https://developer.android.com/reference/kotlin/androidx/swiperefreshlayout/widget/SwipeRefreshLayout.html) and the SessionManager.
 

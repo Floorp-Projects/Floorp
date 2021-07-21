@@ -12,7 +12,7 @@ The main concepts shown in the sample app are:
 * Setting up a`FirefoxAccount` object, from a previous session or from scratch
 * Spawning a custom tab or a WebView to handle the user's authentication flow
 
-A minimal walkthrough is also provided in the [component README](https://github.com/mozilla-mobile/android-components/tree/master/components/service/firefox-accounts).
+A minimal walkthrough is also provided in the [component README](https://github.com/mozilla-mobile/android-components/tree/main/components/service/firefox-accounts).
 
 ## Setting up the account
 

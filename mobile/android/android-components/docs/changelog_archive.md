@@ -346,7 +346,7 @@ permalink: /changelog/archive
   * 🆕 New component: Feature implementation for saving, restoring and organizing collections of tabs.
 
 * **feature-readerview**
-  * 🆕 New component/feature that provides reader mode functionality. To see a complete and working example of how to integrate this new component, check out the `ReaderViewIntegration` class in our [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
+  * 🆕 New component/feature that provides reader mode functionality. To see a complete and working example of how to integrate this new component, check out the `ReaderViewIntegration` class in our [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/main/samples/browser).
   ```kotlin
       val readerViewFeature = ReaderViewFeature(context, engine, sessionManager, controlsView) { available ->
           // This lambda is invoked to indicate whether or not reader view is available
@@ -697,7 +697,7 @@ permalink: /changelog/archive
   * Add TalkBack support for page load status.
   * Added option to add "edit actions" that will show up next to the URL in edit mode.
   * Added option to set a listener for clicks on the site security indicator (globe / lock icon).
-  * The `toolbar` now emits a fact `COMMIT` when the user has edited the URL. [More information](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/README.md).
+  * The `toolbar` now emits a fact `COMMIT` when the user has edited the URL. [More information](https://github.com/mozilla-mobile/android-components/blob/main/components/browser/toolbar/README.md).
 
 * **browser-engine-gecko-nightly**
   * Added new `TrackingProtectionPolicy` category for blocking cryptocurrency miners (`TrackingProtectionPolicy.CRYPTOMINING`).
@@ -709,7 +709,7 @@ permalink: /changelog/archive
   * Added `Context.appName` returns the name (label) of the application or the package name as a fallback.
 
 * **concept-fetch**
-  * Added support for interceptors. Interceptors are a powerful mechanism to monitor, modify, retry, redirect or record requests as well as responses going through a `Client`. See the [concept-fetch README](https://github.com/mozilla-mobile/android-components/tree/master/components/concept/fetch) for example implementations of interceptors.
+  * Added support for interceptors. Interceptors are a powerful mechanism to monitor, modify, retry, redirect or record requests as well as responses going through a `Client`. See the [concept-fetch README](https://github.com/mozilla-mobile/android-components/tree/main/components/concept/fetch) for example implementations of interceptors.
 
 * 💥 **Better crash handling** (#2568, #2569, #2570, #2571)
   * **browser-engine-gecko-nightly**: `EngineSession.Observer.onCrashStateChange()` gets invoked if the content process of a session crashed. Internally a new `GeckoSession` will be created. By default this new session will just render a white page (`about:blank`) and not recover the last state. This prevents crash loops and let's the app decide (and show UI) when to restore. Calling `EngineSession.recoverFromCrash()` will try to restore the last known state from before the crash.
@@ -791,7 +791,7 @@ permalink: /changelog/archive
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.47.0/buildSrc/src/main/java/Config.kt)
 
 * **browser-session**
-  * Added `Session.webAppManifest` to expose the [Web App Manifest](https://developer.mozilla.org/en-US/docs/Web/Manifest) of the currently visible page. This functionality will only be available in [GeckoView](https://mozilla.github.io/geckoview/)-flavored [concept-engine](https://github.com/mozilla-mobile/android-components/tree/master/components/concept/engine) implementations.
+  * Added `Session.webAppManifest` to expose the [Web App Manifest](https://developer.mozilla.org/en-US/docs/Web/Manifest) of the currently visible page. This functionality will only be available in [GeckoView](https://mozilla.github.io/geckoview/)-flavored [concept-engine](https://github.com/mozilla-mobile/android-components/tree/main/components/concept/engine) implementations.
   * Added `WebAppManifestParser` to create [WebAppManifest](https://mozac.org/api/mozilla.components.browser.session.manifest/-web-app-manifest/) from JSON.
 
 * **browser-menu**
@@ -819,7 +819,7 @@ permalink: /changelog/archive
   * See component's README for usage details.
 
 * **browser-engine-system** and **browser-engine-gecko-nightly**
-  * ⚠️ **This is a breaking API change**: The [`captureThumbnail`](https://github.com/mozilla-mobile/android-components/blob/1b1600a7e8aa83a7e7d09b30cecd49762f7781f5/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L245) function has been moved to [`EngineView`](https://github.com/mozilla-mobile/android-components/blob/1b1600a7e8aa83a7e7d09b30cecd49762f7781f5/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineView.kt#L15). From now on for taking screenshots automatically you will have to opt-in by using `ThumbnailsFeature`. The decision was made to reduce overhead memory consumption for apps that are not using screenshots. Find more info in [feature-session](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/README.md) and a practical example can be found in the [sample-browser project](https://github.com/mozilla-mobile/android-components/blob/master/samples/browser).
+  * ⚠️ **This is a breaking API change**: The [`captureThumbnail`](https://github.com/mozilla-mobile/android-components/blob/1b1600a7e8aa83a7e7d09b30cecd49762f7781f5/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L245) function has been moved to [`EngineView`](https://github.com/mozilla-mobile/android-components/blob/1b1600a7e8aa83a7e7d09b30cecd49762f7781f5/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineView.kt#L15). From now on for taking screenshots automatically you will have to opt-in by using `ThumbnailsFeature`. The decision was made to reduce overhead memory consumption for apps that are not using screenshots. Find more info in [feature-session](https://github.com/mozilla-mobile/android-components/blob/main/components/feature/session/README.md) and a practical example can be found in the [sample-browser project](https://github.com/mozilla-mobile/android-components/blob/main/samples/browser).
 
 * **feature-session-bundling**
   * Saving, restoring and removing `SessionBundle` instances need to happen on a worker thread now (off the main thread).
@@ -1001,7 +1001,7 @@ permalink: /changelog/archive
   * Fixed an issue that caused [autofill](https://developer.android.com/guide/topics/text/autofill) to not work with those components.
 
 * **feature-sitepermissions**
-  * 🆕 A feature for showing site permission request prompts. For more info take a look at the [docs](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/README.md).
+  * 🆕 A feature for showing site permission request prompts. For more info take a look at the [docs](https://github.com/mozilla-mobile/android-components/blob/main/components/feature/sitepermissions/README.md).
 
 * **browser-session**
   * Added `SelectionAwareSessionObserver.observeIdOrSelected(sessionId: String?)` to observe the session based on a session ID. If the session does not exist, then observe the selected session.
@@ -1366,7 +1366,7 @@ permalink: /changelog/archive
   * Important: Users consuming megazords must also update the application-services gradle plugin to version 0.3.0.
 
 * **feature-findinpage**
-  * 🆕 A new feature component for [finding text in a web page](https://support.mozilla.org/en-US/kb/search-contents-current-page-text-or-links). [Documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/README.md).
+  * 🆕 A new feature component for [finding text in a web page](https://support.mozilla.org/en-US/kb/search-contents-current-page-text-or-links). [Documentation](https://github.com/mozilla-mobile/android-components/blob/main/components/feature/findinpage/README.md).
 
 * **service-firefox-accounts**
   * Added `FxaAccountManager`, which encapsulates a lower level accounts API and provides an observable interface for consumers that wish to be notified of account and profile changes.
@@ -1419,9 +1419,9 @@ permalink: /changelog/archive
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.38.0...v0.39.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/41?closed=1)
 * [API reference](https://mozilla-mobile.github.io/android-components/api/0.39.0/index)
-* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
-* [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Config.kt)
 
 * **feature-awesomebar**
   * Added `ClipboardSuggestionProvider` - An `AwesomeBar.SuggestionProvider` implementation that returns a suggestions for an URL in the clipboard (if there's any).
@@ -1434,9 +1434,9 @@ permalink: /changelog/archive
   * The GeckoView Nightly dependency is now updated to the latest version automatically in cases where no code changes are required.
 
 * **browser-menu**
-  * Added [docs](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/README.md#browsermenu) for customizing `BrowserMenu`.
-  * Added `BrowserMenuDivider`. [For customization take a look at the docs.](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/menu/README.md#BrowserMenuDivider)
-  * Added [BrowserMenuImageText](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/README.md#BrowserMenuImageText) for show an icon next to text in menus.
+  * Added [docs](https://github.com/mozilla-mobile/android-components/blob/main/components/browser/menu/README.md#browsermenu) for customizing `BrowserMenu`.
+  * Added `BrowserMenuDivider`. [For customization take a look at the docs.](https://github.com/mozilla-mobile/android-components/tree/main/components/browser/menu/README.md#BrowserMenuDivider)
+  * Added [BrowserMenuImageText](https://github.com/mozilla-mobile/android-components/blob/main/components/browser/menu/README.md#BrowserMenuImageText) for show an icon next to text in menus.
   * Added support for showing a menu with DOWN and UP orientation (e.g. for supporting menus in bottom toolbars).
 
 * **concept-engine**, **browser-engine-gecko-***
@@ -1454,7 +1454,7 @@ permalink: /changelog/archive
     * Snap the `BrowserToolbar` to be hidden or visible when the user stops scrolling.
 
 * **lib-publicsuffixlist**
-  * 🆕 A new component/library for reading and using the [public suffix list](https://publicsuffix.org/). Details can be found in our [docs](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/publicsuffixlist/README.md).
+  * 🆕 A new component/library for reading and using the [public suffix list](https://publicsuffix.org/). Details can be found in our [docs](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/publicsuffixlist/README.md).
 
 # 0.38.0
 
@@ -1538,7 +1538,7 @@ permalink: /changelog/archive
   * Added new "pocket event" ping builder ([#1606](https://github.com/mozilla-mobile/android-components/issues/1606))
   * Added ability to get ping builder by type from `Telemetry` instance.
   * ⚠️ **This is a breaking change!** <br/>
-  HttpURLConnectionTelemetryClient was removed. *service-telemetry* is now using [*concept-fetch*](https://github.com/mozilla-mobile/android-components/tree/master/components/concept/fetch) which allows consumers to use a unified http client. There are two options available currently: [lib-fetch-httpurlconnection](https://github.com/mozilla-mobile/android-components/tree/master/components/lib/fetch-httpurlconnection) (Based on [HttpURLConnection](https://developer.android.com/reference/java/net/HttpURLConnection)) and [lib-fetch-okhttp](https://github.com/mozilla-mobile/android-components/tree/master/components/lib/fetch-okhttp) (Based on [OkHttp](https://github.com/square/okhttp)).
+  HttpURLConnectionTelemetryClient was removed. *service-telemetry* is now using [*concept-fetch*](https://github.com/mozilla-mobile/android-components/tree/main/components/concept/fetch) which allows consumers to use a unified http client. There are two options available currently: [lib-fetch-httpurlconnection](https://github.com/mozilla-mobile/android-components/tree/main/components/lib/fetch-httpurlconnection) (Based on [HttpURLConnection](https://developer.android.com/reference/java/net/HttpURLConnection)) and [lib-fetch-okhttp](https://github.com/mozilla-mobile/android-components/tree/main/components/lib/fetch-okhttp) (Based on [OkHttp](https://github.com/square/okhttp)).
 
   ```Kotlin
   // Using HttpURLConnection:
@@ -1864,7 +1864,7 @@ permalink: /changelog/archive
   FirefoxAccount(config)
   ```
 
-  A full working example can be found [here](https://github.com/mozilla-mobile/android-components/blob/master/samples/firefox-accounts/src/main/java/org/mozilla/samples/fxa/MainActivity.kt).
+  A full working example can be found [here](https://github.com/mozilla-mobile/android-components/blob/main/samples/firefox-accounts/src/main/java/org/mozilla/samples/fxa/MainActivity.kt).
 
 # 0.33.0
 
@@ -1904,7 +1904,7 @@ permalink: /changelog/archive
   * Converted these samples to use the new `ToolbarAutocompleteFeature`.
 
 * **feature-session**
-  * Introducing `CoordinateScrollingFeature` a new feature to coordinate scrolling behavior between an `EngineView` and the view that you specify. For a full example take a look at its usages in [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
+  * Introducing `CoordinateScrollingFeature` a new feature to coordinate scrolling behavior between an `EngineView` and the view that you specify. For a full example take a look at its usages in [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/main/samples/browser).
 
 * **feature-tabs**
   * Added a filter to `TabsFeature` to allow you to choose which sessions to show in the TabsTray. This is particularly useful if you want to filter out private tabs based on some UI interaction:
@@ -2059,8 +2059,8 @@ permalink: /changelog/archive
   * 🆕 New component defining an abstract definition of an HTTP client for fetching resources. Later releases will come with components implementing this concept using HttpURLConnection, OkHttp and Necko/GeckoView. Eventually all HTTP client code in the components will be replaced with `concept-fetch` and consumers can decide what HTTP client implementation components should use.
 
 * [**Reference Browser**](https://github.com/mozilla-mobile/reference-browser)
-  * Integrated crash reporting with [`lib-crash`](https://github.com/mozilla-mobile/android-components/tree/master/components/lib/crash).
-  * Added awesome bar with [`browser-awesomebar`](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/awesomebar).
+  * Integrated crash reporting with [`lib-crash`](https://github.com/mozilla-mobile/android-components/tree/main/components/lib/crash).
+  * Added awesome bar with [`browser-awesomebar`](https://github.com/mozilla-mobile/android-components/tree/main/components/browser/awesomebar).
   * Toolbar is hiding automatically now when scrolling web content.
   * Added "Sync Now" button to preferences (without functionality in this release)
   * Updated theme colors.
@@ -2316,7 +2316,7 @@ permalink: /changelog/archive
 * **feature-tabs**:
   * `TabsToolbarFeature` is now adding a `TabCounter` from the `ui-tabcounter` component to the toolbar.
 * **lib-jexl**
-  * New component for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/README.md).
+  * New component for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/jexl/README.md).
 * **service-telemetry**
   * Added option to send list of experiments in event pings: `Telemetry.recordExperiments(Map<String, Boolean> experiments)`
   * Fixed an issue where `DebugLogClient` didn't use the provided log tag.
@@ -2383,7 +2383,7 @@ Release date: 2018-10-23
 * **ui-tabcounter**
   * The `TabCounter` class is now open and can get extended.
 * **feature-downloads**
-  * Now you're able to provide a dialog before a download starts and customize it to your wish. Take a look at the [updated docs](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/README.md).
+  * Now you're able to provide a dialog before a download starts and customize it to your wish. Take a look at the [updated docs](https://github.com/mozilla-mobile/android-components/blob/main/components/feature/downloads/README.md).
 
 # 0.27.0
 
@@ -2451,9 +2451,9 @@ Release date: 2018-10-16
 * **browser-errorpages**
   * Added more detailed documentation in the README.
 * **feature-downloads**
-  * A new components for apps that want to process downloads, for more examples take a look at [here](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/README.md).
+  * A new components for apps that want to process downloads, for more examples take a look at [here](https://github.com/mozilla-mobile/android-components/blob/main/components/feature/downloads/README.md).
 * **lib-crash**
-  * A new generic crash reporter component that can report crashes to multiple services ([documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/README.md)).
+  * A new generic crash reporter component that can report crashes to multiple services ([documentation](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/crash/README.md)).
 * **support-ktx**
   * Added new helper method to run a block of code with a different StrictMode policy:
   ```kotlin
@@ -2735,8 +2735,8 @@ Release date: 2018-10-05
     * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
     * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
 
-* Added initial documentation for the browser-session component: https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/README.md
-* **sync-logins**: New component for integrating with Firefox Sync (for Logins). A sample app showcasing this new functionality can be found at: https://github.com/mozilla-mobile/android-components/tree/master/samples/sync-logins
+* Added initial documentation for the browser-session component: https://github.com/mozilla-mobile/android-components/blob/main/components/browser/session/README.md
+* **sync-logins**: New component for integrating with Firefox Sync (for Logins). A sample app showcasing this new functionality can be found at: https://github.com/mozilla-mobile/android-components/tree/main/samples/sync-logins
 * **browser-engine-**:
   * Added support for fullscreen mode and the ability to exit it programmatically if needed.
   ```Kotlin
@@ -2967,7 +2967,7 @@ Release date: 2018-10-05
 
 * **concept-engine**, **engine-system**, **engine-gecko**: Added new API to load data and HTML directly (without loading a URL). Added the ability to stop loading a page.
 * **ui-autocomplete**: Fixed a bug that caused soft keyboards and the InlineAutocompleteEditText component to desync.
-* **service-firefox-accounts**: Added JNA-specific proguard rules so consumers of this library don't have to add them to their app (see https://github.com/java-native-access/jna/blob/master/www/FrequentlyAskedQuestions.md#jna-on-android for details). Underlying libfxa_client.so no longer depends on versioned .so names. All required dependencies are now statically linked which simplified our dependency setup as well.
+* **service-firefox-accounts**: Added JNA-specific proguard rules so consumers of this library don't have to add them to their app (see https://github.com/java-native-access/jna/blob/main/www/FrequentlyAskedQuestions.md#jna-on-android for details). Underlying libfxa_client.so no longer depends on versioned .so names. All required dependencies are now statically linked which simplified our dependency setup as well.
 
 # 0.18 (2018-08-10)
 
@@ -3004,12 +3004,12 @@ Release date: 2018-10-05
     * Beta: **62.0b13** (dd92dec96711e60a8c6a49ebe584fa23a453a292) 🔺
     * Release: 61.0 (785d242a5b01d5f1094882aa2144d8e5e2791e06)
 
-* **support-base**: New base component containing small building blocks for other components. Added a [simple logging API](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/README.md) that allows components to log messages/exceptions but lets the consuming app decide what gets logged and how.
+* **support-base**: New base component containing small building blocks for other components. Added a [simple logging API](https://github.com/mozilla-mobile/android-components/blob/main/components/support/base/README.md) that allows components to log messages/exceptions but lets the consuming app decide what gets logged and how.
 * **support-utils**: Some classes have been moved to the new _support-base_ component.
 * **service-fretboard**: ⚠️ Breaking change: `ExperimentDescriptor` instances now operate on the experiment name instead of the ID.
 * **ui-icons**: Added new icons (used in _Firefox Focus_ UI refresh): `mozac_ic_arrowhead_down`, `mozac_ic_arrowhead_up`, `mozac_ic_check`, `mozac_ic_device_desktop`, `mozac_ic_mozilla`, `mozac_ic_open_in`, `mozac_ic_reorder`.
-* **service-firefox-accounts**: Added [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/README.md).
-* **service-fretboard**: Updated [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/README.md).
+* **service-firefox-accounts**: Added [documentation](https://github.com/mozilla-mobile/android-components/blob/main/components/service/firefox-accounts/README.md).
+* **service-fretboard**: Updated [documentation](https://github.com/mozilla-mobile/android-components/blob/main/components/service/fretboard/README.md).
 * **browser-toolbar**: Fixed an issue where the toolbar content disappeared if a padding value was set on the toolbar.
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.16.1...v0.17), [Milestone](https://github.com/mozilla-mobile/android-components/milestone/15?closed=1)

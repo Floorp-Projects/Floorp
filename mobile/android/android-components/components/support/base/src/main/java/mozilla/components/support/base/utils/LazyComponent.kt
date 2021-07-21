@@ -68,7 +68,7 @@ class LazyComponent<T>(initializer: () -> T) {
         /**
          * The number of [LazyComponent]s initialized. This is intended to be checked during testing.
          * For example, a team can run a test scenario that starts the app and, if the [initCount]
-         * increases from master, the team can fail the test to alert that a new component is initialized.
+         * increases from main, the team can fail the test to alert that a new component is initialized.
          * This can help the team catch cases where they didn't mean to initialize new components or add
          * new code on start up, keeping it performant.
          *

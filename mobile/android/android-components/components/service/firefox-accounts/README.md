@@ -19,12 +19,12 @@ At a high level, there is an Account Manager:
 * (optionally) Provides Firefox Sync integration
 
 Sample applications:
-* [accounts sample app](https://github.com/mozilla-mobile/android-components/tree/master/samples/firefox-accounts), demonstrates how to use low level APIs
-* [sync app](https://github.com/mozilla-mobile/android-components/tree/master/samples/sync), demonstrates a high level accounts integration, complete with syncing multiple data stores
+* [accounts sample app](https://github.com/mozilla-mobile/android-components/tree/main/samples/firefox-accounts), demonstrates how to use low level APIs
+* [sync app](https://github.com/mozilla-mobile/android-components/tree/main/samples/sync), demonstrates a high level accounts integration, complete with syncing multiple data stores
 
 Useful companion components:
-* [feature-accounts](https://github.com/mozilla-mobile/android-components/tree/master/components/feature/accounts), provides a `tabs` integration on top of `FxaAccountManager`, to handle display of web sign-in UI.
-* [browser-storage-sync](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/storage-sync), provides data storage layers compatible with Firefox Sync.
+* [feature-accounts](https://github.com/mozilla-mobile/android-components/tree/main/components/feature/accounts), provides a `tabs` integration on top of `FxaAccountManager`, to handle display of web sign-in UI.
+* [browser-storage-sync](https://github.com/mozilla-mobile/android-components/tree/main/components/browser/storage-sync), provides data storage layers compatible with Firefox Sync.
 
 ## Before using this component
 Products sending telemetry and using this component *must request* a data-review following [this process](https://wiki.mozilla.org/Firefox/Data_Collection).

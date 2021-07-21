@@ -18,7 +18,7 @@ implementation "org.mozilla.components:browser-menu2:{latest-version}"
 ### MenuController
 The menu controller is used to control the items in the menu as well as displaying the menu popup.
 
-Sample code can be found in [Sample Toolbar app](https://github.com/mozilla-mobile/android-components/tree/master/samples/toolbar).
+Sample code can be found in [Sample Toolbar app](https://github.com/mozilla-mobile/android-components/tree/main/samples/toolbar).
 
 There are multiple properties that you customize of the browser menu by just adding them into your dimens.xml file.
 

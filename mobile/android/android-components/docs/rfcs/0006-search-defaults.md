@@ -13,7 +13,7 @@ Determining the set of default search engines based on the user's home region.
 
 ## Motivation
 
-Our configuration of default search engines ([list.json](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/assets/search/list.json)) is based on the region and language or locale of the user.
+Our configuration of default search engines ([list.json](https://github.com/mozilla-mobile/android-components/blob/main/components/browser/search/src/main/assets/search/list.json)) is based on the region and language or locale of the user.
 
 To provide our users with the best choice of search engines and to satisfy the needs of our partnerships, we want to determine (and recognize changes of) the user's region as accurately as possible.
 

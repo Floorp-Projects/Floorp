@@ -22,7 +22,7 @@ Applications that send telemetry via Glean *must ensure* they have received appr
 [the Firefox Data Collection process](https://wiki.mozilla.org/Firefox/Data_Collection) before integrating this component.
 
 Details on the metrics collected by the `mozilla.appservices.logins` component are available
-[here](https://github.com/mozilla/application-services/tree/master/docs/metrics/logins/metrics.md)
+[here](https://github.com/mozilla/application-services/tree/main/docs/metrics/logins/metrics.md)
 
 
 ### Setting up the dependency
@@ -172,7 +172,7 @@ Currently there is no way to change the key, once set (see https://github.com/mo
 
 ### Where is the source code for this?
 
-Part is in this tree, but most is in https://github.com/mozilla/application-services. Specifically, there are two pieces not present in this repository, an [android-specific piece written in Kotlin](https://github.com/mozilla/application-services/tree/master/logins-sql/tree/master/logins-api/android), and a [cross-platform piece written in Rust](https://github.com/mozilla/application-services/tree/master/logins-sql).
+Part is in this tree, but most is in https://github.com/mozilla/application-services. Specifically, there are two pieces not present in this repository, an [android-specific piece written in Kotlin](https://github.com/mozilla/application-services/tree/main/logins-sql/tree/main/logins-api/android), and a [cross-platform piece written in Rust](https://github.com/mozilla/application-services/tree/main/logins-sql).
 
 ### What's the difference between `wipe` and `wipeLocal`?
 
