@@ -42,7 +42,6 @@ class gfxConfigManager {
         mWrPartialPresent(false),
         mWrOptimizedShaders(false),
         mGPUProcessAllowSoftware(false),
-        mXRenderEnabled(false),
         mWrEnvForceEnabled(false),
         mWrEnvForceDisabled(false),
         mScaledResolution(false),
@@ -96,7 +95,6 @@ class gfxConfigManager {
   Maybe<bool> mWrShaderCache;
   bool mWrOptimizedShaders;
   bool mGPUProcessAllowSoftware;
-  bool mXRenderEnabled;
 
   /**
    * Environment variables
