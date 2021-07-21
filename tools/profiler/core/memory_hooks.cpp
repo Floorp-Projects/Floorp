@@ -92,11 +92,11 @@ static bool profiler_add_native_allocation_marker(int64_t aSize,
     }
     static void StreamJSONMarkerData(
         mozilla::baseprofiler::SpliceableJSONWriter& aWriter, int64_t aSize,
-        uintptr_t aMemoryAddress, int aThreadId) {
+        uintptr_t aMemoryAddress, ProfilerThreadId aThreadId) {
       aWriter.IntProperty("size", aSize);
       aWriter.IntProperty("memoryAddress",
                           static_cast<int64_t>(aMemoryAddress));
-      aWriter.IntProperty("threadId", aThreadId);
+      aWriter.IntProperty("threadId", aThreadId.ToNumber());
     }
     static mozilla::MarkerSchema MarkerTypeDisplay() {
       return mozilla::MarkerSchema::SpecialFrontendLocation{};

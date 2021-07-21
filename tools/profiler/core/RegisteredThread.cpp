@@ -70,7 +70,7 @@ static void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
       info.size, info.inNursery);
 }
 
-RacyRegisteredThread::RacyRegisteredThread(int aThreadId)
+RacyRegisteredThread::RacyRegisteredThread(ProfilerThreadId aThreadId)
     : mProfilingStackOwner(
           mozilla::MakeNotNull<RefPtr<mozilla::ProfilingStackOwner>>()),
       mThreadId(aThreadId),

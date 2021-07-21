@@ -281,11 +281,6 @@ class MarkerThreadId {
       baseprofiler::BaseProfilerThreadId aThreadId)
       : mThreadId(aThreadId) {}
 
-  // Temporary until the Gecko Profiler switches to BaseProfilerThreadId.
-  // TODO: Remove!
-  constexpr explicit MarkerThreadId(int aThreadId)
-      : mThreadId(baseprofiler::BaseProfilerThreadId::FromNumber(aThreadId)) {}
-
   // Use the current thread's id.
   static MarkerThreadId CurrentThread() {
     return MarkerThreadId(baseprofiler::profiler_current_thread_id());

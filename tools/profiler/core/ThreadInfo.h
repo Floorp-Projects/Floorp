@@ -7,6 +7,7 @@
 #ifndef ThreadInfo_h
 #define ThreadInfo_h
 
+#include "mozilla/ProfilerUtils.h"
 #include "mozilla/TimeStamp.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
@@ -20,20 +21,16 @@ class ThreadInfo final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ThreadInfo)
 
   ThreadInfo(
-      const char* aName, int aThreadId, bool aIsMainThread,
+      const char* aName, ProfilerThreadId aThreadId, bool aIsMainThread,
       const mozilla::TimeStamp& aRegisterTime = mozilla::TimeStamp::Now())
       : mName(aName),
         mRegisterTime(aRegisterTime),
         mThreadId(aThreadId),
-        mIsMainThread(aIsMainThread) {
-    // I don't know if we can assert this. But we should warn.
-    MOZ_ASSERT(aThreadId >= 0, "native thread ID is < 0");
-    MOZ_ASSERT(aThreadId <= INT32_MAX, "native thread ID is > INT32_MAX");
-  }
+        mIsMainThread(aIsMainThread) {}
 
   const char* Name() const { return mName.get(); }
   mozilla::TimeStamp RegisterTime() const { return mRegisterTime; }
-  int ThreadId() const { return mThreadId; }
+  ProfilerThreadId ThreadId() const { return mThreadId; }
   bool IsMainThread() const { return mIsMainThread; }
 
  private:
@@ -41,7 +38,7 @@ class ThreadInfo final {
 
   const nsCString mName;
   const mozilla::TimeStamp mRegisterTime;
-  const int mThreadId;
+  const ProfilerThreadId mThreadId;
   const bool mIsMainThread;
 };
 
