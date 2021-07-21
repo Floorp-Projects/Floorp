@@ -366,6 +366,7 @@
   MACRO_(ownKeys, ownKeys, "ownKeys")                                          \
   MACRO_(Object_valueOf, Object_valueOf, "Object_valueOf")                     \
   MACRO_(package, package, "package")                                          \
+  MACRO_(parameters, parameters, "parameters")                                 \
   MACRO_(parseFloat, parseFloat, "parseFloat")                                 \
   MACRO_(parseInt, parseInt, "parseInt")                                       \
   MACRO_(pattern, pattern, "pattern")                                          \
