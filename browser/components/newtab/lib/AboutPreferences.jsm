@@ -80,7 +80,7 @@ const PREFS_AFTER_SECTIONS = ({
           ? "home-prefs-snippets-description-new"
           : "home-prefs-snippets-description",
     },
-    icon: "info",
+    icon: "chrome://global/skin/icons/info.svg",
     eventSource: "SNIPPETS",
   },
 ];

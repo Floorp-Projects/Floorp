@@ -1839,8 +1839,7 @@ getHardcodedLayout = isBasicLayout => ({
               id: "newtab-pocket-learn-more",
             },
             link_url: "https://getpocket.com/firefox/new_tab_learn_more",
-            icon:
-              "chrome://activity-stream/content/data/content/assets/glyph-pocket-16.svg",
+            icon: "chrome://global/skin/icons/pocket.svg",
           },
           properties: {},
           styles: {
