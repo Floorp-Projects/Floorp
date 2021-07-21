@@ -50,7 +50,7 @@ add_task(async function() {
   // continuing the test or it might destroy messages we wait later on (Bug
   // 1270234).
   const promises = [hud.ui.once("messages-cleared")];
-  if (isFissionEnabled()) {
+  if (isFissionEnabled() || isServerTargetSwitchingEnabled()) {
     promises.push(hud.commands.targetCommand.once("switched-target"));
   }
 
