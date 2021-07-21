@@ -20,10 +20,6 @@ const SHOULD_DELIVER_ALL_FOR_NON_PRINTABLE = kStrictKeyPressEvents
   ? SHOULD_DELIVER_KEYDOWN | SHOULD_DELIVER_KEYUP
   : SHOULD_DELIVER_ALL_FOR_PRINTABLE;
 
-const TEST_PATH =
-  "http://example.net/browser/browser/" +
-  "components/resistfingerprinting/test/browser/";
-
 // The test cases for english content.
 const TEST_CASES_EN = [
   {

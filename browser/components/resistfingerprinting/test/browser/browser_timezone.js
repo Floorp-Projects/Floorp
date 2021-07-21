@@ -3,10 +3,6 @@
  *               UTC timezone after fingerprinting resistance is enabled.
  */
 
-const TEST_DOMAIN = "http://example.net/";
-const TEST_PATH =
-  TEST_DOMAIN + "browser/browser/components/resistfingerprinting/test/browser/";
-
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.resistFingerprinting", true]],

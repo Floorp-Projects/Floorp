@@ -3,7 +3,7 @@
  *   be blocked when pref 'privacy.resistFingerprinting.block_mozAddonManager' is true.
  */
 
-const TEST_PATH =
+const HTTPS_TEST_PATH =
   "https://example.com/browser/browser/" +
   "components/resistfingerprinting/test/browser/";
 
@@ -19,7 +19,7 @@ add_task(async function test() {
 
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      TEST_PATH + "file_dummy.html"
+      HTTPS_TEST_PATH + "file_dummy.html"
     );
 
     await SpecialPowers.spawn(tab.linkedBrowser, [pref], function(aPref) {
