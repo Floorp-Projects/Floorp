@@ -15,6 +15,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
+  PrefUtils: "resource://normandy/lib/PrefUtils.jsm",
 });
 
 const IS_MAIN_PROCESS =
@@ -60,27 +61,141 @@ XPCOMUtils.defineLazyGetter(this, "syncDataStore", () => {
         Cu.reportError(e);
       }
     },
+    _trySetTypedPrefValue(pref, value) {
+      let variableType = typeof value;
+      switch (variableType) {
+        case "boolean":
+          Services.prefs.setBoolPref(pref, value);
+          break;
+        case "number":
+          Services.prefs.setIntPref(pref, value);
+          break;
+        case "string":
+          Services.prefs.setStringPref(pref, value);
+          break;
+        case "object":
+          Services.prefs.setStringPref(pref, JSON.stringify(value));
+          break;
+      }
+    },
+    _clearBranchChildValues(prefBranch) {
+      const variablesBranch = Services.prefs.getBranch(prefBranch);
+      const prefChildList = variablesBranch.getChildList("");
+      for (let variable of prefChildList) {
+        variablesBranch.clearUserPref(variable);
+      }
+    },
+    /**
+     * Given a branch pref returns all child prefs and values
+     * { childPref: value }
+     * where value is parsed to the appropriate type
+     *
+     * @returns {Object[]}
+     */
+    _getBranchChildValues(prefBranch, featureId) {
+      const branch = Services.prefs.getBranch(prefBranch);
+      const prefChildList = branch.getChildList("");
+      let values = {};
+      if (!prefChildList.length) {
+        return null;
+      }
+      for (const childPref of prefChildList) {
+        let prefName = `${prefBranch}${childPref}`;
+        let value = PrefUtils.getPref(prefName);
+        // Try to parse string values that could be stringified objects
+        if (FeatureManifest[featureId]?.variables[childPref]?.type === "json") {
+          let parsedValue = tryJSONParse(value);
+          if (parsedValue) {
+            value = parsedValue;
+          }
+        }
+        values[childPref] = value;
+      }
+
+      return values;
+    },
     get(featureId) {
-      return this._tryParsePrefValue(experimentsPrefBranch, featureId);
+      let metadata = this._tryParsePrefValue(experimentsPrefBranch, featureId);
+      if (!metadata) {
+        return null;
+      }
+      let prefBranch = `${SYNC_DATA_PREF_BRANCH}${featureId}.`;
+      metadata.branch.feature.value = this._getBranchChildValues(
+        prefBranch,
+        featureId
+      );
+
+      return metadata;
     },
     getDefault(featureId) {
-      return this._tryParsePrefValue(defaultsPrefBranch, featureId);
+      let metadata = this._tryParsePrefValue(defaultsPrefBranch, featureId);
+      if (!metadata) {
+        return null;
+      }
+      let prefBranch = `${SYNC_DEFAULTS_PREF_BRANCH}${featureId}.`;
+      metadata.variables = this._getBranchChildValues(prefBranch, featureId);
+
+      return metadata;
     },
     set(featureId, value) {
-      this._trySetPrefValue(experimentsPrefBranch, featureId, value);
+      /* If the enrollment branch has variables we store those separately
+       * in pref branches of appropriate type:
+       * { featureId: "foo", value: { enabled: true } }
+       * gets stored as `${SYNC_DATA_PREF_BRANCH}foo.enabled=true`
+       */
+      if (value.branch?.feature?.value) {
+        for (let variable of Object.keys(value.branch.feature.value)) {
+          let prefName = `${SYNC_DATA_PREF_BRANCH}${featureId}.${variable}`;
+          this._trySetTypedPrefValue(
+            prefName,
+            value.branch.feature.value[variable]
+          );
+        }
+        this._trySetPrefValue(experimentsPrefBranch, featureId, {
+          ...value,
+          branch: {
+            ...value.branch,
+            feature: {
+              ...value.branch.feature,
+              value: null,
+            },
+          },
+        });
+      } else {
+        this._trySetPrefValue(experimentsPrefBranch, featureId, value);
+      }
     },
     setDefault(featureId, value) {
-      this._trySetPrefValue(defaultsPrefBranch, featureId, value);
+      /* We store configuration variables separately in pref branches of
+       * appropriate type:
+       * (feature: "foo") { variables: { enabled: true } }
+       * gets stored as `${SYNC_DEFAULTS_PREF_BRANCH}foo.enabled=true`
+       */
+      for (let variable of Object.keys(value.variables || {})) {
+        let prefName = `${SYNC_DEFAULTS_PREF_BRANCH}${featureId}.${variable}`;
+        this._trySetTypedPrefValue(prefName, value.variables[variable]);
+      }
+      this._trySetPrefValue(defaultsPrefBranch, featureId, {
+        ...value,
+        variables: null,
+      });
     },
     getAllDefaultBranches() {
-      return defaultsPrefBranch.getChildList("");
+      return defaultsPrefBranch.getChildList("").filter(
+        // Filter out remote defaults variable prefs
+        pref => !pref.includes(".")
+      );
     },
     delete(featureId) {
+      const prefBranch = `${SYNC_DATA_PREF_BRANCH}${featureId}.`;
+      this._clearBranchChildValues(prefBranch);
       try {
         experimentsPrefBranch.clearUserPref(featureId);
       } catch (e) {}
     },
     deleteDefault(featureId) {
+      let prefBranch = `${SYNC_DEFAULTS_PREF_BRANCH}${featureId}.`;
+      this._clearBranchChildValues(prefBranch);
       try {
         defaultsPrefBranch.clearUserPref(featureId);
       } catch (e) {}
