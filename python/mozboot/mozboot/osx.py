@@ -153,8 +153,48 @@ class OSXBootstrapper(BaseBootstrapper):
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         pass
 
-    def install_mobile_android_packages(self, mozconfig_builder):
-        self.ensure_homebrew_mobile_android_packages(mozconfig_builder)
+    def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
+        # Multi-part process:
+        # 1. System packages.
+        # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
+
+        # 1. System packages.
+        packages = ["wget"]
+        self._ensure_homebrew_packages(packages)
+
+        casks = ["adoptopenjdk8"]
+        self._ensure_homebrew_casks(casks)
+
+        is_64bits = sys.maxsize > 2 ** 32
+        if not is_64bits:
+            raise Exception(
+                "You need a 64-bit version of Mac OS X to build "
+                "GeckoView/Firefox for Android."
+            )
+
+        # 2. Android pieces.
+        java_path = self.ensure_java(mozconfig_builder)
+        # Prefer our validated java binary by putting it on the path first.
+        os.environ["PATH"] = "{}{}{}".format(java_path, os.pathsep, os.environ["PATH"])
+        from mozboot import android
+
+        android.ensure_android(
+            "macosx", artifact_mode=artifact_mode, no_interactive=self.no_interactive
+        )
+        android.ensure_android(
+            "macosx",
+            system_images_only=True,
+            artifact_mode=artifact_mode,
+            no_interactive=self.no_interactive,
+            avd_manifest_path=android.AVD_MANIFEST_X86_64,
+        )
+        android.ensure_android(
+            "macosx",
+            system_images_only=True,
+            artifact_mode=artifact_mode,
+            no_interactive=self.no_interactive,
+            avd_manifest_path=android.AVD_MANIFEST_ARM,
+        )
 
     def ensure_mobile_android_packages(self, state_dir, checkout_root):
         from mozboot import android
@@ -167,9 +207,7 @@ class OSXBootstrapper(BaseBootstrapper):
         )
 
     def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
-        self.ensure_homebrew_mobile_android_packages(
-            mozconfig_builder, artifact_mode=True
-        )
+        self.install_mobile_android_packages(mozconfig_builder, artifact_mode=True)
 
     def generate_mobile_android_mozconfig(self):
         return self._generate_mobile_android_mozconfig()
@@ -239,51 +277,6 @@ class OSXBootstrapper(BaseBootstrapper):
         # TODO: Figure out what not to install for artifact mode
         packages = ["yasm"]
         self._ensure_homebrew_packages(packages)
-
-    def ensure_homebrew_mobile_android_packages(
-        self, mozconfig_builder, artifact_mode=False
-    ):
-        # Multi-part process:
-        # 1. System packages.
-        # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
-
-        # 1. System packages.
-        packages = ["wget"]
-        self._ensure_homebrew_packages(packages)
-
-        casks = ["adoptopenjdk8"]
-        self._ensure_homebrew_casks(casks)
-
-        is_64bits = sys.maxsize > 2 ** 32
-        if not is_64bits:
-            raise Exception(
-                "You need a 64-bit version of Mac OS X to build "
-                "GeckoView/Firefox for Android."
-            )
-
-        # 2. Android pieces.
-        java_path = self.ensure_java(mozconfig_builder)
-        # Prefer our validated java binary by putting it on the path first.
-        os.environ["PATH"] = "{}{}{}".format(java_path, os.pathsep, os.environ["PATH"])
-        from mozboot import android
-
-        android.ensure_android(
-            "macosx", artifact_mode=artifact_mode, no_interactive=self.no_interactive
-        )
-        android.ensure_android(
-            "macosx",
-            system_images_only=True,
-            artifact_mode=artifact_mode,
-            no_interactive=self.no_interactive,
-            avd_manifest_path=android.AVD_MANIFEST_X86_64,
-        )
-        android.ensure_android(
-            "macosx",
-            system_images_only=True,
-            artifact_mode=artifact_mode,
-            no_interactive=self.no_interactive,
-            avd_manifest_path=android.AVD_MANIFEST_ARM,
-        )
 
     def ensure_homebrew_installed(self):
         """

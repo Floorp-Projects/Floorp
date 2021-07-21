@@ -52,15 +52,12 @@ class FreeBSDBootstrapper(BaseBootstrapper):
     def install_system_packages(self):
         self.pkg_install(*self.packages)
 
-    def install_browser_packages(self, mozconfig_builder):
-        self.ensure_browser_packages()
-
-    def install_browser_artifact_mode_packages(self, mozconfig_builder):
-        self.ensure_browser_packages(artifact_mode=True)
-
-    def ensure_browser_packages(self, artifact_mode=False):
+    def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
         self.pkg_install(*self.browser_packages)
+
+    def install_browser_artifact_mode_packages(self, mozconfig_builder):
+        self.install_browser_packages(mozconfig_builder, artifact_mode=True)
 
     def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
         # TODO: we don't ship clang base static analysis for this platform
@@ -71,7 +68,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
         self.pkg_install("rust-cbindgen")
 
     def ensure_nasm_packages(self, state_dir, checkout_root):
-        # installed via ensure_browser_packages
+        # installed via install_browser_packages
         pass
 
     def ensure_node_packages(self, state_dir, checkout_root):
