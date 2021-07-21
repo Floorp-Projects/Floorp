@@ -185,9 +185,11 @@ using mozilla::profiler::detail::RacyFeatures;
 
 LazyLogModule gProfilerLog("prof");
 
+namespace mozilla::profiler::detail {
 // Statically initialized to 0, then set once from profiler_init(), which should
 // be called from the main thread before any other use of the profiler.
 int scProfilerMainThreadId;
+}  // namespace mozilla::profiler::detail
 
 #if defined(GP_OS_android)
 class GeckoJavaSampler
@@ -4324,7 +4326,8 @@ void profiler_init_threadmanager() {
 void profiler_init(void* aStackTop) {
   LOG("profiler_init");
 
-  scProfilerMainThreadId = profiler_current_thread_id();
+  mozilla::profiler::detail::scProfilerMainThreadId =
+      profiler_current_thread_id();
 
   VTUNE_INIT();
 

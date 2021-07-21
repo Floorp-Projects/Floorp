@@ -26,16 +26,13 @@
 
 #  define AUTO_PROFILER_STATS(name)
 
-namespace mozilla {
+namespace mozilla::baseprofiler {
 
-namespace baseprofiler {
+[[nodiscard]] inline int profiler_main_thread_id() { return 0; }
 
-inline int profiler_main_thread_id() { return 0; }
+[[nodiscard]] inline bool profiler_is_active() { return false; }
 
-inline bool profiler_is_active() { return false; }
-
-}  // namespace baseprofiler
-}  // namespace mozilla
+}  // namespace mozilla::baseprofiler
 
 #else  // !MOZ_GECKO_PROFILER
 
@@ -45,9 +42,7 @@ inline bool profiler_is_active() { return false; }
 #  include <stdint.h>
 #  include <string>
 
-namespace mozilla {
-
-namespace baseprofiler {
+namespace mozilla::baseprofiler {
 
 // Uncomment the following line to display profiler runtime statistics at
 // shutdown.
@@ -208,16 +203,16 @@ class MOZ_RAII AutoProfilerStats {
           "other Firefox timers do not get affected")
 
 struct ProfilerFeature {
-#  define DECLARE(n_, str_, Name_, desc_)                     \
-    static constexpr uint32_t Name_ = (1u << n_);             \
-    static constexpr bool Has##Name_(uint32_t aFeatures) {    \
-      return aFeatures & Name_;                               \
-    }                                                         \
-    static constexpr void Set##Name_(uint32_t& aFeatures) {   \
-      aFeatures |= Name_;                                     \
-    }                                                         \
-    static constexpr void Clear##Name_(uint32_t& aFeatures) { \
-      aFeatures &= ~Name_;                                    \
+#  define DECLARE(n_, str_, Name_, desc_)                                \
+    static constexpr uint32_t Name_ = (1u << n_);                        \
+    [[nodiscard]] static constexpr bool Has##Name_(uint32_t aFeatures) { \
+      return aFeatures & Name_;                                          \
+    }                                                                    \
+    static constexpr void Set##Name_(uint32_t& aFeatures) {              \
+      aFeatures |= Name_;                                                \
+    }                                                                    \
+    static constexpr void Clear##Name_(uint32_t& aFeatures) {            \
+      aFeatures &= ~Name_;                                               \
     }
 
   // Define a bitfield constant, a getter, and two setters for each feature.
@@ -250,17 +245,17 @@ class RacyFeatures {
 
   MFBT_API static void SetSamplingUnpaused();
 
-  MFBT_API static bool IsActive();
+  [[nodiscard]] MFBT_API static bool IsActive();
 
-  MFBT_API static bool IsActiveWithFeature(uint32_t aFeature);
+  [[nodiscard]] MFBT_API static bool IsActiveWithFeature(uint32_t aFeature);
 
   // True if profiler is active, and not fully paused.
   // Note that periodic sampling *could* be paused!
-  MFBT_API static bool IsActiveAndUnpaused();
+  [[nodiscard]] MFBT_API static bool IsActiveAndUnpaused();
 
   // True if profiler is active, and sampling is not paused (though generic
   // `SetPaused()` or specific `SetSamplingPaused()`).
-  MFBT_API static bool IsActiveAndSamplingUnpaused();
+  [[nodiscard]] MFBT_API static bool IsActiveAndSamplingUnpaused();
 
  private:
   static constexpr uint32_t Active = 1u << 31;
@@ -306,7 +301,7 @@ MFBT_API bool IsThreadBeingProfiled();
 // expensive data will end up being created but not used if another thread
 // stops the profiler between the CreateExpensiveData() and PROFILER_OPERATION
 // calls.
-inline bool profiler_is_active() {
+[[nodiscard]] inline bool profiler_is_active() {
   return baseprofiler::detail::RacyFeatures::IsActive();
 }
 
@@ -317,50 +312,54 @@ inline bool profiler_is_active() {
 //   if (profiler_can_accept_markers()) {
 //     BASE_PROFILER_MARKER(name, OTHER, SomeMarkerType, expensivePayload);
 //   }
-inline bool profiler_can_accept_markers() {
+[[nodiscard]] inline bool profiler_can_accept_markers() {
   return baseprofiler::detail::RacyFeatures::IsActiveAndUnpaused();
 }
 
 // Is the profiler active, and is the current thread being profiled?
 // (Same caveats and recommented usage as profiler_is_active().)
-inline bool profiler_thread_is_being_profiled() {
+[[nodiscard]] inline bool profiler_thread_is_being_profiled() {
   return profiler_is_active() && baseprofiler::detail::IsThreadBeingProfiled();
 }
 
 // Is the profiler active and paused? Returns false if the profiler is inactive.
-MFBT_API bool profiler_is_paused();
+[[nodiscard]] MFBT_API bool profiler_is_paused();
 
 // Is the profiler active and sampling is paused? Returns false if the profiler
 // is inactive.
-MFBT_API bool profiler_is_sampling_paused();
+[[nodiscard]] MFBT_API bool profiler_is_sampling_paused();
 
 // Is the current thread sleeping?
-MFBT_API bool profiler_thread_is_sleeping();
+[[nodiscard]] MFBT_API bool profiler_thread_is_sleeping();
 
 // Get all the features supported by the profiler that are accepted by
 // profiler_start(). The result is the same whether the profiler is active or
 // not.
-MFBT_API uint32_t profiler_get_available_features();
+[[nodiscard]] MFBT_API uint32_t profiler_get_available_features();
 
 // Check if a profiler feature (specified via the ProfilerFeature type) is
 // active. Returns false if the profiler is inactive. Note: the return value
 // can become immediately out-of-date, much like the return value of
 // profiler_is_active().
-MFBT_API bool profiler_feature_active(uint32_t aFeature);
+[[nodiscard]] MFBT_API bool profiler_feature_active(uint32_t aFeature);
 
 // Get the current process's ID.
-MFBT_API int profiler_current_process_id();
+[[nodiscard]] MFBT_API int profiler_current_process_id();
 
 // Get the current thread's ID.
-MFBT_API int profiler_current_thread_id();
+[[nodiscard]] MFBT_API int profiler_current_thread_id();
 
+namespace detail {
 // Statically initialized to 0, then set once from profiler_init(), which should
 // be called from the main thread before any other use of the profiler.
 extern MFBT_DATA int scProfilerMainThreadId;
+}  // namespace detail
 
-inline int profiler_main_thread_id() { return scProfilerMainThreadId; }
+[[nodiscard]] inline int profiler_main_thread_id() {
+  return detail::scProfilerMainThreadId;
+}
 
-inline bool profiler_is_main_thread() {
+[[nodiscard]] inline bool profiler_is_main_thread() {
   return profiler_current_thread_id() == profiler_main_thread_id();
 }
 
@@ -368,10 +367,9 @@ inline bool profiler_is_main_thread() {
 // current thread*. This may be used by re-entrant code that may call profiler
 // functions while the same of a different profiler mutex is locked, which could
 // deadlock.
-bool profiler_is_locked_on_current_thread();
+[[nodiscard]] bool profiler_is_locked_on_current_thread();
 
-}  // namespace baseprofiler
-}  // namespace mozilla
+}  // namespace mozilla::baseprofiler
 
 #endif  // !MOZ_GECKO_PROFILER
 
