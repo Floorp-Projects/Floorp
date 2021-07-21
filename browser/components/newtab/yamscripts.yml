@@ -4,14 +4,6 @@
 # to compile your changes.
 
 scripts:
-  # Run the activity-stream mochitests
-  mochitest: (cd $npm_package_config_mc_dir && ./mach mochitest browser/components/newtab/test/browser --headless)
-
-  # Run the activity-stream mochitests with the browser toolbox debugger.
-  # Often handy in combination with adding a "debugger" statement in your
-  # mochitest somewhere.
-  mochitest-debug: (cd $npm_package_config_mc_dir && ./mach mochitest --jsdebugger browser/components/newtab/test/browser)
-
   # bundle: Build all assets for activity stream
   bundle:
     webpack: webpack --config webpack.system-addon.config.js
