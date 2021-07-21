@@ -541,9 +541,9 @@ class EntryGetter {
     continue;                                              \
   }
 
-int ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
-                                       int aThreadId, double aSinceTime,
-                                       UniqueStacks& aUniqueStacks) const {
+BaseProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
+    SpliceableJSONWriter& aWriter, BaseProfilerThreadId aThreadId,
+    double aSinceTime, UniqueStacks& aUniqueStacks) const {
   UniquePtr<char[]> dynStrBuf = MakeUnique<char[]>(kMaxFrameKeyLength);
 
   return mEntries.Read([&](ProfileChunkedBuffer::Reader* aReader) {
@@ -551,7 +551,7 @@ int ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
                "ProfileChunkedBuffer cannot be out-of-session when sampler is "
                "running");
 
-    int processedThreadId = 0;
+    BaseProfilerThreadId processedThreadId;
 
     EntryGetter e(*aReader);
 
@@ -582,16 +582,18 @@ int ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
       // must be a ThreadId entry.
       MOZ_ASSERT(e.Get().IsThreadId());
 
-      int threadId = e.Get().GetInt();
+      BaseProfilerThreadId threadId =
+          BaseProfilerThreadId::FromNumber(e.Get().GetInt());
       e.Next();
 
       // Ignore samples that are for the wrong thread.
-      if (threadId != aThreadId && aThreadId != 0) {
+      if (threadId != aThreadId && aThreadId.IsSpecified()) {
         continue;
       }
 
-      MOZ_ASSERT(aThreadId != 0 || processedThreadId == 0,
-                 "aThreadId==0 should only be used with 1-sample buffer");
+      MOZ_ASSERT(
+          aThreadId.IsSpecified() || !processedThreadId.IsSpecified(),
+          "Unspecified aThreadId should only be used with 1-sample buffer");
 
       ProfileSample sample;
 
@@ -776,7 +778,7 @@ int ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
 }
 
 void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
-                                        int aThreadId,
+                                        BaseProfilerThreadId aThreadId,
                                         const TimeStamp& aProcessStartTime,
                                         double aSinceTime,
                                         UniqueStacks& aUniqueStacks) const {
@@ -1179,7 +1181,7 @@ void ProfileBuffer::StreamPausedRangesToJSON(SpliceableJSONWriter& aWriter,
   });
 }
 
-bool ProfileBuffer::DuplicateLastSample(int aThreadId,
+bool ProfileBuffer::DuplicateLastSample(BaseProfilerThreadId aThreadId,
                                         const TimeStamp& aProcessStartTime,
                                         Maybe<uint64_t>& aLastSample) {
   if (!aLastSample) {
@@ -1207,7 +1209,8 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
     }
 
     MOZ_RELEASE_ASSERT(e.Has() && e.Get().IsThreadId() &&
-                       e.Get().GetInt() == aThreadId);
+                       BaseProfilerThreadId::FromNumber(e.Get().GetInt()) ==
+                           aThreadId);
 
     e.Next();
 

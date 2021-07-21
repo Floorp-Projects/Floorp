@@ -88,13 +88,14 @@ void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
   aWriter.ResetUniqueStrings();
 }
 
-int StreamSamplesAndMarkers(
-    const char* aName, int aThreadId, const ProfileBuffer& aBuffer,
-    SpliceableJSONWriter& aWriter, const std::string& aProcessName,
-    const std::string& aETLDplus1, const TimeStamp& aProcessStartTime,
-    const TimeStamp& aRegisterTime, const TimeStamp& aUnregisterTime,
-    double aSinceTime, UniqueStacks& aUniqueStacks) {
-  int processedThreadId = 0;
+BaseProfilerThreadId StreamSamplesAndMarkers(
+    const char* aName, BaseProfilerThreadId aThreadId,
+    const ProfileBuffer& aBuffer, SpliceableJSONWriter& aWriter,
+    const std::string& aProcessName, const std::string& aETLDplus1,
+    const TimeStamp& aProcessStartTime, const TimeStamp& aRegisterTime,
+    const TimeStamp& aUnregisterTime, double aSinceTime,
+    UniqueStacks& aUniqueStacks) {
+  BaseProfilerThreadId processedThreadId;
 
   aWriter.StringProperty(
       "processType",
@@ -176,9 +177,10 @@ int StreamSamplesAndMarkers(
 
   aWriter.IntProperty(
       "pid", static_cast<int64_t>(profiler_current_process_id().ToNumber()));
-  aWriter.IntProperty(
-      "tid",
-      static_cast<int64_t>(aThreadId != 0 ? aThreadId : processedThreadId));
+  aWriter.IntProperty("tid",
+                      static_cast<int64_t>(aThreadId.IsSpecified()
+                                               ? aThreadId.ToNumber()
+                                               : processedThreadId.ToNumber()));
 
   return processedThreadId;
 }

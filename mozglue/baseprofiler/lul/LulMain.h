@@ -10,6 +10,7 @@
 #include "PlatformMacros.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/BaseProfilerUtils.h"
 
 // LUL: A Lightweight Unwind Library.
 // This file provides the end-user (external) interface for LUL.
@@ -348,7 +349,7 @@ class LUL {
   // as to clearly partition the one thread that may do dynamic memory
   // allocation from the threads that are being sampled, since the latter
   // absolutely may not do dynamic memory allocation.
-  int mAdminThreadId;
+  mozilla::baseprofiler::BaseProfilerThreadId mAdminThreadId;
 
   // The top level mapping from code address ranges to postprocessed
   // unwind info.  Basically a sorted array of (addr, len, info)
