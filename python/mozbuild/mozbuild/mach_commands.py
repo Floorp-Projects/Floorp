@@ -2370,6 +2370,40 @@ class CreateMachEnvironment(MachCommandBase):
             print("virtualenv at %s is already up to date." % virtualenv_path)
         else:
             manager.build(sys.executable)
+
+        try:
+            # `mach` can handle it perfectly fine if `psutil` is missing, so
+            # there's no reason to freak out in this case.
+            manager.install_pip_requirements(
+                os.path.join(
+                    command_context.topsrcdir, "build", "psutil_requirements.txt"
+                )
+            )
+        except subprocess.CalledProcessError:
+            print(
+                "Could not install psutil, so telemetry will be missing some "
+                "data. Continuing."
+            )
+
+        manager.install_pip_requirements(
+            os.path.join(
+                command_context.topsrcdir, "build", "zstandard_requirements.txt"
+            )
+        )
+
+        # This can fail on some platforms. See
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1660120
+        try:
+            manager.install_pip_requirements(
+                os.path.join(
+                    command_context.topsrcdir, "build", "glean_requirements.txt"
+                )
+            )
+        except subprocess.CalledProcessError:
+            print(
+                "Could not install glean_sdk, so telemetry will not be "
+                "collected. Continuing."
+            )
         print("Mach environment created.")
 
 
