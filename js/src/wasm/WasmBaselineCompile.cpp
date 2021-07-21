@@ -8633,6 +8633,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitTableGrow();
   [[nodiscard]] bool emitTableSet();
   [[nodiscard]] bool emitTableSize();
+
+#ifdef ENABLE_WASM_GC
   [[nodiscard]] bool emitStructNewWithRtt();
   [[nodiscard]] bool emitStructNewDefaultWithRtt();
   [[nodiscard]] bool emitStructGet(FieldExtension extension);
@@ -8661,6 +8663,7 @@ class BaseCompiler final : public BaseCompilerInterface {
                                      const StructField& field, AnyReg value);
   [[nodiscard]] bool emitGcArraySet(RegRef object, RegPtr data, RegI32 index,
                                     const ArrayType& array, AnyReg value);
+#endif // ENABLE_WASM_GC
 
 #ifdef ENABLE_WASM_SIMD
   void emitVectorAndNot();
@@ -13421,6 +13424,8 @@ bool BaseCompiler::emitTableInit() {
                                       });
 }
 
+#ifdef ENABLE_WASM_GC
+
 void BaseCompiler::emitGcCanon(uint32_t typeIndex) {
   const TypeIdDesc& typeId = moduleEnv_.typeIds[typeIndex];
   RegRef rp = needRef();
@@ -14243,6 +14248,8 @@ bool BaseCompiler::emitBrOnCast() {
 
   return true;
 }
+
+#endif // ENABLE_WASM_GC
 
 #ifdef ENABLE_WASM_SIMD
 

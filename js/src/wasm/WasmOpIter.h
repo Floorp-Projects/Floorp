@@ -606,6 +606,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                   Value* value);
 
   [[nodiscard]] bool readTableSize(uint32_t* tableIndex);
+
+#ifdef ENABLE_WASM_GC
   [[nodiscard]] bool readStructNewWithRtt(uint32_t* typeIndex, Value* rtt,
                                           ValueVector* argValues);
   [[nodiscard]] bool readStructNewDefaultWithRtt(uint32_t* typeIndex,
@@ -633,6 +635,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                   uint32_t* rttTypeIndex, uint32_t* rttDepth,
                                   ResultType* branchTargetType,
                                   ValueVector* values);
+#endif
 
 #ifdef ENABLE_WASM_SIMD
   [[nodiscard]] bool readLaneIndex(uint32_t inputLanes, uint32_t* laneIndex);
@@ -2864,6 +2867,8 @@ inline bool OpIter<Policy>::readFieldIndex(uint32_t* fieldIndex,
   return true;
 }
 
+#ifdef ENABLE_WASM_GC
+
 template <typename Policy>
 inline bool OpIter<Policy>::readStructNewWithRtt(uint32_t* typeIndex,
                                                  Value* rtt,
@@ -3219,6 +3224,8 @@ inline bool OpIter<Policy>::readBrOnCast(uint32_t* relativeDepth, Value* rtt,
   return checkCastedBranchValue(*relativeDepth, castedFromType, castedToType,
                                 branchTargetType, values);
 }
+
+#endif // ENABLE_WASM_GC
 
 #ifdef ENABLE_WASM_SIMD
 
