@@ -110,7 +110,7 @@
         }
 
         await this._copyToClipboard(expectedPastedHTML);
-        await this._pasteToTargetElement();
+        this._pasteToTargetElement();
 
         const targetElement = document.getElementById(kTargetElementId);
         is(targetElement.children.length, 1,
@@ -284,31 +284,34 @@
           () => synthesizeKey("c", { accelKey: true } /* aEvent*/), flavor);
       }
 
-      async _pasteToTargetElement() {
-        const promiseTargetElementChanged = new Promise(resolve => {
-          const editingHost = (this._editabilityMode ==
-            kEditabilityModeContenteditable) ?
-            document.getElementById(kTargetElementId) :
-            document;
+      _pasteToTargetElement() {
+        const editingHost = (this._editabilityMode ==
+          kEditabilityModeContenteditable) ?
+          document.getElementById(kTargetElementId) :
+          document;
 
-          function handleInputEvent(aEvent) {
-            if (aEvent.inputType == kInputEventInputTypeInsertFromPaste) {
-              editingHost.removeEventListener(kInputEventType, handleInputEvent);
-              SimpleTest.info(
-                'Listened to an "' + kInputEventInputTypeInsertFromPaste + '" "'
-                + kInputEventType + ' event.');
-              resolve();
-            }
+        let inputEvent;
+        function handleInputEvent(aEvent) {
+          if (aEvent.inputType == kInputEventInputTypeInsertFromPaste) {
+            editingHost.removeEventListener(kInputEventType, handleInputEvent);
+            SimpleTest.info(
+              'Listened to an "' + kInputEventInputTypeInsertFromPaste + '" "'
+              + kInputEventType + ' event.');
+            inputEvent = aEvent;
           }
-          editingHost.addEventListener(kInputEventType, handleInputEvent);
-        });
+        }
+        editingHost.addEventListener(kInputEventType, handleInputEvent);
 
         const targetElement = document.getElementById(kTargetElementId);
         synthesizeMouseAtCenter(targetElement, {});
         synthesizeKey("v", { accelKey: true } /* aEvent */);
 
-        info("Waiting for paste...");
-        await promiseTargetElementChanged;
+        ok(
+          inputEvent != undefined,
+          `An ${kInputEventType} whose "inputType" is ${
+            kInputEventInputTypeInsertFromPaste
+          } should've been fired on ${editingHost.localName}`
+        );
       }
     }
 
