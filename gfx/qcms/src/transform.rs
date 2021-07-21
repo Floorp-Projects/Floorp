@@ -218,14 +218,13 @@ fn clamp_u8(v: f32) -> u8 {
 //            - Then I eval the source white point across this matrix
 //              obtaining the coeficients of the transformation
 //            - Then, I apply these coeficients to the original matrix
-fn build_RGB_to_XYZ_transfer_matrix(white: qcms_CIE_xyY, primrs: qcms_CIE_xyYTRIPLE) -> Option<Matrix> {
-    let mut primaries: Matrix = Matrix {
-        m: [[0.; 3]; 3],
-    };
+fn build_RGB_to_XYZ_transfer_matrix(
+    white: qcms_CIE_xyY,
+    primrs: qcms_CIE_xyYTRIPLE,
+) -> Option<Matrix> {
+    let mut primaries: Matrix = Matrix { m: [[0.; 3]; 3] };
 
-    let mut result: Matrix = Matrix {
-        m: [[0.; 3]; 3],
-    };
+    let mut result: Matrix = Matrix { m: [[0.; 3]; 3] };
     let mut white_point: Vector = Vector { v: [0.; 3] };
 
     let xn: f64 = white.x;
@@ -296,9 +295,7 @@ fn compute_chromatic_adaption(
 
     let mut cone_dest_XYZ: Vector = Vector { v: [0.; 3] };
 
-    let mut cone: Matrix = Matrix {
-        m: [[0.; 3]; 3],
-    };
+    let mut cone: Matrix = Matrix { m: [[0.; 3]; 3] };
 
     let chad_inv: Matrix = chad.invert()?;
     cone_source_XYZ.v[0] = source_white_point.X as f32;
@@ -356,7 +353,7 @@ pub(crate) fn set_rgb_colorants(
     let colorants = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
     let colorants = match adapt_matrix_to_D50(colorants, white_point) {
         Some(colorants) => colorants,
-        None => return false
+        None => return false,
     };
 
     /* note: there's a transpose type of operation going on here */
