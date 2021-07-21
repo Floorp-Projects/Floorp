@@ -310,6 +310,7 @@ def bootstrap_path(path, **kwargs):
             # `mach artifact toolchain` doesn't support authentication for
             # private artifacts.
             if not artifact.startswith("public/"):
+                log.debug("Cannot bootstrap %s: not a public artifact", label)
                 return False
             index_file = os.path.join(toolchains_base_dir, "indices", path_parts[0])
             try:
@@ -318,6 +319,7 @@ def bootstrap_path(path, **kwargs):
             except Exception:
                 index = None
             if index == task_index and exists:
+                log.debug("%s is up-to-date", label)
                 return True
             log.info(
                 "%s bootstrapped toolchain in %s",
