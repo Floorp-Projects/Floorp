@@ -1225,12 +1225,18 @@ def target_tasks_perftest_s7(full_task_graph, parameters, graph_config):
         build_platform = task.attributes.get("build_platform", "")
         test_platform = task.attributes.get("test_platform", "")
         attributes = task.attributes
+        vismet = attributes.get("kind") == "visual-metrics-dep"
+        try_name = attributes.get("raptor_try_name")
+
+        if vismet:
+            # Visual metric tasks are configured a bit differently
+            test_platform = task.task.get("extra").get("treeherder-platform")
+            try_name = task.label
 
         if build_platform and "android" not in build_platform:
             return False
-        if attributes.get("unittest_suite") != "raptor":
+        if attributes.get("unittest_suite") != "raptor" and not vismet:
             return False
-        try_name = attributes.get("raptor_try_name")
         if "s7" in test_platform and "-qr" in test_platform:
             if "geckoview" in try_name and (
                 "unity-webgl" in try_name
