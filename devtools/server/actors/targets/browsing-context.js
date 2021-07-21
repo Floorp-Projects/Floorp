@@ -1251,7 +1251,7 @@ const browsingContextTargetPrototype = {
    * This will be called by the watcher when the DevTools target-configuration
    * is updated, or when a target is created via JSWindowActors.
    */
-  updateTargetConfiguration(options = {}) {
+  updateTargetConfiguration(options = {}, calledFromDocumentCreation = false) {
     if (!this.docShell) {
       // The browsing context is already closed.
       return;
@@ -1265,13 +1265,14 @@ const browsingContextTargetPrototype = {
         ? Ci.nsIDocShell.META_VIEWPORT_OVERRIDE_ENABLED
         : Ci.nsIDocShell.META_VIEWPORT_OVERRIDE_NONE;
 
-      // We want to reload the document if it's a top level target on which the touch
-      // simulator will be toggled and the user has turned the "reload on touch simulation"
-      // settings on.
+      // We want to reload the document if it's an "existing" top level target on which
+      // the touch simulator will be toggled and the user has turned the
+      // "reload on touch simulation" setting on.
       if (
         enableTouchSimulator !== this.touchSimulator.enabled &&
         options.reloadOnTouchSimulationToggle === true &&
-        this.isTopLevelTarget
+        this.isTopLevelTarget &&
+        !calledFromDocumentCreation
       ) {
         reload = true;
       }
