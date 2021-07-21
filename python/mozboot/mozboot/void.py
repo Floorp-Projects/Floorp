@@ -71,14 +71,11 @@ class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     def install_system_packages(self):
         self.xbps_install(*self.packages)
 
-    def install_browser_packages(self, mozconfig_builder):
-        self.ensure_browser_packages()
+    def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
+        self.xbps_install(*self.browser_packages)
 
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
-        self.ensure_browser_packages(artifact_mode=True)
-
-    def ensure_browser_packages(self, artifact_mode=False):
-        self.xbps_install(*self.browser_packages)
+        self.install_browser_packages(mozconfig_builder, artifact_mode=True)
 
     def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
         # Multi-part process:
@@ -88,7 +85,9 @@ class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
         # 2. Android pieces.
         self.ensure_java(mozconfig_builder)
-        super().install_mobile_android_packages(artifact_mode=artifact_mode)
+        super().install_mobile_android_packages(
+            mozconfig_builder, artifact_mode=artifact_mode
+        )
 
     def _update_package_manager(self):
         self.xbps_update()

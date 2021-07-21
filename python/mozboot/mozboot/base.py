@@ -207,6 +207,22 @@ class BaseBootstrapper(object):
         """
         pass
 
+    def ensure_js_packages(self, state_dir, checkout_root):
+        """
+        Install pre-built packages needed to build SpiderMonkey JavaScript Engine
+
+        Currently this is not needed and kept for compatibility with Firefox for Android.
+        """
+        pass
+
+    def ensure_browser_artifact_mode_packages(self, state_dir, checkout_root):
+        """
+        Install pre-built packages needed to build Firefox for Desktop (application 'browser')
+
+        Currently this is not needed and kept for compatibility with Firefox for Android.
+        """
+        pass
+
     def generate_browser_mozconfig(self):
         """
         Print a message to the console detailing what the user's mozconfig
@@ -269,6 +285,13 @@ class BaseBootstrapper(object):
             "Cannot bootstrap GeckoView/Firefox for Android: "
             "%s does not yet implement ensure_mobile_android_packages()" % __name__
         )
+
+    def ensure_mobile_android_artifact_mode_packages(self, state_dir, checkout_root):
+        """
+        Install pre-built packages required to run GeckoView Artifact Build
+        (application 'mobile/android')
+        """
+        self.ensure_mobile_android_packages(state_dir, checkout_root)
 
     def generate_mobile_android_mozconfig(self):
         """
