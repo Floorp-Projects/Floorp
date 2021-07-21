@@ -5,8 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // This header contains most functions that give information about the Profiler:
-// Whether it is active or not, paused, the selected features, and some generic
-// process and thread information.
+// Whether it is active or not, paused, and the selected features.
 // It is safe to include unconditionally, but uses of structs and functions must
 // be guarded by `#ifdef MOZ_GECKO_PROFILER`.
 
@@ -15,6 +14,7 @@
 
 #include <mozilla/DefineEnum.h>
 #include <mozilla/EnumSet.h>
+#include "mozilla/ProfilerUtils.h"
 
 #include <functional>
 
@@ -174,7 +174,6 @@ using ProfilingStateChangeCallback = std::function<void(ProfilingState)>;
 [[nodiscard]] inline bool profiler_is_locked_on_current_thread() {
   return false;
 }
-[[nodiscard]] inline int profiler_current_thread_id() { return 0; }
 inline void profiler_add_state_change_callback(
     ProfilingStateSet aProfilingStateSet,
     ProfilingStateChangeCallback&& aCallback, uintptr_t aUniqueIdentifier = 0) {
@@ -367,26 +366,6 @@ profiler_features_if_active_and_unpaused() {
 // can become immediately out-of-date, much like the return value of
 // profiler_is_active().
 [[nodiscard]] bool profiler_feature_active(uint32_t aFeature);
-
-// Get the current process's ID.
-[[nodiscard]] int profiler_current_process_id();
-
-// Get the current thread's ID.
-[[nodiscard]] int profiler_current_thread_id();
-
-namespace mozilla::profiler::detail {
-// Statically initialized to 0, then set once from profiler_init(), which should
-// be called from the main thread before any other use of the profiler.
-extern int scProfilerMainThreadId;
-}  // namespace mozilla::profiler::detail
-
-[[nodiscard]] inline int profiler_main_thread_id() {
-  return mozilla::profiler::detail::scProfilerMainThreadId;
-}
-
-[[nodiscard]] inline bool profiler_is_main_thread() {
-  return profiler_current_thread_id() == profiler_main_thread_id();
-}
 
 // Returns true if any of the profiler mutexes are currently locked *on the
 // current thread*. This may be used by re-entrant code that may call profiler
