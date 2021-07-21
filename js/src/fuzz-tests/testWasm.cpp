@@ -258,7 +258,7 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
     size_t currentMemoryExportId = 0;
     size_t currentGlobalExportId = 0;
 #ifdef ENABLE_WASM_EXCEPTIONS
-    size_t currentEventExportId = 0;
+    size_t currentTagExportId = 0;
 #endif
 
     for (const Import& import : importVec) {
@@ -331,11 +331,11 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
             break;
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-          case DefinitionKind::Event:
+          case DefinitionKind::Tag:
             // TODO: Pass a dummy defaultValue
-            if (!assignImportKind<WasmExceptionObject>(
+            if (!assignImportKind<WasmTagObject>(
                     import, obj, lastExportsObj, lastExportIds,
-                    &currentEventExportId, exportsLength, nullValue)) {
+                    &currentTagExportId, exportsLength, nullValue)) {
               return 0;
             }
             break;

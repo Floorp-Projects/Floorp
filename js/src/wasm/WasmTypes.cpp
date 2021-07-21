@@ -141,8 +141,8 @@ uint32_t Export::globalIndex() const {
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-uint32_t Export::eventIndex() const {
-  MOZ_ASSERT(pod.kind_ == DefinitionKind::Event);
+uint32_t Export::tagIndex() const {
+  MOZ_ASSERT(pod.kind_ == DefinitionKind::Tag);
   return pod.index_;
 }
 #endif

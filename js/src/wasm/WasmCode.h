@@ -344,7 +344,7 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   GlobalDescVector globals;
   TableDescVector tables;
 #ifdef ENABLE_WASM_EXCEPTIONS
-  EventDescVector events;
+  TagDescVector tags;
 #endif
   CacheableChars filename;
   CacheableChars sourceMapURL;

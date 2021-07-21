@@ -25,7 +25,7 @@ const elemId           = 9;
 const codeId           = 10;
 const dataId           = 11;
 const dataCountId      = 12;
-const eventId          = 13;
+const tagId            = 13;
 
 // User-defined section names
 const nameName         = "name";
@@ -34,7 +34,7 @@ const nameName         = "name";
 const nameTypeModule    = 0;
 const nameTypeFunction  = 1;
 const nameTypeLocal     = 2;
-const nameTypeEvent     = 3;
+const nameTypeTag       = 3;
 
 // Type codes
 const I32Code          = 0x7f;
@@ -215,7 +215,7 @@ const FunctionCode     = 0x00;
 const TableCode        = 0x01;
 const MemoryCode       = 0x02;
 const GlobalCode       = 0x03;
-const EventCode        = 0x04;
+const TagCode          = 0x04;
 
 // ResizableFlags
 const HasMaximumFlag   = 0x1;
@@ -352,9 +352,9 @@ function exportSection(exports) {
         } else if (exp.hasOwnProperty("memIndex")) {
             body.push(...varU32(MemoryCode));
             body.push(...varU32(exp.memIndex));
-        } else if (exp.hasOwnProperty("eventIndex")) {
-            body.push(...varU32(EventCode));
-            body.push(...varU32(exp.eventIndex));
+        } else if (exp.hasOwnProperty("tagIndex")) {
+            body.push(...varU32(TagCode));
+            body.push(...varU32(exp.tagIndex));
         } else {
             throw "Bad export " + exp;
         }
@@ -379,14 +379,14 @@ function memorySection(initialSize) {
     return { name: memoryId, body };
 }
 
-function eventSection(events) {
+function tagSection(tags) {
     var body = [];
-    body.push(...varU32(events.length));
-    for (let event of events) {
+    body.push(...varU32(tags.length));
+    for (let tag of tags) {
         body.push(...varU32(0)); // exception attribute
-        body.push(...varU32(event.type));
+        body.push(...varU32(tag.type));
     }
-    return { name: eventId, body };
+    return { name: tagId, body };
 }
 
 function dataSection(segmentArrays) {

@@ -104,10 +104,10 @@ function testDescriptions() {
 
   assertEq(imports[0].module, "m");
   assertEq(imports[0].name, "e");
-  assertEq(imports[0].kind, "event");
+  assertEq(imports[0].kind, "tag");
 
   assertEq(exports[0].name, "e");
-  assertEq(exports[0].kind, "event");
+  assertEq(exports[0].kind, "tag");
 }
 
 testException();

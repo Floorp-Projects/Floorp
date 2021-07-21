@@ -760,7 +760,7 @@ bool Module::instantiateImportedTag(JSContext* cx,
                                     WasmTagObjectVector& tagObjs,
                                     SharedExceptionTagVector* tags) const {
   MOZ_ASSERT(tagObj);
-  // The check whether the EventDesc signature matches the tagObj value types
+  // The check whether the TagDesc signature matches the tagObj value types
   // is done by js::wasm::GetImports().
 
   // Collects the exception tag from the imported tag.
@@ -774,7 +774,7 @@ bool Module::instantiateImportedTag(JSContext* cx,
   return true;
 }
 
-bool Module::instantiateLocalTag(JSContext* cx, const EventDesc& ed,
+bool Module::instantiateLocalTag(JSContext* cx, const TagDesc& ed,
                                  WasmTagObjectVector& tagObjs,
                                  SharedExceptionTagVector* tags,
                                  uint32_t tagIndex) const {
@@ -818,7 +818,7 @@ bool Module::instantiateLocalTag(JSContext* cx, const EventDesc& ed,
 bool Module::instantiateTags(JSContext* cx, WasmTagObjectVector& tagObjs,
                              SharedExceptionTagVector* tags) const {
   uint32_t tagIndex = 0;
-  for (const EventDesc& ed : metadata().events) {
+  for (const TagDesc& ed : metadata().tags) {
     if (tagIndex < tagObjs.length()) {
       Rooted<WasmTagObject*> tagObj(cx, tagObjs[tagIndex]);
       if (!instantiateImportedTag(cx, tagObj, tagObjs, tags)) {
@@ -1181,8 +1181,8 @@ static bool CreateExportObject(
         break;
       }
 #ifdef ENABLE_WASM_EXCEPTIONS
-      case DefinitionKind::Event: {
-        val = ObjectValue(*tagObjs[exp.eventIndex()]);
+      case DefinitionKind::Tag: {
+        val = ObjectValue(*tagObjs[exp.tagIndex()]);
         break;
       }
 #endif

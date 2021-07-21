@@ -42,7 +42,7 @@ enum class SectionId {
   Data = 11,
   DataCount = 12,
 #ifdef ENABLE_WASM_EXCEPTIONS
-  Event = 13,
+  Tag = 13,
 #endif
 };
 
@@ -176,7 +176,7 @@ enum class DefinitionKind {
   Memory = 0x02,
   Global = 0x03,
 #ifdef ENABLE_WASM_EXCEPTIONS
-  Event = 0x04,
+  Tag = 0x04,
 #endif
 };
 
@@ -218,7 +218,7 @@ enum class ElemSegmentPayload : uint32_t {
 };
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-enum class EventKind {
+enum class TagKind {
   Exception = 0x0,
 };
 #endif
@@ -1065,7 +1065,7 @@ static const unsigned MaxTypeIndex = 15000;
 static const unsigned MaxRttDepth = 100;
 #endif
 
-static const unsigned MaxEvents = 1000000;
+static const unsigned MaxTags = 1000000;
 
 // These limits pertain to our WebAssembly implementation only.
 
