@@ -10,6 +10,9 @@ import mozilla.components.lib.state.State
 
 /**
  * The state the browser screen is in.
+ *
+ * @param editMode Whether the toolbar is in "edit" or "display" mode.
+ * @param editText The text in the toolbar that is being edited by the user.
  */
 @Parcelize
 data class BrowserScreenState(
