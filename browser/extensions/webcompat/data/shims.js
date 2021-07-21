@@ -346,6 +346,15 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "Optimizely",
+    platform: "all",
+    name: "Optimizely",
+    bug: "1714431",
+    file: "optimizely.js",
+    matches: ["*://cdn.optimizely.com/js/*.js"],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "Rambler",
     platform: "all",
     name: "Rambler Authenticator",
