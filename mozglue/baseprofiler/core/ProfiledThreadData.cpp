@@ -174,8 +174,8 @@ int StreamSamplesAndMarkers(
   }
   aWriter.EndObject();
 
-  aWriter.IntProperty("pid",
-                      static_cast<int64_t>(profiler_current_process_id()));
+  aWriter.IntProperty(
+      "pid", static_cast<int64_t>(profiler_current_process_id().ToNumber()));
   aWriter.IntProperty(
       "tid",
       static_cast<int64_t>(aThreadId != 0 ? aThreadId : processedThreadId));

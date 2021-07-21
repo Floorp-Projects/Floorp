@@ -114,7 +114,9 @@ static_assert(std::is_move_assignable_v<BaseProfilerThreadId>);
 
 namespace mozilla::baseprofiler {
 
-[[nodiscard]] inline int profiler_current_process_id() { return 0; }
+[[nodiscard]] inline BaseProfilerProcessId profiler_current_process_id() {
+  return BaseProfilerProcessId{};
+}
 [[nodiscard]] inline int profiler_current_thread_id() { return 0; }
 [[nodiscard]] inline int profiler_main_thread_id() { return 0; }
 [[nodiscard]] inline bool profiler_is_main_thread() { return false; }
@@ -128,7 +130,7 @@ namespace mozilla::baseprofiler {
 namespace mozilla::baseprofiler {
 
 // Get the current process's ID.
-[[nodiscard]] MFBT_API int profiler_current_process_id();
+[[nodiscard]] MFBT_API BaseProfilerProcessId profiler_current_process_id();
 
 // Get the current thread's ID.
 [[nodiscard]] MFBT_API int profiler_current_thread_id();

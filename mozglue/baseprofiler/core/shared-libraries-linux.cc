@@ -752,7 +752,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
 
 #if defined(GP_OS_linux) || defined(GP_OS_android)
   // Read info from /proc/self/maps. We ignore most of it.
-  pid_t pid = mozilla::baseprofiler::profiler_current_process_id();
+  pid_t pid = mozilla::baseprofiler::profiler_current_process_id().ToNumber();
   char path[PATH_MAX];
   SprintfLiteral(path, "/proc/%d/maps", pid);
   std::ifstream maps(path);
