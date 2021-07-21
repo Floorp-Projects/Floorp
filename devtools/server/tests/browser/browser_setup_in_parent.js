@@ -9,6 +9,12 @@ const ACTOR_URL =
 const { TestSetupInParentFront } = require(ACTOR_URL);
 
 add_task(async function() {
+  // Bug 1675456: We have to keep `setupInParent` for the only one usage left in storage actor
+  // related to WebExtension. As soon as Watcher support WebExtensions,
+  // we should be able to write a Parent Process WebExtension Storage Resource Watcher.
+  // And get rid of this code from the old storage actor.
+  await pushPref("devtools.target-switching.server.enabled", false);
+
   const browser = await addTab("data:text/html;charset=utf-8,foo");
 
   info("Register target-scoped actor in the content process");
