@@ -34,7 +34,9 @@
 
 // this port is based off of v8 svn revision 9837
 
-int profiler_current_process_id() { return getpid(); }
+ProfilerProcessId profiler_current_process_id() {
+  return ProfilerProcessId::FromNumber(getpid());
+}
 
 int profiler_current_thread_id() {
   uint64_t tid;
