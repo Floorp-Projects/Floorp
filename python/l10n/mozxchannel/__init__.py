@@ -32,9 +32,14 @@ def get_default_config(topsrcdir, strings_path):
                 "path": topsrcdir,
                 "url": "https://hg.mozilla.org/mozilla-unified/",
                 "heads": {
+                    # This list of repositories is ordered, starting with the
+                    # one with the most recent content (central) to the oldest
+                    # (ESR). In case two ESR versions are supported, the oldest
+                    # ESR goes last (e.g. esr78 goes after esr91).
                     "central": "mozilla-central",
                     "beta": "releases/mozilla-beta",
                     "release": "releases/mozilla-release",
+                    "esr91": "releases/mozilla-esr91",
                     "esr78": "releases/mozilla-esr78",
                 },
                 "config_files": [
@@ -46,8 +51,13 @@ def get_default_config(topsrcdir, strings_path):
                 "path": topsrcdir / "comm",
                 "url": "https://hg.mozilla.org/comm-central/",
                 "heads": {
+                    # This list of repositories is ordered, starting with the
+                    # one with the most recent content (central) to the oldest
+                    # (ESR). In case two ESR versions are supported, the oldest
+                    # ESR goes last (e.g. esr78 goes after esr91).
                     "comm": "comm-central",
                     "comm-beta": "releases/comm-beta",
+                    "comm-esr91": "releases/comm-esr91",
                     "comm-esr78": "releases/comm-esr78",
                 },
                 "config_files": [
