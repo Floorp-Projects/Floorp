@@ -153,7 +153,7 @@ info["apple_silicon"] = False
 if (
     info["os"] == "mac"
     and float(os_version) > 10.15
-    and processor == "i386"
+    and processor == "arm64"
     and bits == "64bit"
 ):
     info["apple_silicon"] = True
