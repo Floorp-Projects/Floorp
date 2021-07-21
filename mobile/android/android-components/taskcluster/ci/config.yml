@@ -25,6 +25,7 @@ treeherder:
         compose-awesomebar: compose-engine
         compose-browser-toolbar: awesomebar-browser-toolbar
         compose-engine: compose-engine
+        compose-tabstray: compose-tabstray
         concept-awesomebar: concept-awesomebar
         concept-base: concept-base
         concept-engine: concept-engine

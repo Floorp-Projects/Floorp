@@ -19,4 +19,14 @@ sealed class BrowserScreenAction : Action {
      * Updates the text of the toolbar that is currently being edited (in "edit" mode).
      */
     data class UpdateEditText(val text: String) : BrowserScreenAction()
+
+    /**
+     * Shows the list of tabs on top of the web content.
+     */
+    object ShowTabs : BrowserScreenAction()
+
+    /**
+     * Hides the list of tabs.
+     */
+    object HideTabs : BrowserScreenAction()
 }

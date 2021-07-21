@@ -15,6 +15,10 @@ projects:
     path: components/compose/engine
     description: 'A component for integrating a concept-engine implementation into Jetpack Compose UI.'
     publish: true
+  compose-tabstray:
+    path: components/compose/tabstray
+    description: 'A customizable tabs tray using Jetpack Compose.'
+    publish: true
   concept-awesomebar:
     path: components/concept/awesomebar
     description: 'An abstract definition of an awesomebar component.'

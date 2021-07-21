@@ -17,5 +17,6 @@ import mozilla.components.lib.state.State
 @Parcelize
 data class BrowserScreenState(
     val editMode: Boolean = false,
-    val editText: String? = null
+    val editText: String? = null,
+    val showTabs: Boolean = false
 ) : State, Parcelable
