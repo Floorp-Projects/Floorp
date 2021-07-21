@@ -15,6 +15,7 @@ namespace mozilla {
 class EventChainPostVisitor;
 class EventChainPreVisitor;
 namespace dom {
+class FormData;
 
 class HTMLButtonElement final : public nsGenericHTMLFormElementWithState,
                                 public nsIConstraintValidation {
@@ -40,7 +41,7 @@ class HTMLButtonElement final : public nsGenericHTMLFormElementWithState,
 
   // overriden nsIFormControl methods
   NS_IMETHOD Reset() override;
-  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
+  NS_IMETHOD SubmitNamesValues(FormData* aFormData) override;
   NS_IMETHOD SaveState() override;
   bool RestoreState(PresState* aState) override;
   virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;

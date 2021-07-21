@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLFormSubmission;
+class FormData;
 
 class HTMLOutputElement final : public nsGenericHTMLFormElement,
                                 public nsStubMutationObserver,
@@ -32,7 +32,8 @@ class HTMLOutputElement final : public nsGenericHTMLFormElement,
 
   // nsIFormControl
   NS_IMETHOD Reset() override;
-  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
+  // The output element is not submittable.
+  NS_IMETHOD SubmitNamesValues(FormData* aFormData) override { return NS_OK; }
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

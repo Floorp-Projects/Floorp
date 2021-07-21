@@ -7,8 +7,8 @@
 #include "mozilla/dom/HTMLButtonElement.h"
 
 #include "HTMLFormSubmissionConstants.h"
+#include "mozilla/dom/FormData.h"
 #include "mozilla/dom/HTMLButtonElementBinding.h"
-#include "mozilla/dom/HTMLFormSubmission.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -288,11 +288,11 @@ NS_IMETHODIMP
 HTMLButtonElement::Reset() { return NS_OK; }
 
 NS_IMETHODIMP
-HTMLButtonElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
+HTMLButtonElement::SubmitNamesValues(FormData* aFormData) {
   //
   // We only submit if we were the button pressed
   //
-  if (aFormSubmission->GetSubmitterElement() != this) {
+  if (aFormData->GetSubmitterElement() != this) {
     return NS_OK;
   }
 
@@ -319,7 +319,7 @@ HTMLButtonElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
   //
   // Submit
   //
-  return aFormSubmission->AddNameValuePair(name, value);
+  return aFormData->AddNameValuePair(name, value);
 }
 
 void HTMLButtonElement::DoneCreatingElement() {

@@ -34,7 +34,7 @@ class PresState;
 
 namespace dom {
 
-class HTMLFormSubmission;
+class FormData;
 class HTMLSelectElement;
 
 class MOZ_STACK_CLASS SafeOptionListMutation {
@@ -205,7 +205,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormElementWithState,
 
   // Overriden nsIFormControl methods
   NS_IMETHOD Reset() override;
-  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
+  NS_IMETHOD SubmitNamesValues(FormData* aFormData) override;
   NS_IMETHOD SaveState() override;
   virtual bool RestoreState(PresState* aState) override;
   virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;

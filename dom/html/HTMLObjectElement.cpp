@@ -6,7 +6,6 @@
 
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/BindContext.h"
-#include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/ElementInlines.h"
