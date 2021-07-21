@@ -38,7 +38,7 @@ class ProfileBuffer final {
 
   // Add to the buffer a sample start (ThreadId) entry for aThreadId.
   // Returns the position of the entry.
-  uint64_t AddThreadIdEntry(int aThreadId);
+  uint64_t AddThreadIdEntry(ProfilerThreadId aThreadId);
 
   void CollectCodeLocation(
       const char* aLabel, const char* aStr, uint32_t aFrameFlags,
@@ -52,7 +52,7 @@ class ProfileBuffer final {
   // Add JIT frame information to aJITFrameInfo for any JitReturnAddr entries
   // that are currently in the buffer at or after aRangeStart, in samples
   // for the given thread.
-  void AddJITInfoForRange(uint64_t aRangeStart, int aThreadId,
+  void AddJITInfoForRange(uint64_t aRangeStart, ProfilerThreadId aThreadId,
                           JSContext* aContext,
                           JITFrameInfo& aJITFrameInfo) const;
 
@@ -66,10 +66,13 @@ class ProfileBuffer final {
   // words, you need to have called AddJITInfoForRange for every range that
   // might contain JIT frame information before calling this method.
   // Return the thread ID of the streamed sample(s), or 0.
-  int StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
-                          double aSinceTime, UniqueStacks& aUniqueStacks) const;
+  ProfilerThreadId StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
+                                       ProfilerThreadId aThreadId,
+                                       double aSinceTime,
+                                       UniqueStacks& aUniqueStacks) const;
 
-  void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
+  void StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
+                           ProfilerThreadId aThreadId,
                            const mozilla::TimeStamp& aProcessStartTime,
                            double aSinceTime,
                            UniqueStacks& aUniqueStacks) const;
@@ -86,7 +89,7 @@ class ProfileBuffer final {
   // |aThreadId| and clone it, patching in the current time as appropriate.
   // Mutate |aLastSample| to point to the newly inserted sample.
   // Returns whether duplication was successful.
-  bool DuplicateLastSample(int aThreadId, double aSampleTimeMs,
+  bool DuplicateLastSample(ProfilerThreadId aThreadId, double aSampleTimeMs,
                            mozilla::Maybe<uint64_t>& aLastSample,
                            const RunningTimes& aRunningTimes);
 
@@ -139,7 +142,8 @@ class ProfileBuffer final {
   // `static` because it may be used to add an entry to a `ProfileChunkedBuffer`
   // that is not attached to a `ProfileBuffer`.
   static mozilla::ProfileBufferBlockIndex AddThreadIdEntry(
-      mozilla::ProfileChunkedBuffer& aProfileChunkedBuffer, int aThreadId);
+      mozilla::ProfileChunkedBuffer& aProfileChunkedBuffer,
+      ProfilerThreadId aThreadId);
 
   // The storage in which this ProfileBuffer stores its entries.
   mozilla::ProfileChunkedBuffer& mEntries;

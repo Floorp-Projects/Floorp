@@ -73,9 +73,9 @@ class ProfilerBacktrace {
   // That is, markers that contain backtraces should not need their own stack,
   // frame, and string tables. They should instead reuse their parent
   // profile's tables.
-  int StreamJSON(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-                 const mozilla::TimeStamp& aProcessStartTime,
-                 UniqueStacks& aUniqueStacks);
+  ProfilerThreadId StreamJSON(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+      const mozilla::TimeStamp& aProcessStartTime, UniqueStacks& aUniqueStacks);
 
  private:
   // Used to serialize a ProfilerBacktrace.

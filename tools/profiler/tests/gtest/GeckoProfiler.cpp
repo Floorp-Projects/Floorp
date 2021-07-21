@@ -53,6 +53,39 @@ TEST(GeckoProfiler, ProfilerUtils)
 #else
   MOZ_RELEASE_ASSERT(!profiler_current_process_id().IsSpecified());
 #endif
+
+  static_assert(
+      std::is_same_v<decltype(profiler_current_thread_id()), ProfilerThreadId>);
+#ifdef MOZ_GECKO_PROFILER
+  ProfilerThreadId mainTestThreadId = profiler_current_thread_id();
+  MOZ_RELEASE_ASSERT(mainTestThreadId.IsSpecified());
+
+  ProfilerThreadId mainThreadId = profiler_main_thread_id();
+  if (!mainThreadId.IsSpecified()) {
+    // Special case: This may happen if the profiler has not yet been
+    // initialized. We only need to set scProfilerMainThreadId.
+    mozilla::profiler::detail::scProfilerMainThreadId = mainTestThreadId;
+    // After which `profiler_main_thread_id` should work.
+    mainThreadId = profiler_main_thread_id();
+  }
+  MOZ_RELEASE_ASSERT(mainThreadId.IsSpecified());
+
+  MOZ_RELEASE_ASSERT(mainThreadId == mainTestThreadId,
+                     "Test should run on the main thread");
+  MOZ_RELEASE_ASSERT(profiler_is_main_thread());
+
+  std::thread testThread([&]() {
+    const ProfilerThreadId testThreadId = profiler_current_thread_id();
+    MOZ_RELEASE_ASSERT(testThreadId.IsSpecified());
+    MOZ_RELEASE_ASSERT(testThreadId != mainThreadId);
+    MOZ_RELEASE_ASSERT(!profiler_is_main_thread());
+  });
+  testThread.join();
+#else
+  MOZ_RELEASE_ASSERT(!profiler_current_thread_id().IsSpecified());
+  MOZ_RELEASE_ASSERT(!profiler_main_thread_id().IsSpecified());
+  MOZ_RELEASE_ASSERT(!profiler_is_main_thread());
+#endif
 }
 
 TEST(BaseProfiler, BlocksRingBuffer)
@@ -300,13 +333,13 @@ TEST(GeckoProfiler, Utilities)
 {
   // We'll assume that this test runs in the main thread (which should be true
   // when called from the `main` function).
-  const int mainThreadId = profiler_current_thread_id();
+  const ProfilerThreadId mainThreadId = profiler_current_thread_id();
 
   MOZ_RELEASE_ASSERT(profiler_main_thread_id() == mainThreadId);
   MOZ_RELEASE_ASSERT(profiler_is_main_thread());
 
   std::thread testThread([&]() {
-    const int testThreadId = profiler_current_thread_id();
+    const ProfilerThreadId testThreadId = profiler_current_thread_id();
     MOZ_RELEASE_ASSERT(testThreadId != mainThreadId);
 
     MOZ_RELEASE_ASSERT(profiler_main_thread_id() != testThreadId);
@@ -2150,7 +2183,8 @@ class GTestStackCollector final : public ProfilerStackCollector {
   int mFrames;
 };
 
-void DoSuspendAndSample(int aTidToSample, nsIThread* aSamplingThread) {
+void DoSuspendAndSample(ProfilerThreadId aTidToSample,
+                        nsIThread* aSamplingThread) {
   aSamplingThread->Dispatch(
       NS_NewRunnableFunction(
           "GeckoProfiler_SuspendAndSample_Test::TestBody",
@@ -2174,14 +2208,14 @@ TEST(GeckoProfiler, SuspendAndSample)
   nsresult rv = NS_NewNamedThread("GeckoProfGTest", getter_AddRefs(thread));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
-  int tid = profiler_current_thread_id();
+  ProfilerThreadId tid = profiler_current_thread_id();
 
   ASSERT_TRUE(!profiler_is_active());
 
   // Suspend and sample while the profiler is inactive.
   DoSuspendAndSample(tid, thread);
 
-  DoSuspendAndSample(0, thread);
+  DoSuspendAndSample(ProfilerThreadId{}, thread);
 
   uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
   const char* filters[] = {"GeckoMain", "Compositor"};
@@ -2194,7 +2228,7 @@ TEST(GeckoProfiler, SuspendAndSample)
   // Suspend and sample while the profiler is active.
   DoSuspendAndSample(tid, thread);
 
-  DoSuspendAndSample(0, thread);
+  DoSuspendAndSample(ProfilerThreadId{}, thread);
 
   profiler_stop();
 

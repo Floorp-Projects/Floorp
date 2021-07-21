@@ -743,8 +743,8 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
   /* The mixer that the graph mixes into during an iteration. Audio thread only.
    */
   AudioMixer mMixer;
-  /* Contains the id of the audio thread, from profiler_get_thread_id. */
-  std::atomic<int> mAudioThreadId;
+  /* Contains the id of the audio thread, from profiler_current_thread_id. */
+  std::atomic<ProfilerThreadId> mAudioThreadId;
   /* This allows implementing AutoInCallback. This is equal to the current
    * thread id when in an audio callback, and is an invalid thread id otherwise.
    */
