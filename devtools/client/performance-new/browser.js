@@ -62,7 +62,7 @@ const UI_BASE_URL_PATH_DEFAULT = "/from-addon";
  * profiler.firefox.com to be analyzed. This function opens up profiler.firefox.com
  * into a new browser tab, and injects the profile via a frame script.
  *
- * @param {MinimallyTypedGeckoProfile} profile - The Gecko profile.
+ * @param {MinimallyTypedGeckoProfile | ArrayBuffer | {}} profile - The Gecko profile.
  * @param {ProfilerViewMode | undefined} profilerViewMode - View mode for the Firefox Profiler
  *   front-end timeline. While opening the url, we should append a query string
  *   if a view other than "full" needs to be displayed.

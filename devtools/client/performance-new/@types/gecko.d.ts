@@ -116,6 +116,18 @@ declare namespace MockedExports {
 
   interface nsIURI {}
 
+  interface SharedLibrary {
+    start: number;
+    end: number;
+    offset: number;
+    name: string;
+    path: string;
+    debugName: string;
+    debugPath: string;
+    breakpadId: string;
+    arch: string;
+  }
+
   type Services = {
     prefs: {
       clearUserPref: (prefName: string) => void;
@@ -130,7 +142,23 @@ declare namespace MockedExports {
       addObserver: any;
       removeObserver: any;
     };
-    profiler: any;
+    profiler: {
+      CanProfile: () => boolean;
+      StartProfiler: (entryCount: number, interval: number, features: string[], filters?: string[], activeTabId?: number, duration?: number) => void;
+      StopProfiler: () => void;
+      IsPaused: () => boolean;
+      Pause: () => void;
+      Resume: () => void;
+      IsSamplingPaused: () => boolean;
+      PauseSampling: () => void;
+      ResumeSampling: () => void;
+      GetFeatures: () => string[];
+      getProfileDataAsync: (sinceTime?: number) => Promise<object>;
+      getProfileDataAsArrayBuffer: (sinceTime?: number) => Promise<ArrayBuffer>;
+      getProfileDataAsGzippedArrayBuffer: (sinceTime?: number) => Promise<ArrayBuffer>;
+      IsActive: () => boolean;
+      sharedLibraries: SharedLibrary[];
+    };
     platform: string;
     obs: {
       addObserver: (observer: object, type: string) => void;
