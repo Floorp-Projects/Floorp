@@ -68,7 +68,6 @@ mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
     sProcessScript =
         do_ImportModule("resource://gre/modules/ExtensionProcessScript.jsm",
                         "ExtensionProcessScript");
-    MOZ_RELEASE_ASSERT(sProcessScript);
     ClearOnShutdown(&sProcessScript);
   }
   return *sProcessScript;
