@@ -42,6 +42,13 @@ class DocumentEventWatcher {
         newURI,
       } = {}
     ) => {
+      // Ignore will-navigate as that's managed by parent-process-document-event.js.
+      // Except frame switching, when selecting an iframe document via the dropdown menu,
+      // this is handled by the target actor in the content process and the parent process
+      // doesn't know about it.
+      if (name == "will-navigate" && !isFrameSwitching) {
+        return;
+      }
       onAvailable([
         {
           resourceType: DOCUMENT_EVENT,

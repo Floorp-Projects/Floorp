@@ -30,7 +30,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
  *  - dom-complete
  * And some tests are asserting this.
  */
-const WILL_NAVIGATE_TIME_SHIFT = 5;
+const WILL_NAVIGATE_TIME_SHIFT = 10;
 exports.WILL_NAVIGATE_TIME_SHIFT = WILL_NAVIGATE_TIME_SHIFT;
 
 /**
@@ -81,7 +81,13 @@ DocumentEventsListener.prototype = {
     }
   },
 
-  onWillNavigate({ window, isTopLevel, newURI, navigationStart }) {
+  onWillNavigate({
+    window,
+    isTopLevel,
+    newURI,
+    navigationStart,
+    isFrameSwitching,
+  }) {
     // Ignore iframes
     if (!isTopLevel) {
       return;
@@ -90,6 +96,7 @@ DocumentEventsListener.prototype = {
     this.emit("will-navigate", {
       time: navigationStart - WILL_NAVIGATE_TIME_SHIFT,
       newURI,
+      isFrameSwitching,
     });
   },
 

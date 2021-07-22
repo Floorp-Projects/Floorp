@@ -18,6 +18,7 @@ DevToolsModules(
     "network-events-content.js",
     "network-events-stacktraces.js",
     "network-events.js",
+    "parent-process-document-event.js",
     "platform-messages.js",
     "reflow.js",
     "server-sent-events.js",
