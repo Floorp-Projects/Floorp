@@ -84,6 +84,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/apstag.js",
     "shims/bmauth.js",
     "shims/chartbeat.js",
+    "shims/criteo.js",
     "shims/eluminate.js",
     "shims/empty-script.js",
     "shims/empty-shim.txt",

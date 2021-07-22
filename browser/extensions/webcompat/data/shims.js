@@ -162,6 +162,15 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "Criteo",
+    platform: "all",
+    name: "Criteo",
+    bug: "1713720",
+    file: "criteo.js",
+    matches: ["*://static.criteo.net/js/ld/publishertag.js"],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "Doubleclick",
     platform: "all",
     name: "Doubleclick",
