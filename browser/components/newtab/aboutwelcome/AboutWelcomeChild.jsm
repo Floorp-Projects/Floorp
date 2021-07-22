@@ -143,10 +143,6 @@ class AboutWelcomeChild extends JSWindowActorChild {
       defineAs: "AWGetRegion",
     });
 
-    Cu.exportFunction(this.AWIsDefaultBrowser.bind(this), window, {
-      defineAs: "AWIsDefaultBrowser",
-    });
-
     Cu.exportFunction(this.AWSelectTheme.bind(this), window, {
       defineAs: "AWSelectTheme",
     });
@@ -206,7 +202,7 @@ class AboutWelcomeChild extends JSWindowActorChild {
     let featureConfig = NimbusFeatures.aboutwelcome.getValue();
     featureConfig.needDefault = await this.sendQuery("AWPage:NEED_DEFAULT");
     featureConfig.needPin = await this.sendQuery("AWPage:DOES_APP_NEED_PIN");
-    let defaults = AboutWelcomeDefaults.getDefaults(featureConfig);
+    let defaults = AboutWelcomeDefaults.getDefaults();
     // FeatureConfig (from prefs or experiments) has higher precendence
     // to defaults. But the `screens` property isn't defined we shouldn't
     // override the default with `null`
@@ -240,10 +236,6 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
   AWGetSelectedTheme() {
     return this.wrapPromise(getSelectedTheme(this));
-  }
-
-  AWIsDefaultBrowser() {
-    return this.wrapPromise(this.sendQuery("AWPage:IS_DEFAULT_BROWSER"));
   }
 
   /**

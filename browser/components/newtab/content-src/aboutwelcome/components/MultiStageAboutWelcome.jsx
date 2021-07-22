@@ -5,7 +5,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Localized } from "./MSLocalized";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
-import { MultiStageScreen } from "./MultiStageScreen";
 import { MultiStageProtonScreen } from "./MultiStageProtonScreen";
 import {
   BASE_PARAMS,
@@ -140,7 +139,7 @@ export const MultiStageAboutWelcome = props => {
   return (
     <React.Fragment>
       <div
-        className={`outer-wrapper onboardingContainer ${props.design} transition-${transition}`}
+        className={`outer-wrapper onboardingContainer proton transition-${transition}`}
         style={{
           backgroundImage: `url(${props.background_url})`,
         }}
@@ -161,7 +160,6 @@ export const MultiStageAboutWelcome = props => {
               activeTheme={activeTheme}
               initialTheme={initialTheme}
               setActiveTheme={setActiveTheme}
-              design={props.design}
             />
           ) : null;
         })}
@@ -207,7 +205,6 @@ export class WelcomeScreen extends React.PureComponent {
   constructor(props) {
     super(props);
     this.handleAction = this.handleAction.bind(this);
-    this.state = { alternateContent: "" };
   }
 
   handleOpenURL(action, flowParams, UTMTerm) {
@@ -265,25 +262,6 @@ export class WelcomeScreen extends React.PureComponent {
       }
     }
 
-    // Wait until we become default browser to continue rest of action.
-    if (action.waitForDefault) {
-      // Update the UI to show additional "waiting" content.
-      this.setState({ alternateContent: "waiting_for_default" });
-
-      // Keep checking frequently as we want the UI to be responsive.
-      await new Promise(resolve =>
-        (async function checkDefault() {
-          if (await window.AWIsDefaultBrowser()) {
-            resolve();
-          } else {
-            setTimeout(checkDefault, 100);
-          }
-        })()
-      );
-
-      AboutWelcomeUtils.sendActionTelemetry(props.messageId, "default_browser");
-    }
-
     // A special tiles.action.theme value indicates we should use the event's value vs provided value.
     if (action.theme) {
       let themeToUse =
@@ -301,37 +279,13 @@ export class WelcomeScreen extends React.PureComponent {
   }
 
   render() {
-    // Use the provided content or switch to an alternate one.
-    const { content, topSites } = this.props;
-    let newContent = content;
-    if (content[this.state.alternateContent]) {
-      newContent = {
-        ...content,
-        ...content[this.state.alternateContent],
-      };
-    }
-
-    if (this.props.design === "proton") {
-      return (
-        <MultiStageProtonScreen
-          content={newContent}
-          id={this.props.id}
-          order={this.props.order}
-          activeTheme={this.props.activeTheme}
-          totalNumberOfScreens={this.props.totalNumberOfScreens - 1}
-          handleAction={this.handleAction}
-          design={this.props.design}
-        />
-      );
-    }
     return (
-      <MultiStageScreen
-        content={newContent}
+      <MultiStageProtonScreen
+        content={this.props.content}
         id={this.props.id}
         order={this.props.order}
-        topSites={topSites}
         activeTheme={this.props.activeTheme}
-        totalNumberOfScreens={this.props.totalNumberOfScreens}
+        totalNumberOfScreens={this.props.totalNumberOfScreens - 1}
         handleAction={this.handleAction}
       />
     );

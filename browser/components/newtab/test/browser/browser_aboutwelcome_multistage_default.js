@@ -1,18 +1,55 @@
 "use strict";
 
-const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/NimbusTestUtils.jsm"
-);
-
 const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
 
-const TEST_MULTISTAGE_CONTENT = [
+const TEST_PROTON_CONTENT = [
   {
     id: "AW_STEP1",
     order: 0,
     content: {
-      zap: true,
       title: "Step 1",
+      primary_button: {
+        label: "Next",
+        action: {
+          navigate: true,
+        },
+      },
+      secondary_button: {
+        label: "link",
+      },
+      secondary_button_top: {
+        label: "link top",
+        action: {
+          type: "SHOW_FIREFOX_ACCOUNTS",
+          data: { entrypoint: "test" },
+        },
+      },
+      help_text: {
+        text: "Here's some sample help text",
+      },
+    },
+  },
+  {
+    id: "AW_STEP2",
+    order: 1,
+    content: {
+      title: "Step 2",
+      primary_button: {
+        label: "Next",
+        action: {
+          navigate: true,
+        },
+      },
+      secondary_button: {
+        label: "link",
+      },
+    },
+  },
+  {
+    id: "AW_STEP3",
+    order: 2,
+    content: {
+      title: "Step 3",
       tiles: {
         type: "theme",
         action: {
@@ -37,77 +74,37 @@ const TEST_MULTISTAGE_CONTENT = [
         },
       },
       secondary_button: {
-        label: "link",
-      },
-      secondary_button_top: {
-        label: "link top",
-        action: {
-          type: "SHOW_FIREFOX_ACCOUNTS",
-          data: { entrypoint: "test" },
-        },
-      },
-    },
-  },
-  {
-    id: "AW_STEP2",
-    order: 1,
-    content: {
-      zap: true,
-      title: "Step 2 longzaptest",
-      tiles: {
-        type: "topsites",
-        info: true,
-      },
-      primary_button: {
-        label: "Next",
-        action: {
-          navigate: true,
-        },
-      },
-      secondary_button: {
-        label: "link",
-      },
-    },
-  },
-  {
-    id: "AW_STEP3",
-    order: 2,
-    content: {
-      title: "Step 3",
-      tiles: {
-        type: "image",
-        media_type: "test-img",
-        source: {
-          default:
-            "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHBhdGggZmlsbD0iIzQ1YTFmZiIgZmlsbC1vcGFjaXR5PSJjb250ZXh0LWZpbGwtb3BhY2l0eSIgZD0iTTE1Ljg0NSA2LjA2NEExLjEgMS4xIDAgMCAwIDE1IDUuMzMxTDEwLjkxMSA0LjYgOC45ODUuNzM1YTEuMSAxLjEgMCAwIDAtMS45NjkgMEw1LjA4OSA0LjZsLTQuMDgxLjcyOWExLjEgMS4xIDAgMCAwLS42MTUgMS44MzRMMy4zMiAxMC4zMWwtLjYwOSA0LjM2YTEuMSAxLjEgMCAwIDAgMS42IDEuMTI3TDggMTMuODczbDMuNjkgMS45MjdhMS4xIDEuMSAwIDAgMCAxLjYtMS4xMjdsLS42MS00LjM2MyAyLjkyNi0zLjE0NmExLjEgMS4xIDAgMCAwIC4yMzktMS4xeiIvPjwvc3ZnPg==",
-        },
-      },
-      primary_button: {
-        label: "Next",
-        action: {
-          navigate: true,
-        },
-      },
-      secondary_button: {
         label: "Import",
         action: {
           type: "SHOW_MIGRATION_WIZARD",
           data: { source: "chrome" },
         },
       },
-      help_text: {
-        text: "Here's some sample help text",
-        position: "default",
+    },
+  },
+  {
+    id: "AW_STEP4",
+    order: 3,
+    content: {
+      title: "Step 4",
+      primary_button: {
+        label: "Next",
+        action: {
+          navigate: true,
+        },
+      },
+      secondary_button: {
+        label: "link",
       },
     },
   },
 ];
 
-const TEST_MULTISTAGE_JSON = JSON.stringify(TEST_MULTISTAGE_CONTENT);
+const TEST_PROTON_JSON = JSON.stringify(TEST_PROTON_CONTENT);
 
 async function openAboutWelcome() {
   await setAboutWelcomePref(true);
-  await setAboutWelcomeMultiStage(TEST_MULTISTAGE_JSON);
+  await setAboutWelcomeMultiStage(TEST_PROTON_JSON);
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -121,75 +118,124 @@ async function openAboutWelcome() {
 }
 
 /**
- * Test the multistage welcome UI rendered using TEST_MULTISTAGE_JSON
+ * Test the multistage welcome Proton UI
  */
-add_task(async function test_Multistage_About_Welcome_branches() {
-  await setProton(false);
+add_task(async function test_multistage_aboutwelcome_proton() {
+  const sandbox = sinon.createSandbox();
   let browser = await openAboutWelcome();
+  let aboutWelcomeActor = await getAboutWelcomeParent(browser);
+  // Stub AboutWelcomeParent Content Message Handler
+  sandbox.spy(aboutWelcomeActor, "onContentMessage");
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
 
-  // Test first (theme) screen for non-win7.
-  if (!win7Content) {
-    await test_screen_content(
-      browser,
-      "multistage step 1",
-      // Expected selectors:
-      [
-        "div.onboardingContainer",
-        "main.AW_STEP1",
-        "h1.welcomeZap",
-        "span.zap.short",
-        "div.secondary-cta",
-        "div.secondary-cta.top",
-        "button[value='secondary_button']",
-        "button[value='secondary_button_top']",
-        "label.theme",
-        "input[type='radio']",
-        "div.indicator.current",
-      ],
-      // Unexpected selectors:
-      ["main.AW_STEP2", "main.AW_STEP3", "div.tiles-container.info"]
-    );
+  await test_screen_content(
+    browser,
+    "multistage proton step 1",
+    // Expected selectors:
+    [
+      "main.AW_STEP1",
+      "div.onboardingContainer",
+      "div.proton[style*='.jpg']",
+      "div.section-left",
+      "span.attrib-text",
+      "div.secondary-cta.top",
+    ],
+    // Unexpected selectors:
+    [
+      "main.AW_STEP2",
+      "main.AW_STEP3",
+      "nav.steps",
+      "main.dialog-initial",
+      "main.dialog-last",
+      "div.indicator.current",
+    ]
+  );
 
-    await onButtonClick(browser, "button.primary");
+  await onButtonClick(browser, "button.primary");
+
+  const { callCount } = aboutWelcomeActor.onContentMessage;
+  ok(callCount >= 1, `${callCount} Stub was called`);
+  let clickCall;
+  for (let i = 0; i < callCount; i++) {
+    const call = aboutWelcomeActor.onContentMessage.getCall(i);
+    info(`Call #${i}: ${call.args[0]} ${JSON.stringify(call.args[1])}`);
+    if (call.calledWithMatch("", { event: "CLICK_BUTTON" })) {
+      clickCall = call;
+    }
   }
 
+  Assert.ok(
+    clickCall.args[1].message_id === "DEFAULT_ABOUTWELCOME_PROTON_0_AW_STEP1",
+    "AboutWelcome proton message id joined with screen id"
+  );
+
   await test_screen_content(
     browser,
-    "multistage step 2",
+    "multistage proton step 2",
     // Expected selectors:
     [
+      "main.AW_STEP2.dialog-initial",
       "div.onboardingContainer",
-      "main.AW_STEP2",
-      "h1.welcomeZap",
-      "span.zap.long",
-      "button[value='secondary_button']",
-      "div.tiles-container.info",
+      "div.proton[style*='.jpg']",
+      "div.section-main",
+      "nav.steps",
+      "div.indicator.current",
     ],
     // Unexpected selectors:
-    ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top"]
+    ["main.AW_STEP1", "main.AW_STEP3", "div.section-left", "main.dialog-last"]
   );
+
   await onButtonClick(browser, "button.primary");
+
+  // No 3rd screen to go to for win7.
+  if (win7Content) return;
+
   await test_screen_content(
     browser,
-    "multistage step 3",
+    "multistage proton step 3",
     // Expected selectors:
     [
-      "div.onboardingContainer",
       "main.AW_STEP3",
-      "div.brand-logo",
-      "div.welcome-text",
+      "div.onboardingContainer",
+      "div.proton[style*='.jpg']",
+      "div.section-main",
+      "div.tiles-theme-container",
+      "nav.steps",
+      "div.indicator.current",
     ],
     // Unexpected selectors:
-    ["main.AW_STEP1", "main.AW_STEP2", "h1.welcomeZap"]
+    [
+      "main.AW_STEP2",
+      "main.AW_STEP1",
+      "div.section-left",
+      "main.dialog-initial",
+      "main.dialog-last",
+    ]
   );
+
   await onButtonClick(browser, "button.primary");
+
   await test_screen_content(
     browser,
-    "home",
+    "multistage proton step 4",
     // Expected selectors:
-    ["body.activity-stream"],
+    [
+      "main.AW_STEP4.screen-1",
+      "main.AW_STEP4.dialog-last",
+      "div.onboardingContainer",
+    ],
     // Unexpected selectors:
-    ["div.onboardingContainer"]
+    [
+      "main.AW_STEP2",
+      "main.AW_STEP1",
+      "main.AW_STEP3",
+      "main.dialog-initial",
+      "main.AW_STEP4.screen-0",
+      "main.AW_STEP4.screen-2",
+      "main.AW_STEP4.screen-3",
+    ]
   );
 });
 
@@ -203,40 +249,23 @@ add_task(async function test_Multistage_About_Welcome_navigation() {
   await TestUtils.waitForCondition(() => browser.canGoBack);
   browser.goBack();
 
-  // Test first (theme) screen for non-win7.
-  if (!win7Content) {
-    await test_screen_content(
-      browser,
-      "multistage step 1",
-      // Expected selectors:
-      [
-        "div.onboardingContainer",
-        "main.AW_STEP1",
-        "div.secondary-cta",
-        "div.secondary-cta.top",
-        "button[value='secondary_button']",
-        "button[value='secondary_button_top']",
-        "div.indicator.current",
-      ],
-      // Unexpected selectors:
-      ["main.AW_STEP2", "main.AW_STEP3"]
-    );
-
-    await document.getElementById("forward-button").click();
-  }
-
   await test_screen_content(
     browser,
-    "multistage step 2",
+    "multistage step 1",
     // Expected selectors:
     [
       "div.onboardingContainer",
-      "main.AW_STEP2",
+      "main.AW_STEP1",
+      "div.secondary-cta",
+      "div.secondary-cta.top",
       "button[value='secondary_button']",
+      "button[value='secondary_button_top']",
     ],
     // Unexpected selectors:
-    ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top"]
+    ["main.AW_STEP2", "main.AW_STEP3"]
   );
+
+  await document.getElementById("forward-button").click();
 });
 
 /**
@@ -307,7 +336,7 @@ add_task(async function test_AWMultistage_Primary_Action() {
     );
     Assert.equal(
       impressionCall.args[1].message_id,
-      "DEFAULT_ABOUTWELCOME_SITES",
+      "DEFAULT_ABOUTWELCOME_PROTON_SITES",
       "SITES MessageId sent in impression event telemetry"
     );
   }
@@ -341,7 +370,7 @@ add_task(async function test_AWMultistage_Primary_Action() {
     );
     Assert.equal(
       performanceCall.args[1].message_id,
-      "DEFAULT_ABOUTWELCOME",
+      "DEFAULT_ABOUTWELCOME_PROTON",
       "MessageId sent in performance event telemetry"
     );
   }
@@ -363,19 +392,13 @@ add_task(async function test_AWMultistage_Primary_Action() {
   );
   Assert.equal(
     clickCall.args[1].message_id,
-    `DEFAULT_ABOUTWELCOME_0_${
-      TEST_MULTISTAGE_CONTENT[win7Content ? 1 : 0].id
-    }`.toUpperCase(),
+    "DEFAULT_ABOUTWELCOME_PROTON_0_AW_STEP1",
     "MessageId sent in click event telemetry"
   );
 });
 
 add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
-  // First (theme) screen with secondary_button_top is removed for win7.
   if (win7Content) return;
-
-  let { doExperimentCleanup } = ExperimentFakes.enrollmentHelper();
-  await doExperimentCleanup();
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
   const sandbox = sinon.createSandbox();
@@ -462,6 +485,16 @@ add_task(async function test_AWMultistage_Themes() {
   registerCleanupFunction(() => {
     sandbox.restore();
   });
+  await onButtonClick(browser, "button.primary");
+  await test_screen_content(
+    browser,
+    "multistage proton step 2",
+    // Expected selectors:
+    ["main.AW_STEP2.dialog-initial"],
+    // Unexpected selectors:
+    ["main.AW_STEP1"]
+  );
+  await onButtonClick(browser, "button.primary");
 
   await ContentTask.spawn(browser, "Themes", async () => {
     await ContentTaskUtils.waitForCondition(
@@ -517,11 +550,21 @@ add_task(async function test_AWMultistage_Themes() {
 });
 
 add_task(async function test_AWMultistage_Import() {
+  // No import screen to test for win7.
+  if (win7Content) return;
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
 
-  // Click twice to advance to screen 3 - once for win7.
-  if (!win7Content) await onButtonClick(browser, "button.primary");
+  // Click twice to advance to screen 3
+  await onButtonClick(browser, "button.primary");
+  await test_screen_content(
+    browser,
+    "multistage proton step 2",
+    // Expected selectors:
+    ["main.AW_STEP2.dialog-initial"],
+    // Unexpected selectors:
+    ["main.AW_STEP1"]
+  );
   await onButtonClick(browser, "button.primary");
 
   const sandbox = sinon.createSandbox();
@@ -534,6 +577,15 @@ add_task(async function test_AWMultistage_Import() {
   registerCleanupFunction(() => {
     sandbox.restore();
   });
+
+  await test_screen_content(
+    browser,
+    "multistage proton step 2",
+    // Expected selectors:
+    ["main.AW_STEP3"],
+    // Unexpected selectors:
+    ["main.AW_STEP2"]
+  );
 
   await onButtonClick(browser, "button[value='secondary_button']");
   const { callCount } = aboutWelcomeActor.onContentMessage;
@@ -590,7 +642,6 @@ add_task(async function setup() {
   // This needs to happen before any about:welcome page opens
   sandbox.stub(FxAccounts.config, "promiseMetricsFlowURI").resolves("");
   await setAboutWelcomeMultiStage("");
-  await setProton(false);
 
   registerCleanupFunction(() => {
     sandbox.restore();
@@ -605,7 +656,7 @@ test_newtab(
     },
     test: async function test_startBrowsing() {
       await ContentTaskUtils.waitForCondition(
-        () => content.document.querySelector(".indicator.current"),
+        () => content.document.querySelector("div.onboardingContainer"),
         "Wait for about:welcome to load"
       );
     },
