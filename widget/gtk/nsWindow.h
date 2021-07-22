@@ -598,7 +598,7 @@ class nsWindow final : public nsBaseWidget {
   void DispatchMissedButtonReleases(GdkEventCrossing* aGdkEvent);
 
   // nsBaseWidget
-  virtual LayerManager* GetLayerManager() override;
+  virtual WindowRenderer* GetWindowRenderer() override;
 
   void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
 

@@ -2176,7 +2176,7 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*) {
   return NS_OK;
 }
 
-mozilla::layers::LayerManager* nsWindow::GetLayerManager() {
+mozilla::WindowRenderer* nsWindow::GetWindowRenderer() {
   if (mLayerManager) {
     return mLayerManager;
   }
@@ -2571,7 +2571,7 @@ bool nsWindow::WidgetPaintsBackground() {
 
 bool nsWindow::NeedsPaint() {
   auto lvs(mLayerViewSupport.Access());
-  if (!lvs || lvs->CompositorPaused() || !GetLayerManager(nullptr)) {
+  if (!lvs || lvs->CompositorPaused() || !GetWindowRenderer()) {
     return false;
   }
 

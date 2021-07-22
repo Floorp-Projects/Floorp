@@ -27,6 +27,7 @@ EXPORTS += [
     "RetainedDisplayListBuilder.h",
     "RetainedDisplayListHelpers.h",
     "TransformClipNode.h",
+    "WindowRenderer.h",
 ]
 
 EXPORTS.mozilla += [
@@ -51,6 +52,7 @@ UNIFIED_SOURCES += [
     "nsImageRenderer.cpp",
     "PaintTracker.cpp",
     "RetainedDisplayListBuilder.cpp",
+    "WindowRenderer.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

@@ -2435,9 +2435,9 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     // Forward our composition payloads to the layer manager.
     if (!mCompositionPayloads.IsEmpty()) {
       nsIWidget* widget = mPresContext->GetRootWidget();
-      layers::LayerManager* lm = widget ? widget->GetLayerManager() : nullptr;
-      if (lm) {
-        lm->RegisterPayloads(mCompositionPayloads);
+      WindowRenderer* renderer = widget ? widget->GetWindowRenderer() : nullptr;
+      if (renderer && renderer->AsLayerManager()) {
+        renderer->AsLayerManager()->RegisterPayloads(mCompositionPayloads);
       }
       mCompositionPayloads.Clear();
     }

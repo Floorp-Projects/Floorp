@@ -1293,9 +1293,9 @@ already_AddRefed<SourceSurface> HTMLCanvasElement::GetSurfaceSnapshot(
 layers::LayersBackend HTMLCanvasElement::GetCompositorBackendType() const {
   nsIWidget* docWidget = nsContentUtils::WidgetForDocument(OwnerDoc());
   if (docWidget) {
-    layers::LayerManager* layerManager = docWidget->GetLayerManager();
-    if (layerManager) {
-      return layerManager->GetCompositorBackendType();
+    WindowRenderer* renderer = docWidget->GetWindowRenderer();
+    if (renderer) {
+      return renderer->GetCompositorBackendType();
     }
   }
 

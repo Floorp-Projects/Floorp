@@ -294,10 +294,10 @@ LayerTransactionChild* nsDOMWindowUtils::GetLayerTransaction() {
   nsIWidget* widget = GetWidget();
   if (!widget) return nullptr;
 
-  LayerManager* manager = widget->GetLayerManager();
-  if (!manager) return nullptr;
+  WindowRenderer* renderer = widget->GetWindowRenderer();
+  if (!renderer) return nullptr;
 
-  ShadowLayerForwarder* forwarder = manager->AsShadowForwarder();
+  ShadowLayerForwarder* forwarder = renderer->AsShadowForwarder();
   return forwarder && forwarder->HasShadowManager()
              ? forwarder->GetShadowManager()
              : nullptr;
@@ -305,9 +305,9 @@ LayerTransactionChild* nsDOMWindowUtils::GetLayerTransaction() {
 
 WebRenderBridgeChild* nsDOMWindowUtils::GetWebRenderBridge() {
   if (nsIWidget* widget = GetWidget()) {
-    if (LayerManager* lm = widget->GetLayerManager()) {
-      if (WebRenderLayerManager* wrlm = lm->AsWebRenderLayerManager()) {
-        return wrlm->WrBridge();
+    if (WindowRenderer* renderer = widget->GetWindowRenderer()) {
+      if (WebRenderLayerManager* wr = renderer->AsWebRender()) {
+        return wr->WrBridge();
       }
     }
   }
@@ -316,8 +316,8 @@ WebRenderBridgeChild* nsDOMWindowUtils::GetWebRenderBridge() {
 
 CompositorBridgeChild* nsDOMWindowUtils::GetCompositorBridge() {
   if (nsIWidget* widget = GetWidget()) {
-    if (LayerManager* lm = widget->GetLayerManager()) {
-      if (CompositorBridgeChild* cbc = lm->GetCompositorBridgeChild()) {
+    if (WindowRenderer* renderer = widget->GetWindowRenderer()) {
+      if (CompositorBridgeChild* cbc = renderer->GetCompositorBridgeChild()) {
         return cbc;
       }
     }
@@ -328,8 +328,8 @@ CompositorBridgeChild* nsDOMWindowUtils::GetCompositorBridge() {
 NS_IMETHODIMP
 nsDOMWindowUtils::SyncFlushCompositor() {
   if (nsIWidget* widget = GetWidget()) {
-    if (LayerManager* lm = widget->GetLayerManager()) {
-      if (KnowsCompositor* kc = lm->AsKnowsCompositor()) {
+    if (WindowRenderer* renderer = widget->GetWindowRenderer()) {
+      if (KnowsCompositor* kc = renderer->AsKnowsCompositor()) {
         kc->SyncWithCompositor();
       }
     }
@@ -412,7 +412,7 @@ nsDOMWindowUtils::UpdateLayerTree() {
       presShell->Paint(
           view, view->GetBounds(),
           PaintFlags::PaintLayers | PaintFlags::PaintSyncDecodeImages);
-      presShell->GetLayerManager()->WaitOnTransactionProcessed();
+      presShell->GetWindowRenderer()->WaitOnTransactionProcessed();
     }
   }
   return NS_OK;
@@ -533,14 +533,10 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
         rootFrame == nsLayoutUtils::GetDisplayRootFrame(rootFrame)) {
       nsCOMPtr<nsIWidget> widget = GetWidget();
       if (widget) {
-        LayerManager* manager = widget->GetLayerManager();
-        manager->BeginTransaction();
         using PaintFrameFlags = nsLayoutUtils::PaintFrameFlags;
-        nsLayoutUtils::PaintFrame(nullptr, rootFrame, nsRegion(),
-                                  NS_RGB(255, 255, 255),
-                                  nsDisplayListBuilderMode::Painting,
-                                  PaintFrameFlags::WidgetLayers |
-                                      PaintFrameFlags::ExistingTransaction);
+        nsLayoutUtils::PaintFrame(
+            nullptr, rootFrame, nsRegion(), NS_RGB(255, 255, 255),
+            nsDisplayListBuilderMode::Painting, PaintFrameFlags::WidgetLayers);
       }
     }
   }
@@ -2545,10 +2541,10 @@ nsDOMWindowUtils::GetLayerManagerType(nsAString& aType) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) return NS_ERROR_FAILURE;
 
-  LayerManager* mgr = widget->GetLayerManager();
-  if (!mgr) return NS_ERROR_FAILURE;
+  WindowRenderer* renderer = widget->GetWindowRenderer();
+  if (!renderer) return NS_ERROR_FAILURE;
 
-  mgr->GetBackendName(aType);
+  renderer->GetBackendName(aType);
 
   return NS_OK;
 }
@@ -2558,10 +2554,10 @@ nsDOMWindowUtils::GetLayerManagerRemote(bool* retval) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) return NS_ERROR_FAILURE;
 
-  LayerManager* mgr = widget->GetLayerManager();
-  if (!mgr) return NS_ERROR_FAILURE;
+  WindowRenderer* renderer = widget->GetWindowRenderer();
+  if (!renderer) return NS_ERROR_FAILURE;
 
-  *retval = !!mgr->AsKnowsCompositor();
+  *retval = !!renderer->AsKnowsCompositor();
   return NS_OK;
 }
 
@@ -2572,13 +2568,13 @@ nsDOMWindowUtils::GetUsingAdvancedLayers(bool* retval) {
     return NS_ERROR_FAILURE;
   }
 
-  LayerManager* mgr = widget->GetLayerManager();
-  if (!mgr) {
+  WindowRenderer* renderer = widget->GetWindowRenderer();
+  if (!renderer) {
     return NS_ERROR_FAILURE;
   }
 
   *retval = false;
-  if (KnowsCompositor* fwd = mgr->AsKnowsCompositor()) {
+  if (KnowsCompositor* fwd = renderer->AsKnowsCompositor()) {
     *retval = fwd->GetTextureFactoryIdentifier().mUsingAdvancedLayers;
   }
   return NS_OK;
@@ -2688,8 +2684,8 @@ nsDOMWindowUtils::StartFrameTimeRecording(uint32_t* startIndex) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) return NS_ERROR_FAILURE;
 
-  LayerManager* mgr = widget->GetLayerManager();
-  if (!mgr) return NS_ERROR_FAILURE;
+  WindowRenderer* renderer = widget->GetWindowRenderer();
+  if (!renderer) return NS_ERROR_FAILURE;
 
   const uint32_t kRecordingMinSize = 60 * 10;       // 10 seconds @60 fps.
   const uint32_t kRecordingMaxSize = 60 * 60 * 60;  // One hour
@@ -2697,7 +2693,7 @@ nsDOMWindowUtils::StartFrameTimeRecording(uint32_t* startIndex) {
       Preferences::GetUint("toolkit.framesRecording.bufferSize", uint32_t(0));
   bufferSize = std::min(bufferSize, kRecordingMaxSize);
   bufferSize = std::max(bufferSize, kRecordingMinSize);
-  *startIndex = mgr->StartFrameTimeRecording(bufferSize);
+  *startIndex = renderer->StartFrameTimeRecording(bufferSize);
 
   return NS_OK;
 }
@@ -2708,10 +2704,10 @@ nsDOMWindowUtils::StopFrameTimeRecording(uint32_t startIndex,
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) return NS_ERROR_FAILURE;
 
-  LayerManager* mgr = widget->GetLayerManager();
-  if (!mgr) return NS_ERROR_FAILURE;
+  WindowRenderer* renderer = widget->GetWindowRenderer();
+  if (!renderer) return NS_ERROR_FAILURE;
 
-  mgr->StopFrameTimeRecording(startIndex, frameIntervals);
+  renderer->StopFrameTimeRecording(startIndex, frameIntervals);
 
   return NS_OK;
 }
@@ -2814,19 +2810,19 @@ nsDOMWindowUtils::SetAsyncScrollOffset(Element* aElement, float aX, float aY) {
   if (!widget) {
     return NS_ERROR_FAILURE;
   }
-  LayerManager* manager = widget->GetLayerManager();
-  if (!manager) {
+  WindowRenderer* renderer = widget->GetWindowRenderer();
+  if (!renderer) {
     return NS_ERROR_FAILURE;
   }
-  if (WebRenderLayerManager* wrlm = manager->AsWebRenderLayerManager()) {
-    WebRenderBridgeChild* wrbc = wrlm->WrBridge();
+  if (WebRenderLayerManager* wr = renderer->AsWebRender()) {
+    WebRenderBridgeChild* wrbc = wr->WrBridge();
     if (!wrbc) {
       return NS_ERROR_UNEXPECTED;
     }
     wrbc->SendSetAsyncScrollOffset(viewId, aX, aY);
     return NS_OK;
   }
-  ShadowLayerForwarder* forwarder = manager->AsShadowForwarder();
+  ShadowLayerForwarder* forwarder = renderer->AsShadowForwarder();
   if (!forwarder || !forwarder->HasShadowManager()) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -2847,19 +2843,19 @@ nsDOMWindowUtils::SetAsyncZoom(Element* aRootElement, float aValue) {
   if (!widget) {
     return NS_ERROR_FAILURE;
   }
-  LayerManager* manager = widget->GetLayerManager();
-  if (!manager) {
+  WindowRenderer* renderer = widget->GetWindowRenderer();
+  if (!renderer) {
     return NS_ERROR_FAILURE;
   }
-  if (WebRenderLayerManager* wrlm = manager->AsWebRenderLayerManager()) {
-    WebRenderBridgeChild* wrbc = wrlm->WrBridge();
+  if (WebRenderLayerManager* wr = renderer->AsWebRender()) {
+    WebRenderBridgeChild* wrbc = wr->WrBridge();
     if (!wrbc) {
       return NS_ERROR_UNEXPECTED;
     }
     wrbc->SendSetAsyncZoom(viewId, aValue);
     return NS_OK;
   }
-  ShadowLayerForwarder* forwarder = manager->AsShadowForwarder();
+  ShadowLayerForwarder* forwarder = renderer->AsShadowForwarder();
   if (!forwarder || !forwarder->HasShadowManager()) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -2879,13 +2875,13 @@ nsDOMWindowUtils::FlushApzRepaints(bool* aOutResult) {
     *aOutResult = false;
     return NS_OK;
   }
-  LayerManager* manager = widget->GetLayerManager();
-  if (!manager) {
+  WindowRenderer* renderer = widget->GetWindowRenderer();
+  if (!renderer) {
     *aOutResult = false;
     return NS_OK;
   }
-  if (WebRenderLayerManager* wrlm = manager->AsWebRenderLayerManager()) {
-    WebRenderBridgeChild* wrbc = wrlm->WrBridge();
+  if (WebRenderLayerManager* wr = renderer->AsWebRender()) {
+    WebRenderBridgeChild* wrbc = wr->WrBridge();
     if (!wrbc) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -2893,7 +2889,7 @@ nsDOMWindowUtils::FlushApzRepaints(bool* aOutResult) {
     *aOutResult = true;
     return NS_OK;
   }
-  ShadowLayerForwarder* forwarder = manager->AsShadowForwarder();
+  ShadowLayerForwarder* forwarder = renderer->AsShadowForwarder();
   if (!forwarder || !forwarder->HasShadowManager()) {
     *aOutResult = false;
     return NS_OK;
@@ -3227,7 +3223,9 @@ nsDOMWindowUtils::LeafLayersPartitionWindow(bool* aResult) {
 #ifdef DEBUG
   nsIWidget* widget = GetWidget();
   if (!widget) return NS_ERROR_FAILURE;
-  LayerManager* manager = widget->GetLayerManager();
+  WindowRenderer* renderer = widget->GetWindowRenderer();
+  if (!renderer) return NS_ERROR_FAILURE;
+  LayerManager* manager = renderer->AsLayerManager();
   if (!manager) return NS_ERROR_FAILURE;
   nsPresContext* presContext = GetPresContext();
   if (!presContext) return NS_ERROR_FAILURE;
@@ -4206,16 +4204,16 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetContentAPZTestData(
     JSContext* aContext, JS::MutableHandleValue aOutContentTestData) {
   if (nsIWidget* widget = GetWidget()) {
-    RefPtr<LayerManager> lm = widget->GetLayerManager();
-    if (!lm) {
+    WindowRenderer* renderer = widget->GetWindowRenderer();
+    if (!renderer) {
       return NS_OK;
     }
-    if (ClientLayerManager* clm = lm->AsClientLayerManager()) {
+    if (ClientLayerManager* clm = renderer->AsClientLayerManager()) {
       if (!clm->GetAPZTestData().ToJS(aOutContentTestData, aContext)) {
         return NS_ERROR_FAILURE;
       }
-    } else if (WebRenderLayerManager* wrlm = lm->AsWebRenderLayerManager()) {
-      if (!wrlm->GetAPZTestData().ToJS(aOutContentTestData, aContext)) {
+    } else if (WebRenderLayerManager* wr = renderer->AsWebRender()) {
+      if (!wr->GetAPZTestData().ToJS(aOutContentTestData, aContext)) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -4228,18 +4226,18 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetCompositorAPZTestData(
     JSContext* aContext, JS::MutableHandleValue aOutCompositorTestData) {
   if (nsIWidget* widget = GetWidget()) {
-    RefPtr<LayerManager> lm = widget->GetLayerManager();
-    if (!lm) {
+    WindowRenderer* renderer = widget->GetWindowRenderer();
+    if (!renderer) {
       return NS_OK;
     }
     APZTestData compositorSideData;
-    if (ClientLayerManager* clm = lm->AsClientLayerManager()) {
+    if (ClientLayerManager* clm = renderer->AsClientLayerManager()) {
       clm->GetCompositorSideAPZTestData(&compositorSideData);
-    } else if (WebRenderLayerManager* wrlm = lm->AsWebRenderLayerManager()) {
-      if (!wrlm->WrBridge()) {
+    } else if (WebRenderLayerManager* wr = renderer->AsWebRender()) {
+      if (!wr->WrBridge()) {
         return NS_ERROR_UNEXPECTED;
       }
-      if (!wrlm->WrBridge()->SendGetAPZTestData(&compositorSideData)) {
+      if (!wr->WrBridge()->SendGetAPZTestData(&compositorSideData)) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -4290,13 +4288,13 @@ nsDOMWindowUtils::GetFrameUniformityTestData(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<LayerManager> manager = widget->GetLayerManager();
-  if (!manager) {
+  WindowRenderer* renderer = widget->GetWindowRenderer();
+  if (!renderer) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   FrameUniformityData outData;
-  manager->GetFrameUniformity(&outData);
+  renderer->GetFrameUniformity(&outData);
   outData.ToJS(aOutFrameUniformity, aContext);
   return NS_OK;
 }

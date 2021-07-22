@@ -329,9 +329,9 @@ void nsViewManager::Refresh(nsView* aView,
         printf_stderr("--COMPOSITE-- %p\n", presShell.get());
       }
 #endif
-      LayerManager* manager = widget->GetLayerManager();
-      if (!manager->NeedsWidgetInvalidation()) {
-        manager->FlushRendering();
+      WindowRenderer* renderer = widget->GetWindowRenderer();
+      if (!renderer->NeedsWidgetInvalidation()) {
+        renderer->FlushRendering();
       } else {
         presShell->Paint(aView, damageRegion, PaintFlags::PaintComposite);
       }
@@ -619,9 +619,9 @@ void nsViewManager::InvalidateViews(nsView* aView) {
 void nsViewManager::WillPaintWindow(nsIWidget* aWidget) {
   if (aWidget) {
     nsView* view = nsView::GetViewFor(aWidget);
-    LayerManager* manager = aWidget->GetLayerManager();
+    WindowRenderer* renderer = aWidget->GetWindowRenderer();
     if (view &&
-        (view->ForcedRepaint() || !manager->NeedsWidgetInvalidation())) {
+        (view->ForcedRepaint() || !renderer->NeedsWidgetInvalidation())) {
       ProcessPendingUpdates();
       // Re-get the view pointer here since the ProcessPendingUpdates might have
       // destroyed it during CallWillPaintOnObservers.

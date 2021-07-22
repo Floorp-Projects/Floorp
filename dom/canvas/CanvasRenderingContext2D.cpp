@@ -1412,13 +1412,13 @@ void CanvasRenderingContext2D::RegisterAllocation() {
   }
 }
 
-static already_AddRefed<LayerManager> LayerManagerFromCanvasElement(
+static WindowRenderer* WindowRendererFromCanvasElement(
     nsINode* aCanvasElement) {
   if (!aCanvasElement) {
     return nullptr;
   }
 
-  return nsContentUtils::LayerManagerForDocument(aCanvasElement->OwnerDoc());
+  return nsContentUtils::WindowRendererForDocument(aCanvasElement->OwnerDoc());
 }
 
 bool CanvasRenderingContext2D::TrySharedTarget(
@@ -1441,15 +1441,14 @@ bool CanvasRenderingContext2D::TrySharedTarget(
     return false;
   }
 
-  RefPtr<LayerManager> layerManager =
-      LayerManagerFromCanvasElement(mCanvasElement);
+  WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
 
-  if (!layerManager) {
+  if (!renderer) {
     return false;
   }
 
-  aOutProvider = layerManager->CreatePersistentBufferProvider(
-      GetSize(), GetSurfaceFormat());
+  aOutProvider =
+      renderer->CreatePersistentBufferProvider(GetSize(), GetSurfaceFormat());
 
   if (!aOutProvider) {
     return false;

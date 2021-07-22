@@ -122,28 +122,6 @@ already_AddRefed<DrawTarget> LayerManager::CreateDrawTarget(
                                                                      aFormat);
 }
 
-already_AddRefed<PersistentBufferProvider>
-LayerManager::CreatePersistentBufferProvider(
-    const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat) {
-  RefPtr<PersistentBufferProviderBasic> bufferProvider;
-  // If we are using remote canvas we don't want to use acceleration in
-  // non-remote layer managers, so we always use the fallback software one.
-  if (!gfxPlatform::UseRemoteCanvas() ||
-      !gfxPlatform::IsBackendAccelerated(
-          gfxPlatform::GetPlatform()->GetPreferredCanvasBackend())) {
-    bufferProvider = PersistentBufferProviderBasic::Create(
-        aSize, aFormat,
-        gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
-  }
-
-  if (!bufferProvider) {
-    bufferProvider = PersistentBufferProviderBasic::Create(
-        aSize, aFormat, gfxPlatform::GetPlatform()->GetFallbackCanvasBackend());
-  }
-
-  return bufferProvider.forget();
-}
-
 already_AddRefed<ImageContainer> LayerManager::CreateImageContainer(
     ImageContainer::Mode flag) {
   RefPtr<ImageContainer> container = new ImageContainer(flag);
@@ -178,45 +156,6 @@ UniquePtr<LayerUserData> LayerManager::RemoveUserData(void* aKey) {
 
 void LayerManager::PayloadPresented(const TimeStamp& aTimeStamp) {
   RecordCompositionPayloadsPresented(aTimeStamp, mPayload);
-}
-
-void LayerManager::AddPartialPrerenderedAnimation(
-    uint64_t aCompositorAnimationId, dom::Animation* aAnimation) {
-  mPartialPrerenderedAnimations.InsertOrUpdate(aCompositorAnimationId,
-                                               RefPtr{aAnimation});
-  aAnimation->SetPartialPrerendered(aCompositorAnimationId);
-}
-
-void LayerManager::RemovePartialPrerenderedAnimation(
-    uint64_t aCompositorAnimationId, dom::Animation* aAnimation) {
-  MOZ_ASSERT(aAnimation);
-#ifdef DEBUG
-  RefPtr<dom::Animation> animation;
-  if (mPartialPrerenderedAnimations.Remove(aCompositorAnimationId,
-                                           getter_AddRefs(animation)) &&
-      // It may be possible that either animation's effect has already been
-      // nulled out via Animation::SetEffect() so ignore such cases.
-      aAnimation->GetEffect() && aAnimation->GetEffect()->AsKeyframeEffect() &&
-      animation->GetEffect() && animation->GetEffect()->AsKeyframeEffect()) {
-    MOZ_ASSERT(EffectSet::GetEffectSetForEffect(
-                   aAnimation->GetEffect()->AsKeyframeEffect()) ==
-               EffectSet::GetEffectSetForEffect(
-                   animation->GetEffect()->AsKeyframeEffect()));
-  }
-#else
-  mPartialPrerenderedAnimations.Remove(aCompositorAnimationId);
-#endif
-  aAnimation->ResetPartialPrerendered();
-}
-
-void LayerManager::UpdatePartialPrerenderedAnimations(
-    const nsTArray<uint64_t>& aJankedAnimations) {
-  for (uint64_t id : aJankedAnimations) {
-    RefPtr<dom::Animation> animation;
-    if (mPartialPrerenderedAnimations.Remove(id, getter_AddRefs(animation))) {
-      animation->UpdatePartialPrerendered();
-    }
-  }
 }
 
 }  // namespace layers
