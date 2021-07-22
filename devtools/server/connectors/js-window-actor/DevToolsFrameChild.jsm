@@ -188,6 +188,15 @@ class DevToolsFrameChild extends JSWindowActorChild {
           return;
         }
 
+        // If we decide to instantiate a new target and there was one before,
+        // first destroy the previous one.
+        // Otherwise its destroy sequence will be executed *after* the new one
+        // is being initialized and may easily revert changes made against platform API.
+        // (typically toggle platform boolean attributes back to default...)
+        if (existingTarget) {
+          existingTarget.destroy();
+        }
+
         this._createTargetActor({
           watcherActorID,
           parentConnectionPrefix: connectionPrefix,
