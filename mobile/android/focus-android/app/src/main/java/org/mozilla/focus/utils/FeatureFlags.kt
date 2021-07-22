@@ -3,9 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.utils
 
+import org.mozilla.focus.BuildConfig
+
 /**
  * Feature flag for MVP
  */
 object FeatureFlags {
-    const val isMvp = false
+    val isMvp = BuildConfig.DEBUG
 }
