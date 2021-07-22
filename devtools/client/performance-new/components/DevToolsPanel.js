@@ -15,6 +15,7 @@
 
 /**
  * @typedef {Object} OwnProps
+ * @property {import("../@types/perf").PerfFront} perfFront
  * @property {import("../@types/perf").OnProfileReceived} onProfileReceived
  * @property {() => void} onEditSettingsLinkClicked
  */
@@ -59,6 +60,7 @@ class DevToolsPanel extends PureComponent {
   render() {
     const {
       isSupportedPlatform,
+      perfFront,
       onProfileReceived,
       onEditSettingsLinkClicked,
     } = this.props;
@@ -71,7 +73,7 @@ class DevToolsPanel extends PureComponent {
     return div(
       { className: `perf perf-devtools` },
       OnboardingMessage(),
-      RecordingButton({ onProfileReceived }),
+      RecordingButton({ perfFront, onProfileReceived }),
       Description(),
       hr({ className: "perf-presets-hr" }),
       DevToolsPresetSelection({ onEditSettingsLinkClicked })

@@ -20,6 +20,7 @@
 /**
  * @typedef {Object} OwnProps
  * @property {import("../@types/perf").OnProfileReceived} onProfileReceived
+ * @property {import("../@types/perf").PerfFront} perfFront
  */
 
 /**
@@ -63,20 +64,29 @@ const Localized = React.createFactory(
  * @extends {React.PureComponent<Props>}
  */
 class RecordingButton extends PureComponent {
-  _onStopButtonClick = async () => {
+  _onStartButtonClick = () => {
+    const { startRecording, perfFront } = this.props;
+    startRecording(perfFront);
+  };
+
+  _onCaptureButtonClick = async () => {
     const {
       getProfileAndStopProfiler,
       profilerViewMode,
       onProfileReceived,
+      perfFront,
     } = this.props;
-    const profile = await getProfileAndStopProfiler();
+    const profile = await getProfileAndStopProfiler(perfFront);
     onProfileReceived(profile, profilerViewMode);
+  };
+
+  _onStopButtonClick = () => {
+    const { stopProfilerAndDiscardProfile, perfFront } = this.props;
+    stopProfilerAndDiscardProfile(perfFront);
   };
 
   render() {
     const {
-      startRecording,
-      stopProfilerAndDiscardProfile,
       recordingState,
       isSupportedPlatform,
       recordingUnexpectedlyStopped,
@@ -100,7 +110,7 @@ class RecordingButton extends PureComponent {
 
       case "available-to-record":
         return renderButton({
-          onClick: startRecording,
+          onClick: this._onStartButtonClick,
           isPrimary: true,
           label: startRecordingLabel(),
           additionalMessage: recordingUnexpectedlyStopped
@@ -146,14 +156,14 @@ class RecordingButton extends PureComponent {
             })
           ),
           isPrimary: true,
-          onClick: this._onStopButtonClick,
+          onClick: this._onCaptureButtonClick,
           disabled: recordingState === "request-to-start-recording",
           additionalButton: {
             label: Localized(
               { id: "perftools-button-cancel-recording" },
               "Cancel recording"
             ),
-            onClick: stopProfilerAndDiscardProfile,
+            onClick: this._onStopButtonClick,
           },
         });
 

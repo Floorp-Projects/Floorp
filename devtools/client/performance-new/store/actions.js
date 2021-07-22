@@ -198,12 +198,12 @@ exports.initializeStore = values => {
 
 /**
  * Start a new recording with the perfFront and update the internal recording state.
+ * @param {PerfFront} perfFront
  * @return {ThunkAction<void>}
  */
-exports.startRecording = () => {
+exports.startRecording = perfFront => {
   return ({ dispatch, getState }) => {
     const recordingSettings = selectors.getRecordingSettings(getState());
-    const perfFront = selectors.getPerfFront(getState());
     // In the case of the profiler popup, the startProfiler can be synchronous.
     // In order to properly allow the React components to handle the state changes
     // make sure and change the recording state first, then start the profiler.
@@ -214,11 +214,11 @@ exports.startRecording = () => {
 
 /**
  * Stops the profiler, and opens the profile in a new window.
+ * @param {PerfFront} perfFront
  * @return {ThunkAction<Promise<MinimallyTypedGeckoProfile>>}
  */
-exports.getProfileAndStopProfiler = () => {
+exports.getProfileAndStopProfiler = perfFront => {
   return async ({ dispatch, getState }) => {
-    const perfFront = selectors.getPerfFront(getState());
     dispatch({ type: "REQUESTING_PROFILE" });
     const profile = await perfFront.getProfileAndStopProfiler();
     dispatch({ type: "OBTAINED_PROFILE" });
@@ -228,11 +228,11 @@ exports.getProfileAndStopProfiler = () => {
 
 /**
  * Stops the profiler, but does not try to retrieve the profile.
+ * @param {PerfFront} perfFront
  * @return {ThunkAction<void>}
  */
-exports.stopProfilerAndDiscardProfile = () => {
+exports.stopProfilerAndDiscardProfile = perfFront => {
   return async ({ dispatch, getState }) => {
-    const perfFront = selectors.getPerfFront(getState());
     dispatch({ type: "REQUESTING_TO_STOP_RECORDING" });
 
     try {

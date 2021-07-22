@@ -120,7 +120,6 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
   // the browser.
   store.dispatch(
     actions.initializeStore({
-      perfFront,
       isSupportedPlatform,
       recordingSettings: getRecordingSettings(pageContext, supportedFeatures),
       presets,
@@ -165,8 +164,12 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
         React.createElement(
           React.Fragment,
           null,
-          ProfilerEventHandling(),
-          DevToolsPanel({ onProfileReceived, onEditSettingsLinkClicked })
+          ProfilerEventHandling({ perfFront }),
+          DevToolsPanel({
+            perfFront,
+            onProfileReceived,
+            onEditSettingsLinkClicked,
+          })
         )
       )
     ),
