@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.engine.gecko
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.util.JsonReader
@@ -709,7 +708,7 @@ class GeckoEngine(
             .filterNot { it == TrackingCategory.NONE }
             .distinct()
         /**
-         *  When a resource is shimmed we'll received a [REPLACED_UNSAFE_CONTENT] event with
+         *  When a resource is shimmed we'll received a [REPLACED_TRACKING_CONTENT] event with
          *  the quantity [BlockingData.count] of categories that were shimmed, but it doesn't
          *  specify which ones, it only tells us how many. For example:
          *     {
@@ -753,7 +752,8 @@ class GeckoEngine(
             url = origin,
             loadedCategories = loadedCategories.filterNot { it in shimmedCategories },
             blockedCategories = (blockedCategories + shimmedCategories).distinct(),
-            cookiesHasBeenBlocked = cookiesHasBeenBlocked
+            cookiesHasBeenBlocked = cookiesHasBeenBlocked,
+            unBlockedBySmartBlock = this.blockingData.any { it.unBlockedBySmartBlock() }
         )
     }
 }
@@ -767,10 +767,10 @@ internal fun ContentBlockingController.LogEntry.BlockingData.hasBlockedCookies()
         category == Event.COOKIES_BLOCKED_SOCIALTRACKER
 }
 
-// There is going to be a patch from GV for adding [REPLACED_UNSAFE_CONTENT] as
-// a valid option for [BlockingData.category]
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1669577
-@SuppressLint("SwitchIntDef")
+internal fun ContentBlockingController.LogEntry.BlockingData.unBlockedBySmartBlock(): Boolean {
+    return category == Event.ALLOWED_TRACKING_CONTENT
+}
+
 internal fun ContentBlockingController.LogEntry.BlockingData.getBlockedCategory(): TrackingCategory {
     return when (category) {
         Event.BLOCKED_FINGERPRINTING_CONTENT -> TrackingCategory.FINGERPRINTING
