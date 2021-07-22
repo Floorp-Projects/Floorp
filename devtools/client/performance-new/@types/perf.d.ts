@@ -329,17 +329,6 @@ export interface InitializeStoreValues {
 
 export type PopupBackgroundFeatures = { [feature: string]: boolean };
 
-/**
- * The state of the profiler popup.
- */
-export interface PopupBackgroundState {
-  features: PopupBackgroundFeatures;
-  buffersize: number;
-  windowLength: number;
-  interval: number;
-  threads: string;
-}
-
 // TS-TODO - Stub
 export interface ContentFrameMessageManager {
   addMessageListener: (event: string, listener: (event: any) => void) => void;
@@ -410,15 +399,6 @@ export interface PerformancePref {
    * button in the customization palette.
    */
   PopupFeatureFlag: "devtools.performance.popup.feature-flag";
-}
-
-/**
- * This interface represents the global values that are potentially on the window
- * object in the popup. Coerce the "window" object into this interface.
- */
-export interface PopupWindow extends Window {
-  gResizePopup?: (height: number) => void;
-  gIsDarkMode?: boolean;
 }
 
 /**
