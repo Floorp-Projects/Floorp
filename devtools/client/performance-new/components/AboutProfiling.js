@@ -19,7 +19,6 @@
 /**
  * @typedef {StateProps} Props
  * @typedef {import("../@types/perf").State} StoreState
- * @typedef {import("../@types/perf").PanelWindow} PanelWindow
  *@typedef {import("../@types/perf").PageContext} PageContext
  */
 
