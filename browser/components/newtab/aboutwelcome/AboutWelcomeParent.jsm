@@ -256,6 +256,8 @@ class AboutWelcomeParent extends JSWindowActorParent {
         return this.RegionHomeObserver.promiseRegionHome();
       case "AWPage:DOES_APP_NEED_PIN":
         return ShellService.doesAppNeedPin();
+      case "AWPage:IS_DEFAULT_BROWSER":
+        return ShellService.isDefaultBrowser();
       case "AWPage:NEED_DEFAULT":
         // Only need to set default if we're supposed to check and not default.
         return (

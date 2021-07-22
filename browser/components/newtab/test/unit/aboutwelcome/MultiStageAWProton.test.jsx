@@ -38,10 +38,11 @@ describe("MultiStageAboutWelcomeProton module", () => {
   });
 
   describe("AboutWelcomeDefaults for proton", () => {
-    const getData = () => AboutWelcomeDefaults.getDefaults();
+    const getData = () => AboutWelcomeDefaults.getDefaults({ isProton: true });
     async function prepConfig(config) {
       return AboutWelcomeDefaults.prepareContentForReact({
         ...(await getData()),
+        isProton: true,
         ...config,
       });
     }
