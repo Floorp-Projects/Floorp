@@ -26,6 +26,7 @@ buildscript {
         if (project.hasProperty("googleRepo")) {
             maven {
                 name "Google"
+                allowInsecureProtocol true // Local Nexus in CI uses HTTP
                 url project.property("googleRepo")
             }
         } else {
@@ -45,6 +46,7 @@ buildscript {
             maven {
                 name "MavenCentral"
                 url project.property("centralRepo")
+                allowInsecureProtocol true // Local Nexus in CI uses HTTP
             }
         } else {
             mavenCentral() {
@@ -104,6 +106,7 @@ allprojects {
             maven {
                 name "Google"
                 url project.property("googleRepo")
+                allowInsecureProtocol true // Local Nexus in CI uses HTTP
             }
         } else {
             google() {
@@ -121,6 +124,7 @@ allprojects {
             maven {
                 name "MavenCentral"
                 url project.property("centralRepo")
+                allowInsecureProtocol true // Local Nexus in CI uses HTTP
             }
         } else {
             mavenCentral() {

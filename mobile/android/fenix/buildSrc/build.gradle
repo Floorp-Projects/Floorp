@@ -11,6 +11,7 @@ repositories {
         maven {
             name "MavenCentral"
             url project.property("centralRepo")
+            allowInsecureProtocol true // Local Nexus in CI uses HTTP
         }
     } else {
         mavenCentral()
