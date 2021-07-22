@@ -7,7 +7,7 @@
 /**
  * @typedef {import("./@types/perf").PerfFront} PerfFront
  * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
- * @typedef {import("./@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
+ * @typedef {import("./@types/perf").RecordingSettings} RecordingSettings
  * @typedef {import("./@types/perf").PageContext} PageContext
  * @typedef {import("./@types/perf").PanelWindow} PanelWindow
  * @typedef {import("./@types/perf").Store} Store
@@ -129,7 +129,7 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
       // Go ahead and hide the implementation details for the component on how the
       // preference information is stored
       /**
-       * @param {RecordingStateFromPreferences} newRecordingSettings
+       * @param {RecordingSettings} newRecordingSettings
        */
       setRecordingSettings: newRecordingSettings =>
         setRecordingSettings(pageContext, newRecordingSettings),

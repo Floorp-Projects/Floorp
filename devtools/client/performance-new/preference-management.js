@@ -5,7 +5,7 @@
 "use strict";
 
 /**
- * @typedef {import("./@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
+ * @typedef {import("./@types/perf").RecordingSettings} RecordingSettings
  */
 
 /*
@@ -27,8 +27,8 @@
  * stored prefs sometimes have a different shape.
  * This function takes the preferences stored in the user profile and returns
  * the preferences to be used in the redux state.
- * @param {RecordingStateFromPreferences} preferences
- * @returns {RecordingStateFromPreferences}
+ * @param {RecordingSettings} preferences
+ * @returns {RecordingSettings}
  */
 function translatePreferencesToState(preferences) {
   return {
@@ -42,8 +42,8 @@ function translatePreferencesToState(preferences) {
  * stored prefs sometimes have a different shape.
  * This function takes the preferences from the redux state and returns the
  * preferences to be stored in the user profile.
- * @param {RecordingStateFromPreferences} state
- * @returns {RecordingStateFromPreferences}
+ * @param {RecordingSettings} state
+ * @returns {RecordingSettings}
  */
 function translatePreferencesFromState(state) {
   return {
