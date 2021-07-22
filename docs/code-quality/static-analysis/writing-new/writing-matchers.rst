@@ -3,15 +3,14 @@
 Writing Matchers
 ================
 
+On this page we will give some information about what a matcher is, and then provide an example of developing a simple match iteratively.
+
 Types of Matchers
 -----------------
 
-Documentation
-~~~~~~~~~~~~~
+There are three types of matches: Node, Narrowing, and Traversal.  There isn't always a clear separation or distinction between them, so treat this explanation as illustrative rather than definitive.  Here is the documentation on matchers: `https://clang.llvm.org/docs/LibASTMatchersReference.html <https://clang.llvm.org/docs/LibASTMatchersReference.html>`_
 
-Here is the documentation: `https://clang.llvm.org/docs/LibASTMatchersReference.html <https://clang.llvm.org/docs/LibASTMatchersReference.html>`_
-
-It is not obvious, but it is important to note, **cicking on the name of a matcher expands help about that matcher.** Example:
+On that page it is not obvious, so we want to note, **cicking on the name of a matcher expands help about that matcher.** Example:
 
 .. image:: documentation-expanded.png
 
@@ -43,12 +42,12 @@ As you can see **only one Narrowing Matcher is allowed** and it goes inside the 
 
 In the second, we use the singular ``anyOf`` matcher to match any of multiple other Narrowing Matchers: ``isDefinition`` or ``isVariadic``. The other two common combining narrowing matchers are ``allOf()`` and ``unless()``.
 
-If you *need* to specify a narrowing matcher (because it's a requirement argument to some other matcher), you can use the ``anything()`` narrowing matcher to have a no-op narrowing matcher.
+If you *need* to specify a narrowing matcher (because it's a required argument to some other matcher), you can use the ``anything()`` narrowing matcher to have a no-op narrowing matcher.
 
 Traversal Matchers
 ~~~~~~~~~~~~~~~~~~
 
-Traversal Matchers *also* can be thought of as adjectives - at least most of them.  They also describe a specific node, but the difference from a narrowing matcher is that the scope of the description is broader than the individual node.  A narrowing matcher says something about the node in isolation - e.g. the number of arguments it has - a traversal matcher says something about the node's contents or place in the program.  
+Traversal Matchers *also* can be thought of as adjectives - at least most of them.  They also describe a specific node, but the difference from a narrowing matcher is that the scope of the description is broader than the individual node.  A narrowing matcher says something about the node in isolation (e.g. the number of arguments it has) while a traversal matcher says something about the node's contents or place in the program.  
 
 Again, the `the documentation <https://clang.llvm.org/docs/LibASTMatchersReference.html#traversal-matchers>`_ is the best place to explore and understand these, but here is a simple example for the traversal matcher ``hasArraySize()``:
 
@@ -75,7 +74,7 @@ Example of Iterative Matcher Development
 
 When developing matchers, it will be much easier if you do the following:
 
-1. Write out the code you want to match. Write it out in as many different ways as you can. For example: in the same place in the code, use a variable, a constant and a function that returns a value. Put the code you want to match inside of a function, inside of a conditional, inside of a function call, and inside of an inline function definition.
+1. Write out the code you want to match. Write it out in as many different ways as you can. Examples: For some value in the code use a variable, a constant and a function that returns a value. Put the code you want to match inside of a function, inside of a conditional, inside of a function call, and inside of an inline function definition.
 2. Write out the code you *don't* want to match, but looks like code you do. Write out benign function calls, benign assignments, etc.
 3. Iterate on your matcher and treat it as _code_ you're writing. Indent it, copy it somewhere in case your browser crashes, even stick it in a tiny temporary version-controlled file.
 
@@ -134,7 +133,7 @@ Here is the iterative development process:
   // Does not match the first call, but matches the others
   
   //-------------------------------------
-  // Step 5:
+  // Step 5: Limit the binary operator to assignments
   m callExpr(
     forEachArgumentWithParam(
        binaryOperator(isAssignmentOperator()), 
