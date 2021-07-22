@@ -11,6 +11,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Telemetry.h"
 #include "nsMemoryPressure.h"
 #include "nsXULAppAPI.h"
 
@@ -53,7 +54,9 @@ nsAvailableMemoryWatcherBase::GetSingleton() {
 NS_IMPL_ISUPPORTS(nsAvailableMemoryWatcherBase, nsIAvailableMemoryWatcherBase);
 
 nsAvailableMemoryWatcherBase::nsAvailableMemoryWatcherBase()
-    : mTabUnloader(new NullTabUnloader) {
+    : mNumOfTabUnloading(0),
+      mNumOfMemoryPressure(0),
+      mTabUnloader(new NullTabUnloader) {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Watching memory only in the main process.");
 }
@@ -66,11 +69,45 @@ nsresult nsAvailableMemoryWatcherBase::RegisterTabUnloader(
 
 nsresult nsAvailableMemoryWatcherBase::OnUnloadAttemptCompleted(
     nsresult aResult) {
-  if (aResult == NS_ERROR_NOT_AVAILABLE) {
-    // If there was no unloadable tab, declare the memory-pressure
-    NS_NotifyOfEventualMemoryPressure(MemoryPressureState::LowMemory);
+  switch (aResult) {
+    // A tab was unloaded successfully.
+    case NS_OK:
+      ++mNumOfTabUnloading;
+      break;
+
+    // There was no unloadable tab.
+    case NS_ERROR_NOT_AVAILABLE:
+      ++mNumOfMemoryPressure;
+      NS_NotifyOfEventualMemoryPressure(MemoryPressureState::LowMemory);
+      break;
+
+    // There was a pending task to unload a tab.
+    case NS_ERROR_ABORT:
+      break;
+
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected aResult");
+      break;
   }
   return NS_OK;
+}
+
+void nsAvailableMemoryWatcherBase::UpdateLowMemoryTimeStamp() {
+  if (mLowMemoryStart.IsNull()) {
+    mLowMemoryStart = TimeStamp::NowLoRes();
+  }
+}
+
+void nsAvailableMemoryWatcherBase::RecordTelemetryEventOnHighMemory() {
+  Telemetry::SetEventRecordingEnabled("memory_watcher"_ns, true);
+  Telemetry::RecordEvent(
+      Telemetry::EventID::Memory_watcher_OnHighMemory_Stats,
+      Some(nsPrintfCString(
+          "%u,%u,%f", mNumOfTabUnloading, mNumOfMemoryPressure,
+          (TimeStamp::NowLoRes() - mLowMemoryStart).ToSeconds())),
+      Nothing());
+  mNumOfTabUnloading = mNumOfMemoryPressure = 0;
+  mLowMemoryStart = TimeStamp();
 }
 
 // Define the fallback method for a platform for which a platform-specific

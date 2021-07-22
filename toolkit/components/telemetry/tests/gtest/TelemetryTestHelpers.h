@@ -36,6 +36,12 @@ bool EventPresent(JSContext* aCx, const JS::RootedValue& aSnapshot,
                   const nsACString& aCategory, const nsACString& aMethod,
                   const nsACString& aObject);
 
+nsTArray<nsString> EventValuesToArray(JSContext* aCx,
+                                      const JS::RootedValue& aSnapshot,
+                                      const nsAString& aCategory,
+                                      const nsAString& aMethod,
+                                      const nsAString& aObject);
+
 void GetEventSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                       ProcessID aProcessType = ProcessID::Parent);
 
