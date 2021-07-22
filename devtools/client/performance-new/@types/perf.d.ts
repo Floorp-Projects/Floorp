@@ -113,6 +113,8 @@ export type PageContext =
   | "aboutprofiling"
   | "aboutprofiling-remote";
 
+export type PrefPostfix = "" | ".remote";
+
 export interface State {
   recordingState: RecordingState;
   recordingUnexpectedlyStopped: boolean;
