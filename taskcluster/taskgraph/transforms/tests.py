@@ -934,14 +934,6 @@ def set_treeherder_machine_platform(config, tasks):
             task["treeherder-machine-platform"] = task["test-platform"].replace(
                 ".", "-"
             )
-        elif "android-em-7.0-x86_64-lite-qr" in task["test-platform"]:
-            task["treeherder-machine-platform"] = task["test-platform"].replace(
-                ".", "-"
-            )
-        elif "android-em-7.0-x86_64-shippable-lite-qr" in task["test-platform"]:
-            task["treeherder-machine-platform"] = task["test-platform"].replace(
-                ".", "-"
-            )
         elif "-qr" in task["test-platform"]:
             task["treeherder-machine-platform"] = task["test-platform"]
         elif "android-hw" in task["test-platform"]:
@@ -1462,11 +1454,7 @@ def handle_tier(config, tasks):
                 "android-em-7.0-x86-shippable-lite/opt",
                 "android-em-7.0-x86_64-shippable-qr/opt",
                 "android-em-7.0-x86_64-qr/debug",
-                "android-em-7.0-x86_64-qr/debug-isolated-process",
                 "android-em-7.0-x86_64-qr/opt",
-                "android-em-7.0-x86_64-shippable-lite-qr/opt",
-                "android-em-7.0-x86_64-lite-qr/debug",
-                "android-em-7.0-x86_64-lite-qr/opt",
             ]:
                 task["tier"] = 1
             else:

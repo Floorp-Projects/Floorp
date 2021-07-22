@@ -487,6 +487,17 @@ android-x86_64-tests:
     - web-platform-tests-reftest
     - xpcshell
 
+android-x86_64-qr-tests:
+    - crashtest
+    - geckoview-junit
+    - mochitest-media
+    - mochitest-plain
+    - mochitest-plain-gpu
+    - web-platform-tests
+    - web-platform-tests-crashtest
+    - web-platform-tests-reftest
+    - reftest
+
 android-hw-aarch64-opt-unittests:
     - jittest
 
@@ -502,7 +513,7 @@ android-hw-arm7-debug-unittests:
 android-hw-aarch64-debug-unittests:
     - jittest
 
-android-hw-aarch64:
+android-hw-aarch64-qr:
     - crashtest-qr
     - reftest-qr
     - mochitest-media

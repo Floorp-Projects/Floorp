@@ -33,9 +33,9 @@ job-defaults:
                     - remove_executables.py
     target:
         by-test-platform:
-            android-em-7.0-x86_64-shippable(-lite)?-qr/opt: geckoview-androidTest.apk
-            android-em-7.0-x86_64(-lite)?-qr/opt: geckoview-androidTest.apk
-            android-em-7.0-x86_64(-lite)?-qr/debug(-isolated-process)?: geckoview-androidTest.apk
+            android-em-7.0-x86_64-shippable(-qr|-lite)?/opt: geckoview-androidTest.apk
+            android-em-7.0-x86_64(-qr|-lite)?/opt: geckoview-androidTest.apk
+            android-em-7.0-x86_64(-qr|-lite)?/debug(-isolated-process)?: geckoview-androidTest.apk
             default: null
     python-3: true
 
@@ -57,7 +57,7 @@ web-platform-tests:
                     default: 2
             default:
                 by-test-platform:
-                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
+                    android-em-7.0-x86_64/debug-isolated-process: 3
                     default: default
     chunks:
         by-test-platform:
@@ -94,7 +94,7 @@ web-platform-tests:
                     linux.*-qr/.*: ['release']  # skip on integration branches due to high load, bug 1599197
                     windows.*-qr/.*: ['release']  # skip on integration branches due to high load
                     .*-tsan/opt: ['trunk']
-                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    android-em-7.0-x86_64/debug-isolated-process: []
                     default: built-projects
     mozharness:
         chunked: true
@@ -174,7 +174,7 @@ web-platform-tests-reftest:
             default:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
-                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    android-em-7.0-x86_64/debug-isolated-process: []
                     default: built-projects
     tier:
         by-variant:
@@ -187,7 +187,7 @@ web-platform-tests-reftest:
             default:
                 by-test-platform:
                     linux1804-64-asan(-qr)?/opt: 2
-                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
+                    android-em-7.0-x86_64/debug-isolated-process: 3
                     default: default
     mozharness:
         extra-options:
