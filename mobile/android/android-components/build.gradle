@@ -356,7 +356,11 @@ configurations {
 }
 
 dependencies {
-    ktlint "com.github.shyiko:ktlint:0.31.0"
+    ktlint("com.pinterest:ktlint:0.41.0") {
+        attributes {
+            attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
+        }
+    }
     detektPlugins project(":tooling-detekt")
 }
 
@@ -364,7 +368,7 @@ tasks.register("ktlint", JavaExec) {
     group = "verification"
     description = "Check Kotlin code style."
     classpath = configurations.ktlint
-    main = "com.github.shyiko.ktlint.Main"
+    main = "com.pinterest.ktlint.Main"
     args "components/**/*.kt" , "samples/**/*.kt", "!**/build", "buildSrc/**/*.kt"
 }
 
