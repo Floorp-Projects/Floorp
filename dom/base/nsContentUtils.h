@@ -2375,23 +2375,6 @@ class nsContentUtils {
       const nsIContent* aContent);
 
   /**
-   * Returns a layer manager to use for the given document. Basically we
-   * look up the document hierarchy for the first document which has
-   * a presentation with an associated widget, and use that widget's
-   * layer manager. In addition to the normal layer manager lookup this will
-   * specifically request a persistent layer manager. This means that the layer
-   * manager is expected to remain the layer manager for the document in the
-   * forseeable future. This function should be used carefully as it may change
-   * the document's layer manager.
-   *
-   * @param aDoc the document for which to return a layer manager.
-   * @param aAllowRetaining an outparam that states whether the returned
-   * layer manager should be used for retained layers
-   */
-  static already_AddRefed<mozilla::layers::LayerManager>
-  PersistentLayerManagerForDocument(Document* aDoc);
-
-  /**
    * Determine whether a content node is focused or not,
    *
    * @param aContent the content node to check

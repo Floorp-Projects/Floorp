@@ -218,10 +218,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
                           nsIScreen* aScreen = nullptr) override;
   void InfallibleMakeFullScreen(bool aFullScreen, nsIScreen* aScreen = nullptr);
 
-  LayerManager* GetLayerManager(
-      PLayerTransactionChild* aShadowManager = nullptr,
-      LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
-      LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
+  LayerManager* GetLayerManager() override;
 
   // A remote compositor session tied to this window has been lost and IPC
   // messages will no longer work. The widget must clean up any lingering

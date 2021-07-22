@@ -1505,9 +1505,7 @@ bool nsBaseWidget::ShouldUseOffMainThreadCompositing() {
   return gfxPlatform::UsesOffMainThreadCompositing();
 }
 
-LayerManager* nsBaseWidget::GetLayerManager(
-    PLayerTransactionChild* aShadowManager, LayersBackend aBackendHint,
-    LayerManagerPersistence aPersistence) {
+LayerManager* nsBaseWidget::GetLayerManager() {
   if (!mLayerManager) {
     if (!mShutdownObserver) {
       // We are shutting down, do not try to re-create a LayerManager
@@ -1515,11 +1513,6 @@ LayerManager* nsBaseWidget::GetLayerManager(
     }
     // Try to use an async compositor first, if possible
     if (ShouldUseOffMainThreadCompositing()) {
-      // e10s uses the parameter to pass in the shadow manager from the
-      // BrowserChild so we don't expect to see it there since this doesn't
-      // support e10s.
-      NS_ASSERTION(aShadowManager == nullptr,
-                   "Async Compositor not supported with e10s");
       CreateCompositor();
     }
 

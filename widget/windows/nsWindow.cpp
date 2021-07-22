@@ -4080,9 +4080,7 @@ bool nsWindow::HasPendingInputEvent() {
  *
  **************************************************************/
 
-LayerManager* nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
-                                        LayersBackend aBackendHint,
-                                        LayerManagerPersistence aPersistence) {
+LayerManager* nsWindow::GetLayerManager() {
   if (mLayerManager) {
     return mLayerManager;
   }
@@ -4097,12 +4095,6 @@ LayerManager* nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
   // Try OMTC first.
   if (!mLayerManager && ShouldUseOffMainThreadCompositing()) {
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
-
-    // e10s uses the parameter to pass in the shadow manager from the
-    // BrowserChild so we don't expect to see it there since this doesn't
-    // support e10s.
-    NS_ASSERTION(aShadowManager == nullptr,
-                 "Async Compositor not supported with e10s");
     CreateCompositor();
   }
 
