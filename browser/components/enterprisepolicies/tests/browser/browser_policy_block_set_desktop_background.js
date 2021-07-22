@@ -45,12 +45,6 @@ add_task(async function test_check_set_desktop_background() {
     true,
     'The "Set Desktop Background" context menu element should be hidden'
   );
-
-  let promiseContextMenuHidden = BrowserTestUtils.waitForEvent(
-    contextMenu,
-    "popuphidden"
-  );
   contextMenu.hidePopup();
-  await promiseContextMenuHidden;
   BrowserTestUtils.removeTab(tab);
 });
