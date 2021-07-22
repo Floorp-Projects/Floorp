@@ -99,8 +99,6 @@ class CDMProxy {
                     const nsAString& aTopLevelOrigin,
                     const nsAString& aName) = 0;
 
-  virtual void OnSetDecryptorId(uint32_t aId) {}
-
   // Main thread only.
   // Uses the CDM to create a key session.
   // Calls MediaKeys::OnSessionActivated() when session is created.
@@ -257,8 +255,6 @@ class CDMProxy {
 #ifdef DEBUG
   virtual bool IsOnOwnerThread() = 0;
 #endif
-
-  virtual uint32_t GetDecryptorId() { return 0; }
 
   virtual ChromiumCDMProxy* AsChromiumCDMProxy() { return nullptr; }
 

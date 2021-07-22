@@ -402,11 +402,13 @@ already_AddRefed<nsISerialEventTarget> GeckoMediaPluginService::GetGMPThread() {
   return thread.forget();
 }
 
+// TODO(bug 1721842): merge this and GetGMPVideoDecoder as we've removed the
+// concept of a decrypting decoder.
 NS_IMETHODIMP
 GeckoMediaPluginService::GetDecryptingGMPVideoDecoder(
     GMPCrashHelper* aHelper, nsTArray<nsCString>* aTags,
     const nsACString& aNodeId,
-    UniquePtr<GetGMPVideoDecoderCallback>&& aCallback, uint32_t aDecryptorId) {
+    UniquePtr<GetGMPVideoDecoderCallback>&& aCallback) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);
   NS_ENSURE_ARG(aCallback);
@@ -422,14 +424,13 @@ GeckoMediaPluginService::GetDecryptingGMPVideoDecoder(
                    nsLiteralCString(GMP_API_VIDEO_DECODER), *aTags)
       ->Then(
           thread, __func__,
-          [rawCallback, helper,
-           aDecryptorId](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
+          [rawCallback,
+           helper](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
             RefPtr<GMPContentParent> parent = wrapper->mParent;
             UniquePtr<GetGMPVideoDecoderCallback> callback(rawCallback);
             GMPVideoDecoderParent* actor = nullptr;
             GMPVideoHostImpl* host = nullptr;
-            if (parent && NS_SUCCEEDED(parent->GetGMPVideoDecoder(
-                              &actor, aDecryptorId))) {
+            if (parent && NS_SUCCEEDED(parent->GetGMPVideoDecoder(&actor))) {
               host = &(actor->Host());
               actor->SetCrashHelper(helper);
             }

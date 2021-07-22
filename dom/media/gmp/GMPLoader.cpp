@@ -49,8 +49,8 @@ class PassThroughGMPAdapter : public GMPAdapter {
     return initFunc(aPlatformAPI);
   }
 
-  GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
-                   uint32_t aDecryptorId) override {
+  GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI,
+                   void** aPluginAPI) override {
     if (!mLib) {
       return GMPGenericErr;
     }
@@ -121,8 +121,8 @@ bool GMPLoader::Load(const char* aUTF8LibPath, uint32_t aUTF8LibPathLen,
 }
 
 GMPErr GMPLoader::GetAPI(const char* aAPIName, void* aHostAPI,
-                         void** aPluginAPI, uint32_t aDecryptorId) {
-  return mAdapter->GMPGetAPI(aAPIName, aHostAPI, aPluginAPI, aDecryptorId);
+                         void** aPluginAPI) {
+  return mAdapter->GMPGetAPI(aAPIName, aHostAPI, aPluginAPI);
 }
 
 void GMPLoader::Shutdown() {

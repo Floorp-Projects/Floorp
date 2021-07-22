@@ -101,26 +101,26 @@ GMPErr ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI) {
 }
 
 GMPErr ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName, void* aHostAPI,
-                                     void** aPluginAPI, uint32_t aDecryptorId) {
-  GMP_LOG_DEBUG("ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p",
-                aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
+                                     void** aPluginAPI) {
+  GMP_LOG_DEBUG("ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p",
+                aAPIName, aHostAPI, aPluginAPI, this);
   bool isCdm10 = !strcmp(aAPIName, CHROMIUM_CDM_API);
 
   if (!isCdm10) {
     MOZ_ASSERT_UNREACHABLE("We only support and expect cdm10!");
     GMP_LOG_DEBUG(
-        "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p got "
+        "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p got "
         "unsupported CDM version!",
-        aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
+        aAPIName, aHostAPI, aPluginAPI, this);
     return GMPGenericErr;
   }
   auto create = reinterpret_cast<decltype(::CreateCdmInstance)*>(
       PR_FindFunctionSymbol(mLib, "CreateCdmInstance"));
   if (!create) {
     GMP_LOG_DEBUG(
-        "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p "
+        "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p "
         "FAILED to find CreateCdmInstance",
-        aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
+        aAPIName, aHostAPI, aPluginAPI, this);
     return GMPGenericErr;
   }
 
@@ -130,9 +130,9 @@ GMPErr ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName, void* aHostAPI,
                      &ChromiumCdmHost, aHostAPI);
   if (!cdm) {
     GMP_LOG_DEBUG(
-        "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p "
+        "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p "
         "FAILED to create cdm version %d",
-        aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this, version);
+        aAPIName, aHostAPI, aPluginAPI, this, version);
     return GMPGenericErr;
   }
   GMP_LOG_DEBUG("cdm: 0x%p, version: %d", cdm, version);

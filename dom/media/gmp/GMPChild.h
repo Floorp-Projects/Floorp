@@ -64,8 +64,7 @@ class GMPChild : public PGMPChild {
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ProcessingError(Result aCode, const char* aReason) override;
 
-  GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
-                uint32_t aDecryptorId = 0);
+  GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI);
 
   nsTArray<std::pair<nsCString, nsCString>> MakeCDMHostVerificationPaths();
 
