@@ -43,13 +43,11 @@ const changeRecordingState = (exports.changeRecordingState = (
 /**
  * This is the result of the initial questions about the state of the profiler.
  *
- * @param {boolean} isSupportedPlatform - This is a supported platform.
  * @param {RecordingState} recordingState - A valid state in `recordingState`.
  * @return {Action}
  */
-exports.reportProfilerReady = (isSupportedPlatform, recordingState) => ({
+exports.reportProfilerReady = recordingState => ({
   type: "REPORT_PROFILER_READY",
-  isSupportedPlatform,
   recordingState,
 });
 

@@ -268,7 +268,6 @@ export type Action =
     }
   | {
       type: "REPORT_PROFILER_READY";
-      isSupportedPlatform: boolean;
       recordingState: RecordingState;
     }
   | {
@@ -295,6 +294,7 @@ export type Action =
   | {
       type: "INITIALIZE_STORE";
       perfFront: PerfFront;
+      isSupportedPlatform: boolean;
       setRecordingSettings: SetRecordingSettings;
       presets: Presets;
       pageContext: PageContext;
@@ -310,6 +310,7 @@ export type Action =
 
 export interface InitializeStoreValues {
   perfFront: PerfFront;
+  isSupportedPlatform: boolean;
   setRecordingSettings: SetRecordingSettings;
   presets: Presets;
   pageContext: PageContext;

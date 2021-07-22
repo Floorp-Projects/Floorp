@@ -88,6 +88,7 @@ const {
  */
 async function gInit(perfFront, pageContext, openAboutProfiling) {
   const store = createStore(reducers);
+  const isSupportedPlatform = await perfFront.isSupportedPlatform();
   const supportedFeatures = await perfFront.getSupportedFeatures();
 
   if (!openAboutProfiling) {
@@ -120,6 +121,7 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
   store.dispatch(
     actions.initializeStore({
       perfFront,
+      isSupportedPlatform,
       recordingSettings: getRecordingSettings(pageContext, supportedFeatures),
       presets,
       supportedFeatures,
