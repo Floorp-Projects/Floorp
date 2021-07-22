@@ -12,6 +12,7 @@
  * @typedef {import("./@types/perf").PanelWindow} PanelWindow
  * @typedef {import("./@types/perf").Store} Store
  * @typedef {import("./@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
+ * @typedef {import("./@types/perf").ProfilerViewMode} ProfilerViewMode
  */
 "use strict";
 
@@ -119,7 +120,6 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
   store.dispatch(
     actions.initializeStore({
       perfFront,
-      receiveProfile,
       recordingSettings: getRecordingSettings(pageContext, supportedFeatures),
       presets,
       supportedFeatures,
@@ -133,19 +133,22 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
        */
       setRecordingSettings: newRecordingSettings =>
         setRecordingSettings(pageContext, newRecordingSettings),
-
-      // Configure the getSymbolTable function for the DevTools workflow.
-      // See createMultiModalGetSymbolTableFn for more information.
-      getSymbolTableGetter:
-        /** @type {(profile: MinimallyTypedGeckoProfile) => GetSymbolTableCallback} */
-        profile =>
-          createMultiModalGetSymbolTableFn(
-            profile,
-            selectors.getObjdirs(store.getState()),
-            selectors.getPerfFront(store.getState())
-          ),
     })
   );
+
+  /**
+   * @param {MinimallyTypedGeckoProfile} profile
+   * @param {ProfilerViewMode | undefined} profilerViewMode
+   */
+  const onProfileReceived = (profile, profilerViewMode) => {
+    const objdirs = selectors.getObjdirs(store.getState());
+    const getSymbolTableCallback = createMultiModalGetSymbolTableFn(
+      profile,
+      objdirs,
+      perfFront
+    );
+    receiveProfile(profile, profilerViewMode, getSymbolTableCallback);
+  };
 
   ReactDOM.render(
     Provider(
@@ -156,7 +159,7 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
           React.Fragment,
           null,
           ProfilerEventHandling(),
-          DevToolsPanel()
+          DevToolsPanel({ onProfileReceived })
         )
       )
     ),

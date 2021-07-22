@@ -197,19 +197,15 @@ exports.startRecording = () => {
 
 /**
  * Stops the profiler, and opens the profile in a new window.
- * @return {ThunkAction<void>}
+ * @return {ThunkAction<Promise<MinimallyTypedGeckoProfile>>}
  */
 exports.getProfileAndStopProfiler = () => {
   return async ({ dispatch, getState }) => {
     const perfFront = selectors.getPerfFront(getState());
     dispatch(changeRecordingState("request-to-get-profile-and-stop-profiler"));
     const profile = await perfFront.getProfileAndStopProfiler();
-
-    const getSymbolTable = selectors.getSymbolTableGetter(getState())(profile);
-    const receiveProfile = selectors.getReceiveProfileFn(getState());
-    const profilerViewMode = selectors.getProfilerViewMode(getState());
-    receiveProfile(profile, profilerViewMode, getSymbolTable);
     dispatch(changeRecordingState("available-to-record"));
+    return profile;
   };
 };
 

@@ -195,6 +195,15 @@ export type RestartBrowserWithEnvironmentVariable = (
 ) => void;
 
 /**
+ * This is the type signature for the event listener that's called once the
+ * profile has been obtained.
+ */
+export type OnProfileReceived = (
+  profile: MinimallyTypedGeckoProfile,
+  profilerViewMode: ProfilerViewMode | undefined
+) => void;
+
+/**
  * This is the type signature for a function to query the browser for an
  * environment variable. Currently only implemented for the popup.
  */
@@ -233,18 +242,12 @@ export type Reducer<S> = (state: S | undefined, action: Action) => S;
 export interface InitializedValues {
   // The current Front to the Perf actor.
   perfFront: PerfFront;
-  // A function to receive the profile and open it into a new window.
-  receiveProfile: ReceiveProfile;
   // A function to set the recording settings.
   setRecordingSettings: SetRecordingSettings;
   // The current list of presets, loaded in from a JSM.
   presets: Presets;
   // Determine the current page context.
   pageContext: PageContext;
-  // Only used by the devtools panel (both local and remote), not by about:profiling.
-  getSymbolTableGetter: (
-    profile: MinimallyTypedGeckoProfile
-  ) => GetSymbolTableCallback;
   // The list of profiler features that the current target supports.
   supportedFeatures: string[];
   // Allow different devtools contexts to open about:profiling with different methods.
@@ -295,16 +298,12 @@ export type Action =
   | {
       type: "INITIALIZE_STORE";
       perfFront: PerfFront;
-      receiveProfile: ReceiveProfile;
       setRecordingSettings: SetRecordingSettings;
       presets: Presets;
       pageContext: PageContext;
       openAboutProfiling?: () => void;
       openRemoteDevTools?: () => void;
       recordingSettingsFromPreferences: RecordingSettings;
-      getSymbolTableGetter: (
-        profile: MinimallyTypedGeckoProfile
-      ) => GetSymbolTableCallback;
       supportedFeatures: string[];
     }
   | {
@@ -315,15 +314,11 @@ export type Action =
 
 export interface InitializeStoreValues {
   perfFront: PerfFront;
-  receiveProfile: ReceiveProfile;
   setRecordingSettings: SetRecordingSettings;
   presets: Presets;
   pageContext: PageContext;
   recordingSettings: RecordingSettings;
   supportedFeatures: string[];
-  getSymbolTableGetter: (
-    profile: MinimallyTypedGeckoProfile
-  ) => GetSymbolTableCallback;
   openAboutProfiling?: () => void;
   openRemoteDevTools?: () => void;
 }
