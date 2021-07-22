@@ -10,7 +10,7 @@
  * @typedef {import("../@types/perf").InitializedValues} InitializedValues
  * @typedef {import("../@types/perf").PerfFront} PerfFront
  * @typedef {import("../@types/perf").ReceiveProfile} ReceiveProfile
- * @typedef {import("../@types/perf").SetRecordingPreferences} SetRecordingPreferences
+ * @typedef {import("../@types/perf").SetRecordingSettings} SetRecordingSettings
  * @typedef {import("../@types/perf").GetSymbolTableCallback} GetSymbolTableCallback
  * @typedef {import("../@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
  * @typedef {import("../@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
@@ -134,9 +134,9 @@ const getPerfFront = state => getInitializedValues(state).perfFront;
 /** @type {Selector<ReceiveProfile>} */
 const getReceiveProfileFn = state => getInitializedValues(state).receiveProfile;
 
-/** @type {Selector<SetRecordingPreferences>} */
-const getSetRecordingPreferencesFn = state =>
-  getInitializedValues(state).setRecordingPreferences;
+/** @type {Selector<SetRecordingSettings>} */
+const getSetRecordingSettingsFn = state =>
+  getInitializedValues(state).setRecordingSettings;
 
 /** @type {Selector<PageContext>} */
 const getPageContext = state => getInitializedValues(state).pageContext;
@@ -171,7 +171,7 @@ module.exports = {
   getInitializedValues,
   getPerfFront,
   getReceiveProfileFn,
-  getSetRecordingPreferencesFn,
+  getSetRecordingSettingsFn,
   getPageContext,
   getSymbolTableGetter,
   getPromptEnvRestart,

@@ -71,11 +71,11 @@ function _dispatchAndUpdatePreferences(action) {
       );
     }
     dispatch(action);
-    const setRecordingPreferences = selectors.getSetRecordingPreferencesFn(
+    const setRecordingSettings = selectors.getSetRecordingSettingsFn(
       getState()
     );
     const recordingSettings = selectors.getRecordingSettings(getState());
-    setRecordingPreferences(translatePreferencesFromState(recordingSettings));
+    setRecordingSettings(translatePreferencesFromState(recordingSettings));
   };
 }
 
@@ -175,12 +175,12 @@ exports.changeObjdirs = objdirs =>
  * @return {Action}
  */
 exports.initializeStore = values => {
-  const { recordingPreferences, ...initValues } = values;
+  const { recordingSettings, ...initValues } = values;
   return {
     ...initValues,
     type: "INITIALIZE_STORE",
     recordingSettingsFromPreferences: translatePreferencesToState(
-      recordingPreferences
+      recordingSettings
     ),
   };
 };
