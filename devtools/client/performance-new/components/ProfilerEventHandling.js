@@ -17,8 +17,11 @@
 
 /**
  * @typedef {Object} ThunkDispatchProps
- * @property {typeof actions.changeRecordingState} changeRecordingState
  * @property {typeof actions.reportProfilerReady} reportProfilerReady
+ * @property {typeof actions.reportProfilerStarted} reportProfilerStarted
+ * @property {typeof actions.reportProfilerStopped} reportProfilerStopped
+ * @property {typeof actions.reportPrivateBrowsingStarted} reportPrivateBrowsingStarted
+ * @property {typeof actions.reportPrivateBrowsingStopped} reportPrivateBrowsingStopped
  */
 
 /**
@@ -49,7 +52,15 @@ const selectors = require("devtools/client/performance-new/store/selectors");
  */
 class ProfilerEventHandling extends PureComponent {
   componentDidMount() {
-    const { perfFront, isSupportedPlatform, reportProfilerReady } = this.props;
+    const {
+      perfFront,
+      isSupportedPlatform,
+      reportProfilerReady,
+      reportProfilerStarted,
+      reportProfilerStopped,
+      reportPrivateBrowsingStarted,
+      reportPrivateBrowsingStopped,
+    } = this.props;
 
     if (!isSupportedPlatform) {
       return;
@@ -64,15 +75,15 @@ class ProfilerEventHandling extends PureComponent {
     });
 
     // Handle when the profiler changes state. It might be us, it might be someone else.
-    this.props.perfFront.on("profiler-started", this.handleProfilerStarting);
-    this.props.perfFront.on("profiler-stopped", this.handleProfilerStopping);
+    this.props.perfFront.on("profiler-started", reportProfilerStarted);
+    this.props.perfFront.on("profiler-stopped", reportProfilerStopped);
     this.props.perfFront.on(
       "profile-locked-by-private-browsing",
-      this.handlePrivateBrowsingStarting
+      reportPrivateBrowsingStarted
     );
     this.props.perfFront.on(
       "profile-unlocked-from-private-browsing",
-      this.handlePrivateBrowsingEnding
+      reportPrivateBrowsingStopped
     );
   }
 
@@ -96,105 +107,6 @@ class ProfilerEventHandling extends PureComponent {
     }
   }
 
-  handleProfilerStarting = () => {
-    const { changeRecordingState, recordingState } = this.props;
-    switch (recordingState) {
-      case "not-yet-known":
-      // We couldn't have started it yet, so it must have been someone
-      // else. (fallthrough)
-      case "available-to-record":
-      // We aren't recording, someone else started it up. (fallthrough)
-      case "request-to-stop-profiler":
-      // We requested to stop the profiler, but someone else already started
-      // it up. (fallthrough)
-      case "request-to-get-profile-and-stop-profiler":
-        changeRecordingState("recording");
-        break;
-
-      case "request-to-start-recording":
-        // Wait for the profiler to tell us that it has started.
-        changeRecordingState("recording");
-        break;
-
-      case "locked-by-private-browsing":
-      case "recording":
-        // These state cases don't make sense to happen, and means we have a logical
-        // fallacy somewhere.
-        throw new Error(
-          "The profiler started recording, when it shouldn't have " +
-            `been able to. Current state: "${recordingState}"`
-        );
-      default:
-        throw new Error("Unhandled recording state");
-    }
-  };
-
-  handleProfilerStopping = () => {
-    const { changeRecordingState, recordingState } = this.props;
-    switch (recordingState) {
-      case "not-yet-known":
-      case "request-to-get-profile-and-stop-profiler":
-      case "request-to-stop-profiler":
-        changeRecordingState("available-to-record");
-        break;
-
-      case "request-to-start-recording":
-      // Highly unlikely, but someone stopped the recorder, this is fine.
-      // Do nothing (fallthrough).
-      case "locked-by-private-browsing":
-        // The profiler is already locked, so we know about this already.
-        break;
-
-      case "recording":
-        changeRecordingState("available-to-record", {
-          recordingUnexpectedlyStopped: true,
-        });
-        break;
-
-      case "available-to-record":
-        throw new Error(
-          "The profiler stopped recording, when it shouldn't have been able to."
-        );
-      default:
-        throw new Error("Unhandled recording state");
-    }
-  };
-
-  handlePrivateBrowsingStarting = () => {
-    const { recordingState, changeRecordingState } = this.props;
-
-    switch (recordingState) {
-      case "request-to-get-profile-and-stop-profiler":
-      // This one is a tricky case. Go ahead and act like nothing went wrong, maybe
-      // it will resolve correctly? (fallthrough)
-      case "request-to-stop-profiler":
-      case "available-to-record":
-      case "not-yet-known":
-        changeRecordingState("locked-by-private-browsing");
-        break;
-
-      case "request-to-start-recording":
-      case "recording":
-        changeRecordingState("locked-by-private-browsing", {
-          recordingUnexpectedlyStopped: false,
-        });
-        break;
-
-      case "locked-by-private-browsing":
-        // Do nothing
-        break;
-
-      default:
-        throw new Error("Unhandled recording state");
-    }
-  };
-
-  handlePrivateBrowsingEnding = () => {
-    // No matter the state, go ahead and set this as ready to record. This should
-    // be the only logical state to go into.
-    this.props.changeRecordingState("available-to-record");
-  };
-
   render() {
     return null;
   }
@@ -214,8 +126,11 @@ function mapStateToProps(state) {
 
 /** @type {ThunkDispatchProps} */
 const mapDispatchToProps = {
-  changeRecordingState: actions.changeRecordingState,
   reportProfilerReady: actions.reportProfilerReady,
+  reportProfilerStarted: actions.reportProfilerStarted,
+  reportProfilerStopped: actions.reportProfilerStopped,
+  reportPrivateBrowsingStarted: actions.reportPrivateBrowsingStarted,
+  reportPrivateBrowsingStopped: actions.reportPrivateBrowsingStopped,
 };
 
 module.exports = connect(
