@@ -10,6 +10,8 @@ add_task(async function() {
   await testDocumentEventResourcesWithIgnoreExistingResources();
   await testDomCompleteWithOverloadedConsole();
   await testIframeNavigation();
+  await testBfCacheNavigation();
+
   // Enable server side target switching for next test
   // as the regression it tracks only occurs with server side target switching enabled
   await pushPref("devtools.target-switching.server.enabled", true);
@@ -275,6 +277,155 @@ async function testIframeNavigation() {
 
   await commands.destroy();
 }
+
+function isBfCacheInParentEnabled() {
+  return (
+    Services.appinfo.sessionHistoryInParent &&
+    Services.prefs.getBoolPref("fission.bfcacheInParent", false)
+  );
+}
+
+async function testBfCacheNavigation() {
+  info("Test bfcache navigations for DOCUMENT_EVENT");
+
+  info("Open a first document and navigate to a second one");
+  const firstLocation = "data:text/html,<title>first</title>first page";
+  const secondLocation = "data:text/html,<title>second</title>second page";
+  const tab = await addTab(firstLocation);
+  const onLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, secondLocation);
+  await onLoaded;
+
+  const { commands } = await initResourceCommand(tab);
+
+  const documentEvents = [];
+  await commands.resourceCommand.watchResources(
+    [commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+    {
+      onAvailable: resources => {
+        documentEvents.push(...resources);
+      },
+      ignoreExistingResources: true,
+    }
+  );
+  // Wait for some time for extra safety
+  await wait(1000);
+  is(documentEvents.length, 0, "Existing document events are not fired");
+
+  info("Navigate back to the first page");
+  const onSwitched = commands.targetCommand.once("switched-target");
+  const targetBeforeNavigation = commands.targetCommand.targetFront;
+  gBrowser.goBack();
+
+  // We are switching to a new target only when fission is enabled...
+  if (isFissionEnabled() && isBfCacheInParentEnabled()) {
+    await onSwitched;
+  }
+
+  info(
+    "Wait for will-navigate, dom-loading, dom-interactive and dom-complete events"
+  );
+  await waitUntil(() => documentEvents.length >= 4);
+  /* Ignore will-navigate timestamp as all other DOCUMENT_EVENTS will be set at the original load date,
+     which is when we loaded from the network, and not when we loaded from bfcache */
+  assertEvents({
+    commands,
+    targetBeforeNavigation,
+    documentEvents,
+    ignoreWillNavigateTimestamp: true,
+  });
+
+  // Wait for some time in order to let a chance to have duplicated dom-loading events
+  await wait(1000);
+
+  is(
+    documentEvents.length,
+    4,
+    "There is no duplicated event and only the 4 expected DOCUMENT_EVENT states"
+  );
+  const [
+    willNavigateEvent,
+    loadingEvent,
+    interactiveEvent,
+    completeEvent,
+  ] = documentEvents;
+
+  is(
+    willNavigateEvent.name,
+    "will-navigate",
+    "The first DOCUMENT_EVENT is will-navigate"
+  );
+  is(
+    loadingEvent.name,
+    "dom-loading",
+    "The second DOCUMENT_EVENT is dom-loading"
+  );
+  is(
+    interactiveEvent.name,
+    "dom-interactive",
+    "The third DOCUMENT_EVENT is dom-interactive"
+  );
+  is(
+    completeEvent.name,
+    "dom-complete",
+    "The fourth DOCUMENT_EVENT is dom-complete"
+  );
+
+  // followWindowGlobalLifeCycle will be true when enabling server side target switching,
+  // even when fission is off.
+  if (
+    isFissionEnabled() ||
+    commands.targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle
+  ) {
+    is(
+      loadingEvent.shouldBeIgnoredAsRedundantWithTargetAvailable,
+      true,
+      "shouldBeIgnoredAsRedundantWithTargetAvailable is true for the new target which follows the WindowGlobal lifecycle"
+    );
+  } else {
+    is(
+      loadingEvent.shouldBeIgnoredAsRedundantWithTargetAvailable,
+      undefined,
+      "shouldBeIgnoredAsRedundantWithTargetAvailable is undefined if fission is disabled and we keep the same target"
+    );
+  }
+
+  is(
+    loadingEvent.url,
+    firstLocation,
+    `resource ${loadingEvent.name} has expected url after navigation back`
+  );
+  is(
+    loadingEvent.title,
+    undefined,
+    `resource ${loadingEvent.name} does not have a title property after navigating back`
+  );
+
+  is(
+    interactiveEvent.url,
+    undefined,
+    `resource ${interactiveEvent.name} does not have a url property after navigating back`
+  );
+  is(
+    interactiveEvent.title,
+    "first",
+    `resource ${interactiveEvent.name} has expected title after navigating back`
+  );
+
+  is(
+    completeEvent.url,
+    undefined,
+    `resource ${completeEvent.name} does not have a url property after navigating back`
+  );
+  is(
+    completeEvent.title,
+    undefined,
+    `resource ${completeEvent.name} does not have a title property after navigating back`
+  );
+
+  await commands.destroy();
+}
+
 async function testCrossOriginNavigation() {
   info("Test cross origin navigations for DOCUMENT_EVENT");
 
@@ -465,6 +616,7 @@ function assertEvents({
   documentEvents,
   expectedTargetFront = commands.targetCommand.targetFront,
   expectedNewURI = gBrowser.selectedBrowser.currentURI.spec,
+  ignoreWillNavigateTimestamp = false,
 }) {
   const [
     willNavigateEvent,
@@ -515,7 +667,7 @@ function assertEvents({
     "Type of time attribute for complete event is correct"
   );
 
-  if (willNavigateEvent) {
+  if (willNavigateEvent && !ignoreWillNavigateTimestamp) {
     ok(
       willNavigateEvent.time < loadingEvent.time,
       "Timestamp for dom-loading event is greater than will-navigate event"
