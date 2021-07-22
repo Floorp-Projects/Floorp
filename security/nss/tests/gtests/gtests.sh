@@ -86,18 +86,8 @@ gtest_start()
     fi
 
     echo "test output dir: ${GTESTREPORT}"
-    echo "executing sed to parse the xml report"
-    sed -f "${COMMON}/parsegtestreport.sed" "$GTESTREPORT" > "$PARSED_REPORT"
     echo "processing the parsed report"
-    cat "$PARSED_REPORT" | while read result name; do
-      if [ "$result" = "notrun" ]; then
-        echo "$name" SKIPPED
-      elif [ "$result" = "run" ]; then
-        html_passed_ignore_core "$name"
-      else
-        html_failed_ignore_core "$name"
-      fi
-    done
+    gtest_parse_report ${GTESTREPORT}
     popd
   done
 }

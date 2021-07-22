@@ -253,6 +253,72 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     HTML_UNKNOWN='</TD><TD>Unknown</TD><TR>'
     TABLE_ARGS=
 
+    gtest_parse_report_helper()
+    {
+      # Check XML reports for normal test runs and failures.
+      local successes=$(gtest_parse_report_xpath "//testcase[@status='run'][count(*)=0]" "$@" )
+      local failures=$(gtest_parse_report_xpath "//failure/.." "$@" )
+
+      # Print all tests that succeeded.
+      while read result name; do
+        html_passed_ignore_core "$name"
+      done <<< "$successes"
+
+      # Print failing tests.
+      if [ -n "$failures" ]; then
+        printf "\nFAILURES:\n=========\n"
+
+        while read result name; do
+          html_failed_ignore_core "$name"
+        done <<< "$failures"
+
+        printf "\n"
+      fi
+    }
+
+    # This legacy report parser can't actually detect failures. It always relied
+    # on the binary's exit code. Print the tests we ran to keep the old behavior.
+    gtest_parse_report_legacy()
+    {
+      while read result name && [ -n "$name" ]; do
+        if [ "$result" = "notrun" ]; then
+          echo "$name" SKIPPED
+        elif [ "$result" = "run" ]; then
+          html_passed_ignore_core "$name"
+        else
+          html_failed_ignore_core "$name"
+        fi
+      done <<< "$(sed -f "${COMMON}/parsegtestreport.sed" "$@" )"
+      # here's how we would use bash if it wasn't so slow
+      # done <<< "$(sh "${COMMON}/parsegtestreport.sh" "$@" )"
+    }
+
+    gtest_parse_report_xpath()
+    {
+      # Query the XML report with the given XPath pattern.
+      xpath="$1"
+      shift
+      xmllint --xpath "${xpath}" "$@" 2>/dev/null | \
+        # Insert newlines to help sed.
+        sed $'s/<testcase/\\\n<testcase/g' | \
+        # Use sed to parse the report.
+        sed -f "${COMMON}/parsegtestreport.sed"
+        # here's how we would use bash if it wasn't so slow
+        #sh "${COMMON}/parsegtestreport.sh"
+    }
+
+    gtest_parse_report()
+    {
+      if type xmllint &>/dev/null; then
+        echo "DEBUG: Using xmllint to parse GTest XML report(s)"
+        gtest_parse_report_helper "$@"
+      else
+        echo "DEBUG: Falling back to legacy XML report parsing using only sed"
+        gtest_parse_report_legacy "$@"
+      fi
+    }
+
+
 
 #directory name init
     SCRIPTNAME=init.sh

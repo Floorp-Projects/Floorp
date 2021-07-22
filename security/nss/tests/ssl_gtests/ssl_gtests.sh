@@ -133,63 +133,13 @@ ssl_gtest_start()
   html_msg $? 0 "ssl_gtests ran successfully"
 
   # Parse XML report(s).
-  if type xmllint &>/dev/null; then
-    echo "DEBUG: Using xmllint to parse GTest XML report(s)"
-    parse_report
-  else
-    echo "DEBUG: Falling back to legacy XML report parsing using only sed"
-    parse_report_legacy
-  fi
+  gtest_parse_report "${SSLGTESTREPORT}".* 
 }
 
 # Helper function used when 'parallel' isn't available.
 parallel_fallback()
 {
   eval "${@//\{\}/0}"
-}
-
-parse_report()
-{
-  # Check XML reports for normal test runs and failures.
-  local successes=$(parse_report_xpath "//testcase[@status='run'][count(*)=0]")
-  local failures=$(parse_report_xpath "//failure/..")
-
-  # Print all tests that succeeded.
-  while read result name; do
-    html_passed_ignore_core "$name"
-  done <<< "$successes"
-
-  # Print failing tests.
-  if [ -n "$failures" ]; then
-    printf "\nFAILURES:\n=========\n"
-
-    while read result name; do
-      html_failed_ignore_core "$name"
-    done <<< "$failures"
-
-    printf "\n"
-  fi
-}
-
-parse_report_xpath()
-{
-  # Query the XML report with the given XPath pattern.
-  xmllint --xpath "$1" "${SSLGTESTREPORT}".* 2>/dev/null | \
-    # Insert newlines to help sed.
-    sed $'s/<testcase/\\\n<testcase/g' | \
-    # Use sed to parse the report.
-    sed -f "${COMMON}/parsegtestreport.sed"
-}
-
-# This legacy report parser can't actually detect failures. It always relied
-# on the binary's exit code. Print the tests we ran to keep the old behavior.
-parse_report_legacy()
-{
-  while read result name && [ -n "$name" ]; do
-    if [ "$result" = "run" ]; then
-      html_passed_ignore_core "$name"
-    fi
-  done <<< "$(sed -f "${COMMON}/parsegtestreport.sed" "${SSLGTESTREPORT}".*)"
 }
 
 ssl_gtest_cleanup()

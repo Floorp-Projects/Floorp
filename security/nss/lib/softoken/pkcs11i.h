@@ -946,7 +946,7 @@ char **NSC_ModuleDBFunc(unsigned long function, char *parameters, void *args);
 /* dh verify functions */
 /* verify that dhPrime matches one of our known primes, and if so return
  * it's subprime value */
-const SECItem *sftk_VerifyDH_Prime(SECItem *dhPrime);
+const SECItem *sftk_VerifyDH_Prime(SECItem *dhPrime, PRBool isFIPS);
 /* check if dhSubPrime claims dhPrime is a safe prime. */
 SECStatus sftk_IsSafePrime(SECItem *dhPrime, SECItem *dhSubPrime, PRBool *isSafe);
 /* map an operation Attribute to a Mechanism flag */
