@@ -30,6 +30,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/RelativeLuminanceUtils.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -610,6 +611,28 @@ static nsIFrame* GetBodyFrame(nsIFrame* aCanvasFrame) {
     return nullptr;
   }
   return body->GetPrimaryFrame();
+}
+
+bool nsNativeTheme::IsDarkColor(nscolor aColor) {
+  // Given https://www.w3.org/TR/WCAG20/#contrast-ratiodef, this is the
+  // threshold that tells us whether contrast is better against white or black.
+  //
+  // Contrast ratio against black is: (L + 0.05) / 0.05
+  // Contrast ratio against white is: 1.05 / (L + 0.05)
+  //
+  // So the intersection is:
+  //
+  //   (L + 0.05) / 0.05 = 1.05 / (L + 0.05)
+  //
+  // And the solution to that equation is:
+  //
+  //   sqrt(1.05 * 0.05) - 0.05
+  //
+  // So we consider a color dark if the contrast is below this threshold, and
+  // it's at least half-opaque.
+  constexpr float kThreshold = 0.179129;
+  return NS_GET_A(aColor) > 127 &&
+         RelativeLuminanceUtils::Compute(aColor) < kThreshold;
 }
 
 /* static */
