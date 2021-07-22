@@ -1164,8 +1164,6 @@ PK11_HPKE_Seal(HpkeContext *cx, const SECItem *aad, const SECItem *pt,
     unsigned char tagBuf[HASH_LENGTH_MAX];
     size_t tagLen;
     unsigned int fixedBits;
-    PORT_Assert(cx->baseNonce->len == sizeof(ivOut));
-    PORT_Memcpy(ivOut, cx->baseNonce->data, cx->baseNonce->len);
 
     /* aad may be NULL, PT may be zero-length but not NULL. */
     if (!cx || !cx->aeadContext ||
@@ -1175,6 +1173,9 @@ PK11_HPKE_Seal(HpkeContext *cx, const SECItem *aad, const SECItem *pt,
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
+
+    PORT_Assert(cx->baseNonce->len == sizeof(ivOut));
+    PORT_Memcpy(ivOut, cx->baseNonce->data, cx->baseNonce->len);
 
     tagLen = cx->aeadParams->tagLen;
     maxOut = pt->len + tagLen;

@@ -1,0 +1,22 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../..
+
+DEFINES += -DNSPR20
+
+# MODULE public and private header  directories are implicitly REQUIRED.
+MODULE = nss
+
+CSRCS = \
+	sdbthreadtst.c \
+	$(NULL)
+
+# The MODULE is always implicitly required.
+# Listing it here in REQUIRES makes it appear twice in the cc command line.
+
+PROGRAM = sdbthreadtst
+
+# USE_STATIC_LIBS = 1
