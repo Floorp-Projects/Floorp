@@ -154,6 +154,34 @@ add_task(async function() {
   );
 });
 
+// Test `Curl.generateCommand` data POSTing - not post data
+add_task(async function() {
+  const request = {
+    url: "https://example.com/form/",
+    method: "POST",
+    headers: [
+      { name: "Content-Length", value: "1000" },
+      { name: "Content-Type", value: "text/plain" },
+    ],
+    httpVersion: "HTTP/2.0",
+  };
+
+  const cmd = Curl.generateCommand(request);
+  const curlParams = parseCurl(cmd);
+
+  ok(
+    !inParams(curlParams, "--data-raw"),
+    '"--data-raw" param not present in curl output'
+  );
+
+  const methodIndex = curlParams.indexOf("-X");
+
+  ok(
+    methodIndex !== -1 && curlParams[methodIndex + 1] === "POST",
+    "request method explicit is POST"
+  );
+});
+
 // Test `Curl.generateCommand` multipart data POSTing
 add_task(async function() {
   const boundary = "----------14808";

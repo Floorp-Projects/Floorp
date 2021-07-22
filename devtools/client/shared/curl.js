@@ -115,9 +115,11 @@ const Curl = {
       addPostData(text);
       ignoredHeaders.add("content-length");
     } else if (
-      utils.isUrlEncodedRequest(data) ||
-      ["PUT", "POST", "PATCH"].includes(data.method)
+      data.postDataText &&
+      (utils.isUrlEncodedRequest(data) ||
+        ["PUT", "POST", "PATCH"].includes(data.method))
     ) {
+      // When no postData exists, --data-raw should not be set
       postDataText = data.postDataText;
       addPostData("--data-raw");
       addPostData(utils.writePostDataTextParams(postDataText));
@@ -129,12 +131,12 @@ const Curl = {
     // Add -I (HEAD)
     // For servers that supports HEAD.
     // This will fetch the header of a document only.
-    if (data.method == "HEAD") {
+    if (data.method === "HEAD") {
       addParam("-I");
-    } else if (!(data.method == "GET" || data.method == "POST")) {
+    } else if (data.method !== "GET") {
       // Add method.
-      // For HEAD, GET and POST requests this is not necessary. GET is the
-      // default, if --data or --binary is added POST is used, -I implies HEAD.
+      // For HEAD and GET requests this is not necessary. GET is the
+      // default, -I implies HEAD.
       addParam("-X");
       addParam(data.method);
     }
