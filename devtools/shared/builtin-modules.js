@@ -44,6 +44,7 @@ const debuggerSandbox = Cu.Sandbox(systemPrincipal, {
   freshCompartment: true,
 
   wantGlobalProperties: [
+    "AbortController",
     "atob",
     "btoa",
     "Blob",
@@ -67,6 +68,7 @@ const debuggerSandbox = Cu.Sandbox(systemPrincipal, {
 });
 
 const {
+  AbortController,
   atob,
   btoa,
   Blob,
@@ -244,6 +246,7 @@ defineLazyGetter(exports.modules, "xpcInspector", () => {
 // List of all custom globals exposed to devtools modules.
 // Changes here should be mirrored to devtools/.eslintrc.
 exports.globals = {
+  AbortController,
   atob,
   Blob,
   btoa,
