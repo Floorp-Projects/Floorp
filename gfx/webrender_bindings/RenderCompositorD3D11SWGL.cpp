@@ -300,6 +300,9 @@ bool RenderCompositorD3D11SWGL::TileD3D11::Map(wr::DeviceIntRect aDirtyRect,
       MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
     }
   }
+  if (!SUCCEEDED(hr)) {
+    gfxCriticalError() << "Failed to map tile: " << gfx::hexa(hr);
+  }
   MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
 
   // aData is expected to contain a pointer to the first pixel within the valid
