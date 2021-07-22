@@ -31,3 +31,12 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         inputs=["!%s" % full_libname],
     )
     FINAL_TARGET_FILES += ["!dependentlibs.list", "!dependentlibs.list.gtest"]
+
+# Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
+# too old to support Python pretty-printers; if this changes, we could
+# make this 'ifdef __GNUC__'.
+if CONFIG["OS_ARCH"] == "Linux":
+    # Create a GDB Python auto-load file alongside the libxul shared library
+    # in the build directory.
+    DEFINES["topsrcdir"] = TOPSRCDIR
+    OBJDIR_FILES.toolkit.library.build += ["../libxul.so-gdb.py"]
