@@ -43,8 +43,8 @@
  * JSM module, that can be shared with the DevTools keyboard shortcut manager.
  */
 const {
-  getRecordingPreferences,
-  setRecordingPreferences,
+  getRecordingSettings,
+  setRecordingSettings,
   getSymbolsFromThisBrowser,
   presets,
 } = ChromeUtils.import(
@@ -111,15 +111,12 @@ async function gInit(perfFront, pageContext, openRemoteDevTools) {
       supportedFeatures,
       presets,
       // Get the preferences from the current browser
-      recordingPreferences: getRecordingPreferences(
-        pageContext,
-        supportedFeatures
-      ),
+      recordingSettings: getRecordingSettings(pageContext, supportedFeatures),
       /**
-       * @param {RecordingStateFromPreferences} newRecordingPreferences
+       * @param {RecordingStateFromPreferences} newRecordingSettings
        */
-      setRecordingPreferences: newRecordingPreferences =>
-        setRecordingPreferences(pageContext, newRecordingPreferences),
+      setRecordingSettings: newRecordingSettings =>
+        setRecordingSettings(pageContext, newRecordingSettings),
 
       // The popup doesn't need to support remote symbol tables from the debuggee.
       // Only get the symbols from this browser.

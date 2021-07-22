@@ -121,8 +121,8 @@ function createViewControllers(state, elements) {
 
     updatePresets() {
       const { Services } = lazy.Services();
-      const { presets, getRecordingPreferences } = lazy.Background();
-      const { presetName } = getRecordingPreferences(
+      const { presets, getRecordingSettings } = lazy.Background();
+      const { presetName } = getRecordingSettings(
         "aboutprofiling",
         Services.profiler.GetFeatures()
       );

@@ -180,7 +180,7 @@ function initializedValues(state = null, action) {
       return {
         perfFront: action.perfFront,
         receiveProfile: action.receiveProfile,
-        setRecordingPreferences: action.setRecordingPreferences,
+        setRecordingSettings: action.setRecordingSettings,
         presets: action.presets,
         pageContext: action.pageContext,
         getSymbolTableGetter: action.getSymbolTableGetter,

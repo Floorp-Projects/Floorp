@@ -65,9 +65,9 @@ const {
 } = require("devtools/client/performance-new/browser");
 
 const {
-  setRecordingPreferences,
+  setRecordingSettings,
   presets,
-  getRecordingPreferences,
+  getRecordingSettings,
 } = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
 );
@@ -120,10 +120,7 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
     actions.initializeStore({
       perfFront,
       receiveProfile,
-      recordingPreferences: getRecordingPreferences(
-        pageContext,
-        supportedFeatures
-      ),
+      recordingSettings: getRecordingSettings(pageContext, supportedFeatures),
       presets,
       supportedFeatures,
       openAboutProfiling,
@@ -132,10 +129,10 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
       // Go ahead and hide the implementation details for the component on how the
       // preference information is stored
       /**
-       * @param {RecordingStateFromPreferences} newRecordingPreferences
+       * @param {RecordingStateFromPreferences} newRecordingSettings
        */
-      setRecordingPreferences: newRecordingPreferences =>
-        setRecordingPreferences(pageContext, newRecordingPreferences),
+      setRecordingSettings: newRecordingSettings =>
+        setRecordingSettings(pageContext, newRecordingSettings),
 
       // Configure the getSymbolTable function for the DevTools workflow.
       // See createMultiModalGetSymbolTableFn for more information.
