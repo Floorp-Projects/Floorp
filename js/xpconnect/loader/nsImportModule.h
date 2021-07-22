@@ -16,24 +16,20 @@ namespace mozilla {
 namespace loader {
 
 nsresult ImportModule(const char* aURI, const char* aExportName,
-                      const nsIID& aIID, void** aResult, bool aInfallible);
+                      const nsIID& aIID, void** aResult);
 
 }  // namespace loader
 }  // namespace mozilla
 
 class MOZ_STACK_CLASS nsImportModule final : public nsCOMPtr_helper {
  public:
-  nsImportModule(const char* aURI, const char* aExportName, nsresult* aErrorPtr,
-                 bool aInfallible)
-      : mURI(aURI),
-        mExportName(aExportName),
-        mErrorPtr(aErrorPtr),
-        mInfallible(aInfallible) {}
+  nsImportModule(const char* aURI, const char* aExportName, nsresult* aErrorPtr)
+      : mURI(aURI), mExportName(aExportName), mErrorPtr(aErrorPtr) {}
 
   virtual nsresult NS_FASTCALL operator()(const nsIID& aIID,
                                           void** aResult) const override {
-    nsresult rv = ::mozilla::loader::ImportModule(mURI, mExportName, aIID,
-                                                  aResult, mInfallible);
+    nsresult rv =
+        ::mozilla::loader::ImportModule(mURI, mExportName, aIID, aResult);
     if (mErrorPtr) {
       *mErrorPtr = rv;
     }
@@ -44,7 +40,6 @@ class MOZ_STACK_CLASS nsImportModule final : public nsCOMPtr_helper {
   const char* mURI;
   const char* mExportName;
   nsresult* mErrorPtr;
-  bool mInfallible;
 };
 
 /**
@@ -94,38 +89,25 @@ class MOZ_STACK_CLASS nsImportModule final : public nsCOMPtr_helper {
 
 template <size_t N>
 inline nsImportModule do_ImportModule(const char (&aURI)[N]) {
-  return {aURI, nullptr, nullptr, /* infallible */ true};
-}
-
-template <size_t N>
-inline nsImportModule do_ImportModule(const char (&aURI)[N],
-                                      const mozilla::fallible_t&) {
-  return {aURI, nullptr, nullptr, /* infallible */ false};
+  return {aURI, nullptr, nullptr};
 }
 
 template <size_t N>
 inline nsImportModule do_ImportModule(const char (&aURI)[N], nsresult* aRv) {
-  return {aURI, nullptr, aRv, /* infallible */ false};
+  return {aURI, nullptr, aRv};
 }
 
 template <size_t N, size_t N2>
 inline nsImportModule do_ImportModule(const char (&aURI)[N],
                                       const char (&aExportName)[N2]) {
-  return {aURI, aExportName, nullptr, /* infallible */ true};
-}
-
-template <size_t N, size_t N2>
-inline nsImportModule do_ImportModule(const char (&aURI)[N],
-                                      const char (&aExportName)[N2],
-                                      const mozilla::fallible_t&) {
-  return {aURI, aExportName, nullptr, /* infallible */ false};
+  return {aURI, aExportName, nullptr};
 }
 
 template <size_t N, size_t N2>
 inline nsImportModule do_ImportModule(const char (&aURI)[N],
                                       const char (&aExportName)[N2],
                                       nsresult* aRv) {
-  return {aURI, aExportName, aRv, /* infallible */ false};
+  return {aURI, aExportName, aRv};
 }
 
 #endif  // defined nsImportModule_h

@@ -1226,8 +1226,8 @@ nsresult WindowGlobalParent::WriteFormDataAndScrollToSessionStore(
     return NS_OK;
   }
 
-  nsCOMPtr<nsISessionStoreFunctions> funcs = do_ImportModule(
-      "resource://gre/modules/SessionStoreFunctions.jsm", fallible);
+  nsCOMPtr<nsISessionStoreFunctions> funcs =
+      do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
   if (!funcs) {
     return NS_ERROR_FAILURE;
   }
@@ -1277,8 +1277,8 @@ nsresult WindowGlobalParent::ResetSessionStore(uint32_t aEpoch) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsISessionStoreFunctions> funcs = do_ImportModule(
-      "resource://gre/modules/SessionStoreFunctions.jsm", fallible);
+  nsCOMPtr<nsISessionStoreFunctions> funcs =
+      do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
   if (!funcs) {
     return NS_ERROR_FAILURE;
   }
