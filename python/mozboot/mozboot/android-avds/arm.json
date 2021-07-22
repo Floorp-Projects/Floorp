@@ -18,6 +18,7 @@
         "-prop", "ro.test_harness=true"
     ],
     "emulator_extra_config": {
+        "hw.keyboard": "yes",
         "hw.lcd.density": "320",
         "disk.dataPartition.size": "4000MB",
         "sdcard.size": "600M"
