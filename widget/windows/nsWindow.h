@@ -210,7 +210,7 @@ class nsWindow final : public nsWindowBase {
                                    bool aDoCapture) override;
   [[nodiscard]] virtual nsresult GetAttention(int32_t aCycleCount) override;
   virtual bool HasPendingInputEvent() override;
-  virtual LayerManager* GetLayerManager() override;
+  virtual WindowRenderer* GetWindowRenderer() override;
   void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
   [[nodiscard]] virtual nsresult OnDefaultButtonLoaded(
       const LayoutDeviceIntRect& aButtonRect) override;

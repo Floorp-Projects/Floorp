@@ -204,11 +204,9 @@ void AnimationInfo::EnumerateGenerationOnFrame(
     }
   }
 
-  RefPtr<LayerManager> layerManager =
-      nsContentUtils::LayerManagerForContent(aContent);
+  WindowRenderer* renderer = nsContentUtils::WindowRendererForContent(aContent);
 
-  if (layerManager &&
-      layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+  if (renderer && renderer->AsWebRender()) {
     // In case of continuation, nsDisplayItem uses its last continuation, so we
     // have to use the last continuation frame here.
     if (nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aFrame)) {

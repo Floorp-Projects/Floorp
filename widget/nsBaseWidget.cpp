@@ -884,7 +884,9 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
     nsBaseWidget* aWidget, gfxContext* aTarget, BufferMode aDoubleBuffering,
     ScreenRotation aRotation)
     : mWidget(aWidget) {
-  LayerManager* lm = mWidget->GetLayerManager();
+  LayerManager* lm = mWidget->GetWindowRenderer()
+                         ? mWidget->GetWindowRenderer()->AsLayerManager()
+                         : nullptr;
   NS_ASSERTION(
       !lm || lm->GetBackendType() == LayersBackend::LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
@@ -1505,7 +1507,7 @@ bool nsBaseWidget::ShouldUseOffMainThreadCompositing() {
   return gfxPlatform::UsesOffMainThreadCompositing();
 }
 
-LayerManager* nsBaseWidget::GetLayerManager() {
+WindowRenderer* nsBaseWidget::GetWindowRenderer() {
   if (!mLayerManager) {
     if (!mShutdownObserver) {
       // We are shutting down, do not try to re-create a LayerManager

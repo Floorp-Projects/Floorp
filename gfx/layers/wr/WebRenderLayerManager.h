@@ -72,6 +72,7 @@ class WebRenderLayerManager final : public LayerManager {
 
  public:
   KnowsCompositor* AsKnowsCompositor() override;
+  WebRenderLayerManager* AsWebRender() override { return this; }
   WebRenderLayerManager* AsWebRenderLayerManager() override { return this; }
   CompositorBridgeChild* GetCompositorBridgeChild() override;
 

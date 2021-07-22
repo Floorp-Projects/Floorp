@@ -912,10 +912,10 @@ class PresShell final : public nsStubDocumentObserver,
   already_AddRefed<nsIContent> GetFocusedContentInOurWindow() const;
 
   /**
-   * Get the layer manager for the widget of the root view, if it has
+   * Get the window renderer for the widget of the root view, if it has
    * one.
    */
-  LayerManager* GetLayerManager();
+  WindowRenderer* GetWindowRenderer();
 
   /**
    * Return true iff there is a widget rendering this presShell and that

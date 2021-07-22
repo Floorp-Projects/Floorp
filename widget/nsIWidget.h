@@ -74,6 +74,7 @@ namespace dom {
 class BrowserChild;
 enum class CallerType : uint32_t;
 }  // namespace dom
+class WindowRenderer;
 namespace layers {
 class AsyncDragMetrics;
 class Compositor;
@@ -377,6 +378,7 @@ class nsIWidget : public nsISupports {
   typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
   typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::LayerManager LayerManager;
+  typedef mozilla::WindowRenderer WindowRenderer;
   typedef mozilla::layers::LayerManagerComposite LayerManagerComposite;
   typedef mozilla::layers::LayersBackend LayersBackend;
   typedef mozilla::layers::PLayerTransactionChild PLayerTransactionChild;
@@ -1294,7 +1296,7 @@ class nsIWidget : public nsISupports {
    * Return the widget's LayerManager. The layer tree for that
    * LayerManager is what gets rendered to the widget.
    */
-  virtual LayerManager* GetLayerManager() = 0;
+  virtual WindowRenderer* GetWindowRenderer() = 0;
 
   /**
    * Called before each layer manager transaction to allow any preparation

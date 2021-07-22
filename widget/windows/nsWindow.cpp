@@ -4074,13 +4074,13 @@ bool nsWindow::HasPendingInputEvent() {
 
 /**************************************************************
  *
- * SECTION: nsIWidget::GetLayerManager
+ * SECTION: nsIWidget::GetWindowRenderer
  *
- * Get the layer manager associated with this widget.
+ * Get the window renderer associated with this widget.
  *
  **************************************************************/
 
-LayerManager* nsWindow::GetLayerManager() {
+WindowRenderer* nsWindow::GetWindowRenderer() {
   if (mLayerManager) {
     return mLayerManager;
   }
@@ -4205,7 +4205,8 @@ nsresult nsWindow::OnDefaultButtonLoaded(
 
 void nsWindow::UpdateThemeGeometries(
     const nsTArray<ThemeGeometry>& aThemeGeometries) {
-  RefPtr<LayerManager> layerManager = GetLayerManager();
+  RefPtr<LayerManager> layerManager =
+      GetWindowRenderer() ? GetWindowRenderer()->AsLayerManager() : nullptr;
   if (!layerManager) {
     return;
   }
@@ -7329,7 +7330,8 @@ nsresult nsWindow::ConfigureChildren(
       w->Move(configuration.mBounds.X(), configuration.mBounds.Y());
 
       if (gfxWindowsPlatform::GetPlatform()->IsDirect2DBackend() ||
-          GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_BASIC) {
+          GetWindowRenderer()->GetBackendType() !=
+              LayersBackend::LAYERS_BASIC) {
         // XXX - Workaround for Bug 587508. This will invalidate the part of the
         // plugin window that might be touched by moving content somehow. The
         // underlying problem should be found and fixed!
@@ -7775,8 +7777,8 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode) {
   // Clear window by transparent black when compositor window is used in GPU
   // process and non-client area rendering by DWM is enabled.
   // It is for showing non-client area rendering. See nsWindow::UpdateGlass().
-  if (HasGlass() && GetLayerManager()->AsKnowsCompositor() &&
-      GetLayerManager()->AsKnowsCompositor()->GetUseCompositorWnd()) {
+  if (HasGlass() && GetWindowRenderer()->AsKnowsCompositor() &&
+      GetWindowRenderer()->AsKnowsCompositor()->GetUseCompositorWnd()) {
     HDC hdc;
     RECT rect;
     hdc = ::GetWindowDC(mWnd);

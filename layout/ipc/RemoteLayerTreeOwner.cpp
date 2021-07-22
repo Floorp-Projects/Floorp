@@ -32,12 +32,18 @@ namespace layout {
 
 static already_AddRefed<LayerManager> GetLayerManager(
     BrowserParent* aBrowserParent) {
+  RefPtr<LayerManager> lm;
   if (Element* element = aBrowserParent->GetOwnerElement()) {
-    if (RefPtr<LayerManager> lm =
-            nsContentUtils::LayerManagerForContent(element)) {
+    if (WindowRenderer* renderer =
+            nsContentUtils::WindowRendererForContent(element)) {
+      lm = renderer->AsLayerManager();
       return lm.forget();
     }
-    return nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
+    if (WindowRenderer* renderer =
+            nsContentUtils::WindowRendererForDocument(element->OwnerDoc())) {
+      lm = renderer->AsLayerManager();
+      return lm.forget();
+    }
   }
   return nullptr;
 }

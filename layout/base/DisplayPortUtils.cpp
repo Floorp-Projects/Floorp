@@ -212,13 +212,13 @@ static nscoord GetMaxDisplayPortSize(nsIContent* aContent,
   if (!widget) {
     return safeMaximum;
   }
-  LayerManager* lm = widget->GetLayerManager();
-  if (!lm) {
+  WindowRenderer* renderer = widget->GetWindowRenderer();
+  if (!renderer || !renderer->AsLayerManager()) {
     return safeMaximum;
   }
   nsPresContext* presContext = frame->PresContext();
 
-  int32_t maxSizeInDevPixels = lm->GetMaxTextureSize();
+  int32_t maxSizeInDevPixels = renderer->AsLayerManager()->GetMaxTextureSize();
   if (maxSizeInDevPixels < 0 || maxSizeInDevPixels == INT_MAX) {
     return safeMaximum;
   }
