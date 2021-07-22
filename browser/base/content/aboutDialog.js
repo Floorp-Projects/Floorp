@@ -102,7 +102,7 @@ async function init(aEvent) {
     }
   }
 
-  if (AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")) {
+  if (AppConstants.IS_ESR) {
     document.getElementById("release").hidden = false;
   }
 
