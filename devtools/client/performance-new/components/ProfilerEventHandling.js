@@ -52,19 +52,14 @@ const selectors = require("devtools/client/performance-new/store/selectors");
  */
 class ProfilerEventHandling extends PureComponent {
   componentDidMount() {
-    const { perfFront, reportProfilerReady } = this.props;
+    const { perfFront, isSupportedPlatform, reportProfilerReady } = this.props;
 
     // Ask for the initial state of the profiler.
     Promise.all([
       perfFront.isActive(),
-      perfFront.isSupportedPlatform(),
       perfFront.isLockedForPrivateBrowsing(),
     ]).then(results => {
-      const [
-        isActive,
-        isSupportedPlatform,
-        isLockedForPrivateBrowsing,
-      ] = results;
+      const [isActive, isLockedForPrivateBrowsing] = results;
 
       let recordingState = this.props.recordingState;
       // It's theoretically possible we got an event that already let us know about
@@ -78,7 +73,7 @@ class ProfilerEventHandling extends PureComponent {
           recordingState = "available-to-record";
         }
       }
-      reportProfilerReady(isSupportedPlatform, recordingState);
+      reportProfilerReady(recordingState);
     });
 
     // Handle when the profiler changes state. It might be us, it might be someone else.
