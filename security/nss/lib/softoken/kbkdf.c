@@ -613,10 +613,6 @@ kbkdf_CreateKey(CK_MECHANISM_TYPE kdf_mech, CK_SESSION_HANDLE hSession, CK_DERIV
     PR_ASSERT(derived_key != NULL);
     PR_ASSERT(derived_key->phKey != NULL);
 
-    if (slot == NULL) {
-        return CKR_SESSION_HANDLE_INVALID;
-    }
-
     /* Create the new key object for this additional derived key. */
     key = sftk_NewObject(slot);
     if (key == NULL) {
@@ -682,9 +678,7 @@ done:
     sftk_FreeObject(key);
 
     /* Doesn't do anything. */
-    if (session) {
-        sftk_FreeSession(session);
-    }
+    sftk_FreeSession(session);
 
     return ret;
 }

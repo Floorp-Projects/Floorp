@@ -1526,7 +1526,7 @@ sftkdb_DestroyObject(SFTKDBHandle *handle, CK_OBJECT_HANDLE objectID,
 
     crv = (*db->sdb_Begin)(db);
     if (crv != CKR_OK) {
-        return crv;
+        goto loser;
     }
     crv = (*db->sdb_DestroyObject)(db, objectID);
     if (crv != CKR_OK) {
@@ -2461,7 +2461,7 @@ sftkdb_Update(SFTKDBHandle *handle, SECItem *key)
      */
     crv = (*handle->db->sdb_Begin)(handle->db);
     if (crv != CKR_OK) {
-        return crv;
+        goto loser;
     }
     inTransaction = PR_TRUE;
 
