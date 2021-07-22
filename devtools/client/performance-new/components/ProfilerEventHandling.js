@@ -51,26 +51,16 @@ class ProfilerEventHandling extends PureComponent {
   componentDidMount() {
     const { perfFront, isSupportedPlatform, reportProfilerReady } = this.props;
 
+    if (!isSupportedPlatform) {
+      return;
+    }
+
     // Ask for the initial state of the profiler.
     Promise.all([
       perfFront.isActive(),
       perfFront.isLockedForPrivateBrowsing(),
-    ]).then(results => {
-      const [isActive, isLockedForPrivateBrowsing] = results;
-
-      let recordingState = this.props.recordingState;
-      // It's theoretically possible we got an event that already let us know about
-      // the current state of the profiler.
-      if (recordingState === "not-yet-known" && isSupportedPlatform) {
-        if (isLockedForPrivateBrowsing) {
-          recordingState = "locked-by-private-browsing";
-        } else if (isActive) {
-          recordingState = "recording";
-        } else {
-          recordingState = "available-to-record";
-        }
-      }
-      reportProfilerReady(recordingState);
+    ]).then(([isActive, isLockedForPrivateBrowsing]) => {
+      reportProfilerReady(isActive, isLockedForPrivateBrowsing);
     });
 
     // Handle when the profiler changes state. It might be us, it might be someone else.

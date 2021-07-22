@@ -43,12 +43,14 @@ const changeRecordingState = (exports.changeRecordingState = (
 /**
  * This is the result of the initial questions about the state of the profiler.
  *
- * @param {RecordingState} recordingState - A valid state in `recordingState`.
+ * @param {boolean} isActive
+ * @param {boolean} isLockedForPrivateBrowsing
  * @return {Action}
  */
-exports.reportProfilerReady = recordingState => ({
+exports.reportProfilerReady = (isActive, isLockedForPrivateBrowsing) => ({
   type: "REPORT_PROFILER_READY",
-  recordingState,
+  isActive,
+  isLockedForPrivateBrowsing,
 });
 
 /**
