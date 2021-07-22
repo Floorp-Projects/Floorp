@@ -37,6 +37,13 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  IS_ESR:
+#ifdef MOZ_ESR
+  true,
+#else
+  false,
+#endif
+
   ACCESSIBILITY:
 #ifdef ACCESSIBILITY
   true,
