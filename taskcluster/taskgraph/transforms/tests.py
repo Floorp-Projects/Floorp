@@ -1454,6 +1454,7 @@ def handle_tier(config, tasks):
                 "android-em-7.0-x86-shippable-lite/opt",
                 "android-em-7.0-x86_64-shippable-qr/opt",
                 "android-em-7.0-x86_64-qr/debug",
+                "android-em-7.0-x86_64-qr/debug-isolated-process",
                 "android-em-7.0-x86_64-qr/opt",
             ]:
                 task["tier"] = 1
