@@ -73,6 +73,7 @@ EXCLUSIVE_COMPONENTS = [
     "web-platform-tests-wdspec",
     # webrender enabled
     "webrender",
+    "nss",
 ]
 EXCLUSIVE_COMPONENTS = sorted(EXCLUSIVE_COMPONENTS)
 ALL_COMPONENTS = INCLUSIVE_COMPONENTS + EXCLUSIVE_COMPONENTS

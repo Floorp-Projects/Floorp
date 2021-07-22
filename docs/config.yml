@@ -30,6 +30,7 @@ categories:
         - tools/profiler
         - performance
         - xpcom
+        - security/nss
     build_doc:
         - mach
         - tools/try
