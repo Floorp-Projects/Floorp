@@ -28,16 +28,16 @@ const {
 /**
  * The recording state manages the current state of the recording panel.
  * @param {RecordingState} state - A valid state in `recordingState`.
- * @param {{ didRecordingUnexpectedlyStopped: boolean }} options
+ * @param {{ recordingUnexpectedlyStopped: boolean }} options
  * @return {Action}
  */
 const changeRecordingState = (exports.changeRecordingState = (
   state,
-  options = { didRecordingUnexpectedlyStopped: false }
+  options = { recordingUnexpectedlyStopped: false }
 ) => ({
   type: "CHANGE_RECORDING_STATE",
   state,
-  didRecordingUnexpectedlyStopped: options.didRecordingUnexpectedlyStopped,
+  recordingUnexpectedlyStopped: options.recordingUnexpectedlyStopped,
 }));
 
 /**

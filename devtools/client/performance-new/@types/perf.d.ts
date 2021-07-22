@@ -264,7 +264,7 @@ export type Action =
   | {
       type: "CHANGE_RECORDING_STATE";
       state: RecordingState;
-      didRecordingUnexpectedlyStopped: boolean;
+      recordingUnexpectedlyStopped: boolean;
     }
   | {
       type: "REPORT_PROFILER_READY";
