@@ -11,7 +11,6 @@
  * @typedef {import("../@types/perf").PerfFront} PerfFront
  * @typedef {import("../@types/perf").ReceiveProfile} ReceiveProfile
  * @typedef {import("../@types/perf").SetRecordingSettings} SetRecordingSettings
- * @typedef {import("../@types/perf").GetSymbolTableCallback} GetSymbolTableCallback
  * @typedef {import("../@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
  * @typedef {import("../@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
  * @typedef {import("../@types/perf").PageContext} PageContext
@@ -131,19 +130,12 @@ const getInitializedValues = state => {
 /** @type {Selector<PerfFront>} */
 const getPerfFront = state => getInitializedValues(state).perfFront;
 
-/** @type {Selector<ReceiveProfile>} */
-const getReceiveProfileFn = state => getInitializedValues(state).receiveProfile;
-
 /** @type {Selector<SetRecordingSettings>} */
 const getSetRecordingSettingsFn = state =>
   getInitializedValues(state).setRecordingSettings;
 
 /** @type {Selector<PageContext>} */
 const getPageContext = state => getInitializedValues(state).pageContext;
-
-/** @type {Selector<(profile: MinimallyTypedGeckoProfile) => GetSymbolTableCallback>} */
-const getSymbolTableGetter = state =>
-  getInitializedValues(state).getSymbolTableGetter;
 
 /** @type {Selector<string[]>} */
 const getSupportedFeatures = state =>
@@ -170,10 +162,8 @@ module.exports = {
   getRecordingSettings,
   getInitializedValues,
   getPerfFront,
-  getReceiveProfileFn,
   getSetRecordingSettingsFn,
   getPageContext,
-  getSymbolTableGetter,
   getPromptEnvRestart,
   getSupportedFeatures,
 };

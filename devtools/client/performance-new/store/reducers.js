@@ -179,11 +179,9 @@ function initializedValues(state = null, action) {
     case "INITIALIZE_STORE":
       return {
         perfFront: action.perfFront,
-        receiveProfile: action.receiveProfile,
         setRecordingSettings: action.setRecordingSettings,
         presets: action.presets,
         pageContext: action.pageContext,
-        getSymbolTableGetter: action.getSymbolTableGetter,
         supportedFeatures: action.supportedFeatures,
         openAboutProfiling: action.openAboutProfiling,
         openRemoteDevTools: action.openRemoteDevTools,

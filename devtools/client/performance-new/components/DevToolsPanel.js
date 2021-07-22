@@ -14,7 +14,12 @@
  */
 
 /**
- * @typedef {StateProps} Props
+ * @typedef {Object} OwnProps
+ * @property {import("../@types/perf").OnProfileReceived} onProfileReceived
+ */
+
+/**
+ * @typedef {StateProps & OwnProps} Props
  * @typedef {import("../@types/perf").State} StoreState
  */
 
@@ -51,7 +56,7 @@ const selectors = require("devtools/client/performance-new/store/selectors");
  */
 class DevToolsPanel extends PureComponent {
   render() {
-    const { isSupportedPlatform } = this.props;
+    const { isSupportedPlatform, onProfileReceived } = this.props;
 
     if (isSupportedPlatform === null) {
       // We don't know yet if this is a supported platform, wait for a response.
@@ -61,7 +66,7 @@ class DevToolsPanel extends PureComponent {
     return div(
       { className: `perf perf-devtools` },
       OnboardingMessage(),
-      RecordingButton(),
+      RecordingButton({ onProfileReceived }),
       Description(),
       hr({ className: "perf-presets-hr" }),
       DevToolsPresetSelection()

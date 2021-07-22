@@ -14,6 +14,12 @@
  * @property {boolean} isSupportedPlatform
  * @property {boolean} recordingUnexpectedlyStopped
  * @property {PageContext} pageContext
+ * @property {import("../@types/perf").ProfilerViewMode | undefined} profilerViewMode
+ */
+
+/**
+ * @typedef {Object} OwnProps
+ * @property {import("../@types/perf").OnProfileReceived} onProfileReceived
  */
 
 /**
@@ -26,7 +32,7 @@
 
 /**
  * @typedef {ResolveThunks<ThunkDispatchProps>} DispatchProps
- * @typedef {StateProps & DispatchProps} Props
+ * @typedef {StateProps & DispatchProps & OwnProps} Props
  * @typedef {import("../@types/perf").RecordingState} RecordingState
  * @typedef {import("../@types/perf").State} StoreState
  * @typedef {import("../@types/perf").PageContext} PageContext
@@ -57,6 +63,16 @@ const Localized = React.createFactory(
  * @extends {React.PureComponent<Props>}
  */
 class RecordingButton extends PureComponent {
+  _onStopButtonClick = async () => {
+    const {
+      getProfileAndStopProfiler,
+      profilerViewMode,
+      onProfileReceived,
+    } = this.props;
+    const profile = await getProfileAndStopProfiler();
+    onProfileReceived(profile, profilerViewMode);
+  };
+
   render() {
     const {
       startRecording,
@@ -64,7 +80,6 @@ class RecordingButton extends PureComponent {
       recordingState,
       isSupportedPlatform,
       recordingUnexpectedlyStopped,
-      getProfileAndStopProfiler,
     } = this.props;
 
     if (!isSupportedPlatform) {
@@ -131,7 +146,7 @@ class RecordingButton extends PureComponent {
             })
           ),
           isPrimary: true,
-          onClick: getProfileAndStopProfiler,
+          onClick: this._onStopButtonClick,
           disabled: recordingState === "request-to-start-recording",
           additionalButton: {
             label: Localized(
@@ -241,6 +256,7 @@ function mapStateToProps(state) {
       state
     ),
     pageContext: selectors.getPageContext(state),
+    profilerViewMode: selectors.getProfilerViewMode(state),
   };
 }
 
