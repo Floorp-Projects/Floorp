@@ -136,6 +136,9 @@ const ParentProcessResources = augmentResourceDictionary({
   [TYPES.INDEXED_DB]: {
     path: "devtools/server/actors/resources/storage-indexed-db",
   },
+  [TYPES.DOCUMENT_EVENT]: {
+    path: "devtools/server/actors/resources/parent-process-document-event",
+  },
 });
 
 function augmentResourceDictionary(dict) {
