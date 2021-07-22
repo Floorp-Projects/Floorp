@@ -89,7 +89,6 @@ bool Localization::Init() {
 void Localization::Activate(const bool aEager) {
   mLocalization = do_ImportModule("resource://gre/modules/Localization.jsm",
                                   "Localization");
-  MOZ_RELEASE_ASSERT(mLocalization);
 
   AutoJSContext cx;
 
