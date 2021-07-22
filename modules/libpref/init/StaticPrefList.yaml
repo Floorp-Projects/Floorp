@@ -6833,13 +6833,6 @@
   value: true
   mirror: always
 
-# Is path() supported in clip-path?
-- name: layout.css.clip-path-path.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Is the image-set() function enabled?
 - name: layout.css.image-set.enabled
   type: RelaxedAtomicBool

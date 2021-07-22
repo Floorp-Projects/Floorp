@@ -134,7 +134,8 @@ var supported_properties = {
                      test_currentcolor_transition,
                      test_auto_color_transition ],
     "clip": [ test_rect_transition ],
-    "clip-path": [ test_basic_shape_or_url_transition ],
+    "clip-path": [ test_basic_shape_or_url_transition,
+                   test_path_function ],
     "color": [ test_color_transition,
                test_currentcolor_transition ],
     "fill": [ test_color_transition,
@@ -406,10 +407,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
   // `auto` are already in wpt, so we don't test it here again.
   supported_properties["offset-anchor"] =
     [ test_background_position_transition ];
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
-  supported_properties["clip-path"].push(test_path_function);
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.d-property.enabled")) {
