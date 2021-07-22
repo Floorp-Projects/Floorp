@@ -46,6 +46,8 @@ class RttValue : public NativeObject {
   static RttValue* rttSub(JSContext* cx, js::Handle<RttValue*> parent,
                           js::Handle<RttValue*> subCanon);
 
+  bool isNewborn() { return getReservedSlot(Slot::Handle).isUndefined(); }
+
   wasm::TypeHandle handle() const {
     return wasm::TypeHandle(uint32_t(getReservedSlot(Slot::Handle).toInt32()));
   }
