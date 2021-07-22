@@ -12,7 +12,8 @@ add_task(async function() {
   await reload(dbg);
   await waitForPaused(dbg);
   await waitForLoadedSource(dbg, "doc-debugger-statements.html");
-  assertPausedLocation(dbg, "doc-debugger-statements");
+  const source = findSource(dbg, "doc-debugger-statements.html");
+  assertPausedAtSourceAndLine(dbg, source.id, 11);
 
   await pressResume(dbg);
   assertPausedLocation(dbg);

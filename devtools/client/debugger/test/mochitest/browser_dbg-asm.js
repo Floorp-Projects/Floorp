@@ -22,5 +22,5 @@ add_task(async function() {
   invokeInTab("runAsm");
 
   await waitForPaused(dbg);
-  assertPausedLocation(dbg, "asm.js", 7);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, "asm.js").id, 7);
 });
