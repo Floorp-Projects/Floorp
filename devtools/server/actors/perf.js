@@ -29,7 +29,7 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
   initialize: function(conn, targetActor) {
     Actor.prototype.initialize.call(this, conn);
     // The "bridge" is the actual implementation of the actor. It is abstracted
-    // out into its own class so that it can be re-used with the profiler popup.
+    // out into its own class so that it can be re-used by about:profiling.
     this.bridge = new ActorReadyGeckoProfilerInterface();
 
     _bridgeEvents(this, [

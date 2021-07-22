@@ -45,7 +45,7 @@
               (profile instanceof ArrayBuffer) ||
               // DevTools injects the profile as just the plain object, although
               // maybe in the future it could also do it as a compressed profile
-              // to make this faster.
+              // to make this faster (bug 1581963).
               Object.keys(profile).includes("threads")
             )
           ) {

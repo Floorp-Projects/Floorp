@@ -28,12 +28,14 @@ loader.lazyRequireGetter(
 const IS_SUPPORTED_PLATFORM = "nsIProfiler" in Ci;
 
 /**
- * The GeckoProfiler already has an interface to control it through the
- * nsIProfiler component. However, this class implements an interface that can
- * be used on both the actor, and the profiler popup. This allows us to share
- * the UI for the devtools front-end and the profiler popup code. The devtools
- * code needs to work through the actor system, while the popup code controls
- * the Gecko Profiler on the current browser.
+ * This is an implementation of the perf actor API, using nsIProfiler.
+ * It is in a separate class from the actual perf actor implementation
+ * so that it can also be used by about:profiling for the current browser.
+ *
+ * about:profiling is used in two different contexts: For local settings, and
+ * for remote targets when loaded in about:debugging. In the remote context,
+ * it has access to the perf actor. In the local context, it uses this class
+ * as a drop-in perfFront replacement which operates on the current browser.
  */
 class ActorReadyGeckoProfilerInterface {
   constructor() {
