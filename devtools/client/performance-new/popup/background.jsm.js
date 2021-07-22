@@ -74,8 +74,6 @@ const lazy = createLazyLoaders({
     ChromeUtils.import(
       "resource://devtools/client/performance-new/symbolication.jsm.js"
     ),
-  PreferenceManagement: () =>
-    require("devtools/client/performance-new/preference-management"),
   ProfilerMenuButton: () =>
     ChromeUtils.import(
       "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
@@ -273,16 +271,13 @@ async function captureProfile(pageContext) {
  * @param {PageContext} pageContext
  */
 function startProfiler(pageContext) {
-  const { translatePreferencesToState } = lazy.PreferenceManagement();
   const {
     entries,
     interval,
     features,
     threads,
     duration,
-  } = translatePreferencesToState(
-    getRecordingSettings(pageContext, Services.profiler.GetFeatures())
-  );
+  } = getRecordingSettings(pageContext, Services.profiler.GetFeatures());
 
   // Get the active Browser ID from browser.
   const { getActiveBrowserID } = lazy.RecordingUtils();
@@ -411,7 +406,10 @@ function getRecordingSettings(pageContext, supportedFeatures) {
 
   // Next use the preferences to get the values.
   const entries = Services.prefs.getIntPref(ENTRIES_PREF + postfix);
-  const interval = Services.prefs.getIntPref(INTERVAL_PREF + postfix);
+  const intervalInMicroseconds = Services.prefs.getIntPref(
+    INTERVAL_PREF + postfix
+  );
+  const interval = intervalInMicroseconds / 1000;
   const features = _getArrayOfStringsPref(FEATURES_PREF + postfix);
   const threads = _getArrayOfStringsPref(THREADS_PREF + postfix);
   const duration = Services.prefs.getIntPref(DURATION_PREF + postfix);
@@ -452,9 +450,7 @@ function getRecordingSettingsFromPreset(
   return {
     presetName,
     entries: preset.entries,
-    // The interval is stored in preferences as microseconds, but the preset
-    // defines it in terms of milliseconds. Make the conversion here.
-    interval: preset.interval * 1000,
+    interval: preset.interval,
     // Validate the features before passing them to the profiler.
     features: preset.features.filter(feature =>
       supportedFeatures.includes(feature)
@@ -474,7 +470,8 @@ function setRecordingSettings(pageContext, prefs) {
   Services.prefs.setCharPref(PRESET_PREF + postfix, prefs.presetName);
   Services.prefs.setIntPref(ENTRIES_PREF + postfix, prefs.entries);
   // The interval pref stores the value in microseconds for extra precision.
-  Services.prefs.setIntPref(INTERVAL_PREF + postfix, prefs.interval);
+  const intervalInMicroseconds = prefs.interval * 1000;
+  Services.prefs.setIntPref(INTERVAL_PREF + postfix, intervalInMicroseconds);
   Services.prefs.setCharPref(
     FEATURES_PREF + postfix,
     JSON.stringify(prefs.features)

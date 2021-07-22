@@ -6,10 +6,6 @@
 
 const selectors = require("devtools/client/performance-new/store/selectors");
 const {
-  translatePreferencesToState,
-  translatePreferencesFromState,
-} = require("devtools/client/performance-new/preference-management");
-const {
   getEnvironmentVariable,
 } = require("devtools/client/performance-new/browser");
 
@@ -75,7 +71,7 @@ function _dispatchAndUpdatePreferences(action) {
       getState()
     );
     const recordingSettings = selectors.getRecordingSettings(getState());
-    setRecordingSettings(translatePreferencesFromState(recordingSettings));
+    setRecordingSettings(recordingSettings);
   };
 }
 
@@ -179,9 +175,7 @@ exports.initializeStore = values => {
   return {
     ...initValues,
     type: "INITIALIZE_STORE",
-    recordingSettingsFromPreferences: translatePreferencesToState(
-      recordingSettings
-    ),
+    recordingSettingsFromPreferences: recordingSettings,
   };
 };
 
