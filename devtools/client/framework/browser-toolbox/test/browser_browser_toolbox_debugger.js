@@ -79,9 +79,9 @@ add_task(async function runTest() {
   await ToolboxTask.importScript(debuggerHead);
 
   await ToolboxTask.spawn(`"${testUrl}"`, async _testUrl => {
-    /* global createDebuggerContext, waitForSources,
-          waitForPaused, addBreakpoint, assertPausedLocation, stepIn,
-          findSource, removeBreakpoint, resume, selectSource */
+    /* global createDebuggerContext, waitForSources, waitForPaused,
+          addBreakpoint, assertPausedAtSourceAndLine, stepIn, findSource,
+          removeBreakpoint, resume, selectSource */
     const { Services } = ChromeUtils.import(
       "resource://gre/modules/Services.jsm"
     );
@@ -129,15 +129,15 @@ add_task(async function runTest() {
 
     await onPaused;
 
-    assertPausedLocation(dbg, fileName, 2);
+    const source = findSource(dbg, fileName);
+    assertPausedAtSourceAndLine(dbg, source.id, 2);
 
     await stepIn(dbg);
 
-    assertPausedLocation(dbg, fileName, 3);
+    assertPausedAtSourceAndLine(dbg, source.id, 3);
 
     // Remove the breakpoint before resuming in order to prevent hitting the breakpoint
     // again during test closing.
-    const source = findSource(dbg, fileName);
     await removeBreakpoint(dbg, source.id, 2);
 
     await resume(dbg);
