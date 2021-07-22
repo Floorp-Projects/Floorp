@@ -92,7 +92,7 @@ const nsNavigationDirection DirectionFromKeyCodeTable[2][6] = {
 nsXULPopupManager* nsXULPopupManager::sInstance = nullptr;
 
 PendingPopup::PendingPopup(nsIContent* aPopup, mozilla::dom::Event* aEvent)
-    : mPopup(aPopup), mEvent(aEvent), mModifiers(0), mRangeOffset(0) {
+    : mPopup(aPopup), mEvent(aEvent), mModifiers(0) {
   InitMousePoint();
 }
 
@@ -101,13 +101,6 @@ void PendingPopup::InitMousePoint() {
   // containing the popup.
   if (!mEvent) {
     return;
-  }
-
-  RefPtr<UIEvent> uiEvent = mEvent ? mEvent->AsUIEvent() : nullptr;
-  if (uiEvent) {
-    mRangeOffset = -1;
-    mRangeParentContent =
-        uiEvent->GetRangeParentContentAndOffset(&mRangeOffset);
   }
 
   WidgetEvent* event = mEvent->WidgetEventPtr();

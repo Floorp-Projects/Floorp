@@ -92,7 +92,7 @@
         if (document.commandDispatcher.focusedElement != input) {
           input.focus();
         }
-        this._doPopupItemEnabling(event.target);
+        this._doPopupItemEnabling(event);
       });
 
       if (this.spellcheck) {
@@ -113,7 +113,7 @@
       });
     }
 
-    _doPopupItemEnablingSpell(popupNode) {
+    _doPopupItemEnablingSpell(event) {
       var spellui = this.spellCheckerUI;
       if (!spellui || !spellui.canSpellCheck) {
         this._setMenuItemVisibility("spell-no-suggestions", false);
@@ -126,10 +126,7 @@
         return;
       }
 
-      spellui.initFromEvent(
-        document.popupRangeParent,
-        document.popupRangeOffset
-      );
+      spellui.initFromEvent(event.rangeParent, event.rangeOffset);
 
       var enabled = spellui.enabled;
       var showUndo = spellui.canSpellCheck && spellui.canUndo();
@@ -148,7 +145,7 @@
       // suggestion list
       var suggestionsSeparator = this.getMenuItem("spell-no-suggestions");
       var numsug = spellui.addSuggestionsToMenu(
-        popupNode,
+        event.target,
         suggestionsSeparator,
         5
       );
@@ -166,11 +163,12 @@
       );
     }
 
-    _doPopupItemEnabling(popupNode) {
+    _doPopupItemEnabling(event) {
       if (this.spellcheck) {
-        this._doPopupItemEnablingSpell(popupNode);
+        this._doPopupItemEnablingSpell(event);
       }
 
+      let popupNode = event.target;
       var children = popupNode.childNodes;
       for (var i = 0; i < children.length; i++) {
         var command = children[i].getAttribute("cmd");
