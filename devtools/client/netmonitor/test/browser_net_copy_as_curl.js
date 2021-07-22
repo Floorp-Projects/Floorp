@@ -72,6 +72,8 @@ function buildTestData(QUOTE) {
   const COOKIE_PARTIAL_RESULT = [header("Cookie: bob=true; tom=cool")];
 
   const POST_PARTIAL_RESULT = [
+    "-X",
+    "POST",
     "--data-raw " + quote(POST_PAYLOAD),
     header("Content-Type: text/plain;charset=UTF-8"),
   ];
