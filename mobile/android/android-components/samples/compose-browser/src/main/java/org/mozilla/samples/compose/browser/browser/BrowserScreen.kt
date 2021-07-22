@@ -20,10 +20,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
 import mozilla.components.browser.state.helper.Target
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.engine.WebContent
+import mozilla.components.compose.tabstray.TabCounterButton
 import mozilla.components.compose.tabstray.TabList
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
@@ -33,13 +35,14 @@ import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.ext.composableStore
 import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.samples.compose.browser.BrowserComposeActivity.Companion.ROUTE_SETTINGS
 import org.mozilla.samples.compose.browser.components
 
 /**
  * The main browser screen.
  */
 @Composable
-fun BrowserScreen() {
+fun BrowserScreen(navController: NavController) {
     val target = Target.SelectedTab
 
     val store = composableStore<BrowserScreenState, BrowserScreenAction> { restoredState ->
@@ -62,8 +65,7 @@ fun BrowserScreen() {
                 target,
                 editMode = editState.value!!,
                 onDisplayMenuClicked = {
-                    // navController.navigate(ROUTE_SETTINGS)
-                    store.dispatch(BrowserScreenAction.ShowTabs)
+                    navController.navigate(ROUTE_SETTINGS)
                 },
                 onTextCommit = { text ->
                     store.dispatch(BrowserScreenAction.ToggleEditMode(false))
@@ -74,7 +76,13 @@ fun BrowserScreen() {
                     store.dispatch(BrowserScreenAction.ToggleEditMode(true))
                 },
                 editText = editUrl.value,
-                hint = "Search or enter address"
+                hint = "Search or enter address",
+                browserActions = {
+                    TabCounterButton(
+                        components().store,
+                        onClicked = { store.dispatch(BrowserScreenAction.ShowTabs) }
+                    )
+                }
             )
 
             Box {

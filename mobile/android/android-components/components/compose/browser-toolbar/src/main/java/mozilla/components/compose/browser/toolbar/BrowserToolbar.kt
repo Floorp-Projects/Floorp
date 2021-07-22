@@ -30,6 +30,9 @@ import mozilla.components.browser.state.store.BrowserStore
  * @param hint Text displayed in the toolbar when there's no URL to display (no tab or empty URL)
  * @param editMode Whether the toolbar is in "edit" or "display" mode.
  * @param editText The text the user is editing in "edit" mode.
+ * @param browserActions Additional browser actions to be displayed on the right side of the toolbar
+ * (outside of the URL bounding box) in display mode. Also see:
+ * [MDN docs](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/user_interface/Browser_action)
  */
 @Composable
 @Suppress("LongParameterList")
@@ -42,7 +45,8 @@ fun BrowserToolbar(
     onDisplayToolbarClick: () -> Unit,
     hint: String = "",
     editMode: Boolean = false,
-    editText: String? = null
+    editText: String? = null,
+    browserActions: @Composable () -> Unit = {}
 ) {
     val selectedTab: SessionState? by target.observeAsComposableStateFrom(
         store = store,
@@ -67,7 +71,8 @@ fun BrowserToolbar(
             onUrlClicked = {
                 onDisplayToolbarClick()
             },
-            onMenuClicked = { onDisplayMenuClicked() }
+            onMenuClicked = { onDisplayMenuClicked() },
+            browserActions = browserActions
         )
     }
 }

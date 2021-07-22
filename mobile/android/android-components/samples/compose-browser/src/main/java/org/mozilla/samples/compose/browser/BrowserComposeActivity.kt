@@ -31,7 +31,7 @@ class BrowserComposeActivity : AppCompatActivity() {
 
             MaterialTheme {
                 NavHost(navController, startDestination = ROUTE_BROWSER) {
-                    composable(ROUTE_BROWSER) { BrowserScreen() }
+                    composable(ROUTE_BROWSER) { BrowserScreen(navController) }
                     composable(ROUTE_SETTINGS) { SettingsScreen() }
                 }
             }
