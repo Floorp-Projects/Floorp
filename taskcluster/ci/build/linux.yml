@@ -850,7 +850,6 @@ linux64-asan/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt asan"
-            LSAN_OPTIONS: "verbosity=1:log_threads=1"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
         max-run-time: 5400
     run:
@@ -894,7 +893,6 @@ linux64-tsan/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt tsan"
-            LSAN_OPTIONS: "verbosity=1:log_threads=1"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
         max-run-time: 5400
     run:
@@ -989,7 +987,6 @@ linux64-asan-fuzzing/noopt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing-noopt
-            LSAN_OPTIONS: "verbosity=1:log_threads=1"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
         max-run-time: 5400
     run:
@@ -1038,7 +1035,6 @@ linux64-asan-fuzzing/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
-            LSAN_OPTIONS: "verbosity=1:log_threads=1"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
         max-run-time: 5400
     run:
@@ -1088,7 +1084,6 @@ linux64-asan-fuzzing-ccov/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing-ccov
-            LSAN_OPTIONS: "verbosity=1:log_threads=1"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
         max-run-time: 5400
     run:
@@ -1184,7 +1179,6 @@ linux64-asan-reporter-shippable/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-reporter
-            LSAN_OPTIONS: "verbosity=1:log_threads=1"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
         max-run-time: 3600
     run:
@@ -1231,7 +1225,6 @@ linux64-asan/debug:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug asan"
-            LSAN_OPTIONS: "verbosity=1:log_threads=1"
         max-run-time: 5400
     run:
         using: mozharness

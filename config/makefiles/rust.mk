@@ -188,6 +188,19 @@ export CFLAGS_$(rust_cc_env_name)=$(CC_BASE_FLAGS)
 export CXXFLAGS_$(rust_cc_env_name)=$(CXX_BASE_FLAGS)
 endif
 
+# When host == target, cargo will compile build scripts with sanitizers enabled
+# if sanitizers are enabled, which may randomly fail when they execute
+# because of https://github.com/google/sanitizers/issues/1322.
+# Work around by disabling __tls_get_addr interception (bug 1635327).
+ifeq ($(RUST_TARGET),$(RUST_HOST_TARGET))
+define sanitizer_options
+ifdef MOZ_$1
+export $1_OPTIONS:=$$($1_OPTIONS:%=%:)intercept_tls_get_addr=0
+endif
+endef
+$(foreach san,ASAN TSAN UBSAN,$(eval $(call sanitizer_options,$(san))))
+endif
+
 # Force the target down to all bindgen callers, even those that may not
 # read BINDGEN_SYSTEM_FLAGS some way or another.
 export BINDGEN_EXTRA_CLANG_ARGS:=$(filter --target=%,$(BINDGEN_SYSTEM_FLAGS))
