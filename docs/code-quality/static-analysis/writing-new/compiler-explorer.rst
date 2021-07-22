@@ -16,9 +16,10 @@ Quick-Start
 -----------------------
 
 Let's first ensure this matches our default toolchain for Firefox:
+
 #. Ensure the compiler chosen says 'clang XX (mozilla-central)'
 #. Find the tool button below and enable clang-query.
-#. Fill-in the Recommended Boilerplate from our previous section into the stdin box containing 'Query commands'
+#. Fill-in the Recommended Boilerplate from our previous section into the separate tool input box
 
 ::
 
@@ -36,6 +37,11 @@ Continue at the next section, :ref:`writing_matchers`.
 Compiler Explorer Customizations
 --------------------------------
 
+clang-query input
+~~~~~~~~~~~~~~~~~
+
+We have a custom Compiler Explorer patch that provides us with a more featureful input field for clang-query.  This separate editor allows one to indent, adjust the font size, and relocate it to your desires.
+
 mozilla compilers
 ~~~~~~~~~~~~~~~~~
 
@@ -49,7 +55,7 @@ Under the 'Library' toolbar button for the compiler, you will see that the Mozil
 #. Generated headers (which come from the obj-dir) are generated on a Linux x64 machine.
 #. The default mozilla-config.h comes from the objdir as well, as therefore will specify things such as `MOZ_WEBRTC=1`
 #. Non-generated headers will be extracted from moz.build files in an `imperfect way <https://github.com/mozilla-services/civet-docker/blob/00d313a7e0c55a9678bdcc39701675ac5e91bb5e/get_mozbuild_exports.py>`_ that tries to exclude Windows/OSX/Android headers. But this script may have bugs in it. If you encounter one, `feel free to file an issue <https://github.com/mozilla-services/civet-docker/issues>`_. 
-#. Sometimes gecko code will get some `additional, non-global include directories <https://searchfox.org/mozilla-central/search?q=Local_includes&path=>`_ that are not available. These can be added by including a compile flag like ``-I/mozilla/central/accessible/base``.
+#. Sometimes gecko code will get some `additional, non-global include directories <https://searchfox.org/mozilla-central/search?q=Local_includes&path=>`_ that are not available. These can be added by including a compile flag like ``-I/mozilla-central/accessible/base``.
 #. We update mozilla-central and refresh the headers every hour, so they may not match your exact expected version.
 
 compiler flags
