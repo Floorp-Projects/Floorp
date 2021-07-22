@@ -120,12 +120,12 @@ using namespace mozilla::a11y;
   }
 
   nsAutoString url;
-  if (mGeckoAccessible.IsAccessible()) {
-    MOZ_ASSERT(mGeckoAccessible.AsAccessible()->IsDoc());
-    DocAccessible* acc = mGeckoAccessible.AsAccessible()->AsDoc();
+  if (mGeckoAccessible->IsLocal()) {
+    MOZ_ASSERT(mGeckoAccessible->AsLocal()->IsDoc());
+    DocAccessible* acc = mGeckoAccessible->AsLocal()->AsDoc();
     acc->URL(url);
   } else {
-    RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
+    RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
     proxy->URL(url);
   }
 
@@ -183,14 +183,12 @@ using namespace mozilla::a11y;
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
       [self moxPostNotification:
                 NSAccessibilityFocusedUIElementChangedNotification];
-      if ((mGeckoAccessible.IsProxy() && mGeckoAccessible.AsProxy()->IsDoc() &&
-           mGeckoAccessible.AsProxy()->AsDoc()->IsTopLevel()) ||
-          (mGeckoAccessible.IsAccessible() &&
-           !mGeckoAccessible.AsAccessible()->IsRoot() &&
-           mGeckoAccessible.AsAccessible()
-               ->AsDoc()
-               ->ParentDocument()
-               ->IsRoot())) {
+      if ((mGeckoAccessible->IsRemote() &&
+           mGeckoAccessible->AsRemote()->IsDoc() &&
+           mGeckoAccessible->AsRemote()->AsDoc()->IsTopLevel()) ||
+          (mGeckoAccessible->IsLocal() &&
+           !mGeckoAccessible->AsLocal()->IsRoot() &&
+           mGeckoAccessible->AsLocal()->AsDoc()->ParentDocument()->IsRoot())) {
         // we fire an AXLoadComplete event on top-level documents only
         [self moxPostNotification:@"AXLoadComplete"];
       } else {

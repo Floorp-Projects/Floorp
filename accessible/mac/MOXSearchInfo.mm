@@ -19,9 +19,9 @@ using namespace mozilla::a11y;
 
 - (NSArray<mozAccessible*>*)applyPostFilter:(NSArray<mozAccessible*>*)matches;
 
-- (AccessibleOrProxy)rootGeckoAccessible;
+- (Accessible*)rootGeckoAccessible;
 
-- (AccessibleOrProxy)startGeckoAccessible;
+- (Accessible*)startGeckoAccessible;
 
 - (BOOL)shouldApplyPostFilter;
 @end
@@ -57,14 +57,14 @@ using namespace mozilla::a11y;
   return [super init];
 }
 
-- (AccessibleOrProxy)rootGeckoAccessible {
+- (Accessible*)rootGeckoAccessible {
   id root =
       [mRoot isKindOfClass:[mozAccessible class]] ? mRoot : [mRoot moxParent];
 
   return [static_cast<mozAccessible*>(root) geckoAccessible];
 }
 
-- (AccessibleOrProxy)startGeckoAccessible {
+- (Accessible*)startGeckoAccessible {
   if ([mStartElem isKindOfClass:[mozAccessible class]]) {
     return [static_cast<mozAccessible*>(mStartElem) geckoAccessible];
   }
@@ -82,10 +82,10 @@ using namespace mozilla::a11y;
 
   NSMutableArray<mozAccessible*>* matches =
       [[[NSMutableArray alloc] init] autorelease];
-  AccessibleOrProxy geckoRootAcc = [self rootGeckoAccessible];
-  AccessibleOrProxy geckoStartAcc = [self startGeckoAccessible];
+  Accessible* geckoRootAcc = [self rootGeckoAccessible];
+  Accessible* geckoStartAcc = [self startGeckoAccessible];
   Pivot p = Pivot(geckoRootAcc);
-  AccessibleOrProxy match;
+  Accessible* match;
   if (mSearchForward) {
     match = p.Next(geckoStartAcc, rule);
   } else {
@@ -98,7 +98,7 @@ using namespace mozilla::a11y;
     }
   }
 
-  while (!match.IsNull() && resultLimit != 0) {
+  while (match && resultLimit != 0) {
     if (!mSearchForward && match == geckoRootAcc) {
       // If searching backwards, don't include root.
       break;
@@ -142,12 +142,12 @@ using namespace mozilla::a11y;
 
   [matches enumerateObjectsUsingBlock:^(mozAccessible* match, NSUInteger idx,
                                         BOOL* stop) {
-    AccessibleOrProxy geckoAcc = [match geckoAccessible];
-    if (geckoAcc.IsNull()) {
+    Accessible* geckoAcc = [match geckoAccessible];
+    if (!geckoAcc) {
       return;
     }
 
-    switch (geckoAcc.Role()) {
+    switch (geckoAcc->Role()) {
       case roles::LANDMARK:
       case roles::COMBOBOX:
       case roles::LISTITEM:
@@ -165,9 +165,8 @@ using namespace mozilla::a11y;
         break;
     }
 
-    if (geckoAcc.IsAccessible()) {
-      AccessibleWrap* acc =
-          static_cast<AccessibleWrap*>(geckoAcc.AsAccessible());
+    if (geckoAcc->IsLocal()) {
+      AccessibleWrap* acc = static_cast<AccessibleWrap*>(geckoAcc->AsLocal());
       if (acc->ApplyPostFilter(EWhichPostFilter::eContainsText, searchText)) {
         if (mozAccessible* nativePostMatch =
                 GetNativeFromGeckoAccessible(acc)) {
@@ -184,7 +183,7 @@ using namespace mozilla::a11y;
       return;
     }
 
-    RemoteAccessible* proxy = geckoAcc.AsProxy();
+    RemoteAccessible* proxy = geckoAcc->AsRemote();
     if (ipcDoc &&
         ((ipcDoc != proxy->Document()) || (idx + 1 == [matches count]))) {
       // If the ipcDoc doesn't match the current proxy's doc, we crossed into a
@@ -225,8 +224,8 @@ using namespace mozilla::a11y;
 }
 
 - (NSArray*)performSearch {
-  AccessibleOrProxy geckoRootAcc = [self rootGeckoAccessible];
-  AccessibleOrProxy geckoStartAcc = [self startGeckoAccessible];
+  Accessible* geckoRootAcc = [self rootGeckoAccessible];
+  Accessible* geckoStartAcc = [self startGeckoAccessible];
   NSMutableArray* matches = [[[NSMutableArray alloc] init] autorelease];
   for (id key in mSearchKeys) {
     if ([key isEqualToString:@"AXAnyTypeSearchKey"]) {

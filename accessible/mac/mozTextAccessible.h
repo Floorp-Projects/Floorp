@@ -77,9 +77,7 @@
 // override
 - (void)handleAccessibleTextChangeEvent:(NSString*)change
                                inserted:(BOOL)isInserted
-                            inContainer:
-                                (const mozilla::a11y::AccessibleOrProxy&)
-                                    container
+                            inContainer:(mozilla::a11y::Accessible*)container
                                      at:(int32_t)start;
 
 // override

@@ -40,7 +40,7 @@ id xpcAccessibleMacNSObjectWrapper::GetNativeObject() const { return mNativeObje
 NS_IMPL_ISUPPORTS_INHERITED(xpcAccessibleMacInterface, xpcAccessibleMacNSObjectWrapper,
                             nsIAccessibleMacInterface)
 
-xpcAccessibleMacInterface::xpcAccessibleMacInterface(AccessibleOrProxy aObj)
+xpcAccessibleMacInterface::xpcAccessibleMacInterface(Accessible* aObj)
     : xpcAccessibleMacNSObjectWrapper(GetNativeFromGeckoAccessible(aObj)) {}
 
 NS_IMETHODIMP

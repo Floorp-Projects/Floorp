@@ -9,7 +9,6 @@
 #include <stdint.h>
 #include "Role.h"
 #include "mozilla/dom/ChildIterator.h"
-#include "AccessibleOrProxy.h"
 
 namespace mozilla {
 namespace a11y {
@@ -17,6 +16,7 @@ namespace a11y {
 class LocalAccessible;
 class HyperTextAccessible;
 class DocAccessible;
+class Accessible;
 
 class PivotRule {
  public:
@@ -24,7 +24,7 @@ class PivotRule {
   // nsIAccessibleTraversalRule: FILTER_IGNORE (0x0): Don't match this
   // accessible. FILTER_MATCH (0x1): Match this accessible FILTER_IGNORE_SUBTREE
   // (0x2): Ignore accessible's subtree.
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) = 0;
+  virtual uint16_t Match(Accessible* aAcc) = 0;
 };
 
 // The Pivot class is used for searching for accessible nodes in a given subtree
@@ -32,7 +32,7 @@ class PivotRule {
 // this class is meant to be used primarily on the stack.
 class Pivot final {
  public:
-  explicit Pivot(const AccessibleOrProxy& aRoot);
+  explicit Pivot(Accessible* aRoot);
   Pivot() = delete;
   Pivot(const Pivot&) = delete;
   Pivot& operator=(const Pivot&) = delete;
@@ -41,19 +41,19 @@ class Pivot final {
 
   // Return the next accessible after aAnchor in pre-order that matches the
   // given rule. If aIncludeStart, return aAnchor if it matches the rule.
-  AccessibleOrProxy Next(AccessibleOrProxy& aAnchor, PivotRule& aRule,
-                         bool aIncludeStart = false);
+  Accessible* Next(Accessible* aAnchor, PivotRule& aRule,
+                   bool aIncludeStart = false);
 
   // Return the previous accessible before aAnchor in pre-order that matches the
   // given rule. If aIncludeStart, return aAnchor if it matches the rule.
-  AccessibleOrProxy Prev(AccessibleOrProxy& aAnchor, PivotRule& aRule,
-                         bool aIncludeStart = false);
+  Accessible* Prev(Accessible* aAnchor, PivotRule& aRule,
+                   bool aIncludeStart = false);
 
   // Return the first accessible within the root that matches the pivot rule.
-  AccessibleOrProxy First(PivotRule& aRule);
+  Accessible* First(PivotRule& aRule);
 
   // Return the last accessible within the root that matches the pivot rule.
-  AccessibleOrProxy Last(PivotRule& aRule);
+  Accessible* Last(PivotRule& aRule);
 
   // Return the next range of text according to the boundary type.
   LocalAccessible* NextText(LocalAccessible* aAnchor, int32_t* aStartOffset,
@@ -65,25 +65,24 @@ class Pivot final {
 
   // Return the accessible at the given screen coordinate if it matches the
   // pivot rule.
-  AccessibleOrProxy AtPoint(int32_t aX, int32_t aY, PivotRule& aRule);
+  Accessible* AtPoint(int32_t aX, int32_t aY, PivotRule& aRule);
 
  private:
-  AccessibleOrProxy AdjustStartPosition(AccessibleOrProxy& aAnchor,
-                                        PivotRule& aRule,
-                                        uint16_t* aFilterResult);
+  Accessible* AdjustStartPosition(Accessible* aAnchor, PivotRule& aRule,
+                                  uint16_t* aFilterResult);
 
   // Search in preorder for the first accessible to match the rule.
-  AccessibleOrProxy SearchForward(AccessibleOrProxy& aAnchor, PivotRule& aRule,
-                                  bool aSearchCurrent);
+  Accessible* SearchForward(Accessible* aAnchor, PivotRule& aRule,
+                            bool aSearchCurrent);
 
   // Reverse search in preorder for the first accessible to match the rule.
-  AccessibleOrProxy SearchBackward(AccessibleOrProxy& aAnchor, PivotRule& aRule,
-                                   bool aSearchCurrent);
+  Accessible* SearchBackward(Accessible* aAnchor, PivotRule& aRule,
+                             bool aSearchCurrent);
 
   // Search in preorder for the first text accessible.
   HyperTextAccessible* SearchForText(LocalAccessible* aAnchor, bool aBackward);
 
-  AccessibleOrProxy mRoot;
+  Accessible* mRoot;
 };
 
 /**
@@ -93,13 +92,13 @@ class Pivot final {
 class PivotRoleRule : public PivotRule {
  public:
   explicit PivotRoleRule(role aRole);
-  explicit PivotRoleRule(role aRole, AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit PivotRoleRule(role aRole, Accessible* aDirectDescendantsFrom);
 
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  virtual uint16_t Match(Accessible* aAcc) override;
 
  protected:
   role mRole;
-  AccessibleOrProxy mDirectDescendantsFrom;
+  Accessible* mDirectDescendantsFrom;
 };
 
 /**
@@ -109,7 +108,7 @@ class PivotRoleRule : public PivotRule {
  */
 class LocalAccInSameDocRule : public PivotRule {
  public:
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  virtual uint16_t Match(Accessible* aAcc) override;
 };
 
 }  // namespace a11y
