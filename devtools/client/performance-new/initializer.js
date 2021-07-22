@@ -123,7 +123,6 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
       recordingSettings: getRecordingSettings(pageContext, supportedFeatures),
       presets,
       supportedFeatures,
-      openAboutProfiling,
       pageContext: "devtools",
 
       // Go ahead and hide the implementation details for the component on how the
@@ -154,6 +153,8 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
     );
   };
 
+  const onEditSettingsLinkClicked = openAboutProfiling;
+
   ReactDOM.render(
     Provider(
       { store },
@@ -163,7 +164,7 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
           React.Fragment,
           null,
           ProfilerEventHandling(),
-          DevToolsPanel({ onProfileReceived })
+          DevToolsPanel({ onProfileReceived, onEditSettingsLinkClicked })
         )
       )
     ),

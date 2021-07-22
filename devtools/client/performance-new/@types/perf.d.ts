@@ -250,9 +250,6 @@ export interface InitializedValues {
   pageContext: PageContext;
   // The list of profiler features that the current target supports.
   supportedFeatures: string[];
-  // Allow different devtools contexts to open about:profiling with different methods.
-  // e.g. via a new tab, or page navigation.
-  openAboutProfiling?: () => void;
   // Allow about:profiling to switch back to the remote devtools panel.
   openRemoteDevTools?: () => void;
 }
@@ -301,7 +298,6 @@ export type Action =
       setRecordingSettings: SetRecordingSettings;
       presets: Presets;
       pageContext: PageContext;
-      openAboutProfiling?: () => void;
       openRemoteDevTools?: () => void;
       recordingSettingsFromPreferences: RecordingSettings;
       supportedFeatures: string[];
@@ -319,7 +315,6 @@ export interface InitializeStoreValues {
   pageContext: PageContext;
   recordingSettings: RecordingSettings;
   supportedFeatures: string[];
-  openAboutProfiling?: () => void;
   openRemoteDevTools?: () => void;
 }
 

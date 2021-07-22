@@ -16,6 +16,7 @@
 /**
  * @typedef {Object} OwnProps
  * @property {import("../@types/perf").OnProfileReceived} onProfileReceived
+ * @property {() => void} onEditSettingsLinkClicked
  */
 
 /**
@@ -56,7 +57,11 @@ const selectors = require("devtools/client/performance-new/store/selectors");
  */
 class DevToolsPanel extends PureComponent {
   render() {
-    const { isSupportedPlatform, onProfileReceived } = this.props;
+    const {
+      isSupportedPlatform,
+      onProfileReceived,
+      onEditSettingsLinkClicked,
+    } = this.props;
 
     if (isSupportedPlatform === null) {
       // We don't know yet if this is a supported platform, wait for a response.
@@ -69,7 +74,7 @@ class DevToolsPanel extends PureComponent {
       RecordingButton({ onProfileReceived }),
       Description(),
       hr({ className: "perf-presets-hr" }),
-      DevToolsPresetSelection()
+      DevToolsPresetSelection({ onEditSettingsLinkClicked })
     );
   }
 }
