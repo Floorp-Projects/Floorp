@@ -272,12 +272,10 @@ function waitForPausedLine(dbg, line) {
 }
 
 /**
- * Assert that the debugger is paused at the correct location.
+ * Assert that the debugger pause location is correctly rendered.
  *
  * @memberof mochitest/asserts
  * @param {Object} dbg
- * @param {String} source
- * @param {Number} line
  * @static
  */
 function assertPausedLocation(dbg) {
@@ -394,7 +392,11 @@ function isPaused(dbg) {
 
 // Make sure the debugger is paused at a certain source ID and line.
 function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
+  // Check that the debugger is paused.
   assertPaused(dbg);
+
+  // Check that the paused location is correctly rendered.
+  assertPausedLocation(dbg);
 
   const frames = dbg.selectors.getCurrentThreadFrames();
   ok(frames.length >= 1, "Got at least one frame");
