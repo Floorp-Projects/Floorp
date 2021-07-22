@@ -23,7 +23,7 @@ struct HandlerInfo {
   long preferredAction;
 };
 
-sync refcounted protocol PHandlerService
+[RefCounted] sync protocol PHandlerService
 {
   manager PContent;
 

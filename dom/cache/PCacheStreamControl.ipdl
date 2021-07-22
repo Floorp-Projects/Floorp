@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-refcounted protocol PCacheStreamControl
+[RefCounted] protocol PCacheStreamControl
 {
   manager PBackground;
 

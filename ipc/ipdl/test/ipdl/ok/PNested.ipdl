@@ -1,4 +1,4 @@
-nested(upto inside_cpow) sync protocol PNested {
+[NestedUpTo=inside_cpow] sync protocol PNested {
 parent:
   [Nested=not] async NotNested();
   [Nested=inside_sync] sync InsideSync();

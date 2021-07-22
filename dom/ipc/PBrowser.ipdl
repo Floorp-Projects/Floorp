@@ -176,7 +176,7 @@ struct PrintPreviewResultInfo
  * See `dom/docs/Fission-IPC-Diagram.svg` for an overview of the DOM IPC
  * actors.
  */
-nested(upto inside_cpow) sync refcounted protocol PBrowser
+[NestedUpTo=inside_cpow, RefCounted] sync protocol PBrowser
 {
     manager PContent;
 

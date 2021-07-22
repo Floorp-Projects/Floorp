@@ -12,7 +12,7 @@ using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 namespace mozilla {
 namespace net {
 
-refcounted protocol PAltService
+[RefCounted] protocol PAltService
 {
   manager PSocketProcess;
 

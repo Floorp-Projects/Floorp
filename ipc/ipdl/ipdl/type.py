@@ -914,7 +914,9 @@ class GatherDecls(TcheckVisitor):
             fullname = str(qname)
             p.decl = self.declare(
                 loc=p.loc,
-                type=ProtocolType(qname, p.nested, p.sendSemantics, p.refcounted),
+                type=ProtocolType(
+                    qname, p.nested(), p.sendSemantics, "RefCounted" in p.attributes
+                ),
                 shortname=p.name,
                 fullname=None if 0 == len(qname.quals) else fullname,
             )
@@ -1163,6 +1165,14 @@ class GatherDecls(TcheckVisitor):
 
         if not (p.managers or p.messageDecls or p.managesStmts):
             self.error(p.loc, "top-level protocol `%s' cannot be empty", p.name)
+
+        self.checkAttributes(
+            p.attributes,
+            {
+                "RefCounted": None,
+                "NestedUpTo": ("not", "inside_sync", "inside_cpow"),
+            },
+        )
 
         setattr(self, "currentProtocolDecl", p.decl)
         for msg in p.messageDecls:
@@ -1478,6 +1488,11 @@ class CheckTypes(TcheckVisitor):
                     pname,
                     mgrtype.name(),
                 )
+
+        if ptype.isInterrupt() and ptype.nestedRange != (NOT_NESTED, NOT_NESTED):
+            self.error(
+                p.decl.loc, "intr protocol `%s' cannot specify [NestedUpTo]", p.name
+            )
 
         if ptype.isToplevel():
             cycles = checkcycles(p.decl.type)
