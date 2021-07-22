@@ -178,10 +178,7 @@ class nsWindow final : public nsBaseWidget {
                                const InputContextAction& aAction) override;
   virtual InputContext GetInputContext() override;
 
-  LayerManager* GetLayerManager(
-      PLayerTransactionChild* aShadowManager = nullptr,
-      LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
-      LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
+  LayerManager* GetLayerManager() override;
 
   virtual bool NeedsPaint() override;
 

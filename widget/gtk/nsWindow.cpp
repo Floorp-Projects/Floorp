@@ -8276,9 +8276,7 @@ nsresult nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent, int32_t aHorizontal,
   return NS_OK;
 }
 
-nsIWidget::LayerManager* nsWindow::GetLayerManager(
-    PLayerTransactionChild* aShadowManager, LayersBackend aBackendHint,
-    LayerManagerPersistence aPersistence) {
+nsIWidget::LayerManager* nsWindow::GetLayerManager() {
   if (mIsDestroyed) {
     // Prevent external code from triggering the re-creation of the
     // LayerManager/Compositor during shutdown. Just return what we currently
@@ -8286,8 +8284,7 @@ nsIWidget::LayerManager* nsWindow::GetLayerManager(
     return mLayerManager;
   }
 
-  return nsBaseWidget::GetLayerManager(aShadowManager, aBackendHint,
-                                       aPersistence);
+  return nsBaseWidget::GetLayerManager();
 }
 
 void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
