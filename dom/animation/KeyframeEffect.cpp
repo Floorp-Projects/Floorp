@@ -736,8 +736,8 @@ void KeyframeEffect::ResetPartialPrerendered() {
     return;
   }
 
-  if (layers::LayerManager* layerManager = widget->GetLayerManager()) {
-    layerManager->RemovePartialPrerenderedAnimation(
+  if (WindowRenderer* windowRenderer = widget->GetWindowRenderer()) {
+    windowRenderer->RemovePartialPrerenderedAnimation(
         mAnimation->IdOnCompositor(), mAnimation);
   }
 }

@@ -688,19 +688,19 @@ static void SendLayersDependentApzcTargetConfirmation(
     return;
   }
 
-  LayerManager* lm = ps->GetLayerManager();
-  if (!lm) {
+  WindowRenderer* renderer = ps->GetWindowRenderer();
+  if (!renderer) {
     return;
   }
 
-  if (WebRenderLayerManager* wrlm = lm->AsWebRenderLayerManager()) {
+  if (WebRenderLayerManager* wrlm = renderer->AsWebRender()) {
     if (WebRenderBridgeChild* wrbc = wrlm->WrBridge()) {
       wrbc->SendSetConfirmedTargetAPZC(aInputBlockId, aTargets);
     }
     return;
   }
 
-  ShadowLayerForwarder* lf = lm->AsShadowForwarder();
+  ShadowLayerForwarder* lf = renderer->AsShadowForwarder();
   if (!lf) {
     return;
   }

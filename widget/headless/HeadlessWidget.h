@@ -100,7 +100,7 @@ class HeadlessWidget : public nsBaseWidget {
   }
   virtual InputContext GetInputContext() override { return mInputContext; }
 
-  virtual LayerManager* GetLayerManager() override;
+  virtual WindowRenderer* GetWindowRenderer() override;
 
   void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
 

@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "FrameLayerBuilder.h"
+#include "ImgDrawResult.h"
 #include "nsRect.h"
 #include "nsColor.h"
 #include "gfxRect.h"

@@ -117,7 +117,7 @@ void PuppetWidget::InfallibleCreate(nsIWidget* aParent,
   PuppetWidget* parent = static_cast<PuppetWidget*>(aParent);
   if (parent) {
     parent->SetChild(this);
-    mLayerManager = parent->GetLayerManager();
+    mLayerManager = parent->GetWindowRenderer()->AsLayerManager();
   } else {
     Resize(mBounds.X(), mBounds.Y(), mBounds.Width(), mBounds.Height(), false);
   }
@@ -585,7 +585,7 @@ bool PuppetWidget::GetEditCommands(NativeKeyBindingsType aType,
   return true;
 }
 
-LayerManager* PuppetWidget::GetLayerManager() {
+WindowRenderer* PuppetWidget::GetWindowRenderer() {
   if (!mLayerManager) {
     if (XRE_IsParentProcess()) {
       // On the parent process there is no CompositorBridgeChild which confuses

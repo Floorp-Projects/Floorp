@@ -572,12 +572,11 @@ already_AddRefed<layers::KnowsCompositor> MediaCapabilities::GetCompositor() {
   if (NS_WARN_IF(!doc)) {
     return nullptr;
   }
-  RefPtr<layers::LayerManager> layerManager =
-      nsContentUtils::LayerManagerForDocument(doc);
-  if (NS_WARN_IF(!layerManager)) {
+  WindowRenderer* renderer = nsContentUtils::WindowRendererForDocument(doc);
+  if (NS_WARN_IF(!renderer)) {
     return nullptr;
   }
-  RefPtr<layers::KnowsCompositor> knows = layerManager->AsKnowsCompositor();
+  RefPtr<layers::KnowsCompositor> knows = renderer->AsKnowsCompositor();
   if (NS_WARN_IF(!knows)) {
     return nullptr;
   }

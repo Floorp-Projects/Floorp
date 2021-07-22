@@ -24,6 +24,7 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsTArrayForwardDeclare.h"
+#include "WindowRenderer.h"
 
 namespace mozilla {
 
@@ -64,7 +65,7 @@ struct CompositorAnimationIdsForEpoch {
 class WebRenderBridgeParent final : public PWebRenderBridgeParent,
                                     public CompositorVsyncSchedulerOwner,
                                     public CompositableParentManager,
-                                    public layers::FrameRecorder {
+                                    public FrameRecorder {
  public:
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                         const wr::PipelineId& aPipelineId,

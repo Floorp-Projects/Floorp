@@ -55,7 +55,7 @@ class nsWindow final : public nsBaseWidget {
   virtual ~nsWindow();
 
  public:
-  using nsBaseWidget::GetLayerManager;
+  using nsBaseWidget::GetWindowRenderer;
 
   nsWindow();
 
@@ -178,7 +178,7 @@ class nsWindow final : public nsBaseWidget {
                                const InputContextAction& aAction) override;
   virtual InputContext GetInputContext() override;
 
-  LayerManager* GetLayerManager() override;
+  WindowRenderer* GetWindowRenderer() override;
 
   virtual bool NeedsPaint() override;
 
