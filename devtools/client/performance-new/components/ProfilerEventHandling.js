@@ -165,7 +165,7 @@ class ProfilerEventHandling extends PureComponent {
 
       case "recording":
         changeRecordingState("available-to-record", {
-          didRecordingUnexpectedlyStopped: true,
+          recordingUnexpectedlyStopped: true,
         });
         break;
 
@@ -194,7 +194,7 @@ class ProfilerEventHandling extends PureComponent {
       case "request-to-start-recording":
       case "recording":
         changeRecordingState("locked-by-private-browsing", {
-          didRecordingUnexpectedlyStopped: false,
+          recordingUnexpectedlyStopped: false,
         });
         break;
 

@@ -41,7 +41,7 @@ function recordingState(state = "not-yet-known", action) {
 function recordingUnexpectedlyStopped(state = false, action) {
   switch (action.type) {
     case "CHANGE_RECORDING_STATE":
-      return action.didRecordingUnexpectedlyStopped;
+      return action.recordingUnexpectedlyStopped;
     default:
       return state;
   }
