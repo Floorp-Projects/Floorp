@@ -8,6 +8,7 @@ with Files("**"):
 FINAL_TARGET_FILES.actors += [
     "ContentDelegateChild.jsm",
     "ContentDelegateParent.jsm",
+    "GeckoViewAutoFillChild.jsm",
     "GeckoViewContentChild.jsm",
     "GeckoViewContentParent.jsm",
     "GeckoViewPromptChild.jsm",
