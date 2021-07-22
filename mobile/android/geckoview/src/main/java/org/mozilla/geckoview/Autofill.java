@@ -9,6 +9,7 @@ package org.mozilla.geckoview;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Map;
@@ -213,6 +214,8 @@ public class Autofill {
         private @NonNull final GeckoSession mGeckoSession;
         private Node mRoot;
         private SparseArray<Node> mNodes;
+        private HashMap<String, Integer> mUuidToId;
+        private int mCurrentIndex;
         // TODO: support session id?
         private int mId = View.NO_ID;
         private int mFocusedId = View.NO_ID;
@@ -237,6 +240,8 @@ public class Autofill {
                   .dimensions(getDefaultDimensions())
                   .build();
             mNodes = new SparseArray<>();
+            mUuidToId = new HashMap<>();
+            mCurrentIndex = 0;
         }
 
         /* package */ boolean isEmpty() {
@@ -285,6 +290,24 @@ public class Autofill {
             return mRoot;
         }
 
+        /* package */ String getUuid(final int id) {
+            return mNodes.get(id).getUuid();
+        }
+
+        /* package */ int getIdFromUuid(final String uuid) {
+            final Integer id = mUuidToId.get(uuid);
+            if (id != null) {
+                return id;
+            }
+            return -1;
+        }
+
+        /* package */ int mapUuidtoId(final String uuid) {
+            final int newId = ++mCurrentIndex;
+            mUuidToId.put(uuid, newId);
+            return newId;
+        }
+
         @Override
         @AnyThread
         public String toString() {
@@ -319,6 +342,7 @@ public class Autofill {
         private static final String LOGTAG = "AutofillNode";
 
         private int mId;
+        private String mUuid;
         private int mRootId;
         private int mParentId;
         private Session mAutofillSession;
@@ -347,6 +371,15 @@ public class Autofill {
         /* package */ @NonNull Node setId(final int id) {
             mId = id;
             return this;
+        }
+
+        /* package */ @NonNull Node setUuid(final String uuid) {
+            mUuid = uuid;
+            return this;
+        }
+
+        /* package */ @NonNull String getUuid() {
+            return mUuid;
         }
 
         /* package */ @Nullable Node getRoot() {
@@ -781,11 +814,14 @@ public class Autofill {
                 this(autofillSession);
 
                 final GeckoBundle bounds = bundle.getBundle("bounds");
+
+                final String uuid = bundle.getString("uuid");
+                final int id = autofillSession.mapUuidtoId(uuid);
+
                 mNode
                     .setAutofillSession(autofillSession)
-                    .setId(bundle.getInt("id"))
-                    .setParentId(bundle.getInt("parent", View.NO_ID))
-                    .setRootId(bundle.getInt("root", View.NO_ID))
+                    .setId(id)
+                    .setUuid(uuid)
                     .setDomain(bundle.getString("origin", ""))
                     .setValue(bundle.getString("value", ""))
                     .setDimensions(
@@ -793,6 +829,22 @@ public class Autofill {
                                  bounds.getInt("top"),
                                  bounds.getInt("right"),
                                  bounds.getInt("bottom")));
+
+                final String parentUuid = bundle.getString("parentUuid");
+                if (parentUuid != null) {
+                    final int parentId = autofillSession.getIdFromUuid(parentUuid);
+                    mNode.setParentId(parentId);
+                } else {
+                    mNode.setParentId(View.NO_ID);
+                }
+
+                final String rootUuid = bundle.getString("rootUuid");
+                if (rootUuid != null) {
+                    final int rootId = autofillSession.getIdFromUuid(rootUuid);
+                    mNode.setRootId(rootId);
+                } else {
+                    mNode.setRootId(View.NO_ID);
+                }
 
                 if (mNode.getDimensions().isEmpty()) {
                     // Some nodes like <html> will have null-dimensions,
@@ -1051,7 +1103,8 @@ public class Autofill {
                     response = new GeckoBundle(values.size() - i);
                     callback = newCallback;
                 }
-                response.putString(String.valueOf(id), String.valueOf(value));
+                final String uuid = getAutofillSession().getUuid(id);
+                response.putString(uuid, String.valueOf(value));
             }
 
             if (callback != null) {
@@ -1084,10 +1137,9 @@ public class Autofill {
                 @NonNull final GeckoBundle message,
                 @NonNull final EventCallback callback) {
             final boolean initializing = getAutofillSession().isEmpty();
-            final int id = message.getInt("id");
 
             if (DEBUG) {
-                Log.d(LOGTAG, "addNode(" + id + ')');
+                Log.d(LOGTAG, "addNode(" + message.getString("uuid") + ')');
             }
 
             if (initializing) {
@@ -1117,11 +1169,12 @@ public class Autofill {
         }
 
         /* package */ void commit(@Nullable final GeckoBundle message) {
-            if (getAutofillSession().isEmpty()) {
+            if (getAutofillSession().isEmpty() || message == null) {
                 return;
             }
 
-            final int id = message.getInt("id");
+            final String uuid = message.getString("uuid");
+            final int id = getAutofillSession().getIdFromUuid(uuid);
 
             if (DEBUG) {
                 Log.d(LOGTAG, "commit(" + id + ")");
@@ -1133,11 +1186,12 @@ public class Autofill {
         }
 
         /* package */ void update(@Nullable final GeckoBundle message) {
-            if (getAutofillSession().isEmpty()) {
+            if (getAutofillSession().isEmpty() || message == null) {
                 return;
             }
 
-            final int id = message.getInt("id");
+            final String uuid = message.getString("uuid");
+            final int id = getAutofillSession().getIdFromUuid(uuid);
 
             if (DEBUG) {
                 Log.d(LOGTAG, "update(" + id + ")");
@@ -1184,8 +1238,10 @@ public class Autofill {
             final int root;
 
             if (message != null) {
-                id = message.getInt("id");
-                root = message.getInt("root");
+                final String uuid = message.getString("uuid");
+                id = getAutofillSession().getIdFromUuid(uuid);
+                final String rootUuid = message.getString("rootUuid");
+                root = getAutofillSession().getIdFromUuid(rootUuid);
             } else {
                 id = root = View.NO_ID;
             }
