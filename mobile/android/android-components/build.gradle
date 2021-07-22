@@ -374,6 +374,12 @@ tasks.register("ktlint", JavaExec) {
 
 apply plugin: GitHubPlugin
 
+task ktlintFormat(type: JavaExec, group: "formatting") {
+    description = "Fix Kotlin code style deviations."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "-F", "components/**/*.kt" , "samples/**/*.kt", "!**/build", "buildSrc/**/*.kt"
+}
 
 tasks.register("listRepositories") {
     doLast {
