@@ -73,7 +73,7 @@ impl GlyphRasterizer {
                 .has_font(&font.font_key)
         );
 
-        let glyph_key_cache = glyph_cache.get_glyph_key_cache_for_font_mut(font.clone());
+        let glyph_key_cache = glyph_cache.insert_glyph_key_cache_for_font(&font);
 
         // select glyphs that have not been requested yet.
         for key in glyph_keys {
@@ -141,17 +141,18 @@ impl GlyphRasterizer {
         glyphs: SmallVec<[GlyphKey; 16]>,
         use_workers: bool,
     ) {
+        let font = Arc::new(font);
         let font_contexts = Arc::clone(&self.font_contexts);
-        let glyph_tx = self.glyph_tx.clone();
-        self.pending_glyph_jobs += 1;
+        self.pending_glyph_jobs += glyphs.len();
         self.pending_glyph_count -= glyphs.len();
 
         let can_use_r8_format = self.can_use_r8_format;
 
-        let process_glyph = move |key: &GlyphKey, font_contexts: &FontContexts, font: &FontInstance| -> GlyphRasterJob {
+        let process_glyph = move |key: &GlyphKey| -> GlyphRasterJob {
             profile_scope!("glyph-raster");
             let mut context = font_contexts.lock_current_context();
             let mut job = GlyphRasterJob {
+                font: Arc::clone(&font),
                 key: key.clone(),
                 result: context.rasterize_glyph(&font, key),
             };
@@ -205,19 +206,19 @@ impl GlyphRasterizer {
             // possible and in that task use rayon's fork join dispatch to rasterize the
             // glyphs in the thread pool.
             profile_scope!("spawning process_glyph jobs");
-            self.workers.spawn(move || {
-                let jobs = glyphs
-                    .par_iter()
-                    .map(|key: &GlyphKey| process_glyph(key, &font_contexts, &font))
-                    .collect();
-
-                glyph_tx.send(GlyphRasterJobs { font, jobs }).unwrap();
+            let glyph_tx = &self.glyph_tx;
+            self.workers.install(|| {
+                glyphs.par_iter().for_each(|key| {
+                    let job = process_glyph(key);
+                    glyph_tx.lock().unwrap().send(job).unwrap();
+                });
             });
         } else {
-            let jobs = glyphs.iter()
-                             .map(|key: &GlyphKey| process_glyph(key, &font_contexts, &font))
-                             .collect();
-            glyph_tx.send(GlyphRasterJobs { font, jobs }).unwrap();
+            let glyph_tx = self.glyph_tx.lock().unwrap();
+            for key in glyphs {
+                let job = process_glyph(&key);
+                glyph_tx.send(job).unwrap();
+            }
         }
     }
 
@@ -256,67 +257,60 @@ impl GlyphRasterizer {
         }
 
         profile_scope!("resolve_glyphs");
-        // Pull rasterized glyphs from the queue and update the caches.
-        while self.pending_glyph_jobs > 0 {
-            self.pending_glyph_jobs -= 1;
+        // TODO: rather than blocking until all pending glyphs are available
+        // we could try_recv and steal work from the thread pool to take advantage
+        // of the fact that this thread is alive and we avoid the added latency
+        // of blocking it.
+        let mut jobs = {
+            profile_scope!("blocking wait on glyph_rx");
+            self.glyph_rx.iter().take(self.pending_glyph_jobs).collect::<Vec<_>>()
+        };
+        assert_eq!(jobs.len(), self.pending_glyph_jobs, "BUG: Didn't receive all pending glyphs!");
+        self.pending_glyph_jobs = 0;
 
-            // TODO: rather than blocking until all pending glyphs are available
-            // we could try_recv and steal work from the thread pool to take advantage
-            // of the fact that this thread is alive and we avoid the added latency
-            // of blocking it.
+        // Ensure that the glyphs are always processed in the same
+        // order for a given text run (since iterating a hash set doesn't
+        // guarantee order). This can show up as very small float inaccuracy
+        // differences in rasterizers due to the different coordinates
+        // that text runs get associated with by the texture cache allocator.
+        jobs.sort_by(|a, b| (*a.font).cmp(&*b.font).then(a.key.cmp(&b.key)));
 
-            let GlyphRasterJobs { font, mut jobs } = {
-                profile_scope!("blocking wait on glyph_rx");
-                self.glyph_rx
-                .recv()
-                .expect("BUG: Should be glyphs pending!")
+        for GlyphRasterJob { font, key, result } in jobs {
+            let glyph_key_cache = glyph_cache.get_glyph_key_cache_for_font_mut(&*font);
+            let glyph_info = match result {
+                Err(_) => GlyphCacheEntry::Blank,
+                Ok(ref glyph) if glyph.width == 0 || glyph.height == 0 => {
+                    GlyphCacheEntry::Blank
+                }
+                Ok(glyph) => {
+                    let mut texture_cache_handle = TextureCacheHandle::invalid();
+                    texture_cache.request(&texture_cache_handle, gpu_cache);
+                    texture_cache.update(
+                        &mut texture_cache_handle,
+                        ImageDescriptor {
+                            size: size2(glyph.width, glyph.height),
+                            stride: None,
+                            format: glyph.format.image_format(self.can_use_r8_format),
+                            flags: ImageDescriptorFlags::empty(),
+                            offset: 0,
+                        },
+                        TextureFilter::Linear,
+                        Some(CachedImageData::Raw(Arc::new(glyph.bytes))),
+                        [glyph.left, -glyph.top, glyph.scale, 0.0],
+                        DirtyRect::All,
+                        gpu_cache,
+                        Some(glyph_key_cache.eviction_notice()),
+                        UvRectKind::Rect,
+                        Eviction::Auto,
+                        TargetShader::Text,
+                    );
+                    GlyphCacheEntry::Cached(CachedGlyphInfo {
+                        texture_cache_handle,
+                        format: glyph.format,
+                    })
+                }
             };
-
-            // Ensure that the glyphs are always processed in the same
-            // order for a given text run (since iterating a hash set doesn't
-            // guarantee order). This can show up as very small float inaccuracy
-            // differences in rasterizers due to the different coordinates
-            // that text runs get associated with by the texture cache allocator.
-            jobs.sort_by(|a, b| a.key.cmp(&b.key));
-
-            let glyph_key_cache = glyph_cache.get_glyph_key_cache_for_font_mut(font);
-
-            for GlyphRasterJob { key, result } in jobs {
-                let glyph_info = match result {
-                    Err(_) => GlyphCacheEntry::Blank,
-                    Ok(ref glyph) if glyph.width == 0 || glyph.height == 0 => {
-                        GlyphCacheEntry::Blank
-                    }
-                    Ok(glyph) => {
-                        let mut texture_cache_handle = TextureCacheHandle::invalid();
-                        texture_cache.request(&texture_cache_handle, gpu_cache);
-                        texture_cache.update(
-                            &mut texture_cache_handle,
-                            ImageDescriptor {
-                                size: size2(glyph.width, glyph.height),
-                                stride: None,
-                                format: glyph.format.image_format(self.can_use_r8_format),
-                                flags: ImageDescriptorFlags::empty(),
-                                offset: 0,
-                            },
-                            TextureFilter::Linear,
-                            Some(CachedImageData::Raw(Arc::new(glyph.bytes))),
-                            [glyph.left, -glyph.top, glyph.scale, 0.0],
-                            DirtyRect::All,
-                            gpu_cache,
-                            Some(glyph_key_cache.eviction_notice()),
-                            UvRectKind::Rect,
-                            Eviction::Auto,
-                            TargetShader::Text,
-                        );
-                        GlyphCacheEntry::Cached(CachedGlyphInfo {
-                            texture_cache_handle,
-                            format: glyph.format,
-                        })
-                    }
-                };
-                glyph_key_cache.insert(key, glyph_info);
-            }
+            glyph_key_cache.insert(key, glyph_info);
         }
 
         // Now that we are done with the critical path (rendering the glyphs),
@@ -970,8 +964,8 @@ pub struct GlyphRasterizer {
     pending_glyph_requests: FastHashMap<FontInstance, SmallVec<[GlyphKey; 16]>>,
 
     // Receives the rendered glyphs.
-    glyph_rx: Receiver<GlyphRasterJobs>,
-    glyph_tx: Sender<GlyphRasterJobs>,
+    glyph_rx: Receiver<GlyphRasterJob>,
+    glyph_tx: Mutex<Sender<GlyphRasterJob>>,
 
     // We defer removing fonts to the end of the frame so that:
     // - this work is done outside of the critical path,
@@ -1015,7 +1009,7 @@ impl GlyphRasterizer {
             pending_glyph_count: 0,
             glyph_request_count: 0,
             glyph_rx,
-            glyph_tx,
+            glyph_tx: Mutex::new(glyph_tx),
             workers,
             fonts_to_remove: Vec::new(),
             font_instances_to_remove: Vec::new(),
@@ -1120,6 +1114,7 @@ impl AddFont for FontContext {
 
 #[allow(dead_code)]
 pub(in crate::glyph_rasterizer) struct GlyphRasterJob {
+    font: Arc<FontInstance>,
     key: GlyphKey,
     result: GlyphRasterResult,
 }
@@ -1136,12 +1131,6 @@ pub type GlyphRasterResult = Result<RasterizedGlyph, GlyphRasterError>;
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuGlyphCacheKey(pub u32);
-
-#[allow(dead_code)]
-struct GlyphRasterJobs {
-    font: FontInstance,
-    jobs: Vec<GlyphRasterJob>,
-}
 
 #[cfg(test)]
 mod test_glyph_rasterizer {
