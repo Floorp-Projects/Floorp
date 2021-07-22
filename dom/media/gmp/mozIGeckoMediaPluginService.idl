@@ -103,8 +103,7 @@ interface mozIGeckoMediaPluginService : nsISupports
   void getDecryptingGMPVideoDecoder(in GMPCrashHelperPtr helper,
                                     in TagArray tags,
                                     in ACString nodeId,
-                                    in GetGMPVideoDecoderCallback callback,
-                                    in uint32_t decryptorId);
+                                    in GetGMPVideoDecoderCallback callback);
 
   /**
    * Get a video encoder that supports the specified tags.

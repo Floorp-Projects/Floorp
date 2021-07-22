@@ -21,7 +21,7 @@ namespace gmp {
   manages PChromiumCDM;
 
 child:
-  async PGMPVideoDecoder(uint32_t aDecryptorId);
+  async PGMPVideoDecoder();
   async PGMPVideoEncoder();
   async PChromiumCDM();
 

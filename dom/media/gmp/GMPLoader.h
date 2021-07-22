@@ -37,7 +37,7 @@ class GMPAdapter {
   // These are called in place of the corresponding GMP API functions.
   virtual GMPErr GMPInit(const GMPPlatformAPI* aPlatformAPI) = 0;
   virtual GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI,
-                           void** aPluginAPI, uint32_t aDecryptorId) = 0;
+                           void** aPluginAPI) = 0;
   virtual void GMPShutdown() = 0;
 };
 
@@ -56,8 +56,7 @@ class GMPLoader {
             const GMPPlatformAPI* aPlatformAPI, GMPAdapter* aAdapter = nullptr);
 
   // Retrieves an interface pointer from the GMP.
-  GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
-                uint32_t aDecryptorId);
+  GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI);
 
   // Calls the GMPShutdown function exported by the GMP lib, and unloads the
   // plugin library.

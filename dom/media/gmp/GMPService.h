@@ -64,8 +64,7 @@ class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
   NS_IMETHOD GetDecryptingGMPVideoDecoder(
       GMPCrashHelper* aHelper, nsTArray<nsCString>* aTags,
       const nsACString& aNodeId,
-      UniquePtr<GetGMPVideoDecoderCallback>&& aCallback,
-      uint32_t aDecryptorId) override;
+      UniquePtr<GetGMPVideoDecoderCallback>&& aCallback) override;
   NS_IMETHOD GetGMPVideoEncoder(
       GMPCrashHelper* aHelper, nsTArray<nsCString>* aTags,
       const nsACString& aNodeId,
@@ -78,7 +77,7 @@ class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
       const nsACString& aNodeId,
       UniquePtr<GetGMPVideoDecoderCallback>&& aCallback) override {
     return GetDecryptingGMPVideoDecoder(aHelper, aTags, aNodeId,
-                                        std::move(aCallback), 0);
+                                        std::move(aCallback));
   }
 
   NS_IMETHOD RunPluginCrashCallbacks(uint32_t aPluginId,

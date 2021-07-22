@@ -1149,8 +1149,6 @@ class CDMStorageTest {
 
   nsTArray<ExpectedMessage> mExpected;
 
-  RefPtr<nsIRunnable> mSetDecryptorIdContinuation;
-
   RefPtr<gmp::ChromiumCDMParent> mCDM;
   Monitor mMonitor;
   Atomic<bool> mFinished;
