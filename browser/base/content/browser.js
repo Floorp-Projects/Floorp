@@ -552,6 +552,13 @@ customElements.setElementCreationCallback("translation-notification", () => {
   );
 });
 
+customElements.setElementCreationCallback("screenshots-div", () => {
+  Services.scriptloader.loadSubScript(
+    "chrome://browser/content/screenshots/screenshots.js",
+    window
+  );
+});
+
 var gBrowser;
 var gInPrintPreviewMode = false;
 var gContextMenu = null; // nsContextMenu instance

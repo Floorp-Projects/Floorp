@@ -4,7 +4,7 @@
 
 "use strict";
 
-class ScreenshotsUI extends MozXULElement {
+class ScreenshotsUI extends HTMLElement {
   constructor() {
     super();
   }
