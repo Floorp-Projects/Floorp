@@ -124,6 +124,7 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
         return {
           type: "connected",
           threadActor: this._threadActor,
+          consoleActor: this._consoleActor,
         };
       }
 
