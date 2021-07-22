@@ -665,7 +665,41 @@ function startup() {
     {
       name: "GeckoViewAutofill",
       onInit: {
-        frameScript: "chrome://geckoview/content/GeckoViewAutofillChild.js",
+        actors: {
+          GeckoViewAutoFill: {
+            child: {
+              moduleURI: "resource:///actors/GeckoViewAutoFillChild.jsm",
+              events: {
+                DOMFormHasPassword: {
+                  mozSystemGroup: true,
+                  capture: false,
+                },
+                DOMInputPasswordAdded: {
+                  mozSystemGroup: true,
+                  capture: false,
+                },
+                pagehide: {
+                  mozSystemGroup: true,
+                  capture: false,
+                },
+                pageshow: {
+                  mozSystemGroup: true,
+                  capture: false,
+                },
+                focusin: {
+                  mozSystemGroup: true,
+                  capture: false,
+                },
+                focusout: {
+                  mozSystemGroup: true,
+                  capture: false,
+                },
+                "PasswordManager:onFormSubmit": {},
+              },
+            },
+            allFrames: true,
+          },
+        },
       },
     },
     {

@@ -10,7 +10,6 @@ geckoview.jar:
   content/extension-content.js
   content/geckoview.xhtml
   content/geckoview.js
-  content/GeckoViewAutofillChild.js
   content/GeckoViewMediaControlChild.js
   content/SessionStateAggregator.js
 
