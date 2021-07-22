@@ -215,7 +215,7 @@ interface GeckoProfilerFrameScriptInterface {
 export interface RecordingSettings {
   presetName: string;
   entries: number;
-  interval: number;
+  interval: number; // in milliseconds
   features: string[];
   threads: string[];
   objdirs: string[];
