@@ -15,7 +15,6 @@ job-defaults:
             linux1804-64-qr/debug: ['webrender-sw', 'fission']
             windows10-64-qr/debug: ['webrender-sw', 'fission']
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
-            linux.*64/debug: ['fission']
             default: ['fission']
     mozharness:
         script: web_platform_tests.py
@@ -91,8 +90,6 @@ web-platform-tests:
                     default: []
             default:
                 by-test-platform:
-                    linux.*-qr/.*: ['release']  # skip on integration branches due to high load, bug 1599197
-                    windows.*-qr/.*: ['release']  # skip on integration branches due to high load
                     .*-tsan/opt: ['trunk']
                     android-em-7.0-x86_64/debug-isolated-process: []
                     default: built-projects
@@ -155,8 +152,7 @@ web-platform-tests-reftest:
         by-test-platform:
             .*-ccov.*/.*: 8
             linux.*64-tsan/opt: 8
-            linux1804-64(-asan)?(-qr)?/.*: 6
-            linux1804-64(-shippable|-devedition)?/opt: 3
+            linux1804-64(-asan)?-qr/.*: 6
             macosx10.*-64/debug: 6
             macosx10.*-64/opt: 3
             windows.*-(32|64)(-qr)?/debug: 5
@@ -241,10 +237,6 @@ web-platform-tests-wdspec:
         extra-options:
             - --test-type=wdspec
             - --setpref=toolkit.asyncshutdown.log=true
-    variants:
-        by-test-platform:
-            linux.*64/debug: ['fission']
-            default: ['fission']
     run-on-projects:
         by-variant:
             fission:
@@ -253,11 +245,7 @@ web-platform-tests-wdspec:
                     (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-asan(-qr)?/opt: ['trunk']
                     default: []
-            default:
-                by-test-platform:
-                    linux.*-qr/.*: ['release']  # skip on integration branches due to high load
-                    windows10-64.*-qr/.*: ['release']  # skip on integration branches due to high load
-                    default: built-projects
+            default: built-projects
     tier:
         by-variant:
             fission:
@@ -269,8 +257,6 @@ web-platform-tests-wdspec:
             default:
                 by-test-platform:
                     android.*: 3
-                    linux.*64-asan(-qr)?/opt: 2
-                    .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
                     default: default
     fetches:
         toolchain:
@@ -392,11 +378,7 @@ web-platform-tests-crashtest:
                     (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-asan(-qr)?/opt: ['trunk']
                     default: []
-            default:
-                by-test-platform:
-                    linux.*-qr/.*: ['release']  # skip on integration branches due to high load
-                    windows.*-qr/.*: ['release']  # skip on integration branches due to high load
-                    default: built-projects
+            default: built-projects
     tier:
         by-variant:
             fission:
@@ -405,11 +387,7 @@ web-platform-tests-crashtest:
                     linux.*64(-shippable)?-qr/opt: 1
                     windows10-64(-shippable)?-qr/opt: 1
                     default: 2
-            default:
-                by-test-platform:
-                    linux1804-64-asan(-qr)?/opt: 2
-                    .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
-                    default: default
+            default: default
 
 web-platform-tests-print-reftest:
     description: "Web platform print-reftest run"
@@ -425,10 +403,7 @@ web-platform-tests-print-reftest:
                     linux.*64(-shippable)?-qr/opt: 1
                     windows10-64(-shippable)?-qr/opt: 1
                     default: 2
-            default:
-                by-test-platform:
-                    .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
-                    default: default
+            default: default
     run-on-projects:
         by-variant:
             fission:
