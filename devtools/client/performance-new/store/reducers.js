@@ -4,8 +4,6 @@
 // @ts-check
 "use strict";
 
-const { combineReducers } = require("devtools/client/shared/vendor/redux");
-
 /**
  * @typedef {import("../@types/perf").Action} Action
  * @typedef {import("../@types/perf").State} State
@@ -209,19 +207,26 @@ function promptEnvRestart(state = null, action) {
  * The main reducer for the performance-new client.
  * @type {Reducer<State>}
  */
-module.exports = combineReducers({
-  // TODO - The object going into `combineReducers` is not currently type checked
-  // as being correct for. For instance, recordingState here could be removed, or
-  // not return the right state, and TypeScript will not create an error.
-  recordingState,
-  recordingUnexpectedlyStopped,
-  isSupportedPlatform,
-  interval,
-  entries,
-  features,
-  threads,
-  objdirs,
-  presetName,
-  initializedValues,
-  promptEnvRestart,
-});
+module.exports = (state = undefined, action) => {
+  return {
+    recordingState: recordingState(state?.recordingState, action),
+    recordingUnexpectedlyStopped: recordingUnexpectedlyStopped(
+      state?.recordingUnexpectedlyStopped,
+      action
+    ),
+    isSupportedPlatform: isSupportedPlatform(
+      state?.isSupportedPlatform,
+      action
+    ),
+    interval: interval(state?.interval, action),
+    entries: entries(state?.entries, action),
+    features: features(state?.features, action),
+    threads: threads(state?.threads, action),
+    objdirs: objdirs(state?.objdirs, action),
+    presetName: presetName(state?.presetName, action),
+    initializedValues: initializedValues(state?.initializedValues, action),
+    promptEnvRestart: promptEnvRestart(state?.promptEnvRestart, action),
+
+    profilerViewMode: state?.profilerViewMode,
+  };
+};
