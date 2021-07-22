@@ -7,10 +7,6 @@
 
 // test without target switching
 add_task(async function() {
-  // FIXME: The last part of the test is failing with bfcache in parent enabled (when
-  // going back, the host item isn't displayed in the storage tree).
-  // This should be fixed in Bug 1717625.
-  await pushPref("fission.bfcacheInParent", false);
   await testNavigation();
 });
 
