@@ -183,7 +183,6 @@ function initializedValues(state = null, action) {
         presets: action.presets,
         pageContext: action.pageContext,
         supportedFeatures: action.supportedFeatures,
-        openAboutProfiling: action.openAboutProfiling,
         openRemoteDevTools: action.openRemoteDevTools,
       };
     default:
