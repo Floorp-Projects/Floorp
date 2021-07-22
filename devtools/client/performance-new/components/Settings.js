@@ -569,10 +569,9 @@ function _entriesTextDisplay(value) {
 }
 
 /**
- * about:profiling doesn't need to collapse the children into details/summary,
- * but the popup and devtools do (for now).
+ * Renders a section for about:profiling.
  *
- * @param {string} id
+ * @param {string} id Unused.
  * @param {React.ReactNode} title
  * @param {React.ReactNode} children
  * @returns React.ReactNode
