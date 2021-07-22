@@ -224,7 +224,7 @@ tasks:
                   # exist in tree so we must hard code the hash
                   image: 'mozillareleases/gecko_decision:3.0.1@sha256:9964730ed951584e65032bd1d6a2b7ede6d880a8b7aefb72d0d7f82346d834e3'
 
-                  maxRunTime: 1800
+                  maxRunTime: 3600
 
                   command:
                       - /builds/worker/bin/run-task
