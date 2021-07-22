@@ -31,6 +31,7 @@ const AppConstants = ChromeUtils.import(
  * @typedef {import("../@types/perf").ProfilerWebChannel} ProfilerWebChannel
  * @typedef {import("../@types/perf").MessageFromFrontend} MessageFromFrontend
  * @typedef {import("../@types/perf").PageContext} PageContext
+ * @typedef {import("../@types/perf").PrefPostfix} PrefPostfix
  * @typedef {import("../@types/perf").Presets} Presets
  * @typedef {import("../@types/perf").ProfilerViewMode} ProfilerViewMode
  */
@@ -197,7 +198,7 @@ async function getSymbolsFromThisBrowser(pageContext, debugName, breakpadId) {
   }
 
   const lib = cachedLib;
-  const objdirs = getObjdirPrefValue(pageContext);
+  const objdirs = getObjdirPrefValue(getPrefPostfix(pageContext));
   const { getSymbolTableMultiModal } = lazy.PerfSymbolication();
   return getSymbolTableMultiModal(lib, objdirs);
 }
@@ -210,8 +211,8 @@ async function getSymbolsFromThisBrowser(pageContext, debugName, breakpadId) {
  * @return {ProfilerViewMode | undefined}
  */
 function getProfilerViewModeForCurrentPreset(pageContext) {
-  const postfix = getPrefPostfix(pageContext);
-  const presetName = Services.prefs.getCharPref(PRESET_PREF + postfix);
+  const prefPostfix = getPrefPostfix(pageContext);
+  const presetName = Services.prefs.getCharPref(PRESET_PREF + prefPostfix);
 
   if (presetName === "custom") {
     return undefined;
@@ -354,7 +355,7 @@ function _getArrayOfStringsHostPref(prefName) {
  * their pref names.
  *
  * @param {PageContext} pageContext
- * @returns {string}
+ * @returns {PrefPostfix}
  */
 function getPrefPostfix(pageContext) {
   switch (pageContext) {
@@ -373,12 +374,11 @@ function getPrefPostfix(pageContext) {
 }
 
 /**
- * @param {PageContext} pageContext
+ * @param {PrefPostfix} prefPostfix
  * @returns {string[]}
  */
-function getObjdirPrefValue(pageContext) {
-  const postfix = getPrefPostfix(pageContext);
-  return _getArrayOfStringsHostPref(OBJDIRS_PREF + postfix);
+function getObjdirPrefValue(prefPostfix) {
+  return _getArrayOfStringsHostPref(OBJDIRS_PREF + prefPostfix);
 }
 
 /**
@@ -387,43 +387,17 @@ function getObjdirPrefValue(pageContext) {
  * @returns {RecordingSettings}
  */
 function getRecordingSettings(pageContext, supportedFeatures) {
-  const postfix = getPrefPostfix(pageContext);
+  const prefPostfix = getPrefPostfix(pageContext);
+  const objdirs = getObjdirPrefValue(prefPostfix);
+  const presetName = Services.prefs.getCharPref(PRESET_PREF + prefPostfix);
 
-  // If you add a new preference here, please do not forget to update
-  // `revertRecordingSettings` as well.
-  const objdirs = getObjdirPrefValue(pageContext);
-  const presetName = Services.prefs.getCharPref(PRESET_PREF + postfix);
-
-  // First try to get the values from a preset.
-  const recordingSettings = getRecordingSettingsFromPreset(
-    presetName,
-    supportedFeatures,
-    objdirs
+  // First try to get the values from a preset. If the preset is "custom" or
+  // unrecognized, getRecordingSettingsFromPreset will return null and we will
+  // get the settings from individual prefs instead.
+  return (
+    getRecordingSettingsFromPreset(presetName, supportedFeatures, objdirs) ??
+    getRecordingSettingsFromPrefs(supportedFeatures, objdirs, prefPostfix)
   );
-  if (recordingSettings) {
-    return recordingSettings;
-  }
-
-  // Next use the preferences to get the values.
-  const entries = Services.prefs.getIntPref(ENTRIES_PREF + postfix);
-  const intervalInMicroseconds = Services.prefs.getIntPref(
-    INTERVAL_PREF + postfix
-  );
-  const interval = intervalInMicroseconds / 1000;
-  const features = _getArrayOfStringsPref(FEATURES_PREF + postfix);
-  const threads = _getArrayOfStringsPref(THREADS_PREF + postfix);
-  const duration = Services.prefs.getIntPref(DURATION_PREF + postfix);
-
-  return {
-    presetName: "custom",
-    entries,
-    interval,
-    // Validate the features before passing them to the profiler.
-    features: features.filter(feature => supportedFeatures.includes(feature)),
-    threads,
-    objdirs,
-    duration,
-  };
 }
 
 /**
@@ -462,26 +436,64 @@ function getRecordingSettingsFromPreset(
 }
 
 /**
+ * @param {string[]} supportedFeatures
+ * @param {string[]} objdirs
+ * @param {PrefPostfix} prefPostfix
+ * @return {RecordingSettings}
+ */
+function getRecordingSettingsFromPrefs(
+  supportedFeatures,
+  objdirs,
+  prefPostfix
+) {
+  // If you add a new preference here, please do not forget to update
+  // `revertRecordingSettings` as well.
+
+  const entries = Services.prefs.getIntPref(ENTRIES_PREF + prefPostfix);
+  const intervalInMicroseconds = Services.prefs.getIntPref(
+    INTERVAL_PREF + prefPostfix
+  );
+  const interval = intervalInMicroseconds / 1000;
+  const features = _getArrayOfStringsPref(FEATURES_PREF + prefPostfix);
+  const threads = _getArrayOfStringsPref(THREADS_PREF + prefPostfix);
+  const duration = Services.prefs.getIntPref(DURATION_PREF + prefPostfix);
+
+  return {
+    presetName: "custom",
+    entries,
+    interval,
+    // Validate the features before passing them to the profiler.
+    features: features.filter(feature => supportedFeatures.includes(feature)),
+    threads,
+    objdirs,
+    duration,
+  };
+}
+
+/**
  * @param {PageContext} pageContext
  * @param {RecordingSettings} prefs
  */
 function setRecordingSettings(pageContext, prefs) {
-  const postfix = getPrefPostfix(pageContext);
-  Services.prefs.setCharPref(PRESET_PREF + postfix, prefs.presetName);
-  Services.prefs.setIntPref(ENTRIES_PREF + postfix, prefs.entries);
+  const prefPostfix = getPrefPostfix(pageContext);
+  Services.prefs.setCharPref(PRESET_PREF + prefPostfix, prefs.presetName);
+  Services.prefs.setIntPref(ENTRIES_PREF + prefPostfix, prefs.entries);
   // The interval pref stores the value in microseconds for extra precision.
   const intervalInMicroseconds = prefs.interval * 1000;
-  Services.prefs.setIntPref(INTERVAL_PREF + postfix, intervalInMicroseconds);
+  Services.prefs.setIntPref(
+    INTERVAL_PREF + prefPostfix,
+    intervalInMicroseconds
+  );
   Services.prefs.setCharPref(
-    FEATURES_PREF + postfix,
+    FEATURES_PREF + prefPostfix,
     JSON.stringify(prefs.features)
   );
   Services.prefs.setCharPref(
-    THREADS_PREF + postfix,
+    THREADS_PREF + prefPostfix,
     JSON.stringify(prefs.threads)
   );
   Services.prefs.setCharPref(
-    OBJDIRS_PREF + postfix,
+    OBJDIRS_PREF + prefPostfix,
     JSON.stringify(prefs.objdirs)
   );
 }
@@ -493,14 +505,14 @@ const platform = AppConstants.platform;
  * @return {void}
  */
 function revertRecordingSettings() {
-  for (const postfix of ["", ".remote"]) {
-    Services.prefs.clearUserPref(PRESET_PREF + postfix);
-    Services.prefs.clearUserPref(ENTRIES_PREF + postfix);
-    Services.prefs.clearUserPref(INTERVAL_PREF + postfix);
-    Services.prefs.clearUserPref(FEATURES_PREF + postfix);
-    Services.prefs.clearUserPref(THREADS_PREF + postfix);
-    Services.prefs.clearUserPref(OBJDIRS_PREF + postfix);
-    Services.prefs.clearUserPref(DURATION_PREF + postfix);
+  for (const prefPostfix of ["", ".remote"]) {
+    Services.prefs.clearUserPref(PRESET_PREF + prefPostfix);
+    Services.prefs.clearUserPref(ENTRIES_PREF + prefPostfix);
+    Services.prefs.clearUserPref(INTERVAL_PREF + prefPostfix);
+    Services.prefs.clearUserPref(FEATURES_PREF + prefPostfix);
+    Services.prefs.clearUserPref(THREADS_PREF + prefPostfix);
+    Services.prefs.clearUserPref(OBJDIRS_PREF + prefPostfix);
+    Services.prefs.clearUserPref(DURATION_PREF + prefPostfix);
   }
   Services.prefs.clearUserPref(POPUP_FEATURE_FLAG_PREF);
 }
@@ -514,8 +526,8 @@ function revertRecordingSettings() {
  * @return {void}
  */
 function changePreset(pageContext, presetName, supportedFeatures) {
-  const postfix = getPrefPostfix(pageContext);
-  const objdirs = _getArrayOfStringsHostPref(OBJDIRS_PREF + postfix);
+  const prefPostfix = getPrefPostfix(pageContext);
+  const objdirs = _getArrayOfStringsHostPref(OBJDIRS_PREF + prefPostfix);
   let recordingSettings = getRecordingSettingsFromPreset(
     presetName,
     supportedFeatures,
@@ -526,7 +538,7 @@ function changePreset(pageContext, presetName, supportedFeatures) {
     // No recordingSettings were found for that preset. Most likely this means this
     // is a custom preset, or it's one that we dont recognize for some reason.
     // Get the preferences from the individual preference values.
-    Services.prefs.setCharPref(PRESET_PREF + postfix, presetName);
+    Services.prefs.setCharPref(PRESET_PREF + prefPostfix, presetName);
     recordingSettings = getRecordingSettings(pageContext, supportedFeatures);
   }
 
