@@ -8,6 +8,17 @@ apply plugin: 'kotlin'
 targetCompatibility = JavaVersion.VERSION_1_8
 sourceCompatibility = JavaVersion.VERSION_1_8
 
+repositories {
+    if (project.hasProperty("centralRepo")) {
+        maven {
+            name "MavenCentral"
+            url project.property("centralRepo")
+        }
+    } else {
+        mavenCentral()
+    }
+}
+
 dependencies {
     // I didn't look thoroughly enough to really know what's going on here but I think
     // the lint API uses jdk8 so if we provide jdk7, the dependency collision system
@@ -23,6 +34,7 @@ dependencies {
     compileOnly "com.android.tools.lint:lint-api:${Versions.android_lint_api}"
     compileOnly "com.android.tools.lint:lint-checks:${Versions.android_lint_api}"
 
+    testImplementation "junit:junit:4.13.2"
     testImplementation "com.android.tools.lint:lint:${Versions.android_lint_api}"
     testImplementation "com.android.tools.lint:lint-tests:${Versions.android_lint_api}"
 }
