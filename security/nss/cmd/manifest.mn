@@ -65,7 +65,6 @@ NSS_SRCDIRS = \
  pwdecrypt \
  rsaperf \
  rsapoptst \
- sdbthreadtst \
  sdrtest \
  selfserv  \
  signtool \
