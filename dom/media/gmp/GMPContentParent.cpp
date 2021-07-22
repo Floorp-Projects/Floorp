@@ -162,12 +162,11 @@ already_AddRefed<ChromiumCDMParent> GMPContentParent::GetChromiumCDM() {
   return parent.forget();
 }
 
-nsresult GMPContentParent::GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD,
-                                              uint32_t aDecryptorId) {
+nsresult GMPContentParent::GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD) {
   GMP_LOG_DEBUG("GMPContentParent::GetGMPVideoDecoder(this=%p)", this);
 
   RefPtr<GMPVideoDecoderParent> vdp = new GMPVideoDecoderParent(this);
-  if (!SendPGMPVideoDecoderConstructor(vdp, aDecryptorId)) {
+  if (!SendPGMPVideoDecoderConstructor(vdp)) {
     return NS_ERROR_FAILURE;
   }
 

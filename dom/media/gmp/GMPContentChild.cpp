@@ -41,7 +41,7 @@ void GMPContentChild::ProcessingError(Result aCode, const char* aReason) {
 }
 
 already_AddRefed<PGMPVideoDecoderChild>
-GMPContentChild::AllocPGMPVideoDecoderChild(const uint32_t& aDecryptorId) {
+GMPContentChild::AllocPGMPVideoDecoderChild() {
   return MakeAndAddRef<GMPVideoDecoderChild>(this);
 }
 
@@ -55,12 +55,11 @@ already_AddRefed<PChromiumCDMChild> GMPContentChild::AllocPChromiumCDMChild() {
 }
 
 mozilla::ipc::IPCResult GMPContentChild::RecvPGMPVideoDecoderConstructor(
-    PGMPVideoDecoderChild* aActor, const uint32_t& aDecryptorId) {
+    PGMPVideoDecoderChild* aActor) {
   auto vdc = static_cast<GMPVideoDecoderChild*>(aActor);
 
   void* vd = nullptr;
-  GMPErr err =
-      mGMPChild->GetAPI(GMP_API_VIDEO_DECODER, &vdc->Host(), &vd, aDecryptorId);
+  GMPErr err = mGMPChild->GetAPI(GMP_API_VIDEO_DECODER, &vdc->Host(), &vd);
   if (err != GMPNoErr || !vd) {
     NS_WARNING("GMPGetAPI call failed trying to construct decoder.");
     return IPC_FAIL_NO_REASON(this);

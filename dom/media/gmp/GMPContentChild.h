@@ -29,14 +29,13 @@ class GMPContentChild : public PGMPContentChild, public GMPSharedMem {
   MessageLoop* GMPMessageLoop();
 
   mozilla::ipc::IPCResult RecvPGMPVideoDecoderConstructor(
-      PGMPVideoDecoderChild* aActor, const uint32_t& aDecryptorId) override;
+      PGMPVideoDecoderChild* aActor) override;
   mozilla::ipc::IPCResult RecvPGMPVideoEncoderConstructor(
       PGMPVideoEncoderChild* aActor) override;
   mozilla::ipc::IPCResult RecvPChromiumCDMConstructor(
       PChromiumCDMChild* aActor) override;
 
-  already_AddRefed<PGMPVideoDecoderChild> AllocPGMPVideoDecoderChild(
-      const uint32_t& aDecryptorId);
+  already_AddRefed<PGMPVideoDecoderChild> AllocPGMPVideoDecoderChild();
 
   already_AddRefed<PGMPVideoEncoderChild> AllocPGMPVideoEncoderChild();
 
