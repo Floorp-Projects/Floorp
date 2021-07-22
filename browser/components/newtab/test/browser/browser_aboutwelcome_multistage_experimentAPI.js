@@ -10,6 +10,103 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
+const TEST_MULTISTAGE_CONTENT = [
+  {
+    id: "AW_STEP1",
+    order: 0,
+    content: {
+      zap: true,
+      title: "Step 1",
+      tiles: {
+        type: "theme",
+        action: {
+          theme: "<event>",
+        },
+        data: [
+          {
+            theme: "automatic",
+            label: "theme-1",
+            tooltip: "test-tooltip",
+          },
+          {
+            theme: "dark",
+            label: "theme-2",
+          },
+        ],
+      },
+      primary_button: {
+        label: "Next",
+        action: {
+          navigate: true,
+        },
+      },
+      secondary_button: {
+        label: "link",
+      },
+      secondary_button_top: {
+        label: "link top",
+        action: {
+          type: "SHOW_FIREFOX_ACCOUNTS",
+          data: { entrypoint: "test" },
+        },
+      },
+    },
+  },
+  {
+    id: "AW_STEP2",
+    order: 1,
+    content: {
+      zap: true,
+      title: "Step 2 longzaptest",
+      tiles: {
+        type: "topsites",
+        info: true,
+      },
+      primary_button: {
+        label: "Next",
+        action: {
+          navigate: true,
+        },
+      },
+      secondary_button: {
+        label: "link",
+      },
+    },
+  },
+  {
+    id: "AW_STEP3",
+    order: 2,
+    content: {
+      title: "Step 3",
+      tiles: {
+        type: "image",
+        media_type: "test-img",
+        source: {
+          default:
+            "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHBhdGggZmlsbD0iIzQ1YTFmZiIgZmlsbC1vcGFjaXR5PSJjb250ZXh0LWZpbGwtb3BhY2l0eSIgZD0iTTE1Ljg0NSA2LjA2NEExLjEgMS4xIDAgMCAwIDE1IDUuMzMxTDEwLjkxMSA0LjYgOC45ODUuNzM1YTEuMSAxLjEgMCAwIDAtMS45NjkgMEw1LjA4OSA0LjZsLTQuMDgxLjcyOWExLjEgMS4xIDAgMCAwLS42MTUgMS44MzRMMy4zMiAxMC4zMWwtLjYwOSA0LjM2YTEuMSAxLjEgMCAwIDAgMS42IDEuMTI3TDggMTMuODczbDMuNjkgMS45MjdhMS4xIDEuMSAwIDAgMCAxLjYtMS4xMjdsLS42MS00LjM2MyAyLjkyNi0zLjE0NmExLjEgMS4xIDAgMCAwIC4yMzktMS4xeiIvPjwvc3ZnPg==",
+        },
+      },
+      primary_button: {
+        label: "Next",
+        action: {
+          navigate: true,
+        },
+      },
+      secondary_button: {
+        label: "Import",
+        action: {
+          type: "SHOW_MIGRATION_WIZARD",
+          data: { source: "chrome" },
+        },
+      },
+      help_text: {
+        text: "Here's some sample help text",
+        position: "default",
+      },
+    },
+  },
+];
+
 const TEST_PROTON_CONTENT = [
   {
     id: "AW_STEP1",
@@ -144,88 +241,9 @@ add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
 });
 
 /**
- * Test the multistage welcome UI with test content theme as first screen
+ * Test the multistage welcome UI using ExperimentAPI
  */
 add_task(async function test_multistage_aboutwelcome_experimentAPI() {
-  const TEST_CONTENT = [
-    {
-      id: "AW_STEP1",
-      order: 0,
-      content: {
-        title: "Step 1",
-        tiles: {
-          type: "theme",
-          action: {
-            theme: "<event>",
-          },
-          data: [
-            {
-              theme: "automatic",
-              label: "theme-1",
-              tooltip: "test-tooltip",
-            },
-            {
-              theme: "dark",
-              label: "theme-2",
-            },
-          ],
-        },
-        primary_button: {
-          label: "Next",
-          action: {
-            navigate: true,
-          },
-        },
-        secondary_button: {
-          label: "link",
-        },
-        secondary_button_top: {
-          label: "link top",
-          action: {
-            type: "SHOW_FIREFOX_ACCOUNTS",
-            data: { entrypoint: "test" },
-          },
-        },
-      },
-    },
-    {
-      id: "AW_STEP2",
-      order: 1,
-      content: {
-        zap: true,
-        title: "Step 2 test",
-        primary_button: {
-          label: "Next",
-          action: {
-            navigate: true,
-          },
-        },
-        secondary_button: {
-          label: "link",
-        },
-      },
-    },
-    {
-      id: "AW_STEP3",
-      order: 2,
-      content: {
-        title: "Step 3",
-        primary_button: {
-          label: "Next",
-          action: {
-            navigate: true,
-          },
-        },
-        secondary_button: {
-          label: "Import",
-          action: {
-            type: "SHOW_MIGRATION_WIZARD",
-            data: { source: "chrome" },
-          },
-        },
-      },
-    },
-  ];
   const sandbox = sinon.createSandbox();
   NimbusFeatures.aboutwelcome._sendExposureEventOnce = true;
   await setAboutWelcomePref(true);
@@ -236,7 +254,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     enabled: true,
     value: {
       id: "my-mochitest-experiment",
-      screens: TEST_CONTENT,
+      screens: TEST_MULTISTAGE_CONTENT,
     },
   });
 
@@ -268,12 +286,15 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
       [
         "div.onboardingContainer",
         "main.AW_STEP1",
+        "h1.welcomeZap",
+        "span.zap.short",
         "div.secondary-cta",
         "div.secondary-cta.top",
         "button[value='secondary_button']",
         "button[value='secondary_button_top']",
         "label.theme",
         "input[type='radio']",
+        "div.indicator.current",
       ],
       // Unexpected selectors:
       ["main.AW_STEP2", "main.AW_STEP3", "div.tiles-container.info"]
@@ -313,9 +334,12 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
       "div.onboardingContainer",
       "main.AW_STEP2",
       "button[value='secondary_button']",
+      "h1.welcomeZap",
+      "span.zap.long",
+      "div.tiles-container.info",
     ],
     // Unexpected selectors:
-    ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top"]
+    ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top", "div.test-img"]
   );
   await onButtonClick(browser, "button.primary");
   await test_screen_content(
@@ -327,6 +351,8 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
       "main.AW_STEP3",
       "div.brand-logo",
       "div.welcome-text",
+      "p.helptext",
+      "div.test-img",
     ],
     // Unexpected selectors:
     ["main.AW_STEP1", "main.AW_STEP2"]
@@ -363,6 +389,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
 add_task(async function test_multistage_aboutwelcome_transitions() {
   const sandbox = sinon.createSandbox();
   await setAboutWelcomePref(true);
+  await setProton(true);
   await ExperimentAPI.ready();
 
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
@@ -371,6 +398,7 @@ add_task(async function test_multistage_aboutwelcome_transitions() {
       id: "my-mochitest-experiment",
       enabled: true,
       screens: TEST_PROTON_CONTENT,
+      isProton: true,
       transitions: true,
     },
   });
@@ -428,6 +456,7 @@ add_task(async function test_multistage_aboutwelcome_transitions_off() {
       id: "my-mochitest-experiment",
       enabled: true,
       screens: TEST_PROTON_CONTENT,
+      isProton: true,
       transitions: false,
     },
   });

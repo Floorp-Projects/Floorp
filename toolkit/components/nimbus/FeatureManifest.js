@@ -68,6 +68,11 @@ const FeatureManifest = {
         fallbackPref: "browser.aboutwelcome.screens",
         description: "Content to show in the onboarding flow",
       },
+      isProton: {
+        type: "boolean",
+        fallbackPref: "browser.aboutwelcome.protonDesign",
+        description: "Is it using the latest (proton) design",
+      },
       skipFocus: {
         type: "boolean",
         fallbackPref: "browser.aboutwelcome.skipFocus",

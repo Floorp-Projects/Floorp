@@ -19,7 +19,14 @@ export const Themes = props => {
                 key={theme + label}
                 text={typeof tooltip === "object" ? tooltip : {}}
               >
-                <label className="theme" title={theme + label}>
+                <label
+                  className={`theme${
+                    theme === props.activeTheme && !props.design
+                      ? " selected"
+                      : ""
+                  }`}
+                  title={theme + label}
+                >
                   <Localized
                     text={typeof description === "object" ? description : {}}
                   >
@@ -35,7 +42,9 @@ export const Themes = props => {
                   </Localized>
                   <div
                     className={`icon ${
-                      theme === props.activeTheme ? " selected" : ""
+                      theme === props.activeTheme && props.design
+                        ? " selected"
+                        : ""
                     } ${theme}`}
                   />
                   {label && (

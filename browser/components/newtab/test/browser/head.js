@@ -43,6 +43,10 @@ async function getAboutWelcomeParent(browser) {
 async function setAboutWelcomeMultiStage(value = "") {
   return pushPrefs([ABOUT_WELCOME_OVERRIDE_CONTENT_PREF, value]);
 }
+// eslint-disable-next-line no-unused-vars
+async function setProton(value = false) {
+  return pushPrefs(["browser.aboutwelcome.protonDesign", value]);
+}
 
 /**
  * Setup functions to test welcome UI
