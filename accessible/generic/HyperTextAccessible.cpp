@@ -68,9 +68,9 @@ class ParagraphBoundaryRule : public PivotRule {
         mSkipAnchorSubtree(aSkipAnchorSubtree),
         mLastMatchTextOffset(0) {}
 
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override {
-    MOZ_ASSERT(aAccOrProxy.IsAccessible());
-    LocalAccessible* acc = aAccOrProxy.AsAccessible();
+  virtual uint16_t Match(Accessible* aAcc) override {
+    MOZ_ASSERT(aAcc && aAcc->IsLocal());
+    LocalAccessible* acc = aAcc->AsLocal();
     if (acc->IsOuterDoc()) {
       // The child document might be remote and we can't (and don't want to)
       // handle remote documents. Also, iframes are inline anyway and thus
@@ -146,20 +146,20 @@ class ParagraphBoundaryRule : public PivotRule {
  */
 class SkipParagraphBoundaryRule : public PivotRule {
  public:
-  explicit SkipParagraphBoundaryRule(AccessibleOrProxy& aBoundary)
+  explicit SkipParagraphBoundaryRule(Accessible* aBoundary)
       : mBoundary(aBoundary) {}
 
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override {
-    MOZ_ASSERT(aAccOrProxy.IsAccessible());
+  virtual uint16_t Match(Accessible* aAcc) override {
+    MOZ_ASSERT(aAcc && aAcc->IsLocal());
     // If matching the boundary, skip its sub tree.
-    if (aAccOrProxy == mBoundary) {
+    if (aAcc == mBoundary) {
       return nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
     }
     return nsIAccessibleTraversalRule::FILTER_MATCH;
   }
 
  private:
-  AccessibleOrProxy& mBoundary;
+  Accessible* mBoundary;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -870,35 +870,34 @@ int32_t HyperTextAccessible::FindParagraphStartOffset(uint32_t aOffset) {
   ParagraphBoundaryRule boundaryRule = ParagraphBoundaryRule(
       child, child->IsTextLeaf() ? aOffset - GetChildOffset(child) : 0,
       eDirPrevious);
-  AccessibleOrProxy wrappedChild = AccessibleOrProxy(child);
-  AccessibleOrProxy match = p.Prev(wrappedChild, boundaryRule, true);
-  if (match.IsNull() || match.AsAccessible() == this) {
+  Accessible* match = p.Prev(child, boundaryRule, true);
+  if (!match || match->AsLocal() == this) {
     // Found nothing, or pivot found the root of the search, startOffset is 0.
     // This will include all relevant text nodes.
     return 0;
   }
 
-  if (match == wrappedChild) {
+  if (match == child) {
     // We started out on a boundary.
-    if (match.Role() == roles::WHITESPACE) {
+    if (match->Role() == roles::WHITESPACE) {
       // We are on a line break boundary, so force pivot to find the previous
       // boundary. What we want is any text before this, if any.
       match = p.Prev(match, boundaryRule);
-      if (match.IsNull() || match.AsAccessible() == this) {
+      if (!match || match->AsLocal() == this) {
         // Same as before, we landed on the root, so offset is definitely 0.
         return 0;
       }
-    } else if (!match.AsAccessible()->IsTextLeaf()) {
+    } else if (!match->AsLocal()->IsTextLeaf()) {
       // The match is a block element, which is always a starting point, so
       // just return its offset.
-      return TransformOffset(match.AsAccessible(), 0, false);
+      return TransformOffset(match->AsLocal(), 0, false);
     }
   }
 
-  if (match.AsAccessible()->IsTextLeaf()) {
+  if (match->AsLocal()->IsTextLeaf()) {
     // ParagraphBoundaryRule only returns a text leaf if it contains a line
     // break. We want to stop after that.
-    return TransformOffset(match.AsAccessible(),
+    return TransformOffset(match->AsLocal(),
                            boundaryRule.GetLastMatchTextOffset() + 1, false);
   }
 
@@ -910,8 +909,8 @@ int32_t HyperTextAccessible::FindParagraphStartOffset(uint32_t aOffset) {
   match = p.Next(match, goForwardOneRule);
   // We already know that the search skipped over at least one accessible,
   // so match can't be null. Get its transformed offset.
-  MOZ_ASSERT(!match.IsNull());
-  return TransformOffset(match.AsAccessible(), 0, false);
+  MOZ_ASSERT(match);
+  return TransformOffset(match->AsLocal(), 0, false);
 }
 
 int32_t HyperTextAccessible::FindParagraphEndOffset(uint32_t aOffset) {
@@ -926,19 +925,18 @@ int32_t HyperTextAccessible::FindParagraphEndOffset(uint32_t aOffset) {
 
   // Use the pivot class to search for the end offset.
   Pivot p = Pivot(this);
-  AccessibleOrProxy wrappedChild = AccessibleOrProxy(child);
   ParagraphBoundaryRule boundaryRule = ParagraphBoundaryRule(
       child, child->IsTextLeaf() ? aOffset - GetChildOffset(child) : 0,
       eDirNext,
       // In order to encompass all paragraphs inside embedded objects, not just
       // the first, we want to skip the anchor's subtree.
       /* aSkipAnchorSubtree */ true);
-  // Search forward for the end offset, including wrappedChild. We don't want
+  // Search forward for the end offset, including child. We don't want
   // to go beyond this point if this offset indicates a paragraph boundary.
-  AccessibleOrProxy match = p.Next(wrappedChild, boundaryRule, true);
-  if (!match.IsNull()) {
+  Accessible* match = p.Next(child, boundaryRule, true);
+  if (match) {
     // Found something of relevance, adjust end offset.
-    LocalAccessible* matchAcc = match.AsAccessible();
+    LocalAccessible* matchAcc = match->AsLocal();
     uint32_t matchOffset;
     if (matchAcc->IsTextLeaf()) {
       // ParagraphBoundaryRule only returns a text leaf if it contains a line

@@ -11,7 +11,6 @@
 
 #include "Platform.h"
 #include "RemoteAccessible.h"
-#include "AccessibleOrProxy.h"
 #include "DocAccessibleParent.h"
 #include "mozTableAccessible.h"
 #include "MOXWebAreaAccessible.h"

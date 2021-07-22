@@ -10,30 +10,27 @@
 #import "MOXAccessibleProtocol.h"
 #import "GeckoTextMarker.h"
 
-#include "AccessibleOrProxy.h"
-
 @interface MOXTextMarkerDelegate : NSObject <MOXTextMarkerSupport> {
-  mozilla::a11y::AccessibleOrProxy mGeckoDocAccessible;
+  mozilla::a11y::Accessible* mGeckoDocAccessible;
   id mSelection;
   id mCaret;
   id mPrevCaret;
 }
 
-+ (id)getOrCreateForDoc:(mozilla::a11y::AccessibleOrProxy)aDoc;
++ (id)getOrCreateForDoc:(mozilla::a11y::Accessible*)aDoc;
 
-+ (void)destroyForDoc:(mozilla::a11y::AccessibleOrProxy)aDoc;
++ (void)destroyForDoc:(mozilla::a11y::Accessible*)aDoc;
 
-- (id)initWithDoc:(mozilla::a11y::AccessibleOrProxy)aDoc;
+- (id)initWithDoc:(mozilla::a11y::Accessible*)aDoc;
 
 - (void)dealloc;
 
-- (void)setSelectionFrom:(mozilla::a11y::AccessibleOrProxy)startContainer
+- (void)setSelectionFrom:(mozilla::a11y::Accessible*)startContainer
                       at:(int32_t)startOffset
-                      to:(mozilla::a11y::AccessibleOrProxy)endContainer
+                      to:(mozilla::a11y::Accessible*)endContainer
                       at:(int32_t)endOffset;
 
-- (void)setCaretOffset:(mozilla::a11y::AccessibleOrProxy)container
-                    at:(int32_t)offset;
+- (void)setCaretOffset:(mozilla::a11y::Accessible*)container at:(int32_t)offset;
 
 - (NSDictionary*)selectionChangeInfo;
 

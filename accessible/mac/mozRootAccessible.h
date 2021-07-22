@@ -31,7 +31,7 @@
 }
 
 // override
-- (id)initWithAccessible:(mozilla::a11y::AccessibleOrProxy)aAccOrProxy;
+- (id)initWithAccessible:(mozilla::a11y::Accessible*)aAcc;
 
 #pragma mark - MOXAccessible
 

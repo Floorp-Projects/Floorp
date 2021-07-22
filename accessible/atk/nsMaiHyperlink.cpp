@@ -94,7 +94,7 @@ GType mai_atk_hyperlink_get_type(void) {
   return type;
 }
 
-MaiHyperlink::MaiHyperlink(AccessibleOrProxy aHyperLink)
+MaiHyperlink::MaiHyperlink(Accessible* aHyperLink)
     : mHyperlink(aHyperLink), mMaiAtkHyperlink(nullptr) {
   mMaiAtkHyperlink = reinterpret_cast<AtkHyperlink*>(
       g_object_new(mai_atk_hyperlink_get_type(), nullptr));

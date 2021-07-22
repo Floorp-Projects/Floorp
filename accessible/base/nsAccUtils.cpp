@@ -385,9 +385,9 @@ uint32_t nsAccUtils::TextLength(LocalAccessible* aAccessible) {
   return text.Length();
 }
 
-bool nsAccUtils::MustPrune(AccessibleOrProxy aAccessible) {
-  MOZ_ASSERT(!aAccessible.IsNull());
-  roles::Role role = aAccessible.Role();
+bool nsAccUtils::MustPrune(Accessible* aAccessible) {
+  MOZ_ASSERT(aAccessible);
+  roles::Role role = aAccessible->Role();
 
   if (role == roles::SLIDER) {
     // Always prune the tree for sliders, as it doesn't make sense for a
@@ -405,12 +405,12 @@ bool nsAccUtils::MustPrune(AccessibleOrProxy aAccessible) {
     return false;
   }
 
-  if (aAccessible.ChildCount() != 1) {
+  if (aAccessible->ChildCount() != 1) {
     // If the accessible has more than one child, don't prune it.
     return false;
   }
 
-  roles::Role childRole = aAccessible.FirstChild().Role();
+  roles::Role childRole = aAccessible->FirstChild()->Role();
   // If the accessible's child is a text leaf, prune the accessible.
   return childRole == roles::TEXT_LEAF || childRole == roles::STATICTEXT;
 }

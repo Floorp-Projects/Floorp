@@ -7,7 +7,6 @@
 
 #include "DocAccessibleParent.h"
 #include "AccAttributes.h"
-#include "AccessibleOrProxy.h"
 #include "nsCocoaUtils.h"
 
 #include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
@@ -50,13 +49,13 @@ struct OpaqueGeckoTextMarker {
   int32_t mOffset;
 };
 
-static bool DocumentExists(AccessibleOrProxy aDoc, uintptr_t aDocPtr) {
-  if (aDoc.Bits() == aDocPtr) {
+static bool DocumentExists(Accessible* aDoc, uintptr_t aDocPtr) {
+  if (reinterpret_cast<uintptr_t>(aDoc) == aDocPtr) {
     return true;
   }
 
-  if (aDoc.IsAccessible()) {
-    DocAccessible* docAcc = aDoc.AsAccessible()->AsDoc();
+  if (aDoc->IsLocal()) {
+    DocAccessible* docAcc = aDoc->AsLocal()->AsDoc();
     uint32_t docCount = docAcc->ChildDocumentCount();
     for (uint32_t i = 0; i < docCount; i++) {
       if (DocumentExists(docAcc->GetChildDocumentAt(i), aDocPtr)) {
@@ -64,7 +63,7 @@ static bool DocumentExists(AccessibleOrProxy aDoc, uintptr_t aDocPtr) {
       }
     }
   } else {
-    DocAccessibleParent* docProxy = aDoc.AsProxy()->AsDoc();
+    DocAccessibleParent* docProxy = aDoc->AsRemote()->AsDoc();
     size_t docCount = docProxy->ChildDocCount();
     for (uint32_t i = 0; i < docCount; i++) {
       if (DocumentExists(docProxy->ChildDocAt(i), aDocPtr)) {
@@ -78,41 +77,43 @@ static bool DocumentExists(AccessibleOrProxy aDoc, uintptr_t aDocPtr) {
 
 // GeckoTextMarker
 
-GeckoTextMarker::GeckoTextMarker(AccessibleOrProxy aDoc,
+GeckoTextMarker::GeckoTextMarker(Accessible* aDoc,
                                  AXTextMarkerRef aTextMarker) {
-  MOZ_ASSERT(!aDoc.IsNull());
+  MOZ_ASSERT(aDoc);
   OpaqueGeckoTextMarker opaqueMarker;
   if (aTextMarker &&
       AXTextMarkerGetLength(aTextMarker) == sizeof(OpaqueGeckoTextMarker)) {
     memcpy(&opaqueMarker, AXTextMarkerGetBytePtr(aTextMarker),
            sizeof(OpaqueGeckoTextMarker));
     if (DocumentExists(aDoc, opaqueMarker.mDoc)) {
-      AccessibleOrProxy doc;
-      doc.SetBits(opaqueMarker.mDoc);
-      if (doc.IsProxy()) {
-        mContainer = doc.AsProxy()->AsDoc()->GetAccessible(opaqueMarker.mID);
+      Accessible* doc = reinterpret_cast<Accessible*>(opaqueMarker.mDoc);
+      if (doc->IsRemote()) {
+        mContainer = doc->AsRemote()->AsDoc()->GetAccessible(opaqueMarker.mID);
       } else {
-        mContainer = doc.AsAccessible()->AsDoc()->GetAccessibleByUniqueID(
+        mContainer = doc->AsLocal()->AsDoc()->GetAccessibleByUniqueID(
             reinterpret_cast<void*>(opaqueMarker.mID));
       }
     }
 
     mOffset = opaqueMarker.mOffset;
+  } else {
+    mContainer = nullptr;
+    mOffset = 0;
   }
 }
 
-GeckoTextMarker GeckoTextMarker::MarkerFromIndex(const AccessibleOrProxy& aRoot,
+GeckoTextMarker GeckoTextMarker::MarkerFromIndex(Accessible* aRoot,
                                                  int32_t aIndex) {
-  if (aRoot.IsProxy()) {
+  if (aRoot->IsRemote()) {
     int32_t offset = 0;
     uint64_t containerID = 0;
-    DocAccessibleParent* ipcDoc = aRoot.AsProxy()->Document();
+    DocAccessibleParent* ipcDoc = aRoot->AsRemote()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendOffsetAtIndex(
-        aRoot.AsProxy()->ID(), aIndex, &containerID, &offset);
+        aRoot->AsRemote()->ID(), aIndex, &containerID, &offset);
     RemoteAccessible* container = ipcDoc->GetAccessible(containerID);
     return GeckoTextMarker(container, offset);
   } else if (auto htWrap = static_cast<HyperTextAccessibleWrap*>(
-                 aRoot.AsAccessible()->AsHyperText())) {
+                 aRoot->AsLocal()->AsHyperText())) {
     int32_t offset = 0;
     HyperTextAccessible* container = nullptr;
     htWrap->OffsetAtIndex(aIndex, &container, &offset);
@@ -127,19 +128,20 @@ id GeckoTextMarker::CreateAXTextMarker() {
     return nil;
   }
 
-  AccessibleOrProxy doc;
-  if (mContainer.IsProxy()) {
-    doc = mContainer.AsProxy()->Document();
+  Accessible* doc;
+  if (mContainer->IsRemote()) {
+    doc = mContainer->AsRemote()->Document();
   } else {
-    doc = mContainer.AsAccessible()->Document();
+    doc = mContainer->AsLocal()->Document();
   }
 
   uintptr_t identifier =
-      mContainer.IsProxy()
-          ? mContainer.AsProxy()->ID()
-          : reinterpret_cast<uintptr_t>(mContainer.AsAccessible()->UniqueID());
+      mContainer->IsRemote()
+          ? mContainer->AsRemote()->ID()
+          : reinterpret_cast<uintptr_t>(mContainer->AsLocal()->UniqueID());
 
-  OpaqueGeckoTextMarker opaqueMarker(doc.Bits(), identifier, mOffset);
+  OpaqueGeckoTextMarker opaqueMarker(reinterpret_cast<uintptr_t>(doc),
+                                     identifier, mOffset);
   AXTextMarkerRef cf_text_marker = AXTextMarkerCreate(
       kCFAllocatorDefault, reinterpret_cast<const UInt8*>(&opaqueMarker),
       sizeof(OpaqueGeckoTextMarker));
@@ -151,17 +153,17 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
   if (mContainer == aPoint.mContainer) return mOffset < aPoint.mOffset;
 
   // Build the chain of parents
-  AutoTArray<AccessibleOrProxy, 30> parents1, parents2;
-  AccessibleOrProxy p1 = mContainer;
-  while (!p1.IsNull()) {
+  AutoTArray<Accessible*, 30> parents1, parents2;
+  Accessible* p1 = mContainer;
+  while (p1) {
     parents1.AppendElement(p1);
-    p1 = p1.Parent();
+    p1 = p1->Parent();
   }
 
-  AccessibleOrProxy p2 = aPoint.mContainer;
-  while (!p2.IsNull()) {
+  Accessible* p2 = aPoint.mContainer;
+  while (p2) {
     parents2.AppendElement(p2);
-    p2 = p2.Parent();
+    p2 = p2->Parent();
   }
 
   // An empty chain of parents means one of the containers was null.
@@ -171,10 +173,10 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
   // Find where the parent chain differs
   uint32_t pos1 = parents1.Length(), pos2 = parents2.Length();
   for (uint32_t len = std::min(pos1, pos2); len > 0; --len) {
-    AccessibleOrProxy child1 = parents1.ElementAt(--pos1);
-    AccessibleOrProxy child2 = parents2.ElementAt(--pos2);
+    Accessible* child1 = parents1.ElementAt(--pos1);
+    Accessible* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
-      return child1.IndexInParent() < child2.IndexInParent();
+      return child1->IndexInParent() < child2->IndexInParent();
     }
   }
 
@@ -183,11 +185,12 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
     // descendant of aPoint.mContainer. The next element down in parents1
     // is mContainer's ancestor that is the child of aPoint.mContainer.
     // We compare its end offset in aPoint.mContainer with aPoint.mOffset.
-    AccessibleOrProxy child = parents1.ElementAt(pos1 - 1);
-    MOZ_ASSERT(child.Parent() == aPoint.mContainer);
+    Accessible* child = parents1.ElementAt(pos1 - 1);
+    MOZ_ASSERT(child->Parent() == aPoint.mContainer);
     bool unused;
-    uint32_t endOffset = child.IsProxy() ? child.AsProxy()->EndOffset(&unused)
-                                         : child.AsAccessible()->EndOffset();
+    uint32_t endOffset = child->IsRemote()
+                             ? child->AsRemote()->EndOffset(&unused)
+                             : child->AsLocal()->EndOffset();
     return endOffset < static_cast<uint32_t>(aPoint.mOffset);
   }
 
@@ -196,12 +199,12 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
     // descendant of mContainer. The next element down in parents2
     // is aPoint.mContainer's ancestor that is the child of mContainer.
     // We compare its start offset in mContainer with mOffset.
-    AccessibleOrProxy child = parents2.ElementAt(pos2 - 1);
-    MOZ_ASSERT(child.Parent() == mContainer);
+    Accessible* child = parents2.ElementAt(pos2 - 1);
+    MOZ_ASSERT(child->Parent() == mContainer);
     bool unused;
-    uint32_t startOffset = child.IsProxy()
-                               ? child.AsProxy()->StartOffset(&unused)
-                               : child.AsAccessible()->StartOffset();
+    uint32_t startOffset = child->IsRemote()
+                               ? child->AsRemote()->StartOffset(&unused)
+                               : child->AsLocal()->StartOffset();
     return static_cast<uint32_t>(mOffset) <= startOffset;
   }
 
@@ -210,34 +213,35 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
 }
 
 bool GeckoTextMarker::IsEditableRoot() {
-  uint64_t state = mContainer.IsProxy() ? mContainer.AsProxy()->State()
-                                        : mContainer.AsAccessible()->State();
+  uint64_t state = mContainer->IsRemote() ? mContainer->AsRemote()->State()
+                                          : mContainer->AsLocal()->State();
   if ((state & states::EDITABLE) == 0) {
     return false;
   }
 
-  AccessibleOrProxy parent = mContainer.Parent();
-  if (parent.IsNull()) {
+  Accessible* parent = mContainer->Parent();
+  if (!parent) {
     // Not sure when this can happen, but it would technically be an editable
     // root.
     return true;
   }
 
-  state = parent.IsProxy() ? parent.AsProxy()->State()
-                           : parent.AsAccessible()->State();
+  state = parent->IsRemote() ? parent->AsRemote()->State()
+                             : parent->AsLocal()->State();
 
   return (state & states::EDITABLE) == 0;
 }
 
 bool GeckoTextMarker::Next() {
-  if (mContainer.IsProxy()) {
+  if (mContainer->IsRemote()) {
     int32_t nextOffset = 0;
     uint64_t nextContainerID = 0;
-    DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
+    DocAccessibleParent* ipcDoc = mContainer->AsRemote()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendNextClusterAt(
-        mContainer.AsProxy()->ID(), mOffset, &nextContainerID, &nextOffset);
+        mContainer->AsRemote()->ID(), mOffset, &nextContainerID, &nextOffset);
     RemoteAccessible* nextContainer = ipcDoc->GetAccessible(nextContainerID);
-    bool moved = nextContainer != mContainer.AsProxy() || nextOffset != mOffset;
+    bool moved =
+        nextContainer != mContainer->AsRemote() || nextOffset != mOffset;
     mContainer = nextContainer;
     mOffset = nextOffset;
     return moved;
@@ -255,14 +259,15 @@ bool GeckoTextMarker::Next() {
 }
 
 bool GeckoTextMarker::Previous() {
-  if (mContainer.IsProxy()) {
+  if (mContainer->IsRemote()) {
     int32_t prevOffset = 0;
     uint64_t prevContainerID = 0;
-    DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
+    DocAccessibleParent* ipcDoc = mContainer->AsRemote()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendPreviousClusterAt(
-        mContainer.AsProxy()->ID(), mOffset, &prevContainerID, &prevOffset);
+        mContainer->AsRemote()->ID(), mOffset, &prevContainerID, &prevOffset);
     RemoteAccessible* prevContainer = ipcDoc->GetAccessible(prevContainerID);
-    bool moved = prevContainer != mContainer.AsProxy() || prevOffset != mOffset;
+    bool moved =
+        prevContainer != mContainer->AsRemote() || prevOffset != mOffset;
     mContainer = prevContainer;
     mOffset = prevOffset;
     return moved;
@@ -279,26 +284,26 @@ bool GeckoTextMarker::Previous() {
   return false;
 }
 
-static uint32_t CharacterCount(const AccessibleOrProxy& aContainer) {
-  if (aContainer.IsProxy()) {
-    return aContainer.AsProxy()->CharacterCount();
+static uint32_t CharacterCount(Accessible* aContainer) {
+  if (aContainer->IsRemote()) {
+    return aContainer->AsRemote()->CharacterCount();
   }
 
-  if (aContainer.AsAccessible()->IsHyperText()) {
-    return aContainer.AsAccessible()->AsHyperText()->CharacterCount();
+  if (aContainer->AsLocal()->IsHyperText()) {
+    return aContainer->AsLocal()->AsHyperText()->CharacterCount();
   }
 
   return 0;
 }
 
 GeckoTextMarkerRange GeckoTextMarker::Range(EWhichRange aRangeType) {
-  MOZ_ASSERT(!mContainer.IsNull());
-  if (mContainer.IsProxy()) {
+  MOZ_ASSERT(mContainer);
+  if (mContainer->IsRemote()) {
     int32_t startOffset = 0, endOffset = 0;
     uint64_t startContainerID = 0, endContainerID = 0;
-    DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
+    DocAccessibleParent* ipcDoc = mContainer->AsRemote()->Document();
     bool success = ipcDoc->GetPlatformExtension()->SendRangeAt(
-        mContainer.AsProxy()->ID(), mOffset, aRangeType, &startContainerID,
+        mContainer->AsRemote()->ID(), mOffset, aRangeType, &startContainerID,
         &startOffset, &endContainerID, &endOffset);
     if (success) {
       return GeckoTextMarkerRange(
@@ -318,13 +323,13 @@ GeckoTextMarkerRange GeckoTextMarker::Range(EWhichRange aRangeType) {
   return GeckoTextMarkerRange(GeckoTextMarker(), GeckoTextMarker());
 }
 
-AccessibleOrProxy GeckoTextMarker::Leaf() {
-  MOZ_ASSERT(!mContainer.IsNull());
-  if (mContainer.IsProxy()) {
+Accessible* GeckoTextMarker::Leaf() {
+  MOZ_ASSERT(mContainer);
+  if (mContainer->IsRemote()) {
     uint64_t leafID = 0;
-    DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
+    DocAccessibleParent* ipcDoc = mContainer->AsRemote()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendLeafAtOffset(
-        mContainer.AsProxy()->ID(), mOffset, &leafID);
+        mContainer->AsRemote()->ID(), mOffset, &leafID);
     return ipcDoc->GetAccessible(leafID);
   } else if (auto htWrap = ContainerAsHyperTextWrap()) {
     return htWrap->LeafAtOffset(mOffset);
@@ -336,7 +341,7 @@ AccessibleOrProxy GeckoTextMarker::Leaf() {
 // GeckoTextMarkerRange
 
 GeckoTextMarkerRange::GeckoTextMarkerRange(
-    AccessibleOrProxy aDoc, AXTextMarkerRangeRef aTextMarkerRange) {
+    Accessible* aDoc, AXTextMarkerRangeRef aTextMarkerRange) {
   if (!aTextMarkerRange ||
       CFGetTypeID(aTextMarkerRange) != AXTextMarkerRangeGetTypeID()) {
     return;
@@ -353,26 +358,23 @@ GeckoTextMarkerRange::GeckoTextMarkerRange(
   CFRelease(end_marker);
 }
 
-GeckoTextMarkerRange::GeckoTextMarkerRange(
-    const AccessibleOrProxy& aAccessible) {
-  if ((aAccessible.IsAccessible() &&
-       aAccessible.AsAccessible()->IsHyperText()) ||
-      (aAccessible.IsProxy() && aAccessible.AsProxy()->IsHyperText())) {
+GeckoTextMarkerRange::GeckoTextMarkerRange(Accessible* aAccessible) {
+  if (aAccessible->IsHyperText()) {
     // The accessible is a hypertext. Initialize range to its inner text range.
     mStart = GeckoTextMarker(aAccessible, 0);
     mEnd = GeckoTextMarker(aAccessible, (CharacterCount(aAccessible)));
   } else {
     // The accessible is not a hypertext (maybe a text leaf?). Initialize range
     // to its offsets in its container.
-    mStart = GeckoTextMarker(aAccessible.Parent(), 0);
-    mEnd = GeckoTextMarker(aAccessible.Parent(), 0);
-    if (mStart.mContainer.IsProxy()) {
-      DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+    mStart = GeckoTextMarker(aAccessible->Parent(), 0);
+    mEnd = GeckoTextMarker(aAccessible->Parent(), 0);
+    if (mStart.mContainer->IsRemote()) {
+      DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
       Unused << ipcDoc->GetPlatformExtension()->SendRangeOfChild(
-          mStart.mContainer.AsProxy()->ID(), aAccessible.AsProxy()->ID(),
+          mStart.mContainer->AsRemote()->ID(), aAccessible->AsRemote()->ID(),
           &mStart.mOffset, &mEnd.mOffset);
     } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
-      htWrap->RangeOfChild(aAccessible.AsAccessible(), &mStart.mOffset,
+      htWrap->RangeOfChild(aAccessible->AsLocal(), &mStart.mOffset,
                            &mEnd.mOffset);
     }
   }
@@ -391,11 +393,11 @@ id GeckoTextMarkerRange::CreateAXTextMarkerRange() {
 
 NSString* GeckoTextMarkerRange::Text() const {
   nsAutoString text;
-  if (mStart.mContainer.IsProxy() && mEnd.mContainer.IsProxy()) {
-    DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+  if (mStart.mContainer->IsRemote() && mEnd.mContainer->IsRemote()) {
+    DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendTextForRange(
-        mStart.mContainer.AsProxy()->ID(), mStart.mOffset,
-        mEnd.mContainer.AsProxy()->ID(), mEnd.mOffset, &text);
+        mStart.mContainer->AsRemote()->ID(), mStart.mOffset,
+        mEnd.mContainer->AsRemote()->ID(), mEnd.mOffset, &text);
   } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
     htWrap->TextForRange(text, mStart.mOffset, mEnd.ContainerAsHyperTextWrap(),
                          mEnd.mOffset);
@@ -410,8 +412,8 @@ static NSColor* ColorFromColor(const Color& aColor) {
                                    alpha:1.0];
 }
 
-static NSDictionary* StringAttributesFromAttributes(
-    AccAttributes* aAttributes, const AccessibleOrProxy& aContainer) {
+static NSDictionary* StringAttributesFromAttributes(AccAttributes* aAttributes,
+                                                    Accessible* aContainer) {
   NSMutableDictionary* attrDict =
       [NSMutableDictionary dictionaryWithCapacity:aAttributes->Count()];
   NSMutableDictionary* fontAttrDict = [[NSMutableDictionary alloc] init];
@@ -488,12 +490,12 @@ NSAttributedString* GeckoTextMarkerRange::AttributedText() const {
   NSMutableAttributedString* str =
       [[[NSMutableAttributedString alloc] init] autorelease];
 
-  if (mStart.mContainer.IsProxy() && mEnd.mContainer.IsProxy()) {
+  if (mStart.mContainer->IsRemote() && mEnd.mContainer->IsRemote()) {
     nsTArray<TextAttributesRun> textAttributesRuns;
-    DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+    DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendAttributedTextForRange(
-        mStart.mContainer.AsProxy()->ID(), mStart.mOffset,
-        mEnd.mContainer.AsProxy()->ID(), mEnd.mOffset, &textAttributesRuns);
+        mStart.mContainer->AsRemote()->ID(), mStart.mOffset,
+        mEnd.mContainer->AsRemote()->ID(), mEnd.mOffset, &textAttributesRuns);
 
     for (size_t i = 0; i < textAttributesRuns.Length(); i++) {
       AccAttributes* attributes =
@@ -536,11 +538,11 @@ NSAttributedString* GeckoTextMarkerRange::AttributedText() const {
 
 int32_t GeckoTextMarkerRange::Length() const {
   int32_t length = 0;
-  if (mStart.mContainer.IsProxy() && mEnd.mContainer.IsProxy()) {
-    DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+  if (mStart.mContainer->IsRemote() && mEnd.mContainer->IsRemote()) {
+    DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendLengthForRange(
-        mStart.mContainer.AsProxy()->ID(), mStart.mOffset,
-        mEnd.mContainer.AsProxy()->ID(), mEnd.mOffset, &length);
+        mStart.mContainer->AsRemote()->ID(), mStart.mOffset,
+        mEnd.mContainer->AsRemote()->ID(), mEnd.mOffset, &length);
   } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
     length = htWrap->LengthForRange(
         mStart.mOffset, mEnd.ContainerAsHyperTextWrap(), mEnd.mOffset);
@@ -551,11 +553,11 @@ int32_t GeckoTextMarkerRange::Length() const {
 
 NSValue* GeckoTextMarkerRange::Bounds() const {
   nsIntRect rect;
-  if (mStart.mContainer.IsProxy() && mEnd.mContainer.IsProxy()) {
-    DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+  if (mStart.mContainer->IsRemote() && mEnd.mContainer->IsRemote()) {
+    DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendBoundsForRange(
-        mStart.mContainer.AsProxy()->ID(), mStart.mOffset,
-        mEnd.mContainer.AsProxy()->ID(), mEnd.mOffset, &rect);
+        mStart.mContainer->AsRemote()->ID(), mStart.mOffset,
+        mEnd.mContainer->AsRemote()->ID(), mEnd.mOffset, &rect);
   } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
     rect = htWrap->BoundsForRange(
         mStart.mOffset, mEnd.ContainerAsHyperTextWrap(), mEnd.mOffset);
@@ -574,11 +576,11 @@ NSValue* GeckoTextMarkerRange::Bounds() const {
 }
 
 void GeckoTextMarkerRange::Select() const {
-  if (mStart.mContainer.IsProxy() && mEnd.mContainer.IsProxy()) {
-    DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+  if (mStart.mContainer->IsRemote() && mEnd.mContainer->IsRemote()) {
+    DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendSelectRange(
-        mStart.mContainer.AsProxy()->ID(), mStart.mOffset,
-        mEnd.mContainer.AsProxy()->ID(), mEnd.mOffset);
+        mStart.mContainer->AsRemote()->ID(), mStart.mOffset,
+        mEnd.mContainer->AsRemote()->ID(), mEnd.mOffset);
   } else if (RefPtr<HyperTextAccessibleWrap> htWrap =
                  mStart.ContainerAsHyperTextWrap()) {
     RefPtr<HyperTextAccessibleWrap> end = mEnd.ContainerAsHyperTextWrap();
@@ -586,7 +588,7 @@ void GeckoTextMarkerRange::Select() const {
   }
 }
 
-bool GeckoTextMarkerRange::Crop(const AccessibleOrProxy& aContainer) {
+bool GeckoTextMarkerRange::Crop(Accessible* aContainer) {
   GeckoTextMarker containerStart(aContainer, 0);
   GeckoTextMarker containerEnd(aContainer, CharacterCount(aContainer));
 

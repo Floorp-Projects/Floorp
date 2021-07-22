@@ -6,7 +6,6 @@
 
 #include "LocalAccessible-inl.h"
 #include "AccAttributes.h"
-#include "AccessibleOrProxy.h"
 #include "DocAccessibleChild.h"
 #include "DocAccessibleWrap.h"
 #include "nsIDocShell.h"
@@ -166,11 +165,12 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
   }
 
   if (docAcc->mCachePivotBoundaries) {
-    AccessibleOrProxy accOrProxy = AccessibleOrProxy(docAcc);
-    a11y::Pivot pivot(accOrProxy);
+    a11y::Pivot pivot(docAcc);
     TraversalRule rule(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT);
-    LocalAccessible* first = pivot.First(rule).AsAccessible();
-    LocalAccessible* last = pivot.Last(rule).AsAccessible();
+    Accessible* maybeFirst = pivot.First(rule);
+    Accessible* maybeLast = pivot.Last(rule);
+    LocalAccessible* first = maybeFirst ? maybeFirst->AsLocal() : nullptr;
+    LocalAccessible* last = maybeLast ? maybeLast->AsLocal() : nullptr;
 
     // If first/last are null, pass the root document as pivot boundary.
     if (IPCAccessibilityActive()) {

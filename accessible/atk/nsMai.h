@@ -11,13 +11,13 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#include "AccessibleOrProxy.h"
 #include "AccessibleWrap.h"
 
 namespace mozilla {
 namespace a11y {
 class RemoteAccessible;
-}
+class Accessible;
+}  // namespace a11y
 }  // namespace mozilla
 
 #define MAI_TYPE_ATK_OBJECT (mai_atk_object_get_type())
@@ -65,9 +65,8 @@ extern "C" GType (*gAtkTableCellGetTypeFunc)();
 
 mozilla::a11y::AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj);
 mozilla::a11y::RemoteAccessible* GetProxy(AtkObject* aAtkObj);
-mozilla::a11y::AccessibleOrProxy GetInternalObj(AtkObject* aObj);
-AtkObject* GetWrapperFor(mozilla::a11y::RemoteAccessible* aProxy);
-AtkObject* GetWrapperFor(mozilla::a11y::AccessibleOrProxy aObj);
+mozilla::a11y::Accessible* GetInternalObj(AtkObject* aObj);
+AtkObject* GetWrapperFor(mozilla::a11y::Accessible* acc);
 
 extern int atkMajorVersion, atkMinorVersion, atkMicroVersion;
 
@@ -82,10 +81,6 @@ static inline bool IsAtkVersionAtLeast(int aMajor, int aMinor, int aMicro = 0) {
            (aMinor == atkMinorVersion && aMicro <= atkMicroVersion)));
 }
 
-// This is or'd with the pointer in MaiAtkObject::accWrap if the wrap-ee is a
-// proxy.
-static const uintptr_t IS_PROXY = 1;
-
 /**
  * This MaiAtkObject is a thin wrapper, in the MAI namespace, for AtkObject
  */
@@ -95,7 +90,7 @@ struct MaiAtkObject {
    * The AccessibleWrap whose properties and features are exported
    * via this object instance.
    */
-  mozilla::a11y::AccessibleOrProxy accWrap;
+  mozilla::a11y::Accessible* acc;
 
   /*
    * Get the AtkHyperlink for this atk object.
