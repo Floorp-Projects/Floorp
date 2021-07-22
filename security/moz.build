@@ -158,3 +158,8 @@ GYP_DIRS["nss"].action_overrides = {
 
 if CONFIG["NSS_EXTRA_SYMBOLS_FILE"]:
     DEFINES["NSS_EXTRA_SYMBOLS_FILE"] = CONFIG["NSS_EXTRA_SYMBOLS_FILE"]
+
+SPHINX_TREES["nss"] = "nss/doc/rst"
+
+with Files("nss/doc/rst/**"):
+    SCHEDULES.exclusive = ["nss"]
