@@ -57,8 +57,7 @@ var reloadPageAndWaitForStyleSheets = async function(ui, editorCount) {
   info("Reloading the page.");
 
   const onClear = ui.once("stylesheets-clear");
-  const browser = gBrowser.selectedBrowser;
-  await SpecialPowers.spawn(browser, [], () => content.location.reload());
+  await refreshTab();
   await onClear;
 
   await waitUntil(() => ui.editors.length === editorCount);
