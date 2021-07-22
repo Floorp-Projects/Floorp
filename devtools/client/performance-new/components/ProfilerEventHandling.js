@@ -13,8 +13,6 @@
  * @property {PerfFront} perfFront
  * @property {RecordingState} recordingState
  * @property {boolean?} isSupportedPlatform
- * @property {PageContext} pageContext
- * @property {string | null} promptEnvRestart
  */
 
 /**
@@ -29,7 +27,6 @@
  * @typedef {import("../@types/perf").PerfFront} PerfFront
  * @typedef {import("../@types/perf").RecordingState} RecordingState
  * @typedef {import("../@types/perf").State} StoreState
- * @typedef {import("../@types/perf").PageContext} PageContext
  */
 
 /**
@@ -222,8 +219,6 @@ function mapStateToProps(state) {
     perfFront: selectors.getPerfFront(state),
     recordingState: selectors.getRecordingState(state),
     isSupportedPlatform: selectors.getIsSupportedPlatform(state),
-    pageContext: selectors.getPageContext(state),
-    promptEnvRestart: selectors.getPromptEnvRestart(state),
   };
 }
 
