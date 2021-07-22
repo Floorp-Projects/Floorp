@@ -42,34 +42,23 @@ export interface Commands {
 }
 
 /**
- * The actor version of the ActorReadyGeckoProfilerInterface returns promises,
- * while if it's instantiated directly it will not return promises.
- */
-type MaybePromise<T> = Promise<T> | T;
-
-/**
  * TS-TODO - Stub.
- *
- * Any method here that returns a MaybePromise<T> is because the
- * ActorReadyGeckoProfilerInterface returns T while the PerfFront returns Promise<T>.
- * Any method here that returns Promise<T> is because both the
- * ActorReadyGeckoProfilerInterface and the PerfFront return promises.
  */
 export interface PerfFront {
-  startProfiler: (options: RecordingSettings) => MaybePromise<boolean>;
+  startProfiler: (options: RecordingSettings) => Promise<boolean>;
   getProfileAndStopProfiler: () => Promise<any>;
-  stopProfilerAndDiscardProfile: () => MaybePromise<void>;
+  stopProfilerAndDiscardProfile: () => Promise<void>;
   getSymbolTable: (
     path: string,
     breakpadId: string
   ) => Promise<[number[], number[], number[]]>;
-  isActive: () => MaybePromise<boolean>;
-  isSupportedPlatform: () => MaybePromise<boolean>;
-  isLockedForPrivateBrowsing: () => MaybePromise<boolean>;
+  isActive: () => Promise<boolean>;
+  isSupportedPlatform: () => Promise<boolean>;
+  isLockedForPrivateBrowsing: () => Promise<boolean>;
   on: (type: string, listener: () => void) => void;
   off: (type: string, listener: () => void) => void;
   destroy: () => void;
-  getSupportedFeatures: () => MaybePromise<string[]>;
+  getSupportedFeatures: () => Promise<string[]>;
 }
 
 /**
