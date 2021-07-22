@@ -74,7 +74,7 @@ crashtest:
             default:
                 by-test-platform:
                     windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-                    android-em-7.0-x86_64/debug-isolated-process: []
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
                     linux.*asan/opt: []
                     .*(-asan|-tsan|10-32|7-32).*: built-projects
                     android.*: built-projects
@@ -92,7 +92,7 @@ crashtest:
                     windows10-aarch64-qr.*: 2
                     macosx1100.*: 2
                     android-hw-.*-qr/.*: 2
-                    android-em-7.0-x86_64/debug-isolated-process: 3
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
                     default: default
 
 crashtest-qr:
@@ -146,8 +146,8 @@ jsreftest:
             fission: []
             default:
                 by-test-platform:
-                    android-hw-.*-aarch64(?:-shippable)?/.*: ['mozilla-central', 'release']
-                    android-hw-.*-arm7(?:-shippable)?/.*: ['mozilla-central', 'release']
+                    android-hw-.*-aarch64(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
+                    android-hw-.*-arm7(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
                     default: built-projects
     virtualization:
         by-test-platform:
@@ -201,7 +201,7 @@ reftest:
             default:
                 by-test-platform:
                     windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-                    android-em-7.0-x86_64/debug-isolated-process: []
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
                     linux.*asan/opt: []
                     .*(mingwclang|-asan|-tsan|10-32|7-32).*: built-projects
                     windows10-aarch64-qr/opt: built-projects
@@ -233,7 +233,7 @@ reftest:
                     windows10-aarch64-qr.*: 2
                     android-hw-.*-qr/.*: 2
                     macosx1100.*: 2
-                    android-em-7.0-x86_64/debug-isolated-process: 3
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
                     default: default
 
 reftest-qr:

@@ -24,7 +24,7 @@ job-defaults:
                     default: 2
             default:
                 by-test-platform:
-                    android-em-7.0-x86_64/debug-isolated-process: 3
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
                     default: default
     mozharness:
         script:
@@ -79,7 +79,7 @@ mochitest-plain:
             default:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
-                    android-em-7.0-x86_64/debug-isolated-process: []
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
                     default: built-projects
     chunks:
         by-test-platform:
@@ -333,7 +333,7 @@ mochitest-plain-gpu:
             default:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
-                    android-em-7.0-x86_64/debug-isolated-process: []
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
                     default: built-projects
     virtualization:
         by-test-platform:
@@ -345,7 +345,7 @@ mochitest-plain-gpu:
             fission: 2
             default:
                 by-test-platform:
-                    android-em-7.0-x86_64/debug-isolated-process: 3
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
                     default: default
     mozharness:
         mochitest-flavor: plain
@@ -433,7 +433,7 @@ mochitest-media:
                     windows10-64-asan-qr/opt: ['trunk']
                     android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
                     android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
-                    android-em-7.0-x86_64/debug-isolated-process: []
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
                     windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     (linux|windows10-64|macos)(?!.*-qr).*: []
                     default: built-projects
@@ -449,7 +449,7 @@ mochitest-media:
                 by-test-platform:
                     android-hw-.*/opt: []
                     android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
-                    android-em-7.0-x86_64/debug-isolated-process: []
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
                     .*-tsan/opt: ['trunk']
                     linux.*(asan|ccov)/opt: []
                     .*(ccov/|asan/|-32).*: built-projects
@@ -460,7 +460,6 @@ mochitest-media:
         by-test-platform:
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'socketprocess', 'fission', 'noqr']
             android-em.*-qr.*: ['fission', 'fission-webgl-ipc', 'webgl-ipc', 'noqr']
-            android-em-7.*: ['fission']
             android-.*/opt: []
             android.*: ['socketprocess']
             .*-ccov-qr.*/.*: ['noqr']
@@ -506,7 +505,7 @@ mochitest-media:
             default:
                 by-test-platform:
                     android-em.*: 1
-                    android-em-7.0-x86_64/debug-isolated-process: 3
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
                     windows10-aarch64-qr.*: 2
                     android-hw.*: 1
                     macosx1100.*: 2
@@ -620,7 +619,7 @@ mochitest-webgl1-core:
         by-test-platform:
             .*-tsan/opt: ['trunk']
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-            android-hw.*aarch.*-shippable/opt: ['mozilla-central']
+            android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
             default: built-projects
     tier:
         by-test-platform:
@@ -660,7 +659,7 @@ mochitest-webgl1-ext:
         by-test-platform:
             .*-tsan/opt: ['trunk']
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-            android-hw.*aarch.*-shippable/opt: ['mozilla-central']
+            android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
             default: built-projects
     tier:
         by-test-platform:
@@ -699,7 +698,7 @@ mochitest-webgl2-core:
         by-test-platform:
             .*-tsan/opt: ['trunk']
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-            android-hw.*aarch.*-shippable/opt: ['mozilla-central']
+            android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
             default: built-projects
     tier:
         by-test-platform:
