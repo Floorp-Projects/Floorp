@@ -279,6 +279,7 @@ var TabUnloader = {
         Services.console.logStringMessage(
           `TabUnloader discarded <${remoteType}>`
         );
+        tabInfo.tab.updateLastUnloadedByTabUnloader();
         return true;
       }
     }

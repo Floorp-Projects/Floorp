@@ -4957,6 +4957,18 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of tabs opened across all windows, collected at most every 5 minutes whenever the user interacts with the browser in the following ways: open tab/window, page load."
   },
+  "TAB_UNLOAD_TO_RELOAD": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["tkikuchi@mozilla.com"],
+    "bug_numbers": [1715858],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "description": "How long (sec) a tab had been unloaded until it was reloaded."
+  },
   "LAZYLOAD_IMAGE_TOTAL": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],

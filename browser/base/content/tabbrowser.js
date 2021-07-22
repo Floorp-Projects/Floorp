@@ -1156,6 +1156,7 @@
       }
 
       if (!this._previewMode) {
+        newTab.recordTimeFromUnloadToReload();
         newTab.updateLastAccessed();
         oldTab.updateLastAccessed();
 
