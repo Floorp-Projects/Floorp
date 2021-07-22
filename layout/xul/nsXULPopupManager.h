@@ -187,8 +187,7 @@ extern const nsNavigationDirection DirectionFromKeyCodeTable[2][6];
 
 // Used to hold information about a popup that is about to be opened.
 struct PendingPopup {
-  MOZ_CAN_RUN_SCRIPT PendingPopup(nsIContent* aPopup,
-                                  mozilla::dom::Event* aEvent);
+  PendingPopup(nsIContent* aPopup, mozilla::dom::Event* aEvent);
 
   const nsCOMPtr<nsIContent> mPopup;
   const RefPtr<mozilla::dom::Event> mEvent;
@@ -206,7 +205,7 @@ struct PendingPopup {
 
   already_AddRefed<nsIContent> GetTriggerContent() const;
 
-  MOZ_CAN_RUN_SCRIPT void InitMousePoint();
+  void InitMousePoint();
 
   void SetMousePoint(mozilla::LayoutDeviceIntPoint aMousePoint) {
     mMousePoint = aMousePoint;
@@ -467,18 +466,6 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   // aMenuBar isn't currently active, yet another menu bar is, that menu bar
   // will remain active.
   void SetActiveMenuBar(nsMenuBarFrame* aMenuBar, bool aActivate);
-
-  // retrieve the node and offset of the last mouse event used to open a
-  // context menu. This information is determined from the rangeParent and
-  // the rangeOffset of the event supplied to ShowPopup or ShowPopupAtScreen.
-  // This is used by the implementation of Document::GetPopupRangeParent
-  // and Document::GetPopupRangeOffset.
-  nsIContent* GetMouseLocationParent() const {
-    return mPendingPopup ? mPendingPopup->mRangeParentContent.get() : nullptr;
-  }
-  int32_t MouseLocationOffset() const {
-    return mPendingPopup ? mPendingPopup->mRangeOffset : -1;
-  }
 
   /**
    * Open a <menu> given its content node. If aSelectFirstItem is
@@ -754,6 +741,10 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   nsresult UpdateIgnoreKeys(bool aIgnoreKeys);
 
   nsPopupState GetPopupState(mozilla::dom::Element* aPopupElement);
+
+  mozilla::dom::Event* GetOpeningPopupEvent() const {
+    return mPendingPopup->mEvent.get();
+  }
 
   nsresult KeyUp(mozilla::dom::KeyboardEvent* aKeyEvent);
   nsresult KeyDown(mozilla::dom::KeyboardEvent* aKeyEvent);
