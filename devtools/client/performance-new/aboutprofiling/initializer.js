@@ -65,9 +65,6 @@ const LocalizationProvider = React.createFactory(
 const AboutProfiling = React.createFactory(
   require("devtools/client/performance-new/components/AboutProfiling")
 );
-const ProfilerEventHandling = React.createFactory(
-  require("devtools/client/performance-new/components/ProfilerEventHandling")
-);
 const createStore = require("devtools/client/shared/redux/create-store");
 const reducers = require("devtools/client/performance-new/store/reducers");
 const actions = require("devtools/client/performance-new/store/actions");
@@ -126,12 +123,7 @@ async function gInit(perfFront, pageContext, openRemoteDevTools) {
       { store },
       LocalizationProvider(
         { bundles: l10n.getBundles() },
-        React.createElement(
-          React.Fragment,
-          null,
-          ProfilerEventHandling(),
-          AboutProfiling()
-        )
+        React.createElement(React.Fragment, null, AboutProfiling())
       )
     ),
     document.querySelector("#root")
