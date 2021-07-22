@@ -79,7 +79,6 @@ export class MultiStageProtonScreen extends React.PureComponent {
                   content={content}
                   activeTheme={this.props.activeTheme}
                   handleAction={this.props.handleAction}
-                  design={this.props.design}
                 />
               ) : null}
               <div>
