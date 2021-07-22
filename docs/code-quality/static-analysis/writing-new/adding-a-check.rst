@@ -50,18 +50,36 @@ The gist of converting your matcher is to take the following pseudo-code and pas
       this);
 
 
-It honest to god is usually that easy.  Here's a working example where I pasted in straight from Compiler Explorer and then ran through clang-format:
+It honest to god is usually that easy.  Here's a working example where I pasted in straight from Compiler Explorer:
 
 ::
 
   AstMatcher->addMatcher(
-      traverse(TK_IgnoreUnlessSpelledInSource,
-          ifStmt(allOf(has(binaryOperator(has(declRefExpr(hasType(enumDecl()))))),
-                   hasElse(ifStmt(allOf(unless(hasElse(anything())),
-                                        has(binaryOperator(has(declRefExpr(
-                                            hasType(enumDecl()))))))))))
+    traverse(TK_IgnoreUnlessSpelledInSource,
+      ifStmt(allOf(
+              has(
+                   binaryOperator(
+                       has(
+                           declRefExpr(hasType(enumDecl().bind("enum")))
+                       )
+                   )
+               ),
+               hasElse(
+                   ifStmt(allOf(
+                      unless(hasElse(anything())),
+                      has(
+                           binaryOperator(
+                               has(
+                                   declRefExpr(hasType(enumDecl()))
+                               )
+                           )
+                       )
+                   ))
+              )
+           ))
           .bind("node")),
       this);
+
 
 
 If for some reason you're not using the ``IgnoreUnlessSpelledInSource`` Traversal Mode, remove the call to traverse and the corresponding closing paren.  (Also, if you're comparing this code to existing source code, know that because this traversal mode is a new clang feature, most historical clang checks do not use it.)

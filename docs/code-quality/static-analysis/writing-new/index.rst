@@ -11,4 +11,5 @@ or seriously develop one we can land and run internally.  While being written fo
   compiler-explorer.rst
   writing-matchers.rst
   adding-a-check.rst
+  advanced-check-features.rst
 
