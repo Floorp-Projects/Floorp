@@ -101,7 +101,6 @@ async function gInit(perfFront, pageContext, openRemoteDevTools) {
   // the browser.
   store.dispatch(
     actions.initializeStore({
-      perfFront,
       isSupportedPlatform,
       supportedFeatures,
       presets,

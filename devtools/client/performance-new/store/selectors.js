@@ -113,9 +113,6 @@ const getInitializedValues = state => {
   return values;
 };
 
-/** @type {Selector<PerfFront>} */
-const getPerfFront = state => getInitializedValues(state).perfFront;
-
 /** @type {Selector<SetRecordingSettings>} */
 const getSetRecordingSettingsFn = state =>
   getInitializedValues(state).setRecordingSettings;
@@ -146,7 +143,6 @@ module.exports = {
   getOpenRemoteDevTools,
   getRecordingSettings,
   getInitializedValues,
-  getPerfFront,
   getSetRecordingSettingsFn,
   getPageContext,
   getPromptEnvRestart,

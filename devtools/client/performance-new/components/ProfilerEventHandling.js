@@ -10,7 +10,6 @@
 
 /**
  * @typedef {Object} StateProps
- * @property {PerfFront} perfFront
  * @property {RecordingState} recordingState
  * @property {boolean?} isSupportedPlatform
  */
@@ -25,8 +24,13 @@
  */
 
 /**
+ * @typedef {Object} OwnProps
+ * @property {PerfFront} perfFront
+ */
+
+/**
  * @typedef {ResolveThunks<ThunkDispatchProps>} DispatchProps
- * @typedef {StateProps & DispatchProps} Props
+ * @typedef {StateProps & DispatchProps & OwnProps} Props
  * @typedef {import("../@types/perf").PerfFront} PerfFront
  * @typedef {import("../@types/perf").RecordingState} RecordingState
  * @typedef {import("../@types/perf").State} StoreState
@@ -118,7 +122,6 @@ class ProfilerEventHandling extends PureComponent {
  */
 function mapStateToProps(state) {
   return {
-    perfFront: selectors.getPerfFront(state),
     recordingState: selectors.getRecordingState(state),
     isSupportedPlatform: selectors.getIsSupportedPlatform(state),
   };

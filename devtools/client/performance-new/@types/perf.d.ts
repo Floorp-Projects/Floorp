@@ -239,8 +239,6 @@ export interface RecordingSettings {
 export type Reducer<S> = (state: S | undefined, action: Action) => S;
 
 export interface InitializedValues {
-  // The current Front to the Perf actor.
-  perfFront: PerfFront;
   // A function to set the recording settings.
   setRecordingSettings: SetRecordingSettings;
   // The current list of presets, loaded in from a JSM.
@@ -312,7 +310,6 @@ export type Action =
     }
   | {
       type: "INITIALIZE_STORE";
-      perfFront: PerfFront;
       isSupportedPlatform: boolean;
       setRecordingSettings: SetRecordingSettings;
       presets: Presets;
@@ -328,7 +325,6 @@ export type Action =
     };
 
 export interface InitializeStoreValues {
-  perfFront: PerfFront;
   isSupportedPlatform: boolean;
   setRecordingSettings: SetRecordingSettings;
   presets: Presets;
