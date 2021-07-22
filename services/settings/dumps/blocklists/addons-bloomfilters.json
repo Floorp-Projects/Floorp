@@ -3,6 +3,52 @@
     {
       "stash": {
         "blocked": [
+          "ascsurfingprotection2021@iobit.com:2.2.5"
+        ],
+        "unblocked": []
+      },
+      "schema": 1626698274420,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1626870908878,
+      "id": "eb6e0222-4797-4cdd-aa49-0478995da777",
+      "last_modified": 1626871076194
+    },
+    {
+      "stash": {
+        "blocked": [
+          "quickerapp@com:1.2.10",
+          "minibarsearch@com:1.2.12",
+          "myvideopro@com:1.2.18",
+          "openweb@com:1.2.18",
+          "purchresult@com:1.2.18",
+          "togofind@com:1.2.17",
+          "togoresult@com:1.2.18",
+          "quicksearchbar@com:1.2.12",
+          "jumpingapp@com:1.2.18",
+          "gofinding@com:1.2.18",
+          "allsearchpro@com:1.2.18",
+          "keybrowse@com:1.2.12",
+          "browsetag@com:1.2.12",
+          "tagweb@com:1.2.12",
+          "gobrowse@com:1.2.10",
+          "quickbrowse@com:1.2.10",
+          "magicfiind@com:1.2.20",
+          "togobrowse@com:1.2.17",
+          "justsearcher@com:1.2.18",
+          "nextsearch@com:1.2.12",
+          "magicfiind@com:1.2.18"
+        ],
+        "unblocked": []
+      },
+      "schema": 1626449759749,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1626698109169,
+      "id": "b6bf78a6-2997-479d-bdff-c5f173f8025c",
+      "last_modified": 1626698274352
+    },
+    {
+      "stash": {
+        "blocked": [
           "{125f7e07-0be1-42f7-af08-f0816749b1c9}:0.7",
           "{125f7e07-0be1-42f7-af08-f0816749b1c9}:0.6",
           "{125f7e07-0be1-42f7-af08-f0816749b1c9}:0.3",
