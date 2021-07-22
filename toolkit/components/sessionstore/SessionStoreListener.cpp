@@ -490,13 +490,11 @@ bool TabListener::UpdateSessionStore(bool aIsFlush) {
     data.mIsPrivate.Construct() = mSessionStore->GetPrivateModeEnabled();
   }
 
-  nsCOMPtr<nsISessionStoreFunctions> funcs =
-      do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
-  if (!funcs) {
-    return false;
-  }
-
+  nsCOMPtr<nsISessionStoreFunctions> funcs = do_ImportModule(
+      "resource://gre/modules/SessionStoreFunctions.jsm", fallible);
   nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(funcs);
+  NS_ENSURE_TRUE(wrapped, false);
+
   AutoJSAPI jsapi;
   if (!jsapi.Init(wrapped->GetJSObjectGlobal())) {
     return false;

@@ -1666,8 +1666,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
        "[this=%p, contentParent=%s, preferredRemoteType=%s]",
        this, currentRemoteType.get(), preferredRemoteType.get()));
 
-  nsCOMPtr<nsIE10SUtils> e10sUtils =
-      do_ImportModule("resource://gre/modules/E10SUtils.jsm", "E10SUtils");
+  nsCOMPtr<nsIE10SUtils> e10sUtils = do_ImportModule(
+      "resource://gre/modules/E10SUtils.jsm", "E10SUtils", fallible);
   if (!e10sUtils) {
     LOG(("Process Switch Abort: Could not import E10SUtils"));
     return false;

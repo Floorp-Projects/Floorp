@@ -585,6 +585,11 @@ JSLargeAllocationFailure:
     description for the possible values of this annotation.
   type: string
 
+JSModuleLoadError:
+  description: >
+    The error raised when attempting to import a critical JS module from C++
+  type: string
+
 JSOutOfMemory:
   description: >
     A small allocation couldn't be satisfied, the annotation may contain the
