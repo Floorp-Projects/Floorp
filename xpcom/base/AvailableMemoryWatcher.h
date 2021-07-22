@@ -7,6 +7,7 @@
 #ifndef mozilla_AvailableMemoryWatcher_h
 #define mozilla_AvailableMemoryWatcher_h
 
+#include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsIAvailableMemoryWatcherBase.h"
 
@@ -20,10 +21,16 @@ namespace mozilla {
 class nsAvailableMemoryWatcherBase : public nsIAvailableMemoryWatcherBase {
   static StaticRefPtr<nsAvailableMemoryWatcherBase> sSingleton;
 
+  TimeStamp mLowMemoryStart;
+  uint32_t mNumOfTabUnloading;
+  uint32_t mNumOfMemoryPressure;
+
  protected:
   nsCOMPtr<nsITabUnloader> mTabUnloader;
 
   virtual ~nsAvailableMemoryWatcherBase() = default;
+  void UpdateLowMemoryTimeStamp();
+  void RecordTelemetryEventOnHighMemory();
 
  public:
   static already_AddRefed<nsAvailableMemoryWatcherBase> GetSingleton();

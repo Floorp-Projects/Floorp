@@ -24,6 +24,8 @@
 #include "nsWindowsHelpers.h"
 #include "nsIWindowsRegKey.h"
 #include "nsXULAppAPI.h"
+#include "TelemetryFixture.h"
+#include "TelemetryTestHelpers.h"
 
 using namespace mozilla;
 
@@ -280,7 +282,7 @@ NS_IMPL_ISUPPORTS(MockTabUnloader, nsITabUnloader)
 
 }  // namespace
 
-class AvailableMemoryWatcherFixture : public ::testing::Test {
+class AvailableMemoryWatcherFixture : public TelemetryTestFixture {
   static const char kPrefLowCommitSpaceThreshold[];
 
   RefPtr<nsAvailableMemoryWatcherBase> mWatcher;
@@ -393,6 +395,8 @@ class AvailableMemoryWatcherFixture : public ::testing::Test {
   nsAutoHandle mLowMemoryHandle;
 
   void SetUp() override {
+    TelemetryTestFixture::SetUp();
+
     mObserverSvc = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
     ASSERT_TRUE(mObserverSvc);
 
@@ -400,7 +404,7 @@ class AvailableMemoryWatcherFixture : public ::testing::Test {
         new Spinner(mObserverSvc, "memory-pressure-stop", nullptr);
     mTabUnloader = new MockTabUnloader;
 
-    mWatcher = CreateAvailableMemoryWatcher();
+    mWatcher = nsAvailableMemoryWatcherBase::GetSingleton();
     mWatcher->RegisterTabUnloader(mTabUnloader);
 
     mLowMemoryHandle.own(
@@ -440,7 +444,69 @@ class AvailableMemoryWatcherFixture : public ::testing::Test {
 const char AvailableMemoryWatcherFixture::kPrefLowCommitSpaceThreshold[] =
     "browser.low_commit_space_threshold_mb";
 
+class MemoryWatcherTelemetryEvent {
+  static nsLiteralString sEventCategory;
+  static nsLiteralString sEventMethod;
+  static nsLiteralString sEventObject;
+
+  uint32_t mLastCountOfEvents;
+
+ public:
+  explicit MemoryWatcherTelemetryEvent(JSContext* aCx) : mLastCountOfEvents(0) {
+    JS::RootedValue snapshot(aCx);
+    TelemetryTestHelpers::GetEventSnapshot(aCx, &snapshot);
+    nsTArray<nsString> eventValues = TelemetryTestHelpers::EventValuesToArray(
+        aCx, snapshot, sEventCategory, sEventMethod, sEventObject);
+    mLastCountOfEvents = eventValues.Length();
+  }
+
+  void ValidateLastEvent(JSContext* aCx) {
+    JS::RootedValue snapshot(aCx);
+    TelemetryTestHelpers::GetEventSnapshot(aCx, &snapshot);
+    nsTArray<nsString> eventValues = TelemetryTestHelpers::EventValuesToArray(
+        aCx, snapshot, sEventCategory, sEventMethod, sEventObject);
+
+    // A new event was generated.
+    EXPECT_EQ(eventValues.Length(), mLastCountOfEvents + 1);
+    if (eventValues.IsEmpty()) {
+      return;
+    }
+
+    // Update mLastCountOfEvents for a subsequent call to ValidateLastEvent
+    ++mLastCountOfEvents;
+
+    nsTArray<nsString> tokens;
+    for (const nsAString& token : eventValues.LastElement().Split(',')) {
+      tokens.AppendElement(token);
+    }
+    EXPECT_EQ(tokens.Length(), 3);
+    if (tokens.Length() != 3) {
+      const wchar_t* valueStr = eventValues.LastElement().get();
+      fprintf(stderr, "Unexpected event value: %S\n", valueStr);
+      return;
+    }
+
+    // Since this test does not involve TabUnloader, the first two numbers
+    // are always expected to be zero.
+    EXPECT_STREQ(tokens[0].get(), L"0");
+    EXPECT_STREQ(tokens[1].get(), L"0");
+
+    // The third token should be a valid floating number.
+    nsresult rv;
+    tokens[2].ToDouble(&rv);
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+  }
+};
+
+nsLiteralString MemoryWatcherTelemetryEvent::sEventCategory =
+    u"memory_watcher"_ns;
+nsLiteralString MemoryWatcherTelemetryEvent::sEventMethod =
+    u"on_high_memory"_ns;
+nsLiteralString MemoryWatcherTelemetryEvent::sEventObject = u"stats"_ns;
+
 TEST_F(AvailableMemoryWatcherFixture, AlwaysActive) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+  MemoryWatcherTelemetryEvent telemetryEvent(cx.GetJSContext());
   StartUserInteraction();
 
   const size_t allocSize = GetAllocationSizeToTriggerMemoryNotification();
@@ -464,9 +530,13 @@ TEST_F(AvailableMemoryWatcherFixture, AlwaysActive) {
   mHighMemoryObserver->StartListening();
   mMemEater.RequestFree();
   EXPECT_TRUE(mHighMemoryObserver->Wait(kStateChangeTimeoutMs));
+
+  telemetryEvent.ValidateLastEvent(cx.GetJSContext());
 }
 
 TEST_F(AvailableMemoryWatcherFixture, InactiveToActive) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+  MemoryWatcherTelemetryEvent telemetryEvent(cx.GetJSContext());
   const size_t allocSize = GetAllocationSizeToTriggerMemoryNotification();
   if (!allocSize) {
     // Not enough memory to safely create a low-memory situation.
@@ -496,6 +566,8 @@ TEST_F(AvailableMemoryWatcherFixture, InactiveToActive) {
 
   // After user is active, we expect true.
   EXPECT_TRUE(mHighMemoryObserver->Wait(kStateChangeTimeoutMs));
+
+  telemetryEvent.ValidateLastEvent(cx.GetJSContext());
 }
 
 TEST_F(AvailableMemoryWatcherFixture, HighCommitSpace_AlwaysActive) {
