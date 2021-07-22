@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
 /**
- * @typedef {import("../@types/perf").InitializeStoreValues} InitializeStoreValues
- * @typedef {import("../@types/perf").PopupWindow} PopupWindow
  * @typedef {import("../@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
  * @typedef {import("../@types/perf").PerfFront} PerfFront
  * @typedef {import("../@types/perf").PageContext} PageContext
