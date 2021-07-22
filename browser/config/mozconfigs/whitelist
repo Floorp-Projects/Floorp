@@ -27,7 +27,6 @@ for platform in all_platforms:
     whitelist['release'][platform] = [
         'ac_add_options --enable-update-channel=release',
         'ac_add_options --enable-official-branding',
-        'export BUILDING_RELEASE=1',
     ]
 
 whitelist['release']['linux32'] += [
