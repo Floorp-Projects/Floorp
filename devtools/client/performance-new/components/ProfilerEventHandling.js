@@ -51,19 +51,6 @@ const selectors = require("devtools/client/performance-new/store/selectors");
  * @extends {React.PureComponent<Props>}
  */
 class ProfilerEventHandling extends PureComponent {
-  /** @param {Props} props */
-  constructor(props) {
-    super(props);
-    this.handleProfilerStarting = this.handleProfilerStarting.bind(this);
-    this.handleProfilerStopping = this.handleProfilerStopping.bind(this);
-    this.handlePrivateBrowsingStarting = this.handlePrivateBrowsingStarting.bind(
-      this
-    );
-    this.handlePrivateBrowsingEnding = this.handlePrivateBrowsingEnding.bind(
-      this
-    );
-  }
-
   componentDidMount() {
     const { perfFront, reportProfilerReady } = this.props;
 
@@ -127,7 +114,7 @@ class ProfilerEventHandling extends PureComponent {
     }
   }
 
-  handleProfilerStarting() {
+  handleProfilerStarting = () => {
     const { changeRecordingState, recordingState } = this.props;
     switch (recordingState) {
       case "not-yet-known":
@@ -158,9 +145,9 @@ class ProfilerEventHandling extends PureComponent {
       default:
         throw new Error("Unhandled recording state");
     }
-  }
+  };
 
-  handleProfilerStopping() {
+  handleProfilerStopping = () => {
     const { changeRecordingState, recordingState } = this.props;
     switch (recordingState) {
       case "not-yet-known":
@@ -189,9 +176,9 @@ class ProfilerEventHandling extends PureComponent {
       default:
         throw new Error("Unhandled recording state");
     }
-  }
+  };
 
-  handlePrivateBrowsingStarting() {
+  handlePrivateBrowsingStarting = () => {
     const { recordingState, changeRecordingState } = this.props;
 
     switch (recordingState) {
@@ -218,13 +205,13 @@ class ProfilerEventHandling extends PureComponent {
       default:
         throw new Error("Unhandled recording state");
     }
-  }
+  };
 
-  handlePrivateBrowsingEnding() {
+  handlePrivateBrowsingEnding = () => {
     // No matter the state, go ahead and set this as ready to record. This should
     // be the only logical state to go into.
     this.props.changeRecordingState("available-to-record");
-  }
+  };
 
   render() {
     return null;

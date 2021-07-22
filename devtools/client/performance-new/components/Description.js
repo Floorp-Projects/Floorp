@@ -29,24 +29,16 @@ const Localized = createFactory(
  */
 class Description extends PureComponent {
   /**
-   * @param {Props} props
-   */
-  constructor(props) {
-    super(props);
-    this.handleLinkClick = this.handleLinkClick.bind(this);
-  }
-
-  /**
    * @param {React.MouseEvent<HTMLButtonElement>} event
    */
-  handleLinkClick(event) {
+  handleLinkClick = event => {
     const { openDocLink } = require("devtools/client/shared/link");
 
     /** @type HTMLButtonElement */
     const target = /** @type {any} */ (event.target);
 
     openDocLink(target.value, {});
-  }
+  };
 
   render() {
     return div(
