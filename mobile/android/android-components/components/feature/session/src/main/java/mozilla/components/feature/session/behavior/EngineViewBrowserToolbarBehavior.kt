@@ -8,9 +8,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
+import androidx.annotation.VisibleForTesting
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.ktx.android.view.findViewInHierarchy
+import kotlin.math.roundToInt
 
 /**
  * A [CoordinatorLayout.Behavior] implementation that allows the [EngineView] to automatically
@@ -33,15 +35,17 @@ class EngineViewBrowserToolbarBehavior(
     toolbarPosition: ToolbarPosition
 ) : CoordinatorLayout.Behavior<View>(context, attrs) {
 
-    private val engineView = engineViewParent.findViewInHierarchy { it is EngineView } as EngineView?
-    private var toolbarChangedAction: (Float) -> Unit?
+    @VisibleForTesting
+    internal val engineView = engineViewParent.findViewInHierarchy { it is EngineView } as EngineView?
+    @VisibleForTesting
+    internal var toolbarChangedAction: (Float) -> Unit?
     private val bottomToolbarChangedAction = { newToolbarTranslationY: Float ->
-        engineView?.setVerticalClipping(-newToolbarTranslationY.toInt())
+        engineView?.setVerticalClipping(-newToolbarTranslationY.roundToInt())
     }
     private val topToolbarChangedAction = { newToolbarTranslationY: Float ->
         // the top toolbar is translated upwards when collapsing-> all values received are 0 or negative
         engineView?.let {
-            it.setVerticalClipping(newToolbarTranslationY.toInt())
+            it.setVerticalClipping(newToolbarTranslationY.roundToInt())
             // Need to add the toolbarHeight to effectively place the engineView below the toolbar.
             engineViewParent.translationY = newToolbarTranslationY + toolbarHeight
         }

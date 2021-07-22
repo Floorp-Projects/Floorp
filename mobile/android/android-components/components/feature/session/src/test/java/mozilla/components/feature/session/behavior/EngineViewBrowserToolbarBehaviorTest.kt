@@ -81,6 +81,78 @@ class EngineViewBrowserToolbarBehaviorTest {
 
         assertTrue(behavior.layoutDependsOn(mock(), mock(), BrowserToolbar(testContext)))
     }
+
+    @Test
+    fun `GIVEN a bottom toolbar WHEN translation has below a half decimal THEN set vertical clipping with the floor value`() {
+        val engineView: FakeEngineView = mock()
+        val behavior = EngineViewBrowserToolbarBehavior(
+            mock(), null, engineView, 100, ToolbarPosition.BOTTOM
+        )
+
+        behavior.toolbarChangedAction(40.4f)
+
+        verify(engineView).setVerticalClipping(-40)
+    }
+
+    @Test
+    fun `GIVEN a bottom toolbar WHEN translation has exactly half of a decimal THEN set vertical clipping with the ceiling value`() {
+        val engineView: FakeEngineView = mock()
+        val behavior = EngineViewBrowserToolbarBehavior(
+            mock(), null, engineView, 100, ToolbarPosition.BOTTOM
+        )
+
+        behavior.toolbarChangedAction(40.5f)
+
+        verify(engineView).setVerticalClipping(-41)
+    }
+
+    @Test
+    fun `GIVEN a bottom toolbar WHEN translation has more than a half decimal THEN set vertical clipping with the ceiling value`() {
+        val engineView: FakeEngineView = mock()
+        val behavior = EngineViewBrowserToolbarBehavior(
+            mock(), null, engineView, 100, ToolbarPosition.BOTTOM
+        )
+
+        behavior.toolbarChangedAction(40.6f)
+
+        verify(engineView).setVerticalClipping(-41)
+    }
+
+    @Test
+    fun `GIVEN a top toolbar WHEN translation has below a half decimal THEN set vertical clipping with the floor value`() {
+        val engineView: FakeEngineView = mock()
+        val behavior = EngineViewBrowserToolbarBehavior(
+            mock(), null, engineView, 100, ToolbarPosition.TOP
+        )
+
+        behavior.toolbarChangedAction(40.4f)
+
+        verify(engineView).setVerticalClipping(40)
+    }
+
+    @Test
+    fun `GIVEN a top toolbar WHEN translation has exactly half of a decimal THEN set vertical clipping with the ceiling value`() {
+        val engineView: FakeEngineView = mock()
+        val behavior = EngineViewBrowserToolbarBehavior(
+            mock(), null, engineView, 100, ToolbarPosition.TOP
+        )
+
+        behavior.toolbarChangedAction(40.5f)
+
+        verify(engineView).setVerticalClipping(41)
+    }
+
+    @Test
+    fun `GIVEN a top toolbar WHEN translation has more than a half decimal THEN set vertical clipping with the ceiling value`() {
+        val engineView: FakeEngineView = mock()
+        val behavior = EngineViewBrowserToolbarBehavior(
+            mock(), null, engineView, 100, ToolbarPosition.TOP
+        )
+
+        behavior.toolbarChangedAction(40.6f)
+
+        verify(engineView).setVerticalClipping(41)
+    }
 }
 
 class FakeEngineView(context: Context) : TextView(context), EngineView {
