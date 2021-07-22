@@ -915,7 +915,7 @@ class GatherDecls(TcheckVisitor):
             p.decl = self.declare(
                 loc=p.loc,
                 type=ProtocolType(
-                    qname, p.nested(), p.sendSemantics, "RefCounted" in p.attributes
+                    qname, p.nestedUpTo(), p.sendSemantics, "RefCounted" in p.attributes
                 ),
                 shortname=p.name,
                 fullname=None if 0 == len(qname.quals) else fullname,
