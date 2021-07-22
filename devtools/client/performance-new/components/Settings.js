@@ -33,7 +33,6 @@
  */
 
 /**
- * @typedef {import("../@types/perf").PopupWindow} PopupWindow
  * @typedef {import("../@types/perf").State} StoreState
  * @typedef {import("../@types/perf").FeatureDescription} FeatureDescription
  *

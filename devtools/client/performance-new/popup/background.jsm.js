@@ -25,7 +25,6 @@ const AppConstants = ChromeUtils.import(
 
 /**
  * @typedef {import("../@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
- * @typedef {import("../@types/perf").PopupBackgroundFeatures} PopupBackgroundFeatures
  * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("../@types/perf").Library} Library
  * @typedef {import("../@types/perf").PerformancePref} PerformancePref
