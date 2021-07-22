@@ -23,13 +23,6 @@ class AboutWelcome extends React.PureComponent {
       this.fetchFxAFlowUri();
     }
 
-    // Rely on shared proton in-content styling for consistency.
-    if (this.props.design === "proton") {
-      const sheet = document.head.appendChild(document.createElement("link"));
-      sheet.rel = "stylesheet";
-      sheet.href = "chrome://global/skin/in-content/common.css";
-    }
-
     // Record impression with performance data after allowing the page to load
     const recordImpression = domState => {
       const { domComplete, domInteractive } = performance
@@ -83,7 +76,6 @@ class AboutWelcome extends React.PureComponent {
         metricsFlowUri={this.state.metricsFlowUri}
         message_id={props.messageId}
         utm_term={props.UTMTerm}
-        design={props.design}
         transitions={props.transitions}
         background_url={props.background_url}
       />
@@ -96,7 +88,7 @@ function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
   let messageId =
     welcomeContent.template === "return_to_amo"
       ? "RTAMO_DEFAULT_WELCOME"
-      : "DEFAULT_ABOUTWELCOME";
+      : "DEFAULT_ID";
   let UTMTerm = "default";
 
   if (welcomeContent.id) {

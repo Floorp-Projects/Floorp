@@ -5,8 +5,6 @@ import {
   StepsIndicator,
   WelcomeScreen,
 } from "content-src/aboutwelcome/components/MultiStageAboutWelcome";
-import { MultiStageScreen } from "content-src/aboutwelcome/components/MultiStageScreen";
-import { MultiStageProtonScreen } from "content-src/aboutwelcome/components/MultiStageProtonScreen";
 import { Themes } from "content-src/aboutwelcome/components/Themes";
 import React from "react";
 import { shallow, mount } from "enzyme";
@@ -33,7 +31,6 @@ describe("MultiStageAboutWelcome module", () => {
       AWSendEventTelemetry: () => {},
       AWWaitForRegionChange: () => Promise.resolve(),
       AWGetRegion: () => Promise.resolve(),
-      AWIsDefaultBrowser: () => Promise.resolve("true"),
       AWWaitForMigrationClose: () => Promise.resolve(),
       AWSelectTheme: () => Promise.resolve(),
     });
@@ -94,17 +91,6 @@ describe("MultiStageAboutWelcome module", () => {
         welcomeScreenWrapper.prop("initialTheme"),
         "automatic"
       );
-    });
-
-    it("should render proton screens when design is set to proton", async () => {
-      let wrapper = mount(
-        <MultiStageAboutWelcome design="proton" {...DEFAULT_PROPS} />
-      );
-      await new Promise(resolve => setTimeout(resolve, 0));
-      wrapper.update();
-
-      let protonScreenWrapper = wrapper.find(MultiStageProtonScreen);
-      assert.strictEqual(protonScreenWrapper.prop("design"), "proton");
     });
 
     it("should handle primary Action", () => {
@@ -183,69 +169,6 @@ describe("MultiStageAboutWelcome module", () => {
       });
     });
 
-    describe("multistagescreen tiles", () => {
-      let SCREEN_PROPS = {
-        content: {
-          title: "test title",
-        },
-        totalNumberOfScreens: 1,
-        order: 0,
-        id: "test",
-        topSites: {
-          data: [],
-        },
-      };
-      it("should render multistage Screen", () => {
-        const wrapper = mount(<MultiStageScreen {...SCREEN_PROPS} />);
-        assert.ok(wrapper.exists());
-      });
-      it("no image displayed without source", () => {
-        SCREEN_PROPS.content.tiles = {
-          type: "image",
-          media_type: "test-img",
-        };
-        const wrapper = mount(<MultiStageScreen {...SCREEN_PROPS} />);
-        assert.isFalse(wrapper.find("div.test-img").exists());
-      });
-      it("should have image displayed with source", () => {
-        SCREEN_PROPS.content.tiles = {
-          type: "image",
-          media_type: "test-img",
-          source: {
-            default: "",
-          },
-        };
-        const wrapper = mount(<MultiStageScreen {...SCREEN_PROPS} />);
-        assert.ok(wrapper.find("div.test-img").exists());
-      });
-      it("should have video container displayed", () => {
-        SCREEN_PROPS.content.tiles = {
-          type: "video",
-          media_type: "test-video",
-          source: {
-            default: "",
-          },
-        };
-        const wrapper = mount(<MultiStageScreen {...SCREEN_PROPS} />);
-        assert.ok(wrapper.find("div.test-video").exists());
-      });
-      it("should have topsites section displayed", () => {
-        SCREEN_PROPS.content.tiles = {
-          type: "topsites",
-        };
-        const wrapper = mount(<MultiStageScreen {...SCREEN_PROPS} />);
-        assert.ok(wrapper.find("div.tiles-topsites-section").exists());
-      });
-      it("should have theme container displayed", () => {
-        SCREEN_PROPS.content.tiles = {
-          type: "theme",
-          data: [],
-        };
-        const wrapper = mount(<MultiStageScreen {...SCREEN_PROPS} />);
-        assert.ok(wrapper.find("div.tiles-theme-container").exists());
-      });
-    });
-
     describe("theme screen", () => {
       const themeScreen = DEFAULT_WELCOME_CONTENT.screens.find(screen => {
         return screen.id === "AW_CHOOSE_THEME";
@@ -270,16 +193,6 @@ describe("MultiStageAboutWelcome module", () => {
         assert.ok(wrapper.exists());
       });
 
-      it("should select this.props.activeTheme in the rendered input", () => {
-        const wrapper = shallow(<Themes {...THEME_SCREEN_PROPS} />);
-
-        const selectedThemeInput = wrapper.find(".theme.selected input");
-        assert.strictEqual(
-          selectedThemeInput.prop("value"),
-          THEME_SCREEN_PROPS.activeTheme
-        );
-      });
-
       it("should check this.props.activeTheme in the rendered input", () => {
         const wrapper = shallow(<Themes {...THEME_SCREEN_PROPS} />);
 
@@ -293,6 +206,8 @@ describe("MultiStageAboutWelcome module", () => {
     describe("import screen", () => {
       const IMPORT_SCREEN_PROPS = {
         content: {
+          title: "test title",
+          subtitle: "test subtitle",
           help_text: {
             text: "test help text",
             position: "default",
@@ -302,10 +217,6 @@ describe("MultiStageAboutWelcome module", () => {
       it("should render ImportScreen", () => {
         const wrapper = mount(<WelcomeScreen {...IMPORT_SCREEN_PROPS} />);
         assert.ok(wrapper.exists());
-      });
-      it("should have a help text in the rendered output", () => {
-        const wrapper = mount(<WelcomeScreen {...IMPORT_SCREEN_PROPS} />);
-        assert.equal(wrapper.find("p.helptext").text(), "test help text");
       });
       it("should not have a primary or secondary button", () => {
         const wrapper = mount(<WelcomeScreen {...IMPORT_SCREEN_PROPS} />);
@@ -326,6 +237,8 @@ describe("MultiStageAboutWelcome module", () => {
       beforeEach(() => {
         SCREEN_PROPS = {
           content: {
+            title: "test title",
+            subtitle: "test subtitle",
             primary_button: {
               action: {},
               label: "test button",
@@ -381,40 +294,6 @@ describe("MultiStageAboutWelcome module", () => {
         assert.calledWith(AboutWelcomeUtils.handleUserAction, {
           type: "SHOW_MIGRATION_WIZARD",
         });
-      });
-      it("should handle waitForDefault", () => {
-        TEST_ACTION.waitForDefault = true;
-        const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);
-
-        wrapper.find(".primary").simulate("click");
-
-        assert.propertyVal(
-          wrapper.state(),
-          "alternateContent",
-          "waiting_for_default"
-        );
-      });
-    });
-    describe("alternate content", () => {
-      const SCREEN_PROPS = {
-        content: {
-          title: "Original",
-          alternate: {
-            title: "Alternate",
-          },
-        },
-      };
-      it("should show original title", () => {
-        const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);
-
-        assert.equal(wrapper.find(".welcome-text").text(), "Original");
-      });
-      it("should show alternate title", () => {
-        const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);
-
-        wrapper.setState({ alternateContent: "alternate" });
-
-        assert.equal(wrapper.find(".welcome-text").text(), "Alternate");
       });
     });
   });

@@ -11,8 +11,6 @@ A full-page multistep experience that shows up on first run since Fx80 with `bro
 
 #### Default values
 
-Proton design is default experience since MR1 however pre-MR1 flow is supported when `browser.aboutwelcome.protonDesign` boolean pref is set to `false`
-
 Multistage proton onboarding experience is live since Fx89 and its major variations are:
 
 ##### Zero onboarding
@@ -27,12 +25,11 @@ A full-page multistep experience that shows a large splash screen and several su
 
 ##### Legacy (non-proton)
 
-An older multi-stage experience that has been available since Fx80 but was deprecated in Fx89.
+An older multi-stage experience that has been available since Fx80 but was deprecated in Fx89 and support removed in Fx92.
 
 Testing instructions: 
 - In Fx89, set `browser.proton.enabled` as `false` in about:config.
 - In Fx90+, set `browser.aboutwelcome.protonDesign` as `false` in about:config
-
 
 ##### Return to AMO (RTAMO)
 
@@ -58,9 +55,7 @@ In order of precedence:
    - Return to AMO
 - Experiments
 - Defaults
-  - isProton variable = false
-    - Legacy content.
-  - Proton default (DEFAULT_PROTON_WELCOME_CONTENT) with below screens
+  - Proton default content with below screens
     - Welcome Screen with option to 'Pin Firefox', 'Set default' or 'Get Started'
     - Import screen allows user to import password, bookmarks and browsing history from previous browser.
     - Set a theme lets users personalize Firefox with a theme.
