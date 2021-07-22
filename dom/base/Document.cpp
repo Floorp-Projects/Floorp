@@ -16880,8 +16880,8 @@ bool Document::AutomaticStorageAccessPermissionCanBeGranted(
     }
   }
 
-  nsCOMPtr<nsIBrowserUsage> bu = do_ImportModule(
-      "resource:///modules/BrowserUsageTelemetry.jsm", fallible);
+  nsCOMPtr<nsIBrowserUsage> bu =
+      do_ImportModule("resource:///modules/BrowserUsageTelemetry.jsm");
   if (NS_WARN_IF(!bu)) {
     return false;
   }

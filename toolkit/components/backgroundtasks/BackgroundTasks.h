@@ -123,7 +123,7 @@ class BackgroundTasks final : public nsIBackgroundTasks {
 
     nsCOMPtr<nsIBackgroundTasksManager> manager =
         do_ImportModule("resource://gre/modules/BackgroundTasksManager.jsm",
-                        "BackgroundTasksManager", fallible);
+                        "BackgroundTasksManager");
 
     NS_ENSURE_TRUE(manager, NS_ERROR_FAILURE);
 

@@ -24,6 +24,7 @@ extIWebNavigation* ExtensionsParent::WebNavigation() {
   if (!mWebNavigation) {
     mWebNavigation = do_ImportModule("resource://gre/modules/WebNavigation.jsm",
                                      "WebNavigationManager");
+    MOZ_RELEASE_ASSERT(mWebNavigation);
   }
   return mWebNavigation;
 }
