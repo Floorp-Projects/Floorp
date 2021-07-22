@@ -2196,8 +2196,8 @@ void CanonicalBrowsingContext::RestoreState::Resolve() {
 
 nsresult CanonicalBrowsingContext::WriteSessionStorageToSessionStore(
     const nsTArray<SSCacheCopy>& aSesssionStorage, uint32_t aEpoch) {
-  nsCOMPtr<nsISessionStoreFunctions> funcs =
-      do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
+  nsCOMPtr<nsISessionStoreFunctions> funcs = do_ImportModule(
+      "resource://gre/modules/SessionStoreFunctions.jsm", fallible);
   if (!funcs) {
     return NS_ERROR_FAILURE;
   }
