@@ -3381,14 +3381,22 @@ MainAxisPositionTracker::MainAxisPositionTracker(
   // Map 'left'/'right' to 'start'/'end'
   if (mJustifyContent.primary == StyleAlignFlags::LEFT ||
       mJustifyContent.primary == StyleAlignFlags::RIGHT) {
-    if (aAxisTracker.IsColumnOriented()) {
-      // Container's alignment axis is not parallel to the inline axis,
-      // so we map both 'left' and 'right' to 'start'.
+    const auto wm = aAxisTracker.GetWritingMode();
+    if (aAxisTracker.IsColumnOriented() && !wm.IsVertical()) {
+      // Container's alignment axis (main axis) is *not* parallel to the
+      // line-left <-> line-right axis or the physical left <-> physical right
+      // axis, so we map both 'left' and 'right' to 'start'.
       mJustifyContent.primary = StyleAlignFlags::START;
     } else {
-      // Row-oriented, so we map 'left' and 'right' to 'start' or 'end',
-      // depending on left-to-right writing mode.
-      const bool isLTR = aAxisTracker.GetWritingMode().IsBidiLTR();
+      MOZ_ASSERT(
+          aAxisTracker.MainAxis() == eLogicalAxisInline ||
+              wm.PhysicalAxis(aAxisTracker.MainAxis()) == eAxisHorizontal,
+          "The container's main axis should be parallel to either line-left "
+          "<-> line-right axis or physical left <-> physical right axis!");
+
+      // Otherwise, we map 'left' and 'right' to 'start' or 'end', depending on
+      // the container's writing mode.
+      const bool isLTR = wm.IsPhysicalLTR();
       const bool isJustifyLeft =
           (mJustifyContent.primary == StyleAlignFlags::LEFT);
       mJustifyContent.primary = (isJustifyLeft == isLTR)
