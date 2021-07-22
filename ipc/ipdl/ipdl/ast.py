@@ -15,6 +15,20 @@ VSYNC_PRIORITY = 3
 MEDIUMHIGH_PRIORITY = 4
 CONTROL_PRIORITY = 5
 
+NESTED_ATTR_MAP = {
+    "not": NOT_NESTED,
+    "inside_sync": INSIDE_SYNC_NESTED,
+    "inside_cpow": INSIDE_CPOW_NESTED,
+}
+
+PRIORITY_ATTR_MAP = {
+    "normal": NORMAL_PRIORITY,
+    "input": INPUT_PRIORITY,
+    "vsync": VSYNC_PRIORITY,
+    "mediumhigh": MEDIUMHIGH_PRIORITY,
+    "control": CONTROL_PRIORITY,
+}
+
 
 class Visitor:
     def defaultVisit(self, node):
@@ -278,15 +292,11 @@ class Protocol(NamespacedNode):
         self.managesStmts = []
         self.messageDecls = []
 
-    def nested(self):
+    def nestedUpTo(self):
         if "NestedUpTo" not in self.attributes:
             return NOT_NESTED
 
-        return {
-            "not": NOT_NESTED,
-            "inside_sync": INSIDE_SYNC_NESTED,
-            "inside_cpow": INSIDE_CPOW_NESTED,
-        }[self.attributes["NestedUpTo"].value]
+        return NESTED_ATTR_MAP.get(self.attributes["NestedUpTo"].value, NOT_NESTED)
 
 
 class StructField(Node):
@@ -347,23 +357,13 @@ class MessageDecl(Node):
         if "Nested" not in self.attributes:
             return NOT_NESTED
 
-        return {
-            "not": NOT_NESTED,
-            "inside_sync": INSIDE_SYNC_NESTED,
-            "inside_cpow": INSIDE_CPOW_NESTED,
-        }[self.attributes["Nested"].value]
+        return NESTED_ATTR_MAP.get(self.attributes["Nested"].value, NOT_NESTED)
 
     def priority(self):
         if "Priority" not in self.attributes:
             return NORMAL_PRIORITY
 
-        return {
-            "normal": NORMAL_PRIORITY,
-            "input": INPUT_PRIORITY,
-            "vsync": VSYNC_PRIORITY,
-            "mediumhigh": MEDIUMHIGH_PRIORITY,
-            "control": CONTROL_PRIORITY,
-        }[self.attributes["Priority"].value]
+        return PRIORITY_ATTR_MAP.get(self.attributes["Priority"].value, NORMAL_PRIORITY)
 
 
 class Param(Node):
