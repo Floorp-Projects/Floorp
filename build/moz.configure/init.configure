@@ -1244,7 +1244,7 @@ def milestone(build_env, build_project, version_path, _):
                 die(
                     "Only the EARLY_BETA_OR_EARLIER variable can be set in build/defines.sh"
                 )
-            if value:
+            if value and "b" in app_version_display:
                 is_early_beta_or_earlier = True
 
     # Only expose the major version milestone in the UA string and hide the
