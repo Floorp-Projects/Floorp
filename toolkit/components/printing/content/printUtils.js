@@ -255,15 +255,6 @@ var PrintUtils = {
       !PRINT_ALWAYS_SILENT &&
       (!openWindowInfo || openWindowInfo.isForWindowDotPrint)
     ) {
-      if (
-        aBrowsingContext.currentWindowGlobal.documentURI.spec ==
-        "about:sessionrestore"
-      ) {
-        // Tab modal print on about:sessionrestore causes a crash, disable it
-        // for now  (bug 1714639).
-        return null;
-      }
-
       let browsingContext = aBrowsingContext;
       let focusedBc = Services.focus.focusedContentBrowsingContext;
       if (

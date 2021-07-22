@@ -3400,16 +3400,37 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
     return promise.forget();
   }
 
-  nsIDocShell* docShellToCloneInto = nullptr;
+  nsCOMPtr<nsIDocShell> docShellToCloneInto = nullptr;
   if (aSourceBrowsingContext) {
     // We're going to call `Print()` below on a window that is not our own,
     // which happens when we are creating a new print preview document instead
     // of just applying a settings change to the existing PP document.  In this
-    // case we need to explicity pass our docShell as the docShell to clone
+    // case we need to explicitly pass our docShell as the docShell to clone
     // into.
     docShellToCloneInto = GetExistingDocShell();
     if (NS_WARN_IF(!docShellToCloneInto)) {
       promise->MaybeRejectWithNotSupportedError("No print preview docShell");
+      return promise.forget();
+    }
+
+    // We need to make sure we're displayed so that the view tree ends up right.
+    RefPtr<BrowsingContext> bc = docShellToCloneInto->GetBrowsingContext();
+    if (NS_WARN_IF(!bc)) {
+      promise->MaybeRejectWithNotSupportedError(
+          "No print preview browsing context");
+      return promise.forget();
+    }
+
+    RefPtr<Element> embedder = bc->GetEmbedderElement();
+    if (NS_WARN_IF(!embedder)) {
+      promise->MaybeRejectWithNotSupportedError(
+          "Trying to clone into a frameloader with no element?");
+      return promise.forget();
+    }
+
+    nsIFrame* frame = embedder->GetPrimaryFrame(FlushType::Frames);
+    if (NS_WARN_IF(!frame)) {
+      promise->MaybeRejectWithNotSupportedError("Frame is not being displayed");
       return promise.forget();
     }
   }
