@@ -534,7 +534,9 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
 
     if (type === "pageshow" && persisted) {
-      this.sendAsyncMessage("DevToolsFrameChild:bf-cache-navigation-pageshow");
+      this.sendAsyncMessage("DevToolsFrameChild:bf-cache-navigation-pageshow", {
+        isNewTargetCreated: shouldHandleBfCacheEvents,
+      });
 
       if (shouldHandleBfCacheEvents) {
         // If persisted=true, this is a BFCache navigation.
