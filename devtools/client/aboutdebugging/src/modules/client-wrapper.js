@@ -180,7 +180,7 @@ class ClientWrapper {
    */
   async loadPerformanceProfiler(win, openAboutProfiling) {
     const perfFront = await this.getFront("perf");
-    win.gInit(perfFront, "devtools-remote", openAboutProfiling);
+    await win.gInit(perfFront, "devtools-remote", openAboutProfiling);
   }
 
   /**
@@ -189,7 +189,7 @@ class ClientWrapper {
    */
   async loadAboutProfiling(win, openRemoteDevTools) {
     const perfFront = await this.getFront("perf");
-    win.gInit(perfFront, "aboutprofiling-remote", openRemoteDevTools);
+    await win.gInit(perfFront, "aboutprofiling-remote", openRemoteDevTools);
   }
 }
 
