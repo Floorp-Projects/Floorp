@@ -15,23 +15,22 @@ typedef CFTypeRef AXTextMarkerRangeRef;
 namespace mozilla {
 namespace a11y {
 
-class AccessibleOrProxy;
+class Accessible;
 class GeckoTextMarkerRange;
 
 class GeckoTextMarker final {
  public:
-  GeckoTextMarker(const AccessibleOrProxy& aContainer, int32_t aOffset)
+  GeckoTextMarker(Accessible* aContainer, int32_t aOffset)
       : mContainer(aContainer), mOffset(aOffset) {}
 
   GeckoTextMarker(const GeckoTextMarker& aPoint)
       : mContainer(aPoint.mContainer), mOffset(aPoint.mOffset) {}
 
-  GeckoTextMarker(AccessibleOrProxy aDoc, AXTextMarkerRef aTextMarker);
+  GeckoTextMarker(Accessible* aDoc, AXTextMarkerRef aTextMarker);
 
   GeckoTextMarker() : mContainer(nullptr), mOffset(0) {}
 
-  static GeckoTextMarker MarkerFromIndex(const AccessibleOrProxy& aRoot,
-                                         int32_t aIndex);
+  static GeckoTextMarker MarkerFromIndex(Accessible* aRoot, int32_t aIndex);
 
   id CreateAXTextMarker();
 
@@ -42,9 +41,9 @@ class GeckoTextMarker final {
   // Return a range with the given type relative to this marker.
   GeckoTextMarkerRange Range(EWhichRange aRangeType);
 
-  AccessibleOrProxy Leaf();
+  Accessible* Leaf();
 
-  bool IsValid() const { return !mContainer.IsNull(); };
+  bool IsValid() const { return !!mContainer; };
 
   bool operator<(const GeckoTextMarker& aPoint) const;
 
@@ -52,13 +51,13 @@ class GeckoTextMarker final {
     return mContainer == aPoint.mContainer && mOffset == aPoint.mOffset;
   }
 
-  AccessibleOrProxy mContainer;
+  Accessible* mContainer;
   int32_t mOffset;
 
   HyperTextAccessibleWrap* ContainerAsHyperTextWrap() const {
-    return (!mContainer.IsNull() && mContainer.IsAccessible())
+    return (mContainer && mContainer->IsLocal())
                ? static_cast<HyperTextAccessibleWrap*>(
-                     mContainer.AsAccessible()->AsHyperText())
+                     mContainer->AsLocal()->AsHyperText())
                : nullptr;
   }
 
@@ -74,16 +73,13 @@ class GeckoTextMarkerRange final {
 
   GeckoTextMarkerRange() {}
 
-  GeckoTextMarkerRange(AccessibleOrProxy aDoc,
-                       AXTextMarkerRangeRef aTextMarkerRange);
+  GeckoTextMarkerRange(Accessible* aDoc, AXTextMarkerRangeRef aTextMarkerRange);
 
-  explicit GeckoTextMarkerRange(const AccessibleOrProxy& aAccessible);
+  explicit GeckoTextMarkerRange(Accessible* aAccessible);
 
   id CreateAXTextMarkerRange();
 
-  bool IsValid() const {
-    return !mStart.mContainer.IsNull() && !mEnd.mContainer.IsNull();
-  };
+  bool IsValid() const { return !!mStart.mContainer && !!mEnd.mContainer; };
 
   /**
    * Return text enclosed by the range.
@@ -115,7 +111,7 @@ class GeckoTextMarkerRange final {
    * Return true if successfully cropped. false if the range does not intersect
    * with the container.
    */
-  bool Crop(const AccessibleOrProxy& aContainer);
+  bool Crop(Accessible* aContainer);
 
   GeckoTextMarker mStart;
   GeckoTextMarker mEnd;

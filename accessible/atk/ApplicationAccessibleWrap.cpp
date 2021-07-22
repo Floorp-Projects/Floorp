@@ -85,7 +85,7 @@ void ApplicationAccessibleWrap::GetNativeInterface(void** aOutAccessible) {
         g_object_new(MAI_TYPE_ATK_OBJECT, nullptr));
     if (!mAtkObject) return;
 
-    atk_object_initialize(mAtkObject, this);
+    atk_object_initialize(mAtkObject, static_cast<Accessible*>(this));
     mAtkObject->role = ATK_ROLE_INVALID;
     mAtkObject->layer = ATK_LAYER_INVALID;
   }

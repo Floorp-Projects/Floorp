@@ -884,9 +884,9 @@ void DocAccessible::AttributeChangedImpl(LocalAccessible* aAccessible,
       while (LocalAccessible* target = iter.Next()) {
         Pivot pivot(target);
         LocalAccInSameDocRule rule;
-        for (AccessibleOrProxy anchor(target); !anchor.IsNull();
+        for (Accessible* anchor(target); anchor;
              anchor = pivot.Next(anchor, rule)) {
-          LocalAccessible* acc = anchor.AsAccessible();
+          LocalAccessible* acc = anchor->AsLocal();
           MOZ_ASSERT(acc);
           acc->mContextFlags |= eHasDescriptionDependent;
         }
@@ -907,9 +907,9 @@ void DocAccessible::AttributeChangedImpl(LocalAccessible* aAccessible,
       while (LocalAccessible* target = iter.Next()) {
         Pivot pivot(target);
         LocalAccInSameDocRule rule;
-        for (AccessibleOrProxy anchor(target); !anchor.IsNull();
+        for (Accessible* anchor(target); anchor;
              anchor = pivot.Next(anchor, rule)) {
-          LocalAccessible* acc = anchor.AsAccessible();
+          LocalAccessible* acc = anchor->AsLocal();
           MOZ_ASSERT(acc);
           acc->mContextFlags |= eHasNameDependent;
         }

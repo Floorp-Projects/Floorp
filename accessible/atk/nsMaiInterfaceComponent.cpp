@@ -88,27 +88,27 @@ static gboolean scrollToPointCB(AtkComponent* aComponent, AtkCoordType coords,
 
 AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
                                       AtkCoordType aCoordType) {
-  AccessibleOrProxy acc = GetInternalObj(aAtkObj);
-  if (acc.IsNull()) {
+  Accessible* acc = GetInternalObj(aAtkObj);
+  if (!acc) {
     // This might be an ATK Socket.
     acc = GetAccessibleWrap(aAtkObj);
-    if (acc.IsNull()) {
+    if (!acc) {
       return nullptr;
     }
   }
-  if (acc.IsAccessible() && acc.AsAccessible()->IsDefunct()) {
+  if (acc->IsLocal() && acc->AsLocal()->IsDefunct()) {
     return nullptr;
   }
 
-  // AccessibleOrProxy::ChildAtPoint(x,y) is in screen pixels.
+  // Accessible::ChildAtPoint(x,y) is in screen pixels.
   if (aCoordType == ATK_XY_WINDOW) {
     nsINode* node = nullptr;
-    if (acc.IsAccessible()) {
-      node = acc.AsAccessible()->GetNode();
+    if (acc->IsLocal()) {
+      node = acc->AsLocal()->GetNode();
     } else {
       // Use the XUL browser embedding this remote document.
       auto browser = static_cast<mozilla::dom::BrowserParent*>(
-          acc.AsProxy()->Document()->Manager());
+          acc->AsRemote()->Document()->Manager());
       node = browser->GetOwnerElement();
     }
     MOZ_ASSERT(node);
@@ -117,16 +117,16 @@ AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
     aY += winCoords.y;
   }
 
-  AccessibleOrProxy accAtPoint =
-      acc.ChildAtPoint(aX, aY, Accessible::EWhichChildAtPoint::DeepestChild);
-  if (accAtPoint.IsNull()) {
+  Accessible* accAtPoint =
+      acc->ChildAtPoint(aX, aY, Accessible::EWhichChildAtPoint::DeepestChild);
+  if (!accAtPoint) {
     return nullptr;
   }
-  roles::Role role = accAtPoint.Role();
+  roles::Role role = accAtPoint->Role();
   if (role == roles::TEXT_LEAF || role == roles::STATICTEXT) {
     // We don't include text leaf nodes in the ATK tree, so return the parent.
-    accAtPoint = accAtPoint.Parent();
-    MOZ_ASSERT(!accAtPoint.IsNull(), "Text leaf should always have a parent");
+    accAtPoint = accAtPoint->Parent();
+    MOZ_ASSERT(accAtPoint, "Text leaf should always have a parent");
   }
   AtkObject* atkObj = GetWrapperFor(accAtPoint);
   if (atkObj) {

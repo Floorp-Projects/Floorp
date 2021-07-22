@@ -136,7 +136,7 @@ AtkHyperlink* MaiAtkObject::GetAtkHyperlink() {
   MaiHyperlink* maiHyperlink =
       (MaiHyperlink*)g_object_get_qdata(G_OBJECT(this), quark_mai_hyperlink);
   if (!maiHyperlink) {
-    maiHyperlink = new MaiHyperlink(accWrap);
+    maiHyperlink = new MaiHyperlink(acc);
     g_object_set_qdata(G_OBJECT(this), quark_mai_hyperlink, maiHyperlink);
   }
 
@@ -144,7 +144,7 @@ AtkHyperlink* MaiAtkObject::GetAtkHyperlink() {
 }
 
 void MaiAtkObject::Shutdown() {
-  accWrap.SetBits(0);
+  acc = nullptr;
   MaiHyperlink* maiHyperlink =
       (MaiHyperlink*)g_object_get_qdata(G_OBJECT(this), quark_mai_hyperlink);
   if (maiHyperlink) {
@@ -284,7 +284,7 @@ void AccessibleWrap::GetNativeInterface(void** aOutAccessible) {
     mAtkObject = reinterpret_cast<AtkObject*>(g_object_new(type, nullptr));
     if (!mAtkObject) return;
 
-    atk_object_initialize(mAtkObject, this);
+    atk_object_initialize(mAtkObject, static_cast<Accessible*>(this));
     mAtkObject->role = ATK_ROLE_INVALID;
     mAtkObject->layer = ATK_LAYER_INVALID;
   }
@@ -499,12 +499,12 @@ void initializeCB(AtkObject* aAtkObj, gpointer aData) {
   }
 
   /* initialize object */
-  MAI_ATK_OBJECT(aAtkObj)->accWrap.SetBits(reinterpret_cast<uintptr_t>(aData));
+  MAI_ATK_OBJECT(aAtkObj)->acc = static_cast<Accessible*>(aData);
 }
 
 void finalizeCB(GObject* aObj) {
   if (!IS_MAI_OBJECT(aObj)) return;
-  NS_ASSERTION(MAI_ATK_OBJECT(aObj)->accWrap.IsNull(), "AccWrap NOT null");
+  NS_ASSERTION(!MAI_ATK_OBJECT(aObj)->acc, "acc NOT null");
 
   // call parent finalize function
   // finalize of GObjectClass will unref the accessible parent if has
@@ -576,8 +576,8 @@ const gchar* getDescriptionCB(AtkObject* aAtkObj) {
 AtkRole getRoleCB(AtkObject* aAtkObj) {
   if (aAtkObj->role != ATK_ROLE_INVALID) return aAtkObj->role;
 
-  AccessibleOrProxy acc = GetInternalObj(aAtkObj);
-  if (acc.IsNull()) {
+  Accessible* acc = GetInternalObj(aAtkObj);
+  if (!acc) {
     return ATK_ROLE_INVALID;
   }
 
@@ -594,7 +594,7 @@ AtkRole getRoleCB(AtkObject* aAtkObj) {
     aAtkObj->role = atkRole;                                                \
     break;
 
-  switch (acc.Role()) {
+  switch (acc->Role()) {
 #include "RoleMap.h"
     default:
       MOZ_CRASH("Unknown role.");
@@ -691,13 +691,13 @@ const gchar* GetLocaleCB(AtkObject* aAtkObj) {
 AtkObject* getParentCB(AtkObject* aAtkObj) {
   if (aAtkObj->accessible_parent) return aAtkObj->accessible_parent;
 
-  AccessibleOrProxy acc = GetInternalObj(aAtkObj);
-  if (acc.IsNull()) {
+  Accessible* acc = GetInternalObj(aAtkObj);
+  if (!acc) {
     return nullptr;
   }
 
-  AccessibleOrProxy parent = acc.Parent();
-  AtkObject* atkParent = !parent.IsNull() ? GetWrapperFor(parent) : nullptr;
+  Accessible* parent = acc->Parent();
+  AtkObject* atkParent = parent ? GetWrapperFor(parent) : nullptr;
   if (atkParent) atk_object_set_parent(aAtkObj, atkParent);
 
   return aAtkObj->accessible_parent;
@@ -933,9 +933,17 @@ AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj) {
 
   AccessibleWrap* accWrap = nullptr;
   if (isMAIObject) {
-    LocalAccessible* acc = MAI_ATK_OBJECT(aAtkObj)->accWrap.AsAccessible();
-    accWrap = static_cast<AccessibleWrap*>(acc);
+    // If we're working with an ATK object, we need to convert the Accessible
+    // back to an AccessibleWrap:
+    Accessible* storedAcc = MAI_ATK_OBJECT(aAtkObj)->acc;
+    if (!storedAcc) {
+      return nullptr;
+    }
+
+    accWrap = static_cast<AccessibleWrap*>(storedAcc->AsLocal());
   } else {
+    // The ATK socket stores an AccessibleWrap directly, so we can get the value
+    // with no casting.
     accWrap = MAI_ATK_SOCKET(aAtkObj)->accWrap;
   }
 
@@ -945,31 +953,38 @@ AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj) {
   NS_ENSURE_TRUE(accWrap->GetAtkObject() == aAtkObj, nullptr);
 
   AccessibleWrap* appAccWrap = ApplicationAcc();
-  if (appAccWrap != accWrap && !accWrap->IsValidObject()) return nullptr;
+  if (appAccWrap != accWrap && !accWrap->IsValidObject()) {
+    return nullptr;
+  }
 
   return accWrap;
 }
 
 RemoteAccessible* GetProxy(AtkObject* aObj) {
-  return GetInternalObj(aObj).AsProxy();
-}
-
-AccessibleOrProxy GetInternalObj(AtkObject* aObj) {
-  if (!aObj || !IS_MAI_OBJECT(aObj)) return nullptr;
-
-  return MAI_ATK_OBJECT(aObj)->accWrap;
-}
-
-AtkObject* GetWrapperFor(RemoteAccessible* aProxy) {
-  return reinterpret_cast<AtkObject*>(aProxy->GetWrapper() & ~IS_PROXY);
-}
-
-AtkObject* GetWrapperFor(AccessibleOrProxy aObj) {
-  if (aObj.IsProxy()) {
-    return GetWrapperFor(aObj.AsProxy());
+  Accessible* acc = GetInternalObj(aObj);
+  if (!acc) {
+    return nullptr;
   }
 
-  return AccessibleWrap::GetAtkObject(aObj.AsAccessible());
+  return acc->AsRemote();
+}
+
+Accessible* GetInternalObj(AtkObject* aObj) {
+  if (!aObj || !IS_MAI_OBJECT(aObj)) return nullptr;
+
+  return MAI_ATK_OBJECT(aObj)->acc;
+}
+
+AtkObject* GetWrapperFor(Accessible* aAcc) {
+  if (!aAcc) {
+    return nullptr;
+  }
+
+  if (aAcc->IsRemote()) {
+    return reinterpret_cast<AtkObject*>(aAcc->AsRemote()->GetWrapper());
+  }
+
+  return AccessibleWrap::GetAtkObject(aAcc->AsLocal());
 }
 
 static uint16_t GetInterfacesForProxy(RemoteAccessible* aProxy) {
@@ -1021,15 +1036,14 @@ void a11y::ProxyCreated(RemoteAccessible* aProxy) {
   AtkObject* obj = reinterpret_cast<AtkObject*>(g_object_new(type, nullptr));
   if (!obj) return;
 
-  uintptr_t inner = reinterpret_cast<uintptr_t>(aProxy) | IS_PROXY;
-  atk_object_initialize(obj, reinterpret_cast<gpointer>(inner));
+  atk_object_initialize(obj, static_cast<Accessible*>(aProxy));
   obj->role = ATK_ROLE_INVALID;
   obj->layer = ATK_LAYER_INVALID;
-  aProxy->SetWrapper(reinterpret_cast<uintptr_t>(obj) | IS_PROXY);
+  aProxy->SetWrapper(reinterpret_cast<uintptr_t>(obj));
 }
 
 void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
-  auto obj = reinterpret_cast<MaiAtkObject*>(aProxy->GetWrapper() & ~IS_PROXY);
+  auto obj = reinterpret_cast<MaiAtkObject*>(aProxy->GetWrapper());
   if (!obj) {
     return;
   }

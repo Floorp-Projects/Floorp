@@ -296,13 +296,11 @@ bool AccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
 
 void AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
                              bool aInclusive) {
-  AccessibleOrProxy accOrProxyRoot = AccessibleOrProxy(RootAccessible());
-  a11y::Pivot pivot(accOrProxyRoot);
+  a11y::Pivot pivot(RootAccessible());
   TraversalRule rule(aGranularity);
-  AccessibleOrProxy accOrProxy = AccessibleOrProxy(this);
-  LocalAccessible* result =
-      aForward ? pivot.Next(accOrProxy, rule, aInclusive).AsAccessible()
-               : pivot.Prev(accOrProxy, rule, aInclusive).AsAccessible();
+  Accessible* maybeResult = aForward ? pivot.Next(this, rule, aInclusive)
+                                     : pivot.Prev(this, rule, aInclusive);
+  LocalAccessible* result = maybeResult ? maybeResult->AsLocal() : nullptr;
   if (result && (result != this || aInclusive)) {
     PivotMoveReason reason = aForward ? nsIAccessiblePivot::REASON_NEXT
                                       : nsIAccessiblePivot::REASON_PREV;
@@ -317,7 +315,8 @@ void AccessibleWrap::ExploreByTouch(float aX, float aY) {
   a11y::Pivot pivot(RootAccessible());
   TraversalRule rule;
 
-  LocalAccessible* result = pivot.AtPoint(aX, aY, rule).AsAccessible();
+  Accessible* maybeResult = pivot.AtPoint(aX, aY, rule);
+  LocalAccessible* result = maybeResult ? maybeResult->AsLocal() : nullptr;
 
   if (result && result != this) {
     RefPtr<AccEvent> event =

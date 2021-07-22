@@ -25,10 +25,11 @@ TraversalRule::TraversalRule()
 TraversalRule::TraversalRule(int32_t aGranularity)
     : mGranularity(aGranularity) {}
 
-uint16_t TraversalRule::Match(const AccessibleOrProxy& aAccOrProxy) {
-  MOZ_ASSERT(aAccOrProxy.IsAccessible(),
-             "Should only receive accessibles when processing on android.");
-  LocalAccessible* aAccessible = aAccOrProxy.AsAccessible();
+uint16_t TraversalRule::Match(Accessible* aAcc) {
+  MOZ_ASSERT(
+      aAcc && aAcc->IsLocal(),
+      "Should only receive local accessibles when processing on android.");
+  LocalAccessible* aAccessible = aAcc->AsLocal();
   uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
 
   if (nsAccUtils::MustPrune(aAccessible)) {

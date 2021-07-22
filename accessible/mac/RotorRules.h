@@ -16,12 +16,12 @@ using namespace mozilla::a11y;
  */
 class RotorRule : public PivotRule {
  public:
-  explicit RotorRule(AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit RotorRule(Accessible* aDirectDescendantsFrom);
   explicit RotorRule();
-  uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  uint16_t Match(Accessible* aAcc) override;
 
  private:
-  AccessibleOrProxy mDirectDescendantsFrom;
+  Accessible* mDirectDescendantsFrom;
 };
 
 /**
@@ -29,9 +29,9 @@ class RotorRule : public PivotRule {
  */
 class RotorRoleRule : public RotorRule {
  public:
-  explicit RotorRoleRule(role aRole, AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit RotorRoleRule(role aRole, Accessible* aDirectDescendantsFrom);
   explicit RotorRoleRule(role aRole);
-  uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  uint16_t Match(Accessible* aAcc) override;
 
  private:
   role mRole;
@@ -41,9 +41,9 @@ class RotorMacRoleRule : public RotorRule {
  public:
   explicit RotorMacRoleRule(NSString* aRole);
   explicit RotorMacRoleRule(NSString* aRole,
-                            AccessibleOrProxy& aDirectDescendantsFrom);
+                            Accessible* aDirectDescendantsFrom);
   ~RotorMacRoleRule();
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  virtual uint16_t Match(Accessible* aAcc) override;
 
  protected:
   NSString* mMacRole;
@@ -51,42 +51,42 @@ class RotorMacRoleRule : public RotorRule {
 
 class RotorControlRule final : public RotorRule {
  public:
-  explicit RotorControlRule(AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit RotorControlRule(Accessible* aDirectDescendantsFrom);
   explicit RotorControlRule();
 
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  virtual uint16_t Match(Accessible* aAcc) override;
 };
 
 class RotorTextEntryRule final : public RotorRule {
  public:
-  explicit RotorTextEntryRule(AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit RotorTextEntryRule(Accessible* aDirectDescendantsFrom);
   explicit RotorTextEntryRule();
 
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  virtual uint16_t Match(Accessible* aAcc) override;
 };
 
 class RotorLinkRule : public RotorRule {
  public:
   explicit RotorLinkRule();
-  explicit RotorLinkRule(AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit RotorLinkRule(Accessible* aDirectDescendantsFrom);
 
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  virtual uint16_t Match(Accessible* aAcc) override;
 };
 
 class RotorVisitedLinkRule final : public RotorLinkRule {
  public:
   explicit RotorVisitedLinkRule();
-  explicit RotorVisitedLinkRule(AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit RotorVisitedLinkRule(Accessible* aDirectDescendantsFrom);
 
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  virtual uint16_t Match(Accessible* aAcc) override;
 };
 
 class RotorUnvisitedLinkRule final : public RotorLinkRule {
  public:
   explicit RotorUnvisitedLinkRule();
-  explicit RotorUnvisitedLinkRule(AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit RotorUnvisitedLinkRule(Accessible* aDirectDescendantsFrom);
 
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  virtual uint16_t Match(Accessible* aAcc) override;
 };
 
 /**
@@ -96,26 +96,26 @@ class RotorUnvisitedLinkRule final : public RotorLinkRule {
 class RotorNotMacRoleRule : public RotorMacRoleRule {
  public:
   explicit RotorNotMacRoleRule(NSString* aMacRole,
-                               AccessibleOrProxy& aDirectDescendantsFrom);
+                               Accessible* aDirectDescendantsFrom);
   explicit RotorNotMacRoleRule(NSString* aMacRole);
-  uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  uint16_t Match(Accessible* aAcc) override;
 };
 
 class RotorStaticTextRule : public RotorRule {
  public:
   explicit RotorStaticTextRule();
-  explicit RotorStaticTextRule(AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit RotorStaticTextRule(Accessible* aDirectDescendantsFrom);
 
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  virtual uint16_t Match(Accessible* aAcc) override;
 };
 
 class RotorHeadingLevelRule : public RotorRoleRule {
  public:
   explicit RotorHeadingLevelRule(int32_t aLevel);
   explicit RotorHeadingLevelRule(int32_t aLevel,
-                                 AccessibleOrProxy& aDirectDescendantsFrom);
+                                 Accessible* aDirectDescendantsFrom);
 
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  virtual uint16_t Match(Accessible* aAcc) override;
 
  private:
   int32_t mLevel;
@@ -123,11 +123,11 @@ class RotorHeadingLevelRule : public RotorRoleRule {
 
 class RotorLiveRegionRule : public RotorRule {
  public:
-  explicit RotorLiveRegionRule(AccessibleOrProxy& aDirectDescendantsFrom)
+  explicit RotorLiveRegionRule(Accessible* aDirectDescendantsFrom)
       : RotorRule(aDirectDescendantsFrom) {}
   explicit RotorLiveRegionRule() : RotorRule() {}
 
-  uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  uint16_t Match(Accessible* aAcc) override;
 };
 
 /**
@@ -138,5 +138,5 @@ class RotorLiveRegionRule : public RotorRule {
 class OutlineRule : public RotorRule {
  public:
   explicit OutlineRule();
-  uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  uint16_t Match(Accessible* aAcc) override;
 };

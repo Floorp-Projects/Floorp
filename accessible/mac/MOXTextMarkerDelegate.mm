@@ -15,35 +15,37 @@ using namespace mozilla::a11y;
 
 #define PREF_ACCESSIBILITY_MAC_DEBUG "accessibility.mac.debug"
 
-static nsTHashMap<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
+static nsTHashMap<nsPtrHashKey<mozilla::a11y::Accessible>,
+                  MOXTextMarkerDelegate*>
+    sDelegates;
 
 @implementation MOXTextMarkerDelegate
 
-+ (id)getOrCreateForDoc:(mozilla::a11y::AccessibleOrProxy)aDoc {
-  MOZ_ASSERT(!aDoc.IsNull());
++ (id)getOrCreateForDoc:(mozilla::a11y::Accessible*)aDoc {
+  MOZ_ASSERT(aDoc);
 
-  MOXTextMarkerDelegate* delegate = sDelegates.Get(aDoc.Bits());
+  MOXTextMarkerDelegate* delegate = sDelegates.Get(aDoc);
   if (!delegate) {
     delegate = [[MOXTextMarkerDelegate alloc] initWithDoc:aDoc];
-    sDelegates.InsertOrUpdate(aDoc.Bits(), delegate);
+    sDelegates.InsertOrUpdate(aDoc, delegate);
     [delegate retain];
   }
 
   return delegate;
 }
 
-+ (void)destroyForDoc:(mozilla::a11y::AccessibleOrProxy)aDoc {
-  MOZ_ASSERT(!aDoc.IsNull());
++ (void)destroyForDoc:(mozilla::a11y::Accessible*)aDoc {
+  MOZ_ASSERT(aDoc);
 
-  MOXTextMarkerDelegate* delegate = sDelegates.Get(aDoc.Bits());
+  MOXTextMarkerDelegate* delegate = sDelegates.Get(aDoc);
   if (delegate) {
-    sDelegates.Remove(aDoc.Bits());
+    sDelegates.Remove(aDoc);
     [delegate release];
   }
 }
 
-- (id)initWithDoc:(AccessibleOrProxy)aDoc {
-  MOZ_ASSERT(!aDoc.IsNull(), "Cannot init MOXTextDelegate with null");
+- (id)initWithDoc:(Accessible*)aDoc {
+  MOZ_ASSERT(aDoc, "Cannot init MOXTextDelegate with null");
   if ((self = [super init])) {
     mGeckoDocAccessible = aDoc;
   }
@@ -56,9 +58,9 @@ static nsTHashMap<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
   [super dealloc];
 }
 
-- (void)setSelectionFrom:(AccessibleOrProxy)startContainer
+- (void)setSelectionFrom:(Accessible*)startContainer
                       at:(int32_t)startOffset
-                      to:(AccessibleOrProxy)endContainer
+                      to:(Accessible*)endContainer
                       at:(int32_t)endOffset {
   GeckoTextMarkerRange selection(GeckoTextMarker(startContainer, startOffset),
                                  GeckoTextMarker(endContainer, endOffset));
@@ -70,7 +72,7 @@ static nsTHashMap<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
   mSelection = [selection.CreateAXTextMarkerRange() retain];
 }
 
-- (void)setCaretOffset:(mozilla::a11y::AccessibleOrProxy)container
+- (void)setCaretOffset:(mozilla::a11y::Accessible*)container
                     at:(int32_t)offset {
   GeckoTextMarker caretMarker(container, offset);
 
@@ -84,6 +86,7 @@ static nsTHashMap<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 - (NSDictionary*)selectionChangeInfo {
   GeckoTextMarkerRange selectedGeckoRange =
       GeckoTextMarkerRange(mGeckoDocAccessible, mSelection);
+
   int32_t stateChangeType = selectedGeckoRange.mStart == selectedGeckoRange.mEnd
                                 ? AXTextStateChangeTypeSelectionMove
                                 : AXTextStateChangeTypeSelectionExtend;
@@ -98,6 +101,7 @@ static nsTHashMap<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 
   GeckoTextMarker caretMarker(mGeckoDocAccessible, mCaret);
   GeckoTextMarker prevCaretMarker(mGeckoDocAccessible, mPrevCaret);
+
   if (!caretMarker.IsValid()) {
     // If the current caret is invalid, stop here and return base info.
     return info;
@@ -175,9 +179,9 @@ static nsTHashMap<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 
 - (id)moxEndTextMarker {
   uint32_t characterCount =
-      mGeckoDocAccessible.IsProxy()
-          ? mGeckoDocAccessible.AsProxy()->CharacterCount()
-          : mGeckoDocAccessible.AsAccessible()
+      mGeckoDocAccessible->IsRemote()
+          ? mGeckoDocAccessible->AsRemote()->CharacterCount()
+          : mGeckoDocAccessible->AsLocal()
                 ->Document()
                 ->AsHyperText()
                 ->CharacterCount();
@@ -384,8 +388,8 @@ static nsTHashMap<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
     return nil;
   }
 
-  AccessibleOrProxy leaf = geckoTextMarker.Leaf();
-  if (leaf.IsNull()) {
+  Accessible* leaf = geckoTextMarker.Leaf();
+  if (!leaf) {
     return nil;
   }
 
@@ -411,8 +415,8 @@ static nsTHashMap<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
     return @"<GeckoTextMarker 0x0 [0]>";
   }
 
-  return [NSString stringWithFormat:@"<GeckoTextMarker 0x%lx [%d]>",
-                                    geckoTextMarker.mContainer.Bits(),
+  return [NSString stringWithFormat:@"<GeckoTextMarker %p [%d]>",
+                                    geckoTextMarker.mContainer,
                                     geckoTextMarker.mOffset];
 }
 
@@ -427,10 +431,10 @@ static nsTHashMap<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
     return @"<GeckoTextMarkerRange 0x0 [0] - 0x0 [0]>";
   }
 
-  return [NSString
-      stringWithFormat:@"<GeckoTextMarkerRange 0x%lx [%d] - 0x%lx [%d]>",
-                       range.mStart.mContainer.Bits(), range.mStart.mOffset,
-                       range.mEnd.mContainer.Bits(), range.mEnd.mOffset];
+  return
+      [NSString stringWithFormat:@"<GeckoTextMarkerRange %p [%d] - %p [%d]>",
+                                 range.mStart.mContainer, range.mStart.mOffset,
+                                 range.mEnd.mContainer, range.mEnd.mOffset];
 }
 
 - (void)moxSetSelectedTextMarkerRange:(id)textMarkerRange {

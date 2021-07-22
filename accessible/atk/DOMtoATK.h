@@ -113,9 +113,9 @@ class ATKStringConverterHelper {
  * Get text from aAccessible, using ATKStringConverterHelper to properly
  * introduce appropriate BOMs.
  */
-template <class AccessibleOrProxy>
-gchar* NewATKString(AccessibleOrProxy* aAccessible, gint aStartOffset,
-                    gint aEndOffset, AtkStringConvertFlags aFlags) {
+template <class Accessible>
+gchar* NewATKString(Accessible* aAccessible, gint aStartOffset, gint aEndOffset,
+                    AtkStringConvertFlags aFlags) {
   gint startOffset = aStartOffset, endOffset = aEndOffset;
   ATKStringConverterHelper converter;
   converter.AdjustOffsets(&startOffset, &endOffset,

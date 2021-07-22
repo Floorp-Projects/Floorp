@@ -1686,7 +1686,7 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
       // If this is an OOP iframe document, we can't support NODE_CHILD_OF
       // here, since the iframe resides in a different process. This is fine
       // because the client will then request the parent instead, which will be
-      // correctly handled by platform/AccessibleOrProxy code.
+      // correctly handled by platform code.
       if (XRE_IsContentProcess() && IsRoot()) {
         dom::Document* doc =
             const_cast<LocalAccessible*>(this)->AsDoc()->DocumentNode();
@@ -1769,13 +1769,12 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
            * was called from, which is expected. */
           Pivot p = Pivot(currParent);
           PivotRoleRule rule(roles::RADIOBUTTON);
-          AccessibleOrProxy wrappedParent = AccessibleOrProxy(currParent);
-          AccessibleOrProxy match = p.Next(wrappedParent, rule);
-          while (!match.IsNull()) {
-            MOZ_ASSERT(
-                !match.IsProxy(),
-                "We shouldn't find any proxy's while building our relation!");
-            rel.AppendTarget(match.AsAccessible());
+          Accessible* match = p.Next(currParent, rule);
+          while (match) {
+            MOZ_ASSERT(match->IsLocal(),
+                       "We shouldn't find any remote accs while building our "
+                       "relation!");
+            rel.AppendTarget(match->AsLocal());
             match = p.Next(match, rule);
           }
         }
