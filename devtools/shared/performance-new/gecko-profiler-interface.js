@@ -30,12 +30,7 @@ const IS_SUPPORTED_PLATFORM = "nsIProfiler" in Ci;
 /**
  * This is an implementation of the perf actor API, using nsIProfiler.
  * It is in a separate class from the actual perf actor implementation
- * so that it can also be used by about:profiling for the current browser.
- *
- * about:profiling is used in two different contexts: For local settings, and
- * for remote targets when loaded in about:debugging. In the remote context,
- * it has access to the perf actor. In the local context, it uses this class
- * as a drop-in perfFront replacement which operates on the current browser.
+ * for historical reasons only. It could be moved into perf.js.
  */
 class ActorReadyGeckoProfilerInterface {
   constructor() {
@@ -230,24 +225,6 @@ class ActorReadyGeckoProfilerInterface {
       return [];
     }
     return Services.profiler.GetFeatures();
-  }
-
-  /**
-   * @param {string} type
-   * @param {() => void} listener
-   */
-  on(type, listener) {
-    // This is a stub for TypeScript. This function is assigned by the EventEmitter
-    // decorator.
-  }
-
-  /**
-   * @param {string} type
-   * @param {() => void} listener
-   */
-  off(type, listener) {
-    // This is a stub for TypeScript. This function is assigned by the EventEmitter
-    // decorator.
   }
 }
 
