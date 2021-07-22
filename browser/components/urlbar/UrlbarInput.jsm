@@ -661,6 +661,28 @@ class UrlbarInput {
   }
 
   /**
+   * Called by inputs that resemble search boxes, but actually hand input off
+   * to the Urlbar. We use these fake inputs on the new tab page and
+   * about:privatebrowsing.
+   *
+   * @param {string} searchString
+   * @param {nsISearchEngine} [searchEngine]
+   *   Optional. If included and the right prefs are set, we will enter search
+   *   mode when handing `searchString` from the fake input to the Urlbar.
+   *
+   */
+  handoff(searchString, searchEngine) {
+    if (UrlbarPrefs.get("shouldHandOffToSearchMode") && searchEngine) {
+      this.search(searchString, {
+        searchEngine,
+        searchModeEntry: "handoff",
+      });
+    } else {
+      this.search(searchString);
+    }
+  }
+
+  /**
    * Called when an element of the view is picked.
    *
    * @param {Element} element The element that was picked.
