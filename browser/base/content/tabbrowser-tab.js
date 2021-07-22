@@ -267,6 +267,7 @@
 
     updateLastUnloadedByTabUnloader() {
       this._lastUnloaded = Date.now();
+      Services.telemetry.scalarAdd("browser.engagement.tab_unload_count", 1);
     }
 
     recordTimeFromUnloadToReload() {
@@ -278,6 +279,7 @@
       Services.telemetry
         .getHistogramById("TAB_UNLOAD_TO_RELOAD")
         .add(diff_in_msec / 1000);
+      Services.telemetry.scalarAdd("browser.engagement.tab_reload_count", 1);
       delete this._lastUnloaded;
     }
 

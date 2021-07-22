@@ -231,6 +231,36 @@ browser.engagement:
     record_in_processes:
       - 'main'
 
+  tab_unload_count:
+    bug_numbers:
+      - 1715858
+    description: >
+      The count of tab unload events by TabUnloader due to a low-memory situation.
+    expires: never
+    kind: uint
+    notification_emails:
+      - tkikuchi@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  tab_reload_count:
+    bug_numbers:
+      - 1715858
+    description: >
+      The count of tab reload events by the user after unloaded.
+    expires: never
+    kind: uint
+    notification_emails:
+      - tkikuchi@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   total_uri_count:
     bug_numbers:
       - 1271313
