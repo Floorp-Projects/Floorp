@@ -209,6 +209,10 @@ add_task(async function test() {
   ok(!pinnedSoundTab.linkedPanel, "unloaded a pinned tab playing sound");
   await compareTabOrder([]); // note that no tabs are returned when there are no discardable tabs.
 
+  const histogram = TelemetryTestUtils.getAndClearHistogram(
+    "TAB_UNLOAD_TO_RELOAD"
+  );
+
   // It's possible that we're already in the memory-pressure state
   // and we may receive the "ongoing" message.
   const message = await pressureAndObserve("memory-pressure");
@@ -224,6 +228,12 @@ add_task(async function test() {
   await BrowserTestUtils.switchTab(gBrowser, tab1);
   await BrowserTestUtils.switchTab(gBrowser, soundTab);
   await BrowserTestUtils.switchTab(gBrowser, pinnedTab);
+
+  const hist = histogram.snapshot();
+  const numEvents = Object.values(hist.values).reduce((a, b) => a + b);
+  Assert.equal(numEvents, 3, "three tabs have been reloaded.");
+
+  // tab0 has never been unloaded.  No data is added to the histogram.
   await BrowserTestUtils.switchTab(gBrowser, tab0);
 
   // Audio from the first sound tab was stopped when the tab was discarded earlier,

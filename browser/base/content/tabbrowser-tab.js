@@ -265,6 +265,22 @@
       this._lastAccessed = this.selected ? Infinity : aDate || Date.now();
     }
 
+    updateLastUnloadedByTabUnloader() {
+      this._lastUnloaded = Date.now();
+    }
+
+    recordTimeFromUnloadToReload() {
+      if (!this._lastUnloaded) {
+        return;
+      }
+
+      const diff_in_msec = Date.now() - this._lastUnloaded;
+      Services.telemetry
+        .getHistogramById("TAB_UNLOAD_TO_RELOAD")
+        .add(diff_in_msec / 1000);
+      delete this._lastUnloaded;
+    }
+
     on_mouseover(event) {
       if (event.target.classList.contains("tab-close-button")) {
         this.mOverCloseButton = true;
