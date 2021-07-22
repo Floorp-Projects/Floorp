@@ -118,7 +118,7 @@ export type PrefPostfix = "" | ".remote";
 export interface State {
   recordingState: RecordingState;
   recordingUnexpectedlyStopped: boolean;
-  isSupportedPlatform: boolean;
+  isSupportedPlatform: boolean | null;
   interval: number;
   entries: number;
   features: string[];
