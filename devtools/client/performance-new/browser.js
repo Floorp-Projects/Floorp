@@ -203,12 +203,12 @@ function createLibraryMap(profile) {
  * right arguments.
  *
  * @param {MinimallyTypedGeckoProfile} profile - The raw profie (not gzipped).
- * @param {() => string[]} getObjdirs - A function that returns an array of objdir paths
+ * @param {string[]} objdirs - An array of objdir paths
  *   on the host machine that should be searched for relevant build artifacts.
  * @param {PerfFront} perfFront
  * @return {GetSymbolTableCallback}
  */
-function createMultiModalGetSymbolTableFn(profile, getObjdirs, perfFront) {
+function createMultiModalGetSymbolTableFn(profile, objdirs, perfFront) {
   const libraryGetter = createLibraryMap(profile);
 
   return async function getSymbolTable(debugName, breakpadId) {
@@ -218,7 +218,6 @@ function createMultiModalGetSymbolTableFn(profile, getObjdirs, perfFront) {
         `Could not find the library for "${debugName}", "${breakpadId}".`
       );
     }
-    const objdirs = getObjdirs();
     const { getSymbolTableMultiModal } = lazy.PerfSymbolication();
     return getSymbolTableMultiModal(lib, objdirs, perfFront);
   };

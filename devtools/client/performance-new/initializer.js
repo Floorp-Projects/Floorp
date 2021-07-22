@@ -141,7 +141,7 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
         profile =>
           createMultiModalGetSymbolTableFn(
             profile,
-            () => selectors.getObjdirs(store.getState()),
+            selectors.getObjdirs(store.getState()),
             selectors.getPerfFront(store.getState())
           ),
     })
