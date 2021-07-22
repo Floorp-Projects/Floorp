@@ -6,7 +6,7 @@
 
 /**
  * @typedef {import("../@types/perf").RecordingState} RecordingState
- * @typedef {import("../@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
+ * @typedef {import("../@types/perf").RecordingSettings} RecordingSettings
  * @typedef {import("../@types/perf").InitializedValues} InitializedValues
  * @typedef {import("../@types/perf").PerfFront} PerfFront
  * @typedef {import("../@types/perf").ReceiveProfile} ReceiveProfile
@@ -86,7 +86,7 @@ const getOpenAboutProfiling = state => {
  * Warning! This function returns a new object on every run, and so should not
  * be used directly as a React prop.
  *
- * @type {Selector<RecordingStateFromPreferences>}
+ * @type {Selector<RecordingSettings>}
  */
 const getRecordingSettings = state => {
   const presets = getPresets(state);

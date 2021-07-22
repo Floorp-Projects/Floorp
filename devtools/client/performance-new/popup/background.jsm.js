@@ -24,7 +24,7 @@ const AppConstants = ChromeUtils.import(
 ).AppConstants;
 
 /**
- * @typedef {import("../@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
+ * @typedef {import("../@types/perf").RecordingSettings} RecordingSettings
  * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("../@types/perf").Library} Library
  * @typedef {import("../@types/perf").PerformancePref} PerformancePref
@@ -389,7 +389,7 @@ function getObjdirPrefValue(pageContext) {
 /**
  * @param {PageContext} pageContext
  * @param {string[]} supportedFeatures
- * @returns {RecordingStateFromPreferences}
+ * @returns {RecordingSettings}
  */
 function getRecordingSettings(pageContext, supportedFeatures) {
   const postfix = getPrefPostfix(pageContext);
@@ -432,7 +432,7 @@ function getRecordingSettings(pageContext, supportedFeatures) {
  * @param {string} presetName
  * @param {string[]} supportedFeatures
  * @param {string[]} objdirs
- * @return {RecordingStateFromPreferences | null}
+ * @return {RecordingSettings | null}
  */
 function getRecordingSettingsFromPreset(
   presetName,
@@ -467,7 +467,7 @@ function getRecordingSettingsFromPreset(
 
 /**
  * @param {PageContext} pageContext
- * @param {RecordingStateFromPreferences} prefs
+ * @param {RecordingSettings} prefs
  */
 function setRecordingSettings(pageContext, prefs) {
   const postfix = getPrefPostfix(pageContext);

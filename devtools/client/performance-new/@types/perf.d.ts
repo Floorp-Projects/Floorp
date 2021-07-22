@@ -57,7 +57,7 @@ type MaybePromise<T> = Promise<T> | T;
  */
 export interface PerfFront {
   startProfiler: (
-    options: RecordingStateFromPreferences
+    options: RecordingSettings
   ) => MaybePromise<boolean>;
   getProfileAndStopProfiler: () => Promise<any>;
   stopProfilerAndDiscardProfile: () => MaybePromise<void>;
@@ -180,7 +180,7 @@ export type ReceiveProfile = (
 ) => void;
 
 export type SetRecordingSettings = (
-  settings: RecordingStateFromPreferences
+  settings: RecordingSettings
 ) => void;
 
 /**
@@ -212,7 +212,7 @@ interface GeckoProfilerFrameScriptInterface {
   getSymbolTable: GetSymbolTableCallback;
 }
 
-export interface RecordingStateFromPreferences {
+export interface RecordingSettings {
   presetName: string;
   entries: number;
   interval: number;
@@ -299,7 +299,7 @@ export type Action =
       pageContext: PageContext;
       openAboutProfiling?: () => void;
       openRemoteDevTools?: () => void;
-      recordingSettingsFromPreferences: RecordingStateFromPreferences;
+      recordingSettingsFromPreferences: RecordingSettings;
       getSymbolTableGetter: (
         profile: MinimallyTypedGeckoProfile
       ) => GetSymbolTableCallback;
@@ -317,7 +317,7 @@ export interface InitializeStoreValues {
   setRecordingSettings: SetRecordingSettings;
   presets: Presets;
   pageContext: PageContext;
-  recordingSettings: RecordingStateFromPreferences;
+  recordingSettings: RecordingSettings;
   supportedFeatures: string[];
   getSymbolTableGetter: (
     profile: MinimallyTypedGeckoProfile

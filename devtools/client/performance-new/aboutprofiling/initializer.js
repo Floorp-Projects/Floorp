@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
 /**
- * @typedef {import("../@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
+ * @typedef {import("../@types/perf").RecordingSettings} RecordingSettings
  * @typedef {import("../@types/perf").PerfFront} PerfFront
  * @typedef {import("../@types/perf").PageContext} PageContext
  */
@@ -113,7 +113,7 @@ async function gInit(perfFront, pageContext, openRemoteDevTools) {
       // Get the preferences from the current browser
       recordingSettings: getRecordingSettings(pageContext, supportedFeatures),
       /**
-       * @param {RecordingStateFromPreferences} newRecordingSettings
+       * @param {RecordingSettings} newRecordingSettings
        */
       setRecordingSettings: newRecordingSettings =>
         setRecordingSettings(pageContext, newRecordingSettings),

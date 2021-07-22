@@ -13,7 +13,7 @@
  * @typedef {import("./@types/perf").GetSymbolTableCallback} GetSymbolTableCallback
  * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
  * @typedef {import("./@types/perf").PerformancePref} PerformancePref
- * @typedef {import("./@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
+ * @typedef {import("./@types/perf").RecordingSettings} RecordingSettings
  * @typedef {import("./@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
  * @typedef {import("./@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
  * @typedef {import("./@types/perf").GetActiveBrowserID} GetActiveBrowserID
