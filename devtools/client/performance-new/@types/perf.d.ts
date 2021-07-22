@@ -267,7 +267,8 @@ export type Action =
     }
   | {
       type: "REPORT_PROFILER_READY";
-      recordingState: RecordingState;
+      isActive: boolean;
+      isLockedForPrivateBrowsing: boolean;
     }
   | {
       type: "CHANGE_INTERVAL";
