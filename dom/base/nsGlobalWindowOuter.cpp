@@ -1889,7 +1889,14 @@ bool nsGlobalWindowOuter::ComputeIsSecureContext(Document* aDocument,
   }
 
   if (principal->GetIsNullPrincipal()) {
-    nsCOMPtr<nsIURI> uri = aDocument->GetOriginalURI();
+    // If the NullPrincipal has a valid precursor URI we want to use it to
+    // construct the principal otherwise we fall back to the original document
+    // URI.
+    nsCOMPtr<nsIPrincipal> precursorPrin = principal->GetPrecursorPrincipal();
+    nsCOMPtr<nsIURI> uri = precursorPrin ? precursorPrin->GetURI() : nullptr;
+    if (!uri) {
+      uri = aDocument->GetOriginalURI();
+    }
     // IsOriginPotentiallyTrustworthy doesn't care about origin attributes so
     // it doesn't actually matter what we use here, but reusing the document
     // principal's attributes is convenient.
