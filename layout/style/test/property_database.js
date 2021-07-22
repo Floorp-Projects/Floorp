@@ -8569,13 +8569,19 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: ["none"],
     other_values: [
+      "path(evenodd, '')",
+      "path(nonzero, 'M 10 10 h 100 v 100 h-100 v-100 z')",
+      "path(evenodd, 'M 10 10 h 100 v 100 h-100 v-100 z')",
+      "path('M10,30A20,20 0,0,1 50,30A20,20 0,0,1 90,30Q90,60 50,90Q10,60 10,30z')",
       "url(#mypath)",
       "url('404.svg#mypath')",
       "url(#my-clip-path)",
     ]
       .concat(basicShapeSVGBoxValues)
       .concat(basicShapeOtherValues),
-    invalid_values: basicShapeInvalidValues,
+    invalid_values: ["path(nonzero)", "path(abs, 'M 10 10 L 10 10 z')"].concat(
+      basicShapeInvalidValues
+    ),
     unbalanced_values: basicShapeUnbalancedValues,
   },
   "clip-rule": {
@@ -13222,20 +13228,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     ],
     invalid_values: ["none", "10deg", "left 10% top"],
   };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
-  gCSSProperties["clip-path"].other_values.push(
-    "path(evenodd, '')",
-    "path(nonzero, 'M 10 10 h 100 v 100 h-100 v-100 z')",
-    "path(evenodd, 'M 10 10 h 100 v 100 h-100 v-100 z')",
-    "path('M10,30A20,20 0,0,1 50,30A20,20 0,0,1 90,30Q90,60 50,90Q10,60 10,30z')"
-  );
-
-  gCSSProperties["clip-path"].invalid_values.push(
-    "path(nonzero)",
-    "path(abs, 'M 10 10 L 10 10 z')"
-  );
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.d-property.enabled")) {
