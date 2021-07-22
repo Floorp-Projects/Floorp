@@ -8,7 +8,7 @@ const BackgroundJSM = ChromeUtils.import(
 );
 
 registerCleanupFunction(() => {
-  BackgroundJSM.revertRecordingPreferences();
+  BackgroundJSM.revertRecordingSettings();
 });
 
 /**

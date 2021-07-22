@@ -281,7 +281,7 @@ function startProfiler(pageContext) {
     threads,
     duration,
   } = translatePreferencesToState(
-    getRecordingPreferences(pageContext, Services.profiler.GetFeatures())
+    getRecordingSettings(pageContext, Services.profiler.GetFeatures())
   );
 
   // Get the active Browser ID from browser.
@@ -391,22 +391,22 @@ function getObjdirPrefValue(pageContext) {
  * @param {string[]} supportedFeatures
  * @returns {RecordingStateFromPreferences}
  */
-function getRecordingPreferences(pageContext, supportedFeatures) {
+function getRecordingSettings(pageContext, supportedFeatures) {
   const postfix = getPrefPostfix(pageContext);
 
   // If you add a new preference here, please do not forget to update
-  // `revertRecordingPreferences` as well.
+  // `revertRecordingSettings` as well.
   const objdirs = getObjdirPrefValue(pageContext);
   const presetName = Services.prefs.getCharPref(PRESET_PREF + postfix);
 
   // First try to get the values from a preset.
-  const recordingPrefs = getRecordingPrefsFromPreset(
+  const recordingSettings = getRecordingSettingsFromPreset(
     presetName,
     supportedFeatures,
     objdirs
   );
-  if (recordingPrefs) {
-    return recordingPrefs;
+  if (recordingSettings) {
+    return recordingSettings;
   }
 
   // Next use the preferences to get the values.
@@ -434,7 +434,11 @@ function getRecordingPreferences(pageContext, supportedFeatures) {
  * @param {string[]} objdirs
  * @return {RecordingStateFromPreferences | null}
  */
-function getRecordingPrefsFromPreset(presetName, supportedFeatures, objdirs) {
+function getRecordingSettingsFromPreset(
+  presetName,
+  supportedFeatures,
+  objdirs
+) {
   if (presetName === "custom") {
     return null;
   }
@@ -465,7 +469,7 @@ function getRecordingPrefsFromPreset(presetName, supportedFeatures, objdirs) {
  * @param {PageContext} pageContext
  * @param {RecordingStateFromPreferences} prefs
  */
-function setRecordingPreferences(pageContext, prefs) {
+function setRecordingSettings(pageContext, prefs) {
   const postfix = getPrefPostfix(pageContext);
   Services.prefs.setCharPref(PRESET_PREF + postfix, prefs.presetName);
   Services.prefs.setIntPref(ENTRIES_PREF + postfix, prefs.entries);
@@ -491,7 +495,7 @@ const platform = AppConstants.platform;
  * Revert the recording prefs for both local and remote profiling.
  * @return {void}
  */
-function revertRecordingPreferences() {
+function revertRecordingSettings() {
   for (const postfix of ["", ".remote"]) {
     Services.prefs.clearUserPref(PRESET_PREF + postfix);
     Services.prefs.clearUserPref(ENTRIES_PREF + postfix);
@@ -515,21 +519,21 @@ function revertRecordingPreferences() {
 function changePreset(pageContext, presetName, supportedFeatures) {
   const postfix = getPrefPostfix(pageContext);
   const objdirs = _getArrayOfStringsHostPref(OBJDIRS_PREF + postfix);
-  let recordingPrefs = getRecordingPrefsFromPreset(
+  let recordingSettings = getRecordingSettingsFromPreset(
     presetName,
     supportedFeatures,
     objdirs
   );
 
-  if (!recordingPrefs) {
-    // No recordingPrefs were found for that preset. Most likely this means this
+  if (!recordingSettings) {
+    // No recordingSettings were found for that preset. Most likely this means this
     // is a custom preset, or it's one that we dont recognize for some reason.
     // Get the preferences from the individual preference values.
     Services.prefs.setCharPref(PRESET_PREF + postfix, presetName);
-    recordingPrefs = getRecordingPreferences(pageContext, supportedFeatures);
+    recordingSettings = getRecordingSettings(pageContext, supportedFeatures);
   }
 
-  setRecordingPreferences(pageContext, recordingPrefs);
+  setRecordingSettings(pageContext, recordingSettings);
 }
 
 /**
@@ -618,9 +622,9 @@ module.exports = {
   toggleProfiler,
   platform,
   getSymbolsFromThisBrowser,
-  getRecordingPreferences,
-  setRecordingPreferences,
-  revertRecordingPreferences,
+  getRecordingSettings,
+  setRecordingSettings,
+  revertRecordingSettings,
   changePreset,
   handleWebChannelMessage,
 };
