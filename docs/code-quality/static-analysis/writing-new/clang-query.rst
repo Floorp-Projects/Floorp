@@ -13,7 +13,8 @@ Recommended Boilerplate
 ::
 
   set traversal     IgnoreUnlessSpelledInSource
-  set bind-root     true # Unless you use any .bind("foo") commands
+  set bind-root     true
+  # ^ true unless you use any .bind("foo") commands
   set print-matcher true
   enable output     dump
 
