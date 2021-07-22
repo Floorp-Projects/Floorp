@@ -72,7 +72,11 @@ const UI_BASE_URL_PATH_DEFAULT = "/from-addon";
  *   function should obtain a symbol table for the requested binary and resolve the
  *   returned promise with it.
  */
-function receiveProfile(profile, profilerViewMode, getSymbolTableCallback) {
+function openProfilerAndDisplayProfile(
+  profile,
+  profilerViewMode,
+  getSymbolTableCallback
+) {
   const Services = lazy.Services();
   // Find the most recently used window, as the DevTools client could be in a variety
   // of hosts.
@@ -277,7 +281,7 @@ function openFilePickerForObjdir(window, objdirs, changeObjdirs) {
 }
 
 module.exports = {
-  receiveProfile,
+  openProfilerAndDisplayProfile,
   createMultiModalGetSymbolTableFn,
   restartBrowserWithEnvironmentVariable,
   getEnvironmentVariable,

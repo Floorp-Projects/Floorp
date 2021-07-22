@@ -61,7 +61,7 @@ const selectors = require("devtools/client/performance-new/store/selectors");
 const reducers = require("devtools/client/performance-new/store/reducers");
 const actions = require("devtools/client/performance-new/store/actions");
 const {
-  receiveProfile,
+  openProfilerAndDisplayProfile,
   createMultiModalGetSymbolTableFn,
 } = require("devtools/client/performance-new/browser");
 
@@ -147,7 +147,11 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
       objdirs,
       perfFront
     );
-    receiveProfile(profile, profilerViewMode, getSymbolTableCallback);
+    openProfilerAndDisplayProfile(
+      profile,
+      profilerViewMode,
+      getSymbolTableCallback
+    );
   };
 
   ReactDOM.render(

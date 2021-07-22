@@ -257,10 +257,14 @@ async function captureProfile(pageContext) {
     );
 
   const profilerViewMode = getProfilerViewModeForCurrentPreset(pageContext);
-  const receiveProfile = lazy.BrowserModule().receiveProfile;
-  receiveProfile(profile, profilerViewMode, (debugName, breakpadId) => {
-    return getSymbolsFromThisBrowser(pageContext, debugName, breakpadId);
-  });
+  const { openProfilerAndDisplayProfile } = lazy.BrowserModule();
+  openProfilerAndDisplayProfile(
+    profile,
+    profilerViewMode,
+    (debugName, breakpadId) => {
+      return getSymbolsFromThisBrowser(pageContext, debugName, breakpadId);
+    }
+  );
 
   Services.profiler.StopProfiler();
 }
