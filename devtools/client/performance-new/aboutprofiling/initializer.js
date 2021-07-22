@@ -45,13 +45,10 @@
 const {
   getRecordingSettings,
   setRecordingSettings,
-  getSymbolsFromThisBrowser,
   presets,
 } = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
 );
-
-const { receiveProfile } = require("devtools/client/performance-new/browser");
 
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const React = require("devtools/client/shared/vendor/react");
@@ -107,7 +104,6 @@ async function gInit(perfFront, pageContext, openRemoteDevTools) {
   store.dispatch(
     actions.initializeStore({
       perfFront,
-      receiveProfile,
       supportedFeatures,
       presets,
       // Get the preferences from the current browser
@@ -118,12 +114,6 @@ async function gInit(perfFront, pageContext, openRemoteDevTools) {
       setRecordingSettings: newRecordingSettings =>
         setRecordingSettings(pageContext, newRecordingSettings),
 
-      // The popup doesn't need to support remote symbol tables from the debuggee.
-      // Only get the symbols from this browser.
-      getSymbolTableGetter: () => {
-        return (debugName, breakpadId) =>
-          getSymbolsFromThisBrowser(pageContext, debugName, breakpadId);
-      },
       pageContext,
       openRemoteDevTools,
     })
