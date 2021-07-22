@@ -176,7 +176,7 @@ class AddTest(MachCommandBase):
         doc=None,
         overwrite=False,
         editor=MISSING_ARG,
-        **kwargs,
+        **kwargs
     ):
         import addtest
         import io
@@ -464,7 +464,7 @@ class Test(MachCommandBase):
                 command_context._mach_context,
                 argv=extra_args,
                 test_objects=tests,
-                **kwargs,
+                **kwargs
             )
             if res:
                 status = res
@@ -683,10 +683,7 @@ class SpiderMonkeyTests(MachCommandBase):
         test_env = os.environ.copy()
         test_env["TOPSRCDIR"] = command_context.topsrcdir
 
-        result = subprocess.call(jsapi_tests_cmd, env=test_env)
-        if result != 0:
-            print(f"jsapi-tests failed, exit code {result}")
-        return result
+        return subprocess.call(jsapi_tests_cmd, env=test_env)
 
     def run_check_js_msg(self, command_context):
         import subprocess
