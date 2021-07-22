@@ -35,8 +35,8 @@ object Domains {
 
         // First initialize the country specific lists following the default locale order
         countries
-                .filter { availableLists.contains(it) }
-                .forEach { loadDomainsForLanguage(context, domains, it) }
+            .filter { availableLists.contains(it) }
+            .forEach { loadDomainsForLanguage(context, domains, it) }
 
         // And then add domains from the global list
         loadDomainsForLanguage(context, domains, "global")

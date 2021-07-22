@@ -7,8 +7,8 @@ package mozilla.components.concept.engine
 import android.content.Context
 import android.util.AttributeSet
 import android.util.JsonReader
-import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.base.profiler.Profiler
+import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.utils.EngineVersion
 import org.json.JSONObject
 import org.junit.Assert.assertEquals

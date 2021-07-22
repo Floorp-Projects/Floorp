@@ -30,7 +30,8 @@ internal class ActionContainer @JvmOverloads constructor(
         visibility = View.GONE
 
         context.obtainStyledAttributes(
-            attrs, R.styleable.ActionContainer, defStyleAttr, 0).run {
+            attrs, R.styleable.ActionContainer, defStyleAttr, 0
+        ).run {
             actionSize = attrs?.let {
                 getDimensionPixelSize(R.styleable.ActionContainer_actionContainerItemSize, 0)
             }

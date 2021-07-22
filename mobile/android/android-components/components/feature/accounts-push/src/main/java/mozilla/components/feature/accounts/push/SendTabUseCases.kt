@@ -14,8 +14,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.plus
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceCapability
-import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceCommandOutgoing.SendTab
+import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.TabData
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.ktx.kotlin.crossProduct

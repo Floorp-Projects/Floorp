@@ -62,14 +62,16 @@ class ContentActionTest {
 
     @Before
     fun setUp() {
-        val state = BrowserState(tabs = listOf(
-            createTab(url = "https://www.mozilla.org").also {
-                tabId = it.id
-            },
-            createTab(url = "https://www.firefox.com").also {
-                otherTabId = it.id
-            }
-        ))
+        val state = BrowserState(
+            tabs = listOf(
+                createTab(url = "https://www.mozilla.org").also {
+                    tabId = it.id
+                },
+                createTab(url = "https://www.firefox.com").also {
+                    otherTabId = it.id
+                }
+            )
+        )
 
         store = BrowserStore(state)
     }
@@ -256,7 +258,7 @@ class ContentActionTest {
         assertNotEquals(thumbnail, otherTab.content.thumbnail)
 
         store.dispatch(
-                ContentAction.UpdateThumbnailAction(tab.id, thumbnail)
+            ContentAction.UpdateThumbnailAction(tab.id, thumbnail)
         ).joinBlocking()
 
         assertEquals(thumbnail, tab.content.thumbnail)
@@ -270,13 +272,13 @@ class ContentActionTest {
         assertNotEquals(thumbnail, tab.content.thumbnail)
 
         store.dispatch(
-                ContentAction.UpdateThumbnailAction(tab.id, thumbnail)
+            ContentAction.UpdateThumbnailAction(tab.id, thumbnail)
         ).joinBlocking()
 
         assertEquals(thumbnail, tab.content.thumbnail)
 
         store.dispatch(
-                ContentAction.RemoveThumbnailAction(tab.id)
+            ContentAction.RemoveThumbnailAction(tab.id)
         ).joinBlocking()
 
         assertNull(tab.content.thumbnail)
@@ -324,7 +326,7 @@ class ContentActionTest {
         assertEquals(icon, tab.content.icon)
 
         store.dispatch(
-                ContentAction.RemoveIconAction(tab.id)
+            ContentAction.RemoveIconAction(tab.id)
         ).joinBlocking()
 
         assertNull(tab.content.icon)
@@ -410,13 +412,13 @@ class ContentActionTest {
         )
 
         store.dispatch(
-                ContentAction.UpdateDownloadAction(tab.id, download)
+            ContentAction.UpdateDownloadAction(tab.id, download)
         ).joinBlocking()
 
         assertEquals(download, tab.content.download)
 
         store.dispatch(
-                ContentAction.CancelDownloadAction(tab.id, downloadId = "1337")
+            ContentAction.CancelDownloadAction(tab.id, downloadId = "1337")
         ).joinBlocking()
 
         assertNull(tab.content.download)

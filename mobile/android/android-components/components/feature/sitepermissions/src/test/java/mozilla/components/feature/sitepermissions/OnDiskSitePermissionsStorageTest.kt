@@ -17,14 +17,14 @@ import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStat
 import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
 import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
 import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.AUTOPLAY_AUDIBLE
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.AUTOPLAY_INAUDIBLE
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.BLUETOOTH
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.CAMERA
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.LOCAL_STORAGE
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.LOCATION
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.MICROPHONE
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.NOTIFICATION
-import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.AUTOPLAY_AUDIBLE
-import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.AUTOPLAY_INAUDIBLE
 import mozilla.components.feature.sitepermissions.db.SitePermissionsDao
 import mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase
 import mozilla.components.feature.sitepermissions.db.SitePermissionsEntity
@@ -50,9 +50,11 @@ class OnDiskSitePermissionsStorageTest {
     fun setup() {
         mockDAO = mock()
         mockDataCleanable = mock()
-        storage = spy(OnDiskSitePermissionsStorage(mock(), mockDataCleanable).apply {
-            databaseInitializer = { mockDatabase(mockDAO) }
-        })
+        storage = spy(
+            OnDiskSitePermissionsStorage(mock(), mockDataCleanable).apply {
+                databaseInitializer = { mockDatabase(mockDAO) }
+            }
+        )
     }
 
     @Test

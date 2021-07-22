@@ -89,8 +89,10 @@ class BrowserMenuItemTest {
     @Test
     fun `higher prio highlight which cannot propagate does not get selected`() {
         val highlight = BrowserMenuHighlight.LowPriority(Color.YELLOW)
-        val highlightNonPropagate = BrowserMenuHighlight.HighPriority(Color.GREEN,
-            canPropagate = false)
+        val highlightNonPropagate = BrowserMenuHighlight.HighPriority(
+            Color.GREEN,
+            canPropagate = false
+        )
         val list = listOf(
             BrowserMenuHighlightableItem(
                 label = "Test1",

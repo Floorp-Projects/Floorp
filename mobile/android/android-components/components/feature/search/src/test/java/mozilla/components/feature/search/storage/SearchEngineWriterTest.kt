@@ -134,29 +134,41 @@ class SearchEngineWriterTest {
             suggestUrl = "https://www.example.com/search-'suggestion'?q=%s"
         )
 
-        assertNotNull(writer.buildSearchEngineXML(
-            invalidSearchEngineNameAmp,
-            DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()))
-        assertNotNull(writer.buildSearchEngineXML(
-            invalidResultUrlLessSign,
-            DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()))
-        assertNotNull(writer.buildSearchEngineXML(
-            invalidResultUrlGreaterSign,
-            DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()))
-        assertNotNull(writer.buildSearchEngineXML(
-            invalidSuggestionUrlApo,
-            DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()))
+        assertNotNull(
+            writer.buildSearchEngineXML(
+                invalidSearchEngineNameAmp,
+                DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
+            )
+        )
+        assertNotNull(
+            writer.buildSearchEngineXML(
+                invalidResultUrlLessSign,
+                DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
+            )
+        )
+        assertNotNull(
+            writer.buildSearchEngineXML(
+                invalidResultUrlGreaterSign,
+                DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
+            )
+        )
+        assertNotNull(
+            writer.buildSearchEngineXML(
+                invalidSuggestionUrlApo,
+                DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
+            )
+        )
     }
 
     @Test
     fun `saveSearchEngineXML returns false when failed to write to a bad file data`() {
         val writer = spy(SearchEngineWriter())
         val searchEngine = SearchEngine(
-                id = "id1",
-                name = "example",
-                icon = mock(),
-                type = SearchEngine.Type.CUSTOM,
-                resultUrls = listOf("https://www.example.com/search?q=%s'")
+            id = "id1",
+            name = "example",
+            icon = mock(),
+            type = SearchEngine.Type.CUSTOM,
+            resultUrls = listOf("https://www.example.com/search?q=%s'")
         )
 
         val badFile = AtomicFile(File("", ""))

@@ -26,10 +26,10 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 
 class FindInPagePresenterTest {
 
@@ -40,12 +40,14 @@ class FindInPagePresenterTest {
     @ExperimentalCoroutinesApi
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        store = BrowserStore(BrowserState(
-            tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab")
-            ),
-            selectedTabId = "test-tab"
-        ))
+        store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab")
+                ),
+                selectedTabId = "test-tab"
+            )
+        )
     }
 
     @After

@@ -185,7 +185,8 @@ class AwesomeBarFeatureTest {
 
         val feature = AwesomeBarFeature(awesomeBar, mock())
         feature.addHistoryProvider(
-            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfSuggestions = 42)
+            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfSuggestions = 42
+        )
 
         val provider = argumentCaptor<HistoryStorageSuggestionProvider>()
         verify(awesomeBar).addProviders(provider.capture())
@@ -198,7 +199,8 @@ class AwesomeBarFeatureTest {
 
         val feature = AwesomeBarFeature(awesomeBar, mock())
         feature.addHistoryProvider(
-            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfSuggestions = -1)
+            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfSuggestions = -1
+        )
 
         val provider = argumentCaptor<HistoryStorageSuggestionProvider>()
         verify(awesomeBar).addProviders(provider.capture())
@@ -211,7 +213,8 @@ class AwesomeBarFeatureTest {
 
         val feature = AwesomeBarFeature(awesomeBar, mock())
         feature.addHistoryProvider(
-            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfSuggestions = 0)
+            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfSuggestions = 0
+        )
 
         val provider = argumentCaptor<HistoryStorageSuggestionProvider>()
         verify(awesomeBar).addProviders(provider.capture())
@@ -276,7 +279,8 @@ class AwesomeBarFeatureTest {
             awesomeBar,
             toolbar,
             onEditStart = { startInvoked = true },
-            onEditComplete = { completeInvoked = true })
+            onEditComplete = { completeInvoked = true }
+        )
 
         assertFalse(startInvoked)
         assertFalse(completeInvoked)

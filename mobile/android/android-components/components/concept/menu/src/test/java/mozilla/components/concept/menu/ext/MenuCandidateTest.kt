@@ -49,38 +49,42 @@ class MenuCandidateTest {
                 LowPriorityHighlightEffect(Color.BLUE),
                 LowPriorityHighlightEffect(Color.YELLOW)
             ),
-            listOf(RowMenuCandidate(listOf(
-                SmallMenuCandidate(
-                    "",
-                    icon = DrawableMenuIcon(
-                        null,
-                        effect = LowPriorityHighlightEffect(Color.BLUE)
-                    )
-                ),
-                SmallMenuCandidate(
-                    "",
-                    icon = DrawableMenuIcon(
-                        null,
-                        effect = LowPriorityHighlightEffect(Color.RED)
-                    ),
-                    containerStyle = ContainerStyle(isVisible = false)
-                ),
-                SmallMenuCandidate(
-                    "",
-                    icon = DrawableMenuIcon(
-                        null,
-                        effect = LowPriorityHighlightEffect(Color.RED)
-                    ),
-                    containerStyle = ContainerStyle(isEnabled = false)
-                ),
-                SmallMenuCandidate(
-                    "",
-                    icon = DrawableMenuIcon(
-                        null,
-                        effect = LowPriorityHighlightEffect(Color.YELLOW)
+            listOf(
+                RowMenuCandidate(
+                    listOf(
+                        SmallMenuCandidate(
+                            "",
+                            icon = DrawableMenuIcon(
+                                null,
+                                effect = LowPriorityHighlightEffect(Color.BLUE)
+                            )
+                        ),
+                        SmallMenuCandidate(
+                            "",
+                            icon = DrawableMenuIcon(
+                                null,
+                                effect = LowPriorityHighlightEffect(Color.RED)
+                            ),
+                            containerStyle = ContainerStyle(isVisible = false)
+                        ),
+                        SmallMenuCandidate(
+                            "",
+                            icon = DrawableMenuIcon(
+                                null,
+                                effect = LowPriorityHighlightEffect(Color.RED)
+                            ),
+                            containerStyle = ContainerStyle(isEnabled = false)
+                        ),
+                        SmallMenuCandidate(
+                            "",
+                            icon = DrawableMenuIcon(
+                                null,
+                                effect = LowPriorityHighlightEffect(Color.YELLOW)
+                            )
+                        )
                     )
                 )
-            ))).effects().toList()
+            ).effects().toList()
         )
     }
 

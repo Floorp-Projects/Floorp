@@ -45,11 +45,15 @@ class StatementApiTest {
 
     @Test
     fun `return empty list if request fails`() {
-        `when`(httpClient.fetch(Request(
-            url = "https://mozilla.org/.well-known/assetlinks.json",
-            connectTimeout = TIMEOUT,
-            readTimeout = TIMEOUT
-        ))).thenThrow(IOException::class.java)
+        `when`(
+            httpClient.fetch(
+                Request(
+                    url = "https://mozilla.org/.well-known/assetlinks.json",
+                    connectTimeout = TIMEOUT,
+                    readTimeout = TIMEOUT
+                )
+            )
+        ).thenThrow(IOException::class.java)
 
         val source = AssetDescriptor.Web("https://mozilla.org")
         assertEquals(emptyList<Statement>(), listFetcher.listStatements(source).toList())
@@ -63,11 +67,15 @@ class StatementApiTest {
             headers = jsonHeaders,
             body = mock()
         )
-        `when`(httpClient.fetch(Request(
-            url = "https://firefox.com/.well-known/assetlinks.json",
-            connectTimeout = TIMEOUT,
-            readTimeout = TIMEOUT
-        ))).thenReturn(response)
+        `when`(
+            httpClient.fetch(
+                Request(
+                    url = "https://firefox.com/.well-known/assetlinks.json",
+                    connectTimeout = TIMEOUT,
+                    readTimeout = TIMEOUT
+                )
+            )
+        ).thenReturn(response)
 
         val source = AssetDescriptor.Web("https://firefox.com")
         assertEquals(emptyList<Statement>(), listFetcher.listStatements(source).toList())
@@ -84,11 +92,15 @@ class StatementApiTest {
             body = mock()
         )
 
-        `when`(httpClient.fetch(Request(
-            url = "https://firefox.com/.well-known/assetlinks.json",
-            connectTimeout = TIMEOUT,
-            readTimeout = TIMEOUT
-        ))).thenReturn(response)
+        `when`(
+            httpClient.fetch(
+                Request(
+                    url = "https://firefox.com/.well-known/assetlinks.json",
+                    connectTimeout = TIMEOUT,
+                    readTimeout = TIMEOUT
+                )
+            )
+        ).thenReturn(response)
 
         val source = AssetDescriptor.Web("https://firefox.com")
         assertEquals(emptyList<Statement>(), listFetcher.listStatements(source).toList())
@@ -103,11 +115,15 @@ class StatementApiTest {
             body = stringBody("not-json")
         )
 
-        `when`(httpClient.fetch(Request(
-            url = "http://firefox.com/.well-known/assetlinks.json",
-            connectTimeout = TIMEOUT,
-            readTimeout = TIMEOUT
-        ))).thenReturn(response)
+        `when`(
+            httpClient.fetch(
+                Request(
+                    url = "http://firefox.com/.well-known/assetlinks.json",
+                    connectTimeout = TIMEOUT,
+                    readTimeout = TIMEOUT
+                )
+            )
+        ).thenReturn(response)
 
         val source = AssetDescriptor.Web("http://firefox.com")
         assertEquals(emptyList<Statement>(), listFetcher.listStatements(source).toList())
@@ -122,11 +138,15 @@ class StatementApiTest {
             body = stringBody("[]")
         )
 
-        `when`(httpClient.fetch(Request(
-            url = "http://firefox.com/.well-known/assetlinks.json",
-            connectTimeout = TIMEOUT,
-            readTimeout = TIMEOUT
-        ))).thenReturn(response)
+        `when`(
+            httpClient.fetch(
+                Request(
+                    url = "http://firefox.com/.well-known/assetlinks.json",
+                    connectTimeout = TIMEOUT,
+                    readTimeout = TIMEOUT
+                )
+            )
+        ).thenReturn(response)
 
         val source = AssetDescriptor.Web("http://firefox.com")
         assertEquals(emptyList<Statement>(), listFetcher.listStatements(source).toList())
@@ -138,7 +158,8 @@ class StatementApiTest {
             url = "http://firefox.com/.well-known/assetlinks.json",
             status = 200,
             headers = jsonHeaders,
-            body = stringBody("""
+            body = stringBody(
+                """
             [{
                 "relation": [
                     "delegate_permission/common.handle_all_urls",
@@ -165,59 +186,73 @@ class StatementApiTest {
                     "sha256_cert_fingerprints": ["AA", "BB"]
                 }
             }]
-            """)
+            """
+            )
         )
-        `when`(httpClient.fetch(Request(
-            url = "http://firefox.com/.well-known/assetlinks.json",
-            connectTimeout = TIMEOUT,
-            readTimeout = TIMEOUT
-        ))).thenReturn(response)
-
-        val source = AssetDescriptor.Web("http://firefox.com")
-        assertEquals(listOf(
-            Statement(
-                relation = Relation.HANDLE_ALL_URLS,
-                target = AssetDescriptor.Web("https://www.google.com")
-            ),
-            Statement(
-                relation = Relation.USE_AS_ORIGIN,
-                target = AssetDescriptor.Web("https://www.google.com")
-            ),
-            Statement(
-                relation = Relation.HANDLE_ALL_URLS,
-                target = AssetDescriptor.Android(
-                    packageName = "org.digitalassetlinks.sampleapp",
-                    sha256CertFingerprint = "10:39:38:EE:45:37:E5:9E:8E:E7:92:F6:54:50:4F:B8:34:6F:C6:B3:46:D0:BB:C4:41:5F:C3:39:FC:FC:8E:C1"
-                )
-            ),
-            Statement(
-                relation = Relation.HANDLE_ALL_URLS,
-                target = AssetDescriptor.Android(
-                    packageName = "org.digitalassetlinks.sampleapp2",
-                    sha256CertFingerprint = "AA"
-                )
-            ),
-            Statement(
-                relation = Relation.HANDLE_ALL_URLS,
-                target = AssetDescriptor.Android(
-                    packageName = "org.digitalassetlinks.sampleapp2",
-                    sha256CertFingerprint = "BB"
+        `when`(
+            httpClient.fetch(
+                Request(
+                    url = "http://firefox.com/.well-known/assetlinks.json",
+                    connectTimeout = TIMEOUT,
+                    readTimeout = TIMEOUT
                 )
             )
-        ), listFetcher.listStatements(source).toList())
+        ).thenReturn(response)
+
+        val source = AssetDescriptor.Web("http://firefox.com")
+        assertEquals(
+            listOf(
+                Statement(
+                    relation = Relation.HANDLE_ALL_URLS,
+                    target = AssetDescriptor.Web("https://www.google.com")
+                ),
+                Statement(
+                    relation = Relation.USE_AS_ORIGIN,
+                    target = AssetDescriptor.Web("https://www.google.com")
+                ),
+                Statement(
+                    relation = Relation.HANDLE_ALL_URLS,
+                    target = AssetDescriptor.Android(
+                        packageName = "org.digitalassetlinks.sampleapp",
+                        sha256CertFingerprint = "10:39:38:EE:45:37:E5:9E:8E:E7:92:F6:54:50:4F:B8:34:6F:C6:B3:46:D0:BB:C4:41:5F:C3:39:FC:FC:8E:C1"
+                    )
+                ),
+                Statement(
+                    relation = Relation.HANDLE_ALL_URLS,
+                    target = AssetDescriptor.Android(
+                        packageName = "org.digitalassetlinks.sampleapp2",
+                        sha256CertFingerprint = "AA"
+                    )
+                ),
+                Statement(
+                    relation = Relation.HANDLE_ALL_URLS,
+                    target = AssetDescriptor.Android(
+                        packageName = "org.digitalassetlinks.sampleapp2",
+                        sha256CertFingerprint = "BB"
+                    )
+                )
+            ),
+            listFetcher.listStatements(source).toList()
+        )
     }
 
     @Test
     fun `resolves include statements`() {
-        `when`(httpClient.fetch(Request(
-            url = "http://firefox.com/.well-known/assetlinks.json",
-            connectTimeout = TIMEOUT,
-            readTimeout = TIMEOUT
-        ))).thenReturn(Response(
-            url = "http://firefox.com/.well-known/assetlinks.json",
-            status = 200,
-            headers = jsonHeaders,
-            body = stringBody("""
+        `when`(
+            httpClient.fetch(
+                Request(
+                    url = "http://firefox.com/.well-known/assetlinks.json",
+                    connectTimeout = TIMEOUT,
+                    readTimeout = TIMEOUT
+                )
+            )
+        ).thenReturn(
+            Response(
+                url = "http://firefox.com/.well-known/assetlinks.json",
+                status = 200,
+                headers = jsonHeaders,
+                body = stringBody(
+                    """
             [{
                 "relation": ["delegate_permission/common.use_as_origin"],
                 "target": {
@@ -227,17 +262,25 @@ class StatementApiTest {
             },{
                 "include": "https://example.com/includedstatements.json"
             }]
-            """)
-        ))
-        `when`(httpClient.fetch(Request(
-            url = "https://example.com/includedstatements.json",
-            connectTimeout = TIMEOUT,
-            readTimeout = TIMEOUT
-        ))).thenReturn(Response(
-            url = "https://example.com/includedstatements.json",
-            status = 200,
-            headers = jsonHeaders,
-            body = stringBody("""
+            """
+                )
+            )
+        )
+        `when`(
+            httpClient.fetch(
+                Request(
+                    url = "https://example.com/includedstatements.json",
+                    connectTimeout = TIMEOUT,
+                    readTimeout = TIMEOUT
+                )
+            )
+        ).thenReturn(
+            Response(
+                url = "https://example.com/includedstatements.json",
+                status = 200,
+                headers = jsonHeaders,
+                body = stringBody(
+                    """
             [{
                 "relation": ["delegate_permission/common.use_as_origin"],
                 "target": {
@@ -245,33 +288,44 @@ class StatementApiTest {
                     "site": "https://www.example.com"
                 }
             }]
-            """)
-        ))
+            """
+                )
+            )
+        )
 
         val source = AssetDescriptor.Web("http://firefox.com")
-        assertEquals(listOf(
-            Statement(
-                relation = Relation.USE_AS_ORIGIN,
-                target = AssetDescriptor.Web("https://www.google.com")
+        assertEquals(
+            listOf(
+                Statement(
+                    relation = Relation.USE_AS_ORIGIN,
+                    target = AssetDescriptor.Web("https://www.google.com")
+                ),
+                Statement(
+                    relation = Relation.USE_AS_ORIGIN,
+                    target = AssetDescriptor.Web("https://www.example.com")
+                )
             ),
-            Statement(
-                relation = Relation.USE_AS_ORIGIN,
-                target = AssetDescriptor.Web("https://www.example.com")
-            )
-        ), listFetcher.listStatements(source).toList())
+            listFetcher.listStatements(source).toList()
+        )
     }
 
     @Test
     fun `no infinite loops`() {
-        `when`(httpClient.fetch(Request(
-            url = "http://firefox.com/.well-known/assetlinks.json",
-            connectTimeout = TIMEOUT,
-            readTimeout = TIMEOUT
-        ))).thenReturn(Response(
-            url = "http://firefox.com/.well-known/assetlinks.json",
-            status = 200,
-            headers = jsonHeaders,
-            body = stringBody("""
+        `when`(
+            httpClient.fetch(
+                Request(
+                    url = "http://firefox.com/.well-known/assetlinks.json",
+                    connectTimeout = TIMEOUT,
+                    readTimeout = TIMEOUT
+                )
+            )
+        ).thenReturn(
+            Response(
+                url = "http://firefox.com/.well-known/assetlinks.json",
+                status = 200,
+                headers = jsonHeaders,
+                body = stringBody(
+                    """
             [{
                 "relation": ["delegate_permission/common.use_as_origin"],
                 "target": {
@@ -281,16 +335,21 @@ class StatementApiTest {
             },{
                 "include": "http://firefox.com/.well-known/assetlinks.json"
             }]
-            """)
-        ))
+            """
+                )
+            )
+        )
 
         val source = AssetDescriptor.Web("http://firefox.com")
-        assertEquals(listOf(
-            Statement(
-                relation = Relation.USE_AS_ORIGIN,
-                target = AssetDescriptor.Web("https://example.com")
-            )
-        ), listFetcher.listStatements(source).toList())
+        assertEquals(
+            listOf(
+                Statement(
+                    relation = Relation.USE_AS_ORIGIN,
+                    target = AssetDescriptor.Web("https://example.com")
+                )
+            ),
+            listFetcher.listStatements(source).toList()
+        )
     }
 
     private fun stringBody(data: String) = Response.Body(ByteArrayInputStream(data.toByteArray()))

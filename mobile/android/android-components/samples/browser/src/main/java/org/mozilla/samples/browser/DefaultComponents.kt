@@ -147,20 +147,22 @@ open class DefaultComponents(private val applicationContext: Context) {
     val thumbnailStorage by lazy { ThumbnailStorage(applicationContext) }
 
     val store by lazy {
-        BrowserStore(middleware = listOf(
-            DownloadMiddleware(applicationContext, DownloadService::class.java),
-            ReaderViewMiddleware(),
-            ThumbnailsMiddleware(thumbnailStorage),
-            UndoMiddleware(),
-            RegionMiddleware(
-                applicationContext,
-                LocationService.default()
-            ),
-            SearchMiddleware(applicationContext),
-            RecordingDevicesMiddleware(applicationContext),
-            LastAccessMiddleware(),
-            PromptMiddleware()
-        ) + EngineMiddleware.create(engine))
+        BrowserStore(
+            middleware = listOf(
+                DownloadMiddleware(applicationContext, DownloadService::class.java),
+                ReaderViewMiddleware(),
+                ThumbnailsMiddleware(thumbnailStorage),
+                UndoMiddleware(),
+                RegionMiddleware(
+                    applicationContext,
+                    LocationService.default()
+                ),
+                SearchMiddleware(applicationContext),
+                RecordingDevicesMiddleware(applicationContext),
+                LastAccessMiddleware(),
+                PromptMiddleware()
+            ) + EngineMiddleware.create(engine)
+        )
     }
 
     val customTabsStore by lazy { CustomTabsServiceStore() }
@@ -264,7 +266,8 @@ open class DefaultComponents(private val applicationContext: Context) {
     private val menuItems by lazy {
         val items = mutableListOf(
             menuToolbar,
-            BrowserMenuHighlightableItem("No Highlight", R.drawable.mozac_ic_share, android.R.color.black,
+            BrowserMenuHighlightableItem(
+                "No Highlight", R.drawable.mozac_ic_share, android.R.color.black,
                 highlight = BrowserMenuHighlight.LowPriority(
                     notificationTint = ContextCompat.getColor(applicationContext, android.R.color.holo_green_dark),
                     label = "Highlight"
@@ -315,18 +318,24 @@ open class DefaultComponents(private val applicationContext: Context) {
         )
 
         items.add(
-            BrowserMenuCheckbox("Request desktop site", {
-                store.state.selectedTab?.content?.desktopMode == true
-            }) { checked ->
+            BrowserMenuCheckbox(
+                "Request desktop site",
+                {
+                    store.state.selectedTab?.content?.desktopMode == true
+                }
+            ) { checked ->
                 sessionUseCases.requestDesktopSite(checked)
             }.apply {
                 visible = { store.state.selectedTab != null }
             }
         )
         items.add(
-            BrowserMenuCheckbox("Open links in apps", {
-                preferences.getBoolean(PREF_LAUNCH_EXTERNAL_APP, false)
-            }) { checked ->
+            BrowserMenuCheckbox(
+                "Open links in apps",
+                {
+                    preferences.getBoolean(PREF_LAUNCH_EXTERNAL_APP, false)
+                }
+            ) { checked ->
                 preferences.edit().putBoolean(PREF_LAUNCH_EXTERNAL_APP, checked).apply()
             }
         )

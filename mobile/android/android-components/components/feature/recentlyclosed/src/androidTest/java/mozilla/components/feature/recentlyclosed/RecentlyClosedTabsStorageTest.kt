@@ -17,13 +17,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
-import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabEntity
 import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabsDatabase

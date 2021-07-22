@@ -69,8 +69,10 @@ internal data class Identifier(
 ) : AstNode() {
 
     override fun toString(level: Int, isTopLevel: Boolean) =
-        buildNodeDescription("< $value >", "IDENTIFIER", level, isTopLevel,
-            withinHeader = { append(" [ relative = $relative ]") }) {
+        buildNodeDescription(
+            "< $value >", "IDENTIFIER", level, isTopLevel,
+            withinHeader = { append(" [ relative = $relative ]") }
+        ) {
 
             appendChildNode(from, "from", level + 1)
         }
@@ -115,8 +117,10 @@ internal data class ArrayLiteral(
     constructor(vararg values: Any?) : this(values.toMutableList())
 
     override fun toString(level: Int, isTopLevel: Boolean) =
-        buildNodeDescription("[Array]", "ARRAY_LITERAL", level, isTopLevel,
-            withinHeader = { append(" [ size = ${values.size} ]") }) {
+        buildNodeDescription(
+            "[Array]", "ARRAY_LITERAL", level, isTopLevel,
+            withinHeader = { append(" [ size = ${values.size} ]") }
+        ) {
             appendNodeListValues(this@ArrayLiteral, level + 1)
         }
 
@@ -148,8 +152,10 @@ internal data class FilterExpression(
 ) : AstNode() {
 
     override fun toString(level: Int, isTopLevel: Boolean) =
-        buildNodeDescription("[ . ]", "FILTER_EXPRESSION", level, isTopLevel,
-            withinHeader = { append(" [ relative = $relative ]") }) {
+        buildNodeDescription(
+            "[ . ]", "FILTER_EXPRESSION", level, isTopLevel,
+            withinHeader = { append(" [ relative = $relative ]") }
+        ) {
 
             appendChildNode(expression, "expression", level + 1)
             appendChildNode(subject, "subject", level + 1)

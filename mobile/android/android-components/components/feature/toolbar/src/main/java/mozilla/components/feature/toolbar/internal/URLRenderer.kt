@@ -108,7 +108,8 @@ private suspend fun SpannableStringBuilder.colorRegistrableDomain(
         ForegroundColorSpan(configuration.registrableDomainColor),
         index,
         index + registrableDomain.length,
-        SPAN_INCLUSIVE_INCLUSIVE)
+        SPAN_INCLUSIVE_INCLUSIVE
+    )
 }
 
 private fun SpannableStringBuilder.color(@ColorInt urlColor: Int?) {
@@ -118,5 +119,6 @@ private fun SpannableStringBuilder.color(@ColorInt urlColor: Int?) {
         ForegroundColorSpan(urlColor),
         0,
         length,
-        SPAN_INCLUSIVE_INCLUSIVE)
+        SPAN_INCLUSIVE_INCLUSIVE
+    )
 }

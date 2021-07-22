@@ -43,4 +43,4 @@ internal fun emitCloseFact() = emitFindInPageFact(Action.CLICK, FindInPageFacts.
 internal fun emitNextFact() = emitFindInPageFact(Action.CLICK, FindInPageFacts.Items.NEXT)
 internal fun emitPreviousFact() = emitFindInPageFact(Action.CLICK, FindInPageFacts.Items.PREVIOUS)
 internal fun emitCommitFact(value: String) =
-        emitFindInPageFact(Action.COMMIT, FindInPageFacts.Items.INPUT, value)
+    emitFindInPageFact(Action.COMMIT, FindInPageFacts.Items.INPUT, value)

@@ -139,7 +139,7 @@ class FxaWebChannelFeature(
             try {
                 payload = json.getJSONObject("message")
                 command = payload.getString("command").toWebChannelCommand() ?: throw
-                    JSONException("Couldn't get WebChannel command")
+                JSONException("Couldn't get WebChannel command")
                 messageId = payload.optString("messageId", "")
             } catch (e: JSONException) {
                 // We don't have control over what messages we will get from the webchannel.
@@ -217,13 +217,19 @@ class FxaWebChannelFeature(
             // entered their credentials.
             return JSONObject().also { status ->
                 status.put("id", CHANNEL_ID)
-                status.put("message", JSONObject().also { message ->
-                    message.put("messageId", messageId)
-                    message.put("command", COMMAND_CAN_LINK_ACCOUNT)
-                    message.put("data", JSONObject().also { data ->
-                        data.put("ok", true)
-                    })
-                })
+                status.put(
+                    "message",
+                    JSONObject().also { message ->
+                        message.put("messageId", messageId)
+                        message.put("command", COMMAND_CAN_LINK_ACCOUNT)
+                        message.put(
+                            "data",
+                            JSONObject().also { data ->
+                                data.put("ok", true)
+                            }
+                        )
+                    }
+                )
             }
         }
 
@@ -239,36 +245,63 @@ class FxaWebChannelFeature(
         ): JSONObject {
             val status =  JSONObject()
             status.put("id", CHANNEL_ID)
-            status.put("message", JSONObject().also { message ->
-                message.put("messageId", messageId)
-                message.put("command", COMMAND_STATUS)
-                message.put("data", JSONObject().also { data ->
-                    data.put("capabilities", JSONObject().also { capabilities ->
-                        capabilities.put("engines", JSONArray().also { engines ->
-                            accountManager.supportedSyncEngines()?.forEach { engine ->
-                                engines.put(engine.nativeName)
-                            } ?: emptyArray<SyncEngine>()
-                        })
+            status.put(
+                "message",
+                JSONObject().also { message ->
+                    message.put("messageId", messageId)
+                    message.put("command", COMMAND_STATUS)
+                    message.put(
+                        "data",
+                        JSONObject().also { data ->
+                            data.put(
+                                "capabilities",
+                                JSONObject().also { capabilities ->
+                                    capabilities.put(
+                                        "engines",
+                                        JSONArray().also { engines ->
+                                            accountManager.supportedSyncEngines()?.forEach { engine ->
+                                                engines.put(engine.nativeName)
+                                            } ?: emptyArray<SyncEngine>()
+                                        }
+                                    )
 
-                        if (fxaCapabilities.contains(FxaCapability.CHOOSE_WHAT_TO_SYNC)) {
-                            capabilities.put("choose_what_to_sync", true)
+                                    if (fxaCapabilities.contains(FxaCapability.CHOOSE_WHAT_TO_SYNC)) {
+                                        capabilities.put("choose_what_to_sync", true)
+                                    }
+                                }
+                            )
+                            val account = accountManager.authenticatedAccount()
+                            if (account == null) {
+                                data.put("signedInUser", JSONObject.NULL)
+                            } else {
+                                data.put(
+                                    "signedInUser",
+                                    JSONObject().also { signedInUser ->
+                                        signedInUser.put(
+                                            "email",
+                                            accountManager.accountProfile()?.email ?: JSONObject.NULL
+                                        )
+                                        signedInUser.put(
+                                            "uid",
+                                            accountManager.accountProfile()?.uid ?: JSONObject.NULL
+                                        )
+                                        signedInUser.put(
+                                            "sessionToken",
+                                            account.getSessionToken() ?: JSONObject.NULL
+                                        )
+                                        // Our account state machine only ever completes authentication for
+                                        // "verified" accounts, so this is always 'true'.
+                                        signedInUser.put(
+                                            "verified",
+                                            true
+                                        )
+                                    }
+                                )
+                            }
                         }
-                    })
-                    val account = accountManager.authenticatedAccount()
-                    if (account == null) {
-                        data.put("signedInUser", JSONObject.NULL)
-                    } else {
-                        data.put("signedInUser", JSONObject().also { signedInUser ->
-                            signedInUser.put("email", accountManager.accountProfile()?.email ?: JSONObject.NULL)
-                            signedInUser.put("uid", accountManager.accountProfile()?.uid ?: JSONObject.NULL)
-                            signedInUser.put("sessionToken", account.getSessionToken() ?: JSONObject.NULL)
-                            // Our account state machine only ever completes authentication for
-                            // "verified" accounts, so this is always 'true'.
-                            signedInUser.put("verified", true)
-                        })
-                    }
-                })
-            })
+                    )
+                }
+            )
             return status
         }
 
@@ -302,12 +335,14 @@ class FxaWebChannelFeature(
             }
 
             CoroutineScope(Dispatchers.Main).launch {
-                accountManager.finishAuthentication(FxaAuthData(
-                    authType = authType,
-                    code = code,
-                    state = state,
-                    declinedEngines = declinedEngines?.toSyncEngines()
-                ))
+                accountManager.finishAuthentication(
+                    FxaAuthData(
+                        authType = authType,
+                        code = code,
+                        state = state,
+                        declinedEngines = declinedEngines?.toSyncEngines()
+                    )
+                )
             }
 
             return null

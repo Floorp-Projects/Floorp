@@ -46,7 +46,8 @@ class BrowserMenuImageSwitch(
 
     private fun bindImage(switch: SwitchCompat) {
         switch.setCompoundDrawablesRelativeWithIntrinsicBounds(
-            imageResource, 0, 0, 0)
+            imageResource, 0, 0, 0
+        )
     }
 
     override fun asCandidate(context: Context) = super.asCandidate(context).copy(

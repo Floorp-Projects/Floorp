@@ -57,17 +57,20 @@ class SyncedTabsStorageSuggestionProviderTest {
                         TabEntry("Foo", "https://foo.bar", null), /* active tab */
                         TabEntry("Bobo", "https://foo.bar", null),
                         TabEntry("Foo", "https://bobo.bar", null)
-                    ), 0, 1
+                    ),
+                    0, 1
                 ),
                 Tab(
                     listOf(
                         TabEntry("Hello Bobo", "https://foo.bar", null) /* active tab */
-                    ), 0, 5
+                    ),
+                    0, 5
                 ),
                 Tab(
                     listOf(
                         TabEntry("In URL", "https://bobo.bar", null) /* active tab */
-                    ), 0, 2
+                    ),
+                    0, 2
                 )
             )
         )
@@ -87,7 +90,8 @@ class SyncedTabsStorageSuggestionProviderTest {
                     listOf(
                         TabEntry("Bar", "https://bar.bar", null),
                         TabEntry("BOBO in CAPS", "https://obob.bar", null) /* active tab */
-                    ), 1, 1
+                    ),
+                    1, 1
                 )
             )
         )

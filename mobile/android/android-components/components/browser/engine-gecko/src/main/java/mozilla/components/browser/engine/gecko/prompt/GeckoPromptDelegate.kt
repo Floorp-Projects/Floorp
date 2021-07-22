@@ -223,7 +223,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     onConfirm
                 ) { _ ->
                     onConfirm()
-                })
+                }
+            )
         }
         return geckoResult
     }
@@ -390,7 +391,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     if (!prompt.isComplete) {
                         geckoResult.complete(prompt.confirm(valueInput))
                     }
-                })
+                }
+            )
         }
 
         return geckoResult

@@ -32,9 +32,9 @@ class SimpleBrowserMenuHighlightableItemTest {
     fun `GIVEN a simple item, WHEN we try to inflate it in the menu, THEN the item should be inflated`() {
         var onClickWasPress = false
         val item = SimpleBrowserMenuHighlightableItem(
-                "label",
-                textColorResource = android.R.color.black,
-                backgroundTint = Color.RED
+            "label",
+            textColorResource = android.R.color.black,
+            backgroundTint = Color.RED
         ) {
             onClickWasPress = true
         }
@@ -49,10 +49,11 @@ class SimpleBrowserMenuHighlightableItemTest {
     fun `GIVEN a simple item, WHEN we inflate it, THEN it should be visible by default`() {
         val listener = {}
         val item = SimpleBrowserMenuHighlightableItem(
-                label = "label",
-                textColorResource = android.R.color.black,
-                backgroundTint = Color.RED,
-                listener = listener)
+            label = "label",
+            textColorResource = android.R.color.black,
+            backgroundTint = Color.RED,
+            listener = listener
+        )
 
         assertTrue(item.visible())
     }
@@ -62,9 +63,10 @@ class SimpleBrowserMenuHighlightableItemTest {
         var callbackInvoked = false
 
         val item = SimpleBrowserMenuHighlightableItem(
-                label = "label",
-                textColorResource = android.R.color.black,
-                backgroundTint = Color.RED) {
+            label = "label",
+            textColorResource = android.R.color.black,
+            backgroundTint = Color.RED
+        ) {
             callbackInvoked = true
         }
 
@@ -83,12 +85,12 @@ class SimpleBrowserMenuHighlightableItemTest {
     fun `GIVEN a simple item, WHEN we inflate it, THEN it should have the right properties`() {
         val listener = {}
         val item = SimpleBrowserMenuHighlightableItem(
-                label = "label",
-                textSize = 10f,
-                textColorResource = android.R.color.black,
-                backgroundTint = Color.RED,
-                isHighlighted = { false },
-                listener = listener
+            label = "label",
+            textSize = 10f,
+            textColorResource = android.R.color.black,
+            backgroundTint = Color.RED,
+            isHighlighted = { false },
+            listener = listener
         )
 
         var view = inflate(item)
@@ -99,12 +101,12 @@ class SimpleBrowserMenuHighlightableItemTest {
         assertEquals(textView.currentTextColor, testContext.getColor(android.R.color.black))
 
         val highlightedItem = SimpleBrowserMenuHighlightableItem(
-                label = "label",
-                textSize = 10f,
-                textColorResource = android.R.color.black,
-                backgroundTint = Color.RED,
-                isHighlighted = { true },
-                listener = listener
+            label = "label",
+            textSize = 10f,
+            textColorResource = android.R.color.black,
+            backgroundTint = Color.RED,
+            isHighlighted = { true },
+            listener = listener
         )
 
         view = inflate(highlightedItem)
@@ -121,23 +123,23 @@ class SimpleBrowserMenuHighlightableItemTest {
         val listener = {}
         val shouldHighlight = false
         val item = SimpleBrowserMenuHighlightableItem(
-                label = "label",
-                textColorResource = android.R.color.black,
-                backgroundTint = Color.RED,
-                isHighlighted = { shouldHighlight },
-                listener = listener
+            label = "label",
+            textColorResource = android.R.color.black,
+            backgroundTint = Color.RED,
+            isHighlighted = { shouldHighlight },
+            listener = listener
         )
 
         assertEquals(
-                TextMenuCandidate(
-                        "label",
-                        textStyle = TextStyle(
-                                color = ContextCompat.getColor(testContext, android.R.color.black)
-                        ),
-                        containerStyle = ContainerStyle(true),
-                        onClick = listener
+            TextMenuCandidate(
+                "label",
+                textStyle = TextStyle(
+                    color = ContextCompat.getColor(testContext, android.R.color.black)
                 ),
-                item.asCandidate(testContext)
+                containerStyle = ContainerStyle(true),
+                onClick = listener
+            ),
+            item.asCandidate(testContext)
         )
     }
 

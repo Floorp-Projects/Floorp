@@ -20,10 +20,10 @@ import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import org.mozilla.samples.glean.GleanMetrics.Basic
-import org.mozilla.samples.glean.GleanMetrics.GleanBuildInfo
-import org.mozilla.samples.glean.GleanMetrics.Test
 import org.mozilla.samples.glean.GleanMetrics.Custom
+import org.mozilla.samples.glean.GleanMetrics.GleanBuildInfo
 import org.mozilla.samples.glean.GleanMetrics.Pings
+import org.mozilla.samples.glean.GleanMetrics.Test
 
 class GleanApplication : Application() {
 

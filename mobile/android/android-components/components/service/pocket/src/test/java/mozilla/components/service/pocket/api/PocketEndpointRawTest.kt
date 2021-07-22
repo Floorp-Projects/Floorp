@@ -66,11 +66,15 @@ class PocketEndpointRawTest {
         val expectedUrl = "https://mozilla.org/global-recs"
         whenever(urls.getLocaleStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)).thenReturn(expectedUrl.toUri())
 
-        assertRequestParams(client, makeRequest = {
-            endpoint.getGlobalStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)
-        }, assertParams = { request ->
-            assertEquals(expectedUrl, request.url)
-        })
+        assertRequestParams(
+            client,
+            makeRequest = {
+                endpoint.getGlobalStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)
+            },
+            assertParams = { request ->
+                assertEquals(expectedUrl, request.url)
+            }
+        )
     }
 
     @Test

@@ -87,7 +87,8 @@ class SessionStorageTest {
         )
         val tab2 = createTab("https://getpocket.com", id = "tab2", contextId = "context")
         val tab3 = createTab("https://www.firefox.com", id = "tab3", parent = tab1)
-        val tab4 = createTab("https://example.com", id = "tab4", contextId = "context",
+        val tab4 = createTab(
+            "https://example.com", id = "tab4", contextId = "context",
             lastAccess = System.currentTimeMillis()
         )
 

@@ -105,9 +105,11 @@ class BrowserAwesomeBar @JvmOverloads constructor(
         providers.forEach { provider ->
             val existingProvider = this.providers.find { it.id == provider.id }
             existingProvider?.let {
-                throw IllegalStateException("Failed to add provider " +
+                throw IllegalStateException(
+                    "Failed to add provider " +
                         "${provider.id} of type ${provider::class.java.name}. " +
-                        "Provider with the same ID already exists: ${it::class.java.name}")
+                        "Provider with the same ID already exists: ${it::class.java.name}"
+                )
             }
             this.providers.add(provider)
         }

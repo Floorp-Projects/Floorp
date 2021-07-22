@@ -234,8 +234,10 @@ class MimeTypeTest {
         val uri = Uri.parse("context://abcd")
         val image = MimeType.Image { _, _, _ -> uri }
 
-        `when`(packageManager
-            .resolveContentProvider(eq("org.mozilla.browser.fileprovider"), anyInt()))
+        `when`(
+            packageManager
+                .resolveContentProvider(eq("org.mozilla.browser.fileprovider"), anyInt())
+        )
             .thenReturn(mock(ProviderInfo::class.java))
         mockResolveActivity()
 

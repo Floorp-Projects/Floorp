@@ -25,7 +25,8 @@ class FennecProfileTest {
     fun `default fennec profile`() {
         val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
-            testContext, crashReporter, getTestPath("profiles"), "fennec_default.txt")
+            testContext, crashReporter, getTestPath("profiles"), "fennec_default.txt"
+        )
 
         assertNotNull(profile!!)
         assertTrue(profile.default)
@@ -39,7 +40,8 @@ class FennecProfileTest {
     fun `mozillazine default profile`() {
         val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
-            testContext, crashReporter, getTestPath("profiles"), "mozillazine_default.txt")
+            testContext, crashReporter, getTestPath("profiles"), "mozillazine_default.txt"
+        )
 
         assertNotNull(profile!!)
         assertFalse(profile.default)
@@ -52,7 +54,8 @@ class FennecProfileTest {
     fun `mozillazine multiple profiles`() {
         val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
-            testContext, crashReporter, getTestPath("profiles"), "mozillazine_multiple.txt")
+            testContext, crashReporter, getTestPath("profiles"), "mozillazine_multiple.txt"
+        )
 
         assertNotNull(profile!!)
         assertTrue(profile.default)
@@ -65,7 +68,8 @@ class FennecProfileTest {
     fun `desktop profiles`() {
         val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
-            testContext, crashReporter, getTestPath("profiles"), "desktop.txt")
+            testContext, crashReporter, getTestPath("profiles"), "desktop.txt"
+        )
 
         assertNotNull(profile!!)
         assertTrue(profile.default)
@@ -86,7 +90,8 @@ class FennecProfileTest {
     fun `with comments`() {
         val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
-            testContext, crashReporter, getTestPath("profiles"), "with_comments.txt")
+            testContext, crashReporter, getTestPath("profiles"), "with_comments.txt"
+        )
 
         assertNotNull(profile!!)
         assertTrue(profile.default)
@@ -99,7 +104,8 @@ class FennecProfileTest {
     fun `weird broken`() {
         val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
-            testContext, crashReporter, getTestPath("profiles"), "broken.txt")
+            testContext, crashReporter, getTestPath("profiles"), "broken.txt"
+        )
 
         assertNotNull(profile!!)
         assertEquals("Fennec", profile.name)
@@ -112,7 +118,8 @@ class FennecProfileTest {
     fun `multiple profiles without default`() {
         val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
-            testContext, crashReporter, getTestPath("profiles"), "no_default.txt")
+            testContext, crashReporter, getTestPath("profiles"), "no_default.txt"
+        )
 
         assertNotNull(profile!!)
         assertEquals("default", profile.name)

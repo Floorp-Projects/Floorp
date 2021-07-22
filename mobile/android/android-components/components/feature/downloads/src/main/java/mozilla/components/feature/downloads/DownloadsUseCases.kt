@@ -39,9 +39,11 @@ class DownloadsUseCases(
          * [tabId].
          */
         operator fun invoke(tabId: String, downloadId: String) {
-            store.dispatch(ContentAction.ConsumeDownloadAction(
-                tabId, downloadId
-            ))
+            store.dispatch(
+                ContentAction.ConsumeDownloadAction(
+                    tabId, downloadId
+                )
+            )
         }
     }
 

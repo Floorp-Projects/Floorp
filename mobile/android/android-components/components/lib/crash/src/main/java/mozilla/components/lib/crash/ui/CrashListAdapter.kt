@@ -65,11 +65,15 @@ internal class CrashListAdapter(
         holder.footerView.text = SpannableStringBuilder(time).apply {
             append(" - ")
 
-            append(holder.itemView.context.getString(R.string.mozac_lib_crash_share), object : ClickableSpan() {
-                override fun onClick(widget: View) {
-                    shareCrash(widget.context, crashWithReports)
-                }
-            }, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            append(
+                holder.itemView.context.getString(R.string.mozac_lib_crash_share),
+                object : ClickableSpan() {
+                    override fun onClick(widget: View) {
+                        shareCrash(widget.context, crashWithReports)
+                    }
+                },
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
 
             if (crashWithReports.reports.isNotEmpty()) {
                 append(" - ")
@@ -136,11 +140,15 @@ private fun SpannableStringBuilder.append(
         val url = service?.createCrashReportUrl(entity.reportId)
 
         if (url != null) {
-            append(name, object : ClickableSpan() {
-                override fun onClick(widget: View) {
-                    onSelection(url)
-                }
-            }, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            append(
+                name,
+                object : ClickableSpan() {
+                    override fun onClick(widget: View) {
+                        onSelection(url)
+                    }
+                },
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
         } else {
             append(name)
         }

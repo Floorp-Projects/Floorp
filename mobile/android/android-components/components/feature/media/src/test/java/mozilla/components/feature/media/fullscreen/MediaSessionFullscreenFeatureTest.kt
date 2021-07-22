@@ -33,15 +33,17 @@ class MediaSessionFullscreenFeatureTest {
         val mockActivity: Activity = mock()
         val elementMetadata = MediaSession.ElementMetadata()
         val initialState = BrowserState(
-            tabs = listOf(createTab(
-                "https://www.mozilla.org",
-                mediaSessionState = MediaSessionState(
-                    mock(),
-                    elementMetadata = elementMetadata,
-                    playbackState = MediaSession.PlaybackState.PLAYING,
-                    fullscreen = true
+            tabs = listOf(
+                createTab(
+                    "https://www.mozilla.org",
+                    mediaSessionState = MediaSessionState(
+                        mock(),
+                        elementMetadata = elementMetadata,
+                        playbackState = MediaSession.PlaybackState.PLAYING,
+                        fullscreen = true
+                    )
                 )
-            ))
+            )
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFullscreenFeature(
@@ -52,11 +54,13 @@ class MediaSessionFullscreenFeatureTest {
         feature.start()
         verify(mockActivity).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE)
 
-        store.dispatch(MediaSessionAction.UpdateMediaFullscreenAction(
-            store.state.tabs[0].id,
-            true,
-            MediaSession.ElementMetadata(height = 1L)
-        ))
+        store.dispatch(
+            MediaSessionAction.UpdateMediaFullscreenAction(
+                store.state.tabs[0].id,
+                true,
+                MediaSession.ElementMetadata(height = 1L)
+            )
+        )
 
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()

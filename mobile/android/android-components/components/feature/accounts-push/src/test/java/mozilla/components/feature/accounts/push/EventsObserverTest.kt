@@ -4,8 +4,8 @@
 
 package mozilla.components.feature.accounts.push
 
-import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.AccountEvent
+import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceCommandIncoming
 import mozilla.components.concept.sync.TabData
 import mozilla.components.support.test.any

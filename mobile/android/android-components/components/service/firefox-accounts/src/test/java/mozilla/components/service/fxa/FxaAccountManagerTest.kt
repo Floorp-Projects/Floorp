@@ -10,17 +10,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.AccessTokenInfo
+import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthFlowUrl
-import mozilla.components.concept.sync.MigratingAccountInfo
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceConfig
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.InFlightMigrationState
+import mozilla.components.concept.sync.MigratingAccountInfo
 import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.OAuthScopedKey
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.ServiceResult
 import mozilla.components.concept.sync.StatePersistenceCallback
@@ -29,13 +32,10 @@ import mozilla.components.service.fxa.manager.GlobalAccountManager
 import mozilla.components.service.fxa.manager.MigrationResult
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.fxa.sharing.ShareableAccount
-import mozilla.components.service.fxa.sync.SyncManager
 import mozilla.components.service.fxa.sync.SyncDispatcher
+import mozilla.components.service.fxa.sync.SyncManager
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
-import mozilla.components.concept.base.crash.CrashReporting
-import mozilla.components.concept.sync.AccountEventsObserver
-import mozilla.components.concept.sync.OAuthScopedKey
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.test.any
@@ -194,8 +194,8 @@ class FxaAccountManagerTest {
         val accountObserver: AccountObserver = mock()
 
         val manager = TestableFxaAccountManager(
-                testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-                setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
+            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
         ) {
             account
         }
@@ -499,7 +499,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-                setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
         ) {
             account
         }
@@ -535,7 +535,7 @@ class FxaAccountManagerTest {
         val accountObserver: AccountObserver = mock()
         val manager = TestableFxaAccountManager(
             testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-                setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
         ) {
             account
         }
@@ -570,7 +570,7 @@ class FxaAccountManagerTest {
         val accountObserver: AccountObserver = mock()
         val manager = TestableFxaAccountManager(
             testContext, ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"), accountStorage,
-                setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
         ) {
             account
         }
@@ -604,9 +604,9 @@ class FxaAccountManagerTest {
         // but an actual implementation of the interface.
         val manager = TestableFxaAccountManager(
             testContext,
-                ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-                accountStorage,
-                setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            accountStorage,
+            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
         ) {
             account
         }
@@ -834,8 +834,8 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-                ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-                accountStorage, coroutineContext = this.coroutineContext
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            accountStorage, coroutineContext = this.coroutineContext
         )
 
         val accountObserver: AccountObserver = mock()
@@ -861,7 +861,8 @@ class FxaAccountManagerTest {
         val mockAccount: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
         val profile = Profile(
-            "testUid", "test@example.com", null, "Test Profile")
+            "testUid", "test@example.com", null, "Test Profile"
+        )
         `when`(mockAccount.getProfile(ignoreCache = false)).thenReturn(profile)
         `when`(mockAccount.isInMigrationState()).thenReturn(null)
         // We have an account at the start.
@@ -872,9 +873,9 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-                ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-                accountStorage,
-                emptySet(), null, this.coroutineContext
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            accountStorage,
+            emptySet(), null, this.coroutineContext
         )
 
         val accountObserver: AccountObserver = mock()
@@ -1013,8 +1014,8 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-                ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-                accountStorage, coroutineContext = coroutineContext
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            accountStorage, coroutineContext = coroutineContext
         ) {
             mockAccount
         }
@@ -1403,8 +1404,8 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-                ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-                accountStorage, coroutineContext = this.coroutineContext
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            accountStorage, coroutineContext = this.coroutineContext
         ) {
             mockAccount
         }
@@ -1438,7 +1439,8 @@ class FxaAccountManagerTest {
         // Make sure we can re-try fetching a profile. This time, let's have it succeed.
         reset(accountObserver)
         val profile = Profile(
-            uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
+            uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile"
+        )
 
         `when`(mockAccount.getProfile(ignoreCache = true)).thenReturn(profile)
         assertNull(manager.accountProfile())
@@ -1468,9 +1470,9 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                testContext,
-                ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-                accountStorage, coroutineContext = this.coroutineContext
+            testContext,
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            accountStorage, coroutineContext = this.coroutineContext
         ) {
             mockAccount
         }
@@ -1528,8 +1530,8 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-                ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-                accountStorage, coroutineContext = this.coroutineContext
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            accountStorage, coroutineContext = this.coroutineContext
         ) {
             mockAccount
         }
@@ -1579,7 +1581,8 @@ class FxaAccountManagerTest {
         `when`(constellation.finalizeDevice(any(), any())).thenReturn(ServiceResult.Ok)
 
         val profile = Profile(
-                uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
+            uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile"
+        )
 
         // Recovery flow will hit this API, return a success.
         `when`(mockAccount.checkAuthorizationStatus(eq("profile"))).thenReturn(true)
@@ -1590,9 +1593,9 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                testContext,
-                ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-                accountStorage, coroutineContext = this.coroutineContext
+            testContext,
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            accountStorage, coroutineContext = this.coroutineContext
         ) {
             mockAccount
         }
@@ -1664,8 +1667,8 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-                ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-                accountStorage, coroutineContext = this.coroutineContext
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            accountStorage, coroutineContext = this.coroutineContext
         ) {
             mockAccount
         }
@@ -1790,8 +1793,8 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-                ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-                accountStorage, coroutineContext = coroutineContext
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            accountStorage, coroutineContext = coroutineContext
         ) {
             mockAccount
         }

@@ -78,7 +78,8 @@ internal fun View.applyBackgroundEffect(
 
     if (highlight != null) {
         val selectableBackground = ContextCompat.getDrawable(
-            context, selectableBackgroundRes)
+            context, selectableBackgroundRes
+        )
 
         setBackgroundColor(highlight.backgroundTint)
         if (SDK_INT >= Build.VERSION_CODES.M) {

@@ -121,7 +121,8 @@ class Grammar {
                     right.value.contains(left)
                 )
                 else -> throw EvaluatorException(
-                    "Operator 'in' not applicable to " + left::class + " and " + right::class)
+                    "Operator 'in' not applicable to " + left::class + " and " + right::class
+                )
             }
         },
         "!" to GrammarElement(

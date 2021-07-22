@@ -42,13 +42,17 @@ class WindowFeatureTest {
     @Before
     fun setup() {
         engineSession = mock()
-        store = spy(BrowserStore(BrowserState(
-            tabs = listOf(
-                createTab(id = tabId, url = "https://www.mozilla.org", engineSession = engineSession),
-                createTab(id = privateTabId, url = "https://www.mozilla.org", private = true)
-            ),
-            selectedTabId = tabId
-        )))
+        store = spy(
+            BrowserStore(
+                BrowserState(
+                    tabs = listOf(
+                        createTab(id = tabId, url = "https://www.mozilla.org", engineSession = engineSession),
+                        createTab(id = privateTabId, url = "https://www.mozilla.org", private = true)
+                    ),
+                    selectedTabId = tabId
+                )
+            )
+        )
         addTabUseCase = mock()
         removeTabUseCase = mock()
         tabsUseCases = mock()

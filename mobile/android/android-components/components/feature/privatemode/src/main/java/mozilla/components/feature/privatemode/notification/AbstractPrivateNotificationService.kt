@@ -148,10 +148,12 @@ abstract class AbstractPrivateNotificationService : Service() {
             .setVisibility(VISIBILITY_SECRET)
             .setShowWhen(false)
             .setLocalOnly(true)
-            .setContentIntent(Intent(ACTION_ERASE).let {
-                it.setClass(this, this::class.java)
-                PendingIntent.getService(this, 0, it, FLAG_ONE_SHOT)
-            })
+            .setContentIntent(
+                Intent(ACTION_ERASE).let {
+                    it.setClass(this, this::class.java)
+                    PendingIntent.getService(this, 0, it, FLAG_ONE_SHOT)
+                }
+            )
             .apply { buildNotification() }
             .build()
     }

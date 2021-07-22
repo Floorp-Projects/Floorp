@@ -8,10 +8,10 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.JsonReader
 import androidx.annotation.MainThread
-import mozilla.components.concept.engine.content.blocking.TrackerLog
-import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.activity.ActivityDelegate
+import mozilla.components.concept.engine.content.blocking.TrackerLog
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate

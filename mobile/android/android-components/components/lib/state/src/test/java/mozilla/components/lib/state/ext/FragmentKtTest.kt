@@ -111,8 +111,8 @@ class FragmentKtTest {
         val owner = MockedLifecycleOwner(Lifecycle.State.STARTED)
 
         val store = Store(
-                TestState(counter = 23),
-                ::reducer
+            TestState(counter = 23),
+            ::reducer
         )
 
         var receivedValue = 0

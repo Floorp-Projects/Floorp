@@ -187,26 +187,26 @@ class DisplayToolbar internal constructor(
         separator = ContextCompat.getColor(context, R.color.photonGrey80),
         highlight = null
     )
-    set(value) {
-        field = value
+        set(value) {
+            field = value
 
-        updateSiteSecurityIcon()
-        views.emptyIndicator.setColorFilter(value.emptyIcon)
-        views.menu.setColorFilter(value.menu)
-        views.origin.hintColor = value.hint
-        views.origin.titleColor = value.title
-        views.origin.textColor = value.text
-        views.separator.setColorFilter(value.separator)
+            updateSiteSecurityIcon()
+            views.emptyIndicator.setColorFilter(value.emptyIcon)
+            views.menu.setColorFilter(value.menu)
+            views.origin.hintColor = value.hint
+            views.origin.titleColor = value.title
+            views.origin.textColor = value.text
+            views.separator.setColorFilter(value.separator)
 
-        if (value.trackingProtection != null) {
-            views.trackingProtectionIndicator.setTint(value.trackingProtection)
-            views.trackingProtectionIndicator.setColorFilter(value.trackingProtection)
+            if (value.trackingProtection != null) {
+                views.trackingProtectionIndicator.setTint(value.trackingProtection)
+                views.trackingProtectionIndicator.setColorFilter(value.trackingProtection)
+            }
+
+            if (value.highlight != null) {
+                views.highlight.setTint(value.highlight)
+            }
         }
-
-        if (value.highlight != null) {
-            views.highlight.setTint(value.highlight)
-        }
-    }
 
     /**
      * Customizable icons in "edit mode".
@@ -223,25 +223,25 @@ class DisplayToolbar internal constructor(
             getDrawable(context, TrackingProtectionIconView.DEFAULT_ICON_OFF_FOR_A_SITE)
         ),
         highlight = requireNotNull(
-                getDrawable(context, R.drawable.mozac_dot_notification)
+            getDrawable(context, R.drawable.mozac_dot_notification)
         )
     )
-    set(value) {
-        field = value
+        set(value) {
+            field = value
 
-        views.emptyIndicator.setImageDrawable(value.emptyIcon)
+            views.emptyIndicator.setImageDrawable(value.emptyIcon)
 
-        views.trackingProtectionIndicator.setIcons(
-            value.trackingProtectionNothingBlocked,
-            value.trackingProtectionTrackersBlocked,
-            value.trackingProtectionException
-        )
-        views.highlight.setIcon(value.highlight)
-    }
+            views.trackingProtectionIndicator.setIcons(
+                value.trackingProtectionNothingBlocked,
+                value.trackingProtectionTrackersBlocked,
+                value.trackingProtectionException
+            )
+            views.highlight.setIcon(value.highlight)
+        }
 
     /**
-    * Allows customization of URL for display purposes.
-    */
+     * Allows customization of URL for display purposes.
+     */
     var urlFormatter: ((CharSequence) -> CharSequence)? = null
 
     /**
@@ -564,7 +564,8 @@ class DisplayToolbar internal constructor(
             // Announce "loading" for accessibility if it has not been completed
             if (progress < views.progress.max) {
                 views.progress.announceForAccessibility(
-                    context.getString(R.string.mozac_browser_toolbar_progress_loading))
+                    context.getString(R.string.mozac_browser_toolbar_progress_loading)
+                )
             }
         }
 

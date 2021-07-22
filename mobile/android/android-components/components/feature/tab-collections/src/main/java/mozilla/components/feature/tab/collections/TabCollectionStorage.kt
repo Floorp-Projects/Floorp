@@ -118,8 +118,8 @@ class TabCollectionStorage(
     }
 
     /**
-    * Returns all [TabCollection] instances as a list.
-    */
+     * Returns all [TabCollection] instances as a list.
+     */
     suspend fun getCollectionsList(): List<TabCollection> {
         return database.value.tabCollectionDao().getTabCollectionsList().map { e ->
             TabCollectionAdapter(e)

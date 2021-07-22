@@ -304,16 +304,20 @@ class SystemEngineSession(
             @Suppress("DEPRECATION")
             // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/8513
             override var allowFileAccessFromFileURLs by WebSetting(
-                    s::getAllowFileAccessFromFileURLs, s::setAllowFileAccessFromFileURLs)
+                s::getAllowFileAccessFromFileURLs, s::setAllowFileAccessFromFileURLs
+            )
             @Suppress("DEPRECATION")
             // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/8514
             override var allowUniversalAccessFromFileURLs by WebSetting(
-                    s::getAllowUniversalAccessFromFileURLs, s::setAllowUniversalAccessFromFileURLs)
+                s::getAllowUniversalAccessFromFileURLs, s::setAllowUniversalAccessFromFileURLs
+            )
 
             override var mediaPlaybackRequiresUserGesture by WebSetting(
-                    s::getMediaPlaybackRequiresUserGesture, s::setMediaPlaybackRequiresUserGesture)
+                s::getMediaPlaybackRequiresUserGesture, s::setMediaPlaybackRequiresUserGesture
+            )
             override var javaScriptCanOpenWindowsAutomatically by WebSetting(
-                    s::getJavaScriptCanOpenWindowsAutomatically, s::setJavaScriptCanOpenWindowsAutomatically)
+                s::getJavaScriptCanOpenWindowsAutomatically, s::setJavaScriptCanOpenWindowsAutomatically
+            )
 
             override var verticalScrollBarEnabled
                 get() = webView.isVerticalScrollBarEnabled

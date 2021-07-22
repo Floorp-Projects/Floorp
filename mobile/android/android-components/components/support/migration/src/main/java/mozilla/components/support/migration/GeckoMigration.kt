@@ -161,9 +161,11 @@ internal object GeckoMigration {
         return if (atomicPrefsJs.writeString { newPrefs }) {
             Result.Success(GeckoMigrationResult.Success.PrefsFileMigrated)
         } else {
-            Result.Failure(GeckoMigrationException(
-                GeckoMigrationResult.Failure.FailedToWritePrefs(IOException("$PREFS_FILE could not be rewritten"))
-            ))
+            Result.Failure(
+                GeckoMigrationException(
+                    GeckoMigrationResult.Failure.FailedToWritePrefs(IOException("$PREFS_FILE could not be rewritten"))
+                )
+            )
         }
     }
 }

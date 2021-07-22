@@ -22,11 +22,11 @@ typealias ResponseParser = (JSONResponse) -> List<String>
 private fun buildJSONArrayParser(resultsIndex: Int): ResponseParser {
     return { input ->
         JSONArray(input)
-                .getJSONArray(resultsIndex)
-                .asSequence()
-                .map { it as? String }
-                .filterNotNull()
-                .toList()
+            .getJSONArray(resultsIndex)
+            .asSequence()
+            .map { it as? String }
+            .filterNotNull()
+            .toList()
     }
 }
 
@@ -36,11 +36,11 @@ private fun buildJSONArrayParser(resultsIndex: Int): ResponseParser {
 private fun buildJSONObjectParser(resultsKey: String): ResponseParser {
     return { input ->
         JSONObject(input)
-                .getJSONArray(resultsKey)
-                .asSequence()
-                .map { it as? String }
-                .filterNotNull()
-                .toList()
+            .getJSONArray(resultsKey)
+            .asSequence()
+            .map { it as? String }
+            .filterNotNull()
+            .toList()
     }
 }
 
@@ -50,13 +50,13 @@ private fun buildJSONObjectParser(resultsKey: String): ResponseParser {
 private fun buildQwantParser(): ResponseParser {
     return { input ->
         JSONObject(input)
-                .getJSONObject("data")
-                .getJSONArray("items")
-                .asSequence()
-                .map { it as? JSONObject }
-                .map { it?.getString("value") }
-                .filterNotNull()
-                .toList()
+            .getJSONObject("data")
+            .getJSONArray("items")
+            .asSequence()
+            .map { it as? JSONObject }
+            .map { it?.getString("value") }
+            .filterNotNull()
+            .toList()
     }
 }
 

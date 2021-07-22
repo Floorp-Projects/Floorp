@@ -122,7 +122,7 @@ class ManifestStorageTest {
         val manifest3 = WebAppManifest(name = "Mozilla3", startUrl = "https://mozilla.org", scope = "https://mozilla.org/pwa/")
 
         whenever(dao.getManifestsByScope("https://mozilla.org/index.html?key=value"))
-                .thenReturn(listOf(ManifestEntity(manifest1), ManifestEntity(manifest2), ManifestEntity(manifest3)))
+            .thenReturn(listOf(ManifestEntity(manifest1), ManifestEntity(manifest2), ManifestEntity(manifest3)))
 
         assertEquals(
             listOf(manifest1, manifest2, manifest3),
@@ -167,7 +167,7 @@ class ManifestStorageTest {
         val entityCaptor = ArgumentCaptor.forClass(ManifestEntity::class.java)
 
         whenever(dao.getManifest(manifest.startUrl))
-                .thenReturn(entity)
+            .thenReturn(entity)
 
         assertEquals(0, entity.usedAt)
 
@@ -186,7 +186,7 @@ class ManifestStorageTest {
         val deadline = currentTime - timeout
 
         whenever(dao.hasRecentManifest("https://mozilla.org/", deadline))
-                .thenReturn(0)
+            .thenReturn(0)
 
         assertFalse(storage.hasRecentManifest("https://mozilla.org/", currentTime))
     }
@@ -200,12 +200,12 @@ class ManifestStorageTest {
         val deadline = currentTime - timeout
 
         whenever(dao.hasRecentManifest("https://mozilla.org/", deadline))
-                .thenReturn(1)
+            .thenReturn(1)
 
         assertTrue(storage.hasRecentManifest("https://mozilla.org/", currentTime))
 
         whenever(dao.hasRecentManifest("https://mozilla.org/", deadline))
-                .thenReturn(5)
+            .thenReturn(5)
 
         assertTrue(storage.hasRecentManifest("https://mozilla.org/", currentTime))
     }
@@ -231,10 +231,13 @@ class ManifestStorageTest {
         whenever(dao.recentManifestsCount(deadline - 10L))
             .thenReturn(3)
 
-        assertEquals(3, storage.recentManifestsCount(
-            activeThresholdMs = testThreshold + 10L,
-            currentTimeMs = currentTime
-        ))
+        assertEquals(
+            3,
+            storage.recentManifestsCount(
+                activeThresholdMs = testThreshold + 10L,
+                currentTimeMs = currentTime
+            )
+        )
     }
 
     @Test

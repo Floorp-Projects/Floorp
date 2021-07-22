@@ -61,24 +61,26 @@ class BrowserStoreKtTest {
             latch.countDown()
         }
 
-        store.dispatch(SearchAction.SetSearchEnginesAction(
-            regionSearchEngines = listOf(
-                SearchEngine(
-                    id = "google",
-                    name = "Google",
-                    icon = mock(),
-                    type = SearchEngine.Type.BUNDLED
-                )
-            ),
-            userSelectedSearchEngineId = null,
-            userSelectedSearchEngineName = null,
-            regionDefaultSearchEngineId = "google",
-            customSearchEngines = emptyList(),
-            hiddenSearchEngines = emptyList(),
-            additionalAvailableSearchEngines = emptyList(),
-            additionalSearchEngines = emptyList(),
-            regionSearchEnginesOrder = listOf("google")
-        ))
+        store.dispatch(
+            SearchAction.SetSearchEnginesAction(
+                regionSearchEngines = listOf(
+                    SearchEngine(
+                        id = "google",
+                        name = "Google",
+                        icon = mock(),
+                        type = SearchEngine.Type.BUNDLED
+                    )
+                ),
+                userSelectedSearchEngineId = null,
+                userSelectedSearchEngineName = null,
+                regionDefaultSearchEngineId = "google",
+                customSearchEngines = emptyList(),
+                hiddenSearchEngines = emptyList(),
+                additionalAvailableSearchEngines = emptyList(),
+                additionalSearchEngines = emptyList(),
+                regionSearchEnginesOrder = listOf("google")
+            )
+        )
 
         assertTrue(latch.await(10, TimeUnit.SECONDS))
     }
@@ -94,17 +96,19 @@ class BrowserStoreKtTest {
             latch.countDown()
         }
 
-        store.dispatch(SearchAction.SetSearchEnginesAction(
-            regionSearchEngines = listOf(),
-            userSelectedSearchEngineId = null,
-            userSelectedSearchEngineName = null,
-            regionDefaultSearchEngineId = "default",
-            customSearchEngines = emptyList(),
-            hiddenSearchEngines = emptyList(),
-            additionalAvailableSearchEngines = emptyList(),
-            additionalSearchEngines = emptyList(),
-            regionSearchEnginesOrder = listOf("google")
-        ))
+        store.dispatch(
+            SearchAction.SetSearchEnginesAction(
+                regionSearchEngines = listOf(),
+                userSelectedSearchEngineId = null,
+                userSelectedSearchEngineName = null,
+                regionDefaultSearchEngineId = "default",
+                customSearchEngines = emptyList(),
+                hiddenSearchEngines = emptyList(),
+                additionalAvailableSearchEngines = emptyList(),
+                additionalSearchEngines = emptyList(),
+                regionSearchEnginesOrder = listOf("google")
+            )
+        )
 
         assertTrue(latch.await(10, TimeUnit.SECONDS))
     }

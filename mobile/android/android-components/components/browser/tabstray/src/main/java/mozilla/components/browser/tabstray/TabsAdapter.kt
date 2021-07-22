@@ -7,11 +7,11 @@ package mozilla.components.browser.tabstray
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.concept.base.images.ImageLoader
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import mozilla.components.concept.base.images.ImageLoader
 
 /**
  * Function responsible for creating a `TabViewHolder` in the `TabsAdapter`.

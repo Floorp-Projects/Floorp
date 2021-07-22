@@ -166,8 +166,8 @@ internal class Lexer(private val grammar: Grammar) {
         }
 
         val value = raw.substring(1, raw.length - 1)
-                .replace("\\" + quote, quote.toString())
-                .replace("\\\\", "\\")
+            .replace("\\" + quote, quote.toString())
+            .replace("\\\\", "\\")
 
         return Token(Token.Type.LITERAL, raw, value)
     }

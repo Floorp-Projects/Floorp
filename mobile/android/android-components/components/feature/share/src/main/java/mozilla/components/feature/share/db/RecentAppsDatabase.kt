@@ -31,11 +31,11 @@ internal abstract class RecentAppsDatabase : RoomDatabase() {
             instance?.let { return it }
 
             return Room.databaseBuilder(
-                    context,
-                    RecentAppsDatabase::class.java,
-                    RECENT_APPS_TABLE
+                context,
+                RecentAppsDatabase::class.java,
+                RECENT_APPS_TABLE
             ).addMigrations(
-                    Migrations.migration_1_2
+                Migrations.migration_1_2
             ).build().also {
                 instance = it
             }
@@ -49,12 +49,12 @@ internal object Migrations {
 
             database.execSQL("DROP TABLE RECENT_APPS_TABLE")
             database.execSQL(
-                    "CREATE TABLE IF NOT EXISTS " + RECENT_APPS_TABLE +
-                            "(" +
-                            "`activityName` TEXT NOT NULL, " +
-                            "`score` DOUBLE NOT NULL, " +
-                            " PRIMARY KEY(`activityName`)" +
-                            ")"
+                "CREATE TABLE IF NOT EXISTS " + RECENT_APPS_TABLE +
+                    "(" +
+                    "`activityName` TEXT NOT NULL, " +
+                    "`score` DOUBLE NOT NULL, " +
+                    " PRIMARY KEY(`activityName`)" +
+                    ")"
             )
         }
     }

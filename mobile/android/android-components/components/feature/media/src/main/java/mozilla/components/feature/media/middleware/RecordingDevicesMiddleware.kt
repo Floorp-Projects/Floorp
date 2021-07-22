@@ -91,8 +91,10 @@ class RecordingDevicesMiddleware(
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         } ?: throw IllegalStateException("Package has no launcher intent")
 
-        val pendingIntent = PendingIntent.getActivity(context,
-            SharedIdsHelper.getIdForTag(context, PENDING_INTENT_TAG), intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            SharedIdsHelper.getIdForTag(context, PENDING_INTENT_TAG), intent, PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(recordingState.iconResource)

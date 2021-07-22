@@ -6,8 +6,8 @@ package mozilla.components.concept.storage
 
 import android.annotation.SuppressLint
 import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
 import kotlinx.coroutines.Deferred
+import kotlinx.parcelize.Parcelize
 
 /**
  * An interface which defines read/write methods for credit card and address data.

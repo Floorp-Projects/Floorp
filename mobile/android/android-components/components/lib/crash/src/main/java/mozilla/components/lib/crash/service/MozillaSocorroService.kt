@@ -11,8 +11,8 @@ import android.net.Uri
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.pm.PackageInfoCompat
-import mozilla.components.lib.crash.Crash
 import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.ext.getStacktraceAsJsonString
 import mozilla.components.support.base.ext.getStacktraceAsString
 import mozilla.components.support.base.log.logger.Logger
@@ -193,8 +193,10 @@ class MozillaSocorroService(
             conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
             conn.setRequestProperty("Content-Encoding", "gzip")
 
-            sendCrashData(conn.outputStream, boundary, timestamp, throwable, miniDumpFilePath, extrasFilePath,
-                    isNativeCodeCrash, isFatalCrash, breadcrumbsJson.toString())
+            sendCrashData(
+                conn.outputStream, boundary, timestamp, throwable, miniDumpFilePath, extrasFilePath,
+                isNativeCodeCrash, isFatalCrash, breadcrumbsJson.toString()
+            )
 
             BufferedReader(InputStreamReader(conn.inputStream)).use { reader ->
                 val map = parseResponse(reader)
@@ -277,8 +279,14 @@ class MozillaSocorroService(
         }
 
         if (throwable?.stackTrace?.isEmpty() == false) {
-            sendPart(gzipOs, boundary, "JavaStackTrace", getExceptionStackTrace(throwable,
-                !isNativeCodeCrash && !isFatalCrash), nameSet)
+            sendPart(
+                gzipOs, boundary, "JavaStackTrace",
+                getExceptionStackTrace(
+                    throwable,
+                    !isNativeCodeCrash && !isFatalCrash
+                ),
+                nameSet
+            )
 
             sendPart(gzipOs, boundary, "JavaException", throwable.getStacktraceAsJsonString(), nameSet)
         }
@@ -306,10 +314,14 @@ class MozillaSocorroService(
         sendPackageInstallTime(gzipOs, boundary, nameSet)
         sendProcessName(gzipOs, boundary, nameSet)
         sendPart(gzipOs, boundary, "ReleaseChannel", releaseChannel, nameSet)
-        sendPart(gzipOs, boundary, "StartupTime",
-                TimeUnit.MILLISECONDS.toSeconds(startTime).toString(), nameSet)
-        sendPart(gzipOs, boundary, "CrashTime",
-                TimeUnit.MILLISECONDS.toSeconds(timestamp).toString(), nameSet)
+        sendPart(
+            gzipOs, boundary, "StartupTime",
+            TimeUnit.MILLISECONDS.toSeconds(startTime).toString(), nameSet
+        )
+        sendPart(
+            gzipOs, boundary, "CrashTime",
+            TimeUnit.MILLISECONDS.toSeconds(timestamp).toString(), nameSet
+        )
         sendPart(gzipOs, boundary, "Android_PackageName", applicationContext.packageName, nameSet)
         sendPart(gzipOs, boundary, "Android_Manufacturer", Build.MANUFACTURER, nameSet)
         sendPart(gzipOs, boundary, "Android_Model", Build.MODEL, nameSet)
@@ -319,8 +331,10 @@ class MozillaSocorroService(
         sendPart(gzipOs, boundary, "Android_Display", Build.DISPLAY, nameSet)
         sendPart(gzipOs, boundary, "Android_Fingerprint", Build.FINGERPRINT, nameSet)
         sendPart(gzipOs, boundary, "Android_Hardware", Build.HARDWARE, nameSet)
-        sendPart(gzipOs, boundary, "Android_Version",
-                "${Build.VERSION.SDK_INT} (${Build.VERSION.CODENAME})", nameSet)
+        sendPart(
+            gzipOs, boundary, "Android_Version",
+            "${Build.VERSION.SDK_INT} (${Build.VERSION.CODENAME})", nameSet
+        )
 
         if (Build.SUPPORTED_ABIS.isNotEmpty()) {
             sendPart(gzipOs, boundary, "Android_CPU_ABI", Build.SUPPORTED_ABIS[0], nameSet)
@@ -347,8 +361,13 @@ class MozillaSocorroService(
         val packageManager = applicationContext.packageManager
         try {
             val packageInfo = packageManager.getPackageInfo(applicationContext.packageName, 0)
-            sendPart(os, boundary, "InstallTime", TimeUnit.MILLISECONDS.toSeconds(
-                    packageInfo.lastUpdateTime).toString(), nameSet)
+            sendPart(
+                os, boundary, "InstallTime",
+                TimeUnit.MILLISECONDS.toSeconds(
+                    packageInfo.lastUpdateTime
+                ).toString(),
+                nameSet
+            )
         } catch (e: PackageManager.NameNotFoundException) {
             logger.error("Error getting package info", e)
         }
@@ -379,8 +398,12 @@ class MozillaSocorroService(
         }
 
         try {
-            os.write(("--$boundary\r\nContent-Disposition: form-data; " +
-                    "name=$name\r\n\r\n$data\r\n").toByteArray())
+            os.write(
+                (
+                    "--$boundary\r\nContent-Disposition: form-data; " +
+                        "name=$name\r\n\r\n$data\r\n"
+                    ).toByteArray()
+            )
         } catch (e: IOException) {
             logger.error("Exception when sending $name", e)
         }
@@ -401,10 +424,14 @@ class MozillaSocorroService(
         }
 
         try {
-            os.write(("--${boundary}\r\n" +
-                    "Content-Disposition: form-data; name=\"$name\"; " +
-                    "filename=\"${file.getName()}\"\r\n" +
-                    "Content-Type: application/octet-stream\r\n\r\n").toByteArray())
+            os.write(
+                (
+                    "--${boundary}\r\n" +
+                        "Content-Disposition: form-data; name=\"$name\"; " +
+                        "filename=\"${file.getName()}\"\r\n" +
+                        "Content-Type: application/octet-stream\r\n\r\n"
+                    ).toByteArray()
+            )
             val fileInputStream = FileInputStream(file).channel
             fileInputStream.transferTo(0, fileInputStream.size(), Channels.newChannel(os))
             fileInputStream.close()
@@ -469,7 +496,7 @@ class MozillaSocorroService(
         try {
             FileReader(file).use { fileReader ->
                 val input = fileReader.readLines().firstOrNull()
-                        ?: throw JSONException("failed to read json file")
+                    ?: throw JSONException("failed to read json file")
 
                 val jsonObject = JSONObject(input)
                 for (key in jsonObject.keys()) {

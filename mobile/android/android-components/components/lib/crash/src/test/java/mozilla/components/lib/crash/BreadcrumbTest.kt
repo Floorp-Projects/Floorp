@@ -34,11 +34,13 @@ class BreadcrumbTest {
         val testLevel = Breadcrumb.Level.CRITICAL
         val testType = Breadcrumb.Type.USER
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(mock()),
-            shouldPrompt = CrashReporter.Prompt.NEVER
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(mock()),
+                shouldPrompt = CrashReporter.Prompt.NEVER
+            ).install(testContext)
+        )
 
         reporter.recordCrashBreadcrumb(
             Breadcrumb(
@@ -66,11 +68,13 @@ class BreadcrumbTest {
         val testLevel = Breadcrumb.Level.CRITICAL
         val testType = Breadcrumb.Type.USER
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(mock()),
-            shouldPrompt = CrashReporter.Prompt.NEVER
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(mock()),
+                shouldPrompt = CrashReporter.Prompt.NEVER
+            ).install(testContext)
+        )
 
         reporter.recordCrashBreadcrumb(
             Breadcrumb(
@@ -114,11 +118,13 @@ class BreadcrumbTest {
         val testLevel = Breadcrumb.Level.CRITICAL
         val testType = Breadcrumb.Type.USER
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(mock()),
-            shouldPrompt = CrashReporter.Prompt.NEVER
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(mock()),
+                shouldPrompt = CrashReporter.Prompt.NEVER
+            ).install(testContext)
+        )
 
         val beginDate = Date()
         sleep(100) /* make sure time elapsed */

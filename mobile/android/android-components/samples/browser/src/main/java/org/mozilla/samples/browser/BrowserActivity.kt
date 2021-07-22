@@ -14,8 +14,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.feature.contextmenu.ext.DefaultSelectionActionDelegate
+import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.webextensions.WebExtensionPopupFeature

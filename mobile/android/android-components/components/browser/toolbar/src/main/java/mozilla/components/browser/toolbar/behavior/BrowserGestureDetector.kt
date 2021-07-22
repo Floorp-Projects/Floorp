@@ -54,7 +54,8 @@ internal class BrowserGestureDetector(
         CustomScaleDetectorListener(
             listener.onScaleBegin ?: {},
             listener.onScale ?: {},
-            listener.onScaleEnd ?: {})
+            listener.onScaleEnd ?: {}
+        )
     ).apply {
         // Use reflection to modify two fields controlling the sensitivity of our scale detector.
         // The lower the values the higher the sensitivity.
@@ -101,7 +102,8 @@ internal class BrowserGestureDetector(
         return if (!scaleGestureDetector.isInProgress ||
             eventAction == MotionEvent.ACTION_DOWN ||
             eventAction == MotionEvent.ACTION_UP ||
-            eventAction == MotionEvent.ACTION_CANCEL) {
+            eventAction == MotionEvent.ACTION_CANCEL
+        ) {
 
             gestureDetector.onTouchEvent(event)
         } else {

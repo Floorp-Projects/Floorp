@@ -18,8 +18,8 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker.Companion.WORK_TAG_PERIODIC
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker.Companion.CHECKER_UNIQUE_PERIODIC_WORK_NAME
+import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker.Companion.WORK_TAG_PERIODIC
 import mozilla.components.feature.addons.migration.SupportedAddonsChecker.Frequency
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -48,7 +48,7 @@ class DefaultSupportedAddonCheckerTest {
         context = spy(testContext).also {
             val packageManager: PackageManager = mock()
             doReturn(Intent()).`when`(packageManager).getLaunchIntentForPackage(
-                    ArgumentMatchers.anyString()
+                ArgumentMatchers.anyString()
             )
             doReturn(packageManager).`when`(it).packageManager
         }

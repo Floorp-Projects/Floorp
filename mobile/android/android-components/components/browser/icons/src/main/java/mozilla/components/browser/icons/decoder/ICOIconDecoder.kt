@@ -5,9 +5,9 @@
 package mozilla.components.browser.icons.decoder
 
 import android.graphics.Bitmap
-import mozilla.components.support.images.DesiredSize
 import mozilla.components.browser.icons.decoder.ico.decodeDirectoryEntries
 import mozilla.components.browser.icons.utils.findBestSize
+import mozilla.components.support.images.DesiredSize
 import mozilla.components.support.images.decoder.ImageDecoder
 
 // Some geometry of an ICO file.

@@ -31,8 +31,8 @@ class JSONArrayTest {
         val array = JSONArray("[1, 2, 3]")
 
         val sum = array.asSequence()
-                        .map { it as Int }
-                        .sum()
+            .map { it as Int }
+            .sum()
 
         assertEquals(6, sum)
     }

@@ -5,29 +5,34 @@
 package mozilla.components.support.ktx.android.os
 
 import android.os.StrictMode
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import androidx.test.ext.junit.runners.AndroidJUnit4
 
 @RunWith(AndroidJUnit4::class)
 class StrictModeTest {
 
     @Test
     fun `strict mode policy should be restored`() {
-        StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.Builder()
-            .detectDiskReads()
-            .penaltyLog()
-            .build())
+        StrictMode.setThreadPolicy(
+            StrictMode.ThreadPolicy.Builder()
+                .detectDiskReads()
+                .penaltyLog()
+                .build()
+        )
         val policy = StrictMode.getThreadPolicy()
-        assertEquals(27, StrictMode.allowThreadDiskReads().resetAfter {
-            // Comparing via toString because StrictMode.ThreadPolicy does not redefine equals() and each time
-            // setThreadPolicy is called a new ThreadPolicy object is created (although the mask is the same)
-            assertNotEquals(policy.toString(), StrictMode.getThreadPolicy().toString())
-            27
-        })
+        assertEquals(
+            27,
+            StrictMode.allowThreadDiskReads().resetAfter {
+                // Comparing via toString because StrictMode.ThreadPolicy does not redefine equals() and each time
+                // setThreadPolicy is called a new ThreadPolicy object is created (although the mask is the same)
+                assertNotEquals(policy.toString(), StrictMode.getThreadPolicy().toString())
+                27
+            }
+        )
         assertEquals(policy.toString(), StrictMode.getThreadPolicy().toString())
     }
 

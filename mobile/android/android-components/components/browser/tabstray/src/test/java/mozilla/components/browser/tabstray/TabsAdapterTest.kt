@@ -68,7 +68,8 @@ class TabsAdapterTest {
                     Tab("A", "https://www.mozilla.org"),
                     Tab("B", "https://www.firefox.com")
                 ),
-                selectedIndex = 0)
+                selectedIndex = 0
+            )
         )
         assertEquals(2, adapter.itemCount)
 
@@ -79,7 +80,8 @@ class TabsAdapterTest {
                     Tab("B", "https://www.firefox.com"),
                     Tab("C", "https://getpocket.com")
                 ),
-                selectedIndex = 0)
+                selectedIndex = 0
+            )
         )
 
         assertEquals(3, adapter.itemCount)
@@ -96,7 +98,8 @@ class TabsAdapterTest {
         adapter.updateTabs(
             Tabs(
                 list = listOf(tab),
-                selectedIndex = 0)
+                selectedIndex = 0
+            )
         )
 
         adapter.onBindViewHolder(holder, 0)

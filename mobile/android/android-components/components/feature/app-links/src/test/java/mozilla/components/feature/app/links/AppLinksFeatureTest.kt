@@ -84,13 +84,15 @@ class AppLinksFeatureTest {
         `when`(mockGetRedirect.invoke(intentUrl)).thenReturn(appRedirect)
         `when`(mockGetRedirect.invoke(webUrlWithAppLink)).thenReturn(appRedirectFromWebUrl)
 
-        feature = spy(AppLinksFeature(
-            context = mockContext,
-            store = store,
-            fragmentManager = mockFragmentManager,
-            useCases = mockUseCases,
-            dialog = mockDialog
-        )).also {
+        feature = spy(
+            AppLinksFeature(
+                context = mockContext,
+                store = store,
+                fragmentManager = mockFragmentManager,
+                useCases = mockUseCases,
+                dialog = mockDialog
+            )
+        ).also {
             it.start()
         }
     }

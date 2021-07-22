@@ -123,20 +123,29 @@ class FindInPageBarTest {
         val edit = findInPageBar.queryEditText
 
         // By default "private mode" is off.
-        assertEquals(0, edit.imeOptions and
-                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING)
+        assertEquals(
+            0,
+            edit.imeOptions and
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+        )
         assertEquals(false, findInPageBar.private)
 
         // Turning on private mode sets flag
         findInPageBar.private = true
-        assertNotEquals(0, edit.imeOptions and
-                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING)
+        assertNotEquals(
+            0,
+            edit.imeOptions and
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+        )
         assertTrue(findInPageBar.private)
 
         // Turning private mode off again - should remove flag
         findInPageBar.private = false
-        assertEquals(0, edit.imeOptions and
-                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING)
+        assertEquals(
+            0,
+            edit.imeOptions and
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+        )
         assertEquals(false, findInPageBar.private)
     }
 

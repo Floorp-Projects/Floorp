@@ -28,7 +28,8 @@ class LogTest {
             priority = Log.Priority.DEBUG,
             tag = "Tag",
             throwable = exception,
-            message = "Hello World!")
+            message = "Hello World!"
+        )
     }
 
     @Test
@@ -55,10 +56,11 @@ class LogTest {
         Log.log(Log.Priority.WARN, "Tag", exception, "Hello World!")
 
         verify(sink).log(
-                priority = Log.Priority.WARN,
-                tag = "Tag",
-                throwable = exception,
-                message = "Hello World!")
+            priority = Log.Priority.WARN,
+            tag = "Tag",
+            throwable = exception,
+            message = "Hello World!"
+        )
     }
 
     @Test
@@ -72,9 +74,10 @@ class LogTest {
         Log.log(Log.Priority.ERROR, "Tag", exception, "Hello World!")
 
         verify(sink).log(
-                priority = Log.Priority.ERROR,
-                tag = "Tag",
-                throwable = exception,
-                message = "Hello World!")
+            priority = Log.Priority.ERROR,
+            tag = "Tag",
+            throwable = exception,
+            message = "Hello World!"
+        )
     }
 }

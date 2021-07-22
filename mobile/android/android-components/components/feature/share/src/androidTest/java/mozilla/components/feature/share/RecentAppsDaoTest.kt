@@ -36,16 +36,21 @@ class RecentAppsDaoTest {
     fun testGetTwoMostRecentApps() {
         assertEquals(emptyList<RecentApp>(), dao.getRecentAppsUpTo(2))
 
-        dao.insertRecentApps(listOf(
-            RecentAppEntity("first"),
-            RecentAppEntity("second"),
-            RecentAppEntity("third")
-        ))
+        dao.insertRecentApps(
+            listOf(
+                RecentAppEntity("first"),
+                RecentAppEntity("second"),
+                RecentAppEntity("third")
+            )
+        )
 
-        assertEquals(listOf(
-            RecentAppEntity("first"),
-            RecentAppEntity("second")
-        ), dao.getRecentAppsUpTo(2))
+        assertEquals(
+            listOf(
+                RecentAppEntity("first"),
+                RecentAppEntity("second")
+            ),
+            dao.getRecentAppsUpTo(2)
+        )
     }
 
     @Test

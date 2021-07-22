@@ -211,10 +211,11 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                 // No need to display an error message if installation was cancelled by the user.
                 if (e !is CancellationException) {
                     Toast.makeText(
-                        requireContext(), getString(
-                        R.string.mozac_feature_addons_failed_to_install,
-                        addon.translateName(requireContext())
-                ),
+                        requireContext(),
+                        getString(
+                            R.string.mozac_feature_addons_failed_to_install,
+                            addon.translateName(requireContext())
+                        ),
                         Toast.LENGTH_SHORT
                     ).show()
                 }

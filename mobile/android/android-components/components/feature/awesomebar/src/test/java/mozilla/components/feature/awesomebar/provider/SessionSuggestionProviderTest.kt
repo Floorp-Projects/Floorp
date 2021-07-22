@@ -16,9 +16,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 
 class SessionSuggestionProviderTest {
     @Test
@@ -82,9 +82,11 @@ class SessionSuggestionProviderTest {
         val tab2 = createTab("https://getpocket.com", title = "Pocket: My List")
         val tab3 = createTab("https://firefox.com", title = "Download Firefox — Free Web Browser")
 
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(tab1, tab2, tab3)
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(tab1, tab2, tab3)
+            )
+        )
 
         val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
@@ -116,9 +118,11 @@ class SessionSuggestionProviderTest {
         val privateTab1 = createTab("https://mozilla.org/firefox", private = true)
         val privateTab2 = createTab("https://mozilla.org/projects", private = true)
 
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(tab, privateTab1, privateTab2)
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(tab, privateTab1, privateTab2)
+            )
+        )
 
         val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
@@ -138,9 +142,11 @@ class SessionSuggestionProviderTest {
 
         val tab = createTab("https://www.mozilla.org")
 
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(tab)
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(tab)
+            )
+        )
 
         val useCase: TabsUseCases.SelectTabUseCase = mock()
 
@@ -169,13 +175,15 @@ class SessionSuggestionProviderTest {
 
     @Test
     fun `When excludeSelectedSession is true provider should not include the selected session`() = runBlocking {
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(
-                createTab(id = "a", url = "https://wikipedia.org"),
-                createTab(id = "b", url = "https://www.mozilla.org")
-            ),
-            selectedTabId = "b"
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://wikipedia.org"),
+                    createTab(id = "b", url = "https://www.mozilla.org")
+                ),
+                selectedTabId = "b"
+            )
+        )
 
         val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
@@ -192,13 +200,15 @@ class SessionSuggestionProviderTest {
 
     @Test
     fun `When excludeSelectedSession is false provider should include the selected session`() = runBlocking {
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(
-                createTab(id = "a", url = "https://wikipedia.org"),
-                createTab(id = "b", url = "https://www.mozilla.org")
-            ),
-            selectedTabId = "b"
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://wikipedia.org"),
+                    createTab(id = "b", url = "https://www.mozilla.org")
+                ),
+                selectedTabId = "b"
+            )
+        )
 
         val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
@@ -215,13 +225,15 @@ class SessionSuggestionProviderTest {
 
     @Test
     fun `Uses title for chip title when available, but falls back to URL`() = runBlocking {
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(
-                createTab(id = "a", url = "https://wikipedia.org", title = "Wikipedia"),
-                createTab(id = "b", url = "https://www.mozilla.org", title = "")
-            ),
-            selectedTabId = "b"
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://wikipedia.org", title = "Wikipedia"),
+                    createTab(id = "b", url = "https://www.mozilla.org", title = "")
+                ),
+                selectedTabId = "b"
+            )
+        )
 
         val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")

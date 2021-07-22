@@ -7,9 +7,9 @@ package mozilla.components.feature.sitepermissions
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
-import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 
 /**
  * Indicate how site permissions must behave by permission category.
@@ -105,16 +105,16 @@ data class SitePermissionsRules constructor(
      */
     fun toSitePermissions(origin: String, savedAt: Long = System.currentTimeMillis()): SitePermissions {
         return SitePermissions(
-                origin = origin,
-                location = location.toStatus(),
-                notification = notification.toStatus(),
-                microphone = microphone.toStatus(),
-                camera = camera.toStatus(),
-                autoplayAudible = autoplayAudible.toAutoplayStatus(),
-                autoplayInaudible = autoplayInaudible.toAutoplayStatus(),
-                localStorage = persistentStorage.toStatus(),
-                mediaKeySystemAccess = mediaKeySystemAccess.toStatus(),
-                savedAt = savedAt
+            origin = origin,
+            location = location.toStatus(),
+            notification = notification.toStatus(),
+            microphone = microphone.toStatus(),
+            camera = camera.toStatus(),
+            autoplayAudible = autoplayAudible.toAutoplayStatus(),
+            autoplayInaudible = autoplayInaudible.toAutoplayStatus(),
+            localStorage = persistentStorage.toStatus(),
+            mediaKeySystemAccess = mediaKeySystemAccess.toStatus(),
+            savedAt = savedAt
         )
     }
 }

@@ -7,9 +7,6 @@ package mozilla.components.service.fxa
 import mozilla.appservices.fxaclient.AccessTokenInfo
 import mozilla.appservices.fxaclient.AccountEvent
 import mozilla.appservices.fxaclient.Device
-import mozilla.appservices.fxaclient.DeviceType as RustDeviceType
-import mozilla.appservices.fxaclient.DeviceCapability as RustDeviceCapability
-import mozilla.appservices.fxaclient.DevicePushSubscription as RustDevicePushSubscription
 import mozilla.appservices.fxaclient.IncomingDeviceCommand
 import mozilla.appservices.fxaclient.MigrationState
 import mozilla.appservices.fxaclient.Profile
@@ -22,6 +19,9 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.InFlightMigrationState
 import mozilla.components.concept.sync.OAuthScopedKey
 import mozilla.components.concept.sync.SyncAuthInfo
+import mozilla.appservices.fxaclient.DeviceCapability as RustDeviceCapability
+import mozilla.appservices.fxaclient.DevicePushSubscription as RustDevicePushSubscription
+import mozilla.appservices.fxaclient.DeviceType as RustDeviceType
 
 /**
  * Converts a raw 'action' string into an [AuthType] instance.
@@ -245,8 +245,10 @@ fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent {
         is AccountEvent.DeviceConnected ->
             mozilla.components.concept.sync.AccountEvent.DeviceConnected(deviceName = this.deviceName)
         is AccountEvent.DeviceDisconnected ->
-            mozilla.components.concept.sync.AccountEvent.DeviceDisconnected(deviceId = this.deviceId,
-                                                                            isLocalDevice = this.isLocalDevice)
+            mozilla.components.concept.sync.AccountEvent.DeviceDisconnected(
+                deviceId = this.deviceId,
+                isLocalDevice = this.isLocalDevice
+            )
     }
 }
 

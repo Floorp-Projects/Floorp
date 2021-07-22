@@ -7,13 +7,33 @@ package mozilla.components.support.migration
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.appservices.places.PlacesException
+import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.feature.addons.amo.AddonCollectionProvider
+import mozilla.components.feature.addons.update.AddonUpdater
+import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.MigrationResult
+import mozilla.components.service.fxa.sharing.ShareableAccount
+import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.eq
+import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -22,34 +42,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import java.io.File
-import java.lang.IllegalStateException
-import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.state.action.BrowserAction
-import mozilla.components.browser.state.action.TabListAction
-import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.webextension.WebExtension
-import mozilla.components.feature.addons.amo.AddonCollectionProvider
-import mozilla.components.feature.addons.update.AddonUpdater
-import mozilla.components.feature.top.sites.PinnedSiteStorage
-import mozilla.components.service.fxa.manager.MigrationResult
-import mozilla.components.service.fxa.sharing.ShareableAccount
-import mozilla.components.service.sync.logins.SyncableLoginsStorage
-import mozilla.components.concept.base.crash.CrashReporting
-import mozilla.components.feature.tabs.TabsUseCases
-import mozilla.components.support.test.argumentCaptor
-import mozilla.components.support.test.whenever
-import mozilla.components.support.test.eq
-import mozilla.components.support.test.middleware.CaptureActionsMiddleware
-import org.json.JSONObject
-import org.mockito.Mockito.never
-import org.mockito.Mockito.reset
 import java.lang.IllegalArgumentException
+import java.lang.IllegalStateException
 
 @RunWith(AndroidJUnit4::class)
 class FennecMigratorTest {
@@ -174,8 +174,10 @@ class FennecMigratorTest {
 
         val migrator = FennecMigrator.Builder(testContext, mock())
             .setCoroutineContext(this.coroutineContext)
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("combined"), "basic").absolutePath, true)
+            .setProfile(
+                FennecProfile(
+                    "test", File(getTestPath("combined"), "basic").absolutePath, true
+                )
             )
             .migrateHistory(lazy { historyStore })
             .migrateBookmarks(lazy { bookmarksStore }, topSiteStorage)
@@ -230,13 +232,16 @@ class FennecMigratorTest {
 
         val expandedMigrator = FennecMigrator.Builder(testContext, mock())
             .setCoroutineContext(this.coroutineContext)
-            .setProfile(FennecProfile(
-                "test",
-                File(getTestPath("combined"),
-                    "basic"
-                ).absolutePath,
-                true
-            ))
+            .setProfile(
+                FennecProfile(
+                    "test",
+                    File(
+                        getTestPath("combined"),
+                        "basic"
+                    ).absolutePath,
+                    true
+                )
+            )
             .migrateHistory(lazy { historyStore })
             .migrateBookmarks(lazy { bookmarksStore }, topSiteStorage)
             .migrateOpenTabs(tabsUseCases)
@@ -270,8 +275,10 @@ class FennecMigratorTest {
 
         val migrator = FennecMigrator.Builder(testContext, mock())
             .setCoroutineContext(this.coroutineContext)
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("combined"), "basic").absolutePath, true)
+            .setProfile(
+                FennecProfile(
+                    "test", File(getTestPath("combined"), "basic").absolutePath, true
+                )
             )
             .migrateHistory(lazy { historyStore })
             .migrateBookmarks(lazy { bookmarksStore }, topSiteStorage)
@@ -354,13 +361,16 @@ class FennecMigratorTest {
             .migrateHistory(lazy { historyStorage })
             .setCoroutineContext(this.coroutineContext)
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
-            .setProfile(FennecProfile(
-                "test",
-                File(getTestPath("combined"),
-                    "basic"
-                ).absolutePath,
-                true
-            ))
+            .setProfile(
+                FennecProfile(
+                    "test",
+                    File(
+                        getTestPath("combined"),
+                        "basic"
+                    ).absolutePath,
+                    true
+                )
+            )
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -383,25 +393,30 @@ class FennecMigratorTest {
         // Fail during history migration.
         `when`(historyStorage.importFromFennec(any())).thenThrow(PlacesException("test exception"))
 
-        `when`(bookmarkStorage.importFromFennec(any())).thenReturn(JSONObject().also {
-            it.put("num_total", 25)
-            it.put("num_succeeded", 23)
-            it.put("num_failed", 2)
-            it.put("total_duration", 1245L)
-        })
+        `when`(bookmarkStorage.importFromFennec(any())).thenReturn(
+            JSONObject().also {
+                it.put("num_total", 25)
+                it.put("num_succeeded", 23)
+                it.put("num_failed", 2)
+                it.put("total_duration", 1245L)
+            }
+        )
 
         // DB path is configured, partial success (only history failed).
         val migrator = FennecMigrator.Builder(testContext, mock())
             .migrateHistory(lazy { historyStorage })
             .migrateBookmarks(lazy { bookmarkStorage })
             .setCoroutineContext(this.coroutineContext)
-            .setProfile(FennecProfile(
-                "test",
-                File(getTestPath("combined"),
-                    "basic"
-                ).absolutePath,
-                true
-            ))
+            .setProfile(
+                FennecProfile(
+                    "test",
+                    File(
+                        getTestPath("combined"),
+                        "basic"
+                    ).absolutePath,
+                    true
+                )
+            )
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -431,13 +446,16 @@ class FennecMigratorTest {
             .migrateHistory(lazy { historyStorage })
             .migrateBookmarks(lazy { bookmarkStorage })
             .setCoroutineContext(this.coroutineContext)
-            .setProfile(FennecProfile(
-                "test",
-                File(getTestPath("combined"),
-                    "basic"
-                ).absolutePath,
-                true
-            ))
+            .setProfile(
+                FennecProfile(
+                    "test",
+                    File(
+                        getTestPath("combined"),
+                        "basic"
+                    ).absolutePath,
+                    true
+                )
+            )
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -700,8 +718,10 @@ class FennecMigratorTest {
         }
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("logins"), "basic").absolutePath, true)
+            .setProfile(
+                FennecProfile(
+                    "test", File(getTestPath("logins"), "basic").absolutePath, true
+                )
             )
             .setKey4DbName("key4.db")
             .setSignonsDbName("signons.sqlite")
@@ -751,8 +771,10 @@ class FennecMigratorTest {
         val loginStorage = SyncableLoginsStorage(testContext, "test key")
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("logins"), "with-mp").absolutePath, true)
+            .setProfile(
+                FennecProfile(
+                    "test", File(getTestPath("logins"), "with-mp").absolutePath, true
+                )
             )
             .setKey4DbName("key4.db")
             .setSignonsDbName("signons.sqlite")
@@ -779,8 +801,10 @@ class FennecMigratorTest {
         }
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("logins"), "with-mp").absolutePath, true)
+            .setProfile(
+                FennecProfile(
+                    "test", File(getTestPath("logins"), "with-mp").absolutePath, true
+                )
             )
             .setKey4DbName("empty-key4.db")
             .setSignonsDbName("signons.sqlite")
@@ -803,8 +827,10 @@ class FennecMigratorTest {
         val loginStorage = SyncableLoginsStorage(testContext, "test key")
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("logins"), "with-mp").absolutePath, true)
+            .setProfile(
+                FennecProfile(
+                    "test", File(getTestPath("logins"), "with-mp").absolutePath, true
+                )
             )
             .setKey4DbName("noNss-key4.db")
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
@@ -852,8 +878,10 @@ class FennecMigratorTest {
         val loginStorage = SyncableLoginsStorage(testContext, "test key")
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("logins"), "with-mp").absolutePath, true)
+            .setProfile(
+                FennecProfile(
+                    "test", File(getTestPath("logins"), "with-mp").absolutePath, true
+                )
             )
             .setKey4DbName("key4.db")
             .setSignonsDbName("signons-v5.sqlite")
@@ -876,8 +904,10 @@ class FennecMigratorTest {
         val loginStorage = SyncableLoginsStorage(testContext, "test key")
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("logins"), "basic").absolutePath, true)
+            .setProfile(
+                FennecProfile(
+                    "test", File(getTestPath("logins"), "basic").absolutePath, true
+                )
             )
             .setKey4DbName("key4.db")
             .setSignonsDbName("signons-v5.sqlite")
@@ -1043,19 +1073,21 @@ class FennecMigratorTest {
         val addonCaptor = argumentCaptor<WebExtension>()
         val disableSuccessCallback = argumentCaptor<((WebExtension) -> Unit)>()
         val disableErrorCallback = argumentCaptor<((Throwable) -> Unit)>()
-        whenever(engine.disableWebExtension(
-            addonCaptor.capture(),
-            any(),
-            disableSuccessCallback.capture(),
-            disableErrorCallback.capture())
+        whenever(
+            engine.disableWebExtension(
+                addonCaptor.capture(),
+                any(),
+                disableSuccessCallback.capture(),
+                disableErrorCallback.capture()
+            )
         )
-        .thenAnswer {
-            if (addonCaptor.value == addon2 || addonCaptor.value == addon4) {
-                disableErrorCallback.value.invoke(IllegalArgumentException())
-            } else {
-                disableSuccessCallback.value.invoke(mock())
+            .thenAnswer {
+                if (addonCaptor.value == addon2 || addonCaptor.value == addon4) {
+                    disableErrorCallback.value.invoke(IllegalArgumentException())
+                } else {
+                    disableSuccessCallback.value.invoke(mock())
+                }
             }
-        }
 
         val crashReporter: CrashReporting = mock()
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
@@ -1083,8 +1115,10 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateGecko()
             .setCoroutineContext(this.coroutineContext)
-            .setProfile(FennecProfile(
-                "test", getTestPath("empty").absolutePath, true)
+            .setProfile(
+                FennecProfile(
+                    "test", getTestPath("empty").absolutePath, true
+                )
             )
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
@@ -1103,8 +1137,10 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateGecko()
             .setCoroutineContext(this.coroutineContext)
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("prefs"), "invalid_fennec_migrator").absolutePath, true)
+            .setProfile(
+                FennecProfile(
+                    "test", File(getTestPath("prefs"), "invalid_fennec_migrator").absolutePath, true
+                )
             )
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
@@ -1123,8 +1159,10 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateGecko()
             .setCoroutineContext(this.coroutineContext)
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("prefs"), "migrate_fennec_migrator").absolutePath, true)
+            .setProfile(
+                FennecProfile(
+                    "test", File(getTestPath("prefs"), "migrate_fennec_migrator").absolutePath, true
+                )
             )
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
@@ -1143,8 +1181,10 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateGecko()
             .setCoroutineContext(this.coroutineContext)
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("prefs"), "noaddons_fennec_migrator").absolutePath, true)
+            .setProfile(
+                FennecProfile(
+                    "test", File(getTestPath("prefs"), "noaddons_fennec_migrator").absolutePath, true
+                )
             )
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()

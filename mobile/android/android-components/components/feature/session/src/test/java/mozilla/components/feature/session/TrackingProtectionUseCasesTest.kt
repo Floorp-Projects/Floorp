@@ -55,16 +55,18 @@ class TrackingProtectionUseCasesTest {
 
         engineSession = mock()
 
-        store = BrowserStore(BrowserState(
-            tabs = listOf(
-                TabSessionState(
-                    id = "A",
-                    content = ContentState("https://www.mozilla.org"),
-                    engineState = EngineState(engineSession)
-                )
-            ),
-            selectedTabId = "A"
-        ))
+        store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    TabSessionState(
+                        id = "A",
+                        content = ContentState("https://www.mozilla.org"),
+                        engineState = EngineState(engineSession)
+                    )
+                ),
+                selectedTabId = "A"
+            )
+        )
 
         useCases = TrackingProtectionUseCases(store, engine)
     }
@@ -85,12 +87,16 @@ class TrackingProtectionUseCasesTest {
 
         val useCases = TrackingProtectionUseCases(store, engine)
 
-        useCases.fetchTrackingLogs("A", onSuccess = {
-            trackersLog = it
-            onSuccessCalled = true
-        }, onError = {
-            onErrorCalled = true
-        })
+        useCases.fetchTrackingLogs(
+            "A",
+            onSuccess = {
+                trackersLog = it
+                onSuccessCalled = true
+            },
+            onError = {
+                onErrorCalled = true
+            }
+        )
 
         assertNotNull(trackersLog)
         assertTrue(onSuccessCalled)
@@ -123,7 +129,8 @@ class TrackingProtectionUseCasesTest {
             },
             onError = {
                 onErrorCalled = true
-            })
+            }
+        )
 
         assertNull(trackersLog)
         assertTrue(onErrorCalled)
@@ -158,16 +165,16 @@ class TrackingProtectionUseCasesTest {
     @Test
     fun `remove a tracking protection exception`() {
         val tab1 = createTab("https://www.mozilla.org")
-                .copy(trackingProtection = TrackingProtectionState(ignoredOnTrackingProtection = true))
+            .copy(trackingProtection = TrackingProtectionState(ignoredOnTrackingProtection = true))
 
         val tab2 = createTab("https://wiki.mozilla.org/")
-                .copy(trackingProtection = TrackingProtectionState(ignoredOnTrackingProtection = true))
+            .copy(trackingProtection = TrackingProtectionState(ignoredOnTrackingProtection = true))
 
         val tab3 = createTab("https://www.mozilla.org/en-CA/")
-                .copy(trackingProtection = TrackingProtectionState(ignoredOnTrackingProtection = true))
+            .copy(trackingProtection = TrackingProtectionState(ignoredOnTrackingProtection = true))
 
         val customTab = createCustomTab("https://www.mozilla.org/en-CA/")
-                .copy(trackingProtection = TrackingProtectionState(ignoredOnTrackingProtection = true))
+            .copy(trackingProtection = TrackingProtectionState(ignoredOnTrackingProtection = true))
 
         val exception = object : TrackingProtectionException {
             override val url: String = tab1.content.url

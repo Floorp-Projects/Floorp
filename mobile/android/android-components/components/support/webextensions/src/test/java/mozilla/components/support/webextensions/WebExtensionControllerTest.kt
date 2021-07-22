@@ -169,10 +169,10 @@ class WebExtensionControllerTest {
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
         val onError = argumentCaptor<((String, Throwable) -> Unit)>()
         verify(engine, times(1)).installWebExtension(
-                eq(extensionId),
-                eq(extensionUrl),
-                onSuccess.capture(),
-                onError.capture()
+            eq(extensionId),
+            eq(extensionUrl),
+            onSuccess.capture(),
+            onError.capture()
         )
 
         val messageHandler: MessageHandler = mock()

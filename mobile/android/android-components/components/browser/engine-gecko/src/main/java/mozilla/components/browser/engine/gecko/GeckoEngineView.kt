@@ -44,8 +44,8 @@ class GeckoEngineView @JvmOverloads constructor(
                 val activityClassName = context.javaClass.simpleName
                 val activityClassHashCode = context.hashCode()
                 val msg = "ATTACH VIEW: Current activity: $activityClassName hashcode " +
-                        "$activityClassHashCode Other activity: $otherActivityClassName " +
-                        "hashcode $otherActivityClassHashcode"
+                    "$activityClassHashCode Other activity: $otherActivityClassName " +
+                    "hashcode $otherActivityClassHashcode"
                 throw IllegalStateException(msg, e)
             }
         }
@@ -124,8 +124,8 @@ class GeckoEngineView @JvmOverloads constructor(
                 val activityClassName = context.javaClass.simpleName
                 val activityClassHashCode = context.hashCode()
                 val msg = "SET SESSION: Current activity: $activityClassName hashcode " +
-                        "$activityClassHashCode Other activity: $otherActivityClassName " +
-                        "hashcode $otherActivityClassHashcode"
+                    "$activityClassHashCode Other activity: $otherActivityClassName " +
+                    "hashcode $otherActivityClassHashcode"
                 throw IllegalStateException(msg, e)
             }
         }
@@ -182,13 +182,16 @@ class GeckoEngineView @JvmOverloads constructor(
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
         try {
             val geckoResult = geckoView.capturePixels()
-            geckoResult.then({ bitmap ->
-                onFinish(bitmap)
-                GeckoResult<Void>()
-            }, {
-                onFinish(null)
-                GeckoResult<Void>()
-            })
+            geckoResult.then(
+                { bitmap ->
+                    onFinish(bitmap)
+                    GeckoResult<Void>()
+                },
+                {
+                    onFinish(null)
+                    GeckoResult<Void>()
+                }
+            )
         } catch (e: Exception) {
             // There's currently no reliable way for consumers of GeckoView to
             // know whether or not the compositor is ready. So we have to add

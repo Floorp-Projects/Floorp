@@ -14,12 +14,15 @@ class OnDeviceAndroidImageDecoderTest {
     fun decodingPNG() {
         val decoder = AndroidImageDecoder()
 
-        val bitmap = decoder.decode(loadImage("png/mozac.png"), DesiredSize(
-            targetSize = 32,
-            minSize = 32,
-            maxSize = 256,
-            maxScaleFactor = 2.0f
-        ))
+        val bitmap = decoder.decode(
+            loadImage("png/mozac.png"),
+            DesiredSize(
+                targetSize = 32,
+                minSize = 32,
+                maxSize = 256,
+                maxScaleFactor = 2.0f
+            )
+        )
 
         assertNotNull(bitmap!!)
         assertEquals(16, bitmap.width)
@@ -30,12 +33,15 @@ class OnDeviceAndroidImageDecoderTest {
     fun decodingGIF() {
         val decoder = AndroidImageDecoder()
 
-        val bitmap = decoder.decode(loadImage("gif/cat.gif"), DesiredSize(
-            targetSize = 64,
-            minSize = 64,
-            maxSize = 256,
-            maxScaleFactor = 2.0f
-        ))
+        val bitmap = decoder.decode(
+            loadImage("gif/cat.gif"),
+            DesiredSize(
+                targetSize = 64,
+                minSize = 64,
+                maxSize = 256,
+                maxScaleFactor = 2.0f
+            )
+        )
 
         assertNotNull(bitmap!!)
         assertEquals(83 /* 250 / 3 */, bitmap.width)
@@ -46,12 +52,15 @@ class OnDeviceAndroidImageDecoderTest {
     fun decodingJPEG() {
         val decoder = AndroidImageDecoder()
 
-        val bitmap = decoder.decode(loadImage("jpg/tonys.jpg"), DesiredSize(
-            targetSize = 64,
-            minSize = 64,
-            maxSize = 512,
-            maxScaleFactor = 2.0f
-        ))
+        val bitmap = decoder.decode(
+            loadImage("jpg/tonys.jpg"),
+            DesiredSize(
+                targetSize = 64,
+                minSize = 64,
+                maxSize = 512,
+                maxScaleFactor = 2.0f
+            )
+        )
 
         assertNotNull(bitmap!!)
         assertEquals(67, bitmap.width)
@@ -62,12 +71,15 @@ class OnDeviceAndroidImageDecoderTest {
     fun decodingBMP() {
         val decoder = AndroidImageDecoder()
 
-        val bitmap = decoder.decode(loadImage("bmp/test.bmp"), DesiredSize(
-            targetSize = 64,
-            minSize = 64,
-            maxSize = 256,
-            maxScaleFactor = 2.0f
-        ))
+        val bitmap = decoder.decode(
+            loadImage("bmp/test.bmp"),
+            DesiredSize(
+                targetSize = 64,
+                minSize = 64,
+                maxSize = 256,
+                maxScaleFactor = 2.0f
+            )
+        )
 
         assertNotNull(bitmap!!)
         assertEquals(100, bitmap.width)
@@ -78,12 +90,15 @@ class OnDeviceAndroidImageDecoderTest {
     fun decodingWEBP() {
         val decoder = AndroidImageDecoder()
 
-        val bitmap = decoder.decode(loadImage("webp/test.webp"), DesiredSize(
-            targetSize = 64,
-            minSize = 64,
-            maxSize = 256,
-            maxScaleFactor = 2.0f
-        ))
+        val bitmap = decoder.decode(
+            loadImage("webp/test.webp"),
+            DesiredSize(
+                targetSize = 64,
+                minSize = 64,
+                maxSize = 256,
+                maxScaleFactor = 2.0f
+            )
+        )
 
         assertNotNull(bitmap!!)
         assertEquals(64 /* 192 / 3 */, bitmap.width)

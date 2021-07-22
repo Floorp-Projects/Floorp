@@ -45,9 +45,14 @@ class AdsTelemetryMiddlewareTest {
             middleware = listOf(adsMiddleware)
         )
 
-        store.dispatch(ContentAction.UpdateLoadRequestAction(sessionId, LoadRequestState(
-            url = "https://mozilla.org/firefox", triggeredByRedirect = false, triggeredByUser = false
-        ))).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateLoadRequestAction(
+                sessionId,
+                LoadRequestState(
+                    url = "https://mozilla.org/firefox", triggeredByRedirect = false, triggeredByUser = false
+                )
+            )
+        ).joinBlocking()
 
         assertEquals(1, adsMiddleware.redirectChain.size)
         assertEquals("https://mozilla.org", adsMiddleware.redirectChain[sessionId]!!.root)
@@ -61,9 +66,14 @@ class AdsTelemetryMiddlewareTest {
             middleware = listOf(adsMiddleware)
         )
 
-        store.dispatch(ContentAction.UpdateLoadRequestAction(sessionId, LoadRequestState(
-            url = "https://mozilla.org/firefox", triggeredByRedirect = false, triggeredByUser = false
-        ))).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateLoadRequestAction(
+                sessionId,
+                LoadRequestState(
+                    url = "https://mozilla.org/firefox", triggeredByRedirect = false, triggeredByUser = false
+                )
+            )
+        ).joinBlocking()
 
         assertEquals(1, adsMiddleware.redirectChain.size)
         assertEquals("https://mozilla.org", adsMiddleware.redirectChain[sessionId]!!.root)
@@ -99,8 +109,10 @@ class AdsTelemetryMiddlewareTest {
             middleware = listOf(adsMiddleware)
         )
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
-        store.dispatch(ContentAction.UpdateLoadRequestAction(
-            tab.id, LoadRequestState("https://mozilla.org", true, true))
+        store.dispatch(
+            ContentAction.UpdateLoadRequestAction(
+                tab.id, LoadRequestState("https://mozilla.org", true, true)
+            )
         ).joinBlocking()
 
         assertNotNull(adsMiddleware.redirectChain[tab.id])

@@ -246,7 +246,7 @@ class ChoiceDialogFragmentTest {
     fun `Will show a multiple choice item`() {
 
         val choices =
-                arrayOf(Choice(id = "", label = "item1", children = arrayOf(Choice(id = "", label = "sub-item1"))))
+            arrayOf(Choice(id = "", label = "item1", children = arrayOf(Choice(id = "", label = "sub-item1"))))
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", false, MULTIPLE_CHOICE_DIALOG_TYPE))
 
@@ -270,10 +270,10 @@ class ChoiceDialogFragmentTest {
     fun `Will show a multiple choice item with selected element`() {
 
         val choices = arrayOf(
-                Choice(
-                        id = "", label = "item1",
-                        children = arrayOf(Choice(id = "", label = "sub-item1", selected = true))
-                )
+            Choice(
+                id = "", label = "item1",
+                children = arrayOf(Choice(id = "", label = "sub-item1", selected = true))
+            )
         )
 
         val fragment = spy(newInstance(choices, "sessionId", "uid", true, MULTIPLE_CHOICE_DIALOG_TYPE))
@@ -356,7 +356,7 @@ class ChoiceDialogFragmentTest {
     fun `Clicking on multiple choice item notifies the feature`() {
 
         val choices =
-                arrayOf(Choice(id = "", label = "item1", children = arrayOf(subItem)))
+            arrayOf(Choice(id = "", label = "item1", children = arrayOf(subItem)))
         val fragment = spy(newInstance(choices, "sessionId", "uid", false, MULTIPLE_CHOICE_DIALOG_TYPE))
 
         fragment.feature = mockFeature
@@ -391,7 +391,7 @@ class ChoiceDialogFragmentTest {
     fun `Clicking on selected multiple choice item will notify feature`() {
 
         val choices =
-                arrayOf(item.copy(selected = true))
+            arrayOf(item.copy(selected = true))
         val fragment = spy(newInstance(choices, "sessionId", "uid", true, MULTIPLE_CHOICE_DIALOG_TYPE))
 
         fragment.feature = mockFeature

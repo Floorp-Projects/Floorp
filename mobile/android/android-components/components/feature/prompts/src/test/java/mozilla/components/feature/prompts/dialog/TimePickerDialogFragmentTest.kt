@@ -57,7 +57,7 @@ class TimePickerDialogFragmentTest {
         val minDate = "2019-11-28".toDate("yyyy-MM-dd")
         val maxDate = "2019-11-30".toDate("yyyy-MM-dd")
         val fragment = spy(
-                TimePickerDialogFragment.newInstance("sessionId", "uid", true, initialDate, minDate, maxDate)
+            TimePickerDialogFragment.newInstance("sessionId", "uid", true, initialDate, minDate, maxDate)
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -79,7 +79,7 @@ class TimePickerDialogFragmentTest {
     fun `Clicking on positive, neutral and negative button notifies the feature`() {
         val initialDate = "2019-11-29".toDate("yyyy-MM-dd")
         val fragment = spy(
-                TimePickerDialogFragment.newInstance("sessionId", "uid", false, initialDate, null, null)
+            TimePickerDialogFragment.newInstance("sessionId", "uid", false, initialDate, null, null)
         )
         fragment.feature = mockFeature
 
@@ -100,7 +100,7 @@ class TimePickerDialogFragmentTest {
     @Test
     fun `touching outside of the dialog must notify the feature onCancel`() {
         val fragment = spy(
-                TimePickerDialogFragment.newInstance("sessionId", "uid", true, Date(), null, null)
+            TimePickerDialogFragment.newInstance("sessionId", "uid", true, Date(), null, null)
         )
         fragment.feature = mockFeature
         doReturn(testContext).`when`(fragment).requireContext()

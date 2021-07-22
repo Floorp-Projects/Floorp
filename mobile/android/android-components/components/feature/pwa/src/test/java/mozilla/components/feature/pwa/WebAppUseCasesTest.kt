@@ -17,9 +17,9 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -34,10 +34,12 @@ class WebAppUseCasesTest {
             manifest = null
         )
 
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(session),
-            selectedTabId = session.id
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(session),
+                selectedTabId = session.id
+            )
+        )
 
         val webAppUseCases = WebAppUseCases(testContext, store, mock<WebAppShortcutManager>())
         assertFalse(webAppUseCases.isInstallable())
@@ -49,18 +51,22 @@ class WebAppUseCasesTest {
             name = "Demo",
             startUrl = "https://example.com",
             display = WebAppManifest.DisplayMode.STANDALONE,
-            icons = listOf(WebAppManifest.Icon(
+            icons = listOf(
+                WebAppManifest.Icon(
                     src = "https://example.com/icon.png",
                     sizes = listOf(Size(192, 192))
-            ))
+                )
+            )
         )
 
         val session = createTestSession(secure = true, manifest = manifest)
 
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(session),
-            selectedTabId = session.id
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(session),
+                selectedTabId = session.id
+            )
+        )
 
         val shortcutManager: WebAppShortcutManager = mock()
         `when`(shortcutManager.supportWebApps).thenReturn(true)
@@ -76,10 +82,12 @@ class WebAppUseCasesTest {
             name = "Demo",
             startUrl = "https://example.com",
             display = WebAppManifest.DisplayMode.STANDALONE,
-            icons = listOf(WebAppManifest.Icon(
-                src = "https://example.com/icon.png",
-                sizes = listOf(Size(192, 192))
-            ))
+            icons = listOf(
+                WebAppManifest.Icon(
+                    src = "https://example.com/icon.png",
+                    sizes = listOf(Size(192, 192))
+                )
+            )
         )
 
         val session = createTestSession(
@@ -87,10 +95,12 @@ class WebAppUseCasesTest {
             manifest = manifest
         )
 
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(session),
-            selectedTabId = session.id
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(session),
+                selectedTabId = session.id
+            )
+        )
 
         val shortcutManager: WebAppShortcutManager = mock()
         `when`(shortcutManager.supportWebApps).thenReturn(false)
@@ -106,10 +116,12 @@ class WebAppUseCasesTest {
         val currentTime = System.currentTimeMillis()
 
         val session = createTestSession(secure = true)
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(session),
-            selectedTabId = session.id
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(session),
+                selectedTabId = session.id
+            )
+        )
 
         `when`(storage.hasRecentManifest("https://www.mozilla.org", currentTime)).thenReturn(true)
 

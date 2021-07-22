@@ -472,7 +472,8 @@ class DisplayToolbarTest {
         val invisibleAction = BrowserToolbar.Button(
             mock(),
             "Reader Mode",
-            visible = { false }) {}
+            visible = { false }
+        ) {}
 
         displayToolbar.addPageAction(visibleAction)
         displayToolbar.addPageAction(invisibleAction)
@@ -491,7 +492,8 @@ class DisplayToolbarTest {
         val invisibleAction = BrowserToolbar.Button(
             mock(),
             "Settings",
-            visible = { false }) {}
+            visible = { false }
+        ) {}
 
         displayToolbar.addBrowserAction(visibleAction)
         displayToolbar.addBrowserAction(invisibleAction)
@@ -510,7 +512,8 @@ class DisplayToolbarTest {
         val invisibleAction = BrowserToolbar.Button(
             mock(),
             "Back",
-            visible = { false }) {}
+            visible = { false }
+        ) {}
 
         displayToolbar.addNavigationAction(visibleAction)
         displayToolbar.addNavigationAction(invisibleAction)
@@ -648,7 +651,8 @@ class DisplayToolbarTest {
             val menuView = displayToolbar.views.menu
 
             val menuBuilder = BrowserMenuBuilder(
-                listOf(SimpleBrowserMenuItem("Mozilla")), mapOf(
+                listOf(SimpleBrowserMenuItem("Mozilla")),
+                mapOf(
                     "customTab" to true,
                     "test" to "23"
                 )
@@ -718,8 +722,10 @@ class DisplayToolbarTest {
         val siteSecurityIconView = displayToolbar.views.securityIndicator
 
         assertNotNull(siteSecurityIconView.contentDescription)
-        assertEquals(testContext.getString(R.string.mozac_browser_toolbar_content_description_site_info),
-            siteSecurityIconView.contentDescription)
+        assertEquals(
+            testContext.getString(R.string.mozac_browser_toolbar_content_description_site_info),
+            siteSecurityIconView.contentDescription
+        )
     }
 
     @Test

@@ -171,7 +171,8 @@ class AndroidLogSinkTest {
         assertEquals(1, logs.size)
         assertEquals(
             "An error occurred\njava.lang.RuntimeException: This is broken\n\tat A\n\tat B\n\tat C",
-            logs.last().msg)
+            logs.last().msg
+        )
     }
 
     @Test
@@ -184,7 +185,8 @@ class AndroidLogSinkTest {
         assertEquals(1, logs.size)
         assertEquals(
             "java.lang.RuntimeException: This is broken\n\tat A\n\tat B\n\tat C",
-            logs.last().msg)
+            logs.last().msg
+        )
     }
 
     @Test

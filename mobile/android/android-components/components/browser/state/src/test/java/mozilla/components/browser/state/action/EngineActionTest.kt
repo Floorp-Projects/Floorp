@@ -106,10 +106,12 @@ class EngineActionTest {
             engineState = EngineState(engineSession = mock(), engineSessionState = mock())
         )
 
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(tab1, tab2),
-            customTabs = listOf(customTab1, customTab2)
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(tab1, tab2),
+                customTabs = listOf(customTab1, customTab2)
+            )
+        )
 
         store.dispatch(EngineAction.PurgeHistoryAction).joinBlocking()
 

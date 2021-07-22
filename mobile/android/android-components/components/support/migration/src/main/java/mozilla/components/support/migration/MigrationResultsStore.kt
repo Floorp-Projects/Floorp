@@ -31,15 +31,20 @@ internal class MigrationResultsStore(context: Context) : SharedPreferencesCache<
 
     override fun MigrationResults.toJSON(): JSONObject {
         return JSONObject().also { result ->
-            result.put("list", JSONArray().also { list ->
-                this.forEach {
-                    list.put(JSONObject().also { run ->
-                        run.put("migration", it.key.javaClass.simpleName)
-                        run.put("version", it.value.version)
-                        run.put("success", it.value.success)
-                    })
+            result.put(
+                "list",
+                JSONArray().also { list ->
+                    this.forEach {
+                        list.put(
+                            JSONObject().also { run ->
+                                run.put("migration", it.key.javaClass.simpleName)
+                                run.put("version", it.value.version)
+                                run.put("success", it.value.success)
+                            }
+                        )
+                    }
                 }
-            })
+            )
         }
     }
 

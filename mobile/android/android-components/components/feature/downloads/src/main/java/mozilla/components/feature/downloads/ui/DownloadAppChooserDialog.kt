@@ -13,11 +13,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.LinearLayout
-import java.util.ArrayList
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.downloads.R
+import java.util.ArrayList
 
 /**
  * A dialog where an user can select with which app a download must be performed.
@@ -26,7 +26,7 @@ internal class DownloadAppChooserDialog : AppCompatDialogFragment() {
     private val safeArguments get() = requireNotNull(arguments)
     internal val appsList: ArrayList<DownloaderApp>
         get() =
-        safeArguments.getParcelableArrayList<DownloaderApp>(KEY_APP_LIST) ?: arrayListOf()
+            safeArguments.getParcelableArrayList<DownloaderApp>(KEY_APP_LIST) ?: arrayListOf()
 
     internal val dialogGravity: Int get() =
         safeArguments.getInt(KEY_DIALOG_GRAVITY, DEFAULT_VALUE)
@@ -64,7 +64,7 @@ internal class DownloadAppChooserDialog : AppCompatDialogFragment() {
     @SuppressLint("InflateParams")
     private fun createContainer(): View {
         val rootView = LayoutInflater.from(requireContext()).inflate(
-                R.layout.mozac_downloader_chooser_prompt,
+            R.layout.mozac_downloader_chooser_prompt,
             null,
             false
         )

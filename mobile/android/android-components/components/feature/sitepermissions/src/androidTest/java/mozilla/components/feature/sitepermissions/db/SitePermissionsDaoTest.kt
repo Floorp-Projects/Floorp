@@ -9,9 +9,9 @@ import androidx.core.net.toUri
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
 import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
-import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -76,11 +76,13 @@ class SitePermissionsDaoTest {
         assertEquals(AutoplayStatus.BLOCKED, siteFromDb.autoplayAudible)
         assertEquals(AutoplayStatus.ALLOWED, siteFromDb.autoplayInaudible)
 
-        dao.update(siteFromDb.copy(
-            camera = ALLOWED,
-            autoplayInaudible = AutoplayStatus.ALLOWED,
-            autoplayAudible = AutoplayStatus.ALLOWED
-        ).toSitePermissionsEntity())
+        dao.update(
+            siteFromDb.copy(
+                camera = ALLOWED,
+                autoplayInaudible = AutoplayStatus.ALLOWED,
+                autoplayAudible = AutoplayStatus.ALLOWED
+            ).toSitePermissionsEntity()
+        )
 
         siteFromDb = dao.getSitePermissionsBy(origin)!!.toSitePermission()
 

@@ -59,23 +59,25 @@ class WebAppManifestParser {
             val name = json.tryGetString("name") ?: shortName
                 ?: return Result.Failure(JSONException("Missing manifest name"))
 
-            Result.Success(WebAppManifest(
-                name = name,
-                shortName = shortName,
-                startUrl = json.getString("start_url"),
-                display = parseDisplayMode(json),
-                backgroundColor = parseColor(json.tryGetString("background_color")),
-                description = json.tryGetString("description"),
-                icons = parseIcons(json),
-                scope = json.tryGetString("scope"),
-                themeColor = parseColor(json.tryGetString("theme_color")),
-                dir = parseTextDirection(json),
-                lang = json.tryGetString("lang"),
-                orientation = parseOrientation(json),
-                relatedApplications = parseRelatedApplications(json),
-                preferRelatedApplications = json.optBoolean("prefer_related_applications", false),
-                shareTarget = ShareTargetParser.parse(json.optJSONObject("share_target"))
-            ))
+            Result.Success(
+                WebAppManifest(
+                    name = name,
+                    shortName = shortName,
+                    startUrl = json.getString("start_url"),
+                    display = parseDisplayMode(json),
+                    backgroundColor = parseColor(json.tryGetString("background_color")),
+                    description = json.tryGetString("description"),
+                    icons = parseIcons(json),
+                    scope = json.tryGetString("scope"),
+                    themeColor = parseColor(json.tryGetString("theme_color")),
+                    dir = parseTextDirection(json),
+                    lang = json.tryGetString("lang"),
+                    orientation = parseOrientation(json),
+                    relatedApplications = parseRelatedApplications(json),
+                    preferRelatedApplications = json.optBoolean("prefer_related_applications", false),
+                    shareTarget = ShareTargetParser.parse(json.optJSONObject("share_target"))
+                )
+            )
         } catch (e: JSONException) {
             Result.Failure(e)
         }

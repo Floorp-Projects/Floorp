@@ -7,12 +7,12 @@ import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import org.mozilla.geckoview.GeckoRuntimeSettings
 
 internal fun PreferredColorScheme.Companion.from(geckoValue: Int) =
-        when (geckoValue) {
-            GeckoRuntimeSettings.COLOR_SCHEME_DARK -> PreferredColorScheme.Dark
-            GeckoRuntimeSettings.COLOR_SCHEME_LIGHT -> PreferredColorScheme.Light
-            GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM -> PreferredColorScheme.System
-            else -> PreferredColorScheme.System
-        }
+    when (geckoValue) {
+        GeckoRuntimeSettings.COLOR_SCHEME_DARK -> PreferredColorScheme.Dark
+        GeckoRuntimeSettings.COLOR_SCHEME_LIGHT -> PreferredColorScheme.Light
+        GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM -> PreferredColorScheme.System
+        else -> PreferredColorScheme.System
+    }
 
 internal fun PreferredColorScheme.toGeckoValue() =
     when (this) {

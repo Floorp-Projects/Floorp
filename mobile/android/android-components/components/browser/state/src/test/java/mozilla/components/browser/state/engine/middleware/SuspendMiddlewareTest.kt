@@ -68,10 +68,12 @@ class SuspendMiddlewareTest {
     fun `does nothing if tab doesn't exist`() {
         val middleware = SuspendMiddleware(scope)
 
-        val store = spy(BrowserStore(
-            initialState = BrowserState(tabs = listOf()),
-            middleware = listOf(middleware)
-        ))
+        val store = spy(
+            BrowserStore(
+                initialState = BrowserState(tabs = listOf()),
+                middleware = listOf(middleware)
+            )
+        )
 
         store.dispatch(EngineAction.SuspendEngineSessionAction("invalid")).joinBlocking()
         verify(store, never()).dispatch(EngineAction.UnlinkEngineSessionAction("invalid"))
@@ -82,10 +84,12 @@ class SuspendMiddlewareTest {
         val middleware = SuspendMiddleware(scope)
 
         val tab = createTab("https://www.mozilla.org", id = "1")
-        val store = spy(BrowserStore(
-            initialState = BrowserState(tabs = listOf(tab)),
-            middleware = listOf(middleware)
-        ))
+        val store = spy(
+            BrowserStore(
+                initialState = BrowserState(tabs = listOf(tab)),
+                middleware = listOf(middleware)
+            )
+        )
 
         store.dispatch(EngineAction.SuspendEngineSessionAction(tab.id)).joinBlocking()
         verify(store, never()).dispatch(EngineAction.UnlinkEngineSessionAction(tab.id))

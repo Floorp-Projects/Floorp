@@ -28,13 +28,27 @@ import org.mockito.Mockito.verifyZeroInteractions
 class UtilsKtTest {
     @Test
     fun `handleFxaExceptions form 1 returns correct data back`() = runBlocking {
-        assertEquals(1, handleFxaExceptions(mock(), "test op", {
-            1
-        }, { fail() }, { fail() }))
+        assertEquals(
+            1,
+            handleFxaExceptions(
+                mock(), "test op",
+                {
+                    1
+                },
+                { fail() }, { fail() }
+            )
+        )
 
-        assertEquals("Hello", handleFxaExceptions(mock(), "test op", {
-            "Hello"
-        }, { fail() }, { fail() }))
+        assertEquals(
+            "Hello",
+            handleFxaExceptions(
+                mock(), "test op",
+                {
+                    "Hello"
+                },
+                { fail() }, { fail() }
+            )
+        )
     }
 
     @Test
@@ -43,49 +57,81 @@ class UtilsKtTest {
         GlobalAccountManager.setInstance(accountManager)
 
         // Network.
-        assertEquals("pass!", handleFxaExceptions(mock(), "test op", {
-            throw FxaNetworkException("oops")
-        }, { "fail" }, { error ->
-            assertEquals("oops", error.message)
-            assertTrue(error is FxaNetworkException)
-            "pass!"
-        }))
+        assertEquals(
+            "pass!",
+            handleFxaExceptions(
+                mock(), "test op",
+                {
+                    throw FxaNetworkException("oops")
+                },
+                { "fail" },
+                { error ->
+                    assertEquals("oops", error.message)
+                    assertTrue(error is FxaNetworkException)
+                    "pass!"
+                }
+            )
+        )
 
         verifyZeroInteractions(accountManager)
 
-        assertEquals("pass!", handleFxaExceptions(mock(), "test op", {
-            throw FxaUnauthorizedException("auth!")
-        }, {
-            "pass!"
-        }, {
-            fail()
-        }))
+        assertEquals(
+            "pass!",
+            handleFxaExceptions(
+                mock(), "test op",
+                {
+                    throw FxaUnauthorizedException("auth!")
+                },
+                {
+                    "pass!"
+                },
+                {
+                    fail()
+                }
+            )
+        )
 
         verify(accountManager).encounteredAuthError(eq("test op"), anyInt())
 
         reset(accountManager)
-        assertEquals("pass!", handleFxaExceptions(mock(), "test op", {
-            throw FxaUnspecifiedException("dunno")
-        }, { "fail" }, { error ->
-            assertEquals("dunno", error.message)
-            assertTrue(error is FxaUnspecifiedException)
-            "pass!"
-        }))
+        assertEquals(
+            "pass!",
+            handleFxaExceptions(
+                mock(), "test op",
+                {
+                    throw FxaUnspecifiedException("dunno")
+                },
+                { "fail" },
+                { error ->
+                    assertEquals("dunno", error.message)
+                    assertTrue(error is FxaUnspecifiedException)
+                    "pass!"
+                }
+            )
+        )
         verifyZeroInteractions(accountManager)
     }
 
     @Test(expected = IllegalStateException::class)
     fun `handleFxaExceptions form 1 re-throws non-fxa exceptions`() = runBlocking {
-        handleFxaExceptions(mock(), "test op", {
-            throw IllegalStateException("bad state")
-        }, { fail() }, { fail() })
+        handleFxaExceptions(
+            mock(), "test op",
+            {
+                throw IllegalStateException("bad state")
+            },
+            { fail() }, { fail() }
+        )
     }
 
     @Test(expected = FxaPanicException::class)
     fun `handleFxaExceptions form 1 re-throws fxa panic exceptions`() = runBlocking {
-        handleFxaExceptions(mock(), "test op", {
-            throw FxaPanicException("don't panic!")
-        }, { fail() }, { fail() })
+        handleFxaExceptions(
+            mock(), "test op",
+            {
+                throw FxaPanicException("don't panic!")
+            },
+            { fail() }, { fail() }
+        )
     }
 
     @Test
@@ -93,27 +139,35 @@ class UtilsKtTest {
         val accountManager: FxaAccountManager = mock()
         GlobalAccountManager.setInstance(accountManager)
 
-        assertTrue(handleFxaExceptions(mock(), "test op") {
-            Unit
-        })
+        assertTrue(
+            handleFxaExceptions(mock(), "test op") {
+                Unit
+            }
+        )
 
-        assertFalse(handleFxaExceptions(mock(), "test op") {
-            throw FxaUnspecifiedException("dunno")
-        })
+        assertFalse(
+            handleFxaExceptions(mock(), "test op") {
+                throw FxaUnspecifiedException("dunno")
+            }
+        )
 
         verifyZeroInteractions(accountManager)
 
-        assertFalse(handleFxaExceptions(mock(), "test op") {
-            throw FxaUnauthorizedException("401")
-        })
+        assertFalse(
+            handleFxaExceptions(mock(), "test op") {
+                throw FxaUnauthorizedException("401")
+            }
+        )
 
         verify(accountManager).encounteredAuthError("test op")
 
         reset(accountManager)
 
-        assertFalse(handleFxaExceptions(mock(), "test op") {
-            throw FxaNetworkException("dunno")
-        })
+        assertFalse(
+            handleFxaExceptions(mock(), "test op") {
+                throw FxaNetworkException("dunno")
+            }
+        )
 
         verifyZeroInteractions(accountManager)
     }
@@ -146,27 +200,39 @@ class UtilsKtTest {
         val accountManager: FxaAccountManager = mock()
         GlobalAccountManager.setInstance(accountManager)
 
-        assertEquals(1, handleFxaExceptions(mock(), "test op", { 2 }) {
-            1
-        })
+        assertEquals(
+            1,
+            handleFxaExceptions(mock(), "test op", { 2 }) {
+                1
+            }
+        )
 
-        assertEquals(0, handleFxaExceptions(mock(), "test op", { 0 }) {
-            throw FxaUnspecifiedException("dunno")
-        })
+        assertEquals(
+            0,
+            handleFxaExceptions(mock(), "test op", { 0 }) {
+                throw FxaUnspecifiedException("dunno")
+            }
+        )
 
         verifyZeroInteractions(accountManager)
 
-        assertEquals(-1, handleFxaExceptions(mock(), "test op", { -1 }) {
-            throw FxaUnauthorizedException("401")
-        })
+        assertEquals(
+            -1,
+            handleFxaExceptions(mock(), "test op", { -1 }) {
+                throw FxaUnauthorizedException("401")
+            }
+        )
 
         verify(accountManager).encounteredAuthError(eq("test op"), anyInt())
 
         reset(accountManager)
 
-        assertEquals("bad", handleFxaExceptions(mock(), "test op", { "bad" }) {
-            throw FxaNetworkException("dunno")
-        })
+        assertEquals(
+            "bad",
+            handleFxaExceptions(mock(), "test op", { "bad" }) {
+                throw FxaNetworkException("dunno")
+            }
+        )
 
         verifyZeroInteractions(accountManager)
     }

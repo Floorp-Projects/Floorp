@@ -29,8 +29,8 @@ import mozilla.components.feature.downloads.manager.AndroidDownloadManager
 import mozilla.components.feature.downloads.manager.DownloadManager
 import mozilla.components.feature.downloads.manager.noop
 import mozilla.components.feature.downloads.manager.onDownloadStopped
-import mozilla.components.feature.downloads.ui.DownloaderApp
 import mozilla.components.feature.downloads.ui.DownloadAppChooserDialog
+import mozilla.components.feature.downloads.ui.DownloaderApp
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.dialog.DeniedPermissionDialogFragment
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -102,23 +102,23 @@ class DownloadsFeature(
         // This prevents prompts from the previous page from covering content.
         dismissPromptScope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
-                    .ifChanged { it.content.url }
-                    .collect {
-                        val currentHost = previousTab?.content?.url
-                        val newHost = it.content.url
+                .ifChanged { it.content.url }
+                .collect {
+                    val currentHost = previousTab?.content?.url
+                    val newHost = it.content.url
 
-                        // The user is navigating to another site
-                        if (currentHost?.isSameOriginAs(newHost) == false) {
-                            previousTab?.let { tab ->
-                                // We have an old download request.
-                                tab.content.download?.let { download ->
-                                    useCases.cancelDownloadRequest.invoke(tab.id, download.id)
-                                    dismissAllDownloadDialogs()
-                                    previousTab = null
-                                }
+                    // The user is navigating to another site
+                    if (currentHost?.isSameOriginAs(newHost) == false) {
+                        previousTab?.let { tab ->
+                            // We have an old download request.
+                            tab.content.download?.let { download ->
+                                useCases.cancelDownloadRequest.invoke(tab.id, download.id)
+                                dismissAllDownloadDialogs()
+                                previousTab = null
                             }
                         }
                     }
+                }
         }
 
         scope = store.flowScoped { flow ->
@@ -222,7 +222,8 @@ class DownloadsFeature(
             applicationContext,
             applicationContext.getString(
                 R.string.mozac_feature_downloads_file_not_supported2,
-                applicationContext.appName),
+                applicationContext.appName
+            ),
             Toast.LENGTH_LONG
         ).show()
     }
@@ -251,7 +252,7 @@ class DownloadsFeature(
 
     private fun getDownloadDialog(): DownloadDialogFragment {
         return findPreviousDownloadDialogFragment() ?: SimpleDownloadDialogFragment.newInstance(
-                promptsStyling = promptsStyling
+            promptsStyling = promptsStyling
         )
     }
 
@@ -295,10 +296,10 @@ class DownloadsFeature(
     }
 
     private fun getAppDownloaderDialog() = findPreviousAppDownloaderDialogFragment()
-            ?: DownloadAppChooserDialog.newInstance(
-                    promptsStyling?.gravity,
-                    promptsStyling?.shouldWidthMatchParent
-            )
+        ?: DownloadAppChooserDialog.newInstance(
+            promptsStyling?.gravity,
+            promptsStyling?.shouldWidthMatchParent
+        )
 
     @VisibleForTesting
     internal fun isAlreadyAppDownloaderDialog(): Boolean {
@@ -332,11 +333,11 @@ class DownloadsFeature(
         val packageManager = context.packageManager
 
         val browsers = Browsers.findResolvers(context, packageManager, includeThisApp = true)
-                .associateBy { it.activityInfo.identifier }
+            .associateBy { it.activityInfo.identifier }
 
         val thisApp = browsers.values
-                .firstOrNull { it.activityInfo.packageName == context.packageName }
-                ?.toDownloaderApp(context, download)
+            .firstOrNull { it.activityInfo.packageName == context.packageName }
+            ?.toDownloaderApp(context, download)
 
         // Check for data URL that can cause a TransactionTooLargeException when querying for apps
         // See https://github.com/mozilla-mobile/android-components/issues/9665
@@ -345,15 +346,15 @@ class DownloadsFeature(
         }
 
         val apps = Browsers.findResolvers(
-                context,
-                packageManager,
-                includeThisApp = false,
-                url = download.url,
-                contentType = download.contentType
+            context,
+            packageManager,
+            includeThisApp = false,
+            url = download.url,
+            contentType = download.contentType
         )
         // Remove browsers and returns only the apps that can perform a download plus this app.
         return apps.filter { !browsers.contains(it.activityInfo.identifier) }
-                .map { it.toDownloaderApp(context, download) } + listOfNotNull(thisApp)
+            .map { it.toDownloaderApp(context, download) } + listOfNotNull(thisApp)
     }
 
     @VisibleForTesting

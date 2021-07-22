@@ -67,11 +67,11 @@ import java.io.Serializable
 import java.util.ArrayList
 import java.util.Collections
 import java.util.Comparator
+import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
-import java.util.concurrent.ExecutorService
 import kotlin.math.max
 import kotlin.math.min
 
@@ -348,9 +348,11 @@ class QrFragment : Fragment() {
             maxPreviewWidth = min(maxPreviewWidth, MAX_PREVIEW_WIDTH)
             maxPreviewHeight = min(maxPreviewHeight, MAX_PREVIEW_HEIGHT)
 
-            val optimalSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java),
+            val optimalSize = chooseOptimalSize(
+                map.getOutputSizes(SurfaceTexture::class.java),
                 rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
-                maxPreviewHeight, largest)
+                maxPreviewHeight, largest
+            )
 
             adjustPreviewSize(optimalSize)
             this.cameraId = cameraId
@@ -496,8 +498,10 @@ class QrFragment : Fragment() {
                     override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
                         if (null == cameraDevice) return
 
-                        previewRequestBuilder?.set(CaptureRequest.CONTROL_AF_MODE,
-                                CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
+                        previewRequestBuilder?.set(
+                            CaptureRequest.CONTROL_AF_MODE,
+                            CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                        )
 
                         previewRequest = previewRequestBuilder?.build()
                         captureSession = cameraCaptureSession
@@ -625,7 +629,8 @@ class QrFragment : Fragment() {
             val h = aspectRatio.height
             for (option in choices) {
                 if (option.width <= maxWidth && option.height <= maxHeight &&
-                        option.height == option.width * h / w) {
+                    option.height == option.width * h / w
+                ) {
                     if (option.width >= textureViewWidth && option.height >= textureViewHeight) {
                         bigEnough.add(option)
                     } else {
@@ -723,7 +728,8 @@ internal fun WindowManager.getDisplaySize(): Point {
         val windowInsets: WindowInsets = windowMetrics.windowInsets
 
         val insets = windowInsets.getInsetsIgnoringVisibility(
-            WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout())
+            WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout()
+        )
         val insetsWidth = insets.right + insets.left
         val insetsHeight = insets.top + insets.bottom
 

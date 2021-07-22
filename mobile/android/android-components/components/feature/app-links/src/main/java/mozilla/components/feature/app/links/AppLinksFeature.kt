@@ -72,7 +72,7 @@ class AppLinksFeature(
                         store.dispatch(ContentAction.ConsumeAppIntentAction(tab.id))
                     }
                 }
-            }
+        }
 
         findPreviousDialogFragment()?.let {
             fragmentManager?.beginTransaction()?.remove(it)?.commit()

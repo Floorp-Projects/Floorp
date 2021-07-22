@@ -11,8 +11,8 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.widget.ImageViewCompat
 import androidx.annotation.VisibleForTesting
+import androidx.core.widget.ImageViewCompat
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.awesomebar.R
 import mozilla.components.browser.awesomebar.layout.DefaultSuggestionViewHolder.Chips.Companion.EDIT_ARROW_ROTATION

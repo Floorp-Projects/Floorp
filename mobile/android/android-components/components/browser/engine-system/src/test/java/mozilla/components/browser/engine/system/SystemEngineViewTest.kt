@@ -467,7 +467,8 @@ class SystemEngineViewTest {
             "Components/1.0",
             "attachment; filename=\"image.png\"",
             "image/png",
-            1337)
+            1337
+        )
 
         assertTrue(observerNotified)
     }

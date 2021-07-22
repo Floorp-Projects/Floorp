@@ -96,9 +96,9 @@ fun AddonUpdater.Status?.toLocalizedString(context: Context): String {
  */
 fun AddonUpdater.UpdateAttempt.showInformationDialog(context: Context) {
     AlertDialog.Builder(context)
-            .setTitle(R.string.mozac_feature_addons_updater_dialog_title)
-            .setMessage(getDialogMessage(context))
-            .show()
+        .setTitle(R.string.mozac_feature_addons_updater_dialog_title)
+        .setMessage(getDialogMessage(context))
+        .show()
 }
 
 private fun AddonUpdater.UpdateAttempt.getDialogMessage(context: Context): String {

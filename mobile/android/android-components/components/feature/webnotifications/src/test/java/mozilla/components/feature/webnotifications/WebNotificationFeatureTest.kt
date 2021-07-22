@@ -13,9 +13,9 @@ import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.Icon.Source
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.webnotifications.WebNotification
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.Status
+import mozilla.components.concept.engine.webnotifications.WebNotification
 import mozilla.components.feature.sitepermissions.OnDiskSitePermissionsStorage
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq

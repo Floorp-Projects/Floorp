@@ -127,7 +127,8 @@ internal class ContextMenuAdapter(
     private val inflater: LayoutInflater
 ) : RecyclerView.Adapter<ContextMenuViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, position: Int) = ContextMenuViewHolder(
-        inflater.inflate(R.layout.mozac_feature_contextmenu_item, parent, false))
+        inflater.inflate(R.layout.mozac_feature_contextmenu_item, parent, false)
+    )
 
     override fun getItemCount(): Int = fragment.itemIds.size
 

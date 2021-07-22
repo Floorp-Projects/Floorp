@@ -632,7 +632,8 @@ class BrowserToolbarTest {
             mock(),
             "imageDrawable",
             "imageSelectedDrawable",
-            visible = { false }) {}
+            visible = { false }
+        ) {}
 
         assertEquals(false, button.visible())
     }
@@ -685,20 +686,29 @@ class BrowserToolbarTest {
         val edit = toolbar.edit
 
         // By default "private mode" is off.
-        assertEquals(0, edit.views.url.imeOptions and
-            EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING)
+        assertEquals(
+            0,
+            edit.views.url.imeOptions and
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+        )
         assertEquals(false, toolbar.private)
 
         // Turning on private mode sets flag
         toolbar.private = true
-        assertNotEquals(0, edit.views.url.imeOptions and
-            EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING)
+        assertNotEquals(
+            0,
+            edit.views.url.imeOptions and
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+        )
         assertTrue(toolbar.private)
 
         // Turning private mode off again - should remove flag
         toolbar.private = false
-        assertEquals(0, edit.views.url.imeOptions and
-            EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING)
+        assertEquals(
+            0,
+            edit.views.url.imeOptions and
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+        )
         assertEquals(false, toolbar.private)
     }
 

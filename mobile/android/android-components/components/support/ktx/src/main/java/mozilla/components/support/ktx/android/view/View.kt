@@ -58,10 +58,12 @@ fun View.hideKeyboard() {
  */
 fun View.getRectWithViewLocation(): Rect {
     val locationInWindow = IntArray(2).apply { getLocationInWindow(this) }
-    return Rect(locationInWindow[0],
-            locationInWindow[1],
-            locationInWindow[0] + width,
-            locationInWindow[1] + height)
+    return Rect(
+        locationInWindow[0],
+        locationInWindow[1],
+        locationInWindow[0] + width,
+        locationInWindow[1] + height
+    )
 }
 
 /**

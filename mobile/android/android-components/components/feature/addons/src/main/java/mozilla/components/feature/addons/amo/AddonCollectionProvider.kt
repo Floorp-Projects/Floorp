@@ -25,9 +25,9 @@ import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
-import java.util.concurrent.TimeUnit
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 internal const val API_VERSION = "api/v4"
 internal const val DEFAULT_SERVER_URL = "https://services.addons.mozilla.org"
@@ -119,9 +119,11 @@ class AddonCollectionProvider(
                 if (cacheLastUpdated > -1) {
                     val cache = readFromDiskCache(language, useFallbackFile = true)
                     cache?.let {
-                        logger.info("Falling back to available add-ons cache from ${
+                        logger.info(
+                            "Falling back to available add-ons cache from ${
                             SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'", Locale.US).format(cacheLastUpdated)
-                        }")
+                            }"
+                        )
                         return it
                     }
                 }
@@ -146,25 +148,25 @@ class AddonCollectionProvider(
                 readTimeout = Pair(readTimeoutInSeconds ?: DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
             )
         )
-        .use { response ->
-            if (response.isSuccess) {
-                val responseBody = response.body.string(Charsets.UTF_8)
-                return try {
-                    JSONObject(responseBody).getAddons(language).also {
-                        if (maxCacheAgeInMinutes > 0) {
-                            writeToDiskCache(responseBody, language)
+            .use { response ->
+                if (response.isSuccess) {
+                    val responseBody = response.body.string(Charsets.UTF_8)
+                    return try {
+                        JSONObject(responseBody).getAddons(language).also {
+                            if (maxCacheAgeInMinutes > 0) {
+                                writeToDiskCache(responseBody, language)
+                            }
+                            deleteUnusedCacheFiles(language)
                         }
-                        deleteUnusedCacheFiles(language)
+                    } catch (e: JSONException) {
+                        throw IOException(e)
                     }
-                } catch (e: JSONException) {
-                    throw IOException(e)
+                } else {
+                    val errorMessage = "Failed to fetch add-on collection. Status code: ${response.status}"
+                    logger.error(errorMessage)
+                    throw IOException(errorMessage)
                 }
-            } else {
-                val errorMessage = "Failed to fetch add-on collection. Status code: ${response.status}"
-                logger.error(errorMessage)
-                throw IOException(errorMessage)
             }
-        }
     }
 
     /**
@@ -177,7 +179,7 @@ class AddonCollectionProvider(
         var bitmap: Bitmap? = null
         if (addon.iconUrl != "") {
             client.fetch(
-                    Request(url = addon.iconUrl.sanitizeURL())
+                Request(url = addon.iconUrl.sanitizeURL())
             ).use { response ->
                 if (response.isSuccess) {
                     response.body.useStream {
@@ -215,7 +217,8 @@ class AddonCollectionProvider(
 
         context.filesDir
             .listFiles {
-                _, s -> s.startsWith(COLLECTION_FILE_NAME_PREFIX) && s != currentCacheFileName
+                _, s ->
+                s.startsWith(COLLECTION_FILE_NAME_PREFIX) && s != currentCacheFileName
             }
             ?.forEach {
                 logger.debug("Deleting unused collection cache: " + it.name)
@@ -330,11 +333,13 @@ internal fun JSONObject.toAddons(language: String? = null): Addon {
             iconUrl = getSafeString("icon_url"),
             siteUrl = getSafeString("url"),
             rating = getRating(),
-            defaultLocale = (if (!safeLanguage.isNullOrEmpty() && isLanguageInTranslations) {
-                safeLanguage
-            } else {
-                getSafeString("default_locale").ifEmpty { Addon.DEFAULT_LOCALE }
-            }).lowercase(Locale.ROOT)
+            defaultLocale = (
+                if (!safeLanguage.isNullOrEmpty() && isLanguageInTranslations) {
+                    safeLanguage
+                } else {
+                    getSafeString("default_locale").ifEmpty { Addon.DEFAULT_LOCALE }
+                }
+                ).lowercase(Locale.ROOT)
         )
     }
 }
@@ -379,9 +384,11 @@ internal fun JSONObject.getCurrentVersion(): String {
 }
 
 internal fun JSONObject.getDownload(): JSONObject? {
-    return (getJSONObject("current_version")
-        .optJSONArray("files")
-        ?.getJSONObject(0))
+    return (
+        getJSONObject("current_version")
+            .optJSONArray("files")
+            ?.getJSONObject(0)
+        )
 }
 
 internal fun JSONObject.getDownloadId(): String {

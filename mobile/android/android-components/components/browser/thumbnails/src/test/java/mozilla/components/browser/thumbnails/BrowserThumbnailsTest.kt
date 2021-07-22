@@ -43,12 +43,16 @@ class BrowserThumbnailsTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        store = spy(BrowserStore(BrowserState(
-            tabs = listOf(
-                createTab("https://www.mozilla.org", id = tabId)
-            ),
-            selectedTabId = tabId
-        )))
+        store = spy(
+            BrowserStore(
+                BrowserState(
+                    tabs = listOf(
+                        createTab("https://www.mozilla.org", id = tabId)
+                    ),
+                    selectedTabId = tabId
+                )
+            )
+        )
         engineView = mock()
         thumbnails = BrowserThumbnails(testContext, engineView, store)
     }

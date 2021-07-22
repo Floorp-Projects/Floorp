@@ -8,6 +8,7 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,7 +19,6 @@ import androidx.annotation.StringRes
 import androidx.annotation.StyleRes
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
-import android.graphics.drawable.GradientDrawable
 import mozilla.components.feature.downloads.databinding.MozacDownloadsPromptBinding
 
 /**
@@ -90,8 +90,8 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
 
             if (positiveButtonBackgroundColor != DEFAULT_VALUE) {
                 val backgroundTintList = ContextCompat.getColorStateList(
-                        requireContext(),
-                        positiveButtonBackgroundColor
+                    requireContext(),
+                    positiveButtonBackgroundColor
                 )
                 binding.downloadButton.backgroundTintList = backgroundTintList
             }
@@ -104,17 +104,19 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
             if (positiveButtonRadius != DEFAULT_VALUE.toFloat()) {
                 val shape = GradientDrawable()
                 shape.shape = GradientDrawable.RECTANGLE
-                shape.setColor(ContextCompat.getColor(
+                shape.setColor(
+                    ContextCompat.getColor(
                         requireContext(),
                         positiveButtonBackgroundColor
-                ))
+                    )
+                )
                 shape.cornerRadius = positiveButtonRadius
                 binding.downloadButton.background = shape
             }
 
             binding.filename.text = getString(KEY_FILE_NAME, "")
             binding.downloadButton.text = getString(
-                    getInt(KEY_DOWNLOAD_TEXT, R.string.mozac_feature_downloads_dialog_download)
+                getInt(KEY_DOWNLOAD_TEXT, R.string.mozac_feature_downloads_dialog_download)
             )
 
             binding.closeButton.setOnClickListener {

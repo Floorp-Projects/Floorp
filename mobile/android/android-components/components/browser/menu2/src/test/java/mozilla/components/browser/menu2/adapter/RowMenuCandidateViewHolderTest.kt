@@ -58,18 +58,26 @@ class RowMenuCandidateViewHolderTest {
     fun `creates buttons for small items`() {
         val holder = RowMenuCandidateViewHolder(view, inflater, mock())
 
-        holder.bind(RowMenuCandidate(listOf(
-            SmallMenuCandidate("hello", DrawableMenuIcon(null)),
-            SmallMenuCandidate("hello", DrawableMenuIcon(null))
-        )))
+        holder.bind(
+            RowMenuCandidate(
+                listOf(
+                    SmallMenuCandidate("hello", DrawableMenuIcon(null)),
+                    SmallMenuCandidate("hello", DrawableMenuIcon(null))
+                )
+            )
+        )
         verify(view, times(2)).addView(button)
 
         clearInvocations(view)
 
-        holder.bind(RowMenuCandidate(listOf(
-            SmallMenuCandidate("test", DrawableMenuIcon(null)),
-            SmallMenuCandidate("hello", DrawableMenuIcon(null))
-        )))
+        holder.bind(
+            RowMenuCandidate(
+                listOf(
+                    SmallMenuCandidate("test", DrawableMenuIcon(null)),
+                    SmallMenuCandidate("hello", DrawableMenuIcon(null))
+                )
+            )
+        )
         verify(view, never()).removeAllViews()
         verify(view, never()).addView(button)
     }
@@ -78,9 +86,13 @@ class RowMenuCandidateViewHolderTest {
     fun `binds buttons for small items`() {
         val holder = RowMenuCandidateViewHolder(view, inflater, mock())
 
-        holder.bind(RowMenuCandidate(listOf(
-            SmallMenuCandidate("hello", DrawableMenuIcon(null))
-        )))
+        holder.bind(
+            RowMenuCandidate(
+                listOf(
+                    SmallMenuCandidate("hello", DrawableMenuIcon(null))
+                )
+            )
+        )
 
         verify(button).contentDescription = "hello"
         verify(button).setImageDrawable(null)

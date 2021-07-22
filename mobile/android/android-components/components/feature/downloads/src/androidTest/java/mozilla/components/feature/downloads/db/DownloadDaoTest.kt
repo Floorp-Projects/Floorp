@@ -5,20 +5,20 @@
 package mozilla.components.feature.downloads.db
 
 import android.content.Context
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.feature.downloads.DownloadStorage
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.ExecutorService
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
-import mozilla.components.feature.downloads.DownloadStorage
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import java.util.concurrent.Executors
 
 class DownloadDaoTest {
@@ -110,16 +110,16 @@ class DownloadDaoTest {
     private fun getDownloadsPagedList(): PagedList<DownloadEntity> {
         val dataSource = dao.getDownloadsPaged().create()
         return PagedList.Builder(dataSource, 10)
-                .setNotifyExecutor(executor)
-                .setFetchExecutor(executor)
-                .build()
+            .setNotifyExecutor(executor)
+            .setFetchExecutor(executor)
+            .build()
     }
 
     private suspend fun insertMockDownload(id: String, url: String): DownloadState {
         val download = DownloadState(
-                id = id,
-                url = url, contentType = "application/zip", contentLength = 5242880,
-                userAgent = "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
+            id = id,
+            url = url, contentType = "application/zip", contentLength = 5242880,
+            userAgent = "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
         )
         dao.insert(download.toDownloadEntity())
         return download

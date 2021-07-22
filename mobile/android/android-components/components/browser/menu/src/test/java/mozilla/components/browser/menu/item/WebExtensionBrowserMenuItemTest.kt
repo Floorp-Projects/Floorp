@@ -146,12 +146,12 @@ class WebExtensionBrowserMenuItemTest {
 
         val badgeText = ""
         val browserAction = Action(
-                title = "title",
-                loadIcon = { icon },
-                enabled = true,
-                badgeText = badgeText,
-                badgeTextColor = Color.WHITE,
-                badgeBackgroundColor = Color.BLUE
+            title = "title",
+            loadIcon = { icon },
+            enabled = true,
+            badgeText = badgeText,
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
         ) {}
 
         val action = WebExtensionBrowserMenuItem(browserAction, {})
@@ -177,12 +177,12 @@ class WebExtensionBrowserMenuItemTest {
         whenever(view.context).thenReturn(testContext)
 
         val browserAction = Action(
-                title = "title",
-                loadIcon = { throw IllegalArgumentException() },
-                enabled = true,
-                badgeText = "badgeText",
-                badgeTextColor = Color.WHITE,
-                badgeBackgroundColor = Color.BLUE
+            title = "title",
+            loadIcon = { throw IllegalArgumentException() },
+            enabled = true,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
         ) {}
 
         val action = WebExtensionBrowserMenuItem(browserAction, {})
@@ -266,12 +266,12 @@ class WebExtensionBrowserMenuItemTest {
         verify(badgeView).text = "badgeText"
 
         val browserActionOverride = Action(
-                title = "override",
-                loadIcon = { icon },
-                enabled = true,
-                badgeText = "overrideBadge",
-                badgeTextColor = Color.WHITE,
-                badgeBackgroundColor = Color.BLUE
+            title = "override",
+            loadIcon = { icon },
+            enabled = true,
+            badgeText = "overrideBadge",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
         ) {}
 
         item.action = browserActionOverride

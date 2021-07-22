@@ -59,12 +59,7 @@ typealias onUpdatePermissionRequest = (
  */
 object WebExtensionSupport {
     private val logger = Logger("mozac-webextensions")
-    private var onUpdatePermissionRequest: ((
-        current: WebExtension,
-        updated: WebExtension,
-        newPermissions: List<String>,
-        onPermissionsGranted: (Boolean) -> Unit
-    ) -> Unit)? = null
+    private var onUpdatePermissionRequest: onUpdatePermissionRequest? = null
     private var onExtensionsLoaded: ((List<WebExtension>) -> Unit)? = null
     private var onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null
     private var onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null
@@ -219,7 +214,7 @@ object WebExtensionSupport {
                             closeTab(popupSessionId, false, store, onCloseTabOverride, extension)
                         } else {
                             onSelectTabOverride?.invoke(extension, popupSessionId)
-                                    ?: store.dispatch(TabListAction.SelectTabAction(popupSessionId))
+                                ?: store.dispatch(TabListAction.SelectTabAction(popupSessionId))
                         }
                         null
                     } else {
@@ -251,9 +246,11 @@ object WebExtensionSupport {
 
             override fun onAllowedInPrivateBrowsingChanged(extension: WebExtension) {
                 installedExtensions[extension.id] = extension
-                store.dispatch(WebExtensionAction.UpdateWebExtensionAllowedInPrivateBrowsingAction(
-                    extension.id, extension.isAllowedInPrivateBrowsing()
-                ))
+                store.dispatch(
+                    WebExtensionAction.UpdateWebExtensionAllowedInPrivateBrowsingAction(
+                        extension.id, extension.isAllowedInPrivateBrowsing()
+                    )
+                )
             }
 
             override fun onInstallPermissionRequest(extension: WebExtension): Boolean {
@@ -297,14 +294,16 @@ object WebExtensionSupport {
     private fun registerInstalledExtensions(store: BrowserStore, runtime: WebExtensionRuntime) {
         runtime.listInstalledWebExtensions(
             onSuccess = {
-                extensions -> extensions.forEach { registerInstalledExtension(store, it) }
+                extensions ->
+                extensions.forEach { registerInstalledExtension(store, it) }
                 emitWebExtensionsInitializedFact(extensions)
                 closeUnsupportedTabs(store, extensions)
                 initializationResult.complete(Unit)
                 onExtensionsLoaded?.invoke(extensions.filter { !it.isBuiltIn() })
             },
             onError = {
-                throwable -> logger.error("Failed to query installed extension", throwable)
+                throwable ->
+                logger.error("Failed to query installed extension", throwable)
                 initializationResult.completeExceptionally(throwable)
             }
         )

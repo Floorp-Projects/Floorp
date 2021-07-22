@@ -57,9 +57,10 @@ class HighlightViewTest {
         val view = spy(HighlightView(testContext))
 
         view.setIcon(
-                testContext.getDrawable(
-                        TrackingProtectionIconView.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED
-                )!!)
+            testContext.getDrawable(
+                TrackingProtectionIconView.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED
+            )!!
+        )
 
         verify(view).updateIcon()
     }

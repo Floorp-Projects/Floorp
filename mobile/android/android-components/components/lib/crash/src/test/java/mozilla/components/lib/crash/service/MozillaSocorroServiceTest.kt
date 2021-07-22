@@ -6,8 +6,8 @@ package mozilla.components.lib.crash.service
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.io.Resources.getResource
-import mozilla.components.lib.crash.Crash
 import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.lib.crash.Crash
 import mozilla.components.support.test.any
 import mozilla.components.support.test.robolectric.testContext
 import okhttp3.mockwebserver.MockResponse
@@ -36,10 +36,12 @@ class MozillaSocorroServiceTest {
 
     @Test
     fun `MozillaSocorroService sends native code crashes to GeckoView crash reporter`() {
-        val service = spy(MozillaSocorroService(
-            testContext,
-            "Test App"
-        ))
+        val service = spy(
+            MozillaSocorroService(
+                testContext,
+                "Test App"
+            )
+        )
         doReturn("").`when`(service).sendReport(anyLong(), any(), any(), any(), anyBoolean(), anyBoolean(), any())
 
         val crash = Crash.NativeCodeCrash(123, "", true, "", false, arrayListOf())
@@ -64,10 +66,12 @@ class MozillaSocorroServiceTest {
 
     @Test
     fun `MozillaSocorroService send uncaught exception crashes`() {
-        val service = spy(MozillaSocorroService(
-            testContext,
-            "Test App"
-        ))
+        val service = spy(
+            MozillaSocorroService(
+                testContext,
+                "Test App"
+            )
+        )
         doReturn("").`when`(service).sendReport(anyLong(), any(), any(), any(), anyBoolean(), anyBoolean(), any())
 
         val crash = Crash.UncaughtExceptionCrash(123, RuntimeException("Test"), arrayListOf())
@@ -79,10 +83,12 @@ class MozillaSocorroServiceTest {
 
     @Test
     fun `MozillaSocorroService do not send caught exception`() {
-        val service = spy(MozillaSocorroService(
+        val service = spy(
+            MozillaSocorroService(
                 testContext,
                 "Test App"
-        ))
+            )
+        )
         doReturn("").`when`(service).sendReport(anyLong(), any(), any(), any(), anyBoolean(), anyBoolean(), any())
         val throwable = RuntimeException("Test")
         val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
@@ -500,10 +506,12 @@ class MozillaSocorroServiceTest {
 
     @Test
     fun `MozillaSocorroService parses extrasFile correctly`() {
-        val service = spy(MozillaSocorroService(
+        val service = spy(
+            MozillaSocorroService(
                 testContext,
                 "Test App"
-        ))
+            )
+        )
         val file = File(getResource("TestExtrasFile").file)
         val extrasMap = service.readExtrasFromFile(file)
 
@@ -539,10 +547,12 @@ class MozillaSocorroServiceTest {
 
     @Test
     fun `MozillaSocorroService parses legacyExtraFile correctly`() {
-        val service = spy(MozillaSocorroService(
+        val service = spy(
+            MozillaSocorroService(
                 testContext,
                 "Test App"
-        ))
+            )
+        )
         val file = File(getResource("TestLegacyExtrasFile").file)
         val extrasMap = service.readExtrasFromFile(file)
 
@@ -578,10 +588,12 @@ class MozillaSocorroServiceTest {
 
     @Test
     fun `MozillaSocorroService handles bad extrasFile correctly`() {
-        val service = spy(MozillaSocorroService(
+        val service = spy(
+            MozillaSocorroService(
                 testContext,
                 "Test App"
-        ))
+            )
+        )
         val file = File(getResource("BadTestExtrasFile").file)
         val extrasMap = service.readExtrasFromFile(file)
 
@@ -590,10 +602,12 @@ class MozillaSocorroServiceTest {
 
     @Test
     fun `MozillaSocorroService unescape strings correctly`() {
-        val service = spy(MozillaSocorroService(
+        val service = spy(
+            MozillaSocorroService(
                 testContext,
                 "Test App"
-        ))
+            )
+        )
         val test1 = "\\\\\\\\"
         val expected1 = "\\"
         assert(service.unescape(test1) == expected1)

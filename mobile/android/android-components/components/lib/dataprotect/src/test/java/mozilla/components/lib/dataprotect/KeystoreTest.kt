@@ -31,7 +31,7 @@ internal class MockStoreWrapper : KeyStoreWrapper() {
     }
 
     override fun getKeyFor(label: String): Key? =
-            getKeyStore().getKey(label, DEFAULTPASS)
+        getKeyStore().getKey(label, DEFAULTPASS)
     override fun makeKeyFor(label: String): SecretKey {
         val gen = KeyGenerator.getInstance("AES")
         gen.init(256)

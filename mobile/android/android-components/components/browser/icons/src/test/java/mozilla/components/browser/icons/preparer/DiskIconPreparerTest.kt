@@ -50,9 +50,12 @@ class DiskIconPreparerTest {
 
         val preparer = DiskIconPreparer(cache)
 
-        val initialRequest = IconRequest(url = "https://www.example.org", resources = listOf(
-            IconRequest.Resource("https://getpocket.com", type = IconRequest.Resource.Type.FAVICON)
-        ))
+        val initialRequest = IconRequest(
+            url = "https://www.example.org",
+            resources = listOf(
+                IconRequest.Resource("https://getpocket.com", type = IconRequest.Resource.Type.FAVICON)
+            )
+        )
 
         val request = preparer.prepare(mock(), initialRequest)
 

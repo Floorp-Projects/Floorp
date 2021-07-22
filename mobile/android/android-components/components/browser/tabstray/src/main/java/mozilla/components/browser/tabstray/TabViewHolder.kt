@@ -14,11 +14,11 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
+import mozilla.components.concept.base.images.ImageLoadRequest
+import mozilla.components.concept.base.images.ImageLoader
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
-import mozilla.components.concept.base.images.ImageLoadRequest
-import mozilla.components.concept.base.images.ImageLoader
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 

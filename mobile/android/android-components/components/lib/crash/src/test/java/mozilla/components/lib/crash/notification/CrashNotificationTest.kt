@@ -89,14 +89,19 @@ class CrashNotificationTest {
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Boom"), arrayListOf())
 
-        val crashNotification = CrashNotification(testContext, crash, CrashReporter.PromptConfiguration(
-            appName = "TestApp"
-        ))
+        val crashNotification = CrashNotification(
+            testContext, crash,
+            CrashReporter.PromptConfiguration(
+                appName = "TestApp"
+            )
+        )
         crashNotification.show()
 
         assertEquals(1, shadowNotificationManager.notificationChannels.size)
-        assertEquals("Crashes",
-            (shadowNotificationManager.notificationChannels[0] as NotificationChannel).name)
+        assertEquals(
+            "Crashes",
+            (shadowNotificationManager.notificationChannels[0] as NotificationChannel).name
+        )
 
         assertEquals(1, shadowNotificationManager.size())
     }

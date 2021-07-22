@@ -40,12 +40,14 @@ class ThumbnailsMiddlewareTest {
     fun `thumbnail storage removes the thumbnail on remove all normal tabs action`() {
         val thumbnailStorage: ThumbnailStorage = mock()
         val store = BrowserStore(
-            initialState = BrowserState(tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab1"),
-                createTab("https://www.firefox.com", id = "test-tab2"),
-                createTab("https://www.wikipedia.com", id = "test-tab3"),
-                createTab("https://www.example.org", private = true, id = "test-ta4")
-            )),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab1"),
+                    createTab("https://www.firefox.com", id = "test-tab2"),
+                    createTab("https://www.wikipedia.com", id = "test-tab3"),
+                    createTab("https://www.example.org", private = true, id = "test-ta4")
+                )
+            ),
             middleware = listOf(ThumbnailsMiddleware(thumbnailStorage))
         )
 
@@ -59,12 +61,14 @@ class ThumbnailsMiddlewareTest {
     fun `thumbnail storage removes the thumbnail on remove all private tabs action`() {
         val thumbnailStorage: ThumbnailStorage = mock()
         val store = BrowserStore(
-            initialState = BrowserState(tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab1"),
-                createTab("https://www.firefox.com", private = true, id = "test-tab2"),
-                createTab("https://www.wikipedia.com", private = true, id = "test-tab3"),
-                createTab("https://www.example.org", private = true, id = "test-tab4")
-            )),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab1"),
+                    createTab("https://www.firefox.com", private = true, id = "test-tab2"),
+                    createTab("https://www.wikipedia.com", private = true, id = "test-tab3"),
+                    createTab("https://www.example.org", private = true, id = "test-tab4")
+                )
+            ),
             middleware = listOf(ThumbnailsMiddleware(thumbnailStorage))
         )
 
@@ -78,10 +82,12 @@ class ThumbnailsMiddlewareTest {
     fun `thumbnail storage removes the thumbnail on remove all tabs action`() {
         val thumbnailStorage: ThumbnailStorage = mock()
         val store = BrowserStore(
-            initialState = BrowserState(tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab1"),
-                createTab("https://www.firefox.com", id = "test-tab2")
-            )),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab1"),
+                    createTab("https://www.firefox.com", id = "test-tab2")
+                )
+            ),
             middleware = listOf(ThumbnailsMiddleware(thumbnailStorage))
         )
 
@@ -94,10 +100,12 @@ class ThumbnailsMiddlewareTest {
         val sessionIdOrUrl = "test-tab1"
         val thumbnailStorage: ThumbnailStorage = mock()
         val store = BrowserStore(
-            initialState = BrowserState(tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab1"),
-                createTab("https://www.firefox.com", id = "test-tab2")
-            )),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab1"),
+                    createTab("https://www.firefox.com", id = "test-tab2")
+                )
+            ),
             middleware = listOf(ThumbnailsMiddleware(thumbnailStorage))
         )
 
@@ -110,10 +118,12 @@ class ThumbnailsMiddlewareTest {
         val sessionIdOrUrl = "test-tab1"
         val thumbnailStorage: ThumbnailStorage = mock()
         val store = BrowserStore(
-            initialState = BrowserState(tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab1"),
-                createTab("https://www.firefox.com", id = "test-tab2")
-            )),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab1"),
+                    createTab("https://www.firefox.com", id = "test-tab2")
+                )
+            ),
             middleware = listOf(ThumbnailsMiddleware(thumbnailStorage))
         )
 

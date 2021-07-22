@@ -66,12 +66,15 @@ class ViewTest {
         verify(view).setTypeface(any(), eq(Typeface.NORMAL))
         verify(view).textAlignment = View.TEXT_ALIGNMENT_INHERIT
 
-        view.applyStyle(TextStyle(
-            size = 4f,
-            color = Color.RED,
-            textStyle = Typeface.ITALIC,
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-        ), TextStyle())
+        view.applyStyle(
+            TextStyle(
+                size = 4f,
+                color = Color.RED,
+                textStyle = Typeface.ITALIC,
+                textAlignment = View.TEXT_ALIGNMENT_CENTER
+            ),
+            TextStyle()
+        )
         verify(view).textSize = 4f
         verify(view).setTextColor(Color.RED)
         verify(view).setTypeface(any(), eq(Typeface.ITALIC))

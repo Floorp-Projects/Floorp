@@ -1,6 +1,8 @@
 package mozilla.components.lib.dataprotect
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.lib.dataprotect.SecurePrefsReliabilityExperiment.Companion.Actions
+import mozilla.components.lib.dataprotect.SecurePrefsReliabilityExperiment.Companion.Values
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -9,8 +11,6 @@ import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.lib.dataprotect.SecurePrefsReliabilityExperiment.Companion.Values
-import mozilla.components.lib.dataprotect.SecurePrefsReliabilityExperiment.Companion.Actions
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,16 +28,19 @@ class SecurePrefsReliabilityExperimentTest {
 
         Facts.registerProcessor(processor)
 
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.SUCCESS_MISSING,
             Actions.WRITE to Values.SUCCESS_WRITE
         )
 
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.SUCCESS_PRESENT
         )
 
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.SUCCESS_PRESENT
         )
     }
@@ -49,7 +52,8 @@ class SecurePrefsReliabilityExperimentTest {
 
         Facts.registerProcessor(processor)
 
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.SUCCESS_MISSING,
             Actions.WRITE to Values.SUCCESS_WRITE
         )
@@ -61,13 +65,15 @@ class SecurePrefsReliabilityExperimentTest {
         )
         securePrefs.putString(SecurePrefsReliabilityExperiment.PREF_KEY, "wrong test string")
 
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.CORRUPTED,
             Actions.RESET to Values.SUCCESS_RESET
         )
 
         // ... and we should be reset now:
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.SUCCESS_MISSING,
             Actions.WRITE to Values.SUCCESS_WRITE
         )
@@ -80,7 +86,8 @@ class SecurePrefsReliabilityExperimentTest {
 
         Facts.registerProcessor(processor)
 
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.SUCCESS_MISSING,
             Actions.WRITE to Values.SUCCESS_WRITE
         )
@@ -93,18 +100,21 @@ class SecurePrefsReliabilityExperimentTest {
         securePrefs.clear()
 
         // loss is detected:
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.LOST,
             Actions.RESET to Values.SUCCESS_RESET
         )
 
         // we should be reset now:
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.SUCCESS_MISSING,
             Actions.WRITE to Values.SUCCESS_WRITE
         )
 
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.SUCCESS_PRESENT
         )
     }
@@ -123,7 +133,8 @@ class SecurePrefsReliabilityExperimentTest {
         )
         securePrefs.putString(SecurePrefsReliabilityExperiment.PREF_KEY, SecurePrefsReliabilityExperiment.PREF_VALUE)
 
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.PRESENT_UNEXPECTED,
             Actions.RESET to Values.SUCCESS_RESET
         )
@@ -131,18 +142,21 @@ class SecurePrefsReliabilityExperimentTest {
         // Let's try an incorrect value, as well:
         securePrefs.putString(SecurePrefsReliabilityExperiment.PREF_KEY, "bad string")
 
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.PRESENT_UNEXPECTED,
             Actions.RESET to Values.SUCCESS_RESET
         )
 
         // subsequently, it's all good:
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.SUCCESS_MISSING,
             Actions.WRITE to Values.SUCCESS_WRITE
         )
 
-        triggerAndAssertFacts(processor,
+        triggerAndAssertFacts(
+            processor,
             Actions.GET to Values.SUCCESS_PRESENT
         )
     }

@@ -11,11 +11,10 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.mozilla.samples.glean.GleanMetrics.Test as GleanTestMetrics
-
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.samples.glean.GleanMetrics.Test as GleanTestMetrics
 
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {

@@ -20,9 +20,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.ColorInt
 import androidx.annotation.Px
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
 import mozilla.components.support.ktx.android.util.dpToPx
@@ -67,7 +67,8 @@ class CustomViewFinder @JvmOverloads constructor(
 
         this.layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT)
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
         this.setOverlayColor(DEFAULT_OVERLAY_COLOR)
         this.setViewFinderColor(DEFAULT_VIEWFINDER_COLOR)
         this.setViewFinderStroke(DEFAULT_VIEWFINDER_THICKNESS_DP.dpToPx(resources.displayMetrics))
@@ -210,8 +211,10 @@ class CustomViewFinder @JvmOverloads constructor(
                     viewFinderRectangle.width()
                 ).setAlignment(Layout.Alignment.ALIGN_CENTER).build()
             } else {
-                StaticLayout(scanMessage, messageTextPaint, viewFinderRectangle.width(),
-                    Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, true)
+                StaticLayout(
+                    scanMessage, messageTextPaint, viewFinderRectangle.width(),
+                    Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, true
+                )
             }
 
         messageResource = scanMessageId

@@ -26,7 +26,7 @@ internal class BrowserMenuAdapter(
     private val inflater = LayoutInflater.from(context)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            BrowserMenuItemViewHolder(inflater.inflate(viewType, parent, false))
+        BrowserMenuItemViewHolder(inflater.inflate(viewType, parent, false))
 
     override fun getItemCount() = visibleItems.size
 

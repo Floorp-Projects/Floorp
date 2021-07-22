@@ -57,17 +57,21 @@ class BrowserStoreExceptionTest {
     @Test(expected = IllegalArgumentException::class)
     fun `AddMultipleTabsAction - Exception is thrown in tab with id already exists`() {
         unwrapStoreExceptionAndRethrow {
-            val store = BrowserStore(BrowserState(
+            val store = BrowserStore(
+                BrowserState(
                     tabs = listOf(
-                            createTab(id = "a", url = "https://www.mozilla.org")
+                        createTab(id = "a", url = "https://www.mozilla.org")
                     )
-            ))
+                )
+            )
 
-            store.dispatch(TabListAction.AddMultipleTabsAction(
+            store.dispatch(
+                TabListAction.AddMultipleTabsAction(
                     tabs = listOf(
-                            createTab(id = "a", url = "https://www.example.org")
+                        createTab(id = "a", url = "https://www.example.org")
                     )
-            )).joinBlocking()
+                )
+            ).joinBlocking()
         }
     }
 
@@ -77,17 +81,21 @@ class BrowserStoreExceptionTest {
             val store = BrowserStore()
 
             val tab1 = createTab(
-                    id = "a",
-                    url = "https://www.mozilla.org")
+                id = "a",
+                url = "https://www.mozilla.org"
+            )
 
             val tab2 = createTab(
-                    id = "b",
-                    url = "https://www.firefox.com",
-                    private = true,
-                    parent = tab1)
+                id = "b",
+                url = "https://www.firefox.com",
+                private = true,
+                parent = tab1
+            )
 
-            store.dispatch(TabListAction.AddMultipleTabsAction(
-                    tabs = listOf(tab1, tab2))
+            store.dispatch(
+                TabListAction.AddMultipleTabsAction(
+                    tabs = listOf(tab1, tab2)
+                )
             ).joinBlocking()
         }
     }

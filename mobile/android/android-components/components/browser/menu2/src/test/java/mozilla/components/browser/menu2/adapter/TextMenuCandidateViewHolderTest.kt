@@ -94,19 +94,23 @@ class TextMenuCandidateViewHolderTest {
         verify(view, never()).setBackgroundColor(anyInt())
         verify(view, never()).setBackgroundResource(anyInt())
 
-        holder.bind(TextMenuCandidate(
-            "hello",
-            effect = HighPriorityHighlightEffect(Color.RED)
-        ))
+        holder.bind(
+            TextMenuCandidate(
+                "hello",
+                effect = HighPriorityHighlightEffect(Color.RED)
+            )
+        )
         verify(view).setBackgroundColor(Color.RED)
         verify(view, never()).setBackgroundResource(anyInt())
 
         clearInvocations(view)
 
-        holder.bind(TextMenuCandidate(
-            "hello",
-            effect = null
-        ))
+        holder.bind(
+            TextMenuCandidate(
+                "hello",
+                effect = null
+            )
+        )
         verify(view, never()).setBackgroundColor(anyInt())
         verify(view).setBackgroundResource(anyInt())
     }

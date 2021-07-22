@@ -18,12 +18,12 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_NONE
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
-import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
-import mozilla.components.browser.state.state.content.DownloadState.Status.DOWNLOADING
-import mozilla.components.browser.state.state.content.DownloadState.Status.PAUSED
-import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
 import mozilla.components.browser.state.state.content.DownloadState.Status.CANCELLED
+import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
+import mozilla.components.browser.state.state.content.DownloadState.Status.DOWNLOADING
 import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
+import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
+import mozilla.components.browser.state.state.content.DownloadState.Status.PAUSED
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_CANCEL
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_DISMISS
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_OPEN

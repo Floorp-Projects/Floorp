@@ -20,30 +20,30 @@ import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
-import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
-import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
-import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
 import mozilla.components.browser.state.state.content.DownloadState.Status.CANCELLED
+import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
+import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
+import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Response
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
-import mozilla.components.support.test.mock
-import mozilla.components.support.test.whenever
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.times
 import org.mockito.Mockito.never
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.reset
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class DownloadMiddlewareTest {
@@ -70,12 +70,14 @@ class DownloadMiddlewareTest {
     @Test
     fun `service is started when download is queued`() = runBlockingTest {
         val applicationContext: Context = mock()
-        val downloadMiddleware = spy(DownloadMiddleware(
-            applicationContext,
-            AbstractFetchDownloadService::class.java,
-            coroutineContext = dispatcher,
-            downloadStorage = mock()
-        ))
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java,
+                coroutineContext = dispatcher,
+                downloadStorage = mock()
+            )
+        )
         val store = BrowserStore(
             initialState = BrowserState(),
             middleware = listOf(downloadMiddleware)
@@ -104,12 +106,14 @@ class DownloadMiddlewareTest {
     @Test
     fun `saveDownload do not store private downloads`() = runBlockingTest {
         val applicationContext: Context = mock()
-        val downloadMiddleware = spy(DownloadMiddleware(
-            applicationContext,
-            AbstractFetchDownloadService::class.java,
-            coroutineContext = dispatcher,
-            downloadStorage = mock()
-        ))
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java,
+                coroutineContext = dispatcher,
+                downloadStorage = mock()
+            )
+        )
         val store = BrowserStore(
             initialState = BrowserState(),
             middleware = listOf(downloadMiddleware)
@@ -319,10 +323,12 @@ class DownloadMiddlewareTest {
     @Test
     fun `sendDownloadIntent MUST call startForegroundService WHEN downloads are NOT COMPLETED, CANCELLED and FAILED`() = runBlockingTest {
         val applicationContext: Context = mock()
-        val downloadMiddleware = spy(DownloadMiddleware(
-            applicationContext,
-            AbstractFetchDownloadService::class.java
-        ))
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java
+            )
+        )
 
         val ignoredStatus = listOf(COMPLETED, CANCELLED, FAILED)
         ignoredStatus.forEach { status ->
@@ -345,12 +351,14 @@ class DownloadMiddlewareTest {
     @Test
     fun `WHEN RemoveAllTabsAction and RemoveAllPrivateTabsAction are received THEN removePrivateNotifications must be called`() = runBlockingTest {
         val applicationContext: Context = mock()
-        val downloadMiddleware = spy(DownloadMiddleware(
-            applicationContext,
-            AbstractFetchDownloadService::class.java,
-            coroutineContext = dispatcher,
-            downloadStorage = mock()
-        ))
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java,
+                coroutineContext = dispatcher,
+                downloadStorage = mock()
+            )
+        )
         val store = BrowserStore(
             initialState = BrowserState(),
             middleware = listOf(downloadMiddleware)
@@ -372,12 +380,14 @@ class DownloadMiddlewareTest {
     @Test
     fun `WHEN RemoveTabsAction is received THEN removePrivateNotifications must be called`() = runBlockingTest {
         val applicationContext: Context = mock()
-        val downloadMiddleware = spy(DownloadMiddleware(
-            applicationContext,
-            AbstractFetchDownloadService::class.java,
-            coroutineContext = dispatcher,
-            downloadStorage = mock()
-        ))
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java,
+                coroutineContext = dispatcher,
+                downloadStorage = mock()
+            )
+        )
         val store = BrowserStore(
             initialState = BrowserState(),
             middleware = listOf(downloadMiddleware)
@@ -395,12 +405,14 @@ class DownloadMiddlewareTest {
     @Test
     fun `WHEN RemoveTabAction is received THEN removePrivateNotifications must be called`() = runBlockingTest {
         val applicationContext: Context = mock()
-        val downloadMiddleware = spy(DownloadMiddleware(
-            applicationContext,
-            AbstractFetchDownloadService::class.java,
-            coroutineContext = dispatcher,
-            downloadStorage = mock()
-        ))
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java,
+                coroutineContext = dispatcher,
+                downloadStorage = mock()
+            )
+        )
         val store = BrowserStore(
             initialState = BrowserState(),
             middleware = listOf(downloadMiddleware)
@@ -417,12 +429,14 @@ class DownloadMiddlewareTest {
     @Test
     fun `WHEN removeStatusBarNotification is called THEN an ACTION_REMOVE_PRIVATE_DOWNLOAD intent must be created`() = runBlockingTest {
         val applicationContext: Context = mock()
-        val downloadMiddleware = spy(DownloadMiddleware(
-            applicationContext,
-            AbstractFetchDownloadService::class.java,
-            coroutineContext = dispatcher,
-            downloadStorage = mock()
-        ))
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java,
+                coroutineContext = dispatcher,
+                downloadStorage = mock()
+            )
+        )
         val download = DownloadState("https://mozilla.org/download", notificationId = 100)
         val store = mock<BrowserStore>()
 
@@ -435,12 +449,14 @@ class DownloadMiddlewareTest {
     @Test
     fun `WHEN removePrivateNotifications is called THEN removeStatusBarNotification will be called only for private download`() = runBlockingTest {
         val applicationContext: Context = mock()
-        val downloadMiddleware = spy(DownloadMiddleware(
-            applicationContext,
-            AbstractFetchDownloadService::class.java,
-            coroutineContext = dispatcher,
-            downloadStorage = mock()
-        ))
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java,
+                coroutineContext = dispatcher,
+                downloadStorage = mock()
+            )
+        )
         val download = DownloadState("https://mozilla.org/download", notificationId = 100)
         val privateDownload = DownloadState("https://mozilla.org/download", notificationId = 100, private = true)
         val store = BrowserStore(
@@ -458,12 +474,14 @@ class DownloadMiddlewareTest {
     @Test
     fun `WHEN removePrivateNotifications is called THEN removeStatusBarNotification will be called only for private download in the tabIds list`() = runBlockingTest {
         val applicationContext: Context = mock()
-        val downloadMiddleware = spy(DownloadMiddleware(
-            applicationContext,
-            AbstractFetchDownloadService::class.java,
-            coroutineContext = dispatcher,
-            downloadStorage = mock()
-        ))
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java,
+                coroutineContext = dispatcher,
+                downloadStorage = mock()
+            )
+        )
         val download = DownloadState("https://mozilla.org/download", notificationId = 100, sessionId = "tab1")
         val privateDownload = DownloadState("https://mozilla.org/download", notificationId = 100, private = true, sessionId = "tab2")
         val anotherPrivateDownload = DownloadState("https://mozilla.org/download", notificationId = 100, private = true, sessionId = "tab3")
@@ -484,12 +502,14 @@ class DownloadMiddlewareTest {
         val response = mock<Response>()
         val download = DownloadState(id = "downloadID", url = "example.com/5MB.zip", response = response)
         val applicationContext: Context = mock()
-        val downloadMiddleware = spy(DownloadMiddleware(
-            applicationContext,
-            AbstractFetchDownloadService::class.java,
-            coroutineContext = dispatcher,
-            downloadStorage = mock()
-        ))
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java,
+                coroutineContext = dispatcher,
+                downloadStorage = mock()
+            )
+        )
         val store = BrowserStore(
             initialState = BrowserState(),
             middleware = listOf(downloadMiddleware)
@@ -511,12 +531,14 @@ class DownloadMiddlewareTest {
     @Test
     fun `WHEN closing a download response THEN the response object must be closed`() {
         val applicationContext: Context = mock()
-        val downloadMiddleware = spy(DownloadMiddleware(
-            applicationContext,
-            AbstractFetchDownloadService::class.java,
-            coroutineContext = dispatcher,
-            downloadStorage = mock()
-        ))
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java,
+                coroutineContext = dispatcher,
+                downloadStorage = mock()
+            )
+        )
         val store = BrowserStore(
             initialState = BrowserState(),
             middleware = listOf(downloadMiddleware)

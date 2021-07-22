@@ -5,8 +5,8 @@
 package mozilla.components.service.fxa
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext

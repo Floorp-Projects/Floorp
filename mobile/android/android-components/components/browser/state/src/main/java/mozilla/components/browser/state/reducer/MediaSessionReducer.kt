@@ -6,8 +6,8 @@ package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.MediaSessionState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.mediasession.MediaSession
 
 internal object MediaSessionReducer {
@@ -45,9 +45,11 @@ private fun BrowserState.addMediaSession(
     mediaSessionController: MediaSession.Controller
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
-        current.createCopy(mediaSessionState = MediaSessionState(
-            controller = mediaSessionController
-        ))
+        current.createCopy(
+            mediaSessionState = MediaSessionState(
+                controller = mediaSessionController
+            )
+        )
     }
 }
 
@@ -64,9 +66,11 @@ private fun BrowserState.updateMediaMetadata(
     metadata: MediaSession.Metadata
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
-        current.createCopy(mediaSessionState = current.mediaSessionState?.copy(
-            metadata = metadata
-        ))
+        current.createCopy(
+            mediaSessionState = current.mediaSessionState?.copy(
+                metadata = metadata
+            )
+        )
     }
 }
 
@@ -75,9 +79,11 @@ private fun BrowserState.updatePlaybackState(
     playbackState: MediaSession.PlaybackState
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
-        current.createCopy(mediaSessionState = current.mediaSessionState?.copy(
-            playbackState = playbackState
-        ))
+        current.createCopy(
+            mediaSessionState = current.mediaSessionState?.copy(
+                playbackState = playbackState
+            )
+        )
     }
 }
 
@@ -86,9 +92,11 @@ private fun BrowserState.updateMediaFeature(
     features: MediaSession.Feature
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
-        current.createCopy(mediaSessionState = current.mediaSessionState?.copy(
-            features = features
-        ))
+        current.createCopy(
+            mediaSessionState = current.mediaSessionState?.copy(
+                features = features
+            )
+        )
     }
 }
 
@@ -97,9 +105,11 @@ private fun BrowserState.updatePositionState(
     positionState: MediaSession.PositionState
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
-        current.createCopy(mediaSessionState = current.mediaSessionState?.copy(
-            positionState = positionState
-        ))
+        current.createCopy(
+            mediaSessionState = current.mediaSessionState?.copy(
+                positionState = positionState
+            )
+        )
     }
 }
 
@@ -108,9 +118,11 @@ private fun BrowserState.updateMuted(
     muted: Boolean
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
-        current.createCopy(mediaSessionState = current.mediaSessionState?.copy(
-            muted = muted
-        ))
+        current.createCopy(
+            mediaSessionState = current.mediaSessionState?.copy(
+                muted = muted
+            )
+        )
     }
 }
 
@@ -120,9 +132,11 @@ private fun BrowserState.updateFullscreen(
     elementMetadata: MediaSession.ElementMetadata?
 ): BrowserState {
     return updateTabOrCustomTabState(tabId) { current ->
-        current.createCopy(mediaSessionState = current.mediaSessionState?.copy(
-            fullscreen = fullscreen,
-            elementMetadata = elementMetadata
-        ))
+        current.createCopy(
+            mediaSessionState = current.mediaSessionState?.copy(
+                fullscreen = fullscreen,
+                elementMetadata = elementMetadata
+            )
+        )
     }
 }

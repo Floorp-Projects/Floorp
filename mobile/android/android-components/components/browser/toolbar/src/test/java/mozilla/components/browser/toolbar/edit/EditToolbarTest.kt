@@ -98,12 +98,15 @@ class EditToolbarTest {
             assertEquals(0, facts.size)
 
             toolbar.edit.views.url.setText("https://www.mozilla.org")
-            toolbar.edit.views.url.dispatchKeyEvent(KeyEvent(
-                System.currentTimeMillis(),
-                System.currentTimeMillis(),
-                KeyEvent.ACTION_DOWN,
-                KeyEvent.KEYCODE_ENTER,
-                0))
+            toolbar.edit.views.url.dispatchKeyEvent(
+                KeyEvent(
+                    System.currentTimeMillis(),
+                    System.currentTimeMillis(),
+                    KeyEvent.ACTION_DOWN,
+                    KeyEvent.KEYCODE_ENTER,
+                    0
+                )
+            )
 
             assertEquals(1, facts.size)
 
@@ -136,14 +139,18 @@ class EditToolbarTest {
             toolbar.edit.views.url.autocompleteResult = InlineAutocompleteEditText.AutocompleteResult(
                 text = "hello world",
                 source = "test-source",
-                totalItems = 100)
+                totalItems = 100
+            )
 
-            toolbar.edit.views.url.dispatchKeyEvent(KeyEvent(
-                System.currentTimeMillis(),
-                System.currentTimeMillis(),
-                KeyEvent.ACTION_DOWN,
-                KeyEvent.KEYCODE_ENTER,
-                0))
+            toolbar.edit.views.url.dispatchKeyEvent(
+                KeyEvent(
+                    System.currentTimeMillis(),
+                    System.currentTimeMillis(),
+                    KeyEvent.ACTION_DOWN,
+                    KeyEvent.KEYCODE_ENTER,
+                    0
+                )
+            )
 
             assertEquals(1, facts.size)
 

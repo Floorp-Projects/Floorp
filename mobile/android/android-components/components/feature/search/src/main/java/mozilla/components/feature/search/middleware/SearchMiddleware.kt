@@ -10,11 +10,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
-import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SearchState
 import mozilla.components.feature.search.storage.BundledSearchEnginesStorage
 import mozilla.components.feature.search.storage.CustomSearchEngineStorage
 import mozilla.components.feature.search.storage.SearchMetadataStorage

@@ -169,10 +169,13 @@ class WebExtensionSupportTest {
         var onNewTabCalled = false
 
         val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
-        WebExtensionSupport.initialize(engine, store, onNewTabOverride = { _, _, _ ->
-            onNewTabCalled = true
-            "123"
-        })
+        WebExtensionSupport.initialize(
+            engine, store,
+            onNewTabOverride = { _, _, _ ->
+                onNewTabCalled = true
+                "123"
+            }
+        )
         verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
 
         delegateCaptor.value.onNewTab(ext, engineSession, true, "https://mozilla.org")
@@ -276,7 +279,8 @@ class WebExtensionSupportTest {
             engine,
             store,
             onSelectTabOverride = { _, _ -> },
-            onCloseTabOverride = { _, _ -> onCloseTabCalled = true })
+            onCloseTabOverride = { _, _ -> onCloseTabCalled = true }
+        )
 
         store.waitUntilIdle()
         verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
@@ -545,8 +549,10 @@ class WebExtensionSupportTest {
         val actionHandlerCaptor = argumentCaptor<ActionHandler>()
         val tabHandlerCaptor = argumentCaptor<TabHandler>()
         verify(ext, never()).registerActionHandler(any(), any())
-        verify(ext, never()).registerTabHandler(session = any(),
-            tabHandler = any())
+        verify(ext, never()).registerTabHandler(
+            session = any(),
+            tabHandler = any()
+        )
 
         val engineSession1: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession1)).joinBlocking()
@@ -744,7 +750,8 @@ class WebExtensionSupportTest {
             store = store,
             onUpdatePermissionRequest = { _, _, _, _ ->
                 executed = true
-            })
+            }
+        )
 
         verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
         delegateCaptor.value.onUpdatePermissionRequest(mock(), mock(), mock(), mock())
@@ -827,13 +834,15 @@ class WebExtensionSupportTest {
 
     @Test
     fun `closes tabs from unsupported extensions`() {
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(
-                createTab(id = "1", url = "https://www.mozilla.org", source = SessionState.Source.RESTORED),
-                createTab(id = "2", url = "moz-extension://1234-5678/test", source = SessionState.Source.RESTORED),
-                createTab(id = "3", url = "moz-extension://1234-5678-9/", source = SessionState.Source.RESTORED)
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "1", url = "https://www.mozilla.org", source = SessionState.Source.RESTORED),
+                    createTab(id = "2", url = "moz-extension://1234-5678/test", source = SessionState.Source.RESTORED),
+                    createTab(id = "3", url = "moz-extension://1234-5678-9/", source = SessionState.Source.RESTORED)
+                )
             )
-        ))
+        )
 
         val ext1: WebExtension = mock()
         val ext1Meta: Metadata = mock()
@@ -865,7 +874,7 @@ class WebExtensionSupportTest {
 
         // Make sure we're running a single cleanup and stop the scope after
         store.dispatch(TabListAction.AddTabAction(createTab(id = "4", url = "moz-extension://1234-5678-90/")))
-                .joinBlocking()
+            .joinBlocking()
 
         store.waitUntilIdle()
         assertNotNull(store.state.findTab("4"))

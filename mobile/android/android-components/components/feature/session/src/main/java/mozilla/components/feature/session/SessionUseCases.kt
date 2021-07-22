@@ -79,12 +79,14 @@ class SessionUseCases(
                 ?: store.state.selectedTabId
                 ?: onNoTab.invoke(url).id
 
-            store.dispatch(EngineAction.LoadUrlAction(
-                loadSessionId,
-                url,
-                flags,
-                additionalHeaders
-            ))
+            store.dispatch(
+                EngineAction.LoadUrlAction(
+                    loadSessionId,
+                    url,
+                    flags,
+                    additionalHeaders
+                )
+            )
         }
     }
 
@@ -104,12 +106,14 @@ class SessionUseCases(
         ) {
             val loadTabId = tabId ?: onNoTab.invoke("about:blank").id
 
-            store.dispatch(EngineAction.LoadDataAction(
-                loadTabId,
-                data,
-                mimeType,
-                encoding
-            ))
+            store.dispatch(
+                EngineAction.LoadDataAction(
+                    loadTabId,
+                    data,
+                    mimeType,
+                    encoding
+                )
+            )
         }
     }
 
@@ -131,10 +135,12 @@ class SessionUseCases(
                 return
             }
 
-            store.dispatch(EngineAction.ReloadAction(
-                tabId,
-                flags
-            ))
+            store.dispatch(
+                EngineAction.ReloadAction(
+                    tabId,
+                    flags
+                )
+            )
         }
     }
 
@@ -173,9 +179,11 @@ class SessionUseCases(
                 return
             }
 
-            store.dispatch(EngineAction.GoBackAction(
-                tabId
-            ))
+            store.dispatch(
+                EngineAction.GoBackAction(
+                    tabId
+                )
+            )
         }
     }
 
@@ -192,9 +200,11 @@ class SessionUseCases(
                 return
             }
 
-            store.dispatch(EngineAction.GoForwardAction(
-                tabId
-            ))
+            store.dispatch(
+                EngineAction.GoForwardAction(
+                    tabId
+                )
+            )
         }
     }
 
@@ -220,10 +230,12 @@ class SessionUseCases(
                 return
             }
 
-            store.dispatch(EngineAction.GoToHistoryIndexAction(
-                tabId,
-                index
-            ))
+            store.dispatch(
+                EngineAction.GoToHistoryIndexAction(
+                    tabId,
+                    index
+                )
+            )
         }
     }
 
@@ -241,10 +253,12 @@ class SessionUseCases(
                 return
             }
 
-            store.dispatch(EngineAction.ToggleDesktopModeAction(
-                tabId,
-                enable
-            ))
+            store.dispatch(
+                EngineAction.ToggleDesktopModeAction(
+                    tabId,
+                    enable
+                )
+            )
         }
     }
 
@@ -261,9 +275,11 @@ class SessionUseCases(
                 return
             }
 
-            store.dispatch(EngineAction.ExitFullScreenModeAction(
-                tabId
-            ))
+            store.dispatch(
+                EngineAction.ExitFullScreenModeAction(
+                    tabId
+                )
+            )
         }
     }
 

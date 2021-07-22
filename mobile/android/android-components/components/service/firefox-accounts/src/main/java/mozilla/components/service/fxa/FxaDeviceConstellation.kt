@@ -10,24 +10,24 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.withContext
-import mozilla.appservices.fxaclient.PersistedFirefoxAccount as FirefoxAccount
-import mozilla.appservices.fxaclient.FxaErrorException as FxaException
-import mozilla.components.concept.sync.ConstellationState
-import mozilla.components.concept.sync.Device
-import mozilla.components.concept.sync.DeviceConstellation
-import mozilla.components.concept.sync.DeviceConstellationObserver
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.AccountEvent
 import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.AuthType
+import mozilla.components.concept.sync.ConstellationState
+import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceCommandOutgoing
 import mozilla.components.concept.sync.DeviceConfig
+import mozilla.components.concept.sync.DeviceConstellation
+import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.DevicePushSubscription
-import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.ServiceResult
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.sync.telemetry.SyncTelemetry
+import mozilla.appservices.fxaclient.FxaErrorException as FxaException
+import mozilla.appservices.fxaclient.PersistedFirefoxAccount as FirefoxAccount
 
 internal sealed class FxaDeviceConstellationException : Exception() {
     /**
@@ -143,7 +143,7 @@ class FxaDeviceConstellation(
     ) = withContext(scope.coroutineContext) {
         handleFxaExceptions(logger, "updating device push subscription") {
             account.setDevicePushSubscription(
-                    subscription.endpoint, subscription.publicKey, subscription.authKey
+                subscription.endpoint, subscription.publicKey, subscription.authKey
             )
         }
     }

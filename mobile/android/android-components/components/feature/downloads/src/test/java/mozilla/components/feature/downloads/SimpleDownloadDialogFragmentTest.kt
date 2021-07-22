@@ -24,8 +24,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.doNothing
-import org.robolectric.annotation.Config
 import org.mockito.Mockito.doReturn
+import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)

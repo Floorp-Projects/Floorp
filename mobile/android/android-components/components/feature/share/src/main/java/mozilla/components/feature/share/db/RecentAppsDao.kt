@@ -18,28 +18,34 @@ internal abstract class RecentAppsDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract fun insertRecentApps(recentApps: List<RecentAppEntity>)
 
-    @Query("""
+    @Query(
+        """
         DELETE FROM recent_apps_table
         WHERE activityName = :activityName
-    """)
+    """
+    )
     abstract fun deleteRecentApp(activityName: String)
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM recent_apps_table
         ORDER BY score DESC
         LIMIT :limit
-    """)
+    """
+    )
     abstract fun getRecentAppsUpTo(limit: Int): List<RecentAppEntity>
 
     /**
      * Increments the score of a recent app.
      * @param activityName - Name of the recent app to update.
      */
-    @Query("""
+    @Query(
+        """
         UPDATE recent_apps_table
         SET score = score + 1
         WHERE activityName = :activityName
-    """)
+    """
+    )
     abstract fun updateRecentAppScore(activityName: String)
 
     /**
@@ -47,11 +53,13 @@ internal abstract class RecentAppsDao {
      * @param exceptActivity - ID of recent app to leave alone
      * @param decay - Amount to decay by. Should be between 0 and 1.
      */
-    @Query("""
+    @Query(
+        """
         UPDATE recent_apps_table
         SET score = score * :decay
         WHERE activityName != :exceptActivity
-    """)
+    """
+    )
     abstract fun decayAllRecentApps(
         exceptActivity: String,
         decay: Double = DECAY_MULTIPLIER

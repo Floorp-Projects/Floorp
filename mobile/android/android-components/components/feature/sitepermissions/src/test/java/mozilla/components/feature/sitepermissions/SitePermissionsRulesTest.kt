@@ -13,11 +13,11 @@ import mozilla.components.concept.engine.permission.Permission.ContentGeoLocatio
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
 import mozilla.components.concept.engine.permission.Permission.Generic
-import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import mozilla.components.concept.engine.permission.SitePermissions.Status
+import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
@@ -143,27 +143,27 @@ class SitePermissionsRulesTest {
     @Test
     fun `toSitePermissions - converts a SitePermissionsRules to SitePermissions`() {
         val expectedSitePermission = SitePermissions(
-                origin = "origin",
-                camera = Status.NO_DECISION,
-                location = Status.BLOCKED,
-                localStorage = Status.BLOCKED,
-                notification = Status.NO_DECISION,
-                microphone = Status.BLOCKED,
-                autoplayInaudible = AutoplayStatus.ALLOWED,
-                autoplayAudible = AutoplayStatus.BLOCKED,
-                mediaKeySystemAccess = Status.BLOCKED,
-                savedAt = 1L
+            origin = "origin",
+            camera = Status.NO_DECISION,
+            location = Status.BLOCKED,
+            localStorage = Status.BLOCKED,
+            notification = Status.NO_DECISION,
+            microphone = Status.BLOCKED,
+            autoplayInaudible = AutoplayStatus.ALLOWED,
+            autoplayAudible = AutoplayStatus.BLOCKED,
+            mediaKeySystemAccess = Status.BLOCKED,
+            savedAt = 1L
         )
 
         val rules = SitePermissionsRules(
-                camera = ASK_TO_ALLOW,
-                location = BLOCKED,
-                notification = ASK_TO_ALLOW,
-                microphone = BLOCKED,
-                autoplayInaudible = AutoplayAction.ALLOWED,
-                autoplayAudible = AutoplayAction.BLOCKED,
-                persistentStorage = BLOCKED,
-                mediaKeySystemAccess = BLOCKED
+            camera = ASK_TO_ALLOW,
+            location = BLOCKED,
+            notification = ASK_TO_ALLOW,
+            microphone = BLOCKED,
+            autoplayInaudible = AutoplayAction.ALLOWED,
+            autoplayAudible = AutoplayAction.BLOCKED,
+            persistentStorage = BLOCKED,
+            mediaKeySystemAccess = BLOCKED
         )
 
         val convertedSitePermissions = rules.toSitePermissions(origin = "origin", savedAt = 1L)

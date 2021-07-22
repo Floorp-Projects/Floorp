@@ -77,10 +77,11 @@ class PublicSuffixList(
      */
     fun getPublicSuffixPlusOne(domain: String): Deferred<String?> = scope.async {
         when (val offset = data.getPublicSuffixOffset(domain)) {
-            is PublicSuffixOffset.Offset -> domain
-                .split('.')
-                .drop(offset.value)
-                .joinToString(separator = ".")
+            is PublicSuffixOffset.Offset ->
+                domain
+                    .split('.')
+                    .drop(offset.value)
+                    .joinToString(separator = ".")
             else -> null
         }
     }
@@ -101,10 +102,11 @@ class PublicSuffixList(
      */
     fun getPublicSuffix(domain: String) = scope.async {
         when (val offset = data.getPublicSuffixOffset(domain)) {
-            is PublicSuffixOffset.Offset -> domain
-                .split('.')
-                .drop(offset.value + 1)
-                .joinToString(separator = ".")
+            is PublicSuffixOffset.Offset ->
+                domain
+                    .split('.')
+                    .drop(offset.value + 1)
+                    .joinToString(separator = ".")
             else -> null
         }
     }
@@ -125,10 +127,11 @@ class PublicSuffixList(
      */
     fun stripPublicSuffix(domain: String) = scope.async {
         when (val offset = data.getPublicSuffixOffset(domain)) {
-            is PublicSuffixOffset.Offset -> domain
-                .split('.')
-                .joinToString(separator = ".", limit = offset.value + 1, truncated = "")
-                .dropLast(1)
+            is PublicSuffixOffset.Offset ->
+                domain
+                    .split('.')
+                    .joinToString(separator = ".", limit = offset.value + 1, truncated = "")
+                    .dropLast(1)
             else -> domain
         }
     }

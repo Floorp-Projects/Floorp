@@ -97,11 +97,11 @@ class LoginFragment : Fragment() {
         const val REDIRECT_URL = "redirectUrl"
 
         fun create(authUrl: String, redirectUrl: String): LoginFragment =
-                LoginFragment().apply {
-                    arguments = Bundle().apply {
-                        putString(AUTH_URL, authUrl)
-                        putString(REDIRECT_URL, redirectUrl)
-                    }
+            LoginFragment().apply {
+                arguments = Bundle().apply {
+                    putString(AUTH_URL, authUrl)
+                    putString(REDIRECT_URL, redirectUrl)
                 }
+            }
     }
 }

@@ -5,8 +5,8 @@
 package mozilla.components.feature.awesomebar.provider
 
 import android.graphics.Bitmap
-import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.awesomebar.facts.emitSearchActionClickedFact
@@ -35,19 +35,21 @@ class SearchActionProvider(
         val searchEngine = searchEngine ?: store.state.search.selectedOrDefaultSearchEngine
             ?: return emptyList()
 
-        return listOf(AwesomeBar.Suggestion(
-            provider = this,
-            // We always use the same ID for the entered text so that this suggestion gets replaced "in place".
-            id = FIXED_ID,
-            title = text,
-            description = if (showDescription) searchEngine.name else null,
-            icon = icon ?: searchEngine.icon,
-            score = Int.MAX_VALUE - 1,
-            onSuggestionClicked = {
-                searchUseCase.invoke(text)
-                emitSearchActionClickedFact()
-            }
-        ))
+        return listOf(
+            AwesomeBar.Suggestion(
+                provider = this,
+                // We always use the same ID for the entered text so that this suggestion gets replaced "in place".
+                id = FIXED_ID,
+                title = text,
+                description = if (showDescription) searchEngine.name else null,
+                icon = icon ?: searchEngine.icon,
+                score = Int.MAX_VALUE - 1,
+                onSuggestionClicked = {
+                    searchUseCase.invoke(text)
+                    emitSearchActionClickedFact()
+                }
+            )
+        )
     }
 
     override val shouldClearSuggestions: Boolean = false

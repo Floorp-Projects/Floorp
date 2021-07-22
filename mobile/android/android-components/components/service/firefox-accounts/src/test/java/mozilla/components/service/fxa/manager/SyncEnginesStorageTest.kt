@@ -37,7 +37,8 @@ class SyncEnginesStorageTest {
                 SyncEngine.Bookmarks to false,
                 SyncEngine.Passwords to false,
                 SyncEngine.Other("test") to true
-            ), store.getStatus()
+            ),
+            store.getStatus()
         )
 
         store.clear()

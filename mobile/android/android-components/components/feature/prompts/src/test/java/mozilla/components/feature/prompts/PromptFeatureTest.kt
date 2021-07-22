@@ -129,7 +129,8 @@ class PromptFeatureTest {
                 fragment = mock(),
                 store = store,
                 fragmentManager = fragmentManager
-            ) { })
+            ) { }
+        )
         feature.start()
 
         val promptRequest = SingleChoice(arrayOf()) {}
@@ -600,7 +601,8 @@ class PromptFeatureTest {
             "message",
             "input",
             false,
-            { onDismissWasCalled = true }) { _, _ ->
+            { onDismissWasCalled = true }
+        ) { _, _ ->
             onConfirmWasCalled = true
         }
 
@@ -630,7 +632,8 @@ class PromptFeatureTest {
             "message",
             "value",
             false,
-            { onDismissWasCalled = true }) { _, _ -> }
+            { onDismissWasCalled = true }
+        ) { _, _ -> }
 
         feature.start()
 
@@ -664,7 +667,8 @@ class PromptFeatureTest {
                 null,
                 null,
                 type,
-                { date -> selectedDate = date }) {
+                { date -> selectedDate = date }
+            ) {
                 onClearWasCalled = true
             }
 
@@ -868,7 +872,8 @@ class PromptFeatureTest {
         val loginPickerRequest = PromptRequest.SelectLoginPrompt(
             listOf(login, login2),
             onConfirm = { confirmedLogin = it },
-            onDismiss = { onDismissWasCalled = true })
+            onDismiss = { onDismissWasCalled = true }
+        )
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, loginPickerRequest))
             .joinBlocking()
@@ -1049,7 +1054,8 @@ class PromptFeatureTest {
             "#e66465",
             {
                 onConfirmWasCalled = true
-            }) {
+            }
+        ) {
             onDismissWasCalled = true
         }
 
@@ -1108,9 +1114,12 @@ class PromptFeatureTest {
             PromptFeature(fragment = fragment, store = store, fragmentManager = fragmentManager) { }
         var onCancelWasCalled = false
 
-        val promptRequest = PromptRequest.Popup("http://www.popuptest.com/", onAllow = { }, onDeny = {
-            onCancelWasCalled = true
-        })
+        val promptRequest = PromptRequest.Popup(
+            "http://www.popuptest.com/", onAllow = { },
+            onDeny = {
+                onCancelWasCalled = true
+            }
+        )
 
         feature.start()
 
@@ -1298,7 +1307,8 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = Robolectric.setupActivity(Activity::class.java),
             store = store,
-            fragmentManager = fragmentManager) { }
+            fragmentManager = fragmentManager
+        ) { }
 
         var onDenyCalled = false
         val onDeny = { onDenyCalled = true }
@@ -1557,7 +1567,8 @@ class PromptFeatureTest {
                 store = store,
                 fragmentManager = fragmentManager,
                 shareDelegate = mock()
-            ) { })
+            ) { }
+        )
         feature.start()
 
         val shareRequest = PromptRequest.Share(
@@ -1579,7 +1590,8 @@ class PromptFeatureTest {
                 TabSessionState(
                     id = secondTabId,
                     content = ContentState(url = "mozilla.org")
-                ), select = true
+                ),
+                select = true
             )
         ).joinBlocking()
 
@@ -1594,7 +1606,8 @@ class PromptFeatureTest {
                 store = store,
                 fragmentManager = fragmentManager,
                 shareDelegate = mock()
-            ) { })
+            ) { }
+        )
         feature.start()
 
         val shareRequest = PromptRequest.Share(
@@ -1625,7 +1638,8 @@ class PromptFeatureTest {
                 store = store,
                 fragmentManager = fragmentManager,
                 shareDelegate = mock()
-            ) { })
+            ) { }
+        )
         feature.start()
 
         val shareRequest = PromptRequest.Share(
@@ -1689,7 +1703,8 @@ class PromptFeatureTest {
                 store = store,
                 fragmentManager = fragmentManager,
                 shareDelegate = mock()
-            ) { })
+            ) { }
+        )
         feature.start()
 
         val shareRequest = PromptRequest.Share(
@@ -1730,7 +1745,8 @@ class PromptFeatureTest {
                 store = store,
                 fragmentManager = fragmentManager,
                 shareDelegate = mock()
-            ) { })
+            ) { }
+        )
         feature.start()
 
         val promptRequest = PromptRequest.Confirm(
@@ -1771,10 +1787,14 @@ class PromptFeatureTest {
         val dialog: ConfirmDialogFragment = feature.activePrompt!!.get() as ConfirmDialogFragment
         assertEquals(testContext.getString(R.string.mozac_feature_prompt_repost_title), dialog.title)
         assertEquals(testContext.getString(R.string.mozac_feature_prompt_repost_message), dialog.message)
-        assertEquals(testContext.getString(R.string.mozac_feature_prompt_repost_positive_button_text),
-            dialog.positiveButtonText)
-        assertEquals(testContext.getString(R.string.mozac_feature_prompt_repost_negative_button_text),
-            dialog.negativeButtonText)
+        assertEquals(
+            testContext.getString(R.string.mozac_feature_prompt_repost_positive_button_text),
+            dialog.positiveButtonText
+        )
+        assertEquals(
+            testContext.getString(R.string.mozac_feature_prompt_repost_negative_button_text),
+            dialog.negativeButtonText
+        )
     }
 
     @Test

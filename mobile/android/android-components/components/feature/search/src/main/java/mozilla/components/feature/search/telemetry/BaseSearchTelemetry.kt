@@ -51,7 +51,8 @@ abstract class BaseSearchTelemetry {
             },
             onError = { _, throwable ->
                 Logger.error("Could not install ${extensionInfo.id} extension", throwable)
-            })
+            }
+        )
     }
 
     protected fun emitFact(

@@ -33,7 +33,8 @@ internal object SearchEngineMigration {
         if (fennecSearchEngine == null) {
             logger.debug("Could not locate Fennec search engine preference")
             return Result.Failure(
-                SearchEngineMigrationException(SearchEngineMigrationResult.Failure.NoDefault))
+                SearchEngineMigrationException(SearchEngineMigrationResult.Failure.NoDefault)
+            )
         }
 
         logger.debug("Found search engine from Fennec: $fennecSearchEngine")
@@ -59,18 +60,22 @@ internal object SearchEngineMigration {
             if (engine.name.contains(name, ignoreCase = true)) {
                 logger.debug("Setting new default: ${engine.name}")
 
-                store.dispatch(SearchAction.SelectSearchEngineAction(
-                    engine.id, engine.name
-                ))
+                store.dispatch(
+                    SearchAction.SelectSearchEngineAction(
+                        engine.id, engine.name
+                    )
+                )
 
                 return Result.Success(SearchEngineMigrationResult.Success.SearchEngineMigrated)
             }
         }
 
         logger.debug("Could not find matching search engine")
-        return Result.Failure(SearchEngineMigrationException(
-            SearchEngineMigrationResult.Failure.NoMatch
-        ))
+        return Result.Failure(
+            SearchEngineMigrationException(
+                SearchEngineMigrationResult.Failure.NoMatch
+            )
+        )
     }
 
     private fun retrieveFennecDefaultSearchEngineName(context: Context): String? {

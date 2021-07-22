@@ -6,8 +6,8 @@ package mozilla.components.feature.accounts.push
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.AccountEvent
+import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceCommandIncoming
 import mozilla.components.concept.sync.TabData

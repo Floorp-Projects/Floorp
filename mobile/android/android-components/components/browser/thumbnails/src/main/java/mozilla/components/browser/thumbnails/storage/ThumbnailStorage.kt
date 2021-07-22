@@ -16,11 +16,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.browser.thumbnails.R
 import mozilla.components.browser.thumbnails.utils.ThumbnailDiskCache
-import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.images.DesiredSize
 import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.concept.base.images.ImageSaveRequest
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.utils.NamedThreadFactory
+import mozilla.components.support.images.DesiredSize
 import mozilla.components.support.images.decoder.AndroidImageDecoder
 import java.util.concurrent.Executors
 

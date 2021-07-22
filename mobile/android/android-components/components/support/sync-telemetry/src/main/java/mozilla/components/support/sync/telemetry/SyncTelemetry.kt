@@ -18,9 +18,9 @@ import mozilla.components.support.sync.telemetry.GleanMetrics.CreditcardsSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.FxaTab
 import mozilla.components.support.sync.telemetry.GleanMetrics.HistorySync
 import mozilla.components.support.sync.telemetry.GleanMetrics.LoginsSync
-import mozilla.components.support.sync.telemetry.GleanMetrics.TabsSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.Pings
 import mozilla.components.support.sync.telemetry.GleanMetrics.Sync
+import mozilla.components.support.sync.telemetry.GleanMetrics.TabsSync
 import org.json.JSONException
 import org.json.JSONObject
 

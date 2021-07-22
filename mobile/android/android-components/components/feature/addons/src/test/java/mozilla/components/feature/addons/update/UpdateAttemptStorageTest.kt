@@ -30,9 +30,11 @@ class UpdateAttemptStorageTest {
     @Before
     fun setup() {
         mockDAO = mock()
-        storage = spy(UpdateAttemptStorage(mock()).apply {
-            databaseInitializer = { mockDatabase(mockDAO) }
-        })
+        storage = spy(
+            UpdateAttemptStorage(mock()).apply {
+                databaseInitializer = { mockDatabase(mockDAO) }
+            }
+        )
     }
 
     @Test

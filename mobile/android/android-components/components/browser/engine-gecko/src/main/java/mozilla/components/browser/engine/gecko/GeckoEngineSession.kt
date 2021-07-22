@@ -678,7 +678,8 @@ class GeckoEngineSession(
             // - non-top level visits (i.e. iframes).
             if (privateMode ||
                 (flags and GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL) == 0 ||
-                (flags and GeckoSession.HistoryDelegate.VISIT_UNRECOVERABLE_ERROR) != 0) {
+                (flags and GeckoSession.HistoryDelegate.VISIT_UNRECOVERABLE_ERROR) != 0
+            ) {
                 return GeckoResult.fromValue(false)
             }
 
@@ -824,12 +825,12 @@ class GeckoEngineSession(
 
                 notifyObservers {
                     onExternalResource(
-                            url = url,
-                            contentLength = contentLength,
-                            contentType = DownloadUtils.sanitizeMimeType(contentType),
-                            fileName = fileName.sanitizeFileName(),
-                            response = response,
-                            isPrivate = privateMode
+                        url = url,
+                        contentLength = contentLength,
+                        contentType = DownloadUtils.sanitizeMimeType(contentType),
+                        fileName = fileName.sanitizeFileName(),
+                        response = response,
+                        isPrivate = privateMode
                     )
                 }
             }
@@ -837,7 +838,8 @@ class GeckoEngineSession(
 
         override fun onCloseRequest(session: GeckoSession) {
             notifyObservers {
-                onWindowRequest(GeckoWindowRequest(
+                onWindowRequest(
+                    GeckoWindowRequest(
                         engineSession = this@GeckoEngineSession,
                         type = WindowRequest.Type.CLOSE
                     )
@@ -991,10 +993,11 @@ class GeckoEngineSession(
             callback: GeckoSession.PermissionDelegate.MediaCallback
         ) {
             val request = GeckoPermissionRequest.Media(
-                    uri,
-                    video?.toList() ?: emptyList(),
-                    audio?.toList() ?: emptyList(),
-                    callback)
+                uri,
+                video?.toList() ?: emptyList(),
+                audio?.toList() ?: emptyList(),
+                callback
+            )
             notifyObservers { onContentPermissionRequest(request) }
         }
 
@@ -1004,8 +1007,9 @@ class GeckoEngineSession(
             callback: GeckoSession.PermissionDelegate.Callback
         ) {
             val request = GeckoPermissionRequest.App(
-                    permissions?.toList() ?: emptyList(),
-                    callback)
+                permissions?.toList() ?: emptyList(),
+                callback
+            )
             notifyObservers { onAppPermissionRequest(request) }
         }
     }

@@ -72,7 +72,7 @@ class SessionSuggestionProvider(
     }
 
     private fun TabSessionState.contains(text: String) =
-            (content.url.contains(text, ignoreCase = true) || content.title.contains(text, ignoreCase = true))
+        (content.url.contains(text, ignoreCase = true) || content.title.contains(text, ignoreCase = true))
 
     private fun shouldIncludeSelectedTab(state: BrowserState, tab: TabSessionState): Boolean {
         return if (excludeSelectedSession) {

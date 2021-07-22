@@ -42,9 +42,13 @@ private const val KEY_SELECTION_TYPE = "KEY_SELECTION_TYPE"
 /**
  * [DialogFragment][androidx.fragment.app.DialogFragment] implementation to display date picker with a native dialog.
  */
-internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnDateChangedListener,
-    TimePicker.OnTimeChangedListener, TimePickerDialog.OnTimeSetListener,
-    DatePickerDialog.OnDateSetListener, DialogInterface.OnClickListener,
+internal class TimePickerDialogFragment :
+    PromptDialogFragment(),
+    DatePicker.OnDateChangedListener,
+    TimePicker.OnTimeChangedListener,
+    TimePickerDialog.OnTimeSetListener,
+    DatePickerDialog.OnDateSetListener,
+    DialogInterface.OnClickListener,
     MonthAndYearPicker.OnDateSetListener {
     private val initialDate: Date by lazy { safeArguments.getSerializable(KEY_INITIAL_DATE) as Date }
     private val minimumDate: Date? by lazy { safeArguments.getSerializable((KEY_MIN_DATE)) as? Date }

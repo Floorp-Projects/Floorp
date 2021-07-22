@@ -273,7 +273,8 @@ class AddonsManagerAdapter(
                     val att = context.theme.resolveAttribute(android.R.attr.textColorPrimary)
                     iconView.setColorFilter(ContextCompat.getColor(context, att))
                     iconView.setImageDrawable(
-                        ContextCompat.getDrawable(context, R.drawable.mozac_ic_extensions))
+                        ContextCompat.getDrawable(context, R.drawable.mozac_ic_extensions)
+                    )
                 }
                 logger.error("Attempt to fetch the ${addon.id} icon failed", e)
             }

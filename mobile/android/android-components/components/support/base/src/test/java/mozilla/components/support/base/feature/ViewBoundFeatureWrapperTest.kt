@@ -49,11 +49,13 @@ class ViewBoundFeatureWrapperTest {
         assertTrue(wrapper.onBackPressed())
         assertTrue(feature.onBackPressedInvoked)
 
-        assertFalse(ViewBoundFeatureWrapper(
-            feature = MockFeatureWithUserInteractionHandler(onBackPressed = false),
-            owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
-            view = mock()
-        ).onBackPressed())
+        assertFalse(
+            ViewBoundFeatureWrapper(
+                feature = MockFeatureWithUserInteractionHandler(onBackPressed = false),
+                owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
+                view = mock()
+            ).onBackPressed()
+        )
     }
 
     @Test
@@ -75,11 +77,13 @@ class ViewBoundFeatureWrapperTest {
         assertTrue(wrapper.onActivityResult(1, null, RESULT_OK))
         assertTrue(feature.onActivityResultHandled)
 
-        assertFalse(ViewBoundFeatureWrapper(
-            feature = MockFeatureWithActivityResultHandler(onActivityResult = false),
-            owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
-            view = mock()
-        ).onActivityResult(0, mock(), RESULT_OK))
+        assertFalse(
+            ViewBoundFeatureWrapper(
+                feature = MockFeatureWithActivityResultHandler(onActivityResult = false),
+                owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
+                view = mock()
+            ).onActivityResult(0, mock(), RESULT_OK)
+        )
     }
 
     @Test
@@ -95,7 +99,8 @@ class ViewBoundFeatureWrapperTest {
         wrapper.set(
             feature = feature,
             owner = owner,
-            view = view)
+            view = view
+        )
 
         verify(lifecycle).addObserver(any())
         verify(view).addOnAttachStateChangeListener(any())
@@ -114,7 +119,8 @@ class ViewBoundFeatureWrapperTest {
         wrapper.set(
             feature = feature,
             owner = owner,
-            view = view)
+            view = view
+        )
 
         verify(feature, never()).start()
         assertFalse(feature.started)
@@ -138,7 +144,8 @@ class ViewBoundFeatureWrapperTest {
         wrapper.set(
             feature = feature,
             owner = owner,
-            view = view)
+            view = view
+        )
 
         verify(feature, never()).stop()
         assertFalse(feature.started)
@@ -162,7 +169,8 @@ class ViewBoundFeatureWrapperTest {
         wrapper.set(
             feature = MockFeature(),
             owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
-            view = view)
+            view = view
+        )
 
         verify(wrapper, never()).clear()
 
@@ -182,7 +190,8 @@ class ViewBoundFeatureWrapperTest {
         wrapper.set(
             feature = feature,
             owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
-            view = mock())
+            view = mock()
+        )
 
         assertEquals(feature, wrapper.get())
 
@@ -193,53 +202,61 @@ class ViewBoundFeatureWrapperTest {
 
     @Test
     fun `WithFeature block is executed if feature reference is set`() {
-        assertTrue(run {
-            var blockExecuted = false
+        assertTrue(
+            run {
+                var blockExecuted = false
 
-            val wrapper = ViewBoundFeatureWrapper<MockFeature>()
-            wrapper.withFeature {
-                blockExecuted = true
+                val wrapper = ViewBoundFeatureWrapper<MockFeature>()
+                wrapper.withFeature {
+                    blockExecuted = true
+                }
+
+                assertFalse(blockExecuted)
+                true
             }
+        )
 
-            assertFalse(blockExecuted)
-            true
-        })
+        assertTrue(
+            run {
+                var blockExecuted = false
 
-        assertTrue(run {
-            var blockExecuted = false
+                val wrapper = ViewBoundFeatureWrapper<MockFeature>()
+                wrapper.set(
+                    feature = MockFeature(),
+                    owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
+                    view = mock()
+                )
 
-            val wrapper = ViewBoundFeatureWrapper<MockFeature>()
-            wrapper.set(
-                feature = MockFeature(),
-                owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
-                view = mock())
+                wrapper.withFeature {
+                    blockExecuted = true
+                }
 
-            wrapper.withFeature {
-                blockExecuted = true
+                assertTrue(blockExecuted)
+                true
             }
+        )
 
-            assertTrue(blockExecuted)
-            true
-        })
+        assertTrue(
+            run {
+                var blockExecuted = false
 
-        assertTrue(run {
-            var blockExecuted = false
+                val wrapper = ViewBoundFeatureWrapper<MockFeature>()
+                wrapper.set(
+                    feature = MockFeature(),
+                    owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
+                    view = mock()
+                )
 
-            val wrapper = ViewBoundFeatureWrapper<MockFeature>()
-            wrapper.set(
-                feature = MockFeature(),
-                owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
-                view = mock())
+                wrapper.clear()
 
-            wrapper.clear()
+                wrapper.withFeature {
+                    blockExecuted = true
+                }
 
-            wrapper.withFeature {
-                blockExecuted = true
+                assertFalse(blockExecuted)
+                true
             }
-
-            assertFalse(blockExecuted)
-            true
-        })
+        )
     }
 
     @Test
@@ -255,7 +272,8 @@ class ViewBoundFeatureWrapperTest {
         wrapper.set(
             feature = feature,
             owner = owner,
-            view = view)
+            view = view
+        )
 
         verify(lifecycle, never()).removeObserver(any())
         verify(view, never()).removeOnAttachStateChangeListener(any())
@@ -278,7 +296,8 @@ class ViewBoundFeatureWrapperTest {
         wrapper.set(
             feature = feature,
             owner = owner,
-            view = mock())
+            view = mock()
+        )
 
         lifecycle.observer!!.start()
 
@@ -301,7 +320,8 @@ class ViewBoundFeatureWrapperTest {
         wrapper.set(
             feature = feature,
             owner = owner,
-            view = mock())
+            view = mock()
+        )
 
         lifecycle.observer!!.start()
         lifecycle.observer!!.stop()
@@ -384,7 +404,8 @@ class ViewBoundFeatureWrapperTest {
         wrapper.set(
             feature = feature,
             owner = owner,
-            view = view)
+            view = view
+        )
 
         verify(wrapper, never()).clear()
 

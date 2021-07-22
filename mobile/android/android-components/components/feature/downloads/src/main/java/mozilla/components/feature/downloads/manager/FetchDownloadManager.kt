@@ -17,8 +17,8 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.P
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import mozilla.components.browser.state.action.DownloadAction
-import mozilla.components.browser.state.state.content.DownloadState.Status
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.content.DownloadState.Status
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD_STATUS

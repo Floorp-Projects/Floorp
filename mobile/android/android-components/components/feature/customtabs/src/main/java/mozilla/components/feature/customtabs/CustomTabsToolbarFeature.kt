@@ -190,7 +190,8 @@ class CustomTabsToolbarFeature(
                 config.icon,
                 ACTION_BUTTON_DRAWABLE_WIDTH_DP.dpToPx(context.resources.displayMetrics),
                 ACTION_BUTTON_DRAWABLE_HEIGHT_DP.dpToPx(context.resources.displayMetrics),
-                true)
+                true
+            )
                 .toDrawable(context.resources)
             if (config.tint || forceActionButtonTinting) {
                 drawableIcon.setTint(readableColor)

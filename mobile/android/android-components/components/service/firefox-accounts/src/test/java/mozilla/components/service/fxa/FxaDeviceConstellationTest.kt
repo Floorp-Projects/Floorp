@@ -12,10 +12,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
-import mozilla.appservices.fxaclient.FxaErrorException as FxaException
 import mozilla.appservices.fxaclient.IncomingDeviceCommand
-import mozilla.appservices.fxaclient.TabHistoryEntry
 import mozilla.appservices.fxaclient.SendTabPayload
+import mozilla.appservices.fxaclient.TabHistoryEntry
 import mozilla.appservices.syncmanager.DeviceSettings
 import mozilla.components.concept.sync.AccountEvent
 import mozilla.components.concept.sync.AccountEventsObserver
@@ -53,8 +52,9 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import mozilla.appservices.fxaclient.AccountEvent as ASAccountEvent
 import mozilla.appservices.fxaclient.Device as NativeDevice
-import mozilla.appservices.fxaclient.DeviceType as NativeDeviceType
 import mozilla.appservices.fxaclient.DevicePushSubscription as NativeDevicePushSubscription
+import mozilla.appservices.fxaclient.DeviceType as NativeDeviceType
+import mozilla.appservices.fxaclient.FxaErrorException as FxaException
 import mozilla.appservices.fxaclient.PersistedFirefoxAccount as NativeFirefoxAccount
 import mozilla.appservices.syncmanager.DeviceType as RustDeviceType
 
@@ -189,11 +189,13 @@ class FxaDeviceConstellationTest {
         // Some commands, with an observer. More detailed command handling tests below.
         val testDevice1 = testDevice("test1", false)
         val testTab1 = TabHistoryEntry("Hello", "http://world.com/1")
-        `when`(account.handlePushMessage("raw events payload")).thenReturn(arrayOf(
-            ASAccountEvent.CommandReceived(
-                command = IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab1), "flowid", "streamid"))
+        `when`(account.handlePushMessage("raw events payload")).thenReturn(
+            arrayOf(
+                ASAccountEvent.CommandReceived(
+                    command = IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab1), "flowid", "streamid"))
+                )
             )
-        ))
+        )
         assertTrue(constellation.processRawEvent("raw events payload"))
 
         val events = eventsObserver.latestEvents!!
@@ -205,9 +207,11 @@ class FxaDeviceConstellationTest {
     @Test
     fun `send command to device`() = runBlocking(coroutinesTestRule.testDispatcher) {
         `when`(account.gatherTelemetry()).thenReturn("{}")
-        assertTrue(constellation.sendCommandToDevice(
-            "targetID", DeviceCommandOutgoing.SendTab("Mozilla", "https://www.mozilla.org")
-        ))
+        assertTrue(
+            constellation.sendCommandToDevice(
+                "targetID", DeviceCommandOutgoing.SendTab("Mozilla", "https://www.mozilla.org")
+            )
+        )
 
         verify(account).sendSingleTab("targetID", "Mozilla", "https://www.mozilla.org")
     }
@@ -280,9 +284,11 @@ class FxaDeviceConstellationTest {
         assertEquals(ConstellationState(currentDevice.into(), listOf()), constellation.state())
 
         // Current device with other devices.
-        `when`(account.getDevices()).thenReturn(arrayOf(
-            currentDevice, testDevice1, testDevice2
-        ))
+        `when`(account.getDevices()).thenReturn(
+            arrayOf(
+                currentDevice, testDevice1, testDevice2
+            )
+        )
         constellation.refreshDevices()
 
         assertEquals(ConstellationState(currentDevice.into(), listOf(testDevice1.into(), testDevice2.into())), observer.state)
@@ -290,9 +296,11 @@ class FxaDeviceConstellationTest {
 
         // Current device with expired subscription.
         val currentDeviceExpired = testDevice("currentExpired", true, expired = true)
-        `when`(account.getDevices()).thenReturn(arrayOf(
-            currentDeviceExpired, testDevice2
-        ))
+        `when`(account.getDevices()).thenReturn(
+            arrayOf(
+                currentDeviceExpired, testDevice2
+            )
+        )
 
         `when`(account.pollDeviceCommands()).thenReturn(emptyArray())
         `when`(account.gatherTelemetry()).thenReturn("{}")
@@ -307,9 +315,11 @@ class FxaDeviceConstellationTest {
         // Current device with no subscription.
         val currentDeviceNoSub = testDevice("currentNoSub", true, expired = false, subscribed = false)
 
-        `when`(account.getDevices()).thenReturn(arrayOf(
-            currentDeviceNoSub, testDevice2
-        ))
+        `when`(account.getDevices()).thenReturn(
+            arrayOf(
+                currentDeviceNoSub, testDevice2
+            )
+        )
 
         `when`(account.pollDeviceCommands()).thenReturn(emptyArray())
         `when`(account.gatherTelemetry()).thenReturn("{}")
@@ -342,9 +352,11 @@ class FxaDeviceConstellationTest {
         assertEquals(listOf<AccountEvent>(), eventsObserver.latestEvents)
 
         // Some commands.
-        `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            IncomingDeviceCommand.TabReceived(null, SendTabPayload(emptyList(), "", ""))
-        ))
+        `when`(account.pollDeviceCommands()).thenReturn(
+            arrayOf(
+                IncomingDeviceCommand.TabReceived(null, SendTabPayload(emptyList(), "", ""))
+            )
+        )
         assertTrue(constellation.pollForCommands())
 
         var command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command
@@ -358,9 +370,11 @@ class FxaDeviceConstellationTest {
         val testTab3 = TabHistoryEntry("Hello", "http://world.com/3")
 
         // Zero tabs from a single device.
-        `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(emptyList(), "", ""))
-        ))
+        `when`(account.pollDeviceCommands()).thenReturn(
+            arrayOf(
+                IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(emptyList(), "", ""))
+            )
+        )
         assertTrue(constellation.pollForCommands())
 
         Assert.assertNotNull(eventsObserver.latestEvents)
@@ -370,9 +384,11 @@ class FxaDeviceConstellationTest {
         assertEquals(listOf<TabData>(), command.entries)
 
         // Single tab from a single device.
-        `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1), "", ""))
-        ))
+        `when`(account.pollDeviceCommands()).thenReturn(
+            arrayOf(
+                IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1), "", ""))
+            )
+        )
         assertTrue(constellation.pollForCommands())
 
         command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command
@@ -380,9 +396,11 @@ class FxaDeviceConstellationTest {
         assertEquals(listOf(testTab1.into()), command.entries)
 
         // Multiple tabs from a single device.
-        `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1, testTab3), "", ""))
-        ))
+        `when`(account.pollDeviceCommands()).thenReturn(
+            arrayOf(
+                IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1, testTab3), "", ""))
+            )
+        )
         assertTrue(constellation.pollForCommands())
 
         command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command
@@ -390,10 +408,12 @@ class FxaDeviceConstellationTest {
         assertEquals(listOf(testTab1.into(), testTab3.into()), command.entries)
 
         // Multiple tabs received from multiple devices.
-        `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1, testTab2), "", "")),
-            IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab3), "", ""))
-        ))
+        `when`(account.pollDeviceCommands()).thenReturn(
+            arrayOf(
+                IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1, testTab2), "", "")),
+                IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab3), "", ""))
+            )
+        )
         assertTrue(constellation.pollForCommands())
 
         command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command

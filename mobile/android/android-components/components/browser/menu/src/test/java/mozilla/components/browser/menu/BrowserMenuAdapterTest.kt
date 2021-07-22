@@ -34,7 +34,8 @@ class BrowserMenuAdapterTest {
             createMenuItem(2, { true }),
             createMenuItem(3, { false }),
             createMenuItem(4, { false }),
-            createMenuItem(5, { true }))
+            createMenuItem(5, { true })
+        )
 
         val adapter = BrowserMenuAdapter(testContext, items)
 
@@ -52,8 +53,9 @@ class BrowserMenuAdapterTest {
     @Test
     fun `layout resource ID is used as view type`() {
         val items = listOf(
-                createMenuItem(23),
-                createMenuItem(42))
+            createMenuItem(23),
+            createMenuItem(42)
+        )
 
         val adapter = BrowserMenuAdapter(testContext, items)
 
@@ -115,10 +117,11 @@ class BrowserMenuAdapterTest {
     @Test
     fun `total interactive item count is given provided adapter`() {
         val items = listOf(
-                createMenuItem(1, { true }, { 1 }),
-                createMenuItem(2, { true }, { 0 }),
-                createMenuItem(3, { false }, { 10 }),
-                createMenuItem(4, { true }, { 5 }))
+            createMenuItem(1, { true }, { 1 }),
+            createMenuItem(2, { true }, { 0 }),
+            createMenuItem(3, { false }, { 10 }),
+            createMenuItem(4, { true }, { 5 })
+        )
 
         val adapter = BrowserMenuAdapter(testContext, items)
 

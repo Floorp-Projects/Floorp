@@ -19,9 +19,9 @@ import org.mozilla.experiments.nimbus.NimbusDelegate
 import org.mozilla.experiments.nimbus.NimbusDeviceInfo
 import org.mozilla.experiments.nimbus.NimbusInterface
 import org.mozilla.experiments.nimbus.NimbusServerSettings
-import org.mozilla.experiments.nimbus.Nimbus as ApplicationServicesNimbus
 import java.util.Locale
 import java.util.concurrent.Executors
+import org.mozilla.experiments.nimbus.Nimbus as ApplicationServicesNimbus
 
 private val logger = Logger("service/Nimbus")
 
@@ -61,16 +61,22 @@ class Nimbus(
     ),
     observer = Observer(observable),
     delegate = NimbusDelegate(
-        dbScope = CoroutineScope(Executors.newSingleThreadExecutor(
-            NamedThreadFactory("NimbusDbScope")
-        ).asCoroutineDispatcher()),
-        fetchScope = CoroutineScope(Executors.newSingleThreadExecutor(
-            NamedThreadFactory("NimbusFetchScope")
-        ).asCoroutineDispatcher()),
+        dbScope = CoroutineScope(
+            Executors.newSingleThreadExecutor(
+                NamedThreadFactory("NimbusDbScope")
+            ).asCoroutineDispatcher()
+        ),
+        fetchScope = CoroutineScope(
+            Executors.newSingleThreadExecutor(
+                NamedThreadFactory("NimbusFetchScope")
+            ).asCoroutineDispatcher()
+        ),
         errorReporter = errorReporter,
         logger = { logger.info(it) }
     )
-), NimbusApi, Observable<NimbusInterface.Observer> by observable {
+),
+    NimbusApi,
+    Observable<NimbusInterface.Observer> by observable {
     private class Observer(val observable: Observable<NimbusInterface.Observer>) : NimbusInterface.Observer {
         override fun onExperimentsFetched() {
             observable.notifyObservers { onExperimentsFetched() }

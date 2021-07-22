@@ -233,9 +233,11 @@ private suspend fun loadSearchEnginesFromList(
     val deferredSearchEngines = mutableListOf<Deferred<SearchEngine?>>()
 
     searchEngineIdentifiers.forEach { identifier ->
-        deferredSearchEngines.add(GlobalScope.async(coroutineContext) {
-            loadSearchEngine(assets, reader, identifier)
-        })
+        deferredSearchEngines.add(
+            GlobalScope.async(coroutineContext) {
+                loadSearchEngine(assets, reader, identifier)
+            }
+        )
     }
 
     return deferredSearchEngines.mapNotNull { it.await() }

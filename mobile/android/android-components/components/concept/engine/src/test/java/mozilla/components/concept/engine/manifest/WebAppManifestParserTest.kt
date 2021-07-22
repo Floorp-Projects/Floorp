@@ -148,8 +148,11 @@ class WebAppManifestParserTest {
         assertEquals("/", manifest.startUrl)
         assertEquals(WebAppManifest.DisplayMode.STANDALONE, manifest.display)
         assertEquals(Color.WHITE, manifest.backgroundColor)
-        assertEquals("It's what's happening. From breaking news and entertainment, sports and politics, " +
-            "to big events and everyday interests.", manifest.description)
+        assertEquals(
+            "It's what's happening. From breaking news and entertainment, sports and politics, " +
+                "to big events and everyday interests.",
+            manifest.description
+        )
         assertEquals(WebAppManifest.TextDirection.AUTO, manifest.dir)
         assertNull(manifest.lang)
         assertEquals(WebAppManifest.Orientation.ANY, manifest.orientation)
@@ -404,9 +407,12 @@ class WebAppManifestParserTest {
     @Test
     fun `Ignore missing share target action`() {
         val json = loadManifest("minimal.json").apply {
-            put("share_target", JSONObject().apply {
-                put("method", "POST")
-            })
+            put(
+                "share_target",
+                JSONObject().apply {
+                    put("method", "POST")
+                }
+            )
         }
         val result = WebAppManifestParser().parse(json)
 
@@ -417,10 +423,13 @@ class WebAppManifestParserTest {
     @Test
     fun `Ignore invalid share target method`() {
         val json = loadManifest("minimal.json").apply {
-            put("share_target", JSONObject().apply {
-                put("action", "https://mozilla.com/target")
-                put("method", "PATCH")
-            })
+            put(
+                "share_target",
+                JSONObject().apply {
+                    put("action", "https://mozilla.com/target")
+                    put("method", "PATCH")
+                }
+            )
         }
         val result = WebAppManifestParser().parse(json)
 
@@ -431,10 +440,13 @@ class WebAppManifestParserTest {
     @Test
     fun `Ignore invalid share target encoding type`() {
         val json = loadManifest("minimal.json").apply {
-            put("share_target", JSONObject().apply {
-                put("action", "https://mozilla.com/target")
-                put("enctype", "text/plain")
-            })
+            put(
+                "share_target",
+                JSONObject().apply {
+                    put("action", "https://mozilla.com/target")
+                    put("enctype", "text/plain")
+                }
+            )
         }
         val result = WebAppManifestParser().parse(json)
 
@@ -445,11 +457,14 @@ class WebAppManifestParserTest {
     @Test
     fun `Ignore invalid share target method and encoding type combo`() {
         val json = loadManifest("minimal.json").apply {
-            put("share_target", JSONObject().apply {
-                put("action", "https://mozilla.com/target")
-                put("method", "GET")
-                put("enctype", "multipart/form-data")
-            })
+            put(
+                "share_target",
+                JSONObject().apply {
+                    put("action", "https://mozilla.com/target")
+                    put("method", "GET")
+                    put("enctype", "multipart/form-data")
+                }
+            )
         }
         val result = WebAppManifestParser().parse(json)
 

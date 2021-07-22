@@ -14,5 +14,5 @@ import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER
  */
 class GeckoWebExtensionException(throwable: Throwable) : WebExtensionException(throwable) {
     override val isRecoverable: Boolean = throwable is InstallException &&
-            throwable.code == ERROR_USER_CANCELED
+        throwable.code == ERROR_USER_CANCELED
 }

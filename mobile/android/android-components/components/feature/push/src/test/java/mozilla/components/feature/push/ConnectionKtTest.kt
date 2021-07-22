@@ -6,13 +6,13 @@ package mozilla.components.feature.push
 
 import mozilla.appservices.push.BridgeType
 import mozilla.appservices.push.KeyInfo
-import mozilla.appservices.push.PushSubscriptionChanged as SubscriptionChanged
 import mozilla.appservices.push.SubscriptionInfo
 import mozilla.appservices.push.SubscriptionResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import mozilla.appservices.push.PushSubscriptionChanged as SubscriptionChanged
 
 class ConnectionKtTest {
     @Test

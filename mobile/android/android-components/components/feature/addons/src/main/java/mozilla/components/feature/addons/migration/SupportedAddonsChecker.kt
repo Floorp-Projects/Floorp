@@ -83,9 +83,9 @@ class DefaultSupportedAddonsChecker(
      */
     override fun registerForChecks() {
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
-                CHECKER_UNIQUE_PERIODIC_WORK_NAME,
-                ExistingPeriodicWorkPolicy.REPLACE,
-                createPeriodicWorkerRequest()
+            CHECKER_UNIQUE_PERIODIC_WORK_NAME,
+            ExistingPeriodicWorkPolicy.REPLACE,
+            createPeriodicWorkerRequest()
         )
         logger.info("Register check for new supported add-ons")
     }
@@ -95,15 +95,15 @@ class DefaultSupportedAddonsChecker(
      */
     override fun unregisterForChecks() {
         WorkManager.getInstance(applicationContext)
-                .cancelUniqueWork(CHECKER_UNIQUE_PERIODIC_WORK_NAME)
+            .cancelUniqueWork(CHECKER_UNIQUE_PERIODIC_WORK_NAME)
         logger.info("Unregister check for new supported add-ons")
     }
 
     @VisibleForTesting
     internal fun createPeriodicWorkerRequest(): PeriodicWorkRequest {
         return PeriodicWorkRequestBuilder<SupportedAddonsWorker>(
-                frequency.repeatInterval,
-                frequency.repeatIntervalTimeUnit
+            frequency.repeatInterval,
+            frequency.repeatIntervalTimeUnit
         ).apply {
             setConstraints(getWorkerConstrains())
             addTag(WORK_TAG_PERIODIC)
@@ -112,22 +112,22 @@ class DefaultSupportedAddonsChecker(
 
     @VisibleForTesting
     internal fun getWorkerConstrains() = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
     companion object {
         private const val IDENTIFIER_PREFIX = "mozilla.components.feature.addons.migration"
 
         @VisibleForTesting
         internal const val CHECKER_UNIQUE_PERIODIC_WORK_NAME =
-                "$IDENTIFIER_PREFIX.DefaultSupportedAddonsChecker.periodicWork"
+            "$IDENTIFIER_PREFIX.DefaultSupportedAddonsChecker.periodicWork"
 
         /**
          * Identifies all the workers that periodically check for new add-ons.
          */
         @VisibleForTesting
         internal const val WORK_TAG_PERIODIC =
-                "$IDENTIFIER_PREFIX.DefaultSupportedAddonsChecker.periodicWork"
+            "$IDENTIFIER_PREFIX.DefaultSupportedAddonsChecker.periodicWork"
 
         internal fun createDefaultNotificationIntent(content: Context): Intent {
             return content.packageManager.getLaunchIntentForPackage(content.packageName)?.apply {
@@ -159,9 +159,12 @@ internal class SupportedAddonsWorker(
 
             withContext(Dispatchers.Main) {
                 newSupportedAddons.forEach {
-                    addonManager.enableAddon(it, source = EnableSource.APP_SUPPORT, onError = { error ->
-                        GlobalAddonDependencyProvider.onCrash?.invoke(error)
-                    })
+                    addonManager.enableAddon(
+                        it, source = EnableSource.APP_SUPPORT,
+                        onError = { error ->
+                            GlobalAddonDependencyProvider.onCrash?.invoke(error)
+                        }
+                    )
                 }
             }
 
@@ -184,21 +187,21 @@ internal class SupportedAddonsWorker(
         val notificationId = SharedIdsHelper.getIdForTag(context, NOTIFICATION_TAG)
 
         val channel = ChannelData(
-                NOTIFICATION_CHANNEL_ID,
-                R.string.mozac_feature_addons_supported_checker_notification_channel,
-                NotificationManagerCompat.IMPORTANCE_LOW
+            NOTIFICATION_CHANNEL_ID,
+            R.string.mozac_feature_addons_supported_checker_notification_channel,
+            NotificationManagerCompat.IMPORTANCE_LOW
         )
         val channelId = ensureNotificationChannelExists(context, channel)
         return NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(mozilla.components.ui.icons.R.drawable.mozac_ic_extensions)
-                .setContentTitle(getNotificationTitle(plural = newSupportedAddons.size > 1))
-                .setContentText(getNotificationBody(newSupportedAddons, context))
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setContentIntent(createContentIntent())
-                .setAutoCancel(true)
-                .build().also {
-                    NotificationManagerCompat.from(context).notify(notificationId, it)
-                }
+            .setSmallIcon(mozilla.components.ui.icons.R.drawable.mozac_ic_extensions)
+            .setContentTitle(getNotificationTitle(plural = newSupportedAddons.size > 1))
+            .setContentText(getNotificationBody(newSupportedAddons, context))
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setContentIntent(createContentIntent())
+            .setAutoCancel(true)
+            .build().also {
+                NotificationManagerCompat.from(context).notify(notificationId, it)
+            }
     }
 
     @VisibleForTesting
@@ -218,39 +221,42 @@ internal class SupportedAddonsWorker(
             1 -> {
                 val addonName = newSupportedAddons.first().translateName(context)
                 applicationContext.getString(
-                        R.string.mozac_feature_addons_supported_checker_notification_content_one,
-                        addonName,
-                        applicationContext.appName)
+                    R.string.mozac_feature_addons_supported_checker_notification_content_one,
+                    addonName,
+                    applicationContext.appName
+                )
             }
             2 -> {
                 val firstAddonName = newSupportedAddons.first().translateName(context)
                 val secondAddonName = newSupportedAddons[1].translateName(context)
                 applicationContext.getString(
-                        R.string.mozac_feature_addons_supported_checker_notification_content_two,
-                        firstAddonName,
-                        secondAddonName,
-                        applicationContext.appName)
+                    R.string.mozac_feature_addons_supported_checker_notification_content_two,
+                    firstAddonName,
+                    secondAddonName,
+                    applicationContext.appName
+                )
             }
             else -> {
                 /* There's a restriction in the amount of characters that,
                    we can put in notification. To be safe we just use two variations,
                    as we don't know how long the name of an add-on could be.*/
                 applicationContext.getString(
-                        R.string.mozac_feature_addons_supported_checker_notification_content_more_than_two,
-                        applicationContext.appName)
+                    R.string.mozac_feature_addons_supported_checker_notification_content_more_than_two,
+                    applicationContext.appName
+                )
             }
         }
     }
 
     private fun createContentIntent(): PendingIntent {
         return PendingIntent.getActivity(
-                context, 0, onNotificationClickIntent, PendingIntent.FLAG_UPDATE_CURRENT
+            context, 0, onNotificationClickIntent, PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
     @Suppress("MaxLineLength")
     companion object {
         private const val NOTIFICATION_CHANNEL_ID =
-                "mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker.generic.channel"
+            "mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker.generic.channel"
 
         @VisibleForTesting
         internal const val NOTIFICATION_TAG = "mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker"

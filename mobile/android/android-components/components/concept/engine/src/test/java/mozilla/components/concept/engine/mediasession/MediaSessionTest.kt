@@ -5,7 +5,6 @@
 package mozilla.components.concept.engine.mediasession
 
 import org.junit.Assert.assertEquals
-
 import org.junit.Assert.assertFalse
 import org.junit.Test
 

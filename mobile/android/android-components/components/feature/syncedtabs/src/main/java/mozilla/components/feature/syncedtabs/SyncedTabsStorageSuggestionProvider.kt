@@ -8,11 +8,11 @@ import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
-import mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag
 import mozilla.components.feature.syncedtabs.facts.emitSyncedTabSuggestionClickedFact
+import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
 import java.util.UUID
 
 /**
@@ -39,13 +39,16 @@ class SyncedTabsStorageSuggestionProvider(
                 val activeTabEntry = tab.active()
                 // This is a fairly naive match implementation, but this is what we do on Desktop 🤷.
                 if (activeTabEntry.url.contains(text, ignoreCase = true) ||
-                    activeTabEntry.title.contains(text, ignoreCase = true)) {
-                    results.add(ClientTabPair(
-                        clientName = client.displayName,
-                        tab = activeTabEntry,
-                        lastUsed = tab.lastUsed,
-                        deviceType = client.deviceType
-                    ))
+                    activeTabEntry.title.contains(text, ignoreCase = true)
+                ) {
+                    results.add(
+                        ClientTabPair(
+                            clientName = client.displayName,
+                            tab = activeTabEntry,
+                            lastUsed = tab.lastUsed,
+                            deviceType = client.deviceType
+                        )
+                    )
                 }
             }
         }

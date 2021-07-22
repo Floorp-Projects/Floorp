@@ -197,7 +197,8 @@ internal val handlers: Map<Token.Type, (Parser, Token) -> Unit> = mapOf(
         var operator = (parent as? OperatorNode)?.operator
 
         while (operator != null &&
-            parser.grammar.elements[operator]!!.precedence > precedence) {
+            parser.grammar.elements[operator]!!.precedence > precedence
+        ) {
             parser.cursor = parent
             parent = parent?.parent
             operator = (parent as? OperatorNode)?.operator

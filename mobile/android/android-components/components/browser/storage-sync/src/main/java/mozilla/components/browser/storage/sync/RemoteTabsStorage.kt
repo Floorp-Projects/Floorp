@@ -9,14 +9,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.withContext
 import mozilla.appservices.remotetabs.RemoteTab
-import mozilla.appservices.remotetabs.TabsStore as RemoteTabsProvider
-import mozilla.appservices.remotetabs.InternalException as RemoteTabProviderException
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.Storage
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.logElapsedTime
+import mozilla.appservices.remotetabs.InternalException as RemoteTabProviderException
+import mozilla.appservices.remotetabs.TabsStore as RemoteTabsProvider
 
 /**
  * An interface which defines read/write methods for remote tabs data.
@@ -39,11 +39,13 @@ open class RemoteTabsStorage(
     suspend fun store(tabs: List<Tab>) {
         return withContext(scope.coroutineContext) {
             try {
-                api.setLocalTabs(tabs.map {
-                    val activeTab = it.active()
-                    val urlHistory = listOf(activeTab.url) + it.previous().reversed().map { it.url }
-                    RemoteTab(activeTab.title, urlHistory, activeTab.iconUrl, it.lastUsed)
-                })
+                api.setLocalTabs(
+                    tabs.map {
+                        val activeTab = it.active()
+                        val urlHistory = listOf(activeTab.url) + it.previous().reversed().map { it.url }
+                        RemoteTab(activeTab.title, urlHistory, activeTab.iconUrl, it.lastUsed)
+                    }
+                )
             } catch (e: RemoteTabProviderException) {
                 crashReporter?.submitCaughtException(e)
             }

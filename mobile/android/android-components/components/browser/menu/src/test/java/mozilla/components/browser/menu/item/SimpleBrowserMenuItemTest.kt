@@ -69,9 +69,9 @@ class SimpleBrowserMenuItemTest {
     @Test
     fun `simple browser menu item should have the right text, textSize, and textColorResource`() {
         val item = SimpleBrowserMenuItem(
-                "Powered by Mozilla",
-                10f,
-                android.R.color.holo_green_dark
+            "Powered by Mozilla",
+            10f,
+            android.R.color.holo_green_dark
         )
 
         val view = inflate(item)

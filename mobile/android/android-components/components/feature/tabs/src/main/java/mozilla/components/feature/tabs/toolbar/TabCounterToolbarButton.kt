@@ -42,10 +42,11 @@ open class TabCounterToolbarButton(
     override fun createView(parent: ViewGroup): View {
         store.flowScoped(lifecycleOwner) { flow ->
             flow.map { state -> getTabCount(state) }
-            .ifChanged()
-            .collect {
-                tabs -> updateCount(tabs)
-            }
+                .ifChanged()
+                .collect {
+                    tabs ->
+                    updateCount(tabs)
+                }
         }
 
         val tabCounter = TabCounter(parent.context).apply {
@@ -73,9 +74,11 @@ open class TabCounterToolbarButton(
         }
 
         // Set selectableItemBackgroundBorderless
-        tabCounter.setBackgroundResource(parent.context.theme.resolveAttribute(
-            android.R.attr.selectableItemBackgroundBorderless
-        ))
+        tabCounter.setBackgroundResource(
+            parent.context.theme.resolveAttribute(
+                android.R.attr.selectableItemBackgroundBorderless
+            )
+        )
 
         return tabCounter
     }

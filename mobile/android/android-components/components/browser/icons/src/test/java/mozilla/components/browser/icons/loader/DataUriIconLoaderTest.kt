@@ -23,27 +23,39 @@ class DataUriIconLoaderTest {
 
         assertEquals(
             IconLoader.Result.NoResult,
-            loader.load(mock(), mock(), IconRequest.Resource(
-                url = "https://www.mozilla.org",
-                type = IconRequest.Resource.Type.FAVICON)))
+            loader.load(
+                mock(), mock(),
+                IconRequest.Resource(
+                    url = "https://www.mozilla.org",
+                    type = IconRequest.Resource.Type.FAVICON
+                )
+            )
+        )
 
         assertEquals(
             IconLoader.Result.NoResult,
-            loader.load(mock(), mock(), IconRequest.Resource(
-            url = "http://example.org",
-            type = IconRequest.Resource.Type.FAVICON
-        )))
+            loader.load(
+                mock(), mock(),
+                IconRequest.Resource(
+                    url = "http://example.org",
+                    type = IconRequest.Resource.Type.FAVICON
+                )
+            )
+        )
     }
 
     @Test
     fun `Loader returns bytes for data uri containing png`() {
         val loader = DataUriIconLoader()
 
-        val result = loader.load(mock(), mock(), IconRequest.Resource(
-            url = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91Jpz" +
-                "AAAAEklEQVR4AWP4z8AAxCDiP8N/AB3wBPxcBee7AAAAAElFTkSuQmCC",
-            type = IconRequest.Resource.Type.FAVICON
-        ))
+        val result = loader.load(
+            mock(), mock(),
+            IconRequest.Resource(
+                url = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91Jpz" +
+                    "AAAAEklEQVR4AWP4z8AAxCDiP8N/AB3wBPxcBee7AAAAAElFTkSuQmCC",
+                type = IconRequest.Resource.Type.FAVICON
+            )
+        )
 
         assertTrue(result is IconLoader.Result.BytesResult)
 
@@ -58,10 +70,13 @@ class DataUriIconLoaderTest {
     fun `Loader returns base64 decoded data`() {
         val loader = DataUriIconLoader()
 
-        val result = loader.load(mock(), mock(), IconRequest.Resource(
-            url = "data:image/png;base64,dGhpcyBpcyBhIHRlc3Q=",
-            type = IconRequest.Resource.Type.FAVICON
-        ))
+        val result = loader.load(
+            mock(), mock(),
+            IconRequest.Resource(
+                url = "data:image/png;base64,dGhpcyBpcyBhIHRlc3Q=",
+                type = IconRequest.Resource.Type.FAVICON
+            )
+        )
 
         assertTrue(result is IconLoader.Result.BytesResult)
 

@@ -13,10 +13,10 @@ import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
+import mozilla.components.support.base.utils.NamedThreadFactory
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import java.util.concurrent.Executors
-import mozilla.components.support.base.utils.NamedThreadFactory
 
 /**
  * Create single threaded dispatcher for test environment.

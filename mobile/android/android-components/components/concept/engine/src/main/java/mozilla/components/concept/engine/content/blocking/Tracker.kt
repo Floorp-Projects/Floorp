@@ -4,8 +4,8 @@
 
 package mozilla.components.concept.engine.content.blocking
 
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 
 /**
  * Represents a blocked content tracker.

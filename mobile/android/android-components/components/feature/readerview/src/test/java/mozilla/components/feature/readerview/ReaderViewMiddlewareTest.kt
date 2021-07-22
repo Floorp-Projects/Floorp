@@ -72,7 +72,8 @@ class ReaderViewMiddlewareTest {
     @Test
     fun `state is updated to reconnect and trigger readerable check when new tab is selected`() {
         val tab1 = createTab("https://www.mozilla.org", id = "test-tab1")
-        val tab2 = createTab("https://www.firefox.com", id = "test-tab2",
+        val tab2 = createTab(
+            "https://www.firefox.com", id = "test-tab2",
             readerState = ReaderState(readerable = true)
         )
         val store = BrowserStore(
@@ -110,7 +111,8 @@ class ReaderViewMiddlewareTest {
 
     @Test
     fun `state is updated to enter and leave reader view when URL changes`() {
-        val tab = createTab("https://www.mozilla.org", id = "test-tab1",
+        val tab = createTab(
+            "https://www.mozilla.org", id = "test-tab1",
             readerState = ReaderState(active = false, baseUrl = "moz-extension://123")
         )
         val store = BrowserStore(
@@ -131,7 +133,8 @@ class ReaderViewMiddlewareTest {
 
     @Test
     fun `state is updated to mask extension page URL when navigating to reader view page`() {
-        val tab = createTab("https://www.mozilla.org", id = "test-tab1",
+        val tab = createTab(
+            "https://www.mozilla.org", id = "test-tab1",
             readerState = ReaderState(
                 active = true,
                 baseUrl = "moz-extension://123",
@@ -156,7 +159,8 @@ class ReaderViewMiddlewareTest {
 
     @Test
     fun `state is updated to mask extension page URL when reader view connects`() {
-        val tab = createTab("moz-extension://123?url=https%3A%2F%2Fmozilla.org%2Farticle1", id = "test-tab1",
+        val tab = createTab(
+            "moz-extension://123?url=https%3A%2F%2Fmozilla.org%2Farticle1", id = "test-tab1",
             readerState = ReaderState(
                 active = true,
                 baseUrl = "moz-extension://123"

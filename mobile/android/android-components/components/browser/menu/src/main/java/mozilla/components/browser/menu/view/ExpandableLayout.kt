@@ -325,7 +325,8 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
 
         // Simple sanity check
         if (validLastVisibleItemIndexWhenCollapsed >= listView.childCount ||
-            validLastVisibleItemIndexWhenCollapsed <= 0) {
+            validLastVisibleItemIndexWhenCollapsed <= 0
+        ) {
 
             return measuredHeight
         }
@@ -419,11 +420,11 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
             val expandableView = ExpandableLayout(contentView.context)
             val params = MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
                 .apply {
-                leftMargin = contentView.marginLeft
-                topMargin = contentView.marginTop
-                rightMargin = contentView.marginRight
-                bottomMargin = contentView.marginBottom
-            }
+                    leftMargin = contentView.marginLeft
+                    topMargin = contentView.marginTop
+                    rightMargin = contentView.marginRight
+                    bottomMargin = contentView.marginBottom
+                }
             expandableView.addView(contentView, params)
 
             expandableView.wrappedView = contentView

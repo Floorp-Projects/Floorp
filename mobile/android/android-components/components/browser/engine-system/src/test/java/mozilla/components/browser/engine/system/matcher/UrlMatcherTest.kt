@@ -106,7 +106,8 @@ class UrlMatcherTest {
                 val currentBit = 1 shl currentCategory
                 val enabled = currentBit and categoryPattern == currentBit
                 val url = "http://category$currentCategory.com"
-                assertEquals("Incorrect category matched for combo=$categoryPattern url=$url",
+                assertEquals(
+                    "Incorrect category matched for combo=$categoryPattern url=$url",
                     enabled, matcher.matches(url, "http://www.mozilla.org").first
                 )
             }
@@ -197,8 +198,9 @@ class UrlMatcherTest {
     @Test
     fun createMatcher() {
         val matcher = UrlMatcher.createMatcher(
-                StringReader(BLOCK_LIST),
-                StringReader(SAFE_LIST))
+            StringReader(BLOCK_LIST),
+            StringReader(SAFE_LIST)
+        )
 
         // Check returns correct category
         val (matchesAds, categoryAds) = matcher.matches("http://adtest1.com", "http://www.adtest1.com")
@@ -257,10 +259,12 @@ class UrlMatcherTest {
 
     @Test
     fun setCategoriesEnabled() {
-        val matcher = spy(UrlMatcher.createMatcher(
+        val matcher = spy(
+            UrlMatcher.createMatcher(
                 StringReader(BLOCK_LIST),
                 StringReader(SAFE_LIST),
-                setOf("Advertising", "Analytics"))
+                setOf("Advertising", "Analytics")
+            )
         )
 
         matcher.setCategoriesEnabled(setOf("Advertising", "Analytics"))
@@ -275,9 +279,10 @@ class UrlMatcherTest {
     @Test
     fun webFontsNotBlockedByDefault() {
         val matcher = UrlMatcher.createMatcher(
-                StringReader(BLOCK_LIST),
-                StringReader(SAFE_LIST),
-                setOf(UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL, UrlMatcher.CONTENT))
+            StringReader(BLOCK_LIST),
+            StringReader(SAFE_LIST),
+            setOf(UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL, UrlMatcher.CONTENT)
+        )
 
         assertFalse(
             matcher.matches(

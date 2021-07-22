@@ -22,7 +22,7 @@ import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.ext.components
 
 private const val LEARN_MORE_URL =
-        "https://support.mozilla.org/kb/add-compatibility-firefox-preview"
+    "https://support.mozilla.org/kb/add-compatibility-firefox-preview"
 
 /**
  * Activity for managing unsupported add-ons.

@@ -59,7 +59,8 @@ class VerticalSwipeRefreshLayout @JvmOverloads constructor(
 
         // Cleanup if the gesture has been aborted or quick scale just ended/
         if (MotionEvent.ACTION_CANCEL == eventAction ||
-            (MotionEvent.ACTION_UP == eventAction && isQuickScaleInProgress)) {
+            (MotionEvent.ACTION_UP == eventAction && isQuickScaleInProgress)
+        ) {
 
             forgetQuickScaleEvents()
             return callSuperOnInterceptTouchEvent(event)

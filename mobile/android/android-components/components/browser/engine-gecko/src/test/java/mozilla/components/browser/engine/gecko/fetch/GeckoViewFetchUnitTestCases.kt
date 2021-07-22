@@ -99,7 +99,8 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
             "Accept" to "text/html",
             "Accept-Encoding" to "deflate",
             "User-Agent" to "SuperBrowser/1.0",
-            "Connection" to "close")
+            "Connection" to "close"
+        )
         mockRequest(headerMap)
         mockResponse(200)
 
@@ -252,10 +253,12 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
         whenever(request.url).thenReturn("https://mozilla.org")
         whenever(request.method).thenReturn(Request.Method.GET)
 
-        mockResponse(200,
-                headerMap = mapOf("Content-Type" to "text/html; charset=ISO-8859-1"),
-                body = "ÄäÖöÜü",
-                charset = Charsets.ISO_8859_1)
+        mockResponse(
+            200,
+            headerMap = mapOf("Content-Type" to "text/html; charset=ISO-8859-1"),
+            body = "ÄäÖöÜü",
+            charset = Charsets.ISO_8859_1
+        )
 
         val response = createNewClient().fetch(request)
         assertEquals("ÄäÖöÜü", response.body.string())

@@ -90,7 +90,8 @@ class WebNotificationFeature(
 
             val notification = nativeNotificationBridge.convertToAndroidNotification(
                 webNotification, context, NOTIFICATION_CHANNEL_ID, activityClass,
-                SharedIdsHelper.getNextIdForTag(context, PENDING_INTENT_TAG))
+                SharedIdsHelper.getNextIdForTag(context, PENDING_INTENT_TAG)
+            )
             notificationManager?.notify(webNotification.tag, NOTIFICATION_ID, notification)
         }
     }

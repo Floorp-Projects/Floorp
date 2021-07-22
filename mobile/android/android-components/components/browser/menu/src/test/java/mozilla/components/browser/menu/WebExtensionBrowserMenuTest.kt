@@ -25,7 +25,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.engine.webextension.WebExtensionPageAction
-import mozilla.components.support.base.facts.Action as FactsAction
 import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -39,6 +38,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import mozilla.components.support.base.facts.Action as FactsAction
 
 @RunWith(AndroidJUnit4::class)
 @kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -176,7 +176,8 @@ class WebExtensionBrowserMenuTest {
                             "https://www.example.org", id = "tab1",
                             extensions = overriddenExtensions
                         )
-                    ), selectedTabId = "tab1",
+                    ),
+                    selectedTabId = "tab1",
                     extensions = extensions
                 )
             )

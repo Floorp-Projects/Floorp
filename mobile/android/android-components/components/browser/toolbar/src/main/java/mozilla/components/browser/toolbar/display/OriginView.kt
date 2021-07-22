@@ -32,11 +32,14 @@ internal class OriginView @JvmOverloads constructor(
     internal lateinit var toolbar: BrowserToolbar
 
     private val textSizeUrlNormal = context.resources.getDimension(
-        R.dimen.mozac_browser_toolbar_url_textsize)
+        R.dimen.mozac_browser_toolbar_url_textsize
+    )
     private val textSizeUrlWithTitle = context.resources.getDimension(
-        R.dimen.mozac_browser_toolbar_url_with_title_textsize)
+        R.dimen.mozac_browser_toolbar_url_with_title_textsize
+    )
     private val textSizeTitle = context.resources.getDimension(
-        R.dimen.mozac_browser_toolbar_title_textsize)
+        R.dimen.mozac_browser_toolbar_title_textsize
+    )
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val urlView = TextView(context).apply {
@@ -69,7 +72,8 @@ internal class OriginView @JvmOverloads constructor(
 
         setTextSize(
             TypedValue.COMPLEX_UNIT_PX,
-            textSizeTitle)
+            textSizeTitle
+        )
         gravity = Gravity.CENTER_VERTICAL
 
         setSingleLine()
@@ -85,17 +89,23 @@ internal class OriginView @JvmOverloads constructor(
     init {
         orientation = VERTICAL
 
-        addView(titleView, LayoutParams(
-            LayoutParams.MATCH_PARENT,
-            0,
-            TITLE_VIEW_WEIGHT
-        ))
+        addView(
+            titleView,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                0,
+                TITLE_VIEW_WEIGHT
+            )
+        )
 
-        addView(urlView, LayoutParams(
-            LayoutParams.MATCH_PARENT,
-            0,
-            URL_VIEW_WEIGHT
-        ))
+        addView(
+            urlView,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                0,
+                URL_VIEW_WEIGHT
+            )
+        )
 
         layoutTransition = LayoutTransition()
     }
@@ -107,11 +117,14 @@ internal class OriginView @JvmOverloads constructor(
 
             titleView.isVisible = value.isNotEmpty()
 
-            urlView.setTextSize(TypedValue.COMPLEX_UNIT_PX, if (value.isNotEmpty()) {
-                textSizeUrlWithTitle
-            } else {
-                textSizeUrlNormal
-            })
+            urlView.setTextSize(
+                TypedValue.COMPLEX_UNIT_PX,
+                if (value.isNotEmpty()) {
+                    textSizeUrlWithTitle
+                } else {
+                    textSizeUrlNormal
+                }
+            )
         }
 
     internal var onUrlClicked: () -> Boolean = { true }

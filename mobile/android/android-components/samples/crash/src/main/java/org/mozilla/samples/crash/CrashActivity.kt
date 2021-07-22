@@ -14,8 +14,8 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
-import mozilla.components.lib.crash.Crash
 import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.lib.crash.Crash
 import org.mozilla.samples.crash.databinding.ActivityCrashBinding
 
 class CrashActivity : AppCompatActivity(), View.OnClickListener {

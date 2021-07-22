@@ -105,54 +105,68 @@ class WebAppManifestKtTest {
         val noSizeIconManifest = demoManifest.copy(icons = listOf(demoIcon))
         assertFalse(noSizeIconManifest.hasLargeIcons())
 
-        val onlyBadgeIconManifest = demoManifest.copy(icons = listOf(
-            demoIcon.copy(
-                sizes = listOf(Size(512, 512)),
-                purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+        val onlyBadgeIconManifest = demoManifest.copy(
+            icons = listOf(
+                demoIcon.copy(
+                    sizes = listOf(Size(512, 512)),
+                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+                )
             )
-        ))
+        )
         assertFalse(onlyBadgeIconManifest.hasLargeIcons())
     }
 
     @Test
     fun `web app must have 192x192 icons to be installable`() {
-        val smallIconManifest = demoManifest.copy(icons = listOf(
-            demoIcon.copy(sizes = listOf(Size(32, 32)))
-        ))
+        val smallIconManifest = demoManifest.copy(
+            icons = listOf(
+                demoIcon.copy(sizes = listOf(Size(32, 32)))
+            )
+        )
         assertFalse(smallIconManifest.hasLargeIcons())
 
-        val weirdSizeManifest = demoManifest.copy(icons = listOf(
-            demoIcon.copy(sizes = listOf(Size(50, 200)))
-        ))
+        val weirdSizeManifest = demoManifest.copy(
+            icons = listOf(
+                demoIcon.copy(sizes = listOf(Size(50, 200)))
+            )
+        )
         assertFalse(weirdSizeManifest.hasLargeIcons())
 
-        val largeIconManifest = demoManifest.copy(icons = listOf(
-            demoIcon.copy(sizes = listOf(Size(192, 192)))
-        ))
+        val largeIconManifest = demoManifest.copy(
+            icons = listOf(
+                demoIcon.copy(sizes = listOf(Size(192, 192)))
+            )
+        )
         assertTrue(largeIconManifest.hasLargeIcons())
 
-        val multiSizeIconManifest = demoManifest.copy(icons = listOf(
-            demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512)))
-        ))
+        val multiSizeIconManifest = demoManifest.copy(
+            icons = listOf(
+                demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512)))
+            )
+        )
         assertTrue(multiSizeIconManifest.hasLargeIcons())
 
-        val multiIconManifest = demoManifest.copy(icons = listOf(
-            demoIcon.copy(sizes = listOf(Size(191, 193))),
-            demoIcon.copy(sizes = listOf(Size(512, 512))),
-            demoIcon.copy(
-                sizes = listOf(Size(192, 192)),
-                purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+        val multiIconManifest = demoManifest.copy(
+            icons = listOf(
+                demoIcon.copy(sizes = listOf(Size(191, 193))),
+                demoIcon.copy(sizes = listOf(Size(512, 512))),
+                demoIcon.copy(
+                    sizes = listOf(Size(192, 192)),
+                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+                )
             )
-        ))
+        )
         assertTrue(multiIconManifest.hasLargeIcons())
 
-        val onlyBadgeManifest = demoManifest.copy(icons = listOf(
-            demoIcon.copy(sizes = listOf(Size(191, 191))),
-            demoIcon.copy(
-                sizes = listOf(Size(192, 192)),
-                purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+        val onlyBadgeManifest = demoManifest.copy(
+            icons = listOf(
+                demoIcon.copy(sizes = listOf(Size(191, 191))),
+                demoIcon.copy(
+                    sizes = listOf(Size(192, 192)),
+                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+                )
             )
-        ))
+        )
         assertFalse(onlyBadgeManifest.hasLargeIcons())
     }
 }

@@ -435,8 +435,10 @@ class TabsUseCasesTest {
 
     @Test
     fun `duplicateTab creates a duplicate of the given tab`() {
-        store.dispatch(TabListAction.AddTabAction(
-            createTab(id = "mozilla", url = "https://www.mozilla.org"))
+        store.dispatch(
+            TabListAction.AddTabAction(
+                createTab(id = "mozilla", url = "https://www.mozilla.org")
+            )
         ).joinBlocking()
         assertEquals(1, store.state.tabs.size)
 

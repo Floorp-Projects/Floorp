@@ -15,8 +15,8 @@ internal fun MediaSessionState.toPlaybackState() =
     PlaybackStateCompat.Builder()
         .setActions(
             PlaybackStateCompat.ACTION_PLAY_PAUSE or
-                    PlaybackStateCompat.ACTION_PLAY or
-                    PlaybackStateCompat.ACTION_PAUSE
+                PlaybackStateCompat.ACTION_PLAY or
+                PlaybackStateCompat.ACTION_PAUSE
         )
         .setState(
             when (playbackState) {

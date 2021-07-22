@@ -140,7 +140,8 @@ class BrowserToolbarBehaviorTest {
             directTargetChild = mock(),
             target = mock(),
             axes = ViewCompat.SCROLL_AXIS_VERTICAL,
-            type = ViewCompat.TYPE_TOUCH)
+            type = ViewCompat.TYPE_TOUCH
+        )
         assertTrue(acceptsNestedScroll)
 
         acceptsNestedScroll = behavior.onStartNestedScroll(
@@ -149,7 +150,8 @@ class BrowserToolbarBehaviorTest {
             directTargetChild = mock(),
             target = mock(),
             axes = ViewCompat.SCROLL_AXIS_HORIZONTAL,
-            type = ViewCompat.TYPE_TOUCH)
+            type = ViewCompat.TYPE_TOUCH
+        )
         assertFalse(acceptsNestedScroll)
     }
 
@@ -230,7 +232,8 @@ class BrowserToolbarBehaviorTest {
             directTargetChild = mock(),
             target = mock(),
             axes = ViewCompat.SCROLL_AXIS_VERTICAL,
-            type = ViewCompat.TYPE_TOUCH)
+            type = ViewCompat.TYPE_TOUCH
+        )
 
         assertTrue(behavior.shouldSnapAfterScroll)
         verify(yTranslator).cancelInProgressTranslation()
@@ -260,7 +263,8 @@ class BrowserToolbarBehaviorTest {
             directTargetChild = mock(),
             target = mock(),
             axes = ViewCompat.SCROLL_AXIS_VERTICAL,
-            type = ViewCompat.TYPE_TOUCH)
+            type = ViewCompat.TYPE_TOUCH
+        )
 
         assertTrue(behavior.shouldSnapAfterScroll)
         verify(yTranslator).cancelInProgressTranslation()

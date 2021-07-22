@@ -86,15 +86,19 @@ internal class NativeNotificationBridge(
     private suspend fun loadIcon(url: String?, iconUrl: String?, size: Size, isPrivate: Boolean): Bitmap? {
         url ?: return null
         iconUrl ?: return null
-        val icon = icons.loadIcon(IconRequest(
-            url = url,
-            size = size,
-            resources = listOf(IconRequest.Resource(
-                url = iconUrl,
-                type = IconRequest.Resource.Type.MANIFEST_ICON
-            )),
-            isPrivate = isPrivate
-        )).await()
+        val icon = icons.loadIcon(
+            IconRequest(
+                url = url,
+                size = size,
+                resources = listOf(
+                    IconRequest.Resource(
+                        url = iconUrl,
+                        type = IconRequest.Resource.Type.MANIFEST_ICON
+                    )
+                ),
+                isPrivate = isPrivate
+            )
+        ).await()
 
         return if (icon.source == Source.GENERATOR) null else icon.bitmap
     }

@@ -25,7 +25,7 @@ fun TextView.adjustMaxTextSize(heightMeasureSpec: Int, ascenderPadding: Int = DE
     }
 
     availableHeight -= (this.paddingBottom + this.paddingTop) *
-            resources.displayMetrics.scaledDensity
+        resources.displayMetrics.scaledDensity
 
     if (availableHeight > 0 && this.textSize > availableHeight) {
         this.textSize = availableHeight / resources.displayMetrics.scaledDensity

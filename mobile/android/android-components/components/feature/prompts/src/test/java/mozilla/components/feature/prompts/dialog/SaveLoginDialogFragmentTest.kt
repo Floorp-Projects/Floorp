@@ -40,9 +40,11 @@ class SaveLoginDialogFragmentTest : TestCase() {
         `when`(login.username).thenReturn(loginUsername)
         `when`(login.password).thenReturn(loginPassword)
         val icon: Bitmap = mock()
-        val fragment = spy(SaveLoginDialogFragment.newInstance(
-            sessionId, requestUID, shouldDismissOnLoad, hint, login, icon
-        ))
+        val fragment = spy(
+            SaveLoginDialogFragment.newInstance(
+                sessionId, requestUID, shouldDismissOnLoad, hint, login, icon
+            )
+        )
         doReturn(appCompatContext).`when`(fragment).requireContext()
         doAnswer {
             FrameLayout(appCompatContext).apply {
@@ -79,19 +81,23 @@ class SaveLoginDialogFragmentTest : TestCase() {
         `when`(login.username).thenReturn(loginUsername)
         `when`(login.password).thenReturn(loginPassword)
         val icon: Bitmap? = null // null favicon
-        val fragment = spy(SaveLoginDialogFragment.newInstance(
-            sessionId, requestUID, shouldDismissOnLoad, hint, login, icon
-        ))
+        val fragment = spy(
+            SaveLoginDialogFragment.newInstance(
+                sessionId, requestUID, shouldDismissOnLoad, hint, login, icon
+            )
+        )
         val defaultIconResource = R.drawable.mozac_ic_globe
         doReturn(appCompatContext).`when`(fragment).requireContext()
         doAnswer {
             FrameLayout(appCompatContext).apply {
                 addView(TextInputEditText(appCompatContext).apply { id = R.id.username_field })
                 addView(TextInputEditText(appCompatContext).apply { id = R.id.password_field })
-                addView(ImageView(appCompatContext).apply {
-                    id = R.id.host_icon
-                    setImageResource(defaultIconResource)
-                })
+                addView(
+                    ImageView(appCompatContext).apply {
+                        id = R.id.host_icon
+                        setImageResource(defaultIconResource)
+                    }
+                )
             }
         }.`when`(fragment).inflateRootView(any())
 

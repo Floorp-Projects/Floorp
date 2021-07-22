@@ -60,12 +60,14 @@ open class GitHubPlugin : Plugin<Project> {
         repoName: String,
         user: String
     ) {
-        val bodyJson = ("{\n" +
-            "  \"title\": \" $title\",\n" +
-            "  \"body\": \"$body\",\n" +
-            "  \"head\": \"$user:$branchName\",\n" +
-            "  \"base\": \"$baseBranch\"\n" +
-            "}")
+        val bodyJson = (
+            "{\n" +
+                "  \"title\": \" $title\",\n" +
+                "  \"body\": \"$body\",\n" +
+                "  \"head\": \"$user:$branchName\",\n" +
+                "  \"base\": \"$baseBranch\"\n" +
+                "}"
+            )
 
         val result = client.createPullRequest(owner, repoName, bodyJson)
 
@@ -83,10 +85,12 @@ open class GitHubPlugin : Plugin<Project> {
 
     @Suppress("TooGenericExceptionThrown")
     private fun createIssue(title: String, body: String, owner: String, repoName: String) {
-        val bodyJson = ("{\n" +
-            "  \"title\": \"$title\",\n" +
-            "  \"body\": \"$body\"" +
-            "}")
+        val bodyJson = (
+            "{\n" +
+                "  \"title\": \"$title\",\n" +
+                "  \"body\": \"$body\"" +
+                "}"
+            )
 
         val result = client.createIssue(owner, repoName, bodyJson)
         val successFul = result.first

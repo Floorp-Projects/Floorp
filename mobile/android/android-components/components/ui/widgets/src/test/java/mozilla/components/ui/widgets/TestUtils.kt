@@ -23,7 +23,8 @@ object TestUtils {
             pointerCount = 1
         }
 
-        val properties = Array(pointerCount,
+        val properties = Array(
+            pointerCount,
             TestUtils::getPointerProperties
         )
         val pointerCoords =

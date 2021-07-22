@@ -26,7 +26,8 @@ internal class RefreshPocketWorker(
     override suspend fun doWork(): Result {
 
         val pocketItemsLocale = inputData.getString(KEY_EXTRA_DATA_POCKET_ITEMS_LOCALE)
-        val pocketItemsCount = inputData.getInt(KEY_EXTRA_DATA_POCKET_ITEMS_COUNT,
+        val pocketItemsCount = inputData.getInt(
+            KEY_EXTRA_DATA_POCKET_ITEMS_COUNT,
             DEFAULT_STORIES_COUNT
         )
 

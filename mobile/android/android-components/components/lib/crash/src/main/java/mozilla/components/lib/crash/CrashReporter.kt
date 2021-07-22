@@ -15,6 +15,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.lib.crash.db.CrashDatabase
 import mozilla.components.lib.crash.db.insertCrashSafely
 import mozilla.components.lib.crash.db.insertReportSafely
@@ -27,8 +29,6 @@ import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.CrashTelemetryService
 import mozilla.components.lib.crash.service.SendCrashReportService
 import mozilla.components.lib.crash.service.SendCrashTelemetryService
-import mozilla.components.concept.base.crash.Breadcrumb
-import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -313,7 +313,8 @@ class CrashReporter(
 
         internal val requireInstance: CrashReporter
             get() = instance ?: throw IllegalStateException(
-                "You need to call install() on your CrashReporter instance from Application.onCreate().")
+                "You need to call install() on your CrashReporter instance from Application.onCreate()."
+            )
     }
 }
 

@@ -4,9 +4,8 @@
 
 package mozilla.components.browser.engine.system.matcher
 
-import org.junit.Test
-
 import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class ReversibleStringTest {
 

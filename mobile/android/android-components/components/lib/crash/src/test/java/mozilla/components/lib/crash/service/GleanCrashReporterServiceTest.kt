@@ -12,8 +12,8 @@ import mozilla.components.lib.crash.GleanMetrics.CrashMetrics
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -52,19 +52,25 @@ class GleanCrashReporterServiceTest {
 
             assertTrue("Persistence file must exist", service.file.exists())
             val lines = service.file.readLines()
-            assertEquals("Must be native code crash",
-                GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY, lines.first())
+            assertEquals(
+                "Must be native code crash",
+                GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY, lines.first()
+            )
         }
 
         // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
         run {
             GleanCrashReporterService(context)
 
-            assertTrue("Glean must record a value",
-                CrashMetrics.crashCount[GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY].testHasValue())
-            assertEquals("Glean must record correct value",
+            assertTrue(
+                "Glean must record a value",
+                CrashMetrics.crashCount[GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY].testHasValue()
+            )
+            assertEquals(
+                "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY].testGetValue() - initialValue)
+                CrashMetrics.crashCount[GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY].testGetValue() - initialValue
+            )
         }
     }
 
@@ -89,19 +95,25 @@ class GleanCrashReporterServiceTest {
 
             assertTrue("Persistence file must exist", service.file.exists())
             val lines = service.file.readLines()
-            assertEquals("Must be native code crash",
-                GleanCrashReporterService.NONFATAL_NATIVE_CODE_CRASH_KEY, lines.first())
+            assertEquals(
+                "Must be native code crash",
+                GleanCrashReporterService.NONFATAL_NATIVE_CODE_CRASH_KEY, lines.first()
+            )
         }
 
         // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
         run {
             GleanCrashReporterService(context)
 
-            assertTrue("Glean must record a value",
-                CrashMetrics.crashCount[GleanCrashReporterService.NONFATAL_NATIVE_CODE_CRASH_KEY].testHasValue())
-            assertEquals("Glean must record correct value",
+            assertTrue(
+                "Glean must record a value",
+                CrashMetrics.crashCount[GleanCrashReporterService.NONFATAL_NATIVE_CODE_CRASH_KEY].testHasValue()
+            )
+            assertEquals(
+                "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.NONFATAL_NATIVE_CODE_CRASH_KEY].testGetValue() - initialValue)
+                CrashMetrics.crashCount[GleanCrashReporterService.NONFATAL_NATIVE_CODE_CRASH_KEY].testGetValue() - initialValue
+            )
         }
     }
 
@@ -126,19 +138,25 @@ class GleanCrashReporterServiceTest {
 
             assertTrue("Persistence file must exist", service.file.exists())
             val lines = service.file.readLines()
-            assertEquals("Must be uncaught exception",
-                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY, lines.first())
+            assertEquals(
+                "Must be uncaught exception",
+                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY, lines.first()
+            )
         }
 
         // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
         run {
             GleanCrashReporterService(context)
 
-            assertTrue("Glean must record a value",
-                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testHasValue())
-            assertEquals("Glean must record correct value",
+            assertTrue(
+                "Glean must record a value",
+                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testHasValue()
+            )
+            assertEquals(
+                "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue() - initialValue)
+                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue() - initialValue
+            )
         }
     }
 
@@ -163,19 +181,25 @@ class GleanCrashReporterServiceTest {
 
             assertTrue("Persistence file must exist", service.file.exists())
             val lines = service.file.readLines()
-            assertEquals("Must be caught exception",
-                    GleanCrashReporterService.CAUGHT_EXCEPTION_KEY, lines.first())
+            assertEquals(
+                "Must be caught exception",
+                GleanCrashReporterService.CAUGHT_EXCEPTION_KEY, lines.first()
+            )
         }
 
         // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
         run {
             GleanCrashReporterService(context)
 
-            assertTrue("Glean must record a value",
-                    CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testHasValue())
-            assertEquals("Glean must record correct value",
-                    1,
-                    CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testGetValue() - initialValue)
+            assertTrue(
+                "Glean must record a value",
+                CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testHasValue()
+            )
+            assertEquals(
+                "Glean must record correct value",
+                1,
+                CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testGetValue() - initialValue
+            )
         }
     }
 
@@ -219,31 +243,47 @@ class GleanCrashReporterServiceTest {
             // Get the file lines
             val lines = service.file.readLines()
             assertEquals(4, lines.count())
-            assertEquals("First element must be uncaught exception",
-                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY, lines[0])
-            assertEquals("Second element must be native code crash",
-                GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY, lines[1])
-            assertEquals("First element must be uncaught exception",
-                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY, lines[2])
-            assertEquals("Second element must be native code crash",
-                GleanCrashReporterService.NONFATAL_NATIVE_CODE_CRASH_KEY, lines[3])
+            assertEquals(
+                "First element must be uncaught exception",
+                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY, lines[0]
+            )
+            assertEquals(
+                "Second element must be native code crash",
+                GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY, lines[1]
+            )
+            assertEquals(
+                "First element must be uncaught exception",
+                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY, lines[2]
+            )
+            assertEquals(
+                "Second element must be native code crash",
+                GleanCrashReporterService.NONFATAL_NATIVE_CODE_CRASH_KEY, lines[3]
+            )
         }
 
         // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
         run {
             GleanCrashReporterService(context)
 
-            assertTrue("Glean must record a value",
-                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testHasValue())
-            assertEquals("Glean must record correct value",
+            assertTrue(
+                "Glean must record a value",
+                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testHasValue()
+            )
+            assertEquals(
+                "Glean must record correct value",
                 2,
-                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue() - initialExceptionValue)
-            assertEquals("Glean must record correct value",
+                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue() - initialExceptionValue
+            )
+            assertEquals(
+                "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY].testGetValue() - initialFatalNativeCrashValue)
-            assertEquals("Glean must record correct value",
+                CrashMetrics.crashCount[GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY].testGetValue() - initialFatalNativeCrashValue
+            )
+            assertEquals(
+                "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.NONFATAL_NATIVE_CODE_CRASH_KEY].testGetValue() - initialNonfatalNativeCrashValue)
+                CrashMetrics.crashCount[GleanCrashReporterService.NONFATAL_NATIVE_CODE_CRASH_KEY].testGetValue() - initialNonfatalNativeCrashValue
+            )
         }
     }
 
@@ -288,19 +328,25 @@ class GleanCrashReporterServiceTest {
             service.file.appendText("bad data in here\n")
 
             val lines = service.file.readLines()
-            assertEquals("First must be native code crash",
-                GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY, lines.first())
+            assertEquals(
+                "First must be native code crash",
+                GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY, lines.first()
+            )
             assertEquals("bad data in here", lines[1])
         }
 
         run {
             GleanCrashReporterService(context)
 
-            assertTrue("Glean must record a value",
-                CrashMetrics.crashCount[GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY].testHasValue())
-            assertEquals("Glean must record correct value",
+            assertTrue(
+                "Glean must record a value",
+                CrashMetrics.crashCount[GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY].testHasValue()
+            )
+            assertEquals(
+                "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY].testGetValue() - initialValue)
+                CrashMetrics.crashCount[GleanCrashReporterService.FATAL_NATIVE_CODE_CRASH_KEY].testGetValue() - initialValue
+            )
         }
     }
 }

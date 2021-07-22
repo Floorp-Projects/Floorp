@@ -57,7 +57,8 @@ class BrowserMenuHighlightableItem(
     isCollapsingMenuLimit,
     isSticky,
     listener
-), HighlightableMenuItem {
+),
+    HighlightableMenuItem {
 
     @Deprecated("Use the new constructor")
     @Suppress("Deprecation") // Constructor uses old highlight type

@@ -75,9 +75,10 @@ open class ObserverRegistry<T> : Observable<T> {
     @Synchronized
     override fun register(observer: T, view: View) {
         val viewObserver = ViewBoundObserver(
-                view,
-                registry = this,
-                observer = observer)
+            view,
+            registry = this,
+            observer = observer
+        )
 
         viewObservers[observer] = viewObserver
 

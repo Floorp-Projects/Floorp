@@ -9,7 +9,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
 import mozilla.components.support.base.log.logger.Logger
-
 import java.util.ArrayList
 
 /**
@@ -76,7 +75,7 @@ class SafeIntent(val unsafe: Intent) {
     }
 
     fun getStringArrayListExtra(name: String): ArrayList<String>? = safeAccess {
-            getStringArrayListExtra(name)
+        getStringArrayListExtra(name)
     }
 
     @SuppressWarnings("TooGenericExceptionCaught")

@@ -55,9 +55,11 @@ class MediaNotificationTest {
     fun `media session notification for playing state`() {
         val state = BrowserState(
             tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla",
+                createTab(
+                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla",
                     mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PLAYING)
-                ))
+                )
+            )
         )
 
         val notification = runBlocking {
@@ -73,9 +75,11 @@ class MediaNotificationTest {
     fun `media session notification for paused state`() {
         val state = BrowserState(
             tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla",
+                createTab(
+                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla",
                     mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PAUSED)
-                ))
+                )
+            )
         )
 
         val notification = runBlocking {
@@ -91,9 +95,11 @@ class MediaNotificationTest {
     fun `media session notification for stopped state`() {
         val state = BrowserState(
             tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla",
+                createTab(
+                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla",
                     mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.STOPPED)
-                ))
+                )
+            )
         )
 
         val notification = runBlocking {
@@ -108,9 +114,11 @@ class MediaNotificationTest {
     fun `media session notification for playing state in private mode`() {
         val state = BrowserState(
             tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
+                createTab(
+                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
                     mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PLAYING)
-                ))
+                )
+            )
         )
 
         val notification = runBlocking {
@@ -126,9 +134,11 @@ class MediaNotificationTest {
     fun `media session notification for paused state in private mode`() {
         val state = BrowserState(
             tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
+                createTab(
+                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
                     mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PAUSED)
-                ))
+                )
+            )
         )
 
         val notification = runBlocking {
@@ -150,8 +160,10 @@ class MediaNotificationTest {
 
         val state = BrowserState(
             tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = false,
-                    mediaSessionState = mediaSessionState)
+                createTab(
+                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = false,
+                    mediaSessionState = mediaSessionState
+                )
             )
         )
 
@@ -174,8 +186,10 @@ class MediaNotificationTest {
 
         val state = BrowserState(
             tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
-                    mediaSessionState = mediaSessionState)
+                createTab(
+                    "https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
+                    mediaSessionState = mediaSessionState
+                )
             )
         )
 

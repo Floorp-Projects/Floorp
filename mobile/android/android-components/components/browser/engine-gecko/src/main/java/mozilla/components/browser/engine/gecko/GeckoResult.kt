@@ -21,13 +21,16 @@ import kotlin.coroutines.suspendCoroutine
  * Wait for a GeckoResult to be complete in a co-routine.
  */
 suspend fun <T> GeckoResult<T>.await() = suspendCoroutine<T?> { continuation ->
-    then({
-        continuation.resume(it)
-        GeckoResult<Void>()
-    }, {
-        continuation.resumeWithException(it)
-        GeckoResult<Void>()
-    })
+    then(
+        {
+            continuation.resume(it)
+            GeckoResult<Void>()
+        },
+        {
+            continuation.resumeWithException(it)
+            GeckoResult<Void>()
+        }
+    )
 }
 
 /**
@@ -38,13 +41,16 @@ fun <T> GeckoResult<T>.asCancellableOperation(): CancellableOperation {
     return object : CancellableOperation {
         override fun cancel(): Deferred<Boolean> {
             val result = CompletableDeferred<Boolean>()
-            geckoResult.cancel().then({
-                result.complete(it ?: false)
-                GeckoResult<Void>()
-            }, { throwable ->
-                result.completeExceptionally(throwable)
-                GeckoResult<Void>()
-            })
+            geckoResult.cancel().then(
+                {
+                    result.complete(it ?: false)
+                    GeckoResult<Void>()
+                },
+                { throwable ->
+                    result.completeExceptionally(throwable)
+                    GeckoResult<Void>()
+                }
+            )
             return result
         }
     }

@@ -47,9 +47,11 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 components.customTabsUseCases,
                 components.menuBuilder,
                 window = activity?.window,
-                closeListener = { activity?.finish() }),
+                closeListener = { activity?.finish() }
+            ),
             owner = this,
-            view = binding.root)
+            view = binding.root
+        )
 
         hideToolbarFeature.set(
             feature = WebAppHideToolbarFeature(
@@ -61,7 +63,8 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 binding.toolbar.isVisible = toolbarVisible
             },
             owner = this,
-            view = binding.toolbar)
+            view = binding.toolbar
+        )
 
         val windowFeature = CustomTabWindowFeature(
             requireActivity(),

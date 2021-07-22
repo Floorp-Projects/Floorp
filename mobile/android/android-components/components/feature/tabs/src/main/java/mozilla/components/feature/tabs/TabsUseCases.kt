@@ -164,11 +164,13 @@ class TabsUseCases(
             // If an engine session is specified then loading will have already started when linking
             // the tab to its engine session. Otherwise we ask to load the URL here.
             if (startLoading && engineSession == null) {
-                store.dispatch(EngineAction.LoadUrlAction(
-                    tab.id,
-                    url,
-                    flags
-                ))
+                store.dispatch(
+                    EngineAction.LoadUrlAction(
+                        tab.id,
+                        url,
+                        flags
+                    )
+                )
             }
 
             return tab.id
@@ -228,11 +230,13 @@ class TabsUseCases(
             // If an engine session is specified then loading will have already started when linking
             // the tab to its engine session. Otherwise we ask to load the URL here.
             if (startLoading && engineSession == null) {
-                store.dispatch(EngineAction.LoadUrlAction(
-                    tab.id,
-                    url,
-                    flags
-                ))
+                store.dispatch(
+                    EngineAction.LoadUrlAction(
+                        tab.id,
+                        url,
+                        flags
+                    )
+                )
             }
 
             return tab.id
@@ -424,11 +428,13 @@ class TabsUseCases(
                     initialLoadFlags = flags
                 )
                 store.dispatch(TabListAction.AddTabAction(tab, select = true))
-                store.dispatch(EngineAction.LoadUrlAction(
-                    tab.id,
-                    url,
-                    flags
-                ))
+                store.dispatch(
+                    EngineAction.LoadUrlAction(
+                        tab.id,
+                        url,
+                        flags
+                    )
+                )
                 tab.id
             }
         }
@@ -455,10 +461,12 @@ class TabsUseCases(
                 engineSessionState = tab.engineState.engineSessionState
             )
 
-            store.dispatch(TabListAction.AddTabAction(
-                duplicate,
-                select = selectNewTab
-            ))
+            store.dispatch(
+                TabListAction.AddTabAction(
+                    duplicate,
+                    select = selectNewTab
+                )
+            )
         }
     }
 

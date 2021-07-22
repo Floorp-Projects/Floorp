@@ -106,12 +106,12 @@ class WebExtensionBrowserMenuBuilder(
 
             val webExtSubMenuItems = if (appendExtensionSubMenuAtStart) {
                 listOf(backPressMenuItem) + BrowserMenuDivider() +
-                filteredExtensionMenuItems +
-                BrowserMenuDivider() + addonsManagerMenuItem
+                    filteredExtensionMenuItems +
+                    BrowserMenuDivider() + addonsManagerMenuItem
             } else {
                 listOf(addonsManagerMenuItem) + BrowserMenuDivider() +
-                filteredExtensionMenuItems +
-                BrowserMenuDivider() + backPressMenuItem
+                    filteredExtensionMenuItems +
+                    BrowserMenuDivider() + backPressMenuItem
             }
 
             val webExtBrowserMenuAdapter = BrowserMenuAdapter(context, webExtSubMenuItems)

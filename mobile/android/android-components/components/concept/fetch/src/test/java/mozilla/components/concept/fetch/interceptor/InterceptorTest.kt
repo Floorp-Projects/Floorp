@@ -58,27 +58,33 @@ class InterceptorTest {
                 override fun intercept(chain: Interceptor.Chain): Response {
                     assertEquals("https://www.mozilla.org", chain.request.url)
                     order.add("A")
-                    return chain.proceed(chain.request.copy(
-                        url = chain.request.url + "/a"
-                    ))
+                    return chain.proceed(
+                        chain.request.copy(
+                            url = chain.request.url + "/a"
+                        )
+                    )
                 }
             },
             object : Interceptor {
                 override fun intercept(chain: Interceptor.Chain): Response {
                     assertEquals("https://www.mozilla.org/a", chain.request.url)
                     order.add("B")
-                    return chain.proceed(chain.request.copy(
-                        url = chain.request.url + "/b"
-                    ))
+                    return chain.proceed(
+                        chain.request.copy(
+                            url = chain.request.url + "/b"
+                        )
+                    )
                 }
             },
             object : Interceptor {
                 override fun intercept(chain: Interceptor.Chain): Response {
                     assertEquals("https://www.mozilla.org/a/b", chain.request.url)
                     order.add("C")
-                    return chain.proceed(chain.request.copy(
-                        url = chain.request.url + "/c"
-                    ))
+                    return chain.proceed(
+                        chain.request.copy(
+                            url = chain.request.url + "/c"
+                        )
+                    )
                 }
             }
         )

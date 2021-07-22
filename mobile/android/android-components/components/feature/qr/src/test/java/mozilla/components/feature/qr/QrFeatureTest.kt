@@ -156,10 +156,12 @@ class QrFeatureTest {
         whenever(fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG))
             .thenReturn(fragment)
 
-        val feature = spy(QrFeature(
-            testContext,
-            fragmentManager
-        ))
+        val feature = spy(
+            QrFeature(
+                testContext,
+                fragmentManager
+            )
+        )
         val listener = feature.scanCompleteListener
 
         // When
@@ -175,10 +177,12 @@ class QrFeatureTest {
         val fragment = mock<QrFragment>()
         whenever(fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG))
             .thenReturn(fragment)
-        val feature = spy(QrFeature(
-            testContext,
-            fragmentManager
-        ))
+        val feature = spy(
+            QrFeature(
+                testContext,
+                fragmentManager
+            )
+        )
 
         // When
         feature.stop()

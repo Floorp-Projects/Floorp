@@ -135,7 +135,8 @@ internal class FilePicker(
 
     private fun getActivePromptRequest(): PromptRequest? =
         store.state.findCustomTabOrSelectedTab(sessionId)?.content?.promptRequests?.lastOrNull {
-            prompt -> prompt is File
+            prompt ->
+            prompt is File
         }
 
     /**

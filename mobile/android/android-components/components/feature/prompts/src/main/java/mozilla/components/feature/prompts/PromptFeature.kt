@@ -143,7 +143,10 @@ class PromptFeature private constructor(
     private val onManageCreditCards: () -> Unit = {},
     private val onSelectCreditCard: () -> Unit = {},
     onNeedToRequestPermissions: OnNeedToRequestPermissions
-) : LifecycleAwareFeature, PermissionsFeature, Prompter, ActivityResultHandler,
+) : LifecycleAwareFeature,
+    PermissionsFeature,
+    Prompter,
+    ActivityResultHandler,
     UserInteractionHandler {
     // These three scopes have identical lifetimes. We do not yet have a way of combining scopes
     private var handlePromptScope: CoroutineScope? = null

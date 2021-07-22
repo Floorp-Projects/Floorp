@@ -80,9 +80,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 components.store,
                 components.sessionUseCases.goBack,
                 binding.engineView,
-                sessionId),
+                sessionId
+            ),
             owner = this,
-            view = binding.root)
+            view = binding.root
+        )
 
         toolbarFeature.set(
             feature = ToolbarFeature(
@@ -90,9 +92,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 components.store,
                 components.sessionUseCases.loadUrl,
                 components.defaultSearchUseCase,
-                sessionId),
+                sessionId
+            ),
             owner = this,
-            view = binding.root)
+            view = binding.root
+        )
 
         binding.toolbar.display.indicators += listOf(
             DisplayToolbar.Indicators.TRACKING_PROTECTION, DisplayToolbar.Indicators.HIGHLIGHT
@@ -102,9 +106,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             feature = SwipeRefreshFeature(
                 components.store,
                 components.sessionUseCases.reload,
-                binding.swipeToRefresh),
+                binding.swipeToRefresh
+            ),
             owner = this,
-            view = binding.root)
+            view = binding.root
+        )
 
         downloadsFeature.set(
             feature = DownloadsFeature(
@@ -124,7 +130,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 onNeedToRequestPermissions = { permissions ->
                     @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/10358
                     requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
-                }),
+                }
+            ),
             owner = this,
             view = binding.root
         )
@@ -142,7 +149,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 sessionId = sessionId
             ),
             owner = this,
-            view = binding.root)
+            view = binding.root
+        )
 
         appLinksFeature.set(
             feature = AppLinksFeature(
@@ -166,9 +174,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 onNeedToRequestPermissions = { permissions ->
                     @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/10358
                     requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
-                }),
+                }
+            ),
             owner = this,
-            view = binding.root)
+            view = binding.root
+        )
 
         sitePermissionsFeature.set(
             feature = SitePermissionsFeature(
@@ -200,7 +210,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         findInPageIntegration.set(
             feature = FindInPageIntegration(components.store, binding.findInPage, binding.engineView),
             owner = this,
-            view = binding.root)
+            view = binding.root
+        )
 
         val secureWindowFeature = SecureWindowFeature(
             window = requireActivity().window,

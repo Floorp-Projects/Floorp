@@ -8,8 +8,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import mozilla.components.feature.addons.update.AddonUpdater
-import mozilla.components.feature.addons.update.AddonUpdater.Status.NoUpdateAvailable
 import mozilla.components.feature.addons.update.AddonUpdater.Status.Error
+import mozilla.components.feature.addons.update.AddonUpdater.Status.NoUpdateAvailable
 import mozilla.components.feature.addons.update.AddonUpdater.Status.NotInstalled
 import mozilla.components.feature.addons.update.AddonUpdater.Status.SuccessfullyUpdated
 import mozilla.components.feature.addons.update.db.UpdateAttemptEntity.Companion.ERROR_DB

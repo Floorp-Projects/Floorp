@@ -369,7 +369,7 @@ tasks.register("ktlint", JavaExec) {
     description = "Check Kotlin code style."
     classpath = configurations.ktlint
     main = "com.pinterest.ktlint.Main"
-    args "components/**/*.kt" , "samples/**/*.kt", "!**/build", "buildSrc/**/*.kt"
+    args "components/**/*.kt" , "samples/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt"
 }
 
 apply plugin: GitHubPlugin
@@ -378,7 +378,7 @@ task ktlintFormat(type: JavaExec, group: "formatting") {
     description = "Fix Kotlin code style deviations."
     classpath = configurations.ktlint
     main = "com.pinterest.ktlint.Main"
-    args "-F", "components/**/*.kt" , "samples/**/*.kt", "!**/build", "buildSrc/**/*.kt"
+    args "-F", "components/**/*.kt" , "samples/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt"
 }
 
 tasks.register("listRepositories") {

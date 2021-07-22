@@ -6,8 +6,8 @@ package mozilla.components.browser.state.engine.middleware
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.createCustomTab
@@ -48,10 +48,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.LoadUrlAction(
-            "test-tab",
-            "https://www.firefox.com"
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.LoadUrlAction(
+                "test-tab",
+                "https://www.firefox.com"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -116,10 +118,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.LoadUrlAction(
-            "test-tab",
-            "https://www.firefox.com"
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.LoadUrlAction(
+                "test-tab",
+                "https://www.firefox.com"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -151,10 +155,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.LoadUrlAction(
-            "test-tab",
-            "https://www.firefox.com"
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.LoadUrlAction(
+                "test-tab",
+                "https://www.firefox.com"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -223,10 +229,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.LoadUrlAction(
-            "test-tab",
-            "https://www.firefox.com"
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.LoadUrlAction(
+                "test-tab",
+                "https://www.firefox.com"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -262,10 +270,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.LoadUrlAction(
-            "test-tab",
-            "https://www.firefox.com"
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.LoadUrlAction(
+                "test-tab",
+                "https://www.firefox.com"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -298,10 +308,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.LoadUrlAction(
-            "test-tab",
-            "https://www.firefox.com"
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.LoadUrlAction(
+                "test-tab",
+                "https://www.firefox.com"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -332,15 +344,17 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.LoadUrlAction(
-            "test-tab",
-            "https://www.firefox.com",
-            EngineSession.LoadUrlFlags.external(),
-            mapOf(
-                "X-Coffee" to "Large",
-                "X-Sugar" to "None"
+        store.dispatch(
+            EngineAction.LoadUrlAction(
+                "test-tab",
+                "https://www.firefox.com",
+                EngineSession.LoadUrlFlags.external(),
+                mapOf(
+                    "X-Coffee" to "Large",
+                    "X-Sugar" to "None"
+                )
             )
-        )).joinBlocking()
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -377,10 +391,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.LoadUrlAction(
-            "test-tab",
-            "https://www.mozilla.org"
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.LoadUrlAction(
+                "test-tab",
+                "https://www.mozilla.org"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -410,10 +426,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.LoadUrlAction(
-            "unknown-tab",
-            "https://www.mozilla.org"
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.LoadUrlAction(
+                "unknown-tab",
+                "https://www.mozilla.org"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -442,12 +460,14 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.LoadDataAction(
-            "test-tab",
-            data = "foobar data",
-            mimeType = "something/important",
-            encoding = "UTF-16"
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.LoadDataAction(
+                "test-tab",
+                data = "foobar data",
+                mimeType = "something/important",
+                encoding = "UTF-16"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -481,10 +501,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.ReloadAction(
-            "test-tab",
-            flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.BYPASS_CACHE)
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.ReloadAction(
+                "test-tab",
+                flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.BYPASS_CACHE)
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -516,9 +538,11 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.GoForwardAction(
-            "test-tab"
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.GoForwardAction(
+                "test-tab"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -548,9 +572,11 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.GoBackAction(
-            "test-tab"
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.GoBackAction(
+                "test-tab"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -580,10 +606,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.GoToHistoryIndexAction(
-            "test-tab",
-            index = 42
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.GoToHistoryIndexAction(
+                "test-tab",
+                index = 42
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -613,10 +641,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.ToggleDesktopModeAction(
-            "test-tab",
-            enable = true
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.ToggleDesktopModeAction(
+                "test-tab",
+                enable = true
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -646,10 +676,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.ToggleDesktopModeAction(
-            "test-tab",
-            enable = false
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.ToggleDesktopModeAction(
+                "test-tab",
+                enable = false
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -679,9 +711,11 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.ExitFullScreenModeAction(
-            "test-tab"
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.ExitFullScreenModeAction(
+                "test-tab"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
@@ -711,10 +745,12 @@ class EngineDelegateMiddlewareTest {
             )
         )
 
-        store.dispatch(EngineAction.ClearDataAction(
-            "test-tab",
-            data = Engine.BrowsingData.allCaches()
-        )).joinBlocking()
+        store.dispatch(
+            EngineAction.ClearDataAction(
+                "test-tab",
+                data = Engine.BrowsingData.allCaches()
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()

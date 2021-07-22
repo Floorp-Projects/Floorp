@@ -162,7 +162,8 @@ class ToolbarAutocompleteFeatureTest {
         }
 
         verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
-        verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",
+        verifyAutocompleteResult(
+            toolbar, autocompleteDelegate, "mo",
             AutocompleteResult(
                 input = "mo",
                 text = "mozilla.org",
@@ -178,12 +179,15 @@ class ToolbarAutocompleteFeatureTest {
         verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
 
         // Can autocomplete with a non-empty domain provider.
-        domains.testDomains(listOf(
-            Domain.create("https://www.mozilla.org")
-        ))
+        domains.testDomains(
+            listOf(
+                Domain.create("https://www.mozilla.org")
+            )
+        )
 
         verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
-        verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",
+        verifyAutocompleteResult(
+            toolbar, autocompleteDelegate, "mo",
             AutocompleteResult(
                 input = "mo",
                 text = "mozilla.org",
@@ -202,12 +206,15 @@ class ToolbarAutocompleteFeatureTest {
 
         // Can autocomplete with both domains providing data; test that history is prioritized,
         // falling back to domains.
-        domains.testDomains(listOf(
-            Domain.create("https://www.mozilla.org"),
-            Domain.create("https://moscow.ru")
-        ))
+        domains.testDomains(
+            listOf(
+                Domain.create("https://www.mozilla.org"),
+                Domain.create("https://moscow.ru")
+            )
+        )
 
-        verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",
+        verifyAutocompleteResult(
+            toolbar, autocompleteDelegate, "mo",
             AutocompleteResult(
                 input = "mo",
                 text = "mozilla.org",
@@ -221,7 +228,8 @@ class ToolbarAutocompleteFeatureTest {
             history.recordVisit("https://www.mozilla.org", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
         }
 
-        verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",
+        verifyAutocompleteResult(
+            toolbar, autocompleteDelegate, "mo",
             AutocompleteResult(
                 input = "mo",
                 text = "mozilla.org",
@@ -231,7 +239,8 @@ class ToolbarAutocompleteFeatureTest {
             )
         )
 
-        verifyAutocompleteResult(toolbar, autocompleteDelegate, "mos",
+        verifyAutocompleteResult(
+            toolbar, autocompleteDelegate, "mos",
             AutocompleteResult(
                 input = "mos",
                 text = "moscow.ru",

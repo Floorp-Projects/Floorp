@@ -56,7 +56,8 @@ class SentryService(
 
     // Fenix perf note: Sentry init may negatively impact cold startup so it's important this is lazily init.
     @VisibleForTesting(otherwise = PRIVATE)
-    internal val client: SentryClient by lazy { SentryClientFactory.sentryClient(
+    internal val client: SentryClient by lazy {
+        SentryClientFactory.sentryClient(
             Uri.parse(dsn).buildUpon()
                 .appendQueryParameter("uncaught.handler.enabled", "false")
                 .build()
@@ -86,9 +87,9 @@ class SentryService(
         }
 
         val eventBuilder = EventBuilder().withMessage(createMessage(crash))
-                .withTimestamp(Date(crash.timestamp))
-                .withLevel(Event.Level.FATAL)
-                .withSentryInterface(ExceptionInterface(crash.throwable))
+            .withTimestamp(Date(crash.timestamp))
+            .withLevel(Event.Level.FATAL)
+            .withSentryInterface(ExceptionInterface(crash.throwable))
 
         client.sendEvent(eventBuilder)
         client.context.clearBreadcrumbs()
@@ -127,8 +128,8 @@ class SentryService(
         }
 
         val eventBuilder = EventBuilder().withMessage(createMessage(throwable))
-                .withLevel(Event.Level.INFO)
-                .withSentryInterface(ExceptionInterface(throwable))
+            .withLevel(Event.Level.INFO)
+            .withSentryInterface(ExceptionInterface(throwable))
 
         client.sendEvent(eventBuilder)
         client.context.clearBreadcrumbs()
@@ -139,13 +140,13 @@ class SentryService(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun CrashBreadcrumb.toSentryBreadcrumb(): Breadcrumb {
         return BreadcrumbBuilder()
-                .setMessage(this.message)
-                .setData(this.data)
-                .setCategory(this.category)
-                .setLevel(this.level.toSentryBreadcrumbLevel())
-                .setType(this.type.toSentryBreadcrumbType())
-                .setTimestamp(this.date)
-                .build()
+            .setMessage(this.message)
+            .setData(this.data)
+            .setCategory(this.category)
+            .setLevel(this.level.toSentryBreadcrumbLevel())
+            .setType(this.type.toSentryBreadcrumbType())
+            .setTimestamp(this.date)
+            .build()
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

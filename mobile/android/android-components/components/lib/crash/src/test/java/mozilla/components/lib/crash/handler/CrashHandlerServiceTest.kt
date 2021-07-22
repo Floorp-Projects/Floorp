@@ -42,13 +42,15 @@ class CrashHandlerServiceTest {
     fun setUp() {
         service = spy(Robolectric.setupService(CrashHandlerService::class.java))
         service!!.startService(Intent())
-        reporter = spy(CrashReporter(
-            context = testContext,
-            shouldPrompt = CrashReporter.Prompt.NEVER,
-            services = listOf(mock()),
-            nonFatalCrashIntent = mock(),
-            scope = scope
-        )).install(testContext)
+        reporter = spy(
+            CrashReporter(
+                context = testContext,
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+                services = listOf(mock()),
+                nonFatalCrashIntent = mock(),
+                scope = scope
+            )
+        ).install(testContext)
 
         intent = Intent("org.mozilla.gecko.ACTION_CRASHED")
         intent!!.component = ComponentName(

@@ -167,8 +167,10 @@ class GeckoWebExtension(
      */
     override fun registerActionHandler(actionHandler: ActionHandler) {
         if (!supportActions) {
-            logger.error("Attempt to register default action handler but browser and page " +
-                "action support is turned off for this extension: $id")
+            logger.error(
+                "Attempt to register default action handler but browser and page " +
+                    "action support is turned off for this extension: $id"
+            )
             return
         }
 
@@ -209,8 +211,10 @@ class GeckoWebExtension(
      */
     override fun registerActionHandler(session: EngineSession, actionHandler: ActionHandler) {
         if (!supportActions) {
-            logger.error("Attempt to register action handler on session but browser and page " +
-                "action support is turned off for this extension: $id")
+            logger.error(
+                "Attempt to register action handler on session but browser and page " +
+                    "action support is turned off for this extension: $id"
+            )
             return
         }
 
@@ -275,8 +279,10 @@ class GeckoWebExtension(
                 ext.metaData.optionsPageUrl?.let { optionsPageUrl ->
                     tabHandler.onNewTab(
                         this@GeckoWebExtension,
-                        GeckoEngineSession(runtime,
-                            defaultSettings = defaultSettings),
+                        GeckoEngineSession(
+                            runtime,
+                            defaultSettings = defaultSettings
+                        ),
                         false,
                         optionsPageUrl
                     )
@@ -301,10 +307,11 @@ class GeckoWebExtension(
             ): GeckoResult<AllowOrDeny> {
 
                 return if (tabHandler.onUpdateTab(
-                    this@GeckoWebExtension,
-                    session,
-                    tabDetails.active == true,
-                    tabDetails.url)
+                        this@GeckoWebExtension,
+                        session,
+                        tabDetails.active == true,
+                        tabDetails.url
+                    )
                 ) {
                     GeckoResult.allow()
                 } else {

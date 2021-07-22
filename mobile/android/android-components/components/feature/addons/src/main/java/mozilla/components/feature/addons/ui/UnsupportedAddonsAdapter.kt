@@ -59,15 +59,17 @@ class UnsupportedAddonsAdapter(
         holder.removeButton.setOnClickListener {
             pendingUninstall = true
             notifyDataSetChanged()
-            addonManager.uninstallAddon(addon,
-                    onSuccess = {
-                        removeUninstalledAddon(addon)
-                    },
-                    onError = { addonId, throwable ->
-                        pendingUninstall = false
-                        notifyDataSetChanged()
-                        unsupportedAddonsAdapterDelegate.onUninstallError(addonId, throwable)
-                    })
+            addonManager.uninstallAddon(
+                addon,
+                onSuccess = {
+                    removeUninstalledAddon(addon)
+                },
+                onError = { addonId, throwable ->
+                    pendingUninstall = false
+                    notifyDataSetChanged()
+                    unsupportedAddonsAdapterDelegate.onUninstallError(addonId, throwable)
+                }
+            )
         }
     }
 

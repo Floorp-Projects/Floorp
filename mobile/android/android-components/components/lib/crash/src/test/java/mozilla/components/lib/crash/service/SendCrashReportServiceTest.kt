@@ -53,9 +53,10 @@ class SendCrashReportServiceTest {
     @Test
     fun `Send crash report will forward same crash to crash service`() {
         var caughtCrash: Crash.NativeCodeCrash? = null
-        val crashReporter = spy(CrashReporter(
-            context = testContext,
-            shouldPrompt = CrashReporter.Prompt.NEVER,
+        val crashReporter = spy(
+            CrashReporter(
+                context = testContext,
+                shouldPrompt = CrashReporter.Prompt.NEVER,
                 services = listOf(object : CrashReporterService {
                     override val id: String = "test"
 
@@ -77,31 +78,32 @@ class SendCrashReportServiceTest {
                         fail("Didn't expect caught exception")
                         return null
                     }
-            }),
-            scope = scope
-        )).install(testContext)
+                }),
+                scope = scope
+            )
+        ).install(testContext)
         val originalCrash = Crash.NativeCodeCrash(
-                123,
-                "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
-                true,
-                "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
-                false,
-                arrayListOf()
+            123,
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
+            true,
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
+            false,
+            arrayListOf()
         )
 
         val intent = Intent("org.mozilla.gecko.ACTION_CRASHED")
         intent.component = ComponentName(
-                "org.mozilla.samples.browser",
-                "mozilla.components.lib.crash.handler.CrashHandlerService"
+            "org.mozilla.samples.browser",
+            "mozilla.components.lib.crash.handler.CrashHandlerService"
         )
         intent.putExtra(
-                "minidumpPath",
-                "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
+            "minidumpPath",
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
         )
         intent.putExtra("fatal", false)
         intent.putExtra(
-                "extrasPath",
-                "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
+            "extrasPath",
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
         )
         intent.putExtra("minidumpSuccess", true)
         intent.putParcelableArrayListExtra("breadcrumbs", null)

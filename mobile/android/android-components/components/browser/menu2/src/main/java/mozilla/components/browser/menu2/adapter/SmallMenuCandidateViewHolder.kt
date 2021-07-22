@@ -17,7 +17,8 @@ internal class SmallMenuCandidateViewHolder(
     itemView: View,
     private val dismiss: () -> Unit
 ) : LastItemViewHolder<SmallMenuCandidate>(itemView),
-    View.OnClickListener, View.OnLongClickListener {
+    View.OnClickListener,
+    View.OnLongClickListener {
 
     private val iconView = itemView as AppCompatImageButton
     private var onClickListener: (() -> Unit)? = null

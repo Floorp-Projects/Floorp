@@ -332,15 +332,15 @@ abstract class StickyItemsLinearLayoutManager<T> constructor(
         // If we have a pending scroll wait until the end of layout and scroll again.
         if (scrollPosition != RecyclerView.NO_POSITION) {
             stickyItem.viewTreeObserver.addOnGlobalLayoutListener(object :
-                ViewTreeObserver.OnGlobalLayoutListener {
-                override fun onGlobalLayout() {
-                    stickyItem.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    if (scrollPosition != RecyclerView.NO_POSITION) {
-                        scrollToPositionWithOffset(scrollPosition, scrollOffset)
-                        setScrollState(RecyclerView.NO_POSITION, INVALID_OFFSET)
+                    ViewTreeObserver.OnGlobalLayoutListener {
+                    override fun onGlobalLayout() {
+                        stickyItem.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                        if (scrollPosition != RecyclerView.NO_POSITION) {
+                            scrollToPositionWithOffset(scrollPosition, scrollOffset)
+                            setScrollState(RecyclerView.NO_POSITION, INVALID_OFFSET)
+                        }
                     }
-                }
-            })
+                })
         }
     }
 

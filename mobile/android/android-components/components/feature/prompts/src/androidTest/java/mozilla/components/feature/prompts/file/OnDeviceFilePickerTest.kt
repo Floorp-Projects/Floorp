@@ -45,11 +45,11 @@ class OnDeviceFilePickerTest {
         var onMultipleFilesSelectedWasExecuted = false
 
         val filePickerRequest = PromptRequest.File(
-                arrayOf(""),
-                isMultipleFilesSelection = true,
-                onDismiss = { onDismissWasExecuted = true },
-                onSingleFileSelected = { _, _ -> onSingleFileSelectedWasExecuted = true },
-                onMultipleFilesSelected = { _, _ -> onMultipleFilesSelectedWasExecuted = true }
+            arrayOf(""),
+            isMultipleFilesSelection = true,
+            onDismiss = { onDismissWasExecuted = true },
+            onSingleFileSelected = { _, _ -> onSingleFileSelectedWasExecuted = true },
+            onMultipleFilesSelected = { _, _ -> onMultipleFilesSelectedWasExecuted = true }
         )
 
         val intent = Intent()
@@ -70,11 +70,11 @@ class OnDeviceFilePickerTest {
         var onSingleFileSelectedWasExecuted = false
 
         val filePickerRequest = PromptRequest.File(
-                arrayOf(""),
-                isMultipleFilesSelection = true,
-                onDismiss = { onDismissWasExecuted = true },
-                onSingleFileSelected = { _, _ -> onSingleFileSelectedWasExecuted = true },
-                onMultipleFilesSelected = { _, uris -> urisWereSelected = uris.isNotEmpty() }
+            arrayOf(""),
+            isMultipleFilesSelection = true,
+            onDismiss = { onDismissWasExecuted = true },
+            onSingleFileSelected = { _, _ -> onSingleFileSelectedWasExecuted = true },
+            onMultipleFilesSelected = { _, uris -> urisWereSelected = uris.isNotEmpty() }
         )
 
         val intent = Intent()
@@ -95,10 +95,10 @@ class OnDeviceFilePickerTest {
         var onMultipleFilesSelectedWasExecuted = false
 
         val filePickerRequest = PromptRequest.File(
-                arrayOf(""),
-                onDismiss = { onDismissWasExecuted = true },
-                onSingleFileSelected = { _, _ -> onSingleFileSelectedWasExecuted = true },
-                onMultipleFilesSelected = { _, _ -> onMultipleFilesSelectedWasExecuted = true }
+            arrayOf(""),
+            onDismiss = { onDismissWasExecuted = true },
+            onSingleFileSelected = { _, _ -> onSingleFileSelectedWasExecuted = true },
+            onMultipleFilesSelected = { _, _ -> onMultipleFilesSelectedWasExecuted = true }
         )
 
         val intent = Intent()
@@ -119,10 +119,10 @@ class OnDeviceFilePickerTest {
         var onMultipleFilesSelectedWasExecuted = false
 
         val filePickerRequest = PromptRequest.File(
-                arrayOf(""),
-                onDismiss = { onDismissWasExecuted = true },
-                onSingleFileSelected = { _, _ -> onSingleFileSelectedWasExecuted = true },
-                onMultipleFilesSelected = { _, _ -> onMultipleFilesSelectedWasExecuted = true }
+            arrayOf(""),
+            onDismiss = { onDismissWasExecuted = true },
+            onSingleFileSelected = { _, _ -> onSingleFileSelectedWasExecuted = true },
+            onMultipleFilesSelected = { _, _ -> onMultipleFilesSelectedWasExecuted = true }
         )
 
         val intent = Intent()

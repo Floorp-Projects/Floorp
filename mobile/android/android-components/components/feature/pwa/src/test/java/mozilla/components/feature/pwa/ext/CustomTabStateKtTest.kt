@@ -29,11 +29,13 @@ class CustomTabStateKtTest {
 
     @Test
     fun `trustedOrigins only includes the HANDLE_ALL_URLS relationship`() {
-        val state = CustomTabState(relationships = mapOf(
-            OriginRelationPair("https://firefox.com".toUri(), RELATION_HANDLE_ALL_URLS) to SUCCESS,
-            OriginRelationPair("https://example.com".toUri(), RELATION_USE_AS_ORIGIN) to SUCCESS,
-            OriginRelationPair("https://mozilla.org".toUri(), RELATION_HANDLE_ALL_URLS) to PENDING
-        ))
+        val state = CustomTabState(
+            relationships = mapOf(
+                OriginRelationPair("https://firefox.com".toUri(), RELATION_HANDLE_ALL_URLS) to SUCCESS,
+                OriginRelationPair("https://example.com".toUri(), RELATION_USE_AS_ORIGIN) to SUCCESS,
+                OriginRelationPair("https://mozilla.org".toUri(), RELATION_HANDLE_ALL_URLS) to PENDING
+            )
+        )
         assertEquals(
             listOf("https://firefox.com".toUri(), "https://mozilla.org".toUri()),
             state.trustedOrigins
@@ -42,11 +44,13 @@ class CustomTabStateKtTest {
 
     @Test
     fun `trustedOrigins only includes pending or success statuses`() {
-        val state = CustomTabState(relationships = mapOf(
-            OriginRelationPair("https://firefox.com".toUri(), RELATION_HANDLE_ALL_URLS) to SUCCESS,
-            OriginRelationPair("https://example.com".toUri(), RELATION_USE_AS_ORIGIN) to FAILURE,
-            OriginRelationPair("https://mozilla.org".toUri(), RELATION_HANDLE_ALL_URLS) to PENDING
-        ))
+        val state = CustomTabState(
+            relationships = mapOf(
+                OriginRelationPair("https://firefox.com".toUri(), RELATION_HANDLE_ALL_URLS) to SUCCESS,
+                OriginRelationPair("https://example.com".toUri(), RELATION_USE_AS_ORIGIN) to FAILURE,
+                OriginRelationPair("https://mozilla.org".toUri(), RELATION_HANDLE_ALL_URLS) to PENDING
+            )
+        )
         assertEquals(
             listOf("https://firefox.com".toUri(), "https://mozilla.org".toUri()),
             state.trustedOrigins

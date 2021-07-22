@@ -35,11 +35,14 @@ class CustomDomainsTest {
 
     @Test
     fun saveAndRemoveDomains() {
-        CustomDomains.save(testContext, listOf(
-            "mozilla.org",
-            "example.org",
-            "example.com"
-        ))
+        CustomDomains.save(
+            testContext,
+            listOf(
+                "mozilla.org",
+                "example.org",
+                "example.com"
+            )
+        )
 
         var domains = CustomDomains.load(testContext)
         assertEquals(3, domains.size)
@@ -60,11 +63,14 @@ class CustomDomainsTest {
 
     @Test
     fun saveAndLoadDomains() {
-        CustomDomains.save(testContext, listOf(
-            "mozilla.org",
-            "example.org",
-            "example.com"
-        ))
+        CustomDomains.save(
+            testContext,
+            listOf(
+                "mozilla.org",
+                "example.org",
+                "example.com"
+            )
+        )
 
         val domains = CustomDomains.load(testContext)
 

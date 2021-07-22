@@ -9,8 +9,8 @@ package mozilla.components.support.utils
 import android.webkit.URLUtil
 import java.net.URI
 import java.net.URISyntaxException
-import java.util.Locale
 import java.util.LinkedList
+import java.util.Locale
 import java.util.regex.Pattern
 
 /**

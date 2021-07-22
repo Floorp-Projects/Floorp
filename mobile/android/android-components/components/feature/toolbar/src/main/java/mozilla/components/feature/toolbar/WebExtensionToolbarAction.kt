@@ -19,8 +19,8 @@ import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.base.log.Log
-import mozilla.components.support.ktx.android.view.setPadding
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
+import mozilla.components.support.ktx.android.view.setPadding
 
 /**
  * An action button that represents an web extension item to be added to the toolbar.

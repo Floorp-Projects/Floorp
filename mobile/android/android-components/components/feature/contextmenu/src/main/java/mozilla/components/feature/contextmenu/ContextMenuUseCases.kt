@@ -40,9 +40,11 @@ class ContextMenuUseCases(
          * browser-state we should revisits this and find a better solution.
          */
         operator fun invoke(tabId: String, download: DownloadState) {
-            store.dispatch(ContentAction.UpdateDownloadAction(
-                tabId, download
-            ))
+            store.dispatch(
+                ContentAction.UpdateDownloadAction(
+                    tabId, download
+                )
+            )
         }
     }
 

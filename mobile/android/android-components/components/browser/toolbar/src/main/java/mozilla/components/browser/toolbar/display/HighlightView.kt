@@ -13,8 +13,8 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.isVisible
 import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.Toolbar.Highlight
-import mozilla.components.concept.toolbar.Toolbar.Highlight.PERMISSIONS_CHANGED
 import mozilla.components.concept.toolbar.Toolbar.Highlight.NONE
+import mozilla.components.concept.toolbar.Toolbar.Highlight.PERMISSIONS_CHANGED
 
 /**
  * Internal widget to display a dot notification.
@@ -79,7 +79,8 @@ internal class HighlightView @JvmOverloads constructor(
         PERMISSIONS_CHANGED -> Update(
             highlightIcon,
             R.string.mozac_browser_toolbar_content_description_autoplay_blocked,
-            true)
+            true
+        )
 
         NONE -> Update(
             null,

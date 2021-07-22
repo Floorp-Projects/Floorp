@@ -96,7 +96,8 @@ class SelectorsKtTest {
 
         val state = BrowserState(
             tabs = listOf(tab, otherTab),
-            customTabs = listOf(customTab))
+            customTabs = listOf(customTab)
+        )
 
         assertEquals(tab, state.findTab(tab.id))
         assertEquals(otherTab, state.findTab(otherTab.id))
@@ -111,7 +112,8 @@ class SelectorsKtTest {
 
         val state = BrowserState(
             tabs = listOf(privateTab, normalTab),
-            customTabs = listOf(customTab))
+            customTabs = listOf(customTab)
+        )
 
         assertEquals(normalTab, state.findNormalTab(normalTab.id))
         assertNull(state.findNormalTab(privateTab.id))
@@ -126,7 +128,8 @@ class SelectorsKtTest {
 
         val state = BrowserState(
             tabs = listOf(tab, otherTab),
-            customTabs = listOf(customTab))
+            customTabs = listOf(customTab)
+        )
 
         assertNull(state.findCustomTab(tab.id))
         assertNull(state.findCustomTab(otherTab.id))
@@ -142,7 +145,8 @@ class SelectorsKtTest {
         val state = BrowserState(
             tabs = listOf(tab, otherTab),
             customTabs = listOf(customTab),
-            selectedTabId = tab.id)
+            selectedTabId = tab.id
+        )
 
         assertEquals(tab, state.findCustomTabOrSelectedTab())
         assertEquals(tab, state.findCustomTabOrSelectedTab(null))
@@ -158,9 +162,10 @@ class SelectorsKtTest {
         val customTab = createCustomTab("https://www.mozilla.org")
 
         val state = BrowserState(
-                tabs = listOf(tab, otherTab),
-                customTabs = listOf(customTab),
-                selectedTabId = tab.id)
+            tabs = listOf(tab, otherTab),
+            customTabs = listOf(customTab),
+            selectedTabId = tab.id
+        )
 
         assertEquals(tab, state.findTabOrCustomTabOrSelectedTab())
         assertEquals(tab, state.findTabOrCustomTabOrSelectedTab(null))
@@ -178,7 +183,8 @@ class SelectorsKtTest {
 
         val state = BrowserState(
             tabs = listOf(tab1, privateTab1, tab2, privateTab2),
-            customTabs = listOf(createCustomTab("https://www.google.com")))
+            customTabs = listOf(createCustomTab("https://www.google.com"))
+        )
 
         assertEquals(listOf(tab1, tab2), state.getNormalOrPrivateTabs(private = false))
         assertEquals(listOf(privateTab1, privateTab2), state.getNormalOrPrivateTabs(private = true))
@@ -196,7 +202,8 @@ class SelectorsKtTest {
 
         val state = BrowserState(
             tabs = listOf(tab1, privateTab1, tab2, privateTab2),
-            customTabs = listOf(createCustomTab("https://www.google.com")))
+            customTabs = listOf(createCustomTab("https://www.google.com"))
+        )
 
         assertEquals(listOf(tab1, tab2), state.normalTabs)
         assertEquals(listOf(privateTab1, privateTab2), state.privateTabs)
@@ -213,7 +220,8 @@ class SelectorsKtTest {
             assertNotNull(state.findTabOrCustomTab("test-id"))
             assertEquals(
                 "https://www.mozilla.org",
-                state.findTabOrCustomTab("test-id")!!.content.url)
+                state.findTabOrCustomTab("test-id")!!.content.url
+            )
         }
 
         BrowserState(
@@ -222,7 +230,8 @@ class SelectorsKtTest {
             assertNotNull(state.findTabOrCustomTab("test-id"))
             assertEquals(
                 "https://www.mozilla.org",
-                state.findTabOrCustomTab("test-id")!!.content.url)
+                state.findTabOrCustomTab("test-id")!!.content.url
+            )
         }
     }
 
@@ -234,10 +243,12 @@ class SelectorsKtTest {
             assertNotNull(state.findTabByUrl("https://www.mozilla.org"))
             assertEquals(
                 "https://www.mozilla.org",
-                state.findTabByUrl("https://www.mozilla.org")!!.content.url)
+                state.findTabByUrl("https://www.mozilla.org")!!.content.url
+            )
             assertEquals(
                 "test-id",
-                state.findTabByUrl("https://www.mozilla.org")!!.id)
+                state.findTabByUrl("https://www.mozilla.org")!!.id
+            )
         }
 
         BrowserState(

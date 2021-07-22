@@ -68,10 +68,13 @@ class TabCollectionStorageTest {
     @Test
     fun testCreatingCollections() {
         storage.createCollection("Empty")
-        storage.createCollection("Recipes", listOf(
-            createTab("https://www.mozilla.org", title = "Mozilla"),
-            createTab("https://www.firefox.com", title = "Firefox")
-        ))
+        storage.createCollection(
+            "Recipes",
+            listOf(
+                createTab("https://www.mozilla.org", title = "Mozilla"),
+                createTab("https://www.firefox.com", title = "Firefox")
+            )
+        )
 
         val collections = getAllCollections()
 
@@ -98,10 +101,13 @@ class TabCollectionStorageTest {
             assertEquals(1, collections.size)
             assertEquals(0, collections[0].tabs.size)
 
-            id = storage.addTabsToCollection(collections[0], listOf(
-                createTab("https://www.mozilla.org", title = "Mozilla"),
-                createTab("https://www.firefox.com", title = "Firefox")
-            ))
+            id = storage.addTabsToCollection(
+                collections[0],
+                listOf(
+                    createTab("https://www.mozilla.org", title = "Mozilla"),
+                    createTab("https://www.firefox.com", title = "Firefox")
+                )
+            )
         }
 
         getAllCollections().let { collections ->
@@ -118,10 +124,13 @@ class TabCollectionStorageTest {
 
     @Test
     fun testRemovingTabsFromCollection() {
-        storage.createCollection("Articles", listOf(
-            createTab("https://www.mozilla.org", title = "Mozilla"),
-            createTab("https://www.firefox.com", title = "Firefox")
-        ))
+        storage.createCollection(
+            "Articles",
+            listOf(
+                createTab("https://www.mozilla.org", title = "Mozilla"),
+                createTab("https://www.firefox.com", title = "Firefox")
+            )
+        )
 
         getAllCollections().let { collections ->
             assertEquals(1, collections.size)
@@ -224,29 +233,34 @@ class TabCollectionStorageTest {
     @Suppress("ComplexMethod")
     fun testGettingCollections() = runBlocking {
         storage.createCollection(
-            "Articles", listOf(
+            "Articles",
+            listOf(
                 createTab("https://www.mozilla.org", title = "Mozilla")
             )
         )
         storage.createCollection(
-            "Recipes", listOf(
+            "Recipes",
+            listOf(
                 createTab("https://www.firefox.com", title = "Firefox")
             )
         )
         storage.createCollection(
-            "Books", listOf(
+            "Books",
+            listOf(
                 createTab("https://www.youtube.com", title = "YouTube"),
                 createTab("https://www.amazon.com", title = "Amazon")
             )
         )
         storage.createCollection(
-            "News", listOf(
+            "News",
+            listOf(
                 createTab("https://www.google.com", title = "Google"),
                 createTab("https://www.facebook.com", title = "Facebook")
             )
         )
         storage.createCollection(
-            "Blogs", listOf(
+            "Blogs",
+            listOf(
                 createTab("https://www.wikipedia.org", title = "Wikipedia")
             )
         )
@@ -301,30 +315,35 @@ class TabCollectionStorageTest {
     @Suppress("ComplexMethod")
     fun testGettingCollectionsList() = runBlocking {
         storage.createCollection(
-            "Articles", listOf(
-            createTab("https://www.mozilla.org", title = "Mozilla")
+            "Articles",
+            listOf(
+                createTab("https://www.mozilla.org", title = "Mozilla")
             )
         )
         storage.createCollection(
-            "Recipes", listOf(
-            createTab("https://www.firefox.com", title = "Firefox")
+            "Recipes",
+            listOf(
+                createTab("https://www.firefox.com", title = "Firefox")
             )
         )
         storage.createCollection(
-            "Books", listOf(
-            createTab("https://www.youtube.com", title = "YouTube"),
-            createTab("https://www.amazon.com", title = "Amazon")
+            "Books",
+            listOf(
+                createTab("https://www.youtube.com", title = "YouTube"),
+                createTab("https://www.amazon.com", title = "Amazon")
             )
         )
         storage.createCollection(
-            "News", listOf(
-            createTab("https://www.google.com", title = "Google"),
-            createTab("https://www.facebook.com", title = "Facebook")
+            "News",
+            listOf(
+                createTab("https://www.google.com", title = "Google"),
+                createTab("https://www.facebook.com", title = "Facebook")
             )
         )
         storage.createCollection(
-            "Blogs", listOf(
-            createTab("https://www.wikipedia.org", title = "Wikipedia")
+            "Blogs",
+            listOf(
+                createTab("https://www.wikipedia.org", title = "Wikipedia")
             )
         )
 
@@ -378,12 +397,14 @@ class TabCollectionStorageTest {
         assertEquals(0, storage.getTabCollectionsCount())
 
         storage.createCollection(
-            "Articles", listOf(
+            "Articles",
+            listOf(
                 createTab("https://www.mozilla.org", title = "Mozilla")
             )
         )
         storage.createCollection(
-            "Recipes", listOf(
+            "Recipes",
+            listOf(
                 createTab("https://www.firefox.com", title = "Firefox")
             )
         )
@@ -401,12 +422,14 @@ class TabCollectionStorageTest {
     @Test
     fun testRemovingAllCollections() {
         storage.createCollection(
-            "Articles", listOf(
+            "Articles",
+            listOf(
                 createTab("https://www.mozilla.org", title = "Mozilla")
             )
         )
         storage.createCollection(
-            "Recipes", listOf(
+            "Recipes",
+            listOf(
                 createTab("https://www.firefox.com", title = "Firefox")
             )
         )

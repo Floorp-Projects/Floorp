@@ -29,9 +29,10 @@ internal fun getTrackKey(
         code = uri.getQueryParameter(provider.codeParam)
         if (code.isNullOrEmpty() &&
             provider.name == "baidu" &&
-            uri.toString().contains("from=")) {
+            uri.toString().contains("from=")
+        ) {
             code = uri.toString().substringAfter("from=", "")
-                    .substringBefore("/", "")
+                .substringBefore("/", "")
         }
 
         // Glean doesn't allow code starting with a figure
@@ -72,8 +73,9 @@ private fun getTrackKeyFromCookies(
     for (followOnCookie in provider.followOnCookies) {
         val eCode = uri.getQueryParameter(followOnCookie.extraCodeParam)
         if (eCode == null || !followOnCookie.extraCodePrefixes.any { prefix ->
-                eCode.startsWith(prefix)
-            }) {
+            eCode.startsWith(prefix)
+        }
+        ) {
             continue
         }
 
@@ -91,8 +93,8 @@ private fun getTrackKeyFromCookies(
             if (valueList.size == 2 && valueList[0] == followOnCookie.codeParam &&
                 followOnCookie.codePrefixes.any { prefix ->
                     valueList[1].startsWith(
-                        prefix
-                    )
+                            prefix
+                        )
                 }
             ) {
                 return TrackKeyInfo(provider.name, SEARCH_TYPE_SAP_FOLLOW_ON, valueList[1])

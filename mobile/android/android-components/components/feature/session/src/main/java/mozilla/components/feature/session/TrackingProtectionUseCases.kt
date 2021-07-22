@@ -4,8 +4,8 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.browser.state.action.TrackingProtectionAction
 import androidx.core.net.toUri
+import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine

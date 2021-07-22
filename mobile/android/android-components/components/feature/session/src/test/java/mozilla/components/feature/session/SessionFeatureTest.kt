@@ -283,10 +283,12 @@ class SessionFeatureTest {
     @Test
     fun `onBackPressed() invokes GoBackUseCase if back navigation is possible`() {
         run {
-            val store = BrowserStore(BrowserState(
-                tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
-                selectedTabId = "A"
-            ))
+            val store = BrowserStore(
+                BrowserState(
+                    tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
+                    selectedTabId = "A"
+                )
+            )
 
             val useCase: SessionUseCases.GoBackUseCase = mock()
 
@@ -297,15 +299,19 @@ class SessionFeatureTest {
         }
 
         run {
-            val store = BrowserStore(BrowserState(
-                tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
-                selectedTabId = "A"
-            ))
+            val store = BrowserStore(
+                BrowserState(
+                    tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
+                    selectedTabId = "A"
+                )
+            )
 
-            store.dispatch(ContentAction.UpdateBackNavigationStateAction(
-                "A",
-                canGoBack = true
-            )).joinBlocking()
+            store.dispatch(
+                ContentAction.UpdateBackNavigationStateAction(
+                    "A",
+                    canGoBack = true
+                )
+            ).joinBlocking()
 
             val useCase: SessionUseCases.GoBackUseCase = mock()
 

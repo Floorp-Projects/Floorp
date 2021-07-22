@@ -67,20 +67,28 @@ class CrashTest {
     fun `isCrashIntent()`() {
         assertFalse(Crash.isCrashIntent(Intent()))
 
-        assertFalse(Crash.isCrashIntent(Intent()
-            .putExtra("crash", "I am a crash!")))
+        assertFalse(
+            Crash.isCrashIntent(
+                Intent()
+                    .putExtra("crash", "I am a crash!")
+            )
+        )
 
-        assertTrue(Crash.isCrashIntent(
-            Intent().apply {
-                Crash.UncaughtExceptionCrash(0, RuntimeException(), arrayListOf()).fillIn(this)
-            }
-        ))
+        assertTrue(
+            Crash.isCrashIntent(
+                Intent().apply {
+                    Crash.UncaughtExceptionCrash(0, RuntimeException(), arrayListOf()).fillIn(this)
+                }
+            )
+        )
 
-        assertTrue(Crash.isCrashIntent(
-            Intent().apply {
-                val crash = Crash.NativeCodeCrash(0, "", true, "", false, arrayListOf())
-                crash.fillIn(this)
-            }
-        ))
+        assertTrue(
+            Crash.isCrashIntent(
+                Intent().apply {
+                    val crash = Crash.NativeCodeCrash(0, "", true, "", false, arrayListOf())
+                    crash.fillIn(this)
+                }
+            )
+        )
     }
 }

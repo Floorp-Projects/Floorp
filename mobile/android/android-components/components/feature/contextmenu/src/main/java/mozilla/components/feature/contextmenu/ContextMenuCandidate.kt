@@ -229,9 +229,11 @@ data class ContextMenuCandidate(
             },
             action = { _, hitResult ->
                 val email = hitResult.getLink().stripMailToProtocol()
-                clipPlaintText(context, email, email,
+                clipPlaintText(
+                    context, email, email,
                     R.string.mozac_feature_contextmenu_snackbar_email_address_copied, snackBarParentView,
-                    snackbarDelegate)
+                    snackbarDelegate
+                )
             }
         )
 
@@ -401,9 +403,11 @@ data class ContextMenuCandidate(
                     (hitResult.isUri() || hitResult.isImage() || hitResult.isVideoAudio())
             },
             action = { _, hitResult ->
-                clipPlaintText(context, hitResult.getLink(), hitResult.getLink(),
+                clipPlaintText(
+                    context, hitResult.getLink(), hitResult.getLink(),
                     R.string.mozac_feature_contextmenu_snackbar_link_copied, snackBarParentView,
-                    snackbarDelegate)
+                    snackbarDelegate
+                )
             }
         )
 
@@ -422,9 +426,11 @@ data class ContextMenuCandidate(
                     hitResult.isImage()
             },
             action = { _, hitResult ->
-                clipPlaintText(context, hitResult.getLink(), hitResult.src,
+                clipPlaintText(
+                    context, hitResult.getLink(), hitResult.src,
                     R.string.mozac_feature_contextmenu_snackbar_link_copied, snackBarParentView,
-                    snackbarDelegate)
+                    snackbarDelegate
+                )
             }
         )
 
@@ -495,8 +501,10 @@ private fun HitResult.isLinkForOtherThanWebpage(): Boolean {
 }
 
 private fun HitResult.isIntent(): Boolean =
-    (this is HitResult.UNKNOWN && src.isNotEmpty() &&
-        getLink().startsWith("intent:"))
+    (
+        this is HitResult.UNKNOWN && src.isNotEmpty() &&
+            getLink().startsWith("intent:")
+        )
 
 private fun HitResult.isMailto(): Boolean =
     (this is HitResult.UNKNOWN && src.isNotEmpty()) &&

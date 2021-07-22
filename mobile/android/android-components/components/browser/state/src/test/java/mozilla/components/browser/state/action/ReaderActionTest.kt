@@ -120,7 +120,7 @@ class ReaderActionTest {
         assertNull(readerState().activeUrl)
 
         store.dispatch(ReaderAction.UpdateReaderActiveUrlAction(tabId = tab.id, activeUrl = "https://mozilla.org"))
-                .joinBlocking()
+            .joinBlocking()
         assertEquals("https://mozilla.org", readerState().activeUrl)
 
         store.dispatch(ReaderAction.ClearReaderActiveUrlAction(tabId = tab.id)).joinBlocking()

@@ -83,9 +83,11 @@ class StatementApi(private val httpClient: Client) : StatementListFetcher {
                 }
             }
             // Recursively download include statements
-            yieldAll(includeStatements.asSequence().flatMap {
-                getWebsiteStatementList(it.include, seenSoFar)
-            })
+            yieldAll(
+                includeStatements.asSequence().flatMap {
+                    getWebsiteStatementList(it.include, seenSoFar)
+                }
+            )
         }
     }
 

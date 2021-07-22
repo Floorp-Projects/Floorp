@@ -9,9 +9,9 @@ import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.feature.autofill.lock.AutofillLock
 import mozilla.components.feature.autofill.ui.AbstractAutofillConfirmActivity
 import mozilla.components.feature.autofill.ui.AbstractAutofillSearchActivity
-import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.feature.autofill.ui.AbstractAutofillUnlockActivity
 import mozilla.components.feature.autofill.verify.CredentialAccessVerifier
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
 

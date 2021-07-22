@@ -4,8 +4,8 @@
 
 package mozilla.components.support.rusthttp
 
-import mozilla.appservices.httpconfig.RustHttpConfig as AppSvcHttpConfig
 import mozilla.components.concept.fetch.Client
+import mozilla.appservices.httpconfig.RustHttpConfig as AppSvcHttpConfig
 
 /**
  * An object allowing configuring the HTTP client used by Rust code.

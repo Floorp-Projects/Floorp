@@ -14,9 +14,9 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import mozilla.components.concept.engine.permission.SitePermissions.Status
-import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
 import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
 import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
+import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.geckoview.GeckoRuntime
@@ -386,8 +386,8 @@ internal fun List<ContentPermission>?.filterNotTemporaryPermissions(
 
 @VisibleForTesting
 internal fun ContentPermission.areSame(other: ContentPermission) =
-        other.uri.tryGetHostFromUrl() == this.uri.tryGetHostFromUrl() &&
-                other.permission == this.permission
+    other.uri.tryGetHostFromUrl() == this.uri.tryGetHostFromUrl() &&
+        other.permission == this.permission
 
 @VisibleForTesting
 internal fun Int.toStatus(): Status {

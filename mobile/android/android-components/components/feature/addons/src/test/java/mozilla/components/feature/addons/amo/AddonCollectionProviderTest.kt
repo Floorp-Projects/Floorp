@@ -29,8 +29,8 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import java.io.File
 import java.io.IOException
-import java.util.Date
 import java.io.InputStream
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
@@ -122,11 +122,13 @@ class AddonCollectionProviderTest {
 
         // Authors
         assertTrue(addon.authors.isEmpty())
-        verify(client).fetch(Request(
-            url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
-                "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
-            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        ))
+        verify(client).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                    "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            )
+        )
 
         // Ratings
         assertNull(addon.rating)
@@ -147,33 +149,33 @@ class AddonCollectionProviderTest {
         assertEquals("2015-04-25T07:26:22Z", addon.createdAt)
         assertEquals("2021-02-04T12:05:14Z", addon.updatedAt)
         assertEquals(
-                "https://addons.cdn.mozilla.net/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
-                addon.iconUrl
+            "https://addons.cdn.mozilla.net/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
+            addon.iconUrl
         )
         assertEquals(
-                "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/",
-                addon.siteUrl
+            "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/",
+            addon.siteUrl
         )
         assertEquals(
-                "3719054",
-                addon.downloadId
+            "3719054",
+            addon.downloadId
         )
         assertEquals(
-                "https://addons.mozilla.org/firefox/downloads/file/3719054/ublock_origin-1.33.2-an+fx.xpi",
-                addon.downloadUrl
+            "https://addons.mozilla.org/firefox/downloads/file/3719054/ublock_origin-1.33.2-an+fx.xpi",
+            addon.downloadUrl
         )
         assertEquals(
-                "dns",
-                addon.permissions.first()
+            "dns",
+            addon.permissions.first()
         )
         assertEquals(
-                "uBlock Origin",
-                addon.translatableName["en"]
+            "uBlock Origin",
+            addon.translatableName["en"]
         )
 
         assertEquals(
-                "Finally, an efficient wide-spectrum content blocker. Easy on CPU and memory.",
-                addon.translatableSummary["en"]
+            "Finally, an efficient wide-spectrum content blocker. Easy on CPU and memory.",
+            addon.translatableSummary["en"]
         )
 
         assertTrue(addon.translatableDescription.getValue("en").isNotBlank())
@@ -186,19 +188,21 @@ class AddonCollectionProviderTest {
         assertEquals("Raymond Hill", addon.authors.first().name)
         assertEquals("gorhill", addon.authors.first().username)
         assertEquals(
-                "https://addons.mozilla.org/en-US/firefox/user/11423598/",
-                addon.authors.first().url
+            "https://addons.mozilla.org/en-US/firefox/user/11423598/",
+            addon.authors.first().url
         )
 
         // Ratings
         assertEquals(4.7003F, addon.rating!!.average, 0.7003F)
         assertEquals(13324, addon.rating!!.reviews)
 
-        verify(client).fetch(Request(
+        verify(client).fetch(
+            Request(
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
-                        "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}&lang=en",
+                    "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}&lang=en",
                 readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        ))
+            )
+        )
 
         Unit
     }
@@ -209,11 +213,13 @@ class AddonCollectionProviderTest {
 
         val provider = spy(AddonCollectionProvider(testContext, client = mockedClient))
         provider.getAvailableAddons(readTimeoutInSeconds = 5)
-        verify(mockedClient).fetch(Request(
-            url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
-                "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
-            readTimeout = Pair(5, TimeUnit.SECONDS)
-        ))
+        verify(mockedClient).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                    "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
+                readTimeout = Pair(5, TimeUnit.SECONDS)
+            )
+        )
         Unit
     }
 
@@ -465,11 +471,13 @@ class AddonCollectionProviderTest {
         )
 
         provider.getAvailableAddons()
-        verify(mockedClient).fetch(Request(
-            url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
-                "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
-            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        ))
+        verify(mockedClient).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                    "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            )
+        )
 
         assertEquals(COLLECTION_FILE_NAME.format(collectionName), provider.getCacheFileName())
     }
@@ -488,11 +496,13 @@ class AddonCollectionProviderTest {
             it.getAvailableAddons()
         }
 
-        verify(mockedClient).fetch(Request(
-            url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
-                "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY.value}",
-            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        ))
+        verify(mockedClient).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                    "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY.value}",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            )
+        )
 
         AddonCollectionProvider(
             testContext,
@@ -503,11 +513,13 @@ class AddonCollectionProviderTest {
             it.getAvailableAddons()
         }
 
-        verify(mockedClient).fetch(Request(
-            url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
-                "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
-            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        ))
+        verify(mockedClient).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                    "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            )
+        )
 
         AddonCollectionProvider(
             testContext,
@@ -518,11 +530,13 @@ class AddonCollectionProviderTest {
             it.getAvailableAddons()
         }
 
-        verify(mockedClient).fetch(Request(
-            url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
-                "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.NAME.value}",
-            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        ))
+        verify(mockedClient).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                    "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.NAME.value}",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            )
+        )
 
         AddonCollectionProvider(
             testContext,
@@ -533,11 +547,13 @@ class AddonCollectionProviderTest {
             it.getAvailableAddons()
         }
 
-        verify(mockedClient).fetch(Request(
-            url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
-                "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.NAME_DESC.value}",
-            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        ))
+        verify(mockedClient).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                    "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.NAME_DESC.value}",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            )
+        )
 
         AddonCollectionProvider(
             testContext,
@@ -548,11 +564,13 @@ class AddonCollectionProviderTest {
             it.getAvailableAddons()
         }
 
-        verify(mockedClient).fetch(Request(
-            url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
-                "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.DATE_ADDED.value}",
-            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        ))
+        verify(mockedClient).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                    "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.DATE_ADDED.value}",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            )
+        )
 
         AddonCollectionProvider(
             testContext,
@@ -563,11 +581,13 @@ class AddonCollectionProviderTest {
             it.getAvailableAddons()
         }
 
-        verify(mockedClient).fetch(Request(
-            url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
-                "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.DATE_ADDED_DESC.value}",
-            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        ))
+        verify(mockedClient).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                    "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.DATE_ADDED_DESC.value}",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            )
+        )
 
         Unit
     }
@@ -581,16 +601,19 @@ class AddonCollectionProviderTest {
             testContext,
             client = mockedClient,
             collectionUser = collectionUser,
-            collectionName = collectionName)
+            collectionName = collectionName
+        )
 
         provider.getAvailableAddons()
-        verify(mockedClient).fetch(Request(
-            url = "https://services.addons.mozilla.org/api/v4/accounts/account/" +
-                "$collectionUser/collections/$collectionName/addons/" +
-                "?page_size=$PAGE_SIZE" +
-                "&sort=${SortOption.POPULARITY_DESC.value}",
-            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        ))
+        verify(mockedClient).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/accounts/account/" +
+                    "$collectionUser/collections/$collectionName/addons/" +
+                    "?page_size=$PAGE_SIZE" +
+                    "&sort=${SortOption.POPULARITY_DESC.value}",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            )
+        )
 
         assertEquals(
             COLLECTION_FILE_NAME.format("${collectionUser}_$collectionName"),
@@ -608,13 +631,15 @@ class AddonCollectionProviderTest {
         )
 
         provider.getAvailableAddons()
-        verify(mockedClient).fetch(Request(
-            url = "https://services.addons.mozilla.org/api/v4/accounts/account/" +
-                "$DEFAULT_COLLECTION_USER/collections/$DEFAULT_COLLECTION_NAME/addons/" +
-                "?page_size=$PAGE_SIZE" +
-                "&sort=${SortOption.POPULARITY_DESC.value}",
-            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        ))
+        verify(mockedClient).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/accounts/account/" +
+                    "$DEFAULT_COLLECTION_USER/collections/$DEFAULT_COLLECTION_NAME/addons/" +
+                    "?page_size=$PAGE_SIZE" +
+                    "&sort=${SortOption.POPULARITY_DESC.value}",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            )
+        )
 
         assertEquals(COLLECTION_FILE_NAME.format(DEFAULT_COLLECTION_NAME), provider.getCacheFileName())
     }
@@ -628,7 +653,8 @@ class AddonCollectionProviderTest {
             testContext,
             client = mockedClient,
             collectionUser = collectionUser,
-            collectionName = collectionName)
+            collectionName = collectionName
+        )
 
         assertEquals(
             COLLECTION_FILE_NAME.format("user_collection"),

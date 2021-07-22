@@ -148,9 +148,9 @@ class AccountSharingTest {
         `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
         `when`(contentResolver.acquireContentProviderClient("$packageNameRelease.fxa.auth"))
-                .thenReturn(contentProviderClient)
+            .thenReturn(contentProviderClient)
         `when`(contentResolver.acquireContentProviderClient("$packageNameBeta.fxa.auth"))
-                .thenReturn(contentProviderClient)
+            .thenReturn(contentProviderClient)
         `when`(context.contentResolver).thenReturn(contentResolver)
 
         // Account without tokens should not be returned
@@ -176,13 +176,13 @@ class AccountSharingTest {
         assertEquals(expectedAccountRelease, result[0])
 
         val expectedAccountBeta = ShareableAccount(
-                "user@mozilla.org",
-                packageNameBeta,
+            "user@mozilla.org",
+            packageNameBeta,
             MigratingAccountInfo(
-                    "sessionToken".toByteArray().toHexString(),
-                    "ksync".toByteArray().toHexString(),
-                    "kxscs"
-                )
+                "sessionToken".toByteArray().toHexString(),
+                "ksync".toByteArray().toHexString(),
+                "kxscs"
+            )
         )
         assertEquals(expectedAccountBeta, result[1])
     }

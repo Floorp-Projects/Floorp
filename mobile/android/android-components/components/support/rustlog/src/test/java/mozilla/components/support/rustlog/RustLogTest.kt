@@ -11,11 +11,11 @@ import mozilla.appservices.rustlog.LogLevelFilter
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.Log
-import org.junit.Test
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verifyZeroInteractions
 

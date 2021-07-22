@@ -42,11 +42,13 @@ class IconMessageHandlerTest {
             val icon = Icon(bitmap, source = Icon.Source.DOWNLOAD)
             val deferredIcon = GlobalScope.async { icon }
 
-            val store: BrowserStore = BrowserStore(BrowserState(
-                tabs = listOf(
-                    createTab(url = "https://www.theverge.com/", id = "test-url")
+            val store: BrowserStore = BrowserStore(
+                BrowserState(
+                    tabs = listOf(
+                        createTab(url = "https://www.theverge.com/", id = "test-url")
+                    )
                 )
-            ))
+            )
 
             store.state.findTab("test-url")!!.apply {
                 assertNotNull(this)
@@ -122,7 +124,7 @@ class IconMessageHandlerTest {
                 }
               ]
             }
-        """.trimIndent()
+            """.trimIndent()
 
             handler.onMessage(JSONObject(message), source = null)
 

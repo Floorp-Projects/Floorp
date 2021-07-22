@@ -30,9 +30,11 @@ class AsyncFilterListenerTest {
         val urlView: AutocompleteView = mock()
         val filter: suspend (String, AutocompleteDelegate) -> Unit = mock()
 
-        val dispatcher = spy(Executor {
-            it.run()
-        }.asCoroutineDispatcher())
+        val dispatcher = spy(
+            Executor {
+                it.run()
+            }.asCoroutineDispatcher()
+        )
 
         val listener = AsyncFilterListener(urlView, dispatcher, filter)
 
@@ -47,35 +49,42 @@ class AsyncFilterListenerTest {
     fun `filter delegate checks for cancellations before it runs, passes results to autocomplete view`() = runBlocking {
         var filter: suspend (String, AutocompleteDelegate) -> Unit = { query, delegate ->
             assertEquals("test", query)
-            delegate.applyAutocompleteResult(AutocompleteResult(
-                input = "test",
-                text = "testing.com",
-                url = "http://www.testing.com",
-                source = "asyncTest",
-                totalItems = 1
-            ))
+            delegate.applyAutocompleteResult(
+                AutocompleteResult(
+                    input = "test",
+                    text = "testing.com",
+                    url = "http://www.testing.com",
+                    source = "asyncTest",
+                    totalItems = 1
+                )
+            )
         }
 
-        val dispatcher = spy(Executor {
-            it.run()
-        }.asCoroutineDispatcher())
+        val dispatcher = spy(
+            Executor {
+                it.run()
+            }.asCoroutineDispatcher()
+        )
 
         var didCallApply = 0
 
-        var listener = AsyncFilterListener(object : AutocompleteView {
-            override val originalText: String = "test"
+        var listener = AsyncFilterListener(
+            object : AutocompleteView {
+                override val originalText: String = "test"
 
-            override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
-                assertEquals("asyncTest", result.source)
-                assertEquals("testing.com", result.text)
-                assertEquals(1, result.totalItems)
-                didCallApply += 1
-            }
+                override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
+                    assertEquals("asyncTest", result.source)
+                    assertEquals("testing.com", result.text)
+                    assertEquals(1, result.totalItems)
+                    didCallApply += 1
+                }
 
-            override fun noAutocompleteResult() {
-                fail()
-            }
-        }, dispatcher, filter, this.coroutineContext)
+                override fun noAutocompleteResult() {
+                    fail()
+                }
+            },
+            dispatcher, filter, this.coroutineContext
+        )
 
         verify(dispatcher, never()).isActive
 
@@ -88,28 +97,33 @@ class AsyncFilterListenerTest {
 
         filter = { query, delegate ->
             assertEquals("moz", query)
-            delegate.applyAutocompleteResult(AutocompleteResult(
-                input = "moz",
-                text = "mozilla.com",
-                url = "http://www.mozilla.com",
-                source = "asyncTestTwo",
-                totalItems = 2
-            ))
+            delegate.applyAutocompleteResult(
+                AutocompleteResult(
+                    input = "moz",
+                    text = "mozilla.com",
+                    url = "http://www.mozilla.com",
+                    source = "asyncTestTwo",
+                    totalItems = 2
+                )
+            )
         }
-        listener = AsyncFilterListener(object : AutocompleteView {
-            override val originalText: String = "moz"
+        listener = AsyncFilterListener(
+            object : AutocompleteView {
+                override val originalText: String = "moz"
 
-            override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
-                assertEquals("asyncTestTwo", result.source)
-                assertEquals("mozilla.com", result.text)
-                assertEquals(2, result.totalItems)
-                didCallApply += 1
-            }
+                override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
+                    assertEquals("asyncTestTwo", result.source)
+                    assertEquals("mozilla.com", result.text)
+                    assertEquals(2, result.totalItems)
+                    didCallApply += 1
+                }
 
-            override fun noAutocompleteResult() {
-                fail()
-            }
-        }, dispatcher, filter, this.coroutineContext)
+                override fun noAutocompleteResult() {
+                    fail()
+                }
+            },
+            dispatcher, filter, this.coroutineContext
+        )
 
         async { listener("moz") }.await()
 
@@ -121,30 +135,35 @@ class AsyncFilterListenerTest {
     fun `delegate discards stale results`() = runBlocking {
         val filter: suspend (String, AutocompleteDelegate) -> Unit = { query, delegate ->
             assertEquals("test", query)
-            delegate.applyAutocompleteResult(AutocompleteResult(
-                input = "test",
-                text = "testing.com",
-                url = "http://www.testing.com",
-                source = "asyncTest",
-                totalItems = 1
-            ))
+            delegate.applyAutocompleteResult(
+                AutocompleteResult(
+                    input = "test",
+                    text = "testing.com",
+                    url = "http://www.testing.com",
+                    source = "asyncTest",
+                    totalItems = 1
+                )
+            )
         }
 
         val dispatcher = Executor {
             it.run()
         }.asCoroutineDispatcher()
 
-        val listener = AsyncFilterListener(object : AutocompleteView {
-            override val originalText: String = "nolongertest"
+        val listener = AsyncFilterListener(
+            object : AutocompleteView {
+                override val originalText: String = "nolongertest"
 
-            override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
-                fail()
-            }
+                override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
+                    fail()
+                }
 
-            override fun noAutocompleteResult() {
-                fail()
-            }
-        }, dispatcher, filter, this.coroutineContext)
+                override fun noAutocompleteResult() {
+                    fail()
+                }
+            },
+            dispatcher, filter, this.coroutineContext
+        )
 
         listener("test")
     }
@@ -160,17 +179,20 @@ class AsyncFilterListenerTest {
             it.run()
         }.asCoroutineDispatcher()
 
-        val listener = AsyncFilterListener(object : AutocompleteView {
-            override val originalText: String = "nolongertest"
+        val listener = AsyncFilterListener(
+            object : AutocompleteView {
+                override val originalText: String = "nolongertest"
 
-            override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
-                fail()
-            }
+                override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
+                    fail()
+                }
 
-            override fun noAutocompleteResult() {
-                fail()
-            }
-        }, dispatcher, filter, this.coroutineContext)
+                override fun noAutocompleteResult() {
+                    fail()
+                }
+            },
+            dispatcher, filter, this.coroutineContext
+        )
 
         listener("test")
     }
@@ -187,17 +209,20 @@ class AsyncFilterListenerTest {
         }.asCoroutineDispatcher()
 
         var calledNoResults = 0
-        val listener = AsyncFilterListener(object : AutocompleteView {
-            override val originalText: String = "test"
+        val listener = AsyncFilterListener(
+            object : AutocompleteView {
+                override val originalText: String = "test"
 
-            override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
-                fail()
-            }
+                override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
+                    fail()
+                }
 
-            override fun noAutocompleteResult() {
-                calledNoResults += 1
-            }
-        }, dispatcher, filter, this.coroutineContext)
+                override fun noAutocompleteResult() {
+                    calledNoResults += 1
+                }
+            },
+            dispatcher, filter, this.coroutineContext
+        )
 
         async { listener("test") }.await()
 
@@ -211,13 +236,15 @@ class AsyncFilterListenerTest {
         val filter: suspend (String, AutocompleteDelegate) -> Unit = { query, delegate ->
             preservedDelegate = delegate
             assertEquals("test", query)
-            delegate.applyAutocompleteResult(AutocompleteResult(
-                input = "test",
-                text = "testing.com",
-                url = "http://www.testing.com",
-                source = "asyncTest",
-                totalItems = 1
-            ))
+            delegate.applyAutocompleteResult(
+                AutocompleteResult(
+                    input = "test",
+                    text = "testing.com",
+                    url = "http://www.testing.com",
+                    source = "asyncTest",
+                    totalItems = 1
+                )
+            )
         }
 
         val dispatcher = Executor {
@@ -225,20 +252,23 @@ class AsyncFilterListenerTest {
         }.asCoroutineDispatcher()
 
         var calledResults = 0
-        val listener = AsyncFilterListener(object : AutocompleteView {
-            override val originalText: String = "test"
+        val listener = AsyncFilterListener(
+            object : AutocompleteView {
+                override val originalText: String = "test"
 
-            override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
-                assertEquals("asyncTest", result.source)
-                assertEquals("testing.com", result.text)
-                assertEquals(1, result.totalItems)
-                calledResults += 1
-            }
+                override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
+                    assertEquals("asyncTest", result.source)
+                    assertEquals("testing.com", result.text)
+                    assertEquals(1, result.totalItems)
+                    calledResults += 1
+                }
 
-            override fun noAutocompleteResult() {
-                fail()
-            }
-        }, dispatcher, filter, this.coroutineContext)
+                override fun noAutocompleteResult() {
+                    fail()
+                }
+            },
+            dispatcher, filter, this.coroutineContext
+        )
 
         async {
             listener("test")
@@ -247,13 +277,15 @@ class AsyncFilterListenerTest {
 
         // This result application should be discarded, because scope has been cancelled by the second
         // 'listener' call above.
-        preservedDelegate!!.applyAutocompleteResult(AutocompleteResult(
-            input = "test",
-            text = "testing.com",
-            url = "http://www.testing.com",
-            source = "asyncCancelled",
-            totalItems = 1
-        ))
+        preservedDelegate!!.applyAutocompleteResult(
+            AutocompleteResult(
+                input = "test",
+                text = "testing.com",
+                url = "http://www.testing.com",
+                source = "asyncCancelled",
+                totalItems = 1
+            )
+        )
 
         assertEquals(2, calledResults)
     }
@@ -273,17 +305,20 @@ class AsyncFilterListenerTest {
         }.asCoroutineDispatcher()
 
         var calledResults = 0
-        val listener = AsyncFilterListener(object : AutocompleteView {
-            override val originalText: String = "test"
+        val listener = AsyncFilterListener(
+            object : AutocompleteView {
+                override val originalText: String = "test"
 
-            override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
-                fail()
-            }
+                override fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult) {
+                    fail()
+                }
 
-            override fun noAutocompleteResult() {
-                calledResults += 1
-            }
-        }, dispatcher, filter, this.coroutineContext)
+                override fun noAutocompleteResult() {
+                    calledResults += 1
+                }
+            },
+            dispatcher, filter, this.coroutineContext
+        )
 
         async {
             listener("test")

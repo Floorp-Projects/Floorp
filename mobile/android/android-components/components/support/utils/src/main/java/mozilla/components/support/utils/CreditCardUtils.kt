@@ -53,7 +53,7 @@ enum class CreditCardNetworkType(val cardName: String) {
 /**
  * A mapping of credit card numbers to their respective credit card issuers.
  */
-@Suppress("MagicNumber")
+@Suppress("MagicNumber", "LargeClass")
 internal object CreditCardUtils {
 
     private val GENERIC = CreditCardIssuerNetwork(
@@ -259,8 +259,10 @@ internal object CreditCardUtils {
             ) {
                 continue
             } else if (issuer.cardNumberMaxLength.size > 1 &&
-                (cardNumber.length < issuer.cardNumberMaxLength[0] ||
-                    cardNumber.length > issuer.cardNumberMaxLength[1])
+                (
+                    cardNumber.length < issuer.cardNumberMaxLength[0] ||
+                        cardNumber.length > issuer.cardNumberMaxLength[1]
+                    )
             ) {
                 continue
             }

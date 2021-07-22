@@ -9,10 +9,10 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteDatabase.OPEN_READONLY
 import android.util.Base64
 import androidx.annotation.VisibleForTesting
-import mozilla.components.service.sync.logins.SyncableLoginsStorage
-import mozilla.components.service.sync.logins.ServerPassword
-import mozilla.components.service.sync.logins.toLogin
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.service.sync.logins.ServerPassword
+import mozilla.components.service.sync.logins.SyncableLoginsStorage
+import mozilla.components.service.sync.logins.toLogin
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.pkcs7unpad
 import mozilla.components.support.ktx.kotlin.toHexString
@@ -58,7 +58,7 @@ internal fun ByteArray.getEncodingLength(offset: Int): Int {
         1 -> this[offset + 2].toInt() and 0xFF
         2 -> (this[offset + 2].toInt() and 0xFF shl 8) or (this[offset + 3].toInt() and 0xFF)
         3 -> (this[offset + 2].toInt() and 0xFF shl 16) or (this[offset + 3].toInt() and 0xFF shl 8) or
-                (this[offset + 4].toInt() and 0xFF)
+            (this[offset + 4].toInt() and 0xFF)
         else -> throw IllegalStateException("Unsupported number of octets: $numOctets")
     }
 }
@@ -171,11 +171,13 @@ internal object FennecLoginsMigration {
             0
         }
 
-        return Result.Success(LoginsMigrationResult.Success.ImportedLoginRecords(
-            totalRecordsDetected = fennecRecords.totalRecordsDetected,
-            failedToProcess = (fennecRecords.totalRecordsDetected - fennecRecords.records.size),
-            failedToImport = failedToImport
-        ))
+        return Result.Success(
+            LoginsMigrationResult.Success.ImportedLoginRecords(
+                totalRecordsDetected = fennecRecords.totalRecordsDetected,
+                failedToProcess = (fennecRecords.totalRecordsDetected - fennecRecords.records.size),
+                failedToImport = failedToImport
+            )
+        )
     }
 
     /**
@@ -247,51 +249,53 @@ internal object FennecLoginsMigration {
         val exceptionCollector: MutableMap<String, Exception> = mutableMapOf()
 
         db.rawQuery(selectQuery, null).use {
-            while (it.moveToNext()) { collectExceptionsIntoASet(exceptionCollector) {
-                val encryptedUsername = it.getString(it.getColumnIndexOrThrow("encryptedUsername"))
-                val encryptedPassword = it.getString(it.getColumnIndexOrThrow("encryptedPassword"))
+            while (it.moveToNext()) {
+                collectExceptionsIntoASet(exceptionCollector) {
+                    val encryptedUsername = it.getString(it.getColumnIndexOrThrow("encryptedUsername"))
+                    val encryptedPassword = it.getString(it.getColumnIndexOrThrow("encryptedPassword"))
 
-                val derUsername = Base64.decode(encryptedUsername, Base64.DEFAULT)
-                val plaintextUsername = derDecodeLoginEntry(derUsername)
-                    .decrypt(masterPassword, key4DbPath)
-                    .pkcs7unpad()
+                    val derUsername = Base64.decode(encryptedUsername, Base64.DEFAULT)
+                    val plaintextUsername = derDecodeLoginEntry(derUsername)
+                        .decrypt(masterPassword, key4DbPath)
+                        .pkcs7unpad()
 
-                val derPassword = Base64.decode(encryptedPassword, Base64.DEFAULT)
-                val plaintextPassword = derDecodeLoginEntry(derPassword)
-                    .decrypt(masterPassword, key4DbPath)
-                    .pkcs7unpad()
+                    val derPassword = Base64.decode(encryptedPassword, Base64.DEFAULT)
+                    val plaintextPassword = derDecodeLoginEntry(derPassword)
+                        .decrypt(masterPassword, key4DbPath)
+                        .pkcs7unpad()
 
-                val encodedUsername = String(plaintextUsername, Charsets.UTF_8)
-                val encodedPassword = String(plaintextPassword, Charsets.UTF_8)
+                    val encodedUsername = String(plaintextUsername, Charsets.UTF_8)
+                    val encodedPassword = String(plaintextPassword, Charsets.UTF_8)
 
-                val hostname = it.getString(it.getColumnIndexOrThrow("hostname"))
-                val httpRealm = it.getString(it.getColumnIndexOrThrow("httpRealm"))
-                val formSubmitUrl = it.getString(it.getColumnIndexOrThrow("formSubmitURL"))
-                val usernameField = it.getString(it.getColumnIndexOrThrow("usernameField"))
-                val passwordField = it.getString(it.getColumnIndexOrThrow("passwordField"))
-                val guid = it.getString(it.getColumnIndexOrThrow("guid"))
-                val timeCreated = it.getLong(it.getColumnIndexOrThrow("timeCreated"))
-                val timesUsed = it.getInt(it.getColumnIndexOrThrow("timesUsed"))
-                val timeLastUsed = it.getLong(it.getColumnIndexOrThrow("timeLastUsed"))
-                val timePasswordChanged = it.getLong(it.getColumnIndexOrThrow("timePasswordChanged"))
+                    val hostname = it.getString(it.getColumnIndexOrThrow("hostname"))
+                    val httpRealm = it.getString(it.getColumnIndexOrThrow("httpRealm"))
+                    val formSubmitUrl = it.getString(it.getColumnIndexOrThrow("formSubmitURL"))
+                    val usernameField = it.getString(it.getColumnIndexOrThrow("usernameField"))
+                    val passwordField = it.getString(it.getColumnIndexOrThrow("passwordField"))
+                    val guid = it.getString(it.getColumnIndexOrThrow("guid"))
+                    val timeCreated = it.getLong(it.getColumnIndexOrThrow("timeCreated"))
+                    val timesUsed = it.getInt(it.getColumnIndexOrThrow("timesUsed"))
+                    val timeLastUsed = it.getLong(it.getColumnIndexOrThrow("timeLastUsed"))
+                    val timePasswordChanged = it.getLong(it.getColumnIndexOrThrow("timePasswordChanged"))
 
-                val fullRecord = ServerPassword(
-                    // 'id' is renamed to 'guid' as this record goes over the FFI boundary.
-                    id = guid,
-                    hostname = hostname,
-                    username = encodedUsername,
-                    password = encodedPassword,
-                    httpRealm = httpRealm,
-                    formSubmitUrl = formSubmitUrl,
-                    timesUsed = timesUsed.toLong(),
-                    timeCreated = timeCreated,
-                    timeLastUsed = timeLastUsed,
-                    timePasswordChanged = timePasswordChanged,
-                    usernameField = usernameField,
-                    passwordField = passwordField
-                )
-                records.add(fullRecord)
-            } }
+                    val fullRecord = ServerPassword(
+                        // 'id' is renamed to 'guid' as this record goes over the FFI boundary.
+                        id = guid,
+                        hostname = hostname,
+                        username = encodedUsername,
+                        password = encodedPassword,
+                        httpRealm = httpRealm,
+                        formSubmitUrl = formSubmitUrl,
+                        timesUsed = timesUsed.toLong(),
+                        timeCreated = timeCreated,
+                        timeLastUsed = timeLastUsed,
+                        timePasswordChanged = timePasswordChanged,
+                        usernameField = usernameField,
+                        passwordField = passwordField
+                    )
+                    records.add(fullRecord)
+                }
+            }
         }
 
         // Report exceptions encountered to Sentry. Exceptions are collected into a set, to prevent spamming Sentry

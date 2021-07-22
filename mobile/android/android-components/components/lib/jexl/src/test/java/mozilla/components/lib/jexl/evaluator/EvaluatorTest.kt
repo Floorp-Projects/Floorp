@@ -49,7 +49,8 @@ class EvaluatorTest {
 
     @Test
     fun `Should evaluate a string concat`() {
-        assertExpressionYieldsResult("""
+        assertExpressionYieldsResult(
+            """
                 "Hello" + (4+4) + "Wo\"rld"
             """.trimIndent(),
             "Hello8Wo\"rld"
@@ -93,7 +94,8 @@ class EvaluatorTest {
         assertExpressionYieldsResult(
             "foo.baz.bar",
             "tek",
-            context = context)
+            context = context
+        )
     }
 
     @Test
@@ -106,9 +108,11 @@ class EvaluatorTest {
             "foo|half + 3",
             8,
             context = context,
-            transforms = mapOf("half" to { value, _ ->
-                value.div(JexlInteger(2))
-            })
+            transforms = mapOf(
+                "half" to { value, _ ->
+                    value.div(JexlInteger(2))
+                }
+            )
         )
     }
 
@@ -237,7 +241,8 @@ class EvaluatorTest {
     fun `Should apply the DivFloor operator`() {
         assertExpressionYieldsResult(
             "7 // 2",
-            3)
+            3
+        )
     }
 
     @Test
@@ -268,11 +273,13 @@ class EvaluatorTest {
         assertExpressionYieldsResult(
             """"foo"|concat("baz", "bar", "tek")""",
             "foo: bazbartek",
-            transforms = mapOf("concat" to { value, arguments ->
-                value + JexlString(": ") + JexlString(
-                    arguments.joinToString("")
-                )
-            })
+            transforms = mapOf(
+                "concat" to { value, arguments ->
+                    value + JexlString(": ") + JexlString(
+                        arguments.joinToString("")
+                    )
+                }
+            )
         )
     }
 
@@ -280,7 +287,8 @@ class EvaluatorTest {
     fun `Should evaluate dot notation for object literals`() {
         assertExpressionYieldsResult(
             "{foo: \"bar\"}.foo",
-            "bar")
+            "bar"
+        )
     }
 
     @Test

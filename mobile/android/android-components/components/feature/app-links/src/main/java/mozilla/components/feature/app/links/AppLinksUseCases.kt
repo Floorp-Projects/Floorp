@@ -94,7 +94,8 @@ class AppLinksUseCases(
             // since redirectCache is mutable, get the latest
             val cache = redirectCache
             if (cache != null && urlHash == cache.cachedUrlHash &&
-                currentTimeStamp <= cache.cacheTimeStamp + APP_LINKS_CACHE_INTERVAL) {
+                currentTimeStamp <= cache.cacheTimeStamp + APP_LINKS_CACHE_INTERVAL
+            ) {
                 return cache.cachedAppLinkRedirect
             }
 
@@ -105,8 +106,10 @@ class AppLinksUseCases(
             val appIntent = when {
                 redirectData.resolveInfo == null && isEngineSupportedScheme -> null
                 redirectData.resolveInfo == null && redirectData.marketplaceIntent != null -> null
-                includeHttpAppLinks && (ignoreDefaultBrowser ||
-                    (redirectData.appIntent != null && isDefaultBrowser(redirectData.appIntent))) -> null
+                includeHttpAppLinks && (
+                    ignoreDefaultBrowser ||
+                        (redirectData.appIntent != null && isDefaultBrowser(redirectData.appIntent))
+                    ) -> null
                 includeHttpAppLinks && isAppIntentHttpOrHttps -> redirectData.appIntent
                 !launchInApp() && ENGINE_SUPPORTED_SCHEMES.contains(Uri.parse(url).scheme) -> null
                 else -> redirectData.appIntent
@@ -135,7 +138,8 @@ class AppLinksUseCases(
 
             val marketplaceIntent = intent?.`package`?.let {
                 if (includeInstallAppFallback &&
-                        !context.packageManager.isPackageInstalled(it)) {
+                    !context.packageManager.isPackageInstalled(it)
+                ) {
                     Intent.parseUri(MARKET_INTENT_URI_PACKAGE_PREFIX + it, 0)
                 } else {
                     null
@@ -164,7 +168,7 @@ class AppLinksUseCases(
             val resolveInfoList = appIntent?.let {
                 findActivities(appIntent).filter {
                     it.filter != null &&
-                    !(it.filter.countDataPaths() == 0 && it.filter.countDataAuthorities() == 0)
+                        !(it.filter.countDataPaths() == 0 && it.filter.countDataAuthorities() == 0)
                 }
             }
             val resolveInfo = resolveInfoList?.firstOrNull()
@@ -267,8 +271,10 @@ class AppLinksUseCases(
 
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         // list of scheme from https://searchfox.org/mozilla-central/source/netwerk/build/components.conf
-        internal val ENGINE_SUPPORTED_SCHEMES: Set<String> = setOf("about", "data", "file", "ftp", "http",
-            "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss", "blob")
+        internal val ENGINE_SUPPORTED_SCHEMES: Set<String> = setOf(
+            "about", "data", "file", "ftp", "http",
+            "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss", "blob"
+        )
 
         internal val ALWAYS_DENY_SCHEMES: Set<String> = setOf("jar", "file", "javascript", "data", "about")
     }

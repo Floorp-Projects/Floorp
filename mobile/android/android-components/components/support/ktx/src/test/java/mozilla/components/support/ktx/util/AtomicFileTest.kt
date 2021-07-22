@@ -17,9 +17,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.any
+import org.mockito.Mockito.doThrow
+import org.mockito.Mockito.verify
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException

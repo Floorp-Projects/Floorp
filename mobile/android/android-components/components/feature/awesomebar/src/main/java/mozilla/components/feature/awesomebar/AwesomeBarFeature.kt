@@ -41,13 +41,15 @@ class AwesomeBarFeature(
     onEditComplete: (() -> Unit)? = null
 ) {
     init {
-        toolbar.setOnEditListener(ToolbarEditListener(
-            awesomeBar,
-            onEditStart,
-            onEditComplete,
-            ::showAwesomeBar,
-            ::hideAwesomeBar
-        ))
+        toolbar.setOnEditListener(
+            ToolbarEditListener(
+                awesomeBar,
+                onEditStart,
+                onEditComplete,
+                ::showAwesomeBar,
+                ::hideAwesomeBar
+            )
+        )
 
         awesomeBar.setOnStopListener { toolbar.displayMode() }
         awesomeBar.setOnEditSuggestionListener(toolbar::setSearchTerms)
@@ -88,15 +90,17 @@ class AwesomeBarFeature(
         engine: Engine? = null,
         filterExactMatch: Boolean = false
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(SearchSuggestionProvider(
-            searchEngine,
-            searchUseCase,
-            fetchClient,
-            limit,
-            mode,
-            engine,
-            filterExactMatch = filterExactMatch
-        ))
+        awesomeBar.addProviders(
+            SearchSuggestionProvider(
+                searchEngine,
+                searchUseCase,
+                fetchClient,
+                limit,
+                mode,
+                engine,
+                filterExactMatch = filterExactMatch
+            )
+        )
         return this
     }
 
@@ -127,16 +131,18 @@ class AwesomeBarFeature(
         engine: Engine? = null,
         filterExactMatch: Boolean = false
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(SearchSuggestionProvider(
-            context,
-            store,
-            searchUseCase,
-            fetchClient,
-            limit,
-            mode,
-            engine,
-            filterExactMatch = filterExactMatch
-        ))
+        awesomeBar.addProviders(
+            SearchSuggestionProvider(
+                context,
+                store,
+                searchUseCase,
+                fetchClient,
+                limit,
+                mode,
+                engine,
+                filterExactMatch = filterExactMatch
+            )
+        )
         return this
     }
 
@@ -155,12 +161,14 @@ class AwesomeBarFeature(
         icon: Bitmap? = null,
         showDescription: Boolean = false
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(SearchActionProvider(
-            store,
-            searchUseCase,
-            icon,
-            showDescription
-        ))
+        awesomeBar.addProviders(
+            SearchActionProvider(
+                store,
+                searchUseCase,
+                icon,
+                showDescription
+            )
+        )
         return this
     }
 

@@ -372,8 +372,10 @@ abstract class EngineSession(
              */
             SCRIPTS_AND_SUB_RESOURCES(1 shl 31),
 
-            RECOMMENDED(AD.id + ANALYTICS.id + SOCIAL.id + TEST.id + MOZILLA_SOCIAL.id +
-                CRYPTOMINING.id + FINGERPRINTING.id),
+            RECOMMENDED(
+                AD.id + ANALYTICS.id + SOCIAL.id + TEST.id + MOZILLA_SOCIAL.id +
+                    CRYPTOMINING.id + FINGERPRINTING.id
+            ),
 
             /**
              * Combining the [RECOMMENDED] categories plus [SCRIPTS_AND_SUB_RESOURCES].
@@ -412,18 +414,18 @@ abstract class EngineSession(
             )
 
             /**
-            *  Creates a custom [TrackingProtectionPolicyForSessionTypes] using the provide values .
-            *  @param trackingCategories a list of tracking categories to apply.
-            *  @param cookiePolicy indicates how cookies should behave for this policy.
-            *  @param cookiePolicyPrivateMode indicates how cookies should behave in private mode for this policy,
-            *  default to [cookiePolicy] if not set.
-            *  @param strictSocialTrackingProtection indicate  if content should be blocked from the
-            *  social-tracking-protection-digest256 list, when given a null value,
-            *  it is only applied when the [EngineSession.TrackingProtectionPolicy.TrackingCategory.STRICT]
-            *  is set.
-            *  @param cookiePurging Whether or not to automatically purge tracking cookies. This will
-            *  purge cookies from tracking sites that do not have recent user interaction provided.
-            */
+             *  Creates a custom [TrackingProtectionPolicyForSessionTypes] using the provide values .
+             *  @param trackingCategories a list of tracking categories to apply.
+             *  @param cookiePolicy indicates how cookies should behave for this policy.
+             *  @param cookiePolicyPrivateMode indicates how cookies should behave in private mode for this policy,
+             *  default to [cookiePolicy] if not set.
+             *  @param strictSocialTrackingProtection indicate  if content should be blocked from the
+             *  social-tracking-protection-digest256 list, when given a null value,
+             *  it is only applied when the [EngineSession.TrackingProtectionPolicy.TrackingCategory.STRICT]
+             *  is set.
+             *  @param cookiePurging Whether or not to automatically purge tracking cookies. This will
+             *  purge cookies from tracking sites that do not have recent user interaction provided.
+             */
             @Suppress("LongParameterList")
             fun select(
                 trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),

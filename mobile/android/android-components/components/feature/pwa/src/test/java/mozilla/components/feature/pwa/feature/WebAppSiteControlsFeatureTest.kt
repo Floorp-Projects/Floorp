@@ -54,11 +54,13 @@ class WebAppSiteControlsFeatureTest {
     fun `reload page when reload action is activated`() {
         val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase = mock()
 
-        val store = BrowserStore(BrowserState(
-            customTabs = listOf(
-                createCustomTab("https://www.mozilla.org", id = "session-id")
+        val store = BrowserStore(
+            BrowserState(
+                customTabs = listOf(
+                    createCustomTab("https://www.mozilla.org", id = "session-id")
+                )
             )
-        ))
+        )
 
         val feature = WebAppSiteControlsFeature(testContext, store, reloadUrlUseCase, "session-id", mock())
         feature.onReceive(testContext, Intent("mozilla.components.feature.pwa.REFRESH"))
@@ -90,24 +92,30 @@ class WebAppSiteControlsFeatureTest {
         )
 
         val session = createCustomTab("https://www.mozilla.org", id = "session-id")
-        val store = BrowserStore(BrowserState(
-            customTabs = listOf(session)
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                customTabs = listOf(session)
+            )
+        )
 
         val feature = WebAppSiteControlsFeature(testContext, store, "session-id", manifest, icons = icons)
         feature.onCreate()
 
-        verify(icons).loadIcon(IconRequest(
-            url = "https://mozilla.org",
-            size = IconRequest.Size.DEFAULT,
-            resources = listOf(IconRequest.Resource(
-                url = "https://mozilla.org/logo_black.svg",
-                type = IconRequest.Resource.Type.MANIFEST_ICON,
-                sizes = listOf(Size.ANY),
-                mimeType = "image/svg+xml",
-                maskable = false
-            )),
-            color = Color.WHITE
-        ))
+        verify(icons).loadIcon(
+            IconRequest(
+                url = "https://mozilla.org",
+                size = IconRequest.Size.DEFAULT,
+                resources = listOf(
+                    IconRequest.Resource(
+                        url = "https://mozilla.org/logo_black.svg",
+                        type = IconRequest.Resource.Type.MANIFEST_ICON,
+                        sizes = listOf(Size.ANY),
+                        mimeType = "image/svg+xml",
+                        maskable = false
+                    )
+                ),
+                color = Color.WHITE
+            )
+        )
     }
 }

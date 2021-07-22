@@ -4,8 +4,8 @@
 
 package mozilla.components.support.base.feature
 
-import android.content.Intent
 import android.app.Activity
+import android.content.Intent
 
 /**
  * Generic interface for fragments, activities, features and other components that want to handle

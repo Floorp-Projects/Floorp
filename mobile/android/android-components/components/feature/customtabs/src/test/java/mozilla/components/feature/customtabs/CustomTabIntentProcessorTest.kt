@@ -90,7 +90,7 @@ class CustomTabIntentProcessorTest {
         val customTabsUseCases = CustomTabsUseCases(store, useCases.loadUrl)
 
         val handler =
-                CustomTabIntentProcessor(customTabsUseCases.add, testContext.resources)
+            CustomTabIntentProcessor(customTabsUseCases.add, testContext.resources)
 
         val intent = mock<Intent>()
         whenever(intent.action).thenReturn(Intent.ACTION_VIEW)
@@ -139,7 +139,7 @@ class CustomTabIntentProcessorTest {
         val customTabsUseCases = CustomTabsUseCases(store, useCases.loadUrl)
 
         val handler =
-                CustomTabIntentProcessor(customTabsUseCases.add, testContext.resources, true)
+            CustomTabIntentProcessor(customTabsUseCases.add, testContext.resources, true)
 
         val intent = mock<Intent>()
         whenever(intent.action).thenReturn(Intent.ACTION_VIEW)

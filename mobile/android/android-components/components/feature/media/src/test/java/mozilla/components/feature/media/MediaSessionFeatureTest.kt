@@ -35,13 +35,15 @@ class MediaSessionFeatureTest {
     fun `feature triggers foreground service when there's is media session state`() {
         val mockApplicationContext: Context = mock()
         val initialState = BrowserState(
-            tabs = listOf(createTab(
-                "https://www.mozilla.org",
-                mediaSessionState = MediaSessionState(
-                    mock(),
-                    playbackState = MediaSession.PlaybackState.PLAYING
+            tabs = listOf(
+                createTab(
+                    "https://www.mozilla.org",
+                    mediaSessionState = MediaSessionState(
+                        mock(),
+                        playbackState = MediaSession.PlaybackState.PLAYING
+                    )
                 )
-            ))
+            )
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
@@ -59,10 +61,12 @@ class MediaSessionFeatureTest {
     fun `no media session states will not trigger foreground service`() {
         val mockApplicationContext: Context = mock()
         val initialState = BrowserState(
-            tabs = listOf(createTab(
-                "https://www.mozilla.org",
-                mediaSessionState = null
-            ))
+            tabs = listOf(
+                createTab(
+                    "https://www.mozilla.org",
+                    mediaSessionState = null
+                )
+            )
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
@@ -80,10 +84,12 @@ class MediaSessionFeatureTest {
     fun `feature observes media session state changes`() {
         val mockApplicationContext: Context = mock()
         val initialState = BrowserState(
-            tabs = listOf(createTab(
-                "https://www.mozilla.org",
-                mediaSessionState = null
-            ))
+            tabs = listOf(
+                createTab(
+                    "https://www.mozilla.org",
+                    mediaSessionState = null
+                )
+            )
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
@@ -100,8 +106,12 @@ class MediaSessionFeatureTest {
         dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, never()).startForegroundService(any())
 
-        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(store.state.tabs[0].id,
-            MediaSession.PlaybackState.PLAYING))
+        store.dispatch(
+            MediaSessionAction.UpdateMediaPlaybackStateAction(
+                store.state.tabs[0].id,
+                MediaSession.PlaybackState.PLAYING
+            )
+        )
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
     }
@@ -110,13 +120,16 @@ class MediaSessionFeatureTest {
     fun `feature only starts foreground service when there were no previous playing media session`() {
         val mockApplicationContext: Context = mock()
         val initialState = BrowserState(
-            tabs = listOf(createTab(
-                "https://www.mozilla.org",
-                mediaSessionState = null
-            ), createTab(
-                "https://www.mozilla.org",
-                mediaSessionState = null
-            ))
+            tabs = listOf(
+                createTab(
+                    "https://www.mozilla.org",
+                    mediaSessionState = null
+                ),
+                createTab(
+                    "https://www.mozilla.org",
+                    mediaSessionState = null
+                )
+            )
         )
         val store = BrowserStore(initialState)
         val feature = MediaSessionFeature(
@@ -133,14 +146,22 @@ class MediaSessionFeatureTest {
         dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, never()).startForegroundService(any())
 
-        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(store.state.tabs[0].id,
-            MediaSession.PlaybackState.PLAYING))
+        store.dispatch(
+            MediaSessionAction.UpdateMediaPlaybackStateAction(
+                store.state.tabs[0].id,
+                MediaSession.PlaybackState.PLAYING
+            )
+        )
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(1)).startForegroundService(any())
 
-        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(store.state.tabs[0].id,
-            MediaSession.PlaybackState.PAUSED))
+        store.dispatch(
+            MediaSessionAction.UpdateMediaPlaybackStateAction(
+                store.state.tabs[0].id,
+                MediaSession.PlaybackState.PAUSED
+            )
+        )
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(1)).startForegroundService(any())
@@ -155,20 +176,32 @@ class MediaSessionFeatureTest {
         dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(1)).startForegroundService(any())
 
-        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(store.state.tabs[0].id,
-            MediaSession.PlaybackState.PAUSED))
+        store.dispatch(
+            MediaSessionAction.UpdateMediaPlaybackStateAction(
+                store.state.tabs[0].id,
+                MediaSession.PlaybackState.PAUSED
+            )
+        )
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(1)).startForegroundService(any())
 
-        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(store.state.tabs[0].id,
-            MediaSession.PlaybackState.PLAYING))
+        store.dispatch(
+            MediaSessionAction.UpdateMediaPlaybackStateAction(
+                store.state.tabs[0].id,
+                MediaSession.PlaybackState.PLAYING
+            )
+        )
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(2)).startForegroundService(any())
 
-        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(store.state.tabs[1].id,
-            MediaSession.PlaybackState.PLAYING))
+        store.dispatch(
+            MediaSessionAction.UpdateMediaPlaybackStateAction(
+                store.state.tabs[1].id,
+                MediaSession.PlaybackState.PLAYING
+            )
+        )
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(2)).startForegroundService(any())

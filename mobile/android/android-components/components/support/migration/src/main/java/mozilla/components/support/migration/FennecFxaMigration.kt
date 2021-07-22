@@ -166,23 +166,29 @@ private object AuthenticatedAccountProcessor {
         return when (signInResult) {
             MigrationResult.Failure -> {
                 Result.Failure(
-                    FxaMigrationException(Failure.FailedToSignIntoAuthenticatedAccount(
-                        email = fennecAccount.email,
-                        stateLabel = fennecAccount.stateLabel
-                    ))
+                    FxaMigrationException(
+                        Failure.FailedToSignIntoAuthenticatedAccount(
+                            email = fennecAccount.email,
+                            stateLabel = fennecAccount.stateLabel
+                        )
+                    )
                 )
             }
             MigrationResult.Success -> {
-                Result.Success(SignedInIntoAuthenticatedAccount(
-                    email = fennecAccount.email,
-                    stateLabel = fennecAccount.stateLabel
-                ))
+                Result.Success(
+                    SignedInIntoAuthenticatedAccount(
+                        email = fennecAccount.email,
+                        stateLabel = fennecAccount.stateLabel
+                    )
+                )
             }
             MigrationResult.WillRetry -> {
-                Result.Success(FxaMigrationResult.Success.WillAutoRetrySignInLater(
-                    email = fennecAccount.email,
-                    stateLabel = fennecAccount.stateLabel
-                ))
+                Result.Success(
+                    FxaMigrationResult.Success.WillAutoRetrySignInLater(
+                        email = fennecAccount.email,
+                        stateLabel = fennecAccount.stateLabel
+                    )
+                )
             }
         }
     }
@@ -288,10 +294,12 @@ internal object FennecFxaMigration {
         }
 
         if (customTokenServer || customIdpServer) {
-            throw FxaMigrationException(Failure.CustomServerConfigPresent(
-                customTokenServer = customTokenServer,
-                customIdpServer = customIdpServer
-            ))
+            throw FxaMigrationException(
+                Failure.CustomServerConfigPresent(
+                    customTokenServer = customTokenServer,
+                    customIdpServer = customIdpServer
+                )
+            )
         }
 
         try {
@@ -347,15 +355,15 @@ internal object FennecFxaMigration {
     }
 
     // private fun processStateV3(state: JSONObject): FxaMigrationResult {
-        // See https://github.com/mozilla-mobile/android-components/issues/4887 where this is tracked.
+    // See https://github.com/mozilla-mobile/android-components/issues/4887 where this is tracked.
 
-        // In v3 fxa state, instead of storing derived kSync and kXCS, we stored kB itself.
-        // This method should:
-        // - read the kB
-        // - derive sync key
-        // - compute client state (kXCS)
-        // See similar conversion in Fennec: https://searchfox.org/mozilla-esr68/source/mobile/android/services/src/main/java/org/mozilla/gecko/fxa/login/StateFactory.java#168-195
-        // The rest of the state schema is the same as v4.
-        // logger.debug("Processing account state v3 $state")
+    // In v3 fxa state, instead of storing derived kSync and kXCS, we stored kB itself.
+    // This method should:
+    // - read the kB
+    // - derive sync key
+    // - compute client state (kXCS)
+    // See similar conversion in Fennec: https://searchfox.org/mozilla-esr68/source/mobile/android/services/src/main/java/org/mozilla/gecko/fxa/login/StateFactory.java#168-195
+    // The rest of the state schema is the same as v4.
+    // logger.debug("Processing account state v3 $state")
     // }
 }

@@ -77,13 +77,16 @@ internal fun inferMenuPositioningData(
     val fitsUp = availableHeightToTop >= containerHeight
     val fitsDown = availableHeightToBottom >= containerHeight
 
-    return inferMenuPosition(anchor, currentData.copy(
-        fitsUp = fitsUp,
-        fitsDown = fitsDown,
-        availableHeightToTop = availableHeightToTop,
-        availableHeightToBottom = availableHeightToBottom,
-        containerViewHeight = containerHeight
-    ))
+    return inferMenuPosition(
+        anchor,
+        currentData.copy(
+            fitsUp = fitsUp,
+            fitsDown = fitsDown,
+            availableHeightToTop = availableHeightToTop,
+            availableHeightToBottom = availableHeightToBottom,
+            containerViewHeight = containerHeight
+        )
+    )
 }
 
 /**

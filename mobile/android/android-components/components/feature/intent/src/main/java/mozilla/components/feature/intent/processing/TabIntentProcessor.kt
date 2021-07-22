@@ -7,9 +7,9 @@ package mozilla.components.feature.intent.processing
 import android.app.SearchManager
 import android.content.Intent
 import android.content.Intent.ACTION_MAIN
+import android.content.Intent.ACTION_SEARCH
 import android.content.Intent.ACTION_SEND
 import android.content.Intent.ACTION_VIEW
-import android.content.Intent.ACTION_SEARCH
 import android.content.Intent.ACTION_WEB_SEARCH
 import android.content.Intent.EXTRA_TEXT
 import android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED

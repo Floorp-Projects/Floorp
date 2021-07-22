@@ -40,20 +40,23 @@ import mozilla.components.concept.engine.permission.Permission.ContentAudioCaptu
 import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
 import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayAudible
 import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayInaudible
-import mozilla.components.concept.engine.permission.Permission.ContentMediaKeySystemAccess
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
+import mozilla.components.concept.engine.permission.Permission.ContentMediaKeySystemAccess
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentPersistentStorage
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
 import mozilla.components.concept.engine.permission.Permission.Generic
 import mozilla.components.concept.engine.permission.PermissionRequest
+import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
 import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
 import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
+import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -67,6 +70,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.anyBoolean
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.doNothing
@@ -77,10 +81,6 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import java.security.InvalidParameterException
 import java.util.UUID
-import mozilla.components.concept.engine.permission.SitePermissions
-import mozilla.components.concept.engine.permission.SitePermissionsStorage
-import mozilla.components.support.test.eq
-import org.mockito.Mockito.anyBoolean
 
 @RunWith(AndroidJUnit4::class)
 class SitePermissionsFeatureTest {
@@ -182,7 +182,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumePermissionsRequest
-                ("sessionIdTest", mockPermissionRequest)
+            ("sessionIdTest", mockPermissionRequest)
         )
     }
 
@@ -194,7 +194,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumePermissionsRequest
-                (selectedTab.id, mockPermissionRequest)
+            (selectedTab.id, mockPermissionRequest)
         )
     }
 
@@ -206,7 +206,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumeAppPermissionsRequest
-                ("sessionIdTest", mockAppPermissionRequest)
+            ("sessionIdTest", mockAppPermissionRequest)
         )
     }
 
@@ -218,7 +218,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumeAppPermissionsRequest
-                (selectedTab.id, mockAppPermissionRequest)
+            (selectedTab.id, mockAppPermissionRequest)
         )
     }
 
@@ -275,14 +275,14 @@ class SitePermissionsFeatureTest {
     fun `GIVEN shouldStore false WHEN onContentPermissionGranted() THEN storeSitePermissions() MUST NOT BE called`() {
         // given
         doNothing().`when`(sitePermissionFeature)
-                .storeSitePermissions(any(), any(), any(), any())
+            .storeSitePermissions(any(), any(), any(), any())
 
         // when
         sitePermissionFeature.onContentPermissionGranted(mockPermissionRequest, false)
 
         // then
         verify(sitePermissionFeature, never())
-                .storeSitePermissions(selectedTab.content, mockPermissionRequest, ALLOWED)
+            .storeSitePermissions(selectedTab.content, mockPermissionRequest, ALLOWED)
     }
 
     @Test
@@ -292,7 +292,8 @@ class SitePermissionsFeatureTest {
         doNothing().`when`(sitePermissionFeature)
             .onContentPermissionGranted(mockPermissionRequest, true)
         doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(
-            anyString())
+            anyString()
+        )
 
         // when
         sitePermissionFeature.onPositiveButtonPress(PERMISSION_ID, SESSION_ID, true)
@@ -311,7 +312,8 @@ class SitePermissionsFeatureTest {
         doNothing().`when`(sitePermissionFeature)
             .onContentPermissionDeny(mockPermissionRequest, true)
         doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(
-            anyString())
+            anyString()
+        )
 
         // when
         sitePermissionFeature.onNegativeButtonPress(PERMISSION_ID, SESSION_ID, true)
@@ -330,7 +332,8 @@ class SitePermissionsFeatureTest {
         doNothing().`when`(sitePermissionFeature)
             .onContentPermissionDeny(mockPermissionRequest, false)
         doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(
-            anyString())
+            anyString()
+        )
 
         // when
         sitePermissionFeature.onDismiss(PERMISSION_ID, SESSION_ID)
@@ -551,7 +554,7 @@ class SitePermissionsFeatureTest {
         doReturn(sitePermissions).`when`(mockStorage).findSitePermissionsBy(URL)
         doReturn(false).`when`(sitePermissionFeature).shouldApplyRules(any())
         doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
-                .handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
+            .handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
 
         // when
         runBlockingTest {
@@ -1105,14 +1108,14 @@ class SitePermissionsFeatureTest {
     fun `getInitialSitePermissions - WHEN sitePermissionsRules is present the function MUST use the sitePermissionsRules values to create a SitePermissions object`() = runBlockingTest {
 
         val rules = SitePermissionsRules(
-                location = SitePermissionsRules.Action.BLOCKED,
-                camera = SitePermissionsRules.Action.ASK_TO_ALLOW,
-                notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
-                microphone = SitePermissionsRules.Action.BLOCKED,
-                autoplayAudible = SitePermissionsRules.AutoplayAction.BLOCKED,
-                autoplayInaudible = SitePermissionsRules.AutoplayAction.ALLOWED,
-                persistentStorage = SitePermissionsRules.Action.BLOCKED,
-                mediaKeySystemAccess = SitePermissionsRules.Action.ASK_TO_ALLOW
+            location = SitePermissionsRules.Action.BLOCKED,
+            camera = SitePermissionsRules.Action.ASK_TO_ALLOW,
+            notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
+            microphone = SitePermissionsRules.Action.BLOCKED,
+            autoplayAudible = SitePermissionsRules.AutoplayAction.BLOCKED,
+            autoplayInaudible = SitePermissionsRules.AutoplayAction.ALLOWED,
+            persistentStorage = SitePermissionsRules.Action.BLOCKED,
+            mediaKeySystemAccess = SitePermissionsRules.Action.ASK_TO_ALLOW
         )
 
         sitePermissionFeature.sitePermissionsRules = rules
@@ -1133,10 +1136,10 @@ class SitePermissionsFeatureTest {
     @Test
     fun `any media request must be rejected WHEN system permissions are not granted first`() = runBlocking() {
         val permissions = listOf(
-                ContentVideoCapture("", "back camera"),
-                ContentVideoCamera("", "front camera"),
-                ContentAudioCapture(),
-                ContentAudioMicrophone()
+            ContentVideoCapture("", "back camera"),
+            ContentVideoCamera("", "front camera"),
+            ContentAudioCapture(),
+            ContentAudioMicrophone()
         )
 
         permissions.forEach { permission ->

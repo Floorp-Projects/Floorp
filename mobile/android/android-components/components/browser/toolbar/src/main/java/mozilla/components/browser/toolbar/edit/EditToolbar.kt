@@ -111,8 +111,10 @@ class EditToolbar internal constructor(
                 onTextChanged(text)
             }
 
-            setUrlGoneMargin(ConstraintSet.END,
-                    context.resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_gone_margin_end))
+            setUrlGoneMargin(
+                ConstraintSet.END,
+                context.resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_gone_margin_end)
+            )
 
             setOnDispatchKeyEventPreImeListener { event ->
                 if (event?.keyCode == KeyEvent.KEYCODE_BACK && editListener?.onCancelEditing() != false) {
@@ -134,20 +136,20 @@ class EditToolbar internal constructor(
         suggestionBackground = views.url.autoCompleteBackgroundColor,
         suggestionForeground = views.url.autoCompleteForegroundColor
     )
-    set(value) {
-        field = value
+        set(value) {
+            field = value
 
-        views.clear.setColorFilter(value.clear)
+            views.clear.setColorFilter(value.clear)
 
-        if (value.icon != null) {
-            views.icon.setColorFilter(value.icon)
+            if (value.icon != null) {
+                views.icon.setColorFilter(value.icon)
+            }
+
+            views.url.setHintTextColor(value.hint)
+            views.url.setTextColor(value.text)
+            views.url.autoCompleteBackgroundColor = value.suggestionBackground
+            views.url.autoCompleteForegroundColor = value.suggestionForeground
         }
-
-        views.url.setHintTextColor(value.hint)
-        views.url.setTextColor(value.text)
-        views.url.autoCompleteBackgroundColor = value.suggestionBackground
-        views.url.autoCompleteForegroundColor = value.suggestionForeground
-    }
 
     /**
      * Sets the background that will be drawn behind the URL, icon and edit actions.
@@ -293,7 +295,8 @@ class EditToolbar internal constructor(
     private fun setUrlGoneMargin(anchor: Int, dimen: Int) {
         val set = ConstraintSet()
         val container = rootView.findViewById<ConstraintLayout>(
-                R.id.mozac_browser_toolbar_container)
+            R.id.mozac_browser_toolbar_container
+        )
         set.clone(container)
         set.setGoneMargin(R.id.mozac_browser_toolbar_edit_url_view, anchor, dimen)
         set.applyTo(container)
@@ -308,9 +311,12 @@ class EditToolbar internal constructor(
         if (text.isNotBlank()) {
             setUrlGoneMargin(ConstraintSet.END, 0)
         } else {
-            setUrlGoneMargin(ConstraintSet.END, rootView.resources.getDimensionPixelSize(
+            setUrlGoneMargin(
+                ConstraintSet.END,
+                rootView.resources.getDimensionPixelSize(
                     R.dimen.mozac_browser_toolbar_url_gone_margin_end
-            ))
+                )
+            )
         }
         editListener?.onTextChanged(text)
     }

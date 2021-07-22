@@ -40,7 +40,8 @@ class TabsFeature(
         tabsTray,
         selectTabUseCase,
         removeTabUseCase,
-        closeTabsTray)
+        closeTabsTray
+    )
 
     override fun start() {
         presenter.start()

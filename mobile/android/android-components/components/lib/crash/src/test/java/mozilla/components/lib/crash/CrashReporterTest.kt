@@ -78,13 +78,15 @@ class CrashReporterTest {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            telemetryServices = listOf(telemetryService),
-            shouldPrompt = CrashReporter.Prompt.NEVER,
-            scope = scope
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                telemetryServices = listOf(telemetryService),
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+                scope = scope
+            ).install(testContext)
+        )
 
         val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
 
@@ -100,13 +102,15 @@ class CrashReporterTest {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            telemetryServices = listOf(telemetryService),
-            shouldPrompt = CrashReporter.Prompt.ALWAYS,
-            scope = scope
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                telemetryServices = listOf(telemetryService),
+                shouldPrompt = CrashReporter.Prompt.ALWAYS,
+                scope = scope
+            ).install(testContext)
+        )
 
         val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
 
@@ -122,13 +126,15 @@ class CrashReporterTest {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            telemetryServices = listOf(telemetryService),
-            shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
-            scope = scope
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                telemetryServices = listOf(telemetryService),
+                shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
+                scope = scope
+            ).install(testContext)
+        )
 
         val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
 
@@ -144,13 +150,15 @@ class CrashReporterTest {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            telemetryServices = listOf(telemetryService),
-            shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
-            scope = scope
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                telemetryServices = listOf(telemetryService),
+                shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
+                scope = scope
+            ).install(testContext)
+        )
 
         val crash = Crash.NativeCodeCrash(
             0,
@@ -158,7 +166,8 @@ class CrashReporterTest {
             true,
             "extras.path",
             isFatal = true,
-            breadcrumbs = arrayListOf())
+            breadcrumbs = arrayListOf()
+        )
 
         reporter.onCrash(testContext, crash)
 
@@ -173,12 +182,14 @@ class CrashReporterTest {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            telemetryServices = listOf(telemetryService),
-            shouldPrompt = CrashReporter.Prompt.ALWAYS
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                telemetryServices = listOf(telemetryService),
+                shouldPrompt = CrashReporter.Prompt.ALWAYS
+            ).install(testContext)
+        )
 
         val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
 
@@ -193,11 +204,13 @@ class CrashReporterTest {
     fun `CrashReporter will not prompt the user if there is no crash services`() {
         val telemetryService: CrashTelemetryService = mock()
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            telemetryServices = listOf(telemetryService),
-            shouldPrompt = CrashReporter.Prompt.ALWAYS
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                telemetryServices = listOf(telemetryService),
+                shouldPrompt = CrashReporter.Prompt.ALWAYS
+            ).install(testContext)
+        )
 
         val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
 
@@ -212,11 +225,13 @@ class CrashReporterTest {
     fun `CrashReporter will not send crash telemetry if there is no telemetry service`() {
         val service: CrashReporterService = mock()
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.ALWAYS
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                shouldPrompt = CrashReporter.Prompt.ALWAYS
+            ).install(testContext)
+        )
 
         val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
 
@@ -269,11 +284,13 @@ class CrashReporterTest {
 
     @Test
     fun `CrashReporter is enabled by default`() {
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(mock()),
-            shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(mock()),
+                shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH
+            ).install(testContext)
+        )
 
         assertTrue(reporter.enabled)
     }
@@ -282,12 +299,14 @@ class CrashReporterTest {
     fun `CrashReporter will not prompt and not submit report if not enabled`() {
         val service: CrashReporterService = mock()
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.ALWAYS,
-            scope = scope
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                shouldPrompt = CrashReporter.Prompt.ALWAYS,
+                scope = scope
+            ).install(testContext)
+        )
 
         reporter.enabled = false
 
@@ -306,12 +325,14 @@ class CrashReporterTest {
         val crash = createUncaughtExceptionCrash()
 
         val service = mock<CrashReporterService>()
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.NEVER,
-            scope = scope
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+                scope = scope
+            ).install(testContext)
+        )
 
         reporter.onCrash(testContext, crash)
         verify(reporter, never()).sendCrashTelemetry(testContext, crash)
@@ -338,11 +359,13 @@ class CrashReporterTest {
             override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? = null
         }
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.NEVER
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                shouldPrompt = CrashReporter.Prompt.NEVER
+            ).install(testContext)
+        )
 
         reporter.submitReport(
             Crash.UncaughtExceptionCrash(0, RuntimeException(), arrayListOf())
@@ -371,11 +394,13 @@ class CrashReporterTest {
             override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? = null
         }
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.NEVER
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                shouldPrompt = CrashReporter.Prompt.NEVER
+            ).install(testContext)
+        )
 
         reporter.submitReport(
             Crash.NativeCodeCrash(0, "", true, "", false, arrayListOf())
@@ -412,11 +437,13 @@ class CrashReporterTest {
             }
         }
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.NEVER
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                shouldPrompt = CrashReporter.Prompt.NEVER
+            ).install(testContext)
+        )
 
         val throwable = RuntimeException()
         val breadcrumb = Breadcrumb(
@@ -464,11 +491,13 @@ class CrashReporterTest {
             }
         }
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.NEVER
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                shouldPrompt = CrashReporter.Prompt.NEVER
+            ).install(testContext)
+        )
 
         val throwable = RuntimeException()
         throwable.stackTrace = emptyArray()
@@ -503,11 +532,13 @@ class CrashReporterTest {
             override fun record(throwable: Throwable) = Unit
         }
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            telemetryServices = listOf(telemetryService),
-            shouldPrompt = CrashReporter.Prompt.NEVER
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                telemetryServices = listOf(telemetryService),
+                shouldPrompt = CrashReporter.Prompt.NEVER
+            ).install(testContext)
+        )
 
         reporter.submitCrashTelemetry(
             Crash.NativeCodeCrash(0, "", true, "", false, arrayListOf())
@@ -555,7 +586,8 @@ class CrashReporterTest {
             true,
             "extras.path",
             isFatal = false,
-            breadcrumbs = arrayListOf())
+            breadcrumbs = arrayListOf()
+        )
         reporter.onCrash(context, nativeCrash)
 
         verify(pendingIntent).send(eq(context), eq(0), any())
@@ -577,14 +609,16 @@ class CrashReporterTest {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            telemetryServices = listOf(telemetryService),
-            shouldPrompt = CrashReporter.Prompt.NEVER,
-            nonFatalCrashIntent = mock(),
-            scope = scope
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                telemetryServices = listOf(telemetryService),
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+                nonFatalCrashIntent = mock(),
+                scope = scope
+            ).install(testContext)
+        )
 
         val nativeCrash = Crash.NativeCodeCrash(
             0,
@@ -592,7 +626,8 @@ class CrashReporterTest {
             true,
             "extras.path",
             isFatal = false,
-            breadcrumbs = arrayListOf())
+            breadcrumbs = arrayListOf()
+        )
         reporter.onCrash(testContext, nativeCrash)
 
         verify(reporter, never()).sendCrashReport(testContext, nativeCrash)
@@ -605,13 +640,15 @@ class CrashReporterTest {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
-        val reporter = spy(CrashReporter(
-            context = testContext,
-            services = listOf(service),
-            telemetryServices = listOf(telemetryService),
-            shouldPrompt = CrashReporter.Prompt.NEVER,
-            scope = scope
-        ).install(testContext))
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                telemetryServices = listOf(telemetryService),
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+                scope = scope
+            ).install(testContext)
+        )
 
         val nativeCrash = Crash.NativeCodeCrash(
             0,
@@ -619,7 +656,8 @@ class CrashReporterTest {
             true,
             "extras.path",
             isFatal = false,
-            breadcrumbs = arrayListOf())
+            breadcrumbs = arrayListOf()
+        )
         reporter.onCrash(testContext, nativeCrash)
 
         verify(reporter, times(1)).sendCrashReport(testContext, nativeCrash)

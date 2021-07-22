@@ -67,10 +67,13 @@ suspend fun <T> handleFxaExceptions(
  * Helper method that handles [FxaException] and returns a [Boolean] success flag as a result.
  */
 suspend fun handleFxaExceptions(logger: Logger, operation: String, block: () -> Unit): Boolean {
-    return handleFxaExceptions(logger, operation, { false }, {
-        block()
-        true
-    })
+    return handleFxaExceptions(
+        logger, operation, { false },
+        {
+            block()
+            true
+        }
+    )
 }
 
 /**

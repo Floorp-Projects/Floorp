@@ -41,7 +41,8 @@ class LoggerTest {
             priority = Log.Priority.DEBUG,
             tag = "Tag",
             throwable = exception,
-            message = "Hello")
+            message = "Hello"
+        )
     }
 
     @Test
@@ -52,10 +53,11 @@ class LoggerTest {
         logger.info(message = "Hello", throwable = exception)
 
         verify(sink).log(
-                priority = Log.Priority.INFO,
-                tag = "Tag",
-                throwable = exception,
-                message = "Hello")
+            priority = Log.Priority.INFO,
+            tag = "Tag",
+            throwable = exception,
+            message = "Hello"
+        )
     }
 
     @Test
@@ -66,10 +68,11 @@ class LoggerTest {
         logger.warn(message = "Hello", throwable = exception)
 
         verify(sink).log(
-                priority = Log.Priority.WARN,
-                tag = "Tag",
-                throwable = exception,
-                message = "Hello")
+            priority = Log.Priority.WARN,
+            tag = "Tag",
+            throwable = exception,
+            message = "Hello"
+        )
     }
 
     @Test
@@ -80,10 +83,11 @@ class LoggerTest {
         logger.error(message = "Hello", throwable = exception)
 
         verify(sink).log(
-                priority = Log.Priority.ERROR,
-                tag = "Tag",
-                throwable = exception,
-                message = "Hello")
+            priority = Log.Priority.ERROR,
+            tag = "Tag",
+            throwable = exception,
+            message = "Hello"
+        )
     }
 
     @Test
@@ -95,34 +99,38 @@ class LoggerTest {
             priority = Log.Priority.DEBUG,
             tag = null,
             throwable = debugException,
-            message = "debug message")
+            message = "debug message"
+        )
 
         val infoException = RuntimeException()
         Logger.info("info message", infoException)
 
         verify(sink).log(
-                priority = Log.Priority.INFO,
-                tag = null,
-                throwable = infoException,
-                message = "info message")
+            priority = Log.Priority.INFO,
+            tag = null,
+            throwable = infoException,
+            message = "info message"
+        )
 
         val warnException = RuntimeException()
         Logger.warn("warn message", warnException)
 
         verify(sink).log(
-                priority = Log.Priority.WARN,
-                tag = null,
-                throwable = warnException,
-                message = "warn message")
+            priority = Log.Priority.WARN,
+            tag = null,
+            throwable = warnException,
+            message = "warn message"
+        )
 
         val errorException = RuntimeException()
         Logger.error("error message", errorException)
 
         verify(sink).log(
-                priority = Log.Priority.ERROR,
-                tag = null,
-                throwable = errorException,
-                message = "error message")
+            priority = Log.Priority.ERROR,
+            tag = null,
+            throwable = errorException,
+            message = "error message"
+        )
 
         verifyNoMoreInteractions(sink)
     }
@@ -139,10 +147,10 @@ class LoggerTest {
         )
 
         verify(sink).log(
-                priority = Log.Priority.DEBUG,
-                tag = null,
-                throwable = null,
-                message = "⇠ testing [0ms]"
+            priority = Log.Priority.DEBUG,
+            tag = null,
+            throwable = null,
+            message = "⇠ testing [0ms]"
         )
 
         verifyNoMoreInteractions(sink)
@@ -158,17 +166,17 @@ class LoggerTest {
         }
 
         verify(sink).log(
-                priority = Log.Priority.DEBUG,
-                tag = "WithTag",
-                throwable = null,
-                message = "⇢ testing"
+            priority = Log.Priority.DEBUG,
+            tag = "WithTag",
+            throwable = null,
+            message = "⇢ testing"
         )
 
         verify(sink).log(
-                priority = Log.Priority.DEBUG,
-                tag = "WithTag",
-                throwable = null,
-                message = "⇠ testing [10ms]"
+            priority = Log.Priority.DEBUG,
+            tag = "WithTag",
+            throwable = null,
+            message = "⇠ testing [10ms]"
         )
 
         verifyNoMoreInteractions(sink)

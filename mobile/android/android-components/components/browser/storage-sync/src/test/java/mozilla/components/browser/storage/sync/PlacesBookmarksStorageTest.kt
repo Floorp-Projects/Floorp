@@ -102,9 +102,12 @@ class PlacesBookmarksStorageTest {
         }
 
         val folderGuid = bookmarks.addFolder(BookmarkRoot.Mobile.id, "Test Folder", null)
-        bookmarks.updateNode(insertedItem, BookmarkInfo(
-            parentGuid = folderGuid, title = null, position = -3, url = null
-        ))
+        bookmarks.updateNode(
+            insertedItem,
+            BookmarkInfo(
+                parentGuid = folderGuid, title = null, position = -3, url = null
+            )
+        )
         with(bookmarks.getBookmarksWithUrl(url)) {
             assertEquals(1, this.size)
             with(this[0]) {
@@ -171,8 +174,10 @@ class PlacesBookmarksStorageTest {
         assertTrue(bookmarks.deleteNode(secondInsertedItem))
         assertTrue(bookmarks.deleteNode(folderGuid))
 
-        for (root in listOf(
-            BookmarkRoot.Mobile, BookmarkRoot.Root, BookmarkRoot.Menu, BookmarkRoot.Toolbar, BookmarkRoot.Unfiled)
+        for (
+            root in listOf(
+                BookmarkRoot.Mobile, BookmarkRoot.Root, BookmarkRoot.Menu, BookmarkRoot.Toolbar, BookmarkRoot.Unfiled
+            )
         ) {
             try {
                 bookmarks.deleteNode(root.id)

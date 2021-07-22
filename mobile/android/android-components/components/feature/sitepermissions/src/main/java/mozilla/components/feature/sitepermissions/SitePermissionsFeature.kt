@@ -15,32 +15,42 @@ import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayAudibleBlockingAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayAudibleChangedAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayInAudibleBlockingAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayInAudibleChangedAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.CameraChangedAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.LocationChangedAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.MediaKeySystemAccesChangedAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.MicrophoneChangedAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.NotificationChangedAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.PersistentStorageChangedAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.permission.Permission
+import mozilla.components.concept.engine.permission.Permission.AppAudio
+import mozilla.components.concept.engine.permission.Permission.AppCamera
+import mozilla.components.concept.engine.permission.Permission.AppLocationCoarse
+import mozilla.components.concept.engine.permission.Permission.AppLocationFine
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
 import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
 import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayAudible
 import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayInaudible
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
+import mozilla.components.concept.engine.permission.Permission.ContentMediaKeySystemAccess
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
+import mozilla.components.concept.engine.permission.Permission.ContentPersistentStorage
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
-import mozilla.components.concept.engine.permission.Permission.ContentPersistentStorage
-import mozilla.components.concept.engine.permission.Permission.ContentMediaKeySystemAccess
-import mozilla.components.concept.engine.permission.Permission.AppLocationCoarse
-import mozilla.components.concept.engine.permission.Permission.AppLocationFine
-import mozilla.components.concept.engine.permission.Permission.AppAudio
-import mozilla.components.concept.engine.permission.Permission.AppCamera
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
@@ -56,16 +66,6 @@ import mozilla.components.support.ktx.kotlin.getOrigin
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import java.security.InvalidParameterException
-import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayAudibleBlockingAction
-import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayAudibleChangedAction
-import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayInAudibleBlockingAction
-import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayInAudibleChangedAction
-import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.CameraChangedAction
-import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.LocationChangedAction
-import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.MediaKeySystemAccesChangedAction
-import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.MicrophoneChangedAction
-import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.NotificationChangedAction
-import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.PersistentStorageChangedAction
 
 internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
 
@@ -428,8 +428,10 @@ class SitePermissionsFeature(
         return if (permissionRequest.isForAutoplay()) {
             false
         } else {
-            (permissionFromStorage == null ||
-                    !permissionRequest.doNotAskAgain(permissionFromStorage))
+            (
+                permissionFromStorage == null ||
+                    !permissionRequest.doNotAskAgain(permissionFromStorage)
+                )
         }
     }
 
@@ -515,7 +517,8 @@ class SitePermissionsFeature(
                             ?.toStatus()
                     )
                     request.isForAutoplayInaudible() -> AutoPlayInAudibleChangedAction(
-                        tab.id, value != sitePermissionsRules?.autoplayInaudible?.toAutoplayStatus()
+                        tab.id,
+                        value != sitePermissionsRules?.autoplayInaudible?.toAutoplayStatus()
                             ?.toStatus()
                     )
                     else -> null
@@ -780,7 +783,7 @@ class SitePermissionsFeature(
         val title = context.getString(titleId, host)
 
         val currentSessionId: String = store.state.findTabOrCustomTabOrSelectedTab(sessionId)?.id
-                ?: throw IllegalStateException("Unable to find session for $sessionId or selected session")
+            ?: throw IllegalStateException("Unable to find session for $sessionId or selected session")
 
         return SitePermissionsDialogFragment.newInstance(
             currentSessionId,
@@ -861,7 +864,7 @@ class SitePermissionsFeature(
     @VisibleForTesting
     internal fun noPermissionRequests(contentState: ContentState) =
         contentState.appPermissionRequestsList.isEmpty() &&
-                contentState.permissionRequestsList.isEmpty()
+            contentState.permissionRequestsList.isEmpty()
 }
 
 internal fun SitePermissions?.isGranted(permissionRequest: PermissionRequest): Boolean {

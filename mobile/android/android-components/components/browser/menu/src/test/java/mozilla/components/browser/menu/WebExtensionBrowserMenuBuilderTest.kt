@@ -11,8 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.item.BackPressMenuItem
 import mozilla.components.browser.menu.item.BrowserMenuImageText
-import mozilla.components.browser.menu.item.WebExtensionBrowserMenuItem
 import mozilla.components.browser.menu.item.ParentBrowserMenuItem
+import mozilla.components.browser.menu.item.WebExtensionBrowserMenuItem
 import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
 import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem.Companion.MAIN_EXTENSIONS_MENU_ID
 import mozilla.components.browser.state.state.BrowserState
@@ -289,7 +289,8 @@ class WebExtensionBrowserMenuBuilderTest {
             ),
             mockMenuItem(),
             submenuPlaceholderMenuItem,
-            mockMenuItem())
+            mockMenuItem()
+        )
 
         val builder =
             WebExtensionBrowserMenuBuilder(
@@ -360,7 +361,8 @@ class WebExtensionBrowserMenuBuilderTest {
         val items = listOf(
             mockMenuItem(),
             submenuPlaceholderMenuItem,
-            mockMenuItem())
+            mockMenuItem()
+        )
 
         val builder =
             WebExtensionBrowserMenuBuilder(

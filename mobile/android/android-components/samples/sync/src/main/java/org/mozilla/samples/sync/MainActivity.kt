@@ -18,38 +18,38 @@ import kotlinx.coroutines.withContext
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.storage.BookmarkNode
+import mozilla.components.concept.sync.AccountEvent
+import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.AuthFlowError
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceCapability
-import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.DeviceCommandIncoming
 import mozilla.components.concept.sync.DeviceCommandOutgoing
-import mozilla.components.concept.sync.DeviceType
-import mozilla.components.concept.sync.AccountEventsObserver
-import mozilla.components.concept.sync.AccountEvent
-import mozilla.components.concept.sync.AuthFlowError
 import mozilla.components.concept.sync.DeviceConfig
+import mozilla.components.concept.sync.DeviceConstellationObserver
+import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.dataprotect.generateEncryptionKey
-import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.ServerConfig
-import mozilla.components.service.fxa.SyncConfig
-import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
-import mozilla.components.service.fxa.sync.SyncStatusObserver
-import mozilla.components.support.base.log.Log
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.PeriodicSyncConfig
 import mozilla.components.service.fxa.Server
+import mozilla.components.service.fxa.ServerConfig
+import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
+import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.fxa.sync.SyncReason
+import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.toAuthType
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
+import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rusthttp.RustHttpConfig
@@ -61,10 +61,10 @@ import kotlin.coroutines.CoroutineContext
 private const val PASSWORDS_ENCRYPTION_KEY_STRENGTH = 256
 
 class MainActivity :
-        AppCompatActivity(),
-        LoginFragment.OnLoginCompleteListener,
-        DeviceFragment.OnDeviceListInteractionListener,
-        CoroutineScope {
+    AppCompatActivity(),
+    LoginFragment.OnLoginCompleteListener,
+    DeviceFragment.OnDeviceListInteractionListener,
+    CoroutineScope {
     private val historyStorage = lazy {
         PlacesHistoryStorage(this)
     }
@@ -92,21 +92,21 @@ class MainActivity :
 
     private val accountManager by lazy {
         FxaAccountManager(
-                this,
-                ServerConfig(Server.RELEASE, CLIENT_ID, REDIRECT_URL),
-                DeviceConfig(
-                    name = "A-C Sync Sample - ${System.currentTimeMillis()}",
-                    type = DeviceType.MOBILE,
-                    capabilities = setOf(DeviceCapability.SEND_TAB),
-                    secureStateAtRest = true
+            this,
+            ServerConfig(Server.RELEASE, CLIENT_ID, REDIRECT_URL),
+            DeviceConfig(
+                name = "A-C Sync Sample - ${System.currentTimeMillis()}",
+                type = DeviceType.MOBILE,
+                capabilities = setOf(DeviceCapability.SEND_TAB),
+                secureStateAtRest = true
+            ),
+            SyncConfig(
+                setOf(
+                    SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords,
+                    SyncEngine.Addresses, SyncEngine.CreditCards
                 ),
-                SyncConfig(
-                    setOf(
-                        SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords,
-                        SyncEngine.Addresses, SyncEngine.CreditCards
-                    ),
-                    periodicSyncConfig = PeriodicSyncConfig(periodMinutes = 15, initialDelayMinutes = 5)
-                )
+                periodicSyncConfig = PeriodicSyncConfig(periodMinutes = 15, initialDelayMinutes = 5)
+            )
         )
     }
 

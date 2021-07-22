@@ -5,10 +5,10 @@
 package mozilla.components.support.migration
 
 import android.app.Activity
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.app.NotificationChannel
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -120,14 +120,18 @@ abstract class AbstractMigrationService : Service() {
 
     private fun getNotificationBuilder(titleRes: Int, contentRes: Int, channel: String): NotificationCompat.Builder {
         return NotificationCompat.Builder(this, channel)
-                .setSmallIcon(R.drawable.mozac_support_migration_notification_icon)
-                .setContentTitle(getString(titleRes))
-                .setContentText(getString(contentRes))
-                .setContentIntent(PendingIntent.getActivity(this, 0,
-                        Intent(this, migrationDecisionActivity).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0))
-                .setPriority(NotificationCompat.PRIORITY_LOW)
-                .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setSmallIcon(R.drawable.mozac_support_migration_notification_icon)
+            .setContentTitle(getString(titleRes))
+            .setContentText(getString(contentRes))
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    this, 0,
+                    Intent(this, migrationDecisionActivity).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0
+                )
+            )
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
     }
 
     private fun ensureChannelExists(): String {

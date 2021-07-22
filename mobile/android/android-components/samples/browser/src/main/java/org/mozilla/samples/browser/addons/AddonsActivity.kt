@@ -4,8 +4,8 @@
 
 package org.mozilla.samples.browser.addons
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import org.mozilla.samples.browser.R
 
 /**

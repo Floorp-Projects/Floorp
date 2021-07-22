@@ -95,9 +95,11 @@ class FilePickerTest {
         var onRequestPermissionWasCalled = false
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        filePicker = spy(FilePicker(fragment, store) {
-            onRequestPermissionWasCalled = true
-        })
+        filePicker = spy(
+            FilePicker(fragment, store) {
+                onRequestPermissionWasCalled = true
+            }
+        )
 
         doReturn(context).`when`(fragment).context
 
@@ -284,9 +286,11 @@ class FilePickerTest {
     fun `askAndroidPermissionsForRequest should cache the current request and then ask for permissions`() {
         val permissions = listOf("PermissionA")
         var permissionsRequested = emptyArray<String>()
-        filePicker = spy(FilePicker(fragment, store, null) { requested ->
-            permissionsRequested = requested
-        })
+        filePicker = spy(
+            FilePicker(fragment, store, null) { requested ->
+                permissionsRequested = requested
+            }
+        )
 
         filePicker.askAndroidPermissionsForRequest(permissions, request)
 
@@ -349,8 +353,12 @@ class FilePickerTest {
         doReturn(true).`when`(promptRequest).isMultipleFilesSelection
         // A private file cannot be picked so the request will be dismissed.
         val intent = Intent().apply {
-            clipData = (ClipData.newRawUri("Test",
-                ("file://" + File(testContext.applicationInfo.dataDir, "randomFile").canonicalPath).toUri()))
+            clipData = (
+                ClipData.newRawUri(
+                    "Test",
+                    ("file://" + File(testContext.applicationInfo.dataDir, "randomFile").canonicalPath).toUri()
+                )
+                )
         }
 
         filePicker.handleFilePickerIntentResult(intent, promptRequest)

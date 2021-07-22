@@ -15,8 +15,10 @@ class ProjectLicenseRuleTest {
         val findings = ProjectLicenseRule().lint(fileContent)
 
         assertEquals(1, findings.size)
-        assertEquals("Expected license not found or incorrect in the file: Test.kt.",
-            findings.first().message)
+        assertEquals(
+            "Expected license not found or incorrect in the file: Test.kt.",
+            findings.first().message
+        )
     }
 
     @Test
@@ -30,8 +32,10 @@ class ProjectLicenseRuleTest {
         val findings = ProjectLicenseRule().lint(file)
 
         assertEquals(1, findings.size)
-        assertEquals("Expected license not found or incorrect in the file: Test.kt.",
-            findings.first().message)
+        assertEquals(
+            "Expected license not found or incorrect in the file: Test.kt.",
+            findings.first().message
+        )
     }
 
     @Test

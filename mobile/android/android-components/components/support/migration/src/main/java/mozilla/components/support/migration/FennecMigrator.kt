@@ -21,32 +21,31 @@ import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
-import mozilla.components.concept.base.crash.CrashReporting
-import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.FennecMigrator.Builder
 import mozilla.components.support.migration.GleanMetrics.MigrationAddons
-import mozilla.components.support.migration.state.MigrationAction
-import mozilla.components.support.migration.state.MigrationStore
-import mozilla.components.support.migration.GleanMetrics.Pings
-import mozilla.components.support.migration.GleanMetrics.Migration as MigrationPing
 import mozilla.components.support.migration.GleanMetrics.MigrationBookmarks
 import mozilla.components.support.migration.GleanMetrics.MigrationFxa
 import mozilla.components.support.migration.GleanMetrics.MigrationGecko
 import mozilla.components.support.migration.GleanMetrics.MigrationHistory
 import mozilla.components.support.migration.GleanMetrics.MigrationLogins
-import mozilla.components.support.migration.GleanMetrics.MigrationTelemetryIdentifiers
 import mozilla.components.support.migration.GleanMetrics.MigrationOpenTabs
 import mozilla.components.support.migration.GleanMetrics.MigrationPinnedSites
 import mozilla.components.support.migration.GleanMetrics.MigrationSearch
 import mozilla.components.support.migration.GleanMetrics.MigrationSettings
+import mozilla.components.support.migration.GleanMetrics.MigrationTelemetryIdentifiers
+import mozilla.components.support.migration.GleanMetrics.Pings
+import mozilla.components.support.migration.state.MigrationAction
+import mozilla.components.support.migration.state.MigrationStore
 import java.io.File
 import java.lang.AssertionError
 import java.util.Date
@@ -55,6 +54,7 @@ import java.util.concurrent.Executors
 import kotlin.Exception
 import kotlin.IllegalStateException
 import kotlin.coroutines.CoroutineContext
+import mozilla.components.support.migration.GleanMetrics.Migration as MigrationPing
 
 /**
  * Supported Fennec migrations and their current versions.
@@ -659,10 +659,12 @@ class FennecMigrator private constructor(
             Pings.migration.submit()
 
             // Notify MigrationStore about result.
-            store.dispatch(MigrationAction.MigrationRunResult(
-                versionedMigration.migration,
-                migrationRun
-            ))
+            store.dispatch(
+                MigrationAction.MigrationRunResult(
+                    versionedMigration.migration,
+                    migrationRun
+                )
+            )
 
             // Save result of this migration immediately, so that we keep it even if we crash later
             // in the process and do not rerun this migration version.
@@ -874,11 +876,13 @@ class FennecMigrator private constructor(
                     }
 
                     is LoginsMigrationResult.Success.ImportedLoginRecords -> {
-                        logger.debug("""Imported login records! Details:
+                        logger.debug(
+                            """Imported login records! Details:
                     Total detected=${success.totalRecordsDetected},
                     failed to process=${success.failedToProcess},
                     failed to import=${success.failedToImport}
-                """.trimIndent())
+                            """.trimIndent()
+                        )
                         MigrationLogins.successReason.add(SuccessReasonTelemetryCodes.LOGINS_MIGRATED.code)
                         MigrationLogins.detected.add(success.totalRecordsDetected)
                         MigrationLogins.failureCounts["process"].add(success.failedToProcess)
@@ -928,8 +932,10 @@ class FennecMigrator private constructor(
                             result
                         }
                         is FxaMigrationResult.Failure.CustomServerConfigPresent -> {
-                            logger.error("Custom config present: token=${failure.customTokenServer}," +
-                                "idp=${failure.customIdpServer}")
+                            logger.error(
+                                "Custom config present: token=${failure.customTokenServer}," +
+                                    "idp=${failure.customIdpServer}"
+                            )
                             MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_CUSTOM_SERVER.code)
                             MigrationFxa.hasCustomIdpServer.set(failure.customIdpServer)
                             MigrationFxa.hasCustomTokenServer.set(failure.customTokenServer)

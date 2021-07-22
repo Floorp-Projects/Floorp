@@ -108,11 +108,15 @@ internal object AddonMigration {
         addonUpdater: AddonUpdater
     ): Result<AddonMigrationResult> {
         val installedAddons =
-        try {
-            getInstalledAddons(engine)
-        } catch (e: Exception) {
-            return Result.Failure(AddonMigrationException(AddonMigrationResult.Failure.FailedToQueryInstalledAddons(e)))
-        }
+            try {
+                getInstalledAddons(engine)
+            } catch (e: Exception) {
+                return Result.Failure(
+                    AddonMigrationException(
+                        AddonMigrationResult.Failure.FailedToQueryInstalledAddons(e)
+                    )
+                )
+            }
 
         if (installedAddons.isEmpty()) {
             return Result.Success(AddonMigrationResult.Success.NoAddons)

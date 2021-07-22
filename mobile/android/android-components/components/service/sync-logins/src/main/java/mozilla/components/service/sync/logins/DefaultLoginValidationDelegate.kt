@@ -39,13 +39,13 @@ class DefaultLoginValidationDelegate(
             } else {
                 // Matching guid, non-blank matching username -> update
                 potentialDupesList.find { it.guid == newLogin.guid && it.username == newLogin.username }
-                // Matching guid, blank username -> update
+                    // Matching guid, blank username -> update
                     ?: potentialDupesList.find { it.guid == newLogin.guid && it.username.isEmpty() }
                     // Matching username -> update
                     ?: potentialDupesList.find { it.username == newLogin.username }
                     // Non matching guid, blank username -> update
                     ?: potentialDupesList.find { it.username.isEmpty() }
-                    // else create
+                // else create
             }
             if (foundLogin == null) Result.CanBeCreated else Result.CanBeUpdated(foundLogin)
         }

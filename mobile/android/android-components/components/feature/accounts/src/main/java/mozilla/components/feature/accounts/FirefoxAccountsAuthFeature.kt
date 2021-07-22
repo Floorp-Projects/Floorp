@@ -82,11 +82,13 @@ class FirefoxAccountsAuthFeature(
 
                     // Notify the state machine about our success.
                     CoroutineScope(Dispatchers.Main).launch {
-                        accountManager.finishAuthentication(FxaAuthData(
-                            authType = authType,
-                            code = code,
-                            state = state
-                        ))
+                        accountManager.finishAuthentication(
+                            FxaAuthData(
+                                authType = authType,
+                                code = code,
+                                state = state
+                            )
+                        )
                     }
 
                     return RequestInterceptor.InterceptionResponse.Url(redirectUrl)

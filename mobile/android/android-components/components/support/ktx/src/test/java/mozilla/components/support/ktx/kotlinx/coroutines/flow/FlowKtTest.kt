@@ -24,7 +24,8 @@ class FlowKtTest {
 
         assertEquals(
             listOf("A", "B", "C", "A", "D", "A"),
-            items)
+            items
+        )
     }
 
     @Test
@@ -90,7 +91,8 @@ class FlowKtTest {
 
         val items = runBlocking {
             originalFlow.ifAnyChanged {
-                item -> arrayOf(CharState(item[0]), CharState(item[1]))
+                item ->
+                arrayOf(CharState(item[0]), CharState(item[1]))
             }.toList()
         }
 

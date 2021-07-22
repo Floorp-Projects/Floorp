@@ -51,7 +51,8 @@ class BrowserMenuTest {
     fun `show returns non-null popup window`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {})
+            SimpleBrowserMenuItem("World") {}
+        )
 
         val adapter = BrowserMenuAdapter(testContext, items)
 
@@ -67,7 +68,8 @@ class BrowserMenuTest {
     fun `show assigns currAnchor and isShown`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {})
+            SimpleBrowserMenuItem("World") {}
+        )
 
         val adapter = BrowserMenuAdapter(testContext, items)
 
@@ -114,7 +116,8 @@ class BrowserMenuTest {
     fun `dismiss sets isShown to false`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {})
+            SimpleBrowserMenuItem("World") {}
+        )
 
         val adapter = BrowserMenuAdapter(testContext, items)
 
@@ -131,7 +134,8 @@ class BrowserMenuTest {
     fun `recyclerview adapter will have items for every menu item`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {})
+            SimpleBrowserMenuItem("World") {}
+        )
 
         val adapter = BrowserMenuAdapter(testContext, items)
 
@@ -152,7 +156,8 @@ class BrowserMenuTest {
     fun `endOfMenuAlwaysVisible will be forwarded to recyclerview layoutManager`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {})
+            SimpleBrowserMenuItem("World") {}
+        )
 
         val adapter = spy(BrowserMenuAdapter(testContext, items))
         val menu = BrowserMenu(adapter)
@@ -172,7 +177,8 @@ class BrowserMenuTest {
     fun `endOfMenuAlwaysVisible will be forwarded to scrollOnceToTheBottom on devices with Android M and below`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {})
+            SimpleBrowserMenuItem("World") {}
+        )
 
         val adapter = BrowserMenuAdapter(testContext, items)
         val menu = spy(BrowserMenu(adapter))
@@ -192,7 +198,8 @@ class BrowserMenuTest {
     fun `invalidate will be forwarded to recyclerview adapter`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {})
+            SimpleBrowserMenuItem("World") {}
+        )
 
         val adapter = spy(BrowserMenuAdapter(testContext, items))
 
@@ -221,7 +228,8 @@ class BrowserMenuTest {
     fun `created popup window is displayed automatically`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {})
+            SimpleBrowserMenuItem("World") {}
+        )
 
         val adapter = BrowserMenuAdapter(testContext, items)
 
@@ -237,7 +245,8 @@ class BrowserMenuTest {
     fun `dismissing the browser menu will dismiss the popup`() {
         val items = listOf(
             SimpleBrowserMenuItem("Hello") {},
-            SimpleBrowserMenuItem("World") {})
+            SimpleBrowserMenuItem("World") {}
+        )
 
         val adapter = BrowserMenuAdapter(testContext, items)
 
@@ -422,7 +431,8 @@ class BrowserMenuTest {
     fun `popup is dismissed when anchor is detached`() {
         val items = listOf(
             SimpleBrowserMenuItem("Mock") {},
-            SimpleBrowserMenuItem("Menu") {})
+            SimpleBrowserMenuItem("Menu") {}
+        )
         val adapter = BrowserMenuAdapter(testContext, items)
         val menu = BrowserMenu(adapter)
         val anchor = Button(testContext)

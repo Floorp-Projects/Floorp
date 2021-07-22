@@ -8,7 +8,6 @@ import android.annotation.TargetApi
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
-
 import android.os.Build
 
 /**

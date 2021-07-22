@@ -27,10 +27,10 @@ internal data class TrackKeyInfo(
      */
     fun createTrackKey(): String {
         return "${provider.lowercase(Locale.ROOT)}.in-content" +
-                ".${type.lowercase(Locale.ROOT)}" +
-                ".${code?.lowercase(Locale.ROOT) ?: "none"}" +
-                if (!channel?.lowercase(Locale.ROOT).isNullOrBlank()) {
-                    ".${channel?.lowercase(Locale.ROOT)}"
-                } else ""
+            ".${type.lowercase(Locale.ROOT)}" +
+            ".${code?.lowercase(Locale.ROOT) ?: "none"}" +
+            if (!channel?.lowercase(Locale.ROOT).isNullOrBlank()) {
+                ".${channel?.lowercase(Locale.ROOT)}"
+            } else ""
     }
 }

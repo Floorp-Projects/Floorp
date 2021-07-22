@@ -81,7 +81,7 @@ class BrowserToolbar @JvmOverloads constructor(
             false
         )
     )
-    @VisibleForTesting(otherwise = PRIVATE) internal set
+        @VisibleForTesting(otherwise = PRIVATE) internal set
 
     /**
      * Toolbar in "edit mode".
@@ -95,7 +95,7 @@ class BrowserToolbar @JvmOverloads constructor(
             false
         )
     )
-    @VisibleForTesting(otherwise = PRIVATE) internal set
+        @VisibleForTesting(otherwise = PRIVATE) internal set
 
     override var title: String
         get() = display.title
@@ -125,11 +125,11 @@ class BrowserToolbar @JvmOverloads constructor(
     override var siteTrackingProtection: Toolbar.SiteTrackingProtection =
         Toolbar.SiteTrackingProtection.OFF_GLOBALLY
         set(value) {
-            if (field != value) {
-                display.setTrackingProtectionState(value)
-                field = value
+                if (field != value) {
+                    display.setTrackingProtectionState(value)
+                    field = value
+                }
             }
-        }
 
     override var private: Boolean
         get() = edit.private
@@ -169,7 +169,8 @@ class BrowserToolbar @JvmOverloads constructor(
                 0 + paddingLeft,
                 0 + paddingTop,
                 paddingLeft + child.measuredWidth,
-                paddingTop + child.measuredHeight)
+                paddingTop + child.measuredHeight
+            )
         }
     }
 

@@ -16,8 +16,8 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.concept.engine.Engine
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 import java.util.Locale
@@ -113,6 +113,11 @@ private fun removeSnapshotFromDisk(context: Context, engine: Engine) {
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal fun getFileForEngine(context: Context, engine: Engine): AtomicFile {
-    return AtomicFile(File(context.filesDir, String.format(STORE_FILE_NAME_FORMAT, engine.name())
-        .lowercase(Locale.ROOT)))
+    return AtomicFile(
+        File(
+            context.filesDir,
+            String.format(STORE_FILE_NAME_FORMAT, engine.name())
+                .lowercase(Locale.ROOT)
+        )
+    )
 }

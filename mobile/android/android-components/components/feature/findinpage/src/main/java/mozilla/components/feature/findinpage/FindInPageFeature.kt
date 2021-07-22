@@ -11,8 +11,8 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.findinpage.internal.FindInPageInteractor
 import mozilla.components.feature.findinpage.internal.FindInPagePresenter
 import mozilla.components.feature.findinpage.view.FindInPageView
-import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.base.feature.UserInteractionHandler
 
 /**
  * Feature implementation that will keep a [FindInPageView] in sync with a bound [SessionState].

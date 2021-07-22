@@ -4,9 +4,9 @@
 
 package mozilla.components.lib.jexl
 
-import mozilla.components.lib.jexl.evaluator.JexlContext
 import mozilla.components.lib.jexl.evaluator.Evaluator
 import mozilla.components.lib.jexl.evaluator.EvaluatorException
+import mozilla.components.lib.jexl.evaluator.JexlContext
 import mozilla.components.lib.jexl.evaluator.Transform
 import mozilla.components.lib.jexl.grammar.Grammar
 import mozilla.components.lib.jexl.lexer.Lexer

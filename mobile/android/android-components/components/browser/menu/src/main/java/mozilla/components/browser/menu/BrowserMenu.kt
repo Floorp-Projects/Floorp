@@ -126,7 +126,8 @@ open class BrowserMenu internal constructor(
     ): ViewGroup {
         // If the menu is placed at the bottom it should start as collapsed.
         if (menuPositioningData.inferredMenuPlacement is BrowserMenuPlacement.AnchoredToBottom.Dropdown ||
-            menuPositioningData.inferredMenuPlacement is BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring) {
+            menuPositioningData.inferredMenuPlacement is BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring
+        ) {
 
             val collapsingMenuIndexLimit = adapter.visibleItems.indexOfFirst { it.isCollapsingMenuLimit }
             val stickyFooterPosition = adapter.visibleItems.indexOfLast { it.isSticky }

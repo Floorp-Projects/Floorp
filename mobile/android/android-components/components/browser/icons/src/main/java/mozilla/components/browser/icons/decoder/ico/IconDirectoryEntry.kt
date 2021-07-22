@@ -251,17 +251,23 @@ internal fun createIconDirectoryEntry(
     // Verify that the entry points to a region that actually exists in the buffer, else bin it.
     var fieldPtr = entryOffset + 8
     val entryLength = data[fieldPtr].toInt() and 0xFF or (
-        (data[fieldPtr + 1].toInt() and 0xFF) shl 8) or (
-        (data[fieldPtr + 2].toInt() and 0xFF) shl 16) or (
-        (data[fieldPtr + 3].toInt() and 0xFF) shl 24)
+        (data[fieldPtr + 1].toInt() and 0xFF) shl 8
+        ) or (
+        (data[fieldPtr + 2].toInt() and 0xFF) shl 16
+        ) or (
+        (data[fieldPtr + 3].toInt() and 0xFF) shl 24
+        )
 
     // Advance to the offset field.
     fieldPtr += 4
 
     val payloadOffset = data[fieldPtr].toInt() and 0xFF or (
-        (data[fieldPtr + 1].toInt() and 0xFF) shl 8) or (
-        (data[fieldPtr + 2].toInt() and 0xFF) shl 16) or (
-        (data[fieldPtr + 3].toInt() and 0xFF) shl 24)
+        (data[fieldPtr + 1].toInt() and 0xFF) shl 8
+        ) or (
+        (data[fieldPtr + 2].toInt() and 0xFF) shl 16
+        ) or (
+        (data[fieldPtr + 3].toInt() and 0xFF) shl 24
+        )
 
     // Fail if the entry describes a region outside the buffer.
     if (payloadOffset < 0 || entryLength < 0 || payloadOffset + entryLength > data.size) {

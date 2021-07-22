@@ -37,8 +37,10 @@ private const val TEST_CHANNEL = "testChannel"
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class NativeNotificationBridgeTest {
-    private val blankNotification = WebNotification(TEST_TITLE, TEST_TAG, TEST_TEXT, TEST_URL, null, null,
-            null, true, 0)
+    private val blankNotification = WebNotification(
+        TEST_TITLE, TEST_TAG, TEST_TEXT, TEST_URL, null, null,
+        null, true, 0
+    )
 
     private lateinit var icons: BrowserIcons
     private lateinit var bridge: NativeNotificationBridge
@@ -97,10 +99,12 @@ class NativeNotificationBridgeTest {
             IconRequest(
                 url = "https://example.com",
                 size = IconRequest.Size.DEFAULT,
-                resources = listOf(IconRequest.Resource(
-                    url = "https://example.com/large.png",
-                    type = IconRequest.Resource.Type.MANIFEST_ICON
-                )),
+                resources = listOf(
+                    IconRequest.Resource(
+                        url = "https://example.com/large.png",
+                        type = IconRequest.Resource.Type.MANIFEST_ICON
+                    )
+                ),
                 isPrivate = true
             )
         )

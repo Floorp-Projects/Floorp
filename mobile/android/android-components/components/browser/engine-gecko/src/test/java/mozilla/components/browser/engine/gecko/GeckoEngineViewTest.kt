@@ -238,9 +238,11 @@ class GeckoEngineViewTest {
 
         whenever(geckoView.session).thenReturn(geckoSession)
 
-        engineView.render(mock<GeckoEngineSession>().apply {
-            whenever(this.geckoSession).thenReturn(mock())
-        })
+        engineView.render(
+            mock<GeckoEngineSession>().apply {
+                whenever(this.geckoSession).thenReturn(mock())
+            }
+        )
 
         verify(geckoSession).selectionActionDelegate = null
     }

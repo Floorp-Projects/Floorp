@@ -98,11 +98,13 @@ class SearchSuggestionClientTest {
 
     @Test
     fun `Default search engine is used if search engine manager provided`() {
-        val store = BrowserStore(BrowserState(
-            search = SearchState(
-                regionSearchEngines = listOf(searchEngine)
+        val store = BrowserStore(
+            BrowserState(
+                search = SearchState(
+                    regionSearchEngines = listOf(searchEngine)
+                )
             )
-        ))
+        )
 
         val client = SearchSuggestionClient(
             testContext,

@@ -14,11 +14,11 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.Window
-import android.widget.TextView
 import android.view.ViewGroup
+import android.view.Window
 import android.widget.Button
 import android.widget.LinearLayout.LayoutParams
+import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDialogFragment

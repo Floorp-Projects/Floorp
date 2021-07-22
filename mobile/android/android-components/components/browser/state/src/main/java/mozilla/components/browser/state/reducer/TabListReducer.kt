@@ -263,7 +263,8 @@ private fun findNearbyTab(
     for (steps in 1..maxSteps) {
         listOf(index - steps, index + steps).forEach { current ->
             if (current in 0..tabs.lastIndex &&
-                predicate(tabs[current])) {
+                predicate(tabs[current])
+            ) {
                 return tabs[current]
             }
         }

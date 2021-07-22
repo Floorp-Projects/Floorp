@@ -49,13 +49,15 @@ class SwipeRefreshFeatureTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        store = BrowserStore(BrowserState(
-            tabs = listOf(
-                createTab("https://www.mozilla.org", id = "A"),
-                createTab("https://www.firefox.com", id = "B")
-            ),
-            selectedTabId = "B"
-        ))
+        store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "A"),
+                    createTab("https://www.firefox.com", id = "B")
+                ),
+                selectedTabId = "B"
+            )
+        )
 
         refreshFeature = SwipeRefreshFeature(store, useCase, mockLayout)
     }

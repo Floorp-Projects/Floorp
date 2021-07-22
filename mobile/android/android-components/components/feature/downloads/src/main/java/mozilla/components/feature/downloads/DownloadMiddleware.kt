@@ -62,8 +62,10 @@ class DownloadMiddleware(
             is DownloadAction.AddDownloadAction -> {
                 if (!action.download.private && !saveDownload(context.store, action.download)) {
                     // The download was already added before, so we are ignoring this request.
-                    logger.debug("Ignored add action for ${action.download.id} " +
-                            "download already in store.downloads")
+                    logger.debug(
+                        "Ignored add action for ${action.download.id} " +
+                            "download already in store.downloads"
+                    )
                     return
                 }
             }

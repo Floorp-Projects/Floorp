@@ -20,10 +20,10 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoMoreInteractions
 
 @RunWith(AndroidJUnit4::class)
 class DefaultControllerTest {

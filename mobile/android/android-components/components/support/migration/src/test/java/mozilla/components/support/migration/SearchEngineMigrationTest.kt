@@ -218,9 +218,11 @@ private fun storeFor(language: String, country: String, region: String): Browser
         )
     )
 
-    store.dispatch(SearchAction.SetRegionAction(
-        RegionState(region, region)
-    )).joinBlocking()
+    store.dispatch(
+        SearchAction.SetRegionAction(
+            RegionState(region, region)
+        )
+    ).joinBlocking()
 
     // First we wait for the InitAction that may still need to be processed.
     store.waitUntilIdle()

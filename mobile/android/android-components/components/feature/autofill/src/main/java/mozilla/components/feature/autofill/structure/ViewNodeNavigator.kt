@@ -25,7 +25,7 @@ internal interface AutofillNodeNavigator<Node, Id> {
         val editTextMask = InputType.TYPE_CLASS_TEXT
         val passwordMask =
             InputType.TYPE_TEXT_VARIATION_PASSWORD or
-                    InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
     }
 
     val rootNodes: List<Node>

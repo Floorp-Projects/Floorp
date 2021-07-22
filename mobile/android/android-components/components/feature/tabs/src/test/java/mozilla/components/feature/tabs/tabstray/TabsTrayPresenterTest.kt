@@ -263,7 +263,8 @@ class TabsTrayPresenterTest {
             tabsTray,
             store,
             tabsFilter = { true },
-            closeTabsTray = { closed = true })
+            closeTabsTray = { closed = true }
+        )
 
         presenter.start()
         testDispatcher.advanceUntilIdle()
@@ -297,7 +298,8 @@ class TabsTrayPresenterTest {
             tabsTray,
             store,
             tabsFilter = { true },
-            closeTabsTray = { closed = true })
+            closeTabsTray = { closed = true }
+        )
 
         presenter.start()
         testDispatcher.advanceUntilIdle()
@@ -393,7 +395,8 @@ class TabsTrayPresenterTest {
             tabsTray,
             store,
             tabsFilter = { it.content.private },
-            closeTabsTray = { invoked = true })
+            closeTabsTray = { invoked = true }
+        )
 
         presenter.start()
         testDispatcher.advanceUntilIdle()

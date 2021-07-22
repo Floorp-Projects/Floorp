@@ -32,13 +32,15 @@ annotation class TypefaceStyle
 /**
  * Enum for text alignment values.
  */
-@IntDef(value = [
-    View.TEXT_ALIGNMENT_GRAVITY,
-    View.TEXT_ALIGNMENT_INHERIT,
-    View.TEXT_ALIGNMENT_CENTER,
-    View.TEXT_ALIGNMENT_TEXT_START,
-    View.TEXT_ALIGNMENT_TEXT_END,
-    View.TEXT_ALIGNMENT_VIEW_START,
-    View.TEXT_ALIGNMENT_VIEW_END
-])
+@IntDef(
+    value = [
+        View.TEXT_ALIGNMENT_GRAVITY,
+        View.TEXT_ALIGNMENT_INHERIT,
+        View.TEXT_ALIGNMENT_CENTER,
+        View.TEXT_ALIGNMENT_TEXT_START,
+        View.TEXT_ALIGNMENT_TEXT_END,
+        View.TEXT_ALIGNMENT_VIEW_START,
+        View.TEXT_ALIGNMENT_VIEW_END
+    ]
+)
 annotation class TextAlignment

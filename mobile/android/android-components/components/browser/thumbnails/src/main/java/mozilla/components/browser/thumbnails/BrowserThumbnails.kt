@@ -8,12 +8,12 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.selectedTab
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature

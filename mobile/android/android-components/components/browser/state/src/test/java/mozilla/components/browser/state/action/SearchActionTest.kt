@@ -38,17 +38,19 @@ class SearchActionTest {
         val searchEngineList = listOf(engine1, engine2)
         assertTrue(store.state.search.regionSearchEngines.isEmpty())
 
-        store.dispatch(SearchAction.SetSearchEnginesAction(
-            regionSearchEngines = searchEngineList,
-            regionDefaultSearchEngineId = "id2",
-            customSearchEngines = emptyList(),
-            userSelectedSearchEngineId = null,
-            userSelectedSearchEngineName = null,
-            hiddenSearchEngines = emptyList(),
-            additionalSearchEngines = emptyList(),
-            additionalAvailableSearchEngines = emptyList(),
-            regionSearchEnginesOrder = listOf("id1", "id2")
-        )).joinBlocking()
+        store.dispatch(
+            SearchAction.SetSearchEnginesAction(
+                regionSearchEngines = searchEngineList,
+                regionDefaultSearchEngineId = "id2",
+                customSearchEngines = emptyList(),
+                userSelectedSearchEngineId = null,
+                userSelectedSearchEngineName = null,
+                hiddenSearchEngines = emptyList(),
+                additionalSearchEngines = emptyList(),
+                additionalAvailableSearchEngines = emptyList(),
+                regionSearchEnginesOrder = listOf("id1", "id2")
+            )
+        ).joinBlocking()
 
         val searchEngines = store.state.search.regionSearchEngines
         assertFalse(searchEngines.isEmpty())
@@ -76,17 +78,19 @@ class SearchActionTest {
         val searchEngineList = listOf(engine1, engine2)
         assertTrue(store.state.search.customSearchEngines.isEmpty())
 
-        store.dispatch(SearchAction.SetSearchEnginesAction(
-            customSearchEngines = searchEngineList,
-            regionSearchEngines = emptyList(),
-            regionDefaultSearchEngineId = "default",
-            userSelectedSearchEngineId = null,
-            userSelectedSearchEngineName = null,
-            hiddenSearchEngines = emptyList(),
-            additionalSearchEngines = emptyList(),
-            additionalAvailableSearchEngines = emptyList(),
-            regionSearchEnginesOrder = emptyList()
-        )).joinBlocking()
+        store.dispatch(
+            SearchAction.SetSearchEnginesAction(
+                customSearchEngines = searchEngineList,
+                regionSearchEngines = emptyList(),
+                regionDefaultSearchEngineId = "default",
+                userSelectedSearchEngineId = null,
+                userSelectedSearchEngineName = null,
+                hiddenSearchEngines = emptyList(),
+                additionalSearchEngines = emptyList(),
+                additionalAvailableSearchEngines = emptyList(),
+                regionSearchEnginesOrder = emptyList()
+            )
+        ).joinBlocking()
 
         val searchEngines = store.state.search.customSearchEngines
         assertFalse(searchEngines.isEmpty())

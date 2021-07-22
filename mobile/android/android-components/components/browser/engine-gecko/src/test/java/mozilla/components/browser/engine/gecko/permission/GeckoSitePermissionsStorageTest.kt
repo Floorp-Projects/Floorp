@@ -386,7 +386,8 @@ class GeckoSitePermissionsStorageTest {
             savedAt = 0
         )
         val geckoPermissions = listOf(
-                geckoContentPermission(type = PERMISSION_GEOLOCATION, value = VALUE_DENY)).groupByType()
+            geckoContentPermission(type = PERMISSION_GEOLOCATION, value = VALUE_DENY)
+        ).groupByType()
 
         val mergedPermissions = geckoStorage.mergePermissions(onDiskPermissions, geckoPermissions)!!
 

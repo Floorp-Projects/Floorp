@@ -47,17 +47,20 @@ open class PlacesHistoryStorage(
     override suspend fun recordVisit(uri: String, visit: PageVisit) {
         withContext(writeScope.coroutineContext) {
             handlePlacesExceptions("recordVisit") {
-                places.writer().noteObservation(VisitObservation(uri,
-                    visitType = visit.visitType.into(),
-                    isRedirectSource = when (visit.redirectSource) {
-                        RedirectSource.PERMANENT, RedirectSource.TEMPORARY -> true
-                        RedirectSource.NOT_A_SOURCE -> false
-                    },
-                    isPermanentRedirectSource = when (visit.redirectSource) {
-                        RedirectSource.PERMANENT -> true
-                        RedirectSource.TEMPORARY, RedirectSource.NOT_A_SOURCE -> false
-                    }
-                ))
+                places.writer().noteObservation(
+                    VisitObservation(
+                        uri,
+                        visitType = visit.visitType.into(),
+                        isRedirectSource = when (visit.redirectSource) {
+                            RedirectSource.PERMANENT, RedirectSource.TEMPORARY -> true
+                            RedirectSource.NOT_A_SOURCE -> false
+                        },
+                        isPermanentRedirectSource = when (visit.redirectSource) {
+                            RedirectSource.PERMANENT -> true
+                            RedirectSource.TEMPORARY, RedirectSource.NOT_A_SOURCE -> false
+                        }
+                    )
+                )
             }
         }
     }
@@ -69,11 +72,11 @@ open class PlacesHistoryStorage(
             // if the underlying storage layer refuses it.
             handlePlacesExceptions("recordObservation") {
                 places.writer().noteObservation(
-                        VisitObservation(
-                                url = uri,
-                                visitType = mozilla.appservices.places.VisitType.UPDATE_PLACE,
-                                title = observation.title
-                        )
+                    VisitObservation(
+                        url = uri,
+                        visitType = mozilla.appservices.places.VisitType.UPDATE_PLACE,
+                        title = observation.title
+                    )
                 )
             }
         }
@@ -86,9 +89,9 @@ open class PlacesHistoryStorage(
     override suspend fun getVisited(): List<String> {
         return withContext(readScope.coroutineContext) {
             places.reader().getVisitedUrlsInRange(
-                    start = 0,
-                    end = System.currentTimeMillis(),
-                    includeRemote = true
+                start = 0,
+                end = System.currentTimeMillis(),
+                includeRemote = true
             )
         }
     }
@@ -132,11 +135,11 @@ open class PlacesHistoryStorage(
         val resultText = segmentAwareDomainMatch(query, arrayListOf(url))
         return resultText?.let {
             HistoryAutocompleteResult(
-                    input = query,
-                    text = it.matchedSegment,
-                    url = it.url,
-                    source = AUTOCOMPLETE_SOURCE_NAME,
-                    totalItems = 1
+                input = query,
+                text = it.matchedSegment,
+                url = it.url,
+                source = AUTOCOMPLETE_SOURCE_NAME,
+                totalItems = 1
             )
         }
     }

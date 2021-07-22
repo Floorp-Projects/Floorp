@@ -81,12 +81,14 @@ class InMemoryHistoryStorage : HistoryStorage {
         pages.forEach {
             it.value.forEach { visit ->
                 if (visit.timestamp >= start && visit.timestamp <= end && !excludeTypes.contains(visit.type)) {
-                    visits.add(VisitInfo(
-                        url = it.key,
-                        title = pageMeta[it.key]?.title,
-                        visitTime = visit.timestamp,
-                        visitType = visit.type
-                    ))
+                    visits.add(
+                        VisitInfo(
+                            url = it.key,
+                            title = pageMeta[it.key]?.title,
+                            visitTime = visit.timestamp,
+                            visitType = visit.type
+                        )
+                    )
                 }
             }
         }
@@ -131,7 +133,8 @@ class InMemoryHistoryStorage : HistoryStorage {
     override fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult? = synchronized(pages) {
         return segmentAwareDomainMatch(query, pages.keys)?.let { urlMatch ->
             HistoryAutocompleteResult(
-                query, urlMatch.matchedSegment, urlMatch.url, AUTOCOMPLETE_SOURCE_NAME, pages.size)
+                query, urlMatch.matchedSegment, urlMatch.url, AUTOCOMPLETE_SOURCE_NAME, pages.size
+            )
         }
     }
 
@@ -149,9 +152,11 @@ class InMemoryHistoryStorage : HistoryStorage {
 
     override suspend fun deleteVisitsBetween(startTime: Long, endTime: Long) = synchronized(pages) {
         pages.entries.forEach {
-            it.setValue(it.value.filterNot { visit ->
-                visit.timestamp >= startTime && visit.timestamp <= endTime
-            }.toMutableList())
+            it.setValue(
+                it.value.filterNot { visit ->
+                    visit.timestamp >= startTime && visit.timestamp <= endTime
+                }.toMutableList()
+            )
         }
         pages = pages.filter { it.value.isNotEmpty() } as HashMap<String, MutableList<Visit>>
     }

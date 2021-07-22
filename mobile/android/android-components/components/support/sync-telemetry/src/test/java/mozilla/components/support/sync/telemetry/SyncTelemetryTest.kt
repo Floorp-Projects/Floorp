@@ -14,12 +14,12 @@ import mozilla.appservices.sync15.ProblemInfo
 import mozilla.appservices.sync15.SyncInfo
 import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.appservices.sync15.ValidationInfo
-import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.sync.telemetry.GleanMetrics.BookmarksSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.FxaTab
-import mozilla.components.support.sync.telemetry.GleanMetrics.LoginsSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.HistorySync
+import mozilla.components.support.sync.telemetry.GleanMetrics.LoginsSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.Pings
 import mozilla.components.support.sync.telemetry.GleanMetrics.Sync
 import mozilla.components.support.test.any
@@ -27,16 +27,16 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.json.JSONException
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.verify
 import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import java.util.Date
 import java.util.UUID
 
@@ -58,68 +58,70 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends history telemetry pings on success`() {
-        val noGlobalError = SyncTelemetry.processHistoryPing(SyncTelemetryPing(
-            version = 1,
-            uid = "abc123",
-            syncs = listOf(
-                SyncInfo(
-                    at = now,
-                    took = 10000,
-                    engines = listOf(
-                        EngineInfo(
-                            name = "logins",
-                            at = now + 5,
-                            took = 5000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = null,
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "history",
-                            at = now,
-                            took = 5000,
-                            incoming = IncomingInfo(
-                                applied = 5,
-                                failed = 4,
-                                newFailed = 3,
-                                reconciled = 2
+        val noGlobalError = SyncTelemetry.processHistoryPing(
+            SyncTelemetryPing(
+                version = 1,
+                uid = "abc123",
+                syncs = listOf(
+                    SyncInfo(
+                        at = now,
+                        took = 10000,
+                        engines = listOf(
+                            EngineInfo(
+                                name = "logins",
+                                at = now + 5,
+                                took = 5000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = null,
+                                validation = null
                             ),
-                            outgoing = listOf(
-                                OutgoingInfo(
-                                    sent = 10,
-                                    failed = 5
+                            EngineInfo(
+                                name = "history",
+                                at = now,
+                                took = 5000,
+                                incoming = IncomingInfo(
+                                    applied = 5,
+                                    failed = 4,
+                                    newFailed = 3,
+                                    reconciled = 2
                                 ),
-                                OutgoingInfo(
-                                    sent = 4,
-                                    failed = 2
-                                )
-                            ),
-                            failureReason = null,
-                            validation = null
-                        )
+                                outgoing = listOf(
+                                    OutgoingInfo(
+                                        sent = 10,
+                                        failed = 5
+                                    ),
+                                    OutgoingInfo(
+                                        sent = 4,
+                                        failed = 2
+                                    )
+                                ),
+                                failureReason = null,
+                                validation = null
+                            )
+                        ),
+                        failureReason = null
                     ),
-                    failureReason = null
+                    SyncInfo(
+                        at = now + 10,
+                        took = 5000,
+                        engines = listOf(
+                            EngineInfo(
+                                name = "history",
+                                at = now + 10,
+                                took = 5000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = null,
+                                validation = null
+                            )
+                        ),
+                        failureReason = null
+                    )
                 ),
-                SyncInfo(
-                    at = now + 10,
-                    took = 5000,
-                    engines = listOf(
-                        EngineInfo(
-                            name = "history",
-                            at = now + 10,
-                            took = 5000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = null,
-                            validation = null
-                        )
-                    ),
-                    failureReason = null
-                )
-            ),
-            events = emptyList()
-        )) {
+                events = emptyList()
+            )
+        ) {
             when (pingCount) {
                 0 -> {
                     HistorySync.apply {
@@ -140,14 +142,16 @@ class SyncTelemetryTest {
                         assertEquals("abc123", uid.testGetValue())
                         assertEquals(now + 10, startedAt.testGetValue().asSeconds())
                         assertEquals(now + 15, finishedAt.testGetValue().asSeconds())
-                        assertTrue(listOf(
-                            incoming["applied"],
-                            incoming["failed_to_apply"],
-                            incoming["reconciled"],
-                            outgoing["uploaded"],
-                            outgoing["failed_to_upload"],
-                            outgoingBatches
-                        ).none { it.testHasValue() })
+                        assertTrue(
+                            listOf(
+                                incoming["applied"],
+                                incoming["failed_to_apply"],
+                                incoming["reconciled"],
+                                outgoing["uploaded"],
+                                outgoing["failed_to_upload"],
+                                outgoingBatches
+                            ).none { it.testHasValue() }
+                        )
                         assertFalse(Sync.syncUuid.testHasValue("history-sync"))
                     }
                 }
@@ -165,107 +169,111 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends history telemetry pings on engine failure`() {
-        val noGlobalError = SyncTelemetry.processHistoryPing(SyncTelemetryPing(
-            version = 1,
-            uid = "abc123",
-            syncs = listOf(
-                SyncInfo(
-                    at = now,
-                    took = 5000,
-                    engines = listOf(
-                        // We should ignore any engines that aren't
-                        // history.
-                        EngineInfo(
-                            name = "bookmarks",
-                            at = now + 1,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Unknown, "Boxes not locked"),
-                            validation = null
+        val noGlobalError = SyncTelemetry.processHistoryPing(
+            SyncTelemetryPing(
+                version = 1,
+                uid = "abc123",
+                syncs = listOf(
+                    SyncInfo(
+                        at = now,
+                        took = 5000,
+                        engines = listOf(
+                            // We should ignore any engines that aren't
+                            // history.
+                            EngineInfo(
+                                name = "bookmarks",
+                                at = now + 1,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Unknown, "Boxes not locked"),
+                                validation = null
+                            ),
+                            // Multiple history engine syncs per sync isn't
+                            // expected, but it's easier to test the
+                            // different failure types this way, instead of
+                            // creating a top-level `SyncInfo` for each
+                            // one.
+                            EngineInfo(
+                                name = "history",
+                                at = now + 2,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Shutdown),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "history",
+                                at = now + 3,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "history",
+                                at = now + 4,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Http, code = 418),
+                                validation = null
+                            )
                         ),
-                        // Multiple history engine syncs per sync isn't
-                        // expected, but it's easier to test the
-                        // different failure types this way, instead of
-                        // creating a top-level `SyncInfo` for each
-                        // one.
-                        EngineInfo(
-                            name = "history",
-                            at = now + 2,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Shutdown),
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "history",
-                            at = now + 3,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "history",
-                            at = now + 4,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Http, code = 418),
-                            validation = null
-                        )
+                        failureReason = null
                     ),
-                    failureReason = null
+                    // ...But, just in case, we also test multiple top-level
+                    // syncs.
+                    SyncInfo(
+                        at = now + 5,
+                        took = 4000,
+                        engines = listOf(
+                            EngineInfo(
+                                name = "history",
+                                at = now + 6,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Auth, "Splines not reticulated", 999),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "history",
+                                at = now + 7,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Unexpected, "Kaboom!"),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "history",
+                                at = now + 8,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Other, "Qualia unsynchronized"), // other
+                                validation = null
+                            )
+                        ),
+                        failureReason = null
+                    )
                 ),
-                // ...But, just in case, we also test multiple top-level
-                // syncs.
-                SyncInfo(
-                    at = now + 5,
-                    took = 4000,
-                    engines = listOf(
-                        EngineInfo(
-                            name = "history",
-                            at = now + 6,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Auth, "Splines not reticulated", 999),
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "history",
-                            at = now + 7,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Unexpected, "Kaboom!"),
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "history",
-                            at = now + 8,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Other, "Qualia unsynchronized"), // other
-                            validation = null
-                        )
-                    ),
-                    failureReason = null
-                )
-            ),
-            events = emptyList()
-        )) {
+                events = emptyList()
+            )
+        ) {
             when (pingCount) {
                 0 -> {
                     // Shutdown errors shouldn't be reported at all.
-                    assertTrue(listOf(
-                        "other",
-                        "unexpected",
-                        "auth"
-                    ).none { HistorySync.failureReason[it].testHasValue() })
+                    assertTrue(
+                        listOf(
+                            "other",
+                            "unexpected",
+                            "auth"
+                        ).none { HistorySync.failureReason[it].testHasValue() }
+                    )
                 }
                 1 -> HistorySync.apply {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
@@ -311,19 +319,21 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends history telemetry pings on sync failure`() {
-        val noGlobalError = SyncTelemetry.processHistoryPing(SyncTelemetryPing(
-            version = 1,
-            uid = "abc123",
-            syncs = listOf(
-                SyncInfo(
-                    at = now,
-                    took = 5000,
-                    engines = emptyList(),
-                    failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned")
-                )
-            ),
-            events = emptyList()
-        )) {
+        val noGlobalError = SyncTelemetry.processHistoryPing(
+            SyncTelemetryPing(
+                version = 1,
+                uid = "abc123",
+                syncs = listOf(
+                    SyncInfo(
+                        at = now,
+                        took = 5000,
+                        engines = emptyList(),
+                        failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned")
+                    )
+                ),
+                events = emptyList()
+            )
+        ) {
             when (pingCount) {
                 0 -> HistorySync.apply {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
@@ -345,73 +355,75 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends passwords telemetry pings on success`() {
-        val noGlobalError = SyncTelemetry.processLoginsPing(SyncTelemetryPing(
-            version = 1,
-            uid = "abc123",
-            syncs = listOf(
-                SyncInfo(
-                    at = now,
-                    took = 10000,
-                    engines = listOf(
-                        EngineInfo(
-                            name = "history",
-                            at = now + 5,
-                            took = 5000,
-                            incoming = IncomingInfo(
-                                applied = 10,
-                                failed = 2,
-                                newFailed = 3,
-                                reconciled = 2
-                            ),
-                            outgoing = emptyList(),
-                            failureReason = null,
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "passwords",
-                            at = now,
-                            took = 5000,
-                            incoming = IncomingInfo(
-                                applied = 5,
-                                failed = 4,
-                                newFailed = 3,
-                                reconciled = 2
-                            ),
-                            outgoing = listOf(
-                                OutgoingInfo(
-                                    sent = 10,
-                                    failed = 5
+        val noGlobalError = SyncTelemetry.processLoginsPing(
+            SyncTelemetryPing(
+                version = 1,
+                uid = "abc123",
+                syncs = listOf(
+                    SyncInfo(
+                        at = now,
+                        took = 10000,
+                        engines = listOf(
+                            EngineInfo(
+                                name = "history",
+                                at = now + 5,
+                                took = 5000,
+                                incoming = IncomingInfo(
+                                    applied = 10,
+                                    failed = 2,
+                                    newFailed = 3,
+                                    reconciled = 2
                                 ),
-                                OutgoingInfo(
-                                    sent = 4,
-                                    failed = 2
-                                )
+                                outgoing = emptyList(),
+                                failureReason = null,
+                                validation = null
                             ),
-                            failureReason = null,
-                            validation = null
-                        )
+                            EngineInfo(
+                                name = "passwords",
+                                at = now,
+                                took = 5000,
+                                incoming = IncomingInfo(
+                                    applied = 5,
+                                    failed = 4,
+                                    newFailed = 3,
+                                    reconciled = 2
+                                ),
+                                outgoing = listOf(
+                                    OutgoingInfo(
+                                        sent = 10,
+                                        failed = 5
+                                    ),
+                                    OutgoingInfo(
+                                        sent = 4,
+                                        failed = 2
+                                    )
+                                ),
+                                failureReason = null,
+                                validation = null
+                            )
+                        ),
+                        failureReason = null
                     ),
-                    failureReason = null
+                    SyncInfo(
+                        at = now + 10,
+                        took = 5000,
+                        engines = listOf(
+                            EngineInfo(
+                                name = "passwords",
+                                at = now + 10,
+                                took = 5000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = null,
+                                validation = null
+                            )
+                        ),
+                        failureReason = null
+                    )
                 ),
-                SyncInfo(
-                    at = now + 10,
-                    took = 5000,
-                    engines = listOf(
-                        EngineInfo(
-                            name = "passwords",
-                            at = now + 10,
-                            took = 5000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = null,
-                            validation = null
-                        )
-                    ),
-                    failureReason = null
-                )
-            ),
-            events = emptyList()
-        )) {
+                events = emptyList()
+            )
+        ) {
             when (pingCount) {
                 0 -> {
                     LoginsSync.apply {
@@ -432,14 +444,16 @@ class SyncTelemetryTest {
                         assertEquals("abc123", uid.testGetValue())
                         assertEquals(now + 10, startedAt.testGetValue().asSeconds())
                         assertEquals(now + 15, finishedAt.testGetValue().asSeconds())
-                        assertTrue(listOf(
-                            incoming["applied"],
-                            incoming["failed_to_apply"],
-                            incoming["reconciled"],
-                            outgoing["uploaded"],
-                            outgoing["failed_to_upload"],
-                            outgoingBatches
-                        ).none { it.testHasValue() })
+                        assertTrue(
+                            listOf(
+                                incoming["applied"],
+                                incoming["failed_to_apply"],
+                                incoming["reconciled"],
+                                outgoing["uploaded"],
+                                outgoing["failed_to_upload"],
+                                outgoingBatches
+                            ).none { it.testHasValue() }
+                        )
                         assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
                     }
                 }
@@ -457,107 +471,111 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends passwords telemetry pings on engine failure`() {
-        val noGlobalError = SyncTelemetry.processLoginsPing(SyncTelemetryPing(
-            version = 1,
-            uid = "abc123",
-            syncs = listOf(
-                SyncInfo(
-                    at = now,
-                    took = 5000,
-                    engines = listOf(
-                        // We should ignore any engines that aren't
-                        // passwords.
-                        EngineInfo(
-                            name = "bookmarks",
-                            at = now + 1,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Unknown, "Boxes not locked"),
-                            validation = null
+        val noGlobalError = SyncTelemetry.processLoginsPing(
+            SyncTelemetryPing(
+                version = 1,
+                uid = "abc123",
+                syncs = listOf(
+                    SyncInfo(
+                        at = now,
+                        took = 5000,
+                        engines = listOf(
+                            // We should ignore any engines that aren't
+                            // passwords.
+                            EngineInfo(
+                                name = "bookmarks",
+                                at = now + 1,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Unknown, "Boxes not locked"),
+                                validation = null
+                            ),
+                            // Multiple passwords engine syncs per sync isn't
+                            // expected, but it's easier to test the
+                            // different failure types this way, instead of
+                            // creating a top-level `SyncInfo` for each
+                            // one.
+                            EngineInfo(
+                                name = "passwords",
+                                at = now + 2,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Shutdown),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "passwords",
+                                at = now + 3,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "passwords",
+                                at = now + 4,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Http, code = 418),
+                                validation = null
+                            )
                         ),
-                        // Multiple passwords engine syncs per sync isn't
-                        // expected, but it's easier to test the
-                        // different failure types this way, instead of
-                        // creating a top-level `SyncInfo` for each
-                        // one.
-                        EngineInfo(
-                            name = "passwords",
-                            at = now + 2,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Shutdown),
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "passwords",
-                            at = now + 3,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "passwords",
-                            at = now + 4,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Http, code = 418),
-                            validation = null
-                        )
+                        failureReason = null
                     ),
-                    failureReason = null
+                    // ...But, just in case, we also test multiple top-level
+                    // syncs.
+                    SyncInfo(
+                        at = now + 5,
+                        took = 4000,
+                        engines = listOf(
+                            EngineInfo(
+                                name = "passwords",
+                                at = now + 6,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Auth, "Splines not reticulated", 999),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "passwords",
+                                at = now + 7,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Unexpected, "Kaboom!"),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "passwords",
+                                at = now + 8,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Other, "Qualia unsynchronized"), // other
+                                validation = null
+                            )
+                        ),
+                        failureReason = null
+                    )
                 ),
-                // ...But, just in case, we also test multiple top-level
-                // syncs.
-                SyncInfo(
-                    at = now + 5,
-                    took = 4000,
-                    engines = listOf(
-                        EngineInfo(
-                            name = "passwords",
-                            at = now + 6,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Auth, "Splines not reticulated", 999),
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "passwords",
-                            at = now + 7,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Unexpected, "Kaboom!"),
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "passwords",
-                            at = now + 8,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Other, "Qualia unsynchronized"), // other
-                            validation = null
-                        )
-                    ),
-                    failureReason = null
-                )
-            ),
-            events = emptyList()
-        )) {
+                events = emptyList()
+            )
+        ) {
             when (pingCount) {
                 0 -> {
                     // Shutdown errors shouldn't be reported at all.
-                    assertTrue(listOf(
-                        "other",
-                        "unexpected",
-                        "auth"
-                    ).none { LoginsSync.failureReason[it].testHasValue() })
+                    assertTrue(
+                        listOf(
+                            "other",
+                            "unexpected",
+                            "auth"
+                        ).none { LoginsSync.failureReason[it].testHasValue() }
+                    )
                 }
                 1 -> LoginsSync.apply {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
@@ -603,19 +621,21 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends passwords telemetry pings on sync failure`() {
-        val noGlobalError = SyncTelemetry.processLoginsPing(SyncTelemetryPing(
-            version = 1,
-            uid = "abc123",
-            syncs = listOf(
-                SyncInfo(
-                    at = now,
-                    took = 5000,
-                    engines = emptyList(),
-                    failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned")
-                )
-            ),
-            events = emptyList()
-        )) {
+        val noGlobalError = SyncTelemetry.processLoginsPing(
+            SyncTelemetryPing(
+                version = 1,
+                uid = "abc123",
+                syncs = listOf(
+                    SyncInfo(
+                        at = now,
+                        took = 5000,
+                        engines = emptyList(),
+                        failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned")
+                    )
+                ),
+                events = emptyList()
+            )
+        ) {
             when (pingCount) {
                 0 -> LoginsSync.apply {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
@@ -637,47 +657,49 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends bookmarks telemetry pings on success`() {
-        val noGlobalError = SyncTelemetry.processBookmarksPing(SyncTelemetryPing(
-            version = 1,
-            uid = "xyz789",
-            syncs = listOf(
-                SyncInfo(
-                    at = now + 20,
-                    took = 8000,
-                    engines = listOf(
-                        EngineInfo(
-                            name = "bookmarks",
-                            at = now + 25,
-                            took = 6000,
-                            incoming = null,
-                            outgoing = listOf(
-                                OutgoingInfo(
-                                    sent = 10,
-                                    failed = 5
-                                )
-                            ),
-                            failureReason = null,
-                            validation = ValidationInfo(
-                                version = 2,
-                                problems = listOf(
-                                    ProblemInfo(
-                                        name = "missingParents",
-                                        count = 5
-                                    ),
-                                    ProblemInfo(
-                                        name = "missingChildren",
-                                        count = 7
+        val noGlobalError = SyncTelemetry.processBookmarksPing(
+            SyncTelemetryPing(
+                version = 1,
+                uid = "xyz789",
+                syncs = listOf(
+                    SyncInfo(
+                        at = now + 20,
+                        took = 8000,
+                        engines = listOf(
+                            EngineInfo(
+                                name = "bookmarks",
+                                at = now + 25,
+                                took = 6000,
+                                incoming = null,
+                                outgoing = listOf(
+                                    OutgoingInfo(
+                                        sent = 10,
+                                        failed = 5
                                     )
                                 ),
-                                failureReason = null
+                                failureReason = null,
+                                validation = ValidationInfo(
+                                    version = 2,
+                                    problems = listOf(
+                                        ProblemInfo(
+                                            name = "missingParents",
+                                            count = 5
+                                        ),
+                                        ProblemInfo(
+                                            name = "missingChildren",
+                                            count = 7
+                                        )
+                                    ),
+                                    failureReason = null
+                                )
                             )
-                        )
-                    ),
-                    failureReason = null
-                )
-            ),
-            events = emptyList()
-        )) {
+                        ),
+                        failureReason = null
+                    )
+                ),
+                events = emptyList()
+            )
+        ) {
             when (pingCount) {
                 0 -> {
                     BookmarksSync.apply {
@@ -705,98 +727,102 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends bookmarks telemetry pings on engine failure`() {
-        val noGlobalError = SyncTelemetry.processBookmarksPing(SyncTelemetryPing(
-            version = 1,
-            uid = "abc123",
-            syncs = listOf(
-                SyncInfo(
-                    at = now,
-                    took = 5000,
-                    engines = listOf(
-                        EngineInfo(
-                            name = "history",
-                            at = now + 1,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Unknown, "Boxes not locked"),
-                            validation = null
+        val noGlobalError = SyncTelemetry.processBookmarksPing(
+            SyncTelemetryPing(
+                version = 1,
+                uid = "abc123",
+                syncs = listOf(
+                    SyncInfo(
+                        at = now,
+                        took = 5000,
+                        engines = listOf(
+                            EngineInfo(
+                                name = "history",
+                                at = now + 1,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Unknown, "Boxes not locked"),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "bookmarks",
+                                at = now + 2,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Shutdown),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "bookmarks",
+                                at = now + 3,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "bookmarks",
+                                at = now + 4,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Http, code = 418),
+                                validation = null
+                            )
                         ),
-                        EngineInfo(
-                            name = "bookmarks",
-                            at = now + 2,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Shutdown),
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "bookmarks",
-                            at = now + 3,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned"),
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "bookmarks",
-                            at = now + 4,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Http, code = 418),
-                            validation = null
-                        )
+                        failureReason = null
                     ),
-                    failureReason = null
+                    SyncInfo(
+                        at = now + 5,
+                        took = 4000,
+                        engines = listOf(
+                            EngineInfo(
+                                name = "bookmarks",
+                                at = now + 6,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Auth, "Splines not reticulated", 999),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "bookmarks",
+                                at = now + 7,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Unexpected, "Kaboom!"),
+                                validation = null
+                            ),
+                            EngineInfo(
+                                name = "bookmarks",
+                                at = now + 8,
+                                took = 1000,
+                                incoming = null,
+                                outgoing = emptyList(),
+                                failureReason = FailureReason(FailureName.Other, "Qualia unsynchronized"), // other
+                                validation = null
+                            )
+                        ),
+                        failureReason = null
+                    )
                 ),
-                SyncInfo(
-                    at = now + 5,
-                    took = 4000,
-                    engines = listOf(
-                        EngineInfo(
-                            name = "bookmarks",
-                            at = now + 6,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Auth, "Splines not reticulated", 999),
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "bookmarks",
-                            at = now + 7,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Unexpected, "Kaboom!"),
-                            validation = null
-                        ),
-                        EngineInfo(
-                            name = "bookmarks",
-                            at = now + 8,
-                            took = 1000,
-                            incoming = null,
-                            outgoing = emptyList(),
-                            failureReason = FailureReason(FailureName.Other, "Qualia unsynchronized"), // other
-                            validation = null
-                        )
-                    ),
-                    failureReason = null
-                )
-            ),
-            events = emptyList()
-        )) {
+                events = emptyList()
+            )
+        ) {
             when (pingCount) {
                 0 -> {
                     // Shutdown errors shouldn't be reported.
-                    assertTrue(listOf(
-                        "other",
-                        "unexpected",
-                        "auth"
-                    ).none { BookmarksSync.failureReason[it].testHasValue() })
+                    assertTrue(
+                        listOf(
+                            "other",
+                            "unexpected",
+                            "auth"
+                        ).none { BookmarksSync.failureReason[it].testHasValue() }
+                    )
                 }
                 1 -> BookmarksSync.apply {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
@@ -842,19 +868,21 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends bookmarks telemetry pings on sync failure`() {
-        val noGlobalError = SyncTelemetry.processBookmarksPing(SyncTelemetryPing(
-            version = 1,
-            uid = "abc123",
-            syncs = listOf(
-                SyncInfo(
-                    at = now,
-                    took = 5000,
-                    engines = emptyList(),
-                    failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned")
-                )
-            ),
-            events = emptyList()
-        )) {
+        val noGlobalError = SyncTelemetry.processBookmarksPing(
+            SyncTelemetryPing(
+                version = 1,
+                uid = "abc123",
+                syncs = listOf(
+                    SyncInfo(
+                        at = now,
+                        took = 5000,
+                        engines = emptyList(),
+                        failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned")
+                    )
+                ),
+                events = emptyList()
+            )
+        ) {
             when (pingCount) {
                 0 -> BookmarksSync.apply {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
@@ -1056,14 +1084,16 @@ class SyncTelemetryTest {
                             assertEquals("abc123", uid.testGetValue())
                             assertEquals(now + 10, startedAt.testGetValue().asSeconds())
                             assertEquals(now + 15, finishedAt.testGetValue().asSeconds())
-                            assertTrue(listOf(
-                                incoming["applied"],
-                                incoming["failed_to_apply"],
-                                incoming["reconciled"],
-                                outgoing["uploaded"],
-                                outgoing["failed_to_upload"],
-                                outgoingBatches
-                            ).none { it.testHasValue() })
+                            assertTrue(
+                                listOf(
+                                    incoming["applied"],
+                                    incoming["failed_to_apply"],
+                                    incoming["reconciled"],
+                                    outgoing["uploaded"],
+                                    outgoing["failed_to_upload"],
+                                    outgoingBatches
+                                ).none { it.testHasValue() }
+                            )
                         }
                         Pings.historySync.submit()
                     }

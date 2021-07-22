@@ -158,12 +158,12 @@ class UrlMatcher {
         private val ignoredCategories = setOf("Legacy Disconnect", "Legacy Content")
         private val webfontExtensions = arrayOf(".woff2", ".woff", ".eot", ".ttf", ".otf")
         private val supportedCategories = setOf(
-                ADVERTISING,
-                ANALYTICS,
-                SOCIAL,
-                CONTENT,
-                CRYPTOMINING,
-                FINGERPRINTING
+            ADVERTISING,
+            ANALYTICS,
+            SOCIAL,
+            CONTENT,
+            CRYPTOMINING,
+            FINGERPRINTING
         )
 
         /**
@@ -212,7 +212,8 @@ class UrlMatcher {
             val categoryMap = HashMap<String, Trie>()
 
             JsonReader(block).use {
-                jsonReader -> loadCategories(jsonReader, categoryMap)
+                jsonReader ->
+                loadCategories(jsonReader, categoryMap)
             }
 
             var safelist: Safelist?

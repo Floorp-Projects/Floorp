@@ -79,7 +79,8 @@ class PromptRequestTest {
             "label",
             "value",
             true,
-            {}) { _, _ -> }
+            {}
+        ) { _, _ -> }
 
         assertEquals(textPrompt.title, "title")
         assertEquals(textPrompt.inputLabel, "label")
@@ -98,7 +99,8 @@ class PromptRequestTest {
             Date(),
             Date(),
             Type.DATE,
-            {}) {}
+            {}
+        ) {}
 
         assertEquals(dateRequest.title, "title")
         assertEquals(dateRequest.type, Type.DATE)
@@ -142,7 +144,8 @@ class PromptRequestTest {
             false,
             false,
             false,
-            { _, _ -> }) {
+            { _, _ -> }
+        ) {
         }
 
         assertEquals(promptRequest.title, "title")

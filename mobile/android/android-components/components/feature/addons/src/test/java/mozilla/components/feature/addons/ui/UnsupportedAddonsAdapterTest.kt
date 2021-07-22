@@ -78,10 +78,10 @@ class UnsupportedAddonsAdapterTest {
         )
         val removeButtonTwo = ImageButton(testContext)
         val unsupportedViewHolderTwo = UnsupportedAddonsAdapter.UnsupportedAddonViewHolder(
-                view = mock(),
-                iconView = mock(),
-                titleView = mock(),
-                removeButton = removeButtonTwo
+            view = mock(),
+            iconView = mock(),
+            titleView = mock(),
+            removeButton = removeButtonTwo
         )
         val addonManager: AddonManager = mock()
         val addonOne = Addon("id1")

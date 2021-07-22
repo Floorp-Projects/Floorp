@@ -61,10 +61,10 @@ class PinnedSiteDaoTest {
     @Test
     fun testUpdatingTopSite() {
         val topSite = PinnedSiteEntity(
-                title = "Mozilla",
-                url = "https://www.mozilla.org",
-                isDefault = false,
-                createdAt = 200
+            title = "Mozilla",
+            url = "https://www.mozilla.org",
+            isDefault = false,
+            createdAt = 200
         ).also {
             it.id = pinnedSiteDao.insertPinnedSite(it)
         }

@@ -168,9 +168,11 @@ private fun getEngineSessionOrDispatch(
     val engineSession = tab.engineState.engineSession
 
     return if (engineSession == null) {
-        store.dispatch(EngineAction.CreateEngineSessionAction(
-            action.tabId,
-            followupAction = action.toBrowserAction())
+        store.dispatch(
+            EngineAction.CreateEngineSessionAction(
+                action.tabId,
+                followupAction = action.toBrowserAction()
+            )
         )
         null
     } else {

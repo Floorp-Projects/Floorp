@@ -140,14 +140,16 @@ internal class EngineObserver(
     }
 
     override fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) {
-        store.dispatch(ContentAction.AddFindResultAction(
-            tabId,
-            FindResultState(
-                activeMatchOrdinal,
-                numberOfMatches,
-                isDoneCounting
+        store.dispatch(
+            ContentAction.AddFindResultAction(
+                tabId,
+                FindResultState(
+                    activeMatchOrdinal,
+                    numberOfMatches,
+                    isDoneCounting
+                )
             )
-        ))
+        )
     }
 
     override fun onExternalResource(
@@ -176,32 +178,41 @@ internal class EngineObserver(
             response = response
         )
 
-        store.dispatch(ContentAction.UpdateDownloadAction(
-            tabId,
-            download
-        ))
+        store.dispatch(
+            ContentAction.UpdateDownloadAction(
+                tabId,
+                download
+            )
+        )
     }
 
     override fun onDesktopModeChange(enabled: Boolean) {
-        store.dispatch(ContentAction.UpdateDesktopModeAction(
-            tabId, enabled
-        ))
+        store.dispatch(
+            ContentAction.UpdateDesktopModeAction(
+                tabId, enabled
+            )
+        )
     }
 
     override fun onFullScreenChange(enabled: Boolean) {
-        store.dispatch(ContentAction.FullScreenChangedAction(
-            tabId, enabled
-        ))
+        store.dispatch(
+            ContentAction.FullScreenChangedAction(
+                tabId, enabled
+            )
+        )
     }
 
     override fun onMetaViewportFitChanged(layoutInDisplayCutoutMode: Int) {
-        store.dispatch(ContentAction.ViewportFitChangedAction(
-            tabId, layoutInDisplayCutoutMode
-        ))
+        store.dispatch(
+            ContentAction.ViewportFitChangedAction(
+                tabId, layoutInDisplayCutoutMode
+            )
+        )
     }
 
     override fun onThumbnailChange(bitmap: Bitmap?) {
-        store.dispatch(if (bitmap == null) {
+        store.dispatch(
+            if (bitmap == null) {
                 ContentAction.RemoveThumbnailAction(tabId)
             } else {
                 ContentAction.UpdateThumbnailAction(tabId, bitmap)
@@ -237,10 +248,12 @@ internal class EngineObserver(
     }
 
     override fun onPromptRequest(promptRequest: PromptRequest) {
-        store.dispatch(ContentAction.UpdatePromptRequestAction(
-            tabId,
-            promptRequest
-        ))
+        store.dispatch(
+            ContentAction.UpdatePromptRequestAction(
+                tabId,
+                promptRequest
+            )
+        )
     }
 
     override fun onRepostPromptCancelled() {
@@ -261,10 +274,12 @@ internal class EngineObserver(
     }
 
     override fun onMediaActivated(mediaSessionController: MediaSession.Controller) {
-        store.dispatch(MediaSessionAction.ActivatedMediaSessionAction(
-            tabId,
-            mediaSessionController
-        ))
+        store.dispatch(
+            MediaSessionAction.ActivatedMediaSessionAction(
+                tabId,
+                mediaSessionController
+            )
+        )
     }
 
     override fun onMediaDeactivated() {
@@ -276,42 +291,52 @@ internal class EngineObserver(
     }
 
     override fun onMediaPlaybackStateChanged(playbackState: MediaSession.PlaybackState) {
-        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(
-            tabId,
-            playbackState
-        ))
+        store.dispatch(
+            MediaSessionAction.UpdateMediaPlaybackStateAction(
+                tabId,
+                playbackState
+            )
+        )
     }
 
     override fun onMediaFeatureChanged(features: MediaSession.Feature) {
-        store.dispatch(MediaSessionAction.UpdateMediaFeatureAction(
-            tabId,
-            features
-        ))
+        store.dispatch(
+            MediaSessionAction.UpdateMediaFeatureAction(
+                tabId,
+                features
+            )
+        )
     }
 
     override fun onMediaPositionStateChanged(positionState: MediaSession.PositionState) {
-        store.dispatch(MediaSessionAction.UpdateMediaPositionStateAction(
-            tabId,
-            positionState
-        ))
+        store.dispatch(
+            MediaSessionAction.UpdateMediaPositionStateAction(
+                tabId,
+                positionState
+            )
+        )
     }
 
     override fun onMediaMuteChanged(muted: Boolean) {
-        store.dispatch(MediaSessionAction.UpdateMediaMutedAction(
-            tabId,
-            muted
-        ))
+        store.dispatch(
+            MediaSessionAction.UpdateMediaMutedAction(
+                tabId,
+                muted
+            )
+        )
     }
 
     override fun onMediaFullscreenChanged(
         fullscreen: Boolean,
         elementMetadata: MediaSession.ElementMetadata?
     ) {
-        store.dispatch(MediaSessionAction.UpdateMediaFullscreenAction(
-            tabId,
-            fullscreen,
-            elementMetadata
-        ))
+        store.dispatch(
+            MediaSessionAction.UpdateMediaFullscreenAction(
+                tabId,
+                fullscreen,
+                elementMetadata
+            )
+        )
     }
 
     override fun onWebAppManifestLoaded(manifest: WebAppManifest) {
@@ -319,34 +344,44 @@ internal class EngineObserver(
     }
 
     override fun onCrash() {
-        store.dispatch(CrashAction.SessionCrashedAction(
-            tabId
-        ))
+        store.dispatch(
+            CrashAction.SessionCrashedAction(
+                tabId
+            )
+        )
     }
 
     override fun onProcessKilled() {
-        store.dispatch(EngineAction.KillEngineSessionAction(
-            tabId
-        ))
+        store.dispatch(
+            EngineAction.KillEngineSessionAction(
+                tabId
+            )
+        )
     }
 
     override fun onStateUpdated(state: EngineSessionState) {
-        store.dispatch(EngineAction.UpdateEngineSessionStateAction(
-            tabId, state
-        ))
+        store.dispatch(
+            EngineAction.UpdateEngineSessionStateAction(
+                tabId, state
+            )
+        )
     }
 
     override fun onRecordingStateChanged(devices: List<RecordingDevice>) {
-        store.dispatch(ContentAction.SetRecordingDevices(
-            tabId, devices
-        ))
+        store.dispatch(
+            ContentAction.SetRecordingDevices(
+                tabId, devices
+            )
+        )
     }
 
     override fun onHistoryStateChanged(historyList: List<HistoryItem>, currentIndex: Int) {
-        store.dispatch(ContentAction.UpdateHistoryStateAction(
-            tabId,
-            historyList,
-            currentIndex
-        ))
+        store.dispatch(
+            ContentAction.UpdateHistoryStateAction(
+                tabId,
+                historyList,
+                currentIndex
+            )
+        )
     }
 }

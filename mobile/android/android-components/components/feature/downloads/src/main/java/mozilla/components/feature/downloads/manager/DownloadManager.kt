@@ -5,8 +5,8 @@
 package mozilla.components.feature.downloads.manager
 
 import android.content.Context
-import mozilla.components.browser.state.state.content.DownloadState.Status
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.content.DownloadState.Status
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 
 typealias onDownloadStopped = (DownloadState, String, Status) -> Unit

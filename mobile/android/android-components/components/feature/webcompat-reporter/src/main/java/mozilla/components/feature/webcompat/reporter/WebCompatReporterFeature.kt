@@ -52,7 +52,8 @@ object WebCompatReporterFeature {
         extensionController.registerBackgroundMessageHandler(
             WebcompatReporterBackgroundMessageHandler(productName)
         )
-        extensionController.install(runtime,
+        extensionController.install(
+            runtime,
             onSuccess = {
                 logger.debug("Installed WebCompat Reporter webextension: ${it.id}")
             },

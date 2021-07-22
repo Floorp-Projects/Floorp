@@ -20,24 +20,24 @@ import mozilla.components.concept.sync.DeviceConfig
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
-import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.PeriodicSyncConfig
 import mozilla.components.service.fxa.Server
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.toAuthType
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
-import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
+import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import kotlin.coroutines.CoroutineContext
 
@@ -57,16 +57,16 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     private lateinit var account: FirefoxAccount
     private val accountManager by lazy {
         FxaAccountManager(
-                applicationContext,
-                ServerConfig(Server.RELEASE, CLIENT_ID, REDIRECT_URL),
-                DeviceConfig("A-C Logins Sync Sample", DeviceType.MOBILE, setOf()),
-                SyncConfig(setOf(SyncEngine.Passwords), PeriodicSyncConfig())
+            applicationContext,
+            ServerConfig(Server.RELEASE, CLIENT_ID, REDIRECT_URL),
+            DeviceConfig("A-C Logins Sync Sample", DeviceType.MOBILE, setOf()),
+            SyncConfig(setOf(SyncEngine.Passwords), PeriodicSyncConfig())
         )
     }
 
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
-    get() = Dispatchers.Main + job
+        get() = Dispatchers.Main + job
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

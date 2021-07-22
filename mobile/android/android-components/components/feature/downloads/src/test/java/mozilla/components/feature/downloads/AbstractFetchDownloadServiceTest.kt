@@ -396,18 +396,19 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `verify that a COMPLETED download contains a file size`() {
-        val downloadState = DownloadState(url = "mozilla.org/mozilla.txt",
-                contentLength = 0L,
-                currentBytesCopied = 50,
-                status = DOWNLOADING
+        val downloadState = DownloadState(
+            url = "mozilla.org/mozilla.txt",
+            contentLength = 0L,
+            currentBytesCopied = 50,
+            status = DOWNLOADING
         )
         val downloadJobState = DownloadJobState(
-                job = null,
-                state = downloadState,
-                currentBytesCopied = 50,
-                status = DOWNLOADING,
-                foregroundServiceId = 1,
-                downloadDeleted = false
+            job = null,
+            state = downloadState,
+            currentBytesCopied = 50,
+            status = DOWNLOADING,
+            foregroundServiceId = 1,
+            downloadDeleted = false
         )
 
         browserStore.dispatch(DownloadAction.AddDownloadAction(downloadState)).joinBlocking()
@@ -743,12 +744,14 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `sets the notification foreground in devices that support notification group`() = runBlocking {
-        val download = DownloadState(id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-                status = DOWNLOADING)
+        val download = DownloadState(
+            id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
+            status = DOWNLOADING
+        )
         val downloadState = DownloadJobState(
-                state = download,
-                status = DOWNLOADING,
-                foregroundServiceId = Random.nextInt()
+            state = download,
+            status = DOWNLOADING,
+            foregroundServiceId = Random.nextInt()
         )
         val notification = mock<Notification>()
 
@@ -764,12 +767,14 @@ class AbstractFetchDownloadServiceTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.M])
     fun `sets the notification foreground in devices that DO NOT support notification group`() {
-        val download = DownloadState(id = "1", url = "https://example.com/file.txt",
-                fileName = "file.txt", status = DOWNLOADING)
+        val download = DownloadState(
+            id = "1", url = "https://example.com/file.txt",
+            fileName = "file.txt", status = DOWNLOADING
+        )
         val downloadState = DownloadJobState(
-                state = download,
-                status = DOWNLOADING,
-                foregroundServiceId = Random.nextInt()
+            state = download,
+            status = DOWNLOADING,
+            foregroundServiceId = Random.nextInt()
         )
         val notification = mock<Notification>()
 
@@ -785,12 +790,14 @@ class AbstractFetchDownloadServiceTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.M])
     fun createCompactForegroundNotification() {
-        val download = DownloadState(id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-                status = DOWNLOADING)
+        val download = DownloadState(
+            id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
+            status = DOWNLOADING
+        )
         val downloadState = DownloadJobState(
-                state = download,
-                status = DOWNLOADING,
-                foregroundServiceId = Random.nextInt()
+            state = download,
+            status = DOWNLOADING,
+            foregroundServiceId = Random.nextInt()
         )
 
         assertEquals(0, shadowNotificationService.size())
@@ -841,12 +848,14 @@ class AbstractFetchDownloadServiceTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.M])
     fun `updateNotificationGroup will do nothing on devices that do not support notificaiton groups`() = runBlocking {
-        val download = DownloadState(id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-                status = DOWNLOADING)
+        val download = DownloadState(
+            id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
+            status = DOWNLOADING
+        )
         val downloadState = DownloadJobState(
-                state = download,
-                status = DOWNLOADING,
-                foregroundServiceId = Random.nextInt()
+            state = download,
+            status = DOWNLOADING,
+            foregroundServiceId = Random.nextInt()
         )
 
         service.downloadJobs["1"] = downloadState
@@ -859,12 +868,14 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `removeDownloadJob will update the background notification if there are other pending downloads`() {
-        val download = DownloadState(id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-                status = DOWNLOADING)
+        val download = DownloadState(
+            id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
+            status = DOWNLOADING
+        )
         val downloadState = DownloadJobState(
-                state = download,
-                status = DOWNLOADING,
-                foregroundServiceId = Random.nextInt()
+            state = download,
+            status = DOWNLOADING,
+            foregroundServiceId = Random.nextInt()
         )
 
         service.downloadJobs["1"] = downloadState
@@ -881,10 +892,14 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `WHEN all downloads are completed stopForeground must be called`() {
-        val download1 = DownloadState(id = "1", url = "https://example.com/file1.txt", fileName = "file1.txt",
-                status = COMPLETED)
-        val download2 = DownloadState(id = "2", url = "https://example.com/file2.txt", fileName = "file2.txt",
-                status = COMPLETED)
+        val download1 = DownloadState(
+            id = "1", url = "https://example.com/file1.txt", fileName = "file1.txt",
+            status = COMPLETED
+        )
+        val download2 = DownloadState(
+            id = "2", url = "https://example.com/file2.txt", fileName = "file2.txt",
+            status = COMPLETED
+        )
         val downloadState1 = DownloadJobState(
             state = download1,
             status = COMPLETED,
@@ -907,10 +922,14 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `Until all downloads are NOT completed stopForeground must NOT be called`() {
-        val download1 = DownloadState(id = "1", url = "https://example.com/file1.txt", fileName = "file1.txt",
-                status = COMPLETED)
-        val download2 = DownloadState(id = "2", url = "https://example.com/file2.txt", fileName = "file2.txt",
-                status = DOWNLOADING)
+        val download1 = DownloadState(
+            id = "1", url = "https://example.com/file1.txt", fileName = "file1.txt",
+            status = COMPLETED
+        )
+        val download2 = DownloadState(
+            id = "2", url = "https://example.com/file2.txt", fileName = "file2.txt",
+            status = DOWNLOADING
+        )
         val downloadState1 = DownloadJobState(
             state = download1,
             status = COMPLETED,
@@ -933,12 +952,14 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `removeDownloadJob will stop the service if there are none pending downloads`() {
-        val download = DownloadState(id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-                status = DOWNLOADING)
+        val download = DownloadState(
+            id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
+            status = DOWNLOADING
+        )
         val downloadState = DownloadJobState(
-                state = download,
-                status = DOWNLOADING,
-                foregroundServiceId = Random.nextInt()
+            state = download,
+            status = DOWNLOADING,
+            foregroundServiceId = Random.nextInt()
         )
 
         doNothing().`when`(service).stopForeground(false)
@@ -967,16 +988,20 @@ class AbstractFetchDownloadServiceTest {
     @Config(sdk = [Build.VERSION_CODES.M])
     fun `updateForegroundNotification will select a new foreground notification`() {
         val downloadState1 = DownloadJobState(
-                state = DownloadState(id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-                        status = DownloadState.Status.COMPLETED),
-                status = DownloadState.Status.COMPLETED,
-                foregroundServiceId = Random.nextInt()
+            state = DownloadState(
+                id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
+                status = DownloadState.Status.COMPLETED
+            ),
+            status = DownloadState.Status.COMPLETED,
+            foregroundServiceId = Random.nextInt()
         )
         val downloadState2 = DownloadJobState(
-                state = DownloadState(id = "2", url = "https://example.com/file.txt", fileName = "file.txt",
-                        status = DOWNLOADING),
-                status = DOWNLOADING,
-                foregroundServiceId = Random.nextInt()
+            state = DownloadState(
+                id = "2", url = "https://example.com/file.txt", fileName = "file.txt",
+                status = DOWNLOADING
+            ),
+            status = DOWNLOADING,
+            foregroundServiceId = Random.nextInt()
         )
 
         service.compatForegroundNotificationId = downloadState1.foregroundServiceId
@@ -994,14 +1019,18 @@ class AbstractFetchDownloadServiceTest {
     @Config(sdk = [Build.VERSION_CODES.M])
     fun `updateForegroundNotification will NOT select a new foreground notification`() {
         val downloadState1 = DownloadJobState(
-            state = DownloadState(id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-                    status = DOWNLOADING),
+            state = DownloadState(
+                id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
+                status = DOWNLOADING
+            ),
             status = DOWNLOADING,
             foregroundServiceId = Random.nextInt()
         )
         val downloadState2 = DownloadJobState(
-            state = DownloadState(id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-                    status = DOWNLOADING),
+            state = DownloadState(
+                id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
+                status = DOWNLOADING
+            ),
             status = DOWNLOADING,
             foregroundServiceId = Random.nextInt()
         )
@@ -1286,8 +1315,10 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `updateDownloadState must update the download state in the store and in the downloadJobs`() {
-        val download = DownloadState("https://example.com/file.txt", "file1.txt",
-                status = DOWNLOADING)
+        val download = DownloadState(
+            "https://example.com/file.txt", "file1.txt",
+            status = DOWNLOADING
+        )
         val downloadJob = DownloadJobState(state = mock(), status = DOWNLOADING)
         val mockStore = mock<BrowserStore>()
         val service = spy(object : AbstractFetchDownloadService() {
@@ -1339,13 +1370,15 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `clearAllDownloadsNotificationsAndJobs cancels all running jobs and remove all notifications`() = runBlocking {
-        val download = DownloadState(id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
-                status = DOWNLOADING)
+        val download = DownloadState(
+            id = "1", url = "https://example.com/file.txt", fileName = "file.txt",
+            status = DOWNLOADING
+        )
         val downloadState = DownloadJobState(
-                state = download,
-                foregroundServiceId = Random.nextInt(),
-                status = DOWNLOADING,
-                job = CoroutineScope(IO).launch { while (true) { } }
+            state = download,
+            foregroundServiceId = Random.nextInt(),
+            status = DOWNLOADING,
+            job = CoroutineScope(IO).launch { while (true) { } }
         )
 
         service.registerNotificationActionsReceiver()
@@ -1414,10 +1447,10 @@ class AbstractFetchDownloadServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])
     fun `WHEN a download is completed and the scoped storage is not used it MUST be added manually to the download system database`() = runBlockingTest {
         val download = DownloadState(
-                url = "http://www.mozilla.org",
-                fileName = "example.apk",
-                destinationDirectory = folder.root.path,
-                status = DownloadState.Status.COMPLETED
+            url = "http://www.mozilla.org",
+            fileName = "example.apk",
+            destinationDirectory = folder.root.path,
+            status = DownloadState.Status.COMPLETED
         )
         val service = spy(object : AbstractFetchDownloadService() {
             override val httpClient = client
@@ -1467,7 +1500,8 @@ class AbstractFetchDownloadServiceTest {
             length = anyLong(),
             showNotification = anyBoolean(),
             uri = any(),
-            referer = any())
+            referer = any()
+        )
         doReturn(true).`when`(service).shouldUseScopedStorage()
 
         service.updateDownloadNotification(DownloadState.Status.COMPLETED, downloadJobState, this)

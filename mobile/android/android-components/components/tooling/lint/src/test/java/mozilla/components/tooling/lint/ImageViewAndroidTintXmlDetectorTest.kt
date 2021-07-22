@@ -27,7 +27,8 @@ class ImageViewAndroidTintXmlDetectorTest : LintDetectorTest() {
         lint()
             .files(
                 xml(
-                    "res/layout/layout.xml", """
+                    "res/layout/layout.xml",
+                    """
 <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -44,7 +45,8 @@ class ImageViewAndroidTintXmlDetectorTest : LintDetectorTest() {
         lint()
             .files(
                 xml(
-                    "res/layout/layout.xml", """
+                    "res/layout/layout.xml",
+                    """
 <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"

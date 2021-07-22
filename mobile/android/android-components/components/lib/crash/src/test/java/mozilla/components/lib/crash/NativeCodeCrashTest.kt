@@ -19,13 +19,18 @@ class NativeCodeCrashTest {
         val intent = Intent("org.mozilla.gecko.ACTION_CRASHED")
         intent.component = ComponentName(
             "org.mozilla.samples.browser",
-            "mozilla.components.lib.crash.handler.CrashHandlerService")
+            "mozilla.components.lib.crash.handler.CrashHandlerService"
+        )
         intent.putExtra("uuid", "afc91225-93d7-4328-b3eb-d26ad5af4d86")
-        intent.putExtra("minidumpPath",
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp")
+        intent.putExtra(
+            "minidumpPath",
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
+        )
         intent.putExtra("fatal", false)
-        intent.putExtra("extrasPath",
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra")
+        intent.putExtra(
+            "extrasPath",
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
+        )
         intent.putExtra("minidumpSuccess", true)
 
         val crash = Crash.NativeCodeCrash.fromBundle(intent.extras!!)

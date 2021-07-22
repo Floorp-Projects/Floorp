@@ -150,8 +150,10 @@ class InputResultDetailTest {
         assertEquals(
             StringBuilder("InputResultDetail \$${inputResultDetail.hashCode()} (")
                 .append("Input ${inputResultDetail.getInputResultHandledDescription()}. ")
-                .append("Content ${inputResultDetail.getScrollDirectionsDescription()} " +
-                    "and ${inputResultDetail.getOverscrollDirectionsDescription()}")
+                .append(
+                    "Content ${inputResultDetail.getScrollDirectionsDescription()} " +
+                        "and ${inputResultDetail.getOverscrollDirectionsDescription()}"
+                )
                 .append(')')
                 .toString(),
             result
@@ -188,11 +190,12 @@ class InputResultDetailTest {
                 SCROLL_DIRECTIONS_TOP or SCROLL_DIRECTIONS_BOTTOM
         )
 
-        assertEquals(SCROLL_TOSTRING_DESCRIPTION +
-            "$SCROLL_LEFT_TOSTRING_DESCRIPTION$TOSTRING_SEPARATOR" +
-            "$SCROLL_TOP_TOSTRING_DESCRIPTION$TOSTRING_SEPARATOR" +
-            "$SCROLL_RIGHT_TOSTRING_DESCRIPTION$TOSTRING_SEPARATOR" +
-            SCROLL_BOTTOM_TOSTRING_DESCRIPTION,
+        assertEquals(
+            SCROLL_TOSTRING_DESCRIPTION +
+                "$SCROLL_LEFT_TOSTRING_DESCRIPTION$TOSTRING_SEPARATOR" +
+                "$SCROLL_TOP_TOSTRING_DESCRIPTION$TOSTRING_SEPARATOR" +
+                "$SCROLL_RIGHT_TOSTRING_DESCRIPTION$TOSTRING_SEPARATOR" +
+                SCROLL_BOTTOM_TOSTRING_DESCRIPTION,
             inputResultDetail.getScrollDirectionsDescription()
         )
     }
@@ -221,11 +224,12 @@ class InputResultDetailTest {
             overscrollDirections = OVERSCROLL_DIRECTIONS_VERTICAL or OVERSCROLL_DIRECTIONS_HORIZONTAL
         )
 
-        assertEquals(OVERSCROLL_TOSTRING_DESCRIPTION +
-            "$SCROLL_LEFT_TOSTRING_DESCRIPTION$TOSTRING_SEPARATOR" +
-            "$SCROLL_TOP_TOSTRING_DESCRIPTION$TOSTRING_SEPARATOR" +
-            "$SCROLL_RIGHT_TOSTRING_DESCRIPTION$TOSTRING_SEPARATOR" +
-            SCROLL_BOTTOM_TOSTRING_DESCRIPTION,
+        assertEquals(
+            OVERSCROLL_TOSTRING_DESCRIPTION +
+                "$SCROLL_LEFT_TOSTRING_DESCRIPTION$TOSTRING_SEPARATOR" +
+                "$SCROLL_TOP_TOSTRING_DESCRIPTION$TOSTRING_SEPARATOR" +
+                "$SCROLL_RIGHT_TOSTRING_DESCRIPTION$TOSTRING_SEPARATOR" +
+                SCROLL_BOTTOM_TOSTRING_DESCRIPTION,
             inputResultDetail.getOverscrollDirectionsDescription()
         )
     }

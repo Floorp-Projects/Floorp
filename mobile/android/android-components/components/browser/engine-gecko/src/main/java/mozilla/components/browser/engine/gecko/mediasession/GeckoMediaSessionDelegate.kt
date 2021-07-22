@@ -47,7 +47,8 @@ internal class GeckoMediaSessionDelegate(
 
                     /* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1697255 */
                     if (bitmap != null &&
-                        (bitmap.height <= ARTWORK_ERROR_SIZE || bitmap.width <= ARTWORK_ERROR_SIZE)) {
+                        (bitmap.height <= ARTWORK_ERROR_SIZE || bitmap.width <= ARTWORK_ERROR_SIZE)
+                    ) {
                         bitmap = null
                     }
 
@@ -100,8 +101,10 @@ internal class GeckoMediaSessionDelegate(
     ) {
         engineSession.notifyObservers {
             onMediaPositionStateChanged(
-                MediaSession.PositionState(positionState.duration, positionState.position,
-                    positionState.playbackRate)
+                MediaSession.PositionState(
+                    positionState.duration, positionState.position,
+                    positionState.playbackRate
+                )
             )
         }
     }

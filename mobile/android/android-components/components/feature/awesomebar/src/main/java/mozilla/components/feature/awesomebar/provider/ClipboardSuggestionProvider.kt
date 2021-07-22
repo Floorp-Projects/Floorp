@@ -49,7 +49,7 @@ class ClipboardSuggestionProvider(
     override fun onInputStarted(): List<AwesomeBar.Suggestion> = createClipboardSuggestion()
 
     override suspend fun onInputChanged(text: String) =
-            if ((requireEmptyText && text.isEmpty()) || !requireEmptyText) createClipboardSuggestion() else emptyList()
+        if ((requireEmptyText && text.isEmpty()) || !requireEmptyText) createClipboardSuggestion() else emptyList()
 
     private fun createClipboardSuggestion(): List<AwesomeBar.Suggestion> {
         val url = getTextFromClipboard(clipboardManager)?.let {
@@ -58,19 +58,21 @@ class ClipboardSuggestionProvider(
 
         engine?.speculativeConnect(url)
 
-        return listOf(AwesomeBar.Suggestion(
-            provider = this,
-            id = url,
-            description = url,
-            editSuggestion = url,
-            flags = setOf(AwesomeBar.Suggestion.Flag.CLIPBOARD),
-            icon = icon ?: ContextCompat.getDrawable(context, R.drawable.mozac_ic_search)?.toBitmap(),
-            title = title,
-            onSuggestionClicked = {
-                loadUrlUseCase.invoke(url)
-                emitClipboardSuggestionClickedFact()
-            }
-        ))
+        return listOf(
+            AwesomeBar.Suggestion(
+                provider = this,
+                id = url,
+                description = url,
+                editSuggestion = url,
+                flags = setOf(AwesomeBar.Suggestion.Flag.CLIPBOARD),
+                icon = icon ?: ContextCompat.getDrawable(context, R.drawable.mozac_ic_search)?.toBitmap(),
+                title = title,
+                onSuggestionClicked = {
+                    loadUrlUseCase.invoke(url)
+                    emitClipboardSuggestionClickedFact()
+                }
+            )
+        )
     }
 
     override val shouldClearSuggestions: Boolean

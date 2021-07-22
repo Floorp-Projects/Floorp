@@ -33,12 +33,14 @@ internal interface ManifestDao {
     fun recentManifestsCount(thresholdMs: Long): Int
 
     @WorkerThread
-    @Query("""
+    @Query(
+        """
         SELECT * from manifests 
         WHERE has_share_targets == 1 
         AND used_at > :deadline 
         ORDER BY used_at DESC
-    """)
+    """
+    )
     fun getRecentShareableManifests(deadline: Long): List<ManifestEntity>
 
     @WorkerThread

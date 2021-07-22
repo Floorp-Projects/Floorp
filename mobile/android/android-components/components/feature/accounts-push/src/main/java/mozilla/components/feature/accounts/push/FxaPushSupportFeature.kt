@@ -29,13 +29,13 @@ import mozilla.components.feature.accounts.push.ext.redactPartialUri
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.feature.push.AutoPushSubscription
 import mozilla.components.feature.push.PushScope
-import mozilla.components.concept.sync.AccountObserver as SyncAccountObserver
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.ext.withConstellation
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.utils.SharedPreferencesCache
 import org.json.JSONObject
 import java.util.UUID
+import mozilla.components.concept.sync.AccountObserver as SyncAccountObserver
 
 internal const val PREFERENCE_NAME = "mozac_feature_accounts_push"
 internal const val PREF_LAST_VERIFIED = "last_verified_push_subscription"
@@ -153,7 +153,8 @@ internal class AccountObserver(
                     CoroutineScope(Dispatchers.Main).launch {
                         account.deviceConstellation().setDevicePushSubscription(subscription.into())
                     }
-                })
+                }
+            )
         }
 
         // NB: can we just expose registerDeviceObserver on account manager?

@@ -6,8 +6,8 @@ package mozilla.components.browser.state.engine.middleware
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.action.CrashAction
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.createTab
@@ -52,22 +52,28 @@ class CrashMiddlewareTest {
             )
         )
 
-        store.dispatch(CrashAction.SessionCrashedAction(
-            "tab1"
-        )).joinBlocking()
+        store.dispatch(
+            CrashAction.SessionCrashedAction(
+                "tab1"
+            )
+        ).joinBlocking()
 
-        store.dispatch(CrashAction.SessionCrashedAction(
-            "tab3"
-        )).joinBlocking()
+        store.dispatch(
+            CrashAction.SessionCrashedAction(
+                "tab3"
+            )
+        ).joinBlocking()
 
         assertTrue(store.state.tabs[0].engineState.crashed)
         assertFalse(store.state.tabs[1].engineState.crashed)
         assertTrue(store.state.tabs[2].engineState.crashed)
 
         // Restoring crashed session
-        store.dispatch(CrashAction.RestoreCrashedSessionAction(
-            "tab1"
-        )).joinBlocking()
+        store.dispatch(
+            CrashAction.RestoreCrashedSessionAction(
+                "tab1"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
 
@@ -76,16 +82,20 @@ class CrashMiddlewareTest {
         assertTrue(store.state.tabs[2].engineState.crashed)
 
         // Restoring a non crashed session
-        store.dispatch(CrashAction.RestoreCrashedSessionAction(
-            "tab2"
-        )).joinBlocking()
+        store.dispatch(
+            CrashAction.RestoreCrashedSessionAction(
+                "tab2"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
 
         // Restoring unknown session
-        store.dispatch(CrashAction.RestoreCrashedSessionAction(
-            "unknown"
-        )).joinBlocking()
+        store.dispatch(
+            CrashAction.RestoreCrashedSessionAction(
+                "unknown"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
 
@@ -115,17 +125,21 @@ class CrashMiddlewareTest {
             )
         )
 
-        store.dispatch(CrashAction.SessionCrashedAction(
-            "tab1"
-        )).joinBlocking()
+        store.dispatch(
+            CrashAction.SessionCrashedAction(
+                "tab1"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
 
         assertTrue(store.state.tabs[0].engineState.crashed)
 
-        store.dispatch(CrashAction.RestoreCrashedSessionAction(
-            "tab1"
-        )).joinBlocking()
+        store.dispatch(
+            CrashAction.RestoreCrashedSessionAction(
+                "tab1"
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
 

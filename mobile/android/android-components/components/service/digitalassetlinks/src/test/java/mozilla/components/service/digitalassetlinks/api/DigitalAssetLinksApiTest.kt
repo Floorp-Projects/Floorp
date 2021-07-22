@@ -142,10 +142,12 @@ class DigitalAssetLinksApiTest {
         """
         doReturn(mockResponse(webStatement)).`when`(client).fetch(any())
         assertEquals(
-            listOf(Statement(
-                relation = USE_AS_ORIGIN,
-                target = webAsset
-            )),
+            listOf(
+                Statement(
+                    relation = USE_AS_ORIGIN,
+                    target = webAsset
+                )
+            ),
             api.listStatements(webAsset).toList()
         )
     }
@@ -164,10 +166,12 @@ class DigitalAssetLinksApiTest {
         """
         doReturn(mockResponse(androidStatement)).`when`(client).fetch(any())
         assertEquals(
-            listOf(Statement(
-                relation = HANDLE_ALL_URLS,
-                target = androidAsset
-            )),
+            listOf(
+                Statement(
+                    relation = HANDLE_ALL_URLS,
+                    target = androidAsset
+                )
+            ),
             api.listStatements(webAsset).toList()
         )
     }
@@ -175,33 +179,39 @@ class DigitalAssetLinksApiTest {
     @Test
     fun `passes data in get check request URL for android target`() {
         api.checkRelationship(webAsset, USE_AS_ORIGIN, androidAsset)
-        verify(client).fetch(baseRequest.copy(
-            url = "https://digitalassetlinks.googleapis.com/v1/assetlinks:check?" +
-                "prettyPrint=false&key=X&relation=delegate_permission%2Fcommon.use_as_origin&" +
-                "source.web.site=${Uri.encode("https://mozilla.org")}&" +
-                "target.androidApp.packageName=com.mozilla.fenix&" +
-                "target.androidApp.certificate.sha256Fingerprint=${Uri.encode("01:23:45:67:89")}"
-        ))
+        verify(client).fetch(
+            baseRequest.copy(
+                url = "https://digitalassetlinks.googleapis.com/v1/assetlinks:check?" +
+                    "prettyPrint=false&key=X&relation=delegate_permission%2Fcommon.use_as_origin&" +
+                    "source.web.site=${Uri.encode("https://mozilla.org")}&" +
+                    "target.androidApp.packageName=com.mozilla.fenix&" +
+                    "target.androidApp.certificate.sha256Fingerprint=${Uri.encode("01:23:45:67:89")}"
+            )
+        )
     }
 
     @Test
     fun `passes data in get check request URL for web target`() {
         api.checkRelationship(webAsset, HANDLE_ALL_URLS, webAsset)
-        verify(client).fetch(baseRequest.copy(
-            url = "https://digitalassetlinks.googleapis.com/v1/assetlinks:check?" +
-                "prettyPrint=false&key=X&relation=delegate_permission%2Fcommon.handle_all_urls&" +
-                "source.web.site=${Uri.encode("https://mozilla.org")}&" +
-                "target.web.site=${Uri.encode("https://mozilla.org")}"
-        ))
+        verify(client).fetch(
+            baseRequest.copy(
+                url = "https://digitalassetlinks.googleapis.com/v1/assetlinks:check?" +
+                    "prettyPrint=false&key=X&relation=delegate_permission%2Fcommon.handle_all_urls&" +
+                    "source.web.site=${Uri.encode("https://mozilla.org")}&" +
+                    "target.web.site=${Uri.encode("https://mozilla.org")}"
+            )
+        )
     }
 
     @Test
     fun `passes data in get list request URL`() {
         api.listStatements(webAsset)
-        verify(client).fetch(baseRequest.copy(
-            url = "https://digitalassetlinks.googleapis.com/v1/statements:list?" +
-                "prettyPrint=false&key=X&source.web.site=${Uri.encode("https://mozilla.org")}"
-        ))
+        verify(client).fetch(
+            baseRequest.copy(
+                url = "https://digitalassetlinks.googleapis.com/v1/statements:list?" +
+                    "prettyPrint=false&key=X&source.web.site=${Uri.encode("https://mozilla.org")}"
+            )
+        )
     }
 
     private fun mockResponse(data: String) = Response(

@@ -34,9 +34,9 @@ object CustomDomains {
      */
     fun save(context: Context, domains: List<String>) {
         preferences(context)
-                .edit()
-                .putString(KEY_DOMAINS, domains.joinToString(separator = SEPARATOR))
-                .apply()
+            .edit()
+            .putString(KEY_DOMAINS, domains.joinToString(separator = SEPARATOR))
+            .apply()
     }
 
     /**
@@ -64,5 +64,5 @@ object CustomDomains {
     }
 
     private fun preferences(context: Context): SharedPreferences =
-            context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
+        context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
 }

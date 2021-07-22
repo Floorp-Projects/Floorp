@@ -38,11 +38,13 @@ class BrowserStateReader {
         file: AtomicFile,
         predicate: (RecoverableTab) -> Boolean = { true }
     ): RecoverableBrowserState? {
-        return file.readJSON { browsingSession(
-            engine,
-            restoreSessionId = true,
-            restoreParentId = true,
-            predicate = predicate)
+        return file.readJSON {
+            browsingSession(
+                engine,
+                restoreSessionId = true,
+                restoreParentId = true,
+                predicate = predicate
+            )
         }
     }
 

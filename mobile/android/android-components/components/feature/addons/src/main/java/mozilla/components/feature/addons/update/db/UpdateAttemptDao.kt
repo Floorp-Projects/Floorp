@@ -4,10 +4,10 @@
 
 package mozilla.components.feature.addons.update.db
 
-import androidx.room.Insert
-import androidx.room.Query
 import androidx.room.Dao
+import androidx.room.Insert
 import androidx.room.OnConflictStrategy
+import androidx.room.Query
 
 /**
  * Internal dao for accessing and modifying add-on update requests in the database.

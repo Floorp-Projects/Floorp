@@ -688,7 +688,8 @@ abstract class AbstractFetchDownloadService : Service() {
         // If we are resuming a download and the response does not contain a CONTENT_RANGE
         // we cannot be sure that the request will properly be handled
         if (response.status != PARTIAL_CONTENT_STATUS && response.status != OK_STATUS ||
-            (isResumingDownload && !response.headers.contains(CONTENT_RANGE))) {
+            (isResumingDownload && !response.headers.contains(CONTENT_RANGE))
+        ) {
             // We experienced a problem trying to fetch the file, send a failure notification
             currentDownloadJobState.currentBytesCopied = 0
             currentDownloadJobState.state = currentDownloadJobState.state.copy(currentBytesCopied = 0)
@@ -750,8 +751,10 @@ abstract class AbstractFetchDownloadService : Service() {
         downloadWithHttpClient: Boolean = false
     ): CopyInChuckStatus {
         val data = ByteArray(CHUNK_SIZE)
-        logger.debug("starting copyInChunks ${downloadJobState.state.id}" +
-                " currentBytesCopied ${downloadJobState.state.currentBytesCopied}")
+        logger.debug(
+            "starting copyInChunks ${downloadJobState.state.id}" +
+                " currentBytesCopied ${downloadJobState.state.currentBytesCopied}"
+        )
 
         val throttleUpdateDownload = throttleLatest<Long>(
             PROGRESS_UPDATE_INTERVAL,
@@ -881,7 +884,8 @@ abstract class AbstractFetchDownloadService : Service() {
     internal fun useFileStreamScopedStorage(download: DownloadState, block: (OutputStream) -> Unit) {
         val values = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, download.fileName)
-            put(MediaStore.Downloads.MIME_TYPE,
+            put(
+                MediaStore.Downloads.MIME_TYPE,
                 getSafeContentType(context, download.filePath, download.contentType)
             )
             put(MediaStore.Downloads.SIZE, download.contentLength)
@@ -934,7 +938,7 @@ abstract class AbstractFetchDownloadService : Service() {
             // media store otherwise we have to construct the uri based on the file path.
             val fileUri: Uri = if (SDK_INT >= Build.VERSION_CODES.Q) {
                 queryDownloadMediaStore(applicationContext, download)
-                        ?: getFilePathUri(applicationContext, filePath)
+                    ?: getFilePathUri(applicationContext, filePath)
             } else {
                 // Create a new file with the location of the saved file to extract the correct path
                 // `file` has the wrong path, so we must construct it based on the `fileName` and `dir.path`s
@@ -975,20 +979,20 @@ abstract class AbstractFetchDownloadService : Service() {
 
             val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
             val queryCollection =
-                    if (SDK_INT >= Build.VERSION_CODES.R) {
-                        queryBundle.putInt(MediaStore.QUERY_ARG_MATCH_PENDING, MediaStore.MATCH_INCLUDE)
-                        collection
-                    } else {
-                        @Suppress("DEPRECATION")
-                        setIncludePending(collection)
-                    }
+                if (SDK_INT >= Build.VERSION_CODES.R) {
+                    queryBundle.putInt(MediaStore.QUERY_ARG_MATCH_PENDING, MediaStore.MATCH_INCLUDE)
+                    collection
+                } else {
+                    @Suppress("DEPRECATION")
+                    setIncludePending(collection)
+                }
 
             var downloadUri: Uri? = null
             resolver.query(
-                    queryCollection,
-                    queryProjection,
-                    queryBundle,
-                    null
+                queryCollection,
+                queryProjection,
+                queryBundle,
+                null
             )?.use {
                 if (it.count > 0) {
                     val idColumnIndex = it.getColumnIndex(MediaStore.Downloads._ID)

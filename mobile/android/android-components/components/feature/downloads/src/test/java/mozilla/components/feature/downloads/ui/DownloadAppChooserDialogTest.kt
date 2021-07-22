@@ -22,8 +22,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)

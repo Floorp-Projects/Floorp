@@ -9,10 +9,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.samples.glean.MainActivity
 import androidx.test.uiautomator.UiDevice
 import mozilla.components.service.glean.testing.GleanTestLocalServer
 import okhttp3.mockwebserver.Dispatcher
@@ -22,9 +18,13 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.json.JSONObject
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import java.util.concurrent.TimeUnit
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.samples.glean.MainActivity
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
+import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
 
 /**
@@ -84,8 +84,7 @@ class BaselinePingTest {
         pingName: String,
         pingReason: String?,
         maxAttempts: Int = 3
-    ): JSONObject?
-    {
+    ): JSONObject? {
         var attempts = 0
         do {
             attempts += 1

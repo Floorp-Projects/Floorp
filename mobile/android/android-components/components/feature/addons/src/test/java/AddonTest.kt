@@ -150,9 +150,9 @@ class AddonTest {
     fun `localizedURLAccessPermissions - must translate all_urls access permission`() {
         val expectedString = testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)
         val permissions = listOf(
-                "webRequest",
-                "webRequestBlocking",
-                "<all_urls>"
+            "webRequest",
+            "webRequestBlocking",
+            "<all_urls>"
         )
 
         val result = Addon.localizedURLAccessPermissions(testContext, permissions).first()
@@ -181,10 +181,10 @@ class AddonTest {
         }
         testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)
         val permissions = listOf(
-                "webRequest",
-                "webRequestBlocking",
-                "*://tweetdeck.twitter.com/*",
-                "*://twitter.com/*"
+            "webRequest",
+            "webRequestBlocking",
+            "*://tweetdeck.twitter.com/*",
+            "*://twitter.com/*"
         )
 
         val result = Addon.localizedURLAccessPermissions(testContext, permissions)

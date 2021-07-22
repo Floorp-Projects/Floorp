@@ -51,24 +51,26 @@ class SendCrashTelemetryServiceTest {
     @Test
     fun `Send crash telemetry will forward same crash to crash telemetry service`() {
         var caughtCrash: Crash.NativeCodeCrash? = null
-        val crashReporter = spy(CrashReporter(
-            context = testContext,
-            shouldPrompt = CrashReporter.Prompt.NEVER,
-            telemetryServices = listOf(object : CrashTelemetryService {
-                override fun record(crash: Crash.UncaughtExceptionCrash) {
-                    fail("Didn't expect uncaught exception crash")
-                }
+        val crashReporter = spy(
+            CrashReporter(
+                context = testContext,
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+                telemetryServices = listOf(object : CrashTelemetryService {
+                    override fun record(crash: Crash.UncaughtExceptionCrash) {
+                        fail("Didn't expect uncaught exception crash")
+                    }
 
-                override fun record(crash: Crash.NativeCodeCrash) {
-                    caughtCrash = crash
-                }
+                    override fun record(crash: Crash.NativeCodeCrash) {
+                        caughtCrash = crash
+                    }
 
-                override fun record(throwable: Throwable) {
-                    fail("Didn't expect caught exception")
-                }
-            }),
-            scope = scope
-        )).install(testContext)
+                    override fun record(throwable: Throwable) {
+                        fail("Didn't expect caught exception")
+                    }
+                }),
+                scope = scope
+            )
+        ).install(testContext)
         val originalCrash = Crash.NativeCodeCrash(
             123,
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",

@@ -5,14 +5,14 @@
 package mozilla.components.feature.addons.update.db
 
 import mozilla.components.feature.addons.update.AddonUpdater
+import mozilla.components.feature.addons.update.AddonUpdater.Status.Error
 import mozilla.components.feature.addons.update.AddonUpdater.Status.NoUpdateAvailable
 import mozilla.components.feature.addons.update.AddonUpdater.Status.NotInstalled
-import mozilla.components.feature.addons.update.AddonUpdater.Status.Error
 import mozilla.components.feature.addons.update.AddonUpdater.Status.SuccessfullyUpdated
 import mozilla.components.feature.addons.update.db.UpdateAttemptEntity.Companion.ERROR_DB
 import mozilla.components.feature.addons.update.db.UpdateAttemptEntity.Companion.NOT_INSTALLED_DB
-import mozilla.components.feature.addons.update.db.UpdateAttemptEntity.Companion.SUCCESSFULLY_UPDATED_DB
 import mozilla.components.feature.addons.update.db.UpdateAttemptEntity.Companion.NO_UPDATE_AVAILABLE_DB
+import mozilla.components.feature.addons.update.db.UpdateAttemptEntity.Companion.SUCCESSFULLY_UPDATED_DB
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -86,23 +86,24 @@ class UpdateAttemptEntityTest {
         assertEquals(NOT_INSTALLED_DB, dbStatus)
 
         dbStatus = request.copy(status = SuccessfullyUpdated)
-                .toEntity()
-                .status
+            .toEntity()
+            .status
 
         assertEquals(SUCCESSFULLY_UPDATED_DB, dbStatus)
 
         dbStatus = request.copy(status = NoUpdateAvailable)
-                .toEntity()
-                .status
+            .toEntity()
+            .status
 
         assertEquals(NO_UPDATE_AVAILABLE_DB, dbStatus)
 
         val exception = Exception("")
         val dbEntity = AddonUpdater.UpdateAttempt(
-                addonId = "id",
-                date = Date(),
-                status = Error("error message", exception))
-                .toEntity()
+            addonId = "id",
+            date = Date(),
+            status = Error("error message", exception)
+        )
+            .toEntity()
 
         assertEquals(ERROR_DB, dbEntity.status)
         assertEquals(exception.stackTrace.first().toString(), dbEntity.errorTrace)

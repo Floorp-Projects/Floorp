@@ -39,7 +39,9 @@ class OnDeviceBrowserIconsTest {
                     sizes = listOf(Size(64, 64)),
                     mimeType = "image/png",
                     type = IconRequest.Resource.Type.FAVICON
-                )))
+                )
+            )
+        )
 
         val icon = BrowserIcons(
             context,

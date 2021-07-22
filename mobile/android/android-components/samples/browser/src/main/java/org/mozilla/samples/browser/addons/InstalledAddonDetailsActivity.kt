@@ -16,9 +16,9 @@ import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.translateName
-import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.BrowserActivity
 import org.mozilla.samples.browser.R
+import org.mozilla.samples.browser.ext.components
 
 /**
  * An activity to show the details of a installed add-on.

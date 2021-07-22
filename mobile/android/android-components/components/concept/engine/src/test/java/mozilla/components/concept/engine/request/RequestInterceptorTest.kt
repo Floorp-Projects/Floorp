@@ -6,9 +6,9 @@ package mozilla.components.concept.engine.request
 
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
-import org.junit.Test
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import org.junit.Assert.assertEquals
+import org.junit.Test
 import org.mockito.Mockito.mock
 
 class RequestInterceptorTest {

@@ -8,8 +8,8 @@ import kotlin.reflect.KProperty
  */
 class ThrowProperty<T> : ReadWriteProperty<Any, T> {
     override fun getValue(thisRef: Any, property: KProperty<*>): T =
-            throw UnsupportedOperationException("Cannot get $property")
+        throw UnsupportedOperationException("Cannot get $property")
 
     override fun setValue(thisRef: Any, property: KProperty<*>, value: T) =
-            throw UnsupportedOperationException("Cannot set $property")
+        throw UnsupportedOperationException("Cannot set $property")
 }

@@ -104,7 +104,8 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
         ON_NO_TRACKERS_BLOCKED -> Update(
             iconOnNoTrackersBlocked,
             R.string.mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked,
-            true)
+            true
+        )
 
         ON_TRACKERS_BLOCKED -> Update(
             iconOnTrackersBlocked,

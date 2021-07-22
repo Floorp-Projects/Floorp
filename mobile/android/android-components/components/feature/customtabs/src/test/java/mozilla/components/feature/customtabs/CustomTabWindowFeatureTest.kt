@@ -48,11 +48,15 @@ class CustomTabWindowFeatureTest {
     fun setup() {
         activity = mock()
 
-        store = spy(BrowserStore(BrowserState(
-            customTabs = listOf(
-                createCustomTab(id = sessionId, url = "https://www.mozilla.org")
+        store = spy(
+            BrowserStore(
+                BrowserState(
+                    customTabs = listOf(
+                        createCustomTab(id = sessionId, url = "https://www.mozilla.org")
+                    )
+                )
             )
-        )))
+        )
 
         whenever(activity.packageName).thenReturn("org.mozilla.firefox")
     }

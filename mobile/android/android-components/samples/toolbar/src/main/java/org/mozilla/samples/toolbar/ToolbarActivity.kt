@@ -100,7 +100,8 @@ class ToolbarActivity : AppCompatActivity() {
      */
     private fun setupDefaultToolbar(private: Boolean = false) {
         binding.toolbar.setBackgroundColor(
-                ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80))
+            ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80)
+        )
 
         binding.toolbar.private = private
 
@@ -146,7 +147,8 @@ class ToolbarActivity : AppCompatActivity() {
 
         val reload = BrowserToolbar.Button(
             resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_refresh)!!,
-            "Reload") {
+            "Reload"
+        ) {
             simulateReload()
         }
         binding.toolbar.addBrowserAction(reload)
@@ -176,7 +178,8 @@ class ToolbarActivity : AppCompatActivity() {
      */
     private fun setupCustomMenu() {
         binding.toolbar.setBackgroundColor(
-            ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80))
+            ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80)
+        )
 
         // //////////////////////////////////////////////////////////////////////////////////////////
         // Create a menu with text and icons
@@ -321,7 +324,8 @@ class ToolbarActivity : AppCompatActivity() {
         }
 
         binding.toolbar.display.setUrlBackground(
-            ContextCompat.getDrawable(this, R.drawable.fenix_url_background))
+            ContextCompat.getDrawable(this, R.drawable.fenix_url_background)
+        )
         binding.toolbar.display.hint = "Search or enter address"
         binding.toolbar.display.setOnUrlLongClickListener {
             Toast.makeText(this, "Long click!", Toast.LENGTH_SHORT).show()
@@ -361,9 +365,11 @@ class ToolbarActivity : AppCompatActivity() {
         )
 
         binding.toolbar.edit.setUrlBackground(
-            ContextCompat.getDrawable(this, R.drawable.fenix_url_background))
+            ContextCompat.getDrawable(this, R.drawable.fenix_url_background)
+        )
         binding.toolbar.edit.setIcon(
-            ContextCompat.getDrawable(this, R.drawable.mozac_ic_search)!!, "Search")
+            ContextCompat.getDrawable(this, R.drawable.mozac_ic_search)!!, "Search"
+        )
 
         binding.toolbar.setOnUrlCommitListener { url ->
             simulateReload()

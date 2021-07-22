@@ -50,10 +50,12 @@ class MediaSessionFullscreenFeature(
         }
 
         when (activeState.mediaSessionState?.elementMetadata?.portrait) {
-            true -> activity.requestedOrientation =
-                ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
-            false -> activity.requestedOrientation =
-                ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+            true ->
+                activity.requestedOrientation =
+                    ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+            false ->
+                activity.requestedOrientation =
+                    ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
             else -> activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
         }
     }

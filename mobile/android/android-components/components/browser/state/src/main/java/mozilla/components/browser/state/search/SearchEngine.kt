@@ -53,11 +53,13 @@ data class SearchEngine(
     val resultsUrl: Uri by lazy { Uri.parse(this.resultUrls[0]) }
     // This assumes that search parameters are always "on their own" within the param value,
     // e.g. always in a form of ?q={searchTerms}, never ?q=somePrefix-{searchTerms}
-    val searchParameterName by lazy { resultsUrl.queryParameterNames.find {
-        try {
-            resultsUrl.getQueryParameter(it) == OS_SEARCH_ENGINE_TERMS_PARAM
-        } catch (e: UnsupportedOperationException) {
-            false
+    val searchParameterName by lazy {
+        resultsUrl.queryParameterNames.find {
+            try {
+                resultsUrl.getQueryParameter(it) == OS_SEARCH_ENGINE_TERMS_PARAM
+            } catch (e: UnsupportedOperationException) {
+                false
+            }
         }
-    } }
+    }
 }

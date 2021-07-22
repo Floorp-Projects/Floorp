@@ -59,10 +59,13 @@ class SystemEngineTest {
 
     @Test
     fun settings() {
-        val engine = SystemEngine(testContext, DefaultSettings(
+        val engine = SystemEngine(
+            testContext,
+            DefaultSettings(
                 remoteDebuggingEnabled = true,
                 trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.strict()
-        ))
+            )
+        )
 
         assertTrue(engine.settings.remoteDebuggingEnabled)
         engine.settings.remoteDebuggingEnabled = false
@@ -89,10 +92,13 @@ class SystemEngineTest {
     // https://github.com/mozilla-mobile/android-components/issues/4206
     @Test(expected = UnsupportedSettingException::class)
     fun safeBrowsingIsNotSupportedYet() {
-        val engine = SystemEngine(testContext, DefaultSettings(
-            remoteDebuggingEnabled = true,
-            trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.strict()
-        ))
+        val engine = SystemEngine(
+            testContext,
+            DefaultSettings(
+                remoteDebuggingEnabled = true,
+                trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.strict()
+            )
+        )
 
         engine.settings.safeBrowsingPolicy
     }

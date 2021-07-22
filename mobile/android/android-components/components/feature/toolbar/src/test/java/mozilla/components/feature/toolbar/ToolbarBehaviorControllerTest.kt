@@ -31,11 +31,13 @@ class ToolbarBehaviorControllerTest {
     fun `Controller should check the status of the provided custom tab id`() {
         val customTabContent: ContentState = mock()
         val normalTabContent: ContentState = mock()
-        val state = spy(BrowserState(
-            tabs = listOf(TabSessionState("123", normalTabContent)),
-            customTabs = listOf(CustomTabSessionState("ct", customTabContent, config = mock())),
-            selectedTabId = "123"
-        ))
+        val state = spy(
+            BrowserState(
+                tabs = listOf(TabSessionState("123", normalTabContent)),
+                customTabs = listOf(CustomTabSessionState("ct", customTabContent, config = mock())),
+                selectedTabId = "123"
+            )
+        )
         val store = BrowserStore(state)
         val controller = ToolbarBehaviorController(mock(), store, "ct")
 
@@ -52,11 +54,13 @@ class ToolbarBehaviorControllerTest {
     fun `Controller should check the status of the currently selected tab if not initialized with a custom tab id`() {
         val customTabContent: ContentState = mock()
         val normalTabContent: ContentState = mock()
-        val state = spy(BrowserState(
-            tabs = listOf(TabSessionState("123", normalTabContent)),
-            customTabs = listOf(CustomTabSessionState("ct", customTabContent, config = mock())),
-            selectedTabId = "123"
-        ))
+        val state = spy(
+            BrowserState(
+                tabs = listOf(TabSessionState("123", normalTabContent)),
+                customTabs = listOf(CustomTabSessionState("ct", customTabContent, config = mock())),
+                selectedTabId = "123"
+            )
+        )
         val store = BrowserStore(state)
         val controller = ToolbarBehaviorController(mock(), store)
 
@@ -72,10 +76,12 @@ class ToolbarBehaviorControllerTest {
     @Test
     fun `Controller should disableScrolling if the current tab is loading`() {
         val normalTabContent = ContentState("url", loading = true)
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(TabSessionState("123", normalTabContent)),
-            selectedTabId = "123"
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(TabSessionState("123", normalTabContent)),
+                selectedTabId = "123"
+            )
+        )
         val controller = spy(ToolbarBehaviorController(mock(), store))
 
         controller.start()
@@ -86,10 +92,12 @@ class ToolbarBehaviorControllerTest {
     @Test
     fun `Controller should enableScrolling if the current tab is not loading`() {
         val normalTabContent = ContentState("url", loading = false)
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(TabSessionState("123", normalTabContent)),
-            selectedTabId = "123"
-        ))
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(TabSessionState("123", normalTabContent)),
+                selectedTabId = "123"
+            )
+        )
         val controller = spy(ToolbarBehaviorController(mock(), store))
 
         controller.start()

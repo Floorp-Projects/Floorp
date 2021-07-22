@@ -73,9 +73,12 @@ fun String.toDate(format: String, locale: Locale = Locale.ROOT): Date {
 fun String.sha1(): String {
     val characters = "0123456789abcdef"
     val digest = MessageDigest.getInstance("SHA-1").digest(toByteArray())
-    return digest.joinToString(separator = "", transform = { byte ->
-        String(charArrayOf(characters[byte.toInt() shr 4 and 0x0f], characters[byte.toInt() and 0x0f]))
-    })
+    return digest.joinToString(
+        separator = "",
+        transform = { byte ->
+            String(charArrayOf(characters[byte.toInt() shr 4 and 0x0f], characters[byte.toInt() and 0x0f]))
+        }
+    )
 }
 
 /**
@@ -86,11 +89,11 @@ fun String.sha1(): String {
  */
 fun String.toDate(
     vararg possibleFormats: String = arrayOf(
-            "yyyy-MM-dd'T'HH:mm",
-            "yyyy-MM-dd",
-            "yyyy-'W'ww",
-            "yyyy-MM",
-            "HH:mm"
+        "yyyy-MM-dd'T'HH:mm",
+        "yyyy-MM-dd",
+        "yyyy-'W'ww",
+        "yyyy-MM",
+        "HH:mm"
     )
 ): Date? {
     possibleFormats.forEach {

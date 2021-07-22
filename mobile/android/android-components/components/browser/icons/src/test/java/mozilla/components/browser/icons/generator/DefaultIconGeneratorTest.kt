@@ -96,8 +96,12 @@ class DefaultIconGeneratorTest {
     fun generate() = runBlocking {
         val generator = DefaultIconGenerator()
 
-        val icon = generator.generate(testContext, IconRequest(
-            url = "https://m.facebook.com"))
+        val icon = generator.generate(
+            testContext,
+            IconRequest(
+                url = "https://m.facebook.com"
+            )
+        )
 
         assertNotNull(icon.bitmap)
         assertNotNull(icon.color)

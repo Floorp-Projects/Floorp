@@ -41,7 +41,8 @@ internal object EvaluatorHandlers {
         is Transformation -> evaluateTransformation(evaluator, node)
         is FilterExpression -> evaluateFilterExpression(evaluator, node)
         is UnaryExpression -> throw JexlException(
-            message = "Unary expression evaluation can't be validated")
+            message = "Unary expression evaluation can't be validated"
+        )
     }
 
     private fun evaluateLiteral(node: Literal): JexlValue = when (val value = node.value) {

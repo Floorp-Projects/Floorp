@@ -125,9 +125,11 @@ class TrimMemoryMiddlewareTest {
 
     @Test
     fun `TrimMemoryMiddleware - TRIM_MEMORY_UI_HIDDEN`() {
-        store.dispatch(SystemAction.LowMemoryAction(
-            level = ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN
-        )).joinBlocking()
+        store.dispatch(
+            SystemAction.LowMemoryAction(
+                level = ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN
+            )
+        ).joinBlocking()
 
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
@@ -187,9 +189,11 @@ class TrimMemoryMiddlewareTest {
 
     @Test
     fun `TrimMemoryMiddleware - TRIM_MEMORY_RUNNING_CRITICAL`() {
-        store.dispatch(SystemAction.LowMemoryAction(
-            level = ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL
-        )).joinBlocking()
+        store.dispatch(
+            SystemAction.LowMemoryAction(
+                level = ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL
+            )
+        ).joinBlocking()
 
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()

@@ -50,9 +50,11 @@ class WebExtensionNestedMenuCandidateTest {
 
     @Test
     fun `create nested menu from browser extensions and actions`() {
-        val state = BrowserState(extensions = mapOf(
-            "1" to WebExtensionState(id = "1", browserAction = browserAction, pageAction = pageAction)
-        ))
+        val state = BrowserState(
+            extensions = mapOf(
+                "1" to WebExtensionState(id = "1", browserAction = browserAction, pageAction = pageAction)
+            )
+        )
         val candidate = state.createWebExtensionMenuCandidate(
             testContext,
             appendExtensionSubMenuAt = Side.END

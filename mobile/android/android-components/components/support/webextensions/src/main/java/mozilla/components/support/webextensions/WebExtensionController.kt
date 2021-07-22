@@ -51,7 +51,8 @@ class WebExtensionController(
     ) {
         val installedExtension = installedExtensions[extensionId]
         if (installedExtension == null) {
-            runtime.installWebExtension(extensionId, extensionUrl,
+            runtime.installWebExtension(
+                extensionId, extensionUrl,
                 onSuccess = {
                     logger.debug("Installed extension: ${it.id}")
                     synchronized(this@WebExtensionController) {
@@ -144,7 +145,7 @@ class WebExtensionController(
         installedExtensions[extensionId]?.let { ext ->
             val port = ext.getConnectedPort(name)
             port?.postMessage(msg)
-                    ?: logger.error("No port connected for provided extension. Message $msg not sent.")
+                ?: logger.error("No port connected for provided extension. Message $msg not sent.")
         }
     }
 

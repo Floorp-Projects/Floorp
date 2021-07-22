@@ -60,9 +60,11 @@ class MenuCandidateListAdapterTest {
 
     @Test
     fun `bind will be forwarded to item implementation`() {
-        adapter.submitList(listOf(
-            DividerMenuCandidate()
-        ))
+        adapter.submitList(
+            listOf(
+                DividerMenuCandidate()
+            )
+        )
 
         val holder: DividerMenuCandidateViewHolder = mock()
 

@@ -20,9 +20,9 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import mozilla.components.support.android.test.rules.WebserverRule
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
 import java.util.concurrent.TimeUnit
 
@@ -129,8 +129,12 @@ private fun verifyWebsiteContent(text: String) {
 
     val waitingTime: Long = TimeUnit.SECONDS.toMillis(WAIT_FOR_WEB_CONTENT_SECONDS)
 
-    assertTrue(device
-        .findObject(UiSelector()
-        .textContains(text))
-        .waitForExists(waitingTime))
+    assertTrue(
+        device
+            .findObject(
+                UiSelector()
+                    .textContains(text)
+            )
+            .waitForExists(waitingTime)
+    )
 }

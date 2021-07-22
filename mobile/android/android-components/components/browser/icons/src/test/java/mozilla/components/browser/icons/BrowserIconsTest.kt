@@ -67,10 +67,12 @@ class BrowserIconsTest {
     fun `WHEN resources are provided THEN an icon will be downloaded from one of them`() = runBlocking {
         val server = MockWebServer()
 
-        server.enqueue(MockResponse().setBody(
+        server.enqueue(
+            MockResponse().setBody(
 
-            Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer
-        ))
+                Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer
+            )
+        )
 
         server.start()
 
@@ -118,9 +120,11 @@ class BrowserIconsTest {
     fun `WHEN icon is loaded twice THEN second load is delivered from memory cache`() = runBlocking {
         val server = MockWebServer()
 
-        server.enqueue(MockResponse().setBody(
-            Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer
-        ))
+        server.enqueue(
+            MockResponse().setBody(
+                Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer
+            )
+        )
 
         server.start()
 
@@ -159,9 +163,11 @@ class BrowserIconsTest {
     fun `WHEN icon is loaded again and not in memory cache THEN second load is delivered from disk cache`() = runBlocking {
         val server = MockWebServer()
 
-        server.enqueue(MockResponse().setBody(
-            Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer
-        ))
+        server.enqueue(
+            MockResponse().setBody(
+                Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer
+            )
+        )
 
         server.start()
 

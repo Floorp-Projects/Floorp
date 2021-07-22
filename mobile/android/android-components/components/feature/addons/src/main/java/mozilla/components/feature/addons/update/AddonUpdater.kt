@@ -214,7 +214,7 @@ class DefaultAddonUpdater(
 
         val shouldGrantWithoutPrompt = Addon.localizePermissions(newPermissions, applicationContext).isEmpty()
         val shouldShowNotification =
-                updateStatusStorage.isPreviouslyAllowed(applicationContext, updated.id) || shouldGrantWithoutPrompt
+            updateStatusStorage.isPreviouslyAllowed(applicationContext, updated.id) || shouldGrantWithoutPrompt
 
         onPermissionsGranted(shouldShowNotification)
 
@@ -321,7 +321,7 @@ class DefaultAddonUpdater(
         val contentText = applicationContext.getString(string, validNewPermissions.size)
         var permissionIndex = 1
         val permissionsText =
-                validNewPermissions.joinToString(separator = "\n") {
+            validNewPermissions.joinToString(separator = "\n") {
                 "${permissionIndex++}-$it"
             }
         return "$contentText:\n $permissionsText"
@@ -495,9 +495,9 @@ class DefaultAddonUpdater(
 
         private fun setData(context: Context, allowSet: MutableSet<String>) {
             getSettings(context)
-                    .edit()
-                    .putStringSet(KEY_ALLOWED_SET, allowSet)
-                    .apply()
+                .edit()
+                .putStringSet(KEY_ALLOWED_SET, allowSet)
+                .apply()
         }
 
         private fun getData(context: Context): MutableSet<String> {
@@ -543,9 +543,9 @@ class DefaultAddonUpdater(
         @WorkerThread
         fun findUpdateAttemptBy(addonId: String): AddonUpdater.UpdateAttempt? {
             return database
-                    .updateAttemptDao()
-                    .getUpdateAttemptFor(addonId)
-                    ?.toUpdateAttempt()
+                .updateAttemptDao()
+                .getUpdateAttemptFor(addonId)
+                ?.toUpdateAttempt()
         }
 
         /**
@@ -601,8 +601,8 @@ internal class AddonUpdaterWorker(
                         }
                         is AddonUpdater.Status.Error -> {
                             logger.error(
-                                    "Unable to update extension $extensionId, re-schedule ${status.message}",
-                                    status.exception
+                                "Unable to update extension $extensionId, re-schedule ${status.message}",
+                                status.exception
                             )
                             retryIfRecoverable(status.exception)
                         }
@@ -612,8 +612,8 @@ internal class AddonUpdaterWorker(
                 }
             } catch (exception: Exception) {
                 logger.error(
-                        "Unable to update extension $extensionId, re-schedule ${exception.message}",
-                        exception
+                    "Unable to update extension $extensionId, re-schedule ${exception.message}",
+                    exception
                 )
                 saveUpdateAttempt(extensionId, AddonUpdater.Status.Error(exception.message ?: "", exception))
                 if (exception.shouldReport()) {

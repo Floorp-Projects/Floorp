@@ -151,8 +151,10 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
      */
     var autoCompleteBackgroundColor: Int = {
         val a = context.obtainStyledAttributes(attrs, R.styleable.InlineAutocompleteEditText)
-        val color = a.getColor(R.styleable.InlineAutocompleteEditText_autocompleteBackgroundColor,
-                DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR)
+        val color = a.getColor(
+            R.styleable.InlineAutocompleteEditText_autocompleteBackgroundColor,
+            DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR
+        )
         a.recycle()
         color
     }()
@@ -200,9 +202,13 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         }
 
         // Delete autocomplete text when backspacing or forward deleting.
-        return ((keyCode == KeyEvent.KEYCODE_DEL ||
-                keyCode == KeyEvent.KEYCODE_FORWARD_DEL) &&
-                removeAutocomplete(text))
+        return (
+            (
+                keyCode == KeyEvent.KEYCODE_DEL ||
+                    keyCode == KeyEvent.KEYCODE_FORWARD_DEL
+                ) &&
+                removeAutocomplete(text)
+            )
     }
 
     private val onSelectionChanged = fun (selStart: Int, selEnd: Int) {
@@ -293,7 +299,8 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         // for TYPE_VIEW_TEXT_SELECTION_CHANGED events so that accessibility
         // services could detect a url change.
         if (event.eventType == AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED &&
-                parent != null && !isShown) {
+            parent != null && !isShown
+        ) {
             onInitializeAccessibilityEvent(event)
             dispatchPopulateAccessibilityEvent(event)
             parent.requestSendAccessibilityEvent(this, event)
@@ -325,7 +332,8 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     private fun resetAutocompleteState() {
         autoCompleteSpans = mutableListOf(
             AUTOCOMPLETE_SPAN,
-            BackgroundColorSpan(autoCompleteBackgroundColor)).apply {
+            BackgroundColorSpan(autoCompleteBackgroundColor)
+        ).apply {
             autoCompleteForegroundColor?.let { add(ForegroundColorSpan(it)) }
         }
         autocompleteResult = null
@@ -484,7 +492,8 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
             // For those spans, spanFlag[i] will be 0 and we don't restore them.
             if (spanFlag and Spanned.SPAN_COMPOSING == 0 &&
                 span !== Selection.SELECTION_START &&
-                span !== Selection.SELECTION_END) {
+                span !== Selection.SELECTION_END
+            ) {
                 continue
             }
 
@@ -567,9 +576,10 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
                 // We only delete the autocomplete text when the user is backspacing,
                 // i.e. when the composing text is getting shorter.
                 if (composingStart >= 0 &&
-                        composingEnd >= 0 &&
-                        composingEnd - composingStart > text.length &&
-                        removeAutocomplete(editable)) {
+                    composingEnd >= 0 &&
+                    composingEnd - composingStart > text.length &&
+                    removeAutocomplete(editable)
+                ) {
                     // Make the IME aware that we interrupted the setComposingText call,
                     // by having finishComposingText() send change notifications to the IME.
                     finishComposingText()
@@ -647,19 +657,21 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
             val afterNonAutocompleteText = getNonAutocompleteText(editable)
 
             val hasTextShortenedByOne: Boolean =
-                    beforeChangedTextNonAutocomplete.length == afterNonAutocompleteText.length + 1
+                beforeChangedTextNonAutocomplete.length == afterNonAutocompleteText.length + 1
 
             // Covers both keyboards with text correction activated and those without.
             val hasBackspaceBeenPressed =
-                    textChangedCount == 0 || hasTextShortenedByOne
+                textChangedCount == 0 || hasTextShortenedByOne
 
             // No autocompleting when typing a search query
             val afterTextIsSearch = afterNonAutocompleteText.contains(" ")
 
             val hasTextBeenAdded: Boolean =
-                    (afterNonAutocompleteText.contains(beforeChangedTextNonAutocomplete) ||
-                            beforeChangedTextNonAutocomplete.isEmpty()) &&
-                            afterNonAutocompleteText.length > beforeChangedTextNonAutocomplete.length
+                (
+                    afterNonAutocompleteText.contains(beforeChangedTextNonAutocomplete) ||
+                        beforeChangedTextNonAutocomplete.isEmpty()
+                    ) &&
+                    afterNonAutocompleteText.length > beforeChangedTextNonAutocomplete.length
 
             var shouldAddAutocomplete: Boolean = hasTextBeenAdded || (!afterTextIsSearch && !hasBackspaceBeenPressed)
 
@@ -739,7 +751,8 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     @Suppress("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M &&
-                event.actionMasked == MotionEvent.ACTION_UP) {
+            event.actionMasked == MotionEvent.ACTION_UP
+        ) {
             // Android 6 occasionally throws a NullPointerException inside Editor.onTouchEvent()
             // for ACTION_UP when attempting to display (uninitialised) text handles. The Editor
             // and TextView IME interactions are quite complex, so I don't know how to properly

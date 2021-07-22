@@ -53,10 +53,13 @@ class WebExtensionActionTest {
         store.dispatch(WebExtensionAction.InstallWebExtensionAction(extension)).joinBlocking()
 
         assertFalse(store.state.extensions.isEmpty())
-        assertEquals(extension.copy(
-            browserAction = mockedBrowserAction,
-            pageAction = mockedPageAction
-        ), store.state.extensions.values.first())
+        assertEquals(
+            extension.copy(
+                browserAction = mockedBrowserAction,
+                pageAction = mockedPageAction
+            ),
+            store.state.extensions.values.first()
+        )
     }
 
     @Test
@@ -88,7 +91,7 @@ class WebExtensionActionTest {
         assertEquals(mockedBrowserAction, extensionsTab1.values.first().browserAction)
 
         store.dispatch(WebExtensionAction.UpdateTabBrowserAction(tab2.id, extension2.id, mockedBrowserAction))
-                .joinBlocking()
+            .joinBlocking()
         val extensionsTab2 = store.state.tabs.last().extensionState
         assertEquals(mockedBrowserAction, extensionsTab2.values.last().browserAction)
 

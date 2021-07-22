@@ -54,15 +54,18 @@ internal object ShareTargetParser {
                 put("title", shareTarget.params.title)
                 put("text", shareTarget.params.text)
                 put("url", shareTarget.params.url)
-                put("files", shareTarget.params.files.asSequence()
-                    .map { file ->
-                        JSONObject().apply {
-                            put("name", file.name)
-                            putOpt("accept", file.accept.toJSONArray())
+                put(
+                    "files",
+                    shareTarget.params.files.asSequence()
+                        .map { file ->
+                            JSONObject().apply {
+                                put("name", file.name)
+                                putOpt("accept", file.accept.toJSONArray())
+                            }
                         }
-                    }
-                    .asIterable()
-                    .toJSONArray())
+                        .asIterable()
+                        .toJSONArray()
+                )
             }
             put("params", params)
         }

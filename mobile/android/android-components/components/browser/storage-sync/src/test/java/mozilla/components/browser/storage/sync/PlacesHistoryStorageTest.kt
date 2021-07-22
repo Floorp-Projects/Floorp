@@ -87,22 +87,27 @@ class PlacesHistoryStorageTest {
         assertEquals(VisitType.DOWNLOAD, recordedVisits[8].visitType)
 
         // Can use WebView-style getVisited API.
-        assertEquals(listOf(
+        assertEquals(
+            listOf(
                 "http://www.firefox.com/1", "http://www.firefox.com/2", "http://www.firefox.com/3",
                 "http://www.firefox.com/4", "http://www.firefox.com/5", "http://www.firefox.com/6",
                 "http://www.firefox.com/7", "http://www.firefox.com/8", "http://www.firefox.com/9"
-        ), history.getVisited())
+            ),
+            history.getVisited()
+        )
 
         // Can use GeckoView-style getVisited API.
         assertEquals(
-                listOf(false, true, true, true, true, true, true, false, true, true, true),
-                history.getVisited(listOf(
-                        "http://www.mozilla.com",
-                        "http://www.firefox.com/1", "http://www.firefox.com/2", "http://www.firefox.com/3",
-                        "http://www.firefox.com/4", "http://www.firefox.com/5", "http://www.firefox.com/6",
-                        "http://www.firefox.com/oops",
-                        "http://www.firefox.com/7", "http://www.firefox.com/8", "http://www.firefox.com/9"
-                ))
+            listOf(false, true, true, true, true, true, true, false, true, true, true),
+            history.getVisited(
+                listOf(
+                    "http://www.mozilla.com",
+                    "http://www.firefox.com/1", "http://www.firefox.com/2", "http://www.firefox.com/3",
+                    "http://www.firefox.com/4", "http://www.firefox.com/5", "http://www.firefox.com/6",
+                    "http://www.firefox.com/oops",
+                    "http://www.firefox.com/7", "http://www.firefox.com/8", "http://www.firefox.com/9"
+                )
+            )
         )
 
         // Can query using pagination.
@@ -259,8 +264,8 @@ class PlacesHistoryStorageTest {
         history.recordVisit("https://www.mozilla.org", PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE))
         history.recordVisit("https://www.wikipedia.org", PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE))
         assertEquals(
-                listOf("https://www.mozilla.org/", "https://www.firefox.com/", "https://www.wikipedia.org/"),
-                history.getVisited()
+            listOf("https://www.mozilla.org/", "https://www.firefox.com/", "https://www.wikipedia.org/"),
+            history.getVisited()
         )
     }
 
@@ -802,13 +807,18 @@ class PlacesHistoryStorageTest {
         visits = history.getDetailedVisits(0, Long.MAX_VALUE)
         assertEquals(152, visits.size)
 
-        assertEquals(listOf(false, false, true, true, false), history.reader.getVisited(listOf(
-            "files:///",
-            "https://news.ycombinator.com/",
-            "https://www.theguardian.com/film/2017/jul/24/stranger-things-thor-ragnarok-comic-con-2017",
-            "http://www.bbc.com/news/world-us-canada-40662772",
-            "https://mobile.reuters.com/"
-        )))
+        assertEquals(
+            listOf(false, false, true, true, false),
+            history.reader.getVisited(
+                listOf(
+                    "files:///",
+                    "https://news.ycombinator.com/",
+                    "https://www.theguardian.com/film/2017/jul/24/stranger-things-thor-ragnarok-comic-con-2017",
+                    "http://www.bbc.com/news/world-us-canada-40662772",
+                    "https://mobile.reuters.com/"
+                )
+            )
+        )
 
         with(visits[0]) {
             assertEquals("Apple", this.title)
@@ -828,15 +838,20 @@ class PlacesHistoryStorageTest {
         visits = history.getDetailedVisits(0, Long.MAX_VALUE)
         assertEquals(6, visits.size)
 
-        assertEquals(listOf(false, true, true, true, true, true, true), history.reader.getVisited(listOf(
-            "files:///",
-            "https://news.ycombinator.com/",
-            "https://news.ycombinator.com/item?id=21224209",
-            "https://mobile.twitter.com/random_walker/status/1182635589604171776",
-            "https://www.mozilla.org/en-US/",
-            "https://www.mozilla.org/en-US/firefox/accounts/",
-            "https://mobile.reuters.com/"
-        )))
+        assertEquals(
+            listOf(false, true, true, true, true, true, true),
+            history.reader.getVisited(
+                listOf(
+                    "files:///",
+                    "https://news.ycombinator.com/",
+                    "https://news.ycombinator.com/item?id=21224209",
+                    "https://mobile.twitter.com/random_walker/status/1182635589604171776",
+                    "https://www.mozilla.org/en-US/",
+                    "https://www.mozilla.org/en-US/firefox/accounts/",
+                    "https://mobile.reuters.com/"
+                )
+            )
+        )
 
         with(visits[0]) {
             assertEquals("Hacker News", this.title)
@@ -886,13 +901,18 @@ class PlacesHistoryStorageTest {
         visits = history.getDetailedVisits(0, Long.MAX_VALUE)
         assertEquals(6, visits.size)
 
-        assertEquals(listOf(true, true, true, true, true), history.reader.getVisited(listOf(
-            "https://www.newegg.com/",
-            "https://news.ycombinator.com/",
-            "https://terrytao.wordpress.com/2020/04/12/john-conway/",
-            "https://news.ycombinator.com/item?id=22862053",
-            "https://malleable.systems/"
-        )))
+        assertEquals(
+            listOf(true, true, true, true, true),
+            history.reader.getVisited(
+                listOf(
+                    "https://www.newegg.com/",
+                    "https://news.ycombinator.com/",
+                    "https://terrytao.wordpress.com/2020/04/12/john-conway/",
+                    "https://news.ycombinator.com/item?id=22862053",
+                    "https://malleable.systems/"
+                )
+            )
+        )
 
         with(visits[0]) {
             assertEquals("Computer Parts, PC Components, Laptop Computers, LED LCD TV, Digital Cameras and more - Newegg.com", this.title)

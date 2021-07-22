@@ -96,15 +96,15 @@ class SimpleBrowserMenuHighlightableItem(
 
     override fun asCandidate(context: Context): MenuCandidate {
         val textStyle = TextStyle(
-                size = if (textSize == NO_ID.toFloat()) null else textSize,
-                color = if (textColorResource == NO_ID) null else ContextCompat.getColor(context, textColorResource)
+            size = if (textSize == NO_ID.toFloat()) null else textSize,
+            color = if (textColorResource == NO_ID) null else ContextCompat.getColor(context, textColorResource)
         )
         val containerStyle = ContainerStyle(isVisible = visible())
         return TextMenuCandidate(
-                label,
-                textStyle = textStyle,
-                containerStyle = containerStyle,
-                onClick = listener
+            label,
+            textStyle = textStyle,
+            containerStyle = containerStyle,
+            onClick = listener
         )
     }
 }

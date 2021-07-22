@@ -23,15 +23,19 @@ class StatementRelationCheckerTest {
         val listFetcher = object : StatementListFetcher {
             override fun listStatements(source: AssetDescriptor.Web) = sequence {
                 numYields = 1
-                yield(Statement(
-                    relation = Relation.USE_AS_ORIGIN,
-                    target = target
-                ))
+                yield(
+                    Statement(
+                        relation = Relation.USE_AS_ORIGIN,
+                        target = target
+                    )
+                )
                 numYields = 2
-                yield(Statement(
-                    relation = Relation.USE_AS_ORIGIN,
-                    target = target
-                ))
+                yield(
+                    Statement(
+                        relation = Relation.USE_AS_ORIGIN,
+                        target = target
+                    )
+                )
             }
         }
 

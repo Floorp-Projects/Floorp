@@ -51,7 +51,7 @@ object DownloadUtils {
      *
      */
     private const val contentDispositionFileNameAsterisk =
-            "\\s*filename\\*\\s*=\\s*(utf-8|iso-8859-1)'[^']*'(\\S*)"
+        "\\s*filename\\*\\s*=\\s*(utf-8|iso-8859-1)'[^']*'(\\S*)"
 
     /**
      * Format as defined in RFC 2616 and RFC 5987
@@ -94,16 +94,21 @@ object DownloadUtils {
      * attachment; filename="_.jpg"; filename*=iso-8859-1'en'file%27%20%27name.jpg
      * attachment; filename="_.jpg"; filename*=iso-8859-1'en'file%27%20%27name.jpg
      */
-    private val contentDispositionPattern = Pattern.compile(contentDispositionType +
+    private val contentDispositionPattern = Pattern.compile(
+        contentDispositionType +
             "\\s*filename\\s*=\\s*(\"((?:\\\\.|[^\"\\\\])*)\"|[^;]*)\\s*" +
             "(?:;$contentDispositionFileNameAsterisk)?",
-            Pattern.CASE_INSENSITIVE)
+        Pattern.CASE_INSENSITIVE
+    )
 
     /**
      * This is an alternative content disposition pattern where only filename* is available
      */
-    private val fileNameAsteriskContentDispositionPattern = Pattern.compile(contentDispositionType +
-            contentDispositionFileNameAsterisk, Pattern.CASE_INSENSITIVE)
+    private val fileNameAsteriskContentDispositionPattern = Pattern.compile(
+        contentDispositionType +
+            contentDispositionFileNameAsterisk,
+        Pattern.CASE_INSENSITIVE
+    )
 
     /**
      * Keys for the capture groups inside contentDispositionPattern
@@ -172,15 +177,17 @@ object DownloadUtils {
     // Some site add extra information after the mimetype, for example 'application/pdf; qs=0.001'
     // we just want to extract the mimeType and ignore the rest.
     fun sanitizeMimeType(mimeType: String?): String? {
-        return (if (mimeType != null) {
-            if (mimeType.contains(";")) {
-                mimeType.substringBefore(";")
+        return (
+            if (mimeType != null) {
+                if (mimeType.contains(";")) {
+                    mimeType.substringBefore(";")
+                } else {
+                    mimeType
+                }
             } else {
-                mimeType
+                null
             }
-        } else {
-            null
-        })?.trim()
+            )?.trim()
     }
 
     /**
@@ -233,7 +240,7 @@ object DownloadUtils {
     private fun parseContentDisposition(contentDisposition: String): String? {
         return try {
             parseContentDispositionWithFileName(contentDisposition)
-                    ?: parseContentDispositionWithFileNameAsterisk(contentDisposition)
+                ?: parseContentDispositionWithFileNameAsterisk(contentDisposition)
         } catch (ex: IllegalStateException) {
             // This function is defined as returning null when it can't parse the header
             null
@@ -254,7 +261,7 @@ object DownloadUtils {
                 // Return quoted string if available and replace escaped characters.
                 val quotedFileName = m.group(QUOTED_FILE_NAME_GROUP)
                 quotedFileName?.replace("\\\\(.)".toRegex(), "$1")
-                        ?: m.group(UNQUOTED_FILE_NAME)
+                    ?: m.group(UNQUOTED_FILE_NAME)
             }
         } else {
             null

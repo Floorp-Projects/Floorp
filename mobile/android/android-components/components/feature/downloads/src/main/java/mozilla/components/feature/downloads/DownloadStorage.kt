@@ -86,13 +86,13 @@ class DownloadStorage(context: Context) {
          */
         fun isSameDownload(first: DownloadState, second: DownloadState): Boolean {
             return first.id == second.id &&
-                    first.fileName == second.fileName &&
-                    first.url == second.url &&
-                    first.contentType == second.contentType &&
-                    first.contentLength == second.contentLength &&
-                    first.status == second.status &&
-                    first.destinationDirectory == second.destinationDirectory &&
-                    first.createdTime == second.createdTime
+                first.fileName == second.fileName &&
+                first.url == second.url &&
+                first.contentType == second.contentType &&
+                first.contentLength == second.contentLength &&
+                first.status == second.status &&
+                first.destinationDirectory == second.destinationDirectory &&
+                first.createdTime == second.createdTime
         }
     }
 }

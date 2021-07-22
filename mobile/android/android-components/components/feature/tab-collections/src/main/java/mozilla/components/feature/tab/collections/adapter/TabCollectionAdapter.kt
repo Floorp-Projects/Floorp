@@ -44,7 +44,8 @@ internal class TabCollectionAdapter(
         restoreSessionId: Boolean
     ): List<RecoverableTab> {
         val entities = entity.tabs.filter {
-            candidate -> tabs.find { tab -> tab.id == candidate.id } != null
+            candidate ->
+            tabs.find { tab -> tab.id == candidate.id } != null
         }
         return restore(context, engine, entities, restoreSessionId)
     }

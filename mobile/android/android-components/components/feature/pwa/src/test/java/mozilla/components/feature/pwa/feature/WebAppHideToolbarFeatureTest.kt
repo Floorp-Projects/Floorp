@@ -80,9 +80,11 @@ class WebAppHideToolbarFeatureTest {
             config = CustomTabConfig(sessionToken = token)
         )
         val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
-        val customTabsStore = CustomTabsServiceStore(CustomTabsServiceState(
-            tabs = mapOf(token to mockCustomTabState("https://firefox.com", "https://mozilla.org"))
-        ))
+        val customTabsStore = CustomTabsServiceStore(
+            CustomTabsServiceState(
+                tabs = mapOf(token to mockCustomTabState("https://firefox.com", "https://mozilla.org"))
+            )
+        )
 
         val feature = WebAppHideToolbarFeature(
             store,
@@ -161,9 +163,11 @@ class WebAppHideToolbarFeatureTest {
             config = CustomTabConfig(sessionToken = token)
         )
         val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
-        val customTabsStore = CustomTabsServiceStore(CustomTabsServiceState(
-            tabs = mapOf(token to mockCustomTabState("https://mozilla.org"))
-        ))
+        val customTabsStore = CustomTabsServiceStore(
+            CustomTabsServiceState(
+                tabs = mapOf(token to mockCustomTabState("https://mozilla.org"))
+            )
+        )
 
         val feature = WebAppHideToolbarFeature(
             store,
@@ -185,9 +189,11 @@ class WebAppHideToolbarFeatureTest {
             config = CustomTabConfig(sessionToken = token)
         )
         val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
-        val customTabsStore = CustomTabsServiceStore(CustomTabsServiceState(
-            tabs = mapOf(token to mockCustomTabState("https://mozilla.com", "https://m.mozilla.com"))
-        ))
+        val customTabsStore = CustomTabsServiceStore(
+            CustomTabsServiceState(
+                tabs = mapOf(token to mockCustomTabState("https://mozilla.com", "https://m.mozilla.com"))
+            )
+        )
         val feature = WebAppHideToolbarFeature(
             store,
             customTabsStore,
@@ -287,9 +293,11 @@ class WebAppHideToolbarFeatureTest {
             config = CustomTabConfig(sessionToken = token)
         )
         val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
-        val customTabsStore = CustomTabsServiceStore(CustomTabsServiceState(
-            tabs = mapOf(token to mockCustomTabState())
-        ))
+        val customTabsStore = CustomTabsServiceStore(
+            CustomTabsServiceState(
+                tabs = mapOf(token to mockCustomTabState())
+            )
+        )
         val feature = WebAppHideToolbarFeature(
             store,
             customTabsStore,
@@ -299,20 +307,24 @@ class WebAppHideToolbarFeatureTest {
         }
         feature.start()
 
-        customTabsStore.dispatch(ValidateRelationshipAction(
-            token,
-            RELATION_HANDLE_ALL_URLS,
-            "https://m.mozilla.com".toUri(),
-            VerificationStatus.PENDING
-        )).joinBlocking()
+        customTabsStore.dispatch(
+            ValidateRelationshipAction(
+                token,
+                RELATION_HANDLE_ALL_URLS,
+                "https://m.mozilla.com".toUri(),
+                VerificationStatus.PENDING
+            )
+        ).joinBlocking()
         assertTrue(toolbarVisible)
 
-        customTabsStore.dispatch(ValidateRelationshipAction(
-            token,
-            RELATION_HANDLE_ALL_URLS,
-            "https://mozilla.com".toUri(),
-            VerificationStatus.PENDING
-        )).joinBlocking()
+        customTabsStore.dispatch(
+            ValidateRelationshipAction(
+                token,
+                RELATION_HANDLE_ALL_URLS,
+                "https://mozilla.com".toUri(),
+                VerificationStatus.PENDING
+            )
+        ).joinBlocking()
         assertFalse(toolbarVisible)
     }
 

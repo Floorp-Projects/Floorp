@@ -43,9 +43,13 @@ class PocketStoriesRefreshSchedulerTest {
     @Test
     fun `GIVEN a PocketStoriesRefreshScheduler WHEN schedulePeriodicRefreshes THEN a RefreshPocketWorker is created and enqueued`() {
         val client: HttpURLConnectionClient = mock()
-        val scheduler = spy(PocketStoriesRefreshScheduler(PocketStoriesConfig(
-            TEST_VALID_API_KEY, client, Frequency(1, TimeUnit.HOURS), TEST_STORIES_COUNT, TEST_STORIES_LOCALE
-        )))
+        val scheduler = spy(
+            PocketStoriesRefreshScheduler(
+                PocketStoriesConfig(
+                    TEST_VALID_API_KEY, client, Frequency(1, TimeUnit.HOURS), TEST_STORIES_COUNT, TEST_STORIES_LOCALE
+                )
+            )
+        )
         val workManager = mock<WorkManager>()
         val worker = mock<PeriodicWorkRequest>()
         doReturn(workManager).`when`(scheduler).getWorkManager(any())

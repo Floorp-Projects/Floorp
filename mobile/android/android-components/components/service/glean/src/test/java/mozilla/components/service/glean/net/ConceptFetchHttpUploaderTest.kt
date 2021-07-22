@@ -26,6 +26,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 import java.net.CookieHandler
@@ -33,7 +34,6 @@ import java.net.CookieManager
 import java.net.HttpCookie
 import java.net.URI
 import java.util.concurrent.TimeUnit
-import org.mockito.Mockito.verify
 
 @RunWith(RobolectricTestRunner::class)
 class ConceptFetchHttpUploaderTest {
@@ -76,7 +76,8 @@ class ConceptFetchHttpUploaderTest {
     fun `Glean headers are correctly dispatched`() {
         val mockClient: Client = mock()
         `when`(mockClient.fetch(any())).thenReturn(
-            Response("URL", 200, mock(), mock()))
+            Response("URL", 200, mock(), mock())
+        )
 
         val expectedHeaders = mapOf(
             "Content-Type" to "application/json; charset=utf-8",
@@ -110,8 +111,11 @@ class ConceptFetchHttpUploaderTest {
     @Test
     fun `upload() returns true for successful submissions (200)`() {
         val mockClient: Client = mock()
-        `when`(mockClient.fetch(any())).thenReturn(Response(
-            "URL", 200, mock(), mock()))
+        `when`(mockClient.fetch(any())).thenReturn(
+            Response(
+                "URL", 200, mock(), mock()
+            )
+        )
 
         val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
@@ -121,8 +125,11 @@ class ConceptFetchHttpUploaderTest {
     fun `upload() returns false for server errors (5xx)`() {
         for (responseCode in 500..527) {
             val mockClient: Client = mock()
-            `when`(mockClient.fetch(any())).thenReturn(Response(
-                "URL", responseCode, mock(), mock()))
+            `when`(mockClient.fetch(any())).thenReturn(
+                Response(
+                    "URL", responseCode, mock(), mock()
+                )
+            )
 
             val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
@@ -134,8 +141,11 @@ class ConceptFetchHttpUploaderTest {
     fun `upload() returns true for successful submissions (2xx)`() {
         for (responseCode in 200..226) {
             val mockClient: Client = mock()
-            `when`(mockClient.fetch(any())).thenReturn(Response(
-                "URL", responseCode, mock(), mock()))
+            `when`(mockClient.fetch(any())).thenReturn(
+                Response(
+                    "URL", responseCode, mock(), mock()
+                )
+            )
 
             val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
@@ -147,8 +157,11 @@ class ConceptFetchHttpUploaderTest {
     fun `upload() returns true for failing submissions with broken requests (4xx)`() {
         for (responseCode in 400..451) {
             val mockClient: Client = mock()
-            `when`(mockClient.fetch(any())).thenReturn(Response(
-                "URL", responseCode, mock(), mock()))
+            `when`(mockClient.fetch(any())).thenReturn(
+                Response(
+                    "URL", responseCode, mock(), mock()
+                )
+            )
 
             val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
@@ -280,7 +293,8 @@ class ConceptFetchHttpUploaderTest {
     fun `the lazy client should only be instantiated after the first upload`() {
         val mockClient: Client = mock()
         `when`(mockClient.fetch(any())).thenReturn(
-            Response("URL", 200, mock(), mock()))
+            Response("URL", 200, mock(), mock())
+        )
         val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
         assertFalse(uploader.client.isInitialized())
 
@@ -293,7 +307,8 @@ class ConceptFetchHttpUploaderTest {
     fun `usePrivateRequest sends all requests with private flag`() {
         val mockClient: Client = mock()
         `when`(mockClient.fetch(any())).thenReturn(
-            Response("URL", 200, mock(), mock()))
+            Response("URL", 200, mock(), mock())
+        )
 
         val expectedHeaders = mapOf(
             "Content-Type" to "application/json; charset=utf-8",

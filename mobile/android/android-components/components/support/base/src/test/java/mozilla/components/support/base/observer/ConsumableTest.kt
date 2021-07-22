@@ -72,11 +72,13 @@ class ConsumableTest {
         val consumer3 = TestConsumer(shouldConsume = false)
 
         val consumable = Consumable.from(23)
-        val consumed = consumable.consumeBy(listOf(
-            { value -> consumer1.invoke(value) },
-            { value -> consumer2.invoke(value) },
-            { value -> consumer3.invoke(value) }
-        ))
+        val consumed = consumable.consumeBy(
+            listOf(
+                { value -> consumer1.invoke(value) },
+                { value -> consumer2.invoke(value) },
+                { value -> consumer3.invoke(value) }
+            )
+        )
 
         assertFalse(consumed)
         assertFalse(consumable.isConsumed())
@@ -99,11 +101,13 @@ class ConsumableTest {
         val consumer3 = TestConsumer(shouldConsume = false)
 
         val consumable = Consumable.from(23)
-        val consumed = consumable.consumeBy(listOf(
+        val consumed = consumable.consumeBy(
+            listOf(
                 { value -> consumer1.invoke(value) },
                 { value -> consumer2.invoke(value) },
                 { value -> consumer3.invoke(value) }
-        ))
+            )
+        )
 
         assertTrue(consumed)
         assertTrue(consumable.isConsumed())
@@ -126,11 +130,13 @@ class ConsumableTest {
         val consumer3 = TestConsumer(shouldConsume = true)
 
         val consumable = Consumable.from(23)
-        val consumed = consumable.consumeBy(listOf(
+        val consumed = consumable.consumeBy(
+            listOf(
                 { value -> consumer1.invoke(value) },
                 { value -> consumer2.invoke(value) },
                 { value -> consumer3.invoke(value) }
-        ))
+            )
+        )
 
         assertTrue(consumed)
         assertTrue(consumable.isConsumed())
@@ -207,11 +213,13 @@ class ConsumableTest {
         assertTrue(consumable.isConsumed())
         assertNull(consumable.value)
 
-        val consumed = consumable.consumeBy(listOf(
+        val consumed = consumable.consumeBy(
+            listOf(
                 { value -> consumer1.invoke(value) },
                 { value -> consumer2.invoke(value) },
                 { value -> consumer3.invoke(value) }
-        ))
+            )
+        )
 
         assertFalse(consumed)
 
@@ -261,21 +269,25 @@ class ConsumableTest {
             callbackInvoked = true
         }
 
-        consumable.consumeBy(listOf<(Int) -> Boolean>(
-            { false },
-            { false },
-            { false },
-            { false }
-        ))
+        consumable.consumeBy(
+            listOf<(Int) -> Boolean>(
+                { false },
+                { false },
+                { false },
+                { false }
+            )
+        )
 
         assertFalse(callbackInvoked)
 
-        consumable.consumeBy(listOf<(Int) -> Boolean>(
-            { false },
-            { false },
-            { true },
-            { false }
-        ))
+        consumable.consumeBy(
+            listOf<(Int) -> Boolean>(
+                { false },
+                { false },
+                { true },
+                { false }
+            )
+        )
 
         assertTrue(callbackInvoked)
     }
@@ -319,39 +331,47 @@ class ConsumableTest {
         var consumed = mutableListOf<Int>()
 
         // Consume all values using two consumers
-        stream.consumeAllBy(listOf(
+        stream.consumeAllBy(
+            listOf(
                 { value -> consumed.add(value) },
                 { value -> consumed.add(value + 1) }
-        ))
+            )
+        )
         assertEquals(listOf(1, 2, 2, 3, 3, 4), consumed)
         assertTrue(stream.isConsumed())
 
         // Consume partial values
         stream = Consumable.stream(1, 2, 3)
         consumed = mutableListOf()
-        var allConsumed = stream.consumeAllBy(listOf(
+        var allConsumed = stream.consumeAllBy(
+            listOf(
                 { value -> if (value < 3) consumed.add(value) else false },
                 { _ -> false }
-        ))
+            )
+        )
         assertEquals(listOf(1, 2), consumed)
         assertFalse(allConsumed)
         assertFalse(stream.isConsumed())
 
         // Consume remaining values
-        allConsumed = stream.consumeAllBy(listOf(
+        allConsumed = stream.consumeAllBy(
+            listOf(
                 { value -> consumed.add(value) },
                 { _ -> false }
-        ))
+            )
+        )
         assertEquals(listOf(1, 2, 3), consumed)
         assertTrue(allConsumed)
         assertTrue(stream.isConsumed())
 
         // Consume no values
         stream = Consumable.stream(1, 2, 3)
-        stream.consumeAllBy(listOf(
+        stream.consumeAllBy(
+            listOf(
                 { _ -> false },
                 { _ -> false }
-        ))
+            )
+        )
         assertFalse(stream.isConsumed())
     }
 
@@ -359,34 +379,46 @@ class ConsumableTest {
     fun `stream elements can be consumed by multiple consumers`() {
         val stream = Consumable.stream(1, 2, 3)
         val consumed = mutableListOf<Int>()
-        stream.consumeNextBy(listOf(
+        stream.consumeNextBy(
+            listOf(
                 { value -> consumed.add(value) },
                 { value -> consumed.add(value + 1) }
-        ))
+            )
+        )
         assertEquals(listOf(1, 2), consumed)
 
-        stream.consumeNextBy(listOf(
+        stream.consumeNextBy(
+            listOf(
                 { value -> consumed.add(value + 1) },
                 { _ -> false }
-        ))
+            )
+        )
         assertEquals(listOf(1, 2, 3), consumed)
 
-        stream.consumeNextBy(listOf(
+        stream.consumeNextBy(
+            listOf(
                 { _ -> false },
                 { _ -> false }
-        ))
+            )
+        )
         assertFalse(stream.isConsumed())
 
-        stream.consumeNextBy(listOf(
+        stream.consumeNextBy(
+            listOf(
                 { _ -> false },
                 { value -> consumed.add(value + 1) }
-        ))
+            )
+        )
         assertEquals(listOf(1, 2, 3, 4), consumed)
 
         assertTrue(stream.isConsumed())
-        assertFalse(stream.consumeNextBy(listOf(
-                { _ -> true }
-        )))
+        assertFalse(
+            stream.consumeNextBy(
+                listOf(
+                    { _ -> true }
+                )
+            )
+        )
     }
 
     @Test

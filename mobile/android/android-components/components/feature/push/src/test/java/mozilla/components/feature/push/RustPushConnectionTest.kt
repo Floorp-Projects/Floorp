@@ -9,9 +9,9 @@ import kotlinx.coroutines.runBlocking
 import mozilla.appservices.push.DispatchInfo
 import mozilla.appservices.push.KeyInfo
 import mozilla.appservices.push.PushAPI
-import mozilla.components.support.test.any
 import mozilla.appservices.push.SubscriptionInfo
 import mozilla.appservices.push.SubscriptionResponse
+import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.nullable

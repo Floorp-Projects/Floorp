@@ -19,19 +19,19 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD_STATUS
 import mozilla.components.support.test.any
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.verify
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
-import org.junit.Assert.assertTrue
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertEquals
 import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class FetchDownloadManagerTest {

@@ -43,8 +43,10 @@ fun Bitmap.withRoundedCorners(cornerRadiusPx: Float): Bitmap {
         shader = BitmapShader(this@withRoundedCorners, TileMode.CLAMP, TileMode.CLAMP)
     }
 
-    canvas.drawRoundRect(0.0f, 0.0f, width.toFloat(), height.toFloat(),
-            cornerRadiusPx, cornerRadiusPx, paint)
+    canvas.drawRoundRect(
+        0.0f, 0.0f, width.toFloat(), height.toFloat(),
+        cornerRadiusPx, cornerRadiusPx, paint
+    )
     return roundedBitmap
 }
 

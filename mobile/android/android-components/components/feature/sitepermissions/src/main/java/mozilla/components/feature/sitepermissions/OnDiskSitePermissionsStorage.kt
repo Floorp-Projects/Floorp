@@ -14,20 +14,20 @@ import mozilla.components.concept.engine.DataCleanable
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.Engine.BrowsingData.Companion.PERMISSIONS
 import mozilla.components.concept.engine.permission.PermissionRequest
-import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.Status
 import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
+import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.AUTOPLAY_AUDIBLE
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.AUTOPLAY_INAUDIBLE
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.BLUETOOTH
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.CAMERA
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.LOCAL_STORAGE
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.LOCATION
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.MEDIA_KEY_SYSTEM_ACCESS
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.MICROPHONE
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.NOTIFICATION
-import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.AUTOPLAY_AUDIBLE
-import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.AUTOPLAY_INAUDIBLE
-import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.MEDIA_KEY_SYSTEM_ACCESS
 import mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase
 import mozilla.components.feature.sitepermissions.db.toSitePermissionsEntity
 
@@ -67,7 +67,7 @@ class OnDiskSitePermissionsStorage(
             dataCleanable?.clearData(Engine.BrowsingData.select(PERMISSIONS), sitePermissions.origin)
         }
         database.sitePermissionsDao()
-                .update(sitePermissions.toSitePermissionsEntity())
+            .update(sitePermissions.toSitePermissionsEntity())
     }
 
     /**

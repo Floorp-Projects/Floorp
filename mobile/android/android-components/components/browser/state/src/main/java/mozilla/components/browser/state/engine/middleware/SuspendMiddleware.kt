@@ -46,9 +46,11 @@ internal class SuspendMiddleware(
         val tab = context.state.findTab(sessionId) ?: return
 
         // First we unlink (which clearsEngineSession and state)
-        context.dispatch(EngineAction.UnlinkEngineSessionAction(
-            tab.id
-        ))
+        context.dispatch(
+            EngineAction.UnlinkEngineSessionAction(
+                tab.id
+            )
+        )
 
         // Now we can close the unlinked EngineSession (on the main thread).
         scope.launch {

@@ -60,8 +60,9 @@ internal class TabsRemovedMiddleware(
             if (tab.engineState.engineSession != null) {
                 context.dispatch(
                     EngineAction.UnlinkEngineSessionAction(
-                    tab.id
-                ))
+                        tab.id
+                    )
+                )
                 scope.launch {
                     tab.engineState.engineSession?.close()
                 }

@@ -35,7 +35,8 @@ private const val WEBP_QUALITY = 90
  * Caching bitmaps and resource URLs on disk.
  */
 class IconDiskCache :
-    DiskIconLoader.LoaderDiskCache, DiskIconPreparer.PreparerDiskCache,
+    DiskIconLoader.LoaderDiskCache,
+    DiskIconPreparer.PreparerDiskCache,
     DiskIconProcessor.ProcessorDiskCache {
     private val logger = Logger("Icons/IconDiskCache")
     @VisibleForTesting

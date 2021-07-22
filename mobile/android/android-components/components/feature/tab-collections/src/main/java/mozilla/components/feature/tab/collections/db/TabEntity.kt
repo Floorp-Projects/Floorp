@@ -22,7 +22,8 @@ import java.io.File
             entity = TabCollectionEntity::class,
             parentColumns = ["id"],
             childColumns = ["tab_collection_id"],
-            onDelete = ForeignKey.CASCADE)
+            onDelete = ForeignKey.CASCADE
+        )
     ],
     indices = [
         Index(value = ["tab_collection_id"])

@@ -23,15 +23,17 @@ class ActionTest {
 
     @Test
     fun `override using non-null attributes`() {
-        val overridden = baseAction.copyWithOverride(Action(
-            title = "other",
-            enabled = null,
-            loadIcon = null,
-            badgeText = null,
-            badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = null,
-            onClick = onClick
-        ))
+        val overridden = baseAction.copyWithOverride(
+            Action(
+                title = "other",
+                enabled = null,
+                loadIcon = null,
+                badgeText = null,
+                badgeTextColor = Color.WHITE,
+                badgeBackgroundColor = null,
+                onClick = onClick
+            )
+        )
 
         assertEquals(
             Action(

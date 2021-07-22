@@ -457,9 +457,12 @@ class AddonManagerTest {
 
         var installedAddon: Addon? = null
         val manager = AddonManager(mock(), engine, mock(), mock())
-        manager.installAddon(addon, onSuccess = {
-            installedAddon = it
-        })
+        manager.installAddon(
+            addon,
+            onSuccess = {
+                installedAddon = it
+            }
+        )
 
         verify(engine).installWebExtension(
             eq("ext1"), any(), onSuccessCaptor.capture(), any()
@@ -482,10 +485,13 @@ class AddonManagerTest {
         var throwable: Throwable? = null
         var msg: String? = null
         val manager = AddonManager(mock(), engine, mock(), mock())
-        manager.installAddon(addon, onError = { errorMsg, caught ->
-            throwable = caught
-            msg = errorMsg
-        })
+        manager.installAddon(
+            addon,
+            onError = { errorMsg, caught ->
+                throwable = caught
+                msg = errorMsg
+            }
+        )
 
         verify(engine).installWebExtension(
             eq("ext1"), any(), any(), onErrorCaptor.capture()
@@ -509,10 +515,13 @@ class AddonManagerTest {
         var throwable: Throwable? = null
         var msg: String? = null
         val manager = AddonManager(mock(), engine, mock(), mock())
-        manager.installAddon(addon, onError = { errorMsg, caught ->
-            throwable = caught
-            msg = errorMsg
-        })
+        manager.installAddon(
+            addon,
+            onError = { errorMsg, caught ->
+                throwable = caught
+                msg = errorMsg
+            }
+        )
 
         verify(engine, never()).installWebExtension(
             any(), any(), any(), any()
@@ -539,9 +548,12 @@ class AddonManagerTest {
 
         var successCallbackInvoked = false
         val manager = AddonManager(mock(), engine, mock(), mock())
-        manager.uninstallAddon(installedAddon, onSuccess = {
-            successCallbackInvoked = true
-        })
+        manager.uninstallAddon(
+            installedAddon,
+            onSuccess = {
+                successCallbackInvoked = true
+            }
+        )
         verify(engine).uninstallWebExtension(eq(extension), onSuccessCaptor.capture(), any())
 
         onSuccessCaptor.value.invoke()
@@ -602,9 +614,12 @@ class AddonManagerTest {
 
         var enabledAddon: Addon? = null
         val manager = AddonManager(mock(), engine, mock(), mock())
-        manager.enableAddon(addon, onSuccess = {
-            enabledAddon = it
-        })
+        manager.enableAddon(
+            addon,
+            onSuccess = {
+                enabledAddon = it
+            }
+        )
 
         verify(engine).enableWebExtension(eq(extension), any(), onSuccessCaptor.capture(), any())
         onSuccessCaptor.value.invoke(extension)
@@ -663,9 +678,12 @@ class AddonManagerTest {
 
         var disabledAddon: Addon? = null
         val manager = AddonManager(mock(), engine, mock(), mock())
-        manager.disableAddon(addon, source = EnableSource.APP_SUPPORT, onSuccess = {
-            disabledAddon = it
-        })
+        manager.disableAddon(
+            addon, source = EnableSource.APP_SUPPORT,
+            onSuccess = {
+                disabledAddon = it
+            }
+        )
 
         verify(engine).disableWebExtension(eq(extension), eq(EnableSource.APP_SUPPORT), onSuccessCaptor.capture(), any())
         onSuccessCaptor.value.invoke(extension)

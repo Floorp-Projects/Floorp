@@ -57,7 +57,7 @@ sealed class GeckoPermissionRequest constructor(
         internal val geckoPermission: PermissionDelegate.ContentPermission,
         internal val geckoResult: GeckoResult<Int>
     ) : GeckoPermissionRequest(
-            listOf(permissionsMap.getOrElse(type) { Permission.Generic("$type", "Gecko permission type = $type") })
+        listOf(permissionsMap.getOrElse(type) { Permission.Generic("$type", "Gecko permission type = $type") })
     ) {
         companion object {
             val permissionsMap = mapOf(
@@ -100,8 +100,8 @@ sealed class GeckoPermissionRequest constructor(
         private val nativePermissions: List<String>,
         private val callback: PermissionDelegate.Callback
     ) : GeckoPermissionRequest(
-            nativePermissions.map { permissionsMap.getOrElse(it) { Permission.Generic(it) } },
-            callback
+        nativePermissions.map { permissionsMap.getOrElse(it) { Permission.Generic(it) } },
+        callback
     ) {
         override val uri: String? = null
 
@@ -131,7 +131,7 @@ sealed class GeckoPermissionRequest constructor(
         private val audioSources: List<MediaSource>,
         private val callback: PermissionDelegate.MediaCallback
     ) : GeckoPermissionRequest(
-            videoSources.map { mapPermission(it) } + audioSources.map { mapPermission(it) }
+        videoSources.map { mapPermission(it) } + audioSources.map { mapPermission(it) }
     ) {
         override fun grant(permissions: List<Permission>) {
             val videos = permissions.mapNotNull { permission -> videoSources.find { it.id == permission.id } }

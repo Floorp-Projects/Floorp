@@ -68,7 +68,8 @@ class WebExtensionToolbarFeatureTest {
                             "https://www.example.org", id = "tab1",
                             extensions = overriddenExtensions
                         )
-                    ), selectedTabId = "tab1",
+                    ),
+                    selectedTabId = "tab1",
                     extensions = extensions
                 )
             )
@@ -356,14 +357,14 @@ class WebExtensionToolbarFeatureTest {
 
         val browserExtensions = HashMap<String, WebExtensionState>()
         browserExtensions["1"] =
-                WebExtensionState(id = "1", name = "extensionA", browserAction = actionExt1)
+            WebExtensionState(id = "1", name = "extensionA", browserAction = actionExt1)
         val browserState = BrowserState(extensions = browserExtensions)
         webExtToolbarFeature.renderWebExtensionActions(browserState, tabSessionState)
         verify(toolbar, never()).addBrowserAction(browserActionCaptor.capture())
 
         val browserExtensionsAllowedInPrivateBrowsing = HashMap<String, WebExtensionState>()
         browserExtensionsAllowedInPrivateBrowsing["1"] =
-                WebExtensionState(id = "1", allowedInPrivateBrowsing = true, name = "extensionA", browserAction = actionExt1)
+            WebExtensionState(id = "1", allowedInPrivateBrowsing = true, name = "extensionA", browserAction = actionExt1)
         val browserStateAllowedInPrivateBrowsing = BrowserState(extensions = browserExtensionsAllowedInPrivateBrowsing)
         webExtToolbarFeature.renderWebExtensionActions(browserStateAllowedInPrivateBrowsing, tabSessionState)
         verify(toolbar, times(1)).addBrowserAction(browserActionCaptor.capture())

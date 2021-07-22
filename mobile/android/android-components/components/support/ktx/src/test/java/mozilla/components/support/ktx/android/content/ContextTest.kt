@@ -78,13 +78,15 @@ class ContextTest {
 
         assertEquals(
             testContext.isPermissionGranted(WRITE_EXTERNAL_STORAGE),
-            testContext.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED)
+            testContext.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED
+        )
 
         application.grantPermissions(WRITE_EXTERNAL_STORAGE)
 
         assertEquals(
             testContext.isPermissionGranted(WRITE_EXTERNAL_STORAGE),
-            testContext.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED)
+            testContext.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED
+        )
     }
 
     @Test

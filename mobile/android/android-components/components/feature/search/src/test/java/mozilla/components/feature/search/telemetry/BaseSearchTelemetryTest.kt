@@ -48,11 +48,11 @@ class BaseSearchTelemetryTest {
         baseTelemetry.installWebExtension(engine, store, extensionInfo)
 
         verify(engine).installWebExtension(
-                id = eq(id),
-                url = eq(resourceUrl),
-                onSuccess = any(),
-                onError = any()
-            )
+            id = eq(id),
+            url = eq(resourceUrl),
+            onSuccess = any(),
+            onError = any()
+        )
     }
 
     @Test

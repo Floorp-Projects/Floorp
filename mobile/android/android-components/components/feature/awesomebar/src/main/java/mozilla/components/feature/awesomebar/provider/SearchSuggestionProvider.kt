@@ -184,21 +184,23 @@ class SearchSuggestionProvider private constructor(
         }
 
         list.distinct().take(limit).forEachIndexed { index, item ->
-            suggestions.add(AwesomeBar.Suggestion(
-                provider = this,
-                // We always use the same ID for the entered text so that this suggestion gets replaced "in place".
-                id = if (item == text) ID_OF_ENTERED_TEXT else item,
-                title = item,
-                description = description,
-                // Don't show an autocomplete arrow for the entered text
-                editSuggestion = if (item == text) null else item,
-                icon = icon ?: client.searchEngine?.icon,
-                score = Int.MAX_VALUE - (index + 1),
-                onSuggestionClicked = {
-                    searchUseCase.invoke(item)
-                    emitSearchSuggestionClickedFact()
-                }
-            ))
+            suggestions.add(
+                AwesomeBar.Suggestion(
+                    provider = this,
+                    // We always use the same ID for the entered text so that this suggestion gets replaced "in place".
+                    id = if (item == text) ID_OF_ENTERED_TEXT else item,
+                    title = item,
+                    description = description,
+                    // Don't show an autocomplete arrow for the entered text
+                    editSuggestion = if (item == text) null else item,
+                    icon = icon ?: client.searchEngine?.icon,
+                    score = Int.MAX_VALUE - (index + 1),
+                    onSuggestionClicked = {
+                        searchUseCase.invoke(item)
+                        emitSearchSuggestionClickedFact()
+                    }
+                )
+            )
         }
 
         return suggestions
@@ -219,18 +221,20 @@ class SearchSuggestionProvider private constructor(
             }
         }
 
-        return listOf(AwesomeBar.Suggestion(
-            provider = this,
-            id = text,
-            title = client.searchEngine?.name,
-            chips = chips,
-            score = Int.MAX_VALUE,
-            icon = icon ?: client.searchEngine?.icon,
-            onChipClicked = { chip ->
-                searchUseCase.invoke(chip.title)
-                emitSearchSuggestionClickedFact()
-            }
-        ))
+        return listOf(
+            AwesomeBar.Suggestion(
+                provider = this,
+                id = text,
+                title = client.searchEngine?.name,
+                chips = chips,
+                score = Int.MAX_VALUE,
+                icon = icon ?: client.searchEngine?.icon,
+                onChipClicked = { chip ->
+                    searchUseCase.invoke(chip.title)
+                    emitSearchSuggestionClickedFact()
+                }
+            )
+        )
     }
 
     override val shouldClearSuggestions: Boolean
@@ -251,10 +255,10 @@ class SearchSuggestionProvider private constructor(
         private fun fetch(fetchClient: Client, url: String, private: Boolean): String? {
             try {
                 val request = Request(
-                        url = url.sanitizeURL(),
-                        readTimeout = Pair(READ_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS),
-                        connectTimeout = Pair(CONNECT_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS),
-                        private = private
+                    url = url.sanitizeURL(),
+                    readTimeout = Pair(READ_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS),
+                    connectTimeout = Pair(CONNECT_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS),
+                    private = private
                 )
 
                 val response = fetchClient.fetch(request)

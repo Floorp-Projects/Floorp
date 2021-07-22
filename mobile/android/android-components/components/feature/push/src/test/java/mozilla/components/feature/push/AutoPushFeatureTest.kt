@@ -13,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.appservices.push.GeneralError
 import mozilla.appservices.push.MissingRegistrationTokenError
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushService
@@ -20,7 +21,6 @@ import mozilla.components.feature.push.AutoPushFeature.Companion.LAST_VERIFIED
 import mozilla.components.feature.push.AutoPushFeature.Companion.PERIODIC_INTERVAL_MILLISECONDS
 import mozilla.components.feature.push.AutoPushFeature.Companion.PREFERENCE_NAME
 import mozilla.components.feature.push.AutoPushFeature.Companion.PREF_TOKEN
-import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.nullable
@@ -196,7 +196,8 @@ class AutoPushFeatureTest {
             scope = "testScope",
             onSubscribeError = {
                 errorInvoked = true
-            }, onSubscribe = {
+            },
+            onSubscribe = {
                 invoked = true
             }
         )
@@ -212,7 +213,8 @@ class AutoPushFeatureTest {
             scope = "testScope",
             onSubscribeError = {
                 errorInvoked = true
-            }, onSubscribe = {
+            },
+            onSubscribe = {
                 invoked = true
             }
         )
@@ -452,13 +454,13 @@ class AutoPushFeatureTest {
         val native: PushConnection = TestPushConnection(true)
         val crashReporter: CrashReporting = mock()
         val feature = AutoPushFeature(
-                context = testContext,
-                service = mock(),
-                config = mock(),
-                coroutineContext = coroutineContext,
-                connection = native,
-                crashReporter = crashReporter
-            )
+            context = testContext,
+            service = mock(),
+            config = mock(),
+            coroutineContext = coroutineContext,
+            connection = native,
+            crashReporter = crashReporter
+        )
 
         feature.onError(PushError.Rust(PushError.MalformedMessage("Bad things happened!")))
 

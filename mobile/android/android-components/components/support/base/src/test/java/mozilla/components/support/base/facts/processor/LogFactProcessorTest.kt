@@ -21,7 +21,8 @@ class LogFactProcessorTest {
         val fact = Fact(
             Component.SUPPORT_TEST,
             Action.CLICK,
-            "test")
+            "test"
+        )
 
         processor.process(fact)
 

@@ -19,8 +19,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.showInformationDialog
-import mozilla.components.feature.addons.ui.translateName
 import mozilla.components.feature.addons.ui.translateDescription
+import mozilla.components.feature.addons.ui.translateName
 import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import org.mozilla.samples.browser.R
 import java.text.DateFormat

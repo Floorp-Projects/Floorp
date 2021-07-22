@@ -13,6 +13,8 @@ import org.json.JSONObject
  * @param fileName The name of the asset to open.  This name can be
  *                 hierarchical.
  */
-fun AssetManager.readJSONObject(fileName: String) = JSONObject(open(fileName).bufferedReader().use {
-    it.readText()
-})
+fun AssetManager.readJSONObject(fileName: String) = JSONObject(
+    open(fileName).bufferedReader().use {
+        it.readText()
+    }
+)

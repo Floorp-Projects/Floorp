@@ -84,7 +84,8 @@ internal class SearchEngineReader(
         val name = parser.name
         if ("SearchPlugin" != name && "OpenSearchDescription" != name) {
             throw XmlPullParserException(
-                    "Expected <SearchPlugin> or <OpenSearchDescription> as root tag: ${parser.positionDescription}")
+                "Expected <SearchPlugin> or <OpenSearchDescription> as root tag: ${parser.positionDescription}"
+            )
         }
 
         while (parser.next() != XmlPullParser.END_TAG) {

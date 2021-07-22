@@ -15,12 +15,12 @@ import mozilla.appservices.places.InternalPanic
 import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.Storage
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
-import mozilla.components.concept.base.crash.CrashReporting
-import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.utils.logElapsedTime
 import java.util.concurrent.Executors
 
@@ -32,9 +32,11 @@ abstract class PlacesStorage(
     val crashReporter: CrashReporting? = null
 ) : Storage, SyncableStore {
     internal val writeScope by lazy {
-        CoroutineScope(Executors.newSingleThreadExecutor(
-            NamedThreadFactory("PlacesStorageWriteScope")
-        ).asCoroutineDispatcher())
+        CoroutineScope(
+            Executors.newSingleThreadExecutor(
+                NamedThreadFactory("PlacesStorageWriteScope")
+            ).asCoroutineDispatcher()
+        )
     }
     internal val readScope by lazy { CoroutineScope(Dispatchers.IO) }
     private val storageDir by lazy { context.filesDir }
@@ -100,7 +102,7 @@ abstract class PlacesStorage(
             logger.debug("Successfully synced.")
             SyncStatus.Ok
 
-        // Order of these catches matters: InternalPanic extends PlacesException.
+            // Order of these catches matters: InternalPanic extends PlacesException.
         } catch (e: InternalPanic) {
             logger.error("Places panic while syncing", e)
             throw e

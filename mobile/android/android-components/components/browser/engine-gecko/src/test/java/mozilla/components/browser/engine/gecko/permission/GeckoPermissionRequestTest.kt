@@ -84,18 +84,19 @@ class GeckoPermissionRequestTest {
     fun `create app permission request`() {
         val callback: GeckoSession.PermissionDelegate.Callback = mock()
         val permissions = listOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.CAMERA,
-                Manifest.permission.RECORD_AUDIO,
-                "unknown app permission")
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO,
+            "unknown app permission"
+        )
 
         val mappedPermissions = listOf(
-                Permission.AppLocationCoarse(Manifest.permission.ACCESS_COARSE_LOCATION),
-                Permission.AppLocationFine(Manifest.permission.ACCESS_FINE_LOCATION),
-                Permission.AppCamera(Manifest.permission.CAMERA),
-                Permission.AppAudio(Manifest.permission.RECORD_AUDIO),
-                Permission.Generic("unknown app permission")
+            Permission.AppLocationCoarse(Manifest.permission.ACCESS_COARSE_LOCATION),
+            Permission.AppLocationFine(Manifest.permission.ACCESS_FINE_LOCATION),
+            Permission.AppCamera(Manifest.permission.CAMERA),
+            Permission.AppAudio(Manifest.permission.RECORD_AUDIO),
+            Permission.Generic("unknown app permission")
         )
 
         val request = GeckoPermissionRequest.App(permissions, callback)
@@ -125,30 +126,42 @@ class GeckoPermissionRequestTest {
         val callback: GeckoSession.PermissionDelegate.MediaCallback = mock()
         val uri = "https://mozilla.org"
 
-        val audioMicrophone = MockMediaSource("audioMicrophone", "audioMicrophone",
-                MediaSource.SOURCE_MICROPHONE, MediaSource.TYPE_AUDIO)
-        val audioCapture = MockMediaSource("audioCapture", "audioCapture",
-                MediaSource.SOURCE_AUDIOCAPTURE, MediaSource.TYPE_AUDIO)
-        val audioOther = MockMediaSource("audioOther", "audioOther",
-                MediaSource.SOURCE_OTHER, MediaSource.TYPE_AUDIO)
+        val audioMicrophone = MockMediaSource(
+            "audioMicrophone", "audioMicrophone",
+            MediaSource.SOURCE_MICROPHONE, MediaSource.TYPE_AUDIO
+        )
+        val audioCapture = MockMediaSource(
+            "audioCapture", "audioCapture",
+            MediaSource.SOURCE_AUDIOCAPTURE, MediaSource.TYPE_AUDIO
+        )
+        val audioOther = MockMediaSource(
+            "audioOther", "audioOther",
+            MediaSource.SOURCE_OTHER, MediaSource.TYPE_AUDIO
+        )
 
-        val videoCamera = MockMediaSource("videoCamera", "videoCamera",
-                MediaSource.SOURCE_CAMERA, MediaSource.TYPE_VIDEO)
-        val videoScreen = MockMediaSource("videoScreen", "videoScreen",
-                MediaSource.SOURCE_SCREEN, MediaSource.TYPE_VIDEO)
-        val videoOther = MockMediaSource("videoOther", "videoOther",
-                MediaSource.SOURCE_OTHER, MediaSource.TYPE_VIDEO)
+        val videoCamera = MockMediaSource(
+            "videoCamera", "videoCamera",
+            MediaSource.SOURCE_CAMERA, MediaSource.TYPE_VIDEO
+        )
+        val videoScreen = MockMediaSource(
+            "videoScreen", "videoScreen",
+            MediaSource.SOURCE_SCREEN, MediaSource.TYPE_VIDEO
+        )
+        val videoOther = MockMediaSource(
+            "videoOther", "videoOther",
+            MediaSource.SOURCE_OTHER, MediaSource.TYPE_VIDEO
+        )
 
         val audioSources = listOf(audioCapture, audioMicrophone, audioOther)
         val videoSources = listOf(videoCamera, videoOther, videoScreen)
 
         val mappedPermissions = listOf(
-                Permission.ContentVideoCamera("videoCamera", "videoCamera"),
-                Permission.ContentVideoScreen("videoScreen", "videoScreen"),
-                Permission.ContentVideoOther("videoOther", "videoOther"),
-                Permission.ContentAudioMicrophone("audioMicrophone", "audioMicrophone"),
-                Permission.ContentAudioCapture("audioCapture", "audioCapture"),
-                Permission.ContentAudioOther("audioOther", "audioOther")
+            Permission.ContentVideoCamera("videoCamera", "videoCamera"),
+            Permission.ContentVideoScreen("videoScreen", "videoScreen"),
+            Permission.ContentVideoOther("videoOther", "videoOther"),
+            Permission.ContentAudioMicrophone("audioMicrophone", "audioMicrophone"),
+            Permission.ContentAudioCapture("audioCapture", "audioCapture"),
+            Permission.ContentAudioOther("audioOther", "audioOther")
         )
 
         val request = GeckoPermissionRequest.Media(uri, videoSources, audioSources, callback)
@@ -162,10 +175,14 @@ class GeckoPermissionRequestTest {
         val callback: GeckoSession.PermissionDelegate.MediaCallback = mock()
         val uri = "https://mozilla.org"
 
-        val audioMicrophone = MockMediaSource("audioMicrophone", "audioMicrophone",
-                MediaSource.SOURCE_MICROPHONE, MediaSource.TYPE_AUDIO)
-        val videoCamera = MockMediaSource("videoCamera", "videoCamera",
-                MediaSource.SOURCE_CAMERA, MediaSource.TYPE_VIDEO)
+        val audioMicrophone = MockMediaSource(
+            "audioMicrophone", "audioMicrophone",
+            MediaSource.SOURCE_MICROPHONE, MediaSource.TYPE_AUDIO
+        )
+        val videoCamera = MockMediaSource(
+            "videoCamera", "videoCamera",
+            MediaSource.SOURCE_CAMERA, MediaSource.TYPE_VIDEO
+        )
 
         val audioSources = listOf(audioMicrophone)
         val videoSources = listOf(videoCamera)
@@ -180,10 +197,14 @@ class GeckoPermissionRequestTest {
         val callback: GeckoSession.PermissionDelegate.MediaCallback = mock()
         val uri = "https://mozilla.org"
 
-        val audioMicrophone = MockMediaSource("audioMicrophone", "audioMicrophone",
-                MediaSource.SOURCE_MICROPHONE, MediaSource.TYPE_AUDIO)
-        val videoCamera = MockMediaSource("videoCamera", "videoCamera",
-                MediaSource.SOURCE_CAMERA, MediaSource.TYPE_VIDEO)
+        val audioMicrophone = MockMediaSource(
+            "audioMicrophone", "audioMicrophone",
+            MediaSource.SOURCE_MICROPHONE, MediaSource.TYPE_AUDIO
+        )
+        val videoCamera = MockMediaSource(
+            "videoCamera", "videoCamera",
+            MediaSource.SOURCE_CAMERA, MediaSource.TYPE_VIDEO
+        )
 
         val audioSources = listOf(audioMicrophone)
         val videoSources = listOf(videoCamera)

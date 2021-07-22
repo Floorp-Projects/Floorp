@@ -216,9 +216,12 @@ class ReaderViewFeature(
 
     private fun ensureExtensionInstalled() {
         val feature = WeakReference(this)
-        extensionController.install(engine, onSuccess = {
-            feature.get()?.connectReaderViewContentScript()
-        })
+        extensionController.install(
+            engine,
+            onSuccess = {
+                feature.get()?.connectReaderViewContentScript()
+            }
+        )
     }
 
     /**

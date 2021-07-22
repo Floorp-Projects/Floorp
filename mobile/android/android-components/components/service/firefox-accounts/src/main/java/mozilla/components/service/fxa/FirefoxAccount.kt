@@ -10,14 +10,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
-import mozilla.appservices.fxaclient.PersistedFirefoxAccount as InternalFxAcct
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.AuthFlowUrl
-import mozilla.components.concept.sync.MigratingAccountInfo
 import mozilla.components.concept.sync.DeviceConstellation
+import mozilla.components.concept.sync.MigratingAccountInfo
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.StatePersistenceCallback
-import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.appservices.fxaclient.PersistedFirefoxAccount as InternalFxAcct
 
 typealias PersistCallback = mozilla.appservices.fxaclient.PersistedFirefoxAccount.PersistCallback
 

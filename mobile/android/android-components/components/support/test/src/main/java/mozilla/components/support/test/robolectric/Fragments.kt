@@ -19,14 +19,14 @@ import org.robolectric.Robolectric
  */
 inline fun <T : Fragment> createAddedTestFragment(fragmentTag: String = "test", fragmentFactory: () -> T): T {
     val activity = Robolectric.buildActivity(FragmentActivity::class.java)
-            .create()
-            .start()
-            .resume()
-            .get()
+        .create()
+        .start()
+        .resume()
+        .get()
 
     return fragmentFactory().also {
         activity.supportFragmentManager.beginTransaction()
-                .add(it, fragmentTag)
-                .commitNow()
+            .add(it, fragmentTag)
+            .commitNow()
     }
 }

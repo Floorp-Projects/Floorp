@@ -19,6 +19,6 @@ fun BrowserState.toTabs(
         .filter(tabsFilter)
         .map { it.toTab() },
     selectedIndex = tabs
-            .filter(tabsFilter)
-            .indexOfFirst { it.id == selectedTabId }
+        .filter(tabsFilter)
+        .indexOfFirst { it.id == selectedTabId }
 )

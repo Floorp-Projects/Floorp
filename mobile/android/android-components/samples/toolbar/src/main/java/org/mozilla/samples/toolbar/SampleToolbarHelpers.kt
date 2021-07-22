@@ -116,14 +116,16 @@ class UrlBoxProgressView(
     private var backgroundDrawable = ClipDrawable(
         ResourcesCompat.getDrawable(resources, R.drawable.sample_url_background, context.theme),
         Gravity.END,
-        ClipDrawable.HORIZONTAL).apply {
+        ClipDrawable.HORIZONTAL
+    ).apply {
         level = MAX_LEVEL
     }
 
     private var progressDrawable = ClipDrawable(
         ResourcesCompat.getDrawable(resources, R.drawable.sample_url_progress, context.theme),
         Gravity.START,
-        ClipDrawable.HORIZONTAL).apply {
+        ClipDrawable.HORIZONTAL
+    ).apply {
         level = 0
     }
 

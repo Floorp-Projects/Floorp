@@ -9,9 +9,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.browser.state.state.CustomTabSessionState
-import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.any

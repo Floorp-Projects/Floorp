@@ -9,9 +9,9 @@ import android.graphics.Bitmap
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import com.jakewharton.disklrucache.DiskLruCache
-import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.concept.base.images.ImageSaveRequest
+import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 import java.io.IOException
 

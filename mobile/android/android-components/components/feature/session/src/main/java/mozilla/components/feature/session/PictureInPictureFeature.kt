@@ -35,7 +35,7 @@ class PictureInPictureFeature(
     internal val logger = Logger("PictureInPictureFeature")
 
     private val hasSystemFeature = SDK_INT >= Build.VERSION_CODES.N &&
-            activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+        activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
 
     fun onHomePressed(): Boolean {
         if (!hasSystemFeature) {

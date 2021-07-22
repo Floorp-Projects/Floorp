@@ -25,54 +25,78 @@ class FennecSessionMigrationTest {
         val snapshot = (result as Result.Success).value
 
         assertEquals(6, snapshot.tabs.size)
-            assertEquals(snapshot.tabs[5].id, snapshot.selectedTabId)
+        assertEquals(snapshot.tabs[5].id, snapshot.selectedTabId)
 
         snapshot.tabs[0].also {
-            assertEquals("https://en.m.wikipedia.org/wiki/James_Park_Woods",
-                it.url)
+            assertEquals(
+                "https://en.m.wikipedia.org/wiki/James_Park_Woods",
+                it.url
+            )
 
-            assertEquals("James Park Woods - Wikipedia",
-                it.title)
+            assertEquals(
+                "James Park Woods - Wikipedia",
+                it.title
+            )
         }
 
         snapshot.tabs[1].also {
-            assertEquals("https://m.youtube.com/watch?v=fBbKagy1dD8",
-                it.url)
+            assertEquals(
+                "https://m.youtube.com/watch?v=fBbKagy1dD8",
+                it.url
+            )
 
-            assertEquals("35 DIY IDEAS YOU NEED IN YOUR LIFE RIGHT NOW - YouTube",
-                it.title)
+            assertEquals(
+                "35 DIY IDEAS YOU NEED IN YOUR LIFE RIGHT NOW - YouTube",
+                it.title
+            )
         }
 
         snapshot.tabs[2].also {
-            assertEquals("about:addons",
-                it.url)
+            assertEquals(
+                "about:addons",
+                it.url
+            )
 
-            assertEquals("Add-ons",
-                it.title)
+            assertEquals(
+                "Add-ons",
+                it.title
+            )
         }
 
         snapshot.tabs[3].also {
-            assertEquals("about:firefox",
-                it.url)
+            assertEquals(
+                "about:firefox",
+                it.url
+            )
 
-            assertEquals("About Fennec",
-                it.title)
+            assertEquals(
+                "About Fennec",
+                it.title
+            )
         }
 
         snapshot.tabs[4].also {
-            assertEquals("https://www.theverge.com/2019/9/18/20871860/huawei-mate-30-photos-videos-leak-watch-gt-2-fitness-band-tv-android-tablet-harmony-os",
-                it.url)
+            assertEquals(
+                "https://www.theverge.com/2019/9/18/20871860/huawei-mate-30-photos-videos-leak-watch-gt-2-fitness-band-tv-android-tablet-harmony-os",
+                it.url
+            )
 
-            assertEquals("Huawei’s Thursday event lineup apparently leaks in full",
-                it.title)
+            assertEquals(
+                "Huawei’s Thursday event lineup apparently leaks in full",
+                it.title
+            )
         }
 
         snapshot.tabs[5].also {
-            assertEquals("https://www.microsoft.com/de-de/p/surface-pro-6/8ZCNC665SLQ5?activetab=pivot%3aoverviewtab",
-                it.url)
+            assertEquals(
+                "https://www.microsoft.com/de-de/p/surface-pro-6/8ZCNC665SLQ5?activetab=pivot%3aoverviewtab",
+                it.url
+            )
 
-            assertEquals("Entdecken Sie das Surface Pro 6 – Ultraleicht und vielseitig – Microsoft Surface",
-                it.title)
+            assertEquals(
+                "Entdecken Sie das Surface Pro 6 – Ultraleicht und vielseitig – Microsoft Surface",
+                it.title
+            )
         }
     }
 
@@ -101,11 +125,15 @@ class FennecSessionMigrationTest {
         assertEquals(snapshot.tabs[0].id, snapshot.selectedTabId)
 
         snapshot.tabs[0].also {
-            assertEquals("https://en.m.wikipedia.org/wiki/Main_Page",
-                it.url)
+            assertEquals(
+                "https://en.m.wikipedia.org/wiki/Main_Page",
+                it.url
+            )
 
-            assertEquals("Wikipedia, the free encyclopedia",
-                it.title)
+            assertEquals(
+                "Wikipedia, the free encyclopedia",
+                it.title
+            )
         }
     }
 
@@ -131,19 +159,27 @@ class FennecSessionMigrationTest {
         assertEquals(snapshot.tabs[1].id, snapshot.selectedTabId)
 
         snapshot.tabs[0].also {
-            assertEquals("https://en.m.wikipedia.org/wiki/Climbing",
-                it.url)
+            assertEquals(
+                "https://en.m.wikipedia.org/wiki/Climbing",
+                it.url
+            )
 
-            assertEquals("Climbing - Wikipedia",
-                it.title)
+            assertEquals(
+                "Climbing - Wikipedia",
+                it.title
+            )
         }
 
         snapshot.tabs[1].also {
-            assertEquals("https://www.mozilla.org/en-US/firefox/accounts/",
-                it.url)
+            assertEquals(
+                "https://www.mozilla.org/en-US/firefox/accounts/",
+                it.url
+            )
 
-            assertEquals("There is a way to protect your privacy. Join Firefox.",
-                it.title)
+            assertEquals(
+                "There is a way to protect your privacy. Join Firefox.",
+                it.title
+            )
         }
     }
 
@@ -177,19 +213,27 @@ class FennecSessionMigrationTest {
         assertEquals(snapshot.tabs[1].id, snapshot.selectedTabId)
 
         snapshot.tabs[0].also {
-            assertEquals("https://www.spiegel.de/",
-                it.url)
+            assertEquals(
+                "https://www.spiegel.de/",
+                it.url
+            )
 
-            assertEquals("DER SPIEGEL | Online-Nachrichten",
-                it.title)
+            assertEquals(
+                "DER SPIEGEL | Online-Nachrichten",
+                it.title
+            )
         }
 
         snapshot.tabs[1].also {
-            assertEquals("https://www.spiegel.de/politik/deutschland/fdp-parteivorstand-spricht-lindner-nach-kemmerich-wahl-vertrauen-aus-a-47e0a21c-7617-4549-b6dc-716c0363cbc2",
-                it.url)
+            assertEquals(
+                "https://www.spiegel.de/politik/deutschland/fdp-parteivorstand-spricht-lindner-nach-kemmerich-wahl-vertrauen-aus-a-47e0a21c-7617-4549-b6dc-716c0363cbc2",
+                it.url
+            )
 
-            assertEquals("FDP-Parteivorstand spricht Lindner Vertrauen aus - DER SPIEGEL - Politik",
-                it.title)
+            assertEquals(
+                "FDP-Parteivorstand spricht Lindner Vertrauen aus - DER SPIEGEL - Politik",
+                it.title
+            )
         }
     }
 
@@ -222,11 +266,15 @@ class FennecSessionMigrationTest {
         assertEquals(snapshot.tabs[0].id, snapshot.selectedTabId)
 
         snapshot.tabs[0].also {
-            assertEquals("https://www.mozilla.org/",
-                it.url)
+            assertEquals(
+                "https://www.mozilla.org/",
+                it.url
+            )
 
-            assertEquals("https://www.mozilla.org/",
-                it.title)
+            assertEquals(
+                "https://www.mozilla.org/",
+                it.title
+            )
         }
     }
 }

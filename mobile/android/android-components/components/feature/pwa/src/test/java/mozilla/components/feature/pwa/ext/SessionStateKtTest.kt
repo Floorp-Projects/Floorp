@@ -52,12 +52,14 @@ class SessionStateKtTest {
 
         val onlyBadgeIconSession = createTestSession(
             secure = true,
-            manifest = demoManifest.copy(icons = listOf(
-                demoIcon.copy(
-                    sizes = listOf(Size(512, 512)),
-                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+            manifest = demoManifest.copy(
+                icons = listOf(
+                    demoIcon.copy(
+                        sizes = listOf(Size(512, 512)),
+                        purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+                    )
                 )
-            ))
+            )
         )
         assertNull(onlyBadgeIconSession.installableManifest())
     }
@@ -66,66 +68,82 @@ class SessionStateKtTest {
     fun `web app must have 192x192 icons to be installable`() {
         val smallIconSession = createTestSession(
             secure = true,
-            manifest = demoManifest.copy(icons = listOf(
-                demoIcon.copy(sizes = listOf(Size(32, 32)))
-            ))
+            manifest = demoManifest.copy(
+                icons = listOf(
+                    demoIcon.copy(sizes = listOf(Size(32, 32)))
+                )
+            )
         )
         assertNull(smallIconSession.installableManifest())
 
         val weirdSizeSession = createTestSession(
             secure = true,
-            manifest = demoManifest.copy(icons = listOf(
-                demoIcon.copy(sizes = listOf(Size(50, 200)))
-            ))
+            manifest = demoManifest.copy(
+                icons = listOf(
+                    demoIcon.copy(sizes = listOf(Size(50, 200)))
+                )
+            )
         )
         assertNull(weirdSizeSession.installableManifest())
 
         val largeIconSession = createTestSession(
             secure = true,
-            manifest = demoManifest.copy(icons = listOf(
-                demoIcon.copy(sizes = listOf(Size(192, 192)))
-            ))
+            manifest = demoManifest.copy(
+                icons = listOf(
+                    demoIcon.copy(sizes = listOf(Size(192, 192)))
+                )
+            )
         )
         assertEquals(
-            demoManifest.copy(icons = listOf(
-                demoIcon.copy(sizes = listOf(Size(192, 192)))
-            )),
+            demoManifest.copy(
+                icons = listOf(
+                    demoIcon.copy(sizes = listOf(Size(192, 192)))
+                )
+            ),
             largeIconSession.installableManifest()
         )
 
         val multiSizeIconSession = createTestSession(
             secure = true,
-            manifest = demoManifest.copy(icons = listOf(
-                demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512)))
-            ))
+            manifest = demoManifest.copy(
+                icons = listOf(
+                    demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512)))
+                )
+            )
         )
         assertEquals(
-            demoManifest.copy(icons = listOf(
-                demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512)))
-            )),
+            demoManifest.copy(
+                icons = listOf(
+                    demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512)))
+                )
+            ),
             multiSizeIconSession.installableManifest()
         )
 
         val multiIconSession = createTestSession(
             secure = true,
-            manifest = demoManifest.copy(icons = listOf(
-                demoIcon.copy(sizes = listOf(Size(191, 193))),
-                demoIcon.copy(sizes = listOf(Size(512, 512))),
-                demoIcon.copy(
-                    sizes = listOf(Size(192, 192)),
-                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+            manifest = demoManifest.copy(
+                icons = listOf(
+                    demoIcon.copy(sizes = listOf(Size(191, 193))),
+                    demoIcon.copy(sizes = listOf(Size(512, 512))),
+                    demoIcon.copy(
+                        sizes = listOf(Size(192, 192)),
+                        purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+                    )
                 )
-            ))
+            )
         )
         assertEquals(
-            demoManifest.copy(icons = listOf(
-                demoIcon.copy(sizes = listOf(Size(191, 193))),
-                demoIcon.copy(sizes = listOf(Size(512, 512))),
-                demoIcon.copy(
-                    sizes = listOf(Size(192, 192)),
-                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+            demoManifest.copy(
+                icons = listOf(
+                    demoIcon.copy(sizes = listOf(Size(191, 193))),
+                    demoIcon.copy(sizes = listOf(Size(512, 512))),
+                    demoIcon.copy(
+                        sizes = listOf(Size(192, 192)),
+                        purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+                    )
                 )
-            )),
+            ),
             multiIconSession.installableManifest()
         )
     }

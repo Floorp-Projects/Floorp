@@ -55,11 +55,13 @@ class ManifestUpdateFeatureTest {
         dispatcher = TestCoroutineDispatcher()
         Dispatchers.setMain(dispatcher)
 
-        store = BrowserStore(BrowserState(
-            customTabs = listOf(
-                createCustomTab("https://mozilla.org", id = sessionId)
+        store = BrowserStore(
+            BrowserState(
+                customTabs = listOf(
+                    createCustomTab("https://mozilla.org", id = sessionId)
+                )
             )
-        ))
+        )
     }
 
     @After
@@ -103,10 +105,12 @@ class ManifestUpdateFeatureTest {
         )
 
         // Insert base manifest
-        store.dispatch(ContentAction.UpdateWebAppManifestAction(
-            sessionId,
-            baseManifest
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateWebAppManifestAction(
+                sessionId,
+                baseManifest
+            )
+        ).joinBlocking()
 
         feature.start()
 
@@ -129,20 +133,24 @@ class ManifestUpdateFeatureTest {
         )
 
         // Insert base manifest
-        store.dispatch(ContentAction.UpdateWebAppManifestAction(
-            sessionId,
-            baseManifest
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateWebAppManifestAction(
+                sessionId,
+                baseManifest
+            )
+        ).joinBlocking()
 
         feature.start()
 
         val newManifest = baseManifest.copy(shortName = "Moz")
 
         // Update manifest
-        store.dispatch(ContentAction.UpdateWebAppManifestAction(
-            sessionId,
-            newManifest
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateWebAppManifestAction(
+                sessionId,
+                newManifest
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         feature.updateJob!!.joinBlocking()
@@ -166,10 +174,12 @@ class ManifestUpdateFeatureTest {
         feature.start()
 
         // Update manifest
-        store.dispatch(ContentAction.UpdateWebAppManifestAction(
-            sessionId,
-            baseManifest
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateWebAppManifestAction(
+                sessionId,
+                baseManifest
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         feature.updateJob?.joinBlocking()
@@ -191,17 +201,21 @@ class ManifestUpdateFeatureTest {
         )
 
         // Insert base manifest
-        store.dispatch(ContentAction.UpdateWebAppManifestAction(
-            sessionId,
-            baseManifest
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateWebAppManifestAction(
+                sessionId,
+                baseManifest
+            )
+        ).joinBlocking()
 
         feature.start()
 
         // Update manifest
-        store.dispatch(ContentAction.RemoveWebAppManifestAction(
-            sessionId
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.RemoveWebAppManifestAction(
+                sessionId
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         feature.updateJob?.joinBlocking()
@@ -223,18 +237,22 @@ class ManifestUpdateFeatureTest {
         )
 
         // Insert base manifest
-        store.dispatch(ContentAction.UpdateWebAppManifestAction(
-            sessionId,
-            baseManifest
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateWebAppManifestAction(
+                sessionId,
+                baseManifest
+            )
+        ).joinBlocking()
 
         feature.start()
 
         // Update manifest
-        store.dispatch(ContentAction.UpdateWebAppManifestAction(
-            sessionId,
-            WebAppManifest(name = "Mozilla", startUrl = "https://netscape.com")
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateWebAppManifestAction(
+                sessionId,
+                WebAppManifest(name = "Mozilla", startUrl = "https://netscape.com")
+            )
+        ).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         feature.updateJob?.joinBlocking()

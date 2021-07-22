@@ -51,8 +51,10 @@ class RecentAppsStorage(context: Context) {
      * with a 0 count, so they can be updated later when a user uses that app
      */
     fun updateDatabaseWithNewApps(activityNames: List<String>) {
-        recentAppsDao.value.insertRecentApps(activityNames.map { activityName ->
-            RecentAppEntity(activityName)
-        })
+        recentAppsDao.value.insertRecentApps(
+            activityNames.map { activityName ->
+                RecentAppEntity(activityName)
+            }
+        )
     }
 }

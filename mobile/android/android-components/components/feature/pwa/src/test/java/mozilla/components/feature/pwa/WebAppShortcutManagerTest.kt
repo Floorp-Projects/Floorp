@@ -81,10 +81,12 @@ class WebAppShortcutManagerTest {
     fun `requestPinShortcut no-op if pinning unsupported`() = runBlockingTest {
         val manifest = baseManifest.copy(
             display = WebAppManifest.DisplayMode.STANDALONE,
-            icons = listOf(WebAppManifest.Icon(
-                src = "https://example.com/icon.png",
-                sizes = listOf(Size(192, 192))
-            ))
+            icons = listOf(
+                WebAppManifest.Icon(
+                    src = "https://example.com/icon.png",
+                    sizes = listOf(Size(192, 192))
+                )
+            )
         )
         val session = buildInstallableSession(manifest)
         `when`(packageManager.queryBroadcastReceivers(any(), anyInt())).thenReturn(emptyList())
@@ -123,10 +125,12 @@ class WebAppShortcutManagerTest {
 
         val manifest = baseManifest.copy(
             display = WebAppManifest.DisplayMode.STANDALONE,
-            icons = listOf(WebAppManifest.Icon(
-                src = "https://example.com/icon.png",
-                sizes = listOf(Size(192, 192))
-            ))
+            icons = listOf(
+                WebAppManifest.Icon(
+                    src = "https://example.com/icon.png",
+                    sizes = listOf(Size(192, 192))
+                )
+            )
         )
 
         val session = buildInstallableSession(manifest)
@@ -160,13 +164,15 @@ class WebAppShortcutManagerTest {
         setSdkInt(Build.VERSION_CODES.O)
 
         val session = createTab("https://www.mozilla.org", title = "Internet for people, not profit — Mozilla").let {
-            it.copy(content = it.content.copy(
-                webAppManifest = WebAppManifest(
-                    name = "Mozilla",
-                    shortName = "Moz",
-                    startUrl = "https://mozilla.org"
+            it.copy(
+                content = it.content.copy(
+                    webAppManifest = WebAppManifest(
+                        name = "Mozilla",
+                        shortName = "Moz",
+                        startUrl = "https://mozilla.org"
+                    )
                 )
-            ))
+            )
         }
 
         val shortcut = manager.buildBasicShortcut(context, session)
@@ -179,12 +185,14 @@ class WebAppShortcutManagerTest {
         setSdkInt(Build.VERSION_CODES.O)
 
         val session = createTab("https://www.mozilla.org", title = "Internet for people, not profit — Mozilla").let {
-            it.copy(content = it.content.copy(
-                webAppManifest = WebAppManifest(
-                    name = "Mozilla",
-                    startUrl = "https://mozilla.org"
+            it.copy(
+                content = it.content.copy(
+                    webAppManifest = WebAppManifest(
+                        name = "Mozilla",
+                        startUrl = "https://mozilla.org"
+                    )
                 )
-            ))
+            )
         }
 
         val shortcut = manager.buildBasicShortcut(context, session)
@@ -302,7 +310,7 @@ class WebAppShortcutManagerTest {
         val currentTime = System.currentTimeMillis()
 
         whenever(storage.hasRecentManifest(url, currentTime))
-                .thenReturn(false)
+            .thenReturn(false)
 
         val installState = manager.getWebAppInstallState(url, currentTime)
 
@@ -317,7 +325,7 @@ class WebAppShortcutManagerTest {
         val currentTime = System.currentTimeMillis()
 
         whenever(storage.hasRecentManifest(url, currentTime))
-                .thenReturn(true)
+            .thenReturn(true)
 
         val installState = manager.getWebAppInstallState(url, currentTime)
 

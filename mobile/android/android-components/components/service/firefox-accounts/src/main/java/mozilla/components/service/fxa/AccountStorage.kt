@@ -7,12 +7,12 @@ package mozilla.components.service.fxa
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
-import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.AccountEvent
 import mozilla.components.concept.sync.AccountEventsObserver
+import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.StatePersistenceCallback
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -157,7 +157,7 @@ internal class SharedPrefAccountStorage(
     @Throws(FxaException::class)
     override fun read(): OAuthAccount? {
         val savedJSON = accountPreferences().getString(FXA_STATE_KEY, null)
-                ?: return null
+            ?: return null
 
         // May throw a generic FxaException if it fails to process saved JSON.
         return FirefoxAccount.fromJSONString(savedJSON, crashReporter)

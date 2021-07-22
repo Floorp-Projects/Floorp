@@ -67,12 +67,14 @@ class OriginVerifierTest {
     }
 
     private fun buildVerifier(relation: Int): OriginVerifier {
-        val verifier = spy(OriginVerifier(
-            "com.app.name",
-            relation,
-            packageManager,
-            checker
-        ))
+        val verifier = spy(
+            OriginVerifier(
+                "com.app.name",
+                relation,
+                packageManager,
+                checker
+            )
+        )
         doReturn(androidAsset).`when`(verifier).androidAsset
         return verifier
     }

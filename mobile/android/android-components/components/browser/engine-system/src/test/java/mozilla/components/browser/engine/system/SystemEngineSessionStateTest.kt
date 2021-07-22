@@ -51,16 +51,18 @@ class SystemEngineSessionStateTest {
 
     @Test
     fun writeToAndFromJSON() {
-        val state = SystemEngineSessionState(Bundle().apply {
-            putString("k0", "v0")
-            putInt("k1", 1)
-            putBoolean("k2", true)
-            putStringArrayList("k3", ArrayList<String>(listOf("Hello", "World")))
-            putDouble("k4", 5.0)
-            putFloat("k5", 1.0f)
-            putFloat("k6", 42.25f)
-            putDouble("k7", 23.23)
-        })
+        val state = SystemEngineSessionState(
+            Bundle().apply {
+                putString("k0", "v0")
+                putInt("k1", 1)
+                putBoolean("k2", true)
+                putStringArrayList("k3", ArrayList<String>(listOf("Hello", "World")))
+                putDouble("k4", 5.0)
+                putFloat("k5", 1.0f)
+                putFloat("k6", 42.25f)
+                putDouble("k7", 23.23)
+            }
+        )
 
         val outputStream = ByteArrayOutputStream()
         state.writeTo(JsonWriter(outputStream.writer()))
@@ -93,16 +95,18 @@ class SystemEngineSessionStateTest {
 
     @Test
     fun writeToAndReadFrom() {
-        val state = SystemEngineSessionState(Bundle().apply {
-            putString("k0", "v0")
-            putInt("k1", 1)
-            putBoolean("k2", true)
-            putStringArrayList("k3", ArrayList<String>(listOf("Hello", "World")))
-            putDouble("k4", 5.0)
-            putFloat("k5", 1.0f)
-            putFloat("k6", 42.25f)
-            putDouble("k7", 23.23)
-        })
+        val state = SystemEngineSessionState(
+            Bundle().apply {
+                putString("k0", "v0")
+                putInt("k1", 1)
+                putBoolean("k2", true)
+                putStringArrayList("k3", ArrayList<String>(listOf("Hello", "World")))
+                putDouble("k4", 5.0)
+                putFloat("k5", 1.0f)
+                putFloat("k6", 42.25f)
+                putDouble("k7", 23.23)
+            }
+        )
 
         val outputStream = ByteArrayOutputStream()
         state.writeTo(JsonWriter(outputStream.writer()))

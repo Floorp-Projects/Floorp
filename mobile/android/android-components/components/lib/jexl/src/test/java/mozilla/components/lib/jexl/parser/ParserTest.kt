@@ -26,7 +26,8 @@ class ParserTest {
     fun `Should parse literal`() {
         val expression = "42"
 
-        assertExpressionYieldsTree(expression,
+        assertExpressionYieldsTree(
+            expression,
             Literal(42)
         )
     }
@@ -35,7 +36,8 @@ class ParserTest {
     fun `Should parse math expression`() {
         val expression = "42 + 23"
 
-        assertExpressionYieldsTree(expression,
+        assertExpressionYieldsTree(
+            expression,
             BinaryExpression(
                 left = Literal(42),
                 right = Literal(23),
@@ -54,7 +56,8 @@ class ParserTest {
     fun `Should parse expression with identifier`() {
         val expression = "age > 21"
 
-        assertExpressionYieldsTree(expression,
+        assertExpressionYieldsTree(
+            expression,
             BinaryExpression(
                 operator = ">",
                 left = Identifier("age"),
@@ -67,7 +70,8 @@ class ParserTest {
     fun `Should parse expression with sub expression`() {
         val expression = "(age + 5) > 42"
 
-        assertExpressionYieldsTree(expression,
+        assertExpressionYieldsTree(
+            expression,
             BinaryExpression(
                 operator = ">",
                 left = BinaryExpression(
@@ -82,7 +86,8 @@ class ParserTest {
 
     @Test
     fun `Should parse expression following operator precedence`() {
-        assertExpressionYieldsTree("5 + 7 * 2",
+        assertExpressionYieldsTree(
+            "5 + 7 * 2",
             BinaryExpression(
                 operator = "+",
                 left = Literal(5),
@@ -94,7 +99,8 @@ class ParserTest {
             )
         )
 
-        assertExpressionYieldsTree("5 * 7 + 2",
+        assertExpressionYieldsTree(
+            "5 * 7 + 2",
             BinaryExpression(
                 operator = "+",
                 left = BinaryExpression(
@@ -109,7 +115,8 @@ class ParserTest {
 
     @Test
     fun `Should handle encapsulation of subtree`() {
-        assertExpressionYieldsTree("2+3*4==5/6-7",
+        assertExpressionYieldsTree(
+            "2+3*4==5/6-7",
             BinaryExpression(
                 operator = "==",
                 left = BinaryExpression(
@@ -136,7 +143,8 @@ class ParserTest {
 
     @Test
     fun `Should handle a unary operator`() {
-        assertExpressionYieldsTree("1*!!true-2",
+        assertExpressionYieldsTree(
+            "1*!!true-2",
             BinaryExpression(
                 operator = "-",
                 left = BinaryExpression(
@@ -157,7 +165,8 @@ class ParserTest {
 
     @Test
     fun `Should handle nested subexpressions`() {
-        assertExpressionYieldsTree("(4*(2+3))/5",
+        assertExpressionYieldsTree(
+            "(4*(2+3))/5",
             BinaryExpression(
                 operator = "/",
                 left = BinaryExpression(
@@ -176,7 +185,8 @@ class ParserTest {
 
     @Test
     fun `Should handle whitespace in an expression`() {
-        assertExpressionYieldsTree("\t2\r\n+\n\r3\n\n",
+        assertExpressionYieldsTree(
+            "\t2\r\n+\n\r3\n\n",
             BinaryExpression(
                 operator = "+",
                 left = Literal(2),
@@ -187,7 +197,8 @@ class ParserTest {
 
     @Test
     fun `Should handle object literals`() {
-        assertExpressionYieldsTree("{foo: \"bar\", tek: 1+2}",
+        assertExpressionYieldsTree(
+            "{foo: \"bar\", tek: 1+2}",
             ObjectLiteral(
                 "foo" to Literal("bar"),
                 "tek" to BinaryExpression(
@@ -219,14 +230,16 @@ class ParserTest {
 
     @Test
     fun `Should handle empty object literals`() {
-        assertExpressionYieldsTree("{}",
+        assertExpressionYieldsTree(
+            "{}",
             ObjectLiteral()
         )
     }
 
     @Test
     fun `Should handle array literals`() {
-        assertExpressionYieldsTree("[\"foo\", 1+2]",
+        assertExpressionYieldsTree(
+            "[\"foo\", 1+2]",
             ArrayLiteral(
                 Literal("foo"),
                 BinaryExpression(
@@ -240,7 +253,8 @@ class ParserTest {
 
     @Test
     fun `Should handle nested array literals`() {
-        assertExpressionYieldsTree("[\"foo\", [\"bar\", \"tek\"]]",
+        assertExpressionYieldsTree(
+            "[\"foo\", [\"bar\", \"tek\"]]",
             ArrayLiteral(
                 Literal("foo"),
                 ArrayLiteral(
@@ -253,18 +267,22 @@ class ParserTest {
 
     @Test
     fun `Should handle empty array literals`() {
-        assertExpressionYieldsTree("[]",
+        assertExpressionYieldsTree(
+            "[]",
             ArrayLiteral()
         )
     }
 
     @Test
     fun `Should chain traversed identifiers`() {
-        assertExpressionYieldsTree("foo.bar.baz + 1",
+        assertExpressionYieldsTree(
+            "foo.bar.baz + 1",
             BinaryExpression(
                 operator = "+",
-                left = Identifier("baz",
-                    from = Identifier("bar",
+                left = Identifier(
+                    "baz",
+                    from = Identifier(
+                        "bar",
                         from = Identifier("foo")
                     )
                 ),
@@ -275,7 +293,8 @@ class ParserTest {
 
     @Test
     fun `Should apply transforms and arguments`() {
-        assertExpressionYieldsTree("foo|tr1|tr2.baz|tr3({bar:\"tek\"})",
+        assertExpressionYieldsTree(
+            "foo|tr1|tr2.baz|tr3({bar:\"tek\"})",
             Transformation(
                 name = "tr3",
                 arguments = mutableListOf(
@@ -299,7 +318,8 @@ class ParserTest {
 
     @Test
     fun `Should handle multiple arguments in transforms`() {
-        assertExpressionYieldsTree("foo|bar(\"tek\", 5, true)",
+        assertExpressionYieldsTree(
+            "foo|bar(\"tek\", 5, true)",
             Transformation(
                 name = "bar",
                 subject = Identifier("foo"),
@@ -314,8 +334,10 @@ class ParserTest {
 
     @Test
     fun `Should apply filters to identifiers`() {
-        assertExpressionYieldsTree("""foo[1][.bar[0] == "tek"].baz""",
-            Identifier("baz",
+        assertExpressionYieldsTree(
+            """foo[1][.bar[0] == "tek"].baz""",
+            Identifier(
+                "baz",
                 from = FilterExpression(
                     relative = true,
                     expression = BinaryExpression(
@@ -342,11 +364,13 @@ class ParserTest {
 
     @Test
     fun `Should allow dot notation for all operands`() {
-        assertExpressionYieldsTree("\"foo\".length + {foo: \"bar\"}.foo",
+        assertExpressionYieldsTree(
+            "\"foo\".length + {foo: \"bar\"}.foo",
             BinaryExpression(
                 operator = "+",
                 left = Identifier("length", from = Literal("foo")),
-                right = Identifier("foo",
+                right = Identifier(
+                    "foo",
                     from = ObjectLiteral(
                         "foo" to Literal("bar")
                     )
@@ -357,8 +381,10 @@ class ParserTest {
 
     @Test
     fun `Should allow dot notation on subexpressions`() {
-        assertExpressionYieldsTree("(\"foo\" + \"bar\").length",
-            Identifier("length",
+        assertExpressionYieldsTree(
+            "(\"foo\" + \"bar\").length",
+            Identifier(
+                "length",
                 from = BinaryExpression(
                     operator = "+",
                     left = Literal("foo"),
@@ -370,8 +396,10 @@ class ParserTest {
 
     @Test
     fun `Should allow dot notation on arrays`() {
-        assertExpressionYieldsTree("[\"foo\", \"bar\"].length",
-            Identifier("length",
+        assertExpressionYieldsTree(
+            "[\"foo\", \"bar\"].length",
+            Identifier(
+                "length",
                 from = ArrayLiteral(
                     Literal("foo"),
                     Literal("bar")
@@ -382,7 +410,8 @@ class ParserTest {
 
     @Test
     fun `Should handle a ternary expression`() {
-        assertExpressionYieldsTree("foo ? 1 : 0",
+        assertExpressionYieldsTree(
+            "foo ? 1 : 0",
             ConditionalExpression(
                 test = Identifier("foo"),
                 consequent = Literal(1),
@@ -393,7 +422,8 @@ class ParserTest {
 
     @Test
     fun `Should handle nested and grouped ternary expressions`() {
-        assertExpressionYieldsTree("foo ? (bar ? 1 : 2) : 3",
+        assertExpressionYieldsTree(
+            "foo ? (bar ? 1 : 2) : 3",
             ConditionalExpression(
                 test = Identifier("foo"),
                 consequent = ConditionalExpression(
@@ -408,7 +438,8 @@ class ParserTest {
 
     @Test
     fun `Should handle nested, non-grouped ternary expressions`() {
-        assertExpressionYieldsTree("foo ? bar ? 1 : 2 : 3",
+        assertExpressionYieldsTree(
+            "foo ? bar ? 1 : 2 : 3",
             ConditionalExpression(
                 test = Identifier("foo"),
                 consequent = ConditionalExpression(
@@ -423,7 +454,8 @@ class ParserTest {
 
     @Test
     fun `Should handle ternary expression with objects`() {
-        assertExpressionYieldsTree("foo ? {bar: \"tek\"} : \"baz\"",
+        assertExpressionYieldsTree(
+            "foo ? {bar: \"tek\"} : \"baz\"",
             ConditionalExpression(
                 test = Identifier("foo"),
                 consequent = ObjectLiteral(
@@ -436,7 +468,8 @@ class ParserTest {
 
     @Test
     fun `Should correctly balance a binary op between complex identifiers`() {
-        assertExpressionYieldsTree("a.b == c.d",
+        assertExpressionYieldsTree(
+            "a.b == c.d",
             BinaryExpression(
                 operator = "==",
                 left = Identifier(

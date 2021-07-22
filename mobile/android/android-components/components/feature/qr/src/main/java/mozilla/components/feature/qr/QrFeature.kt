@@ -10,10 +10,10 @@ import androidx.annotation.MainThread
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
-import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 
 typealias OnScanResult = (result: String) -> Unit

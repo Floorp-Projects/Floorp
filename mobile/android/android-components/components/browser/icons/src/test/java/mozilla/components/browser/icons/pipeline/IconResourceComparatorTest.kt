@@ -16,17 +16,21 @@ class IconResourceComparatorTest {
             IconRequest.Resource(
                 url = "https://www.mozilla.org/media/img/favicon/favicon-196x196.c80e6abe0767.png",
                 type = IconRequest.Resource.Type.FAVICON,
-                sizes = listOf(Size(196, 196))),
+                sizes = listOf(Size(196, 196))
+            ),
             IconRequest.Resource(
                 url = "https://www.mozilla.org/media/img/favicon.d4f1f46b91f4.ico",
-                type = IconRequest.Resource.Type.FAVICON),
+                type = IconRequest.Resource.Type.FAVICON
+            ),
             IconRequest.Resource(
                 url = "https://www.mozilla.org/media/img/favicon/apple-touch-icon-180x180.8772ec154918.png",
                 type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
-                sizes = listOf(Size(180, 180))),
+                sizes = listOf(Size(180, 180))
+            ),
             IconRequest.Resource(
                 url = "https://www.mozilla.org/media/img/mozorg/mozilla-256.4720741d4108.jpg",
-                type = IconRequest.Resource.Type.OPENGRAPH)
+                type = IconRequest.Resource.Type.OPENGRAPH
+            )
         )
 
         val urls = resources.sortedWith(IconResourceComparator).map { it.url }
@@ -197,10 +201,13 @@ class IconResourceComparatorTest {
         val resources = listOf(
             IconRequest.Resource(
                 url = "https://abs.twimg.com/favicons/favicon.ico",
-                type = IconRequest.Resource.Type.FAVICON),
+                type = IconRequest.Resource.Type.FAVICON
+            ),
             IconRequest.Resource(
                 url = "https://abs.twimg.com/responsive-web/web/icon-ios.8ea219d08eafdfa41.png",
-                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON))
+                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+            )
+        )
 
         val urls = resources.sortedWith(IconResourceComparator).map { it.url }
 
@@ -218,19 +225,25 @@ class IconResourceComparatorTest {
         val resources = listOf(
             IconRequest.Resource(
                 url = "https://github.githubassets.com/favicon.ico",
-                type = IconRequest.Resource.Type.FAVICON),
+                type = IconRequest.Resource.Type.FAVICON
+            ),
             IconRequest.Resource(
                 url = "https://github.com/fluidicon.png",
-                type = IconRequest.Resource.Type.FLUID_ICON),
+                type = IconRequest.Resource.Type.FLUID_ICON
+            ),
             IconRequest.Resource(
                 url = "https://github.githubassets.com/images/modules/open_graph/github-logo.png",
-                type = IconRequest.Resource.Type.OPENGRAPH),
+                type = IconRequest.Resource.Type.OPENGRAPH
+            ),
             IconRequest.Resource(
                 url = "https://github.githubassets.com/images/modules/open_graph/github-mark.png",
-                type = IconRequest.Resource.Type.OPENGRAPH),
+                type = IconRequest.Resource.Type.OPENGRAPH
+            ),
             IconRequest.Resource(
                 url = "https://github.githubassets.com/images/modules/open_graph/github-octocat.png",
-                type = IconRequest.Resource.Type.OPENGRAPH))
+                type = IconRequest.Resource.Type.OPENGRAPH
+            )
+        )
 
         val urls = resources.sortedWith(IconResourceComparator).map { it.url }
 
@@ -252,35 +265,45 @@ class IconResourceComparatorTest {
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395367/favicon-16x16.0.png",
                 type = IconRequest.Resource.Type.FAVICON,
-                sizes = listOf(Size(16, 16))),
+                sizes = listOf(Size(16, 16))
+            ),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395363/favicon-32x32.0.png",
                 type = IconRequest.Resource.Type.FAVICON,
-                sizes = listOf(Size(32, 32))),
+                sizes = listOf(Size(32, 32))
+            ),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395365/favicon-96x96.0.png",
                 type = IconRequest.Resource.Type.FAVICON,
-                sizes = listOf(Size(96, 96))),
+                sizes = listOf(Size(96, 96))
+            ),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395351/android-chrome-192x192.0.png",
                 type = IconRequest.Resource.Type.FAVICON,
-                sizes = listOf(Size(192, 192))),
+                sizes = listOf(Size(192, 192))
+            ),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395361/favicon-64x64.0.ico",
-                type = IconRequest.Resource.Type.FAVICON),
+                type = IconRequest.Resource.Type.FAVICON
+            ),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395359/ios-icon.0.png",
                 type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
-                sizes = listOf(Size(180, 180))),
+                sizes = listOf(Size(180, 180))
+            ),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/9672633/VergeOG.0_1200x627.0.png",
-                type = IconRequest.Resource.Type.OPENGRAPH),
+                type = IconRequest.Resource.Type.OPENGRAPH
+            ),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/community_logos/52803/VER_Logomark_175x92..png",
-                type = IconRequest.Resource.Type.TWITTER),
+                type = IconRequest.Resource.Type.TWITTER
+            ),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7396113/221a67c8-a10f-11e6-8fae-983107008690.0.png",
-                type = IconRequest.Resource.Type.MICROSOFT_TILE))
+                type = IconRequest.Resource.Type.MICROSOFT_TILE
+            )
+        )
 
         val urls = resources.sortedWith(IconResourceComparator).map { it.url }
 

@@ -131,12 +131,12 @@ internal class ColorPickerDialogFragment : PromptDialogFragment(), DialogInterfa
             shouldDismissOnLoad: Boolean,
             defaultColor: String
         ) = ColorPickerDialogFragment().apply {
-                arguments = (arguments ?: Bundle()).apply {
-                    putString(KEY_SESSION_ID, sessionId)
-                    putString(KEY_PROMPT_UID, promptRequestUID)
-                    putBoolean(KEY_SHOULD_DISMISS_ON_LOAD, shouldDismissOnLoad)
-                    putInt(KEY_SELECTED_COLOR, defaultColor.toColor())
-                }
+            arguments = (arguments ?: Bundle()).apply {
+                putString(KEY_SESSION_ID, sessionId)
+                putString(KEY_PROMPT_UID, promptRequestUID)
+                putBoolean(KEY_SHOULD_DISMISS_ON_LOAD, shouldDismissOnLoad)
+                putInt(KEY_SELECTED_COLOR, defaultColor.toColor())
+            }
         }
     }
 }

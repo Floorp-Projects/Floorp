@@ -53,12 +53,14 @@ class ContextMenuFeatureTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
 
-        store = BrowserStore(BrowserState(
-            tabs = listOf(
-                createTab("https://www.mozilla.org", id = "test-tab")
-            ),
-            selectedTabId = "test-tab"
-        ))
+        store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab")
+                ),
+                selectedTabId = "test-tab"
+            )
+        )
     }
 
     @After
@@ -78,14 +80,17 @@ class ContextMenuFeatureTest {
             store,
             ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock()),
             engineView,
-            mock())
+            mock()
+        )
 
         feature.start()
 
-        store.dispatch(ContentAction.UpdateHitResultAction(
-            "test-tab",
-            HitResult.UNKNOWN("https://www.mozilla.org")
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateHitResultAction(
+                "test-tab",
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        ).joinBlocking()
 
         testDispatcher.advanceUntilIdle()
 
@@ -104,15 +109,18 @@ class ContextMenuFeatureTest {
             store,
             ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock()),
             engineView,
-            mock())
+            mock()
+        )
 
         feature.start()
         feature.stop()
 
-        store.dispatch(ContentAction.UpdateHitResultAction(
-            "test-tab",
-            HitResult.UNKNOWN("https://www.mozilla.org")
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateHitResultAction(
+                "test-tab",
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        ).joinBlocking()
 
         testDispatcher.advanceUntilIdle()
 
@@ -130,17 +138,20 @@ class ContextMenuFeatureTest {
 
         val (engineView, view) = mockEngineView()
 
-        store.dispatch(ContentAction.UpdateHitResultAction(
-            "test-tab",
-            HitResult.UNKNOWN("https://www.mozilla.org")
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateHitResultAction(
+                "test-tab",
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        ).joinBlocking()
 
         val feature = ContextMenuFeature(
             fragmentManager,
             store,
             ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock()),
             engineView,
-            mock())
+            mock()
+        )
 
         feature.start()
 
@@ -169,7 +180,8 @@ class ContextMenuFeatureTest {
             store,
             ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock()),
             engineView,
-            mock())
+            mock()
+        )
 
         feature.start()
 
@@ -199,7 +211,8 @@ class ContextMenuFeatureTest {
             store,
             ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock()),
             engineView,
-            mock())
+            mock()
+        )
 
         store.dispatch(TabListAction.RemoveTabAction("test-tab"))
             .joinBlocking()
@@ -237,7 +250,8 @@ class ContextMenuFeatureTest {
 
         feature.showContextMenu(
             createTab("https://www.mozilla.org"),
-            HitResult.UNKNOWN("https://www.mozilla.org"))
+            HitResult.UNKNOWN("https://www.mozilla.org")
+        )
 
         verify(fragmentManager, never()).beginTransaction()
         verify(view, never()).performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
@@ -253,10 +267,12 @@ class ContextMenuFeatureTest {
             )
         )
 
-        store.dispatch(ContentAction.UpdateHitResultAction(
-            "test-tab",
-            HitResult.UNKNOWN("https://www.mozilla.org")
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateHitResultAction(
+                "test-tab",
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        ).joinBlocking()
 
         val (engineView, _) = mockEngineView()
 
@@ -288,10 +304,12 @@ class ContextMenuFeatureTest {
             )
         )
 
-        store.dispatch(ContentAction.UpdateHitResultAction(
-            "test-tab",
-            HitResult.UNKNOWN("https://www.mozilla.org")
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateHitResultAction(
+                "test-tab",
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        ).joinBlocking()
 
         val (engineView, view) = mockEngineView()
         var actionInvoked = false
@@ -300,7 +318,8 @@ class ContextMenuFeatureTest {
             id = "test-id",
             label = "Test Item",
             showFor = { _, _ -> true },
-            action = { _, _ -> actionInvoked = true })
+            action = { _, _ -> actionInvoked = true }
+        )
 
         val feature = ContextMenuFeature(
             mockFragmentManager(),
@@ -336,17 +355,20 @@ class ContextMenuFeatureTest {
             )
         )
 
-        store.dispatch(ContentAction.UpdateHitResultAction(
-            "test-tab",
-            HitResult.UNKNOWN("https://www.mozilla.org")
-        )).joinBlocking()
+        store.dispatch(
+            ContentAction.UpdateHitResultAction(
+                "test-tab",
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        ).joinBlocking()
 
         val (engineView, _) = mockEngineView()
         val candidate = ContextMenuCandidate(
             id = "test-id",
             label = "Test Item",
             showFor = { _, _ -> true },
-            action = { _, _ -> /* noop */ })
+            action = { _, _ -> /* noop */ }
+        )
 
         val feature = ContextMenuFeature(
             mockFragmentManager(),

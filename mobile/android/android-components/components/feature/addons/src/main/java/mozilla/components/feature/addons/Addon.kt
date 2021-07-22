@@ -67,7 +67,7 @@ data class Addon(
      * @property username The username of the author.
      */
     @SuppressLint("ParcelCreator")
-@Parcelize
+    @Parcelize
     data class Author(
         val id: String,
         val name: String,
@@ -82,7 +82,7 @@ data class Addon(
      * @property reviews The number of users that has scored this add-on.
      */
     @SuppressLint("ParcelCreator")
-@Parcelize
+    @Parcelize
     data class Rating(
         val average: Float,
         val reviews: Int
@@ -106,7 +106,7 @@ data class Addon(
      * as we get the icon from AMO otherwise, see [iconUrl].
      */
     @SuppressLint("ParcelCreator")
-@Parcelize
+    @Parcelize
     data class InstalledState(
         val id: String,
         val version: String,

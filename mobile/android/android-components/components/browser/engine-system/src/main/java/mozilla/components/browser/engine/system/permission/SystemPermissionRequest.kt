@@ -4,11 +4,11 @@
 
 package mozilla.components.browser.engine.system.permission
 
+import android.webkit.PermissionRequest.RESOURCE_AUDIO_CAPTURE
+import android.webkit.PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID
+import android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.PermissionRequest
-import android.webkit.PermissionRequest.RESOURCE_AUDIO_CAPTURE
-import android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE
-import android.webkit.PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID
 
 /**
  * WebView-based implementation of [PermissionRequest].
@@ -33,8 +33,9 @@ class SystemPermissionRequest(private val nativeRequest: android.webkit.Permissi
 
     companion object {
         val permissionsMap = mapOf(
-                RESOURCE_AUDIO_CAPTURE to Permission.ContentAudioCapture(RESOURCE_AUDIO_CAPTURE),
-                RESOURCE_VIDEO_CAPTURE to Permission.ContentVideoCapture(RESOURCE_VIDEO_CAPTURE),
-                RESOURCE_PROTECTED_MEDIA_ID to Permission.ContentProtectedMediaId(RESOURCE_PROTECTED_MEDIA_ID))
+            RESOURCE_AUDIO_CAPTURE to Permission.ContentAudioCapture(RESOURCE_AUDIO_CAPTURE),
+            RESOURCE_VIDEO_CAPTURE to Permission.ContentVideoCapture(RESOURCE_VIDEO_CAPTURE),
+            RESOURCE_PROTECTED_MEDIA_ID to Permission.ContentProtectedMediaId(RESOURCE_PROTECTED_MEDIA_ID)
+        )
     }
 }

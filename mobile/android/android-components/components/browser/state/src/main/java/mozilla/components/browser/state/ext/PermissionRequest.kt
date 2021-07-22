@@ -10,6 +10,6 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 fun List<PermissionRequest>.containsPermission(permissionRequest: PermissionRequest): Boolean {
     return this.any {
         it.uri == permissionRequest.uri &&
-                it.permissions == permissionRequest.permissions
+            it.permissions == permissionRequest.permissions
     }
 }

@@ -72,9 +72,11 @@ class AddonUpdaterWorkerTest {
         val addonId = "addonId"
         val onFinishCaptor = argumentCaptor<((AddonUpdater.Status) -> Unit)>()
         val addonManager = mock<AddonManager>()
-        val worker = spy(TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
-            .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
-            .build())
+        val worker = spy(
+            TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
+                .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
+                .build()
+        )
 
         doReturn(updateAttemptStorage).`when`((worker as AddonUpdaterWorker)).updateAttemptStorage
         GlobalAddonDependencyProvider.initialize(addonManager, mock())
@@ -170,8 +172,8 @@ class AddonUpdaterWorkerTest {
         val onFinishCaptor = argumentCaptor<((AddonUpdater.Status) -> Unit)>()
         val addonManager = mock<AddonManager>()
         val worker = TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
-                .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
-                .build()
+            .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
+            .build()
         val unrecoverableException = WebExtensionException(Exception(), isRecoverable = false)
         (worker as AddonUpdaterWorker).updateAttemptStorage = updateAttemptStorage
 
@@ -195,8 +197,8 @@ class AddonUpdaterWorkerTest {
         val onFinishCaptor = argumentCaptor<((AddonUpdater.Status) -> Unit)>()
         val addonManager = mock<AddonManager>()
         val worker = TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
-                .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
-                .build()
+            .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
+            .build()
         var crashWasReported = false
         val crashReporter: ((Throwable) -> Unit) = { _ ->
             crashWasReported = true
@@ -221,7 +223,7 @@ class AddonUpdaterWorkerTest {
     fun `retryIfRecoverable must return retry for recoverable exception`() {
         val recoverableException = WebExtensionException(Exception(), isRecoverable = true)
         val worker = TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
-                .build()
+            .build()
 
         assertEquals(ListenableWorker.Result.retry(), worker.retryIfRecoverable(recoverableException))
     }
@@ -230,7 +232,7 @@ class AddonUpdaterWorkerTest {
     fun `retryIfRecoverable must return success for unrecoverable exception`() {
         val unrecoverableException = WebExtensionException(Exception(), isRecoverable = false)
         val worker = TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
-                .build()
+            .build()
 
         assertEquals(ListenableWorker.Result.success(), worker.retryIfRecoverable(unrecoverableException))
     }

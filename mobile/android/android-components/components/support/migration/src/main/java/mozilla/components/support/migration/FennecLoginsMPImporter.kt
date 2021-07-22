@@ -4,8 +4,8 @@
 
 package mozilla.components.support.migration
 
-import mozilla.components.service.sync.logins.ServerPassword
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.service.sync.logins.ServerPassword
 import mozilla.components.support.base.log.logger.Logger
 
 /**

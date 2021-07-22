@@ -36,7 +36,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.any as mockitoAny
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
@@ -47,6 +46,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import java.lang.reflect.Modifier
+import org.mockito.ArgumentMatchers.any as mockitoAny
 
 @RunWith(AndroidJUnit4::class)
 class SystemEngineSessionTest {
@@ -383,17 +383,18 @@ class SystemEngineSessionTest {
     @Test
     fun withProvidedDefaultSettings() {
         val defaultSettings = DefaultSettings(
-                javascriptEnabled = false,
-                domStorageEnabled = false,
-                webFontsEnabled = false,
-                trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.strict(),
-                userAgentString = "userAgent",
-                mediaPlaybackRequiresUserGesture = false,
-                javaScriptCanOpenWindowsAutomatically = true,
-                displayZoomControls = true,
-                loadWithOverviewMode = true,
-                useWideViewPort = true,
-                supportMultipleWindows = true)
+            javascriptEnabled = false,
+            domStorageEnabled = false,
+            webFontsEnabled = false,
+            trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.strict(),
+            userAgentString = "userAgent",
+            mediaPlaybackRequiresUserGesture = false,
+            javaScriptCanOpenWindowsAutomatically = true,
+            displayZoomControls = true,
+            loadWithOverviewMode = true,
+            useWideViewPort = true,
+            supportMultipleWindows = true
+        )
         val engineSession = spy(SystemEngineSession(testContext, defaultSettings))
 
         val webView = mock<WebView>()
@@ -467,8 +468,9 @@ class SystemEngineSessionTest {
         doReturn(Uri.parse("sample:about")).`when`(request).url
 
         val response = engineSession.webView.webViewClient.shouldInterceptRequest(
-                engineSession.webView,
-            request)
+            engineSession.webView,
+            request
+        )
 
         assertEquals("sample:about", interceptorCalledWithUri)
 
@@ -543,7 +545,8 @@ class SystemEngineSessionTest {
 
         engineSession.webView.webViewClient.shouldInterceptRequest(
             engineSession.webView,
-            request)
+            request
+        )
 
         verify(observer, never()).onLoadRequest(anyString(), anyBoolean(), anyBoolean())
     }
@@ -579,8 +582,9 @@ class SystemEngineSessionTest {
         doReturn(Uri.parse("sample:about")).`when`(request).url
 
         val response = engineSession.webView.webViewClient.shouldInterceptRequest(
-                engineSession.webView,
-                request)
+            engineSession.webView,
+            request
+        )
 
         assertNull(response)
         assertEquals("sample:about", interceptorCalledWithUri)
@@ -601,7 +605,8 @@ class SystemEngineSessionTest {
 
         val response = engineSession.webView.webViewClient.shouldInterceptRequest(
             engineSession.webView,
-            request)
+            request
+        )
 
         assertNull(response)
     }
@@ -638,7 +643,8 @@ class SystemEngineSessionTest {
 
         val response = engineSession.webView.webViewClient.shouldInterceptRequest(
             engineSession.webView,
-            request)
+            request
+        )
 
         assertEquals("sample:about", interceptorCalledWithUri)
         assertNull(response)
@@ -1020,10 +1026,12 @@ class SystemEngineSessionTest {
         whenever(webView.context).thenReturn(context)
         engineSession.webView = webView
 
-        engineSession.clearData(onError = {
-            onErrorCalled = true
-            assertSame(it, exception)
-        })
+        engineSession.clearData(
+            onError = {
+                onErrorCalled = true
+                assertSame(it, exception)
+            }
+        )
         assertTrue(onErrorCalled)
     }
 

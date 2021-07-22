@@ -84,9 +84,13 @@ class ShareDownloadFeatureTest {
 
     @Test
     fun `ShareFeature starts the share process for AddShareAction which is immediately consumed`() {
-        val store = spy(BrowserStore(BrowserState(
-            tabs = listOf(TabSessionState("123", ContentState(url = "https://www.mozilla.org")))
-        )))
+        val store = spy(
+            BrowserStore(
+                BrowserState(
+                    tabs = listOf(TabSessionState("123", ContentState(url = "https://www.mozilla.org")))
+                )
+            )
+        )
         val shareFeature = spy(ShareDownloadFeature(context, mock(), store, "123"))
         doNothing().`when`(shareFeature).startSharing(any())
         val download = ShareInternetResourceState(url = "testDownload")
