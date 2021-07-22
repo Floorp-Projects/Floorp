@@ -68,22 +68,25 @@ const AboutProfiling = React.createFactory(
 const createStore = require("devtools/client/shared/redux/create-store");
 const reducers = require("devtools/client/performance-new/store/reducers");
 const actions = require("devtools/client/performance-new/store/actions");
-const {
-  ActorReadyGeckoProfilerInterface,
-} = require("devtools/shared/performance-new/gecko-profiler-interface");
+const { Ci } = require("chrome");
+const Services = require("Services");
 
 /**
  * Initialize the panel by creating a redux store, and render the root component.
  *
- * @param {PerfFront} perfFront - The Perf actor's front. Used to start and stop recordings.
  * @param {PageContext} pageContext - The context that the UI is being loaded in under.
+ * @param {boolean} isSupportedPlatform
+ * @param {string[]} supportedFeatures
  * @param {(() => void)} [openRemoteDevTools] Optionally provide a way to go back to
  *                                            the remote devtools page.
  */
-async function gInit(perfFront, pageContext, openRemoteDevTools) {
+async function gInit(
+  pageContext,
+  isSupportedPlatform,
+  supportedFeatures,
+  openRemoteDevTools
+) {
   const store = createStore(reducers);
-  const isSupportedPlatform = await perfFront.isSupportedPlatform();
-  const supportedFeatures = await perfFront.getSupportedFeatures();
 
   const l10n = new FluentL10n();
   await l10n.init(
@@ -127,22 +130,16 @@ async function gInit(perfFront, pageContext, openRemoteDevTools) {
     ),
     document.querySelector("#root")
   );
-
-  window.addEventListener("unload", function() {
-    // Do not destroy the perf front if working remotely, about:debugging will do
-    // this for us.
-    if (pageContext !== "aboutprofiling-remote") {
-      // The perf front interface needs to be unloaded in order to remove event handlers.
-      // Not doing so leads to leaks.
-      perfFront.destroy();
-    }
-  });
 }
 
 // Automatically initialize the page if it's not a remote connection, otherwise
 // the page will be initialized by about:debugging.
 if (window.location.hash !== "#remote") {
   document.addEventListener("DOMContentLoaded", () => {
-    gInit(new ActorReadyGeckoProfilerInterface(), "aboutprofiling");
+    const isSupportedPlatform = "nsIProfiler" in Ci;
+    const supportedFeatures = isSupportedPlatform
+      ? Services.profiler.GetFeatures()
+      : [];
+    gInit("aboutprofiling", isSupportedPlatform, supportedFeatures);
   });
 }

@@ -189,7 +189,14 @@ class ClientWrapper {
    */
   async loadAboutProfiling(win, openRemoteDevTools) {
     const perfFront = await this.getFront("perf");
-    await win.gInit(perfFront, "aboutprofiling-remote", openRemoteDevTools);
+    const isSupportedPlatform = await perfFront.isSupportedPlatform();
+    const supportedFeatures = await perfFront.getSupportedFeatures();
+    await win.gInit(
+      "aboutprofiling-remote",
+      isSupportedPlatform,
+      supportedFeatures,
+      openRemoteDevTools
+    );
   }
 }
 
