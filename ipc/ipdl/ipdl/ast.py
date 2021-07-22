@@ -272,11 +272,21 @@ class Namespace(Node):
 class Protocol(NamespacedNode):
     def __init__(self, loc):
         NamespacedNode.__init__(self, loc)
+        self.attributes = {}
         self.sendSemantics = ASYNC
-        self.nested = NOT_NESTED
         self.managers = []
         self.managesStmts = []
         self.messageDecls = []
+
+    def nested(self):
+        if "NestedUpTo" not in self.attributes:
+            return NOT_NESTED
+
+        return {
+            "not": NOT_NESTED,
+            "inside_sync": INSIDE_SYNC_NESTED,
+            "inside_cpow": INSIDE_CPOW_NESTED,
+        }[self.attributes["NestedUpTo"].value]
 
 
 class StructField(Node):

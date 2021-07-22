@@ -17,7 +17,7 @@ using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 namespace mozilla {
 namespace net {
 
-async refcounted protocol PDNSRequest
+[RefCounted] async protocol PDNSRequest
 {
   manager PNecko or PSocketProcess;
 

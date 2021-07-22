@@ -33,7 +33,7 @@ struct NetworkAddressArg {
   bool echConfigUsed;
 };
 
-refcounted protocol PHttpTransaction
+[RefCounted] protocol PHttpTransaction
 {
   manager PSocketProcess;
 

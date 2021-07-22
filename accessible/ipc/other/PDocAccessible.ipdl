@@ -76,7 +76,7 @@ struct TextRangeData
   int32_t EndOffset;
 };
 
-nested(upto inside_sync) sync protocol PDocAccessible
+[NestedUpTo=inside_sync] sync protocol PDocAccessible
 {
   manager PBrowser;
   manages PDocAccessiblePlatformExt;

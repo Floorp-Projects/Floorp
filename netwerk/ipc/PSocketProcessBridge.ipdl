@@ -17,7 +17,7 @@ namespace net {
   * content process and PSocketProcessBridgeParent lives in
   * socket process.
   */
-nested(upto inside_cpow) sync protocol PSocketProcessBridge
+[NestedUpTo=inside_cpow] sync protocol PSocketProcessBridge
 {
 
 parent:

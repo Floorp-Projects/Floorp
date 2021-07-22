@@ -59,7 +59,7 @@ struct IPCWebShareData
  * link either between the chrome/content process, or will be in-process, for
  * documents which are loaded in the chrome process.
  */
-async refcounted protocol PWindowGlobal
+[RefCounted] async protocol PWindowGlobal
 {
   manager PBrowser or PInProcess;
 

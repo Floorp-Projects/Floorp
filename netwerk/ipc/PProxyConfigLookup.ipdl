@@ -9,7 +9,7 @@ include NeckoChannelParams;
 namespace mozilla {
 namespace net {
 
-async refcounted protocol PProxyConfigLookup
+[RefCounted] async protocol PProxyConfigLookup
 {
   manager PSocketProcess;
 

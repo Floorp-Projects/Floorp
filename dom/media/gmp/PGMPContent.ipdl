@@ -14,7 +14,7 @@ include protocol PSandboxTesting;
 namespace mozilla {
 namespace gmp {
 
-intr refcounted protocol PGMPContent
+[RefCounted] intr protocol PGMPContent
 {
   manages PGMPVideoDecoder;
   manages PGMPVideoEncoder;

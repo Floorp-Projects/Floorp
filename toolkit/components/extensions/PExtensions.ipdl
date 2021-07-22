@@ -27,7 +27,7 @@ struct FrameTransitionData
  * child process, which can be accessed via
  * `mozilla::extensions::ExtensionsChild::Get()`.
  */
-refcounted protocol PExtensions
+[RefCounted] protocol PExtensions
 {
     manager PContent or PInProcess;
 

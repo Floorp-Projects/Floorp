@@ -10,7 +10,7 @@ include protocol PSocketProcess;
 namespace mozilla {
 namespace net {
 
-refcounted protocol PInputChannelThrottleQueue
+[RefCounted] protocol PInputChannelThrottleQueue
 {
   manager PSocketProcess;
 

@@ -10,7 +10,7 @@ namespace mozilla {
 namespace net {
 
 //-------------------------------------------------------------------
-async refcounted protocol PBackgroundDataBridge
+[RefCounted] async protocol PBackgroundDataBridge
 {
   manager PBackground;
 

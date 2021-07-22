@@ -23,7 +23,7 @@ struct TextAttributesRun {
 };
 
 
-nested(upto inside_sync) sync protocol PDocAccessiblePlatformExt {
+[NestedUpTo=inside_sync] sync protocol PDocAccessiblePlatformExt {
   manager PDocAccessible;
 
 child:

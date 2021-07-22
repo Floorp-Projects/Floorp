@@ -22,7 +22,7 @@ using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 namespace mozilla {
 namespace net {
 
-refcounted protocol PDocumentChannel
+[RefCounted] protocol PDocumentChannel
 {
   manager PNecko;
 

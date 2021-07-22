@@ -414,7 +414,7 @@ union BlobURLDataRequestResult
  * and a content process. There is exactly one PContentParent/PContentChild pair
  * for each content process.
  */
-nested(upto inside_cpow) sync protocol PContent
+[NestedUpTo=inside_cpow] sync protocol PContent
 {
     manages PBrowser;
     manages PContentPermissionRequest;

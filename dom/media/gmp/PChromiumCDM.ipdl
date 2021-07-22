@@ -15,7 +15,7 @@ include "GMPMessageUtils.h";
 namespace mozilla {
 namespace gmp {
 
-async refcounted protocol PChromiumCDM
+[RefCounted] async protocol PChromiumCDM
 {
   manager PGMPContent;
 child:
