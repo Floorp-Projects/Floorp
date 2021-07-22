@@ -120,18 +120,6 @@ def cleanup_encoding(s):
     return _cleanup_encoding_re.sub(_cleanup_encoding_repl, s)
 
 
-def ensure_bytes(value, encoding="utf-8"):
-    if isinstance(value, six.text_type):
-        return value.encode(encoding)
-    return value
-
-
-def ensure_unicode(value, encoding="utf-8"):
-    if isinstance(value, six.binary_type):
-        return value.decode(encoding)
-    return value
-
-
 """ Control-C handling """
 gotSIGINT = False
 
