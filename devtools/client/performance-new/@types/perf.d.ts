@@ -56,9 +56,7 @@ type MaybePromise<T> = Promise<T> | T;
  * ActorReadyGeckoProfilerInterface and the PerfFront return promises.
  */
 export interface PerfFront {
-  startProfiler: (
-    options: RecordingSettings
-  ) => MaybePromise<boolean>;
+  startProfiler: (options: RecordingSettings) => MaybePromise<boolean>;
   getProfileAndStopProfiler: () => Promise<any>;
   stopProfilerAndDiscardProfile: () => MaybePromise<void>;
   getSymbolTable: (
@@ -144,7 +142,10 @@ export type SymbolTableAsTuple = [Uint32Array, Uint32Array, Uint8Array];
  */
 export type Dispatch = PlainDispatch & ThunkDispatch;
 
-export type ThunkAction<Returns> = ({ dispatch, getState }: {
+export type ThunkAction<Returns> = ({
+  dispatch,
+  getState,
+}: {
   dispatch: Dispatch;
   getState: GetState;
 }) => Returns;
@@ -181,9 +182,7 @@ export type ReceiveProfile = (
   getSymbolTableCallback: GetSymbolTableCallback
 ) => void;
 
-export type SetRecordingSettings = (
-  settings: RecordingSettings
-) => void;
+export type SetRecordingSettings = (settings: RecordingSettings) => void;
 
 /**
  * This is the type signature for a function to restart the browser with a given
