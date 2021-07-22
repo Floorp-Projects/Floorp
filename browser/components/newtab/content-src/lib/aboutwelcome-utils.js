@@ -49,9 +49,6 @@ export const AboutWelcomeUtils = {
       })
     );
   },
-  hasDarkMode() {
-    return document.body.hasAttribute("lwt-newtab-brighttext");
-  },
 };
 
 export const DEFAULT_RTAMO_CONTENT = {
