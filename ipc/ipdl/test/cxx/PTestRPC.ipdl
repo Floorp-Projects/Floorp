@@ -1,7 +1,7 @@
 namespace mozilla {
 namespace _ipdltest {
 
-nested(upto inside_sync) sync protocol PTestRPC
+[NestedUpTo=inside_sync] sync protocol PTestRPC
 {
 parent:
     [Nested=inside_sync] sync Test1_Start() returns (uint32_t result);

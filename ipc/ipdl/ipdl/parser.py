@@ -130,18 +130,15 @@ reserved = set(
         "manager",
         "manages",
         "namespace",
-        "nested",
         "nullable",
         "or",
         "parent",
         "protocol",
-        "refcounted",
         "returns",
         "struct",
         "sync",
         "union",
         "UniquePtr",
-        "upto",
         "using",
     )
 )
@@ -294,12 +291,6 @@ def p_UsingKind(p):
     p[0] = p[1] if 2 == len(p) else None
 
 
-def p_MaybeRefcounted(p):
-    """MaybeRefcounted : REFCOUNTED
-    |"""
-    p[0] = 2 == len(p)
-
-
 def p_UsingStmt(p):
     """UsingStmt : Attributes USING UsingKind CxxType FROM STRING"""
     p[0] = UsingStmt(
@@ -378,14 +369,13 @@ def p_ComponentTypes(p):
 
 
 def p_ProtocolDefn(p):
-    """ProtocolDefn : OptionalProtocolSendSemanticsQual MaybeRefcounted \
+    """ProtocolDefn : Attributes OptionalSendSemantics \
                       PROTOCOL ID '{' ProtocolBody '}' ';'"""
     protocol = p[6]
     protocol.loc = locFromTok(p, 3)
     protocol.name = p[4]
-    protocol.nested = p[1][0]
-    protocol.sendSemantics = p[1][1]
-    protocol.refcounted = p[2]
+    protocol.attributes = p[1]
+    protocol.sendSemantics = p[2]
     p[0] = protocol
 
     if Parser.current.type == "header":
@@ -559,19 +549,6 @@ def p_AttributeValue(p):
         p[0] = p[2]
 
 
-# --------------------
-# Minor stuff
-def p_Nested(p):
-    """Nested : ID"""
-    kinds = {"not": 1, "inside_sync": 2, "inside_cpow": 3}
-    if p[1] not in kinds:
-        _error(
-            locFromTok(p, 1), "Expected not, inside_sync, or inside_cpow for nested()"
-        )
-
-    p[0] = {"nested": kinds[p[1]]}
-
-
 def p_SendSemantics(p):
     """SendSemantics : ASYNC
     | SYNC
@@ -585,38 +562,17 @@ def p_SendSemantics(p):
         p[0] = INTR
 
 
-def p_OptionalProtocolSendSemanticsQual(p):
-    """OptionalProtocolSendSemanticsQual : ProtocolSendSemanticsQual
+def p_OptionalSendSemantics(p):
+    """OptionalSendSemantics : SendSemantics
     |"""
     if 2 == len(p):
         p[0] = p[1]
     else:
-        p[0] = [NOT_NESTED, ASYNC]
+        p[0] = ASYNC
 
 
-def p_ProtocolSendSemanticsQual(p):
-    """ProtocolSendSemanticsQual : ASYNC
-    | SYNC
-    | NESTED '(' UPTO Nested ')' ASYNC
-    | NESTED '(' UPTO Nested ')' SYNC
-    | INTR"""
-    if p[1] == "nested":
-        mtype = p[6]
-        nested = p[4]
-    else:
-        mtype = p[1]
-        nested = NOT_NESTED
-
-    if mtype == "async":
-        mtype = ASYNC
-    elif mtype == "sync":
-        mtype = SYNC
-    elif mtype == "intr":
-        mtype = INTR
-    else:
-        assert 0
-
-    p[0] = [nested, mtype]
+# --------------------
+# Minor stuff
 
 
 def p_ParamList(p):

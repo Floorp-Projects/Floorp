@@ -10,7 +10,7 @@ include DOMTypes;
 namespace mozilla {
 namespace dom {
 
-refcounted protocol PServiceWorker
+[RefCounted] protocol PServiceWorker
 {
   manager PBackground;
 

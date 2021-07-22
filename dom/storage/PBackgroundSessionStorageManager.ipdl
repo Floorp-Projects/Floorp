@@ -8,7 +8,7 @@ include protocol PBackgroundSessionStorageCache;
 namespace mozilla {
 namespace dom {
 
-sync refcounted protocol PBackgroundSessionStorageManager
+[RefCounted] sync protocol PBackgroundSessionStorageManager
 {
  manager PBackground;
  manages PBackgroundSessionStorageCache;

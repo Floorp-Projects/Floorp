@@ -12,7 +12,7 @@ include "ipc/ErrorIPCUtils.h";
 namespace mozilla {
 namespace dom {
 
-refcounted protocol PServiceWorkerRegistration
+[RefCounted] protocol PServiceWorkerRegistration
 {
   manager PBackground;
 
