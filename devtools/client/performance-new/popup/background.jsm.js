@@ -228,18 +228,19 @@ function getProfilerViewModeForCurrentPreset(pageContext) {
 }
 
 /**
- * This function is called directly by devtools/startup/DevToolsStartup.jsm when
- * using the shortcut keys to capture a profile.
+ * This function is called when the profile is captured with the shortcut
+ * keys, with the profiler toolbarbutton, or with the button inside the
+ * popup.
  * @param {PageContext} pageContext
  * @return {Promise<void>}
  */
 async function captureProfile(pageContext) {
   if (!Services.profiler.IsActive()) {
-    // The profiler is not active, ignore this shortcut.
+    // The profiler is not active, ignore.
     return;
   }
   if (Services.profiler.IsPaused()) {
-    // The profiler is already paused for capture, ignore this shortcut.
+    // The profiler is already paused for capture, ignore.
     return;
   }
 
@@ -266,8 +267,9 @@ async function captureProfile(pageContext) {
 }
 
 /**
- * This function is only called by devtools/startup/DevToolsStartup.jsm when
- * starting the profiler using the shortcut keys, through toggleProfiler below.
+ * This function is called when the profiler is started with the shortcut
+ * keys, with the profiler toolbarbutton, or with the button inside the
+ * popup.
  * @param {PageContext} pageContext
  */
 function startProfiler(pageContext) {

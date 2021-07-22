@@ -239,7 +239,7 @@ export interface InitializedValues {
   presets: Presets;
   // Determine the current page context.
   pageContext: PageContext;
-  // The popup and devtools panel use different codepaths for getting symbol tables.
+  // Only used by the devtools panel (both local and remote), not by about:profiling.
   getSymbolTableGetter: (
     profile: MinimallyTypedGeckoProfile
   ) => GetSymbolTableCallback;

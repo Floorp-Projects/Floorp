@@ -110,8 +110,9 @@ exports.changeFeatures = features => {
   return ({ dispatch, getState }) => {
     let promptEnvRestart = null;
     if (selectors.getPageContext(getState()) === "aboutprofiling") {
-      // TODO Bug 1615431 - The popup supported restarting the browser, but
-      // this hasn't been updated yet for the about:profiling workflow.
+      // TODO Bug 1615431 - The old popup supported restarting the browser, but
+      // this hasn't been updated yet for the about:profiling workflow, because
+      // jstracer is disabled for now.
       if (
         !getEnvironmentVariable("JS_TRACE_LOGGING") &&
         features.includes("jstracer")
