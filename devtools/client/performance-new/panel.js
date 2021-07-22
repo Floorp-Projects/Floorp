@@ -63,7 +63,7 @@ class PerformancePanel {
 
     const perfFront = await this.commands.client.mainRoot.getFront("perf");
 
-    this.panelWin.gInit(perfFront, "devtools");
+    await this.panelWin.gInit(perfFront, "devtools");
     return this;
   }
 
