@@ -16,7 +16,6 @@ export interface PanelWindow {
   gStore?: Store;
   gInit(perfFront: PerfFront, pageContext: PageContext): void;
   gDestroy(): void;
-  gReportReady?(): void;
   gIsPanelDestroyed?: boolean;
 }
 
