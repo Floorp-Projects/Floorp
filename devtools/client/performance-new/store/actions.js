@@ -26,21 +26,6 @@ const {
  */
 
 /**
- * The recording state manages the current state of the recording panel.
- * @param {RecordingState} state - A valid state in `recordingState`.
- * @param {{ recordingUnexpectedlyStopped: boolean }} options
- * @return {Action}
- */
-const changeRecordingState = (exports.changeRecordingState = (
-  state,
-  options = { recordingUnexpectedlyStopped: false }
-) => ({
-  type: "CHANGE_RECORDING_STATE",
-  state,
-  recordingUnexpectedlyStopped: options.recordingUnexpectedlyStopped,
-}));
-
-/**
  * This is the result of the initial questions about the state of the profiler.
  *
  * @param {boolean} isActive
@@ -51,6 +36,38 @@ exports.reportProfilerReady = (isActive, isLockedForPrivateBrowsing) => ({
   type: "REPORT_PROFILER_READY",
   isActive,
   isLockedForPrivateBrowsing,
+});
+
+/**
+ * Dispatched when the profiler starting is observed.
+ * @return {Action}
+ */
+exports.reportProfilerStarted = () => ({
+  type: "REPORT_PROFILER_STARTED",
+});
+
+/**
+ * Dispatched when the profiler stopping is observed.
+ * @return {Action}
+ */
+exports.reportProfilerStopped = () => ({
+  type: "REPORT_PROFILER_STOPPED",
+});
+
+/**
+ * Dispatched when a private browsing session has started.
+ * @return {Action}
+ */
+exports.reportPrivateBrowsingStarted = () => ({
+  type: "REPORT_PRIVATE_BROWSING_STARTED",
+});
+
+/**
+ * Dispatched when a private browsing session has ended.
+ * @return {Action}
+ */
+exports.reportPrivateBrowsingStopped = () => ({
+  type: "REPORT_PRIVATE_BROWSING_STOPPED",
 });
 
 /**
@@ -190,7 +207,7 @@ exports.startRecording = () => {
     // In the case of the profiler popup, the startProfiler can be synchronous.
     // In order to properly allow the React components to handle the state changes
     // make sure and change the recording state first, then start the profiler.
-    dispatch(changeRecordingState("request-to-start-recording"));
+    dispatch({ type: "REQUESTING_TO_START_RECORDING" });
     perfFront.startProfiler(recordingSettings);
   };
 };
@@ -202,9 +219,9 @@ exports.startRecording = () => {
 exports.getProfileAndStopProfiler = () => {
   return async ({ dispatch, getState }) => {
     const perfFront = selectors.getPerfFront(getState());
-    dispatch(changeRecordingState("request-to-get-profile-and-stop-profiler"));
+    dispatch({ type: "REQUESTING_PROFILE" });
     const profile = await perfFront.getProfileAndStopProfiler();
-    dispatch(changeRecordingState("available-to-record"));
+    dispatch({ type: "OBTAINED_PROFILE" });
     return profile;
   };
 };
@@ -216,7 +233,7 @@ exports.getProfileAndStopProfiler = () => {
 exports.stopProfilerAndDiscardProfile = () => {
   return async ({ dispatch, getState }) => {
     const perfFront = selectors.getPerfFront(getState());
-    dispatch(changeRecordingState("request-to-stop-profiler"));
+    dispatch({ type: "REQUESTING_TO_STOP_RECORDING" });
 
     try {
       await perfFront.stopProfilerAndDiscardProfile();

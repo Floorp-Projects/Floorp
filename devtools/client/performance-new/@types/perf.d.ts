@@ -261,14 +261,33 @@ export type Store = ReduxStore<State, Action>;
 
 export type Action =
   | {
-      type: "CHANGE_RECORDING_STATE";
-      state: RecordingState;
-      recordingUnexpectedlyStopped: boolean;
-    }
-  | {
       type: "REPORT_PROFILER_READY";
       isActive: boolean;
       isLockedForPrivateBrowsing: boolean;
+    }
+  | {
+      type: "REPORT_PROFILER_STARTED";
+    }
+  | {
+      type: "REPORT_PROFILER_STOPPED";
+    }
+  | {
+      type: "REPORT_PRIVATE_BROWSING_STARTED";
+    }
+  | {
+      type: "REPORT_PRIVATE_BROWSING_STOPPED";
+    }
+  | {
+      type: "REQUESTING_TO_START_RECORDING";
+    }
+  | {
+      type: "REQUESTING_TO_STOP_RECORDING";
+    }
+  | {
+      type: "REQUESTING_PROFILE";
+    }
+  | {
+      type: "OBTAINED_PROFILE";
     }
   | {
       type: "CHANGE_INTERVAL";
