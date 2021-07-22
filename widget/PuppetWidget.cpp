@@ -585,9 +585,7 @@ bool PuppetWidget::GetEditCommands(NativeKeyBindingsType aType,
   return true;
 }
 
-LayerManager* PuppetWidget::GetLayerManager(
-    PLayerTransactionChild* aShadowManager, LayersBackend aBackendHint,
-    LayerManagerPersistence aPersistence) {
+LayerManager* PuppetWidget::GetLayerManager() {
   if (!mLayerManager) {
     if (XRE_IsParentProcess()) {
       // On the parent process there is no CompositorBridgeChild which confuses

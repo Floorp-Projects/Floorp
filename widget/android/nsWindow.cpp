@@ -2176,8 +2176,7 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*) {
   return NS_OK;
 }
 
-mozilla::layers::LayerManager* nsWindow::GetLayerManager(
-    PLayerTransactionChild*, LayersBackend, LayerManagerPersistence) {
+mozilla::layers::LayerManager* nsWindow::GetLayerManager() {
   if (mLayerManager) {
     return mLayerManager;
   }

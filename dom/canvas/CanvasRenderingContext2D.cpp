@@ -1418,8 +1418,7 @@ static already_AddRefed<LayerManager> LayerManagerFromCanvasElement(
     return nullptr;
   }
 
-  return nsContentUtils::PersistentLayerManagerForDocument(
-      aCanvasElement->OwnerDoc());
+  return nsContentUtils::LayerManagerForDocument(aCanvasElement->OwnerDoc());
 }
 
 bool CanvasRenderingContext2D::TrySharedTarget(

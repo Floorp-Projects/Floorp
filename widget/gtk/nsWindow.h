@@ -598,10 +598,7 @@ class nsWindow final : public nsBaseWidget {
   void DispatchMissedButtonReleases(GdkEventCrossing* aGdkEvent);
 
   // nsBaseWidget
-  virtual LayerManager* GetLayerManager(
-      PLayerTransactionChild* aShadowManager = nullptr,
-      LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
-      LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
+  virtual LayerManager* GetLayerManager() override;
 
   void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
 

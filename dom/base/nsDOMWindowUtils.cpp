@@ -2545,8 +2545,7 @@ nsDOMWindowUtils::GetLayerManagerType(nsAString& aType) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) return NS_ERROR_FAILURE;
 
-  LayerManager* mgr =
-      widget->GetLayerManager(nsIWidget::LAYER_MANAGER_PERSISTENT);
+  LayerManager* mgr = widget->GetLayerManager();
   if (!mgr) return NS_ERROR_FAILURE;
 
   mgr->GetBackendName(aType);

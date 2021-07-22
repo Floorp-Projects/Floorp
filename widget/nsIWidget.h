@@ -1294,24 +1294,7 @@ class nsIWidget : public nsISupports {
    * Return the widget's LayerManager. The layer tree for that
    * LayerManager is what gets rendered to the widget.
    */
-  inline LayerManager* GetLayerManager() {
-    return GetLayerManager(nullptr, mozilla::layers::LayersBackend::LAYERS_NONE,
-                           LAYER_MANAGER_CURRENT);
-  }
-
-  inline LayerManager* GetLayerManager(LayerManagerPersistence aPersistence) {
-    return GetLayerManager(nullptr, mozilla::layers::LayersBackend::LAYERS_NONE,
-                           aPersistence);
-  }
-
-  /**
-   * Like GetLayerManager(), but prefers creating a layer manager of
-   * type |aBackendHint| instead of what would normally be created.
-   * LayersBackend::LAYERS_NONE means "no hint".
-   */
-  virtual LayerManager* GetLayerManager(
-      PLayerTransactionChild* aShadowManager, LayersBackend aBackendHint,
-      LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) = 0;
+  virtual LayerManager* GetLayerManager() = 0;
 
   /**
    * Called before each layer manager transaction to allow any preparation
