@@ -1411,6 +1411,7 @@ sftk_fips_IKE_PowerUpSelfTests(void)
         (outKeySize != sizeof(ike_known_sha256_prf_plus)) ||
         (PORT_Memcmp(outKeyData, ike_known_sha256_prf_plus,
                      sizeof(ike_known_sha256_prf_plus)) != 0)) {
+        PORT_ZFree(outKeyData, outKeySize);
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
