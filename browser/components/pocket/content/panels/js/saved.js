@@ -250,9 +250,9 @@ var PKT_PANEL_OVERLAY = function(options) {
                 Date.now() - this.changestamp > 250
               ) {
                 e.preventDefault();
-                $(".pkt_ext_containersaved")
-                  .find(".pkt_ext_btn")
-                  .trigger("click");
+                document
+                  .querySelector(`.pkt_ext_containersaved .pkt_ext_btn`)
+                  .click();
               }
             }
           })
