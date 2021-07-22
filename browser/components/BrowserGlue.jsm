@@ -4238,7 +4238,7 @@ BrowserGlue.prototype = {
 
   _updateFxaBadges(win) {
     let fxaButton = win.document.getElementById("fxa-toolbar-menu-button");
-    let badge = fxaButton.querySelector(".toolbarbutton-badge");
+    let badge = fxaButton?.querySelector(".toolbarbutton-badge");
 
     let state = UIState.get();
     if (
@@ -4251,16 +4251,16 @@ BrowserGlue.prototype = {
       let isFxAButtonShown = navToolbox.contains(fxaButton);
       if (isFxAButtonShown) {
         state.status == UIState.STATUS_LOGIN_FAILED
-          ? fxaButton.setAttribute("badge-status", state.status)
-          : badge.classList.add("feature-callout");
+          ? fxaButton?.setAttribute("badge-status", state.status)
+          : badge?.classList.add("feature-callout");
       } else {
         AppMenuNotifications.showBadgeOnlyNotification(
           "fxa-needs-authentication"
         );
       }
     } else {
-      fxaButton.removeAttribute("badge-status");
-      badge.classList.remove("feature-callout");
+      fxaButton?.removeAttribute("badge-status");
+      badge?.classList.remove("feature-callout");
       AppMenuNotifications.removeNotification("fxa-needs-authentication");
     }
   },
