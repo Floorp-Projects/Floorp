@@ -497,3 +497,93 @@ TEST_F(AvailableMemoryWatcherFixture, InactiveToActive) {
   // After user is active, we expect true.
   EXPECT_TRUE(mHighMemoryObserver->Wait(kStateChangeTimeoutMs));
 }
+
+TEST_F(AvailableMemoryWatcherFixture, HighCommitSpace_AlwaysActive) {
+  // Setting a low threshold simulates a high commit space.
+  SetThresholdAsPercentageOfCommitSpace(1);
+  StartUserInteraction();
+
+  const size_t allocSize = GetAllocationSizeToTriggerMemoryNotification();
+  if (!allocSize) {
+    // Not enough memory to safely create a low-memory situation.
+    // Aborting the test without failure.
+    return;
+  }
+
+  mTabUnloader->ResetCounter();
+  mMemEater.RequestAlloc(allocSize);
+  if (!WaitForMemoryResourceNotification()) {
+    // If the notification was not triggered, abort the test without failure
+    // because it's not a fault in nsAvailableMemoryWatcher.
+    return;
+  }
+
+  // Tab unload will not be triggered because the commit space is not low.
+  EXPECT_FALSE(WaitUntil([this]() { return mTabUnloader->GetCounter() >= 1; },
+                         kStateChangeTimeoutMs / 2));
+
+  mMemEater.RequestFree();
+  ::Sleep(kStateChangeTimeoutMs / 2);
+
+  // Set a high threshold and make sure the watcher will trigger the tab
+  // unloader next time.
+  SetThresholdAsPercentageOfCommitSpace(50);
+
+  mMemEater.RequestAlloc(allocSize);
+  if (!WaitForMemoryResourceNotification()) {
+    return;
+  }
+
+  EXPECT_TRUE(WaitUntil([this]() { return mTabUnloader->GetCounter() >= 1; },
+                        kStateChangeTimeoutMs));
+
+  mHighMemoryObserver->StartListening();
+  mMemEater.RequestFree();
+  EXPECT_TRUE(mHighMemoryObserver->Wait(kStateChangeTimeoutMs));
+}
+
+TEST_F(AvailableMemoryWatcherFixture, HighCommitSpace_InactiveToActive) {
+  // Setting a low threshold simulates a high commit space.
+  SetThresholdAsPercentageOfCommitSpace(1);
+
+  const size_t allocSize = GetAllocationSizeToTriggerMemoryNotification();
+  if (!allocSize) {
+    // Not enough memory to safely create a low-memory situation.
+    // Aborting the test without failure.
+    return;
+  }
+
+  mTabUnloader->ResetCounter();
+  mMemEater.RequestAlloc(allocSize);
+  if (!WaitForMemoryResourceNotification()) {
+    // If the notification was not triggered, abort the test without failure
+    // because it's not a fault in nsAvailableMemoryWatcher.
+    return;
+  }
+
+  // Tab unload will not be triggered because the commit space is not low.
+  EXPECT_FALSE(WaitUntil([this]() { return mTabUnloader->GetCounter() >= 1; },
+                         kStateChangeTimeoutMs / 2));
+
+  mMemEater.RequestFree();
+  ::Sleep(kStateChangeTimeoutMs / 2);
+
+  // Set a high threshold and make sure the watcher will trigger the tab
+  // unloader next time.
+  SetThresholdAsPercentageOfCommitSpace(50);
+
+  // When the user becomes active, the watcher will resume the timer.
+  StartUserInteraction();
+
+  mMemEater.RequestAlloc(allocSize);
+  if (!WaitForMemoryResourceNotification()) {
+    return;
+  }
+
+  EXPECT_TRUE(WaitUntil([this]() { return mTabUnloader->GetCounter() >= 1; },
+                        kStateChangeTimeoutMs));
+
+  mHighMemoryObserver->StartListening();
+  mMemEater.RequestFree();
+  EXPECT_TRUE(mHighMemoryObserver->Wait(kStateChangeTimeoutMs));
+}
