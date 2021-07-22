@@ -92,18 +92,6 @@ class ProfilerEventHandling extends PureComponent {
         }
       }
       reportProfilerReady(isSupportedPlatform, recordingState);
-
-      // If this component is inside the popup, then report it being ready so that
-      // it will show. This defers the initial visibility of the popup until the
-      // React components have fully rendered, and thus there is no annoying "blip"
-      // to the screen when the page goes from fully blank, to showing the content.
-      /** @type {any} */
-      const anyWindow = window;
-      /** @type {PanelWindow} - Coerce the window into the PanelWindow. */
-      const { gReportReady } = anyWindow;
-      if (gReportReady) {
-        gReportReady();
-      }
     });
 
     // Handle when the profiler changes state. It might be us, it might be someone else.
