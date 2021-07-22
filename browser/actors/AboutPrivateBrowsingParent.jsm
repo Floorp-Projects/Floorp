@@ -28,6 +28,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Region: "resource://gre/modules/Region.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
 });
 
 // We only show the private search banner once per browser session.
@@ -62,13 +63,14 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
       }
       case "SearchHandoff": {
         let urlBar = win.gURLBar;
+        let searchEngine = Services.search.defaultPrivateEngine;
         let isFirstChange = true;
 
         if (!aMessage.data || !aMessage.data.text) {
           urlBar.setHiddenFocus();
         } else {
           // Pass the provided text to the awesomebar
-          urlBar.search(aMessage.data.text);
+          urlBar.handoff(aMessage.data.text, searchEngine);
           isFirstChange = false;
         }
 
@@ -79,7 +81,7 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
           if (isFirstChange) {
             isFirstChange = false;
             urlBar.removeHiddenFocus(true);
-            urlBar.search("");
+            urlBar.handoff("", searchEngine);
             this.sendAsyncMessage("DisableSearch");
             urlBar.removeEventListener("compositionstart", checkFirstChange);
             urlBar.removeEventListener("paste", checkFirstChange);
@@ -123,7 +125,10 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
           "browser.urlbar.placeholderName.private",
           ""
         );
-        return engineName;
+        let shouldHandOffToSearchMode = UrlbarPrefs.get(
+          "shouldHandOffToSearchMode"
+        );
+        return [engineName, shouldHandOffToSearchMode];
       }
       case "ShouldShowSearchBanner": {
         // If this is a pre-loaded private browsing new tab, then we don't want
