@@ -85,6 +85,7 @@ const {
  */
 async function gInit(perfFront, pageContext, openRemoteDevTools) {
   const store = createStore(reducers);
+  const isSupportedPlatform = await perfFront.isSupportedPlatform();
   const supportedFeatures = await perfFront.getSupportedFeatures();
 
   const l10n = new FluentL10n();
@@ -104,6 +105,7 @@ async function gInit(perfFront, pageContext, openRemoteDevTools) {
   store.dispatch(
     actions.initializeStore({
       perfFront,
+      isSupportedPlatform,
       supportedFeatures,
       presets,
       // Get the preferences from the current browser

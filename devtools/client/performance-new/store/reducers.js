@@ -54,7 +54,7 @@ function recordingUnexpectedlyStopped(state = false, action) {
  */
 function isSupportedPlatform(state = null, action) {
   switch (action.type) {
-    case "REPORT_PROFILER_READY":
+    case "INITIALIZE_STORE":
       return action.isSupportedPlatform;
     default:
       return state;
