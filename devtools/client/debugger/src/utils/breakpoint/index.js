@@ -2,29 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import {
-  getBreakpoint,
-  getSource,
-  getSourceActorsForSource,
-} from "../../selectors";
+import { getSource, getSourceActorsForSource } from "../../selectors";
 import { isGenerated } from "../source";
 import { sortSelectedLocations } from "../location";
 import assert from "../assert";
-import { features } from "../prefs";
-
 export * from "./astBreakpointLocation";
 export * from "./breakpointPositions";
-
-// Return the first argument that is a string, or null if nothing is a
-// string.
-export function firstString(...args) {
-  for (const arg of args) {
-    if (typeof arg === "string") {
-      return arg;
-    }
-  }
-  return null;
-}
 
 // The ID for a Breakpoint is derived from its location in its Source.
 export function makeBreakpointId(location) {
@@ -67,34 +50,9 @@ export function makeBreakpointLocation(state, location) {
   return breakpointLocation;
 }
 
-export function makeSourceActorLocation(sourceActor, location) {
-  return {
-    sourceActor,
-    line: location.line,
-    column: location.column,
-  };
-}
-
-// The ID for a BreakpointActor is derived from its location in its SourceActor.
-export function makeBreakpointActorId(location) {
-  const { sourceActor, line, column } = location;
-  return `${sourceActor}:${line}:${column || ""}`;
-}
-
-export function assertBreakpoint(breakpoint) {
-  assertLocation(breakpoint.location);
-  assertLocation(breakpoint.generatedLocation);
-}
-
 export function assertPendingBreakpoint(pendingBreakpoint) {
   assertPendingLocation(pendingBreakpoint.location);
   assertPendingLocation(pendingBreakpoint.generatedLocation);
-}
-
-export function assertLocation(location) {
-  assertPendingLocation(location);
-  const { sourceId } = location;
-  assert(!!sourceId, "location must have a source id");
 }
 
 export function assertPendingLocation(location) {
@@ -109,29 +67,6 @@ export function assertPendingLocation(location) {
     location.hasOwnProperty("column") != null,
     "location must have a column"
   );
-}
-
-// syncing
-export function breakpointAtLocation(breakpoints, { line, column }) {
-  return breakpoints.find(breakpoint => {
-    const sameLine = breakpoint.location.line === line;
-    if (!sameLine) {
-      return false;
-    }
-
-    // NOTE: when column breakpoints are disabled we want to find
-    // the first breakpoint
-    if (!features.columnBreakpoints) {
-      return true;
-    }
-
-    return breakpoint.location.column === column;
-  });
-}
-
-export function breakpointExists(state, location) {
-  const currentBp = getBreakpoint(state, location);
-  return !!currentBp && !currentBp.disabled;
 }
 
 export function createXHRBreakpoint(path, method, overrides = {}) {
