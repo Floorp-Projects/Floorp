@@ -11,6 +11,7 @@
 #include "js/PropertyAndElement.h"  // JS_Enumerate, JS_GetElement, JS_GetProperty
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Unused.h"
+#include "nsTArray.h"
 #include "nsPrintfCString.h"
 
 using namespace mozilla;
@@ -170,6 +171,90 @@ bool EventPresent(JSContext* aCx, const JS::RootedValue& aSnapshot,
 
   // We didn't find it!
   return false;
+}
+
+nsTArray<nsString> EventValuesToArray(JSContext* aCx,
+                                      const JS::RootedValue& aSnapshot,
+                                      const nsAString& aCategory,
+                                      const nsAString& aMethod,
+                                      const nsAString& aObject) {
+  constexpr int kIndexOfCategory = 1;
+  constexpr int kIndexOfMethod = 2;
+  constexpr int kIndexOfObject = 3;
+  constexpr int kIndexOfValueString = 4;
+
+  nsTArray<nsString> valueArray;
+  if (aSnapshot.isNullOrUndefined()) {
+    return valueArray;
+  }
+
+  bool isArray = false;
+  EXPECT_TRUE(JS::IsArrayObject(aCx, aSnapshot, &isArray) && isArray)
+      << "The snapshot must be an array.";
+
+  JS::RootedObject arrayObj(aCx, &aSnapshot.toObject());
+
+  uint32_t arrayLength = 0;
+  EXPECT_TRUE(JS::GetArrayLength(aCx, arrayObj, &arrayLength))
+      << "Array must have a length.";
+
+  JS::Rooted<JS::Value> jsVal(aCx);
+  nsAutoJSString jsStr;
+
+  for (uint32_t arrayIdx = 0; arrayIdx < arrayLength; ++arrayIdx) {
+    JS::Rooted<JS::Value> element(aCx);
+    EXPECT_TRUE(JS_GetElement(aCx, arrayObj, arrayIdx, &element))
+        << "Must be able to get element.";
+
+    EXPECT_TRUE(JS::IsArrayObject(aCx, element, &isArray) && isArray)
+        << "Element must be an array.";
+
+    JS::RootedObject eventArray(aCx, &element.toObject());
+    uint32_t eventLength;
+    EXPECT_TRUE(JS::GetArrayLength(aCx, eventArray, &eventLength))
+        << "Event array must have a length.";
+    EXPECT_TRUE(eventLength >= kIndexOfValueString)
+        << "Event array must have at least 4 elements (timestamp, category, "
+           "method, object).";
+
+    EXPECT_TRUE(JS_GetElement(aCx, eventArray, kIndexOfCategory, &jsVal))
+        << "Must be able to get category.";
+    EXPECT_TRUE(jsVal.isString()) << "Category must be a string.";
+    EXPECT_TRUE(jsStr.init(aCx, jsVal))
+        << "Category must be able to be init'd to a jsstring.";
+    if (jsStr != aCategory) {
+      continue;
+    }
+
+    EXPECT_TRUE(JS_GetElement(aCx, eventArray, kIndexOfMethod, &jsVal))
+        << "Must be able to get method.";
+    EXPECT_TRUE(jsVal.isString()) << "Method must be a string.";
+    EXPECT_TRUE(jsStr.init(aCx, jsVal))
+        << "Method must be able to be init'd to a jsstring.";
+    if (jsStr != aMethod) {
+      continue;
+    }
+
+    EXPECT_TRUE(JS_GetElement(aCx, eventArray, kIndexOfObject, &jsVal))
+        << "Must be able to get object.";
+    EXPECT_TRUE(jsVal.isString()) << "Object must be a string.";
+    EXPECT_TRUE(jsStr.init(aCx, jsVal))
+        << "Object must be able to be init'd to a jsstring.";
+    if (jsStr != aObject) {
+      continue;
+    }
+
+    if (!JS_GetElement(aCx, eventArray, kIndexOfValueString, &jsVal)) {
+      continue;
+    }
+
+    nsString str;
+    EXPECT_TRUE(AssignJSString(aCx, str, jsVal.toString()))
+        << "Value must be able to be init'd to a string.";
+    Unused << valueArray.EmplaceBack(std::move(str));
+  }
+
+  return valueArray;
 }
 
 void GetOriginSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,

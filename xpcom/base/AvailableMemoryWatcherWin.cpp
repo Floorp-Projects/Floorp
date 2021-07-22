@@ -277,6 +277,7 @@ void nsAvailableMemoryWatcher::OnLowMemory(const MutexAutoLock& aLock) {
 
   if (NS_IsMainThread()) {
     MaybeSaveMemoryReport(aLock);
+    UpdateLowMemoryTimeStamp();
     {
       // Don't invoke UnloadTabAsync() with the lock to avoid deadlock
       // because nsAvailableMemoryWatcher::Notify may be invoked while
@@ -292,6 +293,7 @@ void nsAvailableMemoryWatcher::OnLowMemory(const MutexAutoLock& aLock) {
           {
             MutexAutoLock lock(self->mMutex);
             self->MaybeSaveMemoryReport(lock);
+            self->UpdateLowMemoryTimeStamp();
           }
           self->mTabUnloader->UnloadTabAsync();
         }));
@@ -304,6 +306,7 @@ void nsAvailableMemoryWatcher::OnHighMemory(const MutexAutoLock& aLock) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mUnderMemoryPressure) {
+    RecordTelemetryEventOnHighMemory();
     NS_NotifyOfEventualMemoryPressure(MemoryPressureState::NoPressure);
   }
 
