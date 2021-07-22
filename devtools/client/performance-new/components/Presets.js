@@ -96,20 +96,14 @@ class Preset extends PureComponent {
  * @extends {React.PureComponent<Props>}
  */
 class Presets extends PureComponent {
-  /** @param {Props} props */
-  constructor(props) {
-    super(props);
-    this.onChange = this.onChange.bind(this);
-  }
-
   /**
    * Handle the checkbox change.
    * @param {string} presetName
    */
-  onChange(presetName) {
+  onChange = presetName => {
     const { presets } = this.props;
     this.props.changePreset(presets, presetName);
-  }
+  };
 
   render() {
     const { presets, selectedPresetName } = this.props;

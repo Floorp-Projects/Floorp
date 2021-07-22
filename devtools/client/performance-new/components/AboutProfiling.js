@@ -56,13 +56,7 @@ const {
  * @extends {React.PureComponent<Props>}
  */
 class AboutProfiling extends PureComponent {
-  /** @param {Props} props */
-  constructor(props) {
-    super(props);
-    this.handleRestart = this.handleRestart.bind(this);
-  }
-
-  handleRestart() {
+  handleRestart = () => {
     const { promptEnvRestart } = this.props;
     if (!promptEnvRestart) {
       throw new Error(
@@ -70,7 +64,7 @@ class AboutProfiling extends PureComponent {
       );
     }
     restartBrowserWithEnvironmentVariable(promptEnvRestart, "1");
-  }
+  };
 
   render() {
     const {

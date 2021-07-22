@@ -71,7 +71,6 @@ class DevToolsPresetSelection extends PureComponent {
   /** @param {Props} props */
   constructor(props) {
     super(props);
-    this.onPresetChange = this.onPresetChange.bind(this);
 
     /**
      * Create an object map to easily look up feature description.
@@ -87,10 +86,10 @@ class DevToolsPresetSelection extends PureComponent {
    * Handle the select change.
    * @param {React.ChangeEvent<HTMLSelectElement>} event
    */
-  onPresetChange(event) {
+  onPresetChange = event => {
     const { presets } = this.props;
     this.props.changePreset(presets, event.target.value);
-  }
+  };
 
   render() {
     const { presetName, presets, onEditSettingsLinkClicked } = this.props;
