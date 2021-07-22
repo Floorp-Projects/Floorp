@@ -1414,7 +1414,7 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
 }
 
 .printPreviewBrowser {
-  display: none;
+  visibility: collapse;
   opacity: 1;
   transition: opacity 60ms;
 }
@@ -1422,7 +1422,7 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
 .previewStack[previewtype="source"] > .printPreviewBrowser[previewtype="source"],
 .previewStack[previewtype="selection"] > .printPreviewBrowser[previewtype="selection"],
 .previewStack[previewtype="simplified"] > .printPreviewBrowser[previewtype="simplified"] {
-  display: block;
+  visibility: visible;
 }
 
 .previewStack[rendering=true] > .printPreviewBrowser {
