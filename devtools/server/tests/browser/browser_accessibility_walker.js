@@ -164,15 +164,26 @@ add_task(async function() {
   is(index, 2, "Current index is correct");
   await a11yWalker.hideTabbingOrder();
 
-  info(
-    "Checking document-ready event fired by walker when top level accessible " +
-      "document is recreated."
-  );
-  const reloaded = BrowserTestUtils.browserLoaded(browser);
-  const documentReady = a11yWalker.once("document-ready");
-  browser.reload();
-  await reloaded;
-  await documentReady;
+  // If server targets are enable, reloads will spawn a new toplevel target,
+  // so that we can no longer expect an event on previous target's front.
+  // Instead the panel should emit the 'reloaded' event.
+  if (isServerTargetSwitchingEnabled()) {
+    info(
+      "When targets follow the WindowGlobal lifecycle and handle only one document, " +
+        "only check that the panel refreshes correctly and emit its 'reloaded' event"
+    );
+    await refreshTab();
+  } else {
+    info(
+      "When targets follow the DocShell lifecycle and handle more than one document, " +
+        "check that document-ready event fired by walker when top level accessible document is recreated."
+    );
+    const reloaded = BrowserTestUtils.browserLoaded(browser);
+    const documentReady = a11yWalker.once("document-ready");
+    browser.reload();
+    await reloaded;
+    await documentReady;
+  }
 
   await waitForA11yShutdown(parentAccessibility);
   await target.destroy();
