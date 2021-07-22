@@ -31,7 +31,7 @@ class BookmarksStorageSuggestionProviderTest {
 
     private val newItem = BookmarkNode(
         BookmarkNodeType.ITEM, "123", "456", null,
-        "Mozilla", "http://www.mozilla.org", null
+        "Mozilla", "http://www.mozilla.org", 0, null
     )
 
     @Test
@@ -134,7 +134,7 @@ class BookmarksStorageSuggestionProviderTest {
             throw NotImplementedError()
         }
 
-        override suspend fun getRecentBookmarks(limit: Int): List<BookmarkNode> {
+        override suspend fun getRecentBookmarks(limit: Int, maxAge: Long?, currentTime: Long): List<BookmarkNode> {
             // "Not needed for the test"
             throw NotImplementedError()
         }
@@ -176,7 +176,7 @@ class BookmarksStorageSuggestionProviderTest {
         ): String {
             val id = UUID.randomUUID().toString()
             bookmarkMap[id] =
-                BookmarkNode(BookmarkNodeType.ITEM, id, parentGuid, position, title, url, null)
+                BookmarkNode(BookmarkNodeType.ITEM, id, parentGuid, position, title, url, 0, null)
             return id
         }
 

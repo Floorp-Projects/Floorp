@@ -21,6 +21,7 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 class PlacesBookmarksStorageTest {
@@ -143,11 +144,28 @@ class PlacesBookmarksStorageTest {
             assertEquals(insertedItem, this[0].guid)
         }
 
+        with(bookmarks.getRecentBookmarks(1, TimeUnit.DAYS.toMillis(1))) {
+            assertEquals(insertedItem, this[0].guid)
+        }
+
+        with(bookmarks.getRecentBookmarks(1, 99, System.currentTimeMillis() + 100)) {
+            assertTrue(this.isEmpty())
+        }
+
         val secondInsertedItem = bookmarks.addItem(BookmarkRoot.Unfiled.id, url, "Mozilla", 6)
 
         with(bookmarks.getRecentBookmarks(2)) {
             assertEquals(secondInsertedItem, this[0].guid)
             assertEquals(insertedItem, this[1].guid)
+        }
+
+        with(bookmarks.getRecentBookmarks(2, TimeUnit.DAYS.toMillis(1))) {
+            assertEquals(secondInsertedItem, this[0].guid)
+            assertEquals(insertedItem, this[1].guid)
+        }
+
+        with(bookmarks.getRecentBookmarks(2, 99, System.currentTimeMillis() + 100)) {
+            assertTrue(this.isEmpty())
         }
 
         assertTrue(bookmarks.deleteNode(secondInsertedItem))

@@ -94,14 +94,40 @@ internal fun mozilla.appservices.places.TopFrecentSiteInfo.into(): TopFrecentSit
 internal fun BookmarkTreeNode.asBookmarkNode(): BookmarkNode {
     return when (this) {
         is BookmarkItem -> {
-            BookmarkNode(BookmarkNodeType.ITEM, this.guid, this.parentGUID, this.position, this.title, this.url, null)
+            BookmarkNode(
+                BookmarkNodeType.ITEM,
+                this.guid,
+                this.parentGUID,
+                this.position,
+                this.title,
+                this.url,
+                this.dateAdded,
+                null
+            )
         }
         is BookmarkFolder -> {
-            BookmarkNode(BookmarkNodeType.FOLDER, this.guid, this.parentGUID, this.position, this.title, null,
-                this.children?.map(BookmarkTreeNode::asBookmarkNode))
+            BookmarkNode(
+                BookmarkNodeType.FOLDER,
+                this.guid,
+                this.parentGUID,
+                this.position,
+                this.title,
+                null,
+                this.dateAdded,
+                this.children?.map(BookmarkTreeNode::asBookmarkNode)
+            )
         }
         is BookmarkSeparator -> {
-            BookmarkNode(BookmarkNodeType.SEPARATOR, this.guid, this.parentGUID, this.position, null, null, null)
+            BookmarkNode(
+                BookmarkNodeType.SEPARATOR,
+                this.guid,
+                this.parentGUID,
+                this.position,
+                null,
+                null,
+                this.dateAdded,
+                null
+            )
         }
     }
 }

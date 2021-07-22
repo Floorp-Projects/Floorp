@@ -5,6 +5,7 @@
 package mozilla.components.browser.storage.sync
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkUpdateInfo
 import mozilla.appservices.places.PlacesApi
@@ -79,11 +80,23 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * Retrieves a list of recently added bookmarks.
      *
      * @param limit The maximum number of entries to return.
+     * @param maxAge Optional parameter used to filter out entries older than this number of milliseconds.
+     * @param currentTime Optional parameter for current time. Defaults toSystem.currentTimeMillis()
      * @return The list of matching bookmark nodes up to the limit number of items.
      */
-    override suspend fun getRecentBookmarks(limit: Int): List<BookmarkNode> {
+    override suspend fun getRecentBookmarks(
+        limit: Int,
+        maxAge: Long?,
+        @VisibleForTesting currentTime: Long
+    ): List<BookmarkNode> {
         return withContext(readScope.coroutineContext) {
-            reader.getRecentBookmarks(limit).map { it.asBookmarkNode() }
+            val threshold = if (maxAge != null) {
+                currentTime - maxAge
+            } else {
+                0
+            }
+            reader.getRecentBookmarks(limit).filter { it.dateAdded >= threshold }
+                .map { it.asBookmarkNode() }
         }
     }
 
