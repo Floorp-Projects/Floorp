@@ -126,6 +126,11 @@ impl Drop for AndroidHandler {
             Err(e) => error!("Failed deleting GeckoView configuration file: {}", e),
         }
 
+        match self.process.device.remove(&self.test_root) {
+            Ok(_) => debug!("Deleted test root folder: {}", &self.test_root.display()),
+            Err(e) => error!("Failed deleting test root folder: {}", e),
+        }
+
         match self.process.device.kill_forward_port(self.host_port) {
             Ok(_) => debug!(
                 "Android port forward ({} -> {}) stopped",
