@@ -11,7 +11,7 @@
 /**
  * @typedef {Object} StateProps
  * @property {RecordingState} recordingState
- * @property {boolean} isSupportedPlatform
+ * @property {boolean | null} isSupportedPlatform
  * @property {boolean} recordingUnexpectedlyStopped
  * @property {PageContext} pageContext
  * @property {import("../@types/perf").ProfilerViewMode | undefined} profilerViewMode

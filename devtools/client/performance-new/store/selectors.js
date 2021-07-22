@@ -29,7 +29,7 @@ const getRecordingState = state => state.recordingState;
 const getRecordingUnexpectedlyStopped = state =>
   state.recordingUnexpectedlyStopped;
 
-/** @type {Selector<boolean>} */
+/** @type {Selector<boolean | null>} */
 const getIsSupportedPlatform = state => state.isSupportedPlatform;
 
 /** @type {Selector<number>} */
