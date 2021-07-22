@@ -34,8 +34,6 @@ class WinTaskbar final : public nsIWinTaskbar {
  private:
   bool Initialize();
 
-  typedef HRESULT(WINAPI* SetCurrentProcessExplicitAppUserModelIDPtr)(
-      PCWSTR AppID);
   ITaskbarList4* mTaskbar;
 };
 
