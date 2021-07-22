@@ -10,4 +10,5 @@ or seriously develop one we can land and run internally.  While being written fo
   clang-query.rst
   compiler-explorer.rst
   writing-matchers.rst
+  adding-a-check.rst
 
