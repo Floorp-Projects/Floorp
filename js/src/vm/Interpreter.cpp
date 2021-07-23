@@ -251,15 +251,10 @@ static JSObject* SuperFunOperation(JSObject* callee) {
   return callee->as<JSFunction>().staticPrototype();
 }
 
-static JSObject* HomeObjectSuperBase(JSContext* cx, JSObject* homeObj) {
+static JSObject* HomeObjectSuperBase(JSObject* homeObj) {
   MOZ_ASSERT(homeObj->is<PlainObject>() || homeObj->is<JSFunction>());
 
-  if (JSObject* superBase = homeObj->staticPrototype()) {
-    return superBase;
-  }
-
-  ThrowHomeObjectNotObject(cx);
-  return nullptr;
+  return homeObj->staticPrototype();
 }
 
 bool js::ReportIsNotFunction(JSContext* cx, HandleValue v, int numToSkip,
@@ -2917,9 +2912,16 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(GetPropSuper) {
       ReservedRooted<Value> receiver(&rootValue0, REGS.sp[-2]);
-      ReservedRooted<JSObject*> obj(&rootObject1, &REGS.sp[-1].toObject());
+      HandleValue lval = REGS.stackHandleAt(-1);
+      MOZ_ASSERT(lval.isObjectOrNull());
       MutableHandleValue rref = REGS.stackHandleAt(-2);
       ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
+
+      ReservedRooted<JSObject*> obj(&rootObject0);
+      obj = ToObjectFromStackForPropertyAccess(cx, lval, -1, name);
+      if (!obj) {
+        goto error;
+      }
 
       if (!GetProperty(cx, obj, receiver, name, rref)) {
         goto error;
@@ -3008,11 +3010,18 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
           "setprop-super and strictsetprop-super must be the same size");
 
       HandleValue receiver = REGS.stackHandleAt(-3);
-      ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-2].toObject());
+      HandleValue lval = REGS.stackHandleAt(-2);
+      MOZ_ASSERT(lval.isObjectOrNull());
       HandleValue rval = REGS.stackHandleAt(-1);
       ReservedRooted<jsid> id(&rootId0, NameToId(script->getName(REGS.pc)));
 
       bool strict = JSOp(*REGS.pc) == JSOp::StrictSetPropSuper;
+
+      ReservedRooted<JSObject*> obj(&rootObject0);
+      obj = ToObjectFromStackForPropertyAccess(cx, lval, -2, id);
+      if (!obj) {
+        goto error;
+      }
 
       if (!SetObjectElementOperation(cx, obj, id, rval, receiver, strict)) {
         goto error;
@@ -3040,13 +3049,17 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(GetElemSuper) {
       ReservedRooted<Value> receiver(&rootValue0, REGS.sp[-3]);
       HandleValue index = REGS.stackHandleAt(-2);
-      ReservedRooted<JSObject*> obj(&rootObject1, &REGS.sp[-1].toObject());
+      HandleValue lval = REGS.stackHandleAt(-1);
+      MOZ_ASSERT(lval.isObjectOrNull());
 
       MutableHandleValue res = REGS.stackHandleAt(-3);
 
-      // Since we have asserted that obj has to be an object, it cannot be
-      // either optimized arguments, or indeed any primitive. This simplifies
-      // our task some.
+      ReservedRooted<JSObject*> obj(&rootObject0);
+      obj = ToObjectFromStackForPropertyAccess(cx, lval, -1, index);
+      if (!obj) {
+        goto error;
+      }
+
       if (!GetObjectElementOperation(cx, JSOp(*REGS.pc), obj, receiver, index,
                                      res)) {
         goto error;
@@ -3090,8 +3103,16 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
           "setelem-super and strictsetelem-super must be the same size");
 
       HandleValue receiver = REGS.stackHandleAt(-4);
-      ReservedRooted<JSObject*> obj(&rootObject1, &REGS.sp[-2].toObject());
+      HandleValue lval = REGS.stackHandleAt(-2);
+      MOZ_ASSERT(lval.isObjectOrNull());
       HandleValue value = REGS.stackHandleAt(-1);
+
+      ReservedRooted<JSObject*> obj(&rootObject0);
+      obj = ToObjectFromStackForPropertyAccess(cx, lval, -2,
+                                               REGS.stackHandleAt(-3));
+      if (!obj) {
+        goto error;
+      }
 
       ReservedRooted<jsid> id(&rootId0);
       FETCH_ELEMENT_ID(-3, id);
@@ -4288,13 +4309,10 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       const Value& homeObjVal = superEnvFunc.getExtendedSlot(
           FunctionExtended::METHOD_HOMEOBJECT_SLOT);
 
-      ReservedRooted<JSObject*> homeObj(&rootObject0, &homeObjVal.toObject());
-      JSObject* superBase = HomeObjectSuperBase(cx, homeObj);
-      if (!superBase) {
-        goto error;
-      }
+      JSObject* homeObj = &homeObjVal.toObject();
+      JSObject* superBase = HomeObjectSuperBase(homeObj);
 
-      REGS.sp[-1].setObject(*superBase);
+      REGS.sp[-1].setObjectOrNull(superBase);
     }
     END_CASE(SuperBase)
 
@@ -5167,23 +5185,38 @@ bool js::ThrowInitializedThis(JSContext* cx) {
   return false;
 }
 
-bool js::ThrowHomeObjectNotObject(JSContext* cx) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
-                            "null", "object");
-  return false;
-}
-
 bool js::ThrowObjectCoercible(JSContext* cx, HandleValue value) {
   MOZ_ASSERT(value.isNullOrUndefined());
   ReportIsNullOrUndefinedForPropertyAccess(cx, value, JSDVG_SEARCH_STACK);
   return false;
 }
 
-bool js::SetPropertySuper(JSContext* cx, HandleObject obj, HandleValue receiver,
+bool js::SetPropertySuper(JSContext* cx, HandleValue lval, HandleValue receiver,
                           HandlePropertyName name, HandleValue rval,
                           bool strict) {
+  MOZ_ASSERT(lval.isObjectOrNull());
+
+  RootedObject obj(cx, ToObjectFromStackForPropertyAccess(
+                           cx, lval, JSDVG_SEARCH_STACK, name));
+  if (!obj) {
+    return false;
+  }
+
   RootedId id(cx, NameToId(name));
   return SetObjectElementOperation(cx, obj, id, rval, receiver, strict);
+}
+
+bool js::SetElementSuper(JSContext* cx, HandleValue lval, HandleValue receiver,
+                         HandleValue index, HandleValue rval, bool strict) {
+  MOZ_ASSERT(lval.isObjectOrNull());
+
+  RootedObject obj(cx, ToObjectFromStackForPropertyAccess(
+                           cx, lval, JSDVG_SEARCH_STACK, index));
+  if (!obj) {
+    return false;
+  }
+
+  return SetObjectElementWithReceiver(cx, obj, index, rval, receiver, strict);
 }
 
 bool js::LoadAliasedDebugVar(JSContext* cx, JSObject* env, jsbytecode* pc,

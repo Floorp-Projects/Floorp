@@ -5835,7 +5835,7 @@ class LHomeObject : public LInstructionHelper<1, 1, 0> {
   const LAllocation* function() { return getOperand(0); }
 };
 
-class LHomeObjectSuperBase : public LInstructionHelper<1, 1, 0> {
+class LHomeObjectSuperBase : public LInstructionHelper<BOX_PIECES, 1, 0> {
  public:
   LIR_HEADER(HomeObjectSuperBase)
 

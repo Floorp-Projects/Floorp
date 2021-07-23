@@ -686,11 +686,19 @@ bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(op == JSOp::GetElemSuper);
 
+  // |lhs| is [[HomeObject]].[[Prototype]] which must be an Object or null.
+  MOZ_ASSERT(lhs.isObjectOrNull());
+
+  int lhsIndex = -1;
+  RootedObject lhsObj(
+      cx, ToObjectFromStackForPropertyAccess(cx, lhs, lhsIndex, rhs));
+  if (!lhsObj) {
+    return false;
+  }
+
   TryAttachStub<GetPropIRGenerator>("GetElemSuper", cx, frame, stub,
                                     CacheKind::GetElemSuper, lhs, rhs);
 
-  // |lhs| is [[HomeObject]].[[Prototype]] which must be Object
-  RootedObject lhsObj(cx, &lhs.toObject());
   return GetObjectElementOperation(cx, op, lhsObj, receiver, rhs, res);
 }
 
@@ -1252,11 +1260,19 @@ bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
   RootedPropertyName name(cx, script->getName(pc));
   RootedValue idVal(cx, StringValue(name));
 
+  // |val| is [[HomeObject]].[[Prototype]] which must be an Object or null.
+  MOZ_ASSERT(val.isObjectOrNull());
+
+  int valIndex = -1;
+  RootedObject valObj(
+      cx, ToObjectFromStackForPropertyAccess(cx, val, valIndex, name));
+  if (!valObj) {
+    return false;
+  }
+
   TryAttachStub<GetPropIRGenerator>("GetPropSuper", cx, frame, stub,
                                     CacheKind::GetPropSuper, val, idVal);
 
-  // |val| is [[HomeObject]].[[Prototype]] which must be Object
-  RootedObject valObj(cx, &val.toObject());
   if (!GetProperty(cx, valObj, receiver, name, res)) {
     return false;
   }
