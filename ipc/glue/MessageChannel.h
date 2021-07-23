@@ -257,9 +257,6 @@ class MessageChannel : HasResultCodes {
   // Make an Interrupt call to the other side of the channel
   bool Call(UniquePtr<Message> aMsg, Message* aReply);
 
-  // Wait until a message is received
-  bool WaitForIncomingMessage();
-
   bool CanSend() const;
 
   // Remove and return a callback that needs reply
@@ -482,25 +479,6 @@ class MessageChannel : HasResultCodes {
     mMonitor->AssertCurrentThreadOwns();
     return !mInterruptStack.empty();
   }
-  bool AwaitingIncomingMessage() const {
-    mMonitor->AssertCurrentThreadOwns();
-    return mIsWaitingForIncoming;
-  }
-
-  class MOZ_STACK_CLASS AutoEnterWaitForIncoming {
-   public:
-    explicit AutoEnterWaitForIncoming(MessageChannel& aChannel)
-        : mChannel(aChannel) {
-      aChannel.mMonitor->AssertCurrentThreadOwns();
-      aChannel.mIsWaitingForIncoming = true;
-    }
-
-    ~AutoEnterWaitForIncoming() { mChannel.mIsWaitingForIncoming = false; }
-
-   private:
-    MessageChannel& mChannel;
-  };
-  friend class AutoEnterWaitForIncoming;
 
   // Returns true if we're dispatching an async message's callback.
   bool DispatchingAsyncMessage() const {
@@ -797,11 +775,6 @@ class MessageChannel : HasResultCodes {
   // Did we process an Interrupt out-call during this stack?  Only meaningful in
   // ExitedCxxStack(), from which this variable is reset.
   bool mSawInterruptOutMsg = false;
-
-  // Are we waiting on this channel for an incoming message? This is used
-  // to implement WaitForIncomingMessage(). Must only be accessed while owning
-  // mMonitor.
-  bool mIsWaitingForIncoming = false;
 
   // Map of replies received "out of turn", because of Interrupt
   // in-calls racing with replies to outstanding in-calls.  See
