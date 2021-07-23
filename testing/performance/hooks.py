@@ -20,7 +20,6 @@ get_site = next_site()
 
 options = [
     ("firefox.preference", "network.http.speculative-parallel-limit:6"),
-    ("firefox.preference", "gfx.webrender.force-disabled:true"),
     # XXX potentially move those as first class options in mozperf?
     ("pageCompleteWaitTime", "10000"),
     ("visualMetrics", "true"),
