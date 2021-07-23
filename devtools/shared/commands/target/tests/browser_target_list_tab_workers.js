@@ -30,21 +30,15 @@ add_task(async function() {
 
   // Create a TargetCommand for the tab
   const commands = await CommandsFactory.forTab(tab);
-  await commands.targetCommand.startListening();
-  // Ensure attaching the target as BrowsingContextTargetActor.listWorkers
-  // assert that the target actor is attached.
-  // It isn't clear if this assertion is meaningful?
-  const target = commands.targetCommand.targetFront;
-  await target.attach();
   const targetCommand = commands.targetCommand;
-
-  const { TYPES } = targetCommand;
 
   // Workaround to allow listening for workers in the content toolbox
   // without the fission preferences
   targetCommand.listenForWorkers = true;
 
-  await targetCommand.startListening();
+  await commands.targetCommand.startListening();
+
+  const { TYPES } = targetCommand;
 
   info("Check that getAllTargets only returns dedicated workers");
   const workers = await targetCommand.getAllTargets([
@@ -123,7 +117,7 @@ add_task(async function() {
     });
   });
 
-  await TestUtils.waitForCondition(
+  await waitFor(
     () => targets.length === 4,
     "Wait for the target list to notify us about the spawned worker"
   );
@@ -150,7 +144,7 @@ add_task(async function() {
       content.spawnedWorker = null;
     });
   });
-  await TestUtils.waitForCondition(
+  await waitFor(
     () =>
       destroyedTargets.includes(mainPageSpawnedWorkerTarget) &&
       destroyedTargets.includes(iframeSpawnedWorkerTarget),
@@ -168,7 +162,7 @@ add_task(async function() {
   const targetsCountBeforeReload = targets.length;
   tab.linkedBrowser.reload();
 
-  await TestUtils.waitForCondition(() => {
+  await waitFor(() => {
     return (
       destroyedTargets.includes(mainPageWorkerTarget) &&
       destroyedTargets.includes(iframeWorkerTarget)
@@ -179,7 +173,7 @@ add_task(async function() {
     "The target list notified us about all the expected workers being destroyed when reloading"
   );
 
-  await TestUtils.waitForCondition(
+  await waitFor(
     () => targets.length === targetsCountBeforeReload + 2,
     "Wait for the target list to notify us about the new workers after reloading"
   );
@@ -210,7 +204,7 @@ add_task(async function() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.document.querySelector("iframe").remove();
   });
-  await TestUtils.waitForCondition(() => {
+  await waitFor(() => {
     return destroyedTargets.includes(iframeWorkerTargetAfterReload);
   }, `Wait for the target list to notify us about the terminated workers when removing an iframe`);
 
@@ -242,7 +236,7 @@ add_task(async function() {
 
   // It's important to check the length of `targets` here to ensure we don't get unwanted
   // worker targets.
-  await TestUtils.waitForCondition(
+  await waitFor(
     () => targets.length === targetCount + 4,
     "Wait for the target list to notify us about the workers in the new iframes"
   );
@@ -284,9 +278,9 @@ add_task(async function() {
     "data:text/html,<meta charset=utf8>Away"
   );
 
-  await TestUtils.waitForCondition(
+  await waitFor(
     () => destroyedTargets.length === targets.length,
-    "Wait for all the targets to be reporeted as destroyed"
+    "Wait for all the targets to be reported as destroyed"
   );
 
   ok(
