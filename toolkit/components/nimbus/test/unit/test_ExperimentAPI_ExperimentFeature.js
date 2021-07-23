@@ -40,7 +40,6 @@ const FAKE_FEATURE_MANIFEST = {
   },
 };
 const FAKE_FEATURE_REMOTE_VALUE = {
-  slug: "default-remote-value",
   variables: {
     enabled: true,
   },
@@ -69,7 +68,7 @@ add_task(async function test_ExperimentFeature_ready() {
     },
   });
 
-  await manager.store.addExperiment(expected);
+  manager.store.addExperiment(expected);
 
   await readyPromise;
 
@@ -122,7 +121,7 @@ add_task(
       },
     });
 
-    await manager.store.addExperiment(expected);
+    manager.store.addExperiment(expected);
 
     setDefaultBranch(TEST_FALLBACK_PREF, `{"bar": 123}`);
 
@@ -227,10 +226,7 @@ add_task(async function test_ExperimentFeature_test_helper_ready() {
   await ExperimentFakes.remoteDefaultsHelper({
     feature: featureInstance,
     store: manager.store,
-    configuration: {
-      ...FAKE_FEATURE_REMOTE_VALUE,
-      variables: { remoteValue: "mochitest", enabled: true },
-    },
+    configuration: { variables: { remoteValue: "mochitest" }, enabled: true },
   });
 
   Assert.equal(featureInstance.isEnabled(), true, "enabled by remote config");
@@ -257,7 +253,7 @@ add_task(
 
     await manager.store.ready();
 
-    await manager.store.addExperiment(expected);
+    manager.store.addExperiment(expected);
 
     const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
     manager.store.updateRemoteConfigs("foo", {
@@ -309,7 +305,7 @@ add_task(async function test_ExperimentFeature_isEnabled_no_exposure() {
 
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
 
-  await manager.store.addExperiment(expected);
+  manager.store.addExperiment(expected);
 
   const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
 
@@ -338,7 +334,7 @@ add_task(async function test_record_exposure_event() {
     "should not emit an exposure event when no experiment is active"
   );
 
-  await manager.store.addExperiment(
+  manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
       branch: {
         slug: "treatment",
@@ -367,7 +363,7 @@ add_task(async function test_record_exposure_event_once() {
   const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
 
-  await manager.store.addExperiment(
+  manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
       branch: {
         slug: "treatment",
@@ -395,7 +391,7 @@ add_task(async function test_prevent_double_exposure_getValue() {
   const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
 
-  await manager.store.addExperiment(
+  manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
       branch: {
         slug: "treatment",
@@ -426,7 +422,7 @@ add_task(async function test_prevent_double_exposure_isEnabled() {
   const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
 
-  await manager.store.addExperiment(
+  manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
       branch: {
         slug: "treatment",
@@ -456,15 +452,13 @@ add_task(async function test_set_remote_before_ready() {
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
   const feature = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
 
-  await Assert.rejects(
-    ExperimentFakes.remoteDefaultsHelper({
-      feature,
-      store: manager.store,
-      configuration: {
-        ...FAKE_FEATURE_REMOTE_VALUE,
-        variables: { test: true, enabled: true },
-      },
-    }),
+  Assert.throws(
+    () =>
+      ExperimentFakes.remoteDefaultsHelper({
+        feature,
+        store: manager.store,
+        configuration: { variables: { test: true } },
+      }),
     /Store not ready/,
     "Throws if used before init finishes"
   );
@@ -474,10 +468,7 @@ add_task(async function test_set_remote_before_ready() {
   await ExperimentFakes.remoteDefaultsHelper({
     feature,
     store: manager.store,
-    configuration: {
-      ...FAKE_FEATURE_REMOTE_VALUE,
-      variables: { test: true, enabled: true },
-    },
+    configuration: { variables: { test: true } },
   });
 
   Assert.ok(feature.getValue().test, "Successfully set");
@@ -503,15 +494,12 @@ add_task(async function test_isEnabled_backwards_compatible() {
   await ExperimentFakes.remoteDefaultsHelper({
     feature,
     store: manager.store,
-    configuration: {
-      ...FAKE_FEATURE_REMOTE_VALUE,
-      variables: { enabled: false },
-    },
+    configuration: { variables: {}, enabled: false },
   });
 
   Assert.ok(!feature.isEnabled(), "Disabled based on remote configs");
 
-  await manager.store.addExperiment(
+  manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
       branch: {
         slug: "treatment",
