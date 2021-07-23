@@ -27,7 +27,7 @@ const DISABLE_VIDEO_PREF = "media.hardware-video-decoding.failed";
 const RUNNING_PREF = "sanity-test.running";
 const TIMEOUT_SEC = 20;
 
-const WR_DISABLED_PREF = "gfx.webrender.force-disabled";
+const WR_DISABLED_PREF = "gfx.webrender.force-legacy-layers";
 
 // GRAPHICS_SANITY_TEST histogram enumeration values
 const TEST_PASSED = 0;
