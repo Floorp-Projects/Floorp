@@ -120,7 +120,7 @@ class GeckoViewContent extends GeckoViewModule {
 
     switch (aEvent) {
       case "GeckoViewContent:ExitFullScreen":
-        this.sendToAllChildren("GeckoView:DOMFullscreenExited");
+        this.browser.ownerDocument.exitFullscreen();
         break;
       case "GeckoView:ClearMatches": {
         this._clearMatches();
