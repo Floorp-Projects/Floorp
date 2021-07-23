@@ -2676,16 +2676,6 @@ void MessageChannel::AddProfilerMarker(const IPC::Message& aMessage,
   }
 }
 
-int32_t MessageChannel::GetTopmostMessageRoutingId() const {
-  AssertWorkerThread();
-
-  if (mCxxStackFrames.empty()) {
-    return MSG_ROUTING_NONE;
-  }
-  const InterruptFrame& frame = mCxxStackFrames.back();
-  return frame.GetRoutingId();
-}
-
 void MessageChannel::EndTimeout() {
   mMonitor->AssertCurrentThreadOwns();
 
