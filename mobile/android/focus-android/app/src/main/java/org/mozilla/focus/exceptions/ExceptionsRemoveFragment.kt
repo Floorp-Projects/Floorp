@@ -19,6 +19,7 @@ import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import kotlin.collections.forEach as withEach
 
 class ExceptionsRemoveFragment : ExceptionsListFragment() {
 
@@ -43,7 +44,7 @@ class ExceptionsRemoveFragment : ExceptionsListFragment() {
                     val domains = exceptions.map { it.url.tryGetHostFromUrl() }
                     ExceptionDomains.remove(context, domains)
                 }
-                exceptions.forEach { exception ->
+                exceptions.withEach { exception ->
                     context.components.trackingProtectionUseCases.removeException(exception)
                 }
 

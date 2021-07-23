@@ -6,6 +6,7 @@ package org.mozilla.focus.telemetry
 
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -36,6 +37,7 @@ class GleanMetricsService(context: Context) : MetricsService {
 
     private val activationPing = ActivationPing(context)
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun initialize(context: Context) {
         val components = context.components
         val settings = Settings.getInstance(context)

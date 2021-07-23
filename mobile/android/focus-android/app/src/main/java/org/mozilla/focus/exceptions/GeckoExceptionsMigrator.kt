@@ -12,6 +12,7 @@ import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_TRACKING
+import kotlin.collections.forEach as withEach
 
 /**
  * Migrate preference based Focus tracking protection exceptions to gecko based exceptions.
@@ -29,7 +30,7 @@ class GeckoExceptionsMigrator(
             val exceptions = fetchExceptions(context)
 
             withContext(Dispatchers.Main) {
-                exceptions.forEach { migrate(it) }
+                exceptions.withEach { migrate(it) }
             }
 
             logger.info("Finished tracking protection exceptions migration")

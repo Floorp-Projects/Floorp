@@ -53,7 +53,7 @@ class SearchSuggestionsFetcher(
 
     fun requestSuggestions(query: String) {
         if (query.isBlank()) { _results.value = SuggestionResult(query, listOf()); return }
-        fetchChannel.offer(query)
+        fetchChannel.trySend(query)
     }
 
     fun updateSearchEngine(searchEngine: SearchEngine?) {

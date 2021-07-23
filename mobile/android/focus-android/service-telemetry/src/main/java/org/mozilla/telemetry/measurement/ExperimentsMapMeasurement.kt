@@ -5,6 +5,7 @@
 package org.mozilla.telemetry.measurement
 
 import org.json.JSONObject
+import kotlin.collections.forEach as withEach
 
 private const val FIELD_NAME = "experiments"
 
@@ -15,7 +16,7 @@ class ExperimentsMapMeasurement : TelemetryMeasurement(FIELD_NAME) {
     private val map = JSONObject()
 
     fun setExperiments(experiments: Map<String, Boolean>) {
-        experiments.forEach { entry ->
+        experiments.withEach { entry ->
             map.put(entry.key, if (entry.value) VALUE_BRANCH else VALUE_CONTROL)
         }
     }

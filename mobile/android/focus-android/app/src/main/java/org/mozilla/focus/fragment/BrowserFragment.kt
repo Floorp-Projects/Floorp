@@ -26,6 +26,7 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -319,6 +320,7 @@ class BrowserFragment :
         promptFeature.withFeature { it.onActivityResult(requestCode, data, resultCode) }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun showCrashReporter(crash: Crash) {
         val fragmentManager = requireActivity().supportFragmentManager
 
@@ -333,6 +335,7 @@ class BrowserFragment :
         crashReporterFragment.onCloseTabPressed = { sendCrashReport ->
             if (sendCrashReport) {
                 val crashReporter = requireComponents.crashReporter
+
                 GlobalScope.launch(Dispatchers.IO) { crashReporter.submitReport(crash) }
             }
             erase()

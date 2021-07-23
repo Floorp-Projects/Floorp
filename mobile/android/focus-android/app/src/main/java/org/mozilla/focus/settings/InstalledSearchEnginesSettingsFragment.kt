@@ -19,6 +19,7 @@ import org.mozilla.focus.search.RadioSearchEngineListPreference
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import kotlin.collections.forEach as withEach
 
 class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
@@ -112,6 +113,6 @@ private fun SearchState.hasDefaultSearchEnginesOnly(): Boolean {
 }
 
 private fun restoreSearchDefaults(store: BrowserStore, useCases: SearchUseCases) {
-    store.state.search.customSearchEngines.forEach { searchEngine -> useCases.removeSearchEngine(searchEngine) }
-    store.state.search.hiddenSearchEngines.forEach { searchEngine -> useCases.addSearchEngine(searchEngine) }
+    store.state.search.customSearchEngines.withEach { searchEngine -> useCases.removeSearchEngine(searchEngine) }
+    store.state.search.hiddenSearchEngines.withEach { searchEngine -> useCases.addSearchEngine(searchEngine) }
 }

@@ -12,6 +12,7 @@ import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import kotlin.collections.forEach as withEach
 
 class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
@@ -23,7 +24,7 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
 
         when (action) {
             is TabListAction.AddTabAction -> collectTelemetry(action.tab)
-            is TabListAction.AddMultipleTabsAction -> action.tabs.forEach { collectTelemetry(it) }
+            is TabListAction.AddMultipleTabsAction -> action.tabs.withEach { collectTelemetry(it) }
         }
     }
 
