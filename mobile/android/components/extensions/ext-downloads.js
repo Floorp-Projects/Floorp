@@ -193,6 +193,11 @@ this.downloads = class extends ExtensionAPI {
             });
           }
 
+          if (options.cookieStoreId != null) {
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1721460
+            throw new ExtensionError("Not implemented");
+          }
+
           if (options.headers) {
             for (const { name } of options.headers) {
               if (

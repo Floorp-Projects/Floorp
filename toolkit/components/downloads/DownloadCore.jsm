@@ -2361,6 +2361,15 @@ DownloadCopySaver.prototype = {
             download.source.cookieJarSettings;
         }
 
+        if (download.source.userContextId) {
+          // Getters and setters only exist on originAttributes,
+          // so it has to be cloned, changed, and re-set
+          channel.loadInfo.originAttributes = {
+            ...channel.loadInfo.originAttributes,
+            userContextId: download.source.userContextId,
+          };
+        }
+
         // This makes the channel be corretly throttled during page loads
         // and also prevents its caching.
         if (channel instanceof Ci.nsIHttpChannelInternal) {
