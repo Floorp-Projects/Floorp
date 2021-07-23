@@ -126,6 +126,8 @@ class ProcessHandlerMixin(object):
 
             # Parameter for whether or not we should attempt to track child processes
             self._ignore_children = ignore_children
+            self._job = None
+            self._io_port = None
 
             if not self._ignore_children and not isWin:
                 # Set the process group id for linux systems
