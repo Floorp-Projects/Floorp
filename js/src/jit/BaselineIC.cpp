@@ -802,16 +802,12 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
 
   RootedShape oldShape(cx, obj->shape());
 
-  // We cannot attach a stub if the operation executed after the stub
-  // is attached may throw.
-  bool mayThrow = false;
-
   DeferType deferType = DeferType::None;
   bool attached = false;
 
   MaybeTransition(cx, frame, stub);
 
-  if (stub->state().canAttachStub() && !mayThrow) {
+  if (stub->state().canAttachStub()) {
     ICScript* icScript = frame->icScript();
     SetPropIRGenerator gen(cx, script, pc, CacheKind::SetElem, stub->state(),
                            objv, index, rhs);
@@ -1415,7 +1411,6 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
       return false;
     }
   } else if (op == JSOp::InitGLexical) {
-    RootedValue v(cx, rhs);
     ExtensibleLexicalEnvironmentObject* lexicalEnv;
     if (script->hasNonSyntacticScope()) {
       lexicalEnv = &NearestEnclosingExtensibleLexicalEnvironment(
@@ -1423,7 +1418,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     } else {
       lexicalEnv = &cx->global()->lexicalEnvironment();
     }
-    InitGlobalLexicalOperation(cx, lexicalEnv, script, pc, v);
+    InitGlobalLexicalOperation(cx, lexicalEnv, script, pc, rhs);
   } else {
     MOZ_ASSERT(op == JSOp::SetProp || op == JSOp::StrictSetProp);
 
