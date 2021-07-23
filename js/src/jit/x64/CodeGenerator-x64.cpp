@@ -275,7 +275,7 @@ void CodeGeneratorX64::emitBigIntDiv(LBigIntDiv* ins, Register dividend,
   masm.idivq(divisor);
 
   // Create and return the result.
-  masm.newGCBigInt(output, divisor, bigIntsCanBeInNursery(), fail);
+  masm.newGCBigInt(output, divisor, initialBigIntHeap(), fail);
   masm.initializeBigInt(output, dividend);
 }
 
@@ -296,7 +296,7 @@ void CodeGeneratorX64::emitBigIntMod(LBigIntMod* ins, Register dividend,
   masm.movq(output, dividend);
 
   // Create and return the result.
-  masm.newGCBigInt(output, divisor, bigIntsCanBeInNursery(), fail);
+  masm.newGCBigInt(output, divisor, initialBigIntHeap(), fail);
   masm.initializeBigInt(output, dividend);
 }
 

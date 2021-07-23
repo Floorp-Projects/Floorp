@@ -873,7 +873,7 @@ void CodeGeneratorARM::emitBigIntDiv(LBigIntDiv* ins, Register dividend,
     masm.ma_sdiv(dividend, divisor, /* result= */ dividend);
 
     // Create and return the result.
-    masm.newGCBigInt(output, divisor, bigIntsCanBeInNursery(), fail);
+    masm.newGCBigInt(output, divisor, initialBigIntHeap(), fail);
     masm.initializeBigInt(output, dividend);
 
     return;
@@ -900,7 +900,7 @@ void CodeGeneratorARM::emitBigIntDiv(LBigIntDiv* ins, Register dividend,
   masm.PopRegsInMask(volatileRegs);
 
   // Create and return the result.
-  masm.newGCBigInt(output, divisor, bigIntsCanBeInNursery(), fail);
+  masm.newGCBigInt(output, divisor, initialBigIntHeap(), fail);
   masm.initializeBigInt(output, dividend);
 }
 
@@ -916,7 +916,7 @@ void CodeGeneratorARM::emitBigIntMod(LBigIntMod* ins, Register dividend,
     }
 
     // Create and return the result.
-    masm.newGCBigInt(output, divisor, bigIntsCanBeInNursery(), fail);
+    masm.newGCBigInt(output, divisor, initialBigIntHeap(), fail);
     masm.initializeBigInt(output, dividend);
 
     return;
@@ -943,7 +943,7 @@ void CodeGeneratorARM::emitBigIntMod(LBigIntMod* ins, Register dividend,
   masm.PopRegsInMask(volatileRegs);
 
   // Create and return the result.
-  masm.newGCBigInt(output, dividend, bigIntsCanBeInNursery(), fail);
+  masm.newGCBigInt(output, dividend, initialBigIntHeap(), fail);
   masm.initializeBigInt(output, divisor);
 }
 

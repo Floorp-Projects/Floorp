@@ -103,7 +103,9 @@ class MIRGenerator final {
 
   bool stringsCanBeInNursery() const { return stringsCanBeInNursery_; }
 
-  bool bigIntsCanBeInNursery() const { return bigIntsCanBeInNursery_; }
+  gc::InitialHeap initialBigIntHeap() const {
+    return bigIntsCanBeInNursery_ ? gc::DefaultHeap : gc::TenuredHeap;
+  }
 
   // Whether the main thread is trying to cancel this build.
   bool shouldCancel(const char* why) { return cancelBuild_; }
