@@ -665,11 +665,9 @@ void MacroAssembler::newGCFatInlineString(Register result, Register temp,
 }
 
 void MacroAssembler::newGCBigInt(Register result, Register temp,
-                                 bool attemptNursery, Label* fail) {
+                                 gc::InitialHeap initialHeap, Label* fail) {
   checkAllocatorState(fail);
 
-  gc::InitialHeap initialHeap =
-      attemptNursery ? gc::DefaultHeap : gc::TenuredHeap;
   if (shouldNurseryAllocate(gc::AllocKind::BIGINT, initialHeap)) {
     MOZ_ASSERT(initialHeap == gc::DefaultHeap);
     return nurseryAllocateBigInt(result, temp, fail);
@@ -1516,12 +1514,12 @@ void MacroAssembler::initializeBigIntAbsolute(Register bigInt, Register val) {
 
 void MacroAssembler::copyBigIntWithInlineDigits(Register src, Register dest,
                                                 Register temp,
-                                                bool attemptNursery,
+                                                gc::InitialHeap initialHeap,
                                                 Label* fail) {
   branch32(Assembler::Above, Address(src, BigInt::offsetOfLength()),
            Imm32(int32_t(BigInt::inlineDigitsLength())), fail);
 
-  newGCBigInt(dest, temp, attemptNursery, fail);
+  newGCBigInt(dest, temp, initialHeap, fail);
 
   // Copy the sign-bit, but not any of the other bits used by the GC.
   load32(Address(src, BigInt::offsetOfFlags()), temp);
