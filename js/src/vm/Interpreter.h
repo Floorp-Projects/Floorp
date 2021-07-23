@@ -669,8 +669,6 @@ bool ThrowUninitializedThis(JSContext* cx);
 
 bool ThrowInitializedThis(JSContext* cx);
 
-bool ThrowHomeObjectNotObject(JSContext* cx);
-
 bool ThrowObjectCoercible(JSContext* cx, HandleValue value);
 
 bool DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp);
@@ -684,8 +682,11 @@ PlainObject* ObjectWithProtoOperation(JSContext* cx, HandleValue proto);
 JSObject* FunWithProtoOperation(JSContext* cx, HandleFunction fun,
                                 HandleObject parent, HandleObject proto);
 
-bool SetPropertySuper(JSContext* cx, HandleObject obj, HandleValue receiver,
-                      HandlePropertyName id, HandleValue rval, bool strict);
+bool SetPropertySuper(JSContext* cx, HandleValue lval, HandleValue receiver,
+                      HandlePropertyName name, HandleValue rval, bool strict);
+
+bool SetElementSuper(JSContext* cx, HandleValue lval, HandleValue receiver,
+                     HandleValue index, HandleValue rval, bool strict);
 
 bool LoadAliasedDebugVar(JSContext* cx, JSObject* env, jsbytecode* pc,
                          MutableHandleValue result);

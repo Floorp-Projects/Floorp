@@ -227,10 +227,6 @@ ignore-flag(--more-compartments) script test262/built-ins/Function/internals/Cal
 skip script test262/language/expressions/assignmenttargettype/parenthesized-callexpression-arguments.js
 skip script test262/language/expressions/assignmenttargettype/direct-callexpression-arguments.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1720781
-skip script test262/language/expressions/assignment/target-super-identifier-reference-null.js
-skip script test262/language/expressions/assignment/target-super-computed-reference-null.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1720782
 skip script test262/intl402/DateTimeFormat/constructor-options-style-conflict.js
 
@@ -655,6 +651,9 @@ skip script test262/intl402/DisplayNames/locales-length-poison-throws.js
 
 # Tests not yet updated for https://github.com/tc39/intl-displaynames-v2
 skip script test262/intl402/DisplayNames/prototype/resolvedOptions/return-object.js
+
+# https://github.com/tc39/test262/pull/3055
+skip script test262/language/expressions/delete/super-property-null-base.js
 
 
 ##############################################
