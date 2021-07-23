@@ -63,9 +63,14 @@ function writeString(output, data) {
   });
 }
 
-/** Write HTTP response (array of strings) to async output stream. */
-function writeHttpResponse(output, response) {
-  const s = response.join("\r\n") + "\r\n\r\n";
+/**
+ * Write HTTP response with headers (array of strings) and body
+ * to async output stream.
+ */
+function writeHttpResponse(output, headers, body = "") {
+  headers.push(`Content-Length: ${body.length}`);
+
+  const s = headers.join("\r\n") + `\r\n\r\n${body}`;
   return writeString(output, s);
 }
 
@@ -135,13 +140,23 @@ async function serverHandshake(request, output) {
     // Send response headers
     await writeHttpResponse(output, [
       "HTTP/1.1 101 Switching Protocols",
+      "Server: httpd.js",
       "Upgrade: websocket",
       "Connection: Upgrade",
       `Sec-WebSocket-Accept: ${acceptKey}`,
     ]);
   } catch (error) {
     // Send error response in case of error
-    await writeHttpResponse(output, ["HTTP/1.1 400 Bad Request"]);
+    await writeHttpResponse(
+      output,
+      [
+        "HTTP/1.1 400 Bad Request",
+        "Server: httpd.js",
+        "Content-Type: text/plain",
+      ],
+      error.message
+    );
+
     throw error;
   }
 }
