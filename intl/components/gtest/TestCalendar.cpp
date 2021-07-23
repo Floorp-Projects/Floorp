@@ -5,7 +5,7 @@
 
 #include "mozilla/intl/Calendar.h"
 #include "mozilla/Span.h"
-#include "./TestBuffer.h"
+#include "TestBuffer.h"
 
 namespace mozilla::intl {
 
@@ -95,12 +95,12 @@ TEST(IntlCalendar, GetCanonicalTimeZoneID)
   // Providing a canonical time zone results in the same string at the end.
   Calendar::GetCanonicalTimeZoneID(MakeStringSpan(u"America/Chicago"), buffer)
       .unwrap();
-  ASSERT_EQ(buffer.get_string_view<char16_t>(), u"America/Chicago");
+  ASSERT_EQ(buffer.get_string_view(), u"America/Chicago");
 
   // Providing an alias will result in the canonical representation.
   Calendar::GetCanonicalTimeZoneID(MakeStringSpan(u"Europe/Belfast"), buffer)
       .unwrap();
-  ASSERT_EQ(buffer.get_string_view<char16_t>(), u"Europe/London");
+  ASSERT_EQ(buffer.get_string_view(), u"Europe/London");
 
   // An unknown time zone results in an error.
   ASSERT_TRUE(Calendar::GetCanonicalTimeZoneID(

@@ -7,7 +7,7 @@
 #include "mozilla/intl/DateTimeFormat.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
 #include "mozilla/Span.h"
-#include "./TestBuffer.h"
+#include "TestBuffer.h"
 
 namespace mozilla::intl {
 
@@ -29,10 +29,10 @@ TEST(IntlDateTimeFormat, Style_enUS_utf8)
 {
   auto dtFormat =
       testStyle("en-US", DateTimeStyle::Medium, DateTimeStyle::Medium);
-  TestBuffer<uint8_t> buffer;
+  TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view<char>(), "Sep 23, 2002, 8:07:30 PM");
+  ASSERT_EQ(buffer.get_string_view(), "Sep 23, 2002, 8:07:30 PM");
 }
 
 TEST(IntlDateTimeFormat, Style_enUS_utf16)
@@ -42,16 +42,16 @@ TEST(IntlDateTimeFormat, Style_enUS_utf16)
   TestBuffer<char16_t> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view<char16_t>(), u"Sep 23, 2002, 8:07:30 PM");
+  ASSERT_EQ(buffer.get_string_view(), u"Sep 23, 2002, 8:07:30 PM");
 }
 
 TEST(IntlDateTimeFormat, Style_ar_utf8)
 {
   auto dtFormat = testStyle("ar", DateTimeStyle::Medium, DateTimeStyle::None);
-  TestBuffer<uint8_t> buffer;
+  TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view<char>(), "٨:٠٧:٣٠ م");
+  ASSERT_EQ(buffer.get_string_view(), "٨:٠٧:٣٠ م");
 }
 
 TEST(IntlDateTimeFormat, Style_ar_utf16)
@@ -60,16 +60,16 @@ TEST(IntlDateTimeFormat, Style_ar_utf16)
   TestBuffer<char16_t> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view<char16_t>(), u"٨:٠٧:٣٠ م");
+  ASSERT_EQ(buffer.get_string_view(), u"٨:٠٧:٣٠ م");
 }
 
 TEST(IntlDateTimeFormat, Style_enUS_fallback_to_default_styles)
 {
   auto dtFormat = testStyle("en-US", DateTimeStyle::None, DateTimeStyle::None);
-  TestBuffer<uint8_t> buffer;
+  TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view<char>(), "Sep 23, 2002, 8:07:30 PM");
+  ASSERT_EQ(buffer.get_string_view(), "Sep 23, 2002, 8:07:30 PM");
 }
 
 TEST(IntlDateTimeFormat, Skeleton_enUS_utf8_in)
@@ -78,10 +78,10 @@ TEST(IntlDateTimeFormat, Skeleton_enUS_utf8_in)
       DateTimeFormat::TryCreateFromSkeleton(
           "en-US", MakeStringSpan("yMdhhmmss"), Some(MakeStringSpan("GMT+3")))
           .unwrap();
-  TestBuffer<uint8_t> buffer;
+  TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view<char>(), "9/23/2002, 8:07:30 PM");
+  ASSERT_EQ(buffer.get_string_view(), "9/23/2002, 8:07:30 PM");
 }
 
 TEST(IntlDateTimeFormat, Skeleton_enUS_utf16_in)
@@ -90,10 +90,10 @@ TEST(IntlDateTimeFormat, Skeleton_enUS_utf16_in)
       DateTimeFormat::TryCreateFromSkeleton(
           "en-US", MakeStringSpan(u"yMdhhmmss"), Some(MakeStringSpan(u"GMT+3")))
           .unwrap();
-  TestBuffer<uint8_t> buffer;
+  TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view<char>(), "9/23/2002, 8:07:30 PM");
+  ASSERT_EQ(buffer.get_string_view(), "9/23/2002, 8:07:30 PM");
 }
 
 TEST(IntlDateTimeFormat, Time_zone_IANA_identifier)
@@ -103,9 +103,9 @@ TEST(IntlDateTimeFormat, Time_zone_IANA_identifier)
           MakeStringSpan("en-US"), DateTimeStyle::Medium, DateTimeStyle::Medium,
           Some(MakeStringSpan(u"America/Chicago")))
           .unwrap();
-  TestBuffer<uint8_t> buffer;
+  TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
-  ASSERT_EQ(buffer.get_string_view<char>(), "Sep 23, 2002, 12:07:30 PM");
+  ASSERT_EQ(buffer.get_string_view(), "Sep 23, 2002, 12:07:30 PM");
 }
 
 TEST(IntlDateTimePatternGenerator, GetBestPattern)
@@ -114,7 +114,7 @@ TEST(IntlDateTimePatternGenerator, GetBestPattern)
   TestBuffer<char16_t> buffer;
 
   gen->GetBestPattern(MakeStringSpan(u"yMd"), buffer).unwrap();
-  ASSERT_EQ(buffer.get_string_view<char16_t>(), u"M/d/y");
+  ASSERT_EQ(buffer.get_string_view(), u"M/d/y");
 }
 
 TEST(IntlDateTimePatternGenerator, GetSkeleton)
@@ -124,7 +124,7 @@ TEST(IntlDateTimePatternGenerator, GetSkeleton)
 
   DateTimePatternGenerator::GetSkeleton(MakeStringSpan(u"M/d/y"), buffer)
       .unwrap();
-  ASSERT_EQ(buffer.get_string_view<char16_t>(), u"yMd");
+  ASSERT_EQ(buffer.get_string_view(), u"yMd");
 }
 
 }  // namespace mozilla::intl
