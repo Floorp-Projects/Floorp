@@ -25,19 +25,6 @@
 
 using namespace mozilla;
 
-// We rely on invariants about the lifetime of the transport:
-//
-//  - outlives this MessageChannel
-//  - deleted on the IO thread
-//
-// These invariants allow us to send messages directly through the
-// transport without having to worry about orphaned Send() tasks on
-// the IO thread touching MessageChannel memory after it's been deleted
-// on the worker thread.  We also don't need to refcount the
-// Transport, because whatever task triggers its deletion only runs on
-// the IO thread, and only runs after this MessageChannel is done with
-// the Transport.
-
 namespace mozilla {
 namespace ipc {
 
