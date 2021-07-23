@@ -30,7 +30,7 @@ void gfxConfigManager::Init() {
 
   EmplaceUserPref("gfx.webrender.compositor", mWrCompositorEnabled);
   mWrForceEnabled = gfxPlatform::WebRenderPrefEnabled();
-  mWrForceDisabled = StaticPrefs::gfx_webrender_force_disabled_AtStartup();
+  mWrForceDisabled = StaticPrefs::gfx_webrender_force_legacy_layers_AtStartup();
   mWrSoftwareForceEnabled = StaticPrefs::gfx_webrender_software_AtStartup();
   mWrCompositorForceEnabled =
       StaticPrefs::gfx_webrender_compositor_force_enabled_AtStartup();
