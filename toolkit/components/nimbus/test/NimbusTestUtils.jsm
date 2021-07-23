@@ -20,94 +20,47 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   _RemoteSettingsExperimentLoader:
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm",
   Ajv: "resource://testing-common/ajv-4.1.1.js",
-  sinon: "resource://testing-common/Sinon.jsm",
 });
 
 const { SYNC_DATA_PREF_BRANCH, SYNC_DEFAULTS_PREF_BRANCH } = ExperimentStore;
 
 const PATH = FileTestUtils.getTempFile("shared-data-map").path;
 
-async function fetchSchema(url) {
-  const response = await fetch(url);
+XPCOMUtils.defineLazyGetter(this, "fetchExperimentSchema", async () => {
+  const response = await fetch(
+    "resource://testing-common/NimbusExperiment.schema.json"
+  );
   const schema = await response.json();
   if (!schema) {
-    throw new Error(`Failed to load ${url}`);
+    throw new Error("Failed to load NimbusSchema");
   }
-  return schema.definitions;
-}
+  return schema.definitions.NimbusExperiment;
+});
 
 const EXPORTED_SYMBOLS = ["ExperimentTestUtils", "ExperimentFakes"];
 
 const ExperimentTestUtils = {
-  _validator(schema, value, errorMsg) {
-    const ajv = new Ajv({ async: "co*", allErrors: true });
-    const validator = ajv.compile(schema);
-    validator(value);
-    if (validator.errors?.length) {
-      throw new Error(
-        `${errorMsg}: ${JSON.stringify(validator.errors, undefined, 2)}`
-      );
-    }
-    return value;
-  },
-
   /**
    * Checks if an experiment is valid acording to existing schema
+   * @param {NimbusExperiment} experiment
    */
   async validateExperiment(experiment) {
-    const schema = (
-      await fetchSchema(
-        "resource://testing-common/NimbusExperiment.schema.json"
-      )
-    ).NimbusExperiment;
-
-    return this._validator(
-      schema,
-      experiment,
-      `Experiment ${experiment.slug} not valid`
-    );
-  },
-  async validateEnrollment(enrollment) {
-    const schema = (
-      await fetchSchema(
-        "resource://testing-common/NimbusEnrollment.schema.json"
-      )
-    ).NimbusExperiment;
-
-    return this._validator(
-      schema,
-      enrollment,
-      `Enrollment ${enrollment.slug} is not valid`
-    );
-  },
-  async validateRollouts(rollout) {
-    const schema = (
-      await fetchSchema(
-        "resource://testing-common/ExperimentFeatureRemote.schema.json"
-      )
-    ).RemoteFeatureConfiguration;
-
-    return this._validator(
-      schema,
-      rollout,
-      `Rollout configuration ${rollout.slug} is not valid`
-    );
+    const schema = await fetchExperimentSchema;
+    const ajv = new Ajv({ async: "co*", allErrors: true });
+    const validator = ajv.compile(schema);
+    validator(experiment);
+    if (validator.errors?.length) {
+      throw new Error(
+        "Experiment not valid:" + JSON.stringify(validator.errors, undefined, 2)
+      );
+    }
+    return experiment;
   },
 };
 
 const ExperimentFakes = {
   manager(store) {
-    let sandbox = sinon.createSandbox();
-    let manager = new _ExperimentManager({ store: store || this.store() });
-    // We want calls to `store.addExperiment` to implicitly validate the
-    // enrollment before saving to store
-    let origAddExperiment = manager.store.addExperiment.bind(manager.store);
-    sandbox.stub(manager.store, "addExperiment").callsFake(async enrollment => {
-      await ExperimentTestUtils.validateEnrollment(enrollment);
-      return origAddExperiment(enrollment);
-    });
-
-    return manager;
+    return new _ExperimentManager({ store: store || this.store() });
   },
   store() {
     return new ExperimentStore("FakeStore", { path: PATH, isParent: true });
@@ -119,7 +72,7 @@ const ExperimentFakes = {
 
     return new Promise(resolve => ExperimentAPI.on("update", options, resolve));
   },
-  async remoteDefaultsHelper({
+  remoteDefaultsHelper({
     feature,
     store = ExperimentManager.store,
     configuration,
@@ -127,14 +80,9 @@ const ExperimentFakes = {
     if (!store._isReady) {
       throw new Error("Store not ready, need to `await ExperimentAPI.ready()`");
     }
-
-    await ExperimentTestUtils.validateRollouts(configuration);
-    // After storing the remote configuration to store and updating the feature
-    // we want to flush so that NimbusFeature usage in content process also
-    // receives the update
     store.updateRemoteConfigs(feature.featureId, configuration);
-    await feature.ready();
-    store._syncToChildren({ flush: true });
+
+    return feature.ready().then(() => store._syncToChildren({ flush: true }));
   },
   async enrollWithFeatureConfig(
     featureConfig,
@@ -204,7 +152,7 @@ const ExperimentFakes = {
       if (!manager.store._isReady) {
         throw new Error("Manager store not ready, call `manager.onStartup`");
       }
-      manager.enroll(recipe, "enrollmentHelper");
+      manager.enroll(recipe);
     }
 
     return { enrollmentPromise, doExperimentCleanup };
@@ -245,11 +193,8 @@ const ExperimentFakes = {
         },
         ...props,
       },
-      source: "NimbusTestUtils",
+      source: "test",
       isEnrollmentPaused: true,
-      experimentType: "NimbusTestUtils",
-      userFacingName: "NimbusTestUtils",
-      userFacingDescription: "NimbusTestUtils",
       ...props,
     };
   },
