@@ -581,7 +581,7 @@ namespace JS {
   D(HTML_PARSER, 55)                                                   \
                                                                        \
   /* Reasons reserved for embeddings. */                               \
-  D(RESERVED1, 90)                                                     \
+  D(RESERVED1, FIRST_RESERVED_REASON)                                  \
   D(RESERVED2, 91)                                                     \
   D(RESERVED3, 92)                                                     \
   D(RESERVED4, 93)                                                     \
@@ -593,6 +593,7 @@ namespace JS {
 
 enum class GCReason {
   FIRST_FIREFOX_REASON = 33,
+  FIRST_RESERVED_REASON = 90,
 
 #define MAKE_REASON(name, val) name = val,
   GCREASONS(MAKE_REASON)
