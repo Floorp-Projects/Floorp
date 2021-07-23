@@ -409,33 +409,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     return urlObject.toString();
   }
 
-  parseSpocPositions(csvPositions) {
-    let spocPositions;
-
-    // Only accept parseable non-negative integers
-    try {
-      spocPositions = csvPositions.map(index => {
-        let parsedInt = parseInt(index, 10);
-
-        if (!isNaN(parsedInt) && parsedInt >= 0) {
-          return parsedInt;
-        }
-
-        throw new Error("Bad input");
-      });
-    } catch (e) {
-      // Catch spoc positions that are not numbers or negative, and do nothing.
-      // We have hard coded backup positions.
-      spocPositions = undefined;
-    }
-
-    return spocPositions;
-  }
-
   async loadLayout(sendUpdate, isStartup) {
     let layoutResp = {};
     let url = "";
-
     if (!this.config.hardcoded_layout) {
       layoutResp = await this.fetchLayout(isStartup);
     }
@@ -446,16 +422,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         this.store.getState().Prefs.values[PREF_HARDCODED_BASIC_LAYOUT] ||
         this.store.getState().Prefs.values[PREF_REGION_BASIC_LAYOUT];
 
-      let spocPositions = this.store
-        .getState()
-        .Prefs.values?.pocketConfig?.spocPositions?.split(`,`);
-
       // Set a hardcoded layout if one is needed.
       // Changing values in this layout in memory object is unnecessary.
-      layoutResp = getHardcodedLayout(
-        isBasic,
-        this.parseSpocPositions(spocPositions)
-      );
+      layoutResp = getHardcodedLayout(isBasic);
     }
 
     sendUpdate({
@@ -1566,14 +1535,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
-  onPocketConfigChanged() {
-    // Update layout, and reload any off screen tabs.
-    // This does not change any existing open tabs.
-    // It also doesn't update any spoc or rec data, just the layout.
-    const dispatch = action => this.store.dispatch(ac.AlsoToPreloaded(action));
-    this.loadLayout(dispatch, false);
-  }
-
   async onPrefChangedAction(action) {
     switch (action.data.name) {
       case PREF_CONFIG:
@@ -1809,9 +1770,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       }
       case at.PREF_CHANGED:
         await this.onPrefChangedAction(action);
-        if (action.data.name === "pocketConfig") {
-          await this.onPocketConfigChanged(action.data.value);
-        }
         break;
     }
   }
@@ -1823,7 +1781,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 //
 // NOTE: There is some branching logic in the template based on `isBasicLayout`
 //
-getHardcodedLayout = (isBasicLayout, spocPositions = [2, 4, 11, 20]) => ({
+getHardcodedLayout = isBasicLayout => ({
   lastUpdate: Date.now(),
   spocs: {
     url: "https://spocs.getpocket.com/spocs",
@@ -1909,9 +1867,20 @@ getHardcodedLayout = (isBasicLayout, spocPositions = [2, 4, 11, 20]) => ({
           },
           spocs: {
             probability: 1,
-            positions: spocPositions.map(position => {
-              return { index: position };
-            }),
+            positions: [
+              {
+                index: 2,
+              },
+              {
+                index: 4,
+              },
+              {
+                index: 11,
+              },
+              {
+                index: 20,
+              },
+            ],
           },
         },
         {
