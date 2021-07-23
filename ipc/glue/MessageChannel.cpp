@@ -1164,8 +1164,7 @@ void MessageChannel::OnMessageReceivedFromLink(Message&& aMsg) {
 
   bool wakeUpSyncSend = AwaitingSyncReply() && !ShouldDeferMessage(aMsg);
 
-  bool shouldWakeUp =
-      AwaitingInterruptReply() || wakeUpSyncSend || AwaitingIncomingMessage();
+  bool shouldWakeUp = AwaitingInterruptReply() || wakeUpSyncSend;
 
   // Although we usually don't need to post a message task if
   // shouldWakeUp is true, it's easier to post anyway than to have to
@@ -1684,28 +1683,6 @@ bool MessageChannel::Call(UniquePtr<Message> aMsg, Message* aReply) {
       return false;
     }
   }
-}
-
-bool MessageChannel::WaitForIncomingMessage() {
-#ifdef OS_WIN
-  SyncStackFrame frame(this, true);
-  NeuteredWindowRegion neuteredRgn(mFlags &
-                                   REQUIRE_DEFERRED_MESSAGE_PROTECTION);
-#endif
-
-  MonitorAutoLock lock(*mMonitor);
-  AutoEnterWaitForIncoming waitingForIncoming(*this);
-  if (mChannelState != ChannelConnected) {
-    return false;
-  }
-  if (!HasPendingEvents()) {
-    return WaitForInterruptNotify();
-  }
-
-  MOZ_RELEASE_ASSERT(!mPending.isEmpty());
-  RefPtr<MessageTask> task = mPending.getFirst();
-  RunMessage(*task);
-  return true;
 }
 
 bool MessageChannel::HasPendingEvents() {
@@ -2398,9 +2375,13 @@ void MessageChannel::OnChannelErrorFromLink() {
 
   IPC_LOG("OnChannelErrorFromLink");
 
-  if (InterruptStackDepth() > 0) NotifyWorkerThread();
+  if (InterruptStackDepth() > 0) {
+    NotifyWorkerThread();
+  }
 
-  if (AwaitingSyncReply() || AwaitingIncomingMessage()) NotifyWorkerThread();
+  if (AwaitingSyncReply()) {
+    NotifyWorkerThread();
+  }
 
   if (ChannelClosing != mChannelState) {
     if (mAbortOnError) {
