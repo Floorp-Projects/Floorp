@@ -10,7 +10,6 @@ const ResponsiveUIManager = require("devtools/client/responsive/manager");
 const ResponsiveMessageHelper = require("devtools/client/responsive/utils/message");
 
 add_task(async function() {
-  await pushPref("devtools.inspector.color-scheme-simulation.enabled", true);
   // Use a local file for the device list, otherwise the panel tries to reach an external
   // URL, which makes the test fail.
   await pushPref(
