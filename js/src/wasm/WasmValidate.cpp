@@ -1925,29 +1925,7 @@ static bool DecodeTag(Decoder& d, ModuleEnvironment* env, TagKind* tagKind,
 }
 #endif
 
-struct CStringPair {
-  const char* first;
-  const char* second;
-
-  CStringPair(const char* first, const char* second)
-      : first(first), second(second) {}
-
-  using Key = CStringPair;
-  using Lookup = CStringPair;
-
-  static mozilla::HashNumber hash(const Lookup& l) {
-    return mozilla::AddToHash(mozilla::HashString(l.first),
-                              mozilla::HashString(l.second));
-  }
-  static bool match(const Key& k, const Lookup& l) {
-    return !strcmp(k.first, l.first) && !strcmp(k.second, l.second);
-  }
-};
-
-using CStringPairSet = HashSet<CStringPair, CStringPair, SystemAllocPolicy>;
-
-static bool DecodeImport(Decoder& d, ModuleEnvironment* env,
-                         CStringPairSet* dupSet) {
+static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
   UniqueChars moduleName = DecodeName(d);
   if (!moduleName) {
     return d.fail("expected valid import module name");
@@ -1956,16 +1934,6 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env,
   UniqueChars funcName = DecodeName(d);
   if (!funcName) {
     return d.fail("expected valid import func name");
-  }
-
-  // It is valid to store raw pointers in dupSet because moduleName and funcName
-  // become owned by env->imports on all non-error paths, outliving dupSet.
-  CStringPair pair(moduleName.get(), funcName.get());
-  CStringPairSet::AddPtr p = dupSet->lookupForAdd(pair);
-  if (p) {
-    env->usesDuplicateImports = true;
-  } else if (!dupSet->add(p, pair)) {
-    return false;
   }
 
   uint8_t rawImportKind;
@@ -2080,9 +2048,8 @@ static bool DecodeImportSection(Decoder& d, ModuleEnvironment* env) {
     return d.fail("too many imports");
   }
 
-  CStringPairSet dupSet;
   for (uint32_t i = 0; i < numImports; i++) {
-    if (!DecodeImport(d, env, &dupSet)) {
+    if (!DecodeImport(d, env)) {
       return false;
     }
   }
