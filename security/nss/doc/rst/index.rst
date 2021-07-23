@@ -12,6 +12,10 @@ Network Security Services
    introduction_to_network_security_services/index.rst
    More documentation <more_docs>
 
+
+.. warning::
+   This NSS documentation was just imported from our legacy MDN repository. It currently is very deprecated and likely incorrect or broken in many places.
+
 `Documentation <#documentation>`__
 ----------------------------------
 

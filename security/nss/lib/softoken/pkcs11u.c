@@ -2312,7 +2312,7 @@ sftk_handleSpecial(SFTKSlot *slot, CK_MECHANISM *mech,
             if (crv != CKR_OK) {
                 return PR_FALSE;
             }
-            dhSubPrime = sftk_VerifyDH_Prime(&dhPrime);
+            dhSubPrime = sftk_VerifyDH_Prime(&dhPrime, PR_TRUE);
             SECITEM_ZfreeItem(&dhPrime, PR_FALSE);
             return (dhSubPrime) ? PR_TRUE : PR_FALSE;
         }

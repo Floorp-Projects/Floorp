@@ -1171,11 +1171,15 @@ static const SECItem subprime_tls_8192 =
  * verify that dhPrime matches one of our known primes
  */
 const SECItem *
-sftk_VerifyDH_Prime(SECItem *dhPrime)
+sftk_VerifyDH_Prime(SECItem *dhPrime, PRBool isFIPS)
 {
     /* use the length to decide which primes to check */
     switch (dhPrime->len) {
         case 1536 / PR_BITS_PER_BYTE:
+            /* don't accept 1536 bit primes in FIPS mode */
+            if (isFIPS) {
+                break;
+            }
             if (PORT_Memcmp(dhPrime->data, prime_ike_1536,
                             sizeof(prime_ike_1536)) == 0) {
                 return &subprime_ike_1536;
