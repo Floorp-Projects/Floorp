@@ -271,10 +271,9 @@ For example, this IDL:
 
 .. code:: notranslate
 
-   [Constructor,
-    Constructor(unsigned long someNumber)]
-   interface MyInterface
-   {
+   interface MyInterface {
+      constructor();
+      constructor(unsigned long someNumber);
    };
 
 will require the following declarations in ``MyClass``:
@@ -347,7 +346,7 @@ explanations.
      - ``nsCString``
    * - Date
      -
-     - 
+     -
      - ``mozilla::dom::Date``
    * - DOMString
      - ``const nsAString&``
@@ -395,7 +394,7 @@ explanations.
    * - sequence
      - ```const Sequence<T>&`` <#Sequence>`__
      - ``nsTArray<T>&`` *(outparam)*
-     - 
+     -
    * - short
      - ``int16_t``
      - ``int16_t``
@@ -2493,8 +2492,9 @@ APIs. Here's an example:
 
 .. code:: notranslate
 
-   [Constructor(optional long firstNumber), JSImplementation="@mozilla.org/my-number;1"]
+   [JSImplementation="@mozilla.org/my-number;1"]
    interface MyNumber {
+     constructor(optional long firstNumber);
      attribute long value;
      readonly attribute long otherValue;
      void doNothing();
