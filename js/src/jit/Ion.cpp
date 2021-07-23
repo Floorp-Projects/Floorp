@@ -296,7 +296,8 @@ uint8_t* JitRuntime::allocateIonOsrTempData(size_t size) {
 
 void JitRuntime::freeIonOsrTempData() { ionOsrTempData_.ref().reset(); }
 
-JitRealm::JitRealm() : stubCodes_(nullptr), stringsCanBeInNursery(false) {}
+JitRealm::JitRealm()
+    : stubCodes_(nullptr), initialStringHeap(gc::TenuredHeap) {}
 
 JitRealm::~JitRealm() { js_delete(stubCodes_); }
 

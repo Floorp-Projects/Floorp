@@ -110,8 +110,7 @@ class CodeGeneratorShared : public LElementVisitor {
     return gen->isProfilerInstrumentationEnabled();
   }
 
-  bool stringsCanBeInNursery() const { return gen->stringsCanBeInNursery(); }
-
+  gc::InitialHeap initialStringHeap() const { return gen->initialStringHeap(); }
   gc::InitialHeap initialBigIntHeap() const { return gen->initialBigIntHeap(); }
 
  protected:

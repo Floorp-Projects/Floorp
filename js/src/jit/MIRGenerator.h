@@ -101,7 +101,9 @@ class MIRGenerator final {
     return !compilingWasm() && instrumentedProfiling();
   }
 
-  bool stringsCanBeInNursery() const { return stringsCanBeInNursery_; }
+  gc::InitialHeap initialStringHeap() const {
+    return stringsCanBeInNursery_ ? gc::DefaultHeap : gc::TenuredHeap;
+  }
 
   gc::InitialHeap initialBigIntHeap() const {
     return bigIntsCanBeInNursery_ ? gc::DefaultHeap : gc::TenuredHeap;
