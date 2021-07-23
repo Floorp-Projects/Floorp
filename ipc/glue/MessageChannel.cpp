@@ -666,10 +666,7 @@ static void PrintErrorMessage(Side side, const char* channelName,
 
 bool MessageChannel::Connected() const {
   mMonitor->AssertCurrentThreadOwns();
-
-  // The transport layer allows us to send messages before
-  // receiving the "connected" ack from the remote side.
-  return (ChannelOpening == mChannelState || ChannelConnected == mChannelState);
+  return ChannelConnected == mChannelState;
 }
 
 bool MessageChannel::CanSend() const {
@@ -696,11 +693,6 @@ void MessageChannel::Clear() {
         CrashReporter::Annotation::IPCFatalErrorProtocol,
         nsDependentCString(mName));
     switch (mChannelState) {
-      case ChannelOpening:
-        MOZ_CRASH(
-            "MessageChannel destroyed without being closed "
-            "(mChannelState == ChannelOpening).");
-        break;
       case ChannelConnected:
         MOZ_CRASH(
             "MessageChannel destroyed without being closed "
@@ -2299,9 +2291,6 @@ void MessageChannel::ReportConnectionError(const char* aChannelName,
     case ChannelClosed:
       errorMsg = "Closed channel: cannot send/recv";
       break;
-    case ChannelOpening:
-      errorMsg = "Opening channel: not yet ready for send/recv";
-      break;
     case ChannelTimeout:
       errorMsg = "Channel timeout: cannot send/recv";
       break;
@@ -2568,15 +2557,6 @@ void MessageChannel::Close() {
         mMonitor->Unlock();
         NotifyMaybeChannelError();
       }
-      return;
-    }
-
-    if (ChannelOpening == mChannelState) {
-      // SynchronouslyClose() waits for an ack from the other side, so
-      // the opening sequence should complete before this returns.
-      SynchronouslyClose();
-      mChannelState = ChannelError;
-      NotifyMaybeChannelError();
       return;
     }
 

@@ -90,7 +90,6 @@ using RejectCallback = std::function<void(ResponseRejectReason)>;
 
 enum ChannelState {
   ChannelClosed,
-  ChannelOpening,
   ChannelConnected,
   ChannelTimeout,
   ChannelClosing,
