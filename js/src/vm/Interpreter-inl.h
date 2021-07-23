@@ -496,13 +496,11 @@ static MOZ_ALWAYS_INLINE bool GetElementOperationWithStackIndex(
   }
 
   if (lref.isPrimitive()) {
-    RootedValue thisv(cx, lref);
-    return GetPrimitiveElementOperation(cx, thisv, lrefIndex, rref, res);
+    return GetPrimitiveElementOperation(cx, lref, lrefIndex, rref, res);
   }
 
   RootedObject obj(cx, &lref.toObject());
-  RootedValue thisv(cx, lref);
-  return GetObjectElementOperation(cx, JSOp::GetElem, obj, thisv, rref, res);
+  return GetObjectElementOperation(cx, JSOp::GetElem, obj, lref, rref, res);
 }
 
 // Wrapper for callVM from JIT.
