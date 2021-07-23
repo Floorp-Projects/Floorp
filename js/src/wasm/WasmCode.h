@@ -324,14 +324,12 @@ struct MetadataCacheablePod {
   Maybe<uint32_t> nameCustomSectionIndex;
   bool filenameIsURL;
   bool omitsBoundsChecks;
-  bool usesDuplicateImports;
 
   explicit MetadataCacheablePod(ModuleKind kind)
       : kind(kind),
         globalDataLength(0),
         filenameIsURL(false),
-        omitsBoundsChecks(false),
-        usesDuplicateImports(false) {}
+        omitsBoundsChecks(false) {}
 };
 
 typedef uint8_t ModuleHash[8];
