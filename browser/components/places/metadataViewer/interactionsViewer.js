@@ -219,14 +219,14 @@ const metadataHandler = new (class extends TableViewer {
    */
   #db = null;
 
-  async #getRows(query) {
+  async #getRows(query, columns = this.columnMap.keys()) {
     if (!this.#db) {
       this.#db = await PlacesUtils.promiseDBConnection();
     }
     let rows = await this.#db.executeCached(query);
     return rows.map(r => {
       let result = {};
-      for (let column of this.columnMap.keys()) {
+      for (let column of columns) {
         result[column] = r.getResultByName(column);
       }
       return result;
@@ -248,14 +248,25 @@ const metadataHandler = new (class extends TableViewer {
   }
 
   export() {
-    // Get all rows in the last 7 days
+    // Export all data. We only export url_hash and not url so users can share their exports
+    // without revealing the sites they have been visiting.
     return this.#getRows(
-      `SELECT m.id AS id, h.url AS url, updated_at, total_view_time,
-            typing_time, key_presses FROM moz_places_metadata m
+      `SELECT m.id AS id, url_hash, updated_at, total_view_time, visit_count,
+            frecency, typing_time, key_presses, last_visit_date FROM moz_places_metadata m
      JOIN moz_places h ON h.id = m.place_id
-     WHERE updated_at > strftime('%s','now','localtime','start of day','-7 days','utc') * 1000
      ORDER BY updated_at DESC
-     `
+     `,
+      [
+        "id",
+        "url_hash",
+        "visit_count",
+        "frecency",
+        "last_visit_date",
+        "updated_at",
+        "total_view_time",
+        "typing_time",
+        "key_presses",
+      ]
     );
   }
 })();
