@@ -113,17 +113,6 @@ const FeatureManifest = {
       },
     },
   },
-  pocketNewtab: {
-    description: "The Pocket section in newtab",
-    isEarlyStartup: true,
-    variables: {
-      spocPositions: {
-        type: "string",
-        fallbackPref:
-          "browser.newtabpage.activity-stream.discoverystream.spoc-positions",
-      },
-    },
-  },
   "password-autocomplete": {
     description: "A special autocomplete UI for password fields.",
     variables: {
