@@ -174,7 +174,7 @@ abstract class AbstractPrivateNotificationService : Service() {
     final override fun onBind(intent: Intent?): IBinder? = null
 
     final override fun onTaskRemoved(rootIntent: Intent) {
-        if (rootIntent.action in ignoreTaskActions) {
+        if (rootIntent.action in ignoreTaskActions || rootIntent.component?.className in ignoreTaskComponentClasses) {
             // The app may have multiple tasks (e.g. for PWAs). If tasks get removed that are not
             // the main browser task then we do not want to remove all private tabs here.
             // I am not sure whether we can reliably identify the main task since it can be launched
@@ -208,6 +208,12 @@ abstract class AbstractPrivateNotificationService : Service() {
         // passed to onTaskRemoved().
         private val ignoreTaskActions = listOf(
             "mozilla.components.feature.pwa.VIEW_PWA"
+        )
+
+        // List of Intent components classes that will get ignored when they are in the root intent
+        // that gets passed to onTaskRemoved().
+        private val ignoreTaskComponentClasses = listOf(
+            "org.mozilla.fenix.customtabs.ExternalAppBrowserActivity"
         )
     }
 }
