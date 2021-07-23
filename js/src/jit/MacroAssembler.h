@@ -4747,10 +4747,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
                            TypedArrayObject* templateObj,
                            TypedArrayLength lengthKind);
 
-  void newGCString(Register result, Register temp, Label* fail,
-                   bool attemptNursery);
-  void newGCFatInlineString(Register result, Register temp, Label* fail,
-                            bool attemptNursery);
+  void newGCString(Register result, Register temp, bool attemptNursery,
+                   Label* fail);
+  void newGCFatInlineString(Register result, Register temp, bool attemptNursery,
+                            Label* fail);
 
   void newGCBigInt(Register result, Register temp, gc::InitialHeap initialHeap,
                    Label* fail);

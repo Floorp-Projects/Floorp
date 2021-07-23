@@ -2293,11 +2293,11 @@ void CreateDependentString::generate(MacroAssembler& masm,
     }
 
     if (kind != FallbackKind::FatInlineString) {
-      masm.newGCString(string_, temp2_, &fallbacks_[kind],
-                       stringsCanBeInNursery);
+      masm.newGCString(string_, temp2_, stringsCanBeInNursery,
+                       &fallbacks_[kind]);
     } else {
-      masm.newGCFatInlineString(string_, temp2_, &fallbacks_[kind],
-                                stringsCanBeInNursery);
+      masm.newGCFatInlineString(string_, temp2_, stringsCanBeInNursery,
+                                &fallbacks_[kind]);
     }
     masm.bind(&joins_[kind]);
     masm.store32(Imm32(flags), Address(string_, JSString::offsetOfFlags()));
@@ -9981,7 +9981,7 @@ static void ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs,
     if (encoding == CharEncoding::Latin1) {
       flags |= JSString::LATIN1_CHARS_BIT;
     }
-    masm.newGCString(output, temp1, failure, stringsCanBeInNursery);
+    masm.newGCString(output, temp1, stringsCanBeInNursery, failure);
     masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
     masm.jump(&allocDone);
   }
@@ -9991,7 +9991,7 @@ static void ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs,
     if (encoding == CharEncoding::Latin1) {
       flags |= JSString::LATIN1_CHARS_BIT;
     }
-    masm.newGCFatInlineString(output, temp1, failure, stringsCanBeInNursery);
+    masm.newGCFatInlineString(output, temp1, stringsCanBeInNursery, failure);
     masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
   }
   masm.bind(&allocDone);
@@ -10065,7 +10065,7 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
   // Handle inlined strings by creating a FatInlineString.
   masm.branchTest32(Assembler::Zero, stringFlags,
                     Imm32(JSString::INLINE_CHARS_BIT), &notInline);
-  masm.newGCFatInlineString(output, temp, slowPath, stringsCanBeInNursery());
+  masm.newGCFatInlineString(output, temp, stringsCanBeInNursery(), slowPath);
   masm.store32(length, Address(output, JSString::offsetOfLength()));
 
   auto initializeFatInlineString = [&](CharEncoding encoding) {
@@ -10096,7 +10096,7 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
 
   // Handle other cases with a DependentString.
   masm.bind(&notInline);
-  masm.newGCString(output, temp, slowPath, gen->stringsCanBeInNursery());
+  masm.newGCString(output, temp, gen->stringsCanBeInNursery(), slowPath);
   masm.store32(length, Address(output, JSString::offsetOfLength()));
   masm.storeDependentStringBase(string, output);
 
@@ -10179,7 +10179,7 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
 
   // Allocate a new rope, guaranteed to be in the nursery if
   // stringsCanBeInNursery. (As a result, no post barriers are needed below.)
-  masm.newGCString(output, temp3, &failure, stringsCanBeInNursery);
+  masm.newGCString(output, temp3, stringsCanBeInNursery, &failure);
 
   // Store rope length and flags. temp1 still holds the result of AND'ing the
   // lhs and rhs flags, so we just have to clear the other flags to get our rope
@@ -10449,8 +10449,8 @@ void CodeGenerator::visitFromCodePoint(LFromCodePoint* lir) {
                     "JSThinInlineString can hold a supplementary code point");
 
       uint32_t flags = JSString::INIT_THIN_INLINE_FLAGS;
-      masm.newGCString(output, temp1, ool->entry(),
-                       gen->stringsCanBeInNursery());
+      masm.newGCString(output, temp1, gen->stringsCanBeInNursery(),
+                       ool->entry());
       masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
     }
 
