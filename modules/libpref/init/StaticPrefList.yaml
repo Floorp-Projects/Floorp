@@ -5131,11 +5131,7 @@
 # Whether or not to fallback from WebRender to Software WebRender.
 - name: gfx.webrender.fallback.software
   type: bool
-#if defined(MOZ_WIDGET_ANDROID)
-  value: false
-#else
   value: true
-#endif
   mirror: once
 
 #ifdef XP_WIN
