@@ -341,6 +341,15 @@ const AVAILABLE_SHIMS = [
     matches: ["*://cdn.adsafeprotected.com/iasPET.1.js"],
   },
   {
+    id: "MNet",
+    platform: "all",
+    name: "Media.net Ads",
+    bug: "1713703",
+    file: "empty-script.js",
+    matches: ["*://adservex.media.net/videoAds.js*"],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "Moat",
     platform: "all",
     name: "Moat",
