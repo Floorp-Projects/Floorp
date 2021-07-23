@@ -153,6 +153,24 @@ describe("PrefsFeed", () => {
       })
     );
   });
+  it("should send a PREF_CHANGED actions when onPocketExperimentUpdated is called", () => {
+    sandbox.stub(global.NimbusFeatures.newtab, "getAllVariables").returns({
+      prefsButtonIcon: "icon-new",
+    });
+    feed.onPocketExperimentUpdated();
+    assert.calledWith(
+      feed.store.dispatch,
+      ac.BroadcastToContent({
+        type: at.PREF_CHANGED,
+        data: {
+          name: "pocketConfig",
+          value: {
+            prefsButtonIcon: "icon-new",
+          },
+        },
+      })
+    );
+  });
   it("should send a PREF_CHANGED actions when onExperimentUpdated is called", () => {
     sandbox.stub(global.NimbusFeatures.newtab, "getValue").returns({
       prefsButtonIcon: "icon-new",
