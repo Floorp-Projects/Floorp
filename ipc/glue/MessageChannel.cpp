@@ -143,8 +143,6 @@ static const uint32_t kMinTelemetryIPCWriteLatencyMs = 1;
 // (IPC_SYNC_MAIN_LATENCY_MS and IPC_SYNC_RECEIVE_MS).
 static const uint32_t kMinTelemetrySyncIPCLatencyMs = 1;
 
-const int32_t MessageChannel::kNoTimeout = INT32_MIN;
-
 // static
 bool MessageChannel::sIsPumpingMessages = false;
 
@@ -571,37 +569,10 @@ static void TryRegisterStrongMemoryReporter() {
 Atomic<size_t> MessageChannel::gUnresolvedResponses;
 
 MessageChannel::MessageChannel(const char* aName, IToplevelProtocol* aListener)
-    : mName(aName),
-      mListener(aListener),
-      mChannelState(ChannelClosed),
-      mSide(UnknownSide),
-      mIsCrossProcess(false),
-      mChannelErrorTask(nullptr),
-      mTimeoutMs(kNoTimeout),
-      mInTimeoutSecondHalf(false),
-      mNextSeqno(0),
-      mLastSendError(SyncSendError::SendSuccess),
-      mDispatchingAsyncMessage(false),
-      mDispatchingAsyncMessageNestedLevel(0),
-      mTransactionStack(nullptr),
-      mTimedOutMessageSeqno(0),
-      mTimedOutMessageNestedLevel(0),
-      mMaybeDeferredPendingCount(0),
-      mRemoteStackDepthGuess(0),
-      mSawInterruptOutMsg(false),
-      mIsWaitingForIncoming(false),
-      mAbortOnError(false),
-      mNotifiedChannelDone(false),
-      mFlags(REQUIRE_DEFAULT),
-      mIsPostponingSends(false),
-      mBuildIDsConfirmedMatch(false),
-      mIsSameThreadChannel(false) {
+    : mName(aName), mListener(aListener) {
   MOZ_COUNT_CTOR(ipc::MessageChannel);
 
 #ifdef OS_WIN
-  mTopFrame = nullptr;
-  mIsSyncWaitingOnNonMainThread = false;
-
   mEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
   MOZ_RELEASE_ASSERT(mEvent, "CreateEvent failed! Nothing is going to work!");
 #endif
