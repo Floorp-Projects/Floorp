@@ -27,7 +27,7 @@ add_task(async function test_getExperiment_fromChild_slug() {
 
   sandbox.stub(ExperimentAPI, "_store").get(() => ExperimentFakes.childStore());
 
-  manager.store.addExperiment(expected);
+  await manager.store.addExperiment(expected);
 
   // Wait to sync to child
   await TestUtils.waitForCondition(
@@ -59,7 +59,7 @@ add_task(async function test_getExperiment_fromParent_slug() {
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
   await ExperimentAPI.ready();
 
-  manager.store.addExperiment(expected);
+  await manager.store.addExperiment(expected);
 
   Assert.equal(
     ExperimentAPI.getExperiment({ slug: "foo" }).slug,
@@ -80,7 +80,7 @@ add_task(async function test_getExperimentMetaData() {
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
   await ExperimentAPI.ready();
 
-  manager.store.addExperiment(expected);
+  await manager.store.addExperiment(expected);
 
   let metadata = ExperimentAPI.getExperimentMetaData({ slug: expected.slug });
 
@@ -140,7 +140,7 @@ add_task(async function test_getExperiment_feature() {
     branch: {
       slug: "treatment",
       value: { title: "hi" },
-      feature: { featureId: "cfr", enabled: true },
+      feature: { featureId: "cfr", enabled: true, value: null },
     },
   });
 
@@ -149,7 +149,7 @@ add_task(async function test_getExperiment_feature() {
   sandbox.stub(ExperimentAPI, "_store").get(() => ExperimentFakes.childStore());
   let exposureStub = sandbox.stub(ExperimentAPI, "recordExposureEvent");
 
-  manager.store.addExperiment(expected);
+  await manager.store.addExperiment(expected);
 
   // Wait to sync to child
   await TestUtils.waitForCondition(
@@ -268,7 +268,7 @@ add_task(async function test_addExperiment_eventEmit_add() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      feature: { featureId: "purple", enabled: true },
+      feature: { featureId: "purple", enabled: true, value: null },
     },
   });
   const store = ExperimentFakes.store();
@@ -280,7 +280,7 @@ add_task(async function test_addExperiment_eventEmit_add() {
   ExperimentAPI.on("update", { slug: "foo" }, slugStub);
   ExperimentAPI.on("update", { featureId: "purple" }, featureStub);
 
-  store.addExperiment(experiment);
+  await store.addExperiment(experiment);
 
   Assert.equal(
     slugStub.callCount,
@@ -303,7 +303,7 @@ add_task(async function test_updateExperiment_eventEmit_add_and_update() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      feature: { featureId: "purple", enabled: true },
+      feature: { featureId: "purple", enabled: true, value: null },
     },
   });
   const store = ExperimentFakes.store();
@@ -312,7 +312,7 @@ add_task(async function test_updateExperiment_eventEmit_add_and_update() {
   await store.init();
   await ExperimentAPI.ready();
 
-  store.addExperiment(experiment);
+  await store.addExperiment(experiment);
 
   ExperimentAPI.on("update", { slug: "foo" }, slugStub);
   ExperimentAPI.on("update", { featureId: "purple" }, featureStub);
@@ -337,7 +337,7 @@ add_task(async function test_updateExperiment_eventEmit_off() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      feature: { featureId: "purple", enabled: true },
+      feature: { featureId: "purple", enabled: true, value: null },
     },
   });
   const store = ExperimentFakes.store();
@@ -349,7 +349,7 @@ add_task(async function test_updateExperiment_eventEmit_off() {
   ExperimentAPI.on("update", { slug: "foo" }, slugStub);
   ExperimentAPI.on("update", { featureId: "purple" }, featureStub);
 
-  store.addExperiment(experiment);
+  await store.addExperiment(experiment);
 
   ExperimentAPI.off("update:foo", slugStub);
   ExperimentAPI.off("update:purple", featureStub);
@@ -367,12 +367,12 @@ add_task(async function test_activateBranch() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      feature: { featureId: "green", enabled: true },
+      feature: { featureId: "green", enabled: true, value: null },
     },
   });
 
   await store.init();
-  store.addExperiment(experiment);
+  await store.addExperiment(experiment);
 
   Assert.deepEqual(
     ExperimentAPI.activateBranch({ featureId: "green" }),
@@ -412,7 +412,7 @@ add_task(async function test_activateBranch_activationEvent() {
   });
 
   await store.init();
-  store.addExperiment(experiment);
+  await store.addExperiment(experiment);
   // Adding stub later because `addExperiment` emits update events
   const stub = sandbox.stub(ExperimentAPI, "recordExposureEvent");
   ExperimentAPI.activateBranch({ featureId: "green" });
@@ -449,7 +449,7 @@ add_task(async function test_activateBranch_storeFailure() {
   });
 
   await store.init();
-  store.addExperiment(experiment);
+  await store.addExperiment(experiment);
   // Adding stub later because `addExperiment` emits update events
   const stub = sandbox.stub(store, "emit");
   // Call activateBranch to trigger an activation event
@@ -476,7 +476,7 @@ add_task(async function test_activateBranch_noActivationEvent() {
   });
 
   await store.init();
-  store.addExperiment(experiment);
+  await store.addExperiment(experiment);
   // Adding stub later because `addExperiment` emits update events
   const stub = sandbox.stub(store, "emit");
   // Call activateBranch to trigger an activation event
