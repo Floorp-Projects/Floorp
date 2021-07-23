@@ -401,6 +401,10 @@ partner-urls:
                         by-release-level:
                             production: 'git@github.com:mozilla-partners/repack-manifests.git'
                             staging: 'git@github.com:moz-releng-automation-stage/repack-manifests.git'
+                    esr.*:
+                        by-release-level:
+                            production: 'git@github.com:mozilla-partners/esr-repack-manifests.git'
+                            staging: 'git@github.com:moz-releng-automation-stage/esr-repack-manifests.git'
     release-eme-free-repack:
         by-release-product:
             default: null
