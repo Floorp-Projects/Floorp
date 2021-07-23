@@ -1968,6 +1968,10 @@ nsIFrame* nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
   if (display->IsAbsPosContainingBlock(newFrame)) {
     aState.PushAbsoluteContainingBlock(newFrame, newFrame, absoluteSaveState);
   }
+
+  nsFrameConstructorSaveState floatSaveState;
+  aState.MaybePushFloatContainingBlock(innerFrame, floatSaveState);
+
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
     ConstructFramesFromItemList(
         aState, aItem.mChildItems, innerFrame,
@@ -2039,6 +2043,9 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableRowOrRowGroup(
   nsFrameConstructorSaveState absoluteSaveState;
   MakeTablePartAbsoluteContainingBlockIfNeeded(aState, aDisplay,
                                                absoluteSaveState, newFrame);
+
+  nsFrameConstructorSaveState floatSaveState;
+  aState.MaybePushFloatContainingBlock(newFrame, floatSaveState);
 
   nsFrameList childList;
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
@@ -2136,14 +2143,11 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
   MakeTablePartAbsoluteContainingBlockIfNeeded(aState, aDisplay,
                                                absoluteSaveState, newFrame);
 
+  nsFrameConstructorSaveState floatSaveState;
+  aState.MaybePushFloatContainingBlock(cellInnerFrame, floatSaveState);
+
   nsFrameList childList;
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
-    // Need to push ourselves as a float containing block.
-    // XXXbz it might be nice to work on getting the parent
-    // FrameConstructionItem down into ProcessChildren and just making use of
-    // the push there, but that's a bit of work.
-    nsFrameConstructorSaveState floatSaveState;
-    aState.MaybePushFloatContainingBlock(cellInnerFrame, floatSaveState);
     ConstructFramesFromItemList(
         aState, aItem.mChildItems, cellInnerFrame,
         aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX, childList);
@@ -2461,6 +2465,10 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     NS_ASSERTION(!contentFrame->IsBlockFrameOrSubclass() &&
                      !contentFrame->IsFrameOfType(nsIFrame::eSVG),
                  "Only XUL frames should reach here");
+
+    nsFrameConstructorSaveState floatSaveState;
+    state.MaybePushFloatContainingBlock(contentFrame, floatSaveState);
+
     ProcessChildren(state, aDocElement, computedStyle, contentFrame, true,
                     childList, false);
 
@@ -3027,6 +3035,9 @@ void nsCSSFrameConstructor::InitializeSelectFrame(
     RestoreFrameStateFor(scrollFrame, aState.mFrameState);
   }
 
+  nsFrameConstructorSaveState floatSaveState;
+  aState.MaybePushFloatContainingBlock(scrolledFrame, floatSaveState);
+
   // Process children
   nsFrameList childList;
 
@@ -3118,6 +3129,9 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
     aState.PushAbsoluteContainingBlock(contentFrameTop, fieldsetFrame,
                                        absoluteSaveState);
   }
+
+  nsFrameConstructorSaveState floatSaveState;
+  aState.MaybePushFloatContainingBlock(contentFrame, floatSaveState);
 
   ProcessChildren(aState, content, computedStyle, contentFrame, true, childList,
                   true);
@@ -3805,10 +3819,10 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
         }
       }
 
+      nsFrameConstructorSaveState floatSaveState;
+      aState.MaybePushFloatContainingBlock(newFrameAsContainer, floatSaveState);
+
       if (bits & FCDATA_USE_CHILD_ITEMS) {
-        nsFrameConstructorSaveState floatSaveState;
-        aState.MaybePushFloatContainingBlock(newFrameAsContainer,
-                                             floatSaveState);
         ConstructFramesFromItemList(
             aState, aItem.mChildItems, newFrameAsContainer,
             bits & FCDATA_IS_WRAPPER_ANON_BOX, childList);
@@ -4796,6 +4810,9 @@ nsContainerFrame* nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
     SetRootElementFrameAndConstructCanvasAnonContent(newFrame, aState,
                                                      aFrameList);
   }
+
+  nsFrameConstructorSaveState floatSaveState;
+  aState.MaybePushFloatContainingBlock(innerFrame, floatSaveState);
 
   nsFrameList childList;
 
@@ -7928,6 +7945,9 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingTableFrame(
           state, headerFooterComputedStyle->StyleDisplay(), absoluteSaveState,
           headerFooterFrame);
 
+      nsFrameConstructorSaveState floatSaveState;
+      state.MaybePushFloatContainingBlock(headerFooterFrame, floatSaveState);
+
       ProcessChildren(state, headerFooter, rowGroupFrame->Style(),
                       headerFooterFrame, true, childList, false, nullptr);
       NS_ASSERTION(state.mFloatedList.IsEmpty(), "unexpected floated element");
@@ -9562,9 +9582,6 @@ void nsCSSFrameConstructor::ProcessChildren(
                                 &haveFirstLineStyle);
   }
 
-  nsFrameConstructorSaveState floatSaveState;
-  aState.MaybePushFloatContainingBlock(aFrame, floatSaveState);
-
   AutoFrameConstructionItemList itemsToConstruct(this);
 
   // If we have first-letter or first-line style then frames can get
@@ -10525,10 +10542,12 @@ void nsCSSFrameConstructor::ConstructBlock(
   nsFrameConstructorSaveState absoluteSaveState;
   (*aNewFrame)->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
   if (aPositionedFrameForAbsPosContainer) {
-    //    NS_ASSERTION(aRelPos, "should have made area frame for this");
     aState.PushAbsoluteContainingBlock(
         *aNewFrame, aPositionedFrameForAbsPosContainer, absoluteSaveState);
   }
+
+  nsFrameConstructorSaveState floatSaveState;
+  aState.MaybePushFloatContainingBlock(blockFrame, floatSaveState);
 
   if (aParentFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR) &&
       !ShouldSuppressColumnSpanDescendants(aParentFrame)) {
@@ -11670,6 +11689,10 @@ void nsCSSFrameConstructor::GenerateChildFrames(nsContainerFrame* aFrame) {
     nsAutoScriptBlocker scriptBlocker;
     nsFrameList childList;
     nsFrameConstructorState state(mPresShell, nullptr, nullptr, nullptr);
+
+    nsFrameConstructorSaveState floatSaveState;
+    state.MaybePushFloatContainingBlock(aFrame, floatSaveState);
+
     ProcessChildren(state, aFrame->GetContent(), aFrame->Style(), aFrame, false,
                     childList, false);
 
