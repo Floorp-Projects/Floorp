@@ -73,7 +73,7 @@ class PortLink::PortObserverThunk : public NodeController::PortObserver {
 
 PortLink::PortLink(MessageChannel* aChan, ScopedPort aPort)
     : MessageLink(aChan), mNode(aPort.Controller()), mPort(aPort.Release()) {
-  MonitorAutoLock lock(*mChan->mMonitor);
+  mChan->mMonitor->AssertCurrentThreadOwns();
 
   mObserver = new PortObserverThunk(mChan->mMonitor, this);
   mNode->SetPortObserver(mPort, mObserver);
