@@ -248,18 +248,31 @@ char* DataOffer::GetDataInternal(const char* aMimeType,
     return nullptr;
   }
 
+  const PRTime entryTime = PR_Now();
   gsize len;
-  do {
-   ret = g_io_channel_read_to_end(channel, &clipboardData, &len, &error);
-  } while (ret == G_IO_STATUS_AGAIN);
-
-  if (error) {
-    NS_WARNING(
-        nsPrintfCString("Unexpected error when reading clipboard data: %s",
-                        error->message)
-            .get());
-    g_error_free(error);
-    return nullptr;
+  while (1) {
+    LOGCLIP(("reading data...\n"));
+    ret = g_io_channel_read_to_end(channel, &clipboardData, &len, &error);
+    if (ret == G_IO_STATUS_NORMAL) {
+      break;
+    }
+    if (ret == G_IO_STATUS_AGAIN) {
+      wl_display_flush(WaylandDisplayGet()->GetDisplay());
+      // check the number of iterations
+      PR_Sleep(20 * PR_TicksPerSecond() / 1000); /* sleep for 20 ms/iteration */
+      if (PR_Now() - entryTime > kClipboardTimeout) {
+        break;
+      }
+    } else { // G_IO_STATUS_ERROR
+      if (error) {
+        NS_WARNING(
+            nsPrintfCString("Unexpected error when reading clipboard data: %s",
+                            error->message)
+                .get());
+        g_error_free(error);
+      }
+      return nullptr;
+    }
   }
   *aContentLength = len;
 
@@ -330,15 +343,12 @@ char* DataOffer::GetDataAsync(const char* aMimeType, uint32_t* aContentLength) {
       }),
     nsIEventTarget::NS_DISPATCH_NORMAL);
 
-// Maximum time to wait for D&D data
-#define NS_DND_TIMEOUT 500000
-
   PRTime entryTime = PR_Now();
   while (!mGetterFinished) {
     // check the number of iterations
     LOGCLIP(("doing iteration...\n"));
     PR_Sleep(20 * PR_TicksPerSecond() / 1000); /* sleep for 20 ms/iteration */
-    if (PR_Now() - entryTime > NS_DND_TIMEOUT) {
+    if (PR_Now() - entryTime > kClipboardTimeout) {
       break;
     }
     gtk_main_iteration();
