@@ -736,13 +736,13 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
       nsContainerFrame* aNewAbsoluteContainingBlock, nsIFrame* aPositionedFrame,
       nsFrameConstructorSaveState& aSaveState);
 
-  // Function to push the existing float containing block state and
-  // create a new scope. Code that uses this function should get matching
-  // logic in GetFloatContainingBlock.
-  // Pushing a null float containing block forbids any frames from being
-  // floated until a new float containing block is pushed.
-  // XXX we should get rid of null float containing blocks and teach the
-  // various frame classes to deal with floats instead.
+  // Function to forbid floats descendants under aFloatCBCandidate, or open a
+  // new float containing block scope for aFloatCBCandidate. The current
+  // state is saved in aSaveState if a new scope is pushed.
+  void MaybePushFloatContainingBlock(nsContainerFrame* aFloatCBCandidate,
+                                     nsFrameConstructorSaveState& aSaveState);
+
+  // Helper function for MaybePushFloatContainingBlock().
   void PushFloatContainingBlock(nsContainerFrame* aNewFloatContainingBlock,
                                 nsFrameConstructorSaveState& aSaveState);
 
@@ -921,6 +921,23 @@ void nsFrameConstructorState::PushAbsoluteContainingBlock(
 
   if (aNewAbsoluteContainingBlock) {
     aNewAbsoluteContainingBlock->MarkAsAbsoluteContainingBlock();
+  }
+}
+
+void nsFrameConstructorState::MaybePushFloatContainingBlock(
+    nsContainerFrame* aFloatCBCandidate,
+    nsFrameConstructorSaveState& aSaveState) {
+  // The logic here needs to match the logic in GetFloatContainingBlock().
+  if (ShouldSuppressFloatingOfDescendants(aFloatCBCandidate)) {
+    // Pushing a null float containing block forbids any frames from being
+    // floated until a new float containing block is pushed. See implementation
+    // of nsFrameConstructorState::AddChild().
+    //
+    // XXX we should get rid of null float containing blocks and teach the
+    // various frame classes to deal with floats instead.
+    PushFloatContainingBlock(nullptr, aSaveState);
+  } else if (aFloatCBCandidate->IsFloatContainingBlock()) {
+    PushFloatContainingBlock(aFloatCBCandidate, aSaveState);
   }
 }
 
@@ -2106,14 +2123,11 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
           PseudoStyleType::cellContent, computedStyle);
 
   // Create a block frame that will format the cell's content
-  bool isBlock;
   nsContainerFrame* cellInnerFrame;
   if (isMathMLContent) {
     cellInnerFrame = NS_NewMathMLmtdInnerFrame(mPresShell, innerPseudoStyle);
-    isBlock = false;
   } else {
     cellInnerFrame = NS_NewBlockFormattingContext(mPresShell, innerPseudoStyle);
-    isBlock = true;
   }
 
   InitAndRestoreFrame(aState, content, newFrame, cellInnerFrame);
@@ -2129,19 +2143,14 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
     // FrameConstructionItem down into ProcessChildren and just making use of
     // the push there, but that's a bit of work.
     nsFrameConstructorSaveState floatSaveState;
-    if (!isBlock) { /* MathML case */
-      aState.PushFloatContainingBlock(nullptr, floatSaveState);
-    } else {
-      aState.PushFloatContainingBlock(cellInnerFrame, floatSaveState);
-    }
-
+    aState.MaybePushFloatContainingBlock(cellInnerFrame, floatSaveState);
     ConstructFramesFromItemList(
         aState, aItem.mChildItems, cellInnerFrame,
         aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX, childList);
   } else {
     // Process the child content
     ProcessChildren(aState, content, computedStyle, cellInnerFrame, true,
-                    childList, isBlock);
+                    childList, !isMathMLContent);
   }
 
   cellInnerFrame->SetInitialChildList(kPrincipalList, childList);
@@ -3208,9 +3217,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructBlockRubyFrame(
                                        absoluteSaveState);
   }
   nsFrameConstructorSaveState floatSaveState;
-  if (blockFrame->IsFloatContainingBlock()) {
-    aState.PushFloatContainingBlock(blockFrame, floatSaveState);
-  }
+  aState.MaybePushFloatContainingBlock(blockFrame, floatSaveState);
 
   nsFrameList childList;
   ProcessChildren(aState, content, rubyStyle, rubyFrame, true, childList, false,
@@ -3800,12 +3807,8 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
 
       if (bits & FCDATA_USE_CHILD_ITEMS) {
         nsFrameConstructorSaveState floatSaveState;
-
-        if (ShouldSuppressFloatingOfDescendants(newFrame)) {
-          aState.PushFloatContainingBlock(nullptr, floatSaveState);
-        } else if (newFrame->IsFloatContainingBlock()) {
-          aState.PushFloatContainingBlock(newFrameAsContainer, floatSaveState);
-        }
+        aState.MaybePushFloatContainingBlock(newFrameAsContainer,
+                                             floatSaveState);
         ConstructFramesFromItemList(
             aState, aItem.mChildItems, newFrameAsContainer,
             bits & FCDATA_IS_WRAPPER_ANON_BOX, childList);
@@ -5726,9 +5729,8 @@ nsContainerFrame* nsCSSFrameConstructor::GetAbsoluteContainingBlock(
 nsContainerFrame* nsCSSFrameConstructor::GetFloatContainingBlock(
     nsIFrame* aFrame) {
   // Starting with aFrame, look for a frame that is a float containing block.
-  // IF we hit a mathml frame, bail out; we don't allow floating out of mathml
-  // frames, because they don't seem to be able to deal.
-  // The logic here needs to match the logic in ProcessChildren()
+  // If we hit a frame which prevents its descendants from floating, bail out.
+  // The logic here needs to match the logic in MaybePushFloatContainingBlock().
   for (nsIFrame* containingBlock = aFrame;
        containingBlock && !ShouldSuppressFloatingOfDescendants(containingBlock);
        containingBlock = containingBlock->GetParent()) {
@@ -9560,13 +9562,8 @@ void nsCSSFrameConstructor::ProcessChildren(
                                 &haveFirstLineStyle);
   }
 
-  // The logic here needs to match the logic in GetFloatContainingBlock()
   nsFrameConstructorSaveState floatSaveState;
-  if (ShouldSuppressFloatingOfDescendants(aFrame)) {
-    aState.PushFloatContainingBlock(nullptr, floatSaveState);
-  } else if (aFrame->IsFloatContainingBlock()) {
-    aState.PushFloatContainingBlock(aFrame, floatSaveState);
-  }
+  aState.MaybePushFloatContainingBlock(aFrame, floatSaveState);
 
   AutoFrameConstructionItemList itemsToConstruct(this);
 
