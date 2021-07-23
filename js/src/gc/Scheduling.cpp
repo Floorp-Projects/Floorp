@@ -441,7 +441,10 @@ void HeapThreshold::setSliceThreshold(ZoneAllocator* zone,
   }
 
   MOZ_ASSERT(delayBeforeNextSlice <= tunables.zoneAllocDelayBytes());
-  sliceBytes_ = heapSize.bytes() + delayBeforeNextSlice;
+
+  sliceBytes_ = ToClampedSize(
+      std::min(uint64_t(heapSize.bytes()) + uint64_t(delayBeforeNextSlice),
+               uint64_t(incrementalLimitBytes_)));
 }
 
 size_t HeapThreshold::incrementalBytesRemaining(
