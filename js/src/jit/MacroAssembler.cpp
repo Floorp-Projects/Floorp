@@ -653,15 +653,15 @@ void MacroAssembler::allocateString(Register result, Register temp,
 }
 
 void MacroAssembler::newGCString(Register result, Register temp,
-                                 bool attemptNursery, Label* fail) {
-  allocateString(result, temp, js::gc::AllocKind::STRING,
-                 attemptNursery ? gc::DefaultHeap : gc::TenuredHeap, fail);
+                                 gc::InitialHeap initialHeap, Label* fail) {
+  allocateString(result, temp, js::gc::AllocKind::STRING, initialHeap, fail);
 }
 
 void MacroAssembler::newGCFatInlineString(Register result, Register temp,
-                                          bool attemptNursery, Label* fail) {
+                                          gc::InitialHeap initialHeap,
+                                          Label* fail) {
   allocateString(result, temp, js::gc::AllocKind::FAT_INLINE_STRING,
-                 attemptNursery ? gc::DefaultHeap : gc::TenuredHeap, fail);
+                 initialHeap, fail);
 }
 
 void MacroAssembler::newGCBigInt(Register result, Register temp,
