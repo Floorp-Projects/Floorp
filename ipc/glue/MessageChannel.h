@@ -519,9 +519,15 @@ class MessageChannel : HasResultCodes {
   void OnChannelErrorFromLink();
 
  private:
-  // Run on the not current thread.
-  void NotifyChannelClosed();
-  void NotifyMaybeChannelError();
+  // Clear this channel, and notify the listener that the channel has either
+  // closed or errored.
+  //
+  // These methods must be called on the worker thread, passing in a
+  // `Maybe<MonitorAutoLock>`. This lock guard will be reset before the listener
+  // is called, allowing for the mutex to be unlocked before the MessageChannel
+  // is potentially destroyed.
+  void NotifyChannelClosed(Maybe<MonitorAutoLock>& aLock);
+  void NotifyMaybeChannelError(Maybe<MonitorAutoLock>& aLock);
 
  private:
   void AssertWorkerThread() const {
