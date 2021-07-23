@@ -162,11 +162,6 @@ class GeckoViewStartup {
         ) {
           ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
 
-          Services.mm.loadFrameScript(
-            "chrome://geckoview/content/GeckoViewPromptChild.js",
-            true
-          );
-
           GeckoViewUtils.addLazyGetter(this, "ContentCrashHandler", {
             module: "resource://gre/modules/ContentCrashHandler.jsm",
             observers: ["ipc:content-shutdown"],
