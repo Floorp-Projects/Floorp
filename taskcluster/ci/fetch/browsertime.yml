@@ -127,7 +127,6 @@ mac64-chromedriver-90:
         sha256: 1318b3717576154e36476c3253ee8e87a2e09eaf07631ee4948348a8f6a1545f
         size: 8050248
 
-
 win32-chromedriver-91:
     description: 'Win32 chromedriver v91'
     fetch:
@@ -157,3 +156,33 @@ mac64-chromedriver-91:
         url: https://chromedriver.storage.googleapis.com/91.0.4472.19/chromedriver_mac64.zip
         sha256: c23d8244cff767fc1c9bc259fb86fece0124d1eba9645397fe7903100e98651f
         size: 8056350
+
+win32-chromedriver-92:
+    description: 'Win32 chromedriver v92'
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_win32_92.tar.zst
+        add-prefix: '92'
+        url: https://chromedriver.storage.googleapis.com/92.0.4515.43/chromedriver_win32.zip
+        sha256: cf8f42cda863d79bd3f21071f454fb4fd7ee5a840192d144fd84fa0f79c26e64
+        size: 5931534
+
+linux64-chromedriver-92:
+    description: 'Linux64 chromedriver v92'
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_linux64_92.tar.zst
+        add-prefix: '92'
+        url: https://chromedriver.storage.googleapis.com/92.0.4515.43/chromedriver_linux64.zip
+        sha256: 7c21ddfd1951d8f7c6850842e8a8c859a6bfaa536f48b1d89f29f92b12f242e8
+        size: 6023109
+
+mac64-chromedriver-92:
+    description: 'Mac64 chromedriver v92'
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_mac64_92.tar.zst
+        add-prefix: '92'
+        url: https://chromedriver.storage.googleapis.com/92.0.4515.43/chromedriver_mac64.zip
+        sha256: 0ec54504c043013fe8a0617d0c6b8cc012f287cc455412b560e4d4f249264fb2
+        size: 8136683
