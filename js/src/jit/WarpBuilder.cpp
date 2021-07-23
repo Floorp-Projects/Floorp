@@ -2139,20 +2139,20 @@ bool WarpBuilder::build_CheckClassHeritage(BytecodeLocation loc) {
   return resumeAfter(ins, loc);
 }
 
-bool WarpBuilder::build_CheckThis(BytecodeLocation) {
+bool WarpBuilder::build_CheckThis(BytecodeLocation loc) {
   MDefinition* def = current->pop();
   auto* ins = MCheckThis::New(alloc(), def);
   current->add(ins);
   current->push(ins);
-  return true;
+  return resumeAfter(ins, loc);
 }
 
-bool WarpBuilder::build_CheckThisReinit(BytecodeLocation) {
+bool WarpBuilder::build_CheckThisReinit(BytecodeLocation loc) {
   MDefinition* def = current->pop();
   auto* ins = MCheckThisReinit::New(alloc(), def);
   current->add(ins);
   current->push(ins);
-  return true;
+  return resumeAfter(ins, loc);
 }
 
 bool WarpBuilder::build_Generator(BytecodeLocation loc) {
@@ -2401,7 +2401,7 @@ bool WarpBuilder::build_AsyncAwait(BytecodeLocation loc) {
   return resumeAfter(asyncAwait, loc);
 }
 
-bool WarpBuilder::build_CheckReturn(BytecodeLocation) {
+bool WarpBuilder::build_CheckReturn(BytecodeLocation loc) {
   MOZ_ASSERT(!script_->noScriptRval());
 
   MDefinition* returnValue = current->getSlot(info().returnValueSlot());
@@ -2410,7 +2410,7 @@ bool WarpBuilder::build_CheckReturn(BytecodeLocation) {
   auto* ins = MCheckReturn::New(alloc(), returnValue, thisValue);
   current->add(ins);
   current->setSlot(info().returnValueSlot(), ins);
-  return true;
+  return resumeAfter(ins, loc);
 }
 
 void WarpBuilder::buildCheckLexicalOp(BytecodeLocation loc) {
