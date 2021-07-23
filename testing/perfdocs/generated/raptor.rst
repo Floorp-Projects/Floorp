@@ -29,7 +29,2309 @@ The following documents all testing we have for Raptor.
 
 Benchmarks
 ----------
-Standard benchmarks are third-party tests (i.e. Speedometer) that we have integrated into Raptor to run per-commit in our production CI. 
+Standard benchmarks are third-party tests (i.e. Speedometer) that we have integrated into Raptor to run per-commit in our production CI. (FF: Firefox, CH: Chrome, CU: Chromium)
+
+.. dropdown:: ares6 (FF, CH, CU)
+   :container: + anchor-id-ares6-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **page cycles**: 4
+   * **page timeout**: 270000
+   * **subtest lower is better**: true
+   * **subtest unit**: ms
+   * **test url**: `<http://<host>:<port>/ARES-6/index.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: ms
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-firefox-ares6-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-firefox-ares6-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-ares6-e10s: None
+            * browsertime-benchmark-chromium-ares6-e10s: None
+            * browsertime-benchmark-firefox-ares6-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-ares6-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-chrome-ares6-e10s: None
+            * browsertime-benchmark-chromium-ares6-e10s: None
+            * browsertime-benchmark-firefox-ares6-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-firefox-ares6-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-ares6-e10s: None
+            * browsertime-benchmark-chromium-ares6-e10s: None
+            * browsertime-benchmark-firefox-ares6-e10s: trunk
+            * browsertime-benchmark-firefox-ares6-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-ares6-e10s: None
+            * browsertime-benchmark-chromium-ares6-e10s: None
+            * browsertime-benchmark-firefox-ares6-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-ares6-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-chrome-ares6-e10s: None
+            * browsertime-benchmark-chromium-ares6-e10s: None
+            * browsertime-benchmark-firefox-ares6-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-firefox-ares6-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-chrome-ares6-e10s: None
+            * browsertime-benchmark-chromium-ares6-e10s: None
+            * browsertime-benchmark-firefox-ares6-e10s: None
+            * browsertime-benchmark-firefox-ares6-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-firefox-ares6-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-firefox-ares6-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-ares6-e10s: None
+            * browsertime-benchmark-chromium-ares6-e10s: None
+            * browsertime-benchmark-firefox-ares6-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-ares6-fis-e10s: mozilla-central
+
+
+.. dropdown:: assorted-dom (FF, CH, CU)
+   :container: + anchor-id-assorted-dom-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **fetch task**: assorted-dom
+   * **gecko profile entries**: 2000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **screen capture**: true
+   * **test url**: `<http://<host>:<port>/assorted-dom/assorted/driver.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: ms
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-firefox-assorted-dom-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-firefox-assorted-dom-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-assorted-dom-e10s: None
+            * browsertime-benchmark-chromium-assorted-dom-e10s: None
+            * browsertime-benchmark-firefox-assorted-dom-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-assorted-dom-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-chrome-assorted-dom-e10s: None
+            * browsertime-benchmark-chromium-assorted-dom-e10s: None
+            * browsertime-benchmark-firefox-assorted-dom-e10s: autoland
+      * test-linux1804-64/opt
+            * browsertime-benchmark-firefox-assorted-dom-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-assorted-dom-e10s: None
+            * browsertime-benchmark-chromium-assorted-dom-e10s: None
+            * browsertime-benchmark-firefox-assorted-dom-e10s: trunk
+            * browsertime-benchmark-firefox-assorted-dom-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-assorted-dom-e10s: None
+            * browsertime-benchmark-chromium-assorted-dom-e10s: None
+            * browsertime-benchmark-firefox-assorted-dom-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-assorted-dom-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-chrome-assorted-dom-e10s: None
+            * browsertime-benchmark-chromium-assorted-dom-e10s: None
+            * browsertime-benchmark-firefox-assorted-dom-e10s: autoland
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-firefox-assorted-dom-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-chrome-assorted-dom-e10s: None
+            * browsertime-benchmark-chromium-assorted-dom-e10s: None
+            * browsertime-benchmark-firefox-assorted-dom-e10s: None
+            * browsertime-benchmark-firefox-assorted-dom-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-firefox-assorted-dom-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-firefox-assorted-dom-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-assorted-dom-e10s: None
+            * browsertime-benchmark-chromium-assorted-dom-e10s: None
+            * browsertime-benchmark-firefox-assorted-dom-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-assorted-dom-fis-e10s: mozilla-central
+
+
+.. dropdown:: jetstream2 (FF, CH, CU)
+   :container: + anchor-id-jetstream2-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **fetch task**: jetstream2
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: false
+   * **page cycles**: 4
+   * **page timeout**: 2000000
+   * **subtest lower is better**: false
+   * **subtest unit**: score
+   * **test url**: `<http://<host>:<port>/JetStream2/index.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-firefox-jetstream2-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-firefox-jetstream2-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-jetstream2-e10s: None
+            * browsertime-benchmark-chromium-jetstream2-e10s: None
+            * browsertime-benchmark-firefox-jetstream2-e10s: mozilla-central
+            * browsertime-benchmark-firefox-jetstream2-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-chrome-jetstream2-e10s: None
+            * browsertime-benchmark-chromium-jetstream2-e10s: None
+            * browsertime-benchmark-firefox-jetstream2-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-firefox-jetstream2-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-jetstream2-e10s: None
+            * browsertime-benchmark-chromium-jetstream2-e10s: None
+            * browsertime-benchmark-firefox-jetstream2-e10s: mozilla-central
+            * browsertime-benchmark-firefox-jetstream2-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-jetstream2-e10s: None
+            * browsertime-benchmark-chromium-jetstream2-e10s: None
+            * browsertime-benchmark-firefox-jetstream2-e10s: mozilla-central
+            * browsertime-benchmark-firefox-jetstream2-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-chrome-jetstream2-e10s: None
+            * browsertime-benchmark-chromium-jetstream2-e10s: None
+            * browsertime-benchmark-firefox-jetstream2-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-firefox-jetstream2-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-chrome-jetstream2-e10s: None
+            * browsertime-benchmark-chromium-jetstream2-e10s: None
+            * browsertime-benchmark-firefox-jetstream2-e10s: None
+            * browsertime-benchmark-firefox-jetstream2-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-firefox-jetstream2-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-firefox-jetstream2-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-jetstream2-e10s: None
+            * browsertime-benchmark-chromium-jetstream2-e10s: None
+            * browsertime-benchmark-firefox-jetstream2-e10s: mozilla-central
+            * browsertime-benchmark-firefox-jetstream2-fis-e10s: mozilla-central
+
+
+.. dropdown:: motionmark-animometer (FF, CH, CU)
+   :container: + anchor-id-motionmark-animometer-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **gecko profile entries**: 8000000
+   * **gecko profile interval**: 1
+   * **lower is better**: false
+   * **page cycles**: 1
+   * **page timeout**: 600000
+   * **test url**: `<http://<host>:<port>/MotionMark/developer.html?test-interval=15&display=minimal&tiles=big&controller=fixed&frame-rate=30&kalman-process-error=1&kalman-measurement-error=4&time-measurement=performance&suite-name=Animometer&raptor=true&oskey={platform}>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-motionmark-animometer-e10s: None
+            * browsertime-benchmark-chromium-motionmark-animometer-e10s: None
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-motionmark-animometer-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-chrome-motionmark-animometer-e10s: None
+            * browsertime-benchmark-chromium-motionmark-animometer-e10s: None
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-motionmark-animometer-e10s: None
+            * browsertime-benchmark-chromium-motionmark-animometer-e10s: None
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: trunk
+            * browsertime-benchmark-firefox-motionmark-animometer-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-motionmark-animometer-e10s: None
+            * browsertime-benchmark-chromium-motionmark-animometer-e10s: None
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-motionmark-animometer-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-chrome-motionmark-animometer-e10s: None
+            * browsertime-benchmark-chromium-motionmark-animometer-e10s: None
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-chrome-motionmark-animometer-e10s: None
+            * browsertime-benchmark-chromium-motionmark-animometer-e10s: None
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: None
+            * browsertime-benchmark-firefox-motionmark-animometer-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-motionmark-animometer-e10s: None
+            * browsertime-benchmark-chromium-motionmark-animometer-e10s: None
+            * browsertime-benchmark-firefox-motionmark-animometer-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-motionmark-animometer-fis-e10s: mozilla-central
+
+
+.. dropdown:: motionmark-htmlsuite (FF, CH, CU)
+   :container: + anchor-id-motionmark-htmlsuite-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **gecko profile entries**: 8000000
+   * **gecko profile interval**: 1
+   * **lower is better**: false
+   * **page cycles**: 5
+   * **page timeout**: 600000
+   * **test url**: `<http://<host>:<port>/MotionMark/developer.html?test-interval=15&display=minimal&tiles=big&controller=fixed&frame-rate=30&kalman-process-error=1&kalman-measurement-error=4&time-measurement=performance&suite-name=HTMLsuite&raptor=true&oskey={platform}>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-chromium-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-chrome-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-chromium-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: autoland
+      * test-linux1804-64/opt
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-chromium-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: trunk
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-chromium-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-chrome-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-chromium-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: autoland
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-chrome-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-chromium-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-chromium-motionmark-htmlsuite-e10s: None
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-motionmark-htmlsuite-fis-e10s: mozilla-central
+
+
+.. dropdown:: raptor-speedometer-geckoview (GV)
+   :container: + anchor-id-raptor-speedometer-geckoview-b
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: false
+   * **page cycles**: 1
+   * **page timeout**: 420000
+   * **subtest lower is better**: true
+   * **subtest unit**: ms
+   * **test url**: `<http://<host>:<port>/Speedometer/index.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: score
+
+
+.. dropdown:: raptor-youtube-playback-av1-sfr-chrome (CH)
+   :container: + anchor-id-raptor-youtube-playback-av1-sfr-chrome-b
+
+   * **alert threshold**: 2.0
+   * **apps**: chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-av1-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-av1-sfr-fenix (FE)
+   :container: + anchor-id-raptor-youtube-playback-av1-sfr-fenix-b
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-av1-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-av1-sfr-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-av1-sfr-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-av1-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-av1-sfr-geckoview (GV)
+   :container: + anchor-id-raptor-youtube-playback-av1-sfr-geckoview-b
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-av1-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-1080p30-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-h264-1080p30-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&tests=18&raptor=true&muted=true&command=run&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-1080p60-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-h264-1080p60-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=46&muted=true&command=run&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-full-1080p30-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-h264-full-1080p30-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **preferences**: {"full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&tests=18&raptor=true&muted=true&command=run&fullscreen=true&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-full-1080p60-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-h264-full-1080p60-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **preferences**: {"full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=46&muted=true&command=run&fullscreen=true&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-sfr-chrome (CH)
+   :container: + anchor-id-raptor-youtube-playback-h264-sfr-chrome-b
+
+   * **alert threshold**: 2.0
+   * **apps**: chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-sfr-fenix (FE)
+   :container: + anchor-id-raptor-youtube-playback-h264-sfr-fenix-b
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-sfr-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-h264-sfr-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-sfr-geckoview (GV)
+   :container: + anchor-id-raptor-youtube-playback-h264-sfr-geckoview-b
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-hfr-chrome (CH)
+   :container: + anchor-id-raptor-youtube-playback-hfr-chrome-b
+
+   * **alert on**: H2641080p60fps@1X_dropped_frames, H264720p60fps@1X_dropped_frames
+   * **alert threshold**: 2.0
+   * **apps**: chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-hfr-fenix (FE)
+   :container: + anchor-id-raptor-youtube-playback-hfr-fenix-b
+
+   * **alert on**: H2641080p60fps@1X_dropped_frames, H264720p60fps@1X_dropped_frames
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-hfr-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-hfr-firefox-b
+
+   * **alert on**: H2641080p60fps@1X_dropped_frames, H264720p60fps@1X_dropped_frames
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-hfr-geckoview (GV)
+   :container: + anchor-id-raptor-youtube-playback-hfr-geckoview-b
+
+   * **alert on**: H2641080p60fps@1X_dropped_frames, H264720p60fps@1X_dropped_frames
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-v9-1080p30-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-v9-1080p30-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&tests=18&muted=true&command=run&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-v9-1080p60-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-v9-1080p60-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=14&muted=true&command=run&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-v9-full-1080p30-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-v9-full-1080p30-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **preferences**: {"full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&tests=18&muted=true&command=run&fullscreen=true&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-v9-full-1080p60-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-v9-full-1080p60-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **preferences**: {"full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=14&muted=true&command=run&fullscreen=true&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-vp9-sfr-chrome (CH)
+   :container: + anchor-id-raptor-youtube-playback-vp9-sfr-chrome-b
+
+   * **alert threshold**: 2.0
+   * **apps**: chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-vp9-sfr-fenix (FE)
+   :container: + anchor-id-raptor-youtube-playback-vp9-sfr-fenix-b
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-vp9-sfr-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-vp9-sfr-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-vp9-sfr-geckoview (GV)
+   :container: + anchor-id-raptor-youtube-playback-vp9-sfr-geckoview-b
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-widevine-h264-sfr-chrome (CH)
+   :container: + anchor-id-raptor-youtube-playback-widevine-h264-sfr-chrome-b
+
+   * **alert threshold**: 2.0
+   * **apps**: chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-widevine-h264-sfr-fenix (FE)
+   :container: + anchor-id-raptor-youtube-playback-widevine-h264-sfr-fenix-b
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-widevine-h264-sfr-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-widevine-h264-sfr-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-widevine-h264-sfr-geckoview (GV)
+   :container: + anchor-id-raptor-youtube-playback-widevine-h264-sfr-geckoview-b
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-widevine-hfr-chrome (CH)
+   :container: + anchor-id-raptor-youtube-playback-widevine-hfr-chrome-b
+
+   * **alert threshold**: 2.0
+   * **apps**: chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-widevine-hfr-fenix (FE)
+   :container: + anchor-id-raptor-youtube-playback-widevine-hfr-fenix-b
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-widevine-hfr-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-widevine-hfr-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-widevine-hfr-geckoview (GV)
+   :container: + anchor-id-raptor-youtube-playback-widevine-hfr-geckoview-b
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-widevine-vp9-sfr-chrome (CH)
+   :container: + anchor-id-raptor-youtube-playback-widevine-vp9-sfr-chrome-b
+
+   * **alert threshold**: 2.0
+   * **apps**: chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-widevine-vp9-sfr-fenix (FE)
+   :container: + anchor-id-raptor-youtube-playback-widevine-vp9-sfr-fenix-b
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-widevine-vp9-sfr-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-widevine-vp9-sfr-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-widevine-vp9-sfr-geckoview (GV)
+   :container: + anchor-id-raptor-youtube-playback-widevine-vp9-sfr-geckoview-b
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: speedometer (FF, CH, CU, FE, GV, RB, CH-M)
+   :container: + anchor-id-speedometer-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: false
+   * **page cycles**: 5
+   * **page timeout**: 180000
+   * **subtest lower is better**: true
+   * **subtest unit**: ms
+   * **test url**: `<http://<host>:<port>/Speedometer/index.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-speedometer-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: autoland
+      * test-linux1804-64/opt
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: trunk
+            * browsertime-benchmark-firefox-speedometer-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-speedometer-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: autoland
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-speedometer-fis-e10s: mozilla-central
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix, geckoview, refbrow, chrome-m
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: false
+   * **page cycles**: 1
+   * **page timeout**: 420000
+   * **subtest lower is better**: true
+   * **subtest unit**: ms
+   * **test url**: `<http://<host>:<port>/Speedometer/index.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-speedometer-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: autoland
+      * test-linux1804-64/opt
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: trunk
+            * browsertime-benchmark-firefox-speedometer-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-speedometer-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: autoland
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-firefox-speedometer-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-speedometer-e10s: None
+            * browsertime-benchmark-chromium-speedometer-e10s: None
+            * browsertime-benchmark-firefox-speedometer-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-speedometer-fis-e10s: mozilla-central
+
+
+.. dropdown:: stylebench (FF, CH, CU)
+   :container: + anchor-id-stylebench-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **gecko profile entries**: 8000000
+   * **gecko profile interval**: 1
+   * **lower is better**: false
+   * **page cycles**: 5
+   * **page timeout**: 120000
+   * **subtest lower is better**: true
+   * **subtest unit**: ms
+   * **test url**: `<http://<host>:<port>/StyleBench/index.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-firefox-stylebench-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-firefox-stylebench-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-stylebench-e10s: None
+            * browsertime-benchmark-chromium-stylebench-e10s: None
+            * browsertime-benchmark-firefox-stylebench-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-stylebench-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-chrome-stylebench-e10s: None
+            * browsertime-benchmark-chromium-stylebench-e10s: None
+            * browsertime-benchmark-firefox-stylebench-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-firefox-stylebench-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-stylebench-e10s: None
+            * browsertime-benchmark-chromium-stylebench-e10s: None
+            * browsertime-benchmark-firefox-stylebench-e10s: trunk
+            * browsertime-benchmark-firefox-stylebench-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-stylebench-e10s: None
+            * browsertime-benchmark-chromium-stylebench-e10s: None
+            * browsertime-benchmark-firefox-stylebench-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-stylebench-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-chrome-stylebench-e10s: None
+            * browsertime-benchmark-chromium-stylebench-e10s: None
+            * browsertime-benchmark-firefox-stylebench-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-firefox-stylebench-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-chrome-stylebench-e10s: None
+            * browsertime-benchmark-chromium-stylebench-e10s: None
+            * browsertime-benchmark-firefox-stylebench-e10s: None
+            * browsertime-benchmark-firefox-stylebench-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-firefox-stylebench-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-firefox-stylebench-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-stylebench-e10s: None
+            * browsertime-benchmark-chromium-stylebench-e10s: None
+            * browsertime-benchmark-firefox-stylebench-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-stylebench-fis-e10s: mozilla-central
+
+
+.. dropdown:: sunspider (FF, CH, CU)
+   :container: + anchor-id-sunspider-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **gecko profile entries**: 8000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **page cycles**: 5
+   * **page timeout**: 55000
+   * **test url**: `<http://<host>:<port>/SunSpider/sunspider-1.0.1/sunspider-1.0.1/driver.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: ms
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-firefox-sunspider-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-firefox-sunspider-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-sunspider-e10s: None
+            * browsertime-benchmark-chromium-sunspider-e10s: None
+            * browsertime-benchmark-firefox-sunspider-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-sunspider-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-chrome-sunspider-e10s: None
+            * browsertime-benchmark-chromium-sunspider-e10s: None
+            * browsertime-benchmark-firefox-sunspider-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-firefox-sunspider-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-sunspider-e10s: None
+            * browsertime-benchmark-chromium-sunspider-e10s: None
+            * browsertime-benchmark-firefox-sunspider-e10s: trunk
+            * browsertime-benchmark-firefox-sunspider-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-sunspider-e10s: None
+            * browsertime-benchmark-chromium-sunspider-e10s: None
+            * browsertime-benchmark-firefox-sunspider-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-sunspider-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-chrome-sunspider-e10s: None
+            * browsertime-benchmark-chromium-sunspider-e10s: None
+            * browsertime-benchmark-firefox-sunspider-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-firefox-sunspider-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-chrome-sunspider-e10s: None
+            * browsertime-benchmark-chromium-sunspider-e10s: None
+            * browsertime-benchmark-firefox-sunspider-e10s: None
+            * browsertime-benchmark-firefox-sunspider-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-firefox-sunspider-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-firefox-sunspider-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-sunspider-e10s: None
+            * browsertime-benchmark-chromium-sunspider-e10s: None
+            * browsertime-benchmark-firefox-sunspider-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-sunspider-fis-e10s: mozilla-central
+
+
+.. dropdown:: unity-webgl (FF, CH, CU, FE, RB, FE, CH-M)
+   :container: + anchor-id-unity-webgl-b
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, refbrow, fenix, chrome-m
+   * **expected**: pass
+   * **fetch task**: unity-webgl
+   * **gecko profile entries**: 8000000
+   * **gecko profile interval**: 1
+   * **lower is better**: false
+   * **page cycles**: 1
+   * **page timeout**: 420000
+   * **test url**: `<http://<host>:<port>/unity-webgl/index.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: autoland
+            * browsertime-benchmark-firefox-unity-webgl-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: autoland
+            * browsertime-benchmark-firefox-unity-webgl-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: autoland
+            * browsertime-benchmark-firefox-unity-webgl-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: autoland
+            * browsertime-benchmark-firefox-unity-webgl-fis-e10s: mozilla-central
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **fetch task**: unity-webgl
+   * **gecko profile entries**: 8000000
+   * **gecko profile interval**: 1
+   * **lower is better**: false
+   * **page cycles**: 5
+   * **page timeout**: 420000
+   * **test url**: `<http://<host>:<port>/unity-webgl/index.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: autoland
+            * browsertime-benchmark-firefox-unity-webgl-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: autoland
+            * browsertime-benchmark-firefox-unity-webgl-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: autoland
+            * browsertime-benchmark-firefox-unity-webgl-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-firefox-unity-webgl-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-unity-webgl-e10s: None
+            * browsertime-benchmark-chromium-unity-webgl-e10s: None
+            * browsertime-benchmark-firefox-unity-webgl-e10s: autoland
+            * browsertime-benchmark-firefox-unity-webgl-fis-e10s: mozilla-central
+
+
+.. dropdown:: wasm-godot (FF, CH, CU)
+   :container: + anchor-id-wasm-godot-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **gecko profile entries**: 8000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **newtab per cycle**: true
+   * **page cycles**: 5
+   * **page timeout**: 120000
+   * **test url**: `<http://localhost:<port>/wasm-godot/index.html>`__
+   * **type**: benchmark
+   * **unit**: ms
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-chrome-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-godot-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-wasm-chrome-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-chrome-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-fis-e10s: None
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-chrome-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-godot-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-wasm-chrome-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-wasm-chrome-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-chrome-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-godot-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-godot-fis-e10s: mozilla-central
+
+
+.. dropdown:: wasm-godot-baseline (FF)
+   :container: + anchor-id-wasm-godot-baseline-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 8000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **newtab per cycle**: true
+   * **page cycles**: 5
+   * **page timeout**: 120000
+   * **preferences**: {"javascript.options.wasm_baselinejit": true, "javascript.options.wasm_optimizingjit": false}
+   * **test url**: `<http://localhost:<port>/wasm-godot/index.html>`__
+   * **type**: benchmark
+   * **unit**: ms
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-fis-e10s: None
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-godot-baseline-fis-e10s: mozilla-central
+
+
+.. dropdown:: wasm-godot-optimizing (FF)
+   :container: + anchor-id-wasm-godot-optimizing-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 8000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **newtab per cycle**: true
+   * **page cycles**: 5
+   * **page timeout**: 120000
+   * **preferences**: {"javascript.options.wasm_baselinejit": false, "javascript.options.wasm_optimizingjit": true}
+   * **test url**: `<http://localhost:<port>/wasm-godot/index.html>`__
+   * **type**: benchmark
+   * **unit**: ms
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-fis-e10s: None
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-godot-optimizing-fis-e10s: mozilla-central
+
+
+.. dropdown:: wasm-misc (FF, CH, CU)
+   :container: + anchor-id-wasm-misc-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **fetch task**: wasm-misc
+   * **gecko profile entries**: 4000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **page cycles**: 5
+   * **page timeout**: 1200000
+   * **test url**: `<http://<host>:<port>/wasm-misc/index.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: ms
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-chrome-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-misc-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-wasm-chrome-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-chrome-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-fis-e10s: None
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-chrome-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-misc-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-wasm-chrome-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-wasm-chrome-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-chrome-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-chromium-wasm-misc-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-misc-fis-e10s: mozilla-central
+
+
+.. dropdown:: wasm-misc-baseline (FF)
+   :container: + anchor-id-wasm-misc-baseline-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **fetch task**: wasm-misc
+   * **gecko profile entries**: 4000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **page cycles**: 5
+   * **page timeout**: 1200000
+   * **preferences**: {"javascript.options.wasm_baselinejit": true, "javascript.options.wasm_optimizingjit": false}
+   * **test url**: `<http://<host>:<port>/wasm-misc/index.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: ms
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-fis-e10s: None
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-misc-baseline-fis-e10s: mozilla-central
+
+
+.. dropdown:: wasm-misc-optimizing (FF)
+   :container: + anchor-id-wasm-misc-optimizing-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **fetch task**: wasm-misc
+   * **gecko profile entries**: 4000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **page cycles**: 5
+   * **page timeout**: 1200000
+   * **preferences**: {"javascript.options.wasm_baselinejit": false, "javascript.options.wasm_optimizingjit": true}
+   * **test url**: `<http://<host>:<port>/wasm-misc/index.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: ms
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-fis-e10s: None
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: None
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-wasm-firefox-wasm-misc-optimizing-fis-e10s: mozilla-central
+
+
+.. dropdown:: webaudio (FF, CH, CU)
+   :container: + anchor-id-webaudio-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **gecko profile entries**: 4000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **page cycles**: 5
+   * **page timeout**: 360000
+   * **test url**: `<http://<host>:<port>/webaudio/index.html?raptor>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-benchmark-firefox-webaudio-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-benchmark-firefox-webaudio-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-webaudio-e10s: None
+            * browsertime-benchmark-chromium-webaudio-e10s: None
+            * browsertime-benchmark-firefox-webaudio-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-webaudio-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-benchmark-chrome-webaudio-e10s: None
+            * browsertime-benchmark-chromium-webaudio-e10s: None
+            * browsertime-benchmark-firefox-webaudio-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-benchmark-firefox-webaudio-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-webaudio-e10s: None
+            * browsertime-benchmark-chromium-webaudio-e10s: None
+            * browsertime-benchmark-firefox-webaudio-e10s: trunk
+            * browsertime-benchmark-firefox-webaudio-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-webaudio-e10s: None
+            * browsertime-benchmark-chromium-webaudio-e10s: None
+            * browsertime-benchmark-firefox-webaudio-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-webaudio-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-benchmark-chrome-webaudio-e10s: None
+            * browsertime-benchmark-chromium-webaudio-e10s: None
+            * browsertime-benchmark-firefox-webaudio-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-benchmark-firefox-webaudio-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-benchmark-chrome-webaudio-e10s: None
+            * browsertime-benchmark-chromium-webaudio-e10s: None
+            * browsertime-benchmark-firefox-webaudio-e10s: None
+            * browsertime-benchmark-firefox-webaudio-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-benchmark-firefox-webaudio-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-benchmark-firefox-webaudio-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-benchmark-chrome-webaudio-e10s: None
+            * browsertime-benchmark-chromium-webaudio-e10s: None
+            * browsertime-benchmark-firefox-webaudio-e10s: mozilla-beta, trunk
+            * browsertime-benchmark-firefox-webaudio-fis-e10s: mozilla-central
+
+
+.. dropdown:: youtube-playback (FF, GV, FE, RB, CH)
+   :container: + anchor-id-youtube-playback-b
+
+   * **alert on**: H264.1080p30@1X_dropped_frames, H264.1080p60@1X_dropped_frames, H264.1440p30@1X_dropped_frames, H264.144p15@1X_dropped_frames, H264.2160p30@1X_dropped_frames, H264.240p30@1X_dropped_frames, H264.360p30@1X_dropped_frames, H264.480p30@1X_dropped_frames, H264.720p30@1X_dropped_frames, H264.720p60@1X_dropped_frames, VP9.1080p30@1X_dropped_frames, VP9.1080p60@1X_dropped_frames, VP9.1440p30@1X_dropped_frames, VP9.1440p60@1X_dropped_frames, VP9.144p30@1X_dropped_frames, VP9.2160p30@1X_dropped_frames, VP9.2160p60@1X_dropped_frames, VP9.240p30@1X_dropped_frames, VP9.360p30@1X_dropped_frames, VP9.480p30@1X_dropped_frames, VP9.720p30@1X_dropped_frames, VP9.720p60@1X_dropped_frames
+   * **alert threshold**: 2.0
+   * **apps**: firefox, geckoview, fenix,refbrow, chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<http://yttest.prod.mozaws.net/2019/main.html?test_type=playbackperf-test&raptor=true&command=run&exclude=1,2&muted=true>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: youtube-playback-av1-sfr (FF , GV, FE, RB, CH)
+   :container: + anchor-id-youtube-playback-av1-sfr-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, geckoview, fenix, refbrow, chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-av1-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+   * **Test Task**:
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-av1-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-av1-sfr-fis-e10s: mozilla-central
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-firefox-youtube-playback-av1-sfr-e10s: None
+
+
+.. dropdown:: youtube-playback-h264-1080p30 (FF)
+   :container: + anchor-id-youtube-playback-h264-1080p30-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&tests=18&raptor=true&muted=true&command=run&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: youtube-playback-h264-1080p60 (FF)
+   :container: + anchor-id-youtube-playback-h264-1080p60-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=46&muted=true&command=run&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: youtube-playback-h264-full-1080p30 (FF)
+   :container: + anchor-id-youtube-playback-h264-full-1080p30-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **preferences**: {"full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&tests=18&raptor=true&muted=true&command=run&fullscreen=true&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: youtube-playback-h264-full-1080p60 (FF)
+   :container: + anchor-id-youtube-playback-h264-full-1080p60-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **preferences**: {"full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=46&muted=true&command=run&fullscreen=true&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: youtube-playback-h264-sfr (FF , GV, FE, RB, CH)
+   :container: + anchor-id-youtube-playback-h264-sfr-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, geckoview, fenix, refbrow, chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-h264-sfr-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: mozilla-central
+      * test-linux1804-64/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-h264-sfr-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-h264-sfr-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: mozilla-central
+      * test-windows10-32-qr/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: None
+            * browsertime-firefox-youtube-playback-h264-sfr-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-h264-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-h264-sfr-fis-e10s: mozilla-central
+
+
+.. dropdown:: youtube-playback-hfr (FF , GV, FE, RB, CH)
+   :container: + anchor-id-youtube-playback-hfr-b
+
+   * **alert on**: H2641080p60fps@1X_dropped_frames, H264720p60fps@1X_dropped_frames
+   * **alert threshold**: 2.0
+   * **apps**: firefox, geckoview, fenix, refbrow, chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-hfr-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: mozilla-central
+      * test-linux1804-64/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-hfr-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-hfr-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: mozilla-central
+      * test-windows10-32-qr/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: None
+            * browsertime-firefox-youtube-playback-hfr-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-hfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-hfr-fis-e10s: mozilla-central
+
+
+.. dropdown:: youtube-playback-v9-1080p30 (FF)
+   :container: + anchor-id-youtube-playback-v9-1080p30-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&tests=18&muted=true&command=run&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: youtube-playback-v9-1080p60 (FF)
+   :container: + anchor-id-youtube-playback-v9-1080p60-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=14&muted=true&command=run&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: youtube-playback-v9-full-1080p30 (FF)
+   :container: + anchor-id-youtube-playback-v9-full-1080p30-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **preferences**: {"full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&tests=18&muted=true&command=run&fullscreen=true&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: youtube-playback-v9-full-1080p60 (FF)
+   :container: + anchor-id-youtube-playback-v9-full-1080p60-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **preferences**: {"full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=14&muted=true&command=run&fullscreen=true&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: youtube-playback-vp9-sfr (FF , GV, FE, RB, CH)
+   :container: + anchor-id-youtube-playback-vp9-sfr-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, geckoview, fenix, refbrow, chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-vp9-sfr-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: mozilla-central
+      * test-linux1804-64/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-vp9-sfr-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-vp9-sfr-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: mozilla-central
+      * test-windows10-32-qr/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: None
+            * browsertime-firefox-youtube-playback-vp9-sfr-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-vp9-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-vp9-sfr-fis-e10s: mozilla-central
+
+
+.. dropdown:: youtube-playback-widevine-h264-sfr (FF , GV, FE, RB, CH)
+   :container: + anchor-id-youtube-playback-widevine-h264-sfr-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, geckoview, fenix, refbrow, chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: mozilla-central
+      * test-linux1804-64/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: mozilla-central
+
+
+.. dropdown:: youtube-playback-widevine-hfr (FF , GV, FE, RB, CH)
+   :container: + anchor-id-youtube-playback-widevine-hfr-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, geckoview, fenix, refbrow, chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-widevine-hfr-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: mozilla-central
+      * test-linux1804-64/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-widevine-hfr-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-widevine-hfr-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: mozilla-central
+
+
+.. dropdown:: youtube-playback-widevine-vp9-sfr (FF , GV, FE, RB, CH)
+   :container: + anchor-id-youtube-playback-widevine-vp9-sfr-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, geckoview, fenix, refbrow, chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **preferences**: {"media.eme.enabled": true, "media.gmp-manager.updateEnabled": true, "media.eme.require-app-approval": false}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: mozilla-central
+      * test-linux1804-64/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: mozilla-central
+
 
 
 Custom
@@ -3231,7 +5533,449 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 Live
 ----
-A set of test pages that are run as live sites instead of recorded versions. These tests are available on all browsers, on all platforms.
+A set of test pages that are run as live sites instead of recorded versions. These tests are available on all browsers, on all platforms. (WX: WebExtension, BT: Browsertime, FF: Firefox, CH: Chrome, CU: Chromium, GV: Geckoview, RB: Refbrow, FE: Fenix, CH-M: Chrome mobile)
+
+.. dropdown:: booking-sf (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-booking-sf-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://www.booking.com/hotel/us/edwardian-san-francisco.html>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+
+.. dropdown:: cnn (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-cnn-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://www.cnn.com/2021/03/22/weather/climate-change-warm-waters-lake-michigan/index.html>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-tp6-essential-firefox-cnn-e10s: None
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-tp6-essential-firefox-cnn-e10s: None
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-tp6-essential-chrome-cnn-e10s: None
+            * browsertime-tp6-essential-chromium-cnn-e10s: None
+            * browsertime-tp6-essential-firefox-cnn-e10s: mozilla-beta, trunk
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-central
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+            * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
+      * test-linux1804-64-shippable/opt
+            * browsertime-tp6-essential-chrome-cnn-e10s: None
+            * browsertime-tp6-essential-chromium-cnn-e10s: None
+            * browsertime-tp6-essential-firefox-cnn-e10s: mozilla-beta, trunk
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-tp6-essential-firefox-cnn-e10s: None
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-tp6-essential-chrome-cnn-e10s: None
+            * browsertime-tp6-essential-chromium-cnn-e10s: None
+            * browsertime-tp6-essential-firefox-cnn-e10s: trunk
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-central
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+            * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-tp6-essential-chrome-cnn-e10s: None
+            * browsertime-tp6-essential-chromium-cnn-e10s: None
+            * browsertime-tp6-essential-firefox-cnn-e10s: mozilla-beta, trunk
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-central
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+            * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
+      * test-macosx1015-64-shippable/opt
+            * browsertime-tp6-essential-chrome-cnn-e10s: None
+            * browsertime-tp6-essential-chromium-cnn-e10s: None
+            * browsertime-tp6-essential-firefox-cnn-e10s: mozilla-beta, trunk
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-tp6-essential-firefox-cnn-e10s: None
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-tp6-essential-chrome-cnn-e10s: None
+            * browsertime-tp6-essential-chromium-cnn-e10s: None
+            * browsertime-tp6-essential-firefox-cnn-e10s: None
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: None
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+            * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-tp6-essential-firefox-cnn-e10s: None
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-tp6-essential-firefox-cnn-e10s: None
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-tp6-essential-chrome-cnn-e10s: None
+            * browsertime-tp6-essential-chromium-cnn-e10s: None
+            * browsertime-tp6-essential-firefox-cnn-e10s: mozilla-beta, trunk
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-cnn-noqr-e10s: mozilla-beta, trunk
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
+            * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
+
+
+.. dropdown:: cnn-ampstories (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-cnn-ampstories-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://cnn.com/ampstories/us/why-hurricane-michael-is-a-monster-unlike-any-other>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+
+.. dropdown:: discord (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-discord-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://discordapp.com/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+
+.. dropdown:: expedia (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-expedia-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://expedia.com/Hotel-Search?destination=New+York%2C+New+York&latLong=40.756680%2C-73.986470&regionId=178293&startDate=&endDate=&rooms=1&_xpid=11905%7C1&adults=2>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-tp6-firefox-expedia-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-tp6-firefox-expedia-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-tp6-chrome-expedia-e10s: None
+            * browsertime-tp6-chromium-expedia-e10s: None
+            * browsertime-tp6-firefox-expedia-e10s: mozilla-beta, trunk
+            * browsertime-tp6-firefox-expedia-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-tp6-chrome-expedia-e10s: None
+            * browsertime-tp6-chromium-expedia-e10s: None
+            * browsertime-tp6-firefox-expedia-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-tp6-firefox-expedia-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-tp6-chrome-expedia-e10s: None
+            * browsertime-tp6-chromium-expedia-e10s: None
+            * browsertime-tp6-firefox-expedia-e10s: trunk
+            * browsertime-tp6-firefox-expedia-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-tp6-chrome-expedia-e10s: None
+            * browsertime-tp6-chromium-expedia-e10s: None
+            * browsertime-tp6-firefox-expedia-e10s: mozilla-beta, trunk
+            * browsertime-tp6-firefox-expedia-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-tp6-chrome-expedia-e10s: None
+            * browsertime-tp6-chromium-expedia-e10s: None
+            * browsertime-tp6-firefox-expedia-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-tp6-firefox-expedia-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-tp6-chrome-expedia-e10s: None
+            * browsertime-tp6-chromium-expedia-e10s: None
+            * browsertime-tp6-firefox-expedia-e10s: None
+            * browsertime-tp6-firefox-expedia-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-tp6-firefox-expedia-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-tp6-firefox-expedia-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-tp6-chrome-expedia-e10s: None
+            * browsertime-tp6-chromium-expedia-e10s: None
+            * browsertime-tp6-firefox-expedia-e10s: mozilla-beta, trunk
+            * browsertime-tp6-firefox-expedia-fis-e10s: mozilla-central
+
+
+.. dropdown:: fashionbeans (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-fashionbeans-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://fashionbeans.com/article/coolest-menswear-stores-in-the-world>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+
+.. dropdown:: google-accounts (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-google-accounts-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://accounts.google.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+
+.. dropdown:: imdb-firefox (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-imdb-firefox-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://m.imdb.com/title/tt0083943/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+
+.. dropdown:: medium-article (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-medium-article-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://medium.com/s/coincidences-are-a-lie/could-america-have-also-been-the-birthplace-of-impressionism-cb3d31a2e22d>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+
+.. dropdown:: nytimes (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-nytimes-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://www.nytimes.com/2020/02/19/opinion/surprise-medical-bill.html>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-tp6-firefox-nytimes-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-tp6-firefox-nytimes-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-tp6-chrome-nytimes-e10s: None
+            * browsertime-tp6-chromium-nytimes-e10s: None
+            * browsertime-tp6-firefox-nytimes-e10s: mozilla-beta, trunk
+            * browsertime-tp6-firefox-nytimes-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-tp6-chrome-nytimes-e10s: None
+            * browsertime-tp6-chromium-nytimes-e10s: None
+            * browsertime-tp6-firefox-nytimes-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-tp6-firefox-nytimes-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-tp6-chrome-nytimes-e10s: None
+            * browsertime-tp6-chromium-nytimes-e10s: None
+            * browsertime-tp6-firefox-nytimes-e10s: trunk
+            * browsertime-tp6-firefox-nytimes-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-tp6-chrome-nytimes-e10s: None
+            * browsertime-tp6-chromium-nytimes-e10s: None
+            * browsertime-tp6-firefox-nytimes-e10s: mozilla-beta, trunk
+            * browsertime-tp6-firefox-nytimes-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-tp6-chrome-nytimes-e10s: None
+            * browsertime-tp6-chromium-nytimes-e10s: None
+            * browsertime-tp6-firefox-nytimes-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-tp6-firefox-nytimes-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-tp6-chrome-nytimes-e10s: None
+            * browsertime-tp6-chromium-nytimes-e10s: None
+            * browsertime-tp6-firefox-nytimes-e10s: None
+            * browsertime-tp6-firefox-nytimes-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-tp6-firefox-nytimes-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-tp6-firefox-nytimes-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-tp6-chrome-nytimes-e10s: None
+            * browsertime-tp6-chromium-nytimes-e10s: None
+            * browsertime-tp6-firefox-nytimes-e10s: mozilla-beta, trunk
+            * browsertime-tp6-firefox-nytimes-fis-e10s: mozilla-central
+
+
+.. dropdown:: people-article (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-people-article-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://people.com/amp-stories/royal-a-to-z/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+
+.. dropdown:: reddit-thread (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-reddit-thread-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://www.reddit.com/r/firefox/comments/7dkq03/its_been_a_while/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+
+.. dropdown:: rumble-fox (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-rumble-fox-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://rumble.com/v3c44t-foxes-jumping-on-my-trampoline.html>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+
+.. dropdown:: stackoverflow-question (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-stackoverflow-question-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://stackoverflow.com/questions/927358/how-do-i-undo-the-most-recent-commits-in-git>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+
+.. dropdown:: urbandictionary-define (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-urbandictionary-define-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://urbandictionary.com/define.php?term=awesome%20sauce>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+
+.. dropdown:: wikia-marvel (GV, FE, RB, CH-M, FF, CH, CU)
+   :container: + anchor-id-wikia-marvel-l
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **browser cycles**: 15
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **test url**: `<https://marvel.wikia.com/wiki/Black_Panther>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
 
 
 Mobile
@@ -5333,12 +8077,230 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 Scenario
 --------
-Tests that perform a specific action (a scenario), i.e. idle application, idle application in background, etc.
+Tests that perform a specific action (a scenario), i.e. idle application, idle application in background, etc. (FE: Fenix, GV: Geckoview, RB: Refbrow)
+
+.. dropdown:: idle (FE, GV, RB)
+   :container: + anchor-id-idle-s
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix, geckoview, refbrow
+   * **expected**: pass
+   * **lower is better**: true
+   * **measure**: fakeMeasure
+   * **page cycles**: 1
+   * **page timeout**: 1320000
+   * **scenario time**: 1200000
+   * **test url**: `<about:blank>`__
+   * **type**: scenario
+   * **unit**: scenarioComplete
+   * **Test Task**:
+
+
+.. dropdown:: idle-bg (FE, GV, RB)
+   :container: + anchor-id-idle-bg-s
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix, geckoview, refbrow
+   * **background app**: true
+   * **expected**: pass
+   * **lower is better**: true
+   * **measure**: fakeMeasure
+   * **page cycles**: 1
+   * **page timeout**: 1320000
+   * **scenario time**: 600000
+   * **test url**: `<about:blank>`__
+   * **type**: scenario
+   * **unit**: scenarioComplete
+   * **Test Task**:
+
+
+.. dropdown:: raptor-scn-power-idle-bg-fenix (FE)
+   :container: + anchor-id-raptor-scn-power-idle-bg-fenix-s
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **background test**: true
+   * **expected**: pass
+   * **lower is better**: true
+   * **measure**: fakeMeasure
+   * **page cycles**: 1
+   * **page timeout**: 660000
+   * **scenario time**: 600000
+   * **test url**: `<about:blank>`__
+   * **type**: scenario
+   * **unit**: scenarioComplete
+
+
+.. dropdown:: raptor-scn-power-idle-bg-geckoview (GV)
+   :container: + anchor-id-raptor-scn-power-idle-bg-geckoview-s
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **background test**: true
+   * **expected**: pass
+   * **lower is better**: true
+   * **measure**: fakeMeasure
+   * **page cycles**: 1
+   * **page timeout**: 660000
+   * **scenario time**: 600000
+   * **test url**: `<about:blank>`__
+   * **type**: scenario
+   * **unit**: scenarioComplete
+
+
+.. dropdown:: raptor-scn-power-idle-bg-refbrow (RB)
+   :container: + anchor-id-raptor-scn-power-idle-bg-refbrow-s
+
+   * **alert threshold**: 2.0
+   * **apps**: refbrow
+   * **background test**: true
+   * **expected**: pass
+   * **lower is better**: true
+   * **measure**: fakeMeasure
+   * **page cycles**: 1
+   * **page timeout**: 660000
+   * **scenario time**: 600000
+   * **test url**: `<about:blank>`__
+   * **type**: scenario
+   * **unit**: scenarioComplete
+
+
+.. dropdown:: raptor-scn-power-idle-fenix (FE)
+   :container: + anchor-id-raptor-scn-power-idle-fenix-s
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **expected**: pass
+   * **lower is better**: true
+   * **measure**: fakeMeasure
+   * **page cycles**: 1
+   * **page timeout**: 1320000
+   * **scenario time**: 1200000
+   * **test url**: `<about:blank>`__
+   * **type**: scenario
+   * **unit**: scenarioComplete
+
+
+.. dropdown:: raptor-scn-power-idle-geckoview (GV)
+   :container: + anchor-id-raptor-scn-power-idle-geckoview-s
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **lower is better**: true
+   * **measure**: fakeMeasure
+   * **page cycles**: 1
+   * **page timeout**: 1320000
+   * **scenario time**: 1200000
+   * **test url**: `<about:blank>`__
+   * **type**: scenario
+   * **unit**: scenarioComplete
+
+
+.. dropdown:: raptor-scn-power-idle-refbrow (RB)
+   :container: + anchor-id-raptor-scn-power-idle-refbrow-s
+
+   * **alert threshold**: 2.0
+   * **apps**: refbrow
+   * **expected**: pass
+   * **lower is better**: true
+   * **measure**: fakeMeasure
+   * **page cycles**: 1
+   * **page timeout**: 1320000
+   * **scenario time**: 1200000
+   * **test url**: `<about:blank>`__
+   * **type**: scenario
+   * **unit**: scenarioComplete
+
 
 
 Unittests
 ---------
 These tests aren't used in standard testing, they are only used in the Raptor unit tests (they are similar to raptor-tp6 tests though).
+
+.. dropdown:: raptor-tp6-unittest-amazon-firefox (FF)
+   :container: + anchor-id-raptor-tp6-unittest-amazon-firefox-u
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm5-linux-firefox-amazon.manifest
+   * **playback recordings**: amazon.mp
+   * **test url**: `<https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1>`__
+   * **type**: pageload
+   * **unit**: ms
+
+
+.. dropdown:: raptor-tp6-unittest-facebook-firefox (FF)
+   :container: + anchor-id-raptor-tp6-unittest-facebook-firefox-u
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm5-linux-firefox-facebook.manifest
+   * **playback recordings**: facebook.mp
+   * **test url**: `<https://www.facebook.com>`__
+   * **type**: pageload
+   * **unit**: ms
+
+
+.. dropdown:: raptor-tp6-unittest-google-firefox (FF)
+   :container: + anchor-id-raptor-tp6-unittest-google-firefox-u
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm5-linux-firefox-google-search.manifest
+   * **playback recordings**: google-search.mp
+   * **test url**: `<https://www.google.com/search?hl=en&q=barack+obama&cad=h>`__
+   * **type**: pageload
+   * **unit**: ms
+
+
+.. dropdown:: raptor-tp6-unittest-youtube-firefox (FF)
+   :container: + anchor-id-raptor-tp6-unittest-youtube-firefox-u
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm5-linux-firefox-youtube.manifest
+   * **playback recordings**: youtube.mp
+   * **test url**: `<https://www.youtube.com>`__
+   * **type**: pageload
+   * **unit**: ms
+
 
 
 
