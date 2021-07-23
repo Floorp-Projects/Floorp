@@ -8,6 +8,12 @@
 const TEST_URL1 = "https://example.com/";
 const TEST_URL2 = "https://example.com/12345";
 const TEST_URL3 = "https://example.com/14235";
+const VERSION_PREF = "browser.places.snapshots.version";
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+  Sqlite: "resource://gre/modules/Sqlite.jsm",
+});
 
 add_task(async function setup() {
   let now = Date.now();
@@ -136,4 +142,36 @@ add_task(async function test_delete_snapshot() {
     documentType: Interactions.DOCUMENT_TYPE.MEDIA,
     userPersisted: true,
   });
+});
+
+add_task(async function deleteKeyframesDb() {
+  Services.prefs.setIntPref(VERSION_PREF, 0);
+
+  let profileDir = await PathUtils.getProfileDir();
+  let pathToKeyframes = PathUtils.join(profileDir, "keyframes.sqlite");
+
+  try {
+    let db = await Sqlite.openConnection({
+      path: pathToKeyframes,
+    });
+    await db.close();
+
+    Assert.ok(
+      await IOUtils.exists(pathToKeyframes),
+      "Sanity check: keyframes.sqlite exists."
+    );
+    await Snapshots.query({ url: TEST_URL1 });
+    Assert.ok(
+      !(await IOUtils.exists(pathToKeyframes)),
+      "Keyframes.sqlite was deleted."
+    );
+  } catch (ex) {
+    console.warn(`Error occured in deleteKeyframesDb: ${ex}`);
+  }
+
+  Assert.equal(
+    Services.prefs.getIntPref(VERSION_PREF, 0),
+    Snapshots.currentVersion,
+    "Calling Snapshots.query successfully updated to the most recent schema version."
+  );
 });
