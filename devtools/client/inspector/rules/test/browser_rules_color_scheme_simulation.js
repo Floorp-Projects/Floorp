@@ -7,7 +7,6 @@
 const TEST_URI = URL_ROOT + "doc_media_queries.html";
 
 add_task(async function() {
-  await pushPref("devtools.inspector.color-scheme-simulation.enabled", true);
   await addTab(TEST_URI);
   const { inspector, view, toolbox } = await openRuleView();
 
