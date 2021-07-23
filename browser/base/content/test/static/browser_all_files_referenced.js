@@ -256,6 +256,20 @@ var whitelist = [
     file: "resource://gre/localization/en-US/toolkit/about/aboutThirdParty.ftl",
     platforms: ["linux", "macosx"],
   },
+  // Bug 1721741:
+  // (The references to these files are dynamically generated, so the test can't
+  // find the references)
+  { file: "chrome://browser/content/screenshots/cancel.svg" },
+  { file: "chrome://browser/content/screenshots/copied-notification.svg" },
+  { file: "chrome://browser/content/screenshots/copy.svg" },
+  { file: "chrome://browser/content/screenshots/download-white.svg" },
+  { file: "chrome://browser/content/screenshots/download.svg" },
+  {
+    file:
+      "chrome://browser/content/screenshots/icon-welcome-face-without-eyes.svg",
+  },
+  { file: "chrome://browser/content/screenshots/menu-fullpage.svg" },
+  { file: "chrome://browser/content/screenshots/menu-visible.svg" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
