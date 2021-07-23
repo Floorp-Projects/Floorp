@@ -230,6 +230,11 @@ char* DataOffer::GetDataInternal(const char* aMimeType,
   }
 
   close(pipe_fd[1]);
+  pipe_fd[1] = -1;
+
+  // Flush wl_display connection to get clipboard data uploaded from display to
+  // our pipe.
+  wl_display_flush(WaylandDisplayGet()->GetDisplay());
 
   channel = g_io_channel_unix_new(pipe_fd[0]);
   GError* error = nullptr;
