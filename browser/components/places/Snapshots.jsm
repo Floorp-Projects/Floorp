@@ -10,6 +10,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const VERSION_PREF = "browser.places.snapshots.version";
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -225,6 +227,7 @@ const Snapshots = new (class Snapshots {
    *   Returns snapshots in order of descending last interaction time.
    */
   async query({ limit = 100, includeTombstones = false } = {}) {
+    await this.#ensureVersionUpdates();
     let db = await PlacesUtils.promiseDBConnection();
 
     let whereStatement = "";
@@ -247,6 +250,37 @@ const Snapshots = new (class Snapshots {
     );
 
     return rows.map(row => this.#translateRow(row));
+  }
+
+  /**
+   * Ensures that the database is migrated to the latest version. Migrations
+   * should be exception-safe: don't throw an uncaught Error, or else we'll skip
+   * subsequent migrations.
+   */
+  async #ensureVersionUpdates() {
+    let dbVersion = Services.prefs.getIntPref(VERSION_PREF, 0);
+    try {
+      if (dbVersion < 1) {
+        try {
+          // Delete legacy keyframes.sqlite DB.
+          let profileDir = await PathUtils.getProfileDir();
+          let pathToKeyframes = PathUtils.join(profileDir, "keyframes.sqlite");
+          await IOUtils.remove(pathToKeyframes);
+        } catch (ex) {
+          console.warn(`Failed to delete keyframes.sqlite: ${ex}`);
+        }
+      }
+    } finally {
+      Services.prefs.setIntPref(VERSION_PREF, this.currentVersion);
+    }
+  }
+
+  /**
+   * Returns the database's most recent version number.
+   * @returns {number}
+   */
+  get currentVersion() {
+    return 1;
   }
 
   /**
