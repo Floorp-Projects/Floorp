@@ -569,7 +569,7 @@ static void TryRegisterStrongMemoryReporter() {
 Atomic<size_t> MessageChannel::gUnresolvedResponses;
 
 MessageChannel::MessageChannel(const char* aName, IToplevelProtocol* aListener)
-    : mName(aName), mListener(aListener) {
+    : mName(aName), mListener(aListener), mMonitor(new RefCountedMonitor()) {
   MOZ_COUNT_CTOR(ipc::MessageChannel);
 
 #ifdef OS_WIN
@@ -768,7 +768,6 @@ bool MessageChannel::Open(ScopedPort aPort, Side aSide,
                           nsISerialEventTarget* aEventTarget) {
   MOZ_ASSERT(!mLink, "Open() called > once");
 
-  mMonitor = new RefCountedMonitor();
   mWorkerThread = aEventTarget ? aEventTarget : GetCurrentSerialEventTarget();
   MOZ_ASSERT(mWorkerThread, "We should always be on a nsISerialEventTarget");
   mListener->OnIPCChannelOpened();
