@@ -382,7 +382,7 @@ pk11_CreateNewContextInSlot(CK_MECHANISM_TYPE type,
      * of the connection.*/
     context->fortezzaHack = PR_FALSE;
     if (type == CKM_SKIPJACK_CBC64) {
-        if (symKey->origin == PK11_OriginFortezzaHack) {
+        if (symKey && (symKey->origin == PK11_OriginFortezzaHack)) {
             context->fortezzaHack = PR_TRUE;
         }
     }

@@ -5193,7 +5193,7 @@ sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession, SFTKSlot *slot,
                 /* subprime not supplied, In this case look it up.
                  * This only works with approved primes, but in FIPS mode
                  * that's the only kine of prime that will get here */
-                subPrimePtr = sftk_VerifyDH_Prime(&prime);
+                subPrimePtr = sftk_VerifyDH_Prime(&prime, isFIPS);
                 if (subPrimePtr == NULL) {
                     crv = CKR_GENERAL_ERROR;
                     goto done;
@@ -8351,7 +8351,7 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
 
             /* if the prime is an approved prime, we can skip all the other
              * checks. */
-            subPrime = sftk_VerifyDH_Prime(&dhPrime);
+            subPrime = sftk_VerifyDH_Prime(&dhPrime, isFIPS);
             if (subPrime == NULL) {
                 SECItem dhSubPrime;
                 /* If the caller set the subprime value, it means that

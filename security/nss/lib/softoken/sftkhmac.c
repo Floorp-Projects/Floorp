@@ -234,7 +234,9 @@ sftk_MAC_Init(sftk_MACCtx *ctx, CK_MECHANISM_TYPE mech, SFTKObject *key)
                            keyval->attrib.ulValueLen, isFIPS);
 
 done:
-    sftk_FreeAttribute(keyval);
+    if (keyval) {
+        sftk_FreeAttribute(keyval);
+    }
     return ret;
 }
 
