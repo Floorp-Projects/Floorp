@@ -4411,7 +4411,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
    * digits need to be heap allocated.
    */
   void copyBigIntWithInlineDigits(Register src, Register dest, Register temp,
-                                  bool attemptNursery, Label* fail);
+                                  gc::InitialHeap initialHeap, Label* fail);
 
   /**
    * Compare a BigInt and an Int32 value. Falls through to the false case.
@@ -4752,7 +4752,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void newGCFatInlineString(Register result, Register temp, Label* fail,
                             bool attemptNursery);
 
-  void newGCBigInt(Register result, Register temp, bool attemptNursery,
+  void newGCBigInt(Register result, Register temp, gc::InitialHeap initialHeap,
                    Label* fail);
 
   // Compares two strings for equality based on the JSOP.

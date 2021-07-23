@@ -5223,27 +5223,32 @@ bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
   return true;
 }
 
-static bool CanNurseryAllocateBigInt(JSContext* cx) {
+static gc::InitialHeap InitialBigIntHeap(JSContext* cx) {
   JS::Zone* zone = cx->zone();
-  return zone->runtimeFromAnyThread()->gc.nursery().canAllocateBigInts() &&
-         zone->allocNurseryBigInts;
+  bool canNurseryAllocate =
+      zone->runtimeFromAnyThread()->gc.nursery().canAllocateBigInts() &&
+      zone->allocNurseryBigInts;
+  return canNurseryAllocate ? gc::DefaultHeap : gc::TenuredHeap;
 }
 
 static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
                                Register temp, const LiveRegisterSet& liveSet,
-                               bool attemptNursery, Label* fail) {
+                               gc::InitialHeap initialHeap, Label* fail) {
   Label fallback, done;
-  masm.newGCBigInt(result, temp, attemptNursery, &fallback);
+  masm.newGCBigInt(result, temp, initialHeap, &fallback);
   masm.jump(&done);
   {
     masm.bind(&fallback);
-    masm.PushRegsInMask(liveSet);
 
+    // Request a minor collection at a later time if nursery allocation failed.
+    bool requestMinorGC = initialHeap == gc::DefaultHeap;
+
+    masm.PushRegsInMask(liveSet);
     using Fn = void* (*)(JSContext * cx, bool requestMinorGC);
     masm.setupUnalignedABICall(temp);
     masm.loadJSContext(temp);
     masm.passABIArg(temp);
-    masm.move32(Imm32(attemptNursery), result);
+    masm.move32(Imm32(requestMinorGC), result);
     masm.passABIArg(result);
     masm.callWithABI<Fn, jit::AllocateBigIntNoGC>();
     masm.storeCallPointerResult(result);
@@ -5293,8 +5298,8 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
     save.takeUnchecked(scratch2);
     save.takeUnchecked(output);
 
-    bool attemptNursery = CanNurseryAllocateBigInt(cx_);
-    EmitAllocateBigInt(masm, *bigInt, scratch1, save, attemptNursery,
+    gc::InitialHeap initialHeap = InitialBigIntHeap(cx_);
+    EmitAllocateBigInt(masm, *bigInt, scratch1, save, initialHeap,
                        failure->label());
   }
 
@@ -5492,9 +5497,8 @@ bool CacheIRCompiler::emitLoadDataViewValueResult(
                            liveVolatileFloatRegs());
       save.takeUnchecked(bigInt);
       save.takeUnchecked(bigIntScratch);
-      bool attemptNursery = CanNurseryAllocateBigInt(cx_);
-      EmitAllocateBigInt(masm, bigInt, bigIntScratch, save, attemptNursery,
-                         &fail);
+      gc::InitialHeap initialHeap = InitialBigIntHeap(cx_);
+      EmitAllocateBigInt(masm, bigInt, bigIntScratch, save, initialHeap, &fail);
       masm.jump(&done);
 
       masm.bind(&fail);
