@@ -64,17 +64,6 @@ bug-numbers = [1520690]
 is-public = {default = false, nightly = true}
 default-value = false
 
-[devtools-color-scheme-simulation]
-title = "experimental-features-devtools-color-scheme-simulation"
-description = "experimental-features-devtools-color-scheme-simulation-description"
-description-links = {mdn-preferscolorscheme = "https://developer.mozilla.org/docs/Web/CSS/@media/prefers-color-scheme", bugzilla1 = "https://bugzilla.mozilla.org/show_bug.cgi?id=1550804", bugzilla2 = "https://bugzilla.mozilla.org/show_bug.cgi?id=1137699"}
-restart-required = false
-preference = "devtools.inspector.color-scheme-simulation.enabled"
-type = "boolean"
-bug-numbers = [1550804, 1137699]
-is-public = {default = false, nightly = true}
-default-value = true
-
 [devtools-execution-context-selector]
 title = "experimental-features-devtools-execution-context-selector"
 description = "experimental-features-devtools-execution-context-selector-description"
