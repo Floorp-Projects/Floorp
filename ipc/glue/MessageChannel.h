@@ -99,8 +99,6 @@ enum ChannelState {
 class AutoEnterTransaction;
 
 class MessageChannel : HasResultCodes {
-  friend class ProcessLink;
-  friend class ThreadLink;
   friend class PortLink;
 #ifdef FUZZING
   friend class ProtocolFuzzerHelper;
@@ -272,9 +270,6 @@ class MessageChannel : HasResultCodes {
     return mLastSendError;
   }
 
-  // Currently only for debugging purposes, doesn't aquire mMonitor.
-  ChannelState GetChannelState__TotallyRacy() const { return mChannelState; }
-
   void SetReplyTimeoutMs(int32_t aTimeoutMs);
 
   bool IsOnCxxStack() const { return !mCxxStackFrames.empty(); }
@@ -296,14 +291,6 @@ class MessageChannel : HasResultCodes {
   // channel A, messages from A may arrive before B. The easiest way to order
   // this, if needed, is to make B send a sync message.
   void StopPostponingSends();
-
-  /**
-   * This function is used by hang annotation code to determine which IPDL
-   * actor is highest in the call stack at the time of the hang. It should
-   * be called from the main thread when a sync or intr message is about to
-   * be sent.
-   */
-  int32_t GetTopmostMessageRoutingId() const;
 
   // Unsound_IsClosed and Unsound_NumQueuedMessages are safe to call from any
   // thread, but they make no guarantees about whether you'll get an
