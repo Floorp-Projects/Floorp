@@ -386,6 +386,11 @@ bool DeviceManagerDx::CreateCanvasDevice() {
     return false;
   }
 
+  if (!D3D11Checks::DoesTextureSharingWork(mCanvasDevice)) {
+    mCanvasDevice = nullptr;
+    return false;
+  }
+
   if (XRE_IsGPUProcess()) {
     Factory::SetDirect3D11Device(mCanvasDevice);
   }
