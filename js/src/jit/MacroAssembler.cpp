@@ -664,8 +664,8 @@ void MacroAssembler::newGCFatInlineString(Register result, Register temp,
                  attemptNursery ? gc::DefaultHeap : gc::TenuredHeap, fail);
 }
 
-void MacroAssembler::newGCBigInt(Register result, Register temp, Label* fail,
-                                 bool attemptNursery) {
+void MacroAssembler::newGCBigInt(Register result, Register temp,
+                                 bool attemptNursery, Label* fail) {
   checkAllocatorState(fail);
 
   gc::InitialHeap initialHeap =
@@ -1515,12 +1515,13 @@ void MacroAssembler::initializeBigIntAbsolute(Register bigInt, Register val) {
 }
 
 void MacroAssembler::copyBigIntWithInlineDigits(Register src, Register dest,
-                                                Register temp, Label* fail,
-                                                bool attemptNursery) {
+                                                Register temp,
+                                                bool attemptNursery,
+                                                Label* fail) {
   branch32(Assembler::Above, Address(src, BigInt::offsetOfLength()),
            Imm32(int32_t(BigInt::inlineDigitsLength())), fail);
 
-  newGCBigInt(dest, temp, fail, attemptNursery);
+  newGCBigInt(dest, temp, attemptNursery, fail);
 
   // Copy the sign-bit, but not any of the other bits used by the GC.
   load32(Address(src, BigInt::offsetOfFlags()), temp);

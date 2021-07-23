@@ -272,7 +272,7 @@ void CodeGeneratorMIPS64::emitBigIntDiv(LBigIntDiv* ins, Register dividend,
 #endif
 
   // Create and return the result.
-  masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, divisor, bigIntsCanBeInNursery(), fail);
   masm.initializeBigInt(output, dividend);
 }
 
@@ -289,7 +289,7 @@ void CodeGeneratorMIPS64::emitBigIntMod(LBigIntMod* ins, Register dividend,
 #endif
 
   // Create and return the result.
-  masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, divisor, bigIntsCanBeInNursery(), fail);
   masm.initializeBigInt(output, dividend);
 }
 

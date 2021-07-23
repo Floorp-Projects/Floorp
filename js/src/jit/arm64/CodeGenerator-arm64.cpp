@@ -939,7 +939,7 @@ void CodeGeneratorARM64::emitBigIntDiv(LBigIntDiv* ins, Register dividend,
   masm.Sdiv(/* result= */ dividend64, dividend64, divisor64);
 
   // Create and return the result.
-  masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, divisor, bigIntsCanBeInNursery(), fail);
   masm.initializeBigInt(output, dividend);
 }
 
@@ -959,7 +959,7 @@ void CodeGeneratorARM64::emitBigIntMod(LBigIntMod* ins, Register dividend,
   masm.Msub(/* result= */ dividend64, output64, divisor64, dividend64);
 
   // Create and return the result.
-  masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, divisor, bigIntsCanBeInNursery(), fail);
   masm.initializeBigInt(output, dividend);
 }
 

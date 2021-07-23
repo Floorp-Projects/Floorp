@@ -257,7 +257,7 @@ void CodeGenerator::visitCompareExchangeTypedArrayElement64(
   Register temp2 = edx;
 
   Label fail;
-  masm.newGCBigInt(bigInt, temp2, &fail, bigIntsCanBeInNursery());
+  masm.newGCBigInt(bigInt, temp2, bigIntsCanBeInNursery(), &fail);
   masm.initializeBigInt64(arrayType, bigInt, replacement);
   masm.mov(bigInt, out);
   restoreSavedRegisters();
@@ -321,7 +321,7 @@ void CodeGenerator::visitAtomicExchangeTypedArrayElement64(
   Register temp = edx;
 
   Label fail;
-  masm.newGCBigInt(out, temp, &fail, bigIntsCanBeInNursery());
+  masm.newGCBigInt(out, temp, bigIntsCanBeInNursery(), &fail);
   masm.initializeBigInt64(arrayType, out, temp1);
   restoreSavedRegisters();
   masm.jump(ool->rejoin());
@@ -395,7 +395,7 @@ void CodeGenerator::visitAtomicTypedArrayElementBinop64(
   Register temp = edx;
 
   Label fail;
-  masm.newGCBigInt(out, temp, &fail, bigIntsCanBeInNursery());
+  masm.newGCBigInt(out, temp, bigIntsCanBeInNursery(), &fail);
   masm.initializeBigInt64(arrayType, out, temp1);
   restoreSavedRegisters();
   masm.jump(ool->rejoin());
@@ -1241,7 +1241,7 @@ void CodeGeneratorX86::emitBigIntDiv(LBigIntDiv* ins, Register dividend,
   masm.idiv(divisor);
 
   // Create and return the result.
-  masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, divisor, bigIntsCanBeInNursery(), fail);
   masm.initializeBigInt(output, dividend);
 }
 
@@ -1262,7 +1262,7 @@ void CodeGeneratorX86::emitBigIntMod(LBigIntMod* ins, Register dividend,
   masm.movl(output, dividend);
 
   // Create and return the result.
-  masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, divisor, bigIntsCanBeInNursery(), fail);
   masm.initializeBigInt(output, dividend);
 }
 
