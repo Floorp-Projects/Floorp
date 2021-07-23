@@ -29,12 +29,6 @@ bool ElemOpEmitter::prepareForObj() {
 bool ElemOpEmitter::prepareForKey() {
   MOZ_ASSERT(state_ == State::Obj);
 
-  if (!isSuper() && isIncDec()) {
-    if (!bce_->emit1(JSOp::CheckObjCoercible)) {
-      //            [stack] OBJ
-      return false;
-    }
-  }
   if (isCall()) {
     if (!bce_->emit1(JSOp::Dup)) {
       //            [stack] # if Super
