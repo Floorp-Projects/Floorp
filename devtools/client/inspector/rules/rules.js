@@ -515,25 +515,14 @@ CssRuleView.prototype = {
       );
     }
 
-    // Show the color scheme simulation toggle button if the feature pref is
-    // enabled.
-    if (
-      Services.prefs.getBoolPref(
-        "devtools.inspector.color-scheme-simulation.enabled"
-      )
-    ) {
-      this.colorSchemeLightSimulationButton.removeAttribute("hidden");
-      this.colorSchemeDarkSimulationButton.removeAttribute("hidden");
-
-      this.colorSchemeLightSimulationButton.addEventListener(
-        "click",
-        this._onToggleLightColorSchemeSimulation
-      );
-      this.colorSchemeDarkSimulationButton.addEventListener(
-        "click",
-        this._onToggleDarkColorSchemeSimulation
-      );
-    }
+    this.colorSchemeLightSimulationButton.addEventListener(
+      "click",
+      this._onToggleLightColorSchemeSimulation
+    );
+    this.colorSchemeDarkSimulationButton.addEventListener(
+      "click",
+      this._onToggleDarkColorSchemeSimulation
+    );
   },
 
   /**
