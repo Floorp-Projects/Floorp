@@ -1422,11 +1422,6 @@ DownloadSource.prototype = {
       return null;
     }
 
-    // Simplify the representation if we don't have other details.
-    if (!this.isPrivate && !this.referrerInfo && !this._unknownProperties) {
-      return this.url;
-    }
-
     let serializable = { url: this.url };
     if (this.isPrivate) {
       serializable.isPrivate = true;
@@ -1453,6 +1448,12 @@ DownloadSource.prototype = {
     }
 
     serializeUnknownProperties(this, serializable);
+
+    // Simplify the representation if we don't have other details.
+    if (Object.keys(serializable).length === 1) {
+      // serializable's only key is "url", just return the URL as a string.
+      return this.url;
+    }
     return serializable;
   },
 };
