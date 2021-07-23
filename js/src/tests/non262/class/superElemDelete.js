@@ -19,8 +19,8 @@ class derived extends base {
         assertEq(sideEffect, 1);
     }
     testDeleteElemPropValFirst() {
-        // The deletion error is a reference error, but by munging the prototype
-        // chain, we can force a type error from JSOP_SUPERBASE.
+        // The deletion error is a reference error, even after munging the prototype
+        // chain.
         let key = {
             toString() {
                 Object.setPrototypeOf(derived.prototype, null);
@@ -51,7 +51,7 @@ class derivedTestDeleteElem extends base {
 
         Object.setPrototypeOf(derivedTestDeleteElem.prototype, null);
 
-        assertThrowsInstanceOf(() => delete super[key], TypeError);
+        assertThrowsInstanceOf(() => delete super[key], ReferenceError);
         assertEq(sideEffect, 2);
 
         return {};
@@ -60,7 +60,7 @@ class derivedTestDeleteElem extends base {
 
 var d = new derived();
 d.testDeleteElem();
-assertThrowsInstanceOf(() => d.testDeleteElemPropValFirst(), TypeError);
+assertThrowsInstanceOf(() => d.testDeleteElemPropValFirst(), ReferenceError);
 
 new derivedTestDeleteElem();
 

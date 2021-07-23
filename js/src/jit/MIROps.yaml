@@ -1246,9 +1246,7 @@
 - name: HomeObjectSuperBase
   operands:
     homeObject: Object
-  result_type: Object
-  # May throw if [[Prototype]] is null
-  guard: true
+  result_type: Value
   alias_set: custom
 
 - name: GetPropSuperCache

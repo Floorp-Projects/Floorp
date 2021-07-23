@@ -3988,13 +3988,10 @@ void CodeGenerator::visitHomeObject(LHomeObject* lir) {
 
 void CodeGenerator::visitHomeObjectSuperBase(LHomeObjectSuperBase* lir) {
   Register homeObject = ToRegister(lir->homeObject());
-  Register output = ToRegister(lir->output());
+  ValueOperand output = ToOutValue(lir);
+  Register temp = output.scratchReg();
 
-  using Fn = bool (*)(JSContext*);
-  OutOfLineCode* ool =
-      oolCallVM<Fn, ThrowHomeObjectNotObject>(lir, ArgList(), StoreNothing());
-
-  masm.loadObjProto(homeObject, output);
+  masm.loadObjProto(homeObject, temp);
 
 #ifdef DEBUG
   // We won't encounter a lazy proto, because the prototype is guaranteed to
@@ -4003,13 +4000,22 @@ void CodeGenerator::visitHomeObjectSuperBase(LHomeObjectSuperBase* lir) {
   MOZ_ASSERT(uintptr_t(TaggedProto::LazyProto) == 1);
 
   Label proxyCheckDone;
-  masm.branchPtr(Assembler::NotEqual, output, ImmWord(1), &proxyCheckDone);
+  masm.branchPtr(Assembler::NotEqual, temp, ImmWord(1), &proxyCheckDone);
   masm.assumeUnreachable("Unexpected lazy proto in JSOp::SuperBase");
   masm.bind(&proxyCheckDone);
 #endif
 
-  masm.branchPtr(Assembler::Equal, output, ImmWord(0), ool->entry());
-  masm.bind(ool->rejoin());
+  Label nullProto, done;
+  masm.branchPtr(Assembler::Equal, temp, ImmWord(0), &nullProto);
+
+  // Box prototype and return
+  masm.tagValue(JSVAL_TYPE_OBJECT, temp, output);
+  masm.jump(&done);
+
+  masm.bind(&nullProto);
+  masm.moveValue(NullValue(), output);
+
+  masm.bind(&done);
 }
 
 void CodeGenerator::visitNewLexicalEnvironmentObject(

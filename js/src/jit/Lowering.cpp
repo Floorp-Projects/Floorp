@@ -2876,12 +2876,11 @@ void LIRGenerator::visitHomeObject(MHomeObject* ins) {
 
 void LIRGenerator::visitHomeObjectSuperBase(MHomeObjectSuperBase* ins) {
   MOZ_ASSERT(ins->homeObject()->type() == MIRType::Object);
-  MOZ_ASSERT(ins->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::Value);
 
   auto lir =
       new (alloc()) LHomeObjectSuperBase(useRegisterAtStart(ins->homeObject()));
-  define(lir, ins);
-  assignSafepoint(lir, ins);
+  defineBox(lir, ins);
 }
 
 void LIRGenerator::visitInterruptCheck(MInterruptCheck* ins) {
