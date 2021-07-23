@@ -605,7 +605,7 @@ class MessageChannel : HasResultCodes {
   // otherwise noted. It is refcounted so a reference to it can be shared with
   // IPC listener objects which need to access weak references to this
   // `MessageChannel`.
-  RefPtr<RefCountedMonitor> mMonitor;
+  RefPtr<RefCountedMonitor> const mMonitor;
 
   ChannelState mChannelState = ChannelClosed;
   Side mSide = UnknownSide;
