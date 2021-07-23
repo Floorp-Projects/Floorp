@@ -5231,9 +5231,9 @@ static bool CanNurseryAllocateBigInt(JSContext* cx) {
 
 static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
                                Register temp, const LiveRegisterSet& liveSet,
-                               Label* fail, bool attemptNursery) {
+                               bool attemptNursery, Label* fail) {
   Label fallback, done;
-  masm.newGCBigInt(result, temp, &fallback, attemptNursery);
+  masm.newGCBigInt(result, temp, attemptNursery, &fallback);
   masm.jump(&done);
   {
     masm.bind(&fallback);
@@ -5294,8 +5294,8 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
     save.takeUnchecked(output);
 
     bool attemptNursery = CanNurseryAllocateBigInt(cx_);
-    EmitAllocateBigInt(masm, *bigInt, scratch1, save, failure->label(),
-                       attemptNursery);
+    EmitAllocateBigInt(masm, *bigInt, scratch1, save, attemptNursery,
+                       failure->label());
   }
 
   // Load the elements vector.
@@ -5493,8 +5493,8 @@ bool CacheIRCompiler::emitLoadDataViewValueResult(
       save.takeUnchecked(bigInt);
       save.takeUnchecked(bigIntScratch);
       bool attemptNursery = CanNurseryAllocateBigInt(cx_);
-      EmitAllocateBigInt(masm, bigInt, bigIntScratch, save, &fail,
-                         attemptNursery);
+      EmitAllocateBigInt(masm, bigInt, bigIntScratch, save, attemptNursery,
+                         &fail);
       masm.jump(&done);
 
       masm.bind(&fail);

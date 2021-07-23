@@ -4633,7 +4633,7 @@ void CodeGenerator::emitCreateBigInt(LInstruction* lir, Scalar::Type type,
   OutOfLineCode* ool = createBigIntOutOfLine(lir, type, input, output);
 
   if (maybeTemp != InvalidReg) {
-    masm.newGCBigInt(output, maybeTemp, ool->entry(), bigIntsCanBeInNursery());
+    masm.newGCBigInt(output, maybeTemp, bigIntsCanBeInNursery(), ool->entry());
   } else {
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     regs.take(input);
@@ -4644,7 +4644,7 @@ void CodeGenerator::emitCreateBigInt(LInstruction* lir, Scalar::Type type,
     masm.push(temp);
 
     Label fail, ok;
-    masm.newGCBigInt(output, temp, &fail, bigIntsCanBeInNursery());
+    masm.newGCBigInt(output, temp, bigIntsCanBeInNursery(), &fail);
     masm.pop(temp);
     masm.jump(&ok);
     masm.bind(&fail);
@@ -8524,7 +8524,7 @@ void CodeGenerator::visitBigIntAdd(LBigIntAdd* ins) {
   masm.branchAddPtr(Assembler::Overflow, temp2, temp1, ool->entry());
 
   // Create and return the result.
-  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, temp2, bigIntsCanBeInNursery(), ool->entry());
   masm.initializeBigInt(output, temp1);
 
   masm.bind(ool->rejoin());
@@ -8556,7 +8556,7 @@ void CodeGenerator::visitBigIntSub(LBigIntSub* ins) {
   masm.branchSubPtr(Assembler::Overflow, temp2, temp1, ool->entry());
 
   // Create and return the result.
-  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, temp2, bigIntsCanBeInNursery(), ool->entry());
   masm.initializeBigInt(output, temp1);
 
   masm.bind(ool->rejoin());
@@ -8595,7 +8595,7 @@ void CodeGenerator::visitBigIntMul(LBigIntMul* ins) {
   masm.branchMulPtr(Assembler::Overflow, temp2, temp1, ool->entry());
 
   // Create and return the result.
-  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, temp2, bigIntsCanBeInNursery(), ool->entry());
   masm.initializeBigInt(output, temp1);
 
   masm.bind(ool->rejoin());
@@ -8813,7 +8813,7 @@ void CodeGenerator::visitBigIntPow(LBigIntPow* ins) {
 
   // Create and return the result.
   masm.bind(&done);
-  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, temp2, bigIntsCanBeInNursery(), ool->entry());
   masm.initializeBigInt(output, temp1);
 
   masm.bind(ool->rejoin());
@@ -8852,7 +8852,7 @@ void CodeGenerator::visitBigIntBitAnd(LBigIntBitAnd* ins) {
   masm.andPtr(temp2, temp1);
 
   // Create and return the result.
-  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, temp2, bigIntsCanBeInNursery(), ool->entry());
   masm.initializeBigInt(output, temp1);
 
   masm.bind(ool->rejoin());
@@ -8891,7 +8891,7 @@ void CodeGenerator::visitBigIntBitOr(LBigIntBitOr* ins) {
   masm.orPtr(temp2, temp1);
 
   // Create and return the result.
-  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, temp2, bigIntsCanBeInNursery(), ool->entry());
   masm.initializeBigInt(output, temp1);
 
   masm.bind(ool->rejoin());
@@ -8930,7 +8930,7 @@ void CodeGenerator::visitBigIntBitXor(LBigIntBitXor* ins) {
   masm.xorPtr(temp2, temp1);
 
   // Create and return the result.
-  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, temp2, bigIntsCanBeInNursery(), ool->entry());
   masm.initializeBigInt(output, temp1);
 
   masm.bind(ool->rejoin());
@@ -9028,7 +9028,7 @@ void CodeGenerator::visitBigIntLsh(LBigIntLsh* ins) {
   masm.bind(&create);
 
   // Create and return the result.
-  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, temp2, bigIntsCanBeInNursery(), ool->entry());
   masm.initializeBigIntAbsolute(output, temp1);
 
   // Set the sign bit when the left-hand side is negative.
@@ -9131,7 +9131,7 @@ void CodeGenerator::visitBigIntRsh(LBigIntRsh* ins) {
   masm.bind(&create);
 
   // Create and return the result.
-  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, temp2, bigIntsCanBeInNursery(), ool->entry());
   masm.initializeBigIntAbsolute(output, temp1);
 
   // Set the sign bit when the left-hand side is negative.
@@ -9160,7 +9160,7 @@ void CodeGenerator::visitBigIntIncrement(LBigIntIncrement* ins) {
   masm.branchAddPtr(Assembler::Overflow, temp2, temp1, ool->entry());
 
   // Create and return the result.
-  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, temp2, bigIntsCanBeInNursery(), ool->entry());
   masm.initializeBigInt(output, temp1);
 
   masm.bind(ool->rejoin());
@@ -9184,7 +9184,7 @@ void CodeGenerator::visitBigIntDecrement(LBigIntDecrement* ins) {
   masm.branchSubPtr(Assembler::Overflow, temp2, temp1, ool->entry());
 
   // Create and return the result.
-  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, temp2, bigIntsCanBeInNursery(), ool->entry());
   masm.initializeBigInt(output, temp1);
 
   masm.bind(ool->rejoin());
@@ -9207,8 +9207,8 @@ void CodeGenerator::visitBigIntNegate(LBigIntNegate* ins) {
   masm.bind(&lhsNonZero);
 
   // Call into the VM when the input uses heap digits.
-  masm.copyBigIntWithInlineDigits(input, output, temp, ool->entry(),
-                                  bigIntsCanBeInNursery());
+  masm.copyBigIntWithInlineDigits(input, output, temp, bigIntsCanBeInNursery(),
+                                  ool->entry());
 
   // Flip the sign bit.
   masm.xor32(Imm32(BigInt::signBitMask()),
@@ -9247,7 +9247,7 @@ void CodeGenerator::visitBigIntBitNot(LBigIntBitNot* ins) {
   masm.bind(&done);
 
   // Create and return the result.
-  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.newGCBigInt(output, temp2, bigIntsCanBeInNursery(), ool->entry());
   masm.initializeBigIntAbsolute(output, temp1);
 
   // Set the sign bit when the input is positive.
