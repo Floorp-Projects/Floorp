@@ -24,6 +24,10 @@ import androidx.compose.ui.unit.dp
  *
  * @param url The URL to be displayed.
  * @param onUrlClicked Will be called when the user clicks on the URL.
+ * @param onMenuClicked Will be called when the user clicks on the menu button.
+ * @param browserActions Additional browser actions to be displayed on the right side of the toolbar
+ * (outside of the URL bounding box) in display mode. Also see:
+ * [MDN docs](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/user_interface/Browser_action)
  */
 @Composable
 fun BrowserDisplayToolbar(
