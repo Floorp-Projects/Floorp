@@ -466,7 +466,6 @@ const TEST_GLOBAL = {
     newtab: {
       isEnabled() {},
       getValue() {},
-      getAllVariables() {},
       onUpdate() {},
       off() {},
     },
@@ -510,7 +509,6 @@ const TEST_GLOBAL = {
     generateUUID: () => "{foo-123-foo}",
   },
 };
-TEST_GLOBAL.NimbusFeatures.pocketNewtab = TEST_GLOBAL.NimbusFeatures.newtab;
 overrider.set(TEST_GLOBAL);
 
 describe("activity-stream", () => {
