@@ -1,0 +1,33 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>Caret is correctly painted over inline with clip</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  span[contenteditable] {
+    font: 16px/1 monospace;
+    caret-color: black;
+    display: inline-block;
+  }
+  span[contenteditable]:focus {
+    outline: 2px solid blue;
+  }
+  span > span {
+    /* This should only leave the "c" letter visible, but the caret should
+       still be visible when between "a" and "b" */
+    clip-path: inset(0 2ch);
+  }
+</style>
+<span contenteditable spellcheck="false">
+  <span>abcde</span>
+</span>
+<script>
+SimpleTest.waitForFocus(function() {
+  document.querySelector('[contenteditable]').focus();
+  requestAnimationFrame(function() {
+    // Position the caret between "a" and "b".
+    synthesizeKey("KEY_ArrowRight");
+    document.documentElement.removeAttribute("class");
+  });
+});
+</script>
