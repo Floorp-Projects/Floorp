@@ -73,7 +73,7 @@ window.inlineSelectionCss = `
     margin-inline-end: 10px;
     transition: background-color 150ms cubic-bezier(0.07, 0.95, 0, 1); }
   .button.download, .download.highlight-button-cancel, .download.highlight-button-download, .download.highlight-button-copy {
-    background-image: url("../img/icon-download.svg"); }
+    background-image: url("chrome://browser/content/screenshots/download.svg"); }
     .button.download:hover, .download.highlight-button-cancel:hover, .download.highlight-button-download:hover, .download.highlight-button-copy:hover {
       background-color: #ededf0; }
     .button.download:active, .download.highlight-button-cancel:active, .download.highlight-button-download:active, .download.highlight-button-copy:active {
@@ -544,7 +544,7 @@ window.inlineSelectionCss = `
   width: 62.4px;
   height: 62.4px;
   display: block;
-  background-image: url("MOZ_EXTENSION/icons/icon-welcome-face-without-eyes.svg"); }
+  background-image: url("chrome://browser/content/screenshots/icon-welcome-face-without-eyes.svg"); }
 
 .eye {
   background-color: #fff;
@@ -644,9 +644,9 @@ window.inlineSelectionCss = `
       background-color: #dedede;
       border: 1px solid #989898; }
   .all-buttons-container .full-page {
-    background-image: url("MOZ_EXTENSION/icons/menu-fullpage.svg"); }
+    background-image: url("chrome://browser/content/screenshots/menu-fullpage.svg"); }
   .all-buttons-container .visible {
-    background-image: url("MOZ_EXTENSION/icons/menu-visible.svg"); }
+    background-image: url("chrome://browser/content/screenshots/menu-visible.svg"); }
 
 @keyframes pulse {
   0% {
