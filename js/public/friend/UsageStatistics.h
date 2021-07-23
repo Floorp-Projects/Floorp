@@ -82,7 +82,7 @@ extern JS_PUBLIC_API void JS_SetAccumulateTelemetryCallback(
  * fixed member of the mozilla::UseCounter enum by the callback.
  */
 
-enum class JSUseCounter { ASMJS, WASM, WASM_DUPLICATE_IMPORTS };
+enum class JSUseCounter { ASMJS, WASM };
 
 using JSSetUseCounterCallback = void (*)(JSObject*, JSUseCounter);
 

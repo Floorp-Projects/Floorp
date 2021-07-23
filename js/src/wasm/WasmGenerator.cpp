@@ -1109,7 +1109,6 @@ SharedMetadata ModuleGenerator::finishMetadata(const Bytes& bytecode) {
   metadata_->moduleName = moduleEnv_->moduleName;
   metadata_->funcNames = std::move(moduleEnv_->funcNames);
   metadata_->omitsBoundsChecks = moduleEnv_->hugeMemoryEnabled();
-  metadata_->usesDuplicateImports = moduleEnv_->usesDuplicateImports;
 
   // Copy over additional debug information.
 
