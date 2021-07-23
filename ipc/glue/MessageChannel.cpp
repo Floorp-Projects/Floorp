@@ -16,6 +16,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ScopeExit.h"
@@ -766,14 +767,29 @@ void MessageChannel::Clear() {
 
 bool MessageChannel::Open(ScopedPort aPort, Side aSide,
                           nsISerialEventTarget* aEventTarget) {
-  MOZ_ASSERT(!mLink, "Open() called > once");
+  {
+    MonitorAutoLock lock(*mMonitor);
+    MOZ_RELEASE_ASSERT(!mLink, "Open() called > once");
+    MOZ_RELEASE_ASSERT(ChannelClosed == mChannelState, "Not currently closed");
 
-  mWorkerThread = aEventTarget ? aEventTarget : GetCurrentSerialEventTarget();
-  MOZ_ASSERT(mWorkerThread, "We should always be on a nsISerialEventTarget");
+    mWorkerThread = aEventTarget ? aEventTarget : GetCurrentSerialEventTarget();
+    MOZ_ASSERT(mWorkerThread, "We should always be on a nsISerialEventTarget");
+
+    mLink = MakeUnique<PortLink>(this, std::move(aPort));
+    mSide = aSide;
+  }
+
+  // Notify our listener that the underlying IPC channel has been established.
+  // IProtocol will use this callback to create the ActorLifecycleProxy, and
+  // perform an `AddRef` call to keep the actor alive until the channel is
+  // disconnected.
+  //
+  // We unlock our monitor before calling `OnIPCChannelOpened` to ensure that
+  // any calls back into `MessageChannel` do not deadlock. At this point, we may
+  // be receiving messages on the IO thread, however we cannot process them on
+  // the worker thread or have notified our listener until after this function
+  // returns.
   mListener->OnIPCChannelOpened();
-
-  mLink = MakeUnique<PortLink>(this, std::move(aPort));
-  mSide = aSide;
   return true;
 }
 
@@ -793,7 +809,6 @@ bool MessageChannel::Open(MessageChannel* aTargetChan,
   // Opens a connection to another thread in the same process.
 
   MOZ_ASSERT(aTargetChan, "Need a target channel");
-  MOZ_ASSERT(ChannelClosed == mChannelState, "Not currently closed");
 
   std::pair<ScopedPort, ScopedPort> ports =
       NodeController::GetSingleton()->CreatePortPair();
