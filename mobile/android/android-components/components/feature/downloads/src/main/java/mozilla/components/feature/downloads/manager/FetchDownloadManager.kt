@@ -7,14 +7,17 @@ package mozilla.components.feature.downloads.manager
 import android.Manifest.permission.FOREGROUND_SERVICE
 import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.annotation.SuppressLint
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
 import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.P
+import androidx.annotation.VisibleForTesting
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.state.content.DownloadState
@@ -41,11 +44,19 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
 
     private var isSubscribedReceiver = false
 
-    override val permissions = if (SDK_INT >= P) {
-        arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE, FOREGROUND_SERVICE)
-    } else {
-        arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE)
-    }
+    // Do not require WRITE_EXTERNAL_STORAGE permission on API 29 and above (using scoped storage)
+    override val permissions
+        @SuppressLint("InlinedApi")
+        get() = if (getSDKVersion() >= Build.VERSION_CODES.Q) {
+            arrayOf(INTERNET, FOREGROUND_SERVICE)
+        } else if (getSDKVersion() >= P) {
+            arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE, FOREGROUND_SERVICE)
+        } else {
+            arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE)
+        }
+
+    @VisibleForTesting
+    internal fun getSDKVersion() = SDK_INT
 
     /**
      * Schedules a download through the [AbstractFetchDownloadService].
