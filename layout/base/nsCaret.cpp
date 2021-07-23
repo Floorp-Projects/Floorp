@@ -19,6 +19,7 @@
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsIContent.h"
+#include "nsIFrameInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsBlockFrame.h"
@@ -450,7 +451,27 @@ void nsCaret::CheckSelectionLanguageChange() {
   }
 }
 
-nsIFrame* nsCaret::GetPaintGeometry(nsRect* aRect) {
+// This ensures that the caret is not affected by clips on inlines and so forth.
+[[nodiscard]] static nsIFrame* MapToContainingBlock(nsIFrame* aFrame,
+                                                    nsRect* aCaretRect,
+                                                    nsRect* aHookRect) {
+  if (aFrame->IsBlockOutside() || aFrame->IsBlockFrameOrSubclass()) {
+    return aFrame;
+  }
+  nsIFrame* containingBlock = aFrame->GetContainingBlock();
+  if (!containingBlock) {
+    return aFrame;
+  }
+
+  *aCaretRect = nsLayoutUtils::TransformFrameRectToAncestor(aFrame, *aCaretRect,
+                                                            containingBlock);
+  *aHookRect = nsLayoutUtils::TransformFrameRectToAncestor(aFrame, *aHookRect,
+                                                           containingBlock);
+  return containingBlock;
+}
+
+nsIFrame* nsCaret::GetPaintGeometry(nsRect* aCaretRect, nsRect* aHookRect,
+                                    nscolor* aCaretColor) {
   // Return null if we should not be visible.
   if (!IsVisible() || !mIsBlinkOn) {
     return nullptr;
@@ -493,43 +514,44 @@ nsIFrame* nsCaret::GetPaintGeometry(nsRect* aRect) {
     }
   }
 
+  if (aCaretColor) {
+    *aCaretColor = frame->GetCaretColorAt(frameOffset);
+  }
+
+  ComputeCaretRects(frame, frameOffset, aCaretRect, aHookRect);
+  return MapToContainingBlock(frame, aCaretRect, aHookRect);
+}
+
+nsIFrame* nsCaret::GetPaintGeometry(nsRect* aRect) {
   nsRect caretRect;
   nsRect hookRect;
-  ComputeCaretRects(frame, frameOffset, &caretRect, &hookRect);
-
+  nsIFrame* frame = GetPaintGeometry(&caretRect, &hookRect);
   aRect->UnionRect(caretRect, hookRect);
   return frame;
 }
 
-nsIFrame* nsCaret::GetFrame(int32_t* aContentOffset) {
-  return GetFrameAndOffset(GetSelection(), mOverrideContent, mOverrideOffset,
-                           aContentOffset);
-}
-
 void nsCaret::PaintCaret(DrawTarget& aDrawTarget, nsIFrame* aForFrame,
                          const nsPoint& aOffset) {
-  int32_t contentOffset;
-  nsIFrame* frame = GetFrame(&contentOffset);
+  nsRect caretRect;
+  nsRect hookRect;
+  nscolor color;
+  nsIFrame* frame = GetPaintGeometry(&caretRect, &hookRect, &color);
+  MOZ_ASSERT(frame == aForFrame, "We're referring different frame");
+
   if (!frame) {
     return;
   }
-  NS_ASSERTION(frame == aForFrame, "We're referring different frame");
 
   int32_t appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
-
-  nsRect caretRect;
-  nsRect hookRect;
-  ComputeCaretRects(frame, contentOffset, &caretRect, &hookRect);
-
   Rect devPxCaretRect = NSRectToSnappedRect(caretRect + aOffset,
                                             appUnitsPerDevPixel, aDrawTarget);
   Rect devPxHookRect =
       NSRectToSnappedRect(hookRect + aOffset, appUnitsPerDevPixel, aDrawTarget);
-  ColorPattern color(ToDeviceColor(frame->GetCaretColorAt(contentOffset)));
 
-  aDrawTarget.FillRect(devPxCaretRect, color);
+  ColorPattern pattern(ToDeviceColor(color));
+  aDrawTarget.FillRect(devPxCaretRect, pattern);
   if (!hookRect.IsEmpty()) {
-    aDrawTarget.FillRect(devPxHookRect, color);
+    aDrawTarget.FillRect(devPxHookRect, pattern);
   }
 }
 

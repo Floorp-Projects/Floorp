@@ -1,0 +1,28 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>Caret is correctly painted over inline with clip</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  div {
+    font: 16px/1 monospace;
+    outline: 2px solid blue;
+    caret-color: black;
+  }
+  span {
+    color: transparent;
+  }
+</style>
+<div contenteditable spellcheck="false">
+  <span>ab</span>c<span>de</span>
+</div>
+<script>
+SimpleTest.waitForFocus(function() {
+  document.querySelector('[contenteditable]').focus();
+  requestAnimationFrame(function() {
+    // Position the caret between "a" and "b".
+    synthesizeKey("KEY_ArrowRight");
+    document.documentElement.removeAttribute("class");
+  });
+});
+</script>
