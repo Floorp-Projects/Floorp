@@ -5024,7 +5024,7 @@
 # Also expose a pref to allow users to force-disable WR. This is exposed
 # on all channels because WR can be enabled on qualified hardware on all
 # channels.
-- name: gfx.webrender.force-disabled
+- name: gfx.webrender.force-legacy-layers
   type: bool
   value: false
   mirror: once
