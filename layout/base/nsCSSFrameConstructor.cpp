@@ -762,6 +762,14 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
   // columns.
   void ReparentAbsoluteItems(nsContainerFrame* aNewParent);
 
+  // Collect floats in mFloatedList which are proper descendants of aNewParent,
+  // and reparent them to aNewParent.
+  //
+  // Note: This function does something unusual that moves floats after their
+  // frames are constructed under a column hierarchy which has column-span
+  // elements. Do not use this if you're not dealing with columns.
+  void ReparentFloats(nsContainerFrame* aNewParent);
+
   /**
    * Function to add a new frame to the right frame list.  This MUST be called
    * on frames before their children have been processed if the frames might
@@ -1049,6 +1057,35 @@ void nsFrameConstructorState::ReparentAbsoluteItems(
     // won't call us if we can't have absolute children.
     PushAbsoluteContainingBlock(aNewParent, aNewParent, absoluteSaveState);
     mAbsoluteList.SetFrames(newAbsoluteItems);
+  }
+}
+
+void nsFrameConstructorState::ReparentFloats(nsContainerFrame* aNewParent) {
+  MOZ_ASSERT(aNewParent->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR),
+             "Restrict the usage under column hierarchy.");
+  MOZ_ASSERT(
+      aNewParent->IsFloatContainingBlock(),
+      "Why calling this method if aNewParent is not a float containing block?");
+
+  // Gather floats that should reparent under aNewParent.
+  nsFrameList floats;
+  nsIFrame* current = mFloatedList.FirstChild();
+  while (current) {
+    nsIFrame* placeholder = current->GetPlaceholderFrame();
+    nsIFrame* next = current->GetNextSibling();
+    if (nsLayoutUtils::IsProperAncestorFrame(aNewParent, placeholder)) {
+      mFloatedList.RemoveFrame(current);
+      floats.AppendFrame(aNewParent, current);
+    }
+    current = next;
+  }
+
+  if (floats.NotEmpty()) {
+    // Make floats move into aNewParent's float child list in
+    // ~nsFrameConstructorSaveState() when destructing floatSaveState.
+    nsFrameConstructorSaveState floatSaveState;
+    PushFloatContainingBlock(aNewParent, floatSaveState);
+    mFloatedList.SetFrames(floats);
   }
 }
 
@@ -10714,10 +10751,12 @@ bool nsCSSFrameConstructor::MayNeedToCreateColumnSpanSiblings(
 nsFrameList nsCSSFrameConstructor::CreateColumnSpanSiblings(
     nsFrameConstructorState& aState, nsContainerFrame* aInitialBlock,
     nsFrameList& aChildList, nsIFrame* aPositionedFrame) {
+  MOZ_ASSERT(aInitialBlock->IsBlockFrameOrSubclass());
   MOZ_ASSERT(!aPositionedFrame || aPositionedFrame->IsAbsPosContainingBlock());
 
   nsIContent* const content = aInitialBlock->GetContent();
   nsContainerFrame* const parentFrame = aInitialBlock->GetParent();
+  const bool isInitialBlockFloatCB = aInitialBlock->IsFloatContainingBlock();
 
   nsFrameList siblings;
   nsContainerFrame* lastNonColumnSpanWrapper = aInitialBlock;
@@ -10771,6 +10810,9 @@ nsFrameList nsCSSFrameConstructor::CreateColumnSpanSiblings(
                                                 nonColumnSpanKids);
       if (aPositionedFrame) {
         aState.ReparentAbsoluteItems(nonColumnSpanWrapper);
+      }
+      if (isInitialBlockFloatCB) {
+        aState.ReparentFloats(nonColumnSpanWrapper);
       }
     }
 
