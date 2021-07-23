@@ -21,6 +21,26 @@ from mozharness.base.log import DEBUG, INFO, FATAL, WARNING
 from mozharness.base.script import BaseScript
 
 
+# ensure all versions are 3 part (i.e. 99.1.0)
+# ensure all text (i.e. 'esr') is in the last part
+class CompareVersion(LooseVersion):
+    version = ""
+
+    def __init__(self, versionMap):
+        parts = versionMap.split(".")
+        # assume version is 99.9.0, look for 99.0
+        if len(parts) == 2:
+            intre = re.compile("([0-9.]+)(.*)")
+            match = intre.match(parts[-1])
+            if match:
+                parts[-1] = match.group(1)
+                parts.append("0%s" % match.group(2))
+        else:
+            parts.append("0")
+        self.version = ".".join(parts)
+        LooseVersion(versionMap)
+
+
 def is_triangualar(x):
     """Check if a number is triangular (0, 1, 3, 6, 10, 15, ...)
     see: https://en.wikipedia.org/wiki/Triangular_number#Triangular_roots_and_tests_for_triangular_numbers # noqa
@@ -520,7 +540,7 @@ class UpdateVerifyConfigCreator(BaseScript):
         )
 
         completes_only_index = 0
-        for fromVersion in reversed(sorted(self.update_paths, key=LooseVersion)):
+        for fromVersion in reversed(sorted(self.update_paths, key=CompareVersion)):
             from_ = self.update_paths[fromVersion]
             locales = sorted(list(set(from_["locales"]).intersection(to_locales)))
             appVersion = from_["appVersion"]
