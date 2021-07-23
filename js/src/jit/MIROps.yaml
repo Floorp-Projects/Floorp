@@ -1913,7 +1913,7 @@
     thisValue: Value
   result_type: Value
   guard: true
-  alias_set: none
+  alias_set: custom
 
 - name: CheckThis
   operands: 
@@ -1921,7 +1921,7 @@
   result_type: Value
   guard: true
   folds_to: custom
-  alias_set: none
+  alias_set: custom
 
 - name: AsyncResolve
   operands:
@@ -1953,7 +1953,7 @@
   result_type: Value
   guard: true
   folds_to: custom
-  alias_set: none
+  alias_set: custom
 
 - name: Generator
   gen_boilerplate: false

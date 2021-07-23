@@ -5826,6 +5826,18 @@ AliasSet MCheckObjCoercible::getAliasSet() const {
   return AliasSet::Store(AliasSet::ExceptionState);
 }
 
+AliasSet MCheckReturn::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ExceptionState);
+}
+
+AliasSet MCheckThis::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ExceptionState);
+}
+
+AliasSet MCheckThisReinit::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ExceptionState);
+}
+
 AliasSet MIsPackedArray::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
