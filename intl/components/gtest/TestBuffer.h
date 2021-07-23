@@ -60,10 +60,8 @@ class TestBuffer {
   /**
    * Get a string view into the buffer, which is useful for test assertions.
    */
-  template <typename C2>
-  std::basic_string_view<const C2> get_string_view() {
-    return std::basic_string_view<const C2>(reinterpret_cast<const C2*>(data()),
-                                            length());
+  std::basic_string_view<CharType> get_string_view() {
+    return std::basic_string_view<CharType>(data(), length());
   }
 
   Vector<C, inlineCapacity> mBuffer{};
