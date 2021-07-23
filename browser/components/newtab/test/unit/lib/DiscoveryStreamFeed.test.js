@@ -229,6 +229,18 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
+  describe("#parseSpocPositions", () => {
+    it("should return an equivalent array for an array of non negative integers", async () => {
+      assert.deepEqual(feed.parseSpocPositions([0, 2, 3]), [0, 2, 3]);
+    });
+    it("should return undefined for an array containing negative integers", async () => {
+      assert.equal(feed.parseSpocPositions([-2, 2, 3]), undefined);
+    });
+    it("should return undefined for an undefined input", async () => {
+      assert.equal(feed.parseSpocPositions(undefined), undefined);
+    });
+  });
+
   describe("#loadLayout", () => {
     it("should fetch data and populate the cache if it is empty", async () => {
       const resp = { layout: ["foo", "bar"] };
@@ -2082,6 +2094,16 @@ describe("DiscoveryStreamFeed", () => {
 
       assert.calledOnce(feed.loadSpocs);
     });
+    it("should fire onPocketConfigChanged when pocketConfig pref changes", async () => {
+      sandbox.stub(feed, "onPocketConfigChanged").returns(Promise.resolve());
+
+      await feed.onAction({
+        type: at.PREF_CHANGED,
+        data: { name: "pocketConfig", value: false },
+      });
+
+      assert.calledOnce(feed.onPocketConfigChanged);
+    });
     it("should call clearSpocs when sponsored content is turned off", async () => {
       sandbox.stub(feed, "clearSpocs").returns(Promise.resolve());
 
@@ -2164,6 +2186,16 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.onAction({ type: at.SYSTEM_TICK });
       assert.calledWith(feed.refreshAll, { updateOpenTabs: false });
+    });
+  });
+
+  describe("#onPocketConfigChanged", () => {
+    it("should call loadLayout when Pocket config changes", async () => {
+      sandbox.stub(feed, "loadLayout").callsFake(dispatch => dispatch("foo"));
+      sandbox.stub(feed.store, "dispatch");
+      await feed.onPocketConfigChanged();
+      assert.calledOnce(feed.loadLayout);
+      assert.calledWith(feed.store.dispatch, ac.AlsoToPreloaded("foo"));
     });
   });
 

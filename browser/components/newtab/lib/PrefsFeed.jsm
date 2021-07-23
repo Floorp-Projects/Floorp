@@ -26,6 +26,7 @@ this.PrefsFeed = class PrefsFeed {
     this._prefMap = prefMap;
     this._prefs = new Prefs();
     this.onExperimentUpdated = this.onExperimentUpdated.bind(this);
+    this.onPocketExperimentUpdated = this.onPocketExperimentUpdated.bind(this);
   }
 
   onPrefChanged(name, value) {
@@ -77,9 +78,26 @@ this.PrefsFeed = class PrefsFeed {
     );
   }
 
+  /**
+   * Handler for Pocket specific experiment data updates.
+   */
+  onPocketExperimentUpdated(event, reason) {
+    const value = NimbusFeatures.pocketNewtab.getAllVariables() || {};
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.PREF_CHANGED,
+        data: {
+          name: "pocketConfig",
+          value,
+        },
+      })
+    );
+  }
+
   init() {
     this._prefs.observeBranch(this);
     NimbusFeatures.newtab.onUpdate(this.onExperimentUpdated);
+    NimbusFeatures.pocketNewtab.onUpdate(this.onPocketExperimentUpdated);
 
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
 
@@ -155,6 +173,7 @@ this.PrefsFeed = class PrefsFeed {
 
     // Add experiment values and default values
     values.featureConfig = NimbusFeatures.newtab.getValue() || {};
+    values.pocketConfig = NimbusFeatures.pocketNewtab.getAllVariables() || {};
     this._setBoolPref(values, "logowordmark.alwaysVisible", false);
     this._setBoolPref(values, "feeds.section.topstories", false);
     this._setBoolPref(values, "discoverystream.enabled", false);
