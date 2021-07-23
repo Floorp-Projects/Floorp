@@ -705,6 +705,14 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
 
   nsTArray<RefPtr<nsIContent>> mGeneratedContentWithInitializer;
 
+#ifdef DEBUG
+  // Record the float containing block candidate passed into
+  // MaybePushFloatContainingBlock() to keep track that we've call the method to
+  // handle the float CB scope before processing the CB's children. It is reset
+  // in ConstructFramesFromItemList().
+  nsContainerFrame* mFloatCBCandidate = nullptr;
+#endif
+
   // Constructor
   // Use the passed-in history state.
   nsFrameConstructorState(
@@ -947,6 +955,10 @@ void nsFrameConstructorState::MaybePushFloatContainingBlock(
   } else if (aFloatCBCandidate->IsFloatContainingBlock()) {
     PushFloatContainingBlock(aFloatCBCandidate, aSaveState);
   }
+
+#ifdef DEBUG
+  mFloatCBCandidate = aFloatCBCandidate;
+#endif
 }
 
 void nsFrameConstructorState::PushFloatContainingBlock(
@@ -3000,6 +3012,9 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
     MOZ_ASSERT(customFrame);
     childList.AppendFrame(nullptr, customFrame);
 
+    nsFrameConstructorSaveState floatSaveState;
+    aState.MaybePushFloatContainingBlock(comboboxFrame, floatSaveState);
+
     // The other piece of NAC can take the normal path.
     AutoFrameConstructionItemList fcItems(this);
     AddFCItemsForAnonymousContent(aState, comboboxFrame, newAnonymousItems,
@@ -4247,6 +4262,9 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
       GetAnonymousContent(aContent, gfxScrollFrame, scrollNAC);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (scrollNAC.Length() > 0) {
+    nsFrameConstructorSaveState floatSaveState;
+    aState.MaybePushFloatContainingBlock(gfxScrollFrame, floatSaveState);
+
     AutoFrameConstructionItemList items(this);
     AddFCItemsForAnonymousContent(aState, gfxScrollFrame, scrollNAC, items);
     ConstructFramesFromItemList(aState, items, gfxScrollFrame,
@@ -6811,6 +6829,9 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   // our container's DOM child list matches its flattened tree child list.
   items.SetParentHasNoShadowDOM(haveNoShadowDOM);
 
+  nsFrameConstructorSaveState floatSaveState;
+  state.MaybePushFloatContainingBlock(parentFrame, floatSaveState);
+
   nsFrameList frameList;
   ConstructFramesFromItemList(state, items, parentFrame,
                               ParentIsWrapperAnonBox(parentFrame), frameList);
@@ -7260,6 +7281,9 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
     return;
   }
   LAYOUT_PHASE_TEMP_REENTER();
+
+  nsFrameConstructorSaveState floatSaveState;
+  state.MaybePushFloatContainingBlock(insertion.mParentFrame, floatSaveState);
 
   // If the container is a table and a caption will be appended, it needs to be
   // put in the table wrapper frame's additional child list.
@@ -9483,6 +9507,16 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
                  iter.item().mComputedStyle->IsPseudoOrAnonBox());
     }
   }
+
+  // The assertion condition should match the logic in
+  // MaybePushFloatContainingBlock().
+  MOZ_ASSERT(!(ShouldSuppressFloatingOfDescendants(aParentFrame) ||
+               aParentFrame->IsFloatContainingBlock()) ||
+                 aState.mFloatCBCandidate == aParentFrame,
+             "Our caller or ProcessChildren()'s caller should call "
+             "MaybePushFloatContainingBlock() to handle the float containing "
+             "block candidate!");
+  aState.mFloatCBCandidate = nullptr;
 #endif
 
   // Ensure aParentIsWrapperAnonBox is correct.  We _could_ compute it directly,
