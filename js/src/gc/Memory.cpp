@@ -20,21 +20,20 @@
 #  include "util/Windows.h"
 #  include <psapi.h>
 
-#elif defined(__wasi__)
-
-/* nothing */
-
 #else
 
 #  include <algorithm>
 #  include <errno.h>
-#  include <sys/mman.h>
-#  include <sys/resource.h>
-#  include <sys/stat.h>
-#  include <sys/types.h>
 #  include <unistd.h>
 
-#endif
+#  if !defined(__wasi__)
+#    include <sys/mman.h>
+#    include <sys/resource.h>
+#    include <sys/stat.h>
+#    include <sys/types.h>
+#  endif  // !defined(__wasi__)
+
+#endif  // !XP_WIN
 
 namespace js {
 namespace gc {
