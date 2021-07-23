@@ -30,6 +30,7 @@ SPHINX_TREES["docs"] = "docs"
 TESTING_JS_MODULES += [
     "schemas/ExperimentFeatureManifest.schema.json",
     "schemas/ExperimentFeatureRemote.schema.json",
+    "schemas/NimbusEnrollment.schema.json",
     "schemas/NimbusExperiment.schema.json",
     "test/NimbusTestUtils.jsm",
 ]
