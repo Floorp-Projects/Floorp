@@ -27,6 +27,7 @@ using dom::Document;
 bool PreferenceSheet::sInitialized;
 PreferenceSheet::Prefs PreferenceSheet::sContentPrefs;
 PreferenceSheet::Prefs PreferenceSheet::sChromePrefs;
+PreferenceSheet::Prefs PreferenceSheet::sPrintPrefs;
 
 static void GetColor(const char* aPrefName, nscolor& aColor) {
   nsAutoCString value;
@@ -41,24 +42,28 @@ static void GetColor(const char* aPrefName, nscolor& aColor) {
   aColor = result;
 }
 
-bool PreferenceSheet::ShouldUseChromePrefs(const Document& aDoc) {
+auto PreferenceSheet::PrefsKindFor(const Document& aDoc) -> PrefsKind {
   // DevTools documents run in a content frame but should temporarily use
   // chrome preferences, in particular to avoid applying High Contrast mode
   // colors. See Bug 1575766.
   if (aDoc.IsDevToolsDocument() &&
       StaticPrefs::devtools_toolbox_force_chrome_prefs()) {
-    return true;
+    return PrefsKind::Chrome;
   }
 
   if (aDoc.IsInChromeDocShell()) {
-    return true;
+    return PrefsKind::Chrome;
   }
 
   if (aDoc.IsBeingUsedAsImage() && aDoc.IsDocumentURISchemeChrome()) {
-    return true;
+    return PrefsKind::Chrome;
   }
 
-  return false;
+  if (aDoc.IsStaticDocument()) {
+    return PrefsKind::Print;
+  }
+
+  return PrefsKind::Content;
 }
 
 static bool UseAccessibilityTheme(bool aIsChrome) {
@@ -142,6 +147,10 @@ void PreferenceSheet::Initialize() {
 
   sContentPrefs.Load(false);
   sChromePrefs.Load(true);
+  sPrintPrefs = sContentPrefs;
+  if (!sPrintPrefs.mUseDocumentColors) {
+    sPrintPrefs.mColors = Prefs().mColors;
+  }
 
   nsAutoString useDocumentColorPref;
   switch (StaticPrefs::browser_display_document_color_use()) {
