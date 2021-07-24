@@ -1,0 +1,77 @@
+.. _mozilla_projects_nss_nss_3_65_release_notes:
+
+NSS 3.65 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.65 was released on **13 May 2021**.
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_65_RTM. NSS 3.65 requires NSPR 4.30 or newer.
+
+   NSS 3.65 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_65_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _bugs_fixed_in_nss_3.65:
+
+`Bugs fixed in NSS 3.65 <#bugs_fixed_in_nss_3.65>`__
+----------------------------------------------------
+
+.. container::
+
+   -  Bug 1709654 - Update for NetBSD configuration.
+   -  Bug 1709750 - Disable HPKE test when fuzzing.
+   -  Bug 1566124 - Optimize AES-GCM for ppc64le.
+   -  Bug 1699021 - Add AES-256-GCM to HPKE.
+   -  Bug 1698419 - ECH -10 updates.
+   -  Bug 1692930 - Update HPKE to final version.
+   -  Bug 1707130 - NSS should use modern algorithms in PKCS#12 files by default.
+   -  Bug 1703936 - New coverity/cpp scanner errors.
+   -  Bug 1697303 - NSS needs to update it's csp clearing to FIPS 180-3 standards.
+   -  Bug 1702663 - Need to support RSA PSS with Hashing PKCS #11 Mechanisms.
+   -  Bug 1705119 - Deadlock when using GCM and non-thread safe tokens.
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.65 shared libraries are backwards-compatible with all older NSS 3.x shared libraries. A
+   program linked with older NSS 3.x shared libraries will work with NSS 3.65 shared libraries
+   without recompiling or relinking. Furthermore, applications that restrict their use of NSS APIs
+   to the functions listed in NSS Public Functions will remain compatible with future versions of
+   the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).
+
+`Notes <#notes>`__
+------------------
+
+.. container::
+
+   Due to some changes in the Firefox release cycle, NSS 3.67 has yet to be added
+   to the NSS release schedule (3.66 is not affected). I will announce the date to
+   this list once defined.
+
+   Best,
+   Benjamin
