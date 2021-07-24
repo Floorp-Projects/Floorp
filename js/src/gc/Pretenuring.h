@@ -27,6 +27,10 @@
 
 class JS_PUBLIC_API JSTracer;
 
+namespace JS {
+enum class GCReason;
+}  // namespace JS
+
 namespace js {
 namespace gc {
 
@@ -136,7 +140,7 @@ class AllocSite {
 
   void trace(JSTracer* trc);
 
-  static void printInfoHeader();
+  static void printInfoHeader(JS::GCReason reason, double promotionRate);
   static void printInfoFooter(size_t sitesCreated, size_t sitesActive,
                               size_t sitesPretenured, size_t sitesInvalidated);
   void printInfo(bool hasPromotionRate, double promotionRate,
@@ -240,8 +244,9 @@ class PretenuringNursery {
     allocatedSites = site;
   }
 
-  size_t doPretenuring(GCRuntime* gc, bool validPromotionRate,
-                       double promotionRate, bool reportInfo);
+  size_t doPretenuring(GCRuntime* gc, JS::GCReason reason,
+                       bool validPromotionRate, double promotionRate,
+                       bool reportInfo);
 
   void maybeStopPretenuring(GCRuntime* gc);
 
