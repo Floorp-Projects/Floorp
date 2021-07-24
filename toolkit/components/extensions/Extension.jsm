@@ -699,15 +699,13 @@ class ExtensionData {
    * that contains seperate host origins and permissions arrays.
    *
    * @param {Array} permissionsArray
-   * @param {Array} [hostPermissions]
    * @returns {Object} permissions object
    */
-  permissionsObject(permissionsArray = [], hostPermissions = []) {
+  permissionsObject(permissionsArray) {
     let permissions = new Set();
     let origins = new Set();
     let { restrictSchemes, isPrivileged } = this;
-
-    for (let perm of permissionsArray.concat(hostPermissions)) {
+    for (let perm of permissionsArray || []) {
       let type = classifyPermission(perm, restrictSchemes, isPrivileged);
       if (type.origin) {
         origins.add(perm);
@@ -715,7 +713,6 @@ class ExtensionData {
         permissions.add(perm);
       }
     }
-
     return {
       permissions,
       origins,
@@ -735,8 +732,7 @@ class ExtensionData {
     }
 
     let { permissions, origins } = this.permissionsObject(
-      this.manifest.permissions,
-      this.manifest.host_permissions
+      this.manifest.permissions
     );
 
     if (
@@ -1042,9 +1038,7 @@ class ExtensionData {
         isPrivileged && manifest.permissions.includes("mozillaAddons")
       );
 
-      let host_permissions = manifest.host_permissions ?? [];
-
-      for (let perm of manifest.permissions.concat(host_permissions)) {
+      for (let perm of manifest.permissions) {
         if (perm === "geckoProfiler" && !isPrivileged) {
           const acceptedExtensions = Services.prefs.getStringPref(
             "extensions.geckoProfiler.acceptedExtensionIds",
@@ -1316,7 +1310,6 @@ class ExtensionData {
     await this.apiManager.lazyInit();
 
     this.webAccessibleResources = manifestData.webAccessibleResources;
-
     this.allowedOrigins = new MatchPatternSet(manifestData.originPermissions, {
       restrictSchemes: this.restrictSchemes,
     });
