@@ -1043,10 +1043,18 @@ static bool ColorIsCSSAccessible(LookAndFeel::ColorID aId) {
 
 LookAndFeel::UseStandins LookAndFeel::ShouldUseStandins(
     const dom::Document& aDoc, ColorID aId) {
-  return UseStandins(
-      ShouldUseStandinsForNativeColorForNonNativeTheme(aDoc, aId) ||
-      (nsContentUtils::UseStandinsForNativeColors() &&
-       !nsContentUtils::IsChromeDoc(&aDoc) && ColorIsCSSAccessible(aId)));
+  if (ShouldUseStandinsForNativeColorForNonNativeTheme(aDoc, aId)) {
+    return UseStandins::Yes;
+  }
+  if (nsContentUtils::UseStandinsForNativeColors() &&
+      !nsContentUtils::IsChromeDoc(&aDoc) && ColorIsCSSAccessible(aId)) {
+    return UseStandins::Yes;
+  }
+  if (aDoc.IsStaticDocument() &&
+      !PreferenceSheet::ContentPrefs().mUseDocumentColors) {
+    return UseStandins::Yes;
+  }
+  return UseStandins::No;
 }
 
 Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, const dom::Document& aDoc) {
