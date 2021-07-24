@@ -129,6 +129,10 @@ class AllocSite {
     MOZ_ASSERT(nurseryTenuredCount != 0);
   }
 
+  size_t allocCount() const {
+    return std::max(nurseryAllocCount, nurseryTenuredCount);
+  }
+
   void updateStateOnMinorGC(double promotionRate);
 
   // Reset the state to 'Unknown' unless we have reached the invalidation limit
@@ -246,7 +250,7 @@ class PretenuringNursery {
 
   size_t doPretenuring(GCRuntime* gc, JS::GCReason reason,
                        bool validPromotionRate, double promotionRate,
-                       bool reportInfo);
+                       bool reportInfo, size_t reportThreshold);
 
   void maybeStopPretenuring(GCRuntime* gc);
 
