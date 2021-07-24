@@ -34,12 +34,7 @@ struct PreferenceSheet {
     bool mIsChrome = false;
     bool mUseAccessibilityTheme = false;
 
-    bool mUnderlineLinks = true;
-    bool mUseFocusColors = false;
     bool mUseDocumentColors = true;
-    uint8_t mFocusRingWidth = 1;
-    uint8_t mFocusRingStyle = 1;
-    bool mFocusRingOnAnything = false;
 
     // Whether the non-native theme should use system colors for widgets.
     // We only do that if we have a high-contrast theme _and_ we are overriding

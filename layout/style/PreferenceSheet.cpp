@@ -82,12 +82,6 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
 
   mIsChrome = aIsChrome;
   mUseAccessibilityTheme = UseAccessibilityTheme(aIsChrome);
-  mUnderlineLinks = StaticPrefs::browser_underline_anchors();
-
-  mUseFocusColors = StaticPrefs::browser_display_use_focus_colors();
-  mFocusRingWidth = StaticPrefs::browser_display_focus_ring_width();
-  mFocusRingStyle = StaticPrefs::browser_display_focus_ring_style();
-  mFocusRingOnAnything = StaticPrefs::browser_display_focus_ring_on_anything();
 
   const bool useStandins = nsContentUtils::UseStandinsForNativeColors();
   const bool usePrefColors = !useStandins && !aIsChrome &&
