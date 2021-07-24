@@ -51,7 +51,7 @@ var gTabsPanel = {
     this.allTabsPanel = new TabsPanel({
       view: this.allTabsView,
       containerNode: this.allTabsViewTabs,
-      filterFn: tab => !tab.pinned && !tab.hidden,
+      filterFn: tab => !tab.hidden,
     });
 
     this.allTabsView.addEventListener("ViewShowing", e => {
