@@ -69,15 +69,40 @@ struct PreferenceSheet {
     return sChromePrefs;
   }
 
-  static bool ShouldUseChromePrefs(const dom::Document&);
+  static Prefs& PrintPrefs() {
+    MOZ_ASSERT(sInitialized);
+    return sPrintPrefs;
+  }
+
+  enum class PrefsKind {
+    Chrome,
+    Print,
+    Content,
+  };
+
+  static PrefsKind PrefsKindFor(const dom::Document&);
+
+  static bool ShouldUseChromePrefs(const dom::Document& aDocument) {
+    return PrefsKindFor(aDocument) == PrefsKind::Chrome;
+  }
+
   static const Prefs& PrefsFor(const dom::Document& aDocument) {
-    return ShouldUseChromePrefs(aDocument) ? ChromePrefs() : ContentPrefs();
+    switch (PrefsKindFor(aDocument)) {
+      case PrefsKind::Chrome:
+        return ChromePrefs();
+      case PrefsKind::Print:
+        return PrintPrefs();
+      case PrefsKind::Content:
+        break;
+    }
+    return ContentPrefs();
   }
 
  private:
   static bool sInitialized;
-  static Prefs sContentPrefs;
   static Prefs sChromePrefs;
+  static Prefs sPrintPrefs;
+  static Prefs sContentPrefs;
 
   static void Initialize();
 };
