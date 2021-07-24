@@ -589,17 +589,6 @@ void GlobalStyleSheetCache::BuildPreferenceSheet(
       "@namespace svg url(http://www.w3.org/2000/svg);\n");
 
   // Rules for link styling.
-  nscolor linkColor = aPrefs.mLinkColor;
-  nscolor activeColor = aPrefs.mActiveLinkColor;
-  nscolor visitedColor = aPrefs.mVisitedLinkColor;
-
-  sheetText.AppendPrintf(
-      "*|*:link { color: #%02x%02x%02x; }\n"
-      "*|*:any-link:active { color: #%02x%02x%02x; }\n"
-      "*|*:visited { color: #%02x%02x%02x; }\n",
-      NS_GET_R_G_B(linkColor), NS_GET_R_G_B(activeColor),
-      NS_GET_R_G_B(visitedColor));
-
   bool underlineLinks = aPrefs.mUnderlineLinks;
   sheetText.AppendPrintf("*|*:any-link%s { text-decoration: %s; }\n",
                          underlineLinks ? ":not(svg|a)" : "",
