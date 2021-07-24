@@ -403,8 +403,7 @@ async function runCSPTest(test) {
           js: ["content_script.js"],
         },
       ],
-      permissions: ["webRequest", "webRequestBlocking"],
-      host_permissions: ["<all_urls>"],
+      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
       background: { scripts: ["background.js"] },
     },
     files: {

@@ -213,37 +213,13 @@
           },
 
           "permissions": {
-            "default": [],
-            "optional": true,
-            "choices": [
-              {
-                "max_manifest_version": 2,
-                "type": "array",
-                "items": {
-                  "$ref": "PermissionOrOrigin",
-                  "onError": "warn"
-                }
-              },
-              {
-                "min_manifest_version": 3,
-                "type": "array",
-                "items": {
-                  "$ref": "Permission",
-                  "onError": "warn"
-                }
-              }
-            ]
-          },
-
-          "host_permissions": {
-            "min_manifest_version": 3,
             "type": "array",
+            "default": [],
             "items": {
-              "$ref": "MatchPattern",
+              "$ref": "PermissionOrOrigin",
               "onError": "warn"
             },
-            "optional": true,
-            "default": []
+            "optional": true
           },
 
           "optional_permissions": {
