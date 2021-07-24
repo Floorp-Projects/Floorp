@@ -430,7 +430,10 @@ TEST_P(TlsExtensionTest12Plus, SignatureAlgorithmsBadLength) {
 }
 
 TEST_P(TlsExtensionTest12Plus, SignatureAlgorithmsTrailingData) {
-  const uint8_t val[] = {0x00, 0x02, 0x04, 0x01, 0x00};  // sha-256, rsa
+  // make sure the test uses an algorithm that is legal for
+  // tls 1.3 (or tls 1.3 will throw a handshake failure alert
+  // instead of a decode error alert)
+  const uint8_t val[] = {0x00, 0x02, 0x08, 0x09, 0x00};  // sha-256, rsa-pss-pss
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(std::make_shared<TlsExtensionReplacer>(
       client_, ssl_signature_algorithms_xtn, extension));
@@ -1129,6 +1132,15 @@ TEST_P(TlsExtensionTest13, EmptyVersionList) {
 TEST_P(TlsExtensionTest13, OddVersionList) {
   static const uint8_t kExt[] = {0x00, 0x01, 0x00};
   ConnectWithBogusVersionList(kExt, sizeof(kExt));
+}
+
+TEST_P(TlsExtensionTest13, SignatureAlgorithmsInvalidTls13) {
+  // testing the case where we ask for a invalid parameter for tls13
+  const uint8_t val[] = {0x00, 0x02, 0x04, 0x01};  // sha-256, rsa-pkcs1
+  DataBuffer extension(val, sizeof(val));
+  ClientHelloErrorTest(std::make_shared<TlsExtensionReplacer>(
+                           client_, ssl_signature_algorithms_xtn, extension),
+                       kTlsAlertHandshakeFailure);
 }
 
 // Use the stream version number for TLS 1.3 (0x0304) in DTLS.

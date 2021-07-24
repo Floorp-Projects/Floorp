@@ -1,0 +1,79 @@
+.. _mozilla_projects_nss_nss_3_66_release_notes:
+
+NSS 3.66 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.66 was released on **27 May 2021**.
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_66_RTM. NSS 3.66 requires NSPR 4.30 or newer.
+
+   NSS 3.66 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_66_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _bugs_fixed_in_nss_3.66:
+
+`Bugs fixed in NSS 3.66 <#bugs_fixed_in_nss_3.66>`__
+----------------------------------------------------
+
+.. container::
+
+   -  Bug 1710716 - Remove Expired Sonera Class2 CA from NSS.
+   -  Bug 1710716 - Remove Expired Root Certificates from NSS - QuoVadis Root Certification Authority.
+   -  Bug 1708307 - Remove Trustis FPS Root CA from NSS.
+   -  Bug 1707097 - Add Certum Trusted Root CA to NSS.
+   -  Bug 1707097 - Add Certum EC-384 CA to NSS.
+   -  Bug 1703942 - Add ANF Secure Server Root CA to NSS.
+   -  Bug 1697071 - Add GLOBALTRUST 2020 root cert to NSS.
+   -  Bug 1712184 - NSS tools manpages need to be updated to reflect that sqlite is the default database.
+   -  Bug 1712230 - Don't build ppc-gcm.s with clang integrated assembler.
+   -  Bug 1712211 - Strict prototype error when trying to compile nss code that includes blapi.h.
+   -  Bug 1710773 - NSS needs FIPS 180-3 FIPS indicators.
+   -  Bug 1709291 - Add VerifyCodeSigningCertificateChain.
+   -  Use GNU tar for the release helper script.
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.66 shared libraries are backwards-compatible with all older NSS 3.x shared libraries. A
+   program linked with older NSS 3.x shared libraries will work with NSS 3.66 shared libraries
+   without recompiling or relinking. Furthermore, applications that restrict their use of NSS APIs
+   to the functions listed in NSS Public Functions will remain compatible with future versions of
+   the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).
+
+`Notes <#notes>`__
+------------------
+
+.. container::
+
+   To realign the NSS and Firefox release schedules, the next cycle for
+   NSS 3.67 will be very short and the release happen on June 10th.
+   https://wiki.mozilla.org/NSS:Release_Versions
+
+   Bug 1712230 introduced a correctness issue for GCM on ppcle64, the fix will
+   be part of NSS 3.67.

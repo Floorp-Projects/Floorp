@@ -1,0 +1,61 @@
+.. _mozilla_projects_nss_nss_3_68_release_notes:
+
+NSS 3.68 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.68 was released on **8 July 2021**.
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_68_RTM. NSS 3.68 requires NSPR 4.32 or newer.
+
+   NSS 3.68 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_68_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _bugs_fixed_in_nss_3.68:
+
+`Bugs fixed in NSS 3.68 <#bugs_fixed_in_nss_3.68>`__
+----------------------------------------------------
+
+.. container::
+
+   -  Bug 1713562 - Fix test leak.
+   -  Bug 1717452 - NSS 3.68 should depend on NSPR 4.32.
+   -  Bug 1693206 - Implement PKCS8 export of ECDSA keys.
+   -  Bug 1712883 - DTLS 1.3 draft-43.
+   -  Bug 1655493 - Support SHA2 HW acceleration using Intel SHA Extension.
+   -  Bug 1713562 - Validate ECH public names.
+   -  Bug 1717610 - Add function to get seconds from epoch from pkix::Time.
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.68 shared libraries are backwards-compatible with all older NSS 3.x shared libraries. A
+   program linked with older NSS 3.x shared libraries will work with NSS 3.68 shared libraries
+   without recompiling or relinking. Furthermore, applications that restrict their use of NSS APIs
+   to the functions listed in NSS Public Functions will remain compatible with future versions of
+   the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).

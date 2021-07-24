@@ -379,10 +379,10 @@ void TlsConnectTestBase::ExpectResumption(SessionResumptionMode expected,
 }
 
 void TlsConnectTestBase::EnsureTlsSetup() {
-  EXPECT_TRUE(server_->EnsureTlsSetup(server_model_ ? server_model_->ssl_fd()
-                                                    : nullptr));
-  EXPECT_TRUE(client_->EnsureTlsSetup(client_model_ ? client_model_->ssl_fd()
-                                                    : nullptr));
+  EXPECT_TRUE(server_->EnsureTlsSetup(
+      server_model_ ? server_model_->ssl_fd().get() : nullptr));
+  EXPECT_TRUE(client_->EnsureTlsSetup(
+      client_model_ ? client_model_->ssl_fd().get() : nullptr));
   server_->SetAntiReplayContext(anti_replay_);
   EXPECT_EQ(SECSuccess, SSL_SetTimeFunc(client_->ssl_fd(),
                                         TlsConnectTestBase::TimeFunc, &now_));
