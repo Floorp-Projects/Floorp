@@ -150,6 +150,18 @@
   cursor: pointer;
 }
 
+:link {
+  color: LinkText;
+}
+
+:any-link:active {
+  color: ActiveText;
+}
+
+:visited {
+  color: VisitedText;
+}
+
 :focus-visible {
   /* Don't specify the outline-color, we should always use initial value. */
   outline: 1px dotted;

@@ -137,9 +137,9 @@ async function userAgentStylesVisible(inspector, view) {
   );
   ok(
     uaRules.some(rule => {
-      return rule.matchedSelectors.includes("*|*:link");
+      return rule.matchedSelectors.includes(":link");
     }),
-    "There is a rule for *|*:link"
+    "There is a rule for :link"
   );
   ok(
     uaRules.some(rule => {
