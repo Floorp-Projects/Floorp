@@ -176,6 +176,10 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Editar</string>
 
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Pantalla d\'aniciu</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Nun ye posible conectase porque nun se reconoz l\'esquema de la URL.</string>
@@ -396,6 +400,11 @@
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s en %2$s %3$s</string>
+
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Tarxetes de creitu</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Señes</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -983,6 +992,8 @@
     <string name="notification_pbm_action_delete_and_open">Desaniciar y abrir</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Cola potencia de</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Desanicióse la coleición</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1584,7 +1595,7 @@ en llinia y con nós.</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">La cadena de busca a usar</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Troca la consulta por «%s». Exemplu:\nhttps://www.duckduckgo.com/?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Troca la consulta por «%s». Exemplu:\nhttps://www.duckduckgo.com/?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Deprender más</string>
 

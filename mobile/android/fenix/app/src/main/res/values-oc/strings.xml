@@ -57,6 +57,9 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">O afichar tot</string>
 
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Mostrar lo boton dels marcapaginas salvats</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s es produch per Mozilla.</string>
 
@@ -110,6 +113,9 @@
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Mai visitats</string>
 
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Tornar a aqueste onglet</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">O afichar tot</string>
 
@@ -1683,7 +1689,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Cadena de recèrca d’utilizar</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Remplaçar los tèrmes de la recèrca per « %s ». Per exemple :\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Remplaçar los tèrmes de la recèrca per « %s ». Per exemple :\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Ne saber mai</string>
 
