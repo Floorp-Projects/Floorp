@@ -1295,7 +1295,7 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
                                   bool validPromotionRate,
                                   double promotionRate) {
   size_t sitesPretenured = pretenuringNursery.doPretenuring(
-      gc, validPromotionRate, promotionRate, reportPretenuring_);
+      gc, reason, validPromotionRate, promotionRate, reportPretenuring_);
 
   bool highPromotionRate =
       validPromotionRate && promotionRate > tunables().pretenureThreshold();

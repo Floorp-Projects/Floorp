@@ -73,7 +73,8 @@ bool PretenuringNursery::canCreateAllocSite() {
          allocSitesCreated < MaxAllocSitesPerMinorGC;
 }
 
-size_t PretenuringNursery::doPretenuring(GCRuntime* gc, bool validPromotionRate,
+size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
+                                         bool validPromotionRate,
                                          double promotionRate,
                                          bool reportInfo) {
   mozilla::Maybe<AutoGCSession> session;
@@ -99,7 +100,7 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, bool validPromotionRate,
   }
 
   if (reportInfo) {
-    AllocSite::printInfoHeader();
+    AllocSite::printInfoHeader(reason, promotionRate);
   }
 
   AllocSite* site = allocatedSites;
@@ -345,8 +346,10 @@ bool PretenuringZone::shouldResetPretenuredAllocSites() {
 }
 
 /* static */
-void AllocSite::printInfoHeader() {
-  fprintf(stderr, "Pretenuring info after minor GC:\n");
+void AllocSite::printInfoHeader(JS::GCReason reason, double promotionRate) {
+  fprintf(stderr,
+          "Pretenuring info after %s minor GC with %4.1f%% promotion rate:\n",
+          ExplainGCReason(reason), promotionRate * 100.0);
 }
 
 /* static */
