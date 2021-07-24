@@ -29,10 +29,13 @@ class RelativeLuminanceUtils {
     float g = ComputeComponent(NS_GET_G(aColor));
     float b = ComputeComponent(NS_GET_B(aColor));
     float luminance = ComputeFromComponents(r, g, b);
-    float factor = aLuminance / luminance;
-    uint8_t r1 = DecomputeComponent(r * factor);
-    uint8_t g1 = DecomputeComponent(g * factor);
-    uint8_t b1 = DecomputeComponent(b * factor);
+    float factor = (aLuminance + 0.05f) / (luminance + 0.05f);
+    uint8_t r1 =
+        DecomputeComponent(std::max(0.0f, (r + 0.05f) * factor - 0.05f));
+    uint8_t g1 =
+        DecomputeComponent(std::max(0.0f, (g + 0.05f) * factor - 0.05f));
+    uint8_t b1 =
+        DecomputeComponent(std::max(0.0f, (b + 0.05f) * factor - 0.05f));
     return NS_RGBA(r1, g1, b1, NS_GET_A(aColor));
   }
 
