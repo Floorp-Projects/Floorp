@@ -6808,9 +6808,30 @@
 # Whether the `accent-color` css property is enabled.
 - name: layout.css.accent-color.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
+
+# The minimum contrast ratio between the accent color foreground and background
+# colors.
+#
+# We don't use this for text, so we need a contrast of at least AA (for user
+# interface components and graphical objects), which per WCAG is 3:1
+- name: layout.css.accent-color.min-contrast-ratio
+  type: float
+  value: 3.0
+  mirror: always
+
+# The target contrast ratio between the accent color foreground and background
+# colors when darkening.
+#
+# We aim a bit further than the minimum contrast ratio, which seems to provide
+# nice results in practice.
+- name: layout.css.accent-color.darkening-target-contrast-ratio
+  type: float
+  value: 6.0
+  mirror: always
+
 
 # Whether the `aspect-ratio` in css-sizing-4 is enabled.
 - name: layout.css.aspect-ratio.enabled
