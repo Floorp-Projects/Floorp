@@ -19,17 +19,17 @@ class Document;
 
 struct PreferenceSheet {
   struct Prefs {
-    nscolor mLinkColor = NS_RGB(0x00, 0x00, 0xEE);
-    nscolor mActiveLinkColor = NS_RGB(0xEE, 0x00, 0x00);
-    nscolor mVisitedLinkColor = NS_RGB(0x55, 0x1A, 0x8B);
+    struct {
+      nscolor mLink = NS_RGB(0x00, 0x00, 0xEE);
+      nscolor mActiveLink = NS_RGB(0xEE, 0x00, 0x00);
+      nscolor mVisitedLink = NS_RGB(0x55, 0x1A, 0x8B);
 
-    nscolor mDefaultColor = NS_RGB(0, 0, 0);
-    nscolor mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
+      nscolor mDefault = NS_RGB(0, 0, 0);
+      nscolor mDefaultBackground = NS_RGB(0xFF, 0xFF, 0xFF);
 
-    nscolor mLinkBackgroundColor = mDefaultBackgroundColor;
-
-    nscolor mFocusTextColor = mDefaultColor;
-    nscolor mFocusBackgroundColor = mDefaultBackgroundColor;
+      nscolor mFocusText = mDefault;
+      nscolor mFocusBackground = mDefaultBackground;
+    } mColors;
 
     bool mIsChrome = false;
     bool mUseAccessibilityTheme = false;

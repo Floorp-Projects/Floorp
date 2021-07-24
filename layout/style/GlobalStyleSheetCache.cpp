@@ -628,8 +628,9 @@ void GlobalStyleSheetCache::BuildPreferenceSheet(
   }
 
   if (StaticPrefs::browser_display_use_focus_colors()) {
-    nscolor focusText = aPrefs.mFocusTextColor;
-    nscolor focusBG = aPrefs.mFocusBackgroundColor;
+    const auto& colors = aPrefs.mColors;
+    nscolor focusText = colors.mFocusText;
+    nscolor focusBG = colors.mFocusBackground;
     sheetText.AppendPrintf(
         "*:focus, *:focus > font { color: #%02x%02x%02x !important; "
         "background-color: #%02x%02x%02x !important; }\n",
