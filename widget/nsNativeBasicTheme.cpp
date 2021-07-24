@@ -160,6 +160,40 @@ ColorPalette::ColorPalette(nscolor aAccent, nscolor aForeground) {
   mAccentDarker = sRGBColor::FromABGR(GetDarker(aAccent));
 }
 
+static nscolor ComputeCustomAccentForeground(nscolor aColor) {
+  // Contrast ratio is defined in
+  // https://www.w3.org/TR/WCAG20/#contrast-ratiodef as:
+  //
+  //   (L1 + 0.05) / (L2 + 0.05)
+  //
+  // Where L1 is the lighter color, and L2 is the darker one. So we determine
+  // whether we're dark or light and resolve the equation for the target ratio.
+  //
+  // So when lightening:
+  //
+  //   L1 = k * (L2 + 0.05) - 0.05
+  //
+  // And when darkening:
+  //
+  //   L2 = (L1 + 0.05) / k - 0.05
+  //
+  const float luminance = RelativeLuminanceUtils::Compute(aColor);
+
+  // We generally prefer white unless we can't because the color is really light
+  // and we can't provide reasonable contrast.
+  const float ratioWithWhite = 1.05f / (luminance + 0.05f);
+  const bool canBeWhite =
+      ratioWithWhite >=
+      StaticPrefs::layout_css_accent_color_min_contrast_ratio();
+  if (canBeWhite) {
+    return NS_RGB(0xff, 0xff, 0xff);
+  }
+  const float targetRatio =
+      StaticPrefs::layout_css_accent_color_darkening_target_contrast_ratio();
+  const float targetLuminance = (luminance + 0.05f) / targetRatio - 0.05f;
+  return RelativeLuminanceUtils::Adjust(aColor, targetLuminance);
+}
+
 }  // namespace
 
 class nsNativeBasicTheme::AccentColor {
@@ -189,12 +223,7 @@ class nsNativeBasicTheme::AccentColor {
     if (!mAccentColor) {
       return sDefaultPalette.mForeground;
     }
-    // TODO(emilio): Maybe sColorBlack is too dark.
-    //
-    // TODO(emilio): We should probably allow the page to specify this one too:
-    // https://github.com/w3c/csswg-drafts/issues/6159
-    return nsNativeTheme::IsDarkColor(*mAccentColor) ? sColorWhite
-                                                     : sColorBlack;
+    return sRGBColor::FromABGR(ComputeCustomAccentForeground(*mAccentColor));
   }
 
   sRGBColor GetLight() const {
