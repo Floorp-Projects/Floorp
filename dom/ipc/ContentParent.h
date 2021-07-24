@@ -152,9 +152,9 @@ class ContentParent final
   static LogModule* GetLog();
 
   /**
-   * Create a subprocess suitable for use later as a content process.
+   * Create a ContentParent suitable for use later as a content process.
    */
-  static RefPtr<LaunchPromise> PreallocateProcess();
+  static already_AddRefed<ContentParent> MakePreallocProcess();
 
   /**
    * Start up the content-process machinery.  This might include
@@ -1444,7 +1444,7 @@ class ContentParent final
   // Return an existing ContentParent if possible. Otherwise, `nullptr`.
   static already_AddRefed<ContentParent> GetUsedBrowserProcess(
       const nsACString& aRemoteType, nsTArray<ContentParent*>& aContentParents,
-      uint32_t aMaxContentParents, bool aPreferUsed);
+      uint32_t aMaxContentParents, bool aPreferUsed, ProcessPriority aPriority);
 
   void AddToPool(nsTArray<ContentParent*>&);
   void RemoveFromPool(nsTArray<ContentParent*>&);
