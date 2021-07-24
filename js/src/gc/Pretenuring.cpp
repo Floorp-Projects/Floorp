@@ -75,8 +75,8 @@ bool PretenuringNursery::canCreateAllocSite() {
 
 size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
                                          bool validPromotionRate,
-                                         double promotionRate,
-                                         bool reportInfo) {
+                                         double promotionRate, bool reportInfo,
+                                         size_t reportThreshold) {
   mozilla::Maybe<AutoGCSession> session;
 
   size_t sitesActive = 0;
@@ -146,7 +146,7 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
       }
     }
 
-    if (reportInfo) {
+    if (reportInfo && site->allocCount() >= reportThreshold) {
       site->printInfo(hasPromotionRate, promotionRate, wasInvalidated);
     }
 
@@ -160,7 +160,7 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
   for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
     AllocSite* site = zone->optimizedAllocSite();
     if (site->hasNurseryAllocations()) {
-      if (reportInfo) {
+      if (reportInfo && site->allocCount() >= reportThreshold) {
         site->printInfo(false, 0.0, false);
       }
       site->resetNurseryAllocations();
