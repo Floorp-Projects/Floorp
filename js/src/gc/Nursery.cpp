@@ -196,6 +196,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       canAllocateBigInts_(true),
       reportDeduplications_(false),
       reportPretenuring_(false),
+      reportPretenuringThreshold_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
       hasRecentGrowthData(false),
       smoothedGrowthFactor(1.0),
@@ -215,6 +216,11 @@ js::Nursery::Nursery(GCRuntime* gc)
   }
 }
 
+static void PrintAndExit(const char* message) {
+  fprintf(stderr, "%s", message);
+  exit(0);
+}
+
 static const char* GetEnvVar(const char* name, const char* helpMessage) {
   const char* value = getenv(name);
   if (!value) {
@@ -222,8 +228,7 @@ static const char* GetEnvVar(const char* name, const char* helpMessage) {
   }
 
   if (strcmp(value, "help") == 0) {
-    fprintf(stderr, "%s", helpMessage);
-    exit(0);
+    PrintAndExit(helpMessage);
   }
 
   return value;
@@ -232,6 +237,25 @@ static const char* GetEnvVar(const char* name, const char* helpMessage) {
 static bool GetBoolEnvVar(const char* name, const char* helpMessage) {
   const char* env = GetEnvVar(name, helpMessage);
   return env && bool(atoi(env));
+}
+
+static void ReadReportPretenureEnv(const char* name, const char* helpMessage,
+                                   bool* enabled, size_t* threshold) {
+  *enabled = false;
+  *threshold = 0;
+
+  const char* env = GetEnvVar(name, helpMessage);
+  if (!env) {
+    return;
+  }
+
+  char* end;
+  *threshold = strtol(env, &end, 10);
+  if (end == env || *end) {
+    PrintAndExit(helpMessage);
+  }
+
+  *enabled = true;
 }
 
 bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
@@ -244,10 +268,12 @@ bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
       "JS_GC_REPORT_STATS=1\n"
       "\tAfter a minor GC, report how many strings were deduplicated.\n");
 
-  reportPretenuring_ = GetBoolEnvVar(
+  ReadReportPretenureEnv(
       "JS_GC_REPORT_PRETENURE",
-      "JS_GC_REPORT_PRETENURE=1\n"
-      "\tAfter a minor GC, report information about pretenuring.\n");
+      "JS_GC_REPORT_PRETENURE=N\n"
+      "\tAfter a minor GC, report information about pretenuring, including\n"
+      "\tallocation sites with at least N allocations.\n",
+      &reportPretenuring_, &reportPretenuringThreshold_);
 
   if (!gc->storeBuffer().enable()) {
     return false;
@@ -1295,7 +1321,8 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
                                   bool validPromotionRate,
                                   double promotionRate) {
   size_t sitesPretenured = pretenuringNursery.doPretenuring(
-      gc, reason, validPromotionRate, promotionRate, reportPretenuring_);
+      gc, reason, validPromotionRate, promotionRate, reportPretenuring_,
+      reportPretenuringThreshold_);
 
   bool highPromotionRate =
       validPromotionRate && promotionRate > tunables().pretenureThreshold();

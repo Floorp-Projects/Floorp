@@ -503,8 +503,10 @@ class Nursery {
   // Report how many strings were deduplicated.
   bool reportDeduplications_;
 
-  // Report information on allocation sites and pretenuring.
+  // Whether to report information on pretenuring, and if so the allocation
+  // threshold at which to report details of each allocation site.
   bool reportPretenuring_;
+  size_t reportPretenuringThreshold_;
 
   // Whether and why a collection of this nursery has been requested. This is
   // mutable as it is set by the store buffer, which otherwise cannot modify
