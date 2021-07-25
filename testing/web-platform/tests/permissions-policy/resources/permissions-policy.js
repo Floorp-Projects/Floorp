@@ -97,15 +97,17 @@ async function test_feature_in_iframe(feature_name, feature_promise_factory) {
 // Returns true if the URL for this page indicates that it is embedded in an
 // iframe.
 function page_loaded_in_iframe() {
-  return location.hash.startsWith('#iframe');
+  return new URLSearchParams(location.search).get('in-iframe');
 }
 
 // Returns a same-origin (relative) URL suitable for embedding in an iframe for
 // testing the availability of the feature.
 function same_origin_url(feature_name) {
-  // Append #iframe to the URL so we can detect the iframe'd version of the
-  // page.
-  return location.pathname + '#iframe#' + feature_name;
+  // Add an "in-iframe" query parameter so that we can detect the iframe'd
+  // version of the page and testharness script loading can be disabled in
+  // that version, as required for use of testdriver in non-toplevel browsing
+  // contexts.
+  return location.pathname + '?in-iframe=yes#' + feature_name;
 }
 
 // Returns a cross-origin (absolute) URL suitable for embedding in an iframe for
