@@ -2,8 +2,10 @@
 <meta charset=utf-8>
 <body>
   <button id="button">User gesture</button>
-  <script src="/resources/testharness.js"></script>
-  <script src="/resources/testharnessreport.js"></script>
+  <script src="/resources/testharness.js"
+          type="text/javascript{{GET[in-iframe]}}"></script>
+  <script src="/resources/testharnessreport.js"
+          type="text/javascript{{GET[in-iframe]}}"></script>
   <script src="/resources/testdriver.js"></script>
   <script src="/resources/testdriver-vendor.js"></script>
   <script src="/common/get-host-info.sub.js"></script>
