@@ -259,6 +259,12 @@ static bool IsContainerLayerItem(nsDisplayItem* aItem) {
 static bool DetectContainerLayerPropertiesBoundsChange(
     nsDisplayItem* aItem, BlobItemData* aData,
     nsDisplayItemGeometry& aGeometry) {
+  if (aItem->GetType() == DisplayItemType::TYPE_FILTER) {
+    // Filters get clipped to the BuildingRect since they can
+    // have huge bounds outside of the visible area.
+    aGeometry.mBounds = aGeometry.mBounds.Intersect(aItem->GetBuildingRect());
+  }
+
   return !aGeometry.mBounds.IsEqualEdges(aData->mGeometry->mBounds);
 }
 
@@ -1010,8 +1016,10 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       // outside the invalid rect.
       if (aDirty) {
         auto filterItem = static_cast<nsDisplayFilters*>(aItem);
-        filterItem->SetPaintRect(
-            filterItem->GetClippedBounds(mDisplayListBuilder));
+
+        nsRegion visible(aItem->GetClippedBounds(mDisplayListBuilder));
+        visible.And(visible, aItem->GetBuildingRect());
+        aItem->SetPaintRect(visible.GetBounds());
 
         filterItem->Paint(mDisplayListBuilder, aContext);
         TakeExternalSurfaces(aRecorder, aData->mExternalSurfaces, aRootManager,
