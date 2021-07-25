@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+<defs>
+<filter id="dropShadow" x="0" y="0" width="200%" height="200%">
+  <feOffset result="offOut" in="SourceAlpha" dx="1.5" dy="1.5"/>
+  <feGaussianBlur result="blurOut" in="offOut" stdDeviation="2"/>
+  <feBlend in="SourceGraphic" in2="blurOut" mode="normal"/>
+</filter>
+</defs>
+<g filter="url(#dropShadow)">
+  <rect x="-20000" y="-20000" width="40000" height="40000" fill="lime" />
+</g>
+</svg>
