@@ -1989,13 +1989,15 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
 	    ASSERT_NOT_REACHED;
 	}
 
+	/* It's possible that a degenerate clip caused the command to end up doing nothing when replayed. */
+	if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	    status = CAIRO_INT_STATUS_SUCCESS;
+
 	if (type == CAIRO_RECORDING_CREATE_REGIONS && command->header.region != CAIRO_RECORDING_REGION_NATIVE) {
 	    if (status == CAIRO_INT_STATUS_SUCCESS) {
 		command->header.region = CAIRO_RECORDING_REGION_NATIVE;
 	    } else if (status == CAIRO_INT_STATUS_IMAGE_FALLBACK) {
 		command->header.region = CAIRO_RECORDING_REGION_IMAGE_FALLBACK;
-		status = CAIRO_INT_STATUS_SUCCESS;
-	    } else if (status == CAIRO_INT_STATUS_NOTHING_TO_DO) {
 		status = CAIRO_INT_STATUS_SUCCESS;
 	    } else {
 		assert (_cairo_int_status_is_error (status));
