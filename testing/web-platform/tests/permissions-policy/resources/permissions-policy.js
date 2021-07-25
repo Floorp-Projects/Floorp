@@ -123,6 +123,8 @@ function cross_origin_url(base_url, feature_name) {
 // 3. Feature usage fails by default in a cross-origin iframe.
 // 4. Feature usage succeeds when an allow attribute is specified on a
 //    cross-origin iframe.
+// 5. Feature usage fails when an allow attribute is specified on a
+//    same-origin iframe with a value of "feature-name 'none'".
 //
 // The same page which called this function will be loaded in the iframe in
 // order to test feature usage there. When this function is called in that
@@ -185,6 +187,16 @@ function run_all_fp_tests_allow_self(
       },
       'permissions policy "' + feature_name +
           '" can be enabled in cross-origin iframes using "allow" attribute.');
+
+  // 5. Blocked in same-origin iframe with "allow" attribute set to 'none'.
+  async_test(
+      t => {
+        test_feature_availability_with_post_message_result(
+            t, same_origin_frame_pathname, '#' + error_name,
+            feature_name + " 'none'");
+      },
+      'permissions policy "' + feature_name +
+          '" can be disabled in same-origin iframes using "allow" attribute.');
 }
 
 // This function runs all permissions policy tests for a particular feature that
@@ -194,6 +206,8 @@ function run_all_fp_tests_allow_self(
 // 3. Feature usage succeeds by default in a cross-origin iframe.
 // 4. Feature usage fails when an allow attribute is specified on a
 //    cross-origin iframe with a value of "feature-name 'none'".
+// 5. Feature usage fails when an allow attribute is specified on a
+//    same-origin iframe with a value of "feature-name 'none'".
 //
 // The same page which called this function will be loaded in the iframe in
 // order to test feature usage there. When this function is called in that
