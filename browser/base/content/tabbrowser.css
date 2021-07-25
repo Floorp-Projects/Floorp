@@ -42,6 +42,11 @@
 
 .tab-label {
   white-space: nowrap;
+  line-height: 1.7;  /* override 'normal' in case of fallback math fonts with huge metrics */
+}
+
+.tab-secondary-label {
+  margin: -.3em 0 .3em; /* adjust margins to compensate for line-height of .tab-label */
 }
 
 .tab-label-container {
