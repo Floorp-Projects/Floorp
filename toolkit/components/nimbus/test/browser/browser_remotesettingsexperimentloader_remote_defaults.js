@@ -23,6 +23,9 @@ const {
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/NimbusTestUtils.jsm"
+);
 const { TelemetryEnvironment } = ChromeUtils.import(
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
@@ -33,7 +36,8 @@ const REMOTE_CONFIGURATION_AW = {
   configurations: [
     {
       slug: "a",
-      variables: { remoteValue: 24, enabled: false },
+      variables: { remoteValue: 24 },
+      enabled: false,
       targeting: "false",
       bucketConfig: {
         namespace: "nimbus-test-utils",
@@ -45,7 +49,8 @@ const REMOTE_CONFIGURATION_AW = {
     },
     {
       slug: "b",
-      variables: { remoteValue: 42, enabled: true },
+      variables: { remoteValue: 42 },
+      enabled: true,
       targeting: "true",
       bucketConfig: {
         namespace: "nimbus-test-utils",
@@ -63,7 +68,8 @@ const REMOTE_CONFIGURATION_NEWTAB = {
   configurations: [
     {
       slug: "a",
-      variables: { remoteValue: 1, enabled: false },
+      variables: { remoteValue: 1 },
+      enabled: false,
       targeting: "false",
       bucketConfig: {
         namespace: "nimbus-test-utils",
@@ -75,7 +81,8 @@ const REMOTE_CONFIGURATION_NEWTAB = {
     },
     {
       slug: "b",
-      variables: { remoteValue: 3, enabled: true },
+      variables: { remoteValue: 3 },
+      enabled: true,
       targeting: "true",
       bucketConfig: {
         namespace: "nimbus-test-utils",
@@ -87,7 +94,8 @@ const REMOTE_CONFIGURATION_NEWTAB = {
     },
     {
       slug: "c",
-      variables: { remoteValue: 2, enabled: false },
+      variables: { remoteValue: 2 },
+      enabled: false,
       targeting: "false",
       bucketConfig: {
         namespace: "nimbus-test-utils",
@@ -479,8 +487,7 @@ add_task(async function remote_defaults_no_mutation() {
 
 add_task(async function remote_defaults_active_experiments_check() {
   let barFeature = new ExperimentFeature("bar", {
-    description: "mochitest",
-    variables: { enabled: { type: "boolean" } },
+    bar: { description: "mochitest" },
   });
   let experimentOnlyRemoteDefault = {
     id: "bar",
@@ -488,12 +495,14 @@ add_task(async function remote_defaults_active_experiments_check() {
     configurations: [
       {
         slug: "a",
-        variables: { enabled: false },
+        variables: {},
+        enabled: false,
         targeting: "'mochitest-active-foo' in activeExperiments",
       },
       {
         slug: "b",
-        variables: { enabled: true },
+        variables: {},
+        enabled: true,
         targeting: "true",
       },
     ],
@@ -541,12 +550,10 @@ add_task(async function remote_defaults_active_remote_defaults() {
   ExperimentAPI._store._deleteForTests("foo");
   ExperimentAPI._store._deleteForTests("bar");
   let barFeature = new ExperimentFeature("bar", {
-    description: "mochitest",
-    variables: { enabled: { type: "boolean" } },
+    bar: { description: "mochitest" },
   });
   let fooFeature = new ExperimentFeature("foo", {
-    description: "mochitest",
-    variables: { enabled: { type: "boolean" } },
+    foo: { description: "mochitest" },
   });
   let remoteDefaults = [
     {
@@ -555,7 +562,8 @@ add_task(async function remote_defaults_active_remote_defaults() {
       configurations: [
         {
           slug: "a",
-          variables: { enabled: true },
+          variables: {},
+          enabled: true,
           targeting: "true",
         },
       ],
@@ -566,7 +574,8 @@ add_task(async function remote_defaults_active_remote_defaults() {
       configurations: [
         {
           slug: "b",
-          variables: { enabled: true },
+          variables: {},
+          enabled: true,
           targeting: "'bar' in activeRemoteDefaults",
         },
       ],
@@ -638,12 +647,14 @@ add_task(async function test_remote_defaults_no_bucketConfig() {
     configurations: [
       {
         slug: "a",
-        variables: { remoteValue: 24, enabled: false },
+        variables: { remoteValue: 24 },
+        enabled: false,
         targeting: "false",
       },
       {
         slug: "b",
-        variables: { remoteValue: 42, enabled: true },
+        variables: { remoteValue: 42 },
+        enabled: true,
         targeting: "true",
       },
     ],
@@ -677,23 +688,7 @@ add_task(async function test_remote_defaults_no_bucketConfig() {
 
 add_task(async function remote_defaults_variables_storage() {
   let barFeature = new ExperimentFeature("bar", {
-    bar: {
-      description: "mochitest",
-      variables: {
-        storage: {
-          type: "int",
-        },
-        object: {
-          type: "json",
-        },
-        string: {
-          type: "string",
-        },
-        bool: {
-          type: "boolean",
-        },
-      },
-    },
+    bar: { description: "mochitest" },
   });
   let remoteDefaults = [
     {
@@ -708,8 +703,8 @@ add_task(async function remote_defaults_variables_storage() {
             object: { foo: "foo" },
             string: "string",
             bool: true,
-            enabled: true,
           },
+          enabled: true,
           targeting: "true",
         },
       ],
@@ -720,10 +715,6 @@ add_task(async function remote_defaults_variables_storage() {
   await RemoteDefaultsLoader.syncRemoteDefaults("mochitest");
   await barFeature.ready();
 
-  Assert.ok(
-    Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}bar`, ""),
-    "Experiment stored in prefs"
-  );
   Assert.ok(
     Services.prefs.getIntPref(`${SYNC_DEFAULTS_PREF_BRANCH}bar.storage`, 0),
     "Stores variable in separate pref"
