@@ -7,6 +7,8 @@ const { ExtensionPermissions } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
 
+Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+
 // ExtensionParent.jsm is being imported lazily because when it is imported Services.appinfo will be
 // retrieved and cached (as a side-effect of Schemas.jsm being imported), and so Services.appinfo
 // will not be returning the version set by AddonTestUtils.createAppInfo and this test will
@@ -105,7 +107,7 @@ add_task(async function test_permissions_on_startup() {
   await extension.unload();
 });
 
-add_task(async function test_permissions() {
+async function test_permissions(manifest_version) {
   const REQUIRED_PERMISSIONS = ["downloads"];
   const REQUIRED_ORIGINS = ["*://site.com/", "*://*.domain.com/"];
   const REQUIRED_ORIGINS_NORMALIZED = ["*://site.com/*", "*://*.domain.com/*"];
@@ -153,7 +155,9 @@ add_task(async function test_permissions() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      permissions: [...REQUIRED_PERMISSIONS, ...REQUIRED_ORIGINS],
+      manifest_version,
+      permissions: REQUIRED_PERMISSIONS,
+      host_permissions: REQUIRED_ORIGINS,
       optional_permissions: [...OPTIONAL_PERMISSIONS, ...OPTIONAL_ORIGINS],
     },
     useAddonManager: "permanent",
@@ -339,7 +343,9 @@ add_task(async function test_permissions() {
   deepEqual(result, perms, "Back to default permissions after removing more");
 
   await extension.unload();
-});
+}
+add_task(() => test_permissions(2));
+add_task(() => test_permissions(3));
 
 add_task(async function test_startup() {
   async function background() {
@@ -413,14 +419,15 @@ add_task(async function test_startup() {
 });
 
 // Test that we don't prompt for permissions an extension already has.
-add_task(async function test_alreadyGranted() {
-  const REQUIRED_PERMISSIONS = [
-    "geolocation",
+async function test_alreadyGranted(manifest_version) {
+  const REQUIRED_PERMISSIONS = ["geolocation"];
+  const REQUIRED_ORIGINS = [
     "*://required-host.com/",
     "*://*.required-domain.com/",
   ];
   const OPTIONAL_PERMISSIONS = [
     ...REQUIRED_PERMISSIONS,
+    ...REQUIRED_ORIGINS,
     "clipboardRead",
     "*://optional-host.com/",
     "*://*.optional-domain.com/",
@@ -448,7 +455,9 @@ add_task(async function test_alreadyGranted() {
     },
 
     manifest: {
+      manifest_version,
       permissions: REQUIRED_PERMISSIONS,
+      host_permissions: REQUIRED_ORIGINS,
       optional_permissions: OPTIONAL_PERMISSIONS,
     },
 
@@ -537,7 +546,9 @@ add_task(async function test_alreadyGranted() {
   });
 
   await extension.unload();
-});
+}
+add_task(() => test_alreadyGranted(2));
+add_task(() => test_alreadyGranted(3));
 
 // IMPORTANT: Do not change this list without review from a Web Extensions peer!
 
@@ -638,7 +649,7 @@ add_task(async function test_optional_all_urls() {
 });
 
 // Check that optional permissions are not included in update prompts
-add_task(async function test_permissions_prompt() {
+async function test_permissions_prompt(manifest_version) {
   function background() {
     browser.test.onMessage.addListener(async (msg, arg) => {
       if (msg == "request") {
@@ -653,10 +664,11 @@ add_task(async function test_permissions_prompt() {
     manifest: {
       name: "permissions test",
       description: "permissions test",
-      manifest_version: 2,
+      manifest_version,
       version: "1.0",
 
-      permissions: ["tabs", "https://test1.example.com/*"],
+      permissions: ["tabs"],
+      host_permissions: ["https://test1.example.com/*"],
       optional_permissions: ["clipboardWrite", "<all_urls>"],
 
       content_scripts: [
@@ -687,12 +699,13 @@ add_task(async function test_permissions_prompt() {
     manifest: {
       name: "permissions test",
       description: "permissions test",
-      manifest_version: 2,
+      manifest_version,
       version: "2.0",
 
       applications: { gecko: { id: extension.id } },
 
-      permissions: [...PERMS, ...ORIGINS],
+      permissions: PERMS,
+      host_permissions: ORIGINS,
       optional_permissions: ["clipboardWrite", "<all_urls>"],
     },
   });
@@ -727,7 +740,9 @@ add_task(async function test_permissions_prompt() {
   );
 
   await extension.unload();
-});
+}
+add_task(() => test_permissions_prompt(2));
+add_task(() => test_permissions_prompt(3));
 
 // Check that internal permissions can not be set and are not returned by the API.
 add_task(async function test_internal_permissions() {

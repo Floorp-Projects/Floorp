@@ -23,6 +23,8 @@ AddonTestUtils.overrideCertDB();
 AddonTestUtils.usePrivilegedSignatures = id => id.startsWith("privileged");
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
+Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+
 async function getManifestPermissions(extensionData) {
   let extension = ExtensionTestCommon.generate(extensionData);
   // Some tests contain invalid permissions; ignore the warnings about their invalidity.
@@ -341,30 +343,40 @@ add_task(async function host_permissions() {
       ],
     },
   ];
-  for (let {
-    description,
-    manifest,
-    expectedOrigins,
-    expectedWarnings,
-    options,
-  } of permissionTestCases) {
-    let manifestPermissions = await getManifestPermissions({
+  for (let manifest_version of [2, 3]) {
+    for (let {
+      description,
       manifest,
-    });
-
-    deepEqual(
-      manifestPermissions.origins,
       expectedOrigins,
-      `Expected origins (${description})`
-    );
-    deepEqual(
-      manifestPermissions.permissions,
-      [],
-      `Expected no non-host permissions (${description})`
-    );
+      expectedWarnings,
+      options,
+    } of permissionTestCases) {
+      manifest = Object.assign({}, manifest, { manifest_version });
+      if (manifest_version > 2) {
+        manifest.host_permissions = manifest.permissions;
+        manifest.permissions = [];
+      }
 
-    let warnings = getPermissionWarnings(manifestPermissions, options);
-    deepEqual(warnings, expectedWarnings, `Expected warnings (${description})`);
+      let manifestPermissions = await getManifestPermissions({ manifest });
+
+      deepEqual(
+        manifestPermissions.origins,
+        expectedOrigins,
+        `Expected origins (${description})`
+      );
+      deepEqual(
+        manifestPermissions.permissions,
+        [],
+        `Expected no non-host permissions (${description})`
+      );
+
+      let warnings = getPermissionWarnings(manifestPermissions, options);
+      deepEqual(
+        warnings,
+        expectedWarnings,
+        `Expected warnings (${description})`
+      );
+    }
   }
 });
 
