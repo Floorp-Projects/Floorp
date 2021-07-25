@@ -35,6 +35,9 @@
     }
   }
 
+  if (page_loaded_in_iframe()) {
+    test_driver.set_test_context(window.parent);
+  }
   const cross_domain = get_host_info().HTTPS_REMOTE_ORIGIN;
   run_all_fp_tests_allow_self(
     cross_domain,
