@@ -6,9 +6,6 @@ const { _ExperimentManager } = ChromeUtils.import(
 const { ExperimentStore } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentStore.jsm"
 );
-const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/NimbusTestUtils.jsm"
-);
 const { Sampling } = ChromeUtils.import(
   "resource://gre/modules/components-utils/Sampling.jsm"
 );
@@ -163,8 +160,13 @@ add_task(async function test_onRecipe_isEnrollmentPaused() {
   const updatedRecipe = ExperimentFakes.recipe("foo", {
     isEnrollmentPaused: true,
   });
-  await manager.enroll(fooRecipe);
+  let enrollmentPromise = new Promise(resolve =>
+    manager.store.on(`update:${fooRecipe.slug}`, resolve)
+  );
+  await manager.enroll(fooRecipe, "test");
+  await enrollmentPromise;
   await manager.onRecipe(updatedRecipe, "test");
+  console.log("XXX", manager.updateEnrollment.callCount);
   Assert.equal(
     manager.updateEnrollment.calledWith(updatedRecipe),
     true,
@@ -186,10 +188,15 @@ add_task(async function test_onFinalize_unenroll() {
 
   // Add an experiment to the store without calling .onRecipe
   // This simulates an enrollment having happened in the past.
-  manager.store.addExperiment(ExperimentFakes.experiment("foo"));
+  let recipe0 = ExperimentFakes.experiment("foo", {
+    experimentType: "unittest",
+    userFacingName: "foo",
+    userFacingDescription: "foo",
+    lastSeen: Date.now().toLocaleString(),
+    source: "test",
+  });
+  await manager.store.addExperiment(recipe0);
 
-  // Simulate adding some other recipes
-  await manager.onStartup();
   const recipe1 = ExperimentFakes.recipe("bar");
   // Unique features to prevent overlap
   recipe1.branches[0].feature.featureId = "red";

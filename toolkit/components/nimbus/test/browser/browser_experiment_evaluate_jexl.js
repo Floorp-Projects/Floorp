@@ -75,10 +75,26 @@ add_task(async function test_evaluate_active_experiments_activeExperiments() {
   const slug = "foo" + Math.random();
   // Init the store before we use it
   await ExperimentManager.onStartup();
-  ExperimentManager.store.addExperiment(ExperimentFakes.experiment(slug));
-  registerCleanupFunction(() => {
-    ExperimentManager.store._deleteForTests(slug);
-  });
+  let {
+    enrollmentPromise,
+    doExperimentCleanup,
+  } = ExperimentFakes.enrollmentHelper(
+    ExperimentFakes.recipe(slug, {
+      branches: [
+        {
+          slug: "mochitest-active-foo",
+          feature: {
+            enabled: true,
+            featureId: "foo",
+            value: null,
+          },
+        },
+      ],
+      active: true,
+    })
+  );
+
+  await enrollmentPromise;
 
   Assert.equal(
     await RemoteSettingsExperimentLoader.evaluateJexl(
@@ -97,4 +113,6 @@ add_task(async function test_evaluate_active_experiments_activeExperiments() {
     false,
     "should not find an experiment that doesn't exist"
   );
+
+  await doExperimentCleanup();
 });
