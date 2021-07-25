@@ -21,9 +21,9 @@ function assert_permissions_policy_supported() {
 //        Example: expect_feature_available_default(data, feature_description).
 //    feature_name: Optional argument, only provided when testing iframe allow
 //      attribute. "feature_name" is the feature name of a policy controlled
-//      feature (https://wicg.github.io/permissions-policy/#features).
+//      feature (https://w3c.github.io/webappsec-permissions-policy/#features).
 //      See examples at:
-//      https://github.com/WICG/permissions-policy/blob/master/features.md
+//      https://github.com/w3c/webappsec-permissions-policy/blob/main/features.md
 //    allow_attribute: Optional argument, only used for testing fullscreen or
 //      payment: either "allowfullscreen" or "allowpaymentrequest" is passed.
 function test_feature_availability(
@@ -40,12 +40,11 @@ function test_feature_availability(
     frame.setAttribute(allow_attribute, true);
   }
 
-  window.addEventListener('message', test.step_func(function handler(evt) {
+  window.addEventListener('message', test.step_func(evt => {
     if (evt.source === frame.contentWindow &&
         evt.data.type === 'availability-result') {
       expect_feature_available(evt.data, feature_description);
       document.body.removeChild(frame);
-      window.removeEventListener('message', handler);
       test.done();
     }
   }));
