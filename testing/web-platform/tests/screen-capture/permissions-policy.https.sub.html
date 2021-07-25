@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <body>
-  <button id="button">User gesture</button>
   <script src="/resources/testharness.js"
           type="text/javascript{{GET[in-iframe]}}"></script>
   <script src="/resources/testharnessreport.js"
@@ -14,9 +13,7 @@
   'use strict';
 
   async function getDisplayMedia(constraints) {
-    const p = new Promise(r => button.onclick = r);
-    await test_driver.click(button);
-    await p;
+    await test_driver.bless('transient activation for getDisplayMedia()');
     return navigator.mediaDevices.getDisplayMedia(constraints);
   }
 
