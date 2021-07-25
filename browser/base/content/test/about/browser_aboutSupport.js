@@ -111,8 +111,8 @@ add_task(async function test_remote_configuration() {
     feature: NimbusFeatures.aboutwelcome,
     configuration: {
       slug: "about:studies-configuration-slug",
-      variables: { enabled: true },
-      targeting: "true",
+      enabled: true,
+      variables: {},
     },
   });
 

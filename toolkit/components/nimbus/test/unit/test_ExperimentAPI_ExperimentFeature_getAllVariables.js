@@ -11,6 +11,10 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
 const { cleanupStorePrefCache } = ExperimentFakes;
 
 async function setupForExperimentFeature() {
@@ -84,7 +88,7 @@ add_task(
       },
     });
 
-    await manager.store.addExperiment(recipe);
+    manager.store.addExperiment(recipe);
 
     const featureInstance = new ExperimentFeature(
       FEATURE_ID,
