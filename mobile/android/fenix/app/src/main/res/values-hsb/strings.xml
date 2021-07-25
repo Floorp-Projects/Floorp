@@ -334,7 +334,7 @@
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Datowe wuběry</string>
     <!-- Preference for data collection -->
-    <string name="preferences_data_collection">Zběranje datow</string>
+    <string name="preferences_data_collection">Hromadźenje datow</string>
     <!-- Preference linking to the privacy notice -->
     <string name="preferences_privacy_link">Zdźělenka priwatnosće</string>
     <!-- Preference category for developer tools -->
@@ -1669,7 +1669,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Pytanski wuraz, kotryž ma so wužiwać</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Naprašowanje z „%s“ wuměnić. Přikład: \nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Naprašowanje z „%s“ wuměnić. Přikład: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Dalše informacije</string>
 
