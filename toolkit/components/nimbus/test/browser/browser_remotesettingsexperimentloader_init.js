@@ -48,10 +48,14 @@ add_task(async function test_double_feature_enrollment() {
   let enrollPromise1 = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
     slug: recipe1.slug,
   });
+  let enrollPromise2 = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
+    slug: recipe2.slug,
+  });
 
-  ExperimentManager.enroll(recipe1, "test_double_feature_enrollment");
-  await enrollPromise1;
-  ExperimentManager.enroll(recipe2, "test_double_feature_enrollment");
+  ExperimentManager.enroll(recipe1);
+  ExperimentManager.enroll(recipe2);
+
+  await Promise.any([enrollPromise1, enrollPromise2]);
 
   Assert.equal(
     ExperimentManager.store.getAllActive().length,
