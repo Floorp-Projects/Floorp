@@ -456,6 +456,7 @@ TEST_F(MP3DemuxerTest, FrameParsing) {
     // TODO: find reference number which accounts for trailing headers.
     // EXPECT_EQ(target.mNumSamples / target.mSamplesPerFrame, numFrames);
     // EXPECT_EQ(target.mNumSamples, numSamples);
+    EXPECT_GE(numSamples, 0);
 
     // There may be trailing headers which we don't parse, so the stream length
     // is the upper bound.
