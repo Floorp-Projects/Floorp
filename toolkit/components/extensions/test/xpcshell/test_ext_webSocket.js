@@ -26,7 +26,8 @@ async function test_webSocket(version) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version: version,
-      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+      permissions: ["webRequest", "webRequestBlocking"],
+      host_permissions: ["<all_urls>"],
       content_scripts: [
         {
           matches: ["http://*/plain.html"],
