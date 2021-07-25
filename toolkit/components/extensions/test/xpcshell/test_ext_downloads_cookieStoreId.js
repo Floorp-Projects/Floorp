@@ -429,6 +429,7 @@ add_task(async function setup() {
   downloadDir.createUnique(nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue("browser.download.dir", nsIFile, downloadDir);
+  Services.prefs.setBoolPref("privacy.userContext.enabled", true);
   await setUpCookies();
   registerCleanupFunction(() => {
     Services.cookies.removeAll();
