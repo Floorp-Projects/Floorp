@@ -183,7 +183,9 @@ const ExperimentAPI = {
     }
     let fullEventName = `${eventName}:${options.slug || options.featureId}`;
 
-    if (this._store._isReady) {
+    // The update event will always fire after the event listener is added, either
+    // immediately if it is already ready, or on ready
+    this._store.ready().then(() => {
       let experiment = this.getExperiment(options);
       // Only if we have an experiment that matches what the caller requested
       if (experiment) {
@@ -192,7 +194,7 @@ const ExperimentAPI = {
         // are attached later than the `update` events.
         callback(fullEventName, experiment);
       }
-    }
+    });
 
     this._store.on(fullEventName, callback);
   },
