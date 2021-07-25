@@ -14,10 +14,10 @@ function assert_permissions_policy_supported() {
 //        "/permissions-policy/resources/permissions-policy-usb.html".
 //    expect_feature_available: a callback(data, feature_description) to
 //        verify if a feature is available or unavailable as expected.
-//        The file under the path "src" defines what "data" is sent back as a
-//        pistMessage. Inside the callback, some tests (e.g., EXPECT_EQ,
-//        EXPECT_TRUE, etc) are run accordingly to test a feature's
-//        availability.
+//        The file under the path "src" defines what "data" is sent back via
+//        postMessage with type: 'availability-result'.
+//        Inside the callback, some tests (e.g., EXPECT_EQ, EXPECT_TRUE, etc)
+//        are run accordingly to test a feature's availability.
 //        Example: expect_feature_available_default(data, feature_description).
 //    feature_name: Optional argument, only provided when testing iframe allow
 //      attribute. "feature_name" is the feature name of a policy controlled
@@ -41,7 +41,8 @@ function test_feature_availability(
   }
 
   window.addEventListener('message', test.step_func(function handler(evt) {
-    if (evt.source === frame.contentWindow) {
+    if (evt.source === frame.contentWindow &&
+        evt.data.type === 'availability-result') {
       expect_feature_available(evt.data, feature_description);
       document.body.removeChild(frame);
       window.removeEventListener('message', handler);
@@ -73,8 +74,8 @@ function expect_feature_unavailable_default(data, feature_description) {
 //         attribute should be specified on the iframe.
 function test_feature_availability_with_post_message_result(
     test, src, expected_result, allow_attribute) {
-  var test_result = function(data, feature_description) {
-    assert_equals(data, expected_result);
+  var test_result = function({message}, feature_description) {
+    assert_equals(message, expected_result);
   };
   test_feature_availability(null, test, src, test_result, allow_attribute);
 }
@@ -82,11 +83,15 @@ function test_feature_availability_with_post_message_result(
 // If this page is intended to test the named feature (according to the URL),
 // tests the feature availability and posts the result back to the parent.
 // Otherwise, does nothing.
-function test_feature_in_iframe(feature_name, feature_promise_factory) {
+async function test_feature_in_iframe(feature_name, feature_promise_factory) {
   if (location.hash.endsWith(`#${feature_name}`)) {
-    feature_promise_factory().then(
-        () => window.parent.postMessage('#OK', '*'),
-        (e) => window.parent.postMessage('#' + e.name, '*'));
+    let message = '#OK';
+    try {
+      await feature_promise_factory();
+    } catch (e) {
+      message = '#' + e.name;
+    }
+    window.parent.postMessage({ type: 'availability-result', message }, '*');
   }
 }
 
