@@ -51,7 +51,6 @@ bool GMPSharedMemManager::MgrDeallocShmem(GMPSharedMem::GMPMemoryClasses aClass,
   mData->CheckThread();
 
   size_t size = aMem.Size<uint8_t>();
-  size_t total = 0;
 
   // XXX Bug NNNNNNN Until we put better guards on ipc::shmem, verify we
   // weren't fed an shmem we already had.
@@ -74,7 +73,6 @@ bool GMPSharedMemManager::MgrDeallocShmem(GMPSharedMem::GMPMemoryClasses aClass,
   }
   for (uint32_t i = 0; i < GetGmpFreelist(aClass).Length(); i++) {
     MOZ_ASSERT(GetGmpFreelist(aClass)[i].IsWritable());
-    total += GetGmpFreelist(aClass)[i].Size<uint8_t>();
     if (size < GetGmpFreelist(aClass)[i].Size<uint8_t>()) {
       GetGmpFreelist(aClass).InsertElementAt(i, aMem);
       return true;
