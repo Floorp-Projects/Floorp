@@ -79,6 +79,9 @@ Review groups
    * - #perftest-reviewers
      - Perf Tests
      - `Member list <https://phabricator.services.mozilla.com/project/members/102/>`__
+   * - #platform-i18n-reviewers
+     - Platform Internationalization
+     - `Member list <https://phabricator.services.mozilla.com/project/members/150/>`__
    * - #preferences-reviewers
      - Firefox for Desktop Preferences (Options) user interface
      - `Member list <https://phabricator.services.mozilla.com/project/members/132/>`__
