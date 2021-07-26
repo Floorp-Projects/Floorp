@@ -30,7 +30,6 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.application
@@ -40,6 +39,7 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.share.ShareViewModel.Companion.RECENT_APPS_LIMIT
 import org.mozilla.fenix.share.listadapters.AppShareOption
 import org.mozilla.fenix.share.listadapters.SyncShareOption
+import org.robolectric.shadows.ShadowLooper
 
 @RunWith(FenixRobolectricTestRunner::class)
 @ExperimentalCoroutinesApi
@@ -69,8 +69,9 @@ class ShareViewModelTest {
         every { application.getSystemService<ConnectivityManager>() } returns connectivityManager
         every { application.components.backgroundServices.accountManager } returns fxaAccountManager
 
-        viewModel = spyk(ShareViewModel(application))
-        viewModel.ioDispatcher = testIoDispatcher
+        viewModel = spyk(ShareViewModel(application).apply {
+            this.ioDispatcher = testIoDispatcher
+        })
     }
 
     @After
@@ -85,8 +86,7 @@ class ShareViewModelTest {
     }
 
     @Test
-    @Ignore("With latest Robolectric/mockk: expected:<1> but was:<0>")
-    fun `test loadDevicesAndApps`() = runBlockingTest {
+    fun `loadDevicesAndApps`() = runBlockingTest {
         val appOptions = listOf(
             AppShareOption("Label", mockk(), "Package", "Activity")
         )
@@ -101,6 +101,7 @@ class ShareViewModelTest {
         viewModel.recentAppsStorage = storage
 
         viewModel.loadDevicesAndApps()
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
 
         verify {
             connectivityManager.registerNetworkCallback(
@@ -108,6 +109,7 @@ class ShareViewModelTest {
                 any<ConnectivityManager.NetworkCallback>()
             )
         }
+
         assertEquals(1, viewModel.recentAppsList.asFlow().first().size)
         assertEquals(0, viewModel.appsList.asFlow().first().size)
     }
