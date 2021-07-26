@@ -180,7 +180,10 @@ class LegacyWorkersWatcher {
     }
 
     // Here, we're handling Dedicated Workers in content toolbox.
-    this.targetsByProcess.set(this.target, new Set());
+    this.targetsByProcess.set(
+      this.target,
+      this.targetsByProcess.get(this.target) || new Set()
+    );
     this._workerListChangedListener = this._workerListChanged.bind(
       this,
       this.target
@@ -193,7 +196,7 @@ class LegacyWorkersWatcher {
     return this.targetCommand.getAllTargets([this.targetCommand.TYPES.PROCESS]);
   }
 
-  unlisten() {
+  unlisten({ isTargetSwitching } = {}) {
     // Stop listening for new process targets.
     if (this.target.isParentProcess) {
       this.targetCommand.unwatchTargets(
@@ -213,7 +216,16 @@ class LegacyWorkersWatcher {
       for (const targetFront of this._getProcessTargets()) {
         const listener = this.targetsListeners.get(targetFront);
         targetFront.off("workerListChanged", listener);
-        this.targetsByProcess.delete(targetFront);
+
+        // When unlisten is called from a target switch and service workers targets are not
+        // destroyed on navigation, we don't want to remove the targets from targetsByProcess
+        if (
+          !isTargetSwitching ||
+          !this._isServiceWorkerWatcher ||
+          this.targetCommand.destroyServiceWorkersOnNavigation
+        ) {
+          this.targetsByProcess.delete(targetFront);
+        }
         this.targetsListeners.delete(targetFront);
       }
     } else {
