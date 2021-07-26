@@ -15,33 +15,35 @@ class GmpPluginNotifier {
  public:
   GmpPluginNotifier()
       : mOwningThread(GetCurrentSerialEventTarget()),
-        mCreatedGmpPluginEvent(mOwningThread),
-        mReleasedGmpPluginEvent(mOwningThread) {}
+        mCreatedGmpPluginEvent(
+            new MediaEventForwarder<uint64_t>(mOwningThread)),
+        mReleasedGmpPluginEvent(
+            new MediaEventForwarder<uint64_t>(mOwningThread)) {}
 
   ~GmpPluginNotifier() {
     mOwningThread->Dispatch(NS_NewRunnableFunction(
         "~GmpPluginNotifier",
         [createdEvent = std::move(mCreatedGmpPluginEvent),
          releasedEvent = std::move(mReleasedGmpPluginEvent)]() mutable {
-          createdEvent.DisconnectAll();
-          releasedEvent.DisconnectAll();
+          createdEvent->DisconnectAll();
+          releasedEvent->DisconnectAll();
         }));
   }
 
   MediaEventSource<uint64_t>& CreatedGmpPluginEvent() {
     MOZ_ASSERT(mOwningThread->IsOnCurrentThread());
-    return mCreatedGmpPluginEvent;
+    return *mCreatedGmpPluginEvent;
   }
 
   MediaEventSource<uint64_t>& ReleasedGmpPluginEvent() {
     MOZ_ASSERT(mOwningThread->IsOnCurrentThread());
-    return mReleasedGmpPluginEvent;
+    return *mReleasedGmpPluginEvent;
   }
 
  protected:
   const nsCOMPtr<nsISerialEventTarget> mOwningThread;
-  MediaEventForwarder<uint64_t> mCreatedGmpPluginEvent;
-  MediaEventForwarder<uint64_t> mReleasedGmpPluginEvent;
+  RefPtr<MediaEventForwarder<uint64_t> > mCreatedGmpPluginEvent;
+  RefPtr<MediaEventForwarder<uint64_t> > mReleasedGmpPluginEvent;
 };
 
 class WebrtcVideoDecoderFactory : public GmpPluginNotifier,
@@ -87,8 +89,9 @@ class WebrtcVideoEncoderFactory : public GmpPluginNotifier,
  public:
   explicit WebrtcVideoEncoderFactory(std::string aPCHandle)
       : mInternalFactory(MakeUnique<InternalFactory>(std::move(aPCHandle))) {
-    mCreatedGmpPluginEvent.Forward(mInternalFactory->CreatedGmpPluginEvent());
-    mReleasedGmpPluginEvent.Forward(mInternalFactory->ReleasedGmpPluginEvent());
+    mCreatedGmpPluginEvent->Forward(mInternalFactory->CreatedGmpPluginEvent());
+    mReleasedGmpPluginEvent->Forward(
+        mInternalFactory->ReleasedGmpPluginEvent());
   }
 
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override {

@@ -540,6 +540,8 @@ class MediaEventForwarder : public MediaEventSource<Es...> {
   template <typename T>
   using ArgType = typename detail::EventTypeTraits<T>::ArgType;
 
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEventForwarder);
+
   explicit MediaEventForwarder(nsCOMPtr<nsISerialEventTarget> aEventTarget)
       : mEventTarget(std::move(aEventTarget)) {}
 
@@ -553,15 +555,11 @@ class MediaEventForwarder : public MediaEventSource<Es...> {
     mListeners = std::move(aOther.mListeners);
   }
 
-  ~MediaEventForwarder() { MOZ_ASSERT(mListeners.IsEmpty()); }
-
   void Forward(MediaEventSource<Es...>& aSource) {
-    // Forwarding a rawptr `this` here is fine, since the dtor disconnects the
-    // listener on the thread used to run the callback (which checks the
-    // disconnect status).
-    mListeners.AppendElement(
-        aSource.Connect(mEventTarget, [this](ArgType<Es>&&... aEvents) {
-          this->NotifyInternal(std::forward<ArgType<Es>...>(aEvents)...);
+    mListeners.AppendElement(aSource.Connect(
+        mEventTarget,
+        [self = RefPtr<MediaEventForwarder>(this)](ArgType<Es>&&... aEvents) {
+          self->NotifyInternal(std::forward<ArgType<Es>...>(aEvents)...);
         }));
   }
 
@@ -573,6 +571,8 @@ class MediaEventForwarder : public MediaEventSource<Es...> {
   }
 
  private:
+  ~MediaEventForwarder() { MOZ_ASSERT(mListeners.IsEmpty()); }
+
   const nsCOMPtr<nsISerialEventTarget> mEventTarget;
   nsTArray<MediaEventListener> mListeners;
 };
