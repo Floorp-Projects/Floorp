@@ -8,7 +8,7 @@ const BASE = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "http://example.com"
 );
-const TEST_URL = BASE + "browser_contextmenu_shareurl.html";
+const TEST_URL = BASE + "file_shareurl.html";
 
 let mockShareData = [
   {
@@ -47,31 +47,30 @@ registerCleanupFunction(async function() {
 /**
  * Test the "Share" item menus in the tab contextmenu on MacOSX.
  */
-add_task(async function test_contextmenu_share_macosx() {
+add_task(async function test_file_menu_share() {
   await BrowserTestUtils.withNewTab(TEST_URL, async () => {
-    let contextMenu = await openTabContextMenu(gBrowser.selectedTab);
+    // We can't toggle menubar items on OSX, so mocking instead.
+    let menu = document.getElementById("menu_FilePopup");
+    await simulateMenuOpen(menu);
+
     await BrowserTestUtils.waitForMutationCondition(
-      contextMenu,
+      menu,
       { childList: true },
-      () => contextMenu.querySelector(".share-tab-url-item")
+      () => menu.querySelector(".share-tab-url-item")
     );
     ok(true, "Got Share item");
 
-    await openMenuPopup(contextMenu);
+    let popup = menu.querySelector(".share-tab-url-item").menupopup;
+    await simulateMenuOpen(popup);
     ok(getSharingProvidersSpy.calledOnce, "getSharingProviders called");
 
     info(
       "Check we have a service and one extra menu item for the More... button"
     );
-    let popup = contextMenu.querySelector(".share-tab-url-item").menupopup;
     let items = popup.querySelectorAll("menuitem");
     is(items.length, 2, "There should be 2 sharing services.");
 
     info("Click on the sharing service");
-    let menuPopupClosedPromised = BrowserTestUtils.waitForPopupEvent(
-      contextMenu,
-      "hidden"
-    );
     let shareButton = items[0];
     is(
       shareButton.label,
@@ -84,8 +83,7 @@ add_task(async function test_contextmenu_share_macosx() {
       "Share button's share-name value should match the service's name. "
     );
 
-    popup.activateItem(shareButton);
-    await menuPopupClosedPromised;
+    shareButton.doCommand();
 
     ok(shareUrlSpy.calledOnce, "shareUrl called");
 
@@ -94,48 +92,42 @@ add_task(async function test_contextmenu_share_macosx() {
     is(name, mockShareData[0].name, "Shared correct service name");
     is(url, TEST_URL, "Shared correct URL");
     is(title, "Sharing URL", "Shared the correct title.");
+    await simulateMenuClosed(popup);
+    await simulateMenuClosed(menu);
 
     info("Test the More... button");
-    contextMenu = await openTabContextMenu(gBrowser.selectedTab);
-    await openMenuPopup(contextMenu);
-    // Since the tab context menu was collapsed previously, the popup needs to get the
+
+    await simulateMenuOpen(menu);
+    popup = menu.querySelector(".share-tab-url-item").menupopup;
+    await simulateMenuOpen(popup);
+    // Since the menu was collapsed previously, the popup needs to get the
     // providers again.
     ok(getSharingProvidersSpy.calledTwice, "getSharingProviders called again");
-    popup = contextMenu.querySelector(".share-tab-url-item").menupopup;
     items = popup.querySelectorAll("menuitem");
     is(items.length, 2, "There should be 2 sharing services.");
 
     info("Click on the More Button");
     let moreButton = items[1];
-    menuPopupClosedPromised = BrowserTestUtils.waitForPopupEvent(
-      contextMenu,
-      "hidden"
-    );
-    popup.activateItem(moreButton);
-    await menuPopupClosedPromised;
+    moreButton.doCommand();
     ok(openSharingPreferencesSpy.calledOnce, "openSharingPreferences called");
+    // Tidy up:
+    await simulateMenuClosed(popup);
+    await simulateMenuClosed(menu);
   });
 });
 
-/**
- * Helper for opening the toolbar context menu.
- */
-async function openTabContextMenu(tab) {
-  info("Opening tab context menu");
-  let contextMenu = document.getElementById("tabContextMenu");
-  let openTabContextMenuPromise = BrowserTestUtils.waitForPopupEvent(
-    contextMenu,
-    "shown"
-  );
-
-  EventUtils.synthesizeMouseAtCenter(tab, { type: "contextmenu" });
-  await openTabContextMenuPromise;
-  return contextMenu;
+async function simulateMenuOpen(menu) {
+  return new Promise(resolve => {
+    menu.addEventListener("popupshown", resolve, { once: true });
+    menu.dispatchEvent(new MouseEvent("popupshowing"));
+    menu.dispatchEvent(new MouseEvent("popupshown"));
+  });
 }
 
-async function openMenuPopup(contextMenu) {
-  info("Opening Share menu popup.");
-  let shareItem = contextMenu.querySelector(".share-tab-url-item");
-  shareItem.openMenu(true);
-  await BrowserTestUtils.waitForPopupEvent(shareItem.menupopup, "shown");
+async function simulateMenuClosed(menu) {
+  return new Promise(resolve => {
+    menu.addEventListener("popuphidden", resolve, { once: true });
+    menu.dispatchEvent(new MouseEvent("popuphiding"));
+    menu.dispatchEvent(new MouseEvent("popuphidden"));
+  });
 }

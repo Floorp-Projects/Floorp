@@ -69,8 +69,6 @@ tab-context-close-multiple-tabs =
 tab-context-share-url =
     .label = Share
     .accesskey = h
-tab-context-share-more =
-    .label = More…
 
 ## Variables:
 ##  $tabCount (Number): the number of tabs that are affected by the action.
