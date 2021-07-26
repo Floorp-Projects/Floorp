@@ -5,17 +5,11 @@ const {
   NimbusFeatures,
   _ExperimentFeature: ExperimentFeature,
 } = ChromeUtils.import("resource://nimbus/ExperimentAPI.jsm");
-const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/NimbusTestUtils.jsm"
-);
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
-
 const { Ajv } = ChromeUtils.import("resource://testing-common/ajv-4.1.1.js");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
+
 Cu.importGlobalProperties(["fetch"]);
 
 XPCOMUtils.defineLazyGetter(this, "fetchSchema", async () => {

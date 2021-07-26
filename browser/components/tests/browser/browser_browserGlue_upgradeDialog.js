@@ -360,7 +360,11 @@ add_task(async function remote_disabled() {
   await ExperimentAPI.ready();
   await ExperimentFakes.remoteDefaultsHelper({
     feature: NimbusFeatures.upgradeDialog,
-    configuration: { enabled: false, variables: {} },
+    configuration: {
+      slug: "upgradeDialog_remoteDisabled",
+      variables: { enabled: false },
+      targeting: "true",
+    },
   });
 
   // Simulate starting from a previous version.
@@ -380,7 +384,11 @@ add_task(async function remote_disabled() {
   // Re-enable back
   await ExperimentFakes.remoteDefaultsHelper({
     feature: NimbusFeatures.upgradeDialog,
-    configuration: { enabled: true, variables: {} },
+    configuration: {
+      slug: "upgradeDialog_remoteEnabled",
+      variables: { enabled: true },
+      targeting: "true",
+    },
   });
 });
 

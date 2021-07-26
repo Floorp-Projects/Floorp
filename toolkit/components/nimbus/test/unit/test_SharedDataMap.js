@@ -7,9 +7,6 @@ const { FileTestUtils } = ChromeUtils.import(
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
-const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/NimbusTestUtils.jsm"
-);
 
 const PATH = FileTestUtils.getTempFile("shared-data-map").path;
 
