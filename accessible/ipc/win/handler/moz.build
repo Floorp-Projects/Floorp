@@ -18,13 +18,11 @@ LOCAL_INCLUDES += [
 
 # We want to generate distinct UUIDs on a per-channel basis, so we need
 # finer granularity than the standard preprocessor definitions offer.
-# These defines allow us to separate local builds from automated builds,
-# as well as separate beta from release.
+# This generated include allow us to separate local builds from automated
+# builds, separate beta from release, and use different UUIDs in downstream
+# projects such as Thunderbird.
+CONFIGURE_SUBST_FILES += ["HandlerDataUUID.h"]
 flags = []
-if CONFIG["MOZ_UPDATE_CHANNEL"] == "default":
-    flags += ["-DUSE_LOCAL_UUID"]
-elif CONFIG["MOZ_UPDATE_CHANNEL"] == "beta":
-    flags += ["-DUSE_BETA_UUID"]
 
 GeneratedFile(
     "HandlerData.h",
@@ -46,6 +44,8 @@ GeneratedFile(
         TOPSRCDIR + "/other-licenses/ia2",
         "-I",
         SRCDIR,
+        "-I",
+        OBJDIR,
         "-acf",
         SRCDIR + "/HandlerData.acf",
         "-dlldata",
@@ -68,6 +68,7 @@ SOURCES += [
 EXPORTS += [
     "!HandlerData.h",
     "!HandlerData_i.c",
+    "!HandlerDataUUID.h",
 ]
 
 # Give some symbols a unique name in each translation unit, to avoid
