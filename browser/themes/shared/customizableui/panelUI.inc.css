@@ -132,6 +132,7 @@
   filter: grayscale(100%);
 }
 
+#BMB_bookmarksPopup menupopup,
 .cui-widget-panel,
 #widget-overflow {
   font: menu;
@@ -247,6 +248,7 @@ panelview .toolbaritem-combined-buttons,
 #PlacesToolbar menupopup {
   appearance: none;
   background: var(--arrowpanel-background);
+  font: menu;
 }
 
 #PlacesToolbar menupopup[placespopup=true]::part(content),
