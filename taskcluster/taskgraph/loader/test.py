@@ -122,12 +122,18 @@ def get_test_platforms(
             # Context: Signed builds are only used by Windows
             if test_platform.startswith("macosx1100"):
                 if "shippable" in test_platform:
-                    test_platforms[test_platform]["build-signing-label"] = "repackage-macosx64-shippable/opt"
+                    test_platforms[test_platform][
+                        "build-signing-label"
+                    ] = "repackage-macosx64-shippable/opt"
                 else:
                     if "debug" in test_platform:
-                        test_platforms[test_platform]["build-signing-label"] = "repackage-macosx64/debug"
+                        test_platforms[test_platform][
+                            "build-signing-label"
+                        ] = "repackage-macosx64/debug"
                     else:
-                        test_platforms[test_platform]["build-signing-label"] = "repackage-macosx64/opt"
+                        test_platforms[test_platform][
+                            "build-signing-label"
+                        ] = "repackage-macosx64/opt"
             else:
                 test_platforms[test_platform][
                     "build-signing-label"
