@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "#/definitions/NimbusExperiment",
+  "definitions": {
+    "NimbusExperiment": {
+      "type": "object",
+      "properties": {
+        "slug": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "object",
+          "properties": {
+            "feature": {
+              "type": "object",
+              "properties": {
+                "featureId": {
+                  "type": "string",
+                  "description": "The identifier for the feature flag"
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Optional extra params for the feature (this should be validated against a schema)"
+                },
+                "enabled": {
+                  "type": "boolean",
+                  "description": "(deprecated)"
+                }
+              },
+              "required": ["featureId", "value"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["feature"]
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Experiment status"
+        },
+        "enrollmentId": {
+          "type": "string",
+          "description": "Unique identifier used in telemetry"
+        },
+        "experimentType": {
+          "type": "string"
+        },
+        "isEnrollmentPaused": {
+          "type": "boolean"
+        },
+        "source": {
+          "type": "string",
+          "description": "What triggered the enrollment"
+        },
+        "userFacingName": {
+          "type": "string"
+        },
+        "userFacingDescription": {
+          "type": "string"
+        },
+        "lastSeen": {
+          "type": "string",
+          "description": "When was the enrollment made"
+        },
+        "force": {
+          "type": "boolean",
+          "description": "(debug) If the enrollment happened naturally or through devtools"
+        }
+      },
+      "required": [
+        "slug",
+        "branch",
+        "active",
+        "enrollmentId",
+        "experimentType",
+        "source",
+        "userFacingName",
+        "userFacingDescription"
+      ],
+      "additionalProperties": false,
+      "description": "The experiment definition accessible to:\n1. The Nimbus SDK via Remote Settings\n2. Jetstream via the Experimenter API"
+    }
+  }
+}

@@ -48,7 +48,14 @@ add_task(async function remote_disable() {
   setDefaultStub.resetHistory();
   await ExperimentFakes.remoteDefaultsHelper({
     feature: NimbusFeatures.shellService,
-    configuration: { variables: { setDefaultBrowserUserChoice: false } },
+    configuration: {
+      slug: "shellService_remoteDisable",
+      variables: {
+        setDefaultBrowserUserChoice: false,
+        enabled: true,
+      },
+      targeting: "true",
+    },
   });
 
   ShellService.setDefaultBrowser();
@@ -68,10 +75,7 @@ add_task(async function restore_default() {
 
   userChoiceStub.resetHistory();
   setDefaultStub.resetHistory();
-  await ExperimentFakes.remoteDefaultsHelper({
-    feature: NimbusFeatures.shellService,
-    configuration: {},
-  });
+  ExperimentAPI._store._deleteForTests("shellService");
 
   ShellService.setDefaultBrowser();
 
