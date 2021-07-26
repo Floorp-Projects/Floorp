@@ -4965,10 +4965,6 @@ NS_IMETHODIMP nsIFrame::HandleDrag(nsPresContext* aPresContext,
 
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
-  if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
-    return NS_OK;
-  }
-
   RefPtr<nsFrameSelection> frameselection = GetFrameSelection();
   if (!frameselection) {
     return NS_OK;
