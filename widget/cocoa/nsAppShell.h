@@ -18,7 +18,6 @@
 
 namespace mozilla {
 class ProfilingStackOwner;
-class nsAvailableMemoryWatcherBase;
 }
 
 // GeckoNSApplication
@@ -48,15 +47,11 @@ class nsAppShell : public nsBaseAppShell {
   // public only to be visible to Objective-C code that must call it
   void WillTerminate();
 
-  static void OnMemoryPressureChanged(dispatch_source_memorypressure_flags_t aPressureLevel);
-
  protected:
   virtual ~nsAppShell();
 
   virtual void ScheduleNativeEventCallback() override;
   virtual bool ProcessNextNativeEvent(bool aMayWait) override;
-
-  void InitMemoryPressureObserver();
 
   static void ProcessGeckoEvents(void* aInfo);
 
@@ -73,9 +68,6 @@ class nsAppShell : public nsBaseAppShell {
 
   // Non-null while the native event loop is in the waiting state.
   mozilla::ProfilingStackOwner* mProfilingStackOwnerWhileWaiting = nullptr;
-
-  dispatch_source_t mMemoryPressureSource = nullptr;
-  RefPtr<mozilla::nsAvailableMemoryWatcherBase> mAvailableMemoryWatcher;
 
   bool mRunningEventLoop;
   bool mStarted;
