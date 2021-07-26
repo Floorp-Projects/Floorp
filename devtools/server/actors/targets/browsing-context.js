@@ -602,8 +602,12 @@ const browsingContextTargetPrototype = {
 
   /**
    * Called when the actor is removed from the connection.
+   *
+   * @params {Object} options
+   * @params {Boolean} options.isTargetSwitching: Set to true when this is called during
+   *         a target switch.
    */
-  destroy() {
+  destroy({ isTargetSwitching = false } = {}) {
     if (this.isDestroyed()) {
       return;
     }
@@ -619,7 +623,7 @@ const browsingContextTargetPrototype = {
       this._touchSimulator = null;
     }
 
-    this._detach();
+    this._detach({ isTargetSwitching });
     this.docShell = null;
     this._extraActors = null;
 
@@ -1028,9 +1032,12 @@ const browsingContextTargetPrototype = {
   /**
    * Does the actual work of detaching from a browsing context.
    *
+   * @params {Object} options
+   * @params {Boolean} options.isTargetSwitching: Set to true when this is called during
+   *         a target switch.
    * @returns false if the actor wasn't attached or true of detaching succeeds.
    */
-  _detach() {
+  _detach({ isTargetSwitching } = {}) {
     if (!this.attached) {
       return false;
     }
@@ -1039,7 +1046,13 @@ const browsingContextTargetPrototype = {
     // Firefox shutdown.
     if (this.docShell) {
       this._unwatchDocShell(this.docShell);
-      this._restoreTargetConfiguration();
+
+      // If this target is being destroyed as part of a target switch, we don't need to
+      // restore the configuration (this might cause the content page to be focused again
+      // and cause issues in tets).
+      if (!isTargetSwitching) {
+        this._restoreTargetConfiguration();
+      }
     }
     this._unwatchDocshells();
 
