@@ -112,7 +112,7 @@ void nsAvailableMemoryWatcherBase::RecordTelemetryEventOnHighMemory() {
 
 // Define the fallback method for a platform for which a platform-specific
 // CreateAvailableMemoryWatcher() is not defined.
-#if !defined(XP_WIN)
+#if !defined(XP_WIN) && !defined(XP_MACOSX)
 already_AddRefed<nsAvailableMemoryWatcherBase> CreateAvailableMemoryWatcher() {
   RefPtr instance(new nsAvailableMemoryWatcherBase);
   return do_AddRef(instance);
