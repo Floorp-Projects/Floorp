@@ -1051,18 +1051,24 @@ var PlacesDBUtils = {
       await db.execute(query, params, r =>
         _getTableCount(r.getResultByIndex(0))
       );
-
-      params.type = "index";
-      await db.execute(query, params, r => {
-        logs.push(`Index ${r.getResultByIndex(0)}`);
-      });
-
-      params.type = "trigger";
-      await db.execute(query, params, r => {
-        logs.push(`Trigger ${r.getResultByIndex(0)}`);
-      });
     } catch (ex) {
       throw new Error("Unable to collect stats.");
+    }
+
+    let details = await PlacesDBUtils.getEntitiesStats();
+    logs.push(
+      `Pages sequentiality: ${details.get("moz_places").sequentialityPerc}`
+    );
+    let entities = Array.from(details.keys()).sort((a, b) => {
+      return details.get(a).sizePerc - details.get(b).sizePerc;
+    });
+    for (let key of entities) {
+      let info = details.get(key);
+      logs.push(
+        `${key}: ${info.sizeBytes / 1024}KiB (${info.sizePerc}%), ${
+          info.efficiencyPerc
+        }% eff.`
+      );
     }
 
     return logs;
@@ -1312,6 +1318,55 @@ var PlacesDBUtils = {
       iterator.close();
     }
     return logs;
+  },
+
+  /**
+   * Gets detailed statistics about database entities like tables and indices.
+   * @returns {Map} a Map by table name, containing an object with the following
+   *          properties:
+   *            - efficiencyPerc: percentage filling of pages, an high
+   *              efficiency means most pages are filled up almost completely.
+   *              This value is not particularly useful with a low number of
+   *              pages.
+   *            - sizeBytes: size of the entity in bytes
+   *            - pages: number of pages of the entity
+   *            - sizePerc: percentage of the total database size
+   *            - sequentialityPerc: percentage of sequential pages, this is
+   *              a global value of the database, thus it's the same for every
+   *              entity, and it can be used to evaluate fragmentation and the
+   *              need for vacuum.
+   */
+  async getEntitiesStats() {
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.execute(`
+      /* do not warn (bug no): no need for index */
+      SELECT name,
+      round((pgsize - unused) * 100.0 / pgsize, 1) as efficiency_perc,
+      pgsize as size_bytes, pageno as pages,
+      round(pgsize * 100.0 / (SELECT sum(pgsize) FROM dbstat WHERE aggregate = TRUE), 1) as size_perc,
+      round((
+        WITH s(row, pageno) AS (
+          SELECT row_number() OVER (ORDER BY path), pageno FROM dbstat ORDER BY path
+        )
+        SELECT sum(s1.pageno+1==s2.pageno)*100.0/count(*)
+        FROM s AS s1, s AS s2
+        WHERE s1.row+1=s2.row
+      ), 1) AS sequentiality_perc
+      FROM dbstat
+      WHERE aggregate = TRUE
+    `);
+    let entitiesByName = new Map();
+    for (let row of rows) {
+      let details = {
+        efficiencyPerc: row.getResultByName("efficiency_perc"),
+        pages: row.getResultByName("pages"),
+        sizeBytes: row.getResultByName("size_bytes"),
+        sizePerc: row.getResultByName("size_perc"),
+        sequentialityPerc: row.getResultByName("sequentiality_perc"),
+      };
+      entitiesByName.set(row.getResultByName("name"), details);
+    }
+    return entitiesByName;
   },
 
   /**
