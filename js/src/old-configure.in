@@ -222,17 +222,6 @@ AC_SUBST(QEMU_CANT_RUN_JS_SHELL)
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
 
-dnl ========================================================
-dnl Checks for programs.
-dnl ========================================================
-if test "$COMPILE_ENVIRONMENT"; then
-
-AC_PATH_XTRA
-
-XCFLAGS="$X_CFLAGS"
-
-fi # COMPILE_ENVIRONMENT
-
 # Separate version into components for use in shared object naming etc
 changequote(,)
 MOZJS_MAJOR_VERSION=`echo $MOZILLA_VERSION | sed "s|\(^[0-9]*\)\.[0-9]*.*|\1|"`

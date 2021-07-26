@@ -245,6 +245,13 @@ dnl Checks for programs.
 dnl ========================================================
 if test "$COMPILE_ENVIRONMENT"; then
 
+dnl autoconf's xmkmf test tries to find X11 headers and libraries via
+dnl running xmkmf if it's available. This doesn't take into account
+dnl sysroots, so we're better off without the test. Moreover, most of
+dnl the time, xmkmf is not available, and things work just fine anyway.
+dnl This avoids breaking the build when xmkmf _is_ available and a
+dnl sysroot is used.
+define([AC_PATH_X_XMKMF], [])
 AC_PATH_XTRA
 
 XCFLAGS="$X_CFLAGS"
