@@ -165,19 +165,7 @@ class TargetCommand extends EventEmitter {
     if (targetFront.isTopLevel) {
       // First report that all existing targets are destroyed
       if (!isFirstTarget) {
-        for (const target of this._targets) {
-          // We only consider the top level target to be switched
-          const isDestroyedTargetSwitching = target == this.targetFront;
-          this._onTargetDestroyed(target, {
-            isTargetSwitching: isDestroyedTargetSwitching,
-          });
-        }
-        // Stop listening to legacy listeners as we now have to listen
-        // on the new target.
-        this.stopListening({ onlyLegacy: true });
-
-        // Clear the cached target list
-        this._targets.clear();
+        this._destroyExistingTargetsOnTargetSwitching();
       }
 
       // Update the reference to the memoized top level target
@@ -220,13 +208,43 @@ class TargetCommand extends EventEmitter {
     // Re-register the listeners as the top level target changed
     // and some targets are fetched from it
     if (targetFront.isTopLevel && !isFirstTarget) {
-      await this.startListening({ onlyLegacy: true });
+      await this.startListening({ isTargetSwitching: true });
     }
 
     // To be consumed by tests triggering frame navigations, spawning workers...
     this.emitForTests("processed-available-target", targetFront);
     if (isTargetSwitching) {
       this.emitForTests("switched-target", targetFront);
+    }
+  }
+
+  _destroyExistingTargetsOnTargetSwitching() {
+    const destroyedTargets = [];
+    for (const target of this._targets) {
+      // We only consider the top level target to be switched
+      const isDestroyedTargetSwitching = target == this.targetFront;
+
+      // Only destroy service worker targets if this.destroyServiceWorkersOnNavigation is true
+      if (
+        target.targetType !== this.TYPES.SERVICE_WORKER ||
+        this.destroyServiceWorkersOnNavigation
+      ) {
+        this._onTargetDestroyed(target, {
+          isTargetSwitching: isDestroyedTargetSwitching,
+        });
+        destroyedTargets.push(target);
+      }
+    }
+
+    // Stop listening to legacy listeners as we now have to listen
+    // on the new target.
+    this.stopListening({ isTargetSwitching: true });
+
+    // Remove destroyed target from the cached target list. We don't simply clear the
+    // Map as SW targets might not have been destroyed (i.e. when destroyServiceWorkersOnNavigation
+    // is set to false).
+    for (const target of destroyedTargets) {
+      this._targets.delete(target);
     }
   }
 
@@ -349,11 +367,12 @@ class TargetCommand extends EventEmitter {
    * reported to _onTargetAvailable.
    *
    * @param Object options
-   *        Dictionary object with `onlyLegacy` optional boolean.
-   *        If true, we wouldn't register listener set on the Watcher Actor,
-   *        but still register listeners set via Legacy Listeners.
+   * @param Boolean options.isTargetSwitching
+   *        Set to true when this is called while a target switching happens. In such case,
+   *        we won't register listener set on the Watcher Actor, but still register listeners
+   *        set via Legacy Listeners.
    */
-  async startListening({ onlyLegacy = false } = {}) {
+  async startListening({ isTargetSwitching = false } = {}) {
     // The first time we call this method, we pull the current top level target from the descriptor
     if (
       !this.isServerTargetSwitchingEnabled() &&
@@ -391,7 +410,7 @@ class TargetCommand extends EventEmitter {
         // When we switch to a new top level target, we don't have to stop and restart
         // Watcher listener as it is independant from the top level target.
         // This isn't the case for some Legacy Listeners, which fetch targets from the top level target
-        if (!onlyLegacy) {
+        if (!isTargetSwitching) {
           await this.watcherFront.watchTargets(type);
         }
       } else if (this.legacyImplementation[type]) {
@@ -469,16 +488,15 @@ class TargetCommand extends EventEmitter {
    * Stop listening for targets from the server
    *
    * @param Object options
-   *        Dictionary object with `onlyLegacy` optional boolean.
-   *        If true, we wouldn't unregister listener set on the Watcher Actor,
-   *        but still unregister listeners set via Legacy Listeners.
+   * @param Boolean options.isTargetSwitching
+   *        Set to true when this is called while a target switching happens. In such case,
+   *        we won't unregister listener set on the Watcher Actor, but still unregister
+   *        listeners set via Legacy Listeners.
    */
-  stopListening({ onlyLegacy = false } = {}) {
+  stopListening({ isTargetSwitching = false } = {}) {
     // As DOCUMENT_EVENT isn't using legacy listener,
     // there is no need to stop and restart it in case of target switching.
-    // (We typically set onlyLegacy=true when we stop and restart legacy listeners
-    // during a target switch)
-    if (this._watchingDocumentEvent && !onlyLegacy) {
+    if (this._watchingDocumentEvent && !isTargetSwitching) {
       this.commands.resourceCommand.unwatchResources(
         [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
         {
@@ -500,11 +518,11 @@ class TargetCommand extends EventEmitter {
         // When we switch to a new top level target, we don't have to stop and restart
         // Watcher listener as it is independant from the top level target.
         // This isn't the case for some Legacy Listeners, which fetch targets from the top level target
-        if (!onlyLegacy) {
+        if (!isTargetSwitching) {
           this.watcherFront.unwatchTargets(type);
         }
       } else if (this.legacyImplementation[type]) {
-        this.legacyImplementation[type].unlisten();
+        this.legacyImplementation[type].unlisten({ isTargetSwitching });
       } else {
         throw new Error(`Unsupported target type '${type}'`);
       }

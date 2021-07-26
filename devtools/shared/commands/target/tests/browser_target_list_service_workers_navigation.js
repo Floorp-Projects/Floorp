@@ -86,8 +86,12 @@ add_task(async function test_NavigationBetweenTwoDomains_NoDestroy() {
     targets: [COM_WORKER_URL],
   });
 
-  info("Go back to page 1");
+  info("Go back to .com page");
+  const onBrowserLoaded = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser
+  );
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, COM_PAGE_URL);
+  await onBrowserLoaded;
   await checkHooks(hooks, {
     available: 2,
     destroyed: 1,
@@ -236,11 +240,17 @@ async function testNavigationToPageWithExistingWorker({
   await waitForRegistrationReady(tab, COM_PAGE_URL);
 
   info("Navigate to another page");
+  let onBrowserLoaded = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser
+  );
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, ORG_PAGE_URL);
 
   // Avoid TV failures, where target list still starts thinking that the
   // current domain is .com .
   info("Wait until we have fully navigated to the .org page");
+  // wait for the browser to be loaded otherwise the task spawned in waitForRegistrationReady
+  // might be destroyed (when it still belongs to the previous content process)
+  await onBrowserLoaded;
   await waitForRegistrationReady(tab, ORG_PAGE_URL);
 
   const { hooks, commands, targetCommand } = await watchServiceWorkerTargets({
@@ -261,7 +271,10 @@ async function testNavigationToPageWithExistingWorker({
   await checkHooks(hooks, { available: 1, destroyed: 1, targets: [] });
 
   info("Go back .com page, wait for onAvailable to be called");
+  onBrowserLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, COM_PAGE_URL);
+  await onBrowserLoaded;
+
   await checkHooks(hooks, {
     available: 2,
     destroyed: 1,
