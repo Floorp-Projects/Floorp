@@ -33,6 +33,7 @@ macosx64/debug:
     index:
         job-name: macosx64-debug
     attributes:
+        enable-build-signing: true
         enable-full-crashsymbols: true
     treeherder:
         platform: osx-cross/debug
