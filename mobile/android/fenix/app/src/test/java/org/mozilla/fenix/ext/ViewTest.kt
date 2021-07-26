@@ -43,6 +43,7 @@ class ViewTest {
         mockkStatic("mozilla.components.support.ktx.android.util.DisplayMetricsKt")
         mockkStatic("org.mozilla.fenix.ext.ViewKt")
 
+        every { view.context } answers { testContext }
         every { view.resources.getDimensionPixelSize(any()) } answers {
             testContext.resources.getDimensionPixelSize(firstArg())
         }

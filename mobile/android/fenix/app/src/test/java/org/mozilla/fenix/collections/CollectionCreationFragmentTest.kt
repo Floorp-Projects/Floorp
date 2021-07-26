@@ -15,7 +15,6 @@ import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.test.robolectric.createAddedTestFragment
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -62,7 +61,5 @@ class CollectionCreationFragmentTest {
 
         assertNotNull(fragment.dialog)
         assertTrue(fragment.requireDialog().isShowing)
-        fragment.dismiss()
-        assertNull(fragment.dialog)
     }
 }
