@@ -585,6 +585,10 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
                               GeneratorKind generatorKind,
                               FunctionAsyncKind asyncKind);
 
+  FunctionBox* newFunctionBox(FunctionNodeType funNode,
+                              const ScriptStencil& cachedScriptData,
+                              const ScriptStencilExtra& cachedScriptExtra);
+
  public:
   // ErrorReportMixin.
 
