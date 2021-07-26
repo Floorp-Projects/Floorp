@@ -70,12 +70,11 @@ add_task(async function() {
   );
 
   info("Click the button to disable simulation");
-  const onRuleViewRefreshed = view.once("ruleview-refreshed");
   darkButton.click();
   await waitFor(() => !isButtonChecked(darkButton));
   ok(true, "The button isn't checked anymore");
-  await onRuleViewRefreshed;
-  ok(divHasDefaultStyling(), "We're not simulating color-scheme anymore");
+  await waitFor(() => divHasDefaultStyling());
+  ok(true, "We're not simulating color-scheme anymore");
 
   info("Check that enabling dark-mode simulation before RDM does work as well");
   darkButton.click();
