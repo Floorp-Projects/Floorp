@@ -535,6 +535,15 @@ class AndroidEmulatorCommands(MachCommandBase):
             )
             return 1
 
+        if not emulator.check_avd():
+            command_context.log(
+                logging.WARN,
+                "emulator",
+                {},
+                "AVD not found. Please run |mach bootstrap|.",
+            )
+            return 2
+
         if not emulator.is_available():
             command_context.log(
                 logging.WARN,
