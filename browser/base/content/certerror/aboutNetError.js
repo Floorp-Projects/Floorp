@@ -1018,23 +1018,6 @@ function setCertErrorDetails(event) {
       }
       break;
   }
-
-  // Add slightly more alarming UI unless there are indicators that
-  // show that the error is harmless or can not be skipped anyway.
-  let cssClass = getCSSClass();
-  // Don't alarm users when they can't continue to the website anyway...
-  if (
-    cssClass != "badStsCert" &&
-    // Errors in iframes can't be skipped either...
-    window.parent == window &&
-    // Also don't bother if it's just the user's clock being off...
-    !clockSkew &&
-    // Symantec distrust is likely harmless as well.
-    failedCertInfo.errorCodeString !=
-      "MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED"
-  ) {
-    document.body.classList.add("caution");
-  }
 }
 
 // The optional argument is only here for testing purposes.
