@@ -6,11 +6,13 @@ package mozilla.components.browser.state.reducer
 
 import android.net.Uri
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction
 import mozilla.components.browser.state.ext.containsPermission
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.HistoryState
+import mozilla.components.browser.state.state.content.PermissionHighlightsState
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.support.ktx.android.net.isInScope
 import mozilla.components.support.ktx.android.net.sameSchemeAndHostAs
@@ -217,9 +219,60 @@ internal object ContentStateReducer {
             is ContentAction.UpdateDesktopModeAction -> updateContentState(state, action.sessionId) {
                 it.copy(desktopMode = action.enabled)
             }
-            is ContentAction.UpdatePermissionHighlightsStateAction -> updateContentState(state, action.sessionId) {
-                it.copy(permissionHighlights = action.highlights)
+            is UpdatePermissionHighlightsStateAction.NotificationChangedAction -> {
+                updatePermissionHighlightsState(state, action.tabId) {
+                    it.copy(notificationChanged = action.value)
+                }
             }
+            is UpdatePermissionHighlightsStateAction.CameraChangedAction -> {
+                updatePermissionHighlightsState(state, action.tabId) {
+                    it.copy(cameraChanged = action.value)
+                }
+            }
+            is UpdatePermissionHighlightsStateAction.LocationChangedAction -> {
+                updatePermissionHighlightsState(state, action.tabId) {
+                    it.copy(locationChanged = action.value)
+                }
+            }
+            is UpdatePermissionHighlightsStateAction.MediaKeySystemAccesChangedAction -> {
+                updatePermissionHighlightsState(state, action.tabId) {
+                    it.copy(mediaKeySystemAccessChanged = action.value)
+                }
+            }
+            is UpdatePermissionHighlightsStateAction.MicrophoneChangedAction -> {
+                updatePermissionHighlightsState(state, action.tabId) {
+                    it.copy(microphoneChanged = action.value)
+                }
+            }
+            is UpdatePermissionHighlightsStateAction.PersistentStorageChangedAction -> {
+                updatePermissionHighlightsState(state, action.tabId) {
+                    it.copy(persistentStorageChanged = action.value)
+                }
+            }
+            is UpdatePermissionHighlightsStateAction.AutoPlayAudibleBlockingAction -> {
+                updatePermissionHighlightsState(state, action.tabId) {
+                    it.copy(autoPlayAudibleBlocking = action.value)
+                }
+            }
+            is UpdatePermissionHighlightsStateAction.AutoPlayInAudibleChangedAction -> {
+                updatePermissionHighlightsState(state, action.tabId) {
+                    it.copy(autoPlayInaudibleChanged = action.value)
+                }
+            }
+            is UpdatePermissionHighlightsStateAction.AutoPlayInAudibleBlockingAction -> {
+                updatePermissionHighlightsState(state, action.tabId) {
+                    it.copy(autoPlayInaudibleBlocking = action.value)
+                }
+            }
+            is UpdatePermissionHighlightsStateAction.AutoPlayAudibleChangedAction -> {
+                updatePermissionHighlightsState(state, action.tabId) {
+                    it.copy(autoPlayAudibleChanged = action.value)
+                }
+            }
+            is UpdatePermissionHighlightsStateAction.Reset -> {
+                updatePermissionHighlightsState(state, action.tabId) { PermissionHighlightsState() }
+            }
+
             is ContentAction.UpdateAppIntentAction -> updateContentState(state, action.sessionId) {
                 it.copy(appIntent = action.appIntent)
             }
@@ -236,6 +289,16 @@ internal object ContentStateReducer {
                 it
             }
         }
+    }
+}
+
+private inline fun updatePermissionHighlightsState(
+    state: BrowserState,
+    tabId: String,
+    crossinline update: (PermissionHighlightsState) -> PermissionHighlightsState
+): BrowserState {
+    return updateContentState(state, tabId) {
+        it.copy(permissionHighlights = update(it.permissionHighlights))
     }
 }
 

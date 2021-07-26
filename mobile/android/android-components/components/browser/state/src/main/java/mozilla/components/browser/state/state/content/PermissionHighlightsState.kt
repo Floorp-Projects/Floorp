@@ -12,11 +12,41 @@ import kotlinx.parcelize.Parcelize
  * Value type that represents any information about permissions that should
  * be brought to user's attention.
  *
- * @property isAutoPlayBlocking indicates if the autoplay setting
- * disabled some web content from playing.
+ * @property notificationChanged indicates if the notification permission has changed from
+ * its default value.
+ * @property cameraChanged indicates if the camera permission has changed from its default value.
+ * @property locationChanged indicates if the location permission has changed from its default value.
+ * @property microphoneChanged indicates if the microphone permission has changed from its default value.
+ * @property persistentStorageChanged indicates if the persistent storage permission has
+ * changed from its default value.
+ * @property mediaKeySystemAccessChanged indicates if the media key systemAccess
+ * permission has changed from its default value.
+ * @property autoPlayAudibleChanged indicates if the autoplay audible permission has changed
+ * from its default value.
+ * @property autoPlayInaudibleChanged indicates if the autoplay inaudible permission has changed
+ * from its default value.
+ * @property autoPlayAudibleBlocking indicates if the autoplay audible setting disabled some
+ * web content from playing.
+ * @property autoPlayInaudibleBlocking indicates if the autoplay inaudible setting disabled
+ * some web content from playing.
  */
 @SuppressLint("ParcelCreator")
 @Parcelize
 data class PermissionHighlightsState(
-    val isAutoPlayBlocking: Boolean = false
-) : Parcelable
+    val notificationChanged: Boolean = false,
+    val cameraChanged: Boolean = false,
+    val locationChanged: Boolean = false,
+    val microphoneChanged: Boolean = false,
+    val persistentStorageChanged: Boolean = false,
+    val mediaKeySystemAccessChanged: Boolean = false,
+    val autoPlayAudibleChanged: Boolean = false,
+    val autoPlayInaudibleChanged: Boolean = false,
+    val autoPlayAudibleBlocking: Boolean = false,
+    val autoPlayInaudibleBlocking: Boolean = false
+) : Parcelable {
+    val isAutoPlayBlocking get() = autoPlayAudibleBlocking || autoPlayInaudibleBlocking
+    val permissionsChanged
+        get() = notificationChanged || cameraChanged || locationChanged ||
+            microphoneChanged || persistentStorageChanged || mediaKeySystemAccessChanged ||
+            autoPlayAudibleChanged || autoPlayInaudibleChanged
+}

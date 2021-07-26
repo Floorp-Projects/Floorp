@@ -8,7 +8,7 @@ import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.Toolbar.Highlight.NONE
-import mozilla.components.concept.toolbar.Toolbar.Highlight.AUTOPLAY_BLOCKED
+import mozilla.components.concept.toolbar.Toolbar.Highlight.PERMISSIONS_CHANGED
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -34,9 +34,9 @@ class HighlightViewTest {
     fun `setting status will trigger an icon updated`() {
         val view = HighlightView(testContext)
 
-        view.state = AUTOPLAY_BLOCKED
+        view.state = PERMISSIONS_CHANGED
 
-        assertEquals(AUTOPLAY_BLOCKED, view.state)
+        assertEquals(PERMISSIONS_CHANGED, view.state)
         assertTrue(view.isVisible)
         assertNotNull(view.drawable)
         assertEquals(

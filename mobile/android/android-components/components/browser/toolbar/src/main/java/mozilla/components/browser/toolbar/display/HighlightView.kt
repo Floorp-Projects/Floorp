@@ -13,7 +13,7 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.isVisible
 import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.Toolbar.Highlight
-import mozilla.components.concept.toolbar.Toolbar.Highlight.AUTOPLAY_BLOCKED
+import mozilla.components.concept.toolbar.Toolbar.Highlight.PERMISSIONS_CHANGED
 import mozilla.components.concept.toolbar.Toolbar.Highlight.NONE
 
 /**
@@ -76,7 +76,7 @@ internal class HighlightView @JvmOverloads constructor(
     }
 
     private fun Highlight.toUpdate(): Update = when (this) {
-        AUTOPLAY_BLOCKED -> Update(
+        PERMISSIONS_CHANGED -> Update(
             highlightIcon,
             R.string.mozac_browser_toolbar_content_description_autoplay_blocked,
             true)

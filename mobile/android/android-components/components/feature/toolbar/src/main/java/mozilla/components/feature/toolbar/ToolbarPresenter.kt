@@ -88,7 +88,7 @@ class ToolbarPresenter(
 
     private fun updateHighlight(tab: SessionState) {
         toolbar.highlight = when {
-            tab.content.permissionHighlights.isAutoPlayBlocking -> Highlight.AUTOPLAY_BLOCKED
+            tab.content.permissionHighlights.permissionsChanged -> Highlight.PERMISSIONS_CHANGED
             else -> Highlight.NONE
         }
     }

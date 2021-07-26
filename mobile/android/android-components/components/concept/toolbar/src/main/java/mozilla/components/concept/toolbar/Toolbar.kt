@@ -441,9 +441,9 @@ interface Toolbar {
      */
     enum class Highlight {
         /**
-         * The site has autoplay blocked.
+         * The site has changed its permissions from their default values.
          */
-        AUTOPLAY_BLOCKED,
+        PERMISSIONS_CHANGED,
         /**
          * The site does not show a dot indicator.
          */

@@ -208,7 +208,7 @@ class DisplayToolbarTest {
             displayToolbar.views.highlight.drawable
         )
 
-        displayToolbar.setHighlight(Toolbar.Highlight.AUTOPLAY_BLOCKED)
+        displayToolbar.setHighlight(Toolbar.Highlight.PERMISSIONS_CHANGED)
 
         assertNotEquals(
             oldPermissionIcon,

@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.NotificationChangedAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.BrowserState
@@ -339,7 +340,7 @@ class ToolbarPresenterTest {
         verify(toolbar).displayProgress(90)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.INSECURE
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
-        verify(toolbar).highlight = Toolbar.Highlight.AUTOPLAY_BLOCKED
+        verify(toolbar).highlight = Toolbar.Highlight.PERMISSIONS_CHANGED
         verifyNoMoreInteractions(toolbarPresenter.renderer)
         verifyNoMoreInteractions(toolbar)
     }
@@ -420,13 +421,13 @@ class ToolbarPresenterTest {
 
         verify(toolbar).highlight = Toolbar.Highlight.NONE
 
-        store.dispatch(UpdatePermissionHighlightsStateAction("tab", PermissionHighlightsState(true))).joinBlocking()
+        store.dispatch(NotificationChangedAction("tab", true)).joinBlocking()
 
         testDispatcher.advanceUntilIdle()
 
-        verify(toolbar).highlight = Toolbar.Highlight.AUTOPLAY_BLOCKED
+        verify(toolbar).highlight = Toolbar.Highlight.PERMISSIONS_CHANGED
 
-        store.dispatch(UpdatePermissionHighlightsStateAction("tab", PermissionHighlightsState())).joinBlocking()
+        store.dispatch(UpdatePermissionHighlightsStateAction.Reset("tab")).joinBlocking()
 
         testDispatcher.advanceUntilIdle()
 
