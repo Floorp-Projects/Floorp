@@ -402,10 +402,8 @@ already_AddRefed<nsISerialEventTarget> GeckoMediaPluginService::GetGMPThread() {
   return thread.forget();
 }
 
-// TODO(bug 1721842): merge this and GetGMPVideoDecoder as we've removed the
-// concept of a decrypting decoder.
 NS_IMETHODIMP
-GeckoMediaPluginService::GetDecryptingGMPVideoDecoder(
+GeckoMediaPluginService::GetGMPVideoDecoder(
     GMPCrashHelper* aHelper, nsTArray<nsCString>* aTags,
     const nsACString& aNodeId,
     UniquePtr<GetGMPVideoDecoderCallback>&& aCallback) {

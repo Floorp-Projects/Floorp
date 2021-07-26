@@ -260,8 +260,8 @@ RefPtr<MediaDataDecoder::InitPromise> GMPVideoDecoder::Init() {
   nsTArray<nsCString> tags;
   InitTags(tags);
   UniquePtr<GetGMPVideoDecoderCallback> callback(new GMPInitDoneCallback(this));
-  if (NS_FAILED(mMPS->GetDecryptingGMPVideoDecoder(
-          mCrashHelper, &tags, GetNodeId(), std::move(callback)))) {
+  if (NS_FAILED(mMPS->GetGMPVideoDecoder(mCrashHelper, &tags, GetNodeId(),
+                                         std::move(callback)))) {
     mInitPromise.Reject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 
