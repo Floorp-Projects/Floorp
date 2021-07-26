@@ -770,7 +770,7 @@ function renderTransportStats(
         { className: "stat-label" },
         "about-webrtc-lost-label",
         {
-          packets: packetsReceived,
+          packets: packetsLost,
         }
       )
     );
