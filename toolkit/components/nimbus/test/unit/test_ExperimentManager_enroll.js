@@ -1,5 +1,8 @@
 "use strict";
 
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/NimbusTestUtils.jsm"
+);
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"
 );
@@ -28,14 +31,10 @@ const { SYNC_DATA_PREF_BRANCH } = ExperimentStore;
 add_task(async function test_add_to_store() {
   const manager = ExperimentFakes.manager();
   const recipe = ExperimentFakes.recipe("foo");
-  const enrollPromise = new Promise(resolve =>
-    manager.store.on("update:foo", resolve)
-  );
 
   await manager.onStartup();
 
-  await manager.enroll(recipe, "test_add_to_store");
-  await enrollPromise;
+  await manager.enroll(recipe);
   const experiment = manager.store.get("foo");
 
   Assert.ok(experiment, "should add an experiment with slug foo");
@@ -54,9 +53,6 @@ add_task(
   async function test_setExperimentActive_sendEnrollmentTelemetry_called() {
     const manager = ExperimentFakes.manager();
     const sandbox = sinon.createSandbox();
-    const enrollPromise = new Promise(resolve =>
-      manager.store.on("update:foo", resolve)
-    );
     sandbox.spy(manager, "setExperimentActive");
     sandbox.spy(manager, "sendEnrollmentTelemetry");
 
@@ -64,11 +60,7 @@ add_task(
 
     await manager.onStartup();
 
-    await manager.enroll(
-      ExperimentFakes.recipe("foo"),
-      "test_setExperimentActive_sendEnrollmentTelemetry_called"
-    );
-    await enrollPromise;
+    await manager.enroll(ExperimentFakes.recipe("foo"));
     const experiment = manager.store.get("foo");
 
     Assert.equal(
@@ -99,10 +91,10 @@ add_task(async function test_failure_name_conflict() {
   await manager.onStartup();
 
   // simulate adding a previouly enrolled experiment
-  await manager.store.addExperiment(ExperimentFakes.experiment("foo"));
+  manager.store.addExperiment(ExperimentFakes.experiment("foo"));
 
   await Assert.rejects(
-    manager.enroll(ExperimentFakes.recipe("foo"), "test_failure_name_conflict"),
+    manager.enroll(ExperimentFakes.recipe("foo")),
     /An experiment with the slug "foo" already exists/,
     "should throw if a conflicting experiment exists"
   );
@@ -129,15 +121,15 @@ add_task(async function test_failure_group_conflict() {
   // These should not be allowed to exist simultaneously.
   const existingBranch = {
     slug: "treatment",
-    feature: { featureId: "pink", enabled: true, value: {} },
+    feature: { featureId: "pink", enabled: true },
   };
   const newBranch = {
     slug: "treatment",
-    feature: { featureId: "pink", enabled: true, value: {} },
+    feature: { featureId: "pink", enabled: true },
   };
 
   // simulate adding an experiment with a conflicting group "pink"
-  await manager.store.addExperiment(
+  manager.store.addExperiment(
     ExperimentFakes.experiment("foo", {
       branch: existingBranch,
     })
@@ -147,8 +139,7 @@ add_task(async function test_failure_group_conflict() {
   sandbox.stub(manager, "chooseBranch").returns(newBranch);
   Assert.equal(
     await manager.enroll(
-      ExperimentFakes.recipe("bar", { branches: [newBranch] }),
-      "test_failure_group_conflict"
+      ExperimentFakes.recipe("bar", { branches: [newBranch] })
     ),
     null,
     "should not enroll if there is a feature conflict"
@@ -241,12 +232,8 @@ add_task(async function enroll_in_reference_aw_experiment() {
   recipe.bucketConfig.count = recipe.bucketConfig.total;
 
   const manager = ExperimentFakes.manager();
-  const enrollPromise = new Promise(resolve =>
-    manager.store.on("update:reference-aw", resolve)
-  );
   await manager.onStartup();
-  await manager.enroll(recipe, "enroll_in_reference_aw_experiment");
-  await enrollPromise;
+  await manager.enroll(recipe);
 
   Assert.ok(manager.store.get("reference-aw"), "Successful onboarding");
   let prefValue = Services.prefs.getStringPref(
@@ -264,19 +251,13 @@ add_task(async function enroll_in_reference_aw_experiment() {
 add_task(async function test_forceEnroll_cleanup() {
   const manager = ExperimentFakes.manager();
   const sandbox = sinon.createSandbox();
-  const fooEnrollPromise = new Promise(resolve =>
-    manager.store.on("update:foo", resolve)
-  );
-  const barEnrollPromise = new Promise(resolve =>
-    manager.store.on("update:optin-bar", resolve)
-  );
   let unenrollStub = sandbox.spy(manager, "unenroll");
   let existingRecipe = ExperimentFakes.recipe("foo", {
     branches: [
       {
         slug: "treatment",
         ratio: 1,
-        feature: { featureId: "force-enrollment", enabled: true, value: {} },
+        feature: { featureId: "force-enrollment", enabled: true },
       },
     ],
   });
@@ -285,18 +266,16 @@ add_task(async function test_forceEnroll_cleanup() {
       {
         slug: "treatment",
         ratio: 1,
-        feature: { featureId: "force-enrollment", enabled: true, value: {} },
+        feature: { featureId: "force-enrollment", enabled: true },
       },
     ],
   });
 
   await manager.onStartup();
-  await manager.enroll(existingRecipe, "test_forceEnroll_cleanup");
-  await fooEnrollPromise;
+  await manager.enroll(existingRecipe);
 
   let setExperimentActiveSpy = sandbox.spy(manager, "setExperimentActive");
   manager.forceEnroll(forcedRecipe, forcedRecipe.branches[0]);
-  await barEnrollPromise;
 
   Assert.ok(unenrollStub.called, "Unenrolled from existing experiment");
   Assert.equal(
