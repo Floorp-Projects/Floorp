@@ -153,9 +153,6 @@ nsresult HeadlessLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::AllowOverlayScrollbarsOverlap:
       aResult = 0;
       break;
-    case IntID::ShowHideScrollbars:
-      aResult = 0;
-      break;
     case IntID::SkipNavigatingDisabledMenuItem:
       aResult = 1;
       break;
