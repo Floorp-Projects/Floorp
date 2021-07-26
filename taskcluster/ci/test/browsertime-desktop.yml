@@ -96,6 +96,7 @@ browsertime-tp6:
         - expedia
         - [facebook, fb]
         - [google-docs, gdocs]
+        - [google-docs-canvas, gcanvas]
         - [google-mail, gmail]
         - [google-search, gsearch]
         - imdb
