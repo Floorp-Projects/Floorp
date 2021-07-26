@@ -110,22 +110,7 @@ class FullParseHandler {
         previousParseCache_(compilationState.previousParseCache),
         lazyInnerFunctionIndex(0),
         lazyClosedOverBindingIndex(0),
-        reuseGCThings(compilationState.input.isDelazifying()) {
-    // The gcthings() array contains the inner function list
-    // followed by the closed-over bindings data. Advance the index for
-    // closed-over bindings to the end of the inner functions. The
-    // nextLazyInnerFunction / nextLazyClosedOverBinding accessors confirm we
-    // have the expected types. See also: BaseScript::CreateLazy.
-    if (reuseGCThings) {
-      auto gcThings = compilationState.previousParseCache.gcThings();
-      for (auto gcThing : gcThings) {
-        if (gcThing.isNull() || gcThing.isAtom()) {
-          break;
-        }
-        lazyClosedOverBindingIndex++;
-      }
-    }
-  }
+        reuseGCThings(compilationState.input.isDelazifying()) {}
 
   static NullNode null() { return NullNode(); }
 
@@ -1096,26 +1081,27 @@ class FullParseHandler {
   bool reuseLazyInnerFunctions() { return reuseGCThings; }
   bool reuseClosedOverBindings() { return reuseGCThings; }
   bool reuseRegexpSyntaxParse() { return reuseGCThings; }
-  ScriptIndex nextLazyInnerFunction() {
-    auto gcThings = previousParseCache_.gcThings();
-    auto taggedScriptIndex = gcThings[lazyInnerFunctionIndex++];
-    MOZ_ASSERT(taggedScriptIndex.isFunction());
-    return taggedScriptIndex.toFunction();
-  }
+  void nextLazyInnerFunction() { lazyInnerFunctionIndex++; }
   TaggedParserAtomIndex nextLazyClosedOverBinding() {
     // Trailing nullptrs were elided in PerHandlerParser::finishFunction().
-    auto gcThings = previousParseCache_.gcThings();
-    if (lazyClosedOverBindingIndex >= gcThings.Length()) {
+    auto closedOverBindings = previousParseCache_.closedOverBindings();
+    if (lazyClosedOverBindingIndex >= closedOverBindings.Length()) {
       return TaggedParserAtomIndex::null();
     }
 
-    return gcThings[lazyClosedOverBindingIndex++].toAtomOrNull();
+    return closedOverBindings[lazyClosedOverBindingIndex++];
   }
-  const ScriptStencil& cachedScriptData(ScriptIndex index) const {
-    return previousParseCache_.scriptData()[index];
+  const ScriptStencil& cachedScriptData() const {
+    // lazyInnerFunctionIndex is incremented with nextLazyInnferFunction before
+    // reading the content, thus we need -1 to access the element that we just
+    // skipped.
+    return previousParseCache_.scriptData(lazyInnerFunctionIndex - 1);
   }
-  const ScriptStencilExtra& cachedScriptExtra(ScriptIndex index) const {
-    return previousParseCache_.scriptExtra()[index];
+  const ScriptStencilExtra& cachedScriptExtra() const {
+    // lazyInnerFunctionIndex is incremented with nextLazyInnferFunction before
+    // reading the content, thus we need -1 to access the element that we just
+    // skipped.
+    return previousParseCache_.scriptExtra(lazyInnerFunctionIndex - 1);
   }
 
   void setPrivateNameKind(Node node, PrivateNameKind kind) {
