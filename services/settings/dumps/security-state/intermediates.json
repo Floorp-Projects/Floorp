@@ -1,7 +1,205 @@
 {
   "data": [
     {
-      "schema": 1626922716506,
+      "schema": 1627246646065,
+      "derHash": "ClUqZfIv+CDn7D1Du/iLAqvDS9JH4MNQWJG2NC8WpfI=",
+      "subject": "CN=SHECA RSA Domain Validation Server CA G3,O=UniTrust,C=CN",
+      "subjectDN": "MFMxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDExMC8GA1UEAwwoU0hFQ0EgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "42516b0068507cb60d6383aaefa05ac169921cff9e4616761151efe098d3e1fe",
+        "size": 2008,
+        "filename": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS_84dpbLl_qNOnU=.pem",
+        "location": "security-state-staging/intermediates/525578e5-a94b-4525-b9e7-801be6e0ff89.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS/84dpbLl/qNOnU=",
+      "crlite_enrolled": false,
+      "id": "4b6a2421-1677-41c0-8103-bc13fb7e09f9",
+      "last_modified": 1627289862386
+    },
+    {
+      "schema": 1627102641600,
+      "derHash": "6mljaWdQVkoiiz64jg/UMExdonp6+S0dQZk1elAHgxU=",
+      "subject": "CN=WoTrus EV SSL CA,O=WoTrus CA Limited,C=CN",
+      "subjectDN": "MEQxCzAJBgNVBAYTAkNOMRowGAYDVQQKDBFXb1RydXMgQ0EgTGltaXRlZDEZMBcGA1UEAwwQV29UcnVzIEVWIFNTTCBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "fc57e3fad962bd4b00feeaae47893e01b5b42af32dadb1d3e0e55cad0d68a007",
+        "size": 1691,
+        "filename": "bfm30K2ufQC3gQINxl7OwREoFSQEJrK4ecMD3jy_Qlc=.pem",
+        "location": "security-state-staging/intermediates/744615e6-3b14-49f9-9fef-3d7691a5c6d6.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "bfm30K2ufQC3gQINxl7OwREoFSQEJrK4ecMD3jy/Qlc=",
+      "crlite_enrolled": false,
+      "id": "9cb658c6-3e52-4a94-b178-1d2ab7a03ad7",
+      "last_modified": 1627246645036
+    },
+    {
+      "schema": 1627098943049,
+      "derHash": "qzIDs+ogF9UJcmodgik+/8uMQs61LJrxwO7pa1wCvLo=",
+      "subject": "CN=Microsoft Azure TLS Issuing CA 05,O=Microsoft Corporation,C=US",
+      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwNQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "dab72f8a61c3d1392090bfa1d53928ff5e675385a1b03742a601a3457a12342f",
+        "size": 2653,
+        "filename": "4i4h0jN9NROr1xKJI-TQ1Q_ZIfUjPMXtmWUsDR3Pjiw=.pem",
+        "location": "security-state-staging/intermediates/cd6fd8ca-476d-4166-8171-47e097b3fba7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "4i4h0jN9NROr1xKJI+TQ1Q/ZIfUjPMXtmWUsDR3Pjiw=",
+      "crlite_enrolled": false,
+      "id": "cdcb7fdb-36d0-4d2b-b326-6537b6c0a255",
+      "last_modified": 1627102640462
+    },
+    {
+      "schema": 1627098765680,
+      "derHash": "1oMbpDYH9awZd41idTFWKvVRRfGRyrXvr6DgAFRCswI=",
+      "subject": "CN=Microsoft Azure TLS Issuing CA 05,O=Microsoft Corporation,C=US",
+      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwNQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "eec823ad61a76103455ac29ab1ea726af33851691074cffd1fb703c49fe85217",
+        "size": 2121,
+        "filename": "4i4h0jN9NROr1xKJI-TQ1Q_ZIfUjPMXtmWUsDR3Pjiw=.pem",
+        "location": "security-state-staging/intermediates/d49999e5-60cd-4c45-a970-e9462ab32f63.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "4i4h0jN9NROr1xKJI+TQ1Q/ZIfUjPMXtmWUsDR3Pjiw=",
+      "crlite_enrolled": false,
+      "id": "9561182b-470d-459e-8d38-ee7e1b3ceed8",
+      "last_modified": 1627102640439
+    },
+    {
+      "schema": 1627099151125,
+      "derHash": "qzIDs+ogF9UJcmodgik+/8uMQs61LJrxwO7pa1wCvLo=",
+      "subject": "CN=Microsoft Azure TLS Issuing CA 05,O=Microsoft Corporation,C=US",
+      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwNQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "dab72f8a61c3d1392090bfa1d53928ff5e675385a1b03742a601a3457a12342f",
+        "size": 2653,
+        "filename": "4i4h0jN9NROr1xKJI-TQ1Q_ZIfUjPMXtmWUsDR3Pjiw=.pem",
+        "location": "security-state-staging/intermediates/8493a5e1-2fe7-48d1-baff-5f6b9f29913f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "4i4h0jN9NROr1xKJI+TQ1Q/ZIfUjPMXtmWUsDR3Pjiw=",
+      "crlite_enrolled": false,
+      "id": "f45995f1-56b8-45c4-9465-14c646f731cc",
+      "last_modified": 1627102640419
+    },
+    {
+      "schema": 1627098943614,
+      "derHash": "1oMbpDYH9awZd41idTFWKvVRRfGRyrXvr6DgAFRCswI=",
+      "subject": "CN=Microsoft Azure TLS Issuing CA 05,O=Microsoft Corporation,C=US",
+      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwNQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "eec823ad61a76103455ac29ab1ea726af33851691074cffd1fb703c49fe85217",
+        "size": 2121,
+        "filename": "4i4h0jN9NROr1xKJI-TQ1Q_ZIfUjPMXtmWUsDR3Pjiw=.pem",
+        "location": "security-state-staging/intermediates/e3b5ce85-565e-482f-b742-aae47955c01f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "4i4h0jN9NROr1xKJI+TQ1Q/ZIfUjPMXtmWUsDR3Pjiw=",
+      "crlite_enrolled": false,
+      "id": "8fc3b269-4824-4ae9-9b9d-2d5ab7099766",
+      "last_modified": 1627102640399
+    },
+    {
+      "schema": 1626987442498,
+      "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
+      "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
+      "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a111efc20329e87b541cfc3e7f526fc54bb24624fddf210f4347b9fadfb1ab6b",
+        "size": 1727,
+        "filename": "8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=.pem",
+        "location": "security-state-staging/intermediates/a2a04dfe-6201-4d0a-b8cf-80d2975bfb51.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
+      "crlite_enrolled": true,
+      "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
+      "last_modified": 1627009045803
+    },
+    {
+      "schema": 1626986989722,
+      "derHash": "9igmTHnb+9/P3sZDFxvcvU3nSD+cgOpZBoiHrkSaLkg=",
+      "subject": "CN=HARICA EV TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,L=Athens,C=GR",
+      "subjectDN": "MHwxCzAJBgNVBAYTAkdSMQ8wDQYDVQQHDAZBdGhlbnMxNzA1BgNVBAoMLkhlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgQ0ExIzAhBgNVBAMMGkhBUklDQSBFViBUTFMgUlNBIFN1YkNBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "846d7358205bc7e15ac8e01f9d19e231ffbaa461c8bdace8a0b4ec9f552e012c",
+        "size": 2475,
+        "filename": "qQHYBA8HuHBDaaxDEsg5_SBSGWrd6XH3D7_lIoKEbz8=.pem",
+        "location": "security-state-staging/intermediates/14678d7f-ddf3-4f36-b119-073b8c5a9b16.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "qQHYBA8HuHBDaaxDEsg5/SBSGWrd6XH3D7/lIoKEbz8=",
+      "crlite_enrolled": true,
+      "id": "d11e6280-6580-49bf-8a77-32ab8fe404d8",
+      "last_modified": 1626987441447
+    },
+    {
+      "schema": 1626986989201,
+      "derHash": "cB6yP5VWTNVWnNIOXwXCiIkAuum6A6v1q+V7/gS1SmA=",
+      "subject": "CN=HARICA EV TLS ECC SubCA R1,O=Hellenic Academic and Research Institutions CA,L=Athens,C=GR",
+      "subjectDN": "MHwxCzAJBgNVBAYTAkdSMQ8wDQYDVQQHDAZBdGhlbnMxNzA1BgNVBAoMLkhlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgQ0ExIzAhBgNVBAMMGkhBUklDQSBFViBUTFMgRUNDIFN1YkNBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "244713695ba67258093ce03ecbc69ba3cae541d762cb47302f341d9624076e4a",
+        "size": 1337,
+        "filename": "guE2rUJ3slSQ9iYP0Ub25zrLqasAFng1eTC5H9BqTUg=.pem",
+        "location": "security-state-staging/intermediates/8530e613-2ac4-47e1-a3d6-9e33c404cd71.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "guE2rUJ3slSQ9iYP0Ub25zrLqasAFng1eTC5H9BqTUg=",
+      "crlite_enrolled": true,
+      "id": "f9d19bad-6a64-448b-95cf-8ba59a0aeecc",
+      "last_modified": 1626987441427
+    },
+    {
+      "schema": 1626984474074,
+      "derHash": "9igmTHnb+9/P3sZDFxvcvU3nSD+cgOpZBoiHrkSaLkg=",
+      "subject": "CN=HARICA EV TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,L=Athens,C=GR",
+      "subjectDN": "MHwxCzAJBgNVBAYTAkdSMQ8wDQYDVQQHDAZBdGhlbnMxNzA1BgNVBAoMLkhlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgQ0ExIzAhBgNVBAMMGkhBUklDQSBFViBUTFMgUlNBIFN1YkNBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "846d7358205bc7e15ac8e01f9d19e231ffbaa461c8bdace8a0b4ec9f552e012c",
+        "size": 2475,
+        "filename": "qQHYBA8HuHBDaaxDEsg5_SBSGWrd6XH3D7_lIoKEbz8=.pem",
+        "location": "security-state-staging/intermediates/e5246c0b-fc24-4e46-97eb-c00a68aa1d0f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "qQHYBA8HuHBDaaxDEsg5/SBSGWrd6XH3D7/lIoKEbz8=",
+      "crlite_enrolled": true,
+      "id": "53de2049-dbd1-4f4b-87f0-bfa0d0eb57aa",
+      "last_modified": 1626987441407
+    },
+    {
+      "schema": 1626984722728,
+      "derHash": "cB6yP5VWTNVWnNIOXwXCiIkAuum6A6v1q+V7/gS1SmA=",
+      "subject": "CN=HARICA EV TLS ECC SubCA R1,O=Hellenic Academic and Research Institutions CA,L=Athens,C=GR",
+      "subjectDN": "MHwxCzAJBgNVBAYTAkdSMQ8wDQYDVQQHDAZBdGhlbnMxNzA1BgNVBAoMLkhlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgQ0ExIzAhBgNVBAMMGkhBUklDQSBFViBUTFMgRUNDIFN1YkNBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "244713695ba67258093ce03ecbc69ba3cae541d762cb47302f341d9624076e4a",
+        "size": 1337,
+        "filename": "guE2rUJ3slSQ9iYP0Ub25zrLqasAFng1eTC5H9BqTUg=.pem",
+        "location": "security-state-staging/intermediates/d45617a3-d10a-4c7e-b432-ea22d743a33d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "guE2rUJ3slSQ9iYP0Ub25zrLqasAFng1eTC5H9BqTUg=",
+      "crlite_enrolled": true,
+      "id": "edea9972-db9b-4cd4-85ca-c61cf1317bc3",
+      "last_modified": 1626987441386
+    },
+    {
+      "schema": 1626947969519,
       "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
       "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
       "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
@@ -14,9 +212,9 @@
         "mimetype": "application/x-pem-file"
       },
       "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
-      "crlite_enrolled": false,
+      "crlite_enrolled": true,
       "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
-      "last_modified": 1626944256233
+      "last_modified": 1626965850835
     },
     {
       "schema": 1626919335949,
@@ -53,24 +251,6 @@
       "crlite_enrolled": true,
       "id": "29d99702-edc8-413c-b8ca-77c56ea0181f",
       "last_modified": 1626922715440
-    },
-    {
-      "schema": 1626789590692,
-      "derHash": "ClUqZfIv+CDn7D1Du/iLAqvDS9JH4MNQWJG2NC8WpfI=",
-      "subject": "CN=SHECA RSA Domain Validation Server CA G3,O=UniTrust,C=CN",
-      "subjectDN": "MFMxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDExMC8GA1UEAwwoU0hFQ0EgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "42516b0068507cb60d6383aaefa05ac169921cff9e4616761151efe098d3e1fe",
-        "size": 2008,
-        "filename": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS_84dpbLl_qNOnU=.pem",
-        "location": "security-state-staging/intermediates/525578e5-a94b-4525-b9e7-801be6e0ff89.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS/84dpbLl/qNOnU=",
-      "crlite_enrolled": true,
-      "id": "4b6a2421-1677-41c0-8103-bc13fb7e09f9",
-      "last_modified": 1626836316246
     },
     {
       "schema": 1626789523481,
@@ -1403,24 +1583,6 @@
       "crlite_enrolled": true,
       "id": "fcf9f03f-2cbd-43fe-9c9d-9d9d05d57e03",
       "last_modified": 1622710635761
-    },
-    {
-      "schema": 1622581045640,
-      "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
-      "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
-      "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a111efc20329e87b541cfc3e7f526fc54bb24624fddf210f4347b9fadfb1ab6b",
-        "size": 1727,
-        "filename": "8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=.pem",
-        "location": "security-state-staging/intermediates/a2a04dfe-6201-4d0a-b8cf-80d2975bfb51.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
-      "crlite_enrolled": true,
-      "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
-      "last_modified": 1622602645120
     },
     {
       "schema": 1622555926542,
@@ -6949,24 +7111,6 @@
       "last_modified": 1613660250166
     },
     {
-      "schema": 1613659830808,
-      "derHash": "cB6yP5VWTNVWnNIOXwXCiIkAuum6A6v1q+V7/gS1SmA=",
-      "subject": "CN=HARICA EV TLS ECC SubCA R1,O=Hellenic Academic and Research Institutions CA,L=Athens,C=GR",
-      "subjectDN": "MHwxCzAJBgNVBAYTAkdSMQ8wDQYDVQQHDAZBdGhlbnMxNzA1BgNVBAoMLkhlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgQ0ExIzAhBgNVBAMMGkhBUklDQSBFViBUTFMgRUNDIFN1YkNBIFIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "244713695ba67258093ce03ecbc69ba3cae541d762cb47302f341d9624076e4a",
-        "size": 1337,
-        "filename": "guE2rUJ3slSQ9iYP0Ub25zrLqasAFng1eTC5H9BqTUg=.pem",
-        "location": "security-state-staging/intermediates/d45617a3-d10a-4c7e-b432-ea22d743a33d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "guE2rUJ3slSQ9iYP0Ub25zrLqasAFng1eTC5H9BqTUg=",
-      "crlite_enrolled": false,
-      "id": "edea9972-db9b-4cd4-85ca-c61cf1317bc3",
-      "last_modified": 1613660250155
-    },
-    {
       "schema": 1613659832265,
       "derHash": "wWH1qt5A+8lyPwiS3pY9TRBAVWGmvcaacnmPkYvtGc0=",
       "subject": "CN=GRnet SSL RSA SubCA R2,O=Greek Research and Technology Network,L=Athens,C=GR",
@@ -7199,24 +7343,6 @@
       "crlite_enrolled": false,
       "id": "f0b81efc-4667-4062-9892-0ed9b67a19b6",
       "last_modified": 1613660249965
-    },
-    {
-      "schema": 1613659856411,
-      "derHash": "9igmTHnb+9/P3sZDFxvcvU3nSD+cgOpZBoiHrkSaLkg=",
-      "subject": "CN=HARICA EV TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,L=Athens,C=GR",
-      "subjectDN": "MHwxCzAJBgNVBAYTAkdSMQ8wDQYDVQQHDAZBdGhlbnMxNzA1BgNVBAoMLkhlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgQ0ExIzAhBgNVBAMMGkhBUklDQSBFViBUTFMgUlNBIFN1YkNBIFIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "846d7358205bc7e15ac8e01f9d19e231ffbaa461c8bdace8a0b4ec9f552e012c",
-        "size": 2475,
-        "filename": "qQHYBA8HuHBDaaxDEsg5_SBSGWrd6XH3D7_lIoKEbz8=.pem",
-        "location": "security-state-staging/intermediates/e5246c0b-fc24-4e46-97eb-c00a68aa1d0f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "qQHYBA8HuHBDaaxDEsg5/SBSGWrd6XH3D7/lIoKEbz8=",
-      "crlite_enrolled": false,
-      "id": "53de2049-dbd1-4f4b-87f0-bfa0d0eb57aa",
-      "last_modified": 1613660249954
     },
     {
       "schema": 1613659859355,
@@ -7903,24 +8029,6 @@
       "last_modified": 1613656686762
     },
     {
-      "schema": 1613656220550,
-      "derHash": "cB6yP5VWTNVWnNIOXwXCiIkAuum6A6v1q+V7/gS1SmA=",
-      "subject": "CN=HARICA EV TLS ECC SubCA R1,O=Hellenic Academic and Research Institutions CA,L=Athens,C=GR",
-      "subjectDN": "MHwxCzAJBgNVBAYTAkdSMQ8wDQYDVQQHDAZBdGhlbnMxNzA1BgNVBAoMLkhlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgQ0ExIzAhBgNVBAMMGkhBUklDQSBFViBUTFMgRUNDIFN1YkNBIFIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "244713695ba67258093ce03ecbc69ba3cae541d762cb47302f341d9624076e4a",
-        "size": 1337,
-        "filename": "guE2rUJ3slSQ9iYP0Ub25zrLqasAFng1eTC5H9BqTUg=.pem",
-        "location": "security-state-staging/intermediates/8530e613-2ac4-47e1-a3d6-9e33c404cd71.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "guE2rUJ3slSQ9iYP0Ub25zrLqasAFng1eTC5H9BqTUg=",
-      "crlite_enrolled": false,
-      "id": "f9d19bad-6a64-448b-95cf-8ba59a0aeecc",
-      "last_modified": 1613656686752
-    },
-    {
       "schema": 1613656222014,
       "derHash": "kY0pldob4hnjp+S6La+hGgJe6/TUo1o6iy25nnksaH4=",
       "subject": "CN=Institute of Accelerating Systems and Applications SSL CA R1,O=Institute of Accelerating Systems and Applications,L=Athens,C=GR",
@@ -8063,24 +8171,6 @@
       "crlite_enrolled": true,
       "id": "d04a4c38-b4a8-453d-a710-09672b6a5ecc",
       "last_modified": 1613656686657
-    },
-    {
-      "schema": 1613656235385,
-      "derHash": "9igmTHnb+9/P3sZDFxvcvU3nSD+cgOpZBoiHrkSaLkg=",
-      "subject": "CN=HARICA EV TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,L=Athens,C=GR",
-      "subjectDN": "MHwxCzAJBgNVBAYTAkdSMQ8wDQYDVQQHDAZBdGhlbnMxNzA1BgNVBAoMLkhlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgQ0ExIzAhBgNVBAMMGkhBUklDQSBFViBUTFMgUlNBIFN1YkNBIFIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "846d7358205bc7e15ac8e01f9d19e231ffbaa461c8bdace8a0b4ec9f552e012c",
-        "size": 2475,
-        "filename": "qQHYBA8HuHBDaaxDEsg5_SBSGWrd6XH3D7_lIoKEbz8=.pem",
-        "location": "security-state-staging/intermediates/14678d7f-ddf3-4f36-b119-073b8c5a9b16.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "qQHYBA8HuHBDaaxDEsg5/SBSGWrd6XH3D7/lIoKEbz8=",
-      "crlite_enrolled": false,
-      "id": "d11e6280-6580-49bf-8a77-32ab8fe404d8",
-      "last_modified": 1613656686647
     },
     {
       "schema": 1613656236887,
@@ -13357,24 +13447,6 @@
       "last_modified": 1601517446797
     },
     {
-      "schema": 1601376570852,
-      "derHash": "1oMbpDYH9awZd41idTFWKvVRRfGRyrXvr6DgAFRCswI=",
-      "subject": "CN=Microsoft Azure TLS Issuing CA 05,O=Microsoft Corporation,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwNQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "eec823ad61a76103455ac29ab1ea726af33851691074cffd1fb703c49fe85217",
-        "size": 2121,
-        "filename": "4i4h0jN9NROr1xKJI-TQ1Q_ZIfUjPMXtmWUsDR3Pjiw=.pem",
-        "location": "security-state-staging/intermediates/e3b5ce85-565e-482f-b742-aae47955c01f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "4i4h0jN9NROr1xKJI+TQ1Q/ZIfUjPMXtmWUsDR3Pjiw=",
-      "crlite_enrolled": true,
-      "id": "8fc3b269-4824-4ae9-9b9d-2d5ab7099766",
-      "last_modified": 1601517446782
-    },
-    {
       "schema": 1601376569389,
       "derHash": "HYDNGKeU8fSFDtwzxgSPAuhThqR/POg2l0qORSpg1/I=",
       "subject": "CN=GeoTrust TLS DV RSA Mixed SHA256 2021 CA-1,O=DigiCert Inc,C=US",
@@ -13967,24 +14039,6 @@
       "crlite_enrolled": false,
       "id": "b41c2405-7326-442a-9924-c50f3172fd29",
       "last_modified": 1601517446297
-    },
-    {
-      "schema": 1601376510177,
-      "derHash": "qzIDs+ogF9UJcmodgik+/8uMQs61LJrxwO7pa1wCvLo=",
-      "subject": "CN=Microsoft Azure TLS Issuing CA 05,O=Microsoft Corporation,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwNQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "dab72f8a61c3d1392090bfa1d53928ff5e675385a1b03742a601a3457a12342f",
-        "size": 2653,
-        "filename": "4i4h0jN9NROr1xKJI-TQ1Q_ZIfUjPMXtmWUsDR3Pjiw=.pem",
-        "location": "security-state-staging/intermediates/8493a5e1-2fe7-48d1-baff-5f6b9f29913f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "4i4h0jN9NROr1xKJI+TQ1Q/ZIfUjPMXtmWUsDR3Pjiw=",
-      "crlite_enrolled": true,
-      "id": "f45995f1-56b8-45c4-9465-14c646f731cc",
-      "last_modified": 1601517446286
     },
     {
       "schema": 1601376507194,
@@ -14795,24 +14849,6 @@
       "crlite_enrolled": true,
       "id": "4802c4c4-718e-4497-a9a5-c367fed873eb",
       "last_modified": 1601517445709
-    },
-    {
-      "schema": 1601373055050,
-      "derHash": "1oMbpDYH9awZd41idTFWKvVRRfGRyrXvr6DgAFRCswI=",
-      "subject": "CN=Microsoft Azure TLS Issuing CA 05,O=Microsoft Corporation,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwNQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "eec823ad61a76103455ac29ab1ea726af33851691074cffd1fb703c49fe85217",
-        "size": 2121,
-        "filename": "4i4h0jN9NROr1xKJI-TQ1Q_ZIfUjPMXtmWUsDR3Pjiw=.pem",
-        "location": "security-state-staging/intermediates/d49999e5-60cd-4c45-a970-e9462ab32f63.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "4i4h0jN9NROr1xKJI+TQ1Q/ZIfUjPMXtmWUsDR3Pjiw=",
-      "crlite_enrolled": true,
-      "id": "9561182b-470d-459e-8d38-ee7e1b3ceed8",
-      "last_modified": 1601517445698
     },
     {
       "schema": 1601373060728,
@@ -16289,24 +16325,6 @@
       "crlite_enrolled": true,
       "id": "ace9be7d-afb4-4716-92de-ec68d8675c16",
       "last_modified": 1601517444570
-    },
-    {
-      "schema": 1601372915726,
-      "derHash": "qzIDs+ogF9UJcmodgik+/8uMQs61LJrxwO7pa1wCvLo=",
-      "subject": "CN=Microsoft Azure TLS Issuing CA 05,O=Microsoft Corporation,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwNQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "dab72f8a61c3d1392090bfa1d53928ff5e675385a1b03742a601a3457a12342f",
-        "size": 2653,
-        "filename": "4i4h0jN9NROr1xKJI-TQ1Q_ZIfUjPMXtmWUsDR3Pjiw=.pem",
-        "location": "security-state-staging/intermediates/cd6fd8ca-476d-4166-8171-47e097b3fba7.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "4i4h0jN9NROr1xKJI+TQ1Q/ZIfUjPMXtmWUsDR3Pjiw=",
-      "crlite_enrolled": true,
-      "id": "cdcb7fdb-36d0-4d2b-b326-6537b6c0a255",
-      "last_modified": 1601517444558
     },
     {
       "schema": 1601372912986,
@@ -46655,24 +46673,6 @@
       "crlite_enrolled": false,
       "id": "2a05f09e-4930-43ff-891b-351f3751cce6",
       "last_modified": 1562024771677
-    },
-    {
-      "schema": 1562024769411,
-      "derHash": "6mljaWdQVkoiiz64jg/UMExdonp6+S0dQZk1elAHgxU=",
-      "subject": "CN=WoTrus EV SSL CA,O=WoTrus CA Limited,C=CN",
-      "subjectDN": "MEQxCzAJBgNVBAYTAkNOMRowGAYDVQQKDBFXb1RydXMgQ0EgTGltaXRlZDEZMBcGA1UEAwwQV29UcnVzIEVWIFNTTCBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "fc57e3fad962bd4b00feeaae47893e01b5b42af32dadb1d3e0e55cad0d68a007",
-        "size": 1691,
-        "filename": "bfm30K2ufQC3gQINxl7OwREoFSQEJrK4ecMD3jy_Qlc=.pem",
-        "location": "security-state-staging/intermediates/744615e6-3b14-49f9-9fef-3d7691a5c6d6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "bfm30K2ufQC3gQINxl7OwREoFSQEJrK4ecMD3jy/Qlc=",
-      "crlite_enrolled": true,
-      "id": "9cb658c6-3e52-4a94-b178-1d2ab7a03ad7",
-      "last_modified": 1562024770176
     },
     {
       "schema": 1562024768666,
