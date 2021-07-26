@@ -303,6 +303,15 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "GooglePageAd",
+    platform: "all",
+    name: "Google Page Ad",
+    bug: "1713692",
+    file: "google-page-ad.js",
+    matches: ["*://www.googleadservices.com/pagead/conversion_async.js"],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "GooglePublisherTags",
     platform: "all",
     name: "Google Publisher Tags",
