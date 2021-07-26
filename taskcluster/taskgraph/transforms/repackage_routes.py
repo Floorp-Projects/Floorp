@@ -16,7 +16,7 @@ transforms = TransformSequence()
 def add_indexes(config, jobs):
     for job in jobs:
         repackage_type = job["attributes"].get("repackage_type")
-        if repackage_type:
+        if repackage_type and job["attributes"]["build_type"] != "debug":
             build_platform = job["attributes"]["build_platform"]
             job_name = "{}-{}".format(build_platform, repackage_type)
             product = job.get("index", {}).get("product", "firefox")
