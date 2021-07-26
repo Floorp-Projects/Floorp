@@ -31,6 +31,7 @@ class RecentBookmarksViewHolderTest {
         position = null,
         title = null,
         url = null,
+        dateAdded = 0,
         children = null
     )
 

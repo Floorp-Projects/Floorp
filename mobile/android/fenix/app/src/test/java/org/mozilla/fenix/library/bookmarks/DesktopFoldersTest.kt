@@ -34,6 +34,7 @@ class DesktopFoldersTest {
         title = BookmarkRoot.Root.name,
         position = 0,
         url = null,
+        dateAdded = 0,
         children = null
     )
 

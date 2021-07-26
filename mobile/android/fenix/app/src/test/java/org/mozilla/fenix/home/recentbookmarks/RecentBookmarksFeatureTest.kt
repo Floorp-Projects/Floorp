@@ -40,6 +40,7 @@ class RecentBookmarksFeatureTest {
         position = null,
         title = null,
         url = "https://www.example.com",
+        dateAdded = 0,
         children = null
     )
 

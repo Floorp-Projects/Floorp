@@ -32,6 +32,7 @@ class RecentBookmarkItemViewHolderTest {
         position = null,
         title = "Bookmark Title",
         url = null,
+        dateAdded = 0,
         children = null
     )
 
@@ -42,6 +43,7 @@ class RecentBookmarkItemViewHolderTest {
         position = null,
         title = "Other Bookmark Title",
         url = "https://www.example.com",
+        dateAdded = 0,
         children = null
     )
 
@@ -52,6 +54,7 @@ class RecentBookmarkItemViewHolderTest {
         position = null,
         title = null,
         url = "https://www.github.com",
+        dateAdded = 0,
         children = null
     )
 

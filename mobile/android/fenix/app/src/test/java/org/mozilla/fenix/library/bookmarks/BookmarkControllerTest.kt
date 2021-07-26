@@ -66,9 +66,9 @@ class BookmarkControllerTest {
     private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase = mockk(relaxed = true)
 
     private val item =
-        BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", null)
+        BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", 0, null)
     private val subfolder =
-        BookmarkNode(BookmarkNodeType.FOLDER, "987", "123", 0, "Subfolder", null, listOf())
+        BookmarkNode(BookmarkNodeType.FOLDER, "987", "123", 0, "Subfolder", null, 0, listOf())
     private val childItem = BookmarkNode(
         BookmarkNodeType.ITEM,
         "987",
@@ -76,6 +76,7 @@ class BookmarkControllerTest {
         2,
         "Firefox",
         "https://www.mozilla.org/en-US/firefox/",
+        0,
         null
     )
     private val tree = BookmarkNode(
@@ -85,10 +86,11 @@ class BookmarkControllerTest {
         0,
         "Mobile",
         null,
+        0,
         listOf(item, item, childItem, subfolder)
     )
     private val root = BookmarkNode(
-        BookmarkNodeType.FOLDER, BookmarkRoot.Root.id, null, 0, BookmarkRoot.Root.name, null, null
+        BookmarkNodeType.FOLDER, BookmarkRoot.Root.id, null, 0, BookmarkRoot.Root.name, null, 0, null
     )
 
     @Before
