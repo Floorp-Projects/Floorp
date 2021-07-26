@@ -38,8 +38,8 @@ struct Color {
 class AccAttributes {
   friend struct IPC::ParamTraits<AccAttributes*>;
 
-  using AttrValueType = Variant<nsString, bool, float, int32_t, RefPtr<nsAtom>,
-                                CSSCoord, FontSize, Color>;
+  using AttrValueType =
+      Variant<bool, float, int32_t, RefPtr<nsAtom>, CSSCoord, FontSize, Color>;
   using AtomVariantMap = nsTHashMap<nsRefPtrHashKey<nsAtom>, AttrValueType>;
 
  protected:
@@ -60,7 +60,8 @@ class AccAttributes {
       mData.InsertOrUpdate(aAttrName, AsVariant(RefPtr<nsAtom>(aAttrValue)));
     } else if constexpr (std::is_base_of_v<nsAString, T> ||
                          std::is_base_of_v<nsLiteralString, T>) {
-      mData.InsertOrUpdate(aAttrName, AsVariant(nsString(aAttrValue)));
+      RefPtr<nsAtom> atomValue = NS_Atomize(aAttrValue);
+      mData.InsertOrUpdate(aAttrName, AsVariant(atomValue));
     } else {
       mData.InsertOrUpdate(aAttrName, AsVariant(aAttrValue));
     }
