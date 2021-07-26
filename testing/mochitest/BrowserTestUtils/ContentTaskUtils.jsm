@@ -19,9 +19,7 @@
 var EXPORTED_SYMBOLS = ["ContentTaskUtils"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { clearInterval, setInterval, setTimeout } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
-);
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var ContentTaskUtils = {
   /**
@@ -90,34 +88,24 @@ var ContentTaskUtils = {
    *        Resolves when condition is true.
    *        Rejects if timeout is exceeded or condition ever throws.
    */
-  waitForCondition(condition, msg, interval = 100, maxTries = 50) {
-    return new Promise((resolve, reject) => {
-      let tries = 0;
-      let intervalID = setInterval(() => {
-        if (tries >= maxTries) {
-          clearInterval(intervalID);
-          msg += ` - timed out after ${maxTries} tries.`;
-          reject(msg);
-          return;
-        }
+  async waitForCondition(condition, msg, interval = 100, maxTries = 50) {
+    for (let tries = 0; tries < maxTries; ++tries) {
+      await new Promise(resolve => setTimeout(resolve, interval));
 
-        let conditionPassed = false;
-        try {
-          conditionPassed = condition();
-        } catch (e) {
-          msg += ` - threw exception: ${e}`;
-          clearInterval(intervalID);
-          reject(msg);
-          return;
-        }
+      let conditionPassed = false;
+      try {
+        conditionPassed = await condition();
+      } catch (e) {
+        msg += ` - threw exception: ${e}`;
+        throw msg;
+      }
+      if (conditionPassed) {
+        return conditionPassed;
+      }
+    }
 
-        if (conditionPassed) {
-          clearInterval(intervalID);
-          resolve(conditionPassed);
-        }
-        tries++;
-      }, interval);
-    });
+    msg += ` - timed out after ${maxTries} tries.`;
+    throw msg;
   },
 
   /**
