@@ -275,7 +275,12 @@ fuzzy(0-2,0-6) == grid-fragmentation-dyn2-029.html grid-fragmentation-029-ref.ht
 fuzzy-if(webrender&&swgl,0-2,0-60) == grid-fragmentation-dyn2-031.html grid-fragmentation-031-ref.html
 
 == bug1306106.html bug1306106-ref.html
+== bug1349571.html bug1349571-ref.html
+== bug1356820.html bug1356820-ref.html
+== bug1350925.html bug1350925-ref.html
 == grid-percent-intrinsic-sizing-001.html grid-percent-intrinsic-sizing-001-ref.html
+== grid-measuring-reflow-resize-static-001.html grid-measuring-reflow-resize-001-ref.html
+== grid-measuring-reflow-resize-dynamic-001.html grid-measuring-reflow-resize-001-ref.html
 == grid-item-align-dynamic-pos-001.html grid-item-align-dynamic-pos-001-ref.html
 == grid-item-align-dynamic-pos-002.html grid-item-align-dynamic-pos-002-ref.html
 == grid-item-align-dynamic-pos-003.html grid-item-align-dynamic-pos-003-ref.html
