@@ -24,8 +24,6 @@ namespace js {
 
 namespace frontend {
 
-struct CompilationState;
-
 // Parse handler used when processing the syntax in a block of code, to generate
 // the minimal information which is required to detect syntax errors and allow
 // bytecode to be emitted for outer functions.
@@ -174,9 +172,8 @@ class SyntaxParseHandler {
   }
 
  public:
-  SyntaxParseHandler(JSContext* cx, CompilationState& compilationState) {
-    MOZ_ASSERT(!compilationState.input.isDelazifying());
-  }
+  SyntaxParseHandler(JSContext* cx, LifoAlloc& alloc,
+                     BaseScript* lazyOuterFunction) {}
 
   static NullNode null() { return NodeFailure; }
 
@@ -751,9 +748,9 @@ class SyntaxParseHandler {
     return TaggedParserAtomIndex::null();
   }
 
-  bool reuseLazyInnerFunctions() { return false; }
-  bool reuseClosedOverBindings() { return false; }
-  TaggedParserAtomIndex nextLazyClosedOverBinding() {
+  bool canSkipLazyInnerFunctions() { return false; }
+  bool canSkipLazyClosedOverBindings() { return false; }
+  JSAtom* nextLazyClosedOverBinding() {
     MOZ_CRASH(
         "SyntaxParseHandler::canSkipLazyClosedOverBindings must return false");
   }
