@@ -198,6 +198,11 @@
       "test_url": "https://docs.google.com/document/d/1US-07msg12slQtI_xchzYxcKlTs6Fp7WqIc6W5GK5M8/edit?usp=sharing"
     },
     {
+      "login": false,
+      "name": "google-docs-canvas",
+      "test_url": "https://docs.google.com/document/d/1vUnn0ePU-ynArE1OdxyEHXR2G0sl74ja_st_4OOzlgE/preview"
+    },
+    {
       "login": true,
       "name": "google-mail",
       "test_url": "https://mail.google.com/"

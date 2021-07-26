@@ -19,6 +19,7 @@ suites:
             facebook: "BT, FF, CH, CU"
             fandom: "BT, FF, CH, CU"
             google-docs: "BT, FF, CH, CU"
+            google-docs-canvas: "BT, FF, CH, CU"
             google-mail: "BT, FF, CH, CU"
             google-search: "BT, FF, CH, CU"
             google-slides: "BT, FF, CH, CU"
