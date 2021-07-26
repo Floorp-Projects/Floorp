@@ -5,30 +5,65 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.components.components
 import org.mozilla.fenix.ext.showToolbar
 
-class SecretDebugSettingsFragment : PreferenceFragmentCompat() {
+class SecretDebugSettingsFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+
         showToolbar(getString(R.string.preferences_debug_info))
     }
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.secret_info_settings_preferences, rootKey)
-
-        val store = requireComponents.core.store
-
-        requirePreference<Preference>(R.string.pref_key_search_region_home).apply {
-            summary = store.state.search.region?.home ?: "Unknown"
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setContent { DebugInfo() }
         }
+    }
+}
 
-        requirePreference<Preference>(R.string.pref_key_search_region_current).apply {
-            summary = store.state.search.region?.current ?: "Unknown"
-        }
+@Composable
+private fun DebugInfo() {
+    val store = components.core.store
+
+    Column(
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.debug_info_region_home),
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.padding(4.dp)
+        )
+        Text(
+            text = store.state.search.region?.home ?: "Unknown",
+            modifier = Modifier.padding(4.dp))
+        Text(
+            text = stringResource(R.string.debug_info_region_current),
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.padding(4.dp)
+        )
+        Text(
+            text = store.state.search.region?.current ?: "Unknown",
+            modifier = Modifier.padding(4.dp)
+        )
     }
 }

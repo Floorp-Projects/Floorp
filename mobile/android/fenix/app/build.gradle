@@ -217,6 +217,14 @@ android {
             minHeapSize = "1024m"
         }
     }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.androidx_compose
+    }
 }
 
 android.applicationVariants.all { variant ->
@@ -496,6 +504,10 @@ dependencies {
     implementation Deps.mozilla_lib_dataprotect
     debugImplementation Deps.leakcanary
 
+    implementation Deps.androidx_compose_ui
+    implementation Deps.androidx_compose_ui_tooling
+    implementation Deps.androidx_compose_foundation
+    implementation Deps.androidx_compose_material
     implementation Deps.androidx_legacy
     implementation Deps.androidx_biometric
     implementation Deps.androidx_paging
