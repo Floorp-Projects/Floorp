@@ -3377,6 +3377,76 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-live-firefox-google-docs-fis-e10s: None
 
 
+.. dropdown:: google-docs-canvas (BT, FF, CH, CU)
+   :container: + anchor-id-google-docs-canvas-d
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm6-linux-firefox-google-docs-canvas.manifest
+   * **playback recordings**: mitm5-linux-firefox-google-docs-canvas.mp
+   * **playback version**: 6.0.2
+   * **test url**: `<https://docs.google.com/document/d/1vUnn0ePU-ynArE1OdxyEHXR2G0sl74ja_st_4OOzlgE/preview>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-tp6-chrome-google-docs-canvas-e10s: None
+            * browsertime-tp6-chromium-google-docs-canvas-e10s: None
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: mozilla-beta, trunk
+            * browsertime-tp6-firefox-google-docs-canvas-fis-e10s: mozilla-central
+      * test-linux1804-64-shippable/opt
+            * browsertime-tp6-chrome-google-docs-canvas-e10s: None
+            * browsertime-tp6-chromium-google-docs-canvas-e10s: None
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: None
+      * test-linux1804-64/opt
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: None
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-tp6-chrome-google-docs-canvas-e10s: None
+            * browsertime-tp6-chromium-google-docs-canvas-e10s: None
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: trunk
+            * browsertime-tp6-firefox-google-docs-canvas-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-tp6-chrome-google-docs-canvas-e10s: None
+            * browsertime-tp6-chromium-google-docs-canvas-e10s: None
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: mozilla-beta, trunk
+            * browsertime-tp6-firefox-google-docs-canvas-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-tp6-chrome-google-docs-canvas-e10s: None
+            * browsertime-tp6-chromium-google-docs-canvas-e10s: None
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-tp6-chrome-google-docs-canvas-e10s: None
+            * browsertime-tp6-chromium-google-docs-canvas-e10s: None
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: None
+            * browsertime-tp6-firefox-google-docs-canvas-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-tp6-chrome-google-docs-canvas-e10s: None
+            * browsertime-tp6-chromium-google-docs-canvas-e10s: None
+            * browsertime-tp6-firefox-google-docs-canvas-e10s: mozilla-beta, trunk
+            * browsertime-tp6-firefox-google-docs-canvas-fis-e10s: mozilla-central
+
+
 .. dropdown:: google-mail (BT, FF, CH, CU)
    :container: + anchor-id-google-mail-d
 
