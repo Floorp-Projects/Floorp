@@ -46,6 +46,9 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Napili</string>
 
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">Ipakita lahat</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Ang %1$s ay gawa ng Mozilla.</string>
 
@@ -99,6 +102,9 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Bagong private tab</string>
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Mga pangunahing site</string>
+
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Ipakita lahat</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -174,6 +180,10 @@
     <string name="browser_menu_add">Idagdag</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">I-edit</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Home screen</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -411,6 +421,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s sa %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Mga credit card</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Mga tirahan</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Mga natanggap na tab</string>
@@ -451,6 +466,8 @@
     <string name="preferences_marketing_data">Marketing data</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Ibinabahagi ang datos tungkol sa mga feature na ginagamit mo sa %1$s kay Leanplum, ang aming mobile marketing vendor.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Nagbabahagi ng basic usage data sa Adjust, ang aming mobile marketing vendor</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Mga pag-aaral</string>
     <!-- Summary for studies preferences -->
@@ -585,6 +602,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Pagkatapos ng isang buwan</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Magsimula sa home</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Matapos ng apat na oras</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Palagi</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Hindi kailanman</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Manu-manong isara</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -622,7 +648,7 @@
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Mga isinarang tab kamakailan</string>
     <!-- Text shown in the menu to view account settings -->
-    <string name="tab_tray_menu_account_settings">Account Settings</string>
+    <string name="tab_tray_menu_account_settings">Mga account setting</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Mga tab setting</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -1019,6 +1045,18 @@
     <string name="notification_pbm_action_delete_and_open">Burahin at Buksan</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Pinatatakbo Ng</string>
+
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Marketing</string>
+
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">Mabilis at pribado ang %1$s</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Gawing mong default browser ang %1$s</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Nabura na ang collection</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1450,6 +1488,8 @@
     <string name="preferences_passwords_autofill">Autofill</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Mag-sync ng mga login</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Mag-sync ng mga login sa iba\'t-ibang mga device</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Kumonekta muli</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1551,6 +1591,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Ang data ay encrypted</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sync cards across devices</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Mag-sync ng mga card</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Magdagdag ng credit card</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1563,10 +1605,14 @@
     <string name="credit_cards_card_number">Card Number</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Expiration Date</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">Petsa ng Pag-expire, Buwan</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">Petsa ng Pag-expire, Taon</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Pangalan sa Card</string>
     <!-- The header for the nickname for a credit card -->
-    <string name="credit_cards_card_nickname">Card Nickname</string>
+    <string name="credit_cards_card_nickname">Palayaw ng Card</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Tanggalin ang card</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
@@ -1579,6 +1625,25 @@
     <string name="credit_cards_cancel_button">Kaselahin</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Mga naka-save na card</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Mangyaring magpasok ng wastong credit card number</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Pakilagyan ang field na ito</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">I-unlock para makita ang iyong mga naka-save na card</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">I-secure ang iyong mga credit card</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Mag-setup ng device lock pattern, PIN, o password para maprotektahan at hindi ma-access ang iyong mga naka-save na credit card kung may ibang may hawak ng device mo.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Mag-setup na ngayon</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Mamaya</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">I-unlock ang iyong device</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">I-unlock para magamit ang nakaimbak na credit card information</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Magdagdag ng search engine</string>
@@ -1601,7 +1666,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Gagamiting teksto ng paghahanap</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Palitan ang query ng “%s”. Halimbawa:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Palitan ang query ng “%s”. Halimbawa:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Alamin</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
@@ -1746,4 +1811,10 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Pindutin para sa karagdagang detalye</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Mag-navigate pataas</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Isara</string>
+
+</resources>
