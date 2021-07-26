@@ -561,6 +561,9 @@ class AndroidEmulator(object):
         self.gpu = True
         self.restarted = False
         self.device_serial = device_serial
+        self.avd_path = os.path.join(
+            EMULATOR_HOME_DIR, "avd", "%s.avd" % self.avd_info.name
+        )
         _log_debug("Running on %s" % platform.platform())
         _log_debug("Emulator created with type %s" % self.avd_type)
 
@@ -600,9 +603,8 @@ class AndroidEmulator(object):
 
         Returns True if the AVD is installed.
         """
-        avd = os.path.join(EMULATOR_HOME_DIR, "avd", self.avd_info.name + ".avd")
-        if os.path.exists(avd):
-            _log_debug("AVD found at %s" % avd)
+        if os.path.exists(self.avd_path):
+            _log_debug("AVD found at %s" % self.avd_path)
             return True
         return False
 
@@ -615,6 +617,7 @@ class AndroidEmulator(object):
         if os.path.exists(EMULATOR_AUTH_FILE):
             os.remove(EMULATOR_AUTH_FILE)
             _log_debug("deleted %s" % EMULATOR_AUTH_FILE)
+        self._update_avd_paths()
         # create an empty auth file to disable emulator authentication
         auth_file = open(EMULATOR_AUTH_FILE, "w")
         auth_file.close()
@@ -763,23 +766,13 @@ class AndroidEmulator(object):
         return self.avd_info.description
 
     def _update_avd_paths(self):
-        avd_path = os.path.join(EMULATOR_HOME_DIR, "avd")
-        ini_file = os.path.join(avd_path, "test-1.ini")
-        ini_file_new = os.path.join(avd_path, self.avd_info.name + ".ini")
-        os.rename(ini_file, ini_file_new)
-        avd_dir = os.path.join(avd_path, "test-1.avd")
-        avd_dir_new = os.path.join(avd_path, self.avd_info.name + ".avd")
-        os.rename(avd_dir, avd_dir_new)
-        self._replace_ini_contents(ini_file_new)
-
-    def _replace_ini_contents(self, path):
-        with open(path, "r") as f:
+        ini_path = os.path.join(EMULATOR_HOME_DIR, "avd", "%s.ini" % self.avd_info.name)
+        with open(ini_path, "r") as f:
             lines = f.readlines()
-        with open(path, "w") as f:
+        with open(ini_path, "w") as f:
             for line in lines:
                 if line.startswith("path="):
-                    avd_path = os.path.join(EMULATOR_HOME_DIR, "avd")
-                    f.write("path=%s/%s.avd\n" % (avd_path, self.avd_info.name))
+                    f.write("path=%s\n" % self.avd_path)
                 elif line.startswith("path.rel="):
                     f.write("path.rel=avd/%s.avd\n" % self.avd_info.name)
                 else:
