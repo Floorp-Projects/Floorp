@@ -2,6 +2,16 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+
 const { EventEmitter } = ExtensionCommon;
 
 AddonTestUtils.init(this);
@@ -11,6 +21,7 @@ AddonTestUtils.createAppInfo(
   "1",
   "42"
 );
+AddonTestUtils.overrideCertDB();
 
 add_task(async function setup() {
   ok(
@@ -32,8 +43,10 @@ add_task(async function setup() {
   );
 
   info("Set a low service worker idle timeout");
+  Services.prefs.setBoolPref("dom.serviceWorkers.testing.enabled", true);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("dom.serviceWorkers.idle_timeout");
+    Services.prefs.clearUserPref("dom.serviceWorkers.testing.enabled");
   });
 });
 
@@ -263,3 +276,167 @@ add_task(
     await extension.unload();
   }
 );
+
+add_task(async function test_serviceworker_lifecycle_events() {
+  async function assertLifecycleEvents({ extension, expected, message }) {
+    const getLifecycleEvents = async () => {
+      const { active } = await this.content.navigator.serviceWorker.ready;
+      const { port1, port2 } = new content.MessageChannel();
+
+      return new Promise(resolve => {
+        port1.onmessage = msg => resolve(msg.data.lifecycleEvents);
+        active.postMessage("test", [port2]);
+      });
+    };
+    const page = await ExtensionTestUtils.loadContentPage(
+      extension.extension.baseURI.resolve("page.html"),
+      { extension }
+    );
+    Assert.deepEqual(
+      await page.spawn([], getLifecycleEvents),
+      expected,
+      `Got the expected lifecycle events on ${message}`
+    );
+    await page.close();
+  }
+
+  const swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
+    Ci.nsIServiceWorkerManager
+  );
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      version: "1.0",
+      background: {
+        service_worker: "sw.js",
+      },
+      applications: { gecko: { id: "test-bg-sw@mochi.test" } },
+    },
+    files: {
+      "page.html": "<!DOCTYPE html><body></body>",
+      "sw.js": `
+        dump('Background ServiceWorker - executed\\n');
+
+        const lifecycleEvents = [];
+        self.oninstall = () => {
+          dump('Background ServiceWorker - oninstall\\n');
+          lifecycleEvents.push("install");
+        };
+        self.onactivate = () => {
+          dump('Background ServiceWorker - onactivate\\n');
+          lifecycleEvents.push("activate");
+        };
+        self.onmessage = (evt) => {
+          dump('Background ServiceWorker - onmessage\\n');
+          evt.ports[0].postMessage({ lifecycleEvents });
+          dump('Background ServiceWorker - postMessage\\n');
+        };
+      `,
+    },
+  });
+
+  const testWorkerWatcher = new TestWorkerWatcher();
+  let watcher = await testWorkerWatcher.watchExtensionServiceWorker(extension);
+
+  await extension.startup();
+
+  await assertLifecycleEvents({
+    extension,
+    expected: ["install", "activate"],
+    message: "initial worker registration",
+  });
+
+  const file = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  file.append("serviceworker.txt");
+  await TestUtils.waitForCondition(
+    () => file.exists(),
+    "Wait for service worker registrations to have been dumped on disk"
+  );
+
+  const managerShutdownCompleted = AddonTestUtils.promiseShutdownManager();
+
+  const firstSwReg = swm.getRegistrationByPrincipal(
+    extension.extension.principal,
+    extension.extension.principal.spec
+  );
+  // Force the worker shutdown (in normal condition the worker would have been
+  // terminated as part of the entire application shutting down).
+  firstSwReg.forceShutdown();
+
+  info(
+    "Wait for the background service worker to be terminated while the app is shutting down"
+  );
+  ok(
+    await watcher.promiseWorkerTerminated,
+    "The extension service worker has been terminated as expected"
+  );
+  await managerShutdownCompleted;
+
+  Assert.equal(
+    firstSwReg,
+    swm.getRegistrationByPrincipal(
+      extension.extension.principal,
+      extension.extension.principal.spec
+    ),
+    "Expect the service worker to not be unregistered on application shutdown"
+  );
+
+  info("Restart AddonManager (mocking Browser instance restart)");
+  ExtensionParent._resetStartupPromises();
+  await AddonTestUtils.promiseStartupManager();
+  await extension.awaitStartup();
+
+  info(
+    "Force reload ServiceWorkerManager registrations (mocking a Browser instance restart)"
+  );
+  swm.reloadRegistrationsForTest();
+
+  info(
+    "trigger delayed call to nsIServiceWorkerManager.registerForAddonPrincipal"
+  );
+  extension.extension.emit("start-background-page");
+
+  info("Force activate the extension worker");
+  const newSwReg = swm.getRegistrationByPrincipal(
+    extension.extension.principal,
+    extension.extension.principal.spec
+  );
+
+  Assert.notEqual(
+    newSwReg,
+    firstSwReg,
+    "Expect the service worker registration to have been recreated"
+  );
+
+  await assertLifecycleEvents({
+    extension,
+    expected: [],
+    message: "on previous registration loaded",
+  });
+
+  const { principal } = extension.extension;
+  const addon = await AddonManager.getAddonByID(extension.id);
+  await addon.disable();
+
+  ok(
+    await watcher.promiseWorkerTerminated,
+    "The extension service worker has been terminated as expected"
+  );
+
+  Assert.throws(
+    () => swm.getRegistrationByPrincipal(principal, principal.spec),
+    /NS_ERROR_FAILURE/,
+    "Expect the service worker to have been unregistered on addon disabled"
+  );
+
+  await addon.enable();
+  await assertLifecycleEvents({
+    extension,
+    expected: ["install", "activate"],
+    message: "on disabled addon re-enabled",
+  });
+
+  await testWorkerWatcher.destroy();
+  await extension.unload();
+});

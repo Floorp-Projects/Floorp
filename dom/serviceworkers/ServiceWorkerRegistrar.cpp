@@ -346,6 +346,38 @@ void ServiceWorkerRegistrar::LoadData() {
   mMonitor.Notify();
 }
 
+bool ServiceWorkerRegistrar::ReloadDataForTest() {
+  if (NS_WARN_IF(!StaticPrefs::dom_serviceWorkers_testing_enabled())) {
+    return false;
+  }
+
+  MOZ_ASSERT(NS_IsMainThread());
+  mData.Clear();
+  mDataLoaded = false;
+
+  MonitorAutoLock lock(mMonitor);
+
+  nsCOMPtr<nsIEventTarget> target =
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  MOZ_ASSERT(target, "Must have stream transport service");
+
+  nsCOMPtr<nsIRunnable> runnable =
+      NewRunnableMethod("dom::ServiceWorkerRegistrar::LoadData", this,
+                        &ServiceWorkerRegistrar::LoadData);
+  nsresult rv = target->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to dispatch the LoadDataRunnable.");
+    return false;
+  }
+
+  mMonitor.AssertCurrentThreadOwns();
+  while (!mDataLoaded) {
+    mMonitor.Wait();
+  }
+
+  return mDataLoaded;
+}
+
 nsresult ServiceWorkerRegistrar::ReadData() {
   // We cannot assert about the correct thread because normally this method
   // runs on a IO thread, but in gTests we call it from the main-thread.

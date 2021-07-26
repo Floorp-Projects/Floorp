@@ -168,6 +168,24 @@ interface nsIServiceWorkerManagerListener : nsISupports
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
+   * A testing helper that is meant to only be used in xpcshell-test to test behaviors
+   * that would need a browser restart to re-initialize the ServiceWorkerManager from
+   * the service worker registration dumped on disk (the one listed in the serviceworker.txt
+   * file part of the Firefox profile directory).
+   *
+   * NOTE: this test helper does
+   * - fail if "dom.serviceWorkers.testing.enabled" is not set to true 
+   * - fail if there are controlled clients (the test case is responsible of making sure that 
+   *   there is none when this method is being called)
+   * - shutdown and clear all service worker registrations (but without removing them from
+   *   the registration stored in serviceworker.txt)
+   * - force reload the registration data stored in serviceworker.txt (but the test case using 
+   *   this helper is responsible to be sure that the registrations have been already written
+   *   on disk)
+   */
+  void reloadRegistrationsForTest();
+
+  /**
    * A testing helper that registers a service worker for testing purpose (e.g. used to test
    * a remote worker that has to spawn a new process to be launched).
    * This method can only be used when "dom.serviceWorkers.testing.enabled" is true and
