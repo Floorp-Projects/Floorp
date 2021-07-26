@@ -465,8 +465,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
     // callback, and proceed to do the lookup.
 
     bool excludedFromTRR = false;
-
-    if (gTRRService && gTRRService->IsExcludedFromTRR(host)) {
+    if (TRRService::Get() && TRRService::Get()->IsExcludedFromTRR(host)) {
       flags |= RES_DISABLE_TRR;
       excludedFromTRR = true;
 
@@ -877,7 +876,7 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec,
 
   nsIRequest::TRRMode reqMode = rec->mEffectiveTRRMode;
   if (rec->mTrrServer.IsEmpty() &&
-      (!gTRRService || !gTRRService->Enabled(reqMode))) {
+      (!TRRService::Get() || !TRRService::Get()->Enabled(reqMode))) {
     if (NS_IsOffline()) {
       // If we are in the NOT_CONFIRMED state _because_ we lack connectivity,
       // then we should report that the browser is offline instead.
@@ -953,8 +952,8 @@ nsresult nsHostResolver::NativeLookup(nsHostRecord* aRec,
 
 // static
 nsIDNSService::ResolverMode nsHostResolver::Mode() {
-  if (gTRRService) {
-    return gTRRService->Mode();
+  if (TRRService::Get()) {
+    return TRRService::Get()->Mode();
   }
 
   // If we don't have a TRR service just return MODE_TRROFF so we don't make
@@ -976,7 +975,7 @@ void nsHostResolver::ComputeEffectiveTRRMode(nsHostRecord* aRec) {
   // localhost and local are excluded (so we cover *.local hosts) See the
   // network.trr.excluded-domains pref.
 
-  if (!gTRRService) {
+  if (!TRRService::Get()) {
     aRec->RecordReason(TRRSkippedReason::TRR_NO_GSERVICE);
     aRec->mEffectiveTRRMode = requestMode;
     return;
@@ -987,14 +986,14 @@ void nsHostResolver::ComputeEffectiveTRRMode(nsHostRecord* aRec) {
     return;
   }
 
-  if (gTRRService->IsExcludedFromTRR(aRec->host)) {
+  if (TRRService::Get()->IsExcludedFromTRR(aRec->host)) {
     aRec->RecordReason(TRRSkippedReason::TRR_EXCLUDED);
     aRec->mEffectiveTRRMode = nsIRequest::TRR_DISABLED_MODE;
     return;
   }
 
   if (StaticPrefs::network_dns_skipTRR_when_parental_control_enabled() &&
-      gTRRService->ParentalControlEnabled()) {
+      TRRService::Get()->ParentalControlEnabled()) {
     aRec->RecordReason(TRRSkippedReason::TRR_PARENTAL_CONTROL);
     aRec->mEffectiveTRRMode = nsIRequest::TRR_DISABLED_MODE;
     return;
@@ -1085,13 +1084,12 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
     rec->RecordReason(TRRSkippedReason::TRR_DISABLED_FLAG);
   }
 
+  bool serviceNotReady =
+      !TRRService::Get() || !TRRService::Get()->Enabled(rec->mEffectiveTRRMode);
   if (rec->mEffectiveTRRMode != nsIRequest::TRR_DISABLED_MODE &&
-      !((rec->flags & RES_DISABLE_TRR))) {
+      !((rec->flags & RES_DISABLE_TRR)) && !serviceNotReady) {
     rv = TrrLookup(rec, aLock);
   }
-
-  bool serviceNotReady =
-      !gTRRService || !gTRRService->Enabled(rec->mEffectiveTRRMode);
 
   if (rec->mEffectiveTRRMode == nsIRequest::TRR_DISABLED_MODE ||
       (rec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE &&

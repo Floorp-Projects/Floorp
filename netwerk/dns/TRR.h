@@ -27,7 +27,6 @@ namespace net {
 
 class TRRService;
 class TRRServiceChannel;
-extern TRRService* gTRRService;
 
 class TRR : public Runnable,
             public nsITimerCallback,

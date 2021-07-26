@@ -37,6 +37,8 @@ class TRRService : public TRRServiceBase,
   NS_DECL_NSIOBSERVER
 
   TRRService();
+  static TRRService* Get();
+
   nsresult Init();
   nsresult Start();
   bool Enabled(nsIRequest::TRRMode aRequestMode = nsIRequest::TRR_DEFAULT_MODE);
@@ -324,8 +326,6 @@ class TRRService : public TRRServiceBase,
   RefPtr<ODoHService> mODoHService;
   nsCOMPtr<nsINetworkLinkService> mLinkService;
 };
-
-extern TRRService* gTRRService;
 
 }  // namespace net
 }  // namespace mozilla

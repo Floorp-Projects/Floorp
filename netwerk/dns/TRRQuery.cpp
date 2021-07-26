@@ -90,8 +90,8 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR, bool aUseODoH) {
     nsTArray<RefPtr<TRR>> requestsToSend;
     do {
       sendAgain = false;
-      if ((TRRTYPE_AAAA == rectype) && gTRRService &&
-          (gTRRService->DisableIPv6() ||
+      if ((TRRTYPE_AAAA == rectype) && TRRService::Get() &&
+          (TRRService::Get()->DisableIPv6() ||
            (StaticPrefs::network_trr_skip_AAAA_when_not_supported() &&
             mHostResolver->GetNCS() &&
             mHostResolver->GetNCS()->GetIPv6() ==
@@ -135,7 +135,7 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR, bool aUseODoH) {
 
     mTRRRequestCounter = requestsToSend.Length();
     for (const auto& request : requestsToSend) {
-      if (NS_SUCCEEDED(gTRRService->DispatchTRRRequest(request))) {
+      if (NS_SUCCEEDED(TRRService::Get()->DispatchTRRRequest(request))) {
         madeQuery = true;
       } else {
         mTRRRequestCounter--;
@@ -175,7 +175,7 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR, bool aUseODoH) {
       trr = pushedTRR ? pushedTRR : new TRR(this, mRecord, rectype);
     }
 
-    if (pushedTRR || NS_SUCCEEDED(gTRRService->DispatchTRRRequest(trr))) {
+    if (pushedTRR || NS_SUCCEEDED(TRRService::Get()->DispatchTRRRequest(trr))) {
       MutexAutoLock trrlock(mTrrLock);
       MOZ_ASSERT(!mTrrByType);
       mTrrByType = trr;
