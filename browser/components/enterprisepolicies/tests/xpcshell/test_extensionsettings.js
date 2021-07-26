@@ -19,6 +19,8 @@ const BASE_URL = `http://example.com/data`;
 let addonID = "policytest2@mozilla.com";
 let themeID = "policytheme@mozilla.com";
 
+let fileURL;
+
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
 
@@ -33,6 +35,9 @@ add_task(async function setup() {
   });
 
   server.registerFile("/data/policy_test.xpi", webExtensionFile);
+  fileURL = Services.io
+    .newFileURI(webExtensionFile)
+    .QueryInterface(Ci.nsIFileURL);
 });
 
 add_task(async function test_extensionsettings() {
@@ -251,5 +256,36 @@ add_task(async function test_theme() {
   let currentTheme = Services.prefs.getCharPref("extensions.activeThemeID");
   equal(currentTheme, themeID, "Theme should be active");
   let addon = await AddonManager.getAddonByID(themeID);
+  await addon.uninstall();
+});
+
+add_task(async function test_addon_normalinstalled_file() {
+  await Promise.all([
+    AddonTestUtils.promiseInstallEvent("onInstallEnded"),
+    setupPolicyEngineWithJson({
+      policies: {
+        ExtensionSettings: {
+          "policytest2@mozilla.com": {
+            installation_mode: "normal_installed",
+            install_url: fileURL.spec,
+          },
+        },
+      },
+    }),
+  ]);
+  let addon = await AddonManager.getAddonByID(addonID);
+  notEqual(addon, null, "Addon should not be null");
+  equal(addon.appDisabled, false, "Addon should not be disabled");
+  equal(
+    addon.permissions & AddonManager.PERM_CAN_UNINSTALL,
+    0,
+    "Addon should not be able to be uninstalled."
+  );
+  notEqual(
+    addon.permissions & AddonManager.PERM_CAN_DISABLE,
+    0,
+    "Addon should be able to be disabled."
+  );
+
   await addon.uninstall();
 });
