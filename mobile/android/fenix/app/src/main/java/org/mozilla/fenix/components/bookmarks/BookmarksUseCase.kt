@@ -47,10 +47,13 @@ class BookmarksUseCase(storage: BookmarksStorage) {
          * Retrieves a list of recently added bookmarks, if any, up to maximum.
          */
         @WorkerThread
-        suspend operator fun invoke(count: Int = DEFAULT_BOOKMARKS_TO_RETRIEVE): List<BookmarkNode> {
+        suspend operator fun invoke(
+            count: Int = DEFAULT_BOOKMARKS_TO_RETRIEVE,
+            maxAgeInMs: Long = TimeUnit.DAYS.toMillis(DEFAULT_BOOKMARKS_DAYS_AGE_TO_RETRIEVE)
+        ): List<BookmarkNode> {
             return storage.getRecentBookmarks(
                 count,
-                TimeUnit.DAYS.toMillis(DEFAULT_BOOKMARKS_DAYS_AGE_TO_RETRIEVE)
+                maxAgeInMs
             )
         }
     }

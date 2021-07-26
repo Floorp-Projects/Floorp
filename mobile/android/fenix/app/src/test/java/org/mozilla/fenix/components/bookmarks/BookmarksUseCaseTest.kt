@@ -13,9 +13,11 @@ import kotlinx.coroutines.test.runBlockingTest
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarksStorage
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.concurrent.TimeUnit
 
 @ExperimentalCoroutinesApi
 class BookmarksUseCaseTest {
@@ -46,5 +48,52 @@ class BookmarksUseCaseTest {
         assertTrue(result)
 
         coVerify { storage.addItem(BookmarkRoot.Mobile.id, "https://mozilla.org", "Mozilla", null) }
+    }
+
+    @Test
+    fun `WHEN recently saved bookmarks exist THEN retrieve the list from storage`() = runBlockingTest {
+        val storage = mockk<BookmarksStorage>(relaxed = true)
+        val useCase = BookmarksUseCase(storage)
+        val bookmarkNode = mockk<BookmarkNode>()
+
+        coEvery {
+            storage.getRecentBookmarks(
+                any(),
+                any(),
+                any()
+            )
+        }.coAnswers { listOf(bookmarkNode) }
+
+        val result = useCase.retrieveRecentBookmarks(BookmarksUseCase.DEFAULT_BOOKMARKS_TO_RETRIEVE, 22)
+
+        assertEquals(listOf(bookmarkNode), result)
+
+        coVerify {
+            storage.getRecentBookmarks(
+                BookmarksUseCase.DEFAULT_BOOKMARKS_TO_RETRIEVE,
+                22,
+                any()
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN there are no recently saved bookmarks THEN retrieve the empty list from storage`() = runBlockingTest {
+        val storage = mockk<BookmarksStorage>(relaxed = true)
+        val useCase = BookmarksUseCase(storage)
+
+        coEvery { storage.getRecentBookmarks(any(), any(), any()) }.coAnswers { listOf() }
+
+        val result = useCase.retrieveRecentBookmarks(BookmarksUseCase.DEFAULT_BOOKMARKS_TO_RETRIEVE)
+
+        assertEquals(listOf<BookmarkNode>(), result)
+
+        coVerify {
+            storage.getRecentBookmarks(
+                BookmarksUseCase.DEFAULT_BOOKMARKS_TO_RETRIEVE,
+                TimeUnit.DAYS.toMillis(BookmarksUseCase.DEFAULT_BOOKMARKS_DAYS_AGE_TO_RETRIEVE),
+                any()
+            )
+        }
     }
 }
