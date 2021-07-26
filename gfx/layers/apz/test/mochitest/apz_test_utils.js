@@ -519,12 +519,9 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
 
       if (test.prefs) {
         // Got some prefs for this subtest, push them
-        SpecialPowers.pushPrefEnv({ set: test.prefs }, function() {
-          w = spawnTest(test.file);
-        });
-      } else {
-        w = spawnTest(test.file);
+        await SpecialPowers.pushPrefEnv({ set: test.prefs });
       }
+      w = spawnTest(test.file);
     }
 
     advanceSubtestExecution();
