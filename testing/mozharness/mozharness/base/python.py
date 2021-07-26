@@ -480,14 +480,12 @@ class VirtualenvMixin(object):
                 "mv -f {}/* {}/bin/".format(tmp_path, venv_path), shell=True
             )
             self.info(
-                "codesign -s - --preserve-metadata=identifier,entitlements,flags,runtime -f {}/bin/*".format(
-                    venv_path
-                )
+                "codesign -s - --preserve-metadata=identifier,entitlements,flags,runtime "
+                "-f {}/bin/*".format(venv_path)
             )
             subprocess.call(
-                "codesign -s - --preserve-metadata=identifier,entitlements,flags,runtime -f {}/bin/python*".format(
-                    venv_path
-                ),
+                "codesign -s - --preserve-metadata=identifier,entitlements,flags,runtime -f "
+                "{}/bin/python*".format(venv_path),
                 shell=True,
             )
 
@@ -889,7 +887,7 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
 
 # This needs to be inherited only if you have already inherited ScriptMixin
 class Python3Virtualenv(object):
-    """ Support Python3.5+ virtualenv creation."""
+    """Support Python3.5+ virtualenv creation."""
 
     py3_initialized_venv = False
 
