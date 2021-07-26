@@ -394,24 +394,26 @@ var ExtensionAddonObserver = {
     );
 
     // Clear all the registered service workers for the extension
-    // principal.
+    // principal (the one that may have been registered through the
+    // manifest.json file and the ones that may have been registered
+    // from an extension page through the service worker API).
+    //
     // Any stored data would be cleared below (if the pref
     // "extensions.webextensions.keepStorageOnUninstall has not been
     // explicitly set to true, which is usually only done in
     // tests and by some extensions developers for testing purpose).
-    if (WebExtensionPolicy.backgroundServiceWorkerEnabled) {
-      // TODO: ServiceWorkerCleanUp may go away once Bug 1183245
-      // is fixed, and so this may actually go away, replaced by
-      // marking the registration as disabled or to be removed on
-      // shutdown (where we do know if the extension is shutting
-      // down because is being uninstalled) and then cleared from
-      // the persisted serviceworker registration on the next
-      // startup.
-      AsyncShutdown.profileChangeTeardown.addBlocker(
-        `Clear ServiceWorkers for ${addon.id}`,
-        ServiceWorkerCleanUp.removeFromPrincipal(principal)
-      );
-    }
+    //
+    // TODO: ServiceWorkerCleanUp may go away once Bug 1183245
+    // is fixed, and so this may actually go away, replaced by
+    // marking the registration as disabled or to be removed on
+    // shutdown (where we do know if the extension is shutting
+    // down because is being uninstalled) and then cleared from
+    // the persisted serviceworker registration on the next
+    // startup.
+    AsyncShutdown.profileChangeTeardown.addBlocker(
+      `Clear ServiceWorkers for ${addon.id}`,
+      ServiceWorkerCleanUp.removeFromPrincipal(principal)
+    );
 
     if (!Services.prefs.getBoolPref(LEAVE_STORAGE_PREF, false)) {
       // Clear browser.storage.local backends.
@@ -2836,6 +2838,20 @@ class Extension extends ExtensionData {
     Services.ppmm.removeMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
     this.updatePermissions(reason);
+
+    // The service worker registrations related to the extensions are unregistered
+    // only when the extension is not shutting down as part of the application
+    // shutdown (a previously registered service worker is expected to stay
+    // active across browser restarts), the service worker may have been
+    // registered through the manifest.json background.service_worker property
+    // or from an extension page through the service worker API if allowed
+    // through the about:config pref.
+    if (!isAppShutdown) {
+      this.state = "Shutdown: ServiceWorkers";
+      // TODO: ServiceWorkerCleanUp may go away once Bug 1183245 is fixed.
+      await ServiceWorkerCleanUp.removeFromPrincipal(this.principal);
+      this.state = "Shutdown: ServiceWorkers completed";
+    }
 
     if (!this.manifest) {
       this.state = "Shutdown: Complete: No manifest";
