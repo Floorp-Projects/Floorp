@@ -2577,6 +2577,39 @@ ServiceWorkerManager::GetRegistration(const PrincipalInfo& aPrincipalInfo,
 }
 
 NS_IMETHODIMP
+ServiceWorkerManager::ReloadRegistrationsForTest() {
+  if (NS_WARN_IF(!StaticPrefs::dom_serviceWorkers_testing_enabled())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Let's keep it simple and fail if there are any controlled client,
+  // the test case can take care of making sure there is none when this
+  // method will be called.
+  if (NS_WARN_IF(!mControlledClients.IsEmpty())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  for (const auto& info : mRegistrationInfos.Values()) {
+    for (ServiceWorkerRegistrationInfo* reg : info->mInfos.Values()) {
+      MOZ_ASSERT(reg);
+      reg->ForceShutdown();
+    }
+  }
+
+  mRegistrationInfos.Clear();
+
+  nsTArray<ServiceWorkerRegistrationData> data;
+  RefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
+  if (NS_WARN_IF(!swr->ReloadDataForTest())) {
+    return NS_ERROR_FAILURE;
+  }
+  swr->GetRegistrations(data);
+  LoadRegistrations(data);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ServiceWorkerManager::RegisterForAddonPrincipal(nsIPrincipal* aPrincipal,
                                                 JSContext* aCx,
                                                 dom::Promise** aPromise) {
