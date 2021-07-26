@@ -58,8 +58,6 @@ class LookAndFeel {
     UseOverlayScrollbars,
     // allow H and V overlay scrollbars to overlap?
     AllowOverlayScrollbarsOverlap,
-    // show/hide scrollbars based on activity
-    ShowHideScrollbars,
     // skip navigating to disabled menu item?
     SkipNavigatingDisabledMenuItem,
     // begin a drag if the mouse is moved further than the threshold while the
