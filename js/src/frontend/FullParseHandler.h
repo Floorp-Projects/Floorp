@@ -39,26 +39,28 @@ class FullParseHandler {
     return static_cast<ParseNode*>(allocator.allocNode(size));
   }
 
-  /*
-   * If this is a full parse to construct the bytecode for a function that
-   * was previously lazily parsed, we still don't want to full parse the
-   * inner functions. These members are used for this functionality:
-   *
-   * - lazyOuterFunction_ holds the lazyScript for this current parse
-   * - lazyInnerFunctionIndex is used as we skip over inner functions
-   *   (see skipLazyInnerFunction),
-   *
-   *  TODO-Stencil: We probably need to snapshot the atoms from the
-   *                lazyOuterFunction here.
-   */
-  const Rooted<BaseScript*> lazyOuterFunction_;
+  // If this is a full parse to construct the bytecode for a function that
+  // was previously lazily parsed, we still don't want to full parse the
+  // inner functions. These members are used for this functionality:
+  //
+  // - reuseGCThings if ture it means that the following fields are valid.
+  // - gcThingsData holds an incomplete stencil-like copy of inner functions as
+  //   well as atoms.
+  // - scriptData and scriptExtra_ hold information necessary to locate inner
+  //   functions to skip over each.
+  // - lazyInnerFunctionIndex is used as we skip over inner functions
+  //   (see skipLazyInnerFunction),
+  // - lazyClosedOverBindingIndex is used to synchronize binding computation
+  //   with the scope traversal.
+  //   (see propagateFreeNamesAndMarkClosedOverBindings),
   const mozilla::Span<TaggedScriptThingIndex> gcThingsData;
   const mozilla::Span<ScriptStencil> scriptData_;
   const mozilla::Span<ScriptStencilExtra> scriptExtra_;
 
   size_t lazyInnerFunctionIndex;
-
   size_t lazyClosedOverBindingIndex;
+
+  bool reuseGCThings;
 
  public:
   /* new_ methods for creating parse nodes. These report OOM on context. */
@@ -107,12 +109,12 @@ class FullParseHandler {
 
   FullParseHandler(JSContext* cx, CompilationState& compilationState)
       : allocator(cx, compilationState.allocScope.alloc()),
-        lazyOuterFunction_(cx, compilationState.input.lazyOuterScript()),
         gcThingsData(compilationState.input.gcThings()),
         scriptData_(compilationState.input.scriptData()),
         scriptExtra_(compilationState.input.scriptExtra()),
         lazyInnerFunctionIndex(0),
-        lazyClosedOverBindingIndex(0) {
+        lazyClosedOverBindingIndex(0),
+        reuseGCThings(compilationState.input.isDelazifying()) {
     // The gcthings() array contains the inner function list
     // followed by the closed-over bindings data. Advance the index for
     // closed-over bindings to the end of the inner functions. The
@@ -1092,9 +1094,9 @@ class FullParseHandler {
     return TaggedParserAtomIndex::null();
   }
 
-  bool canSkipLazyInnerFunctions() { return !!lazyOuterFunction_; }
-  bool canSkipLazyClosedOverBindings() { return !!lazyOuterFunction_; }
-  bool canSkipRegexpSyntaxParse() { return !!lazyOuterFunction_; }
+  bool reuseLazyInnerFunctions() { return reuseGCThings; }
+  bool reuseClosedOverBindings() { return reuseGCThings; }
+  bool reuseRegexpSyntaxParse() { return reuseGCThings; }
   ScriptIndex nextLazyInnerFunction() {
     auto taggedScriptIndex = gcThingsData[lazyInnerFunctionIndex++];
     MOZ_ASSERT(taggedScriptIndex.isFunction());

@@ -751,8 +751,8 @@ class SyntaxParseHandler {
     return TaggedParserAtomIndex::null();
   }
 
-  bool canSkipLazyInnerFunctions() { return false; }
-  bool canSkipLazyClosedOverBindings() { return false; }
+  bool reuseLazyInnerFunctions() { return false; }
+  bool reuseClosedOverBindings() { return false; }
   TaggedParserAtomIndex nextLazyClosedOverBinding() {
     MOZ_CRASH(
         "SyntaxParseHandler::canSkipLazyClosedOverBindings must return false");
