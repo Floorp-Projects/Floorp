@@ -43,7 +43,7 @@ add_task(async function test_disable_profile_import() {
 });
 
 add_task(async function test_file_menu() {
-  updateImportCommandEnabledState();
+  gFileMenu.updateImportCommandEnabledState();
 
   let command = document.getElementById("cmd_file_importFromAnotherBrowser");
   ok(

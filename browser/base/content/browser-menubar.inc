@@ -14,9 +14,7 @@
                 >
             <menu id="file-menu" data-l10n-id="menu-file">
               <menupopup id="menu_FilePopup"
-                         onpopupshowing="updateFileMenuUserContextUIVisibility('menu_newUserContext');
-                                         updateImportCommandEnabledState();
-                                         PrintUtils.updatePrintPreviewMenuHiddenState();">
+                         onpopupshowing="gFileMenu.onPopupShowing(event);">
                 <menuitem id="menu_newNavigatorTab"
                           command="cmd_newNavigatorTab"
                           key="key_newNavigatorTab" data-l10n-id="menu-file-new-tab"/>
