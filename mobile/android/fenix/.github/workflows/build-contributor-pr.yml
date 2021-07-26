@@ -125,7 +125,7 @@ jobs:
           arch: x86_64
           profile: pixel_3a
           script:
-            "./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=\
+            "JAVA_HOME=$JAVA_HOME_11_X64 && ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=\
             org.mozilla.fenix.ui.NavigationToolbarTest#visitURLTest"
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v2
