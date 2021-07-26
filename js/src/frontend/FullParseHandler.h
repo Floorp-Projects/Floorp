@@ -13,6 +13,7 @@
 #include <cstddef>  // std::nullptr_t
 #include <string.h>
 
+#include "frontend/CompilationStencil.h"  // CompilationState
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
 #include "frontend/ParseNode.h"
@@ -51,6 +52,7 @@ class FullParseHandler {
    *                lazyOuterFunction here.
    */
   const Rooted<BaseScript*> lazyOuterFunction_;
+  const mozilla::Span<TaggedScriptThingIndex> gcThingsData;
   size_t lazyInnerFunctionIndex;
 
   size_t lazyClosedOverBindingIndex;
@@ -100,25 +102,22 @@ class FullParseHandler {
                                   node->isKind(ParseNodeKind::ArrayExpr));
   }
 
-  FullParseHandler(JSContext* cx, LifoAlloc& alloc,
-                   BaseScript* lazyOuterFunction)
-      : allocator(cx, alloc),
-        lazyOuterFunction_(cx, lazyOuterFunction),
+  FullParseHandler(JSContext* cx, CompilationState& compilationState)
+      : allocator(cx, compilationState.allocScope.alloc()),
+        lazyOuterFunction_(cx, compilationState.input.lazyOuterScript()),
+        gcThingsData(compilationState.input.gcThings()),
         lazyInnerFunctionIndex(0),
         lazyClosedOverBindingIndex(0) {
-    // The BaseScript::gcthings() array contains the inner function list
+    // The gcthings() array contains the inner function list
     // followed by the closed-over bindings data. Advance the index for
     // closed-over bindings to the end of the inner functions. The
     // nextLazyInnerFunction / nextLazyClosedOverBinding accessors confirm we
     // have the expected types. See also: BaseScript::CreateLazy.
-    if (lazyOuterFunction) {
-      for (JS::GCCellPtr gcThing : lazyOuterFunction->gcthings()) {
-        if (gcThing.is<JSObject>()) {
-          lazyClosedOverBindingIndex++;
-        } else {
-          break;
-        }
+    for (auto gcThing : gcThingsData) {
+      if (gcThing.isNull() || gcThing.isAtom()) {
+        break;
       }
+      lazyClosedOverBindingIndex++;
     }
   }
 
@@ -1096,19 +1095,13 @@ class FullParseHandler {
                 .as<JSObject>()
                 .as<JSFunction>();
   }
-  JSAtom* nextLazyClosedOverBinding() {
-    auto gcthings = lazyOuterFunction_->gcthings();
-
+  TaggedParserAtomIndex nextLazyClosedOverBinding() {
     // Trailing nullptrs were elided in PerHandlerParser::finishFunction().
-    if (lazyClosedOverBindingIndex >= gcthings.Length()) {
-      return nullptr;
+    if (lazyClosedOverBindingIndex >= gcThingsData.Length()) {
+      return TaggedParserAtomIndex::null();
     }
 
-    // These entries are either JSAtom* or nullptr, so use the 'asCell()'
-    // accessor which is faster.
-    gc::Cell* cell = gcthings[lazyClosedOverBindingIndex++].asCell();
-    MOZ_ASSERT_IF(cell, cell->as<JSString>()->isAtom());
-    return static_cast<JSAtom*>(cell);
+    return gcThingsData[lazyClosedOverBindingIndex++].toAtomOrNull();
   }
 
   void setPrivateNameKind(Node node, PrivateNameKind kind) {
