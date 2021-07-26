@@ -7027,7 +7027,10 @@ var TabContextMenu = {
       !Services.prefs.getBoolPref("privacy.userContext.enabled", false) ||
       PrivateBrowsingUtils.isWindowPrivate(window);
 
-    gShareUtils.updateShareURLMenuItem(this.contextTab.linkedBrowser);
+    gShareUtils.updateShareURLMenuItem(
+      this.contextTab.linkedBrowser,
+      document.getElementById("context_sendTabToDevice")
+    );
   },
 
   handleEvent(aEvent) {
