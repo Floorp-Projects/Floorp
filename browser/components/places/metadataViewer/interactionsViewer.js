@@ -12,6 +12,9 @@ const { Snapshots } = ChromeUtils.import("resource:///modules/Snapshots.jsm");
 const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"
 );
+const { PlacesDBUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesDBUtils.jsm"
+);
 
 /**
  * Base class for the table display. Handles table layout and updates.
@@ -336,6 +339,74 @@ const snapshotHandler = new (class extends TableViewer {
   }
 })();
 
+/**
+ * Viewer definition for the Places database stats.
+ */
+const placesStatsHandler = new (class extends TableViewer {
+  title = "Places Database Statistics";
+  cssGridTemplateColumns = "fit-content(100%) repeat(5, max-content);";
+
+  /**
+   * @see TableViewer.columnMap
+   */
+  columnMap = new Map([
+    ["entity", { header: "Entity" }],
+    ["count", { header: "Count" }],
+    [
+      "sizeBytes",
+      {
+        header: "Size (KiB)",
+        modifier: c => c / 1024,
+      },
+    ],
+    [
+      "sizePerc",
+      {
+        header: "Size (Perc.)",
+      },
+    ],
+    [
+      "efficiencyPerc",
+      {
+        header: "Space Eff. (Perc.)",
+      },
+    ],
+    [
+      "sequentialityPerc",
+      {
+        header: "Sequentiality (Perc.)",
+      },
+    ],
+  ]);
+
+  /**
+   * Loads the current metadata from the database and updates the display.
+   */
+  async updateDisplay() {
+    let stats = await PlacesDBUtils.getEntitiesStats();
+    let data = [];
+    let db = await PlacesUtils.promiseDBConnection();
+    for (let [entity, value] of stats) {
+      let count = "-";
+      try {
+        if (
+          entity.startsWith("moz_") &&
+          !entity.endsWith("index") &&
+          entity != "moz_places_visitcount" /* bug in index name */
+        ) {
+          count = (
+            await db.execute(`SELECT count(*) FROM ${entity}`)
+          )[0].getResultByIndex(0);
+        }
+      } catch (ex) {
+        console.error(ex);
+      }
+      data.push(Object.assign(value, { entity, count }));
+    }
+    this.displayData(data);
+  }
+})();
+
 function checkPrefs() {
   if (
     !Services.prefs.getBoolPref("browser.places.interactions.enabled", false)
@@ -362,6 +433,10 @@ function show(selectedButton) {
     case "metadata":
       snapshotHandler.pause();
       metadataHandler.start();
+      break;
+    case "places-stats":
+      placesStatsHandler.pause();
+      placesStatsHandler.start();
       break;
   }
 }
