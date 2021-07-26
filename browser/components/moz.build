@@ -36,6 +36,7 @@ DIRS += [
     "downloads",
     "enterprisepolicies",
     "extensions",
+    "pagedata",
     "migration",
     "newtab",
     "originattributes",
