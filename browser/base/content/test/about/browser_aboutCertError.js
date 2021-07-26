@@ -347,40 +347,6 @@ add_task(async function checkUnknownIssuerLearnMoreLink() {
   }
 });
 
-add_task(async function checkCautionClass() {
-  info("Checking that are potentially more dangerous get a 'caution' class");
-  for (let useFrame of [false, true]) {
-    let tab = await openErrorPage(UNKNOWN_ISSUER, useFrame);
-    let browser = tab.linkedBrowser;
-
-    let bc = browser.browsingContext;
-    if (useFrame) {
-      bc = bc.children[0];
-    }
-
-    await SpecialPowers.spawn(bc, [useFrame], async function(subFrame) {
-      Assert.equal(
-        content.document.body.classList.contains("caution"),
-        !subFrame,
-        `Cert error body has ${subFrame ? "no" : ""} caution class`
-      );
-    });
-
-    BrowserTestUtils.removeTab(gBrowser.selectedTab);
-
-    tab = await openErrorPage(BAD_STS_CERT, useFrame);
-    bc = tab.linkedBrowser.browsingContext;
-    await SpecialPowers.spawn(bc, [], async function() {
-      Assert.ok(
-        !content.document.body.classList.contains("caution"),
-        "Cert error body has no caution class"
-      );
-    });
-
-    BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  }
-});
-
 add_task(async function checkViewCertificate() {
   info("Loading a cert error and checking that the certificate can be shown.");
   for (let useFrame of [true, false]) {
