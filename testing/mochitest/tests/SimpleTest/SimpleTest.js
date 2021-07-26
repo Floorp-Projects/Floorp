@@ -1260,34 +1260,27 @@ SimpleTest.promiseClipboardChange = async function(
  *        before timeout.
  */
 SimpleTest.waitForCondition = function(aCond, aCallback, aErrorMsg) {
-  var tries = 0;
-  var interval = setInterval(() => {
-    if (tries >= 30) {
-      ok(false, aErrorMsg);
-      moveOn();
-      return;
-    }
-    var conditionPassed;
+  this.promiseWaitForCondition(aCond, aErrorMsg).then(() => aCallback());
+};
+SimpleTest.promiseWaitForCondition = async function(aCond, aErrorMsg) {
+  for (let tries = 0; tries < 30; ++tries) {
+    // Wait 100ms between checks.
+    await new Promise(resolve => {
+      SimpleTest._originalSetTimeout.apply(window, [resolve, 100]);
+    });
+
+    let conditionPassed;
     try {
-      conditionPassed = aCond();
+      conditionPassed = await aCond();
     } catch (e) {
       ok(false, `${e}\n${e.stack}`);
       conditionPassed = false;
     }
     if (conditionPassed) {
-      moveOn();
+      return;
     }
-    tries++;
-  }, 100);
-  var moveOn = () => {
-    clearInterval(interval);
-    aCallback();
-  };
-};
-SimpleTest.promiseWaitForCondition = function(aCond, aErrorMsg) {
-  return new Promise(resolve => {
-    this.waitForCondition(aCond, resolve, aErrorMsg);
-  });
+  }
+  ok(false, aErrorMsg);
 };
 
 /**
