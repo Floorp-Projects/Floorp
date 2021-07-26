@@ -194,7 +194,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
         // is being initialized and may easily revert changes made against platform API.
         // (typically toggle platform boolean attributes back to default...)
         if (existingTarget) {
-          existingTarget.destroy();
+          existingTarget.destroy({ isTargetSwitching: true });
         }
 
         this._createTargetActor({
