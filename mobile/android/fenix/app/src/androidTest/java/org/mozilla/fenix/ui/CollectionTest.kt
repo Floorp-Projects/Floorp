@@ -86,7 +86,8 @@ class CollectionTest {
         }.openTabDrawer {
             createCollection(firstWebPage.title, firstCollectionName)
             verifySnackBarText("Collection saved!")
-        }.closeTabDrawer {}
+            closeTab()
+        }
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(secondWebPage.url) {
