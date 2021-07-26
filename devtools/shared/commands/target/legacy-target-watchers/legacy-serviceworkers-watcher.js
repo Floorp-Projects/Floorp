@@ -12,6 +12,9 @@ const {
 } = require("devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher");
 
 class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
+  // Holds the current target URL object
+  #currentTargetURL;
+
   constructor(targetCommand, onTargetAvailable, onTargetDestroyed, commands) {
     super(targetCommand, onTargetAvailable, onTargetDestroyed);
     this._registrations = [];
@@ -76,6 +79,10 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     // Listen to the current target front.
     this.target = this.targetCommand.targetFront;
 
+    if (this.targetCommand.descriptorFront.isLocalTab) {
+      this.#currentTargetURL = new URL(this.targetCommand.targetFront.url);
+    }
+
     this._workersListener.addListener(this._onRegistrationListChanged);
 
     // Fetch the registrations before calling listen, since service workers
@@ -97,7 +104,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
   }
 
   // Override from LegacyWorkersWatcher.
-  unlisten() {
+  unlisten(...args) {
     this._workersListener.removeListener(this._onRegistrationListChanged);
 
     if (this.targetCommand.descriptorFront.isLocalTab) {
@@ -109,7 +116,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
       );
     }
 
-    super.unlisten();
+    super.unlisten(...args);
   }
 
   // Override from LegacyWorkersWatcher.
@@ -120,11 +127,12 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
       // to filter matching workers, it only makes sense when we are debugging
       // a tab. However in theory, parent process debugging could pause all
       // service workers without matching anything.
-      const origin = new URL(this.target.url).origin;
       try {
         // To support early breakpoint we need to setup the
         // `pauseMatchingServiceWorkers` mechanism in each process.
-        await targetFront.pauseMatchingServiceWorkers({ origin });
+        await targetFront.pauseMatchingServiceWorkers({
+          origin: this.#currentTargetURL.origin,
+        });
       } catch (e) {
         if (targetFront.actorID) {
           throw e;
@@ -151,6 +159,21 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
 
   _onDocumentEvent(resources) {
     for (const resource of resources) {
+      if (
+        resource.resourceType !==
+        this.commands.resourceCommand.TYPES.DOCUMENT_EVENT
+      ) {
+        continue;
+      }
+
+      if (resource.name === "will-navigate") {
+        // We rely on will-navigate as the onTargetAvailable for the top-level frame can
+        // happen after the onTargetAvailable for processes (handled in _onProcessAvailable),
+        // where we need the origin we navigate to.
+        this.#currentTargetURL = new URL(resource.newURI);
+        continue;
+      }
+
       // Note that we rely on "dom-loading" rather than "will-navigate" because the
       // destroyed/available callbacks should be triggered after the Debugger
       // has cleaned up its reducers, which happens on "will-navigate".
@@ -159,36 +182,32 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
       // in test (like browser_target_list_service_workers_navigation.js), as the new worker
       // target would already be registered at this point, and seen as something that would
       // need to be destroyed.
-      if (
-        resource.resourceType !==
-          this.commands.resourceCommand.TYPES.DOCUMENT_EVENT ||
-        resource.name !== "dom-loading"
-      ) {
-        continue;
-      }
+      if (resource.name === "dom-loading") {
+        const allServiceWorkerTargets = this._getAllServiceWorkerTargets();
+        const shouldDestroy = this._shouldDestroyTargetsOnNavigation();
 
-      const allServiceWorkerTargets = this._getAllServiceWorkerTargets();
-      const shouldDestroy = this._shouldDestroyTargetsOnNavigation();
+        for (const target of allServiceWorkerTargets) {
+          const isRegisteredBefore = this.targetCommand.isTargetRegistered(
+            target
+          );
+          if (shouldDestroy && isRegisteredBefore) {
+            // Instruct the target command to notify about the worker target destruction
+            // but do not destroy the front as we want to keep using it.
+            // We will notify about it again via onTargetAvailable.
+            this.onTargetDestroyed(target, { shouldDestroyTargetFront: false });
+          }
 
-      for (const target of allServiceWorkerTargets) {
-        const isRegisteredBefore = this.targetCommand.isTargetRegistered(
-          target
-        );
-        if (shouldDestroy && isRegisteredBefore) {
-          // Instruct the target command to notify about the worker target destruction
-          // but do not destroy the front as we want to keep using it.
-          // We will notify about it again via onTargetAvailable.
-          this.onTargetDestroyed(target, { shouldDestroyTargetFront: false });
-        }
-
-        // Note: we call isTargetRegistered again because calls to
-        // onTargetDestroyed might have modified the list of registered targets.
-        const isRegisteredAfter = this.targetCommand.isTargetRegistered(target);
-        const isValidTarget = this._supportWorkerTarget(target);
-        if (isValidTarget && !isRegisteredAfter) {
-          // If the target is still valid for the current top target, call
-          // onTargetAvailable as well.
-          this.onTargetAvailable(target);
+          // Note: we call isTargetRegistered again because calls to
+          // onTargetDestroyed might have modified the list of registered targets.
+          const isRegisteredAfter = this.targetCommand.isTargetRegistered(
+            target
+          );
+          const isValidTarget = this._supportWorkerTarget(target);
+          if (isValidTarget && !isRegisteredAfter) {
+            // If the target is still valid for the current top target, call
+            // onTargetAvailable as well.
+            this.onTargetAvailable(target);
+          }
         }
       }
     }
@@ -287,7 +306,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
 
     // For local tabs, we match ServiceWorkerRegistrations and the target
     // if they share the same hostname for their "url" properties.
-    const targetDomain = new URL(this.target.url).hostname;
+    const targetDomain = this.#currentTargetURL.hostname;
     try {
       const registrationDomain = new URL(registration.url).hostname;
       return registrationDomain === targetDomain;
