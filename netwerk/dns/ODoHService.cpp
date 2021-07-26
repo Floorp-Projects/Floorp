@@ -227,7 +227,7 @@ nsresult ODoHService::UpdateODoHConfigFromURI() {
     return UpdateODoHConfigFromHTTPSRR();
   }
 
-  nsCOMPtr<nsIEventTarget> target = gTRRService->MainThreadOrTRRThread();
+  nsCOMPtr<nsIEventTarget> target = TRRService::Get()->MainThreadOrTRRThread();
   if (!target) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -306,7 +306,7 @@ nsresult ODoHService::UpdateODoHConfigFromHTTPSRR() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (!gTRRService) {
+  if (!TRRService::Get()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -317,7 +317,7 @@ nsresult ODoHService::UpdateODoHConfigFromHTTPSRR() {
   }
 
   nsCOMPtr<nsICancelable> tmpOutstanding;
-  nsCOMPtr<nsIEventTarget> target = gTRRService->MainThreadOrTRRThread();
+  nsCOMPtr<nsIEventTarget> target = TRRService::Get()->MainThreadOrTRRThread();
   // We'd like to bypass the DNS cache, since ODoHConfigs will be updated
   // manually by ODoHService.
   uint32_t flags =
@@ -353,8 +353,8 @@ ODoHService::Notify(nsITimer* aTimer) {
 
 void ODoHService::ODoHConfigUpdateDone(uint32_t aTTL,
                                        Span<const uint8_t> aRawConfig) {
-  MOZ_ASSERT_IF(XRE_IsParentProcess() && gTRRService,
-                NS_IsMainThread() || gTRRService->IsOnTRRThread());
+  MOZ_ASSERT_IF(XRE_IsParentProcess() && TRRService::Get(),
+                NS_IsMainThread() || TRRService::Get()->IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
   mQueryODoHConfigInProgress = false;
@@ -399,7 +399,8 @@ void ODoHService::ODoHConfigUpdateDone(uint32_t aTTL,
 
   if (!mPendingRequests.IsEmpty()) {
     nsTArray<RefPtr<ODoH>> requests = std::move(mPendingRequests);
-    nsCOMPtr<nsIEventTarget> target = gTRRService->MainThreadOrTRRThread();
+    nsCOMPtr<nsIEventTarget> target =
+        TRRService::Get()->MainThreadOrTRRThread();
     for (auto& query : requests) {
       target->Dispatch(query.forget());
     }
@@ -409,8 +410,8 @@ void ODoHService::ODoHConfigUpdateDone(uint32_t aTTL,
 NS_IMETHODIMP
 ODoHService::OnLookupComplete(nsICancelable* aRequest, nsIDNSRecord* aRec,
                               nsresult aStatus) {
-  MOZ_ASSERT_IF(XRE_IsParentProcess() && gTRRService,
-                NS_IsMainThread() || gTRRService->IsOnTRRThread());
+  MOZ_ASSERT_IF(XRE_IsParentProcess() && TRRService::Get(),
+                NS_IsMainThread() || TRRService::Get()->IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
   nsCOMPtr<nsIDNSHTTPSSVCRecord> httpsRecord;
@@ -454,8 +455,8 @@ NS_IMETHODIMP
 ODoHService::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
                               nsresult aStatus, uint32_t aLength,
                               const uint8_t* aContent) {
-  MOZ_ASSERT_IF(XRE_IsParentProcess() && gTRRService,
-                NS_IsMainThread() || gTRRService->IsOnTRRThread());
+  MOZ_ASSERT_IF(XRE_IsParentProcess() && TRRService::Get(),
+                NS_IsMainThread() || TRRService::Get()->IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
   LOG(("ODoHService::OnStreamComplete aLength=%d\n", aLength));
 
@@ -468,8 +469,8 @@ ODoHService::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
 }
 
 const Maybe<nsTArray<ObliviousDoHConfig>>& ODoHService::ODoHConfigs() {
-  MOZ_ASSERT_IF(XRE_IsParentProcess() && gTRRService,
-                NS_IsMainThread() || gTRRService->IsOnTRRThread());
+  MOZ_ASSERT_IF(XRE_IsParentProcess() && TRRService::Get(),
+                NS_IsMainThread() || TRRService::Get()->IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
   return mODoHConfigs;
@@ -477,16 +478,16 @@ const Maybe<nsTArray<ObliviousDoHConfig>>& ODoHService::ODoHConfigs() {
 
 void ODoHService::AppendPendingODoHRequest(ODoH* aRequest) {
   LOG(("ODoHService::AppendPendingODoHQuery\n"));
-  MOZ_ASSERT_IF(XRE_IsParentProcess() && gTRRService,
-                NS_IsMainThread() || gTRRService->IsOnTRRThread());
+  MOZ_ASSERT_IF(XRE_IsParentProcess() && TRRService::Get(),
+                NS_IsMainThread() || TRRService::Get()->IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
   mPendingRequests.AppendElement(aRequest);
 }
 
 bool ODoHService::RemovePendingODoHRequest(ODoH* aRequest) {
-  MOZ_ASSERT_IF(XRE_IsParentProcess() && gTRRService,
-                NS_IsMainThread() || gTRRService->IsOnTRRThread());
+  MOZ_ASSERT_IF(XRE_IsParentProcess() && TRRService::Get(),
+                NS_IsMainThread() || TRRService::Get()->IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
   return mPendingRequests.RemoveElement(aRequest);
