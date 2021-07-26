@@ -78,10 +78,14 @@ static inline mozilla::LauncherResult<bool> IsSameBinaryAsParentProcess(
                                            FALSE, parentPid.unwrap()));
   if (!parentProcess.get()) {
     DWORD err = ::GetLastError();
-    if (err == ERROR_INVALID_PARAMETER) {
-      // The process identified by parentPid has already exited. This is a
-      // common case when the parent process is not Firefox, thus we should
-      // return false instead of erroring out.
+    if (err == ERROR_INVALID_PARAMETER || err == ERROR_ACCESS_DENIED) {
+      // In the ERROR_INVALID_PARAMETER case, the process identified by
+      // parentPid has already exited. This is a common case when the parent
+      // process is not Firefox, thus we should return false instead of erroring
+      // out.
+      // The ERROR_ACCESS_DENIED case can happen when the parent process is
+      // something that we don't have permission to query. For example, we may
+      // encounter this when Firefox is launched by the Windows Task Scheduler.
       return false;
     }
 
