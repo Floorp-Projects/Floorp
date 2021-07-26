@@ -56,8 +56,10 @@
                 <menuitem id="menu_savePage"
                           key="key_savePage"
                           command="Browser:SavePage" data-l10n-id="menu-file-save-page"/>
+#ifndef XP_MACOSX
                 <menuitem id="menu_sendLink"
                           command="Browser:SendLink" data-l10n-id="menu-file-email-link"/>
+#endif
                 <menuseparator/>
 #if !defined(MOZ_WIDGET_GTK)
                 <menuitem id="menu_printSetup"
