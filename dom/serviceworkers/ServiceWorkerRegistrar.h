@@ -63,6 +63,8 @@ class ServiceWorkerRegistrar : public nsIObserver,
       const nsACString& aScope);
   void RemoveAll();
 
+  bool ReloadDataForTest();
+
  protected:
   // These methods are protected because we test this class using gTest
   // subclassing it.
