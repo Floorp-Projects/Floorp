@@ -17,6 +17,7 @@ import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.databinding.TabTrayGridItemBinding
 import org.mozilla.fenix.databinding.TabTrayItemBinding
 import org.mozilla.fenix.ext.components
@@ -25,11 +26,18 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 
 /**
  * A [RecyclerView.Adapter] for browser tabs.
+ *
+ * @param context [Context] used for various platform interactions or accessing [Components]
+ * @param interactor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
+ * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
+ * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
+ * @param delegate [Observable]<[TabsTray.Observer]> for observing tabs tray changes. Defaults to [ObserverRegistry].
  */
 class BrowserTabsAdapter(
     private val context: Context,
     private val interactor: BrowserTrayInteractor,
     private val store: TabsTrayStore,
+    private val featureName: String,
     delegate: Observable<TabsTray.Observer> = ObserverRegistry()
 ) : TabsAdapter<AbstractBrowserTabViewHolder>(delegate) {
 
@@ -62,9 +70,9 @@ class BrowserTabsAdapter(
 
         return when (viewType) {
             ViewType.GRID.layoutRes ->
-                BrowserTabGridViewHolder(imageLoader, interactor, store, selectionHolder, view)
+                BrowserTabGridViewHolder(imageLoader, interactor, store, selectionHolder, view, featureName)
             else ->
-                BrowserTabListViewHolder(imageLoader, interactor, store, selectionHolder, view)
+                BrowserTabListViewHolder(imageLoader, interactor, store, selectionHolder, view, featureName)
         }
     }
 
@@ -76,12 +84,12 @@ class BrowserTabsAdapter(
                 ViewType.GRID.layoutRes -> {
                     val gridBinding = TabTrayGridItemBinding.bind(holder.itemView)
                     selectedMaskView = gridBinding.checkboxInclude.selectedMask
-                    gridBinding.mozacBrowserTabstrayClose.setOnClickListener { interactor.close(tab) }
+                    gridBinding.mozacBrowserTabstrayClose.setOnClickListener { interactor.close(tab, featureName) }
                 }
                 ViewType.LIST.layoutRes -> {
                     val listBinding = TabTrayItemBinding.bind(holder.itemView)
                     selectedMaskView = listBinding.checkboxInclude.selectedMask
-                    listBinding.mozacBrowserTabstrayClose.setOnClickListener { interactor.close(tab) }
+                    listBinding.mozacBrowserTabstrayClose.setOnClickListener { interactor.close(tab, featureName) }
                 }
             }
 

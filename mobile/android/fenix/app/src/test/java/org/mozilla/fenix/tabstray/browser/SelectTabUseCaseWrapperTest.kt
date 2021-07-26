@@ -17,13 +17,25 @@ class SelectTabUseCaseWrapperTest {
     val selectUseCase: TabsUseCases.SelectTabUseCase = mockk(relaxed = true)
 
     @Test
-    fun `WHEN invoked THEN metrics, use case and callback are triggered`() {
+    fun `WHEN invoked with no source name THEN metrics with unknown source, use case and callback are triggered`() {
         val onSelect: (String) -> Unit = mockk(relaxed = true)
         val wrapper = SelectTabUseCaseWrapper(metricController, selectUseCase, onSelect)
 
         wrapper("123")
 
-        verify { metricController.track(Event.OpenedExistingTab) }
+        verify { metricController.track(Event.OpenedExistingTab("unknown")) }
+        verify { selectUseCase("123") }
+        verify { onSelect("123") }
+    }
+
+    @Test
+    fun `WHEN invoked with a source name THEN metrics, use case and callback are triggered`() {
+        val onSelect: (String) -> Unit = mockk(relaxed = true)
+        val wrapper = SelectTabUseCaseWrapper(metricController, selectUseCase, onSelect)
+
+        wrapper("123", "Test")
+
+        verify { metricController.track(Event.OpenedExistingTab("Test")) }
         verify { selectUseCase("123") }
         verify { onSelect("123") }
     }

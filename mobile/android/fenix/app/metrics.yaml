@@ -2625,7 +2625,11 @@ tabs_tray:
   opened_existing_tab:
     type: event
     description: |
-      A user opened an existing tab
+      A user opened an existing tab from a particular app feature.
+    extra_keys:
+      source:
+        description: |
+          From which app feature was an existing tab opened.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
@@ -2633,15 +2637,20 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/20517#pullrequestreview-718069041
+      - https://github.com/mozilla-mobile/fenix/pull/20508#issuecomment-902160532
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2022-02-01"
+    expires: "2022-08-01"
   closed_existing_tab:
     type: event
     description: |
-      A user closed an existing tab
+      A user closed an existing tab from a particular app feature.
+    extra_keys:
+      source:
+        description: |
+          From which app feature was an existing tab closed.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
@@ -2649,11 +2658,12 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/20517#pullrequestreview-718069041
+      - https://github.com/mozilla-mobile/fenix/pull/20508#issuecomment-902160532
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2022-02-01"
+    expires: "2022-08-01"
   private_mode_tapped:
     type: event
     description: |
@@ -2806,6 +2816,34 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/20328
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/issues/20328
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-08-01"
+  inactive_tabs_expanded:
+    type: event
+    description: |
+      A user tapped the "Inactive tabs" header to expand
+      the group of inactive tabs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/20507
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/20508#issuecomment-901336677
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-08-01"
+  inactive_tabs_collapsed:
+    type: event
+    description: |
+      A user tapped the "Inactive tabs" header to collapse
+      the group of inactive tabs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/20507
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/20508#issuecomment-901336677
     data_sensitivity:
       - interaction
     notification_emails:

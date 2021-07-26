@@ -44,7 +44,7 @@ class AbstractBrowserTabViewHolderTest {
 
         holder.itemView.performClick()
 
-        verify { interactor.open(any()) }
+        verify { interactor.open(any(), holder.featureName) }
     }
 
     @Test
@@ -65,7 +65,7 @@ class AbstractBrowserTabViewHolderTest {
 
         holder.itemView.performClick()
 
-        verify { interactor.open(any()) }
+        verify { interactor.open(any(), holder.featureName) }
         assertTrue(selectionHolder.invoked)
     }
 
@@ -77,8 +77,9 @@ class AbstractBrowserTabViewHolderTest {
         selectionHolder: SelectionHolder<Tab>?,
         store: BrowserStore,
         metrics: MetricController,
-        override val browserTrayInteractor: BrowserTrayInteractor
-    ) : AbstractBrowserTabViewHolder(itemView, imageLoader, trayStore, selectionHolder, store, metrics) {
+        override val browserTrayInteractor: BrowserTrayInteractor,
+        featureName: String = "Test"
+    ) : AbstractBrowserTabViewHolder(itemView, imageLoader, trayStore, selectionHolder, featureName, store, metrics) {
         override val thumbnailSize: Int
             get() = 30
 

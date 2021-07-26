@@ -52,9 +52,17 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
         }
     }
 
+    /**
+     * A RecyclerView ViewHolder implementation for an inactive tab view.
+     *
+     * @param itemView the inactive tab [View].
+     * @param browserTrayInteractor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
+     * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
+     */
     class TabViewHolder(
         itemView: View,
-        private val browserTrayInteractor: BrowserTrayInteractor
+        private val browserTrayInteractor: BrowserTrayInteractor,
+        private val featureName: String
     ) : InactiveTabViewHolder(itemView) {
 
         private val binding = InactiveTabListItemBinding.bind(itemView)
@@ -65,7 +73,7 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
             val url = tab.url.toShortUrl(components.publicSuffixList).take(MAX_URI_LENGTH)
 
             itemView.setOnClickListener {
-                browserTrayInteractor.open(tab)
+                browserTrayInteractor.open(tab, featureName)
             }
 
             binding.siteListItem.apply {
@@ -75,7 +83,7 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
                     R.drawable.mozac_ic_close,
                     R.string.content_description_close_button
                 ) {
-                    browserTrayInteractor.close(tab)
+                    browserTrayInteractor.close(tab, featureName)
                 }
             }
         }

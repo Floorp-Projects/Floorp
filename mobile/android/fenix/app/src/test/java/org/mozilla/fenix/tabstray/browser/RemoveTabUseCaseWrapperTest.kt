@@ -16,7 +16,7 @@ class RemoveTabUseCaseWrapperTest {
     val metricController = mockk<MetricController>(relaxed = true)
 
     @Test
-    fun `WHEN invoked THEN metrics, use case and callback are triggered`() {
+    fun `WHEN invoked with no source name THEN metrics with unknown source, use case and callback are triggered`() {
         var actualTabId: String? = null
         val onRemove: (String) -> Unit = { tabId ->
             actualTabId = tabId
@@ -25,7 +25,21 @@ class RemoveTabUseCaseWrapperTest {
 
         wrapper("123")
 
-        verify { metricController.track(Event.ClosedExistingTab) }
+        verify { metricController.track(Event.ClosedExistingTab("unknown")) }
+        assertEquals("123", actualTabId)
+    }
+
+    @Test
+    fun `WHEN invoked with a source name THEN metrics containing the source, use case and callback are triggered`() {
+        var actualTabId: String? = null
+        val onRemove: (String) -> Unit = { tabId ->
+            actualTabId = tabId
+        }
+        val wrapper = RemoveTabUseCaseWrapper(metricController, onRemove)
+
+        wrapper("123", "Test")
+
+        verify { metricController.track(Event.ClosedExistingTab("Test")) }
         assertEquals("123", actualTabId)
     }
 }

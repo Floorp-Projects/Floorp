@@ -35,19 +35,28 @@ import org.mozilla.fenix.ext.removeTouchDelegate
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.selection.SelectionHolder
-import org.mozilla.fenix.selection.SelectionInteractor
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.ext.isSelect
 
 /**
  * A RecyclerView ViewHolder implementation for "tab" items.
+ *
+ * @param itemView [View] that displays a "tab".
+ * @param imageLoader [ImageLoader] used to load tab thumbnails.
+ * @param trayStore [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
+ * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
+ * @param store [BrowserStore] containing the complete state of the browser and methods to update that.
+ * @param metrics [MetricController] used for handling telemetry events.
  */
+@Suppress("LongParameterList")
 abstract class AbstractBrowserTabViewHolder(
     itemView: View,
     private val imageLoader: ImageLoader,
     private val trayStore: TabsTrayStore,
     private val selectionHolder: SelectionHolder<Tab>?,
+    @VisibleForTesting
+    internal val featureName: String,
     private val store: BrowserStore = itemView.context.components.core.store,
     private val metrics: MetricController = itemView.context.components.analytics.metrics
 ) : TabViewHolder(itemView) {
@@ -91,7 +100,7 @@ abstract class AbstractBrowserTabViewHolder(
         if (selectionHolder != null) {
             setSelectionInteractor(tab, selectionHolder, browserTrayInteractor)
         } else {
-            itemView.setOnClickListener { browserTrayInteractor.open(tab) }
+            itemView.setOnClickListener { browserTrayInteractor.open(tab, featureName) }
         }
 
         if (tab.thumbnail != null) {
@@ -202,12 +211,12 @@ abstract class AbstractBrowserTabViewHolder(
     private fun setSelectionInteractor(
         item: Tab,
         holder: SelectionHolder<Tab>,
-        interactor: SelectionInteractor<Tab>
+        interactor: BrowserTrayInteractor
     ) {
         itemView.setOnClickListener {
             val selected = holder.selectedItems
             when {
-                selected.isEmpty() && trayStore.state.mode.isSelect().not() -> interactor.open(item)
+                selected.isEmpty() && trayStore.state.mode.isSelect().not() -> interactor.open(item, featureName)
                 item in selected -> interactor.deselect(item)
                 else -> interactor.select(item)
             }

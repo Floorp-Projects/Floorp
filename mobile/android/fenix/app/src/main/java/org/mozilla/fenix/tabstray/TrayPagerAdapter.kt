@@ -35,11 +35,11 @@ class TrayPagerAdapter(
 
     private val normalAdapter by lazy {
         ConcatAdapter(
-            BrowserTabsAdapter(context, browserInteractor, store),
-            InactiveTabsAdapter(context, browserInteractor)
+            BrowserTabsAdapter(context, browserInteractor, store, TABS_TRAY_FEATURE_NAME),
+            InactiveTabsAdapter(context, browserInteractor, INACTIVE_TABS_FEATURE_NAME)
         )
     }
-    private val privateAdapter by lazy { BrowserTabsAdapter(context, browserInteractor, store) }
+    private val privateAdapter by lazy { BrowserTabsAdapter(context, browserInteractor, store, TABS_TRAY_FEATURE_NAME) }
     private val syncedTabsAdapter by lazy { SyncedTabsAdapter(TabClickDelegate(navInteractor)) }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AbstractPageViewHolder {
@@ -97,6 +97,10 @@ class TrayPagerAdapter(
 
     companion object {
         const val TRAY_TABS_COUNT = 3
+
+        // Telemetry keys for identifying from which app features the a was opened / closed.
+        const val TABS_TRAY_FEATURE_NAME = "Tabs tray"
+        const val INACTIVE_TABS_FEATURE_NAME = "Inactive tabs"
 
         val POSITION_NORMAL_TABS = Page.NormalTabs.ordinal
         val POSITION_PRIVATE_TABS = Page.PrivateTabs.ordinal

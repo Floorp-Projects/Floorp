@@ -15,6 +15,8 @@ import mozilla.components.concept.tabstray.TabsTray
 import org.junit.Assert.assertEquals
 import mozilla.components.browser.state.state.createTab as createTabState
 import org.junit.Test
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 
 class InactiveTabsControllerTest {
     @Test
@@ -31,7 +33,7 @@ class InactiveTabsControllerTest {
         )
         val tray: TabsTray = mockk(relaxed = true)
         val tabsSlot = slot<Tabs>()
-        val controller = InactiveTabsController(store, filter, tray)
+        val controller = InactiveTabsController(store, filter, tray, mockk(relaxed = true))
 
         controller.updateCardExpansion(true)
 
@@ -39,5 +41,31 @@ class InactiveTabsControllerTest {
 
         assertEquals(2, tabsSlot.captured.list.size)
         assertEquals("1", tabsSlot.captured.list.first().id)
+    }
+
+    @Test
+    fun `WHEN expanded THEN track telemetry event`() {
+        val metrics: MetricController = mockk(relaxed = true)
+        val store = BrowserStore(BrowserState())
+        val controller = InactiveTabsController(
+            store, mockk(relaxed = true), mockk(relaxed = true), metrics
+        )
+
+        controller.updateCardExpansion(true)
+
+        verify { metrics.track(Event.TabsTrayInactiveTabsExpanded) }
+    }
+
+    @Test
+    fun `WHEN collapsed THEN track telemetry event`() {
+        val metrics: MetricController = mockk(relaxed = true)
+        val store = BrowserStore(BrowserState())
+        val controller = InactiveTabsController(
+            store, mockk(relaxed = true), mockk(relaxed = true), metrics
+        )
+
+        controller.updateCardExpansion(false)
+
+        verify { metrics.track(Event.TabsTrayInactiveTabsCollapsed) }
     }
 }

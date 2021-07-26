@@ -21,14 +21,22 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 
 /**
  * A RecyclerView ViewHolder implementation for "tab" items with grid layout.
+ *
+ * @param imageLoader [ImageLoader] used to load tab thumbnails.
+ * @param browserTrayInteractor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
+ * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
+ * @param selectionHolder [SelectionHolder]<[Tab]> for helping with selecting any number of displayed [Tab]s.
+ * @param itemView [View] that displays a "tab".
+ * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
  */
 class BrowserTabGridViewHolder(
     imageLoader: ImageLoader,
     override val browserTrayInteractor: BrowserTrayInteractor,
     store: TabsTrayStore,
     selectionHolder: SelectionHolder<Tab>? = null,
-    itemView: View
-) : AbstractBrowserTabViewHolder(itemView, imageLoader, store, selectionHolder) {
+    itemView: View,
+    featureName: String
+) : AbstractBrowserTabViewHolder(itemView, imageLoader, store, selectionHolder, featureName) {
 
     private val closeButton: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
 

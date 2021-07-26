@@ -68,7 +68,7 @@ class NormalBrowserTrayList @JvmOverloads constructor(
         }
         val tabsAdapter = concatAdapter.inactiveTabsAdapter.apply {
             inactiveTabsInteractor = DefaultInactiveTabsInteractor(
-                InactiveTabsController(store, tabFilter, this)
+                InactiveTabsController(store, tabFilter, this, context.components.analytics.metrics)
             )
         }
 

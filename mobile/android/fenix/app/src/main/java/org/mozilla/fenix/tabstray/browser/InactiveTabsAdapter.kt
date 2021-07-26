@@ -13,6 +13,7 @@ import mozilla.components.concept.tabstray.Tab as TabsTrayTab
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.ObserverRegistry
+import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.FooterHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.HeaderHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.RecentlyClosedHolder
@@ -32,10 +33,16 @@ private typealias Observable = ComponentObservable<TabsTray.Observer>
 
 /**
  * The [ListAdapter] for displaying the list of inactive tabs.
+ *
+ * @param context [Context] used for various platform interactions or accessing [Components]
+ * @param browserTrayInteractor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
+ * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
+ * @param delegate [Observable]<[TabsTray.Observer]> for observing tabs tray changes. Defaults to [ObserverRegistry].
  */
 class InactiveTabsAdapter(
     private val context: Context,
     private val browserTrayInteractor: BrowserTrayInteractor,
+    private val featureName: String,
     delegate: Observable = ObserverRegistry()
 ) : Adapter(DiffCallback), TabsTray, Observable by delegate {
 
@@ -47,7 +54,7 @@ class InactiveTabsAdapter(
 
         return when (viewType) {
             HeaderHolder.LAYOUT_ID -> HeaderHolder(view, inactiveTabsInteractor)
-            TabViewHolder.LAYOUT_ID -> TabViewHolder(view, browserTrayInteractor)
+            TabViewHolder.LAYOUT_ID -> TabViewHolder(view, browserTrayInteractor, featureName)
             FooterHolder.LAYOUT_ID -> FooterHolder(view)
             RecentlyClosedHolder.LAYOUT_ID -> RecentlyClosedHolder(view, browserTrayInteractor)
             else -> throw IllegalStateException("Unknown viewType: $viewType")

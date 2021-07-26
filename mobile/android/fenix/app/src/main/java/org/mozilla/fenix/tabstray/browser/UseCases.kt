@@ -13,19 +13,27 @@ class SelectTabUseCaseWrapper(
     private val selectTab: TabsUseCases.SelectTabUseCase,
     private val onSelect: (String) -> Unit
 ) : TabsUseCases.SelectTabUseCase {
-    override fun invoke(tabId: String) {
-        metrics.track(Event.OpenedExistingTab)
+    operator fun invoke(tabId: String, source: String? = null) {
+        metrics.track(Event.OpenedExistingTab(source ?: "unknown"))
         selectTab(tabId)
         onSelect(tabId)
+    }
+
+    override fun invoke(tabId: String) {
+        invoke(tabId, null)
     }
 }
 
 class RemoveTabUseCaseWrapper(
     private val metrics: MetricController,
-    private val onRemove: (String) -> Unit
+    private val onRemove: (String) -> Unit,
 ) : TabsUseCases.RemoveTabUseCase {
-    override fun invoke(tabId: String) {
-        metrics.track(Event.ClosedExistingTab)
+    operator fun invoke(tabId: String, source: String? = null) {
+        metrics.track(Event.ClosedExistingTab(source ?: "unknown"))
         onRemove(tabId)
+    }
+
+    override fun invoke(tabId: String) {
+        invoke(tabId, null)
     }
 }

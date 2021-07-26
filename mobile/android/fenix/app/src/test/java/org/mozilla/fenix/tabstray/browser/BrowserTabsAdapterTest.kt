@@ -30,7 +30,7 @@ class BrowserTabsAdapterTest {
 
     @Test
     fun `WHEN bind with payloads is called THEN update the holder`() {
-        val adapter = BrowserTabsAdapter(context, interactor, store)
+        val adapter = BrowserTabsAdapter(context, interactor, store, "Test")
         val holder = mockk<AbstractBrowserTabViewHolder>(relaxed = true)
 
         adapter.updateTabs(
@@ -53,7 +53,7 @@ class BrowserTabsAdapterTest {
 
     @Test
     fun `WHEN the selection holder is set THEN update the selected tab`() {
-        val adapter = BrowserTabsAdapter(context, interactor, store)
+        val adapter = BrowserTabsAdapter(context, interactor, store, "Test")
         val binding = TabTrayItemBinding.inflate(LayoutInflater.from(testContext))
         val holder = spyk(
             BrowserTabListViewHolder(
@@ -61,7 +61,8 @@ class BrowserTabsAdapterTest {
                 browserTrayInteractor = interactor,
                 store = store,
                 selectionHolder = null,
-                itemView = binding.root
+                itemView = binding.root,
+                featureName = "Test"
             )
         )
         val tab = createTab("tab1")

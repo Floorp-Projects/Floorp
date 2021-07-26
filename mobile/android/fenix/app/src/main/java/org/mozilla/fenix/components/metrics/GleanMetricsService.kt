@@ -650,11 +650,13 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TabsTrayClosed -> EventWrapper<NoExtraKeys>(
             { TabsTray.closed.record(it) }
         )
-        is Event.OpenedExistingTab -> EventWrapper<NoExtraKeys>(
-            { TabsTray.openedExistingTab.record(it) }
+        is Event.OpenedExistingTab -> EventWrapper(
+            { TabsTray.openedExistingTab.record(it) },
+            { TabsTray.openedExistingTabKeys.valueOf(it) }
         )
-        is Event.ClosedExistingTab -> EventWrapper<NoExtraKeys>(
-            { TabsTray.closedExistingTab.record(it) }
+        is Event.ClosedExistingTab -> EventWrapper(
+            { TabsTray.closedExistingTab.record(it) },
+            { TabsTray.closedExistingTabKeys.valueOf(it) }
         )
         is Event.TabsTrayPrivateModeTapped -> EventWrapper<NoExtraKeys>(
             { TabsTray.privateModeTapped.record(it) }
@@ -685,6 +687,12 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.TabsTrayRecentlyClosedPressed -> EventWrapper<NoExtraKeys>(
             { TabsTray.inactiveTabsRecentlyClosed.record(it) }
+        )
+        is Event.TabsTrayInactiveTabsExpanded -> EventWrapper<NoExtraKeys>(
+            { TabsTray.inactiveTabsExpanded.record(it) }
+        )
+        is Event.TabsTrayInactiveTabsCollapsed -> EventWrapper<NoExtraKeys>(
+            { TabsTray.inactiveTabsCollapsed.record(it) }
         )
         is Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(
             { Autoplay.visitedSetting.record(it) }

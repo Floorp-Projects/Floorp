@@ -22,9 +22,20 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 interface BrowserTrayInteractor : SelectionInteractor<Tab>, UserInteractionHandler {
 
     /**
-     * Close the tab.
+     * Open a tab.
+     *
+     * @param tab [Tab] to open in browser.
+     * @param source app feature from which the [tab] was opened.
      */
-    fun close(tab: Tab)
+    fun open(tab: Tab, source: String? = null)
+
+    /**
+     * Close the tab.
+     *
+     * @param tab [Tab] to close.
+     * @param source app feature from which the [tab] was closed.
+     */
+    fun close(tab: Tab, source: String? = null)
 
     /**
      * TabTray's Floating Action Button clicked.
@@ -65,14 +76,21 @@ class DefaultBrowserTrayInteractor(
      * See [SelectionInteractor.open]
      */
     override fun open(item: Tab) {
-        selectTabWrapper.invoke(item.id)
+        open(item, null)
+    }
+
+    /**
+     * See [BrowserTrayInteractor.open].
+     */
+    override fun open(tab: Tab, source: String?) {
+        selectTabWrapper.invoke(tab.id, source)
     }
 
     /**
      * See [BrowserTrayInteractor.close].
      */
-    override fun close(tab: Tab) {
-        removeTabWrapper.invoke(tab.id)
+    override fun close(tab: Tab, source: String?) {
+        removeTabWrapper.invoke(tab.id, source)
     }
 
     /**
