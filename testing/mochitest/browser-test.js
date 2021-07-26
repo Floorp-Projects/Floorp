@@ -797,6 +797,14 @@ Tester.prototype = {
         name
       );
       let time = Date.now() - this.lastStartTime;
+
+      // HTTPS-First (Bug 1704453) TODO: in case a test is annoated
+      // with https_first_disabled then we explicitly flip the pref
+      // dom.security.https_first to false for the duration of the test.
+      if (this.currentTest.https_first_disabled) {
+        window.SpecialPowers.popPrefEnv();
+      }
+
       this.structuredLogger.testEnd(
         this.currentTest.path,
         "OK",
@@ -954,6 +962,15 @@ Tester.prototype = {
       this.currentTest.expected
     ));
     let currentTest = this.currentTest;
+
+    // HTTPS-First (Bug 1704453) TODO: in case a test is annoated
+    // with https_first_disabled then we explicitly flip the pref
+    // dom.security.https_first to false for the duration of the test.
+    if (currentTest.https_first_disabled) {
+      window.SpecialPowers.pushPrefEnv({
+        set: [["dom.security.https_first", false]],
+      });
+    }
 
     // Import utils in the test scope.
     let { scope } = this.currentTest;

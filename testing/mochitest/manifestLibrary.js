@@ -30,6 +30,7 @@ function parseTestManifest(testManifest, params, callback) {
         test: {
           url: name,
           expected: obj.expected,
+          https_first_disabled: obj.https_first_disabled,
         },
       };
     } else {
@@ -41,6 +42,7 @@ function parseTestManifest(testManifest, params, callback) {
         test: {
           url: name,
           expected: obj.expected,
+          https_first_disabled: obj.https_first_disabled,
         },
       });
     }
