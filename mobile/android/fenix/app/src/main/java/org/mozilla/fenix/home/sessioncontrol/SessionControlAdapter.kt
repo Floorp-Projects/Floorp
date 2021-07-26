@@ -86,8 +86,15 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
          * See https://github.com/mozilla-mobile/fenix/pull/20189#issuecomment-877124730
          */
         override fun getChangePayload(newItem: AdapterItem): Any? {
-            val newTopSites = (newItem as? TopSitePager) ?: return null
-            val oldTopSites = (this as? TopSitePager) ?: return null
+            val newTopSites = (newItem as? TopSitePager)
+            val oldTopSites = (this as? TopSitePager)
+
+            if (newTopSites == null || oldTopSites == null ||
+                (newTopSites.topSites.size > TopSitePagerViewHolder.TOP_SITES_PER_PAGE)
+                != (oldTopSites.topSites.size > TopSitePagerViewHolder.TOP_SITES_PER_PAGE)
+            ) {
+                return null
+            }
 
             val changed = mutableSetOf<Pair<Int, TopSite>>()
 
