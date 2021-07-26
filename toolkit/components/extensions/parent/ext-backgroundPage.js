@@ -129,11 +129,17 @@ class BackgroundWorker {
     );
   }
 
-  shutdown() {
-    if (this.registrationInfo) {
+  shutdown(isAppShutdown) {
+    // All service worker registrations related to the extensions will be unregistered
+    // - when the extension is shutting down if the application is not also shutting down
+    //   shutdown (in which case a previously registered service worker is expected to stay
+    //   active across browser restarts).
+    // - when the extension has been uninstalled
+    if (!isAppShutdown && this.registrationInfo) {
       this.registrationInfo.forceShutdown();
-      this.registrationInfo = null;
     }
+
+    this.registrationInfo = null;
   }
 }
 
@@ -220,9 +226,9 @@ this.backgroundPage = class extends ExtensionAPI {
     });
   }
 
-  onShutdown() {
+  onShutdown(isAppShutdown) {
     if (this.bgInstance) {
-      this.bgInstance.shutdown();
+      this.bgInstance.shutdown(isAppShutdown);
       this.bgInstance = null;
     } else {
       EventManager.clearPrimedListeners(this.extension, false);
