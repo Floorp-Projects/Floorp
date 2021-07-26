@@ -14,6 +14,7 @@ import os
 import socket
 import sys
 import traceback
+import subprocess
 
 try:
     import urlparse
@@ -461,6 +462,33 @@ class VirtualenvMixin(object):
                 error_list=VirtualenvErrorList,
                 partial_env={"VIRTUALENV_NO_DOWNLOAD": "1"},
                 halt_on_failure=True,
+            )
+        self.info(self.platform_name())
+        if self.platform_name().startswith("macos"):
+            tmp_path = "{}/bin/bak".format(venv_path)
+            self.info(
+                "Copying venv python binaries to {} to clear for re-sign".format(
+                    tmp_path
+                )
+            )
+            subprocess.call("mkdir -p {}".format(tmp_path), shell=True)
+            subprocess.call(
+                "cp {}/bin/python* {}/".format(venv_path, tmp_path), shell=True
+            )
+            self.info("Replacing venv python binaries with reset copies")
+            subprocess.call(
+                "mv -f {}/* {}/bin/".format(tmp_path, venv_path), shell=True
+            )
+            self.info(
+                "codesign -s - --preserve-metadata=identifier,entitlements,flags,runtime -f {}/bin/*".format(
+                    venv_path
+                )
+            )
+            subprocess.call(
+                "codesign -s - --preserve-metadata=identifier,entitlements,flags,runtime -f {}/bin/python*".format(
+                    venv_path
+                ),
+                shell=True,
             )
 
         if not modules:
