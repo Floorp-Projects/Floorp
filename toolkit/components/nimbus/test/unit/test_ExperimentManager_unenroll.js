@@ -1,8 +1,5 @@
 "use strict";
 
-const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/NimbusTestUtils.jsm"
-);
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"
 );
@@ -31,7 +28,7 @@ add_task(async function test_set_inactive() {
   const manager = ExperimentFakes.manager();
 
   await manager.onStartup();
-  manager.store.addExperiment(ExperimentFakes.experiment("foo"));
+  await manager.store.addExperiment(ExperimentFakes.experiment("foo"));
 
   manager.unenroll("foo", "some-reason");
 
@@ -49,7 +46,7 @@ add_task(async function test_unenroll_opt_out() {
   const experiment = ExperimentFakes.experiment("foo");
 
   await manager.onStartup();
-  manager.store.addExperiment(experiment);
+  await manager.store.addExperiment(experiment);
 
   Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, false);
 
@@ -83,7 +80,7 @@ add_task(async function test_setExperimentInactive_called() {
   const experiment = ExperimentFakes.experiment("foo");
 
   await manager.onStartup();
-  manager.store.addExperiment(experiment);
+  await manager.store.addExperiment(experiment);
 
   manager.unenroll("foo", "some-reason");
 
@@ -99,7 +96,7 @@ add_task(async function test_send_unenroll_event() {
   const experiment = ExperimentFakes.experiment("foo");
 
   await manager.onStartup();
-  manager.store.addExperiment(experiment);
+  await manager.store.addExperiment(experiment);
 
   manager.unenroll("foo", "some-reason");
 
@@ -126,7 +123,7 @@ add_task(async function test_undefined_reason() {
   const experiment = ExperimentFakes.experiment("foo");
 
   await manager.onStartup();
-  manager.store.addExperiment(experiment);
+  await manager.store.addExperiment(experiment);
 
   manager.unenroll("foo");
 
