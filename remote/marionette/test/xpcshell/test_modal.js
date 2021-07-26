@@ -79,7 +79,7 @@ add_test(function test_registerDialogClosedEventHandler() {
     },
   };
 
-  observer.observe(mockChromeWindow, "toplevel-window-ready");
+  observer.observe(mockChromeWindow, "domwindowopened");
 });
 
 add_test(function test_handleCallbackOpenModalDialog() {
