@@ -141,12 +141,10 @@ var TabUnloader = {
    * Initialize low-memory detection and tab auto-unloading.
    */
   init() {
-    if (Services.prefs.getBoolPref("browser.tabs.unloadOnLowMemory", true)) {
-      const watcher = Cc["@mozilla.org/xpcom/memory-watcher;1"].getService(
-        Ci.nsIAvailableMemoryWatcherBase
-      );
-      watcher.registerTabUnloader(this);
-    }
+    const watcher = Cc["@mozilla.org/xpcom/memory-watcher;1"].getService(
+      Ci.nsIAvailableMemoryWatcherBase
+    );
+    watcher.registerTabUnloader(this);
   },
 
   // This method is exposed on nsITabUnloader
@@ -154,6 +152,11 @@ var TabUnloader = {
     const watcher = Cc["@mozilla.org/xpcom/memory-watcher;1"].getService(
       Ci.nsIAvailableMemoryWatcherBase
     );
+
+    if (!Services.prefs.getBoolPref("browser.tabs.unloadOnLowMemory", true)) {
+      watcher.onUnloadAttemptCompleted(Cr.NS_ERROR_NOT_AVAILABLE);
+      return;
+    }
 
     if (this._isUnloading) {
       // Don't post multiple unloading requests.  The situation may be solved
