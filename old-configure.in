@@ -2775,6 +2775,21 @@ if test -n "$A11Y_LOG"; then
     AC_DEFINE(A11Y_LOG)
 fi
 
+dnl Windows AccessibilityHandler
+dnl ========================================================
+
+if test -z "$MOZ_HANDLER_CLSID"; then
+    MOZ_HANDLER_CLSID="4a195748-dca2-45fb-9295-0a139e76a9e7"
+    MOZ_IHANDLERCONTROL_IID="3316ce35-f892-4832-97c5-06c52c03cdba"
+    MOZ_ASYNCIHANDLERCONTROL_IID="15b48b76-ad38-4ad3-bd1a-d3c48a5a9947"
+    MOZ_IGECKOBACKCHANNEL_IID="dd2e4a89-999e-4d65-8b65-440c923ddb61"
+fi
+
+AC_SUBST(MOZ_HANDLER_CLSID)
+AC_SUBST(MOZ_IHANDLERCONTROL_IID)
+AC_SUBST(MOZ_ASYNCIHANDLERCONTROL_IID)
+AC_SUBST(MOZ_IGECKOBACKCHANNEL_IID)
+
 dnl Spit out some output
 dnl ========================================================
 
