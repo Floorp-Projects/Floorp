@@ -146,6 +146,11 @@ void FunctionBox::initFromLazyFunctionShared(JSFunction* fun) {
   extent_ = lazy->extent();
 }
 
+void FunctionBox::initFromScriptStencilExtra(const ScriptStencilExtra& extra) {
+  immutableFlags_ = extra.immutableFlags;
+  extent_ = extra.extent;
+}
+
 void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
                                                 FunctionFlags flags,
                                                 FunctionSyntaxKind kind) {
