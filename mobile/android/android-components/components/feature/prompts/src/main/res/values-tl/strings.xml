@@ -97,4 +97,10 @@
     <string name="mozac_feature_prompt_repost_positive_button_text">Ipadala muli ang data</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
     <string name="mozac_feature_prompt_repost_negative_button_text">Kanselahin</string>
-</resources>
+
+    <!-- Credit Card Autofill -->
+    <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
+    <string name="mozac_feature_prompts_select_credit_card">Pumili ng credit card</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Palawakin ang naka-mungkahing mga credit card</string>
+    </resources>
