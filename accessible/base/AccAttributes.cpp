@@ -23,7 +23,6 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
   aValueString.Truncate();
 
   aValue.match(
-      [&aValueString](const nsString& val) { aValueString.Assign(val); },
       [&aValueString](const bool& val) {
         aValueString.Assign(val ? u"true" : u"false");
       },
