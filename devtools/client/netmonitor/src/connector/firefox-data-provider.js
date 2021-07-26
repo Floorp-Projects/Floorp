@@ -311,12 +311,18 @@ class FirefoxDataProvider {
    * @return {object}
    */
   async _getStackTraceFromWatcher(actor) {
-    const networkContentFront = await actor.targetFront.getFront(
-      "networkContent"
-    );
-    const stacktrace = await networkContentFront.getStackTrace(
-      actor.stacktraceResourceId
-    );
+    // If we request the stack trace for the navigation request,
+    // t was coming from previous page content process, which may no longer be around.
+    // In any case, the previous target is destroyed and we can't fetch the stack anymore.
+    let stacktrace = [];
+    if (!actor.targetFront.isDestroyed()) {
+      const networkContentFront = await actor.targetFront.getFront(
+        "networkContent"
+      );
+      stacktrace = await networkContentFront.getStackTrace(
+        actor.stacktraceResourceId
+      );
+    }
     return { stacktrace };
   }
 
@@ -567,6 +573,7 @@ class FirefoxDataProvider {
     ) {
       const requestInfo = this.stackTraceRequestInfoByActorID.get(actorID);
       const { stacktrace } = await this._getStackTraceFromWatcher(requestInfo);
+      this.stackTraceRequestInfoByActorID.delete(actorID);
       response = { from: actor, stacktrace };
     } else {
       // We don't create fronts for NetworkEvent actors,
