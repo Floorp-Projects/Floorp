@@ -3753,24 +3753,19 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
                        ? aState.GetGeometricParent(*display, aParentFrame)
                        : aParentFrame);
 
-    // Must init frameToAddToList to null, since it's inout
-    nsIFrame* frameToAddToList = nullptr;
+    // In the non-scrollframe case, primaryFrame and newFrame are equal; in the
+    // scrollframe case, newFrame is the scrolled frame while primaryFrame is
+    // the scrollframe.
     if ((bits & FCDATA_MAY_NEED_SCROLLFRAME) &&
         display->IsScrollableOverflow()) {
       nsContainerFrame* scrollframe = nullptr;
       BuildScrollFrame(aState, content, computedStyle, newFrame,
                        geometricParent, scrollframe);
-      frameToAddToList = scrollframe;
+      primaryFrame = scrollframe;
     } else {
       InitAndRestoreFrame(aState, content, geometricParent, newFrame);
-      frameToAddToList = newFrame;
+      primaryFrame = newFrame;
     }
-
-    // Use frameToAddToList as the primary frame.  In the non-scrollframe case
-    // they're equal, but in the scrollframe case newFrame is the scrolled
-    // frame, while frameToAddToList is the scrollframe (and should be the
-    // primary frame).
-    primaryFrame = frameToAddToList;
 
     // If we need to create a block formatting context to wrap our
     // kids, do it now.
@@ -3836,7 +3831,7 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
       newFrame = innerFrame;
     }
 
-    aState.AddChild(frameToAddToList, aFrameList, content, aParentFrame,
+    aState.AddChild(primaryFrame, aFrameList, content, aParentFrame,
                     allowOutOfFlow, allowOutOfFlow, isPopup);
 
     nsContainerFrame* newFrameAsContainer = do_QueryFrame(newFrame);
