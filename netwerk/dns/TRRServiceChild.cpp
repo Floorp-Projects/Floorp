@@ -25,22 +25,24 @@ void TRRServiceChild::Init(const bool& aCaptiveIsPassed,
   sDNSService = dns;
   ClearOnShutdown(&sDNSService);
   MOZ_ASSERT(sDNSService);
-  MOZ_ASSERT(gTRRService);
 
-  gTRRService->mCaptiveIsPassed = aCaptiveIsPassed;
-  gTRRService->mParentalControlEnabled = aParentalControlEnabled;
-  gTRRService->RebuildSuffixList(std::move(aDNSSuffixList));
+  TRRService* trrService = TRRService::Get();
+  MOZ_ASSERT(trrService);
+
+  trrService->mCaptiveIsPassed = aCaptiveIsPassed;
+  trrService->mParentalControlEnabled = aParentalControlEnabled;
+  trrService->RebuildSuffixList(std::move(aDNSSuffixList));
 }
 
 mozilla::ipc::IPCResult TRRServiceChild::RecvUpdatePlatformDNSInformation(
     nsTArray<nsCString>&& aDNSSuffixList) {
-  gTRRService->RebuildSuffixList(std::move(aDNSSuffixList));
+  TRRService::Get()->RebuildSuffixList(std::move(aDNSSuffixList));
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult TRRServiceChild::RecvUpdateParentalControlEnabled(
     const bool& aEnabled) {
-  gTRRService->mParentalControlEnabled = aEnabled;
+  TRRService::Get()->mParentalControlEnabled = aEnabled;
   return IPC_OK();
 }
 
@@ -52,7 +54,7 @@ mozilla::ipc::IPCResult TRRServiceChild::RecvClearDNSCache(
 
 mozilla::ipc::IPCResult TRRServiceChild::RecvSetDetectedTrrURI(
     const nsCString& aURI) {
-  gTRRService->SetDetectedTrrURI(aURI);
+  TRRService::Get()->SetDetectedTrrURI(aURI);
   return IPC_OK();
 }
 

@@ -114,11 +114,11 @@ TRR::Notify(nsITimer* aTimer) {
 
 NS_IMETHODIMP
 TRR::Run() {
-  MOZ_ASSERT_IF(XRE_IsParentProcess() && gTRRService,
-                NS_IsMainThread() || gTRRService->IsOnTRRThread());
+  MOZ_ASSERT_IF(XRE_IsParentProcess() && TRRService::Get(),
+                NS_IsMainThread() || TRRService::Get()->IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
-  if ((gTRRService == nullptr) || NS_FAILED(SendHTTPRequest())) {
+  if ((TRRService::Get() == nullptr) || NS_FAILED(SendHTTPRequest())) {
     RecordReason(TRRSkippedReason::TRR_SEND_FAILED);
     FailData(NS_ERROR_FAILURE);
     // The dtor will now be run
@@ -138,7 +138,7 @@ nsresult TRR::CreateQueryURI(nsIURI** aOutURI) {
   nsAutoCString uri;
   nsCOMPtr<nsIURI> dnsURI;
   if (UseDefaultServer()) {
-    gTRRService->GetURI(uri);
+    TRRService::Get()->GetURI(uri);
   } else {
     uri = mRec->mTrrServer;
   }
@@ -160,13 +160,13 @@ bool TRR::MaybeBlockRequest() {
     MOZ_ASSERT(mRec);
 
     // If TRRService isn't enabled anymore for the req, don't do TRR.
-    if (!gTRRService->Enabled(mRec->mEffectiveTRRMode)) {
+    if (!TRRService::Get()->Enabled(mRec->mEffectiveTRRMode)) {
       RecordReason(TRRSkippedReason::TRR_MODE_NOT_ENABLED);
       return true;
     }
 
-    if (UseDefaultServer() &&
-        gTRRService->IsTemporarilyBlocked(mHost, mOriginSuffix, mPB, true)) {
+    if (UseDefaultServer() && TRRService::Get()->IsTemporarilyBlocked(
+                                  mHost, mOriginSuffix, mPB, true)) {
       if (mType == TRRTYPE_A) {
         // count only blocklist for A records to avoid double counts
         Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED3,
@@ -178,7 +178,7 @@ bool TRR::MaybeBlockRequest() {
       return true;
     }
 
-    if (gTRRService->IsExcludedFromTRR(mHost)) {
+    if (TRRService::Get()->IsExcludedFromTRR(mHost)) {
       RecordReason(TRRSkippedReason::TRR_EXCLUDED);
       return true;
     }
@@ -285,7 +285,7 @@ nsresult TRR::SendHTTPRequest() {
 
   nsAutoCString cred;
   if (UseDefaultServer()) {
-    gTRRService->GetCredentials(cred);
+    TRRService::Get()->GetCredentials(cred);
   }
   if (!cred.IsEmpty()) {
     rv = httpChannel->SetRequestHeader("Authorization"_ns, cred, false);
@@ -342,7 +342,7 @@ nsresult TRR::SendHTTPRequest() {
 
   NS_NewTimerWithCallback(
       getter_AddRefs(mTimeout), this,
-      mTimeoutMs ? mTimeoutMs : gTRRService->GetRequestTimeout(),
+      mTimeoutMs ? mTimeoutMs : TRRService::Get()->GetRequestTimeout(),
       nsITimer::TYPE_ONE_SHOT);
 
   mChannel = channel;
@@ -507,7 +507,7 @@ nsresult TRR::ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (gTRRService->IsExcludedFromTRR(mHost)) {
+  if (TRRService::Get()->IsExcludedFromTRR(mHost)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -811,10 +811,10 @@ nsresult TRR::FollowCname(nsIChannel* aChannel) {
       ResolverType() == DNSResolverType::ODoH
           ? new ODoH(mHostResolver, mRec, mCname, mType, mCnameLoop, mPB)
           : new TRR(mHostResolver, mRec, mCname, mType, mCnameLoop, mPB);
-  if (!gTRRService) {
+  if (!TRRService::Get()) {
     return NS_ERROR_FAILURE;
   }
-  return gTRRService->DispatchTRRRequest(trr);
+  return TRRService::Get()->DispatchTRRRequest(trr);
 }
 
 nsresult TRR::On200Response(nsIChannel* aChannel) {
@@ -874,7 +874,7 @@ void TRR::ReportStatus(nsresult aStatusCode) {
   // it as failed; otherwise it can cause the confirmation to fail.
   if (UseDefaultServer() && aStatusCode != NS_ERROR_ABORT) {
     // Bad content is still considered "okay" if the HTTP response is okay
-    gTRRService->RecordTRRStatus(aStatusCode);
+    TRRService::Get()->RecordTRRStatus(aStatusCode);
   }
 }
 
@@ -988,8 +988,8 @@ TRR::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
 void TRR::Cancel(nsresult aStatus) {
   RefPtr<TRRServiceChannel> trrServiceChannel = do_QueryObject(mChannel);
   if (trrServiceChannel && !XRE_IsSocketProcess()) {
-    if (gTRRService) {
-      nsCOMPtr<nsIThread> thread = gTRRService->TRRThread();
+    if (TRRService::Get()) {
+      nsCOMPtr<nsIThread> thread = TRRService::Get()->TRRThread();
       if (thread && !thread->IsOnCurrentThread()) {
         thread->Dispatch(NS_NewRunnableFunction(
             "TRR::Cancel",

@@ -42,7 +42,6 @@ static const char kDisableIpv6Pref[] = "network.dns.disableIPv6";
 namespace mozilla {
 namespace net {
 
-TRRService* gTRRService = nullptr;
 StaticRefPtr<nsIThread> sTRRBackgroundThread;
 static Atomic<TRRService*> sTRRServicePtr;
 
@@ -68,6 +67,9 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(TRRService::ConfirmationContext,
 NS_IMPL_QUERY_INTERFACE(TRRService::ConfirmationContext, nsITimerCallback)
 
 TRRService::TRRService() { MOZ_ASSERT(NS_IsMainThread(), "wrong thread"); }
+
+// static
+TRRService* TRRService::Get() { return sTRRServicePtr; }
 
 // static
 void TRRService::AddObserver(nsIObserver* aObserver,
@@ -162,7 +164,6 @@ nsresult TRRService::Init() {
     prefBranch->AddObserver(kRolloutModePref, this, true);
   }
 
-  gTRRService = this;
   sTRRServicePtr = this;
 
   ReadPrefs(nullptr);
@@ -536,7 +537,6 @@ nsresult TRRService::Start() {
 TRRService::~TRRService() {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   LOG(("Exiting TRRService\n"));
-  gTRRService = nullptr;
 }
 
 nsresult TRRService::DispatchTRRRequest(TRR* aTrrRequest) {

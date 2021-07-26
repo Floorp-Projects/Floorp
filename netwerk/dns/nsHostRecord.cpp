@@ -350,8 +350,8 @@ void AddrHostRecord::ResolveComplete() {
   }
 
   if (mResolverType == DNSResolverType::TRR && !mTRRSuccess && mNativeSuccess &&
-      gTRRService) {
-    gTRRService->AddToBlocklist(nsCString(host), originSuffix, pb, true);
+      TRRService::Get()) {
+    TRRService::Get()->AddToBlocklist(nsCString(host), originSuffix, pb, true);
   }
 }
 
