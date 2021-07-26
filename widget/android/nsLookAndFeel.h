@@ -20,9 +20,9 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   nsresult NativeGetColor(ColorID, ColorScheme, nscolor& aResult) override;
   bool NativeGetFont(FontID aID, nsString& aName,
                      gfxFontStyle& aStyle) override;
-  virtual bool GetEchoPasswordImpl() override;
-  virtual uint32_t GetPasswordMaskDelayImpl() override;
-  virtual char16_t GetPasswordCharacterImpl() override;
+  bool GetEchoPasswordImpl() override;
+  uint32_t GetPasswordMaskDelayImpl() override;
+  char16_t GetPasswordCharacterImpl() override;
 
  protected:
   bool mInitializedSystemColors = false;
