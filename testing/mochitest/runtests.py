@@ -1627,6 +1627,8 @@ toolbar#nav-bar {
                 testob["disabled"] = test["disabled"]
             if "expected" in test:
                 testob["expected"] = test["expected"]
+            if "https_first_disabled" in test:
+                testob["https_first_disabled"] = test["https_first_disabled"] == "true"
             if "scheme" in test:
                 testob["scheme"] = test["scheme"]
             if "tags" in test:
