@@ -2423,6 +2423,14 @@ function installAddonFromURL(url, extensionID, addon) {
         log.debug(`Installation succeeded - ${url}`);
       },
     };
+    // If it's a local file install, onDownloadEnded is never called.
+    // So we call it manually, to handle some error cases.
+    if (url.startsWith("file:")) {
+      listener.onDownloadEnded(install);
+      if (install.state == AddonManager.STATE_CANCELLED) {
+        return;
+      }
+    }
     install.addListener(listener);
     install.install();
   });
