@@ -843,33 +843,29 @@ void nsComboboxControlFrame::Reflow(nsPresContext* aPresContext,
   }
 
   WritingMode wm = aReflowInput.GetWritingMode();
-  nscoord buttonISize = 0;
 
   // Check if the theme specifies a minimum size for the dropdown button
   // first.
-  buttonISize += DropDownButtonISize();
+  const nscoord buttonISize = DropDownButtonISize();
+  const auto borderPadding = aReflowInput.ComputedLogicalBorderPadding(wm);
+  const auto padding = aReflowInput.ComputedLogicalPadding(wm);
+  const auto border = borderPadding - padding;
 
   mDisplayISize = aReflowInput.ComputedISize() - buttonISize;
-
-  mMaxDisplayISize =
-      mDisplayISize + aReflowInput.ComputedLogicalPadding(wm).IEnd(wm);
+  mMaxDisplayISize = mDisplayISize + padding.IEnd(wm);
 
   nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
-  // The button should occupy the same space as a scrollbar
-  nsSize containerSize = aDesiredSize.PhysicalSize();
-  LogicalRect buttonRect = mButtonFrame->GetLogicalRect(containerSize);
-  const auto borderPadding = aReflowInput.ComputedLogicalBorderPadding(wm);
+  // The button should occupy the same space as a scrollbar, and its position
+  // starts from the border edge.
+  LogicalRect buttonRect(wm);
+  buttonRect.IStart(wm) = borderPadding.IStart(wm) + mMaxDisplayISize;
+  buttonRect.BStart(wm) = border.BStart(wm);
 
-  buttonRect.IStart(wm) = borderPadding.IStartEnd(wm) + mDisplayISize -
-                          (borderPadding.IEnd(wm) -
-                           aReflowInput.ComputedLogicalPadding(wm).IEnd(wm));
   buttonRect.ISize(wm) = buttonISize;
+  buttonRect.BSize(wm) = mDisplayFrame->BSize(wm) + padding.BStartEnd(wm);
 
-  buttonRect.BStart(wm) = this->GetLogicalUsedBorder(wm).BStart(wm);
-  buttonRect.BSize(wm) =
-      mDisplayFrame->BSize(wm) + this->GetLogicalUsedPadding(wm).BStartEnd(wm);
-
+  const nsSize containerSize = aDesiredSize.PhysicalSize();
   mButtonFrame->SetRect(buttonRect, containerSize);
 
   if (!aStatus.IsInlineBreakBefore() && !aStatus.IsFullyComplete()) {
