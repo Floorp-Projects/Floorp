@@ -36,106 +36,26 @@ RemoteCanvas.prototype.remotePagePrepared = function(callback) {
 }
 
 var gPrefs = [
-  {
-    name: "ui.SpellCheckerUnderline",
-    type: "char",
-    newValue: "#ff0000"
-  },
-  {
-    name: "ui.IMERawInputBackground",
-    type: "char",
-    newValue: "transparent"
-  },
-  {
-    name: "ui.IMERawInputForeground",
-    type: "char",
-    newValue: "#000000"
-  },
-  {
-    name: "ui.IMERawInputUnderline",
-    type: "char",
-    newValue: "#00ff00"
-  },
-  {
-    name: "ui.IMESelectedRawTextBackground",
-    type: "char",
-    newValue: "transparent"
-  },
-  {
-    name: "ui.IMESelectedRawTextForeground",
-    type: "char",
-    newValue: "#000000"
-  },
-  {
-    name: "ui.IMESelectedRawTextUnderline",
-    type: "char",
-    newValue: "#0000ff"
-  },
-  {
-    name: "ui.IMEConvertedTextBackground",
-    type: "char",
-    newValue: "transparent"
-  },
-  {
-    name: "ui.IMEConvertedTextForeground",
-    type: "char",
-    newValue: "#000000"
-  },
-  {
-    name: "ui.IMEConvertedTextUnderline",
-    type: "char",
-    newValue: "#ffff00"
-  },
-  {
-    name: "ui.IMESelectedConvertedTextBackground",
-    type: "char",
-    newValue: "transparent"
-  },
-  {
-    name: "ui.IMESelectedConvertedTextForeground",
-    type: "char",
-    newValue: "#000000"
-  },
-  {
-    name: "ui.IMESelectedConvertedTextUnderline",
-    type: "char",
-    newValue: "#00ffff"
-  },
-  {
-    name: "ui.SpellCheckerUnderlineStyle",
-    type: "int",
-    newValue: 0
-  },
-  {
-    name: "ui.IMERawInputUnderlineStyle",
-    type: "int",
-    newValue: 0
-  },
-  {
-    name: "ui.IMESelectedRawTextUnderlineStyle",
-    type: "int",
-    newValue: 0
-  },
-  {
-    name: "ui.IMEConvertedTextUnderlineStyle",
-    type: "int",
-    newValue: 0
-  },
-  {
-    name: "ui.IMESelectedConvertedTextUnderlineStyle",
-    type: "int",
-    newValue: 0
-  },
-  {
-    name: "ui.SpellCheckerUnderlineRelativeSize",
-    type: "float",
-    newValue: 1.0
-  },
-  {
-    name: "ui.IMEUnderlineRelativeSize",
-    type: "float",
-    newValue: 1.0
-  }
+  [ "ui.SpellCheckerUnderline", "#ff0000" ],
+  [ "ui.IMERawInputBackground", "transparent" ],
+  [ "ui.IMERawInputForeground", "#000000" ],
+  [ "ui.IMERawInputUnderline", "#00ff00" ],
+  [ "ui.IMESelectedRawTextBackground", "transparent" ],
+  [ "ui.IMESelectedRawTextForeground", "#000000" ],
+  [ "ui.IMESelectedRawTextUnderline", "#0000ff" ],
+  [ "ui.IMEConvertedTextBackground", "transparent" ],
+  [ "ui.IMEConvertedTextForeground", "#000000" ],
+  [ "ui.IMEConvertedTextUnderline", "#ffff00" ],
+  [ "ui.IMESelectedConvertedTextBackground", "transparent" ],
+  [ "ui.IMESelectedConvertedTextForeground", "#000000" ],
+  [ "ui.IMESelectedConvertedTextUnderline", "#00ffff" ],
+  [ "ui.SpellCheckerUnderlineStyle", 0 ],
+  [ "ui.IMERawInputUnderlineStyle", 0 ],
+  [ "ui.IMESelectedRawTextUnderlineStyle", 0 ],
+  [ "ui.IMEConvertedTextUnderlineStyle", 0 ],
+  [ "ui.IMESelectedConvertedTextUnderlineStyle", 0 ],
+  [ "ui.SpellCheckerUnderlineRelativeSize", 1.0 ],
+  [ "ui.IMEUnderlineRelativeSize", 1.0 ]
 ];
 
 const nsISelectionController = Ci.nsISelectionController;
@@ -217,20 +137,19 @@ function getFuzz(test) {
   return null;
 }
 
-function run()
+async function run()
 {
+  let prefs = [];
   if (++gSelectionIndex == kSelections.length) {
     if (++gFontIndex == kFonts.length) {
       if (++gDecorationIndex == kDecorations.length) {
         SimpleTest.finish();
-        cleanup();
         return;
       }
       gFontIndex = 0;
     }
     gSelectionIndex = 0;
-    SpecialPowers.setIntPref("font.size.variable.x-western",
-                             kFonts[gFontIndex].defaultSize);
+    prefs.push([ "font.size.variable.x-western", kFonts[gFontIndex].defaultSize ]);
   }
 
   var test = {
@@ -239,22 +158,18 @@ function run()
     selection: kSelections[gSelectionIndex],
   };
 
-  SpecialPowers.setIntPref("ui.SpellCheckerUnderlineRelativeSize",
-                           test.decoration.relativeSize * 100);
-  SpecialPowers.setIntPref("ui.IMEUnderlineRelativeSize",
-                           test.decoration.relativeSize * 100);
-  SpecialPowers.setIntPref("ui.SpellCheckerUnderlineStyle",
-                           test.decoration.style);
-  SpecialPowers.setIntPref("ui.IMERawInputUnderlineStyle",
-                           test.decoration.style);
-  SpecialPowers.setIntPref("ui.IMESelectedRawTextUnderlineStyle",
-                           test.decoration.style);
-  SpecialPowers.setIntPref("ui.IMEConvertedTextUnderlineStyle",
-                           test.decoration.style);
-  SpecialPowers.setIntPref("ui.IMESelectedConvertedTextUnderlineStyle",
-                           test.decoration.style);
+  prefs.push(
+    ["ui.SpellCheckerUnderlineRelativeSize", test.decoration.relativeSize * 100],
+    ["ui.IMEUnderlineRelativeSize", test.decoration.relativeSize * 100],
+    ["ui.SpellCheckerUnderlineStyle", test.decoration.style],
+    ["ui.IMERawInputUnderlineStyle", test.decoration.style],
+    ["ui.IMESelectedRawTextUnderlineStyle", test.decoration.style],
+    ["ui.IMEConvertedTextUnderlineStyle", test.decoration.style],
+    ["ui.IMESelectedConvertedTextUnderlineStyle", test.decoration.style],
+  );
 
-  SimpleTest.executeSoon(function () { doTest(test); });
+  await SpecialPowers.pushPrefEnv({ set: prefs });
+  doTest(test);
 }
 
 function doTest(aTest)
@@ -300,17 +215,9 @@ function doTest(aTest)
   refCanvas.load(callbackTestCanvas);
 }
 
-function onLoad()
+async function onLoad()
 {
-  for (var i = 0; i < gPrefs.length; i++) {
-    if (gPrefs[i].type == "char") {
-      SpecialPowers.setCharPref(gPrefs[i].name, gPrefs[i].newValue);
-    } else if (gPrefs[i].type == "int") {
-      SpecialPowers.setIntPref(gPrefs[i].name, gPrefs[i].newValue);
-    } else if (gPrefs[i].type == "float") {
-      SpecialPowers.setIntPref(gPrefs[i].name, gPrefs[i].newValue * 100);
-    }
-  }
+  await SpecialPowers.pushPrefEnv({ set: gPrefs });
 
   var iframe = document.getElementById("result");
   iframe.width = RemoteCanvas.CANVAS_WIDTH + "px";
@@ -320,14 +227,6 @@ function onLoad()
   iframe.height = RemoteCanvas.CANVAS_HEIGHT + "px";
 
   run();
-}
-
-function cleanup()
-{
-  SpecialPowers.clearUserPref("font.size.variable.x-western");
-  for (var i = 0; i < gPrefs.length; i++) {
-    SpecialPowers.clearUserPref(gPrefs[i].name);
-  }
 }
 
 SimpleTest.waitForExplicitFinish();
