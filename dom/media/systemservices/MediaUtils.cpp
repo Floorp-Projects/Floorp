@@ -56,31 +56,32 @@ class MediaEventBlocker : public ShutdownBlocker {
 
 class RefCountedTicket {
   RefPtr<MediaEventBlocker> mBlocker;
-  MediaEventForwarder<void> mShutdownEventForwarder;
+  RefPtr<MediaEventForwarder<void> > mShutdownEventForwarder;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedTicket)
 
   RefCountedTicket()
-      : mShutdownEventForwarder(GetMainThreadSerialEventTarget()) {}
+      : mShutdownEventForwarder(
+            new MediaEventForwarder<void>(GetMainThreadSerialEventTarget())) {}
 
   void AddBlocker(nsString aName, nsString aFileName, int32_t aLineNr) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!mBlocker);
     mBlocker = MakeAndAddRef<MediaEventBlocker>(aName);
-    mShutdownEventForwarder.Forward(mBlocker->ShutdownEvent());
+    mShutdownEventForwarder->Forward(mBlocker->ShutdownEvent());
     GetShutdownBarrier()->AddBlocker(mBlocker.get(), std::move(aFileName),
                                      aLineNr, std::move(aName));
   }
 
-  MediaEventSource<void>& ShutdownEvent() { return mShutdownEventForwarder; }
+  MediaEventSource<void>& ShutdownEvent() { return *mShutdownEventForwarder; }
 
  protected:
   virtual ~RefCountedTicket() {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mBlocker);
     GetShutdownBarrier()->RemoveBlocker(mBlocker.get());
-    mShutdownEventForwarder.DisconnectAll();
+    mShutdownEventForwarder->DisconnectAll();
   }
 };
 }  // namespace
