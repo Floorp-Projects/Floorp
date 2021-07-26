@@ -257,7 +257,6 @@
 
 #if defined(XP_MACOSX)
 #  include "nsMacUtilsImpl.h"
-#  include "mozilla/AvailableMemoryWatcher.h"
 #endif
 
 #if defined(ANDROID) || defined(LINUX)
@@ -2061,12 +2060,6 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
         // if mCreatedPairedMinidumps is true, we've already generated
         // parent/child dumps for desktop crashes.
         if (!mCreatedPairedMinidumps) {
-#if defined(XP_MACOSX)
-          RefPtr<nsAvailableMemoryWatcherBase> memWatcher;
-          memWatcher = nsAvailableMemoryWatcherBase::GetSingleton();
-          memWatcher->AddChildAnnotations(mCrashReporter);
-#endif
-
           if (mCrashReporter->GenerateCrashReport(OtherPid())) {
             // Propagate `isLikelyOOM`.
             Unused << props->SetPropertyAsBool(u"isLikelyOOM"_ns,

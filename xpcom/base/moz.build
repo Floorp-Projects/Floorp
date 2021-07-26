@@ -107,7 +107,6 @@ EXPORTS.mozilla += [
     "AppShutdown.h",
     "AutoRestore.h",
     "AvailableMemoryTracker.h",
-    "AvailableMemoryWatcher.h",
     "ClearOnShutdown.h",
     "CountingAllocatorBase.h",
     "CycleCollectedJSContext.h",
@@ -206,11 +205,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     UNIFIED_SOURCES += [
         "AvailableMemoryWatcherWin.cpp",
         "MemoryInfo.cpp",
-    ]
-
-if CONFIG["OS_TARGET"] == "Darwin":
-    UNIFIED_SOURCES += [
-        "AvailableMemoryWatcherMac.cpp",
     ]
 
 GeneratedFile("ErrorList.h", script="ErrorList.py", entry_point="error_list_h")
