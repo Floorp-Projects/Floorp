@@ -110,8 +110,8 @@ modal.DialogObserver = class {
 
   register() {
     Services.obs.addObserver(this, "common-dialog-loaded");
+    Services.obs.addObserver(this, "domwindowopened");
     Services.obs.addObserver(this, "tabmodal-dialog-loaded");
-    Services.obs.addObserver(this, "toplevel-window-ready");
 
     // Register event listener for all already open windows
     for (let win of Services.wm.getEnumerator(null)) {
@@ -121,8 +121,8 @@ modal.DialogObserver = class {
 
   unregister() {
     Services.obs.removeObserver(this, "common-dialog-loaded");
+    Services.obs.removeObserver(this, "domwindowopened");
     Services.obs.removeObserver(this, "tabmodal-dialog-loaded");
-    Services.obs.removeObserver(this, "toplevel-window-ready");
 
     // Unregister event listener for all open windows
     for (let win of Services.wm.getEnumerator(null)) {
@@ -200,7 +200,7 @@ modal.DialogObserver = class {
         );
         break;
 
-      case "toplevel-window-ready":
+      case "domwindowopened":
         subject.addEventListener("DOMModalDialogClosed", this);
         break;
     }
