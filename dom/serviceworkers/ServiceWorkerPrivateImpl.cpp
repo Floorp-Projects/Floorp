@@ -49,6 +49,7 @@
 #include "mozilla/dom/RemoteWorkerControllerChild.h"
 #include "mozilla/dom/RemoteWorkerManager.h"  // RemoteWorkerManager::GetRemoteType
 #include "mozilla/dom/ServiceWorkerBinding.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"  // WebExtensionPolicy
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -285,6 +286,19 @@ nsresult ServiceWorkerPrivateImpl::SpawnWorkerIfNeeded() {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
+  // If the worker principal is an extension principal, then we should not spawn
+  // a worker if there is no WebExtensionPolicy associated to that principal
+  // or if the WebExtensionPolicy is not active.
+  auto* principal = mOuter->mInfo->Principal();
+  if (principal->SchemeIs("moz-extension")) {
+    auto* addonPolicy = BasePrincipal::Cast(principal)->AddonPolicy();
+    if (!addonPolicy || !addonPolicy->Active()) {
+      NS_WARNING(
+          "Trying to wake up a service worker for a disabled webextension.");
+      return NS_ERROR_DOM_INVALID_STATE_ERR;
+    }
+  }
+
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
   if (NS_WARN_IF(!swm)) {
@@ -292,7 +306,7 @@ nsresult ServiceWorkerPrivateImpl::SpawnWorkerIfNeeded() {
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> regInfo =
-      swm->GetRegistration(mOuter->mInfo->Principal(), mOuter->mInfo->Scope());
+      swm->GetRegistration(principal, mOuter->mInfo->Scope());
 
   if (NS_WARN_IF(!regInfo)) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
