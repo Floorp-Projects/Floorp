@@ -666,8 +666,10 @@ bool CompilationSyntaxParseCache::init(JSContext* cx, LifoAlloc& alloc,
 bool CompilationSyntaxParseCache::copyScriptInfo(
     JSContext* cx, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
     CompilationAtomCache& atomCache, BaseScript* lazy) {
+  using GCThingsSpan = mozilla::Span<TaggedScriptThingIndex>;
   using ScriptDataSpan = mozilla::Span<ScriptStencil>;
   using ScriptExtraSpan = mozilla::Span<ScriptStencilExtra>;
+  cachedGCThings_ = GCThingsSpan(nullptr);
   cachedScriptData_ = ScriptDataSpan(nullptr);
   cachedScriptExtra_ = ScriptExtraSpan(nullptr);
 
@@ -687,11 +689,13 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
     MOZ_ASSERT(cell->as<JSObject>()->is<JSFunction>());
   }
 
+  TaggedScriptThingIndex* gcThingsData =
+      alloc.newArrayUninitialized<TaggedScriptThingIndex>(length);
   ScriptStencil* scriptData =
       alloc.newArrayUninitialized<ScriptStencil>(length);
   ScriptStencilExtra* scriptExtra =
       alloc.newArrayUninitialized<ScriptStencilExtra>(length);
-  if (!scriptData || !scriptExtra) {
+  if (!gcThingsData || !scriptData || !scriptExtra) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -699,6 +703,7 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
   for (size_t i = 0; i < length; i++) {
     gc::Cell* cell = gcthings[i].asCell();
     RootedFunction fun(cx, &cell->as<JSObject>()->as<JSFunction>());
+    gcThingsData[i] = TaggedScriptThingIndex(ScriptIndex(i));
     new (mozilla::KnownNotNull, &scriptData[i]) ScriptStencil();
     ScriptStencil& data = scriptData[i];
     new (mozilla::KnownNotNull, &scriptExtra[i]) ScriptStencilExtra();
@@ -724,6 +729,7 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
     MOZ_ASSERT(lazy->hasEnclosingScript());
   }
 
+  cachedGCThings_ = GCThingsSpan(gcThingsData, length);
   cachedScriptData_ = ScriptDataSpan(scriptData, length);
   cachedScriptExtra_ = ScriptExtraSpan(scriptExtra, length);
   return true;
@@ -732,32 +738,31 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
 bool CompilationSyntaxParseCache::copyClosedOverBindings(
     JSContext* cx, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
     CompilationAtomCache& atomCache, BaseScript* lazy) {
-  using GCThingsSpan = mozilla::Span<TaggedScriptThingIndex>;
-  cachedGCThings_ = GCThingsSpan(nullptr);
+  using ClosedOverBindingsSpan = mozilla::Span<TaggedParserAtomIndex>;
+  closedOverBindings_ = ClosedOverBindingsSpan(nullptr);
+
+  // The gcthings() array contains the inner function list followed by the
+  // closed-over bindings data. Skip the inner function list, as it is already
+  // cached in cachedGCThings_. See also: BaseScript::CreateLazy.
+  size_t start = cachedGCThings_.Length();
   auto gcthings = lazy->gcthings();
   size_t length = gcthings.Length();
-  if (length == 0) {
+  MOZ_ASSERT(start <= length);
+  if (length - start == 0) {
     return true;
   }
 
-  TaggedScriptThingIndex* gcThingsData =
-      alloc.newArrayUninitialized<TaggedScriptThingIndex>(length);
-  if (!gcThingsData) {
+  TaggedParserAtomIndex* closedOverBindings =
+      alloc.newArrayUninitialized<TaggedParserAtomIndex>(length - start);
+  if (!closedOverBindings) {
     ReportOutOfMemory(cx);
     return false;
   }
 
-  size_t scriptIndex = 0;
-  for (size_t i = 0; i < length; i++) {
+  for (size_t i = start; i < length; i++) {
     gc::Cell* cell = gcthings[i].asCell();
     if (!cell) {
-      gcThingsData[i] = TaggedScriptThingIndex();
-      continue;
-    }
-    if (cell->is<JSObject>()) {
-      MOZ_ASSERT(cell->as<JSObject>()->is<JSFunction>());
-      MOZ_ASSERT(scriptIndex < cachedScriptData_.Length());
-      gcThingsData[i] = TaggedScriptThingIndex(ScriptIndex(scriptIndex++));
+      closedOverBindings[i - start] = TaggedParserAtomIndex::null();
       continue;
     }
 
@@ -768,10 +773,10 @@ bool CompilationSyntaxParseCache::copyClosedOverBindings(
       return false;
     }
 
-    gcThingsData[i] = TaggedScriptThingIndex(parserAtom);
+    closedOverBindings[i - start] = parserAtom;
   }
 
-  cachedGCThings_ = GCThingsSpan(gcThingsData, length);
+  closedOverBindings_ = ClosedOverBindingsSpan(closedOverBindings, length - start);
   return true;
 }
 
