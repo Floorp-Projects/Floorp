@@ -26,11 +26,7 @@ add_task(async function remote_disable() {
 
   await ExperimentFakes.remoteDefaultsHelper({
     feature: NimbusFeatures.shellService,
-    configuration: {
-      slug: "shellService_remoteDisable",
-      variables: { disablePin: true, enabled: true },
-      targeting: "true",
-    },
+    configuration: { variables: { disablePin: true } },
   });
 
   Assert.equal(
@@ -46,7 +42,10 @@ add_task(async function restore_default() {
     return;
   }
 
-  ExperimentAPI._store._deleteForTests("shellService");
+  await ExperimentFakes.remoteDefaultsHelper({
+    feature: NimbusFeatures.shellService,
+    configuration: {},
+  });
 
   Assert.equal(
     await ShellService.doesAppNeedPin(),
