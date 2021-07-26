@@ -4843,6 +4843,181 @@ let gFileMenu = {
   },
 };
 
+let gShareUtils = {
+  updateShareURLMenuItem(browser) {
+    // We only support "share URL" on macOS and on Windows 10:
+    if (
+      AppConstants.platform != "macosx" &&
+      // Windows 10's internal NT version number was initially 6.4
+      !AppConstants.isPlatformAndVersionAtLeast("win", "6.4")
+    ) {
+      return;
+    }
+
+    let shareURL = document.getElementById("context_shareTabURL");
+
+    if (!shareURL) {
+      shareURL = this.createShareURLMenuItem();
+    }
+
+    // Don't show the menuitem on non-shareable URLs.
+    shareURL.hidden = !BrowserUtils.isShareableURL(browser.currentURI);
+  },
+
+  /**
+   * Creates and returns the "Share" menu item.
+   */
+  createShareURLMenuItem() {
+    let menu = document.getElementById("tabContextMenu");
+    let shareURL = null;
+
+    if (AppConstants.platform == "win") {
+      shareURL = this.buildShareURLItem();
+    } else if (AppConstants.platform == "macosx") {
+      shareURL = this.buildShareURLMenu();
+    }
+
+    let sendTabContext = document.getElementById("context_sendTabToDevice");
+    menu.insertBefore(shareURL, sendTabContext.nextSibling);
+    return shareURL;
+  },
+
+  /**
+   * Returns a menu item specifically for accessing Windows sharing services.
+   */
+  buildShareURLItem() {
+    let shareURLMenuItem = document.createXULElement("menuitem");
+    shareURLMenuItem.setAttribute("id", "context_shareTabURL");
+    document.l10n.setAttributes(shareURLMenuItem, "tab-context-share-url");
+
+    shareURLMenuItem.addEventListener("command", this);
+    return shareURLMenuItem;
+  },
+
+  /**
+   * Returns a menu specifically for accessing macOSx sharing services .
+   */
+  buildShareURLMenu() {
+    let menu = document.createXULElement("menu");
+    menu.id = "context_shareTabURL";
+    document.l10n.setAttributes(menu, "tab-context-share-url");
+
+    let menuPopup = document.createXULElement("menupopup");
+    menuPopup.id = "context_shareTabURL_popup";
+    menuPopup.addEventListener("popupshowing", this);
+    menu.appendChild(menuPopup);
+
+    return menu;
+  },
+
+  /**
+   * Populates the "Share" menupopup on macOSx.
+   */
+  initializeShareURLPopup() {
+    if (AppConstants.platform !== "macosx") {
+      return;
+    }
+
+    let menuPopup = document.getElementById("context_shareTabURL_popup");
+
+    // Empty menupopup
+    while (menuPopup.firstChild) {
+      menuPopup.firstChild.remove();
+    }
+
+    // The context menu might not have been opened on the selected browser.
+    // Fix this in the next commit.
+    let url = gBrowser.selectedBrowser.currentURI;
+    let sharingService = gBrowser.MacSharingService;
+    let currentURI = gURLBar.makeURIReadable(url).displaySpec;
+    let services = sharingService.getSharingProviders(currentURI);
+
+    services.forEach(share => {
+      let item = document.createXULElement("menuitem");
+      item.classList.add("menuitem-iconic");
+      item.setAttribute("label", share.menuItemTitle);
+      item.setAttribute("share-name", share.name);
+      item.setAttribute("image", share.image);
+      menuPopup.appendChild(item);
+    });
+    let moreItem = document.createXULElement("menuitem");
+    document.l10n.setAttributes(moreItem, "tab-context-share-more");
+    moreItem.classList.add("menuitem-iconic", "share-more-button");
+    menuPopup.appendChild(moreItem);
+
+    menuPopup.addEventListener("command", this);
+    menuPopup.parentNode
+      .closest("menupopup")
+      .addEventListener("popuphiding", this);
+    menuPopup.setAttribute("data-initialized", true);
+  },
+
+  onShareURLCommand(event) {
+    // Only call sharing services for the "Share" context menu item. These
+    // services are accessed from a submenu popup for MacOS or the "Share"
+    // menu item for Windows.
+    if (
+      event.target.parentNode.id !== "context_shareTabURL_popup" &&
+      event.target.id !== "context_shareTabURL"
+    ) {
+      return;
+    }
+
+    // The context menu might not have been opened on the selected browser.
+    // Fix this in the next commit.
+    let browser = gBrowser.selectedBrowser;
+    let currentURI = gURLBar.makeURIReadable(browser.currentURI).displaySpec;
+
+    if (AppConstants.platform == "win") {
+      WindowsUIUtils.shareUrl(currentURI, browser.contentTitle);
+      return;
+    }
+
+    // On macOSX platforms
+    let sharingService = gBrowser.MacSharingService;
+    let shareName = event.target.getAttribute("share-name");
+
+    if (shareName) {
+      sharingService.shareUrl(shareName, currentURI, browser.contentTitle);
+    } else if (event.target.classList.contains("share-more-button")) {
+      sharingService.openSharingPreferences();
+    }
+  },
+
+  onPopupHiding(event) {
+    // We don't want to rebuild the contents of the "Share" menupopup if only its submenu is
+    // hidden. So bail if this isn't the top menupopup in the DOM tree:
+    if (event.target.parentNode.closest("menupopup")) {
+      return;
+    }
+    // Otherwise, clear its "data-initialized" attribute.
+    let menupopup = document.getElementById("context_shareTabURL_popup");
+    menupopup.removeAttribute("data-initialized");
+
+    event.target.removeEventListener("popuphiding", this);
+  },
+
+  onPopupShowing(event) {
+    if (!event.target.hasAttribute("data-initialized")) {
+      this.initializeShareURLPopup(event.target);
+    }
+  },
+
+  handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "command":
+        this.onShareURLCommand(aEvent);
+        break;
+      case "popuphiding":
+        this.onPopupHiding(aEvent);
+        break;
+      case "popupshowing":
+        this.onPopupShowing(aEvent);
+        break;
+    }
+  },
+};
+
 /**
  * Opens a new tab with the userContextId specified as an attribute of
  * sourceEvent. This attribute is propagated to the top level originAttributes
