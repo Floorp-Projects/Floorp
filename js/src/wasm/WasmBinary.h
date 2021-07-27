@@ -19,6 +19,7 @@
 #ifndef wasm_binary_h
 #define wasm_binary_h
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
 #include <type_traits>
@@ -35,6 +36,7 @@
 namespace js {
 namespace wasm {
 
+using mozilla::DebugOnly;
 using mozilla::Maybe;
 
 struct ModuleEnvironment;
