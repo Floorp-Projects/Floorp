@@ -115,11 +115,21 @@ async function testDocumentEventResources() {
   ok(true, "Document events are fired after reloading");
 
   domLoadingResource = await onLoadingAtReloaded;
-  is(
-    domLoadingResource.shouldBeIgnoredAsRedundantWithTargetAvailable,
-    undefined,
-    "shouldBeIgnoredAsRedundantWithTargetAvailable is not set after reloading"
-  );
+  if (
+    commands.targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle
+  ) {
+    is(
+      domLoadingResource.shouldBeIgnoredAsRedundantWithTargetAvailable,
+      true,
+      "shouldBeIgnoredAsRedundantWithTargetAvailable is true when server targets are enabled and we get a new target for each new WindowGlobal"
+    );
+  } else {
+    is(
+      domLoadingResource.shouldBeIgnoredAsRedundantWithTargetAvailable,
+      undefined,
+      "shouldBeIgnoredAsRedundantWithTargetAvailable is not set after reloading, when server targets are not enabled"
+    );
+  }
 
   is(
     domLoadingResource.url,
