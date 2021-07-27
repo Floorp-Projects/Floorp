@@ -23,8 +23,8 @@ SimpleTest.requestCompleteLog();
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 const {
-  TabDescriptorFactory,
-} = require("devtools/client/framework/tab-descriptor-factory");
+  CommandsFactory,
+} = require("devtools/shared/commands/commands-factory");
 
 async function doGC() {
   // In order to get stable results, we really have to do 3 GC attempts
@@ -48,17 +48,14 @@ async function addTab(url) {
 }
 
 async function testScript(tab) {
-  const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
-  const target = await descriptor.getTarget();
-  await target.attach();
+  const commands = await CommandsFactory.forTab(tab);
+  await commands.targetCommand.startListening();
 
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));
 
-  await target.destroy();
-
-  // destroy the descriptor to also destroy the dedicated client.
-  await descriptor.destroy();
+  // destroy the commands to also destroy the dedicated client.
+  await commands.destroy();
 }
 
 add_task(async function() {
