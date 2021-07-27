@@ -4440,10 +4440,6 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
   // case-insensitively.
   pref("marionette.log.level", "Info");
 
-  // Certain log messages that are known to be long are truncated. This
-  // preference causes them to not be truncated.
-  pref("marionette.log.truncate", true);
-
   // Port to start Marionette server on.
   pref("marionette.port", 2828);
 

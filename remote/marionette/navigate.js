@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   modal: "chrome://remote/content/marionette/modal.js",
   PageLoadStrategy: "chrome://remote/content/shared/webdriver/Capabilities.jsm",
   TimedPromise: "chrome://remote/content/marionette/sync.js",
-  truncate: "chrome://remote/content/marionette/format.js",
+  truncate: "chrome://remote/content/shared/Format.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>

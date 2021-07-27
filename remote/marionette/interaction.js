@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   event: "chrome://remote/content/marionette/event.js",
   Log: "chrome://remote/content/shared/Log.jsm",
-  pprint: "chrome://remote/content/marionette/format.js",
+  pprint: "chrome://remote/content/shared/Format.jsm",
   TimedPromise: "chrome://remote/content/marionette/sync.js",
 });
 

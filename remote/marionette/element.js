@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   atom: "chrome://remote/content/marionette/atom.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   PollPromise: "chrome://remote/content/marionette/sync.js",
-  pprint: "chrome://remote/content/marionette/format.js",
+  pprint: "chrome://remote/content/shared/Format.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
