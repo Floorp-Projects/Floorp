@@ -127,11 +127,11 @@ class ThreeDotMenuMainRobot {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun openSettings(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
-            var maxSwipes = 3
-            while (!settingsButton().exists() && maxSwipes != 0) {
-                threeDotMenuRecyclerView().perform(swipeUp())
-                maxSwipes--
-            }
+            // We require one swipe to display the full size 3-dot menu. On smaller devices
+            // such as the Pixel 2, we require two swipes to display the "Settings" menu item
+            // at the bottom. On larger devices, the second swipe is a no-op.
+            threeDotMenuRecyclerView().perform(swipeUp())
+            threeDotMenuRecyclerView().perform(swipeUp())
             settingsButton().click()
 
             SettingsRobot().interact()
