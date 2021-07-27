@@ -913,8 +913,16 @@ function PropertyInfo(tree, name) {
 }
 
 PropertyInfo.prototype = {
+  get isSupported() {
+    // There can be a mismatch between the list of properties
+    // supported on the server and on the client.
+    // Ideally we should build PropertyInfo only for property names supported on
+    // the server. See Bug 1722348.
+    return this.tree._computed && this.name in this.tree._computed;
+  },
+
   get value() {
-    if (this.tree._computed) {
+    if (this.isSupported) {
       const value = this.tree._computed[this.name].value;
       return value;
     }
@@ -1014,7 +1022,7 @@ PropertyView.prototype = {
       return false;
     }
 
-    return true;
+    return this.propertyInfo.isSupported;
   },
 
   /**
