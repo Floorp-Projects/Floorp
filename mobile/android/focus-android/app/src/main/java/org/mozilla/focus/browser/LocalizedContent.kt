@@ -31,7 +31,8 @@ object LocalizedContent {
         val learnMoreURL = manifestoURL
         var aboutVersion = ""
         try {
-            val engineIndicator = BuildConfig.MOZ_APP_VERSION + "-" + BuildConfig.MOZ_APP_BUILDID
+            val engineIndicator = " \uD83E\uDD8E " + BuildConfig.MOZ_APP_VERSION + "-" +
+                BuildConfig.MOZ_APP_BUILDID
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             @Suppress("DEPRECATION")
             aboutVersion = String.format(
