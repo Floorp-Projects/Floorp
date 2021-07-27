@@ -319,21 +319,23 @@ this.devtools = class extends ExtensionAPI {
 
     /* eslint-disable mozilla/balanced-listeners */
     extension.on("add-permissions", (ignoreEvent, permissions) => {
-      Services.prefs.setBoolPref(
-        `${getDevToolsPrefBranchName(extension.id)}.enabled`,
-        true
-      );
       if (permissions.permissions.includes("devtools")) {
+        Services.prefs.setBoolPref(
+          `${getDevToolsPrefBranchName(extension.id)}.enabled`,
+          true
+        );
+
         this._initialize();
       }
     });
 
     extension.on("remove-permissions", (ignoreEvent, permissions) => {
-      Services.prefs.setBoolPref(
-        `${getDevToolsPrefBranchName(extension.id)}.enabled`,
-        false
-      );
       if (permissions.permissions.includes("devtools")) {
+        Services.prefs.setBoolPref(
+          `${getDevToolsPrefBranchName(extension.id)}.enabled`,
+          false
+        );
+
         this._uninitialize();
       }
     });
