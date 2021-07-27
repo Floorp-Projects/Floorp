@@ -318,6 +318,7 @@ nsresult ScriptPreloader::Observe(nsISupports* subject, const char* topic,
     MOZ_ASSERT(XRE_IsParentProcess());
 
     mStartupFinished = true;
+    URLPreloader::GetSingleton().SetStartupFinished();
   } else if (!strcmp(topic, CACHE_WRITE_TOPIC)) {
     obs->RemoveObserver(this, CACHE_WRITE_TOPIC);
 

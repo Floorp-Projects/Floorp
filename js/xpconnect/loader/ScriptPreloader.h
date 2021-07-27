@@ -115,7 +115,7 @@ class ScriptPreloader : public nsIObserver,
   Result<Ok, nsresult> InitCache(const Maybe<ipc::FileDescriptor>& cacheFile,
                                  ScriptCacheChild* cacheChild);
 
-  bool Active() { return mCacheInitialized && !mStartupFinished; }
+  bool Active() const { return mCacheInitialized && !mStartupFinished; }
 
  private:
   Result<Ok, nsresult> InitCacheInternal(JS::HandleObject scope = nullptr);
