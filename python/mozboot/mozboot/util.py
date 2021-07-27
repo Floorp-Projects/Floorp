@@ -143,42 +143,39 @@ def locate_java_bin_path():
         no_matching_java_version_exception = JavaLocationFailedException(
             'Could not find Java on your machine. Please install it, either via "mach bootstrap" '
             "(if you have brew) or directly from https://adoptopenjdk.net/?variant=openjdk8."
+            "If you have already installed a 1.8 JDK, you may need to set $JAVA_HOME"
         )
+        # In some cases, such as reported in bug 1670264, the
+        # "java_home" binary might return a JRE instead of a JDK,
+        # when the JRE has a higher priority (e.g. after a system
+        # upgrade that re-installs the JRE). To make sure that the
+        # expected JDK is found if it exists, we read the verbose
+        # output of java_home in XML format and extract a fitting
+        # path.
         try:
-            java_home_path = subprocess.check_output(
-                ["/usr/libexec/java_home", "-v", "1.8"], universal_newlines=True
-            ).strip()
+            java_home_verbose_xml_output = subprocess.check_output(
+                ["/usr/libexec/java_home", "-VX", "-v", "1.8"], stderr=subprocess.PIPE
+            )
+            import plistlib
+
+            list_of_java_homes = plistlib.loads(java_home_verbose_xml_output)
         except CalledProcessError:
             raise no_matching_java_version_exception
 
-        if not java_home_path:
-            raise no_matching_java_version_exception
+        # If adoptopenjdk8 is available, use it.
+        for java_home_item in list_of_java_homes:
+            if java_home_item["JVMBundleID"] == "net.adoptopenjdk.8.jdk":
+                return java_home_item["JVMHomePath"]
 
-        bin_path = os.path.join(java_home_path, "bin")
-        javac_path = which("javac", path=bin_path)
+        # Fall back to any other JDK 1.8.
+        for java_home_item in list_of_java_homes:
+            java_home_path = java_home_item["JVMHomePath"]
+            bin_path = os.path.join(java_home_path, "bin")
+            javac_path = which("javac", path=bin_path)
+            if javac_path:
+                return bin_path
 
-        if not javac_path:
-            raise JavaLocationFailedException(
-                "The Java 1.8 installation found by "
-                '"/usr/libexec/java_home" ("{}") is a JRE, not a '
-                "JDK. Since Firefox depends on the JDK to compile "
-                "Java, you should install the Java 1.8 JDK, either "
-                'via "mach bootstrap" (if you have brew) or '
-                "directly from "
-                "https://adoptopenjdk.net/?variant=openjdk8.\n"
-                # In some cases, such as reported in bug 1670264, the
-                # "java_home" binary might return a JRE instead of a
-                # JDK. There's two workarounds:
-                # 1. Have the user uninstall the 1.8 JRE, so the JDK
-                #    takes priority
-                # 2. Have the user explicitly specify $JAVA_HOME so
-                #    that the JDK is selected.
-                "Note: if you have already installed a 1.8 JDK and "
-                "are still seeing this message, then you may need "
-                "to set $JAVA_HOME.".format(java_home_path)
-            )
-
-        return bin_path
+        raise no_matching_java_version_exception
     else:  # Handle Linux and other OSes by finding Java from the $PATH
         java_path = which("java")
         javac_path = which("javac")
