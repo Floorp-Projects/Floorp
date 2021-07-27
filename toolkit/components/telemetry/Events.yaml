@@ -127,7 +127,7 @@ aboutprivatebrowsing:
     bug_numbers: [1709344]
     notification_emails:
       - "khudson@mozilla.com"
-    expiry_version: "93"
+    expiry_version: "100"
     products:
       - "firefox"
 
