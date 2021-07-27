@@ -182,6 +182,7 @@ AccessibilityPanel.prototype = {
     this.shouldRefresh = true;
     await this._opening;
 
+    await this.accessibilityProxy.accessibilityFrontGetPromise;
     const onUpdated = this.panelWin.once(EVENTS.INITIALIZED);
     this.refresh();
     await onUpdated;
