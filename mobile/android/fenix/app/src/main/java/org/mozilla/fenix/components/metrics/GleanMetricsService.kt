@@ -683,6 +683,9 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TabsTrayCloseAllTabsPressed -> EventWrapper<NoExtraKeys>(
             { TabsTray.closeAllTabs.record(it) }
         )
+        is Event.TabsTrayRecentlyClosedPressed -> EventWrapper<NoExtraKeys>(
+            { TabsTray.inactiveTabsRecentlyClosed.record(it) }
+        )
         is Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(
             { Autoplay.visitedSetting.record(it) }
         )

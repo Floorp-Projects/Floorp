@@ -2798,6 +2798,19 @@ tabs_tray:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+  inactive_tabs_recently_closed:
+    type: event
+    description: |
+      A user tapped the "Recently closed" option of the inactive tabs menu.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/20328
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/20328
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-08-01"
 
 collections:
   renamed:

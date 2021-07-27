@@ -249,6 +249,10 @@ class GleanMetricsServiceTest {
         assertFalse(TabsTray.closeAllTabs.testHasValue())
         gleanService.track(Event.TabsTrayCloseAllTabsPressed)
         assertTrue(TabsTray.closeAllTabs.testHasValue())
+
+        assertFalse(TabsTray.inactiveTabsRecentlyClosed.testHasValue())
+        gleanService.track(Event.TabsTrayRecentlyClosedPressed)
+        assertTrue(TabsTray.inactiveTabsRecentlyClosed.testHasValue())
     }
 
     @Test
