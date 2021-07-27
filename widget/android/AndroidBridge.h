@@ -56,7 +56,7 @@ class NetworkInformation;
 
 // The order and number of the members in this structure must correspond
 // to the attrsAppearance array in GeckoAppShell.getSystemColors()
-typedef struct AndroidSystemColors {
+struct AndroidSystemColors {
   nscolor textColorPrimary;
   nscolor textColorPrimaryInverse;
   nscolor textColorSecondary;
@@ -68,7 +68,8 @@ typedef struct AndroidSystemColors {
   nscolor colorBackground;
   nscolor panelColorForeground;
   nscolor panelColorBackground;
-} AndroidSystemColors;
+  nscolor colorAccent;
+};
 
 class AndroidBridge final {
  public:
