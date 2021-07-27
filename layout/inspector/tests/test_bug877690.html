@@ -63,11 +63,7 @@ function do_test() {
   var expected = [ "auto", "initial", "inherit", "unset", "revert", ...allColors, "no-repeat", "repeat",
       "repeat-x", "repeat-y", "space", "round", "fixed", "scroll", "local", "center", "top", "bottom", "left", "right",
       "border-box", "padding-box", "content-box", "text", "contain",
-      "cover", "none", "-moz-element", "-moz-image-rect", "url", ...allGradients ];
-
-  if(SpecialPowers.getBoolPref("layout.css.image-set.enabled")) {
-    expected.push("image-set");
-  }
+      "cover", "none", "-moz-element", "-moz-image-rect", "url", ...allGradients, "image-set" ];
 
   if(SpecialPowers.getBoolPref("layout.css.cross-fade.enabled")) {
     expected.push("cross-fade");
@@ -148,11 +144,7 @@ function do_test() {
   var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "auto", "inherit", "revert", "initial", "unset", "repeat", "stretch",
                    "-moz-element", "-moz-image-rect", "url", ...allGradients,
-                   "fill", "none", "round", "space" ];
-
-  if(SpecialPowers.getBoolPref("layout.css.image-set.enabled")) {
-    expected.push("image-set");
-  }
+                   "fill", "none", "round", "space", "image-set" ];
 
   if(SpecialPowers.getBoolPref("layout.css.cross-fade.enabled")) {
     expected.push("cross-fade");

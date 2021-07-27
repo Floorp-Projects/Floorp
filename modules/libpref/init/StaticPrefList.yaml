@@ -6846,13 +6846,6 @@
   value: true
   mirror: always
 
-# Is the image-set() function enabled?
-- name: layout.css.image-set.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Are implicit tracks in computed grid templates serialized?
 - name: layout.css.serialize-grid-implicit-tracks
   type: RelaxedAtomicBool
