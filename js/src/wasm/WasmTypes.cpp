@@ -46,23 +46,6 @@ using namespace js::wasm;
 using mozilla::IsPowerOfTwo;
 using mozilla::MakeEnumeratedRange;
 
-const JSClass WasmJSExceptionObject::class_ = {
-    "WasmJSExnRefObject", JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS)};
-
-WasmJSExceptionObject* WasmJSExceptionObject::create(JSContext* cx,
-                                                     MutableHandleValue value) {
-  WasmJSExceptionObject* obj =
-      NewObjectWithGivenProto<WasmJSExceptionObject>(cx, nullptr);
-
-  if (!obj) {
-    return nullptr;
-  }
-
-  obj->setFixedSlot(VALUE_SLOT, value);
-
-  return obj;
-}
-
 size_t Import::serializedSize() const {
   return module.serializedSize() + field.serializedSize() + sizeof(kind);
 }
