@@ -30,6 +30,7 @@ struct ParamTraits;
 namespace mozilla {
 
 namespace dom {
+class CanonicalBrowsingContext;
 class DOMRect;
 class Promise;
 class WindowGlobalParent;
@@ -144,6 +145,8 @@ class CrossProcessPaint final {
       dom::WindowGlobalParent* aWGP, const Maybe<IntRect>& aRect,
       nscolor aBackgroundColor = NS_RGBA(0, 0, 0, 0),
       CrossProcessPaintFlags aFlags = CrossProcessPaintFlags::DrawView);
+
+  void QueuePaint(dom::CanonicalBrowsingContext* aBc);
 
   /// Clear the state of this paint so that it cannot be resolved or receive
   /// any paint fragments.
