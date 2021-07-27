@@ -102,17 +102,11 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
       aColor = mSystemColors.textColorPrimary;
       break;
     case ColorID::TextSelectBackground:
-      // Matched to action_accent in java codebase. This works fine with both
-      // light and dark color scheme.
-      //
-      // FIXME(emilio): action_accent is not mentioned anywhere. Might be cool
-      // to use the real android accent color.
+      /* matched to action_accent in java codebase */
       aColor = NS_RGBA(10, 132, 255, 153);
       break;
     case ColorID::TextSelectForeground:
-      // Selection background is transparent enough that any foreground color
-      // does.
-      aColor = NS_SAME_AS_FOREGROUND_COLOR;
+      aColor = NS_RGB(0, 0, 0);
       break;
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
@@ -160,17 +154,13 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
     case ColorID::MozHtmlCellhighlight:
     case ColorID::Highlight:
     case ColorID::MozAccentColor:
-      // Background of selected item. This is TextSelectBackground blended with
-      // black to guarantee that white has a good enough contrast, similar to
-      // how Windows does it.
-      aColor = NS_RGB(0x06, 0x4e, 0x99);
+      // background of selected item
+      aColor = NS_RGB(0xfa, 0xd1, 0x84);
       break;
     case ColorID::MozCellhighlighttext:
     case ColorID::MozHtmlCellhighlighttext:
     case ColorID::Highlighttext:
     case ColorID::MozAccentColorForeground:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
-      break;
     case ColorID::Fieldtext:
       aColor = NS_RGB(0x1a, 0x1a, 0x1a);
       break;
