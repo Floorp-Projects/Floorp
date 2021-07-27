@@ -24,6 +24,7 @@
 
 #include "NamespaceImports.h"
 
+#include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmValue.h"
 

@@ -138,6 +138,8 @@ extern Pages ClampedMaxPages(Pages initialPages,
 //   IsValidBoundsCheckImmediate(boundsCheckLimit)
 extern size_t ComputeMappedSize(Pages clampedMaxPages);
 
+extern size_t GetMaxOffsetGuardLimit(bool hugeMemory);
+
 // Return whether the given immediate satisfies the constraints of the platform.
 extern bool IsValidBoundsCheckImmediate(uint32_t i);
 
@@ -150,6 +152,23 @@ extern uint64_t RoundUpToNextValidBoundsCheckImmediate(uint64_t i);
 
 // Return the next higher valid immediate for arm.
 extern uint64_t RoundUpToNextValidARMImmediate(uint64_t i);
+
+#ifdef WASM_SUPPORTS_HUGE_MEMORY
+// On WASM_SUPPORTS_HUGE_MEMORY platforms, every asm.js or WebAssembly 32-bit
+// memory unconditionally allocates a huge region of virtual memory of size
+// wasm::HugeMappedSize. This allows all memory resizing to work without
+// reallocation and provides enough guard space for all offsets to be folded
+// into memory accesses.
+
+static const uint64_t HugeIndexRange = uint64_t(UINT32_MAX) + 1;
+static const uint64_t HugeOffsetGuardLimit = uint64_t(INT32_MAX) + 1;
+static const uint64_t HugeUnalignedGuardPage = PageSize;
+static const uint64_t HugeMappedSize =
+    HugeIndexRange + HugeOffsetGuardLimit + HugeUnalignedGuardPage;
+#endif
+
+// The size of the guard page for non huge-memories.
+static const size_t GuardSize = PageSize;
 
 }  // namespace wasm
 }  // namespace js
