@@ -19,6 +19,7 @@
 #ifndef wasm_type_def_h
 #define wasm_type_def_h
 
+#include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmCompileArgs.h"
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmSerialize.h"

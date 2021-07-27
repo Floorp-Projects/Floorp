@@ -20,6 +20,7 @@
 
 #include "mozilla/MathAlgorithms.h"
 #include "vm/ArrayBufferObject.h"
+#include "wasm/WasmCodegenTypes.h"
 
 using mozilla::IsPowerOfTwo;
 
@@ -212,3 +213,71 @@ uint64_t wasm::RoundUpToNextValidBoundsCheckImmediate(uint64_t i) {
   return i;
 #endif
 }
+
+// Bounds checks always compare the base of the memory access with the bounds
+// check limit. If the memory access is unaligned, this means that, even if the
+// bounds check succeeds, a few bytes of the access can extend past the end of
+// memory. To guard against this, extra space is included in the guard region to
+// catch the overflow. MaxMemoryAccessSize is a conservative approximation of
+// the maximum guard space needed to catch all unaligned overflows.
+
+static const unsigned MaxMemoryAccessSize = LitVal::sizeofLargestValue();
+
+// All plausible targets must be able to do at least IEEE754 double
+// loads/stores, hence the lower limit of 8.  Some Intel processors support
+// AVX-512 loads/stores, hence the upper limit of 64.
+static_assert(MaxMemoryAccessSize >= 8, "MaxMemoryAccessSize too low");
+static_assert(MaxMemoryAccessSize <= 64, "MaxMemoryAccessSize too high");
+static_assert((MaxMemoryAccessSize & (MaxMemoryAccessSize - 1)) == 0,
+              "MaxMemoryAccessSize is not a power of two");
+
+#ifdef WASM_SUPPORTS_HUGE_MEMORY
+
+static_assert(MaxMemoryAccessSize <= HugeUnalignedGuardPage,
+              "rounded up to static page size");
+static_assert(HugeOffsetGuardLimit < UINT32_MAX,
+              "checking for overflow against OffsetGuardLimit is enough.");
+
+// We have only tested huge memory on x64 and arm64.
+#  if !(defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64))
+#    error "Not an expected configuration"
+#  endif
+
+// TODO: We want this static_assert back, but it reqires MaxMemory32Bytes to be
+// a constant or constexpr function, not a regular function as now.
+//
+// The assert is also present in WasmMemoryObject::isHuge and
+// WasmMemoryObject::grow, so it's OK to comment out here for now.
+
+// static_assert(MaxMemory32Bytes < HugeMappedSize(),
+//               "Normal array buffer could be confused with huge memory");
+#endif
+
+// On !WASM_SUPPORTS_HUGE_MEMORY platforms:
+//  - To avoid OOM in ArrayBuffer::prepareForAsmJS, asm.js continues to use the
+//    original ArrayBuffer allocation which has no guard region at all.
+//  - For WebAssembly memories, an additional GuardSize is mapped after the
+//    accessible region of the memory to catch folded (base+offset) accesses
+//    where `offset < OffsetGuardLimit` as well as the overflow from unaligned
+//    accesses, as described above for MaxMemoryAccessSize.
+
+static const size_t OffsetGuardLimit = PageSize - MaxMemoryAccessSize;
+
+static_assert(MaxMemoryAccessSize < GuardSize,
+              "Guard page handles partial out-of-bounds");
+static_assert(OffsetGuardLimit < UINT32_MAX,
+              "checking for overflow against OffsetGuardLimit is enough.");
+
+size_t wasm::GetMaxOffsetGuardLimit(bool hugeMemory) {
+#ifdef WASM_SUPPORTS_HUGE_MEMORY
+  return hugeMemory ? HugeOffsetGuardLimit : OffsetGuardLimit;
+#else
+  return OffsetGuardLimit;
+#endif
+}
+
+// Assert that our minimum offset guard limit covers our inline
+// memory.copy/fill optimizations.
+static const size_t MinOffsetGuardLimit = OffsetGuardLimit;
+static_assert(MaxInlineMemoryCopyLength < MinOffsetGuardLimit, "precondition");
+static_assert(MaxInlineMemoryFillLength < MinOffsetGuardLimit, "precondition");
