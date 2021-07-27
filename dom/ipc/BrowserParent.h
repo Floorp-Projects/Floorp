@@ -756,6 +756,8 @@ class BrowserParent final : public PBrowserParent,
       const uint32_t& aPointerId, RequestPointerCaptureResolver&& aResolve);
   mozilla::ipc::IPCResult RecvReleasePointerCapture(const uint32_t& aPointerId);
 
+  mozilla::ipc::IPCResult RecvShowDynamicToolbar();
+
  private:
   void SuppressDisplayport(bool aEnabled);
 

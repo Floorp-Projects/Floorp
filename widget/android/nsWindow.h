@@ -125,6 +125,8 @@ class nsWindow final : public nsBaseWidget {
 
   void NotifyDisablingWebRender();
 
+  void ShowDynamicToolbar();
+
   void DetachNatives();
 
   //
