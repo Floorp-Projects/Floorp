@@ -2164,6 +2164,14 @@ class Document : public nsINode,
                          nsAString& Standalone);
 
   /**
+   * Returns the bits for the color-scheme specified by the
+   * <meta name="color-scheme">.
+   *
+   * TODO(emilio): Actually process the meta tag.
+   */
+  uint8_t GetColorSchemeBits() const { return mColorSchemeBits; }
+
+  /**
    * Returns true if this is what HTML 5 calls an "HTML document" (for example
    * regular HTML document with Content-Type "text/html", image documents and
    * media documents).  Returns false for XHTML and any other documents parsed
@@ -4758,6 +4766,11 @@ class Document : public nsINode,
   uint8_t mPendingFullscreenRequests;
 
   uint8_t mXMLDeclarationBits;
+
+  // NOTE(emilio): Technically, this should be a StyleColorSchemeFlags, but we
+  // use uint8_t to avoid having to include a bunch of style system headers
+  // everywhere.
+  uint8_t mColorSchemeBits = 0;
 
   // Currently active onload blockers.
   uint32_t mOnloadBlockCount;

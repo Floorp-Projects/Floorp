@@ -964,8 +964,9 @@ static bool ShouldRespectGlobalToolbarThemeAppearanceForChromeDoc() {
 #endif
 }
 
-LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForDocument(
-    const dom::Document& aDoc) {
+static LookAndFeel::ColorScheme ColorSchemeForDocument(
+    const dom::Document& aDoc, bool aContentSupportsDark) {
+  using ColorScheme = LookAndFeel::ColorScheme;
   if (nsContentUtils::IsChromeDoc(&aDoc)) {
     if (ShouldRespectGlobalToolbarThemeAppearanceForChromeDoc()) {
       switch (StaticPrefs::browser_theme_toolbar_theme()) {
@@ -974,16 +975,40 @@ LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForDocument(
         case 1:  // Light
           return ColorScheme::Light;
         case 2:  // System
-          return SystemColorScheme();
+          return LookAndFeel::SystemColorScheme();
         default:
           break;
       }
     }
     if (ShouldRespectSystemColorSchemeForChromeDoc()) {
-      return SystemColorScheme();
+      return LookAndFeel::SystemColorScheme();
     }
   }
-  return LookAndFeel::ColorScheme::Light;
+  return aContentSupportsDark ? LookAndFeel::SystemColorScheme()
+                              : ColorScheme::Light;
+}
+
+LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForStyle(
+    const dom::Document& aDoc, const StyleColorSchemeFlags& aFlags) {
+  StyleColorSchemeFlags style(aFlags);
+  if (!style) {
+    style.bits = aDoc.GetColorSchemeBits();
+  }
+  const bool supportsDark = bool(style & StyleColorSchemeFlags::DARK);
+  const bool supportsLight = bool(style & StyleColorSchemeFlags::LIGHT);
+  if (supportsDark && !supportsLight) {
+    return ColorScheme::Dark;
+  }
+  if (supportsLight && !supportsDark) {
+    return ColorScheme::Light;
+  }
+  return ColorSchemeForDocument(aDoc, supportsDark);
+}
+
+LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForFrame(
+    const nsIFrame* aFrame) {
+  return ColorSchemeForStyle(*aFrame->PresContext()->Document(),
+                             aFrame->StyleUI()->mColorScheme.bits);
 }
 
 // static
@@ -1056,13 +1081,10 @@ LookAndFeel::UseStandins LookAndFeel::ShouldUseStandins(
   return UseStandins::No;
 }
 
-Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, const dom::Document& aDoc) {
-  return GetColor(aId, ColorSchemeForDocument(aDoc),
-                  ShouldUseStandins(aDoc, aId));
-}
-
 Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, const nsIFrame* aFrame) {
-  return GetColor(aId, *aFrame->PresContext()->Document());
+  const auto* doc = aFrame->PresContext()->Document();
+  return GetColor(aId, ColorSchemeForFrame(aFrame),
+                  ShouldUseStandins(*doc, aId));
 }
 
 // static
