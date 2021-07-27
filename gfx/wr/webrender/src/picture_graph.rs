@@ -75,6 +75,7 @@ impl PictureGraph {
 
         let pass_count = max_pass_index + 1;
 
+        self.update_passes.clear();
         self.update_passes.resize_with(pass_count, Vec::new);
 
         for (pic_index, info) in self.pic_info.iter().enumerate() {
