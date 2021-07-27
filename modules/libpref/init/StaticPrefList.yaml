@@ -10663,7 +10663,7 @@
 
 -   name: security.sandbox.socket.shadow-stack.enabled
     type: RelaxedAtomicBool
-    value: false
+    value: @IS_NIGHTLY_BUILD@
     mirror: always
 
 -   name: security.sandbox.gpu.shadow-stack.enabled
