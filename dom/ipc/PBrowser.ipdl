@@ -581,7 +581,7 @@ child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
     async UpdateEpoch(uint32_t aEpoch);
     async UpdateSHistory();
-    async CloneDocumentTreeIntoSelf(MaybeDiscardedBrowsingContext aBc, PrintData aPrintData);
+    async CloneDocumentTreeIntoSelf(MaybeDiscardedBrowsingContext aBc, PrintData aPrintData) returns(bool aSuccess);
     async UpdateRemotePrintSettings(PrintData aPrintData);
 
     /**

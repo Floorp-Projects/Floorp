@@ -1039,40 +1039,40 @@ mozilla::ipc::IPCResult BrowserChild::RecvResumeLoad(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvCloneDocumentTreeIntoSelf(
+nsresult BrowserChild::CloneDocumentTreeIntoSelf(
     const MaybeDiscarded<BrowsingContext>& aSourceBC,
     const embedding::PrintData& aPrintData) {
 #ifdef NS_PRINTING
   if (NS_WARN_IF(aSourceBC.IsNullOrDiscarded())) {
-    return IPC_OK();
+    return NS_ERROR_FAILURE;
   }
   nsCOMPtr<Document> sourceDocument = aSourceBC.get()->GetDocument();
   if (NS_WARN_IF(!sourceDocument)) {
-    return IPC_OK();
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIDocShell> ourDocShell = do_GetInterface(WebNavigation());
   if (NS_WARN_IF(!ourDocShell)) {
-    return IPC_OK();
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIContentViewer> cv;
   ourDocShell->GetContentViewer(getter_AddRefs(cv));
   if (NS_WARN_IF(!cv)) {
-    return IPC_OK();
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
       do_GetService("@mozilla.org/gfx/printsettings-service;1");
   if (NS_WARN_IF(!printSettingsSvc)) {
-    return IPC_OK();
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIPrintSettings> printSettings;
   nsresult rv =
       printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_OK();
+    return rv;
   }
 
   printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
@@ -1085,44 +1085,62 @@ mozilla::ipc::IPCResult BrowserChild::RecvCloneDocumentTreeIntoSelf(
     clone = sourceDocument->CreateStaticClone(ourDocShell, cv, printSettings,
                                               &hasInProcessCallbacks);
     if (NS_WARN_IF(!clone)) {
-      return IPC_OK();
+      return NS_ERROR_FAILURE;
     }
   }
 
-  return RecvUpdateRemotePrintSettings(aPrintData);
+  rv = UpdateRemotePrintSettings(aPrintData);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
 #endif
+  return NS_OK;
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvCloneDocumentTreeIntoSelf(
+    const MaybeDiscarded<BrowsingContext>& aSourceBC,
+    const embedding::PrintData& aPrintData,
+    CloneDocumentTreeIntoSelfResolver&& aResolve) {
+  nsresult rv = NS_OK;
+
+#ifdef NS_PRINTING
+  rv = CloneDocumentTreeIntoSelf(aSourceBC, aPrintData);
+#endif
+
+  aResolve(NS_SUCCEEDED(rv));
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvUpdateRemotePrintSettings(
+nsresult BrowserChild::UpdateRemotePrintSettings(
     const embedding::PrintData& aPrintData) {
 #ifdef NS_PRINTING
   nsCOMPtr<nsIDocShell> ourDocShell = do_GetInterface(WebNavigation());
   if (NS_WARN_IF(!ourDocShell)) {
-    return IPC_OK();
+    return NS_ERROR_FAILURE;
   }
 
   RefPtr<Document> doc = ourDocShell->GetExtantDocument();
   if (NS_WARN_IF(!doc) || NS_WARN_IF(!doc->IsStaticDocument())) {
-    return IPC_OK();
+    return NS_ERROR_FAILURE;
   }
 
   RefPtr<BrowsingContext> bc = ourDocShell->GetBrowsingContext();
   if (NS_WARN_IF(!bc)) {
-    return IPC_OK();
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
       do_GetService("@mozilla.org/gfx/printsettings-service;1");
   if (NS_WARN_IF(!printSettingsSvc)) {
-    return IPC_OK();
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIPrintSettings> printSettings;
   nsresult rv =
       printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_OK();
+    return rv;
   }
 
   printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
@@ -1149,6 +1167,15 @@ mozilla::ipc::IPCResult BrowserChild::RecvUpdateRemotePrintSettings(
     }
     return BrowsingContext::WalkFlag::Next;
   });
+#endif
+
+  return NS_OK;
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvUpdateRemotePrintSettings(
+    const embedding::PrintData& aPrintData) {
+#ifdef NS_PRINTING
+  UpdateRemotePrintSettings(aPrintData);
 #endif
 
   return IPC_OK();
