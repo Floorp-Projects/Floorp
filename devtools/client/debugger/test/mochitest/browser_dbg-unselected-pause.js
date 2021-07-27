@@ -139,7 +139,8 @@ add_task(async function() {
   info("Wait for the paused code in the iframe to complete after resume");
   await pausedReload;
 
-  ok(!toolbox.isHighlighted("jsdebugger"), "Debugger is no longer highlighted after resuming all the paused targets");
+  await waitUntil(() => !toolbox.isHighlighted("jsdebugger"))
+  ok(true, "Debugger is no longer highlighted after resuming all the paused targets");
 
 
 });
