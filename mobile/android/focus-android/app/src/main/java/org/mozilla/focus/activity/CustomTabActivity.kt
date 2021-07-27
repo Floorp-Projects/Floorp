@@ -38,6 +38,7 @@ class CustomTabActivity : LocaleAwareAppCompatActivity() {
 
         this.customTabId = customTabId
 
+        @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/5016
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
 
         setContentView(R.layout.activity_customtab)

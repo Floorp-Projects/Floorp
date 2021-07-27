@@ -74,7 +74,7 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
 
             val domain = domainView.text.toString()
                     .trim()
-                    .toLowerCase()
+                    .lowercase()
 
             launch(IO) {
                 val domains = CustomDomains.load(requireActivity())

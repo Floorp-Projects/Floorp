@@ -6,11 +6,11 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 30
     }
 
     buildTypes {
@@ -34,11 +34,11 @@ dependencies {
 
     implementation Dependencies.androidx_annotation
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation Dependencies.kotlin_stdlib
 
     testImplementation "junit:junit:4.12"
-    testImplementation "org.robolectric:robolectric:4.4" // required to support api level 28
-    testImplementation 'org.mockito:mockito-core:2.24.5'
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
 
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'
 

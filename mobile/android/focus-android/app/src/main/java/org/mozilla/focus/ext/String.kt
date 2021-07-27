@@ -64,10 +64,10 @@ fun String.beautifyUrl(): String {
  */
 fun String.removePrefixesIgnoreCase(vararg prefixes: String): String {
     var value = this
-    var lower = this.toLowerCase()
+    var lower = this.lowercase()
 
     prefixes.forEach {
-        if (lower.startsWith(it.toLowerCase())) {
+        if (lower.startsWith(it.lowercase())) {
             value = value.substring(it.length)
             lower = lower.substring(it.length)
         }

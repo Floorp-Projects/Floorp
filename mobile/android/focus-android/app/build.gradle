@@ -11,11 +11,11 @@ apply from: "$project.rootDir/tools/gradle/versionCode.gradle"
 import com.android.build.OutputFile
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     defaultConfig {
         applicationId "org.mozilla"
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
                        // override this with a generated versionCode at build time.
         versionName "8.13.1"
@@ -28,10 +28,6 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    dexOptions {
-        preDexLibraries true
     }
 
     lintOptions {
@@ -64,6 +60,14 @@ android {
         unitTests {
             includeAndroidResources = true
         }
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose_version
     }
 
     flavorDimensions "product"
@@ -156,6 +160,10 @@ dependencies {
     implementation Dependencies.androidx_appcompat
     implementation Dependencies.androidx_browser
     implementation Dependencies.androidx_cardview
+    implementation Dependencies.androidx_compose_ui
+    implementation Dependencies.androidx_compose_ui_tooling
+    implementation Dependencies.androidx_compose_foundation
+    implementation Dependencies.androidx_compose_material
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_lifecycle_extensions
     implementation Dependencies.androidx_palette
@@ -199,8 +207,8 @@ dependencies {
 
     implementation project(':service-telemetry')
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${coroutines_version}"
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
     focusImplementation 'com.adjust.sdk:adjust-android:4.11.4'
     focusImplementation 'com.android.installreferrer:installreferrer:1.1' // Required by Adjust
@@ -214,8 +222,8 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-params:5.3.1"
     testImplementation "junit:junit:4.12"
     testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.3.1"
-    testImplementation "org.robolectric:robolectric:4.4" // required to support api level 28
-    testImplementation "org.mockito:mockito-core:3.11.0"
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.androidx_arch_core_testing
 
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version", {
@@ -256,7 +264,7 @@ android.applicationVariants.all { variant ->
 
     println("----------------------------------------------")
     println("Variant name:      " + variant.name)
-    println("Application ID:    " + [variant.mergedFlavor.applicationId, variant.buildType.applicationIdSuffix].findAll().join())
+    println("Application ID:    " + [variant.applicationId, variant.buildType.applicationIdSuffix].findAll().join())
     println("Build type:        " + variant.buildType.name)
     println("Flavor:            " + variant.flavorName)
 

@@ -5,17 +5,25 @@
 package org.mozilla.focus.settings
 
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import androidx.annotation.WorkerThread
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Request.Redirect.FOLLOW
@@ -31,11 +39,11 @@ import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
 import java.io.IOException
-import java.lang.ref.WeakReference
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.concurrent.TimeUnit
 
+@Suppress("TooManyFunctions")
 class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         setHasOptionsMenu(true)
@@ -43,13 +51,9 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         addPreferencesFromResource(R.xml.manual_add_search_engine)
     }
 
-    /**
-     * A reference to an active async task, if applicable, used to manage the task for lifecycle changes.
-     * See {@link #onPause()} for details.
-     */
-    private var activeAsyncTask: AsyncTask<Void, Void, Boolean>? = null
+    private var scope: CoroutineScope? = null
     private var menuItemForActiveAsyncTask: MenuItem? = null
-    private val handler = Handler()
+    private var job: Job? = null
 
     override fun onResume() {
         super.onResume()
@@ -59,20 +63,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
     override fun onPause() {
         super.onPause()
-        // This is a last minute change and we want to keep the async task management simple: onPause is the
-        // first required callback for various lifecycle changes: a dialog is shown, the user
-        // leaves the app, the app rotates, etc. To keep things simple, we do our AsyncTask management here,
-        // before it gets more complex (e.g. reattaching the AsyncTask to a new fragment).
-        //
-        // We cancel the AsyncTask also to keep things simple: if the task is cancelled, it will:
-        // - Likely end immediately and we don't need to handle it returning after the lifecycle changes
-        // - Get onPostExecute scheduled on the UI thread, which must run after onPause (since it also runs on
-        // the UI thread), and we check if the AsyncTask is cancelled there before we perform any other actions.
-        if (activeAsyncTask == null) return
-        activeAsyncTask?.cancel(true)
         setUiIsValidatingAsync(false, menuItemForActiveAsyncTask)
-
-        activeAsyncTask = null
         menuItemForActiveAsyncTask = null
     }
 
@@ -105,13 +96,11 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             if (isPartialSuccess) {
                 ViewUtils.hideKeyboard(view)
                 setUiIsValidatingAsync(true, item)
-                activeAsyncTask = ValidateSearchEngineAsyncTask(
-                    this,
-                    engineName,
-                    searchQuery,
-                    requireComponents.client
-                ).execute()
+
                 menuItemForActiveAsyncTask = item
+                scope?.launch {
+                    validateSearchEngine(engineName, searchQuery, requireComponents.client)
+                }
             } else {
                 TelemetryWrapper.saveCustomSearchEngineEvent(false)
             }
@@ -126,7 +115,17 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         return true
     }
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        scope = CoroutineScope(Dispatchers.IO)
+        return super.onCreateView(inflater, container, savedInstanceState)
+    }
+
     override fun onDestroyView() {
+        scope?.cancel()
         super.onDestroyView()
         if (view != null) ViewUtils.hideKeyboard(view)
     }
@@ -137,12 +136,13 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         if (isValidating) {
             view?.alpha = DISABLED_ALPHA
             // Delay showing the loading indicator to prevent it flashing on the screen
-            handler.postDelayed({
+            job = scope?.launch {
+                delay(LOADING_INDICATOR_DELAY)
                 pref?.setProgressViewShown(isValidating)
-            }, LOADING_INDICATOR_DELAY)
+            }
         } else {
             view?.alpha = 1f
-            handler.removeCallbacksAndMessages(null)
+            job?.cancel()
             pref?.setProgressViewShown(isValidating)
         }
 
@@ -150,7 +150,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         val viewGroup = view as ViewGroup
         enableAllSubviews(!isValidating, viewGroup)
 
-        saveMenuItem!!.isEnabled = !isValidating
+        saveMenuItem?.isEnabled = !isValidating
     }
 
     private fun enableAllSubviews(shouldEnable: Boolean, viewGroup: ViewGroup) {
@@ -207,65 +207,42 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         }
     }
 
-    private class ValidateSearchEngineAsyncTask
-        constructor (
-            fragment: ManualAddSearchEngineSettingsFragment,
-            private val engineName: String,
-            private val query: String,
-            private val client: Client
-        ) : AsyncTask<Void, Void, Boolean>() {
+    private suspend fun validateSearchEngine(engineName: String, query: String, client: Client) {
+        val isValidSearchQuery = isValidSearchQueryURL(client, query)
+        TelemetryWrapper.saveCustomSearchEngineEvent(isValidSearchQuery)
 
-        private val fragmentWeakReference = WeakReference(fragment)
-
-        override fun doInBackground(vararg p0: Void?): Boolean {
-            val isValidSearchQuery = isValidSearchQueryURL(client, query)
-            TelemetryWrapper.saveCustomSearchEngineEvent(isValidSearchQuery)
-
-            return isValidSearchQuery
-        }
-
-        override fun onPostExecute(isValidSearchQuery: Boolean) {
-            super.onPostExecute(isValidSearchQuery)
-            if (isCancelled) {
-                Log.d(LOGTAG, "ValidateSearchEngineAsyncTask has been cancelled")
-                return
-            }
-
-            val fragment = fragmentWeakReference.get()
-            if (fragment == null) {
-                Log.d(LOGTAG, "Fragment or menu item no longer exists when search query " +
-                        "validation async task returned.")
-                return
+        withContext(Dispatchers.Main) {
+            if (!isActive) {
+                return@withContext
             }
 
             if (isValidSearchQuery) {
-                fragment.requireComponents.searchUseCases.addSearchEngine(
+                requireComponents.searchUseCases.addSearchEngine(
                     createSearchEngine(
                         engineName,
                         query.toSearchUrl(),
-                        IconGenerator.generateSearchEngineIcon(fragment.requireContext())
+                        IconGenerator.generateSearchEngineIcon(requireContext())
                     )
                 )
 
-                Snackbar.make(fragment.requireView(), R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
-                Settings.getInstance(fragment.requireActivity()).setDefaultSearchEngineByName(engineName)
+                Snackbar.make(requireView(), R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
+                Settings.getInstance(requireActivity()).setDefaultSearchEngineByName(engineName)
 
-                fragment.requireComponents.appStore.dispatch(
-                    AppAction.NavigateUp(fragment.requireComponents.store.state.selectedTabId)
+                requireComponents.appStore.dispatch(
+                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId)
                 )
             } else {
-                showServerError(fragment)
+                showServerError()
             }
 
-            fragment.setUiIsValidatingAsync(false, fragment.menuItemForActiveAsyncTask)
-            fragment.activeAsyncTask = null
-            fragment.menuItemForActiveAsyncTask = null
+            setUiIsValidatingAsync(false, menuItemForActiveAsyncTask)
+            menuItemForActiveAsyncTask = null
         }
+    }
 
-        private fun showServerError(that: ManualAddSearchEngineSettingsFragment) {
-            val pref = that.findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
-            pref?.setSearchQueryErrorText(that.getString(R.string.error_hostLookup_title))
-        }
+    private fun showServerError() {
+        val pref = findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
+        pref?.setSearchQueryErrorText(getString(R.string.error_hostLookup_title))
     }
 }
 

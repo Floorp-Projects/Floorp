@@ -2,7 +2,6 @@
 
 buildscript {
     ext.espresso_version = '3.1.0-alpha4'
-    ext.kotlin_version = '1.4.30'
     ext.coroutines_version = '1.4.2'
     ext.jna_version = "5.6.0"
     // Pinning the last working version of the service-telemetry component until we decide
@@ -22,8 +21,8 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.1'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath Dependencies.android_gradle_plugin
+        classpath Dependencies.kotlin_gradle_plugin
         classpath "org.mozilla.components:tooling-glean-gradle:${AndroidComponents.VERSION}"
 
         // NOTE: Do not place your application dependencies here; they belong

@@ -68,7 +68,7 @@ class FirstrunPagerAdapter(
         if (position == pages.size - 1) {
             buttonView.setText(R.string.firstrun_close_button)
             buttonView.id = R.id.finish
-            buttonView.contentDescription = buttonView.text.toString().toLowerCase()
+            buttonView.contentDescription = buttonView.text.toString().lowercase()
         } else {
             buttonView.setText(R.string.firstrun_next_button)
             buttonView.id = R.id.next

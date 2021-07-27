@@ -10,7 +10,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 11
       - name: "Clean & Assemble Debug"
         uses: eskatos/gradle-command-action@v1
         with:
@@ -29,7 +29,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 11
       - name: "Test Debug Unit Tests"
         uses: eskatos/gradle-command-action@v1
         with:
@@ -48,7 +48,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 11
       - name: "Detekt"
         uses: eskatos/gradle-command-action@v1
         with:
@@ -72,7 +72,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 11
       - name: "Ktlint"
         uses: eskatos/gradle-command-action@v1
         with:
@@ -91,7 +91,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 11
       - name: "Lint Debug"
         uses: eskatos/gradle-command-action@v1
         with:
@@ -125,7 +125,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           script:
-            "./gradlew connectedFocusDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=\
+            "JAVA_HOME=$JAVA_HOME_11_X64 && ./gradlew connectedFocusDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=\
             org.mozilla.focus.activity.ThreeDotMainMenuTest#browserMenuItemsTest"
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v2

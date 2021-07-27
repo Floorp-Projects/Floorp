@@ -7,6 +7,8 @@ package org.mozilla.focus
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.DefaultSettings
@@ -43,6 +45,7 @@ import org.mozilla.focus.engine.ClientWrapper
 import org.mozilla.focus.engine.LocalizedContentInterceptor
 import org.mozilla.focus.engine.SanityCheckMiddleware
 import org.mozilla.focus.exceptions.ExceptionMigrationMiddleware
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.locale.LocaleManager
 import org.mozilla.focus.notification.PrivateNotificationMiddleware
 import org.mozilla.focus.search.SearchFilterMiddleware
@@ -225,3 +228,10 @@ private fun getLocaleTag(context: Context): String {
         Locale.getDefault().toLanguageTag()
     }
 }
+
+/**
+ * Returns the [Components] object from within a [Composable].
+ */
+val components: Components
+    @Composable
+    get() = LocalContext.current.components
