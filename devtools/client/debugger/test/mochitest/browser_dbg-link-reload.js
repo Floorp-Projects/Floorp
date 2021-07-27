@@ -13,7 +13,7 @@ add_task(async function() {
     set: [["fission.bfcacheInParent", false]],
   });
 
-  const dbg = await initDebugger("doc-reload-link.html");
+  const dbg = await initDebugger("doc-reload-link.html", "doc-reload-link.html");
   const {
     selectors: { getSelectedSource, getIsPaused, getCurrentThread },
     getState
