@@ -24,7 +24,6 @@ remote.jar:
   content/marionette/element.js (element.js)
   content/marionette/evaluate.js (evaluate.js)
   content/marionette/event.js  (event.js)
-  content/marionette/format.js (format.js)
   content/marionette/interaction.js (interaction.js)
   content/marionette/l10n.js (l10n.js)
   content/marionette/legacyaction.js (legacyaction.js)

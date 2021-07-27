@@ -22,11 +22,12 @@ Marionette is now using the shared Remote logger, please see `remote.log.level`
 in the [Remote Agent Preferences] documentation.
 
 
-`marionette.log.truncate`
+`marionette.log.truncate` (deprecated)
 -------------------------
 
-Certain log messages that are known to be long, such as wire protocol
-dumps, are truncated.  This preference causes them not to be truncated.
+This preference used to control whether long messages were truncated or not.
+Marionette is now using the shared Remote format module, please see `remote.log.truncate`
+in the [Remote Agent Preferences] documentation.
 
 
 `marionette.port`

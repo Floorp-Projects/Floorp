@@ -39,7 +39,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   navigate: "chrome://remote/content/marionette/navigate.js",
   permissions: "chrome://remote/content/marionette/permissions.js",
   PollPromise: "chrome://remote/content/marionette/sync.js",
-  pprint: "chrome://remote/content/marionette/format.js",
+  pprint: "chrome://remote/content/shared/Format.jsm",
   print: "chrome://remote/content/marionette/print.js",
   reftest: "chrome://remote/content/marionette/reftest.js",
   registerCommandsActor:
