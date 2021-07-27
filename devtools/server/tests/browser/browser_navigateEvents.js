@@ -121,6 +121,10 @@ async function connectAndAttachTab(tab) {
 }
 
 add_task(async function() {
+  // Navigation events (navigate/will-navigate) on the target no longer fire with server targets.
+  // We should probably drop this test once we stop supporting client side targets (bug 1721852).
+  await pushPref("devtools.target-switching.server.enabled", false);
+
   // Open a test tab
   const browser = await addTab(URL1);
 

@@ -2,6 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function() {
+  // Navigation events (navigate/will-navigate) on the target no longer fire with server targets.
+  // And as bfcache in parent introduce server target, they are also missing in this case.
+  // We should probably drop this test once we stop supporting client side targets (bug 1721852).
+  await pushPref("devtools.target-switching.server.enabled", false);
+
   // Disable bfcache for Fission for now.
   // If Fission is disabled, the pref is no-op.
   await SpecialPowers.pushPrefEnv({
