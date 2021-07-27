@@ -24,6 +24,7 @@ UNIFIED_SOURCES += [
     "WasmBinary.cpp",
     "WasmBuiltins.cpp",
     "WasmCode.cpp",
+    "WasmCodegenTypes.cpp",
     "WasmCompile.cpp",
     "WasmContext.cpp",
     "WasmDebug.cpp",
