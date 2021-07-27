@@ -364,7 +364,8 @@ class StorageActorMock extends EventEmitter {
       return hostName === host;
     });
 
-    const principal = hostBrowsingContext.currentWindowGlobal.documentPrincipal;
+    const principal =
+      hostBrowsingContext.currentWindowGlobal.documentStoragePrincipal;
 
     return { document: { effectiveStoragePrincipal: principal } };
   }

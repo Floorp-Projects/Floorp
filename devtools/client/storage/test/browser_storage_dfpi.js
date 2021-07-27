@@ -9,9 +9,14 @@
 
 "use strict";
 
+const { SiteDataTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SiteDataTestUtils.jsm"
+);
+
 // Ensure iframe.src in storage-dfpi.html starts with PREFIX.
 const PREFIX = "http://sub1.test1.example";
 const ORIGIN = `${PREFIX}.org`;
+const ORIGIN_THIRD_PARTY = `${PREFIX}.com`;
 const TEST_URL = `${ORIGIN}/${PATH}storage-dfpi.html`;
 
 function listOrigins() {
@@ -22,29 +27,13 @@ function listOrigins() {
   });
 }
 
-async function clearAllDatabases() {
-  await new Promise(resolve => {
-    const uri = SpecialPowers.Services.io.newURI(TEST_URL);
-    const attrs = {};
-    const principal = SpecialPowers.Services.scriptSecurityManager.createContentPrincipal(
-      uri,
-      attrs
-    );
-    const request = SpecialPowers.Services.qms.clearStoragesForPrincipal(
-      principal
-    );
-    const cb = SpecialPowers.wrapCallback(resolve);
-    request.callback = cb;
-  });
-}
-
 add_task(async function() {
   await pushPref(
     "network.cookie.cookieBehavior",
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
   );
 
-  registerCleanupFunction(clearAllDatabases);
+  registerCleanupFunction(SiteDataTestUtils.clear);
 
   // `Services.qms.listOrigins()` may or contain results created by other tests.
   // And it's unsafe to clear existing origins by `Services.qms.clear()`.
@@ -64,4 +53,107 @@ add_task(async function() {
     );
   }
   ok(origins.includes(ORIGIN), `${ORIGIN} is added`);
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+async function setPartitionedStorage(browser, type, key) {
+  const handler = async (storageType, storageKey, storageValue) => {
+    if (storageType == "cookie") {
+      content.document.cookie = `${storageKey}=${storageValue}`;
+      return;
+    }
+    content.localStorage.setItem(storageKey, storageValue);
+  };
+
+  // Set first party storage.
+  await SpecialPowers.spawn(browser, [type, key, "first"], handler);
+  // Set third-party (partitioned) storage in the iframe.
+  await SpecialPowers.spawn(
+    browser.browsingContext.children[0],
+    [type, key, "third"],
+    handler
+  );
+}
+
+function checkData(storageType, key, value) {
+  if (storageType == "cookie") {
+    checkCookieData(key, value);
+    return;
+  }
+  checkStorageData(key, value);
+}
+
+async function testPartitionedStorage(
+  storageType,
+  treeItemLabel = storageType
+) {
+  await pushPref(
+    "network.cookie.cookieBehavior",
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
+  );
+
+  info(
+    "Open the test url in a new tab and add storage entries *before* opening the storage panel."
+  );
+  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+    await setPartitionedStorage(browser, storageType, "contextA");
+  });
+
+  await openTabAndSetupStorage(TEST_URL);
+
+  const doc = gPanelWindow.document;
+
+  info("check that both hosts appear in the storage tree");
+  checkTree(doc, [treeItemLabel, ORIGIN]);
+  checkTree(doc, [treeItemLabel, ORIGIN_THIRD_PARTY]);
+
+  info(
+    "check that items for both first and third party host have the initial storage entries"
+  );
+
+  await selectTreeItem([treeItemLabel, ORIGIN]);
+  checkData(storageType, "contextA", "first");
+
+  await selectTreeItem([treeItemLabel, ORIGIN_THIRD_PARTY]);
+  checkData(storageType, "contextA", "third");
+
+  info("Add more entries while the storage panel is open");
+  const onUpdated = gUI.once("store-objects-edit");
+  await setPartitionedStorage(
+    gBrowser.selectedBrowser,
+    storageType,
+    "contextB"
+  );
+  await onUpdated;
+
+  info("check that both hosts appear in the storage tree");
+  checkTree(doc, [treeItemLabel, ORIGIN]);
+  checkTree(doc, [treeItemLabel, ORIGIN_THIRD_PARTY]);
+
+  info(
+    "check that items for both first and third party host have the updated storage entries"
+  );
+
+  await selectTreeItem([treeItemLabel, ORIGIN]);
+  checkData(storageType, "contextA", "first");
+  checkData(storageType, "contextB", "first");
+
+  await selectTreeItem([treeItemLabel, ORIGIN_THIRD_PARTY]);
+  checkData(storageType, "contextA", "third");
+  checkData(storageType, "contextB", "third");
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+}
+
+// Tests that partitioned storage is shown in the storage panel.
+
+add_task(async function test_partitioned_cookies() {
+  registerCleanupFunction(SiteDataTestUtils.clear);
+  await testPartitionedStorage("cookie", "cookies");
+});
+
+add_task(async function test_partitioned_localStorage() {
+  registerCleanupFunction(SiteDataTestUtils.clear);
+  await testPartitionedStorage("localStorage");
 });
