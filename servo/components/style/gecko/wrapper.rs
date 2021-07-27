@@ -1032,6 +1032,7 @@ pub struct DefaultFontSizes {
     monospace: Length,
     cursive: Length,
     fantasy: Length,
+    system_ui: Length,
 }
 
 impl DefaultFontSizes {
@@ -1043,6 +1044,7 @@ impl DefaultFontSizes {
             GenericFontFamily::Monospace => self.monospace,
             GenericFontFamily::Cursive => self.cursive,
             GenericFontFamily::Fantasy => self.fantasy,
+            GenericFontFamily::SystemUi => self.system_ui,
             GenericFontFamily::MozEmoji => unreachable!(
                 "Should never get here, since this doesn't (yet) appear on font family"
             ),
