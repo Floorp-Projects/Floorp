@@ -83,10 +83,9 @@ void profiler_add_network_marker(
             "isHttpToHttpsRedirect",
             aRedirectFlags & nsIChannelEventSink::REDIRECT_STS_UPGRADE);
 
-        MOZ_ASSERT(
-            aRedirectChannelId != 0,
-            "aRedirectChannelId should be non-zero for a redirected request");
-        aWriter.IntProperty("redirectId", aRedirectChannelId);
+        if (aRedirectChannelId != 0) {
+          aWriter.IntProperty("redirectId", aRedirectChannelId);
+        }
       }
 
       aWriter.StringProperty("requestMethod", aRequestMethod);
