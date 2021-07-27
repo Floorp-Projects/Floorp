@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.state
 
+import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.Action
 
 /**
@@ -74,4 +75,9 @@ sealed class AppAction : Action {
      * Opens the tab with the given [tabId] and actively switches to the browser screen if needed.
      */
     data class OpenTab(val tabId: String) : AppAction()
+
+    /**
+     * The list of [TopSite] has changed.
+     */
+    data class TopSitesChange(val topSites: List<TopSite>) : AppAction()
 }

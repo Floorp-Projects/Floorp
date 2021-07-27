@@ -6,11 +6,13 @@
 
 package org.mozilla.focus.state
 
+import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.Reducer
 
 /**
  * Reducer creating a new [AppState] for dispatched [AppAction]s.
  */
+@Suppress("ComplexMethod")
 object AppReducer : Reducer<AppState, AppAction> {
     override fun invoke(state: AppState, action: AppAction): AppState {
         return when (action) {
@@ -27,6 +29,7 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.OpenSettings -> openSettings(state, action)
             is AppAction.NavigateUp -> navigateUp(state, action)
             is AppAction.OpenTab -> openTab(state, action)
+            is AppAction.TopSitesChange -> topSitesChanged(state, action)
         }
     }
 }
@@ -145,6 +148,13 @@ private fun openTab(state: AppState, action: AppAction.OpenTab): AppState {
     return state.copy(
         screen = Screen.Browser(tabId = action.tabId, showTabs = false)
     )
+}
+
+/**
+ * The list of [TopSite] has changed.
+ */
+private fun topSitesChanged(state: AppState, action: AppAction.TopSitesChange): AppState {
+    return state.copy(topSites = action.topSites)
 }
 
 @Suppress("ComplexMethod")

@@ -19,16 +19,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
-import kotlinx.android.synthetic.main.firstrun_page.*
-import kotlinx.android.synthetic.main.firstrun_page.view.*
 import kotlinx.android.synthetic.main.fragment_urlinput2.*
 import kotlinx.android.synthetic.main.fragment_urlinput2.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.state.action.ContentAction
@@ -36,12 +39,16 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
+import mozilla.components.feature.top.sites.TopSitesConfig
+import mozilla.components.feature.top.sites.TopSitesFeature
+import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.home.HomeScreen
 import org.mozilla.focus.input.InputToolbarIntegration
 import org.mozilla.focus.menu.home.HomeMenu
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
@@ -51,6 +58,8 @@ import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.tips.Tip
 import org.mozilla.focus.tips.TipManager
+import org.mozilla.focus.topsites.DefaultTopSitesView
+import org.mozilla.focus.topsites.TopSiteMenuItem
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
@@ -151,6 +160,7 @@ class UrlInputFragment :
     private var isInitialized = false
 
     private val toolbarIntegration = ViewBoundFeatureWrapper<InputToolbarIntegration>()
+    private val topSitesFeature = ViewBoundFeatureWrapper<TopSitesFeature>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -289,8 +299,40 @@ class UrlInputFragment :
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_urlinput2, container, false)
+    ): View? {
+        val view = inflater.inflate(R.layout.fragment_urlinput2, container, false)
 
+        val topSites = view.findViewById<ComposeView>(R.id.topSites)
+        topSites.setContent {
+            val topSitesState = requireComponents.appStore.observeAsComposableState { state -> state.topSites }
+
+            HomeScreen(
+                topSites = topSitesState.value!!,
+                topSitesMenuItems = listOfNotNull(
+                    TopSiteMenuItem(
+                        title = stringResource(R.string.remove_top_site),
+                        onClick = { topSite ->
+                            viewLifecycleOwner.lifecycleScope.launch(IO) {
+                                requireComponents.topSitesUseCases.removeTopSites(topSite)
+                            }
+                        }
+                    )
+                ),
+                onTopSiteClick = { topSite ->
+                    requireComponents.tabsUseCases.addTab(
+                        url = topSite.url,
+                        source = SessionState.Source.Internal.HomeScreen,
+                        selectTab = true,
+                        private = true
+                    )
+                }
+            )
+        }
+
+        return view
+    }
+
+    @Suppress("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         toolbarIntegration.set(
             InputToolbarIntegration(
@@ -301,6 +343,21 @@ class UrlInputFragment :
             ),
             owner = this,
             view = browserToolbar
+        )
+
+        topSitesFeature.set(
+            feature = TopSitesFeature(
+                view = DefaultTopSitesView(requireComponents.appStore),
+                storage = requireComponents.topSitesStorage,
+                config = {
+                    TopSitesConfig(
+                        totalSites = 4,
+                        frecencyConfig = null
+                    )
+                }
+            ),
+            owner = this,
+            view = view
         )
 
         dismissView.setOnClickListener(this)

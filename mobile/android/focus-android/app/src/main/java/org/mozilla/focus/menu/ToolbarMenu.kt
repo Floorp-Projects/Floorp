@@ -14,6 +14,8 @@ interface ToolbarMenu {
         object Back : Item()
         object Forward : Item()
         object Share : Item()
+        object AddToShortcuts : Item()
+        object RemoveFromShortcuts : Item()
         object FindInPage : Item()
         object AddToHomeScreen : Item()
         object OpenInBrowser : Item()

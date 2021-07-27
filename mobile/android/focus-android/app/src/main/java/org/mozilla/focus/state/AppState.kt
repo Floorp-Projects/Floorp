@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.state
 
+import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.State
 import java.util.UUID
 
@@ -11,9 +12,11 @@ import java.util.UUID
  * Global state of the application.
  *
  * @property screen The currently displayed screen.
+ * @property topSites The list of [TopSite] to display on the Home screen.
  */
 data class AppState(
-    val screen: Screen
+    val screen: Screen,
+    val topSites: List<TopSite> = emptyList()
 ) : State
 
 /**

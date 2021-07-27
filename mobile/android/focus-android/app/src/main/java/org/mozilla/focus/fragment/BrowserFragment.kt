@@ -277,6 +277,8 @@ class BrowserFragment :
         val controller = BrowserMenuController(
             requireComponents.sessionUseCases,
             requireComponents.appStore,
+            requireComponents.store,
+            requireComponents.topSitesUseCases,
             tabId,
             ::shareCurrentUrl,
             ::setShouldRequestDesktop,
@@ -289,6 +291,7 @@ class BrowserFragment :
         if (tab.ifCustomTab()?.config == null) {
             val browserMenu = DefaultBrowserMenu(
                 context = requireContext(),
+                appStore = requireComponents.appStore,
                 store = requireComponents.store,
                 onItemTapped = { controller.handleMenuInteraction(it) }
             )

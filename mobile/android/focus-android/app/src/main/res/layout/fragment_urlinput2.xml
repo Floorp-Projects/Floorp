@@ -19,6 +19,11 @@
         android:weightSum="1"
         app:animate="true">
 
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/topSites"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -18,7 +18,7 @@ android {
         // in order to run UI tests against other build variants than debug in automation.
         testBuildType project.property("testBuildType")
     }
-    
+
     defaultConfig {
         applicationId "org.mozilla"
         minSdkVersion 21
@@ -219,6 +219,7 @@ dependencies {
     implementation "org.mozilla.components:feature-search:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-tabs:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-toolbar:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:feature-top-sites:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:lib-crash:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:lib-state:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:service-glean:${AndroidComponents.VERSION}"
@@ -251,6 +252,7 @@ dependencies {
     testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.3.1"
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_coroutines
     testImplementation Dependencies.androidx_arch_core_testing
     testImplementation "org.mozilla.components:support-test:${AndroidComponents.VERSION}"
 

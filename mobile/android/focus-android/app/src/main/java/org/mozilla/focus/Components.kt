@@ -32,6 +32,8 @@ import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.top.sites.PinnedSiteStorage
+import mozilla.components.feature.top.sites.TopSitesUseCases
 import mozilla.components.feature.webcompat.WebCompatFeature
 import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.lib.crash.CrashReporter
@@ -59,6 +61,7 @@ import org.mozilla.focus.state.AppStore
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.GleanMetricsService
 import org.mozilla.focus.telemetry.TelemetryMiddleware
+import org.mozilla.focus.topsites.DefaultTopSitesStorage
 import org.mozilla.focus.utils.Settings
 import java.util.Locale
 
@@ -73,7 +76,8 @@ class Components(
     val appStore: AppStore by lazy {
         AppStore(
             AppState(
-                screen = determineInitialScreen(context)
+                screen = determineInitialScreen(context),
+                topSites = emptyList()
             )
         )
     }
@@ -169,6 +173,10 @@ class Components(
     val searchTelemetry: InContentTelemetry by lazy { InContentTelemetry() }
 
     val icons by lazy { BrowserIcons(context, client) }
+
+    val topSitesStorage by lazy { DefaultTopSitesStorage(PinnedSiteStorage(context)) }
+
+    val topSitesUseCases: TopSitesUseCases by lazy { TopSitesUseCases(topSitesStorage) }
 }
 
 private fun determineInitialScreen(context: Context): Screen {

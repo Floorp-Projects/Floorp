@@ -50,6 +50,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Add to Home screen</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Add to Shortcuts</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Remove from Shortcuts</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">What’s New</string>
     <string name="menu_settings">Settings</string>
@@ -770,4 +775,8 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">Go back</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Remove</string>
 </resources>

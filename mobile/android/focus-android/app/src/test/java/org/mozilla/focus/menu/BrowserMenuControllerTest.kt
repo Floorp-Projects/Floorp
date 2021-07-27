@@ -1,12 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.focus.menu
 
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.top.sites.TopSitesUseCases
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,6 +30,9 @@ class BrowserMenuControllerTest {
 
     @Mock
     private lateinit var appStore: AppStore
+
+    @Mock
+    private lateinit var topSitesUseCases: TopSitesUseCases
 
     private val currentTabId: String = "1"
     private val selectedTab = createTab("https://www.mozilla.org", id = "1")
@@ -63,6 +68,8 @@ class BrowserMenuControllerTest {
         browserMenuController = BrowserMenuController(
             sessionUseCases,
             appStore,
+            store,
+            topSitesUseCases,
             currentTabId,
             shareCallback,
             requestDesktopCallback,
