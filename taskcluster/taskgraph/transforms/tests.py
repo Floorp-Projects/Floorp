@@ -198,7 +198,7 @@ TEST_VARIANTS = {
         "replace": {
             "run-on-projects": {
                 "by-test-platform": {
-                    "linux.*64(-shippable)?/opt": ["trunk"],
+                    "linux.*64(-shippable)?-qr/opt": ["trunk"],
                     "default": [],
                 },
             },
@@ -343,6 +343,60 @@ TEST_VARIANTS = {
                     "--setpref=gfx.webrender.software=true",
                 ],
             },
+        },
+    },
+    "webrender-sw-a11y-checks": {
+        "description": "{description} with software webrender and accessibility checks enabled",
+        "suffix": "swr-a11y-checks",
+        "replace": {
+            "run-on-projects": {
+                "by-test-platform": {
+                    "linux.*64(-shippable)?-qr/opt": ["trunk"],
+                    "default": [],
+                },
+            },
+            "tier": 2,
+        },
+        "merge": {
+            "webrender": True,
+            "mozharness": {
+                "extra-options": [
+                    "--setpref=gfx.webrender.software=true",
+                    "--enable-a11y-checks",
+                ],
+            },
+        },
+    },
+    "webrender-sw-fission": {
+        "description": "{description} with software webrender and fission enabled",
+        "filterfn": fission_filter,
+        "suffix": "swr-fis",
+        "replace": {
+            "e10s": True,
+        },
+        "merge": {
+            "webrender": True,
+            "mozharness": {
+                "extra-options": [
+                    "--setpref=gfx.webrender.software=true",
+                    "--setpref=fission.autostart=true",
+                ],
+            },
+        },
+    },
+    "webrender-sw-wayland": {
+        "description": "{description} with software webrender and Wayland backend enabled",
+        "suffix": "swr-wayland",
+        "replace": {
+            "run-on-projects": [],
+        },
+        "merge": {
+            "mozharness": {
+                "extra-options": [
+                    "--setpref=gfx.webrender.software=true",
+                    "--setpref=widget.wayland.test-workarounds.enabled=true",
+                ],
+            }
         },
     },
     "webgl-ipc": {
