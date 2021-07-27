@@ -11359,7 +11359,7 @@
 
 - name: webgl.enable-debug-renderer-info
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: webgl.enable-draft-extensions
@@ -11370,6 +11370,11 @@
 - name: webgl.enable-privileged-extensions
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+- name: webgl.enable-renderer-query
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 
 - name: webgl.enable-surface-texture
@@ -11456,12 +11461,27 @@
   value: 100000 # 100KB
   mirror: always
 
+- name: webgl.override-unmasked-renderer
+  type: String
+  value: ""
+  mirror: never
+
+- name: webgl.override-unmasked-vendor
+  type: String
+  value: ""
+  mirror: never
+
 - name: webgl.power-preference-override
   type: RelaxedAtomicInt32
   value: 0
   mirror: always
 
 - name: webgl.prefer-16bpp
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: webgl.sanitize-unmasked-renderer
   type: RelaxedAtomicBool
   value: false
   mirror: always
