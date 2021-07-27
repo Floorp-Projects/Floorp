@@ -158,18 +158,41 @@ function getInflatedNetworkMarkers(thread) {
  * @return {InflatedMarker[][]} Pairs of network markers
  */
 function getPairsOfNetworkMarkers(allNetworkMarkers) {
-  // For each 'start' marker we want to find the 'stop' or 'redirect' marker
-  // with the same id.
-  // Note: the algorithm we use here to match markers is very crude and would
-  // be too slow for the real product, but because it is very simple it's good
-  // for a test. Also the logic will be compatible with future marker sets.
-  // Because we only have a few markers the performance is good enough in this
-  // case.
-  return allNetworkMarkers
-    .filter(({ data }) => data.status === "STATUS_START")
-    .map(startMarker =>
-      allNetworkMarkers.filter(({ data }) => data.id === startMarker.data.id)
-    );
+  // For each 'start' marker we want to find the next 'stop' or 'redirect'
+  // marker with the same id.
+  const result = [];
+  const mapOfStartMarkers = new Map(); // marker id -> id in result array
+  for (const marker of allNetworkMarkers) {
+    const { data } = marker;
+    if (data.status === "STATUS_START") {
+      if (mapOfStartMarkers.has(data.id)) {
+        const previousMarker = result[mapOfStartMarkers.get(data.id)][0];
+        Assert.ok(
+          false,
+          `We found 2 start markers with the same id ${data.id}, without end marker in-between.` +
+            `The first marker has URI ${previousMarker.data.URI}, the second marker has URI ${data.URI}.` +
+            ` This should not happen.`
+        );
+        continue;
+      }
+
+      mapOfStartMarkers.set(data.id, result.length);
+      result.push([marker]);
+    } else {
+      // STOP or REDIRECT
+      if (!mapOfStartMarkers.has(data.id)) {
+        Assert.ok(
+          false,
+          `We found an end marker without a start marker (id: ${data.id}, URI: ${data.URI}). This should not happen.`
+        );
+        continue;
+      }
+      result[mapOfStartMarkers.get(data.id)].push(marker);
+      mapOfStartMarkers.delete(data.id);
+    }
+  }
+
+  return result;
 }
 
 /**
