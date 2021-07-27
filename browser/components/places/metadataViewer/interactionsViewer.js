@@ -222,7 +222,7 @@ const metadataHandler = new (class extends TableViewer {
    */
   #db = null;
 
-  async #getRows(query, columns = this.columnMap.keys()) {
+  async #getRows(query, columns = [...this.columnMap.keys()]) {
     if (!this.#db) {
       this.#db = await PlacesUtils.promiseDBConnection();
     }
