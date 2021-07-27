@@ -5084,17 +5084,13 @@ bool nsDisplayBorder::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   nsRect rect = nsRect(ToReferenceFrame(), mFrame->GetSize());
 
-  aBuilder.StartGroup(this);
   ImgDrawResult drawResult = nsCSSRendering::CreateWebRenderCommandsForBorder(
       this, mFrame, rect, aBuilder, aResources, aSc, aManager,
       aDisplayListBuilder);
 
   if (drawResult == ImgDrawResult::NOT_SUPPORTED) {
-    aBuilder.CancelGroup(true);
     return false;
   }
-
-  aBuilder.FinishGroup();
 
   nsDisplayBorderGeometry::UpdateDrawResult(this, drawResult);
   return true;
