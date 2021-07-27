@@ -8,6 +8,13 @@ add_task(async function tabs_discarded_load_and_discard() {
       permissions: ["tabs", "webNavigation"],
     },
     async background() {
+      browser.test.sendMessage("ready");
+      const SHIP = await new Promise(resolve =>
+        browser.test.onMessage.addListener((msg, data) => {
+          resolve(data);
+        })
+      );
+
       const PAGE_URL_BEFORE = "http://example.com/initiallyDiscarded";
       const PAGE_URL =
         "http://example.com/browser/browser/components/extensions/test/browser/file_dummy.html";
@@ -67,8 +74,16 @@ add_task(async function tabs_discarded_load_and_discard() {
       // requested URL and its title. However, the current implementation
       // reports several events (including url/title "changes") as part of
       // "restoring" the lazy browser prior to loading the requested URL.
+
+      let expectedUrlChanges = [PAGE_URL_BEFORE, PAGE_URL];
+      if (SHIP && observedChanges.url.length === 1) {
+        // Except when SHIP is enabled, which turns this into a race,
+        // so sometimes only the final URL is seen (see bug 1696815#c22).
+        expectedUrlChanges = [PAGE_URL];
+      }
+
       assertDeepEqual(
-        [PAGE_URL_BEFORE, PAGE_URL],
+        expectedUrlChanges,
         observedChanges.url,
         "changes to tab.url after update"
       );
@@ -109,6 +124,8 @@ add_task(async function tabs_discarded_load_and_discard() {
   });
 
   await extension.startup();
+  await extension.awaitMessage("ready");
+  extension.sendMessage("SHIP", Services.appinfo.sessionHistoryInParent);
   await extension.awaitMessage("done");
   await extension.unload();
 });
