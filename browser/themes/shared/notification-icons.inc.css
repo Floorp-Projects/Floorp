@@ -186,6 +186,10 @@
   list-style-image: url(chrome://browser/skin/notification-icons/screen-blocked.svg);
 }
 
+.speaker-icon {
+  list-style-image: url(chrome://global/skin/media/audio.svg);
+}
+
 .midi-icon,
 .midi-sysex-icon,
 .popup-notification-icon[popupid="midi"],

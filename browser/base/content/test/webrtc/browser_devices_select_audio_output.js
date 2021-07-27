@@ -18,7 +18,7 @@ async function requestAudioOutputExpectingPrompt() {
 
   is(
     PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
-    "webRTC-shareDevices-notification-icon",
+    "webRTC-shareSpeaker-notification-icon",
     "anchored to device icon"
   );
   checkDeviceSelectors(["speaker"]);
