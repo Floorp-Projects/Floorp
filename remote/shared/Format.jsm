@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 const ELEMENT_NODE = 1;
 const MAX_STRING_LENGTH = 250;
+
 const PREF_TRUNCATE = "remote.log.truncate";
 
 /**
