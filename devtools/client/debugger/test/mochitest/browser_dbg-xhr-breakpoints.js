@@ -76,14 +76,17 @@ add_task(async function() {
   invokeInTab("main", "doc-xhr.html");
   await waitForPaused(dbg);
   await resume(dbg);
+  ok(!dbg.toolbox.isHighlighted("jsdebugger"), "Debugger is no longer highlighted after resume");
 
   invokeInTab("main", "fetch.js");
   await waitForPaused(dbg);
   await resume(dbg);
+  ok(!dbg.toolbox.isHighlighted("jsdebugger"), "Debugger is no longer highlighted after resume");
 
   invokeInTab("main", "README.md");
   await waitForPaused(dbg);
   await resume(dbg);
+  ok(!dbg.toolbox.isHighlighted("jsdebugger"), "Debugger is no longer highlighted after resume");
 
   // Disable pause on any URL
   await clickPauseOnAny(dbg, "DISABLE_XHR_BREAKPOINT");
