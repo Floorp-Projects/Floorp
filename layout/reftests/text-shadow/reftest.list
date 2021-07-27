@@ -27,9 +27,9 @@ fuzzy-if(webrender&&swgl&&!Android,2-2,6320-6320) random-if(useDrawSnapshot&&web
 fuzzy-if(cocoaWidget,0-27,0-2) fuzzy-if(winWidget,0-47,0-2) == overflow-clip.html overflow-clip-ref.html
 
 needs-focus != text-shadow-selected-1.html text-shadow-selected-1-notref.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,0-1,0-1000) needs-focus == text-shadow-selected-1.html text-shadow-selected-1-ref.html # different foreground selection color on Android
+fuzzy-if(skiaContent,0-1,0-1000) needs-focus == text-shadow-selected-1.html text-shadow-selected-1-ref.html
 needs-focus != text-shadow-selected-2.html text-shadow-selected-2-notref.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,0-1,0-1400) needs-focus == text-shadow-selected-2.html text-shadow-selected-2-ref.html # different foreground selection color on Android
+fuzzy-if(skiaContent,0-1,0-1400) needs-focus == text-shadow-selected-2.html text-shadow-selected-2-ref.html
 
 # bug 692744
 fuzzy-if(webrender,0-19,0-2872) == text-shadow-on-space-1.html text-shadow-on-space-1-ref.html
