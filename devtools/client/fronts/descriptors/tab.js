@@ -83,6 +83,12 @@ class TabDescriptorFront extends DescriptorMixin(
     super.destroy();
   }
 
+  getWatcher() {
+    return super.getWatcher({
+      isServerTargetSwitchingEnabled: this.isServerTargetSwitchingEnabled(),
+    });
+  }
+
   setLocalTab(localTab) {
     this._localTab = localTab;
     this._setupLocalTabListeners();
