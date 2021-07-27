@@ -65,6 +65,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   initialize: function(conn, options) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._browser = options && options.browser;
+    this._config = options ? options.config : {};
 
     this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
     this.notifyResourceDestroyed = this.notifyResourceDestroyed.bind(this);
@@ -91,6 +92,10 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    */
   get browserId() {
     return this._browser?.browserId;
+  },
+
+  get isServerTargetSwitchingEnabled() {
+    return !!this._config.isServerTargetSwitchingEnabled;
   },
 
   destroy: function() {

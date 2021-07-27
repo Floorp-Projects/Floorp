@@ -232,7 +232,6 @@ class DevToolsFrameParent extends JSWindowActorParent {
         )) {
           watcherActor.emit("bf-cache-navigation-pageshow", {
             windowGlobal: this.browsingContext.currentWindowGlobal,
-            isNewTargetCreated: message.data.isNewTargetCreated,
           });
         }
         return null;
