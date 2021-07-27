@@ -1071,6 +1071,16 @@
     <string name="notification_pbm_action_delete_and_open">Supprimer et ouvrir</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Fonctionne grâce à</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Marketing</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s est rapide et privé</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Faites de %1$s votre navigateur par défaut</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Collection supprimée</string>
 
@@ -1624,9 +1634,9 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="credit_cards_card_number">Numéro de carte</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Date d’expiration</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Mois d’expiration</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Année d’expiration</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Nom du titulaire</string>
@@ -1686,7 +1696,7 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Chaîne de recherche à utiliser</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Remplacer les termes de la recherche par « %s ». Par exemple :\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Remplacer les termes de la recherche par « %s ». Par exemple :\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">En savoir plus</string>
 
