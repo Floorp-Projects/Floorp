@@ -6852,6 +6852,13 @@
   value: true
   mirror: always
 
+# Whether the system-ui generic family is enabled.
+- name: layout.css.system-ui.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether the bloom filter optimization is applied to attribute names too, not
 # only classes / id / namespaces / etc.
 - name: layout.css.bloom-filter-attribute-names.enabled

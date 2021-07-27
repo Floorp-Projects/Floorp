@@ -2357,6 +2357,8 @@ nsAtom* gfxPlatformFontList::GetLangGroup(nsAtom* aLanguage) {
       return "cursive";
     case StyleGenericFontFamily::Fantasy:
       return "fantasy";
+    case StyleGenericFontFamily::SystemUi:
+      return "system-ui";
     case StyleGenericFontFamily::MozEmoji:
       return "-moz-emoji";
     case StyleGenericFontFamily::None:

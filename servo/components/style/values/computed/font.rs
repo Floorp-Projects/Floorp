@@ -6,6 +6,7 @@
 
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::{bindings, structs};
+use crate::parser::{Parse, ParserContext};
 use crate::values::animated::ToAnimatedValue;
 use crate::values::computed::{
     Angle, Context, Integer, Length, NonNegativeLength, NonNegativeNumber, NonNegativePercentage,
@@ -243,6 +244,7 @@ impl FontFamily {
         generic_font_family!(CURSIVE, Cursive);
         generic_font_family!(FANTASY, Fantasy);
         generic_font_family!(MOZ_EMOJI, MozEmoji);
+        generic_font_family!(SYSTEM_UI, SystemUi);
 
         match generic {
             GenericFontFamily::None => {
@@ -255,6 +257,7 @@ impl FontFamily {
             GenericFontFamily::Cursive => &*CURSIVE,
             GenericFontFamily::Fantasy => &*FANTASY,
             GenericFontFamily::MozEmoji => &*MOZ_EMOJI,
+            GenericFontFamily::SystemUi => &*SYSTEM_UI,
         }
     }
 }
@@ -370,6 +373,10 @@ pub enum SingleFontFamily {
     Generic(GenericFontFamily),
 }
 
+fn system_ui_enabled(_: &ParserContext) -> bool {
+    static_prefs::pref!("layout.css.system-ui.enabled")
+}
+
 /// A generic font-family name.
 ///
 /// The order here is important, if you change it make sure that
@@ -404,15 +411,17 @@ pub enum GenericFontFamily {
     Monospace,
     Cursive,
     Fantasy,
+    #[parse(aliases = "-apple-system", condition = "system_ui_enabled")]
+    SystemUi,
     /// An internal value for emoji font selection.
     #[css(skip)]
     #[cfg(feature = "gecko")]
     MozEmoji,
 }
 
-impl SingleFontFamily {
+impl Parse for SingleFontFamily {
     /// Parse a font-family value.
-    pub fn parse<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i>> {
+    fn parse<'i, 't>(context: &ParserContext, input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i>> {
         if let Ok(value) = input.try_parse(|i| i.expect_string_cloned()) {
             return Ok(SingleFontFamily::FamilyName(FamilyName {
                 name: Atom::from(&*value),
@@ -420,11 +429,11 @@ impl SingleFontFamily {
             }));
         }
 
-        let first_ident = input.expect_ident_cloned()?;
-        if let Ok(generic) = GenericFontFamily::from_ident(&first_ident) {
+        if let Ok(generic) = input.try_parse(|i| GenericFontFamily::parse(context, i)) {
             return Ok(SingleFontFamily::Generic(generic));
         }
 
+        let first_ident = input.expect_ident_cloned()?;
         let reserved = match_ignore_ascii_case! { &first_ident,
             // https://drafts.csswg.org/css-fonts/#propdef-font-family
             // "Font family names that happen to be the same as a keyword value
@@ -467,8 +476,10 @@ impl SingleFontFamily {
             syntax,
         }))
     }
+}
 
-    #[cfg(feature = "servo")]
+#[cfg(feature = "servo")]
+impl SingleFontFamily {
     /// Get the corresponding font-family with Atom
     pub fn from_atom(input: Atom) -> SingleFontFamily {
         match input {
