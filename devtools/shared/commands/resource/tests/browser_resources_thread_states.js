@@ -269,9 +269,11 @@ async function checkPauseOnException() {
     "data:text/html,<meta charset=utf8><script>a.b.c.d</script>"
   );
 
-  const { client, resourceCommand, targetCommand } = await initResourceCommand(
-    tab
-  );
+  const {
+    commands,
+    resourceCommand,
+    targetCommand,
+  } = await initResourceCommand(tab);
 
   info("Call watchResources");
   const availableResources = [];
@@ -285,9 +287,9 @@ async function checkPauseOnException() {
     "Got no THREAD_STATE when calling watchResources"
   );
 
-  // treadFront is created and attached while calling watchResources
-  const { threadFront } = targetCommand.targetFront;
-  await threadFront.reconfigure({ pauseOnExceptions: true });
+  await commands.threadConfigurationCommand.updateConfiguration({
+    pauseOnExceptions: true,
+  });
 
   info("Reload the page, in order to trigger exception on load");
   const reloaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -318,6 +320,7 @@ async function checkPauseOnException() {
     },
   });
 
+  const { threadFront } = targetCommand.targetFront;
   await threadFront.resume();
   info("Wait for page to finish reloading after resume");
   await reloaded;
@@ -332,7 +335,7 @@ async function checkPauseOnException() {
   assertResumedResource(resumed);
 
   targetCommand.destroy();
-  await client.close();
+  await commands.destroy();
 }
 
 async function checkSetBeforeWatch() {
