@@ -1122,8 +1122,6 @@
     <string name="delete_tab_and_collection_dialog_title">%1$s のコレクションを削除しますか？</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">削除</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">キャンセル</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">全画面表示モードです</string>
 

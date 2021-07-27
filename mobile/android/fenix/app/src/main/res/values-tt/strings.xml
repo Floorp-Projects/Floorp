@@ -1060,8 +1060,6 @@
     <string name="delete_tab_and_collection_dialog_title">%1$s җыентыгын бетерергәме?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Бетерү</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Баш тарту</string>
 
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Тулы экран режимына күчү</string>

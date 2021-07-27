@@ -131,7 +131,6 @@ class CollectionRobot {
 
     fun selectDeleteCollection() {
         onView(withText("Delete collection")).click()
-        mDevice.waitNotNull(Until.findObject(By.res("android:id/message")), waitingTime)
     }
 
     fun confirmDeleteCollection() {

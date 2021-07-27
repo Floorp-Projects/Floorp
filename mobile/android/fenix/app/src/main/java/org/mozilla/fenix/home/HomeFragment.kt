@@ -6,7 +6,6 @@ package org.mozilla.fenix.home
 
 import android.animation.Animator
 import android.content.Context
-import android.content.DialogInterface
 import android.content.res.Configuration
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
@@ -22,7 +21,6 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -301,7 +299,7 @@ class HomeFragment : Fragment() {
                 viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
                 hideOnboarding = ::hideOnboardingAndOpenSearch,
                 registerCollectionStorageObserver = ::registerCollectionStorageObserver,
-                showDeleteCollectionPrompt = ::showDeleteCollectionPrompt,
+                removeCollectionWithUndo = ::removeCollectionWithUndo,
                 showTabTray = ::openTabsTray,
                 handleSwipedItemDeletionCancel = ::handleSwipedItemDeletionCancel
             ),
@@ -703,34 +701,25 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showDeleteCollectionPrompt(
-        tabCollection: TabCollection,
-        title: String?,
-        message: String,
-        wasSwiped: Boolean,
-        handleSwipedItemDeletionCancel: () -> Unit
-    ) {
-        val context = context ?: return
-        AlertDialog.Builder(context).apply {
-            setTitle(title)
-            setMessage(message)
-            setNegativeButton(R.string.tab_collection_dialog_negative) { dialog: DialogInterface, _ ->
-                if (wasSwiped) {
-                    handleSwipedItemDeletionCancel()
-                }
-                dialog.cancel()
-            }
-            setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
-                // Use fragment's lifecycle; the view may be gone by the time dialog is interacted with.
-                lifecycleScope.launch(IO) {
-                    context.components.core.tabCollectionStorage.removeCollection(tabCollection)
-                    context.components.analytics.metrics.track(Event.CollectionRemoved)
-                }.invokeOnCompletion {
-                    dialog.dismiss()
-                }
-            }
-            create()
-        }.show()
+    @VisibleForTesting
+    internal fun removeCollectionWithUndo(tabCollection: TabCollection) {
+        val snackbarMessage = getString(R.string.snackbar_collection_deleted)
+
+        lifecycleScope.allowUndo(
+            requireView(),
+            snackbarMessage,
+            getString(R.string.snackbar_deleted_undo),
+            {
+                requireComponents.core.tabCollectionStorage.createCollection(tabCollection)
+            },
+            operation = { },
+            elevation = TOAST_ELEVATION,
+            anchorView = null
+        )
+
+        lifecycleScope.launch(IO) {
+            requireComponents.core.tabCollectionStorage.removeCollection(tabCollection)
+        }
     }
 
     override fun onResume() {
@@ -1142,5 +1131,8 @@ class HomeFragment : Fragment() {
         private const val FADE_ANIM_DURATION = 150L
         private const val CFR_WIDTH_DIVIDER = 1.7
         private const val CFR_Y_OFFSET = -20
+
+        // Elevation for undo toasts
+        internal const val TOAST_ELEVATION = 80f
     }
 }

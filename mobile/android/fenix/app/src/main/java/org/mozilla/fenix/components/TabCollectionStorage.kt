@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tab.collections.TabCollectionStorage
@@ -64,6 +65,15 @@ class TabCollectionStorage(
         return withContext(ioScope.coroutineContext) {
             val id = collectionStorage.createCollection(title, sessions)
             notifyObservers { onCollectionCreated(title, sessions, id) }
+            id
+        }
+    }
+
+    suspend fun createCollection(tabCollection: TabCollection): Long? {
+        return withContext(ioScope.coroutineContext) {
+            val sessions = tabCollection.tabs.map { createTab(url = it.url, title = it.title) }
+            val id = collectionStorage.createCollection(tabCollection.title, sessions)
+            notifyObservers { onCollectionCreated(tabCollection.title, sessions, id) }
             id
         }
     }

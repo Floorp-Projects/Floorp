@@ -710,8 +710,6 @@
     <string name="tab_collection_dialog_message">Aɗa yenanaa yiɗde momtude %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Momtu</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Haaytu</string>
 
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Ñiiɓirde geese nattaama</string>

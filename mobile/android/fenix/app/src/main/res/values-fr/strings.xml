@@ -1133,8 +1133,6 @@
     <string name="delete_tab_and_collection_dialog_title">Supprimer %1$s ?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Supprimer</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Annuler</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Mode plein écran activé</string>
 

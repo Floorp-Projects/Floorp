@@ -1104,8 +1104,6 @@
     <string name="delete_tab_and_collection_dialog_title">%1$s-ро нест мекунед?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Нест кардан</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Бекор кардан</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Ба реҷаи экрани пурра ворид шуда истодааст</string>
     <!-- Message for copying the URL via long press on the toolbar -->

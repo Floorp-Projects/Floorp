@@ -760,8 +760,6 @@
     <string name="delete_tab_and_collection_dialog_title">%1$s ને કાઢી નાખીએ?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">કાઢી નાખો</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">રદ કરો</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">પૂર્ણ સ્ક્રીન મોડમાં દાખલ થઈ રહ્યું છે</string>
     <!-- Message for copying the URL via long press on the toolbar -->

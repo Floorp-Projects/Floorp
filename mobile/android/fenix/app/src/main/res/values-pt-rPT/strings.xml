@@ -1107,8 +1107,6 @@
     <string name="delete_tab_and_collection_dialog_title">Eliminar %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Eliminar</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Cancelar</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">A entrar no modo de ecrã completo</string>
     <!-- Message for copying the URL via long press on the toolbar -->

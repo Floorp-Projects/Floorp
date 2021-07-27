@@ -1125,8 +1125,6 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Odstranit</string>
 
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Zrušit</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Spuštěn režim celé obrazovky</string>
     <!-- Message for copying the URL via long press on the toolbar -->

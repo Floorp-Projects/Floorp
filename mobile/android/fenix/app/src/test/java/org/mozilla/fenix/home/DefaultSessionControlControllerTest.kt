@@ -263,25 +263,16 @@ class DefaultSessionControlControllerTest {
         } returns "Deleting this tab will delete everything."
 
         var actualCollection: TabCollection? = null
-        var actualTitle: String? = null
-        var actualMessage: String? = null
-        var actualWasSwipe: Boolean? = null
 
         createController(
-            showDeleteCollectionPrompt = { collection, title, message, wasSwipe, _ ->
+            removeCollectionWithUndo = { collection ->
                 actualCollection = collection
-                actualTitle = title
-                actualMessage = message
-                actualWasSwipe = wasSwipe
             }
         ).handleCollectionRemoveTab(expectedCollection, tab, false)
 
         verify { metrics.track(Event.CollectionTabRemoved) }
 
         assertEquals(expectedCollection, actualCollection)
-        assertEquals("Delete Collection?", actualTitle)
-        assertEquals("Deleting this tab will delete everything.", actualMessage)
-        assertEquals(false, actualWasSwipe)
     }
 
     @Test
@@ -319,23 +310,14 @@ class DefaultSessionControlControllerTest {
         } returns "Are you sure you want to delete Collection?"
 
         var actualCollection: TabCollection? = null
-        var actualTitle: String? = null
-        var actualMessage: String? = null
-        var actualWasSwipe: Boolean? = null
 
         createController(
-            showDeleteCollectionPrompt = { collection, title, message, wasSwipe, _ ->
+            removeCollectionWithUndo = { collection ->
                 actualCollection = collection
-                actualTitle = title
-                actualMessage = message
-                actualWasSwipe = wasSwipe
             }
         ).handleDeleteCollectionTapped(expectedCollection)
 
         assertEquals(expectedCollection, actualCollection)
-        assertEquals(null, actualTitle)
-        assertEquals("Are you sure you want to delete Collection?", actualMessage)
-        assertEquals(false, actualWasSwipe)
     }
 
     @Test
@@ -744,13 +726,7 @@ class DefaultSessionControlControllerTest {
         registerCollectionStorageObserver: () -> Unit = { },
         showTabTray: () -> Unit = { },
         handleSwipedItemDeletionCancel: () -> Unit = { },
-        showDeleteCollectionPrompt: (
-            tabCollection: TabCollection,
-            title: String?,
-            message: String,
-            wasSwiped: Boolean,
-            handleSwipedItemDeletionCancel: () -> Unit
-        ) -> Unit = { _, _, _, _, _ -> }
+        removeCollectionWithUndo: (tabCollection: TabCollection) -> Unit = { }
     ): DefaultSessionControlController {
         return DefaultSessionControlController(
             activity = activity,
@@ -768,7 +744,7 @@ class DefaultSessionControlControllerTest {
             viewLifecycleScope = scope,
             hideOnboarding = hideOnboarding,
             registerCollectionStorageObserver = registerCollectionStorageObserver,
-            showDeleteCollectionPrompt = showDeleteCollectionPrompt,
+            removeCollectionWithUndo = removeCollectionWithUndo,
             showTabTray = showTabTray,
             handleSwipedItemDeletionCancel = handleSwipedItemDeletionCancel
         )

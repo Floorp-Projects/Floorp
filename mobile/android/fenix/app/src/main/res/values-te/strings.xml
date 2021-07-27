@@ -1056,8 +1056,6 @@
     <string name="delete_tab_and_collection_dialog_title">%1$s‌ని తొలగించాలా?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">తొలగించు</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">రద్దుచేయి</string>
 
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">నిండు తెర రీతిలోకి వెళ్తున్నారు</string>
