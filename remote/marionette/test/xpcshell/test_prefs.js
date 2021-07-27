@@ -9,8 +9,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "env",
@@ -109,7 +107,6 @@ add_test(function test_EnvironmentPrefs_from() {
 add_test(function test_MarionettePrefs_getters() {
   equal(false, MarionettePrefs.clickToStart);
   equal(2828, MarionettePrefs.port);
-  equal(Log.Level.Info, MarionettePrefs.logLevel);
 
   run_next_test();
 });

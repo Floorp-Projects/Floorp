@@ -4433,13 +4433,6 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
   // for user to set breakpoints in the Browser Toolbox.
   pref("marionette.debugging.clicktostart", false);
 
-  // Verbosity of Marionette logger repository.
-  //
-  // Available levels are, in descending order of severity, "trace", "debug",
-  // "config", "info", "warn", "error", and "fatal". The value is treated
-  // case-insensitively.
-  pref("marionette.log.level", "Info");
-
   // Port to start Marionette server on.
   pref("marionette.port", 2828);
 

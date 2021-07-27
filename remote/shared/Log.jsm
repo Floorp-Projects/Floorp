@@ -65,6 +65,15 @@ class Log {
     return logger;
   }
 
+  /**
+   * Check if the current log level matches the Trace log level. This should be
+   * used to guard logger.trace calls and avoid instanciating logger instances
+   * unnecessarily.
+   */
+  static get isTraceLevel() {
+    return [StdLog.Level.All, StdLog.Level.Trace].includes(prefLogLevel);
+  }
+
   static get verbose() {
     // we can't use Preferences.jsm before first paint,
     // see ../browser/base/content/test/performance/browser_startup.js

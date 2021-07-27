@@ -11,10 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Log: "resource://gre/modules/Log.jsm",
-});
-
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "env",
@@ -151,34 +147,6 @@ class MarionetteBranch extends Branch {
 
   set port(newPort) {
     this.set("port", newPort);
-  }
-
-  /**
-   * Fail-safe return of the current log level from preference
-   * `marionette.log.level`.
-   *
-   * @return {Log.Level}
-   */
-  get logLevel() {
-    // TODO: when geckodriver's minimum supported Firefox version reaches 62,
-    // the lower-casing here can be dropped (https://bugzil.la/1482829)
-    switch (this.get("log.level", "info").toLowerCase()) {
-      case "fatal":
-        return Log.Level.Fatal;
-      case "error":
-        return Log.Level.Error;
-      case "warn":
-        return Log.Level.Warn;
-      case "config":
-        return Log.Level.Config;
-      case "debug":
-        return Log.Level.Debug;
-      case "trace":
-        return Log.Level.Trace;
-      case "info":
-      default:
-        return Log.Level.Info;
-    }
   }
 
   /**
