@@ -1,5 +1,5 @@
-Ecosystem Telemetry
-===================
+Ecosystem Telemetry (obsolete)
+==============================
 
 This module transmits Ecosystem Telemetry from Firefox Desktop.
 It is only sent for Firefox Account users, using a single ping type
