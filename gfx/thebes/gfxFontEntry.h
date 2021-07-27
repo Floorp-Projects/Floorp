@@ -653,7 +653,8 @@ class gfxFontEntry {
 
   static tainted_opaque_gr<const void*> GrGetTable(
       rlbox_sandbox_gr& sandbox, tainted_opaque_gr<const void*> aAppFaceHandle,
-      tainted_opaque_gr<unsigned int> aName, tainted_opaque_gr<size_t*> aLen);
+      tainted_opaque_gr<unsigned int> aName,
+      tainted_opaque_gr<unsigned int*> aLen);
   static void GrReleaseTable(rlbox_sandbox_gr& sandbox,
                              tainted_opaque_gr<const void*> aAppFaceHandle,
                              tainted_opaque_gr<const void*> aTableBuffer);

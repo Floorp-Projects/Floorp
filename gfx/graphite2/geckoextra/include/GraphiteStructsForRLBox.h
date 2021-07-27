@@ -19,14 +19,17 @@
 // Don't know the compiler... just let it go through
 #endif
 
+// Note that the two size fields below are actually size_t in the headers
+// However RLBox currently does not handle these correctly. See Bug 1722127.
+// Use a workaround of unsiged int instead of size_t.
 #define sandbox_fields_reflection_graphite_class_gr_font_ops(f, g, ...)                       \
-  f(size_t, size, FIELD_NORMAL, ##__VA_ARGS__) g()                                            \
+  f(unsigned int, size, FIELD_NORMAL, ##__VA_ARGS__) g()                                            \
   f(float (*)(const void*, unsigned short), glyph_advance_x, FIELD_NORMAL, ##__VA_ARGS__) g() \
   f(float (*)(const void*, unsigned short), glyph_advance_y, FIELD_NORMAL, ##__VA_ARGS__) g()
 
 #define sandbox_fields_reflection_graphite_class_gr_face_ops(f, g, ...)                              \
-  f(size_t, size, FIELD_NORMAL, ##__VA_ARGS__) g()                                                   \
-  f(const void* (*)(const void*, unsigned int, size_t*), get_table, FIELD_NORMAL, ##__VA_ARGS__) g() \
+  f(unsigned int, size, FIELD_NORMAL, ##__VA_ARGS__) g()                                                   \
+  f(const void* (*)(const void*, unsigned int, unsigned int*), get_table, FIELD_NORMAL, ##__VA_ARGS__) g() \
   f(void (*)(const void*, const void*), release_table, FIELD_NORMAL, ##__VA_ARGS__) g()
 
 #define sandbox_fields_reflection_graphite_class_gr_glyph_to_char_cluster(f, g, ...) \
