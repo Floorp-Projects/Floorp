@@ -83,7 +83,7 @@ class RTC_EXPORT RtpPacketInfo {
   absl::optional<AbsoluteCaptureTime> absolute_capture_time_;
 
   // Local |webrtc::Clock|-based timestamp of when the packet was received.
-  int64_t receive_time_ms_;
+  int64_t receive_time_ms_ = 0;
 };
 
 bool operator==(const RtpPacketInfo& lhs, const RtpPacketInfo& rhs);
