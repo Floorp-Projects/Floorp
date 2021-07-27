@@ -73,16 +73,16 @@ void js::GCParallelTask::cancelAndWait() {
   cancel_ = false;
 }
 
-bool js::GCParallelTask::join(Maybe<TimeStamp> deadline) {
+void js::GCParallelTask::join(Maybe<TimeStamp> deadline) {
   AutoLockHelperThreadState lock;
-  return joinWithLockHeld(lock, deadline);
+  joinWithLockHeld(lock, deadline);
 }
 
-bool js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock,
+void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock,
                                           Maybe<TimeStamp> deadline) {
   // Task has not been started; there's nothing to do.
   if (isIdle(lock)) {
-    return true;
+    return;
   }
 
   if (isDispatched(lock) && deadline.isNothing()) {
@@ -102,8 +102,6 @@ bool js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock,
       gc->stats().recordParallelPhase(phaseKind, duration());
     }
   }
-
-  return isIdle(lock);
 }
 
 void js::GCParallelTask::joinNonIdleTask(Maybe<TimeStamp> deadline,

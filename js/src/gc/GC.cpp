@@ -7366,9 +7366,7 @@ IncrementalProgress GCRuntime::waitForBackgroundTask(
     if (budget.isTimeBudget()) {
       deadline.emplace(budget.deadline());
     }
-    if (task.join(deadline) && triggerSlice) {
-      cancelRequestedGCAfterBackgroundTask();
-    }
+    task.join(deadline);
   }
 
   // In incremental collections, yield if the task has not finished and
@@ -7386,6 +7384,11 @@ IncrementalProgress GCRuntime::waitForBackgroundTask(
   }
 
   MOZ_ASSERT(task.isIdle());
+
+  if (triggerSlice) {
+    cancelRequestedGCAfterBackgroundTask();
+  }
+
   return Finished;
 }
 
