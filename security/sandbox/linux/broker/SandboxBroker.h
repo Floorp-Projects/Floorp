@@ -53,6 +53,10 @@ class SandboxBroker final : private SandboxBrokerCommon,
     RECURSIVE = 1 << 5,
     // Allow Unix-domain socket connections to a path
     MAY_CONNECT = 1 << 6,
+    // This flag is for adding a deny rule, so that we can e.g., allow read
+    // access to ~/.config/ but still deny access to ~/.config/mozilla/.
+    // It will bypass other checks.
+    FORCE_DENY = 1 << 7,
   };
   // Bitwise operations on enum values return ints, so just use int in
   // the hash table type (and below) to avoid cluttering code with casts.
@@ -89,6 +93,9 @@ class SandboxBroker final : private SandboxBrokerCommon,
     // A directory, and all files and directories under it, even those
     // added after creation (the dir itself must exist).
     void AddDir(int aPerms, const char* aPath);
+    // A directory, and all files and directories under it, even those
+    // added after creation (the dir itself may not exist).
+    void AddFutureDir(int aPerms, const char* aPath);
     // All files in a directory with a given prefix; useful for devices.
     void AddFilePrefix(int aPerms, const char* aDir, const char* aPrefix);
     // Everything starting with the given path, even those files/dirs
@@ -121,6 +128,7 @@ class SandboxBroker final : private SandboxBrokerCommon,
     // * No /../ path traversal
     bool ValidatePath(const char* path) const;
     void AddPrefixInternal(int aPerms, const nsACString& aPath);
+    void AddDirInternal(int aPerms, const char* aPath);
   };
 
   // Constructing a broker involves creating a socketpair and a
