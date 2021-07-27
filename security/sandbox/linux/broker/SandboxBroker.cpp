@@ -200,6 +200,14 @@ void SandboxBroker::Policy::AddDir(int aPerms, const char* aPath) {
     return;
   }
 
+  Policy::AddDirInternal(aPerms, aPath);
+}
+
+void SandboxBroker::Policy::AddFutureDir(int aPerms, const char* aPath) {
+  Policy::AddDirInternal(aPerms, aPath);
+}
+
+void SandboxBroker::Policy::AddDirInternal(int aPerms, const char* aPath) {
   // Add a Prefix permission on things inside the dir.
   nsDependentCString path(aPath);
   MOZ_ASSERT(path.Length() <= kMaxPathLen - 1);
@@ -320,7 +328,15 @@ void SandboxBroker::Policy::FixRecursivePermissions() {
       ancestor.Truncate(lastSlash + 1);
       const int ancestorPerms = oldMap.Get(ancestor);
       if (ancestorPerms & RECURSIVE) {
-        inheritedPerms |= ancestorPerms & ~RECURSIVE;
+        // if a child is set with FORCE_DENY, do not compute inheritedPerms
+        if ((localPerms & FORCE_DENY) == FORCE_DENY) {
+          if (SandboxInfo::Get().Test(SandboxInfo::kVerbose)) {
+            SANDBOX_LOG_ERROR("skip inheritence policy for %s: %d",
+                              PromiseFlatCString(path).get(), localPerms);
+          }
+        } else {
+          inheritedPerms |= ancestorPerms & ~RECURSIVE;
+        }
       }
     }
 
@@ -815,6 +831,8 @@ void SandboxBroker::ThreadMain(void) {
     if (perms & CRASH_INSTEAD) {
       // This is somewhat nonmodular, but it works.
       resp.mError = -ENOSYS;
+    } else if ((perms & FORCE_DENY) == FORCE_DENY) {
+      resp.mError = -EACCES;
     } else if (permissive || perms & MAY_ACCESS) {
       // If the operation was only allowed because of permissive mode, log it.
       if (permissive && !(perms & MAY_ACCESS)) {

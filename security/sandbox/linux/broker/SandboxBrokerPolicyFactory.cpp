@@ -29,6 +29,7 @@
 #include "nsReadableUtils.h"
 #include "nsIFileStreams.h"
 #include "nsILineInputStream.h"
+#include "nsIFile.h"
 
 #include "nsNetCID.h"
 
@@ -57,6 +58,7 @@ static const int wronly = SandboxBroker::MAY_WRITE;
 static const int rdwr = rdonly | wronly;
 static const int rdwrcr = rdwr | SandboxBroker::MAY_CREATE;
 static const int access = SandboxBroker::MAY_ACCESS;
+static const int deny = SandboxBroker::FORCE_DENY;
 }  // namespace
 
 static void AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy) {
@@ -359,14 +361,13 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   // Allow access to XDG_CONFIG_HOME and XDG_CONFIG_DIRS
   nsAutoCString xdgConfigHome(PR_GetEnv("XDG_CONFIG_HOME"));
   if (!xdgConfigHome.IsEmpty()) {  // AddPath will fail on empty strings
-    policy->AddPath(rdonly, xdgConfigHome.get(),
-                    SandboxBroker::Policy::AddCondition::AddAlways);
+    policy->AddFutureDir(rdonly, xdgConfigHome.get());
   }
+
   nsAutoCString xdgConfigDirs(PR_GetEnv("XDG_CONFIG_DIRS"));
   for (const auto& path : xdgConfigDirs.Split(':')) {
     if (!path.IsEmpty()) {  // AddPath will fail on empty strings
-      policy->AddPath(rdonly, PromiseFlatCString(path).get(),
-                      SandboxBroker::Policy::AddCondition::AddAlways);
+      policy->AddFutureDir(rdonly, PromiseFlatCString(path).get());
     }
   }
 
@@ -375,8 +376,7 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   if (!xdgDataHome.IsEmpty()) {
     nsAutoCString fontPath(xdgDataHome);
     fontPath.Append("/fonts");
-    policy->AddPath(rdonly, PromiseFlatCString(fontPath).get(),
-                    SandboxBroker::Policy::AddCondition::AddAlways);
+    policy->AddFutureDir(rdonly, PromiseFlatCString(fontPath).get());
   }
 
   // Any font subdirs in XDG_DATA_DIRS
@@ -384,18 +384,21 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   for (const auto& path : xdgDataDirs.Split(':')) {
     nsAutoCString fontPath(path);
     fontPath.Append("/fonts");
-    policy->AddPath(rdonly, PromiseFlatCString(fontPath).get(),
-                    SandboxBroker::Policy::AddCondition::AddAlways);
+    policy->AddFutureDir(rdonly, PromiseFlatCString(fontPath).get());
   }
 
   // Extra configuration/cache dirs in the homedir that we want to allow read
   // access to.
-  mozilla::Array<const char*, 4> extraConfDirs = {
-      ".config",  // Fallback if XDG_CONFIG_HOME isn't set
+  std::vector<const char*> extraConfDirsAllow = {
       ".themes",
       ".fonts",
       ".cache/fontconfig",
   };
+
+  // Fallback if XDG_CONFIG_HOME isn't set
+  if (xdgConfigHome.IsEmpty()) {
+    extraConfDirsAllow.emplace_back(".config");
+  }
 
   nsCOMPtr<nsIFile> homeDir;
   nsresult rv =
@@ -403,7 +406,7 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIFile> confDir;
 
-    for (const auto& dir : extraConfDirs) {
+    for (const auto& dir : extraConfDirsAllow) {
       rv = homeDir->Clone(getter_AddRefs(confDir));
       if (NS_SUCCEEDED(rv)) {
         rv = confDir->AppendRelativeNativePath(nsDependentCString(dir));
@@ -412,6 +415,39 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
           rv = confDir->GetNativePath(tmpPath);
           if (NS_SUCCEEDED(rv)) {
             policy->AddDir(rdonly, tmpPath.get());
+          }
+        }
+      }
+    }
+
+    // ~/.config/mozilla/ needs to be manually blocked, because the previous
+    // loop will allow for ~/.config/ access.
+    {
+      // If $XDG_CONFIG_HOME is set, we need to account for it.
+      // FIXME: Bug 1722272: Maybe this should just be handled with
+      // GetSpecialSystemDirectory(Unix_XDG_ConfigHome) ?
+      nsCOMPtr<nsIFile> confDirOrXDGConfigHomeDir;
+      if (!xdgConfigHome.IsEmpty()) {
+        rv = NS_NewNativeLocalFile(xdgConfigHome, true,
+                                   getter_AddRefs(confDirOrXDGConfigHomeDir));
+        // confDirOrXDGConfigHomeDir = nsIFile($XDG_CONFIG_HOME)
+      } else {
+        rv = homeDir->Clone(getter_AddRefs(confDirOrXDGConfigHomeDir));
+        if (NS_SUCCEEDED(rv)) {
+          // since we will use that later, we dont need to care about trailing
+          // slash
+          rv = confDirOrXDGConfigHomeDir->AppendNative(".config"_ns);
+          // confDirOrXDGConfigHomeDir = nsIFile($HOME/.config/)
+        }
+      }
+
+      if (NS_SUCCEEDED(rv)) {
+        rv = confDirOrXDGConfigHomeDir->AppendNative("mozilla"_ns);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoCString tmpPath;
+          rv = confDirOrXDGConfigHomeDir->GetNativePath(tmpPath);
+          if (NS_SUCCEEDED(rv)) {
+            policy->AddFutureDir(deny, tmpPath.get());
           }
         }
       }
