@@ -30,6 +30,8 @@
 namespace js {
 namespace wasm {
 
+using mozilla::Some;
+
 // ModuleEnvironment contains all the state necessary to process or render
 // functions, and all of the state necessary to validate all aspects of the
 // functions.

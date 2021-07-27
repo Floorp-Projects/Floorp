@@ -87,8 +87,10 @@ using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
 using mozilla::IsPositiveZero;
 using mozilla::IsPowerOfTwo;
+using mozilla::Nothing;
 using mozilla::PodZero;
 using mozilla::PositiveInfinity;
+using mozilla::Some;
 using mozilla::Utf8Unit;
 using mozilla::Compression::LZ4;
 

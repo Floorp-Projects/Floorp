@@ -16,35 +16,12 @@
  * limitations under the License.
  */
 
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmModuleTypes.h"
 
-#include "mozilla/FloatingPoint.h"
-
-#include <algorithm>
-
-#include "jsmath.h"
-#include "jit/JitFrames.h"
-#include "js/friend/ErrorMessages.h"  // JSMSG_*
-#include "js/Printf.h"
-#include "util/Memory.h"
-#include "vm/ArrayBufferObject.h"
-#include "vm/Warnings.h"  // js:WarnNumberASCII
-#include "wasm/TypedObject.h"
-#include "wasm/WasmBaselineCompile.h"
-#include "wasm/WasmInstance.h"
-#include "wasm/WasmJS.h"
-#include "wasm/WasmSerialize.h"
-#include "wasm/WasmStubs.h"
-
-#include "vm/JSObject-inl.h"
-#include "vm/NativeObject-inl.h"
+#include "vm/MallocProvider.h"
 
 using namespace js;
-using namespace js::jit;
 using namespace js::wasm;
-
-using mozilla::IsPowerOfTwo;
-using mozilla::MakeEnumeratedRange;
 
 size_t Import::serializedSize() const {
   return module.serializedSize() + field.serializedSize() + sizeof(kind);

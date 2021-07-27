@@ -31,6 +31,7 @@ using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::Nothing;
+using mozilla::Some;
 
 using namespace js;
 
