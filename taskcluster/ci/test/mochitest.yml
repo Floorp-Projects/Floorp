@@ -133,27 +133,44 @@ mochitest-browser-chrome:
     loopback-video: true
     variants:
         by-test-platform:
-            linux.*64(-shippable)?/opt: ['fission', 'a11y-checks', 'wayland']
-            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland']
+            linux.*64(-shippable)?-qr/opt: ['webrender-sw', 'webrender-sw-fission', 'webrender-sw-a11y-checks', 'webrender-sw-wayland']
+            linux.*64(-asan|-ccov|-devedition)-qr/opt: ['webrender-sw', 'webrender-sw-fission']
+            linux.*64-qr/debug: ['webrender-sw', 'webrender-sw-fission', 'webrender-sw-wayland']
             windows10-64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
-                    linux.*64-asan/opt: ['trunk']
-                    linux.*64(-shippable)?/(opt|debug): ['trunk']
                     (windows10-64|macosx.*64)(-shippable)?-qr/(opt|debug): ['trunk']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    linux.*64(-asan)?-qr/(opt|debug): ['all']
+                    linux.*64(-shippable|-ccov)-qr/opt: ['release']
+                    default: built-projects
+            webrender-sw-fission:
+                by-test-platform:
+                    linux.*64(-asan|-shippable)?-qr/(opt|debug): ['trunk']
                     default: []
             default:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
+                    linux.*-qr/.*: []
                     default: built-projects
     tier:
         by-variant:
             fission(-xorigin)?:
                 by-test-platform:
-                    linux.*64/debug: 1
+                    linux.*64-qr/debug: 1
+                    default: 2
+            webrender-sw:
+                by-test-platform:
+                    linux.*64(-asan|-shippable)?-qr/(opt|debug): 1
+                    default: default
+            webrender-sw-fission:
+                by-test-platform:
+                    linux.*64-qr/debug: 1
                     default: 2
             default:
                 by-test-platform:
@@ -161,8 +178,8 @@ mochitest-browser-chrome:
                     default: default
     chunks:
         by-test-platform:
-            linux.*/debug: 16
-            linux.*64-asan(-qr)?/opt: 16
+            linux.*-qr/debug: 16
+            linux.*64-asan-qr/opt: 16
             linux.*64-tsan/opt: 32
             macosx.*64/debug: 16
             windows10-64-ccov.*/.*: 14
@@ -175,6 +192,7 @@ mochitest-browser-chrome:
             windows10-64-ccov.*/.*: 10800
             macosx.*64-ccov.*/.*: 10800
             linux.*64-tsan/opt: 9000
+            linux.*-qr/opt: 5400
             .*/debug: 5400
             default: 3600
     mozharness:

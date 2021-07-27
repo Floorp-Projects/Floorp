@@ -169,7 +169,6 @@ linux1804-tests:
     - jsreftest
     - marionette
     - mochitest-a11y
-    - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-chrome-gpu
     - mochitest-media
@@ -196,6 +195,7 @@ linux1804-qr-tests:
     - jsreftest
     - marionette
     - mochitest-a11y
+    - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-chrome-gpu
     - mochitest-devtools-chrome
@@ -217,11 +217,13 @@ linux1804-ccov-qr-tests:
     - reftest-snapshot
     - reftest
     - crashtest
+    - mochitest-browser-chrome
     - mochitest-devtools-chrome
     - mochitest-media
     - telemetry-tests-client
 
 linux1804-devedition-qr-tests:
+    - mochitest-browser-chrome
     - reftest-snapshot
     - telemetry-tests-client
 
@@ -241,6 +243,7 @@ linux-qr-smoketests:
     - jsreftest
     - marionette
     - mochitest-a11y
+    - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-chrome-gpu
     - mochitest-devtools-chrome

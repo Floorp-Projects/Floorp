@@ -31,7 +31,7 @@ const startupPhases = {
   "before first paint": [
     {
       name: "PLayerTransaction::Msg_GetTextureFactoryIdentifier",
-      condition: (MAC && !WEBRENDER) || LINUX,
+      condition: (MAC || LINUX) && !WEBRENDER,
       maxCount: 1,
     },
     {
@@ -46,7 +46,7 @@ const startupPhases = {
     },
     {
       name: "PWebRenderBridge::Msg_EnsureConnected",
-      condition: MAC && WEBRENDER,
+      condition: (MAC || LINUX) && WEBRENDER,
       maxCount: 1,
     },
     {
@@ -242,7 +242,7 @@ const startupPhases = {
     },
     {
       name: "PWebRenderBridge::Msg_EnsureConnected",
-      condition: WIN && WEBRENDER,
+      condition: (WIN || LINUX) && WEBRENDER,
       ignoreIfUnused: true,
       maxCount: 1,
     },
