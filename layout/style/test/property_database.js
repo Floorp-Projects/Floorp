@@ -270,19 +270,15 @@ var validNonUrlImageValues = [
   "radial-gradient(at calc(100px + -25px) top, red, blue)",
   "radial-gradient(at left calc(100px + -25px), red, blue)",
 
-  ...(IsCSSPropertyPrefEnabled("layout.css.image-set.enabled")
-    ? [
-        "image-set(linear-gradient(green, green) 1x, url(foobar.png) 2x)",
-        "image-set(linear-gradient(red, red), url(foobar.png) 2x)",
-        "image-set(url(foobar.png) 2x)",
-        "image-set(url(foobar.png) 1x, url(bar.png) 2x, url(baz.png) 3x)",
-        "image-set('foobar.png', 'bar.png' 2x, url(baz.png) 3x)",
-        "image-set(image-set('foobar.png', 'bar.png' 2x) 1x, url(baz.png) 3x)",
-        "image-set(url(foobar.png) type('image/png'))",
-        "image-set(url(foobar.png) 1x type('image/png'))",
-        "image-set(url(foobar.png) type('image/png') 1x)",
-      ]
-    : []),
+  "image-set(linear-gradient(green, green) 1x, url(foobar.png) 2x)",
+  "image-set(linear-gradient(red, red), url(foobar.png) 2x)",
+  "image-set(url(foobar.png) 2x)",
+  "image-set(url(foobar.png) 1x, url(bar.png) 2x, url(baz.png) 3x)",
+  "image-set('foobar.png', 'bar.png' 2x, url(baz.png) 3x)",
+  "image-set(image-set('foobar.png', 'bar.png' 2x) 1x, url(baz.png) 3x)",
+  "image-set(url(foobar.png) type('image/png'))",
+  "image-set(url(foobar.png) 1x type('image/png'))",
+  "image-set(url(foobar.png) type('image/png') 1x)",
 
   ...(IsCSSPropertyPrefEnabled("layout.css.cross-fade.enabled")
     ? [
@@ -821,19 +817,15 @@ var invalidNonUrlImageValues = [
   "-webkit-repeating-conic-gradient(red, blue)",
   "-moz-repeating-conic-gradient(red, blue)",
 
-  ...(IsCSSPropertyPrefEnabled("layout.css.image-set.enabled")
-    ? [
-        "image-set(url(foobar.png) 1x, none)",
-        "image-set(garbage)",
-        "image-set(image-set(garbage))",
-        "image-set()",
-        "image-set(type('image/png') url(foobar.png) 1x)",
-        "image-set(url(foobar.png) type('image/png') 1x type('image/png'))",
-        "image-set(url(foobar.png) type('image/png') type('image/png'))",
-        "image-set(url(foobar.png) type(image/png))",
-        "image-set(url(foobar.png) epyt('image/png'))",
-      ]
-    : []),
+  "image-set(url(foobar.png) 1x, none)",
+  "image-set(garbage)",
+  "image-set(image-set(garbage))",
+  "image-set()",
+  "image-set(type('image/png') url(foobar.png) 1x)",
+  "image-set(url(foobar.png) type('image/png') 1x type('image/png'))",
+  "image-set(url(foobar.png) type('image/png') type('image/png'))",
+  "image-set(url(foobar.png) type(image/png))",
+  "image-set(url(foobar.png) epyt('image/png'))",
 
   ...(IsCSSPropertyPrefEnabled("layout.css.cross-fade.enabled")
     ? [
