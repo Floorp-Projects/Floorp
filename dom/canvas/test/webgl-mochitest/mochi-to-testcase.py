@@ -43,17 +43,17 @@ function todo(val, text) {
 }
 
 function addLoadEvent(func) {
-  window.addEventListener('load', func, false);
+  window.addEventListener('load', func);
 }
 
 SimpleTest = {
-  waitForExplicitFinish: function() {},
-  finish: function() {},
-  requestFlakyTimeout: function() {},
+  waitForExplicitFinish: () => {},
+  finish: () => {},
+  requestFlakyTimeout: () => {},
 };
 
 SpecialPowers = {
-  pushPrefEnv: function(env, func) {
+  pushPrefEnv: (env, func) => {
     console.log('SpecialPowers.pushPrefEnv: ' + JSON.stringify(env));
     setTimeout(func, 0);
   },

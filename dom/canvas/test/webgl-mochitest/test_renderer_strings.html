@@ -7,94 +7,141 @@
 <body>
 <script>
 
-function AssertError(gl, expected, info) {
-  var actual = gl.getError();
-  while (gl.getError()) {}
-
-  ok(actual == expected,
-     'For ' + info + ', expected GL error 0x' + expected.toString(16) + ', got 0x'
-      + actual.toString(16));
+async function asyncPushPrefEnv(env) {
+  return new Promise(res => {
+    SpecialPowers.pushPrefEnv(env, res);
+  });
 }
 
-var gl;
 
-var RENDERER_OVERRIDE = 'overridden renderer';
-var VENDOR_OVERRIDE = 'overridden vendor';
+let gl, ext;
 
-function TestExt() {
-  var ext = gl.getExtension('WEBGL_debug_renderer_info');
-  ok(ext, 'When pref enabled: Should have access to \'WEBGL_debug_renderer_info\'.');
-  AssertError(gl, 0, 'start of test');
-
-  var renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
-  AssertError(gl, 0, 'UNMASKED_RENDERER_WEBGL');
-  ok(renderer,
-     'When pref enabled: UNMASKED_RENDERER_WEBGL value should not be empty, was \''
-     + renderer + '\'');
-
-  var vendor = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
-  AssertError(gl, 0, 'UNMASKED_VENDOR_WEBGL');
-  ok(vendor,
-     'When pref enabled: UNMASKED_VENDOR_WEBGL value should not be empty, was \''
-     + vendor + '\'');
-
-  var prefArrArr = [
-    ['webgl.renderer-string-override', RENDERER_OVERRIDE],
-    ['webgl.vendor-string-override', VENDOR_OVERRIDE],
-  ];
-  var prefEnv = {'set': prefArrArr};
-  SpecialPowers.pushPrefEnv(prefEnv, TestOverrides);
+function getStrings() {
+  const ret = {
+    renderer: gl.getParameter(gl.RENDERER),
+    vendor: gl.getParameter(gl.VENDOR),
+  };
+  if (ext) {
+    ret.unmasked_renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+    ret.unmasked_vendor = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
+  }
+  return ret;
 }
 
-function TestOverrides() {
-  var ext = gl.getExtension('WEBGL_debug_renderer_info');
-  ok(ext, 'When overrides set: Should have access to \'WEBGL_debug_renderer_info\'.');
-  AssertError(gl, 0, 'start of test');
+const RTX3070_R = 'ANGLE (NVIDIA GeForce RTX 3070 Direct3D11 vs_5_0 ps_5_0)';
+const RTX3070_V = 'Google Inc.';
+const RTX3070_R_SANITIZED = 'ANGLE (NVIDIA GeForce GTX 980 Direct3D11 vs_5_0 ps_5_0)';
 
-  var renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
-  AssertError(gl, 0, 'UNMASKED_RENDERER_WEBGL');
-  ok(renderer == RENDERER_OVERRIDE,
-     'When overrides set: UNMASKED_RENDERER_WEBGL value should be \'' + RENDERER_OVERRIDE
-     + '\', was \'' + renderer + '\'');
-
-  var vendor = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
-  AssertError(gl, 0, 'UNMASKED_VENDOR_WEBGL');
-  ok(vendor == VENDOR_OVERRIDE,
-     'When overrides set: UNMASKED_VENDOR_WEBGL value should be \'' + VENDOR_OVERRIDE
-     + '\', was \'' + vendor + '\'');
-
-  var prefArrArr = [
-    ['webgl.enable-debug-renderer-info', false],
-  ];
-  var prefEnv = {'set': prefArrArr};
-  SpecialPowers.pushPrefEnv(prefEnv, TestDisable);
+function expectJsonEqual(was, expected, when) {
+  if (when) {
+    when = when + ': ';
+  } else {
+    when = '';
+  }
+  const wasStr = JSON.stringify(was);
+  const expectedStr = JSON.stringify(expected);
+  let str = `${when}Was ${wasStr}`;
+  const matches = (wasStr == expectedStr);
+  if (!matches) {
+    str += `, expected ${expectedStr}`;
+  }
+  ok(matches, str);
 }
 
-function TestDisable() {
-  var ext = gl.getExtension('WEBGL_debug_renderer_info');
-  ok(!ext,
-     'When pref disabled: Should not have access to \'WEBGL_debug_renderer_info\'.');
+SimpleTest.waitForExplicitFinish();
 
-  ok(true, 'Test complete.');
-  SimpleTest.finish();
-}
-
-(function() {
-  var canvas = document.createElement('canvas');
-  gl = canvas.getContext('experimental-webgl');
+(async function() {
+  const canvas = document.createElement('canvas');
+  gl = canvas.getContext('webgl');
   if (!gl) {
     todo(gl, 'Get WebGL working here first.');
     ok(true, 'Test complete.');
+    SimpleTest.finish();
     return;
   }
 
-  SimpleTest.waitForExplicitFinish();
+  await asyncPushPrefEnv({'set': [
+    ['webgl.override-unmasked-renderer', RTX3070_R],
+    ['webgl.override-unmasked-vendor', RTX3070_V],
+  ]});
 
-  var prefArrArr = [
+  // -
+  // Initial state
+
+  ext = gl.getExtension('WEBGL_debug_renderer_info');
+  ok(!ext,
+     'When pref disabled: Should not have access to \'WEBGL_debug_renderer_info\'.');
+
+  {
+    const EXPECTED = {
+      renderer: RTX3070_R_SANITIZED,
+      vendor: 'Mozilla',
+    };
+    const was = getStrings();
+    expectJsonEqual(was, EXPECTED, 'v92 behavior');
+  }
+
+  // -
+  // Enable extension
+
+  await asyncPushPrefEnv({'set': [
     ['webgl.enable-debug-renderer-info', true],
-  ];
-  var prefEnv = {'set': prefArrArr};
-  SpecialPowers.pushPrefEnv(prefEnv, TestExt);
+  ]});
+
+  ext = gl.getExtension('WEBGL_debug_renderer_info');
+  ok(ext, 'When pref enabled: Should have access to \'WEBGL_debug_renderer_info\'.');
+
+  {
+    const EXPECTED = {
+      renderer: RTX3070_R_SANITIZED,
+      vendor: 'Mozilla',
+      unmasked_renderer: RTX3070_R,
+      unmasked_vendor: RTX3070_V,
+    };
+    const was = getStrings();
+    expectJsonEqual(was, EXPECTED, 'v92 behavior w/ext');
+  }
+
+  // -
+  // Disable detailed RENDERER
+
+  await asyncPushPrefEnv({'set': [
+    ['webgl.enable-renderer-query', false],
+  ]});
+
+  {
+    const EXPECTED = {
+      renderer: 'Mozilla',
+      vendor: 'Mozilla',
+      unmasked_renderer: RTX3070_R,
+      unmasked_vendor: RTX3070_V,
+    };
+    const was = getStrings();
+    expectJsonEqual(was, EXPECTED, 'v90 behavior');
+  }
+
+  // -
+  // Sanitize even UNMASKED_RENDERER
+
+  await asyncPushPrefEnv({'set': [
+    ['webgl.sanitize-unmasked-renderer', true],
+  ]});
+
+  {
+    const EXPECTED = {
+      renderer: 'Mozilla',
+      vendor: 'Mozilla',
+      unmasked_renderer: RTX3070_R_SANITIZED,
+      unmasked_vendor: RTX3070_V,
+    };
+    const was = getStrings();
+    expectJsonEqual(was, EXPECTED, 'v91 behavior');
+  }
+
+  // -
+
+  ok(true, 'Test complete.');
+  SimpleTest.finish();
 })();
 
 </script>
