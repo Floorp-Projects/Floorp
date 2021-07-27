@@ -2129,7 +2129,7 @@
 - name: dom.image-lazy-loading.root-margin.top
   type: float
 #if defined(EARLY_BETA_OR_EARLIER)
-  value: 1000
+  value: 800
 #else
   value: 300
 #endif
@@ -2143,7 +2143,7 @@
 - name: dom.image-lazy-loading.root-margin.bottom
   type: float
 #if defined(EARLY_BETA_OR_EARLIER)
-  value: 1000
+  value: 800
 #else
   value: 300
 #endif
@@ -2157,7 +2157,7 @@
 - name: dom.image-lazy-loading.root-margin.left
   type: float
 #if defined(EARLY_BETA_OR_EARLIER)
-  value: 1000
+  value: 800
 #else
   value: 300
 #endif
@@ -2171,7 +2171,7 @@
 - name: dom.image-lazy-loading.root-margin.right
   type: float
 #if defined(EARLY_BETA_OR_EARLIER)
-  value: 1000
+  value: 800
 #else
   value: 300
 #endif
