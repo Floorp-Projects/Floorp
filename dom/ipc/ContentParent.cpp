@@ -3844,20 +3844,8 @@ mozilla::ipc::IPCResult ContentParent::RecvCloneDocumentTreeInto(
     return IPC_OK();
   }
 
-  RemotenessChangeOptions options;
-  options.mRemoteType = cp->GetRemoteType();
-  target->ChangeRemoteness(options, /* aPendingSwitchId = */ 0)
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [source = RefPtr{source},
-           data = std::move(aPrintData)](BrowserParent* aBp) {
-            Unused << aBp->SendCloneDocumentTreeIntoSelf(source, data);
-          },
-          [](nsresult aRv) {
-            NS_WARNING(
-                nsPrintfCString("Remote clone failed: %x\n", unsigned(aRv))
-                    .get());
-          });
+  target->CloneDocumentTreeInto(source, cp->GetRemoteType(),
+                                std::move(aPrintData));
   return IPC_OK();
 }
 

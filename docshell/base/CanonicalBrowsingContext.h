@@ -36,6 +36,10 @@ class nsITimer;
 namespace mozilla {
 enum class CallState;
 
+namespace embedding {
+class PrintData;
+}
+
 namespace net {
 class DocumentLoadListener;
 }
@@ -331,6 +335,16 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void ClearPermanentKey() { mPermanentKey.setNull(); }
   void MaybeSetPermanentKey(Element* aEmbedder);
 
+  void CloneDocumentTreeInto(CanonicalBrowsingContext* aSource,
+                             const nsACString& aRemoteType,
+                             embedding::PrintData&& aPrintData);
+
+  // Returns a Promise which resolves when cloning documents for printing
+  // finished if this browsing context is cloning document tree.
+  RefPtr<GenericNonExclusivePromise> GetClonePromise() const {
+    return mClonePromise;
+  }
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -493,6 +507,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   nsCOMPtr<nsITimer> mSessionStoreSessionStorageUpdateTimer;
 
   bool mIsReplaced = false;
+
+  // A Promise created when cloning documents for printing.
+  RefPtr<GenericNonExclusivePromise> mClonePromise;
 
   JS::Heap<JS::Value> mPermanentKey;
 };

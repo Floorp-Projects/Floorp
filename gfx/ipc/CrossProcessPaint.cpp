@@ -6,6 +6,7 @@
 
 #include "CrossProcessPaint.h"
 
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -357,7 +358,7 @@ void CrossProcessPaint::QueueDependencies(
   for (const auto& key : aDependencies) {
     auto dependency = dom::TabId(key);
 
-    // Get the current WindowGlobalParent of the remote browser that was marked
+    // Get the current BrowserParent of the remote browser that was marked
     // as a dependency
     dom::ContentProcessManager* cpm =
         dom::ContentProcessManager::GetSingleton();
@@ -370,17 +371,11 @@ void CrossProcessPaint::QueueDependencies(
               (uint64_t)dependency);
       continue;
     }
-    RefPtr<dom::WindowGlobalParent> wgp =
-        browser->GetBrowsingContext()->GetCurrentWindowGlobal();
 
-    if (!wgp) {
-      CPP_LOG("Skipping dependency %" PRIu64 " with no current WGP.\n",
-              (uint64_t)dependency);
-      continue;
-    }
-
-    // TODO: Apply some sort of clipping to visible bounds here (Bug 1562720)
-    QueuePaint(wgp, Nothing());
+    // Note that if the remote document is currently being cloned, it's possible
+    // that the BrowserParent isn't the one for the cloned document, but the
+    // BrowsingContext should be persisted/consistent.
+    QueuePaint(browser->GetBrowsingContext());
   }
 }
 
@@ -390,11 +385,47 @@ void CrossProcessPaint::QueuePaint(dom::WindowGlobalParent* aWGP,
                                    CrossProcessPaintFlags aFlags) {
   MOZ_ASSERT(!mReceivedFragments.Contains(GetTabId(aWGP)));
 
-  CPP_LOG("Queueing paint for %p.\n", aWGP);
+  CPP_LOG("Queueing paint for WindowGlobalParent(%p).\n", aWGP);
 
   aWGP->DrawSnapshotInternal(this, aRect, mScale, aBackgroundColor,
                              (uint32_t)aFlags);
   mPendingFragments += 1;
+}
+
+void CrossProcessPaint::QueuePaint(dom::CanonicalBrowsingContext* aBc) {
+  RefPtr<GenericNonExclusivePromise> clonePromise = aBc->GetClonePromise();
+
+  if (!clonePromise) {
+    RefPtr<dom::WindowGlobalParent> wgp = aBc->GetCurrentWindowGlobal();
+    // TODO: Apply some sort of clipping to visible bounds here (Bug 1562720)
+    QueuePaint(wgp, Nothing(), NS_RGBA(0, 0, 0, 0),
+               CrossProcessPaintFlags::DrawView);
+    return;
+  }
+
+  CPP_LOG("Queueing paint for BrowsingContext(%p).\n", aBc);
+  // In the case it's still in the process of cloning the remote document, we
+  // should defer the snapshot request after the cloning has been finished.
+  mPendingFragments += 1;
+  clonePromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [self = RefPtr{this}, bc = RefPtr{aBc}]() {
+        RefPtr<dom::WindowGlobalParent> wgp = bc->GetCurrentWindowGlobal();
+        MOZ_ASSERT(!self->mReceivedFragments.Contains(GetTabId(wgp)));
+
+        // TODO: Apply some sort of clipping to visible bounds here (Bug
+        // 1562720)
+        wgp->DrawSnapshotInternal(self, Nothing(), self->mScale,
+                                  NS_RGBA(0, 0, 0, 0),
+                                  (uint32_t)CrossProcessPaintFlags::DrawView);
+      },
+      [self = RefPtr{this}]() {
+        CPP_LOG(
+            "Abort painting for BrowsingContext(%p) because cloning remote "
+            "document failed.\n",
+            self.get());
+        self->Clear(NS_ERROR_FAILURE);
+      });
 }
 
 void CrossProcessPaint::Clear(nsresult aStatus) {
