@@ -13,6 +13,162 @@ const environment = Cc["@mozilla.org/process/environment;1"].getService(
  * Utility functions for the browser content sandbox tests.
  */
 
+// Creates file at |path| and returns a promise that resolves with true
+// if the file was successfully created, otherwise false. Include imports
+// so this can be safely serialized and run remotely by ContentTask.spawn.
+function createFile(path) {
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  let encoder = new TextEncoder();
+  let array = encoder.encode("TEST FILE DUMMY DATA");
+  return OS.File.writeAtomic(path, array).then(
+    function(value) {
+      return true;
+    },
+    function(reason) {
+      return false;
+    }
+  );
+}
+
+// Creates a symlink at |path| and returns a promise that resolves with true
+// if the symlink was successfully created, otherwise false. Include imports
+// so this can be safely serialized and run remotely by ContentTask.spawn.
+function createSymlink(path) {
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  // source location for the symlink can be anything
+  return OS.File.unixSymLink("/Users", path).then(
+    function(value) {
+      return true;
+    },
+    function(reason) {
+      return false;
+    }
+  );
+}
+
+// Deletes file at |path| and returns a promise that resolves with true
+// if the file was successfully deleted, otherwise false. Include imports
+// so this can be safely serialized and run remotely by ContentTask.spawn.
+function deleteFile(path) {
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  return OS.File.remove(path, { ignoreAbsent: false })
+    .then(function(value) {
+      return true;
+    })
+    .catch(function(err) {
+      return false;
+    });
+}
+
+// Reads the directory at |path| and returns a promise that resolves when
+// iteration over the directory finishes or encounters an error. The promise
+// resolves with an object where .ok indicates success or failure and
+// .numEntries is the number of directory entries found.
+function readDir(path) {
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  let numEntries = 0;
+  let iterator = new OS.File.DirectoryIterator(path);
+  let promise = iterator
+    .forEach(function(dirEntry) {
+      numEntries++;
+    })
+    .then(function() {
+      iterator.close();
+      return { ok: true, numEntries };
+    })
+    .catch(function() {
+      return { ok: false, numEntries };
+    });
+  return promise;
+}
+
+// Reads the file at |path| and returns a promise that resolves when
+// reading is completed. Returned object has boolean .ok to indicate
+// success or failure.
+function readFile(path) {
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  let promise = OS.File.read(path)
+    .then(function(binaryData) {
+      return { ok: true };
+    })
+    .catch(function(error) {
+      return { ok: false };
+    });
+  return promise;
+}
+
+// Does a stat of |path| and returns a promise that resolves if the
+// stat is successful. Returned object has boolean .ok to indicate
+// success or failure.
+function statPath(path) {
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  let promise = OS.File.stat(path)
+    .then(function(stat) {
+      return { ok: true };
+    })
+    .catch(function(error) {
+      return { ok: false };
+    });
+  return promise;
+}
+
+// Returns true if the current content sandbox level, passed in
+// the |level| argument, supports filesystem sandboxing.
+function isContentFileIOSandboxed(level) {
+  let fileIOSandboxMinLevel = 0;
+
+  // Set fileIOSandboxMinLevel to the lowest level that has
+  // content filesystem sandboxing enabled. For now, this
+  // varies across Windows, Mac, Linux, other.
+  switch (Services.appinfo.OS) {
+    case "WINNT":
+      fileIOSandboxMinLevel = 1;
+      break;
+    case "Darwin":
+      fileIOSandboxMinLevel = 1;
+      break;
+    case "Linux":
+      fileIOSandboxMinLevel = 2;
+      break;
+    default:
+      Assert.ok(false, "Unknown OS");
+  }
+
+  return level >= fileIOSandboxMinLevel;
+}
+
+// Returns the lowest sandbox level where blanket reading of the profile
+// directory from the content process should be blocked by the sandbox.
+function minProfileReadSandboxLevel(level) {
+  switch (Services.appinfo.OS) {
+    case "WINNT":
+      return 3;
+    case "Darwin":
+      return 2;
+    case "Linux":
+      return 3;
+    default:
+      Assert.ok(false, "Unknown OS");
+      return 0;
+  }
+}
+
+// Returns the lowest sandbox level where blanket reading of the home
+// directory from the content process should be blocked by the sandbox.
+function minHomeReadSandboxLevel(level) {
+  switch (Services.appinfo.OS) {
+    case "WINNT":
+      return 3;
+    case "Darwin":
+      return 3;
+    case "Linux":
+      return 3;
+    default:
+      Assert.ok(false, "Unknown OS");
+      return 0;
+  }
+}
+
 function isMac() {
   return Services.appinfo.OS == "Darwin";
 }
@@ -109,4 +265,93 @@ function GetFile(path) {
 
 function GetEnvironmentVariable(varName) {
   return environment.get(varName);
+}
+
+function GetBrowserType(type) {
+  let browserType = undefined;
+
+  if (!GetBrowserType[type]) {
+    if (type === "web") {
+      GetBrowserType[type] = gBrowser.selectedBrowser;
+    } else {
+      // open a tab in a `type` content process
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
+        preferredRemoteType: type,
+      });
+      // get the browser for the `type` process tab
+      GetBrowserType[type] = gBrowser.getBrowserForTab(gBrowser.selectedTab);
+    }
+  }
+
+  browserType = GetBrowserType[type];
+  ok(
+    browserType.remoteType === type,
+    `GetBrowserType(${type}) returns a ${type} process`
+  );
+  return browserType;
+}
+
+function GetWebBrowser() {
+  return GetBrowserType("web");
+}
+
+function isFileContentProcessEnabled() {
+  // Ensure that the file content process is enabled.
+  let fileContentProcessEnabled = Services.prefs.getBoolPref(
+    "browser.tabs.remote.separateFileUriProcess"
+  );
+  ok(fileContentProcessEnabled, "separate file content process is enabled");
+  return fileContentProcessEnabled;
+}
+
+function GetFileBrowser() {
+  if (!isFileContentProcessEnabled()) {
+    return undefined;
+  }
+  return GetBrowserType("file");
+}
+
+function GetSandboxLevel() {
+  // Current level
+  return Services.prefs.getIntPref("security.sandbox.content.level");
+}
+
+async function runTestsList(tests) {
+  let level = GetSandboxLevel();
+
+  // remove tests not enabled by the current sandbox level
+  tests = tests.filter(test => test.minLevel <= level);
+
+  for (let test of tests) {
+    let okString = test.ok ? "allowed" : "blocked";
+    let processType = test.browser.remoteType;
+
+    // ensure the file/dir exists before we ask a content process to stat
+    // it so we know a failure is not due to a nonexistent file/dir
+    if (test.func === statPath) {
+      ok(test.file.exists(), `${test.file.path} exists`);
+    }
+
+    let result = await ContentTask.spawn(
+      test.browser,
+      test.file.path,
+      test.func
+    );
+
+    ok(
+      result.ok == test.ok,
+      `reading ${test.desc} from a ${processType} process ` +
+        `is ${okString} (${test.file.path})`
+    );
+
+    // if the directory is not expected to be readable,
+    // ensure the listing has zero entries
+    if (test.func === readDir && !test.ok) {
+      ok(result.numEntries == 0, `directory list is empty (${test.file.path})`);
+    }
+
+    if (test.cleanup != undefined) {
+      await test.cleanup(test.file.path);
+    }
+  }
 }
