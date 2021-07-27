@@ -446,7 +446,12 @@ div:-moz-native-anonymous.moz-accessiblecaret > #image {
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-  background-image: url("resource://gre-resources/accessiblecaret-normal@1x.png");
+  background-image: image-set(
+    url("resource://gre-resources/accessiblecaret-normal@1x.png"),
+    url("resource://gre-resources/accessiblecaret-normal@1.5x.png") 1.5x,
+    url("resource://gre-resources/accessiblecaret-normal@2x.png") 2x,
+    url("resource://gre-resources/accessiblecaret-normal@2.25x.png") 2.25x
+  );
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.left > :is(#text-overlay, #image) {
@@ -454,7 +459,12 @@ div:-moz-native-anonymous.moz-accessiblecaret.left > :is(#text-overlay, #image) 
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-  background-image: url("resource://gre-resources/accessiblecaret-tilt-left@1x.png");
+  background-image: image-set(
+    url("resource://gre-resources/accessiblecaret-tilt-left@1x.png"),
+    url("resource://gre-resources/accessiblecaret-tilt-left@1.5x.png") 1.5x,
+    url("resource://gre-resources/accessiblecaret-tilt-left@2x.png") 2x,
+    url("resource://gre-resources/accessiblecaret-tilt-left@2.25x.png") 2.25x
+  );
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.right > :is(#text-overlay, #image) {
@@ -462,7 +472,12 @@ div:-moz-native-anonymous.moz-accessiblecaret.right > :is(#text-overlay, #image)
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-  background-image: url("resource://gre-resources/accessiblecaret-tilt-right@1x.png");
+  background-image: image-set(
+    url("resource://gre-resources/accessiblecaret-tilt-right@1x.png"),
+    url("resource://gre-resources/accessiblecaret-tilt-right@1.5x.png") 1.5x,
+    url("resource://gre-resources/accessiblecaret-tilt-right@2x.png") 2x,
+    url("resource://gre-resources/accessiblecaret-tilt-right@2.25x.png") 2.25x
+  );
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.none {
@@ -471,48 +486,6 @@ div:-moz-native-anonymous.moz-accessiblecaret.none {
 
 div:-moz-native-anonymous.moz-accessiblecaret.hidden {
   visibility: hidden;
-}
-
-@media (min-resolution: 1.5dppx) {
-  div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-    background-image: url("resource://gre-resources/accessiblecaret-normal@1.5x.png");
-  }
-
-  div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-    background-image: url("resource://gre-resources/accessiblecaret-tilt-left@1.5x.png");
-  }
-
-  div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-    background-image: url("resource://gre-resources/accessiblecaret-tilt-right@1.5x.png");
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-    background-image: url("resource://gre-resources/accessiblecaret-normal@2x.png");
-  }
-
-  div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-    background-image: url("resource://gre-resources/accessiblecaret-tilt-left@2x.png");
-  }
-
-  div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-    background-image: url("resource://gre-resources/accessiblecaret-tilt-right@2x.png");
-  }
-}
-
-@media (min-resolution: 2.25dppx) {
-  div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-    background-image: url("resource://gre-resources/accessiblecaret-normal@2.25x.png");
-  }
-
-  div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-    background-image: url("resource://gre-resources/accessiblecaret-tilt-left@2.25x.png");
-  }
-
-  div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-    background-image: url("resource://gre-resources/accessiblecaret-tilt-right@2.25x.png");
-  }
 }
 
 %ifdef ANDROID
@@ -528,7 +501,11 @@ div:-moz-native-anonymous.moz-accessiblecaret > #image {
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-  background-image: url("chrome://geckoview/skin/images/accessiblecaret-normal-hdpi.png");
+  background-image: image-set(
+    url("chrome://geckoview/skin/images/accessiblecaret-normal-hdpi.png"),
+    url("chrome://geckoview/skin/images/accessiblecaret-normal-xhdpi.png") 2x,
+    url("chrome://geckoview/skin/images/accessiblecaret-normal-xxhdpi.png") 2.25x
+  );
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.left > :is(#text-overlay, #image) {
@@ -536,7 +513,11 @@ div:-moz-native-anonymous.moz-accessiblecaret.left > :is(#text-overlay, #image) 
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-  background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-hdpi.png");
+  background-image: image-set(
+    url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-hdpi.png"),
+    url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-xhdpi.png") 2x,
+    url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-xxhdpi.png") 2.25x
+  );
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.right > :is(#text-overlay, #image) {
@@ -544,50 +525,13 @@ div:-moz-native-anonymous.moz-accessiblecaret.right > :is(#text-overlay, #image)
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-  background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-hdpi.png");
+  background-image: image-set(
+    url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-hdpi.png"),
+    url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-xhdpi.png") 2x,
+    url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-xxhdpi.png") 2.25x
+  );
 }
 
-@media (min-resolution: 1.5dppx) {
-  div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-    background-image: url("chrome://geckoview/skin/images/accessiblecaret-normal-hdpi.png");
-  }
-
-  div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-hdpi.png");
-  }
-
-  div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-hdpi.png");
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-    background-image: url("chrome://geckoview/skin/images/accessiblecaret-normal-xhdpi.png");
-  }
-
-  div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-xhdpi.png");
-  }
-
-  div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-xhdpi.png");
-  }
-}
-
-@media (min-resolution: 2.25dppx) {
-  div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-    background-image: url("chrome://geckoview/skin/images/accessiblecaret-normal-xxhdpi.png");
-  }
-
-  div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-xxhdpi.png");
-  }
-
-  div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-xxhdpi.png");
-  }
-}
 %endif
 
 /* Custom content container in the CanvasFrame, positioned on top of everything
