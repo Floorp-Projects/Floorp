@@ -147,6 +147,10 @@
 #  include "GeckoViewHistory.h"
 #endif
 
+#if defined(MOZ_WIDGET_ANDROID)
+#  include "mozilla/widget/nsWindow.h"
+#endif  // defined(MOZ_WIDGET_ANDROID)
+
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
@@ -3984,6 +3988,23 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestPointerCapture(
 mozilla::ipc::IPCResult BrowserParent::RecvReleasePointerCapture(
     const uint32_t& aPointerId) {
   PointerEventHandler::ReleasePointerCaptureRemoteTarget(aPointerId);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserParent::RecvShowDynamicToolbar() {
+#if defined(MOZ_WIDGET_ANDROID)
+  nsCOMPtr<nsIWidget> widget = GetTopLevelWidget();
+  if (!widget) {
+    return IPC_OK();
+  }
+
+  RefPtr<nsWindow> window = nsWindow::From(widget);
+  if (!window) {
+    return IPC_OK();
+  }
+
+  window->ShowDynamicToolbar();
+#endif  // defined(MOZ_WIDGET_ANDROID)
   return IPC_OK();
 }
 

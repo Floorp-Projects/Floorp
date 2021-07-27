@@ -404,7 +404,7 @@ public class GeckoSession {
                     delegate.onFullScreen(GeckoSession.this, true);
                 } else if ("GeckoView:FullScreenExit".equals(event)) {
                     delegate.onFullScreen(GeckoSession.this, false);
-                }  else if ("GeckoView:WebAppManifest".equals(event)) {
+                } else if ("GeckoView:WebAppManifest".equals(event)) {
                     final GeckoBundle manifest = message.getBundle("manifest");
                     if (manifest == null) {
                         return;
@@ -1094,6 +1094,21 @@ public class GeckoSession {
             if (delegate != null) {
                 delegate.onExternalResponse(session, response);
             }
+        }
+
+        @WrapForJNI(calledFrom = "gecko")
+        private void onShowDynamicToolbar() {
+            final Window self = this;
+            ThreadUtils.runOnUiThread(() -> {
+                final GeckoSession session = self.mOwner.get();
+                if (session == null) {
+                    return;
+                }
+                final ContentDelegate delegate = session.getContentDelegate();
+                if (delegate != null) {
+                    delegate.onShowDynamicToolbar(session);
+                }
+            });
         }
     }
 
@@ -3296,7 +3311,7 @@ public class GeckoSession {
         default void onWebAppManifest(@NonNull final GeckoSession session, @NonNull final JSONObject manifest) {}
 
         /**
-         * A script has exceeded it's execution timeout value
+         * A script has exceeded its execution timeout value
          * @param geckoSession GeckoSession that initiated the callback.
          * @param scriptFileName Filename of the slow script
          * @return A {@link GeckoResult} with a SlowScriptResponse value which indicates whether to
@@ -3308,6 +3323,14 @@ public class GeckoSession {
                                                                        @NonNull final String scriptFileName) {
             return null;
         }
+
+        /**
+         * The app should display its dynamic toolbar, fully expanded to the height that was
+         * previously specified via {@link GeckoView#setDynamicToolbarMaxHeight}.
+         * @param geckoSession GeckoSession that initiated the callback.
+         */
+        @UiThread
+        default void onShowDynamicToolbar(@NonNull final GeckoSession geckoSession) {}
     }
 
     public interface SelectionActionDelegate {
