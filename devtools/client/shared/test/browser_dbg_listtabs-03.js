@@ -13,6 +13,11 @@ var { DevToolsClient } = require("devtools/client/devtools-client");
 const TAB1_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 
 add_task(async function test() {
+  // This test assert RDP APIs which were only meaningful when doing client side targets.
+  // Now that targets are all created by the Watcher, it is no longer meaningful to cover this.
+  // We should probably remove this test in bug 1721852.
+  await pushPref("devtools.target-switching.server.enabled", false);
+
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 

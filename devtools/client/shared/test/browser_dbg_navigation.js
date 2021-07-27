@@ -12,6 +12,10 @@ const TAB2_FILE = "doc_empty-tab-02.html";
 const TAB2_URL = EXAMPLE_URL + TAB2_FILE;
 
 add_task(async () => {
+  // Navigation events (navigate/will-navigate/tabNavigated) on the target no longer fire with server targets.
+  // We should probably drop this test once we stop supporting client side targets (bug 1721852).
+  await pushPref("devtools.target-switching.server.enabled", false);
+
   const tab = await addTab(TAB1_URL);
   const target = await createAndAttachTargetForTab(tab);
 
