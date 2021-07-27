@@ -1281,11 +1281,16 @@ function prompt(aActor, aBrowser, aRequest) {
   }
 
   let iconType = "Devices";
-  if (
-    requestTypes.length == 1 &&
-    (requestTypes[0] == "Microphone" || requestTypes[0] == "AudioCapture")
-  ) {
-    iconType = "Microphone";
+  if (requestTypes.length == 1) {
+    switch (requestTypes[0]) {
+      case "AudioCapture":
+        iconType = "Microphone";
+        break;
+      case "Microphone":
+      case "Speaker":
+        iconType = requestTypes[0];
+        break;
+    }
   }
   if (requestTypes.includes("Screen")) {
     iconType = "Screen";
