@@ -240,9 +240,8 @@ typedef enum {
                                      except for always on APO, driver and hardware. */
   CUBEB_STREAM_PREF_PERSIST = 0x10, /**< Request that the volume and mute settings
                                          should persist across restarts of the stream
-                                         and/or application. May not be honored for
-                                         all backends and platforms. */
-
+                                         and/or application. This is obsolete and ignored
+                                         by all backends. */
   CUBEB_STREAM_PREF_JACK_NO_AUTO_CONNECT = 0x20  /**< Don't automatically try to connect
                                                       ports.  Only affects the jack
                                                       backend. */
