@@ -9,11 +9,11 @@
  */
 
 add_task(async function() {
-  const INITIATOR_URL = EXAMPLE_URL + "html_cause-test-page.html";
-  const FETCH_REQUEST =
-    "http://example.com/browser/devtools/client/netmonitor/test/fetch_request";
+  const URL = EXAMPLE_URL + "html_single-get-page.html";
+  const REQUEST =
+    "http://example.com/browser/devtools/client/netmonitor/test/request_0";
 
-  const { tab, monitor } = await initNetMonitor(INITIATOR_URL, {
+  const { tab, monitor } = await initNetMonitor(URL, {
     requestCount: 1,
   });
 
@@ -24,7 +24,7 @@ add_task(async function() {
 
   info("Starting test... ");
 
-  const wait = waitForNetworkEvents(monitor, 8);
+  const wait = waitForNetworkEvents(monitor, 2);
   tab.linkedBrowser.reload();
   await wait;
 
@@ -33,11 +33,11 @@ add_task(async function() {
     "Wait for the stacktrace to be rendered"
   );
 
-  // Select the fetch-request
+  // Select the request initiated by html_single-get-page.html
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelector(
-      `.request-list-item .requests-list-file[title="${FETCH_REQUEST}"]`
+      `.request-list-item .requests-list-file[title="${REQUEST}"]`
     )
   );
   clickOnSidebarTab(document, "stack-trace");
@@ -48,7 +48,7 @@ add_task(async function() {
   const { hud } = await monitor.toolbox.selectTool("webconsole");
 
   const fetchRequestUrlNode = hud.ui.outputNode.querySelector(
-    `.webconsole-output .cm-s-mozilla.message.network span[title="${FETCH_REQUEST}"]`
+    `.webconsole-output .cm-s-mozilla.message.network span[title="${REQUEST}"]`
   );
   fetchRequestUrlNode.click();
 
