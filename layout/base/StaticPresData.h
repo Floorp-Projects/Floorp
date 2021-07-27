@@ -26,7 +26,8 @@ struct LangGroupFontPrefs {
         mDefaultSansSerifFont(StyleGenericFontFamily::SansSerif, {0}),
         mDefaultMonospaceFont(StyleGenericFontFamily::Monospace, {0}),
         mDefaultCursiveFont(StyleGenericFontFamily::Cursive, {0}),
-        mDefaultFantasyFont(StyleGenericFontFamily::Fantasy, {0}) {
+        mDefaultFantasyFont(StyleGenericFontFamily::Fantasy, {0}),
+        mDefaultSystemUiFont(StyleGenericFontFamily::SystemUi, {0}) {
     mDefaultVariableFont.family.families.fallback =
         StyleGenericFontFamily::Serif;
     // We create mDefaultVariableFont.family with defaultType as the
@@ -72,6 +73,8 @@ struct LangGroupFontPrefs {
         return &mDefaultCursiveFont;
       case StyleGenericFontFamily::Fantasy:
         return &mDefaultFantasyFont;
+      case StyleGenericFontFamily::SystemUi:
+        return &mDefaultSystemUiFont;
       case StyleGenericFontFamily::MozEmoji:
         // This shouldn't appear in font family names.
         break;
@@ -88,6 +91,7 @@ struct LangGroupFontPrefs {
   nsFont mDefaultMonospaceFont;
   nsFont mDefaultCursiveFont;
   nsFont mDefaultFantasyFont;
+  nsFont mDefaultSystemUiFont;
   UniquePtr<LangGroupFontPrefs> mNext;
 };
 

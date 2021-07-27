@@ -1364,7 +1364,8 @@ StyleDefaultFontSizes Gecko_GetBaseSize(nsAtom* aLanguage) {
   prefs.Initialize(langGroupAtom);
   return {prefs.mDefaultVariableFont.size,  prefs.mDefaultSerifFont.size,
           prefs.mDefaultSansSerifFont.size, prefs.mDefaultMonospaceFont.size,
-          prefs.mDefaultCursiveFont.size,   prefs.mDefaultFantasyFont.size};
+          prefs.mDefaultCursiveFont.size,   prefs.mDefaultFantasyFont.size,
+          prefs.mDefaultSystemUiFont.size};
 }
 
 static StaticRefPtr<UACacheReporter> gUACacheReporter;
@@ -1792,6 +1793,8 @@ void StyleSingleFontFamily::AppendToString(nsACString& aName,
       return aName.AppendLiteral("cursive");
     case StyleGenericFontFamily::Fantasy:
       return aName.AppendLiteral("fantasy");
+    case StyleGenericFontFamily::SystemUi:
+      return aName.AppendLiteral("system-ui");
   }
   MOZ_ASSERT_UNREACHABLE("Unknown generic font-family!");
   return aName.AppendLiteral("serif");
