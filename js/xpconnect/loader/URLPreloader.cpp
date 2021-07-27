@@ -23,7 +23,6 @@
 #include "nsDebug.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"
-#include "nsIObserverService.h"
 #include "nsNetUtil.h"
 #include "nsPromiseFlatString.h"
 #include "nsProxyRelease.h"
@@ -31,9 +30,6 @@
 #include "nsXULAppAPI.h"
 #include "nsZipArchive.h"
 #include "xpcpublic.h"
-
-#undef DELAYED_STARTUP_TOPIC
-#define DELAYED_STARTUP_TOPIC "sessionstore-windows-restored"
 
 namespace mozilla {
 namespace {
@@ -140,10 +136,6 @@ Result<Ok, nsresult> URLPreloader::InitInternal() {
     return Err(NS_ERROR_UNEXPECTED);
   }
 
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-
-  MOZ_TRY(obs->AddObserver(this, DELAYED_STARTUP_TOPIC, false));
-
   MOZ_TRY(NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(mProfD)));
 
   return Ok();
@@ -151,6 +143,7 @@ Result<Ok, nsresult> URLPreloader::InitInternal() {
 
 URLPreloader& URLPreloader::ReInitialize() {
   MOZ_ASSERT(sSingleton);
+  sSingleton = nullptr;
   sSingleton = Create(&sInitialized);
   return *sSingleton;
 }
@@ -195,6 +188,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> URLPreloader::FindCacheFile() {
 
 Result<Ok, nsresult> URLPreloader::WriteCache() {
   MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(mStartupFinished);
 
   // The script preloader might call us a second time, if it has to re-write
   // its cache after a cache flush. We don't care about cache flushes, since
@@ -665,18 +659,7 @@ Result<nsCString, nsresult> URLPreloader::URLEntry::ReadOrWait(
 
 inline URLPreloader::CacheKey::CacheKey(InputBuffer& buffer) { Code(buffer); }
 
-nsresult URLPreloader::Observe(nsISupports* subject, const char* topic,
-                               const char16_t* data) {
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!strcmp(topic, DELAYED_STARTUP_TOPIC)) {
-    obs->RemoveObserver(this, DELAYED_STARTUP_TOPIC);
-    mStartupFinished = true;
-  }
-
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(URLPreloader, nsIObserver, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(URLPreloader, nsIMemoryReporter)
 
 #undef LOG
 
