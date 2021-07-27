@@ -215,6 +215,11 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     return ![self moxIsLiveRegion];
   }
 
+  if (selector == @selector(moxExpanded)) {
+    return ([self stateWithMask:states::EXPANDED] == 0) &&
+           ([self stateWithMask:states::COLLAPSED] == 0);
+  }
+
   return [super moxBlockSelector:selector];
 }
 
@@ -691,6 +696,10 @@ struct RoleDescrComparator {
 
 - (NSNumber*)moxSelected {
   return @NO;
+}
+
+- (NSNumber*)moxExpanded {
+  return @([self stateWithMask:states::EXPANDED] != 0);
 }
 
 - (NSValue*)moxFrame {
