@@ -45,7 +45,7 @@ add_task(async function test_local_addon_update() {
     setupPolicyEngineWithJson({
       policies: {
         ExtensionSettings: {
-          "updatable@test": {
+          "updatable1@test": {
             installation_mode: "force_installed",
             install_url: Services.io.newFileURI(tmpDir).spec + "/" + TEST_NAME,
           },
@@ -74,7 +74,7 @@ add_task(async function test_local_addon_update() {
     setupPolicyEngineWithJson({
       policies: {
         ExtensionSettings: {
-          "updatable@test": {
+          "updatable1@test": {
             installation_mode: "force_installed",
             install_url: Services.io.newFileURI(tmpDir).spec + "/" + TEST_NAME,
           },
