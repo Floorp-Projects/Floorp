@@ -15,20 +15,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   event: "chrome://remote/content/marionette/event.js",
   Log: "chrome://remote/content/shared/Log.jsm",
-  MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.get(Log.TYPES.MARIONETTE)
 );
-
-XPCOMUtils.defineLazyGetter(this, "isTraceLevel", () => {
-  const StdLog = ChromeUtils.import("resource://gre/modules/Log.jsm").Log;
-
-  return [StdLog.Level.All, StdLog.Level.Trace].includes(
-    MarionettePrefs.logLevel
-  );
-});
 
 class MarionetteEventsChild extends JSWindowActorChild {
   get innerWindowId() {
@@ -39,7 +30,7 @@ class MarionetteEventsChild extends JSWindowActorChild {
     // Prevent the logger from being created if the current log level
     // isn't set to 'trace'. This is important for a faster content process
     // creation when Marionette is running.
-    if (isTraceLevel) {
+    if (Log.isTraceLevel) {
       logger.trace(
         `[${this.browsingContext.id}] MarionetteEvents actor created ` +
           `for window id ${this.innerWindowId}`
