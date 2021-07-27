@@ -25,6 +25,10 @@ static constexpr gfx::sRGBColor sColorWhiteAlpha50(gfx::sRGBColor::White(0.5f));
 static constexpr gfx::sRGBColor sColorWhiteAlpha80(gfx::sRGBColor::White(0.8f));
 static constexpr gfx::sRGBColor sColorBlack(gfx::sRGBColor::OpaqueBlack());
 
+static constexpr gfx::sRGBColor sDefaultAccent(
+    gfx::sRGBColor::UnusualFromARGB(0xff0060df));  // Luminance: 13.69346%
+static constexpr gfx::sRGBColor sDefaultAccentForeground(sColorWhite);
+
 static constexpr gfx::sRGBColor sColorGrey10(
     gfx::sRGBColor::UnusualFromARGB(0xffe9e9ed));
 static constexpr gfx::sRGBColor sColorGrey10Alpha50(
@@ -169,6 +173,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   static nscolor AdjustUnthemedScrollbarThumbColor(nscolor, EventStates);
   static nscolor GetScrollbarButtonColor(nscolor aTrackColor, EventStates);
   static mozilla::Maybe<nscolor> GetScrollbarArrowColor(nscolor aButtonColor);
+  static nscolor ComputeCustomAccentForeground(nscolor aAccent);
 
   nscoord GetCheckboxRadioPrefSize() override;
 

@@ -11586,7 +11586,7 @@
 # TODO(emilio): This should probably do the right thing in most other
 # platforms, but stick to the standard colors on those.
 - name: widget.non-native-theme.use-theme-accent
-  type: bool
+  type: RelaxedAtomicBool
 #if defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
   value: true
 #else

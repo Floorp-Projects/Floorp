@@ -83,8 +83,7 @@ struct ColorPalette {
 
   constexpr static ColorPalette Default() {
     return ColorPalette(
-        sRGBColor::UnusualFromARGB(0xff0060df),  // Luminance: 13.69346%
-        sColorWhite,
+        sDefaultAccent, sDefaultAccentForeground,
         sRGBColor::UnusualFromARGB(0x4d008deb),  // Luminance: 25.04791%
         sRGBColor::UnusualFromARGB(0xff0250bb),  // Luminance: 9.33808%
         sRGBColor::UnusualFromARGB(0xff054096)   // Luminance: 5.90106%
@@ -160,7 +159,9 @@ ColorPalette::ColorPalette(nscolor aAccent, nscolor aForeground) {
   mAccentDarker = sRGBColor::FromABGR(GetDarker(aAccent));
 }
 
-static nscolor ComputeCustomAccentForeground(nscolor aColor) {
+}  // namespace
+
+nscolor nsNativeBasicTheme::ComputeCustomAccentForeground(nscolor aColor) {
   // Contrast ratio is defined in
   // https://www.w3.org/TR/WCAG20/#contrast-ratiodef as:
   //
@@ -193,8 +194,6 @@ static nscolor ComputeCustomAccentForeground(nscolor aColor) {
   const float targetLuminance = (luminance + 0.05f) / targetRatio - 0.05f;
   return RelativeLuminanceUtils::Adjust(aColor, targetLuminance);
 }
-
-}  // namespace
 
 class nsNativeBasicTheme::AccentColor {
   Maybe<nscolor> mAccentColor;

@@ -1045,7 +1045,8 @@ public class GeckoAppShell {
             android.R.attr.colorForeground,
             android.R.attr.colorBackground,
             android.R.attr.panelColorForeground,
-            android.R.attr.panelColorBackground
+            android.R.attr.panelColorBackground,
+            Build.VERSION.SDK_INT >= 21 ? android.R.attr.colorAccent : 0,
         };
 
         final int[] result = new int[attrsAppearance.length];
