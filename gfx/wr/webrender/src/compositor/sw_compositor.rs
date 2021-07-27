@@ -1330,6 +1330,8 @@ impl Compositor for SwCompositor {
     }
 
     fn begin_frame(&mut self) {
+        self.reset_overlaps();
+
         if self.use_native_compositor {
             self.compositor.begin_frame();
         }
