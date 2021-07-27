@@ -96,11 +96,11 @@ class BundledSearchEnginesStorageTest {
         val engines = storage.load(RegionState("CN", "CN"), Locale("zh", "CN"))
         val searchEngines = engines.list
 
-        // visibleDefaultEngines: ["google-b-m", "bing", "baidu", "ddg", "taobao", "wikipedia-zh-CN"]
+        // visibleDefaultEngines: ["google-b-m", "bing", "baidu", "ddg", "wikipedia-zh-CN"]
         // searchOrder (default): ["Google", "Bing"]
 
         assertEquals(
-            listOf("google-b-m", "bing", "baidu", "ddg", "taobao", "wikipedia-zh-CN"),
+            listOf("google-b-m", "bing", "baidu", "ddg", "wikipedia-zh-CN"),
             searchEngines.map { it.id }
         )
 
