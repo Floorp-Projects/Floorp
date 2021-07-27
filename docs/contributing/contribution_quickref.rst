@@ -312,7 +312,7 @@ GeckoView setup and contribution docs live in `geckoview.dev <https://geckoview.
 More documentation about contribution
 -------------------------------------
 
-https://developer.mozilla.org/docs/Mozilla/Developer_guide/Introduction
+:ref:`Contributing to Mozilla projects`
 
 https://mozilla-version-control-tools.readthedocs.io/en/latest/devguide/contributing.html
 
