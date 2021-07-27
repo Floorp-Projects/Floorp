@@ -161,6 +161,8 @@ using mozilla::DebugOnly;
 using mozilla::FloorLog2;
 using mozilla::IsPowerOfTwo;
 using mozilla::Maybe;
+using mozilla::Nothing;
+using mozilla::Some;
 
 namespace js {
 namespace wasm {
