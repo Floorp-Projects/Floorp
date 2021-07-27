@@ -341,10 +341,6 @@ pub enum SystemColor {
     MozMacActiveSourceListSelection,
     MozMacTooltip,
 
-    /// Parsed for compat, effectively black (not implemented in any platform).
-    /// See bug 1718934.
-    WebkitFocusRingColor,
-
     /// Theme accent color.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozAccentColor,
