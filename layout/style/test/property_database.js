@@ -13357,6 +13357,27 @@ if (IsCSSPropertyPrefEnabled("layout.css.color-mix.enabled")) {
   );
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.color-scheme.enabled")) {
+  gCSSProperties["color-scheme"] = {
+    domProp: "colorScheme",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["normal"],
+    other_values: [
+      "light",
+      "dark",
+      "light dark",
+      "light dark purple",
+      "light light dark",
+      "only light",
+      "only light dark",
+      "only light dark purple",
+      "light only",
+    ],
+    invalid_values: ["only normal", "normal only", "only light only"],
+  };
+}
+
 // Copy aliased properties' fields from their alias targets. Keep this logic
 // at the bottom of this file to ensure all the aliased properties are
 // processed.

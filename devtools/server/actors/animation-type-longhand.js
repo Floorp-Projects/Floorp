@@ -42,6 +42,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "color-adjust",
       "color-interpolation",
       "color-interpolation-filters",
+      "color-scheme",
       "column-fill",
       "column-rule-style",
       "column-span",

@@ -2598,7 +2598,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
 
   bool hidpi = IsHiDPIContext(aFrame->PresContext()->DeviceContext());
 
-  auto colorScheme = LookAndFeel::ColorSchemeForDocument(*aFrame->PresContext()->Document());
+  auto colorScheme = LookAndFeel::ColorSchemeForFrame(aFrame);
 
   RenderWidget(*widgetInfo, colorScheme, *aContext->GetDrawTarget(), nativeWidgetRect,
                NSRectToRect(aDirtyRect, p2a), hidpi ? 2.0f : 1.0f);

@@ -3077,7 +3077,8 @@ nsStyleUI::nsStyleUI(const Document& aDocument)
       mCursor{{}, StyleCursorKind::Auto},
       mAccentColor(StyleColorOrAuto::Auto()),
       mCaretColor(StyleColorOrAuto::Auto()),
-      mScrollbarColor(StyleScrollbarColor::Auto()) {
+      mScrollbarColor(StyleScrollbarColor::Auto()),
+      mColorScheme(StyleColorScheme{{}, {}}) {
   MOZ_COUNT_CTOR(nsStyleUI);
 }
 
@@ -3090,7 +3091,8 @@ nsStyleUI::nsStyleUI(const nsStyleUI& aSource)
       mCursor(aSource.mCursor),
       mAccentColor(aSource.mAccentColor),
       mCaretColor(aSource.mCaretColor),
-      mScrollbarColor(aSource.mScrollbarColor) {
+      mScrollbarColor(aSource.mScrollbarColor),
+      mColorScheme(aSource.mColorScheme) {
   MOZ_COUNT_CTOR(nsStyleUI);
 }
 
@@ -3140,7 +3142,8 @@ nsChangeHint nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const {
 
   if (mCaretColor != aNewData.mCaretColor ||
       mAccentColor != aNewData.mAccentColor ||
-      mScrollbarColor != aNewData.mScrollbarColor) {
+      mScrollbarColor != aNewData.mScrollbarColor ||
+      mColorScheme != aNewData.mColorScheme) {
     hint |= nsChangeHint_RepaintFrame;
   }
 

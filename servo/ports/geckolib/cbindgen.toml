@@ -137,6 +137,7 @@ include = [
   "BorderImageSlice",
   "BorderSpacing",
   "BorderRadius",
+  "ColorScheme",
   "NonNegativeLengthOrNumberRect",
   "Perspective",
   "ZIndex",

@@ -688,7 +688,8 @@ bool Gecko_IsDocumentBody(const Element* aElement) {
 }
 
 nscolor Gecko_GetLookAndFeelSystemColor(int32_t aId, const Document* aDoc,
-                                        StyleSystemColorScheme aColorScheme) {
+                                        StyleSystemColorScheme aColorScheme,
+                                        const StyleColorScheme* aStyle) {
   auto colorId = static_cast<LookAndFeel::ColorID>(aId);
   auto useStandins = LookAndFeel::ShouldUseStandins(*aDoc, colorId);
   auto colorScheme = [&] {
@@ -700,7 +701,7 @@ nscolor Gecko_GetLookAndFeelSystemColor(int32_t aId, const Document* aDoc,
       case StyleSystemColorScheme::Dark:
         return LookAndFeel::ColorScheme::Dark;
     }
-    return LookAndFeel::ColorSchemeForDocument(*aDoc);
+    return LookAndFeel::ColorSchemeForStyle(*aDoc, aStyle->bits);
   }();
 
   AutoWriteLock guard(*sServoFFILock);
