@@ -9,8 +9,8 @@ async function createFileInHome() {
   let homeFile = fileInHomeDir();
   let path = homeFile.path;
   let fileCreated = await SpecialPowers.spawn(browser, [path], createFile);
-  ok(!fileCreated, "creating a file in home dir is not permitted");
-  if (fileCreated) {
+  ok(!fileCreated.ok, "creating a file in home dir is not permitted");
+  if (fileCreated.ok) {
     // content process successfully created the file, now remove it
     homeFile.remove(false);
   }
@@ -24,9 +24,9 @@ async function createTempFile() {
   let path = fileInTempDir().path;
   let fileCreated = await SpecialPowers.spawn(browser, [path], createFile);
   if (isMac()) {
-    ok(!fileCreated, "creating a file in content temp is not permitted");
+    ok(!fileCreated.ok, "creating a file in content temp is not permitted");
   } else {
-    ok(!!fileCreated, "creating a file in content temp is permitted");
+    ok(!!fileCreated.ok, "creating a file in content temp is permitted");
   }
   // now delete the file
   let fileDeleted = await SpecialPowers.spawn(browser, [path], deleteFile);
@@ -34,7 +34,7 @@ async function createTempFile() {
     // On macOS we do not allow file deletion - it is not needed by the content
     // process itself, and macOS uses a different permission to control access
     // so revoking it is easy.
-    ok(!fileDeleted, "deleting a file in content temp is not permitted");
+    ok(!fileDeleted.ok, "deleting a file in content temp is not permitted");
 
     let path = fileInTempDir().path;
     let symlinkCreated = await SpecialPowers.spawn(
@@ -42,9 +42,12 @@ async function createTempFile() {
       [path],
       createSymlink
     );
-    ok(!symlinkCreated, "created a symlink in content temp is not permitted");
+    ok(
+      !symlinkCreated.ok,
+      "created a symlink in content temp is not permitted"
+    );
   } else {
-    ok(!!fileDeleted, "deleting a file in content temp is permitted");
+    ok(!!fileDeleted.ok, "deleting a file in content temp is permitted");
   }
 }
 
@@ -404,12 +407,24 @@ async function testFileAccessLinuxOnly() {
     func: readDir,
   });
 
-  let xdgConfigHome = GetEnvironmentVariable("XDG_CONFIG_HOME");
-  ok(xdgConfigHome.length > 1, `$XDG_CONFIG_HOME defined (${xdgConfigHome})`);
+  let cacheFontConfigDir = GetHomeSubdir(".cache/fontconfig/");
+  tests.push({
+    desc: `$HOME/.cache/fontconfig/ (${cacheFontConfigDir.path})`,
+    ok: true,
+    browser: webBrowser,
+    file: cacheFontConfigDir,
+    minLevel: minHomeReadSandboxLevel(),
+    func: readDir,
+  });
 
+  // allows to handle both $HOME/.config/ or $XDG_CONFIG_HOME
+  let configDir = GetHomeSubdir(".config");
+
+  const xdgConfigHome = GetEnvironmentVariable("XDG_CONFIG_HOME");
   let populateFakeXdgConfigHome = async aPath => {
     const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
     await OS.File.makeDir(aPath, { unixMode: OS.Constants.S_IRWXU });
+    ok(await OS.File.exists(aPath), `XDG_CONFIG_HOME ${aPath} was created`);
   };
 
   let unpopulateFakeXdgConfigHome = async aPath => {
@@ -417,30 +432,222 @@ async function testFileAccessLinuxOnly() {
     await OS.File.removeDir(aPath);
   };
 
-  await populateFakeXdgConfigHome(xdgConfigHome);
+  if (xdgConfigHome.length > 1) {
+    await populateFakeXdgConfigHome(xdgConfigHome);
 
-  let xdgConfigHomePath = GetDir(xdgConfigHome);
-  xdgConfigHomePath.normalize();
+    configDir = GetDir(xdgConfigHome);
+    configDir.normalize();
 
+    tests.push({
+      desc: `$XDG_CONFIG_HOME (${configDir.path})`,
+      ok: true,
+      browser: webBrowser,
+      file: configDir,
+      minLevel: minHomeReadSandboxLevel(),
+      func: readDir,
+    });
+  }
+
+  // $HOME/.config/ or $XDG_CONFIG_HOME/ should have rdonly access
   tests.push({
-    desc: `$XDG_CONFIG_HOME (${xdgConfigHomePath.path})`,
+    desc: `${configDir.path} dir`,
     ok: true,
     browser: webBrowser,
-    file: xdgConfigHomePath,
+    file: configDir,
     minLevel: minHomeReadSandboxLevel(),
     func: readDir,
-    cleanup: unpopulateFakeXdgConfigHome,
   });
+  if (fileContentProcessEnabled) {
+    tests.push({
+      desc: `${configDir.path} dir`,
+      ok: true,
+      browser: fileBrowser,
+      file: configDir,
+      minLevel: 0,
+      func: readDir,
+    });
+  }
 
-  let cacheFontConfigDir = GetHomeSubdir(".cache/fontconfig");
+  if (xdgConfigHome.length > 1) {
+    // When XDG_CONFIG_HOME is set, dont allow $HOME/.config
+    const homeConfigDir = GetHomeSubdir(".config");
+    tests.push({
+      desc: `${homeConfigDir.path} dir`,
+      ok: false,
+      browser: webBrowser,
+      file: homeConfigDir,
+      minLevel: minHomeReadSandboxLevel(),
+      func: readDir,
+    });
+    if (fileContentProcessEnabled) {
+      tests.push({
+        desc: `${homeConfigDir.path} dir`,
+        ok: true,
+        browser: fileBrowser,
+        file: homeConfigDir,
+        minLevel: 0,
+        func: readDir,
+      });
+    }
+  } else {
+    // WWhen XDG_CONFIG_HOME is not set, verify we do not allow $HOME/.configlol
+    // (i.e., check allow the dir and not the prefix)
+    //
+    // Checking $HOME/.config is already done above.
+    const homeConfigPrefix = GetHomeSubdir(".configlol");
+    tests.push({
+      desc: `${homeConfigPrefix.path} dir`,
+      ok: false,
+      browser: webBrowser,
+      file: homeConfigPrefix,
+      minLevel: minHomeReadSandboxLevel(),
+      func: readDir,
+    });
+    if (fileContentProcessEnabled) {
+      tests.push({
+        desc: `${homeConfigPrefix.path} dir`,
+        ok: false,
+        browser: fileBrowser,
+        file: homeConfigPrefix,
+        minLevel: 0,
+        func: readDir,
+      });
+    }
+  }
+
+  // Create a file under $HOME/.config/ or $XDG_CONFIG_HOME and ensure we can
+  // read it
+  let fileUnderConfig = GetSubdirFile(configDir);
+  let fileUnderConfigCreated = await createFile(fileUnderConfig.path);
+  if (!fileUnderConfigCreated.ok) {
+    ok(false, `Failure to create ${fileUnderConfig.path}`);
+  }
+  ok(
+    fileUnderConfigCreated,
+    `File ${fileUnderConfig.path} was properly created`
+  );
+  let removeFileUnderConfig = async aPath => {
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+    await OS.File.remove(aPath);
+  };
+
   tests.push({
-    desc: "$HOME/.cache/fontconfig/",
+    desc: `${configDir.path}/xxx is readable (${fileUnderConfig.path})`,
     ok: true,
     browser: webBrowser,
-    file: cacheFontConfigDir,
+    file: fileUnderConfig,
+    minLevel: minHomeReadSandboxLevel(),
+    func: readFile,
+    cleanup: removeFileUnderConfig,
+  });
+
+  let configFile = GetSubdirFile(configDir);
+  tests.push({
+    desc: `${configDir.path} file write`,
+    ok: false,
+    browser: webBrowser,
+    file: configFile,
+    minLevel: minHomeReadSandboxLevel(),
+    func: createFile,
+  });
+  if (fileContentProcessEnabled) {
+    tests.push({
+      desc: `${configDir.path} file write`,
+      ok: false,
+      browser: fileBrowser,
+      file: configFile,
+      minLevel: 0,
+      func: createFile,
+    });
+  }
+
+  // Create a $HOME/.config/mozilla/ or $XDG_CONFIG_HOME/mozilla/ if none
+  // exists and assert content process cannot access it
+  let configMozilla = GetSubdir(configDir, "mozilla");
+  const emptyFileName = ".test_run_browser_sandbox.tmp";
+  let emptyFile = configMozilla.clone();
+  emptyFile.appendRelativePath(emptyFileName);
+
+  let populateFakeConfigMozilla = async aPath => {
+    // called with configMozilla
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+    await OS.File.makeDir(aPath, { unixMode: OS.Constants.S_IRWXU });
+    await createFile(emptyFile.path);
+    ok(
+      await OS.File.exists(emptyFile.path),
+      `Temp file ${emptyFile.path} was created`
+    );
+  };
+
+  let unpopulateFakeConfigMozilla = async aPath => {
+    // called with emptyFile
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+    await OS.File.remove(aPath);
+    ok(!(await OS.File.exists(aPath)), `Temp file ${aPath} was removed`);
+    const parentDir = OS.Path.dirname(aPath);
+    try {
+      await OS.File.removeEmptyDir(parentDir);
+    } catch (ex) {
+      // 39=ENOTEMPTY, if we get that there it means the directory was not
+      // empty and since we assert earlier we removed the temp file we created
+      // it means we should not worrying about removing this directory ...
+      if (ex.unixErrno !== 39) {
+        throw ex;
+      }
+    }
+  };
+
+  await populateFakeConfigMozilla(configMozilla.path);
+
+  tests.push({
+    desc: `stat ${configDir.path}/mozilla (${configMozilla.path})`,
+    ok: false,
+    browser: webBrowser,
+    file: configMozilla,
+    minLevel: minHomeReadSandboxLevel(),
+    func: statPath,
+  });
+
+  tests.push({
+    desc: `read ${configDir.path}/mozilla (${configMozilla.path})`,
+    ok: false,
+    browser: webBrowser,
+    file: configMozilla,
     minLevel: minHomeReadSandboxLevel(),
     func: readDir,
   });
+
+  tests.push({
+    desc: `stat ${configDir.path}/mozilla/${emptyFileName} (${emptyFile.path})`,
+    ok: false,
+    browser: webBrowser,
+    file: emptyFile,
+    minLevel: minHomeReadSandboxLevel(),
+    func: statPath,
+  });
+
+  tests.push({
+    desc: `read ${configDir.path}/mozilla/${emptyFileName} (${emptyFile.path})`,
+    ok: false,
+    browser: webBrowser,
+    file: emptyFile,
+    minLevel: minHomeReadSandboxLevel(),
+    func: readFile,
+    cleanup: unpopulateFakeConfigMozilla,
+  });
+
+  // Only needed to perform cleanup
+  if (xdgConfigHome.length > 1) {
+    tests.push({
+      desc: `$XDG_CONFIG_HOME (${configDir.path}) cleanup`,
+      ok: true,
+      browser: webBrowser,
+      file: configDir,
+      minLevel: minHomeReadSandboxLevel(),
+      func: readDir,
+      cleanup: unpopulateFakeXdgConfigHome,
+    });
+  }
 
   await runTestsList(tests);
 }

@@ -35,40 +35,7 @@ Services.scriptloader.loadSubScript(
 // content processes.
 //
 add_task(async function() {
-  // This test is only relevant in e10s
-  if (!gMultiProcessBrowser) {
-    ok(false, "e10s is enabled");
-    info("e10s is not enabled, exiting");
-    return;
-  }
-
-  let level = 0;
-  let prefExists = true;
-
-  // Read the security.sandbox.content.level pref.
-  // eslint-disable-next-line mozilla/use-default-preference-values
-  try {
-    level = Services.prefs.getIntPref("security.sandbox.content.level");
-  } catch (e) {
-    prefExists = false;
-  }
-
-  ok(prefExists, "pref security.sandbox.content.level exists");
-  if (!prefExists) {
-    return;
-  }
-
-  info(`security.sandbox.content.level=${level}`);
-  ok(level > 0, "content sandbox is enabled.");
-
-  let isFileIOSandboxed = isContentFileIOSandboxed(level);
-
-  // Content sandbox enabled, but level doesn't include file I/O sandboxing.
-  ok(isFileIOSandboxed, "content file I/O sandboxing is enabled.");
-  if (!isFileIOSandboxed) {
-    info("content sandbox level too low for file I/O tests, exiting\n");
-    return;
-  }
+  sanityChecks();
 
   // Test creating a file in the home directory from a web content process
   add_task(createFileInHome); // eslint-disable-line no-undef
