@@ -41,6 +41,7 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmConstants.h"
+#include "wasm/WasmException.h"
 #include "wasm/WasmExprType.h"
 #include "wasm/WasmInitExpr.h"
 #include "wasm/WasmLog.h"
@@ -78,40 +79,6 @@ class Memory;
 class Module;
 class Instance;
 class Table;
-
-// Exception tags are used to uniquely identify exceptions. They are stored
-// in a vector in Instances and used by both WebAssembly.Tag for import
-// and export, and by WebAssembly.Exception for thrown exceptions.
-//
-// Since an exception tag is a (trivial) substructure of AtomicRefCounted, the
-// RefPtr SharedTag can have many instances/modules referencing a single
-// constant exception tag.
-//
-// It is possible that other proposals will start using tags as well, in which
-// case it may be worth generalizing this representation for other kinds of
-// tags.
-
-struct ExceptionTag : AtomicRefCounted<ExceptionTag> {
-  ExceptionTag() = default;
-};
-using SharedExceptionTag = RefPtr<ExceptionTag>;
-using SharedExceptionTagVector =
-    Vector<SharedExceptionTag, 0, SystemAllocPolicy>;
-
-// WasmJSExceptionObject wraps a JS Value in order to provide a uniform
-// method of handling JS thrown exceptions. Exceptions originating in Wasm
-// are WebAssemby.Exception objects, whereas exceptions from JS are
-// wrapped as WasmJSExceptionObject objects.
-class WasmJSExceptionObject : public NativeObject {
-  static const unsigned VALUE_SLOT = 0;
-
- public:
-  static const unsigned RESERVED_SLOTS = 1;
-  static const JSClass class_;
-  const Value& value() const { return getFixedSlot(VALUE_SLOT); }
-
-  static WasmJSExceptionObject* create(JSContext* cx, MutableHandleValue value);
-};
 
 // A Module can either be asm.js or wasm.
 
