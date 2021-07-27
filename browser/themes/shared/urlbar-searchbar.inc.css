@@ -413,7 +413,9 @@
   fill-opacity: var(--urlbar-icon-fill-opacity);
 }
 
-.urlbar-page-action {
+.urlbar-page-action,
+#urlbar-go-button,
+.search-go-button {
   width: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
   height: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
   border-radius: var(--urlbar-icon-border-radius);
@@ -421,20 +423,20 @@
   color: inherit;
 }
 
-:root[uidensity=compact] .urlbar-page-action {
+:root[uidensity=compact] .urlbar-icon {
   margin-inline: 1px;
 }
 
-.urlbar-page-action:not([disabled]):hover {
+.urlbar-icon:not([disabled]):hover {
   background-color: hsla(0,0%,70%,.2);
 }
 
-.urlbar-page-action:not([disabled])[open],
-.urlbar-page-action:not([disabled]):hover:active {
+.urlbar-icon:not([disabled])[open],
+.urlbar-icon:not([disabled]):hover:active {
   background-color: hsla(0,0%,70%,.3);
 }
 
-.urlbar-page-action:-moz-focusring {
+.urlbar-icon:-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
   outline-offset: -2px;
 }
