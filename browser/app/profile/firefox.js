@@ -1194,24 +1194,6 @@ pref("dom.ipc.shims.enabledWarnings", false);
   // content process is killed when all windows are closed, so a change will
   // take effect when the 1st window is opened.
   pref("security.sandbox.content.level", 3);
-
-  // Prefs for controlling whether and how the Mac NPAPI Flash plugin process is
-  // sandboxed. On Mac these levels are:
-  // 0 - "no sandbox"
-  // 1 - "global read access, limited write access for Flash functionality"
-  // 2 - "read access triggered by file dialog activity, limited read/write"
-  //     "access for Flash functionality"
-  // 3 - "limited read/write access for Flash functionality"
-  pref("dom.ipc.plugins.sandbox-level.flash", 1);
-  // Controls the level used on older OS X versions. Is overriden when the
-  // "dom.ipc.plugins.sandbox-level.flash" is set to 0.
-  pref("dom.ipc.plugins.sandbox-level.flash.legacy", 1);
-  // The max OS minor version where we use the above legacy sandbox level.
-  pref("dom.ipc.plugins.sandbox-level.flash.max-legacy-os-minor", 10);
-  // Controls the sandbox level used by plugins other than Flash. On Mac,
-  // no other plugins are supported and this pref is only used for test
-  // plugins used in automated tests.
-  pref("dom.ipc.plugins.sandbox-level.default", 1);
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
