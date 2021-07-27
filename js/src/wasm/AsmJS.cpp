@@ -94,9 +94,18 @@ using mozilla::Compression::LZ4;
 
 /*****************************************************************************/
 
+// A wasm module can either use no memory, a unshared memory (ArrayBuffer) or
+// shared memory (SharedArrayBuffer).
+
+enum class MemoryUsage { None = false, Unshared = 1, Shared = 2 };
+
 // The asm.js valid heap lengths are precisely the WASM valid heap lengths for
 // ARM greater or equal to MinHeapLength
 static const size_t MinHeapLength = PageSize;
+// An asm.js heap can in principle be up to INT32_MAX bytes but requirements
+// on the format restrict it further to the largest pseudo-ARM-immediate.
+// See IsValidAsmJSHeapLength().
+static const uint64_t MaxHeapLength = 0x7f000000;
 
 static uint64_t RoundUpToNextValidAsmJSHeapLength(uint64_t length) {
   if (length <= MinHeapLength) {
@@ -6767,11 +6776,11 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
 
   if (!IsValidAsmJSHeapLength(memoryLength)) {
     UniqueChars msg;
-    if (memoryLength > MaxAsmJSHeapLength) {
+    if (memoryLength > MaxHeapLength) {
       msg = JS_smprintf("ArrayBuffer byteLength 0x%" PRIx64
                         " is not a valid heap length - it is too long."
                         " The longest valid length is 0x%" PRIx64,
-                        uint64_t(memoryLength), MaxAsmJSHeapLength);
+                        uint64_t(memoryLength), MaxHeapLength);
     } else {
       msg = JS_smprintf("ArrayBuffer byteLength 0x%" PRIx64
                         " is not a valid heap length. The next "

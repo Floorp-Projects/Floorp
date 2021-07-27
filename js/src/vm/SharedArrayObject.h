@@ -16,7 +16,7 @@
 #include "gc/Memory.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
-#include "wasm/WasmPages.h"
+#include "wasm/WasmMemory.h"
 
 namespace js {
 

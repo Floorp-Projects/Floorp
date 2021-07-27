@@ -42,7 +42,7 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmInitExpr.h"
-#include "wasm/WasmPages.h"
+#include "wasm/WasmMemory.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmShareable.h"
 #include "wasm/WasmTlsData.h"
@@ -1283,7 +1283,10 @@ struct Limits {
   Limits() = default;
   explicit Limits(uint64_t initial, const Maybe<uint64_t>& maximum = Nothing(),
                   Shareable shared = Shareable::False)
-      : indexType(IndexType::I32), initial(initial), maximum(maximum), shared(shared) {}
+      : indexType(IndexType::I32),
+        initial(initial),
+        maximum(maximum),
+        shared(shared) {}
 };
 
 // MemoryDesc describes a memory.
@@ -1477,15 +1480,6 @@ class CalleeDesc {
   }
 };
 
-// Because ARM has a fixed-width instruction encoding, ARM can only express a
-// limited subset of immediates (in a single instruction).
-
-static const uint64_t HighestValidARMImmediate = 0xff000000;
-
-extern bool IsValidARMImmediate(uint32_t i);
-
-extern uint64_t RoundUpToNextValidARMImmediate(uint64_t i);
-
 // Bounds checks always compare the base of the memory access with the bounds
 // check limit. If the memory access is unaligned, this means that, even if the
 // bounds check succeeds, a few bytes of the access can extend past the end of
@@ -1541,19 +1535,6 @@ static constexpr size_t GetMaxOffsetGuardLimit(bool hugeMemory) {
 }
 
 static const size_t MinOffsetGuardLimit = OffsetGuardLimit;
-
-// Return whether the given immediate satisfies the constraints of the platform
-// (viz. that, on ARM, IsValidARMImmediate).
-
-extern bool IsValidBoundsCheckImmediate(uint32_t i);
-
-// For a given WebAssembly/asm.js max pages, return the number of bytes to
-// map which will necessarily be a multiple of the system page size and greater
-// than maxPages in bytes. For a returned mappedSize:
-//   boundsCheckLimit = mappedSize - GuardSize
-//   IsValidBoundsCheckImmediate(boundsCheckLimit)
-
-extern size_t ComputeMappedSize(Pages maxPages);
 
 // The following thresholds were derived from a microbenchmark. If we begin to
 // ship this optimization for more platforms, we will need to extend this list.

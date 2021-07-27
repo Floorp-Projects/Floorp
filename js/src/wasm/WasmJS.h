@@ -156,21 +156,6 @@ void ReportSimdAnalysis(const char* data);
 // options can support try/catch, throw, rethrow, and branch_on_exn (evolving).
 bool ExceptionsAvailable(JSContext* cx);
 
-Pages MaxMemoryPages();
-size_t MaxMemoryBoundsCheckLimit();
-
-static inline size_t MaxMemoryBytes() { return MaxMemoryPages().byteLength(); }
-
-static inline uint64_t MaxMemoryLimitField(IndexType indexType) {
-  return indexType == IndexType::I32 ? MaxMemory32LimitField
-                                     : MaxMemory64LimitField;
-}
-
-// Compute the 'clamped' maximum size of a memory. See
-// 'WASM Linear Memory structure' in ArrayBufferObject.cpp for background.
-Pages ClampedMaxPages(Pages initialPages, const Maybe<Pages>& sourceMaxPages,
-                      bool useHugeMemory);
-
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 
