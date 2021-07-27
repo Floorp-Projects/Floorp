@@ -10,6 +10,7 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/AvailableMemoryWatcher.h"
 #include "CustomCocoaEvents.h"
 #include "mozilla/WidgetTraceEvent.h"
 #include "nsAppShell.h"
@@ -20,6 +21,7 @@
 #include "nsString.h"
 #include "nsIRollupListener.h"
 #include "nsIWidget.h"
+#include "nsMemoryPressure.h"
 #include "nsThreadUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsObjCExceptions.h"
@@ -227,6 +229,11 @@ nsAppShell::~nsAppShell() {
 
   hal::Shutdown();
 
+  if (mMemoryPressureSource) {
+    dispatch_release(mMemoryPressureSource);
+    mMemoryPressureSource = nullptr;
+  }
+
   if (mCFRunLoop) {
     if (mCFRunLoopSource) {
       ::CFRunLoopRemoveSource(mCFRunLoop, mCFRunLoopSource, kCFRunLoopCommonModes);
@@ -391,6 +398,8 @@ nsresult nsAppShell::Init() {
     } else {
       screenManager.SetHelper(mozilla::MakeUnique<ScreenHelperCocoa>());
     }
+
+    InitMemoryPressureObserver();
   }
 
   nsresult rv = nsBaseAppShell::Init();
@@ -847,6 +856,52 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal* aThread, bool aEventWasProc
   return nsBaseAppShell::AfterProcessNextEvent(aThread, aEventWasProcessed);
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
+}
+
+void nsAppShell::InitMemoryPressureObserver() {
+  // Testing shows that sometimes the memory pressure event is not fired for
+  // over a minute after the memory pressure change is reflected in sysctl
+  // values. Hence this may need to be augmented with polling of the memory
+  // pressure sysctls for lower latency reactions to OS memory pressure. This
+  // was also observed when using DISPATCH_QUEUE_PRIORITY_HIGH.
+  mMemoryPressureSource =
+      dispatch_source_create(DISPATCH_SOURCE_TYPE_MEMORYPRESSURE, 0,
+                             DISPATCH_MEMORYPRESSURE_NORMAL | DISPATCH_MEMORYPRESSURE_WARN |
+                                 DISPATCH_MEMORYPRESSURE_CRITICAL,
+                             dispatch_get_main_queue());
+
+  dispatch_source_set_event_handler(mMemoryPressureSource, ^{
+    dispatch_source_memorypressure_flags_t pressureLevel =
+        dispatch_source_get_data(mMemoryPressureSource);
+    nsAppShell::OnMemoryPressureChanged(pressureLevel);
+  });
+
+  dispatch_resume(mMemoryPressureSource);
+}
+
+void nsAppShell::OnMemoryPressureChanged(dispatch_source_memorypressure_flags_t aPressureLevel) {
+  // The memory pressure dispatch source is created (above) with
+  // dispatch_get_main_queue() which always fires on the main thread.
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MacMemoryPressureLevel geckoPressureLevel;
+  switch (aPressureLevel) {
+    case DISPATCH_MEMORYPRESSURE_NORMAL:
+      geckoPressureLevel = MacMemoryPressureLevel::Normal;
+      break;
+    case DISPATCH_MEMORYPRESSURE_WARN:
+      geckoPressureLevel = MacMemoryPressureLevel::Warning;
+      break;
+    case DISPATCH_MEMORYPRESSURE_CRITICAL:
+      geckoPressureLevel = MacMemoryPressureLevel::Critical;
+      break;
+    default:
+      geckoPressureLevel = MacMemoryPressureLevel::Unexpected;
+  }
+
+  RefPtr<mozilla::nsAvailableMemoryWatcherBase> watcher(
+      nsAvailableMemoryWatcherBase::GetSingleton());
+  watcher->OnMemoryPressureChanged(geckoPressureLevel);
 }
 
 // AppShellDelegate implementation
