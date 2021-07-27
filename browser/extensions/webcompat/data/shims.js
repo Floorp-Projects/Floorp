@@ -98,6 +98,23 @@ const AVAILABLE_SHIMS = [
     ],
   },
   {
+    id: "Adform",
+    platform: "all",
+    name: "Adform",
+    bug: "1713695",
+    file: "adform.js",
+    matches: [
+      "*://track.adform.net/serving/scripts/trackpoint/",
+      "*://track.adform.net/serving/scripts/trackpoint/async/",
+      {
+        patterns: ["*://track.adform.net/Serving/TrackPoint/*"],
+        target: "tracking-pixel.png",
+        types: ["image", "imageset", "xmlhttprequest"],
+      },
+    ],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "AdNexus",
     platform: "all",
     name: "AdNexus",
