@@ -14,6 +14,7 @@
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PBackgroundSessionStorageCache.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
 #include "mozilla/dom/WindowGlobalParent.h"
@@ -2509,6 +2510,45 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
 void CanonicalBrowsingContext::SetTouchEventsOverride(
     dom::TouchEventsOverride aOverride, ErrorResult& aRv) {
   SetTouchEventsOverrideInternal(aOverride, aRv);
+}
+
+void CanonicalBrowsingContext::CloneDocumentTreeInto(
+    CanonicalBrowsingContext* aSource, const nsACString& aRemoteType,
+    embedding::PrintData&& aPrintData) {
+  RemotenessChangeOptions options;
+  options.mRemoteType = aRemoteType;
+
+  mClonePromise =
+      ChangeRemoteness(options, /* aPendingSwitchId = */ 0)
+          ->Then(
+              GetMainThreadSerialEventTarget(), __func__,
+              [source = MaybeDiscardedBrowsingContext{aSource},
+               data = std::move(aPrintData)](
+                  BrowserParent* aBp) -> RefPtr<GenericNonExclusivePromise> {
+                return aBp->SendCloneDocumentTreeIntoSelf(source, data)
+                    ->Then(
+                        GetMainThreadSerialEventTarget(), __func__,
+                        [](BrowserParent::CloneDocumentTreeIntoSelfPromise::
+                               ResolveOrRejectValue&& aValue) {
+                          if (aValue.IsResolve() && aValue.ResolveValue()) {
+                            return GenericNonExclusivePromise::CreateAndResolve(
+                                true, __func__);
+                          }
+                          return GenericNonExclusivePromise::CreateAndReject(
+                              NS_ERROR_FAILURE, __func__);
+                        });
+              },
+              [](nsresult aRv) -> RefPtr<GenericNonExclusivePromise> {
+                NS_WARNING(
+                    nsPrintfCString("Remote clone failed: %x\n", unsigned(aRv))
+                        .get());
+                return GenericNonExclusivePromise::CreateAndReject(
+                    NS_ERROR_FAILURE, __func__);
+              });
+
+  mClonePromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [self = RefPtr{this}]() { self->mClonePromise = nullptr; });
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(CanonicalBrowsingContext)
