@@ -100,12 +100,12 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
 
   // The simple interface to a parallel task works exactly like pthreads.
   void start();
-  bool join(mozilla::Maybe<mozilla::TimeStamp> deadline = mozilla::Nothing());
+  void join(mozilla::Maybe<mozilla::TimeStamp> deadline = mozilla::Nothing());
 
   // If multiple tasks are to be started or joined at once, it is more
   // efficient to take the helper thread lock once and use these methods.
   void startWithLockHeld(AutoLockHelperThreadState& lock);
-  bool joinWithLockHeld(
+  void joinWithLockHeld(
       AutoLockHelperThreadState& lock,
       mozilla::Maybe<mozilla::TimeStamp> deadline = mozilla::Nothing());
   void joinNonIdleTask(mozilla::Maybe<mozilla::TimeStamp> deadline,
