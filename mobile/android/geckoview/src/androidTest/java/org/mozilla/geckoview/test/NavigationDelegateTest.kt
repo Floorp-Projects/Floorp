@@ -254,6 +254,13 @@ class NavigationDelegateTest : BaseSessionTest() {
                     }
 
                     @AssertCalled(count = 1, order = [2])
+                    override fun onSecurityChange(session: GeckoSession,
+                                                  securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
+                        assertThat("Should be exception", securityInfo.isException, equalTo(true))
+                        assertThat("Should not be secure", securityInfo.isSecure, equalTo(false))
+                    }
+
+                    @AssertCalled(count = 1, order = [3])
                     override fun onPageStop(session: GeckoSession, success: Boolean) {
                         assertThat("Load should succeed", success, equalTo(true))
                         sessionRule.removeAllCertOverrides()

@@ -153,10 +153,15 @@ var IdentityHandler = {
       result.securityException = OverrideService.hasMatchingOverride(
         uri.host,
         uri.port,
+        {},
         cert,
         {},
         {}
       );
+
+      // If an override exists, the connection is being allowed but should not
+      // be considered secure.
+      result.secure = !result.securityException;
     } catch (e) {}
 
     return result;
