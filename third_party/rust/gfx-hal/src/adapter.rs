@@ -9,7 +9,7 @@
 //! of that [backend][crate::Backend].
 
 use crate::{
-    device, format, image, memory,
+    buffer, device, display, external_memory, format, image, memory,
     queue::{QueueGroup, QueuePriority},
     Backend, Features, PhysicalDeviceProperties,
 };
@@ -115,6 +115,43 @@ pub trait PhysicalDevice<B: Backend>: fmt::Debug + Any + Send + Sync {
     /// Fetch details for the memory regions provided by the device.
     fn memory_properties(&self) -> MemoryProperties;
 
+    /// Get external buffer properties. The parameters specify how the buffer is going to used.
+    /// # Arguments
+    ///
+    /// * `usage` - the usage of the buffer.
+    /// * `sparse` - the sparse flags of the buffer.
+    /// * `memory_type` - the external memory type for the buffer.
+    fn external_buffer_properties(
+        &self,
+        usage: buffer::Usage,
+        sparse: memory::SparseFlags,
+        memory_type: external_memory::ExternalMemoryType,
+    ) -> external_memory::ExternalMemoryProperties;
+
+    /// Get external image properties. The parameters specify how the image is going to used.
+    /// # Arguments
+    ///
+    /// * `format` - the format of the image.
+    /// * `dimensions` - the dimensions of the image.
+    /// * `tiling` - the tiling mode of the image.
+    /// * `usage` - the usage of the image.
+    /// * `view_caps` - the view capabilities of the image.
+    /// * `external_memory_type` - the external memory type for the image.
+    /// # Errors
+    ///
+    /// - Returns `OutOfMemory` if the implementation goes out of memory during the operation.
+    /// - Returns `FormatNotSupported` if the implementation does not support the requested image format.
+    ///
+    fn external_image_properties(
+        &self,
+        format: format::Format,
+        dimensions: u8,
+        tiling: image::Tiling,
+        usage: image::Usage,
+        view_caps: image::ViewCapabilities,
+        external_memory_type: external_memory::ExternalMemoryType,
+    ) -> Result<external_memory::ExternalMemoryProperties, external_memory::ExternalImagePropertiesError>;
+
     /// Returns the features of this `PhysicalDevice`. This usually depends on the graphics API being
     /// used, as well as the actual platform underneath.
     fn features(&self) -> Features;
@@ -127,6 +164,52 @@ pub trait PhysicalDevice<B: Backend>: fmt::Debug + Any + Send + Sync {
     fn is_valid_cache(&self, _cache: &[u8]) -> bool {
         false
     }
+
+    /// Enumerate active displays [surface][display::Display] from display.
+    /// Please notice that, even if a system has displays attached, they could be not returned because they are managed by some other components.
+    /// This function only return the display that are available to be managed by the current application.
+    /// Since, generally, while compositor are running they take the control of every display connected, it could be better to run the application directly from the tty to avoid the return of an empty list.
+    /// # Arguments
+    ///
+    /// * `adapter` - the [adapter][crate::adapter::Adapter] from which the displays will be enumerated.
+    unsafe fn enumerate_displays(&self) -> Vec<display::Display<B>>;
+
+    /// Enumerate compatibles planes with the provided display.
+    /// # Arguments
+    ///
+    /// * `display` - display on which the the compatible planes will be listed.
+    unsafe fn enumerate_compatible_planes(
+        &self,
+        display: &display::Display<B>,
+    ) -> Vec<display::Plane>;
+
+    /// Create a new display mode from a display, a resolution, a refresh_rate and the plane index.
+    /// If the builtin display modes does not satisfy the requirements, this function will try to create a new one.
+    /// # Arguments
+    ///
+    /// * `display` - display on which the display mode will be created.
+    /// * `resolution` - the desired resolution.
+    /// * `refresh_rate` - the desired refresh_rate.
+    unsafe fn create_display_mode(
+        &self,
+        display: &display::Display<B>,
+        resolution: (u32, u32),
+        refresh_rate: u32,
+    ) -> Result<display::DisplayMode<B>, display::DisplayModeError>;
+
+    /// Create a display plane from a display, a resolution, a refresh_rate and a plane.
+    /// If the builtin display modes does not satisfy the requirements, this function will try to create a new one.
+    /// # Arguments
+    ///
+    /// * `display` - display on which the display plane will be created.
+    /// * `plane` - the plane on which the surface will be rendered on.
+    /// * `resolution` - the desired resolution.
+    /// * `refresh_rate` - the desired refresh_rate.
+    unsafe fn create_display_plane<'a>(
+        &self,
+        display: &'a display::DisplayMode<B>,
+        plane: &'a display::Plane,
+    ) -> Result<display::DisplayPlane<'a, B>, device::OutOfMemory>;
 }
 
 /// The type of a physical graphics device

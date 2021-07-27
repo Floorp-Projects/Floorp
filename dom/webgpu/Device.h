@@ -35,7 +35,7 @@ struct GPUComputePipelineDescriptor;
 struct GPURenderBundleEncoderDescriptor;
 struct GPURenderPipelineDescriptor;
 struct GPUCommandEncoderDescriptor;
-struct GPUSwapChainDescriptor;
+struct GPUCanvasConfiguration;
 
 class EventHandlerNonNull;
 class Promise;
@@ -90,9 +90,9 @@ class Device final : public DOMEventTargetHelper {
   void UnmapBuffer(RawId aId, ipc::Shmem&& aShmem, bool aFlush,
                    bool aKeepShmem);
   already_AddRefed<Texture> InitSwapChain(
-      const dom::GPUSwapChainDescriptor& aDesc,
-      const dom::GPUExtent3DDict& aExtent3D,
-      wr::ExternalImageId aExternalImageId, gfx::SurfaceFormat aFormat);
+      const dom::GPUCanvasConfiguration& aDesc,
+      wr::ExternalImageId aExternalImageId, gfx::SurfaceFormat aFormat,
+      gfx::IntSize* aDefaultSize);
 
  private:
   ~Device();
