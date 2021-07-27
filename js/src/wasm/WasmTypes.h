@@ -39,10 +39,11 @@
 #include "vm/MallocProvider.h"
 #include "vm/NativeObject.h"
 #include "wasm/WasmBuiltins.h"
-#include "wasm/WasmConstants.h"
 #include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmConstants.h"
 #include "wasm/WasmExprType.h"
 #include "wasm/WasmInitExpr.h"
+#include "wasm/WasmLog.h"
 #include "wasm/WasmMemory.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmShareable.h"
@@ -590,26 +591,6 @@ struct TableDesc {
 };
 
 using TableDescVector = Vector<TableDesc, 0, SystemAllocPolicy>;
-
-// Verbose logging support.
-
-extern void Log(JSContext* cx, const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
-
-// Codegen debug support.
-
-enum class DebugChannel {
-  Function,
-  Import,
-};
-
-#ifdef WASM_CODEGEN_DEBUG
-bool IsCodegenDebugEnabled(DebugChannel channel);
-#endif
-
-void DebugCodegen(DebugChannel channel, const char* fmt, ...)
-    MOZ_FORMAT_PRINTF(2, 3);
-
-using PrintCallback = void (*)(const char*);
 
 }  // namespace wasm
 }  // namespace js
