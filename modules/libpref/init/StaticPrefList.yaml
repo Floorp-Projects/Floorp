@@ -6812,6 +6812,13 @@
   mirror: always
   rust: true
 
+# Whether the `color-scheme` css property and meta tags are enabled.
+- name: layout.css.color-scheme.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # The minimum contrast ratio between the accent color foreground and background
 # colors.
 #

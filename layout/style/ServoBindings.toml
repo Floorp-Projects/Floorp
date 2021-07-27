@@ -497,6 +497,7 @@ cbindgen-types = [
     { gecko = "StyleRestyleHint", servo = "crate::invalidation::element::restyle_hints::RestyleHint" },
     { gecko = "StyleTouchAction", servo = "crate::values::computed::TouchAction" },
     { gecko = "StyleWillChange", servo = "crate::values::specified::box_::WillChange" },
+    { gecko = "StyleColorScheme", servo = "crate::values::specified::color::ColorScheme" },
     { gecko = "StyleTextDecorationLine", servo = "crate::values::computed::TextDecorationLine" },
     { gecko = "StyleTextTransform", servo = "crate::values::computed::TextTransform" },
     { gecko = "StyleTextUnderlinePosition", servo = "crate::values::computed::TextUnderlinePosition" },
