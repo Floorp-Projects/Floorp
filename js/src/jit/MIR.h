@@ -46,6 +46,7 @@
 #include "vm/RegExpObject.h"
 #include "vm/SharedMem.h"
 #include "vm/TypedArrayObject.h"
+#include "wasm/WasmJS.h"  // for WasmInstanceObject
 
 namespace JS {
 struct ExpandoAndGeneration;

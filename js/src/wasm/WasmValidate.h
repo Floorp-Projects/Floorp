@@ -21,11 +21,14 @@
 
 #include <type_traits>
 
+#include "js/Utility.h"
 #include "js/WasmFeatures.h"
 
 #include "wasm/WasmBinary.h"
 #include "wasm/WasmCompile.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmCompileArgs.h"
+#include "wasm/WasmModuleTypes.h"
+#include "wasm/WasmTypeDef.h"
 
 namespace js {
 namespace wasm {

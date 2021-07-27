@@ -38,9 +38,9 @@
 #include "vm/BigIntType.h"
 #include "vm/ErrorObject.h"
 #include "wasm/TypedObject.h"
+#include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
-#include "wasm/WasmTypes.h"
 
 #include "debugger/DebugAPI-inl.h"
 #include "vm/ErrorObject-inl.h"

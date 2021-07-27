@@ -12,7 +12,6 @@
 #include "jit/JitSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
-#include "wasm/WasmTypes.h"
 
 using namespace js;
 using namespace js::jit;

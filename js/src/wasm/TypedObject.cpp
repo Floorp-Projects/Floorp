@@ -29,7 +29,6 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/Uint8Clamped.h"
 
-#include "wasm/WasmTypes.h"  // WasmValueBox
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
 #include "gc/StoreBuffer-inl.h"

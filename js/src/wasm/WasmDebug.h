@@ -20,8 +20,13 @@
 #define wasm_debug_h
 
 #include "js/HashTable.h"
+#include "wasm/WasmCode.h"
+#include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmConstants.h"
+#include "wasm/WasmExprType.h"
 #include "wasm/WasmModule.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmTypeDecls.h"
+#include "wasm/WasmValType.h"
 
 namespace js {
 

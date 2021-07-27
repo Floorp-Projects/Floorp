@@ -14,7 +14,8 @@
 #include "gc/WeakMap.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmTypeDef.h"
+#include "wasm/WasmValType.h"
 
 namespace js {
 

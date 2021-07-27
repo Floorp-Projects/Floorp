@@ -9,7 +9,6 @@
 #include "jit/JitSpewer.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
-#include "wasm/WasmTypes.h"
 
 using namespace js;
 using namespace js::jit;

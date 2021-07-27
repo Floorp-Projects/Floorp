@@ -28,7 +28,6 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmTlsData.h"
-#include "wasm/WasmTypes.h"
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

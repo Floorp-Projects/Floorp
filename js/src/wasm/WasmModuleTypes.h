@@ -26,6 +26,7 @@
 
 #include "wasm/WasmCompileArgs.h"
 #include "wasm/WasmConstants.h"
+#include "wasm/WasmExprType.h"
 #include "wasm/WasmInitExpr.h"
 #include "wasm/WasmMemory.h"
 #include "wasm/WasmSerialize.h"

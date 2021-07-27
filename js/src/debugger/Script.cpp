@@ -44,7 +44,7 @@
 #include "wasm/WasmDebug.h"           // for ExprLoc, DebugState
 #include "wasm/WasmInstance.h"        // for Instance
 #include "wasm/WasmJS.h"              // for WasmInstanceObject
-#include "wasm/WasmTypes.h"           // for Bytes
+#include "wasm/WasmTypeDecls.h"       // for Bytes
 
 #include "vm/BytecodeUtil-inl.h"  // for BytecodeRangeWithPosition
 #include "vm/JSAtom-inl.h"        // for ValueToId
