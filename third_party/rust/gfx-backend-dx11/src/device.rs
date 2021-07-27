@@ -55,6 +55,7 @@ pub struct Device {
     pub(crate) context: ComPtr<d3d11::ID3D11DeviceContext>,
     features: hal::Features,
     memory_properties: MemoryProperties,
+    render_doc: gfx_renderdoc::RenderDoc,
     pub(crate) internal: Arc<internal::Internal>,
 }
 
@@ -99,6 +100,7 @@ impl Device {
             context,
             features,
             memory_properties,
+            render_doc: Default::default(),
         }
     }
 
@@ -2459,11 +2461,107 @@ impl device::Device<Backend> for Device {
         // TODO
     }
 
+    unsafe fn set_display_power_state(
+        &self,
+        _display: &hal::display::Display<Backend>,
+        _power_state: &hal::display::control::PowerState,
+    ) -> Result<(), hal::display::control::DisplayControlError> {
+        unimplemented!()
+    }
+
+    unsafe fn register_device_event(
+        &self,
+        _device_event: &hal::display::control::DeviceEvent,
+        _fence: &mut <Backend as hal::Backend>::Fence,
+    ) -> Result<(), hal::display::control::DisplayControlError> {
+        unimplemented!()
+    }
+
+    unsafe fn register_display_event(
+        &self,
+        _display: &hal::display::Display<Backend>,
+        _display_event: &hal::display::control::DisplayEvent,
+        _fence: &mut <Backend as hal::Backend>::Fence,
+    ) -> Result<(), hal::display::control::DisplayControlError> {
+        unimplemented!()
+    }
+
+    unsafe fn create_allocate_external_buffer(
+        &self,
+        _external_memory_type: hal::external_memory::ExternalBufferMemoryType,
+        _usage: hal::buffer::Usage,
+        _sparse: hal::memory::SparseFlags,
+        _type_mask: u32,
+        _size: u64,
+    ) -> Result<(Buffer, Memory), hal::external_memory::ExternalResourceError> {
+        unimplemented!()
+    }
+
+    unsafe fn import_external_buffer(
+        &self,
+        _external_memory: hal::external_memory::ExternalBufferMemory,
+        _usage: hal::buffer::Usage,
+        _sparse: hal::memory::SparseFlags,
+        _type_mask: u32,
+        _size: u64,
+    ) -> Result<(Buffer, Memory), hal::external_memory::ExternalResourceError> {
+        unimplemented!()
+    }
+
+    unsafe fn create_allocate_external_image(
+        &self,
+        _external_memory_type: hal::external_memory::ExternalImageMemoryType,
+        _kind: image::Kind,
+        _mip_levels: image::Level,
+        _format: format::Format,
+        _tiling: image::Tiling,
+        _usage: image::Usage,
+        _sparse: memory::SparseFlags,
+        _view_caps: image::ViewCapabilities,
+        _type_mask: u32,
+    ) -> Result<(Image, Memory), hal::external_memory::ExternalResourceError> {
+        unimplemented!()
+    }
+
+    unsafe fn import_external_image(
+        &self,
+        _external_memory: hal::external_memory::ExternalImageMemory,
+        _kind: image::Kind,
+        _mip_levels: image::Level,
+        _format: format::Format,
+        _tiling: image::Tiling,
+        _usage: image::Usage,
+        _sparse: memory::SparseFlags,
+        _view_caps: image::ViewCapabilities,
+        _type_mask: u32,
+    ) -> Result<(Image, Memory), hal::external_memory::ExternalResourceError> {
+        unimplemented!()
+    }
+
+    unsafe fn export_memory(
+        &self,
+        _external_memory_type: hal::external_memory::ExternalMemoryType,
+        _memory: &Memory,
+    ) -> Result<hal::external_memory::PlatformMemory, hal::external_memory::ExternalMemoryExportError>
+    {
+        unimplemented!()
+    }
+
+    unsafe fn drm_format_modifier(&self, _image: &Image) -> Option<hal::format::DrmModifier> {
+        None
+    }
+
     fn start_capture(&self) {
-        //TODO
+        unsafe {
+            self.render_doc
+                .start_frame_capture(self.raw.as_raw() as *mut _, ptr::null_mut())
+        }
     }
 
     fn stop_capture(&self) {
-        //TODO
+        unsafe {
+            self.render_doc
+                .end_frame_capture(self.raw.as_raw() as *mut _, ptr::null_mut())
+        }
     }
 }

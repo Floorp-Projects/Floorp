@@ -7,8 +7,6 @@
 
 use super::*;
 
-use cocoa_foundation::foundation::NSUInteger;
-
 #[repr(u64)]
 #[derive(Copy, Clone, Debug)]
 pub enum MTLLoadAction {
@@ -257,11 +255,9 @@ foreign_obj_type! {
 }
 
 impl RenderPassDescriptor {
+    /// Creates a default render pass descriptor with no attachments.
     pub fn new<'a>() -> &'a RenderPassDescriptorRef {
-        unsafe {
-            let class = class!(MTLRenderPassDescriptorInternal);
-            msg_send![class, renderPassDescriptor]
-        }
+        unsafe { msg_send![class!(MTLRenderPassDescriptor), renderPassDescriptor] }
     }
 }
 

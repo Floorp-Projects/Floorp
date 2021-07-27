@@ -71,7 +71,9 @@ use foreign_types::ForeignTypeRef;
 use metal::MTLFeatureSet;
 use metal::MTLGPUFamily;
 use metal::MTLLanguageVersion;
-use metal::{CGFloat, CGSize, MetalLayer, MetalLayerRef};
+use metal::{MetalLayer, MetalLayerRef};
+use core_graphics_types::base::CGFloat;
+use core_graphics_types::geometry::CGSize;
 use objc::{
     declare::ClassDecl,
     runtime::{Class, Object, Sel, BOOL, YES},
@@ -317,6 +319,17 @@ impl hal::Instance<Backend> for Instance {
     unsafe fn destroy_surface(&self, surface: Surface) {
         surface.dispose();
     }
+
+    unsafe fn create_display_plane_surface(
+        &self,
+        _display_plane: &hal::display::DisplayPlane<crate::Backend>,
+        _plane_stack_index: u32,
+        _transformation: hal::display::SurfaceTransform,
+        _alpha: hal::display::DisplayPlaneAlpha,
+        _image_extent: hal::window::Extent2D,
+    ) -> Result<Surface, hal::display::DisplayPlaneSurfaceError> {
+        unimplemented!();
+    }
 }
 
 extern "C" fn layer_should_inherit_contents_scale_from_window(
@@ -493,6 +506,9 @@ impl hal::Backend for Backend {
     type Semaphore = native::Semaphore;
     type Event = native::Event;
     type QueryPool = native::QueryPool;
+
+    type Display = ();
+    type DisplayMode = ();
 }
 
 const RESOURCE_HEAP_SUPPORT: &[MTLFeatureSet] = &[
