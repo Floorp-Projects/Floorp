@@ -26,6 +26,7 @@
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/PresState.h"
 #include "mozilla/layout/ScrollAnchorContainer.h"
+#include "mozilla/TypedEnumBits.h"
 
 class nsPresContext;
 class nsIContent;
@@ -76,6 +77,15 @@ class ScrollFrameHelper : public nsIReflowCallback {
       nsTArray<nsIAnonymousContentCreator::ContentInfo>& aElements);
   void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                 uint32_t aFilter);
+
+  enum class OverflowState : uint32_t {
+    None = 0,
+    Vertical = (1 << 0),
+    Horizontal = (1 << 1),
+  };
+
+  OverflowState GetOverflowState() const;
+
   nsresult FireScrollPortEvent();
   void PostScrollEndEvent();
   void FireScrollEndEvent();
@@ -788,6 +798,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // Removes any RefreshDriver observers we might have registered.
   void RemoveObservers();
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ScrollFrameHelper::OverflowState)
 
 }  // namespace mozilla
 

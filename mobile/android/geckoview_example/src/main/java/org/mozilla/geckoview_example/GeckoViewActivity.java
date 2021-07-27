@@ -1655,6 +1655,14 @@ public class GeckoViewActivity
             }
             getWindow().setAttributes(layoutParams);
         }
+
+        @Override
+        public void onShowDynamicToolbar(final GeckoSession session) {
+            final View toolbar = findViewById(R.id.toolbar);
+            if (toolbar != null) {
+                toolbar.setTranslationY(0f);
+            }
+        }
     }
 
     private class ExampleProgressDelegate implements GeckoSession.ProgressDelegate {

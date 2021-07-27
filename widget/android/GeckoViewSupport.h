@@ -87,6 +87,8 @@ class GeckoViewSupport final
                      bool aHasUserGesture, bool aIsTopLevel) const
       -> java::GeckoResult::LocalRef;
 
+  void OnShowDynamicToolbar() const;
+
   void PassExternalResponse(java::WebResponse::Param aResponse);
 
   void AttachMediaSessionController(

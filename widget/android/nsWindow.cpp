@@ -1612,6 +1612,15 @@ auto GeckoViewSupport::OnLoadRequest(mozilla::jni::String::Param aUri,
                                aHasUserGesture, aIsTopLevel);
 }
 
+void GeckoViewSupport::OnShowDynamicToolbar() const {
+  GeckoSession::Window::LocalRef window(mGeckoViewWindow);
+  if (!window) {
+    return;
+  }
+
+  window->OnShowDynamicToolbar();
+}
+
 void GeckoViewSupport::OnReady(jni::Object::Param aQueue) {
   GeckoSession::Window::LocalRef window(mGeckoViewWindow);
   if (!window) {
@@ -2224,6 +2233,15 @@ void nsWindow::CreateLayerManager() {
 void nsWindow::NotifyDisablingWebRender() {
   mIsDisablingWebRender = true;
   RedrawAll();
+}
+
+void nsWindow::ShowDynamicToolbar() {
+  auto acc(mGeckoViewSupport.Access());
+  if (!acc) {
+    return;
+  }
+
+  acc->OnShowDynamicToolbar();
 }
 
 void nsWindow::OnSizeChanged(const gfx::IntSize& aSize) {
