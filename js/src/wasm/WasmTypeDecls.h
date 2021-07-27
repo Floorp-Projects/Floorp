@@ -71,11 +71,11 @@ namespace wasm {
 
 struct ModuleEnvironment;
 class Code;
+class CodeRange;
 class DebugState;
 class Decoder;
 class GeneratedSourceMap;
 class Instance;
-class Memory;
 class Module;
 class Table;
 

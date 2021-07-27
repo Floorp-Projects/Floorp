@@ -18,7 +18,8 @@
 
 #include "wasm/WasmContext.h"
 
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmCompileArgs.h"
+#include "wasm/WasmTypeDef.h"
 
 using namespace js;
 using namespace wasm;

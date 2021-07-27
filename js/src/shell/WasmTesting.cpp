@@ -23,7 +23,7 @@
 #include <stddef.h>
 
 #include "js/Printf.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmTypeDecls.h"
 
 using namespace js;
 using namespace js::wasm;

@@ -22,7 +22,8 @@
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/HelperThreads.h"
 #include "vm/NativeObject.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmConstants.h"
 
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)

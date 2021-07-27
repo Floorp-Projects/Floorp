@@ -23,6 +23,7 @@
 #include "js/BuildId.h"
 
 #include "wasm/WasmCode.h"
+#include "wasm/WasmException.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmTable.h"
 

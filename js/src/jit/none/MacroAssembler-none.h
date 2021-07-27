@@ -11,7 +11,7 @@
 
 #include "jit/MoveResolver.h"
 #include "jit/shared/Assembler-shared.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmTypeDecls.h"
 
 namespace js {
 namespace jit {

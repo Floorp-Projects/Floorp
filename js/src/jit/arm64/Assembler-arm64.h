@@ -13,7 +13,7 @@
 
 #include "jit/CompactBuffer.h"
 #include "jit/shared/Disassembler-shared.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmTypeDecls.h"
 
 namespace js {
 namespace jit {

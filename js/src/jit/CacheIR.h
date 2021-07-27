@@ -22,7 +22,8 @@
 #include "js/ScalarType.h"          // js::Scalar::Type
 #include "vm/JSFunction.h"
 #include "vm/Shape.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmConstants.h"
+#include "wasm/WasmValType.h"
 
 enum class JSOp : uint8_t;
 

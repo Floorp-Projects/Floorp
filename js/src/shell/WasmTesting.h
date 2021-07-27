@@ -19,7 +19,7 @@
 #ifndef shell_wasm_h
 #define shell_wasm_h
 
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmTypeDecls.h"
 
 namespace js {
 namespace wasm {

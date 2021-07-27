@@ -24,7 +24,7 @@
 #include "wasm/WasmFrameIter.h"  // js::wasm::{RegisterState,StartUnwinding,UnwindState}
 #include "wasm/WasmInstance.h"  // js::wasm::Instance
 #include "wasm/WasmProcess.h"   // js::wasm::LookupCode
-#include "wasm/WasmTypes.h"     // js::wasm::TlsData
+#include "wasm/WasmTlsData.h"   // js::wasm::TlsData
 
 #include "vm/Realm-inl.h"  // js::~AutoRealm
 

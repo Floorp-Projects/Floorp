@@ -108,7 +108,7 @@
 #include "wasm/WasmInstance.h"        // for Instance
 #include "wasm/WasmJS.h"              // for WasmInstanceObject
 #include "wasm/WasmRealm.h"           // for Realm
-#include "wasm/WasmTypes.h"           // for WasmInstanceObjectVector
+#include "wasm/WasmTypeDecls.h"       // for WasmInstanceObjectVector
 
 #include "debugger/DebugAPI-inl.h"
 #include "debugger/Environment-inl.h"  // for DebuggerEnvironment::owner

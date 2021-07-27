@@ -63,6 +63,7 @@
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpStaticsObject.h"
 #include "vm/StringObject.h"
+#include "wasm/WasmJS.h"
 
 #include "gc/FreeOp-inl.h"
 #include "vm/JSObject-inl.h"

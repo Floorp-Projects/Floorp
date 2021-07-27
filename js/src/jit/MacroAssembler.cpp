@@ -40,7 +40,10 @@
 #include "vm/JSContext.h"
 #include "vm/TraceLogging.h"
 #include "vm/TypedArrayObject.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmBuiltins.h"
+#include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmMemory.h"
+#include "wasm/WasmTlsData.h"
 #include "wasm/WasmValidate.h"
 
 #include "gc/Nursery-inl.h"
