@@ -19,7 +19,7 @@
 #include "vm/JSObject.h"
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
-#include "wasm/WasmPages.h"
+#include "wasm/WasmMemory.h"
 
 namespace js {
 

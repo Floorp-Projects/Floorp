@@ -337,64 +337,6 @@ size_t CustomSection::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
          payload->sizeOfExcludingThis(mallocSizeOf);
 }
 
-//  Heap length on ARM should fit in an ARM immediate. We approximate the set
-//  of valid ARM immediates with the predicate:
-//    2^n for n in [16, 24)
-//  or
-//    2^24 * n for n >= 1.
-bool wasm::IsValidARMImmediate(uint32_t i) {
-  bool valid = (IsPowerOfTwo(i) || (i & 0x00ffffff) == 0);
-
-  MOZ_ASSERT_IF(valid, i % PageSize == 0);
-
-  return valid;
-}
-
-uint64_t wasm::RoundUpToNextValidARMImmediate(uint64_t i) {
-  MOZ_ASSERT(i <= HighestValidARMImmediate);
-  static_assert(HighestValidARMImmediate == 0xff000000,
-                "algorithm relies on specific constant");
-
-  if (i <= 16 * 1024 * 1024) {
-    i = i ? mozilla::RoundUpPow2(i) : 0;
-  } else {
-    i = (i + 0x00ffffff) & ~0x00ffffff;
-  }
-
-  MOZ_ASSERT(IsValidARMImmediate(i));
-
-  return i;
-}
-
-bool wasm::IsValidBoundsCheckImmediate(uint32_t i) {
-#ifdef JS_CODEGEN_ARM
-  return IsValidARMImmediate(i);
-#else
-  return true;
-#endif
-}
-
-size_t wasm::ComputeMappedSize(wasm::Pages maxPages) {
-  // Caller is responsible to ensure that maxPages has been clamped to
-  // implementation limits.
-  size_t maxSize = maxPages.byteLength();
-
-  // It is the bounds-check limit, not the mapped size, that gets baked into
-  // code. Thus round up the maxSize to the next valid immediate value
-  // *before* adding in the guard page.
-
-#ifdef JS_CODEGEN_ARM
-  uint64_t boundsCheckLimit = RoundUpToNextValidARMImmediate(maxSize);
-#else
-  uint64_t boundsCheckLimit = maxSize;
-#endif
-  MOZ_ASSERT(IsValidBoundsCheckImmediate(boundsCheckLimit));
-
-  MOZ_ASSERT(boundsCheckLimit % gc::SystemPageSize() == 0);
-  MOZ_ASSERT(GuardSize % gc::SystemPageSize() == 0);
-  return boundsCheckLimit + GuardSize;
-}
-
 bool TrapSiteVectorArray::empty() const {
   for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
     if (!(*this)[trap].empty()) {
@@ -552,40 +494,6 @@ const CodeRange* wasm::LookupInSorted(const CodeRangeVector& codeRanges,
   }
 
   return &codeRanges[match];
-}
-
-const char* wasm::ToString(IndexType indexType) {
-  switch (indexType) {
-    case IndexType::I32:
-      return "i32";
-    case IndexType::I64:
-      return "i64";
-    default:
-      MOZ_CRASH();
-  }
-}
-
-bool wasm::ToIndexType(JSContext* cx, HandleValue value, IndexType* indexType) {
-  RootedString typeStr(cx, ToString(cx, value));
-  if (!typeStr) {
-    return false;
-  }
-
-  RootedLinearString typeLinearStr(cx, typeStr->ensureLinear(cx));
-  if (!typeLinearStr) {
-    return false;
-  }
-
-  if (StringEqualsLiteral(typeLinearStr, "i32")) {
-    *indexType = IndexType::I32;
-  } else if (StringEqualsLiteral(typeLinearStr, "i64")) {
-    *indexType = IndexType::I64;
-  } else {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_STRING_IDX_TYPE);
-    return false;
-  }
-  return true;
 }
 
 void wasm::Log(JSContext* cx, const char* fmt, ...) {

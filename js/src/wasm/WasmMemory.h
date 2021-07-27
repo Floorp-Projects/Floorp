@@ -16,12 +16,17 @@
  * limitations under the License.
  */
 
-#ifndef wasm_pages_h
-#define wasm_pages_h
+#ifndef wasm_memory_h
+#define wasm_memory_h
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Maybe.h"
 
 #include <stdint.h>
+
+#include "js/Value.h"
+#include "vm/NativeObject.h"
+#include "wasm/WasmConstants.h"
 
 namespace js {
 namespace wasm {
@@ -109,7 +114,44 @@ struct Pages {
   bool operator>(Pages other) const { return value_ > other.value_; }
 };
 
+extern Pages MaxMemoryPages();
+
+extern size_t MaxMemoryBoundsCheckLimit();
+
+static inline size_t MaxMemoryBytes() { return MaxMemoryPages().byteLength(); }
+
+static inline uint64_t MaxMemoryLimitField(IndexType indexType) {
+  return indexType == IndexType::I32 ? MaxMemory32LimitField
+                                     : MaxMemory64LimitField;
+}
+
+// Compute the 'clamped' maximum size of a memory. See
+// 'WASM Linear Memory structure' in ArrayBufferObject.cpp for background.
+extern Pages ClampedMaxPages(Pages initialPages,
+                             const mozilla::Maybe<Pages>& sourceMaxPages,
+                             bool useHugeMemory);
+
+// For a given WebAssembly/asm.js 'clamped' max pages, return the number of
+// bytes to map which will necessarily be a multiple of the system page size
+// and greater than maxPages in bytes. For a returned mappedSize:
+//   boundsCheckLimit = mappedSize - GuardSize
+//   IsValidBoundsCheckImmediate(boundsCheckLimit)
+extern size_t ComputeMappedSize(Pages clampedMaxPages);
+
+// Return whether the given immediate satisfies the constraints of the platform.
+extern bool IsValidBoundsCheckImmediate(uint32_t i);
+
+// Return whether the given immediate is valid on arm.
+extern bool IsValidARMImmediate(uint32_t i);
+
+// Return the next higher valid immediate that satisfies the constraints of the
+// platform.
+extern uint64_t RoundUpToNextValidBoundsCheckImmediate(uint64_t i);
+
+// Return the next higher valid immediate for arm.
+extern uint64_t RoundUpToNextValidARMImmediate(uint64_t i);
+
 }  // namespace wasm
 }  // namespace js
 
-#endif  // wasm_pages_h
+#endif  // wasm_memory_h
