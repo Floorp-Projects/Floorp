@@ -501,11 +501,7 @@ div:-moz-native-anonymous.moz-accessiblecaret > #image {
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-  background-image: image-set(
-    url("chrome://geckoview/skin/images/accessiblecaret-normal-hdpi.png"),
-    url("chrome://geckoview/skin/images/accessiblecaret-normal-xhdpi.png") 2x,
-    url("chrome://geckoview/skin/images/accessiblecaret-normal-xxhdpi.png") 2.25x
-  );
+  background-image: url("chrome://geckoview/skin/images/accessiblecaret-normal.svg");
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.left > :is(#text-overlay, #image) {
@@ -513,11 +509,7 @@ div:-moz-native-anonymous.moz-accessiblecaret.left > :is(#text-overlay, #image) 
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-  background-image: image-set(
-    url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-hdpi.png"),
-    url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-xhdpi.png") 2x,
-    url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-xxhdpi.png") 2.25x
-  );
+  background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-left.svg");
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.right > :is(#text-overlay, #image) {
@@ -525,11 +517,7 @@ div:-moz-native-anonymous.moz-accessiblecaret.right > :is(#text-overlay, #image)
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-  background-image: image-set(
-    url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-hdpi.png"),
-    url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-xhdpi.png") 2x,
-    url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-xxhdpi.png") 2.25x
-  );
+  background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-right.svg");
 }
 
 %endif
