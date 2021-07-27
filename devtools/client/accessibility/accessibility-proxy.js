@@ -410,6 +410,7 @@ class AccessibilityProxy {
     this.accessibilityEvents.clear();
 
     this.accessibilityFront = null;
+    this.accessibilityFrontGetPromise = null;
     this.parentAccessibilityFront = null;
     this.simulatorFront = null;
     this.simulate = null;
@@ -503,9 +504,9 @@ class AccessibilityProxy {
 
     this._accessibilityWalkerFronts.clear();
 
-    this.accessibilityFront = await this.currentTarget.getFront(
-      "accessibility"
-    );
+    this.accessibilityFrontGetPromise = targetFront.getFront("accessibility");
+    this.accessibilityFront = await this.accessibilityFrontGetPromise;
+
     // Check for backward compatibility. New API's must be described in the
     // "getTraits" method of the AccessibilityActor.
     this.supports = { ...this.accessibilityFront.traits };
