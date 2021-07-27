@@ -26,8 +26,13 @@
 #include "threading/ExclusiveData.h"
 #include "util/Memory.h"
 #include "vm/MutexIDs.h"
+#include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmGC.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmLog.h"
+#include "wasm/WasmModuleTypes.h"
+#include "wasm/WasmSerialize.h"
+#include "wasm/WasmTypeDef.h"
+#include "wasm/WasmValType.h"
 
 namespace js {
 

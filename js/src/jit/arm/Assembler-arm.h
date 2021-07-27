@@ -20,7 +20,7 @@
 #include "jit/shared/Assembler-shared.h"
 #include "jit/shared/Disassembler-shared.h"
 #include "jit/shared/IonAssemblerBufferWithConstantPools.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmTypeDecls.h"
 
 union PoolHintPun;
 

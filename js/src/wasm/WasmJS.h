@@ -36,10 +36,18 @@
 #include "js/TypeDecls.h"  // HandleValue, HandleObject, MutableHandleObject, MutableHandleFunction
 #include "js/Vector.h"  // JS::Vector
 #include "js/WasmFeatures.h"
-#include "vm/JSFunction.h"     // JSFunction
-#include "vm/NativeObject.h"   // NativeObject
-#include "wasm/WasmTlsData.h"  // UniqueTlsData
-#include "wasm/WasmTypes.h"    // MutableHandleWasmInstanceObject, wasm::*
+#include "vm/JSFunction.h"    // JSFunction
+#include "vm/NativeObject.h"  // NativeObject
+#include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmConstants.h"
+#include "wasm/WasmException.h"
+#include "wasm/WasmExprType.h"
+#include "wasm/WasmMemory.h"
+#include "wasm/WasmModuleTypes.h"
+#include "wasm/WasmTlsData.h"    // UniqueTlsData
+#include "wasm/WasmTypeDecls.h"  // MutableHandleWasmInstanceObject
+#include "wasm/WasmValType.h"
+#include "wasm/WasmValue.h"
 
 class JSFreeOp;
 class JSObject;

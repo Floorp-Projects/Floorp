@@ -69,9 +69,9 @@
 #include "vm/Stack.h"                      // for AbstractFramePtr, FrameIter
 #include "vm/StringType.h"                 // for PropertyName, JSString
 #include "wasm/WasmDebug.h"                // for DebugState
+#include "wasm/WasmFrame.h"                // for DebugFrame
 #include "wasm/WasmInstance.h"             // for Instance
 #include "wasm/WasmJS.h"                   // for WasmInstanceObject
-#include "wasm/WasmTypes.h"                // for DebugFrame
 
 #include "debugger/Debugger-inl.h"    // for Debugger::fromJSObject
 #include "gc/WeakMap-inl.h"           // for WeakMap::remove

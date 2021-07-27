@@ -18,7 +18,9 @@
 #include "jit/MIRGraph.h"
 #include "js/Conversions.h"
 #include "vm/Shape.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmBuiltins.h"
+#include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmTlsData.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"

@@ -130,7 +130,8 @@
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmSignalHandlers.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmValType.h"
+#include "wasm/WasmValue.h"
 
 #include "debugger/DebugAPI-inl.h"
 #include "vm/Compartment-inl.h"

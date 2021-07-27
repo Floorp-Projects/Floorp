@@ -35,7 +35,7 @@
 #include "jit/x86-shared/AssemblerBuffer-x86-shared.h"
 #include "jit/x86-shared/Encoding-x86-shared.h"
 #include "jit/x86-shared/Patching-x86-shared.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmTypeDecls.h"
 
 namespace js {
 namespace jit {

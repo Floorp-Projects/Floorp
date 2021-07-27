@@ -26,6 +26,7 @@
 #include "wasm/WasmCode.h"
 #include "wasm/WasmDebug.h"
 #include "wasm/WasmFrameIter.h"  // js::wasm::WasmFrameIter
+#include "wasm/WasmLog.h"
 #include "wasm/WasmProcess.h"
 #include "wasm/WasmTable.h"
 

@@ -55,8 +55,11 @@
 #include "vm/SharedArrayObject.h"
 #include "vm/Warnings.h"  // js::WarnNumberASCII
 #include "vm/WrapperObject.h"
+#include "wasm/WasmConstants.h"
+#include "wasm/WasmLog.h"
+#include "wasm/WasmModuleTypes.h"
+#include "wasm/WasmProcess.h"
 #include "wasm/WasmSignalHandlers.h"
-#include "wasm/WasmTypes.h"
 
 #include "gc/FreeOp-inl.h"
 #include "gc/Marking-inl.h"

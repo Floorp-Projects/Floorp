@@ -27,8 +27,8 @@
 #include "js/UniquePtr.h"             // js::UniquePtr
 #include "vm/Activation.h"            // js::Activation
 #include "wasm/WasmConstants.h"       // js::wasm::Trap
+#include "wasm/WasmFrame.h"           // js::wasm::{Frame,TrapData}
 #include "wasm/WasmFrameIter.h"  // js::wasm::{ExitReason,RegisterState,WasmFrameIter}
-#include "wasm/WasmTypes.h"  // js::wasm::{Frame,TrapData}
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSTracer;
