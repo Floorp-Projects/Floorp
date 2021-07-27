@@ -19,19 +19,6 @@ const {
 
 const browsingContextAttachedObserverByWatcher = new Map();
 
-// Note: this preference should be read from the client and propagated to the
-// server. However since target switching is only supported for local-tab
-// debugging scenarios, it is acceptable to temporarily read it both on the
-// client and server until we can just enable it by default.
-// Do not use a lazy getter in order to help test toggle this pref on/off
-// and have it to live update here.
-function isServerTargetSwitchingEnabled() {
-  return Services.prefs.getBoolPref(
-    "devtools.target-switching.server.enabled",
-    false
-  );
-}
-
 /**
  * Force creating targets for all existing BrowsingContext, that, for a given Watcher Actor.
  *
@@ -83,7 +70,7 @@ async function createTargets(watcher) {
     );
   }
 
-  if (isServerTargetSwitchingEnabled() && watcher.browserElement) {
+  if (watcher.isServerTargetSwitchingEnabled && watcher.browserElement) {
     // If server side target switching is enabled, process the top level browsing context first,
     // so that we guarantee it is notified to the client first.
     // If it is disabled, the top level target will be created from the client instead.
@@ -147,7 +134,7 @@ function destroyTargets(watcher) {
   const browsingContexts = getFilteredRemoteBrowsingContext(
     watcher.browserElement
   );
-  if (isServerTargetSwitchingEnabled() && watcher.browserElement) {
+  if (watcher.isServerTargetSwitchingEnabled && watcher.browserElement) {
     // If server side target switching is enabled, we should also destroy the top level browsing context.
     // If it is disabled, the top level target will be destroyed from the client instead.
     browsingContexts.push(watcher.browserElement.browsingContext);
