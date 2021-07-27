@@ -1,10 +1,12 @@
 //! Module processing functionality.
 
 mod interpolator;
+mod layouter;
 mod namer;
 mod terminator;
 mod typifier;
 
+pub use layouter::{Alignment, InvalidBaseType, Layouter, TypeLayout};
 pub use namer::{EntryPointIndex, NameKey, Namer};
 pub use terminator::ensure_block_returns;
 pub use typifier::{ResolveContext, ResolveError, TypeResolution};
@@ -181,6 +183,28 @@ impl crate::Expression {
             _ => false,
         }
     }
+
+    /// Return true if this expression is a dynamic array index, for [`Access`].
+    ///
+    /// This method returns true if this expression is a dynamically computed
+    /// index, and as such can only be used to index matrices and arrays when
+    /// they appear behind a pointer. See the documentation for [`Access`] for
+    /// details.
+    ///
+    /// Note, this does not check the _type_ of the given expression. It's up to
+    /// the caller to establish that the `Access` expression is well-typed
+    /// through other means, like [`ResolveContext`].
+    ///
+    /// [`Access`]: crate::Expression::Access
+    /// [`ResolveContext`]: crate::proc::ResolveContext
+    pub fn is_dynamic_index(&self, module: &crate::Module) -> bool {
+        if let Self::Constant(handle) = *self {
+            let constant = &module.constants[handle];
+            constant.specialization.is_some()
+        } else {
+            true
+        }
+    }
 }
 
 impl crate::SampleLevel {
@@ -240,6 +264,27 @@ impl std::hash::Hash for crate::ScalarValue {
             Self::Uint(v) => v.hash(hasher),
             Self::Float(v) => v.to_bits().hash(hasher),
             Self::Bool(v) => v.hash(hasher),
+        }
+    }
+}
+
+impl super::SwizzleComponent {
+    pub const XYZW: [Self; 4] = [Self::X, Self::Y, Self::Z, Self::W];
+
+    pub fn index(&self) -> u32 {
+        match *self {
+            Self::X => 0,
+            Self::Y => 1,
+            Self::Z => 2,
+            Self::W => 3,
+        }
+    }
+    pub fn from_index(idx: u32) -> Self {
+        match idx {
+            0 => Self::X,
+            1 => Self::Y,
+            2 => Self::Z,
+            _ => Self::W,
         }
     }
 }

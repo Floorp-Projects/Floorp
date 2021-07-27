@@ -9,6 +9,8 @@
 //! for instance `R32_G32_B32_A32`.  The `ChannelType` specifies how the
 //! components are interpreted, for instance `Sfloat` or `Sint`.
 
+pub use external_memory::DrmModifier;
+
 bitflags!(
     /// Bitflags which describe what properties of an image
     /// a format specifies or does not specify.  For example,
@@ -126,8 +128,29 @@ impl Default for Swizzle {
     }
 }
 
+/// Drm format properties
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct DrmFormatProperties {
+    /// Drm format modifier.
+    pub drm_modifier: DrmModifier,
+    /// Number of memory planes each image crated with `drm_modifier` has.
+    pub plane_count: u32,
+    /// Valid image usage with the `drm_modifier`.
+    pub valid_usages: ImageFeature,
+}
+impl Default for DrmFormatProperties {
+    fn default() -> Self {
+        Self {
+            drm_modifier: DrmModifier::Invalid,
+            plane_count: 0,
+            valid_usages: ImageFeature::default(),
+        }
+    }
+}
+
 /// Format properties of the physical device.
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Properties {
     /// A bitmask of the features supported when an image with linear tiling is requested.
@@ -139,6 +162,8 @@ pub struct Properties {
     pub optimal_tiling: ImageFeature,
     /// The features supported by buffers.
     pub buffer_features: BufferFeature,
+    /// Drm format properties
+    pub drm_format_properties: Vec<DrmFormatProperties>,
 }
 
 //Note: these are detached from Vulkan!

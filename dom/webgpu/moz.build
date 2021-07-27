@@ -17,7 +17,6 @@ DIRS += []
 h_and_cpp = [
     "Adapter",
     "AdapterFeatures",
-    "AdapterLimits",
     "BindGroup",
     "BindGroupLayout",
     "Buffer",
@@ -42,7 +41,7 @@ h_and_cpp = [
     "RenderPipeline",
     "Sampler",
     "ShaderModule",
-    "SwapChain",
+    "SupportedLimits",
     "Texture",
     "TextureView",
     "ValidationError",

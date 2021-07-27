@@ -17,33 +17,26 @@ extern crate objc;
 #[macro_use]
 extern crate foreign_types;
 
-use std::borrow::{Borrow, ToOwned};
-use std::marker::PhantomData;
-use std::mem;
-use std::ops::Deref;
-use std::os::raw::c_void;
+use std::{
+    borrow::{Borrow, ToOwned},
+    marker::PhantomData,
+    mem,
+    ops::Deref,
+    os::raw::c_void,
+};
 
-use cocoa_foundation::foundation::NSUInteger;
+use core_graphics_types::{base::CGFloat, geometry::CGSize};
 use foreign_types::ForeignType;
 use objc::runtime::{Object, NO, YES};
 
 #[cfg(target_pointer_width = "64")]
-pub type CGFloat = f64;
+pub type NSInteger = i64;
 #[cfg(not(target_pointer_width = "64"))]
-pub type CGFloat = f32;
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct CGSize {
-    pub width: CGFloat,
-    pub height: CGFloat,
-}
-
-impl CGSize {
-    pub fn new(width: f64, height: f64) -> Self {
-        CGSize { width, height }
-    }
-}
+pub type NSInteger = i32;
+#[cfg(target_pointer_width = "64")]
+pub type NSUInteger = u64;
+#[cfg(target_pointer_width = "32")]
+pub type NSUInteger = u32;
 
 #[repr(C)]
 #[derive(Copy, Clone)]

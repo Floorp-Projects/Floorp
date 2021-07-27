@@ -1,14 +1,16 @@
 use cocoa::{appkit::NSView, base::id as cocoa_id};
+use core_graphics_types::geometry::CGSize;
 
 use metal::*;
 use objc::{rc::autoreleasepool, runtime::YES};
-use std::mem;
-use winit::platform::macos::WindowExtMacOS;
 
 use winit::{
     event::{Event, WindowEvent},
     event_loop::ControlFlow,
+    platform::macos::WindowExtMacOS,
 };
+
+use std::mem;
 
 struct App {
     pub device: Device,
