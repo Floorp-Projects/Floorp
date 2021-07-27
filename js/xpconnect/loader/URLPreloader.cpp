@@ -11,6 +11,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/IOBuffers.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
@@ -452,7 +453,7 @@ void URLPreloader::BeginBackgroundRead() {
 
 Result<nsCString, nsresult> URLPreloader::ReadInternal(const CacheKey& key,
                                                        ReadType readType) {
-  if (mStartupFinished) {
+  if (mStartupFinished || !mReaderInitialized) {
     URLEntry entry(key);
 
     return entry.Read();
