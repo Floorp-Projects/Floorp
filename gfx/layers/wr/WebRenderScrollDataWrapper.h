@@ -8,6 +8,7 @@
 #define GFX_WEBRENDERSCROLLDATAWRAPPER_H
 
 #include "FrameMetrics.h"
+#include "mozilla/layers/APZUpdater.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/WebRenderScrollData.h"
