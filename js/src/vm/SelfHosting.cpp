@@ -3245,40 +3245,6 @@ static bool CloneValue(JSContext* cx, HandleValue selfHostedValue,
   return true;
 }
 
-bool JSRuntime::createLazySelfHostedFunctionClone(
-    JSContext* cx, HandlePropertyName selfHostedName, HandleAtom name,
-    unsigned nargs, NewObjectKind newKind, MutableHandleFunction fun) {
-  MOZ_ASSERT(newKind != GenericObject);
-
-  RootedAtom funName(cx, name);
-  JSFunction* selfHostedFun = getUnclonedSelfHostedFunction(selfHostedName);
-  if (!selfHostedFun) {
-    return false;
-  }
-
-  // If there is a a canonical name set, use that instead.
-  if (JSAtom* name = GetUnclonedSelfHostedCanonicalName(selfHostedFun)) {
-    funName = name;
-  }
-
-  RootedObject proto(cx);
-  if (!GetFunctionPrototype(cx, selfHostedFun->generatorKind(),
-                            selfHostedFun->asyncKind(), &proto)) {
-    return false;
-  }
-
-  fun.set(NewScriptedFunction(cx, nargs, FunctionFlags::BASESCRIPT, funName,
-                              proto, gc::AllocKind::FUNCTION_EXTENDED,
-                              newKind));
-  if (!fun) {
-    return false;
-  }
-  fun->setIsSelfHostedBuiltin();
-  fun->initSelfHostedLazyScript(&cx->runtime()->selfHostedLazyScript.ref());
-  SetClonedSelfHostedFunctionName(fun, selfHostedName);
-  return true;
-}
-
 bool JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx,
                                               HandlePropertyName name,
                                               HandleFunction targetFun) {
