@@ -2843,9 +2843,9 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-ebay.manifest
-   * **playback recordings**: mitm5-linux-firefox-ebay.mp
-   * **playback version**: 5.1.1
+   * **playback pageset manifest**: mitm6-darwin-firefox-ebay.manifest
+   * **playback recordings**: mitm6-darwin-firefox-ebay.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.ebay.com/>`__
    * **type**: pageload
    * **unit**: ms
