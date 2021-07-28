@@ -113,6 +113,7 @@ static void SetupCanonicalNaN() {
   } while (0)
 
 extern "C" void install_rust_panic_hook();
+extern "C" void install_rust_oom_hook();
 
 JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
     bool isDebugBuild) {
@@ -131,7 +132,11 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
 
   libraryInitState = InitState::Initializing;
 
+#ifdef JS_STANDALONE
+  // The rust hooks are initialized by Gecko on non-standalone builds.
   install_rust_panic_hook();
+  install_rust_oom_hook();
+#endif
 
   PRMJ_NowInit();
 
