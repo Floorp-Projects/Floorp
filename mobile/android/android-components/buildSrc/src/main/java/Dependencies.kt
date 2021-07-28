@@ -17,7 +17,7 @@ object Versions {
 
     const val mockwebserver = "3.10.0"
 
-    const val android_gradle_plugin = "7.0.0-rc01"
+    const val android_gradle_plugin = "7.0.0"
     const val android_maven_publish_plugin = "3.6.2"
     const val lint = "27.0.1"
     const val detekt = "1.17.1"
@@ -35,10 +35,10 @@ object Versions {
 
     const val material = "1.2.1"
 
-    const val compose_version = "1.0.0-rc02"
+    const val compose_version = "1.0.0"
 
     object AndroidX {
-        const val activityCompose = "1.3.0-rc02"
+        const val activityCompose = "1.3.0"
         const val annotation = "1.1.0"
         const val appcompat = "1.3.0"
         const val browser = "1.3.0"
