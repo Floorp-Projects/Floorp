@@ -12,6 +12,7 @@
 
 #include "base/platform_thread.h"           // for PlatformThreadId
 #include "mozilla/layers/OMTAController.h"  // for OMTAController
+#include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
@@ -146,7 +147,7 @@ class OMTASampler final {
   // We basically use this time stamp instead of |mSampleTime| to make
   // animations more in sync with other animations on the main thread.
   TimeStamp mPreviousSampleTime;
-  bool mIsInTestMode;
+  Atomic<bool> mIsInTestMode;
 };
 
 }  // namespace layers
