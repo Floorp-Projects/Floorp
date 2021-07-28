@@ -1832,6 +1832,13 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
         // that we deferred, and a child WebRenderLayerScrollData item that
         // holds the scroll metadata for the child's ASR.
         Maybe<nsDisplayTransform*> deferred = aSc.GetDeferredTransformItem();
+        ScrollableLayerGuid::ViewID deferredId =
+            ScrollableLayerGuid::NULL_SCROLL_ID;
+        if (deferred) {
+          if (const auto* asr = (*deferred)->GetActiveScrolledRoot()) {
+            deferredId = asr->GetViewId();
+          }
+        }
         if (deferred && (*deferred)->GetActiveScrolledRoot() !=
                             item->GetActiveScrolledRoot()) {
           // This creates the child WebRenderLayerScrollData for |item|, but
@@ -1842,7 +1849,8 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
           mLayerScrollData.emplace_back();
           mLayerScrollData.back().Initialize(
               mManager->GetScrollData(), item, descendants,
-              (*deferred)->GetActiveScrolledRoot(), Nothing());
+              (*deferred)->GetActiveScrolledRoot(), Nothing(),
+              ScrollableLayerGuid::NULL_SCROLL_ID);
 
           // The above WebRenderLayerScrollData will also be a descendant of
           // the transform-holding WebRenderLayerScrollData we create below.
@@ -1854,17 +1862,17 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
           // stopAtAsr down to the deferred transform item's ASR, which must be
           // "between" stopAtAsr and |item|'s ASR in the ASR tree).
           mLayerScrollData.emplace_back();
-          mLayerScrollData.back().Initialize(mManager->GetScrollData(),
-                                             *deferred, descendants, stopAtAsr,
-                                             aSc.GetDeferredTransformMatrix());
+          mLayerScrollData.back().Initialize(
+              mManager->GetScrollData(), *deferred, descendants, stopAtAsr,
+              aSc.GetDeferredTransformMatrix(), deferredId);
         } else {
           // This is the "simple" case where we don't need to create two
           // WebRenderLayerScrollData items; we can just create one that also
           // holds the deferred transform matrix, if any.
           mLayerScrollData.emplace_back();
-          mLayerScrollData.back().Initialize(mManager->GetScrollData(), item,
-                                             descendants, stopAtAsr,
-                                             aSc.GetDeferredTransformMatrix());
+          mLayerScrollData.back().Initialize(
+              mManager->GetScrollData(), item, descendants, stopAtAsr,
+              aSc.GetDeferredTransformMatrix(), deferredId);
         }
       }
     }
