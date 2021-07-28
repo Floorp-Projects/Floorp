@@ -6239,6 +6239,36 @@ class nsAutoNotifyDidPaint {
   PaintFlags mFlags;
 };
 
+bool PresShell::Composite(nsView* aViewToPaint) {
+  nsCString url;
+  nsIURI* uri = mDocument->GetDocumentURI();
+  Document* contentRoot = GetPrimaryContentDocument();
+  if (contentRoot) {
+    uri = contentRoot->GetDocumentURI();
+  }
+  url = uri ? uri->GetSpecOrDefault() : "N/A"_ns;
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("PresShell::Composite", GRAPHICS, url);
+
+  nsIFrame* frame = aViewToPaint->GetFrame();
+  WindowRenderer* renderer = aViewToPaint->GetWidget()->GetWindowRenderer();
+  NS_ASSERTION(renderer, "Must be in paint event");
+
+  if (!renderer->BeginTransaction(url)) {
+    // If we can't begin a transaction and paint, then there's not
+    // much the caller can do.
+    return true;
+  }
+
+  if (frame) {
+    if (renderer->EndEmptyTransaction()) {
+      GetPresContext()->NotifyDidPaintForSubtree();
+      return true;
+    }
+    NS_WARNING("Must complete empty transaction when compositing!");
+  }
+  return false;
+}
+
 void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
                       PaintFlags aFlags) {
   nsCString url;
@@ -6317,20 +6347,6 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
   }
 
   if (frame) {
-    // Try to do an empty transaction, if the frame tree does not
-    // need to be updated. Do not try to do an empty transaction on
-    // a non-retained layer manager (like the BasicLayerManager that
-    // draws the window title bar on Mac), because a) it won't work
-    // and b) below we don't want to clear NS_FRAME_UPDATE_LAYER_TREE,
-    // that will cause us to forget to update the real layer manager!
-
-    if (!(aFlags & PaintFlags::PaintLayers)) {
-      if (renderer->EndEmptyTransaction()) {
-        return;
-      }
-      NS_WARNING("Must complete empty transaction when compositing!");
-    }
-
     if (!(aFlags & PaintFlags::PaintSyncDecodeImages) &&
         !frame->HasAnyStateBits(NS_FRAME_UPDATE_LAYER_TREE) &&
         !mNextPaintCompressed) {
