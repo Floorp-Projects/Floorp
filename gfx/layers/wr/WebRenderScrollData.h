@@ -51,7 +51,8 @@ class WebRenderLayerScrollData final {
   void Initialize(WebRenderScrollData& aOwner, nsDisplayItem* aItem,
                   int32_t aDescendantCount,
                   const ActiveScrolledRoot* aStopAtAsr,
-                  const Maybe<gfx::Matrix4x4>& aAncestorTransform);
+                  const Maybe<gfx::Matrix4x4>& aAncestorTransform,
+                  const ViewID& aAncestorTransformId);
 
   int32_t GetDescendantCount() const;
   size_t GetScrollMetadataCount() const;
@@ -66,6 +67,7 @@ class WebRenderLayerScrollData final {
                                           size_t aIndex) const;
 
   gfx::Matrix4x4 GetAncestorTransform() const { return mAncestorTransform; }
+  ViewID GetAncestorTransformId() const { return mAncestorTransformId; }
   void SetTransform(const gfx::Matrix4x4& aTransform) {
     mTransform = aTransform;
   }
@@ -186,6 +188,7 @@ class WebRenderLayerScrollData final {
   // over IPC, and use on the parent side in APZ.
 
   gfx::Matrix4x4 mAncestorTransform;
+  ViewID mAncestorTransformId;
   gfx::Matrix4x4 mTransform;
   bool mTransformIsPerspective;
   float mResolution;
