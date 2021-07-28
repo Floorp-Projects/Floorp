@@ -26,6 +26,7 @@ import java.util.UUID
  * @property readerState the [ReaderState] of this tab.
  * @property contextId the session context ID of this tab.
  * @property lastAccess The last time this tab was selected (requires LastAccessMiddleware).
+ * @property createdAt Timestamp of this tab's creation.
  * @property lastMediaAccessState - [LastMediaAccessState] detailing the tab state when media started playing.
  * Requires [LastMediaAccessMiddleware] to update the value when playback starts.
  */
@@ -40,6 +41,7 @@ data class TabSessionState(
     override val source: SessionState.Source = SessionState.Source.NONE,
     val parentId: String? = null,
     val lastAccess: Long = 0L,
+    val createdAt: Long = System.currentTimeMillis(),
     val lastMediaAccessState: LastMediaAccessState = LastMediaAccessState(),
     val readerState: ReaderState = ReaderState(),
     val historyMetadata: HistoryMetadataKey? = null
@@ -80,6 +82,7 @@ fun createTab(
     thumbnail: Bitmap? = null,
     contextId: String? = null,
     lastAccess: Long = 0L,
+    createdAt: Long = System.currentTimeMillis(),
     lastMediaAccessState: LastMediaAccessState = LastMediaAccessState(),
     source: SessionState.Source = SessionState.Source.NONE,
     engineSession: EngineSession? = null,
@@ -106,6 +109,7 @@ fun createTab(
         readerState = readerState,
         contextId = contextId,
         lastAccess = lastAccess,
+        createdAt = createdAt,
         lastMediaAccessState = lastMediaAccessState,
         source = source,
         engineState = EngineState(

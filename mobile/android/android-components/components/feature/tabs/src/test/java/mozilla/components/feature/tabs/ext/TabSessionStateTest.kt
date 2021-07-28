@@ -7,6 +7,7 @@ package mozilla.components.feature.tabs.ext
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.LastMediaAccessState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.createTab
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -40,5 +41,16 @@ class TabSessionStateTest {
         )
 
         assertFalse(tab.hasMediaPlayed())
+    }
+
+    @Test
+    fun `WHEN creating a new TabSessionState THEN createAt is initialized with currentTimeMillis`() {
+        val currentTime = System.currentTimeMillis()
+
+        val newTab = TabSessionState(content = ContentState(url = "https://mozilla.org"))
+        val newTab2 = createTab(url = "https://mozilla.org")
+
+        assertTrue(currentTime <= newTab.createdAt)
+        assertTrue(currentTime <= newTab2.createdAt)
     }
 }

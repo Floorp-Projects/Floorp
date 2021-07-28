@@ -255,4 +255,57 @@ class RestoringBrowsingSessionsTest {
             }
         }
     }
+
+    /**
+     * App: Firefox for Android (Fenix)
+     * Version: master branch (GeckoView Nightly), 2021-01-08
+     */
+    @Test
+    fun Fenix_Master_2021_01_8() {
+        runBlocking(Dispatchers.Main) {
+            val json = """
+                {"version":2,"selectedTabId":"7f4fd2c9-2bb1-4c23-a06c-7fbd2b78922f","sessionStateTuples":[{"session":{"url":"https://airhorner.com/","uuid":"0e556bb8-9120-48af-bc93-2bba0d4ec346","parentUuid":"","title":"The Air Horner","contextId":null,"readerMode":false,"lastAccess":1609784156118, "createdAt":1609784156118},"engineSession":{"GECKO_STATE":"{\"scrolldata\":{\"zoom\":{\"resolution\":1,\"displaySize\":{\"height\":1823,\"width\":1080}}},\"history\":{\"entries\":[{\"referrerInfo\":\"BBoSnxDOS9qmDeAnom1e0AAAAAAAAAAAwAAAAAAAAEYAAAAAAAEBAAAAAAEA\",\"persist\":true,\"cacheKey\":0,\"ID\":0,\"url\":\"https:\\/\\/airhorner.com\\/\",\"title\":\"The Air Horner\",\"loadReplace\":true,\"docIdentifier\":2147483649,\"loadReplace2\":true,\"partitionedPrincipalToInherit_base64\":\"eyIwIjp7IjAiOiJtb3otbnVsbHByaW5jaXBhbDp7YjRjZTU0NjItMGQ0Yy00MDc3LTgwMzctYjk2YTI5MGEyMDRifSJ9fQ==\",\"triggeringPrincipal_base64\":\"eyIwIjp7IjAiOiJtb3otbnVsbHByaW5jaXBhbDp7NmE1YzZhODItODdlNy00ODQ0LTljMWItYjY0ZWRiZTA1MDY1fSJ9fQ==\",\"principalToInherit_base64\":\"eyIwIjp7IjAiOiJtb3otbnVsbHByaW5jaXBhbDp7YjRjZTU0NjItMGQ0Yy00MDc3LTgwMzctYjk2YTI5MGEyMDRifSJ9fQ==\",\"resultPrincipalURI\":\"https:\\/\\/airhorner.com\\/\",\"hasUserInteraction\":false,\"originalURI\":\"http:\\/\\/airhorner.com\\/\",\"docshellUUID\":\"{16bc3b14-e47f-4839-b809-095f0b0f79b4}\"}],\"requestedIndex\":0,\"fromIdx\":-1,\"index\":1,\"userContextId\":0}}"}},{"session":{"url":"https://www.wikipedia.org/","uuid":"7f4fd2c9-2bb1-4c23-a06c-7fbd2b78922f","parentUuid":"","title":"","contextId":null,"readerMode":false,"lastAccess":0},"engineSession":{}}]}
+            """.trimIndent()
+
+            val engine = GeckoEngine(context)
+
+            assertTrue(
+                getFileForEngine(context, engine).writeString { json }
+            )
+
+            val storage = SessionStorage(context, engine)
+            val state = storage.restore()
+
+            assertNotNull(state)
+
+            assertEquals(2, state!!.tabs.size)
+            assertEquals("7f4fd2c9-2bb1-4c23-a06c-7fbd2b78922f", state.selectedTabId)
+
+            state.tabs[0].apply {
+                assertEquals("0e556bb8-9120-48af-bc93-2bba0d4ec346", id)
+                assertEquals("The Air Horner", title)
+                assertEquals("https://airhorner.com/", url)
+                assertNull(contextId)
+                assertNull(parentId)
+                assertFalse(readerState.active)
+                assertNull(readerState.activeUrl)
+                assertEquals(1609784156118, lastAccess)
+                assertEquals(1609784156118, createdAt)
+                assertNotNull(state)
+            }
+
+            state.tabs[1].apply {
+                assertEquals("7f4fd2c9-2bb1-4c23-a06c-7fbd2b78922f", id)
+                assertEquals("", title)
+                assertEquals("https://www.wikipedia.org/", url)
+                assertNull(contextId)
+                assertNull(parentId)
+                assertFalse(readerState.active)
+                assertNull(readerState.activeUrl)
+                assertEquals(0, lastAccess)
+                assertEquals(0, createdAt)
+                assertNotNull(state)
+            }
+        }
+    }
 }

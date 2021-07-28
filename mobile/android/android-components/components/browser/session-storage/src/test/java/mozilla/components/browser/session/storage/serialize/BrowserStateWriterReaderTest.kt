@@ -175,6 +175,60 @@ class BrowserStateWriterReaderTest {
         assertEquals(333L, restoredTab.lastMediaAccessState.lastMediaAccess)
         assertTrue(restoredTab.lastMediaAccessState.mediaSessionActive)
     }
+
+    @Test
+    fun `Read and write tab with createdAt`() {
+        val engineState = createFakeEngineState()
+        val engine = createFakeEngine(engineState)
+        val currentTime = System.currentTimeMillis()
+
+        val tab = createTab(
+            url = "https://www.mozilla.org",
+            title = "Mozilla",
+            contextId = "work",
+            createdAt = currentTime
+        )
+
+        val writer = BrowserStateWriter()
+        val reader = BrowserStateReader()
+
+        val file = AtomicFile(
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+        )
+
+        assertTrue(writer.writeTab(tab, file))
+
+        val restoredTab = reader.readTab(engine, file)
+        assertNotNull(restoredTab!!)
+
+        assertEquals(currentTime, restoredTab.createdAt)
+    }
+
+    @Test
+    fun `Read and write tab without createdAt`() {
+        val engineState = createFakeEngineState()
+        val engine = createFakeEngine(engineState)
+
+        val tab = createTab(
+            url = "https://www.mozilla.org",
+            title = "Mozilla",
+            contextId = "work"
+        )
+
+        val writer = BrowserStateWriter()
+        val reader = BrowserStateReader()
+
+        val file = AtomicFile(
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+        )
+
+        assertTrue(writer.writeTab(tab, file))
+
+        val restoredTab = reader.readTab(engine, file)
+        assertNotNull(restoredTab!!)
+
+        assertNotNull(restoredTab.createdAt)
+    }
 }
 
 private fun createFakeEngineState(): EngineSessionState {

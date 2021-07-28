@@ -27,6 +27,7 @@ import mozilla.components.concept.storage.HistoryMetadataKey
  * @property state The [EngineSessionState] needed for restoring the previous state of this tab.
  * @property readerState The last [ReaderState] of the tab.
  * @property lastAccess The last time this tab was selected.
+ * @property createdAt Timestamp of the tab's creation.
  * @property lastMediaAccessState Details about the last time was playing in this tab.
  * @property private If tab was private.
  */
@@ -39,6 +40,7 @@ data class RecoverableTab(
     val state: EngineSessionState? = null,
     val readerState: ReaderState = ReaderState(),
     val lastAccess: Long = 0,
+    val createdAt: Long = 0,
     val lastMediaAccessState: LastMediaAccessState = LastMediaAccessState(),
     val private: Boolean = false,
     val historyMetadata: HistoryMetadataKey? = null
@@ -56,6 +58,7 @@ fun TabSessionState.toRecoverableTab() = RecoverableTab(
     state = engineState.engineSessionState,
     readerState = readerState,
     lastAccess = lastAccess,
+    createdAt = createdAt,
     lastMediaAccessState = lastMediaAccessState,
     private = content.private,
     historyMetadata = historyMetadata
@@ -73,6 +76,7 @@ fun RecoverableTab.toTabSessionState() = createTab(
     engineSessionState = state,
     readerState = readerState,
     lastAccess = lastAccess,
+    createdAt = createdAt,
     lastMediaAccessState = lastMediaAccessState,
     private = private
 )
