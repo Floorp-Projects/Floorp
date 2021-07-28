@@ -133,11 +133,6 @@ def static_js(value):
 set_define("MOZ_STATIC_JS", static_js)
 
 
-option(env="NO_RUST_PANIC_HOOK", when=js_standalone, help="Disable rust panic hook")
-
-set_define("NO_RUST_PANIC_HOOK", True, when="NO_RUST_PANIC_HOOK")
-
-
 # JIT support
 # =======================================================
 @depends(target)
