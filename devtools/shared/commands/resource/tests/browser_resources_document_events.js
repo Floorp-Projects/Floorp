@@ -57,11 +57,6 @@ async function testDocumentEventResources() {
     "Document events are fired even when the document was already loaded"
   );
   let domLoadingResource = await onLoadingAtInit;
-  is(
-    domLoadingResource.shouldBeIgnoredAsRedundantWithTargetAvailable,
-    true,
-    "shouldBeIgnoredAsRedundantWithTargetAvailable is true for already loaded page"
-  );
 
   is(
     domLoadingResource.url,
@@ -115,22 +110,6 @@ async function testDocumentEventResources() {
   ok(true, "Document events are fired after reloading");
 
   domLoadingResource = await onLoadingAtReloaded;
-  if (
-    commands.targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle
-  ) {
-    is(
-      domLoadingResource.shouldBeIgnoredAsRedundantWithTargetAvailable,
-      true,
-      "shouldBeIgnoredAsRedundantWithTargetAvailable is true when server targets are enabled and we get a new target for each new WindowGlobal"
-    );
-  } else {
-    is(
-      domLoadingResource.shouldBeIgnoredAsRedundantWithTargetAvailable,
-      undefined,
-      "shouldBeIgnoredAsRedundantWithTargetAvailable is not set after reloading, when server targets are not enabled"
-    );
-  }
-
   is(
     domLoadingResource.url,
     url,
@@ -381,25 +360,6 @@ async function testBfCacheNavigation() {
     "The fourth DOCUMENT_EVENT is dom-complete"
   );
 
-  // followWindowGlobalLifeCycle will be true when enabling server side target switching,
-  // even when fission is off.
-  if (
-    isFissionEnabled() ||
-    commands.targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle
-  ) {
-    is(
-      loadingEvent.shouldBeIgnoredAsRedundantWithTargetAvailable,
-      true,
-      "shouldBeIgnoredAsRedundantWithTargetAvailable is true for the new target which follows the WindowGlobal lifecycle"
-    );
-  } else {
-    is(
-      loadingEvent.shouldBeIgnoredAsRedundantWithTargetAvailable,
-      undefined,
-      "shouldBeIgnoredAsRedundantWithTargetAvailable is undefined if fission is disabled and we keep the same target"
-    );
-  }
-
   is(
     loadingEvent.url,
     firstLocation,
@@ -510,25 +470,6 @@ async function testCrossOriginNavigation() {
     "dom-complete",
     "The fourth DOCUMENT_EVENT is dom-complete"
   );
-
-  // followWindowGlobalLifeCycle will be true when enabling server side target switching,
-  // even when fission is off.
-  if (
-    isFissionEnabled() ||
-    commands.targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle
-  ) {
-    is(
-      loadingEvent.shouldBeIgnoredAsRedundantWithTargetAvailable,
-      true,
-      "shouldBeIgnoredAsRedundantWithTargetAvailable is true for the new target which follows the WindowGlobal lifecycle"
-    );
-  } else {
-    is(
-      loadingEvent.shouldBeIgnoredAsRedundantWithTargetAvailable,
-      undefined,
-      "shouldBeIgnoredAsRedundantWithTargetAvailable is undefined if fission is disabled and we keep the same target"
-    );
-  }
 
   is(
     loadingEvent.url,
