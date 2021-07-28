@@ -1626,7 +1626,11 @@ class UrlbarView {
           );
           continue;
         }
-        node.setAttribute(attrName, value);
+        if (value === null) {
+          node.removeAttribute(attrName);
+        } else {
+          node.setAttribute(attrName, value);
+        }
       }
       for (let [styleName, value] of Object.entries(update.style || {})) {
         node.style[styleName] = value;
