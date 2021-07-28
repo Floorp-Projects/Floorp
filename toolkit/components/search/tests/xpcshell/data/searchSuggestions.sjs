@@ -62,6 +62,8 @@ function handleRequest(request, response) {
     writeSuggestions(q, ["Mozilla", "modern", "mom"]);
   } else if (q && q.startsWith("I ❤️")) {
     writeSuggestions(q, ["I ❤️ Mozilla"]);
+  } else if (q && q.startsWith("stü")) {
+    writeSuggestions("st\\u00FC", ["stühle", "stüssy"]);
   } else if (q && q.startsWith("tailjunk ")) {
     writeSuggestionsDirectly([
       q,
