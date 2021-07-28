@@ -983,6 +983,13 @@ static LookAndFeel::ColorScheme ColorSchemeForDocument(
       return LookAndFeel::SystemColorScheme();
     }
   }
+#ifdef MOZ_WIDGET_GTK
+  if (StaticPrefs::widget_content_allow_gtk_dark_theme()) {
+    // If users manually tweak allow-gtk-dark-theme, allow content to use the
+    // system color scheme rather than forcing it to light.
+    return LookAndFeel::SystemColorScheme();
+  }
+#endif
   return aContentSupportsDark ? LookAndFeel::SystemColorScheme()
                               : ColorScheme::Light;
 }

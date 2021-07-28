@@ -11640,7 +11640,7 @@
 
 # Whether to allow gtk dark themes in content.
 - name: widget.content.allow-gtk-dark-theme
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
