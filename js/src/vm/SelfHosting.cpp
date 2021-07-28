@@ -3325,6 +3325,21 @@ JSRuntime::getSelfHostedScriptIndexRange(js::PropertyName* name) {
 
 bool JSRuntime::cloneSelfHostedValue(JSContext* cx, HandlePropertyName name,
                                      MutableHandleValue vp) {
+  // If the self-hosted value we want is a function in the stencil, instantiate
+  // a lazy self-hosted function for it. This is typical when a self-hosted
+  // function calls other self-hosted helper functions.
+  if (auto index = getSelfHostedScriptIndexRange(name)) {
+    JSFunction* fun =
+        cx->runtime()->selfHostStencil().instantiateSelfHostedLazyFunction(
+            cx, cx->runtime()->selfHostStencilInput().atomCache, index->start,
+            name);
+    if (!fun) {
+      return false;
+    }
+    vp.setObject(*fun);
+    return true;
+  }
+
   RootedValue selfHostedValue(cx);
   getUnclonedSelfHostedValue(name, selfHostedValue.address());
 
