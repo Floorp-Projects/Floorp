@@ -143,21 +143,6 @@
       "test_url": "https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1"
     },
     {
-      "login": true,
-      "name": "facebook",
-      "test_url": "https://www.facebook.com"
-    },
-    {
-      "login": true,
-      "name": "google",
-      "test_url": "https://www.google.com/search?hl=en&q=barack+obama&cad=h"
-    },
-    {
-      "login": false,
-      "name": "youtube",
-      "test_url": "https://www.youtube.com"
-    },
-    {
       "login": false,
       "name": "bing-search",
       "test_url": "https://www.bing.com/search?q=barack+obama"
@@ -186,6 +171,16 @@
       "login": false,
       "name": "expedia",
       "test_url": "https://expedia.com/Hotel-Search?destination=New+York%2C+New+York&latLong=40.756680%2C-73.986470&regionId=178293&startDate=&endDate=&rooms=1&_xpid=11905%7C1&adults=2"
+    },
+    {
+      "login": true,
+      "name": "facebook",
+      "test_url": "https://www.facebook.com"
+    },
+    {
+      "login": true,
+      "name": "google",
+      "test_url": "https://www.google.com/search?hl=en&q=barack+obama&cad=h"
     },
     {
       "login": false,
@@ -301,6 +296,11 @@
       "login": true,
       "name": "yahoo-mail",
       "test_url": "https://mail.yahoo.com/"
+    },
+    {
+      "login": false,
+      "name": "youtube",
+      "test_url": "https://www.youtube.com"
     }
   ]
 }
