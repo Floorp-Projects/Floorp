@@ -27,6 +27,10 @@ async function runPrefTest(aURI, aDesc, aAssertURLStartsWith) {
 }
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
+
   await runPrefTest(
     "http://example.com",
     "HTTPS-First disabled; Should not upgrade",
