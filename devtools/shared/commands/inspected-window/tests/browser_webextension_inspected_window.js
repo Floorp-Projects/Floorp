@@ -31,7 +31,7 @@ async function setup(pageUrl) {
 
   const tab = await addTab(pageUrl);
 
-  const commands = await CommandsFactory.forTab(tab);
+  const commands = await CommandsFactory.forTab(tab, { isWebExtension: true });
   await commands.targetCommand.startListening();
 
   const webConsoleFront = await commands.targetCommand.targetFront.getFront(
