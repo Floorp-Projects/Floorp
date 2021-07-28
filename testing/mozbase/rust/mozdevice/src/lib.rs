@@ -25,9 +25,10 @@ use std::io::{self, Read, Write};
 use std::iter::FromIterator;
 use std::net::TcpStream;
 use std::num::{ParseIntError, TryFromIntError};
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path};
 use std::str::{FromStr, Utf8Error};
 use std::time::{Duration, SystemTime};
+pub use unix_path::{Path as UnixPath, PathBuf as UnixPathBuf};
 use uuid::Uuid;
 use walkdir::WalkDir;
 
@@ -410,7 +411,7 @@ pub struct Device {
     pub storage: AndroidStorage,
 
     /// Cache intermediate tempfile name used in pushing via run_as.
-    pub tempfile: PathBuf,
+    pub tempfile: UnixPathBuf,
 }
 
 impl Device {
@@ -424,7 +425,7 @@ impl Device {
             storage: AndroidStorage::App,
             su_c_root: false,
             su_0_root: false,
-            tempfile: PathBuf::from("/data/local/tmp"),
+            tempfile: UnixPathBuf::from("/data/local/tmp"),
         };
         device
             .tempfile
@@ -467,7 +468,7 @@ impl Device {
             .map(|v| v.contains("Success"))
     }
 
-    pub fn create_dir(&self, path: &Path) -> Result<()> {
+    pub fn create_dir(&self, path: &UnixPath) -> Result<()> {
         debug!("Creating {}", path.display());
 
         let enable_run_as = self.enable_run_as_for_path(&path);
@@ -476,7 +477,7 @@ impl Device {
         Ok(())
     }
 
-    pub fn chmod(&self, path: &Path, mask: &str, recursive: bool) -> Result<()> {
+    pub fn chmod(&self, path: &UnixPath, mask: &str, recursive: bool) -> Result<()> {
         let enable_run_as = self.enable_run_as_for_path(&path);
 
         let recursive = match recursive {
@@ -518,10 +519,10 @@ impl Device {
         Ok(response.replace("\r\n", "\n"))
     }
 
-    pub fn enable_run_as_for_path(&self, path: &Path) -> bool {
+    pub fn enable_run_as_for_path(&self, path: &UnixPath) -> bool {
         match &self.run_as_package {
             Some(package) => {
-                let mut p = PathBuf::from("/data/data/");
+                let mut p = UnixPathBuf::from("/data/data/");
                 p.push(package);
                 path.starts_with(p)
             }
@@ -691,12 +692,12 @@ impl Device {
             .and(Ok(()))
     }
 
-    pub fn path_exists(&self, path: &Path, enable_run_as: bool) -> Result<bool> {
+    pub fn path_exists(&self, path: &UnixPath, enable_run_as: bool) -> Result<bool> {
         self.execute_host_shell_command_as(format!("ls {}", path.display()).as_str(), enable_run_as)
             .map(|path| !path.contains("No such file or directory"))
     }
 
-    pub fn push(&self, buffer: &mut dyn Read, dest: &Path, mode: u32) -> Result<()> {
+    pub fn push(&self, buffer: &mut dyn Read, dest: &UnixPath, mode: u32) -> Result<()> {
         // Implement the ADB protocol to send a file to the device.
         // The protocol consists of the following steps:
         // * Send "host:transport" command with device serial
@@ -708,7 +709,7 @@ impl Device {
         let enable_run_as = self.enable_run_as_for_path(&dest.to_path_buf());
         let dest1 = match enable_run_as {
             true => self.tempfile.as_path(),
-            false => Path::new(dest),
+            false => UnixPath::new(dest),
         };
 
         // If the destination directory does not exist, adb will
@@ -723,8 +724,8 @@ impl Device {
         // exist so we can create them and adjust their permissions
         // prior to performing the push.
         let mut current = dest.parent();
-        let mut leaf: Option<&Path> = None;
-        let mut root: Option<&Path> = None;
+        let mut leaf: Option<&UnixPath> = None;
+        let mut root: Option<&UnixPath> = None;
 
         while let Some(path) = current {
             if self.path_exists(path, enable_run_as)? {
@@ -828,7 +829,7 @@ impl Device {
         }
     }
 
-    pub fn push_dir(&self, source: &Path, dest_dir: &Path, mode: u32) -> Result<()> {
+    pub fn push_dir(&self, source: &Path, dest_dir: &UnixPath, mode: u32) -> Result<()> {
         debug!("Pushing {} to {}", source.display(), dest_dir.display());
 
         let walker = WalkDir::new(source).follow_links(false).into_iter();
@@ -843,19 +844,18 @@ impl Device {
 
             let mut file = File::open(path)?;
 
-            let mut dest = dest_dir.to_path_buf();
-            dest.push(
-                path.strip_prefix(source)
-                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?,
-            );
+            let tail = path
+                .strip_prefix(source)
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
 
+            let dest = append_components(dest_dir, tail)?;
             self.push(&mut file, &dest, mode)?;
         }
 
         Ok(())
     }
 
-    pub fn remove(&self, path: &Path) -> Result<()> {
+    pub fn remove(&self, path: &UnixPath) -> Result<()> {
         debug!("Deleting {}", path.display());
 
         self.execute_host_shell_command_as(
@@ -865,4 +865,27 @@ impl Device {
 
         Ok(())
     }
+}
+
+pub(crate) fn append_components(base: &UnixPath, tail: &Path) -> std::result::Result<UnixPathBuf, io::Error> {
+    let mut buf = base.to_path_buf();
+
+    for component in tail.components() {
+        if let Component::Normal(ref segment) = component {
+            let utf8 = segment.to_str().ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::Other,
+                    "Could not represent path segment as UTF-8",
+                )
+            })?;
+            buf.push(utf8);
+        } else {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "Unexpected path component".to_owned(),
+            ));
+        }
+    }
+
+    Ok(buf)
 }
