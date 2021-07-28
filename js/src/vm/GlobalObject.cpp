@@ -43,6 +43,7 @@
 #include "builtin/WeakRefObject.h"
 #include "builtin/WeakSetObject.h"
 #include "debugger/DebugAPI.h"
+#include "frontend/CompilationStencil.h"
 #include "gc/FreeOp.h"
 #include "js/friend/ErrorMessages.h"        // js::GetErrorMessage, JSMSG_*
 #include "js/friend/WindowProxy.h"          // js::ToWindowProxyIfWindow
@@ -998,11 +999,16 @@ bool GlobalObject::getSelfHostedFunction(JSContext* cx,
     return true;
   }
 
-  RootedFunction fun(cx);
-  if (!cx->runtime()->createLazySelfHostedFunctionClone(
-          cx, selfHostedName, name, nargs, TenuredObject, &fun)) {
+  JSRuntime* runtime = cx->runtime();
+  frontend::ScriptIndex index =
+      runtime->getSelfHostedScriptIndexRange(selfHostedName)->start;
+  JSFunction* fun =
+      runtime->selfHostStencil().instantiateSelfHostedLazyFunction(
+          cx, runtime->selfHostStencilInput().atomCache, index, name);
+  if (!fun) {
     return false;
   }
+  MOZ_ASSERT(fun->nargs() == nargs);
   funVal.setObject(*fun);
 
   return GlobalObject::addIntrinsicValue(cx, global, selfHostedName, funVal);
