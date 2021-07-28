@@ -7,6 +7,10 @@ registerCleanupFunction(function() {
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
   await gBrowser.contentWindow.gMainPane._selectDefaultLanguageGroupPromise;
+  await TestUtils.waitForCondition(
+    () => !gBrowser.contentWindow.Preferences.updateQueued
+  );
+
   let doc = gBrowser.contentDocument;
   let contentWindow = gBrowser.contentWindow;
   var langGroup = Services.prefs.getComplexValue(
