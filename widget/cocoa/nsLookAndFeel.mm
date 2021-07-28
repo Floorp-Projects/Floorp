@@ -22,6 +22,7 @@
 #include "SDKDeclarations.h"
 
 #import <Cocoa/Cocoa.h>
+#import <AppKit/NSColor.h>
 
 // This must be included last:
 #include "nsObjCExceptions.h"
@@ -336,6 +337,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       break;
     case ColorID::MozNativehyperlinktext:
       color = GetColorFromNSColor(NSColor.linkColor);
+      break;
+    case ColorID::MozNativevisitedhyperlinktext:
+      color = GetColorFromNSColor(NSColor.systemPurpleColor);
       break;
     // The following colors are supposed to be used as font-smoothing background
     // colors, in the chrome-only -moz-font-smoothing-background-color property.

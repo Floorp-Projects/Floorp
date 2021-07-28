@@ -248,6 +248,11 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID, ColorScheme, nscolor& aResult) {
       // There appears to be no available system defined color. HARDCODING to the appropriate color.
       aResult = NS_RGB(0x14, 0x4F, 0xAE);
       break;
+    case ColorID::MozNativevisitedhyperlinktext:
+      // Safari defaults to the MacOS color implementation for visited links, which in turn uses
+      // systemPurpleColor, so we do the same here.
+      aResult = GetColorFromUIColor([UIColor systemPurpleColor]);
+      break;
     default:
       NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
       aResult = NS_RGB(0xff, 0xff, 0xff);
