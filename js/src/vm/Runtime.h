@@ -707,11 +707,6 @@ struct JSRuntime {
     return global == selfHostingGlobal_;
   }
   js::GeneratorKind getSelfHostedFunctionGeneratorKind(js::PropertyName* name);
-  bool createLazySelfHostedFunctionClone(JSContext* cx,
-                                         js::HandlePropertyName selfHostedName,
-                                         js::HandleAtom name, unsigned nargs,
-                                         js::NewObjectKind newKind,
-                                         js::MutableHandleFunction fun);
   bool cloneSelfHostedFunctionScript(JSContext* cx,
                                      js::Handle<js::PropertyName*> name,
                                      js::Handle<JSFunction*> targetFun);

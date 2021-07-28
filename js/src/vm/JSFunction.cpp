@@ -1893,20 +1893,6 @@ bool JSFunction::needsCallObject() const {
   return nonLazyScript()->bodyScope()->hasEnvironment();
 }
 
-JSFunction* js::NewScriptedFunction(
-    JSContext* cx, unsigned nargs, FunctionFlags flags, HandleAtom atom,
-    HandleObject proto /* = nullptr */,
-    gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
-    NewObjectKind newKind /* = GenericObject */,
-    HandleObject enclosingEnvArg /* = nullptr */) {
-  RootedObject enclosingEnv(cx, enclosingEnvArg);
-  if (!enclosingEnv) {
-    enclosingEnv = &cx->global()->lexicalEnvironment();
-  }
-  return NewFunctionWithProto(cx, nullptr, nargs, flags, enclosingEnv, atom,
-                              proto, allocKind, newKind);
-}
-
 #ifdef DEBUG
 static JSObject* SkipEnvironmentObjects(JSObject* env) {
   if (!env) {
