@@ -29,13 +29,13 @@ def run_process(cmd):
 def run_mozlint(hooktype, args):
     if isinstance(hooktype, six.binary_type):
         hooktype = hooktype.decode("UTF-8", "replace")
-    # --quiet prevents warnings on eslint, it will be ignored by other linters
+
     python = find_executable("python3")
     if not python:
         print("error: Python 3 not detected on your system! Please install it.")
         sys.exit(1)
 
-    cmd = [python, os.path.join(topsrcdir, "mach"), "lint", "--quiet"]
+    cmd = [python, os.path.join(topsrcdir, "mach"), "lint"]
 
     if "commit" in hooktype:
         # don't prevent commits, just display the lint results
