@@ -162,7 +162,7 @@ fn run_tasks_in_order() {
     fn visit(v: u32, visited_ptr: usize) {
         let visited = unsafe { &mut *(visited_ptr as *mut Vec<u32>) };
         visited.push(v);
-    };
+    }
 
     let queue = Queue::new("Run tasks in order");
 
@@ -189,7 +189,7 @@ fn run_final_task() {
         fn visit(v: u32, visited_ptr: usize) {
             let visited = unsafe { &mut *(visited_ptr as *mut Vec<u32>) };
             visited.push(v);
-        };
+        }
 
         let queue = Queue::new("Task after run_final will be cancelled");
 
