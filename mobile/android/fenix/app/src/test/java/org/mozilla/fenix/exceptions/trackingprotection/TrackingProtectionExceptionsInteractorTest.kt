@@ -4,14 +4,10 @@
 
 package org.mozilla.fenix.exceptions.trackingprotection
 
-import io.mockk.CapturingSlot
 import io.mockk.MockKAnnotations
-import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifySequence
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
@@ -28,7 +24,7 @@ class TrackingProtectionExceptionsInteractorTest {
     @MockK(relaxed = true) private lateinit var exceptionsStore: ExceptionsFragmentStore
     @MockK(relaxed = true) private lateinit var trackingProtectionUseCases: TrackingProtectionUseCases
     private lateinit var interactor: TrackingProtectionExceptionsInteractor
-    private lateinit var onResult: CapturingSlot<(List<TrackingProtectionException>) -> Unit>
+    private lateinit var results: List<TrackingProtectionException>
 
     @Before
     fun setup() {
@@ -39,8 +35,10 @@ class TrackingProtectionExceptionsInteractorTest {
             trackingProtectionUseCases = trackingProtectionUseCases
         )
 
-        onResult = slot()
-        every { trackingProtectionUseCases.fetchExceptions(capture(onResult)) } just Runs
+        results = emptyList()
+        every { trackingProtectionUseCases.fetchExceptions(any()) } answers {
+            firstArg<(List<TrackingProtectionException>) -> Unit>()(results)
+        }
     }
 
     @Test
@@ -67,8 +65,6 @@ class TrackingProtectionExceptionsInteractorTest {
             trackingProtectionUseCases.fetchExceptions(any())
         }
 
-        val results = mockk<List<TrackingProtectionException>>()
-        onResult.captured(results)
         verify { exceptionsStore.dispatch(ExceptionsFragmentAction.Change(results)) }
     }
 
@@ -81,8 +77,6 @@ class TrackingProtectionExceptionsInteractorTest {
             trackingProtectionUseCases.fetchExceptions(any())
         }
 
-        val results = mockk<List<TrackingProtectionException>>()
-        onResult.captured(results)
         verify { exceptionsStore.dispatch(ExceptionsFragmentAction.Change(results)) }
     }
 }
