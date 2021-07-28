@@ -368,7 +368,7 @@ function teardown(monitor) {
   info("Destroying the specified network monitor.");
 
   return (async function() {
-    const tab = monitor.toolbox.target.localTab;
+    const tab = monitor.commands.descriptorFront.localTab;
 
     await waitForAllNetworkUpdateEvents();
     info("All pending requests finished.");
