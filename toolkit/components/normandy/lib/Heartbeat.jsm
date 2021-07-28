@@ -171,7 +171,7 @@ var Heartbeat = class {
       });
     }
 
-    this.notificationBox = this.chromeWindow.gHighPriorityNotificationBox;
+    this.notificationBox = this.chromeWindow.gNotificationBox;
     this.notice = this.notificationBox.appendNotification(
       this.options.message,
       "heartbeat-" + this.options.flowId,
