@@ -167,4 +167,44 @@ void WindowRenderer::UpdatePartialPrerenderedAnimations(
   }
 }
 
+void FallbackRenderer::SetTarget(gfxContext* aTarget,
+                                 layers::BufferMode aDoubleBuffering) {
+  mTarget = aTarget;
+  mBufferMode = aDoubleBuffering;
+}
+
+bool FallbackRenderer::BeginTransaction(const nsCString& aURL) {
+  if (!mTarget) {
+    return false;
+  }
+
+  return true;
+}
+
+void FallbackRenderer::EndTransactionWithColor(const nsIntRect& aRect,
+                                               const gfx::DeviceColor& aColor) {
+  mTarget->GetDrawTarget()->FillRect(Rect(aRect), ColorPattern(aColor));
+}
+
+void FallbackRenderer::EndTransactionWithList(nsDisplayListBuilder* aBuilder,
+                                              nsDisplayList* aList,
+                                              int32_t aAppUnitsPerDevPixel,
+                                              EndTransactionFlags aFlags) {
+  if (aFlags & EndTransactionFlags::END_NO_COMPOSITE) {
+    return;
+  }
+
+  DrawTarget* dt = mTarget->GetDrawTarget();
+
+  if (mBufferMode == BufferMode::BUFFERED) {
+    dt->PushLayer(true, 1.0, nullptr, Matrix());
+  }
+
+  aList->Paint(aBuilder, mTarget, aAppUnitsPerDevPixel);
+
+  if (mBufferMode == BufferMode::BUFFERED) {
+    dt->PopLayer();
+  }
+}
+
 }  // namespace mozilla
