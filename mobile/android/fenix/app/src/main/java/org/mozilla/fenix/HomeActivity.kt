@@ -220,7 +220,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             shouldNavigateBrowserFragmentOnCouldStart(savedInstanceState)
         ) {
             navigateToBrowserOnColdStart()
-        } else {
+        } else if (FeatureFlags.showStartOnHomeSettings) {
             components.analytics.metrics.track(Event.StartOnHomeEnterHomeScreen)
         }
 
@@ -974,6 +974,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
      *  links from an external apps should always opened in the [BrowserFragment].
      */
     fun shouldStartOnHome(intent: Intent? = this.intent): Boolean {
+        if (!FeatureFlags.showStartOnHomeSettings) {
+            return false
+        }
         return components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             // We only want to open on home when users tap the app,
             // we want to ignore other cases when the app gets open by users clicking on links.

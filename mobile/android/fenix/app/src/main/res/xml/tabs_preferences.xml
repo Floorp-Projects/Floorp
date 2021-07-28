@@ -50,6 +50,8 @@
         android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_start_on_home"
         app:allowDividerAbove="true"
+        app:isPreferenceVisible="false"
+        android:key="pref_key_start_on_home_category"
         app:iconSpaceReserved="false">
 
         <org.mozilla.fenix.settings.RadioButtonPreference
