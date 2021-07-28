@@ -32,6 +32,7 @@ const DYNAMIC_TYPE_VIEW_TEMPLATE = {
           tag: "span",
           attributes: {
             role: "button",
+            attribute_to_remove: "value",
           },
         },
         {
@@ -247,6 +248,16 @@ add_task(async function viewUpdated() {
           'element.getAttribute("searchString")'
         );
       }
+
+      let button1 = row.querySelector(
+        `.urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-button1`
+      );
+
+      Assert.equal(
+        button1.hasAttribute("attribute_to_remove"),
+        false,
+        "Attribute should be removed"
+      );
 
       // text.textContent should be updated.
       Assert.equal(
@@ -649,6 +660,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
         textContent: "Button 1",
         attributes: {
           searchString: result.payload.searchString,
+          attribute_to_remove: null,
         },
       },
       button2: {
@@ -728,6 +740,14 @@ function checkDOM(parentNode, expectedChildren) {
       "The child was assigned the correct ID."
     );
     for (let [name, value] of Object.entries(child.attributes || {})) {
+      if (name == "attribute_to_remove") {
+        Assert.equal(
+          actualChild.hasAttribute(name),
+          false,
+          `attribute: ${name}`
+        );
+        continue;
+      }
       Assert.equal(actualChild.getAttribute(name), value, `attribute: ${name}`);
     }
     for (let name of child.classList || []) {
