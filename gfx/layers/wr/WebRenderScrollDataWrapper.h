@@ -205,17 +205,31 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
   gfx::Matrix4x4 GetTransform() const {
     MOZ_ASSERT(IsValid());
 
-    // See WebRenderLayerScrollData::Initialize for more context. The ancestor
-    // transform is associated with the "topmost" layer, and the transform is
-    // associated with the "bottommost" layer. If there is only one
-    // scrollmetadata on the layer, then it is both "topmost" and "bottommost"
-    // and we combine the two transforms.
+    // See WebRenderLayerScrollData::Initialize for more context.
+    //  * The ancestor transform is associated with whichever layer has scroll
+    //    id matching GetAncestorTransformId().
+    //  * The resolution is associated with the "topmost" layer.
+    //  * The transform is associated with the "bottommost" layer.
+    // Multiple transforms may apply to the same layer (e.g. if there is only
+    // one scrollmetadata on the layer, then it is both "topmost" and
+    // "bottommost"), so we may need to combine the transforms.
 
     gfx::Matrix4x4 transform;
+    // The ancestor transform is usually emitted at the layer with the
+    // matching scroll id. However, sometimes the transform ends up on
+    // a node with no scroll metadata at all. In such cases we generate
+    // a single layer, and the ancestor transform needs to be on that layer,
+    // otherwise it will be lost.
+    bool emitAncestorTransform =
+        !Metrics().IsScrollable() ||
+        Metrics().GetScrollId() == mLayer->GetAncestorTransformId();
+    if (emitAncestorTransform) {
+      transform = mLayer->GetAncestorTransform();
+    }
     if (AtTopLayer()) {
       float resolution = mLayer->GetResolution();
-      transform = mLayer->GetAncestorTransform() *
-                  gfx::Matrix4x4::Scaling(resolution, resolution, 1.f);
+      transform =
+          transform * gfx::Matrix4x4::Scaling(resolution, resolution, 1.f);
     }
     if (AtBottomLayer()) {
       transform = mLayer->GetTransform() * transform;
