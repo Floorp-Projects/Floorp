@@ -52,7 +52,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/UserActivation.h"
-#include "HTMLElementAccessibles.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -695,6 +694,8 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
       aAttribute == nsGkAtoms::disabled || aAttribute == nsGkAtoms::tabindex ||
       aAttribute == nsGkAtoms::contenteditable) {
     mPrevStateBits = accessible->State();
+  } else {
+    mPrevStateBits = 0;
   }
 }
 
@@ -736,7 +737,7 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
   }
 
   // Ignore attribute change if the element doesn't have an accessible (at all
-  // or still) iff the element is not a root content of this document accessible
+  // or still) if the element is not a root content of this document accessible
   // (which is treated as attribute change on this document accessible).
   // Note: we don't bail if all the content hasn't finished loading because
   // these attributes are changing for a loaded part of the content.
@@ -750,295 +751,10 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
   MOZ_ASSERT(accessible->IsBoundToParent() || accessible->IsDoc(),
              "DOM attribute change on an accessible detached from the tree");
 
-  // Fire accessible events iff there's an accessible, otherwise we consider
-  // the accessible state wasn't changed, i.e. its state is initial state.
-  AttributeChangedImpl(accessible, aNameSpaceID, aAttribute, aModType,
-                       aOldValue);
-
-  // Update dependent IDs cache. Take care of accessible elements because no
-  // accessible element means either the element is not accessible at all or
-  // its accessible will be created later. It doesn't make sense to keep
-  // dependent IDs for non accessible elements. For the second case we'll update
-  // dependent IDs cache when its accessible is created.
-  if (aModType == dom::MutationEvent_Binding::MODIFICATION ||
-      aModType == dom::MutationEvent_Binding::ADDITION) {
-    AddDependentIDsFor(accessible, aAttribute);
-  }
-}
-
-// DocAccessible protected member
-void DocAccessible::AttributeChangedImpl(LocalAccessible* aAccessible,
-                                         int32_t aNameSpaceID,
-                                         nsAtom* aAttribute, int32_t aModType,
-                                         const nsAttrValue* aOldValue) {
-  // Fire accessible event after short timer, because we need to wait for
-  // DOM attribute & resulting layout to actually change. Otherwise,
-  // assistive technology will retrieve the wrong state/value/selection info.
-
-  // XXX todo
-  // We still need to handle special HTML cases here
-  // For example, if an <img>'s usemap attribute is modified
-  // Otherwise it may just be a state change, for example an object changing
-  // its visibility
-  //
-  // XXX todo: report aria state changes for "undefined" literal value changes
-  // filed as bug 472142
-  //
-  // XXX todo:  invalidate accessible when aria state changes affect exposed
-  // role filed as bug 472143
-
-  // Universal boolean properties that don't require a role. Fire the state
-  // change when disabled or aria-disabled attribute is set.
-  // Note. Checking the XUL or HTML namespace would not seem to gain us
-  // anything, because disabled attribute really is going to mean the same
-  // thing in any namespace.
-  // Note. We use the attribute instead of the disabled state bit because
-  // ARIA's aria-disabled does not affect the disabled state bit.
-  if (aAttribute == nsGkAtoms::disabled ||
-      aAttribute == nsGkAtoms::aria_disabled) {
-    // disabled can affect focusable state
-    aAccessible->MaybeFireFocusableStateChange(
-        (mPrevStateBits & states::FOCUSABLE) != 0);
-
-    // Do nothing if state wasn't changed (like @aria-disabled was removed but
-    // @disabled is still presented).
-    uint64_t unavailableState = (aAccessible->State() & states::UNAVAILABLE);
-    if ((mPrevStateBits & states::UNAVAILABLE) == unavailableState) {
-      return;
-    }
-
-    RefPtr<AccEvent> enabledChangeEvent = new AccStateChangeEvent(
-        aAccessible, states::ENABLED, !unavailableState);
-    FireDelayedEvent(enabledChangeEvent);
-
-    RefPtr<AccEvent> sensitiveChangeEvent = new AccStateChangeEvent(
-        aAccessible, states::SENSITIVE, !unavailableState);
-    FireDelayedEvent(sensitiveChangeEvent);
-
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::tabindex) {
-    // Fire a focusable state change event if the previous state was different.
-    // It may be the same if tabindex is on a redundantly focusable element.
-    aAccessible->MaybeFireFocusableStateChange(
-        (mPrevStateBits & states::FOCUSABLE));
-    return;
-  }
-
-  // When a details object has its open attribute changed
-  // we should fire a state-change event on the accessible of
-  // its main summary
-  if (aAttribute == nsGkAtoms::open) {
-    // FromDetails checks if the given accessible belongs to
-    // a details frame and also locates the accessible of its
-    // main summary.
-    if (HTMLSummaryAccessible* summaryAccessible =
-            HTMLSummaryAccessible::FromDetails(aAccessible)) {
-      RefPtr<AccEvent> expandedChangeEvent =
-          new AccStateChangeEvent(summaryAccessible, states::EXPANDED);
-      FireDelayedEvent(expandedChangeEvent);
-      return;
-    }
-  }
-
-  // Check for namespaced ARIA attribute
-  if (aNameSpaceID == kNameSpaceID_None) {
-    // Check for hyphenated aria-foo property?
-    if (StringBeginsWith(nsDependentAtomString(aAttribute), u"aria-"_ns)) {
-      ARIAAttributeChanged(aAccessible, aAttribute, aOldValue);
-    }
-  }
-
-  // Fire name change and description change events. XXX: it's not complete and
-  // dupes the code logic of accessible name and description calculation, we do
-  // that for performance reasons.
-  if (aAttribute == nsGkAtoms::aria_label) {
-    FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, aAccessible);
-    return;
-  }
-
-  dom::Element* elm = aAccessible->GetContent()->AsElement();
-  if (aAttribute == nsGkAtoms::aria_describedby) {
-    FireDelayedEvent(nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE, aAccessible);
-    if (aModType == dom::MutationEvent_Binding::MODIFICATION ||
-        aModType == dom::MutationEvent_Binding::ADDITION) {
-      // The subtrees of the new aria-describedby targets might be used to
-      // compute the description for aAccessible. Therefore, we need to set
-      // the eHasDescriptionDependent flag on all Accessibles in these subtrees.
-      IDRefsIterator iter(this, aAccessible->Elm(),
-                          nsGkAtoms::aria_describedby);
-      while (LocalAccessible* target = iter.Next()) {
-        Pivot pivot(target);
-        LocalAccInSameDocRule rule;
-        for (Accessible* anchor(target); anchor;
-             anchor = pivot.Next(anchor, rule)) {
-          LocalAccessible* acc = anchor->AsLocal();
-          MOZ_ASSERT(acc);
-          acc->mContextFlags |= eHasDescriptionDependent;
-        }
-      }
-    }
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::aria_labelledby &&
-      !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label)) {
-    FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, aAccessible);
-    if (aModType == dom::MutationEvent_Binding::MODIFICATION ||
-        aModType == dom::MutationEvent_Binding::ADDITION) {
-      // The subtrees of the new aria-labelledby targets might be used to
-      // compute the name for aAccessible. Therefore, we need to set
-      // the eHasNameDependent flag on all Accessibles in these subtrees.
-      IDRefsIterator iter(this, aAccessible->Elm(), nsGkAtoms::aria_labelledby);
-      while (LocalAccessible* target = iter.Next()) {
-        Pivot pivot(target);
-        LocalAccInSameDocRule rule;
-        for (Accessible* anchor(target); anchor;
-             anchor = pivot.Next(anchor, rule)) {
-          LocalAccessible* acc = anchor->AsLocal();
-          MOZ_ASSERT(acc);
-          acc->mContextFlags |= eHasNameDependent;
-        }
-      }
-    }
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::alt &&
-      !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label) &&
-      !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_labelledby)) {
-    FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, aAccessible);
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::title) {
-    if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label) &&
-        !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_labelledby) &&
-        !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::alt)) {
-      FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, aAccessible);
-      return;
-    }
-
-    if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_describedby)) {
-      FireDelayedEvent(nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE,
-                       aAccessible);
-    }
-
-    return;
-  }
-
-  // These attributes can change whether or not a table is a layout table.
-  // We currently cache that information on Mac, so we fire a
-  // EVENT_OBJECT_ATTRIBUTE_CHANGED, which Mac listens for, to invalidate.
-  if (aAccessible->IsTable() || aAccessible->IsTableRow() ||
-      aAccessible->IsTableCell()) {
-    if (aAttribute == nsGkAtoms::summary || aAttribute == nsGkAtoms::headers ||
-        aAttribute == nsGkAtoms::scope || aAttribute == nsGkAtoms::abbr) {
-      FireDelayedEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
-                       aAccessible);
-    }
-  }
-
-  if (aAttribute == nsGkAtoms::aria_busy) {
-    bool isOn = elm->AttrValueIs(aNameSpaceID, aAttribute, nsGkAtoms::_true,
-                                 eCaseMatters);
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(aAccessible, states::BUSY, isOn);
-    FireDelayedEvent(event);
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::aria_multiline) {
-    bool isOn = elm->AttrValueIs(aNameSpaceID, aAttribute, nsGkAtoms::_true,
-                                 eCaseMatters);
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(aAccessible, states::MULTI_LINE, isOn);
-    FireDelayedEvent(event);
-    return;
-  }
-
   if (aAttribute == nsGkAtoms::id) {
+    dom::Element* elm = accessible->Elm();
     RelocateARIAOwnedIfNeeded(elm);
     ARIAActiveDescendantIDMaybeMoved(elm);
-  }
-
-  // ARIA or XUL selection
-  if ((aAccessible->GetContent()->IsXULElement() &&
-       aAttribute == nsGkAtoms::selected) ||
-      aAttribute == nsGkAtoms::aria_selected) {
-    LocalAccessible* widget =
-        nsAccUtils::GetSelectableContainer(aAccessible, aAccessible->State());
-    if (widget) {
-      AccSelChangeEvent::SelChangeType selChangeType =
-          elm->AttrValueIs(aNameSpaceID, aAttribute, nsGkAtoms::_true,
-                           eCaseMatters)
-              ? AccSelChangeEvent::eSelectionAdd
-              : AccSelChangeEvent::eSelectionRemove;
-
-      RefPtr<AccEvent> event =
-          new AccSelChangeEvent(widget, aAccessible, selChangeType);
-      FireDelayedEvent(event);
-    }
-
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::contenteditable) {
-    RefPtr<AccEvent> editableChangeEvent =
-        new AccStateChangeEvent(aAccessible, states::EDITABLE);
-    FireDelayedEvent(editableChangeEvent);
-    // Fire a focusable state change event if the previous state was different.
-    // It may be the same if contenteditable is set on a node that doesn't
-    // support it. Like an <input>.
-    aAccessible->MaybeFireFocusableStateChange(
-        (mPrevStateBits & states::FOCUSABLE));
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::value) {
-    if (aAccessible->IsProgress()) {
-      FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible);
-    }
-    return;
-  }
-
-  if (aModType == dom::MutationEvent_Binding::REMOVAL ||
-      aModType == dom::MutationEvent_Binding::ADDITION) {
-    if (aAttribute == nsGkAtoms::href) {
-      if (aAccessible->IsHTMLLink() &&
-          !nsCoreUtils::HasClickListener(aAccessible->GetContent())) {
-        RefPtr<AccEvent> linkedChangeEvent =
-            new AccStateChangeEvent(aAccessible, states::LINKED);
-        FireDelayedEvent(linkedChangeEvent);
-        // Fire a focusable state change event if the previous state was
-        // different. It may be the same if there is tabindex on this link.
-        aAccessible->MaybeFireFocusableStateChange(
-            (mPrevStateBits & states::FOCUSABLE));
-      }
-    }
-  }
-}
-
-// DocAccessible protected member
-void DocAccessible::ARIAAttributeChanged(LocalAccessible* aAccessible,
-                                         nsAtom* aAttribute,
-                                         const nsAttrValue* aOldValue) {
-  // Note: For universal/global ARIA states and properties we don't care if
-  // there is an ARIA role present or not.
-
-  if (aAttribute == nsGkAtoms::aria_required) {
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(aAccessible, states::REQUIRED);
-    FireDelayedEvent(event);
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::aria_invalid) {
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(aAccessible, states::INVALID);
-    FireDelayedEvent(event);
-    return;
   }
 
   // The activedescendant universal property redirects accessible focus events
@@ -1050,88 +766,21 @@ void DocAccessible::ARIAAttributeChanged(LocalAccessible* aAccessible,
   if (aAttribute == nsGkAtoms::aria_activedescendant) {
     mNotificationController
         ->ScheduleNotification<DocAccessible, LocalAccessible>(
-            this, &DocAccessible::ARIAActiveDescendantChanged, aAccessible);
+            this, &DocAccessible::ARIAActiveDescendantChanged, accessible);
     return;
   }
 
-  // We treat aria-expanded as a global ARIA state for historical reasons
-  if (aAttribute == nsGkAtoms::aria_expanded) {
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(aAccessible, states::EXPANDED);
-    FireDelayedEvent(event);
-    return;
-  }
+  // Defer to accessible any needed actions like changing states or emiting
+  // events.
+  accessible->DOMAttributeChanged(aNameSpaceID, aAttribute, aModType, aOldValue,
+                                  mPrevStateBits);
 
-  // For aria attributes like drag and drop changes we fire a generic attribute
-  // change event; at least until native API comes up with a more meaningful
-  // event.
-  uint8_t attrFlags = aria::AttrCharacteristicsFor(aAttribute);
-  if (!(attrFlags & ATTR_BYPASSOBJ)) {
-    RefPtr<AccEvent> event =
-        new AccObjectAttrChangedEvent(aAccessible, aAttribute);
-    FireDelayedEvent(event);
-  }
-
-  dom::Element* elm = aAccessible->GetContent()->AsElement();
-
-  if (aAttribute == nsGkAtoms::aria_checked ||
-      (aAccessible->IsButton() && aAttribute == nsGkAtoms::aria_pressed)) {
-    const uint64_t kState = (aAttribute == nsGkAtoms::aria_checked)
-                                ? states::CHECKED
-                                : states::PRESSED;
-    RefPtr<AccEvent> event = new AccStateChangeEvent(aAccessible, kState);
-    FireDelayedEvent(event);
-
-    bool wasMixed = aOldValue->GetAtomValue() == nsGkAtoms::mixed;
-    bool isMixed = elm->AttrValueIs(kNameSpaceID_None, aAttribute,
-                                    nsGkAtoms::mixed, eCaseMatters);
-    if (isMixed != wasMixed) {
-      RefPtr<AccEvent> event =
-          new AccStateChangeEvent(aAccessible, states::MIXED, isMixed);
-      FireDelayedEvent(event);
-    }
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::aria_readonly) {
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(aAccessible, states::READONLY);
-    FireDelayedEvent(event);
-    return;
-  }
-
-  // Fire text value change event whenever aria-valuetext is changed.
-  if (aAttribute == nsGkAtoms::aria_valuetext) {
-    FireDelayedEvent(nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE, aAccessible);
-    return;
-  }
-
-  // Fire numeric value change event when aria-valuenow is changed and
-  // aria-valuetext is empty
-  if (aAttribute == nsGkAtoms::aria_valuenow &&
-      (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_valuetext) ||
-       elm->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_valuetext,
-                        nsGkAtoms::_empty, eCaseMatters))) {
-    FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible);
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::aria_current) {
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(aAccessible, states::CURRENT);
-    FireDelayedEvent(event);
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::aria_haspopup) {
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(aAccessible, states::HASPOPUP);
-    FireDelayedEvent(event);
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::aria_owns) {
-    mNotificationController->ScheduleRelocation(aAccessible);
+  // Update dependent IDs cache. We handle elements with accessibles.
+  // If the accessible or element with the ID doesn't exist yet the cache will
+  // be updated when they are added.
+  if (aModType == dom::MutationEvent_Binding::MODIFICATION ||
+      aModType == dom::MutationEvent_Binding::ADDITION) {
+    AddDependentIDsFor(accessible, aAttribute);
   }
 }
 
