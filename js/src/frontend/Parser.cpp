@@ -152,7 +152,7 @@ ParserSharedBase::ParserSharedBase(JSContext* cx,
                                    CompilationState& compilationState,
                                    Kind kind)
     : cx_(cx),
-      alloc_(compilationState.allocScope.alloc()),
+      alloc_(compilationState.parserAllocScope.alloc()),
       compilationState_(compilationState),
       pc_(nullptr),
       usedNames_(compilationState.usedNames) {
@@ -198,7 +198,7 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
     JSContext* cx, const ReadOnlyCompileOptions& options, bool foldConstants,
     CompilationState& compilationState, void* internalSyntaxParser)
     : ParserBase(cx, options, foldConstants, compilationState),
-      handler_(cx, compilationState.allocScope.alloc(),
+      handler_(cx, compilationState.parserAllocScope.alloc(),
                compilationState.input.lazyOuterScript()),
       internalSyntaxParser_(internalSyntaxParser) {
   MOZ_ASSERT(compilationState.isInitialStencil() ==
@@ -10933,7 +10933,7 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     // Verify that the Regexp will syntax parse when the time comes to
     // instantiate it. If we have already done a syntax parse, we can
     // skip this.
-    LifoAllocScope allocScope(&cx_->tempLifoAlloc());
+    LifoAllocScope parserAllocScope(&cx_->tempLifoAlloc());
     if (!irregexp::CheckPatternSyntax(cx_, anyChars, range, flags, Some(line),
                                       Some(column))) {
       return nullptr;
@@ -10975,7 +10975,7 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
 
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
   {
-    LifoAllocScope scopeAlloc(&alloc_);
+    LifoAllocScope regExpAllocScope(&alloc_);
     if (!irregexp::CheckPatternSyntax(cx_, anyChars, source, flags, Some(line),
                                       Some(column))) {
       return null();

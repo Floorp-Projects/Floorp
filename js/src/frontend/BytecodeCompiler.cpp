@@ -99,10 +99,11 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
   using TokenStreamPosition = frontend::TokenStreamPosition<Unit>;
 
  protected:
-  explicit SourceAwareCompiler(JSContext* cx, LifoAllocScope& allocScope,
+  explicit SourceAwareCompiler(JSContext* cx, LifoAllocScope& parserAllocScope,
                                CompilationInput& input,
                                SourceText<Unit>& sourceBuffer)
-      : sourceBuffer_(sourceBuffer), compilationState_(cx, allocScope, input) {
+      : sourceBuffer_(sourceBuffer),
+        compilationState_(cx, parserAllocScope, input) {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
 
@@ -162,10 +163,10 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
   using typename Base::TokenStreamPosition;
 
  public:
-  explicit ScriptCompiler(JSContext* cx, LifoAllocScope& allocScope,
+  explicit ScriptCompiler(JSContext* cx, LifoAllocScope& parserAllocScope,
                           CompilationInput& input,
                           SourceText<Unit>& sourceBuffer)
-      : Base(cx, allocScope, input, sourceBuffer) {}
+      : Base(cx, parserAllocScope, input, sourceBuffer) {}
 
   using Base::init;
   using Base::stencil;
@@ -272,8 +273,8 @@ template <typename Unit>
 
   AutoAssertReportedException assertException(cx);
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ScriptCompiler<Unit> compiler(cx, allocScope, input, srcBuf);
+  LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
+  ScriptCompiler<Unit> compiler(cx, parserAllocScope, input, srcBuf);
   if (!compiler.init(cx)) {
     return false;
   }
@@ -453,9 +454,9 @@ static JSScript* CompileEvalScriptImpl(
     return nullptr;
   }
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
 
-  ScriptCompiler<Unit> compiler(cx, allocScope, input.get(), srcBuf);
+  ScriptCompiler<Unit> compiler(cx, parserAllocScope, input.get(), srcBuf);
   if (!compiler.init(cx, InheritThis::Yes, enclosingEnv)) {
     return nullptr;
   }
@@ -501,10 +502,10 @@ class MOZ_STACK_CLASS frontend::ModuleCompiler final
   using Base::parser;
 
  public:
-  explicit ModuleCompiler(JSContext* cx, LifoAllocScope& allocScope,
+  explicit ModuleCompiler(JSContext* cx, LifoAllocScope& parserAllocScope,
                           CompilationInput& input,
                           SourceText<Unit>& sourceBuffer)
-      : Base(cx, allocScope, input, sourceBuffer) {}
+      : Base(cx, parserAllocScope, input, sourceBuffer) {}
 
   using Base::init;
   using Base::stencil;
@@ -528,10 +529,11 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
   using typename Base::TokenStreamPosition;
 
  public:
-  explicit StandaloneFunctionCompiler(JSContext* cx, LifoAllocScope& allocScope,
+  explicit StandaloneFunctionCompiler(JSContext* cx,
+                                      LifoAllocScope& parserAllocScope,
                                       CompilationInput& input,
                                       SourceText<Unit>& sourceBuffer)
-      : Base(cx, allocScope, input, sourceBuffer) {}
+      : Base(cx, parserAllocScope, input, sourceBuffer) {}
 
   using Base::init;
   using Base::stencil;
@@ -880,8 +882,8 @@ template <typename Unit>
 
   AutoAssertReportedException assertException(cx);
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ModuleCompiler<Unit> compiler(cx, allocScope, input, srcBuf);
+  LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
+  ModuleCompiler<Unit> compiler(cx, parserAllocScope, input, srcBuf);
   if (!compiler.init(cx)) {
     return false;
   }
@@ -1015,8 +1017,8 @@ static bool CompileLazyFunction(JSContext* cx, CompilationInput& input,
 
   InheritThis inheritThis = fun->isArrow() ? InheritThis::Yes : InheritThis::No;
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationState compilationState(cx, allocScope, input);
+  LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
+  CompilationState compilationState(cx, parserAllocScope, input);
   compilationState.setFunctionKey(input.extent());
   MOZ_ASSERT(!compilationState.isInitialStencil());
   if (!compilationState.init(cx, inheritThis)) {
@@ -1167,12 +1169,12 @@ static JSFunction* CompileStandaloneFunction(
     }
   }
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
   InheritThis inheritThis = (syntaxKind == FunctionSyntaxKind::Arrow)
                                 ? InheritThis::Yes
                                 : InheritThis::No;
-  StandaloneFunctionCompiler<char16_t> compiler(cx, allocScope, input.get(),
-                                                srcBuf);
+  StandaloneFunctionCompiler<char16_t> compiler(cx, parserAllocScope,
+                                                input.get(), srcBuf);
   if (!compiler.init(cx, inheritThis)) {
     return nullptr;
   }
