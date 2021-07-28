@@ -33,7 +33,7 @@ struct Zone {
     Compact
   };
 
-  enum Kind : uint8_t { NormalZone, AtomsZone, SelfHostingZone, SystemZone };
+  enum Kind : uint8_t { NormalZone, AtomsZone, SystemZone };
 
  protected:
   JSRuntime* const runtime_;
@@ -82,7 +82,6 @@ struct Zone {
   }
 
   bool isAtomsZone() const { return kind_ == AtomsZone; }
-  bool isSelfHostingZone() const { return kind_ == SelfHostingZone; }
   bool isSystemZone() const { return kind_ == SystemZone; }
 
   static shadow::Zone* from(JS::Zone* zone) {

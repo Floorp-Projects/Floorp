@@ -520,9 +520,6 @@ MOZ_ALWAYS_INLINE void PreWriteBarrierImpl(TenuredCell* thing) {
   //  - while we are verifying pre-barriers for a worker runtime
   // The barrier is not required in either case.
   bool checkThread = zone->isAtomsZone();
-#ifdef JS_GC_ZEAL
-  checkThread = checkThread || zone->isSelfHostingZone();
-#endif
   JSRuntime* runtime = thing->runtimeFromAnyThread();
   if (checkThread && !CurrentThreadCanAccessRuntime(runtime)) {
     MOZ_ASSERT(CurrentThreadIsGCFinalizing() ||

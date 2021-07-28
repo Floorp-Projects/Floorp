@@ -817,14 +817,7 @@ extern JSFunction* CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
                                             gc::AllocKind kind,
                                             HandleObject proto);
 
-extern JSFunction* CloneFunctionAndScript(
-    JSContext* cx, HandleFunction fun, HandleObject enclosingEnv,
-    HandleScope newScope, Handle<ScriptSourceObject*> sourceObject,
-    gc::AllocKind kind, HandleObject proto = nullptr);
-
 extern JSFunction* CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun);
-
-extern JSFunction* CloneSelfHostingIntrinsic(JSContext* cx, HandleFunction fun);
 
 }  // namespace js
 

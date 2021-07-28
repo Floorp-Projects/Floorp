@@ -135,8 +135,6 @@ void WaitForBackgroundTasks(JSContext* cx);
  */
 void MergeRealms(JS::Realm* source, JS::Realm* target);
 
-void CollectSelfHostingZone(JSContext* cx);
-
 enum VerifierType { PreBarrierVerifier };
 
 #ifdef JS_GC_ZEAL
