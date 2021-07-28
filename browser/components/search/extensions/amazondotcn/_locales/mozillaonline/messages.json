@@ -1,8 +1,8 @@
 {
   "searchUrl": {
-    "message": "https://www.amazon.cn/gp/associates/link-types/searchbox.html"
+    "message": "https://www.amazon.cn/gp/search"
   },
   "searchUrlGetParams": {
-    "message": "engine=amazon_shopping&tag=mozilla&create=2028&adid=1NZNRHJZ2Q87NTS7YW6N&campaign=408&mode=blended&keyword={searchTerms}"
+    "message": "ie=UTF8&camp=536&creative=3200&index=aps&linkCode=ur2&tag=mozilla&keywords={searchTerms}"
   }
 }
