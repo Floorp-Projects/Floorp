@@ -316,7 +316,7 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
 
     // See Parser<FullParseHandler, Unit>::newRegExp.
 
-    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    LifoAllocScope regExpAllocScope(&cx->tempLifoAlloc());
     if (!irregexp::CheckPatternSyntax(cx, ts, range, flags)) {
       return false;
     }
@@ -584,10 +584,10 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
     return false;
   }
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
 
   Vector<TaggedParserAtomIndex> allAtoms(cx);
-  CompilationState compilationState(cx, allocScope, input);
+  CompilationState compilationState(cx, parserAllocScope, input);
   if (!ConvertAtoms(cx, result, compilationState, allAtoms)) {
     return false;
   }

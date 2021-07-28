@@ -1516,12 +1516,12 @@ ExtensibleCompilationStencil::ExtensibleCompilationStencil(
       parserAtoms(cx->runtime(), alloc) {}
 
 CompilationState::CompilationState(JSContext* cx,
-                                   LifoAllocScope& frontendAllocScope,
+                                   LifoAllocScope& parserAllocScope,
                                    CompilationInput& input)
     : ExtensibleCompilationStencil(cx, input),
       directives(input.options.forceStrictMode()),
       usedNames(cx),
-      allocScope(frontendAllocScope),
+      parserAllocScope(parserAllocScope),
       input(input) {}
 
 BorrowingCompilationStencil::BorrowingCompilationStencil(
