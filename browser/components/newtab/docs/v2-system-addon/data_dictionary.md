@@ -210,9 +210,6 @@ Schema definitions/validations that can be used for tests can be found in `syste
 +----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
 | topsites_data_late_by_ms   | [Optional] Time in ms it took for TopSites to become initialized                                                                                     | :one:            |
 +----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
-| topstories.domain.affinity | [Optional] Time in ms it took for domain affinities to be calculated (topstories.domain.affinity.calculation.ms)                                     | :one:            |
-| .calculation.ms            |                                                                                                                                                      |                  |
-+----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
 | topsites_first_painted_ts  | [Optional][Service Counter][Server Alert for too many omissions] Timestamp of when the Top Sites element finished painting (possibly with only       |                  |
 |                            | placeholder screenshots)                                                                                                                             | :one:            |
 +----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+

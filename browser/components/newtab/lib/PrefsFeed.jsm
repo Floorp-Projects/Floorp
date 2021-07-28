@@ -181,13 +181,13 @@ this.PrefsFeed = class PrefsFeed {
     this._setBoolPref(values, "discoverystream.hardcoded-basic-layout", false);
     this._setBoolPref(values, "discoverystream.recs.personalized", false);
     this._setBoolPref(values, "discoverystream.spocs.personalized", false);
+    this._setBoolPref(values, "discoverystream.personalization.enabled", false);
+    this._setBoolPref(values, "discoverystream.personalization.override");
     this._setStringPref(
       values,
       "discoverystream.personalization.modelKeys",
       ""
     );
-    this._setIntPref(values, "discoverystream.personalization.version", 1);
-    this._setIntPref(values, "discoverystream.personalization.overrideVersion");
     this._setStringPref(values, "discoverystream.spocs-endpoint", "");
     this._setStringPref(values, "discoverystream.spocs-endpoint-query", "");
     this._setStringPref(values, "newNewtabExperience.colors", "");
