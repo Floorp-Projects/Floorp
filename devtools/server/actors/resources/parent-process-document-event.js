@@ -97,7 +97,6 @@ class ParentProcessDocumentEventWatcher {
           resourceType: DOCUMENT_EVENT,
           name: "will-navigate",
           time: Date.now() - WILL_NAVIGATE_TIME_SHIFT,
-          shouldBeIgnoredAsRedundantWithTargetAvailable: false,
           isFrameSwitching: false,
           newURI,
         },

@@ -490,7 +490,6 @@ class ResourceCommand {
               resourceType: this.TYPES.DOCUMENT_EVENT,
               name: "will-navigate",
               time: Date.now(), // will-navigate was not passing any timestamp
-              shouldBeIgnoredAsRedundantWithTargetAvailable: false,
               isFrameSwitching,
               newURI: url,
             },
