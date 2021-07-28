@@ -17,4 +17,16 @@
         <attr name="shiftInterpolator" format="reference" />
     </declare-styleable>
 
+    <declare-styleable name="PreferenceSwitch">
+        <attr name="preferenceKey" format="reference" />
+        <attr name="preferenceKeyTitle" format="reference" />
+        <attr name="preferenceKeyDescription" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="SwitchWithDescription">
+        <attr name="switchTitle" format="reference" />
+        <attr name="switchDescription" format="reference" />
+        <attr name="switchIcon" format="reference" />
+    </declare-styleable>
+
 </resources>
