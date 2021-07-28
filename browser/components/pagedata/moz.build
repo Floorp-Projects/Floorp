@@ -7,9 +7,18 @@
 XPCSHELL_TESTS_MANIFESTS += [
     "tests/unit/xpcshell.ini",
 ]
+BROWSER_CHROME_MANIFESTS += [
+    "tests/browser/browser.ini",
+]
 
 EXTRA_JS_MODULES.pagedata += [
+    "PageDataCollector.jsm",
     "PageDataService.jsm",
+]
+
+FINAL_TARGET_FILES.actors += [
+    "PageDataChild.jsm",
+    "PageDataParent.jsm",
 ]
 
 SPHINX_TREES["docs"] = "docs"
