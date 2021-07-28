@@ -1196,7 +1196,8 @@ static JSFunction* CompileStandaloneFunction(
   }
 
 #ifdef DEBUG
-  JSFunction* fun = gcOutput.get().functions[CompilationStencil::TopLevelIndex];
+  JSFunction* fun =
+      gcOutput.get().getFunctionNoBaseIndex(CompilationStencil::TopLevelIndex);
   MOZ_ASSERT(fun->hasBytecode() || IsAsmJSModule(fun));
 #endif
 
@@ -1224,7 +1225,8 @@ static JSFunction* CompileStandaloneFunction(
   }
 
   assertException.reset();
-  return gcOutput.get().functions[CompilationStencil::TopLevelIndex];
+  return gcOutput.get().getFunctionNoBaseIndex(
+      CompilationStencil::TopLevelIndex);
 }
 
 JSFunction* frontend::CompileStandaloneFunction(
