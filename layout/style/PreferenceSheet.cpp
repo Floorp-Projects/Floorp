@@ -89,13 +89,18 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
   mUseAccessibilityTheme = UseAccessibilityTheme(aIsChrome);
 
   const bool useStandins = nsContentUtils::UseStandinsForNativeColors();
+  // Users should be able to choose to use system colors or preferred colors
+  // when HCM is disabled, and in both OS-level HCM and FF-level HCM.
+  // To make this possible, we don't consider UseDocumentColors and
+  // mUseAccessibilityTheme when computing the following bool.
   const bool usePrefColors = !useStandins && !aIsChrome &&
-                             !mUseAccessibilityTheme &&
                              !StaticPrefs::browser_display_use_system_colors();
   if (usePrefColors) {
     GetColor("browser.display.background_color", mColors.mDefaultBackground);
     GetColor("browser.display.foreground_color", mColors.mDefault);
     GetColor("browser.anchor_color", mColors.mLink);
+    GetColor("browser.active_color", mColors.mActiveLink);
+    GetColor("browser.visited_color", mColors.mVisitedLink);
   } else {
     using ColorID = LookAndFeel::ColorID;
     const auto standins = LookAndFeel::UseStandins(useStandins);
@@ -131,13 +136,10 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
     } else {
       // Otherwise we keep the default visited link color
     }
-  }
 
-  if (mUseAccessibilityTheme && !useStandins) {
-    mColors.mActiveLink = mColors.mLink;
-  } else {
-    GetColor("browser.active_color", mColors.mActiveLink);
-    GetColor("browser.visited_color", mColors.mVisitedLink);
+    if (mUseAccessibilityTheme) {
+      mColors.mActiveLink = mColors.mLink;
+    }
   }
 
   GetColor("browser.display.focus_text_color", mColors.mFocusText);
