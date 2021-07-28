@@ -10,9 +10,14 @@
 #include "js-confdefs.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
+#include "mozilla/mozalloc_oom.h"
 
 // MOZ_Crash wrapper for use by rust, since MOZ_Crash is an inline function.
 extern "C" void RustMozCrash(const char* aFilename, int aLine,
                              const char* aReason) {
   MOZ_Crash(aFilename, aLine, aReason);
 }
+
+// mozalloc_handle_oom wrapper for use by rust, because mozalloc_handle_oom is
+// MFBT_API, that rust can't respect.
+extern "C" void RustHandleOOM(size_t size) { mozalloc_handle_oom(size); }
