@@ -44,6 +44,8 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -76,8 +78,6 @@ class DefaultBrowserToolbarMenuControllerTest {
     @MockK private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     @RelaxedMockK private lateinit var activity: HomeActivity
     @RelaxedMockK private lateinit var navController: NavController
-    @RelaxedMockK private lateinit var findInPageLauncher: () -> Unit
-    @RelaxedMockK private lateinit var bookmarkTapped: (String, String) -> Unit
     @RelaxedMockK private lateinit var openInFenixIntent: Intent
     @RelaxedMockK private lateinit var metrics: MetricController
     @RelaxedMockK private lateinit var settings: Settings
@@ -140,41 +140,51 @@ class DefaultBrowserToolbarMenuControllerTest {
     fun handleToolbarBookmarkPressWithReaderModeInactive() = runBlockingTest {
         val item = ToolbarMenu.Item.Bookmark
 
-        val title = "Mozilla"
-        val url = "https://mozilla.org"
+        val expectedTitle = "Mozilla"
+        val expectedUrl = "https://mozilla.org"
         val regularTab = createTab(
-            url = url,
+            url = expectedUrl,
             readerState = ReaderState(active = false, activeUrl = "https://1234.org"),
-            title = title
+            title = expectedTitle
         )
         val store =
             BrowserStore(BrowserState(tabs = listOf(regularTab), selectedTabId = regularTab.id))
 
-        val controller = createController(scope = this, store = store)
+        var bookmarkTappedInvoked = false
+        val controller = createController(scope = this, store = store, bookmarkTapped = { url, title ->
+            assertEquals(expectedTitle, title)
+            assertEquals(expectedUrl, url)
+            bookmarkTappedInvoked = true
+        })
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BOOKMARK)) }
-        verify { bookmarkTapped(url, title) }
+        assertTrue(bookmarkTappedInvoked)
     }
 
     @Test
     fun `IF reader mode is active WHEN bookmark menu item is pressed THEN menu item is handled`() = runBlockingTest {
         val item = ToolbarMenu.Item.Bookmark
-        val title = "Mozilla"
+        val expectedTitle = "Mozilla"
         val readerUrl = "moz-extension://1234"
         val readerTab = createTab(
             url = readerUrl,
             readerState = ReaderState(active = true, activeUrl = "https://mozilla.org"),
-            title = title
+            title = expectedTitle
         )
         browserStore =
             BrowserStore(BrowserState(tabs = listOf(readerTab), selectedTabId = readerTab.id))
 
-        val controller = createController(scope = this, store = browserStore)
+        var bookmarkTappedInvoked = false
+        val controller = createController(scope = this, store = browserStore, bookmarkTapped = { url, title ->
+            assertEquals(expectedTitle, title)
+            assertEquals(readerTab.readerState.activeUrl, url)
+            bookmarkTappedInvoked = true
+        })
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BOOKMARK)) }
-        verify { bookmarkTapped("https://mozilla.org", title) }
+        assertTrue(bookmarkTappedInvoked)
     }
 
     @Test
@@ -483,10 +493,13 @@ class DefaultBrowserToolbarMenuControllerTest {
     fun `WHEN Find In Page menu item is pressed THEN launch finder`() = runBlockingTest {
         val item = ToolbarMenu.Item.FindInPage
 
-        val controller = createController(scope = this, store = browserStore)
+        var launcherInvoked = false
+        val controller = createController(scope = this, store = browserStore, findInPageLauncher = {
+            launcherInvoked = true
+        })
         controller.handleToolbarItemInteraction(item)
 
-        verify { findInPageLauncher() }
+        assertTrue(launcherInvoked)
         verify { metrics.track(Event.FindInPageOpened) }
     }
 
@@ -595,11 +608,14 @@ class DefaultBrowserToolbarMenuControllerTest {
         verify { navController.navigate(turnOnSyncDirections, null) }
     }
 
+    @Suppress("LongParameterList")
     private fun createController(
         scope: CoroutineScope,
         store: BrowserStore,
         activity: HomeActivity = this.activity,
-        customTabSessionId: String? = null
+        customTabSessionId: String? = null,
+        findInPageLauncher: () -> Unit = { },
+        bookmarkTapped: (String, String) -> Unit = { _, _ -> }
     ) = DefaultBrowserToolbarMenuController(
         store = store,
         activity = activity,
