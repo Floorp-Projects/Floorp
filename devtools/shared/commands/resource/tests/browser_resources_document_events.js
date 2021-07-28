@@ -267,7 +267,7 @@ async function testIframeNavigation() {
     });
   } else {
     // Wait for some time in order to let a chance to receive some unexpected events
-    await wait(500);
+    await wait(250);
     is(
       documentEvents.length,
       0,
@@ -309,7 +309,7 @@ async function testBfCacheNavigation() {
     }
   );
   // Wait for some time for extra safety
-  await wait(1000);
+  await wait(250);
   is(documentEvents.length, 0, "Existing document events are not fired");
 
   info("Navigate back to the first page");
@@ -336,7 +336,7 @@ async function testBfCacheNavigation() {
   });
 
   // Wait for some time in order to let a chance to have duplicated dom-loading events
-  await wait(1000);
+  await wait(250);
 
   is(
     documentEvents.length,
@@ -442,7 +442,7 @@ async function testCrossOriginNavigation() {
     }
   );
   // Wait for some time for extra safety
-  await wait(1000);
+  await wait(250);
   is(documentEvents.length, 0, "Existing document events are not fired");
 
   info("Navigate to another process");
@@ -466,7 +466,7 @@ async function testCrossOriginNavigation() {
   assertEvents({ commands, targetBeforeNavigation, documentEvents });
 
   // Wait for some time in order to let a chance to have duplicated dom-loading events
-  await wait(1000);
+  await wait(250);
 
   is(
     documentEvents.length,
