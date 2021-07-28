@@ -867,7 +867,8 @@ const UNSUPPORTED_FEATURES = {
   errorFontLoadNative: "errorFontLoadNative",
   errorFontBuildPath: "errorFontBuildPath",
   errorFontGetPath: "errorFontGetPath",
-  errorMarkedContent: "errorMarkedContent"
+  errorMarkedContent: "errorMarkedContent",
+  errorContentSubStream: "errorContentSubStream"
 };
 exports.UNSUPPORTED_FEATURES = UNSUPPORTED_FEATURES;
 const PasswordResponses = {
@@ -1862,7 +1863,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.11.5',
+    apiVersion: '2.11.22',
     source: {
       data: source.data,
       url: source.url,
@@ -3901,9 +3902,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.11.5';
+const version = '2.11.22';
 exports.version = version;
-const build = '777d89026';
+const build = '4ad5c5d52';
 exports.build = build;
 
 /***/ }),
@@ -4319,6 +4320,7 @@ var _pattern_helper = __w_pdfjs_require__(11);
 const MIN_FONT_SIZE = 16;
 const MAX_FONT_SIZE = 100;
 const MAX_GROUP_SIZE = 4096;
+const MAX_CACHED_CANVAS_PATTERNS = 2;
 const EXECUTION_TIME = 15;
 const EXECUTION_STEPS = 10;
 const COMPILE_TYPE3_GLYPHS = true;
@@ -4468,6 +4470,46 @@ class CachedCanvases {
       this.canvasFactory.destroy(canvasEntry);
       delete this.cache[id];
     }
+  }
+
+}
+
+class LRUCache {
+  constructor(maxSize = 0) {
+    this._cache = new Map();
+    this._maxSize = maxSize;
+  }
+
+  has(key) {
+    return this._cache.has(key);
+  }
+
+  get(key) {
+    if (this._cache.has(key)) {
+      const value = this._cache.get(key);
+
+      this._cache.delete(key);
+
+      this._cache.set(key, value);
+    }
+
+    return this._cache.get(key);
+  }
+
+  set(key, value) {
+    if (this._maxSize <= 0) {
+      return;
+    }
+
+    if (this._cache.size + 1 > this._maxSize) {
+      this._cache.delete(this._cache.keys().next().value);
+    }
+
+    this._cache.set(key, value);
+  }
+
+  clear() {
+    this._cache.clear();
   }
 
 }
@@ -5047,6 +5089,7 @@ class CanvasGraphics {
     this.markedContentStack = [];
     this.optionalContentConfig = optionalContentConfig;
     this.cachedCanvases = new CachedCanvases(this.canvasFactory);
+    this.cachedCanvasPatterns = new LRUCache(MAX_CACHED_CANVAS_PATTERNS);
     this.cachedPatterns = new Map();
 
     if (canvasCtx) {
@@ -5166,6 +5209,7 @@ class CanvasGraphics {
     }
 
     this.cachedCanvases.clear();
+    this.cachedCanvasPatterns.clear();
     this.cachedPatterns.clear();
 
     if (this.imageLayer) {
@@ -6097,7 +6141,7 @@ class CanvasGraphics {
       };
       pattern = new _pattern_helper.TilingPattern(IR, color, this.ctx, canvasGraphicsFactory, baseTransform);
     } else {
-      pattern = this._getPattern(IR[1]);
+      pattern = this._getPattern(IR[1], IR[2]);
     }
 
     return pattern;
@@ -6127,13 +6171,20 @@ class CanvasGraphics {
     this.current.patternFill = false;
   }
 
-  _getPattern(objId) {
+  _getPattern(objId, matrix = null) {
+    let pattern;
+
     if (this.cachedPatterns.has(objId)) {
-      return this.cachedPatterns.get(objId);
+      pattern = this.cachedPatterns.get(objId);
+    } else {
+      pattern = (0, _pattern_helper.getShadingPattern)(this.objs.get(objId), this.cachedCanvasPatterns);
+      this.cachedPatterns.set(objId, pattern);
     }
 
-    const pattern = (0, _pattern_helper.getShadingPattern)(this.objs.get(objId));
-    this.cachedPatterns.set(objId, pattern);
+    if (matrix) {
+      pattern.matrix = matrix;
+    }
+
     return pattern;
   }
 
@@ -6707,7 +6758,7 @@ class BaseShadingPattern {
 }
 
 class RadialAxialShadingPattern extends BaseShadingPattern {
-  constructor(IR) {
+  constructor(IR, cachedCanvasPatterns) {
     super();
     this._type = IR[1];
     this._bbox = IR[2];
@@ -6716,8 +6767,8 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
     this._p1 = IR[5];
     this._r0 = IR[6];
     this._r1 = IR[7];
-    this._matrix = IR[8];
-    this._patternCache = null;
+    this.matrix = null;
+    this.cachedCanvasPatterns = cachedCanvasPatterns;
   }
 
   _createGradient(ctx) {
@@ -6739,10 +6790,10 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
   getPattern(ctx, owner, inverse, shadingFill = false) {
     let pattern;
 
-    if (this._patternCache) {
-      pattern = this._patternCache;
-    } else {
-      if (!shadingFill) {
+    if (!shadingFill) {
+      if (this.cachedCanvasPatterns.has(this)) {
+        pattern = this.cachedCanvasPatterns.get(this);
+      } else {
         const tmpCanvas = owner.cachedCanvases.getCanvas("pattern", owner.ctx.canvas.width, owner.ctx.canvas.height, true);
         const tmpCtx = tmpCanvas.context;
         tmpCtx.clearRect(0, 0, tmpCtx.canvas.width, tmpCtx.canvas.height);
@@ -6750,20 +6801,19 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
         tmpCtx.rect(0, 0, tmpCtx.canvas.width, tmpCtx.canvas.height);
         tmpCtx.setTransform.apply(tmpCtx, owner.baseTransform);
 
-        if (this._matrix) {
-          tmpCtx.transform.apply(tmpCtx, this._matrix);
+        if (this.matrix) {
+          tmpCtx.transform.apply(tmpCtx, this.matrix);
         }
 
         applyBoundingBox(tmpCtx, this._bbox);
         tmpCtx.fillStyle = this._createGradient(tmpCtx);
         tmpCtx.fill();
         pattern = ctx.createPattern(tmpCanvas.canvas, "repeat");
-      } else {
-        applyBoundingBox(ctx, this._bbox);
-        pattern = this._createGradient(ctx);
+        this.cachedCanvasPatterns.set(this, pattern);
       }
-
-      this._patternCache = pattern;
+    } else {
+      applyBoundingBox(ctx, this._bbox);
+      pattern = this._createGradient(ctx);
     }
 
     if (!shadingFill) {
@@ -6947,9 +6997,9 @@ class MeshShadingPattern extends BaseShadingPattern {
     this._colors = IR[3];
     this._figures = IR[4];
     this._bounds = IR[5];
-    this._matrix = IR[6];
     this._bbox = IR[7];
     this._background = IR[8];
+    this.matrix = null;
   }
 
   _createMeshCanvas(combinedScale, backgroundColor, cachedCanvases) {
@@ -7013,8 +7063,8 @@ class MeshShadingPattern extends BaseShadingPattern {
     } else {
       scale = _util.Util.singularValueDecompose2dScale(owner.baseTransform);
 
-      if (this._matrix) {
-        const matrixScale = _util.Util.singularValueDecompose2dScale(this._matrix);
+      if (this.matrix) {
+        const matrixScale = _util.Util.singularValueDecompose2dScale(this.matrix);
 
         scale = [scale[0] * matrixScale[0], scale[1] * matrixScale[1]];
       }
@@ -7025,8 +7075,8 @@ class MeshShadingPattern extends BaseShadingPattern {
     if (!shadingFill) {
       ctx.setTransform.apply(ctx, owner.baseTransform);
 
-      if (this._matrix) {
-        ctx.transform.apply(ctx, this._matrix);
+      if (this.matrix) {
+        ctx.transform.apply(ctx, this.matrix);
       }
     }
 
@@ -7044,10 +7094,10 @@ class DummyShadingPattern extends BaseShadingPattern {
 
 }
 
-function getShadingPattern(IR) {
+function getShadingPattern(IR, cachedCanvasPatterns) {
   switch (IR[0]) {
     case "RadialAxial":
-      return new RadialAxialShadingPattern(IR);
+      return new RadialAxialShadingPattern(IR, cachedCanvasPatterns);
 
     case "Mesh":
       return new MeshShadingPattern(IR);
@@ -8607,6 +8657,14 @@ class AnnotationElement {
     (0, _util.unreachable)("Abstract method `AnnotationElement.render` called");
   }
 
+  static get platform() {
+    const platform = typeof navigator !== "undefined" ? navigator.platform : "";
+    return (0, _util.shadow)(this, "platform", {
+      isWin: platform.includes("Win"),
+      isMac: platform.includes("Mac")
+    });
+  }
+
 }
 
 class LinkAnnotationElement extends AnnotationElement {
@@ -8750,7 +8808,11 @@ class WidgetAnnotationElement extends AnnotationElement {
   }
 
   _getKeyModifier(event) {
-    return navigator.platform.includes("Win") && event.ctrlKey || navigator.platform.includes("Mac") && event.metaKey;
+    const {
+      isWin,
+      isMac
+    } = AnnotationElement.platform;
+    return isWin && event.ctrlKey || isMac && event.metaKey;
   }
 
   _setEventListener(element, baseName, eventName, valueGetter) {
@@ -11462,8 +11524,8 @@ var _svg = __w_pdfjs_require__(20);
 
 var _xfa_layer = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.11.5';
-const pdfjsBuild = '777d89026';
+const pdfjsVersion = '2.11.22';
+const pdfjsBuild = '4ad5c5d52';
 ;
 })();
 
