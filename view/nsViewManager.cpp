@@ -336,6 +336,9 @@ void nsViewManager::Refresh(nsView* aView,
         // Try to just Composite the current WindowRenderer contents. If
         // that fails then we need tor repaint, and request that it gets
         // composited as well.
+        // Once BasicLayerManager is removed, Composite will never succeed, so
+        // we can remove it and only have the call to Paint for
+        // FallbackRenderer.
         if (!presShell->Composite(aView)) {
           presShell->Paint(aView, damageRegion, PaintFlags::PaintComposite);
         }
