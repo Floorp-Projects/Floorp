@@ -10,7 +10,7 @@ const { UpdateUtils } = ChromeUtils.import(
 
 function promiseNotificationShown(aWindow, aName) {
   return new Promise(resolve => {
-    let notificationBox = aWindow.gHighPriorityNotificationBox;
+    let notificationBox = aWindow.gNotificationBox;
     notificationBox.stack.addEventListener(
       "AlertActive",
       function() {

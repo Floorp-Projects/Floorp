@@ -53,11 +53,11 @@ add_task(async function() {
 
   await notifyStoragePressure();
   await TestUtils.waitForCondition(() =>
-    win.gHighPriorityNotificationBox.getNotificationWithValue(
+    win.gNotificationBox.getNotificationWithValue(
       "storage-pressure-notification"
     )
   );
-  let notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
+  let notification = win.gNotificationBox.getNotificationWithValue(
     "storage-pressure-notification"
   );
   is(
@@ -68,7 +68,7 @@ add_task(async function() {
   notification.close();
 
   await notifyStoragePressure();
-  notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
+  notification = win.gNotificationBox.getNotificationWithValue(
     "storage-pressure-notification"
   );
   is(
@@ -82,11 +82,11 @@ add_task(async function() {
   );
   await notifyStoragePressure();
   await TestUtils.waitForCondition(() =>
-    win.gHighPriorityNotificationBox.getNotificationWithValue(
+    win.gNotificationBox.getNotificationWithValue(
       "storage-pressure-notification"
     )
   );
-  notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
+  notification = win.gNotificationBox.getNotificationWithValue(
     "storage-pressure-notification"
   );
   is(
@@ -116,11 +116,11 @@ add_task(async function() {
     );
   await notifyStoragePressure(USAGE_THRESHOLD_BYTES);
   await TestUtils.waitForCondition(() =>
-    win.gHighPriorityNotificationBox.getNotificationWithValue(
+    win.gNotificationBox.getNotificationWithValue(
       "storage-pressure-notification"
     )
   );
-  let notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
+  let notification = win.gNotificationBox.getNotificationWithValue(
     "storage-pressure-notification"
   );
   is(
@@ -161,7 +161,7 @@ add_task(async function() {
 
   await notifyStoragePressure();
   await notifyStoragePressure();
-  let allNotifications = win.gHighPriorityNotificationBox.allNotifications;
+  let allNotifications = win.gNotificationBox.allNotifications;
   let pressureNotificationCount = 0;
   allNotifications.forEach(notification => {
     if (notification.getAttribute("value") == "storage-pressure-notification") {
@@ -173,7 +173,7 @@ add_task(async function() {
     1,
     "Should not display the 2nd notification when there is already one"
   );
-  win.gHighPriorityNotificationBox.removeAllNotifications();
+  win.gNotificationBox.removeAllNotifications();
 });
 
 add_task(async function cleanup() {

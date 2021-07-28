@@ -41,7 +41,7 @@ class InfoBarNotification {
     let doc = gBrowser.ownerDocument;
     let notificationContainer;
     if (content.type === "global") {
-      notificationContainer = browser.ownerGlobal.gHighPriorityNotificationBox;
+      notificationContainer = browser.ownerGlobal.gNotificationBox;
     } else {
       notificationContainer = gBrowser.getNotificationBox(browser);
     }

@@ -97,7 +97,7 @@ add_task(async function setup() {
 /* Batch #1 - General UI, Stars, and telemetry data */
 add_task(async function() {
   const targetWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  const notificationBox = targetWindow.gHighPriorityNotificationBox;
+  const notificationBox = targetWindow.gNotificationBox;
 
   const preCount = notificationBox.allNotifications.length;
   const hb = new Heartbeat(targetWindow, {
@@ -176,7 +176,7 @@ add_task(async function() {
 // Batch #2 - Engagement buttons
 add_task(async function() {
   const targetWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  const notificationBox = targetWindow.gHighPriorityNotificationBox;
+  const notificationBox = targetWindow.gNotificationBox;
   const hb = new Heartbeat(targetWindow, {
     testing: true,
     flowId: "test",

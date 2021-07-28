@@ -5,8 +5,7 @@
 
 async function addNotification(box, label, value, priorityName) {
   let added = BrowserTestUtils.waitForNotificationInNotificationBox(box, value);
-  let priority =
-    gHighPriorityNotificationBox[`PRIORITY_${priorityName}_MEDIUM`];
+  let priority = gNotificationBox[`PRIORITY_${priorityName}_MEDIUM`];
   let notification = box.appendNotification(label, value, null, priority);
   await added;
   return notification;
@@ -15,7 +14,7 @@ async function addNotification(box, label, value, priorityName) {
 add_task(async function testStackingOrder() {
   const tabNotificationBox = gBrowser.getNotificationBox();
   ok(
-    gHighPriorityNotificationBox.stack.hasAttribute("prepend-notifications"),
+    gNotificationBox.stack.hasAttribute("prepend-notifications"),
     "Browser stack will prepend"
   );
   ok(
@@ -24,7 +23,7 @@ add_task(async function testStackingOrder() {
   );
 
   let browserOne = await addNotification(
-    gHighPriorityNotificationBox,
+    gNotificationBox,
     "My first browser notification",
     "browser-one",
     "INFO"
@@ -38,13 +37,13 @@ add_task(async function testStackingOrder() {
   );
 
   let browserTwo = await addNotification(
-    gHighPriorityNotificationBox,
+    gNotificationBox,
     "My second browser notification",
     "browser-two",
     "CRITICAL"
   );
   let browserThree = await addNotification(
-    gHighPriorityNotificationBox,
+    gNotificationBox,
     "My third browser notification",
     "browser-three",
     "WARNING"
@@ -65,7 +64,7 @@ add_task(async function testStackingOrder() {
 
   Assert.deepEqual(
     [browserThree, browserTwo, browserOne],
-    [...gHighPriorityNotificationBox.stack.children],
+    [...gNotificationBox.stack.children],
     "Browser notifications prepended"
   );
   Assert.deepEqual(
@@ -74,6 +73,6 @@ add_task(async function testStackingOrder() {
     "Tab notifications appended"
   );
 
-  gHighPriorityNotificationBox.removeAllNotifications(true);
+  gNotificationBox.removeAllNotifications(true);
   tabNotificationBox.removeAllNotifications(true);
 });
