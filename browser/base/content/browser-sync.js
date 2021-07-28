@@ -1361,6 +1361,8 @@ var gSync = {
           let anchorNode =
             (fxastatus &&
               fxastatus != "not_configured" &&
+              document.getElementById("fxa-toolbar-menu-button")?.parentNode
+                ?.id != "widget-overflow-list" &&
               document.getElementById("fxa-toolbar-menu-button")) ||
             document.getElementById("PanelUI-menu-button");
           ConfirmationHint.show(anchorNode, "sendToDevice");
