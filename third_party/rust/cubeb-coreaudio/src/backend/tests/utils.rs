@@ -555,18 +555,19 @@ pub fn test_audiounit_get_buffer_frame_size(
 //   2. a non-input/non-output device
 //   3. the current default input/output device
 // as the new default input/output device by apple's API. We need to check the above things by ourselves.
+// This function returns an Ok containing the previous default device id on success.
+// Otherwise, it returns an Err containing the error code with OSStatus type
 pub fn test_set_default_device(
     device: AudioObjectID,
     scope: Scope,
-) -> std::result::Result<bool, OSStatus> {
-    let default = test_get_default_device(scope.clone());
-    if default.is_none() {
-        return Ok(false);
+) -> std::result::Result<AudioObjectID, OSStatus> {
+    assert!(test_device_in_scope(device, scope.clone()));
+    let default = test_get_default_device(scope.clone()).unwrap();
+    if default == device {
+        // Do nothing if device is already the default device
+        return Ok(device);
     }
-    let default = default.unwrap();
-    if default == device || !test_device_in_scope(device, scope.clone()) {
-        return Ok(false);
-    }
+
     let address = AudioObjectPropertyAddress {
         mSelector: match scope {
             Scope::Input => kAudioHardwarePropertyDefaultInputDevice,
@@ -587,7 +588,7 @@ pub fn test_set_default_device(
         )
     };
     if status == NO_ERR {
-        Ok(true)
+        Ok(default)
     } else {
         Err(status)
     }
@@ -623,11 +624,12 @@ impl TestDeviceSwitcher {
             "Switch device for {:?}: {} -> {}",
             self.scope, current, next
         );
-        assert!(self.set_device(next).unwrap());
+        let prev = self.set_device(next).unwrap();
+        assert_eq!(prev, current);
         self.current_device_index = next_index;
     }
 
-    fn set_device(&self, device: AudioObjectID) -> std::result::Result<bool, OSStatus> {
+    fn set_device(&self, device: AudioObjectID) -> std::result::Result<AudioObjectID, OSStatus> {
         test_set_default_device(device, self.scope.clone())
     }
 }

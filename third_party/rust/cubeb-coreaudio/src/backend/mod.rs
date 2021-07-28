@@ -136,10 +136,10 @@ impl device_property_listener {
 #[derive(Debug, PartialEq)]
 struct CAChannelLabel(AudioChannelLabel);
 
-impl Into<mixer::Channel> for CAChannelLabel {
-    fn into(self) -> mixer::Channel {
+impl From<CAChannelLabel> for mixer::Channel {
+    fn from(label: CAChannelLabel) -> mixer::Channel {
         use self::coreaudio_sys_utils::sys;
-        match self.0 {
+        match label.0 {
             sys::kAudioChannelLabel_Left => mixer::Channel::FrontLeft,
             sys::kAudioChannelLabel_Right => mixer::Channel::FrontRight,
             sys::kAudioChannelLabel_Center | sys::kAudioChannelLabel_Mono => {
@@ -336,7 +336,7 @@ extern "C" fn audiounit_input_callback(
     enum ErrorHandle {
         Return(OSStatus),
         Reinit,
-    };
+    }
 
     assert!(input_frames > 0);
     assert_eq!(bus, AU_IN_BUS);
@@ -346,7 +346,7 @@ extern "C" fn audiounit_input_callback(
 
     if unsafe { *flags | kAudioTimeStampHostTimeValid } != 0 {
         let now = unsafe { mach_absolute_time() };
-        let input_latency_frames = compute_input_latency(&stm, unsafe { (*tstamp).mHostTime }, now);
+        let input_latency_frames = compute_input_latency(stm, unsafe { (*tstamp).mHostTime }, now);
         stm.total_input_latency_frames
             .store(input_latency_frames, Ordering::SeqCst);
     }
@@ -419,10 +419,6 @@ extern "C" fn audiounit_input_callback(
             ErrorHandle::Return(status)
         };
 
-        // Advance input frame counter.
-        stm.frames_read
-            .fetch_add(input_frames as usize, atomic::Ordering::SeqCst);
-
         cubeb_logv!(
             "({:p}) input: buffers {}, size {}, channels {}, rendered frames {}, total frames {}.",
             stm.core_stream_data.stm_ptr,
@@ -445,7 +441,10 @@ extern "C" fn audiounit_input_callback(
             / stm.core_stream_data.input_desc.mChannelsPerFrame as usize)
             as i64;
         assert!(input_frames as i64 <= total_input_frames);
-        let input_buffer = input_buffer_manager.get_linear_data(total_input_frames as usize);
+        stm.frames_read
+            .fetch_add(total_input_frames as usize, atomic::Ordering::SeqCst);
+        let input_buffer =
+            input_buffer_manager.get_linear_data(input_buffer_manager.available_samples());
         let outframes = stm.core_stream_data.resampler.fill(
             input_buffer,
             &mut total_input_frames,
@@ -562,7 +561,7 @@ extern "C" fn audiounit_output_callback(
 
     if unsafe { *flags | kAudioTimeStampHostTimeValid } != 0 {
         let output_latency_frames =
-            compute_output_latency(&stm, unsafe { (*tstamp).mHostTime }, now);
+            compute_output_latency(stm, unsafe { (*tstamp).mHostTime }, now);
         stm.total_output_latency_frames
             .store(output_latency_frames, Ordering::SeqCst);
     }
@@ -613,36 +612,33 @@ extern "C" fn audiounit_output_callback(
         if prev_frames_written == 0 && buffered_input_frames > input_frames_needed as usize {
             input_buffer_manager.trim(input_frames_needed * input_channels);
             let popped_frames = buffered_input_frames - input_frames_needed as usize;
-            stm.frames_read.fetch_sub(popped_frames, Ordering::SeqCst);
-
             cubeb_log!("Dropping {} frames in input buffer.", popped_frames);
         }
 
-        let input_frames = if input_frames_needed > buffered_input_frames
-            && (stm.switching_device.load(Ordering::SeqCst)
-                || stm.frames_read.load(Ordering::SeqCst) == 0)
-        {
+        let input_frames = if input_frames_needed > buffered_input_frames {
             // The silent frames will be inserted in `get_linear_data` below.
             let silent_frames_to_push = input_frames_needed - buffered_input_frames;
             cubeb_log!(
-                "({:p}) Missing Frames: {} will append {} frames of input silence.",
+                "({:p}) Missing Frames: {}, will append {} frames of input silence.",
                 stm.core_stream_data.stm_ptr,
                 if stm.frames_read.load(Ordering::SeqCst) == 0 {
-                    "input hasn't started,"
+                    "input hasn't started"
+                } else if stm.switching_device.load(Ordering::SeqCst) {
+                    "device switching"
+                } else if stm.reinit_pending.load(Ordering::SeqCst) {
+                    "reinit pending"
                 } else {
-                    assert!(stm.switching_device.load(Ordering::SeqCst));
-                    "device switching,"
+                    "not enough buffered frames"
                 },
                 silent_frames_to_push
             );
-            stm.frames_read
-                .fetch_add(input_frames_needed, Ordering::SeqCst);
             input_frames_needed
         } else {
             buffered_input_frames
         };
 
         let input_samples_needed = input_frames * input_channels;
+        stm.frames_read.fetch_add(input_frames, Ordering::SeqCst);
         (
             input_buffer_manager.get_linear_data(input_samples_needed),
             input_frames as i64,
@@ -651,6 +647,9 @@ extern "C" fn audiounit_output_callback(
         (ptr::null_mut::<c_void>(), 0)
     };
 
+    // If `input_buffer` is non-null but `input_frames` is zero and this is the first call to
+    // resampler, then we will hit an assertion in resampler code since no internal buffer will be
+    // allocated in the resampler due to zero `input_frames`
     let outframes = stm.core_stream_data.resampler.fill(
         input_buffer,
         if input_buffer.is_null() {
@@ -1489,8 +1488,10 @@ fn create_cubeb_device_info(
         return Err(Error::error());
     }
 
-    let mut dev_info = ffi::cubeb_device_info::default();
-    dev_info.max_channels = channels;
+    let mut dev_info = ffi::cubeb_device_info {
+        max_channels: channels,
+        ..Default::default()
+    };
 
     assert!(
         mem::size_of::<ffi::cubeb_devid>() >= mem::size_of_val(&devid),
@@ -1630,7 +1631,7 @@ fn is_aggregate_device(device_info: &ffi::cubeb_device_info) -> bool {
         libc::strncmp(
             device_info.friendly_name,
             private_name.as_ptr(),
-            libc::strlen(private_name.as_ptr()),
+            private_name.as_bytes().len(),
         ) == 0
     }
 }

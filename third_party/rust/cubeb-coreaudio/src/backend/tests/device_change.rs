@@ -523,11 +523,46 @@ fn test_unplug_a_device_on_an_active_stream(
         return;
     }
 
+    let default_device_before_plugging = test_get_default_device(device_scope.clone()).unwrap();
+    println!(
+        "Before plugging, default {:?} device is {}",
+        device_scope, default_device_before_plugging
+    );
+
     let mut plugger = TestDevicePlugger::new(device_scope.clone()).unwrap();
     assert!(plugger.plug().is_ok());
     assert_ne!(plugger.get_device_id(), kAudioObjectUnknown);
+    println!(
+        "Create plugger device: {} for {:?}",
+        plugger.get_device_id(),
+        device_scope
+    );
+
+    let default_device_after_plugging = test_get_default_device(device_scope.clone()).unwrap();
+    println!(
+        "After plugging, default {:?} device is {}",
+        device_scope, default_device_after_plugging
+    );
+
+    // The new device, plugger, is possible to be set to the default device.
+    // Before running the test, we need to set the default device to the correct one.
     if set_device_to_default {
-        assert!(test_set_default_device(plugger.get_device_id(), device_scope.clone()).unwrap());
+        // plugger should be the default device for the test.
+        // If it's not, then set it to the default device.
+        if default_device_after_plugging != plugger.get_device_id() {
+            let prev_def_dev =
+                test_set_default_device(plugger.get_device_id(), device_scope.clone()).unwrap();
+            assert_eq!(prev_def_dev, default_device_after_plugging);
+        }
+    } else {
+        // plugger should NOT be the default device for the test.
+        // If it is, reset the default device to another one.
+        if default_device_after_plugging == plugger.get_device_id() {
+            let prev_def_dev =
+                test_set_default_device(default_device_before_plugging, device_scope.clone())
+                    .unwrap();
+            assert_eq!(prev_def_dev, default_device_after_plugging);
+        }
     }
 
     let (input_device, output_device) = match device_scope {
@@ -552,12 +587,25 @@ fn test_unplug_a_device_on_an_active_stream(
             stream.start();
             // Wait for stream data callback.
             thread::sleep(Duration::from_millis(200));
+            println!(
+                "Stream runs on the device {} for {:?}",
+                plugger.get_device_id(),
+                device_scope
+            );
+            let dev = plugger.get_device_id();
             assert!(plugger.unplug().is_ok());
             changed_watcher.wait_for_change();
             // Wait for stream re-initialization or destroy stream directly.
             if wait_for_reinit_millis > 0 {
                 thread::sleep(Duration::from_millis(wait_for_reinit_millis));
             }
+            println!(
+                "Device {} for {:?} is unplugged. The default {:?} device now is {}",
+                dev,
+                device_scope,
+                device_scope,
+                test_get_default_device(device_scope.clone()).unwrap()
+            );
         },
     );
 
