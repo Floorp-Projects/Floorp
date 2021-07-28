@@ -72,15 +72,13 @@ void RendererScreenshotGrabber::GrabScreenshot(
       handle,
       screenshotSize,
       aWindowSize,
-      reinterpret_cast<uintptr_t>(this),
   });
 }
 
 void RendererScreenshotGrabber::ProcessQueue(Renderer* aRenderer) {
   for (const auto& item : mQueue) {
     mProfilerScreenshots->SubmitScreenshot(
-        item.mWindowIdentifier, item.mWindowSize, item.mScreenshotSize,
-        item.mTimeStamp,
+        item.mWindowSize, item.mScreenshotSize, item.mTimeStamp,
         [&item, aRenderer](gfx::DataSourceSurface* aTargetSurface) {
           gfx::DataSourceSurface::ScopedMap map(aTargetSurface,
                                                 gfx::DataSourceSurface::WRITE);

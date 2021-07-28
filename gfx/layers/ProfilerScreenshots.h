@@ -35,6 +35,8 @@ namespace layers {
  * pass the data to the profiler.
  * This class encodes each screenshot to a JPEG data URL, on a separate thread.
  * This class manages that thread and recycles memory buffers.
+ * Users of ProfilerScreenshots should have one ProfilerScreenshot instance per
+ * window, as a unique window id is created by the constructor.
  */
 class ProfilerScreenshots final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProfilerScreenshots)
@@ -74,8 +76,8 @@ class ProfilerScreenshots final {
    *   supplied to the callback. Called zero or one times, synchronously.
    */
   void SubmitScreenshot(
-      uintptr_t aWindowIdentifier, const gfx::IntSize& aOriginalSize,
-      const gfx::IntSize& aScaledSize, const TimeStamp& aTimeStamp,
+      const gfx::IntSize& aOriginalSize, const gfx::IntSize& aScaledSize,
+      const TimeStamp& aTimeStamp,
       const std::function<bool(gfx::DataSourceSurface*)>& aPopulateSurface);
 
  private:
@@ -104,6 +106,12 @@ class ProfilerScreenshots final {
   // entirely in the time between two calls to SubmitScreenshot, this should
   // never exceed 1.
   uint32_t mLiveSurfaceCount;
+
+  // Window identifier used to submit screenshots, created in the constructor.
+  uint32_t mWindowIdentifier;
+
+  // Counter incremented each time a new instance is constructed.
+  static uint32_t sWindowCounter;
 };
 
 }  // namespace layers

@@ -16,10 +16,33 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-ProfilerScreenshots::ProfilerScreenshots()
-    : mMutex("ProfilerScreenshots::mMutex"), mLiveSurfaceCount(0) {}
+uint32_t ProfilerScreenshots::sWindowCounter = 0;
 
-ProfilerScreenshots::~ProfilerScreenshots() = default;
+ProfilerScreenshots::ProfilerScreenshots()
+    : mMutex("ProfilerScreenshots::mMutex"),
+      mLiveSurfaceCount(0),
+      mWindowIdentifier(++sWindowCounter) {}
+
+ProfilerScreenshots::~ProfilerScreenshots() {
+  if (mWindowIdentifier) {
+    struct ScreenshotWindowDestroyedMarker {
+      static constexpr mozilla::Span<const char> MarkerTypeName() {
+        return mozilla::MakeStringSpan("CompositorScreenshot");
+      }
+      static void StreamJSONMarkerData(
+          mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+          uint32_t aWindowIdentifier) {
+        aWriter.IntProperty("windowID", aWindowIdentifier);
+      }
+      static mozilla::MarkerSchema MarkerTypeDisplay() {
+        return mozilla::MarkerSchema::SpecialFrontendLocation{};
+      }
+    };
+    profiler_add_marker("CompositorScreenshotWindowDestroyed",
+                        geckoprofiler::category::GRAPHICS, {},
+                        ScreenshotWindowDestroyedMarker{}, mWindowIdentifier);
+  }
+}
 
 /* static */
 bool ProfilerScreenshots::IsEnabled() {
@@ -27,8 +50,8 @@ bool ProfilerScreenshots::IsEnabled() {
 }
 
 void ProfilerScreenshots::SubmitScreenshot(
-    uintptr_t aWindowIdentifier, const gfx::IntSize& aOriginalSize,
-    const IntSize& aScaledSize, const TimeStamp& aTimeStamp,
+    const gfx::IntSize& aOriginalSize, const IntSize& aScaledSize,
+    const TimeStamp& aTimeStamp,
     const std::function<bool(DataSourceSurface*)>& aPopulateSurface) {
   RefPtr<DataSourceSurface> backingSurface = TakeNextSurface();
   if (!backingSurface) {
@@ -48,7 +71,7 @@ void ProfilerScreenshots::SubmitScreenshot(
   }
 
   ProfilerThreadId sourceThread = profiler_current_thread_id();
-  uintptr_t windowIdentifier = aWindowIdentifier;
+  uint32_t windowIdentifier = mWindowIdentifier;
   IntSize originalSize = aOriginalSize;
   IntSize scaledSize = aScaledSize;
   TimeStamp timeStamp = aTimeStamp;
@@ -84,12 +107,10 @@ void ProfilerScreenshots::SubmitScreenshot(
                   mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
                   const mozilla::ProfilerString8View& aScreenshotDataURL,
                   const mozilla::gfx::IntSize& aWindowSize,
-                  uintptr_t aWindowIdentifier) {
+                  uint32_t aWindowIdentifier) {
                 aWriter.UniqueStringProperty("url", aScreenshotDataURL);
 
-                char hexWindowID[32];
-                SprintfLiteral(hexWindowID, "0x%" PRIXPTR, aWindowIdentifier);
-                aWriter.StringProperty("windowID", hexWindowID);
+                aWriter.IntProperty("windowID", aWindowIdentifier);
                 aWriter.DoubleProperty("windowWidth", aWindowSize.width);
                 aWriter.DoubleProperty("windowHeight", aWindowSize.height);
               }
