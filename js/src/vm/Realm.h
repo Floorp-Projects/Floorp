@@ -320,7 +320,7 @@ class JS::Realm : public JS::shadow::Realm {
   // Names are only removed from this list by a |delete IdentifierReference|
   // that successfully removes that global property.
   using VarNamesSet =
-      GCHashSet<js::HeapPtr<JSAtom*>, js::DefaultHasher<JSAtom*>,
+      GCHashSet<js::WeakHeapPtr<JSAtom*>, js::DefaultHasher<JSAtom*>,
                 js::ZoneAllocPolicy>;
   VarNamesSet varNames_;
 

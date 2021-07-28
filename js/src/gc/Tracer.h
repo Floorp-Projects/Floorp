@@ -225,8 +225,12 @@ inline bool TraceManuallyBarrieredWeakEdge(JSTracer* trc, T* thingp,
 }
 
 template <typename T>
-inline bool TraceWeakEdge(JSTracer* trc, BarrieredBase<T>* thingp,
+inline bool TraceWeakEdge(JSTracer* trc, WeakHeapPtr<T>* thingp,
                           const char* name) {
+  if (!InternalBarrierMethods<T>::isMarkable(thingp->unbarrieredGet())) {
+    return true;
+  }
+
   return gc::TraceEdgeInternal(
       trc, gc::ConvertToBase(thingp->unbarrieredAddress()), name);
 }
