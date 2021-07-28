@@ -131,6 +131,7 @@ module.exports = {
     "mozilla/prefer-formatValues": "error",
     "mozilla/reject-chromeutils-import-params": "error",
     "mozilla/reject-importGlobalProperties": ["error", "allownonwebidl"],
+    "mozilla/reject-osfile": "warn",
     "mozilla/rejects-requires-await": "error",
     "mozilla/use-cc-etc": "error",
     "mozilla/use-chromeutils-generateqi": "error",
