@@ -62,6 +62,7 @@
 #include "vm/PIC.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpStaticsObject.h"
+#include "vm/SelfHosting.h"
 #include "vm/StringObject.h"
 #include "wasm/WasmJS.h"
 
@@ -766,13 +767,6 @@ bool GlobalObject::initStandardClasses(JSContext* cx,
 }
 
 /* static */
-bool GlobalObject::initSelfHostingBuiltins(JSContext* cx,
-                                           Handle<GlobalObject*> global,
-                                           const JSFunctionSpec* builtins) {
-  return DefineFunctions(cx, global, builtins, AsIntrinsic);
-}
-
-/* static */
 bool GlobalObject::isRuntimeCodeGenEnabled(JSContext* cx, HandleString code,
                                            Handle<GlobalObject*> global) {
   HeapSlot& v = global->getSlotRef(RUNTIME_CODEGEN_ENABLED);
@@ -1019,6 +1013,26 @@ bool GlobalObject::getIntrinsicValueSlow(JSContext* cx,
                                          Handle<GlobalObject*> global,
                                          HandlePropertyName name,
                                          MutableHandleValue value) {
+  // If this is a C++ intrinsic, simply define the function on the intrinsics
+  // holder.
+  if (const JSFunctionSpec* spec = js::FindIntrinsicSpec(name)) {
+    RootedNativeObject holder(cx,
+                              GlobalObject::getIntrinsicsHolder(cx, global));
+    if (!holder) {
+      return false;
+    }
+
+    RootedId id(cx, NameToId(name));
+    RootedFunction fun(cx, JS::NewFunctionFromSpec(cx, spec, id));
+    if (!fun) {
+      return false;
+    }
+    fun->setIsIntrinsic();
+
+    value.setObject(*fun);
+    return GlobalObject::addIntrinsicValue(cx, global, name, value);
+  }
+
   if (!cx->runtime()->cloneSelfHostedValue(cx, name, value)) {
     return false;
   }
