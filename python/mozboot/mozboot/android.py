@@ -458,7 +458,8 @@ def ensure_android_avd(
         e = subprocess.CalledProcessError(retcode, cmd)
         raise e
 
-    config_file_name = os.path.join(avd_home_path, avd_name + ".avd", "config.ini")
+    avd_path = os.path.join(avd_home_path, avd_name + ".avd")
+    config_file_name = os.path.join(avd_path, "config.ini")
 
     print("Writing config at %s" % config_file_name)
 
@@ -474,6 +475,17 @@ def ensure_android_avd(
         run_prewarm_avd(
             adb_tool, emulator_tool, env, avd_name, avd_manifest, no_interactive
         )
+    # When running in headless mode, the emulator does not run the cleanup
+    # step, and thus doesn't delete lock files. On some platforms, left-over
+    # lock files can cause the emulator to not start, so we remove them here.
+    for lock_file in ["hardware-qemu.ini.lock", "multiinstance.lock"]:
+        lock_file_path = os.path.join(avd_path, lock_file)
+        try:
+            os.remove(lock_file_path)
+            print("Removed lock file %s" % lock_file_path)
+        except OSError:
+            # The lock file is not there, nothing to do.
+            pass
 
 
 def run_prewarm_avd(
@@ -509,8 +521,9 @@ def run_prewarm_avd(
     if not booted:
         raise NotImplementedError("Could not prewarm emulator")
 
-    # We can kill the emulator now
-    proc.terminate()
+    # Wait until the emulator completely shuts down
+    subprocess.Popen([adb_tool, "emu", "kill"], env=env).wait()
+    proc.wait()
 
 
 def ensure_android_packages(
