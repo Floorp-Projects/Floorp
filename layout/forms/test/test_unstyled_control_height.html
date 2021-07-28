@@ -1,9 +1,14 @@
 <!doctype html>
+<meta charset="utf-8">
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <style>
-  #container * {
+  #container *, #container2 * {
     white-space: nowrap;
     appearance: none;
+  }
+  input {
+    /* Reduce the width so that container can fit all its children in 600px viewport width. */
+    width: 100px;
   }
   input[type=date] {
     /* date by default uses a monospace font, which might have different metrics */
@@ -16,17 +21,31 @@
     padding: 0;
   }
 </style>
+
+<!-- Each container should fit all its children in the same line to verify every
+     child has the same |top|. -->
 <div id="container">
   <input>
+  <!-- Putting the <input> containing Burmese characters here is just to verify
+       our current behavior. They are slightly clipped. So if we fix it by
+       making the <input> taller, it's OK to remove it from this test. -->
+  <input value="漢字 jpg မြန်မာစာ">
   <input type=date>
   <button>Foo</button>
   <select><option>Foo</option></select>
 </div>
+
+<br>
+<div id="container2">
+  <button>漢字 Foo မြန်မာစာ</button>
+  <select><option>漢字 Foo မြန်မာစာ</option></select>
+</div>
+
 <script>
-function testHeightMatches(desc) {
+function testHeightMatches(id, desc) {
   let commonHeight = null;
   let commonTop = null;
-  for (let element of document.querySelectorAll("#container > *")) {
+  for (let element of document.querySelectorAll(`#${id} > *`)) {
     let rect = element.getBoundingClientRect();
     if (commonHeight === null) {
       commonHeight = rect.height;
@@ -37,15 +56,17 @@ function testHeightMatches(desc) {
   }
 }
 
-const container = document.getElementById("container");
+for (id of ["container", "container2"]) {
+  const container = document.getElementById(id);
 
-testHeightMatches("");
+  testHeightMatches(id, "");
 
-container.className = "no-padding";
+  container.className = "no-padding";
 
-testHeightMatches(" without padding");
+  testHeightMatches(id, " without padding");
 
-container.className = "small-font";
+  container.className = "small-font";
 
-testHeightMatches(" with an small font");
+  testHeightMatches(id, " with an small font");
+}
 </script>

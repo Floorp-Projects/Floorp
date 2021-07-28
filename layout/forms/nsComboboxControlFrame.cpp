@@ -1245,18 +1245,13 @@ void nsComboboxDisplayFrame::Reflow(nsPresContext* aPresContext,
                                     const ReflowInput& aReflowInput,
                                     nsReflowStatus& aStatus) {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+  MOZ_ASSERT(aReflowInput.mParentReflowInput &&
+                 aReflowInput.mParentReflowInput->mFrame == mComboBox,
+             "Combobox's frame tree is wrong!");
 
   ReflowInput state(aReflowInput);
   if (state.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
-    float inflation = nsLayoutUtils::FontSizeInflationFor(mComboBox);
-    // We intentionally use the combobox frame's style here, which has
-    // the 'line-height' specified by the author, if any.
-    // (This frame has 'line-height: -moz-block-height' in the UA
-    // sheet which is suitable when there's a specified block-size.)
-    nscoord lh = ReflowInput::CalcLineHeight(mComboBox->GetContent(),
-                                             mComboBox->Style(), aPresContext,
-                                             NS_UNCONSTRAINEDSIZE, inflation);
-    state.SetComputedBSize(lh);
+    state.SetLineHeight(state.mParentReflowInput->GetLineHeight());
   }
   const WritingMode wm = aReflowInput.GetWritingMode();
   const LogicalMargin bp = state.ComputedLogicalBorderPadding(wm);
