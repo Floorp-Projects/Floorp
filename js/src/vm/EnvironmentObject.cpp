@@ -3883,7 +3883,6 @@ bool js::GlobalOrEvalDeclInstantiation(JSContext* cx, HandleObject envChain,
                                        HandleScript script,
                                        GCThingIndex lastFun) {
   MOZ_ASSERT(script->isGlobalCode() || script->isForEval());
-  MOZ_ASSERT(!script->selfHosted());
 
   RootedObject varObj(cx, &GetVariablesObject(envChain));
   Rooted<ExtensibleLexicalEnvironmentObject*> lexicalEnv(cx);

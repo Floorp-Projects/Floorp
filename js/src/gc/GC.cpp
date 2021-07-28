@@ -1597,6 +1597,21 @@ bool GCRuntime::init(uint32_t maxbytes) {
   return true;
 }
 
+void GCRuntime::freezeSelfHostingZone() {
+  MOZ_ASSERT(!selfHostingZoneFrozen);
+  MOZ_ASSERT(!isIncrementalGCInProgress());
+
+  for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
+    MOZ_ASSERT(!zone->isGCScheduled());
+    if (zone->isSelfHostingZone()) {
+      zone->scheduleGC();
+    }
+  }
+
+  gc(JS::GCOptions::Shrink, JS::GCReason::INIT_SELF_HOSTING);
+  selfHostingZoneFrozen = true;
+}
+
 void GCRuntime::finish() {
   MOZ_ASSERT(inPageLoadCount == 0);
 
@@ -2139,7 +2154,15 @@ AutoDisableCompactingGC::~AutoDisableCompactingGC() {
 }
 
 bool GCRuntime::canRelocateZone(Zone* zone) const {
-  return !zone->isAtomsZone();
+  if (zone->isAtomsZone()) {
+    return false;
+  }
+
+  if (zone->isSelfHostingZone() && selfHostingZoneFrozen) {
+    return false;
+  }
+
+  return true;
 }
 
 #ifdef DEBUG
@@ -4347,6 +4370,9 @@ void GCRuntime::discardJITCodeForGC() {
 void GCRuntime::relazifyFunctionsForShrinkingGC() {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::RELAZIFY_FUNCTIONS);
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
+    if (zone->isSelfHostingZone()) {
+      continue;
+    }
     RelazifyFunctions(zone, AllocKind::FUNCTION);
     RelazifyFunctions(zone, AllocKind::FUNCTION_EXTENDED);
   }
@@ -8272,14 +8298,19 @@ Realm* js::NewRealm(JSContext* cx, JSPrincipals* principals,
       zone = comp->zone();
       break;
     case JS::CompartmentSpecifier::NewCompartmentAndZone:
+    case JS::CompartmentSpecifier::NewCompartmentInSelfHostingZone:
       break;
   }
 
   if (!zone) {
     Zone::Kind kind = Zone::NormalZone;
     const JSPrincipals* trusted = rt->trustedPrincipals();
-    if (compSpec == JS::CompartmentSpecifier::NewCompartmentInSystemZone ||
-        (principals && principals == trusted)) {
+    if (compSpec == JS::CompartmentSpecifier::NewCompartmentInSelfHostingZone) {
+      MOZ_ASSERT(!rt->hasInitializedSelfHosting());
+      kind = Zone::SelfHostingZone;
+    } else if (compSpec ==
+                   JS::CompartmentSpecifier::NewCompartmentInSystemZone ||
+               (principals && principals == trusted)) {
       kind = Zone::SystemZone;
     }
 

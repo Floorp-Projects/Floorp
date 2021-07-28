@@ -685,7 +685,7 @@ AbstractScopePtr ScopeStencil::enclosing(
 Scope* ScopeStencil::enclosingExistingScope(
     const CompilationInput& input, const CompilationGCOutput& gcOutput) const {
   if (hasEnclosing()) {
-    Scope* result = gcOutput.getScopeNoBaseIndex(enclosing());
+    Scope* result = gcOutput.scopes[enclosing()];
     MOZ_ASSERT(result, "Scope must already exist to use this method");
     return result;
   }
@@ -1021,15 +1021,16 @@ static bool InstantiateFunctions(JSContext* cx, CompilationAtomCache& atomCache,
       return false;
     }
 
-    // Self-hosted functions may have a canonical name to use when instantiating
-    // into other realms.
+    // Self-hosted functions may have an canonical name that differs from the
+    // function name.  In that case, store this canonical name in an extended
+    // slot.
     if (scriptStencil.hasSelfHostedCanonicalName()) {
       JSAtom* canonicalName = atomCache.getExistingAtomAt(
           cx, scriptStencil.selfHostedCanonicalName());
-      fun->setAtom(canonicalName);
+      SetUnclonedSelfHostedCanonicalName(fun, canonicalName);
     }
 
-    gcOutput.getFunctionNoBaseIndex(index) = fun;
+    gcOutput.functions[index] = fun;
   }
 
   return true;
@@ -1219,7 +1220,7 @@ static void UpdateEmittedInnerFunctions(JSContext* cx,
       BaseScript* script = fun->baseScript();
 
       ScopeIndex index = scriptStencil.lazyFunctionEnclosingScopeIndex();
-      Scope* scope = gcOutput.getScopeNoBaseIndex(index);
+      Scope* scope = gcOutput.scopes[index];
       script->setEnclosingScope(scope);
 
       // Inferred and Guessed names are computed by BytecodeEmitter and so may
@@ -1365,7 +1366,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
   bool isInitialParse = stencil.isInitialStencil();
   MOZ_ASSERT(stencil.isInitialStencil() == input.isInitialStencil());
 
-  // Phase 1: Instantiate JSAtoms.
+  // Phase 1: Instantate JSAtoms.
   if (!InstantiateAtoms(cx, input.atomCache, stencil)) {
     return false;
   }
@@ -1438,189 +1439,6 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
       LinkEnclosingLazyScript(stencil, gcOutput);
     }
   }
-
-  return true;
-}
-
-// The top-level self-hosted script is created and executed in each realm that
-// needs it. While the stencil has a gcthings list for the various top-level
-// functions, we use special machinery to create them on demand. So instead we
-// use a placeholder JSFunction that should never be called.
-static bool SelfHostedDummyFunction(JSContext* cx, unsigned argc,
-                                    JS::Value* vp) {
-  MOZ_CRASH("Self-hosting top-level should not use functions directly");
-}
-
-bool CompilationStencil::instantiateSelfHostedForRuntime(
-    JSContext* cx, CompilationAtomCache& atomCache) const {
-  MOZ_ASSERT(isInitialStencil());
-
-  // We must instantiate atoms during startup so they can be made permanent
-  // across multiple runtimes.
-  return InstantiateAtoms(cx, atomCache, *this);
-}
-
-JSScript* CompilationStencil::instantiateSelfHostedTopLevelForRealm(
-    JSContext* cx, CompilationInput& input) {
-  MOZ_ASSERT(isInitialStencil());
-
-  Rooted<CompilationGCOutput> gcOutput(cx);
-
-  gcOutput.get().sourceObject = SelfHostingScriptSourceObject(cx);
-  if (!gcOutput.get().sourceObject) {
-    return nullptr;
-  }
-
-  // The top-level script has ScriptIndex references in its gcthings list, but
-  // we do not want to instantiate those functions here since they are instead
-  // created on demand from the stencil. Create a dummy function and populate
-  // the functions array of the CompilationGCOutput with references to it.
-  RootedFunction dummy(
-      cx, NewNativeFunction(cx, SelfHostedDummyFunction, 0, nullptr));
-  if (!dummy) {
-    return nullptr;
-  }
-  if (!gcOutput.get().functions.appendN(dummy, scriptData.size())) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
-  if (!InstantiateTopLevel(cx, input, *this, gcOutput.get())) {
-    return nullptr;
-  }
-
-  return gcOutput.get().script;
-}
-
-JSFunction* CompilationStencil::instantiateSelfHostedLazyFunction(
-    JSContext* cx, CompilationAtomCache& atomCache, ScriptIndex index,
-    HandleAtom name) {
-  GeneratorKind generatorKind = scriptExtra[index].immutableFlags.hasFlag(
-                                    ImmutableScriptFlagsEnum::IsGenerator)
-                                    ? GeneratorKind::Generator
-                                    : GeneratorKind::NotGenerator;
-  FunctionAsyncKind asyncKind = scriptExtra[index].immutableFlags.hasFlag(
-                                    ImmutableScriptFlagsEnum::IsAsync)
-                                    ? FunctionAsyncKind::AsyncFunction
-                                    : FunctionAsyncKind::SyncFunction;
-
-  RootedAtom funName(cx);
-  if (scriptData[index].hasSelfHostedCanonicalName()) {
-    // SetCanonicalName was used to override the name.
-    funName = atomCache.getExistingAtomAt(
-        cx, scriptData[index].selfHostedCanonicalName());
-  } else if (name) {
-    // Our caller has a name it wants to use.
-    funName = name;
-  } else {
-    MOZ_ASSERT(scriptData[index].functionAtom);
-    funName = atomCache.getExistingAtomAt(cx, scriptData[index].functionAtom);
-  }
-
-  RootedObject proto(cx);
-  if (!GetFunctionPrototype(cx, generatorKind, asyncKind, &proto)) {
-    return nullptr;
-  }
-
-  RootedObject env(cx, &cx->global()->lexicalEnvironment());
-
-  RootedFunction fun(
-      cx,
-      NewFunctionWithProto(cx, nullptr, scriptExtra[index].nargs,
-                           scriptData[index].functionFlags, env, funName, proto,
-                           gc::AllocKind::FUNCTION_EXTENDED, TenuredObject));
-  if (!fun) {
-    return nullptr;
-  }
-
-  fun->initSelfHostedLazyScript(&cx->runtime()->selfHostedLazyScript.ref());
-
-  JSAtom* selfHostedName =
-      atomCache.getExistingAtomAt(cx, scriptData[index].functionAtom);
-  SetClonedSelfHostedFunctionName(fun, selfHostedName->asPropertyName());
-
-  return fun;
-}
-
-bool CompilationStencil::delazifySelfHostedFunction(
-    JSContext* cx, CompilationAtomCache& atomCache, ScriptIndexRange range,
-    HandleFunction fun) {
-  // Determine the equivalent ScopeIndex range by looking at the outermost scope
-  // of the scripts defining the range. Take special care if this is the last
-  // script in the list.
-  auto getOutermostScope = [this](ScriptIndex scriptIndex) -> ScopeIndex {
-    MOZ_ASSERT(scriptData[scriptIndex].hasSharedData());
-    auto gcthings = scriptData[scriptIndex].gcthings(*this);
-    return gcthings[GCThingIndex::outermostScopeIndex()].toScope();
-  };
-  ScopeIndex scopeIndex = getOutermostScope(range.start);
-  ScopeIndex scopeLimit = (range.limit < scriptData.size())
-                              ? getOutermostScope(range.limit)
-                              : ScopeIndex(scopeData.size());
-
-  // Prepare to instantiate by reserving the output vectors. We also set a base
-  // index to avoid allocations in most cases.
-  Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!gcOutput.get().ensureReservedWithBaseIndex(cx, range.start, range.limit,
-                                                  scopeIndex, scopeLimit)) {
-    return false;
-  }
-
-  // Phase 1: Instantiate JSAtoms.
-  //  NOTE: The self-hosted atoms are all "permanent" and the
-  //        CompilationAtomCache is already stored on the JSRuntime.
-
-  // Phase 2: Instantiate ScriptSourceObject, ModuleObject, JSFunctions.
-
-  // Get the corresponding ScriptSourceObject to use in current realm.
-  gcOutput.get().sourceObject = SelfHostingScriptSourceObject(cx);
-  if (!gcOutput.get().sourceObject) {
-    return false;
-  }
-
-  // Delazification target function.
-  gcOutput.get().functions.infallibleAppend(fun);
-
-  // Allocate inner functions. Self-hosted functions do not allocate these with
-  // the initial function.
-  for (size_t i = range.start + 1; i < range.limit; i++) {
-    JSFunction* innerFun = CreateFunction(cx, atomCache, *this, scriptData[i],
-                                          scriptExtra[i], ScriptIndex(i));
-    if (!innerFun) {
-      return false;
-    }
-    gcOutput.get().functions.infallibleAppend(innerFun);
-  }
-
-  // Phase 3: Instantiate js::Scopes.
-  // NOTE: When the enclosing scope is not a stencil, directly use the
-  //       `emptyGlobalScope` instead of reading from CompilationInput. This is
-  //       a special case for self-hosted delazification that allows us to reuse
-  //       the CompilationInput between different realms.
-  for (size_t i = scopeIndex; i < scopeLimit; i++) {
-    ScopeStencil& data = scopeData[i];
-    RootedScope enclosingScope(
-        cx, data.hasEnclosing() ? gcOutput.get().getScope(data.enclosing())
-                                : &cx->global()->emptyGlobalScope());
-
-    js::Scope* scope =
-        data.createScope(cx, atomCache, enclosingScope, scopeNames[i]);
-    if (!scope) {
-      return false;
-    }
-    gcOutput.get().scopes.infallibleAppend(scope);
-  }
-
-  // Phase 4, 5: Instantiate BaseScripts.
-  for (size_t i = range.start; i < range.limit; i++) {
-    if (!JSScript::fromStencil(cx, atomCache, *this, gcOutput.get(),
-                               ScriptIndex(i))) {
-      return false;
-    }
-  }
-
-  // Phase 6: Update lazy scripts.
-  //  NOTE: Self-hosting is always fully parsed so there is nothing to do here.
 
   return true;
 }

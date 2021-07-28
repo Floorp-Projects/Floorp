@@ -43,7 +43,6 @@
 #include "builtin/WeakRefObject.h"
 #include "builtin/WeakSetObject.h"
 #include "debugger/DebugAPI.h"
-#include "frontend/CompilationStencil.h"
 #include "gc/FreeOp.h"
 #include "js/friend/ErrorMessages.h"        // js::GetErrorMessage, JSMSG_*
 #include "js/friend/WindowProxy.h"          // js::ToWindowProxyIfWindow
@@ -63,7 +62,6 @@
 #include "vm/PIC.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpStaticsObject.h"
-#include "vm/SelfHosting.h"
 #include "vm/StringObject.h"
 #include "wasm/WasmJS.h"
 
@@ -338,24 +336,28 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
     global->setConstructor(key, ObjectValue(*ctor));
   }
 
-  if (const JSFunctionSpec* funs = clasp->specPrototypeFunctions()) {
-    if (!JS_DefineFunctions(cx, proto, funs)) {
-      return false;
+  // If we're operating on the self-hosting global, we don't want any
+  // functions and properties on the builtins and their prototypes.
+  if (!cx->runtime()->isSelfHostingGlobal(global)) {
+    if (const JSFunctionSpec* funs = clasp->specPrototypeFunctions()) {
+      if (!JS_DefineFunctions(cx, proto, funs)) {
+        return false;
+      }
     }
-  }
-  if (const JSPropertySpec* props = clasp->specPrototypeProperties()) {
-    if (!JS_DefineProperties(cx, proto, props)) {
-      return false;
+    if (const JSPropertySpec* props = clasp->specPrototypeProperties()) {
+      if (!JS_DefineProperties(cx, proto, props)) {
+        return false;
+      }
     }
-  }
-  if (const JSFunctionSpec* funs = clasp->specConstructorFunctions()) {
-    if (!JS_DefineFunctions(cx, ctor, funs)) {
-      return false;
+    if (const JSFunctionSpec* funs = clasp->specConstructorFunctions()) {
+      if (!JS_DefineFunctions(cx, ctor, funs)) {
+        return false;
+      }
     }
-  }
-  if (const JSPropertySpec* props = clasp->specConstructorProperties()) {
-    if (!JS_DefineProperties(cx, ctor, props)) {
-      return false;
+    if (const JSPropertySpec* props = clasp->specConstructorProperties()) {
+      if (!JS_DefineProperties(cx, ctor, props)) {
+        return false;
+      }
     }
   }
 
@@ -764,6 +766,13 @@ bool GlobalObject::initStandardClasses(JSContext* cx,
 }
 
 /* static */
+bool GlobalObject::initSelfHostingBuiltins(JSContext* cx,
+                                           Handle<GlobalObject*> global,
+                                           const JSFunctionSpec* builtins) {
+  return DefineFunctions(cx, global, builtins, AsIntrinsic);
+}
+
+/* static */
 bool GlobalObject::isRuntimeCodeGenEnabled(JSContext* cx, HandleString code,
                                            Handle<GlobalObject*> global) {
   HeapSlot& v = global->getSlotRef(RUNTIME_CODEGEN_ENABLED);
@@ -933,10 +942,15 @@ NativeObject* GlobalObject::getIntrinsicsHolder(JSContext* cx,
     return &slot.toObject().as<NativeObject>();
   }
 
-  Rooted<NativeObject*> intrinsicsHolder(
-      cx, NewTenuredObjectWithGivenProto<PlainObject>(cx, nullptr));
-  if (!intrinsicsHolder) {
-    return nullptr;
+  Rooted<NativeObject*> intrinsicsHolder(cx);
+  bool isSelfHostingGlobal = cx->runtime()->isSelfHostingGlobal(global);
+  if (isSelfHostingGlobal) {
+    intrinsicsHolder = global;
+  } else {
+    intrinsicsHolder = NewTenuredObjectWithGivenProto<PlainObject>(cx, nullptr);
+    if (!intrinsicsHolder) {
+      return nullptr;
+    }
   }
 
   // Define a top-level property 'undefined' with the undefined value.
@@ -986,20 +1000,15 @@ bool GlobalObject::getSelfHostedFunction(JSContext* cx,
     // might be neither "selfHostedName" nor "name". In that case, its
     // canonical name must've been set using the `_SetCanonicalName`
     // intrinsic.
-    cx->runtime()->assertSelfHostedFunctionHasCanonicalName(selfHostedName);
+    cx->runtime()->assertSelfHostedFunctionHasCanonicalName(cx, selfHostedName);
     return true;
   }
 
-  JSRuntime* runtime = cx->runtime();
-  frontend::ScriptIndex index =
-      runtime->getSelfHostedScriptIndexRange(selfHostedName)->start;
-  JSFunction* fun =
-      runtime->selfHostStencil().instantiateSelfHostedLazyFunction(
-          cx, runtime->selfHostStencilInput().atomCache, index, name);
-  if (!fun) {
+  RootedFunction fun(cx);
+  if (!cx->runtime()->createLazySelfHostedFunctionClone(
+          cx, selfHostedName, name, nargs, TenuredObject, &fun)) {
     return false;
   }
-  MOZ_ASSERT(fun->nargs() == nargs);
   funVal.setObject(*fun);
 
   return GlobalObject::addIntrinsicValue(cx, global, selfHostedName, funVal);
@@ -1010,27 +1019,7 @@ bool GlobalObject::getIntrinsicValueSlow(JSContext* cx,
                                          Handle<GlobalObject*> global,
                                          HandlePropertyName name,
                                          MutableHandleValue value) {
-  // If this is a C++ intrinsic, simply define the function on the intrinsics
-  // holder.
-  if (const JSFunctionSpec* spec = js::FindIntrinsicSpec(name)) {
-    RootedNativeObject holder(cx,
-                              GlobalObject::getIntrinsicsHolder(cx, global));
-    if (!holder) {
-      return false;
-    }
-
-    RootedId id(cx, NameToId(name));
-    RootedFunction fun(cx, JS::NewFunctionFromSpec(cx, spec, id));
-    if (!fun) {
-      return false;
-    }
-    fun->setIsIntrinsic();
-
-    value.setObject(*fun);
-    return GlobalObject::addIntrinsicValue(cx, global, name, value);
-  }
-
-  if (!cx->runtime()->getSelfHostedValue(cx, name, value)) {
+  if (!cx->runtime()->cloneSelfHostedValue(cx, name, value)) {
     return false;
   }
 

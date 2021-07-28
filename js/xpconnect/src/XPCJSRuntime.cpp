@@ -1891,10 +1891,6 @@ void ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
                 rtStats.runtime.atomsMarkBitmaps,
                 "Mark bitmaps for atoms held by each zone.");
 
-  RREPORT_BYTES(rtPath + "runtime/self-host-stencil"_ns, KIND_HEAP,
-                rtStats.runtime.selfHostStencil,
-                "The self-hosting CompilationStencil.");
-
   RREPORT_BYTES(rtPath + "runtime/contexts"_ns, KIND_HEAP,
                 rtStats.runtime.contexts,
                 "JSContext objects and structures that belong to them.");
