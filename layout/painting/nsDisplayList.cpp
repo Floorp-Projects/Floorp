@@ -2477,13 +2477,20 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
   if (aFlags & PAINT_USE_WIDGET_LAYERS) {
     renderer = aBuilder->GetWidgetWindowRenderer(&view);
     if (renderer) {
-      layerManager = renderer->AsLayerManager();
-      if (layerManager) {
-        layerManager->SetContainsSVG(false);
-      }
+      // The fallback renderer doesn't retain any content, so it's
+      // not meaningful to use it when drawing to an external context.
+      if (aCtx && renderer->AsFallback()) {
+        MOZ_ASSERT(!(aFlags & PAINT_EXISTING_TRANSACTION));
+        renderer = nullptr;
+      } else {
+        layerManager = renderer->AsLayerManager();
+        if (layerManager) {
+          layerManager->SetContainsSVG(false);
+        }
 
-      doBeginTransaction = !(aFlags & PAINT_EXISTING_TRANSACTION);
-      widgetTransaction = true;
+        doBeginTransaction = !(aFlags & PAINT_EXISTING_TRANSACTION);
+        widgetTransaction = true;
+      }
     }
   }
 
@@ -2618,21 +2625,26 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
   }
 
   if (!sent) {
-    const auto start = TimeStamp::Now();
+    if (renderer->AsFallback()) {
+      renderer->AsFallback()->EndTransactionWithList(
+          aBuilder, this, presContext->AppUnitsPerDevPixel(), flags);
+    } else {
+      const auto start = TimeStamp::Now();
 
-    FrameLayerBuilder* layerBuilder =
-        BuildLayers(aBuilder, layerManager, aFlags, widgetTransaction);
+      FrameLayerBuilder* layerBuilder =
+          BuildLayers(aBuilder, layerManager, aFlags, widgetTransaction);
 
-    Telemetry::AccumulateTimeDelta(Telemetry::PAINT_BUILD_LAYERS_TIME, start);
+      Telemetry::AccumulateTimeDelta(Telemetry::PAINT_BUILD_LAYERS_TIME, start);
 
-    if (!layerBuilder) {
-      layerManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
-      return nullptr;
+      if (!layerBuilder) {
+        layerManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
+        return nullptr;
+      }
+
+      layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
+                                   aBuilder, flags);
+      layerBuilder->DidEndTransaction();
     }
-
-    layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aBuilder,
-                                 flags);
-    layerBuilder->DidEndTransaction();
   }
 
   if (widgetTransaction ||

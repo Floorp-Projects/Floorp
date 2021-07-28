@@ -270,6 +270,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
 #endif  // WIDGET_DEBUG_OUTPUT
 
     switch (renderer->GetBackendType()) {
+      case LayersBackend::LAYERS_NONE:
       case LayersBackend::LAYERS_BASIC: {
         RefPtr<gfxASurface> targetSurface;
 

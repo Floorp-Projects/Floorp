@@ -6441,8 +6441,14 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
   bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
 
   if (!layerManager) {
-    // TODO: Once we support WindowRenderers that aren't a LayerManager,
-    // then we need to handle this single color case for them.
+    FallbackRenderer* fallback = renderer->AsFallback();
+    MOZ_ASSERT(fallback);
+
+    if (aFlags & PaintFlags::PaintComposite) {
+      nsIntRect bounds = presContext->GetVisibleArea().ToOutsidePixels(
+          presContext->AppUnitsPerDevPixel());
+      fallback->EndTransactionWithColor(bounds, ToDeviceColor(bgcolor));
+    }
     return;
   }
 

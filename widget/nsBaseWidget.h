@@ -403,6 +403,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
    private:
     nsBaseWidget* mWidget;
     RefPtr<BasicLayerManager> mLayerManager;
+    mozilla::FallbackRenderer* mRenderer = nullptr;
   };
   friend class AutoLayerManagerSetup;
 
