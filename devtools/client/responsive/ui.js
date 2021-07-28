@@ -263,9 +263,11 @@ class ResponsiveUI {
       await this.inited;
 
       // Restore screen orientation of physical device.
-      await this.updateScreenOrientation("landscape-primary", 0);
-      await this.updateMaxTouchPointsEnabled(false);
-      await this.responsiveFront.setFloatingScrollbars(false);
+      await Promise.all([
+        this.updateScreenOrientation("landscape-primary", 0),
+        this.updateMaxTouchPointsEnabled(false),
+        this.responsiveFront.setFloatingScrollbars(false),
+      ]);
 
       // Hide browser UI to avoid displaying weird intermediate states while closing.
       this.hideBrowserUI();
