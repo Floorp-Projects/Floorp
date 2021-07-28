@@ -29,6 +29,7 @@
 #  include "builtin/intl/SharedIntlData.h"
 #endif
 #include "frontend/NameCollections.h"
+#include "frontend/ScriptIndex.h"
 #include "gc/GCRuntime.h"
 #include "gc/Tracer.h"
 #include "js/AllocationRecording.h"
@@ -413,6 +414,13 @@ struct JSRuntime {
   }
   bool hasSelfHostStencil() { return bool(selfHostStencil_.ref()); }
 
+  // A mapping from the name of self-hosted function to a ScriptIndex range of
+  // the function and inner-functions within the self-hosted stencil.
+  js::MainThreadData<
+      JS::GCHashMap<js::PreBarriered<JSAtom*>, js::frontend::ScriptIndexRange,
+                    js::DefaultHasher<JSAtom*>, js::SystemAllocPolicy>>
+      selfHostScriptMap;
+
  private:
   /* Gecko profiling metadata */
   js::UnprotectedData<js::GeckoProfilerRuntime> geckoProfiler_;
@@ -661,6 +669,9 @@ struct JSRuntime {
  public:
   void getUnclonedSelfHostedValue(js::PropertyName* name, JS::Value* vp);
   JSFunction* getUnclonedSelfHostedFunction(js::PropertyName* name);
+
+  mozilla::Maybe<js::frontend::ScriptIndexRange> getSelfHostedScriptIndexRange(
+      js::PropertyName* name);
 
   [[nodiscard]] bool createJitRuntime(JSContext* cx);
   js::jit::JitRuntime* jitRuntime() const { return jitRuntime_.ref(); }
