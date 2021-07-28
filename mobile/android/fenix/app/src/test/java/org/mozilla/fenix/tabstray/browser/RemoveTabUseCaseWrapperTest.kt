@@ -6,6 +6,7 @@ package org.mozilla.fenix.tabstray.browser
 
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -16,12 +17,15 @@ class RemoveTabUseCaseWrapperTest {
 
     @Test
     fun `WHEN invoked THEN metrics, use case and callback are triggered`() {
-        val onRemove: (String) -> Unit = mockk(relaxed = true)
+        var actualTabId: String? = null
+        val onRemove: (String) -> Unit = { tabId ->
+            actualTabId = tabId
+        }
         val wrapper = RemoveTabUseCaseWrapper(metricController, onRemove)
 
         wrapper("123")
 
         verify { metricController.track(Event.ClosedExistingTab) }
-        verify { onRemove("123") }
+        assertEquals("123", actualTabId)
     }
 }
