@@ -38,14 +38,16 @@ exports.CommandsFactory = {
    * @param {Object} options
    * @param {DevToolsClient} options.client: An optional DevToolsClient. If none is passed,
    *        a new one will be created.
+   * @param {DevToolsClient} options.isWebExtension: An optional boolean to flag commands
+   *        that are created for the WebExtension codebase.
    * @returns {Object} Commands
    */
-  async forTab(tab, { client } = {}) {
+  async forTab(tab, { client, isWebExtension } = {}) {
     if (!client) {
       client = await createLocalClient();
     }
 
-    const descriptor = await client.mainRoot.getTab({ tab });
+    const descriptor = await client.mainRoot.getTab({ tab, isWebExtension });
     const commands = await createCommandsDictionary(descriptor);
     return commands;
   },

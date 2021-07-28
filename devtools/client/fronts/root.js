@@ -208,6 +208,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
    *         - outerWindowID: used to match tabs in parent process
    *         - tabId: used to match tabs in child processes
    *         - tab: a reference to xul:tab element
+   *         - isWebExtension: an optional boolean to flag TabDescriptors
    *        If nothing is specified, returns the actor for the currently
    *        selected tab.
    */
@@ -236,6 +237,12 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     }
 
     const descriptorFront = await super.getTab(packet);
+
+    // Should be called before setLocalTab.
+    // Will flag TabDescriptor used by WebExtension codebase.
+    if (filter?.isWebExtension) {
+      descriptorFront.setIsForWebExtension(true);
+    }
 
     // If the tab is a local tab, forward it to the descriptor.
     if (filter?.tab?.tagName == "tab") {
