@@ -115,6 +115,9 @@ class Simulator;
 }  // namespace jit
 
 namespace frontend {
+struct CompilationGCOutput;
+struct CompilationInput;
+struct CompilationStencil;
 class WellKnownParserAtoms;
 }  // namespace frontend
 
@@ -390,6 +393,25 @@ struct JSRuntime {
   // instead instead of a BaseScript. This contains the minimal pointers to
   // trampolines for the scripts to support direct jitCodeRaw calls.
   js::UnprotectedData<js::SelfHostedLazyScript> selfHostedLazyScript;
+
+ private:
+  // The self-hosted JS code is compiled as a Stencil which is then attached to
+  // the Runtime. This is used to instantiate functions into realms on demand.
+  js::WriteOnceData<js::frontend::CompilationInput*> selfHostStencilInput_;
+  js::WriteOnceData<js::frontend::CompilationStencil*> selfHostStencil_;
+
+ public:
+  // The self-hosted stencil is immutable once attached to the runtime, so
+  // worker runtimes directly use the stencil on the parent runtime.
+  js::frontend::CompilationInput& selfHostStencilInput() {
+    MOZ_ASSERT(hasSelfHostStencil());
+    return *selfHostStencilInput_.ref();
+  }
+  js::frontend::CompilationStencil& selfHostStencil() {
+    MOZ_ASSERT(hasSelfHostStencil());
+    return *selfHostStencil_.ref();
+  }
+  bool hasSelfHostStencil() { return bool(selfHostStencil_.ref()); }
 
  private:
   /* Gecko profiling metadata */
@@ -669,6 +691,7 @@ struct JSRuntime {
                        JS::SelfHostedWriter xdrWriter = nullptr);
   void finishSelfHosting();
   void traceSelfHostingGlobal(JSTracer* trc);
+  void traceSelfHostingStencil(JSTracer* trc);
   bool isSelfHostingGlobal(JSObject* global) {
     return global == selfHostingGlobal_;
   }
