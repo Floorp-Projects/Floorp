@@ -367,9 +367,7 @@ mingwclang-tests-opt:
     - mochitest-plain-gpu
 
 windows-aarch64-tests:
-    - crashtest
     - mochitest-media
-    - reftest
 
 windows-talos:
     - talos-bcv
