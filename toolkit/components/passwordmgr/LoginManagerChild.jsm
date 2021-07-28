@@ -3087,8 +3087,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       candidate = element;
     }
 
-    if (candidate &&
-        this.isProbablyAUsernameLoginForm(formElement, candidate)) {
+    if (
+      candidate &&
+      this.isProbablyAUsernameLoginForm(formElement, candidate)
+    ) {
       return candidate;
     }
 
