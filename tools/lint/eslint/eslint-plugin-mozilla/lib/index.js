@@ -55,6 +55,7 @@ module.exports = {
     "prefer-formatValues": require("../lib/rules/prefer-formatValues"),
     "reject-chromeutils-import-params": require("../lib/rules/reject-chromeutils-import-params"),
     "reject-importGlobalProperties": require("../lib/rules/reject-importGlobalProperties"),
+    "reject-osfile": require("../lib/rules/reject-osfile"),
     "reject-relative-requires": require("../lib/rules/reject-relative-requires"),
     "reject-some-requires": require("../lib/rules/reject-some-requires"),
     "rejects-requires-await": require("../lib/rules/rejects-requires-await"),
