@@ -1404,9 +1404,6 @@ if test -n "$MOZ_DEV_EDITION"; then
     AC_DEFINE(MOZ_DEV_EDITION)
 fi
 
-BINDGEN_SYSTEM_FLAGS="$_BINDGEN_CFLAGS $NSPR_CFLAGS"
-AC_SUBST(BINDGEN_SYSTEM_FLAGS)
-
 dnl ========================================================
 dnl JavaScript shell
 dnl ========================================================

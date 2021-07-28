@@ -375,4 +375,4 @@ def bindgen_cflags(base_flags, extra_flags):
     return " ".join(flags)
 
 
-add_old_configure_assignment("_BINDGEN_CFLAGS", bindgen_cflags)
+set_config("BINDGEN_SYSTEM_FLAGS", bindgen_cflags)
