@@ -1039,7 +1039,7 @@ bool GlobalObject::getIntrinsicValueSlow(JSContext* cx,
     return GlobalObject::addIntrinsicValue(cx, global, name, value);
   }
 
-  if (!cx->runtime()->cloneSelfHostedValue(cx, name, value)) {
+  if (!cx->runtime()->getSelfHostedValue(cx, name, value)) {
     return false;
   }
 

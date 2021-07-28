@@ -42,6 +42,7 @@
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/String.h"
+#include "builtin/Symbol.h"
 #include "builtin/WeakMapObject.h"
 #include "frontend/BytecodeCompilation.h"  // CompileGlobalScriptToStencil
 #include "frontend/CompilationStencil.h"   // js::frontend::CompilationStencil
@@ -2663,62 +2664,13 @@ class MOZ_STACK_CLASS AutoSelfHostingErrorReporter {
   }
 };
 
-static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
-#ifdef DEBUG
-  RootedId id(cx);
-  bool nameMissing = false;
-
-  for (auto base = cx->zone()->cellIter<BaseScript>();
-       !base.done() && !nameMissing; base.next()) {
-    if (!base->hasBytecode()) {
-      continue;
-    }
-    JSScript* script = base->asJSScript();
-
-    for (BytecodeLocation loc : AllBytecodesIterable(script)) {
-      JSOp op = loc.getOp();
-
-      if (op == JSOp::GetIntrinsic) {
-        PropertyName* name = loc.getPropertyName(script);
-        id = NameToId(name);
-
-        if (shg->lookupPure(id).isNothing() && !js::FindIntrinsicSpec(name)) {
-          // cellIter disallows GCs, but error reporting wants to
-          // have them, so we need to move it out of the loop.
-          nameMissing = true;
-          break;
-        }
-      }
-    }
-  }
-
-  if (nameMissing) {
-    return Throw(cx, id, JSMSG_NO_SUCH_SELF_HOSTED_PROP);
-  }
-#endif  // DEBUG
-
-  return true;
-}
-
-[[nodiscard]] bool InitSelfHostingFromStencil(
-    JSContext* cx, Handle<GlobalObject*> shg, frontend::CompilationInput& input,
+[[nodiscard]] static bool InitSelfHostingFromStencil(
+    JSContext* cx, frontend::CompilationAtomCache& atomCache,
     const frontend::CompilationStencil& stencil) {
-  // Instantiate the stencil and run the script.
-  // NOTE: Use a block here so the GC roots are dropped before freezing the Zone
-  //       below.
-  {
-    Rooted<frontend::CompilationGCOutput> output(cx);
-    if (!frontend::CompilationStencil::instantiateStencils(cx, input, stencil,
-                                                           output.get())) {
-      return false;
-    }
-
-    // Run the script
-    RootedScript script(cx, output.get().script);
-    RootedValue rval(cx);
-    if (!JS_ExecuteScript(cx, script, &rval)) {
-      return false;
-    }
+  // We must instantiate the atoms since they are shared between runtimes and
+  // must be frozen during this startup.
+  if (!stencil.instantiateSelfHostedForRuntime(cx, atomCache)) {
+    return false;
   }
 
   // Build the JSAtom -> ScriptIndexRange mapping and save on the runtime.
@@ -2757,9 +2709,9 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
         scriptMap.putNewInfallible(prevAtom, range);
       }
 
-      prevAtom = script.functionAtom ? input.atomCache.getExistingAtomAt(
-                                           cx, script.functionAtom)
-                                     : nullptr;
+      prevAtom = script.functionAtom
+                     ? atomCache.getExistingAtomAt(cx, script.functionAtom)
+                     : nullptr;
       prevIndex = index;
     }
     if (prevAtom) {
@@ -2779,38 +2731,20 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
   CheckSelfHostedIntrinsics();
 #endif
 
-  if (!VerifyGlobalNames(cx, shg)) {
-    return false;
-  }
-
-  // Garbage collect the self hosting zone once when it is created. It should
-  // not be modified after this point.
-  cx->runtime()->gc.freezeSelfHostingZone();
-
   return true;
 }
 
 bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
                                 JS::SelfHostedWriter xdrWriter) {
-  MOZ_ASSERT(!selfHostingGlobal_);
-
-  if (cx->runtime()->parentRuntime) {
+  if (parentRuntime) {
     MOZ_RELEASE_ASSERT(
         parentRuntime->hasInitializedSelfHosting(),
         "Parent runtime must initialize self-hosting before workers");
 
-    selfHostStencilInput_ = cx->runtime()->parentRuntime->selfHostStencilInput_;
-    selfHostStencil_ = cx->runtime()->parentRuntime->selfHostStencil_;
-    selfHostingGlobal_ = cx->runtime()->parentRuntime->selfHostingGlobal_;
+    selfHostStencilInput_ = parentRuntime->selfHostStencilInput_;
+    selfHostStencil_ = parentRuntime->selfHostStencil_;
     return true;
   }
-
-  Rooted<GlobalObject*> shg(cx, JSRuntime::createSelfHostingGlobal(cx));
-  if (!shg) {
-    return false;
-  }
-
-  JSAutoRealm ar(cx, shg);
 
   /*
    * Set a temporary error reporter printing to stderr because it is too
@@ -2853,7 +2787,7 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
     }
 
     if (decodeOk) {
-      if (!InitSelfHostingFromStencil(cx, shg, *input, *stencil)) {
+      if (!InitSelfHostingFromStencil(cx, input->atomCache, *stencil)) {
         return false;
       }
 
@@ -2907,7 +2841,7 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
     }
   }
 
-  if (!InitSelfHostingFromStencil(cx, shg, *input, *stencil)) {
+  if (!InitSelfHostingFromStencil(cx, input->atomCache, *stencil)) {
     return false;
   }
 
@@ -3298,8 +3232,37 @@ JSRuntime::getSelfHostedScriptIndexRange(js::PropertyName* name) {
   return mozilla::Nothing();
 }
 
-bool JSRuntime::cloneSelfHostedValue(JSContext* cx, HandlePropertyName name,
-                                     MutableHandleValue vp) {
+static bool GetComputedIntrinsic(JSContext* cx, HandlePropertyName name,
+                                 MutableHandleValue vp) {
+  // If the intrinsic was not in hardcoded set, run the top-level of the
+  // selfhosted script and then look for intrinsic again.
+
+  RootedScript script(
+      cx,
+      cx->runtime()->selfHostStencil().instantiateSelfHostedTopLevelForRealm(
+          cx, cx->runtime()->selfHostStencilInput()));
+  if (!script) {
+    return false;
+  }
+
+  if (!JS_ExecuteScript(cx, script)) {
+    return false;
+  }
+
+  bool exists = false;
+  if (!GlobalObject::maybeGetIntrinsicValue(cx, cx->global(), name, vp,
+                                            &exists)) {
+    return false;
+  }
+  if (!exists) {
+    MOZ_CRASH("SelfHosted Intrinsic not found");
+  }
+
+  return true;
+}
+
+bool JSRuntime::getSelfHostedValue(JSContext* cx, HandlePropertyName name,
+                                   MutableHandleValue vp) {
   // If the self-hosted value we want is a function in the stencil, instantiate
   // a lazy self-hosted function for it. This is typical when a self-hosted
   // function calls other self-hosted helper functions.
@@ -3315,20 +3278,7 @@ bool JSRuntime::cloneSelfHostedValue(JSContext* cx, HandlePropertyName name,
     return true;
   }
 
-  RootedValue selfHostedValue(cx);
-  getUnclonedSelfHostedValue(name, selfHostedValue.address());
-
-  /*
-   * We don't clone if we're operating in the self-hosting global, as that
-   * means we're currently executing the self-hosting script while
-   * initializing the runtime (see JSRuntime::initSelfHosting).
-   */
-  if (cx->global() == selfHostingGlobal_) {
-    vp.set(selfHostedValue);
-    return true;
-  }
-
-  return CloneValue(cx, selfHostedValue, vp);
+  return GetComputedIntrinsic(cx, name, vp);
 }
 
 void JSRuntime::assertSelfHostedFunctionHasCanonicalName(

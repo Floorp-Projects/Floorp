@@ -17,8 +17,6 @@
 /* static */ inline bool js::GlobalObject::setIntrinsicValue(
     JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName name,
     HandleValue value) {
-  MOZ_ASSERT(cx->runtime()->isSelfHostingGlobal(global));
-
   RootedObject holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
   if (!holder) {
     return false;
