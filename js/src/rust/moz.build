@@ -22,6 +22,9 @@ if CONFIG["MOZ_RUST_SIMD"]:
 if CONFIG["JS_ENABLE_SMOOSH"]:
     features += ["smoosh"]
 
+if CONFIG["MOZ_MEMORY"]:
+    features += ["moz_memory"]
+
 RustLibrary("jsrust", features)
 
 if CONFIG["JS_SHARED_LIBRARY"]:
