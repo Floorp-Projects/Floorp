@@ -12,3 +12,7 @@ arrayvec = "0.5"
 
 [build-dependencies]
 cc = "1"
+rustc_version = "0.2"
+
+[features]
+moz_memory = []

@@ -74,9 +74,6 @@ qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], defau
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "8a576fbe79199fa8664f64285524017f74ebcc5f"}
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
 
-[build-dependencies]
-rustc_version = "0.2"
-
 [features]
 default = []
 quantum_render = ["webrender_bindings"]
@@ -86,7 +83,6 @@ cubeb_pulse_rust = ["cubeb-sys", "cubeb-pulse"]
 gecko_debug = ["geckoservo/gecko_debug", "nsstring/gecko_debug"]
 gecko_refcount_logging = ["geckoservo/gecko_refcount_logging", "xpcom/gecko_refcount_logging"]
 simd-accel = ["encoding_glue/simd-accel", "jsrust_shared/simd-accel"]
-moz_memory = []
 moz_places = ["bookmark_sync"]
 spidermonkey_rust = ["jsrust_shared/baldrdash"]
 cranelift_x86 = ["jsrust_shared/cranelift_x86"]

@@ -1995,7 +1995,6 @@ dependencies = [
  "rsdparsa_capi",
  "rusqlite",
  "rust_minidump_writer_linux",
- "rustc_version",
  "static_prefs",
  "storage",
  "unic-langid",
@@ -3124,6 +3123,7 @@ version = "0.1.0"
 dependencies = [
  "arrayvec",
  "cc",
+ "rustc_version",
 ]
 
 [[package]]
