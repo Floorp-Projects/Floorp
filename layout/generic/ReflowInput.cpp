@@ -2706,15 +2706,19 @@ static inline nscoord ComputeLineHeight(ComputedStyle* aComputedStyle,
   return GetNormalLineHeight(fm);
 }
 
-nscoord ReflowInput::CalcLineHeight() const {
+nscoord ReflowInput::GetLineHeight() const {
+  if (mLineHeight != NS_UNCONSTRAINEDSIZE) {
+    return mLineHeight;
+  }
+
   nscoord blockBSize = nsLayoutUtils::IsNonWrapperBlock(mFrame)
                            ? ComputedBSize()
                            : (mCBReflowInput ? mCBReflowInput->ComputedBSize()
                                              : NS_UNCONSTRAINEDSIZE);
-
-  return CalcLineHeight(mFrame->GetContent(), mFrame->Style(),
-                        mFrame->PresContext(), blockBSize,
-                        nsLayoutUtils::FontSizeInflationFor(mFrame));
+  mLineHeight = CalcLineHeight(mFrame->GetContent(), mFrame->Style(),
+                               mFrame->PresContext(), blockBSize,
+                               nsLayoutUtils::FontSizeInflationFor(mFrame));
+  return mLineHeight;
 }
 
 /* static */
