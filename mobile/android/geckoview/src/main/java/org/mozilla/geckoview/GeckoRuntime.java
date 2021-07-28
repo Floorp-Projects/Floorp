@@ -405,6 +405,7 @@ public final class GeckoRuntime implements Parcelable {
 
         // Add process lifecycle listener to react to backgrounding events.
         ProcessLifecycleOwner.get().getLifecycle().addObserver(new LifecycleListener());
+        mProfilerController.addMarker("GeckoView Initialization START", mProfilerController.getProfilerTime());
         return true;
     }
 
