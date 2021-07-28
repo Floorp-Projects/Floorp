@@ -338,28 +338,24 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
     global->setConstructor(key, ObjectValue(*ctor));
   }
 
-  // If we're operating on the self-hosting global, we don't want any
-  // functions and properties on the builtins and their prototypes.
-  if (!cx->runtime()->isSelfHostingGlobal(global)) {
-    if (const JSFunctionSpec* funs = clasp->specPrototypeFunctions()) {
-      if (!JS_DefineFunctions(cx, proto, funs)) {
-        return false;
-      }
+  if (const JSFunctionSpec* funs = clasp->specPrototypeFunctions()) {
+    if (!JS_DefineFunctions(cx, proto, funs)) {
+      return false;
     }
-    if (const JSPropertySpec* props = clasp->specPrototypeProperties()) {
-      if (!JS_DefineProperties(cx, proto, props)) {
-        return false;
-      }
+  }
+  if (const JSPropertySpec* props = clasp->specPrototypeProperties()) {
+    if (!JS_DefineProperties(cx, proto, props)) {
+      return false;
     }
-    if (const JSFunctionSpec* funs = clasp->specConstructorFunctions()) {
-      if (!JS_DefineFunctions(cx, ctor, funs)) {
-        return false;
-      }
+  }
+  if (const JSFunctionSpec* funs = clasp->specConstructorFunctions()) {
+    if (!JS_DefineFunctions(cx, ctor, funs)) {
+      return false;
     }
-    if (const JSPropertySpec* props = clasp->specConstructorProperties()) {
-      if (!JS_DefineProperties(cx, ctor, props)) {
-        return false;
-      }
+  }
+  if (const JSPropertySpec* props = clasp->specConstructorProperties()) {
+    if (!JS_DefineProperties(cx, ctor, props)) {
+      return false;
     }
   }
 
@@ -937,15 +933,10 @@ NativeObject* GlobalObject::getIntrinsicsHolder(JSContext* cx,
     return &slot.toObject().as<NativeObject>();
   }
 
-  Rooted<NativeObject*> intrinsicsHolder(cx);
-  bool isSelfHostingGlobal = cx->runtime()->isSelfHostingGlobal(global);
-  if (isSelfHostingGlobal) {
-    intrinsicsHolder = global;
-  } else {
-    intrinsicsHolder = NewTenuredObjectWithGivenProto<PlainObject>(cx, nullptr);
-    if (!intrinsicsHolder) {
-      return nullptr;
-    }
+  Rooted<NativeObject*> intrinsicsHolder(
+      cx, NewTenuredObjectWithGivenProto<PlainObject>(cx, nullptr));
+  if (!intrinsicsHolder) {
+    return nullptr;
   }
 
   // Define a top-level property 'undefined' with the undefined value.
