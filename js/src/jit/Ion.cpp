@@ -444,9 +444,7 @@ void JitRealm::traceWeak(JSTracer* trc, JS::Realm* realm) {
   stubCodes_->traceWeak(trc);
 
   for (WeakHeapPtrJitCode& stub : stubs_) {
-    if (stub) {
-      TraceWeakEdge(trc, &stub, "JitRealm::stubs_");
-    }
+    TraceWeakEdge(trc, &stub, "JitRealm::stubs_");
   }
 }
 
