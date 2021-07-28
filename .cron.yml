@@ -342,5 +342,5 @@ jobs:
           - mozilla-central
       when:
           by-project:
-              mozilla-central: [{hour: 8, minute: 0}, {hour: 20, minute: 0}]
+              mozilla-central: [{hour: 11, minute: 0}, {hour: 23, minute: 0}]
               default: []
