@@ -125,7 +125,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.11.5';
+    const workerVersion = '2.11.22';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -1059,7 +1059,8 @@ const UNSUPPORTED_FEATURES = {
   errorFontLoadNative: "errorFontLoadNative",
   errorFontBuildPath: "errorFontBuildPath",
   errorFontGetPath: "errorFontGetPath",
-  errorMarkedContent: "errorMarkedContent"
+  errorMarkedContent: "errorMarkedContent",
+  errorContentSubStream: "errorContentSubStream"
 };
 exports.UNSUPPORTED_FEATURES = UNSUPPORTED_FEATURES;
 const PasswordResponses = {
@@ -3441,9 +3442,11 @@ var _primitives = __w_pdfjs_require__(5);
 
 var _core_utils = __w_pdfjs_require__(9);
 
+var _xfa_fonts = __w_pdfjs_require__(12);
+
 var _stream = __w_pdfjs_require__(10);
 
-var _annotation = __w_pdfjs_require__(12);
+var _annotation = __w_pdfjs_require__(22);
 
 var _base_stream = __w_pdfjs_require__(6);
 
@@ -3451,17 +3454,15 @@ var _crypto = __w_pdfjs_require__(72);
 
 var _catalog = __w_pdfjs_require__(64);
 
-var _xfa_fonts = __w_pdfjs_require__(55);
-
-var _parser = __w_pdfjs_require__(17);
+var _parser = __w_pdfjs_require__(27);
 
 var _object_loader = __w_pdfjs_require__(70);
 
 var _operator_list = __w_pdfjs_require__(62);
 
-var _evaluator = __w_pdfjs_require__(15);
+var _evaluator = __w_pdfjs_require__(25);
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
 var _struct_tree = __w_pdfjs_require__(69);
 
@@ -3617,14 +3618,26 @@ class Page {
     return (0, _util.shadow)(this, "rotate", rotate);
   }
 
-  getContentStream() {
+  _onSubStreamError(handler, reason, objId) {
+    if (this.evaluatorOptions.ignoreErrors) {
+      handler.send("UnsupportedFeature", {
+        featureId: _util.UNSUPPORTED_FEATURES.errorContentSubStream
+      });
+      (0, _util.warn)(`getContentStream - ignoring sub-stream (${objId}): "${reason}".`);
+      return;
+    }
+
+    throw reason;
+  }
+
+  getContentStream(handler) {
     return this.pdfManager.ensure(this, "content").then(content => {
       if (content instanceof _base_stream.BaseStream) {
         return content;
       }
 
       if (Array.isArray(content)) {
-        return new _decode_stream.StreamsSequenceStream(content);
+        return new _decode_stream.StreamsSequenceStream(content, this._onSubStreamError.bind(this, handler));
       }
 
       return new _stream.NullStream();
@@ -3690,7 +3703,7 @@ class Page {
     renderInteractiveForms,
     annotationStorage
   }) {
-    const contentStreamPromise = this.getContentStream();
+    const contentStreamPromise = this.getContentStream(handler);
     const resourcesPromise = this.loadResources(["ColorSpace", "ExtGState", "Font", "Pattern", "Properties", "Shading", "XObject"]);
     const partialEvaluator = new _evaluator.PartialEvaluator({
       xref: this.xref,
@@ -3764,7 +3777,7 @@ class Page {
     sink,
     combineTextItems
   }) {
-    const contentStreamPromise = this.getContentStream();
+    const contentStreamPromise = this.getContentStream(handler);
     const resourcesPromise = this.loadResources(["ExtGState", "Font", "Properties", "XObject"]);
     const dataPromises = Promise.all([contentStreamPromise, resourcesPromise]);
     return dataPromises.then(([contentStream]) => {
@@ -4308,7 +4321,7 @@ class PDFDocument {
     const reallyMissingFonts = new Set();
 
     for (const missing of missingFonts) {
-      if (!(0, _xfa_fonts.getXfaFontWidths)(`${missing}-Regular`)) {
+      if (!(0, _xfa_fonts.getXfaFontName)(`${missing}-Regular`)) {
         reallyMissingFonts.add(missing);
       }
     }
@@ -4340,15 +4353,7 @@ class PDFDocument {
         italicAngle: 12
       }]) {
         const name = `${missing}-${fontInfo.name}`;
-        const widths = (0, _xfa_fonts.getXfaFontWidths)(name);
-        const dict = new _primitives.Dict(null);
-        dict.set("BaseFont", _primitives.Name.get(name));
-        dict.set("Type", _primitives.Name.get("Font"));
-        dict.set("Subtype", _primitives.Name.get("TrueType"));
-        dict.set("Encoding", _primitives.Name.get("WinAnsiEncoding"));
-        const descriptor = new _primitives.Dict(null);
-        descriptor.set("Widths", widths);
-        dict.set("FontDescriptor", descriptor);
+        const dict = (0, _xfa_fonts.getXfaFontDict)(name);
         promises.push(partialEvaluator.handleSetFont(resources, [_primitives.Name.get(name), 1], null, operatorList, task, initialState, dict, {
           fontFamily: missing,
           fontWeight: fontInfo.fontWeight,
@@ -4714,6 +4719,1180 @@ exports.PDFDocument = PDFDocument;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.getXfaFontDict = getXfaFontDict;
+exports.getXfaFontName = getXfaFontName;
+
+var _calibri_factors = __w_pdfjs_require__(13);
+
+var _primitives = __w_pdfjs_require__(5);
+
+var _helvetica_factors = __w_pdfjs_require__(14);
+
+var _liberationsans_widths = __w_pdfjs_require__(15);
+
+var _myriadpro_factors = __w_pdfjs_require__(16);
+
+var _segoeui_factors = __w_pdfjs_require__(17);
+
+var _core_utils = __w_pdfjs_require__(9);
+
+var _fonts_utils = __w_pdfjs_require__(18);
+
+const getXFAFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
+  t["MyriadPro-Regular"] = t["PdfJS-Fallback-Regular"] = {
+    name: "LiberationSans-Regular",
+    factors: _myriadpro_factors.MyriadProRegularFactors,
+    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
+    baseMapping: _liberationsans_widths.LiberationSansRegularMapping,
+    metrics: _myriadpro_factors.MyriadProRegularMetrics
+  };
+  t["MyriadPro-Bold"] = t["PdfJS-Fallback-Bold"] = {
+    name: "LiberationSans-Bold",
+    factors: _myriadpro_factors.MyriadProBoldFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
+    baseMapping: _liberationsans_widths.LiberationSansBoldMapping,
+    metrics: _myriadpro_factors.MyriadProBoldMetrics
+  };
+  t["MyriadPro-It"] = t["MyriadPro-Italic"] = t["PdfJS-Fallback-Italic"] = {
+    name: "LiberationSans-Italic",
+    factors: _myriadpro_factors.MyriadProItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
+    baseMapping: _liberationsans_widths.LiberationSansItalicMapping,
+    metrics: _myriadpro_factors.MyriadProItalicMetrics
+  };
+  t["MyriadPro-BoldIt"] = t["MyriadPro-BoldItalic"] = t["PdfJS-Fallback-BoldItalic"] = {
+    name: "LiberationSans-BoldItalic",
+    factors: _myriadpro_factors.MyriadProBoldItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
+    baseMapping: _liberationsans_widths.LiberationSansBoldItalicMapping,
+    metrics: _myriadpro_factors.MyriadProBoldItalicMetrics
+  };
+  t.ArialMT = t.Arial = t["Arial-Regular"] = {
+    name: "LiberationSans-Regular",
+    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
+    baseMapping: _liberationsans_widths.LiberationSansRegularMapping
+  };
+  t["Arial-BoldMT"] = t["Arial-Bold"] = {
+    name: "LiberationSans-Bold",
+    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
+    baseMapping: _liberationsans_widths.LiberationSansBoldMapping
+  };
+  t["Arial-ItalicMT"] = t["Arial-Italic"] = {
+    name: "LiberationSans-Italic",
+    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
+    baseMapping: _liberationsans_widths.LiberationSansItalicMapping
+  };
+  t["Arial-BoldItalicMT"] = t["Arial-BoldItalic"] = {
+    name: "LiberationSans-BoldItalic",
+    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
+    baseMapping: _liberationsans_widths.LiberationSansBoldItalicMapping
+  };
+  t["Calibri-Regular"] = {
+    name: "LiberationSans-Regular",
+    factors: _calibri_factors.CalibriRegularFactors,
+    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
+    baseMapping: _liberationsans_widths.LiberationSansRegularMapping,
+    metrics: _calibri_factors.CalibriRegularMetrics
+  };
+  t["Calibri-Bold"] = {
+    name: "LiberationSans-Bold",
+    factors: _calibri_factors.CalibriBoldFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
+    baseMapping: _liberationsans_widths.LiberationSansBoldMapping,
+    metrics: _calibri_factors.CalibriBoldMetrics
+  };
+  t["Calibri-Italic"] = {
+    name: "LiberationSans-Italic",
+    factors: _calibri_factors.CalibriItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
+    baseMapping: _liberationsans_widths.LiberationSansItalicMapping,
+    metrics: _calibri_factors.CalibriItalicMetrics
+  };
+  t["Calibri-BoldItalic"] = {
+    name: "LiberationSans-BoldItalic",
+    factors: _calibri_factors.CalibriBoldItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
+    baseMapping: _liberationsans_widths.LiberationSansBoldItalicMapping,
+    metrics: _calibri_factors.CalibriBoldItalicMetrics
+  };
+  t["Segoeui-Regular"] = {
+    name: "LiberationSans-Regular",
+    factors: _segoeui_factors.SegoeuiRegularFactors,
+    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
+    baseMapping: _liberationsans_widths.LiberationSansRegularMapping,
+    metrics: _segoeui_factors.SegoeuiRegularMetrics
+  };
+  t["Segoeui-Bold"] = {
+    name: "LiberationSans-Bold",
+    factors: _segoeui_factors.SegoeuiBoldFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
+    baseMapping: _liberationsans_widths.LiberationSansBoldMapping,
+    metrics: _segoeui_factors.SegoeuiBoldMetrics
+  };
+  t["Segoeui-Italic"] = {
+    name: "LiberationSans-Italic",
+    factors: _segoeui_factors.SegoeuiItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
+    baseMapping: _liberationsans_widths.LiberationSansItalicMapping,
+    metrics: _segoeui_factors.SegoeuiItalicMetrics
+  };
+  t["Segoeui-BoldItalic"] = {
+    name: "LiberationSans-BoldItalic",
+    factors: _segoeui_factors.SegoeuiBoldItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
+    baseMapping: _liberationsans_widths.LiberationSansBoldItalicMapping,
+    metrics: _segoeui_factors.SegoeuiBoldItalicMetrics
+  };
+  t["Helvetica-Regular"] = t.Helvetica = {
+    name: "LiberationSans-Regular",
+    factors: _helvetica_factors.HelveticaRegularFactors,
+    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
+    baseMapping: _liberationsans_widths.LiberationSansRegularMapping,
+    metrics: _helvetica_factors.HelveticaRegularMetrics
+  };
+  t["Helvetica-Bold"] = {
+    name: "LiberationSans-Bold",
+    factors: _helvetica_factors.HelveticaBoldFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
+    baseMapping: _liberationsans_widths.LiberationSansBoldMapping,
+    metrics: _helvetica_factors.HelveticaBoldMetrics
+  };
+  t["Helvetica-Italic"] = {
+    name: "LiberationSans-Italic",
+    factors: _helvetica_factors.HelveticaItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
+    baseMapping: _liberationsans_widths.LiberationSansItalicMapping,
+    metrics: _helvetica_factors.HelveticaItalicMetrics
+  };
+  t["Helvetica-BoldItalic"] = {
+    name: "LiberationSans-BoldItalic",
+    factors: _helvetica_factors.HelveticaBoldItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
+    baseMapping: _liberationsans_widths.LiberationSansBoldItalicMapping,
+    metrics: _helvetica_factors.HelveticaBoldItalicMetrics
+  };
+});
+
+function getXfaFontName(name) {
+  const fontName = (0, _fonts_utils.normalizeFontName)(name);
+  const fontMap = getXFAFontMap();
+  return fontMap[fontName];
+}
+
+function getXfaFontWidths(name) {
+  const info = getXfaFontName(name);
+
+  if (!info) {
+    return null;
+  }
+
+  const {
+    baseWidths,
+    baseMapping,
+    factors
+  } = info;
+  let rescaledBaseWidths;
+
+  if (!factors) {
+    rescaledBaseWidths = baseWidths;
+  } else {
+    rescaledBaseWidths = baseWidths.map((w, i) => w * factors[i]);
+  }
+
+  let currentCode = -2;
+  let currentArray;
+  const newWidths = [];
+
+  for (const [unicode, glyphIndex] of baseMapping.map((charUnicode, index) => [charUnicode, index]).sort(([unicode1], [unicode2]) => unicode1 - unicode2)) {
+    if (unicode === -1) {
+      continue;
+    }
+
+    if (unicode === currentCode + 1) {
+      currentArray.push(rescaledBaseWidths[glyphIndex]);
+      currentCode += 1;
+    } else {
+      currentCode = unicode;
+      currentArray = [rescaledBaseWidths[glyphIndex]];
+      newWidths.push(unicode, currentArray);
+    }
+  }
+
+  return newWidths;
+}
+
+function getXfaFontDict(name) {
+  const widths = getXfaFontWidths(name);
+  const dict = new _primitives.Dict(null);
+  dict.set("BaseFont", _primitives.Name.get(name));
+  dict.set("Type", _primitives.Name.get("Font"));
+  dict.set("Subtype", _primitives.Name.get("CIDFontType2"));
+  dict.set("Encoding", _primitives.Name.get("Identity-H"));
+  dict.set("CIDToGIDMap", _primitives.Name.get("Identity"));
+  dict.set("W", widths);
+  dict.set("FirstChar", widths[0]);
+  dict.set("LastChar", widths[widths.length - 2] + widths[widths.length - 1].length - 1);
+  const descriptor = new _primitives.Dict(null);
+  dict.set("FontDescriptor", descriptor);
+  const systemInfo = new _primitives.Dict(null);
+  systemInfo.set("Ordering", "Identity");
+  systemInfo.set("Registry", "Adobe");
+  systemInfo.set("Supplement", 0);
+  dict.set("CIDSystemInfo", systemInfo);
+  return dict;
+}
+
+/***/ }),
+/* 13 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.CalibriRegularMetrics = exports.CalibriRegularFactors = exports.CalibriItalicMetrics = exports.CalibriItalicFactors = exports.CalibriBoldMetrics = exports.CalibriBoldItalicMetrics = exports.CalibriBoldItalicFactors = exports.CalibriBoldFactors = void 0;
+const CalibriBoldFactors = [1.3877, 1, 1, 1, 0.97801, 0.92482, 0.89552, 0.91133, 0.81988, 0.97566, 0.98152, 0.93548, 0.93548, 1.2798, 0.85284, 0.92794, 1, 0.96134, 1.54657, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.82845, 0.82845, 0.85284, 0.85284, 0.85284, 0.75859, 0.92138, 0.83908, 0.7762, 0.73293, 0.87289, 0.73133, 0.7514, 0.81921, 0.87356, 0.95958, 0.59526, 0.75727, 0.69225, 1.04924, 0.9121, 0.86943, 0.79795, 0.88198, 0.77958, 0.70864, 0.81055, 0.90399, 0.88653, 0.96017, 0.82577, 0.77892, 0.78257, 0.97507, 1.54657, 0.97507, 0.85284, 0.89552, 0.90176, 0.88762, 0.8785, 0.75241, 0.8785, 0.90518, 0.95015, 0.77618, 0.8785, 0.88401, 0.91916, 0.86304, 0.88401, 0.91488, 0.8785, 0.8801, 0.8785, 0.8785, 0.91343, 0.7173, 1.04106, 0.8785, 0.85075, 0.95794, 0.82616, 0.85162, 0.79492, 0.88331, 1.69808, 0.88331, 0.85284, 0.97801, 0.89552, 0.91133, 0.89552, 0.91133, 1.7801, 0.89552, 1.24487, 1.13254, 1.12401, 0.96839, 0.85284, 0.68787, 0.70645, 0.85592, 0.90747, 1.01466, 1.0088, 0.90323, 1, 1.07463, 1, 0.91056, 0.75806, 1.19118, 0.96839, 0.78864, 0.82845, 0.84133, 0.75859, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.77539, 0.73293, 0.73133, 0.73133, 0.73133, 0.73133, 0.95958, 0.95958, 0.95958, 0.95958, 0.88506, 0.9121, 0.86943, 0.86943, 0.86943, 0.86943, 0.86943, 0.85284, 0.87508, 0.90399, 0.90399, 0.90399, 0.90399, 0.77892, 0.79795, 0.90807, 0.88762, 0.88762, 0.88762, 0.88762, 0.88762, 0.88762, 0.8715, 0.75241, 0.90518, 0.90518, 0.90518, 0.90518, 0.88401, 0.88401, 0.88401, 0.88401, 0.8785, 0.8785, 0.8801, 0.8801, 0.8801, 0.8801, 0.8801, 0.90747, 0.89049, 0.8785, 0.8785, 0.8785, 0.8785, 0.85162, 0.8785, 0.85162, 0.83908, 0.88762, 0.83908, 0.88762, 0.83908, 0.88762, 0.73293, 0.75241, 0.73293, 0.75241, 0.73293, 0.75241, 0.73293, 0.75241, 0.87289, 0.83016, 0.88506, 0.93125, 0.73133, 0.90518, 0.73133, 0.90518, 0.73133, 0.90518, 0.73133, 0.90518, 0.73133, 0.90518, 0.81921, 0.77618, 0.81921, 0.77618, 0.81921, 0.77618, 1, 1, 0.87356, 0.8785, 0.91075, 0.89608, 0.95958, 0.88401, 0.95958, 0.88401, 0.95958, 0.88401, 0.95958, 0.88401, 0.95958, 0.88401, 0.76229, 0.90167, 0.59526, 0.91916, 1, 1, 0.86304, 0.69225, 0.88401, 1, 1, 0.70424, 0.79468, 0.91926, 0.88175, 0.70823, 0.94903, 0.9121, 0.8785, 1, 1, 0.9121, 0.8785, 0.87802, 0.88656, 0.8785, 0.86943, 0.8801, 0.86943, 0.8801, 0.86943, 0.8801, 0.87402, 0.89291, 0.77958, 0.91343, 1, 1, 0.77958, 0.91343, 0.70864, 0.7173, 0.70864, 0.7173, 0.70864, 0.7173, 0.70864, 0.7173, 1, 1, 0.81055, 0.75841, 0.81055, 1.06452, 0.90399, 0.8785, 0.90399, 0.8785, 0.90399, 0.8785, 0.90399, 0.8785, 0.90399, 0.8785, 0.90399, 0.8785, 0.96017, 0.95794, 0.77892, 0.85162, 0.77892, 0.78257, 0.79492, 0.78257, 0.79492, 0.78257, 0.79492, 0.9297, 0.56892, 0.83908, 0.88762, 0.77539, 0.8715, 0.87508, 0.89049, 1, 1, 0.81055, 1.04106, 1.20528, 1.20528, 1, 1.15543, 0.70674, 0.98387, 0.94721, 1.33431, 1.45894, 0.95161, 1.06303, 0.83908, 0.80352, 0.57184, 0.6965, 0.56289, 0.82001, 0.56029, 0.81235, 1.02988, 0.83908, 0.7762, 0.68156, 0.80367, 0.73133, 0.78257, 0.87356, 0.86943, 0.95958, 0.75727, 0.89019, 1.04924, 0.9121, 0.7648, 0.86943, 0.87356, 0.79795, 0.78275, 0.81055, 0.77892, 0.9762, 0.82577, 0.99819, 0.84896, 0.95958, 0.77892, 0.96108, 1.01407, 0.89049, 1.02988, 0.94211, 0.96108, 0.8936, 0.84021, 0.87842, 0.96399, 0.79109, 0.89049, 1.00813, 1.02988, 0.86077, 0.87445, 0.92099, 0.84723, 0.86513, 0.8801, 0.75638, 0.85714, 0.78216, 0.79586, 0.87965, 0.94211, 0.97747, 0.78287, 0.97926, 0.84971, 1.02988, 0.94211, 0.8801, 0.94211, 0.84971, 0.73133, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.90264, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.90518, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.90548, 1, 1, 1, 1, 1, 1, 0.96017, 0.95794, 0.96017, 0.95794, 0.96017, 0.95794, 0.77892, 0.85162, 1, 1, 0.89552, 0.90527, 1, 0.90363, 0.92794, 0.92794, 0.92794, 0.92794, 0.87012, 0.87012, 0.87012, 0.89552, 0.89552, 1.42259, 0.71143, 1.06152, 1, 1, 1.03372, 1.03372, 0.97171, 1.4956, 2.2807, 0.93835, 0.83406, 0.91133, 0.84107, 0.91133, 1, 1, 1, 0.72021, 1, 1.23108, 0.83489, 0.88525, 0.88525, 0.81499, 0.90527, 1.81055, 0.90527, 1.81055, 1.31006, 1.53711, 0.94434, 1.08696, 1, 0.95018, 0.77192, 0.85284, 0.90747, 1.17534, 0.69825, 0.9716, 1.37077, 0.90747, 0.90747, 0.85356, 0.90747, 0.90747, 1.44947, 0.85284, 0.8941, 0.8941, 0.70572, 0.8, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.99862, 0.99862, 1, 1, 1, 1, 1, 1.08004, 0.91027, 1, 1, 1, 0.99862, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.90727, 0.90727, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.CalibriBoldFactors = CalibriBoldFactors;
+const CalibriBoldMetrics = {
+  lineHeight: 1.2207,
+  lineGap: 0.2207
+};
+exports.CalibriBoldMetrics = CalibriBoldMetrics;
+const CalibriBoldItalicFactors = [1.3877, 1, 1, 1, 0.97801, 0.92482, 0.89552, 0.91133, 0.81988, 0.97566, 0.98152, 0.93548, 0.93548, 1.2798, 0.85284, 0.92794, 1, 0.96134, 1.56239, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.82845, 0.82845, 0.85284, 0.85284, 0.85284, 0.75859, 0.92138, 0.83908, 0.7762, 0.71805, 0.87289, 0.73133, 0.7514, 0.81921, 0.87356, 0.95958, 0.59526, 0.75727, 0.69225, 1.04924, 0.90872, 0.85938, 0.79795, 0.87068, 0.77958, 0.69766, 0.81055, 0.90399, 0.88653, 0.96068, 0.82577, 0.77892, 0.78257, 0.97507, 1.529, 0.97507, 0.85284, 0.89552, 0.90176, 0.94908, 0.86411, 0.74012, 0.86411, 0.88323, 0.95015, 0.86411, 0.86331, 0.88401, 0.91916, 0.86304, 0.88401, 0.9039, 0.86331, 0.86331, 0.86411, 0.86411, 0.90464, 0.70852, 1.04106, 0.86331, 0.84372, 0.95794, 0.82616, 0.84548, 0.79492, 0.88331, 1.69808, 0.88331, 0.85284, 0.97801, 0.89552, 0.91133, 0.89552, 0.91133, 1.7801, 0.89552, 1.24487, 1.13254, 1.19129, 0.96839, 0.85284, 0.68787, 0.70645, 0.85592, 0.90747, 1.01466, 1.0088, 0.90323, 1, 1.07463, 1, 0.91056, 0.75806, 1.19118, 0.96839, 0.78864, 0.82845, 0.84133, 0.75859, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.77539, 0.71805, 0.73133, 0.73133, 0.73133, 0.73133, 0.95958, 0.95958, 0.95958, 0.95958, 0.88506, 0.90872, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.85284, 0.87068, 0.90399, 0.90399, 0.90399, 0.90399, 0.77892, 0.79795, 0.90807, 0.94908, 0.94908, 0.94908, 0.94908, 0.94908, 0.94908, 0.85887, 0.74012, 0.88323, 0.88323, 0.88323, 0.88323, 0.88401, 0.88401, 0.88401, 0.88401, 0.8785, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.90747, 0.89049, 0.86331, 0.86331, 0.86331, 0.86331, 0.84548, 0.86411, 0.84548, 0.83908, 0.94908, 0.83908, 0.94908, 0.83908, 0.94908, 0.71805, 0.74012, 0.71805, 0.74012, 0.71805, 0.74012, 0.71805, 0.74012, 0.87289, 0.79538, 0.88506, 0.92726, 0.73133, 0.88323, 0.73133, 0.88323, 0.73133, 0.88323, 0.73133, 0.88323, 0.73133, 0.88323, 0.81921, 0.86411, 0.81921, 0.86411, 0.81921, 0.86411, 1, 1, 0.87356, 0.86331, 0.91075, 0.8777, 0.95958, 0.88401, 0.95958, 0.88401, 0.95958, 0.88401, 0.95958, 0.88401, 0.95958, 0.88401, 0.76467, 0.90167, 0.59526, 0.91916, 1, 1, 0.86304, 0.69225, 0.88401, 1, 1, 0.70424, 0.77312, 0.91926, 0.88175, 0.70823, 0.94903, 0.90872, 0.86331, 1, 1, 0.90872, 0.86331, 0.86906, 0.88116, 0.86331, 0.85938, 0.86331, 0.85938, 0.86331, 0.85938, 0.86331, 0.87402, 0.86549, 0.77958, 0.90464, 1, 1, 0.77958, 0.90464, 0.69766, 0.70852, 0.69766, 0.70852, 0.69766, 0.70852, 0.69766, 0.70852, 1, 1, 0.81055, 0.75841, 0.81055, 1.06452, 0.90399, 0.86331, 0.90399, 0.86331, 0.90399, 0.86331, 0.90399, 0.86331, 0.90399, 0.86331, 0.90399, 0.86331, 0.96068, 0.95794, 0.77892, 0.84548, 0.77892, 0.78257, 0.79492, 0.78257, 0.79492, 0.78257, 0.79492, 0.9297, 0.56892, 0.83908, 0.94908, 0.77539, 0.85887, 0.87068, 0.89049, 1, 1, 0.81055, 1.04106, 1.20528, 1.20528, 1, 1.15543, 0.70088, 0.98387, 0.94721, 1.33431, 1.45894, 0.95161, 1.48387, 0.83908, 0.80352, 0.57118, 0.6965, 0.56347, 0.79179, 0.55853, 0.80346, 1.02988, 0.83908, 0.7762, 0.67174, 0.86036, 0.73133, 0.78257, 0.87356, 0.86441, 0.95958, 0.75727, 0.89019, 1.04924, 0.90872, 0.74889, 0.85938, 0.87891, 0.79795, 0.7957, 0.81055, 0.77892, 0.97447, 0.82577, 0.97466, 0.87179, 0.95958, 0.77892, 0.94252, 0.95612, 0.8753, 1.02988, 0.92733, 0.94252, 0.87411, 0.84021, 0.8728, 0.95612, 0.74081, 0.8753, 1.02189, 1.02988, 0.84814, 0.87445, 0.91822, 0.84723, 0.85668, 0.86331, 0.81344, 0.87581, 0.76422, 0.82046, 0.96057, 0.92733, 0.99375, 0.78022, 0.95452, 0.86015, 1.02988, 0.92733, 0.86331, 0.92733, 0.86015, 0.73133, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.90631, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.88323, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.85174, 1, 1, 1, 1, 1, 1, 0.96068, 0.95794, 0.96068, 0.95794, 0.96068, 0.95794, 0.77892, 0.84548, 1, 1, 0.89552, 0.90527, 1, 0.90363, 0.92794, 0.92794, 0.92794, 0.89807, 0.87012, 0.87012, 0.87012, 0.89552, 0.89552, 1.42259, 0.71094, 1.06152, 1, 1, 1.03372, 1.03372, 0.97171, 1.4956, 2.2807, 0.92972, 0.83406, 0.91133, 0.83326, 0.91133, 1, 1, 1, 0.72021, 1, 1.23108, 0.83489, 0.88525, 0.88525, 0.81499, 0.90616, 1.81055, 0.90527, 1.81055, 1.3107, 1.53711, 0.94434, 1.08696, 1, 0.95018, 0.77192, 0.85284, 0.90747, 1.17534, 0.69825, 0.9716, 1.37077, 0.90747, 0.90747, 0.85356, 0.90747, 0.90747, 1.44947, 0.85284, 0.8941, 0.8941, 0.70572, 0.8, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.99862, 0.99862, 1, 1, 1, 1, 1, 1.08004, 0.91027, 1, 1, 1, 0.99862, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.90727, 0.90727, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.CalibriBoldItalicFactors = CalibriBoldItalicFactors;
+const CalibriBoldItalicMetrics = {
+  lineHeight: 1.2207,
+  lineGap: 0.2207
+};
+exports.CalibriBoldItalicMetrics = CalibriBoldItalicMetrics;
+const CalibriItalicFactors = [1.3877, 1, 1, 1, 1.17223, 1.1293, 0.89552, 0.91133, 0.80395, 1.02269, 1.15601, 0.91056, 0.91056, 1.2798, 0.85284, 0.89807, 1, 0.90861, 1.39543, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.96309, 0.96309, 0.85284, 0.85284, 0.85284, 0.83319, 0.88071, 0.8675, 0.81552, 0.72346, 0.85193, 0.73206, 0.7522, 0.81105, 0.86275, 0.90685, 0.6377, 0.77892, 0.75593, 1.02638, 0.89249, 0.84118, 0.77452, 0.85374, 0.75186, 0.67789, 0.79776, 0.88844, 0.85066, 0.94309, 0.77818, 0.7306, 0.76659, 1.10369, 1.38313, 1.10369, 1.06139, 0.89552, 0.8739, 0.9245, 0.9245, 0.83203, 0.9245, 0.85865, 1.09842, 0.9245, 0.9245, 1.03297, 1.07692, 0.90918, 1.03297, 0.94959, 0.9245, 0.92274, 0.9245, 0.9245, 1.02933, 0.77832, 1.20562, 0.9245, 0.8916, 0.98986, 0.86621, 0.89453, 0.79004, 0.94152, 1.77256, 0.94152, 0.85284, 0.97801, 0.89552, 0.91133, 0.89552, 0.91133, 1.91729, 0.89552, 1.17889, 1.13254, 1.16359, 0.92098, 0.85284, 0.68787, 0.71353, 0.84737, 0.90747, 1.0088, 1.0044, 0.87683, 1, 1.09091, 1, 0.92229, 0.739, 1.15642, 0.92098, 0.76288, 0.80504, 0.80972, 0.75859, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.76318, 0.72346, 0.73206, 0.73206, 0.73206, 0.73206, 0.90685, 0.90685, 0.90685, 0.90685, 0.86477, 0.89249, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.85284, 0.84557, 0.88844, 0.88844, 0.88844, 0.88844, 0.7306, 0.77452, 0.86331, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.84843, 0.83203, 0.85865, 0.85865, 0.85865, 0.85865, 0.82601, 0.82601, 0.82601, 0.82601, 0.94469, 0.9245, 0.92274, 0.92274, 0.92274, 0.92274, 0.92274, 0.90747, 0.86651, 0.9245, 0.9245, 0.9245, 0.9245, 0.89453, 0.9245, 0.89453, 0.8675, 0.9245, 0.8675, 0.9245, 0.8675, 0.9245, 0.72346, 0.83203, 0.72346, 0.83203, 0.72346, 0.83203, 0.72346, 0.83203, 0.85193, 0.8875, 0.86477, 0.99034, 0.73206, 0.85865, 0.73206, 0.85865, 0.73206, 0.85865, 0.73206, 0.85865, 0.73206, 0.85865, 0.81105, 0.9245, 0.81105, 0.9245, 0.81105, 0.9245, 1, 1, 0.86275, 0.9245, 0.90872, 0.93591, 0.90685, 0.82601, 0.90685, 0.82601, 0.90685, 0.82601, 0.90685, 1.03297, 0.90685, 0.82601, 0.77896, 1.05611, 0.6377, 1.07692, 1, 1, 0.90918, 0.75593, 1.03297, 1, 1, 0.76032, 0.9375, 0.98156, 0.93407, 0.77261, 1.11429, 0.89249, 0.9245, 1, 1, 0.89249, 0.9245, 0.92534, 0.86698, 0.9245, 0.84118, 0.92274, 0.84118, 0.92274, 0.84118, 0.92274, 0.8667, 0.86291, 0.75186, 1.02933, 1, 1, 0.75186, 1.02933, 0.67789, 0.77832, 0.67789, 0.77832, 0.67789, 0.77832, 0.67789, 0.77832, 1, 1, 0.79776, 0.97655, 0.79776, 1.23023, 0.88844, 0.9245, 0.88844, 0.9245, 0.88844, 0.9245, 0.88844, 0.9245, 0.88844, 0.9245, 0.88844, 0.9245, 0.94309, 0.98986, 0.7306, 0.89453, 0.7306, 0.76659, 0.79004, 0.76659, 0.79004, 0.76659, 0.79004, 1.09231, 0.54873, 0.8675, 0.9245, 0.76318, 0.84843, 0.84557, 0.86651, 1, 1, 0.79776, 1.20562, 1.18622, 1.18622, 1, 1.1437, 0.67009, 0.96334, 0.93695, 1.35191, 1.40909, 0.95161, 1.48387, 0.8675, 0.90861, 0.6192, 0.7363, 0.64824, 0.82411, 0.56321, 0.85696, 1.23516, 0.8675, 0.81552, 0.7286, 0.84134, 0.73206, 0.76659, 0.86275, 0.84369, 0.90685, 0.77892, 0.85871, 1.02638, 0.89249, 0.75828, 0.84118, 0.85984, 0.77452, 0.76466, 0.79776, 0.7306, 0.90782, 0.77818, 0.903, 0.87291, 0.90685, 0.7306, 0.99058, 1.03667, 0.94635, 1.23516, 0.9849, 0.99058, 0.92393, 0.8916, 0.942, 1.03667, 0.75026, 0.94635, 1.0297, 1.23516, 0.90918, 0.94048, 0.98217, 0.89746, 0.84153, 0.92274, 0.82507, 0.88832, 0.84438, 0.88178, 1.03525, 0.9849, 1.00225, 0.78086, 0.97248, 0.89404, 1.23516, 0.9849, 0.92274, 0.9849, 0.89404, 0.73206, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.89693, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.85865, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.90933, 1, 1, 1, 1, 1, 1, 0.94309, 0.98986, 0.94309, 0.98986, 0.94309, 0.98986, 0.7306, 0.89453, 1, 1, 0.89552, 0.90527, 1, 0.90186, 1.12308, 1.12308, 1.12308, 1.12308, 1.2566, 1.2566, 1.2566, 0.89552, 0.89552, 1.42259, 0.68994, 1.03809, 1, 1, 1.0176, 1.0176, 1.11523, 1.4956, 2.01462, 0.97858, 0.82616, 0.91133, 0.83437, 0.91133, 1, 1, 1, 0.70508, 1, 1.23108, 0.79801, 0.84426, 0.84426, 0.774, 0.90572, 1.81055, 0.90749, 1.81055, 1.28809, 1.55469, 0.94434, 1.07806, 1, 0.97094, 0.7589, 0.85284, 0.90747, 1.19658, 0.69825, 0.97622, 1.33512, 0.90747, 0.90747, 0.85284, 0.90747, 0.90747, 1.44947, 0.85284, 0.8941, 0.8941, 0.70572, 0.8, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.99862, 0.99862, 1, 1, 1, 1, 1, 1.0336, 0.91027, 1, 1, 1, 0.99862, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.05859, 1.05859, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.CalibriItalicFactors = CalibriItalicFactors;
+const CalibriItalicMetrics = {
+  lineHeight: 1.2207,
+  lineGap: 0.2207
+};
+exports.CalibriItalicMetrics = CalibriItalicMetrics;
+const CalibriRegularFactors = [1.3877, 1, 1, 1, 1.17223, 1.1293, 0.89552, 0.91133, 0.80395, 1.02269, 1.15601, 0.91056, 0.91056, 1.2798, 0.85284, 0.89807, 1, 0.90861, 1.39016, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.91133, 0.96309, 0.96309, 0.85284, 0.85284, 0.85284, 0.83319, 0.88071, 0.8675, 0.81552, 0.73834, 0.85193, 0.73206, 0.7522, 0.81105, 0.86275, 0.90685, 0.6377, 0.77892, 0.75593, 1.02638, 0.89385, 0.85122, 0.77452, 0.86503, 0.75186, 0.68887, 0.79776, 0.88844, 0.85066, 0.94258, 0.77818, 0.7306, 0.76659, 1.10369, 1.39016, 1.10369, 1.06139, 0.89552, 0.8739, 0.86128, 0.94469, 0.8457, 0.94469, 0.89464, 1.09842, 0.84636, 0.94469, 1.03297, 1.07692, 0.90918, 1.03297, 0.95897, 0.94469, 0.9482, 0.94469, 0.94469, 1.04692, 0.78223, 1.20562, 0.94469, 0.90332, 0.98986, 0.86621, 0.90527, 0.79004, 0.94152, 1.77256, 0.94152, 0.85284, 0.97801, 0.89552, 0.91133, 0.89552, 0.91133, 1.91729, 0.89552, 1.17889, 1.13254, 1.08707, 0.92098, 0.85284, 0.68787, 0.71353, 0.84737, 0.90747, 1.0088, 1.0044, 0.87683, 1, 1.09091, 1, 0.92229, 0.739, 1.15642, 0.92098, 0.76288, 0.80504, 0.80972, 0.75859, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.76318, 0.73834, 0.73206, 0.73206, 0.73206, 0.73206, 0.90685, 0.90685, 0.90685, 0.90685, 0.86477, 0.89385, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.85284, 0.85311, 0.88844, 0.88844, 0.88844, 0.88844, 0.7306, 0.77452, 0.86331, 0.86128, 0.86128, 0.86128, 0.86128, 0.86128, 0.86128, 0.8693, 0.8457, 0.89464, 0.89464, 0.89464, 0.89464, 0.82601, 0.82601, 0.82601, 0.82601, 0.94469, 0.94469, 0.9482, 0.9482, 0.9482, 0.9482, 0.9482, 0.90747, 0.86651, 0.94469, 0.94469, 0.94469, 0.94469, 0.90527, 0.94469, 0.90527, 0.8675, 0.86128, 0.8675, 0.86128, 0.8675, 0.86128, 0.73834, 0.8457, 0.73834, 0.8457, 0.73834, 0.8457, 0.73834, 0.8457, 0.85193, 0.92454, 0.86477, 0.9921, 0.73206, 0.89464, 0.73206, 0.89464, 0.73206, 0.89464, 0.73206, 0.89464, 0.73206, 0.89464, 0.81105, 0.84636, 0.81105, 0.84636, 0.81105, 0.84636, 1, 1, 0.86275, 0.94469, 0.90872, 0.95786, 0.90685, 0.82601, 0.90685, 0.82601, 0.90685, 0.82601, 0.90685, 1.03297, 0.90685, 0.82601, 0.77741, 1.05611, 0.6377, 1.07692, 1, 1, 0.90918, 0.75593, 1.03297, 1, 1, 0.76032, 0.90452, 0.98156, 1.11842, 0.77261, 1.11429, 0.89385, 0.94469, 1, 1, 0.89385, 0.94469, 0.95877, 0.86901, 0.94469, 0.85122, 0.9482, 0.85122, 0.9482, 0.85122, 0.9482, 0.8667, 0.90016, 0.75186, 1.04692, 1, 1, 0.75186, 1.04692, 0.68887, 0.78223, 0.68887, 0.78223, 0.68887, 0.78223, 0.68887, 0.78223, 1, 1, 0.79776, 0.92188, 0.79776, 1.23023, 0.88844, 0.94469, 0.88844, 0.94469, 0.88844, 0.94469, 0.88844, 0.94469, 0.88844, 0.94469, 0.88844, 0.94469, 0.94258, 0.98986, 0.7306, 0.90527, 0.7306, 0.76659, 0.79004, 0.76659, 0.79004, 0.76659, 0.79004, 1.09231, 0.54873, 0.8675, 0.86128, 0.76318, 0.8693, 0.85311, 0.86651, 1, 1, 0.79776, 1.20562, 1.18622, 1.18622, 1, 1.1437, 0.67742, 0.96334, 0.93695, 1.35191, 1.40909, 0.95161, 1.48387, 0.86686, 0.90861, 0.62267, 0.74359, 0.65649, 0.85498, 0.56963, 0.88254, 1.23516, 0.8675, 0.81552, 0.75443, 0.84503, 0.73206, 0.76659, 0.86275, 0.85122, 0.90685, 0.77892, 0.85746, 1.02638, 0.89385, 0.75657, 0.85122, 0.86275, 0.77452, 0.74171, 0.79776, 0.7306, 0.95165, 0.77818, 0.89772, 0.88831, 0.90685, 0.7306, 0.98142, 1.02191, 0.96576, 1.23516, 0.99018, 0.98142, 0.9236, 0.89258, 0.94035, 1.02191, 0.78848, 0.96576, 0.9561, 1.23516, 0.90918, 0.92578, 0.95424, 0.89746, 0.83969, 0.9482, 0.80113, 0.89442, 0.85208, 0.86155, 0.98022, 0.99018, 1.00452, 0.81209, 0.99247, 0.89181, 1.23516, 0.99018, 0.9482, 0.99018, 0.89181, 0.73206, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.88844, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.89464, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.96766, 1, 1, 1, 1, 1, 1, 0.94258, 0.98986, 0.94258, 0.98986, 0.94258, 0.98986, 0.7306, 0.90527, 1, 1, 0.89552, 0.90527, 1, 0.90186, 1.12308, 1.12308, 1.12308, 1.12308, 1.2566, 1.2566, 1.2566, 0.89552, 0.89552, 1.42259, 0.69043, 1.03809, 1, 1, 1.0176, 1.0176, 1.11523, 1.4956, 2.01462, 0.99331, 0.82616, 0.91133, 0.84286, 0.91133, 1, 1, 1, 0.70508, 1, 1.23108, 0.79801, 0.84426, 0.84426, 0.774, 0.90527, 1.81055, 0.90527, 1.81055, 1.28809, 1.55469, 0.94434, 1.07806, 1, 0.97094, 0.7589, 0.85284, 0.90747, 1.19658, 0.69825, 0.97622, 1.33512, 0.90747, 0.90747, 0.85356, 0.90747, 0.90747, 1.44947, 0.85284, 0.8941, 0.8941, 0.70572, 0.8, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.99862, 0.99862, 1, 1, 1, 1, 1, 1.0336, 0.91027, 1, 1, 1, 0.99862, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.05859, 1.05859, 1, 1, 1, 1.07185, 0.99413, 0.96334, 1.08065, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.CalibriRegularFactors = CalibriRegularFactors;
+const CalibriRegularMetrics = {
+  lineHeight: 1.2207,
+  lineGap: 0.2207
+};
+exports.CalibriRegularMetrics = CalibriRegularMetrics;
+
+/***/ }),
+/* 14 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.HelveticaRegularMetrics = exports.HelveticaRegularFactors = exports.HelveticaItalicMetrics = exports.HelveticaItalicFactors = exports.HelveticaBoldMetrics = exports.HelveticaBoldItalicMetrics = exports.HelveticaBoldItalicFactors = exports.HelveticaBoldFactors = void 0;
+const HelveticaBoldFactors = [0.76116, 1, 1, 1.0006, 0.99998, 0.99974, 0.99973, 0.99973, 0.99982, 0.99977, 1.00087, 0.99998, 0.99998, 0.99959, 1.00003, 1.0006, 0.99998, 1.0006, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 1.00003, 1.00003, 1.00003, 1.00026, 0.9999, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00026, 1.00022, 0.99977, 1.0006, 0.99973, 0.99977, 1.00026, 0.99999, 0.99977, 1.00022, 1.00001, 1.00022, 0.99977, 1.00001, 1.00026, 0.99977, 1.00001, 1.00016, 1.00001, 1.00001, 1.00026, 0.99998, 1.0006, 0.99998, 1.00003, 0.99973, 0.99998, 0.99973, 1.00026, 0.99973, 1.00026, 0.99973, 0.99998, 1.00026, 1.00026, 1.0006, 1.0006, 0.99973, 1.0006, 0.99982, 1.00026, 1.00026, 1.00026, 1.00026, 0.99959, 0.99973, 0.99998, 1.00026, 0.99973, 1.00022, 0.99973, 0.99973, 1, 0.99959, 1.00077, 0.99959, 1.00003, 0.99998, 0.99973, 0.99973, 0.99973, 0.99973, 1.00077, 0.99973, 0.99998, 1.00025, 0.99968, 0.99973, 1.00003, 1.00025, 0.60299, 1.00024, 1.06409, 1, 1, 0.99998, 1, 0.99973, 1.0006, 0.99998, 1, 0.99936, 0.99973, 1.00002, 1.00002, 1.00002, 1.00026, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1, 0.99977, 1.00001, 1.00001, 1.00001, 1.00001, 1.0006, 1.0006, 1.0006, 1.0006, 0.99977, 0.99977, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00003, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99982, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.0006, 1.0006, 1.0006, 1.0006, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.06409, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 1.00026, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 1.03374, 0.99977, 1.00026, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00022, 1.00026, 1.00022, 1.00026, 1.00022, 1.00026, 1.00022, 1.00026, 0.99977, 1.00026, 0.99977, 1.00026, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00042, 0.99973, 0.99973, 1.0006, 0.99977, 0.99973, 0.99973, 1.00026, 1.0006, 1.00026, 1.0006, 1.00026, 1.03828, 1.00026, 0.99999, 1.00026, 1.0006, 0.99977, 1.00026, 0.99977, 1.00026, 0.99977, 1.00026, 0.9993, 0.9998, 1.00026, 1.00022, 1.00026, 1.00022, 1.00026, 1.00022, 1.00026, 1, 1.00016, 0.99977, 0.99959, 0.99977, 0.99959, 0.99977, 0.99959, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00026, 0.99998, 1.00026, 0.8121, 1.00026, 0.99998, 0.99977, 1.00026, 0.99977, 1.00026, 0.99977, 1.00026, 0.99977, 1.00026, 0.99977, 1.00026, 0.99977, 1.00026, 1.00016, 1.00022, 1.00001, 0.99973, 1.00001, 1.00026, 1, 1.00026, 1, 1.00026, 1, 1.0006, 0.99973, 0.99977, 0.99973, 1, 0.99982, 1.00022, 1.00026, 1.00001, 0.99973, 1.00026, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 1.00034, 0.99977, 1, 0.99997, 1.00026, 1.00078, 1.00036, 0.99973, 1.00013, 1.0006, 0.99977, 0.99977, 0.99988, 0.85148, 1.00001, 1.00026, 0.99977, 1.00022, 1.0006, 0.99977, 1.00001, 0.99999, 0.99977, 1.00069, 1.00022, 0.99977, 1.00001, 0.99984, 1.00026, 1.00001, 1.00024, 1.00001, 0.9999, 1, 1.0006, 1.00001, 1.00041, 0.99962, 1.00026, 1.0006, 0.99995, 1.00041, 0.99942, 0.99973, 0.99927, 1.00082, 0.99902, 1.00026, 1.00087, 1.0006, 1.00069, 0.99973, 0.99867, 0.99973, 0.9993, 1.00026, 1.00049, 1.00056, 1, 0.99988, 0.99935, 0.99995, 0.99954, 1.00055, 0.99945, 1.00032, 1.0006, 0.99995, 1.00026, 0.99995, 1.00032, 1.00001, 1.00008, 0.99971, 1.00019, 0.9994, 1.00001, 1.0006, 1.00044, 0.99973, 1.00023, 1.00047, 1, 0.99942, 0.99561, 0.99989, 1.00035, 0.99977, 1.00035, 0.99977, 1.00019, 0.99944, 1.00001, 1.00021, 0.99926, 1.00035, 1.00035, 0.99942, 1.00048, 0.99999, 0.99977, 1.00022, 1.00035, 1.00001, 0.99977, 1.00026, 0.99989, 1.00057, 1.00001, 0.99936, 1.00052, 1.00012, 0.99996, 1.00043, 1, 1.00035, 0.9994, 0.99976, 1.00035, 0.99973, 1.00052, 1.00041, 1.00119, 1.00037, 0.99973, 1.00002, 0.99986, 1.00041, 1.00041, 0.99902, 0.9996, 1.00034, 0.99999, 1.00026, 0.99999, 1.00026, 0.99973, 1.00052, 0.99973, 1, 0.99973, 1.00041, 1.00075, 0.9994, 1.0003, 0.99999, 1, 1.00041, 0.99955, 1, 0.99915, 0.99973, 0.99973, 1.00026, 1.00119, 0.99955, 0.99973, 1.0006, 0.99911, 1.0006, 1.00026, 0.99972, 1.00026, 0.99902, 1.00041, 0.99973, 0.99999, 1, 1, 1.00038, 1.0005, 1.00016, 1.00022, 1.00016, 1.00022, 1.00016, 1.00022, 1.00001, 0.99973, 1, 1, 0.99973, 1, 1, 0.99955, 1.0006, 1.0006, 1.0006, 1.0006, 1, 1, 1, 0.99973, 0.99973, 0.99972, 1, 1, 1.00106, 0.99999, 0.99998, 0.99998, 0.99999, 0.99998, 1.66475, 1, 0.99973, 0.99973, 1.00023, 0.99973, 0.99971, 1.00047, 1.00023, 1, 0.99991, 0.99984, 1.00002, 1.00002, 1.00002, 1.00002, 1, 1, 1, 1, 1, 1, 1, 0.99972, 1, 1.20985, 1.39713, 1.00003, 1.00031, 1.00015, 1, 0.99561, 1.00027, 1.00031, 1.00031, 0.99915, 1.00031, 1.00031, 0.99999, 1.00003, 0.99999, 0.99999, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.40579, 1.40579, 1.36625, 0.99999, 1, 0.99861, 0.99861, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99972, 0.99999, 0.99999, 0.99999, 0.99999, 1.40483, 1, 0.99977, 1.00054, 1, 1, 0.99953, 0.99962, 1.00042, 0.9995, 1, 1, 1, 1, 1, 1, 1, 1, 0.99998, 0.99998, 0.99998, 0.99998, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.HelveticaBoldFactors = HelveticaBoldFactors;
+const HelveticaBoldMetrics = {
+  lineHeight: 1.2,
+  lineGap: 0.2
+};
+exports.HelveticaBoldMetrics = HelveticaBoldMetrics;
+const HelveticaBoldItalicFactors = [0.76116, 1, 1, 1.0006, 0.99998, 0.99974, 0.99973, 0.99973, 0.99982, 0.99977, 1.00087, 0.99998, 0.99998, 0.99959, 1.00003, 1.0006, 0.99998, 1.0006, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 1.00003, 1.00003, 1.00003, 1.00026, 0.9999, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00026, 1.00022, 0.99977, 1.0006, 0.99973, 0.99977, 1.00026, 0.99999, 0.99977, 1.00022, 1.00001, 1.00022, 0.99977, 1.00001, 1.00026, 0.99977, 1.00001, 1.00016, 1.00001, 1.00001, 1.00026, 0.99998, 1.0006, 0.99998, 1.00003, 0.99973, 0.99998, 0.99973, 1.00026, 0.99973, 1.00026, 0.99973, 0.99998, 1.00026, 1.00026, 1.0006, 1.0006, 0.99973, 1.0006, 0.99982, 1.00026, 1.00026, 1.00026, 1.00026, 0.99959, 0.99973, 0.99998, 1.00026, 0.99973, 1.00022, 0.99973, 0.99973, 1, 0.99959, 1.00077, 0.99959, 1.00003, 0.99998, 0.99973, 0.99973, 0.99973, 0.99973, 1.00077, 0.99973, 0.99998, 1.00025, 0.99968, 0.99973, 1.00003, 1.00025, 0.60299, 1.00024, 1.06409, 1, 1, 0.99998, 1, 0.99973, 1.0006, 0.99998, 1, 0.99936, 0.99973, 1.00002, 1.00002, 1.00002, 1.00026, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1, 0.99977, 1.00001, 1.00001, 1.00001, 1.00001, 1.0006, 1.0006, 1.0006, 1.0006, 0.99977, 0.99977, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00003, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99982, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.0006, 1.0006, 1.0006, 1.0006, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.06409, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 1.00026, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 1.0044, 0.99977, 1.00026, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00022, 1.00026, 1.00022, 1.00026, 1.00022, 1.00026, 1.00022, 1.00026, 0.99977, 1.00026, 0.99977, 1.00026, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99971, 0.99973, 0.99973, 1.0006, 0.99977, 0.99973, 0.99973, 1.00026, 1.0006, 1.00026, 1.0006, 1.00026, 1.01011, 1.00026, 0.99999, 1.00026, 1.0006, 0.99977, 1.00026, 0.99977, 1.00026, 0.99977, 1.00026, 0.9993, 0.9998, 1.00026, 1.00022, 1.00026, 1.00022, 1.00026, 1.00022, 1.00026, 1, 1.00016, 0.99977, 0.99959, 0.99977, 0.99959, 0.99977, 0.99959, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00026, 0.99998, 1.00026, 0.8121, 1.00026, 0.99998, 0.99977, 1.00026, 0.99977, 1.00026, 0.99977, 1.00026, 0.99977, 1.00026, 0.99977, 1.00026, 0.99977, 1.00026, 1.00016, 1.00022, 1.00001, 0.99973, 1.00001, 1.00026, 1, 1.00026, 1, 1.00026, 1, 1.0006, 0.99973, 0.99977, 0.99973, 1, 0.99982, 1.00022, 1.00026, 1.00001, 0.99973, 1.00026, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99977, 1, 1, 1.00026, 0.99969, 0.99972, 0.99981, 0.9998, 1.0006, 0.99977, 0.99977, 1.00022, 0.91155, 1.00001, 1.00026, 0.99977, 1.00022, 1.0006, 0.99977, 1.00001, 0.99999, 0.99977, 0.99966, 1.00022, 1.00032, 1.00001, 0.99944, 1.00026, 1.00001, 0.99968, 1.00001, 1.00047, 1, 1.0006, 1.00001, 0.99981, 1.00101, 1.00026, 1.0006, 0.99948, 0.99981, 1.00064, 0.99973, 0.99942, 1.00101, 1.00061, 1.00026, 1.00069, 1.0006, 1.00014, 0.99973, 1.01322, 0.99973, 1.00065, 1.00026, 1.00012, 0.99923, 1, 1.00064, 1.00076, 0.99948, 1.00055, 1.00063, 1.00007, 0.99943, 1.0006, 0.99948, 1.00026, 0.99948, 0.99943, 1.00001, 1.00001, 1.00029, 1.00038, 1.00035, 1.00001, 1.0006, 1.0006, 0.99973, 0.99978, 1.00001, 1.00057, 0.99989, 0.99967, 0.99964, 0.99967, 0.99977, 0.99999, 0.99977, 1.00038, 0.99977, 1.00001, 0.99973, 1.00066, 0.99967, 0.99967, 1.00041, 0.99998, 0.99999, 0.99977, 1.00022, 0.99967, 1.00001, 0.99977, 1.00026, 0.99964, 1.00031, 1.00001, 0.99999, 0.99999, 1, 1.00023, 1, 1, 0.99999, 1.00035, 1.00001, 0.99999, 0.99973, 0.99977, 0.99999, 1.00058, 0.99973, 0.99973, 0.99955, 0.9995, 1.00026, 1.00026, 1.00032, 0.99989, 1.00034, 0.99999, 1.00026, 1.00026, 1.00026, 0.99973, 0.45998, 0.99973, 1.00026, 0.99973, 1.00001, 0.99999, 0.99982, 0.99994, 0.99996, 1, 1.00042, 1.00044, 1.00029, 1.00023, 0.99973, 0.99973, 1.00026, 0.99949, 1.00002, 0.99973, 1.0006, 1.0006, 1.0006, 0.99975, 1.00026, 1.00026, 1.00032, 0.98685, 0.99973, 1.00026, 1, 1, 0.99966, 1.00044, 1.00016, 1.00022, 1.00016, 1.00022, 1.00016, 1.00022, 1.00001, 0.99973, 1, 1, 0.99973, 1, 1, 0.99955, 1.0006, 1.0006, 1.0006, 1.0006, 1, 1, 1, 0.99973, 0.99973, 0.99972, 1, 1, 1.00106, 0.99999, 0.99998, 0.99998, 0.99999, 0.99998, 1.66475, 1, 0.99973, 0.99973, 1, 0.99973, 0.99971, 0.99978, 1, 1, 0.99991, 0.99984, 1.00002, 1.00002, 1.00002, 1.00002, 1.00098, 1, 1, 1, 1.00049, 1, 1, 0.99972, 1, 1.20985, 1.39713, 1.00003, 1.00031, 1.00015, 1, 0.99561, 1.00027, 1.00031, 1.00031, 0.99915, 1.00031, 1.00031, 0.99999, 1.00003, 0.99999, 0.99999, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.40579, 1.40579, 1.36625, 0.99999, 1, 0.99861, 0.99861, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99972, 0.99999, 0.99999, 0.99999, 0.99999, 1.40483, 1, 0.99977, 1.00054, 1, 1, 0.99953, 0.99962, 1.00042, 0.9995, 1, 1, 1, 1, 1, 1, 1, 1, 0.99998, 0.99998, 0.99998, 0.99998, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.HelveticaBoldItalicFactors = HelveticaBoldItalicFactors;
+const HelveticaBoldItalicMetrics = {
+  lineHeight: 1.35,
+  lineGap: 0.2
+};
+exports.HelveticaBoldItalicMetrics = HelveticaBoldItalicMetrics;
+const HelveticaItalicFactors = [0.76116, 1, 1, 1.0006, 1.0006, 1.00006, 0.99973, 0.99973, 0.99982, 1.00001, 1.00043, 0.99998, 0.99998, 0.99959, 1.00003, 1.0006, 0.99998, 1.0006, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.0006, 1, 1.00003, 1.00003, 1.00003, 0.99973, 0.99987, 1.00001, 1.00001, 0.99977, 0.99977, 1.00001, 1.00026, 1.00022, 0.99977, 1.0006, 1, 1.00001, 0.99973, 0.99999, 0.99977, 1.00022, 1.00001, 1.00022, 0.99977, 1.00001, 1.00026, 0.99977, 1.00001, 1.00016, 1.00001, 1.00001, 1.00026, 1.0006, 1.0006, 1.0006, 0.99949, 0.99973, 0.99998, 0.99973, 0.99973, 1, 0.99973, 0.99973, 1.0006, 0.99973, 0.99973, 0.99924, 0.99924, 1, 0.99924, 0.99999, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 1.0006, 0.99973, 1, 0.99977, 1, 1, 1, 1.00005, 1.0009, 1.00005, 1.00003, 0.99998, 0.99973, 0.99973, 0.99973, 0.99973, 1.0009, 0.99973, 0.99998, 1.00025, 0.99968, 0.99973, 1.00003, 1.00025, 0.60299, 1.00024, 1.06409, 1, 1, 0.99998, 1, 0.9998, 1.0006, 0.99998, 1, 0.99936, 0.99973, 1.00002, 1.00002, 1.00002, 1.00026, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1, 0.99977, 1.00001, 1.00001, 1.00001, 1.00001, 1.0006, 1.0006, 1.0006, 1.0006, 0.99977, 0.99977, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00003, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99982, 1, 0.99973, 0.99973, 0.99973, 0.99973, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.06409, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 1, 0.99973, 1, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 0.99977, 1, 0.99977, 1, 0.99977, 1, 0.99977, 1, 0.99977, 1.0288, 0.99977, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00022, 0.99973, 1.00022, 0.99973, 1.00022, 0.99973, 1.00022, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99924, 1.0006, 1.0006, 0.99946, 1.00034, 1, 0.99924, 1.00001, 1, 1, 0.99973, 0.99924, 0.99973, 0.99924, 0.99973, 1.06311, 0.99973, 1.00024, 0.99973, 0.99924, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 1.00041, 0.9998, 0.99973, 1.00022, 0.99973, 1.00022, 0.99973, 1.00022, 0.99973, 1, 1.00016, 0.99977, 0.99998, 0.99977, 0.99998, 0.99977, 0.99998, 1.00001, 1, 1.00001, 1, 1.00001, 1, 1.00001, 1, 1.00026, 1.0006, 1.00026, 0.89547, 1.00026, 1.0006, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 1.00016, 0.99977, 1.00001, 1, 1.00001, 1.00026, 1, 1.00026, 1, 1.00026, 1, 0.99924, 0.99973, 1.00001, 0.99973, 1, 0.99982, 1.00022, 1.00026, 1.00001, 1, 1.00026, 1.0006, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 1.00001, 1, 1.00054, 0.99977, 1.00084, 1.00007, 0.99973, 1.00013, 0.99924, 1.00001, 1.00001, 0.99945, 0.91221, 1.00001, 1.00026, 0.99977, 1.00022, 1.0006, 1.00001, 1.00001, 0.99999, 0.99977, 0.99933, 1.00022, 1.00054, 1.00001, 1.00065, 1.00026, 1.00001, 1.0001, 1.00001, 1.00052, 1, 1.0006, 1.00001, 0.99945, 0.99897, 0.99968, 0.99924, 1.00036, 0.99945, 0.99949, 1, 1.0006, 0.99897, 0.99918, 0.99968, 0.99911, 0.99924, 1, 0.99962, 1.01487, 1, 1.0005, 0.99973, 1.00012, 1.00043, 1, 0.99995, 0.99994, 1.00036, 0.99947, 1.00019, 1.00063, 1.00025, 0.99924, 1.00036, 0.99973, 1.00036, 1.00025, 1.00001, 1.00001, 1.00027, 1.0001, 1.00068, 1.00001, 1.0006, 1.0006, 1, 1.00008, 0.99957, 0.99972, 0.9994, 0.99954, 0.99975, 1.00051, 1.00001, 1.00019, 1.00001, 1.0001, 0.99986, 1.00001, 1.00001, 1.00038, 0.99954, 0.99954, 0.9994, 1.00066, 0.99999, 0.99977, 1.00022, 1.00054, 1.00001, 0.99977, 1.00026, 0.99975, 1.0001, 1.00001, 0.99993, 0.9995, 0.99955, 1.00016, 0.99978, 0.99974, 1.00019, 1.00022, 0.99955, 1.00053, 0.99973, 1.00089, 1.00005, 0.99967, 1.00048, 0.99973, 1.00002, 1.00034, 0.99973, 0.99973, 0.99964, 1.00006, 1.00066, 0.99947, 0.99973, 0.98894, 0.99973, 1, 0.44898, 1, 0.99946, 1, 1.00039, 1.00082, 0.99991, 0.99991, 0.99985, 1.00022, 1.00023, 1.00061, 1.00006, 0.99966, 0.99973, 0.99973, 0.99973, 1.00019, 1.0008, 1, 0.99924, 0.99924, 0.99924, 0.99983, 1.00044, 0.99973, 0.99964, 0.98332, 1, 0.99973, 1, 1, 0.99962, 0.99895, 1.00016, 0.99977, 1.00016, 0.99977, 1.00016, 0.99977, 1.00001, 1, 1, 1, 0.99973, 1, 1, 0.99955, 0.99924, 0.99924, 0.99924, 0.99924, 0.99998, 0.99998, 0.99998, 0.99973, 0.99973, 0.99972, 1, 1, 1.00267, 0.99999, 0.99998, 0.99998, 1, 0.99998, 1.66475, 1, 0.99973, 0.99973, 1.00023, 0.99973, 1.00423, 0.99925, 0.99999, 1, 0.99991, 0.99984, 1.00002, 1.00002, 1.00002, 1.00002, 1.00049, 1, 1.00245, 1, 1, 1, 1, 0.96329, 1, 1.20985, 1.39713, 1.00003, 0.8254, 1.00015, 1, 1.00035, 1.00027, 1.00031, 1.00031, 1.00003, 1.00031, 1.00031, 0.99999, 1.00003, 0.99999, 0.99999, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.40579, 1.40579, 1.36625, 0.99999, 1, 0.99861, 0.99861, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.95317, 0.99999, 0.99999, 0.99999, 0.99999, 1.40483, 1, 0.99977, 1.00054, 1, 1, 0.99953, 0.99962, 1.00042, 0.9995, 1, 1, 1, 1, 1, 1, 1, 1, 0.99998, 0.99998, 0.99998, 0.99998, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.HelveticaItalicFactors = HelveticaItalicFactors;
+const HelveticaItalicMetrics = {
+  lineHeight: 1.35,
+  lineGap: 0.2
+};
+exports.HelveticaItalicMetrics = HelveticaItalicMetrics;
+const HelveticaRegularFactors = [0.76116, 1, 1, 1.0006, 1.0006, 1.00006, 0.99973, 0.99973, 0.99982, 1.00001, 1.00043, 0.99998, 0.99998, 0.99959, 1.00003, 1.0006, 0.99998, 1.0006, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.0006, 1, 1.00003, 1.00003, 1.00003, 0.99973, 0.99987, 1.00001, 1.00001, 0.99977, 0.99977, 1.00001, 1.00026, 1.00022, 0.99977, 1.0006, 1, 1.00001, 0.99973, 0.99999, 0.99977, 1.00022, 1.00001, 1.00022, 0.99977, 1.00001, 1.00026, 0.99977, 1.00001, 1.00016, 1.00001, 1.00001, 1.00026, 1.0006, 1.0006, 1.0006, 0.99949, 0.99973, 0.99998, 0.99973, 0.99973, 1, 0.99973, 0.99973, 1.0006, 0.99973, 0.99973, 0.99924, 0.99924, 1, 0.99924, 0.99999, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 1.0006, 0.99973, 1, 0.99977, 1, 1, 1, 1.00005, 1.0009, 1.00005, 1.00003, 0.99998, 0.99973, 0.99973, 0.99973, 0.99973, 1.0009, 0.99973, 0.99998, 1.00025, 0.99968, 0.99973, 1.00003, 1.00025, 0.60299, 1.00024, 1.06409, 1, 1, 0.99998, 1, 0.9998, 1.0006, 0.99998, 1, 0.99936, 0.99973, 1.00002, 1.00002, 1.00002, 1.00026, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1, 0.99977, 1.00001, 1.00001, 1.00001, 1.00001, 1.0006, 1.0006, 1.0006, 1.0006, 0.99977, 0.99977, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00003, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99982, 1, 0.99973, 0.99973, 0.99973, 0.99973, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.06409, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 1, 0.99973, 1, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 0.99977, 1, 0.99977, 1, 0.99977, 1, 0.99977, 1, 0.99977, 1.04596, 0.99977, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00001, 0.99973, 1.00022, 0.99973, 1.00022, 0.99973, 1.00022, 0.99973, 1.00022, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99924, 1.0006, 1.0006, 1.00019, 1.00034, 1, 0.99924, 1.00001, 1, 1, 0.99973, 0.99924, 0.99973, 0.99924, 0.99973, 1.02572, 0.99973, 1.00005, 0.99973, 0.99924, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99999, 0.9998, 0.99973, 1.00022, 0.99973, 1.00022, 0.99973, 1.00022, 0.99973, 1, 1.00016, 0.99977, 0.99998, 0.99977, 0.99998, 0.99977, 0.99998, 1.00001, 1, 1.00001, 1, 1.00001, 1, 1.00001, 1, 1.00026, 1.0006, 1.00026, 0.84533, 1.00026, 1.0006, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 0.99977, 0.99973, 1.00016, 0.99977, 1.00001, 1, 1.00001, 1.00026, 1, 1.00026, 1, 1.00026, 1, 0.99924, 0.99973, 1.00001, 0.99973, 1, 0.99982, 1.00022, 1.00026, 1.00001, 1, 1.00026, 1.0006, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99998, 0.99928, 1, 0.99977, 1.00013, 1.00055, 0.99947, 0.99945, 0.99941, 0.99924, 1.00001, 1.00001, 1.0004, 0.91621, 1.00001, 1.00026, 0.99977, 1.00022, 1.0006, 1.00001, 1.00005, 0.99999, 0.99977, 1.00015, 1.00022, 0.99977, 1.00001, 0.99973, 1.00026, 1.00001, 1.00019, 1.00001, 0.99946, 1, 1.0006, 1.00001, 0.99978, 1.00045, 0.99973, 0.99924, 1.00023, 0.99978, 0.99966, 1, 1.00065, 1.00045, 1.00019, 0.99973, 0.99973, 0.99924, 1, 1, 0.96499, 1, 1.00055, 0.99973, 1.00008, 1.00027, 1, 0.9997, 0.99995, 1.00023, 0.99933, 1.00019, 1.00015, 1.00031, 0.99924, 1.00023, 0.99973, 1.00023, 1.00031, 1.00001, 0.99928, 1.00029, 1.00092, 1.00035, 1.00001, 1.0006, 1.0006, 1, 0.99988, 0.99975, 1, 1.00082, 0.99561, 0.9996, 1.00035, 1.00001, 0.99962, 1.00001, 1.00092, 0.99964, 1.00001, 0.99963, 0.99999, 1.00035, 1.00035, 1.00082, 0.99962, 0.99999, 0.99977, 1.00022, 1.00035, 1.00001, 0.99977, 1.00026, 0.9996, 0.99967, 1.00001, 1.00034, 1.00074, 1.00054, 1.00053, 1.00063, 0.99971, 0.99962, 1.00035, 0.99975, 0.99977, 0.99973, 1.00043, 0.99953, 1.0007, 0.99915, 0.99973, 1.00008, 0.99892, 1.00073, 1.00073, 1.00114, 0.99915, 1.00073, 0.99955, 0.99973, 1.00092, 0.99973, 1, 0.99998, 1, 1.0003, 1, 1.00043, 1.00001, 0.99969, 1.0003, 1, 1.00035, 1.00001, 0.9995, 1, 1.00092, 0.99973, 0.99973, 0.99973, 1.0007, 0.9995, 1, 0.99924, 1.0006, 0.99924, 0.99972, 1.00062, 0.99973, 1.00114, 1.00073, 1, 0.99955, 1, 1, 1.00047, 0.99968, 1.00016, 0.99977, 1.00016, 0.99977, 1.00016, 0.99977, 1.00001, 1, 1, 1, 0.99973, 1, 1, 0.99955, 0.99924, 0.99924, 0.99924, 0.99924, 0.99998, 0.99998, 0.99998, 0.99973, 0.99973, 0.99972, 1, 1, 1.00267, 0.99999, 0.99998, 0.99998, 1, 0.99998, 1.66475, 1, 0.99973, 0.99973, 1.00023, 0.99973, 0.99971, 0.99925, 1.00023, 1, 0.99991, 0.99984, 1.00002, 1.00002, 1.00002, 1.00002, 1, 1, 1, 1, 1, 1, 1, 0.96329, 1, 1.20985, 1.39713, 1.00003, 0.8254, 1.00015, 1, 1.00035, 1.00027, 1.00031, 1.00031, 0.99915, 1.00031, 1.00031, 0.99999, 1.00003, 0.99999, 0.99999, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.40579, 1.40579, 1.36625, 0.99999, 1, 0.99861, 0.99861, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.95317, 0.99999, 0.99999, 0.99999, 0.99999, 1.40483, 1, 0.99977, 1.00054, 1, 1, 0.99953, 0.99962, 1.00042, 0.9995, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.HelveticaRegularFactors = HelveticaRegularFactors;
+const HelveticaRegularMetrics = {
+  lineHeight: 1.2,
+  lineGap: 0.2
+};
+exports.HelveticaRegularMetrics = HelveticaRegularMetrics;
+
+/***/ }),
+/* 15 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.LiberationSansRegularWidths = exports.LiberationSansRegularMapping = exports.LiberationSansItalicWidths = exports.LiberationSansItalicMapping = exports.LiberationSansBoldWidths = exports.LiberationSansBoldMapping = exports.LiberationSansBoldItalicWidths = exports.LiberationSansBoldItalicMapping = void 0;
+const LiberationSansBoldWidths = [365, 0, 333, 278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611, 975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556, 333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611, 611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584, 333, 556, 556, 556, 556, 280, 556, 333, 737, 370, 556, 584, 737, 552, 400, 549, 333, 333, 333, 576, 556, 278, 333, 333, 365, 556, 834, 834, 834, 611, 722, 722, 722, 722, 722, 722, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 556, 556, 556, 556, 556, 278, 278, 278, 278, 611, 611, 611, 611, 611, 611, 611, 549, 611, 611, 611, 611, 611, 556, 611, 556, 722, 556, 722, 556, 722, 556, 722, 556, 722, 556, 722, 556, 722, 556, 722, 719, 722, 611, 667, 556, 667, 556, 667, 556, 667, 556, 667, 556, 778, 611, 778, 611, 778, 611, 778, 611, 722, 611, 722, 611, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 785, 556, 556, 278, 722, 556, 556, 611, 278, 611, 278, 611, 385, 611, 479, 611, 278, 722, 611, 722, 611, 722, 611, 708, 723, 611, 778, 611, 778, 611, 778, 611, 1000, 944, 722, 389, 722, 389, 722, 389, 667, 556, 667, 556, 667, 556, 667, 556, 611, 333, 611, 479, 611, 333, 722, 611, 722, 611, 722, 611, 722, 611, 722, 611, 722, 611, 944, 778, 667, 556, 667, 611, 500, 611, 500, 611, 500, 278, 556, 722, 556, 1000, 889, 778, 611, 667, 556, 611, 333, 333, 333, 333, 333, 333, 333, 333, 333, 333, 333, 465, 722, 333, 853, 906, 474, 825, 927, 838, 278, 722, 722, 601, 719, 667, 611, 722, 778, 278, 722, 667, 833, 722, 644, 778, 722, 667, 600, 611, 667, 821, 667, 809, 802, 278, 667, 615, 451, 611, 278, 582, 615, 610, 556, 606, 475, 460, 611, 541, 278, 558, 556, 612, 556, 445, 611, 766, 619, 520, 684, 446, 582, 715, 576, 753, 845, 278, 582, 611, 582, 845, 667, 669, 885, 567, 711, 667, 278, 276, 556, 1094, 1062, 875, 610, 722, 622, 719, 722, 719, 722, 567, 712, 667, 904, 626, 719, 719, 610, 702, 833, 722, 778, 719, 667, 722, 611, 622, 854, 667, 730, 703, 1005, 1019, 870, 979, 719, 711, 1031, 719, 556, 618, 615, 417, 635, 556, 709, 497, 615, 615, 500, 635, 740, 604, 611, 604, 611, 556, 490, 556, 875, 556, 615, 581, 833, 844, 729, 854, 615, 552, 854, 583, 556, 556, 611, 417, 552, 556, 278, 281, 278, 969, 906, 611, 500, 615, 556, 604, 778, 611, 487, 447, 944, 778, 944, 778, 944, 778, 667, 556, 333, 333, 556, 1000, 1000, 552, 278, 278, 278, 278, 500, 500, 500, 556, 556, 350, 1000, 1000, 240, 479, 333, 333, 604, 333, 167, 396, 556, 556, 1094, 556, 885, 489, 1115, 1000, 768, 600, 834, 834, 834, 834, 1000, 500, 1000, 500, 1000, 500, 500, 494, 612, 823, 713, 584, 549, 713, 979, 722, 274, 549, 549, 583, 549, 549, 604, 584, 604, 604, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 729, 604, 604, 354, 354, 1000, 990, 990, 990, 990, 494, 604, 604, 604, 604, 354, 1021, 1052, 917, 750, 750, 531, 656, 594, 510, 500, 750, 750, 611, 611, 333, 333, 333, 333, 333, 333, 333, 333, 222, 222, 333, 333, 333, 333, 333, 333, 333, 333];
+exports.LiberationSansBoldWidths = LiberationSansBoldWidths;
+const LiberationSansBoldMapping = [-1, -1, -1, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 402, 506, 507, 508, 509, 510, 511, 536, 537, 538, 539, 710, 711, 713, 728, 729, 730, 731, 732, 733, 900, 901, 902, 903, 904, 905, 906, 908, 910, 911, 912, 913, 914, 915, 916, 917, 918, 919, 920, 921, 922, 923, 924, 925, 926, 927, 928, 929, 931, 932, 933, 934, 935, 936, 937, 938, 939, 940, 941, 942, 943, 944, 945, 946, 947, 948, 949, 950, 951, 952, 953, 954, 955, 956, 957, 958, 959, 960, 961, 962, 963, 964, 965, 966, 967, 968, 969, 970, 971, 972, 973, 974, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044, 1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052, 1053, 1054, 1055, 1056, 1057, 1058, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074, 1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088, 1089, 1090, 1091, 1092, 1093, 1094, 1095, 1096, 1097, 1098, 1099, 1100, 1101, 1102, 1103, 1104, 1105, 1106, 1107, 1108, 1109, 1110, 1111, 1112, 1113, 1114, 1115, 1116, 1117, 1118, 1119, 1138, 1139, 1168, 1169, 7808, 7809, 7810, 7811, 7812, 7813, 7922, 7923, 8208, 8209, 8211, 8212, 8213, 8215, 8216, 8217, 8218, 8219, 8220, 8221, 8222, 8224, 8225, 8226, 8230, 8240, 8242, 8243, 8249, 8250, 8252, 8254, 8260, 8319, 8355, 8356, 8359, 8364, 8453, 8467, 8470, 8482, 8486, 8494, 8539, 8540, 8541, 8542, 8592, 8593, 8594, 8595, 8596, 8597, 8616, 8706, 8710, 8719, 8721, 8722, 8730, 8734, 8735, 8745, 8747, 8776, 8800, 8801, 8804, 8805, 8962, 8976, 8992, 8993, 9472, 9474, 9484, 9488, 9492, 9496, 9500, 9508, 9516, 9524, 9532, 9552, 9553, 9554, 9555, 9556, 9557, 9558, 9559, 9560, 9561, 9562, 9563, 9564, 9565, 9566, 9567, 9568, 9569, 9570, 9571, 9572, 9573, 9574, 9575, 9576, 9577, 9578, 9579, 9580, 9600, 9604, 9608, 9612, 9616, 9617, 9618, 9619, 9632, 9633, 9642, 9643, 9644, 9650, 9658, 9660, 9668, 9674, 9675, 9679, 9688, 9689, 9702, 9786, 9787, 9788, 9792, 9794, 9824, 9827, 9829, 9830, 9834, 9835, 9836, 61441, 61442, 61445, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+exports.LiberationSansBoldMapping = LiberationSansBoldMapping;
+const LiberationSansBoldItalicWidths = [365, 0, 333, 278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611, 975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556, 333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611, 611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584, 333, 556, 556, 556, 556, 280, 556, 333, 737, 370, 556, 584, 737, 552, 400, 549, 333, 333, 333, 576, 556, 278, 333, 333, 365, 556, 834, 834, 834, 611, 722, 722, 722, 722, 722, 722, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 556, 556, 556, 556, 556, 278, 278, 278, 278, 611, 611, 611, 611, 611, 611, 611, 549, 611, 611, 611, 611, 611, 556, 611, 556, 722, 556, 722, 556, 722, 556, 722, 556, 722, 556, 722, 556, 722, 556, 722, 740, 722, 611, 667, 556, 667, 556, 667, 556, 667, 556, 667, 556, 778, 611, 778, 611, 778, 611, 778, 611, 722, 611, 722, 611, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 782, 556, 556, 278, 722, 556, 556, 611, 278, 611, 278, 611, 396, 611, 479, 611, 278, 722, 611, 722, 611, 722, 611, 708, 723, 611, 778, 611, 778, 611, 778, 611, 1000, 944, 722, 389, 722, 389, 722, 389, 667, 556, 667, 556, 667, 556, 667, 556, 611, 333, 611, 479, 611, 333, 722, 611, 722, 611, 722, 611, 722, 611, 722, 611, 722, 611, 944, 778, 667, 556, 667, 611, 500, 611, 500, 611, 500, 278, 556, 722, 556, 1000, 889, 778, 611, 667, 556, 611, 333, 333, 333, 333, 333, 333, 333, 333, 333, 333, 333, 333, 722, 333, 854, 906, 473, 844, 930, 847, 278, 722, 722, 610, 671, 667, 611, 722, 778, 278, 722, 667, 833, 722, 657, 778, 718, 667, 590, 611, 667, 822, 667, 829, 781, 278, 667, 620, 479, 611, 278, 591, 620, 621, 556, 610, 479, 492, 611, 558, 278, 566, 556, 603, 556, 450, 611, 712, 605, 532, 664, 409, 591, 704, 578, 773, 834, 278, 591, 611, 591, 834, 667, 667, 886, 614, 719, 667, 278, 278, 556, 1094, 1042, 854, 622, 719, 677, 719, 722, 708, 722, 614, 722, 667, 927, 643, 719, 719, 615, 687, 833, 722, 778, 719, 667, 722, 611, 677, 781, 667, 729, 708, 979, 989, 854, 1000, 708, 719, 1042, 729, 556, 619, 604, 534, 618, 556, 736, 510, 611, 611, 507, 622, 740, 604, 611, 611, 611, 556, 889, 556, 885, 556, 646, 583, 889, 935, 707, 854, 594, 552, 865, 589, 556, 556, 611, 469, 563, 556, 278, 278, 278, 969, 906, 611, 507, 619, 556, 611, 778, 611, 575, 467, 944, 778, 944, 778, 944, 778, 667, 556, 333, 333, 556, 1000, 1000, 552, 278, 278, 278, 278, 500, 500, 500, 556, 556, 350, 1000, 1000, 240, 479, 333, 333, 604, 333, 167, 396, 556, 556, 1104, 556, 885, 516, 1146, 1000, 768, 600, 834, 834, 834, 834, 999, 500, 1000, 500, 1000, 500, 500, 494, 612, 823, 713, 584, 549, 713, 979, 722, 274, 549, 549, 583, 549, 549, 604, 584, 604, 604, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 729, 604, 604, 354, 354, 1000, 990, 990, 990, 990, 494, 604, 604, 604, 604, 354, 1021, 1052, 917, 750, 750, 531, 656, 594, 510, 500, 750, 750, 611, 611, 333, 333, 333, 333, 333, 333, 333, 333, 222, 222, 333, 333, 333, 333, 333, 333, 333, 333];
+exports.LiberationSansBoldItalicWidths = LiberationSansBoldItalicWidths;
+const LiberationSansBoldItalicMapping = [-1, -1, -1, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 402, 506, 507, 508, 509, 510, 511, 536, 537, 538, 539, 710, 711, 713, 728, 729, 730, 731, 732, 733, 900, 901, 902, 903, 904, 905, 906, 908, 910, 911, 912, 913, 914, 915, 916, 917, 918, 919, 920, 921, 922, 923, 924, 925, 926, 927, 928, 929, 931, 932, 933, 934, 935, 936, 937, 938, 939, 940, 941, 942, 943, 944, 945, 946, 947, 948, 949, 950, 951, 952, 953, 954, 955, 956, 957, 958, 959, 960, 961, 962, 963, 964, 965, 966, 967, 968, 969, 970, 971, 972, 973, 974, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044, 1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052, 1053, 1054, 1055, 1056, 1057, 1058, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074, 1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088, 1089, 1090, 1091, 1092, 1093, 1094, 1095, 1096, 1097, 1098, 1099, 1100, 1101, 1102, 1103, 1104, 1105, 1106, 1107, 1108, 1109, 1110, 1111, 1112, 1113, 1114, 1115, 1116, 1117, 1118, 1119, 1138, 1139, 1168, 1169, 7808, 7809, 7810, 7811, 7812, 7813, 7922, 7923, 8208, 8209, 8211, 8212, 8213, 8215, 8216, 8217, 8218, 8219, 8220, 8221, 8222, 8224, 8225, 8226, 8230, 8240, 8242, 8243, 8249, 8250, 8252, 8254, 8260, 8319, 8355, 8356, 8359, 8364, 8453, 8467, 8470, 8482, 8486, 8494, 8539, 8540, 8541, 8542, 8592, 8593, 8594, 8595, 8596, 8597, 8616, 8706, 8710, 8719, 8721, 8722, 8730, 8734, 8735, 8745, 8747, 8776, 8800, 8801, 8804, 8805, 8962, 8976, 8992, 8993, 9472, 9474, 9484, 9488, 9492, 9496, 9500, 9508, 9516, 9524, 9532, 9552, 9553, 9554, 9555, 9556, 9557, 9558, 9559, 9560, 9561, 9562, 9563, 9564, 9565, 9566, 9567, 9568, 9569, 9570, 9571, 9572, 9573, 9574, 9575, 9576, 9577, 9578, 9579, 9580, 9600, 9604, 9608, 9612, 9616, 9617, 9618, 9619, 9632, 9633, 9642, 9643, 9644, 9650, 9658, 9660, 9668, 9674, 9675, 9679, 9688, 9689, 9702, 9786, 9787, 9788, 9792, 9794, 9824, 9827, 9829, 9830, 9834, 9835, 9836, 61441, 61442, 61445, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+exports.LiberationSansBoldItalicMapping = LiberationSansBoldItalicMapping;
+const LiberationSansItalicWidths = [365, 0, 333, 278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556, 1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556, 333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556, 556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584, 333, 556, 556, 556, 556, 260, 556, 333, 737, 370, 556, 584, 737, 552, 400, 549, 333, 333, 333, 576, 537, 278, 333, 333, 365, 556, 834, 834, 834, 611, 667, 667, 667, 667, 667, 667, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 500, 556, 556, 556, 556, 278, 278, 278, 278, 556, 556, 556, 556, 556, 556, 556, 549, 611, 556, 556, 556, 556, 500, 556, 500, 667, 556, 667, 556, 667, 556, 722, 500, 722, 500, 722, 500, 722, 500, 722, 625, 722, 556, 667, 556, 667, 556, 667, 556, 667, 556, 667, 556, 778, 556, 778, 556, 778, 556, 778, 556, 722, 556, 722, 556, 278, 278, 278, 278, 278, 278, 278, 222, 278, 278, 733, 444, 500, 222, 667, 500, 500, 556, 222, 556, 222, 556, 281, 556, 400, 556, 222, 722, 556, 722, 556, 722, 556, 615, 723, 556, 778, 556, 778, 556, 778, 556, 1000, 944, 722, 333, 722, 333, 722, 333, 667, 500, 667, 500, 667, 500, 667, 500, 611, 278, 611, 354, 611, 278, 722, 556, 722, 556, 722, 556, 722, 556, 722, 556, 722, 556, 944, 722, 667, 500, 667, 611, 500, 611, 500, 611, 500, 222, 556, 667, 556, 1000, 889, 778, 611, 667, 500, 611, 278, 333, 333, 333, 333, 333, 333, 333, 333, 333, 333, 333, 667, 278, 789, 846, 389, 794, 865, 775, 222, 667, 667, 570, 671, 667, 611, 722, 778, 278, 667, 667, 833, 722, 648, 778, 725, 667, 600, 611, 667, 837, 667, 831, 761, 278, 667, 570, 439, 555, 222, 550, 570, 571, 500, 556, 439, 463, 555, 542, 222, 500, 492, 548, 500, 447, 556, 670, 573, 486, 603, 374, 550, 652, 546, 728, 779, 222, 550, 556, 550, 779, 667, 667, 843, 544, 708, 667, 278, 278, 500, 1066, 982, 844, 589, 715, 639, 724, 667, 651, 667, 544, 704, 667, 917, 614, 715, 715, 589, 686, 833, 722, 778, 725, 667, 722, 611, 639, 795, 667, 727, 673, 920, 923, 805, 886, 651, 694, 1022, 682, 556, 562, 522, 493, 553, 556, 688, 465, 556, 556, 472, 564, 686, 550, 556, 556, 556, 500, 833, 500, 835, 500, 572, 518, 830, 851, 621, 736, 526, 492, 752, 534, 556, 556, 556, 378, 496, 500, 222, 222, 222, 910, 828, 556, 472, 565, 500, 556, 778, 556, 492, 339, 944, 722, 944, 722, 944, 722, 667, 500, 333, 333, 556, 1000, 1000, 552, 222, 222, 222, 222, 333, 333, 333, 556, 556, 350, 1000, 1000, 188, 354, 333, 333, 500, 333, 167, 365, 556, 556, 1094, 556, 885, 323, 1083, 1000, 768, 600, 834, 834, 834, 834, 1000, 500, 998, 500, 1000, 500, 500, 494, 612, 823, 713, 584, 549, 713, 979, 719, 274, 549, 549, 584, 549, 549, 604, 584, 604, 604, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 729, 604, 604, 354, 354, 1000, 990, 990, 990, 990, 494, 604, 604, 604, 604, 354, 1021, 1052, 917, 750, 750, 531, 656, 594, 510, 500, 750, 750, 500, 500, 333, 333, 333, 333, 333, 333, 333, 333, 222, 222, 294, 294, 324, 324, 316, 328, 398, 285];
+exports.LiberationSansItalicWidths = LiberationSansItalicWidths;
+const LiberationSansItalicMapping = [-1, -1, -1, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 402, 506, 507, 508, 509, 510, 511, 536, 537, 538, 539, 710, 711, 713, 728, 729, 730, 731, 732, 733, 900, 901, 902, 903, 904, 905, 906, 908, 910, 911, 912, 913, 914, 915, 916, 917, 918, 919, 920, 921, 922, 923, 924, 925, 926, 927, 928, 929, 931, 932, 933, 934, 935, 936, 937, 938, 939, 940, 941, 942, 943, 944, 945, 946, 947, 948, 949, 950, 951, 952, 953, 954, 955, 956, 957, 958, 959, 960, 961, 962, 963, 964, 965, 966, 967, 968, 969, 970, 971, 972, 973, 974, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044, 1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052, 1053, 1054, 1055, 1056, 1057, 1058, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074, 1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088, 1089, 1090, 1091, 1092, 1093, 1094, 1095, 1096, 1097, 1098, 1099, 1100, 1101, 1102, 1103, 1104, 1105, 1106, 1107, 1108, 1109, 1110, 1111, 1112, 1113, 1114, 1115, 1116, 1117, 1118, 1119, 1138, 1139, 1168, 1169, 7808, 7809, 7810, 7811, 7812, 7813, 7922, 7923, 8208, 8209, 8211, 8212, 8213, 8215, 8216, 8217, 8218, 8219, 8220, 8221, 8222, 8224, 8225, 8226, 8230, 8240, 8242, 8243, 8249, 8250, 8252, 8254, 8260, 8319, 8355, 8356, 8359, 8364, 8453, 8467, 8470, 8482, 8486, 8494, 8539, 8540, 8541, 8542, 8592, 8593, 8594, 8595, 8596, 8597, 8616, 8706, 8710, 8719, 8721, 8722, 8730, 8734, 8735, 8745, 8747, 8776, 8800, 8801, 8804, 8805, 8962, 8976, 8992, 8993, 9472, 9474, 9484, 9488, 9492, 9496, 9500, 9508, 9516, 9524, 9532, 9552, 9553, 9554, 9555, 9556, 9557, 9558, 9559, 9560, 9561, 9562, 9563, 9564, 9565, 9566, 9567, 9568, 9569, 9570, 9571, 9572, 9573, 9574, 9575, 9576, 9577, 9578, 9579, 9580, 9600, 9604, 9608, 9612, 9616, 9617, 9618, 9619, 9632, 9633, 9642, 9643, 9644, 9650, 9658, 9660, 9668, 9674, 9675, 9679, 9688, 9689, 9702, 9786, 9787, 9788, 9792, 9794, 9824, 9827, 9829, 9830, 9834, 9835, 9836, 61441, 61442, 61445, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+exports.LiberationSansItalicMapping = LiberationSansItalicMapping;
+const LiberationSansRegularWidths = [365, 0, 333, 278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556, 1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556, 333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556, 556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584, 333, 556, 556, 556, 556, 260, 556, 333, 737, 370, 556, 584, 737, 552, 400, 549, 333, 333, 333, 576, 537, 278, 333, 333, 365, 556, 834, 834, 834, 611, 667, 667, 667, 667, 667, 667, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 500, 556, 556, 556, 556, 278, 278, 278, 278, 556, 556, 556, 556, 556, 556, 556, 549, 611, 556, 556, 556, 556, 500, 556, 500, 667, 556, 667, 556, 667, 556, 722, 500, 722, 500, 722, 500, 722, 500, 722, 615, 722, 556, 667, 556, 667, 556, 667, 556, 667, 556, 667, 556, 778, 556, 778, 556, 778, 556, 778, 556, 722, 556, 722, 556, 278, 278, 278, 278, 278, 278, 278, 222, 278, 278, 735, 444, 500, 222, 667, 500, 500, 556, 222, 556, 222, 556, 292, 556, 334, 556, 222, 722, 556, 722, 556, 722, 556, 604, 723, 556, 778, 556, 778, 556, 778, 556, 1000, 944, 722, 333, 722, 333, 722, 333, 667, 500, 667, 500, 667, 500, 667, 500, 611, 278, 611, 375, 611, 278, 722, 556, 722, 556, 722, 556, 722, 556, 722, 556, 722, 556, 944, 722, 667, 500, 667, 611, 500, 611, 500, 611, 500, 222, 556, 667, 556, 1000, 889, 778, 611, 667, 500, 611, 278, 333, 333, 333, 333, 333, 333, 333, 333, 333, 333, 333, 667, 278, 784, 838, 384, 774, 855, 752, 222, 667, 667, 551, 668, 667, 611, 722, 778, 278, 667, 668, 833, 722, 650, 778, 722, 667, 618, 611, 667, 798, 667, 835, 748, 278, 667, 578, 446, 556, 222, 547, 578, 575, 500, 557, 446, 441, 556, 556, 222, 500, 500, 576, 500, 448, 556, 690, 569, 482, 617, 395, 547, 648, 525, 713, 781, 222, 547, 556, 547, 781, 667, 667, 865, 542, 719, 667, 278, 278, 500, 1057, 1010, 854, 583, 722, 635, 719, 667, 656, 667, 542, 677, 667, 923, 604, 719, 719, 583, 656, 833, 722, 778, 719, 667, 722, 611, 635, 760, 667, 740, 667, 917, 938, 792, 885, 656, 719, 1010, 722, 556, 573, 531, 365, 583, 556, 669, 458, 559, 559, 438, 583, 688, 552, 556, 542, 556, 500, 458, 500, 823, 500, 573, 521, 802, 823, 625, 719, 521, 510, 750, 542, 556, 556, 556, 365, 510, 500, 222, 278, 222, 906, 812, 556, 438, 559, 500, 552, 778, 556, 489, 411, 944, 722, 944, 722, 944, 722, 667, 500, 333, 333, 556, 1000, 1000, 552, 222, 222, 222, 222, 333, 333, 333, 556, 556, 350, 1000, 1000, 188, 354, 333, 333, 500, 333, 167, 365, 556, 556, 1094, 556, 885, 323, 1073, 1000, 768, 600, 834, 834, 834, 834, 1000, 500, 1000, 500, 1000, 500, 500, 494, 612, 823, 713, 584, 549, 713, 979, 719, 274, 549, 549, 583, 549, 549, 604, 584, 604, 604, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 729, 604, 604, 354, 354, 1000, 990, 990, 990, 990, 494, 604, 604, 604, 604, 354, 1021, 1052, 917, 750, 750, 531, 656, 594, 510, 500, 750, 750, 500, 500, 333, 333, 333, 333, 333, 333, 333, 333, 222, 222, 294, 294, 324, 324, 316, 328, 398, 285];
+exports.LiberationSansRegularWidths = LiberationSansRegularWidths;
+const LiberationSansRegularMapping = [-1, -1, -1, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 402, 506, 507, 508, 509, 510, 511, 536, 537, 538, 539, 710, 711, 713, 728, 729, 730, 731, 732, 733, 900, 901, 902, 903, 904, 905, 906, 908, 910, 911, 912, 913, 914, 915, 916, 917, 918, 919, 920, 921, 922, 923, 924, 925, 926, 927, 928, 929, 931, 932, 933, 934, 935, 936, 937, 938, 939, 940, 941, 942, 943, 944, 945, 946, 947, 948, 949, 950, 951, 952, 953, 954, 955, 956, 957, 958, 959, 960, 961, 962, 963, 964, 965, 966, 967, 968, 969, 970, 971, 972, 973, 974, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044, 1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052, 1053, 1054, 1055, 1056, 1057, 1058, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074, 1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088, 1089, 1090, 1091, 1092, 1093, 1094, 1095, 1096, 1097, 1098, 1099, 1100, 1101, 1102, 1103, 1104, 1105, 1106, 1107, 1108, 1109, 1110, 1111, 1112, 1113, 1114, 1115, 1116, 1117, 1118, 1119, 1138, 1139, 1168, 1169, 7808, 7809, 7810, 7811, 7812, 7813, 7922, 7923, 8208, 8209, 8211, 8212, 8213, 8215, 8216, 8217, 8218, 8219, 8220, 8221, 8222, 8224, 8225, 8226, 8230, 8240, 8242, 8243, 8249, 8250, 8252, 8254, 8260, 8319, 8355, 8356, 8359, 8364, 8453, 8467, 8470, 8482, 8486, 8494, 8539, 8540, 8541, 8542, 8592, 8593, 8594, 8595, 8596, 8597, 8616, 8706, 8710, 8719, 8721, 8722, 8730, 8734, 8735, 8745, 8747, 8776, 8800, 8801, 8804, 8805, 8962, 8976, 8992, 8993, 9472, 9474, 9484, 9488, 9492, 9496, 9500, 9508, 9516, 9524, 9532, 9552, 9553, 9554, 9555, 9556, 9557, 9558, 9559, 9560, 9561, 9562, 9563, 9564, 9565, 9566, 9567, 9568, 9569, 9570, 9571, 9572, 9573, 9574, 9575, 9576, 9577, 9578, 9579, 9580, 9600, 9604, 9608, 9612, 9616, 9617, 9618, 9619, 9632, 9633, 9642, 9643, 9644, 9650, 9658, 9660, 9668, 9674, 9675, 9679, 9688, 9689, 9702, 9786, 9787, 9788, 9792, 9794, 9824, 9827, 9829, 9830, 9834, 9835, 9836, 61441, 61442, 61445, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+exports.LiberationSansRegularMapping = LiberationSansRegularMapping;
+
+/***/ }),
+/* 16 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.MyriadProRegularMetrics = exports.MyriadProRegularFactors = exports.MyriadProItalicMetrics = exports.MyriadProItalicFactors = exports.MyriadProBoldMetrics = exports.MyriadProBoldItalicMetrics = exports.MyriadProBoldItalicFactors = exports.MyriadProBoldFactors = void 0;
+const MyriadProBoldFactors = [1.36898, 1, 1, 0.72706, 0.80479, 0.83734, 0.98894, 0.99793, 0.9897, 0.93884, 0.86209, 0.94292, 0.94292, 1.16661, 1.02058, 0.93582, 0.96694, 0.93582, 1.19137, 0.99793, 0.99793, 0.99793, 0.99793, 0.99793, 0.99793, 0.99793, 0.99793, 0.99793, 0.99793, 0.78076, 0.78076, 1.02058, 1.02058, 1.02058, 0.72851, 0.78966, 0.90838, 0.83637, 0.82391, 0.96376, 0.80061, 0.86275, 0.8768, 0.95407, 1.0258, 0.73901, 0.85022, 0.83655, 1.0156, 0.95546, 0.92179, 0.87107, 0.92179, 0.82114, 0.8096, 0.89713, 0.94438, 0.95353, 0.94083, 0.91905, 0.90406, 0.9446, 0.94292, 1.18777, 0.94292, 1.02058, 0.89903, 0.90088, 0.94938, 0.97898, 0.81093, 0.97571, 0.94938, 1.024, 0.9577, 0.95933, 0.98621, 1.0474, 0.97455, 0.98981, 0.9672, 0.95933, 0.9446, 0.97898, 0.97407, 0.97646, 0.78036, 1.10208, 0.95442, 0.95298, 0.97579, 0.9332, 0.94039, 0.938, 0.80687, 1.01149, 0.80687, 1.02058, 0.80479, 0.99793, 0.99793, 0.99793, 0.99793, 1.01149, 1.00872, 0.90088, 0.91882, 1.0213, 0.8361, 1.02058, 0.62295, 0.54324, 0.89022, 1.08595, 1, 1, 0.90088, 1, 0.97455, 0.93582, 0.90088, 1, 1.05686, 0.8361, 0.99642, 0.99642, 0.99642, 0.72851, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.868, 0.82391, 0.80061, 0.80061, 0.80061, 0.80061, 1.0258, 1.0258, 1.0258, 1.0258, 0.97484, 0.95546, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 1.02058, 0.92179, 0.94438, 0.94438, 0.94438, 0.94438, 0.90406, 0.86958, 0.98225, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.9031, 0.81093, 0.94938, 0.94938, 0.94938, 0.94938, 0.98621, 0.98621, 0.98621, 0.98621, 0.93969, 0.95933, 0.9446, 0.9446, 0.9446, 0.9446, 0.9446, 1.08595, 0.9446, 0.95442, 0.95442, 0.95442, 0.95442, 0.94039, 0.97898, 0.94039, 0.90838, 0.94938, 0.90838, 0.94938, 0.90838, 0.94938, 0.82391, 0.81093, 0.82391, 0.81093, 0.82391, 0.81093, 0.82391, 0.81093, 0.96376, 0.84313, 0.97484, 0.97571, 0.80061, 0.94938, 0.80061, 0.94938, 0.80061, 0.94938, 0.80061, 0.94938, 0.80061, 0.94938, 0.8768, 0.9577, 0.8768, 0.9577, 0.8768, 0.9577, 1, 1, 0.95407, 0.95933, 0.97069, 0.95933, 1.0258, 0.98621, 1.0258, 0.98621, 1.0258, 0.98621, 1.0258, 0.98621, 1.0258, 0.98621, 0.887, 1.01591, 0.73901, 1.0474, 1, 1, 0.97455, 0.83655, 0.98981, 1, 1, 0.83655, 0.73977, 0.83655, 0.73903, 0.84638, 1.033, 0.95546, 0.95933, 1, 1, 0.95546, 0.95933, 0.8271, 0.95417, 0.95933, 0.92179, 0.9446, 0.92179, 0.9446, 0.92179, 0.9446, 0.936, 0.91964, 0.82114, 0.97646, 1, 1, 0.82114, 0.97646, 0.8096, 0.78036, 0.8096, 0.78036, 1, 1, 0.8096, 0.78036, 1, 1, 0.89713, 0.77452, 0.89713, 1.10208, 0.94438, 0.95442, 0.94438, 0.95442, 0.94438, 0.95442, 0.94438, 0.95442, 0.94438, 0.95442, 0.94438, 0.95442, 0.94083, 0.97579, 0.90406, 0.94039, 0.90406, 0.9446, 0.938, 0.9446, 0.938, 0.9446, 0.938, 1, 0.99793, 0.90838, 0.94938, 0.868, 0.9031, 0.92179, 0.9446, 1, 1, 0.89713, 1.10208, 0.90088, 0.90088, 0.90088, 0.90088, 0.90088, 0.90088, 0.90088, 0.90088, 0.90088, 0.90989, 0.9358, 0.91945, 0.83181, 0.75261, 0.87992, 0.82976, 0.96034, 0.83689, 0.97268, 1.0078, 0.90838, 0.83637, 0.8019, 0.90157, 0.80061, 0.9446, 0.95407, 0.92436, 1.0258, 0.85022, 0.97153, 1.0156, 0.95546, 0.89192, 0.92179, 0.92361, 0.87107, 0.96318, 0.89713, 0.93704, 0.95638, 0.91905, 0.91709, 0.92796, 1.0258, 0.93704, 0.94836, 1.0373, 0.95933, 1.0078, 0.95871, 0.94836, 0.96174, 0.92601, 0.9498, 0.98607, 0.95776, 0.95933, 1.05453, 1.0078, 0.98275, 0.9314, 0.95617, 0.91701, 1.05993, 0.9446, 0.78367, 0.9553, 1, 0.86832, 1.0128, 0.95871, 0.99394, 0.87548, 0.96361, 0.86774, 1.0078, 0.95871, 0.9446, 0.95871, 0.86774, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.94083, 0.97579, 0.94083, 0.97579, 0.94083, 0.97579, 0.90406, 0.94039, 0.96694, 1, 0.89903, 1, 1, 1, 0.93582, 0.93582, 0.93582, 1, 0.908, 0.908, 0.918, 0.94219, 0.94219, 0.96544, 1, 1.285, 1, 1, 0.81079, 0.81079, 1, 1, 0.74854, 1, 1, 1, 1, 0.99793, 1, 1, 1, 0.65, 1, 1.36145, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.17173, 1, 0.80535, 0.76169, 1.02058, 1.0732, 1.05486, 1, 1, 1.30692, 1.08595, 1.08595, 1, 1.08595, 1.08595, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.16161, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.MyriadProBoldFactors = MyriadProBoldFactors;
+const MyriadProBoldMetrics = {
+  lineHeight: 1.2,
+  lineGap: 0.2
+};
+exports.MyriadProBoldMetrics = MyriadProBoldMetrics;
+const MyriadProBoldItalicFactors = [1.36898, 1, 1, 0.66227, 0.80779, 0.81625, 0.97276, 0.97276, 0.97733, 0.92222, 0.83266, 0.94292, 0.94292, 1.16148, 1.02058, 0.93582, 0.96694, 0.93582, 1.17337, 0.97276, 0.97276, 0.97276, 0.97276, 0.97276, 0.97276, 0.97276, 0.97276, 0.97276, 0.97276, 0.78076, 0.78076, 1.02058, 1.02058, 1.02058, 0.71541, 0.76813, 0.85576, 0.80591, 0.80729, 0.94299, 0.77512, 0.83655, 0.86523, 0.92222, 0.98621, 0.71743, 0.81698, 0.79726, 0.98558, 0.92222, 0.90637, 0.83809, 0.90637, 0.80729, 0.76463, 0.86275, 0.90699, 0.91605, 0.9154, 0.85308, 0.85458, 0.90531, 0.94292, 1.21296, 0.94292, 1.02058, 0.89903, 1.18616, 0.99613, 0.91677, 0.78216, 0.91677, 0.90083, 0.98796, 0.9135, 0.92168, 0.95381, 0.98981, 0.95298, 0.95381, 0.93459, 0.92168, 0.91513, 0.92004, 0.91677, 0.95077, 0.748, 1.04502, 0.91677, 0.92061, 0.94236, 0.89544, 0.89364, 0.9, 0.80687, 0.8578, 0.80687, 1.02058, 0.80779, 0.97276, 0.97276, 0.97276, 0.97276, 0.8578, 0.99973, 1.18616, 0.91339, 1.08074, 0.82891, 1.02058, 0.55509, 0.71526, 0.89022, 1.08595, 1, 1, 1.18616, 1, 0.96736, 0.93582, 1.18616, 1, 1.04864, 0.82711, 0.99043, 0.99043, 0.99043, 0.71541, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.845, 0.80729, 0.77512, 0.77512, 0.77512, 0.77512, 0.98621, 0.98621, 0.98621, 0.98621, 0.95961, 0.92222, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 1.02058, 0.90251, 0.90699, 0.90699, 0.90699, 0.90699, 0.85458, 0.83659, 0.94951, 0.99613, 0.99613, 0.99613, 0.99613, 0.99613, 0.99613, 0.85811, 0.78216, 0.90083, 0.90083, 0.90083, 0.90083, 0.95381, 0.95381, 0.95381, 0.95381, 0.9135, 0.92168, 0.91513, 0.91513, 0.91513, 0.91513, 0.91513, 1.08595, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.89364, 0.92332, 0.89364, 0.85576, 0.99613, 0.85576, 0.99613, 0.85576, 0.99613, 0.80729, 0.78216, 0.80729, 0.78216, 0.80729, 0.78216, 0.80729, 0.78216, 0.94299, 0.76783, 0.95961, 0.91677, 0.77512, 0.90083, 0.77512, 0.90083, 0.77512, 0.90083, 0.77512, 0.90083, 0.77512, 0.90083, 0.86523, 0.9135, 0.86523, 0.9135, 0.86523, 0.9135, 1, 1, 0.92222, 0.92168, 0.92222, 0.92168, 0.98621, 0.95381, 0.98621, 0.95381, 0.98621, 0.95381, 0.98621, 0.95381, 0.98621, 0.95381, 0.86036, 0.97096, 0.71743, 0.98981, 1, 1, 0.95298, 0.79726, 0.95381, 1, 1, 0.79726, 0.6894, 0.79726, 0.74321, 0.81691, 1.0006, 0.92222, 0.92168, 1, 1, 0.92222, 0.92168, 0.79464, 0.92098, 0.92168, 0.90637, 0.91513, 0.90637, 0.91513, 0.90637, 0.91513, 0.909, 0.87514, 0.80729, 0.95077, 1, 1, 0.80729, 0.95077, 0.76463, 0.748, 0.76463, 0.748, 1, 1, 0.76463, 0.748, 1, 1, 0.86275, 0.72651, 0.86275, 1.04502, 0.90699, 0.91677, 0.90699, 0.91677, 0.90699, 0.91677, 0.90699, 0.91677, 0.90699, 0.91677, 0.90699, 0.91677, 0.9154, 0.94236, 0.85458, 0.89364, 0.85458, 0.90531, 0.9, 0.90531, 0.9, 0.90531, 0.9, 1, 0.97276, 0.85576, 0.99613, 0.845, 0.85811, 0.90251, 0.91677, 1, 1, 0.86275, 1.04502, 1.18616, 1.18616, 1.18616, 1.18616, 1.18616, 1.18616, 1.18616, 1.18616, 1.18616, 1.00899, 1.30628, 0.85576, 0.80178, 0.66862, 0.7927, 0.69323, 0.88127, 0.72459, 0.89711, 0.95381, 0.85576, 0.80591, 0.7805, 0.94729, 0.77512, 0.90531, 0.92222, 0.90637, 0.98621, 0.81698, 0.92655, 0.98558, 0.92222, 0.85359, 0.90637, 0.90976, 0.83809, 0.94523, 0.86275, 0.83509, 0.93157, 0.85308, 0.83392, 0.92346, 0.98621, 0.83509, 0.92886, 0.91324, 0.92168, 0.95381, 0.90646, 0.92886, 0.90557, 0.86847, 0.90276, 0.91324, 0.86842, 0.92168, 0.99531, 0.95381, 0.9224, 0.85408, 0.92699, 0.86847, 1.0051, 0.91513, 0.80487, 0.93481, 1, 0.88159, 1.05214, 0.90646, 0.97355, 0.81539, 0.89398, 0.85923, 0.95381, 0.90646, 0.91513, 0.90646, 0.85923, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.9154, 0.94236, 0.9154, 0.94236, 0.9154, 0.94236, 0.85458, 0.89364, 0.96694, 1, 0.89903, 1, 1, 1, 0.91782, 0.91782, 0.91782, 1, 0.896, 0.896, 0.896, 0.9332, 0.9332, 0.95973, 1, 1.26, 1, 1, 0.80479, 0.80178, 1, 1, 0.85633, 1, 1, 1, 1, 0.97276, 1, 1, 1, 0.698, 1, 1.36145, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.14542, 1, 0.79199, 0.78694, 1.02058, 1.03493, 1.05486, 1, 1, 1.23026, 1.08595, 1.08595, 1, 1.08595, 1.08595, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.20006, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.MyriadProBoldItalicFactors = MyriadProBoldItalicFactors;
+const MyriadProBoldItalicMetrics = {
+  lineHeight: 1.2,
+  lineGap: 0.2
+};
+exports.MyriadProBoldItalicMetrics = MyriadProBoldItalicMetrics;
+const MyriadProItalicFactors = [1.36898, 1, 1, 0.65507, 0.84943, 0.85639, 0.88465, 0.88465, 0.86936, 0.88307, 0.86948, 0.85283, 0.85283, 1.06383, 1.02058, 0.75945, 0.9219, 0.75945, 1.17337, 0.88465, 0.88465, 0.88465, 0.88465, 0.88465, 0.88465, 0.88465, 0.88465, 0.88465, 0.88465, 0.75945, 0.75945, 1.02058, 1.02058, 1.02058, 0.69046, 0.70926, 0.85158, 0.77812, 0.76852, 0.89591, 0.70466, 0.76125, 0.80094, 0.86822, 0.83864, 0.728, 0.77212, 0.79475, 0.93637, 0.87514, 0.8588, 0.76013, 0.8588, 0.72421, 0.69866, 0.77598, 0.85991, 0.80811, 0.87832, 0.78112, 0.77512, 0.8562, 1.0222, 1.18417, 1.0222, 1.27014, 0.89903, 1.15012, 0.93859, 0.94399, 0.846, 0.94399, 0.81453, 1.0186, 0.94219, 0.96017, 1.03075, 1.02175, 0.912, 1.03075, 0.96998, 0.96017, 0.93859, 0.94399, 0.94399, 0.95493, 0.746, 1.12658, 0.94578, 0.91, 0.979, 0.882, 0.882, 0.83, 0.85034, 0.83537, 0.85034, 1.02058, 0.70869, 0.88465, 0.88465, 0.88465, 0.88465, 0.83537, 0.90083, 1.15012, 0.9161, 0.94565, 0.73541, 1.02058, 0.53609, 0.69353, 0.79519, 1.08595, 1, 1, 1.15012, 1, 0.91974, 0.75945, 1.15012, 1, 0.9446, 0.73361, 0.9005, 0.9005, 0.9005, 0.62864, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.773, 0.76852, 0.70466, 0.70466, 0.70466, 0.70466, 0.83864, 0.83864, 0.83864, 0.83864, 0.90561, 0.87514, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 1.02058, 0.85751, 0.85991, 0.85991, 0.85991, 0.85991, 0.77512, 0.76013, 0.88075, 0.93859, 0.93859, 0.93859, 0.93859, 0.93859, 0.93859, 0.8075, 0.846, 0.81453, 0.81453, 0.81453, 0.81453, 0.82424, 0.82424, 0.82424, 0.82424, 0.9278, 0.96017, 0.93859, 0.93859, 0.93859, 0.93859, 0.93859, 1.08595, 0.8562, 0.94578, 0.94578, 0.94578, 0.94578, 0.882, 0.94578, 0.882, 0.85158, 0.93859, 0.85158, 0.93859, 0.85158, 0.93859, 0.76852, 0.846, 0.76852, 0.846, 0.76852, 0.846, 0.76852, 0.846, 0.89591, 0.8544, 0.90561, 0.94399, 0.70466, 0.81453, 0.70466, 0.81453, 0.70466, 0.81453, 0.70466, 0.81453, 0.70466, 0.81453, 0.80094, 0.94219, 0.80094, 0.94219, 0.80094, 0.94219, 1, 1, 0.86822, 0.96017, 0.86822, 0.96017, 0.83864, 0.82424, 0.83864, 0.82424, 0.83864, 0.82424, 0.83864, 1.03075, 0.83864, 0.82424, 0.81402, 1.02738, 0.728, 1.02175, 1, 1, 0.912, 0.79475, 1.03075, 1, 1, 0.79475, 0.83911, 0.79475, 0.66266, 0.80553, 1.06676, 0.87514, 0.96017, 1, 1, 0.87514, 0.96017, 0.86865, 0.87396, 0.96017, 0.8588, 0.93859, 0.8588, 0.93859, 0.8588, 0.93859, 0.867, 0.84759, 0.72421, 0.95493, 1, 1, 0.72421, 0.95493, 0.69866, 0.746, 0.69866, 0.746, 1, 1, 0.69866, 0.746, 1, 1, 0.77598, 0.88417, 0.77598, 1.12658, 0.85991, 0.94578, 0.85991, 0.94578, 0.85991, 0.94578, 0.85991, 0.94578, 0.85991, 0.94578, 0.85991, 0.94578, 0.87832, 0.979, 0.77512, 0.882, 0.77512, 0.8562, 0.83, 0.8562, 0.83, 0.8562, 0.83, 1, 0.88465, 0.85158, 0.93859, 0.773, 0.8075, 0.85751, 0.8562, 1, 1, 0.77598, 1.12658, 1.15012, 1.15012, 1.15012, 1.15012, 1.15012, 1.15313, 1.15012, 1.15012, 1.15012, 1.08106, 1.03901, 0.85158, 0.77025, 0.62264, 0.7646, 0.65351, 0.86026, 0.69461, 0.89947, 1.03075, 0.85158, 0.77812, 0.76449, 0.88836, 0.70466, 0.8562, 0.86822, 0.8588, 0.83864, 0.77212, 0.85308, 0.93637, 0.87514, 0.82352, 0.8588, 0.85701, 0.76013, 0.89058, 0.77598, 0.8156, 0.82565, 0.78112, 0.77899, 0.89386, 0.83864, 0.8156, 0.9486, 0.92388, 0.96186, 1.03075, 0.91123, 0.9486, 0.93298, 0.878, 0.93942, 0.92388, 0.84596, 0.96186, 0.95119, 1.03075, 0.922, 0.88787, 0.95829, 0.88, 0.93559, 0.93859, 0.78815, 0.93758, 1, 0.89217, 1.03737, 0.91123, 0.93969, 0.77487, 0.85769, 0.86799, 1.03075, 0.91123, 0.93859, 0.91123, 0.86799, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.87832, 0.979, 0.87832, 0.979, 0.87832, 0.979, 0.77512, 0.882, 0.9219, 1, 0.89903, 1, 1, 1, 0.87321, 0.87321, 0.87321, 1, 1.027, 1.027, 1.027, 0.86847, 0.86847, 0.79121, 1, 1.124, 1, 1, 0.73572, 0.73572, 1, 1, 0.85034, 1, 1, 1, 1, 0.88465, 1, 1, 1, 0.669, 1, 1.36145, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.04828, 1, 0.74948, 0.75187, 1.02058, 0.98391, 1.02119, 1, 1, 1.06233, 1.08595, 1.08595, 1, 1.08595, 1.08595, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.05233, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.MyriadProItalicFactors = MyriadProItalicFactors;
+const MyriadProItalicMetrics = {
+  lineHeight: 1.2,
+  lineGap: 0.2
+};
+exports.MyriadProItalicMetrics = MyriadProItalicMetrics;
+const MyriadProRegularFactors = [1.36898, 1, 1, 0.76305, 0.82784, 0.94935, 0.89364, 0.92241, 0.89073, 0.90706, 0.98472, 0.85283, 0.85283, 1.0664, 1.02058, 0.74505, 0.9219, 0.74505, 1.23456, 0.92241, 0.92241, 0.92241, 0.92241, 0.92241, 0.92241, 0.92241, 0.92241, 0.92241, 0.92241, 0.74505, 0.74505, 1.02058, 1.02058, 1.02058, 0.73002, 0.72601, 0.91755, 0.8126, 0.80314, 0.92222, 0.73764, 0.79726, 0.83051, 0.90284, 0.86023, 0.74, 0.8126, 0.84869, 0.96518, 0.91115, 0.8858, 0.79761, 0.8858, 0.74498, 0.73914, 0.81363, 0.89591, 0.83659, 0.89633, 0.85608, 0.8111, 0.90531, 1.0222, 1.22736, 1.0222, 1.27014, 0.89903, 0.90088, 0.86667, 1.0231, 0.896, 1.01411, 0.90083, 1.05099, 1.00512, 0.99793, 1.05326, 1.09377, 0.938, 1.06226, 1.00119, 0.99793, 0.98714, 1.0231, 1.01231, 0.98196, 0.792, 1.19137, 0.99074, 0.962, 1.01915, 0.926, 0.942, 0.856, 0.85034, 0.92006, 0.85034, 1.02058, 0.69067, 0.92241, 0.92241, 0.92241, 0.92241, 0.92006, 0.9332, 0.90088, 0.91882, 0.93484, 0.75339, 1.02058, 0.56866, 0.54324, 0.79519, 1.08595, 1, 1, 0.90088, 1, 0.95325, 0.74505, 0.90088, 1, 0.97198, 0.75339, 0.91009, 0.91009, 0.91009, 0.66466, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.788, 0.80314, 0.73764, 0.73764, 0.73764, 0.73764, 0.86023, 0.86023, 0.86023, 0.86023, 0.92915, 0.91115, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 1.02058, 0.8858, 0.89591, 0.89591, 0.89591, 0.89591, 0.8111, 0.79611, 0.89713, 0.86667, 0.86667, 0.86667, 0.86667, 0.86667, 0.86667, 0.86936, 0.896, 0.90083, 0.90083, 0.90083, 0.90083, 0.84224, 0.84224, 0.84224, 0.84224, 0.97276, 0.99793, 0.98714, 0.98714, 0.98714, 0.98714, 0.98714, 1.08595, 0.89876, 0.99074, 0.99074, 0.99074, 0.99074, 0.942, 1.0231, 0.942, 0.91755, 0.86667, 0.91755, 0.86667, 0.91755, 0.86667, 0.80314, 0.896, 0.80314, 0.896, 0.80314, 0.896, 0.80314, 0.896, 0.92222, 0.93372, 0.92915, 1.01411, 0.73764, 0.90083, 0.73764, 0.90083, 0.73764, 0.90083, 0.73764, 0.90083, 0.73764, 0.90083, 0.83051, 1.00512, 0.83051, 1.00512, 0.83051, 1.00512, 1, 1, 0.90284, 0.99793, 0.90976, 0.99793, 0.86023, 0.84224, 0.86023, 0.84224, 0.86023, 0.84224, 0.86023, 1.05326, 0.86023, 0.84224, 0.82873, 1.07469, 0.74, 1.09377, 1, 1, 0.938, 0.84869, 1.06226, 1, 1, 0.84869, 0.83704, 0.84869, 0.81441, 0.85588, 1.08927, 0.91115, 0.99793, 1, 1, 0.91115, 0.99793, 0.91887, 0.90991, 0.99793, 0.8858, 0.98714, 0.8858, 0.98714, 0.8858, 0.98714, 0.894, 0.91434, 0.74498, 0.98196, 1, 1, 0.74498, 0.98196, 0.73914, 0.792, 0.73914, 0.792, 1, 1, 0.73914, 0.792, 1, 1, 0.81363, 0.904, 0.81363, 1.19137, 0.89591, 0.99074, 0.89591, 0.99074, 0.89591, 0.99074, 0.89591, 0.99074, 0.89591, 0.99074, 0.89591, 0.99074, 0.89633, 1.01915, 0.8111, 0.942, 0.8111, 0.90531, 0.856, 0.90531, 0.856, 0.90531, 0.856, 1, 0.92241, 0.91755, 0.86667, 0.788, 0.86936, 0.8858, 0.89876, 1, 1, 0.81363, 1.19137, 0.90088, 0.90088, 0.90088, 0.90088, 0.90088, 0.90088, 0.90088, 0.90088, 0.90088, 0.90388, 1.03901, 0.92138, 0.78105, 0.7154, 0.86169, 0.80513, 0.94007, 0.82528, 0.98612, 1.06226, 0.91755, 0.8126, 0.81884, 0.92819, 0.73764, 0.90531, 0.90284, 0.8858, 0.86023, 0.8126, 0.91172, 0.96518, 0.91115, 0.83089, 0.8858, 0.87791, 0.79761, 0.89297, 0.81363, 0.88157, 0.89992, 0.85608, 0.81992, 0.94307, 0.86023, 0.88157, 0.95308, 0.98699, 0.99793, 1.06226, 0.95817, 0.95308, 0.97358, 0.928, 0.98088, 0.98699, 0.92761, 0.99793, 0.96017, 1.06226, 0.986, 0.944, 0.95978, 0.938, 0.96705, 0.98714, 0.80442, 0.98972, 1, 0.89762, 1.04552, 0.95817, 0.99007, 0.87064, 0.91879, 0.88888, 1.06226, 0.95817, 0.98714, 0.95817, 0.88888, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.89633, 1.01915, 0.89633, 1.01915, 0.89633, 1.01915, 0.8111, 0.942, 0.9219, 1, 0.89903, 1, 1, 1, 0.93173, 0.93173, 0.93173, 1, 1.06304, 1.06304, 1.06904, 0.89903, 0.89903, 0.80549, 1, 1.156, 1, 1, 0.76575, 0.76575, 1, 1, 0.72458, 1, 1, 1, 1, 0.92241, 1, 1, 1, 0.619, 1, 1.36145, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.07257, 1, 0.74705, 0.71119, 1.02058, 1.024, 1.02119, 1, 1, 1.1536, 1.08595, 1.08595, 1, 1.08595, 1.08595, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.05638, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.MyriadProRegularFactors = MyriadProRegularFactors;
+const MyriadProRegularMetrics = {
+  lineHeight: 1.2,
+  lineGap: 0.2
+};
+exports.MyriadProRegularMetrics = MyriadProRegularMetrics;
+
+/***/ }),
+/* 17 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.SegoeuiRegularMetrics = exports.SegoeuiRegularFactors = exports.SegoeuiItalicMetrics = exports.SegoeuiItalicFactors = exports.SegoeuiBoldMetrics = exports.SegoeuiBoldItalicMetrics = exports.SegoeuiBoldItalicFactors = exports.SegoeuiBoldFactors = void 0;
+const SegoeuiBoldFactors = [1.76738, 1, 1, 0.99297, 0.9824, 1.04016, 1.06497, 1.03424, 0.97529, 1.17647, 1.23203, 1.1085, 1.1085, 1.16939, 1.2107, 0.9754, 1.21408, 0.9754, 1.59578, 1.03424, 1.03424, 1.03424, 1.03424, 1.03424, 1.03424, 1.03424, 1.03424, 1.03424, 1.03424, 0.81378, 0.81378, 1.2107, 1.2107, 1.2107, 0.71703, 0.97847, 0.97363, 0.88776, 0.8641, 1.02096, 0.79795, 0.85132, 0.914, 1.06085, 1.1406, 0.8007, 0.89858, 0.83693, 1.14889, 1.09398, 0.97489, 0.92094, 0.97489, 0.90399, 0.84041, 0.95923, 1.00135, 1, 1.06467, 0.98243, 0.90996, 0.99361, 1.1085, 1.56942, 1.1085, 1.2107, 0.74627, 0.94282, 0.96752, 1.01519, 0.86304, 1.01359, 0.97278, 1.15103, 1.01359, 0.98561, 1.02285, 1.02285, 1.00527, 1.02285, 1.0302, 0.99041, 1.0008, 1.01519, 1.01359, 1.02258, 0.79104, 1.16862, 0.99041, 0.97454, 1.02511, 0.99298, 0.96752, 0.95801, 0.94856, 1.16579, 0.94856, 1.2107, 0.9824, 1.03424, 1.03424, 1, 1.03424, 1.16579, 0.8727, 1.3871, 1.18622, 1.10818, 1.04478, 1.2107, 1.18622, 0.75155, 0.94994, 1.28826, 1.21408, 1.21408, 0.91056, 1, 0.91572, 0.9754, 0.64663, 1.18328, 1.24866, 1.04478, 1.14169, 1.15749, 1.17389, 0.71703, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.93506, 0.8641, 0.79795, 0.79795, 0.79795, 0.79795, 1.1406, 1.1406, 1.1406, 1.1406, 1.02096, 1.09398, 0.97426, 0.97426, 0.97426, 0.97426, 0.97426, 1.2107, 0.97489, 1.00135, 1.00135, 1.00135, 1.00135, 0.90996, 0.92094, 1.02798, 0.96752, 0.96752, 0.96752, 0.96752, 0.96752, 0.96752, 0.93136, 0.86304, 0.97278, 0.97278, 0.97278, 0.97278, 1.02285, 1.02285, 1.02285, 1.02285, 0.97122, 0.99041, 1, 1, 1, 1, 1, 1.28826, 1.0008, 0.99041, 0.99041, 0.99041, 0.99041, 0.96752, 1.01519, 0.96752, 0.97363, 0.96752, 0.97363, 0.96752, 0.97363, 0.96752, 0.8641, 0.86304, 0.8641, 0.86304, 0.8641, 0.86304, 0.8641, 0.86304, 1.02096, 1.03057, 1.02096, 1.03517, 0.79795, 0.97278, 0.79795, 0.97278, 0.79795, 0.97278, 0.79795, 0.97278, 0.79795, 0.97278, 0.914, 1.01359, 0.914, 1.01359, 0.914, 1.01359, 1, 1, 1.06085, 0.98561, 1.06085, 1.00879, 1.1406, 1.02285, 1.1406, 1.02285, 1.1406, 1.02285, 1.1406, 1.02285, 1.1406, 1.02285, 0.97138, 1.08692, 0.8007, 1.02285, 1, 1, 1.00527, 0.83693, 1.02285, 1, 1, 0.83693, 0.9455, 0.83693, 0.90418, 0.83693, 1.13005, 1.09398, 0.99041, 1, 1, 1.09398, 0.99041, 0.96692, 1.09251, 0.99041, 0.97489, 1.0008, 0.97489, 1.0008, 0.97489, 1.0008, 0.93994, 0.97931, 0.90399, 1.02258, 1, 1, 0.90399, 1.02258, 0.84041, 0.79104, 0.84041, 0.79104, 0.84041, 0.79104, 0.84041, 0.79104, 1, 1, 0.95923, 1.07034, 0.95923, 1.16862, 1.00135, 0.99041, 1.00135, 0.99041, 1.00135, 0.99041, 1.00135, 0.99041, 1.00135, 0.99041, 1.00135, 0.99041, 1.06467, 1.02511, 0.90996, 0.96752, 0.90996, 0.99361, 0.95801, 0.99361, 0.95801, 0.99361, 0.95801, 1.07733, 1.03424, 0.97363, 0.96752, 0.93506, 0.93136, 0.97489, 1.0008, 1, 1, 0.95923, 1.16862, 1.15103, 1.15103, 1.01173, 1.03959, 0.75953, 0.81378, 0.79912, 1.15103, 1.21994, 0.95161, 0.87815, 1.01149, 0.81525, 0.7676, 0.98167, 1.01134, 1.02546, 0.84097, 1.03089, 1.18102, 0.97363, 0.88776, 0.85134, 0.97826, 0.79795, 0.99361, 1.06085, 0.97489, 1.1406, 0.89858, 1.0388, 1.14889, 1.09398, 0.86039, 0.97489, 1.0595, 0.92094, 0.94793, 0.95923, 0.90996, 0.99346, 0.98243, 1.02112, 0.95493, 1.1406, 0.90996, 1.03574, 1.02597, 1.0008, 1.18102, 1.06628, 1.03574, 1.0192, 1.01932, 1.00886, 0.97531, 1.0106, 1.0008, 1.13189, 1.18102, 1.02277, 0.98683, 1.0016, 0.99561, 1.07237, 1.0008, 0.90434, 0.99921, 0.93803, 0.8965, 1.23085, 1.06628, 1.04983, 0.96268, 1.0499, 0.98439, 1.18102, 1.06628, 1.0008, 1.06628, 0.98439, 0.79795, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.09466, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.97278, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.02065, 1, 1, 1, 1, 1, 1, 1.06467, 1.02511, 1.06467, 1.02511, 1.06467, 1.02511, 0.90996, 0.96752, 1, 1.21408, 0.89903, 1, 1, 0.75155, 1.04394, 1.04394, 1.04394, 1.04394, 0.98633, 0.98633, 0.98633, 0.73047, 0.73047, 1.20642, 0.91211, 1.25635, 1.222, 1.02956, 1.03372, 1.03372, 0.96039, 1.24633, 1, 1.12454, 0.93503, 1.03424, 1.19687, 1.03424, 1, 1, 1, 0.771, 1, 1, 1.15749, 1.15749, 1.15749, 1.10948, 0.86279, 0.94434, 0.86279, 0.94434, 0.86182, 1, 1, 1.16897, 1, 0.96085, 0.90137, 1.2107, 1.18416, 1.13973, 0.69825, 0.9716, 2.10339, 1.29004, 1.29004, 1.21172, 1.29004, 1.29004, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.42603, 1, 0.99862, 0.99862, 1, 0.87025, 0.87025, 0.87025, 0.87025, 1.18874, 1.42603, 1, 1.42603, 1.42603, 0.99862, 1, 1, 1, 1, 1, 1.2886, 1.04315, 1.15296, 1.34163, 1, 1, 1, 1.09193, 1.09193, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.SegoeuiBoldFactors = SegoeuiBoldFactors;
+const SegoeuiBoldMetrics = {
+  lineHeight: 1.33008,
+  lineGap: 0
+};
+exports.SegoeuiBoldMetrics = SegoeuiBoldMetrics;
+const SegoeuiBoldItalicFactors = [1.76738, 1, 1, 0.98946, 1.03959, 1.04016, 1.02809, 1.036, 0.97639, 1.10953, 1.23203, 1.11144, 1.11144, 1.16939, 1.21237, 0.9754, 1.21261, 0.9754, 1.59754, 1.036, 1.036, 1.036, 1.036, 1.036, 1.036, 1.036, 1.036, 1.036, 1.036, 0.81378, 0.81378, 1.21237, 1.21237, 1.21237, 0.73541, 0.97847, 0.97363, 0.89723, 0.87897, 1.0426, 0.79429, 0.85292, 0.91149, 1.05815, 1.1406, 0.79631, 0.90128, 0.83853, 1.04396, 1.10615, 0.97552, 0.94436, 0.97552, 0.88641, 0.80527, 0.96083, 1.00135, 1, 1.06777, 0.9817, 0.91142, 0.99361, 1.11144, 1.57293, 1.11144, 1.21237, 0.74627, 1.31818, 1.06585, 0.97042, 0.83055, 0.97042, 0.93503, 1.1261, 0.97042, 0.97922, 1.14236, 0.94552, 1.01054, 1.14236, 1.02471, 0.97922, 0.94165, 0.97042, 0.97042, 1.0276, 0.78929, 1.1261, 0.97922, 0.95874, 1.02197, 0.98507, 0.96752, 0.97168, 0.95107, 1.16579, 0.95107, 1.21237, 1.03959, 1.036, 1.036, 1, 1.036, 1.16579, 0.87357, 1.31818, 1.18754, 1.26781, 1.05356, 1.21237, 1.18622, 0.79487, 0.94994, 1.29004, 1.24047, 1.24047, 1.31818, 1, 0.91484, 0.9754, 1.31818, 1.1349, 1.24866, 1.05356, 1.13934, 1.15574, 1.17389, 0.73541, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.94385, 0.87897, 0.79429, 0.79429, 0.79429, 0.79429, 1.1406, 1.1406, 1.1406, 1.1406, 1.0426, 1.10615, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 1.21237, 0.97552, 1.00135, 1.00135, 1.00135, 1.00135, 0.91142, 0.94436, 0.98721, 1.06585, 1.06585, 1.06585, 1.06585, 1.06585, 1.06585, 0.96705, 0.83055, 0.93503, 0.93503, 0.93503, 0.93503, 1.14236, 1.14236, 1.14236, 1.14236, 0.93125, 0.97922, 0.94165, 0.94165, 0.94165, 0.94165, 0.94165, 1.29004, 0.94165, 0.97922, 0.97922, 0.97922, 0.97922, 0.96752, 0.97042, 0.96752, 0.97363, 1.06585, 0.97363, 1.06585, 0.97363, 1.06585, 0.87897, 0.83055, 0.87897, 0.83055, 0.87897, 0.83055, 0.87897, 0.83055, 1.0426, 1.0033, 1.0426, 0.97042, 0.79429, 0.93503, 0.79429, 0.93503, 0.79429, 0.93503, 0.79429, 0.93503, 0.79429, 0.93503, 0.91149, 0.97042, 0.91149, 0.97042, 0.91149, 0.97042, 1, 1, 1.05815, 0.97922, 1.05815, 0.97922, 1.1406, 1.14236, 1.1406, 1.14236, 1.1406, 1.14236, 1.1406, 1.14236, 1.1406, 1.14236, 0.97441, 1.04302, 0.79631, 1.01582, 1, 1, 1.01054, 0.83853, 1.14236, 1, 1, 0.83853, 1.09125, 0.83853, 0.90418, 0.83853, 1.19508, 1.10615, 0.97922, 1, 1, 1.10615, 0.97922, 1.01034, 1.10466, 0.97922, 0.97552, 0.94165, 0.97552, 0.94165, 0.97552, 0.94165, 0.91602, 0.91981, 0.88641, 1.0276, 1, 1, 0.88641, 1.0276, 0.80527, 0.78929, 0.80527, 0.78929, 0.80527, 0.78929, 0.80527, 0.78929, 1, 1, 0.96083, 1.05403, 0.95923, 1.16862, 1.00135, 0.97922, 1.00135, 0.97922, 1.00135, 0.97922, 1.00135, 0.97922, 1.00135, 0.97922, 1.00135, 0.97922, 1.06777, 1.02197, 0.91142, 0.96752, 0.91142, 0.99361, 0.97168, 0.99361, 0.97168, 0.99361, 0.97168, 1.23199, 1.036, 0.97363, 1.06585, 0.94385, 0.96705, 0.97552, 0.94165, 1, 1, 0.96083, 1.1261, 1.31818, 1.31818, 1.31818, 1.31818, 1.31818, 1.31818, 1.31818, 1.31818, 1.31818, 0.95161, 1.27126, 1.00811, 0.83284, 0.77702, 0.99137, 0.95253, 1.0347, 0.86142, 1.07205, 1.14236, 0.97363, 0.89723, 0.86869, 1.09818, 0.79429, 0.99361, 1.05815, 0.97552, 1.1406, 0.90128, 1.06662, 1.04396, 1.10615, 0.84918, 0.97552, 1.04694, 0.94436, 0.98015, 0.96083, 0.91142, 1.00356, 0.9817, 1.01945, 0.98999, 1.1406, 0.91142, 1.04961, 0.9898, 1.00639, 1.14236, 1.07514, 1.04961, 0.99607, 1.02897, 1.008, 0.9898, 0.95134, 1.00639, 1.11121, 1.14236, 1.00518, 0.97981, 1.02186, 1, 1.08578, 0.94165, 0.99314, 0.98387, 0.93028, 0.93377, 1.35125, 1.07514, 1.10687, 0.93491, 1.04232, 1.00351, 1.14236, 1.07514, 0.94165, 1.07514, 1.00351, 0.79429, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.09097, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.93503, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.96609, 1, 1, 1, 1, 1, 1, 1.06777, 1.02197, 1.06777, 1.02197, 1.06777, 1.02197, 0.91142, 0.96752, 1, 1.21261, 0.89903, 1, 1, 0.75155, 1.04745, 1.04745, 1.04745, 1.04394, 0.98633, 0.98633, 0.98633, 0.72959, 0.72959, 1.20502, 0.91406, 1.26514, 1.222, 1.02956, 1.03372, 1.03372, 0.96039, 1.24633, 1, 1.09125, 0.93327, 1.03336, 1.16541, 1.036, 1, 1, 1, 0.771, 1, 1, 1.15574, 1.15574, 1.15574, 1.15574, 0.86364, 0.94434, 0.86279, 0.94434, 0.86224, 1, 1, 1.16798, 1, 0.96085, 0.90068, 1.21237, 1.18416, 1.13904, 0.69825, 0.9716, 2.10339, 1.29004, 1.29004, 1.21339, 1.29004, 1.29004, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.42603, 1, 0.99862, 0.99862, 1, 0.87025, 0.87025, 0.87025, 0.87025, 1.18775, 1.42603, 1, 1.42603, 1.42603, 0.99862, 1, 1, 1, 1, 1, 1.2886, 1.04315, 1.15296, 1.34163, 1, 1, 1, 1.13269, 1.13269, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.SegoeuiBoldItalicFactors = SegoeuiBoldItalicFactors;
+const SegoeuiBoldItalicMetrics = {
+  lineHeight: 1.33008,
+  lineGap: 0
+};
+exports.SegoeuiBoldItalicMetrics = SegoeuiBoldItalicMetrics;
+const SegoeuiItalicFactors = [1.76738, 1, 1, 0.98946, 1.14763, 1.05365, 1.06234, 0.96927, 0.92586, 1.15373, 1.18414, 0.91349, 0.91349, 1.07403, 1.17308, 0.78383, 1.20088, 0.78383, 1.42531, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.78383, 0.78383, 1.17308, 1.17308, 1.17308, 0.77349, 0.94565, 0.94729, 0.85944, 0.88506, 0.9858, 0.74817, 0.80016, 0.88449, 0.98039, 0.95782, 0.69238, 0.89898, 0.83231, 0.98183, 1.03989, 0.96924, 0.86237, 0.96924, 0.80595, 0.74524, 0.86091, 0.95402, 0.94143, 0.98448, 0.8858, 0.83089, 0.93285, 1.0949, 1.39016, 1.0949, 1.45994, 0.74627, 1.04839, 0.97454, 0.97454, 0.87207, 0.97454, 0.87533, 1.06151, 0.97454, 1.00176, 1.16484, 1.08132, 0.98047, 1.16484, 1.02989, 1.01054, 0.96225, 0.97454, 0.97454, 1.06598, 0.79004, 1.16344, 1.00351, 0.94629, 0.9973, 0.91016, 0.96777, 0.9043, 0.91082, 0.92481, 0.91082, 1.17308, 0.95748, 0.96927, 0.96927, 1, 0.96927, 0.92481, 0.80597, 1.04839, 1.23393, 1.1781, 0.9245, 1.17308, 1.20808, 0.63218, 0.94261, 1.24822, 1.09971, 1.09971, 1.04839, 1, 0.85273, 0.78032, 1.04839, 1.09971, 1.22326, 0.9245, 1.09836, 1.13525, 1.15222, 0.70424, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.85498, 0.88506, 0.74817, 0.74817, 0.74817, 0.74817, 0.95782, 0.95782, 0.95782, 0.95782, 0.9858, 1.03989, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 1.17308, 0.96924, 0.95402, 0.95402, 0.95402, 0.95402, 0.83089, 0.86237, 0.88409, 0.97454, 0.97454, 0.97454, 0.97454, 0.97454, 0.97454, 0.92916, 0.87207, 0.87533, 0.87533, 0.87533, 0.87533, 0.93146, 0.93146, 0.93146, 0.93146, 0.93854, 1.01054, 0.96225, 0.96225, 0.96225, 0.96225, 0.96225, 1.24822, 0.8761, 1.00351, 1.00351, 1.00351, 1.00351, 0.96777, 0.97454, 0.96777, 0.94729, 0.97454, 0.94729, 0.97454, 0.94729, 0.97454, 0.88506, 0.87207, 0.88506, 0.87207, 0.88506, 0.87207, 0.88506, 0.87207, 0.9858, 0.95391, 0.9858, 0.97454, 0.74817, 0.87533, 0.74817, 0.87533, 0.74817, 0.87533, 0.74817, 0.87533, 0.74817, 0.87533, 0.88449, 0.97454, 0.88449, 0.97454, 0.88449, 0.97454, 1, 1, 0.98039, 1.00176, 0.98039, 1.00176, 0.95782, 0.93146, 0.95782, 0.93146, 0.95782, 0.93146, 0.95782, 1.16484, 0.95782, 0.93146, 0.84421, 1.12761, 0.69238, 1.08132, 1, 1, 0.98047, 0.83231, 1.16484, 1, 1, 0.84723, 1.04861, 0.84723, 0.78755, 0.83231, 1.23736, 1.03989, 1.01054, 1, 1, 1.03989, 1.01054, 0.9857, 1.03849, 1.01054, 0.96924, 0.96225, 0.96924, 0.96225, 0.96924, 0.96225, 0.92383, 0.90171, 0.80595, 1.06598, 1, 1, 0.80595, 1.06598, 0.74524, 0.79004, 0.74524, 0.79004, 0.74524, 0.79004, 0.74524, 0.79004, 1, 1, 0.86091, 1.02759, 0.85771, 1.16344, 0.95402, 1.00351, 0.95402, 1.00351, 0.95402, 1.00351, 0.95402, 1.00351, 0.95402, 1.00351, 0.95402, 1.00351, 0.98448, 0.9973, 0.83089, 0.96777, 0.83089, 0.93285, 0.9043, 0.93285, 0.9043, 0.93285, 0.9043, 1.31868, 0.96927, 0.94729, 0.97454, 0.85498, 0.92916, 0.96924, 0.8761, 1, 1, 0.86091, 1.16344, 1.04839, 1.04839, 1.04839, 1.04839, 1.04839, 1.04839, 1.04839, 1.04839, 1.04839, 0.81965, 0.81965, 0.94729, 0.78032, 0.71022, 0.90883, 0.84171, 0.99877, 0.77596, 1.05734, 1.2, 0.94729, 0.85944, 0.82791, 0.9607, 0.74817, 0.93285, 0.98039, 0.96924, 0.95782, 0.89898, 0.98316, 0.98183, 1.03989, 0.78614, 0.96924, 0.97642, 0.86237, 0.86075, 0.86091, 0.83089, 0.90082, 0.8858, 0.97296, 1.01284, 0.95782, 0.83089, 1.0976, 1.04, 1.03342, 1.2, 1.0675, 1.0976, 0.98205, 1.03809, 1.05097, 1.04, 0.95364, 1.03342, 1.05401, 1.2, 1.02148, 1.0119, 1.04724, 1.0127, 1.02732, 0.96225, 0.8965, 0.97783, 0.93574, 0.94818, 1.30679, 1.0675, 1.11826, 0.99821, 1.0557, 1.0326, 1.2, 1.0675, 0.96225, 1.0675, 1.0326, 0.74817, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.03754, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.87533, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.98705, 1, 1, 1, 1, 1, 1, 0.98448, 0.9973, 0.98448, 0.9973, 0.98448, 0.9973, 0.83089, 0.96777, 1, 1.20088, 0.89903, 1, 1, 0.75155, 0.94945, 0.94945, 0.94945, 0.94945, 1.12317, 1.12317, 1.12317, 0.67603, 0.67603, 1.15621, 0.73584, 1.21191, 1.22135, 1.06483, 0.94868, 0.94868, 0.95996, 1.24633, 1, 1.07497, 0.87709, 0.96927, 1.01473, 0.96927, 1, 1, 1, 0.77295, 1, 1, 1.09836, 1.09836, 1.09836, 1.01522, 0.86321, 0.94434, 0.8649, 0.94434, 0.86182, 1, 1, 1.083, 1, 0.91578, 0.86438, 1.17308, 1.18416, 1.14589, 0.69825, 0.97622, 1.96791, 1.24822, 1.24822, 1.17308, 1.24822, 1.24822, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.42603, 1, 0.99862, 0.99862, 1, 0.87025, 0.87025, 0.87025, 0.87025, 1.17984, 1.42603, 1, 1.42603, 1.42603, 0.99862, 1, 1, 1, 1, 1, 1.2886, 1.04315, 1.15296, 1.34163, 1, 1, 1, 1.10742, 1.10742, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.SegoeuiItalicFactors = SegoeuiItalicFactors;
+const SegoeuiItalicMetrics = {
+  lineHeight: 1.33008,
+  lineGap: 0
+};
+exports.SegoeuiItalicMetrics = SegoeuiItalicMetrics;
+const SegoeuiRegularFactors = [1.76738, 1, 1, 0.98594, 1.02285, 1.10454, 1.06234, 0.96927, 0.92037, 1.19985, 1.2046, 0.90616, 0.90616, 1.07152, 1.1714, 0.78032, 1.20088, 0.78032, 1.40246, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.78032, 0.78032, 1.1714, 1.1714, 1.1714, 0.80597, 0.94084, 0.96706, 0.85944, 0.85734, 0.97093, 0.75842, 0.79936, 0.88198, 0.9831, 0.95782, 0.71387, 0.86969, 0.84636, 1.07796, 1.03584, 0.96924, 0.83968, 0.96924, 0.82826, 0.79649, 0.85771, 0.95132, 0.93119, 0.98965, 0.88433, 0.8287, 0.93365, 1.08612, 1.3638, 1.08612, 1.45786, 0.74627, 0.80499, 0.91484, 1.05707, 0.92383, 1.05882, 0.9403, 1.12654, 1.05882, 1.01756, 1.09011, 1.09011, 0.99414, 1.09011, 1.034, 1.01756, 1.05356, 1.05707, 1.05882, 1.04399, 0.84863, 1.21968, 1.01756, 0.95801, 1.00068, 0.91797, 0.96777, 0.9043, 0.90351, 0.92105, 0.90351, 1.1714, 0.85337, 0.96927, 0.96927, 0.99912, 0.96927, 0.92105, 0.80597, 1.2434, 1.20808, 1.05937, 0.90957, 1.1714, 1.20808, 0.75155, 0.94261, 1.24644, 1.09971, 1.09971, 0.84751, 1, 0.85273, 0.78032, 0.61584, 1.05425, 1.17914, 0.90957, 1.08665, 1.11593, 1.14169, 0.73381, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.86035, 0.85734, 0.75842, 0.75842, 0.75842, 0.75842, 0.95782, 0.95782, 0.95782, 0.95782, 0.97093, 1.03584, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 1.1714, 0.96924, 0.95132, 0.95132, 0.95132, 0.95132, 0.8287, 0.83968, 0.89049, 0.91484, 0.91484, 0.91484, 0.91484, 0.91484, 0.91484, 0.93575, 0.92383, 0.9403, 0.9403, 0.9403, 0.9403, 0.8717, 0.8717, 0.8717, 0.8717, 1.00527, 1.01756, 1.05356, 1.05356, 1.05356, 1.05356, 1.05356, 1.24644, 0.95923, 1.01756, 1.01756, 1.01756, 1.01756, 0.96777, 1.05707, 0.96777, 0.96706, 0.91484, 0.96706, 0.91484, 0.96706, 0.91484, 0.85734, 0.92383, 0.85734, 0.92383, 0.85734, 0.92383, 0.85734, 0.92383, 0.97093, 1.0969, 0.97093, 1.05882, 0.75842, 0.9403, 0.75842, 0.9403, 0.75842, 0.9403, 0.75842, 0.9403, 0.75842, 0.9403, 0.88198, 1.05882, 0.88198, 1.05882, 0.88198, 1.05882, 1, 1, 0.9831, 1.01756, 0.9831, 1.01756, 0.95782, 0.8717, 0.95782, 0.8717, 0.95782, 0.8717, 0.95782, 1.09011, 0.95782, 0.8717, 0.84784, 1.11551, 0.71387, 1.09011, 1, 1, 0.99414, 0.84636, 1.09011, 1, 1, 0.84636, 1.0536, 0.84636, 0.94298, 0.84636, 1.23297, 1.03584, 1.01756, 1, 1, 1.03584, 1.01756, 1.00323, 1.03444, 1.01756, 0.96924, 1.05356, 0.96924, 1.05356, 0.96924, 1.05356, 0.93066, 0.98293, 0.82826, 1.04399, 1, 1, 0.82826, 1.04399, 0.79649, 0.84863, 0.79649, 0.84863, 0.79649, 0.84863, 0.79649, 0.84863, 1, 1, 0.85771, 1.17318, 0.85771, 1.21968, 0.95132, 1.01756, 0.95132, 1.01756, 0.95132, 1.01756, 0.95132, 1.01756, 0.95132, 1.01756, 0.95132, 1.01756, 0.98965, 1.00068, 0.8287, 0.96777, 0.8287, 0.93365, 0.9043, 0.93365, 0.9043, 0.93365, 0.9043, 1.08571, 0.96927, 0.96706, 0.91484, 0.86035, 0.93575, 0.96924, 0.95923, 1, 1, 0.85771, 1.21968, 1.11437, 1.11437, 0.93109, 0.91202, 0.60411, 0.84164, 0.55572, 1.01173, 0.97361, 0.81818, 0.81818, 0.96635, 0.78032, 0.72727, 0.92366, 0.98601, 1.03405, 0.77968, 1.09799, 1.2, 0.96706, 0.85944, 0.85638, 0.96491, 0.75842, 0.93365, 0.9831, 0.96924, 0.95782, 0.86969, 0.94152, 1.07796, 1.03584, 0.78437, 0.96924, 0.98715, 0.83968, 0.83491, 0.85771, 0.8287, 0.94492, 0.88433, 0.9287, 1.0098, 0.95782, 0.8287, 1.0625, 0.98248, 1.03424, 1.2, 1.01071, 1.0625, 0.95246, 1.03809, 1.04912, 0.98248, 1.00221, 1.03424, 1.05443, 1.2, 1.04785, 0.99609, 1.00169, 1.05176, 0.99346, 1.05356, 0.9087, 1.03004, 0.95542, 0.93117, 1.23362, 1.01071, 1.07831, 1.02512, 1.05205, 1.03502, 1.2, 1.01071, 1.05356, 1.01071, 1.03502, 0.75842, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.03719, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.9403, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.04021, 1, 1, 1, 1, 1, 1, 0.98965, 1.00068, 0.98965, 1.00068, 0.98965, 1.00068, 0.8287, 0.96777, 1, 1.20088, 0.89903, 1, 1, 0.75155, 1.03077, 1.03077, 1.03077, 1.03077, 1.13196, 1.13196, 1.13196, 0.67428, 0.67428, 1.16039, 0.73291, 1.20996, 1.22135, 1.06483, 0.94868, 0.94868, 0.95996, 1.24633, 1, 1.07497, 0.87796, 0.96927, 1.01518, 0.96927, 1, 1, 1, 0.77295, 1, 1, 1.10539, 1.10539, 1.11358, 1.06967, 0.86279, 0.94434, 0.86279, 0.94434, 0.86182, 1, 1, 1.083, 1, 0.91578, 0.86507, 1.1714, 1.18416, 1.14589, 0.69825, 0.97622, 1.9697, 1.24822, 1.24822, 1.17238, 1.24822, 1.24822, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.42603, 1, 0.99862, 0.99862, 1, 0.87025, 0.87025, 0.87025, 0.87025, 1.18083, 1.42603, 1, 1.42603, 1.42603, 0.99862, 1, 1, 1, 1, 1, 1.2886, 1.04315, 1.15296, 1.34163, 1, 1, 1, 1.10938, 1.10938, 1, 1, 1, 1.05425, 1.09971, 1.09971, 1.09971, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+exports.SegoeuiRegularFactors = SegoeuiRegularFactors;
+const SegoeuiRegularMetrics = {
+  lineHeight: 1.33008,
+  lineGap: 0
+};
+exports.SegoeuiRegularMetrics = SegoeuiRegularMetrics;
+
+/***/ }),
+/* 18 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.getFontType = getFontType;
+exports.normalizeFontName = normalizeFontName;
+exports.recoverGlyphName = recoverGlyphName;
+exports.type1FontGlyphMapping = type1FontGlyphMapping;
+exports.SEAC_ANALYSIS_ENABLED = exports.MacStandardGlyphOrdering = exports.FontFlags = void 0;
+
+var _util = __w_pdfjs_require__(2);
+
+var _encodings = __w_pdfjs_require__(19);
+
+var _glyphlist = __w_pdfjs_require__(20);
+
+var _unicode = __w_pdfjs_require__(21);
+
+const SEAC_ANALYSIS_ENABLED = true;
+exports.SEAC_ANALYSIS_ENABLED = SEAC_ANALYSIS_ENABLED;
+const FontFlags = {
+  FixedPitch: 1,
+  Serif: 2,
+  Symbolic: 4,
+  Script: 8,
+  Nonsymbolic: 32,
+  Italic: 64,
+  AllCap: 65536,
+  SmallCap: 131072,
+  ForceBold: 262144
+};
+exports.FontFlags = FontFlags;
+const MacStandardGlyphOrdering = [".notdef", ".null", "nonmarkingreturn", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand", "quotesingle", "parenleft", "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum", "underscore", "grave", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "Adieresis", "Aring", "Ccedilla", "Eacute", "Ntilde", "Odieresis", "Udieresis", "aacute", "agrave", "acircumflex", "adieresis", "atilde", "aring", "ccedilla", "eacute", "egrave", "ecircumflex", "edieresis", "iacute", "igrave", "icircumflex", "idieresis", "ntilde", "oacute", "ograve", "ocircumflex", "odieresis", "otilde", "uacute", "ugrave", "ucircumflex", "udieresis", "dagger", "degree", "cent", "sterling", "section", "bullet", "paragraph", "germandbls", "registered", "copyright", "trademark", "acute", "dieresis", "notequal", "AE", "Oslash", "infinity", "plusminus", "lessequal", "greaterequal", "yen", "mu", "partialdiff", "summation", "product", "pi", "integral", "ordfeminine", "ordmasculine", "Omega", "ae", "oslash", "questiondown", "exclamdown", "logicalnot", "radical", "florin", "approxequal", "Delta", "guillemotleft", "guillemotright", "ellipsis", "nonbreakingspace", "Agrave", "Atilde", "Otilde", "OE", "oe", "endash", "emdash", "quotedblleft", "quotedblright", "quoteleft", "quoteright", "divide", "lozenge", "ydieresis", "Ydieresis", "fraction", "currency", "guilsinglleft", "guilsinglright", "fi", "fl", "daggerdbl", "periodcentered", "quotesinglbase", "quotedblbase", "perthousand", "Acircumflex", "Ecircumflex", "Aacute", "Edieresis", "Egrave", "Iacute", "Icircumflex", "Idieresis", "Igrave", "Oacute", "Ocircumflex", "apple", "Ograve", "Uacute", "Ucircumflex", "Ugrave", "dotlessi", "circumflex", "tilde", "macron", "breve", "dotaccent", "ring", "cedilla", "hungarumlaut", "ogonek", "caron", "Lslash", "lslash", "Scaron", "scaron", "Zcaron", "zcaron", "brokenbar", "Eth", "eth", "Yacute", "yacute", "Thorn", "thorn", "minus", "multiply", "onesuperior", "twosuperior", "threesuperior", "onehalf", "onequarter", "threequarters", "franc", "Gbreve", "gbreve", "Idotaccent", "Scedilla", "scedilla", "Cacute", "cacute", "Ccaron", "ccaron", "dcroat"];
+exports.MacStandardGlyphOrdering = MacStandardGlyphOrdering;
+
+function getFontType(type, subtype, isStandardFont = false) {
+  switch (type) {
+    case "Type1":
+      if (isStandardFont) {
+        return _util.FontType.TYPE1STANDARD;
+      }
+
+      return subtype === "Type1C" ? _util.FontType.TYPE1C : _util.FontType.TYPE1;
+
+    case "CIDFontType0":
+      return subtype === "CIDFontType0C" ? _util.FontType.CIDFONTTYPE0C : _util.FontType.CIDFONTTYPE0;
+
+    case "OpenType":
+      return _util.FontType.OPENTYPE;
+
+    case "TrueType":
+      return _util.FontType.TRUETYPE;
+
+    case "CIDFontType2":
+      return _util.FontType.CIDFONTTYPE2;
+
+    case "MMType1":
+      return _util.FontType.MMTYPE1;
+
+    case "Type0":
+      return _util.FontType.TYPE0;
+
+    default:
+      return _util.FontType.UNKNOWN;
+  }
+}
+
+function recoverGlyphName(name, glyphsUnicodeMap) {
+  if (glyphsUnicodeMap[name] !== undefined) {
+    return name;
+  }
+
+  const unicode = (0, _unicode.getUnicodeForGlyph)(name, glyphsUnicodeMap);
+
+  if (unicode !== -1) {
+    for (const key in glyphsUnicodeMap) {
+      if (glyphsUnicodeMap[key] === unicode) {
+        return key;
+      }
+    }
+  }
+
+  (0, _util.info)("Unable to recover a standard glyph name for: " + name);
+  return name;
+}
+
+function type1FontGlyphMapping(properties, builtInEncoding, glyphNames) {
+  const charCodeToGlyphId = Object.create(null);
+  let glyphId, charCode, baseEncoding;
+  const isSymbolicFont = !!(properties.flags & FontFlags.Symbolic);
+
+  if (properties.isInternalFont) {
+    baseEncoding = builtInEncoding;
+
+    for (charCode = 0; charCode < baseEncoding.length; charCode++) {
+      glyphId = glyphNames.indexOf(baseEncoding[charCode]);
+
+      if (glyphId >= 0) {
+        charCodeToGlyphId[charCode] = glyphId;
+      } else {
+        charCodeToGlyphId[charCode] = 0;
+      }
+    }
+  } else if (properties.baseEncodingName) {
+    baseEncoding = (0, _encodings.getEncoding)(properties.baseEncodingName);
+
+    for (charCode = 0; charCode < baseEncoding.length; charCode++) {
+      glyphId = glyphNames.indexOf(baseEncoding[charCode]);
+
+      if (glyphId >= 0) {
+        charCodeToGlyphId[charCode] = glyphId;
+      } else {
+        charCodeToGlyphId[charCode] = 0;
+      }
+    }
+  } else if (isSymbolicFont) {
+    for (charCode in builtInEncoding) {
+      charCodeToGlyphId[charCode] = builtInEncoding[charCode];
+    }
+  } else {
+    baseEncoding = _encodings.StandardEncoding;
+
+    for (charCode = 0; charCode < baseEncoding.length; charCode++) {
+      glyphId = glyphNames.indexOf(baseEncoding[charCode]);
+
+      if (glyphId >= 0) {
+        charCodeToGlyphId[charCode] = glyphId;
+      } else {
+        charCodeToGlyphId[charCode] = 0;
+      }
+    }
+  }
+
+  const differences = properties.differences;
+  let glyphsUnicodeMap;
+
+  if (differences) {
+    for (charCode in differences) {
+      const glyphName = differences[charCode];
+      glyphId = glyphNames.indexOf(glyphName);
+
+      if (glyphId === -1) {
+        if (!glyphsUnicodeMap) {
+          glyphsUnicodeMap = (0, _glyphlist.getGlyphsUnicode)();
+        }
+
+        const standardGlyphName = recoverGlyphName(glyphName, glyphsUnicodeMap);
+
+        if (standardGlyphName !== glyphName) {
+          glyphId = glyphNames.indexOf(standardGlyphName);
+        }
+      }
+
+      if (glyphId >= 0) {
+        charCodeToGlyphId[charCode] = glyphId;
+      } else {
+        charCodeToGlyphId[charCode] = 0;
+      }
+    }
+  }
+
+  return charCodeToGlyphId;
+}
+
+function normalizeFontName(name) {
+  return name.replace(/[,_]/g, "-").replace(/\s/g, "");
+}
+
+/***/ }),
+/* 19 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.getEncoding = getEncoding;
+exports.ZapfDingbatsEncoding = exports.WinAnsiEncoding = exports.SymbolSetEncoding = exports.StandardEncoding = exports.MacRomanEncoding = exports.ExpertEncoding = void 0;
+const ExpertEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclamsmall", "Hungarumlautsmall", "", "dollaroldstyle", "dollarsuperior", "ampersandsmall", "Acutesmall", "parenleftsuperior", "parenrightsuperior", "twodotenleader", "onedotenleader", "comma", "hyphen", "period", "fraction", "zerooldstyle", "oneoldstyle", "twooldstyle", "threeoldstyle", "fouroldstyle", "fiveoldstyle", "sixoldstyle", "sevenoldstyle", "eightoldstyle", "nineoldstyle", "colon", "semicolon", "commasuperior", "threequartersemdash", "periodsuperior", "questionsmall", "", "asuperior", "bsuperior", "centsuperior", "dsuperior", "esuperior", "", "", "", "isuperior", "", "", "lsuperior", "msuperior", "nsuperior", "osuperior", "", "", "rsuperior", "ssuperior", "tsuperior", "", "ff", "fi", "fl", "ffi", "ffl", "parenleftinferior", "", "parenrightinferior", "Circumflexsmall", "hyphensuperior", "Gravesmall", "Asmall", "Bsmall", "Csmall", "Dsmall", "Esmall", "Fsmall", "Gsmall", "Hsmall", "Ismall", "Jsmall", "Ksmall", "Lsmall", "Msmall", "Nsmall", "Osmall", "Psmall", "Qsmall", "Rsmall", "Ssmall", "Tsmall", "Usmall", "Vsmall", "Wsmall", "Xsmall", "Ysmall", "Zsmall", "colonmonetary", "onefitted", "rupiah", "Tildesmall", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "exclamdownsmall", "centoldstyle", "Lslashsmall", "", "", "Scaronsmall", "Zcaronsmall", "Dieresissmall", "Brevesmall", "Caronsmall", "", "Dotaccentsmall", "", "", "Macronsmall", "", "", "figuredash", "hypheninferior", "", "", "Ogoneksmall", "Ringsmall", "Cedillasmall", "", "", "", "onequarter", "onehalf", "threequarters", "questiondownsmall", "oneeighth", "threeeighths", "fiveeighths", "seveneighths", "onethird", "twothirds", "", "", "zerosuperior", "onesuperior", "twosuperior", "threesuperior", "foursuperior", "fivesuperior", "sixsuperior", "sevensuperior", "eightsuperior", "ninesuperior", "zeroinferior", "oneinferior", "twoinferior", "threeinferior", "fourinferior", "fiveinferior", "sixinferior", "seveninferior", "eightinferior", "nineinferior", "centinferior", "dollarinferior", "periodinferior", "commainferior", "Agravesmall", "Aacutesmall", "Acircumflexsmall", "Atildesmall", "Adieresissmall", "Aringsmall", "AEsmall", "Ccedillasmall", "Egravesmall", "Eacutesmall", "Ecircumflexsmall", "Edieresissmall", "Igravesmall", "Iacutesmall", "Icircumflexsmall", "Idieresissmall", "Ethsmall", "Ntildesmall", "Ogravesmall", "Oacutesmall", "Ocircumflexsmall", "Otildesmall", "Odieresissmall", "OEsmall", "Oslashsmall", "Ugravesmall", "Uacutesmall", "Ucircumflexsmall", "Udieresissmall", "Yacutesmall", "Thornsmall", "Ydieresissmall"];
+exports.ExpertEncoding = ExpertEncoding;
+const MacExpertEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclamsmall", "Hungarumlautsmall", "centoldstyle", "dollaroldstyle", "dollarsuperior", "ampersandsmall", "Acutesmall", "parenleftsuperior", "parenrightsuperior", "twodotenleader", "onedotenleader", "comma", "hyphen", "period", "fraction", "zerooldstyle", "oneoldstyle", "twooldstyle", "threeoldstyle", "fouroldstyle", "fiveoldstyle", "sixoldstyle", "sevenoldstyle", "eightoldstyle", "nineoldstyle", "colon", "semicolon", "", "threequartersemdash", "", "questionsmall", "", "", "", "", "Ethsmall", "", "", "onequarter", "onehalf", "threequarters", "oneeighth", "threeeighths", "fiveeighths", "seveneighths", "onethird", "twothirds", "", "", "", "", "", "", "ff", "fi", "fl", "ffi", "ffl", "parenleftinferior", "", "parenrightinferior", "Circumflexsmall", "hypheninferior", "Gravesmall", "Asmall", "Bsmall", "Csmall", "Dsmall", "Esmall", "Fsmall", "Gsmall", "Hsmall", "Ismall", "Jsmall", "Ksmall", "Lsmall", "Msmall", "Nsmall", "Osmall", "Psmall", "Qsmall", "Rsmall", "Ssmall", "Tsmall", "Usmall", "Vsmall", "Wsmall", "Xsmall", "Ysmall", "Zsmall", "colonmonetary", "onefitted", "rupiah", "Tildesmall", "", "", "asuperior", "centsuperior", "", "", "", "", "Aacutesmall", "Agravesmall", "Acircumflexsmall", "Adieresissmall", "Atildesmall", "Aringsmall", "Ccedillasmall", "Eacutesmall", "Egravesmall", "Ecircumflexsmall", "Edieresissmall", "Iacutesmall", "Igravesmall", "Icircumflexsmall", "Idieresissmall", "Ntildesmall", "Oacutesmall", "Ogravesmall", "Ocircumflexsmall", "Odieresissmall", "Otildesmall", "Uacutesmall", "Ugravesmall", "Ucircumflexsmall", "Udieresissmall", "", "eightsuperior", "fourinferior", "threeinferior", "sixinferior", "eightinferior", "seveninferior", "Scaronsmall", "", "centinferior", "twoinferior", "", "Dieresissmall", "", "Caronsmall", "osuperior", "fiveinferior", "", "commainferior", "periodinferior", "Yacutesmall", "", "dollarinferior", "", "", "Thornsmall", "", "nineinferior", "zeroinferior", "Zcaronsmall", "AEsmall", "Oslashsmall", "questiondownsmall", "oneinferior", "Lslashsmall", "", "", "", "", "", "", "Cedillasmall", "", "", "", "", "", "OEsmall", "figuredash", "hyphensuperior", "", "", "", "", "exclamdownsmall", "", "Ydieresissmall", "", "onesuperior", "twosuperior", "threesuperior", "foursuperior", "fivesuperior", "sixsuperior", "sevensuperior", "ninesuperior", "zerosuperior", "", "esuperior", "rsuperior", "tsuperior", "", "", "isuperior", "ssuperior", "dsuperior", "", "", "", "", "", "lsuperior", "Ogoneksmall", "Brevesmall", "Macronsmall", "bsuperior", "nsuperior", "msuperior", "commasuperior", "periodsuperior", "Dotaccentsmall", "Ringsmall", "", "", "", ""];
+const MacRomanEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand", "quotesingle", "parenleft", "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum", "underscore", "grave", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "", "Adieresis", "Aring", "Ccedilla", "Eacute", "Ntilde", "Odieresis", "Udieresis", "aacute", "agrave", "acircumflex", "adieresis", "atilde", "aring", "ccedilla", "eacute", "egrave", "ecircumflex", "edieresis", "iacute", "igrave", "icircumflex", "idieresis", "ntilde", "oacute", "ograve", "ocircumflex", "odieresis", "otilde", "uacute", "ugrave", "ucircumflex", "udieresis", "dagger", "degree", "cent", "sterling", "section", "bullet", "paragraph", "germandbls", "registered", "copyright", "trademark", "acute", "dieresis", "notequal", "AE", "Oslash", "infinity", "plusminus", "lessequal", "greaterequal", "yen", "mu", "partialdiff", "summation", "product", "pi", "integral", "ordfeminine", "ordmasculine", "Omega", "ae", "oslash", "questiondown", "exclamdown", "logicalnot", "radical", "florin", "approxequal", "Delta", "guillemotleft", "guillemotright", "ellipsis", "space", "Agrave", "Atilde", "Otilde", "OE", "oe", "endash", "emdash", "quotedblleft", "quotedblright", "quoteleft", "quoteright", "divide", "lozenge", "ydieresis", "Ydieresis", "fraction", "currency", "guilsinglleft", "guilsinglright", "fi", "fl", "daggerdbl", "periodcentered", "quotesinglbase", "quotedblbase", "perthousand", "Acircumflex", "Ecircumflex", "Aacute", "Edieresis", "Egrave", "Iacute", "Icircumflex", "Idieresis", "Igrave", "Oacute", "Ocircumflex", "apple", "Ograve", "Uacute", "Ucircumflex", "Ugrave", "dotlessi", "circumflex", "tilde", "macron", "breve", "dotaccent", "ring", "cedilla", "hungarumlaut", "ogonek", "caron"];
+exports.MacRomanEncoding = MacRomanEncoding;
+const StandardEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand", "quoteright", "parenleft", "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum", "underscore", "quoteleft", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "exclamdown", "cent", "sterling", "fraction", "yen", "florin", "section", "currency", "quotesingle", "quotedblleft", "guillemotleft", "guilsinglleft", "guilsinglright", "fi", "fl", "", "endash", "dagger", "daggerdbl", "periodcentered", "", "paragraph", "bullet", "quotesinglbase", "quotedblbase", "quotedblright", "guillemotright", "ellipsis", "perthousand", "", "questiondown", "", "grave", "acute", "circumflex", "tilde", "macron", "breve", "dotaccent", "dieresis", "", "ring", "cedilla", "", "hungarumlaut", "ogonek", "caron", "emdash", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "AE", "", "ordfeminine", "", "", "", "", "Lslash", "Oslash", "OE", "ordmasculine", "", "", "", "", "", "ae", "", "", "", "dotlessi", "", "", "lslash", "oslash", "oe", "germandbls", "", "", "", ""];
+exports.StandardEncoding = StandardEncoding;
+const WinAnsiEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand", "quotesingle", "parenleft", "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum", "underscore", "grave", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "bullet", "Euro", "bullet", "quotesinglbase", "florin", "quotedblbase", "ellipsis", "dagger", "daggerdbl", "circumflex", "perthousand", "Scaron", "guilsinglleft", "OE", "bullet", "Zcaron", "bullet", "bullet", "quoteleft", "quoteright", "quotedblleft", "quotedblright", "bullet", "endash", "emdash", "tilde", "trademark", "scaron", "guilsinglright", "oe", "bullet", "zcaron", "Ydieresis", "space", "exclamdown", "cent", "sterling", "currency", "yen", "brokenbar", "section", "dieresis", "copyright", "ordfeminine", "guillemotleft", "logicalnot", "hyphen", "registered", "macron", "degree", "plusminus", "twosuperior", "threesuperior", "acute", "mu", "paragraph", "periodcentered", "cedilla", "onesuperior", "ordmasculine", "guillemotright", "onequarter", "onehalf", "threequarters", "questiondown", "Agrave", "Aacute", "Acircumflex", "Atilde", "Adieresis", "Aring", "AE", "Ccedilla", "Egrave", "Eacute", "Ecircumflex", "Edieresis", "Igrave", "Iacute", "Icircumflex", "Idieresis", "Eth", "Ntilde", "Ograve", "Oacute", "Ocircumflex", "Otilde", "Odieresis", "multiply", "Oslash", "Ugrave", "Uacute", "Ucircumflex", "Udieresis", "Yacute", "Thorn", "germandbls", "agrave", "aacute", "acircumflex", "atilde", "adieresis", "aring", "ae", "ccedilla", "egrave", "eacute", "ecircumflex", "edieresis", "igrave", "iacute", "icircumflex", "idieresis", "eth", "ntilde", "ograve", "oacute", "ocircumflex", "otilde", "odieresis", "divide", "oslash", "ugrave", "uacute", "ucircumflex", "udieresis", "yacute", "thorn", "ydieresis"];
+exports.WinAnsiEncoding = WinAnsiEncoding;
+const SymbolSetEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclam", "universal", "numbersign", "existential", "percent", "ampersand", "suchthat", "parenleft", "parenright", "asteriskmath", "plus", "comma", "minus", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "congruent", "Alpha", "Beta", "Chi", "Delta", "Epsilon", "Phi", "Gamma", "Eta", "Iota", "theta1", "Kappa", "Lambda", "Mu", "Nu", "Omicron", "Pi", "Theta", "Rho", "Sigma", "Tau", "Upsilon", "sigma1", "Omega", "Xi", "Psi", "Zeta", "bracketleft", "therefore", "bracketright", "perpendicular", "underscore", "radicalex", "alpha", "beta", "chi", "delta", "epsilon", "phi", "gamma", "eta", "iota", "phi1", "kappa", "lambda", "mu", "nu", "omicron", "pi", "theta", "rho", "sigma", "tau", "upsilon", "omega1", "omega", "xi", "psi", "zeta", "braceleft", "bar", "braceright", "similar", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "Euro", "Upsilon1", "minute", "lessequal", "fraction", "infinity", "florin", "club", "diamond", "heart", "spade", "arrowboth", "arrowleft", "arrowup", "arrowright", "arrowdown", "degree", "plusminus", "second", "greaterequal", "multiply", "proportional", "partialdiff", "bullet", "divide", "notequal", "equivalence", "approxequal", "ellipsis", "arrowvertex", "arrowhorizex", "carriagereturn", "aleph", "Ifraktur", "Rfraktur", "weierstrass", "circlemultiply", "circleplus", "emptyset", "intersection", "union", "propersuperset", "reflexsuperset", "notsubset", "propersubset", "reflexsubset", "element", "notelement", "angle", "gradient", "registerserif", "copyrightserif", "trademarkserif", "product", "radical", "dotmath", "logicalnot", "logicaland", "logicalor", "arrowdblboth", "arrowdblleft", "arrowdblup", "arrowdblright", "arrowdbldown", "lozenge", "angleleft", "registersans", "copyrightsans", "trademarksans", "summation", "parenlefttp", "parenleftex", "parenleftbt", "bracketlefttp", "bracketleftex", "bracketleftbt", "bracelefttp", "braceleftmid", "braceleftbt", "braceex", "", "angleright", "integral", "integraltp", "integralex", "integralbt", "parenrighttp", "parenrightex", "parenrightbt", "bracketrighttp", "bracketrightex", "bracketrightbt", "bracerighttp", "bracerightmid", "bracerightbt", ""];
+exports.SymbolSetEncoding = SymbolSetEncoding;
+const ZapfDingbatsEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "a1", "a2", "a202", "a3", "a4", "a5", "a119", "a118", "a117", "a11", "a12", "a13", "a14", "a15", "a16", "a105", "a17", "a18", "a19", "a20", "a21", "a22", "a23", "a24", "a25", "a26", "a27", "a28", "a6", "a7", "a8", "a9", "a10", "a29", "a30", "a31", "a32", "a33", "a34", "a35", "a36", "a37", "a38", "a39", "a40", "a41", "a42", "a43", "a44", "a45", "a46", "a47", "a48", "a49", "a50", "a51", "a52", "a53", "a54", "a55", "a56", "a57", "a58", "a59", "a60", "a61", "a62", "a63", "a64", "a65", "a66", "a67", "a68", "a69", "a70", "a71", "a72", "a73", "a74", "a203", "a75", "a204", "a76", "a77", "a78", "a79", "a81", "a82", "a83", "a84", "a97", "a98", "a99", "a100", "", "a89", "a90", "a93", "a94", "a91", "a92", "a205", "a85", "a206", "a86", "a87", "a88", "a95", "a96", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "a101", "a102", "a103", "a104", "a106", "a107", "a108", "a112", "a111", "a110", "a109", "a120", "a121", "a122", "a123", "a124", "a125", "a126", "a127", "a128", "a129", "a130", "a131", "a132", "a133", "a134", "a135", "a136", "a137", "a138", "a139", "a140", "a141", "a142", "a143", "a144", "a145", "a146", "a147", "a148", "a149", "a150", "a151", "a152", "a153", "a154", "a155", "a156", "a157", "a158", "a159", "a160", "a161", "a163", "a164", "a196", "a165", "a192", "a166", "a167", "a168", "a169", "a170", "a171", "a172", "a173", "a162", "a174", "a175", "a176", "a177", "a178", "a179", "a193", "a180", "a199", "a181", "a200", "a182", "", "a201", "a183", "a184", "a197", "a185", "a194", "a198", "a186", "a195", "a187", "a188", "a189", "a190", "a191", ""];
+exports.ZapfDingbatsEncoding = ZapfDingbatsEncoding;
+
+function getEncoding(encodingName) {
+  switch (encodingName) {
+    case "WinAnsiEncoding":
+      return WinAnsiEncoding;
+
+    case "StandardEncoding":
+      return StandardEncoding;
+
+    case "MacRomanEncoding":
+      return MacRomanEncoding;
+
+    case "SymbolSetEncoding":
+      return SymbolSetEncoding;
+
+    case "ZapfDingbatsEncoding":
+      return ZapfDingbatsEncoding;
+
+    case "ExpertEncoding":
+      return ExpertEncoding;
+
+    case "MacExpertEncoding":
+      return MacExpertEncoding;
+
+    default:
+      return null;
+  }
+}
+
+/***/ }),
+/* 20 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.getGlyphsUnicode = exports.getDingbatsGlyphsUnicode = void 0;
+
+var _core_utils = __w_pdfjs_require__(9);
+
+const getGlyphsUnicode = (0, _core_utils.getArrayLookupTableFactory)(function () {
+  return ["A", 0x0041, "AE", 0x00c6, "AEacute", 0x01fc, "AEmacron", 0x01e2, "AEsmall", 0xf7e6, "Aacute", 0x00c1, "Aacutesmall", 0xf7e1, "Abreve", 0x0102, "Abreveacute", 0x1eae, "Abrevecyrillic", 0x04d0, "Abrevedotbelow", 0x1eb6, "Abrevegrave", 0x1eb0, "Abrevehookabove", 0x1eb2, "Abrevetilde", 0x1eb4, "Acaron", 0x01cd, "Acircle", 0x24b6, "Acircumflex", 0x00c2, "Acircumflexacute", 0x1ea4, "Acircumflexdotbelow", 0x1eac, "Acircumflexgrave", 0x1ea6, "Acircumflexhookabove", 0x1ea8, "Acircumflexsmall", 0xf7e2, "Acircumflextilde", 0x1eaa, "Acute", 0xf6c9, "Acutesmall", 0xf7b4, "Acyrillic", 0x0410, "Adblgrave", 0x0200, "Adieresis", 0x00c4, "Adieresiscyrillic", 0x04d2, "Adieresismacron", 0x01de, "Adieresissmall", 0xf7e4, "Adotbelow", 0x1ea0, "Adotmacron", 0x01e0, "Agrave", 0x00c0, "Agravesmall", 0xf7e0, "Ahookabove", 0x1ea2, "Aiecyrillic", 0x04d4, "Ainvertedbreve", 0x0202, "Alpha", 0x0391, "Alphatonos", 0x0386, "Amacron", 0x0100, "Amonospace", 0xff21, "Aogonek", 0x0104, "Aring", 0x00c5, "Aringacute", 0x01fa, "Aringbelow", 0x1e00, "Aringsmall", 0xf7e5, "Asmall", 0xf761, "Atilde", 0x00c3, "Atildesmall", 0xf7e3, "Aybarmenian", 0x0531, "B", 0x0042, "Bcircle", 0x24b7, "Bdotaccent", 0x1e02, "Bdotbelow", 0x1e04, "Becyrillic", 0x0411, "Benarmenian", 0x0532, "Beta", 0x0392, "Bhook", 0x0181, "Blinebelow", 0x1e06, "Bmonospace", 0xff22, "Brevesmall", 0xf6f4, "Bsmall", 0xf762, "Btopbar", 0x0182, "C", 0x0043, "Caarmenian", 0x053e, "Cacute", 0x0106, "Caron", 0xf6ca, "Caronsmall", 0xf6f5, "Ccaron", 0x010c, "Ccedilla", 0x00c7, "Ccedillaacute", 0x1e08, "Ccedillasmall", 0xf7e7, "Ccircle", 0x24b8, "Ccircumflex", 0x0108, "Cdot", 0x010a, "Cdotaccent", 0x010a, "Cedillasmall", 0xf7b8, "Chaarmenian", 0x0549, "Cheabkhasiancyrillic", 0x04bc, "Checyrillic", 0x0427, "Chedescenderabkhasiancyrillic", 0x04be, "Chedescendercyrillic", 0x04b6, "Chedieresiscyrillic", 0x04f4, "Cheharmenian", 0x0543, "Chekhakassiancyrillic", 0x04cb, "Cheverticalstrokecyrillic", 0x04b8, "Chi", 0x03a7, "Chook", 0x0187, "Circumflexsmall", 0xf6f6, "Cmonospace", 0xff23, "Coarmenian", 0x0551, "Csmall", 0xf763, "D", 0x0044, "DZ", 0x01f1, "DZcaron", 0x01c4, "Daarmenian", 0x0534, "Dafrican", 0x0189, "Dcaron", 0x010e, "Dcedilla", 0x1e10, "Dcircle", 0x24b9, "Dcircumflexbelow", 0x1e12, "Dcroat", 0x0110, "Ddotaccent", 0x1e0a, "Ddotbelow", 0x1e0c, "Decyrillic", 0x0414, "Deicoptic", 0x03ee, "Delta", 0x2206, "Deltagreek", 0x0394, "Dhook", 0x018a, "Dieresis", 0xf6cb, "DieresisAcute", 0xf6cc, "DieresisGrave", 0xf6cd, "Dieresissmall", 0xf7a8, "Digammagreek", 0x03dc, "Djecyrillic", 0x0402, "Dlinebelow", 0x1e0e, "Dmonospace", 0xff24, "Dotaccentsmall", 0xf6f7, "Dslash", 0x0110, "Dsmall", 0xf764, "Dtopbar", 0x018b, "Dz", 0x01f2, "Dzcaron", 0x01c5, "Dzeabkhasiancyrillic", 0x04e0, "Dzecyrillic", 0x0405, "Dzhecyrillic", 0x040f, "E", 0x0045, "Eacute", 0x00c9, "Eacutesmall", 0xf7e9, "Ebreve", 0x0114, "Ecaron", 0x011a, "Ecedillabreve", 0x1e1c, "Echarmenian", 0x0535, "Ecircle", 0x24ba, "Ecircumflex", 0x00ca, "Ecircumflexacute", 0x1ebe, "Ecircumflexbelow", 0x1e18, "Ecircumflexdotbelow", 0x1ec6, "Ecircumflexgrave", 0x1ec0, "Ecircumflexhookabove", 0x1ec2, "Ecircumflexsmall", 0xf7ea, "Ecircumflextilde", 0x1ec4, "Ecyrillic", 0x0404, "Edblgrave", 0x0204, "Edieresis", 0x00cb, "Edieresissmall", 0xf7eb, "Edot", 0x0116, "Edotaccent", 0x0116, "Edotbelow", 0x1eb8, "Efcyrillic", 0x0424, "Egrave", 0x00c8, "Egravesmall", 0xf7e8, "Eharmenian", 0x0537, "Ehookabove", 0x1eba, "Eightroman", 0x2167, "Einvertedbreve", 0x0206, "Eiotifiedcyrillic", 0x0464, "Elcyrillic", 0x041b, "Elevenroman", 0x216a, "Emacron", 0x0112, "Emacronacute", 0x1e16, "Emacrongrave", 0x1e14, "Emcyrillic", 0x041c, "Emonospace", 0xff25, "Encyrillic", 0x041d, "Endescendercyrillic", 0x04a2, "Eng", 0x014a, "Enghecyrillic", 0x04a4, "Enhookcyrillic", 0x04c7, "Eogonek", 0x0118, "Eopen", 0x0190, "Epsilon", 0x0395, "Epsilontonos", 0x0388, "Ercyrillic", 0x0420, "Ereversed", 0x018e, "Ereversedcyrillic", 0x042d, "Escyrillic", 0x0421, "Esdescendercyrillic", 0x04aa, "Esh", 0x01a9, "Esmall", 0xf765, "Eta", 0x0397, "Etarmenian", 0x0538, "Etatonos", 0x0389, "Eth", 0x00d0, "Ethsmall", 0xf7f0, "Etilde", 0x1ebc, "Etildebelow", 0x1e1a, "Euro", 0x20ac, "Ezh", 0x01b7, "Ezhcaron", 0x01ee, "Ezhreversed", 0x01b8, "F", 0x0046, "Fcircle", 0x24bb, "Fdotaccent", 0x1e1e, "Feharmenian", 0x0556, "Feicoptic", 0x03e4, "Fhook", 0x0191, "Fitacyrillic", 0x0472, "Fiveroman", 0x2164, "Fmonospace", 0xff26, "Fourroman", 0x2163, "Fsmall", 0xf766, "G", 0x0047, "GBsquare", 0x3387, "Gacute", 0x01f4, "Gamma", 0x0393, "Gammaafrican", 0x0194, "Gangiacoptic", 0x03ea, "Gbreve", 0x011e, "Gcaron", 0x01e6, "Gcedilla", 0x0122, "Gcircle", 0x24bc, "Gcircumflex", 0x011c, "Gcommaaccent", 0x0122, "Gdot", 0x0120, "Gdotaccent", 0x0120, "Gecyrillic", 0x0413, "Ghadarmenian", 0x0542, "Ghemiddlehookcyrillic", 0x0494, "Ghestrokecyrillic", 0x0492, "Gheupturncyrillic", 0x0490, "Ghook", 0x0193, "Gimarmenian", 0x0533, "Gjecyrillic", 0x0403, "Gmacron", 0x1e20, "Gmonospace", 0xff27, "Grave", 0xf6ce, "Gravesmall", 0xf760, "Gsmall", 0xf767, "Gsmallhook", 0x029b, "Gstroke", 0x01e4, "H", 0x0048, "H18533", 0x25cf, "H18543", 0x25aa, "H18551", 0x25ab, "H22073", 0x25a1, "HPsquare", 0x33cb, "Haabkhasiancyrillic", 0x04a8, "Hadescendercyrillic", 0x04b2, "Hardsigncyrillic", 0x042a, "Hbar", 0x0126, "Hbrevebelow", 0x1e2a, "Hcedilla", 0x1e28, "Hcircle", 0x24bd, "Hcircumflex", 0x0124, "Hdieresis", 0x1e26, "Hdotaccent", 0x1e22, "Hdotbelow", 0x1e24, "Hmonospace", 0xff28, "Hoarmenian", 0x0540, "Horicoptic", 0x03e8, "Hsmall", 0xf768, "Hungarumlaut", 0xf6cf, "Hungarumlautsmall", 0xf6f8, "Hzsquare", 0x3390, "I", 0x0049, "IAcyrillic", 0x042f, "IJ", 0x0132, "IUcyrillic", 0x042e, "Iacute", 0x00cd, "Iacutesmall", 0xf7ed, "Ibreve", 0x012c, "Icaron", 0x01cf, "Icircle", 0x24be, "Icircumflex", 0x00ce, "Icircumflexsmall", 0xf7ee, "Icyrillic", 0x0406, "Idblgrave", 0x0208, "Idieresis", 0x00cf, "Idieresisacute", 0x1e2e, "Idieresiscyrillic", 0x04e4, "Idieresissmall", 0xf7ef, "Idot", 0x0130, "Idotaccent", 0x0130, "Idotbelow", 0x1eca, "Iebrevecyrillic", 0x04d6, "Iecyrillic", 0x0415, "Ifraktur", 0x2111, "Igrave", 0x00cc, "Igravesmall", 0xf7ec, "Ihookabove", 0x1ec8, "Iicyrillic", 0x0418, "Iinvertedbreve", 0x020a, "Iishortcyrillic", 0x0419, "Imacron", 0x012a, "Imacroncyrillic", 0x04e2, "Imonospace", 0xff29, "Iniarmenian", 0x053b, "Iocyrillic", 0x0401, "Iogonek", 0x012e, "Iota", 0x0399, "Iotaafrican", 0x0196, "Iotadieresis", 0x03aa, "Iotatonos", 0x038a, "Ismall", 0xf769, "Istroke", 0x0197, "Itilde", 0x0128, "Itildebelow", 0x1e2c, "Izhitsacyrillic", 0x0474, "Izhitsadblgravecyrillic", 0x0476, "J", 0x004a, "Jaarmenian", 0x0541, "Jcircle", 0x24bf, "Jcircumflex", 0x0134, "Jecyrillic", 0x0408, "Jheharmenian", 0x054b, "Jmonospace", 0xff2a, "Jsmall", 0xf76a, "K", 0x004b, "KBsquare", 0x3385, "KKsquare", 0x33cd, "Kabashkircyrillic", 0x04a0, "Kacute", 0x1e30, "Kacyrillic", 0x041a, "Kadescendercyrillic", 0x049a, "Kahookcyrillic", 0x04c3, "Kappa", 0x039a, "Kastrokecyrillic", 0x049e, "Kaverticalstrokecyrillic", 0x049c, "Kcaron", 0x01e8, "Kcedilla", 0x0136, "Kcircle", 0x24c0, "Kcommaaccent", 0x0136, "Kdotbelow", 0x1e32, "Keharmenian", 0x0554, "Kenarmenian", 0x053f, "Khacyrillic", 0x0425, "Kheicoptic", 0x03e6, "Khook", 0x0198, "Kjecyrillic", 0x040c, "Klinebelow", 0x1e34, "Kmonospace", 0xff2b, "Koppacyrillic", 0x0480, "Koppagreek", 0x03de, "Ksicyrillic", 0x046e, "Ksmall", 0xf76b, "L", 0x004c, "LJ", 0x01c7, "LL", 0xf6bf, "Lacute", 0x0139, "Lambda", 0x039b, "Lcaron", 0x013d, "Lcedilla", 0x013b, "Lcircle", 0x24c1, "Lcircumflexbelow", 0x1e3c, "Lcommaaccent", 0x013b, "Ldot", 0x013f, "Ldotaccent", 0x013f, "Ldotbelow", 0x1e36, "Ldotbelowmacron", 0x1e38, "Liwnarmenian", 0x053c, "Lj", 0x01c8, "Ljecyrillic", 0x0409, "Llinebelow", 0x1e3a, "Lmonospace", 0xff2c, "Lslash", 0x0141, "Lslashsmall", 0xf6f9, "Lsmall", 0xf76c, "M", 0x004d, "MBsquare", 0x3386, "Macron", 0xf6d0, "Macronsmall", 0xf7af, "Macute", 0x1e3e, "Mcircle", 0x24c2, "Mdotaccent", 0x1e40, "Mdotbelow", 0x1e42, "Menarmenian", 0x0544, "Mmonospace", 0xff2d, "Msmall", 0xf76d, "Mturned", 0x019c, "Mu", 0x039c, "N", 0x004e, "NJ", 0x01ca, "Nacute", 0x0143, "Ncaron", 0x0147, "Ncedilla", 0x0145, "Ncircle", 0x24c3, "Ncircumflexbelow", 0x1e4a, "Ncommaaccent", 0x0145, "Ndotaccent", 0x1e44, "Ndotbelow", 0x1e46, "Nhookleft", 0x019d, "Nineroman", 0x2168, "Nj", 0x01cb, "Njecyrillic", 0x040a, "Nlinebelow", 0x1e48, "Nmonospace", 0xff2e, "Nowarmenian", 0x0546, "Nsmall", 0xf76e, "Ntilde", 0x00d1, "Ntildesmall", 0xf7f1, "Nu", 0x039d, "O", 0x004f, "OE", 0x0152, "OEsmall", 0xf6fa, "Oacute", 0x00d3, "Oacutesmall", 0xf7f3, "Obarredcyrillic", 0x04e8, "Obarreddieresiscyrillic", 0x04ea, "Obreve", 0x014e, "Ocaron", 0x01d1, "Ocenteredtilde", 0x019f, "Ocircle", 0x24c4, "Ocircumflex", 0x00d4, "Ocircumflexacute", 0x1ed0, "Ocircumflexdotbelow", 0x1ed8, "Ocircumflexgrave", 0x1ed2, "Ocircumflexhookabove", 0x1ed4, "Ocircumflexsmall", 0xf7f4, "Ocircumflextilde", 0x1ed6, "Ocyrillic", 0x041e, "Odblacute", 0x0150, "Odblgrave", 0x020c, "Odieresis", 0x00d6, "Odieresiscyrillic", 0x04e6, "Odieresissmall", 0xf7f6, "Odotbelow", 0x1ecc, "Ogoneksmall", 0xf6fb, "Ograve", 0x00d2, "Ogravesmall", 0xf7f2, "Oharmenian", 0x0555, "Ohm", 0x2126, "Ohookabove", 0x1ece, "Ohorn", 0x01a0, "Ohornacute", 0x1eda, "Ohorndotbelow", 0x1ee2, "Ohorngrave", 0x1edc, "Ohornhookabove", 0x1ede, "Ohorntilde", 0x1ee0, "Ohungarumlaut", 0x0150, "Oi", 0x01a2, "Oinvertedbreve", 0x020e, "Omacron", 0x014c, "Omacronacute", 0x1e52, "Omacrongrave", 0x1e50, "Omega", 0x2126, "Omegacyrillic", 0x0460, "Omegagreek", 0x03a9, "Omegaroundcyrillic", 0x047a, "Omegatitlocyrillic", 0x047c, "Omegatonos", 0x038f, "Omicron", 0x039f, "Omicrontonos", 0x038c, "Omonospace", 0xff2f, "Oneroman", 0x2160, "Oogonek", 0x01ea, "Oogonekmacron", 0x01ec, "Oopen", 0x0186, "Oslash", 0x00d8, "Oslashacute", 0x01fe, "Oslashsmall", 0xf7f8, "Osmall", 0xf76f, "Ostrokeacute", 0x01fe, "Otcyrillic", 0x047e, "Otilde", 0x00d5, "Otildeacute", 0x1e4c, "Otildedieresis", 0x1e4e, "Otildesmall", 0xf7f5, "P", 0x0050, "Pacute", 0x1e54, "Pcircle", 0x24c5, "Pdotaccent", 0x1e56, "Pecyrillic", 0x041f, "Peharmenian", 0x054a, "Pemiddlehookcyrillic", 0x04a6, "Phi", 0x03a6, "Phook", 0x01a4, "Pi", 0x03a0, "Piwrarmenian", 0x0553, "Pmonospace", 0xff30, "Psi", 0x03a8, "Psicyrillic", 0x0470, "Psmall", 0xf770, "Q", 0x0051, "Qcircle", 0x24c6, "Qmonospace", 0xff31, "Qsmall", 0xf771, "R", 0x0052, "Raarmenian", 0x054c, "Racute", 0x0154, "Rcaron", 0x0158, "Rcedilla", 0x0156, "Rcircle", 0x24c7, "Rcommaaccent", 0x0156, "Rdblgrave", 0x0210, "Rdotaccent", 0x1e58, "Rdotbelow", 0x1e5a, "Rdotbelowmacron", 0x1e5c, "Reharmenian", 0x0550, "Rfraktur", 0x211c, "Rho", 0x03a1, "Ringsmall", 0xf6fc, "Rinvertedbreve", 0x0212, "Rlinebelow", 0x1e5e, "Rmonospace", 0xff32, "Rsmall", 0xf772, "Rsmallinverted", 0x0281, "Rsmallinvertedsuperior", 0x02b6, "S", 0x0053, "SF010000", 0x250c, "SF020000", 0x2514, "SF030000", 0x2510, "SF040000", 0x2518, "SF050000", 0x253c, "SF060000", 0x252c, "SF070000", 0x2534, "SF080000", 0x251c, "SF090000", 0x2524, "SF100000", 0x2500, "SF110000", 0x2502, "SF190000", 0x2561, "SF200000", 0x2562, "SF210000", 0x2556, "SF220000", 0x2555, "SF230000", 0x2563, "SF240000", 0x2551, "SF250000", 0x2557, "SF260000", 0x255d, "SF270000", 0x255c, "SF280000", 0x255b, "SF360000", 0x255e, "SF370000", 0x255f, "SF380000", 0x255a, "SF390000", 0x2554, "SF400000", 0x2569, "SF410000", 0x2566, "SF420000", 0x2560, "SF430000", 0x2550, "SF440000", 0x256c, "SF450000", 0x2567, "SF460000", 0x2568, "SF470000", 0x2564, "SF480000", 0x2565, "SF490000", 0x2559, "SF500000", 0x2558, "SF510000", 0x2552, "SF520000", 0x2553, "SF530000", 0x256b, "SF540000", 0x256a, "Sacute", 0x015a, "Sacutedotaccent", 0x1e64, "Sampigreek", 0x03e0, "Scaron", 0x0160, "Scarondotaccent", 0x1e66, "Scaronsmall", 0xf6fd, "Scedilla", 0x015e, "Schwa", 0x018f, "Schwacyrillic", 0x04d8, "Schwadieresiscyrillic", 0x04da, "Scircle", 0x24c8, "Scircumflex", 0x015c, "Scommaaccent", 0x0218, "Sdotaccent", 0x1e60, "Sdotbelow", 0x1e62, "Sdotbelowdotaccent", 0x1e68, "Seharmenian", 0x054d, "Sevenroman", 0x2166, "Shaarmenian", 0x0547, "Shacyrillic", 0x0428, "Shchacyrillic", 0x0429, "Sheicoptic", 0x03e2, "Shhacyrillic", 0x04ba, "Shimacoptic", 0x03ec, "Sigma", 0x03a3, "Sixroman", 0x2165, "Smonospace", 0xff33, "Softsigncyrillic", 0x042c, "Ssmall", 0xf773, "Stigmagreek", 0x03da, "T", 0x0054, "Tau", 0x03a4, "Tbar", 0x0166, "Tcaron", 0x0164, "Tcedilla", 0x0162, "Tcircle", 0x24c9, "Tcircumflexbelow", 0x1e70, "Tcommaaccent", 0x0162, "Tdotaccent", 0x1e6a, "Tdotbelow", 0x1e6c, "Tecyrillic", 0x0422, "Tedescendercyrillic", 0x04ac, "Tenroman", 0x2169, "Tetsecyrillic", 0x04b4, "Theta", 0x0398, "Thook", 0x01ac, "Thorn", 0x00de, "Thornsmall", 0xf7fe, "Threeroman", 0x2162, "Tildesmall", 0xf6fe, "Tiwnarmenian", 0x054f, "Tlinebelow", 0x1e6e, "Tmonospace", 0xff34, "Toarmenian", 0x0539, "Tonefive", 0x01bc, "Tonesix", 0x0184, "Tonetwo", 0x01a7, "Tretroflexhook", 0x01ae, "Tsecyrillic", 0x0426, "Tshecyrillic", 0x040b, "Tsmall", 0xf774, "Twelveroman", 0x216b, "Tworoman", 0x2161, "U", 0x0055, "Uacute", 0x00da, "Uacutesmall", 0xf7fa, "Ubreve", 0x016c, "Ucaron", 0x01d3, "Ucircle", 0x24ca, "Ucircumflex", 0x00db, "Ucircumflexbelow", 0x1e76, "Ucircumflexsmall", 0xf7fb, "Ucyrillic", 0x0423, "Udblacute", 0x0170, "Udblgrave", 0x0214, "Udieresis", 0x00dc, "Udieresisacute", 0x01d7, "Udieresisbelow", 0x1e72, "Udieresiscaron", 0x01d9, "Udieresiscyrillic", 0x04f0, "Udieresisgrave", 0x01db, "Udieresismacron", 0x01d5, "Udieresissmall", 0xf7fc, "Udotbelow", 0x1ee4, "Ugrave", 0x00d9, "Ugravesmall", 0xf7f9, "Uhookabove", 0x1ee6, "Uhorn", 0x01af, "Uhornacute", 0x1ee8, "Uhorndotbelow", 0x1ef0, "Uhorngrave", 0x1eea, "Uhornhookabove", 0x1eec, "Uhorntilde", 0x1eee, "Uhungarumlaut", 0x0170, "Uhungarumlautcyrillic", 0x04f2, "Uinvertedbreve", 0x0216, "Ukcyrillic", 0x0478, "Umacron", 0x016a, "Umacroncyrillic", 0x04ee, "Umacrondieresis", 0x1e7a, "Umonospace", 0xff35, "Uogonek", 0x0172, "Upsilon", 0x03a5, "Upsilon1", 0x03d2, "Upsilonacutehooksymbolgreek", 0x03d3, "Upsilonafrican", 0x01b1, "Upsilondieresis", 0x03ab, "Upsilondieresishooksymbolgreek", 0x03d4, "Upsilonhooksymbol", 0x03d2, "Upsilontonos", 0x038e, "Uring", 0x016e, "Ushortcyrillic", 0x040e, "Usmall", 0xf775, "Ustraightcyrillic", 0x04ae, "Ustraightstrokecyrillic", 0x04b0, "Utilde", 0x0168, "Utildeacute", 0x1e78, "Utildebelow", 0x1e74, "V", 0x0056, "Vcircle", 0x24cb, "Vdotbelow", 0x1e7e, "Vecyrillic", 0x0412, "Vewarmenian", 0x054e, "Vhook", 0x01b2, "Vmonospace", 0xff36, "Voarmenian", 0x0548, "Vsmall", 0xf776, "Vtilde", 0x1e7c, "W", 0x0057, "Wacute", 0x1e82, "Wcircle", 0x24cc, "Wcircumflex", 0x0174, "Wdieresis", 0x1e84, "Wdotaccent", 0x1e86, "Wdotbelow", 0x1e88, "Wgrave", 0x1e80, "Wmonospace", 0xff37, "Wsmall", 0xf777, "X", 0x0058, "Xcircle", 0x24cd, "Xdieresis", 0x1e8c, "Xdotaccent", 0x1e8a, "Xeharmenian", 0x053d, "Xi", 0x039e, "Xmonospace", 0xff38, "Xsmall", 0xf778, "Y", 0x0059, "Yacute", 0x00dd, "Yacutesmall", 0xf7fd, "Yatcyrillic", 0x0462, "Ycircle", 0x24ce, "Ycircumflex", 0x0176, "Ydieresis", 0x0178, "Ydieresissmall", 0xf7ff, "Ydotaccent", 0x1e8e, "Ydotbelow", 0x1ef4, "Yericyrillic", 0x042b, "Yerudieresiscyrillic", 0x04f8, "Ygrave", 0x1ef2, "Yhook", 0x01b3, "Yhookabove", 0x1ef6, "Yiarmenian", 0x0545, "Yicyrillic", 0x0407, "Yiwnarmenian", 0x0552, "Ymonospace", 0xff39, "Ysmall", 0xf779, "Ytilde", 0x1ef8, "Yusbigcyrillic", 0x046a, "Yusbigiotifiedcyrillic", 0x046c, "Yuslittlecyrillic", 0x0466, "Yuslittleiotifiedcyrillic", 0x0468, "Z", 0x005a, "Zaarmenian", 0x0536, "Zacute", 0x0179, "Zcaron", 0x017d, "Zcaronsmall", 0xf6ff, "Zcircle", 0x24cf, "Zcircumflex", 0x1e90, "Zdot", 0x017b, "Zdotaccent", 0x017b, "Zdotbelow", 0x1e92, "Zecyrillic", 0x0417, "Zedescendercyrillic", 0x0498, "Zedieresiscyrillic", 0x04de, "Zeta", 0x0396, "Zhearmenian", 0x053a, "Zhebrevecyrillic", 0x04c1, "Zhecyrillic", 0x0416, "Zhedescendercyrillic", 0x0496, "Zhedieresiscyrillic", 0x04dc, "Zlinebelow", 0x1e94, "Zmonospace", 0xff3a, "Zsmall", 0xf77a, "Zstroke", 0x01b5, "a", 0x0061, "aabengali", 0x0986, "aacute", 0x00e1, "aadeva", 0x0906, "aagujarati", 0x0a86, "aagurmukhi", 0x0a06, "aamatragurmukhi", 0x0a3e, "aarusquare", 0x3303, "aavowelsignbengali", 0x09be, "aavowelsigndeva", 0x093e, "aavowelsigngujarati", 0x0abe, "abbreviationmarkarmenian", 0x055f, "abbreviationsigndeva", 0x0970, "abengali", 0x0985, "abopomofo", 0x311a, "abreve", 0x0103, "abreveacute", 0x1eaf, "abrevecyrillic", 0x04d1, "abrevedotbelow", 0x1eb7, "abrevegrave", 0x1eb1, "abrevehookabove", 0x1eb3, "abrevetilde", 0x1eb5, "acaron", 0x01ce, "acircle", 0x24d0, "acircumflex", 0x00e2, "acircumflexacute", 0x1ea5, "acircumflexdotbelow", 0x1ead, "acircumflexgrave", 0x1ea7, "acircumflexhookabove", 0x1ea9, "acircumflextilde", 0x1eab, "acute", 0x00b4, "acutebelowcmb", 0x0317, "acutecmb", 0x0301, "acutecomb", 0x0301, "acutedeva", 0x0954, "acutelowmod", 0x02cf, "acutetonecmb", 0x0341, "acyrillic", 0x0430, "adblgrave", 0x0201, "addakgurmukhi", 0x0a71, "adeva", 0x0905, "adieresis", 0x00e4, "adieresiscyrillic", 0x04d3, "adieresismacron", 0x01df, "adotbelow", 0x1ea1, "adotmacron", 0x01e1, "ae", 0x00e6, "aeacute", 0x01fd, "aekorean", 0x3150, "aemacron", 0x01e3, "afii00208", 0x2015, "afii08941", 0x20a4, "afii10017", 0x0410, "afii10018", 0x0411, "afii10019", 0x0412, "afii10020", 0x0413, "afii10021", 0x0414, "afii10022", 0x0415, "afii10023", 0x0401, "afii10024", 0x0416, "afii10025", 0x0417, "afii10026", 0x0418, "afii10027", 0x0419, "afii10028", 0x041a, "afii10029", 0x041b, "afii10030", 0x041c, "afii10031", 0x041d, "afii10032", 0x041e, "afii10033", 0x041f, "afii10034", 0x0420, "afii10035", 0x0421, "afii10036", 0x0422, "afii10037", 0x0423, "afii10038", 0x0424, "afii10039", 0x0425, "afii10040", 0x0426, "afii10041", 0x0427, "afii10042", 0x0428, "afii10043", 0x0429, "afii10044", 0x042a, "afii10045", 0x042b, "afii10046", 0x042c, "afii10047", 0x042d, "afii10048", 0x042e, "afii10049", 0x042f, "afii10050", 0x0490, "afii10051", 0x0402, "afii10052", 0x0403, "afii10053", 0x0404, "afii10054", 0x0405, "afii10055", 0x0406, "afii10056", 0x0407, "afii10057", 0x0408, "afii10058", 0x0409, "afii10059", 0x040a, "afii10060", 0x040b, "afii10061", 0x040c, "afii10062", 0x040e, "afii10063", 0xf6c4, "afii10064", 0xf6c5, "afii10065", 0x0430, "afii10066", 0x0431, "afii10067", 0x0432, "afii10068", 0x0433, "afii10069", 0x0434, "afii10070", 0x0435, "afii10071", 0x0451, "afii10072", 0x0436, "afii10073", 0x0437, "afii10074", 0x0438, "afii10075", 0x0439, "afii10076", 0x043a, "afii10077", 0x043b, "afii10078", 0x043c, "afii10079", 0x043d, "afii10080", 0x043e, "afii10081", 0x043f, "afii10082", 0x0440, "afii10083", 0x0441, "afii10084", 0x0442, "afii10085", 0x0443, "afii10086", 0x0444, "afii10087", 0x0445, "afii10088", 0x0446, "afii10089", 0x0447, "afii10090", 0x0448, "afii10091", 0x0449, "afii10092", 0x044a, "afii10093", 0x044b, "afii10094", 0x044c, "afii10095", 0x044d, "afii10096", 0x044e, "afii10097", 0x044f, "afii10098", 0x0491, "afii10099", 0x0452, "afii10100", 0x0453, "afii10101", 0x0454, "afii10102", 0x0455, "afii10103", 0x0456, "afii10104", 0x0457, "afii10105", 0x0458, "afii10106", 0x0459, "afii10107", 0x045a, "afii10108", 0x045b, "afii10109", 0x045c, "afii10110", 0x045e, "afii10145", 0x040f, "afii10146", 0x0462, "afii10147", 0x0472, "afii10148", 0x0474, "afii10192", 0xf6c6, "afii10193", 0x045f, "afii10194", 0x0463, "afii10195", 0x0473, "afii10196", 0x0475, "afii10831", 0xf6c7, "afii10832", 0xf6c8, "afii10846", 0x04d9, "afii299", 0x200e, "afii300", 0x200f, "afii301", 0x200d, "afii57381", 0x066a, "afii57388", 0x060c, "afii57392", 0x0660, "afii57393", 0x0661, "afii57394", 0x0662, "afii57395", 0x0663, "afii57396", 0x0664, "afii57397", 0x0665, "afii57398", 0x0666, "afii57399", 0x0667, "afii57400", 0x0668, "afii57401", 0x0669, "afii57403", 0x061b, "afii57407", 0x061f, "afii57409", 0x0621, "afii57410", 0x0622, "afii57411", 0x0623, "afii57412", 0x0624, "afii57413", 0x0625, "afii57414", 0x0626, "afii57415", 0x0627, "afii57416", 0x0628, "afii57417", 0x0629, "afii57418", 0x062a, "afii57419", 0x062b, "afii57420", 0x062c, "afii57421", 0x062d, "afii57422", 0x062e, "afii57423", 0x062f, "afii57424", 0x0630, "afii57425", 0x0631, "afii57426", 0x0632, "afii57427", 0x0633, "afii57428", 0x0634, "afii57429", 0x0635, "afii57430", 0x0636, "afii57431", 0x0637, "afii57432", 0x0638, "afii57433", 0x0639, "afii57434", 0x063a, "afii57440", 0x0640, "afii57441", 0x0641, "afii57442", 0x0642, "afii57443", 0x0643, "afii57444", 0x0644, "afii57445", 0x0645, "afii57446", 0x0646, "afii57448", 0x0648, "afii57449", 0x0649, "afii57450", 0x064a, "afii57451", 0x064b, "afii57452", 0x064c, "afii57453", 0x064d, "afii57454", 0x064e, "afii57455", 0x064f, "afii57456", 0x0650, "afii57457", 0x0651, "afii57458", 0x0652, "afii57470", 0x0647, "afii57505", 0x06a4, "afii57506", 0x067e, "afii57507", 0x0686, "afii57508", 0x0698, "afii57509", 0x06af, "afii57511", 0x0679, "afii57512", 0x0688, "afii57513", 0x0691, "afii57514", 0x06ba, "afii57519", 0x06d2, "afii57534", 0x06d5, "afii57636", 0x20aa, "afii57645", 0x05be, "afii57658", 0x05c3, "afii57664", 0x05d0, "afii57665", 0x05d1, "afii57666", 0x05d2, "afii57667", 0x05d3, "afii57668", 0x05d4, "afii57669", 0x05d5, "afii57670", 0x05d6, "afii57671", 0x05d7, "afii57672", 0x05d8, "afii57673", 0x05d9, "afii57674", 0x05da, "afii57675", 0x05db, "afii57676", 0x05dc, "afii57677", 0x05dd, "afii57678", 0x05de, "afii57679", 0x05df, "afii57680", 0x05e0, "afii57681", 0x05e1, "afii57682", 0x05e2, "afii57683", 0x05e3, "afii57684", 0x05e4, "afii57685", 0x05e5, "afii57686", 0x05e6, "afii57687", 0x05e7, "afii57688", 0x05e8, "afii57689", 0x05e9, "afii57690", 0x05ea, "afii57694", 0xfb2a, "afii57695", 0xfb2b, "afii57700", 0xfb4b, "afii57705", 0xfb1f, "afii57716", 0x05f0, "afii57717", 0x05f1, "afii57718", 0x05f2, "afii57723", 0xfb35, "afii57793", 0x05b4, "afii57794", 0x05b5, "afii57795", 0x05b6, "afii57796", 0x05bb, "afii57797", 0x05b8, "afii57798", 0x05b7, "afii57799", 0x05b0, "afii57800", 0x05b2, "afii57801", 0x05b1, "afii57802", 0x05b3, "afii57803", 0x05c2, "afii57804", 0x05c1, "afii57806", 0x05b9, "afii57807", 0x05bc, "afii57839", 0x05bd, "afii57841", 0x05bf, "afii57842", 0x05c0, "afii57929", 0x02bc, "afii61248", 0x2105, "afii61289", 0x2113, "afii61352", 0x2116, "afii61573", 0x202c, "afii61574", 0x202d, "afii61575", 0x202e, "afii61664", 0x200c, "afii63167", 0x066d, "afii64937", 0x02bd, "agrave", 0x00e0, "agujarati", 0x0a85, "agurmukhi", 0x0a05, "ahiragana", 0x3042, "ahookabove", 0x1ea3, "aibengali", 0x0990, "aibopomofo", 0x311e, "aideva", 0x0910, "aiecyrillic", 0x04d5, "aigujarati", 0x0a90, "aigurmukhi", 0x0a10, "aimatragurmukhi", 0x0a48, "ainarabic", 0x0639, "ainfinalarabic", 0xfeca, "aininitialarabic", 0xfecb, "ainmedialarabic", 0xfecc, "ainvertedbreve", 0x0203, "aivowelsignbengali", 0x09c8, "aivowelsigndeva", 0x0948, "aivowelsigngujarati", 0x0ac8, "akatakana", 0x30a2, "akatakanahalfwidth", 0xff71, "akorean", 0x314f, "alef", 0x05d0, "alefarabic", 0x0627, "alefdageshhebrew", 0xfb30, "aleffinalarabic", 0xfe8e, "alefhamzaabovearabic", 0x0623, "alefhamzaabovefinalarabic", 0xfe84, "alefhamzabelowarabic", 0x0625, "alefhamzabelowfinalarabic", 0xfe88, "alefhebrew", 0x05d0, "aleflamedhebrew", 0xfb4f, "alefmaddaabovearabic", 0x0622, "alefmaddaabovefinalarabic", 0xfe82, "alefmaksuraarabic", 0x0649, "alefmaksurafinalarabic", 0xfef0, "alefmaksurainitialarabic", 0xfef3, "alefmaksuramedialarabic", 0xfef4, "alefpatahhebrew", 0xfb2e, "alefqamatshebrew", 0xfb2f, "aleph", 0x2135, "allequal", 0x224c, "alpha", 0x03b1, "alphatonos", 0x03ac, "amacron", 0x0101, "amonospace", 0xff41, "ampersand", 0x0026, "ampersandmonospace", 0xff06, "ampersandsmall", 0xf726, "amsquare", 0x33c2, "anbopomofo", 0x3122, "angbopomofo", 0x3124, "angbracketleft", 0x3008, "angbracketright", 0x3009, "angkhankhuthai", 0x0e5a, "angle", 0x2220, "anglebracketleft", 0x3008, "anglebracketleftvertical", 0xfe3f, "anglebracketright", 0x3009, "anglebracketrightvertical", 0xfe40, "angleleft", 0x2329, "angleright", 0x232a, "angstrom", 0x212b, "anoteleia", 0x0387, "anudattadeva", 0x0952, "anusvarabengali", 0x0982, "anusvaradeva", 0x0902, "anusvaragujarati", 0x0a82, "aogonek", 0x0105, "apaatosquare", 0x3300, "aparen", 0x249c, "apostrophearmenian", 0x055a, "apostrophemod", 0x02bc, "apple", 0xf8ff, "approaches", 0x2250, "approxequal", 0x2248, "approxequalorimage", 0x2252, "approximatelyequal", 0x2245, "araeaekorean", 0x318e, "araeakorean", 0x318d, "arc", 0x2312, "arighthalfring", 0x1e9a, "aring", 0x00e5, "aringacute", 0x01fb, "aringbelow", 0x1e01, "arrowboth", 0x2194, "arrowdashdown", 0x21e3, "arrowdashleft", 0x21e0, "arrowdashright", 0x21e2, "arrowdashup", 0x21e1, "arrowdblboth", 0x21d4, "arrowdbldown", 0x21d3, "arrowdblleft", 0x21d0, "arrowdblright", 0x21d2, "arrowdblup", 0x21d1, "arrowdown", 0x2193, "arrowdownleft", 0x2199, "arrowdownright", 0x2198, "arrowdownwhite", 0x21e9, "arrowheaddownmod", 0x02c5, "arrowheadleftmod", 0x02c2, "arrowheadrightmod", 0x02c3, "arrowheadupmod", 0x02c4, "arrowhorizex", 0xf8e7, "arrowleft", 0x2190, "arrowleftdbl", 0x21d0, "arrowleftdblstroke", 0x21cd, "arrowleftoverright", 0x21c6, "arrowleftwhite", 0x21e6, "arrowright", 0x2192, "arrowrightdblstroke", 0x21cf, "arrowrightheavy", 0x279e, "arrowrightoverleft", 0x21c4, "arrowrightwhite", 0x21e8, "arrowtableft", 0x21e4, "arrowtabright", 0x21e5, "arrowup", 0x2191, "arrowupdn", 0x2195, "arrowupdnbse", 0x21a8, "arrowupdownbase", 0x21a8, "arrowupleft", 0x2196, "arrowupleftofdown", 0x21c5, "arrowupright", 0x2197, "arrowupwhite", 0x21e7, "arrowvertex", 0xf8e6, "asciicircum", 0x005e, "asciicircummonospace", 0xff3e, "asciitilde", 0x007e, "asciitildemonospace", 0xff5e, "ascript", 0x0251, "ascriptturned", 0x0252, "asmallhiragana", 0x3041, "asmallkatakana", 0x30a1, "asmallkatakanahalfwidth", 0xff67, "asterisk", 0x002a, "asteriskaltonearabic", 0x066d, "asteriskarabic", 0x066d, "asteriskmath", 0x2217, "asteriskmonospace", 0xff0a, "asterisksmall", 0xfe61, "asterism", 0x2042, "asuperior", 0xf6e9, "asymptoticallyequal", 0x2243, "at", 0x0040, "atilde", 0x00e3, "atmonospace", 0xff20, "atsmall", 0xfe6b, "aturned", 0x0250, "aubengali", 0x0994, "aubopomofo", 0x3120, "audeva", 0x0914, "augujarati", 0x0a94, "augurmukhi", 0x0a14, "aulengthmarkbengali", 0x09d7, "aumatragurmukhi", 0x0a4c, "auvowelsignbengali", 0x09cc, "auvowelsigndeva", 0x094c, "auvowelsigngujarati", 0x0acc, "avagrahadeva", 0x093d, "aybarmenian", 0x0561, "ayin", 0x05e2, "ayinaltonehebrew", 0xfb20, "ayinhebrew", 0x05e2, "b", 0x0062, "babengali", 0x09ac, "backslash", 0x005c, "backslashmonospace", 0xff3c, "badeva", 0x092c, "bagujarati", 0x0aac, "bagurmukhi", 0x0a2c, "bahiragana", 0x3070, "bahtthai", 0x0e3f, "bakatakana", 0x30d0, "bar", 0x007c, "barmonospace", 0xff5c, "bbopomofo", 0x3105, "bcircle", 0x24d1, "bdotaccent", 0x1e03, "bdotbelow", 0x1e05, "beamedsixteenthnotes", 0x266c, "because", 0x2235, "becyrillic", 0x0431, "beharabic", 0x0628, "behfinalarabic", 0xfe90, "behinitialarabic", 0xfe91, "behiragana", 0x3079, "behmedialarabic", 0xfe92, "behmeeminitialarabic", 0xfc9f, "behmeemisolatedarabic", 0xfc08, "behnoonfinalarabic", 0xfc6d, "bekatakana", 0x30d9, "benarmenian", 0x0562, "bet", 0x05d1, "beta", 0x03b2, "betasymbolgreek", 0x03d0, "betdagesh", 0xfb31, "betdageshhebrew", 0xfb31, "bethebrew", 0x05d1, "betrafehebrew", 0xfb4c, "bhabengali", 0x09ad, "bhadeva", 0x092d, "bhagujarati", 0x0aad, "bhagurmukhi", 0x0a2d, "bhook", 0x0253, "bihiragana", 0x3073, "bikatakana", 0x30d3, "bilabialclick", 0x0298, "bindigurmukhi", 0x0a02, "birusquare", 0x3331, "blackcircle", 0x25cf, "blackdiamond", 0x25c6, "blackdownpointingtriangle", 0x25bc, "blackleftpointingpointer", 0x25c4, "blackleftpointingtriangle", 0x25c0, "blacklenticularbracketleft", 0x3010, "blacklenticularbracketleftvertical", 0xfe3b, "blacklenticularbracketright", 0x3011, "blacklenticularbracketrightvertical", 0xfe3c, "blacklowerlefttriangle", 0x25e3, "blacklowerrighttriangle", 0x25e2, "blackrectangle", 0x25ac, "blackrightpointingpointer", 0x25ba, "blackrightpointingtriangle", 0x25b6, "blacksmallsquare", 0x25aa, "blacksmilingface", 0x263b, "blacksquare", 0x25a0, "blackstar", 0x2605, "blackupperlefttriangle", 0x25e4, "blackupperrighttriangle", 0x25e5, "blackuppointingsmalltriangle", 0x25b4, "blackuppointingtriangle", 0x25b2, "blank", 0x2423, "blinebelow", 0x1e07, "block", 0x2588, "bmonospace", 0xff42, "bobaimaithai", 0x0e1a, "bohiragana", 0x307c, "bokatakana", 0x30dc, "bparen", 0x249d, "bqsquare", 0x33c3, "braceex", 0xf8f4, "braceleft", 0x007b, "braceleftbt", 0xf8f3, "braceleftmid", 0xf8f2, "braceleftmonospace", 0xff5b, "braceleftsmall", 0xfe5b, "bracelefttp", 0xf8f1, "braceleftvertical", 0xfe37, "braceright", 0x007d, "bracerightbt", 0xf8fe, "bracerightmid", 0xf8fd, "bracerightmonospace", 0xff5d, "bracerightsmall", 0xfe5c, "bracerighttp", 0xf8fc, "bracerightvertical", 0xfe38, "bracketleft", 0x005b, "bracketleftbt", 0xf8f0, "bracketleftex", 0xf8ef, "bracketleftmonospace", 0xff3b, "bracketlefttp", 0xf8ee, "bracketright", 0x005d, "bracketrightbt", 0xf8fb, "bracketrightex", 0xf8fa, "bracketrightmonospace", 0xff3d, "bracketrighttp", 0xf8f9, "breve", 0x02d8, "brevebelowcmb", 0x032e, "brevecmb", 0x0306, "breveinvertedbelowcmb", 0x032f, "breveinvertedcmb", 0x0311, "breveinverteddoublecmb", 0x0361, "bridgebelowcmb", 0x032a, "bridgeinvertedbelowcmb", 0x033a, "brokenbar", 0x00a6, "bstroke", 0x0180, "bsuperior", 0xf6ea, "btopbar", 0x0183, "buhiragana", 0x3076, "bukatakana", 0x30d6, "bullet", 0x2022, "bulletinverse", 0x25d8, "bulletoperator", 0x2219, "bullseye", 0x25ce, "c", 0x0063, "caarmenian", 0x056e, "cabengali", 0x099a, "cacute", 0x0107, "cadeva", 0x091a, "cagujarati", 0x0a9a, "cagurmukhi", 0x0a1a, "calsquare", 0x3388, "candrabindubengali", 0x0981, "candrabinducmb", 0x0310, "candrabindudeva", 0x0901, "candrabindugujarati", 0x0a81, "capslock", 0x21ea, "careof", 0x2105, "caron", 0x02c7, "caronbelowcmb", 0x032c, "caroncmb", 0x030c, "carriagereturn", 0x21b5, "cbopomofo", 0x3118, "ccaron", 0x010d, "ccedilla", 0x00e7, "ccedillaacute", 0x1e09, "ccircle", 0x24d2, "ccircumflex", 0x0109, "ccurl", 0x0255, "cdot", 0x010b, "cdotaccent", 0x010b, "cdsquare", 0x33c5, "cedilla", 0x00b8, "cedillacmb", 0x0327, "cent", 0x00a2, "centigrade", 0x2103, "centinferior", 0xf6df, "centmonospace", 0xffe0, "centoldstyle", 0xf7a2, "centsuperior", 0xf6e0, "chaarmenian", 0x0579, "chabengali", 0x099b, "chadeva", 0x091b, "chagujarati", 0x0a9b, "chagurmukhi", 0x0a1b, "chbopomofo", 0x3114, "cheabkhasiancyrillic", 0x04bd, "checkmark", 0x2713, "checyrillic", 0x0447, "chedescenderabkhasiancyrillic", 0x04bf, "chedescendercyrillic", 0x04b7, "chedieresiscyrillic", 0x04f5, "cheharmenian", 0x0573, "chekhakassiancyrillic", 0x04cc, "cheverticalstrokecyrillic", 0x04b9, "chi", 0x03c7, "chieuchacirclekorean", 0x3277, "chieuchaparenkorean", 0x3217, "chieuchcirclekorean", 0x3269, "chieuchkorean", 0x314a, "chieuchparenkorean", 0x3209, "chochangthai", 0x0e0a, "chochanthai", 0x0e08, "chochingthai", 0x0e09, "chochoethai", 0x0e0c, "chook", 0x0188, "cieucacirclekorean", 0x3276, "cieucaparenkorean", 0x3216, "cieuccirclekorean", 0x3268, "cieuckorean", 0x3148, "cieucparenkorean", 0x3208, "cieucuparenkorean", 0x321c, "circle", 0x25cb, "circlecopyrt", 0x00a9, "circlemultiply", 0x2297, "circleot", 0x2299, "circleplus", 0x2295, "circlepostalmark", 0x3036, "circlewithlefthalfblack", 0x25d0, "circlewithrighthalfblack", 0x25d1, "circumflex", 0x02c6, "circumflexbelowcmb", 0x032d, "circumflexcmb", 0x0302, "clear", 0x2327, "clickalveolar", 0x01c2, "clickdental", 0x01c0, "clicklateral", 0x01c1, "clickretroflex", 0x01c3, "club", 0x2663, "clubsuitblack", 0x2663, "clubsuitwhite", 0x2667, "cmcubedsquare", 0x33a4, "cmonospace", 0xff43, "cmsquaredsquare", 0x33a0, "coarmenian", 0x0581, "colon", 0x003a, "colonmonetary", 0x20a1, "colonmonospace", 0xff1a, "colonsign", 0x20a1, "colonsmall", 0xfe55, "colontriangularhalfmod", 0x02d1, "colontriangularmod", 0x02d0, "comma", 0x002c, "commaabovecmb", 0x0313, "commaaboverightcmb", 0x0315, "commaaccent", 0xf6c3, "commaarabic", 0x060c, "commaarmenian", 0x055d, "commainferior", 0xf6e1, "commamonospace", 0xff0c, "commareversedabovecmb", 0x0314, "commareversedmod", 0x02bd, "commasmall", 0xfe50, "commasuperior", 0xf6e2, "commaturnedabovecmb", 0x0312, "commaturnedmod", 0x02bb, "compass", 0x263c, "congruent", 0x2245, "contourintegral", 0x222e, "control", 0x2303, "controlACK", 0x0006, "controlBEL", 0x0007, "controlBS", 0x0008, "controlCAN", 0x0018, "controlCR", 0x000d, "controlDC1", 0x0011, "controlDC2", 0x0012, "controlDC3", 0x0013, "controlDC4", 0x0014, "controlDEL", 0x007f, "controlDLE", 0x0010, "controlEM", 0x0019, "controlENQ", 0x0005, "controlEOT", 0x0004, "controlESC", 0x001b, "controlETB", 0x0017, "controlETX", 0x0003, "controlFF", 0x000c, "controlFS", 0x001c, "controlGS", 0x001d, "controlHT", 0x0009, "controlLF", 0x000a, "controlNAK", 0x0015, "controlNULL", 0x0000, "controlRS", 0x001e, "controlSI", 0x000f, "controlSO", 0x000e, "controlSOT", 0x0002, "controlSTX", 0x0001, "controlSUB", 0x001a, "controlSYN", 0x0016, "controlUS", 0x001f, "controlVT", 0x000b, "copyright", 0x00a9, "copyrightsans", 0xf8e9, "copyrightserif", 0xf6d9, "cornerbracketleft", 0x300c, "cornerbracketlefthalfwidth", 0xff62, "cornerbracketleftvertical", 0xfe41, "cornerbracketright", 0x300d, "cornerbracketrighthalfwidth", 0xff63, "cornerbracketrightvertical", 0xfe42, "corporationsquare", 0x337f, "cosquare", 0x33c7, "coverkgsquare", 0x33c6, "cparen", 0x249e, "cruzeiro", 0x20a2, "cstretched", 0x0297, "curlyand", 0x22cf, "curlyor", 0x22ce, "currency", 0x00a4, "cyrBreve", 0xf6d1, "cyrFlex", 0xf6d2, "cyrbreve", 0xf6d4, "cyrflex", 0xf6d5, "d", 0x0064, "daarmenian", 0x0564, "dabengali", 0x09a6, "dadarabic", 0x0636, "dadeva", 0x0926, "dadfinalarabic", 0xfebe, "dadinitialarabic", 0xfebf, "dadmedialarabic", 0xfec0, "dagesh", 0x05bc, "dageshhebrew", 0x05bc, "dagger", 0x2020, "daggerdbl", 0x2021, "dagujarati", 0x0aa6, "dagurmukhi", 0x0a26, "dahiragana", 0x3060, "dakatakana", 0x30c0, "dalarabic", 0x062f, "dalet", 0x05d3, "daletdagesh", 0xfb33, "daletdageshhebrew", 0xfb33, "dalethebrew", 0x05d3, "dalfinalarabic", 0xfeaa, "dammaarabic", 0x064f, "dammalowarabic", 0x064f, "dammatanaltonearabic", 0x064c, "dammatanarabic", 0x064c, "danda", 0x0964, "dargahebrew", 0x05a7, "dargalefthebrew", 0x05a7, "dasiapneumatacyrilliccmb", 0x0485, "dblGrave", 0xf6d3, "dblanglebracketleft", 0x300a, "dblanglebracketleftvertical", 0xfe3d, "dblanglebracketright", 0x300b, "dblanglebracketrightvertical", 0xfe3e, "dblarchinvertedbelowcmb", 0x032b, "dblarrowleft", 0x21d4, "dblarrowright", 0x21d2, "dbldanda", 0x0965, "dblgrave", 0xf6d6, "dblgravecmb", 0x030f, "dblintegral", 0x222c, "dbllowline", 0x2017, "dbllowlinecmb", 0x0333, "dbloverlinecmb", 0x033f, "dblprimemod", 0x02ba, "dblverticalbar", 0x2016, "dblverticallineabovecmb", 0x030e, "dbopomofo", 0x3109, "dbsquare", 0x33c8, "dcaron", 0x010f, "dcedilla", 0x1e11, "dcircle", 0x24d3, "dcircumflexbelow", 0x1e13, "dcroat", 0x0111, "ddabengali", 0x09a1, "ddadeva", 0x0921, "ddagujarati", 0x0aa1, "ddagurmukhi", 0x0a21, "ddalarabic", 0x0688, "ddalfinalarabic", 0xfb89, "dddhadeva", 0x095c, "ddhabengali", 0x09a2, "ddhadeva", 0x0922, "ddhagujarati", 0x0aa2, "ddhagurmukhi", 0x0a22, "ddotaccent", 0x1e0b, "ddotbelow", 0x1e0d, "decimalseparatorarabic", 0x066b, "decimalseparatorpersian", 0x066b, "decyrillic", 0x0434, "degree", 0x00b0, "dehihebrew", 0x05ad, "dehiragana", 0x3067, "deicoptic", 0x03ef, "dekatakana", 0x30c7, "deleteleft", 0x232b, "deleteright", 0x2326, "delta", 0x03b4, "deltaturned", 0x018d, "denominatorminusonenumeratorbengali", 0x09f8, "dezh", 0x02a4, "dhabengali", 0x09a7, "dhadeva", 0x0927, "dhagujarati", 0x0aa7, "dhagurmukhi", 0x0a27, "dhook", 0x0257, "dialytikatonos", 0x0385, "dialytikatonoscmb", 0x0344, "diamond", 0x2666, "diamondsuitwhite", 0x2662, "dieresis", 0x00a8, "dieresisacute", 0xf6d7, "dieresisbelowcmb", 0x0324, "dieresiscmb", 0x0308, "dieresisgrave", 0xf6d8, "dieresistonos", 0x0385, "dihiragana", 0x3062, "dikatakana", 0x30c2, "dittomark", 0x3003, "divide", 0x00f7, "divides", 0x2223, "divisionslash", 0x2215, "djecyrillic", 0x0452, "dkshade", 0x2593, "dlinebelow", 0x1e0f, "dlsquare", 0x3397, "dmacron", 0x0111, "dmonospace", 0xff44, "dnblock", 0x2584, "dochadathai", 0x0e0e, "dodekthai", 0x0e14, "dohiragana", 0x3069, "dokatakana", 0x30c9, "dollar", 0x0024, "dollarinferior", 0xf6e3, "dollarmonospace", 0xff04, "dollaroldstyle", 0xf724, "dollarsmall", 0xfe69, "dollarsuperior", 0xf6e4, "dong", 0x20ab, "dorusquare", 0x3326, "dotaccent", 0x02d9, "dotaccentcmb", 0x0307, "dotbelowcmb", 0x0323, "dotbelowcomb", 0x0323, "dotkatakana", 0x30fb, "dotlessi", 0x0131, "dotlessj", 0xf6be, "dotlessjstrokehook", 0x0284, "dotmath", 0x22c5, "dottedcircle", 0x25cc, "doubleyodpatah", 0xfb1f, "doubleyodpatahhebrew", 0xfb1f, "downtackbelowcmb", 0x031e, "downtackmod", 0x02d5, "dparen", 0x249f, "dsuperior", 0xf6eb, "dtail", 0x0256, "dtopbar", 0x018c, "duhiragana", 0x3065, "dukatakana", 0x30c5, "dz", 0x01f3, "dzaltone", 0x02a3, "dzcaron", 0x01c6, "dzcurl", 0x02a5, "dzeabkhasiancyrillic", 0x04e1, "dzecyrillic", 0x0455, "dzhecyrillic", 0x045f, "e", 0x0065, "eacute", 0x00e9, "earth", 0x2641, "ebengali", 0x098f, "ebopomofo", 0x311c, "ebreve", 0x0115, "ecandradeva", 0x090d, "ecandragujarati", 0x0a8d, "ecandravowelsigndeva", 0x0945, "ecandravowelsigngujarati", 0x0ac5, "ecaron", 0x011b, "ecedillabreve", 0x1e1d, "echarmenian", 0x0565, "echyiwnarmenian", 0x0587, "ecircle", 0x24d4, "ecircumflex", 0x00ea, "ecircumflexacute", 0x1ebf, "ecircumflexbelow", 0x1e19, "ecircumflexdotbelow", 0x1ec7, "ecircumflexgrave", 0x1ec1, "ecircumflexhookabove", 0x1ec3, "ecircumflextilde", 0x1ec5, "ecyrillic", 0x0454, "edblgrave", 0x0205, "edeva", 0x090f, "edieresis", 0x00eb, "edot", 0x0117, "edotaccent", 0x0117, "edotbelow", 0x1eb9, "eegurmukhi", 0x0a0f, "eematragurmukhi", 0x0a47, "efcyrillic", 0x0444, "egrave", 0x00e8, "egujarati", 0x0a8f, "eharmenian", 0x0567, "ehbopomofo", 0x311d, "ehiragana", 0x3048, "ehookabove", 0x1ebb, "eibopomofo", 0x311f, "eight", 0x0038, "eightarabic", 0x0668, "eightbengali", 0x09ee, "eightcircle", 0x2467, "eightcircleinversesansserif", 0x2791, "eightdeva", 0x096e, "eighteencircle", 0x2471, "eighteenparen", 0x2485, "eighteenperiod", 0x2499, "eightgujarati", 0x0aee, "eightgurmukhi", 0x0a6e, "eighthackarabic", 0x0668, "eighthangzhou", 0x3028, "eighthnotebeamed", 0x266b, "eightideographicparen", 0x3227, "eightinferior", 0x2088, "eightmonospace", 0xff18, "eightoldstyle", 0xf738, "eightparen", 0x247b, "eightperiod", 0x248f, "eightpersian", 0x06f8, "eightroman", 0x2177, "eightsuperior", 0x2078, "eightthai", 0x0e58, "einvertedbreve", 0x0207, "eiotifiedcyrillic", 0x0465, "ekatakana", 0x30a8, "ekatakanahalfwidth", 0xff74, "ekonkargurmukhi", 0x0a74, "ekorean", 0x3154, "elcyrillic", 0x043b, "element", 0x2208, "elevencircle", 0x246a, "elevenparen", 0x247e, "elevenperiod", 0x2492, "elevenroman", 0x217a, "ellipsis", 0x2026, "ellipsisvertical", 0x22ee, "emacron", 0x0113, "emacronacute", 0x1e17, "emacrongrave", 0x1e15, "emcyrillic", 0x043c, "emdash", 0x2014, "emdashvertical", 0xfe31, "emonospace", 0xff45, "emphasismarkarmenian", 0x055b, "emptyset", 0x2205, "enbopomofo", 0x3123, "encyrillic", 0x043d, "endash", 0x2013, "endashvertical", 0xfe32, "endescendercyrillic", 0x04a3, "eng", 0x014b, "engbopomofo", 0x3125, "enghecyrillic", 0x04a5, "enhookcyrillic", 0x04c8, "enspace", 0x2002, "eogonek", 0x0119, "eokorean", 0x3153, "eopen", 0x025b, "eopenclosed", 0x029a, "eopenreversed", 0x025c, "eopenreversedclosed", 0x025e, "eopenreversedhook", 0x025d, "eparen", 0x24a0, "epsilon", 0x03b5, "epsilontonos", 0x03ad, "equal", 0x003d, "equalmonospace", 0xff1d, "equalsmall", 0xfe66, "equalsuperior", 0x207c, "equivalence", 0x2261, "erbopomofo", 0x3126, "ercyrillic", 0x0440, "ereversed", 0x0258, "ereversedcyrillic", 0x044d, "escyrillic", 0x0441, "esdescendercyrillic", 0x04ab, "esh", 0x0283, "eshcurl", 0x0286, "eshortdeva", 0x090e, "eshortvowelsigndeva", 0x0946, "eshreversedloop", 0x01aa, "eshsquatreversed", 0x0285, "esmallhiragana", 0x3047, "esmallkatakana", 0x30a7, "esmallkatakanahalfwidth", 0xff6a, "estimated", 0x212e, "esuperior", 0xf6ec, "eta", 0x03b7, "etarmenian", 0x0568, "etatonos", 0x03ae, "eth", 0x00f0, "etilde", 0x1ebd, "etildebelow", 0x1e1b, "etnahtafoukhhebrew", 0x0591, "etnahtafoukhlefthebrew", 0x0591, "etnahtahebrew", 0x0591, "etnahtalefthebrew", 0x0591, "eturned", 0x01dd, "eukorean", 0x3161, "euro", 0x20ac, "evowelsignbengali", 0x09c7, "evowelsigndeva", 0x0947, "evowelsigngujarati", 0x0ac7, "exclam", 0x0021, "exclamarmenian", 0x055c, "exclamdbl", 0x203c, "exclamdown", 0x00a1, "exclamdownsmall", 0xf7a1, "exclammonospace", 0xff01, "exclamsmall", 0xf721, "existential", 0x2203, "ezh", 0x0292, "ezhcaron", 0x01ef, "ezhcurl", 0x0293, "ezhreversed", 0x01b9, "ezhtail", 0x01ba, "f", 0x0066, "fadeva", 0x095e, "fagurmukhi", 0x0a5e, "fahrenheit", 0x2109, "fathaarabic", 0x064e, "fathalowarabic", 0x064e, "fathatanarabic", 0x064b, "fbopomofo", 0x3108, "fcircle", 0x24d5, "fdotaccent", 0x1e1f, "feharabic", 0x0641, "feharmenian", 0x0586, "fehfinalarabic", 0xfed2, "fehinitialarabic", 0xfed3, "fehmedialarabic", 0xfed4, "feicoptic", 0x03e5, "female", 0x2640, "ff", 0xfb00, "f_f", 0xfb00, "ffi", 0xfb03, "ffl", 0xfb04, "fi", 0xfb01, "fifteencircle", 0x246e, "fifteenparen", 0x2482, "fifteenperiod", 0x2496, "figuredash", 0x2012, "filledbox", 0x25a0, "filledrect", 0x25ac, "finalkaf", 0x05da, "finalkafdagesh", 0xfb3a, "finalkafdageshhebrew", 0xfb3a, "finalkafhebrew", 0x05da, "finalmem", 0x05dd, "finalmemhebrew", 0x05dd, "finalnun", 0x05df, "finalnunhebrew", 0x05df, "finalpe", 0x05e3, "finalpehebrew", 0x05e3, "finaltsadi", 0x05e5, "finaltsadihebrew", 0x05e5, "firsttonechinese", 0x02c9, "fisheye", 0x25c9, "fitacyrillic", 0x0473, "five", 0x0035, "fivearabic", 0x0665, "fivebengali", 0x09eb, "fivecircle", 0x2464, "fivecircleinversesansserif", 0x278e, "fivedeva", 0x096b, "fiveeighths", 0x215d, "fivegujarati", 0x0aeb, "fivegurmukhi", 0x0a6b, "fivehackarabic", 0x0665, "fivehangzhou", 0x3025, "fiveideographicparen", 0x3224, "fiveinferior", 0x2085, "fivemonospace", 0xff15, "fiveoldstyle", 0xf735, "fiveparen", 0x2478, "fiveperiod", 0x248c, "fivepersian", 0x06f5, "fiveroman", 0x2174, "fivesuperior", 0x2075, "fivethai", 0x0e55, "fl", 0xfb02, "florin", 0x0192, "fmonospace", 0xff46, "fmsquare", 0x3399, "fofanthai", 0x0e1f, "fofathai", 0x0e1d, "fongmanthai", 0x0e4f, "forall", 0x2200, "four", 0x0034, "fourarabic", 0x0664, "fourbengali", 0x09ea, "fourcircle", 0x2463, "fourcircleinversesansserif", 0x278d, "fourdeva", 0x096a, "fourgujarati", 0x0aea, "fourgurmukhi", 0x0a6a, "fourhackarabic", 0x0664, "fourhangzhou", 0x3024, "fourideographicparen", 0x3223, "fourinferior", 0x2084, "fourmonospace", 0xff14, "fournumeratorbengali", 0x09f7, "fouroldstyle", 0xf734, "fourparen", 0x2477, "fourperiod", 0x248b, "fourpersian", 0x06f4, "fourroman", 0x2173, "foursuperior", 0x2074, "fourteencircle", 0x246d, "fourteenparen", 0x2481, "fourteenperiod", 0x2495, "fourthai", 0x0e54, "fourthtonechinese", 0x02cb, "fparen", 0x24a1, "fraction", 0x2044, "franc", 0x20a3, "g", 0x0067, "gabengali", 0x0997, "gacute", 0x01f5, "gadeva", 0x0917, "gafarabic", 0x06af, "gaffinalarabic", 0xfb93, "gafinitialarabic", 0xfb94, "gafmedialarabic", 0xfb95, "gagujarati", 0x0a97, "gagurmukhi", 0x0a17, "gahiragana", 0x304c, "gakatakana", 0x30ac, "gamma", 0x03b3, "gammalatinsmall", 0x0263, "gammasuperior", 0x02e0, "gangiacoptic", 0x03eb, "gbopomofo", 0x310d, "gbreve", 0x011f, "gcaron", 0x01e7, "gcedilla", 0x0123, "gcircle", 0x24d6, "gcircumflex", 0x011d, "gcommaaccent", 0x0123, "gdot", 0x0121, "gdotaccent", 0x0121, "gecyrillic", 0x0433, "gehiragana", 0x3052, "gekatakana", 0x30b2, "geometricallyequal", 0x2251, "gereshaccenthebrew", 0x059c, "gereshhebrew", 0x05f3, "gereshmuqdamhebrew", 0x059d, "germandbls", 0x00df, "gershayimaccenthebrew", 0x059e, "gershayimhebrew", 0x05f4, "getamark", 0x3013, "ghabengali", 0x0998, "ghadarmenian", 0x0572, "ghadeva", 0x0918, "ghagujarati", 0x0a98, "ghagurmukhi", 0x0a18, "ghainarabic", 0x063a, "ghainfinalarabic", 0xfece, "ghaininitialarabic", 0xfecf, "ghainmedialarabic", 0xfed0, "ghemiddlehookcyrillic", 0x0495, "ghestrokecyrillic", 0x0493, "gheupturncyrillic", 0x0491, "ghhadeva", 0x095a, "ghhagurmukhi", 0x0a5a, "ghook", 0x0260, "ghzsquare", 0x3393, "gihiragana", 0x304e, "gikatakana", 0x30ae, "gimarmenian", 0x0563, "gimel", 0x05d2, "gimeldagesh", 0xfb32, "gimeldageshhebrew", 0xfb32, "gimelhebrew", 0x05d2, "gjecyrillic", 0x0453, "glottalinvertedstroke", 0x01be, "glottalstop", 0x0294, "glottalstopinverted", 0x0296, "glottalstopmod", 0x02c0, "glottalstopreversed", 0x0295, "glottalstopreversedmod", 0x02c1, "glottalstopreversedsuperior", 0x02e4, "glottalstopstroke", 0x02a1, "glottalstopstrokereversed", 0x02a2, "gmacron", 0x1e21, "gmonospace", 0xff47, "gohiragana", 0x3054, "gokatakana", 0x30b4, "gparen", 0x24a2, "gpasquare", 0x33ac, "gradient", 0x2207, "grave", 0x0060, "gravebelowcmb", 0x0316, "gravecmb", 0x0300, "gravecomb", 0x0300, "gravedeva", 0x0953, "gravelowmod", 0x02ce, "gravemonospace", 0xff40, "gravetonecmb", 0x0340, "greater", 0x003e, "greaterequal", 0x2265, "greaterequalorless", 0x22db, "greatermonospace", 0xff1e, "greaterorequivalent", 0x2273, "greaterorless", 0x2277, "greateroverequal", 0x2267, "greatersmall", 0xfe65, "gscript", 0x0261, "gstroke", 0x01e5, "guhiragana", 0x3050, "guillemotleft", 0x00ab, "guillemotright", 0x00bb, "guilsinglleft", 0x2039, "guilsinglright", 0x203a, "gukatakana", 0x30b0, "guramusquare", 0x3318, "gysquare", 0x33c9, "h", 0x0068, "haabkhasiancyrillic", 0x04a9, "haaltonearabic", 0x06c1, "habengali", 0x09b9, "hadescendercyrillic", 0x04b3, "hadeva", 0x0939, "hagujarati", 0x0ab9, "hagurmukhi", 0x0a39, "haharabic", 0x062d, "hahfinalarabic", 0xfea2, "hahinitialarabic", 0xfea3, "hahiragana", 0x306f, "hahmedialarabic", 0xfea4, "haitusquare", 0x332a, "hakatakana", 0x30cf, "hakatakanahalfwidth", 0xff8a, "halantgurmukhi", 0x0a4d, "hamzaarabic", 0x0621, "hamzalowarabic", 0x0621, "hangulfiller", 0x3164, "hardsigncyrillic", 0x044a, "harpoonleftbarbup", 0x21bc, "harpoonrightbarbup", 0x21c0, "hasquare", 0x33ca, "hatafpatah", 0x05b2, "hatafpatah16", 0x05b2, "hatafpatah23", 0x05b2, "hatafpatah2f", 0x05b2, "hatafpatahhebrew", 0x05b2, "hatafpatahnarrowhebrew", 0x05b2, "hatafpatahquarterhebrew", 0x05b2, "hatafpatahwidehebrew", 0x05b2, "hatafqamats", 0x05b3, "hatafqamats1b", 0x05b3, "hatafqamats28", 0x05b3, "hatafqamats34", 0x05b3, "hatafqamatshebrew", 0x05b3, "hatafqamatsnarrowhebrew", 0x05b3, "hatafqamatsquarterhebrew", 0x05b3, "hatafqamatswidehebrew", 0x05b3, "hatafsegol", 0x05b1, "hatafsegol17", 0x05b1, "hatafsegol24", 0x05b1, "hatafsegol30", 0x05b1, "hatafsegolhebrew", 0x05b1, "hatafsegolnarrowhebrew", 0x05b1, "hatafsegolquarterhebrew", 0x05b1, "hatafsegolwidehebrew", 0x05b1, "hbar", 0x0127, "hbopomofo", 0x310f, "hbrevebelow", 0x1e2b, "hcedilla", 0x1e29, "hcircle", 0x24d7, "hcircumflex", 0x0125, "hdieresis", 0x1e27, "hdotaccent", 0x1e23, "hdotbelow", 0x1e25, "he", 0x05d4, "heart", 0x2665, "heartsuitblack", 0x2665, "heartsuitwhite", 0x2661, "hedagesh", 0xfb34, "hedageshhebrew", 0xfb34, "hehaltonearabic", 0x06c1, "heharabic", 0x0647, "hehebrew", 0x05d4, "hehfinalaltonearabic", 0xfba7, "hehfinalalttwoarabic", 0xfeea, "hehfinalarabic", 0xfeea, "hehhamzaabovefinalarabic", 0xfba5, "hehhamzaaboveisolatedarabic", 0xfba4, "hehinitialaltonearabic", 0xfba8, "hehinitialarabic", 0xfeeb, "hehiragana", 0x3078, "hehmedialaltonearabic", 0xfba9, "hehmedialarabic", 0xfeec, "heiseierasquare", 0x337b, "hekatakana", 0x30d8, "hekatakanahalfwidth", 0xff8d, "hekutaarusquare", 0x3336, "henghook", 0x0267, "herutusquare", 0x3339, "het", 0x05d7, "hethebrew", 0x05d7, "hhook", 0x0266, "hhooksuperior", 0x02b1, "hieuhacirclekorean", 0x327b, "hieuhaparenkorean", 0x321b, "hieuhcirclekorean", 0x326d, "hieuhkorean", 0x314e, "hieuhparenkorean", 0x320d, "hihiragana", 0x3072, "hikatakana", 0x30d2, "hikatakanahalfwidth", 0xff8b, "hiriq", 0x05b4, "hiriq14", 0x05b4, "hiriq21", 0x05b4, "hiriq2d", 0x05b4, "hiriqhebrew", 0x05b4, "hiriqnarrowhebrew", 0x05b4, "hiriqquarterhebrew", 0x05b4, "hiriqwidehebrew", 0x05b4, "hlinebelow", 0x1e96, "hmonospace", 0xff48, "hoarmenian", 0x0570, "hohipthai", 0x0e2b, "hohiragana", 0x307b, "hokatakana", 0x30db, "hokatakanahalfwidth", 0xff8e, "holam", 0x05b9, "holam19", 0x05b9, "holam26", 0x05b9, "holam32", 0x05b9, "holamhebrew", 0x05b9, "holamnarrowhebrew", 0x05b9, "holamquarterhebrew", 0x05b9, "holamwidehebrew", 0x05b9, "honokhukthai", 0x0e2e, "hookabovecomb", 0x0309, "hookcmb", 0x0309, "hookpalatalizedbelowcmb", 0x0321, "hookretroflexbelowcmb", 0x0322, "hoonsquare", 0x3342, "horicoptic", 0x03e9, "horizontalbar", 0x2015, "horncmb", 0x031b, "hotsprings", 0x2668, "house", 0x2302, "hparen", 0x24a3, "hsuperior", 0x02b0, "hturned", 0x0265, "huhiragana", 0x3075, "huiitosquare", 0x3333, "hukatakana", 0x30d5, "hukatakanahalfwidth", 0xff8c, "hungarumlaut", 0x02dd, "hungarumlautcmb", 0x030b, "hv", 0x0195, "hyphen", 0x002d, "hypheninferior", 0xf6e5, "hyphenmonospace", 0xff0d, "hyphensmall", 0xfe63, "hyphensuperior", 0xf6e6, "hyphentwo", 0x2010, "i", 0x0069, "iacute", 0x00ed, "iacyrillic", 0x044f, "ibengali", 0x0987, "ibopomofo", 0x3127, "ibreve", 0x012d, "icaron", 0x01d0, "icircle", 0x24d8, "icircumflex", 0x00ee, "icyrillic", 0x0456, "idblgrave", 0x0209, "ideographearthcircle", 0x328f, "ideographfirecircle", 0x328b, "ideographicallianceparen", 0x323f, "ideographiccallparen", 0x323a, "ideographiccentrecircle", 0x32a5, "ideographicclose", 0x3006, "ideographiccomma", 0x3001, "ideographiccommaleft", 0xff64, "ideographiccongratulationparen", 0x3237, "ideographiccorrectcircle", 0x32a3, "ideographicearthparen", 0x322f, "ideographicenterpriseparen", 0x323d, "ideographicexcellentcircle", 0x329d, "ideographicfestivalparen", 0x3240, "ideographicfinancialcircle", 0x3296, "ideographicfinancialparen", 0x3236, "ideographicfireparen", 0x322b, "ideographichaveparen", 0x3232, "ideographichighcircle", 0x32a4, "ideographiciterationmark", 0x3005, "ideographiclaborcircle", 0x3298, "ideographiclaborparen", 0x3238, "ideographicleftcircle", 0x32a7, "ideographiclowcircle", 0x32a6, "ideographicmedicinecircle", 0x32a9, "ideographicmetalparen", 0x322e, "ideographicmoonparen", 0x322a, "ideographicnameparen", 0x3234, "ideographicperiod", 0x3002, "ideographicprintcircle", 0x329e, "ideographicreachparen", 0x3243, "ideographicrepresentparen", 0x3239, "ideographicresourceparen", 0x323e, "ideographicrightcircle", 0x32a8, "ideographicsecretcircle", 0x3299, "ideographicselfparen", 0x3242, "ideographicsocietyparen", 0x3233, "ideographicspace", 0x3000, "ideographicspecialparen", 0x3235, "ideographicstockparen", 0x3231, "ideographicstudyparen", 0x323b, "ideographicsunparen", 0x3230, "ideographicsuperviseparen", 0x323c, "ideographicwaterparen", 0x322c, "ideographicwoodparen", 0x322d, "ideographiczero", 0x3007, "ideographmetalcircle", 0x328e, "ideographmooncircle", 0x328a, "ideographnamecircle", 0x3294, "ideographsuncircle", 0x3290, "ideographwatercircle", 0x328c, "ideographwoodcircle", 0x328d, "ideva", 0x0907, "idieresis", 0x00ef, "idieresisacute", 0x1e2f, "idieresiscyrillic", 0x04e5, "idotbelow", 0x1ecb, "iebrevecyrillic", 0x04d7, "iecyrillic", 0x0435, "ieungacirclekorean", 0x3275, "ieungaparenkorean", 0x3215, "ieungcirclekorean", 0x3267, "ieungkorean", 0x3147, "ieungparenkorean", 0x3207, "igrave", 0x00ec, "igujarati", 0x0a87, "igurmukhi", 0x0a07, "ihiragana", 0x3044, "ihookabove", 0x1ec9, "iibengali", 0x0988, "iicyrillic", 0x0438, "iideva", 0x0908, "iigujarati", 0x0a88, "iigurmukhi", 0x0a08, "iimatragurmukhi", 0x0a40, "iinvertedbreve", 0x020b, "iishortcyrillic", 0x0439, "iivowelsignbengali", 0x09c0, "iivowelsigndeva", 0x0940, "iivowelsigngujarati", 0x0ac0, "ij", 0x0133, "ikatakana", 0x30a4, "ikatakanahalfwidth", 0xff72, "ikorean", 0x3163, "ilde", 0x02dc, "iluyhebrew", 0x05ac, "imacron", 0x012b, "imacroncyrillic", 0x04e3, "imageorapproximatelyequal", 0x2253, "imatragurmukhi", 0x0a3f, "imonospace", 0xff49, "increment", 0x2206, "infinity", 0x221e, "iniarmenian", 0x056b, "integral", 0x222b, "integralbottom", 0x2321, "integralbt", 0x2321, "integralex", 0xf8f5, "integraltop", 0x2320, "integraltp", 0x2320, "intersection", 0x2229, "intisquare", 0x3305, "invbullet", 0x25d8, "invcircle", 0x25d9, "invsmileface", 0x263b, "iocyrillic", 0x0451, "iogonek", 0x012f, "iota", 0x03b9, "iotadieresis", 0x03ca, "iotadieresistonos", 0x0390, "iotalatin", 0x0269, "iotatonos", 0x03af, "iparen", 0x24a4, "irigurmukhi", 0x0a72, "ismallhiragana", 0x3043, "ismallkatakana", 0x30a3, "ismallkatakanahalfwidth", 0xff68, "issharbengali", 0x09fa, "istroke", 0x0268, "isuperior", 0xf6ed, "iterationhiragana", 0x309d, "iterationkatakana", 0x30fd, "itilde", 0x0129, "itildebelow", 0x1e2d, "iubopomofo", 0x3129, "iucyrillic", 0x044e, "ivowelsignbengali", 0x09bf, "ivowelsigndeva", 0x093f, "ivowelsigngujarati", 0x0abf, "izhitsacyrillic", 0x0475, "izhitsadblgravecyrillic", 0x0477, "j", 0x006a, "jaarmenian", 0x0571, "jabengali", 0x099c, "jadeva", 0x091c, "jagujarati", 0x0a9c, "jagurmukhi", 0x0a1c, "jbopomofo", 0x3110, "jcaron", 0x01f0, "jcircle", 0x24d9, "jcircumflex", 0x0135, "jcrossedtail", 0x029d, "jdotlessstroke", 0x025f, "jecyrillic", 0x0458, "jeemarabic", 0x062c, "jeemfinalarabic", 0xfe9e, "jeeminitialarabic", 0xfe9f, "jeemmedialarabic", 0xfea0, "jeharabic", 0x0698, "jehfinalarabic", 0xfb8b, "jhabengali", 0x099d, "jhadeva", 0x091d, "jhagujarati", 0x0a9d, "jhagurmukhi", 0x0a1d, "jheharmenian", 0x057b, "jis", 0x3004, "jmonospace", 0xff4a, "jparen", 0x24a5, "jsuperior", 0x02b2, "k", 0x006b, "kabashkircyrillic", 0x04a1, "kabengali", 0x0995, "kacute", 0x1e31, "kacyrillic", 0x043a, "kadescendercyrillic", 0x049b, "kadeva", 0x0915, "kaf", 0x05db, "kafarabic", 0x0643, "kafdagesh", 0xfb3b, "kafdageshhebrew", 0xfb3b, "kaffinalarabic", 0xfeda, "kafhebrew", 0x05db, "kafinitialarabic", 0xfedb, "kafmedialarabic", 0xfedc, "kafrafehebrew", 0xfb4d, "kagujarati", 0x0a95, "kagurmukhi", 0x0a15, "kahiragana", 0x304b, "kahookcyrillic", 0x04c4, "kakatakana", 0x30ab, "kakatakanahalfwidth", 0xff76, "kappa", 0x03ba, "kappasymbolgreek", 0x03f0, "kapyeounmieumkorean", 0x3171, "kapyeounphieuphkorean", 0x3184, "kapyeounpieupkorean", 0x3178, "kapyeounssangpieupkorean", 0x3179, "karoriisquare", 0x330d, "kashidaautoarabic", 0x0640, "kashidaautonosidebearingarabic", 0x0640, "kasmallkatakana", 0x30f5, "kasquare", 0x3384, "kasraarabic", 0x0650, "kasratanarabic", 0x064d, "kastrokecyrillic", 0x049f, "katahiraprolongmarkhalfwidth", 0xff70, "kaverticalstrokecyrillic", 0x049d, "kbopomofo", 0x310e, "kcalsquare", 0x3389, "kcaron", 0x01e9, "kcedilla", 0x0137, "kcircle", 0x24da, "kcommaaccent", 0x0137, "kdotbelow", 0x1e33, "keharmenian", 0x0584, "kehiragana", 0x3051, "kekatakana", 0x30b1, "kekatakanahalfwidth", 0xff79, "kenarmenian", 0x056f, "kesmallkatakana", 0x30f6, "kgreenlandic", 0x0138, "khabengali", 0x0996, "khacyrillic", 0x0445, "khadeva", 0x0916, "khagujarati", 0x0a96, "khagurmukhi", 0x0a16, "khaharabic", 0x062e, "khahfinalarabic", 0xfea6, "khahinitialarabic", 0xfea7, "khahmedialarabic", 0xfea8, "kheicoptic", 0x03e7, "khhadeva", 0x0959, "khhagurmukhi", 0x0a59, "khieukhacirclekorean", 0x3278, "khieukhaparenkorean", 0x3218, "khieukhcirclekorean", 0x326a, "khieukhkorean", 0x314b, "khieukhparenkorean", 0x320a, "khokhaithai", 0x0e02, "khokhonthai", 0x0e05, "khokhuatthai", 0x0e03, "khokhwaithai", 0x0e04, "khomutthai", 0x0e5b, "khook", 0x0199, "khorakhangthai", 0x0e06, "khzsquare", 0x3391, "kihiragana", 0x304d, "kikatakana", 0x30ad, "kikatakanahalfwidth", 0xff77, "kiroguramusquare", 0x3315, "kiromeetorusquare", 0x3316, "kirosquare", 0x3314, "kiyeokacirclekorean", 0x326e, "kiyeokaparenkorean", 0x320e, "kiyeokcirclekorean", 0x3260, "kiyeokkorean", 0x3131, "kiyeokparenkorean", 0x3200, "kiyeoksioskorean", 0x3133, "kjecyrillic", 0x045c, "klinebelow", 0x1e35, "klsquare", 0x3398, "kmcubedsquare", 0x33a6, "kmonospace", 0xff4b, "kmsquaredsquare", 0x33a2, "kohiragana", 0x3053, "kohmsquare", 0x33c0, "kokaithai", 0x0e01, "kokatakana", 0x30b3, "kokatakanahalfwidth", 0xff7a, "kooposquare", 0x331e, "koppacyrillic", 0x0481, "koreanstandardsymbol", 0x327f, "koroniscmb", 0x0343, "kparen", 0x24a6, "kpasquare", 0x33aa, "ksicyrillic", 0x046f, "ktsquare", 0x33cf, "kturned", 0x029e, "kuhiragana", 0x304f, "kukatakana", 0x30af, "kukatakanahalfwidth", 0xff78, "kvsquare", 0x33b8, "kwsquare", 0x33be, "l", 0x006c, "labengali", 0x09b2, "lacute", 0x013a, "ladeva", 0x0932, "lagujarati", 0x0ab2, "lagurmukhi", 0x0a32, "lakkhangyaothai", 0x0e45, "lamaleffinalarabic", 0xfefc, "lamalefhamzaabovefinalarabic", 0xfef8, "lamalefhamzaaboveisolatedarabic", 0xfef7, "lamalefhamzabelowfinalarabic", 0xfefa, "lamalefhamzabelowisolatedarabic", 0xfef9, "lamalefisolatedarabic", 0xfefb, "lamalefmaddaabovefinalarabic", 0xfef6, "lamalefmaddaaboveisolatedarabic", 0xfef5, "lamarabic", 0x0644, "lambda", 0x03bb, "lambdastroke", 0x019b, "lamed", 0x05dc, "lameddagesh", 0xfb3c, "lameddageshhebrew", 0xfb3c, "lamedhebrew", 0x05dc, "lamfinalarabic", 0xfede, "lamhahinitialarabic", 0xfcca, "laminitialarabic", 0xfedf, "lamjeeminitialarabic", 0xfcc9, "lamkhahinitialarabic", 0xfccb, "lamlamhehisolatedarabic", 0xfdf2, "lammedialarabic", 0xfee0, "lammeemhahinitialarabic", 0xfd88, "lammeeminitialarabic", 0xfccc, "largecircle", 0x25ef, "lbar", 0x019a, "lbelt", 0x026c, "lbopomofo", 0x310c, "lcaron", 0x013e, "lcedilla", 0x013c, "lcircle", 0x24db, "lcircumflexbelow", 0x1e3d, "lcommaaccent", 0x013c, "ldot", 0x0140, "ldotaccent", 0x0140, "ldotbelow", 0x1e37, "ldotbelowmacron", 0x1e39, "leftangleabovecmb", 0x031a, "lefttackbelowcmb", 0x0318, "less", 0x003c, "lessequal", 0x2264, "lessequalorgreater", 0x22da, "lessmonospace", 0xff1c, "lessorequivalent", 0x2272, "lessorgreater", 0x2276, "lessoverequal", 0x2266, "lesssmall", 0xfe64, "lezh", 0x026e, "lfblock", 0x258c, "lhookretroflex", 0x026d, "lira", 0x20a4, "liwnarmenian", 0x056c, "lj", 0x01c9, "ljecyrillic", 0x0459, "ll", 0xf6c0, "lladeva", 0x0933, "llagujarati", 0x0ab3, "llinebelow", 0x1e3b, "llladeva", 0x0934, "llvocalicbengali", 0x09e1, "llvocalicdeva", 0x0961, "llvocalicvowelsignbengali", 0x09e3, "llvocalicvowelsigndeva", 0x0963, "lmiddletilde", 0x026b, "lmonospace", 0xff4c, "lmsquare", 0x33d0, "lochulathai", 0x0e2c, "logicaland", 0x2227, "logicalnot", 0x00ac, "logicalnotreversed", 0x2310, "logicalor", 0x2228, "lolingthai", 0x0e25, "longs", 0x017f, "lowlinecenterline", 0xfe4e, "lowlinecmb", 0x0332, "lowlinedashed", 0xfe4d, "lozenge", 0x25ca, "lparen", 0x24a7, "lslash", 0x0142, "lsquare", 0x2113, "lsuperior", 0xf6ee, "ltshade", 0x2591, "luthai", 0x0e26, "lvocalicbengali", 0x098c, "lvocalicdeva", 0x090c, "lvocalicvowelsignbengali", 0x09e2, "lvocalicvowelsigndeva", 0x0962, "lxsquare", 0x33d3, "m", 0x006d, "mabengali", 0x09ae, "macron", 0x00af, "macronbelowcmb", 0x0331, "macroncmb", 0x0304, "macronlowmod", 0x02cd, "macronmonospace", 0xffe3, "macute", 0x1e3f, "madeva", 0x092e, "magujarati", 0x0aae, "magurmukhi", 0x0a2e, "mahapakhhebrew", 0x05a4, "mahapakhlefthebrew", 0x05a4, "mahiragana", 0x307e, "maichattawalowleftthai", 0xf895, "maichattawalowrightthai", 0xf894, "maichattawathai", 0x0e4b, "maichattawaupperleftthai", 0xf893, "maieklowleftthai", 0xf88c, "maieklowrightthai", 0xf88b, "maiekthai", 0x0e48, "maiekupperleftthai", 0xf88a, "maihanakatleftthai", 0xf884, "maihanakatthai", 0x0e31, "maitaikhuleftthai", 0xf889, "maitaikhuthai", 0x0e47, "maitholowleftthai", 0xf88f, "maitholowrightthai", 0xf88e, "maithothai", 0x0e49, "maithoupperleftthai", 0xf88d, "maitrilowleftthai", 0xf892, "maitrilowrightthai", 0xf891, "maitrithai", 0x0e4a, "maitriupperleftthai", 0xf890, "maiyamokthai", 0x0e46, "makatakana", 0x30de, "makatakanahalfwidth", 0xff8f, "male", 0x2642, "mansyonsquare", 0x3347, "maqafhebrew", 0x05be, "mars", 0x2642, "masoracirclehebrew", 0x05af, "masquare", 0x3383, "mbopomofo", 0x3107, "mbsquare", 0x33d4, "mcircle", 0x24dc, "mcubedsquare", 0x33a5, "mdotaccent", 0x1e41, "mdotbelow", 0x1e43, "meemarabic", 0x0645, "meemfinalarabic", 0xfee2, "meeminitialarabic", 0xfee3, "meemmedialarabic", 0xfee4, "meemmeeminitialarabic", 0xfcd1, "meemmeemisolatedarabic", 0xfc48, "meetorusquare", 0x334d, "mehiragana", 0x3081, "meizierasquare", 0x337e, "mekatakana", 0x30e1, "mekatakanahalfwidth", 0xff92, "mem", 0x05de, "memdagesh", 0xfb3e, "memdageshhebrew", 0xfb3e, "memhebrew", 0x05de, "menarmenian", 0x0574, "merkhahebrew", 0x05a5, "merkhakefulahebrew", 0x05a6, "merkhakefulalefthebrew", 0x05a6, "merkhalefthebrew", 0x05a5, "mhook", 0x0271, "mhzsquare", 0x3392, "middledotkatakanahalfwidth", 0xff65, "middot", 0x00b7, "mieumacirclekorean", 0x3272, "mieumaparenkorean", 0x3212, "mieumcirclekorean", 0x3264, "mieumkorean", 0x3141, "mieumpansioskorean", 0x3170, "mieumparenkorean", 0x3204, "mieumpieupkorean", 0x316e, "mieumsioskorean", 0x316f, "mihiragana", 0x307f, "mikatakana", 0x30df, "mikatakanahalfwidth", 0xff90, "minus", 0x2212, "minusbelowcmb", 0x0320, "minuscircle", 0x2296, "minusmod", 0x02d7, "minusplus", 0x2213, "minute", 0x2032, "miribaarusquare", 0x334a, "mirisquare", 0x3349, "mlonglegturned", 0x0270, "mlsquare", 0x3396, "mmcubedsquare", 0x33a3, "mmonospace", 0xff4d, "mmsquaredsquare", 0x339f, "mohiragana", 0x3082, "mohmsquare", 0x33c1, "mokatakana", 0x30e2, "mokatakanahalfwidth", 0xff93, "molsquare", 0x33d6, "momathai", 0x0e21, "moverssquare", 0x33a7, "moverssquaredsquare", 0x33a8, "mparen", 0x24a8, "mpasquare", 0x33ab, "mssquare", 0x33b3, "msuperior", 0xf6ef, "mturned", 0x026f, "mu", 0x00b5, "mu1", 0x00b5, "muasquare", 0x3382, "muchgreater", 0x226b, "muchless", 0x226a, "mufsquare", 0x338c, "mugreek", 0x03bc, "mugsquare", 0x338d, "muhiragana", 0x3080, "mukatakana", 0x30e0, "mukatakanahalfwidth", 0xff91, "mulsquare", 0x3395, "multiply", 0x00d7, "mumsquare", 0x339b, "munahhebrew", 0x05a3, "munahlefthebrew", 0x05a3, "musicalnote", 0x266a, "musicalnotedbl", 0x266b, "musicflatsign", 0x266d, "musicsharpsign", 0x266f, "mussquare", 0x33b2, "muvsquare", 0x33b6, "muwsquare", 0x33bc, "mvmegasquare", 0x33b9, "mvsquare", 0x33b7, "mwmegasquare", 0x33bf, "mwsquare", 0x33bd, "n", 0x006e, "nabengali", 0x09a8, "nabla", 0x2207, "nacute", 0x0144, "nadeva", 0x0928, "nagujarati", 0x0aa8, "nagurmukhi", 0x0a28, "nahiragana", 0x306a, "nakatakana", 0x30ca, "nakatakanahalfwidth", 0xff85, "napostrophe", 0x0149, "nasquare", 0x3381, "nbopomofo", 0x310b, "nbspace", 0x00a0, "ncaron", 0x0148, "ncedilla", 0x0146, "ncircle", 0x24dd, "ncircumflexbelow", 0x1e4b, "ncommaaccent", 0x0146, "ndotaccent", 0x1e45, "ndotbelow", 0x1e47, "nehiragana", 0x306d, "nekatakana", 0x30cd, "nekatakanahalfwidth", 0xff88, "newsheqelsign", 0x20aa, "nfsquare", 0x338b, "ngabengali", 0x0999, "ngadeva", 0x0919, "ngagujarati", 0x0a99, "ngagurmukhi", 0x0a19, "ngonguthai", 0x0e07, "nhiragana", 0x3093, "nhookleft", 0x0272, "nhookretroflex", 0x0273, "nieunacirclekorean", 0x326f, "nieunaparenkorean", 0x320f, "nieuncieuckorean", 0x3135, "nieuncirclekorean", 0x3261, "nieunhieuhkorean", 0x3136, "nieunkorean", 0x3134, "nieunpansioskorean", 0x3168, "nieunparenkorean", 0x3201, "nieunsioskorean", 0x3167, "nieuntikeutkorean", 0x3166, "nihiragana", 0x306b, "nikatakana", 0x30cb, "nikatakanahalfwidth", 0xff86, "nikhahitleftthai", 0xf899, "nikhahitthai", 0x0e4d, "nine", 0x0039, "ninearabic", 0x0669, "ninebengali", 0x09ef, "ninecircle", 0x2468, "ninecircleinversesansserif", 0x2792, "ninedeva", 0x096f, "ninegujarati", 0x0aef, "ninegurmukhi", 0x0a6f, "ninehackarabic", 0x0669, "ninehangzhou", 0x3029, "nineideographicparen", 0x3228, "nineinferior", 0x2089, "ninemonospace", 0xff19, "nineoldstyle", 0xf739, "nineparen", 0x247c, "nineperiod", 0x2490, "ninepersian", 0x06f9, "nineroman", 0x2178, "ninesuperior", 0x2079, "nineteencircle", 0x2472, "nineteenparen", 0x2486, "nineteenperiod", 0x249a, "ninethai", 0x0e59, "nj", 0x01cc, "njecyrillic", 0x045a, "nkatakana", 0x30f3, "nkatakanahalfwidth", 0xff9d, "nlegrightlong", 0x019e, "nlinebelow", 0x1e49, "nmonospace", 0xff4e, "nmsquare", 0x339a, "nnabengali", 0x09a3, "nnadeva", 0x0923, "nnagujarati", 0x0aa3, "nnagurmukhi", 0x0a23, "nnnadeva", 0x0929, "nohiragana", 0x306e, "nokatakana", 0x30ce, "nokatakanahalfwidth", 0xff89, "nonbreakingspace", 0x00a0, "nonenthai", 0x0e13, "nonuthai", 0x0e19, "noonarabic", 0x0646, "noonfinalarabic", 0xfee6, "noonghunnaarabic", 0x06ba, "noonghunnafinalarabic", 0xfb9f, "nooninitialarabic", 0xfee7, "noonjeeminitialarabic", 0xfcd2, "noonjeemisolatedarabic", 0xfc4b, "noonmedialarabic", 0xfee8, "noonmeeminitialarabic", 0xfcd5, "noonmeemisolatedarabic", 0xfc4e, "noonnoonfinalarabic", 0xfc8d, "notcontains", 0x220c, "notelement", 0x2209, "notelementof", 0x2209, "notequal", 0x2260, "notgreater", 0x226f, "notgreaternorequal", 0x2271, "notgreaternorless", 0x2279, "notidentical", 0x2262, "notless", 0x226e, "notlessnorequal", 0x2270, "notparallel", 0x2226, "notprecedes", 0x2280, "notsubset", 0x2284, "notsucceeds", 0x2281, "notsuperset", 0x2285, "nowarmenian", 0x0576, "nparen", 0x24a9, "nssquare", 0x33b1, "nsuperior", 0x207f, "ntilde", 0x00f1, "nu", 0x03bd, "nuhiragana", 0x306c, "nukatakana", 0x30cc, "nukatakanahalfwidth", 0xff87, "nuktabengali", 0x09bc, "nuktadeva", 0x093c, "nuktagujarati", 0x0abc, "nuktagurmukhi", 0x0a3c, "numbersign", 0x0023, "numbersignmonospace", 0xff03, "numbersignsmall", 0xfe5f, "numeralsigngreek", 0x0374, "numeralsignlowergreek", 0x0375, "numero", 0x2116, "nun", 0x05e0, "nundagesh", 0xfb40, "nundageshhebrew", 0xfb40, "nunhebrew", 0x05e0, "nvsquare", 0x33b5, "nwsquare", 0x33bb, "nyabengali", 0x099e, "nyadeva", 0x091e, "nyagujarati", 0x0a9e, "nyagurmukhi", 0x0a1e, "o", 0x006f, "oacute", 0x00f3, "oangthai", 0x0e2d, "obarred", 0x0275, "obarredcyrillic", 0x04e9, "obarreddieresiscyrillic", 0x04eb, "obengali", 0x0993, "obopomofo", 0x311b, "obreve", 0x014f, "ocandradeva", 0x0911, "ocandragujarati", 0x0a91, "ocandravowelsigndeva", 0x0949, "ocandravowelsigngujarati", 0x0ac9, "ocaron", 0x01d2, "ocircle", 0x24de, "ocircumflex", 0x00f4, "ocircumflexacute", 0x1ed1, "ocircumflexdotbelow", 0x1ed9, "ocircumflexgrave", 0x1ed3, "ocircumflexhookabove", 0x1ed5, "ocircumflextilde", 0x1ed7, "ocyrillic", 0x043e, "odblacute", 0x0151, "odblgrave", 0x020d, "odeva", 0x0913, "odieresis", 0x00f6, "odieresiscyrillic", 0x04e7, "odotbelow", 0x1ecd, "oe", 0x0153, "oekorean", 0x315a, "ogonek", 0x02db, "ogonekcmb", 0x0328, "ograve", 0x00f2, "ogujarati", 0x0a93, "oharmenian", 0x0585, "ohiragana", 0x304a, "ohookabove", 0x1ecf, "ohorn", 0x01a1, "ohornacute", 0x1edb, "ohorndotbelow", 0x1ee3, "ohorngrave", 0x1edd, "ohornhookabove", 0x1edf, "ohorntilde", 0x1ee1, "ohungarumlaut", 0x0151, "oi", 0x01a3, "oinvertedbreve", 0x020f, "okatakana", 0x30aa, "okatakanahalfwidth", 0xff75, "okorean", 0x3157, "olehebrew", 0x05ab, "omacron", 0x014d, "omacronacute", 0x1e53, "omacrongrave", 0x1e51, "omdeva", 0x0950, "omega", 0x03c9, "omega1", 0x03d6, "omegacyrillic", 0x0461, "omegalatinclosed", 0x0277, "omegaroundcyrillic", 0x047b, "omegatitlocyrillic", 0x047d, "omegatonos", 0x03ce, "omgujarati", 0x0ad0, "omicron", 0x03bf, "omicrontonos", 0x03cc, "omonospace", 0xff4f, "one", 0x0031, "onearabic", 0x0661, "onebengali", 0x09e7, "onecircle", 0x2460, "onecircleinversesansserif", 0x278a, "onedeva", 0x0967, "onedotenleader", 0x2024, "oneeighth", 0x215b, "onefitted", 0xf6dc, "onegujarati", 0x0ae7, "onegurmukhi", 0x0a67, "onehackarabic", 0x0661, "onehalf", 0x00bd, "onehangzhou", 0x3021, "oneideographicparen", 0x3220, "oneinferior", 0x2081, "onemonospace", 0xff11, "onenumeratorbengali", 0x09f4, "oneoldstyle", 0xf731, "oneparen", 0x2474, "oneperiod", 0x2488, "onepersian", 0x06f1, "onequarter", 0x00bc, "oneroman", 0x2170, "onesuperior", 0x00b9, "onethai", 0x0e51, "onethird", 0x2153, "oogonek", 0x01eb, "oogonekmacron", 0x01ed, "oogurmukhi", 0x0a13, "oomatragurmukhi", 0x0a4b, "oopen", 0x0254, "oparen", 0x24aa, "openbullet", 0x25e6, "option", 0x2325, "ordfeminine", 0x00aa, "ordmasculine", 0x00ba, "orthogonal", 0x221f, "oshortdeva", 0x0912, "oshortvowelsigndeva", 0x094a, "oslash", 0x00f8, "oslashacute", 0x01ff, "osmallhiragana", 0x3049, "osmallkatakana", 0x30a9, "osmallkatakanahalfwidth", 0xff6b, "ostrokeacute", 0x01ff, "osuperior", 0xf6f0, "otcyrillic", 0x047f, "otilde", 0x00f5, "otildeacute", 0x1e4d, "otildedieresis", 0x1e4f, "oubopomofo", 0x3121, "overline", 0x203e, "overlinecenterline", 0xfe4a, "overlinecmb", 0x0305, "overlinedashed", 0xfe49, "overlinedblwavy", 0xfe4c, "overlinewavy", 0xfe4b, "overscore", 0x00af, "ovowelsignbengali", 0x09cb, "ovowelsigndeva", 0x094b, "ovowelsigngujarati", 0x0acb, "p", 0x0070, "paampssquare", 0x3380, "paasentosquare", 0x332b, "pabengali", 0x09aa, "pacute", 0x1e55, "padeva", 0x092a, "pagedown", 0x21df, "pageup", 0x21de, "pagujarati", 0x0aaa, "pagurmukhi", 0x0a2a, "pahiragana", 0x3071, "paiyannoithai", 0x0e2f, "pakatakana", 0x30d1, "palatalizationcyrilliccmb", 0x0484, "palochkacyrillic", 0x04c0, "pansioskorean", 0x317f, "paragraph", 0x00b6, "parallel", 0x2225, "parenleft", 0x0028, "parenleftaltonearabic", 0xfd3e, "parenleftbt", 0xf8ed, "parenleftex", 0xf8ec, "parenleftinferior", 0x208d, "parenleftmonospace", 0xff08, "parenleftsmall", 0xfe59, "parenleftsuperior", 0x207d, "parenlefttp", 0xf8eb, "parenleftvertical", 0xfe35, "parenright", 0x0029, "parenrightaltonearabic", 0xfd3f, "parenrightbt", 0xf8f8, "parenrightex", 0xf8f7, "parenrightinferior", 0x208e, "parenrightmonospace", 0xff09, "parenrightsmall", 0xfe5a, "parenrightsuperior", 0x207e, "parenrighttp", 0xf8f6, "parenrightvertical", 0xfe36, "partialdiff", 0x2202, "paseqhebrew", 0x05c0, "pashtahebrew", 0x0599, "pasquare", 0x33a9, "patah", 0x05b7, "patah11", 0x05b7, "patah1d", 0x05b7, "patah2a", 0x05b7, "patahhebrew", 0x05b7, "patahnarrowhebrew", 0x05b7, "patahquarterhebrew", 0x05b7, "patahwidehebrew", 0x05b7, "pazerhebrew", 0x05a1, "pbopomofo", 0x3106, "pcircle", 0x24df, "pdotaccent", 0x1e57, "pe", 0x05e4, "pecyrillic", 0x043f, "pedagesh", 0xfb44, "pedageshhebrew", 0xfb44, "peezisquare", 0x333b, "pefinaldageshhebrew", 0xfb43, "peharabic", 0x067e, "peharmenian", 0x057a, "pehebrew", 0x05e4, "pehfinalarabic", 0xfb57, "pehinitialarabic", 0xfb58, "pehiragana", 0x307a, "pehmedialarabic", 0xfb59, "pekatakana", 0x30da, "pemiddlehookcyrillic", 0x04a7, "perafehebrew", 0xfb4e, "percent", 0x0025, "percentarabic", 0x066a, "percentmonospace", 0xff05, "percentsmall", 0xfe6a, "period", 0x002e, "periodarmenian", 0x0589, "periodcentered", 0x00b7, "periodhalfwidth", 0xff61, "periodinferior", 0xf6e7, "periodmonospace", 0xff0e, "periodsmall", 0xfe52, "periodsuperior", 0xf6e8, "perispomenigreekcmb", 0x0342, "perpendicular", 0x22a5, "perthousand", 0x2030, "peseta", 0x20a7, "pfsquare", 0x338a, "phabengali", 0x09ab, "phadeva", 0x092b, "phagujarati", 0x0aab, "phagurmukhi", 0x0a2b, "phi", 0x03c6, "phi1", 0x03d5, "phieuphacirclekorean", 0x327a, "phieuphaparenkorean", 0x321a, "phieuphcirclekorean", 0x326c, "phieuphkorean", 0x314d, "phieuphparenkorean", 0x320c, "philatin", 0x0278, "phinthuthai", 0x0e3a, "phisymbolgreek", 0x03d5, "phook", 0x01a5, "phophanthai", 0x0e1e, "phophungthai", 0x0e1c, "phosamphaothai", 0x0e20, "pi", 0x03c0, "pieupacirclekorean", 0x3273, "pieupaparenkorean", 0x3213, "pieupcieuckorean", 0x3176, "pieupcirclekorean", 0x3265, "pieupkiyeokkorean", 0x3172, "pieupkorean", 0x3142, "pieupparenkorean", 0x3205, "pieupsioskiyeokkorean", 0x3174, "pieupsioskorean", 0x3144, "pieupsiostikeutkorean", 0x3175, "pieupthieuthkorean", 0x3177, "pieuptikeutkorean", 0x3173, "pihiragana", 0x3074, "pikatakana", 0x30d4, "pisymbolgreek", 0x03d6, "piwrarmenian", 0x0583, "plus", 0x002b, "plusbelowcmb", 0x031f, "pluscircle", 0x2295, "plusminus", 0x00b1, "plusmod", 0x02d6, "plusmonospace", 0xff0b, "plussmall", 0xfe62, "plussuperior", 0x207a, "pmonospace", 0xff50, "pmsquare", 0x33d8, "pohiragana", 0x307d, "pointingindexdownwhite", 0x261f, "pointingindexleftwhite", 0x261c, "pointingindexrightwhite", 0x261e, "pointingindexupwhite", 0x261d, "pokatakana", 0x30dd, "poplathai", 0x0e1b, "postalmark", 0x3012, "postalmarkface", 0x3020, "pparen", 0x24ab, "precedes", 0x227a, "prescription", 0x211e, "primemod", 0x02b9, "primereversed", 0x2035, "product", 0x220f, "projective", 0x2305, "prolongedkana", 0x30fc, "propellor", 0x2318, "propersubset", 0x2282, "propersuperset", 0x2283, "proportion", 0x2237, "proportional", 0x221d, "psi", 0x03c8, "psicyrillic", 0x0471, "psilipneumatacyrilliccmb", 0x0486, "pssquare", 0x33b0, "puhiragana", 0x3077, "pukatakana", 0x30d7, "pvsquare", 0x33b4, "pwsquare", 0x33ba, "q", 0x0071, "qadeva", 0x0958, "qadmahebrew", 0x05a8, "qafarabic", 0x0642, "qaffinalarabic", 0xfed6, "qafinitialarabic", 0xfed7, "qafmedialarabic", 0xfed8, "qamats", 0x05b8, "qamats10", 0x05b8, "qamats1a", 0x05b8, "qamats1c", 0x05b8, "qamats27", 0x05b8, "qamats29", 0x05b8, "qamats33", 0x05b8, "qamatsde", 0x05b8, "qamatshebrew", 0x05b8, "qamatsnarrowhebrew", 0x05b8, "qamatsqatanhebrew", 0x05b8, "qamatsqatannarrowhebrew", 0x05b8, "qamatsqatanquarterhebrew", 0x05b8, "qamatsqatanwidehebrew", 0x05b8, "qamatsquarterhebrew", 0x05b8, "qamatswidehebrew", 0x05b8, "qarneyparahebrew", 0x059f, "qbopomofo", 0x3111, "qcircle", 0x24e0, "qhook", 0x02a0, "qmonospace", 0xff51, "qof", 0x05e7, "qofdagesh", 0xfb47, "qofdageshhebrew", 0xfb47, "qofhebrew", 0x05e7, "qparen", 0x24ac, "quarternote", 0x2669, "qubuts", 0x05bb, "qubuts18", 0x05bb, "qubuts25", 0x05bb, "qubuts31", 0x05bb, "qubutshebrew", 0x05bb, "qubutsnarrowhebrew", 0x05bb, "qubutsquarterhebrew", 0x05bb, "qubutswidehebrew", 0x05bb, "question", 0x003f, "questionarabic", 0x061f, "questionarmenian", 0x055e, "questiondown", 0x00bf, "questiondownsmall", 0xf7bf, "questiongreek", 0x037e, "questionmonospace", 0xff1f, "questionsmall", 0xf73f, "quotedbl", 0x0022, "quotedblbase", 0x201e, "quotedblleft", 0x201c, "quotedblmonospace", 0xff02, "quotedblprime", 0x301e, "quotedblprimereversed", 0x301d, "quotedblright", 0x201d, "quoteleft", 0x2018, "quoteleftreversed", 0x201b, "quotereversed", 0x201b, "quoteright", 0x2019, "quoterightn", 0x0149, "quotesinglbase", 0x201a, "quotesingle", 0x0027, "quotesinglemonospace", 0xff07, "r", 0x0072, "raarmenian", 0x057c, "rabengali", 0x09b0, "racute", 0x0155, "radeva", 0x0930, "radical", 0x221a, "radicalex", 0xf8e5, "radoverssquare", 0x33ae, "radoverssquaredsquare", 0x33af, "radsquare", 0x33ad, "rafe", 0x05bf, "rafehebrew", 0x05bf, "ragujarati", 0x0ab0, "ragurmukhi", 0x0a30, "rahiragana", 0x3089, "rakatakana", 0x30e9, "rakatakanahalfwidth", 0xff97, "ralowerdiagonalbengali", 0x09f1, "ramiddlediagonalbengali", 0x09f0, "ramshorn", 0x0264, "ratio", 0x2236, "rbopomofo", 0x3116, "rcaron", 0x0159, "rcedilla", 0x0157, "rcircle", 0x24e1, "rcommaaccent", 0x0157, "rdblgrave", 0x0211, "rdotaccent", 0x1e59, "rdotbelow", 0x1e5b, "rdotbelowmacron", 0x1e5d, "referencemark", 0x203b, "reflexsubset", 0x2286, "reflexsuperset", 0x2287, "registered", 0x00ae, "registersans", 0xf8e8, "registerserif", 0xf6da, "reharabic", 0x0631, "reharmenian", 0x0580, "rehfinalarabic", 0xfeae, "rehiragana", 0x308c, "rekatakana", 0x30ec, "rekatakanahalfwidth", 0xff9a, "resh", 0x05e8, "reshdageshhebrew", 0xfb48, "reshhebrew", 0x05e8, "reversedtilde", 0x223d, "reviahebrew", 0x0597, "reviamugrashhebrew", 0x0597, "revlogicalnot", 0x2310, "rfishhook", 0x027e, "rfishhookreversed", 0x027f, "rhabengali", 0x09dd, "rhadeva", 0x095d, "rho", 0x03c1, "rhook", 0x027d, "rhookturned", 0x027b, "rhookturnedsuperior", 0x02b5, "rhosymbolgreek", 0x03f1, "rhotichookmod", 0x02de, "rieulacirclekorean", 0x3271, "rieulaparenkorean", 0x3211, "rieulcirclekorean", 0x3263, "rieulhieuhkorean", 0x3140, "rieulkiyeokkorean", 0x313a, "rieulkiyeoksioskorean", 0x3169, "rieulkorean", 0x3139, "rieulmieumkorean", 0x313b, "rieulpansioskorean", 0x316c, "rieulparenkorean", 0x3203, "rieulphieuphkorean", 0x313f, "rieulpieupkorean", 0x313c, "rieulpieupsioskorean", 0x316b, "rieulsioskorean", 0x313d, "rieulthieuthkorean", 0x313e, "rieultikeutkorean", 0x316a, "rieulyeorinhieuhkorean", 0x316d, "rightangle", 0x221f, "righttackbelowcmb", 0x0319, "righttriangle", 0x22bf, "rihiragana", 0x308a, "rikatakana", 0x30ea, "rikatakanahalfwidth", 0xff98, "ring", 0x02da, "ringbelowcmb", 0x0325, "ringcmb", 0x030a, "ringhalfleft", 0x02bf, "ringhalfleftarmenian", 0x0559, "ringhalfleftbelowcmb", 0x031c, "ringhalfleftcentered", 0x02d3, "ringhalfright", 0x02be, "ringhalfrightbelowcmb", 0x0339, "ringhalfrightcentered", 0x02d2, "rinvertedbreve", 0x0213, "rittorusquare", 0x3351, "rlinebelow", 0x1e5f, "rlongleg", 0x027c, "rlonglegturned", 0x027a, "rmonospace", 0xff52, "rohiragana", 0x308d, "rokatakana", 0x30ed, "rokatakanahalfwidth", 0xff9b, "roruathai", 0x0e23, "rparen", 0x24ad, "rrabengali", 0x09dc, "rradeva", 0x0931, "rragurmukhi", 0x0a5c, "rreharabic", 0x0691, "rrehfinalarabic", 0xfb8d, "rrvocalicbengali", 0x09e0, "rrvocalicdeva", 0x0960, "rrvocalicgujarati", 0x0ae0, "rrvocalicvowelsignbengali", 0x09c4, "rrvocalicvowelsigndeva", 0x0944, "rrvocalicvowelsigngujarati", 0x0ac4, "rsuperior", 0xf6f1, "rtblock", 0x2590, "rturned", 0x0279, "rturnedsuperior", 0x02b4, "ruhiragana", 0x308b, "rukatakana", 0x30eb, "rukatakanahalfwidth", 0xff99, "rupeemarkbengali", 0x09f2, "rupeesignbengali", 0x09f3, "rupiah", 0xf6dd, "ruthai", 0x0e24, "rvocalicbengali", 0x098b, "rvocalicdeva", 0x090b, "rvocalicgujarati", 0x0a8b, "rvocalicvowelsignbengali", 0x09c3, "rvocalicvowelsigndeva", 0x0943, "rvocalicvowelsigngujarati", 0x0ac3, "s", 0x0073, "sabengali", 0x09b8, "sacute", 0x015b, "sacutedotaccent", 0x1e65, "sadarabic", 0x0635, "sadeva", 0x0938, "sadfinalarabic", 0xfeba, "sadinitialarabic", 0xfebb, "sadmedialarabic", 0xfebc, "sagujarati", 0x0ab8, "sagurmukhi", 0x0a38, "sahiragana", 0x3055, "sakatakana", 0x30b5, "sakatakanahalfwidth", 0xff7b, "sallallahoualayhewasallamarabic", 0xfdfa, "samekh", 0x05e1, "samekhdagesh", 0xfb41, "samekhdageshhebrew", 0xfb41, "samekhhebrew", 0x05e1, "saraaathai", 0x0e32, "saraaethai", 0x0e41, "saraaimaimalaithai", 0x0e44, "saraaimaimuanthai", 0x0e43, "saraamthai", 0x0e33, "saraathai", 0x0e30, "saraethai", 0x0e40, "saraiileftthai", 0xf886, "saraiithai", 0x0e35, "saraileftthai", 0xf885, "saraithai", 0x0e34, "saraothai", 0x0e42, "saraueeleftthai", 0xf888, "saraueethai", 0x0e37, "saraueleftthai", 0xf887, "sarauethai", 0x0e36, "sarauthai", 0x0e38, "sarauuthai", 0x0e39, "sbopomofo", 0x3119, "scaron", 0x0161, "scarondotaccent", 0x1e67, "scedilla", 0x015f, "schwa", 0x0259, "schwacyrillic", 0x04d9, "schwadieresiscyrillic", 0x04db, "schwahook", 0x025a, "scircle", 0x24e2, "scircumflex", 0x015d, "scommaaccent", 0x0219, "sdotaccent", 0x1e61, "sdotbelow", 0x1e63, "sdotbelowdotaccent", 0x1e69, "seagullbelowcmb", 0x033c, "second", 0x2033, "secondtonechinese", 0x02ca, "section", 0x00a7, "seenarabic", 0x0633, "seenfinalarabic", 0xfeb2, "seeninitialarabic", 0xfeb3, "seenmedialarabic", 0xfeb4, "segol", 0x05b6, "segol13", 0x05b6, "segol1f", 0x05b6, "segol2c", 0x05b6, "segolhebrew", 0x05b6, "segolnarrowhebrew", 0x05b6, "segolquarterhebrew", 0x05b6, "segoltahebrew", 0x0592, "segolwidehebrew", 0x05b6, "seharmenian", 0x057d, "sehiragana", 0x305b, "sekatakana", 0x30bb, "sekatakanahalfwidth", 0xff7e, "semicolon", 0x003b, "semicolonarabic", 0x061b, "semicolonmonospace", 0xff1b, "semicolonsmall", 0xfe54, "semivoicedmarkkana", 0x309c, "semivoicedmarkkanahalfwidth", 0xff9f, "sentisquare", 0x3322, "sentosquare", 0x3323, "seven", 0x0037, "sevenarabic", 0x0667, "sevenbengali", 0x09ed, "sevencircle", 0x2466, "sevencircleinversesansserif", 0x2790, "sevendeva", 0x096d, "seveneighths", 0x215e, "sevengujarati", 0x0aed, "sevengurmukhi", 0x0a6d, "sevenhackarabic", 0x0667, "sevenhangzhou", 0x3027, "sevenideographicparen", 0x3226, "seveninferior", 0x2087, "sevenmonospace", 0xff17, "sevenoldstyle", 0xf737, "sevenparen", 0x247a, "sevenperiod", 0x248e, "sevenpersian", 0x06f7, "sevenroman", 0x2176, "sevensuperior", 0x2077, "seventeencircle", 0x2470, "seventeenparen", 0x2484, "seventeenperiod", 0x2498, "seventhai", 0x0e57, "sfthyphen", 0x00ad, "shaarmenian", 0x0577, "shabengali", 0x09b6, "shacyrillic", 0x0448, "shaddaarabic", 0x0651, "shaddadammaarabic", 0xfc61, "shaddadammatanarabic", 0xfc5e, "shaddafathaarabic", 0xfc60, "shaddakasraarabic", 0xfc62, "shaddakasratanarabic", 0xfc5f, "shade", 0x2592, "shadedark", 0x2593, "shadelight", 0x2591, "shademedium", 0x2592, "shadeva", 0x0936, "shagujarati", 0x0ab6, "shagurmukhi", 0x0a36, "shalshelethebrew", 0x0593, "shbopomofo", 0x3115, "shchacyrillic", 0x0449, "sheenarabic", 0x0634, "sheenfinalarabic", 0xfeb6, "sheeninitialarabic", 0xfeb7, "sheenmedialarabic", 0xfeb8, "sheicoptic", 0x03e3, "sheqel", 0x20aa, "sheqelhebrew", 0x20aa, "sheva", 0x05b0, "sheva115", 0x05b0, "sheva15", 0x05b0, "sheva22", 0x05b0, "sheva2e", 0x05b0, "shevahebrew", 0x05b0, "shevanarrowhebrew", 0x05b0, "shevaquarterhebrew", 0x05b0, "shevawidehebrew", 0x05b0, "shhacyrillic", 0x04bb, "shimacoptic", 0x03ed, "shin", 0x05e9, "shindagesh", 0xfb49, "shindageshhebrew", 0xfb49, "shindageshshindot", 0xfb2c, "shindageshshindothebrew", 0xfb2c, "shindageshsindot", 0xfb2d, "shindageshsindothebrew", 0xfb2d, "shindothebrew", 0x05c1, "shinhebrew", 0x05e9, "shinshindot", 0xfb2a, "shinshindothebrew", 0xfb2a, "shinsindot", 0xfb2b, "shinsindothebrew", 0xfb2b, "shook", 0x0282, "sigma", 0x03c3, "sigma1", 0x03c2, "sigmafinal", 0x03c2, "sigmalunatesymbolgreek", 0x03f2, "sihiragana", 0x3057, "sikatakana", 0x30b7, "sikatakanahalfwidth", 0xff7c, "siluqhebrew", 0x05bd, "siluqlefthebrew", 0x05bd, "similar", 0x223c, "sindothebrew", 0x05c2, "siosacirclekorean", 0x3274, "siosaparenkorean", 0x3214, "sioscieuckorean", 0x317e, "sioscirclekorean", 0x3266, "sioskiyeokkorean", 0x317a, "sioskorean", 0x3145, "siosnieunkorean", 0x317b, "siosparenkorean", 0x3206, "siospieupkorean", 0x317d, "siostikeutkorean", 0x317c, "six", 0x0036, "sixarabic", 0x0666, "sixbengali", 0x09ec, "sixcircle", 0x2465, "sixcircleinversesansserif", 0x278f, "sixdeva", 0x096c, "sixgujarati", 0x0aec, "sixgurmukhi", 0x0a6c, "sixhackarabic", 0x0666, "sixhangzhou", 0x3026, "sixideographicparen", 0x3225, "sixinferior", 0x2086, "sixmonospace", 0xff16, "sixoldstyle", 0xf736, "sixparen", 0x2479, "sixperiod", 0x248d, "sixpersian", 0x06f6, "sixroman", 0x2175, "sixsuperior", 0x2076, "sixteencircle", 0x246f, "sixteencurrencydenominatorbengali", 0x09f9, "sixteenparen", 0x2483, "sixteenperiod", 0x2497, "sixthai", 0x0e56, "slash", 0x002f, "slashmonospace", 0xff0f, "slong", 0x017f, "slongdotaccent", 0x1e9b, "smileface", 0x263a, "smonospace", 0xff53, "sofpasuqhebrew", 0x05c3, "softhyphen", 0x00ad, "softsigncyrillic", 0x044c, "sohiragana", 0x305d, "sokatakana", 0x30bd, "sokatakanahalfwidth", 0xff7f, "soliduslongoverlaycmb", 0x0338, "solidusshortoverlaycmb", 0x0337, "sorusithai", 0x0e29, "sosalathai", 0x0e28, "sosothai", 0x0e0b, "sosuathai", 0x0e2a, "space", 0x0020, "spacehackarabic", 0x0020, "spade", 0x2660, "spadesuitblack", 0x2660, "spadesuitwhite", 0x2664, "sparen", 0x24ae, "squarebelowcmb", 0x033b, "squarecc", 0x33c4, "squarecm", 0x339d, "squarediagonalcrosshatchfill", 0x25a9, "squarehorizontalfill", 0x25a4, "squarekg", 0x338f, "squarekm", 0x339e, "squarekmcapital", 0x33ce, "squareln", 0x33d1, "squarelog", 0x33d2, "squaremg", 0x338e, "squaremil", 0x33d5, "squaremm", 0x339c, "squaremsquared", 0x33a1, "squareorthogonalcrosshatchfill", 0x25a6, "squareupperlefttolowerrightfill", 0x25a7, "squareupperrighttolowerleftfill", 0x25a8, "squareverticalfill", 0x25a5, "squarewhitewithsmallblack", 0x25a3, "srsquare", 0x33db, "ssabengali", 0x09b7, "ssadeva", 0x0937, "ssagujarati", 0x0ab7, "ssangcieuckorean", 0x3149, "ssanghieuhkorean", 0x3185, "ssangieungkorean", 0x3180, "ssangkiyeokkorean", 0x3132, "ssangnieunkorean", 0x3165, "ssangpieupkorean", 0x3143, "ssangsioskorean", 0x3146, "ssangtikeutkorean", 0x3138, "ssuperior", 0xf6f2, "sterling", 0x00a3, "sterlingmonospace", 0xffe1, "strokelongoverlaycmb", 0x0336, "strokeshortoverlaycmb", 0x0335, "subset", 0x2282, "subsetnotequal", 0x228a, "subsetorequal", 0x2286, "succeeds", 0x227b, "suchthat", 0x220b, "suhiragana", 0x3059, "sukatakana", 0x30b9, "sukatakanahalfwidth", 0xff7d, "sukunarabic", 0x0652, "summation", 0x2211, "sun", 0x263c, "superset", 0x2283, "supersetnotequal", 0x228b, "supersetorequal", 0x2287, "svsquare", 0x33dc, "syouwaerasquare", 0x337c, "t", 0x0074, "tabengali", 0x09a4, "tackdown", 0x22a4, "tackleft", 0x22a3, "tadeva", 0x0924, "tagujarati", 0x0aa4, "tagurmukhi", 0x0a24, "taharabic", 0x0637, "tahfinalarabic", 0xfec2, "tahinitialarabic", 0xfec3, "tahiragana", 0x305f, "tahmedialarabic", 0xfec4, "taisyouerasquare", 0x337d, "takatakana", 0x30bf, "takatakanahalfwidth", 0xff80, "tatweelarabic", 0x0640, "tau", 0x03c4, "tav", 0x05ea, "tavdages", 0xfb4a, "tavdagesh", 0xfb4a, "tavdageshhebrew", 0xfb4a, "tavhebrew", 0x05ea, "tbar", 0x0167, "tbopomofo", 0x310a, "tcaron", 0x0165, "tccurl", 0x02a8, "tcedilla", 0x0163, "tcheharabic", 0x0686, "tchehfinalarabic", 0xfb7b, "tchehinitialarabic", 0xfb7c, "tchehmedialarabic", 0xfb7d, "tcircle", 0x24e3, "tcircumflexbelow", 0x1e71, "tcommaaccent", 0x0163, "tdieresis", 0x1e97, "tdotaccent", 0x1e6b, "tdotbelow", 0x1e6d, "tecyrillic", 0x0442, "tedescendercyrillic", 0x04ad, "teharabic", 0x062a, "tehfinalarabic", 0xfe96, "tehhahinitialarabic", 0xfca2, "tehhahisolatedarabic", 0xfc0c, "tehinitialarabic", 0xfe97, "tehiragana", 0x3066, "tehjeeminitialarabic", 0xfca1, "tehjeemisolatedarabic", 0xfc0b, "tehmarbutaarabic", 0x0629, "tehmarbutafinalarabic", 0xfe94, "tehmedialarabic", 0xfe98, "tehmeeminitialarabic", 0xfca4, "tehmeemisolatedarabic", 0xfc0e, "tehnoonfinalarabic", 0xfc73, "tekatakana", 0x30c6, "tekatakanahalfwidth", 0xff83, "telephone", 0x2121, "telephoneblack", 0x260e, "telishagedolahebrew", 0x05a0, "telishaqetanahebrew", 0x05a9, "tencircle", 0x2469, "tenideographicparen", 0x3229, "tenparen", 0x247d, "tenperiod", 0x2491, "tenroman", 0x2179, "tesh", 0x02a7, "tet", 0x05d8, "tetdagesh", 0xfb38, "tetdageshhebrew", 0xfb38, "tethebrew", 0x05d8, "tetsecyrillic", 0x04b5, "tevirhebrew", 0x059b, "tevirlefthebrew", 0x059b, "thabengali", 0x09a5, "thadeva", 0x0925, "thagujarati", 0x0aa5, "thagurmukhi", 0x0a25, "thalarabic", 0x0630, "thalfinalarabic", 0xfeac, "thanthakhatlowleftthai", 0xf898, "thanthakhatlowrightthai", 0xf897, "thanthakhatthai", 0x0e4c, "thanthakhatupperleftthai", 0xf896, "theharabic", 0x062b, "thehfinalarabic", 0xfe9a, "thehinitialarabic", 0xfe9b, "thehmedialarabic", 0xfe9c, "thereexists", 0x2203, "therefore", 0x2234, "theta", 0x03b8, "theta1", 0x03d1, "thetasymbolgreek", 0x03d1, "thieuthacirclekorean", 0x3279, "thieuthaparenkorean", 0x3219, "thieuthcirclekorean", 0x326b, "thieuthkorean", 0x314c, "thieuthparenkorean", 0x320b, "thirteencircle", 0x246c, "thirteenparen", 0x2480, "thirteenperiod", 0x2494, "thonangmonthothai", 0x0e11, "thook", 0x01ad, "thophuthaothai", 0x0e12, "thorn", 0x00fe, "thothahanthai", 0x0e17, "thothanthai", 0x0e10, "thothongthai", 0x0e18, "thothungthai", 0x0e16, "thousandcyrillic", 0x0482, "thousandsseparatorarabic", 0x066c, "thousandsseparatorpersian", 0x066c, "three", 0x0033, "threearabic", 0x0663, "threebengali", 0x09e9, "threecircle", 0x2462, "threecircleinversesansserif", 0x278c, "threedeva", 0x0969, "threeeighths", 0x215c, "threegujarati", 0x0ae9, "threegurmukhi", 0x0a69, "threehackarabic", 0x0663, "threehangzhou", 0x3023, "threeideographicparen", 0x3222, "threeinferior", 0x2083, "threemonospace", 0xff13, "threenumeratorbengali", 0x09f6, "threeoldstyle", 0xf733, "threeparen", 0x2476, "threeperiod", 0x248a, "threepersian", 0x06f3, "threequarters", 0x00be, "threequartersemdash", 0xf6de, "threeroman", 0x2172, "threesuperior", 0x00b3, "threethai", 0x0e53, "thzsquare", 0x3394, "tihiragana", 0x3061, "tikatakana", 0x30c1, "tikatakanahalfwidth", 0xff81, "tikeutacirclekorean", 0x3270, "tikeutaparenkorean", 0x3210, "tikeutcirclekorean", 0x3262, "tikeutkorean", 0x3137, "tikeutparenkorean", 0x3202, "tilde", 0x02dc, "tildebelowcmb", 0x0330, "tildecmb", 0x0303, "tildecomb", 0x0303, "tildedoublecmb", 0x0360, "tildeoperator", 0x223c, "tildeoverlaycmb", 0x0334, "tildeverticalcmb", 0x033e, "timescircle", 0x2297, "tipehahebrew", 0x0596, "tipehalefthebrew", 0x0596, "tippigurmukhi", 0x0a70, "titlocyrilliccmb", 0x0483, "tiwnarmenian", 0x057f, "tlinebelow", 0x1e6f, "tmonospace", 0xff54, "toarmenian", 0x0569, "tohiragana", 0x3068, "tokatakana", 0x30c8, "tokatakanahalfwidth", 0xff84, "tonebarextrahighmod", 0x02e5, "tonebarextralowmod", 0x02e9, "tonebarhighmod", 0x02e6, "tonebarlowmod", 0x02e8, "tonebarmidmod", 0x02e7, "tonefive", 0x01bd, "tonesix", 0x0185, "tonetwo", 0x01a8, "tonos", 0x0384, "tonsquare", 0x3327, "topatakthai", 0x0e0f, "tortoiseshellbracketleft", 0x3014, "tortoiseshellbracketleftsmall", 0xfe5d, "tortoiseshellbracketleftvertical", 0xfe39, "tortoiseshellbracketright", 0x3015, "tortoiseshellbracketrightsmall", 0xfe5e, "tortoiseshellbracketrightvertical", 0xfe3a, "totaothai", 0x0e15, "tpalatalhook", 0x01ab, "tparen", 0x24af, "trademark", 0x2122, "trademarksans", 0xf8ea, "trademarkserif", 0xf6db, "tretroflexhook", 0x0288, "triagdn", 0x25bc, "triaglf", 0x25c4, "triagrt", 0x25ba, "triagup", 0x25b2, "ts", 0x02a6, "tsadi", 0x05e6, "tsadidagesh", 0xfb46, "tsadidageshhebrew", 0xfb46, "tsadihebrew", 0x05e6, "tsecyrillic", 0x0446, "tsere", 0x05b5, "tsere12", 0x05b5, "tsere1e", 0x05b5, "tsere2b", 0x05b5, "tserehebrew", 0x05b5, "tserenarrowhebrew", 0x05b5, "tserequarterhebrew", 0x05b5, "tserewidehebrew", 0x05b5, "tshecyrillic", 0x045b, "tsuperior", 0xf6f3, "ttabengali", 0x099f, "ttadeva", 0x091f, "ttagujarati", 0x0a9f, "ttagurmukhi", 0x0a1f, "tteharabic", 0x0679, "ttehfinalarabic", 0xfb67, "ttehinitialarabic", 0xfb68, "ttehmedialarabic", 0xfb69, "tthabengali", 0x09a0, "tthadeva", 0x0920, "tthagujarati", 0x0aa0, "tthagurmukhi", 0x0a20, "tturned", 0x0287, "tuhiragana", 0x3064, "tukatakana", 0x30c4, "tukatakanahalfwidth", 0xff82, "tusmallhiragana", 0x3063, "tusmallkatakana", 0x30c3, "tusmallkatakanahalfwidth", 0xff6f, "twelvecircle", 0x246b, "twelveparen", 0x247f, "twelveperiod", 0x2493, "twelveroman", 0x217b, "twentycircle", 0x2473, "twentyhangzhou", 0x5344, "twentyparen", 0x2487, "twentyperiod", 0x249b, "two", 0x0032, "twoarabic", 0x0662, "twobengali", 0x09e8, "twocircle", 0x2461, "twocircleinversesansserif", 0x278b, "twodeva", 0x0968, "twodotenleader", 0x2025, "twodotleader", 0x2025, "twodotleadervertical", 0xfe30, "twogujarati", 0x0ae8, "twogurmukhi", 0x0a68, "twohackarabic", 0x0662, "twohangzhou", 0x3022, "twoideographicparen", 0x3221, "twoinferior", 0x2082, "twomonospace", 0xff12, "twonumeratorbengali", 0x09f5, "twooldstyle", 0xf732, "twoparen", 0x2475, "twoperiod", 0x2489, "twopersian", 0x06f2, "tworoman", 0x2171, "twostroke", 0x01bb, "twosuperior", 0x00b2, "twothai", 0x0e52, "twothirds", 0x2154, "u", 0x0075, "uacute", 0x00fa, "ubar", 0x0289, "ubengali", 0x0989, "ubopomofo", 0x3128, "ubreve", 0x016d, "ucaron", 0x01d4, "ucircle", 0x24e4, "ucircumflex", 0x00fb, "ucircumflexbelow", 0x1e77, "ucyrillic", 0x0443, "udattadeva", 0x0951, "udblacute", 0x0171, "udblgrave", 0x0215, "udeva", 0x0909, "udieresis", 0x00fc, "udieresisacute", 0x01d8, "udieresisbelow", 0x1e73, "udieresiscaron", 0x01da, "udieresiscyrillic", 0x04f1, "udieresisgrave", 0x01dc, "udieresismacron", 0x01d6, "udotbelow", 0x1ee5, "ugrave", 0x00f9, "ugujarati", 0x0a89, "ugurmukhi", 0x0a09, "uhiragana", 0x3046, "uhookabove", 0x1ee7, "uhorn", 0x01b0, "uhornacute", 0x1ee9, "uhorndotbelow", 0x1ef1, "uhorngrave", 0x1eeb, "uhornhookabove", 0x1eed, "uhorntilde", 0x1eef, "uhungarumlaut", 0x0171, "uhungarumlautcyrillic", 0x04f3, "uinvertedbreve", 0x0217, "ukatakana", 0x30a6, "ukatakanahalfwidth", 0xff73, "ukcyrillic", 0x0479, "ukorean", 0x315c, "umacron", 0x016b, "umacroncyrillic", 0x04ef, "umacrondieresis", 0x1e7b, "umatragurmukhi", 0x0a41, "umonospace", 0xff55, "underscore", 0x005f, "underscoredbl", 0x2017, "underscoremonospace", 0xff3f, "underscorevertical", 0xfe33, "underscorewavy", 0xfe4f, "union", 0x222a, "universal", 0x2200, "uogonek", 0x0173, "uparen", 0x24b0, "upblock", 0x2580, "upperdothebrew", 0x05c4, "upsilon", 0x03c5, "upsilondieresis", 0x03cb, "upsilondieresistonos", 0x03b0, "upsilonlatin", 0x028a, "upsilontonos", 0x03cd, "uptackbelowcmb", 0x031d, "uptackmod", 0x02d4, "uragurmukhi", 0x0a73, "uring", 0x016f, "ushortcyrillic", 0x045e, "usmallhiragana", 0x3045, "usmallkatakana", 0x30a5, "usmallkatakanahalfwidth", 0xff69, "ustraightcyrillic", 0x04af, "ustraightstrokecyrillic", 0x04b1, "utilde", 0x0169, "utildeacute", 0x1e79, "utildebelow", 0x1e75, "uubengali", 0x098a, "uudeva", 0x090a, "uugujarati", 0x0a8a, "uugurmukhi", 0x0a0a, "uumatragurmukhi", 0x0a42, "uuvowelsignbengali", 0x09c2, "uuvowelsigndeva", 0x0942, "uuvowelsigngujarati", 0x0ac2, "uvowelsignbengali", 0x09c1, "uvowelsigndeva", 0x0941, "uvowelsigngujarati", 0x0ac1, "v", 0x0076, "vadeva", 0x0935, "vagujarati", 0x0ab5, "vagurmukhi", 0x0a35, "vakatakana", 0x30f7, "vav", 0x05d5, "vavdagesh", 0xfb35, "vavdagesh65", 0xfb35, "vavdageshhebrew", 0xfb35, "vavhebrew", 0x05d5, "vavholam", 0xfb4b, "vavholamhebrew", 0xfb4b, "vavvavhebrew", 0x05f0, "vavyodhebrew", 0x05f1, "vcircle", 0x24e5, "vdotbelow", 0x1e7f, "vecyrillic", 0x0432, "veharabic", 0x06a4, "vehfinalarabic", 0xfb6b, "vehinitialarabic", 0xfb6c, "vehmedialarabic", 0xfb6d, "vekatakana", 0x30f9, "venus", 0x2640, "verticalbar", 0x007c, "verticallineabovecmb", 0x030d, "verticallinebelowcmb", 0x0329, "verticallinelowmod", 0x02cc, "verticallinemod", 0x02c8, "vewarmenian", 0x057e, "vhook", 0x028b, "vikatakana", 0x30f8, "viramabengali", 0x09cd, "viramadeva", 0x094d, "viramagujarati", 0x0acd, "visargabengali", 0x0983, "visargadeva", 0x0903, "visargagujarati", 0x0a83, "vmonospace", 0xff56, "voarmenian", 0x0578, "voicediterationhiragana", 0x309e, "voicediterationkatakana", 0x30fe, "voicedmarkkana", 0x309b, "voicedmarkkanahalfwidth", 0xff9e, "vokatakana", 0x30fa, "vparen", 0x24b1, "vtilde", 0x1e7d, "vturned", 0x028c, "vuhiragana", 0x3094, "vukatakana", 0x30f4, "w", 0x0077, "wacute", 0x1e83, "waekorean", 0x3159, "wahiragana", 0x308f, "wakatakana", 0x30ef, "wakatakanahalfwidth", 0xff9c, "wakorean", 0x3158, "wasmallhiragana", 0x308e, "wasmallkatakana", 0x30ee, "wattosquare", 0x3357, "wavedash", 0x301c, "wavyunderscorevertical", 0xfe34, "wawarabic", 0x0648, "wawfinalarabic", 0xfeee, "wawhamzaabovearabic", 0x0624, "wawhamzaabovefinalarabic", 0xfe86, "wbsquare", 0x33dd, "wcircle", 0x24e6, "wcircumflex", 0x0175, "wdieresis", 0x1e85, "wdotaccent", 0x1e87, "wdotbelow", 0x1e89, "wehiragana", 0x3091, "weierstrass", 0x2118, "wekatakana", 0x30f1, "wekorean", 0x315e, "weokorean", 0x315d, "wgrave", 0x1e81, "whitebullet", 0x25e6, "whitecircle", 0x25cb, "whitecircleinverse", 0x25d9, "whitecornerbracketleft", 0x300e, "whitecornerbracketleftvertical", 0xfe43, "whitecornerbracketright", 0x300f, "whitecornerbracketrightvertical", 0xfe44, "whitediamond", 0x25c7, "whitediamondcontainingblacksmalldiamond", 0x25c8, "whitedownpointingsmalltriangle", 0x25bf, "whitedownpointingtriangle", 0x25bd, "whiteleftpointingsmalltriangle", 0x25c3, "whiteleftpointingtriangle", 0x25c1, "whitelenticularbracketleft", 0x3016, "whitelenticularbracketright", 0x3017, "whiterightpointingsmalltriangle", 0x25b9, "whiterightpointingtriangle", 0x25b7, "whitesmallsquare", 0x25ab, "whitesmilingface", 0x263a, "whitesquare", 0x25a1, "whitestar", 0x2606, "whitetelephone", 0x260f, "whitetortoiseshellbracketleft", 0x3018, "whitetortoiseshellbracketright", 0x3019, "whiteuppointingsmalltriangle", 0x25b5, "whiteuppointingtriangle", 0x25b3, "wihiragana", 0x3090, "wikatakana", 0x30f0, "wikorean", 0x315f, "wmonospace", 0xff57, "wohiragana", 0x3092, "wokatakana", 0x30f2, "wokatakanahalfwidth", 0xff66, "won", 0x20a9, "wonmonospace", 0xffe6, "wowaenthai", 0x0e27, "wparen", 0x24b2, "wring", 0x1e98, "wsuperior", 0x02b7, "wturned", 0x028d, "wynn", 0x01bf, "x", 0x0078, "xabovecmb", 0x033d, "xbopomofo", 0x3112, "xcircle", 0x24e7, "xdieresis", 0x1e8d, "xdotaccent", 0x1e8b, "xeharmenian", 0x056d, "xi", 0x03be, "xmonospace", 0xff58, "xparen", 0x24b3, "xsuperior", 0x02e3, "y", 0x0079, "yaadosquare", 0x334e, "yabengali", 0x09af, "yacute", 0x00fd, "yadeva", 0x092f, "yaekorean", 0x3152, "yagujarati", 0x0aaf, "yagurmukhi", 0x0a2f, "yahiragana", 0x3084, "yakatakana", 0x30e4, "yakatakanahalfwidth", 0xff94, "yakorean", 0x3151, "yamakkanthai", 0x0e4e, "yasmallhiragana", 0x3083, "yasmallkatakana", 0x30e3, "yasmallkatakanahalfwidth", 0xff6c, "yatcyrillic", 0x0463, "ycircle", 0x24e8, "ycircumflex", 0x0177, "ydieresis", 0x00ff, "ydotaccent", 0x1e8f, "ydotbelow", 0x1ef5, "yeharabic", 0x064a, "yehbarreearabic", 0x06d2, "yehbarreefinalarabic", 0xfbaf, "yehfinalarabic", 0xfef2, "yehhamzaabovearabic", 0x0626, "yehhamzaabovefinalarabic", 0xfe8a, "yehhamzaaboveinitialarabic", 0xfe8b, "yehhamzaabovemedialarabic", 0xfe8c, "yehinitialarabic", 0xfef3, "yehmedialarabic", 0xfef4, "yehmeeminitialarabic", 0xfcdd, "yehmeemisolatedarabic", 0xfc58, "yehnoonfinalarabic", 0xfc94, "yehthreedotsbelowarabic", 0x06d1, "yekorean", 0x3156, "yen", 0x00a5, "yenmonospace", 0xffe5, "yeokorean", 0x3155, "yeorinhieuhkorean", 0x3186, "yerahbenyomohebrew", 0x05aa, "yerahbenyomolefthebrew", 0x05aa, "yericyrillic", 0x044b, "yerudieresiscyrillic", 0x04f9, "yesieungkorean", 0x3181, "yesieungpansioskorean", 0x3183, "yesieungsioskorean", 0x3182, "yetivhebrew", 0x059a, "ygrave", 0x1ef3, "yhook", 0x01b4, "yhookabove", 0x1ef7, "yiarmenian", 0x0575, "yicyrillic", 0x0457, "yikorean", 0x3162, "yinyang", 0x262f, "yiwnarmenian", 0x0582, "ymonospace", 0xff59, "yod", 0x05d9, "yoddagesh", 0xfb39, "yoddageshhebrew", 0xfb39, "yodhebrew", 0x05d9, "yodyodhebrew", 0x05f2, "yodyodpatahhebrew", 0xfb1f, "yohiragana", 0x3088, "yoikorean", 0x3189, "yokatakana", 0x30e8, "yokatakanahalfwidth", 0xff96, "yokorean", 0x315b, "yosmallhiragana", 0x3087, "yosmallkatakana", 0x30e7, "yosmallkatakanahalfwidth", 0xff6e, "yotgreek", 0x03f3, "yoyaekorean", 0x3188, "yoyakorean", 0x3187, "yoyakthai", 0x0e22, "yoyingthai", 0x0e0d, "yparen", 0x24b4, "ypogegrammeni", 0x037a, "ypogegrammenigreekcmb", 0x0345, "yr", 0x01a6, "yring", 0x1e99, "ysuperior", 0x02b8, "ytilde", 0x1ef9, "yturned", 0x028e, "yuhiragana", 0x3086, "yuikorean", 0x318c, "yukatakana", 0x30e6, "yukatakanahalfwidth", 0xff95, "yukorean", 0x3160, "yusbigcyrillic", 0x046b, "yusbigiotifiedcyrillic", 0x046d, "yuslittlecyrillic", 0x0467, "yuslittleiotifiedcyrillic", 0x0469, "yusmallhiragana", 0x3085, "yusmallkatakana", 0x30e5, "yusmallkatakanahalfwidth", 0xff6d, "yuyekorean", 0x318b, "yuyeokorean", 0x318a, "yyabengali", 0x09df, "yyadeva", 0x095f, "z", 0x007a, "zaarmenian", 0x0566, "zacute", 0x017a, "zadeva", 0x095b, "zagurmukhi", 0x0a5b, "zaharabic", 0x0638, "zahfinalarabic", 0xfec6, "zahinitialarabic", 0xfec7, "zahiragana", 0x3056, "zahmedialarabic", 0xfec8, "zainarabic", 0x0632, "zainfinalarabic", 0xfeb0, "zakatakana", 0x30b6, "zaqefgadolhebrew", 0x0595, "zaqefqatanhebrew", 0x0594, "zarqahebrew", 0x0598, "zayin", 0x05d6, "zayindagesh", 0xfb36, "zayindageshhebrew", 0xfb36, "zayinhebrew", 0x05d6, "zbopomofo", 0x3117, "zcaron", 0x017e, "zcircle", 0x24e9, "zcircumflex", 0x1e91, "zcurl", 0x0291, "zdot", 0x017c, "zdotaccent", 0x017c, "zdotbelow", 0x1e93, "zecyrillic", 0x0437, "zedescendercyrillic", 0x0499, "zedieresiscyrillic", 0x04df, "zehiragana", 0x305c, "zekatakana", 0x30bc, "zero", 0x0030, "zeroarabic", 0x0660, "zerobengali", 0x09e6, "zerodeva", 0x0966, "zerogujarati", 0x0ae6, "zerogurmukhi", 0x0a66, "zerohackarabic", 0x0660, "zeroinferior", 0x2080, "zeromonospace", 0xff10, "zerooldstyle", 0xf730, "zeropersian", 0x06f0, "zerosuperior", 0x2070, "zerothai", 0x0e50, "zerowidthjoiner", 0xfeff, "zerowidthnonjoiner", 0x200c, "zerowidthspace", 0x200b, "zeta", 0x03b6, "zhbopomofo", 0x3113, "zhearmenian", 0x056a, "zhebrevecyrillic", 0x04c2, "zhecyrillic", 0x0436, "zhedescendercyrillic", 0x0497, "zhedieresiscyrillic", 0x04dd, "zihiragana", 0x3058, "zikatakana", 0x30b8, "zinorhebrew", 0x05ae, "zlinebelow", 0x1e95, "zmonospace", 0xff5a, "zohiragana", 0x305e, "zokatakana", 0x30be, "zparen", 0x24b5, "zretroflexhook", 0x0290, "zstroke", 0x01b6, "zuhiragana", 0x305a, "zukatakana", 0x30ba, ".notdef", 0x0000, "angbracketleftbig", 0x2329, "angbracketleftBig", 0x2329, "angbracketleftbigg", 0x2329, "angbracketleftBigg", 0x2329, "angbracketrightBig", 0x232a, "angbracketrightbig", 0x232a, "angbracketrightBigg", 0x232a, "angbracketrightbigg", 0x232a, "arrowhookleft", 0x21aa, "arrowhookright", 0x21a9, "arrowlefttophalf", 0x21bc, "arrowleftbothalf", 0x21bd, "arrownortheast", 0x2197, "arrownorthwest", 0x2196, "arrowrighttophalf", 0x21c0, "arrowrightbothalf", 0x21c1, "arrowsoutheast", 0x2198, "arrowsouthwest", 0x2199, "backslashbig", 0x2216, "backslashBig", 0x2216, "backslashBigg", 0x2216, "backslashbigg", 0x2216, "bardbl", 0x2016, "bracehtipdownleft", 0xfe37, "bracehtipdownright", 0xfe37, "bracehtipupleft", 0xfe38, "bracehtipupright", 0xfe38, "braceleftBig", 0x007b, "braceleftbig", 0x007b, "braceleftbigg", 0x007b, "braceleftBigg", 0x007b, "bracerightBig", 0x007d, "bracerightbig", 0x007d, "bracerightbigg", 0x007d, "bracerightBigg", 0x007d, "bracketleftbig", 0x005b, "bracketleftBig", 0x005b, "bracketleftbigg", 0x005b, "bracketleftBigg", 0x005b, "bracketrightBig", 0x005d, "bracketrightbig", 0x005d, "bracketrightbigg", 0x005d, "bracketrightBigg", 0x005d, "ceilingleftbig", 0x2308, "ceilingleftBig", 0x2308, "ceilingleftBigg", 0x2308, "ceilingleftbigg", 0x2308, "ceilingrightbig", 0x2309, "ceilingrightBig", 0x2309, "ceilingrightbigg", 0x2309, "ceilingrightBigg", 0x2309, "circledotdisplay", 0x2299, "circledottext", 0x2299, "circlemultiplydisplay", 0x2297, "circlemultiplytext", 0x2297, "circleplusdisplay", 0x2295, "circleplustext", 0x2295, "contintegraldisplay", 0x222e, "contintegraltext", 0x222e, "coproductdisplay", 0x2210, "coproducttext", 0x2210, "floorleftBig", 0x230a, "floorleftbig", 0x230a, "floorleftbigg", 0x230a, "floorleftBigg", 0x230a, "floorrightbig", 0x230b, "floorrightBig", 0x230b, "floorrightBigg", 0x230b, "floorrightbigg", 0x230b, "hatwide", 0x0302, "hatwider", 0x0302, "hatwidest", 0x0302, "intercal", 0x1d40, "integraldisplay", 0x222b, "integraltext", 0x222b, "intersectiondisplay", 0x22c2, "intersectiontext", 0x22c2, "logicalanddisplay", 0x2227, "logicalandtext", 0x2227, "logicalordisplay", 0x2228, "logicalortext", 0x2228, "parenleftBig", 0x0028, "parenleftbig", 0x0028, "parenleftBigg", 0x0028, "parenleftbigg", 0x0028, "parenrightBig", 0x0029, "parenrightbig", 0x0029, "parenrightBigg", 0x0029, "parenrightbigg", 0x0029, "prime", 0x2032, "productdisplay", 0x220f, "producttext", 0x220f, "radicalbig", 0x221a, "radicalBig", 0x221a, "radicalBigg", 0x221a, "radicalbigg", 0x221a, "radicalbt", 0x221a, "radicaltp", 0x221a, "radicalvertex", 0x221a, "slashbig", 0x002f, "slashBig", 0x002f, "slashBigg", 0x002f, "slashbigg", 0x002f, "summationdisplay", 0x2211, "summationtext", 0x2211, "tildewide", 0x02dc, "tildewider", 0x02dc, "tildewidest", 0x02dc, "uniondisplay", 0x22c3, "unionmultidisplay", 0x228e, "unionmultitext", 0x228e, "unionsqdisplay", 0x2294, "unionsqtext", 0x2294, "uniontext", 0x22c3, "vextenddouble", 0x2225, "vextendsingle", 0x2223];
+});
+exports.getGlyphsUnicode = getGlyphsUnicode;
+const getDingbatsGlyphsUnicode = (0, _core_utils.getArrayLookupTableFactory)(function () {
+  return ["space", 0x0020, "a1", 0x2701, "a2", 0x2702, "a202", 0x2703, "a3", 0x2704, "a4", 0x260e, "a5", 0x2706, "a119", 0x2707, "a118", 0x2708, "a117", 0x2709, "a11", 0x261b, "a12", 0x261e, "a13", 0x270c, "a14", 0x270d, "a15", 0x270e, "a16", 0x270f, "a105", 0x2710, "a17", 0x2711, "a18", 0x2712, "a19", 0x2713, "a20", 0x2714, "a21", 0x2715, "a22", 0x2716, "a23", 0x2717, "a24", 0x2718, "a25", 0x2719, "a26", 0x271a, "a27", 0x271b, "a28", 0x271c, "a6", 0x271d, "a7", 0x271e, "a8", 0x271f, "a9", 0x2720, "a10", 0x2721, "a29", 0x2722, "a30", 0x2723, "a31", 0x2724, "a32", 0x2725, "a33", 0x2726, "a34", 0x2727, "a35", 0x2605, "a36", 0x2729, "a37", 0x272a, "a38", 0x272b, "a39", 0x272c, "a40", 0x272d, "a41", 0x272e, "a42", 0x272f, "a43", 0x2730, "a44", 0x2731, "a45", 0x2732, "a46", 0x2733, "a47", 0x2734, "a48", 0x2735, "a49", 0x2736, "a50", 0x2737, "a51", 0x2738, "a52", 0x2739, "a53", 0x273a, "a54", 0x273b, "a55", 0x273c, "a56", 0x273d, "a57", 0x273e, "a58", 0x273f, "a59", 0x2740, "a60", 0x2741, "a61", 0x2742, "a62", 0x2743, "a63", 0x2744, "a64", 0x2745, "a65", 0x2746, "a66", 0x2747, "a67", 0x2748, "a68", 0x2749, "a69", 0x274a, "a70", 0x274b, "a71", 0x25cf, "a72", 0x274d, "a73", 0x25a0, "a74", 0x274f, "a203", 0x2750, "a75", 0x2751, "a204", 0x2752, "a76", 0x25b2, "a77", 0x25bc, "a78", 0x25c6, "a79", 0x2756, "a81", 0x25d7, "a82", 0x2758, "a83", 0x2759, "a84", 0x275a, "a97", 0x275b, "a98", 0x275c, "a99", 0x275d, "a100", 0x275e, "a101", 0x2761, "a102", 0x2762, "a103", 0x2763, "a104", 0x2764, "a106", 0x2765, "a107", 0x2766, "a108", 0x2767, "a112", 0x2663, "a111", 0x2666, "a110", 0x2665, "a109", 0x2660, "a120", 0x2460, "a121", 0x2461, "a122", 0x2462, "a123", 0x2463, "a124", 0x2464, "a125", 0x2465, "a126", 0x2466, "a127", 0x2467, "a128", 0x2468, "a129", 0x2469, "a130", 0x2776, "a131", 0x2777, "a132", 0x2778, "a133", 0x2779, "a134", 0x277a, "a135", 0x277b, "a136", 0x277c, "a137", 0x277d, "a138", 0x277e, "a139", 0x277f, "a140", 0x2780, "a141", 0x2781, "a142", 0x2782, "a143", 0x2783, "a144", 0x2784, "a145", 0x2785, "a146", 0x2786, "a147", 0x2787, "a148", 0x2788, "a149", 0x2789, "a150", 0x278a, "a151", 0x278b, "a152", 0x278c, "a153", 0x278d, "a154", 0x278e, "a155", 0x278f, "a156", 0x2790, "a157", 0x2791, "a158", 0x2792, "a159", 0x2793, "a160", 0x2794, "a161", 0x2192, "a163", 0x2194, "a164", 0x2195, "a196", 0x2798, "a165", 0x2799, "a192", 0x279a, "a166", 0x279b, "a167", 0x279c, "a168", 0x279d, "a169", 0x279e, "a170", 0x279f, "a171", 0x27a0, "a172", 0x27a1, "a173", 0x27a2, "a162", 0x27a3, "a174", 0x27a4, "a175", 0x27a5, "a176", 0x27a6, "a177", 0x27a7, "a178", 0x27a8, "a179", 0x27a9, "a193", 0x27aa, "a180", 0x27ab, "a199", 0x27ac, "a181", 0x27ad, "a200", 0x27ae, "a182", 0x27af, "a201", 0x27b1, "a183", 0x27b2, "a184", 0x27b3, "a197", 0x27b4, "a185", 0x27b5, "a194", 0x27b6, "a198", 0x27b7, "a186", 0x27b8, "a195", 0x27b9, "a187", 0x27ba, "a188", 0x27bb, "a189", 0x27bc, "a190", 0x27bd, "a191", 0x27be, "a89", 0x2768, "a90", 0x2769, "a93", 0x276a, "a94", 0x276b, "a91", 0x276c, "a92", 0x276d, "a205", 0x276e, "a85", 0x276f, "a206", 0x2770, "a86", 0x2771, "a87", 0x2772, "a88", 0x2773, "a95", 0x2774, "a96", 0x2775, ".notdef", 0x0000];
+});
+exports.getDingbatsGlyphsUnicode = getDingbatsGlyphsUnicode;
+
+/***/ }),
+/* 21 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.getUnicodeForGlyph = getUnicodeForGlyph;
+exports.getUnicodeRangeFor = getUnicodeRangeFor;
+exports.mapSpecialUnicodeValues = mapSpecialUnicodeValues;
+exports.reverseIfRtl = reverseIfRtl;
+exports.getNormalizedUnicodes = void 0;
+
+var _core_utils = __w_pdfjs_require__(9);
+
+const getSpecialPUASymbols = (0, _core_utils.getLookupTableFactory)(function (t) {
+  t[63721] = 0x00a9;
+  t[63193] = 0x00a9;
+  t[63720] = 0x00ae;
+  t[63194] = 0x00ae;
+  t[63722] = 0x2122;
+  t[63195] = 0x2122;
+  t[63729] = 0x23a7;
+  t[63730] = 0x23a8;
+  t[63731] = 0x23a9;
+  t[63740] = 0x23ab;
+  t[63741] = 0x23ac;
+  t[63742] = 0x23ad;
+  t[63726] = 0x23a1;
+  t[63727] = 0x23a2;
+  t[63728] = 0x23a3;
+  t[63737] = 0x23a4;
+  t[63738] = 0x23a5;
+  t[63739] = 0x23a6;
+  t[63723] = 0x239b;
+  t[63724] = 0x239c;
+  t[63725] = 0x239d;
+  t[63734] = 0x239e;
+  t[63735] = 0x239f;
+  t[63736] = 0x23a0;
+});
+
+function mapSpecialUnicodeValues(code) {
+  if (code >= 0xfff0 && code <= 0xffff) {
+    return 0;
+  } else if (code >= 0xf600 && code <= 0xf8ff) {
+    return getSpecialPUASymbols()[code] || code;
+  } else if (code === 0x00ad) {
+    return 0x002d;
+  }
+
+  return code;
+}
+
+function getUnicodeForGlyph(name, glyphsUnicodeMap) {
+  let unicode = glyphsUnicodeMap[name];
+
+  if (unicode !== undefined) {
+    return unicode;
+  }
+
+  if (!name) {
+    return -1;
+  }
+
+  if (name[0] === "u") {
+    const nameLen = name.length;
+    let hexStr;
+
+    if (nameLen === 7 && name[1] === "n" && name[2] === "i") {
+      hexStr = name.substring(3);
+    } else if (nameLen >= 5 && nameLen <= 7) {
+      hexStr = name.substring(1);
+    } else {
+      return -1;
+    }
+
+    if (hexStr === hexStr.toUpperCase()) {
+      unicode = parseInt(hexStr, 16);
+
+      if (unicode >= 0) {
+        return unicode;
+      }
+    }
+  }
+
+  return -1;
+}
+
+const UnicodeRanges = [{
+  begin: 0x0000,
+  end: 0x007f
+}, {
+  begin: 0x0080,
+  end: 0x00ff
+}, {
+  begin: 0x0100,
+  end: 0x017f
+}, {
+  begin: 0x0180,
+  end: 0x024f
+}, {
+  begin: 0x0250,
+  end: 0x02af
+}, {
+  begin: 0x02b0,
+  end: 0x02ff
+}, {
+  begin: 0x0300,
+  end: 0x036f
+}, {
+  begin: 0x0370,
+  end: 0x03ff
+}, {
+  begin: 0x2c80,
+  end: 0x2cff
+}, {
+  begin: 0x0400,
+  end: 0x04ff
+}, {
+  begin: 0x0530,
+  end: 0x058f
+}, {
+  begin: 0x0590,
+  end: 0x05ff
+}, {
+  begin: 0xa500,
+  end: 0xa63f
+}, {
+  begin: 0x0600,
+  end: 0x06ff
+}, {
+  begin: 0x07c0,
+  end: 0x07ff
+}, {
+  begin: 0x0900,
+  end: 0x097f
+}, {
+  begin: 0x0980,
+  end: 0x09ff
+}, {
+  begin: 0x0a00,
+  end: 0x0a7f
+}, {
+  begin: 0x0a80,
+  end: 0x0aff
+}, {
+  begin: 0x0b00,
+  end: 0x0b7f
+}, {
+  begin: 0x0b80,
+  end: 0x0bff
+}, {
+  begin: 0x0c00,
+  end: 0x0c7f
+}, {
+  begin: 0x0c80,
+  end: 0x0cff
+}, {
+  begin: 0x0d00,
+  end: 0x0d7f
+}, {
+  begin: 0x0e00,
+  end: 0x0e7f
+}, {
+  begin: 0x0e80,
+  end: 0x0eff
+}, {
+  begin: 0x10a0,
+  end: 0x10ff
+}, {
+  begin: 0x1b00,
+  end: 0x1b7f
+}, {
+  begin: 0x1100,
+  end: 0x11ff
+}, {
+  begin: 0x1e00,
+  end: 0x1eff
+}, {
+  begin: 0x1f00,
+  end: 0x1fff
+}, {
+  begin: 0x2000,
+  end: 0x206f
+}, {
+  begin: 0x2070,
+  end: 0x209f
+}, {
+  begin: 0x20a0,
+  end: 0x20cf
+}, {
+  begin: 0x20d0,
+  end: 0x20ff
+}, {
+  begin: 0x2100,
+  end: 0x214f
+}, {
+  begin: 0x2150,
+  end: 0x218f
+}, {
+  begin: 0x2190,
+  end: 0x21ff
+}, {
+  begin: 0x2200,
+  end: 0x22ff
+}, {
+  begin: 0x2300,
+  end: 0x23ff
+}, {
+  begin: 0x2400,
+  end: 0x243f
+}, {
+  begin: 0x2440,
+  end: 0x245f
+}, {
+  begin: 0x2460,
+  end: 0x24ff
+}, {
+  begin: 0x2500,
+  end: 0x257f
+}, {
+  begin: 0x2580,
+  end: 0x259f
+}, {
+  begin: 0x25a0,
+  end: 0x25ff
+}, {
+  begin: 0x2600,
+  end: 0x26ff
+}, {
+  begin: 0x2700,
+  end: 0x27bf
+}, {
+  begin: 0x3000,
+  end: 0x303f
+}, {
+  begin: 0x3040,
+  end: 0x309f
+}, {
+  begin: 0x30a0,
+  end: 0x30ff
+}, {
+  begin: 0x3100,
+  end: 0x312f
+}, {
+  begin: 0x3130,
+  end: 0x318f
+}, {
+  begin: 0xa840,
+  end: 0xa87f
+}, {
+  begin: 0x3200,
+  end: 0x32ff
+}, {
+  begin: 0x3300,
+  end: 0x33ff
+}, {
+  begin: 0xac00,
+  end: 0xd7af
+}, {
+  begin: 0xd800,
+  end: 0xdfff
+}, {
+  begin: 0x10900,
+  end: 0x1091f
+}, {
+  begin: 0x4e00,
+  end: 0x9fff
+}, {
+  begin: 0xe000,
+  end: 0xf8ff
+}, {
+  begin: 0x31c0,
+  end: 0x31ef
+}, {
+  begin: 0xfb00,
+  end: 0xfb4f
+}, {
+  begin: 0xfb50,
+  end: 0xfdff
+}, {
+  begin: 0xfe20,
+  end: 0xfe2f
+}, {
+  begin: 0xfe10,
+  end: 0xfe1f
+}, {
+  begin: 0xfe50,
+  end: 0xfe6f
+}, {
+  begin: 0xfe70,
+  end: 0xfeff
+}, {
+  begin: 0xff00,
+  end: 0xffef
+}, {
+  begin: 0xfff0,
+  end: 0xffff
+}, {
+  begin: 0x0f00,
+  end: 0x0fff
+}, {
+  begin: 0x0700,
+  end: 0x074f
+}, {
+  begin: 0x0780,
+  end: 0x07bf
+}, {
+  begin: 0x0d80,
+  end: 0x0dff
+}, {
+  begin: 0x1000,
+  end: 0x109f
+}, {
+  begin: 0x1200,
+  end: 0x137f
+}, {
+  begin: 0x13a0,
+  end: 0x13ff
+}, {
+  begin: 0x1400,
+  end: 0x167f
+}, {
+  begin: 0x1680,
+  end: 0x169f
+}, {
+  begin: 0x16a0,
+  end: 0x16ff
+}, {
+  begin: 0x1780,
+  end: 0x17ff
+}, {
+  begin: 0x1800,
+  end: 0x18af
+}, {
+  begin: 0x2800,
+  end: 0x28ff
+}, {
+  begin: 0xa000,
+  end: 0xa48f
+}, {
+  begin: 0x1700,
+  end: 0x171f
+}, {
+  begin: 0x10300,
+  end: 0x1032f
+}, {
+  begin: 0x10330,
+  end: 0x1034f
+}, {
+  begin: 0x10400,
+  end: 0x1044f
+}, {
+  begin: 0x1d000,
+  end: 0x1d0ff
+}, {
+  begin: 0x1d400,
+  end: 0x1d7ff
+}, {
+  begin: 0xff000,
+  end: 0xffffd
+}, {
+  begin: 0xfe00,
+  end: 0xfe0f
+}, {
+  begin: 0xe0000,
+  end: 0xe007f
+}, {
+  begin: 0x1900,
+  end: 0x194f
+}, {
+  begin: 0x1950,
+  end: 0x197f
+}, {
+  begin: 0x1980,
+  end: 0x19df
+}, {
+  begin: 0x1a00,
+  end: 0x1a1f
+}, {
+  begin: 0x2c00,
+  end: 0x2c5f
+}, {
+  begin: 0x2d30,
+  end: 0x2d7f
+}, {
+  begin: 0x4dc0,
+  end: 0x4dff
+}, {
+  begin: 0xa800,
+  end: 0xa82f
+}, {
+  begin: 0x10000,
+  end: 0x1007f
+}, {
+  begin: 0x10140,
+  end: 0x1018f
+}, {
+  begin: 0x10380,
+  end: 0x1039f
+}, {
+  begin: 0x103a0,
+  end: 0x103df
+}, {
+  begin: 0x10450,
+  end: 0x1047f
+}, {
+  begin: 0x10480,
+  end: 0x104af
+}, {
+  begin: 0x10800,
+  end: 0x1083f
+}, {
+  begin: 0x10a00,
+  end: 0x10a5f
+}, {
+  begin: 0x1d300,
+  end: 0x1d35f
+}, {
+  begin: 0x12000,
+  end: 0x123ff
+}, {
+  begin: 0x1d360,
+  end: 0x1d37f
+}, {
+  begin: 0x1b80,
+  end: 0x1bbf
+}, {
+  begin: 0x1c00,
+  end: 0x1c4f
+}, {
+  begin: 0x1c50,
+  end: 0x1c7f
+}, {
+  begin: 0xa880,
+  end: 0xa8df
+}, {
+  begin: 0xa900,
+  end: 0xa92f
+}, {
+  begin: 0xa930,
+  end: 0xa95f
+}, {
+  begin: 0xaa00,
+  end: 0xaa5f
+}, {
+  begin: 0x10190,
+  end: 0x101cf
+}, {
+  begin: 0x101d0,
+  end: 0x101ff
+}, {
+  begin: 0x102a0,
+  end: 0x102df
+}, {
+  begin: 0x1f030,
+  end: 0x1f09f
+}];
+
+function getUnicodeRangeFor(value) {
+  for (let i = 0, ii = UnicodeRanges.length; i < ii; i++) {
+    const range = UnicodeRanges[i];
+
+    if (value >= range.begin && value < range.end) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+function isRTLRangeFor(value) {
+  let range = UnicodeRanges[13];
+
+  if (value >= range.begin && value < range.end) {
+    return true;
+  }
+
+  range = UnicodeRanges[11];
+
+  if (value >= range.begin && value < range.end) {
+    return true;
+  }
+
+  return false;
+}
+
+const getNormalizedUnicodes = (0, _core_utils.getArrayLookupTableFactory)(function () {
+  return ["\u00A8", "\u0020\u0308", "\u00AF", "\u0020\u0304", "\u00B4", "\u0020\u0301", "\u00B5", "\u03BC", "\u00B8", "\u0020\u0327", "\u0132", "\u0049\u004A", "\u0133", "\u0069\u006A", "\u013F", "\u004C\u00B7", "\u0140", "\u006C\u00B7", "\u0149", "\u02BC\u006E", "\u017F", "\u0073", "\u01C4", "\u0044\u017D", "\u01C5", "\u0044\u017E", "\u01C6", "\u0064\u017E", "\u01C7", "\u004C\u004A", "\u01C8", "\u004C\u006A", "\u01C9", "\u006C\u006A", "\u01CA", "\u004E\u004A", "\u01CB", "\u004E\u006A", "\u01CC", "\u006E\u006A", "\u01F1", "\u0044\u005A", "\u01F2", "\u0044\u007A", "\u01F3", "\u0064\u007A", "\u02D8", "\u0020\u0306", "\u02D9", "\u0020\u0307", "\u02DA", "\u0020\u030A", "\u02DB", "\u0020\u0328", "\u02DC", "\u0020\u0303", "\u02DD", "\u0020\u030B", "\u037A", "\u0020\u0345", "\u0384", "\u0020\u0301", "\u03D0", "\u03B2", "\u03D1", "\u03B8", "\u03D2", "\u03A5", "\u03D5", "\u03C6", "\u03D6", "\u03C0", "\u03F0", "\u03BA", "\u03F1", "\u03C1", "\u03F2", "\u03C2", "\u03F4", "\u0398", "\u03F5", "\u03B5", "\u03F9", "\u03A3", "\u0587", "\u0565\u0582", "\u0675", "\u0627\u0674", "\u0676", "\u0648\u0674", "\u0677", "\u06C7\u0674", "\u0678", "\u064A\u0674", "\u0E33", "\u0E4D\u0E32", "\u0EB3", "\u0ECD\u0EB2", "\u0EDC", "\u0EAB\u0E99", "\u0EDD", "\u0EAB\u0EA1", "\u0F77", "\u0FB2\u0F81", "\u0F79", "\u0FB3\u0F81", "\u1E9A", "\u0061\u02BE", "\u1FBD", "\u0020\u0313", "\u1FBF", "\u0020\u0313", "\u1FC0", "\u0020\u0342", "\u1FFE", "\u0020\u0314", "\u2002", "\u0020", "\u2003", "\u0020", "\u2004", "\u0020", "\u2005", "\u0020", "\u2006", "\u0020", "\u2008", "\u0020", "\u2009", "\u0020", "\u200A", "\u0020", "\u2017", "\u0020\u0333", "\u2024", "\u002E", "\u2025", "\u002E\u002E", "\u2026", "\u002E\u002E\u002E", "\u2033", "\u2032\u2032", "\u2034", "\u2032\u2032\u2032", "\u2036", "\u2035\u2035", "\u2037", "\u2035\u2035\u2035", "\u203C", "\u0021\u0021", "\u203E", "\u0020\u0305", "\u2047", "\u003F\u003F", "\u2048", "\u003F\u0021", "\u2049", "\u0021\u003F", "\u2057", "\u2032\u2032\u2032\u2032", "\u205F", "\u0020", "\u20A8", "\u0052\u0073", "\u2100", "\u0061\u002F\u0063", "\u2101", "\u0061\u002F\u0073", "\u2103", "\u00B0\u0043", "\u2105", "\u0063\u002F\u006F", "\u2106", "\u0063\u002F\u0075", "\u2107", "\u0190", "\u2109", "\u00B0\u0046", "\u2116", "\u004E\u006F", "\u2121", "\u0054\u0045\u004C", "\u2135", "\u05D0", "\u2136", "\u05D1", "\u2137", "\u05D2", "\u2138", "\u05D3", "\u213B", "\u0046\u0041\u0058", "\u2160", "\u0049", "\u2161", "\u0049\u0049", "\u2162", "\u0049\u0049\u0049", "\u2163", "\u0049\u0056", "\u2164", "\u0056", "\u2165", "\u0056\u0049", "\u2166", "\u0056\u0049\u0049", "\u2167", "\u0056\u0049\u0049\u0049", "\u2168", "\u0049\u0058", "\u2169", "\u0058", "\u216A", "\u0058\u0049", "\u216B", "\u0058\u0049\u0049", "\u216C", "\u004C", "\u216D", "\u0043", "\u216E", "\u0044", "\u216F", "\u004D", "\u2170", "\u0069", "\u2171", "\u0069\u0069", "\u2172", "\u0069\u0069\u0069", "\u2173", "\u0069\u0076", "\u2174", "\u0076", "\u2175", "\u0076\u0069", "\u2176", "\u0076\u0069\u0069", "\u2177", "\u0076\u0069\u0069\u0069", "\u2178", "\u0069\u0078", "\u2179", "\u0078", "\u217A", "\u0078\u0069", "\u217B", "\u0078\u0069\u0069", "\u217C", "\u006C", "\u217D", "\u0063", "\u217E", "\u0064", "\u217F", "\u006D", "\u222C", "\u222B\u222B", "\u222D", "\u222B\u222B\u222B", "\u222F", "\u222E\u222E", "\u2230", "\u222E\u222E\u222E", "\u2474", "\u0028\u0031\u0029", "\u2475", "\u0028\u0032\u0029", "\u2476", "\u0028\u0033\u0029", "\u2477", "\u0028\u0034\u0029", "\u2478", "\u0028\u0035\u0029", "\u2479", "\u0028\u0036\u0029", "\u247A", "\u0028\u0037\u0029", "\u247B", "\u0028\u0038\u0029", "\u247C", "\u0028\u0039\u0029", "\u247D", "\u0028\u0031\u0030\u0029", "\u247E", "\u0028\u0031\u0031\u0029", "\u247F", "\u0028\u0031\u0032\u0029", "\u2480", "\u0028\u0031\u0033\u0029", "\u2481", "\u0028\u0031\u0034\u0029", "\u2482", "\u0028\u0031\u0035\u0029", "\u2483", "\u0028\u0031\u0036\u0029", "\u2484", "\u0028\u0031\u0037\u0029", "\u2485", "\u0028\u0031\u0038\u0029", "\u2486", "\u0028\u0031\u0039\u0029", "\u2487", "\u0028\u0032\u0030\u0029", "\u2488", "\u0031\u002E", "\u2489", "\u0032\u002E", "\u248A", "\u0033\u002E", "\u248B", "\u0034\u002E", "\u248C", "\u0035\u002E", "\u248D", "\u0036\u002E", "\u248E", "\u0037\u002E", "\u248F", "\u0038\u002E", "\u2490", "\u0039\u002E", "\u2491", "\u0031\u0030\u002E", "\u2492", "\u0031\u0031\u002E", "\u2493", "\u0031\u0032\u002E", "\u2494", "\u0031\u0033\u002E", "\u2495", "\u0031\u0034\u002E", "\u2496", "\u0031\u0035\u002E", "\u2497", "\u0031\u0036\u002E", "\u2498", "\u0031\u0037\u002E", "\u2499", "\u0031\u0038\u002E", "\u249A", "\u0031\u0039\u002E", "\u249B", "\u0032\u0030\u002E", "\u249C", "\u0028\u0061\u0029", "\u249D", "\u0028\u0062\u0029", "\u249E", "\u0028\u0063\u0029", "\u249F", "\u0028\u0064\u0029", "\u24A0", "\u0028\u0065\u0029", "\u24A1", "\u0028\u0066\u0029", "\u24A2", "\u0028\u0067\u0029", "\u24A3", "\u0028\u0068\u0029", "\u24A4", "\u0028\u0069\u0029", "\u24A5", "\u0028\u006A\u0029", "\u24A6", "\u0028\u006B\u0029", "\u24A7", "\u0028\u006C\u0029", "\u24A8", "\u0028\u006D\u0029", "\u24A9", "\u0028\u006E\u0029", "\u24AA", "\u0028\u006F\u0029", "\u24AB", "\u0028\u0070\u0029", "\u24AC", "\u0028\u0071\u0029", "\u24AD", "\u0028\u0072\u0029", "\u24AE", "\u0028\u0073\u0029", "\u24AF", "\u0028\u0074\u0029", "\u24B0", "\u0028\u0075\u0029", "\u24B1", "\u0028\u0076\u0029", "\u24B2", "\u0028\u0077\u0029", "\u24B3", "\u0028\u0078\u0029", "\u24B4", "\u0028\u0079\u0029", "\u24B5", "\u0028\u007A\u0029", "\u2A0C", "\u222B\u222B\u222B\u222B", "\u2A74", "\u003A\u003A\u003D", "\u2A75", "\u003D\u003D", "\u2A76", "\u003D\u003D\u003D", "\u2E9F", "\u6BCD", "\u2EF3", "\u9F9F", "\u2F00", "\u4E00", "\u2F01", "\u4E28", "\u2F02", "\u4E36", "\u2F03", "\u4E3F", "\u2F04", "\u4E59", "\u2F05", "\u4E85", "\u2F06", "\u4E8C", "\u2F07", "\u4EA0", "\u2F08", "\u4EBA", "\u2F09", "\u513F", "\u2F0A", "\u5165", "\u2F0B", "\u516B", "\u2F0C", "\u5182", "\u2F0D", "\u5196", "\u2F0E", "\u51AB", "\u2F0F", "\u51E0", "\u2F10", "\u51F5", "\u2F11", "\u5200", "\u2F12", "\u529B", "\u2F13", "\u52F9", "\u2F14", "\u5315", "\u2F15", "\u531A", "\u2F16", "\u5338", "\u2F17", "\u5341", "\u2F18", "\u535C", "\u2F19", "\u5369", "\u2F1A", "\u5382", "\u2F1B", "\u53B6", "\u2F1C", "\u53C8", "\u2F1D", "\u53E3", "\u2F1E", "\u56D7", "\u2F1F", "\u571F", "\u2F20", "\u58EB", "\u2F21", "\u5902", "\u2F22", "\u590A", "\u2F23", "\u5915", "\u2F24", "\u5927", "\u2F25", "\u5973", "\u2F26", "\u5B50", "\u2F27", "\u5B80", "\u2F28", "\u5BF8", "\u2F29", "\u5C0F", "\u2F2A", "\u5C22", "\u2F2B", "\u5C38", "\u2F2C", "\u5C6E", "\u2F2D", "\u5C71", "\u2F2E", "\u5DDB", "\u2F2F", "\u5DE5", "\u2F30", "\u5DF1", "\u2F31", "\u5DFE", "\u2F32", "\u5E72", "\u2F33", "\u5E7A", "\u2F34", "\u5E7F", "\u2F35", "\u5EF4", "\u2F36", "\u5EFE", "\u2F37", "\u5F0B", "\u2F38", "\u5F13", "\u2F39", "\u5F50", "\u2F3A", "\u5F61", "\u2F3B", "\u5F73", "\u2F3C", "\u5FC3", "\u2F3D", "\u6208", "\u2F3E", "\u6236", "\u2F3F", "\u624B", "\u2F40", "\u652F", "\u2F41", "\u6534", "\u2F42", "\u6587", "\u2F43", "\u6597", "\u2F44", "\u65A4", "\u2F45", "\u65B9", "\u2F46", "\u65E0", "\u2F47", "\u65E5", "\u2F48", "\u66F0", "\u2F49", "\u6708", "\u2F4A", "\u6728", "\u2F4B", "\u6B20", "\u2F4C", "\u6B62", "\u2F4D", "\u6B79", "\u2F4E", "\u6BB3", "\u2F4F", "\u6BCB", "\u2F50", "\u6BD4", "\u2F51", "\u6BDB", "\u2F52", "\u6C0F", "\u2F53", "\u6C14", "\u2F54", "\u6C34", "\u2F55", "\u706B", "\u2F56", "\u722A", "\u2F57", "\u7236", "\u2F58", "\u723B", "\u2F59", "\u723F", "\u2F5A", "\u7247", "\u2F5B", "\u7259", "\u2F5C", "\u725B", "\u2F5D", "\u72AC", "\u2F5E", "\u7384", "\u2F5F", "\u7389", "\u2F60", "\u74DC", "\u2F61", "\u74E6", "\u2F62", "\u7518", "\u2F63", "\u751F", "\u2F64", "\u7528", "\u2F65", "\u7530", "\u2F66", "\u758B", "\u2F67", "\u7592", "\u2F68", "\u7676", "\u2F69", "\u767D", "\u2F6A", "\u76AE", "\u2F6B", "\u76BF", "\u2F6C", "\u76EE", "\u2F6D", "\u77DB", "\u2F6E", "\u77E2", "\u2F6F", "\u77F3", "\u2F70", "\u793A", "\u2F71", "\u79B8", "\u2F72", "\u79BE", "\u2F73", "\u7A74", "\u2F74", "\u7ACB", "\u2F75", "\u7AF9", "\u2F76", "\u7C73", "\u2F77", "\u7CF8", "\u2F78", "\u7F36", "\u2F79", "\u7F51", "\u2F7A", "\u7F8A", "\u2F7B", "\u7FBD", "\u2F7C", "\u8001", "\u2F7D", "\u800C", "\u2F7E", "\u8012", "\u2F7F", "\u8033", "\u2F80", "\u807F", "\u2F81", "\u8089", "\u2F82", "\u81E3", "\u2F83", "\u81EA", "\u2F84", "\u81F3", "\u2F85", "\u81FC", "\u2F86", "\u820C", "\u2F87", "\u821B", "\u2F88", "\u821F", "\u2F89", "\u826E", "\u2F8A", "\u8272", "\u2F8B", "\u8278", "\u2F8C", "\u864D", "\u2F8D", "\u866B", "\u2F8E", "\u8840", "\u2F8F", "\u884C", "\u2F90", "\u8863", "\u2F91", "\u897E", "\u2F92", "\u898B", "\u2F93", "\u89D2", "\u2F94", "\u8A00", "\u2F95", "\u8C37", "\u2F96", "\u8C46", "\u2F97", "\u8C55", "\u2F98", "\u8C78", "\u2F99", "\u8C9D", "\u2F9A", "\u8D64", "\u2F9B", "\u8D70", "\u2F9C", "\u8DB3", "\u2F9D", "\u8EAB", "\u2F9E", "\u8ECA", "\u2F9F", "\u8F9B", "\u2FA0", "\u8FB0", "\u2FA1", "\u8FB5", "\u2FA2", "\u9091", "\u2FA3", "\u9149", "\u2FA4", "\u91C6", "\u2FA5", "\u91CC", "\u2FA6", "\u91D1", "\u2FA7", "\u9577", "\u2FA8", "\u9580", "\u2FA9", "\u961C", "\u2FAA", "\u96B6", "\u2FAB", "\u96B9", "\u2FAC", "\u96E8", "\u2FAD", "\u9751", "\u2FAE", "\u975E", "\u2FAF", "\u9762", "\u2FB0", "\u9769", "\u2FB1", "\u97CB", "\u2FB2", "\u97ED", "\u2FB3", "\u97F3", "\u2FB4", "\u9801", "\u2FB5", "\u98A8", "\u2FB6", "\u98DB", "\u2FB7", "\u98DF", "\u2FB8", "\u9996", "\u2FB9", "\u9999", "\u2FBA", "\u99AC", "\u2FBB", "\u9AA8", "\u2FBC", "\u9AD8", "\u2FBD", "\u9ADF", "\u2FBE", "\u9B25", "\u2FBF", "\u9B2F", "\u2FC0", "\u9B32", "\u2FC1", "\u9B3C", "\u2FC2", "\u9B5A", "\u2FC3", "\u9CE5", "\u2FC4", "\u9E75", "\u2FC5", "\u9E7F", "\u2FC6", "\u9EA5", "\u2FC7", "\u9EBB", "\u2FC8", "\u9EC3", "\u2FC9", "\u9ECD", "\u2FCA", "\u9ED1", "\u2FCB", "\u9EF9", "\u2FCC", "\u9EFD", "\u2FCD", "\u9F0E", "\u2FCE", "\u9F13", "\u2FCF", "\u9F20", "\u2FD0", "\u9F3B", "\u2FD1", "\u9F4A", "\u2FD2", "\u9F52", "\u2FD3", "\u9F8D", "\u2FD4", "\u9F9C", "\u2FD5", "\u9FA0", "\u3036", "\u3012", "\u3038", "\u5341", "\u3039", "\u5344", "\u303A", "\u5345", "\u309B", "\u0020\u3099", "\u309C", "\u0020\u309A", "\u3131", "\u1100", "\u3132", "\u1101", "\u3133", "\u11AA", "\u3134", "\u1102", "\u3135", "\u11AC", "\u3136", "\u11AD", "\u3137", "\u1103", "\u3138", "\u1104", "\u3139", "\u1105", "\u313A", "\u11B0", "\u313B", "\u11B1", "\u313C", "\u11B2", "\u313D", "\u11B3", "\u313E", "\u11B4", "\u313F", "\u11B5", "\u3140", "\u111A", "\u3141", "\u1106", "\u3142", "\u1107", "\u3143", "\u1108", "\u3144", "\u1121", "\u3145", "\u1109", "\u3146", "\u110A", "\u3147", "\u110B", "\u3148", "\u110C", "\u3149", "\u110D", "\u314A", "\u110E", "\u314B", "\u110F", "\u314C", "\u1110", "\u314D", "\u1111", "\u314E", "\u1112", "\u314F", "\u1161", "\u3150", "\u1162", "\u3151", "\u1163", "\u3152", "\u1164", "\u3153", "\u1165", "\u3154", "\u1166", "\u3155", "\u1167", "\u3156", "\u1168", "\u3157", "\u1169", "\u3158", "\u116A", "\u3159", "\u116B", "\u315A", "\u116C", "\u315B", "\u116D", "\u315C", "\u116E", "\u315D", "\u116F", "\u315E", "\u1170", "\u315F", "\u1171", "\u3160", "\u1172", "\u3161", "\u1173", "\u3162", "\u1174", "\u3163", "\u1175", "\u3164", "\u1160", "\u3165", "\u1114", "\u3166", "\u1115", "\u3167", "\u11C7", "\u3168", "\u11C8", "\u3169", "\u11CC", "\u316A", "\u11CE", "\u316B", "\u11D3", "\u316C", "\u11D7", "\u316D", "\u11D9", "\u316E", "\u111C", "\u316F", "\u11DD", "\u3170", "\u11DF", "\u3171", "\u111D", "\u3172", "\u111E", "\u3173", "\u1120", "\u3174", "\u1122", "\u3175", "\u1123", "\u3176", "\u1127", "\u3177", "\u1129", "\u3178", "\u112B", "\u3179", "\u112C", "\u317A", "\u112D", "\u317B", "\u112E", "\u317C", "\u112F", "\u317D", "\u1132", "\u317E", "\u1136", "\u317F", "\u1140", "\u3180", "\u1147", "\u3181", "\u114C", "\u3182", "\u11F1", "\u3183", "\u11F2", "\u3184", "\u1157", "\u3185", "\u1158", "\u3186", "\u1159", "\u3187", "\u1184", "\u3188", "\u1185", "\u3189", "\u1188", "\u318A", "\u1191", "\u318B", "\u1192", "\u318C", "\u1194", "\u318D", "\u119E", "\u318E", "\u11A1", "\u3200", "\u0028\u1100\u0029", "\u3201", "\u0028\u1102\u0029", "\u3202", "\u0028\u1103\u0029", "\u3203", "\u0028\u1105\u0029", "\u3204", "\u0028\u1106\u0029", "\u3205", "\u0028\u1107\u0029", "\u3206", "\u0028\u1109\u0029", "\u3207", "\u0028\u110B\u0029", "\u3208", "\u0028\u110C\u0029", "\u3209", "\u0028\u110E\u0029", "\u320A", "\u0028\u110F\u0029", "\u320B", "\u0028\u1110\u0029", "\u320C", "\u0028\u1111\u0029", "\u320D", "\u0028\u1112\u0029", "\u320E", "\u0028\u1100\u1161\u0029", "\u320F", "\u0028\u1102\u1161\u0029", "\u3210", "\u0028\u1103\u1161\u0029", "\u3211", "\u0028\u1105\u1161\u0029", "\u3212", "\u0028\u1106\u1161\u0029", "\u3213", "\u0028\u1107\u1161\u0029", "\u3214", "\u0028\u1109\u1161\u0029", "\u3215", "\u0028\u110B\u1161\u0029", "\u3216", "\u0028\u110C\u1161\u0029", "\u3217", "\u0028\u110E\u1161\u0029", "\u3218", "\u0028\u110F\u1161\u0029", "\u3219", "\u0028\u1110\u1161\u0029", "\u321A", "\u0028\u1111\u1161\u0029", "\u321B", "\u0028\u1112\u1161\u0029", "\u321C", "\u0028\u110C\u116E\u0029", "\u321D", "\u0028\u110B\u1169\u110C\u1165\u11AB\u0029", "\u321E", "\u0028\u110B\u1169\u1112\u116E\u0029", "\u3220", "\u0028\u4E00\u0029", "\u3221", "\u0028\u4E8C\u0029", "\u3222", "\u0028\u4E09\u0029", "\u3223", "\u0028\u56DB\u0029", "\u3224", "\u0028\u4E94\u0029", "\u3225", "\u0028\u516D\u0029", "\u3226", "\u0028\u4E03\u0029", "\u3227", "\u0028\u516B\u0029", "\u3228", "\u0028\u4E5D\u0029", "\u3229", "\u0028\u5341\u0029", "\u322A", "\u0028\u6708\u0029", "\u322B", "\u0028\u706B\u0029", "\u322C", "\u0028\u6C34\u0029", "\u322D", "\u0028\u6728\u0029", "\u322E", "\u0028\u91D1\u0029", "\u322F", "\u0028\u571F\u0029", "\u3230", "\u0028\u65E5\u0029", "\u3231", "\u0028\u682A\u0029", "\u3232", "\u0028\u6709\u0029", "\u3233", "\u0028\u793E\u0029", "\u3234", "\u0028\u540D\u0029", "\u3235", "\u0028\u7279\u0029", "\u3236", "\u0028\u8CA1\u0029", "\u3237", "\u0028\u795D\u0029", "\u3238", "\u0028\u52B4\u0029", "\u3239", "\u0028\u4EE3\u0029", "\u323A", "\u0028\u547C\u0029", "\u323B", "\u0028\u5B66\u0029", "\u323C", "\u0028\u76E3\u0029", "\u323D", "\u0028\u4F01\u0029", "\u323E", "\u0028\u8CC7\u0029", "\u323F", "\u0028\u5354\u0029", "\u3240", "\u0028\u796D\u0029", "\u3241", "\u0028\u4F11\u0029", "\u3242", "\u0028\u81EA\u0029", "\u3243", "\u0028\u81F3\u0029", "\u32C0", "\u0031\u6708", "\u32C1", "\u0032\u6708", "\u32C2", "\u0033\u6708", "\u32C3", "\u0034\u6708", "\u32C4", "\u0035\u6708", "\u32C5", "\u0036\u6708", "\u32C6", "\u0037\u6708", "\u32C7", "\u0038\u6708", "\u32C8", "\u0039\u6708", "\u32C9", "\u0031\u0030\u6708", "\u32CA", "\u0031\u0031\u6708", "\u32CB", "\u0031\u0032\u6708", "\u3358", "\u0030\u70B9", "\u3359", "\u0031\u70B9", "\u335A", "\u0032\u70B9", "\u335B", "\u0033\u70B9", "\u335C", "\u0034\u70B9", "\u335D", "\u0035\u70B9", "\u335E", "\u0036\u70B9", "\u335F", "\u0037\u70B9", "\u3360", "\u0038\u70B9", "\u3361", "\u0039\u70B9", "\u3362", "\u0031\u0030\u70B9", "\u3363", "\u0031\u0031\u70B9", "\u3364", "\u0031\u0032\u70B9", "\u3365", "\u0031\u0033\u70B9", "\u3366", "\u0031\u0034\u70B9", "\u3367", "\u0031\u0035\u70B9", "\u3368", "\u0031\u0036\u70B9", "\u3369", "\u0031\u0037\u70B9", "\u336A", "\u0031\u0038\u70B9", "\u336B", "\u0031\u0039\u70B9", "\u336C", "\u0032\u0030\u70B9", "\u336D", "\u0032\u0031\u70B9", "\u336E", "\u0032\u0032\u70B9", "\u336F", "\u0032\u0033\u70B9", "\u3370", "\u0032\u0034\u70B9", "\u33E0", "\u0031\u65E5", "\u33E1", "\u0032\u65E5", "\u33E2", "\u0033\u65E5", "\u33E3", "\u0034\u65E5", "\u33E4", "\u0035\u65E5", "\u33E5", "\u0036\u65E5", "\u33E6", "\u0037\u65E5", "\u33E7", "\u0038\u65E5", "\u33E8", "\u0039\u65E5", "\u33E9", "\u0031\u0030\u65E5", "\u33EA", "\u0031\u0031\u65E5", "\u33EB", "\u0031\u0032\u65E5", "\u33EC", "\u0031\u0033\u65E5", "\u33ED", "\u0031\u0034\u65E5", "\u33EE", "\u0031\u0035\u65E5", "\u33EF", "\u0031\u0036\u65E5", "\u33F0", "\u0031\u0037\u65E5", "\u33F1", "\u0031\u0038\u65E5", "\u33F2", "\u0031\u0039\u65E5", "\u33F3", "\u0032\u0030\u65E5", "\u33F4", "\u0032\u0031\u65E5", "\u33F5", "\u0032\u0032\u65E5", "\u33F6", "\u0032\u0033\u65E5", "\u33F7", "\u0032\u0034\u65E5", "\u33F8", "\u0032\u0035\u65E5", "\u33F9", "\u0032\u0036\u65E5", "\u33FA", "\u0032\u0037\u65E5", "\u33FB", "\u0032\u0038\u65E5", "\u33FC", "\u0032\u0039\u65E5", "\u33FD", "\u0033\u0030\u65E5", "\u33FE", "\u0033\u0031\u65E5", "\uFB00", "\u0066\u0066", "\uFB01", "\u0066\u0069", "\uFB02", "\u0066\u006C", "\uFB03", "\u0066\u0066\u0069", "\uFB04", "\u0066\u0066\u006C", "\uFB05", "\u017F\u0074", "\uFB06", "\u0073\u0074", "\uFB13", "\u0574\u0576", "\uFB14", "\u0574\u0565", "\uFB15", "\u0574\u056B", "\uFB16", "\u057E\u0576", "\uFB17", "\u0574\u056D", "\uFB4F", "\u05D0\u05DC", "\uFB50", "\u0671", "\uFB51", "\u0671", "\uFB52", "\u067B", "\uFB53", "\u067B", "\uFB54", "\u067B", "\uFB55", "\u067B", "\uFB56", "\u067E", "\uFB57", "\u067E", "\uFB58", "\u067E", "\uFB59", "\u067E", "\uFB5A", "\u0680", "\uFB5B", "\u0680", "\uFB5C", "\u0680", "\uFB5D", "\u0680", "\uFB5E", "\u067A", "\uFB5F", "\u067A", "\uFB60", "\u067A", "\uFB61", "\u067A", "\uFB62", "\u067F", "\uFB63", "\u067F", "\uFB64", "\u067F", "\uFB65", "\u067F", "\uFB66", "\u0679", "\uFB67", "\u0679", "\uFB68", "\u0679", "\uFB69", "\u0679", "\uFB6A", "\u06A4", "\uFB6B", "\u06A4", "\uFB6C", "\u06A4", "\uFB6D", "\u06A4", "\uFB6E", "\u06A6", "\uFB6F", "\u06A6", "\uFB70", "\u06A6", "\uFB71", "\u06A6", "\uFB72", "\u0684", "\uFB73", "\u0684", "\uFB74", "\u0684", "\uFB75", "\u0684", "\uFB76", "\u0683", "\uFB77", "\u0683", "\uFB78", "\u0683", "\uFB79", "\u0683", "\uFB7A", "\u0686", "\uFB7B", "\u0686", "\uFB7C", "\u0686", "\uFB7D", "\u0686", "\uFB7E", "\u0687", "\uFB7F", "\u0687", "\uFB80", "\u0687", "\uFB81", "\u0687", "\uFB82", "\u068D", "\uFB83", "\u068D", "\uFB84", "\u068C", "\uFB85", "\u068C", "\uFB86", "\u068E", "\uFB87", "\u068E", "\uFB88", "\u0688", "\uFB89", "\u0688", "\uFB8A", "\u0698", "\uFB8B", "\u0698", "\uFB8C", "\u0691", "\uFB8D", "\u0691", "\uFB8E", "\u06A9", "\uFB8F", "\u06A9", "\uFB90", "\u06A9", "\uFB91", "\u06A9", "\uFB92", "\u06AF", "\uFB93", "\u06AF", "\uFB94", "\u06AF", "\uFB95", "\u06AF", "\uFB96", "\u06B3", "\uFB97", "\u06B3", "\uFB98", "\u06B3", "\uFB99", "\u06B3", "\uFB9A", "\u06B1", "\uFB9B", "\u06B1", "\uFB9C", "\u06B1", "\uFB9D", "\u06B1", "\uFB9E", "\u06BA", "\uFB9F", "\u06BA", "\uFBA0", "\u06BB", "\uFBA1", "\u06BB", "\uFBA2", "\u06BB", "\uFBA3", "\u06BB", "\uFBA4", "\u06C0", "\uFBA5", "\u06C0", "\uFBA6", "\u06C1", "\uFBA7", "\u06C1", "\uFBA8", "\u06C1", "\uFBA9", "\u06C1", "\uFBAA", "\u06BE", "\uFBAB", "\u06BE", "\uFBAC", "\u06BE", "\uFBAD", "\u06BE", "\uFBAE", "\u06D2", "\uFBAF", "\u06D2", "\uFBB0", "\u06D3", "\uFBB1", "\u06D3", "\uFBD3", "\u06AD", "\uFBD4", "\u06AD", "\uFBD5", "\u06AD", "\uFBD6", "\u06AD", "\uFBD7", "\u06C7", "\uFBD8", "\u06C7", "\uFBD9", "\u06C6", "\uFBDA", "\u06C6", "\uFBDB", "\u06C8", "\uFBDC", "\u06C8", "\uFBDD", "\u0677", "\uFBDE", "\u06CB", "\uFBDF", "\u06CB", "\uFBE0", "\u06C5", "\uFBE1", "\u06C5", "\uFBE2", "\u06C9", "\uFBE3", "\u06C9", "\uFBE4", "\u06D0", "\uFBE5", "\u06D0", "\uFBE6", "\u06D0", "\uFBE7", "\u06D0", "\uFBE8", "\u0649", "\uFBE9", "\u0649", "\uFBEA", "\u0626\u0627", "\uFBEB", "\u0626\u0627", "\uFBEC", "\u0626\u06D5", "\uFBED", "\u0626\u06D5", "\uFBEE", "\u0626\u0648", "\uFBEF", "\u0626\u0648", "\uFBF0", "\u0626\u06C7", "\uFBF1", "\u0626\u06C7", "\uFBF2", "\u0626\u06C6", "\uFBF3", "\u0626\u06C6", "\uFBF4", "\u0626\u06C8", "\uFBF5", "\u0626\u06C8", "\uFBF6", "\u0626\u06D0", "\uFBF7", "\u0626\u06D0", "\uFBF8", "\u0626\u06D0", "\uFBF9", "\u0626\u0649", "\uFBFA", "\u0626\u0649", "\uFBFB", "\u0626\u0649", "\uFBFC", "\u06CC", "\uFBFD", "\u06CC", "\uFBFE", "\u06CC", "\uFBFF", "\u06CC", "\uFC00", "\u0626\u062C", "\uFC01", "\u0626\u062D", "\uFC02", "\u0626\u0645", "\uFC03", "\u0626\u0649", "\uFC04", "\u0626\u064A", "\uFC05", "\u0628\u062C", "\uFC06", "\u0628\u062D", "\uFC07", "\u0628\u062E", "\uFC08", "\u0628\u0645", "\uFC09", "\u0628\u0649", "\uFC0A", "\u0628\u064A", "\uFC0B", "\u062A\u062C", "\uFC0C", "\u062A\u062D", "\uFC0D", "\u062A\u062E", "\uFC0E", "\u062A\u0645", "\uFC0F", "\u062A\u0649", "\uFC10", "\u062A\u064A", "\uFC11", "\u062B\u062C", "\uFC12", "\u062B\u0645", "\uFC13", "\u062B\u0649", "\uFC14", "\u062B\u064A", "\uFC15", "\u062C\u062D", "\uFC16", "\u062C\u0645", "\uFC17", "\u062D\u062C", "\uFC18", "\u062D\u0645", "\uFC19", "\u062E\u062C", "\uFC1A", "\u062E\u062D", "\uFC1B", "\u062E\u0645", "\uFC1C", "\u0633\u062C", "\uFC1D", "\u0633\u062D", "\uFC1E", "\u0633\u062E", "\uFC1F", "\u0633\u0645", "\uFC20", "\u0635\u062D", "\uFC21", "\u0635\u0645", "\uFC22", "\u0636\u062C", "\uFC23", "\u0636\u062D", "\uFC24", "\u0636\u062E", "\uFC25", "\u0636\u0645", "\uFC26", "\u0637\u062D", "\uFC27", "\u0637\u0645", "\uFC28", "\u0638\u0645", "\uFC29", "\u0639\u062C", "\uFC2A", "\u0639\u0645", "\uFC2B", "\u063A\u062C", "\uFC2C", "\u063A\u0645", "\uFC2D", "\u0641\u062C", "\uFC2E", "\u0641\u062D", "\uFC2F", "\u0641\u062E", "\uFC30", "\u0641\u0645", "\uFC31", "\u0641\u0649", "\uFC32", "\u0641\u064A", "\uFC33", "\u0642\u062D", "\uFC34", "\u0642\u0645", "\uFC35", "\u0642\u0649", "\uFC36", "\u0642\u064A", "\uFC37", "\u0643\u0627", "\uFC38", "\u0643\u062C", "\uFC39", "\u0643\u062D", "\uFC3A", "\u0643\u062E", "\uFC3B", "\u0643\u0644", "\uFC3C", "\u0643\u0645", "\uFC3D", "\u0643\u0649", "\uFC3E", "\u0643\u064A", "\uFC3F", "\u0644\u062C", "\uFC40", "\u0644\u062D", "\uFC41", "\u0644\u062E", "\uFC42", "\u0644\u0645", "\uFC43", "\u0644\u0649", "\uFC44", "\u0644\u064A", "\uFC45", "\u0645\u062C", "\uFC46", "\u0645\u062D", "\uFC47", "\u0645\u062E", "\uFC48", "\u0645\u0645", "\uFC49", "\u0645\u0649", "\uFC4A", "\u0645\u064A", "\uFC4B", "\u0646\u062C", "\uFC4C", "\u0646\u062D", "\uFC4D", "\u0646\u062E", "\uFC4E", "\u0646\u0645", "\uFC4F", "\u0646\u0649", "\uFC50", "\u0646\u064A", "\uFC51", "\u0647\u062C", "\uFC52", "\u0647\u0645", "\uFC53", "\u0647\u0649", "\uFC54", "\u0647\u064A", "\uFC55", "\u064A\u062C", "\uFC56", "\u064A\u062D", "\uFC57", "\u064A\u062E", "\uFC58", "\u064A\u0645", "\uFC59", "\u064A\u0649", "\uFC5A", "\u064A\u064A", "\uFC5B", "\u0630\u0670", "\uFC5C", "\u0631\u0670", "\uFC5D", "\u0649\u0670", "\uFC5E", "\u0020\u064C\u0651", "\uFC5F", "\u0020\u064D\u0651", "\uFC60", "\u0020\u064E\u0651", "\uFC61", "\u0020\u064F\u0651", "\uFC62", "\u0020\u0650\u0651", "\uFC63", "\u0020\u0651\u0670", "\uFC64", "\u0626\u0631", "\uFC65", "\u0626\u0632", "\uFC66", "\u0626\u0645", "\uFC67", "\u0626\u0646", "\uFC68", "\u0626\u0649", "\uFC69", "\u0626\u064A", "\uFC6A", "\u0628\u0631", "\uFC6B", "\u0628\u0632", "\uFC6C", "\u0628\u0645", "\uFC6D", "\u0628\u0646", "\uFC6E", "\u0628\u0649", "\uFC6F", "\u0628\u064A", "\uFC70", "\u062A\u0631", "\uFC71", "\u062A\u0632", "\uFC72", "\u062A\u0645", "\uFC73", "\u062A\u0646", "\uFC74", "\u062A\u0649", "\uFC75", "\u062A\u064A", "\uFC76", "\u062B\u0631", "\uFC77", "\u062B\u0632", "\uFC78", "\u062B\u0645", "\uFC79", "\u062B\u0646", "\uFC7A", "\u062B\u0649", "\uFC7B", "\u062B\u064A", "\uFC7C", "\u0641\u0649", "\uFC7D", "\u0641\u064A", "\uFC7E", "\u0642\u0649", "\uFC7F", "\u0642\u064A", "\uFC80", "\u0643\u0627", "\uFC81", "\u0643\u0644", "\uFC82", "\u0643\u0645", "\uFC83", "\u0643\u0649", "\uFC84", "\u0643\u064A", "\uFC85", "\u0644\u0645", "\uFC86", "\u0644\u0649", "\uFC87", "\u0644\u064A", "\uFC88", "\u0645\u0627", "\uFC89", "\u0645\u0645", "\uFC8A", "\u0646\u0631", "\uFC8B", "\u0646\u0632", "\uFC8C", "\u0646\u0645", "\uFC8D", "\u0646\u0646", "\uFC8E", "\u0646\u0649", "\uFC8F", "\u0646\u064A", "\uFC90", "\u0649\u0670", "\uFC91", "\u064A\u0631", "\uFC92", "\u064A\u0632", "\uFC93", "\u064A\u0645", "\uFC94", "\u064A\u0646", "\uFC95", "\u064A\u0649", "\uFC96", "\u064A\u064A", "\uFC97", "\u0626\u062C", "\uFC98", "\u0626\u062D", "\uFC99", "\u0626\u062E", "\uFC9A", "\u0626\u0645", "\uFC9B", "\u0626\u0647", "\uFC9C", "\u0628\u062C", "\uFC9D", "\u0628\u062D", "\uFC9E", "\u0628\u062E", "\uFC9F", "\u0628\u0645", "\uFCA0", "\u0628\u0647", "\uFCA1", "\u062A\u062C", "\uFCA2", "\u062A\u062D", "\uFCA3", "\u062A\u062E", "\uFCA4", "\u062A\u0645", "\uFCA5", "\u062A\u0647", "\uFCA6", "\u062B\u0645", "\uFCA7", "\u062C\u062D", "\uFCA8", "\u062C\u0645", "\uFCA9", "\u062D\u062C", "\uFCAA", "\u062D\u0645", "\uFCAB", "\u062E\u062C", "\uFCAC", "\u062E\u0645", "\uFCAD", "\u0633\u062C", "\uFCAE", "\u0633\u062D", "\uFCAF", "\u0633\u062E", "\uFCB0", "\u0633\u0645", "\uFCB1", "\u0635\u062D", "\uFCB2", "\u0635\u062E", "\uFCB3", "\u0635\u0645", "\uFCB4", "\u0636\u062C", "\uFCB5", "\u0636\u062D", "\uFCB6", "\u0636\u062E", "\uFCB7", "\u0636\u0645", "\uFCB8", "\u0637\u062D", "\uFCB9", "\u0638\u0645", "\uFCBA", "\u0639\u062C", "\uFCBB", "\u0639\u0645", "\uFCBC", "\u063A\u062C", "\uFCBD", "\u063A\u0645", "\uFCBE", "\u0641\u062C", "\uFCBF", "\u0641\u062D", "\uFCC0", "\u0641\u062E", "\uFCC1", "\u0641\u0645", "\uFCC2", "\u0642\u062D", "\uFCC3", "\u0642\u0645", "\uFCC4", "\u0643\u062C", "\uFCC5", "\u0643\u062D", "\uFCC6", "\u0643\u062E", "\uFCC7", "\u0643\u0644", "\uFCC8", "\u0643\u0645", "\uFCC9", "\u0644\u062C", "\uFCCA", "\u0644\u062D", "\uFCCB", "\u0644\u062E", "\uFCCC", "\u0644\u0645", "\uFCCD", "\u0644\u0647", "\uFCCE", "\u0645\u062C", "\uFCCF", "\u0645\u062D", "\uFCD0", "\u0645\u062E", "\uFCD1", "\u0645\u0645", "\uFCD2", "\u0646\u062C", "\uFCD3", "\u0646\u062D", "\uFCD4", "\u0646\u062E", "\uFCD5", "\u0646\u0645", "\uFCD6", "\u0646\u0647", "\uFCD7", "\u0647\u062C", "\uFCD8", "\u0647\u0645", "\uFCD9", "\u0647\u0670", "\uFCDA", "\u064A\u062C", "\uFCDB", "\u064A\u062D", "\uFCDC", "\u064A\u062E", "\uFCDD", "\u064A\u0645", "\uFCDE", "\u064A\u0647", "\uFCDF", "\u0626\u0645", "\uFCE0", "\u0626\u0647", "\uFCE1", "\u0628\u0645", "\uFCE2", "\u0628\u0647", "\uFCE3", "\u062A\u0645", "\uFCE4", "\u062A\u0647", "\uFCE5", "\u062B\u0645", "\uFCE6", "\u062B\u0647", "\uFCE7", "\u0633\u0645", "\uFCE8", "\u0633\u0647", "\uFCE9", "\u0634\u0645", "\uFCEA", "\u0634\u0647", "\uFCEB", "\u0643\u0644", "\uFCEC", "\u0643\u0645", "\uFCED", "\u0644\u0645", "\uFCEE", "\u0646\u0645", "\uFCEF", "\u0646\u0647", "\uFCF0", "\u064A\u0645", "\uFCF1", "\u064A\u0647", "\uFCF2", "\u0640\u064E\u0651", "\uFCF3", "\u0640\u064F\u0651", "\uFCF4", "\u0640\u0650\u0651", "\uFCF5", "\u0637\u0649", "\uFCF6", "\u0637\u064A", "\uFCF7", "\u0639\u0649", "\uFCF8", "\u0639\u064A", "\uFCF9", "\u063A\u0649", "\uFCFA", "\u063A\u064A", "\uFCFB", "\u0633\u0649", "\uFCFC", "\u0633\u064A", "\uFCFD", "\u0634\u0649", "\uFCFE", "\u0634\u064A", "\uFCFF", "\u062D\u0649", "\uFD00", "\u062D\u064A", "\uFD01", "\u062C\u0649", "\uFD02", "\u062C\u064A", "\uFD03", "\u062E\u0649", "\uFD04", "\u062E\u064A", "\uFD05", "\u0635\u0649", "\uFD06", "\u0635\u064A", "\uFD07", "\u0636\u0649", "\uFD08", "\u0636\u064A", "\uFD09", "\u0634\u062C", "\uFD0A", "\u0634\u062D", "\uFD0B", "\u0634\u062E", "\uFD0C", "\u0634\u0645", "\uFD0D", "\u0634\u0631", "\uFD0E", "\u0633\u0631", "\uFD0F", "\u0635\u0631", "\uFD10", "\u0636\u0631", "\uFD11", "\u0637\u0649", "\uFD12", "\u0637\u064A", "\uFD13", "\u0639\u0649", "\uFD14", "\u0639\u064A", "\uFD15", "\u063A\u0649", "\uFD16", "\u063A\u064A", "\uFD17", "\u0633\u0649", "\uFD18", "\u0633\u064A", "\uFD19", "\u0634\u0649", "\uFD1A", "\u0634\u064A", "\uFD1B", "\u062D\u0649", "\uFD1C", "\u062D\u064A", "\uFD1D", "\u062C\u0649", "\uFD1E", "\u062C\u064A", "\uFD1F", "\u062E\u0649", "\uFD20", "\u062E\u064A", "\uFD21", "\u0635\u0649", "\uFD22", "\u0635\u064A", "\uFD23", "\u0636\u0649", "\uFD24", "\u0636\u064A", "\uFD25", "\u0634\u062C", "\uFD26", "\u0634\u062D", "\uFD27", "\u0634\u062E", "\uFD28", "\u0634\u0645", "\uFD29", "\u0634\u0631", "\uFD2A", "\u0633\u0631", "\uFD2B", "\u0635\u0631", "\uFD2C", "\u0636\u0631", "\uFD2D", "\u0634\u062C", "\uFD2E", "\u0634\u062D", "\uFD2F", "\u0634\u062E", "\uFD30", "\u0634\u0645", "\uFD31", "\u0633\u0647", "\uFD32", "\u0634\u0647", "\uFD33", "\u0637\u0645", "\uFD34", "\u0633\u062C", "\uFD35", "\u0633\u062D", "\uFD36", "\u0633\u062E", "\uFD37", "\u0634\u062C", "\uFD38", "\u0634\u062D", "\uFD39", "\u0634\u062E", "\uFD3A", "\u0637\u0645", "\uFD3B", "\u0638\u0645", "\uFD3C", "\u0627\u064B", "\uFD3D", "\u0627\u064B", "\uFD50", "\u062A\u062C\u0645", "\uFD51", "\u062A\u062D\u062C", "\uFD52", "\u062A\u062D\u062C", "\uFD53", "\u062A\u062D\u0645", "\uFD54", "\u062A\u062E\u0645", "\uFD55", "\u062A\u0645\u062C", "\uFD56", "\u062A\u0645\u062D", "\uFD57", "\u062A\u0645\u062E", "\uFD58", "\u062C\u0645\u062D", "\uFD59", "\u062C\u0645\u062D", "\uFD5A", "\u062D\u0645\u064A", "\uFD5B", "\u062D\u0645\u0649", "\uFD5C", "\u0633\u062D\u062C", "\uFD5D", "\u0633\u062C\u062D", "\uFD5E", "\u0633\u062C\u0649", "\uFD5F", "\u0633\u0645\u062D", "\uFD60", "\u0633\u0645\u062D", "\uFD61", "\u0633\u0645\u062C", "\uFD62", "\u0633\u0645\u0645", "\uFD63", "\u0633\u0645\u0645", "\uFD64", "\u0635\u062D\u062D", "\uFD65", "\u0635\u062D\u062D", "\uFD66", "\u0635\u0645\u0645", "\uFD67", "\u0634\u062D\u0645", "\uFD68", "\u0634\u062D\u0645", "\uFD69", "\u0634\u062C\u064A", "\uFD6A", "\u0634\u0645\u062E", "\uFD6B", "\u0634\u0645\u062E", "\uFD6C", "\u0634\u0645\u0645", "\uFD6D", "\u0634\u0645\u0645", "\uFD6E", "\u0636\u062D\u0649", "\uFD6F", "\u0636\u062E\u0645", "\uFD70", "\u0636\u062E\u0645", "\uFD71", "\u0637\u0645\u062D", "\uFD72", "\u0637\u0645\u062D", "\uFD73", "\u0637\u0645\u0645", "\uFD74", "\u0637\u0645\u064A", "\uFD75", "\u0639\u062C\u0645", "\uFD76", "\u0639\u0645\u0645", "\uFD77", "\u0639\u0645\u0645", "\uFD78", "\u0639\u0645\u0649", "\uFD79", "\u063A\u0645\u0645", "\uFD7A", "\u063A\u0645\u064A", "\uFD7B", "\u063A\u0645\u0649", "\uFD7C", "\u0641\u062E\u0645", "\uFD7D", "\u0641\u062E\u0645", "\uFD7E", "\u0642\u0645\u062D", "\uFD7F", "\u0642\u0645\u0645", "\uFD80", "\u0644\u062D\u0645", "\uFD81", "\u0644\u062D\u064A", "\uFD82", "\u0644\u062D\u0649", "\uFD83", "\u0644\u062C\u062C", "\uFD84", "\u0644\u062C\u062C", "\uFD85", "\u0644\u062E\u0645", "\uFD86", "\u0644\u062E\u0645", "\uFD87", "\u0644\u0645\u062D", "\uFD88", "\u0644\u0645\u062D", "\uFD89", "\u0645\u062D\u062C", "\uFD8A", "\u0645\u062D\u0645", "\uFD8B", "\u0645\u062D\u064A", "\uFD8C", "\u0645\u062C\u062D", "\uFD8D", "\u0645\u062C\u0645", "\uFD8E", "\u0645\u062E\u062C", "\uFD8F", "\u0645\u062E\u0645", "\uFD92", "\u0645\u062C\u062E", "\uFD93", "\u0647\u0645\u062C", "\uFD94", "\u0647\u0645\u0645", "\uFD95", "\u0646\u062D\u0645", "\uFD96", "\u0646\u062D\u0649", "\uFD97", "\u0646\u062C\u0645", "\uFD98", "\u0646\u062C\u0645", "\uFD99", "\u0646\u062C\u0649", "\uFD9A", "\u0646\u0645\u064A", "\uFD9B", "\u0646\u0645\u0649", "\uFD9C", "\u064A\u0645\u0645", "\uFD9D", "\u064A\u0645\u0645", "\uFD9E", "\u0628\u062E\u064A", "\uFD9F", "\u062A\u062C\u064A", "\uFDA0", "\u062A\u062C\u0649", "\uFDA1", "\u062A\u062E\u064A", "\uFDA2", "\u062A\u062E\u0649", "\uFDA3", "\u062A\u0645\u064A", "\uFDA4", "\u062A\u0645\u0649", "\uFDA5", "\u062C\u0645\u064A", "\uFDA6", "\u062C\u062D\u0649", "\uFDA7", "\u062C\u0645\u0649", "\uFDA8", "\u0633\u062E\u0649", "\uFDA9", "\u0635\u062D\u064A", "\uFDAA", "\u0634\u062D\u064A", "\uFDAB", "\u0636\u062D\u064A", "\uFDAC", "\u0644\u062C\u064A", "\uFDAD", "\u0644\u0645\u064A", "\uFDAE", "\u064A\u062D\u064A", "\uFDAF", "\u064A\u062C\u064A", "\uFDB0", "\u064A\u0645\u064A", "\uFDB1", "\u0645\u0645\u064A", "\uFDB2", "\u0642\u0645\u064A", "\uFDB3", "\u0646\u062D\u064A", "\uFDB4", "\u0642\u0645\u062D", "\uFDB5", "\u0644\u062D\u0645", "\uFDB6", "\u0639\u0645\u064A", "\uFDB7", "\u0643\u0645\u064A", "\uFDB8", "\u0646\u062C\u062D", "\uFDB9", "\u0645\u062E\u064A", "\uFDBA", "\u0644\u062C\u0645", "\uFDBB", "\u0643\u0645\u0645", "\uFDBC", "\u0644\u062C\u0645", "\uFDBD", "\u0646\u062C\u062D", "\uFDBE", "\u062C\u062D\u064A", "\uFDBF", "\u062D\u062C\u064A", "\uFDC0", "\u0645\u062C\u064A", "\uFDC1", "\u0641\u0645\u064A", "\uFDC2", "\u0628\u062D\u064A", "\uFDC3", "\u0643\u0645\u0645", "\uFDC4", "\u0639\u062C\u0645", "\uFDC5", "\u0635\u0645\u0645", "\uFDC6", "\u0633\u062E\u064A", "\uFDC7", "\u0646\u062C\u064A", "\uFE49", "\u203E", "\uFE4A", "\u203E", "\uFE4B", "\u203E", "\uFE4C", "\u203E", "\uFE4D", "\u005F", "\uFE4E", "\u005F", "\uFE4F", "\u005F", "\uFE80", "\u0621", "\uFE81", "\u0622", "\uFE82", "\u0622", "\uFE83", "\u0623", "\uFE84", "\u0623", "\uFE85", "\u0624", "\uFE86", "\u0624", "\uFE87", "\u0625", "\uFE88", "\u0625", "\uFE89", "\u0626", "\uFE8A", "\u0626", "\uFE8B", "\u0626", "\uFE8C", "\u0626", "\uFE8D", "\u0627", "\uFE8E", "\u0627", "\uFE8F", "\u0628", "\uFE90", "\u0628", "\uFE91", "\u0628", "\uFE92", "\u0628", "\uFE93", "\u0629", "\uFE94", "\u0629", "\uFE95", "\u062A", "\uFE96", "\u062A", "\uFE97", "\u062A", "\uFE98", "\u062A", "\uFE99", "\u062B", "\uFE9A", "\u062B", "\uFE9B", "\u062B", "\uFE9C", "\u062B", "\uFE9D", "\u062C", "\uFE9E", "\u062C", "\uFE9F", "\u062C", "\uFEA0", "\u062C", "\uFEA1", "\u062D", "\uFEA2", "\u062D", "\uFEA3", "\u062D", "\uFEA4", "\u062D", "\uFEA5", "\u062E", "\uFEA6", "\u062E", "\uFEA7", "\u062E", "\uFEA8", "\u062E", "\uFEA9", "\u062F", "\uFEAA", "\u062F", "\uFEAB", "\u0630", "\uFEAC", "\u0630", "\uFEAD", "\u0631", "\uFEAE", "\u0631", "\uFEAF", "\u0632", "\uFEB0", "\u0632", "\uFEB1", "\u0633", "\uFEB2", "\u0633", "\uFEB3", "\u0633", "\uFEB4", "\u0633", "\uFEB5", "\u0634", "\uFEB6", "\u0634", "\uFEB7", "\u0634", "\uFEB8", "\u0634", "\uFEB9", "\u0635", "\uFEBA", "\u0635", "\uFEBB", "\u0635", "\uFEBC", "\u0635", "\uFEBD", "\u0636", "\uFEBE", "\u0636", "\uFEBF", "\u0636", "\uFEC0", "\u0636", "\uFEC1", "\u0637", "\uFEC2", "\u0637", "\uFEC3", "\u0637", "\uFEC4", "\u0637", "\uFEC5", "\u0638", "\uFEC6", "\u0638", "\uFEC7", "\u0638", "\uFEC8", "\u0638", "\uFEC9", "\u0639", "\uFECA", "\u0639", "\uFECB", "\u0639", "\uFECC", "\u0639", "\uFECD", "\u063A", "\uFECE", "\u063A", "\uFECF", "\u063A", "\uFED0", "\u063A", "\uFED1", "\u0641", "\uFED2", "\u0641", "\uFED3", "\u0641", "\uFED4", "\u0641", "\uFED5", "\u0642", "\uFED6", "\u0642", "\uFED7", "\u0642", "\uFED8", "\u0642", "\uFED9", "\u0643", "\uFEDA", "\u0643", "\uFEDB", "\u0643", "\uFEDC", "\u0643", "\uFEDD", "\u0644", "\uFEDE", "\u0644", "\uFEDF", "\u0644", "\uFEE0", "\u0644", "\uFEE1", "\u0645", "\uFEE2", "\u0645", "\uFEE3", "\u0645", "\uFEE4", "\u0645", "\uFEE5", "\u0646", "\uFEE6", "\u0646", "\uFEE7", "\u0646", "\uFEE8", "\u0646", "\uFEE9", "\u0647", "\uFEEA", "\u0647", "\uFEEB", "\u0647", "\uFEEC", "\u0647", "\uFEED", "\u0648", "\uFEEE", "\u0648", "\uFEEF", "\u0649", "\uFEF0", "\u0649", "\uFEF1", "\u064A", "\uFEF2", "\u064A", "\uFEF3", "\u064A", "\uFEF4", "\u064A", "\uFEF5", "\u0644\u0622", "\uFEF6", "\u0644\u0622", "\uFEF7", "\u0644\u0623", "\uFEF8", "\u0644\u0623", "\uFEF9", "\u0644\u0625", "\uFEFA", "\u0644\u0625", "\uFEFB", "\u0644\u0627", "\uFEFC", "\u0644\u0627"];
+});
+exports.getNormalizedUnicodes = getNormalizedUnicodes;
+
+function reverseIfRtl(chars) {
+  const charsLength = chars.length;
+
+  if (charsLength <= 1 || !isRTLRangeFor(chars.charCodeAt(0))) {
+    return chars;
+  }
+
+  const buf = [];
+
+  for (let ii = charsLength - 1; ii >= 0; ii--) {
+    buf.push(chars[ii]);
+  }
+
+  return buf.join("");
+}
+
+/***/ }),
+/* 22 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
 exports.getQuadPoints = getQuadPoints;
 exports.MarkupAnnotation = exports.AnnotationFactory = exports.AnnotationBorderStyle = exports.Annotation = void 0;
 
@@ -4721,13 +5900,13 @@ var _util = __w_pdfjs_require__(2);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _default_appearance = __w_pdfjs_require__(13);
+var _default_appearance = __w_pdfjs_require__(23);
 
 var _primitives = __w_pdfjs_require__(5);
 
 var _catalog = __w_pdfjs_require__(64);
 
-var _colorspace = __w_pdfjs_require__(14);
+var _colorspace = __w_pdfjs_require__(24);
 
 var _file_spec = __w_pdfjs_require__(66);
 
@@ -7018,7 +8197,7 @@ class FileAttachmentAnnotation extends MarkupAnnotation {
 }
 
 /***/ }),
-/* 13 */
+/* 23 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -7031,11 +8210,11 @@ exports.parseDefaultAppearance = parseDefaultAppearance;
 
 var _util = __w_pdfjs_require__(2);
 
-var _colorspace = __w_pdfjs_require__(14);
+var _colorspace = __w_pdfjs_require__(24);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _evaluator = __w_pdfjs_require__(15);
+var _evaluator = __w_pdfjs_require__(25);
 
 var _primitives = __w_pdfjs_require__(5);
 
@@ -7134,7 +8313,7 @@ function createDefaultAppearance({
 }
 
 /***/ }),
-/* 14 */
+/* 24 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -8201,7 +9380,7 @@ const LabCS = function LabCSClosure() {
 }();
 
 /***/ }),
-/* 15 */
+/* 25 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -8213,45 +9392,45 @@ exports.PartialEvaluator = exports.EvaluatorPreprocessor = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _cmap = __w_pdfjs_require__(16);
+var _cmap = __w_pdfjs_require__(26);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _fonts = __w_pdfjs_require__(34);
+var _fonts = __w_pdfjs_require__(44);
 
-var _fonts_utils = __w_pdfjs_require__(38);
+var _fonts_utils = __w_pdfjs_require__(18);
 
-var _encodings = __w_pdfjs_require__(37);
+var _encodings = __w_pdfjs_require__(19);
 
-var _standard_fonts = __w_pdfjs_require__(41);
+var _standard_fonts = __w_pdfjs_require__(47);
 
-var _unicode = __w_pdfjs_require__(40);
+var _unicode = __w_pdfjs_require__(21);
 
-var _pattern = __w_pdfjs_require__(49);
+var _pattern = __w_pdfjs_require__(55);
 
-var _to_unicode_map = __w_pdfjs_require__(42);
+var _xfa_fonts = __w_pdfjs_require__(12);
 
-var _function = __w_pdfjs_require__(50);
+var _to_unicode_map = __w_pdfjs_require__(48);
 
-var _parser = __w_pdfjs_require__(17);
+var _function = __w_pdfjs_require__(56);
 
-var _image_utils = __w_pdfjs_require__(52);
+var _parser = __w_pdfjs_require__(27);
+
+var _image_utils = __w_pdfjs_require__(58);
 
 var _stream = __w_pdfjs_require__(10);
 
-var _bidi = __w_pdfjs_require__(53);
+var _bidi = __w_pdfjs_require__(59);
 
-var _colorspace = __w_pdfjs_require__(14);
+var _colorspace = __w_pdfjs_require__(24);
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
-var _glyphlist = __w_pdfjs_require__(39);
+var _glyphlist = __w_pdfjs_require__(20);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _metrics = __w_pdfjs_require__(54);
-
-var _xfa_fonts = __w_pdfjs_require__(55);
+var _metrics = __w_pdfjs_require__(60);
 
 var _murmurhash = __w_pdfjs_require__(61);
 
@@ -9346,21 +10525,19 @@ class PartialEvaluator {
   }
 
   parseShading({
-    keyObj,
     shading,
     resources,
     localColorSpaceCache,
-    localShadingPatternCache,
-    matrix = null
+    localShadingPatternCache
   }) {
-    let id = localShadingPatternCache.get(keyObj);
+    let id = localShadingPatternCache.get(shading);
 
     if (!id) {
-      var shadingFill = _pattern.Pattern.parseShading(shading, matrix, this.xref, resources, this.handler, this._pdfFunctionFactory, localColorSpaceCache);
+      var shadingFill = _pattern.Pattern.parseShading(shading, this.xref, resources, this.handler, this._pdfFunctionFactory, localColorSpaceCache);
 
       const patternIR = shadingFill.getIR();
       id = `pattern_${this.idFactory.createObjId()}`;
-      localShadingPatternCache.set(keyObj, id);
+      localShadingPatternCache.set(shading, id);
       this.handler.send("obj", [id, this.pageIndex, "Pattern", patternIR]);
     }
 
@@ -9396,14 +10573,12 @@ class PartialEvaluator {
           const shading = dict.get("Shading");
           const matrix = dict.getArray("Matrix");
           const objId = this.parseShading({
-            keyObj: pattern,
             shading,
-            matrix,
             resources,
             localColorSpaceCache,
             localShadingPatternCache
           });
-          operatorList.addOp(fn, ["Shading", objId]);
+          operatorList.addOp(fn, ["Shading", objId, matrix]);
           return undefined;
         }
 
@@ -9908,7 +11083,6 @@ class PartialEvaluator {
             }
 
             const patternId = self.parseShading({
-              keyObj: shading,
               shading,
               resources,
               localColorSpaceCache,
@@ -11710,11 +12884,12 @@ class PartialEvaluator {
 
       if (standardFontName) {
         cssFontInfo.fontFamily = `${cssFontInfo.fontFamily}-PdfJS-XFA`;
-        cssFontInfo.lineHeight = standardFontName.lineHeight || null;
+        cssFontInfo.metrics = standardFontName.metrics || null;
         glyphScaleFactors = standardFontName.factors || null;
         fontFile = await this.fetchStandardFontData(standardFontName.name);
         isInternalFont = !!fontFile;
-        type = "TrueType";
+        baseDict = dict = (0, _xfa_fonts.getXfaFontDict)(fontName.name);
+        composite = true;
       }
     } else if (!isType3Font) {
       const standardFontName = (0, _standard_fonts.getStandardFontName)(fontName.name);
@@ -12593,7 +13768,7 @@ class EvaluatorPreprocessor {
 exports.EvaluatorPreprocessor = EvaluatorPreprocessor;
 
 /***/ }),
-/* 16 */
+/* 26 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -12607,7 +13782,7 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _parser = __w_pdfjs_require__(17);
+var _parser = __w_pdfjs_require__(27);
 
 var _core_utils = __w_pdfjs_require__(9);
 
@@ -13509,7 +14684,7 @@ const CMapFactory = function CMapFactoryClosure() {
 exports.CMapFactory = CMapFactory;
 
 /***/ }),
-/* 17 */
+/* 27 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -13525,27 +14700,27 @@ var _primitives = __w_pdfjs_require__(5);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _ascii_85_stream = __w_pdfjs_require__(18);
+var _ascii_85_stream = __w_pdfjs_require__(28);
 
-var _ascii_hex_stream = __w_pdfjs_require__(20);
+var _ascii_hex_stream = __w_pdfjs_require__(30);
 
-var _ccitt_stream = __w_pdfjs_require__(21);
+var _ccitt_stream = __w_pdfjs_require__(31);
 
-var _flate_stream = __w_pdfjs_require__(23);
+var _flate_stream = __w_pdfjs_require__(33);
 
-var _jbig2_stream = __w_pdfjs_require__(24);
+var _jbig2_stream = __w_pdfjs_require__(34);
 
-var _jpeg_stream = __w_pdfjs_require__(27);
+var _jpeg_stream = __w_pdfjs_require__(37);
 
-var _jpx_stream = __w_pdfjs_require__(29);
+var _jpx_stream = __w_pdfjs_require__(39);
 
-var _lzw_stream = __w_pdfjs_require__(31);
+var _lzw_stream = __w_pdfjs_require__(41);
 
 var _stream = __w_pdfjs_require__(10);
 
-var _predictor_stream = __w_pdfjs_require__(32);
+var _predictor_stream = __w_pdfjs_require__(42);
 
-var _run_length_stream = __w_pdfjs_require__(33);
+var _run_length_stream = __w_pdfjs_require__(43);
 
 const MAX_LENGTH_TO_CACHE = 1000;
 const MAX_ADLER32_LENGTH = 5552;
@@ -14866,7 +16041,7 @@ class Linearization {
 exports.Linearization = Linearization;
 
 /***/ }),
-/* 18 */
+/* 28 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -14876,7 +16051,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.Ascii85Stream = void 0;
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
 var _core_utils = __w_pdfjs_require__(9);
 
@@ -14966,7 +16141,7 @@ class Ascii85Stream extends _decode_stream.DecodeStream {
 exports.Ascii85Stream = Ascii85Stream;
 
 /***/ }),
-/* 19 */
+/* 29 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -15098,7 +16273,7 @@ class DecodeStream extends _base_stream.BaseStream {
 exports.DecodeStream = DecodeStream;
 
 class StreamsSequenceStream extends DecodeStream {
-  constructor(streams) {
+  constructor(streams, onError = null) {
     let maybeLength = 0;
 
     for (const stream of streams) {
@@ -15107,6 +16282,7 @@ class StreamsSequenceStream extends DecodeStream {
 
     super(maybeLength);
     this.streams = streams;
+    this._onError = onError;
   }
 
   readBlock() {
@@ -15118,7 +16294,20 @@ class StreamsSequenceStream extends DecodeStream {
     }
 
     const stream = streams.shift();
-    const chunk = stream.getBytes();
+    let chunk;
+
+    try {
+      chunk = stream.getBytes();
+    } catch (reason) {
+      if (this._onError) {
+        this._onError(reason, stream.dict && stream.dict.objId);
+
+        return;
+      }
+
+      throw reason;
+    }
+
     const bufferLength = this.bufferLength;
     const newLength = bufferLength + chunk.length;
     const buffer = this.ensureBuffer(newLength);
@@ -15145,7 +16334,7 @@ class StreamsSequenceStream extends DecodeStream {
 exports.StreamsSequenceStream = StreamsSequenceStream;
 
 /***/ }),
-/* 20 */
+/* 30 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -15155,7 +16344,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.AsciiHexStream = void 0;
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
 class AsciiHexStream extends _decode_stream.DecodeStream {
   constructor(str, maybeLength) {
@@ -15219,7 +16408,7 @@ class AsciiHexStream extends _decode_stream.DecodeStream {
 exports.AsciiHexStream = AsciiHexStream;
 
 /***/ }),
-/* 21 */
+/* 31 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -15231,9 +16420,9 @@ exports.CCITTFaxStream = void 0;
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _ccitt = __w_pdfjs_require__(22);
+var _ccitt = __w_pdfjs_require__(32);
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
 class CCITTFaxStream extends _decode_stream.DecodeStream {
   constructor(str, maybeLength, params) {
@@ -15281,7 +16470,7 @@ class CCITTFaxStream extends _decode_stream.DecodeStream {
 exports.CCITTFaxStream = CCITTFaxStream;
 
 /***/ }),
-/* 22 */
+/* 32 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -15982,7 +17171,7 @@ class CCITTFaxDecoder {
 exports.CCITTFaxDecoder = CCITTFaxDecoder;
 
 /***/ }),
-/* 23 */
+/* 33 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -15992,7 +17181,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.FlateStream = void 0;
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -16297,7 +17486,7 @@ class FlateStream extends _decode_stream.DecodeStream {
 exports.FlateStream = FlateStream;
 
 /***/ }),
-/* 24 */
+/* 34 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -16309,9 +17498,9 @@ exports.Jbig2Stream = void 0;
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
-var _jbig = __w_pdfjs_require__(25);
+var _jbig = __w_pdfjs_require__(35);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -16373,7 +17562,7 @@ class Jbig2Stream extends _decode_stream.DecodeStream {
 exports.Jbig2Stream = Jbig2Stream;
 
 /***/ }),
-/* 25 */
+/* 35 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -16387,9 +17576,9 @@ var _util = __w_pdfjs_require__(2);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _arithmetic_decoder = __w_pdfjs_require__(26);
+var _arithmetic_decoder = __w_pdfjs_require__(36);
 
-var _ccitt = __w_pdfjs_require__(22);
+var _ccitt = __w_pdfjs_require__(32);
 
 class Jbig2Error extends _util.BaseException {
   constructor(msg) {
@@ -18572,7 +19761,7 @@ class Jbig2Image {
 exports.Jbig2Image = Jbig2Image;
 
 /***/ }),
-/* 26 */
+/* 36 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -18925,7 +20114,7 @@ class ArithmeticDecoder {
 exports.ArithmeticDecoder = ArithmeticDecoder;
 
 /***/ }),
-/* 27 */
+/* 37 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -18935,11 +20124,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.JpegStream = void 0;
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _jpg = __w_pdfjs_require__(28);
+var _jpg = __w_pdfjs_require__(38);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -19025,7 +20214,7 @@ class JpegStream extends _decode_stream.DecodeStream {
 exports.JpegStream = JpegStream;
 
 /***/ }),
-/* 28 */
+/* 38 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -20267,7 +21456,7 @@ class JpegImage {
 exports.JpegImage = JpegImage;
 
 /***/ }),
-/* 29 */
+/* 39 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -20277,9 +21466,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.JpxStream = void 0;
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
-var _jpx = __w_pdfjs_require__(30);
+var _jpx = __w_pdfjs_require__(40);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -20347,7 +21536,7 @@ class JpxStream extends _decode_stream.DecodeStream {
 exports.JpxStream = JpxStream;
 
 /***/ }),
-/* 30 */
+/* 40 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -20361,7 +21550,7 @@ var _util = __w_pdfjs_require__(2);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _arithmetic_decoder = __w_pdfjs_require__(26);
+var _arithmetic_decoder = __w_pdfjs_require__(36);
 
 class JpxError extends _util.BaseException {
   constructor(msg) {
@@ -22682,7 +23871,7 @@ class ReversibleTransform extends Transform {
 }
 
 /***/ }),
-/* 31 */
+/* 41 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -22692,7 +23881,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.LZWStream = void 0;
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
 class LZWStream extends _decode_stream.DecodeStream {
   constructor(str, maybeLength, earlyChange) {
@@ -22832,7 +24021,7 @@ class LZWStream extends _decode_stream.DecodeStream {
 exports.LZWStream = LZWStream;
 
 /***/ }),
-/* 32 */
+/* 42 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -22842,7 +24031,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PredictorStream = void 0;
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -23084,7 +24273,7 @@ class PredictorStream extends _decode_stream.DecodeStream {
 exports.PredictorStream = PredictorStream;
 
 /***/ }),
-/* 33 */
+/* 43 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -23094,7 +24283,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.RunLengthStream = void 0;
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
 class RunLengthStream extends _decode_stream.DecodeStream {
   constructor(str, maybeLength) {
@@ -23142,7 +24331,7 @@ class RunLengthStream extends _decode_stream.DecodeStream {
 exports.RunLengthStream = RunLengthStream;
 
 /***/ }),
-/* 34 */
+/* 44 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -23154,35 +24343,35 @@ exports.Font = exports.ErrorFont = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _cff_parser = __w_pdfjs_require__(35);
+var _cff_parser = __w_pdfjs_require__(45);
 
-var _fonts_utils = __w_pdfjs_require__(38);
+var _fonts_utils = __w_pdfjs_require__(18);
 
-var _glyphlist = __w_pdfjs_require__(39);
+var _glyphlist = __w_pdfjs_require__(20);
 
-var _encodings = __w_pdfjs_require__(37);
+var _encodings = __w_pdfjs_require__(19);
 
-var _standard_fonts = __w_pdfjs_require__(41);
+var _standard_fonts = __w_pdfjs_require__(47);
 
-var _unicode = __w_pdfjs_require__(40);
+var _unicode = __w_pdfjs_require__(21);
 
-var _to_unicode_map = __w_pdfjs_require__(42);
+var _to_unicode_map = __w_pdfjs_require__(48);
 
-var _cff_font = __w_pdfjs_require__(43);
+var _cff_font = __w_pdfjs_require__(49);
 
-var _font_renderer = __w_pdfjs_require__(44);
+var _font_renderer = __w_pdfjs_require__(50);
 
-var _glyf = __w_pdfjs_require__(45);
+var _glyf = __w_pdfjs_require__(51);
 
-var _cmap = __w_pdfjs_require__(16);
+var _cmap = __w_pdfjs_require__(26);
 
-var _opentype_file_builder = __w_pdfjs_require__(46);
+var _opentype_file_builder = __w_pdfjs_require__(52);
 
 var _core_utils = __w_pdfjs_require__(9);
 
 var _stream = __w_pdfjs_require__(10);
 
-var _type1_font = __w_pdfjs_require__(47);
+var _type1_font = __w_pdfjs_require__(53);
 
 const PRIVATE_USE_AREAS = [[0xe000, 0xf8ff], [0x100000, 0x10fffd]];
 const PDF_GLYPH_SPACE_UNITS = 1000;
@@ -25310,7 +26499,8 @@ class Font {
     this.lineGap = metricsOverride.lineGap / metricsOverride.unitsPerEm;
 
     if (this.cssFontInfo && this.cssFontInfo.lineHeight) {
-      this.lineHeight = this.cssFontInfo.lineHeight;
+      this.lineHeight = this.cssFontInfo.metrics.lineHeight;
+      this.lineGap = this.cssFontInfo.metrics.lineGap;
     } else {
       this.lineHeight = this.ascent - this.descent + this.lineGap;
     }
@@ -25799,6 +26989,8 @@ class Font {
 
     const hasCurrentBufErrors = () => buffers.length % 2 === 1;
 
+    const getCharCode = this.toUnicode instanceof _to_unicode_map.IdentityToUnicodeMap ? unicode => this.toUnicode.charCodeOf(unicode) : unicode => this.toUnicode.charCodeOf(String.fromCodePoint(unicode));
+
     for (let i = 0, ii = str.length; i < ii; i++) {
       const unicode = str.codePointAt(i);
 
@@ -25807,8 +26999,7 @@ class Font {
       }
 
       if (this.toUnicode) {
-        const char = String.fromCodePoint(unicode);
-        const charCode = this.toUnicode.charCodeOf(char);
+        const charCode = getCharCode(unicode);
 
         if (charCode !== -1) {
           if (hasCurrentBufErrors()) {
@@ -25868,7 +27059,7 @@ class ErrorFont {
 exports.ErrorFont = ErrorFont;
 
 /***/ }),
-/* 35 */
+/* 45 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -25880,9 +27071,9 @@ exports.CFFTopDict = exports.CFFStrings = exports.CFFStandardStrings = exports.C
 
 var _util = __w_pdfjs_require__(2);
 
-var _charsets = __w_pdfjs_require__(36);
+var _charsets = __w_pdfjs_require__(46);
 
-var _encodings = __w_pdfjs_require__(37);
+var _encodings = __w_pdfjs_require__(19);
 
 const MAX_SUBR_NESTING = 10;
 const CFFStandardStrings = [".notdef", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand", "quoteright", "parenleft", "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum", "underscore", "quoteleft", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "exclamdown", "cent", "sterling", "fraction", "yen", "florin", "section", "currency", "quotesingle", "quotedblleft", "guillemotleft", "guilsinglleft", "guilsinglright", "fi", "fl", "endash", "dagger", "daggerdbl", "periodcentered", "paragraph", "bullet", "quotesinglbase", "quotedblbase", "quotedblright", "guillemotright", "ellipsis", "perthousand", "questiondown", "grave", "acute", "circumflex", "tilde", "macron", "breve", "dotaccent", "dieresis", "ring", "cedilla", "hungarumlaut", "ogonek", "caron", "emdash", "AE", "ordfeminine", "Lslash", "Oslash", "OE", "ordmasculine", "ae", "dotlessi", "lslash", "oslash", "oe", "germandbls", "onesuperior", "logicalnot", "mu", "trademark", "Eth", "onehalf", "plusminus", "Thorn", "onequarter", "divide", "brokenbar", "degree", "thorn", "threequarters", "twosuperior", "registered", "minus", "eth", "multiply", "threesuperior", "copyright", "Aacute", "Acircumflex", "Adieresis", "Agrave", "Aring", "Atilde", "Ccedilla", "Eacute", "Ecircumflex", "Edieresis", "Egrave", "Iacute", "Icircumflex", "Idieresis", "Igrave", "Ntilde", "Oacute", "Ocircumflex", "Odieresis", "Ograve", "Otilde", "Scaron", "Uacute", "Ucircumflex", "Udieresis", "Ugrave", "Yacute", "Ydieresis", "Zcaron", "aacute", "acircumflex", "adieresis", "agrave", "aring", "atilde", "ccedilla", "eacute", "ecircumflex", "edieresis", "egrave", "iacute", "icircumflex", "idieresis", "igrave", "ntilde", "oacute", "ocircumflex", "odieresis", "ograve", "otilde", "scaron", "uacute", "ucircumflex", "udieresis", "ugrave", "yacute", "ydieresis", "zcaron", "exclamsmall", "Hungarumlautsmall", "dollaroldstyle", "dollarsuperior", "ampersandsmall", "Acutesmall", "parenleftsuperior", "parenrightsuperior", "twodotenleader", "onedotenleader", "zerooldstyle", "oneoldstyle", "twooldstyle", "threeoldstyle", "fouroldstyle", "fiveoldstyle", "sixoldstyle", "sevenoldstyle", "eightoldstyle", "nineoldstyle", "commasuperior", "threequartersemdash", "periodsuperior", "questionsmall", "asuperior", "bsuperior", "centsuperior", "dsuperior", "esuperior", "isuperior", "lsuperior", "msuperior", "nsuperior", "osuperior", "rsuperior", "ssuperior", "tsuperior", "ff", "ffi", "ffl", "parenleftinferior", "parenrightinferior", "Circumflexsmall", "hyphensuperior", "Gravesmall", "Asmall", "Bsmall", "Csmall", "Dsmall", "Esmall", "Fsmall", "Gsmall", "Hsmall", "Ismall", "Jsmall", "Ksmall", "Lsmall", "Msmall", "Nsmall", "Osmall", "Psmall", "Qsmall", "Rsmall", "Ssmall", "Tsmall", "Usmall", "Vsmall", "Wsmall", "Xsmall", "Ysmall", "Zsmall", "colonmonetary", "onefitted", "rupiah", "Tildesmall", "exclamdownsmall", "centoldstyle", "Lslashsmall", "Scaronsmall", "Zcaronsmall", "Dieresissmall", "Brevesmall", "Caronsmall", "Dotaccentsmall", "Macronsmall", "figuredash", "hypheninferior", "Ogoneksmall", "Ringsmall", "Cedillasmall", "questiondownsmall", "oneeighth", "threeeighths", "fiveeighths", "seveneighths", "onethird", "twothirds", "zerosuperior", "foursuperior", "fivesuperior", "sixsuperior", "sevensuperior", "eightsuperior", "ninesuperior", "zeroinferior", "oneinferior", "twoinferior", "threeinferior", "fourinferior", "fiveinferior", "sixinferior", "seveninferior", "eightinferior", "nineinferior", "centinferior", "dollarinferior", "periodinferior", "commainferior", "Agravesmall", "Aacutesmall", "Acircumflexsmall", "Atildesmall", "Adieresissmall", "Aringsmall", "AEsmall", "Ccedillasmall", "Egravesmall", "Eacutesmall", "Ecircumflexsmall", "Edieresissmall", "Igravesmall", "Iacutesmall", "Icircumflexsmall", "Idieresissmall", "Ethsmall", "Ntildesmall", "Ogravesmall", "Oacutesmall", "Ocircumflexsmall", "Otildesmall", "Odieresissmall", "OEsmall", "Oslashsmall", "Ugravesmall", "Uacutesmall", "Ucircumflexsmall", "Udieresissmall", "Yacutesmall", "Thornsmall", "Ydieresissmall", "001.000", "001.001", "001.002", "001.003", "Black", "Bold", "Book", "Light", "Medium", "Regular", "Roman", "Semibold"];
@@ -27713,7 +28904,7 @@ class CFFCompiler {
 exports.CFFCompiler = CFFCompiler;
 
 /***/ }),
-/* 36 */
+/* 46 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -27730,766 +28921,7 @@ const ExpertSubsetCharset = [".notdef", "space", "dollaroldstyle", "dollarsuperi
 exports.ExpertSubsetCharset = ExpertSubsetCharset;
 
 /***/ }),
-/* 37 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.getEncoding = getEncoding;
-exports.ZapfDingbatsEncoding = exports.WinAnsiEncoding = exports.SymbolSetEncoding = exports.StandardEncoding = exports.MacRomanEncoding = exports.ExpertEncoding = void 0;
-const ExpertEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclamsmall", "Hungarumlautsmall", "", "dollaroldstyle", "dollarsuperior", "ampersandsmall", "Acutesmall", "parenleftsuperior", "parenrightsuperior", "twodotenleader", "onedotenleader", "comma", "hyphen", "period", "fraction", "zerooldstyle", "oneoldstyle", "twooldstyle", "threeoldstyle", "fouroldstyle", "fiveoldstyle", "sixoldstyle", "sevenoldstyle", "eightoldstyle", "nineoldstyle", "colon", "semicolon", "commasuperior", "threequartersemdash", "periodsuperior", "questionsmall", "", "asuperior", "bsuperior", "centsuperior", "dsuperior", "esuperior", "", "", "", "isuperior", "", "", "lsuperior", "msuperior", "nsuperior", "osuperior", "", "", "rsuperior", "ssuperior", "tsuperior", "", "ff", "fi", "fl", "ffi", "ffl", "parenleftinferior", "", "parenrightinferior", "Circumflexsmall", "hyphensuperior", "Gravesmall", "Asmall", "Bsmall", "Csmall", "Dsmall", "Esmall", "Fsmall", "Gsmall", "Hsmall", "Ismall", "Jsmall", "Ksmall", "Lsmall", "Msmall", "Nsmall", "Osmall", "Psmall", "Qsmall", "Rsmall", "Ssmall", "Tsmall", "Usmall", "Vsmall", "Wsmall", "Xsmall", "Ysmall", "Zsmall", "colonmonetary", "onefitted", "rupiah", "Tildesmall", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "exclamdownsmall", "centoldstyle", "Lslashsmall", "", "", "Scaronsmall", "Zcaronsmall", "Dieresissmall", "Brevesmall", "Caronsmall", "", "Dotaccentsmall", "", "", "Macronsmall", "", "", "figuredash", "hypheninferior", "", "", "Ogoneksmall", "Ringsmall", "Cedillasmall", "", "", "", "onequarter", "onehalf", "threequarters", "questiondownsmall", "oneeighth", "threeeighths", "fiveeighths", "seveneighths", "onethird", "twothirds", "", "", "zerosuperior", "onesuperior", "twosuperior", "threesuperior", "foursuperior", "fivesuperior", "sixsuperior", "sevensuperior", "eightsuperior", "ninesuperior", "zeroinferior", "oneinferior", "twoinferior", "threeinferior", "fourinferior", "fiveinferior", "sixinferior", "seveninferior", "eightinferior", "nineinferior", "centinferior", "dollarinferior", "periodinferior", "commainferior", "Agravesmall", "Aacutesmall", "Acircumflexsmall", "Atildesmall", "Adieresissmall", "Aringsmall", "AEsmall", "Ccedillasmall", "Egravesmall", "Eacutesmall", "Ecircumflexsmall", "Edieresissmall", "Igravesmall", "Iacutesmall", "Icircumflexsmall", "Idieresissmall", "Ethsmall", "Ntildesmall", "Ogravesmall", "Oacutesmall", "Ocircumflexsmall", "Otildesmall", "Odieresissmall", "OEsmall", "Oslashsmall", "Ugravesmall", "Uacutesmall", "Ucircumflexsmall", "Udieresissmall", "Yacutesmall", "Thornsmall", "Ydieresissmall"];
-exports.ExpertEncoding = ExpertEncoding;
-const MacExpertEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclamsmall", "Hungarumlautsmall", "centoldstyle", "dollaroldstyle", "dollarsuperior", "ampersandsmall", "Acutesmall", "parenleftsuperior", "parenrightsuperior", "twodotenleader", "onedotenleader", "comma", "hyphen", "period", "fraction", "zerooldstyle", "oneoldstyle", "twooldstyle", "threeoldstyle", "fouroldstyle", "fiveoldstyle", "sixoldstyle", "sevenoldstyle", "eightoldstyle", "nineoldstyle", "colon", "semicolon", "", "threequartersemdash", "", "questionsmall", "", "", "", "", "Ethsmall", "", "", "onequarter", "onehalf", "threequarters", "oneeighth", "threeeighths", "fiveeighths", "seveneighths", "onethird", "twothirds", "", "", "", "", "", "", "ff", "fi", "fl", "ffi", "ffl", "parenleftinferior", "", "parenrightinferior", "Circumflexsmall", "hypheninferior", "Gravesmall", "Asmall", "Bsmall", "Csmall", "Dsmall", "Esmall", "Fsmall", "Gsmall", "Hsmall", "Ismall", "Jsmall", "Ksmall", "Lsmall", "Msmall", "Nsmall", "Osmall", "Psmall", "Qsmall", "Rsmall", "Ssmall", "Tsmall", "Usmall", "Vsmall", "Wsmall", "Xsmall", "Ysmall", "Zsmall", "colonmonetary", "onefitted", "rupiah", "Tildesmall", "", "", "asuperior", "centsuperior", "", "", "", "", "Aacutesmall", "Agravesmall", "Acircumflexsmall", "Adieresissmall", "Atildesmall", "Aringsmall", "Ccedillasmall", "Eacutesmall", "Egravesmall", "Ecircumflexsmall", "Edieresissmall", "Iacutesmall", "Igravesmall", "Icircumflexsmall", "Idieresissmall", "Ntildesmall", "Oacutesmall", "Ogravesmall", "Ocircumflexsmall", "Odieresissmall", "Otildesmall", "Uacutesmall", "Ugravesmall", "Ucircumflexsmall", "Udieresissmall", "", "eightsuperior", "fourinferior", "threeinferior", "sixinferior", "eightinferior", "seveninferior", "Scaronsmall", "", "centinferior", "twoinferior", "", "Dieresissmall", "", "Caronsmall", "osuperior", "fiveinferior", "", "commainferior", "periodinferior", "Yacutesmall", "", "dollarinferior", "", "", "Thornsmall", "", "nineinferior", "zeroinferior", "Zcaronsmall", "AEsmall", "Oslashsmall", "questiondownsmall", "oneinferior", "Lslashsmall", "", "", "", "", "", "", "Cedillasmall", "", "", "", "", "", "OEsmall", "figuredash", "hyphensuperior", "", "", "", "", "exclamdownsmall", "", "Ydieresissmall", "", "onesuperior", "twosuperior", "threesuperior", "foursuperior", "fivesuperior", "sixsuperior", "sevensuperior", "ninesuperior", "zerosuperior", "", "esuperior", "rsuperior", "tsuperior", "", "", "isuperior", "ssuperior", "dsuperior", "", "", "", "", "", "lsuperior", "Ogoneksmall", "Brevesmall", "Macronsmall", "bsuperior", "nsuperior", "msuperior", "commasuperior", "periodsuperior", "Dotaccentsmall", "Ringsmall", "", "", "", ""];
-const MacRomanEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand", "quotesingle", "parenleft", "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum", "underscore", "grave", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "", "Adieresis", "Aring", "Ccedilla", "Eacute", "Ntilde", "Odieresis", "Udieresis", "aacute", "agrave", "acircumflex", "adieresis", "atilde", "aring", "ccedilla", "eacute", "egrave", "ecircumflex", "edieresis", "iacute", "igrave", "icircumflex", "idieresis", "ntilde", "oacute", "ograve", "ocircumflex", "odieresis", "otilde", "uacute", "ugrave", "ucircumflex", "udieresis", "dagger", "degree", "cent", "sterling", "section", "bullet", "paragraph", "germandbls", "registered", "copyright", "trademark", "acute", "dieresis", "notequal", "AE", "Oslash", "infinity", "plusminus", "lessequal", "greaterequal", "yen", "mu", "partialdiff", "summation", "product", "pi", "integral", "ordfeminine", "ordmasculine", "Omega", "ae", "oslash", "questiondown", "exclamdown", "logicalnot", "radical", "florin", "approxequal", "Delta", "guillemotleft", "guillemotright", "ellipsis", "space", "Agrave", "Atilde", "Otilde", "OE", "oe", "endash", "emdash", "quotedblleft", "quotedblright", "quoteleft", "quoteright", "divide", "lozenge", "ydieresis", "Ydieresis", "fraction", "currency", "guilsinglleft", "guilsinglright", "fi", "fl", "daggerdbl", "periodcentered", "quotesinglbase", "quotedblbase", "perthousand", "Acircumflex", "Ecircumflex", "Aacute", "Edieresis", "Egrave", "Iacute", "Icircumflex", "Idieresis", "Igrave", "Oacute", "Ocircumflex", "apple", "Ograve", "Uacute", "Ucircumflex", "Ugrave", "dotlessi", "circumflex", "tilde", "macron", "breve", "dotaccent", "ring", "cedilla", "hungarumlaut", "ogonek", "caron"];
-exports.MacRomanEncoding = MacRomanEncoding;
-const StandardEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand", "quoteright", "parenleft", "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum", "underscore", "quoteleft", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "exclamdown", "cent", "sterling", "fraction", "yen", "florin", "section", "currency", "quotesingle", "quotedblleft", "guillemotleft", "guilsinglleft", "guilsinglright", "fi", "fl", "", "endash", "dagger", "daggerdbl", "periodcentered", "", "paragraph", "bullet", "quotesinglbase", "quotedblbase", "quotedblright", "guillemotright", "ellipsis", "perthousand", "", "questiondown", "", "grave", "acute", "circumflex", "tilde", "macron", "breve", "dotaccent", "dieresis", "", "ring", "cedilla", "", "hungarumlaut", "ogonek", "caron", "emdash", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "AE", "", "ordfeminine", "", "", "", "", "Lslash", "Oslash", "OE", "ordmasculine", "", "", "", "", "", "ae", "", "", "", "dotlessi", "", "", "lslash", "oslash", "oe", "germandbls", "", "", "", ""];
-exports.StandardEncoding = StandardEncoding;
-const WinAnsiEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand", "quotesingle", "parenleft", "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum", "underscore", "grave", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "bullet", "Euro", "bullet", "quotesinglbase", "florin", "quotedblbase", "ellipsis", "dagger", "daggerdbl", "circumflex", "perthousand", "Scaron", "guilsinglleft", "OE", "bullet", "Zcaron", "bullet", "bullet", "quoteleft", "quoteright", "quotedblleft", "quotedblright", "bullet", "endash", "emdash", "tilde", "trademark", "scaron", "guilsinglright", "oe", "bullet", "zcaron", "Ydieresis", "space", "exclamdown", "cent", "sterling", "currency", "yen", "brokenbar", "section", "dieresis", "copyright", "ordfeminine", "guillemotleft", "logicalnot", "hyphen", "registered", "macron", "degree", "plusminus", "twosuperior", "threesuperior", "acute", "mu", "paragraph", "periodcentered", "cedilla", "onesuperior", "ordmasculine", "guillemotright", "onequarter", "onehalf", "threequarters", "questiondown", "Agrave", "Aacute", "Acircumflex", "Atilde", "Adieresis", "Aring", "AE", "Ccedilla", "Egrave", "Eacute", "Ecircumflex", "Edieresis", "Igrave", "Iacute", "Icircumflex", "Idieresis", "Eth", "Ntilde", "Ograve", "Oacute", "Ocircumflex", "Otilde", "Odieresis", "multiply", "Oslash", "Ugrave", "Uacute", "Ucircumflex", "Udieresis", "Yacute", "Thorn", "germandbls", "agrave", "aacute", "acircumflex", "atilde", "adieresis", "aring", "ae", "ccedilla", "egrave", "eacute", "ecircumflex", "edieresis", "igrave", "iacute", "icircumflex", "idieresis", "eth", "ntilde", "ograve", "oacute", "ocircumflex", "otilde", "odieresis", "divide", "oslash", "ugrave", "uacute", "ucircumflex", "udieresis", "yacute", "thorn", "ydieresis"];
-exports.WinAnsiEncoding = WinAnsiEncoding;
-const SymbolSetEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclam", "universal", "numbersign", "existential", "percent", "ampersand", "suchthat", "parenleft", "parenright", "asteriskmath", "plus", "comma", "minus", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "congruent", "Alpha", "Beta", "Chi", "Delta", "Epsilon", "Phi", "Gamma", "Eta", "Iota", "theta1", "Kappa", "Lambda", "Mu", "Nu", "Omicron", "Pi", "Theta", "Rho", "Sigma", "Tau", "Upsilon", "sigma1", "Omega", "Xi", "Psi", "Zeta", "bracketleft", "therefore", "bracketright", "perpendicular", "underscore", "radicalex", "alpha", "beta", "chi", "delta", "epsilon", "phi", "gamma", "eta", "iota", "phi1", "kappa", "lambda", "mu", "nu", "omicron", "pi", "theta", "rho", "sigma", "tau", "upsilon", "omega1", "omega", "xi", "psi", "zeta", "braceleft", "bar", "braceright", "similar", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "Euro", "Upsilon1", "minute", "lessequal", "fraction", "infinity", "florin", "club", "diamond", "heart", "spade", "arrowboth", "arrowleft", "arrowup", "arrowright", "arrowdown", "degree", "plusminus", "second", "greaterequal", "multiply", "proportional", "partialdiff", "bullet", "divide", "notequal", "equivalence", "approxequal", "ellipsis", "arrowvertex", "arrowhorizex", "carriagereturn", "aleph", "Ifraktur", "Rfraktur", "weierstrass", "circlemultiply", "circleplus", "emptyset", "intersection", "union", "propersuperset", "reflexsuperset", "notsubset", "propersubset", "reflexsubset", "element", "notelement", "angle", "gradient", "registerserif", "copyrightserif", "trademarkserif", "product", "radical", "dotmath", "logicalnot", "logicaland", "logicalor", "arrowdblboth", "arrowdblleft", "arrowdblup", "arrowdblright", "arrowdbldown", "lozenge", "angleleft", "registersans", "copyrightsans", "trademarksans", "summation", "parenlefttp", "parenleftex", "parenleftbt", "bracketlefttp", "bracketleftex", "bracketleftbt", "bracelefttp", "braceleftmid", "braceleftbt", "braceex", "", "angleright", "integral", "integraltp", "integralex", "integralbt", "parenrighttp", "parenrightex", "parenrightbt", "bracketrighttp", "bracketrightex", "bracketrightbt", "bracerighttp", "bracerightmid", "bracerightbt", ""];
-exports.SymbolSetEncoding = SymbolSetEncoding;
-const ZapfDingbatsEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "a1", "a2", "a202", "a3", "a4", "a5", "a119", "a118", "a117", "a11", "a12", "a13", "a14", "a15", "a16", "a105", "a17", "a18", "a19", "a20", "a21", "a22", "a23", "a24", "a25", "a26", "a27", "a28", "a6", "a7", "a8", "a9", "a10", "a29", "a30", "a31", "a32", "a33", "a34", "a35", "a36", "a37", "a38", "a39", "a40", "a41", "a42", "a43", "a44", "a45", "a46", "a47", "a48", "a49", "a50", "a51", "a52", "a53", "a54", "a55", "a56", "a57", "a58", "a59", "a60", "a61", "a62", "a63", "a64", "a65", "a66", "a67", "a68", "a69", "a70", "a71", "a72", "a73", "a74", "a203", "a75", "a204", "a76", "a77", "a78", "a79", "a81", "a82", "a83", "a84", "a97", "a98", "a99", "a100", "", "a89", "a90", "a93", "a94", "a91", "a92", "a205", "a85", "a206", "a86", "a87", "a88", "a95", "a96", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "a101", "a102", "a103", "a104", "a106", "a107", "a108", "a112", "a111", "a110", "a109", "a120", "a121", "a122", "a123", "a124", "a125", "a126", "a127", "a128", "a129", "a130", "a131", "a132", "a133", "a134", "a135", "a136", "a137", "a138", "a139", "a140", "a141", "a142", "a143", "a144", "a145", "a146", "a147", "a148", "a149", "a150", "a151", "a152", "a153", "a154", "a155", "a156", "a157", "a158", "a159", "a160", "a161", "a163", "a164", "a196", "a165", "a192", "a166", "a167", "a168", "a169", "a170", "a171", "a172", "a173", "a162", "a174", "a175", "a176", "a177", "a178", "a179", "a193", "a180", "a199", "a181", "a200", "a182", "", "a201", "a183", "a184", "a197", "a185", "a194", "a198", "a186", "a195", "a187", "a188", "a189", "a190", "a191", ""];
-exports.ZapfDingbatsEncoding = ZapfDingbatsEncoding;
-
-function getEncoding(encodingName) {
-  switch (encodingName) {
-    case "WinAnsiEncoding":
-      return WinAnsiEncoding;
-
-    case "StandardEncoding":
-      return StandardEncoding;
-
-    case "MacRomanEncoding":
-      return MacRomanEncoding;
-
-    case "SymbolSetEncoding":
-      return SymbolSetEncoding;
-
-    case "ZapfDingbatsEncoding":
-      return ZapfDingbatsEncoding;
-
-    case "ExpertEncoding":
-      return ExpertEncoding;
-
-    case "MacExpertEncoding":
-      return MacExpertEncoding;
-
-    default:
-      return null;
-  }
-}
-
-/***/ }),
-/* 38 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.getFontType = getFontType;
-exports.normalizeFontName = normalizeFontName;
-exports.recoverGlyphName = recoverGlyphName;
-exports.type1FontGlyphMapping = type1FontGlyphMapping;
-exports.SEAC_ANALYSIS_ENABLED = exports.MacStandardGlyphOrdering = exports.FontFlags = void 0;
-
-var _util = __w_pdfjs_require__(2);
-
-var _encodings = __w_pdfjs_require__(37);
-
-var _glyphlist = __w_pdfjs_require__(39);
-
-var _unicode = __w_pdfjs_require__(40);
-
-const SEAC_ANALYSIS_ENABLED = true;
-exports.SEAC_ANALYSIS_ENABLED = SEAC_ANALYSIS_ENABLED;
-const FontFlags = {
-  FixedPitch: 1,
-  Serif: 2,
-  Symbolic: 4,
-  Script: 8,
-  Nonsymbolic: 32,
-  Italic: 64,
-  AllCap: 65536,
-  SmallCap: 131072,
-  ForceBold: 262144
-};
-exports.FontFlags = FontFlags;
-const MacStandardGlyphOrdering = [".notdef", ".null", "nonmarkingreturn", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand", "quotesingle", "parenleft", "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum", "underscore", "grave", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "Adieresis", "Aring", "Ccedilla", "Eacute", "Ntilde", "Odieresis", "Udieresis", "aacute", "agrave", "acircumflex", "adieresis", "atilde", "aring", "ccedilla", "eacute", "egrave", "ecircumflex", "edieresis", "iacute", "igrave", "icircumflex", "idieresis", "ntilde", "oacute", "ograve", "ocircumflex", "odieresis", "otilde", "uacute", "ugrave", "ucircumflex", "udieresis", "dagger", "degree", "cent", "sterling", "section", "bullet", "paragraph", "germandbls", "registered", "copyright", "trademark", "acute", "dieresis", "notequal", "AE", "Oslash", "infinity", "plusminus", "lessequal", "greaterequal", "yen", "mu", "partialdiff", "summation", "product", "pi", "integral", "ordfeminine", "ordmasculine", "Omega", "ae", "oslash", "questiondown", "exclamdown", "logicalnot", "radical", "florin", "approxequal", "Delta", "guillemotleft", "guillemotright", "ellipsis", "nonbreakingspace", "Agrave", "Atilde", "Otilde", "OE", "oe", "endash", "emdash", "quotedblleft", "quotedblright", "quoteleft", "quoteright", "divide", "lozenge", "ydieresis", "Ydieresis", "fraction", "currency", "guilsinglleft", "guilsinglright", "fi", "fl", "daggerdbl", "periodcentered", "quotesinglbase", "quotedblbase", "perthousand", "Acircumflex", "Ecircumflex", "Aacute", "Edieresis", "Egrave", "Iacute", "Icircumflex", "Idieresis", "Igrave", "Oacute", "Ocircumflex", "apple", "Ograve", "Uacute", "Ucircumflex", "Ugrave", "dotlessi", "circumflex", "tilde", "macron", "breve", "dotaccent", "ring", "cedilla", "hungarumlaut", "ogonek", "caron", "Lslash", "lslash", "Scaron", "scaron", "Zcaron", "zcaron", "brokenbar", "Eth", "eth", "Yacute", "yacute", "Thorn", "thorn", "minus", "multiply", "onesuperior", "twosuperior", "threesuperior", "onehalf", "onequarter", "threequarters", "franc", "Gbreve", "gbreve", "Idotaccent", "Scedilla", "scedilla", "Cacute", "cacute", "Ccaron", "ccaron", "dcroat"];
-exports.MacStandardGlyphOrdering = MacStandardGlyphOrdering;
-
-function getFontType(type, subtype, isStandardFont = false) {
-  switch (type) {
-    case "Type1":
-      if (isStandardFont) {
-        return _util.FontType.TYPE1STANDARD;
-      }
-
-      return subtype === "Type1C" ? _util.FontType.TYPE1C : _util.FontType.TYPE1;
-
-    case "CIDFontType0":
-      return subtype === "CIDFontType0C" ? _util.FontType.CIDFONTTYPE0C : _util.FontType.CIDFONTTYPE0;
-
-    case "OpenType":
-      return _util.FontType.OPENTYPE;
-
-    case "TrueType":
-      return _util.FontType.TRUETYPE;
-
-    case "CIDFontType2":
-      return _util.FontType.CIDFONTTYPE2;
-
-    case "MMType1":
-      return _util.FontType.MMTYPE1;
-
-    case "Type0":
-      return _util.FontType.TYPE0;
-
-    default:
-      return _util.FontType.UNKNOWN;
-  }
-}
-
-function recoverGlyphName(name, glyphsUnicodeMap) {
-  if (glyphsUnicodeMap[name] !== undefined) {
-    return name;
-  }
-
-  const unicode = (0, _unicode.getUnicodeForGlyph)(name, glyphsUnicodeMap);
-
-  if (unicode !== -1) {
-    for (const key in glyphsUnicodeMap) {
-      if (glyphsUnicodeMap[key] === unicode) {
-        return key;
-      }
-    }
-  }
-
-  (0, _util.info)("Unable to recover a standard glyph name for: " + name);
-  return name;
-}
-
-function type1FontGlyphMapping(properties, builtInEncoding, glyphNames) {
-  const charCodeToGlyphId = Object.create(null);
-  let glyphId, charCode, baseEncoding;
-  const isSymbolicFont = !!(properties.flags & FontFlags.Symbolic);
-
-  if (properties.isInternalFont) {
-    baseEncoding = builtInEncoding;
-
-    for (charCode = 0; charCode < baseEncoding.length; charCode++) {
-      glyphId = glyphNames.indexOf(baseEncoding[charCode]);
-
-      if (glyphId >= 0) {
-        charCodeToGlyphId[charCode] = glyphId;
-      } else {
-        charCodeToGlyphId[charCode] = 0;
-      }
-    }
-  } else if (properties.baseEncodingName) {
-    baseEncoding = (0, _encodings.getEncoding)(properties.baseEncodingName);
-
-    for (charCode = 0; charCode < baseEncoding.length; charCode++) {
-      glyphId = glyphNames.indexOf(baseEncoding[charCode]);
-
-      if (glyphId >= 0) {
-        charCodeToGlyphId[charCode] = glyphId;
-      } else {
-        charCodeToGlyphId[charCode] = 0;
-      }
-    }
-  } else if (isSymbolicFont) {
-    for (charCode in builtInEncoding) {
-      charCodeToGlyphId[charCode] = builtInEncoding[charCode];
-    }
-  } else {
-    baseEncoding = _encodings.StandardEncoding;
-
-    for (charCode = 0; charCode < baseEncoding.length; charCode++) {
-      glyphId = glyphNames.indexOf(baseEncoding[charCode]);
-
-      if (glyphId >= 0) {
-        charCodeToGlyphId[charCode] = glyphId;
-      } else {
-        charCodeToGlyphId[charCode] = 0;
-      }
-    }
-  }
-
-  const differences = properties.differences;
-  let glyphsUnicodeMap;
-
-  if (differences) {
-    for (charCode in differences) {
-      const glyphName = differences[charCode];
-      glyphId = glyphNames.indexOf(glyphName);
-
-      if (glyphId === -1) {
-        if (!glyphsUnicodeMap) {
-          glyphsUnicodeMap = (0, _glyphlist.getGlyphsUnicode)();
-        }
-
-        const standardGlyphName = recoverGlyphName(glyphName, glyphsUnicodeMap);
-
-        if (standardGlyphName !== glyphName) {
-          glyphId = glyphNames.indexOf(standardGlyphName);
-        }
-      }
-
-      if (glyphId >= 0) {
-        charCodeToGlyphId[charCode] = glyphId;
-      } else {
-        charCodeToGlyphId[charCode] = 0;
-      }
-    }
-  }
-
-  return charCodeToGlyphId;
-}
-
-function normalizeFontName(name) {
-  return name.replace(/[,_]/g, "-").replace(/\s/g, "");
-}
-
-/***/ }),
-/* 39 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.getGlyphsUnicode = exports.getDingbatsGlyphsUnicode = void 0;
-
-var _core_utils = __w_pdfjs_require__(9);
-
-const getGlyphsUnicode = (0, _core_utils.getArrayLookupTableFactory)(function () {
-  return ["A", 0x0041, "AE", 0x00c6, "AEacute", 0x01fc, "AEmacron", 0x01e2, "AEsmall", 0xf7e6, "Aacute", 0x00c1, "Aacutesmall", 0xf7e1, "Abreve", 0x0102, "Abreveacute", 0x1eae, "Abrevecyrillic", 0x04d0, "Abrevedotbelow", 0x1eb6, "Abrevegrave", 0x1eb0, "Abrevehookabove", 0x1eb2, "Abrevetilde", 0x1eb4, "Acaron", 0x01cd, "Acircle", 0x24b6, "Acircumflex", 0x00c2, "Acircumflexacute", 0x1ea4, "Acircumflexdotbelow", 0x1eac, "Acircumflexgrave", 0x1ea6, "Acircumflexhookabove", 0x1ea8, "Acircumflexsmall", 0xf7e2, "Acircumflextilde", 0x1eaa, "Acute", 0xf6c9, "Acutesmall", 0xf7b4, "Acyrillic", 0x0410, "Adblgrave", 0x0200, "Adieresis", 0x00c4, "Adieresiscyrillic", 0x04d2, "Adieresismacron", 0x01de, "Adieresissmall", 0xf7e4, "Adotbelow", 0x1ea0, "Adotmacron", 0x01e0, "Agrave", 0x00c0, "Agravesmall", 0xf7e0, "Ahookabove", 0x1ea2, "Aiecyrillic", 0x04d4, "Ainvertedbreve", 0x0202, "Alpha", 0x0391, "Alphatonos", 0x0386, "Amacron", 0x0100, "Amonospace", 0xff21, "Aogonek", 0x0104, "Aring", 0x00c5, "Aringacute", 0x01fa, "Aringbelow", 0x1e00, "Aringsmall", 0xf7e5, "Asmall", 0xf761, "Atilde", 0x00c3, "Atildesmall", 0xf7e3, "Aybarmenian", 0x0531, "B", 0x0042, "Bcircle", 0x24b7, "Bdotaccent", 0x1e02, "Bdotbelow", 0x1e04, "Becyrillic", 0x0411, "Benarmenian", 0x0532, "Beta", 0x0392, "Bhook", 0x0181, "Blinebelow", 0x1e06, "Bmonospace", 0xff22, "Brevesmall", 0xf6f4, "Bsmall", 0xf762, "Btopbar", 0x0182, "C", 0x0043, "Caarmenian", 0x053e, "Cacute", 0x0106, "Caron", 0xf6ca, "Caronsmall", 0xf6f5, "Ccaron", 0x010c, "Ccedilla", 0x00c7, "Ccedillaacute", 0x1e08, "Ccedillasmall", 0xf7e7, "Ccircle", 0x24b8, "Ccircumflex", 0x0108, "Cdot", 0x010a, "Cdotaccent", 0x010a, "Cedillasmall", 0xf7b8, "Chaarmenian", 0x0549, "Cheabkhasiancyrillic", 0x04bc, "Checyrillic", 0x0427, "Chedescenderabkhasiancyrillic", 0x04be, "Chedescendercyrillic", 0x04b6, "Chedieresiscyrillic", 0x04f4, "Cheharmenian", 0x0543, "Chekhakassiancyrillic", 0x04cb, "Cheverticalstrokecyrillic", 0x04b8, "Chi", 0x03a7, "Chook", 0x0187, "Circumflexsmall", 0xf6f6, "Cmonospace", 0xff23, "Coarmenian", 0x0551, "Csmall", 0xf763, "D", 0x0044, "DZ", 0x01f1, "DZcaron", 0x01c4, "Daarmenian", 0x0534, "Dafrican", 0x0189, "Dcaron", 0x010e, "Dcedilla", 0x1e10, "Dcircle", 0x24b9, "Dcircumflexbelow", 0x1e12, "Dcroat", 0x0110, "Ddotaccent", 0x1e0a, "Ddotbelow", 0x1e0c, "Decyrillic", 0x0414, "Deicoptic", 0x03ee, "Delta", 0x2206, "Deltagreek", 0x0394, "Dhook", 0x018a, "Dieresis", 0xf6cb, "DieresisAcute", 0xf6cc, "DieresisGrave", 0xf6cd, "Dieresissmall", 0xf7a8, "Digammagreek", 0x03dc, "Djecyrillic", 0x0402, "Dlinebelow", 0x1e0e, "Dmonospace", 0xff24, "Dotaccentsmall", 0xf6f7, "Dslash", 0x0110, "Dsmall", 0xf764, "Dtopbar", 0x018b, "Dz", 0x01f2, "Dzcaron", 0x01c5, "Dzeabkhasiancyrillic", 0x04e0, "Dzecyrillic", 0x0405, "Dzhecyrillic", 0x040f, "E", 0x0045, "Eacute", 0x00c9, "Eacutesmall", 0xf7e9, "Ebreve", 0x0114, "Ecaron", 0x011a, "Ecedillabreve", 0x1e1c, "Echarmenian", 0x0535, "Ecircle", 0x24ba, "Ecircumflex", 0x00ca, "Ecircumflexacute", 0x1ebe, "Ecircumflexbelow", 0x1e18, "Ecircumflexdotbelow", 0x1ec6, "Ecircumflexgrave", 0x1ec0, "Ecircumflexhookabove", 0x1ec2, "Ecircumflexsmall", 0xf7ea, "Ecircumflextilde", 0x1ec4, "Ecyrillic", 0x0404, "Edblgrave", 0x0204, "Edieresis", 0x00cb, "Edieresissmall", 0xf7eb, "Edot", 0x0116, "Edotaccent", 0x0116, "Edotbelow", 0x1eb8, "Efcyrillic", 0x0424, "Egrave", 0x00c8, "Egravesmall", 0xf7e8, "Eharmenian", 0x0537, "Ehookabove", 0x1eba, "Eightroman", 0x2167, "Einvertedbreve", 0x0206, "Eiotifiedcyrillic", 0x0464, "Elcyrillic", 0x041b, "Elevenroman", 0x216a, "Emacron", 0x0112, "Emacronacute", 0x1e16, "Emacrongrave", 0x1e14, "Emcyrillic", 0x041c, "Emonospace", 0xff25, "Encyrillic", 0x041d, "Endescendercyrillic", 0x04a2, "Eng", 0x014a, "Enghecyrillic", 0x04a4, "Enhookcyrillic", 0x04c7, "Eogonek", 0x0118, "Eopen", 0x0190, "Epsilon", 0x0395, "Epsilontonos", 0x0388, "Ercyrillic", 0x0420, "Ereversed", 0x018e, "Ereversedcyrillic", 0x042d, "Escyrillic", 0x0421, "Esdescendercyrillic", 0x04aa, "Esh", 0x01a9, "Esmall", 0xf765, "Eta", 0x0397, "Etarmenian", 0x0538, "Etatonos", 0x0389, "Eth", 0x00d0, "Ethsmall", 0xf7f0, "Etilde", 0x1ebc, "Etildebelow", 0x1e1a, "Euro", 0x20ac, "Ezh", 0x01b7, "Ezhcaron", 0x01ee, "Ezhreversed", 0x01b8, "F", 0x0046, "Fcircle", 0x24bb, "Fdotaccent", 0x1e1e, "Feharmenian", 0x0556, "Feicoptic", 0x03e4, "Fhook", 0x0191, "Fitacyrillic", 0x0472, "Fiveroman", 0x2164, "Fmonospace", 0xff26, "Fourroman", 0x2163, "Fsmall", 0xf766, "G", 0x0047, "GBsquare", 0x3387, "Gacute", 0x01f4, "Gamma", 0x0393, "Gammaafrican", 0x0194, "Gangiacoptic", 0x03ea, "Gbreve", 0x011e, "Gcaron", 0x01e6, "Gcedilla", 0x0122, "Gcircle", 0x24bc, "Gcircumflex", 0x011c, "Gcommaaccent", 0x0122, "Gdot", 0x0120, "Gdotaccent", 0x0120, "Gecyrillic", 0x0413, "Ghadarmenian", 0x0542, "Ghemiddlehookcyrillic", 0x0494, "Ghestrokecyrillic", 0x0492, "Gheupturncyrillic", 0x0490, "Ghook", 0x0193, "Gimarmenian", 0x0533, "Gjecyrillic", 0x0403, "Gmacron", 0x1e20, "Gmonospace", 0xff27, "Grave", 0xf6ce, "Gravesmall", 0xf760, "Gsmall", 0xf767, "Gsmallhook", 0x029b, "Gstroke", 0x01e4, "H", 0x0048, "H18533", 0x25cf, "H18543", 0x25aa, "H18551", 0x25ab, "H22073", 0x25a1, "HPsquare", 0x33cb, "Haabkhasiancyrillic", 0x04a8, "Hadescendercyrillic", 0x04b2, "Hardsigncyrillic", 0x042a, "Hbar", 0x0126, "Hbrevebelow", 0x1e2a, "Hcedilla", 0x1e28, "Hcircle", 0x24bd, "Hcircumflex", 0x0124, "Hdieresis", 0x1e26, "Hdotaccent", 0x1e22, "Hdotbelow", 0x1e24, "Hmonospace", 0xff28, "Hoarmenian", 0x0540, "Horicoptic", 0x03e8, "Hsmall", 0xf768, "Hungarumlaut", 0xf6cf, "Hungarumlautsmall", 0xf6f8, "Hzsquare", 0x3390, "I", 0x0049, "IAcyrillic", 0x042f, "IJ", 0x0132, "IUcyrillic", 0x042e, "Iacute", 0x00cd, "Iacutesmall", 0xf7ed, "Ibreve", 0x012c, "Icaron", 0x01cf, "Icircle", 0x24be, "Icircumflex", 0x00ce, "Icircumflexsmall", 0xf7ee, "Icyrillic", 0x0406, "Idblgrave", 0x0208, "Idieresis", 0x00cf, "Idieresisacute", 0x1e2e, "Idieresiscyrillic", 0x04e4, "Idieresissmall", 0xf7ef, "Idot", 0x0130, "Idotaccent", 0x0130, "Idotbelow", 0x1eca, "Iebrevecyrillic", 0x04d6, "Iecyrillic", 0x0415, "Ifraktur", 0x2111, "Igrave", 0x00cc, "Igravesmall", 0xf7ec, "Ihookabove", 0x1ec8, "Iicyrillic", 0x0418, "Iinvertedbreve", 0x020a, "Iishortcyrillic", 0x0419, "Imacron", 0x012a, "Imacroncyrillic", 0x04e2, "Imonospace", 0xff29, "Iniarmenian", 0x053b, "Iocyrillic", 0x0401, "Iogonek", 0x012e, "Iota", 0x0399, "Iotaafrican", 0x0196, "Iotadieresis", 0x03aa, "Iotatonos", 0x038a, "Ismall", 0xf769, "Istroke", 0x0197, "Itilde", 0x0128, "Itildebelow", 0x1e2c, "Izhitsacyrillic", 0x0474, "Izhitsadblgravecyrillic", 0x0476, "J", 0x004a, "Jaarmenian", 0x0541, "Jcircle", 0x24bf, "Jcircumflex", 0x0134, "Jecyrillic", 0x0408, "Jheharmenian", 0x054b, "Jmonospace", 0xff2a, "Jsmall", 0xf76a, "K", 0x004b, "KBsquare", 0x3385, "KKsquare", 0x33cd, "Kabashkircyrillic", 0x04a0, "Kacute", 0x1e30, "Kacyrillic", 0x041a, "Kadescendercyrillic", 0x049a, "Kahookcyrillic", 0x04c3, "Kappa", 0x039a, "Kastrokecyrillic", 0x049e, "Kaverticalstrokecyrillic", 0x049c, "Kcaron", 0x01e8, "Kcedilla", 0x0136, "Kcircle", 0x24c0, "Kcommaaccent", 0x0136, "Kdotbelow", 0x1e32, "Keharmenian", 0x0554, "Kenarmenian", 0x053f, "Khacyrillic", 0x0425, "Kheicoptic", 0x03e6, "Khook", 0x0198, "Kjecyrillic", 0x040c, "Klinebelow", 0x1e34, "Kmonospace", 0xff2b, "Koppacyrillic", 0x0480, "Koppagreek", 0x03de, "Ksicyrillic", 0x046e, "Ksmall", 0xf76b, "L", 0x004c, "LJ", 0x01c7, "LL", 0xf6bf, "Lacute", 0x0139, "Lambda", 0x039b, "Lcaron", 0x013d, "Lcedilla", 0x013b, "Lcircle", 0x24c1, "Lcircumflexbelow", 0x1e3c, "Lcommaaccent", 0x013b, "Ldot", 0x013f, "Ldotaccent", 0x013f, "Ldotbelow", 0x1e36, "Ldotbelowmacron", 0x1e38, "Liwnarmenian", 0x053c, "Lj", 0x01c8, "Ljecyrillic", 0x0409, "Llinebelow", 0x1e3a, "Lmonospace", 0xff2c, "Lslash", 0x0141, "Lslashsmall", 0xf6f9, "Lsmall", 0xf76c, "M", 0x004d, "MBsquare", 0x3386, "Macron", 0xf6d0, "Macronsmall", 0xf7af, "Macute", 0x1e3e, "Mcircle", 0x24c2, "Mdotaccent", 0x1e40, "Mdotbelow", 0x1e42, "Menarmenian", 0x0544, "Mmonospace", 0xff2d, "Msmall", 0xf76d, "Mturned", 0x019c, "Mu", 0x039c, "N", 0x004e, "NJ", 0x01ca, "Nacute", 0x0143, "Ncaron", 0x0147, "Ncedilla", 0x0145, "Ncircle", 0x24c3, "Ncircumflexbelow", 0x1e4a, "Ncommaaccent", 0x0145, "Ndotaccent", 0x1e44, "Ndotbelow", 0x1e46, "Nhookleft", 0x019d, "Nineroman", 0x2168, "Nj", 0x01cb, "Njecyrillic", 0x040a, "Nlinebelow", 0x1e48, "Nmonospace", 0xff2e, "Nowarmenian", 0x0546, "Nsmall", 0xf76e, "Ntilde", 0x00d1, "Ntildesmall", 0xf7f1, "Nu", 0x039d, "O", 0x004f, "OE", 0x0152, "OEsmall", 0xf6fa, "Oacute", 0x00d3, "Oacutesmall", 0xf7f3, "Obarredcyrillic", 0x04e8, "Obarreddieresiscyrillic", 0x04ea, "Obreve", 0x014e, "Ocaron", 0x01d1, "Ocenteredtilde", 0x019f, "Ocircle", 0x24c4, "Ocircumflex", 0x00d4, "Ocircumflexacute", 0x1ed0, "Ocircumflexdotbelow", 0x1ed8, "Ocircumflexgrave", 0x1ed2, "Ocircumflexhookabove", 0x1ed4, "Ocircumflexsmall", 0xf7f4, "Ocircumflextilde", 0x1ed6, "Ocyrillic", 0x041e, "Odblacute", 0x0150, "Odblgrave", 0x020c, "Odieresis", 0x00d6, "Odieresiscyrillic", 0x04e6, "Odieresissmall", 0xf7f6, "Odotbelow", 0x1ecc, "Ogoneksmall", 0xf6fb, "Ograve", 0x00d2, "Ogravesmall", 0xf7f2, "Oharmenian", 0x0555, "Ohm", 0x2126, "Ohookabove", 0x1ece, "Ohorn", 0x01a0, "Ohornacute", 0x1eda, "Ohorndotbelow", 0x1ee2, "Ohorngrave", 0x1edc, "Ohornhookabove", 0x1ede, "Ohorntilde", 0x1ee0, "Ohungarumlaut", 0x0150, "Oi", 0x01a2, "Oinvertedbreve", 0x020e, "Omacron", 0x014c, "Omacronacute", 0x1e52, "Omacrongrave", 0x1e50, "Omega", 0x2126, "Omegacyrillic", 0x0460, "Omegagreek", 0x03a9, "Omegaroundcyrillic", 0x047a, "Omegatitlocyrillic", 0x047c, "Omegatonos", 0x038f, "Omicron", 0x039f, "Omicrontonos", 0x038c, "Omonospace", 0xff2f, "Oneroman", 0x2160, "Oogonek", 0x01ea, "Oogonekmacron", 0x01ec, "Oopen", 0x0186, "Oslash", 0x00d8, "Oslashacute", 0x01fe, "Oslashsmall", 0xf7f8, "Osmall", 0xf76f, "Ostrokeacute", 0x01fe, "Otcyrillic", 0x047e, "Otilde", 0x00d5, "Otildeacute", 0x1e4c, "Otildedieresis", 0x1e4e, "Otildesmall", 0xf7f5, "P", 0x0050, "Pacute", 0x1e54, "Pcircle", 0x24c5, "Pdotaccent", 0x1e56, "Pecyrillic", 0x041f, "Peharmenian", 0x054a, "Pemiddlehookcyrillic", 0x04a6, "Phi", 0x03a6, "Phook", 0x01a4, "Pi", 0x03a0, "Piwrarmenian", 0x0553, "Pmonospace", 0xff30, "Psi", 0x03a8, "Psicyrillic", 0x0470, "Psmall", 0xf770, "Q", 0x0051, "Qcircle", 0x24c6, "Qmonospace", 0xff31, "Qsmall", 0xf771, "R", 0x0052, "Raarmenian", 0x054c, "Racute", 0x0154, "Rcaron", 0x0158, "Rcedilla", 0x0156, "Rcircle", 0x24c7, "Rcommaaccent", 0x0156, "Rdblgrave", 0x0210, "Rdotaccent", 0x1e58, "Rdotbelow", 0x1e5a, "Rdotbelowmacron", 0x1e5c, "Reharmenian", 0x0550, "Rfraktur", 0x211c, "Rho", 0x03a1, "Ringsmall", 0xf6fc, "Rinvertedbreve", 0x0212, "Rlinebelow", 0x1e5e, "Rmonospace", 0xff32, "Rsmall", 0xf772, "Rsmallinverted", 0x0281, "Rsmallinvertedsuperior", 0x02b6, "S", 0x0053, "SF010000", 0x250c, "SF020000", 0x2514, "SF030000", 0x2510, "SF040000", 0x2518, "SF050000", 0x253c, "SF060000", 0x252c, "SF070000", 0x2534, "SF080000", 0x251c, "SF090000", 0x2524, "SF100000", 0x2500, "SF110000", 0x2502, "SF190000", 0x2561, "SF200000", 0x2562, "SF210000", 0x2556, "SF220000", 0x2555, "SF230000", 0x2563, "SF240000", 0x2551, "SF250000", 0x2557, "SF260000", 0x255d, "SF270000", 0x255c, "SF280000", 0x255b, "SF360000", 0x255e, "SF370000", 0x255f, "SF380000", 0x255a, "SF390000", 0x2554, "SF400000", 0x2569, "SF410000", 0x2566, "SF420000", 0x2560, "SF430000", 0x2550, "SF440000", 0x256c, "SF450000", 0x2567, "SF460000", 0x2568, "SF470000", 0x2564, "SF480000", 0x2565, "SF490000", 0x2559, "SF500000", 0x2558, "SF510000", 0x2552, "SF520000", 0x2553, "SF530000", 0x256b, "SF540000", 0x256a, "Sacute", 0x015a, "Sacutedotaccent", 0x1e64, "Sampigreek", 0x03e0, "Scaron", 0x0160, "Scarondotaccent", 0x1e66, "Scaronsmall", 0xf6fd, "Scedilla", 0x015e, "Schwa", 0x018f, "Schwacyrillic", 0x04d8, "Schwadieresiscyrillic", 0x04da, "Scircle", 0x24c8, "Scircumflex", 0x015c, "Scommaaccent", 0x0218, "Sdotaccent", 0x1e60, "Sdotbelow", 0x1e62, "Sdotbelowdotaccent", 0x1e68, "Seharmenian", 0x054d, "Sevenroman", 0x2166, "Shaarmenian", 0x0547, "Shacyrillic", 0x0428, "Shchacyrillic", 0x0429, "Sheicoptic", 0x03e2, "Shhacyrillic", 0x04ba, "Shimacoptic", 0x03ec, "Sigma", 0x03a3, "Sixroman", 0x2165, "Smonospace", 0xff33, "Softsigncyrillic", 0x042c, "Ssmall", 0xf773, "Stigmagreek", 0x03da, "T", 0x0054, "Tau", 0x03a4, "Tbar", 0x0166, "Tcaron", 0x0164, "Tcedilla", 0x0162, "Tcircle", 0x24c9, "Tcircumflexbelow", 0x1e70, "Tcommaaccent", 0x0162, "Tdotaccent", 0x1e6a, "Tdotbelow", 0x1e6c, "Tecyrillic", 0x0422, "Tedescendercyrillic", 0x04ac, "Tenroman", 0x2169, "Tetsecyrillic", 0x04b4, "Theta", 0x0398, "Thook", 0x01ac, "Thorn", 0x00de, "Thornsmall", 0xf7fe, "Threeroman", 0x2162, "Tildesmall", 0xf6fe, "Tiwnarmenian", 0x054f, "Tlinebelow", 0x1e6e, "Tmonospace", 0xff34, "Toarmenian", 0x0539, "Tonefive", 0x01bc, "Tonesix", 0x0184, "Tonetwo", 0x01a7, "Tretroflexhook", 0x01ae, "Tsecyrillic", 0x0426, "Tshecyrillic", 0x040b, "Tsmall", 0xf774, "Twelveroman", 0x216b, "Tworoman", 0x2161, "U", 0x0055, "Uacute", 0x00da, "Uacutesmall", 0xf7fa, "Ubreve", 0x016c, "Ucaron", 0x01d3, "Ucircle", 0x24ca, "Ucircumflex", 0x00db, "Ucircumflexbelow", 0x1e76, "Ucircumflexsmall", 0xf7fb, "Ucyrillic", 0x0423, "Udblacute", 0x0170, "Udblgrave", 0x0214, "Udieresis", 0x00dc, "Udieresisacute", 0x01d7, "Udieresisbelow", 0x1e72, "Udieresiscaron", 0x01d9, "Udieresiscyrillic", 0x04f0, "Udieresisgrave", 0x01db, "Udieresismacron", 0x01d5, "Udieresissmall", 0xf7fc, "Udotbelow", 0x1ee4, "Ugrave", 0x00d9, "Ugravesmall", 0xf7f9, "Uhookabove", 0x1ee6, "Uhorn", 0x01af, "Uhornacute", 0x1ee8, "Uhorndotbelow", 0x1ef0, "Uhorngrave", 0x1eea, "Uhornhookabove", 0x1eec, "Uhorntilde", 0x1eee, "Uhungarumlaut", 0x0170, "Uhungarumlautcyrillic", 0x04f2, "Uinvertedbreve", 0x0216, "Ukcyrillic", 0x0478, "Umacron", 0x016a, "Umacroncyrillic", 0x04ee, "Umacrondieresis", 0x1e7a, "Umonospace", 0xff35, "Uogonek", 0x0172, "Upsilon", 0x03a5, "Upsilon1", 0x03d2, "Upsilonacutehooksymbolgreek", 0x03d3, "Upsilonafrican", 0x01b1, "Upsilondieresis", 0x03ab, "Upsilondieresishooksymbolgreek", 0x03d4, "Upsilonhooksymbol", 0x03d2, "Upsilontonos", 0x038e, "Uring", 0x016e, "Ushortcyrillic", 0x040e, "Usmall", 0xf775, "Ustraightcyrillic", 0x04ae, "Ustraightstrokecyrillic", 0x04b0, "Utilde", 0x0168, "Utildeacute", 0x1e78, "Utildebelow", 0x1e74, "V", 0x0056, "Vcircle", 0x24cb, "Vdotbelow", 0x1e7e, "Vecyrillic", 0x0412, "Vewarmenian", 0x054e, "Vhook", 0x01b2, "Vmonospace", 0xff36, "Voarmenian", 0x0548, "Vsmall", 0xf776, "Vtilde", 0x1e7c, "W", 0x0057, "Wacute", 0x1e82, "Wcircle", 0x24cc, "Wcircumflex", 0x0174, "Wdieresis", 0x1e84, "Wdotaccent", 0x1e86, "Wdotbelow", 0x1e88, "Wgrave", 0x1e80, "Wmonospace", 0xff37, "Wsmall", 0xf777, "X", 0x0058, "Xcircle", 0x24cd, "Xdieresis", 0x1e8c, "Xdotaccent", 0x1e8a, "Xeharmenian", 0x053d, "Xi", 0x039e, "Xmonospace", 0xff38, "Xsmall", 0xf778, "Y", 0x0059, "Yacute", 0x00dd, "Yacutesmall", 0xf7fd, "Yatcyrillic", 0x0462, "Ycircle", 0x24ce, "Ycircumflex", 0x0176, "Ydieresis", 0x0178, "Ydieresissmall", 0xf7ff, "Ydotaccent", 0x1e8e, "Ydotbelow", 0x1ef4, "Yericyrillic", 0x042b, "Yerudieresiscyrillic", 0x04f8, "Ygrave", 0x1ef2, "Yhook", 0x01b3, "Yhookabove", 0x1ef6, "Yiarmenian", 0x0545, "Yicyrillic", 0x0407, "Yiwnarmenian", 0x0552, "Ymonospace", 0xff39, "Ysmall", 0xf779, "Ytilde", 0x1ef8, "Yusbigcyrillic", 0x046a, "Yusbigiotifiedcyrillic", 0x046c, "Yuslittlecyrillic", 0x0466, "Yuslittleiotifiedcyrillic", 0x0468, "Z", 0x005a, "Zaarmenian", 0x0536, "Zacute", 0x0179, "Zcaron", 0x017d, "Zcaronsmall", 0xf6ff, "Zcircle", 0x24cf, "Zcircumflex", 0x1e90, "Zdot", 0x017b, "Zdotaccent", 0x017b, "Zdotbelow", 0x1e92, "Zecyrillic", 0x0417, "Zedescendercyrillic", 0x0498, "Zedieresiscyrillic", 0x04de, "Zeta", 0x0396, "Zhearmenian", 0x053a, "Zhebrevecyrillic", 0x04c1, "Zhecyrillic", 0x0416, "Zhedescendercyrillic", 0x0496, "Zhedieresiscyrillic", 0x04dc, "Zlinebelow", 0x1e94, "Zmonospace", 0xff3a, "Zsmall", 0xf77a, "Zstroke", 0x01b5, "a", 0x0061, "aabengali", 0x0986, "aacute", 0x00e1, "aadeva", 0x0906, "aagujarati", 0x0a86, "aagurmukhi", 0x0a06, "aamatragurmukhi", 0x0a3e, "aarusquare", 0x3303, "aavowelsignbengali", 0x09be, "aavowelsigndeva", 0x093e, "aavowelsigngujarati", 0x0abe, "abbreviationmarkarmenian", 0x055f, "abbreviationsigndeva", 0x0970, "abengali", 0x0985, "abopomofo", 0x311a, "abreve", 0x0103, "abreveacute", 0x1eaf, "abrevecyrillic", 0x04d1, "abrevedotbelow", 0x1eb7, "abrevegrave", 0x1eb1, "abrevehookabove", 0x1eb3, "abrevetilde", 0x1eb5, "acaron", 0x01ce, "acircle", 0x24d0, "acircumflex", 0x00e2, "acircumflexacute", 0x1ea5, "acircumflexdotbelow", 0x1ead, "acircumflexgrave", 0x1ea7, "acircumflexhookabove", 0x1ea9, "acircumflextilde", 0x1eab, "acute", 0x00b4, "acutebelowcmb", 0x0317, "acutecmb", 0x0301, "acutecomb", 0x0301, "acutedeva", 0x0954, "acutelowmod", 0x02cf, "acutetonecmb", 0x0341, "acyrillic", 0x0430, "adblgrave", 0x0201, "addakgurmukhi", 0x0a71, "adeva", 0x0905, "adieresis", 0x00e4, "adieresiscyrillic", 0x04d3, "adieresismacron", 0x01df, "adotbelow", 0x1ea1, "adotmacron", 0x01e1, "ae", 0x00e6, "aeacute", 0x01fd, "aekorean", 0x3150, "aemacron", 0x01e3, "afii00208", 0x2015, "afii08941", 0x20a4, "afii10017", 0x0410, "afii10018", 0x0411, "afii10019", 0x0412, "afii10020", 0x0413, "afii10021", 0x0414, "afii10022", 0x0415, "afii10023", 0x0401, "afii10024", 0x0416, "afii10025", 0x0417, "afii10026", 0x0418, "afii10027", 0x0419, "afii10028", 0x041a, "afii10029", 0x041b, "afii10030", 0x041c, "afii10031", 0x041d, "afii10032", 0x041e, "afii10033", 0x041f, "afii10034", 0x0420, "afii10035", 0x0421, "afii10036", 0x0422, "afii10037", 0x0423, "afii10038", 0x0424, "afii10039", 0x0425, "afii10040", 0x0426, "afii10041", 0x0427, "afii10042", 0x0428, "afii10043", 0x0429, "afii10044", 0x042a, "afii10045", 0x042b, "afii10046", 0x042c, "afii10047", 0x042d, "afii10048", 0x042e, "afii10049", 0x042f, "afii10050", 0x0490, "afii10051", 0x0402, "afii10052", 0x0403, "afii10053", 0x0404, "afii10054", 0x0405, "afii10055", 0x0406, "afii10056", 0x0407, "afii10057", 0x0408, "afii10058", 0x0409, "afii10059", 0x040a, "afii10060", 0x040b, "afii10061", 0x040c, "afii10062", 0x040e, "afii10063", 0xf6c4, "afii10064", 0xf6c5, "afii10065", 0x0430, "afii10066", 0x0431, "afii10067", 0x0432, "afii10068", 0x0433, "afii10069", 0x0434, "afii10070", 0x0435, "afii10071", 0x0451, "afii10072", 0x0436, "afii10073", 0x0437, "afii10074", 0x0438, "afii10075", 0x0439, "afii10076", 0x043a, "afii10077", 0x043b, "afii10078", 0x043c, "afii10079", 0x043d, "afii10080", 0x043e, "afii10081", 0x043f, "afii10082", 0x0440, "afii10083", 0x0441, "afii10084", 0x0442, "afii10085", 0x0443, "afii10086", 0x0444, "afii10087", 0x0445, "afii10088", 0x0446, "afii10089", 0x0447, "afii10090", 0x0448, "afii10091", 0x0449, "afii10092", 0x044a, "afii10093", 0x044b, "afii10094", 0x044c, "afii10095", 0x044d, "afii10096", 0x044e, "afii10097", 0x044f, "afii10098", 0x0491, "afii10099", 0x0452, "afii10100", 0x0453, "afii10101", 0x0454, "afii10102", 0x0455, "afii10103", 0x0456, "afii10104", 0x0457, "afii10105", 0x0458, "afii10106", 0x0459, "afii10107", 0x045a, "afii10108", 0x045b, "afii10109", 0x045c, "afii10110", 0x045e, "afii10145", 0x040f, "afii10146", 0x0462, "afii10147", 0x0472, "afii10148", 0x0474, "afii10192", 0xf6c6, "afii10193", 0x045f, "afii10194", 0x0463, "afii10195", 0x0473, "afii10196", 0x0475, "afii10831", 0xf6c7, "afii10832", 0xf6c8, "afii10846", 0x04d9, "afii299", 0x200e, "afii300", 0x200f, "afii301", 0x200d, "afii57381", 0x066a, "afii57388", 0x060c, "afii57392", 0x0660, "afii57393", 0x0661, "afii57394", 0x0662, "afii57395", 0x0663, "afii57396", 0x0664, "afii57397", 0x0665, "afii57398", 0x0666, "afii57399", 0x0667, "afii57400", 0x0668, "afii57401", 0x0669, "afii57403", 0x061b, "afii57407", 0x061f, "afii57409", 0x0621, "afii57410", 0x0622, "afii57411", 0x0623, "afii57412", 0x0624, "afii57413", 0x0625, "afii57414", 0x0626, "afii57415", 0x0627, "afii57416", 0x0628, "afii57417", 0x0629, "afii57418", 0x062a, "afii57419", 0x062b, "afii57420", 0x062c, "afii57421", 0x062d, "afii57422", 0x062e, "afii57423", 0x062f, "afii57424", 0x0630, "afii57425", 0x0631, "afii57426", 0x0632, "afii57427", 0x0633, "afii57428", 0x0634, "afii57429", 0x0635, "afii57430", 0x0636, "afii57431", 0x0637, "afii57432", 0x0638, "afii57433", 0x0639, "afii57434", 0x063a, "afii57440", 0x0640, "afii57441", 0x0641, "afii57442", 0x0642, "afii57443", 0x0643, "afii57444", 0x0644, "afii57445", 0x0645, "afii57446", 0x0646, "afii57448", 0x0648, "afii57449", 0x0649, "afii57450", 0x064a, "afii57451", 0x064b, "afii57452", 0x064c, "afii57453", 0x064d, "afii57454", 0x064e, "afii57455", 0x064f, "afii57456", 0x0650, "afii57457", 0x0651, "afii57458", 0x0652, "afii57470", 0x0647, "afii57505", 0x06a4, "afii57506", 0x067e, "afii57507", 0x0686, "afii57508", 0x0698, "afii57509", 0x06af, "afii57511", 0x0679, "afii57512", 0x0688, "afii57513", 0x0691, "afii57514", 0x06ba, "afii57519", 0x06d2, "afii57534", 0x06d5, "afii57636", 0x20aa, "afii57645", 0x05be, "afii57658", 0x05c3, "afii57664", 0x05d0, "afii57665", 0x05d1, "afii57666", 0x05d2, "afii57667", 0x05d3, "afii57668", 0x05d4, "afii57669", 0x05d5, "afii57670", 0x05d6, "afii57671", 0x05d7, "afii57672", 0x05d8, "afii57673", 0x05d9, "afii57674", 0x05da, "afii57675", 0x05db, "afii57676", 0x05dc, "afii57677", 0x05dd, "afii57678", 0x05de, "afii57679", 0x05df, "afii57680", 0x05e0, "afii57681", 0x05e1, "afii57682", 0x05e2, "afii57683", 0x05e3, "afii57684", 0x05e4, "afii57685", 0x05e5, "afii57686", 0x05e6, "afii57687", 0x05e7, "afii57688", 0x05e8, "afii57689", 0x05e9, "afii57690", 0x05ea, "afii57694", 0xfb2a, "afii57695", 0xfb2b, "afii57700", 0xfb4b, "afii57705", 0xfb1f, "afii57716", 0x05f0, "afii57717", 0x05f1, "afii57718", 0x05f2, "afii57723", 0xfb35, "afii57793", 0x05b4, "afii57794", 0x05b5, "afii57795", 0x05b6, "afii57796", 0x05bb, "afii57797", 0x05b8, "afii57798", 0x05b7, "afii57799", 0x05b0, "afii57800", 0x05b2, "afii57801", 0x05b1, "afii57802", 0x05b3, "afii57803", 0x05c2, "afii57804", 0x05c1, "afii57806", 0x05b9, "afii57807", 0x05bc, "afii57839", 0x05bd, "afii57841", 0x05bf, "afii57842", 0x05c0, "afii57929", 0x02bc, "afii61248", 0x2105, "afii61289", 0x2113, "afii61352", 0x2116, "afii61573", 0x202c, "afii61574", 0x202d, "afii61575", 0x202e, "afii61664", 0x200c, "afii63167", 0x066d, "afii64937", 0x02bd, "agrave", 0x00e0, "agujarati", 0x0a85, "agurmukhi", 0x0a05, "ahiragana", 0x3042, "ahookabove", 0x1ea3, "aibengali", 0x0990, "aibopomofo", 0x311e, "aideva", 0x0910, "aiecyrillic", 0x04d5, "aigujarati", 0x0a90, "aigurmukhi", 0x0a10, "aimatragurmukhi", 0x0a48, "ainarabic", 0x0639, "ainfinalarabic", 0xfeca, "aininitialarabic", 0xfecb, "ainmedialarabic", 0xfecc, "ainvertedbreve", 0x0203, "aivowelsignbengali", 0x09c8, "aivowelsigndeva", 0x0948, "aivowelsigngujarati", 0x0ac8, "akatakana", 0x30a2, "akatakanahalfwidth", 0xff71, "akorean", 0x314f, "alef", 0x05d0, "alefarabic", 0x0627, "alefdageshhebrew", 0xfb30, "aleffinalarabic", 0xfe8e, "alefhamzaabovearabic", 0x0623, "alefhamzaabovefinalarabic", 0xfe84, "alefhamzabelowarabic", 0x0625, "alefhamzabelowfinalarabic", 0xfe88, "alefhebrew", 0x05d0, "aleflamedhebrew", 0xfb4f, "alefmaddaabovearabic", 0x0622, "alefmaddaabovefinalarabic", 0xfe82, "alefmaksuraarabic", 0x0649, "alefmaksurafinalarabic", 0xfef0, "alefmaksurainitialarabic", 0xfef3, "alefmaksuramedialarabic", 0xfef4, "alefpatahhebrew", 0xfb2e, "alefqamatshebrew", 0xfb2f, "aleph", 0x2135, "allequal", 0x224c, "alpha", 0x03b1, "alphatonos", 0x03ac, "amacron", 0x0101, "amonospace", 0xff41, "ampersand", 0x0026, "ampersandmonospace", 0xff06, "ampersandsmall", 0xf726, "amsquare", 0x33c2, "anbopomofo", 0x3122, "angbopomofo", 0x3124, "angbracketleft", 0x3008, "angbracketright", 0x3009, "angkhankhuthai", 0x0e5a, "angle", 0x2220, "anglebracketleft", 0x3008, "anglebracketleftvertical", 0xfe3f, "anglebracketright", 0x3009, "anglebracketrightvertical", 0xfe40, "angleleft", 0x2329, "angleright", 0x232a, "angstrom", 0x212b, "anoteleia", 0x0387, "anudattadeva", 0x0952, "anusvarabengali", 0x0982, "anusvaradeva", 0x0902, "anusvaragujarati", 0x0a82, "aogonek", 0x0105, "apaatosquare", 0x3300, "aparen", 0x249c, "apostrophearmenian", 0x055a, "apostrophemod", 0x02bc, "apple", 0xf8ff, "approaches", 0x2250, "approxequal", 0x2248, "approxequalorimage", 0x2252, "approximatelyequal", 0x2245, "araeaekorean", 0x318e, "araeakorean", 0x318d, "arc", 0x2312, "arighthalfring", 0x1e9a, "aring", 0x00e5, "aringacute", 0x01fb, "aringbelow", 0x1e01, "arrowboth", 0x2194, "arrowdashdown", 0x21e3, "arrowdashleft", 0x21e0, "arrowdashright", 0x21e2, "arrowdashup", 0x21e1, "arrowdblboth", 0x21d4, "arrowdbldown", 0x21d3, "arrowdblleft", 0x21d0, "arrowdblright", 0x21d2, "arrowdblup", 0x21d1, "arrowdown", 0x2193, "arrowdownleft", 0x2199, "arrowdownright", 0x2198, "arrowdownwhite", 0x21e9, "arrowheaddownmod", 0x02c5, "arrowheadleftmod", 0x02c2, "arrowheadrightmod", 0x02c3, "arrowheadupmod", 0x02c4, "arrowhorizex", 0xf8e7, "arrowleft", 0x2190, "arrowleftdbl", 0x21d0, "arrowleftdblstroke", 0x21cd, "arrowleftoverright", 0x21c6, "arrowleftwhite", 0x21e6, "arrowright", 0x2192, "arrowrightdblstroke", 0x21cf, "arrowrightheavy", 0x279e, "arrowrightoverleft", 0x21c4, "arrowrightwhite", 0x21e8, "arrowtableft", 0x21e4, "arrowtabright", 0x21e5, "arrowup", 0x2191, "arrowupdn", 0x2195, "arrowupdnbse", 0x21a8, "arrowupdownbase", 0x21a8, "arrowupleft", 0x2196, "arrowupleftofdown", 0x21c5, "arrowupright", 0x2197, "arrowupwhite", 0x21e7, "arrowvertex", 0xf8e6, "asciicircum", 0x005e, "asciicircummonospace", 0xff3e, "asciitilde", 0x007e, "asciitildemonospace", 0xff5e, "ascript", 0x0251, "ascriptturned", 0x0252, "asmallhiragana", 0x3041, "asmallkatakana", 0x30a1, "asmallkatakanahalfwidth", 0xff67, "asterisk", 0x002a, "asteriskaltonearabic", 0x066d, "asteriskarabic", 0x066d, "asteriskmath", 0x2217, "asteriskmonospace", 0xff0a, "asterisksmall", 0xfe61, "asterism", 0x2042, "asuperior", 0xf6e9, "asymptoticallyequal", 0x2243, "at", 0x0040, "atilde", 0x00e3, "atmonospace", 0xff20, "atsmall", 0xfe6b, "aturned", 0x0250, "aubengali", 0x0994, "aubopomofo", 0x3120, "audeva", 0x0914, "augujarati", 0x0a94, "augurmukhi", 0x0a14, "aulengthmarkbengali", 0x09d7, "aumatragurmukhi", 0x0a4c, "auvowelsignbengali", 0x09cc, "auvowelsigndeva", 0x094c, "auvowelsigngujarati", 0x0acc, "avagrahadeva", 0x093d, "aybarmenian", 0x0561, "ayin", 0x05e2, "ayinaltonehebrew", 0xfb20, "ayinhebrew", 0x05e2, "b", 0x0062, "babengali", 0x09ac, "backslash", 0x005c, "backslashmonospace", 0xff3c, "badeva", 0x092c, "bagujarati", 0x0aac, "bagurmukhi", 0x0a2c, "bahiragana", 0x3070, "bahtthai", 0x0e3f, "bakatakana", 0x30d0, "bar", 0x007c, "barmonospace", 0xff5c, "bbopomofo", 0x3105, "bcircle", 0x24d1, "bdotaccent", 0x1e03, "bdotbelow", 0x1e05, "beamedsixteenthnotes", 0x266c, "because", 0x2235, "becyrillic", 0x0431, "beharabic", 0x0628, "behfinalarabic", 0xfe90, "behinitialarabic", 0xfe91, "behiragana", 0x3079, "behmedialarabic", 0xfe92, "behmeeminitialarabic", 0xfc9f, "behmeemisolatedarabic", 0xfc08, "behnoonfinalarabic", 0xfc6d, "bekatakana", 0x30d9, "benarmenian", 0x0562, "bet", 0x05d1, "beta", 0x03b2, "betasymbolgreek", 0x03d0, "betdagesh", 0xfb31, "betdageshhebrew", 0xfb31, "bethebrew", 0x05d1, "betrafehebrew", 0xfb4c, "bhabengali", 0x09ad, "bhadeva", 0x092d, "bhagujarati", 0x0aad, "bhagurmukhi", 0x0a2d, "bhook", 0x0253, "bihiragana", 0x3073, "bikatakana", 0x30d3, "bilabialclick", 0x0298, "bindigurmukhi", 0x0a02, "birusquare", 0x3331, "blackcircle", 0x25cf, "blackdiamond", 0x25c6, "blackdownpointingtriangle", 0x25bc, "blackleftpointingpointer", 0x25c4, "blackleftpointingtriangle", 0x25c0, "blacklenticularbracketleft", 0x3010, "blacklenticularbracketleftvertical", 0xfe3b, "blacklenticularbracketright", 0x3011, "blacklenticularbracketrightvertical", 0xfe3c, "blacklowerlefttriangle", 0x25e3, "blacklowerrighttriangle", 0x25e2, "blackrectangle", 0x25ac, "blackrightpointingpointer", 0x25ba, "blackrightpointingtriangle", 0x25b6, "blacksmallsquare", 0x25aa, "blacksmilingface", 0x263b, "blacksquare", 0x25a0, "blackstar", 0x2605, "blackupperlefttriangle", 0x25e4, "blackupperrighttriangle", 0x25e5, "blackuppointingsmalltriangle", 0x25b4, "blackuppointingtriangle", 0x25b2, "blank", 0x2423, "blinebelow", 0x1e07, "block", 0x2588, "bmonospace", 0xff42, "bobaimaithai", 0x0e1a, "bohiragana", 0x307c, "bokatakana", 0x30dc, "bparen", 0x249d, "bqsquare", 0x33c3, "braceex", 0xf8f4, "braceleft", 0x007b, "braceleftbt", 0xf8f3, "braceleftmid", 0xf8f2, "braceleftmonospace", 0xff5b, "braceleftsmall", 0xfe5b, "bracelefttp", 0xf8f1, "braceleftvertical", 0xfe37, "braceright", 0x007d, "bracerightbt", 0xf8fe, "bracerightmid", 0xf8fd, "bracerightmonospace", 0xff5d, "bracerightsmall", 0xfe5c, "bracerighttp", 0xf8fc, "bracerightvertical", 0xfe38, "bracketleft", 0x005b, "bracketleftbt", 0xf8f0, "bracketleftex", 0xf8ef, "bracketleftmonospace", 0xff3b, "bracketlefttp", 0xf8ee, "bracketright", 0x005d, "bracketrightbt", 0xf8fb, "bracketrightex", 0xf8fa, "bracketrightmonospace", 0xff3d, "bracketrighttp", 0xf8f9, "breve", 0x02d8, "brevebelowcmb", 0x032e, "brevecmb", 0x0306, "breveinvertedbelowcmb", 0x032f, "breveinvertedcmb", 0x0311, "breveinverteddoublecmb", 0x0361, "bridgebelowcmb", 0x032a, "bridgeinvertedbelowcmb", 0x033a, "brokenbar", 0x00a6, "bstroke", 0x0180, "bsuperior", 0xf6ea, "btopbar", 0x0183, "buhiragana", 0x3076, "bukatakana", 0x30d6, "bullet", 0x2022, "bulletinverse", 0x25d8, "bulletoperator", 0x2219, "bullseye", 0x25ce, "c", 0x0063, "caarmenian", 0x056e, "cabengali", 0x099a, "cacute", 0x0107, "cadeva", 0x091a, "cagujarati", 0x0a9a, "cagurmukhi", 0x0a1a, "calsquare", 0x3388, "candrabindubengali", 0x0981, "candrabinducmb", 0x0310, "candrabindudeva", 0x0901, "candrabindugujarati", 0x0a81, "capslock", 0x21ea, "careof", 0x2105, "caron", 0x02c7, "caronbelowcmb", 0x032c, "caroncmb", 0x030c, "carriagereturn", 0x21b5, "cbopomofo", 0x3118, "ccaron", 0x010d, "ccedilla", 0x00e7, "ccedillaacute", 0x1e09, "ccircle", 0x24d2, "ccircumflex", 0x0109, "ccurl", 0x0255, "cdot", 0x010b, "cdotaccent", 0x010b, "cdsquare", 0x33c5, "cedilla", 0x00b8, "cedillacmb", 0x0327, "cent", 0x00a2, "centigrade", 0x2103, "centinferior", 0xf6df, "centmonospace", 0xffe0, "centoldstyle", 0xf7a2, "centsuperior", 0xf6e0, "chaarmenian", 0x0579, "chabengali", 0x099b, "chadeva", 0x091b, "chagujarati", 0x0a9b, "chagurmukhi", 0x0a1b, "chbopomofo", 0x3114, "cheabkhasiancyrillic", 0x04bd, "checkmark", 0x2713, "checyrillic", 0x0447, "chedescenderabkhasiancyrillic", 0x04bf, "chedescendercyrillic", 0x04b7, "chedieresiscyrillic", 0x04f5, "cheharmenian", 0x0573, "chekhakassiancyrillic", 0x04cc, "cheverticalstrokecyrillic", 0x04b9, "chi", 0x03c7, "chieuchacirclekorean", 0x3277, "chieuchaparenkorean", 0x3217, "chieuchcirclekorean", 0x3269, "chieuchkorean", 0x314a, "chieuchparenkorean", 0x3209, "chochangthai", 0x0e0a, "chochanthai", 0x0e08, "chochingthai", 0x0e09, "chochoethai", 0x0e0c, "chook", 0x0188, "cieucacirclekorean", 0x3276, "cieucaparenkorean", 0x3216, "cieuccirclekorean", 0x3268, "cieuckorean", 0x3148, "cieucparenkorean", 0x3208, "cieucuparenkorean", 0x321c, "circle", 0x25cb, "circlecopyrt", 0x00a9, "circlemultiply", 0x2297, "circleot", 0x2299, "circleplus", 0x2295, "circlepostalmark", 0x3036, "circlewithlefthalfblack", 0x25d0, "circlewithrighthalfblack", 0x25d1, "circumflex", 0x02c6, "circumflexbelowcmb", 0x032d, "circumflexcmb", 0x0302, "clear", 0x2327, "clickalveolar", 0x01c2, "clickdental", 0x01c0, "clicklateral", 0x01c1, "clickretroflex", 0x01c3, "club", 0x2663, "clubsuitblack", 0x2663, "clubsuitwhite", 0x2667, "cmcubedsquare", 0x33a4, "cmonospace", 0xff43, "cmsquaredsquare", 0x33a0, "coarmenian", 0x0581, "colon", 0x003a, "colonmonetary", 0x20a1, "colonmonospace", 0xff1a, "colonsign", 0x20a1, "colonsmall", 0xfe55, "colontriangularhalfmod", 0x02d1, "colontriangularmod", 0x02d0, "comma", 0x002c, "commaabovecmb", 0x0313, "commaaboverightcmb", 0x0315, "commaaccent", 0xf6c3, "commaarabic", 0x060c, "commaarmenian", 0x055d, "commainferior", 0xf6e1, "commamonospace", 0xff0c, "commareversedabovecmb", 0x0314, "commareversedmod", 0x02bd, "commasmall", 0xfe50, "commasuperior", 0xf6e2, "commaturnedabovecmb", 0x0312, "commaturnedmod", 0x02bb, "compass", 0x263c, "congruent", 0x2245, "contourintegral", 0x222e, "control", 0x2303, "controlACK", 0x0006, "controlBEL", 0x0007, "controlBS", 0x0008, "controlCAN", 0x0018, "controlCR", 0x000d, "controlDC1", 0x0011, "controlDC2", 0x0012, "controlDC3", 0x0013, "controlDC4", 0x0014, "controlDEL", 0x007f, "controlDLE", 0x0010, "controlEM", 0x0019, "controlENQ", 0x0005, "controlEOT", 0x0004, "controlESC", 0x001b, "controlETB", 0x0017, "controlETX", 0x0003, "controlFF", 0x000c, "controlFS", 0x001c, "controlGS", 0x001d, "controlHT", 0x0009, "controlLF", 0x000a, "controlNAK", 0x0015, "controlNULL", 0x0000, "controlRS", 0x001e, "controlSI", 0x000f, "controlSO", 0x000e, "controlSOT", 0x0002, "controlSTX", 0x0001, "controlSUB", 0x001a, "controlSYN", 0x0016, "controlUS", 0x001f, "controlVT", 0x000b, "copyright", 0x00a9, "copyrightsans", 0xf8e9, "copyrightserif", 0xf6d9, "cornerbracketleft", 0x300c, "cornerbracketlefthalfwidth", 0xff62, "cornerbracketleftvertical", 0xfe41, "cornerbracketright", 0x300d, "cornerbracketrighthalfwidth", 0xff63, "cornerbracketrightvertical", 0xfe42, "corporationsquare", 0x337f, "cosquare", 0x33c7, "coverkgsquare", 0x33c6, "cparen", 0x249e, "cruzeiro", 0x20a2, "cstretched", 0x0297, "curlyand", 0x22cf, "curlyor", 0x22ce, "currency", 0x00a4, "cyrBreve", 0xf6d1, "cyrFlex", 0xf6d2, "cyrbreve", 0xf6d4, "cyrflex", 0xf6d5, "d", 0x0064, "daarmenian", 0x0564, "dabengali", 0x09a6, "dadarabic", 0x0636, "dadeva", 0x0926, "dadfinalarabic", 0xfebe, "dadinitialarabic", 0xfebf, "dadmedialarabic", 0xfec0, "dagesh", 0x05bc, "dageshhebrew", 0x05bc, "dagger", 0x2020, "daggerdbl", 0x2021, "dagujarati", 0x0aa6, "dagurmukhi", 0x0a26, "dahiragana", 0x3060, "dakatakana", 0x30c0, "dalarabic", 0x062f, "dalet", 0x05d3, "daletdagesh", 0xfb33, "daletdageshhebrew", 0xfb33, "dalethebrew", 0x05d3, "dalfinalarabic", 0xfeaa, "dammaarabic", 0x064f, "dammalowarabic", 0x064f, "dammatanaltonearabic", 0x064c, "dammatanarabic", 0x064c, "danda", 0x0964, "dargahebrew", 0x05a7, "dargalefthebrew", 0x05a7, "dasiapneumatacyrilliccmb", 0x0485, "dblGrave", 0xf6d3, "dblanglebracketleft", 0x300a, "dblanglebracketleftvertical", 0xfe3d, "dblanglebracketright", 0x300b, "dblanglebracketrightvertical", 0xfe3e, "dblarchinvertedbelowcmb", 0x032b, "dblarrowleft", 0x21d4, "dblarrowright", 0x21d2, "dbldanda", 0x0965, "dblgrave", 0xf6d6, "dblgravecmb", 0x030f, "dblintegral", 0x222c, "dbllowline", 0x2017, "dbllowlinecmb", 0x0333, "dbloverlinecmb", 0x033f, "dblprimemod", 0x02ba, "dblverticalbar", 0x2016, "dblverticallineabovecmb", 0x030e, "dbopomofo", 0x3109, "dbsquare", 0x33c8, "dcaron", 0x010f, "dcedilla", 0x1e11, "dcircle", 0x24d3, "dcircumflexbelow", 0x1e13, "dcroat", 0x0111, "ddabengali", 0x09a1, "ddadeva", 0x0921, "ddagujarati", 0x0aa1, "ddagurmukhi", 0x0a21, "ddalarabic", 0x0688, "ddalfinalarabic", 0xfb89, "dddhadeva", 0x095c, "ddhabengali", 0x09a2, "ddhadeva", 0x0922, "ddhagujarati", 0x0aa2, "ddhagurmukhi", 0x0a22, "ddotaccent", 0x1e0b, "ddotbelow", 0x1e0d, "decimalseparatorarabic", 0x066b, "decimalseparatorpersian", 0x066b, "decyrillic", 0x0434, "degree", 0x00b0, "dehihebrew", 0x05ad, "dehiragana", 0x3067, "deicoptic", 0x03ef, "dekatakana", 0x30c7, "deleteleft", 0x232b, "deleteright", 0x2326, "delta", 0x03b4, "deltaturned", 0x018d, "denominatorminusonenumeratorbengali", 0x09f8, "dezh", 0x02a4, "dhabengali", 0x09a7, "dhadeva", 0x0927, "dhagujarati", 0x0aa7, "dhagurmukhi", 0x0a27, "dhook", 0x0257, "dialytikatonos", 0x0385, "dialytikatonoscmb", 0x0344, "diamond", 0x2666, "diamondsuitwhite", 0x2662, "dieresis", 0x00a8, "dieresisacute", 0xf6d7, "dieresisbelowcmb", 0x0324, "dieresiscmb", 0x0308, "dieresisgrave", 0xf6d8, "dieresistonos", 0x0385, "dihiragana", 0x3062, "dikatakana", 0x30c2, "dittomark", 0x3003, "divide", 0x00f7, "divides", 0x2223, "divisionslash", 0x2215, "djecyrillic", 0x0452, "dkshade", 0x2593, "dlinebelow", 0x1e0f, "dlsquare", 0x3397, "dmacron", 0x0111, "dmonospace", 0xff44, "dnblock", 0x2584, "dochadathai", 0x0e0e, "dodekthai", 0x0e14, "dohiragana", 0x3069, "dokatakana", 0x30c9, "dollar", 0x0024, "dollarinferior", 0xf6e3, "dollarmonospace", 0xff04, "dollaroldstyle", 0xf724, "dollarsmall", 0xfe69, "dollarsuperior", 0xf6e4, "dong", 0x20ab, "dorusquare", 0x3326, "dotaccent", 0x02d9, "dotaccentcmb", 0x0307, "dotbelowcmb", 0x0323, "dotbelowcomb", 0x0323, "dotkatakana", 0x30fb, "dotlessi", 0x0131, "dotlessj", 0xf6be, "dotlessjstrokehook", 0x0284, "dotmath", 0x22c5, "dottedcircle", 0x25cc, "doubleyodpatah", 0xfb1f, "doubleyodpatahhebrew", 0xfb1f, "downtackbelowcmb", 0x031e, "downtackmod", 0x02d5, "dparen", 0x249f, "dsuperior", 0xf6eb, "dtail", 0x0256, "dtopbar", 0x018c, "duhiragana", 0x3065, "dukatakana", 0x30c5, "dz", 0x01f3, "dzaltone", 0x02a3, "dzcaron", 0x01c6, "dzcurl", 0x02a5, "dzeabkhasiancyrillic", 0x04e1, "dzecyrillic", 0x0455, "dzhecyrillic", 0x045f, "e", 0x0065, "eacute", 0x00e9, "earth", 0x2641, "ebengali", 0x098f, "ebopomofo", 0x311c, "ebreve", 0x0115, "ecandradeva", 0x090d, "ecandragujarati", 0x0a8d, "ecandravowelsigndeva", 0x0945, "ecandravowelsigngujarati", 0x0ac5, "ecaron", 0x011b, "ecedillabreve", 0x1e1d, "echarmenian", 0x0565, "echyiwnarmenian", 0x0587, "ecircle", 0x24d4, "ecircumflex", 0x00ea, "ecircumflexacute", 0x1ebf, "ecircumflexbelow", 0x1e19, "ecircumflexdotbelow", 0x1ec7, "ecircumflexgrave", 0x1ec1, "ecircumflexhookabove", 0x1ec3, "ecircumflextilde", 0x1ec5, "ecyrillic", 0x0454, "edblgrave", 0x0205, "edeva", 0x090f, "edieresis", 0x00eb, "edot", 0x0117, "edotaccent", 0x0117, "edotbelow", 0x1eb9, "eegurmukhi", 0x0a0f, "eematragurmukhi", 0x0a47, "efcyrillic", 0x0444, "egrave", 0x00e8, "egujarati", 0x0a8f, "eharmenian", 0x0567, "ehbopomofo", 0x311d, "ehiragana", 0x3048, "ehookabove", 0x1ebb, "eibopomofo", 0x311f, "eight", 0x0038, "eightarabic", 0x0668, "eightbengali", 0x09ee, "eightcircle", 0x2467, "eightcircleinversesansserif", 0x2791, "eightdeva", 0x096e, "eighteencircle", 0x2471, "eighteenparen", 0x2485, "eighteenperiod", 0x2499, "eightgujarati", 0x0aee, "eightgurmukhi", 0x0a6e, "eighthackarabic", 0x0668, "eighthangzhou", 0x3028, "eighthnotebeamed", 0x266b, "eightideographicparen", 0x3227, "eightinferior", 0x2088, "eightmonospace", 0xff18, "eightoldstyle", 0xf738, "eightparen", 0x247b, "eightperiod", 0x248f, "eightpersian", 0x06f8, "eightroman", 0x2177, "eightsuperior", 0x2078, "eightthai", 0x0e58, "einvertedbreve", 0x0207, "eiotifiedcyrillic", 0x0465, "ekatakana", 0x30a8, "ekatakanahalfwidth", 0xff74, "ekonkargurmukhi", 0x0a74, "ekorean", 0x3154, "elcyrillic", 0x043b, "element", 0x2208, "elevencircle", 0x246a, "elevenparen", 0x247e, "elevenperiod", 0x2492, "elevenroman", 0x217a, "ellipsis", 0x2026, "ellipsisvertical", 0x22ee, "emacron", 0x0113, "emacronacute", 0x1e17, "emacrongrave", 0x1e15, "emcyrillic", 0x043c, "emdash", 0x2014, "emdashvertical", 0xfe31, "emonospace", 0xff45, "emphasismarkarmenian", 0x055b, "emptyset", 0x2205, "enbopomofo", 0x3123, "encyrillic", 0x043d, "endash", 0x2013, "endashvertical", 0xfe32, "endescendercyrillic", 0x04a3, "eng", 0x014b, "engbopomofo", 0x3125, "enghecyrillic", 0x04a5, "enhookcyrillic", 0x04c8, "enspace", 0x2002, "eogonek", 0x0119, "eokorean", 0x3153, "eopen", 0x025b, "eopenclosed", 0x029a, "eopenreversed", 0x025c, "eopenreversedclosed", 0x025e, "eopenreversedhook", 0x025d, "eparen", 0x24a0, "epsilon", 0x03b5, "epsilontonos", 0x03ad, "equal", 0x003d, "equalmonospace", 0xff1d, "equalsmall", 0xfe66, "equalsuperior", 0x207c, "equivalence", 0x2261, "erbopomofo", 0x3126, "ercyrillic", 0x0440, "ereversed", 0x0258, "ereversedcyrillic", 0x044d, "escyrillic", 0x0441, "esdescendercyrillic", 0x04ab, "esh", 0x0283, "eshcurl", 0x0286, "eshortdeva", 0x090e, "eshortvowelsigndeva", 0x0946, "eshreversedloop", 0x01aa, "eshsquatreversed", 0x0285, "esmallhiragana", 0x3047, "esmallkatakana", 0x30a7, "esmallkatakanahalfwidth", 0xff6a, "estimated", 0x212e, "esuperior", 0xf6ec, "eta", 0x03b7, "etarmenian", 0x0568, "etatonos", 0x03ae, "eth", 0x00f0, "etilde", 0x1ebd, "etildebelow", 0x1e1b, "etnahtafoukhhebrew", 0x0591, "etnahtafoukhlefthebrew", 0x0591, "etnahtahebrew", 0x0591, "etnahtalefthebrew", 0x0591, "eturned", 0x01dd, "eukorean", 0x3161, "euro", 0x20ac, "evowelsignbengali", 0x09c7, "evowelsigndeva", 0x0947, "evowelsigngujarati", 0x0ac7, "exclam", 0x0021, "exclamarmenian", 0x055c, "exclamdbl", 0x203c, "exclamdown", 0x00a1, "exclamdownsmall", 0xf7a1, "exclammonospace", 0xff01, "exclamsmall", 0xf721, "existential", 0x2203, "ezh", 0x0292, "ezhcaron", 0x01ef, "ezhcurl", 0x0293, "ezhreversed", 0x01b9, "ezhtail", 0x01ba, "f", 0x0066, "fadeva", 0x095e, "fagurmukhi", 0x0a5e, "fahrenheit", 0x2109, "fathaarabic", 0x064e, "fathalowarabic", 0x064e, "fathatanarabic", 0x064b, "fbopomofo", 0x3108, "fcircle", 0x24d5, "fdotaccent", 0x1e1f, "feharabic", 0x0641, "feharmenian", 0x0586, "fehfinalarabic", 0xfed2, "fehinitialarabic", 0xfed3, "fehmedialarabic", 0xfed4, "feicoptic", 0x03e5, "female", 0x2640, "ff", 0xfb00, "f_f", 0xfb00, "ffi", 0xfb03, "ffl", 0xfb04, "fi", 0xfb01, "fifteencircle", 0x246e, "fifteenparen", 0x2482, "fifteenperiod", 0x2496, "figuredash", 0x2012, "filledbox", 0x25a0, "filledrect", 0x25ac, "finalkaf", 0x05da, "finalkafdagesh", 0xfb3a, "finalkafdageshhebrew", 0xfb3a, "finalkafhebrew", 0x05da, "finalmem", 0x05dd, "finalmemhebrew", 0x05dd, "finalnun", 0x05df, "finalnunhebrew", 0x05df, "finalpe", 0x05e3, "finalpehebrew", 0x05e3, "finaltsadi", 0x05e5, "finaltsadihebrew", 0x05e5, "firsttonechinese", 0x02c9, "fisheye", 0x25c9, "fitacyrillic", 0x0473, "five", 0x0035, "fivearabic", 0x0665, "fivebengali", 0x09eb, "fivecircle", 0x2464, "fivecircleinversesansserif", 0x278e, "fivedeva", 0x096b, "fiveeighths", 0x215d, "fivegujarati", 0x0aeb, "fivegurmukhi", 0x0a6b, "fivehackarabic", 0x0665, "fivehangzhou", 0x3025, "fiveideographicparen", 0x3224, "fiveinferior", 0x2085, "fivemonospace", 0xff15, "fiveoldstyle", 0xf735, "fiveparen", 0x2478, "fiveperiod", 0x248c, "fivepersian", 0x06f5, "fiveroman", 0x2174, "fivesuperior", 0x2075, "fivethai", 0x0e55, "fl", 0xfb02, "florin", 0x0192, "fmonospace", 0xff46, "fmsquare", 0x3399, "fofanthai", 0x0e1f, "fofathai", 0x0e1d, "fongmanthai", 0x0e4f, "forall", 0x2200, "four", 0x0034, "fourarabic", 0x0664, "fourbengali", 0x09ea, "fourcircle", 0x2463, "fourcircleinversesansserif", 0x278d, "fourdeva", 0x096a, "fourgujarati", 0x0aea, "fourgurmukhi", 0x0a6a, "fourhackarabic", 0x0664, "fourhangzhou", 0x3024, "fourideographicparen", 0x3223, "fourinferior", 0x2084, "fourmonospace", 0xff14, "fournumeratorbengali", 0x09f7, "fouroldstyle", 0xf734, "fourparen", 0x2477, "fourperiod", 0x248b, "fourpersian", 0x06f4, "fourroman", 0x2173, "foursuperior", 0x2074, "fourteencircle", 0x246d, "fourteenparen", 0x2481, "fourteenperiod", 0x2495, "fourthai", 0x0e54, "fourthtonechinese", 0x02cb, "fparen", 0x24a1, "fraction", 0x2044, "franc", 0x20a3, "g", 0x0067, "gabengali", 0x0997, "gacute", 0x01f5, "gadeva", 0x0917, "gafarabic", 0x06af, "gaffinalarabic", 0xfb93, "gafinitialarabic", 0xfb94, "gafmedialarabic", 0xfb95, "gagujarati", 0x0a97, "gagurmukhi", 0x0a17, "gahiragana", 0x304c, "gakatakana", 0x30ac, "gamma", 0x03b3, "gammalatinsmall", 0x0263, "gammasuperior", 0x02e0, "gangiacoptic", 0x03eb, "gbopomofo", 0x310d, "gbreve", 0x011f, "gcaron", 0x01e7, "gcedilla", 0x0123, "gcircle", 0x24d6, "gcircumflex", 0x011d, "gcommaaccent", 0x0123, "gdot", 0x0121, "gdotaccent", 0x0121, "gecyrillic", 0x0433, "gehiragana", 0x3052, "gekatakana", 0x30b2, "geometricallyequal", 0x2251, "gereshaccenthebrew", 0x059c, "gereshhebrew", 0x05f3, "gereshmuqdamhebrew", 0x059d, "germandbls", 0x00df, "gershayimaccenthebrew", 0x059e, "gershayimhebrew", 0x05f4, "getamark", 0x3013, "ghabengali", 0x0998, "ghadarmenian", 0x0572, "ghadeva", 0x0918, "ghagujarati", 0x0a98, "ghagurmukhi", 0x0a18, "ghainarabic", 0x063a, "ghainfinalarabic", 0xfece, "ghaininitialarabic", 0xfecf, "ghainmedialarabic", 0xfed0, "ghemiddlehookcyrillic", 0x0495, "ghestrokecyrillic", 0x0493, "gheupturncyrillic", 0x0491, "ghhadeva", 0x095a, "ghhagurmukhi", 0x0a5a, "ghook", 0x0260, "ghzsquare", 0x3393, "gihiragana", 0x304e, "gikatakana", 0x30ae, "gimarmenian", 0x0563, "gimel", 0x05d2, "gimeldagesh", 0xfb32, "gimeldageshhebrew", 0xfb32, "gimelhebrew", 0x05d2, "gjecyrillic", 0x0453, "glottalinvertedstroke", 0x01be, "glottalstop", 0x0294, "glottalstopinverted", 0x0296, "glottalstopmod", 0x02c0, "glottalstopreversed", 0x0295, "glottalstopreversedmod", 0x02c1, "glottalstopreversedsuperior", 0x02e4, "glottalstopstroke", 0x02a1, "glottalstopstrokereversed", 0x02a2, "gmacron", 0x1e21, "gmonospace", 0xff47, "gohiragana", 0x3054, "gokatakana", 0x30b4, "gparen", 0x24a2, "gpasquare", 0x33ac, "gradient", 0x2207, "grave", 0x0060, "gravebelowcmb", 0x0316, "gravecmb", 0x0300, "gravecomb", 0x0300, "gravedeva", 0x0953, "gravelowmod", 0x02ce, "gravemonospace", 0xff40, "gravetonecmb", 0x0340, "greater", 0x003e, "greaterequal", 0x2265, "greaterequalorless", 0x22db, "greatermonospace", 0xff1e, "greaterorequivalent", 0x2273, "greaterorless", 0x2277, "greateroverequal", 0x2267, "greatersmall", 0xfe65, "gscript", 0x0261, "gstroke", 0x01e5, "guhiragana", 0x3050, "guillemotleft", 0x00ab, "guillemotright", 0x00bb, "guilsinglleft", 0x2039, "guilsinglright", 0x203a, "gukatakana", 0x30b0, "guramusquare", 0x3318, "gysquare", 0x33c9, "h", 0x0068, "haabkhasiancyrillic", 0x04a9, "haaltonearabic", 0x06c1, "habengali", 0x09b9, "hadescendercyrillic", 0x04b3, "hadeva", 0x0939, "hagujarati", 0x0ab9, "hagurmukhi", 0x0a39, "haharabic", 0x062d, "hahfinalarabic", 0xfea2, "hahinitialarabic", 0xfea3, "hahiragana", 0x306f, "hahmedialarabic", 0xfea4, "haitusquare", 0x332a, "hakatakana", 0x30cf, "hakatakanahalfwidth", 0xff8a, "halantgurmukhi", 0x0a4d, "hamzaarabic", 0x0621, "hamzalowarabic", 0x0621, "hangulfiller", 0x3164, "hardsigncyrillic", 0x044a, "harpoonleftbarbup", 0x21bc, "harpoonrightbarbup", 0x21c0, "hasquare", 0x33ca, "hatafpatah", 0x05b2, "hatafpatah16", 0x05b2, "hatafpatah23", 0x05b2, "hatafpatah2f", 0x05b2, "hatafpatahhebrew", 0x05b2, "hatafpatahnarrowhebrew", 0x05b2, "hatafpatahquarterhebrew", 0x05b2, "hatafpatahwidehebrew", 0x05b2, "hatafqamats", 0x05b3, "hatafqamats1b", 0x05b3, "hatafqamats28", 0x05b3, "hatafqamats34", 0x05b3, "hatafqamatshebrew", 0x05b3, "hatafqamatsnarrowhebrew", 0x05b3, "hatafqamatsquarterhebrew", 0x05b3, "hatafqamatswidehebrew", 0x05b3, "hatafsegol", 0x05b1, "hatafsegol17", 0x05b1, "hatafsegol24", 0x05b1, "hatafsegol30", 0x05b1, "hatafsegolhebrew", 0x05b1, "hatafsegolnarrowhebrew", 0x05b1, "hatafsegolquarterhebrew", 0x05b1, "hatafsegolwidehebrew", 0x05b1, "hbar", 0x0127, "hbopomofo", 0x310f, "hbrevebelow", 0x1e2b, "hcedilla", 0x1e29, "hcircle", 0x24d7, "hcircumflex", 0x0125, "hdieresis", 0x1e27, "hdotaccent", 0x1e23, "hdotbelow", 0x1e25, "he", 0x05d4, "heart", 0x2665, "heartsuitblack", 0x2665, "heartsuitwhite", 0x2661, "hedagesh", 0xfb34, "hedageshhebrew", 0xfb34, "hehaltonearabic", 0x06c1, "heharabic", 0x0647, "hehebrew", 0x05d4, "hehfinalaltonearabic", 0xfba7, "hehfinalalttwoarabic", 0xfeea, "hehfinalarabic", 0xfeea, "hehhamzaabovefinalarabic", 0xfba5, "hehhamzaaboveisolatedarabic", 0xfba4, "hehinitialaltonearabic", 0xfba8, "hehinitialarabic", 0xfeeb, "hehiragana", 0x3078, "hehmedialaltonearabic", 0xfba9, "hehmedialarabic", 0xfeec, "heiseierasquare", 0x337b, "hekatakana", 0x30d8, "hekatakanahalfwidth", 0xff8d, "hekutaarusquare", 0x3336, "henghook", 0x0267, "herutusquare", 0x3339, "het", 0x05d7, "hethebrew", 0x05d7, "hhook", 0x0266, "hhooksuperior", 0x02b1, "hieuhacirclekorean", 0x327b, "hieuhaparenkorean", 0x321b, "hieuhcirclekorean", 0x326d, "hieuhkorean", 0x314e, "hieuhparenkorean", 0x320d, "hihiragana", 0x3072, "hikatakana", 0x30d2, "hikatakanahalfwidth", 0xff8b, "hiriq", 0x05b4, "hiriq14", 0x05b4, "hiriq21", 0x05b4, "hiriq2d", 0x05b4, "hiriqhebrew", 0x05b4, "hiriqnarrowhebrew", 0x05b4, "hiriqquarterhebrew", 0x05b4, "hiriqwidehebrew", 0x05b4, "hlinebelow", 0x1e96, "hmonospace", 0xff48, "hoarmenian", 0x0570, "hohipthai", 0x0e2b, "hohiragana", 0x307b, "hokatakana", 0x30db, "hokatakanahalfwidth", 0xff8e, "holam", 0x05b9, "holam19", 0x05b9, "holam26", 0x05b9, "holam32", 0x05b9, "holamhebrew", 0x05b9, "holamnarrowhebrew", 0x05b9, "holamquarterhebrew", 0x05b9, "holamwidehebrew", 0x05b9, "honokhukthai", 0x0e2e, "hookabovecomb", 0x0309, "hookcmb", 0x0309, "hookpalatalizedbelowcmb", 0x0321, "hookretroflexbelowcmb", 0x0322, "hoonsquare", 0x3342, "horicoptic", 0x03e9, "horizontalbar", 0x2015, "horncmb", 0x031b, "hotsprings", 0x2668, "house", 0x2302, "hparen", 0x24a3, "hsuperior", 0x02b0, "hturned", 0x0265, "huhiragana", 0x3075, "huiitosquare", 0x3333, "hukatakana", 0x30d5, "hukatakanahalfwidth", 0xff8c, "hungarumlaut", 0x02dd, "hungarumlautcmb", 0x030b, "hv", 0x0195, "hyphen", 0x002d, "hypheninferior", 0xf6e5, "hyphenmonospace", 0xff0d, "hyphensmall", 0xfe63, "hyphensuperior", 0xf6e6, "hyphentwo", 0x2010, "i", 0x0069, "iacute", 0x00ed, "iacyrillic", 0x044f, "ibengali", 0x0987, "ibopomofo", 0x3127, "ibreve", 0x012d, "icaron", 0x01d0, "icircle", 0x24d8, "icircumflex", 0x00ee, "icyrillic", 0x0456, "idblgrave", 0x0209, "ideographearthcircle", 0x328f, "ideographfirecircle", 0x328b, "ideographicallianceparen", 0x323f, "ideographiccallparen", 0x323a, "ideographiccentrecircle", 0x32a5, "ideographicclose", 0x3006, "ideographiccomma", 0x3001, "ideographiccommaleft", 0xff64, "ideographiccongratulationparen", 0x3237, "ideographiccorrectcircle", 0x32a3, "ideographicearthparen", 0x322f, "ideographicenterpriseparen", 0x323d, "ideographicexcellentcircle", 0x329d, "ideographicfestivalparen", 0x3240, "ideographicfinancialcircle", 0x3296, "ideographicfinancialparen", 0x3236, "ideographicfireparen", 0x322b, "ideographichaveparen", 0x3232, "ideographichighcircle", 0x32a4, "ideographiciterationmark", 0x3005, "ideographiclaborcircle", 0x3298, "ideographiclaborparen", 0x3238, "ideographicleftcircle", 0x32a7, "ideographiclowcircle", 0x32a6, "ideographicmedicinecircle", 0x32a9, "ideographicmetalparen", 0x322e, "ideographicmoonparen", 0x322a, "ideographicnameparen", 0x3234, "ideographicperiod", 0x3002, "ideographicprintcircle", 0x329e, "ideographicreachparen", 0x3243, "ideographicrepresentparen", 0x3239, "ideographicresourceparen", 0x323e, "ideographicrightcircle", 0x32a8, "ideographicsecretcircle", 0x3299, "ideographicselfparen", 0x3242, "ideographicsocietyparen", 0x3233, "ideographicspace", 0x3000, "ideographicspecialparen", 0x3235, "ideographicstockparen", 0x3231, "ideographicstudyparen", 0x323b, "ideographicsunparen", 0x3230, "ideographicsuperviseparen", 0x323c, "ideographicwaterparen", 0x322c, "ideographicwoodparen", 0x322d, "ideographiczero", 0x3007, "ideographmetalcircle", 0x328e, "ideographmooncircle", 0x328a, "ideographnamecircle", 0x3294, "ideographsuncircle", 0x3290, "ideographwatercircle", 0x328c, "ideographwoodcircle", 0x328d, "ideva", 0x0907, "idieresis", 0x00ef, "idieresisacute", 0x1e2f, "idieresiscyrillic", 0x04e5, "idotbelow", 0x1ecb, "iebrevecyrillic", 0x04d7, "iecyrillic", 0x0435, "ieungacirclekorean", 0x3275, "ieungaparenkorean", 0x3215, "ieungcirclekorean", 0x3267, "ieungkorean", 0x3147, "ieungparenkorean", 0x3207, "igrave", 0x00ec, "igujarati", 0x0a87, "igurmukhi", 0x0a07, "ihiragana", 0x3044, "ihookabove", 0x1ec9, "iibengali", 0x0988, "iicyrillic", 0x0438, "iideva", 0x0908, "iigujarati", 0x0a88, "iigurmukhi", 0x0a08, "iimatragurmukhi", 0x0a40, "iinvertedbreve", 0x020b, "iishortcyrillic", 0x0439, "iivowelsignbengali", 0x09c0, "iivowelsigndeva", 0x0940, "iivowelsigngujarati", 0x0ac0, "ij", 0x0133, "ikatakana", 0x30a4, "ikatakanahalfwidth", 0xff72, "ikorean", 0x3163, "ilde", 0x02dc, "iluyhebrew", 0x05ac, "imacron", 0x012b, "imacroncyrillic", 0x04e3, "imageorapproximatelyequal", 0x2253, "imatragurmukhi", 0x0a3f, "imonospace", 0xff49, "increment", 0x2206, "infinity", 0x221e, "iniarmenian", 0x056b, "integral", 0x222b, "integralbottom", 0x2321, "integralbt", 0x2321, "integralex", 0xf8f5, "integraltop", 0x2320, "integraltp", 0x2320, "intersection", 0x2229, "intisquare", 0x3305, "invbullet", 0x25d8, "invcircle", 0x25d9, "invsmileface", 0x263b, "iocyrillic", 0x0451, "iogonek", 0x012f, "iota", 0x03b9, "iotadieresis", 0x03ca, "iotadieresistonos", 0x0390, "iotalatin", 0x0269, "iotatonos", 0x03af, "iparen", 0x24a4, "irigurmukhi", 0x0a72, "ismallhiragana", 0x3043, "ismallkatakana", 0x30a3, "ismallkatakanahalfwidth", 0xff68, "issharbengali", 0x09fa, "istroke", 0x0268, "isuperior", 0xf6ed, "iterationhiragana", 0x309d, "iterationkatakana", 0x30fd, "itilde", 0x0129, "itildebelow", 0x1e2d, "iubopomofo", 0x3129, "iucyrillic", 0x044e, "ivowelsignbengali", 0x09bf, "ivowelsigndeva", 0x093f, "ivowelsigngujarati", 0x0abf, "izhitsacyrillic", 0x0475, "izhitsadblgravecyrillic", 0x0477, "j", 0x006a, "jaarmenian", 0x0571, "jabengali", 0x099c, "jadeva", 0x091c, "jagujarati", 0x0a9c, "jagurmukhi", 0x0a1c, "jbopomofo", 0x3110, "jcaron", 0x01f0, "jcircle", 0x24d9, "jcircumflex", 0x0135, "jcrossedtail", 0x029d, "jdotlessstroke", 0x025f, "jecyrillic", 0x0458, "jeemarabic", 0x062c, "jeemfinalarabic", 0xfe9e, "jeeminitialarabic", 0xfe9f, "jeemmedialarabic", 0xfea0, "jeharabic", 0x0698, "jehfinalarabic", 0xfb8b, "jhabengali", 0x099d, "jhadeva", 0x091d, "jhagujarati", 0x0a9d, "jhagurmukhi", 0x0a1d, "jheharmenian", 0x057b, "jis", 0x3004, "jmonospace", 0xff4a, "jparen", 0x24a5, "jsuperior", 0x02b2, "k", 0x006b, "kabashkircyrillic", 0x04a1, "kabengali", 0x0995, "kacute", 0x1e31, "kacyrillic", 0x043a, "kadescendercyrillic", 0x049b, "kadeva", 0x0915, "kaf", 0x05db, "kafarabic", 0x0643, "kafdagesh", 0xfb3b, "kafdageshhebrew", 0xfb3b, "kaffinalarabic", 0xfeda, "kafhebrew", 0x05db, "kafinitialarabic", 0xfedb, "kafmedialarabic", 0xfedc, "kafrafehebrew", 0xfb4d, "kagujarati", 0x0a95, "kagurmukhi", 0x0a15, "kahiragana", 0x304b, "kahookcyrillic", 0x04c4, "kakatakana", 0x30ab, "kakatakanahalfwidth", 0xff76, "kappa", 0x03ba, "kappasymbolgreek", 0x03f0, "kapyeounmieumkorean", 0x3171, "kapyeounphieuphkorean", 0x3184, "kapyeounpieupkorean", 0x3178, "kapyeounssangpieupkorean", 0x3179, "karoriisquare", 0x330d, "kashidaautoarabic", 0x0640, "kashidaautonosidebearingarabic", 0x0640, "kasmallkatakana", 0x30f5, "kasquare", 0x3384, "kasraarabic", 0x0650, "kasratanarabic", 0x064d, "kastrokecyrillic", 0x049f, "katahiraprolongmarkhalfwidth", 0xff70, "kaverticalstrokecyrillic", 0x049d, "kbopomofo", 0x310e, "kcalsquare", 0x3389, "kcaron", 0x01e9, "kcedilla", 0x0137, "kcircle", 0x24da, "kcommaaccent", 0x0137, "kdotbelow", 0x1e33, "keharmenian", 0x0584, "kehiragana", 0x3051, "kekatakana", 0x30b1, "kekatakanahalfwidth", 0xff79, "kenarmenian", 0x056f, "kesmallkatakana", 0x30f6, "kgreenlandic", 0x0138, "khabengali", 0x0996, "khacyrillic", 0x0445, "khadeva", 0x0916, "khagujarati", 0x0a96, "khagurmukhi", 0x0a16, "khaharabic", 0x062e, "khahfinalarabic", 0xfea6, "khahinitialarabic", 0xfea7, "khahmedialarabic", 0xfea8, "kheicoptic", 0x03e7, "khhadeva", 0x0959, "khhagurmukhi", 0x0a59, "khieukhacirclekorean", 0x3278, "khieukhaparenkorean", 0x3218, "khieukhcirclekorean", 0x326a, "khieukhkorean", 0x314b, "khieukhparenkorean", 0x320a, "khokhaithai", 0x0e02, "khokhonthai", 0x0e05, "khokhuatthai", 0x0e03, "khokhwaithai", 0x0e04, "khomutthai", 0x0e5b, "khook", 0x0199, "khorakhangthai", 0x0e06, "khzsquare", 0x3391, "kihiragana", 0x304d, "kikatakana", 0x30ad, "kikatakanahalfwidth", 0xff77, "kiroguramusquare", 0x3315, "kiromeetorusquare", 0x3316, "kirosquare", 0x3314, "kiyeokacirclekorean", 0x326e, "kiyeokaparenkorean", 0x320e, "kiyeokcirclekorean", 0x3260, "kiyeokkorean", 0x3131, "kiyeokparenkorean", 0x3200, "kiyeoksioskorean", 0x3133, "kjecyrillic", 0x045c, "klinebelow", 0x1e35, "klsquare", 0x3398, "kmcubedsquare", 0x33a6, "kmonospace", 0xff4b, "kmsquaredsquare", 0x33a2, "kohiragana", 0x3053, "kohmsquare", 0x33c0, "kokaithai", 0x0e01, "kokatakana", 0x30b3, "kokatakanahalfwidth", 0xff7a, "kooposquare", 0x331e, "koppacyrillic", 0x0481, "koreanstandardsymbol", 0x327f, "koroniscmb", 0x0343, "kparen", 0x24a6, "kpasquare", 0x33aa, "ksicyrillic", 0x046f, "ktsquare", 0x33cf, "kturned", 0x029e, "kuhiragana", 0x304f, "kukatakana", 0x30af, "kukatakanahalfwidth", 0xff78, "kvsquare", 0x33b8, "kwsquare", 0x33be, "l", 0x006c, "labengali", 0x09b2, "lacute", 0x013a, "ladeva", 0x0932, "lagujarati", 0x0ab2, "lagurmukhi", 0x0a32, "lakkhangyaothai", 0x0e45, "lamaleffinalarabic", 0xfefc, "lamalefhamzaabovefinalarabic", 0xfef8, "lamalefhamzaaboveisolatedarabic", 0xfef7, "lamalefhamzabelowfinalarabic", 0xfefa, "lamalefhamzabelowisolatedarabic", 0xfef9, "lamalefisolatedarabic", 0xfefb, "lamalefmaddaabovefinalarabic", 0xfef6, "lamalefmaddaaboveisolatedarabic", 0xfef5, "lamarabic", 0x0644, "lambda", 0x03bb, "lambdastroke", 0x019b, "lamed", 0x05dc, "lameddagesh", 0xfb3c, "lameddageshhebrew", 0xfb3c, "lamedhebrew", 0x05dc, "lamfinalarabic", 0xfede, "lamhahinitialarabic", 0xfcca, "laminitialarabic", 0xfedf, "lamjeeminitialarabic", 0xfcc9, "lamkhahinitialarabic", 0xfccb, "lamlamhehisolatedarabic", 0xfdf2, "lammedialarabic", 0xfee0, "lammeemhahinitialarabic", 0xfd88, "lammeeminitialarabic", 0xfccc, "largecircle", 0x25ef, "lbar", 0x019a, "lbelt", 0x026c, "lbopomofo", 0x310c, "lcaron", 0x013e, "lcedilla", 0x013c, "lcircle", 0x24db, "lcircumflexbelow", 0x1e3d, "lcommaaccent", 0x013c, "ldot", 0x0140, "ldotaccent", 0x0140, "ldotbelow", 0x1e37, "ldotbelowmacron", 0x1e39, "leftangleabovecmb", 0x031a, "lefttackbelowcmb", 0x0318, "less", 0x003c, "lessequal", 0x2264, "lessequalorgreater", 0x22da, "lessmonospace", 0xff1c, "lessorequivalent", 0x2272, "lessorgreater", 0x2276, "lessoverequal", 0x2266, "lesssmall", 0xfe64, "lezh", 0x026e, "lfblock", 0x258c, "lhookretroflex", 0x026d, "lira", 0x20a4, "liwnarmenian", 0x056c, "lj", 0x01c9, "ljecyrillic", 0x0459, "ll", 0xf6c0, "lladeva", 0x0933, "llagujarati", 0x0ab3, "llinebelow", 0x1e3b, "llladeva", 0x0934, "llvocalicbengali", 0x09e1, "llvocalicdeva", 0x0961, "llvocalicvowelsignbengali", 0x09e3, "llvocalicvowelsigndeva", 0x0963, "lmiddletilde", 0x026b, "lmonospace", 0xff4c, "lmsquare", 0x33d0, "lochulathai", 0x0e2c, "logicaland", 0x2227, "logicalnot", 0x00ac, "logicalnotreversed", 0x2310, "logicalor", 0x2228, "lolingthai", 0x0e25, "longs", 0x017f, "lowlinecenterline", 0xfe4e, "lowlinecmb", 0x0332, "lowlinedashed", 0xfe4d, "lozenge", 0x25ca, "lparen", 0x24a7, "lslash", 0x0142, "lsquare", 0x2113, "lsuperior", 0xf6ee, "ltshade", 0x2591, "luthai", 0x0e26, "lvocalicbengali", 0x098c, "lvocalicdeva", 0x090c, "lvocalicvowelsignbengali", 0x09e2, "lvocalicvowelsigndeva", 0x0962, "lxsquare", 0x33d3, "m", 0x006d, "mabengali", 0x09ae, "macron", 0x00af, "macronbelowcmb", 0x0331, "macroncmb", 0x0304, "macronlowmod", 0x02cd, "macronmonospace", 0xffe3, "macute", 0x1e3f, "madeva", 0x092e, "magujarati", 0x0aae, "magurmukhi", 0x0a2e, "mahapakhhebrew", 0x05a4, "mahapakhlefthebrew", 0x05a4, "mahiragana", 0x307e, "maichattawalowleftthai", 0xf895, "maichattawalowrightthai", 0xf894, "maichattawathai", 0x0e4b, "maichattawaupperleftthai", 0xf893, "maieklowleftthai", 0xf88c, "maieklowrightthai", 0xf88b, "maiekthai", 0x0e48, "maiekupperleftthai", 0xf88a, "maihanakatleftthai", 0xf884, "maihanakatthai", 0x0e31, "maitaikhuleftthai", 0xf889, "maitaikhuthai", 0x0e47, "maitholowleftthai", 0xf88f, "maitholowrightthai", 0xf88e, "maithothai", 0x0e49, "maithoupperleftthai", 0xf88d, "maitrilowleftthai", 0xf892, "maitrilowrightthai", 0xf891, "maitrithai", 0x0e4a, "maitriupperleftthai", 0xf890, "maiyamokthai", 0x0e46, "makatakana", 0x30de, "makatakanahalfwidth", 0xff8f, "male", 0x2642, "mansyonsquare", 0x3347, "maqafhebrew", 0x05be, "mars", 0x2642, "masoracirclehebrew", 0x05af, "masquare", 0x3383, "mbopomofo", 0x3107, "mbsquare", 0x33d4, "mcircle", 0x24dc, "mcubedsquare", 0x33a5, "mdotaccent", 0x1e41, "mdotbelow", 0x1e43, "meemarabic", 0x0645, "meemfinalarabic", 0xfee2, "meeminitialarabic", 0xfee3, "meemmedialarabic", 0xfee4, "meemmeeminitialarabic", 0xfcd1, "meemmeemisolatedarabic", 0xfc48, "meetorusquare", 0x334d, "mehiragana", 0x3081, "meizierasquare", 0x337e, "mekatakana", 0x30e1, "mekatakanahalfwidth", 0xff92, "mem", 0x05de, "memdagesh", 0xfb3e, "memdageshhebrew", 0xfb3e, "memhebrew", 0x05de, "menarmenian", 0x0574, "merkhahebrew", 0x05a5, "merkhakefulahebrew", 0x05a6, "merkhakefulalefthebrew", 0x05a6, "merkhalefthebrew", 0x05a5, "mhook", 0x0271, "mhzsquare", 0x3392, "middledotkatakanahalfwidth", 0xff65, "middot", 0x00b7, "mieumacirclekorean", 0x3272, "mieumaparenkorean", 0x3212, "mieumcirclekorean", 0x3264, "mieumkorean", 0x3141, "mieumpansioskorean", 0x3170, "mieumparenkorean", 0x3204, "mieumpieupkorean", 0x316e, "mieumsioskorean", 0x316f, "mihiragana", 0x307f, "mikatakana", 0x30df, "mikatakanahalfwidth", 0xff90, "minus", 0x2212, "minusbelowcmb", 0x0320, "minuscircle", 0x2296, "minusmod", 0x02d7, "minusplus", 0x2213, "minute", 0x2032, "miribaarusquare", 0x334a, "mirisquare", 0x3349, "mlonglegturned", 0x0270, "mlsquare", 0x3396, "mmcubedsquare", 0x33a3, "mmonospace", 0xff4d, "mmsquaredsquare", 0x339f, "mohiragana", 0x3082, "mohmsquare", 0x33c1, "mokatakana", 0x30e2, "mokatakanahalfwidth", 0xff93, "molsquare", 0x33d6, "momathai", 0x0e21, "moverssquare", 0x33a7, "moverssquaredsquare", 0x33a8, "mparen", 0x24a8, "mpasquare", 0x33ab, "mssquare", 0x33b3, "msuperior", 0xf6ef, "mturned", 0x026f, "mu", 0x00b5, "mu1", 0x00b5, "muasquare", 0x3382, "muchgreater", 0x226b, "muchless", 0x226a, "mufsquare", 0x338c, "mugreek", 0x03bc, "mugsquare", 0x338d, "muhiragana", 0x3080, "mukatakana", 0x30e0, "mukatakanahalfwidth", 0xff91, "mulsquare", 0x3395, "multiply", 0x00d7, "mumsquare", 0x339b, "munahhebrew", 0x05a3, "munahlefthebrew", 0x05a3, "musicalnote", 0x266a, "musicalnotedbl", 0x266b, "musicflatsign", 0x266d, "musicsharpsign", 0x266f, "mussquare", 0x33b2, "muvsquare", 0x33b6, "muwsquare", 0x33bc, "mvmegasquare", 0x33b9, "mvsquare", 0x33b7, "mwmegasquare", 0x33bf, "mwsquare", 0x33bd, "n", 0x006e, "nabengali", 0x09a8, "nabla", 0x2207, "nacute", 0x0144, "nadeva", 0x0928, "nagujarati", 0x0aa8, "nagurmukhi", 0x0a28, "nahiragana", 0x306a, "nakatakana", 0x30ca, "nakatakanahalfwidth", 0xff85, "napostrophe", 0x0149, "nasquare", 0x3381, "nbopomofo", 0x310b, "nbspace", 0x00a0, "ncaron", 0x0148, "ncedilla", 0x0146, "ncircle", 0x24dd, "ncircumflexbelow", 0x1e4b, "ncommaaccent", 0x0146, "ndotaccent", 0x1e45, "ndotbelow", 0x1e47, "nehiragana", 0x306d, "nekatakana", 0x30cd, "nekatakanahalfwidth", 0xff88, "newsheqelsign", 0x20aa, "nfsquare", 0x338b, "ngabengali", 0x0999, "ngadeva", 0x0919, "ngagujarati", 0x0a99, "ngagurmukhi", 0x0a19, "ngonguthai", 0x0e07, "nhiragana", 0x3093, "nhookleft", 0x0272, "nhookretroflex", 0x0273, "nieunacirclekorean", 0x326f, "nieunaparenkorean", 0x320f, "nieuncieuckorean", 0x3135, "nieuncirclekorean", 0x3261, "nieunhieuhkorean", 0x3136, "nieunkorean", 0x3134, "nieunpansioskorean", 0x3168, "nieunparenkorean", 0x3201, "nieunsioskorean", 0x3167, "nieuntikeutkorean", 0x3166, "nihiragana", 0x306b, "nikatakana", 0x30cb, "nikatakanahalfwidth", 0xff86, "nikhahitleftthai", 0xf899, "nikhahitthai", 0x0e4d, "nine", 0x0039, "ninearabic", 0x0669, "ninebengali", 0x09ef, "ninecircle", 0x2468, "ninecircleinversesansserif", 0x2792, "ninedeva", 0x096f, "ninegujarati", 0x0aef, "ninegurmukhi", 0x0a6f, "ninehackarabic", 0x0669, "ninehangzhou", 0x3029, "nineideographicparen", 0x3228, "nineinferior", 0x2089, "ninemonospace", 0xff19, "nineoldstyle", 0xf739, "nineparen", 0x247c, "nineperiod", 0x2490, "ninepersian", 0x06f9, "nineroman", 0x2178, "ninesuperior", 0x2079, "nineteencircle", 0x2472, "nineteenparen", 0x2486, "nineteenperiod", 0x249a, "ninethai", 0x0e59, "nj", 0x01cc, "njecyrillic", 0x045a, "nkatakana", 0x30f3, "nkatakanahalfwidth", 0xff9d, "nlegrightlong", 0x019e, "nlinebelow", 0x1e49, "nmonospace", 0xff4e, "nmsquare", 0x339a, "nnabengali", 0x09a3, "nnadeva", 0x0923, "nnagujarati", 0x0aa3, "nnagurmukhi", 0x0a23, "nnnadeva", 0x0929, "nohiragana", 0x306e, "nokatakana", 0x30ce, "nokatakanahalfwidth", 0xff89, "nonbreakingspace", 0x00a0, "nonenthai", 0x0e13, "nonuthai", 0x0e19, "noonarabic", 0x0646, "noonfinalarabic", 0xfee6, "noonghunnaarabic", 0x06ba, "noonghunnafinalarabic", 0xfb9f, "nooninitialarabic", 0xfee7, "noonjeeminitialarabic", 0xfcd2, "noonjeemisolatedarabic", 0xfc4b, "noonmedialarabic", 0xfee8, "noonmeeminitialarabic", 0xfcd5, "noonmeemisolatedarabic", 0xfc4e, "noonnoonfinalarabic", 0xfc8d, "notcontains", 0x220c, "notelement", 0x2209, "notelementof", 0x2209, "notequal", 0x2260, "notgreater", 0x226f, "notgreaternorequal", 0x2271, "notgreaternorless", 0x2279, "notidentical", 0x2262, "notless", 0x226e, "notlessnorequal", 0x2270, "notparallel", 0x2226, "notprecedes", 0x2280, "notsubset", 0x2284, "notsucceeds", 0x2281, "notsuperset", 0x2285, "nowarmenian", 0x0576, "nparen", 0x24a9, "nssquare", 0x33b1, "nsuperior", 0x207f, "ntilde", 0x00f1, "nu", 0x03bd, "nuhiragana", 0x306c, "nukatakana", 0x30cc, "nukatakanahalfwidth", 0xff87, "nuktabengali", 0x09bc, "nuktadeva", 0x093c, "nuktagujarati", 0x0abc, "nuktagurmukhi", 0x0a3c, "numbersign", 0x0023, "numbersignmonospace", 0xff03, "numbersignsmall", 0xfe5f, "numeralsigngreek", 0x0374, "numeralsignlowergreek", 0x0375, "numero", 0x2116, "nun", 0x05e0, "nundagesh", 0xfb40, "nundageshhebrew", 0xfb40, "nunhebrew", 0x05e0, "nvsquare", 0x33b5, "nwsquare", 0x33bb, "nyabengali", 0x099e, "nyadeva", 0x091e, "nyagujarati", 0x0a9e, "nyagurmukhi", 0x0a1e, "o", 0x006f, "oacute", 0x00f3, "oangthai", 0x0e2d, "obarred", 0x0275, "obarredcyrillic", 0x04e9, "obarreddieresiscyrillic", 0x04eb, "obengali", 0x0993, "obopomofo", 0x311b, "obreve", 0x014f, "ocandradeva", 0x0911, "ocandragujarati", 0x0a91, "ocandravowelsigndeva", 0x0949, "ocandravowelsigngujarati", 0x0ac9, "ocaron", 0x01d2, "ocircle", 0x24de, "ocircumflex", 0x00f4, "ocircumflexacute", 0x1ed1, "ocircumflexdotbelow", 0x1ed9, "ocircumflexgrave", 0x1ed3, "ocircumflexhookabove", 0x1ed5, "ocircumflextilde", 0x1ed7, "ocyrillic", 0x043e, "odblacute", 0x0151, "odblgrave", 0x020d, "odeva", 0x0913, "odieresis", 0x00f6, "odieresiscyrillic", 0x04e7, "odotbelow", 0x1ecd, "oe", 0x0153, "oekorean", 0x315a, "ogonek", 0x02db, "ogonekcmb", 0x0328, "ograve", 0x00f2, "ogujarati", 0x0a93, "oharmenian", 0x0585, "ohiragana", 0x304a, "ohookabove", 0x1ecf, "ohorn", 0x01a1, "ohornacute", 0x1edb, "ohorndotbelow", 0x1ee3, "ohorngrave", 0x1edd, "ohornhookabove", 0x1edf, "ohorntilde", 0x1ee1, "ohungarumlaut", 0x0151, "oi", 0x01a3, "oinvertedbreve", 0x020f, "okatakana", 0x30aa, "okatakanahalfwidth", 0xff75, "okorean", 0x3157, "olehebrew", 0x05ab, "omacron", 0x014d, "omacronacute", 0x1e53, "omacrongrave", 0x1e51, "omdeva", 0x0950, "omega", 0x03c9, "omega1", 0x03d6, "omegacyrillic", 0x0461, "omegalatinclosed", 0x0277, "omegaroundcyrillic", 0x047b, "omegatitlocyrillic", 0x047d, "omegatonos", 0x03ce, "omgujarati", 0x0ad0, "omicron", 0x03bf, "omicrontonos", 0x03cc, "omonospace", 0xff4f, "one", 0x0031, "onearabic", 0x0661, "onebengali", 0x09e7, "onecircle", 0x2460, "onecircleinversesansserif", 0x278a, "onedeva", 0x0967, "onedotenleader", 0x2024, "oneeighth", 0x215b, "onefitted", 0xf6dc, "onegujarati", 0x0ae7, "onegurmukhi", 0x0a67, "onehackarabic", 0x0661, "onehalf", 0x00bd, "onehangzhou", 0x3021, "oneideographicparen", 0x3220, "oneinferior", 0x2081, "onemonospace", 0xff11, "onenumeratorbengali", 0x09f4, "oneoldstyle", 0xf731, "oneparen", 0x2474, "oneperiod", 0x2488, "onepersian", 0x06f1, "onequarter", 0x00bc, "oneroman", 0x2170, "onesuperior", 0x00b9, "onethai", 0x0e51, "onethird", 0x2153, "oogonek", 0x01eb, "oogonekmacron", 0x01ed, "oogurmukhi", 0x0a13, "oomatragurmukhi", 0x0a4b, "oopen", 0x0254, "oparen", 0x24aa, "openbullet", 0x25e6, "option", 0x2325, "ordfeminine", 0x00aa, "ordmasculine", 0x00ba, "orthogonal", 0x221f, "oshortdeva", 0x0912, "oshortvowelsigndeva", 0x094a, "oslash", 0x00f8, "oslashacute", 0x01ff, "osmallhiragana", 0x3049, "osmallkatakana", 0x30a9, "osmallkatakanahalfwidth", 0xff6b, "ostrokeacute", 0x01ff, "osuperior", 0xf6f0, "otcyrillic", 0x047f, "otilde", 0x00f5, "otildeacute", 0x1e4d, "otildedieresis", 0x1e4f, "oubopomofo", 0x3121, "overline", 0x203e, "overlinecenterline", 0xfe4a, "overlinecmb", 0x0305, "overlinedashed", 0xfe49, "overlinedblwavy", 0xfe4c, "overlinewavy", 0xfe4b, "overscore", 0x00af, "ovowelsignbengali", 0x09cb, "ovowelsigndeva", 0x094b, "ovowelsigngujarati", 0x0acb, "p", 0x0070, "paampssquare", 0x3380, "paasentosquare", 0x332b, "pabengali", 0x09aa, "pacute", 0x1e55, "padeva", 0x092a, "pagedown", 0x21df, "pageup", 0x21de, "pagujarati", 0x0aaa, "pagurmukhi", 0x0a2a, "pahiragana", 0x3071, "paiyannoithai", 0x0e2f, "pakatakana", 0x30d1, "palatalizationcyrilliccmb", 0x0484, "palochkacyrillic", 0x04c0, "pansioskorean", 0x317f, "paragraph", 0x00b6, "parallel", 0x2225, "parenleft", 0x0028, "parenleftaltonearabic", 0xfd3e, "parenleftbt", 0xf8ed, "parenleftex", 0xf8ec, "parenleftinferior", 0x208d, "parenleftmonospace", 0xff08, "parenleftsmall", 0xfe59, "parenleftsuperior", 0x207d, "parenlefttp", 0xf8eb, "parenleftvertical", 0xfe35, "parenright", 0x0029, "parenrightaltonearabic", 0xfd3f, "parenrightbt", 0xf8f8, "parenrightex", 0xf8f7, "parenrightinferior", 0x208e, "parenrightmonospace", 0xff09, "parenrightsmall", 0xfe5a, "parenrightsuperior", 0x207e, "parenrighttp", 0xf8f6, "parenrightvertical", 0xfe36, "partialdiff", 0x2202, "paseqhebrew", 0x05c0, "pashtahebrew", 0x0599, "pasquare", 0x33a9, "patah", 0x05b7, "patah11", 0x05b7, "patah1d", 0x05b7, "patah2a", 0x05b7, "patahhebrew", 0x05b7, "patahnarrowhebrew", 0x05b7, "patahquarterhebrew", 0x05b7, "patahwidehebrew", 0x05b7, "pazerhebrew", 0x05a1, "pbopomofo", 0x3106, "pcircle", 0x24df, "pdotaccent", 0x1e57, "pe", 0x05e4, "pecyrillic", 0x043f, "pedagesh", 0xfb44, "pedageshhebrew", 0xfb44, "peezisquare", 0x333b, "pefinaldageshhebrew", 0xfb43, "peharabic", 0x067e, "peharmenian", 0x057a, "pehebrew", 0x05e4, "pehfinalarabic", 0xfb57, "pehinitialarabic", 0xfb58, "pehiragana", 0x307a, "pehmedialarabic", 0xfb59, "pekatakana", 0x30da, "pemiddlehookcyrillic", 0x04a7, "perafehebrew", 0xfb4e, "percent", 0x0025, "percentarabic", 0x066a, "percentmonospace", 0xff05, "percentsmall", 0xfe6a, "period", 0x002e, "periodarmenian", 0x0589, "periodcentered", 0x00b7, "periodhalfwidth", 0xff61, "periodinferior", 0xf6e7, "periodmonospace", 0xff0e, "periodsmall", 0xfe52, "periodsuperior", 0xf6e8, "perispomenigreekcmb", 0x0342, "perpendicular", 0x22a5, "perthousand", 0x2030, "peseta", 0x20a7, "pfsquare", 0x338a, "phabengali", 0x09ab, "phadeva", 0x092b, "phagujarati", 0x0aab, "phagurmukhi", 0x0a2b, "phi", 0x03c6, "phi1", 0x03d5, "phieuphacirclekorean", 0x327a, "phieuphaparenkorean", 0x321a, "phieuphcirclekorean", 0x326c, "phieuphkorean", 0x314d, "phieuphparenkorean", 0x320c, "philatin", 0x0278, "phinthuthai", 0x0e3a, "phisymbolgreek", 0x03d5, "phook", 0x01a5, "phophanthai", 0x0e1e, "phophungthai", 0x0e1c, "phosamphaothai", 0x0e20, "pi", 0x03c0, "pieupacirclekorean", 0x3273, "pieupaparenkorean", 0x3213, "pieupcieuckorean", 0x3176, "pieupcirclekorean", 0x3265, "pieupkiyeokkorean", 0x3172, "pieupkorean", 0x3142, "pieupparenkorean", 0x3205, "pieupsioskiyeokkorean", 0x3174, "pieupsioskorean", 0x3144, "pieupsiostikeutkorean", 0x3175, "pieupthieuthkorean", 0x3177, "pieuptikeutkorean", 0x3173, "pihiragana", 0x3074, "pikatakana", 0x30d4, "pisymbolgreek", 0x03d6, "piwrarmenian", 0x0583, "plus", 0x002b, "plusbelowcmb", 0x031f, "pluscircle", 0x2295, "plusminus", 0x00b1, "plusmod", 0x02d6, "plusmonospace", 0xff0b, "plussmall", 0xfe62, "plussuperior", 0x207a, "pmonospace", 0xff50, "pmsquare", 0x33d8, "pohiragana", 0x307d, "pointingindexdownwhite", 0x261f, "pointingindexleftwhite", 0x261c, "pointingindexrightwhite", 0x261e, "pointingindexupwhite", 0x261d, "pokatakana", 0x30dd, "poplathai", 0x0e1b, "postalmark", 0x3012, "postalmarkface", 0x3020, "pparen", 0x24ab, "precedes", 0x227a, "prescription", 0x211e, "primemod", 0x02b9, "primereversed", 0x2035, "product", 0x220f, "projective", 0x2305, "prolongedkana", 0x30fc, "propellor", 0x2318, "propersubset", 0x2282, "propersuperset", 0x2283, "proportion", 0x2237, "proportional", 0x221d, "psi", 0x03c8, "psicyrillic", 0x0471, "psilipneumatacyrilliccmb", 0x0486, "pssquare", 0x33b0, "puhiragana", 0x3077, "pukatakana", 0x30d7, "pvsquare", 0x33b4, "pwsquare", 0x33ba, "q", 0x0071, "qadeva", 0x0958, "qadmahebrew", 0x05a8, "qafarabic", 0x0642, "qaffinalarabic", 0xfed6, "qafinitialarabic", 0xfed7, "qafmedialarabic", 0xfed8, "qamats", 0x05b8, "qamats10", 0x05b8, "qamats1a", 0x05b8, "qamats1c", 0x05b8, "qamats27", 0x05b8, "qamats29", 0x05b8, "qamats33", 0x05b8, "qamatsde", 0x05b8, "qamatshebrew", 0x05b8, "qamatsnarrowhebrew", 0x05b8, "qamatsqatanhebrew", 0x05b8, "qamatsqatannarrowhebrew", 0x05b8, "qamatsqatanquarterhebrew", 0x05b8, "qamatsqatanwidehebrew", 0x05b8, "qamatsquarterhebrew", 0x05b8, "qamatswidehebrew", 0x05b8, "qarneyparahebrew", 0x059f, "qbopomofo", 0x3111, "qcircle", 0x24e0, "qhook", 0x02a0, "qmonospace", 0xff51, "qof", 0x05e7, "qofdagesh", 0xfb47, "qofdageshhebrew", 0xfb47, "qofhebrew", 0x05e7, "qparen", 0x24ac, "quarternote", 0x2669, "qubuts", 0x05bb, "qubuts18", 0x05bb, "qubuts25", 0x05bb, "qubuts31", 0x05bb, "qubutshebrew", 0x05bb, "qubutsnarrowhebrew", 0x05bb, "qubutsquarterhebrew", 0x05bb, "qubutswidehebrew", 0x05bb, "question", 0x003f, "questionarabic", 0x061f, "questionarmenian", 0x055e, "questiondown", 0x00bf, "questiondownsmall", 0xf7bf, "questiongreek", 0x037e, "questionmonospace", 0xff1f, "questionsmall", 0xf73f, "quotedbl", 0x0022, "quotedblbase", 0x201e, "quotedblleft", 0x201c, "quotedblmonospace", 0xff02, "quotedblprime", 0x301e, "quotedblprimereversed", 0x301d, "quotedblright", 0x201d, "quoteleft", 0x2018, "quoteleftreversed", 0x201b, "quotereversed", 0x201b, "quoteright", 0x2019, "quoterightn", 0x0149, "quotesinglbase", 0x201a, "quotesingle", 0x0027, "quotesinglemonospace", 0xff07, "r", 0x0072, "raarmenian", 0x057c, "rabengali", 0x09b0, "racute", 0x0155, "radeva", 0x0930, "radical", 0x221a, "radicalex", 0xf8e5, "radoverssquare", 0x33ae, "radoverssquaredsquare", 0x33af, "radsquare", 0x33ad, "rafe", 0x05bf, "rafehebrew", 0x05bf, "ragujarati", 0x0ab0, "ragurmukhi", 0x0a30, "rahiragana", 0x3089, "rakatakana", 0x30e9, "rakatakanahalfwidth", 0xff97, "ralowerdiagonalbengali", 0x09f1, "ramiddlediagonalbengali", 0x09f0, "ramshorn", 0x0264, "ratio", 0x2236, "rbopomofo", 0x3116, "rcaron", 0x0159, "rcedilla", 0x0157, "rcircle", 0x24e1, "rcommaaccent", 0x0157, "rdblgrave", 0x0211, "rdotaccent", 0x1e59, "rdotbelow", 0x1e5b, "rdotbelowmacron", 0x1e5d, "referencemark", 0x203b, "reflexsubset", 0x2286, "reflexsuperset", 0x2287, "registered", 0x00ae, "registersans", 0xf8e8, "registerserif", 0xf6da, "reharabic", 0x0631, "reharmenian", 0x0580, "rehfinalarabic", 0xfeae, "rehiragana", 0x308c, "rekatakana", 0x30ec, "rekatakanahalfwidth", 0xff9a, "resh", 0x05e8, "reshdageshhebrew", 0xfb48, "reshhebrew", 0x05e8, "reversedtilde", 0x223d, "reviahebrew", 0x0597, "reviamugrashhebrew", 0x0597, "revlogicalnot", 0x2310, "rfishhook", 0x027e, "rfishhookreversed", 0x027f, "rhabengali", 0x09dd, "rhadeva", 0x095d, "rho", 0x03c1, "rhook", 0x027d, "rhookturned", 0x027b, "rhookturnedsuperior", 0x02b5, "rhosymbolgreek", 0x03f1, "rhotichookmod", 0x02de, "rieulacirclekorean", 0x3271, "rieulaparenkorean", 0x3211, "rieulcirclekorean", 0x3263, "rieulhieuhkorean", 0x3140, "rieulkiyeokkorean", 0x313a, "rieulkiyeoksioskorean", 0x3169, "rieulkorean", 0x3139, "rieulmieumkorean", 0x313b, "rieulpansioskorean", 0x316c, "rieulparenkorean", 0x3203, "rieulphieuphkorean", 0x313f, "rieulpieupkorean", 0x313c, "rieulpieupsioskorean", 0x316b, "rieulsioskorean", 0x313d, "rieulthieuthkorean", 0x313e, "rieultikeutkorean", 0x316a, "rieulyeorinhieuhkorean", 0x316d, "rightangle", 0x221f, "righttackbelowcmb", 0x0319, "righttriangle", 0x22bf, "rihiragana", 0x308a, "rikatakana", 0x30ea, "rikatakanahalfwidth", 0xff98, "ring", 0x02da, "ringbelowcmb", 0x0325, "ringcmb", 0x030a, "ringhalfleft", 0x02bf, "ringhalfleftarmenian", 0x0559, "ringhalfleftbelowcmb", 0x031c, "ringhalfleftcentered", 0x02d3, "ringhalfright", 0x02be, "ringhalfrightbelowcmb", 0x0339, "ringhalfrightcentered", 0x02d2, "rinvertedbreve", 0x0213, "rittorusquare", 0x3351, "rlinebelow", 0x1e5f, "rlongleg", 0x027c, "rlonglegturned", 0x027a, "rmonospace", 0xff52, "rohiragana", 0x308d, "rokatakana", 0x30ed, "rokatakanahalfwidth", 0xff9b, "roruathai", 0x0e23, "rparen", 0x24ad, "rrabengali", 0x09dc, "rradeva", 0x0931, "rragurmukhi", 0x0a5c, "rreharabic", 0x0691, "rrehfinalarabic", 0xfb8d, "rrvocalicbengali", 0x09e0, "rrvocalicdeva", 0x0960, "rrvocalicgujarati", 0x0ae0, "rrvocalicvowelsignbengali", 0x09c4, "rrvocalicvowelsigndeva", 0x0944, "rrvocalicvowelsigngujarati", 0x0ac4, "rsuperior", 0xf6f1, "rtblock", 0x2590, "rturned", 0x0279, "rturnedsuperior", 0x02b4, "ruhiragana", 0x308b, "rukatakana", 0x30eb, "rukatakanahalfwidth", 0xff99, "rupeemarkbengali", 0x09f2, "rupeesignbengali", 0x09f3, "rupiah", 0xf6dd, "ruthai", 0x0e24, "rvocalicbengali", 0x098b, "rvocalicdeva", 0x090b, "rvocalicgujarati", 0x0a8b, "rvocalicvowelsignbengali", 0x09c3, "rvocalicvowelsigndeva", 0x0943, "rvocalicvowelsigngujarati", 0x0ac3, "s", 0x0073, "sabengali", 0x09b8, "sacute", 0x015b, "sacutedotaccent", 0x1e65, "sadarabic", 0x0635, "sadeva", 0x0938, "sadfinalarabic", 0xfeba, "sadinitialarabic", 0xfebb, "sadmedialarabic", 0xfebc, "sagujarati", 0x0ab8, "sagurmukhi", 0x0a38, "sahiragana", 0x3055, "sakatakana", 0x30b5, "sakatakanahalfwidth", 0xff7b, "sallallahoualayhewasallamarabic", 0xfdfa, "samekh", 0x05e1, "samekhdagesh", 0xfb41, "samekhdageshhebrew", 0xfb41, "samekhhebrew", 0x05e1, "saraaathai", 0x0e32, "saraaethai", 0x0e41, "saraaimaimalaithai", 0x0e44, "saraaimaimuanthai", 0x0e43, "saraamthai", 0x0e33, "saraathai", 0x0e30, "saraethai", 0x0e40, "saraiileftthai", 0xf886, "saraiithai", 0x0e35, "saraileftthai", 0xf885, "saraithai", 0x0e34, "saraothai", 0x0e42, "saraueeleftthai", 0xf888, "saraueethai", 0x0e37, "saraueleftthai", 0xf887, "sarauethai", 0x0e36, "sarauthai", 0x0e38, "sarauuthai", 0x0e39, "sbopomofo", 0x3119, "scaron", 0x0161, "scarondotaccent", 0x1e67, "scedilla", 0x015f, "schwa", 0x0259, "schwacyrillic", 0x04d9, "schwadieresiscyrillic", 0x04db, "schwahook", 0x025a, "scircle", 0x24e2, "scircumflex", 0x015d, "scommaaccent", 0x0219, "sdotaccent", 0x1e61, "sdotbelow", 0x1e63, "sdotbelowdotaccent", 0x1e69, "seagullbelowcmb", 0x033c, "second", 0x2033, "secondtonechinese", 0x02ca, "section", 0x00a7, "seenarabic", 0x0633, "seenfinalarabic", 0xfeb2, "seeninitialarabic", 0xfeb3, "seenmedialarabic", 0xfeb4, "segol", 0x05b6, "segol13", 0x05b6, "segol1f", 0x05b6, "segol2c", 0x05b6, "segolhebrew", 0x05b6, "segolnarrowhebrew", 0x05b6, "segolquarterhebrew", 0x05b6, "segoltahebrew", 0x0592, "segolwidehebrew", 0x05b6, "seharmenian", 0x057d, "sehiragana", 0x305b, "sekatakana", 0x30bb, "sekatakanahalfwidth", 0xff7e, "semicolon", 0x003b, "semicolonarabic", 0x061b, "semicolonmonospace", 0xff1b, "semicolonsmall", 0xfe54, "semivoicedmarkkana", 0x309c, "semivoicedmarkkanahalfwidth", 0xff9f, "sentisquare", 0x3322, "sentosquare", 0x3323, "seven", 0x0037, "sevenarabic", 0x0667, "sevenbengali", 0x09ed, "sevencircle", 0x2466, "sevencircleinversesansserif", 0x2790, "sevendeva", 0x096d, "seveneighths", 0x215e, "sevengujarati", 0x0aed, "sevengurmukhi", 0x0a6d, "sevenhackarabic", 0x0667, "sevenhangzhou", 0x3027, "sevenideographicparen", 0x3226, "seveninferior", 0x2087, "sevenmonospace", 0xff17, "sevenoldstyle", 0xf737, "sevenparen", 0x247a, "sevenperiod", 0x248e, "sevenpersian", 0x06f7, "sevenroman", 0x2176, "sevensuperior", 0x2077, "seventeencircle", 0x2470, "seventeenparen", 0x2484, "seventeenperiod", 0x2498, "seventhai", 0x0e57, "sfthyphen", 0x00ad, "shaarmenian", 0x0577, "shabengali", 0x09b6, "shacyrillic", 0x0448, "shaddaarabic", 0x0651, "shaddadammaarabic", 0xfc61, "shaddadammatanarabic", 0xfc5e, "shaddafathaarabic", 0xfc60, "shaddakasraarabic", 0xfc62, "shaddakasratanarabic", 0xfc5f, "shade", 0x2592, "shadedark", 0x2593, "shadelight", 0x2591, "shademedium", 0x2592, "shadeva", 0x0936, "shagujarati", 0x0ab6, "shagurmukhi", 0x0a36, "shalshelethebrew", 0x0593, "shbopomofo", 0x3115, "shchacyrillic", 0x0449, "sheenarabic", 0x0634, "sheenfinalarabic", 0xfeb6, "sheeninitialarabic", 0xfeb7, "sheenmedialarabic", 0xfeb8, "sheicoptic", 0x03e3, "sheqel", 0x20aa, "sheqelhebrew", 0x20aa, "sheva", 0x05b0, "sheva115", 0x05b0, "sheva15", 0x05b0, "sheva22", 0x05b0, "sheva2e", 0x05b0, "shevahebrew", 0x05b0, "shevanarrowhebrew", 0x05b0, "shevaquarterhebrew", 0x05b0, "shevawidehebrew", 0x05b0, "shhacyrillic", 0x04bb, "shimacoptic", 0x03ed, "shin", 0x05e9, "shindagesh", 0xfb49, "shindageshhebrew", 0xfb49, "shindageshshindot", 0xfb2c, "shindageshshindothebrew", 0xfb2c, "shindageshsindot", 0xfb2d, "shindageshsindothebrew", 0xfb2d, "shindothebrew", 0x05c1, "shinhebrew", 0x05e9, "shinshindot", 0xfb2a, "shinshindothebrew", 0xfb2a, "shinsindot", 0xfb2b, "shinsindothebrew", 0xfb2b, "shook", 0x0282, "sigma", 0x03c3, "sigma1", 0x03c2, "sigmafinal", 0x03c2, "sigmalunatesymbolgreek", 0x03f2, "sihiragana", 0x3057, "sikatakana", 0x30b7, "sikatakanahalfwidth", 0xff7c, "siluqhebrew", 0x05bd, "siluqlefthebrew", 0x05bd, "similar", 0x223c, "sindothebrew", 0x05c2, "siosacirclekorean", 0x3274, "siosaparenkorean", 0x3214, "sioscieuckorean", 0x317e, "sioscirclekorean", 0x3266, "sioskiyeokkorean", 0x317a, "sioskorean", 0x3145, "siosnieunkorean", 0x317b, "siosparenkorean", 0x3206, "siospieupkorean", 0x317d, "siostikeutkorean", 0x317c, "six", 0x0036, "sixarabic", 0x0666, "sixbengali", 0x09ec, "sixcircle", 0x2465, "sixcircleinversesansserif", 0x278f, "sixdeva", 0x096c, "sixgujarati", 0x0aec, "sixgurmukhi", 0x0a6c, "sixhackarabic", 0x0666, "sixhangzhou", 0x3026, "sixideographicparen", 0x3225, "sixinferior", 0x2086, "sixmonospace", 0xff16, "sixoldstyle", 0xf736, "sixparen", 0x2479, "sixperiod", 0x248d, "sixpersian", 0x06f6, "sixroman", 0x2175, "sixsuperior", 0x2076, "sixteencircle", 0x246f, "sixteencurrencydenominatorbengali", 0x09f9, "sixteenparen", 0x2483, "sixteenperiod", 0x2497, "sixthai", 0x0e56, "slash", 0x002f, "slashmonospace", 0xff0f, "slong", 0x017f, "slongdotaccent", 0x1e9b, "smileface", 0x263a, "smonospace", 0xff53, "sofpasuqhebrew", 0x05c3, "softhyphen", 0x00ad, "softsigncyrillic", 0x044c, "sohiragana", 0x305d, "sokatakana", 0x30bd, "sokatakanahalfwidth", 0xff7f, "soliduslongoverlaycmb", 0x0338, "solidusshortoverlaycmb", 0x0337, "sorusithai", 0x0e29, "sosalathai", 0x0e28, "sosothai", 0x0e0b, "sosuathai", 0x0e2a, "space", 0x0020, "spacehackarabic", 0x0020, "spade", 0x2660, "spadesuitblack", 0x2660, "spadesuitwhite", 0x2664, "sparen", 0x24ae, "squarebelowcmb", 0x033b, "squarecc", 0x33c4, "squarecm", 0x339d, "squarediagonalcrosshatchfill", 0x25a9, "squarehorizontalfill", 0x25a4, "squarekg", 0x338f, "squarekm", 0x339e, "squarekmcapital", 0x33ce, "squareln", 0x33d1, "squarelog", 0x33d2, "squaremg", 0x338e, "squaremil", 0x33d5, "squaremm", 0x339c, "squaremsquared", 0x33a1, "squareorthogonalcrosshatchfill", 0x25a6, "squareupperlefttolowerrightfill", 0x25a7, "squareupperrighttolowerleftfill", 0x25a8, "squareverticalfill", 0x25a5, "squarewhitewithsmallblack", 0x25a3, "srsquare", 0x33db, "ssabengali", 0x09b7, "ssadeva", 0x0937, "ssagujarati", 0x0ab7, "ssangcieuckorean", 0x3149, "ssanghieuhkorean", 0x3185, "ssangieungkorean", 0x3180, "ssangkiyeokkorean", 0x3132, "ssangnieunkorean", 0x3165, "ssangpieupkorean", 0x3143, "ssangsioskorean", 0x3146, "ssangtikeutkorean", 0x3138, "ssuperior", 0xf6f2, "sterling", 0x00a3, "sterlingmonospace", 0xffe1, "strokelongoverlaycmb", 0x0336, "strokeshortoverlaycmb", 0x0335, "subset", 0x2282, "subsetnotequal", 0x228a, "subsetorequal", 0x2286, "succeeds", 0x227b, "suchthat", 0x220b, "suhiragana", 0x3059, "sukatakana", 0x30b9, "sukatakanahalfwidth", 0xff7d, "sukunarabic", 0x0652, "summation", 0x2211, "sun", 0x263c, "superset", 0x2283, "supersetnotequal", 0x228b, "supersetorequal", 0x2287, "svsquare", 0x33dc, "syouwaerasquare", 0x337c, "t", 0x0074, "tabengali", 0x09a4, "tackdown", 0x22a4, "tackleft", 0x22a3, "tadeva", 0x0924, "tagujarati", 0x0aa4, "tagurmukhi", 0x0a24, "taharabic", 0x0637, "tahfinalarabic", 0xfec2, "tahinitialarabic", 0xfec3, "tahiragana", 0x305f, "tahmedialarabic", 0xfec4, "taisyouerasquare", 0x337d, "takatakana", 0x30bf, "takatakanahalfwidth", 0xff80, "tatweelarabic", 0x0640, "tau", 0x03c4, "tav", 0x05ea, "tavdages", 0xfb4a, "tavdagesh", 0xfb4a, "tavdageshhebrew", 0xfb4a, "tavhebrew", 0x05ea, "tbar", 0x0167, "tbopomofo", 0x310a, "tcaron", 0x0165, "tccurl", 0x02a8, "tcedilla", 0x0163, "tcheharabic", 0x0686, "tchehfinalarabic", 0xfb7b, "tchehinitialarabic", 0xfb7c, "tchehmedialarabic", 0xfb7d, "tcircle", 0x24e3, "tcircumflexbelow", 0x1e71, "tcommaaccent", 0x0163, "tdieresis", 0x1e97, "tdotaccent", 0x1e6b, "tdotbelow", 0x1e6d, "tecyrillic", 0x0442, "tedescendercyrillic", 0x04ad, "teharabic", 0x062a, "tehfinalarabic", 0xfe96, "tehhahinitialarabic", 0xfca2, "tehhahisolatedarabic", 0xfc0c, "tehinitialarabic", 0xfe97, "tehiragana", 0x3066, "tehjeeminitialarabic", 0xfca1, "tehjeemisolatedarabic", 0xfc0b, "tehmarbutaarabic", 0x0629, "tehmarbutafinalarabic", 0xfe94, "tehmedialarabic", 0xfe98, "tehmeeminitialarabic", 0xfca4, "tehmeemisolatedarabic", 0xfc0e, "tehnoonfinalarabic", 0xfc73, "tekatakana", 0x30c6, "tekatakanahalfwidth", 0xff83, "telephone", 0x2121, "telephoneblack", 0x260e, "telishagedolahebrew", 0x05a0, "telishaqetanahebrew", 0x05a9, "tencircle", 0x2469, "tenideographicparen", 0x3229, "tenparen", 0x247d, "tenperiod", 0x2491, "tenroman", 0x2179, "tesh", 0x02a7, "tet", 0x05d8, "tetdagesh", 0xfb38, "tetdageshhebrew", 0xfb38, "tethebrew", 0x05d8, "tetsecyrillic", 0x04b5, "tevirhebrew", 0x059b, "tevirlefthebrew", 0x059b, "thabengali", 0x09a5, "thadeva", 0x0925, "thagujarati", 0x0aa5, "thagurmukhi", 0x0a25, "thalarabic", 0x0630, "thalfinalarabic", 0xfeac, "thanthakhatlowleftthai", 0xf898, "thanthakhatlowrightthai", 0xf897, "thanthakhatthai", 0x0e4c, "thanthakhatupperleftthai", 0xf896, "theharabic", 0x062b, "thehfinalarabic", 0xfe9a, "thehinitialarabic", 0xfe9b, "thehmedialarabic", 0xfe9c, "thereexists", 0x2203, "therefore", 0x2234, "theta", 0x03b8, "theta1", 0x03d1, "thetasymbolgreek", 0x03d1, "thieuthacirclekorean", 0x3279, "thieuthaparenkorean", 0x3219, "thieuthcirclekorean", 0x326b, "thieuthkorean", 0x314c, "thieuthparenkorean", 0x320b, "thirteencircle", 0x246c, "thirteenparen", 0x2480, "thirteenperiod", 0x2494, "thonangmonthothai", 0x0e11, "thook", 0x01ad, "thophuthaothai", 0x0e12, "thorn", 0x00fe, "thothahanthai", 0x0e17, "thothanthai", 0x0e10, "thothongthai", 0x0e18, "thothungthai", 0x0e16, "thousandcyrillic", 0x0482, "thousandsseparatorarabic", 0x066c, "thousandsseparatorpersian", 0x066c, "three", 0x0033, "threearabic", 0x0663, "threebengali", 0x09e9, "threecircle", 0x2462, "threecircleinversesansserif", 0x278c, "threedeva", 0x0969, "threeeighths", 0x215c, "threegujarati", 0x0ae9, "threegurmukhi", 0x0a69, "threehackarabic", 0x0663, "threehangzhou", 0x3023, "threeideographicparen", 0x3222, "threeinferior", 0x2083, "threemonospace", 0xff13, "threenumeratorbengali", 0x09f6, "threeoldstyle", 0xf733, "threeparen", 0x2476, "threeperiod", 0x248a, "threepersian", 0x06f3, "threequarters", 0x00be, "threequartersemdash", 0xf6de, "threeroman", 0x2172, "threesuperior", 0x00b3, "threethai", 0x0e53, "thzsquare", 0x3394, "tihiragana", 0x3061, "tikatakana", 0x30c1, "tikatakanahalfwidth", 0xff81, "tikeutacirclekorean", 0x3270, "tikeutaparenkorean", 0x3210, "tikeutcirclekorean", 0x3262, "tikeutkorean", 0x3137, "tikeutparenkorean", 0x3202, "tilde", 0x02dc, "tildebelowcmb", 0x0330, "tildecmb", 0x0303, "tildecomb", 0x0303, "tildedoublecmb", 0x0360, "tildeoperator", 0x223c, "tildeoverlaycmb", 0x0334, "tildeverticalcmb", 0x033e, "timescircle", 0x2297, "tipehahebrew", 0x0596, "tipehalefthebrew", 0x0596, "tippigurmukhi", 0x0a70, "titlocyrilliccmb", 0x0483, "tiwnarmenian", 0x057f, "tlinebelow", 0x1e6f, "tmonospace", 0xff54, "toarmenian", 0x0569, "tohiragana", 0x3068, "tokatakana", 0x30c8, "tokatakanahalfwidth", 0xff84, "tonebarextrahighmod", 0x02e5, "tonebarextralowmod", 0x02e9, "tonebarhighmod", 0x02e6, "tonebarlowmod", 0x02e8, "tonebarmidmod", 0x02e7, "tonefive", 0x01bd, "tonesix", 0x0185, "tonetwo", 0x01a8, "tonos", 0x0384, "tonsquare", 0x3327, "topatakthai", 0x0e0f, "tortoiseshellbracketleft", 0x3014, "tortoiseshellbracketleftsmall", 0xfe5d, "tortoiseshellbracketleftvertical", 0xfe39, "tortoiseshellbracketright", 0x3015, "tortoiseshellbracketrightsmall", 0xfe5e, "tortoiseshellbracketrightvertical", 0xfe3a, "totaothai", 0x0e15, "tpalatalhook", 0x01ab, "tparen", 0x24af, "trademark", 0x2122, "trademarksans", 0xf8ea, "trademarkserif", 0xf6db, "tretroflexhook", 0x0288, "triagdn", 0x25bc, "triaglf", 0x25c4, "triagrt", 0x25ba, "triagup", 0x25b2, "ts", 0x02a6, "tsadi", 0x05e6, "tsadidagesh", 0xfb46, "tsadidageshhebrew", 0xfb46, "tsadihebrew", 0x05e6, "tsecyrillic", 0x0446, "tsere", 0x05b5, "tsere12", 0x05b5, "tsere1e", 0x05b5, "tsere2b", 0x05b5, "tserehebrew", 0x05b5, "tserenarrowhebrew", 0x05b5, "tserequarterhebrew", 0x05b5, "tserewidehebrew", 0x05b5, "tshecyrillic", 0x045b, "tsuperior", 0xf6f3, "ttabengali", 0x099f, "ttadeva", 0x091f, "ttagujarati", 0x0a9f, "ttagurmukhi", 0x0a1f, "tteharabic", 0x0679, "ttehfinalarabic", 0xfb67, "ttehinitialarabic", 0xfb68, "ttehmedialarabic", 0xfb69, "tthabengali", 0x09a0, "tthadeva", 0x0920, "tthagujarati", 0x0aa0, "tthagurmukhi", 0x0a20, "tturned", 0x0287, "tuhiragana", 0x3064, "tukatakana", 0x30c4, "tukatakanahalfwidth", 0xff82, "tusmallhiragana", 0x3063, "tusmallkatakana", 0x30c3, "tusmallkatakanahalfwidth", 0xff6f, "twelvecircle", 0x246b, "twelveparen", 0x247f, "twelveperiod", 0x2493, "twelveroman", 0x217b, "twentycircle", 0x2473, "twentyhangzhou", 0x5344, "twentyparen", 0x2487, "twentyperiod", 0x249b, "two", 0x0032, "twoarabic", 0x0662, "twobengali", 0x09e8, "twocircle", 0x2461, "twocircleinversesansserif", 0x278b, "twodeva", 0x0968, "twodotenleader", 0x2025, "twodotleader", 0x2025, "twodotleadervertical", 0xfe30, "twogujarati", 0x0ae8, "twogurmukhi", 0x0a68, "twohackarabic", 0x0662, "twohangzhou", 0x3022, "twoideographicparen", 0x3221, "twoinferior", 0x2082, "twomonospace", 0xff12, "twonumeratorbengali", 0x09f5, "twooldstyle", 0xf732, "twoparen", 0x2475, "twoperiod", 0x2489, "twopersian", 0x06f2, "tworoman", 0x2171, "twostroke", 0x01bb, "twosuperior", 0x00b2, "twothai", 0x0e52, "twothirds", 0x2154, "u", 0x0075, "uacute", 0x00fa, "ubar", 0x0289, "ubengali", 0x0989, "ubopomofo", 0x3128, "ubreve", 0x016d, "ucaron", 0x01d4, "ucircle", 0x24e4, "ucircumflex", 0x00fb, "ucircumflexbelow", 0x1e77, "ucyrillic", 0x0443, "udattadeva", 0x0951, "udblacute", 0x0171, "udblgrave", 0x0215, "udeva", 0x0909, "udieresis", 0x00fc, "udieresisacute", 0x01d8, "udieresisbelow", 0x1e73, "udieresiscaron", 0x01da, "udieresiscyrillic", 0x04f1, "udieresisgrave", 0x01dc, "udieresismacron", 0x01d6, "udotbelow", 0x1ee5, "ugrave", 0x00f9, "ugujarati", 0x0a89, "ugurmukhi", 0x0a09, "uhiragana", 0x3046, "uhookabove", 0x1ee7, "uhorn", 0x01b0, "uhornacute", 0x1ee9, "uhorndotbelow", 0x1ef1, "uhorngrave", 0x1eeb, "uhornhookabove", 0x1eed, "uhorntilde", 0x1eef, "uhungarumlaut", 0x0171, "uhungarumlautcyrillic", 0x04f3, "uinvertedbreve", 0x0217, "ukatakana", 0x30a6, "ukatakanahalfwidth", 0xff73, "ukcyrillic", 0x0479, "ukorean", 0x315c, "umacron", 0x016b, "umacroncyrillic", 0x04ef, "umacrondieresis", 0x1e7b, "umatragurmukhi", 0x0a41, "umonospace", 0xff55, "underscore", 0x005f, "underscoredbl", 0x2017, "underscoremonospace", 0xff3f, "underscorevertical", 0xfe33, "underscorewavy", 0xfe4f, "union", 0x222a, "universal", 0x2200, "uogonek", 0x0173, "uparen", 0x24b0, "upblock", 0x2580, "upperdothebrew", 0x05c4, "upsilon", 0x03c5, "upsilondieresis", 0x03cb, "upsilondieresistonos", 0x03b0, "upsilonlatin", 0x028a, "upsilontonos", 0x03cd, "uptackbelowcmb", 0x031d, "uptackmod", 0x02d4, "uragurmukhi", 0x0a73, "uring", 0x016f, "ushortcyrillic", 0x045e, "usmallhiragana", 0x3045, "usmallkatakana", 0x30a5, "usmallkatakanahalfwidth", 0xff69, "ustraightcyrillic", 0x04af, "ustraightstrokecyrillic", 0x04b1, "utilde", 0x0169, "utildeacute", 0x1e79, "utildebelow", 0x1e75, "uubengali", 0x098a, "uudeva", 0x090a, "uugujarati", 0x0a8a, "uugurmukhi", 0x0a0a, "uumatragurmukhi", 0x0a42, "uuvowelsignbengali", 0x09c2, "uuvowelsigndeva", 0x0942, "uuvowelsigngujarati", 0x0ac2, "uvowelsignbengali", 0x09c1, "uvowelsigndeva", 0x0941, "uvowelsigngujarati", 0x0ac1, "v", 0x0076, "vadeva", 0x0935, "vagujarati", 0x0ab5, "vagurmukhi", 0x0a35, "vakatakana", 0x30f7, "vav", 0x05d5, "vavdagesh", 0xfb35, "vavdagesh65", 0xfb35, "vavdageshhebrew", 0xfb35, "vavhebrew", 0x05d5, "vavholam", 0xfb4b, "vavholamhebrew", 0xfb4b, "vavvavhebrew", 0x05f0, "vavyodhebrew", 0x05f1, "vcircle", 0x24e5, "vdotbelow", 0x1e7f, "vecyrillic", 0x0432, "veharabic", 0x06a4, "vehfinalarabic", 0xfb6b, "vehinitialarabic", 0xfb6c, "vehmedialarabic", 0xfb6d, "vekatakana", 0x30f9, "venus", 0x2640, "verticalbar", 0x007c, "verticallineabovecmb", 0x030d, "verticallinebelowcmb", 0x0329, "verticallinelowmod", 0x02cc, "verticallinemod", 0x02c8, "vewarmenian", 0x057e, "vhook", 0x028b, "vikatakana", 0x30f8, "viramabengali", 0x09cd, "viramadeva", 0x094d, "viramagujarati", 0x0acd, "visargabengali", 0x0983, "visargadeva", 0x0903, "visargagujarati", 0x0a83, "vmonospace", 0xff56, "voarmenian", 0x0578, "voicediterationhiragana", 0x309e, "voicediterationkatakana", 0x30fe, "voicedmarkkana", 0x309b, "voicedmarkkanahalfwidth", 0xff9e, "vokatakana", 0x30fa, "vparen", 0x24b1, "vtilde", 0x1e7d, "vturned", 0x028c, "vuhiragana", 0x3094, "vukatakana", 0x30f4, "w", 0x0077, "wacute", 0x1e83, "waekorean", 0x3159, "wahiragana", 0x308f, "wakatakana", 0x30ef, "wakatakanahalfwidth", 0xff9c, "wakorean", 0x3158, "wasmallhiragana", 0x308e, "wasmallkatakana", 0x30ee, "wattosquare", 0x3357, "wavedash", 0x301c, "wavyunderscorevertical", 0xfe34, "wawarabic", 0x0648, "wawfinalarabic", 0xfeee, "wawhamzaabovearabic", 0x0624, "wawhamzaabovefinalarabic", 0xfe86, "wbsquare", 0x33dd, "wcircle", 0x24e6, "wcircumflex", 0x0175, "wdieresis", 0x1e85, "wdotaccent", 0x1e87, "wdotbelow", 0x1e89, "wehiragana", 0x3091, "weierstrass", 0x2118, "wekatakana", 0x30f1, "wekorean", 0x315e, "weokorean", 0x315d, "wgrave", 0x1e81, "whitebullet", 0x25e6, "whitecircle", 0x25cb, "whitecircleinverse", 0x25d9, "whitecornerbracketleft", 0x300e, "whitecornerbracketleftvertical", 0xfe43, "whitecornerbracketright", 0x300f, "whitecornerbracketrightvertical", 0xfe44, "whitediamond", 0x25c7, "whitediamondcontainingblacksmalldiamond", 0x25c8, "whitedownpointingsmalltriangle", 0x25bf, "whitedownpointingtriangle", 0x25bd, "whiteleftpointingsmalltriangle", 0x25c3, "whiteleftpointingtriangle", 0x25c1, "whitelenticularbracketleft", 0x3016, "whitelenticularbracketright", 0x3017, "whiterightpointingsmalltriangle", 0x25b9, "whiterightpointingtriangle", 0x25b7, "whitesmallsquare", 0x25ab, "whitesmilingface", 0x263a, "whitesquare", 0x25a1, "whitestar", 0x2606, "whitetelephone", 0x260f, "whitetortoiseshellbracketleft", 0x3018, "whitetortoiseshellbracketright", 0x3019, "whiteuppointingsmalltriangle", 0x25b5, "whiteuppointingtriangle", 0x25b3, "wihiragana", 0x3090, "wikatakana", 0x30f0, "wikorean", 0x315f, "wmonospace", 0xff57, "wohiragana", 0x3092, "wokatakana", 0x30f2, "wokatakanahalfwidth", 0xff66, "won", 0x20a9, "wonmonospace", 0xffe6, "wowaenthai", 0x0e27, "wparen", 0x24b2, "wring", 0x1e98, "wsuperior", 0x02b7, "wturned", 0x028d, "wynn", 0x01bf, "x", 0x0078, "xabovecmb", 0x033d, "xbopomofo", 0x3112, "xcircle", 0x24e7, "xdieresis", 0x1e8d, "xdotaccent", 0x1e8b, "xeharmenian", 0x056d, "xi", 0x03be, "xmonospace", 0xff58, "xparen", 0x24b3, "xsuperior", 0x02e3, "y", 0x0079, "yaadosquare", 0x334e, "yabengali", 0x09af, "yacute", 0x00fd, "yadeva", 0x092f, "yaekorean", 0x3152, "yagujarati", 0x0aaf, "yagurmukhi", 0x0a2f, "yahiragana", 0x3084, "yakatakana", 0x30e4, "yakatakanahalfwidth", 0xff94, "yakorean", 0x3151, "yamakkanthai", 0x0e4e, "yasmallhiragana", 0x3083, "yasmallkatakana", 0x30e3, "yasmallkatakanahalfwidth", 0xff6c, "yatcyrillic", 0x0463, "ycircle", 0x24e8, "ycircumflex", 0x0177, "ydieresis", 0x00ff, "ydotaccent", 0x1e8f, "ydotbelow", 0x1ef5, "yeharabic", 0x064a, "yehbarreearabic", 0x06d2, "yehbarreefinalarabic", 0xfbaf, "yehfinalarabic", 0xfef2, "yehhamzaabovearabic", 0x0626, "yehhamzaabovefinalarabic", 0xfe8a, "yehhamzaaboveinitialarabic", 0xfe8b, "yehhamzaabovemedialarabic", 0xfe8c, "yehinitialarabic", 0xfef3, "yehmedialarabic", 0xfef4, "yehmeeminitialarabic", 0xfcdd, "yehmeemisolatedarabic", 0xfc58, "yehnoonfinalarabic", 0xfc94, "yehthreedotsbelowarabic", 0x06d1, "yekorean", 0x3156, "yen", 0x00a5, "yenmonospace", 0xffe5, "yeokorean", 0x3155, "yeorinhieuhkorean", 0x3186, "yerahbenyomohebrew", 0x05aa, "yerahbenyomolefthebrew", 0x05aa, "yericyrillic", 0x044b, "yerudieresiscyrillic", 0x04f9, "yesieungkorean", 0x3181, "yesieungpansioskorean", 0x3183, "yesieungsioskorean", 0x3182, "yetivhebrew", 0x059a, "ygrave", 0x1ef3, "yhook", 0x01b4, "yhookabove", 0x1ef7, "yiarmenian", 0x0575, "yicyrillic", 0x0457, "yikorean", 0x3162, "yinyang", 0x262f, "yiwnarmenian", 0x0582, "ymonospace", 0xff59, "yod", 0x05d9, "yoddagesh", 0xfb39, "yoddageshhebrew", 0xfb39, "yodhebrew", 0x05d9, "yodyodhebrew", 0x05f2, "yodyodpatahhebrew", 0xfb1f, "yohiragana", 0x3088, "yoikorean", 0x3189, "yokatakana", 0x30e8, "yokatakanahalfwidth", 0xff96, "yokorean", 0x315b, "yosmallhiragana", 0x3087, "yosmallkatakana", 0x30e7, "yosmallkatakanahalfwidth", 0xff6e, "yotgreek", 0x03f3, "yoyaekorean", 0x3188, "yoyakorean", 0x3187, "yoyakthai", 0x0e22, "yoyingthai", 0x0e0d, "yparen", 0x24b4, "ypogegrammeni", 0x037a, "ypogegrammenigreekcmb", 0x0345, "yr", 0x01a6, "yring", 0x1e99, "ysuperior", 0x02b8, "ytilde", 0x1ef9, "yturned", 0x028e, "yuhiragana", 0x3086, "yuikorean", 0x318c, "yukatakana", 0x30e6, "yukatakanahalfwidth", 0xff95, "yukorean", 0x3160, "yusbigcyrillic", 0x046b, "yusbigiotifiedcyrillic", 0x046d, "yuslittlecyrillic", 0x0467, "yuslittleiotifiedcyrillic", 0x0469, "yusmallhiragana", 0x3085, "yusmallkatakana", 0x30e5, "yusmallkatakanahalfwidth", 0xff6d, "yuyekorean", 0x318b, "yuyeokorean", 0x318a, "yyabengali", 0x09df, "yyadeva", 0x095f, "z", 0x007a, "zaarmenian", 0x0566, "zacute", 0x017a, "zadeva", 0x095b, "zagurmukhi", 0x0a5b, "zaharabic", 0x0638, "zahfinalarabic", 0xfec6, "zahinitialarabic", 0xfec7, "zahiragana", 0x3056, "zahmedialarabic", 0xfec8, "zainarabic", 0x0632, "zainfinalarabic", 0xfeb0, "zakatakana", 0x30b6, "zaqefgadolhebrew", 0x0595, "zaqefqatanhebrew", 0x0594, "zarqahebrew", 0x0598, "zayin", 0x05d6, "zayindagesh", 0xfb36, "zayindageshhebrew", 0xfb36, "zayinhebrew", 0x05d6, "zbopomofo", 0x3117, "zcaron", 0x017e, "zcircle", 0x24e9, "zcircumflex", 0x1e91, "zcurl", 0x0291, "zdot", 0x017c, "zdotaccent", 0x017c, "zdotbelow", 0x1e93, "zecyrillic", 0x0437, "zedescendercyrillic", 0x0499, "zedieresiscyrillic", 0x04df, "zehiragana", 0x305c, "zekatakana", 0x30bc, "zero", 0x0030, "zeroarabic", 0x0660, "zerobengali", 0x09e6, "zerodeva", 0x0966, "zerogujarati", 0x0ae6, "zerogurmukhi", 0x0a66, "zerohackarabic", 0x0660, "zeroinferior", 0x2080, "zeromonospace", 0xff10, "zerooldstyle", 0xf730, "zeropersian", 0x06f0, "zerosuperior", 0x2070, "zerothai", 0x0e50, "zerowidthjoiner", 0xfeff, "zerowidthnonjoiner", 0x200c, "zerowidthspace", 0x200b, "zeta", 0x03b6, "zhbopomofo", 0x3113, "zhearmenian", 0x056a, "zhebrevecyrillic", 0x04c2, "zhecyrillic", 0x0436, "zhedescendercyrillic", 0x0497, "zhedieresiscyrillic", 0x04dd, "zihiragana", 0x3058, "zikatakana", 0x30b8, "zinorhebrew", 0x05ae, "zlinebelow", 0x1e95, "zmonospace", 0xff5a, "zohiragana", 0x305e, "zokatakana", 0x30be, "zparen", 0x24b5, "zretroflexhook", 0x0290, "zstroke", 0x01b6, "zuhiragana", 0x305a, "zukatakana", 0x30ba, ".notdef", 0x0000, "angbracketleftbig", 0x2329, "angbracketleftBig", 0x2329, "angbracketleftbigg", 0x2329, "angbracketleftBigg", 0x2329, "angbracketrightBig", 0x232a, "angbracketrightbig", 0x232a, "angbracketrightBigg", 0x232a, "angbracketrightbigg", 0x232a, "arrowhookleft", 0x21aa, "arrowhookright", 0x21a9, "arrowlefttophalf", 0x21bc, "arrowleftbothalf", 0x21bd, "arrownortheast", 0x2197, "arrownorthwest", 0x2196, "arrowrighttophalf", 0x21c0, "arrowrightbothalf", 0x21c1, "arrowsoutheast", 0x2198, "arrowsouthwest", 0x2199, "backslashbig", 0x2216, "backslashBig", 0x2216, "backslashBigg", 0x2216, "backslashbigg", 0x2216, "bardbl", 0x2016, "bracehtipdownleft", 0xfe37, "bracehtipdownright", 0xfe37, "bracehtipupleft", 0xfe38, "bracehtipupright", 0xfe38, "braceleftBig", 0x007b, "braceleftbig", 0x007b, "braceleftbigg", 0x007b, "braceleftBigg", 0x007b, "bracerightBig", 0x007d, "bracerightbig", 0x007d, "bracerightbigg", 0x007d, "bracerightBigg", 0x007d, "bracketleftbig", 0x005b, "bracketleftBig", 0x005b, "bracketleftbigg", 0x005b, "bracketleftBigg", 0x005b, "bracketrightBig", 0x005d, "bracketrightbig", 0x005d, "bracketrightbigg", 0x005d, "bracketrightBigg", 0x005d, "ceilingleftbig", 0x2308, "ceilingleftBig", 0x2308, "ceilingleftBigg", 0x2308, "ceilingleftbigg", 0x2308, "ceilingrightbig", 0x2309, "ceilingrightBig", 0x2309, "ceilingrightbigg", 0x2309, "ceilingrightBigg", 0x2309, "circledotdisplay", 0x2299, "circledottext", 0x2299, "circlemultiplydisplay", 0x2297, "circlemultiplytext", 0x2297, "circleplusdisplay", 0x2295, "circleplustext", 0x2295, "contintegraldisplay", 0x222e, "contintegraltext", 0x222e, "coproductdisplay", 0x2210, "coproducttext", 0x2210, "floorleftBig", 0x230a, "floorleftbig", 0x230a, "floorleftbigg", 0x230a, "floorleftBigg", 0x230a, "floorrightbig", 0x230b, "floorrightBig", 0x230b, "floorrightBigg", 0x230b, "floorrightbigg", 0x230b, "hatwide", 0x0302, "hatwider", 0x0302, "hatwidest", 0x0302, "intercal", 0x1d40, "integraldisplay", 0x222b, "integraltext", 0x222b, "intersectiondisplay", 0x22c2, "intersectiontext", 0x22c2, "logicalanddisplay", 0x2227, "logicalandtext", 0x2227, "logicalordisplay", 0x2228, "logicalortext", 0x2228, "parenleftBig", 0x0028, "parenleftbig", 0x0028, "parenleftBigg", 0x0028, "parenleftbigg", 0x0028, "parenrightBig", 0x0029, "parenrightbig", 0x0029, "parenrightBigg", 0x0029, "parenrightbigg", 0x0029, "prime", 0x2032, "productdisplay", 0x220f, "producttext", 0x220f, "radicalbig", 0x221a, "radicalBig", 0x221a, "radicalBigg", 0x221a, "radicalbigg", 0x221a, "radicalbt", 0x221a, "radicaltp", 0x221a, "radicalvertex", 0x221a, "slashbig", 0x002f, "slashBig", 0x002f, "slashBigg", 0x002f, "slashbigg", 0x002f, "summationdisplay", 0x2211, "summationtext", 0x2211, "tildewide", 0x02dc, "tildewider", 0x02dc, "tildewidest", 0x02dc, "uniondisplay", 0x22c3, "unionmultidisplay", 0x228e, "unionmultitext", 0x228e, "unionsqdisplay", 0x2294, "unionsqtext", 0x2294, "uniontext", 0x22c3, "vextenddouble", 0x2225, "vextendsingle", 0x2223];
-});
-exports.getGlyphsUnicode = getGlyphsUnicode;
-const getDingbatsGlyphsUnicode = (0, _core_utils.getArrayLookupTableFactory)(function () {
-  return ["space", 0x0020, "a1", 0x2701, "a2", 0x2702, "a202", 0x2703, "a3", 0x2704, "a4", 0x260e, "a5", 0x2706, "a119", 0x2707, "a118", 0x2708, "a117", 0x2709, "a11", 0x261b, "a12", 0x261e, "a13", 0x270c, "a14", 0x270d, "a15", 0x270e, "a16", 0x270f, "a105", 0x2710, "a17", 0x2711, "a18", 0x2712, "a19", 0x2713, "a20", 0x2714, "a21", 0x2715, "a22", 0x2716, "a23", 0x2717, "a24", 0x2718, "a25", 0x2719, "a26", 0x271a, "a27", 0x271b, "a28", 0x271c, "a6", 0x271d, "a7", 0x271e, "a8", 0x271f, "a9", 0x2720, "a10", 0x2721, "a29", 0x2722, "a30", 0x2723, "a31", 0x2724, "a32", 0x2725, "a33", 0x2726, "a34", 0x2727, "a35", 0x2605, "a36", 0x2729, "a37", 0x272a, "a38", 0x272b, "a39", 0x272c, "a40", 0x272d, "a41", 0x272e, "a42", 0x272f, "a43", 0x2730, "a44", 0x2731, "a45", 0x2732, "a46", 0x2733, "a47", 0x2734, "a48", 0x2735, "a49", 0x2736, "a50", 0x2737, "a51", 0x2738, "a52", 0x2739, "a53", 0x273a, "a54", 0x273b, "a55", 0x273c, "a56", 0x273d, "a57", 0x273e, "a58", 0x273f, "a59", 0x2740, "a60", 0x2741, "a61", 0x2742, "a62", 0x2743, "a63", 0x2744, "a64", 0x2745, "a65", 0x2746, "a66", 0x2747, "a67", 0x2748, "a68", 0x2749, "a69", 0x274a, "a70", 0x274b, "a71", 0x25cf, "a72", 0x274d, "a73", 0x25a0, "a74", 0x274f, "a203", 0x2750, "a75", 0x2751, "a204", 0x2752, "a76", 0x25b2, "a77", 0x25bc, "a78", 0x25c6, "a79", 0x2756, "a81", 0x25d7, "a82", 0x2758, "a83", 0x2759, "a84", 0x275a, "a97", 0x275b, "a98", 0x275c, "a99", 0x275d, "a100", 0x275e, "a101", 0x2761, "a102", 0x2762, "a103", 0x2763, "a104", 0x2764, "a106", 0x2765, "a107", 0x2766, "a108", 0x2767, "a112", 0x2663, "a111", 0x2666, "a110", 0x2665, "a109", 0x2660, "a120", 0x2460, "a121", 0x2461, "a122", 0x2462, "a123", 0x2463, "a124", 0x2464, "a125", 0x2465, "a126", 0x2466, "a127", 0x2467, "a128", 0x2468, "a129", 0x2469, "a130", 0x2776, "a131", 0x2777, "a132", 0x2778, "a133", 0x2779, "a134", 0x277a, "a135", 0x277b, "a136", 0x277c, "a137", 0x277d, "a138", 0x277e, "a139", 0x277f, "a140", 0x2780, "a141", 0x2781, "a142", 0x2782, "a143", 0x2783, "a144", 0x2784, "a145", 0x2785, "a146", 0x2786, "a147", 0x2787, "a148", 0x2788, "a149", 0x2789, "a150", 0x278a, "a151", 0x278b, "a152", 0x278c, "a153", 0x278d, "a154", 0x278e, "a155", 0x278f, "a156", 0x2790, "a157", 0x2791, "a158", 0x2792, "a159", 0x2793, "a160", 0x2794, "a161", 0x2192, "a163", 0x2194, "a164", 0x2195, "a196", 0x2798, "a165", 0x2799, "a192", 0x279a, "a166", 0x279b, "a167", 0x279c, "a168", 0x279d, "a169", 0x279e, "a170", 0x279f, "a171", 0x27a0, "a172", 0x27a1, "a173", 0x27a2, "a162", 0x27a3, "a174", 0x27a4, "a175", 0x27a5, "a176", 0x27a6, "a177", 0x27a7, "a178", 0x27a8, "a179", 0x27a9, "a193", 0x27aa, "a180", 0x27ab, "a199", 0x27ac, "a181", 0x27ad, "a200", 0x27ae, "a182", 0x27af, "a201", 0x27b1, "a183", 0x27b2, "a184", 0x27b3, "a197", 0x27b4, "a185", 0x27b5, "a194", 0x27b6, "a198", 0x27b7, "a186", 0x27b8, "a195", 0x27b9, "a187", 0x27ba, "a188", 0x27bb, "a189", 0x27bc, "a190", 0x27bd, "a191", 0x27be, "a89", 0x2768, "a90", 0x2769, "a93", 0x276a, "a94", 0x276b, "a91", 0x276c, "a92", 0x276d, "a205", 0x276e, "a85", 0x276f, "a206", 0x2770, "a86", 0x2771, "a87", 0x2772, "a88", 0x2773, "a95", 0x2774, "a96", 0x2775, ".notdef", 0x0000];
-});
-exports.getDingbatsGlyphsUnicode = getDingbatsGlyphsUnicode;
-
-/***/ }),
-/* 40 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.getUnicodeForGlyph = getUnicodeForGlyph;
-exports.getUnicodeRangeFor = getUnicodeRangeFor;
-exports.mapSpecialUnicodeValues = mapSpecialUnicodeValues;
-exports.reverseIfRtl = reverseIfRtl;
-exports.getNormalizedUnicodes = void 0;
-
-var _core_utils = __w_pdfjs_require__(9);
-
-const getSpecialPUASymbols = (0, _core_utils.getLookupTableFactory)(function (t) {
-  t[63721] = 0x00a9;
-  t[63193] = 0x00a9;
-  t[63720] = 0x00ae;
-  t[63194] = 0x00ae;
-  t[63722] = 0x2122;
-  t[63195] = 0x2122;
-  t[63729] = 0x23a7;
-  t[63730] = 0x23a8;
-  t[63731] = 0x23a9;
-  t[63740] = 0x23ab;
-  t[63741] = 0x23ac;
-  t[63742] = 0x23ad;
-  t[63726] = 0x23a1;
-  t[63727] = 0x23a2;
-  t[63728] = 0x23a3;
-  t[63737] = 0x23a4;
-  t[63738] = 0x23a5;
-  t[63739] = 0x23a6;
-  t[63723] = 0x239b;
-  t[63724] = 0x239c;
-  t[63725] = 0x239d;
-  t[63734] = 0x239e;
-  t[63735] = 0x239f;
-  t[63736] = 0x23a0;
-});
-
-function mapSpecialUnicodeValues(code) {
-  if (code >= 0xfff0 && code <= 0xffff) {
-    return 0;
-  } else if (code >= 0xf600 && code <= 0xf8ff) {
-    return getSpecialPUASymbols()[code] || code;
-  } else if (code === 0x00ad) {
-    return 0x002d;
-  }
-
-  return code;
-}
-
-function getUnicodeForGlyph(name, glyphsUnicodeMap) {
-  let unicode = glyphsUnicodeMap[name];
-
-  if (unicode !== undefined) {
-    return unicode;
-  }
-
-  if (!name) {
-    return -1;
-  }
-
-  if (name[0] === "u") {
-    const nameLen = name.length;
-    let hexStr;
-
-    if (nameLen === 7 && name[1] === "n" && name[2] === "i") {
-      hexStr = name.substring(3);
-    } else if (nameLen >= 5 && nameLen <= 7) {
-      hexStr = name.substring(1);
-    } else {
-      return -1;
-    }
-
-    if (hexStr === hexStr.toUpperCase()) {
-      unicode = parseInt(hexStr, 16);
-
-      if (unicode >= 0) {
-        return unicode;
-      }
-    }
-  }
-
-  return -1;
-}
-
-const UnicodeRanges = [{
-  begin: 0x0000,
-  end: 0x007f
-}, {
-  begin: 0x0080,
-  end: 0x00ff
-}, {
-  begin: 0x0100,
-  end: 0x017f
-}, {
-  begin: 0x0180,
-  end: 0x024f
-}, {
-  begin: 0x0250,
-  end: 0x02af
-}, {
-  begin: 0x02b0,
-  end: 0x02ff
-}, {
-  begin: 0x0300,
-  end: 0x036f
-}, {
-  begin: 0x0370,
-  end: 0x03ff
-}, {
-  begin: 0x2c80,
-  end: 0x2cff
-}, {
-  begin: 0x0400,
-  end: 0x04ff
-}, {
-  begin: 0x0530,
-  end: 0x058f
-}, {
-  begin: 0x0590,
-  end: 0x05ff
-}, {
-  begin: 0xa500,
-  end: 0xa63f
-}, {
-  begin: 0x0600,
-  end: 0x06ff
-}, {
-  begin: 0x07c0,
-  end: 0x07ff
-}, {
-  begin: 0x0900,
-  end: 0x097f
-}, {
-  begin: 0x0980,
-  end: 0x09ff
-}, {
-  begin: 0x0a00,
-  end: 0x0a7f
-}, {
-  begin: 0x0a80,
-  end: 0x0aff
-}, {
-  begin: 0x0b00,
-  end: 0x0b7f
-}, {
-  begin: 0x0b80,
-  end: 0x0bff
-}, {
-  begin: 0x0c00,
-  end: 0x0c7f
-}, {
-  begin: 0x0c80,
-  end: 0x0cff
-}, {
-  begin: 0x0d00,
-  end: 0x0d7f
-}, {
-  begin: 0x0e00,
-  end: 0x0e7f
-}, {
-  begin: 0x0e80,
-  end: 0x0eff
-}, {
-  begin: 0x10a0,
-  end: 0x10ff
-}, {
-  begin: 0x1b00,
-  end: 0x1b7f
-}, {
-  begin: 0x1100,
-  end: 0x11ff
-}, {
-  begin: 0x1e00,
-  end: 0x1eff
-}, {
-  begin: 0x1f00,
-  end: 0x1fff
-}, {
-  begin: 0x2000,
-  end: 0x206f
-}, {
-  begin: 0x2070,
-  end: 0x209f
-}, {
-  begin: 0x20a0,
-  end: 0x20cf
-}, {
-  begin: 0x20d0,
-  end: 0x20ff
-}, {
-  begin: 0x2100,
-  end: 0x214f
-}, {
-  begin: 0x2150,
-  end: 0x218f
-}, {
-  begin: 0x2190,
-  end: 0x21ff
-}, {
-  begin: 0x2200,
-  end: 0x22ff
-}, {
-  begin: 0x2300,
-  end: 0x23ff
-}, {
-  begin: 0x2400,
-  end: 0x243f
-}, {
-  begin: 0x2440,
-  end: 0x245f
-}, {
-  begin: 0x2460,
-  end: 0x24ff
-}, {
-  begin: 0x2500,
-  end: 0x257f
-}, {
-  begin: 0x2580,
-  end: 0x259f
-}, {
-  begin: 0x25a0,
-  end: 0x25ff
-}, {
-  begin: 0x2600,
-  end: 0x26ff
-}, {
-  begin: 0x2700,
-  end: 0x27bf
-}, {
-  begin: 0x3000,
-  end: 0x303f
-}, {
-  begin: 0x3040,
-  end: 0x309f
-}, {
-  begin: 0x30a0,
-  end: 0x30ff
-}, {
-  begin: 0x3100,
-  end: 0x312f
-}, {
-  begin: 0x3130,
-  end: 0x318f
-}, {
-  begin: 0xa840,
-  end: 0xa87f
-}, {
-  begin: 0x3200,
-  end: 0x32ff
-}, {
-  begin: 0x3300,
-  end: 0x33ff
-}, {
-  begin: 0xac00,
-  end: 0xd7af
-}, {
-  begin: 0xd800,
-  end: 0xdfff
-}, {
-  begin: 0x10900,
-  end: 0x1091f
-}, {
-  begin: 0x4e00,
-  end: 0x9fff
-}, {
-  begin: 0xe000,
-  end: 0xf8ff
-}, {
-  begin: 0x31c0,
-  end: 0x31ef
-}, {
-  begin: 0xfb00,
-  end: 0xfb4f
-}, {
-  begin: 0xfb50,
-  end: 0xfdff
-}, {
-  begin: 0xfe20,
-  end: 0xfe2f
-}, {
-  begin: 0xfe10,
-  end: 0xfe1f
-}, {
-  begin: 0xfe50,
-  end: 0xfe6f
-}, {
-  begin: 0xfe70,
-  end: 0xfeff
-}, {
-  begin: 0xff00,
-  end: 0xffef
-}, {
-  begin: 0xfff0,
-  end: 0xffff
-}, {
-  begin: 0x0f00,
-  end: 0x0fff
-}, {
-  begin: 0x0700,
-  end: 0x074f
-}, {
-  begin: 0x0780,
-  end: 0x07bf
-}, {
-  begin: 0x0d80,
-  end: 0x0dff
-}, {
-  begin: 0x1000,
-  end: 0x109f
-}, {
-  begin: 0x1200,
-  end: 0x137f
-}, {
-  begin: 0x13a0,
-  end: 0x13ff
-}, {
-  begin: 0x1400,
-  end: 0x167f
-}, {
-  begin: 0x1680,
-  end: 0x169f
-}, {
-  begin: 0x16a0,
-  end: 0x16ff
-}, {
-  begin: 0x1780,
-  end: 0x17ff
-}, {
-  begin: 0x1800,
-  end: 0x18af
-}, {
-  begin: 0x2800,
-  end: 0x28ff
-}, {
-  begin: 0xa000,
-  end: 0xa48f
-}, {
-  begin: 0x1700,
-  end: 0x171f
-}, {
-  begin: 0x10300,
-  end: 0x1032f
-}, {
-  begin: 0x10330,
-  end: 0x1034f
-}, {
-  begin: 0x10400,
-  end: 0x1044f
-}, {
-  begin: 0x1d000,
-  end: 0x1d0ff
-}, {
-  begin: 0x1d400,
-  end: 0x1d7ff
-}, {
-  begin: 0xff000,
-  end: 0xffffd
-}, {
-  begin: 0xfe00,
-  end: 0xfe0f
-}, {
-  begin: 0xe0000,
-  end: 0xe007f
-}, {
-  begin: 0x1900,
-  end: 0x194f
-}, {
-  begin: 0x1950,
-  end: 0x197f
-}, {
-  begin: 0x1980,
-  end: 0x19df
-}, {
-  begin: 0x1a00,
-  end: 0x1a1f
-}, {
-  begin: 0x2c00,
-  end: 0x2c5f
-}, {
-  begin: 0x2d30,
-  end: 0x2d7f
-}, {
-  begin: 0x4dc0,
-  end: 0x4dff
-}, {
-  begin: 0xa800,
-  end: 0xa82f
-}, {
-  begin: 0x10000,
-  end: 0x1007f
-}, {
-  begin: 0x10140,
-  end: 0x1018f
-}, {
-  begin: 0x10380,
-  end: 0x1039f
-}, {
-  begin: 0x103a0,
-  end: 0x103df
-}, {
-  begin: 0x10450,
-  end: 0x1047f
-}, {
-  begin: 0x10480,
-  end: 0x104af
-}, {
-  begin: 0x10800,
-  end: 0x1083f
-}, {
-  begin: 0x10a00,
-  end: 0x10a5f
-}, {
-  begin: 0x1d300,
-  end: 0x1d35f
-}, {
-  begin: 0x12000,
-  end: 0x123ff
-}, {
-  begin: 0x1d360,
-  end: 0x1d37f
-}, {
-  begin: 0x1b80,
-  end: 0x1bbf
-}, {
-  begin: 0x1c00,
-  end: 0x1c4f
-}, {
-  begin: 0x1c50,
-  end: 0x1c7f
-}, {
-  begin: 0xa880,
-  end: 0xa8df
-}, {
-  begin: 0xa900,
-  end: 0xa92f
-}, {
-  begin: 0xa930,
-  end: 0xa95f
-}, {
-  begin: 0xaa00,
-  end: 0xaa5f
-}, {
-  begin: 0x10190,
-  end: 0x101cf
-}, {
-  begin: 0x101d0,
-  end: 0x101ff
-}, {
-  begin: 0x102a0,
-  end: 0x102df
-}, {
-  begin: 0x1f030,
-  end: 0x1f09f
-}];
-
-function getUnicodeRangeFor(value) {
-  for (let i = 0, ii = UnicodeRanges.length; i < ii; i++) {
-    const range = UnicodeRanges[i];
-
-    if (value >= range.begin && value < range.end) {
-      return i;
-    }
-  }
-
-  return -1;
-}
-
-function isRTLRangeFor(value) {
-  let range = UnicodeRanges[13];
-
-  if (value >= range.begin && value < range.end) {
-    return true;
-  }
-
-  range = UnicodeRanges[11];
-
-  if (value >= range.begin && value < range.end) {
-    return true;
-  }
-
-  return false;
-}
-
-const getNormalizedUnicodes = (0, _core_utils.getArrayLookupTableFactory)(function () {
-  return ["\u00A8", "\u0020\u0308", "\u00AF", "\u0020\u0304", "\u00B4", "\u0020\u0301", "\u00B5", "\u03BC", "\u00B8", "\u0020\u0327", "\u0132", "\u0049\u004A", "\u0133", "\u0069\u006A", "\u013F", "\u004C\u00B7", "\u0140", "\u006C\u00B7", "\u0149", "\u02BC\u006E", "\u017F", "\u0073", "\u01C4", "\u0044\u017D", "\u01C5", "\u0044\u017E", "\u01C6", "\u0064\u017E", "\u01C7", "\u004C\u004A", "\u01C8", "\u004C\u006A", "\u01C9", "\u006C\u006A", "\u01CA", "\u004E\u004A", "\u01CB", "\u004E\u006A", "\u01CC", "\u006E\u006A", "\u01F1", "\u0044\u005A", "\u01F2", "\u0044\u007A", "\u01F3", "\u0064\u007A", "\u02D8", "\u0020\u0306", "\u02D9", "\u0020\u0307", "\u02DA", "\u0020\u030A", "\u02DB", "\u0020\u0328", "\u02DC", "\u0020\u0303", "\u02DD", "\u0020\u030B", "\u037A", "\u0020\u0345", "\u0384", "\u0020\u0301", "\u03D0", "\u03B2", "\u03D1", "\u03B8", "\u03D2", "\u03A5", "\u03D5", "\u03C6", "\u03D6", "\u03C0", "\u03F0", "\u03BA", "\u03F1", "\u03C1", "\u03F2", "\u03C2", "\u03F4", "\u0398", "\u03F5", "\u03B5", "\u03F9", "\u03A3", "\u0587", "\u0565\u0582", "\u0675", "\u0627\u0674", "\u0676", "\u0648\u0674", "\u0677", "\u06C7\u0674", "\u0678", "\u064A\u0674", "\u0E33", "\u0E4D\u0E32", "\u0EB3", "\u0ECD\u0EB2", "\u0EDC", "\u0EAB\u0E99", "\u0EDD", "\u0EAB\u0EA1", "\u0F77", "\u0FB2\u0F81", "\u0F79", "\u0FB3\u0F81", "\u1E9A", "\u0061\u02BE", "\u1FBD", "\u0020\u0313", "\u1FBF", "\u0020\u0313", "\u1FC0", "\u0020\u0342", "\u1FFE", "\u0020\u0314", "\u2002", "\u0020", "\u2003", "\u0020", "\u2004", "\u0020", "\u2005", "\u0020", "\u2006", "\u0020", "\u2008", "\u0020", "\u2009", "\u0020", "\u200A", "\u0020", "\u2017", "\u0020\u0333", "\u2024", "\u002E", "\u2025", "\u002E\u002E", "\u2026", "\u002E\u002E\u002E", "\u2033", "\u2032\u2032", "\u2034", "\u2032\u2032\u2032", "\u2036", "\u2035\u2035", "\u2037", "\u2035\u2035\u2035", "\u203C", "\u0021\u0021", "\u203E", "\u0020\u0305", "\u2047", "\u003F\u003F", "\u2048", "\u003F\u0021", "\u2049", "\u0021\u003F", "\u2057", "\u2032\u2032\u2032\u2032", "\u205F", "\u0020", "\u20A8", "\u0052\u0073", "\u2100", "\u0061\u002F\u0063", "\u2101", "\u0061\u002F\u0073", "\u2103", "\u00B0\u0043", "\u2105", "\u0063\u002F\u006F", "\u2106", "\u0063\u002F\u0075", "\u2107", "\u0190", "\u2109", "\u00B0\u0046", "\u2116", "\u004E\u006F", "\u2121", "\u0054\u0045\u004C", "\u2135", "\u05D0", "\u2136", "\u05D1", "\u2137", "\u05D2", "\u2138", "\u05D3", "\u213B", "\u0046\u0041\u0058", "\u2160", "\u0049", "\u2161", "\u0049\u0049", "\u2162", "\u0049\u0049\u0049", "\u2163", "\u0049\u0056", "\u2164", "\u0056", "\u2165", "\u0056\u0049", "\u2166", "\u0056\u0049\u0049", "\u2167", "\u0056\u0049\u0049\u0049", "\u2168", "\u0049\u0058", "\u2169", "\u0058", "\u216A", "\u0058\u0049", "\u216B", "\u0058\u0049\u0049", "\u216C", "\u004C", "\u216D", "\u0043", "\u216E", "\u0044", "\u216F", "\u004D", "\u2170", "\u0069", "\u2171", "\u0069\u0069", "\u2172", "\u0069\u0069\u0069", "\u2173", "\u0069\u0076", "\u2174", "\u0076", "\u2175", "\u0076\u0069", "\u2176", "\u0076\u0069\u0069", "\u2177", "\u0076\u0069\u0069\u0069", "\u2178", "\u0069\u0078", "\u2179", "\u0078", "\u217A", "\u0078\u0069", "\u217B", "\u0078\u0069\u0069", "\u217C", "\u006C", "\u217D", "\u0063", "\u217E", "\u0064", "\u217F", "\u006D", "\u222C", "\u222B\u222B", "\u222D", "\u222B\u222B\u222B", "\u222F", "\u222E\u222E", "\u2230", "\u222E\u222E\u222E", "\u2474", "\u0028\u0031\u0029", "\u2475", "\u0028\u0032\u0029", "\u2476", "\u0028\u0033\u0029", "\u2477", "\u0028\u0034\u0029", "\u2478", "\u0028\u0035\u0029", "\u2479", "\u0028\u0036\u0029", "\u247A", "\u0028\u0037\u0029", "\u247B", "\u0028\u0038\u0029", "\u247C", "\u0028\u0039\u0029", "\u247D", "\u0028\u0031\u0030\u0029", "\u247E", "\u0028\u0031\u0031\u0029", "\u247F", "\u0028\u0031\u0032\u0029", "\u2480", "\u0028\u0031\u0033\u0029", "\u2481", "\u0028\u0031\u0034\u0029", "\u2482", "\u0028\u0031\u0035\u0029", "\u2483", "\u0028\u0031\u0036\u0029", "\u2484", "\u0028\u0031\u0037\u0029", "\u2485", "\u0028\u0031\u0038\u0029", "\u2486", "\u0028\u0031\u0039\u0029", "\u2487", "\u0028\u0032\u0030\u0029", "\u2488", "\u0031\u002E", "\u2489", "\u0032\u002E", "\u248A", "\u0033\u002E", "\u248B", "\u0034\u002E", "\u248C", "\u0035\u002E", "\u248D", "\u0036\u002E", "\u248E", "\u0037\u002E", "\u248F", "\u0038\u002E", "\u2490", "\u0039\u002E", "\u2491", "\u0031\u0030\u002E", "\u2492", "\u0031\u0031\u002E", "\u2493", "\u0031\u0032\u002E", "\u2494", "\u0031\u0033\u002E", "\u2495", "\u0031\u0034\u002E", "\u2496", "\u0031\u0035\u002E", "\u2497", "\u0031\u0036\u002E", "\u2498", "\u0031\u0037\u002E", "\u2499", "\u0031\u0038\u002E", "\u249A", "\u0031\u0039\u002E", "\u249B", "\u0032\u0030\u002E", "\u249C", "\u0028\u0061\u0029", "\u249D", "\u0028\u0062\u0029", "\u249E", "\u0028\u0063\u0029", "\u249F", "\u0028\u0064\u0029", "\u24A0", "\u0028\u0065\u0029", "\u24A1", "\u0028\u0066\u0029", "\u24A2", "\u0028\u0067\u0029", "\u24A3", "\u0028\u0068\u0029", "\u24A4", "\u0028\u0069\u0029", "\u24A5", "\u0028\u006A\u0029", "\u24A6", "\u0028\u006B\u0029", "\u24A7", "\u0028\u006C\u0029", "\u24A8", "\u0028\u006D\u0029", "\u24A9", "\u0028\u006E\u0029", "\u24AA", "\u0028\u006F\u0029", "\u24AB", "\u0028\u0070\u0029", "\u24AC", "\u0028\u0071\u0029", "\u24AD", "\u0028\u0072\u0029", "\u24AE", "\u0028\u0073\u0029", "\u24AF", "\u0028\u0074\u0029", "\u24B0", "\u0028\u0075\u0029", "\u24B1", "\u0028\u0076\u0029", "\u24B2", "\u0028\u0077\u0029", "\u24B3", "\u0028\u0078\u0029", "\u24B4", "\u0028\u0079\u0029", "\u24B5", "\u0028\u007A\u0029", "\u2A0C", "\u222B\u222B\u222B\u222B", "\u2A74", "\u003A\u003A\u003D", "\u2A75", "\u003D\u003D", "\u2A76", "\u003D\u003D\u003D", "\u2E9F", "\u6BCD", "\u2EF3", "\u9F9F", "\u2F00", "\u4E00", "\u2F01", "\u4E28", "\u2F02", "\u4E36", "\u2F03", "\u4E3F", "\u2F04", "\u4E59", "\u2F05", "\u4E85", "\u2F06", "\u4E8C", "\u2F07", "\u4EA0", "\u2F08", "\u4EBA", "\u2F09", "\u513F", "\u2F0A", "\u5165", "\u2F0B", "\u516B", "\u2F0C", "\u5182", "\u2F0D", "\u5196", "\u2F0E", "\u51AB", "\u2F0F", "\u51E0", "\u2F10", "\u51F5", "\u2F11", "\u5200", "\u2F12", "\u529B", "\u2F13", "\u52F9", "\u2F14", "\u5315", "\u2F15", "\u531A", "\u2F16", "\u5338", "\u2F17", "\u5341", "\u2F18", "\u535C", "\u2F19", "\u5369", "\u2F1A", "\u5382", "\u2F1B", "\u53B6", "\u2F1C", "\u53C8", "\u2F1D", "\u53E3", "\u2F1E", "\u56D7", "\u2F1F", "\u571F", "\u2F20", "\u58EB", "\u2F21", "\u5902", "\u2F22", "\u590A", "\u2F23", "\u5915", "\u2F24", "\u5927", "\u2F25", "\u5973", "\u2F26", "\u5B50", "\u2F27", "\u5B80", "\u2F28", "\u5BF8", "\u2F29", "\u5C0F", "\u2F2A", "\u5C22", "\u2F2B", "\u5C38", "\u2F2C", "\u5C6E", "\u2F2D", "\u5C71", "\u2F2E", "\u5DDB", "\u2F2F", "\u5DE5", "\u2F30", "\u5DF1", "\u2F31", "\u5DFE", "\u2F32", "\u5E72", "\u2F33", "\u5E7A", "\u2F34", "\u5E7F", "\u2F35", "\u5EF4", "\u2F36", "\u5EFE", "\u2F37", "\u5F0B", "\u2F38", "\u5F13", "\u2F39", "\u5F50", "\u2F3A", "\u5F61", "\u2F3B", "\u5F73", "\u2F3C", "\u5FC3", "\u2F3D", "\u6208", "\u2F3E", "\u6236", "\u2F3F", "\u624B", "\u2F40", "\u652F", "\u2F41", "\u6534", "\u2F42", "\u6587", "\u2F43", "\u6597", "\u2F44", "\u65A4", "\u2F45", "\u65B9", "\u2F46", "\u65E0", "\u2F47", "\u65E5", "\u2F48", "\u66F0", "\u2F49", "\u6708", "\u2F4A", "\u6728", "\u2F4B", "\u6B20", "\u2F4C", "\u6B62", "\u2F4D", "\u6B79", "\u2F4E", "\u6BB3", "\u2F4F", "\u6BCB", "\u2F50", "\u6BD4", "\u2F51", "\u6BDB", "\u2F52", "\u6C0F", "\u2F53", "\u6C14", "\u2F54", "\u6C34", "\u2F55", "\u706B", "\u2F56", "\u722A", "\u2F57", "\u7236", "\u2F58", "\u723B", "\u2F59", "\u723F", "\u2F5A", "\u7247", "\u2F5B", "\u7259", "\u2F5C", "\u725B", "\u2F5D", "\u72AC", "\u2F5E", "\u7384", "\u2F5F", "\u7389", "\u2F60", "\u74DC", "\u2F61", "\u74E6", "\u2F62", "\u7518", "\u2F63", "\u751F", "\u2F64", "\u7528", "\u2F65", "\u7530", "\u2F66", "\u758B", "\u2F67", "\u7592", "\u2F68", "\u7676", "\u2F69", "\u767D", "\u2F6A", "\u76AE", "\u2F6B", "\u76BF", "\u2F6C", "\u76EE", "\u2F6D", "\u77DB", "\u2F6E", "\u77E2", "\u2F6F", "\u77F3", "\u2F70", "\u793A", "\u2F71", "\u79B8", "\u2F72", "\u79BE", "\u2F73", "\u7A74", "\u2F74", "\u7ACB", "\u2F75", "\u7AF9", "\u2F76", "\u7C73", "\u2F77", "\u7CF8", "\u2F78", "\u7F36", "\u2F79", "\u7F51", "\u2F7A", "\u7F8A", "\u2F7B", "\u7FBD", "\u2F7C", "\u8001", "\u2F7D", "\u800C", "\u2F7E", "\u8012", "\u2F7F", "\u8033", "\u2F80", "\u807F", "\u2F81", "\u8089", "\u2F82", "\u81E3", "\u2F83", "\u81EA", "\u2F84", "\u81F3", "\u2F85", "\u81FC", "\u2F86", "\u820C", "\u2F87", "\u821B", "\u2F88", "\u821F", "\u2F89", "\u826E", "\u2F8A", "\u8272", "\u2F8B", "\u8278", "\u2F8C", "\u864D", "\u2F8D", "\u866B", "\u2F8E", "\u8840", "\u2F8F", "\u884C", "\u2F90", "\u8863", "\u2F91", "\u897E", "\u2F92", "\u898B", "\u2F93", "\u89D2", "\u2F94", "\u8A00", "\u2F95", "\u8C37", "\u2F96", "\u8C46", "\u2F97", "\u8C55", "\u2F98", "\u8C78", "\u2F99", "\u8C9D", "\u2F9A", "\u8D64", "\u2F9B", "\u8D70", "\u2F9C", "\u8DB3", "\u2F9D", "\u8EAB", "\u2F9E", "\u8ECA", "\u2F9F", "\u8F9B", "\u2FA0", "\u8FB0", "\u2FA1", "\u8FB5", "\u2FA2", "\u9091", "\u2FA3", "\u9149", "\u2FA4", "\u91C6", "\u2FA5", "\u91CC", "\u2FA6", "\u91D1", "\u2FA7", "\u9577", "\u2FA8", "\u9580", "\u2FA9", "\u961C", "\u2FAA", "\u96B6", "\u2FAB", "\u96B9", "\u2FAC", "\u96E8", "\u2FAD", "\u9751", "\u2FAE", "\u975E", "\u2FAF", "\u9762", "\u2FB0", "\u9769", "\u2FB1", "\u97CB", "\u2FB2", "\u97ED", "\u2FB3", "\u97F3", "\u2FB4", "\u9801", "\u2FB5", "\u98A8", "\u2FB6", "\u98DB", "\u2FB7", "\u98DF", "\u2FB8", "\u9996", "\u2FB9", "\u9999", "\u2FBA", "\u99AC", "\u2FBB", "\u9AA8", "\u2FBC", "\u9AD8", "\u2FBD", "\u9ADF", "\u2FBE", "\u9B25", "\u2FBF", "\u9B2F", "\u2FC0", "\u9B32", "\u2FC1", "\u9B3C", "\u2FC2", "\u9B5A", "\u2FC3", "\u9CE5", "\u2FC4", "\u9E75", "\u2FC5", "\u9E7F", "\u2FC6", "\u9EA5", "\u2FC7", "\u9EBB", "\u2FC8", "\u9EC3", "\u2FC9", "\u9ECD", "\u2FCA", "\u9ED1", "\u2FCB", "\u9EF9", "\u2FCC", "\u9EFD", "\u2FCD", "\u9F0E", "\u2FCE", "\u9F13", "\u2FCF", "\u9F20", "\u2FD0", "\u9F3B", "\u2FD1", "\u9F4A", "\u2FD2", "\u9F52", "\u2FD3", "\u9F8D", "\u2FD4", "\u9F9C", "\u2FD5", "\u9FA0", "\u3036", "\u3012", "\u3038", "\u5341", "\u3039", "\u5344", "\u303A", "\u5345", "\u309B", "\u0020\u3099", "\u309C", "\u0020\u309A", "\u3131", "\u1100", "\u3132", "\u1101", "\u3133", "\u11AA", "\u3134", "\u1102", "\u3135", "\u11AC", "\u3136", "\u11AD", "\u3137", "\u1103", "\u3138", "\u1104", "\u3139", "\u1105", "\u313A", "\u11B0", "\u313B", "\u11B1", "\u313C", "\u11B2", "\u313D", "\u11B3", "\u313E", "\u11B4", "\u313F", "\u11B5", "\u3140", "\u111A", "\u3141", "\u1106", "\u3142", "\u1107", "\u3143", "\u1108", "\u3144", "\u1121", "\u3145", "\u1109", "\u3146", "\u110A", "\u3147", "\u110B", "\u3148", "\u110C", "\u3149", "\u110D", "\u314A", "\u110E", "\u314B", "\u110F", "\u314C", "\u1110", "\u314D", "\u1111", "\u314E", "\u1112", "\u314F", "\u1161", "\u3150", "\u1162", "\u3151", "\u1163", "\u3152", "\u1164", "\u3153", "\u1165", "\u3154", "\u1166", "\u3155", "\u1167", "\u3156", "\u1168", "\u3157", "\u1169", "\u3158", "\u116A", "\u3159", "\u116B", "\u315A", "\u116C", "\u315B", "\u116D", "\u315C", "\u116E", "\u315D", "\u116F", "\u315E", "\u1170", "\u315F", "\u1171", "\u3160", "\u1172", "\u3161", "\u1173", "\u3162", "\u1174", "\u3163", "\u1175", "\u3164", "\u1160", "\u3165", "\u1114", "\u3166", "\u1115", "\u3167", "\u11C7", "\u3168", "\u11C8", "\u3169", "\u11CC", "\u316A", "\u11CE", "\u316B", "\u11D3", "\u316C", "\u11D7", "\u316D", "\u11D9", "\u316E", "\u111C", "\u316F", "\u11DD", "\u3170", "\u11DF", "\u3171", "\u111D", "\u3172", "\u111E", "\u3173", "\u1120", "\u3174", "\u1122", "\u3175", "\u1123", "\u3176", "\u1127", "\u3177", "\u1129", "\u3178", "\u112B", "\u3179", "\u112C", "\u317A", "\u112D", "\u317B", "\u112E", "\u317C", "\u112F", "\u317D", "\u1132", "\u317E", "\u1136", "\u317F", "\u1140", "\u3180", "\u1147", "\u3181", "\u114C", "\u3182", "\u11F1", "\u3183", "\u11F2", "\u3184", "\u1157", "\u3185", "\u1158", "\u3186", "\u1159", "\u3187", "\u1184", "\u3188", "\u1185", "\u3189", "\u1188", "\u318A", "\u1191", "\u318B", "\u1192", "\u318C", "\u1194", "\u318D", "\u119E", "\u318E", "\u11A1", "\u3200", "\u0028\u1100\u0029", "\u3201", "\u0028\u1102\u0029", "\u3202", "\u0028\u1103\u0029", "\u3203", "\u0028\u1105\u0029", "\u3204", "\u0028\u1106\u0029", "\u3205", "\u0028\u1107\u0029", "\u3206", "\u0028\u1109\u0029", "\u3207", "\u0028\u110B\u0029", "\u3208", "\u0028\u110C\u0029", "\u3209", "\u0028\u110E\u0029", "\u320A", "\u0028\u110F\u0029", "\u320B", "\u0028\u1110\u0029", "\u320C", "\u0028\u1111\u0029", "\u320D", "\u0028\u1112\u0029", "\u320E", "\u0028\u1100\u1161\u0029", "\u320F", "\u0028\u1102\u1161\u0029", "\u3210", "\u0028\u1103\u1161\u0029", "\u3211", "\u0028\u1105\u1161\u0029", "\u3212", "\u0028\u1106\u1161\u0029", "\u3213", "\u0028\u1107\u1161\u0029", "\u3214", "\u0028\u1109\u1161\u0029", "\u3215", "\u0028\u110B\u1161\u0029", "\u3216", "\u0028\u110C\u1161\u0029", "\u3217", "\u0028\u110E\u1161\u0029", "\u3218", "\u0028\u110F\u1161\u0029", "\u3219", "\u0028\u1110\u1161\u0029", "\u321A", "\u0028\u1111\u1161\u0029", "\u321B", "\u0028\u1112\u1161\u0029", "\u321C", "\u0028\u110C\u116E\u0029", "\u321D", "\u0028\u110B\u1169\u110C\u1165\u11AB\u0029", "\u321E", "\u0028\u110B\u1169\u1112\u116E\u0029", "\u3220", "\u0028\u4E00\u0029", "\u3221", "\u0028\u4E8C\u0029", "\u3222", "\u0028\u4E09\u0029", "\u3223", "\u0028\u56DB\u0029", "\u3224", "\u0028\u4E94\u0029", "\u3225", "\u0028\u516D\u0029", "\u3226", "\u0028\u4E03\u0029", "\u3227", "\u0028\u516B\u0029", "\u3228", "\u0028\u4E5D\u0029", "\u3229", "\u0028\u5341\u0029", "\u322A", "\u0028\u6708\u0029", "\u322B", "\u0028\u706B\u0029", "\u322C", "\u0028\u6C34\u0029", "\u322D", "\u0028\u6728\u0029", "\u322E", "\u0028\u91D1\u0029", "\u322F", "\u0028\u571F\u0029", "\u3230", "\u0028\u65E5\u0029", "\u3231", "\u0028\u682A\u0029", "\u3232", "\u0028\u6709\u0029", "\u3233", "\u0028\u793E\u0029", "\u3234", "\u0028\u540D\u0029", "\u3235", "\u0028\u7279\u0029", "\u3236", "\u0028\u8CA1\u0029", "\u3237", "\u0028\u795D\u0029", "\u3238", "\u0028\u52B4\u0029", "\u3239", "\u0028\u4EE3\u0029", "\u323A", "\u0028\u547C\u0029", "\u323B", "\u0028\u5B66\u0029", "\u323C", "\u0028\u76E3\u0029", "\u323D", "\u0028\u4F01\u0029", "\u323E", "\u0028\u8CC7\u0029", "\u323F", "\u0028\u5354\u0029", "\u3240", "\u0028\u796D\u0029", "\u3241", "\u0028\u4F11\u0029", "\u3242", "\u0028\u81EA\u0029", "\u3243", "\u0028\u81F3\u0029", "\u32C0", "\u0031\u6708", "\u32C1", "\u0032\u6708", "\u32C2", "\u0033\u6708", "\u32C3", "\u0034\u6708", "\u32C4", "\u0035\u6708", "\u32C5", "\u0036\u6708", "\u32C6", "\u0037\u6708", "\u32C7", "\u0038\u6708", "\u32C8", "\u0039\u6708", "\u32C9", "\u0031\u0030\u6708", "\u32CA", "\u0031\u0031\u6708", "\u32CB", "\u0031\u0032\u6708", "\u3358", "\u0030\u70B9", "\u3359", "\u0031\u70B9", "\u335A", "\u0032\u70B9", "\u335B", "\u0033\u70B9", "\u335C", "\u0034\u70B9", "\u335D", "\u0035\u70B9", "\u335E", "\u0036\u70B9", "\u335F", "\u0037\u70B9", "\u3360", "\u0038\u70B9", "\u3361", "\u0039\u70B9", "\u3362", "\u0031\u0030\u70B9", "\u3363", "\u0031\u0031\u70B9", "\u3364", "\u0031\u0032\u70B9", "\u3365", "\u0031\u0033\u70B9", "\u3366", "\u0031\u0034\u70B9", "\u3367", "\u0031\u0035\u70B9", "\u3368", "\u0031\u0036\u70B9", "\u3369", "\u0031\u0037\u70B9", "\u336A", "\u0031\u0038\u70B9", "\u336B", "\u0031\u0039\u70B9", "\u336C", "\u0032\u0030\u70B9", "\u336D", "\u0032\u0031\u70B9", "\u336E", "\u0032\u0032\u70B9", "\u336F", "\u0032\u0033\u70B9", "\u3370", "\u0032\u0034\u70B9", "\u33E0", "\u0031\u65E5", "\u33E1", "\u0032\u65E5", "\u33E2", "\u0033\u65E5", "\u33E3", "\u0034\u65E5", "\u33E4", "\u0035\u65E5", "\u33E5", "\u0036\u65E5", "\u33E6", "\u0037\u65E5", "\u33E7", "\u0038\u65E5", "\u33E8", "\u0039\u65E5", "\u33E9", "\u0031\u0030\u65E5", "\u33EA", "\u0031\u0031\u65E5", "\u33EB", "\u0031\u0032\u65E5", "\u33EC", "\u0031\u0033\u65E5", "\u33ED", "\u0031\u0034\u65E5", "\u33EE", "\u0031\u0035\u65E5", "\u33EF", "\u0031\u0036\u65E5", "\u33F0", "\u0031\u0037\u65E5", "\u33F1", "\u0031\u0038\u65E5", "\u33F2", "\u0031\u0039\u65E5", "\u33F3", "\u0032\u0030\u65E5", "\u33F4", "\u0032\u0031\u65E5", "\u33F5", "\u0032\u0032\u65E5", "\u33F6", "\u0032\u0033\u65E5", "\u33F7", "\u0032\u0034\u65E5", "\u33F8", "\u0032\u0035\u65E5", "\u33F9", "\u0032\u0036\u65E5", "\u33FA", "\u0032\u0037\u65E5", "\u33FB", "\u0032\u0038\u65E5", "\u33FC", "\u0032\u0039\u65E5", "\u33FD", "\u0033\u0030\u65E5", "\u33FE", "\u0033\u0031\u65E5", "\uFB00", "\u0066\u0066", "\uFB01", "\u0066\u0069", "\uFB02", "\u0066\u006C", "\uFB03", "\u0066\u0066\u0069", "\uFB04", "\u0066\u0066\u006C", "\uFB05", "\u017F\u0074", "\uFB06", "\u0073\u0074", "\uFB13", "\u0574\u0576", "\uFB14", "\u0574\u0565", "\uFB15", "\u0574\u056B", "\uFB16", "\u057E\u0576", "\uFB17", "\u0574\u056D", "\uFB4F", "\u05D0\u05DC", "\uFB50", "\u0671", "\uFB51", "\u0671", "\uFB52", "\u067B", "\uFB53", "\u067B", "\uFB54", "\u067B", "\uFB55", "\u067B", "\uFB56", "\u067E", "\uFB57", "\u067E", "\uFB58", "\u067E", "\uFB59", "\u067E", "\uFB5A", "\u0680", "\uFB5B", "\u0680", "\uFB5C", "\u0680", "\uFB5D", "\u0680", "\uFB5E", "\u067A", "\uFB5F", "\u067A", "\uFB60", "\u067A", "\uFB61", "\u067A", "\uFB62", "\u067F", "\uFB63", "\u067F", "\uFB64", "\u067F", "\uFB65", "\u067F", "\uFB66", "\u0679", "\uFB67", "\u0679", "\uFB68", "\u0679", "\uFB69", "\u0679", "\uFB6A", "\u06A4", "\uFB6B", "\u06A4", "\uFB6C", "\u06A4", "\uFB6D", "\u06A4", "\uFB6E", "\u06A6", "\uFB6F", "\u06A6", "\uFB70", "\u06A6", "\uFB71", "\u06A6", "\uFB72", "\u0684", "\uFB73", "\u0684", "\uFB74", "\u0684", "\uFB75", "\u0684", "\uFB76", "\u0683", "\uFB77", "\u0683", "\uFB78", "\u0683", "\uFB79", "\u0683", "\uFB7A", "\u0686", "\uFB7B", "\u0686", "\uFB7C", "\u0686", "\uFB7D", "\u0686", "\uFB7E", "\u0687", "\uFB7F", "\u0687", "\uFB80", "\u0687", "\uFB81", "\u0687", "\uFB82", "\u068D", "\uFB83", "\u068D", "\uFB84", "\u068C", "\uFB85", "\u068C", "\uFB86", "\u068E", "\uFB87", "\u068E", "\uFB88", "\u0688", "\uFB89", "\u0688", "\uFB8A", "\u0698", "\uFB8B", "\u0698", "\uFB8C", "\u0691", "\uFB8D", "\u0691", "\uFB8E", "\u06A9", "\uFB8F", "\u06A9", "\uFB90", "\u06A9", "\uFB91", "\u06A9", "\uFB92", "\u06AF", "\uFB93", "\u06AF", "\uFB94", "\u06AF", "\uFB95", "\u06AF", "\uFB96", "\u06B3", "\uFB97", "\u06B3", "\uFB98", "\u06B3", "\uFB99", "\u06B3", "\uFB9A", "\u06B1", "\uFB9B", "\u06B1", "\uFB9C", "\u06B1", "\uFB9D", "\u06B1", "\uFB9E", "\u06BA", "\uFB9F", "\u06BA", "\uFBA0", "\u06BB", "\uFBA1", "\u06BB", "\uFBA2", "\u06BB", "\uFBA3", "\u06BB", "\uFBA4", "\u06C0", "\uFBA5", "\u06C0", "\uFBA6", "\u06C1", "\uFBA7", "\u06C1", "\uFBA8", "\u06C1", "\uFBA9", "\u06C1", "\uFBAA", "\u06BE", "\uFBAB", "\u06BE", "\uFBAC", "\u06BE", "\uFBAD", "\u06BE", "\uFBAE", "\u06D2", "\uFBAF", "\u06D2", "\uFBB0", "\u06D3", "\uFBB1", "\u06D3", "\uFBD3", "\u06AD", "\uFBD4", "\u06AD", "\uFBD5", "\u06AD", "\uFBD6", "\u06AD", "\uFBD7", "\u06C7", "\uFBD8", "\u06C7", "\uFBD9", "\u06C6", "\uFBDA", "\u06C6", "\uFBDB", "\u06C8", "\uFBDC", "\u06C8", "\uFBDD", "\u0677", "\uFBDE", "\u06CB", "\uFBDF", "\u06CB", "\uFBE0", "\u06C5", "\uFBE1", "\u06C5", "\uFBE2", "\u06C9", "\uFBE3", "\u06C9", "\uFBE4", "\u06D0", "\uFBE5", "\u06D0", "\uFBE6", "\u06D0", "\uFBE7", "\u06D0", "\uFBE8", "\u0649", "\uFBE9", "\u0649", "\uFBEA", "\u0626\u0627", "\uFBEB", "\u0626\u0627", "\uFBEC", "\u0626\u06D5", "\uFBED", "\u0626\u06D5", "\uFBEE", "\u0626\u0648", "\uFBEF", "\u0626\u0648", "\uFBF0", "\u0626\u06C7", "\uFBF1", "\u0626\u06C7", "\uFBF2", "\u0626\u06C6", "\uFBF3", "\u0626\u06C6", "\uFBF4", "\u0626\u06C8", "\uFBF5", "\u0626\u06C8", "\uFBF6", "\u0626\u06D0", "\uFBF7", "\u0626\u06D0", "\uFBF8", "\u0626\u06D0", "\uFBF9", "\u0626\u0649", "\uFBFA", "\u0626\u0649", "\uFBFB", "\u0626\u0649", "\uFBFC", "\u06CC", "\uFBFD", "\u06CC", "\uFBFE", "\u06CC", "\uFBFF", "\u06CC", "\uFC00", "\u0626\u062C", "\uFC01", "\u0626\u062D", "\uFC02", "\u0626\u0645", "\uFC03", "\u0626\u0649", "\uFC04", "\u0626\u064A", "\uFC05", "\u0628\u062C", "\uFC06", "\u0628\u062D", "\uFC07", "\u0628\u062E", "\uFC08", "\u0628\u0645", "\uFC09", "\u0628\u0649", "\uFC0A", "\u0628\u064A", "\uFC0B", "\u062A\u062C", "\uFC0C", "\u062A\u062D", "\uFC0D", "\u062A\u062E", "\uFC0E", "\u062A\u0645", "\uFC0F", "\u062A\u0649", "\uFC10", "\u062A\u064A", "\uFC11", "\u062B\u062C", "\uFC12", "\u062B\u0645", "\uFC13", "\u062B\u0649", "\uFC14", "\u062B\u064A", "\uFC15", "\u062C\u062D", "\uFC16", "\u062C\u0645", "\uFC17", "\u062D\u062C", "\uFC18", "\u062D\u0645", "\uFC19", "\u062E\u062C", "\uFC1A", "\u062E\u062D", "\uFC1B", "\u062E\u0645", "\uFC1C", "\u0633\u062C", "\uFC1D", "\u0633\u062D", "\uFC1E", "\u0633\u062E", "\uFC1F", "\u0633\u0645", "\uFC20", "\u0635\u062D", "\uFC21", "\u0635\u0645", "\uFC22", "\u0636\u062C", "\uFC23", "\u0636\u062D", "\uFC24", "\u0636\u062E", "\uFC25", "\u0636\u0645", "\uFC26", "\u0637\u062D", "\uFC27", "\u0637\u0645", "\uFC28", "\u0638\u0645", "\uFC29", "\u0639\u062C", "\uFC2A", "\u0639\u0645", "\uFC2B", "\u063A\u062C", "\uFC2C", "\u063A\u0645", "\uFC2D", "\u0641\u062C", "\uFC2E", "\u0641\u062D", "\uFC2F", "\u0641\u062E", "\uFC30", "\u0641\u0645", "\uFC31", "\u0641\u0649", "\uFC32", "\u0641\u064A", "\uFC33", "\u0642\u062D", "\uFC34", "\u0642\u0645", "\uFC35", "\u0642\u0649", "\uFC36", "\u0642\u064A", "\uFC37", "\u0643\u0627", "\uFC38", "\u0643\u062C", "\uFC39", "\u0643\u062D", "\uFC3A", "\u0643\u062E", "\uFC3B", "\u0643\u0644", "\uFC3C", "\u0643\u0645", "\uFC3D", "\u0643\u0649", "\uFC3E", "\u0643\u064A", "\uFC3F", "\u0644\u062C", "\uFC40", "\u0644\u062D", "\uFC41", "\u0644\u062E", "\uFC42", "\u0644\u0645", "\uFC43", "\u0644\u0649", "\uFC44", "\u0644\u064A", "\uFC45", "\u0645\u062C", "\uFC46", "\u0645\u062D", "\uFC47", "\u0645\u062E", "\uFC48", "\u0645\u0645", "\uFC49", "\u0645\u0649", "\uFC4A", "\u0645\u064A", "\uFC4B", "\u0646\u062C", "\uFC4C", "\u0646\u062D", "\uFC4D", "\u0646\u062E", "\uFC4E", "\u0646\u0645", "\uFC4F", "\u0646\u0649", "\uFC50", "\u0646\u064A", "\uFC51", "\u0647\u062C", "\uFC52", "\u0647\u0645", "\uFC53", "\u0647\u0649", "\uFC54", "\u0647\u064A", "\uFC55", "\u064A\u062C", "\uFC56", "\u064A\u062D", "\uFC57", "\u064A\u062E", "\uFC58", "\u064A\u0645", "\uFC59", "\u064A\u0649", "\uFC5A", "\u064A\u064A", "\uFC5B", "\u0630\u0670", "\uFC5C", "\u0631\u0670", "\uFC5D", "\u0649\u0670", "\uFC5E", "\u0020\u064C\u0651", "\uFC5F", "\u0020\u064D\u0651", "\uFC60", "\u0020\u064E\u0651", "\uFC61", "\u0020\u064F\u0651", "\uFC62", "\u0020\u0650\u0651", "\uFC63", "\u0020\u0651\u0670", "\uFC64", "\u0626\u0631", "\uFC65", "\u0626\u0632", "\uFC66", "\u0626\u0645", "\uFC67", "\u0626\u0646", "\uFC68", "\u0626\u0649", "\uFC69", "\u0626\u064A", "\uFC6A", "\u0628\u0631", "\uFC6B", "\u0628\u0632", "\uFC6C", "\u0628\u0645", "\uFC6D", "\u0628\u0646", "\uFC6E", "\u0628\u0649", "\uFC6F", "\u0628\u064A", "\uFC70", "\u062A\u0631", "\uFC71", "\u062A\u0632", "\uFC72", "\u062A\u0645", "\uFC73", "\u062A\u0646", "\uFC74", "\u062A\u0649", "\uFC75", "\u062A\u064A", "\uFC76", "\u062B\u0631", "\uFC77", "\u062B\u0632", "\uFC78", "\u062B\u0645", "\uFC79", "\u062B\u0646", "\uFC7A", "\u062B\u0649", "\uFC7B", "\u062B\u064A", "\uFC7C", "\u0641\u0649", "\uFC7D", "\u0641\u064A", "\uFC7E", "\u0642\u0649", "\uFC7F", "\u0642\u064A", "\uFC80", "\u0643\u0627", "\uFC81", "\u0643\u0644", "\uFC82", "\u0643\u0645", "\uFC83", "\u0643\u0649", "\uFC84", "\u0643\u064A", "\uFC85", "\u0644\u0645", "\uFC86", "\u0644\u0649", "\uFC87", "\u0644\u064A", "\uFC88", "\u0645\u0627", "\uFC89", "\u0645\u0645", "\uFC8A", "\u0646\u0631", "\uFC8B", "\u0646\u0632", "\uFC8C", "\u0646\u0645", "\uFC8D", "\u0646\u0646", "\uFC8E", "\u0646\u0649", "\uFC8F", "\u0646\u064A", "\uFC90", "\u0649\u0670", "\uFC91", "\u064A\u0631", "\uFC92", "\u064A\u0632", "\uFC93", "\u064A\u0645", "\uFC94", "\u064A\u0646", "\uFC95", "\u064A\u0649", "\uFC96", "\u064A\u064A", "\uFC97", "\u0626\u062C", "\uFC98", "\u0626\u062D", "\uFC99", "\u0626\u062E", "\uFC9A", "\u0626\u0645", "\uFC9B", "\u0626\u0647", "\uFC9C", "\u0628\u062C", "\uFC9D", "\u0628\u062D", "\uFC9E", "\u0628\u062E", "\uFC9F", "\u0628\u0645", "\uFCA0", "\u0628\u0647", "\uFCA1", "\u062A\u062C", "\uFCA2", "\u062A\u062D", "\uFCA3", "\u062A\u062E", "\uFCA4", "\u062A\u0645", "\uFCA5", "\u062A\u0647", "\uFCA6", "\u062B\u0645", "\uFCA7", "\u062C\u062D", "\uFCA8", "\u062C\u0645", "\uFCA9", "\u062D\u062C", "\uFCAA", "\u062D\u0645", "\uFCAB", "\u062E\u062C", "\uFCAC", "\u062E\u0645", "\uFCAD", "\u0633\u062C", "\uFCAE", "\u0633\u062D", "\uFCAF", "\u0633\u062E", "\uFCB0", "\u0633\u0645", "\uFCB1", "\u0635\u062D", "\uFCB2", "\u0635\u062E", "\uFCB3", "\u0635\u0645", "\uFCB4", "\u0636\u062C", "\uFCB5", "\u0636\u062D", "\uFCB6", "\u0636\u062E", "\uFCB7", "\u0636\u0645", "\uFCB8", "\u0637\u062D", "\uFCB9", "\u0638\u0645", "\uFCBA", "\u0639\u062C", "\uFCBB", "\u0639\u0645", "\uFCBC", "\u063A\u062C", "\uFCBD", "\u063A\u0645", "\uFCBE", "\u0641\u062C", "\uFCBF", "\u0641\u062D", "\uFCC0", "\u0641\u062E", "\uFCC1", "\u0641\u0645", "\uFCC2", "\u0642\u062D", "\uFCC3", "\u0642\u0645", "\uFCC4", "\u0643\u062C", "\uFCC5", "\u0643\u062D", "\uFCC6", "\u0643\u062E", "\uFCC7", "\u0643\u0644", "\uFCC8", "\u0643\u0645", "\uFCC9", "\u0644\u062C", "\uFCCA", "\u0644\u062D", "\uFCCB", "\u0644\u062E", "\uFCCC", "\u0644\u0645", "\uFCCD", "\u0644\u0647", "\uFCCE", "\u0645\u062C", "\uFCCF", "\u0645\u062D", "\uFCD0", "\u0645\u062E", "\uFCD1", "\u0645\u0645", "\uFCD2", "\u0646\u062C", "\uFCD3", "\u0646\u062D", "\uFCD4", "\u0646\u062E", "\uFCD5", "\u0646\u0645", "\uFCD6", "\u0646\u0647", "\uFCD7", "\u0647\u062C", "\uFCD8", "\u0647\u0645", "\uFCD9", "\u0647\u0670", "\uFCDA", "\u064A\u062C", "\uFCDB", "\u064A\u062D", "\uFCDC", "\u064A\u062E", "\uFCDD", "\u064A\u0645", "\uFCDE", "\u064A\u0647", "\uFCDF", "\u0626\u0645", "\uFCE0", "\u0626\u0647", "\uFCE1", "\u0628\u0645", "\uFCE2", "\u0628\u0647", "\uFCE3", "\u062A\u0645", "\uFCE4", "\u062A\u0647", "\uFCE5", "\u062B\u0645", "\uFCE6", "\u062B\u0647", "\uFCE7", "\u0633\u0645", "\uFCE8", "\u0633\u0647", "\uFCE9", "\u0634\u0645", "\uFCEA", "\u0634\u0647", "\uFCEB", "\u0643\u0644", "\uFCEC", "\u0643\u0645", "\uFCED", "\u0644\u0645", "\uFCEE", "\u0646\u0645", "\uFCEF", "\u0646\u0647", "\uFCF0", "\u064A\u0645", "\uFCF1", "\u064A\u0647", "\uFCF2", "\u0640\u064E\u0651", "\uFCF3", "\u0640\u064F\u0651", "\uFCF4", "\u0640\u0650\u0651", "\uFCF5", "\u0637\u0649", "\uFCF6", "\u0637\u064A", "\uFCF7", "\u0639\u0649", "\uFCF8", "\u0639\u064A", "\uFCF9", "\u063A\u0649", "\uFCFA", "\u063A\u064A", "\uFCFB", "\u0633\u0649", "\uFCFC", "\u0633\u064A", "\uFCFD", "\u0634\u0649", "\uFCFE", "\u0634\u064A", "\uFCFF", "\u062D\u0649", "\uFD00", "\u062D\u064A", "\uFD01", "\u062C\u0649", "\uFD02", "\u062C\u064A", "\uFD03", "\u062E\u0649", "\uFD04", "\u062E\u064A", "\uFD05", "\u0635\u0649", "\uFD06", "\u0635\u064A", "\uFD07", "\u0636\u0649", "\uFD08", "\u0636\u064A", "\uFD09", "\u0634\u062C", "\uFD0A", "\u0634\u062D", "\uFD0B", "\u0634\u062E", "\uFD0C", "\u0634\u0645", "\uFD0D", "\u0634\u0631", "\uFD0E", "\u0633\u0631", "\uFD0F", "\u0635\u0631", "\uFD10", "\u0636\u0631", "\uFD11", "\u0637\u0649", "\uFD12", "\u0637\u064A", "\uFD13", "\u0639\u0649", "\uFD14", "\u0639\u064A", "\uFD15", "\u063A\u0649", "\uFD16", "\u063A\u064A", "\uFD17", "\u0633\u0649", "\uFD18", "\u0633\u064A", "\uFD19", "\u0634\u0649", "\uFD1A", "\u0634\u064A", "\uFD1B", "\u062D\u0649", "\uFD1C", "\u062D\u064A", "\uFD1D", "\u062C\u0649", "\uFD1E", "\u062C\u064A", "\uFD1F", "\u062E\u0649", "\uFD20", "\u062E\u064A", "\uFD21", "\u0635\u0649", "\uFD22", "\u0635\u064A", "\uFD23", "\u0636\u0649", "\uFD24", "\u0636\u064A", "\uFD25", "\u0634\u062C", "\uFD26", "\u0634\u062D", "\uFD27", "\u0634\u062E", "\uFD28", "\u0634\u0645", "\uFD29", "\u0634\u0631", "\uFD2A", "\u0633\u0631", "\uFD2B", "\u0635\u0631", "\uFD2C", "\u0636\u0631", "\uFD2D", "\u0634\u062C", "\uFD2E", "\u0634\u062D", "\uFD2F", "\u0634\u062E", "\uFD30", "\u0634\u0645", "\uFD31", "\u0633\u0647", "\uFD32", "\u0634\u0647", "\uFD33", "\u0637\u0645", "\uFD34", "\u0633\u062C", "\uFD35", "\u0633\u062D", "\uFD36", "\u0633\u062E", "\uFD37", "\u0634\u062C", "\uFD38", "\u0634\u062D", "\uFD39", "\u0634\u062E", "\uFD3A", "\u0637\u0645", "\uFD3B", "\u0638\u0645", "\uFD3C", "\u0627\u064B", "\uFD3D", "\u0627\u064B", "\uFD50", "\u062A\u062C\u0645", "\uFD51", "\u062A\u062D\u062C", "\uFD52", "\u062A\u062D\u062C", "\uFD53", "\u062A\u062D\u0645", "\uFD54", "\u062A\u062E\u0645", "\uFD55", "\u062A\u0645\u062C", "\uFD56", "\u062A\u0645\u062D", "\uFD57", "\u062A\u0645\u062E", "\uFD58", "\u062C\u0645\u062D", "\uFD59", "\u062C\u0645\u062D", "\uFD5A", "\u062D\u0645\u064A", "\uFD5B", "\u062D\u0645\u0649", "\uFD5C", "\u0633\u062D\u062C", "\uFD5D", "\u0633\u062C\u062D", "\uFD5E", "\u0633\u062C\u0649", "\uFD5F", "\u0633\u0645\u062D", "\uFD60", "\u0633\u0645\u062D", "\uFD61", "\u0633\u0645\u062C", "\uFD62", "\u0633\u0645\u0645", "\uFD63", "\u0633\u0645\u0645", "\uFD64", "\u0635\u062D\u062D", "\uFD65", "\u0635\u062D\u062D", "\uFD66", "\u0635\u0645\u0645", "\uFD67", "\u0634\u062D\u0645", "\uFD68", "\u0634\u062D\u0645", "\uFD69", "\u0634\u062C\u064A", "\uFD6A", "\u0634\u0645\u062E", "\uFD6B", "\u0634\u0645\u062E", "\uFD6C", "\u0634\u0645\u0645", "\uFD6D", "\u0634\u0645\u0645", "\uFD6E", "\u0636\u062D\u0649", "\uFD6F", "\u0636\u062E\u0645", "\uFD70", "\u0636\u062E\u0645", "\uFD71", "\u0637\u0645\u062D", "\uFD72", "\u0637\u0645\u062D", "\uFD73", "\u0637\u0645\u0645", "\uFD74", "\u0637\u0645\u064A", "\uFD75", "\u0639\u062C\u0645", "\uFD76", "\u0639\u0645\u0645", "\uFD77", "\u0639\u0645\u0645", "\uFD78", "\u0639\u0645\u0649", "\uFD79", "\u063A\u0645\u0645", "\uFD7A", "\u063A\u0645\u064A", "\uFD7B", "\u063A\u0645\u0649", "\uFD7C", "\u0641\u062E\u0645", "\uFD7D", "\u0641\u062E\u0645", "\uFD7E", "\u0642\u0645\u062D", "\uFD7F", "\u0642\u0645\u0645", "\uFD80", "\u0644\u062D\u0645", "\uFD81", "\u0644\u062D\u064A", "\uFD82", "\u0644\u062D\u0649", "\uFD83", "\u0644\u062C\u062C", "\uFD84", "\u0644\u062C\u062C", "\uFD85", "\u0644\u062E\u0645", "\uFD86", "\u0644\u062E\u0645", "\uFD87", "\u0644\u0645\u062D", "\uFD88", "\u0644\u0645\u062D", "\uFD89", "\u0645\u062D\u062C", "\uFD8A", "\u0645\u062D\u0645", "\uFD8B", "\u0645\u062D\u064A", "\uFD8C", "\u0645\u062C\u062D", "\uFD8D", "\u0645\u062C\u0645", "\uFD8E", "\u0645\u062E\u062C", "\uFD8F", "\u0645\u062E\u0645", "\uFD92", "\u0645\u062C\u062E", "\uFD93", "\u0647\u0645\u062C", "\uFD94", "\u0647\u0645\u0645", "\uFD95", "\u0646\u062D\u0645", "\uFD96", "\u0646\u062D\u0649", "\uFD97", "\u0646\u062C\u0645", "\uFD98", "\u0646\u062C\u0645", "\uFD99", "\u0646\u062C\u0649", "\uFD9A", "\u0646\u0645\u064A", "\uFD9B", "\u0646\u0645\u0649", "\uFD9C", "\u064A\u0645\u0645", "\uFD9D", "\u064A\u0645\u0645", "\uFD9E", "\u0628\u062E\u064A", "\uFD9F", "\u062A\u062C\u064A", "\uFDA0", "\u062A\u062C\u0649", "\uFDA1", "\u062A\u062E\u064A", "\uFDA2", "\u062A\u062E\u0649", "\uFDA3", "\u062A\u0645\u064A", "\uFDA4", "\u062A\u0645\u0649", "\uFDA5", "\u062C\u0645\u064A", "\uFDA6", "\u062C\u062D\u0649", "\uFDA7", "\u062C\u0645\u0649", "\uFDA8", "\u0633\u062E\u0649", "\uFDA9", "\u0635\u062D\u064A", "\uFDAA", "\u0634\u062D\u064A", "\uFDAB", "\u0636\u062D\u064A", "\uFDAC", "\u0644\u062C\u064A", "\uFDAD", "\u0644\u0645\u064A", "\uFDAE", "\u064A\u062D\u064A", "\uFDAF", "\u064A\u062C\u064A", "\uFDB0", "\u064A\u0645\u064A", "\uFDB1", "\u0645\u0645\u064A", "\uFDB2", "\u0642\u0645\u064A", "\uFDB3", "\u0646\u062D\u064A", "\uFDB4", "\u0642\u0645\u062D", "\uFDB5", "\u0644\u062D\u0645", "\uFDB6", "\u0639\u0645\u064A", "\uFDB7", "\u0643\u0645\u064A", "\uFDB8", "\u0646\u062C\u062D", "\uFDB9", "\u0645\u062E\u064A", "\uFDBA", "\u0644\u062C\u0645", "\uFDBB", "\u0643\u0645\u0645", "\uFDBC", "\u0644\u062C\u0645", "\uFDBD", "\u0646\u062C\u062D", "\uFDBE", "\u062C\u062D\u064A", "\uFDBF", "\u062D\u062C\u064A", "\uFDC0", "\u0645\u062C\u064A", "\uFDC1", "\u0641\u0645\u064A", "\uFDC2", "\u0628\u062D\u064A", "\uFDC3", "\u0643\u0645\u0645", "\uFDC4", "\u0639\u062C\u0645", "\uFDC5", "\u0635\u0645\u0645", "\uFDC6", "\u0633\u062E\u064A", "\uFDC7", "\u0646\u062C\u064A", "\uFE49", "\u203E", "\uFE4A", "\u203E", "\uFE4B", "\u203E", "\uFE4C", "\u203E", "\uFE4D", "\u005F", "\uFE4E", "\u005F", "\uFE4F", "\u005F", "\uFE80", "\u0621", "\uFE81", "\u0622", "\uFE82", "\u0622", "\uFE83", "\u0623", "\uFE84", "\u0623", "\uFE85", "\u0624", "\uFE86", "\u0624", "\uFE87", "\u0625", "\uFE88", "\u0625", "\uFE89", "\u0626", "\uFE8A", "\u0626", "\uFE8B", "\u0626", "\uFE8C", "\u0626", "\uFE8D", "\u0627", "\uFE8E", "\u0627", "\uFE8F", "\u0628", "\uFE90", "\u0628", "\uFE91", "\u0628", "\uFE92", "\u0628", "\uFE93", "\u0629", "\uFE94", "\u0629", "\uFE95", "\u062A", "\uFE96", "\u062A", "\uFE97", "\u062A", "\uFE98", "\u062A", "\uFE99", "\u062B", "\uFE9A", "\u062B", "\uFE9B", "\u062B", "\uFE9C", "\u062B", "\uFE9D", "\u062C", "\uFE9E", "\u062C", "\uFE9F", "\u062C", "\uFEA0", "\u062C", "\uFEA1", "\u062D", "\uFEA2", "\u062D", "\uFEA3", "\u062D", "\uFEA4", "\u062D", "\uFEA5", "\u062E", "\uFEA6", "\u062E", "\uFEA7", "\u062E", "\uFEA8", "\u062E", "\uFEA9", "\u062F", "\uFEAA", "\u062F", "\uFEAB", "\u0630", "\uFEAC", "\u0630", "\uFEAD", "\u0631", "\uFEAE", "\u0631", "\uFEAF", "\u0632", "\uFEB0", "\u0632", "\uFEB1", "\u0633", "\uFEB2", "\u0633", "\uFEB3", "\u0633", "\uFEB4", "\u0633", "\uFEB5", "\u0634", "\uFEB6", "\u0634", "\uFEB7", "\u0634", "\uFEB8", "\u0634", "\uFEB9", "\u0635", "\uFEBA", "\u0635", "\uFEBB", "\u0635", "\uFEBC", "\u0635", "\uFEBD", "\u0636", "\uFEBE", "\u0636", "\uFEBF", "\u0636", "\uFEC0", "\u0636", "\uFEC1", "\u0637", "\uFEC2", "\u0637", "\uFEC3", "\u0637", "\uFEC4", "\u0637", "\uFEC5", "\u0638", "\uFEC6", "\u0638", "\uFEC7", "\u0638", "\uFEC8", "\u0638", "\uFEC9", "\u0639", "\uFECA", "\u0639", "\uFECB", "\u0639", "\uFECC", "\u0639", "\uFECD", "\u063A", "\uFECE", "\u063A", "\uFECF", "\u063A", "\uFED0", "\u063A", "\uFED1", "\u0641", "\uFED2", "\u0641", "\uFED3", "\u0641", "\uFED4", "\u0641", "\uFED5", "\u0642", "\uFED6", "\u0642", "\uFED7", "\u0642", "\uFED8", "\u0642", "\uFED9", "\u0643", "\uFEDA", "\u0643", "\uFEDB", "\u0643", "\uFEDC", "\u0643", "\uFEDD", "\u0644", "\uFEDE", "\u0644", "\uFEDF", "\u0644", "\uFEE0", "\u0644", "\uFEE1", "\u0645", "\uFEE2", "\u0645", "\uFEE3", "\u0645", "\uFEE4", "\u0645", "\uFEE5", "\u0646", "\uFEE6", "\u0646", "\uFEE7", "\u0646", "\uFEE8", "\u0646", "\uFEE9", "\u0647", "\uFEEA", "\u0647", "\uFEEB", "\u0647", "\uFEEC", "\u0647", "\uFEED", "\u0648", "\uFEEE", "\u0648", "\uFEEF", "\u0649", "\uFEF0", "\u0649", "\uFEF1", "\u064A", "\uFEF2", "\u064A", "\uFEF3", "\u064A", "\uFEF4", "\u064A", "\uFEF5", "\u0644\u0622", "\uFEF6", "\u0644\u0622", "\uFEF7", "\u0644\u0623", "\uFEF8", "\u0644\u0623", "\uFEF9", "\u0644\u0625", "\uFEFA", "\u0644\u0625", "\uFEFB", "\u0644\u0627", "\uFEFC", "\u0644\u0627"];
-});
-exports.getNormalizedUnicodes = getNormalizedUnicodes;
-
-function reverseIfRtl(chars) {
-  const charsLength = chars.length;
-
-  if (charsLength <= 1 || !isRTLRangeFor(chars.charCodeAt(0))) {
-    return chars;
-  }
-
-  const buf = [];
-
-  for (let ii = charsLength - 1; ii >= 0; ii--) {
-    buf.push(chars[ii]);
-  }
-
-  return buf.join("");
-}
-
-/***/ }),
-/* 41 */
+/* 47 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -28502,7 +28934,7 @@ exports.getSymbolsFonts = exports.getSupplementalGlyphMapForCalibri = exports.ge
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _fonts_utils = __w_pdfjs_require__(38);
+var _fonts_utils = __w_pdfjs_require__(18);
 
 const getStdFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
   t["Times-Roman"] = "Times-Roman";
@@ -29271,7 +29703,7 @@ function getStandardFontName(name) {
 }
 
 /***/ }),
-/* 42 */
+/* 48 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -29373,7 +29805,7 @@ class IdentityToUnicodeMap {
 exports.IdentityToUnicodeMap = IdentityToUnicodeMap;
 
 /***/ }),
-/* 43 */
+/* 49 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -29383,9 +29815,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.CFFFont = void 0;
 
-var _cff_parser = __w_pdfjs_require__(35);
+var _cff_parser = __w_pdfjs_require__(45);
 
-var _fonts_utils = __w_pdfjs_require__(38);
+var _fonts_utils = __w_pdfjs_require__(18);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -29493,7 +29925,7 @@ class CFFFont {
 exports.CFFFont = CFFFont;
 
 /***/ }),
-/* 44 */
+/* 50 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -29505,11 +29937,11 @@ exports.FontRendererFactory = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _cff_parser = __w_pdfjs_require__(35);
+var _cff_parser = __w_pdfjs_require__(45);
 
-var _glyphlist = __w_pdfjs_require__(39);
+var _glyphlist = __w_pdfjs_require__(20);
 
-var _encodings = __w_pdfjs_require__(37);
+var _encodings = __w_pdfjs_require__(19);
 
 var _stream = __w_pdfjs_require__(10);
 
@@ -30468,7 +30900,7 @@ class FontRendererFactory {
 exports.FontRendererFactory = FontRendererFactory;
 
 /***/ }),
-/* 45 */
+/* 51 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -31124,7 +31556,7 @@ class CompositeGlyph {
 }
 
 /***/ }),
-/* 46 */
+/* 52 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -31264,7 +31696,7 @@ class OpenTypeFileBuilder {
 exports.OpenTypeFileBuilder = OpenTypeFileBuilder;
 
 /***/ }),
-/* 47 */
+/* 53 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -31274,15 +31706,15 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.Type1Font = void 0;
 
-var _cff_parser = __w_pdfjs_require__(35);
+var _cff_parser = __w_pdfjs_require__(45);
 
-var _fonts_utils = __w_pdfjs_require__(38);
+var _fonts_utils = __w_pdfjs_require__(18);
 
 var _core_utils = __w_pdfjs_require__(9);
 
 var _stream = __w_pdfjs_require__(10);
 
-var _type1_parser = __w_pdfjs_require__(48);
+var _type1_parser = __w_pdfjs_require__(54);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -31629,7 +32061,7 @@ class Type1Font {
 exports.Type1Font = Type1Font;
 
 /***/ }),
-/* 48 */
+/* 54 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -31639,7 +32071,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.Type1Parser = void 0;
 
-var _encodings = __w_pdfjs_require__(37);
+var _encodings = __w_pdfjs_require__(19);
 
 var _core_utils = __w_pdfjs_require__(9);
 
@@ -32352,7 +32784,7 @@ const Type1Parser = function Type1ParserClosure() {
 exports.Type1Parser = Type1Parser;
 
 /***/ }),
-/* 49 */
+/* 55 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -32365,7 +32797,7 @@ exports.Pattern = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _colorspace = __w_pdfjs_require__(14);
+var _colorspace = __w_pdfjs_require__(24);
 
 var _primitives = __w_pdfjs_require__(5);
 
@@ -32386,7 +32818,7 @@ class Pattern {
     (0, _util.unreachable)("Cannot initialize Pattern.");
   }
 
-  static parseShading(shading, matrix, xref, res, handler, pdfFunctionFactory, localColorSpaceCache) {
+  static parseShading(shading, xref, res, handler, pdfFunctionFactory, localColorSpaceCache) {
     const dict = (0, _primitives.isStream)(shading) ? shading.dict : shading;
     const type = dict.get("ShadingType");
 
@@ -32394,13 +32826,13 @@ class Pattern {
       switch (type) {
         case ShadingType.AXIAL:
         case ShadingType.RADIAL:
-          return new RadialAxialShading(dict, matrix, xref, res, pdfFunctionFactory, localColorSpaceCache);
+          return new RadialAxialShading(dict, xref, res, pdfFunctionFactory, localColorSpaceCache);
 
         case ShadingType.FREE_FORM_MESH:
         case ShadingType.LATTICE_FORM_MESH:
         case ShadingType.COONS_PATCH_MESH:
         case ShadingType.TENSOR_PATCH_MESH:
-          return new MeshShading(shading, matrix, xref, res, pdfFunctionFactory, localColorSpaceCache);
+          return new MeshShading(shading, xref, res, pdfFunctionFactory, localColorSpaceCache);
 
         default:
           throw new _util.FormatError("Unsupported ShadingType: " + type);
@@ -32440,9 +32872,8 @@ class BaseShading {
 }
 
 class RadialAxialShading extends BaseShading {
-  constructor(dict, matrix, xref, resources, pdfFunctionFactory, localColorSpaceCache) {
+  constructor(dict, xref, resources, pdfFunctionFactory, localColorSpaceCache) {
     super();
-    this.matrix = matrix;
     this.coordsArr = dict.getArray("Coords");
     this.shadingType = dict.get("ShadingType");
 
@@ -32557,7 +32988,7 @@ class RadialAxialShading extends BaseShading {
       (0, _util.unreachable)(`getPattern type unknown: ${shadingType}`);
     }
 
-    return ["RadialAxial", type, this.bbox, this.colorStops, p0, p1, r0, r1, this.matrix];
+    return ["RadialAxial", type, this.bbox, this.colorStops, p0, p1, r0, r1];
   }
 
 }
@@ -32701,7 +33132,7 @@ class MeshShading extends BaseShading {
     return (0, _util.shadow)(this, "TRIANGLE_DENSITY", 20);
   }
 
-  constructor(stream, matrix, xref, resources, pdfFunctionFactory, localColorSpaceCache) {
+  constructor(stream, xref, resources, pdfFunctionFactory, localColorSpaceCache) {
     super();
 
     if (!(0, _primitives.isStream)(stream)) {
@@ -32709,7 +33140,6 @@ class MeshShading extends BaseShading {
     }
 
     const dict = stream.dict;
-    this.matrix = matrix;
     this.shadingType = dict.get("ShadingType");
     const bbox = dict.getArray("BBox");
 
@@ -33267,7 +33697,7 @@ class MeshShading extends BaseShading {
   }
 
   getIR() {
-    return ["Mesh", this.shadingType, this.coords, this.colors, this.figures, this.bounds, this.matrix, this.bbox, this.background];
+    return ["Mesh", this.shadingType, this.coords, this.colors, this.figures, this.bounds, this.bbox, this.background];
   }
 
 }
@@ -33297,7 +33727,7 @@ function getTilingPatternIR(operatorList, dict, color) {
 }
 
 /***/ }),
-/* 50 */
+/* 56 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -33312,9 +33742,9 @@ var _primitives = __w_pdfjs_require__(5);
 
 var _util = __w_pdfjs_require__(2);
 
-var _ps_parser = __w_pdfjs_require__(51);
+var _ps_parser = __w_pdfjs_require__(57);
 
-var _image_utils = __w_pdfjs_require__(52);
+var _image_utils = __w_pdfjs_require__(58);
 
 class PDFFunctionFactory {
   constructor({
@@ -34632,7 +35062,7 @@ const PostScriptCompiler = function PostScriptCompilerClosure() {
 exports.PostScriptCompiler = PostScriptCompiler;
 
 /***/ }),
-/* 51 */
+/* 57 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -34883,7 +35313,7 @@ class PostScriptLexer {
 exports.PostScriptLexer = PostScriptLexer;
 
 /***/ }),
-/* 52 */
+/* 58 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -35209,7 +35639,7 @@ class GlobalImageCache {
 exports.GlobalImageCache = GlobalImageCache;
 
 /***/ }),
-/* 53 */
+/* 59 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -35520,7 +35950,7 @@ function bidi(str, startLevel, vertical) {
 }
 
 /***/ }),
-/* 54 */
+/* 60 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -38473,299 +38903,6 @@ const getMetrics = (0, _core_utils.getLookupTableFactory)(function (t) {
 exports.getMetrics = getMetrics;
 
 /***/ }),
-/* 55 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.getXfaFontName = getXfaFontName;
-exports.getXfaFontWidths = getXfaFontWidths;
-
-var _calibri_factors = __w_pdfjs_require__(56);
-
-var _helvetica_factors = __w_pdfjs_require__(57);
-
-var _liberationsans_widths = __w_pdfjs_require__(58);
-
-var _myriadpro_factors = __w_pdfjs_require__(59);
-
-var _segoeui_factors = __w_pdfjs_require__(60);
-
-var _core_utils = __w_pdfjs_require__(9);
-
-var _fonts_utils = __w_pdfjs_require__(38);
-
-const getXFAFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
-  t["MyriadPro-Regular"] = t["PdfJS-Fallback-Regular"] = {
-    name: "LiberationSans-Regular",
-    factors: _myriadpro_factors.MyriadProRegularFactors,
-    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
-    lineHeight: _myriadpro_factors.MyriadProRegularLineHeight
-  };
-  t["MyriadPro-Bold"] = t["PdfJS-Fallback-Bold"] = {
-    name: "LiberationSans-Bold",
-    factors: _myriadpro_factors.MyriadProBoldFactors,
-    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
-    lineHeight: _myriadpro_factors.MyriadProBoldLineHeight
-  };
-  t["MyriadPro-It"] = t["MyriadPro-Italic"] = t["PdfJS-Fallback-Italic"] = {
-    name: "LiberationSans-Italic",
-    factors: _myriadpro_factors.MyriadProItalicFactors,
-    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
-    lineHeight: _myriadpro_factors.MyriadProItalicLineHeight
-  };
-  t["MyriadPro-BoldIt"] = t["MyriadPro-BoldItalic"] = t["PdfJS-Fallback-BoldItalic"] = {
-    name: "LiberationSans-BoldItalic",
-    factors: _myriadpro_factors.MyriadProBoldItalicFactors,
-    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
-    lineHeight: _myriadpro_factors.MyriadProBoldItalicLineHeight
-  };
-  t.ArialMT = t.Arial = t["Arial-Regular"] = {
-    name: "LiberationSans-Regular",
-    baseWidths: _liberationsans_widths.LiberationSansRegularWidths
-  };
-  t["Arial-BoldMT"] = t["Arial-Bold"] = {
-    name: "LiberationSans-Bold",
-    baseWidths: _liberationsans_widths.LiberationSansBoldWidths
-  };
-  t["Arial-ItalicMT"] = t["Arial-Italic"] = {
-    name: "LiberationSans-Italic",
-    baseWidths: _liberationsans_widths.LiberationSansItalicWidths
-  };
-  t["Arial-BoldItalicMT"] = t["Arial-BoldItalic"] = {
-    name: "LiberationSans-BoldItalic",
-    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths
-  };
-  t["Calibri-Regular"] = {
-    name: "LiberationSans-Regular",
-    factors: _calibri_factors.CalibriRegularFactors,
-    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
-    lineHeight: _calibri_factors.CalibriRegularLineHeight
-  };
-  t["Calibri-Bold"] = {
-    name: "LiberationSans-Bold",
-    factors: _calibri_factors.CalibriBoldFactors,
-    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
-    lineHeight: _calibri_factors.CalibriBoldLineHeight
-  };
-  t["Calibri-Italic"] = {
-    name: "LiberationSans-Italic",
-    factors: _calibri_factors.CalibriItalicFactors,
-    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
-    lineHeight: _calibri_factors.CalibriItalicLineHeight
-  };
-  t["Calibri-BoldItalic"] = {
-    name: "LiberationSans-BoldItalic",
-    factors: _calibri_factors.CalibriBoldItalicFactors,
-    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
-    lineHeight: _calibri_factors.CalibriBoldItalicLineHeight
-  };
-  t["Segoeui-Regular"] = {
-    name: "LiberationSans-Regular",
-    factors: _segoeui_factors.SegoeuiRegularFactors,
-    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
-    lineHeight: _segoeui_factors.SegoeuiRegularLineHeight
-  };
-  t["Segoeui-Bold"] = {
-    name: "LiberationSans-Bold",
-    factors: _segoeui_factors.SegoeuiBoldFactors,
-    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
-    lineHeight: _segoeui_factors.SegoeuiBoldLineHeight
-  };
-  t["Segoeui-Italic"] = {
-    name: "LiberationSans-Italic",
-    factors: _segoeui_factors.SegoeuiItalicFactors,
-    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
-    lineHeight: _segoeui_factors.SegoeuiItalicLineHeight
-  };
-  t["Segoeui-BoldItalic"] = {
-    name: "LiberationSans-BoldItalic",
-    factors: _segoeui_factors.SegoeuiBoldItalicFactors,
-    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
-    lineHeight: _segoeui_factors.SegoeuiBoldItalicLineHeight
-  };
-  t["Helvetica-Regular"] = t.Helvetica = {
-    name: "LiberationSans-Regular",
-    factors: _helvetica_factors.HelveticaRegularFactors,
-    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
-    lineHeight: _helvetica_factors.HelveticaRegularLineHeight
-  };
-  t["Helvetica-Bold"] = {
-    name: "LiberationSans-Bold",
-    factors: _helvetica_factors.HelveticaBoldFactors,
-    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
-    lineHeight: _helvetica_factors.HelveticaBoldLineHeight
-  };
-  t["Helvetica-Italic"] = {
-    name: "LiberationSans-Italic",
-    factors: _helvetica_factors.HelveticaItalicFactors,
-    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
-    lineHeight: _helvetica_factors.HelveticaItalicLineHeight
-  };
-  t["Helvetica-BoldItalic"] = {
-    name: "LiberationSans-BoldItalic",
-    factors: _helvetica_factors.HelveticaBoldItalicFactors,
-    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
-    lineHeight: _helvetica_factors.HelveticaBoldItalicLineHeight
-  };
-});
-
-function getXfaFontName(name) {
-  const fontName = (0, _fonts_utils.normalizeFontName)(name);
-  const fontMap = getXFAFontMap();
-  return fontMap[fontName];
-}
-
-function getXfaFontWidths(name) {
-  const info = getXfaFontName(name);
-
-  if (!info) {
-    return null;
-  }
-
-  const {
-    baseWidths,
-    factors
-  } = info;
-
-  if (!factors) {
-    return baseWidths;
-  }
-
-  return baseWidths.map((w, i) => w * factors[i]);
-}
-
-/***/ }),
-/* 56 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.CalibriRegularLineHeight = exports.CalibriRegularFactors = exports.CalibriItalicLineHeight = exports.CalibriItalicFactors = exports.CalibriBoldLineHeight = exports.CalibriBoldItalicLineHeight = exports.CalibriBoldItalicFactors = exports.CalibriBoldFactors = void 0;
-const CalibriBoldFactors = [1.3877, 1, 0.83908, 0.77539, 0.77539, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.7762, 0.7762, 0.73293, 0.73293, 0.73293, 0.73293, 0.73293, 0.73293, 0.82577, 0.87289, 0.87289, 0.88506, 0.80367, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.88656, 0.73133, 0.73133, 0.57184, 0.87356, 0.6965, 0.88506, 0.91133, 0.7514, 0.81921, 0.68156, 0.81921, 0.81921, 1, 0.81921, 0.87356, 1, 0.99862, 0.99862, 1, 0.91075, 0.87356, 0.95958, 0.76229, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.56289, 0.95958, 0.59526, 0.59526, 0.75727, 0.75727, 1, 0.69225, 0.69225, 0.89019, 0.70424, 1, 0.91926, 0.70823, 1.04924, 1.04924, 0.9121, 0.9121, 0.9121, 1, 0.9121, 0.9121, 0.86943, 0.87402, 0.86943, 0.86943, 0.86943, 0.86943, 0.86943, 0.86943, 0.86943, 0.84896, 0.81235, 0.86943, 0.82001, 0.87508, 0.87508, 0.86943, 0.79795, 0.9762, 0.87356, 0.99819, 0.88198, 0.77958, 0.77958, 0.77958, 1, 0.79795, 0.70864, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.70864, 0.70864, 0.70864, 0.70864, 1, 0.78275, 0.81055, 0.81055, 0.81055, 0.81055, 1, 0.86943, 0.79795, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.77892, 0.77892, 0.56029, 0.90399, 0.90399, 0.88653, 0.96017, 0.96017, 0.96017, 0.96017, 0.96017, 0.82577, 0.7648, 0.77892, 0.77892, 0.77892, 0.77892, 0.77892, 0.78257, 0.78257, 0.78257, 0.78257, 0.78257, 0.88762, 0.88762, 0.88762, 0.88762, 0.90323, 1, 0.88762, 0.8715, 0.8715, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.88762, 0.96108, 0.96108, 0.88762, 0.97566, 0.80352, 0.88762, 0.90747, 0.88762, 0.88762, 1.31006, 1.81055, 0.90527, 0.90527, 1.81055, 1.53711, 0.94434, 0.85284, 0.85284, 1.2798, 0.92138, 0.88762, 0.8785, 1.54657, 1.69808, 0.8936, 1, 0.88331, 0.88331, 0.97507, 0.97507, 1.15543, 1, 1.7801, 1.42259, 0.75241, 0.75241, 1.20528, 1, 1, 0.75241, 0.75241, 0.75241, 0.75241, 0.91056, 0.89552, 0.78287, 0.91027, 1.20528, 1, 1, 0.82845, 0.92794, 1, 1, 1.13254, 0.89552, 1, 0.8785, 0.89552, 0.89552, 0.83016, 0.93125, 0.85592, 0.87842, 1, 1.24487, 1, 1.06303, 0.90747, 1, 1, 0.91133, 0.70674, 0.88401, 0.90518, 0.90518, 0.90518, 0.90518, 0.90518, 0.90518, 0.90518, 0.90518, 0.91133, 1, 0.71143, 0.90518, 0.90527, 0.89552, 0.8785, 0.90518, 0.96399, 1.01407, 0.85284, 0.85356, 1.23108, 0.89049, 0.89049, 0.8785, 0.97801, 0.97171, 0.97801, 0.95015, 1, 1, 1, 0.91133, 0.88525, 1, 0.56892, 0.91133, 1, 0.83406, 0.77618, 0.84021, 0.77618, 0.77618, 1, 0.77618, 0.90807, 0.90176, 1, 0.85284, 0.90747, 0.96839, 0.96839, 1.03372, 1.03372, 0.8785, 0.89608, 0.8785, 1, 1.44947, 1.45894, 1, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.90167, 0.88401, 1.17534, 1.37077, 0.8941, 0.8941, 0.9716, 1, 1, 1, 0.88401, 1.02988, 1.02988, 1.02988, 1.02988, 0.88401, 0.91916, 0.91916, 0.86304, 0.86077, 1, 0.86304, 0.88401, 0.88401, 0.87445, 0.79468, 1, 0.88175, 0.85284, 0.90747, 1, 0.91133, 0.85284, 0.9297, 1.08004, 0.94903, 1, 0.91488, 0.70645, 1, 1, 0.85284, 1, 0.92099, 0.85284, 1, 1, 0.8785, 0.8785, 0.87802, 0.8785, 1, 0.91133, 1, 0.90747, 0.8785, 0.84723, 0.89552, 0.8801, 0.8801, 0.8801, 0.8801, 0.8801, 0.89291, 0.94721, 0.8801, 0.8801, 0.8801, 0.84971, 0.84971, 0.8801, 0.8801, 0.91133, 0.83489, 0.82845, 0.78864, 0.99862, 1.12401, 1.19118, 0.69825, 0.89049, 0.89049, 0.8801, 0.8785, 1.07463, 0.93548, 0.93548, 1.08696, 0.81988, 0.96134, 1.06152, 0.84107, 0.97747, 0.75638, 0.85284, 0.90747, 0.95018, 0.97926, 0.8785, 0.75859, 0.75859, 0.92482, 0.87012, 0.87012, 0.87012, 0.92794, 0.92794, 0.92794, 0.92794, 0.98152, 0.91343, 0.91343, 0.90747, 0.91343, 1, 0.68787, 0.85284, 0.85714, 0.98387, 1, 0.7173, 0.7173, 0.7173, 0.7173, 0.7173, 1, 1, 0.89552, 0.91133, 0.81499, 1, 1, 0.79586, 0.78216, 0.91133, 1.54657, 1, 1, 0.91133, 0.77192, 1, 1.04106, 0.87965, 1.06452, 0.75841, 1, 1.00813, 0.8785, 0.91133, 0.88525, 0.84133, 1.33431, 1, 0.95161, 0.72021, 1, 1, 1, 1, 0.91133, 0.8785, 0.8785, 0.8785, 0.8785, 0.8785, 0.8785, 0.8785, 0.8785, 0.89552, 0.90363, 1, 1, 1.01466, 1.0088, 1, 0.75806, 0.81055, 1.04106, 1, 0.82845, 0.73133, 0.90264, 0.90518, 0.90548, 1, 1, 1.4956, 0.93835, 1, 1, 2.2807, 1, 1, 1, 0.90727, 0.90727, 0.8785, 1, 0.94211, 0.94211, 0.94211, 0.94211, 0.8785, 0.8785, 0.85075, 0.95794, 0.95794, 0.95794, 0.95794, 0.95794, 0.82616, 0.86513, 0.85162, 0.85162, 0.85162, 0.85162, 0.91133, 0.85162, 0.79492, 0.79492, 0.79492, 0.79492, 0.91133, 0.79109];
-exports.CalibriBoldFactors = CalibriBoldFactors;
-const CalibriBoldLineHeight = 1.2207;
-exports.CalibriBoldLineHeight = CalibriBoldLineHeight;
-const CalibriBoldItalicFactors = [1.3877, 1, 0.83908, 0.77539, 0.77539, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.7762, 0.7762, 0.71805, 0.71805, 0.71805, 0.71805, 0.71805, 0.71805, 0.82577, 0.87289, 0.87289, 0.88506, 0.86036, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.88116, 0.73133, 0.73133, 0.57118, 0.87356, 0.6965, 0.88506, 0.91133, 0.7514, 0.81921, 0.67174, 0.81921, 0.81921, 1, 0.81921, 0.87356, 1, 0.99862, 0.99862, 1, 0.91075, 0.87356, 0.95958, 0.76467, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.56347, 0.95958, 0.59526, 0.59526, 0.75727, 0.75727, 1, 0.69225, 0.69225, 0.89019, 0.70424, 1, 0.91926, 0.70823, 1.04924, 1.04924, 0.90872, 0.90872, 0.90872, 1, 0.90872, 0.90872, 0.85938, 0.87402, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.87179, 0.80346, 0.85938, 0.79179, 0.87068, 0.87068, 0.85938, 0.79795, 0.97447, 0.87891, 0.97466, 0.87068, 0.77958, 0.77958, 0.77958, 1, 0.79795, 0.69766, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.69766, 0.69766, 0.69766, 0.69766, 1, 0.7957, 0.81055, 0.81055, 0.81055, 0.81055, 1, 0.86441, 0.79795, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.77892, 0.77892, 0.55853, 0.90399, 0.90399, 0.88653, 0.96068, 0.96068, 0.96068, 0.96068, 0.96068, 0.82577, 0.74889, 0.77892, 0.77892, 0.77892, 0.77892, 0.77892, 0.78257, 0.78257, 0.78257, 0.78257, 0.78257, 0.94908, 0.94908, 0.94908, 0.94908, 0.90323, 1, 0.94908, 0.85887, 0.85887, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.94908, 0.94252, 0.94252, 0.94908, 0.97566, 0.80352, 0.94908, 0.90747, 0.94908, 0.94908, 1.3107, 1.81055, 0.90616, 0.90527, 1.81055, 1.53711, 0.94434, 0.85284, 0.85284, 1.2798, 0.92138, 0.94908, 0.86411, 1.529, 1.69808, 0.87411, 1, 0.88331, 0.88331, 0.97507, 0.97507, 1.15543, 1, 1.7801, 1.42259, 0.74012, 0.74012, 1.20528, 1, 1, 0.74012, 0.74012, 0.74012, 0.74012, 0.91056, 0.89552, 0.78022, 0.91027, 1.20528, 1, 1, 0.82845, 0.92794, 1, 1, 1.13254, 0.89552, 1, 0.86411, 0.89552, 0.89552, 0.79538, 0.92726, 0.85592, 0.8728, 1, 1.24487, 1, 1.48387, 0.90747, 1, 1, 0.91133, 0.70088, 0.88401, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.91133, 1, 0.71094, 0.88323, 0.90527, 0.89552, 0.86331, 0.88323, 0.95612, 0.95612, 0.85284, 0.85356, 1.23108, 0.8753, 0.8753, 0.8785, 0.97801, 0.97171, 0.97801, 0.95015, 1, 1, 1, 0.91133, 0.88525, 1, 0.56892, 0.91133, 1, 0.83406, 0.86411, 0.84021, 0.86411, 0.86411, 1, 0.86411, 0.90807, 0.90176, 1, 0.85284, 0.90747, 0.96839, 0.96839, 1.03372, 1.03372, 0.86331, 0.8777, 0.86331, 1, 1.44947, 1.45894, 1, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.90167, 0.88401, 1.17534, 1.37077, 0.8941, 0.8941, 0.9716, 1, 1, 1, 0.88401, 1.02988, 1.02988, 1.02988, 1.02988, 0.88401, 0.91916, 0.91916, 0.86304, 0.84814, 1, 0.86304, 0.88401, 0.88401, 0.87445, 0.77312, 1, 0.88175, 0.85284, 0.90747, 1, 0.91133, 0.85284, 0.9297, 1.08004, 0.94903, 1, 0.9039, 0.70645, 1, 1, 0.85284, 1, 0.91822, 0.85284, 1, 1, 0.86331, 0.86331, 0.86906, 0.86331, 1, 0.91133, 1, 0.90747, 0.86331, 0.84723, 0.89552, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86549, 0.94721, 0.86331, 0.86331, 0.86331, 0.86015, 0.86015, 0.86331, 0.86331, 0.91133, 0.83489, 0.82845, 0.78864, 0.99862, 1.19129, 1.19118, 0.69825, 0.89049, 0.89049, 0.86331, 0.86411, 1.07463, 0.93548, 0.93548, 1.08696, 0.81988, 0.96134, 1.06152, 0.83326, 0.99375, 0.81344, 0.85284, 0.90747, 0.95018, 0.95452, 0.86411, 0.75859, 0.75859, 0.92482, 0.87012, 0.87012, 0.87012, 0.92794, 0.89807, 0.92794, 0.92794, 0.98152, 0.90464, 0.90464, 0.90747, 0.90464, 1, 0.68787, 0.85284, 0.87581, 0.98387, 1, 0.70852, 0.70852, 0.70852, 0.70852, 0.70852, 1, 1, 0.89552, 0.91133, 0.81499, 1, 1, 0.82046, 0.76422, 0.91133, 1.56239, 1, 1, 0.91133, 0.77192, 1, 1.04106, 0.96057, 1.06452, 0.75841, 1, 1.02189, 0.86411, 0.91133, 0.88525, 0.84133, 1.33431, 1, 0.95161, 0.72021, 1, 1, 1, 1, 0.91133, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.89552, 0.90363, 1, 1, 1.01466, 1.0088, 1, 0.75806, 0.81055, 1.04106, 1, 0.82845, 0.73133, 0.90631, 0.88323, 0.85174, 1, 1, 1.4956, 0.92972, 1, 1, 2.2807, 1, 1, 1, 0.90727, 0.90727, 0.86331, 1, 0.92733, 0.92733, 0.92733, 0.92733, 0.86331, 0.86331, 0.84372, 0.95794, 0.95794, 0.95794, 0.95794, 0.95794, 0.82616, 0.85668, 0.84548, 0.84548, 0.84548, 0.84548, 0.91133, 0.84548, 0.79492, 0.79492, 0.79492, 0.79492, 0.91133, 0.74081];
-exports.CalibriBoldItalicFactors = CalibriBoldItalicFactors;
-const CalibriBoldItalicLineHeight = 1.2207;
-exports.CalibriBoldItalicLineHeight = CalibriBoldItalicLineHeight;
-const CalibriItalicFactors = [1.3877, 1, 0.8675, 0.76318, 0.76318, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.81552, 0.81552, 0.72346, 0.72346, 0.72346, 0.72346, 0.72346, 0.72346, 0.77818, 0.85193, 0.85193, 0.86477, 0.84134, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.86698, 0.73206, 0.73206, 0.6192, 0.86275, 0.7363, 0.86477, 0.91133, 0.7522, 0.81105, 0.7286, 0.81105, 0.81105, 1, 0.81105, 0.86275, 1, 0.99862, 0.99862, 1, 0.90872, 0.86275, 0.90685, 0.77896, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.64824, 0.90685, 0.6377, 0.6377, 0.77892, 0.77892, 1, 0.75593, 0.75593, 0.85871, 0.76032, 1, 0.98156, 0.77261, 1.02638, 1.02638, 0.89249, 0.89249, 0.89249, 1, 0.89249, 0.89249, 0.84118, 0.8667, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.87291, 0.85696, 0.84118, 0.82411, 0.84557, 0.84557, 0.84118, 0.77452, 0.90782, 0.85984, 0.903, 0.85374, 0.75186, 0.75186, 0.75186, 1, 0.77452, 0.67789, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.67789, 0.67789, 0.67789, 0.67789, 1, 0.76466, 0.79776, 0.79776, 0.79776, 0.79776, 1, 0.84369, 0.77452, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.7306, 0.7306, 0.56321, 0.88844, 0.88844, 0.85066, 0.94309, 0.94309, 0.94309, 0.94309, 0.94309, 0.77818, 0.75828, 0.7306, 0.7306, 0.7306, 0.7306, 0.7306, 0.76659, 0.76659, 0.76659, 0.76659, 0.76659, 0.9245, 0.9245, 0.9245, 0.9245, 0.87683, 1, 0.9245, 0.84843, 0.84843, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.9245, 0.99058, 0.99058, 0.9245, 1.02269, 0.90861, 0.9245, 0.90747, 0.9245, 0.9245, 1.28809, 1.81055, 0.90572, 0.90749, 1.81055, 1.55469, 0.94434, 1.06139, 0.85284, 1.2798, 0.88071, 0.9245, 0.9245, 1.38313, 1.77256, 0.92393, 1, 0.94152, 0.94152, 1.10369, 1.10369, 1.1437, 1, 1.91729, 1.42259, 0.83203, 0.83203, 1.18622, 1, 1, 0.83203, 0.83203, 0.83203, 0.83203, 0.92229, 0.89552, 0.78086, 0.91027, 1.18622, 1, 1, 0.96309, 0.89807, 1, 1, 1.13254, 0.89552, 1, 0.9245, 0.89552, 0.89552, 0.8875, 0.99034, 0.84737, 0.942, 1, 1.17889, 1, 1.48387, 0.90747, 1, 1, 0.91133, 0.67009, 0.82601, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.91133, 1, 0.68994, 0.85865, 0.90527, 0.89552, 0.9245, 0.85865, 1.03667, 1.03667, 0.85284, 0.85284, 1.23108, 0.94635, 0.94635, 0.94469, 1.17223, 1.11523, 0.97801, 1.09842, 1, 1, 1, 0.91133, 0.84426, 1, 0.54873, 0.91133, 1, 0.82616, 0.9245, 0.8916, 0.9245, 0.9245, 1, 0.9245, 0.86331, 0.8739, 1, 0.85284, 0.90747, 0.92098, 0.92098, 1.0176, 1.0176, 0.9245, 0.93591, 0.9245, 1, 1.44947, 1.40909, 1, 1.03297, 0.82601, 0.82601, 0.82601, 0.82601, 0.82601, 1.05611, 0.82601, 1.19658, 1.33512, 0.8941, 0.8941, 0.97622, 1, 1, 1, 1.03297, 1.23516, 1.23516, 1.23516, 1.23516, 0.82601, 1.07692, 1.07692, 0.90918, 0.90918, 1, 0.90918, 1.03297, 1.03297, 0.94048, 0.9375, 1, 0.93407, 0.85284, 0.90747, 1, 0.91133, 0.85284, 1.09231, 1.0336, 1.11429, 1, 0.94959, 0.71353, 1, 1, 0.85284, 1, 0.98217, 0.85284, 1, 1, 0.9245, 0.9245, 0.92534, 0.9245, 1, 0.91133, 1, 0.90747, 0.9245, 0.89746, 0.89552, 0.92274, 0.92274, 0.92274, 0.92274, 0.92274, 0.86291, 0.93695, 0.92274, 0.92274, 0.92274, 0.89404, 0.89404, 0.92274, 0.92274, 0.91133, 0.79801, 0.80504, 0.76288, 0.99862, 1.16359, 1.15642, 0.69825, 0.86651, 0.86651, 0.92274, 0.9245, 1.09091, 0.91056, 0.91056, 1.07806, 0.80395, 0.90861, 1.03809, 0.83437, 1.00225, 0.82507, 0.85284, 0.90747, 0.97094, 0.97248, 0.9245, 0.83319, 0.75859, 1.1293, 1.2566, 1.2566, 1.2566, 1.12308, 1.12308, 1.12308, 1.12308, 1.15601, 1.02933, 1.02933, 0.90747, 1.02933, 1, 0.68787, 0.85284, 0.88832, 0.96334, 1, 0.77832, 0.77832, 0.77832, 0.77832, 0.77832, 1, 1, 0.89552, 0.91133, 0.774, 1, 1, 0.88178, 0.84438, 0.91133, 1.39543, 1, 1, 0.91133, 0.7589, 1, 1.20562, 1.03525, 1.23023, 0.97655, 1, 1.0297, 0.9245, 0.91133, 0.84426, 0.80972, 1.35191, 1, 0.95161, 0.70508, 1, 1, 1, 1, 0.91133, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.89552, 0.90186, 1, 1, 1.0088, 1.0044, 1, 0.739, 0.79776, 1.20562, 1, 0.96309, 0.73206, 0.89693, 0.85865, 0.90933, 1, 1, 1.4956, 0.97858, 1, 1, 2.01462, 1, 1, 1, 1.05859, 1.05859, 0.9245, 1, 0.9849, 0.9849, 0.9849, 0.9849, 0.9245, 0.9245, 0.8916, 0.98986, 0.98986, 0.98986, 0.98986, 0.98986, 0.86621, 0.84153, 0.89453, 0.89453, 0.89453, 0.89453, 0.91133, 0.89453, 0.79004, 0.79004, 0.79004, 0.79004, 0.91133, 0.75026];
-exports.CalibriItalicFactors = CalibriItalicFactors;
-const CalibriItalicLineHeight = 1.2207;
-exports.CalibriItalicLineHeight = CalibriItalicLineHeight;
-const CalibriRegularFactors = [1.3877, 1, 0.8675, 0.76318, 0.76318, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.86686, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.81552, 0.81552, 0.73834, 0.73834, 0.73834, 0.73834, 0.73834, 0.73834, 0.77818, 0.85193, 0.85193, 0.86477, 0.84503, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.86901, 0.73206, 0.73206, 0.62267, 0.86275, 0.74359, 0.86477, 0.91133, 0.7522, 0.81105, 0.75443, 0.81105, 0.81105, 1, 0.81105, 0.86275, 1, 0.99862, 0.99862, 1, 0.90872, 0.86275, 0.90685, 0.77741, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.65649, 0.90685, 0.6377, 0.6377, 0.77892, 0.77892, 1, 0.75593, 0.75593, 0.85746, 0.76032, 1, 0.98156, 0.77261, 1.02638, 1.02638, 0.89385, 0.89385, 0.89385, 1, 0.89385, 0.89385, 0.85122, 0.8667, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.88831, 0.88254, 0.85122, 0.85498, 0.85311, 0.85311, 0.85122, 0.77452, 0.95165, 0.86275, 0.89772, 0.86503, 0.75186, 0.75186, 0.75186, 1, 0.77452, 0.68887, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.68887, 0.68887, 0.68887, 0.68887, 1, 0.74171, 0.79776, 0.79776, 0.79776, 0.79776, 1, 0.85122, 0.77452, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.7306, 0.7306, 0.56963, 0.88844, 0.88844, 0.85066, 0.94258, 0.94258, 0.94258, 0.94258, 0.94258, 0.77818, 0.75657, 0.7306, 0.7306, 0.7306, 0.7306, 0.7306, 0.76659, 0.76659, 0.76659, 0.76659, 0.76659, 0.86128, 0.86128, 0.86128, 0.86128, 0.87683, 0.86128, 0.8693, 0.8693, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.86128, 0.98142, 0.98142, 0.86128, 1.02269, 0.90861, 0.86128, 0.90747, 0.86128, 0.86128, 1.28809, 1.81055, 0.90527, 0.90527, 1.81055, 1.55469, 0.94434, 1.06139, 0.85284, 1.2798, 0.88071, 0.86128, 0.94469, 1.39016, 1.77256, 0.9236, 1, 0.94152, 0.94152, 1.10369, 1.10369, 1.1437, 1.91729, 1.42259, 0.8457, 0.8457, 1.18622, 0.8457, 0.8457, 0.8457, 0.8457, 0.92229, 0.89552, 0.81209, 0.91027, 1.18622, 1, 0.96309, 0.89807, 1.13254, 0.89552, 0.94469, 0.89552, 0.89552, 0.92454, 0.9921, 0.84737, 0.94035, 1, 1.17889, 1.48387, 0.90747, 1, 1, 0.91133, 0.67742, 0.82601, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.91133, 0.69043, 0.89464, 0.90527, 0.89552, 0.94469, 0.89464, 1.02191, 1.02191, 0.85284, 0.85356, 1.23108, 0.96576, 0.96576, 0.94469, 1.17223, 1.11523, 0.97801, 1.09842, 1, 1, 1, 0.91133, 0.84426, 0.54873, 0.91133, 0.82616, 0.84636, 0.89258, 0.84636, 0.84636, 1, 0.84636, 0.86331, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.8739, 0.85284, 0.90747, 0.92098, 0.92098, 1.0176, 1.0176, 0.94469, 0.95786, 0.94469, 1, 1.44947, 1.40909, 1.03297, 0.82601, 0.82601, 0.82601, 0.82601, 0.82601, 1.05611, 0.82601, 1.19658, 1.33512, 0.8941, 0.8941, 0.97622, 1, 1, 1, 1.03297, 1.23516, 1.23516, 1.23516, 1.23516, 0.82601, 1.07692, 1.07692, 0.90918, 0.90918, 1, 0.90918, 1.03297, 1.03297, 0.92578, 0.90452, 1, 1.11842, 0.85284, 0.90747, 1, 0.91133, 0.85284, 1.09231, 1.0336, 1.11429, 1, 0.95897, 0.71353, 1, 1, 0.85284, 1, 0.95424, 0.85284, 1, 1, 0.94469, 0.94469, 0.95877, 0.94469, 1, 0.91133, 1, 0.90747, 0.94469, 0.89746, 0.89552, 0.9482, 0.9482, 0.9482, 0.9482, 0.9482, 0.90016, 0.93695, 0.9482, 0.9482, 0.9482, 0.89181, 0.89181, 0.9482, 0.9482, 0.91133, 0.79801, 0.80504, 0.76288, 0.99862, 1.08707, 1.15642, 0.69825, 0.86651, 0.86651, 0.9482, 0.94469, 1.09091, 0.91056, 0.91056, 1.07806, 0.80395, 0.90861, 1.03809, 0.84286, 1.00452, 0.80113, 0.85284, 0.90747, 0.97094, 0.99247, 0.94469, 0.83319, 0.75859, 1.1293, 1.2566, 1.2566, 1.2566, 1.12308, 1.12308, 1.12308, 1.12308, 1.15601, 1.04692, 1.04692, 0.90747, 1.04692, 1, 0.68787, 0.85284, 0.89442, 0.96334, 1, 0.78223, 0.78223, 0.78223, 0.78223, 0.78223, 1, 1, 0.89552, 0.91133, 0.774, 1, 0.86155, 0.85208, 0.91133, 1.39016, 1, 1, 0.91133, 0.7589, 1, 1.20562, 0.98022, 1.23023, 0.92188, 1, 0.9561, 0.94469, 0.91133, 0.84426, 0.80972, 1.35191, 0.95161, 0.70508, 1, 1, 1, 1, 0.91133, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.89552, 0.90186, 1, 1, 1.0088, 1.0044, 1, 0.739, 0.79776, 1.20562, 1, 0.96309, 0.73206, 0.88844, 0.89464, 0.96766, 1, 1, 1.4956, 1.07185, 0.99413, 0.96334, 1.08065, 0.99331, 1, 1, 2.01462, 1, 1, 1, 1, 1.05859, 1.05859, 0.94469, 1, 0.99018, 0.99018, 0.99018, 0.99018, 0.94469, 0.94469, 0.90332, 0.98986, 0.98986, 0.98986, 0.98986, 0.98986, 0.86621, 0.83969, 0.90527, 0.90527, 0.90527, 0.90527, 0.91133, 0.90527, 0.79004, 0.79004, 0.79004, 0.79004, 0.91133, 0.78848];
-exports.CalibriRegularFactors = CalibriRegularFactors;
-const CalibriRegularLineHeight = 1.2207;
-exports.CalibriRegularLineHeight = CalibriRegularLineHeight;
-
-/***/ }),
-/* 57 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.HelveticaRegularLineHeight = exports.HelveticaRegularFactors = exports.HelveticaItalicLineHeight = exports.HelveticaItalicFactors = exports.HelveticaBoldLineHeight = exports.HelveticaBoldItalicLineHeight = exports.HelveticaBoldItalicFactors = exports.HelveticaBoldFactors = void 0;
-const HelveticaBoldFactors = [0.76116, 1, 0.99977, 1, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.85148, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 0.99997, 0.99977, 1.00026, 0.99977, 0.99973, 1.00026, 1.00022, 0.99988, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 1.00042, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00078, 1.0006, 0.99973, 0.99973, 0.99977, 0.99977, 0.99977, 1.00026, 1.00026, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 1.00013, 1.00022, 1.00036, 1.00022, 1.00022, 1.00022, 1.00001, 1.00024, 0.99977, 0.9999, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99984, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99973, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 1.00069, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 0.99982, 0.99982, 1, 0.99977, 1.00035, 0.99977, 1.00019, 0.99944, 1.00001, 1.00008, 1.00021, 0.99926, 1.00035, 1.00035, 0.99942, 1.00048, 0.99999, 0.99977, 1.00022, 1.00035, 1.00001, 0.99977, 1.00026, 0.99989, 1.00057, 1.00001, 0.99936, 1.00052, 1.00012, 0.99996, 1.00043, 1, 1.00035, 0.9994, 0.99976, 1.00035, 1.00038, 0.99971, 1.00019, 0.9994, 1.00001, 1.0006, 1.00044, 0.99973, 1.00023, 1.00047, 1, 0.99942, 0.99989, 0.99973, 1.00052, 1.00041, 1.00119, 1.00037, 0.99973, 0.99973, 1.00002, 0.99986, 1.00041, 1.00041, 0.99902, 0.9996, 1.00034, 0.99999, 1.00026, 0.99999, 1.00026, 0.99973, 1.00052, 0.99973, 1, 0.99973, 1.00041, 1.00075, 0.9994, 1.0003, 0.99999, 1, 1.00041, 0.99955, 1, 0.99915, 1.0005, 1.00026, 1.00119, 0.99955, 0.99973, 1.0006, 0.99911, 1.0006, 1.00026, 0.99972, 1.00026, 0.99902, 0.99973, 1.00035, 1, 0.99999, 1, 0.99971, 1.00047, 1.00023, 0.99973, 1.00041, 1.00041, 0.99973, 0.99977, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1, 1, 1, 1, 1, 1, 1, 1.00003, 1.00003, 0.99959, 0.9999, 0.99973, 1.00026, 1.0006, 1.00077, 0.99942, 1.41144, 0.99959, 0.99959, 0.99998, 0.99998, 0.99998, 1, 1.00077, 0.99972, 0.99973, 0.99973, 0.99998, 1, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 0.99973, 1.00055, 0.99999, 0.99998, 1, 0.99962, 0.99998, 1.0006, 1, 1, 1.00025, 0.99973, 1, 1.00026, 0.99973, 0.99973, 1.03374, 1.00026, 1.00024, 0.99927, 0.9995, 0.99998, 1, 1.00034, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 1, 0.99973, 1.00026, 0.99973, 1.00082, 0.99962, 1.00003, 0.99915, 0.99984, 1.00026, 1.00026, 1.00026, 0.99998, 0.99999, 0.99998, 0.99998, 1, 0.99999, 1, 0.99973, 1.00002, 0.99998, 0.99973, 0.99973, 0.99998, 0.99973, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99998, 1, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 1.00026, 1.00026, 1.00026, 1.00042, 0.99999, 0.99998, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 0.99561, 0.99999, 0.99999, 0.99977, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.00069, 0.99973, 0.99973, 1.0006, 1.0006, 0.99973, 1.03828, 1.0006, 0.99999, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 1.0006, 0.99972, 1.0006, 1.40579, 0.99982, 0.60299, 1, 1, 1.00003, 1.00106, 0.99867, 1.00003, 1, 1, 1.00026, 1.00026, 0.9993, 1.00026, 1.00026, 0.99973, 1, 1.00031, 1.00026, 0.99973, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00016, 0.99998, 1.00026, 1.00026, 1.00026, 1.00032, 1.00032, 1.00026, 1.00026, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99998, 0.99998, 0.99972, 0.99982, 1.0006, 1, 1.00023, 0.99954, 1.00049, 1.00003, 1.06409, 1.20985, 0.99945, 1.00026, 1.00026, 1.00026, 0.99974, 1, 1, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.00087, 0.99959, 0.99959, 1.00031, 0.99959, 0.99959, 1.00025, 1.00003, 1.00056, 0.99998, 1.41144, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99973, 0.99973, 1.00002, 0.99998, 1.40579, 0.99988, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 0.99998, 0.99935, 0.99998, 0.8121, 0.99998, 1.00087, 1.00026, 0.99973, 1.00002, 1.00002, 0.99998, 1, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 0.99998, 0.99998, 1, 1.00001, 0.99561, 0.99973, 1.00041, 1, 1, 0.99998, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 1.00026, 1.41144, 0.99995, 0.99995, 0.99995, 0.99995, 1.00026, 1.00026, 0.99973, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 0.99973, 0.9993, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1, 1, 1, 1, 0.99973, 0.99902];
-exports.HelveticaBoldFactors = HelveticaBoldFactors;
-const HelveticaBoldLineHeight = 1.2;
-exports.HelveticaBoldLineHeight = HelveticaBoldLineHeight;
-const HelveticaBoldItalicFactors = [0.76116, 1, 0.99977, 1, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.91155, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 1, 0.99977, 1.00026, 0.99977, 0.99973, 1.00026, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 0.99971, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99969, 1.0006, 0.99973, 0.99973, 0.99977, 0.99977, 0.99977, 1.00026, 1.00026, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 0.9998, 1.00022, 0.99972, 1.00022, 1.00022, 1.00022, 1.00001, 0.99968, 1.00032, 1.00047, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99944, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99981, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 0.99966, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 0.99982, 0.99982, 1, 0.99977, 0.99999, 0.99977, 1.00038, 0.99977, 1.00001, 1.00001, 0.99973, 1.00066, 0.99967, 0.99967, 1.00041, 0.99998, 0.99999, 0.99977, 1.00022, 0.99967, 1.00001, 0.99977, 1.00026, 0.99964, 1.00031, 1.00001, 0.99999, 0.99999, 1, 1.00023, 1, 1, 0.99999, 1.00035, 1.00001, 0.99999, 0.99966, 1.00029, 1.00038, 1.00035, 1.00001, 1.0006, 1.0006, 0.99973, 0.99978, 1.00001, 1.00057, 0.99989, 0.99964, 0.99973, 0.99977, 0.99999, 1.00058, 0.99973, 0.99973, 0.99973, 0.99955, 0.9995, 1.00026, 1.00026, 1.00032, 0.99989, 1.00034, 0.99999, 1.00026, 1.00026, 1.00026, 0.99973, 0.45998, 0.99973, 1.00026, 0.99973, 1.00001, 0.99999, 0.99982, 0.99994, 0.99996, 1, 1.00042, 1.00044, 1.00029, 1.00023, 1.00044, 1.00026, 0.99949, 1.00002, 0.99973, 1.0006, 1.0006, 1.0006, 0.99975, 1.00026, 1.00026, 1.00032, 0.99973, 0.99967, 1, 1.00026, 1, 0.99971, 0.99978, 1, 0.99973, 0.99981, 0.99981, 0.99973, 0.99977, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1.00049, 1, 1.00098, 1, 1, 1, 1, 1.00003, 1.00003, 0.99959, 0.9999, 0.99973, 1.00026, 1.0006, 1.00077, 1.00064, 1.41144, 0.99959, 0.99959, 0.99998, 0.99998, 0.99998, 1, 1.00077, 0.99972, 0.99973, 0.99973, 0.99998, 1, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 0.99973, 1.00063, 0.99999, 0.99998, 1, 0.99962, 0.99998, 1.0006, 1, 1, 1.00025, 0.99973, 1, 1.00026, 0.99973, 0.99973, 1.0044, 1.00026, 1.00024, 0.99942, 0.9995, 0.99998, 1, 0.99998, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 1, 0.99973, 1.00026, 0.99973, 1.00101, 1.00101, 1.00003, 0.99915, 0.99984, 1.00026, 1.00026, 1.00026, 0.99998, 0.99999, 0.99998, 0.99998, 1, 0.99999, 1, 0.99973, 1.00002, 0.99998, 0.99973, 0.99973, 0.99998, 0.99973, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99998, 1, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 1.00026, 1.00026, 1.00026, 1.00042, 0.99999, 0.99998, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 0.99561, 0.99999, 0.99999, 0.99977, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.00014, 0.99973, 0.99973, 1.0006, 1.0006, 0.99973, 1.01011, 1.0006, 0.99999, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 1.0006, 0.99972, 1.0006, 1.40579, 0.99982, 0.60299, 1, 1, 1.00003, 1.00106, 1.01322, 1.00003, 1, 1, 1.00026, 1.00026, 0.9993, 1.00026, 1.00026, 0.99973, 1, 1.00031, 1.00026, 0.99973, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00016, 0.99998, 1.00026, 1.00026, 1.00026, 0.99943, 0.99943, 1.00026, 1.00026, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99998, 0.99998, 0.99972, 0.99982, 1.0006, 1, 1, 1.00055, 1.00012, 1.00003, 1.06409, 1.20985, 1.00007, 1.00026, 1.00026, 1.00026, 0.99974, 1, 1, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.00087, 0.99959, 0.99959, 1.00031, 0.99959, 0.99959, 1.00025, 1.00003, 0.99923, 0.99998, 1.41144, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99973, 0.99973, 1.00002, 0.99998, 1.40579, 1.00064, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 0.99998, 1.00076, 0.99998, 0.8121, 0.99998, 1.00069, 1.00026, 0.99973, 1.00002, 1.00002, 0.99998, 1, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 0.99998, 0.99998, 1, 1.00001, 0.99967, 0.99973, 0.98685, 1, 1, 0.99998, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 1.00026, 1.41144, 0.99948, 0.99948, 0.99948, 0.99948, 1.00026, 1.00026, 0.99973, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 0.99973, 1.00065, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1, 1, 1, 1, 0.99973, 1.00061];
-exports.HelveticaBoldItalicFactors = HelveticaBoldItalicFactors;
-const HelveticaBoldItalicLineHeight = 1.35;
-exports.HelveticaBoldItalicLineHeight = HelveticaBoldItalicLineHeight;
-const HelveticaItalicFactors = [0.76116, 1, 1.00001, 1, 1, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.91221, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 1.00054, 0.99977, 0.99977, 0.99977, 0.99973, 1.00026, 1.00022, 0.99945, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 0.99946, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00084, 1.0006, 1, 1, 1.00001, 1.00001, 1.00001, 0.99973, 0.99973, 1.00001, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 1.00013, 1.00022, 1.00007, 1.00022, 1.00022, 1.00022, 1.00001, 1.0001, 1.00054, 1.00052, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00065, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99973, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 0.99933, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 0.99982, 0.99982, 1, 1.00001, 1.00019, 1.00001, 1.0001, 0.99986, 1.00001, 1.00001, 1.00001, 1.00038, 0.99954, 0.99954, 0.9994, 1.00066, 0.99999, 0.99977, 1.00022, 1.00054, 1.00001, 0.99977, 1.00026, 0.99975, 1.0001, 1.00001, 0.99993, 0.9995, 0.99955, 1.00016, 0.99978, 0.99974, 1.00019, 1.00022, 0.99955, 1.00053, 0.99962, 1.00027, 1.0001, 1.00068, 1.00001, 1.0006, 1.0006, 1, 1.00008, 0.99957, 0.99972, 0.9994, 0.99975, 0.99973, 1.00089, 1.00005, 0.99967, 1.00048, 0.99973, 0.99973, 1.00002, 1.00034, 0.99973, 0.99973, 0.99964, 1.00006, 1.00066, 0.99947, 0.99973, 0.98894, 0.99973, 1, 0.44898, 1, 0.99946, 1, 1.00039, 1.00082, 0.99991, 0.99991, 0.99985, 1.00022, 1.00023, 1.00061, 1.00006, 0.99966, 0.99895, 0.99973, 1.00019, 1.0008, 1, 0.99924, 0.99924, 0.99924, 0.99983, 1.00044, 0.99973, 0.99964, 1, 1.00051, 1, 0.99973, 1, 1.00423, 0.99925, 0.99999, 0.99973, 0.99945, 0.99945, 0.99973, 1.00001, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1, 1, 1.00049, 1.00245, 1, 1, 1, 0.99949, 1.00003, 0.99959, 0.99987, 0.99973, 0.99973, 1.0006, 1.0009, 0.99949, 1.41144, 1.00005, 1.00005, 1.0006, 1.0006, 0.99998, 1, 1.0009, 0.99972, 1, 1, 0.99998, 1, 1, 1, 1, 1, 1, 0.99998, 0.99973, 1.00019, 0.99999, 0.99998, 1, 0.99962, 1.0006, 1.0006, 1, 1, 1.00025, 0.99973, 1, 0.99973, 0.99973, 0.99973, 1.0288, 0.99973, 1.00024, 1.0006, 0.9995, 0.99998, 1, 0.99998, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99897, 0.99897, 1.00003, 1.00003, 0.99984, 0.99968, 0.99968, 0.99973, 1.0006, 1, 0.99998, 1.0006, 1, 0.99999, 1, 0.99973, 1.00002, 0.99998, 0.99973, 0.99973, 0.99998, 0.99973, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 1.00026, 0.99998, 1, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 0.99973, 0.99973, 0.99973, 1.00042, 0.99999, 0.99998, 1, 0.99924, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00034, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 1.00035, 0.99999, 0.99999, 0.99977, 0.99924, 0.99924, 0.99924, 0.99924, 0.99924, 1.0006, 0.99924, 0.99924, 1, 1, 1, 1, 0.99924, 0.99924, 0.99962, 1.06311, 0.99924, 1.00024, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 0.99924, 0.95317, 0.99924, 1.40579, 0.99999, 0.60299, 1, 1, 1.00003, 1.00267, 1.01487, 1.00003, 1, 1, 0.99973, 0.99973, 1.00041, 0.99973, 0.99973, 0.99973, 1, 1.00031, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.00016, 0.99998, 0.99973, 0.99973, 0.99973, 1.00025, 1.00025, 0.99973, 0.99973, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 0.99973, 0.99973, 0.9998, 0.99998, 0.99998, 0.96329, 0.99982, 1.0006, 1, 1.00023, 0.99947, 1.00012, 1.00003, 1.06409, 1.20985, 1.00063, 0.99973, 0.99973, 1.00026, 1.00006, 0.99998, 0.99998, 0.99998, 0.99924, 0.99924, 0.99924, 0.99924, 1.00043, 0.99998, 0.99998, 0.8254, 0.99998, 0.99998, 1.00025, 1.00003, 1.00043, 0.99998, 1.41144, 1, 1, 1, 1, 1, 1, 0.99999, 0.99973, 0.99973, 1.00002, 0.99998, 1.40579, 0.99995, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 1.0006, 0.99994, 1.0006, 0.89547, 1.0006, 0.99911, 0.99973, 0.99973, 1.00002, 1.00002, 0.99998, 1, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 1.0006, 0.99998, 1, 1.00001, 0.99954, 0.99973, 0.98332, 1, 1, 0.99998, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 0.99973, 1.41144, 1.00036, 1.00036, 1.00036, 1.00036, 0.99973, 0.99973, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1, 1.0005, 1, 1, 1, 1, 0.99973, 1, 1, 1, 1, 1, 0.99973, 0.99918];
-exports.HelveticaItalicFactors = HelveticaItalicFactors;
-const HelveticaItalicLineHeight = 1.35;
-exports.HelveticaItalicLineHeight = HelveticaItalicLineHeight;
-const HelveticaRegularFactors = [0.76116, 1, 1.00001, 1, 1, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99928, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.91621, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 0.99977, 0.99977, 1.00013, 0.99977, 0.99973, 1.00026, 1.00022, 1.0004, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 1.00019, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00055, 1.0006, 1, 1, 1.00001, 1.00001, 1.00001, 0.99973, 0.99973, 1.00005, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 0.99941, 1.00022, 0.99947, 1.00022, 1.00022, 1.00022, 1.00001, 1.00019, 0.99977, 0.99946, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99945, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 1.00015, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 0.99973, 0.99982, 0.99982, 1, 1.00001, 0.99962, 1.00001, 1.00092, 0.99964, 1.00001, 0.99928, 0.99963, 0.99999, 1.00035, 1.00035, 1.00082, 0.99962, 0.99999, 0.99977, 1.00022, 1.00035, 1.00001, 0.99977, 1.00026, 0.9996, 0.99967, 1.00001, 1.00034, 1.00074, 1.00054, 1.00053, 1.00063, 0.99971, 0.99962, 1.00035, 0.99975, 0.99977, 1.00047, 1.00029, 1.00092, 1.00035, 1.00001, 1.0006, 1.0006, 1, 0.99988, 0.99975, 1, 1.00082, 0.9996, 0.99973, 1.00043, 0.99953, 1.0007, 0.99915, 0.99973, 0.99973, 1.00008, 0.99892, 1.00073, 1.00073, 1.00114, 0.99915, 1.00073, 0.99955, 0.99973, 1.00092, 0.99973, 1, 0.99998, 1, 1.0003, 1, 1.00043, 1.00001, 0.99969, 1.0003, 1, 1.00035, 1.00001, 0.9995, 1, 1.00092, 0.99968, 0.99973, 1.0007, 0.9995, 1, 0.99924, 1.0006, 0.99924, 0.99972, 1.00062, 0.99973, 1.00114, 1, 1.00035, 1, 0.99955, 1, 0.99971, 0.99925, 1.00023, 0.99973, 0.99978, 0.99978, 0.99973, 1.00001, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1, 1, 1, 1, 1, 1, 1, 0.99949, 1.00003, 0.99959, 0.99987, 0.99973, 0.99973, 1.0006, 1.0009, 0.99966, 1.41144, 1.00005, 1.00005, 1.0006, 1.0006, 0.99998, 1.0009, 0.99972, 1, 1, 0.99998, 1, 1, 1, 1, 0.99998, 0.99973, 1.00019, 0.99999, 0.99998, 0.99962, 1.0006, 1.0006, 1.00025, 0.99973, 0.99973, 0.99973, 0.99973, 1.04596, 0.99973, 1.00024, 1.00065, 0.9995, 0.99998, 0.99998, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1, 0.99973, 1, 0.99973, 0.99973, 0.99973, 1.00045, 1.00045, 1.00003, 0.99915, 0.99984, 0.99973, 0.99973, 0.99973, 1.0006, 1, 0.99998, 1.0006, 1, 0.99999, 1, 0.99973, 1.00002, 0.99973, 0.99973, 0.99973, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 1.00026, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.99998, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 0.99973, 0.99973, 0.99973, 1.00042, 0.99999, 0.99998, 0.99924, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00034, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 1.00035, 0.99999, 0.99999, 0.99977, 0.99924, 0.99924, 0.99924, 0.99924, 0.99924, 1.0006, 0.99924, 0.99924, 1, 1, 1, 1, 0.99924, 0.99924, 1, 1.02572, 0.99924, 1.00005, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 0.99924, 0.95317, 0.99924, 1.40579, 0.99999, 0.60299, 1, 1, 1.00003, 1.00267, 0.96499, 1.00003, 1, 1, 0.99973, 0.99973, 0.99999, 0.99973, 0.99973, 0.99973, 1, 1.00031, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.00016, 0.99998, 0.99973, 0.99973, 0.99973, 1.00031, 1.00031, 0.99973, 0.99973, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 0.99973, 0.99973, 0.9998, 0.99998, 0.99998, 0.96329, 0.99982, 1.0006, 1, 1.00023, 0.99933, 1.00008, 1.00003, 1.06409, 1.20985, 1.00015, 0.99973, 0.99973, 1.00026, 1.00006, 0.99998, 0.99998, 0.99998, 0.99924, 0.99924, 0.99924, 0.99924, 1.00043, 0.99998, 0.99998, 0.8254, 0.99998, 0.99998, 1.00025, 1.00003, 1.00027, 0.99998, 1.41144, 1, 1, 1, 1, 1, 1, 0.99999, 0.99973, 0.99973, 1.00002, 1.40579, 0.9997, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 1.0006, 0.99995, 1.0006, 0.84533, 1.0006, 0.99973, 0.99973, 0.99973, 1.00002, 1.00002, 0.99998, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 1.0006, 0.99998, 1, 1.00001, 0.99561, 0.99973, 1.00073, 1, 1, 0.99998, 1, 1, 1, 1, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 1, 0.99973, 1.41144, 1.00023, 1.00023, 1.00023, 1.00023, 0.99973, 0.99973, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1, 1.00055, 1, 1, 1, 1, 0.99973, 1, 1, 1, 1, 1, 0.99973, 1.00019];
-exports.HelveticaRegularFactors = HelveticaRegularFactors;
-const HelveticaRegularLineHeight = 1.2;
-exports.HelveticaRegularLineHeight = HelveticaRegularLineHeight;
-
-/***/ }),
-/* 58 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.LiberationSansRegularWidths = exports.LiberationSansItalicWidths = exports.LiberationSansBoldWidths = exports.LiberationSansBoldItalicWidths = void 0;
-const LiberationSansBoldWidths = [365, 0, 722, 1000, 1000, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 722, 722, 722, 719, 667, 667, 667, 667, 667, 667, 667, 667, 667, 723, 667, 667, 853, 722, 906, 722, 556, 611, 778, 601, 778, 778, 778, 778, 722, 604, 354, 354, 604, 722, 722, 278, 785, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 474, 278, 556, 556, 722, 722, 722, 611, 611, 667, 611, 611, 611, 611, 833, 833, 722, 722, 722, 722, 722, 722, 778, 1000, 778, 778, 778, 778, 778, 778, 778, 802, 838, 778, 825, 778, 778, 778, 667, 821, 722, 809, 778, 722, 722, 722, 722, 667, 667, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 667, 667, 667, 667, 667, 600, 611, 611, 611, 611, 611, 778, 667, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 667, 927, 722, 722, 667, 944, 944, 944, 944, 944, 667, 644, 667, 667, 667, 667, 667, 611, 611, 611, 611, 611, 556, 556, 556, 556, 333, 333, 556, 889, 889, 1000, 722, 719, 722, 567, 712, 667, 669, 904, 626, 719, 719, 610, 702, 833, 722, 778, 719, 667, 722, 611, 622, 854, 667, 730, 703, 1005, 1019, 870, 979, 719, 711, 1031, 719, 487, 885, 567, 711, 667, 278, 276, 556, 1094, 1062, 875, 610, 622, 556, 618, 615, 417, 635, 556, 556, 709, 497, 615, 615, 500, 635, 740, 604, 611, 604, 611, 556, 490, 556, 875, 556, 615, 581, 833, 844, 729, 854, 615, 552, 854, 583, 447, 611, 417, 552, 556, 278, 281, 278, 969, 906, 611, 500, 556, 719, 778, 604, 611, 885, 489, 1115, 556, 615, 615, 556, 722, 333, 556, 549, 556, 556, 1000, 500, 1000, 1000, 500, 500, 500, 584, 584, 389, 975, 556, 611, 278, 280, 610, 708, 389, 389, 333, 333, 333, 333, 280, 350, 556, 556, 333, 333, 222, 556, 556, 556, 556, 333, 556, 576, 604, 333, 333, 656, 333, 278, 333, 222, 737, 556, 333, 611, 556, 556, 719, 611, 400, 606, 510, 333, 333, 465, 549, 729, 708, 556, 333, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 1000, 556, 1000, 556, 611, 556, 475, 451, 584, 583, 600, 611, 611, 611, 333, 604, 333, 333, 750, 604, 1000, 556, 834, 333, 556, 556, 333, 556, 611, 556, 611, 611, 611, 611, 611, 333, 333, 584, 549, 556, 556, 333, 333, 611, 611, 611, 594, 604, 333, 333, 278, 278, 278, 278, 278, 278, 556, 278, 713, 274, 604, 604, 722, 604, 604, 1052, 278, 278, 278, 278, 278, 278, 278, 278, 556, 558, 556, 556, 278, 278, 556, 385, 278, 479, 584, 549, 708, 556, 584, 278, 494, 278, 708, 889, 552, 750, 333, 584, 240, 612, 584, 500, 750, 611, 611, 708, 611, 611, 556, 333, 549, 611, 556, 556, 611, 611, 611, 611, 611, 944, 333, 611, 611, 611, 845, 845, 611, 611, 556, 834, 834, 834, 354, 370, 365, 979, 611, 611, 611, 611, 556, 333, 333, 494, 889, 278, 1000, 1094, 715, 766, 584, 549, 823, 753, 611, 611, 611, 474, 500, 500, 500, 278, 278, 278, 278, 238, 389, 389, 549, 389, 389, 737, 584, 619, 333, 708, 556, 556, 556, 556, 556, 556, 479, 556, 556, 834, 333, 708, 684, 520, 556, 278, 1021, 531, 556, 713, 917, 333, 446, 333, 479, 333, 541, 611, 556, 834, 834, 333, 333, 333, 1000, 990, 990, 990, 990, 556, 611, 611, 611, 611, 611, 611, 611, 611, 556, 552, 278, 333, 333, 333, 576, 333, 611, 333, 333, 333, 667, 722, 556, 615, 333, 333, 333, 396, 768, 612, 167, 278, 750, 333, 611, 611, 611, 708, 582, 582, 582, 582, 611, 611, 556, 778, 778, 778, 778, 778, 556, 445, 556, 556, 556, 556, 556, 556, 500, 500, 500, 500, 556, 460];
-exports.LiberationSansBoldWidths = LiberationSansBoldWidths;
-const LiberationSansBoldItalicWidths = [365, 0, 722, 1000, 1000, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 722, 722, 722, 671, 667, 667, 667, 667, 667, 667, 667, 667, 667, 723, 667, 667, 854, 722, 906, 722, 556, 611, 778, 610, 778, 778, 778, 778, 722, 604, 354, 354, 604, 722, 722, 278, 782, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 473, 278, 556, 556, 722, 722, 722, 611, 611, 667, 611, 611, 611, 611, 833, 833, 722, 722, 722, 722, 722, 722, 778, 1000, 778, 778, 778, 778, 778, 778, 778, 781, 847, 778, 844, 778, 778, 778, 667, 822, 718, 829, 778, 722, 722, 722, 722, 667, 667, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 667, 667, 667, 667, 667, 590, 611, 611, 611, 611, 611, 778, 667, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 667, 930, 722, 722, 667, 944, 944, 944, 944, 944, 667, 657, 667, 667, 667, 667, 667, 611, 611, 611, 611, 611, 556, 556, 556, 556, 333, 333, 556, 889, 889, 1000, 722, 708, 722, 614, 722, 667, 667, 927, 643, 719, 719, 615, 687, 833, 722, 778, 719, 667, 722, 611, 677, 781, 667, 729, 708, 979, 989, 854, 1000, 708, 719, 1042, 729, 575, 886, 614, 719, 667, 278, 278, 556, 1094, 1042, 854, 622, 677, 556, 619, 604, 534, 618, 556, 556, 736, 510, 611, 611, 507, 622, 740, 604, 611, 611, 611, 556, 889, 556, 885, 556, 646, 583, 889, 935, 707, 854, 594, 552, 865, 589, 467, 611, 469, 563, 556, 278, 278, 278, 969, 906, 611, 507, 556, 719, 778, 611, 611, 885, 516, 1146, 556, 620, 620, 556, 722, 333, 556, 549, 556, 556, 1000, 500, 999, 1000, 500, 500, 500, 584, 584, 389, 975, 556, 611, 278, 280, 621, 708, 389, 389, 333, 333, 333, 333, 280, 350, 556, 556, 333, 333, 222, 556, 556, 556, 556, 333, 556, 578, 604, 333, 333, 656, 333, 278, 333, 222, 737, 556, 333, 611, 556, 556, 740, 611, 400, 610, 510, 333, 333, 333, 549, 729, 708, 556, 333, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 1000, 556, 1000, 556, 611, 556, 479, 479, 584, 583, 600, 611, 611, 611, 333, 604, 333, 333, 750, 604, 1000, 556, 834, 333, 556, 556, 333, 556, 611, 556, 611, 611, 611, 611, 611, 333, 333, 584, 549, 556, 556, 333, 333, 611, 611, 611, 594, 604, 333, 333, 278, 278, 278, 278, 278, 278, 556, 278, 713, 274, 604, 604, 722, 604, 604, 1052, 278, 278, 278, 278, 278, 278, 278, 278, 556, 566, 556, 556, 278, 278, 556, 396, 278, 479, 584, 549, 708, 556, 584, 278, 494, 278, 708, 889, 552, 750, 333, 584, 240, 603, 584, 500, 750, 611, 611, 708, 611, 611, 556, 333, 549, 611, 556, 556, 611, 611, 611, 611, 611, 944, 333, 611, 611, 611, 834, 834, 611, 611, 556, 834, 834, 834, 354, 370, 365, 979, 611, 611, 611, 611, 556, 333, 333, 494, 889, 278, 1000, 1104, 704, 712, 584, 549, 823, 773, 611, 611, 611, 474, 500, 500, 500, 278, 278, 278, 278, 238, 389, 389, 549, 389, 389, 737, 584, 605, 333, 708, 556, 556, 556, 556, 556, 556, 479, 556, 556, 834, 333, 708, 664, 532, 556, 278, 1021, 531, 556, 713, 917, 333, 409, 333, 479, 333, 558, 611, 556, 834, 834, 333, 333, 333, 1000, 990, 990, 990, 990, 556, 611, 611, 611, 611, 611, 611, 611, 611, 556, 552, 278, 333, 333, 333, 576, 333, 611, 333, 333, 333, 667, 719, 556, 619, 333, 333, 333, 396, 768, 612, 167, 278, 750, 333, 611, 611, 611, 708, 591, 591, 591, 591, 611, 611, 556, 778, 778, 778, 778, 778, 556, 450, 556, 556, 556, 556, 556, 556, 500, 500, 500, 500, 556, 492];
-exports.LiberationSansBoldItalicWidths = LiberationSansBoldItalicWidths;
-const LiberationSansItalicWidths = [365, 0, 667, 1000, 1000, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 722, 722, 722, 722, 722, 722, 667, 722, 722, 722, 671, 667, 667, 667, 667, 667, 667, 667, 667, 667, 723, 667, 667, 789, 722, 846, 722, 556, 611, 778, 570, 778, 778, 778, 778, 722, 604, 354, 354, 604, 722, 722, 278, 733, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 389, 278, 500, 500, 667, 667, 667, 556, 556, 667, 556, 556, 556, 556, 833, 833, 722, 722, 722, 722, 722, 722, 778, 1000, 778, 778, 778, 778, 778, 778, 778, 761, 775, 778, 794, 778, 778, 778, 667, 837, 725, 831, 778, 722, 722, 722, 722, 667, 667, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 667, 667, 667, 667, 667, 600, 611, 611, 611, 611, 611, 778, 667, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 667, 865, 722, 722, 667, 944, 944, 944, 944, 944, 667, 648, 667, 667, 667, 667, 667, 611, 611, 611, 611, 611, 556, 556, 556, 556, 333, 294, 556, 889, 889, 1000, 667, 651, 667, 544, 704, 667, 667, 917, 614, 715, 715, 589, 686, 833, 722, 778, 725, 667, 722, 611, 639, 795, 667, 727, 673, 920, 923, 805, 886, 651, 694, 1022, 682, 492, 843, 544, 708, 667, 278, 278, 500, 1066, 982, 844, 589, 639, 556, 562, 522, 493, 553, 556, 556, 688, 465, 556, 556, 472, 564, 686, 550, 556, 556, 556, 500, 833, 500, 835, 500, 572, 518, 830, 851, 621, 736, 526, 492, 752, 534, 339, 556, 378, 496, 500, 222, 222, 222, 910, 828, 556, 472, 500, 724, 778, 556, 556, 885, 323, 1083, 556, 570, 570, 556, 667, 278, 556, 549, 556, 556, 1000, 500, 1000, 998, 500, 500, 500, 469, 584, 389, 1015, 556, 556, 278, 260, 571, 708, 334, 334, 278, 278, 333, 285, 260, 350, 500, 500, 333, 324, 222, 500, 500, 500, 500, 333, 556, 546, 604, 333, 324, 656, 278, 278, 333, 222, 737, 556, 333, 556, 556, 556, 625, 556, 400, 556, 510, 333, 316, 333, 549, 729, 708, 556, 333, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 1000, 556, 1000, 556, 556, 556, 439, 439, 584, 584, 600, 555, 555, 556, 278, 500, 333, 278, 750, 604, 1000, 556, 834, 333, 556, 556, 333, 556, 556, 500, 556, 556, 556, 556, 611, 333, 294, 584, 549, 556, 556, 333, 333, 556, 556, 556, 594, 604, 333, 398, 222, 278, 278, 278, 278, 278, 444, 278, 713, 274, 604, 604, 719, 604, 604, 1052, 222, 222, 222, 222, 222, 278, 222, 222, 500, 500, 500, 500, 222, 222, 492, 281, 222, 400, 584, 549, 708, 556, 584, 222, 494, 222, 708, 833, 552, 750, 333, 584, 188, 548, 584, 500, 750, 556, 556, 615, 556, 556, 556, 333, 549, 556, 500, 556, 556, 556, 556, 556, 556, 944, 333, 556, 556, 556, 779, 779, 556, 556, 556, 834, 834, 834, 354, 370, 365, 979, 611, 611, 556, 556, 537, 333, 333, 494, 889, 278, 1000, 1094, 652, 670, 584, 549, 823, 728, 556, 556, 611, 355, 333, 333, 333, 222, 222, 222, 222, 191, 333, 333, 549, 333, 333, 737, 584, 573, 333, 708, 500, 500, 500, 500, 500, 500, 354, 556, 556, 834, 333, 708, 603, 486, 556, 278, 1021, 531, 556, 713, 917, 278, 374, 278, 354, 278, 542, 556, 556, 834, 834, 333, 328, 333, 1000, 990, 990, 990, 990, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 552, 278, 333, 333, 333, 576, 333, 611, 278, 333, 278, 667, 715, 556, 565, 333, 333, 333, 365, 768, 612, 167, 278, 750, 333, 500, 500, 556, 708, 550, 550, 550, 550, 556, 556, 500, 722, 722, 722, 722, 722, 500, 447, 500, 500, 500, 500, 556, 500, 500, 500, 500, 500, 556, 463];
-exports.LiberationSansItalicWidths = LiberationSansItalicWidths;
-const LiberationSansRegularWidths = [365, 0, 667, 1000, 1000, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 722, 722, 722, 722, 722, 722, 667, 722, 722, 722, 668, 667, 667, 667, 667, 667, 667, 667, 667, 667, 723, 667, 667, 784, 722, 838, 722, 556, 611, 778, 551, 778, 778, 778, 778, 722, 604, 354, 354, 604, 722, 722, 278, 735, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 384, 278, 500, 500, 667, 667, 667, 556, 556, 668, 556, 556, 556, 556, 833, 833, 722, 722, 722, 722, 722, 722, 778, 1000, 778, 778, 778, 778, 778, 778, 778, 748, 752, 778, 774, 778, 778, 778, 667, 798, 722, 835, 778, 722, 722, 722, 722, 667, 667, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 667, 667, 667, 667, 667, 618, 611, 611, 611, 611, 611, 778, 667, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 667, 855, 722, 722, 667, 944, 944, 944, 944, 944, 667, 650, 667, 667, 667, 667, 667, 611, 611, 611, 611, 611, 556, 556, 556, 556, 333, 556, 889, 889, 1000, 667, 656, 667, 542, 677, 667, 667, 923, 604, 719, 719, 583, 656, 833, 722, 778, 719, 667, 722, 611, 635, 760, 667, 740, 667, 917, 938, 792, 885, 656, 719, 1010, 722, 489, 865, 542, 719, 667, 278, 278, 500, 1057, 1010, 854, 583, 635, 556, 573, 531, 365, 583, 556, 556, 669, 458, 559, 559, 438, 583, 688, 552, 556, 542, 556, 500, 458, 500, 823, 500, 573, 521, 802, 823, 625, 719, 521, 510, 750, 542, 411, 556, 365, 510, 500, 222, 278, 222, 906, 812, 556, 438, 500, 719, 778, 552, 556, 885, 323, 1073, 556, 578, 578, 556, 667, 278, 556, 549, 556, 556, 1000, 500, 1000, 1000, 500, 500, 500, 469, 584, 389, 1015, 556, 556, 278, 260, 575, 708, 334, 334, 278, 278, 333, 260, 350, 500, 500, 333, 500, 500, 500, 500, 333, 556, 525, 604, 333, 656, 278, 278, 737, 556, 556, 556, 556, 615, 556, 400, 557, 510, 333, 333, 549, 729, 708, 556, 333, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 1000, 556, 1000, 556, 556, 556, 446, 446, 584, 583, 600, 556, 556, 556, 278, 500, 333, 278, 750, 604, 1000, 556, 834, 556, 556, 556, 556, 500, 556, 556, 556, 556, 611, 333, 222, 222, 294, 294, 324, 324, 316, 328, 398, 285, 333, 584, 549, 556, 556, 333, 333, 556, 556, 556, 594, 604, 333, 222, 278, 278, 278, 278, 278, 444, 278, 713, 274, 604, 604, 719, 604, 604, 1052, 222, 222, 222, 222, 222, 278, 222, 222, 500, 500, 500, 500, 222, 222, 500, 292, 222, 334, 584, 549, 708, 556, 584, 222, 494, 222, 708, 833, 552, 750, 333, 584, 188, 576, 584, 500, 750, 556, 556, 604, 556, 556, 556, 333, 549, 556, 500, 556, 556, 556, 556, 556, 556, 944, 333, 556, 556, 556, 781, 781, 556, 556, 556, 834, 834, 834, 354, 370, 365, 979, 611, 611, 556, 556, 537, 333, 333, 494, 889, 278, 1000, 1094, 648, 690, 584, 549, 823, 713, 556, 556, 611, 355, 333, 333, 333, 222, 222, 222, 222, 191, 333, 333, 549, 333, 333, 737, 584, 569, 333, 708, 500, 500, 500, 500, 500, 500, 354, 556, 556, 834, 708, 617, 482, 556, 278, 1021, 531, 556, 713, 917, 278, 395, 278, 375, 278, 556, 556, 556, 834, 834, 333, 333, 1000, 990, 990, 990, 990, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 552, 278, 333, 333, 333, 576, 333, 611, 278, 333, 278, 667, 722, 556, 559, 333, 333, 333, 333, 333, 333, 333, 365, 768, 612, 167, 278, 750, 333, 333, 500, 500, 556, 708, 547, 547, 547, 547, 556, 556, 500, 722, 722, 722, 722, 722, 500, 448, 500, 500, 500, 500, 556, 500, 500, 500, 500, 500, 556, 441];
-exports.LiberationSansRegularWidths = LiberationSansRegularWidths;
-
-/***/ }),
-/* 59 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.MyriadProRegularLineHeight = exports.MyriadProRegularFactors = exports.MyriadProItalicLineHeight = exports.MyriadProItalicFactors = exports.MyriadProBoldLineHeight = exports.MyriadProBoldItalicLineHeight = exports.MyriadProBoldItalicFactors = exports.MyriadProBoldFactors = void 0;
-const MyriadProBoldFactors = [1.36898, 1, 0.90838, 0.868, 0.868, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.91945, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.83637, 0.83637, 0.82391, 0.82391, 0.82391, 0.82391, 0.82391, 0.82391, 0.91905, 0.96376, 0.96376, 0.97484, 0.90157, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.95417, 0.80061, 0.80061, 0.75261, 0.95407, 0.87992, 0.97484, 0.99793, 0.86275, 0.8768, 0.8019, 0.8768, 0.8768, 1, 0.8768, 0.95407, 1, 1, 1, 1, 0.97069, 0.95407, 1.0258, 0.887, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 0.82976, 1.0258, 0.73901, 0.73901, 0.85022, 0.85022, 1, 0.83655, 0.83655, 0.97153, 0.83655, 1, 0.83655, 0.84638, 1.0156, 1.0156, 0.95546, 0.95546, 0.95546, 1, 0.95546, 0.95546, 0.92179, 0.936, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 0.92796, 0.97268, 0.92179, 0.96034, 0.92179, 0.92179, 0.92179, 0.87107, 0.95638, 0.92361, 0.91709, 0.92179, 0.82114, 0.82114, 0.82114, 1, 0.87107, 0.8096, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.8096, 0.8096, 1, 0.8096, 1, 0.96318, 0.89713, 0.89713, 0.89713, 0.89713, 1, 0.92436, 0.86958, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.93704, 0.93704, 0.83689, 0.94438, 0.94438, 0.95353, 0.94083, 0.94083, 0.94083, 0.94083, 0.94083, 0.91905, 0.89192, 0.90406, 0.90406, 0.90406, 0.90406, 0.90406, 0.9446, 0.9446, 0.9446, 0.9446, 0.9446, 0.94938, 0.94938, 0.94938, 0.94938, 0.90088, 1, 0.94938, 0.9031, 0.9031, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.94938, 0.94836, 0.94836, 0.94938, 0.93884, 0.83181, 0.94938, 1.08595, 0.94938, 0.94938, 1, 1, 1, 1, 1, 1, 1, 1.02058, 1.02058, 1.16661, 0.78966, 0.94938, 0.97898, 1.18777, 1.01149, 0.96174, 1, 0.80687, 0.80687, 0.94292, 0.94292, 0.90088, 1, 1.01149, 0.96544, 0.81093, 0.81093, 0.90088, 1, 1, 0.81093, 0.81093, 0.81093, 0.81093, 0.90088, 0.99793, 0.87548, 1, 0.90088, 1, 1, 0.78076, 0.93582, 1, 1, 0.91882, 0.99793, 1, 0.97571, 0.94219, 0.94219, 0.84313, 0.97571, 0.89022, 0.9498, 1, 0.90088, 1, 0.9358, 1.08595, 1, 1, 0.99793, 0.90088, 0.98621, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.99793, 1, 1, 0.94938, 1, 0.89903, 0.95933, 0.94938, 0.98607, 1.0373, 1.02058, 1, 1.36145, 0.95933, 0.95933, 0.93969, 0.80479, 1, 0.80479, 1.024, 1, 1, 1, 0.99793, 1, 1, 0.99793, 0.99793, 1, 1, 0.9577, 0.92601, 0.9577, 0.9577, 1, 0.9577, 0.98225, 0.90088, 1, 1.02058, 1.08595, 0.8361, 0.8361, 0.81079, 0.81079, 0.95933, 0.95933, 0.95933, 1, 1, 0.90088, 1, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 1.01591, 0.98621, 1.05486, 1.30692, 1, 1, 1, 1, 1, 1, 0.98621, 1.0078, 1.0078, 1.0078, 1.0078, 0.98621, 1.0474, 1.0474, 0.97455, 0.98275, 1, 0.97455, 0.98981, 0.98981, 0.9314, 0.73977, 1, 0.73903, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.16161, 1.033, 1, 0.9672, 0.54324, 1, 1, 1.02058, 1, 0.95617, 1.02058, 1, 1, 0.95933, 0.95933, 0.8271, 0.95933, 1, 0.99793, 1, 1.08595, 0.95933, 0.91701, 0.98894, 0.9446, 0.9446, 0.9446, 0.9446, 0.9446, 0.91964, 0.90088, 0.9446, 0.9446, 0.9446, 0.86774, 0.86774, 0.9446, 0.9446, 0.99793, 1, 0.99642, 0.99642, 1, 1.0213, 1.05686, 1, 0.9446, 0.9446, 0.9446, 0.97898, 0.97455, 0.94292, 0.94292, 1.17173, 0.9897, 0.93582, 1.285, 1, 0.99394, 0.78367, 1.02058, 1.08595, 0.80535, 0.96361, 0.97407, 0.72851, 0.72851, 0.83734, 0.918, 0.908, 0.908, 0.93582, 1, 0.93582, 0.93582, 0.86209, 0.97646, 0.97646, 1.0732, 0.97646, 1, 0.62295, 1, 0.9553, 0.90088, 1, 0.78036, 0.78036, 0.78036, 1, 0.78036, 1, 1, 1.00872, 0.99793, 1, 1, 1, 0.86832, 1, 0.99793, 1.19137, 1, 1, 0.99793, 0.76169, 1, 1.10208, 1.0128, 1.10208, 0.77452, 1, 1.05453, 0.97898, 0.99793, 1, 0.99642, 0.90088, 1, 0.90989, 0.65, 1, 1, 1, 1, 0.99793, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.89903, 1, 0.72706, 0.96694, 1, 1, 1, 1, 0.89713, 1.10208, 0.90088, 0.78076, 1, 1, 1, 1, 0.96694, 1, 1, 1, 1, 1, 0.74854, 0.93582, 1, 1, 1, 1, 0.95442, 1, 0.95871, 0.95871, 0.95871, 0.95871, 0.95442, 0.95442, 0.95298, 0.97579, 0.97579, 0.97579, 0.97579, 0.97579, 0.9332, 1.05993, 0.94039, 0.94039, 0.94039, 0.94039, 0.99793, 0.94039, 0.938, 0.938, 0.938, 0.938, 0.99793, 0.95776];
-exports.MyriadProBoldFactors = MyriadProBoldFactors;
-const MyriadProBoldLineHeight = 1.2;
-exports.MyriadProBoldLineHeight = MyriadProBoldLineHeight;
-const MyriadProBoldItalicFactors = [1.36898, 1, 0.85576, 0.845, 0.845, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.80591, 0.80591, 0.80729, 0.80729, 0.80729, 0.80729, 0.80729, 0.80729, 0.85308, 0.94299, 0.94299, 0.95961, 0.94729, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.92098, 0.77512, 0.77512, 0.66862, 0.92222, 0.7927, 0.95961, 0.97276, 0.83655, 0.86523, 0.7805, 0.86523, 0.86523, 1, 0.86523, 0.92222, 1, 1, 1, 1, 0.92222, 0.92222, 0.98621, 0.86036, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.69323, 0.98621, 0.71743, 0.71743, 0.81698, 0.81698, 1, 0.79726, 0.79726, 0.92655, 0.79726, 1, 0.79726, 0.81691, 0.98558, 0.98558, 0.92222, 0.92222, 0.92222, 1, 0.92222, 0.92222, 0.90637, 0.909, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 0.92346, 0.89711, 0.90637, 0.88127, 0.90251, 0.90251, 0.90637, 0.83809, 0.93157, 0.90976, 0.83392, 0.90637, 0.80729, 0.80729, 0.80729, 1, 0.83809, 0.76463, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.76463, 0.76463, 1, 0.76463, 1, 0.94523, 0.86275, 0.86275, 0.86275, 0.86275, 1, 0.90637, 0.83659, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.83509, 0.83509, 0.72459, 0.90699, 0.90699, 0.91605, 0.9154, 0.9154, 0.9154, 0.9154, 0.9154, 0.85308, 0.85359, 0.85458, 0.85458, 0.85458, 0.85458, 0.85458, 0.90531, 0.90531, 0.90531, 0.90531, 0.90531, 0.99613, 0.99613, 0.99613, 0.99613, 1.18616, 1, 0.99613, 0.85811, 0.85811, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.99613, 0.92886, 0.92886, 0.99613, 0.92222, 0.80178, 0.99613, 1.08595, 0.99613, 0.99613, 1, 1, 1, 1, 1, 1, 1, 1.02058, 1.02058, 1.16148, 0.76813, 0.99613, 0.91677, 1.21296, 0.8578, 0.90557, 1, 0.80687, 0.80687, 0.94292, 0.94292, 1.18616, 1, 0.8578, 0.95973, 0.78216, 0.78216, 1.18616, 1, 1, 0.78216, 0.78216, 0.78216, 0.78216, 1.18616, 0.97276, 0.81539, 1, 1.18616, 1, 1, 0.78076, 0.93582, 1, 1, 0.91339, 0.97276, 1, 0.91677, 0.9332, 0.9332, 0.76783, 0.91677, 0.89022, 0.90276, 1, 1.18616, 1, 1.30628, 1.08595, 1, 1, 0.97276, 1.18616, 0.95381, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.97276, 1, 1, 0.90083, 1, 0.89903, 0.92168, 0.90083, 0.91324, 0.91324, 1.02058, 1, 1.36145, 0.92168, 0.92168, 0.9135, 0.80779, 1, 0.80779, 0.98796, 1, 1, 1, 0.97276, 1, 1, 0.97276, 0.97276, 1, 1, 0.9135, 0.86847, 0.9135, 0.9135, 1, 0.9135, 0.94951, 1.18616, 1, 1.02058, 1.08595, 0.82891, 0.82711, 0.80479, 0.80178, 0.92168, 0.92168, 0.92168, 1, 1, 1.18616, 1, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.97096, 0.95381, 1.05486, 1.23026, 1, 1, 1, 1, 1, 1, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.98981, 0.98981, 0.95298, 0.9224, 1, 0.95298, 0.95381, 0.95381, 0.85408, 0.6894, 1, 0.74321, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.20006, 1.0006, 1, 0.93459, 0.71526, 1, 1, 1.02058, 1, 0.92699, 1.02058, 1, 1, 0.92168, 0.92168, 0.79464, 0.92168, 1, 0.97276, 1, 1.08595, 0.92168, 0.86847, 0.97276, 0.91513, 0.91513, 0.91513, 0.91513, 0.91513, 0.87514, 1.18616, 0.91513, 0.91513, 0.91513, 0.85923, 0.85923, 0.91513, 0.91513, 0.97276, 1, 0.99043, 0.99043, 1, 1.08074, 1.04864, 1, 0.91677, 0.91677, 0.91513, 0.92004, 0.96736, 0.94292, 0.94292, 1.14542, 0.97733, 0.93582, 1.26, 1, 0.97355, 0.80487, 1.02058, 1.08595, 0.79199, 0.89398, 0.91677, 0.71541, 0.71541, 0.81625, 0.896, 0.896, 0.896, 0.91782, 1, 0.91782, 0.91782, 0.83266, 0.95077, 0.95077, 1.03493, 0.95077, 1, 0.55509, 1, 0.93481, 1.18616, 1, 0.748, 0.748, 0.748, 1, 0.748, 1, 1, 0.99973, 0.97276, 1, 1, 1, 0.88159, 1, 0.97276, 1.17337, 1, 1, 0.97276, 0.78694, 1, 1.04502, 1.05214, 1.04502, 0.72651, 1, 0.99531, 0.92332, 0.97276, 1, 0.99043, 1.18616, 1, 1.00899, 0.698, 1, 1, 1, 1, 0.97276, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.89903, 1, 0.66227, 0.96694, 1, 1, 1, 1, 0.86275, 1.04502, 1.18616, 0.78076, 1, 1, 1, 1, 0.96694, 1, 1, 1, 1, 1, 0.85633, 0.93582, 1, 1, 1, 1, 0.91677, 1, 0.90646, 0.90646, 0.90646, 0.90646, 0.91677, 0.91677, 0.92061, 0.94236, 0.94236, 0.94236, 0.94236, 0.94236, 0.89544, 1.0051, 0.89364, 0.89364, 0.89364, 0.89364, 0.97276, 0.89364, 0.9, 0.9, 0.9, 0.9, 0.97276, 0.86842];
-exports.MyriadProBoldItalicFactors = MyriadProBoldItalicFactors;
-const MyriadProBoldItalicLineHeight = 1.2;
-exports.MyriadProBoldItalicLineHeight = MyriadProBoldItalicLineHeight;
-const MyriadProItalicFactors = [1.36898, 1, 0.85158, 0.773, 0.773, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.77812, 0.77812, 0.76852, 0.76852, 0.76852, 0.76852, 0.76852, 0.76852, 0.78112, 0.89591, 0.89591, 0.90561, 0.88836, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.87396, 0.70466, 0.70466, 0.62264, 0.86822, 0.7646, 0.90561, 0.88465, 0.76125, 0.80094, 0.76449, 0.80094, 0.80094, 1, 0.80094, 0.86822, 1, 1, 1, 1, 0.86822, 0.86822, 0.83864, 0.81402, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.65351, 0.83864, 0.728, 0.728, 0.77212, 0.77212, 1, 0.79475, 0.79475, 0.85308, 0.79475, 1, 0.79475, 0.80553, 0.93637, 0.93637, 0.87514, 0.87514, 0.87514, 1, 0.87514, 0.87514, 0.8588, 0.867, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 0.89386, 0.89947, 0.8588, 0.86026, 0.85751, 0.85751, 0.8588, 0.76013, 0.82565, 0.85701, 0.77899, 0.8588, 0.72421, 0.72421, 0.72421, 1, 0.76013, 0.69866, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.69866, 0.69866, 1, 0.69866, 1, 0.89058, 0.77598, 0.77598, 0.77598, 0.77598, 1, 0.8588, 0.76013, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.8156, 0.8156, 0.69461, 0.85991, 0.85991, 0.80811, 0.87832, 0.87832, 0.87832, 0.87832, 0.87832, 0.78112, 0.82352, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.8562, 0.8562, 0.8562, 0.8562, 0.8562, 0.93859, 0.93859, 0.93859, 0.93859, 1.15012, 1, 0.93859, 0.8075, 0.8075, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.93859, 0.9486, 0.9486, 0.93859, 0.88307, 0.77025, 0.93859, 1.08595, 0.93859, 0.93859, 1, 1, 1, 1, 1, 1, 1, 1.27014, 1.02058, 1.06383, 0.70926, 0.93859, 0.94399, 1.18417, 0.83537, 0.93298, 1, 0.85034, 0.85034, 1.0222, 1.0222, 1.15012, 1, 0.83537, 0.79121, 0.846, 0.846, 1.15012, 1, 1, 0.846, 0.846, 0.846, 0.846, 1.15012, 0.88465, 0.77487, 1, 1.15012, 1, 1, 0.75945, 0.75945, 1, 1, 0.9161, 0.88465, 1, 0.94399, 0.86847, 0.86847, 0.8544, 0.94399, 0.79519, 0.93942, 1, 1.15012, 1, 1.03901, 1.08595, 1, 1, 0.88465, 1.15012, 0.82424, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.88465, 1, 1, 0.81453, 1, 0.89903, 0.96017, 0.81453, 0.92388, 0.92388, 1.02058, 1, 1.36145, 0.96186, 0.96186, 0.9278, 0.84943, 1, 0.70869, 1.0186, 1, 1, 1, 0.88465, 1, 1, 0.88465, 0.88465, 1, 1, 0.94219, 0.878, 0.94219, 0.94219, 1, 0.94219, 0.88075, 1.15012, 1, 1.02058, 1.08595, 0.73541, 0.73361, 0.73572, 0.73572, 0.96017, 0.96017, 0.96017, 1, 1, 1.15012, 1, 1.03075, 0.82424, 0.82424, 0.82424, 0.82424, 0.82424, 1.02738, 0.82424, 1.02119, 1.06233, 1, 1, 1, 1, 1, 1, 1.03075, 1.03075, 1.03075, 1.03075, 1.03075, 0.82424, 1.02175, 1.02175, 0.912, 0.922, 1, 0.912, 1.03075, 1.03075, 0.88787, 0.83911, 1, 0.66266, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.05233, 1.06676, 1, 0.96998, 0.69353, 1, 1, 1.02058, 1, 0.95829, 1.02058, 1, 1, 0.96017, 0.96017, 0.86865, 0.96017, 1, 0.88465, 1, 1.08595, 0.96017, 0.88, 0.88465, 0.93859, 0.93859, 0.93859, 0.93859, 0.93859, 0.84759, 1.15012, 0.93859, 0.93859, 0.93859, 0.86799, 0.86799, 0.93859, 0.93859, 0.88465, 1, 0.9005, 0.9005, 1, 0.94565, 0.9446, 1, 0.8562, 0.8562, 0.93859, 0.94399, 0.91974, 0.85283, 0.85283, 1.04828, 0.86936, 0.75945, 1.124, 1, 0.93969, 0.78815, 1.02058, 1.08595, 0.74948, 0.85769, 0.94399, 0.69046, 0.62864, 0.85639, 1.027, 1.027, 1.027, 0.87321, 1, 0.87321, 0.87321, 0.86948, 0.95493, 0.95493, 0.98391, 0.95493, 1, 0.53609, 1, 0.93758, 1.15313, 1, 0.746, 0.746, 0.746, 1, 0.746, 1, 1, 0.90083, 0.88465, 1, 1, 1, 0.89217, 1, 0.88465, 1.17337, 1, 1, 0.88465, 0.75187, 1, 1.12658, 1.03737, 1.12658, 0.88417, 1, 0.95119, 0.94578, 0.88465, 1, 0.9005, 1.15012, 1, 1.08106, 0.669, 1, 1, 1, 1, 0.88465, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.89903, 1, 0.65507, 0.9219, 1, 1, 1, 1, 0.77598, 1.12658, 1.15012, 0.75945, 1, 1, 1, 1, 0.9219, 1, 1, 1, 1, 1, 0.85034, 0.75945, 1, 1, 1, 1, 0.94578, 1, 0.91123, 0.91123, 0.91123, 0.91123, 0.94578, 0.94578, 0.91, 0.979, 0.979, 0.979, 0.979, 0.979, 0.882, 0.93559, 0.882, 0.882, 0.882, 0.882, 0.88465, 0.882, 0.83, 0.83, 0.83, 0.83, 0.88465, 0.84596];
-exports.MyriadProItalicFactors = MyriadProItalicFactors;
-const MyriadProItalicLineHeight = 1.2;
-exports.MyriadProItalicLineHeight = MyriadProItalicLineHeight;
-const MyriadProRegularFactors = [1.36898, 1, 0.91755, 0.788, 0.788, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.92138, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.8126, 0.8126, 0.80314, 0.80314, 0.80314, 0.80314, 0.80314, 0.80314, 0.85608, 0.92222, 0.92222, 0.92915, 0.92819, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.90991, 0.73764, 0.73764, 0.7154, 0.90284, 0.86169, 0.92915, 0.92241, 0.79726, 0.83051, 0.81884, 0.83051, 0.83051, 1, 0.83051, 0.90284, 1, 1, 1, 1, 0.90976, 0.90284, 0.86023, 0.82873, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.80513, 0.86023, 0.74, 0.74, 0.8126, 0.8126, 1, 0.84869, 0.84869, 0.91172, 0.84869, 1, 0.84869, 0.85588, 0.96518, 0.96518, 0.91115, 0.91115, 0.91115, 1, 0.91115, 0.91115, 0.8858, 0.894, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 0.94307, 0.98612, 0.8858, 0.94007, 0.8858, 0.8858, 0.8858, 0.79761, 0.89992, 0.87791, 0.81992, 0.8858, 0.74498, 0.74498, 0.74498, 1, 0.79761, 0.73914, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.73914, 0.73914, 1, 0.73914, 1, 0.89297, 0.81363, 0.81363, 0.81363, 0.81363, 1, 0.8858, 0.79611, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.88157, 0.88157, 0.82528, 0.89591, 0.89591, 0.83659, 0.89633, 0.89633, 0.89633, 0.89633, 0.89633, 0.85608, 0.83089, 0.8111, 0.8111, 0.8111, 0.8111, 0.8111, 0.90531, 0.90531, 0.90531, 0.90531, 0.90531, 0.86667, 0.86667, 0.86667, 0.86667, 0.90088, 0.86667, 0.86936, 0.86936, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.86667, 0.95308, 0.95308, 0.86667, 0.90706, 0.78105, 0.86667, 1.08595, 0.86667, 0.86667, 1, 1, 1, 1, 1, 1, 1, 1.27014, 1.02058, 1.0664, 0.72601, 0.86667, 1.0231, 1.22736, 0.92006, 0.97358, 1, 0.85034, 0.85034, 1.0222, 1.0222, 0.90088, 0.92006, 0.80549, 0.896, 0.896, 0.90088, 0.896, 0.896, 0.896, 0.896, 0.90088, 0.92241, 0.87064, 1, 0.90088, 1, 0.74505, 0.74505, 0.91882, 0.92241, 1.01411, 0.89903, 0.89903, 0.93372, 1.01411, 0.79519, 0.98088, 1, 0.90088, 1.03901, 1.08595, 1, 1, 0.92241, 0.90088, 0.84224, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.92241, 1, 0.90083, 1, 0.89903, 0.99793, 0.90083, 0.98699, 0.98699, 1.02058, 1, 1.36145, 0.99793, 0.99793, 0.97276, 0.82784, 1, 0.69067, 1.05099, 1, 1, 1, 0.92241, 1, 0.92241, 0.92241, 1, 1.00512, 0.928, 1.00512, 1.00512, 1, 1.00512, 0.89713, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.90088, 1.02058, 1.08595, 0.75339, 0.75339, 0.76575, 0.76575, 0.99793, 0.99793, 0.99793, 1, 1, 0.90088, 1.05326, 0.84224, 0.84224, 0.84224, 0.84224, 0.84224, 1.07469, 0.84224, 1.02119, 1.1536, 1, 1, 1, 1, 1, 1, 1.05326, 1.06226, 1.06226, 1.06226, 1.06226, 0.84224, 1.09377, 1.09377, 0.938, 0.986, 1, 0.938, 1.06226, 1.06226, 0.944, 0.83704, 1, 0.81441, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.05638, 1.08927, 1, 1.00119, 0.54324, 1, 1, 1.02058, 1, 0.95978, 1.02058, 1, 1, 0.99793, 0.99793, 0.91887, 0.99793, 1, 0.92241, 1, 1.08595, 0.99793, 0.938, 0.89364, 0.98714, 0.98714, 0.98714, 0.98714, 0.98714, 0.91434, 0.90088, 0.98714, 0.98714, 0.98714, 0.88888, 0.88888, 0.98714, 0.98714, 0.92241, 1, 0.91009, 0.91009, 1, 0.93484, 0.97198, 1, 0.89876, 0.89876, 0.98714, 1.0231, 0.95325, 0.85283, 0.85283, 1.07257, 0.89073, 0.74505, 1.156, 1, 0.99007, 0.80442, 1.02058, 1.08595, 0.74705, 0.91879, 1.01231, 0.73002, 0.66466, 0.94935, 1.06904, 1.06304, 1.06304, 0.93173, 1, 0.93173, 0.93173, 0.98472, 0.98196, 0.98196, 1.024, 0.98196, 1, 0.56866, 1, 0.98972, 0.90088, 1, 0.792, 0.792, 0.792, 1, 0.792, 1, 1, 0.9332, 0.92241, 1, 1, 0.89762, 1, 0.92241, 1.23456, 1, 1, 0.92241, 0.71119, 1, 1.19137, 1.04552, 1.19137, 0.904, 1, 0.96017, 1.0231, 0.92241, 1, 0.91009, 0.90088, 0.90388, 0.619, 1, 1, 1, 1, 0.92241, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.89903, 1, 0.76305, 0.9219, 1, 1, 1, 1, 0.81363, 1.19137, 0.90088, 0.74505, 1, 1, 1, 1, 0.9219, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.72458, 0.74505, 1, 1, 1, 1, 1, 0.99074, 1, 0.95817, 0.95817, 0.95817, 0.95817, 0.99074, 0.99074, 0.962, 1.01915, 1.01915, 1.01915, 1.01915, 1.01915, 0.926, 0.96705, 0.942, 0.942, 0.942, 0.942, 0.92241, 0.942, 0.856, 0.856, 0.856, 0.856, 0.92241, 0.92761];
-exports.MyriadProRegularFactors = MyriadProRegularFactors;
-const MyriadProRegularLineHeight = 1.2;
-exports.MyriadProRegularLineHeight = MyriadProRegularLineHeight;
-
-/***/ }),
-/* 60 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.SegoeuiRegularLineHeight = exports.SegoeuiRegularFactors = exports.SegoeuiItalicLineHeight = exports.SegoeuiItalicFactors = exports.SegoeuiBoldLineHeight = exports.SegoeuiBoldItalicLineHeight = exports.SegoeuiBoldItalicFactors = exports.SegoeuiBoldFactors = void 0;
-const SegoeuiBoldFactors = [1.76738, 1, 0.97363, 0.93506, 0.93506, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 1.01149, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.88776, 0.88776, 0.8641, 0.8641, 0.8641, 0.8641, 0.8641, 0.8641, 0.98243, 1.02096, 1.02096, 1.02096, 0.97826, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 1.09251, 0.79795, 0.79795, 0.7676, 1.06085, 0.98167, 1.02096, 1.03424, 0.85132, 0.914, 0.85134, 0.914, 0.914, 1, 0.914, 1.06085, 1, 0.99862, 0.99862, 1, 1.06085, 1.06085, 1.1406, 0.97138, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.01134, 1.1406, 0.8007, 0.8007, 0.89858, 0.89858, 1, 0.83693, 0.83693, 1.0388, 0.83693, 1, 0.83693, 0.83693, 1.14889, 1.14889, 1.09398, 1.09398, 1.09398, 1, 1.09398, 1.09398, 0.97489, 0.93994, 0.97426, 0.97489, 0.97426, 0.97426, 0.97426, 0.97489, 0.97489, 0.95493, 1.03089, 0.97489, 1.02546, 0.97489, 0.97489, 0.97426, 0.92094, 0.99346, 1.0595, 1.02112, 0.97489, 0.90399, 0.90399, 0.90399, 1, 0.92094, 0.84041, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.84041, 0.84041, 0.84041, 0.84041, 1, 0.94793, 0.95923, 0.95923, 0.95923, 0.95923, 1, 0.97489, 0.92094, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 0.90996, 0.90996, 0.84097, 1.00135, 1.00135, 1, 1.06467, 1.06467, 1.06467, 1.06467, 1.06467, 0.98243, 0.86039, 0.90996, 0.90996, 0.90996, 0.90996, 0.90996, 0.99361, 0.99361, 0.99361, 0.99361, 0.99361, 0.96752, 0.96752, 0.96752, 0.96752, 0.91056, 1, 0.96752, 0.93136, 0.93136, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.96752, 1.03574, 1.03574, 0.96752, 1.17647, 0.81525, 0.96752, 1.29004, 0.96752, 0.96752, 0.86182, 0.94434, 0.86279, 0.86279, 0.94434, 1, 1, 1.2107, 1.2107, 1.16939, 0.97847, 0.96752, 1.01519, 1.56942, 1.16579, 1.0192, 1, 0.94856, 0.94856, 1.1085, 1.1085, 1.03959, 1, 1.16579, 1.20642, 0.86304, 0.86304, 1.15103, 1, 1, 0.86304, 0.86304, 0.86304, 0.86304, 0.64663, 1.03424, 0.96268, 1.42603, 1.15103, 1, 1.04315, 0.81378, 0.9754, 1, 1, 1.18622, 1, 1, 1.01359, 0.73047, 0.73047, 1.03057, 1.03517, 0.94994, 1.00886, 1.34163, 1.3871, 1, 0.87815, 1.28826, 1, 1, 1.03424, 0.75953, 1.02285, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 1.03424, 1, 0.91211, 0.97278, 1, 0.89903, 0.99041, 0.97278, 0.97531, 1.02597, 1.2107, 1.21172, 1, 1.0008, 1.0008, 0.97122, 0.9824, 0.96039, 0.9824, 1.15103, 1, 1.42603, 1, 1.03424, 1.15749, 1, 1.03424, 1.03424, 1, 0.93503, 1.01359, 1.01932, 1.01359, 1.01359, 1, 1.01359, 1.02798, 0.94282, 1, 1.2107, 1.29004, 1.04478, 1.04478, 1.03372, 1.03372, 0.98561, 1.00879, 0.98561, 1.15296, 1, 1.21994, 1, 1.02285, 1.02285, 1.02285, 1.02285, 1.02285, 1.02285, 1.08692, 1.02285, 1.13973, 2.10339, 1, 1, 0.9716, 1.42603, 1.42603, 1, 1.02285, 1.18102, 1.18102, 1.18102, 1.18102, 1.02285, 1.02285, 1.02285, 1.00527, 1.02277, 1, 1.00527, 1.02285, 1.02285, 0.98683, 0.9455, 1, 0.90418, 1.2107, 1.29004, 1, 1.03424, 1.2107, 1.07733, 1.18874, 1.13005, 1, 1.0302, 0.75155, 1, 1, 1.2107, 1.222, 1.0016, 1.2107, 1, 1, 0.99041, 0.99041, 0.96692, 0.99041, 1, 1.03424, 1, 1.29004, 0.99041, 0.99561, 1.06497, 1.0008, 1, 1.0008, 1, 1, 0.97931, 0.79912, 1, 1.0008, 1.0008, 0.98439, 0.98439, 1.0008, 1.0008, 1.03424, 1.15749, 1.15749, 1.14169, 0.99862, 1.10818, 1.24866, 0.69825, 1.0008, 1.0008, 1, 1.01519, 0.91572, 1.1085, 1.1085, 1.16897, 0.97529, 0.9754, 1.25635, 1.19687, 1.04983, 0.90434, 1.2107, 1.28826, 0.96085, 1.0499, 1.01359, 0.71703, 0.71703, 1.04016, 0.98633, 0.98633, 0.98633, 1.04394, 1.04394, 1.04394, 1.04394, 1.23203, 1.02258, 1.02258, 1.18416, 1.02258, 1, 1.18622, 1, 0.99921, 0.81378, 1, 0.79104, 0.79104, 0.79104, 0.79104, 0.79104, 1, 1.02956, 0.8727, 1.03424, 1.10948, 1, 1, 0.8965, 0.93803, 1.03424, 1.59578, 1, 1.2886, 1.03424, 0.90137, 1, 1.16862, 1.23085, 1.16862, 1.07034, 1, 1.13189, 1.01519, 1.03424, 1.15749, 1.17389, 1.15103, 1, 0.95161, 0.771, 0.87025, 0.87025, 0.87025, 0.87025, 1.03424, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.74627, 0.75155, 0.99297, 1.21408, 1.21408, 1.21408, 1, 1.18328, 0.95923, 1.16862, 1.01173, 0.81378, 0.79795, 1.09466, 0.97278, 1.02065, 1, 1.21408, 1.24633, 1.12454, 1, 1, 1, 0.9754, 1, 1, 1.09193, 1.09193, 0.99041, 1, 1.06628, 1.06628, 1.06628, 1.06628, 0.99041, 0.99041, 0.97454, 1.02511, 1.02511, 1.02511, 1.02511, 1.02511, 0.99298, 1.07237, 0.96752, 0.96752, 0.96752, 0.96752, 1.03424, 0.96752, 0.95801, 0.95801, 0.95801, 0.95801, 1.03424, 1.0106];
-exports.SegoeuiBoldFactors = SegoeuiBoldFactors;
-const SegoeuiBoldLineHeight = 1.33008;
-exports.SegoeuiBoldLineHeight = SegoeuiBoldLineHeight;
-const SegoeuiBoldItalicFactors = [1.76738, 1, 0.97363, 0.94385, 0.94385, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 1.00811, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.89723, 0.89723, 0.87897, 0.87897, 0.87897, 0.87897, 0.87897, 0.87897, 0.9817, 1.0426, 1.0426, 1.0426, 1.09818, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 1.10466, 0.79429, 0.79429, 0.77702, 1.05815, 0.99137, 1.0426, 1.036, 0.85292, 0.91149, 0.86869, 0.91149, 0.91149, 1, 0.91149, 1.05815, 1, 0.99862, 0.99862, 1, 1.05815, 1.05815, 1.1406, 0.97441, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 0.95253, 1.1406, 0.79631, 0.79631, 0.90128, 0.90128, 1, 0.83853, 0.83853, 1.06662, 0.83853, 1, 0.83853, 0.83853, 1.04396, 1.04396, 1.10615, 1.10615, 1.10615, 1, 1.10615, 1.10615, 0.97552, 0.91602, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 0.98999, 1.07205, 0.97552, 1.0347, 0.97552, 0.97552, 0.97552, 0.94436, 1.00356, 1.04694, 1.01945, 0.97552, 0.88641, 0.88641, 0.88641, 1, 0.94436, 0.80527, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.80527, 0.80527, 0.80527, 0.80527, 1, 0.98015, 0.96083, 0.96083, 0.95923, 0.96083, 1, 0.97552, 0.94436, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 0.91142, 0.91142, 0.86142, 1.00135, 1.00135, 1, 1.06777, 1.06777, 1.06777, 1.06777, 1.06777, 0.9817, 0.84918, 0.91142, 0.91142, 0.91142, 0.91142, 0.91142, 0.99361, 0.99361, 0.99361, 0.99361, 0.99361, 1.06585, 1.06585, 1.06585, 1.06585, 1.31818, 1, 1.06585, 0.96705, 0.96705, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.06585, 1.04961, 1.04961, 1.06585, 1.10953, 0.83284, 1.06585, 1.29004, 1.06585, 1.06585, 0.86224, 0.94434, 0.86364, 0.86279, 0.94434, 1, 1, 1.21237, 1.21237, 1.16939, 0.97847, 1.06585, 0.97042, 1.57293, 1.16579, 0.99607, 1, 0.95107, 0.95107, 1.11144, 1.11144, 1.31818, 1, 1.16579, 1.20502, 0.83055, 0.83055, 1.31818, 1, 1, 0.83055, 0.83055, 0.83055, 0.83055, 1.31818, 1.036, 0.93491, 1.42603, 1.31818, 1, 1.04315, 0.81378, 0.9754, 1, 1, 1.18754, 1, 1, 0.97042, 0.72959, 0.72959, 1.0033, 0.97042, 0.94994, 1.008, 1.34163, 1.31818, 1, 1.27126, 1.29004, 1, 1, 1.036, 1.31818, 1.14236, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 1.036, 1, 0.91406, 0.93503, 1, 0.89903, 0.97922, 0.93503, 0.9898, 0.9898, 1.21237, 1.21339, 1, 1.00639, 1.00639, 0.93125, 1.03959, 0.96039, 1.03959, 1.1261, 1, 1.42603, 1, 1.036, 1.15574, 1, 1.036, 1.036, 1, 0.93327, 0.97042, 1.02897, 0.97042, 0.97042, 1, 0.97042, 0.98721, 1.31818, 1, 1.21237, 1.29004, 1.05356, 1.05356, 1.03372, 1.03372, 0.97922, 0.97922, 0.97922, 1.15296, 1, 1.31818, 1, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 1.04302, 1.14236, 1.13904, 2.10339, 1, 1, 0.9716, 1.42603, 1.42603, 1, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 0.94552, 1.01582, 1.01054, 1.00518, 1, 1.01054, 1.14236, 1.14236, 0.97981, 1.09125, 1, 0.90418, 1.21237, 1.29004, 1, 1.03336, 1.21237, 1.23199, 1.18775, 1.19508, 1, 1.02471, 0.79487, 1, 1, 1.21237, 1.222, 1.02186, 1.21237, 1, 1, 0.97922, 0.97922, 1.01034, 0.97922, 1, 1.036, 1, 1.29004, 0.97922, 1, 1.02809, 0.94165, 0.94165, 0.94165, 0.94165, 0.94165, 0.91981, 1.31818, 0.94165, 0.94165, 0.94165, 1.00351, 1.00351, 0.94165, 0.94165, 1.036, 1.15574, 1.15574, 1.13934, 0.99862, 1.26781, 1.24866, 0.69825, 0.94165, 0.94165, 0.94165, 0.97042, 0.91484, 1.11144, 1.11144, 1.16798, 0.97639, 0.9754, 1.26514, 1.16541, 1.10687, 0.99314, 1.21237, 1.29004, 0.96085, 1.04232, 0.97042, 0.73541, 0.73541, 1.04016, 0.98633, 0.98633, 0.98633, 1.04745, 1.04394, 1.04745, 1.04745, 1.23203, 1.0276, 1.0276, 1.18416, 1.0276, 1, 1.18622, 1, 0.98387, 1.31818, 1, 0.78929, 0.78929, 0.78929, 0.78929, 0.78929, 1, 1.02956, 0.87357, 1.036, 1.15574, 1, 1, 0.93377, 0.93028, 1.036, 1.59754, 1, 1.2886, 1.036, 0.90068, 1, 1.1261, 1.35125, 1.16862, 1.05403, 1, 1.11121, 0.97042, 1.036, 1.15574, 1.17389, 1.31818, 1, 0.95161, 0.771, 0.87025, 0.87025, 0.87025, 0.87025, 1.036, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.74627, 0.75155, 0.98946, 1.21261, 1.24047, 1.24047, 1, 1.1349, 0.96083, 1.1261, 1.31818, 0.81378, 0.79429, 1.09097, 0.93503, 0.96609, 1, 1.21261, 1.24633, 1.09125, 1, 1, 1, 0.9754, 1, 1, 1.13269, 1.13269, 0.97922, 1, 1.07514, 1.07514, 1.07514, 1.07514, 0.97922, 0.97922, 0.95874, 1.02197, 1.02197, 1.02197, 1.02197, 1.02197, 0.98507, 1.08578, 0.96752, 0.96752, 0.96752, 0.96752, 1.036, 0.96752, 0.97168, 0.97168, 0.97168, 0.97168, 1.036, 0.95134];
-exports.SegoeuiBoldItalicFactors = SegoeuiBoldItalicFactors;
-const SegoeuiBoldItalicLineHeight = 1.33008;
-exports.SegoeuiBoldItalicLineHeight = SegoeuiBoldItalicLineHeight;
-const SegoeuiItalicFactors = [1.76738, 1, 0.94729, 0.85498, 0.85498, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.85944, 0.85944, 0.88506, 0.88506, 0.88506, 0.88506, 0.88506, 0.88506, 0.8858, 0.9858, 0.9858, 0.9858, 0.9607, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 1.03849, 0.74817, 0.74817, 0.71022, 0.98039, 0.90883, 0.9858, 0.96927, 0.80016, 0.88449, 0.82791, 0.88449, 0.88449, 1, 0.88449, 0.98039, 1, 0.99862, 0.99862, 1, 0.98039, 0.98039, 0.95782, 0.84421, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.84171, 0.95782, 0.69238, 0.69238, 0.89898, 0.89898, 1, 0.83231, 0.83231, 0.98316, 0.84723, 1, 0.84723, 0.83231, 0.98183, 0.98183, 1.03989, 1.03989, 1.03989, 1, 1.03989, 1.03989, 0.96924, 0.92383, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 1.01284, 1.05734, 0.96924, 0.99877, 0.96924, 0.96924, 0.96924, 0.86237, 0.90082, 0.97642, 0.97296, 0.96924, 0.80595, 0.80595, 0.80595, 1, 0.86237, 0.74524, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.74524, 0.74524, 0.74524, 0.74524, 1, 0.86075, 0.86091, 0.86091, 0.85771, 0.86091, 1, 0.96924, 0.86237, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.83089, 0.83089, 0.77596, 0.95402, 0.95402, 0.94143, 0.98448, 0.98448, 0.98448, 0.98448, 0.98448, 0.8858, 0.78614, 0.83089, 0.83089, 0.83089, 0.83089, 0.83089, 0.93285, 0.93285, 0.93285, 0.93285, 0.93285, 0.97454, 0.97454, 0.97454, 0.97454, 1.04839, 1, 0.97454, 0.92916, 0.92916, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.97454, 1.0976, 1.0976, 0.97454, 1.15373, 0.78032, 0.97454, 1.24822, 0.97454, 0.97454, 0.86182, 0.94434, 0.86321, 0.8649, 0.94434, 1, 1, 1.45994, 1.17308, 1.07403, 0.94565, 0.97454, 0.97454, 1.39016, 0.92481, 0.98205, 1, 0.91082, 0.91082, 1.0949, 1.0949, 1.04839, 1, 0.92481, 1.15621, 0.87207, 0.87207, 1.04839, 1, 1, 0.87207, 0.87207, 0.87207, 0.87207, 1.04839, 0.96927, 0.99821, 1.42603, 1.04839, 1, 1.04315, 0.78383, 0.78383, 1, 1, 1.23393, 1, 1, 0.97454, 0.67603, 0.67603, 0.95391, 0.97454, 0.94261, 1.05097, 1.34163, 1.04839, 1, 0.81965, 1.24822, 1, 1, 0.96927, 1.04839, 0.93146, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.96927, 1, 0.73584, 0.87533, 1, 0.89903, 1.01054, 0.87533, 1.04, 1.04, 1.17308, 1.17308, 1, 1.03342, 1.03342, 0.93854, 1.14763, 0.95996, 0.95748, 1.06151, 1, 1.42603, 1, 0.96927, 1.09836, 1, 0.96927, 0.96927, 1, 0.87709, 0.97454, 1.03809, 0.97454, 0.97454, 1, 0.97454, 0.88409, 1.04839, 1, 1.17308, 1.24822, 0.9245, 0.9245, 0.94868, 0.94868, 1.00176, 1.00176, 1.00176, 1.15296, 1, 1.04839, 1, 1.16484, 0.93146, 0.93146, 0.93146, 0.93146, 0.93146, 1.12761, 0.93146, 1.14589, 1.96791, 1, 1, 0.97622, 1.42603, 1.42603, 1, 1.16484, 1.2, 1.2, 1.2, 1.2, 0.93146, 1.08132, 1.08132, 0.98047, 1.02148, 1, 0.98047, 1.16484, 1.16484, 1.0119, 1.04861, 1, 0.78755, 1.17308, 1.24822, 1, 0.96927, 1.17308, 1.31868, 1.17984, 1.23736, 1, 1.02989, 0.63218, 1, 1, 1.17308, 1.22135, 1.04724, 1.17308, 1, 1, 1.01054, 1.01054, 0.9857, 1.01054, 1, 0.96927, 1, 1.24822, 1.01054, 1.0127, 1.06234, 0.96225, 0.96225, 0.96225, 0.96225, 0.96225, 0.90171, 1.04839, 0.96225, 0.96225, 0.96225, 1.0326, 1.0326, 0.96225, 0.96225, 0.96927, 1.09836, 1.13525, 1.09836, 0.99862, 1.1781, 1.22326, 0.69825, 0.8761, 0.8761, 0.96225, 0.97454, 0.85273, 0.91349, 0.91349, 1.083, 0.92586, 0.78383, 1.21191, 1.01473, 1.11826, 0.8965, 1.17308, 1.24822, 0.91578, 1.0557, 0.97454, 0.77349, 0.70424, 1.05365, 1.12317, 1.12317, 1.12317, 0.94945, 0.94945, 0.94945, 0.94945, 1.18414, 1.06598, 1.06598, 1.18416, 1.06598, 1, 1.20808, 1, 0.97783, 1.04839, 1, 0.79004, 0.79004, 0.79004, 0.79004, 0.79004, 1, 1.06483, 0.80597, 0.96927, 1.01522, 1, 1, 0.94818, 0.93574, 0.96927, 1.42531, 1, 1.2886, 0.96927, 0.86438, 1, 1.16344, 1.30679, 1.16344, 1.02759, 1, 1.05401, 0.97454, 0.96927, 1.09836, 1.15222, 1.04839, 1, 0.81965, 0.77295, 0.87025, 0.87025, 0.87025, 0.87025, 0.96927, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 0.74627, 0.75155, 0.98946, 1.20088, 1.09971, 1.09971, 1, 1.09971, 0.86091, 1.16344, 1.04839, 0.78383, 0.74817, 1.03754, 0.87533, 0.98705, 1, 1.20088, 1.24633, 1.07497, 1, 1, 1, 0.78032, 1, 1, 1.10742, 1.10742, 1.00351, 1, 1.0675, 1.0675, 1.0675, 1.0675, 1.00351, 1.00351, 0.94629, 0.9973, 0.9973, 0.9973, 0.9973, 0.9973, 0.91016, 1.02732, 0.96777, 0.96777, 0.96777, 0.96777, 0.96927, 0.96777, 0.9043, 0.9043, 0.9043, 0.9043, 0.96927, 0.95364];
-exports.SegoeuiItalicFactors = SegoeuiItalicFactors;
-const SegoeuiItalicLineHeight = 1.33008;
-exports.SegoeuiItalicLineHeight = SegoeuiItalicLineHeight;
-const SegoeuiRegularFactors = [1.76738, 1, 0.96706, 0.86035, 0.86035, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.96635, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.85944, 0.85944, 0.85734, 0.85734, 0.85734, 0.85734, 0.85734, 0.85734, 0.88433, 0.97093, 0.97093, 0.97093, 0.96491, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 1.03444, 0.75842, 0.75842, 0.72727, 0.9831, 0.92366, 0.97093, 0.96927, 0.79936, 0.88198, 0.85638, 0.88198, 0.88198, 1, 0.88198, 0.9831, 1, 0.99862, 0.99862, 1, 0.9831, 0.9831, 0.95782, 0.84784, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.98601, 0.95782, 0.71387, 0.71387, 0.86969, 0.86969, 1, 0.84636, 0.84636, 0.94152, 0.84636, 1, 0.84636, 0.84636, 1.07796, 1.07796, 1.03584, 1.03584, 1.03584, 1, 1.03584, 1.03584, 0.96924, 0.93066, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 1.0098, 1.09799, 0.96924, 1.03405, 0.96924, 0.96924, 0.96924, 0.83968, 0.94492, 0.98715, 0.9287, 0.96924, 0.82826, 0.82826, 0.82826, 1, 0.83968, 0.79649, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.79649, 0.79649, 0.79649, 0.79649, 1, 0.83491, 0.85771, 0.85771, 0.85771, 0.85771, 1, 0.96924, 0.83968, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.8287, 0.8287, 0.77968, 0.95132, 0.95132, 0.93119, 0.98965, 0.98965, 0.98965, 0.98965, 0.98965, 0.88433, 0.78437, 0.8287, 0.8287, 0.8287, 0.8287, 0.8287, 0.93365, 0.93365, 0.93365, 0.93365, 0.93365, 0.91484, 0.91484, 0.91484, 0.91484, 0.84751, 0.91484, 0.93575, 0.93575, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.91484, 1.0625, 1.0625, 0.91484, 1.19985, 0.78032, 0.91484, 1.24822, 0.91484, 0.91484, 0.86182, 0.94434, 0.86279, 0.86279, 0.94434, 1, 1, 1.45786, 1.1714, 1.07152, 0.94084, 0.91484, 1.05707, 1.3638, 0.92105, 0.95246, 1, 0.90351, 0.90351, 1.08612, 1.08612, 0.91202, 0.92105, 1.16039, 0.92383, 0.92383, 1.11437, 0.92383, 0.92383, 0.92383, 0.92383, 0.61584, 0.96927, 1.02512, 1.42603, 1.11437, 1.04315, 0.78032, 0.78032, 1.20808, 0.99912, 1.05882, 0.67428, 0.67428, 1.0969, 1.05882, 0.94261, 1.04912, 1.34163, 1.2434, 0.81818, 1.24644, 1, 1, 0.96927, 0.60411, 0.8717, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.96927, 0.73291, 0.9403, 1, 0.89903, 1.01756, 0.9403, 0.98248, 0.98248, 1.1714, 1.17238, 1, 1.03424, 1.03424, 1.00527, 1.02285, 0.95996, 0.85337, 1.12654, 1, 1.42603, 1, 0.96927, 1.11358, 0.96927, 0.96927, 0.87796, 1.05882, 1.03809, 1.05882, 1.05882, 1, 1.05882, 0.89049, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.80499, 1.1714, 1.24822, 0.90957, 0.90957, 0.94868, 0.94868, 1.01756, 1.01756, 1.01756, 1.15296, 1, 0.97361, 1.09011, 0.8717, 0.8717, 0.8717, 0.8717, 0.8717, 1.11551, 0.8717, 1.14589, 1.9697, 1, 1, 0.97622, 1.42603, 1.42603, 1, 1.09011, 1.2, 1.2, 1.2, 1.2, 0.8717, 1.09011, 1.09011, 0.99414, 1.04785, 1, 0.99414, 1.09011, 1.09011, 0.99609, 1.0536, 1, 0.94298, 1.1714, 1.24822, 1, 0.96927, 1.1714, 1.08571, 1.18083, 1.23297, 1, 1.034, 0.75155, 1, 1, 1.1714, 1.22135, 1.00169, 1.1714, 1, 1, 1.01756, 1.01756, 1.00323, 1.01756, 1, 0.96927, 1, 1.24822, 1.01756, 1.05176, 1.06234, 1.05356, 1.05356, 1.05356, 1.05356, 1.05356, 0.98293, 0.55572, 1.05356, 1.05356, 1.05356, 1.03502, 1.03502, 1.05356, 1.05356, 0.96927, 1.10539, 1.11593, 1.08665, 0.99862, 1.05937, 1.17914, 0.69825, 0.95923, 0.95923, 1.05356, 1.05707, 0.85273, 0.90616, 0.90616, 1.083, 0.92037, 0.78032, 1.20996, 1.01518, 1.07831, 0.9087, 1.1714, 1.24644, 0.91578, 1.05205, 1.05882, 0.80597, 0.73381, 1.10454, 1.13196, 1.13196, 1.13196, 1.03077, 1.03077, 1.03077, 1.03077, 1.2046, 1.04399, 1.04399, 1.18416, 1.04399, 1, 1.20808, 1, 1.03004, 0.84164, 1, 0.84863, 0.84863, 0.84863, 0.84863, 0.84863, 1, 1.06483, 0.80597, 0.96927, 1.06967, 1, 0.93117, 0.95542, 0.96927, 1.40246, 1, 1.2886, 0.96927, 0.86507, 1, 1.21968, 1.23362, 1.21968, 1.17318, 1, 1.05443, 1.05707, 0.96927, 1.10539, 1.14169, 1.01173, 0.81818, 0.77295, 0.87025, 0.87025, 0.87025, 0.87025, 0.96927, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 0.74627, 0.75155, 0.98594, 1.20088, 1.09971, 1.09971, 1, 1.05425, 0.85771, 1.21968, 0.93109, 0.78032, 0.75842, 1.03719, 0.9403, 1.04021, 1, 1.20088, 1.24633, 1.05425, 1.09971, 1.09971, 1.09971, 1.07497, 1, 1, 1, 0.78032, 1, 1, 1, 1.10938, 1.10938, 1.01756, 1, 1.01071, 1.01071, 1.01071, 1.01071, 1.01756, 1.01756, 0.95801, 1.00068, 1.00068, 1.00068, 1.00068, 1.00068, 0.91797, 0.99346, 0.96777, 0.96777, 0.96777, 0.96777, 0.96927, 0.96777, 0.9043, 0.9043, 0.9043, 0.9043, 0.96927, 1.00221];
-exports.SegoeuiRegularFactors = SegoeuiRegularFactors;
-const SegoeuiRegularLineHeight = 1.33008;
-exports.SegoeuiRegularLineHeight = SegoeuiRegularLineHeight;
-
-/***/ }),
 /* 61 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
@@ -39560,13 +39697,13 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _colorspace = __w_pdfjs_require__(14);
+var _colorspace = __w_pdfjs_require__(24);
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
-var _jpeg_stream = __w_pdfjs_require__(27);
+var _jpeg_stream = __w_pdfjs_require__(37);
 
-var _jpx = __w_pdfjs_require__(30);
+var _jpx = __w_pdfjs_require__(40);
 
 function decodeAndClamp(value, addend, coefficient, max) {
   value = addend + value * coefficient;
@@ -40237,11 +40374,11 @@ var _util = __w_pdfjs_require__(2);
 
 var _name_number_tree = __w_pdfjs_require__(65);
 
-var _colorspace = __w_pdfjs_require__(14);
+var _colorspace = __w_pdfjs_require__(24);
 
 var _file_spec = __w_pdfjs_require__(66);
 
-var _image_utils = __w_pdfjs_require__(52);
+var _image_utils = __w_pdfjs_require__(58);
 
 var _metadata_parser = __w_pdfjs_require__(67);
 
@@ -45079,7 +45216,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.DecryptStream = void 0;
 
-var _decode_stream = __w_pdfjs_require__(19);
+var _decode_stream = __w_pdfjs_require__(29);
 
 const chunkSize = 512;
 
@@ -45260,7 +45397,7 @@ exports.XFAFactory = XFAFactory;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.XmlObject = exports.XFAObjectArray = exports.XFAObject = exports.XFAAttribute = exports.StringObject = exports.OptionObject = exports.Option10 = exports.Option01 = exports.IntegerObject = exports.ContentObject = exports.$uid = exports.$toStyle = exports.$toString = exports.$toHTML = exports.$text = exports.$tabIndex = exports.$setValue = exports.$setSetAttributes = exports.$setId = exports.$searchNode = exports.$root = exports.$resolvePrototypes = exports.$removeChild = exports.$pushGlyphs = exports.$onText = exports.$onChildCheck = exports.$onChild = exports.$nsAttributes = exports.$nodeName = exports.$namespaceId = exports.$isUsable = exports.$isTransparent = exports.$isThereMoreWidth = exports.$isSplittable = exports.$isNsAgnostic = exports.$isDescendent = exports.$isDataValue = exports.$isCDATAXml = exports.$isBindable = exports.$insertAt = exports.$indexOf = exports.$ids = exports.$hasSettableValue = exports.$globalData = exports.$getTemplateRoot = exports.$getSubformParent = exports.$getRealChildrenByNameIt = exports.$getParent = exports.$getNextPage = exports.$getExtra = exports.$getDataValue = exports.$getContainedChildren = exports.$getChildrenByNameIt = exports.$getChildrenByName = exports.$getChildrenByClass = exports.$getChildren = exports.$getAvailableSpace = exports.$getAttributes = exports.$getAttributeIt = exports.$flushHTML = exports.$finalize = exports.$extra = exports.$dump = exports.$data = exports.$content = exports.$consumed = exports.$clone = exports.$cleanup = exports.$cleanPage = exports.$clean = exports.$childrenToHTML = exports.$appendChild = exports.$addHTML = exports.$acceptWhitespace = void 0;
+exports.XmlObject = exports.XFAObjectArray = exports.XFAObject = exports.XFAAttribute = exports.StringObject = exports.OptionObject = exports.Option10 = exports.Option01 = exports.IntegerObject = exports.ContentObject = exports.$uid = exports.$toStyle = exports.$toString = exports.$toHTML = exports.$text = exports.$tabIndex = exports.$setValue = exports.$setSetAttributes = exports.$setId = exports.$searchNode = exports.$root = exports.$resolvePrototypes = exports.$removeChild = exports.$pushPara = exports.$pushGlyphs = exports.$popPara = exports.$onText = exports.$onChildCheck = exports.$onChild = exports.$nsAttributes = exports.$nodeName = exports.$namespaceId = exports.$isUsable = exports.$isTransparent = exports.$isThereMoreWidth = exports.$isSplittable = exports.$isNsAgnostic = exports.$isDescendent = exports.$isDataValue = exports.$isCDATAXml = exports.$isBindable = exports.$insertAt = exports.$indexOf = exports.$ids = exports.$hasSettableValue = exports.$globalData = exports.$getTemplateRoot = exports.$getSubformParent = exports.$getRealChildrenByNameIt = exports.$getParent = exports.$getNextPage = exports.$getExtra = exports.$getDataValue = exports.$getContainedChildren = exports.$getChildrenByNameIt = exports.$getChildrenByName = exports.$getChildrenByClass = exports.$getChildren = exports.$getAvailableSpace = exports.$getAttributes = exports.$getAttributeIt = exports.$flushHTML = exports.$finalize = exports.$extra = exports.$dump = exports.$data = exports.$content = exports.$consumed = exports.$clone = exports.$cleanup = exports.$cleanPage = exports.$clean = exports.$childrenToHTML = exports.$appendChild = exports.$addHTML = exports.$acceptWhitespace = void 0;
 
 var _utils = __w_pdfjs_require__(76);
 
@@ -45375,6 +45512,10 @@ const $onText = Symbol();
 exports.$onText = $onText;
 const $pushGlyphs = Symbol();
 exports.$pushGlyphs = $pushGlyphs;
+const $popPara = Symbol();
+exports.$popPara = $popPara;
+const $pushPara = Symbol();
+exports.$pushPara = $pushPara;
 const $removeChild = Symbol();
 exports.$removeChild = $removeChild;
 const $root = Symbol("root");
@@ -45505,6 +45646,16 @@ class XFAObject {
     return false;
   }
 
+  [$popPara]() {
+    if (this.para) {
+      this[$getTemplateRoot]()[$extra].paraStack.pop();
+    }
+  }
+
+  [$pushPara]() {
+    this[$getTemplateRoot]()[$extra].paraStack.push(this.para);
+  }
+
   [$setId](ids) {
     if (this.id && this[$namespaceId] === _namespaces.NamespaceIds.template.id) {
       ids.set(this.id, this);
@@ -45527,6 +45678,10 @@ class XFAObject {
     child[_parent] = this;
 
     this[_children].push(child);
+
+    if (!child[$globalData] && this[$globalData]) {
+      child[$globalData] = this[$globalData];
+    }
   }
 
   [$removeChild](child) {
@@ -45562,6 +45717,10 @@ class XFAObject {
     child[_parent] = this;
 
     this[_children].splice(i, 0, child);
+
+    if (!child[$globalData] && this[$globalData]) {
+      child[$globalData] = this[$globalData];
+    }
   }
 
   [$isTransparent]() {
@@ -47419,6 +47578,10 @@ class Binder {
 
     if (matches.length > 1) {
       baseClone = formNode[_xfa_object.$clone]();
+
+      baseClone[_xfa_object.$removeChild](baseClone.occur);
+
+      baseClone.occur = null;
     }
 
     this._bindValue(formNode, matches[0], picture);
@@ -47442,9 +47605,6 @@ class Binder {
 
       const clone = baseClone[_xfa_object.$clone]();
 
-      clone.occur.min = 1;
-      clone.occur.max = 1;
-      clone.occur.initial = 1;
       parent[name].push(clone);
 
       parent[_xfa_object.$insertAt](pos + i, clone);
@@ -47474,25 +47634,48 @@ class Binder {
 
     const name = formNode[_xfa_object.$nodeName];
 
-    for (let i = 0, ii = occur.initial; i < ii; i++) {
-      const clone = formNode[_xfa_object.$clone]();
+    if (!(parent[name] instanceof _xfa_object.XFAObjectArray)) {
+      return;
+    }
 
-      clone.occur.min = 1;
-      clone.occur.max = 1;
-      clone.occur.initial = 1;
-      parent[name].push(clone);
+    let currentNumber;
 
-      parent[_xfa_object.$appendChild](clone);
+    if (formNode.name) {
+      currentNumber = parent[name].children.filter(e => e.name === formNode.name).length;
+    } else {
+      currentNumber = parent[name].children.length;
+    }
+
+    const pos = parent[_xfa_object.$indexOf](formNode) + 1;
+    const ii = occur.initial - currentNumber;
+
+    if (ii) {
+      const nodeClone = formNode[_xfa_object.$clone]();
+
+      nodeClone[_xfa_object.$removeChild](nodeClone.occur);
+
+      nodeClone.occur = null;
+      parent[name].push(nodeClone);
+
+      parent[_xfa_object.$insertAt](pos, nodeClone);
+
+      for (let i = 1; i < ii; i++) {
+        const clone = nodeClone[_xfa_object.$clone]();
+
+        parent[name].push(clone);
+
+        parent[_xfa_object.$insertAt](pos + i, clone);
+      }
     }
   }
 
   _getOccurInfo(formNode) {
     const {
+      name,
       occur
     } = formNode;
-    const dataName = formNode.name;
 
-    if (!occur || !dataName) {
+    if (!occur || !name) {
       return [1, 1];
     }
 
@@ -47657,11 +47840,6 @@ class Binder {
       }
 
       if (match) {
-        if (match.length < min) {
-          (0, _util.warn)(`XFA - Must have at least ${min} occurrences: ${formNode[_xfa_object.$nodeName]}.`);
-          continue;
-        }
-
         this._bindOccurrences(child, match, picture);
       } else if (min > 0) {
         this._setProperties(child, dataNode);
@@ -47704,12 +47882,37 @@ var _utils = __w_pdfjs_require__(76);
 
 var _util = __w_pdfjs_require__(2);
 
+var _fonts = __w_pdfjs_require__(83);
+
 var _som = __w_pdfjs_require__(78);
 
 const TEMPLATE_NS_ID = _namespaces.NamespaceIds.template.id;
 const SVG_NS = "http://www.w3.org/2000/svg";
 const MAX_ATTEMPTS_FOR_LRTB_LAYOUT = 2;
 const MAX_EMPTY_PAGES = 3;
+
+function getBorderDims(node) {
+  if (!node || !node.border) {
+    return {
+      w: 0,
+      h: 0
+    };
+  }
+
+  const borderExtra = node.border[_xfa_object.$getExtra]();
+
+  if (!borderExtra) {
+    return {
+      w: 0,
+      h: 0
+    };
+  }
+
+  return {
+    w: borderExtra.widths[0] + borderExtra.widths[2] + borderExtra.insets[0] + borderExtra.insets[2],
+    h: borderExtra.widths[1] + borderExtra.widths[3] + borderExtra.insets[1] + borderExtra.insets[3]
+  };
+}
 
 function hasMargin(node) {
   return node.margin && (node.margin.topInset || node.margin.rightInset || node.margin.bottomInset || node.margin.leftInset);
@@ -48258,16 +48461,42 @@ class Border extends _xfa_object.XFAObject {
     this.margin = null;
   }
 
-  [_xfa_object.$toStyle]() {
-    const edges = this.edge.children.slice();
+  [_xfa_object.$getExtra]() {
+    if (!this[_xfa_object.$extra]) {
+      const edges = this.edge.children.slice();
 
-    if (edges.length < 4) {
-      const defaultEdge = edges[edges.length - 1] || new Edge({});
+      if (edges.length < 4) {
+        const defaultEdge = edges[edges.length - 1] || new Edge({});
 
-      for (let i = edges.length; i < 4; i++) {
-        edges.push(defaultEdge);
+        for (let i = edges.length; i < 4; i++) {
+          edges.push(defaultEdge);
+        }
       }
+
+      const widths = edges.map(edge => edge.thickness);
+      const insets = [0, 0, 0, 0];
+
+      if (this.margin) {
+        insets[0] = this.margin.topInset;
+        insets[1] = this.margin.rightInset;
+        insets[2] = this.margin.bottomInset;
+        insets[3] = this.margin.leftInset;
+      }
+
+      this[_xfa_object.$extra] = {
+        widths,
+        insets,
+        edges
+      };
     }
+
+    return this[_xfa_object.$extra];
+  }
+
+  [_xfa_object.$toStyle]() {
+    const {
+      edges
+    } = this[_xfa_object.$getExtra]();
 
     const edgeStyles = edges.map(node => {
       const style = node[_xfa_object.$toStyle]();
@@ -48275,20 +48504,6 @@ class Border extends _xfa_object.XFAObject {
       style.color = style.color || "#000000";
       return style;
     });
-    const widths = edges.map(edge => edge.thickness);
-    const insets = [0, 0, 0, 0];
-
-    if (this.margin) {
-      insets[0] = this.margin.topInset;
-      insets[1] = this.margin.rightInset;
-      insets[2] = this.margin.bottomInset;
-      insets[3] = this.margin.leftInset;
-    }
-
-    this[_xfa_object.$extra] = {
-      widths,
-      insets
-    };
     const style = Object.create(null);
 
     if (this.margin) {
@@ -48497,9 +48712,13 @@ class Caption extends _xfa_object.XFAObject {
       return _utils.HTMLResult.EMPTY;
     }
 
+    this[_xfa_object.$pushPara]();
+
     const value = this.value[_xfa_object.$toHTML](availableSpace).html;
 
     if (!value) {
+      this[_xfa_object.$popPara]();
+
       return _utils.HTMLResult.EMPTY;
     }
 
@@ -48557,6 +48776,9 @@ class Caption extends _xfa_object.XFAObject {
     }
 
     (0, _html_utils.setPara)(this, null, value);
+
+    this[_xfa_object.$popPara]();
+
     this.reserve = savedReserve;
     return _utils.HTMLResult.success({
       name: "div",
@@ -49116,6 +49338,9 @@ class Draw extends _xfa_object.XFAObject {
     }
 
     (0, _html_utils.fixDimensions)(this);
+
+    this[_xfa_object.$pushPara]();
+
     const savedW = this.w;
     const savedH = this.h;
     const {
@@ -49126,6 +49351,8 @@ class Draw extends _xfa_object.XFAObject {
 
     if (w && this.w === "") {
       if (isBroken && this[_xfa_object.$getSubformParent]()[_xfa_object.$isThereMoreWidth]()) {
+        this[_xfa_object.$popPara]();
+
         return _utils.HTMLResult.FAILURE;
       }
 
@@ -49141,6 +49368,9 @@ class Draw extends _xfa_object.XFAObject {
     if (!(0, _layout.checkDimensions)(this, availableSpace)) {
       this.w = savedW;
       this.h = savedH;
+
+      this[_xfa_object.$popPara]();
+
       return _utils.HTMLResult.FAILURE;
     }
 
@@ -49190,6 +49420,9 @@ class Draw extends _xfa_object.XFAObject {
     if (value === null) {
       this.w = savedW;
       this.h = savedH;
+
+      this[_xfa_object.$popPara]();
+
       return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
     }
 
@@ -49197,6 +49430,9 @@ class Draw extends _xfa_object.XFAObject {
     (0, _html_utils.setPara)(this, style, value);
     this.w = savedW;
     this.h = savedH;
+
+    this[_xfa_object.$popPara]();
+
     return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
   }
 
@@ -49629,6 +49865,8 @@ class ExclGroup extends _xfa_object.XFAObject {
       attributes.xfaName = this.name;
     }
 
+    this[_xfa_object.$pushPara]();
+
     const isLrTb = this.layout === "lr-tb" || this.layout === "rl-tb";
     const maxRun = isLrTb ? MAX_ATTEMPTS_FOR_LRTB_LAYOUT : 1;
 
@@ -49647,6 +49885,8 @@ class ExclGroup extends _xfa_object.XFAObject {
       }
 
       if (result.isBreak()) {
+        this[_xfa_object.$popPara]();
+
         return result;
       }
 
@@ -49655,6 +49895,8 @@ class ExclGroup extends _xfa_object.XFAObject {
         break;
       }
     }
+
+    this[_xfa_object.$popPara]();
 
     if (!isSplittable) {
       unsetFirstUnsplittable(this);
@@ -49842,21 +50084,46 @@ class Field extends _xfa_object.XFAObject {
       delete this.caption[_xfa_object.$extra];
     }
 
+    this[_xfa_object.$pushPara]();
+
     const caption = this.caption ? this.caption[_xfa_object.$toHTML](availableSpace).html : null;
     const savedW = this.w;
     const savedH = this.h;
+    let marginH = 0;
+    let marginV = 0;
+
+    if (this.margin) {
+      marginH = this.margin.leftInset + this.margin.rightInset;
+      marginV = this.margin.topInset + this.margin.bottomInset;
+    }
+
+    let borderDims = null;
 
     if (this.w === "" || this.h === "") {
-      let marginH = 0;
-      let marginV = 0;
-
-      if (this.margin) {
-        marginH = this.margin.leftInset + this.margin.rightInset;
-        marginV = this.margin.topInset + this.margin.bottomInset;
-      }
-
       let width = null;
       let height = null;
+      let uiW = 0;
+      let uiH = 0;
+
+      if (this.ui.checkButton) {
+        uiW = uiH = this.ui.checkButton.size;
+      } else {
+        const {
+          w,
+          h
+        } = (0, _html_utils.layoutNode)(this, availableSpace);
+
+        if (w !== null) {
+          uiW = w;
+          uiH = h;
+        } else {
+          uiH = (0, _fonts.getMetrics)(this.font, true).lineNoGap;
+        }
+      }
+
+      borderDims = getBorderDims(this.ui[_xfa_object.$getExtra]());
+      uiW += borderDims.w;
+      uiH += borderDims.h;
 
       if (this.caption) {
         const {
@@ -49866,36 +50133,43 @@ class Field extends _xfa_object.XFAObject {
         } = this.caption[_xfa_object.$getExtra](availableSpace);
 
         if (isBroken && this[_xfa_object.$getSubformParent]()[_xfa_object.$isThereMoreWidth]()) {
+          this[_xfa_object.$popPara]();
+
           return _utils.HTMLResult.FAILURE;
         }
 
         width = w;
         height = h;
 
-        if (this.ui.checkButton) {
-          switch (this.caption.placement) {
-            case "left":
-            case "right":
-            case "inline":
-              width += this.ui.checkButton.size;
-              break;
+        switch (this.caption.placement) {
+          case "left":
+          case "right":
+          case "inline":
+            width += uiW;
+            break;
 
-            case "top":
-            case "bottom":
-              height += this.ui.checkButton.size;
-              break;
-          }
+          case "top":
+          case "bottom":
+            height += uiH;
+            break;
         }
+      } else {
+        width = uiW;
+        height = uiH;
       }
 
       if (width && this.w === "") {
-        this.w = Math.min(this.maxW <= 0 ? Infinity : this.maxW, Math.max(this.minW, width + marginH));
+        width += marginH;
+        this.w = Math.min(this.maxW <= 0 ? Infinity : this.maxW, this.minW + 1 < width ? width : this.minW);
       }
 
       if (height && this.h === "") {
-        this.h = Math.min(this.maxH <= 0 ? Infinity : this.maxH, Math.max(this.minH, height + marginV));
+        height += marginV;
+        this.h = Math.min(this.maxH <= 0 ? Infinity : this.maxH, this.minH + 1 < height ? height : this.minH);
       }
     }
+
+    this[_xfa_object.$popPara]();
 
     (0, _html_utils.fixDimensions)(this);
     setFirstUnsplittable(this);
@@ -49903,6 +50177,9 @@ class Field extends _xfa_object.XFAObject {
     if (!(0, _layout.checkDimensions)(this, availableSpace)) {
       this.w = savedW;
       this.h = savedH;
+
+      this[_xfa_object.$popPara]();
+
       return _utils.HTMLResult.FAILURE;
     }
 
@@ -49986,6 +50263,8 @@ class Field extends _xfa_object.XFAObject {
 
         if (this.value.exData) {
           value = this.value.exData[_xfa_object.$text]();
+        } else if (this.value.text) {
+          value = this.value.text[_xfa_object.$getExtra]();
         } else {
           const htmlValue = this.value[_xfa_object.$toHTML]().html;
 
@@ -50005,6 +50284,24 @@ class Field extends _xfa_object.XFAObject {
             ui.children[0].attributes.value = value;
           }
         }
+      }
+    }
+
+    if (!this.ui.imageEdit && ui.children && ui.children[0] && this.h) {
+      borderDims = borderDims || getBorderDims(this.ui[_xfa_object.$getExtra]());
+      let captionHeight = 0;
+
+      if (this.caption && ["top", "bottom"].includes(this.caption.placement)) {
+        captionHeight = this.caption.reserve;
+
+        if (captionHeight <= 0) {
+          captionHeight = this.caption[_xfa_object.$getExtra](availableSpace).h;
+        }
+
+        const inputHeight = this.h - captionHeight - marginV - borderDims.h;
+        ui.children[0].attributes.style.height = (0, _html_utils.measureToString)(inputHeight);
+      } else {
+        ui.children[0].attributes.style.height = "100%";
       }
     }
 
@@ -50037,25 +50334,23 @@ class Field extends _xfa_object.XFAObject {
       ui.attributes.class = [];
     }
 
+    ui.children.splice(0, 0, caption);
+
     switch (this.caption.placement) {
       case "left":
-        ui.children.splice(0, 0, caption);
         ui.attributes.class.push("xfaLeft");
         break;
 
       case "right":
-        ui.children.push(caption);
-        ui.attributes.class.push("xfaLeft");
+        ui.attributes.class.push("xfaRight");
         break;
 
       case "top":
-        ui.children.splice(0, 0, caption);
         ui.attributes.class.push("xfaTop");
         break;
 
       case "bottom":
-        ui.children.push(caption);
-        ui.attributes.class.push("xfaTop");
+        ui.attributes.class.push("xfaBottom");
         break;
 
       case "inline":
@@ -50091,15 +50386,25 @@ class Fill extends _xfa_object.XFAObject {
   [_xfa_object.$toStyle]() {
     const parent = this[_xfa_object.$getParent]();
 
+    const grandpa = parent[_xfa_object.$getParent]();
+
+    const ggrandpa = grandpa[_xfa_object.$getParent]();
+
     const style = Object.create(null);
     let propName = "color";
+    let altPropName = propName;
 
     if (parent instanceof Border) {
-      propName = "background";
+      propName = "background-color";
+      altPropName = "background";
+
+      if (ggrandpa instanceof Ui) {
+        style.backgroundColor = "white";
+      }
     }
 
     if (parent instanceof Rectangle || parent instanceof Arc) {
-      propName = "fill";
+      propName = altPropName = "fill";
       style.fill = "white";
     }
 
@@ -50114,12 +50419,19 @@ class Fill extends _xfa_object.XFAObject {
         continue;
       }
 
-      style[propName] = obj[_xfa_object.$toStyle](this.color);
+      const color = obj[_xfa_object.$toStyle](this.color);
+
+      if (color) {
+        style[color.startsWith("#") ? propName : altPropName] = color;
+      }
+
       return style;
     }
 
-    if (this.color) {
-      style[propName] = this.color[_xfa_object.$toStyle]();
+    if (this.color && this.color.value) {
+      const color = this.color[_xfa_object.$toStyle]();
+
+      style[color.startsWith("#") ? propName : altPropName] = color;
     }
 
     return style;
@@ -50264,7 +50576,7 @@ class Font extends _xfa_object.XFAObject {
 
     style.fontStyle = this.posture;
     style.fontSize = (0, _html_utils.measureToString)(0.99 * this.size);
-    (0, _html_utils.setFontFamily)(this, this[_xfa_object.$globalData].fontFinder, style);
+    (0, _html_utils.setFontFamily)(this, this, this[_xfa_object.$globalData].fontFinder, style);
 
     if (this.underline !== 0) {
       style.textDecoration = "underline";
@@ -50791,24 +51103,50 @@ class Occur extends _xfa_object.XFAObject {
   constructor(attributes) {
     super(TEMPLATE_NS_ID, "occur", true);
     this.id = attributes.id || "";
-    this.initial = (0, _utils.getInteger)({
+    this.initial = attributes.initial !== "" ? (0, _utils.getInteger)({
       data: attributes.initial,
-      defaultValue: 1,
+      defaultValue: "",
       validate: x => true
-    });
-    this.max = (0, _utils.getInteger)({
+    }) : "";
+    this.max = attributes.max !== "" ? (0, _utils.getInteger)({
       data: attributes.max,
       defaultValue: 1,
       validate: x => true
-    });
-    this.min = (0, _utils.getInteger)({
+    }) : "";
+    this.min = attributes.min !== "" ? (0, _utils.getInteger)({
       data: attributes.min,
       defaultValue: 1,
       validate: x => true
-    });
+    }) : "";
     this.use = attributes.use || "";
     this.usehref = attributes.usehref || "";
     this.extras = null;
+  }
+
+  [_xfa_object.$clean]() {
+    const parent = this[_xfa_object.$getParent]();
+
+    const originalMin = this.min;
+
+    if (this.min === "") {
+      this.min = parent instanceof PageArea || parent instanceof PageSet ? 0 : 1;
+    }
+
+    if (this.max === "") {
+      if (originalMin === "") {
+        this.max = parent instanceof PageArea || parent instanceof PageSet ? -1 : 1;
+      } else {
+        this.max = this.min;
+      }
+    }
+
+    if (this.max !== -1 && this.max < this.min) {
+      this.max = this.min;
+    }
+
+    if (this.initial === "") {
+      this.initial = parent instanceof Template ? 1 : this.min;
+    }
   }
 
 }
@@ -51898,6 +52236,8 @@ class Subform extends _xfa_object.XFAObject {
       }
     }
 
+    this[_xfa_object.$pushPara]();
+
     const isLrTb = this.layout === "lr-tb" || this.layout === "rl-tb";
     const maxRun = isLrTb ? MAX_ATTEMPTS_FOR_LRTB_LAYOUT : 1;
 
@@ -51916,6 +52256,8 @@ class Subform extends _xfa_object.XFAObject {
       }
 
       if (result.isBreak()) {
+        this[_xfa_object.$popPara]();
+
         return result;
       }
 
@@ -51924,6 +52266,8 @@ class Subform extends _xfa_object.XFAObject {
         break;
       }
     }
+
+    this[_xfa_object.$popPara]();
 
     if (!isSplittable) {
       unsetFirstUnsplittable(this);
@@ -52144,7 +52488,8 @@ class Template extends _xfa_object.XFAObject {
       pageNumber: 1,
       pagePosition: "first",
       oddOrEven: "odd",
-      blankOrNotBlank: "nonBlank"
+      blankOrNotBlank: "nonBlank",
+      paraStack: []
     };
     const root = this.subform.children[0];
 
@@ -52399,6 +52744,26 @@ class Text extends _xfa_object.ContentObject {
     super[_xfa_object.$onText](str);
   }
 
+  [_xfa_object.$finalize]() {
+    if (typeof this[_xfa_object.$content] === "string") {
+      this[_xfa_object.$content] = this[_xfa_object.$content].replace(/\r\n/g, "\n");
+    }
+  }
+
+  [_xfa_object.$getExtra]() {
+    if (typeof this[_xfa_object.$content] === "string") {
+      return this[_xfa_object.$content].split(/[\u2029\u2028\n]/).reduce((acc, line) => {
+        if (line) {
+          acc.push(line);
+        }
+
+        return acc;
+      }, []).join("\n");
+    }
+
+    return this[_xfa_object.$content][_xfa_object.$text]();
+  }
+
   [_xfa_object.$toHTML](availableSpace) {
     if (typeof this[_xfa_object.$content] === "string") {
       const html = valueToHtml(this[_xfa_object.$content]).html;
@@ -52455,7 +52820,11 @@ class TextEdit extends _xfa_object.XFAObject {
     });
     this.hScrollPolicy = (0, _utils.getStringOption)(attributes.hScrollPolicy, ["auto", "off", "on"]);
     this.id = attributes.id || "";
-    this.multiLine = attributes.multiLine || "";
+    this.multiLine = (0, _utils.getInteger)({
+      data: attributes.multiLine,
+      defaultValue: "",
+      validate: x => x === 0 || x === 1
+    });
     this.use = attributes.use || "";
     this.usehref = attributes.usehref || "";
     this.vScrollPolicy = (0, _utils.getStringOption)(attributes.vScrollPolicy, ["auto", "off", "on"]);
@@ -52465,24 +52834,15 @@ class TextEdit extends _xfa_object.XFAObject {
     this.margin = null;
   }
 
-  [_xfa_object.$clean](builder) {
-    super[_xfa_object.$clean](builder);
-
-    const parent = this[_xfa_object.$getParent]();
-
-    const defaultValue = parent instanceof Draw ? 1 : 0;
-    this.multiLine = (0, _utils.getInteger)({
-      data: this.multiLine,
-      defaultValue,
-      validate: x => x === 0 || x === 1
-    });
-  }
-
   [_xfa_object.$toHTML](availableSpace) {
     const style = (0, _html_utils.toStyle)(this, "border", "font", "margin");
     let html;
 
     const field = this[_xfa_object.$getParent]()[_xfa_object.$getParent]();
+
+    if (this.multiLine === "") {
+      this.multiLine = field instanceof Draw ? 1 : 0;
+    }
 
     if (this.multiLine === 1) {
       html = {
@@ -52617,18 +52977,33 @@ class Ui extends _xfa_object.XFAObject {
     this.textEdit = null;
   }
 
+  [_xfa_object.$getExtra]() {
+    if (this[_xfa_object.$extra] === undefined) {
+      for (const name of Object.getOwnPropertyNames(this)) {
+        if (name === "extras" || name === "picture") {
+          continue;
+        }
+
+        const obj = this[name];
+
+        if (!(obj instanceof _xfa_object.XFAObject)) {
+          continue;
+        }
+
+        this[_xfa_object.$extra] = obj;
+        return obj;
+      }
+
+      this[_xfa_object.$extra] = null;
+    }
+
+    return this[_xfa_object.$extra];
+  }
+
   [_xfa_object.$toHTML](availableSpace) {
-    for (const name of Object.getOwnPropertyNames(this)) {
-      if (name === "extras" || name === "picture") {
-        continue;
-      }
+    const obj = this[_xfa_object.$getExtra]();
 
-      const obj = this[name];
-
-      if (!(obj instanceof _xfa_object.XFAObject)) {
-        continue;
-      }
-
+    if (obj) {
       return obj[_xfa_object.$toHTML](availableSpace);
     }
 
@@ -52688,6 +53063,8 @@ class Value extends _xfa_object.XFAObject {
       if (parent.ui && parent.ui.imageEdit) {
         if (!this.image) {
           this.image = new Image({});
+
+          this[_xfa_object.$appendChild](this.image);
         }
 
         this.image[_xfa_object.$content] = value[_xfa_object.$content];
@@ -53879,7 +54256,7 @@ function layoutNode(node, availableSpace) {
       }
     }
 
-    const maxWidth = !node.w ? availableSpace.width : node.w;
+    const maxWidth = (!node.w ? availableSpace.width : node.w) - marginH;
     const fontFinder = node[_xfa_object.$globalData].fontFinder;
 
     if (node.value.exData && node.value.exData[_xfa_object.$content] && node.value.exData.contentType === "text/html") {
@@ -54190,6 +54567,12 @@ function isPrintOnly(node) {
   return node.relevant.length > 0 && !node.relevant[0].excluded && node.relevant[0].viewname === "print";
 }
 
+function getCurrentPara(node) {
+  const stack = node[_xfa_object.$getTemplateRoot]()[_xfa_object.$extra].paraStack;
+
+  return stack.length ? stack[stack.length - 1] : null;
+}
+
 function setPara(node, nodeStyle, value) {
   if (value.attributes.class && value.attributes.class.includes("xfaRich")) {
     if (nodeStyle) {
@@ -54202,12 +54585,14 @@ function setPara(node, nodeStyle, value) {
       }
     }
 
-    if (node.para) {
+    const para = getCurrentPara(node);
+
+    if (para) {
       const valueStyle = value.attributes.style;
       valueStyle.display = "flex";
       valueStyle.flexDirection = "column";
 
-      switch (node.para.vAlign) {
+      switch (para.vAlign) {
         case "top":
           valueStyle.justifyContent = "start";
           break;
@@ -54221,7 +54606,7 @@ function setPara(node, nodeStyle, value) {
           break;
       }
 
-      const paraStyle = node.para[_xfa_object.$toStyle]();
+      const paraStyle = para[_xfa_object.$toStyle]();
 
       for (const [key, val] of Object.entries(paraStyle)) {
         if (!(key in valueStyle)) {
@@ -54232,7 +54617,7 @@ function setPara(node, nodeStyle, value) {
   }
 }
 
-function setFontFamily(xfaFont, fontFinder, style) {
+function setFontFamily(xfaFont, node, fontFinder, style) {
   const name = (0, _utils.stripQuotes)(xfaFont.typeface);
   const typeface = fontFinder.find(name);
   style.fontFamily = `"${name}"`;
@@ -54246,16 +54631,20 @@ function setFontFamily(xfaFont, fontFinder, style) {
       style.fontFamily = `"${fontFamily}"`;
     }
 
+    const para = getCurrentPara(node);
+
+    if (para && para.lineHeight !== "") {
+      return;
+    }
+
     if (style.lineHeight) {
       return;
     }
 
     const pdfFont = (0, _fonts.selectFont)(xfaFont, typeface);
 
-    if (pdfFont && pdfFont.lineHeight > 0) {
+    if (pdfFont) {
       style.lineHeight = Math.max(1.2, pdfFont.lineHeight);
-    } else {
-      style.lineHeight = 1.2;
     }
   }
 }
@@ -54269,8 +54658,13 @@ function setFontFamily(xfaFont, fontFinder, style) {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.getMetrics = getMetrics;
 exports.selectFont = selectFont;
 exports.FontFinder = void 0;
+
+var _xfa_object = __w_pdfjs_require__(75);
+
+var _utils = __w_pdfjs_require__(76);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -54435,6 +54829,35 @@ function selectFont(xfaFont, typeface) {
   return typeface.regular;
 }
 
+function getMetrics(xfaFont, real = false) {
+  let pdfFont = null;
+
+  if (xfaFont) {
+    const name = (0, _utils.stripQuotes)(xfaFont.typeface);
+
+    const typeface = xfaFont[_xfa_object.$globalData].fontFinder.find(name);
+
+    pdfFont = selectFont(xfaFont, typeface);
+  }
+
+  if (!pdfFont) {
+    return {
+      lineHeight: 12,
+      lineGap: 2,
+      lineNoGap: 10
+    };
+  }
+
+  const size = xfaFont.size || 10;
+  const lineHeight = pdfFont.lineHeight ? Math.max(real ? 0 : 1.2, pdfFont.lineHeight) : 1.2;
+  const lineGap = pdfFont.lineGap === undefined ? 0.2 : pdfFont.lineGap;
+  return {
+    lineHeight: lineHeight * size,
+    lineGap: lineGap * size,
+    lineNoGap: Math.max(1, lineHeight - lineGap) * size
+  };
+}
+
 /***/ }),
 /* 84 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
@@ -54448,7 +54871,7 @@ exports.TextMeasure = void 0;
 
 var _fonts = __w_pdfjs_require__(83);
 
-const WIDTH_FACTOR = 1.01;
+const WIDTH_FACTOR = 1.02;
 
 class FontInfo {
   constructor(xfaFont, margin, lineHeight, fontFinder) {
@@ -54585,18 +55008,24 @@ class TextMeasure {
     if (lastFont.pdfFont) {
       const letterSpacing = lastFont.xfaFont.letterSpacing;
       const pdfFont = lastFont.pdfFont;
-      const lineHeight = lastFont.lineHeight || Math.ceil(Math.max(1.2, pdfFont.lineHeight) * fontSize);
+      const fontLineHeight = pdfFont.lineHeight || 1.2;
+      const lineHeight = lastFont.lineHeight || Math.max(1.2, fontLineHeight) * fontSize;
+      const lineGap = pdfFont.lineGap === undefined ? 0.2 : pdfFont.lineGap;
+      const noGap = fontLineHeight - lineGap;
+      const firstLineHeight = Math.max(1, noGap) * fontSize;
       const scale = fontSize / 1000;
+      const fallbackWidth = pdfFont.defaultWidth || pdfFont.charsToGlyphs(" ")[0].width;
 
       for (const line of str.split(/[\u2029\n]/)) {
         const encodedLine = pdfFont.encodeString(line).join("");
         const glyphs = pdfFont.charsToGlyphs(encodedLine);
 
         for (const glyph of glyphs) {
-          this.glyphs.push([glyph.width * scale + letterSpacing, lineHeight, glyph.unicode === " ", false]);
+          const width = glyph.width || fallbackWidth;
+          this.glyphs.push([width * scale + letterSpacing, lineHeight, firstLineHeight, glyph.unicode, false]);
         }
 
-        this.glyphs.push([0, 0, false, true]);
+        this.glyphs.push([0, 0, 0, "\n", true]);
       }
 
       this.glyphs.pop();
@@ -54605,10 +55034,10 @@ class TextMeasure {
 
     for (const line of str.split(/[\u2029\n]/)) {
       for (const char of line.split("")) {
-        this.glyphs.push([fontSize, fontSize, char === " ", false]);
+        this.glyphs.push([fontSize, 1.2 * fontSize, fontSize, char, false]);
       }
 
-      this.glyphs.push([0, 0, false, true]);
+      this.glyphs.push([0, 0, 0, "\n", true]);
     }
 
     this.glyphs.pop();
@@ -54622,9 +55051,12 @@ class TextMeasure {
         currentLineWidth = 0,
         currentLineHeight = 0;
     let isBroken = false;
+    let isFirstLine = true;
 
     for (let i = 0, ii = this.glyphs.length; i < ii; i++) {
-      const [glyphWidth, glyphHeight, isSpace, isEOL] = this.glyphs[i];
+      const [glyphWidth, lineHeight, firstLineHeight, char, isEOL] = this.glyphs[i];
+      const isSpace = char === " ";
+      const glyphHeight = isFirstLine ? firstLineHeight : lineHeight;
 
       if (isEOL) {
         width = Math.max(width, currentLineWidth);
@@ -54633,6 +55065,7 @@ class TextMeasure {
         currentLineHeight = glyphHeight;
         lastSpacePos = -1;
         lastSpaceWidth = 0;
+        isFirstLine = false;
         continue;
       }
 
@@ -54645,6 +55078,7 @@ class TextMeasure {
           lastSpacePos = -1;
           lastSpaceWidth = 0;
           isBroken = true;
+          isFirstLine = false;
         } else {
           currentLineHeight = Math.max(glyphHeight, currentLineHeight);
           lastSpaceWidth = currentLineWidth;
@@ -54671,6 +55105,7 @@ class TextMeasure {
         }
 
         isBroken = true;
+        isFirstLine = false;
         continue;
       }
 
@@ -57908,7 +58343,7 @@ const StyleMapping = new Map([["page-break-after", "breakAfter"], ["page-break-b
 const spacesRegExp = /\s+/g;
 const crlfRegExp = /[\r\n]+/g;
 
-function mapStyle(styleStr, fontFinder) {
+function mapStyle(styleStr, node) {
   const style = Object.create(null);
 
   if (!styleStr) {
@@ -57951,7 +58386,7 @@ function mapStyle(styleStr, fontFinder) {
       weight: style.fontWeight || "normal",
       posture: style.fontStyle || "normal",
       size: original.fontSize || 0
-    }, fontFinder, style);
+    }, node, node[_xfa_object.$globalData].fontFinder, style);
   }
 
   (0, _html_utils.fixTextIndent)(style);
@@ -58121,7 +58556,7 @@ class XhtmlObject extends _xfa_object.XmlObject {
       name: this[_xfa_object.$nodeName],
       attributes: {
         href: this.href,
-        style: mapStyle(this.style, this[_xfa_object.$globalData].fontFinder)
+        style: mapStyle(this.style, this)
       },
       children,
       value: this[_xfa_object.$content] || ""
@@ -58429,7 +58864,7 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _parser = __w_pdfjs_require__(17);
+var _parser = __w_pdfjs_require__(27);
 
 var _core_utils = __w_pdfjs_require__(9);
 
@@ -59945,8 +60380,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.11.5';
-const pdfjsBuild = '777d89026';
+const pdfjsVersion = '2.11.22';
+const pdfjsBuild = '4ad5c5d52';
 })();
 
 /******/ 	return __webpack_exports__;
