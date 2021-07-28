@@ -7,7 +7,7 @@
 // The page content is a 400 x 400 div in a 200 x 200 viewport. Initially,
 // the viewport width is set to 800 at initial-scale 1, but then the tag
 // content is changed. This triggers various rescale operations that will
-// changge the resolution of the page after reflow.
+// change the resolution of the page after reflow.
 
 // Chrome handles many of these cases differently. The Chrome results are
 // included as TODOs, but labelled as "res_chrome" to indicate that the
@@ -63,12 +63,13 @@ const TESTS = [
   { content: "width=500, initial-scale=1, user-scalable=no", res_target: 1.0 },
 ];
 
-const TEST_URL =
-  `data:text/html;charset=utf-8,` +
-  `<html><head><meta name="viewport" content="${INITIAL_CONTENT}"></head>` +
-  `<body style="margin:0">` +
-  `<div id="box" style="width:400px;height:400px;background-color:green">` +
-  `Initial</div></body></html>`;
+const TEST_URL = `data:text/html;charset=utf-8,
+  <html>
+    <head><meta name="viewport" content="${INITIAL_CONTENT}"></head>
+    <body style="margin:0">
+      <div id="box" style="width:400px;height:400px;background-color:green">Initial</div>
+    </body>
+  </html>`;
 
 addRDMTask(TEST_URL, async function({ ui, manager, browser }) {
   await setViewportSize(ui, manager, WIDTH, HEIGHT);
@@ -117,9 +118,18 @@ addRDMTask(TEST_URL, async function({ ui, manager, browser }) {
       );
     }
 
-    // Reload to prepare for next test.
-    const reload = waitForViewportLoad(ui);
+    info("Reload and wait for document to be loaded to prepare for next test.");
+    const {
+      onResource: onDomComplete,
+    } = await ui.commands.resourceCommand.waitForNextResource(
+      ui.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        ignoreExistingResources: true,
+        predicate: resource =>
+          resource.targetFront.isTopLevel && resource.name === "dom-complete",
+      }
+    );
     browser.reload();
-    await reload;
+    await onDomComplete;
   }
 });
