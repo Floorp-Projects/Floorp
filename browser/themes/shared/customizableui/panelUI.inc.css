@@ -107,7 +107,7 @@
 }
 
 .panel-banner-item[notificationid="update-unsupported"] > .toolbarbutton-icon {
-  background: url(chrome://browser/skin/warning.svg) no-repeat center;
+  background: url(chrome://global/skin/icons/warning.svg) no-repeat center;
   -moz-context-properties: stroke, fill;
   stroke: var(--arrowpanel-background);
   fill: var(--panel-banner-item-warning-icon-bgcolor);
