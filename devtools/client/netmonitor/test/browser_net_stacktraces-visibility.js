@@ -40,6 +40,12 @@ add_task(async function() {
       `.request-list-item .requests-list-file[title="${REQUEST}"]`
     )
   );
+
+  // Wait for the stack trace tab to show
+  await waitUntil(() =>
+    document.querySelector(".network-details-bar #stack-trace-tab")
+  );
+
   clickOnSidebarTab(document, "stack-trace");
 
   await onStackTracesVisible;
