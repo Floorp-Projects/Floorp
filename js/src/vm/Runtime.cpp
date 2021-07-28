@@ -131,7 +131,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       scriptAndCountsVector(nullptr),
       lcovOutput_(),
       jitRuntime_(nullptr),
-      selfHostingGlobal_(nullptr),
       gc(thisFromCtor()),
       gcInitialized(false),
       emptyString(nullptr),

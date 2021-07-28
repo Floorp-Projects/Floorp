@@ -209,13 +209,6 @@ bool Compartment::getNonWrapperObjectForCurrentCompartment(
   // Ensure that we have entered a realm.
   MOZ_ASSERT(cx->global());
 
-  // If we have a cross-compartment wrapper, make sure that the cx isn't
-  // associated with the self-hosting zone. We don't want to create
-  // wrappers for objects in other runtimes, which may be the case for the
-  // self-hosting zone.
-  MOZ_ASSERT(!cx->zone()->isSelfHostingZone());
-  MOZ_ASSERT(!obj->zone()->isSelfHostingZone());
-
   // The object is already in the right compartment. Normally same-
   // compartment returns the object itself, however, windows are always
   // wrapped by a proxy, so we have to check for that case here manually.

@@ -658,18 +658,7 @@ struct JSRuntime {
  private:
   js::UnprotectedData<js::jit::JitRuntime*> jitRuntime_;
 
-  /*
-   * Self-hosting state cloned on demand into other compartments. Shared with
-   * the parent runtime if there is one.
-   */
-  js::WriteOnceData<js::NativeObject*> selfHostingGlobal_;
-
-  static js::GlobalObject* createSelfHostingGlobal(JSContext* cx);
-
  public:
-  void getUnclonedSelfHostedValue(js::PropertyName* name, JS::Value* vp);
-  JSFunction* getUnclonedSelfHostedFunction(js::PropertyName* name);
-
   mozilla::Maybe<js::frontend::ScriptIndexRange> getSelfHostedScriptIndexRange(
       js::PropertyName* name);
 
@@ -701,11 +690,7 @@ struct JSRuntime {
   bool initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache = nullptr,
                        JS::SelfHostedWriter xdrWriter = nullptr);
   void finishSelfHosting();
-  void traceSelfHostingGlobal(JSTracer* trc);
   void traceSelfHostingStencil(JSTracer* trc);
-  bool isSelfHostingGlobal(JSObject* global) {
-    return global == selfHostingGlobal_;
-  }
   js::GeneratorKind getSelfHostedFunctionGeneratorKind(js::PropertyName* name);
   bool delazifySelfHostedFunction(JSContext* cx,
                                   js::Handle<js::PropertyName*> name,
@@ -713,11 +698,6 @@ struct JSRuntime {
   bool getSelfHostedValue(JSContext* cx, js::Handle<js::PropertyName*> name,
                           js::MutableHandleValue vp);
   void assertSelfHostedFunctionHasCanonicalName(js::HandlePropertyName name);
-#if DEBUG
-  bool isSelfHostingZone(const JS::Zone* zone) const {
-    return selfHostingGlobal_ && selfHostingGlobal_->zone() == zone;
-  }
-#endif
 
   //-------------------------------------------------------------------------
   // Locale information

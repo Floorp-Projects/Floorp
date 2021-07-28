@@ -894,17 +894,6 @@ bool js::intrinsic_NewRegExpStringIterator(JSContext* cx, unsigned argc,
   return true;
 }
 
-static js::PropertyName* GetUnclonedSelfHostedCanonicalName(JSFunction* fun) {
-  if (!fun->isExtended()) {
-    return nullptr;
-  }
-  Value name = fun->getExtendedSlot(CANONICAL_FUNCTION_NAME_SLOT);
-  if (!name.isString()) {
-    return nullptr;
-  }
-  return name.toString()->asAtom().asPropertyName();
-}
-
 js::PropertyName* js::GetClonedSelfHostedFunctionName(const JSFunction* fun) {
   if (!fun->isExtended()) {
     return nullptr;
@@ -931,10 +920,6 @@ bool js::IsExtendedUnclonedSelfHostedFunctionName(JSAtom* name) {
   }
   return name->latin1OrTwoByteChar(0) ==
          ExtendedUnclonedSelfHostedFunctionNamePrefix;
-}
-
-void js::SetUnclonedSelfHostedCanonicalName(JSFunction* fun, JSAtom* name) {
-  fun->setExtendedSlot(CANONICAL_FUNCTION_NAME_SLOT, StringValue(name));
 }
 
 void js::SetClonedSelfHostedFunctionName(JSFunction* fun,
@@ -2597,53 +2582,6 @@ void js::FillSelfHostingCompileOptions(CompileOptions& options) {
   options.setNoScriptRval(true);
 }
 
-GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
-  MOZ_ASSERT(!cx->isExceptionPending());
-  MOZ_ASSERT(!cx->realm());
-
-  JS::RealmOptions options;
-  options.creationOptions().setNewCompartmentInSelfHostingZone();
-  // Debugging the selfHosted zone is not supported because CCWs are not
-  // allowed in that zone.
-  options.creationOptions().setInvisibleToDebugger(true);
-
-  Realm* realm = NewRealm(cx, nullptr, options);
-  if (!realm) {
-    return nullptr;
-  }
-
-  static const JSClassOps shgClassOps = {
-      nullptr,                   // addProperty
-      nullptr,                   // delProperty
-      nullptr,                   // enumerate
-      nullptr,                   // newEnumerate
-      nullptr,                   // resolve
-      nullptr,                   // mayResolve
-      nullptr,                   // finalize
-      nullptr,                   // call
-      nullptr,                   // hasInstance
-      nullptr,                   // construct
-      JS_GlobalObjectTraceHook,  // trace
-  };
-
-  static const JSClass shgClass = {"self-hosting-global", JSCLASS_GLOBAL_FLAGS,
-                                   &shgClassOps};
-
-  AutoRealmUnchecked ar(cx, realm);
-  Rooted<GlobalObject*> shg(cx, GlobalObject::createInternal(cx, &shgClass));
-  if (!shg) {
-    return nullptr;
-  }
-
-  cx->runtime()->selfHostingGlobal_ = shg;
-  MOZ_ASSERT(realm->zone()->isSelfHostingZone());
-  realm->setIsSelfHostingRealm();
-
-  JS_FireOnNewGlobalObject(cx, shg);
-
-  return shg;
-}
-
 class MOZ_STACK_CLASS AutoSelfHostingErrorReporter {
   JSContext* cx_;
   JS::WarningReporter oldReporter_;
@@ -2864,15 +2802,6 @@ void JSRuntime::finishSelfHosting() {
   selfHostStencil_ = nullptr;
 
   selfHostScriptMap.ref().clear();
-
-  selfHostingGlobal_ = nullptr;
-}
-
-void JSRuntime::traceSelfHostingGlobal(JSTracer* trc) {
-  if (selfHostingGlobal_ && !parentRuntime) {
-    TraceRoot(trc, const_cast<NativeObject**>(&selfHostingGlobal_.ref()),
-              "self-hosting global");
-  }
 }
 
 void JSRuntime::traceSelfHostingStencil(JSTracer* trc) {
@@ -2889,124 +2818,6 @@ GeneratorKind JSRuntime::getSelfHostedFunctionGeneratorKind(
   return flags.hasFlag(js::ImmutableScriptFlagsEnum::IsGenerator)
              ? GeneratorKind::Generator
              : GeneratorKind::NotGenerator;
-}
-
-static bool CloneValue(JSContext* cx, HandleValue selfHostedValue,
-                       MutableHandleValue vp);
-
-static void GetUnclonedValue(NativeObject* selfHostedObject,
-                             const PropertyKey& id, Value* vp) {
-  if (JSID_IS_INT(id)) {
-    size_t index = JSID_TO_INT(id);
-    if (index < selfHostedObject->getDenseInitializedLength() &&
-        !selfHostedObject->getDenseElement(index).isMagic(JS_ELEMENTS_HOLE)) {
-      *vp = selfHostedObject->getDenseElement(JSID_TO_INT(id));
-      return;
-    }
-  }
-
-  // Since all atoms used by self-hosting are marked as permanent, the only
-  // reason we'd see a non-permanent atom here is code looking for
-  // properties on the self hosted global which aren't present.
-  // Since we ensure that that can't happen during startup, encountering
-  // non-permanent atoms here should be impossible.
-  MOZ_ASSERT_IF(JSID_IS_STRING(id), JSID_TO_STRING(id)->isPermanentAtom());
-
-  mozilla::Maybe<PropertyInfo> prop = selfHostedObject->lookupPure(id);
-  MOZ_ASSERT(prop.isSome());
-  MOZ_ASSERT(prop->isDataProperty());
-  *vp = selfHostedObject->getSlot(prop->slot());
-}
-
-static bool CloneProperties(JSContext* cx, HandleNativeObject selfHostedObject,
-                            HandleObject clone) {
-  RootedIdVector ids(cx);
-  Vector<uint8_t, 16> attrs(cx);
-
-  for (size_t i = 0; i < selfHostedObject->getDenseInitializedLength(); i++) {
-    if (!selfHostedObject->getDenseElement(i).isMagic(JS_ELEMENTS_HOLE)) {
-      if (!ids.append(INT_TO_JSID(i))) {
-        return false;
-      }
-      if (!attrs.append(JSPROP_ENUMERATE)) {
-        return false;
-      }
-    }
-  }
-
-  Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
-  for (ShapePropertyIter<NoGC> iter(selfHostedObject->shape()); !iter.done();
-       iter++) {
-    if (iter->enumerable() && !props.append(*iter)) {
-      return false;
-    }
-  }
-
-  // Now our properties are in last-to-first order, so....
-  std::reverse(props.begin(), props.end());
-  for (size_t i = 0; i < props.length(); ++i) {
-    MOZ_ASSERT(props[i].isDataProperty(),
-               "Can't handle cloning accessors here yet.");
-    if (!ids.append(props[i].key())) {
-      return false;
-    }
-    PropertyInfo prop = props[i];
-    uint8_t propAttrs = 0;
-    if (prop.enumerable()) {
-      propAttrs |= JSPROP_ENUMERATE;
-    }
-    if (!prop.configurable()) {
-      propAttrs |= JSPROP_PERMANENT;
-    }
-    if (!prop.writable()) {
-      propAttrs |= JSPROP_READONLY;
-    }
-    if (!attrs.append(propAttrs)) {
-      return false;
-    }
-  }
-
-  RootedId id(cx);
-  RootedValue val(cx);
-  RootedValue selfHostedValue(cx);
-  for (uint32_t i = 0; i < ids.length(); i++) {
-    id = ids[i];
-    GetUnclonedValue(selfHostedObject, id, selfHostedValue.address());
-    if (!CloneValue(cx, selfHostedValue, &val) ||
-        !JS_DefinePropertyById(cx, clone, id, val, attrs[i])) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-static JSString* CloneString(JSContext* cx, JSLinearString* selfHostedString) {
-  size_t len = selfHostedString->length();
-  {
-    JS::AutoCheckCannotGC nogc;
-    JSString* clone;
-    if (selfHostedString->hasLatin1Chars()) {
-      clone =
-          NewStringCopyN<NoGC>(cx, selfHostedString->latin1Chars(nogc), len);
-    } else {
-      clone = NewStringCopyNDontDeflate<NoGC>(
-          cx, selfHostedString->twoByteChars(nogc), len);
-    }
-    if (clone) {
-      return clone;
-    }
-  }
-
-  AutoStableStringChars chars(cx);
-  if (!chars.init(cx, selfHostedString)) {
-    return nullptr;
-  }
-
-  return chars.isLatin1()
-             ? NewStringCopyN<CanGC>(cx, chars.latin1Range().begin().get(), len)
-             : NewStringCopyNDontDeflate<CanGC>(
-                   cx, chars.twoByteRange().begin().get(), len);
 }
 
 // Returns the ScriptSourceObject to use for cloned self-hosted scripts in the
@@ -3042,146 +2853,6 @@ ScriptSourceObject* js::SelfHostingScriptSourceObject(JSContext* cx) {
   return sourceObject;
 }
 
-static JSObject* CloneObject(JSContext* cx,
-                             HandleNativeObject selfHostedObject) {
-#ifdef DEBUG
-  // Object hash identities are owned by the hashed object, which may be on a
-  // different thread than the clone target. In theory, these objects are all
-  // tenured and will not be compacted; however, we simply avoid the issue
-  // altogether by skipping the cycle-detection when off thread.
-  mozilla::Maybe<AutoCycleDetector> detect;
-  if (js::CurrentThreadCanAccessZone(selfHostedObject->zoneFromAnyThread())) {
-    detect.emplace(cx, selfHostedObject);
-    if (!detect->init()) {
-      return nullptr;
-    }
-    if (detect->foundCycle()) {
-      MOZ_CRASH("SelfHosted cloning cannot handle cyclic object graphs.");
-    }
-  }
-#endif
-
-  RootedObject clone(cx);
-  if (selfHostedObject->is<JSFunction>()) {
-    RootedFunction selfHostedFunction(cx, &selfHostedObject->as<JSFunction>());
-    if (selfHostedFunction->isInterpreted()) {
-      // Arrow functions use the first extended slot for their lexical |this|
-      // value. And methods use the first extended slot for their home-object.
-      // We only expect to see normal functions here.
-      MOZ_ASSERT(selfHostedFunction->kind() == FunctionFlags::NormalFunction);
-      MOZ_ASSERT(selfHostedFunction->isLambda() == false);
-
-      Handle<GlobalObject*> global = cx->global();
-      Rooted<GlobalLexicalEnvironmentObject*> globalLexical(
-          cx, &global->lexicalEnvironment());
-      RootedScope emptyGlobalScope(cx, &global->emptyGlobalScope());
-      Rooted<ScriptSourceObject*> sourceObject(
-          cx, SelfHostingScriptSourceObject(cx));
-      if (!sourceObject) {
-        return nullptr;
-      }
-      MOZ_ASSERT(
-          !CanReuseScriptForClone(cx->realm(), selfHostedFunction, global));
-      clone = CloneFunctionAndScript(cx, selfHostedFunction, globalLexical,
-                                     emptyGlobalScope, sourceObject,
-                                     gc::AllocKind::FUNCTION_EXTENDED);
-      if (!clone) {
-        return nullptr;
-      }
-
-      // Save the original function name that we are cloning from. This allows
-      // the function to potentially be relazified in the future.
-      SetClonedSelfHostedFunctionName(
-          &clone->as<JSFunction>(),
-          selfHostedFunction->explicitName()->asPropertyName());
-
-      // If |_SetCanonicalName| was called on the function, the function name to
-      // use is stored in the extended slot.
-      if (JSAtom* name =
-              GetUnclonedSelfHostedCanonicalName(selfHostedFunction)) {
-        clone->as<JSFunction>().setAtom(name);
-      }
-    } else {
-      clone = CloneSelfHostingIntrinsic(cx, selfHostedFunction);
-    }
-  } else if (selfHostedObject->is<RegExpObject>()) {
-    RegExpObject& reobj = selfHostedObject->as<RegExpObject>();
-    RootedAtom source(cx, reobj.getSource());
-    MOZ_ASSERT(source->isPermanentAtom());
-    clone = RegExpObject::create(cx, source, reobj.getFlags(), TenuredObject);
-  } else if (selfHostedObject->is<DateObject>()) {
-    clone =
-        JS::NewDateObject(cx, selfHostedObject->as<DateObject>().clippedTime());
-  } else if (selfHostedObject->is<BooleanObject>()) {
-    clone = BooleanObject::create(
-        cx, selfHostedObject->as<BooleanObject>().unbox());
-  } else if (selfHostedObject->is<NumberObject>()) {
-    clone =
-        NumberObject::create(cx, selfHostedObject->as<NumberObject>().unbox());
-  } else if (selfHostedObject->is<StringObject>()) {
-    JSString* selfHostedString = selfHostedObject->as<StringObject>().unbox();
-    if (!selfHostedString->isLinear()) {
-      MOZ_CRASH();
-    }
-    RootedString str(cx, CloneString(cx, &selfHostedString->asLinear()));
-    if (!str) {
-      return nullptr;
-    }
-    clone = StringObject::create(cx, str);
-  } else if (selfHostedObject->is<ArrayObject>()) {
-    clone = NewTenuredDenseEmptyArray(cx, nullptr);
-  } else {
-    MOZ_ASSERT(selfHostedObject->is<NativeObject>());
-    clone = NewObjectWithGivenProto(
-        cx, selfHostedObject->getClass(), nullptr,
-        selfHostedObject->asTenured().getAllocKind(), TenuredObject);
-  }
-  if (!clone) {
-    return nullptr;
-  }
-
-  if (!CloneProperties(cx, selfHostedObject, clone)) {
-    return nullptr;
-  }
-  return clone;
-}
-
-static bool CloneValue(JSContext* cx, HandleValue selfHostedValue,
-                       MutableHandleValue vp) {
-  if (selfHostedValue.isObject()) {
-    RootedNativeObject selfHostedObject(
-        cx, &selfHostedValue.toObject().as<NativeObject>());
-    JSObject* clone = CloneObject(cx, selfHostedObject);
-    if (!clone) {
-      return false;
-    }
-    vp.setObject(*clone);
-  } else if (selfHostedValue.isBoolean() || selfHostedValue.isNumber() ||
-             selfHostedValue.isNullOrUndefined()) {
-    // Nothing to do here: these are represented inline in the value.
-    vp.set(selfHostedValue);
-  } else if (selfHostedValue.isString()) {
-    if (!selfHostedValue.toString()->isLinear()) {
-      MOZ_CRASH();
-    }
-    JSLinearString* selfHostedString = &selfHostedValue.toString()->asLinear();
-    JSString* clone = CloneString(cx, selfHostedString);
-    if (!clone) {
-      return false;
-    }
-    vp.setString(clone);
-  } else if (selfHostedValue.isSymbol()) {
-    // Well-known symbols are shared.
-    mozilla::DebugOnly<JS::Symbol*> sym = selfHostedValue.toSymbol();
-    MOZ_ASSERT(sym->isWellKnownSymbol());
-    MOZ_ASSERT(cx->wellKnownSymbols().get(sym->code()) == sym);
-    vp.set(selfHostedValue);
-  } else {
-    MOZ_CRASH("Self-hosting CloneValue can't clone given value.");
-  }
-  return true;
-}
-
 bool JSRuntime::delazifySelfHostedFunction(JSContext* cx,
                                            HandlePropertyName name,
                                            HandleFunction targetFun) {
@@ -3207,17 +2878,6 @@ bool JSRuntime::delazifySelfHostedFunction(JSContext* cx,
   }
 
   return true;
-}
-
-void JSRuntime::getUnclonedSelfHostedValue(PropertyName* name, Value* vp) {
-  PropertyKey id = NameToId(name);
-  GetUnclonedValue(selfHostingGlobal_, id, vp);
-}
-
-JSFunction* JSRuntime::getUnclonedSelfHostedFunction(PropertyName* name) {
-  Value selfHostedValue;
-  getUnclonedSelfHostedValue(name, &selfHostedValue);
-  return &selfHostedValue.toObject().as<JSFunction>();
 }
 
 mozilla::Maybe<frontend::ScriptIndexRange>
