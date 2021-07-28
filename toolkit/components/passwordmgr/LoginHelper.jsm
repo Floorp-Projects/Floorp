@@ -1379,6 +1379,28 @@ this.LoginHelper = {
   },
 
   /**
+   * Search for keywords that indicates the input field is not likely a
+   * field of a username login form.
+   *
+   * @param {Element} element
+   *                  the input field we want to check.
+   *
+   * @returns {boolean} True if any of the rules matches
+   */
+  isInferredNonUsernameField(element) {
+    const expr = /search|code/i;
+
+    if (
+      this._elementAttrsMatchRegex(element, expr) ||
+      this._hasLabelMatchingRegex(element, expr)
+    ) {
+      return true;
+    }
+
+    return false;
+  },
+
+  /**
    * Infer whether an input field is an email field by searching
    * 'email' keyword in its attributes.
    *
