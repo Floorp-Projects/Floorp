@@ -10,7 +10,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Variant.h"
 
-#include "frontend/TypedIndex.h"
+#include "frontend/ScopeIndex.h"
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
 #include "gc/Tracer.h"
@@ -29,18 +29,6 @@ struct CompilationState;
 struct CompilationGCOutput;
 class ScopeStencil;
 }  // namespace frontend
-
-class ScopeIndex : public frontend::TypedIndex<Scope> {
-  // Delegate constructors;
-  using Base = frontend::TypedIndex<Scope>;
-  using Base::Base;
-
-  static constexpr uint32_t InvalidIndex = UINT32_MAX;
-
- public:
-  static constexpr ScopeIndex invalid() { return ScopeIndex(InvalidIndex); }
-  bool isValid() const { return index != InvalidIndex; }
-};
 
 // An interface class to support Scope queries in the frontend without requiring
 // a GC Allocated scope to necessarily exist.
