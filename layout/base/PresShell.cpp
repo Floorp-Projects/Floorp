@@ -2009,6 +2009,10 @@ void PresShell::SimpleResizeReflow(nscoord aWidth, nscoord aHeight,
   FrameNeedsReflow(rootFrame, IntrinsicDirty::Resize,
                    NS_FRAME_HAS_DIRTY_CHILDREN);
 
+  if (mMobileViewportManager) {
+    mMobileViewportManager->UpdateSizesBeforeReflow();
+  }
+
   // For compat with the old code path which always reflowed as long as there
   // was a root frame.
   bool suppressReflow = (aOptions & ResizeReflowOptions::SuppressReflow) ||
@@ -9486,10 +9490,6 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
     tp->Accumulate();
     tp->reflowCount++;
     timeStart = TimeStamp::Now();
-  }
-
-  if (mMobileViewportManager) {
-    mMobileViewportManager->UpdateSizesBeforeReflow();
   }
 
   // Schedule a paint, but don't actually mark this frame as changed for
