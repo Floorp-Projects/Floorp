@@ -27,7 +27,7 @@ object FeatureFlags {
     /**
      * Enables WebAuthn support.
      */
-    val webAuthFeature = Config.channel.isNightlyOrDebug
+    const val webAuthFeature = true
 
     /**
      * Enables the Home button in the browser toolbar to navigate back to the home screen.
