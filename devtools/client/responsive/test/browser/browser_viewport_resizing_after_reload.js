@@ -54,10 +54,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
     );
 
     // Force a reload.
-    const reload = waitForViewportLoad(ui);
-    const browser = ui.getViewportBrowser();
-    browser.reload();
-    await reload;
+    await reloadViewport(ui);
 
     // Check initial values again.
     await testViewportZoomWidthAndHeight(

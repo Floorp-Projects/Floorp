@@ -600,6 +600,26 @@ async function load(browser, url) {
   await loaded;
 }
 
+/**
+ * Reload and wait for the viewport to be loaded and for the page to be fully parsed.
+ */
+async function reloadViewport(ui) {
+  const onReload = waitForViewportLoad(ui);
+  const {
+    onResource: onDomComplete,
+  } = await ui.commands.resourceCommand.waitForNextResource(
+    ui.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+    {
+      ignoreExistingResources: true,
+      predicate: resource =>
+        resource.targetFront.isTopLevel && resource.name === "dom-complete",
+    }
+  );
+  ui.getViewportBrowser().reload();
+  await onDomComplete;
+  await onReload;
+}
+
 function back(browser) {
   const shown = waitForPageShow(browser);
   browser.goBack();
@@ -854,10 +874,8 @@ function rotateViewport(ui) {
 async function setTouchAndMetaViewportSupport(ui, value) {
   await ui.updateTouchSimulation(value);
   info("Reload so the new configuration applies cleanly to the page");
-  const reload = waitForViewportLoad(ui);
-  const browser = ui.getViewportBrowser();
-  browser.reload();
-  await reload;
+  await reloadViewport(ui);
+
   await promiseContentReflow(ui);
 }
 
