@@ -718,7 +718,7 @@ DevTools.prototype = {
    * DevToolsExtensionPageContextParent.getDevToolsCommands.
    */
   createCommandsForTabForWebExtension: function(tab) {
-    return CommandsFactory.forTab(tab);
+    return CommandsFactory.forTab(tab, { isWebExtension: true });
   },
 
   /**

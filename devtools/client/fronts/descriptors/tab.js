@@ -47,6 +47,7 @@ class TabDescriptorFront extends DescriptorMixin(
     // (eg, regular tab toolbox) or browsing context targets (eg tab remote
     // debugging).
     this._localTab = null;
+    this._isForWebExtension = false;
 
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._handleTabEvent = this._handleTabEvent.bind(this);
@@ -140,7 +141,20 @@ class TabDescriptorFront extends DescriptorMixin(
       SERVER_TARGET_SWITCHING_ENABLED_PREF,
       false
     );
-    return isEnabled && this.isLocalTab;
+    // We explicitely disable server targets for remote tabs (i.e. about:debugging)
+    // and WebExtension codebase (see setIsForWebExtension)
+    const enabled = isEnabled && this.isLocalTab && !this._isForWebExtension;
+    return enabled;
+  }
+
+  /**
+   * Called by CommandsFactory, when the WebExtension codebase instantiates
+   * a commands. We have to flag the TabDescriptor for them as they don't support
+   * target switching and gets severely broken when enabling server target which
+   * introduce target switching for all navigations and reloads
+   */
+  setIsForWebExtension() {
+    this._isForWebExtension = true;
   }
 
   get isZombieTab() {
