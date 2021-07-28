@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   Services: "resource://gre/modules/Services.jsm",
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 });
@@ -23,6 +24,8 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
       : "Warn",
   });
 });
+
+const ALLOWED_SCHEMES = ["http", "https", "data", "blob"];
 
 /**
  * @typedef {object} Data
@@ -44,23 +47,83 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
 
 const PageDataService = new (class PageDataService extends EventEmitter {
   /**
-   * Caches page data discovered from browsers. The key is the url of the data. Currently the cache
-   * never expires.
+   * Caches page data discovered from browsers. The key is the url of the data.
+   *
+   * TODO: Currently the cache never expires.
+   *
    * @type {Map<string, PageData[]>}
    */
   #pageDataCache = new Map();
 
   /**
-   * Constructs a new instance of the service, not called externally.
+   * Initializes a new instance of the service, not called externally.
    */
-  constructor() {
-    super();
-
+  init() {
     if (!Services.prefs.getBoolPref("browser.pagedata.enabled", false)) {
       return;
     }
 
+    ChromeUtils.registerWindowActor("PageData", {
+      parent: {
+        moduleURI: "resource:///actors/PageDataParent.jsm",
+      },
+      child: {
+        moduleURI: "resource:///actors/PageDataChild.jsm",
+        events: {
+          DOMContentLoaded: {},
+          pageshow: {},
+        },
+      },
+    });
+
     logConsole.debug("Service started");
+
+    for (let win of BrowserWindowTracker.orderedWindows) {
+      if (!win.closed) {
+        // Ask any existing tabs to report
+        for (let tab of win.gBrowser.tabs) {
+          let parent = tab.linkedBrowser.browsingContext.currentWindowGlobal.getActor(
+            "PageData"
+          );
+
+          parent.sendAsyncMessage("PageData:CheckLoaded");
+        }
+      }
+    }
+  }
+
+  /**
+   * Called when the service is destroyed. This is generally on shutdown so we
+   * don't really need to do much cleanup.
+   */
+  uninit() {
+    logConsole.debug("Service stopped");
+  }
+
+  /**
+   * Called when the content process signals that a page is ready for data
+   * collection.
+   *
+   * @param {PageDataParent} actor
+   *   The parent actor for the page.
+   * @param {string} url
+   *   The url of the page.
+   */
+  async pageLoaded(actor, url) {
+    let uri = Services.io.newURI(url);
+    if (!ALLOWED_SCHEMES.includes(uri.scheme)) {
+      return;
+    }
+
+    let browser = actor.browsingContext?.embedderElement;
+    // If we don't have a browser then it went away before we could record,
+    // so we don't know where the data came from.
+    if (!browser || !this.#isATabBrowser(browser)) {
+      return;
+    }
+
+    let data = await actor.collectPageData();
+    this.pageDataDiscovered(url, data);
   }
 
   /**
@@ -73,6 +136,8 @@ const PageDataService = new (class PageDataService extends EventEmitter {
    *   The set of data discovered.
    */
   pageDataDiscovered(url, data) {
+    logConsole.debug("Discovered page data", url, data);
+
     let pageData = {
       url,
       date: Date.now(),
@@ -81,10 +146,9 @@ const PageDataService = new (class PageDataService extends EventEmitter {
 
     this.#pageDataCache.set(url, pageData);
 
-    // Send out a notification if there was some data found.
-    if (data.length) {
-      this.emit("page-data", pageData);
-    }
+    // Send out a notification. The `no-page-data` notification is intended
+    // for test use only.
+    this.emit(data.length ? "page-data" : "no-page-data", pageData);
   }
 
   /**
@@ -103,34 +167,14 @@ const PageDataService = new (class PageDataService extends EventEmitter {
   }
 
   /**
-   * Queues page data retrieval for a url.
+   * Determines if the given browser is contained within a tab.
    *
-   * @param {string} url
-   *   The url to retrieve data for.
-   * @returns {Promise<PageData>}
-   *   Resolves to a `PageData` (which may not contain any items of data) when the page has been
-   *   successfully checked for data. Will resolve immediately if there is cached data available.
-   *   Rejects if there was some failure to collect data.
+   * @param {DOMElement} browser
+   *   The browser element to check.
+   * @returns {boolean}
+   *   True if the browser element is contained within a tab.
    */
-  async queueFetch(url) {
-    let cached = this.#pageDataCache.get(url);
-    if (cached) {
-      return cached;
-    }
-
-    let pageData = {
-      url,
-      date: Date.now(),
-      data: [],
-    };
-
-    this.#pageDataCache.set(url, pageData);
-
-    // Send out a notification if there was some data found.
-    if (pageData.data.length) {
-      this.emit("page-data", pageData);
-    }
-
-    return pageData;
+  #isATabBrowser(browser) {
+    return browser.ownerGlobal.gBrowser?.getTabForBrowser(browser);
   }
 })();
