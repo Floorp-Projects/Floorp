@@ -2742,6 +2742,12 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
   MOZ_ASSERT(!selfHostingGlobal_);
 
   if (cx->runtime()->parentRuntime) {
+    MOZ_RELEASE_ASSERT(
+        parentRuntime->hasInitializedSelfHosting(),
+        "Parent runtime must initialize self-hosting before workers");
+
+    selfHostStencilInput_ = cx->runtime()->parentRuntime->selfHostStencilInput_;
+    selfHostStencil_ = cx->runtime()->parentRuntime->selfHostStencil_;
     selfHostingGlobal_ = cx->runtime()->parentRuntime->selfHostingGlobal_;
     return true;
   }
@@ -2775,19 +2781,34 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
     // copying it. The buffer must outlive all runtimes (including workers).
     options.usePinnedBytecode = true;
 
-    Rooted<frontend::CompilationInput> input(
-        cx, frontend::CompilationInput(options));
-    if (!input.get().initForSelfHostingGlobal(cx)) {
+    Rooted<UniquePtr<frontend::CompilationInput>> input(
+        cx, cx->new_<frontend::CompilationInput>(options));
+    if (!input) {
+      return false;
+    }
+    if (!input->initForSelfHostingGlobal(cx)) {
       return false;
     }
 
-    frontend::CompilationStencil stencil(input.get().source);
-    if (!stencil.deserializeStencils(cx, input.get(), xdrCache, &decodeOk)) {
+    UniquePtr<frontend::CompilationStencil> stencil(
+        cx->new_<frontend::CompilationStencil>(input->source));
+    if (!stencil) {
+      return false;
+    }
+    if (!stencil->deserializeStencils(cx, *input, xdrCache, &decodeOk)) {
       return false;
     }
 
     if (decodeOk) {
-      return InitSelfHostingFromStencil(cx, shg, input.get(), stencil);
+      if (!InitSelfHostingFromStencil(cx, shg, *input, *stencil)) {
+        return false;
+      }
+
+      // Move it to the runtime.
+      cx->runtime()->selfHostStencilInput_ = input.release();
+      cx->runtime()->selfHostStencil_ = stencil.release();
+
+      return true;
     }
   }
 
@@ -2810,9 +2831,12 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
     return false;
   }
 
-  Rooted<frontend::CompilationInput> input(cx,
-                                           frontend::CompilationInput(options));
-  auto stencil = frontend::CompileGlobalScriptToStencil(cx, input.get(), srcBuf,
+  Rooted<UniquePtr<frontend::CompilationInput>> input(
+      cx, cx->new_<frontend::CompilationInput>(options));
+  if (!input) {
+    return false;
+  }
+  auto stencil = frontend::CompileGlobalScriptToStencil(cx, *input, srcBuf,
                                                         ScopeKind::Global);
   if (!stencil) {
     return false;
@@ -2821,7 +2845,7 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
   // Serialize the stencil to XDR.
   if (xdrWriter) {
     JS::TranscodeBuffer xdrBuffer;
-    if (!stencil->serializeStencils(cx, input.get(), xdrBuffer)) {
+    if (!stencil->serializeStencils(cx, *input, xdrBuffer)) {
       return false;
     }
 
@@ -2830,15 +2854,41 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
     }
   }
 
-  return InitSelfHostingFromStencil(cx, shg, input.get(), *stencil);
+  if (!InitSelfHostingFromStencil(cx, shg, *input, *stencil)) {
+    return false;
+  }
+
+  MOZ_ASSERT(!hasSelfHostStencil());
+
+  // Move it to the runtime.
+  cx->runtime()->selfHostStencilInput_ = input.release();
+  cx->runtime()->selfHostStencil_ = stencil.release();
+
+  return true;
 }
 
-void JSRuntime::finishSelfHosting() { selfHostingGlobal_ = nullptr; }
+void JSRuntime::finishSelfHosting() {
+  if (!parentRuntime) {
+    js_delete(selfHostStencilInput_.ref());
+    js_delete(selfHostStencil_.ref());
+  }
+
+  selfHostStencilInput_ = nullptr;
+  selfHostStencil_ = nullptr;
+
+  selfHostingGlobal_ = nullptr;
+}
 
 void JSRuntime::traceSelfHostingGlobal(JSTracer* trc) {
   if (selfHostingGlobal_ && !parentRuntime) {
     TraceRoot(trc, const_cast<NativeObject**>(&selfHostingGlobal_.ref()),
               "self-hosting global");
+  }
+}
+
+void JSRuntime::traceSelfHostingStencil(JSTracer* trc) {
+  if (selfHostStencilInput_.ref()) {
+    selfHostStencilInput_->trace(trc);
   }
 }
 
