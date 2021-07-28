@@ -512,7 +512,11 @@ struct FrameMetrics {
   // frame's scroll port (but in a coordinate system where the size does not
   // change during zooming).
   //
-  // The origin of the composition bounds is relative to the layer tree origin.
+  // The origin of the composition bounds is relative to the scroll node origin.
+  // (The "scroll node origin" is the point such that applying the APZC's
+  //  apzc-to-screen transform to it takes you to the window origin, which is
+  //  what Screen event coordinates are relative to. In layout terms, it's
+  //  the origin of the reference frame passed to ComputeScrollMetadata().)
   // Unlike the scroll port's origin, it does not change during scrolling of
   // the scrollable layer to which it is associated. However, it may change due
   // to scrolling of ancestor layers.
