@@ -2075,7 +2075,7 @@ void nsWindow::Move(double aX, double aY) {
       // Workaround SetWindowPos bug with D3D9. If our window has a clip
       // region, some drivers or OSes may incorrectly copy into the clipped-out
       // area.
-      if (IsPlugin() && !mLayerManager && mClipRects &&
+      if (IsPlugin() && !mWindowRenderer && mClipRects &&
           (mClipRectCount != 1 ||
            !mClipRects[0].IsEqualInterior(
                LayoutDeviceIntRect(0, 0, mBounds.Width(), mBounds.Height())))) {
@@ -4081,8 +4081,8 @@ bool nsWindow::HasPendingInputEvent() {
  **************************************************************/
 
 WindowRenderer* nsWindow::GetWindowRenderer() {
-  if (mLayerManager) {
-    return mLayerManager;
+  if (mWindowRenderer) {
+    return mWindowRenderer;
   }
 
   if (!mLocalesChangedObserver) {
@@ -4093,12 +4093,12 @@ WindowRenderer* nsWindow::GetWindowRenderer() {
   ::GetClientRect(mWnd, &windowRect);
 
   // Try OMTC first.
-  if (!mLayerManager && ShouldUseOffMainThreadCompositing()) {
+  if (!mWindowRenderer && ShouldUseOffMainThreadCompositing()) {
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
     CreateCompositor();
   }
 
-  if (!mLayerManager) {
+  if (!mWindowRenderer) {
     MOZ_ASSERT(!mCompositorSession && !mCompositorBridgeChild);
     MOZ_ASSERT(!mCompositorWidgetDelegate);
 
@@ -4113,15 +4113,15 @@ WindowRenderer* nsWindow::GetWindowRenderer() {
     mBasicLayersSurface =
         new InProcessWinCompositorWidget(initData, options, this);
     mCompositorWidgetDelegate = mBasicLayersSurface;
-    mLayerManager = CreateBasicLayerManager();
+    mWindowRenderer = CreateBasicLayerManager();
   }
 
-  NS_ASSERTION(mLayerManager, "Couldn't provide a valid layer manager.");
+  NS_ASSERTION(mWindowRenderer, "Couldn't provide a valid window renderer.");
 
-  if (mLayerManager) {
+  if (mWindowRenderer) {
     // Update the size constraints now that the layer manager has been
     // created.
-    KnowsCompositor* knowsCompositor = mLayerManager->AsKnowsCompositor();
+    KnowsCompositor* knowsCompositor = mWindowRenderer->AsKnowsCompositor();
     if (knowsCompositor) {
       SizeConstraints c = mSizeConstraints;
       mMaxTextureSize = knowsCompositor->GetMaxTextureSize();
@@ -4131,7 +4131,7 @@ WindowRenderer* nsWindow::GetWindowRenderer() {
     }
   }
 
-  return mLayerManager;
+  return mWindowRenderer;
 }
 
 /**************************************************************
@@ -8034,9 +8034,9 @@ BOOL CALLBACK nsWindow::ClearResourcesCallback(HWND aWnd, LPARAM aMsg) {
 }
 
 void nsWindow::ClearCachedResources() {
-  if (mLayerManager &&
-      mLayerManager->GetBackendType() == LayersBackend::LAYERS_BASIC) {
-    mLayerManager->ClearCachedResources();
+  if (mWindowRenderer &&
+      mWindowRenderer->GetBackendType() == LayersBackend::LAYERS_BASIC) {
+    mWindowRenderer->AsLayerManager()->ClearCachedResources();
   }
   ::EnumChildWindows(mWnd, nsWindow::ClearResourcesCallback, 0);
 }

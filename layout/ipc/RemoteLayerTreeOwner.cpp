@@ -30,19 +30,17 @@ using namespace mozilla::layers;
 namespace mozilla {
 namespace layout {
 
-static already_AddRefed<LayerManager> GetLayerManager(
+static already_AddRefed<WindowRenderer> GetWindowRenderer(
     BrowserParent* aBrowserParent) {
-  RefPtr<LayerManager> lm;
+  RefPtr<WindowRenderer> renderer;
   if (Element* element = aBrowserParent->GetOwnerElement()) {
-    if (WindowRenderer* renderer =
-            nsContentUtils::WindowRendererForContent(element)) {
-      lm = renderer->AsLayerManager();
-      return lm.forget();
+    renderer = nsContentUtils::WindowRendererForContent(element);
+    if (renderer) {
+      return renderer.forget();
     }
-    if (WindowRenderer* renderer =
-            nsContentUtils::WindowRendererForDocument(element->OwnerDoc())) {
-      lm = renderer->AsLayerManager();
-      return lm.forget();
+    renderer = nsContentUtils::WindowRendererForDocument(element->OwnerDoc());
+    if (renderer) {
+      return renderer.forget();
     }
   }
   return nullptr;
@@ -51,7 +49,6 @@ static already_AddRefed<LayerManager> GetLayerManager(
 RemoteLayerTreeOwner::RemoteLayerTreeOwner()
     : mLayersId{0},
       mBrowserParent(nullptr),
-      mLayerManager(nullptr),
       mInitialized(false),
       mLayersConnected(false) {}
 
@@ -63,9 +60,9 @@ bool RemoteLayerTreeOwner::Initialize(BrowserParent* aBrowserParent) {
   }
 
   mBrowserParent = aBrowserParent;
-  RefPtr<LayerManager> lm = GetLayerManager(mBrowserParent);
+  RefPtr<WindowRenderer> renderer = GetWindowRenderer(mBrowserParent);
   PCompositorBridgeChild* compositor =
-      lm ? lm->GetCompositorBridgeChild() : nullptr;
+      renderer ? renderer->GetCompositorBridgeChild() : nullptr;
   mTabProcessId = mBrowserParent->Manager()->OtherPid();
 
   // Our remote frame will push layers updates to the compositor,
@@ -84,53 +81,56 @@ void RemoteLayerTreeOwner::Destroy() {
   }
 
   mBrowserParent = nullptr;
-  mLayerManager = nullptr;
+  mWindowRenderer = nullptr;
 }
 
 void RemoteLayerTreeOwner::EnsureLayersConnected(
     CompositorOptions* aCompositorOptions) {
-  RefPtr<LayerManager> lm = GetLayerManager(mBrowserParent);
-  if (!lm) {
+  RefPtr<WindowRenderer> renderer = GetWindowRenderer(mBrowserParent);
+  if (!renderer) {
     return;
   }
 
-  if (!lm->GetCompositorBridgeChild()) {
+  if (!renderer->GetCompositorBridgeChild()) {
     return;
   }
 
-  mLayersConnected = lm->GetCompositorBridgeChild()->SendNotifyChildRecreated(
-      mLayersId, &mCompositorOptions);
+  mLayersConnected =
+      renderer->GetCompositorBridgeChild()->SendNotifyChildRecreated(
+          mLayersId, &mCompositorOptions);
   *aCompositorOptions = mCompositorOptions;
 }
 
-LayerManager* RemoteLayerTreeOwner::AttachLayerManager() {
-  RefPtr<LayerManager> lm;
+bool RemoteLayerTreeOwner::AttachWindowRenderer() {
+  RefPtr<WindowRenderer> renderer;
   if (mBrowserParent) {
-    lm = GetLayerManager(mBrowserParent);
+    renderer = GetWindowRenderer(mBrowserParent);
   }
 
   // Perhaps the document containing this frame currently has no presentation?
-  if (lm && lm->GetCompositorBridgeChild() && lm != mLayerManager) {
+  if (renderer && renderer->GetCompositorBridgeChild() &&
+      renderer != mWindowRenderer) {
     mLayersConnected =
-        lm->GetCompositorBridgeChild()->SendAdoptChild(mLayersId);
-    FrameLayerBuilder::InvalidateAllLayers(lm);
+        renderer->GetCompositorBridgeChild()->SendAdoptChild(mLayersId);
+    FrameLayerBuilder::InvalidateAllLayers(renderer->AsLayerManager());
   }
 
-  mLayerManager = std::move(lm);
-  return mLayerManager;
+  mWindowRenderer = std::move(renderer);
+  return !!mWindowRenderer;
 }
 
 void RemoteLayerTreeOwner::OwnerContentChanged() {
-  Unused << AttachLayerManager();
+  Unused << AttachWindowRenderer();
 }
 
 void RemoteLayerTreeOwner::GetTextureFactoryIdentifier(
     TextureFactoryIdentifier* aTextureFactoryIdentifier) const {
-  RefPtr<LayerManager> lm =
-      mBrowserParent ? GetLayerManager(mBrowserParent) : nullptr;
+  RefPtr<WindowRenderer> renderer =
+      mBrowserParent ? GetWindowRenderer(mBrowserParent) : nullptr;
   // Perhaps the document containing this frame currently has no presentation?
-  if (lm) {
-    *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
+  if (renderer && renderer->AsLayerManager()) {
+    *aTextureFactoryIdentifier =
+        renderer->AsLayerManager()->GetTextureFactoryIdentifier();
   } else {
     *aTextureFactoryIdentifier = TextureFactoryIdentifier();
   }
