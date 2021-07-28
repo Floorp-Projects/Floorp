@@ -76,14 +76,17 @@ add_task(async function() {
   invokeInTab("main", "doc-xhr.html");
   await waitForPaused(dbg);
   await resume(dbg);
+  await assertDebuggerTabHighlight(dbg);
 
   invokeInTab("main", "fetch.js");
   await waitForPaused(dbg);
   await resume(dbg);
+  await assertDebuggerTabHighlight(dbg);
 
   invokeInTab("main", "README.md");
   await waitForPaused(dbg);
   await resume(dbg);
+  await assertDebuggerTabHighlight(dbg);
 
   // Disable pause on any URL
   await clickPauseOnAny(dbg, "DISABLE_XHR_BREAKPOINT");
@@ -172,4 +175,9 @@ function getXHRBreakpointCheckbox(dbg) {
 async function clickPauseOnAny(dbg, expectedEvent) {
   getXHRBreakpointCheckbox(dbg).click();
   await waitForDispatch(dbg.store, expectedEvent);
+}
+
+async function assertDebuggerTabHighlight(dbg) {
+  await waitUntil(() => !dbg.toolbox.isHighlighted("jsdebugger"));
+  ok(true, "Debugger is no longer highlighted after resume");
 }
