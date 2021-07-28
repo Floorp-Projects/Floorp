@@ -955,21 +955,15 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(
 
 void RegExpRealm::traceWeak(JSTracer* trc) {
   for (auto& templateObject : matchResultTemplateObjects_) {
-    if (templateObject) {
-      TraceWeakEdge(trc, &templateObject,
-                    "RegExpRealm::matchResultTemplateObject_");
-    }
+    TraceWeakEdge(trc, &templateObject,
+                  "RegExpRealm::matchResultTemplateObject_");
   }
 
-  if (optimizableRegExpPrototypeShape_) {
-    TraceWeakEdge(trc, &optimizableRegExpPrototypeShape_,
-                  "RegExpRealm::optimizableRegExpPrototypeShape_");
-  }
+  TraceWeakEdge(trc, &optimizableRegExpPrototypeShape_,
+                "RegExpRealm::optimizableRegExpPrototypeShape_");
 
-  if (optimizableRegExpInstanceShape_) {
-    TraceWeakEdge(trc, &optimizableRegExpInstanceShape_,
-                  "RegExpRealm::optimizableRegExpInstanceShape_");
-  }
+  TraceWeakEdge(trc, &optimizableRegExpInstanceShape_,
+                "RegExpRealm::optimizableRegExpInstanceShape_");
 }
 
 RegExpShared* RegExpZone::get(JSContext* cx, HandleAtom source,
