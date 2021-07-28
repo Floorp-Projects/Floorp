@@ -892,13 +892,22 @@ ParentAPIManager = {
       });
     }
 
-    let start = Cu.now() * 1000;
+    let start = Cu.now();
     try {
       return callable();
     } finally {
+      ChromeUtils.addProfilerMarker(
+        "ExtensionParent",
+        { startTime: start },
+        `${id}, api_call: ${data.path}`
+      );
       if (gTimingEnabled) {
         let end = Cu.now() * 1000;
-        PerformanceCounters.storeExecutionTime(id, data.path, end - start);
+        PerformanceCounters.storeExecutionTime(
+          id,
+          data.path,
+          end - start * 1000
+        );
       }
     }
   },
@@ -975,6 +984,7 @@ ParentAPIManager = {
     let handlingUserInput = false;
 
     let listener = async (...listenerArgs) => {
+      let startTime = Cu.now();
       // Extract urgentSend flag to avoid deserializing args holder later.
       let urgentSend = false;
       if (listenerArgs[0] && data.path.startsWith("webRequest.")) {
@@ -992,6 +1002,11 @@ ParentAPIManager = {
         },
       });
       let rv = result && result.deserialize(global);
+      ChromeUtils.addProfilerMarker(
+        "ExtensionParent",
+        { startTime },
+        `${context.extension.id}, api_event: ${data.path}`
+      );
       ExtensionActivityLog.log(
         context.extension.id,
         context.viewType,
