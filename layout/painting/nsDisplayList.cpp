@@ -8089,14 +8089,14 @@ bool nsDisplayTransform::CreateWebRenderCommands(
       animationsId,
   };
 
-  Maybe<nsDisplayTransform*> deferredTransformItem;
+  nsDisplayTransform* deferredTransformItem = nullptr;
   if (!mFrame->ChildrenHavePerspective()) {
     // If it has perspective, we create a new scroll data via the
     // UpdateScrollData call because that scenario is more complex. Otherwise
     // we can just stash the transform on the StackingContextHelper and
     // apply it to any scroll data that are created inside this
     // nsDisplayTransform.
-    deferredTransformItem = Some(this);
+    deferredTransformItem = this;
   }
 
   // Determine if we're possibly animated (= would need an active layer in FLB).
