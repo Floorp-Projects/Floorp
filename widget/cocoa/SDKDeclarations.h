@@ -25,6 +25,11 @@
 
 using NSAppearanceName = NSString*;
 
+@interface NSColor (NSColor10_13)
+// "Available in 10.10", but not present in any SDK less than 10.13
+@property(class, strong, readonly) NSColor* systemPurpleColor NS_AVAILABLE_MAC(10_10);
+@end
+
 #endif
 
 #if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
