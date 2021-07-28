@@ -311,9 +311,10 @@ ipc::IPCResult DocAccessibleChild::RecvRestoreFocus() {
 
 void DocAccessibleChild::SetEmbedderOnBridge(dom::BrowserBridgeChild* aBridge,
                                              uint64_t aID) {
+  DocAccessibleChild* doc = aID ? this : nullptr;
   if (IsConstructedInParentProcess()) {
     MOZ_ASSERT(CanSend());
-    aBridge->SendSetEmbedderAccessible(this, aID);
+    aBridge->SetEmbedderAccessible(doc, aID);
     return;
   }
   // Even though this doesn't fire an event, we must ensure this is sent in
@@ -321,7 +322,7 @@ void DocAccessibleChild::SetEmbedderOnBridge(dom::BrowserBridgeChild* aBridge,
   // we are notified about parent process construction. Otherwise, the
   // parent process might bind a child document to the wrong accessible if
   // ids get reused.
-  PushDeferredEvent(MakeUnique<SerializedSetEmbedder>(aBridge, this, aID));
+  PushDeferredEvent(MakeUnique<SerializedSetEmbedder>(aBridge, doc, aID));
 }
 
 }  // namespace a11y

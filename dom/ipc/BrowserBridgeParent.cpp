@@ -252,10 +252,23 @@ a11y::DocAccessibleParent* BrowserBridgeParent::GetDocAccessibleParent() {
 
 IPCResult BrowserBridgeParent::RecvSetEmbedderAccessible(
     PDocAccessibleParent* aDoc, uint64_t aID) {
-  MOZ_ASSERT(!mEmbedderAccessibleDoc || mEmbedderAccessibleDoc == aDoc,
-             "Embedder document shouldn't change");
+  MOZ_ASSERT(aDoc || mEmbedderAccessibleDoc,
+             "Embedder doc shouldn't be cleared if it wasn't set");
+  MOZ_ASSERT(!mEmbedderAccessibleDoc || !aDoc || mEmbedderAccessibleDoc == aDoc,
+             "Embedder doc shouldn't change from one doc to another");
+  if (!aDoc && mEmbedderAccessibleDoc &&
+      !mEmbedderAccessibleDoc->IsShutdown()) {
+    // We're clearing the embedder doc, so remove the pending child doc addition
+    // (if any).
+    mEmbedderAccessibleDoc->RemovePendingOOPChildDoc(this);
+  }
   mEmbedderAccessibleDoc = static_cast<a11y::DocAccessibleParent*>(aDoc);
   mEmbedderAccessibleID = aID;
+  if (!aDoc) {
+    MOZ_ASSERT(!aID);
+    return IPC_OK();
+  }
+  MOZ_ASSERT(aID);
   if (GetDocAccessibleParent()) {
     // The embedded DocAccessibleParent has already been created. This can
     // happen if, for example, an iframe is hidden and then shown or

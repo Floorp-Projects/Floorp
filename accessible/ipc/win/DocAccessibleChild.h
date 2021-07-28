@@ -349,7 +349,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
         : DeferredEvent(aDoc), mBridge(aBridge), mID(aID) {}
 
     void Dispatch(DocAccessibleChild* aDoc) override {
-      Unused << mBridge->SendSetEmbedderAccessible(aDoc, mID);
+      mBridge->SetEmbedderAccessible(aDoc, mID);
     }
 
     RefPtr<dom::BrowserBridgeChild> mBridge;
