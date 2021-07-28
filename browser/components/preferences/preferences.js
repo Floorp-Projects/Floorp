@@ -86,6 +86,7 @@ function register_module(categoryName, categoryObject) {
   gCategoryInits.set(categoryName, {
     inited: false,
     async init() {
+      let startTime = performance.now();
       let template = document.getElementById("template-" + categoryName);
       if (template) {
         // Replace the template element with the nodes inside of it.
@@ -97,13 +98,18 @@ function register_module(categoryName, categoryObject) {
         template.replaceWith(frag);
         document.l10n.resumeObserving();
 
-        // Asks Preferences to update the attribute value of the entire
-        // document again (this can be simplified if we could seperate the
-        // preferences of each pane.)
-        Preferences.updateAllElements();
+        // We need to queue an update again because the previous update might
+        // have happened while we awaited on translateFragment.
+        Preferences.queueUpdateOfAllElements();
       }
+
       categoryObject.init();
       this.inited = true;
+      ChromeUtils.addProfilerMarker(
+        "Preferences",
+        { startTime },
+        categoryName + " init"
+      );
     },
   });
 }
@@ -112,6 +118,10 @@ document.addEventListener("DOMContentLoaded", init_all, { once: true });
 
 function init_all() {
   Preferences.forceEnableInstantApply();
+
+  // Asks Preferences to queue an update of the attribute values of
+  // the entire document.
+  Preferences.queueUpdateOfAllElements();
 
   register_module("paneGeneral", gMainPane);
   register_module("paneHome", gHomePane);

@@ -163,6 +163,5 @@ var gExperimentalPane = {
       preference.setElementValue(checkbox);
     }
     this._featureGatesContainer.appendChild(frag);
-    Preferences.updateAllElements();
   },
 };
