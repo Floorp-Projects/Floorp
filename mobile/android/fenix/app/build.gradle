@@ -171,7 +171,6 @@ android {
         }
         beta {
             java.srcDirs = ['src/migration/java']
-            manifest.srcFile "src/migration/AndroidManifest.xml"
         }
         release {
             java.srcDirs = ['src/migration/java']

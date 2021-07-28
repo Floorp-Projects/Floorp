@@ -1,0 +1,44 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="org.mozilla.fenix"
+    android:sharedUserId="${sharedUserId}">
+    <application
+        android:name="org.mozilla.fenix.MigratingFenixApplication"
+        tools:replace="android:name">
+
+        <activity android:name=".autofill.AutofillUnlockActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <activity android:name=".autofill.AutofillConfirmActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Translucent" />
+
+        <activity android:name=".autofill.AutofillSearchActivity"
+            android:exported="false"
+            android:theme="@style/DialogActivityTheme" />
+
+        <service
+            android:name=".autofill.AutofillService"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_AUTOFILL_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.autofill.AutofillService"/>
+            </intent-filter>
+        </service>
+
+        <!-- Overriding the alias of the main manifest to route app launches through our
+             MigrationDecisionActivity which will show the migration screen before launching
+             into the app if needed. -->
+        <activity-alias
+            android:name="${applicationId}.App"
+            android:targetActivity="org.mozilla.fenix.MigrationDecisionActivity"
+            tools:replace="android:targetActivity" />
+
+        <activity
+            android:name="org.mozilla.fenix.MigrationDecisionActivity"
+            android:exported="false" />
+
+        <service android:name="org.mozilla.fenix.MigrationService" />
+    </application>
+</manifest>
