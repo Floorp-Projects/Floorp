@@ -320,5 +320,5 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
     )
 
     CONFIGURE_SUBST_FILES += [
-        "bindgen.toml",
+        "extra-bindgen-flags",
     ]
