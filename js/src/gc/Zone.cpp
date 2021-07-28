@@ -190,6 +190,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
   MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone*>(this) ==
              static_cast<JS::shadow::Zone*>(this));
   MOZ_ASSERT_IF(isAtomsZone(), !rt->unsafeAtomsZone());
+  MOZ_ASSERT_IF(isSelfHostingZone(), !rt->hasInitializedSelfHosting());
 
   // We can't call updateGCStartThresholds until the Zone has been constructed.
   AutoLockGC lock(rt);
@@ -582,6 +583,11 @@ bool Zone::canCollect() {
   // place.
   if (isAtomsZone()) {
     return !runtimeFromAnyThread()->hasHelperThreadZones();
+  }
+
+  // We don't collect the self hosting zone after it has been initialized.
+  if (isSelfHostingZone()) {
+    return !runtimeFromAnyThread()->gc.isSelfHostingZoneFrozen();
   }
 
   // Zones that will be or are currently used by other threads cannot be

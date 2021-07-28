@@ -7,10 +7,7 @@
 #ifndef frontend_ScriptIndex_h
 #define frontend_ScriptIndex_h
 
-#include <utility>
-
 #include "frontend/TypedIndex.h"  // TypedIndex
-#include "js/GCPolicyAPI.h"       // JS::GCPolicy, JS::IgnoreGCPolicy
 
 namespace js {
 namespace frontend {
@@ -19,24 +16,7 @@ class ScriptStencil;
 
 using ScriptIndex = TypedIndex<ScriptStencil>;
 
-// Represents a range for scripts [start, limit).
-struct ScriptIndexRange {
-  ScriptIndex start;
-  ScriptIndex limit;
-
-  ScriptIndexRange(ScriptIndex start, ScriptIndex limit)
-      : start(start), limit(limit) {
-    MOZ_ASSERT(start < limit);
-  }
-};
-
 } /* namespace frontend */
 } /* namespace js */
-
-namespace JS {
-template <>
-struct GCPolicy<js::frontend::ScriptIndexRange>
-    : public IgnoreGCPolicy<js::frontend::ScriptIndexRange> {};
-}  // namespace JS
 
 #endif /* frontend_ScriptIndex_h */

@@ -118,6 +118,13 @@ bool Realm::init(JSContext* cx, JSPrincipals* principals) {
   return true;
 }
 
+void Realm::setIsSelfHostingRealm() {
+  MOZ_ASSERT(!isSelfHostingRealm_);
+  MOZ_ASSERT(zone()->isSelfHostingZone());
+  isSelfHostingRealm_ = true;
+  isSystem_ = true;
+}
+
 bool JSRuntime::createJitRuntime(JSContext* cx) {
   using namespace js::jit;
 
