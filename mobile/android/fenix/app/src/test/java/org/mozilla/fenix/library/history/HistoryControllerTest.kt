@@ -41,28 +41,7 @@ class HistoryControllerTest {
     private val resources: Resources = mockk(relaxed = true)
     private val snackbar: FenixSnackbar = mockk(relaxed = true)
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
-    private val openInBrowser: (HistoryItem) -> Unit = mockk(relaxed = true)
-    private val openAndShowTray: (HistoryItem, BrowsingMode) -> Unit = mockk(relaxed = true)
-    private val displayDeleteAll: () -> Unit = mockk(relaxed = true)
-    private val invalidateOptionsMenu: () -> Unit = mockk(relaxed = true)
-    private val deleteHistoryItems: (Set<HistoryItem>) -> Unit = mockk(relaxed = true)
-    private val syncHistory: suspend () -> Unit = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
-    private val controller = DefaultHistoryController(
-        store,
-        navController,
-        resources,
-        snackbar,
-        clipboardManager,
-        scope,
-        openInBrowser,
-        openAndShowTray,
-        displayDeleteAll,
-        invalidateOptionsMenu,
-        deleteHistoryItems,
-        syncHistory,
-        metrics
-    )
 
     @Before
     fun setUp() {
@@ -76,36 +55,45 @@ class HistoryControllerTest {
 
     @Test
     fun onPressHistoryItemInNormalMode() {
+        var actualHistoryItem: HistoryItem? = null
+        val controller = createController(openInBrowser = {
+            actualHistoryItem = it
+        })
         controller.handleOpen(historyItem)
-
-        verify {
-            openInBrowser(historyItem)
-        }
+        assertEquals(historyItem, actualHistoryItem)
     }
 
     @Test
     fun onOpenItemInNormalMode() {
+        var actualHistoryItem: HistoryItem? = null
+        var actualBrowsingMode: BrowsingMode? = null
+        val controller = createController(openAndShowTray = { historyItem, browsingMode ->
+            actualHistoryItem = historyItem
+            actualBrowsingMode = browsingMode
+        })
         controller.handleOpenInNewTab(historyItem, BrowsingMode.Normal)
-
-        verify {
-            openAndShowTray(historyItem, BrowsingMode.Normal)
-        }
+        assertEquals(historyItem, actualHistoryItem)
+        assertEquals(BrowsingMode.Normal, actualBrowsingMode)
     }
 
     @Test
     fun onOpenItemInPrivateMode() {
+        var actualHistoryItem: HistoryItem? = null
+        var actualBrowsingMode: BrowsingMode? = null
+        val controller = createController(openAndShowTray = { historyItem, browsingMode ->
+            actualHistoryItem = historyItem
+            actualBrowsingMode = browsingMode
+        })
         controller.handleOpenInNewTab(historyItem, BrowsingMode.Private)
-
-        verify {
-            openAndShowTray(historyItem, BrowsingMode.Private)
-        }
+        assertEquals(historyItem, actualHistoryItem)
+        assertEquals(BrowsingMode.Private, actualBrowsingMode)
     }
 
     @Test
     fun onPressHistoryItemInEditMode() {
         every { state.mode } returns HistoryFragmentState.Mode.Editing(setOf())
 
-        controller.handleSelect(historyItem)
+        createController().handleSelect(historyItem)
 
         verify {
             store.dispatch(HistoryFragmentAction.AddItemForRemoval(historyItem))
@@ -116,7 +104,7 @@ class HistoryControllerTest {
     fun onPressSelectedHistoryItemInEditMode() {
         every { state.mode } returns HistoryFragmentState.Mode.Editing(setOf(historyItem))
 
-        controller.handleDeselect(historyItem)
+        createController().handleDeselect(historyItem)
 
         verify {
             store.dispatch(HistoryFragmentAction.RemoveItemForRemoval(historyItem))
@@ -127,7 +115,7 @@ class HistoryControllerTest {
     fun onSelectHistoryItemDuringSync() {
         every { state.mode } returns HistoryFragmentState.Mode.Syncing
 
-        controller.handleSelect(historyItem)
+        createController().handleSelect(historyItem)
 
         verify(exactly = 0) {
             store.dispatch(HistoryFragmentAction.AddItemForRemoval(historyItem))
@@ -138,14 +126,14 @@ class HistoryControllerTest {
     fun onBackPressedInNormalMode() {
         every { state.mode } returns HistoryFragmentState.Mode.Normal
 
-        assertFalse(controller.handleBackPressed())
+        assertFalse(createController().handleBackPressed())
     }
 
     @Test
     fun onBackPressedInEditMode() {
         every { state.mode } returns HistoryFragmentState.Mode.Editing(setOf())
 
-        assertTrue(controller.handleBackPressed())
+        assertTrue(createController().handleBackPressed())
         verify {
             store.dispatch(HistoryFragmentAction.ExitEditMode)
         }
@@ -153,38 +141,43 @@ class HistoryControllerTest {
 
     @Test
     fun onModeSwitched() {
-        controller.handleModeSwitched()
+        var invalidateOptionsMenuInvoked = false
+        val controller = createController(invalidateOptionsMenu = {
+            invalidateOptionsMenuInvoked = true
+        })
 
-        verify {
-            invalidateOptionsMenu.invoke()
-        }
+        controller.handleModeSwitched()
+        assertTrue(invalidateOptionsMenuInvoked)
     }
 
     @Test
     fun onDeleteAll() {
-        controller.handleDeleteAll()
+        var displayDeleteAllInvoked = false
+        val controller = createController(displayDeleteAll = {
+            displayDeleteAllInvoked = true
+        })
 
-        verify {
-            displayDeleteAll.invoke()
-        }
+        controller.handleDeleteAll()
+        assertTrue(displayDeleteAllInvoked)
     }
 
     @Test
     fun onDeleteSome() {
         val itemsToDelete = setOf(historyItem)
+        var actualItems: Set<HistoryItem>? = null
+        val controller = createController(deleteHistoryItems = { items ->
+            actualItems = items
+        })
 
         controller.handleDeleteSome(itemsToDelete)
-
-        verify {
-            deleteHistoryItems(itemsToDelete)
-        }
+        assertEquals(itemsToDelete, actualItems)
     }
 
     @Test
     fun onCopyItem() {
         val clipdata = slot<ClipData>()
 
-        controller.handleCopyUrl(historyItem)
+        createController().handleCopyUrl(historyItem)
 
         verify {
             clipboardManager.setPrimaryClip(capture(clipdata))
@@ -198,7 +191,7 @@ class HistoryControllerTest {
     @Test
     @Suppress("UNCHECKED_CAST")
     fun onShareItem() {
-        controller.handleShare(historyItem)
+        createController().handleShare(historyItem)
 
         verify {
             navController.navigate(directionsEq(
@@ -211,16 +204,42 @@ class HistoryControllerTest {
 
     @Test
     fun onRequestSync() {
-        controller.handleRequestSync()
-
-        verify(exactly = 2) {
-            store.dispatch(any())
-        }
+        var syncHistoryInvoked = false
+        createController(syncHistory = {
+            syncHistoryInvoked = true
+        }).handleRequestSync()
 
         coVerifyOrder {
             store.dispatch(HistoryFragmentAction.StartSync)
-            syncHistory.invoke()
             store.dispatch(HistoryFragmentAction.FinishSync)
         }
+
+        assertTrue(syncHistoryInvoked)
+    }
+
+    @Suppress("LongParameterList")
+    private fun createController(
+        openInBrowser: (HistoryItem) -> Unit = { _ -> },
+        openAndShowTray: (HistoryItem, BrowsingMode) -> Unit = { _, _ -> },
+        displayDeleteAll: () -> Unit = { },
+        invalidateOptionsMenu: () -> Unit = { },
+        deleteHistoryItems: (Set<HistoryItem>) -> Unit = { _ -> },
+        syncHistory: suspend () -> Unit = { }
+    ): HistoryController {
+        return DefaultHistoryController(
+            store,
+            navController,
+            resources,
+            snackbar,
+            clipboardManager,
+            scope,
+            openInBrowser,
+            openAndShowTray,
+            displayDeleteAll,
+            invalidateOptionsMenu,
+            deleteHistoryItems,
+            syncHistory,
+            metrics
+        )
     }
 }
