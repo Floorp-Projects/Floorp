@@ -13,6 +13,7 @@ cranelift_x86 = ['jsrust_shared/cranelift_x86']
 cranelift_arm32 = ['jsrust_shared/cranelift_arm32']
 cranelift_arm64 = ['jsrust_shared/cranelift_arm64']
 cranelift_none = ['jsrust_shared/cranelift_none']
+moz_memory = ['mozglue-static/moz_memory']
 simd-accel = ['jsrust_shared/simd-accel']
 smoosh = ['jsrust_shared/smoosh']
 
