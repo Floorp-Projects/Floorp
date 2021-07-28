@@ -68,10 +68,7 @@ addRDMTask(TEST_COM_URL, async function({ ui }) {
   );
 
   info("Check that the viewport orientation values persist after reload");
-  const browser = ui.getViewportBrowser();
-  let onViewportLoad = waitForViewportLoad(ui);
-  browser.reload();
-  await onViewportLoad;
+  await reloadViewport(ui);
 
   is(
     await getScreenOrientationType(ui.getViewportBrowser()),
@@ -97,9 +94,10 @@ addRDMTask(TEST_COM_URL, async function({ ui }) {
   info(
     "Check that the viewport orientation values persist after navigating to a page that forces the creation of a new browsing context"
   );
+  const browser = ui.getViewportBrowser();
   const previousBrowsingContextId = browser.browsingContext.id;
   const onPageReloaded = BrowserTestUtils.browserLoaded(browser, true);
-  onViewportLoad = waitForViewportLoad(ui);
+  const onViewportLoad = waitForViewportLoad(ui);
   BrowserTestUtils.loadURI(
     browser,
     URL_ROOT_ORG_SSL + TEST_DOCUMENT + "?crossOriginIsolated=true"
