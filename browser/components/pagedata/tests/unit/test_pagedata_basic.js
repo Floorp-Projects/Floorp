@@ -24,6 +24,22 @@ add_task(async function notifies() {
     "Should be no cached data."
   );
 
+  let listener = () => {
+    Assert.ok(false, "Should not notify for no data.");
+  };
+
+  PageDataService.on("page-data", listener);
+
+  let pageData = await PageDataService.queueFetch(url);
+  Assert.equal(pageData.url, "https://www.mozilla.org/");
+  Assert.equal(pageData.data.length, 0);
+
+  pageData = PageDataService.getCached(url);
+  Assert.equal(pageData.url, "https://www.mozilla.org/");
+  Assert.equal(pageData.data.length, 0);
+
+  PageDataService.off("page-data", listener);
+
   let promise = PageDataService.once("page-data");
 
   PageDataService.pageDataDiscovered(url, [
@@ -35,28 +51,11 @@ add_task(async function notifies() {
     },
   ]);
 
-  let pageData = await promise;
-  Assert.equal(
-    pageData.url,
-    "https://www.mozilla.org/",
-    "Should have notified data for the expected url"
-  );
-  Assert.deepEqual(
-    pageData.data,
-    [
-      {
-        type: "product",
-        data: {
-          price: 276,
-        },
-      },
-    ],
-    "Should have returned the correct product data"
-  );
+  pageData = await promise;
+  Assert.equal(pageData.url, "https://www.mozilla.org/");
+  Assert.equal(pageData.data.length, 1);
+  Assert.equal(pageData.data[0].type, "product");
 
-  Assert.deepEqual(
-    PageDataService.getCached(url),
-    pageData,
-    "Should return the same pageData from the cache as was notified."
-  );
+  Assert.equal(PageDataService.getCached(url), pageData);
+  Assert.equal(await PageDataService.queueFetch(url), pageData);
 });
