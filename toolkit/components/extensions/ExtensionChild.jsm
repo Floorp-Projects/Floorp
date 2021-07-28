@@ -691,16 +691,21 @@ class ChildLocalAPIImplementation extends LocalAPIImplementation {
    */
   callAndLog(callable, args) {
     this.context.logActivity("api_call", this.fullname, { args });
-    let start = Cu.now() * 1000;
+    let start = Cu.now();
     try {
       return callable();
     } finally {
+      ChromeUtils.addProfilerMarker(
+        "ExtensionChild",
+        { startTime: start },
+        `${this.context.extension.id}, api_call: ${this.fullname}`
+      );
       if (gTimingEnabled) {
         let end = Cu.now() * 1000;
         PerformanceCounters.storeExecutionTime(
           this.context.extension.id,
           this.name,
-          end - start,
+          end - start * 1000,
           this.childApiManagerId
         );
       }
