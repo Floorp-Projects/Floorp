@@ -1,34 +1,6 @@
 import { GlobalOverrider } from "test/unit/utils";
 import { PersonalityProvider } from "lib/PersonalityProvider/PersonalityProvider.jsm";
 
-const TIME_SEGMENTS = [
-  { id: "hour", startTime: 3600, endTime: 0, weightPosition: 1 },
-  { id: "day", startTime: 86400, endTime: 3600, weightPosition: 0.75 },
-  { id: "week", startTime: 604800, endTime: 86400, weightPosition: 0.5 },
-  { id: "weekPlus", startTime: null, endTime: 604800, weightPosition: 0.25 },
-];
-
-const PARAMETER_SETS = {
-  paramSet1: {
-    recencyFactor: 0.5,
-    frequencyFactor: 0.5,
-    combinedDomainFactor: 0.5,
-    perfectFrequencyVisits: 10,
-    perfectCombinedDomainScore: 2,
-    multiDomainBoost: 0.1,
-    itemScoreFactor: 0,
-  },
-  paramSet2: {
-    recencyFactor: 1,
-    frequencyFactor: 0.7,
-    combinedDomainFactor: 0.8,
-    perfectFrequencyVisits: 10,
-    perfectCombinedDomainScore: 2,
-    multiDomainBoost: 0.1,
-    itemScoreFactor: 0,
-  },
-};
-
 describe("Personality Provider", () => {
   let instance;
   let RemoteSettingsStub;
@@ -72,7 +44,6 @@ describe("Personality Provider", () => {
     globals.set("RemoteSettings", RemoteSettingsStub);
 
     instance = new PersonalityProvider();
-    instance.setAffinities(TIME_SEGMENTS, PARAMETER_SETS);
     instance.interestConfig = {
       history_item_builder: "history_item_builder",
       history_required_fields: ["a", "b", "c"],
@@ -379,11 +350,10 @@ describe("Personality Provider", () => {
       );
     });
   });
-  describe("#getAffinities", () => {
-    it("should return correct data for getAffinities", () => {
-      const affinities = instance.getAffinities();
-      assert.isDefined(affinities.timeSegments);
-      assert.isDefined(affinities.parameterSets);
+  describe("#getScores", () => {
+    it("should return correct data for getScores", () => {
+      const scores = instance.getScores();
+      assert.isDefined(scores.interestConfig);
     });
   });
 });

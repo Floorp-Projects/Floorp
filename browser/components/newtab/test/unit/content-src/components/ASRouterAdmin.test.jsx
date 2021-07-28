@@ -470,7 +470,6 @@ describe("ASRouterAdmin", () => {
           dispatch={dispatch}
           state={{
             Personalization: {
-              version: 1,
               lastUpdated: 1000,
               initialized: true,
             },
@@ -478,55 +477,35 @@ describe("ASRouterAdmin", () => {
         />
       );
     });
-    it("should render with buttons, version, and lastUpdated", () => {
-      assert.equal(
-        wrapper
-          .find("button")
-          .at(0)
-          .text(),
-        "Enable V2 Personalization"
-      );
+    it("should render with pref checkbox, lastUpdated, and initialized", () => {
+      assert.lengthOf(wrapper.find("TogglePrefCheckbox"), 1);
       assert.equal(
         wrapper
           .find("td")
           .at(1)
           .text(),
-        "1"
+        "Personalization Last Updated"
+      );
+      assert.equal(
+        wrapper
+          .find("td")
+          .at(2)
+          .text(),
+        new Date(1000).toLocaleString()
       );
       assert.equal(
         wrapper
           .find("td")
           .at(3)
           .text(),
-        new Date(1000).toLocaleString()
-      );
-    });
-    it("should render with proper version 2 state", () => {
-      wrapper = shallow(
-        <Personalization
-          dispatch={dispatch}
-          state={{
-            Personalization: {
-              version: 2,
-              lastUpdated: 1000,
-              initialized: true,
-            },
-          }}
-        />
-      );
-      assert.equal(
-        wrapper
-          .find("button")
-          .at(0)
-          .text(),
-        "Enable V1 Personalization"
+        "Personalization Initialized"
       );
       assert.equal(
         wrapper
           .find("td")
-          .at(1)
+          .at(4)
           .text(),
-        "2"
+        "true"
       );
     });
     it("should render with no data with no last updated", () => {
@@ -545,20 +524,17 @@ describe("ASRouterAdmin", () => {
       assert.equal(
         wrapper
           .find("td")
-          .at(3)
+          .at(2)
           .text(),
         "(no data)"
       );
     });
-    it("should fire DISCOVERY_STREAM_PERSONALIZATION_VERSION_TOGGLE with version", () => {
-      wrapper
-        .find("button")
-        .at(0)
-        .simulate("click");
+    it("should dispatch DISCOVERY_STREAM_PERSONALIZATION_TOGGLE", () => {
+      wrapper.instance().togglePersonalization();
       assert.calledWith(
         dispatch,
         ac.OnlyToMain({
-          type: at.DISCOVERY_STREAM_PERSONALIZATION_VERSION_TOGGLE,
+          type: at.DISCOVERY_STREAM_PERSONALIZATION_TOGGLE,
         })
       );
     });

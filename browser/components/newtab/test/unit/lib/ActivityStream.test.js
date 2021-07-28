@@ -142,8 +142,8 @@ describe("ActivityStream", () => {
       const feed = as.feeds.get("feeds.favicon")();
       assert.ok(feed, "feed should exist");
     });
-    it("should create a RecommendationProviderSwitcher feed", () => {
-      const feed = as.feeds.get("feeds.recommendationproviderswitcher")();
+    it("should create a RecommendationProvider feed", () => {
+      const feed = as.feeds.get("feeds.recommendationprovider")();
       assert.ok(feed, "feed should exist");
     });
     it("should create a DiscoveryStreamFeed feed", () => {

@@ -31,24 +31,13 @@ const RECIPE_NAME = "personality-provider-recipe";
 const MODELS_NAME = "personality-provider-models";
 
 this.PersonalityProvider = class PersonalityProvider {
-  constructor(v2Params) {
-    this.v2Params = v2Params || {};
-    this.modelKeys = this.v2Params.modelKeys;
+  constructor(modelKeys) {
+    this.modelKeys = modelKeys;
     this.onSync = this.onSync.bind(this);
     this.setup();
   }
 
-  setAffinities(
-    timeSegments,
-    parameterSets,
-    maxHistoryQueryResults,
-    version,
-    scores
-  ) {
-    this.timeSegments = timeSegments;
-    this.parameterSets = parameterSets;
-    this.maxHistoryQueryResults = maxHistoryQueryResults;
-    this.version = version;
+  setScores(scores) {
     this.scores = scores || {};
     this.interestConfig = this.scores.interestConfig;
     this.interestVector = this.scores.interestVector;
@@ -292,22 +281,16 @@ this.PersonalityProvider = class PersonalityProvider {
   }
 
   /**
-   * Returns an object holding the settings and affinity scores of this provider instance.
+   * Returns an object holding the personalization scores of this provider instance.
    */
-  getAffinities() {
+  getScores() {
     return {
-      timeSegments: this.timeSegments,
-      parameterSets: this.parameterSets,
-      maxHistoryQueryResults: this.maxHistoryQueryResults,
-      version: this.version,
-      scores: {
-        // We cannot return taggers here.
-        // What we return here goes into persistent cache, and taggers have functions on it.
-        // If we attempted to save taggers into persistent cache, it would store it to disk,
-        // and the next time we load it, it would start thowing function is not defined.
-        interestConfig: this.interestConfig,
-        interestVector: this.interestVector,
-      },
+      // We cannot return taggers here.
+      // What we return here goes into persistent cache, and taggers have functions on it.
+      // If we attempted to save taggers into persistent cache, it would store it to disk,
+      // and the next time we load it, it would start thowing function is not defined.
+      interestConfig: this.interestConfig,
+      interestVector: this.interestVector,
     };
   }
 };
