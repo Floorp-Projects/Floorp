@@ -15,8 +15,7 @@ class TrackingProtectionPanelInteractorTest {
     @Test
     fun openDetails() {
         val store: TrackingProtectionStore = mockk(relaxed = true)
-        val interactor =
-            TrackingProtectionPanelInteractor(store, mockk(), mockk())
+        val interactor = TrackingProtectionPanelInteractor(store, {}, {})
         interactor.openDetails(TrackingProtectionCategory.FINGERPRINTERS, true)
         verify {
             store.dispatch(
@@ -32,7 +31,7 @@ class TrackingProtectionPanelInteractorTest {
     fun openDetailsForRedirectTrackers() {
         val store: TrackingProtectionStore = mockk(relaxed = true)
         val interactor =
-            TrackingProtectionPanelInteractor(store, mockk(), mockk())
+            TrackingProtectionPanelInteractor(store, {}, {})
         interactor.openDetails(TrackingProtectionCategory.REDIRECT_TRACKERS, true)
         verify {
             store.dispatch(
@@ -49,7 +48,7 @@ class TrackingProtectionPanelInteractorTest {
         var openSettings = false
         val interactor = TrackingProtectionPanelInteractor(
             mockk(),
-            mockk(),
+            { },
             { openSettings = true }
         )
         interactor.selectTrackingProtectionSettings()
@@ -72,7 +71,7 @@ class TrackingProtectionPanelInteractorTest {
     fun onBackPressed() {
         val store: TrackingProtectionStore = mockk(relaxed = true)
         val interactor =
-            TrackingProtectionPanelInteractor(store, mockk(), mockk())
+            TrackingProtectionPanelInteractor(store, {}, {})
         interactor.onBackPressed()
         verify { store.dispatch(TrackingProtectionAction.ExitDetailsMode) }
     }
