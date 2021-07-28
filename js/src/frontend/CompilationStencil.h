@@ -233,10 +233,8 @@ struct CompilationInput {
   RefPtr<ScriptSource> source;
 
   //  * If the target is Global, null.
-  //  * If the target is SelfHosting, an empty global scope.
-  //    This scope is also used for EmptyGlobalScopeType in
-  //    CompilationStencil.gcThings.
-  //    See the comment in initForSelfHostingGlobal.
+  //  * If the target is SelfHosting, null. Instantiation code for self-hosting
+  //    will ignore this and use the appropriate empty global scope instead.
   //  * If the target is StandaloneFunction, an empty global scope.
   //  * If the target is StandaloneFunctionInNonSyntacticScope, the non-null
   //    enclosing scope of the function
@@ -261,18 +259,7 @@ struct CompilationInput {
 
   bool initForSelfHostingGlobal(JSContext* cx) {
     target = CompilationTarget::SelfHosting;
-    if (!initScriptSource(cx)) {
-      return false;
-    }
-
-    // This enclosing scope is also recorded as EmptyGlobalScopeType in
-    // CompilationStencil.gcThings even though corresponding ScopeStencil
-    // isn't generated.
-    //
-    // Store the enclosing scope here in order to access it from
-    // inner scopes' ScopeStencil::enclosing.
-    enclosingScope = &cx->global()->emptyGlobalScope();
-    return true;
+    return initScriptSource(cx);
   }
 
   bool initForStandaloneFunction(JSContext* cx) {
@@ -649,6 +636,11 @@ struct CompilationStencil {
       JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
       CompilationGCOutput& gcOutput);
 
+  // Decode the special self-hosted stencil
+  [[nodiscard]] bool instantiateSelfHostedForRuntime(
+      JSContext* cx, CompilationAtomCache& atomCache) const;
+  [[nodiscard]] JSScript* instantiateSelfHostedTopLevelForRealm(
+      JSContext* cx, CompilationInput& input);
   [[nodiscard]] JSFunction* instantiateSelfHostedLazyFunction(
       JSContext* cx, CompilationAtomCache& atomCache, ScriptIndex index,
       HandleAtom name);
