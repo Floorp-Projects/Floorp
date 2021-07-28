@@ -25,17 +25,17 @@
 /******/ 	var __webpack_modules__ = ([
 /* 0 */,
 /* 1 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ ((__unused_webpack_module, exports) => {
 
 
 
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.OptionKind = exports.AppOptions = void 0;
-
-var _viewer_compatibility = __webpack_require__(2);
-
+exports.OptionKind = exports.compatibilityParams = exports.AppOptions = void 0;
+const compatibilityParams = Object.create(null);
+exports.compatibilityParams = compatibilityParams;
+;
 const OptionKind = {
   VIEWER: 0x02,
   API: 0x04,
@@ -98,7 +98,7 @@ const defaultOptions = {
   },
   maxCanvasPixels: {
     value: 16777216,
-    compatibility: _viewer_compatibility.viewerCompatibilityParams.maxCanvasPixels,
+    compatibility: compatibilityParams.maxCanvasPixels,
     kind: OptionKind.VIEWER
   },
   pdfBugEnabled: {
@@ -285,21 +285,6 @@ exports.AppOptions = AppOptions;
 
 /***/ }),
 /* 2 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.viewerCompatibilityParams = void 0;
-const compatibilityParams = Object.create(null);
-;
-const viewerCompatibilityParams = Object.freeze(compatibilityParams);
-exports.viewerCompatibilityParams = viewerCompatibilityParams;
-
-/***/ }),
-/* 3 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -309,55 +294,53 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFViewerApplication = exports.PDFPrintServiceFactory = exports.DefaultExternalServices = void 0;
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
 var _app_options = __webpack_require__(1);
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
-var _pdf_cursor_tools = __webpack_require__(6);
+var _pdf_cursor_tools = __webpack_require__(5);
 
-var _pdf_rendering_queue = __webpack_require__(8);
+var _pdf_rendering_queue = __webpack_require__(7);
 
-var _overlay_manager = __webpack_require__(9);
+var _overlay_manager = __webpack_require__(8);
 
-var _password_prompt = __webpack_require__(10);
+var _password_prompt = __webpack_require__(9);
 
-var _pdf_attachment_viewer = __webpack_require__(11);
+var _pdf_attachment_viewer = __webpack_require__(10);
 
-var _pdf_document_properties = __webpack_require__(13);
+var _pdf_document_properties = __webpack_require__(12);
 
-var _pdf_find_bar = __webpack_require__(14);
+var _pdf_find_bar = __webpack_require__(13);
 
-var _pdf_find_controller = __webpack_require__(15);
+var _pdf_find_controller = __webpack_require__(14);
 
-var _pdf_history = __webpack_require__(17);
+var _pdf_history = __webpack_require__(16);
 
-var _pdf_layer_viewer = __webpack_require__(18);
+var _pdf_layer_viewer = __webpack_require__(17);
 
-var _pdf_link_service = __webpack_require__(19);
+var _pdf_link_service = __webpack_require__(18);
 
-var _pdf_outline_viewer = __webpack_require__(20);
+var _pdf_outline_viewer = __webpack_require__(19);
 
-var _pdf_presentation_mode = __webpack_require__(21);
+var _pdf_presentation_mode = __webpack_require__(20);
 
-var _pdf_scripting_manager = __webpack_require__(22);
+var _pdf_scripting_manager = __webpack_require__(21);
 
-var _pdf_sidebar = __webpack_require__(23);
+var _pdf_sidebar = __webpack_require__(22);
 
-var _pdf_sidebar_resizer = __webpack_require__(24);
+var _pdf_sidebar_resizer = __webpack_require__(23);
 
-var _pdf_thumbnail_viewer = __webpack_require__(25);
+var _pdf_thumbnail_viewer = __webpack_require__(24);
 
-var _pdf_viewer = __webpack_require__(27);
+var _pdf_viewer = __webpack_require__(26);
 
-var _secondary_toolbar = __webpack_require__(35);
+var _secondary_toolbar = __webpack_require__(34);
 
-var _toolbar = __webpack_require__(37);
+var _toolbar = __webpack_require__(36);
 
-var _viewer_compatibility = __webpack_require__(2);
-
-var _view_history = __webpack_require__(38);
+var _view_history = __webpack_require__(37);
 
 const DEFAULT_SCALE_DELTA = 1.1;
 const DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT = 5000;
@@ -2930,7 +2913,7 @@ const PDFPrintServiceFactory = {
 exports.PDFPrintServiceFactory = PDFPrintServiceFactory;
 
 /***/ }),
-/* 4 */
+/* 3 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -3702,7 +3685,7 @@ function apiPageModeToSidebarView(mode) {
 }
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ ((module) => {
 
 
@@ -3718,7 +3701,7 @@ if (typeof window !== "undefined" && window["pdfjs-dist/build/pdf"]) {
 module.exports = pdfjsLib;
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -3728,9 +3711,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFCursorTools = exports.CursorTool = void 0;
 
-var _grab_to_pan = __webpack_require__(7);
+var _grab_to_pan = __webpack_require__(6);
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
 const CursorTool = {
   SELECT: 0,
@@ -3845,7 +3828,7 @@ class PDFCursorTools {
 exports.PDFCursorTools = PDFCursorTools;
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -3985,7 +3968,7 @@ function isLeftMouseReleased(event) {
 }
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -3995,7 +3978,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.RenderingStates = exports.PDFRenderingQueue = void 0;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
 const CLEANUP_TIMEOUT = 30000;
 const RenderingStates = {
@@ -4127,7 +4110,7 @@ class PDFRenderingQueue {
 exports.PDFRenderingQueue = PDFRenderingQueue;
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -4237,7 +4220,7 @@ class OverlayManager {
 exports.OverlayManager = OverlayManager;
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -4247,7 +4230,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PasswordPrompt = void 0;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
 class PasswordPrompt {
   constructor(options, overlayManager, l10n, isViewerEmbedded = false) {
@@ -4308,7 +4291,7 @@ class PasswordPrompt {
 exports.PasswordPrompt = PasswordPrompt;
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -4318,9 +4301,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFAttachmentViewer = void 0;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
-var _base_tree_viewer = __webpack_require__(12);
+var _base_tree_viewer = __webpack_require__(11);
 
 class PDFAttachmentViewer extends _base_tree_viewer.BaseTreeViewer {
   constructor(options) {
@@ -4463,7 +4446,7 @@ class PDFAttachmentViewer extends _base_tree_viewer.BaseTreeViewer {
 exports.PDFAttachmentViewer = PDFAttachmentViewer;
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -4473,7 +4456,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.BaseTreeViewer = void 0;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
 const TREEITEM_OFFSET_TOP = -100;
 const TREEITEM_SELECTED_CLASS = "selected";
@@ -4597,7 +4580,7 @@ class BaseTreeViewer {
 exports.BaseTreeViewer = BaseTreeViewer;
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -4607,9 +4590,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFDocumentProperties = void 0;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
 const DEFAULT_FIELD_CONTENT = "-";
 const NON_METRIC_LOCALES = ["en-us", "en-lr", "my"];
@@ -4869,7 +4852,7 @@ class PDFDocumentProperties {
 exports.PDFDocumentProperties = PDFDocumentProperties;
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -4879,7 +4862,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFFindBar = void 0;
 
-var _pdf_find_controller = __webpack_require__(15);
+var _pdf_find_controller = __webpack_require__(14);
 
 const MATCHES_COUNT_LIMIT = 1000;
 
@@ -5072,7 +5055,7 @@ class PDFFindBar {
 exports.PDFFindBar = PDFFindBar;
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -5082,11 +5065,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFFindController = exports.FindState = void 0;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
-var _pdf_find_utils = __webpack_require__(16);
+var _pdf_find_utils = __webpack_require__(15);
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
 const FindState = {
   FOUND: 0,
@@ -5801,7 +5784,7 @@ class PDFFindController {
 exports.PDFFindController = PDFFindController;
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -5896,7 +5879,7 @@ function getCharacterType(charCode) {
 }
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -5908,7 +5891,7 @@ exports.isDestArraysEqual = isDestArraysEqual;
 exports.isDestHashesEqual = isDestHashesEqual;
 exports.PDFHistory = void 0;
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
 const HASH_CHANGE_TIMEOUT = 1000;
 const POSITION_UPDATED_THRESHOLD = 50;
@@ -6510,7 +6493,7 @@ function isDestArraysEqual(firstDest, secondDest) {
 }
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -6520,7 +6503,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFLayerViewer = void 0;
 
-var _base_tree_viewer = __webpack_require__(12);
+var _base_tree_viewer = __webpack_require__(11);
 
 class PDFLayerViewer extends _base_tree_viewer.BaseTreeViewer {
   constructor(options) {
@@ -6694,7 +6677,7 @@ class PDFLayerViewer extends _base_tree_viewer.BaseTreeViewer {
 exports.PDFLayerViewer = PDFLayerViewer;
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -6704,7 +6687,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.SimpleLinkService = exports.PDFLinkService = void 0;
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
 class PDFLinkService {
   constructor({
@@ -7156,7 +7139,7 @@ class SimpleLinkService {
 exports.SimpleLinkService = SimpleLinkService;
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -7166,11 +7149,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFOutlineViewer = void 0;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
-var _base_tree_viewer = __webpack_require__(12);
+var _base_tree_viewer = __webpack_require__(11);
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
 class PDFOutlineViewer extends _base_tree_viewer.BaseTreeViewer {
   constructor(options) {
@@ -7496,7 +7479,7 @@ class PDFOutlineViewer extends _base_tree_viewer.BaseTreeViewer {
 exports.PDFOutlineViewer = PDFOutlineViewer;
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -7506,7 +7489,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFPresentationMode = void 0;
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
 const DELAY_BEFORE_RESETTING_SWITCH_IN_PROGRESS = 1500;
 const DELAY_BEFORE_HIDING_CONTROLS = 3000;
@@ -7847,7 +7830,7 @@ class PDFPresentationMode {
 exports.PDFPresentationMode = PDFPresentationMode;
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -7857,11 +7840,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFScriptingManager = void 0;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
-var _pdf_rendering_queue = __webpack_require__(8);
+var _pdf_rendering_queue = __webpack_require__(7);
 
 class PDFScriptingManager {
   constructor({
@@ -8295,7 +8278,7 @@ class PDFScriptingManager {
 exports.PDFScriptingManager = PDFScriptingManager;
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -8305,9 +8288,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFSidebar = void 0;
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
-var _pdf_rendering_queue = __webpack_require__(8);
+var _pdf_rendering_queue = __webpack_require__(7);
 
 const UI_NOTIFICATION_CLASS = "pdfSidebarNotification";
 
@@ -8655,7 +8638,7 @@ class PDFSidebar {
 exports.PDFSidebar = PDFSidebar;
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -8786,7 +8769,7 @@ class PDFSidebarResizer {
 exports.PDFSidebarResizer = PDFSidebarResizer;
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -8796,11 +8779,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFThumbnailViewer = void 0;
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
-var _pdf_thumbnail_view = __webpack_require__(26);
+var _pdf_thumbnail_view = __webpack_require__(25);
 
-var _pdf_rendering_queue = __webpack_require__(8);
+var _pdf_rendering_queue = __webpack_require__(7);
 
 const THUMBNAIL_SCROLL_MARGIN = -19;
 const THUMBNAIL_SELECTED_CLASS = "selected";
@@ -9066,7 +9049,7 @@ class PDFThumbnailViewer {
 exports.PDFThumbnailViewer = PDFThumbnailViewer;
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -9076,11 +9059,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.TempImageFactory = exports.PDFThumbnailView = void 0;
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
-var _pdf_rendering_queue = __webpack_require__(8);
+var _pdf_rendering_queue = __webpack_require__(7);
 
 const DRAW_UPSCALE_FACTOR = 2;
 const MAX_NUM_SCALING_STEPS = 3;
@@ -9469,7 +9452,7 @@ class PDFThumbnailView {
 exports.PDFThumbnailView = PDFThumbnailView;
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -9479,11 +9462,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFViewer = void 0;
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
-var _base_viewer = __webpack_require__(28);
+var _base_viewer = __webpack_require__(27);
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
 class PDFViewer extends _base_viewer.BaseViewer {
   get _viewerElement() {
@@ -9557,7 +9540,7 @@ class PDFViewer extends _base_viewer.BaseViewer {
 exports.PDFViewer = PDFViewer;
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -9567,25 +9550,25 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.BaseViewer = void 0;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
-var _pdf_rendering_queue = __webpack_require__(8);
+var _pdf_rendering_queue = __webpack_require__(7);
 
-var _annotation_layer_builder = __webpack_require__(29);
+var _annotation_layer_builder = __webpack_require__(28);
 
-var _l10n_utils = __webpack_require__(30);
+var _l10n_utils = __webpack_require__(29);
 
-var _pdf_page_view = __webpack_require__(31);
+var _pdf_page_view = __webpack_require__(30);
 
-var _pdf_link_service = __webpack_require__(19);
+var _pdf_link_service = __webpack_require__(18);
 
-var _struct_tree_layer_builder = __webpack_require__(32);
+var _struct_tree_layer_builder = __webpack_require__(31);
 
-var _text_layer_builder = __webpack_require__(33);
+var _text_layer_builder = __webpack_require__(32);
 
-var _xfa_layer_builder = __webpack_require__(34);
+var _xfa_layer_builder = __webpack_require__(33);
 
 const DEFAULT_CACHE_SIZE = 10;
 
@@ -9649,7 +9632,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.11.5';
+    const viewerVersion = '2.11.22';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -10980,7 +10963,7 @@ class BaseViewer {
 exports.BaseViewer = BaseViewer;
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -10990,11 +10973,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.DefaultAnnotationLayerFactory = exports.AnnotationLayerBuilder = void 0;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
-var _l10n_utils = __webpack_require__(30);
+var _l10n_utils = __webpack_require__(29);
 
-var _pdf_link_service = __webpack_require__(19);
+var _pdf_link_service = __webpack_require__(18);
 
 class AnnotationLayerBuilder {
   constructor({
@@ -11106,7 +11089,7 @@ class DefaultAnnotationLayerFactory {
 exports.DefaultAnnotationLayerFactory = DefaultAnnotationLayerFactory;
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -11234,7 +11217,7 @@ const NullL10n = {
 exports.NullL10n = NullL10n;
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -11244,17 +11227,17 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFPageView = void 0;
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
-var _l10n_utils = __webpack_require__(30);
+var _app_options = __webpack_require__(1);
 
-var _pdf_rendering_queue = __webpack_require__(8);
+var _l10n_utils = __webpack_require__(29);
 
-var _viewer_compatibility = __webpack_require__(2);
+var _pdf_rendering_queue = __webpack_require__(7);
 
-const MAX_CANVAS_PIXELS = _viewer_compatibility.viewerCompatibilityParams.maxCanvasPixels || 16777216;
+const MAX_CANVAS_PIXELS = _app_options.compatibilityParams.maxCanvasPixels || 16777216;
 
 class PDFPageView {
   constructor(options) {
@@ -11945,7 +11928,7 @@ class PDFPageView {
 exports.PDFPageView = PDFPageView;
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -12071,7 +12054,7 @@ class DefaultStructTreeLayerFactory {
 exports.DefaultStructTreeLayerFactory = DefaultStructTreeLayerFactory;
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -12081,7 +12064,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.TextLayerBuilder = exports.DefaultTextLayerFactory = void 0;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
 const EXPAND_DIVS_TIMEOUT = 300;
 
@@ -12428,7 +12411,7 @@ class DefaultTextLayerFactory {
 exports.DefaultTextLayerFactory = DefaultTextLayerFactory;
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -12438,7 +12421,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XfaLayerBuilder = exports.DefaultXfaLayerFactory = void 0;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
 class XfaLayerBuilder {
   constructor({
@@ -12537,7 +12520,7 @@ class DefaultXfaLayerFactory {
 exports.DefaultXfaLayerFactory = DefaultXfaLayerFactory;
 
 /***/ }),
-/* 35 */
+/* 34 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -12547,11 +12530,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.SecondaryToolbar = void 0;
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
-var _pdf_cursor_tools = __webpack_require__(6);
+var _pdf_cursor_tools = __webpack_require__(5);
 
-var _pdf_single_page_viewer = __webpack_require__(36);
+var _pdf_single_page_viewer = __webpack_require__(35);
 
 class SecondaryToolbar {
   constructor(options, mainContainer, eventBus) {
@@ -12856,7 +12839,7 @@ class SecondaryToolbar {
 exports.SecondaryToolbar = SecondaryToolbar;
 
 /***/ }),
-/* 36 */
+/* 35 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -12866,9 +12849,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFSinglePageViewer = void 0;
 
-var _base_viewer = __webpack_require__(28);
+var _base_viewer = __webpack_require__(27);
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
 class PDFSinglePageViewer extends _base_viewer.BaseViewer {
   constructor(options) {
@@ -12985,7 +12968,7 @@ class PDFSinglePageViewer extends _base_viewer.BaseViewer {
 exports.PDFSinglePageViewer = PDFSinglePageViewer;
 
 /***/ }),
-/* 37 */
+/* 36 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -12995,7 +12978,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.Toolbar = void 0;
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
 const PAGE_NUMBER_LOADING_INDICATOR = "visiblePageIsLoading";
 const SCALE_SELECT_CONTAINER_WIDTH = 140;
@@ -13260,7 +13243,7 @@ class Toolbar {
 exports.Toolbar = Toolbar;
 
 /***/ }),
-/* 38 */
+/* 37 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -13355,7 +13338,7 @@ class ViewHistory {
 exports.ViewHistory = ViewHistory;
 
 /***/ }),
-/* 39 */
+/* 38 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -13365,17 +13348,17 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.FirefoxCom = exports.DownloadManager = void 0;
 
-__webpack_require__(40);
+__webpack_require__(39);
 
-var _app = __webpack_require__(3);
+var _app = __webpack_require__(2);
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
-var _preferences = __webpack_require__(41);
+var _preferences = __webpack_require__(40);
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
-var _l10n_utils = __webpack_require__(30);
+var _l10n_utils = __webpack_require__(29);
 
 ;
 
@@ -13779,7 +13762,7 @@ document.mozL10n.setExternalLocalizerServices({
 });
 
 /***/ }),
-/* 40 */
+/* 39 */
 /***/ (() => {
 
 
@@ -13901,7 +13884,7 @@ document.mozL10n.setExternalLocalizerServices({
 })(void 0);
 
 /***/ }),
-/* 41 */
+/* 40 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -14033,7 +14016,7 @@ class BasePreferences {
 exports.BasePreferences = BasePreferences;
 
 /***/ }),
-/* 42 */
+/* 41 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -14043,11 +14026,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.FirefoxPrintService = FirefoxPrintService;
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
-var _print_utils = __webpack_require__(43);
+var _print_utils = __webpack_require__(42);
 
-var _app = __webpack_require__(3);
+var _app = __webpack_require__(2);
 
 function composePage(pdfDocument, pageNumber, size, printContainer, printResolution, optionalContentConfigPromise) {
   const canvas = document.createElement("canvas");
@@ -14162,7 +14145,7 @@ _app.PDFPrintServiceFactory.instance = {
 };
 
 /***/ }),
-/* 43 */
+/* 42 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -14172,11 +14155,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.getXfaHtmlForPrinting = getXfaHtmlForPrinting;
 
-var _ui_utils = __webpack_require__(4);
+var _ui_utils = __webpack_require__(3);
 
-var _xfa_layer_builder = __webpack_require__(34);
+var _xfa_layer_builder = __webpack_require__(33);
 
-var _pdfjsLib = __webpack_require__(5);
+var _pdfjsLib = __webpack_require__(4);
 
 function getXfaHtmlForPrinting(printContainer, pdfDocument) {
   const xfaHtml = pdfDocument.allXfaHtml;
@@ -14247,17 +14230,17 @@ Object.defineProperty(exports, "PDFViewerApplication", ({
 
 var _app_options = __webpack_require__(1);
 
-var _app = __webpack_require__(3);
+var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.11.5';
-const pdfjsBuild = '777d89026';
+const pdfjsVersion = '2.11.22';
+const pdfjsBuild = '4ad5c5d52';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
 {
-  __webpack_require__(39);
+  __webpack_require__(38);
 
-  __webpack_require__(42);
+  __webpack_require__(41);
 }
 ;
 ;
