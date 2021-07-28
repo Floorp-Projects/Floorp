@@ -41,9 +41,7 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
   info("Check maxTouchPoints override persists after reload");
   await toggleTouchSimulation(ui);
 
-  let onPageReloaded = BrowserTestUtils.browserLoaded(browser, true);
-  browser.reload();
-  await onPageReloaded;
+  await reloadViewport(ui);
 
   is(
     await getMaxTouchPoints(browser),
@@ -55,8 +53,10 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
     "Check that maxTouchPoints persist after navigating to a page that forces the creation of a new browsing context"
   );
   const previousBrowsingContextId = browser.browsingContext.id;
-  onPageReloaded = BrowserTestUtils.browserLoaded(browser, true, loadedUrl =>
-    loadedUrl.includes(URL_ROOT_ORG_SSL)
+  let onPageReloaded = BrowserTestUtils.browserLoaded(
+    browser,
+    true,
+    loadedUrl => loadedUrl.includes(URL_ROOT_ORG_SSL)
   );
 
   // `closeRDM`, which is used later, check that the responsiveFront isn't destroyed

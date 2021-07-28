@@ -74,9 +74,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
     await setViewportSizeAndAwaitReflow(ui, manager, 600, 300);
 
     // Reload the window.
-    const reload = waitForViewportLoad(ui);
-    browser.reload();
-    await reload;
+    await reloadViewport(ui);
 
     // Go back to the initial size and take another snapshot.
     await setViewportSizeAndAwaitReflow(ui, manager, 300, 600);
