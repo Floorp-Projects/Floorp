@@ -155,24 +155,12 @@ def RelativePath(path, relative_to, follow_path_symlink=True):
         os.path.splitdrive(relative_to)[0].lower()):
       return path
 
-  # Split the paths into components.
-  path_split = path.split(os.path.sep)
-  relative_to_split = relative_to.split(os.path.sep)
-
-  # Determine how much of the prefix the two paths share.
-  prefix_len = len(os.path.commonprefix([path_split, relative_to_split]))
-
-  # Put enough ".." components to back up out of relative_to to the common
-  # prefix, and then append the part of path_split after the common prefix.
-  relative_split = [os.path.pardir] * (len(relative_to_split) - prefix_len) + \
-                   path_split[prefix_len:]
-
-  if len(relative_split) == 0:
+  relative = os.path.relpath(path, relative_to)
+  if relative == os.path.curdir:
     # The paths were the same.
     return ''
 
-  # Turn it back into a string and we're done.
-  return os.path.join(*relative_split)
+  return relative
 
 
 @memoize
