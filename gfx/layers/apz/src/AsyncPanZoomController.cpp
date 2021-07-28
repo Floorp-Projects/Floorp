@@ -5971,6 +5971,7 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
 }
 
 void AsyncPanZoomController::SetTestAsyncScrollOffset(const CSSPoint& aPoint) {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   mTestAsyncScrollOffset = aPoint;
   ScheduleComposite();
 }
