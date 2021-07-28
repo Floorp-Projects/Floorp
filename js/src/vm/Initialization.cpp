@@ -131,9 +131,7 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
 
   libraryInitState = InitState::Initializing;
 
-#ifndef NO_RUST_PANIC_HOOK
   install_rust_panic_hook();
-#endif
 
   PRMJ_NowInit();
 
