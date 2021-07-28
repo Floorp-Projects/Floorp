@@ -236,7 +236,7 @@ endif
 endif
 
 ifndef RUSTC_BOOTSTRAP
-RUSTC_BOOTSTRAP := gkrust_shared,qcms
+RUSTC_BOOTSTRAP := mozglue_static,qcms
 ifdef MOZ_RUST_SIMD
 RUSTC_BOOTSTRAP := $(RUSTC_BOOTSTRAP),encoding_rs,packed_simd
 endif

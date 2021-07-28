@@ -239,7 +239,6 @@
 #  include "mozilla/CodeCoverageHandler.h"
 #endif
 
-#include "mozilla/mozalloc_oom.h"
 #include "SafeMode.h"
 
 #ifdef MOZ_BACKGROUNDTASKS
@@ -5689,11 +5688,7 @@ mozilla::BinPathType XRE_GetChildProcBinPathType(
   }
 }
 
-// Because rust doesn't handle weak symbols, this function wraps the weak
-// malloc_handle_oom for it.
-extern "C" void GeckoHandleOOM(size_t size) { mozalloc_handle_oom(size); }
-
-// From toolkit/library/rust/shared/lib.rs
+// From mozglue/static/rust/lib.rs
 extern "C" void install_rust_panic_hook();
 extern "C" void install_rust_oom_hook();
 
