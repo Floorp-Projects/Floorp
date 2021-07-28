@@ -1,6 +1,7 @@
 # cubeb-coreaudio-rs
 
-[![Build Status](https://travis-ci.com/ChunMinChang/cubeb-coreaudio-rs.svg?branch=trailblazer)](https://travis-ci.com/ChunMinChang/cubeb-coreaudio-rs)
+[![CircleCI](https://circleci.com/gh/mozilla/cubeb-coreaudio-rs.svg?style=svg)](https://circleci.com/gh/mozilla/cubeb-coreaudio-rs)
+[![Build & Test](https://github.com/mozilla/cubeb-coreaudio-rs/actions/workflows/test.yml/badge.svg)](https://github.com/mozilla/cubeb-coreaudio-rs/actions/workflows/test.yml)
 
 *Rust* implementation of [Cubeb][cubeb] on [the MacOS platform][cubeb-au].
 

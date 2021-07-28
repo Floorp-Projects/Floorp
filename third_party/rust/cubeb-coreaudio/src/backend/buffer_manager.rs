@@ -139,7 +139,7 @@ impl BufferManager {
                 let available = c.len();
                 assert!(available >= final_size);
                 let to_pop = available - final_size;
-                let mut buffer = [0 as i16; INPUT_BUFFER_CAPACITY];
+                let mut buffer = [0_i16; INPUT_BUFFER_CAPACITY];
                 let mut slice_to_pop = buffer.split_at_mut(to_pop);
                 c.pop_slice(&mut slice_to_pop.0);
             }

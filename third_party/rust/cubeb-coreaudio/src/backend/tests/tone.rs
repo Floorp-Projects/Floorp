@@ -28,7 +28,7 @@ fn test_dial_tone() {
     struct Closure {
         buffer_size: AtomicI64,
         phase: i64,
-    };
+    }
     let mut closure = Closure {
         buffer_size: AtomicI64::new(0),
         phase: 0,
@@ -55,7 +55,7 @@ fn test_dial_tone() {
                 Paused,
                 Resumed,
                 End,
-            };
+            }
             let mut state = State::WaitingForStart;
             let mut position: u64 = 0;
             let mut prev_position: u64 = 0;
