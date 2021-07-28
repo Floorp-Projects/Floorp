@@ -1,11 +1,10 @@
 use crate::capabilities::AndroidOptions;
-use mozdevice::{AndroidStorage, Device, Host};
+use mozdevice::{AndroidStorage, Device, Host, UnixPathBuf};
 use mozprofile::profile::Profile;
 use serde::Serialize;
 use serde_yaml::{Mapping, Value};
 use std::fmt;
 use std::io;
-use std::path::PathBuf;
 use std::time;
 use webdriver::error::{ErrorStatus, WebDriverError};
 
@@ -97,11 +96,11 @@ impl AndroidProcess {
 
 #[derive(Debug)]
 pub struct AndroidHandler {
-    pub config: PathBuf,
+    pub config: UnixPathBuf,
     pub options: AndroidOptions,
     pub process: AndroidProcess,
-    pub profile: PathBuf,
-    pub test_root: PathBuf,
+    pub profile: UnixPathBuf,
+    pub test_root: UnixPathBuf,
 
     // For port forwarding host => target
     pub host_port: u16,
@@ -170,19 +169,19 @@ impl AndroidHandler {
         let test_root = match device.storage {
             AndroidStorage::App => {
                 device.run_as_package = Some(options.package.to_owned());
-                let mut buf = PathBuf::from("/data/data");
+                let mut buf = UnixPathBuf::from("/data/data");
                 buf.push(&options.package);
                 buf.push("test_root");
                 buf
             }
-            AndroidStorage::Internal => PathBuf::from("/data/local/tmp/test_root"),
+            AndroidStorage::Internal => UnixPathBuf::from("/data/local/tmp/test_root"),
             AndroidStorage::Sdcard => {
                 // We need to push the profile to a location on the device that can also
                 // be read and write by the application, and works for unrooted devices.
                 // The only location that meets this criteria is under:
                 //     $EXTERNAL_STORAGE/Android/data/%options.package%/files
                 let response = device.execute_host_shell_command("echo $EXTERNAL_STORAGE")?;
-                let mut buf = PathBuf::from(response.trim_end_matches('\n'));
+                let mut buf = UnixPathBuf::from(response.trim_end_matches('\n'));
                 buf.push("Android/data");
                 buf.push(&options.package);
                 buf.push("files/test_root");
@@ -213,7 +212,7 @@ impl AndroidHandler {
             return Err(AndroidError::PackageNotFound(options.package.clone()));
         }
 
-        let config = PathBuf::from(format!(
+        let config = UnixPathBuf::from(format!(
             "/data/local/tmp/{}-geckoview-config.yaml",
             &options.package
         ));
@@ -413,8 +412,7 @@ mod test {
 
     use crate::android::AndroidHandler;
     use crate::capabilities::AndroidOptions;
-    use mozdevice::{AndroidStorage, AndroidStorageInput};
-    use std::path::PathBuf;
+    use mozdevice::{AndroidStorage, AndroidStorageInput, UnixPathBuf};
 
     fn run_handler_storage_test(package: &str, storage: AndroidStorageInput) {
         let options = AndroidOptions::new(package.to_owned(), storage);
@@ -423,7 +421,7 @@ mod test {
         assert_eq!(handler.options, options);
         assert_eq!(handler.process.package, package);
 
-        let expected_config_path = PathBuf::from(format!(
+        let expected_config_path = UnixPathBuf::from(format!(
             "/data/local/tmp/{}-geckoview-config.yaml",
             &package
         ));
@@ -440,12 +438,12 @@ mod test {
 
         let test_root = match handler.process.device.storage {
             AndroidStorage::App => {
-                let mut buf = PathBuf::from("/data/data");
+                let mut buf = UnixPathBuf::from("/data/data");
                 buf.push(&package);
                 buf.push("test_root");
                 buf
             }
-            AndroidStorage::Internal => PathBuf::from("/data/local/tmp/test_root"),
+            AndroidStorage::Internal => UnixPathBuf::from("/data/local/tmp/test_root"),
             AndroidStorage::Sdcard => {
                 let response = handler
                     .process
@@ -453,7 +451,7 @@ mod test {
                     .execute_host_shell_command("echo $EXTERNAL_STORAGE")
                     .unwrap();
 
-                let mut buf = PathBuf::from(response.trim_end_matches('\n'));
+                let mut buf = UnixPathBuf::from(response.trim_end_matches('\n'));
                 buf.push("Android/data/");
                 buf.push(&package);
                 buf.push("files/test_root");
