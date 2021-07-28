@@ -2529,13 +2529,8 @@ bool BytecodeEmitter::emitDeclarationInstantiation(ParseNode* body) {
 #endif
 
   // Check for declaration conflicts and initialize the bindings.
-  // NOTE: The self-hosting top-level script should not populate the builtins
-  //       directly on the GlobalObject (and instead uses JSOp::GetIntrinsic for
-  //       lookups).
-  if (emitterMode == BytecodeEmitter::EmitterMode::Normal) {
-    if (!emitGCIndexOp(JSOp::GlobalOrEvalDeclInstantiation, lastFun)) {
-      return false;
-    }
+  if (!emitGCIndexOp(JSOp::GlobalOrEvalDeclInstantiation, lastFun)) {
+    return false;
   }
 
   return true;

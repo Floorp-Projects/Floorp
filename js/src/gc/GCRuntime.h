@@ -290,6 +290,9 @@ class GCRuntime {
 
   JS::HeapState heapState() const { return heapState_; }
 
+  void freezeSelfHostingZone();
+  bool isSelfHostingZoneFrozen() const { return selfHostingZoneFrozen; }
+
   inline bool hasZealMode(ZealMode mode);
   inline void clearZealMode(ZealMode mode);
   inline bool upcomingZealousGC();
@@ -956,6 +959,12 @@ class GCRuntime {
   MainThreadData<bool> perZoneGCEnabled;
 
   mozilla::Atomic<size_t, mozilla::ReleaseAcquire> numActiveZoneIters;
+
+  /*
+   * The self hosting zone is collected once after initialization. We don't
+   * allow allocation after this point and we don't collect it again.
+   */
+  WriteOnceData<bool> selfHostingZoneFrozen;
 
   /* During shutdown, the GC needs to clean up every possible object. */
   MainThreadData<bool> cleanUpEverything;

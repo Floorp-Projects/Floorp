@@ -169,7 +169,8 @@ static inline bool IsThingPoisoned(T* thing) {
 template <typename T>
 static inline bool IsOwnedByOtherRuntime(JSRuntime* rt, T thing) {
   bool other = thing->runtimeFromAnyThread() != rt;
-  MOZ_ASSERT_IF(other, thing->isPermanentAndMayBeShared());
+  MOZ_ASSERT_IF(other, thing->isPermanentAndMayBeShared() ||
+                           thing->zoneFromAnyThread()->isSelfHostingZone());
   return other;
 }
 

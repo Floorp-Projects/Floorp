@@ -726,6 +726,15 @@ inline JSFunction* NewNativeConstructor(
                               allocKind, newKind);
 }
 
+// Allocate a new scripted function.  If enclosingEnv is null, the
+// global lexical environment will be used.  In all cases the terminating
+// environment of the resulting object will be the global.
+extern JSFunction* NewScriptedFunction(
+    JSContext* cx, unsigned nargs, FunctionFlags flags, HandleAtom atom,
+    HandleObject proto = nullptr,
+    gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
+    NewObjectKind newKind = GenericObject, HandleObject enclosingEnv = nullptr);
+
 // Determine which [[Prototype]] to use when creating a new function using the
 // requested generator and async kind.
 //
@@ -817,7 +826,14 @@ extern JSFunction* CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
                                             gc::AllocKind kind,
                                             HandleObject proto);
 
+extern JSFunction* CloneFunctionAndScript(
+    JSContext* cx, HandleFunction fun, HandleObject enclosingEnv,
+    HandleScope newScope, Handle<ScriptSourceObject*> sourceObject,
+    gc::AllocKind kind, HandleObject proto = nullptr);
+
 extern JSFunction* CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun);
+
+extern JSFunction* CloneSelfHostingIntrinsic(JSContext* cx, HandleFunction fun);
 
 }  // namespace js
 

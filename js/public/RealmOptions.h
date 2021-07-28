@@ -48,6 +48,9 @@ enum class CompartmentSpecifier {
 
   // Create a new realm in an existing compartment.
   ExistingCompartment,
+
+  // Internal use only. Create the self-hosting compartment.
+  NewCompartmentInSelfHostingZone,
 };
 
 /**
@@ -95,6 +98,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   RealmCreationOptions& setNewCompartmentAndZone();
   RealmCreationOptions& setExistingCompartment(JSObject* obj);
   RealmCreationOptions& setExistingCompartment(Compartment* compartment);
+  RealmCreationOptions& setNewCompartmentInSelfHostingZone();
 
   // Certain compartments are implementation details of the embedding, and
   // references to them should never leak out to script. This flag causes this
