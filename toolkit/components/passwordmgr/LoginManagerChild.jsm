@@ -3087,13 +3087,8 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       candidate = element;
     }
 
-    // Check whether the input field looks like a username field or the
-    // form looks like a sign-in or sign-up form.
-    if (
-      candidate &&
-      (this.isProbablyAUsernameField(candidate) ||
-        this.isProbablyALoginForm(formElement))
-    ) {
+    if (candidate &&
+        this.isProbablyAUsernameLoginForm(formElement, candidate)) {
       return candidate;
     }
 
@@ -3139,17 +3134,39 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   }
 
   /**
-   * Returns true if the form is considered a login form by
-   * 'LoginHelper.isInferredLoginForm'.
+   * Returns true if the form is considered a username login form if
+   * 1. The input element looks like a username field or the form looks
+   *    like a login form
+   * 2. The input field doesn't match keywords that indicate the username
+   *    is not used for login (ex, search) or the login form is not use
+   *    a username to sign-in (ex, authentication code)
    *
    * @param {Element} element the form to check.
    * @returns {boolean} True if the element is likely a login form
    */
-  isProbablyALoginForm(formElement) {
+  isProbablyAUsernameLoginForm(formElement, inputElement) {
     let docState = this.stateForDocument(formElement.ownerDocument);
     let result = docState.cachedIsInferredLoginForm.get(formElement);
     if (result === undefined) {
-      result = LoginHelper.isInferredLoginForm(formElement);
+      // We should revisit these rules after we collect more positive or negative
+      // cases for username-only forms. Right now, if-else-based rules are good
+      // enough to cover the sites we know, but if we find out defining "weight" for each
+      // rule is necessary to improve the heuristic, we should consider switching
+      // this with Fathom.
+
+      result = false;
+      // Check whether the input field looks like a username field or the
+      // form looks like a sign-in or sign-up form.
+      if (
+        this.isProbablyAUsernameField(inputElement) ||
+        LoginHelper.isInferredLoginForm(formElement)
+      ) {
+        // This is where we collect hints that indicate this is not a username
+        // login form.
+        if (!LoginHelper.isInferredNonUsernameField(inputElement)) {
+          result = true;
+        }
+      }
       docState.cachedIsInferredLoginForm.set(formElement, result);
     }
 
