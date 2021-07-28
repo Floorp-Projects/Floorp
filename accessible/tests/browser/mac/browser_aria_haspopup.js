@@ -91,11 +91,13 @@ addAccessibleTask(
       "Correct AXHasPopup val for button with menu"
     );
 
+    attrChanged = waitForEvent(EVENT_STATE_CHANGE, "menu");
     await SpecialPowers.spawn(browser, [], () => {
       content.document
         .getElementById("menu")
         .setAttribute("aria-haspopup", "true");
     });
+    await attrChanged;
 
     is(
       menuID.getAttributeValue("AXPopupValue"),
@@ -138,11 +140,13 @@ addAccessibleTask(
       "Correct AXHasPopup for button with listbox"
     );
 
+    attrChanged = waitForEvent(EVENT_STATE_CHANGE, "listbox");
     await SpecialPowers.spawn(browser, [], () => {
       content.document
         .getElementById("listbox")
         .setAttribute("aria-haspopup", "true");
     });
+    await attrChanged;
 
     is(
       listboxID.getAttributeValue("AXPopupValue"),
@@ -187,11 +191,13 @@ addAccessibleTask(
       "Correct AXHasPopup for button with tree"
     );
 
+    attrChanged = waitForEvent(EVENT_STATE_CHANGE, "tree");
     await SpecialPowers.spawn(browser, [], () => {
       content.document
         .getElementById("tree")
         .setAttribute("aria-haspopup", "true");
     });
+    await attrChanged;
 
     is(
       treeID.getAttributeValue("AXPopupValue"),
@@ -234,11 +240,13 @@ addAccessibleTask(
       "Correct AXHasPopup for button with grid"
     );
 
+    attrChanged = waitForEvent(EVENT_STATE_CHANGE, "grid");
     await SpecialPowers.spawn(browser, [], () => {
       content.document
         .getElementById("grid")
         .setAttribute("aria-haspopup", "true");
     });
+    await attrChanged;
 
     is(
       gridID.getAttributeValue("AXPopupValue"),
@@ -281,11 +289,13 @@ addAccessibleTask(
       "Correct AXHasPopup for button with dialog"
     );
 
+    attrChanged = waitForEvent(EVENT_STATE_CHANGE, "dialog");
     await SpecialPowers.spawn(browser, [], () => {
       content.document
         .getElementById("dialog")
         .setAttribute("aria-haspopup", "true");
     });
+    await attrChanged;
 
     is(
       dialogID.getAttributeValue("AXPopupValue"),
