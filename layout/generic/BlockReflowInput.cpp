@@ -44,6 +44,7 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
               .ComputedLogicalBorderPadding(mReflowInput.GetWritingMode())
               .ApplySkipSides(aFrame->PreReflowBlockLevelLogicalSkipSides())),
       mPrevBEndMargin(),
+      mMinLineHeight(aReflowInput.GetLineHeight()),
       mLineNumber(0),
       mFloatBreakType(StyleClear::None),
       mConsumedBSize(aConsumedBSize) {
@@ -133,8 +134,6 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
 
   mPrevChild = nullptr;
   mCurrentLine = aFrame->LinesEnd();
-
-  mMinLineHeight = aReflowInput.CalcLineHeight();
 }
 
 void BlockReflowInput::ComputeReplacedBlockOffsetsForFloats(

@@ -996,7 +996,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
   // default line-height 1140/2 = 570 app units as the minimum value. Otherwise
   // we might take more than necessary iterations before finding a feasible
   // block-size.
-  nscoord extraBlockSize = std::max(570, aReflowInput.CalcLineHeight() / 2);
+  nscoord extraBlockSize = std::max(570, aReflowInput.GetLineHeight() / 2);
 
   // We use divide-by-N to estimate the optimal column block-size only if the
   // last column's available block-size is unbounded.
