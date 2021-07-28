@@ -69,7 +69,6 @@ class RendererScreenshotGrabber final {
     AsyncScreenshotHandle mHandle;
     gfx::IntSize mScreenshotSize;
     gfx::IntSize mWindowSize;
-    uintptr_t mWindowIdentifier;
   };
 
   /**
