@@ -409,9 +409,8 @@ nsDOMWindowUtils::UpdateLayerTree() {
     RefPtr<nsViewManager> vm = presShell->GetViewManager();
     if (nsView* view = vm->GetRootView()) {
       nsAutoScriptBlocker scriptBlocker;
-      presShell->Paint(
-          view, view->GetBounds(),
-          PaintFlags::PaintLayers | PaintFlags::PaintSyncDecodeImages);
+      presShell->Paint(view, view->GetBounds(),
+                       PaintFlags::PaintSyncDecodeImages);
       presShell->GetWindowRenderer()->WaitOnTransactionProcessed();
     }
   }

@@ -2732,7 +2732,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
   } else {
     RefPtr<nsViewManager> vm = presShell->GetViewManager();
     if (nsView* view = vm->GetRootView()) {
-      presShell->Paint(view, view->GetBounds(), PaintFlags::PaintLayers);
+      presShell->Paint(view, view->GetBounds(), PaintFlags::None);
     }
   }
   presShell->SuppressDisplayport(false);
