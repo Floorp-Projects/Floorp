@@ -23,7 +23,6 @@ import mozilla.components.browser.state.state.createTab as createStateTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.browser.storage.sync.Tab as SyncTab
-import mozilla.components.concept.tabstray.Tab
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertTrue
@@ -44,17 +43,12 @@ import org.mozilla.fenix.tabstray.browser.createTab as createTrayTab
 class NavigationInteractorTest {
     private lateinit var store: BrowserStore
     private lateinit var tabsTrayStore: TabsTrayStore
-    private lateinit var navigationInteractor: NavigationInteractor
     private val testTab: TabSessionState = createStateTab(url = "https://mozilla.org")
     private val navController: NavController = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
-    private val dismissTabTray: () -> Unit = mockk(relaxed = true)
-    private val dismissTabTrayAndNavigateHome: (String) -> Unit = mockk(relaxed = true)
     private val bookmarksUseCase: BookmarksUseCase = mockk(relaxed = true)
     private val context: Context = mockk(relaxed = true)
     private val collectionStorage: TabCollectionStorage = mockk(relaxed = true)
-    private val showCollectionSnackbar: (Int, Boolean, Long?) -> Unit = mockk(relaxed = true)
-    private val showBookmarkSnackbar: (Int) -> Unit = mockk(relaxed = true)
     private val accountManager: FxaAccountManager = mockk(relaxed = true)
     private val activity: HomeActivity = mockk(relaxed = true)
 
@@ -67,7 +61,128 @@ class NavigationInteractorTest {
     fun setup() {
         store = BrowserStore(initialState = BrowserState(tabs = listOf(testTab)))
         tabsTrayStore = TabsTrayStore()
-        navigationInteractor = DefaultNavigationInteractor(
+    }
+
+    @Test
+    fun `onTabTrayDismissed calls dismissTabTray on DefaultNavigationInteractor`() {
+        var dismissTabTrayInvoked = false
+        createInteractor(dismissTabTray = {
+            dismissTabTrayInvoked = true
+        }).onTabTrayDismissed()
+
+        assertTrue(dismissTabTrayInvoked)
+        verify {
+            metrics.track(Event.TabsTrayClosed)
+        }
+    }
+
+    @Test
+    fun `onAccountSettingsClicked calls navigation on DefaultNavigationInteractor`() {
+        every { accountManager.authenticatedAccount() }.answers { mockk(relaxed = true) }
+
+        createInteractor().onAccountSettingsClicked()
+
+        verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalAccountSettingsFragment()) }
+    }
+
+    @Test
+    fun `onAccountSettingsClicked when not logged in calls navigation to turn on sync`() {
+        every { accountManager.authenticatedAccount() }.answers { null }
+
+        createInteractor().onAccountSettingsClicked()
+
+        verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalTurnOnSync()) }
+    }
+
+    @Test
+    fun `onTabSettingsClicked calls navigation on DefaultNavigationInteractor`() {
+        createInteractor().onTabSettingsClicked()
+        verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalTabSettingsFragment()) }
+    }
+
+    @Test
+    fun `onOpenRecentlyClosedClicked calls navigation on DefaultNavigationInteractor`() {
+        createInteractor().onOpenRecentlyClosedClicked()
+        verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalRecentlyClosed()) }
+    }
+
+    @Test
+    fun `onCloseAllTabsClicked calls navigation on DefaultNavigationInteractor`() {
+        var dismissTabTrayAndNavigateHomeInvoked = false
+        createInteractor(dismissTabTrayAndNavigateHome = {
+            dismissTabTrayAndNavigateHomeInvoked = true
+        }).onCloseAllTabsClicked(false)
+
+        assertTrue(dismissTabTrayAndNavigateHomeInvoked)
+    }
+
+    @Test
+    fun `onShareTabsOfType calls navigation on DefaultNavigationInteractor`() {
+        createInteractor().onShareTabsOfTypeClicked(false)
+        verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
+    }
+
+    @Test
+    fun `onShareTabs calls navigation on DefaultNavigationInteractor`() {
+        createInteractor().onShareTabs(emptyList())
+        verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
+    }
+
+    @Test
+    fun `onSaveToCollections calls navigation on DefaultNavigationInteractor`() {
+        mockkStatic("org.mozilla.fenix.collections.CollectionsDialogKt")
+
+        every { any<CollectionsDialog>().show(any()) } answers { }
+        createInteractor().onSaveToCollections(emptyList())
+        verify(exactly = 1) { metrics.track(Event.TabsTraySaveToCollectionPressed) }
+
+        unmockkStatic("org.mozilla.fenix.collections.CollectionsDialogKt")
+    }
+
+    @Test
+    fun `onBookmarkTabs calls navigation on DefaultNavigationInteractor`() = runBlockingTest {
+        var showBookmarkSnackbarInvoked = false
+        createInteractor(showBookmarkSnackbar = {
+            showBookmarkSnackbarInvoked = true
+        }).onSaveToBookmarks(listOf(createTrayTab()))
+
+        coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any()) }
+        assertTrue(showBookmarkSnackbarInvoked)
+    }
+
+    @Test
+    fun `onSyncedTabsClicked sets metrics and opens browser`() {
+        val tab = mockk<SyncTab>()
+        val entry = mockk<TabEntry>()
+
+        every { tab.active() }.answers { entry }
+        every { entry.url }.answers { "https://mozilla.org" }
+
+        var dismissTabTrayInvoked = false
+        createInteractor(dismissTabTray = {
+            dismissTabTrayInvoked = true
+        }).onSyncedTabClicked(tab)
+
+        assertTrue(dismissTabTrayInvoked)
+        verifyOrder {
+            metrics.track(Event.SyncedTabOpened)
+
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = "https://mozilla.org",
+                newTab = true,
+                from = BrowserDirection.FromTabsTray
+            )
+        }
+    }
+
+    @Suppress("LongParameterList")
+    private fun createInteractor(
+        dismissTabTray: () -> Unit = { },
+        dismissTabTrayAndNavigateHome: (String) -> Unit = { _ -> },
+        showCollectionSnackbar: (Int, Boolean, Long?) -> Unit = { _, _, _ -> },
+        showBookmarkSnackbar: (Int) -> Unit = { _ -> }
+    ): NavigationInteractor {
+        return DefaultNavigationInteractor(
             context,
             activity,
             store,
@@ -83,183 +198,5 @@ class NavigationInteractorTest {
             accountManager,
             testDispatcher
         )
-    }
-
-    @Test
-    fun `navigation interactor calls the overridden functions`() {
-        var tabTrayDismissed = false
-        var accountSettingsClicked = false
-        var tabSettingsClicked = false
-        var openRecentlyClosedClicked = false
-        var shareTabsOfTypeClicked = false
-        var closeAllTabsClicked = false
-        var onShareTabs = false
-        var onSaveToCollections = false
-        var onBookmarkTabs = false
-        var onSyncedTabsClicked = false
-
-        class TestNavigationInteractor : NavigationInteractor {
-
-            override fun onTabTrayDismissed() {
-                tabTrayDismissed = true
-            }
-
-            override fun onShareTabs(tabs: Collection<Tab>) {
-                onShareTabs = true
-            }
-
-            override fun onAccountSettingsClicked() {
-                accountSettingsClicked = true
-            }
-
-            override fun onTabSettingsClicked() {
-                tabSettingsClicked = true
-            }
-
-            override fun onOpenRecentlyClosedClicked() {
-                openRecentlyClosedClicked = true
-            }
-
-            override fun onSaveToCollections(tabs: Collection<Tab>) {
-                onSaveToCollections = true
-            }
-
-            override fun onSaveToBookmarks(tabs: Collection<Tab>) {
-                onBookmarkTabs = true
-            }
-
-            override fun onSyncedTabClicked(tab: mozilla.components.browser.storage.sync.Tab) {
-                onSyncedTabsClicked = true
-            }
-
-            override fun onShareTabsOfTypeClicked(private: Boolean) {
-                shareTabsOfTypeClicked = true
-            }
-
-            override fun onCloseAllTabsClicked(private: Boolean) {
-                closeAllTabsClicked = true
-            }
-        }
-
-        val navigationInteractor: NavigationInteractor = TestNavigationInteractor()
-        navigationInteractor.onTabTrayDismissed()
-        assertTrue(tabTrayDismissed)
-        navigationInteractor.onAccountSettingsClicked()
-        assertTrue(accountSettingsClicked)
-        navigationInteractor.onTabSettingsClicked()
-        assertTrue(tabSettingsClicked)
-        navigationInteractor.onOpenRecentlyClosedClicked()
-        assertTrue(openRecentlyClosedClicked)
-        navigationInteractor.onShareTabsOfTypeClicked(true)
-        assertTrue(shareTabsOfTypeClicked)
-        navigationInteractor.onCloseAllTabsClicked(true)
-        assertTrue(closeAllTabsClicked)
-        navigationInteractor.onShareTabs(emptyList())
-        assertTrue(onShareTabs)
-        navigationInteractor.onSaveToCollections(emptyList())
-        assertTrue(onSaveToCollections)
-        navigationInteractor.onSaveToBookmarks(emptyList())
-        assertTrue(onBookmarkTabs)
-        navigationInteractor.onSyncedTabClicked(mockk())
-        assertTrue(onSyncedTabsClicked)
-    }
-
-    @Test
-    fun `onTabTrayDismissed calls dismissTabTray on DefaultNavigationInteractor`() {
-        navigationInteractor.onTabTrayDismissed()
-
-        // We care about the order here; anything after `dismissTabTray` is not guaranteed.
-        verifyOrder {
-            metrics.track(Event.TabsTrayClosed)
-            dismissTabTray()
-        }
-    }
-
-    @Test
-    fun `onAccountSettingsClicked calls navigation on DefaultNavigationInteractor`() {
-        every { accountManager.authenticatedAccount() }.answers { mockk(relaxed = true) }
-
-        navigationInteractor.onAccountSettingsClicked()
-
-        verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalAccountSettingsFragment()) }
-    }
-
-    @Test
-    fun `onAccountSettingsClicked when not logged in calls navigation to turn on sync`() {
-        every { accountManager.authenticatedAccount() }.answers { null }
-
-        navigationInteractor.onAccountSettingsClicked()
-
-        verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalTurnOnSync()) }
-    }
-
-    @Test
-    fun `onTabSettingsClicked calls navigation on DefaultNavigationInteractor`() {
-        navigationInteractor.onTabSettingsClicked()
-        verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalTabSettingsFragment()) }
-    }
-
-    @Test
-    fun `onOpenRecentlyClosedClicked calls navigation on DefaultNavigationInteractor`() {
-        navigationInteractor.onOpenRecentlyClosedClicked()
-        verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalRecentlyClosed()) }
-    }
-
-    @Test
-    fun `onCloseAllTabsClicked calls navigation on DefaultNavigationInteractor`() {
-        navigationInteractor.onCloseAllTabsClicked(false)
-        verify(exactly = 1) { dismissTabTrayAndNavigateHome(any()) }
-    }
-
-    @Test
-    fun `onShareTabsOfType calls navigation on DefaultNavigationInteractor`() {
-        navigationInteractor.onShareTabsOfTypeClicked(false)
-        verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
-    }
-
-    @Test
-    fun `onShareTabs calls navigation on DefaultNavigationInteractor`() {
-        navigationInteractor.onShareTabs(emptyList())
-        verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
-    }
-
-    @Test
-    fun `onSaveToCollections calls navigation on DefaultNavigationInteractor`() {
-        mockkStatic("org.mozilla.fenix.collections.CollectionsDialogKt")
-
-        every { any<CollectionsDialog>().show(any()) } answers { }
-        navigationInteractor.onSaveToCollections(emptyList())
-        verify(exactly = 1) { metrics.track(Event.TabsTraySaveToCollectionPressed) }
-
-        unmockkStatic("org.mozilla.fenix.collections.CollectionsDialogKt")
-    }
-
-    @Test
-    fun `onBookmarkTabs calls navigation on DefaultNavigationInteractor`() = runBlockingTest {
-        navigationInteractor.onSaveToBookmarks(listOf(createTrayTab()))
-        coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any()) }
-        coVerify(exactly = 1) { showBookmarkSnackbar(1) }
-    }
-
-    @Test
-    fun `onSyncedTabsClicked sets metrics and opens browser`() {
-        val tab = mockk<SyncTab>()
-        val entry = mockk<TabEntry>()
-
-        every { tab.active() }.answers { entry }
-        every { entry.url }.answers { "https://mozilla.org" }
-
-        navigationInteractor.onSyncedTabClicked(tab)
-
-        verifyOrder {
-            metrics.track(Event.SyncedTabOpened)
-
-            dismissTabTray()
-            activity.openToBrowserAndLoad(
-                searchTermOrURL = "https://mozilla.org",
-                newTab = true,
-                from = BrowserDirection.FromTabsTray
-            )
-        }
     }
 }
