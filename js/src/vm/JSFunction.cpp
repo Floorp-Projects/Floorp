@@ -1555,7 +1555,7 @@ bool JSFunction::delazifySelfHostedLazyFunction(JSContext* cx,
   if (!funName) {
     return false;
   }
-  return cx->runtime()->cloneSelfHostedFunctionScript(cx, funName, fun);
+  return cx->runtime()->delazifySelfHostedFunction(cx, funName, fun);
 }
 
 void JSFunction::maybeRelazify(JSRuntime* rt) {
