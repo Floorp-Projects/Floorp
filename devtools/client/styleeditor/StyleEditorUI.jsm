@@ -1206,23 +1206,7 @@ StyleEditorUI.prototype = {
         continue;
       }
 
-      if (resource.name === "dom-loading") {
-        // will-navigate doesn't work when we navigate to a new process,
-        // and for now, onTargetAvailable/onTargetDestroyed doesn't fire on navigation and
-        // only when navigating to another process.
-        // So we fallback on DOCUMENT_EVENTS to be notified when we navigates.
-        // The only catch is that when starting up a DevToolsServer, a dom-loading event
-        // is fired, and it might come _after_ the stylesheet resources; and in such case
-        // we shouldn't clear the stylesheets that where already handled.
-        // So here we bail out if we get this kind of event. At the moment, this will only
-        // happen for the initial target and for target switching (and luckily, in those
-        // case onTargetAvailable is called before we get any stylesheets).
-        // This means we still want to clear the UI on dom-loading for same-process navigation.
-        // (We would probably revisit that in bug 1632141)
-        if (resource.shouldBeIgnoredAsRedundantWithTargetAvailable) {
-          continue;
-        }
-
+      if (resource.name === "will-navigate") {
         this._startLoadingStyleSheets();
         this._clear();
       } else if (resource.name === "dom-complete") {
@@ -1267,8 +1251,6 @@ StyleEditorUI.prototype = {
 
   async _onTargetAvailable({ targetFront }) {
     if (targetFront.isTopLevel) {
-      this._startLoadingStyleSheets();
-      this._clear();
       await this.initializeHighlighter(targetFront);
     }
   },
