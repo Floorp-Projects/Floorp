@@ -42,11 +42,26 @@ add_task(async function setup() {
     "force-serviceworkerrestart-init"
   );
 
-  info("Set a low service worker idle timeout");
+  // Make sure background-delayed-startup is set to true (in some builds,
+  // in particular Thunderbird, it is set to false) otherwise the extension
+  // service worker will be started before the test cases can properly
+  // mock the behavior expected on browser startup by calling the
+  // nsIServiceWorkerManager.reloadRegistrationsForTest (and then the test task
+  // test_serviceworker_lifecycle_events will fail because the worker will
+  // refuse to be spawned while the extension is still disabled).
+  Services.prefs.setBoolPref(
+    "extensions.webextensions.background-delayed-startup",
+    true
+  );
+
   Services.prefs.setBoolPref("dom.serviceWorkers.testing.enabled", true);
+
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("dom.serviceWorkers.idle_timeout");
+    Services.prefs.clearUserPref(
+      "extensions.webextensions.background-delayed-startup"
+    );
     Services.prefs.clearUserPref("dom.serviceWorkers.testing.enabled");
+    Services.prefs.clearUserPref("dom.serviceWorkers.idle_timeout");
   });
 });
 
