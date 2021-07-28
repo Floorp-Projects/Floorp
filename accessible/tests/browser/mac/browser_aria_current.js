@@ -31,11 +31,13 @@ addAccessibleTask(
       "Correct aria-current for #two"
     );
 
+    let stateChanged = waitForEvent(EVENT_STATE_CHANGE, "one");
     await SpecialPowers.spawn(browser, [], () => {
       content.document
         .getElementById("one")
         .setAttribute("aria-current", "step");
     });
+    await stateChanged;
 
     is(
       one.getAttributeValue("AXARIACurrent"),
@@ -43,7 +45,7 @@ addAccessibleTask(
       "Correct aria-current for #one"
     );
 
-    let stateChanged = waitForEvent(EVENT_STATE_CHANGE, "one");
+    stateChanged = waitForEvent(EVENT_STATE_CHANGE, "one");
     await SpecialPowers.spawn(browser, [], () => {
       content.document.getElementById("one").removeAttribute("aria-current");
     });
