@@ -566,10 +566,6 @@ void MobileViewportManager::RefreshVisualViewportSize() {
 void MobileViewportManager::UpdateSizesBeforeReflow() {
   if (Maybe<LayoutDeviceIntSize> newDisplaySize =
           mContext->GetContentViewerSize()) {
-    if (mDisplaySize == *newDisplaySize) {
-      return;
-    }
-
     mDisplaySize = *newDisplaySize;
     MVM_LOG("%p: Reflow starting, display size updated to %s\n", this,
             ToString(mDisplaySize).c_str());

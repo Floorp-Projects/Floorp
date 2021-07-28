@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 1223561</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="text/javascript" src="file_fullscreen-utils.js"></script>
+</head>
+<body>
+<div id="target" style="width: 100px; height: 100px; background-color: green;"></div>
+<script>
+"use strict";
+
+function begin() {
+  info("Setting full zoom to 30%");
+  SpecialPowers.setFullZoom(window, 0.3);
+
+  addFullscreenChangeContinuation("enter", enteredFullscreen);
+  target.requestFullscreen();
+}
+
+function enteredFullscreen() {
+  info("The element with green background should be in fullscreen");
+  assertWindowPureColor(window, "green");
+  addFullscreenChangeContinuation("exit", exitedFullscreen);
+  document.exitFullscreen();
+}
+
+function exitedFullscreen() {
+  opener.nextTest();
+}
+</script>
+</body>
+</html>
