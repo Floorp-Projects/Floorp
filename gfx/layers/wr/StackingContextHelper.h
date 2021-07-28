@@ -54,7 +54,7 @@ class MOZ_RAII StackingContextHelper {
     return mSnappingSurfaceTransform;
   }
 
-  const Maybe<nsDisplayTransform*>& GetDeferredTransformItem() const;
+  nsDisplayTransform* GetDeferredTransformItem() const;
   Maybe<gfx::Matrix4x4> GetDeferredTransformMatrix() const;
 
   bool AffectsClipPositioning() const { return mAffectsClipPositioning; }
@@ -106,7 +106,7 @@ class MOZ_RAII StackingContextHelper {
   // created this StackingContextHelper). And then we use
   // mDeferredAncestorTransform to store the product of all the other transforms
   // that were deferred. As a result, there is an invariant here that if
-  // mDeferredTransformItem is Nothing(), mDeferredAncestorTransform will also
+  // mDeferredTransformItem is nullptr, mDeferredAncestorTransform will also
   // be Nothing(). Note that we can only do this if the nsDisplayTransform items
   // share the same ASR. If we are processing an nsDisplayTransform item with a
   // different ASR than the previously-deferred item, we assume that the
@@ -117,7 +117,7 @@ class MOZ_RAII StackingContextHelper {
   // behaviour of forcing a WebRenderLayerScrollData item to be generated when
   // the ASR changes is implemented in
   // WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList.
-  Maybe<nsDisplayTransform*> mDeferredTransformItem;
+  nsDisplayTransform* mDeferredTransformItem;
   Maybe<gfx::Matrix4x4> mDeferredAncestorTransform;
 
   bool mRasterizeLocally;

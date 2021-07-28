@@ -17,6 +17,7 @@ StackingContextHelper::StackingContextHelper()
     : mBuilder(nullptr),
       mScale(1.0f, 1.0f),
       mAffectsClipPositioning(false),
+      mDeferredTransformItem(nullptr),
       mRasterizeLocally(false) {
   // mOrigin remains at 0,0
 }
@@ -104,7 +105,7 @@ StackingContextHelper::StackingContextHelper(
   // the comments on StackingContextHelper::mDeferredTransformItem for an
   // explanation of what goes in these fields.
   if (aParentSC.mDeferredTransformItem &&
-      aAsr == (*aParentSC.mDeferredTransformItem)->GetActiveScrolledRoot()) {
+      aAsr == aParentSC.mDeferredTransformItem->GetActiveScrolledRoot()) {
     if (mDeferredTransformItem) {
       // If we are deferring another transform, put the combined transform from
       // all the ancestor deferred items into mDeferredAncestorTransform
@@ -125,8 +126,7 @@ StackingContextHelper::~StackingContextHelper() {
   }
 }
 
-const Maybe<nsDisplayTransform*>&
-StackingContextHelper::GetDeferredTransformItem() const {
+nsDisplayTransform* StackingContextHelper::GetDeferredTransformItem() const {
   return mDeferredTransformItem;
 }
 
@@ -138,8 +138,7 @@ Maybe<gfx::Matrix4x4> StackingContextHelper::GetDeferredTransformMatrix()
     // mDeferredAncestorTransform. Here we need to return the combined transform
     // transform from all the deferred ancestors, including
     // mDeferredTransformItem.
-    gfx::Matrix4x4 result =
-        (*mDeferredTransformItem)->GetTransform().GetMatrix();
+    gfx::Matrix4x4 result = mDeferredTransformItem->GetTransform().GetMatrix();
     if (mDeferredAncestorTransform) {
       result = result * *mDeferredAncestorTransform;
     }
