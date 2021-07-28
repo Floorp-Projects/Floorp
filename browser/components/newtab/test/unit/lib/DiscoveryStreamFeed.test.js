@@ -6,7 +6,7 @@ import {
 import { combineReducers, createStore } from "redux";
 import { GlobalOverrider } from "test/unit/utils";
 import { DiscoveryStreamFeed } from "lib/DiscoveryStreamFeed.jsm";
-import { RecommendationProviderSwitcher } from "lib/RecommendationProviderSwitcher.jsm";
+import { RecommendationProvider } from "lib/RecommendationProvider.jsm";
 import { reducers } from "common/Reducers.jsm";
 
 const CONFIG_PREF_NAME = "discoverystream.config";
@@ -23,7 +23,7 @@ const FAKE_UUID = "{foo-123-foo}";
 describe("DiscoveryStreamFeed", () => {
   let feed;
   let feeds;
-  let recommendationProviderSwitcher;
+  let recommendationProvider;
   let sandbox;
   let fetchStub;
   let clock;
@@ -59,13 +59,10 @@ describe("DiscoveryStreamFeed", () => {
       .withArgs("browser.newtabpage.activity-stream.discoverystream.enabled")
       .returns(true);
 
-    recommendationProviderSwitcher = new RecommendationProviderSwitcher();
-    recommendationProviderSwitcher.store = createStore(
-      combineReducers(reducers),
-      {}
-    );
+    recommendationProvider = new RecommendationProvider();
+    recommendationProvider.store = createStore(combineReducers(reducers), {});
     feeds = {
-      "feeds.recommendationproviderswitcher": recommendationProviderSwitcher,
+      "feeds.recommendationprovider": recommendationProvider,
     };
 
     // Feed
@@ -754,23 +751,23 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
-  describe("#personalizationVersionOverride", () => {
+  describe("#personalizationOverride", () => {
     it("should dispatch setPref", async () => {
       sandbox.spy(feed.store, "dispatch");
       feed.store.getState = () => ({
         Prefs: {
           values: {
-            "discoverystream.personalization.version": 2,
+            "discoverystream.personalization.enabled": true,
           },
         },
       });
 
-      feed.personalizationVersionOverride(false);
+      feed.personalizationOverride(true);
 
       assert.calledWithMatch(feed.store.dispatch, {
         data: {
-          name: "discoverystream.personalization.overrideVersion",
-          value: 1,
+          name: "discoverystream.personalization.override",
+          value: true,
         },
         type: at.SET_PREF,
       });
@@ -780,17 +777,17 @@ describe("DiscoveryStreamFeed", () => {
       feed.store.getState = () => ({
         Prefs: {
           values: {
-            "discoverystream.personalization.version": 2,
-            "discoverystream.personalization.overrideVersion": 1,
+            "discoverystream.personalization.enabled": true,
+            "discoverystream.personalization.override": true,
           },
         },
       });
 
-      feed.personalizationVersionOverride(true);
+      feed.personalizationOverride(false);
 
       assert.calledWithMatch(feed.store.dispatch, {
         data: {
-          name: "discoverystream.personalization.overrideVersion",
+          name: "discoverystream.personalization.override",
         },
         type: at.CLEAR_PREF,
       });
@@ -916,7 +913,7 @@ describe("DiscoveryStreamFeed", () => {
     });
     it("should call personalizationVersionOverride with feature_flags", async () => {
       sandbox.stub(feed.cache, "get").returns(Promise.resolve());
-      sandbox.stub(feed, "personalizationVersionOverride").returns();
+      sandbox.stub(feed, "personalizationOverride").returns();
       sandbox
         .stub(feed, "fetchFromEndpoint")
         .resolves({ settings: { feature_flags: {} }, spocs: [{ id: "data" }] });
@@ -924,7 +921,7 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.loadSpocs(feed.store.dispatch);
 
-      assert.calledOnce(feed.personalizationVersionOverride);
+      assert.calledOnce(feed.personalizationOverride);
     });
     it("should return expected data if normalizeSpocsItems returns no spoc data", async () => {
       sandbox.stub(feed.cache, "get").returns(Promise.resolve());
@@ -1137,16 +1134,13 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#reset", () => {
-    it("should fire all teardown based functions", async () => {
+    it("should fire all reset based functions", async () => {
       sandbox.stub(global.Services.obs, "removeObserver").returns();
 
       sandbox.stub(feed, "resetDataPrefs").returns();
       sandbox.stub(feed, "resetCache").returns(Promise.resolve());
       sandbox.stub(feed, "resetState").returns();
 
-      feed.affinityProvider = {
-        teardown: sandbox.stub().returns(),
-      };
       feed.loaded = true;
 
       await feed.reset();
@@ -1159,7 +1153,7 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#resetCache", () => {
-    it("should set .layout, .feeds .spocs and .affinities to {}", async () => {
+    it("should set .layout, .feeds .spocs and .personalization to {}", async () => {
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
 
       await feed.resetCache();
@@ -1172,7 +1166,7 @@ describe("DiscoveryStreamFeed", () => {
       assert.deepEqual(firstCall.args, ["layout", {}]);
       assert.deepEqual(secondCall.args, ["feeds", {}]);
       assert.deepEqual(thirdCall.args, ["spocs", {}]);
-      assert.deepEqual(fourthCall.args, ["affinities", {}]);
+      assert.deepEqual(fourthCall.args, ["personalization", {}]);
     });
   });
 
@@ -2761,6 +2755,7 @@ describe("DiscoveryStreamFeed", () => {
           values: {
             "discoverystream.spocs.personalized": true,
             "discoverystream.recs.personalized": true,
+            "discoverystream.personalization.enabled": true,
           },
         },
         DiscoveryStream: {
@@ -2771,15 +2766,12 @@ describe("DiscoveryStreamFeed", () => {
       sandbox.stub(feed, "scoreFeeds").resolves();
       sandbox.stub(feed, "scoreSpocs").resolves();
       sandbox.stub(feed, "refreshContent").resolves();
-      sandbox.stub(feed, "loadAffinityScoresCache").resolves();
+      sandbox.stub(feed, "loadPersonalizationScoresCache").resolves();
       sandbox.stub(feed.store, "getState").returns(fakeDiscoveryStream);
       sandbox.stub(feed, "_checkExpirationPerComponent").resolves({
         feeds: true,
         spocs: true,
       });
-      feed._prefCache.config = {
-        personalized: true,
-      };
 
       await feed.refreshAll();
 
@@ -2796,89 +2788,110 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
-  describe("#loadAffinityScoresCache", () => {
-    it("should create an affinity provider from cached affinities", async () => {
-      feed._prefCache.config = {
-        personalized: true,
-      };
+  describe("#loadPersonalizationScoresCache", () => {
+    it("should create a personalization provider from cached scores", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "discoverystream.spocs.personalized": true,
+            "discoverystream.recs.personalized": true,
+            "discoverystream.personalization.enabled": true,
+          },
+        },
+      });
       const fakeCache = {
-        affinities: {
+        personalization: {
           scores: 123,
           _timestamp: 456,
         },
       };
       sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
 
-      await feed.loadAffinityScoresCache();
+      await feed.loadPersonalizationScoresCache();
 
-      assert.equal(feed.domainAffinitiesLastUpdated, 456);
+      assert.equal(feed.personalizationLastUpdated, 456);
     });
   });
 
-  describe("#updateDomainAffinityScores", () => {
-    it("should call updateDomainAffinityScores on idle daily", async () => {
-      sandbox.stub(feed, "updateDomainAffinityScores").returns();
+  describe("#updatePersonalizationScores", () => {
+    it("should call updatePersonalizationScores on idle daily", async () => {
+      sandbox.stub(feed, "updatePersonalizationScores").returns();
       feed.observe(null, "idle-daily");
-      assert.calledOnce(feed.updateDomainAffinityScores);
+      assert.calledOnce(feed.updatePersonalizationScores);
     });
-    it("should update affinity provider on updateDomainAffinityScores", async () => {
-      feed._prefCache.config = {
-        personalized: true,
-      };
-      const DEFAULT_TIME_SEGMENTS = [
-        { id: "hour", startTime: 3600, endTime: 0, weightPosition: 1 },
-        { id: "day", startTime: 86400, endTime: 3600, weightPosition: 0.75 },
-        { id: "week", startTime: 604800, endTime: 86400, weightPosition: 0.5 },
-        { id: "weekPlus", startTime: 0, endTime: 604800, weightPosition: 0.25 },
-        { id: "alltime", startTime: 0, endTime: 0, weightPosition: 0.25 },
-      ];
-      feed.affinities = {
-        parameterSets: {
-          default: {},
+    it("should update recommendationProvider on updatePersonalizationScores", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "discoverystream.spocs.personalized": true,
+            "discoverystream.recs.personalized": true,
+            "discoverystream.personalization.enabled": true,
+          },
         },
-        maxHistoryQueryResults: 1000,
-        timeSegments: DEFAULT_TIME_SEGMENTS,
-        version: "123",
-      };
+      });
+      sandbox.stub(feed.recommendationProvider, "init").returns();
 
-      await feed.updateDomainAffinityScores();
+      await feed.updatePersonalizationScores();
 
-      assert.equal(feed.providerSwitcher.affinityProvider.version, "123");
+      assert.deepEqual(feed.recommendationProvider.provider.getScores(), {
+        interestConfig: undefined,
+        interestVector: undefined,
+      });
     });
-    it("should not update affinity provider on updateDomainAffinityScores", async () => {
-      feed._prefCache.config = {
-        personalized: false,
-      };
+    it("should not update recommendationProvider on updatePersonalizationScores", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "discoverystream.spocs.personalized": true,
+            "discoverystream.recs.personalized": true,
+            "discoverystream.personalization.enabled": false,
+          },
+        },
+      });
+      await feed.updatePersonalizationScores();
 
-      await feed.updateDomainAffinityScores();
-
-      assert.isTrue(!feed.affinityProvider);
+      assert.isTrue(!feed.recommendationProvider.provider);
     });
   });
   describe("#scoreItem", () => {
-    it("should call calculateItemRelevanceScore with affinity provider", async () => {
-      const item = {};
-      feed._prefCache.config = {
-        personalized: true,
-      };
-      feed.providerSwitcher.calculateItemRelevanceScore = sandbox
-        .stub()
-        .returns();
-      await feed.scoreItem(item, true);
-      assert.calledOnce(feed.providerSwitcher.calculateItemRelevanceScore);
-    });
-    it("should use item_score score without affinity provider score", async () => {
+    it("should call calculateItemRelevanceScore with recommendationProvider with initial score", async () => {
       const item = {
         item_score: 0.6,
       };
-      feed._prefCache.config = {
-        personalized: true,
-      };
-      feed.affinityProvider = {
-        calculateItemRelevanceScore: () => {},
-      };
-      const result = await feed.scoreItem(item);
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "discoverystream.spocs.personalized": true,
+            "discoverystream.recs.personalized": true,
+            "discoverystream.personalization.enabled": true,
+          },
+        },
+      });
+      feed.recommendationProvider.calculateItemRelevanceScore = sandbox
+        .stub()
+        .returns();
+      const result = await feed.scoreItem(item, true);
+      assert.calledOnce(
+        feed.recommendationProvider.calculateItemRelevanceScore
+      );
       assert.equal(result.score, 0.6);
+    });
+    it("should fallback to score 1 without an initial score", async () => {
+      const item = {};
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "discoverystream.spocs.personalized": true,
+            "discoverystream.recs.personalized": true,
+            "discoverystream.personalization.enabled": true,
+          },
+        },
+      });
+      feed.recommendationProvider.calculateItemRelevanceScore = sandbox
+        .stub()
+        .returns();
+      const result = await feed.scoreItem(item, true);
+      assert.equal(result.score, 1);
     });
   });
 });

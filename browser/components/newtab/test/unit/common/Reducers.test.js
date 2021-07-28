@@ -905,25 +905,6 @@ describe("Reducers", () => {
         INITIAL_STATE.Personalization
       );
     });
-    it("should set version to 2 with DISCOVERY_STREAM_PERSONALIZATION_VERSION", () => {
-      const state = Personalization(undefined, {
-        type: at.DISCOVERY_STREAM_PERSONALIZATION_VERSION,
-        data: {
-          version: 2,
-        },
-      });
-      assert.equal(state.version, 2);
-    });
-    it("should set version to 2 with PREF_CHANGED", () => {
-      const state = Personalization(undefined, {
-        type: at.PREF_CHANGED,
-        data: {
-          name: "discoverystream.personalization.version",
-          value: 2,
-        },
-      });
-      assert.equal(state.version, 2);
-    });
     it("should set lastUpdated with DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED", () => {
       const state = Personalization(undefined, {
         type: at.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED,

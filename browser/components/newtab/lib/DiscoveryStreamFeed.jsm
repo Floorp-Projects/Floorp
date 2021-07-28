@@ -48,9 +48,8 @@ const STARTUP_CACHE_EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000; // 1 week
 const COMPONENT_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const SPOCS_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const DEFAULT_RECS_EXPIRE_TIME = 60 * 60 * 1000; // 1 hour
-const MIN_DOMAIN_AFFINITIES_UPDATE_TIME = 12 * 60 * 60 * 1000; // 12 hours
+const MIN_PERSONALIZATION_UPDATE_TIME = 12 * 60 * 60 * 1000; // 12 hours
 const MAX_LIFETIME_CAP = 500; // Guard against misconfiguration on the server
-const DEFAULT_MAX_HISTORY_QUERY_RESULTS = 1000;
 const FETCH_TIMEOUT = 45 * 1000;
 const PREF_CONFIG = "discoverystream.config";
 const PREF_ENDPOINTS = "discoverystream.endpoints";
@@ -70,9 +69,9 @@ const PREF_REC_IMPRESSIONS = "discoverystream.rec.impressions";
 const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
 const PREF_RECS_PERSONALIZED = "discoverystream.recs.personalized";
 const PREF_SPOCS_PERSONALIZED = "discoverystream.spocs.personalized";
-const PREF_PERSONALIZATION_VERSION = "discoverystream.personalization.version";
-const PREF_PERSONALIZATION_OVERRIDE_VERSION =
-  "discoverystream.personalization.overrideVersion";
+const PREF_PERSONALIZATION = "discoverystream.personalization.enabled";
+const PREF_PERSONALIZATION_OVERRIDE =
+  "discoverystream.personalization.override";
 
 let getHardcodedLayout;
 
@@ -177,22 +176,33 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     const recsPersonalized = this.store.getState().Prefs.values[
       PREF_RECS_PERSONALIZED
     ];
+    const personalization = this.store.getState().Prefs.values[
+      PREF_PERSONALIZATION
+    ];
+
+    // There is a server sent flag to keep personalization on.
+    // If the server stops sending this, we turn personalization off,
+    // until the server starts returning the signal.
+    const overrideState = this.store.getState().Prefs.values[
+      PREF_PERSONALIZATION_OVERRIDE
+    ];
 
     return (
-      this.config.personalized &&
-      !!this.providerSwitcher &&
+      personalization &&
+      !overrideState &&
+      !!this.recommendationProvider &&
       (spocsPersonalized || recsPersonalized)
     );
   }
 
-  get providerSwitcher() {
-    if (this._providerSwitcher) {
-      return this._providerSwitcher;
+  get recommendationProvider() {
+    if (this._recommendationProvider) {
+      return this._recommendationProvider;
     }
-    this._providerSwitcher = this.store.feeds.get(
-      "feeds.recommendationproviderswitcher"
+    this._recommendationProvider = this.store.feeds.get(
+      "feeds.recommendationprovider"
     );
-    return this._providerSwitcher;
+    return this._recommendationProvider;
   }
 
   setupPrefs(isStartup = false) {
@@ -536,21 +546,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
                 isStartup,
               },
             });
-
-            // We grab affinities off the first feed for the moment.
-            // Ideally this would be returned from the server on the layout,
-            // or from another endpoint.
-            if (!this.affinities) {
-              const { settings } = feed.data;
-              this.affinities = {
-                timeSegments: settings.timeSegments,
-                parameterSets: settings.domainAffinityParameterSets,
-                maxHistoryQueryResults:
-                  settings.maxHistoryQueryResults ||
-                  DEFAULT_MAX_HISTORY_QUERY_RESULTS,
-                version: settings.version,
-              };
-            }
           })
           .catch(
             /* istanbul ignore next */ error => {
@@ -693,27 +688,36 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     };
   }
 
-  // This sets an override pref for personalization version.
-  personalizationVersionOverride(spoc_v2) {
-    const overrideVersion = this.store.getState().Prefs.values[
-      PREF_PERSONALIZATION_OVERRIDE_VERSION
+  // This turns personalization on/off if the server sends the override command.
+  // The server sends a true signal to keep personalization on. So a malfunctioning
+  // server would more likely mistakenly turn off personalization, and not turn it on.
+  // This is safer, because the override is for cases where personalization is causing issues.
+  // So having it mistakenly go off is safe, but it mistakenly going on could be bad.
+  personalizationOverride(overrideCommand) {
+    // Are we currently in an override state.
+    // This is useful to know if we want to do a cleanup.
+    const overrideState = this.store.getState().Prefs.values[
+      PREF_PERSONALIZATION_OVERRIDE
     ];
 
-    const currentVersion = this.store.getState().Prefs.values[
-      PREF_PERSONALIZATION_VERSION
+    // Is this profile currently set to be personalized.
+    const personalization = this.store.getState().Prefs.values[
+      PREF_PERSONALIZATION
     ];
 
-    // If we have a downgrade override, and the current version can be downgraded,
-    // and it hasn't already been downgraded, set it to 1.
-    if (spoc_v2 === false && currentVersion === 2 && overrideVersion !== 1) {
-      this.store.dispatch(ac.SetPref(PREF_PERSONALIZATION_OVERRIDE_VERSION, 1));
+    // If we have an override command, profile is currently personalized,
+    // and is not currently being overridden, we can set the override pref.
+    if (overrideCommand && personalization && !overrideState) {
+      this.store.dispatch(ac.SetPref(PREF_PERSONALIZATION_OVERRIDE, true));
     }
 
-    // This is if we need to revert the downgrade and do cleanup.
-    if (spoc_v2 && overrideVersion === 1) {
+    // This is if we need to revert an override and do cleanup.
+    // We do this if we are in an override state,
+    // but not currently receiving the override signal.
+    if (!overrideCommand && overrideState) {
       this.store.dispatch({
         type: at.CLEAR_PREF,
-        data: { name: PREF_PERSONALIZATION_OVERRIDE_VERSION },
+        data: { name: PREF_PERSONALIZATION_OVERRIDE },
       });
     }
   }
@@ -756,8 +760,11 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           };
 
           if (spocsResponse.settings && spocsResponse.settings.feature_flags) {
-            this.personalizationVersionOverride(
-              spocsResponse.settings.feature_flags.spoc_v2
+            this.personalizationOverride(
+              // The server's old signal was for a version override.
+              // When we removed version 1, version 2 was now the defacto only version.
+              // Without a version 1, the override is now a command to turn off personalization.
+              !spocsResponse.settings.feature_flags.spoc_v2
             );
           }
 
@@ -883,25 +890,20 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
    * We can call this on startup because it's generally fast.
    * It reports to devtools the last time the data in the cache was updated.
    */
-  async loadAffinityScoresCache(isStartup = false) {
+  async loadPersonalizationScoresCache(isStartup = false) {
     const cachedData = (await this.cache.get()) || {};
-    const { affinities } = cachedData;
-    if (this.personalized && affinities && affinities.scores) {
-      this.providerSwitcher.setAffinityProvider(
-        affinities.timeSegments,
-        affinities.parameterSets,
-        affinities.maxHistoryQueryResults,
-        affinities.version,
-        affinities.scores
-      );
+    const { personalization } = cachedData;
 
-      this.domainAffinitiesLastUpdated = affinities._timestamp;
+    if (this.personalized && personalization && personalization.scores) {
+      this.recommendationProvider.setProvider(personalization.scores);
+
+      this.personalizationLastUpdated = personalization._timestamp;
 
       this.store.dispatch(
         ac.BroadcastToContent({
           type: at.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED,
           data: {
-            lastUpdated: this.domainAffinitiesLastUpdated,
+            lastUpdated: this.personalizationLastUpdated,
           },
           meta: {
             isStartup,
@@ -912,54 +914,46 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   /*
-   * This creates a new affinityProvider using fresh affinities,
-   * It's run on a last updated timer. This is the opposite of loadAffinityScoresCache.
+   * This creates a new recommendationProvider using fresh data,
+   * It's run on a last updated timer. This is the opposite of loadPersonalizationScoresCache.
    * This is also much slower so we only trigger this in the background on idle-daily.
    * It causes new profiles to pick up personalization slowly because the first time
    * a new profile is run you don't have any old cache to use, so it needs to wait for the first
    * idle-daily. Older profiles can rely on cache during the idle-daily gap. Idle-daily is
    * usually run once every 24 hours.
    */
-  async updateDomainAffinityScores() {
+  async updatePersonalizationScores() {
     if (
       !this.personalized ||
-      !this.affinities ||
-      !this.affinities.parameterSets ||
-      Date.now() - this.domainAffinitiesLastUpdated <
-        MIN_DOMAIN_AFFINITIES_UPDATE_TIME
+      Date.now() - this.personalizationLastUpdated <
+        MIN_PERSONALIZATION_UPDATE_TIME
     ) {
       return;
     }
 
-    this.providerSwitcher.setAffinityProvider(
-      this.affinities.timeSegments,
-      this.affinities.parameterSets,
-      this.affinities.maxHistoryQueryResults,
-      this.affinities.version,
-      undefined
-    );
+    this.recommendationProvider.setProvider();
 
-    await this.providerSwitcher.init();
+    await this.recommendationProvider.init();
 
-    const affinities = this.providerSwitcher.getAffinities();
-    this.domainAffinitiesLastUpdated = Date.now();
+    const personalization = { scores: this.recommendationProvider.getScores() };
+    this.personalizationLastUpdated = Date.now();
 
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED,
         data: {
-          lastUpdated: this.domainAffinitiesLastUpdated,
+          lastUpdated: this.personalizationLastUpdated,
         },
       })
     );
-    affinities._timestamp = this.domainAffinitiesLastUpdated;
-    this.cache.set("affinities", affinities);
+    personalization._timestamp = this.personalizationLastUpdated;
+    this.cache.set("personalization", personalization);
   }
 
   observe(subject, topic, data) {
     switch (topic) {
       case "idle-daily":
-        this.updateDomainAffinityScores();
+        this.updatePersonalizationScores();
         break;
     }
   }
@@ -1021,7 +1015,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       item.score = 1;
     }
     if (this.personalized && personalizedByType) {
-      await this.providerSwitcher.calculateItemRelevanceScore(item);
+      await this.recommendationProvider.calculateItemRelevanceScore(item);
     }
     return item;
   }
@@ -1221,7 +1215,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
    * @param {RefreshAll} options
    */
   async refreshAll(options = {}) {
-    const affinityCacheLoadPromise = this.loadAffinityScoresCache(
+    const personalizationCacheLoadPromise = this.loadPersonalizationScoresCache(
       options.isStartup
     );
 
@@ -1242,14 +1236,14 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     await this.refreshContent(options);
 
     if (this.personalized) {
-      // affinityCacheLoadPromise is probably done, because of the refreshContent await above,
+      // personalizationCacheLoadPromise is probably done, because of the refreshContent await above,
       // but to be sure, we should check that it's done, without making the parent function wait.
-      affinityCacheLoadPromise.then(() => {
+      personalizationCacheLoadPromise.then(() => {
         // If we don't have expired stories or feeds, we don't need to score after init.
         // If we do have expired stories, we want to score after init.
         // In both cases, we don't want these to block the parent function.
         // This is why we store the promise, and call then to do our scoring work.
-        const initPromise = this.providerSwitcher.init();
+        const initPromise = this.recommendationProvider.init();
         initPromise.then(() => {
           // Both scoreFeeds and scoreSpocs are promises,
           // but they don't need to wait for each other.
@@ -1429,7 +1423,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
   async resetAllCache() {
     await this.resetContentCache();
-    await this.cache.set("affinities", {});
+    await this.cache.set("personalization", {});
   }
 
   resetDataPrefs() {
@@ -1453,7 +1447,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         },
       })
     );
-    this.domainAffinitiesLastUpdated = null;
+    this.personalizationLastUpdated = null;
     this.loaded = false;
   }
 
@@ -1581,6 +1575,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case PREF_HARDCODED_BASIC_LAYOUT:
       case PREF_SPOCS_ENDPOINT:
       case PREF_SPOCS_ENDPOINT_QUERY:
+      case PREF_PERSONALIZATION:
         // This is a config reset directly related to Discovery Stream pref.
         this.configReset();
         break;
@@ -1635,7 +1630,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         RemoteSettings.pollChanges();
         break;
       case at.DISCOVERY_STREAM_DEV_EXPIRE_CACHE:
-        // Affinities update at a slower interval than content, so in order to debug,
+        // Personalization scores update at a slower interval than content, so in order to debug,
         // we want to be able to expire just content to trigger the earlier expire times.
         await this.resetContentCache();
         break;
@@ -1793,7 +1788,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case at.UNINIT:
         // When this feed is shutting down:
         this.uninitPrefs();
-        this._providerSwitcher = null;
+        this._recommendationProvider = null;
         break;
       case at.BLOCK_URL: {
         // If we block a story that also has a flight_id

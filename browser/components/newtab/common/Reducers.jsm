@@ -12,7 +12,6 @@ const { Dedupe } = ChromeUtils.import(
 
 const TOP_SITES_DEFAULT_ROWS = 1;
 const TOP_SITES_MAX_SITES_PER_ROW = 8;
-const PREF_PERSONALIZATION_VERSION = "discoverystream.personalization.version";
 const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
 
 const dedupe = new Dedupe(site => site && site.url);
@@ -79,7 +78,6 @@ const INITIAL_STATE = {
     },
   },
   Personalization: {
-    version: 1,
     lastUpdated: null,
     initialized: false,
   },
@@ -543,11 +541,6 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
 
 function Personalization(prevState = INITIAL_STATE.Personalization, action) {
   switch (action.type) {
-    case at.DISCOVERY_STREAM_PERSONALIZATION_VERSION:
-      return {
-        ...prevState,
-        version: action.data.version,
-      };
     case at.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED:
       return {
         ...prevState,
@@ -558,14 +551,6 @@ function Personalization(prevState = INITIAL_STATE.Personalization, action) {
         ...prevState,
         initialized: true,
       };
-    case at.PREF_CHANGED:
-      if (action.data.name === PREF_PERSONALIZATION_VERSION) {
-        return {
-          ...prevState,
-          version: action.data.value,
-        };
-      }
-      return prevState;
     default:
       return prevState;
   }
