@@ -1021,13 +1021,12 @@ static bool InstantiateFunctions(JSContext* cx, CompilationAtomCache& atomCache,
       return false;
     }
 
-    // Self-hosted functions may have an canonical name that differs from the
-    // function name.  In that case, store this canonical name in an extended
-    // slot.
+    // Self-hosted functions may have a canonical name to use when instantiating
+    // into other realms.
     if (scriptStencil.hasSelfHostedCanonicalName()) {
       JSAtom* canonicalName = atomCache.getExistingAtomAt(
           cx, scriptStencil.selfHostedCanonicalName());
-      SetUnclonedSelfHostedCanonicalName(fun, canonicalName);
+      fun->setAtom(canonicalName);
     }
 
     gcOutput.getFunctionNoBaseIndex(index) = fun;
@@ -1441,6 +1440,56 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
   }
 
   return true;
+}
+
+// The top-level self-hosted script is created and executed in each realm that
+// needs it. While the stencil has a gcthings list for the various top-level
+// functions, we use special machinery to create them on demand. So instead we
+// use a placeholder JSFunction that should never be called.
+static bool SelfHostedDummyFunction(JSContext* cx, unsigned argc,
+                                    JS::Value* vp) {
+  MOZ_CRASH("Self-hosting top-level should not use functions directly");
+}
+
+bool CompilationStencil::instantiateSelfHostedForRuntime(
+    JSContext* cx, CompilationAtomCache& atomCache) const {
+  MOZ_ASSERT(isInitialStencil());
+
+  // We must instantiate atoms during startup so they can be made permanent
+  // across multiple runtimes.
+  return InstantiateAtoms(cx, atomCache, *this);
+}
+
+JSScript* CompilationStencil::instantiateSelfHostedTopLevelForRealm(
+    JSContext* cx, CompilationInput& input) {
+  MOZ_ASSERT(isInitialStencil());
+
+  Rooted<CompilationGCOutput> gcOutput(cx);
+
+  gcOutput.get().sourceObject = SelfHostingScriptSourceObject(cx);
+  if (!gcOutput.get().sourceObject) {
+    return nullptr;
+  }
+
+  // The top-level script has ScriptIndex references in its gcthings list, but
+  // we do not want to instantiate those functions here since they are instead
+  // created on demand from the stencil. Create a dummy function and populate
+  // the functions array of the CompilationGCOutput with references to it.
+  RootedFunction dummy(
+      cx, NewNativeFunction(cx, SelfHostedDummyFunction, 0, nullptr));
+  if (!dummy) {
+    return nullptr;
+  }
+  if (!gcOutput.get().functions.appendN(dummy, scriptData.size())) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  if (!InstantiateTopLevel(cx, input, *this, gcOutput.get())) {
+    return nullptr;
+  }
+
+  return gcOutput.get().script;
 }
 
 JSFunction* CompilationStencil::instantiateSelfHostedLazyFunction(
