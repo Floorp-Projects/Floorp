@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+</head>
+
+<body>
+<script>
+    let f = document.createElement("iframe");
+    f.src = "data:text/html,<iframe src='http://example.com' onload=\"parent.postMessage({status:'loaded', type: 'http'}, 'https://example.com')\" onerror=\"parent.postMessage({status:'blocked', type: 'http'}, 'https://example.com')\"></iframe>";
+    window.addEventListener("message", (event) => {
+        parent.postMessage(event.data, "http://mochi.test:8888");
+
+        // Only create second iframe once
+        if(event.data.type === "https") {
+            return;
+        }
+
+        let f2 = document.createElement("iframe");
+        f2.src = "data:text/html,<iframe src='https://example.com' onload=\"parent.postMessage({status:'loaded', type: 'https'}, 'https://example.com')\" onerror=\"parent.postMessage({status:'blocked', type: 'https'}, 'https://example.com')\"></iframe>";
+        document.body.appendChild(f2);
+    });
+    document.body.appendChild(f);
+</script>
+</body>
+</html>

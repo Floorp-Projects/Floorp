@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Bug 1551886: Opaque documents aren't considered in the mixed content blocker</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+let f = document.createElement("iframe");
+f.src = "https://example.com/tests/dom/security/test/mixedcontentblocker/file_bug1551886.html";
+
+window.addEventListener("message", (event) => {
+    switch(event.data.type) {
+        case 'http':
+            is(event.data.status, "blocked", "nested load of http://example should get blocked by the MCB");
+            break
+        case 'https':
+            is(event.data.status, "loaded", "nested load of https://example should not get blocked by the MCB");
+            SimpleTest.finish();
+            break;
+    }
+});
+
+document.body.appendChild(f); 
+
+</script>
+</body>
+</html>
