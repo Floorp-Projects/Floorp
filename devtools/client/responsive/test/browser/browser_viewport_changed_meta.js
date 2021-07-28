@@ -119,17 +119,6 @@ addRDMTask(TEST_URL, async function({ ui, manager, browser }) {
     }
 
     info("Reload and wait for document to be loaded to prepare for next test.");
-    const {
-      onResource: onDomComplete,
-    } = await ui.commands.resourceCommand.waitForNextResource(
-      ui.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-      {
-        ignoreExistingResources: true,
-        predicate: resource =>
-          resource.targetFront.isTopLevel && resource.name === "dom-complete",
-      }
-    );
-    browser.reload();
-    await onDomComplete;
+    await reloadViewport(ui);
   }
 });
