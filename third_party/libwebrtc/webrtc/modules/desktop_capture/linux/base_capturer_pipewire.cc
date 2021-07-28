@@ -124,9 +124,9 @@ void BaseCapturerPipeWire::OnStreamParamChanged(void *data, uint32_t id,
   const struct spa_pod* params[3];
   params[0] = reinterpret_cast<spa_pod *>(spa_pod_builder_add_object(&builder,
               SPA_TYPE_OBJECT_ParamBuffers, SPA_PARAM_Buffers,
-              SPA_PARAM_BUFFERS_dataType, SPA_POD_Int((1<<SPA_DATA_MemPtr) |
-                                                      (1<<SPA_DATA_MemFd) |
-                                                      (1<<SPA_DATA_DmaBuf)),
+              SPA_PARAM_BUFFERS_dataType, SPA_POD_CHOICE_FLAGS_Int((1<<SPA_DATA_MemPtr) |
+                                                                   (1<<SPA_DATA_MemFd) |
+                                                                   (1<<SPA_DATA_DmaBuf)),
               SPA_PARAM_BUFFERS_size, SPA_POD_Int(size),
               SPA_PARAM_BUFFERS_stride, SPA_POD_Int(stride),
               SPA_PARAM_BUFFERS_buffers, SPA_POD_CHOICE_RANGE_Int(8, 1, 32)));
@@ -309,7 +309,6 @@ pw_stream* BaseCapturerPipeWire::CreateReceivingStream() {
               SPA_FORMAT_VIDEO_size, SPA_POD_CHOICE_RANGE_Rectangle(&pwMinScreenBounds,
                                                                     &pwMinScreenBounds,
                                                                     &pwMaxScreenBounds),
-              SPA_FORMAT_VIDEO_modifier, SPA_POD_Long(0),
               0));
   pw_stream_add_listener(stream, &spa_stream_listener_, &pw_stream_events_, this);
 
