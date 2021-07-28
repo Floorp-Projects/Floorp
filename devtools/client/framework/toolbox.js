@@ -661,7 +661,8 @@ Toolbox.prototype = {
         reason === "eventBreakpoint" ||
         reason === "breakpoint" ||
         reason === "exception" ||
-        reason === "resumeLimit"
+        reason === "resumeLimit" ||
+        reason === "XHR"
       ) {
         this.raise();
         this.selectTool("jsdebugger", reason);
