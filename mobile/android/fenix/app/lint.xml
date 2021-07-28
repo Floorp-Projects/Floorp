@@ -50,7 +50,7 @@
     <!-- Performance: checks we'd like to eventually set to error. -->
     <issue id="UseCompoundDrawables" severity="warning" />
     <issue id="Overdraw" severity="warning" />
-    <issue id="UnusedResources" severity="warning" />
+    <issue id="UnusedResources" severity="error" />
 
     <!-- Performance: checks that we're unsure of the value of that we might want to investigate. -->
     <issue id="UnpackedNativeCode" severity="informational" />
