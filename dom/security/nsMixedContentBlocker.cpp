@@ -367,6 +367,21 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(nsIURI* aURI) {
   return false;
 }
 
+/*
+ * Return the URI of the precusor principal or the URI of aPrincipal if there is
+ * no precursor URI.
+ */
+static already_AddRefed<nsIURI> GetPrincipalURIOrPrecursorPrincialURI(
+    nsIPrincipal* aPrincipal) {
+  nsCOMPtr<nsIURI> precursorURI = nullptr;
+  if (aPrincipal->GetIsNullPrincipal()) {
+    nsCOMPtr<nsIPrincipal> precursorPrin = aPrincipal->GetPrecursorPrincipal();
+    precursorURI = precursorPrin ? precursorPrin->GetURI() : nullptr;
+  }
+
+  return precursorURI ? precursorURI.forget() : aPrincipal->GetURI();
+}
+
 /* Static version of ShouldLoad() that contains all the Mixed Content Blocker
  * logic.  Called from non-static ShouldLoad().
  */
@@ -614,12 +629,14 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   nsCOMPtr<nsIURI> requestingLocation;
   auto* baseLoadingPrincipal = BasePrincipal::Cast(loadingPrincipal);
   if (baseLoadingPrincipal) {
-    baseLoadingPrincipal->GetURI(getter_AddRefs(requestingLocation));
+    requestingLocation =
+        GetPrincipalURIOrPrecursorPrincialURI(baseLoadingPrincipal);
   }
   if (!requestingLocation) {
     auto* baseTriggeringPrincipal = BasePrincipal::Cast(triggeringPrincipal);
     if (baseTriggeringPrincipal) {
-      baseTriggeringPrincipal->GetURI(getter_AddRefs(requestingLocation));
+      requestingLocation =
+          GetPrincipalURIOrPrecursorPrincialURI(baseTriggeringPrincipal);
     }
   }
 
