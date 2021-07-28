@@ -840,7 +840,7 @@ class MOZ_RAII PEHeaders final {
 
     auto dataEntry =
         RVAToPtr<PIMAGE_RESOURCE_DATA_ENTRY>(topLevel, langEntry->OffsetToData);
-    return RVAToPtr<T>(dataEntry->OffsetToData);
+    return dataEntry ? RVAToPtr<T>(dataEntry->OffsetToData) : nullptr;
   }
 
   template <size_t N>
@@ -953,6 +953,10 @@ class MOZ_RAII PEHeaders final {
 
   PIMAGE_RESOURCE_DIRECTORY_ENTRY
   FindResourceEntry(PIMAGE_RESOURCE_DIRECTORY aCurLevel, WORD aId) const {
+    if (!aCurLevel) {
+      return nullptr;
+    }
+
     // Immediately after the IMAGE_RESOURCE_DIRECTORY structure is an array
     // of IMAGE_RESOURCE_DIRECTORY_ENTRY structures. Since this function
     // searches by ID, we need to skip past any named entries before iterating.
