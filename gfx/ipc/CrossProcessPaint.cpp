@@ -397,6 +397,11 @@ void CrossProcessPaint::QueuePaint(dom::CanonicalBrowsingContext* aBc) {
 
   if (!clonePromise) {
     RefPtr<dom::WindowGlobalParent> wgp = aBc->GetCurrentWindowGlobal();
+    if (!wgp) {
+      CPP_LOG("Skipping BrowsingContext(%p) with no current WGP.\n", aBc);
+      return;
+    }
+
     // TODO: Apply some sort of clipping to visible bounds here (Bug 1562720)
     QueuePaint(wgp, Nothing(), NS_RGBA(0, 0, 0, 0),
                CrossProcessPaintFlags::DrawView);
@@ -411,6 +416,11 @@ void CrossProcessPaint::QueuePaint(dom::CanonicalBrowsingContext* aBc) {
       GetMainThreadSerialEventTarget(), __func__,
       [self = RefPtr{this}, bc = RefPtr{aBc}]() {
         RefPtr<dom::WindowGlobalParent> wgp = bc->GetCurrentWindowGlobal();
+        if (!wgp) {
+          CPP_LOG("Skipping BrowsingContext(%p) with no current WGP.\n",
+                  bc.get());
+          return;
+        }
         MOZ_ASSERT(!self->mReceivedFragments.Contains(GetTabId(wgp)));
 
         // TODO: Apply some sort of clipping to visible bounds here (Bug
