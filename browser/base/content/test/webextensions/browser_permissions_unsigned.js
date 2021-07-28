@@ -1,7 +1,7 @@
 "use strict";
 
 const ID = "permissions@test.mozilla.org";
-const WARNING_ICON = "chrome://browser/skin/warning.svg";
+const WARNING_ICON = "chrome://global/skin/icons/warning.svg";
 
 add_task(async function test_unsigned() {
   await SpecialPowers.pushPrefEnv({

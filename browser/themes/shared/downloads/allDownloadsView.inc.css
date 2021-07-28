@@ -37,7 +37,9 @@
 }
 
 @item@[verdict="PotentiallyUnwanted"] .downloadBlockedBadge {
-  background-image: url("chrome://browser/skin/warning.svg");
+  background-image: url("chrome://global/skin/icons/warning.svg");
+  -moz-context-properties: fill;
+  fill: #FFBF00;
 }
 
 @item@[verdict="Uncommon"] .downloadBlockedBadge {

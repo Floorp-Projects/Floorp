@@ -21,3 +21,8 @@
 .error-learn-more-link {
   font-weight: 600;
 }
+
+.warning-icon {
+  -moz-context-properties: fill;
+  fill: #FFBF00;
+}
