@@ -52,7 +52,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Interactions: "resource:///modules/Interactions.jsm",
   Log: "resource://gre/modules/Log.jsm",
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
-  PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
@@ -1934,7 +1933,6 @@ BrowserGlue.prototype = {
     BrowserUsageTelemetry.uninit();
     SearchSERPTelemetry.uninit();
     Interactions.uninit();
-    PageDataService.uninit();
     PageThumbs.uninit();
     NewTabUtils.uninit();
 
@@ -2150,7 +2148,6 @@ BrowserGlue.prototype = {
     SearchSERPTelemetry.init();
 
     Interactions.init();
-    PageDataService.init();
     ExtensionsUI.init();
 
     let signingRequired;
