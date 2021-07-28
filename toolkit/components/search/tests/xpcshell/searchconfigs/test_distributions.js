@@ -235,13 +235,12 @@ tests.push({
   region: "CN",
   distribution: "MozillaOnline",
   test: engines =>
-    hasParams(engines, "亚马逊", "searchbar", "engine=amazon_shopping") &&
+    hasParams(engines, "亚马逊", "searchbar", "ie=UTF8") &&
     hasParams(engines, "亚马逊", "suggestions", "tag=mozilla") &&
-    hasParams(engines, "亚马逊", "homepage", "create=2028") &&
-    hasParams(engines, "亚马逊", "homepage", "adid=1NZNRHJZ2Q87NTS7YW6N") &&
-    hasParams(engines, "亚马逊", "homepage", "campaign=408") &&
-    hasParams(engines, "亚马逊", "homepage", "create=2028") &&
-    hasParams(engines, "亚马逊", "homepage", "mode=blended") &&
+    hasParams(engines, "亚马逊", "homepage", "camp=536") &&
+    hasParams(engines, "亚马逊", "homepage", "creative=3200") &&
+    hasParams(engines, "亚马逊", "homepage", "index=aps") &&
+    hasParams(engines, "亚马逊", "homepage", "linkCode=ur2") &&
     hasEnginesFirst(engines, ["百度", "Bing", "Google", "亚马逊", "维基百科"]),
 });
 
