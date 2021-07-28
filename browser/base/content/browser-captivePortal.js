@@ -27,7 +27,7 @@ var CaptivePortalWatcher = {
   _previousCaptivePortalTab: null,
 
   get _captivePortalNotification() {
-    return gHighPriorityNotificationBox.getNotificationWithValue(
+    return gNotificationBox.getNotificationWithValue(
       this.PORTAL_NOTIFICATION_VALUE
     );
   },
@@ -308,11 +308,11 @@ var CaptivePortalWatcher = {
       gBrowser.tabContainer.removeEventListener("TabSelect", this);
     };
 
-    gHighPriorityNotificationBox.appendNotification(
+    gNotificationBox.appendNotification(
       message,
       this.PORTAL_NOTIFICATION_VALUE,
       "",
-      gHighPriorityNotificationBox.PRIORITY_INFO_MEDIUM,
+      gNotificationBox.PRIORITY_INFO_MEDIUM,
       buttons,
       closeHandler
     );
