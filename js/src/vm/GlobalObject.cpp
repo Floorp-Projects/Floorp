@@ -995,7 +995,7 @@ bool GlobalObject::getSelfHostedFunction(JSContext* cx,
     // might be neither "selfHostedName" nor "name". In that case, its
     // canonical name must've been set using the `_SetCanonicalName`
     // intrinsic.
-    cx->runtime()->assertSelfHostedFunctionHasCanonicalName(cx, selfHostedName);
+    cx->runtime()->assertSelfHostedFunctionHasCanonicalName(selfHostedName);
     return true;
   }
 
