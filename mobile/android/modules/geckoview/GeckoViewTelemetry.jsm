@@ -3,7 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["HistogramStopwatch"];
+var EXPORTED_SYMBOLS = ["HistogramStopwatch", "InitializationTracker"];
+
+var InitializationTracker = {
+  initialized: false,
+  onInitialized(profilerTime) {
+    if (!this.initialized) {
+      this.initialized = true;
+      ChromeUtils.addProfilerMarker(
+        "GeckoView Initialization END",
+        profilerTime
+      );
+    }
+  },
+};
 
 // A helper for histogram timer probes.
 class HistogramStopwatch {
