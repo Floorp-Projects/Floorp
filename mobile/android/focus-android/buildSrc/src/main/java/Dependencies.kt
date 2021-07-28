@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 object Versions {
-    const val compose_version = "1.0.0-rc02"
+    const val compose_version = "1.0.0"
 
     object AndroidX {
-        const val activity_compose = "1.3.0-rc02"
+        const val activity_compose = "1.3.0"
         const val annotation = "1.1.0"
         const val appcompat = "1.3.0"
         const val arch = "2.1.0"
@@ -31,7 +31,7 @@ object Versions {
 
     object Gradle {
         const val kotlin_plugin = Kotlin.version
-        const val android_plugin = "7.0.0-rc01"
+        const val android_plugin = "7.0.0"
     }
 
     object Test {
