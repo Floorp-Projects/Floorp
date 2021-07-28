@@ -227,7 +227,7 @@ var ExtensionsUI = {
       }
 
       let icon = info.unsigned
-        ? "chrome://browser/skin/warning.svg"
+        ? "chrome://global/skin/icons/warning.svg"
         : info.icon;
 
       let histkey;
@@ -426,6 +426,7 @@ var ExtensionsUI = {
       let popupOptions = {
         hideClose: true,
         popupIconURL: icon || DEFAULT_EXTENSION_ICON,
+        popupIconClass: icon ? "" : "addon-warning-icon",
         persistent: true,
         eventCallback,
         name: strings.addonName,

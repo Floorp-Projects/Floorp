@@ -48,3 +48,8 @@ html|*.addon-webext-perm-list {
   font-weight: bold;
   margin: 0;
 }
+
+.addon-warning-icon {
+  -moz-context-properties: fill;
+  fill: #FFBF00;
+}

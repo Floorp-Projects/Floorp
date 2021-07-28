@@ -13,6 +13,8 @@ body {
 
 .message-bar-icon {
   vertical-align: middle;
+  -moz-context-properties: fill;
+  fill: #FFBF00;
 }
 
 #categories {
