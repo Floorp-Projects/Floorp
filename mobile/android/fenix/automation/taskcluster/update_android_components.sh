@@ -59,7 +59,7 @@ if [[ $(hub pr list --head "$GITHUB_USER:$BRANCH") ]]; then
     echo "There's already an open PR."
 else
     echo "No PR found. Opening new PR."
-    hub pull-request --base master --head "$GITHUB_USER:$BRANCH" --no-edit -m "Update Android Components version"
+    hub pull-request --base main --head "$GITHUB_USER:$BRANCH" --no-edit -m "Update Android Components version"
 fi
 
 unset GITHUB_TOKEN

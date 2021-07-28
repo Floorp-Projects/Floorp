@@ -1,10 +1,10 @@
 Firefox Preview tracks certain types of installs using a third-party install tracking framework called Adjust. The intention is to determine the origin of Firefox Preview installs by answering the question, “Did this user on this device install Firefox Preview in response to a specific advertising campaign performed by Mozilla?”
 
-The framework consists of a software development kit (SDK) linked into Firefox Preview and a data-collecting Internet service backend run by the German company [adjust GmbH](https://www.adjust.com). The Adjust SDK is open source and MIT licensed. It is hosted at [https://github.com/adjust/android_sdk](https://github.com/adjust/android_sdk). Firefox Preview pulls in an unmodified copy of the SDK using Gradle. The [Dependencies.kt](https://github.com/mozilla-mobile/fenix/blob/master/buildSrc/src/main/java/Dependencies.kt#L39) contains the version of the framework that is being used. The SDK is documented at [https://docs.adjust.com](https://docs.adjust.com).
+The framework consists of a software development kit (SDK) linked into Firefox Preview and a data-collecting Internet service backend run by the German company [adjust GmbH](https://www.adjust.com). The Adjust SDK is open source and MIT licensed. It is hosted at [https://github.com/adjust/android_sdk](https://github.com/adjust/android_sdk). Firefox Preview pulls in an unmodified copy of the SDK using Gradle. The [Dependencies.kt](https://github.com/mozilla-mobile/fenix/blob/main/buildSrc/src/main/java/Dependencies.kt#L39) contains the version of the framework that is being used. The SDK is documented at [https://docs.adjust.com](https://docs.adjust.com).
 
 ## Adjust Integration
 
-The Adjust framework is abstracted via the [AdjustMetricService](https://github.com/mozilla-mobile/fenix/blob/master/app/src/main/java/org/mozilla/fenix/components/metrics/AdjustMetricsService.kt) class. All interaction with Adjust happens via this class.
+The Adjust framework is abstracted via the [AdjustMetricService](https://github.com/mozilla-mobile/fenix/blob/main/app/src/main/java/org/mozilla/fenix/components/metrics/AdjustMetricsService.kt) class. All interaction with Adjust happens via this class.
 
 ## Adjust Messages
 

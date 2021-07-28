@@ -12,7 +12,7 @@ Our largest deviation from these architectures is that while they each recommend
 #### Overview
 A store of state
 
-See [mozilla.components.lib.state.Store](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt)
+See [mozilla.components.lib.state.Store](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt)
 
 Pushes changes to: [View](#view)
 
@@ -25,7 +25,7 @@ It is recommended that consumers rely as much as possible on `consumeFrom(store)
 
 Note that there is one Store for any given screen, and only one will be active at any given time. Stores are persisted across configuration changes, but created and destroyed during fragment transactions. This means that data that must be shared across Stores must be passed as arguments to the new fragment.
 
-Stores should be created using [StoreProvider#get](https://github.com/mozilla-mobile/fenix/blob/master/app/src/main/java/org/mozilla/fenix/components/StoreProvider.kt).
+Stores should be created using [StoreProvider#get](https://github.com/mozilla-mobile/fenix/blob/main/app/src/main/java/org/mozilla/fenix/components/StoreProvider.kt).
 
 -------
 
@@ -33,7 +33,7 @@ Stores should be created using [StoreProvider#get](https://github.com/mozilla-mo
 #### Overview
 Simple description of a state change
 
-See [mozilla.components.lib.state.Action](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Action.kt)
+See [mozilla.components.lib.state.Action](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/state/src/main/java/mozilla/components/lib/state/Action.kt)
 
 Created by: [Controller](#controller)
 
@@ -48,7 +48,7 @@ Simple data object that carries information about a [State](#state) change to a 
 #### Overview
 Description of the state of a screen
 
-See [mozilla.components.lib.state.State](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/State.kt)
+See [mozilla.components.lib.state.State](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/state/src/main/java/mozilla/components/lib/state/State.kt)
 
 Referenced by: [Store](#store)
 
@@ -67,7 +67,7 @@ This also gives us a major advantage when debugging. If the UI looks wrong, chec
 #### Overview
 Pure function used to create new [State](#state) objects
 
-See [mozilla.components.lib.state.Reducer](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt)
+See [mozilla.components.lib.state.Reducer](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt)
 
 Referenced by: [Store](#store)
 

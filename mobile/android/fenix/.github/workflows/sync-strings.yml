@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: main
-          ref: master
+          ref: main
       - name: "Checkout Beta Branch"
         uses: actions/checkout@v2
         with:
@@ -40,6 +40,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: beta
           branch: automation/sync-strings-${{ steps.fenix-beta-version.outputs.major-beta-version }}
-          title: "Sync Strings from master to releases_${{steps.fenix-beta-version.outputs.fenix-beta-version}}.0"
-          body: "This (automated) PR syncs strings from `master` to `releases_${{steps.fenix-beta-version.outputs.fenix-beta-version}}.0.0`"
+          title: "Sync Strings from main to releases_${{steps.fenix-beta-version.outputs.fenix-beta-version}}.0"
+          body: "This (automated) PR syncs strings from `main` to `releases_${{steps.fenix-beta-version.outputs.fenix-beta-version}}.0.0`"
           labels: needs:review

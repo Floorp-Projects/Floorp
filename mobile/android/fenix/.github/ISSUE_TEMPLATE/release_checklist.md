@@ -28,7 +28,7 @@ There are two releases this covers: the current sprint that is going out to Beta
 
 ## Sprint X.1 End [Wednesday, 2nd week] Cutting a Beta
 - [ ] Make a new Beta
-    - [ ] Create a branch off of master (DO NOT PUSH YET) for the *current* milestone of format `releases_v85.0.0`. After that, anything landing in master will be part of the next release.
+    - [ ] Create a branch off of main (DO NOT PUSH YET) for the *current* milestone of format `releases_v85.0.0`. After that, anything landing in main will be part of the next release.
        - ⚠️ Please **do not** use `/` in branch names anymore: Taskcluster silently ignores them and doesn't output tasks at the right index.
     - [ ] Bump `version.txt` to match the new version number
     - [ ] Grant [mozilla-release-automation-bot](https://github.com/mozilla-release-automation-bot) write access to this branch.
@@ -41,7 +41,7 @@ There are two releases this covers: the current sprint that is going out to Beta
     - [ ] Send an email to QA at mozilla-mobile-qa@softvision.com with a link to the Taskcluster build (subdirectory of the [Fenix CI](https://firefox-ci-tc.services.mozilla.com/tasks/index/mobile.v2.fenix.beta))
 
 ### Bugfix uplifts / Beta Product Integrity (Beta Release until PI green signoff)
-- [ ] If bugs are considered release blocker then find someone to fix them on master and the milestone branch (cherry-pick / uplift)
+- [ ] If bugs are considered release blocker then find someone to fix them on main and the milestone branch (cherry-pick / uplift)
     - [ ] Add the uplift request to the appropriate row in the [Uplifts document](https://docs.google.com/spreadsheets/d/1qIvHpcQ3BqJtlzV5T4M1MhbWVxkNiG-ToeYnWEBW4-I/edit#gid=0).
 - [ ] If needed, ship a new beta version (e.g. v1.0-beta.2) and follow the submission checklist again.
 - [ ] Once there is GREEN QA signoff, file a [release management bugzilla for rollout](https://bugzilla.mozilla.org/show_bug.cgi?id=1664366)
@@ -49,8 +49,8 @@ There are two releases this covers: the current sprint that is going out to Beta
 
 ### Uplifting L10N strings to Beta [Wednesday, 2 weeks after sprint end]
 - [ ] Find the issue ([example](https://github.com/mozilla-mobile/fenix/issues/16381)) filed by L10N / delphine saying string are ready for uplift (it takes 2 weeks for localizers to prepare localization).
-- [ ] If there are new locales that are ready to be added to Release, add them to [l10n-release.toml](https://github.com/mozilla-mobile/fenix/blob/master/l10n-release.toml)
-- [ ] Run the [L10N uplift script](https://github.com/mozilla-mobile/fenix/blob/master/l10n-uplift.py) against the releases/vX.1 branch (releases/v85.0.0). There will likely be conflicts, but if you are confused, they should match the strings in [main/Nightly](https://github.com/mozilla-mobile/fenix/tree/master/app/src/main/res)
+- [ ] If there are new locales that are ready to be added to Release, add them to [l10n-release.toml](https://github.com/mozilla-mobile/fenix/blob/main/l10n-release.toml)
+- [ ] Run the [L10N uplift script](https://github.com/mozilla-mobile/fenix/blob/main/l10n-uplift.py) against the releases/vX.1 branch (releases/v85.0.0). There will likely be conflicts, but if you are confused, they should match the strings in [main/Nightly](https://github.com/mozilla-mobile/fenix/tree/main/app/src/main/res)
 - [ ] Once all conflicts are resolved, tag a new Beta to be released.
 - [ ] Notify delphine in the L10N issue that the strings have been uplifted, and string quarantine can be lifted
 

@@ -1,7 +1,7 @@
 pipeline {
     agent any
     triggers {
-        cron(env.BRANCH_NAME == 'master' ? 'H 0 * * *' : '')
+        cron(env.BRANCH_NAME == 'main' ? 'H 0 * * *' : '')
     }
     options {
         timestamps()
@@ -9,7 +9,7 @@ pipeline {
     }
     stages {
         stage('test') {
-        when { branch 'master' }
+        when { branch 'main' }
             steps {
                 dir('app/src/androidTest/java/org/mozilla/fenix/syncIntegration') {
                     sh 'pipenv install'
@@ -22,7 +22,7 @@ pipeline {
     post {
         always {
             script {
-                 if (env.BRANCH_NAME == 'master') {
+                 if (env.BRANCH_NAME == 'main') {
                  publishHTML(target: [
                      allowMissing: false,
                      alwaysLinkToLastBuild: true,
@@ -36,7 +36,7 @@ pipeline {
 
         failure {
             script {
-                if (env.BRANCH_NAME == 'master') {
+                if (env.BRANCH_NAME == 'main') {
                     slackSend(
                         color: 'danger',
                         message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}HTML_20Report/)")

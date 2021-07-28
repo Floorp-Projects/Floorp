@@ -1,7 +1,7 @@
 # Firefox for Android
 
-[![Task Status](https://github.taskcluster.net/v1/repository/mozilla-mobile/fenix/master/badge.svg)](https://github.taskcluster.net/v1/repository/mozilla-mobile/fenix/master/latest)
-[![codecov](https://codecov.io/gh/mozilla-mobile/fenix/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla-mobile/fenix)
+[![Task Status](https://github.taskcluster.net/v1/repository/mozilla-mobile/fenix/main/badge.svg)](https://github.taskcluster.net/v1/repository/mozilla-mobile/fenix/main/latest)
+[![codecov](https://codecov.io/gh/mozilla-mobile/fenix/branch/main/graph/badge.svg)](https://codecov.io/gh/mozilla-mobile/fenix)
 
 Fenix (internal codename) is the all-new Firefox for Android browser, based on [GeckoView](https://mozilla.github.io/geckoview/) and [Mozilla Android Components](https://mozac.org/).
 
@@ -207,7 +207,7 @@ See a [demo of auto-publication workflow in action](https://www.youtube.com/watc
 
 In order to build successfully, you need to check out a commit in the dependency repository that has no breaking changes. The two best ways to do this are:
 - Run the `<android-components>/tools/list_compatible_dependency_versions.py` script to output a compatible commit
-- Check out the latest commit from master in this repository and the dependency repository. However, this may fail if there were breaking changes added recently to the dependency.
+- Check out the latest commit from main in this repository and the dependency repository. However, this may fail if there were breaking changes added recently to the dependency.
 
 ### Using Nimbus servers during local development
 If you're working with the Nimbus experiments platform, by default for local development Fenix configures Nimbus to not use a server.

@@ -4,23 +4,23 @@ Firefox for Android uses a few libraries for crash and exception reporting. This
 
 This page documents the types of crash reporting, how the various parts interact, and what kind of data is sent back to Mozilla.
 
-Documentation for the specific libraries is included in the [Android Components Crash Reporting README](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/README.md).
+Documentation for the specific libraries is included in the [Android Components Crash Reporting README](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/crash/README.md).
 
 ## Glean crash ping
 
 [Glean SDK](https://mozilla.github.io/glean/book/index.html) is a Mozilla open source telemetry library, which Firefox for Android uses to collect app telemetry. It can also collect crash counts as a labeled counter with each label corresponding to a specific type of crash (such as `native_code_crash`, `unhandled_exception`).
 
-The Glean crash ping format is documented [here](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/docs/metrics.md).
+The Glean crash ping format is documented [here](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/crash/docs/metrics.md).
 
 To opt in or out of Glean telemetry reporting, visit the Data collection menu under Settings.
 
 ## Breadcrumbs
 
-[Breadcrumbs](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt) are trail of events that are sent with each crash report to both Socorro and Sentry.  
+[Breadcrumbs](https://github.com/mozilla-mobile/android-components/blob/main/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt) are trail of events that are sent with each crash report to both Socorro and Sentry.  
 
 ### Events
 
-In [HomeActivity](https://github.com/mozilla-mobile/fenix/blob/master/app/src/main/java/org/mozilla/fenix/HomeActivity.kt) when `onDestinationChanged` occurs, the destination fragment's name and and whether it is a custom tab is added to the breadcrumbs. 
+In [HomeActivity](https://github.com/mozilla-mobile/fenix/blob/main/app/src/main/java/org/mozilla/fenix/HomeActivity.kt) when `onDestinationChanged` occurs, the destination fragment's name and and whether it is a custom tab is added to the breadcrumbs. 
 
 ## Socorro
 
