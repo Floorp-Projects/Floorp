@@ -3758,9 +3758,12 @@ bool JSScript::fullyInitFromStencil(
 
   // Link Scope -> JSFunction -> BaseScript.
   if (script->isFunction()) {
-    JSFunction* fun = gcOutput.functions[scriptIndex];
+    JSFunction* fun = gcOutput.getFunction(scriptIndex);
     script->bodyScope()->as<FunctionScope>().initCanonicalFunction(fun);
     if (fun->isIncomplete()) {
+      fun->initScript(script);
+    } else if (fun->hasSelfHostedLazyScript()) {
+      fun->clearSelfHostedLazyScript();
       fun->initScript(script);
     } else {
       // We are delazifying in-place.
@@ -3803,7 +3806,7 @@ JSScript* JSScript::fromStencil(JSContext* cx,
 
   RootedObject functionOrGlobal(cx, cx->global());
   if (scriptStencil.isFunction()) {
-    functionOrGlobal = gcOutput.functions[scriptIndex];
+    functionOrGlobal = gcOutput.getFunction(scriptIndex);
   }
 
   Rooted<ScriptSourceObject*> sourceObject(cx, gcOutput.sourceObject);
