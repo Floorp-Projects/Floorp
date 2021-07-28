@@ -159,28 +159,12 @@
       getNode("popupButton").setAttribute("aria-haspopup", "true");
       await p;
 
-      p = waitForEvent(...stateChange(STATE_HASPOPUP, false, true, "popupButton"));
-      getNode("popupButton").setAttribute("aria-haspopup", "tree");
-      await p;
-
-      p = waitForEvent(...stateChange(STATE_HASPOPUP, false, true, "popupButton"));
-      getNode("popupButton").setAttribute("aria-haspopup", "menu");
-      await p;
-
-      p = waitForEvent(...stateChange(STATE_HASPOPUP, false, true, "popupButton"));
-      getNode("popupButton").setAttribute("aria-haspopup", "listbox");
-      await p;
-
-      p = waitForEvent(...stateChange(STATE_HASPOPUP, false, true, "popupButton"));
-      getNode("popupButton").setAttribute("aria-haspopup", "grid");
-      await p;
-
       p = waitForEvent(...stateChange(STATE_HASPOPUP, false, false, "popupButton"));
       getNode("popupButton").setAttribute("aria-haspopup", "false");
       await p;
 
       p = waitForEvent(...stateChange(STATE_HASPOPUP, false, true, "popupButton"));
-      getNode("popupButton").setAttribute("aria-haspopup", "dialog");
+      getNode("popupButton").setAttribute("aria-haspopup", "true");
       await p;
 
       p = waitForEvent(...stateChange(STATE_HASPOPUP, false, false, "popupButton"));
