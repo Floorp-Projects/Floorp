@@ -726,6 +726,18 @@ add_task(async function test_userContextId() {
   controller.fetch("test", false, getEngine, 1);
 });
 
+// Non-English characters
+
+add_task(async function suggestions_contain_escaped_unicode() {
+  let controller = new SearchSuggestionController();
+  let result = await controller.fetch("stü", false, getEngine);
+  Assert.equal(result.term, "stü");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 2);
+  Assert.equal(result.remote[0].value, "stühle");
+  Assert.equal(result.remote[1].value, "stüssy");
+});
+
 // Helpers
 
 function updateSearchHistory(operation, value) {

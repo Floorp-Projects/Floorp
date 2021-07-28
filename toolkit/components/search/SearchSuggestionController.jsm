@@ -521,16 +521,35 @@ SearchSuggestionController.prototype = {
       return;
     }
 
-    if (
-      !Array.isArray(serverResults) ||
-      !serverResults[0] ||
-      this._searchString.localeCompare(serverResults[0], undefined, {
-        sensitivity: "base",
-      })
-    ) {
-      // something is wrong here so drop remote results
+    try {
+      if (
+        !Array.isArray(serverResults) ||
+        !serverResults[0] ||
+        (this._searchString.localeCompare(serverResults[0], undefined, {
+          sensitivity: "base",
+        }) &&
+          // Some engines (e.g. Amazon) return a search string containing
+          // escaped Unicode sequences. Try decoding the remote search string
+          // and compare that with our typed search string.
+          this._searchString.localeCompare(
+            decodeURIComponent(
+              JSON.parse('"' + serverResults[0].replace(/\"/g, '\\"') + '"')
+            ),
+            undefined,
+            {
+              sensitivity: "base",
+            }
+          ))
+      ) {
+        // something is wrong here so drop remote results
+        deferredResponse.resolve(
+          "Unexpected response, this._searchString does not match remote response"
+        );
+        return;
+      }
+    } catch (ex) {
       deferredResponse.resolve(
-        "Unexpected response, this._searchString does not match remote response"
+        `Failed to parse the remote response string: ${ex}`
       );
       return;
     }
