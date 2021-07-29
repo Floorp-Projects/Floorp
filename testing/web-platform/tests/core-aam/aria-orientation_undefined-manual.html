@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>aria-autocomplete=list</title>
+    <title>aria-orientation=undefined</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -19,29 +19,23 @@
             "ATK" : [
                [
                   "property",
-                  "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
+                  "states",
+                  "doesNotContain",
+                  "STATE_VERTICAL"
                ],
                [
                   "property",
                   "states",
-                  "contains",
-                  "STATE_SUPPORTS_AUTOCOMPLETION"
+                  "doesNotContain",
+                  "STATE_HORIZONTAL"
                ]
             ],
-            "IAccessible2" : [
+            "AXAPI" : [
                [
                   "property",
-                  "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
-               ],
-               [
-                  "property",
-                  "states",
-                  "contains",
-                  "IA2_STATE_SUPPORTS_AUTOCOMPLETION"
+                  "AXOrientation",
+                  "is",
+                  "AXUnknownOrientation"
                ]
             ]
          },
@@ -49,15 +43,16 @@
          "type" : "test"
       }
    ],
-   "title" : "aria-autocomplete=list"
+   "title" : "aria-orientation=undefined"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for aria-autocomplete=list.</p>
-  <input role='combobox' id='test' aria-autocomplete='list'>
+  <p>This test examines the ARIA properties for aria-orientation=undefined.</p>
+    <div role='radiogroup' id='test' aria-orientation='undefined'>content</div>
+
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>

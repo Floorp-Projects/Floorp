@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>alertdialog</title>
+    <title>progressbar no min or max</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -18,46 +18,58 @@
          "test" : {
             "ATK" : [
                [
-                  "property",
-                  "role",
+                  "result",
+                  "atk_value_get_minimum_value()",
                   "is",
-                  "ROLE_ALERT"
+                  "0"
+               ],
+               [
+                  "result",
+                  "atk_value_get_maximum_value()",
+                  "is",
+                  "100"
                ]
             ],
             "AXAPI" : [
                [
                   "property",
-                  "AXRole",
+                  "AXMinValue",
                   "is",
-                  "AXGroup"
+                  "0"
                ],
                [
                   "property",
-                  "AXSubrole",
+                  "AXMaxValue",
                   "is",
-                  "AXApplicationAlertDialog"
-               ],
-               [
-                  "property",
-                  "AXRoleDescription",
-                  "is",
-                  "web alert dialog"
+                  "100"
                ]
             ],
-            "MSAA" : [
+            "IAccessible2" : [
                [
                   "property",
-                  "role",
+                  "minimumValue",
                   "is",
-                  "ROLE_SYSTEM_DIALOG"
+                  "0"
+               ],
+               [
+                  "property",
+                  "maximumValue",
+                  "is",
+                  "100"
                ]
             ],
             "UIA" : [
                [
-                  "property",
-                  "ControlType",
+                  "result",
+                  "RangeValue.Minimum",
                   "is",
-                  "Pane"
+                  "0"
+               ],
+               [
+                  "result",
+                  "RangeValue.Maximum",
+                  "is",
+                  "100"
                ]
             ]
          },
@@ -65,16 +77,15 @@
          "type" : "test"
       }
    ],
-   "title" : "alertdialog"
+   "title" : "progressbar no min or max"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for alertdialog.</p>
-    <div role='alertdialog' id='test'>content</div>
-
+  <p>This test examines the ARIA properties for progressbar without a min or max.</p>
+  <div role="progressbar" aria-valuenow="20" id="test">content</div>
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>

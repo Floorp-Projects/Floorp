@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>aria-autocomplete=list</title>
+    <title>aria-current with non-false allowed value</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -21,13 +21,21 @@
                   "property",
                   "objectAttributes",
                   "contains",
-                  "autocomplete:list"
+                  "current:step"
                ],
                [
                   "property",
                   "states",
                   "contains",
-                  "STATE_SUPPORTS_AUTOCOMPLETION"
+                  "STATE_ACTIVE"
+               ]
+            ],
+            "AXAPI" : [
+               [
+                  "property",
+                  "AXARIACurrent",
+                  "is",
+                  "step"
                ]
             ],
             "IAccessible2" : [
@@ -35,13 +43,15 @@
                   "property",
                   "objectAttributes",
                   "contains",
-                  "autocomplete:list"
-               ],
+                  "current:step"
+               ]
+            ],
+            "UIA" : [
                [
                   "property",
-                  "states",
-                  "contains",
-                  "IA2_STATE_SUPPORTS_AUTOCOMPLETION"
+                  "AriaProperties.current",
+                  "is",
+                  "step"
                ]
             ]
          },
@@ -49,15 +59,16 @@
          "type" : "test"
       }
    ],
-   "title" : "aria-autocomplete=list"
+   "title" : "aria-current with non-false allowed value"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for aria-autocomplete=list.</p>
-  <input role='combobox' id='test' aria-autocomplete='list'>
+  <p>This test examines the ARIA properties for aria-current with non-false allowed value.</p>
+    <div role='group' id='test' aria-current='step'>content</div>
+
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>
