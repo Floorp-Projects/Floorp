@@ -181,7 +181,7 @@ class PuppetWidget : public nsBaseWidget,
   bool CreateRemoteLayerManager(
       const std::function<bool(LayerManager*)>& aInitializeFunc);
 
-  bool HasLayerManager() { return !!mWindowRenderer; }
+  bool HasLayerManager() { return !!mLayerManager; }
 
   virtual void SetInputContext(const InputContext& aContext,
                                const InputContextAction& aAction) override;

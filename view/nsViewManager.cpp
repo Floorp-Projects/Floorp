@@ -333,15 +333,7 @@ void nsViewManager::Refresh(nsView* aView,
       if (!renderer->NeedsWidgetInvalidation()) {
         renderer->FlushRendering();
       } else {
-        // Try to just Composite the current WindowRenderer contents. If
-        // that fails then we need tor repaint, and request that it gets
-        // composited as well.
-        // Once BasicLayerManager is removed, Composite will never succeed, so
-        // we can remove it and only have the call to Paint for
-        // FallbackRenderer.
-        if (!presShell->Composite(aView)) {
-          presShell->Paint(aView, damageRegion, PaintFlags::PaintComposite);
-        }
+        presShell->Paint(aView, damageRegion, PaintFlags::PaintComposite);
       }
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -464,7 +456,7 @@ void nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget) {
       }
 #endif
 
-      presShell->Paint(view, nsRegion(), PaintFlags::None);
+      presShell->Paint(view, nsRegion(), PaintFlags::PaintLayers);
       view->SetForcedRepaint(false);
 
 #ifdef MOZ_DUMP_PAINTING
