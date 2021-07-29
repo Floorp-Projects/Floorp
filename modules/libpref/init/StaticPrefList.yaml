@@ -9202,6 +9202,14 @@
   value: 2
   mirror: always
 
+# Set to ignore referrer policies which is less restricted than the default for
+# cross-site requests, including 'unsafe-url', 'no-referrer-when-downgrade' and
+# 'origin-when-cross-origin'.
+- name: network.http.referer.disallowCrossSiteRelaxingDefault
+  type: bool
+  value: @IS_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
 # Set the Private Browsing Default Referrer Policy applied to third-party
 # trackers when the default cookie policy is set to reject third-party
 # trackers, to be used unless overriden by the site.
