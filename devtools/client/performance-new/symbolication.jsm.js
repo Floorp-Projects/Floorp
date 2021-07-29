@@ -109,77 +109,6 @@ function getCandidatePaths(objdirs, lib) {
 }
 
 /**
- * Profiling through the DevTools remote debugging protocol supports multiple
- * different modes. This function is specialized to handle various profiling
- * modes such as:
- *
- *   1) Profiling the same browser on the same machine.
- *   2) Profiling a remote browser on the same machine.
- *   3) Profiling a remote browser on a different device.
- *
- * It's also built to handle symbolication requests for both Gecko libraries and
- * system libraries.
- *
- * @param {Library} lib - The library to get symbols for.
- * @param {string[]} objdirs - An array of objdir paths on the host machine that
- *   should be searched for relevant build artifacts.
- * @param {PerfFront | undefined} perfFront - The perfFront for a remote debugging
- *   connection, or undefined when profiling this browser.
- * @return {Promise<SymbolTableAsTuple>} The symbol table of the first encountered binary with a
- *   matching breakpad ID, in SymbolTableAsTuple format. An exception is thrown (the
- *   promise is rejected) if nothing was found.
- */
-async function getSymbolTableMultiModal(lib, objdirs, perfFront = undefined) {
-  const { debugName, breakpadId } = lib;
-
-  // First, enumerate the local paths at which we could find binaries (and, on
-  // Windows, PDB files) which could contain symbol information.
-  const candidatePaths = getCandidatePaths(objdirs, lib);
-
-  // Iterate over all the paths and try to get symbols from each entry.
-  const { ProfilerGetSymbols } = lazy.ProfilerGetSymbols();
-  for (const { path, debugPath } of candidatePaths) {
-    if (await doesFileExistAtPath(path)) {
-      try {
-        return await ProfilerGetSymbols.getSymbolTable(
-          path,
-          debugPath,
-          breakpadId
-        );
-      } catch (e) {
-        // ProfilerGetSymbols.getSymbolTable was unsuccessful. So either the
-        // file wasn't parseable or its contents didn't match the specified
-        // breakpadId, or some other error occurred.
-        // Advance to the next candidate path.
-      }
-    }
-  }
-
-  // No local file was found to obtain symbols from.
-  // This can happen if the  debuggee is truly remote (e.g. on an Android phone).
-  if (!perfFront) {
-    throw new Error(
-      `Could not obtain symbols for the library ${debugName} ${breakpadId} ` +
-        `because there was no matching file at any of the candidate paths: ${JSON.stringify(
-          candidatePaths
-        )}`
-    );
-  }
-
-  // Try to obtain the symbol table on the debuggee. We get into this
-  // branch in the following cases:
-  //  - Android system libraries
-  //  - Firefox binaries that have no matching equivalent on the host
-  //    machine, for example because the user didn't point us at the
-  //    corresponding objdir, or if the build was compiled somewhere
-  //    else, or if the build on the device is outdated.
-  // For now, the "debuggee" is never a Windows machine, which is why we don't
-  // need to pass the library's debugPath. (path and debugPath are always the
-  // same on non-Windows.)
-  return getSymbolTableFromDebuggee(perfFront, lib.path, breakpadId);
-}
-
-/**
  * Returns a function getLibrary(debugName, breakpadId) => Library which
  * resolves a (debugName, breakpadId) pair to the library's information, which
  * contains the absolute paths on the file system where the binary and its
@@ -223,6 +152,18 @@ function createLibraryMap(sharedLibraries) {
   };
 }
 
+/**
+ * Profiling through the DevTools remote debugging protocol supports multiple
+ * different modes. This class is specialized to handle various profiling
+ * modes such as:
+ *
+ *   1) Profiling the same browser on the same machine.
+ *   2) Profiling a remote browser on the same machine.
+ *   3) Profiling a remote browser on a different device.
+ *
+ * It's also built to handle symbolication requests for both Gecko libraries and
+ * system libraries.
+ */
 class LocalSymbolicationService {
   /**
    * @param {Library[]} sharedLibraries - Information about the shared libraries
@@ -249,13 +190,57 @@ class LocalSymbolicationService {
         `Could not find the library for "${debugName}", "${breakpadId}".`
       );
     }
-    return getSymbolTableMultiModal(lib, this._objdirs, this._perfFront);
+
+    // First, enumerate the local paths at which we could find binaries (and, on
+    // Windows, PDB files) which could contain symbol information.
+    const candidatePaths = getCandidatePaths(this._objdirs, lib);
+
+    // Iterate over all the paths and try to get symbols from each entry.
+    const { ProfilerGetSymbols } = lazy.ProfilerGetSymbols();
+    for (const { path, debugPath } of candidatePaths) {
+      if (await doesFileExistAtPath(path)) {
+        try {
+          return await ProfilerGetSymbols.getSymbolTable(
+            path,
+            debugPath,
+            breakpadId
+          );
+        } catch (e) {
+          // ProfilerGetSymbols.getSymbolTable was unsuccessful. So either the
+          // file wasn't parseable or its contents didn't match the specified
+          // breakpadId, or some other error occurred.
+          // Advance to the next candidate path.
+        }
+      }
+    }
+
+    // No local file was found to obtain symbols from.
+    // This can happen if the  debuggee is truly remote (e.g. on an Android phone).
+    if (!this._perfFront) {
+      throw new Error(
+        `Could not obtain symbols for the library ${debugName} ${breakpadId} ` +
+          `because there was no matching file at any of the candidate paths: ${JSON.stringify(
+            candidatePaths
+          )}`
+      );
+    }
+
+    // Try to obtain the symbol table on the debuggee. We get into this
+    // branch in the following cases:
+    //  - Android system libraries
+    //  - Firefox binaries that have no matching equivalent on the host
+    //    machine, for example because the user didn't point us at the
+    //    corresponding objdir, or if the build was compiled somewhere
+    //    else, or if the build on the device is outdated.
+    // For now, the "debuggee" is never a Windows machine, which is why we don't
+    // need to pass the library's debugPath. (path and debugPath are always the
+    // same on non-Windows.)
+    return getSymbolTableFromDebuggee(this._perfFront, lib.path, breakpadId);
   }
 }
 
 /**
- * Return an object that implements the SymbolicationService interface, whose
- * getSymbolTable method calls getSymbolTableMultiModal with the right arguments.
+ * Return an object that implements the SymbolicationService interface.
  *
  * @param {Library[]} sharedLibraries - Information about the shared libraries
  * @param {string[]} objdirs - An array of objdir paths
