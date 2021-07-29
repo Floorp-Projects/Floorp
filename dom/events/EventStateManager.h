@@ -415,8 +415,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    *        in that case the caller is responsible for updating hover state.
    */
   void NotifyMouseOut(WidgetMouseEvent* aMouseEvent, nsIContent* aMovingInto);
-  void GenerateDragDropEnterExit(nsPresContext* aPresContext,
-                                 WidgetDragEvent* aDragEvent);
+  MOZ_CAN_RUN_SCRIPT void GenerateDragDropEnterExit(
+      nsPresContext* aPresContext, WidgetDragEvent* aDragEvent);
 
   /**
    * Return mMouseEnterLeaveHelper or relevant mPointersEnterLeaveHelper
@@ -433,11 +433,12 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * @param aTargetContent target to set for the event
    * @param aTargetFrame target frame for the event
    */
-  void FireDragEnterOrExit(nsPresContext* aPresContext,
-                           WidgetDragEvent* aDragEvent, EventMessage aMessage,
-                           nsIContent* aRelatedTarget,
-                           nsIContent* aTargetContent,
-                           AutoWeakFrame& aTargetFrame);
+  MOZ_CAN_RUN_SCRIPT void FireDragEnterOrExit(nsPresContext* aPresContext,
+                                              WidgetDragEvent* aDragEvent,
+                                              EventMessage aMessage,
+                                              nsIContent* aRelatedTarget,
+                                              nsIContent* aTargetContent,
+                                              AutoWeakFrame& aTargetFrame);
   /**
    * Update the initial drag session data transfer with any changes that occur
    * on cloned data transfer objects used for events.
