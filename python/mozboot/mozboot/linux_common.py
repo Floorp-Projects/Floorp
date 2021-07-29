@@ -37,18 +37,6 @@ class FixStacksInstall(object):
         )
 
 
-class WasiSysrootInstall(object):
-    def __init__(self, **kwargs):
-        pass
-
-    def ensure_wasi_sysroot_packages(self, state_dir, checkout_root):
-        from mozboot import wasi_sysroot
-
-        self.install_toolchain_artifact(
-            state_dir, checkout_root, wasi_sysroot.LINUX_WASI_SYSROOT
-        )
-
-
 class StyloInstall(object):
     def __init__(self, **kwargs):
         pass
@@ -188,7 +176,6 @@ class LinuxBootstrapper(
     NodeInstall,
     SccacheInstall,
     StyloInstall,
-    WasiSysrootInstall,
 ):
     def __init__(self, **kwargs):
         pass

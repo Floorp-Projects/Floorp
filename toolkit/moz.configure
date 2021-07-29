@@ -2088,19 +2088,23 @@ with only_when(requires_wasm_sandboxing & compile_environment):
         help="Path to wasi sysroot for wasm sandboxing",
     )
 
-    @depends("--with-wasi-sysroot", toolchains_base_dir)
+    @depends("--with-wasi-sysroot", requires_wasm_sandboxing)
+    def bootstrap_wasi_sysroot(wasi_sysroot, requires_wasm_sandboxing):
+        return requires_wasm_sandboxing and not wasi_sysroot
+
+    @depends(
+        "--with-wasi-sysroot",
+        bootstrap_path("wasi-sysroot/share/wasi-sysroot", when=bootstrap_wasi_sysroot),
+    )
     @imports("os")
-    def wasi_sysroot(wasi_sysroot, toolchains_base_dir):
+    def wasi_sysroot(wasi_sysroot, bootstrapped_sysroot):
         if not wasi_sysroot:
-            sysroot = os.path.join(
-                toolchains_base_dir, "wasi-sysroot", "share", "wasi-sysroot"
-            )
-            if os.path.isdir(sysroot):
-                return sysroot
-            die(
-                "Cannot find a wasi sysroot. Install the sysroot at %s or set "
-                "--with-wasi-sysroot." % sysroot
-            )
+            if not bootstrapped_sysroot:
+                die(
+                    "Cannot find a wasi sysroot. Please give its location with "
+                    "--with-wasi-sysroot."
+                )
+            return bootstrapped_sysroot
 
         wasi_sysroot = wasi_sysroot[0]
         if not os.path.isdir(wasi_sysroot):

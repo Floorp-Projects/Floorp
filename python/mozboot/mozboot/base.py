@@ -367,12 +367,6 @@ class BaseBootstrapper(object):
         """
         pass
 
-    def ensure_wasi_sysroot_packages(self, state_dir, checkout_root):
-        """
-        Install the wasi sysroot.
-        """
-        pass
-
     def ensure_node_packages(self, state_dir, checkout_root):
         """
         Install any necessary packages needed to supply NodeJS"""
