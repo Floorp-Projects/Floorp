@@ -538,6 +538,21 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
     }
   }
 
+  if (aLoadState->GetRemoteTypeOverride()) {
+    if (!mIsDocumentLoad || !NS_IsAboutBlank(aLoadState->URI()) ||
+        !loadingContext->IsTopContent()) {
+      LOG(
+          ("DocumentLoadListener::Open with invalid remoteTypeOverride "
+           "[this=%p]",
+           this));
+      *aRv = NS_ERROR_DOM_SECURITY_ERR;
+      mParentChannelListener = nullptr;
+      return nullptr;
+    }
+
+    mRemoteTypeOverride = aLoadState->GetRemoteTypeOverride();
+  }
+
   if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
           loadingContext, aLoadState, aLoadInfo, mParentChannelListener,
           nullptr, attrs, aLoadFlags, aCacheKey, *aRv,
@@ -1566,6 +1581,11 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   nsAutoCString preferredRemoteType(currentRemoteType);
   RemotenessChangeOptions options;
 
+  // If there is a remote type override, default to it.
+  if (mRemoteTypeOverride) {
+    preferredRemoteType = *mRemoteTypeOverride;
+  }
+
   // If we're in a preloaded browser, force browsing context replacement to
   // ensure the current process is re-selected.
   if (Element* browserElement = browsingContext->Top()->GetEmbedderElement()) {
@@ -2535,6 +2555,10 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   // We expect the URI classifier to run on the redirected channel with
   // the new URI and set these again.
   mIParentChannelFunctions.Clear();
+
+  // If we had a remote type override, ensure it's been cleared after a
+  // redirect, as it can't apply anymore.
+  mRemoteTypeOverride.reset();
 
 #ifdef ANDROID
   nsCOMPtr<nsIURI> uriBeingLoaded =
