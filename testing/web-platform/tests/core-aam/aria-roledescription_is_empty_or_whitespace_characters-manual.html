@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>aria-autocomplete=list</title>
+    <title>aria-roledescription is empty or whitespace characters</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -16,32 +16,20 @@
       {
          "element" : "test",
          "test" : {
-            "ATK" : [
+            "AXAPI" : [
                [
                   "property",
-                  "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
-               ],
-               [
-                  "property",
-                  "states",
-                  "contains",
-                  "STATE_SUPPORTS_AUTOCOMPLETION"
+                  "AXRoleDescription",
+                  "is",
+                  "group"
                ]
             ],
-            "IAccessible2" : [
+            "UIA" : [
                [
                   "property",
-                  "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
-               ],
-               [
-                  "property",
-                  "states",
-                  "contains",
-                  "IA2_STATE_SUPPORTS_AUTOCOMPLETION"
+                  "Localized ControlType",
+                  "is",
+                  "Group"
                ]
             ]
          },
@@ -49,15 +37,16 @@
          "type" : "test"
       }
    ],
-   "title" : "aria-autocomplete=list"
+   "title" : "aria-roledescription is empty or whitespace characters"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for aria-autocomplete=list.</p>
-  <input role='combobox' id='test' aria-autocomplete='list'>
+  <p>This test examines the ARIA properties for aria-roledescription is empty or whitespace characters.</p>
+    <div role='group' id='test' aria-roledescription=' '>content</div>
+
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>

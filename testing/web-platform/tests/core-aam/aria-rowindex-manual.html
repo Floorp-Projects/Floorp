@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>aria-autocomplete=list</title>
+    <title>aria-rowindex</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -21,13 +21,21 @@
                   "property",
                   "objectAttributes",
                   "contains",
-                  "autocomplete:list"
+                  "rowindex:3"
                ],
                [
-                  "property",
-                  "states",
+                  "result",
+                  "atk_table_cell_get_position()",
                   "contains",
-                  "STATE_SUPPORTS_AUTOCOMPLETION"
+                  "row=0"
+               ]
+            ],
+            "AXAPI" : [
+               [
+                  "property",
+                  "AXARIARowIndex",
+                  "is",
+                  "3"
                ]
             ],
             "IAccessible2" : [
@@ -35,29 +43,51 @@
                   "property",
                   "objectAttributes",
                   "contains",
-                  "autocomplete:list"
-               ],
+                  "rowindex:3"
+               ]
+            ],
+            "UIA" : [
                [
                   "property",
-                  "states",
-                  "contains",
-                  "IA2_STATE_SUPPORTS_AUTOCOMPLETION"
+                  "GridItem.Row",
+                  "is",
+                  "2"
                ]
             ]
          },
          "title" : "step 1",
          "type" : "test"
+      },
+      {
+         "element" : "row",
+         "test" : {
+            "IAccessible2" : [
+               [
+                  "property",
+                  "groupPosition",
+                  "contains",
+                  "positionInGroup:3"
+               ]
+            ]
+         },
+         "title" : "step 2",
+         "type" : "test"
       }
    ],
-   "title" : "aria-autocomplete=list"
+   "title" : "aria-rowindex"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for aria-autocomplete=list.</p>
-  <input role='combobox' id='test' aria-autocomplete='list'>
+  <p>This test examines the ARIA properties for aria-rowindex.</p>
+    <div role='grid'>
+    <div role='row' id='row'>
+      <div role='cell' id='test' aria-rowindex='3'>content</div>
+    </div>
+  </div>
+
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>

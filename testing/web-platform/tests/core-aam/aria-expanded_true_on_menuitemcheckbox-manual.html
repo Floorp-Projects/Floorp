@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>aria-autocomplete=list</title>
+    <title>aria-expanded=true on menuitemcheckbox</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -19,29 +19,39 @@
             "ATK" : [
                [
                   "property",
-                  "objectAttributes",
+                  "states",
                   "contains",
-                  "autocomplete:list"
+                  "STATE_EXPANDABLE"
                ],
                [
                   "property",
                   "states",
                   "contains",
-                  "STATE_SUPPORTS_AUTOCOMPLETION"
+                  "STATE_EXPANDED"
                ]
             ],
-            "IAccessible2" : [
+            "AXAPI" : [
                [
                   "property",
-                  "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
-               ],
+                  "AXExpanded",
+                  "is",
+                  "YES"
+               ]
+            ],
+            "MSAA" : [
                [
                   "property",
                   "states",
                   "contains",
-                  "IA2_STATE_SUPPORTS_AUTOCOMPLETION"
+                  "STATE_SYSTEM_EXPANDED"
+               ]
+            ],
+            "UIA" : [
+               [
+                  "property",
+                  "ExpandCollapse.ExpandCollapseState",
+                  "is",
+                  "Expanded"
                ]
             ]
          },
@@ -49,15 +59,17 @@
          "type" : "test"
       }
    ],
-   "title" : "aria-autocomplete=list"
+   "title" : "aria-expanded=true on menuitemcheckbox"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for aria-autocomplete=list.</p>
-  <input role='combobox' id='test' aria-autocomplete='list'>
+  <p>This test examines the ARIA properties for aria-expanded=true on a menuitemcheckbox.</p>
+    <div role='menu'>
+    <div role='menuitemcheckbox' id='test' aria-expanded='true'>content</div>
+    </div>
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>alertdialog</title>
+    <title>cell</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -21,7 +21,13 @@
                   "property",
                   "role",
                   "is",
-                  "ROLE_ALERT"
+                  "ROLE_TABLE_CELL"
+               ],
+               [
+                  "property",
+                  "interfaces",
+                  "contains",
+                  "TableCell"
                ]
             ],
             "AXAPI" : [
@@ -29,19 +35,27 @@
                   "property",
                   "AXRole",
                   "is",
-                  "AXGroup"
+                  "AXCell"
                ],
                [
                   "property",
                   "AXSubrole",
                   "is",
-                  "AXApplicationAlertDialog"
+                  "<nil>"
                ],
                [
                   "property",
                   "AXRoleDescription",
                   "is",
-                  "web alert dialog"
+                  "cell"
+               ]
+            ],
+            "IAccessible2" : [
+               [
+                  "property",
+                  "interfaces",
+                  "contains",
+                  "IAccessibleTableCell"
                ]
             ],
             "MSAA" : [
@@ -49,7 +63,7 @@
                   "property",
                   "role",
                   "is",
-                  "ROLE_SYSTEM_DIALOG"
+                  "ROLE_SYSTEM_CELL"
                ]
             ],
             "UIA" : [
@@ -57,7 +71,19 @@
                   "property",
                   "ControlType",
                   "is",
-                  "Pane"
+                  "DataItem"
+               ],
+               [
+                  "property",
+                  "LocalizedControlType",
+                  "is",
+                  "cell"
+               ],
+               [
+                  "property",
+                  "Control Pattern",
+                  "is",
+                  "TableItem"
                ]
             ]
          },
@@ -65,15 +91,19 @@
          "type" : "test"
       }
    ],
-   "title" : "alertdialog"
+   "title" : "cell"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for alertdialog.</p>
-    <div role='alertdialog' id='test'>content</div>
+  <p>This test examines the ARIA properties for cell.</p>
+    <div role='table'>
+    <div role='row'>
+      <div role='cell' id='test'>content</div>
+    </div>
+  </div>
 
   <div id="manualMode"></div>
   <div id="log"></div>

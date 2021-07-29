@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>aria-autocomplete=list</title>
+    <title>term</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -19,29 +19,57 @@
             "ATK" : [
                [
                   "property",
-                  "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
+                  "role",
+                  "is",
+                  "ROLE_DESCRIPTION_TERM"
+               ]
+            ],
+            "AXAPI" : [
+               [
+                  "property",
+                  "AXRole",
+                  "is",
+                  "AXGroup"
                ],
                [
                   "property",
-                  "states",
-                  "contains",
-                  "STATE_SUPPORTS_AUTOCOMPLETION"
+                  "AXSubrole",
+                  "is",
+                  "AXTerm"
+               ],
+               [
+                  "property",
+                  "AXRoleDescription",
+                  "is",
+                  "term"
                ]
             ],
             "IAccessible2" : [
                [
                   "property",
-                  "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
+                  "role",
+                  "is",
+                  "IA2_ROLE_TEXT_FRAME"
                ],
                [
                   "property",
-                  "states",
+                  "objectAttributes",
                   "contains",
-                  "IA2_STATE_SUPPORTS_AUTOCOMPLETION"
+                  "xml-roles:term"
+               ]
+            ],
+            "UIA" : [
+               [
+                  "property",
+                  "ControlType",
+                  "is",
+                  "Text"
+               ],
+               [
+                  "property",
+                  "LocalizedControlType",
+                  "is",
+                  "term"
                ]
             ]
          },
@@ -49,15 +77,16 @@
          "type" : "test"
       }
    ],
-   "title" : "aria-autocomplete=list"
+   "title" : "term"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for aria-autocomplete=list.</p>
-  <input role='combobox' id='test' aria-autocomplete='list'>
+  <p>This test examines the ARIA properties for term.</p>
+    <div role='term' id='test'>content</div>
+
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>

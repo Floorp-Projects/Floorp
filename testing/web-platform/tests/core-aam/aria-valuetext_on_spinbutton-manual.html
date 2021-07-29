@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>aria-autocomplete=list</title>
+    <title>spinbutton</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -12,7 +12,7 @@
 
     var theTest = new ATTAcomm(
     {
-   "steps" : [
+      "steps" : [
       {
          "element" : "test",
          "test" : {
@@ -21,27 +21,37 @@
                   "property",
                   "objectAttributes",
                   "contains",
-                  "autocomplete:list"
-               ],
+                  "valuetext:awesome"
+               ]
+            ],
+            "AXAPI" : [
                [
                   "property",
-                  "states",
-                  "contains",
-                  "STATE_SUPPORTS_AUTOCOMPLETION"
+                  "AXValueDescription",
+                  "is",
+                  "awesome"
                ]
             ],
             "IAccessible2" : [
                [
                   "property",
-                  "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
+                  "accValue",
+                  "is",
+                  "awesome"
                ],
                [
                   "property",
-                  "states",
+                  "objectAttributes",
                   "contains",
-                  "IA2_STATE_SUPPORTS_AUTOCOMPLETION"
+                  "valuetext:awesome"
+               ]
+            ],
+            "UIA" : [
+               [
+                  "property",
+                  "Value.Value",
+                  "is",
+                  "awesome"
                ]
             ]
          },
@@ -49,15 +59,15 @@
          "type" : "test"
       }
    ],
-   "title" : "aria-autocomplete=list"
+   "title" : "aria-valuetext"
 }
-
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for aria-autocomplete=list.</p>
-  <input role='combobox' id='test' aria-autocomplete='list'>
+  <p>This test examines exposure for aria-valuetext on a spinbutton.</p>
+    <div role='spinbutton' id='test' aria-valuetext="awesome">10</div>
+
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>aria-autocomplete=list</title>
+    <title>Include element referenced by global aria-details</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -19,29 +19,33 @@
             "ATK" : [
                [
                   "property",
-                  "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
-               ],
-               [
-                  "property",
-                  "states",
-                  "contains",
-                  "STATE_SUPPORTS_AUTOCOMPLETION"
+                  "accessible",
+                  "is",
+                  "true"
                ]
             ],
-            "IAccessible2" : [
+            "AXAPI" : [
                [
                   "property",
-                  "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
-               ],
+                  "accessible",
+                  "is",
+                  "true"
+               ]
+            ],
+            "MSAA" : [
                [
                   "property",
-                  "states",
-                  "contains",
-                  "IA2_STATE_SUPPORTS_AUTOCOMPLETION"
+                  "accessible",
+                  "is",
+                  "true"
+               ]
+            ],
+            "UIA" : [
+               [
+                  "property",
+                  "accessible",
+                  "is",
+                  "true"
                ]
             ]
          },
@@ -49,15 +53,17 @@
          "type" : "test"
       }
    ],
-   "title" : "aria-autocomplete=list"
+   "title" : "Include element referenced by global aria-details"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for aria-autocomplete=list.</p>
-  <input role='combobox' id='test' aria-autocomplete='list'>
+  <p>This test examines the ARIA properties for Include element referenced by global aria-details.</p>
+    <div role='group' aria-details='test'>content</div>
+  <div id='test'>hello world</div>
+
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>
