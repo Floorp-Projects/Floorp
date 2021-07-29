@@ -2950,8 +2950,11 @@ void JSRuntime::traceSelfHostingStencil(JSTracer* trc) {
 
 GeneratorKind JSRuntime::getSelfHostedFunctionGeneratorKind(
     js::PropertyName* name) {
-  JSFunction* fun = getUnclonedSelfHostedFunction(name);
-  return fun->generatorKind();
+  frontend::ScriptIndex index = getSelfHostedScriptIndexRange(name)->start;
+  auto flags = selfHostStencil().scriptExtra[index].immutableFlags;
+  return flags.hasFlag(js::ImmutableScriptFlagsEnum::IsGenerator)
+             ? GeneratorKind::Generator
+             : GeneratorKind::NotGenerator;
 }
 
 static bool CloneValue(JSContext* cx, HandleValue selfHostedValue,
@@ -3329,11 +3332,10 @@ bool JSRuntime::cloneSelfHostedValue(JSContext* cx, HandlePropertyName name,
 }
 
 void JSRuntime::assertSelfHostedFunctionHasCanonicalName(
-    JSContext* cx, HandlePropertyName name) {
+    HandlePropertyName name) {
 #ifdef DEBUG
-  JSFunction* selfHostedFun = getUnclonedSelfHostedFunction(name);
-  MOZ_ASSERT(selfHostedFun);
-  MOZ_ASSERT(GetUnclonedSelfHostedCanonicalName(selfHostedFun));
+  frontend::ScriptIndex index = getSelfHostedScriptIndexRange(name)->start;
+  MOZ_ASSERT(selfHostStencil().scriptData[index].hasSelfHostedCanonicalName());
 #endif
 }
 

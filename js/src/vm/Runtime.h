@@ -712,8 +712,7 @@ struct JSRuntime {
                                   js::Handle<JSFunction*> targetFun);
   bool cloneSelfHostedValue(JSContext* cx, js::Handle<js::PropertyName*> name,
                             js::MutableHandleValue vp);
-  void assertSelfHostedFunctionHasCanonicalName(JSContext* cx,
-                                                js::HandlePropertyName name);
+  void assertSelfHostedFunctionHasCanonicalName(js::HandlePropertyName name);
 #if DEBUG
   bool isSelfHostingZone(const JS::Zone* zone) const {
     return selfHostingGlobal_ && selfHostingGlobal_->zone() == zone;
