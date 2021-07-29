@@ -2334,12 +2334,6 @@ esac
 AC_SUBST(MOZ_ENABLE_CAIRO_FT)
 AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
 
-if test "$MOZ_X11"; then
-    MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_OSLIBS $XLDFLAGS -lXrender"
-fi
-
-AC_SUBST_LIST(MOZ_CAIRO_LIBS)
-AC_SUBST_LIST(MOZ_CAIRO_OSLIBS)
 AC_SUBST(MOZ_TREE_PIXMAN)
 
 dnl ========================================================
