@@ -19,9 +19,42 @@ impl std::fmt::Display for EntryKind {
     }
 }
 
+/// Core error type for Fluent runtime system.
+///
+/// It contains three main types of errors that may come up
+/// during runtime use of the fluent-bundle crate.
 #[derive(Debug, PartialEq, Clone)]
 pub enum FluentError {
-    Overriding { kind: EntryKind, id: String },
+    /// An error which occurs when
+    /// [`FluentBundle::add_resource`](crate::bundle::FluentBundle::add_resource)
+    /// adds entries that are already registered in a given [`FluentBundle`](crate::FluentBundle).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use fluent_bundle::{FluentBundle, FluentResource};
+    /// use unic_langid::langid;
+    ///
+    /// let ftl_string = String::from("intro = Welcome, { $name }.");
+    /// let res1 = FluentResource::try_new(ftl_string)
+    ///     .expect("Could not parse an FTL string.");
+    ///
+    /// let ftl_string = String::from("intro = Hi, { $name }.");
+    /// let res2 = FluentResource::try_new(ftl_string)
+    ///     .expect("Could not parse an FTL string.");
+    ///
+    /// let langid_en = langid!("en-US");
+    /// let mut bundle = FluentBundle::new(vec![langid_en]);
+    ///
+    /// bundle.add_resource(&res1)
+    ///     .expect("Failed to add FTL resources to the bundle.");
+    ///
+    /// assert!(bundle.add_resource(&res2).is_err());
+    /// ```
+    Overriding {
+        kind: EntryKind,
+        id: String,
+    },
     ParserError(ParserError),
     ResolverError(ResolverError),
 }
