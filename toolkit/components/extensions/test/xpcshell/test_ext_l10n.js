@@ -1,6 +1,6 @@
 "use strict";
 
-const { L10nRegistry, FileSource } = ChromeUtils.import(
+const { L10nRegistry } = ChromeUtils.import(
   "resource://gre/modules/L10nRegistry.jsm"
 );
 const { FileUtils } = ChromeUtils.import(
@@ -29,7 +29,7 @@ add_task(async function setup() {
 
   resProto.setSubstitution("l10ntest", target);
 
-  const source = new FileSource(
+  const source = new L10nFileSource(
     "test",
     Services.locale.requestedLocales,
     "resource://l10ntest/"
