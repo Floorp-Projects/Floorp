@@ -363,7 +363,8 @@ void JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 
     rtSizes->selfHostStencil =
         selfHostStencilInput_->sizeOfIncludingThis(mallocSizeOf) +
-        selfHostStencil_->sizeOfIncludingThis(mallocSizeOf);
+        selfHostStencil_->sizeOfIncludingThis(mallocSizeOf) +
+        selfHostScriptMap.ref().shallowSizeOfExcludingThis(mallocSizeOf);
   }
 
   JSContext* cx = mainContextFromAnyThread();
