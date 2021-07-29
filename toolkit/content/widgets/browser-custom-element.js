@@ -814,7 +814,6 @@
         postData,
         headers,
         csp,
-        remoteTypeOverride,
       } = aParams;
       let loadFlags =
         aParams.loadFlags ||
@@ -827,7 +826,6 @@
         loadFlags,
         postData,
         headers,
-        remoteTypeOverride,
       };
       this._wrapURIChangeCall(() =>
         this.webNavigation.loadURI(aURI, loadURIOptions)
