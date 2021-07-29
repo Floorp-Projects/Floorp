@@ -3070,8 +3070,7 @@ bool XPCJSRuntime::DescribeCustomObjects(JSObject* obj, const JSClass* clasp,
     return false;
   }
 
-  XPCWrappedNativeProto* p =
-      static_cast<XPCWrappedNativeProto*>(xpc_GetJSPrivate(obj));
+  XPCWrappedNativeProto* p = XPCWrappedNativeProto::Get(obj);
   nsCOMPtr<nsIXPCScriptable> scr = p->GetScriptable();
   if (!scr) {
     return false;
