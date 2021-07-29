@@ -49,6 +49,11 @@ function observeMasterPasswordDialog(window, result) {
 }
 
 add_task(async function setup() {
+  Services.prefs.setBoolPref("signon.usernameOnlyForm.enabled", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("signon.usernameOnlyForm.enabled");
+  });
+
   Services.logins.removeAllUserFacingLogins();
   let login = LoginTestUtils.testData.formLogin({
     origin: "http://example.org",
