@@ -77,7 +77,7 @@ class FenixSnackbarKtTest {
         every { snackbar.setAction(any(), any()) }.answers { mockk(relaxed = true) }
         every { snackbar.anchorView }.answers { anchor }
 
-        snackbar.anchorWithAction(anchor, mockk(relaxed = true))
+        snackbar.anchorWithAction(anchor, {})
 
         verifyOrder {
             snackbar.anchorView = anchor
