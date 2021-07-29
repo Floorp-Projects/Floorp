@@ -488,7 +488,8 @@ class nsWSAdmissionManager {
   int32_t IndexOf(nsCString& aAddress, nsCString& aOriginSuffix) {
     for (uint32_t i = 0; i < mQueue.Length(); i++) {
       bool isPartitioned =
-          StaticPrefs::privacy_partition_network_state() &&
+          (StaticPrefs::privacy_partition_network_state() ||
+           StaticPrefs::privacy_firstparty_isolate()) &&
           StaticPrefs::privacy_partition_network_state_ws_connection_queue();
       if (aAddress == (mQueue[i])->mAddress &&
           (!isPartitioned || aOriginSuffix == (mQueue[i])->mOriginSuffix)) {
