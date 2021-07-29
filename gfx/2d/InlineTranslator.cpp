@@ -111,11 +111,35 @@ already_AddRefed<DrawTarget> InlineTranslator::CreateDrawTarget(
 
 already_AddRefed<SourceSurface> InlineTranslator::LookupExternalSurface(
     uint64_t aKey) {
-  if (!mExternalSurfaces) {
+  if (mExternalSurfaces) {
+    RefPtr<SourceSurface> surface = mExternalSurfaces->Get(aKey);
+    if (surface) {
+      return surface.forget();
+    }
+  }
+
+  if (!mDependentSurfaces) {
     return nullptr;
   }
-  RefPtr<SourceSurface> surface = mExternalSurfaces->Get(aKey);
-  return surface.forget();
+
+  RefPtr<RecordedDependentSurface> recordedSurface =
+      mDependentSurfaces->Get(aKey);
+  if (!recordedSurface) {
+    return nullptr;
+  }
+
+  RefPtr<DrawTarget> newDT = GetReferenceDrawTarget()->CreateSimilarDrawTarget(
+      recordedSurface->mSize, SurfaceFormat::B8G8R8A8);
+
+  InlineTranslator translator(newDT, nullptr);
+  translator.SetDependentSurfaces(mDependentSurfaces);
+  if (!translator.TranslateRecording((char*)recordedSurface->mRecording.mData,
+                                     recordedSurface->mRecording.mLen)) {
+    return nullptr;
+  }
+
+  RefPtr<SourceSurface> snapshot = newDT->Snapshot();
+  return snapshot.forget();
 }
 
 }  // namespace mozilla::gfx
