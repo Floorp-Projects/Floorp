@@ -39,10 +39,10 @@ class TimelineConsumers : public nsIObserver {
   void operator=(const TimelineConsumers& aOther) = delete;
   virtual ~TimelineConsumers() = default;
 
-  bool Init();
   bool RemoveObservers();
 
  public:
+  static void Init();
   static already_AddRefed<TimelineConsumers> Get();
 
   // Methods for registering interested consumers (i.e. "devtools toolboxes").
@@ -115,7 +115,7 @@ class TimelineConsumers : public nsIObserver {
 
  private:
   static StaticRefPtr<TimelineConsumers> sInstance;
-  static bool sInShutdown;
+  static Atomic<bool> sInShutdown;
 
   // Counter for how many timelines are currently interested in markers,
   // and a list of the MarkersStorage interfaces representing them.
