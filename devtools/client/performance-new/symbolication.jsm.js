@@ -135,16 +135,9 @@ class LocalSymbolicationService {
    * @returns {Promise<SymbolTableAsTuple>}
    */
   async getSymbolTable(debugName, breakpadId) {
-    const lib = this._libraryGetter(debugName, breakpadId);
-    if (!lib) {
-      throw new Error(
-        `Could not find the library for "${debugName}", "${breakpadId}".`
-      );
-    }
-
     // First, enumerate the local paths at which we could find binaries (and, on
     // Windows, PDB files) which could contain symbol information.
-    const candidatePaths = this._getCandidatePaths(lib);
+    const candidatePaths = this._getCandidatePaths(debugName, breakpadId);
 
     // Iterate over all the paths and try to get symbols from each entry.
     const { ProfilerGetSymbols } = lazy.ProfilerGetSymbols();
@@ -176,10 +169,18 @@ class LocalSymbolicationService {
   /**
    * Enumerate all paths at which we could find files with symbol information.
    *
-   * @param {Library} lib Information about the library.
+   * @param {string} debugName
+   * @param {string} breakpadId
    * @returns {Array<{ path: string, debugPath: string }>}
    */
-  _getCandidatePaths(lib) {
+  _getCandidatePaths(debugName, breakpadId) {
+    const lib = this._libraryGetter(debugName, breakpadId);
+    if (!lib) {
+      throw new Error(
+        `Could not find the library for "${debugName}", "${breakpadId}".`
+      );
+    }
+
     const { name, path, debugPath } = lib;
     const { OS } = lazy.OS();
     const candidatePaths = [];
