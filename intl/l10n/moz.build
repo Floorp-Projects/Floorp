@@ -5,13 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.intl += [
+    "FileSource.h",
     "FluentBindings.h",
     "FluentBundle.h",
     "FluentResource.h",
     "Localization.h",
+    "RegistryBindings.h",
 ]
 
 UNIFIED_SOURCES += [
+    "FileSource.cpp",
     "FluentBundle.cpp",
     "FluentResource.cpp",
     "L10nRegistry.cpp",
@@ -45,9 +48,13 @@ USE_LIBS += ["intlcomponents"]
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
     CbindgenHeader("fluent_ffi_generated.h", inputs=["/intl/l10n/rust/fluent-ffi"])
+    CbindgenHeader(
+        "l10nregistry_ffi_generated.h", inputs=["/intl/l10n/rust/l10nregistry-ffi"]
+    )
 
     EXPORTS.mozilla.intl += [
         "!fluent_ffi_generated.h",
+        "!l10nregistry_ffi_generated.h",
     ]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
