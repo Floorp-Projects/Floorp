@@ -7,5 +7,14 @@ edition = "2018"
 [dependencies]
 futures-channel = "0.3"
 libc = "0.2"
+cstr = "0.2"
+log = "0.4"
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
+l10nregistry = { git = "https://github.com/zbraniecki/l10nregistry-rs", rev = "92d8fbfbbbdffa2047ce01a935a389eb11031f69" }
+fluent = { version = "0.15.0", features = ["fluent-pseudo"] }
+unic-langid = "0.9"
+thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
+async-trait = "0.1"
+moz_task = { path = "../../../../xpcom/rust/moz_task" }
+xpcom = { path = "../../../../xpcom/rust/xpcom" }

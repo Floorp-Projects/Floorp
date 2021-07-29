@@ -2656,10 +2656,19 @@ dependencies = [
 name = "l10nregistry-ffi"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "cstr",
+ "fluent",
  "futures-channel",
+ "l10nregistry 0.2.0 (git+https://github.com/zbraniecki/l10nregistry-rs?rev=92d8fbfbbbdffa2047ce01a935a389eb11031f69)",
  "libc",
+ "log",
+ "moz_task",
  "nserror",
  "nsstring",
+ "thin-vec",
+ "unic-langid",
+ "xpcom",
 ]
 
 [[package]]
