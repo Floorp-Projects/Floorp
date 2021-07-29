@@ -42,9 +42,11 @@ const add_plain_task = add_task.bind(this);
 // Start RemoteAgent lazily and reuse it for all the tests in the suite.
 // Starting and stopping RemoteAgent for every test would trigger race conditions
 // in httpd.js. See Bug 1609162.
+let remoteAgentStarted = false;
 async function startRemoteAgent() {
-  if (!RemoteAgent.listening) {
+  if (!remoteAgentStarted) {
     await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
+    remoteAgentStarted = true;
     info("Remote agent started");
   }
 }
