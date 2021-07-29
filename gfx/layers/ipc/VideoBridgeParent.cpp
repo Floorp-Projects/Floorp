@@ -89,8 +89,22 @@ void VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   mClosed = true;
 }
 
+/* static */
+void VideoBridgeParent::Shutdown() {
+  if (sVideoBridgeFromRddProcess) {
+    sVideoBridgeFromRddProcess->ReleaseCompositorThread();
+  } else if (sVideoBridgeFromGpuProcess) {
+    sVideoBridgeFromGpuProcess->ReleaseCompositorThread();
+  }
+}
+
+void VideoBridgeParent::ReleaseCompositorThread() {
+  mCompositorThreadHolder = nullptr;
+}
+
 void VideoBridgeParent::ActorDealloc() {
   mCompositorThreadHolder = nullptr;
+  ReleaseCompositorThread();
   mSelfRef = nullptr;
 }
 
