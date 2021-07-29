@@ -59,56 +59,6 @@ async function doesFileExistAtPath(path) {
 }
 
 /**
- * Enumerate all paths at which we could find files with symbol information.
- *
- * @param {string[]} objdirs An array of objdir paths on the host machine
- *   that should be searched for relevant build artifacts.
- * @param {Library} lib Information about the library.
- * @returns {Array<{ path: string, debugPath: string }>}
- */
-function getCandidatePaths(objdirs, lib) {
-  const { name, path, debugPath } = lib;
-  const { OS } = lazy.OS();
-  const candidatePaths = [];
-
-  // First, try to find a binary with a matching file name and breakpadId
-  // in one of the manually specified objdirs.
-  // This is needed if the debuggee is a build running on a remote machine that
-  // was compiled by the developer on *this* machine (the "host machine"). In
-  // that case, the objdir will contain the compiled binary with full symbol and
-  // debug information, whereas the binary on the device may not exist in
-  // uncompressed form or may have been stripped of debug information and some
-  // symbol information.
-  // An objdir, or "object directory", is a directory on the host machine that's
-  // used to store build artifacts ("object files") from the compilation process.
-  // This only works if the binary is one of the Gecko binaries and not
-  // a system library.
-  for (const objdirPath of objdirs) {
-    // Binaries are usually expected to exist at objdir/dist/bin/filename.
-    candidatePaths.push({
-      path: OS.Path.join(objdirPath, "dist", "bin", name),
-      debugPath: OS.Path.join(objdirPath, "dist", "bin", name),
-    });
-    // Also search in the "objdir" directory itself (not just in dist/bin).
-    // If, for some unforeseen reason, the relevant binary is not inside the
-    // objdirs dist/bin/ directory, this provides a way out because it lets the
-    // user specify the actual location.
-    candidatePaths.push({
-      path: OS.Path.join(objdirPath, name),
-      debugPath: OS.Path.join(objdirPath, name),
-    });
-  }
-
-  // Check the absolute paths of the library file(s) last.
-  // We do this after the objdir search because the library's path may point
-  // to a stripped binary, which will have fewer symbols than the original
-  // binaries in the objdir.
-  candidatePaths.push({ path, debugPath });
-
-  return candidatePaths;
-}
-
-/**
  * Returns a function getLibrary(debugName, breakpadId) => Library which
  * resolves a (debugName, breakpadId) pair to the library's information, which
  * contains the absolute paths on the file system where the binary and its
@@ -193,7 +143,7 @@ class LocalSymbolicationService {
 
     // First, enumerate the local paths at which we could find binaries (and, on
     // Windows, PDB files) which could contain symbol information.
-    const candidatePaths = getCandidatePaths(this._objdirs, lib);
+    const candidatePaths = this._getCandidatePaths(lib);
 
     // Iterate over all the paths and try to get symbols from each entry.
     const { ProfilerGetSymbols } = lazy.ProfilerGetSymbols();
@@ -236,6 +186,54 @@ class LocalSymbolicationService {
     // need to pass the library's debugPath. (path and debugPath are always the
     // same on non-Windows.)
     return getSymbolTableFromDebuggee(this._perfFront, lib.path, breakpadId);
+  }
+
+  /**
+   * Enumerate all paths at which we could find files with symbol information.
+   *
+   * @param {Library} lib Information about the library.
+   * @returns {Array<{ path: string, debugPath: string }>}
+   */
+  _getCandidatePaths(lib) {
+    const { name, path, debugPath } = lib;
+    const { OS } = lazy.OS();
+    const candidatePaths = [];
+
+    // First, try to find a binary with a matching file name and breakpadId
+    // in one of the manually specified objdirs.
+    // This is needed if the debuggee is a build running on a remote machine that
+    // was compiled by the developer on *this* machine (the "host machine"). In
+    // that case, the objdir will contain the compiled binary with full symbol and
+    // debug information, whereas the binary on the device may not exist in
+    // uncompressed form or may have been stripped of debug information and some
+    // symbol information.
+    // An objdir, or "object directory", is a directory on the host machine that's
+    // used to store build artifacts ("object files") from the compilation process.
+    // This only works if the binary is one of the Gecko binaries and not
+    // a system library.
+    for (const objdirPath of this._objdirs) {
+      // Binaries are usually expected to exist at objdir/dist/bin/filename.
+      candidatePaths.push({
+        path: OS.Path.join(objdirPath, "dist", "bin", name),
+        debugPath: OS.Path.join(objdirPath, "dist", "bin", name),
+      });
+      // Also search in the "objdir" directory itself (not just in dist/bin).
+      // If, for some unforeseen reason, the relevant binary is not inside the
+      // objdirs dist/bin/ directory, this provides a way out because it lets the
+      // user specify the actual location.
+      candidatePaths.push({
+        path: OS.Path.join(objdirPath, name),
+        debugPath: OS.Path.join(objdirPath, name),
+      });
+    }
+
+    // Check the absolute paths of the library file(s) last.
+    // We do this after the objdir search because the library's path may point
+    // to a stripped binary, which will have fewer symbols than the original
+    // binaries in the objdir.
+    candidatePaths.push({ path, debugPath });
+
+    return candidatePaths;
   }
 }
 
