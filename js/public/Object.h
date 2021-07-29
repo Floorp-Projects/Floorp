@@ -71,13 +71,6 @@ inline void* GetPrivate(JSObject* obj) {
 }
 
 /**
- * Set the private value for |obj|.
- *
- * This function may called during the finalization of |obj|.
- */
-extern JS_PUBLIC_API void SetPrivate(JSObject* obj, void* data);
-
-/**
  * Get the value stored in a reserved slot in an object.
  *
  * If |obj| is known to be a proxy and you're willing to use friend APIs,

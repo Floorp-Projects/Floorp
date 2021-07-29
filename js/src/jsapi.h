@@ -469,14 +469,6 @@ extern JS_PUBLIC_API bool InstanceofOperator(JSContext* cx, HandleObject obj,
 
 }  // namespace JS
 
-extern JS_PUBLIC_API void JS_InitPrivate(JSObject* obj, void* data,
-                                         size_t nbytes, JS::MemoryUse use);
-
-extern JS_PUBLIC_API void* JS_GetInstancePrivate(JSContext* cx,
-                                                 JS::Handle<JSObject*> obj,
-                                                 const JSClass* clasp,
-                                                 JS::CallArgs* args);
-
 extern JS_PUBLIC_API JSObject* JS_GetConstructor(JSContext* cx,
                                                  JS::Handle<JSObject*> proto);
 
@@ -712,9 +704,6 @@ void JS_InitReservedSlot(JSObject* obj, uint32_t index, T* ptr,
                          JS::MemoryUse use) {
   JS_InitReservedSlot(obj, index, ptr, sizeof(T), use);
 }
-
-extern JS_PUBLIC_API void JS_InitPrivate(JSObject* obj, void* data,
-                                         size_t nbytes, JS::MemoryUse use);
 
 /************************************************************************/
 
