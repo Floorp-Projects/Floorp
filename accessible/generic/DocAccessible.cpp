@@ -90,7 +90,7 @@ DocAccessible::DocAccessible(dom::Document* aDocument,
       mLoadState(eTreeConstructionPending),
       mDocFlags(0),
       mLoadEventType(0),
-      mARIAAttrOldValue{nullptr},
+      mPrevStateBits(0),
       mVirtualCursor(nullptr),
       mPresShell(aPresShell),
       mIPCDoc(nullptr) {
@@ -689,23 +689,8 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
     RelocateARIAOwnedIfNeeded(aElement);
   }
 
-  // Store the ARIA attribute old value so that it can be used after
-  // attribute change. Note, we assume there's no nested ARIA attribute
-  // changes. If this happens then we should end up with keeping a stack of
-  // old values.
-
-  // XXX TODO: bugs 472142, 472143.
-  // Here we will want to cache whatever attribute values we are interested
-  // in, such as the existence of aria-pressed for button (so we know if we
-  // need to newly expose it as a toggle button) etc.
-  if (aAttribute == nsGkAtoms::aria_checked ||
-      aAttribute == nsGkAtoms::aria_pressed) {
-    mARIAAttrOldValue = (aModType != dom::MutationEvent_Binding::ADDITION)
-                            ? nsAccUtils::GetARIAToken(aElement, aAttribute)
-                            : nullptr;
-    return;
-  }
-
+  // For these attributes we store the state before the attribute changes so we
+  // can determine if the attribute change changes the state.
   if (aAttribute == nsGkAtoms::aria_disabled || aAttribute == nsGkAtoms::href ||
       aAttribute == nsGkAtoms::disabled || aAttribute == nsGkAtoms::tabindex ||
       aAttribute == nsGkAtoms::contenteditable) {
@@ -767,7 +752,8 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
 
   // Fire accessible events iff there's an accessible, otherwise we consider
   // the accessible state wasn't changed, i.e. its state is initial state.
-  AttributeChangedImpl(accessible, aNameSpaceID, aAttribute, aModType);
+  AttributeChangedImpl(accessible, aNameSpaceID, aAttribute, aModType,
+                       aOldValue);
 
   // Update dependent IDs cache. Take care of accessible elements because no
   // accessible element means either the element is not accessible at all or
@@ -783,7 +769,8 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
 // DocAccessible protected member
 void DocAccessible::AttributeChangedImpl(LocalAccessible* aAccessible,
                                          int32_t aNameSpaceID,
-                                         nsAtom* aAttribute, int32_t aModType) {
+                                         nsAtom* aAttribute, int32_t aModType,
+                                         const nsAttrValue* aOldValue) {
   // Fire accessible event after short timer, because we need to wait for
   // DOM attribute & resulting layout to actually change. Otherwise,
   // assistive technology will retrieve the wrong state/value/selection info.
@@ -859,7 +846,7 @@ void DocAccessible::AttributeChangedImpl(LocalAccessible* aAccessible,
   if (aNameSpaceID == kNameSpaceID_None) {
     // Check for hyphenated aria-foo property?
     if (StringBeginsWith(nsDependentAtomString(aAttribute), u"aria-"_ns)) {
-      ARIAAttributeChanged(aAccessible, aAttribute);
+      ARIAAttributeChanged(aAccessible, aAttribute, aOldValue);
     }
   }
 
@@ -1035,7 +1022,8 @@ void DocAccessible::AttributeChangedImpl(LocalAccessible* aAccessible,
 
 // DocAccessible protected member
 void DocAccessible::ARIAAttributeChanged(LocalAccessible* aAccessible,
-                                         nsAtom* aAttribute) {
+                                         nsAtom* aAttribute,
+                                         const nsAttrValue* aOldValue) {
   // Note: For universal/global ARIA states and properties we don't care if
   // there is an ARIA role present or not.
 
@@ -1094,7 +1082,7 @@ void DocAccessible::ARIAAttributeChanged(LocalAccessible* aAccessible,
     RefPtr<AccEvent> event = new AccStateChangeEvent(aAccessible, kState);
     FireDelayedEvent(event);
 
-    bool wasMixed = (mARIAAttrOldValue == nsGkAtoms::mixed);
+    bool wasMixed = aOldValue->GetAtomValue() == nsGkAtoms::mixed;
     bool isMixed = elm->AttrValueIs(kNameSpaceID_None, aAttribute,
                                     nsGkAtoms::mixed, eCaseMatters);
     if (isMixed != wasMixed) {
