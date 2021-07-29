@@ -156,8 +156,8 @@ export interface Library {
  * reason to maintain a full type definition here.
  */
 export interface MinimallyTypedGeckoProfile {
-  libs: Array<{ debugName: string; breakpadId: string }>;
-  processes: Array<MinimallyTypedGeckoProfile>;
+  libs: Library[];
+  processes: MinimallyTypedGeckoProfile[];
 }
 
 export type GetSymbolTableCallback = (
