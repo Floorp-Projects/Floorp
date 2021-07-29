@@ -14,7 +14,7 @@ import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
-import mozilla.components.feature.awesomebar.provider.HistoryMetadataSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.CombinedHistorySuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchActionProvider
 import mozilla.components.feature.awesomebar.provider.SearchEngineSuggestionProvider
@@ -46,7 +46,7 @@ class AwesomeBarView(
 ) {
     private val sessionProvider: SessionSuggestionProvider
     private val historyStorageProvider: HistoryStorageSuggestionProvider
-    private val historyMetadataProvider: HistoryMetadataSuggestionProvider
+    private val combinedHistoryProvider: CombinedHistorySuggestionProvider
     private val shortcutsEnginePickerProvider: ShortcutsSuggestionProvider
     private val bookmarksStorageSuggestionProvider: BookmarksStorageSuggestionProvider
     private val syncedTabsStorageSuggestionProvider: SyncedTabsStorageSuggestionProvider
@@ -120,9 +120,10 @@ class AwesomeBarView(
                 engineForSpeculativeConnects
             )
 
-        historyMetadataProvider =
-            HistoryMetadataSuggestionProvider(
+        combinedHistoryProvider =
+            CombinedHistorySuggestionProvider(
                 historyStorage = components.core.historyStorage,
+                historyMetadataStorage = components.core.historyStorage,
                 loadUrlUseCase = loadUrlUseCase,
                 icons = components.core.icons,
                 engine = engineForSpeculativeConnects,
@@ -251,7 +252,7 @@ class AwesomeBarView(
 
         if (state.showHistorySuggestions) {
             if (activity.settings().historyMetadataFeature) {
-                providersToAdd.add(historyMetadataProvider)
+                providersToAdd.add(combinedHistoryProvider)
             } else {
                 providersToAdd.add(historyStorageProvider)
             }
@@ -285,7 +286,7 @@ class AwesomeBarView(
 
         if (!state.showHistorySuggestions) {
             if (activity.settings().historyMetadataFeature) {
-                providersToRemove.add(historyMetadataProvider)
+                providersToRemove.add(combinedHistoryProvider)
             } else {
                 providersToRemove.add(historyStorageProvider)
             }
