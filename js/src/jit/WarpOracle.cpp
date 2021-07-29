@@ -386,9 +386,13 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
 
       case JSOp::GetIntrinsic: {
         // If we already cloned this intrinsic we can bake it in.
+        // NOTE: When the initializer runs in a content global, we also have to
+        //       worry about nursery objects. These quickly tenure and stay that
+        //       way so this is only a temporary problem.
         PropertyName* name = loc.getPropertyName(script_);
         Value val;
-        if (cx_->global()->maybeExistingIntrinsicValue(name, &val)) {
+        if (cx_->global()->maybeExistingIntrinsicValue(name, &val) &&
+            JS::GCPolicy<Value>::isTenured(val)) {
           if (!AddOpSnapshot<WarpGetIntrinsic>(alloc_, opSnapshots, offset,
                                                val)) {
             return abort(AbortReason::Alloc);
