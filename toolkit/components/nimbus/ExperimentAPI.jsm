@@ -444,34 +444,6 @@ class _ExperimentFeature {
   }
 
   /**
-   * @deprecated Please use .getAllVariables() instead.
-   * @returns {obj} The feature value
-   */
-  getValue({ sendExposureEvent } = {}) {
-    // Any user pref will override any other configuration
-    let userPrefs = this._getUserPrefsValues();
-    const branch = ExperimentAPI.activateBranch({
-      featureId: this.featureId,
-      sendExposureEvent: sendExposureEvent && this._sendExposureEventOnce,
-    });
-
-    // Prevent future exposure events if user is enrolled in an experiment
-    if (branch && sendExposureEvent) {
-      this._sendExposureEventOnce = false;
-    }
-
-    if (branch?.feature?.value) {
-      return { ...branch.feature.value, ...userPrefs };
-    }
-
-    return {
-      ...this.prefGetters,
-      ...this.getRemoteConfig()?.variables,
-      ...userPrefs,
-    };
-  }
-
-  /**
    * Lookup feature variables in experiments, prefs, and remote defaults.
    * @param {{sendExposureEvent: boolean, defaultValues?: {[variableName: string]: any}}} options
    * @returns {{[variableName: string]: any}} The feature value
@@ -574,7 +546,7 @@ class _ExperimentFeature {
   debug() {
     return {
       enabled: this.isEnabled(),
-      value: this.getValue(),
+      variables: this.getAllVariables(),
       experiment: ExperimentAPI.getExperimentMetaData({
         featureId: this.featureId,
       }),

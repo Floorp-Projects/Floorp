@@ -148,7 +148,7 @@ this.AboutPreferences = class AboutPreferences {
       sections = this.handleDiscoverySettings(sections);
     }
 
-    const featureConfig = NimbusFeatures.newtab.getValue() || {};
+    const featureConfig = NimbusFeatures.newtab.getAllVariables() || {};
 
     this.renderPreferences(window, [
       ...PREFS_BEFORE_SECTIONS(featureConfig),

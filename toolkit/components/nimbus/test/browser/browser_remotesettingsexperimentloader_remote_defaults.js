@@ -27,14 +27,39 @@ const { TelemetryEnvironment } = ChromeUtils.import(
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
 
-const REMOTE_CONFIGURATION_AW = {
-  id: "aboutwelcome",
-  description: "about:welcome",
+const FOO_FAKE_FEATURE_MANIFEST = {
+  isEarlyStartup: true,
+  variables: {
+    remoteValue: {
+      type: "boolean",
+    },
+    enabled: {
+      type: "boolean",
+    },
+  },
+};
+
+const BAR_FAKE_FEATURE_MANIFEST = {
+  isEarlyStartup: true,
+  variables: {
+    remoteValue: {
+      type: "boolean",
+    },
+    enabled: {
+      type: "boolean",
+    },
+  },
+};
+
+const REMOTE_CONFIGURATION_FOO = {
+  id: "foo",
+  description: "foo remote feature value",
   configurations: [
     {
       slug: "a",
       variables: { remoteValue: 24, enabled: false },
       targeting: "false",
+      isEarlyStartup: true,
       bucketConfig: {
         namespace: "nimbus-test-utils",
         randomizationUnit: "normandy_id",
@@ -47,6 +72,7 @@ const REMOTE_CONFIGURATION_AW = {
       slug: "b",
       variables: { remoteValue: 42, enabled: true },
       targeting: "true",
+      isEarlyStartup: true,
       bucketConfig: {
         namespace: "nimbus-test-utils",
         randomizationUnit: "normandy_id",
@@ -57,14 +83,15 @@ const REMOTE_CONFIGURATION_AW = {
     },
   ],
 };
-const REMOTE_CONFIGURATION_NEWTAB = {
-  id: "newtab",
-  description: "about:newtab",
+const REMOTE_CONFIGURATION_BAR = {
+  id: "bar",
+  description: "bar remote feature value",
   configurations: [
     {
       slug: "a",
       variables: { remoteValue: 1, enabled: false },
       targeting: "false",
+      isEarlyStartup: true,
       bucketConfig: {
         namespace: "nimbus-test-utils",
         randomizationUnit: "normandy_id",
@@ -77,6 +104,7 @@ const REMOTE_CONFIGURATION_NEWTAB = {
       slug: "b",
       variables: { remoteValue: 3, enabled: true },
       targeting: "true",
+      isEarlyStartup: true,
       bucketConfig: {
         namespace: "nimbus-test-utils",
         randomizationUnit: "normandy_id",
@@ -89,6 +117,7 @@ const REMOTE_CONFIGURATION_NEWTAB = {
       slug: "c",
       variables: { remoteValue: 2, enabled: false },
       targeting: "false",
+      isEarlyStartup: true,
       bucketConfig: {
         namespace: "nimbus-test-utils",
         randomizationUnit: "normandy_id",
@@ -106,7 +135,7 @@ async function setup(configuration) {
   await client.db.importChanges(
     {},
     42,
-    configuration || [REMOTE_CONFIGURATION_AW, REMOTE_CONFIGURATION_NEWTAB],
+    configuration || [REMOTE_CONFIGURATION_FOO, REMOTE_CONFIGURATION_BAR],
     {
       clear: true,
     }
@@ -121,8 +150,8 @@ async function setup(configuration) {
 
 add_task(async function test_remote_fetch_and_ready() {
   const sandbox = sinon.createSandbox();
-  const featureInstance = NimbusFeatures.aboutwelcome;
-  const newtabFeature = NimbusFeatures.newtab;
+  const fooInstance = new ExperimentFeature("foo", FOO_FAKE_FEATURE_MANIFEST);
+  const barInstance = new ExperimentFeature("bar", BAR_FAKE_FEATURE_MANIFEST);
   let stub = sandbox.stub();
   let spy = sandbox.spy(ExperimentAPI._store, "finalizeRemoteConfigs");
   const setExperimentActiveStub = sandbox.stub(
@@ -133,13 +162,13 @@ add_task(async function test_remote_fetch_and_ready() {
     TelemetryEnvironment,
     "setExperimentInactive"
   );
-  ExperimentAPI._store._deleteForTests("aboutwelcome");
-  ExperimentAPI._store._deleteForTests("newtab");
+  ExperimentAPI._store._deleteForTests("foo");
+  ExperimentAPI._store._deleteForTests("bar");
 
-  featureInstance.onUpdate(stub);
+  fooInstance.onUpdate(stub);
 
   Assert.equal(
-    featureInstance.getValue().remoteValue,
+    fooInstance.getVariable("remoteValue"),
     undefined,
     "This prop does not exist before we sync"
   );
@@ -156,18 +185,18 @@ add_task(async function test_remote_fetch_and_ready() {
 
   // We need to await here because remote configurations are processed
   // async to evaluate targeting
-  await Promise.all([featureInstance.ready(), newtabFeature.ready()]);
+  await Promise.all([fooInstance.ready(), barInstance.ready()]);
 
-  Assert.ok(featureInstance.isEnabled(), "Enabled by remote defaults");
+  Assert.ok(fooInstance.isEnabled(), "Enabled by remote defaults");
   Assert.equal(
-    featureInstance.getValue().remoteValue,
-    REMOTE_CONFIGURATION_AW.configurations[1].variables.remoteValue,
-    "aboutwelcome is set by remote defaults"
+    fooInstance.getVariable("remoteValue"),
+    REMOTE_CONFIGURATION_FOO.configurations[1].variables.remoteValue,
+    "`foo` feature is set by remote defaults"
   );
   Assert.equal(
-    newtabFeature.getValue().remoteValue,
-    REMOTE_CONFIGURATION_NEWTAB.configurations[1].variables.remoteValue,
-    "newtab is set by remote defaults"
+    barInstance.getVariable("remoteValue"),
+    REMOTE_CONFIGURATION_BAR.configurations[1].variables.remoteValue,
+    "`bar` feature is set by remote defaults"
   );
 
   Assert.equal(stub.callCount, 1, "Called by RS sync");
@@ -178,7 +207,7 @@ add_task(async function test_remote_fetch_and_ready() {
   );
 
   Assert.ok(
-    Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}newtab`),
+    Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}bar`),
     "Pref cache is set"
   );
 
@@ -191,25 +220,25 @@ add_task(async function test_remote_fetch_and_ready() {
 
   Assert.ok(
     setExperimentActiveStub.calledWith(
-      "default-aboutwelcome",
-      REMOTE_CONFIGURATION_AW.configurations[1].slug,
+      "default-foo",
+      REMOTE_CONFIGURATION_FOO.configurations[1].slug,
       {
         type: "nimbus-default",
         enrollmentId: "__NO_ENROLLMENT_ID__",
       }
     ),
-    "should call setExperimentActive with aboutwelcome"
+    "should call setExperimentActive with `foo` feature"
   );
   Assert.ok(
     setExperimentActiveStub.calledWith(
-      "default-newtab",
-      REMOTE_CONFIGURATION_NEWTAB.configurations[1].slug,
+      "default-bar",
+      REMOTE_CONFIGURATION_BAR.configurations[1].slug,
       {
         type: "nimbus-default",
         enrollmentId: "__NO_ENROLLMENT_ID__",
       }
     ),
-    "should call setExperimentActive with newtab"
+    "should call setExperimentActive with `bar` feature"
   );
 
   // Clear RS db and load again. No configurations so should clear the cache.
@@ -233,27 +262,23 @@ add_task(async function test_remote_fetch_and_ready() {
   );
 
   Assert.ok(
-    setExperimentInactiveStub.calledWith("default-aboutwelcome"),
-    "should call setExperimentInactive with aboutwelcome"
+    setExperimentInactiveStub.calledWith("default-foo"),
+    "should call setExperimentInactive with `foo` feature"
   );
   Assert.ok(
-    setExperimentInactiveStub.calledWith("default-newtab"),
-    "should call setExperimentInactive with aboutnewtab"
+    setExperimentInactiveStub.calledWith("default-bar"),
+    "should call setExperimentInactive with `bar` feature"
   );
 
   Assert.ok(
-    !Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}newtab`, ""),
+    !Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}bar`, ""),
     "Should clear the pref"
   );
-  Assert.ok(!newtabFeature.getValue().remoteValue, "Should be missing");
+  Assert.ok(!barInstance.getVariable("remoteValue"), "Should be missing");
 
-  featureInstance.off(stub);
-  ExperimentAPI._store._deleteForTests("aboutwelcome");
-  ExperimentAPI._store._deleteForTests("newtab");
-  // The Promise for remote defaults has been resolved so we need
-  // clean state for the next run
-  NimbusFeatures.aboutwelcome = new ExperimentFeature("aboutwelcome");
-  NimbusFeatures.newtab = new ExperimentFeature("newtab");
+  fooInstance.off(stub);
+  ExperimentAPI._store._deleteForTests("foo");
+  ExperimentAPI._store._deleteForTests("bar");
   sandbox.restore();
 });
 
@@ -303,9 +328,9 @@ add_task(async function test_remote_fetch_on_updateRecipes() {
 // data
 add_task(async function test_remote_fetch_no_data_syncRemoteBefore() {
   const sandbox = sinon.createSandbox();
-  const featureInstance = NimbusFeatures.aboutwelcome;
-  const featureFoo = new ExperimentFeature("foo", {
-    foo: { description: "mochitests" },
+  const fooInstance = new ExperimentFeature("foo", FOO_FAKE_FEATURE_MANIFEST);
+  const barInstance = new ExperimentFeature("bar", {
+    bar: { description: "mochitests" },
   });
   const stub = sandbox.stub();
   const spy = sandbox.spy(ExperimentAPI._store, "finalizeRemoteConfigs");
@@ -317,29 +342,24 @@ add_task(async function test_remote_fetch_no_data_syncRemoteBefore() {
   await RemoteDefaultsLoader.syncRemoteDefaults();
 
   // featureFoo will also resolve when the remote defaults cycle finishes
-  await Promise.all([featureInstance.ready(), featureFoo.ready()]);
+  await Promise.all([fooInstance.ready(), barInstance.ready()]);
 
   Assert.ok(spy.calledOnce, "Called finalizeRemoteConfigs");
-  Assert.deepEqual(spy.firstCall.args[0], ["aboutwelcome", "newtab"]);
+  Assert.deepEqual(spy.firstCall.args[0], ["bar", "foo"]);
   Assert.equal(stub.callCount, 1, "Notified all features");
 
   ExperimentAPI._store.off("remote-defaults-finalized", stub);
-  ExperimentAPI._store._deleteForTests("aboutwelcome");
-  ExperimentAPI._store._deleteForTests("newtab");
   ExperimentAPI._store._deleteForTests("foo");
-  // The Promise for remote defaults has been resolved so we need
-  // clean state for the next run
-  NimbusFeatures.aboutwelcome = new ExperimentFeature("aboutwelcome");
-  NimbusFeatures.newtab = new ExperimentFeature("newtab");
+  ExperimentAPI._store._deleteForTests("bar");
   sandbox.restore();
 });
 
 // Test that awaiting `feature.ready()` resolves even when there is no remote
 // data
 add_task(async function test_remote_fetch_no_data_noWaitRemoteLoad() {
-  const featureInstance = NimbusFeatures.aboutwelcome;
-  const featureFoo = new ExperimentFeature("foo", {
-    foo: { description: "mochitests" },
+  const fooInstance = new ExperimentFeature("foo", FOO_FAKE_FEATURE_MANIFEST);
+  const barInstance = new ExperimentFeature("bar", {
+    bar: { description: "mochitests" },
   });
   const stub = sinon.stub();
 
@@ -352,17 +372,13 @@ add_task(async function test_remote_fetch_no_data_noWaitRemoteLoad() {
   RemoteDefaultsLoader.syncRemoteDefaults();
 
   // featureFoo will also resolve when the remote defaults cycle finishes
-  await Promise.all([featureInstance.ready(), featureFoo.ready()]);
+  await Promise.all([fooInstance.ready(), barInstance.ready()]);
 
   Assert.equal(stub.callCount, 1, "Notified all features");
 
   ExperimentAPI._store.off("remote-defaults-finalized", stub);
-  ExperimentAPI._store._deleteForTests("aboutwelcome");
+  ExperimentAPI._store._deleteForTests("bar");
   ExperimentAPI._store._deleteForTests("foo");
-  // The Promise for remote defaults has been resolved so we need
-  // clean state for the next run
-  NimbusFeatures.aboutwelcome = new ExperimentFeature("aboutwelcome");
-  NimbusFeatures.newtab = new ExperimentFeature("newtab");
 });
 
 add_task(async function test_remote_ready_from_experiment() {
@@ -470,7 +486,8 @@ add_task(async function remote_defaults_no_mutation() {
       )
     );
 
-  let config = NimbusFeatures.aboutwelcome.getValue();
+  let fooInstance = new ExperimentFeature("foo", FOO_FAKE_FEATURE_MANIFEST);
+  let config = fooInstance.getAllVariables();
 
   Assert.ok(config.remoteStub, "Got back the expected value");
 
