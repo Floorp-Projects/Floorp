@@ -5571,6 +5571,8 @@ dependencies = [
  "cookie",
  "http",
  "log",
+ "once_cell",
+ "regex",
  "serde",
  "serde_derive",
  "serde_json",

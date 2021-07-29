@@ -126,6 +126,7 @@ enum Operation {
     Version,
     Server {
         log_level: Option<Level>,
+        host: String,
         address: SocketAddr,
         settings: MarionetteSettings,
         deprecated_storage_arg: bool,
@@ -198,6 +199,7 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
         };
         Operation::Server {
             log_level,
+            host: host.into(),
             address,
             settings,
             deprecated_storage_arg: matches.is_present("android_storage"),
@@ -214,6 +216,7 @@ fn inner_main(app: &mut App) -> ProgramResult<()> {
 
         Operation::Server {
             log_level,
+            host,
             address,
             settings,
             deprecated_storage_arg,
@@ -229,7 +232,7 @@ fn inner_main(app: &mut App) -> ProgramResult<()> {
             };
 
             let handler = MarionetteHandler::new(settings);
-            let listening = webdriver::server::start(address, handler, extension_routes())?;
+            let listening = webdriver::server::start(host, address, handler, extension_routes())?;
             info!("Listening on {}", listening.socket);
         }
     }
