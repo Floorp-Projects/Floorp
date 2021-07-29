@@ -67,10 +67,8 @@ class TemplateNativeObject : public TemplateObject {
   inline bool hasDynamicElements() const;
   inline const Value* getDenseElements() const;
 
-  // Reading private slots is safe.
   inline bool hasPrivate() const;
   inline gc::Cell* regExpShared() const;
-  inline void* getPrivate() const;
 };
 
 }  // namespace jit

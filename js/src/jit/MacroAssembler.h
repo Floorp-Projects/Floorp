@@ -4274,9 +4274,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void storeObjShape(Shape* shape, Register obj,
                             EmitPreBarrier emitPreBarrier);
 
-  template <typename T>
-  void storeObjPrivate(T src, const Address& address);
-
   void loadObjProto(Register obj, Register dest) {
     loadPtr(Address(obj, JSObject::offsetOfShape()), dest);
     loadPtr(Address(dest, Shape::offsetOfBaseShape()), dest);

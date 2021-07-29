@@ -767,24 +767,11 @@ static void FindStartOfUninitializedAndUndefinedSlots(
   }
 }
 
-template <typename Src>
-inline void MacroAssembler::storeObjPrivate(Src ptr, const Address& address) {
-  // The private pointer is stored as a PrivateValue in a JS::Value, so on 32
-  // bit systems we also need to zero the top word.
-#ifdef JS_PUNBOX64
-  storePtr(ptr, address);
-#else
-  storePtr(ptr, LowWord(address));
-  store32(Imm32(0), HighWord(address));
-#endif
-}
-
 void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
                                          Register lengthReg,
                                          LiveRegisterSet liveRegs, Label* fail,
                                          TypedArrayObject* templateObj,
                                          TypedArrayLength lengthKind) {
-  MOZ_ASSERT(templateObj->hasPrivate());
   MOZ_ASSERT(!templateObj->hasBuffer());
 
   constexpr size_t dataSlotOffset = ArrayBufferViewObject::dataOffset();
@@ -811,7 +798,7 @@ void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
 
     // Store data elements inside the remaining JSObject slots.
     computeEffectiveAddress(Address(obj, dataOffset), temp);
-    storeObjPrivate(temp, Address(obj, dataSlotOffset));
+    storePrivateValue(temp, Address(obj, dataSlotOffset));
 
     // Write enough zero pointers into fixed data to zero every
     // element.  (This zeroes past the end of a byte count that's
@@ -845,8 +832,8 @@ void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
     callWithABI<Fn, AllocateAndInitTypedArrayBuffer>();
     PopRegsInMask(liveRegs);
 
-    // Fail when data elements is set to NULL.
-    branchPtr(Assembler::Equal, Address(obj, dataSlotOffset), ImmWord(0), fail);
+    // Fail when data slot is UndefinedValue.
+    branchTestUndefined(Assembler::Equal, Address(obj, dataSlotOffset), fail);
   }
 }
 
@@ -936,6 +923,7 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
     const TemplateNativeObject& ntemplate =
         templateObj.asTemplateNativeObject();
     MOZ_ASSERT(!ntemplate.hasDynamicElements());
+    MOZ_ASSERT(!ntemplate.hasPrivate());
 
     // If the object has dynamic slots, the slots member has already been
     // filled in.
@@ -977,12 +965,6 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
                Address(obj, NativeObject::offsetOfElements()));
 
       initGCSlots(obj, temp, ntemplate, initContents);
-
-      if (ntemplate.hasPrivate() && !ntemplate.isTypedArrayObject()) {
-        uint32_t nfixed = ntemplate.numFixedSlots();
-        Address privateSlot(obj, NativeObject::getPrivateDataOffset(nfixed));
-        storeObjPrivate(ImmPtr(ntemplate.getPrivate()), privateSlot);
-      }
     }
   } else {
     MOZ_CRASH("Unknown object");

@@ -31,20 +31,19 @@ void ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg) {
   TraceEdge(trc, &bufSlot, "ArrayBufferViewObject.buffer");
 
   // Update obj's data pointer if it moved.
-  if (bufSlot.isObject()) {
-    if (gc::MaybeForwardedObjectIs<ArrayBufferObject>(&bufSlot.toObject())) {
-      ArrayBufferObject& buf =
-          gc::MaybeForwardedObjectAs<ArrayBufferObject>(&bufSlot.toObject());
-      size_t offset = obj->byteOffset();
+  if (bufSlot.isObject() &&
+      gc::MaybeForwardedObjectIs<ArrayBufferObject>(&bufSlot.toObject())) {
+    ArrayBufferObject& buf =
+        gc::MaybeForwardedObjectAs<ArrayBufferObject>(&bufSlot.toObject());
+    size_t offset = obj->byteOffset();
 
-      MOZ_ASSERT_IF(buf.dataPointer() == nullptr, offset == 0);
+    MOZ_ASSERT_IF(buf.dataPointer() == nullptr, offset == 0);
 
-      // The data may or may not be inline with the buffer. The buffer
-      // can only move during a compacting GC, in which case its
-      // objectMoved hook has already updated the buffer's data pointer.
-      size_t nfixed = obj->numFixedSlotsMaybeForwarded();
-      obj->setPrivateUnbarriered(nfixed, buf.dataPointer() + offset);
-    }
+    // The data may or may not be inline with the buffer. The buffer can only
+    // move during a compacting GC, in which case its objectMoved hook has
+    // already updated the buffer's data pointer.
+    void* data = buf.dataPointer() + offset;
+    obj->getFixedSlotRef(DATA_SLOT).unbarrieredSet(PrivateValue(data));
   }
 }
 
@@ -59,8 +58,7 @@ void ArrayBufferViewObject::notifyBufferDetached() {
 
   setFixedSlot(LENGTH_SLOT, PrivateValue(size_t(0)));
   setFixedSlot(BYTEOFFSET_SLOT, PrivateValue(size_t(0)));
-
-  setPrivate(nullptr);
+  setFixedSlot(DATA_SLOT, UndefinedValue());
 }
 
 /* static */
@@ -113,7 +111,7 @@ bool ArrayBufferViewObject::init(JSContext* cx,
     MOZ_ASSERT(length * bytesPerElement <=
                TypedArrayObject::INLINE_BUFFER_LIMIT);
     void* data = fixedData(TypedArrayObject::FIXED_DATA_START);
-    initPrivate(data);
+    initReservedSlot(DATA_SLOT, PrivateValue(data));
     memset(data, 0, length * bytesPerElement);
 #ifdef DEBUG
     if (length == 0) {
@@ -135,9 +133,6 @@ bool ArrayBufferViewObject::init(JSContext* cx,
     MOZ_ASSERT(bufferByteLength - viewByteOffset >= viewByteLength);
     MOZ_ASSERT(viewByteOffset <= bufferByteLength);
   }
-
-  // Verify that the private slot is at the expected place.
-  MOZ_ASSERT(numFixedSlots() == DATA_SLOT);
 #endif
 
   // ArrayBufferObjects track their views to support detaching.

@@ -289,6 +289,10 @@ class MacroAssemblerNone : public Assembler {
     MOZ_CRASH();
   }
   template <typename T, typename S>
+  void storePrivateValue(const T&, const S&) {
+    MOZ_CRASH();
+  }
+  template <typename T, typename S>
   void loadValue(T, S) {
     MOZ_CRASH();
   }

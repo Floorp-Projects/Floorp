@@ -119,10 +119,6 @@ inline gc::Cell* TemplateNativeObject::regExpShared() const {
   return regexp->getShared();
 }
 
-inline void* TemplateNativeObject::getPrivate() const {
-  return asNativeObject().getPrivate();
-}
-
 }  // namespace jit
 }  // namespace js
 

@@ -20,7 +20,7 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/Object.h"      // JS::GetClass, JS::GetPrivate, JS::GetReservedSlot
+#include "js/Object.h"  // JS::GetClass, JS::GetReservedSlot, JS::GetMaybePtrFromReservedSlot
 #include "js/RootingAPI.h"  // JS::Handle
 #include "js/ScalarType.h"  // js::Scalar::Type
 
@@ -204,19 +204,21 @@ extern JS_PUBLIC_DATA const JSClass* const BigUint64ArrayClassPtr;
 extern JS_PUBLIC_DATA const JSClass* const Float32ArrayClassPtr;
 extern JS_PUBLIC_DATA const JSClass* const Float64ArrayClassPtr;
 
-const size_t TypedArrayLengthSlot = 1;
+constexpr size_t TypedArrayLengthSlot = 1;
+constexpr size_t TypedArrayDataSlot = 3;
 
 }  // namespace detail
 
-#define JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Type, type)                    \
-  inline void Get##Type##ArrayLengthAndData(                              \
-      JSObject* obj, size_t* length, bool* isSharedMemory, type** data) { \
-    MOZ_ASSERT(JS::GetClass(obj) == detail::Type##ArrayClassPtr);         \
-    const JS::Value& lenSlot =                                            \
-        JS::GetReservedSlot(obj, detail::TypedArrayLengthSlot);           \
-    *length = size_t(lenSlot.toPrivate());                                \
-    *isSharedMemory = JS_GetTypedArraySharedness(obj);                    \
-    *data = static_cast<type*>(JS::GetPrivate(obj));                      \
+#define JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Type, type)                         \
+  inline void Get##Type##ArrayLengthAndData(                                   \
+      JSObject* obj, size_t* length, bool* isSharedMemory, type** data) {      \
+    MOZ_ASSERT(JS::GetClass(obj) == detail::Type##ArrayClassPtr);              \
+    const JS::Value& lenSlot =                                                 \
+        JS::GetReservedSlot(obj, detail::TypedArrayLengthSlot);                \
+    *length = size_t(lenSlot.toPrivate());                                     \
+    *isSharedMemory = JS_GetTypedArraySharedness(obj);                         \
+    *data = JS::GetMaybePtrFromReservedSlot<type>(obj,                         \
+                                                  detail::TypedArrayDataSlot); \
   }
 
 JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Int8, int8_t)
