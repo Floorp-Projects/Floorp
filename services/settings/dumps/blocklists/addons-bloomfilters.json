@@ -3,6 +3,19 @@
     {
       "stash": {
         "blocked": [
+          "{95e5a38b-5b77-49c4-93da-14db19d0f87c}:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1626947971035,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1627475710369,
+      "id": "644b997c-c81c-44fe-8c74-1dd8a120a0e9",
+      "last_modified": 1627475875269
+    },
+    {
+      "stash": {
+        "blocked": [
           "ascsurfingprotection2021@iobit.com:2.2.5"
         ],
         "unblocked": []
