@@ -87,6 +87,10 @@ var tests = (function*() {
     { set: [["security.mixed_content.block_active_content", false]] },
     advance
   );
+  yield SpecialPowers.pushPrefEnv(
+    { set: [["network.http.referer.disallowRelaxingDefault", false]] },
+    advance
+  );
   yield SpecialPowers.pushPermissions(
     [{ type: "systemXHR", allow: true, context: document }],
     advance
