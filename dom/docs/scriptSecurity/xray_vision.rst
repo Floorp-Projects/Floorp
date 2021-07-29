@@ -1,5 +1,5 @@
---- title: Xray vision slug: Mozilla/Tech/Xray_vision tags: - Gecko -
-X-Ray Vision - XPCOM ---
+Xray Vision
+===========
 
 .. container:: summary
 
@@ -19,9 +19,8 @@ variety of different privilege levels.
    regarded as untrusted and potentially hostile, both to other websites
    and to the user.
 -  As well as these two levels of privilege, chrome code can create
-   `sandboxes </en-US/docs/Components.utils.Sandbox>`__. The `security
-   principal </en-US/docs/Components.utils.Sandbox#Sandbox_principal>`__
-   defined for the sandbox determines its privilege level. If an
+   sandboxes. The security principal  defined for the sandbox determines
+   its privilege level. If an
    Expanded Principal is used, the sandbox is granted certain privileges
    over content code and is protected from direct access by content
    code.
@@ -33,12 +32,11 @@ variety of different privilege levels.
 | However, even the ability to access content objects can be a security
   risk for chrome code. JavaScript's a highly malleable language.
   Scripts running in web pages can add extra properties to DOM objects
-  (also known as `expando properties </en-US/docs/Glossary/Expando>`__)
+  (also known as expando properties)
   and even redefine standard DOM objects to do something unexpected. If
   chrome code relies on such modified objects, it can be tricked into
   doing things it shouldn't.
-| For example:
-  ```window.confirm()`` </en-US/docs/Web/API/Window.confirm>`__ is a DOM
+| For example: ``window.confirm()`` is a DOM
   API that's supposed to ask the user to confirm an action, and return a
   boolean depending on whether they clicked "OK" or "Cancel". A web page
   could redefine it to return ``true``:
@@ -105,7 +103,7 @@ Waiving Xray vision
   properties or functions being, or doing, what you expect. Any of them,
   even setters and getters, could have been redefined by untrusted code.
 | To waive Xray vision for an object you can use
-  ```Components.utils.waiveXrays(object)`` </en-US/docs/Components.utils.waiveXrays>`__,
+  Components.utils.waiveXrays(object),
   or use the object's ``wrappedJSObject`` property:
 
 .. code:: brush:
@@ -127,8 +125,7 @@ you automatically waive it for all the object's properties. For example,
 ``window.wrappedJSObject.document`` gets you the waived version of
 ``document``.
 
-To undo the waiver again, call
-```Components.utils.unwaiveXrays(waivedObject)`` </en-US/docs/Components.utils.unwaiveXrays>`__:
+To undo the waiver again, call Components.utils.unwaiveXrays(waivedObject):
 
 .. code:: brush:
 
@@ -141,8 +138,7 @@ To undo the waiver again, call
 Xrays for DOM objects
 ---------------------
 
-The primary use of Xray vision is for `DOM
-objects </en-US/docs/Web/API/Document_Object_Model>`__: that is, the
+The primary use of Xray vision is for DOM objects: that is, the
 objects that represent parts of the web page.
 
 In Gecko, DOM objects have a dual representation: the canonical
@@ -167,8 +163,8 @@ the C++ representation.
 Xrays for JavaScript objects
 ----------------------------
 
-Until recently, `built-in JavaScript objects that are not part of the
-DOM </en-US/docs/Web/JavaScript/Reference/Global_Objects>`__, such as
+Until recently, built-in JavaScript objects that are not part of the
+DOM, such as
 ``Date``, ``Error``, and ``Object``, did not get Xray vision when
 accessed by more-privileged code.
 
@@ -210,18 +206,10 @@ However, there are some situations in which privileged code will access
 JavaScript objects that are not themselves DOM objects and are not
 properties of DOM objects. For example:
 
--  the ``detail`` property of a
-   ```CustomEvent`` </en-US/docs/Web/API/CustomEvent>`__ fired by
-   content could be a JavaScript
-   ```Object`` </en-US/docs/Web/JavaScript/Reference/Global_Objects/Object>`__
-   or
-   ```Date`` </en-US/docs/Web/JavaScript/Reference/Global_Objects/Date>`__
-   as well as a string or a primitive
--  the return value of
-   ```evalInSandbox()`` </en-US/docs/Components.utils.evalInSandbox>`__
-   and any properties attached to the
-   ```Sandbox`` </en-US/docs/Components.utils.Sandbox>`__ object may be
-   pure JavaScript objects
+-  the ``detail`` property of a CustomEvent fired by content could be a JavaScript
+   Object or Date as well as a string or a primitive
+-  the return value of ``evalInSandbox()`` and any properties attached to the
+   ``Sandbox`` object may be pure JavaScript objects
 
 Also, the WebIDL specifications are starting to use JavaScript types
 such as ``Date`` and ``Promise``: since WebIDL definition is the basis
@@ -256,11 +244,9 @@ the object will behave as its specification defines:
 
 .. note::
 
-   To test out examples like this, you can use the `Scratchpad in
-   browser
-   context </en-US/docs/Tools/Scratchpad#Running_Scratchpad_in_the_browser_context>`__
-   for the code snippet, and the `Browser
-   Console </en-US/docs/Tools/Browser_Console>`__ to see the expected
+   To test out examples like this, you can use the Scratchpad in
+   browser context
+   for the code snippet, and the Browser Console to see the expected
    output.
 
    Because code running in Scratchpad's browser context has chrome
@@ -273,8 +259,7 @@ the object will behave as its specification defines:
 Xray semantics for Object and Array
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The exceptions are
-```Object`` </en-US/docs/Web/JavaScript/Reference/Global_Objects/Object>`__
+The exceptions are ``Object``
 and ``Array``: their interesting state is in JavaScript, not C++. This
 means that the semantics of their Xrays have to be independently
 defined: they can't simply be defined as "the C++ representation".
@@ -285,8 +270,7 @@ involved cases. So the semantics defined for ``Object`` and ``Array``
 Xrays aim to make it easy for privileged code to treat untrusted objects
 like simple dictionaries.
 
-Any `value
-properties </en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty>`__
+Any value properties
 of the object are visible in the Xray. If the object has properties
 which are themselves objects, and these objects are same-origin with the
 content, then their value properties are visible as well.
@@ -305,8 +289,7 @@ There are two main sorts of restrictions:
       visible in the Xray
 
 -  Second, we want to prevent the chrome code from running content code,
-   so functions and `accessor
-   properties </en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty>`__
+   so functions and accessor properties
    of the object are not visible in the Xray.
 
 These rules are demonstrated in the script below, which evaluates a
@@ -314,12 +297,9 @@ script in a sandbox, then examines the object attached to the sandbox.
 
 .. note::
 
-   To test out examples like this, you can use the `Scratchpad in
-   browser
-   context </en-US/docs/Tools/Scratchpad#Running_Scratchpad_in_the_browser_context>`__
-   for the code snippet, and the `Browser
-   Console </en-US/docs/Tools/Browser_Console>`__ to see the expected
-   output.
+   To test out examples like this, you can use the Scratchpad in
+   browser context  for the code snippet, and the Browser Console
+   to see the expected output.
 
    Because code running in Scratchpad's browser context has chrome
    privileges, any time you use it to run code, you need to understand
