@@ -167,42 +167,6 @@ const presets = {
 };
 
 /**
- * This Map caches the symbols from the shared libraries.
- * @type {Map<string, Library>}
- */
-const symbolCache = new Map();
-
-/**
- * @param {string} debugName
- * @param {string} breakpadId
- */
-async function getSymbolsFromThisBrowser(debugName, breakpadId) {
-  if (symbolCache.size === 0) {
-    // Prime the symbols cache.
-    for (const lib of Services.profiler.sharedLibraries) {
-      symbolCache.set(`${lib.debugName}/${lib.breakpadId}`, lib);
-    }
-  }
-
-  const cachedLib = symbolCache.get(`${debugName}/${breakpadId}`);
-  if (!cachedLib) {
-    throw new Error(
-      `The library ${debugName} ${breakpadId} is not in the ` +
-        "Services.profiler.sharedLibraries list, so the local path for it is not known " +
-        "and symbols for it can not be obtained. This usually happens if a content " +
-        "process uses a library that's not used in the parent process - " +
-        "Services.profiler.sharedLibraries only knows about libraries in the " +
-        "parent process."
-    );
-  }
-
-  const lib = cachedLib;
-  const objdirs = getObjdirPrefValue("");
-  const { getSymbolTableMultiModal } = lazy.PerfSymbolication();
-  return getSymbolTableMultiModal(lib, objdirs);
-}
-
-/**
  * Return the proper view mode for the Firefox Profiler front-end timeline by
  * looking at the proper preset that is selected.
  * Return value can be undefined when the preset is unknown or custom.
@@ -256,17 +220,23 @@ async function captureProfile(pageContext) {
     );
 
   const profilerViewMode = getProfilerViewModeForCurrentPreset(pageContext);
-  const { openProfilerAndDisplayProfile } = lazy.BrowserModule();
+  const sharedLibraries = Services.profiler.sharedLibraries;
+  const objdirs = getObjdirPrefValue("");
+
+  const {
+    openProfilerAndDisplayProfile,
+    createMultiModalGetSymbolTableFn,
+  } = lazy.BrowserModule();
+
+  const getSymbolTableCallback = createMultiModalGetSymbolTableFn(
+    sharedLibraries,
+    objdirs
+  );
+
   openProfilerAndDisplayProfile(
     profile,
     profilerViewMode,
-    /**
-     * @param {string} debugName
-     * @param {string} breakpadId
-     */
-    (debugName, breakpadId) => {
-      return getSymbolsFromThisBrowser(debugName, breakpadId);
-    }
+    getSymbolTableCallback
   );
 
   Services.profiler.StopProfiler();
