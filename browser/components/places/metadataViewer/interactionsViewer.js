@@ -146,6 +146,10 @@ class TableViewer {
    *   the rows being the keys of the columnMap.
    */
   displayData(rows) {
+    if (gCurrentHandler != this) {
+      /* Data is no more relevant for the current view. */
+      return;
+    }
     let viewer = document.getElementById("tableViewer");
     let index = this.columnMap.size;
     for (let row of rows) {
@@ -422,21 +426,19 @@ function show(selectedButton) {
     return;
   }
 
+  gCurrentHandler.pause();
   currentButton.classList.remove("selected");
   selectedButton.classList.add("selected");
-
   switch (selectedButton.getAttribute("value")) {
     case "snapshots":
-      metadataHandler.pause();
-      snapshotHandler.start();
+      (gCurrentHandler = snapshotHandler).start();
       break;
     case "metadata":
-      snapshotHandler.pause();
+      (gCurrentHandler = metadataHandler).start();
       metadataHandler.start();
       break;
     case "places-stats":
-      placesStatsHandler.pause();
-      placesStatsHandler.start();
+      (gCurrentHandler = placesStatsHandler).start();
       break;
   }
 }
@@ -463,5 +465,7 @@ function setupListeners() {
 }
 
 checkPrefs();
-snapshotHandler.start().catch(console.error);
+// Set the initial handler here.
+let gCurrentHandler = snapshotHandler;
+gCurrentHandler.start().catch(console.error);
 setupListeners();
