@@ -44,7 +44,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page timeout**: 270000
    * **subtest lower is better**: true
    * **subtest unit**: ms
-   * **test url**: `<http://<host>:<port>/ARES-6/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/ARES-6/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -108,7 +108,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page cycles**: 1
    * **page timeout**: 60000
    * **screen capture**: true
-   * **test url**: `<http://<host>:<port>/assorted-dom/assorted/driver.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/assorted-dom/assorted/driver.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -173,7 +173,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page timeout**: 2000000
    * **subtest lower is better**: false
    * **subtest unit**: score
-   * **test url**: `<http://<host>:<port>/JetStream2/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/JetStream2/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -235,7 +235,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **lower is better**: false
    * **page cycles**: 1
    * **page timeout**: 600000
-   * **test url**: `<http://<host>:<port>/MotionMark/developer.html?test-interval=15&display=minimal&tiles=big&controller=fixed&frame-rate=30&kalman-process-error=1&kalman-measurement-error=4&time-measurement=performance&suite-name=Animometer&raptor=true&oskey={platform}>`__
+   * **test url**: `<http://\<host\>:\<port\>/MotionMark/developer.html?test-interval=15&display=minimal&tiles=big&controller=fixed&frame-rate=30&kalman-process-error=1&kalman-measurement-error=4&time-measurement=performance&suite-name=Animometer&raptor=true&oskey={platform}>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -297,7 +297,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **lower is better**: false
    * **page cycles**: 5
    * **page timeout**: 600000
-   * **test url**: `<http://<host>:<port>/MotionMark/developer.html?test-interval=15&display=minimal&tiles=big&controller=fixed&frame-rate=30&kalman-process-error=1&kalman-measurement-error=4&time-measurement=performance&suite-name=HTMLsuite&raptor=true&oskey={platform}>`__
+   * **test url**: `<http://\<host\>:\<port\>/MotionMark/developer.html?test-interval=15&display=minimal&tiles=big&controller=fixed&frame-rate=30&kalman-process-error=1&kalman-measurement-error=4&time-measurement=performance&suite-name=HTMLsuite&raptor=true&oskey={platform}>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -361,7 +361,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page timeout**: 420000
    * **subtest lower is better**: true
    * **subtest unit**: ms
-   * **test url**: `<http://<host>:<port>/Speedometer/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/Speedometer/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: score
 
@@ -1095,7 +1095,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page timeout**: 180000
    * **subtest lower is better**: true
    * **subtest unit**: ms
-   * **test url**: `<http://<host>:<port>/Speedometer/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/Speedometer/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -1155,7 +1155,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page timeout**: 420000
    * **subtest lower is better**: true
    * **subtest unit**: ms
-   * **test url**: `<http://<host>:<port>/Speedometer/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/Speedometer/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -1219,7 +1219,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page timeout**: 120000
    * **subtest lower is better**: true
    * **subtest unit**: ms
-   * **test url**: `<http://<host>:<port>/StyleBench/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/StyleBench/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -1281,7 +1281,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **lower is better**: true
    * **page cycles**: 5
    * **page timeout**: 55000
-   * **test url**: `<http://<host>:<port>/SunSpider/sunspider-1.0.1/sunspider-1.0.1/driver.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/SunSpider/sunspider-1.0.1/sunspider-1.0.1/driver.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -1344,7 +1344,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **lower is better**: false
    * **page cycles**: 1
    * **page timeout**: 420000
-   * **test url**: `<http://<host>:<port>/unity-webgl/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/unity-webgl/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -1403,7 +1403,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **lower is better**: false
    * **page cycles**: 5
    * **page timeout**: 420000
-   * **test url**: `<http://<host>:<port>/unity-webgl/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/unity-webgl/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -1466,7 +1466,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **newtab per cycle**: true
    * **page cycles**: 5
    * **page timeout**: 120000
-   * **test url**: `<http://localhost:<port>/wasm-godot/index.html>`__
+   * **test url**: `<http://localhost:\<port\>/wasm-godot/index.html>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -1530,7 +1530,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page cycles**: 5
    * **page timeout**: 120000
    * **preferences**: {"javascript.options.wasm_baselinejit": true, "javascript.options.wasm_optimizingjit": false}
-   * **test url**: `<http://localhost:<port>/wasm-godot/index.html>`__
+   * **test url**: `<http://localhost:\<port\>/wasm-godot/index.html>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -1580,7 +1580,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page cycles**: 5
    * **page timeout**: 120000
    * **preferences**: {"javascript.options.wasm_baselinejit": false, "javascript.options.wasm_optimizingjit": true}
-   * **test url**: `<http://localhost:<port>/wasm-godot/index.html>`__
+   * **test url**: `<http://localhost:\<port\>/wasm-godot/index.html>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -1629,7 +1629,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **lower is better**: true
    * **page cycles**: 5
    * **page timeout**: 1200000
-   * **test url**: `<http://<host>:<port>/wasm-misc/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/wasm-misc/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -1693,7 +1693,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page cycles**: 5
    * **page timeout**: 1200000
    * **preferences**: {"javascript.options.wasm_baselinejit": true, "javascript.options.wasm_optimizingjit": false}
-   * **test url**: `<http://<host>:<port>/wasm-misc/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/wasm-misc/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -1743,7 +1743,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page cycles**: 5
    * **page timeout**: 1200000
    * **preferences**: {"javascript.options.wasm_baselinejit": false, "javascript.options.wasm_optimizingjit": true}
-   * **test url**: `<http://<host>:<port>/wasm-misc/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/wasm-misc/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -1791,7 +1791,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **lower is better**: true
    * **page cycles**: 5
    * **page timeout**: 360000
-   * **test url**: `<http://<host>:<port>/webaudio/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/webaudio/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
