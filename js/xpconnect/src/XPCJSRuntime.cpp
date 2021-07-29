@@ -3092,9 +3092,9 @@ bool XPCJSRuntime::NoteCustomGCThingXPCOMChildren(
   // (see XPCWrappedNative::FlatJSObjectFinalized). Its XPCWrappedNative
   // will be held alive through tearoff's XPC_WN_TEAROFF_FLAT_OBJECT_SLOT,
   // which points to the XPCWrappedNative's mFlatJSObject.
-  XPCWrappedNativeTearOff* to =
-      static_cast<XPCWrappedNativeTearOff*>(xpc_GetJSPrivate(obj));
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)->mNative");
+  XPCWrappedNativeTearOff* to = XPCWrappedNativeTearOff::Get(obj);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
+      cb, "XPCWrappedNativeTearOff::Get(obj)->mNative");
   cb.NoteXPCOMChild(to->GetNative());
   return true;
 }
