@@ -52,8 +52,6 @@
 #include "libANGLE/renderer/d3d/d3d9/VertexBuffer9.h"
 #include "libANGLE/renderer/d3d/d3d9/formatutils9.h"
 #include "libANGLE/renderer/d3d/d3d9/renderer9_utils.h"
-#include "libANGLE/renderer/d3d/driver_utils_d3d.h"
-#include "libANGLE/renderer/driver_utils.h"
 #include "libANGLE/trace.h"
 
 #if !defined(ANGLE_COMPILE_OPTIMIZATION_LEVEL)
@@ -590,6 +588,7 @@ void Renderer9::generateDisplayExtensions(egl::DisplayExtensions *outExtensions)
     outExtensions->querySurfacePointer = true;
     outExtensions->windowFixedSize     = true;
     outExtensions->postSubBuffer       = true;
+    outExtensions->deviceQuery         = true;
 
     outExtensions->image               = true;
     outExtensions->imageBase           = true;
@@ -734,8 +733,7 @@ egl::Error Renderer9::getD3DTextureInfo(const egl::Config *configuration,
                                         EGLint *height,
                                         GLsizei *samples,
                                         gl::Format *glFormat,
-                                        const angle::Format **angleFormat,
-                                        UINT *arraySlice) const
+                                        const angle::Format **angleFormat) const
 {
     IDirect3DTexture9 *texture = nullptr;
     if (FAILED(d3dTexture->QueryInterface(&texture)))
@@ -802,11 +800,6 @@ egl::Error Renderer9::getD3DTextureInfo(const egl::Config *configuration,
     {
 
         *angleFormat = &d3dFormatInfo.info();
-    }
-
-    if (arraySlice)
-    {
-        *arraySlice = 0;
     }
 
     return egl::NoError();
@@ -3277,32 +3270,8 @@ angle::Result Renderer9::ensureVertexDataManagerInitialized(const gl::Context *c
     return angle::Result::Continue;
 }
 
-std::string Renderer9::getVendorString() const
-{
-    return GetVendorString(getVendorId());
-}
-
-std::string Renderer9::getVersionString() const
-{
-    std::ostringstream versionString;
-    std::string driverName(mAdapterIdentifier.Driver);
-    if (!driverName.empty())
-    {
-        versionString << mAdapterIdentifier.Driver;
-    }
-    else
-    {
-        versionString << "D3D9 ";
-    }
-    versionString << "-";
-    versionString << GetDriverVersionString(mAdapterIdentifier.DriverVersion);
-
-    return versionString.str();
-}
-
 RendererD3D *CreateRenderer9(egl::Display *display)
 {
     return new Renderer9(display);
 }
-
 }  // namespace rx

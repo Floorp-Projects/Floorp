@@ -723,6 +723,16 @@ gl::GraphicsResetStatus Context11::getResetStatus()
     return mRenderer->getResetStatus();
 }
 
+std::string Context11::getVendorString() const
+{
+    return mRenderer->getVendorString();
+}
+
+std::string Context11::getRendererDescription() const
+{
+    return mRenderer->getRendererDescription();
+}
+
 angle::Result Context11::insertEventMarker(GLsizei length, const char *marker)
 {
     mRenderer->getAnnotator()->setMarker(marker);
@@ -731,8 +741,7 @@ angle::Result Context11::insertEventMarker(GLsizei length, const char *marker)
 
 angle::Result Context11::pushGroupMarker(GLsizei length, const char *marker)
 {
-    mRenderer->getAnnotator()->beginEvent(nullptr, angle::EntryPoint::GLPushGroupMarkerEXT, marker,
-                                          marker);
+    mRenderer->getAnnotator()->beginEvent(nullptr, gl::EntryPoint::Begin, marker, marker);
     mMarkerStack.push(std::string(marker));
     return angle::Result::Continue;
 }
@@ -744,8 +753,7 @@ angle::Result Context11::popGroupMarker()
     {
         marker = mMarkerStack.top().c_str();
         mMarkerStack.pop();
-        mRenderer->getAnnotator()->endEvent(nullptr, marker,
-                                            angle::EntryPoint::GLPopGroupMarkerEXT);
+        mRenderer->getAnnotator()->endEvent(nullptr, marker, gl::EntryPoint::Begin);
     }
     return angle::Result::Continue;
 }
@@ -966,8 +974,7 @@ angle::Result Context11::getIncompleteTexture(const gl::Context *context,
                                               gl::TextureType type,
                                               gl::Texture **textureOut)
 {
-    return mIncompleteTextures.getIncompleteTexture(context, type, gl::SamplerFormat::Float, this,
-                                                    textureOut);
+    return mIncompleteTextures.getIncompleteTexture(context, type, this, textureOut);
 }
 
 angle::Result Context11::initializeMultisampleTextureToBlack(const gl::Context *context,

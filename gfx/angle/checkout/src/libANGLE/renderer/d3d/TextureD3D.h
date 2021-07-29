@@ -149,9 +149,7 @@ class TextureD3D : public TextureImpl, public angle::ObserverInterface
                                      const gl::PixelUnpackState &unpack,
                                      const uint8_t *pixels,
                                      ptrdiff_t layerOffset);
-    bool isFastUnpackable(const gl::Buffer *unpackBuffer,
-                          const gl::PixelUnpackState &unpack,
-                          GLenum sizedInternalFormat);
+    bool isFastUnpackable(const gl::Buffer *unpackBuffer, GLenum sizedInternalFormat);
     angle::Result fastUnpackPixels(const gl::Context *context,
                                    const gl::PixelUnpackState &unpack,
                                    gl::Buffer *unpackBuffer,

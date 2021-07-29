@@ -69,7 +69,7 @@ ImmutableString HashName(const ImmutableString &name,
             // have as long names and could conflict.
             return name;
         }
-        if (name == "gl_ClipDistance" || name == "gl_CullDistance" || name == "gl_LastFragData")
+        if (name == "gl_ClipDistance")
         {
             // NOTE(hqle): When gl_ClipDistance is re-declared, it will become an UserDefined
             // symbol. Normally, UserDefined symbols will have "_u" prefix added to their names by
@@ -81,7 +81,7 @@ ImmutableString HashName(const ImmutableString &name,
             // re-declaration occurs. AngleInternal symbols will have their name intact. However,
             // the issue is that the current code put a lot of restrictions on AngleInternal
             // symbols. For examples:
-            //  - CollectVariables.cpp will not consider AngleInternal as varying output variables.
+            //  - CollectVariables.cpp will not consider AngleInternal as varying output variales.
             //  - SymbolTable.cpp will throw an exception if AngleInternal symbols are declared by
             //  users. In this case, it would be gl_ClipDistance. This is because
             //  TSymbolTable::declare() only accepts an UserDefined symbol.
@@ -95,8 +95,6 @@ ImmutableString HashName(const ImmutableString &name,
             // variable.
             // Compare to only this place has to be handled if re-declared gl_ClipDistance is
             // treated as an UserDefined symbol.
-            //
-            // Also, gl_LastFragData should be added.
             //
             return name;
         }

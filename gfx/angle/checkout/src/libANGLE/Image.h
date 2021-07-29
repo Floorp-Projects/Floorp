@@ -51,7 +51,6 @@ class ImageSibling : public gl::FramebufferAttachmentObject
     bool isRenderable(const gl::Context *context,
                       GLenum binding,
                       const gl::ImageIndex &imageIndex) const override;
-    bool isYUV() const override;
 
   protected:
     // Set the image target of this sibling
@@ -98,7 +97,6 @@ class ExternalImageSibling : public ImageSibling
                       GLenum binding,
                       const gl::ImageIndex &imageIndex) const override;
     bool isTextureable(const gl::Context *context) const;
-    bool isYUV() const override;
 
     void onAttach(const gl::Context *context, rx::Serial framebufferSerial) override;
     void onDetach(const gl::Context *context, rx::Serial framebufferSerial) override;
@@ -132,7 +130,6 @@ struct ImageState : private angle::NonCopyable
     std::set<ImageSibling *> targets;
 
     gl::Format format;
-    bool yuv;
     gl::Extents size;
     size_t samples;
     EGLenum sourceType;
@@ -157,7 +154,6 @@ class Image final : public RefCountObject, public LabeledObject
     const gl::Format &getFormat() const;
     bool isRenderable(const gl::Context *context) const;
     bool isTexturable(const gl::Context *context) const;
-    bool isYUV() const;
     size_t getWidth() const;
     size_t getHeight() const;
     bool isLayered() const;

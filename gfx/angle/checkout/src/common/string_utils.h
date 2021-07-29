@@ -105,8 +105,6 @@ std::vector<std::string> GetCachedStringsFromEnvironmentVarOrAndroidProperty(
     const char *propertyName,
     const char *separator);
 
-// reference name can have *.
-bool NamesMatchWithWildcard(const char *ref, const char *testName);
 }  // namespace angle
 
 #endif  // LIBANGLE_STRING_UTILS_H_
