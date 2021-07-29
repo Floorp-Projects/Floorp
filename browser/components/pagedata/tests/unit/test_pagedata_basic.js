@@ -11,8 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
+  PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
 });
 
@@ -29,7 +30,7 @@ add_task(async function test_pageDataDiscoverd_notifies() {
 
   PageDataService.pageDataDiscovered(url, [
     {
-      type: Snapshots.DATA_TYPE.PRODUCT,
+      type: PageDataCollector.DATA_TYPE.PRODUCT,
       data: {
         price: 276,
       },
@@ -46,7 +47,7 @@ add_task(async function test_pageDataDiscoverd_notifies() {
     pageData.data,
     [
       {
-        type: Snapshots.DATA_TYPE.PRODUCT,
+        type: PageDataCollector.DATA_TYPE.PRODUCT,
         data: {
           price: 276,
         },

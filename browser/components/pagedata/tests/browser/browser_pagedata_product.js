@@ -24,7 +24,7 @@ add_task(async function test_single_product_data() {
       pageData.data,
       [
         {
-          type: Snapshots.DATA_TYPE.PRODUCT,
+          type: PageDataCollector.DATA_TYPE.PRODUCT,
           data: [
             {
               gtin: "13572468",
@@ -55,7 +55,7 @@ add_task(async function test_single_multiple_data() {
       pageData.data,
       [
         {
-          type: Snapshots.DATA_TYPE.PRODUCT,
+          type: PageDataCollector.DATA_TYPE.PRODUCT,
           data: [
             {
               gtin: "13572468",
