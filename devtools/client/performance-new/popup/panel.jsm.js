@@ -58,10 +58,16 @@ function selectElementsInPanelview(panelview) {
     return element;
   }
 
+  // Forcefully cast the window to the type ChromeWindow.
+  /** @type {any} */
+  const chromeWindowAny = document.defaultView;
+  /** @type {ChromeWindow} */
+  const chromeWindow = chromeWindowAny;
+
   return {
     document,
     panelview,
-    window: /** @type {ChromeWindow} */ (document.defaultView),
+    window: chromeWindow,
     inactive: getElementById("PanelUI-profiler-inactive"),
     active: getElementById("PanelUI-profiler-active"),
     locked: getElementById("PanelUI-profiler-locked"),
