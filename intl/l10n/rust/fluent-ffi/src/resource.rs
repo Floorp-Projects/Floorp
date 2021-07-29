@@ -4,8 +4,10 @@
 
 pub use fluent::FluentResource;
 use nsstring::nsACString;
-use std::mem;
-use std::rc::Rc;
+use std::{
+    mem::{self, ManuallyDrop},
+    rc::Rc,
+};
 
 #[no_mangle]
 pub extern "C" fn fluent_resource_new(
@@ -27,12 +29,11 @@ pub extern "C" fn fluent_resource_new(
 
 #[no_mangle]
 pub unsafe extern "C" fn fluent_resource_addref(res: &FluentResource) {
-    let raw = Rc::from_raw(res);
+    let raw = ManuallyDrop::new(Rc::from_raw(res));
     mem::forget(Rc::clone(&raw));
-    mem::forget(raw);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fluent_resource_release(res: &FluentResource) {
+pub unsafe extern "C" fn fluent_resource_release(res: *const FluentResource) {
     let _ = Rc::from_raw(res);
 }
