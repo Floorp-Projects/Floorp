@@ -1,5 +1,6 @@
 /* global Handlebars:false */
 /* import-globals-from messages.js */
+/* import-globals-from main.js */
 
 /*
 PKT_PANEL_OVERLAY is the view itself and contains all of the methods to manipute the overlay and messaging.
@@ -441,17 +442,9 @@ var PKT_PANEL_OVERLAY = function(options) {
       });
   };
   this.initOpenListInput = function() {
-    document
-      .querySelector(`.pkt_ext_openpocket`)
-      .addEventListener(`click`, e => {
-        e.preventDefault();
-
-        pktPanelMessaging.sendMessage("PKT_openTabWithUrl", {
-          url: e.target.getAttribute(`href`),
-          activate: true,
-          source: `view_list`,
-        });
-      });
+    thePKT_PANEL.clickHelper(document.querySelector(`.pkt_ext_openpocket`), {
+      source: `view_list`,
+    });
   };
 
   this.showTagsLocalizedError = function(l10nId) {
@@ -575,17 +568,9 @@ var PKT_PANEL_OVERLAY = function(options) {
         .querySelector(`.pkt_ext_item_recs`)
         .append(myself.parseHTML(renderedRecs));
 
-      document
-        .querySelector(`.pkt_ext_learn_more`)
-        .addEventListener(`click`, e => {
-          e.preventDefault();
-
-          pktPanelMessaging.sendMessage(`PKT_openTabWithUrl`, {
-            url: e.target.getAttribute(`href`),
-            activate: true,
-            source: `recs_learn_more`,
-          });
-        });
+      thePKT_PANEL.clickHelper(document.querySelector(`.pkt_ext_learn_more`), {
+        source: `recs_learn_more`,
+      });
 
       document
         .querySelectorAll(`.pkt_ext_item_recs_link`)
