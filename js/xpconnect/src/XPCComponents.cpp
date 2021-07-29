@@ -1318,6 +1318,12 @@ nsXPCComponents_Utils::CreateServicesCache(JSContext* aCx,
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::PrintStderr(const nsACString& message) {
+  printf_stderr("%s", PromiseFlatUTF8String(message).get());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack,
                                    JSContext* cx) {
   // This function shall never fail! Silently eat any failure conditions.

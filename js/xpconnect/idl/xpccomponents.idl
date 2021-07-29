@@ -101,8 +101,13 @@ interface nsIScheduledGCCallback : nsISupports
 [scriptable, builtinclass, uuid(86003fe3-ee9a-4620-91dc-eef8b1e58815)]
 interface nsIXPCComponents_Utils : nsISupports
 {
+    /*
+     * Prints the provided message to stderr.
+     */
+    void printStderr(in AUTF8String message);
 
-    /* reportError is designed to be called from JavaScript only.
+    /*
+     * reportError is designed to be called from JavaScript only.
      *
      * It will report a JS Error object to the JS console, and return. It
      * is meant for use in exception handler blocks which want to "eat"
