@@ -5,23 +5,28 @@ const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(function test_methods_calling() {
-  const { L10nRegistry } =
+  const { L10nRegistry, FileSource } =
     ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 
-  const fs = [
-    { path: "/localization/de/browser/menu.ftl", source: `
+  const fs = {
+    "/localization/de/browser/menu.ftl": `
 key-value1 = [de] Value2
-` },
-    { path: "/localization/en-US/browser/menu.ftl", source: `
+`,
+    "/localization/en-US/browser/menu.ftl": `
 key-value1 = [en] Value2
 key-value2 = [en] Value3
 key-attr =
     .label = [en] Label 3
-` },
-  ];
+`,
+  };
+  const originalLoadSync = L10nRegistry.loadSync;
   const originalRequested = Services.locale.requestedLocales;
 
-  const source = L10nFileSource.createMock("test", ["de", "en-US"], "/localization/{locale}", fs);
+  L10nRegistry.loadSync = function(url) {
+    return fs[url];
+  };
+
+  const source = new FileSource("test", ["de", "en-US"], "/localization/{locale}");
   L10nRegistry.registerSources([source]);
 
   function* generateBundlesSync(resIds) {
@@ -83,11 +88,12 @@ key-attr =
   }
 
   L10nRegistry.sources.clear();
+  L10nRegistry.loadSync = originalLoadSync;
   Services.locale.requestedLocales = originalRequested;
 });
 
 add_task(function test_builtins() {
-  const { L10nRegistry } =
+  const { L10nRegistry, FileSource } =
     ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 
   const known_platforms = {
@@ -97,16 +103,21 @@ add_task(function test_builtins() {
     "android": "android",
   };
 
-  const fs = [
-    { path: "/localization/en-US/test.ftl", source: `
+  const fs = {
+    "/localization/en-US/test.ftl": `
 key = { PLATFORM() ->
         ${ Object.values(known_platforms).map(
               name => `      [${ name }] ${ name.toUpperCase() } Value\n`).join("") }
        *[other] OTHER Value
-    }` },
-  ];
+    }`,
+  };
+  const originalLoadSync = L10nRegistry.loadSync;
 
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
+  L10nRegistry.loadSync = function(url) {
+    return fs[url];
+  };
+
+  const source = new FileSource("test", ["en-US"], "/localization/{locale}");
   L10nRegistry.registerSources([source]);
 
   function* generateBundlesSync(resIds) {
@@ -123,19 +134,25 @@ key = { PLATFORM() ->
     `${ known_platforms[AppConstants.platform].toUpperCase() } Value`));
 
   L10nRegistry.sources.clear();
+  L10nRegistry.loadSync = originalLoadSync;
 });
 
 add_task(function test_add_remove_resourceIds() {
-  const { L10nRegistry } =
+  const { L10nRegistry, FileSource } =
     ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 
-  const fs = [
-    { path: "/localization/en-US/browser/menu.ftl", source: "key1 = Value1" },
-    { path: "/localization/en-US/toolkit/menu.ftl", source: "key2 = Value2" },
-  ];
+  const fs = {
+    "/localization/en-US/browser/menu.ftl": "key1 = Value1",
+    "/localization/en-US/toolkit/menu.ftl": "key2 = Value2",
+  };
+  const originalLoadSync = L10nRegistry.loadSYnc;
   const originalRequested = Services.locale.requestedLocales;
 
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
+  L10nRegistry.loadSync = function(url) {
+    return fs[url];
+  };
+
+  const source = new FileSource("test", ["en-US"], "/localization/{locale}");
   L10nRegistry.registerSources([source]);
 
   function* generateBundlesSync(resIds) {
@@ -174,6 +191,7 @@ add_task(function test_add_remove_resourceIds() {
   strictEqual(values[1], "Value2");
 
   L10nRegistry.sources.clear();
+  L10nRegistry.loadSync = originalLoadSync;
   Services.locale.requestedLocales = originalRequested;
 });
 
