@@ -2186,21 +2186,21 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*) {
 }
 
 mozilla::WindowRenderer* nsWindow::GetWindowRenderer() {
-  if (mWindowRenderer) {
-    return mWindowRenderer;
+  if (mLayerManager) {
+    return mLayerManager;
   }
 
   if (mIsDisablingWebRender) {
     CreateLayerManager();
     mIsDisablingWebRender = false;
-    return mWindowRenderer;
+    return mLayerManager;
   }
 
   return nullptr;
 }
 
 void nsWindow::CreateLayerManager() {
-  if (mWindowRenderer) {
+  if (mLayerManager) {
     return;
   }
 
@@ -2216,7 +2216,7 @@ void nsWindow::CreateLayerManager() {
   if (ShouldUseOffMainThreadCompositing()) {
     LayoutDeviceIntRect rect = GetBounds();
     CreateCompositor(rect.Width(), rect.Height());
-    if (mWindowRenderer) {
+    if (mLayerManager) {
       return;
     }
 
@@ -2226,7 +2226,7 @@ void nsWindow::CreateLayerManager() {
 
   if (!ComputeShouldAccelerate() || sFailedToCreateGLContext) {
     printf_stderr(" -- creating basic, not accelerated\n");
-    mWindowRenderer = CreateBasicLayerManager();
+    mLayerManager = CreateBasicLayerManager();
   }
 }
 

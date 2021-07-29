@@ -422,7 +422,6 @@ class nsDisplayListBuilder {
     mTemporaryItems.AppendElement(aItem);
   }
 
-  WindowRenderer* GetWidgetWindowRenderer(nsView** aView = nullptr);
   layers::LayerManager* GetWidgetLayerManager(nsView** aView = nullptr);
 
   /**

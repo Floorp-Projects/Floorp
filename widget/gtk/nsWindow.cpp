@@ -705,10 +705,10 @@ void nsWindow::Destroy() {
   mCreated = false;
 
   /** Need to clean our LayerManager up while still alive */
-  if (mWindowRenderer) {
-    mWindowRenderer->Destroy();
+  if (mLayerManager) {
+    mLayerManager->Destroy();
   }
-  mWindowRenderer = nullptr;
+  mLayerManager = nullptr;
 
 #ifdef MOZ_WAYLAND
   // Shut down our local vsync source
@@ -3529,8 +3529,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
 
   bool painted = false;
   {
-    if (renderer->GetBackendType() == LayersBackend::LAYERS_NONE ||
-        renderer->GetBackendType() == LayersBackend::LAYERS_BASIC) {
+    if (renderer->GetBackendType() == LayersBackend::LAYERS_BASIC) {
       if (GetTransparencyMode() == eTransparencyTransparent &&
           layerBuffering == BufferMode::BUFFER_NONE && mHasAlphaVisual) {
         // If our draw target is unbuffered and we use an alpha channel,
@@ -6118,9 +6117,9 @@ LayoutDeviceIntSize nsWindow::GetSafeWindowSize(LayoutDeviceIntSize aSize) {
   // we also must ensure that the window can fit in a Cairo surface.
   LayoutDeviceIntSize result = aSize;
   int32_t maxSize = 32767;
-  if (mWindowRenderer && mWindowRenderer->AsKnowsCompositor()) {
-    maxSize = std::min(
-        maxSize, mWindowRenderer->AsKnowsCompositor()->GetMaxTextureSize());
+  if (mLayerManager && mLayerManager->AsKnowsCompositor()) {
+    maxSize = std::min(maxSize,
+                       mLayerManager->AsKnowsCompositor()->GetMaxTextureSize());
   }
   if (result.width > maxSize) {
     result.width = maxSize;
@@ -6136,9 +6135,9 @@ void nsWindow::EnsureGrabs(void) {
 }
 
 void nsWindow::CleanLayerManagerRecursive(void) {
-  if (mWindowRenderer) {
-    mWindowRenderer->Destroy();
-    mWindowRenderer = nullptr;
+  if (mLayerManager) {
+    mLayerManager->Destroy();
+    mLayerManager = nullptr;
   }
 
   DestroyCompositor();
@@ -8285,7 +8284,7 @@ nsIWidget::WindowRenderer* nsWindow::GetWindowRenderer() {
     // Prevent external code from triggering the re-creation of the
     // LayerManager/Compositor during shutdown. Just return what we currently
     // have, which is most likely null.
-    return mWindowRenderer;
+    return mLayerManager;
   }
 
   return nsBaseWidget::GetWindowRenderer();
@@ -8306,9 +8305,9 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
 }
 
 void nsWindow::ClearCachedResources() {
-  if (mWindowRenderer && mWindowRenderer->GetBackendType() ==
-                             mozilla::layers::LayersBackend::LAYERS_BASIC) {
-    mWindowRenderer->AsLayerManager()->ClearCachedResources();
+  if (mLayerManager && mLayerManager->GetBackendType() ==
+                           mozilla::layers::LayersBackend::LAYERS_BASIC) {
+    mLayerManager->ClearCachedResources();
   }
 
   GList* children = gdk_window_peek_children(mGdkWindow);

@@ -455,7 +455,7 @@ class BrowserParent final : public PBrowserParent,
   void ResumeLoad(uint64_t aPendingSwitchID);
 
   void InitRendering();
-  bool AttachWindowRenderer();
+  bool AttachLayerManager();
   void MaybeShowFrame();
 
   bool Show(const OwnerShowInfo&);
