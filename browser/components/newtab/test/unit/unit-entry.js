@@ -465,7 +465,7 @@ const TEST_GLOBAL = {
   NimbusFeatures: {
     newtab: {
       isEnabled() {},
-      getValue() {},
+      getVariable() {},
       getAllVariables() {},
       onUpdate() {},
       off() {},
