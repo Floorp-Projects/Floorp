@@ -53,9 +53,23 @@ SimpleTest = {
 };
 
 SpecialPowers = {
-  pushPrefEnv: (env, func) => {
-    console.log('SpecialPowers.pushPrefEnv: ' + JSON.stringify(env));
-    setTimeout(func, 0);
+  pushPrefEnv: async (env, callback = null) => {
+    console.log(`SpecialPowers.pushPrefEnv(${JSON.stringify(env)})`);
+    await new Promise(res => {
+        setTimeout(res, 0);
+    });
+    if (callback) {
+        await callback();
+    }
+  },
+  popPrefEnv: async (callback = null) => {
+    console.log('SpecialPowers.popPrefEnv()');
+    await new Promise(res => {
+        setTimeout(res, 0);
+    });
+    if (callback) {
+        await callback();
+    }
   },
 };
 </script>

@@ -60,13 +60,17 @@ SimpleTest.waitForExplicitFinish();
     return;
   }
 
-  await asyncPushPrefEnv({'set': [
+  await SpecialPowers.pushPrefEnv({'set': [
     ['webgl.override-unmasked-renderer', RTX3070_R],
     ['webgl.override-unmasked-vendor', RTX3070_V],
   ]});
 
   // -
-  // Initial state
+  // Test disabled
+
+  await SpecialPowers.pushPrefEnv({'set': [
+    ['webgl.enable-debug-renderer-info', false],
+  ]});
 
   ext = gl.getExtension('WEBGL_debug_renderer_info');
   ok(!ext,
@@ -78,53 +82,56 @@ SimpleTest.waitForExplicitFinish();
       vendor: 'Mozilla',
     };
     const was = getStrings();
-    expectJsonEqual(was, EXPECTED, 'v92 behavior');
+    expectJsonEqual(was, EXPECTED, 'v92 behavior w/o ext');
   }
 
-  // -
-  // Enable extension
+  await SpecialPowers.popPrefEnv();
 
-  await asyncPushPrefEnv({'set': [
-    ['webgl.enable-debug-renderer-info', true],
+  // -
+  // Test RFP
+
+  await SpecialPowers.pushPrefEnv({'set': [
+    ['privacy.resistFingerprinting', true],
   ]});
 
   ext = gl.getExtension('WEBGL_debug_renderer_info');
-  ok(ext, 'When pref enabled: Should have access to \'WEBGL_debug_renderer_info\'.');
-
-  {
-    const EXPECTED = {
-      renderer: RTX3070_R_SANITIZED,
-      vendor: 'Mozilla',
-      unmasked_renderer: RTX3070_R,
-      unmasked_vendor: RTX3070_V,
-    };
-    const was = getStrings();
-    expectJsonEqual(was, EXPECTED, 'v92 behavior w/ext');
-  }
-
-  // -
-  // Disable detailed RENDERER
-
-  await asyncPushPrefEnv({'set': [
-    ['webgl.enable-renderer-query', false],
-  ]});
+  ok(!ext,
+     'With RFP: Should not have access to \'WEBGL_debug_renderer_info\'.');
 
   {
     const EXPECTED = {
       renderer: 'Mozilla',
       vendor: 'Mozilla',
-      unmasked_renderer: RTX3070_R,
+    };
+    const was = getStrings();
+    expectJsonEqual(was, EXPECTED, 'RFP behavior');
+  }
+
+  await SpecialPowers.popPrefEnv();
+
+  // -
+  // Test default state (v92+)
+
+  ext = gl.getExtension('WEBGL_debug_renderer_info');
+  ok(ext,
+     'By default: Should have access to \'WEBGL_debug_renderer_info\'.');
+
+  {
+    const EXPECTED = {
+      renderer: RTX3070_R_SANITIZED,
+      vendor: 'Mozilla',
+      unmasked_renderer: RTX3070_R_SANITIZED,
       unmasked_vendor: RTX3070_V,
     };
     const was = getStrings();
-    expectJsonEqual(was, EXPECTED, 'v90 behavior');
+    expectJsonEqual(was, EXPECTED, 'v92 behavior');
   }
 
   // -
-  // Sanitize even UNMASKED_RENDERER
+  // Test v91 behavior
 
-  await asyncPushPrefEnv({'set': [
-    ['webgl.sanitize-unmasked-renderer', true],
+  await SpecialPowers.pushPrefEnv({'set': [
+    ['webgl.enable-renderer-query', false],
   ]});
 
   {
@@ -136,6 +143,24 @@ SimpleTest.waitForExplicitFinish();
     };
     const was = getStrings();
     expectJsonEqual(was, EXPECTED, 'v91 behavior');
+  }
+
+  // -
+  // Test v90 behavior
+
+  await SpecialPowers.pushPrefEnv({'set': [
+    ['webgl.sanitize-unmasked-renderer', false],
+  ]});
+
+  {
+    const EXPECTED = {
+      renderer: 'Mozilla',
+      vendor: 'Mozilla',
+      unmasked_renderer: RTX3070_R,
+      unmasked_vendor: RTX3070_V,
+    };
+    const was = getStrings();
+    expectJsonEqual(was, EXPECTED, 'v90 behavior');
   }
 
   // -
