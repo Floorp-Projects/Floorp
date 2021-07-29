@@ -1203,6 +1203,8 @@ class XPCNativeSet final {
 
 class XPCWrappedNativeProto final {
  public:
+  enum Slots { ProtoSlot, SlotCount };
+
   static XPCWrappedNativeProto* GetNewOrUsed(JSContext* cx,
                                              XPCWrappedNativeScope* scope,
                                              nsIClassInfo* classInfo,
@@ -1226,6 +1228,8 @@ class XPCWrappedNativeProto final {
 
   void JSProtoObjectFinalized(JSFreeOp* fop, JSObject* obj);
   void JSProtoObjectMoved(JSObject* obj, const JSObject* old);
+
+  static XPCWrappedNativeProto* Get(JSObject* obj);
 
   void SystemIsBeingShutDown();
 
