@@ -223,16 +223,13 @@ async function captureProfile(pageContext) {
   const sharedLibraries = Services.profiler.sharedLibraries;
   const objdirs = getObjdirPrefValue("");
 
-  const {
-    openProfilerAndDisplayProfile,
-    createLocalSymbolicationService,
-  } = lazy.BrowserModule();
-
+  const { createLocalSymbolicationService } = lazy.PerfSymbolication();
   const symbolicationService = createLocalSymbolicationService(
     sharedLibraries,
     objdirs
   );
 
+  const { openProfilerAndDisplayProfile } = lazy.BrowserModule();
   openProfilerAndDisplayProfile(
     profile,
     profilerViewMode,

@@ -10,7 +10,6 @@
  * @typedef {import("./@types/perf").PerfFront} PerfFront
  * @typedef {import("./@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("./@types/perf").RecordingState} RecordingState
- * @typedef {import("./@types/perf").GetSymbolTableCallback} GetSymbolTableCallback
  * @typedef {import("./@types/perf").SymbolicationService} SymbolicationService
  * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
  * @typedef {import("./@types/perf").PerformancePref} PerformancePref
@@ -171,78 +170,6 @@ function sharedLibrariesFromProfile(profile) {
 }
 
 /**
- * Returns a function getLibrary(debugName, breakpadId) => Library which
- * resolves a (debugName, breakpadId) pair to the library's information, which
- * contains the absolute paths on the file system where the binary and its
- * optional pdb file are stored.
- *
- * This is needed for the following reason:
- *  - In order to obtain a symbol table for a system library, we need to know
- *    the library's absolute path on the file system. On Windows, we
- *    additionally need to know the absolute path to the library's PDB file,
- *    which we call the binary's "debugPath".
- *  - Symbol tables are requested asynchronously, by the profiler UI, after the
- *    profile itself has been obtained.
- *  - When the symbol tables are requested, we don't want the profiler UI to
- *    pass us arbitrary absolute file paths, as an extra defense against
- *    potential information leaks.
- *  - Instead, when the UI requests symbol tables, it identifies the library
- *    with a (debugName, breakpadId) pair. We need to map that pair back to the
- *    absolute paths.
- *  - We get the "trusted" paths from the "libs" sections of the profile. We
- *    trust these paths because we just obtained the profile directly from
- *    Gecko.
- *  - This function builds the (debugName, breakpadId) => Library mapping and
- *    retains it on the returned closure so that it can be consulted after the
- *    profile has been passed to the UI.
- *
- * @param {Library[]} sharedLibraries
- * @returns {(debugName: string, breakpadId: string) => Library | undefined}
- */
-function createLibraryMap(sharedLibraries) {
-  const map = new Map(
-    sharedLibraries.map(lib => {
-      const { debugName, breakpadId } = lib;
-      const key = [debugName, breakpadId].join(":");
-      return [key, lib];
-    })
-  );
-
-  return function getLibraryFor(debugName, breakpadId) {
-    const key = [debugName, breakpadId].join(":");
-    return map.get(key);
-  };
-}
-
-/**
- * Return an object that implements the SymbolicationService interface, whose
- * getSymbolTable method calls getSymbolTableMultiModal with the right arguments.
- *
- * @param {Library[]} sharedLibraries - Information about the shared libraries
- * @param {string[]} objdirs - An array of objdir paths
- *   on the host machine that should be searched for relevant build artifacts.
- * @param {PerfFront} [perfFront] - An optional perf actor, to obtain symbol
- *   tables from remote targets
- * @return {SymbolicationService}
- */
-function createLocalSymbolicationService(sharedLibraries, objdirs, perfFront) {
-  const libraryGetter = createLibraryMap(sharedLibraries);
-
-  return {
-    async getSymbolTable(debugName, breakpadId) {
-      const lib = libraryGetter(debugName, breakpadId);
-      if (!lib) {
-        throw new Error(
-          `Could not find the library for "${debugName}", "${breakpadId}".`
-        );
-      }
-      const { getSymbolTableMultiModal } = lazy.PerfSymbolication();
-      return getSymbolTableMultiModal(lib, objdirs, perfFront);
-    },
-  };
-}
-
-/**
  * Restarts the browser with a given environment variable set to a value.
  *
  * @type {RestartBrowserWithEnvironmentVariable}
@@ -298,7 +225,6 @@ function openFilePickerForObjdir(window, objdirs, changeObjdirs) {
 module.exports = {
   openProfilerAndDisplayProfile,
   sharedLibrariesFromProfile,
-  createLocalSymbolicationService,
   restartBrowserWithEnvironmentVariable,
   getEnvironmentVariable,
   openFilePickerForObjdir,
