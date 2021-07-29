@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>alertdialog</title>
+    <title>aria-hidden=true when element is focused or fires event</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -15,65 +15,79 @@
    "steps" : [
       {
          "element" : "test",
+         "event" : "focus",
+         "title" : "step 1",
+         "type" : "event"
+      },
+      {
+         "element" : "test",
          "test" : {
             "ATK" : [
                [
                   "property",
-                  "role",
+                  "accessible",
                   "is",
-                  "ROLE_ALERT"
+                  "true"
+               ],
+               [
+                  "property",
+                  "objectAttributes",
+                  "contains",
+                  "hidden:true"
                ]
             ],
             "AXAPI" : [
                [
                   "property",
-                  "AXRole",
+                  "accessible",
                   "is",
-                  "AXGroup"
-               ],
+                  "true"
+               ]
+            ],
+            "IAccessible2" : [
                [
                   "property",
-                  "AXSubrole",
-                  "is",
-                  "AXApplicationAlertDialog"
-               ],
-               [
-                  "property",
-                  "AXRoleDescription",
-                  "is",
-                  "web alert dialog"
+                  "objectAttributes",
+                  "contains",
+                  "hidden:true"
                ]
             ],
             "MSAA" : [
                [
                   "property",
-                  "role",
+                  "accessible",
                   "is",
-                  "ROLE_SYSTEM_DIALOG"
+                  "true"
                ]
             ],
             "UIA" : [
                [
                   "property",
-                  "ControlType",
+                  "accessible",
                   "is",
-                  "Pane"
+                  "true"
+               ],
+               [
+                  "property",
+                  "AriaProperties.hidden",
+                  "is",
+                  "true"
                ]
             ]
          },
-         "title" : "step 1",
+         "title" : "step 2",
          "type" : "test"
       }
    ],
-   "title" : "alertdialog"
+   "title" : "aria-hidden=true when element is focused or fires event"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for alertdialog.</p>
-    <div role='alertdialog' id='test'>content</div>
+  <p>This test examines the ARIA properties for aria-hidden=true when element is focused or fires event.</p>
+    <div id='test' aria-hidden='true' tabindex='0'>content</div>
 
   <div id="manualMode"></div>
   <div id="log"></div>

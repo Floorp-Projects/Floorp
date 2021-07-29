@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>aria-autocomplete=list</title>
+    <title>aria-readonly is unspecified on gridcell</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -19,29 +19,39 @@
             "ATK" : [
                [
                   "property",
-                  "objectAttributes",
+                  "states",
                   "contains",
-                  "autocomplete:list"
+                  "STATE_READ_ONLY"
                ],
                [
                   "property",
                   "states",
-                  "contains",
-                  "STATE_SUPPORTS_AUTOCOMPLETION"
+                  "doesNotContain",
+                  "STATE_EDITABLE"
                ]
             ],
-            "IAccessible2" : [
+            "AXAPI" : [
                [
-                  "property",
-                  "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
-               ],
+                  "result",
+                  "AXUIElementIsAttributeSettable(AXValue)",
+                  "is",
+                  "NO"
+               ]
+            ],
+            "MSAA" : [
                [
                   "property",
                   "states",
                   "contains",
-                  "IA2_STATE_SUPPORTS_AUTOCOMPLETION"
+                  "STATE_SYSTEM_READONLY"
+               ]
+            ],
+            "UIA" : [
+               [
+                  "property",
+                  "Value.IsReadOnly",
+                  "is",
+                  "true"
                ]
             ]
          },
@@ -49,15 +59,20 @@
          "type" : "test"
       }
    ],
-   "title" : "aria-autocomplete=list"
+   "title" : "aria-readonly is unspecified on gridcell"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for aria-autocomplete=list.</p>
-  <input role='combobox' id='test' aria-autocomplete='list'>
+  <p>This test examines the ARIA properties for aria-readonly is unspecified on gridcell.</p>
+    <div role='grid' aria-readonly='true'>
+    <div role='row'>
+      <div role='gridcell' id='test'>content</div>
+    </div>
+  </div>
+
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>
