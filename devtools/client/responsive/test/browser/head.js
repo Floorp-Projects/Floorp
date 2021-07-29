@@ -578,12 +578,24 @@ async function waitForPageShow(browser) {
   return waitForTick();
 }
 
-function waitForViewportLoad(ui) {
-  return BrowserTestUtils.waitForContentEvent(
+/**
+ * Returns a Promise which resolves with an object holding a `onPageLoaded` property, which
+ * is a promise that resolves when the page is fully loaded.
+ *
+ * @param {ResponsiveUI} ui
+ * @returns Promise<{ onPageLoaded: Promise }>
+ */
+async function waitForViewportLoad(ui) {
+  const onLoad = BrowserTestUtils.waitForContentEvent(
     ui.getViewportBrowser(),
     "load",
     true
   );
+  const {
+    onDomCompleteResource,
+  } = await waitForNextTopLevelDomCompleteResource(ui.commands);
+
+  return { onPageLoaded: Promise.all([onLoad, onDomCompleteResource]) };
 }
 
 function waitForViewportScroll(ui) {
@@ -604,20 +616,9 @@ async function load(browser, url) {
  * Reload and wait for the viewport to be loaded and for the page to be fully parsed.
  */
 async function reloadViewport(ui) {
-  const onReload = waitForViewportLoad(ui);
-  const {
-    onResource: onDomComplete,
-  } = await ui.commands.resourceCommand.waitForNextResource(
-    ui.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-    {
-      ignoreExistingResources: true,
-      predicate: resource =>
-        resource.targetFront.isTopLevel && resource.name === "dom-complete",
-    }
-  );
+  const { onPageLoaded } = await waitForViewportLoad(ui);
   ui.getViewportBrowser().reload();
-  await onDomComplete;
-  await onReload;
+  await onPageLoaded;
 }
 
 function back(browser) {
@@ -688,9 +689,9 @@ async function toggleTouchSimulation(ui) {
   const { document } = ui.toolWindow;
   const touchButton = document.getElementById("touch-simulation-button");
   const changed = once(ui, "touch-simulation-changed");
-  const loaded = waitForViewportLoad(ui);
+  const { onPageLoaded } = await waitForViewportLoad(ui);
   touchButton.click();
-  await Promise.all([changed, loaded]);
+  await Promise.all([changed, onPageLoaded]);
 }
 
 async function testUserAgent(ui, expected) {
@@ -743,9 +744,9 @@ async function changeUserAgentInput(ui, value) {
     state => state.ui.userAgent === value
   );
   const changed = once(ui, "user-agent-changed");
-  const loaded = waitForViewportLoad(ui);
+  const { onPageLoaded } = await waitForViewportLoad(ui);
   Simulate.keyUp(userAgentInput, { keyCode: KeyCodes.DOM_VK_RETURN });
-  await Promise.all([changed, loaded, userAgentChanged]);
+  await Promise.all([changed, onPageLoaded, userAgentChanged]);
 }
 
 /**

@@ -38,9 +38,15 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
     "navigator.maxTouchPoints should be 0 after turning off touch simulation"
   );
 
-  info("Check maxTouchPoints override persists after reload");
+  info("Enabling touch simulation again");
   await toggleTouchSimulation(ui);
+  is(
+    await getMaxTouchPoints(browser),
+    1,
+    "navigator.maxTouchPoints should be 1 after enabling touch simulation again"
+  );
 
+  info("Check maxTouchPoints override persists after reload");
   await reloadViewport(ui);
 
   is(
@@ -53,39 +59,13 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
     "Check that maxTouchPoints persist after navigating to a page that forces the creation of a new browsing context"
   );
   const previousBrowsingContextId = browser.browsingContext.id;
-  let onPageReloaded = BrowserTestUtils.browserLoaded(
-    browser,
-    true,
-    loadedUrl => loadedUrl.includes(URL_ROOT_ORG_SSL)
-  );
 
-  // `closeRDM`, which is used later, check that the responsiveFront isn't destroyed
-  // to reset the state of the document. It might happen that the rest of the test
-  // happens so fast that the RDM ui doesn't have the time to update its responsiveFront
-  // instance (it's done onTargetAvailable), and so the one it will check is the "old" one,
-  // which is likely to be destroyed, causing the destroy method to not be fully executed
-  // as expected. In order to prevent such thing, we do wait until a new instance is
-  // put on the ui.
-  let targets = 0;
-  const expectedTargets = isFissionEnabled() ? 2 : 1;
-  const onAvailableTargetProcessed = new Promise(resolve => {
-    const off = ui.commands.targetCommand.on(
-      "processed-available-target",
-      () => {
-        targets++;
-        if (targets == expectedTargets) {
-          resolve();
-          off();
-        }
-      }
-    );
-  });
-
+  const { onPageLoaded } = await waitForViewportLoad(ui);
   BrowserTestUtils.loadURI(
     browser,
     URL_ROOT_ORG_SSL + TEST_DOCUMENT + "?crossOriginIsolated=true"
   );
-  await Promise.all([onPageReloaded, onAvailableTargetProcessed]);
+  await onPageLoaded;
 
   isnot(
     browser.browsingContext.id,
@@ -101,7 +81,7 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
 
   info("Check that the value is reset when closing RDM");
   // Closing RDM trigers a reload
-  onPageReloaded = BrowserTestUtils.browserLoaded(browser, true);
+  const onPageReloaded = BrowserTestUtils.browserLoaded(browser, true);
   await closeRDM(tab);
   await onPageReloaded;
 
