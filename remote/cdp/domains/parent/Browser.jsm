@@ -26,7 +26,7 @@ class Browser extends Domain {
     ].getService(Ci.nsIHttpProtocolHandler);
     return {
       protocolVersion: "1.3",
-      product: (isHeadless ? "Headless " : "") + "Firefox",
+      product: (isHeadless ? "Headless " : "") + Services.appinfo.name,
       revision: "1",
       userAgent,
       jsVersion: "1.8.5",
