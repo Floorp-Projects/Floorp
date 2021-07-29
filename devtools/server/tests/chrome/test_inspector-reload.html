@@ -21,6 +21,7 @@ window.onload = function() {
 let gInspectee = null;
 let gWalker = null;
 let gResourceCommand = null;
+let gCommands = null;
 
 addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
@@ -31,6 +32,7 @@ addTest(async function setup() {
   const walker = inspector.walker;
   gWalker = await inspector.getWalker();
   gResourceCommand = commands.resourceCommand;
+  gCommands = commands;
 
   ok(walker === gWalker, "getWalker() twice should return the same walker.");
   runNextTest();
@@ -57,6 +59,7 @@ addTest(async function testReload() {
 
   gInspectee.defaultView.location.reload();
   await rootNodePromise;
+  gWalker = (await gCommands.targetCommand.targetFront.getFront("inspector")).walker;
 
   info("Retrieve the (new) node front for the selector `#a`");
   const newNodeFront = await gWalker.querySelector(gWalker.rootNode, "#a");

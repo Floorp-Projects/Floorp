@@ -22,11 +22,13 @@ let gWalker = null;
 let gDoc = null;
 let gResourceCommand = null;
 let gRootNodeResolve = null;
+let gCommands = null;
 
 async function reloadTarget() {
   const rootNodePromise = new Promise(r => (gRootNodeResolve = r));
   gDoc.defaultView.location.reload();
   await rootNodePromise;
+  gWalker = (await gCommands.targetCommand.targetFront.getFront("inspector")).walker;
 }
 
 addAsyncTest(async function() {
@@ -37,6 +39,7 @@ addAsyncTest(async function() {
   const inspector = await target.getFront("inspector");
   gWalker = inspector.walker;
   gResourceCommand = commands.resourceCommand;
+  gCommands = commands;
 
   info("Start watching for root nodes and wait for the initial root node");
   const rootNodePromise = new Promise(r => (gRootNodeResolve = r));
