@@ -13,7 +13,11 @@ const { createLazyLoaders } = ChromeUtils.import(
  * @typedef {import("./@types/perf").PerfFront} PerfFront
  * @typedef {import("./@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("./@types/perf").SymbolicationService} SymbolicationService
- * @typedef {import("./@types/perf").SymbolicationWorkerReplyData} SymbolicationWorkerReplyData
+ */
+
+/**
+ * @template R
+ * @typedef {import("./@types/perf").SymbolicationWorkerReplyData<R>} SymbolicationWorkerReplyData<R>
  */
 
 const lazy = createLazyLoaders({
@@ -91,34 +95,23 @@ function getWASMProfilerGetSymbolsModule() {
 }
 
 /**
- * Obtain symbols for the binary at the specified location.
+ * Handle the entire life cycle of a worker, and report its result.
+ * This method creates a new worker, sends the initial message to it, handles
+ * any errors, and accepts the result.
+ * Returns a promise that resolves with the contents of the (singular) result
+ * message or rejects with an error.
  *
- * @param {string} binaryPath The absolute path to the binary on the local
- *   file system.
- * @param {string} debugPath The absolute path to the binary's pdb file on the
- *   local file system if on Windows, otherwise the same as binaryPath.
- * @param {string} breakpadId The breakpadId for the binary whose symbols
- *   should be obtained. This is used for two purposes: 1) to locate the
- *   correct single-arch binary in "FatArch" files, and 2) to make sure the
- *   binary at the given path is actually the one that we want. If no ID match
- *   is found, this function throws (rejects the promise).
- * @returns {Promise<SymbolTableAsTuple>} The symbol table in SymbolTableAsTuple format, see the
- *   documentation for nsIProfiler.getSymbolTable.
+ * @template R
+ * @param {string} workerURL
+ * @param {object} initialMessageToWorker
+ * @returns {Promise<R>}
  */
-async function getSymbolTableFromLocalBinary(
-  binaryPath,
-  debugPath,
-  breakpadId
-) {
-  const module = await getWASMProfilerGetSymbolsModule();
-
+async function getResultFromWorker(workerURL, initialMessageToWorker) {
   return new Promise((resolve, reject) => {
-    const worker = new ChromeWorker(
-      "resource://devtools/client/performance-new/symbolication-worker.js"
-    );
+    const worker = new ChromeWorker(workerURL);
     gActiveWorkers.add(worker);
 
-    /** @param {MessageEvent<SymbolicationWorkerReplyData>} msg */
+    /** @param {MessageEvent<SymbolicationWorkerReplyData<R>>} msg */
     worker.onmessage = msg => {
       gActiveWorkers.delete(worker);
       if ("error" in msg.data) {
@@ -175,8 +168,35 @@ async function getSymbolTableFromLocalBinary(
       }
     };
 
-    worker.postMessage({ binaryPath, debugPath, breakpadId, module });
+    worker.postMessage(initialMessageToWorker);
   });
+}
+
+/**
+ * Obtain symbols for the binary at the specified location.
+ *
+ * @param {string} binaryPath The absolute path to the binary on the local
+ *   file system.
+ * @param {string} debugPath The absolute path to the binary's pdb file on the
+ *   local file system if on Windows, otherwise the same as binaryPath.
+ * @param {string} breakpadId The breakpadId for the binary whose symbols
+ *   should be obtained. This is used for two purposes: 1) to locate the
+ *   correct single-arch binary in "FatArch" files, and 2) to make sure the
+ *   binary at the given path is actually the one that we want. If no ID match
+ *   is found, this function throws (rejects the promise).
+ * @returns {Promise<SymbolTableAsTuple>} The symbol table in SymbolTableAsTuple format, see the
+ *   documentation for nsIProfiler.getSymbolTable.
+ */
+async function getSymbolTableFromLocalBinary(
+  binaryPath,
+  debugPath,
+  breakpadId
+) {
+  const module = await getWASMProfilerGetSymbolsModule();
+  return getResultFromWorker(
+    "resource://devtools/client/performance-new/symbolication-worker.js",
+    { binaryPath, debugPath, breakpadId, module }
+  );
 }
 
 /**
