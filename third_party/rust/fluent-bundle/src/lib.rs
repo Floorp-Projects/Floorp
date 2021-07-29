@@ -1,6 +1,6 @@
 //! Fluent is a modern localization system designed to improve how software is translated.
 //!
-//! `fluent-bundle` is the mid-level component of the [Fluent Localization
+//! `fluent-bundle` is a mid-level component of the [Fluent Localization
 //! System](https://www.projectfluent.org).
 //!
 //! The crate builds on top of the low level [`fluent-syntax`](../fluent-syntax) package, and provides
