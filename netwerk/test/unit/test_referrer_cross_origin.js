@@ -32,6 +32,18 @@ function test_policy(test) {
     prefs.setIntPref("network.http.referer.XOriginTrimmingPolicy", 0);
   }
 
+  if (test.disallowRelaxingDefault) {
+    prefs.setBoolPref(
+      "network.http.referer.disallowCrossSiteRelaxingDefault",
+      test.disallowRelaxingDefault
+    );
+  } else {
+    prefs.setBoolPref(
+      "network.http.referer.disallowCrossSiteRelaxingDefault",
+      false
+    );
+  }
+
   let referrer = NetUtil.newURI(test.referrer);
   let triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
     referrer,
@@ -316,4 +328,7 @@ function run_test() {
   gTests.forEach(test => test_policy(test));
   Services.prefs.clearUserPref("network.http.referer.trimmingPolicy");
   Services.prefs.clearUserPref("network.http.referer.XOriginTrimmingPolicy");
+  Services.prefs.clearUserPref(
+    "network.http.referer.disallowCrossSiteRelaxingDefault"
+  );
 }

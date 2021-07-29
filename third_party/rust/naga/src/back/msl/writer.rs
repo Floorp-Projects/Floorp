@@ -9,6 +9,7 @@ use crate::{
     valid::{Capabilities, FunctionInfo, GlobalUse, ModuleInfo},
     FastHashMap,
 };
+use bit_set::BitSet;
 use std::{
     fmt::{Display, Error as FmtError, Formatter, Write},
     iter,
@@ -287,7 +288,7 @@ impl<'a> Display for ConstantContext<'a> {
 pub struct Writer<W> {
     out: W,
     names: FastHashMap<NameKey, String>,
-    named_expressions: crate::NamedExpressions,
+    named_expressions: BitSet,
     namer: Namer,
     runtime_sized_buffers: FastHashMap<Handle<crate::GlobalVariable>, usize>,
     #[cfg(test)]
@@ -448,7 +449,7 @@ impl<W: Write> Writer<W> {
         Writer {
             out,
             names: FastHashMap::default(),
-            named_expressions: crate::NamedExpressions::default(),
+            named_expressions: BitSet::new(),
             namer: Namer::default(),
             runtime_sized_buffers: FastHashMap::default(),
             #[cfg(test)]
@@ -709,8 +710,8 @@ impl<W: Write> Writer<W> {
         self.put_expression_stack_pointers
             .insert(&expr_handle as *const _ as *const ());
 
-        if let Some(name) = self.named_expressions.get(&expr_handle) {
-            write!(self.out, "{}", name)?;
+        if self.named_expressions.contains(expr_handle.index()) {
+            write!(self.out, "{}{}", BAKE_PREFIX, expr_handle.index())?;
             return Ok(());
         }
 
@@ -765,7 +766,7 @@ impl<W: Write> Writer<W> {
                         write!(self.out, "[{}]", index)?;
                     }
                     crate::TypeInner::Array { .. } => {
-                        write!(self.out, ".{}[{}]", WRAPPED_ARRAY_FIELD, index)?;
+                        write!(self.out, "[{}]", index)?;
                     }
                     _ => {
                         // unexpected indexing, should fail validation
@@ -853,7 +854,7 @@ impl<W: Write> Writer<W> {
                                 members,
                                 span,
                                 index as usize,
-                                context.module,
+                                &context.module,
                             ),
                             _ => None,
                         }
@@ -1243,7 +1244,6 @@ impl<W: Write> Writer<W> {
         &mut self,
         handle: Handle<crate::Expression>,
         context: &ExpressionContext,
-        name: &str,
     ) -> Result<(), Error> {
         match context.info[handle].ty {
             TypeResolution::Handle(ty_handle) => {
@@ -1285,8 +1285,7 @@ impl<W: Write> Writer<W> {
         }
 
         //TODO: figure out the naming scheme that wouldn't collide with user names.
-        write!(self.out, " {} = ", name)?;
-
+        write!(self.out, " {}{} = ", BAKE_PREFIX, handle.index())?;
         Ok(())
     }
 
@@ -1307,30 +1306,14 @@ impl<W: Write> Writer<W> {
             match *statement {
                 crate::Statement::Emit(ref range) => {
                     for handle in range.clone() {
-                        let expr_name = if let Some(name) =
-                            context.expression.function.named_expressions.get(&handle)
-                        {
-                            // Front end provides names for all variables at the start of writing.
-                            // But we write them to step by step. We need to recache them
-                            // Otherwise, we could accidentally write variable name instead of full expression.
-                            // Also, we use sanitized names! It defense backend from generating variable with name from reserved keywords.
-                            Some(self.namer.call_unique(name))
-                        } else {
-                            let min_ref_count =
-                                context.expression.function.expressions[handle].bake_ref_count();
-                            if min_ref_count <= context.expression.info[handle].ref_count {
-                                Some(format!("{}{}", BAKE_PREFIX, handle.index()))
-                            } else {
-                                None
-                            }
-                        };
-
-                        if let Some(name) = expr_name {
+                        let min_ref_count =
+                            context.expression.function.expressions[handle].bake_ref_count();
+                        if min_ref_count <= context.expression.info[handle].ref_count {
                             write!(self.out, "{}", level)?;
-                            self.start_baking_expression(handle, &context.expression, &name)?;
+                            self.start_baking_expression(handle, &context.expression)?;
                             self.put_expression(handle, &context.expression, true)?;
-                            self.named_expressions.insert(handle, name);
                             writeln!(self.out, ";")?;
+                            self.named_expressions.insert(handle.index());
                         }
                     }
                 }
@@ -1505,9 +1488,8 @@ impl<W: Write> Writer<W> {
                 } => {
                     write!(self.out, "{}", level)?;
                     if let Some(expr) = result {
-                        let name = format!("{}{}", BAKE_PREFIX, expr.index());
-                        self.start_baking_expression(expr, &context.expression, &name)?;
-                        self.named_expressions.insert(expr, name);
+                        self.start_baking_expression(expr, &context.expression)?;
+                        self.named_expressions.insert(expr.index());
                     }
                     let fun_name = &self.names[&NameKey::Function(function)];
                     write!(self.out, "{}(", fun_name)?;
@@ -1556,7 +1538,7 @@ impl<W: Write> Writer<W> {
         for statement in statements {
             if let crate::Statement::Emit(ref range) = *statement {
                 for handle in range.clone() {
-                    self.named_expressions.remove(&handle);
+                    self.named_expressions.remove(handle.index());
                 }
             }
         }
@@ -2080,7 +2062,7 @@ impl<W: Write> Writer<W> {
                         _ => continue,
                     };
                     varying_count += 1;
-                    let name = &self.names[name_key];
+                    let name = &self.names[&name_key];
                     let ty_name = TypeContext {
                         handle: ty,
                         arena: &module.types,
@@ -2177,7 +2159,7 @@ impl<W: Write> Writer<W> {
                     Some(ref binding @ &crate::Binding::BuiltIn(..)) => binding,
                     _ => continue,
                 };
-                let name = &self.names[name_key];
+                let name = &self.names[&name_key];
                 let ty_name = TypeContext {
                     handle: ty,
                     arena: &module.types,
@@ -2446,7 +2428,7 @@ fn test_stack_size() {
         let stack_size = addresses.end - addresses.start;
         // check the size (in debug only)
         // last observed macOS value: 17664
-        if stack_size < 14000 || stack_size > 19000 {
+        if stack_size < 17000 || stack_size > 19000 {
             panic!("`put_expression` stack size {} has changed!", stack_size);
         }
     }
@@ -2461,7 +2443,7 @@ fn test_stack_size() {
         let stack_size = addresses.end - addresses.start;
         // check the size (in debug only)
         // last observed macOS value: 13600
-        if stack_size < 11000 || stack_size > 16000 {
+        if stack_size < 12000 || stack_size > 14500 {
             panic!("`put_block` stack size {} has changed!", stack_size);
         }
     }

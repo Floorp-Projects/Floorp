@@ -14,7 +14,7 @@ use crate::{
 
 /// Helper class to emit expressions
 #[allow(dead_code)]
-#[derive(Default, Debug)]
+#[derive(Default)]
 struct Emitter {
     start_len: Option<usize>,
 }
@@ -69,39 +69,16 @@ impl Typifier {
         self.resolutions[expr_handle.index()].inner_with(types)
     }
 
-    pub fn get_handle(
-        &mut self,
-        expr_handle: Handle<crate::Expression>,
-        types: &mut Arena<crate::Type>,
-    ) -> Handle<crate::Type> {
-        let mut dummy = TypeResolution::Value(crate::TypeInner::Sampler { comparison: false });
-        let res = &mut self.resolutions[expr_handle.index()];
-
-        std::mem::swap(&mut dummy, res);
-
-        let v = match dummy {
-            TypeResolution::Handle(h) => h,
-            TypeResolution::Value(inner) => {
-                let h = types.fetch_or_append(crate::Type { name: None, inner });
-                dummy = TypeResolution::Handle(h);
-                h
-            }
-        };
-
-        std::mem::swap(&mut dummy, res);
-
-        v
-    }
-
     pub fn grow(
         &mut self,
         expr_handle: Handle<crate::Expression>,
         expressions: &Arena<crate::Expression>,
+        types: &mut Arena<crate::Type>,
         ctx: &ResolveContext,
     ) -> Result<(), ResolveError> {
         if self.resolutions.len() <= expr_handle.index() {
             for (eh, expr) in expressions.iter().skip(self.resolutions.len()) {
-                let resolution = ctx.resolve(expr, |h| &self.resolutions[h.index()])?;
+                let resolution = ctx.resolve(expr, types, |h| &self.resolutions[h.index()])?;
                 log::debug!("Resolving {:?} = {:?} : {:?}", eh, expr, resolution);
                 self.resolutions.push(resolution);
             }

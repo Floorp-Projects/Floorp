@@ -82,6 +82,11 @@ var tests = (function*() {
   var iframe = document.getElementById("testframe");
   var sjs = "/tests/dom/base/test/referrer_change_server.sjs?action=generate-policy-test";
 
+  yield SpecialPowers.pushPrefEnv(
+    { set: [["network.http.referer.disallowCrossSiteRelaxingDefault", false]] },
+    advance
+  );
+
   yield resetState();
   var name = "no-referrer-unsafe-url";
   yield iframe.src = sjs + "&policy=" + escape('no-referrer') + "&name=" + name + "&newPolicy=" + escape('unsafe-url');

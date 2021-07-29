@@ -21,6 +21,18 @@ function test_policy(test) {
     prefs.setIntPref("network.http.referer.defaultPolicy", 3);
   }
 
+  if (test.disallowRelaxingDefault) {
+    prefs.setBoolPref(
+      "network.http.referer.disallowCrossSiteRelaxingDefault",
+      test.disallowRelaxingDefault
+    );
+  } else {
+    prefs.setBoolPref(
+      "network.http.referer.disallowCrossSiteRelaxingDefault",
+      false
+    );
+  }
+
   var uri = NetUtil.newURI(test.url);
   var chan = NetUtil.newChannel({
     uri,
@@ -140,4 +152,5 @@ var gTests = [
 
 function run_test() {
   gTests.forEach(test => test_policy(test));
+  Services.prefs.clearUserPref("network.http.referer.disallowRelaxingDefault");
 }

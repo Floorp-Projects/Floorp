@@ -160,8 +160,8 @@ var DevToolsServer = {
       return;
     }
 
-    for (const connID of Object.getOwnPropertyNames(this._connections)) {
-      this._connections[connID].close();
+    for (const connection of Object.values(this._connections)) {
+      connection.close();
     }
 
     ActorRegistry.destroy();

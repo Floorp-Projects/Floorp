@@ -226,7 +226,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::RateMetric rate_with_external_denominator(21);
+    constexpr impl::NumeratorMetric rate_with_external_denominator(21);
 
     /**
      * generated from test.nested.external_denominator
@@ -235,7 +235,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::CounterMetric external_denominator(22);
+    constexpr impl::DenominatorMetric external_denominator(22);
 
 }
 
