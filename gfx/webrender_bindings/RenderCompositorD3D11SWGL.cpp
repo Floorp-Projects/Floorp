@@ -297,13 +297,15 @@ bool RenderCompositorD3D11SWGL::TileD3D11::Map(wr::DeviceIntRect aDirtyRect,
       }
       hr = context->Map(mRenderCompositor->mCurrentStagingTexture, 0,
                         D3D11_MAP_READ_WRITE, 0, &mappedSubresource);
-      MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
     }
   }
   if (!SUCCEEDED(hr)) {
     gfxCriticalError() << "Failed to map tile: " << gfx::hexa(hr);
+    // This is only expected to fail if we hit a device reset.
+    MOZ_RELEASE_ASSERT(
+        mRenderCompositor->GetDevice()->GetDeviceRemovedReason() != S_OK);
+    return false;
   }
-  MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
 
   // aData is expected to contain a pointer to the first pixel within the valid
   // rect, so take the mapped resource's data (which covers the full tile size)
