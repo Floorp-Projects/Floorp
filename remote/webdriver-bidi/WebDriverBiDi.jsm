@@ -11,6 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   WebDriverNewSessionHandler:
@@ -149,7 +151,11 @@ class WebDriverBiDi {
       new WebDriverNewSessionHandler(this)
     );
 
-    Cu.printStderr(`WebDriver BiDi listening on ${this.address}\n`);
+    Services.obs.notifyObservers(
+      null,
+      "remote-listening",
+      `WebDriver BiDi listening on ${this.address}`
+    );
   }
 
   /**

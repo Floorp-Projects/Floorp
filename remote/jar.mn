@@ -4,7 +4,6 @@
 
 remote.jar:
 % content remote %content/
-  content/components/Marionette.jsm (components/Marionette.jsm)
   content/components/RemoteAgent.jsm (components/RemoteAgent.jsm)
 
   # transport layer (http / websocket)
