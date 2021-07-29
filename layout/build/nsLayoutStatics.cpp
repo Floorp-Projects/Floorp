@@ -62,6 +62,7 @@
 #include "FrameLayerBuilder.h"
 #include "AnimationCommon.h"
 #include "LayerAnimationInfo.h"
+#include "mozilla/TimelineConsumers.h"
 
 #include "AudioChannelService.h"
 #include "mozilla/dom/PromiseDebugging.h"
@@ -234,6 +235,8 @@ nsresult nsLayoutStatics::Initialize() {
   nsLayoutUtils::Initialize();
   PointerEventHandler::InitializeStatics();
   TouchManager::InitializeStatics();
+
+  TimelineConsumers::Init();
 
   nsWindowMemoryReporter::Init();
 
