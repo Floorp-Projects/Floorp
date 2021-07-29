@@ -50,8 +50,7 @@ void JS::TracingContext::getEdgeName(char* buffer, size_t bufferSize) {
 JS_PUBLIC_API void JS::TraceChildren(JSTracer* trc, GCCellPtr thing) {
   ApplyGCThingTyped(thing.asCell(), thing.kind(), [trc](auto t) {
     MOZ_ASSERT_IF(t->runtimeFromAnyThread() != trc->runtime(),
-                  t->isPermanentAndMayBeShared() ||
-                      t->zoneFromAnyThread()->isSelfHostingZone());
+                  t->isPermanentAndMayBeShared());
     t->traceChildren(trc);
   });
 }

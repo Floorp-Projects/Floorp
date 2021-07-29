@@ -432,8 +432,6 @@ bool GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind) {
                     kind == AllocKind::SCOPE);
   MOZ_ASSERT_IF(!cx->zone()->isAtomsZone(),
                 kind != AllocKind::ATOM && kind != AllocKind::FAT_INLINE_ATOM);
-  MOZ_ASSERT_IF(cx->zone()->isSelfHostingZone(),
-                !rt->parentRuntime && !selfHostingZoneFrozen);
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
 #endif
 
