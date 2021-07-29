@@ -39,6 +39,10 @@ bool CheckShaderType(Shader expected, GLenum actual)
             return actual == GL_GEOMETRY_SHADER;
         case Shader::GEOMETRY_EXT:
             return actual == GL_GEOMETRY_SHADER_EXT;
+        case Shader::TESS_CONTROL_EXT:
+            return actual == GL_TESS_CONTROL_SHADER_EXT;
+        case Shader::TESS_EVALUATION_EXT:
+            return actual == GL_TESS_EVALUATION_SHADER_EXT;
         case Shader::NOT_COMPUTE:
             return actual != GL_COMPUTE_SHADER;
         default:
@@ -411,6 +415,8 @@ void TSymbolTable::initializeBuiltIns(sh::GLenum type,
             case GL_VERTEX_SHADER:
             case GL_COMPUTE_SHADER:
             case GL_GEOMETRY_SHADER_EXT:
+            case GL_TESS_CONTROL_SHADER_EXT:
+            case GL_TESS_EVALUATION_SHADER_EXT:
                 setDefaultPrecision(EbtInt, EbpHigh);
                 setDefaultPrecision(EbtFloat, EbpHigh);
                 break;

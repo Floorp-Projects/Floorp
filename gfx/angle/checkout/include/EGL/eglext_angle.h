@@ -24,9 +24,11 @@
 
 #ifndef EGL_ANGLE_d3d_texture_client_buffer
 #define EGL_ANGLE_d3d_texture_client_buffer 1
-#define EGL_D3D_TEXTURE_ANGLE             0x33A3
-#define EGL_TEXTURE_OFFSET_X_ANGLE        0x3490
-#define EGL_TEXTURE_OFFSET_Y_ANGLE        0x3491
+#define EGL_D3D_TEXTURE_ANGLE 0x33A3
+#define EGL_TEXTURE_OFFSET_X_ANGLE 0x3490
+#define EGL_TEXTURE_OFFSET_Y_ANGLE 0x3491
+#define EGL_D3D11_TEXTURE_PLANE_ANGLE 0x3492
+#define EGL_D3D11_TEXTURE_ARRAY_SLICE_ANGLE 0x3493
 #endif /* EGL_ANGLE_d3d_texture_client_buffer */
 
 #ifndef EGL_ANGLE_software_display
@@ -204,12 +206,12 @@ EGLAPI EGLBoolean EGLAPIENTRY eglReleaseDeviceANGLE(EGLDeviceEXT device);
 typedef EGLint (EGLAPIENTRYP PFNEGLPROGRAMCACHEGETATTRIBANGLEPROC) (EGLDisplay dpy, EGLenum attrib);
 typedef void (EGLAPIENTRYP PFNEGLPROGRAMCACHEQUERYANGLEPROC) (EGLDisplay dpy, EGLint index, void *key, EGLint *keysize, void *binary, EGLint *binarysize);
 typedef void (EGLAPIENTRYP PFNEGLPROGRAMCACHEPOPULATEANGLEPROC) (EGLDisplay dpy, const void *key, EGLint keysize, const void *binary, EGLint binarysize);
-typedef EGLint (EGLAPIENTRYP PFNEGLPROGRAMCACHERESIZEANGLEPROC) (EGLDisplay dpy, EGLint limit, EGLenum mode);
+typedef EGLint (EGLAPIENTRYP PFNEGLPROGRAMCACHERESIZEANGLEPROC) (EGLDisplay dpy, EGLint limit, EGLint mode);
 #ifdef EGL_EGLEXT_PROTOTYPES
 EGLAPI EGLint EGLAPIENTRY eglProgramCacheGetAttribANGLE(EGLDisplay dpy, EGLenum attrib);
 EGLAPI void EGLAPIENTRY eglProgramCacheQueryANGLE(EGLDisplay dpy, EGLint index, void *key, EGLint *keysize, void *binary, EGLint *binarysize);
 EGLAPI void EGLAPIENTRY eglProgramCachePopulateANGLE(EGLDisplay dpy, const void *key, EGLint keysize, const void *binary, EGLint binarysize);
-EGLAPI EGLint EGLAPIENTRY eglProgramCacheResizeANGLE(EGLDisplay dpy, EGLint limit, EGLenum mode);
+EGLAPI EGLint EGLAPIENTRY eglProgramCacheResizeANGLE(EGLDisplay dpy, EGLint limit, EGLint mode);
 #endif
 #endif /* EGL_ANGLE_program_cache_control */
 
@@ -225,6 +227,11 @@ EGLAPI EGLint EGLAPIENTRY eglProgramCacheResizeANGLE(EGLDisplay dpy, EGLint limi
 #define EGL_IOSURFACE_WRITE_HINT_ANGLE 0x0002
 #define EGL_BIND_TO_TEXTURE_TARGET_ANGLE 0x348D
 #endif /* EGL_ANGLE_iosurface_client_buffer */
+
+#ifndef ANGLE_metal_texture_client_buffer
+#define ANGLE_metal_texture_client_buffer 1
+#define EGL_METAL_TEXTURE_ANGLE 0x34A7
+#endif /* ANGLE_metal_texture_client_buffer */
 
 #ifndef EGL_ANGLE_create_context_extensions_enabled
 #define EGL_ANGLE_create_context_extensions_enabled 1
@@ -331,10 +338,22 @@ EGLAPI EGLBoolean EGLAPIENTRY eglSwapBuffersWithFrameTokenANGLE(EGLDisplay dpy, 
 #define EGL_EAGL_CONTEXT_ANGLE 0x348C
 #endif
 
+#ifndef EGL_ANGLE_device_metal
+#define EGL_ANGLE_device_metal 1
+#define EGL_METAL_DEVICE_ANGLE 0x34A6
+#endif /* EGL_ANGLE_device_metal */
+
 #ifndef EGL_ANGLE_display_semaphore_share_group
 #define EGL_ANGLE_display_semaphore_share_group 1
 #define EGL_DISPLAY_SEMAPHORE_SHARE_GROUP_ANGLE 0x348D
 #endif /* EGL_ANGLE_display_semaphore_share_group */
+
+#ifndef EGL_ANGLE_external_context_and_surface
+#define EGL_ANGLE_external_context_and_surface 1
+#define EGL_EXTERNAL_CONTEXT_ANGLE 0x348E
+#define EGL_EXTERNAL_SURFACE_ANGLE 0x348F
+#define EGL_EXTERNAL_CONTEXT_SAVE_STATE_ANGLE 0x3490
+#endif /* EGL_ANGLE_external_context_and_surface */
 
 // clang-format on
 

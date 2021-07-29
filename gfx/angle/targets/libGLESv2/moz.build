@@ -4,12 +4,12 @@ include("../../moz.build.common")
 
 DEFINES["ANGLE_CAPTURE_ENABLED"] = "0"
 DEFINES["ANGLE_ENABLE_D3D11"] = True
+DEFINES["ANGLE_ENABLE_D3D11_COMPOSITOR_NATIVE_WINDOW"] = True
 DEFINES["ANGLE_ENABLE_D3D9"] = True
-# DEFINES["ANGLE_IS_64_BIT_CPU"] = True
 # DEFINES["ANGLE_IS_WIN"] = True
 # DEFINES["ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES"] = "{ "d3dcompiler_47.dll", "d3dcompiler_46.dll", "d3dcompiler_43.dll" }"
 # DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
-DEFINES["CR_CLANG_REVISION"] = '"llvmorg-12-init-11060-g118c3f3c-1"'
+DEFINES["CR_CLANG_REVISION"] = '"llvmorg-13-init-9302-g897d7bce-1"'
 DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
 DEFINES["EGL_EGLEXT_PROTOTYPES"] = True
 DEFINES["EGL_EGL_PROTOTYPES"] = "1"
@@ -56,22 +56,24 @@ LOCAL_INCLUDES += [
 #     "-D__DATE__=",
 #     "-D__TIME__=",
 #     "-D__TIMESTAMP__=",
-#     "-debug-info-kind=constructor",
 #     "-fcolor-diagnostics",
 #     "-fcomplete-member-pointers",
 #     "-fcrash-diagnostics-dir=../tools/clang/crashreports",
 #     "-fdebug-compilation-dir",
 #     "-fmerge-all-constants",
 #     "-fmsc-version=1916",
+#     "-fno-delete-null-pointer-checks",
+#     "-fno-ident",
 #     "-ftrivial-auto-var-init=pattern",
 #     "-gcodeview-ghash",
 #     "-instcombine-lower-dbg-declare=0",
 #     "-m64",
 #     "-mllvm",
+#     "-msse3",
 #     "-no-canonical-prefixes",
+#     "-plugin-arg-find-bad-constructs",
 #     "-Wbad-function-cast",
 #     "-Wconditional-uninitialized",
-#     "-Wdeprecated-copy",
 #     "-Wexit-time-destructors",
 #     "-Wextra-semi",
 #     "-Wextra-semi-stmt",
@@ -102,7 +104,7 @@ LOCAL_INCLUDES += [
 #     "-Wparentheses",
 #     "-Wrange-loop-analysis",
 #     "-Wredundant-parens",
-#     "-Wreturn-std-move-in-c++11",
+#     "-Wreturn-std-move",
 #     "-Wshadow-field",
 #     "-Wshorten-64-to-32",
 #     "-Wstrict-prototypes",
@@ -183,11 +185,11 @@ LOCAL_INCLUDES += [
 #     "/we4800",
 #     "/we4838",
 #     "/WX",
-#     "/X",
 #     "/Z7",
 #     "/Zc:inline",
 #     "/Zc:sizedDealloc-",
 #     "/Zc:twoPhase",
+#     "checked-ptr-as-trivial-member",
 #     "find-bad-constructs",
 # ]
 
@@ -197,6 +199,8 @@ SOURCES += [
     "../../checkout/src/libANGLE/BlobCache.cpp",
     "../../checkout/src/libANGLE/Buffer.cpp",
     "../../checkout/src/libANGLE/Caps.cpp",
+    "../../checkout/src/libANGLE/capture/frame_capture_utils_mock.cpp",
+    "../../checkout/src/libANGLE/capture/FrameCapture_mock.cpp",
     "../../checkout/src/libANGLE/Compiler.cpp",
     "../../checkout/src/libANGLE/Config.cpp",
     "../../checkout/src/libANGLE/Context.cpp",
@@ -214,7 +218,6 @@ SOURCES += [
     "../../checkout/src/libANGLE/formatutils.cpp",
     "../../checkout/src/libANGLE/Framebuffer.cpp",
     "../../checkout/src/libANGLE/FramebufferAttachment.cpp",
-    "../../checkout/src/libANGLE/FrameCapture_mock.cpp",
     "../../checkout/src/libANGLE/GLES1Renderer.cpp",
     "../../checkout/src/libANGLE/GLES1State.cpp",
     "../../checkout/src/libANGLE/HandleAllocator.cpp",
@@ -299,6 +302,7 @@ SOURCES += [
     "../../checkout/src/libANGLE/renderer/d3d/d3d9/VertexDeclarationCache.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/DeviceD3D.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/DisplayD3D.cpp",
+    "../../checkout/src/libANGLE/renderer/d3d/driver_utils_d3d.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/DynamicHLSL.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/DynamicImage2DHLSL.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/EGLImageD3D.cpp",
@@ -355,30 +359,17 @@ SOURCES += [
     "../../checkout/src/libANGLE/validationES32.cpp",
     "../../checkout/src/libANGLE/validationESEXT.cpp",
     "../../checkout/src/libANGLE/validationGL1.cpp",
-    "../../checkout/src/libANGLE/validationGL11.cpp",
-    "../../checkout/src/libANGLE/validationGL12.cpp",
-    "../../checkout/src/libANGLE/validationGL13.cpp",
-    "../../checkout/src/libANGLE/validationGL14.cpp",
-    "../../checkout/src/libANGLE/validationGL15.cpp",
     "../../checkout/src/libANGLE/validationGL2.cpp",
-    "../../checkout/src/libANGLE/validationGL21.cpp",
     "../../checkout/src/libANGLE/validationGL3.cpp",
-    "../../checkout/src/libANGLE/validationGL31.cpp",
-    "../../checkout/src/libANGLE/validationGL32.cpp",
-    "../../checkout/src/libANGLE/validationGL33.cpp",
     "../../checkout/src/libANGLE/validationGL4.cpp",
-    "../../checkout/src/libANGLE/validationGL41.cpp",
-    "../../checkout/src/libANGLE/validationGL42.cpp",
-    "../../checkout/src/libANGLE/validationGL43.cpp",
-    "../../checkout/src/libANGLE/validationGL44.cpp",
-    "../../checkout/src/libANGLE/validationGL45.cpp",
-    "../../checkout/src/libANGLE/validationGL46.cpp",
     "../../checkout/src/libANGLE/VaryingPacking.cpp",
     "../../checkout/src/libANGLE/VertexArray.cpp",
     "../../checkout/src/libANGLE/VertexAttribute.cpp",
     "../../checkout/src/libANGLE/WorkerThread.cpp",
-    "../../checkout/src/libGLESv2/entry_points_egl.cpp",
-    "../../checkout/src/libGLESv2/entry_points_egl_ext.cpp",
+    "../../checkout/src/libGLESv2/egl_ext_stubs.cpp",
+    "../../checkout/src/libGLESv2/egl_stubs.cpp",
+    "../../checkout/src/libGLESv2/entry_points_egl_autogen.cpp",
+    "../../checkout/src/libGLESv2/entry_points_egl_ext_autogen.cpp",
     "../../checkout/src/libGLESv2/entry_points_gles_1_0_autogen.cpp",
     "../../checkout/src/libGLESv2/entry_points_gles_2_0_autogen.cpp",
     "../../checkout/src/libGLESv2/entry_points_gles_3_0_autogen.cpp",
@@ -439,6 +430,7 @@ OS_LIBS += [
 # LDFLAGS += [
 #     "--color-diagnostics",
 #     "/call-graph-profile-sort:no",
+#     "/CETCOMPAT",
 #     "/DEBUG:GHASH",
 #     "/DELAYLOAD:d3d9.dll",
 #     "/DYNAMICBASE",
@@ -457,7 +449,7 @@ OS_LIBS += [
 #     "/PDBSourcePath:C:/dev/angle/out",
 #     "/PROFILE",
 #     "/SUBSYSTEM:CONSOLE,5.02",
-#     "/TIMESTAMP:1604206800",
+#     "/TIMESTAMP:1619931600",
 #     "/WX",
 # ]
 

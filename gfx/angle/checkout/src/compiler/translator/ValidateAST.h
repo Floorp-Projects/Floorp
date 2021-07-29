@@ -23,6 +23,8 @@ struct ValidateASTOptions
 
     // Check that every node always has only one parent,
     bool validateSingleParent = true;
+    // Check that all symbols reference TVariables that have been declared.
+    bool validateVariableReferences = true;
     // Check that all EOpCallFunctionInAST have their corresponding function definitions in the AST,
     // with matching symbol ids. There should also be at least a prototype declaration before the
     // function is called.
@@ -40,13 +42,15 @@ struct ValidateASTOptions
     // Check that there is only one TFunction with each function name referenced in the nodes (no
     // two TFunctions with the same name, taking internal/non-internal namespaces into account).
     bool validateUniqueFunctions = true;  // TODO
-    // Check that references to user-defined structs are matched with the corresponding struct
+    // Check that references to structs are matched with the corresponding struct declaration.  This
+    // is only done for references to structs inside other struct or interface blocks declarations,
+    // as validateVariableReferences already ensures other references to the struct match the
     // declaration.
-    bool validateStructUsage = true;  // TODO
+    bool validateStructUsage = true;
     // Check that expression nodes have the correct type considering their operand(s).
     bool validateExpressionTypes = true;  // TODO
     // If SeparateDeclarations has been run, check for the absence of multi declarations as well.
-    bool validateMultiDeclarations = false;  // TODO
+    bool validateMultiDeclarations = false;
 };
 
 // Check for errors and output error messages on the context.
