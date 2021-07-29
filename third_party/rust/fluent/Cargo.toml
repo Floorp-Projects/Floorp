@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "fluent"
-version = "0.14.1"
+version = "0.15.0"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>", "Staś Małolepszy <stas@mozilla.com>"]
 include = ["src/**/*", "benches/*.rs", "Cargo.toml", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "A localization system designed to unleash the entire expressive power of\nnatural language translations.\n"
@@ -24,7 +24,7 @@ categories = ["localization", "internationalization"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/projectfluent/fluent-rs"
 [dependencies.fluent-bundle]
-version = "0.14.1"
+version = "0.15"
 
 [dependencies.fluent-pseudo]
 version = "0.2"

@@ -111,6 +111,7 @@
 ///         immutable: Box<i32>,
 ///         mutable: Box<i32>,
 ///         #[borrows(immutable, mut mutable)]
+///         #[covariant]
 ///         complex_data: ComplexData<'this, 'this>,
 ///     }
 ///
@@ -127,6 +128,19 @@
 ///     });
 /// }
 /// ```
+/// # Covariance
+/// Many types in Rust have a property called "covariance". In practical tearms, this means that a
+/// covariant type like `Box<&'this i32>` can be used as a `Box<&'a i32>` as long as `'a` is 
+/// smaller than `'this`. Since the lifetime is smaller, it does not violate the lifetime specified
+/// by the original type. Contrast this to `Fn(&'this i32)`, which is not covariant. You cannot give
+/// this function a reference with a lifetime shorter than `'this` as the function needs something
+/// that lives at *least* as long as `'this`. Unfortunately, there is no easy way to determine
+/// whether or not a type is covariant from inside the macro. As such, you may
+/// receive a compiler error letting you know that the macro is uncertain if a particular field
+/// uses a covariant type. Adding `#[covariant]` or `#[not_covariant]` will resolve this issue.
+/// 
+/// These annotations control whether or not a `borrow_*` method is generated for that field.
+/// 
 /// # Using `chain_hack`
 /// Unfortunately, as of September 2020, Rust has a
 /// [known limitation in its type checker](https://users.rust-lang.org/t/why-does-this-not-compile-box-t-target-t/49027/7?u=aaaaa)
@@ -192,10 +206,10 @@
 /// can do anything you want with the reference, it is constructed to not outlive the struct.
 /// ### `MyStruct::borrow_FIELD(&self) -> &FieldType`
 /// This function is generated for every **tail and immutably-borrowed field** in your struct. It 
-/// is equivalent to calling `my_struct.with_FIELD(|field| field)`. Note that certain types of
-/// fields would cause this function to generate a compiler error, so it is ommitted. Generally, if
-/// your field uses `'this` as a lifetime parameter, the corresponding `borrow_FIELD` function will
-/// not be generated. There is no `borrow_FIELD_mut`, unfortunately, as Rust's
+/// is equivalent to calling `my_struct.with_FIELD(|field| field)`. It is only generated for types
+/// which are known to be covariant, either through the macro being able to detect it or through the
+/// programmer adding the `#[covariant]` annotation to the field.
+/// There is no `borrow_FIELD_mut`, unfortunately, as Rust's
 /// borrow checker is currently not capable of ensuring that such a method would be used safely.
 /// ### `MyStruct::with_FIELD_mut<R>(&mut self, user: FnOnce(field: &mut FieldType) -> R) -> R`
 /// This function is generated for every **tail field** in your struct. It is the mutable version

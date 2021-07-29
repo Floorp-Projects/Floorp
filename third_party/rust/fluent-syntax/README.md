@@ -3,8 +3,8 @@
 `fluent-syntax` is a parser/serializer API for the Fluent Syntax, part of the [Project Fluent](https://projectfluent.org/), a localization
 framework designed to unleash the entire expressive power of natural language translations.
 
-[![crates.io](http://meritbadge.herokuapp.com/fluent-syntax)](https://crates.io/crates/fluent-syntax)
-[![Build Status](https://travis-ci.org/projectfluent/fluent-rs.svg?branch=master)](https://travis-ci.org/projectfluent/fluent-rs)
+[![crates.io](https://meritbadge.herokuapp.com/fluent-syntax)](https://crates.io/crates/fluent-syntax)
+[![Build and test](https://github.com/projectfluent/fluent-rs/workflows/Build%20and%20test/badge.svg)](https://github.com/projectfluent/fluent-rs/actions?query=branch%3Amaster+workflow%3A%22Build+and+test%22)
 [![Coverage Status](https://coveralls.io/repos/github/projectfluent/fluent-rs/badge.svg?branch=master)](https://coveralls.io/github/projectfluent/fluent-rs?branch=master)
 
 Status

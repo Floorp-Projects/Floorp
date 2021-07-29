@@ -1,11 +1,3 @@
-//! The `ResolveValue` trait resolves Fluent AST nodes to [`FluentValues`].
-//!
-//! This is an internal API used by [`FluentBundle`] to evaluate Messages, Attributes and other
-//! AST nodes to [`FluentValues`] which can be then formatted to strings.
-//!
-//! [`FluentValues`]: ../types/enum.FluentValue.html
-//! [`FluentBundle`]: ../bundle/struct.FluentBundle.html
-
 mod errors;
 mod expression;
 mod inline_expression;
@@ -24,23 +16,25 @@ use crate::types::FluentValue;
 
 // Converts an AST node to a `FluentValue`.
 pub(crate) trait ResolveValue {
-    fn resolve<'source, 'errors, R, M: MemoizerKind>(
+    fn resolve<'source, 'errors, R, M>(
         &'source self,
         scope: &mut Scope<'source, 'errors, R, M>,
     ) -> FluentValue<'source>
     where
-        R: Borrow<FluentResource>;
+        R: Borrow<FluentResource>,
+        M: MemoizerKind;
 }
 
 pub(crate) trait WriteValue {
-    fn write<'source, 'errors, W, R, M: MemoizerKind>(
+    fn write<'source, 'errors, W, R, M>(
         &'source self,
         w: &mut W,
         scope: &mut Scope<'source, 'errors, R, M>,
     ) -> fmt::Result
     where
         W: fmt::Write,
-        R: Borrow<FluentResource>;
+        R: Borrow<FluentResource>,
+        M: MemoizerKind;
 
     fn write_error<W>(&self, _w: &mut W) -> fmt::Result
     where

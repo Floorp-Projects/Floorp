@@ -1,3 +1,16 @@
+//! `types` module contains types necessary for Fluent runtime
+//! value handling.
+//! The core struct is [`FluentValue`] which is a type that can be passed
+//! to the [`FluentBundle::format_pattern`](crate::bundle::FluentBundle) as an argument, it can be passed
+//! to any Fluent Function, and any function may return it.
+//!
+//! This part of functionality is not fully hashed out yet, since we're waiting
+//! for the internationalization APIs to mature, at which point all number
+//! formatting operations will be moved out of Fluent.
+//!
+//! For now, [`FluentValue`] can be a string, a number, or a custom [`FluentType`]
+//! which allows users of the library to implement their own types of values,
+//! such as dates, or more complex structures needed for their bindings.
 mod number;
 mod plural;
 
@@ -51,7 +64,7 @@ impl<T: Any + PartialEq> AnyEq for T {
 /// Those values are either passed as arguments to [`FluentBundle::format_pattern`][] or
 /// produced by functions, or generated in the process of pattern resolution.
 ///
-/// [`FluentBundle::format_pattern`]: ../bundle/struct.FluentBundleBase.html#method.format_pattern
+/// [`FluentBundle::format_pattern`]: ../bundle/struct.FluentBundle.html#method.format_pattern
 #[derive(Debug)]
 pub enum FluentValue<'source> {
     String(Cow<'source, str>),
@@ -97,11 +110,14 @@ impl<'source> FluentValue<'source> {
         }
     }
 
-    pub fn matches<R: Borrow<FluentResource>, M: MemoizerKind>(
+    pub fn matches<R: Borrow<FluentResource>, M>(
         &self,
         other: &FluentValue,
         scope: &Scope<R, M>,
-    ) -> bool {
+    ) -> bool
+    where
+        M: MemoizerKind,
+    {
         match (self, other) {
             (&FluentValue::String(ref a), &FluentValue::String(ref b)) => a == b,
             (&FluentValue::Number(ref a), &FluentValue::Number(ref b)) => a == b,
@@ -148,10 +164,10 @@ impl<'source> FluentValue<'source> {
         }
     }
 
-    pub fn as_string<R: Borrow<FluentResource>, M: MemoizerKind>(
-        &self,
-        scope: &Scope<R, M>,
-    ) -> Cow<'source, str> {
+    pub fn as_string<R: Borrow<FluentResource>, M>(&self, scope: &Scope<R, M>) -> Cow<'source, str>
+    where
+        M: MemoizerKind,
+    {
         if let Some(formatter) = &scope.bundle.formatter {
             if let Some(val) = formatter(self, &scope.bundle.intls) {
                 return val.into();
