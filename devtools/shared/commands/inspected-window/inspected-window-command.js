@@ -8,6 +8,7 @@ const {
   getAdHocFrontOrPrimitiveGrip,
   // eslint-disable-next-line mozilla/reject-some-requires
 } = require("devtools/client/fronts/object");
+const { Cu } = require("chrome");
 
 /**
  * For now, this class is mostly a wrapper around webExtInspectedWindow actor.

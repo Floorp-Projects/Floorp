@@ -28,8 +28,12 @@ async function getCurrentTabId(extension) {
 async function navigateTo(uri, tab, toolbox, extension) {
   const originalTabId = await getCurrentTabId(extension);
 
+  const promiseBrowserLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   const onSwitched = toolbox.commands.targetCommand.once("switched-target");
   BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
+  info("Wait for the tab to be loaded");
+  await promiseBrowserLoaded;
+  info("Wait for the toolbox target to have been switched");
   await onSwitched;
 
   const currentTabId = await getCurrentTabId(extension);
