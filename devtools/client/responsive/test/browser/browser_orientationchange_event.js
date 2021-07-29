@@ -96,13 +96,12 @@ addRDMTask(TEST_COM_URL, async function({ ui }) {
   );
   const browser = ui.getViewportBrowser();
   const previousBrowsingContextId = browser.browsingContext.id;
-  const onPageReloaded = BrowserTestUtils.browserLoaded(browser, true);
-  const onViewportLoad = waitForViewportLoad(ui);
+  const { onPageLoaded } = await waitForViewportLoad(ui);
   BrowserTestUtils.loadURI(
     browser,
     URL_ROOT_ORG_SSL + TEST_DOCUMENT + "?crossOriginIsolated=true"
   );
-  await Promise.all([onPageReloaded, onViewportLoad]);
+  await onPageLoaded;
 
   isnot(
     browser.browsingContext.id,
