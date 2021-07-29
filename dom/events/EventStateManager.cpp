@@ -4923,9 +4923,9 @@ void EventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
             lastContent = lastContent->GetFlattenedTreeParent();
           }
 
-          FireDragEnterOrExit(sLastDragOverFrame->PresContext(), aDragEvent,
-                              eDragExit, targetContent, lastContent,
-                              sLastDragOverFrame);
+          RefPtr<nsPresContext> presContext = sLastDragOverFrame->PresContext();
+          FireDragEnterOrExit(presContext, aDragEvent, eDragExit, targetContent,
+                              lastContent, sLastDragOverFrame);
           nsIContent* target = sLastDragOverFrame
                                    ? sLastDragOverFrame.GetFrame()->GetContent()
                                    : nullptr;
@@ -4951,9 +4951,9 @@ void EventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
                             targetContent, currentTraget);
 
         if (sLastDragOverFrame) {
-          FireDragEnterOrExit(sLastDragOverFrame->PresContext(), aDragEvent,
-                              eDragLeave, targetContent, lastContent,
-                              sLastDragOverFrame);
+          RefPtr<nsPresContext> presContext = sLastDragOverFrame->PresContext();
+          FireDragEnterOrExit(presContext, aDragEvent, eDragLeave,
+                              targetContent, lastContent, sLastDragOverFrame);
         }
 
         sLastDragOverFrame = mCurrentTarget;
