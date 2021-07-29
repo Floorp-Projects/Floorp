@@ -38,7 +38,7 @@ def fixture_new_session(request, configuration, current_session):
     def _delete_session(session_id):
         transport.send("DELETE", "session/{}".format(session_id))
 
-    def new_session(body, delete_existing_session=False):
+    def new_session(body, delete_existing_session=False, headers=None):
         # If there is an active session from the global session fixture,
         # delete that one first
         if current_session is not None:
@@ -47,7 +47,7 @@ def fixture_new_session(request, configuration, current_session):
         if delete_existing_session:
             _delete_session(custom_session["session"]["sessionId"])
 
-        response = transport.send("POST", "session", body)
+        response = transport.send("POST", "session", body, headers=headers)
         if response.status == 200:
             custom_session["session"] = response.body["value"]
         return response, custom_session.get("session", None)
