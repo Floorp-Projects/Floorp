@@ -649,6 +649,10 @@ struct CompilationStencil {
       JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
       CompilationGCOutput& gcOutput);
 
+  [[nodiscard]] JSFunction* instantiateSelfHostedLazyFunction(
+      JSContext* cx, CompilationAtomCache& atomCache, ScriptIndex index,
+      HandleAtom name);
+
   [[nodiscard]] bool serializeStencils(JSContext* cx, CompilationInput& input,
                                        JS::TranscodeBuffer& buf,
                                        bool* succeededOut = nullptr) const;
