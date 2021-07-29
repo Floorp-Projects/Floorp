@@ -197,8 +197,14 @@ RefPtr<ClientWebGLExtensionBase> ClientWebGLContext::GetExtension(
           return new ClientWebGLExtensionCompressedTextureS3TC(*this);
         case WebGLExtensionID::WEBGL_compressed_texture_s3tc_srgb:
           return new ClientWebGLExtensionCompressedTextureS3TC_SRGB(*this);
-        case WebGLExtensionID::WEBGL_debug_renderer_info:
+        case WebGLExtensionID::WEBGL_debug_renderer_info: {
+          if (callerType != dom::CallerType::System) {
+            JsWarning(
+                "WEBGL_debug_renderer_info is deprecated in Firefox and will "
+                "be removed. Please use RENDERER.");
+          }
           return new ClientWebGLExtensionDebugRendererInfo(*this);
+        }
         case WebGLExtensionID::WEBGL_debug_shaders:
           return new ClientWebGLExtensionDebugShaders(*this);
         case WebGLExtensionID::WEBGL_depth_texture:
