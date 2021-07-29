@@ -39,19 +39,19 @@
 //! let msg = bundle.get_message("hello-world")
 //!     .expect("Message doesn't exist.");
 //! let mut errors = vec![];
-//! let pattern = msg.value
+//! let pattern = msg.value()
 //!     .expect("Message has no value.");
 //! let value = bundle.format_pattern(&pattern, None, &mut errors);
 //!
 //! assert_eq!(&value, "Hello, world!");
 //!
 //! let mut args = FluentArgs::new();
-//! args.add("name", FluentValue::from("John"));
+//! args.set("name", FluentValue::from("John"));
 //!
 //! let msg = bundle.get_message("intro")
 //!     .expect("Message doesn't exist.");
 //! let mut errors = vec![];
-//! let pattern = msg.value.expect("Message has no value.");
+//! let pattern = msg.value().expect("Message has no value.");
 //! let value = bundle.format_pattern(&pattern, Some(&args), &mut errors);
 //!
 //! // The FSI/PDI isolation marks ensure that the direction of
@@ -100,7 +100,7 @@ macro_rules! fluent_args {
         {
             let mut args: $crate::FluentArgs = $crate::FluentArgs::new();
             $(
-                args.add($key, $value.into());
+                args.set($key, $value);
             )*
             args
         }

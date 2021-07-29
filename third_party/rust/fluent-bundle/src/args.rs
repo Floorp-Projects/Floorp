@@ -6,27 +6,79 @@ use crate::types::FluentValue;
 /// A map of arguments passed from the code to
 /// the localization to be used for message
 /// formatting.
+///
+/// # Example
+///
+/// ```
+/// use fluent_bundle::{FluentArgs, FluentBundle, FluentResource};
+///
+/// let mut args = FluentArgs::new();
+/// args.set("user", "John");
+/// args.set("emailCount", 5);
+///
+/// let res = FluentResource::try_new(r#"
+///
+/// msg-key = Hello, { $user }. You have { $emailCount } messages.
+///
+/// "#.to_string())
+///     .expect("Failed to parse FTL.");
+///
+/// let mut bundle = FluentBundle::default();
+///
+/// // For this example, we'll turn on BiDi support.
+/// // Please, be careful when doing it, it's a risky move.
+/// bundle.set_use_isolating(false);
+///
+/// bundle.add_resource(res)
+///     .expect("Failed to add a resource.");
+///
+/// let mut err = vec![];
+///
+/// let msg = bundle.get_message("msg-key")
+///     .expect("Failed to retrieve a message.");
+/// let value = msg.value()
+///     .expect("Failed to retrieve a value.");
+///
+/// assert_eq!(
+///     bundle.format_pattern(value, Some(&args), &mut err),
+///     "Hello, John. You have 5 messages."
+/// );
+/// ```
 #[derive(Debug, Default)]
 pub struct FluentArgs<'args>(Vec<(Cow<'args, str>, FluentValue<'args>)>);
 
 impl<'args> FluentArgs<'args> {
     pub fn new() -> Self {
-        Self(vec![])
+        Self::default()
     }
 
     pub fn with_capacity(capacity: usize) -> Self {
         Self(Vec::with_capacity(capacity))
     }
 
-    pub fn get(&self, key: &str) -> Option<&FluentValue<'args>> {
-        self.0.iter().find(|(k, _)| key == *k).map(|(_, v)| v)
-    }
-
-    pub fn add<K>(&mut self, key: K, value: FluentValue<'args>)
+    pub fn get<K>(&self, key: K) -> Option<&FluentValue<'args>>
     where
         K: Into<Cow<'args, str>>,
     {
-        self.0.push((key.into(), value));
+        let key = key.into();
+        if let Ok(idx) = self.0.binary_search_by_key(&&key, |(k, _)| k) {
+            Some(&self.0[idx].1)
+        } else {
+            None
+        }
+    }
+
+    pub fn set<K, V>(&mut self, key: K, value: V)
+    where
+        K: Into<Cow<'args, str>>,
+        V: Into<FluentValue<'args>>,
+    {
+        let key = key.into();
+        let idx = match self.0.binary_search_by_key(&&key, |(k, _)| k) {
+            Ok(idx) => idx,
+            Err(idx) => idx,
+        };
+        self.0.insert(idx, (key, value.into()));
     }
 
     pub fn iter(&self) -> impl Iterator<Item = (&str, &FluentValue)> {
@@ -34,33 +86,27 @@ impl<'args> FluentArgs<'args> {
     }
 }
 
-impl<'args> FromIterator<(&'args str, FluentValue<'args>)> for FluentArgs<'args> {
+impl<'args, K, V> FromIterator<(K, V)> for FluentArgs<'args>
+where
+    K: Into<Cow<'args, str>>,
+    V: Into<FluentValue<'args>>,
+{
     fn from_iter<I>(iter: I) -> Self
     where
-        I: IntoIterator<Item = (&'args str, FluentValue<'args>)>,
+        I: IntoIterator<Item = (K, V)>,
     {
-        let mut c = FluentArgs::new();
+        let iter = iter.into_iter();
+        let mut args = if let Some(size) = iter.size_hint().1 {
+            FluentArgs::with_capacity(size)
+        } else {
+            FluentArgs::new()
+        };
 
         for (k, v) in iter {
-            c.add(k, v);
+            args.set(k, v);
         }
 
-        c
-    }
-}
-
-impl<'args> FromIterator<(String, FluentValue<'args>)> for FluentArgs<'args> {
-    fn from_iter<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = (String, FluentValue<'args>)>,
-    {
-        let mut c = FluentArgs::new();
-
-        for (k, v) in iter {
-            c.add(k, v);
-        }
-
-        c
+        args
     }
 }
 
