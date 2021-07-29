@@ -13,6 +13,7 @@ const { createLazyLoaders } = ChromeUtils.import(
  * @typedef {import("./@types/perf").PerfFront} PerfFront
  * @typedef {import("./@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("./@types/perf").SymbolicationService} SymbolicationService
+ * @typedef {import("./@types/perf").SymbolicationWorkerInitialMessage} SymbolicationWorkerInitialMessage
  */
 
 /**
@@ -101,9 +102,10 @@ function getWASMProfilerGetSymbolsModule() {
  * Returns a promise that resolves with the contents of the (singular) result
  * message or rejects with an error.
  *
+ * @template M
  * @template R
  * @param {string} workerURL
- * @param {object} initialMessageToWorker
+ * @param {M} initialMessageToWorker
  * @returns {Promise<R>}
  */
 async function getResultFromWorker(workerURL, initialMessageToWorker) {
@@ -193,9 +195,13 @@ async function getSymbolTableFromLocalBinary(
   breakpadId
 ) {
   const module = await getWASMProfilerGetSymbolsModule();
+
+  /** @type {SymbolicationWorkerInitialMessage} */
+  const initialMessage = { binaryPath, debugPath, breakpadId, module };
+
   return getResultFromWorker(
     "resource://devtools/client/performance-new/symbolication-worker.js",
-    { binaryPath, debugPath, breakpadId, module }
+    initialMessage
   );
 }
 

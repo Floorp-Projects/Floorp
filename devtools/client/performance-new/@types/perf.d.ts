@@ -500,6 +500,22 @@ export interface FeatureDescription {
   disabledReason?: string;
 }
 
+export type SymbolicationWorkerInitialMessage = {
+  // The absolute path to the binary on the local file system.
+  binaryPath: string;
+  // The absolute path to the binary's pdb file on the local file system if on
+  // Windows, otherwise the same as binaryPath.
+  debugPath: string;
+  // The breakpadId for the binary whose symbols should be obtained. This is
+  // used for two purposes: 1) to locate the correct single-arch binary in
+  // "FatArch" files, and 2) to make sure the binary at the given path is
+  // actually the one that we want. If no ID match is found, the worker returns
+  // an error.
+  breakpadId: string;
+  // The profiler-get-symbols wasm module.
+  module: WebAssembly.Module;
+};
+
 export type SymbolicationWorkerError = {
   name: string;
   message: string;
