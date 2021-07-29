@@ -217,14 +217,13 @@ function createLibraryMap(sharedLibraries) {
  * Return a function `getSymbolTable` that calls getSymbolTableMultiModal with the
  * right arguments.
  *
- * @param {MinimallyTypedGeckoProfile} profile - The raw profie (not gzipped).
+ * @param {Library[]} sharedLibraries - Information about the shared libraries
  * @param {string[]} objdirs - An array of objdir paths
  *   on the host machine that should be searched for relevant build artifacts.
  * @param {PerfFront} perfFront
  * @return {GetSymbolTableCallback}
  */
-function createMultiModalGetSymbolTableFn(profile, objdirs, perfFront) {
-  const sharedLibraries = sharedLibrariesFromProfile(profile);
+function createMultiModalGetSymbolTableFn(sharedLibraries, objdirs, perfFront) {
   const libraryGetter = createLibraryMap(sharedLibraries);
 
   return async function getSymbolTable(debugName, breakpadId) {
@@ -294,6 +293,7 @@ function openFilePickerForObjdir(window, objdirs, changeObjdirs) {
 
 module.exports = {
   openProfilerAndDisplayProfile,
+  sharedLibrariesFromProfile,
   createMultiModalGetSymbolTableFn,
   restartBrowserWithEnvironmentVariable,
   getEnvironmentVariable,
