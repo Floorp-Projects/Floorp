@@ -1,4 +1,4 @@
-use super::{Parser, Result, Slice};
+use super::{core::Parser, core::Result, Slice};
 use crate::ast;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -32,7 +32,7 @@ where
             if self.ptr == self.length {
                 break;
             } else if self.is_current_byte(b'\n') {
-                content.push(self.get_comment_line()?);
+                content.push(self.get_comment_line());
             } else {
                 if let Err(e) = self.expect_byte(b' ') {
                     if content.is_empty() {
@@ -42,7 +42,7 @@ where
                         break;
                     }
                 }
-                content.push(self.get_comment_line()?);
+                content.push(self.get_comment_line());
             }
             self.skip_eol();
         }
@@ -50,31 +50,40 @@ where
         Ok((ast::Comment { content }, level))
     }
 
-    fn get_comment_level(&mut self) -> Level {
-        let mut chars = 0;
-
-        for _ in 0..3 {
-            if self.take_byte_if(b'#') {
-                chars += 1;
+    pub(super) fn skip_comment(&mut self) {
+        loop {
+            while self.ptr < self.length && !self.is_current_byte(b'\n') {
+                self.ptr += 1;
             }
-        }
-
-        match chars {
-            0 => Level::None,
-            1 => Level::Regular,
-            2 => Level::Group,
-            3 => Level::Resource,
-            _ => unreachable!(),
+            self.ptr += 1;
+            if self.is_current_byte(b'#') {
+                self.ptr += 1;
+            } else {
+                break;
+            }
         }
     }
 
-    fn get_comment_line(&mut self) -> Result<S> {
+    fn get_comment_level(&mut self) -> Level {
+        if self.take_byte_if(b'#') {
+            if self.take_byte_if(b'#') {
+                if self.take_byte_if(b'#') {
+                    return Level::Resource;
+                }
+                return Level::Group;
+            }
+            return Level::Regular;
+        }
+        Level::None
+    }
+
+    fn get_comment_line(&mut self) -> S {
         let start_pos = self.ptr;
 
-        while self.ptr < self.length && !self.is_eol() {
+        while !self.is_eol() {
             self.ptr += 1;
         }
 
-        Ok(self.source.slice(start_pos..self.ptr))
+        self.source.slice(start_pos..self.ptr)
     }
 }

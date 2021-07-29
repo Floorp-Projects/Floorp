@@ -1,5 +1,5 @@
 use super::errors::{ErrorKind, ParserError};
-use super::{Parser, Result, Slice};
+use super::{core::Parser, core::Result, slice::Slice};
 use crate::ast;
 
 #[derive(Debug, PartialEq)]
@@ -57,7 +57,7 @@ where
         };
 
         while self.ptr < self.length {
-            if self.is_current_byte(b'{') {
+            if self.take_byte_if(b'{') {
                 if text_element_role == TextElementPosition::LineStart {
                     common_indent = Some(0);
                 }
@@ -70,16 +70,16 @@ where
                 let mut indent = 0;
                 if text_element_role == TextElementPosition::LineStart {
                     indent = self.skip_blank_inline();
-                    if self.ptr >= self.length {
-                        break;
-                    }
-                    let b = self.source.as_ref().as_bytes().get(self.ptr);
-                    if indent == 0 {
-                        if b != Some(&b'\n') {
+                    if let Some(b) = get_current_byte!(self) {
+                        if indent == 0 {
+                            if b != &b'\r' && b != &b'\n' {
+                                break;
+                            }
+                        } else if !Self::is_byte_pattern_continuation(*b) {
+                            self.ptr = slice_start;
                             break;
                         }
-                    } else if !Self::is_byte_pattern_continuation(*b.unwrap()) {
-                        self.ptr = slice_start;
+                    } else {
                         break;
                     }
                 }
@@ -114,7 +114,7 @@ where
 
                 text_element_role = match termination_reason {
                     TextElementTermination::LineFeed => TextElementPosition::LineStart,
-                    TextElementTermination::CRLF => TextElementPosition::Continuation,
+                    TextElementTermination::CRLF => TextElementPosition::LineStart,
                     TextElementTermination::PlaceableStart => TextElementPosition::Continuation,
                     TextElementTermination::EOF => TextElementPosition::Continuation,
                 };
@@ -142,10 +142,8 @@ where
                         let mut value = self.source.slice(start..end);
                         if last_non_blank == i {
                             value.trim();
-                            ast::PatternElement::TextElement { value }
-                        } else {
-                            ast::PatternElement::TextElement { value }
                         }
+                        ast::PatternElement::TextElement { value }
                     }
                 })
                 .collect();
@@ -161,7 +159,7 @@ where
         let start_pos = self.ptr;
         let mut text_element_type = TextElementType::Blank;
 
-        while let Some(b) = self.source.as_ref().as_bytes().get(self.ptr) {
+        while let Some(b) = get_current_byte!(self) {
             match b {
                 b' ' => self.ptr += 1,
                 b'\n' => {

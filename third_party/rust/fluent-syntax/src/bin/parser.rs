@@ -1,4 +1,4 @@
-use fluent_syntax::parser::Parser;
+use fluent_syntax::parser::parse;
 use std::env;
 use std::fs::File;
 use std::io;
@@ -15,7 +15,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let source = read_file(args.get(1).expect("Pass an argument")).expect("Failed to fetch file");
 
-    let (ast, errors) = match Parser::new(source.as_str()).parse() {
+    let (ast, errors) = match parse(source.as_str()) {
         Ok(ast) => (ast, None),
         Err((ast, err)) => (ast, Some(err)),
     };

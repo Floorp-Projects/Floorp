@@ -1,3 +1,48 @@
+//! A set of helper functions for unescaping Fluent unicode escape sequences.
+//!
+//! # Unicode
+//!
+//! Fluent supports UTF-8 in all FTL resources, but it also allows
+//! unicode sequences to be escaped in [`String
+//! Literals`](super::ast::InlineExpression::StringLiteral).
+//!
+//! Four byte sequences are encoded with `\u` and six byte
+//! sqeuences using `\U`.
+//! ## Example
+//!
+//! ```
+//! use fluent_syntax::unicode::unescape_unicode_to_string;
+//!
+//! assert_eq!(
+//!     unescape_unicode_to_string("Foo \\u5bd2 Bar"),
+//!     "Foo 寒 Bar"
+//! );
+//!
+//! assert_eq!(
+//!     unescape_unicode_to_string("Foo \\U01F68A Bar"),
+//!     "Foo 🚊 Bar"
+//! );
+//! ```
+//!
+//! # Other unescapes
+//!
+//! This also allows for a char `"` to be present inside an FTL string literal,
+//! and for `\` itself to be escaped.
+//!
+//! ## Example
+//!
+//! ```
+//! use fluent_syntax::unicode::unescape_unicode_to_string;
+//!
+//! assert_eq!(
+//!     unescape_unicode_to_string("Foo \\\" Bar"),
+//!     "Foo \" Bar"
+//! );
+//! assert_eq!(
+//!     unescape_unicode_to_string("Foo \\\\ Bar"),
+//!     "Foo \\ Bar"
+//! );
+//! ```
 use std::borrow::Cow;
 use std::char;
 use std::fmt;
@@ -9,6 +54,17 @@ fn encode_unicode(s: Option<&str>) -> char {
         .unwrap_or(UNKNOWN_CHAR)
 }
 
+/// Unescapes to a writer without allocating.
+///
+/// ## Example
+///
+/// ```
+/// use fluent_syntax::unicode::unescape_unicode;
+///
+/// let mut s = String::new();
+/// unescape_unicode(&mut s, "Foo \\U01F60A Bar");
+/// assert_eq!(s, "Foo 😊 Bar");
+/// ```
 pub fn unescape_unicode<W>(w: &mut W, input: &str) -> fmt::Result
 where
     W: fmt::Write,
@@ -50,6 +106,18 @@ where
     Ok(())
 }
 
+/// Unescapes to a `Cow<str>` optionally allocating.
+///
+/// ## Example
+///
+/// ```
+/// use fluent_syntax::unicode::unescape_unicode_to_string;
+///
+/// assert_eq!(
+///     unescape_unicode_to_string("Foo \\U01F60A Bar"),
+///     "Foo 😊 Bar"
+/// );
+/// ```
 pub fn unescape_unicode_to_string(input: &str) -> Cow<str> {
     let bytes = input.as_bytes();
     let mut result = Cow::from(input);
