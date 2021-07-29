@@ -3790,6 +3790,9 @@ main.has-snippet {
   padding-inline-start: 6px;
   float: inline-end;
 }
+.ds-navigation .ds-navigation-privacy:hover {
+  text-decoration: underline;
+}
 
 .ds-section-title {
   text-align: center;

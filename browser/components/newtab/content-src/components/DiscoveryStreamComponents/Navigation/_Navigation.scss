@@ -65,5 +65,9 @@
   .ds-navigation-privacy {
     padding-inline-start: 6px;
     float: inline-end;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 }

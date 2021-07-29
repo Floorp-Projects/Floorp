@@ -76,12 +76,10 @@ export class Navigation extends React.PureComponent {
 
         <SafeAnchor
           onLinkClick={this.onLinkClick}
-          className={this.props.className}
+          className="ds-navigation-privacy"
           url={privacyNotice.url}
         >
-          <FluentOrText message={privacyNotice.title}>
-            <span className="ds-navigation-privacy" />
-          </FluentOrText>
+          <FluentOrText message={privacyNotice.title} />
         </SafeAnchor>
       </div>
     );

@@ -10015,13 +10015,11 @@ class Navigation extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCompon
       dispatch: this.props.dispatch
     })))) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_2__["SafeAnchor"], {
       onLinkClick: this.onLinkClick,
-      className: this.props.className,
+      className: "ds-navigation-privacy",
       url: privacyNotice.url
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_3__["FluentOrText"], {
       message: privacyNotice.title
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("span", {
-      className: "ds-navigation-privacy"
-    }))));
+    })));
   }
 
 }
