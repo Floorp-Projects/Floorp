@@ -62,10 +62,11 @@ const reducers = require("devtools/client/performance-new/store/reducers");
 const actions = require("devtools/client/performance-new/store/actions");
 const {
   openProfilerAndDisplayProfile,
-  createLocalSymbolicationService,
   sharedLibrariesFromProfile,
 } = require("devtools/client/performance-new/browser");
-
+const { createLocalSymbolicationService } = ChromeUtils.import(
+  "resource://devtools/client/performance-new/symbolication.jsm.js"
+);
 const {
   setRecordingSettings,
   presets,
