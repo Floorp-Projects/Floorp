@@ -32,6 +32,7 @@ EXPORTS += [
 LOCAL_INCLUDES += [
     "/dom/base",
     "/dom/canvas",
+    "/gfx/cairo/cairo/src",
     "/gfx/layers/d3d11",
     "/gfx/thebes",
 ]
@@ -90,9 +91,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
     LOCAL_INCLUDES += ["/layout/generic", "/widget", "/widget/windows"]
     SOURCES += ["FxROutputHandler.cpp", "FxRWindowManager.cpp"]
 
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 CXXFLAGS += CONFIG["TK_CFLAGS"]
-CFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 CFLAGS += CONFIG["TK_CFLAGS"]
 
 include("/ipc/chromium/chromium-config.mozbuild")

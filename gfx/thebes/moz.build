@@ -263,6 +263,7 @@ LOCAL_INCLUDES += [
     "/dom/base",
     "/dom/media/platforms/apple",
     "/dom/xml",
+    "/gfx/cairo/cairo/src",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("android", "gtk"):
@@ -273,9 +274,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
         if CONFIG[var]:
             DEFINES[var] = True
 
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 CXXFLAGS += CONFIG["TK_CFLAGS"]
-CFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 CFLAGS += CONFIG["TK_CFLAGS"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("android"):

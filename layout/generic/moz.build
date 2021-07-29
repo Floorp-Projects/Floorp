@@ -253,6 +253,7 @@ LOCAL_INCLUDES += [
     "/dom/base",
     "/dom/html",
     "/dom/xul",
+    "/gfx/cairo/cairo/src",
 ]
 
 JAR_MANIFESTS += ["jar.mn"]
@@ -263,8 +264,6 @@ CONTENT_ACCESSIBLE_FILES.html = [
 
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
-
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CXXFLAGS += CONFIG["TK_CFLAGS"]

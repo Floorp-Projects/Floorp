@@ -121,6 +121,8 @@ LOCAL_INCLUDES += [
     # Because SVGDocumentWrapper.cpp includes "mozilla/dom/SVGSVGElement.h"
     "/dom/base",
     "/dom/svg",
+    # Because imgFrame.cpp includes "cairo.h"
+    "/gfx/cairo/cairo/src",
     # We need to instantiate the decoders
     "/image/decoders",
     # For URI-related functionality
@@ -130,9 +132,6 @@ LOCAL_INCLUDES += [
     # DecodePool uses thread-related facilities.
     "/xpcom/threads",
 ]
-
-# Because imgFrame.cpp includes "cairo.h"
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 
 LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
 

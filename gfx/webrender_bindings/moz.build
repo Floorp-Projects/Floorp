@@ -99,7 +99,6 @@ if CONFIG["MOZ_WAYLAND"]:
     ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("android", "gtk"):
-    CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
     CXXFLAGS += CONFIG["CAIRO_FT_CFLAGS"]
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
@@ -121,6 +120,8 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
 
+LOCAL_INCLUDES += [
+    "/gfx/cairo/cairo/src",
+]
 CXXFLAGS += CONFIG["TK_CFLAGS"]
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 CXXFLAGS += ["-Werror=switch"]
