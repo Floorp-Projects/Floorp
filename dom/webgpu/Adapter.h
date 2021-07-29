@@ -22,9 +22,9 @@ struct GPUFeatures;
 
 namespace webgpu {
 class AdapterFeatures;
+class AdapterLimits;
 class Device;
 class Instance;
-class SupportedLimits;
 class WebGPUChild;
 namespace ffi {
 struct WGPUAdapterInformation;
@@ -46,15 +46,13 @@ class Adapter final : public ObjectBase, public ChildOf<Instance> {
   // Cant have them as `const` right now, since we wouldn't be able
   // to unlink them in CC unlink.
   RefPtr<AdapterFeatures> mFeatures;
-  RefPtr<SupportedLimits> mLimits;
-  const bool mIsSoftware = false;
+  RefPtr<AdapterLimits> mLimits;
 
  public:
   Adapter(Instance* const aParent, const ffi::WGPUAdapterInformation& aInfo);
   void GetName(nsString& out) const { out = mName; }
   const RefPtr<AdapterFeatures>& Features() const;
-  const RefPtr<SupportedLimits>& Limits() const;
-  bool IsSoftware() const;
+  const RefPtr<AdapterLimits>& Limits() const;
 
   already_AddRefed<dom::Promise> RequestDevice(
       const dom::GPUDeviceDescriptor& aDesc, ErrorResult& aRv);

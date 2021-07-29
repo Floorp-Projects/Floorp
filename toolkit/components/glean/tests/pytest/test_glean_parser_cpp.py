@@ -16,11 +16,7 @@ FOG_ROOT_PATH = path.abspath(
 )
 sys.path.append(path.join(FOG_ROOT_PATH, "build_scripts", "glean_parser_ext"))
 import cpp
-
-# Shenanigans to import the in-tree glean_parser
-GECKO_PATH = path.join(FOG_ROOT_PATH, path.pardir, path.pardir, path.pardir)
-sys.path.append(path.join(GECKO_PATH, "third_party", "python", "glean_parser"))
-from glean_parser import lint, parser, util
+import run_glean_parser
 
 
 def test_all_metric_types():
@@ -36,12 +32,10 @@ def test_all_metric_types():
     options = {"allow_reserved": False}
     input_files = [Path(path.join(path.dirname(__file__), "metrics_test.yaml"))]
 
-    all_objs = parser.parse_objects(input_files, options)
-    assert not util.report_validation_errors(all_objs)
-    assert not lint.lint_metrics(all_objs.value, options)
+    all_objs, options = run_glean_parser.parse_with_options(input_files, options)
 
     output_fd = io.StringIO()
-    cpp.output_cpp(all_objs.value, output_fd, options)
+    cpp.output_cpp(all_objs, output_fd, options)
 
     expect(
         path.join(path.dirname(__file__), "metrics_test_output_cpp"),
@@ -62,12 +56,10 @@ def test_fake_pings():
     options = {"allow_reserved": False}
     input_files = [Path(path.join(path.dirname(__file__), "pings_test.yaml"))]
 
-    all_objs = parser.parse_objects(input_files, options)
-    assert not util.report_validation_errors(all_objs)
-    assert not lint.lint_metrics(all_objs.value, options)
+    all_objs, options = run_glean_parser.parse_with_options(input_files, options)
 
     output_fd = io.StringIO()
-    cpp.output_cpp(all_objs.value, output_fd, options)
+    cpp.output_cpp(all_objs, output_fd, options)
 
     expect(
         path.join(path.dirname(__file__), "pings_test_output_cpp"), output_fd.getvalue()

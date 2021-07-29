@@ -362,8 +362,8 @@ pub mod test_nested {
     ///
     /// A multi-line
     /// description
-    pub static rate_with_external_denominator: Lazy<RateMetric> = Lazy::new(|| {
-        RateMetric::new(21.into(), CommonMetricData {
+    pub static rate_with_external_denominator: Lazy<NumeratorMetric> = Lazy::new(|| {
+        NumeratorMetric::new(21.into(), CommonMetricData {
             name: "rate_with_external_denominator".into(),
             category: "test.nested".into(),
             send_in_pings: vec!["metrics".into()],
@@ -378,15 +378,15 @@ pub mod test_nested {
     ///
     /// A multi-line
     /// description
-    pub static external_denominator: Lazy<CounterMetric> = Lazy::new(|| {
-        CounterMetric::new(22.into(), CommonMetricData {
+    pub static external_denominator: Lazy<DenominatorMetric> = Lazy::new(|| {
+        DenominatorMetric::new(22.into(), CommonMetricData {
             name: "external_denominator".into(),
             category: "test.nested".into(),
             send_in_pings: vec!["metrics".into()],
             lifetime: Lifetime::Ping,
             disabled: false,
             ..Default::default()
-        })
+        }, vec![CommonMetricData {name: "rate_with_external_denominator".into(), category: "test.nested".into(), send_in_pings: vec!["metrics".into()], lifetime: Lifetime::Ping, disabled: false,  ..Default::default()}])
     });
 
 }
@@ -413,9 +413,8 @@ pub(crate) mod __glean_metric_maps {
     });
 
     pub static COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<CounterMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(2);
+        let mut map = HashMap::with_capacity(1);
         map.insert(4.into(), &super::test::counter_metric);
-        map.insert(22.into(), &super::test_nested::external_denominator);
         map
     });
 
@@ -488,9 +487,20 @@ pub(crate) mod __glean_metric_maps {
     });
 
     pub static RATE_MAP: Lazy<HashMap<MetricId, &Lazy<RateMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(2);
+        let mut map = HashMap::with_capacity(1);
         map.insert(20.into(), &super::test_nested::rate_metric);
+        map
+    });
+
+    pub static NUMERATOR_MAP: Lazy<HashMap<MetricId, &Lazy<NumeratorMetric>>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity(1);
         map.insert(21.into(), &super::test_nested::rate_with_external_denominator);
+        map
+    });
+
+    pub static DENOMINATOR_MAP: Lazy<HashMap<MetricId, &Lazy<DenominatorMetric>>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity(1);
+        map.insert(22.into(), &super::test_nested::external_denominator);
         map
     });
 

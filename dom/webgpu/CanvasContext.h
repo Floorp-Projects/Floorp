@@ -9,12 +9,12 @@
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
+#include "SwapChain.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 
 namespace mozilla {
 namespace dom {
 class Promise;
-struct GPUCanvasConfiguration;
 enum class GPUTextureFormat : uint8_t;
 }  // namespace dom
 namespace layers {
@@ -22,6 +22,7 @@ class WebRenderLocalCanvasData;
 };
 namespace webgpu {
 class Adapter;
+class SwapChain;
 class Texture;
 
 class CanvasContext final : public nsICanvasRenderingContextInternal,
@@ -40,12 +41,12 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
+  void RemoveSwapChain();
+
   Maybe<wr::ImageKey> GetImageKey() const;
   wr::ImageKey CreateImageKey(layers::RenderRootStateManager* aManager);
   bool UpdateWebRenderLocalCanvasData(
       layers::WebRenderLocalCanvasData* aCanvasData);
-
-  wr::ImageDescriptor MakeImageDescriptor() const;
 
   wr::ExternalImageId mExternalImageId;
 
@@ -97,19 +98,14 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   bool IsContextCleanForFrameCapture() override { return false; }
 
  public:
-  void Configure(const dom::GPUCanvasConfiguration& aDesc);
-  void Unconfigure();
-
-  dom::GPUTextureFormat GetPreferredFormat(Adapter& aAdapter) const;
-  RefPtr<Texture> GetCurrentTexture();
+  dom::GPUTextureFormat GetSwapChainPreferredFormat(Adapter& aAdapter) const;
+  RefPtr<SwapChain> ConfigureSwapChain(const dom::GPUSwapChainDescriptor& aDesc,
+                                       ErrorResult& aRv);
 
  private:
   uint32_t mWidth = 0, mHeight = 0;
 
-  RefPtr<WebGPUChild> mBridge;
-  RefPtr<Texture> mTexture;
-  gfx::SurfaceFormat mGfxFormat = gfx::SurfaceFormat::R8G8B8A8;
-  gfx::IntSize mGfxSize;
+  RefPtr<SwapChain> mSwapChain;
   RefPtr<layers::RenderRootStateManager> mRenderRootStateManager;
   Maybe<wr::ImageKey> mImageKey;
 };

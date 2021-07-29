@@ -9,7 +9,10 @@ use crate::{
     valid::{FunctionInfo, ModuleInfo},
 };
 
-use std::fmt::{Error as FmtError, Write as _};
+use std::{
+    borrow::Cow,
+    fmt::{Error as FmtError, Write as _},
+};
 
 #[derive(Default)]
 struct StatementGraph {
@@ -174,16 +177,16 @@ fn write_fun(
             E::Access { base, index } => {
                 edges.insert("base", base);
                 edges.insert("index", index);
-                ("Access".into(), 1)
+                (Cow::Borrowed("Access"), 1)
             }
             E::AccessIndex { base, index } => {
                 edges.insert("base", base);
-                (format!("AccessIndex[{}]", index).into(), 1)
+                (Cow::Owned(format!("AccessIndex[{}]", index)), 1)
             }
-            E::Constant(_) => ("Constant".into(), 2),
+            E::Constant(_) => (Cow::Borrowed("Constant"), 2),
             E::Splat { size, value } => {
                 edges.insert("value", value);
-                (format!("Splat{:?}", size).into(), 3)
+                (Cow::Owned(format!("Splat{:?}", size)), 3)
             }
             E::Swizzle {
                 size,
@@ -191,24 +194,27 @@ fn write_fun(
                 pattern,
             } => {
                 edges.insert("vector", vector);
-                (format!("Swizzle{:?}", &pattern[..size as usize]).into(), 3)
+                (
+                    Cow::Owned(format!("Swizzle{:?}", &pattern[..size as usize])),
+                    3,
+                )
             }
             E::Compose { ref components, .. } => {
                 payload = Some(Payload::Arguments(components));
-                ("Compose".into(), 3)
+                (Cow::Borrowed("Compose"), 3)
             }
-            E::FunctionArgument(index) => (format!("Argument[{}]", index).into(), 1),
+            E::FunctionArgument(index) => (Cow::Owned(format!("Argument[{}]", index)), 1),
             E::GlobalVariable(h) => {
                 payload = Some(Payload::Global(h));
-                ("Global".into(), 2)
+                (Cow::Borrowed("Global"), 2)
             }
             E::LocalVariable(h) => {
                 payload = Some(Payload::Local(h));
-                ("Local".into(), 1)
+                (Cow::Borrowed("Local"), 1)
             }
             E::Load { pointer } => {
                 edges.insert("pointer", pointer);
-                ("Load".into(), 4)
+                (Cow::Borrowed("Load"), 4)
             }
             E::ImageSample {
                 image,
@@ -242,7 +248,7 @@ fn write_fun(
                 if let Some(expr) = depth_ref {
                     edges.insert("depth_ref", expr);
                 }
-                ("ImageSample".into(), 5)
+                (Cow::Borrowed("ImageSample"), 5)
             }
             E::ImageLoad {
                 image,
@@ -258,7 +264,7 @@ fn write_fun(
                 if let Some(expr) = index {
                     edges.insert("index", expr);
                 }
-                ("ImageLoad".into(), 5)
+                (Cow::Borrowed("ImageLoad"), 5)
             }
             E::ImageQuery { image, query } => {
                 edges.insert("image", image);
@@ -267,20 +273,20 @@ fn write_fun(
                         if let Some(expr) = level {
                             edges.insert("level", expr);
                         }
-                        std::borrow::Cow::from("ImageSize")
+                        Cow::Borrowed("ImageSize")
                     }
-                    _ => format!("{:?}", query).into(),
+                    _ => Cow::Owned(format!("{:?}", query)),
                 };
                 (args, 7)
             }
             E::Unary { op, expr } => {
                 edges.insert("expr", expr);
-                (format!("{:?}", op).into(), 6)
+                (Cow::Owned(format!("{:?}", op)), 6)
             }
             E::Binary { op, left, right } => {
                 edges.insert("left", left);
                 edges.insert("right", right);
-                (format!("{:?}", op).into(), 6)
+                (Cow::Owned(format!("{:?}", op)), 6)
             }
             E::Select {
                 condition,
@@ -290,15 +296,15 @@ fn write_fun(
                 edges.insert("condition", condition);
                 edges.insert("accept", accept);
                 edges.insert("reject", reject);
-                ("Select".into(), 3)
+                (Cow::Borrowed("Select"), 3)
             }
             E::Derivative { axis, expr } => {
                 edges.insert("", expr);
-                (format!("d{:?}", axis).into(), 8)
+                (Cow::Owned(format!("d{:?}", axis)), 8)
             }
             E::Relational { fun, argument } => {
                 edges.insert("arg", argument);
-                (format!("{:?}", fun).into(), 6)
+                (Cow::Owned(format!("{:?}", fun)), 6)
             }
             E::Math {
                 fun,
@@ -313,7 +319,7 @@ fn write_fun(
                 if let Some(expr) = arg2 {
                     edges.insert("arg2", expr);
                 }
-                (format!("{:?}", fun).into(), 7)
+                (Cow::Owned(format!("{:?}", fun)), 7)
             }
             E::As {
                 kind,
@@ -325,12 +331,12 @@ fn write_fun(
                     Some(width) => format!("Convert<{:?},{}>", kind, width),
                     None => format!("Bitcast<{:?}>", kind),
                 };
-                (string.into(), 3)
+                (Cow::Owned(string), 3)
             }
-            E::Call(_function) => ("Call".into(), 4),
+            E::Call(_function) => (Cow::Borrowed("Call"), 4),
             E::ArrayLength(expr) => {
                 edges.insert("", expr);
-                ("ArrayLength".into(), 7)
+                (Cow::Borrowed("ArrayLength"), 7)
             }
         };
 

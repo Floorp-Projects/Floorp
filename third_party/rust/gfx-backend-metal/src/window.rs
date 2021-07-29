@@ -72,7 +72,7 @@ impl Surface {
         };
         let can_set_display_sync = is_mac && caps.has_version_at_least(10, 13);
         let drawable_size =
-            core_graphics_types::geometry::CGSize::new(config.extent.width as f64, config.extent.height as f64);
+            metal::CGSize::new(config.extent.width as f64, config.extent.height as f64);
 
         match config.composite_alpha_mode {
             w::CompositeAlphaMode::OPAQUE => render_layer.set_opaque(true),
@@ -115,7 +115,7 @@ impl Surface {
     }
 
     fn dimensions(&self) -> w::Extent2D {
-        let (size, scale): (core_graphics_types::geometry::CGSize, core_graphics_types::base::CGFloat) = match self.view {
+        let (size, scale): (metal::CGSize, metal::CGFloat) = match self.view {
             Some(view) if !cfg!(target_os = "macos") => unsafe {
                 let bounds: CGRect = msg_send![view.as_ptr(), bounds];
                 let window: Option<NonNull<Object>> = msg_send![view.as_ptr(), window];
@@ -126,7 +126,7 @@ impl Surface {
                     Some(screen) => {
                         let screen_space: *mut Object = msg_send![screen.as_ptr(), coordinateSpace];
                         let rect: CGRect = msg_send![view.as_ptr(), convertRect:bounds toCoordinateSpace:screen_space];
-                        let scale_factor: core_graphics_types::base::CGFloat = msg_send![screen.as_ptr(), nativeScale];
+                        let scale_factor: metal::CGFloat = msg_send![screen.as_ptr(), nativeScale];
                         (rect.size, scale_factor)
                     }
                     None => (bounds.size, 1.0),
@@ -136,7 +136,7 @@ impl Surface {
                 let render_layer_borrow = self.render_layer.lock();
                 let render_layer = render_layer_borrow.as_ref();
                 let bounds: CGRect = msg_send![render_layer, bounds];
-                let contents_scale: core_graphics_types::base::CGFloat = msg_send![render_layer, contentsScale];
+                let contents_scale: metal::CGFloat = msg_send![render_layer, contentsScale];
                 (bounds.size, contents_scale)
             },
         };
@@ -243,6 +243,12 @@ impl w::PresentationSurface<Backend> for Surface {
     ) -> Result<(), w::SwapchainError> {
         if !image::Usage::COLOR_ATTACHMENT.contains(config.image_usage) {
             warn!("Swapchain usage {:?} is not expected", config.image_usage);
+        }
+        #[cfg(target_os = "macos")]
+        {
+            if self.view.is_some() && self.main_thread_id != thread::current().id() {
+                return Err(w::SwapchainError::WrongThread);
+            }
         }
         self.swapchain_format = self.configure(&device.shared, &config);
         Ok(())

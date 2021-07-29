@@ -22,7 +22,7 @@ import rust
 # Shenanigans to import the in-tree glean_parser
 GECKO_PATH = path.join(FOG_ROOT_PATH, path.pardir, path.pardir, path.pardir)
 sys.path.append(path.join(GECKO_PATH, "third_party", "python", "glean_parser"))
-from glean_parser import lint, parser, util
+from glean_parser import parser
 
 
 def test_all_metric_types():
@@ -38,12 +38,10 @@ def test_all_metric_types():
     options = {"allow_reserved": False}
     input_files = [Path(path.join(path.dirname(__file__), "metrics_test.yaml"))]
 
-    all_objs = parser.parse_objects(input_files, options)
-    assert not util.report_validation_errors(all_objs)
-    assert not lint.lint_metrics(all_objs.value, options)
+    all_objs, options = run_glean_parser.parse_with_options(input_files, options)
 
     output_fd = io.StringIO()
-    rust.output_rust(all_objs.value, output_fd, options)
+    rust.output_rust(all_objs, output_fd, options)
 
     expect(
         path.join(path.dirname(__file__), "metrics_test_output"), output_fd.getvalue()
@@ -63,12 +61,10 @@ def test_fake_pings():
     options = {"allow_reserved": False}
     input_files = [Path(path.join(path.dirname(__file__), "pings_test.yaml"))]
 
-    all_objs = parser.parse_objects(input_files, options)
-    assert not util.report_validation_errors(all_objs)
-    assert not lint.lint_metrics(all_objs.value, options)
+    all_objs, options = run_glean_parser.parse_with_options(input_files, options)
 
     output_fd = io.StringIO()
-    rust.output_rust(all_objs.value, output_fd, options)
+    rust.output_rust(all_objs, output_fd, options)
 
     expect(path.join(path.dirname(__file__), "pings_test_output"), output_fd.getvalue())
 
@@ -84,14 +80,11 @@ def test_expires_version():
         Path(path.join(path.dirname(__file__), "metrics_expires_versions_test.yaml"))
     ]
 
-    all_objs = parser.parse_objects(input_files, options)
+    all_objs, options = run_glean_parser.parse_with_options(input_files, options)
 
-    assert not util.report_validation_errors(all_objs)
-    assert not lint.lint_metrics(all_objs.value, options)
-
-    assert all_objs.value["test"]["expired1"].disabled is True
-    assert all_objs.value["test"]["expired2"].disabled is True
-    assert all_objs.value["test"]["unexpired"].disabled is False
+    assert all_objs["test"]["expired1"].disabled is True
+    assert all_objs["test"]["expired2"].disabled is True
+    assert all_objs["test"]["unexpired"].disabled is False
 
 
 def test_numeric_expires():

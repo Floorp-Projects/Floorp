@@ -195,8 +195,24 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
           return true;
         }
 
-        const wr::ImageDescriptor imageDesc =
-            canvasContext->MakeImageDescriptor();
+        nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
+        IntrinsicSize intrinsicSize =
+            IntrinsicSizeFromCanvasSize(canvasSizeInPx);
+        AspectRatio intrinsicRatio =
+            IntrinsicRatioFromCanvasSize(canvasSizeInPx);
+        nsRect area =
+            mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
+        nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
+            area, intrinsicSize, intrinsicRatio, mFrame->StylePosition());
+        LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
+            dest, mFrame->PresContext()->AppUnitsPerDevPixel());
+
+        const RGBDescriptor rgbDesc(canvasSizeInPx, canvasData->mFormat, false);
+        const auto targetStride = ImageDataSerializer::GetRGBStride(rgbDesc);
+        const bool preferCompositorSurface = true;
+        const wr::ImageDescriptor imageDesc(
+            canvasSizeInPx, targetStride, canvasData->mFormat,
+            wr::OpacityType::HasAlphaChannel, preferCompositorSurface);
 
         wr::ImageKey imageKey;
         auto imageKeyMaybe = canvasContext->GetImageKey();
@@ -211,23 +227,10 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
                                              imageKey, imageDesc);
         }
 
-        {
-          nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
-          IntrinsicSize intrinsicSize =
-              IntrinsicSizeFromCanvasSize(canvasSizeInPx);
-          AspectRatio intrinsicRatio =
-              IntrinsicRatioFromCanvasSize(canvasSizeInPx);
-          nsRect area =
-              mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
-          nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
-              area, intrinsicSize, intrinsicRatio, mFrame->StylePosition());
-          LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
-              dest, mFrame->PresContext()->AppUnitsPerDevPixel());
-          mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
-              nsLayoutUtils::GetSamplingFilterForFrame(mFrame));
-          aBuilder.PushImage(wr::ToLayoutRect(bounds), wr::ToLayoutRect(bounds),
-                             !BackfaceIsHidden(), rendering, imageKey);
-        }
+        mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
+            nsLayoutUtils::GetSamplingFilterForFrame(mFrame));
+        aBuilder.PushImage(wr::ToLayoutRect(bounds), wr::ToLayoutRect(bounds),
+                           !BackfaceIsHidden(), rendering, imageKey);
 
         canvasData->mDescriptor = imageDesc;
         canvasData->mImageKey = imageKey;

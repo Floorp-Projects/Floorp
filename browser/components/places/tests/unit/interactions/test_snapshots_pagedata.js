@@ -5,6 +5,7 @@
  * Tests that adding a snapshot also adds related page data.
  */
 XPCOMUtils.defineLazyModuleGetters(this, {
+  PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
 });
 
@@ -16,7 +17,7 @@ add_task(async function pagedata() {
   // Register some page data.
   PageDataService.pageDataDiscovered(TEST_URL1, [
     {
-      type: Snapshots.DATA_TYPE.PRODUCT,
+      type: PageDataCollector.DATA_TYPE.PRODUCT,
       data: {
         price: 276,
       },
@@ -32,7 +33,7 @@ add_task(async function pagedata() {
 
   PageDataService.pageDataDiscovered(TEST_URL2, [
     {
-      type: Snapshots.DATA_TYPE.PRODUCT,
+      type: PageDataCollector.DATA_TYPE.PRODUCT,
       data: {
         price: 384,
       },
@@ -88,7 +89,7 @@ add_task(async function pagedata() {
   let snap = await Snapshots.get(TEST_URL1);
   Assert.equal(snap.pageData.size, 1, "Should have some page data.");
   Assert.equal(
-    snap.pageData.get(Snapshots.DATA_TYPE.PRODUCT).price,
+    snap.pageData.get(PageDataCollector.DATA_TYPE.PRODUCT).price,
     276,
     "Should have the right price."
   );
@@ -97,7 +98,7 @@ add_task(async function pagedata() {
   snap = await Snapshots.get(TEST_URL2);
   Assert.equal(snap.pageData.size, 1, "Should have some page data.");
   Assert.equal(
-    snap.pageData.get(Snapshots.DATA_TYPE.PRODUCT).price,
+    snap.pageData.get(PageDataCollector.DATA_TYPE.PRODUCT).price,
     384,
     "Should have the right price."
   );
@@ -119,7 +120,7 @@ add_task(async function pagedata() {
         documentType: Interactions.DOCUMENT_TYPE.GENERIC,
       },
     ],
-    { type: Snapshots.DATA_TYPE.PRODUCT }
+    { type: PageDataCollector.DATA_TYPE.PRODUCT }
   );
 
   info("Ensure that removing a snapshot removes pagedata for it");
@@ -141,7 +142,7 @@ add_task(async function pagedata() {
   snap = await Snapshots.get(TEST_URL1);
   Assert.equal(snap.pageData.size, 1, "Should have some page data.");
   Assert.equal(
-    snap.pageData.get(Snapshots.DATA_TYPE.PRODUCT).price,
+    snap.pageData.get(PageDataCollector.DATA_TYPE.PRODUCT).price,
     276,
     "Should have the right price."
   );

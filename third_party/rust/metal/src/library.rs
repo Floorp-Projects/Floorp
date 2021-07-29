@@ -7,6 +7,7 @@
 
 use super::*;
 
+use cocoa_foundation::foundation::NSUInteger;
 use foreign_types::ForeignType;
 use objc::runtime::{Object, BOOL, NO, YES};
 

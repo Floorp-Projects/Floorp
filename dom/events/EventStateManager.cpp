@@ -4910,16 +4910,22 @@ void EventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
         nsCOMPtr<nsIContent> targetContent;
         mCurrentTarget->GetContentForEvent(aDragEvent,
                                            getter_AddRefs(targetContent));
+        if (targetContent && targetContent->IsText()) {
+          targetContent = targetContent->GetFlattenedTreeParent();
+        }
 
         if (sLastDragOverFrame) {
           // The frame has changed but the content may not have. Check before
           // dispatching to content
           sLastDragOverFrame->GetContentForEvent(aDragEvent,
                                                  getter_AddRefs(lastContent));
+          if (lastContent && lastContent->IsText()) {
+            lastContent = lastContent->GetFlattenedTreeParent();
+          }
 
-          FireDragEnterOrExit(sLastDragOverFrame->PresContext(), aDragEvent,
-                              eDragExit, targetContent, lastContent,
-                              sLastDragOverFrame);
+          RefPtr<nsPresContext> presContext = sLastDragOverFrame->PresContext();
+          FireDragEnterOrExit(presContext, aDragEvent, eDragExit, targetContent,
+                              lastContent, sLastDragOverFrame);
           nsIContent* target = sLastDragOverFrame
                                    ? sLastDragOverFrame.GetFrame()->GetContent()
                                    : nullptr;
@@ -4945,9 +4951,9 @@ void EventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
                             targetContent, currentTraget);
 
         if (sLastDragOverFrame) {
-          FireDragEnterOrExit(sLastDragOverFrame->PresContext(), aDragEvent,
-                              eDragLeave, targetContent, lastContent,
-                              sLastDragOverFrame);
+          RefPtr<nsPresContext> presContext = sLastDragOverFrame->PresContext();
+          FireDragEnterOrExit(presContext, aDragEvent, eDragLeave,
+                              targetContent, lastContent, sLastDragOverFrame);
         }
 
         sLastDragOverFrame = mCurrentTarget;

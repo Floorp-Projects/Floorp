@@ -29,14 +29,8 @@ a short delay and then updated when necessary. Any data is cached in memory for 
 When page data has been found a `page-data` event is emitted. The event's argument holds the
 `PageData` structure. The `getCached` function can be used to access any cached data for a url.
 
-Page data can also be requested for a URL that is not currently open. In this case the service will
-load the page in the background to find its data. The service operates a queueing system to reduce
-resource usage. As above when any new data is found the `page-data` event is emitted. The
-`queueFetch` method starts this process and returns a promise that resolves to the `PageData` or
-rejects in the event of failure.
-
 ## Supported Types of page data
 
-The following types of page data are currently supported:
+The following types of page data (`PageDataCollector.DATA_TYPE`) are currently supported:
 
-... TBD
+- [`PRODUCT`](./schema-org.html#Product)

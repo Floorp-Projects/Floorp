@@ -28,8 +28,6 @@ extern crate objc;
 
 #[cfg(not(feature = "use-rtld-next"))]
 use ash::Entry;
-#[cfg(feature = "use-rtld-next")]
-type Entry = ash::EntryCustom<()>;
 use ash::{
     extensions::{ext, khr, nv::MeshShader},
     version::{DeviceV1_0, EntryV1_0, InstanceV1_0},
@@ -39,7 +37,7 @@ use ash::{
 use hal::{
     adapter,
     device::{DeviceLost, OutOfMemory},
-    display, image, memory,
+    image, memory,
     pso::PipelineStage,
     queue,
     window::{OutOfDate, PresentError, Suboptimal, SurfaceLost},
@@ -54,6 +52,9 @@ use std::{
     sync::Arc,
     thread, unreachable,
 };
+
+#[cfg(feature = "use-rtld-next")]
+use ash::EntryCustom;
 
 mod command;
 mod conv;
@@ -71,11 +72,10 @@ const ROUGH_MAX_ATTACHMENT_COUNT: usize = 5;
 
 pub struct RawInstance {
     inner: ash::Instance,
-    handle_is_external: bool,
     debug_messenger: Option<DebugMessenger>,
-    get_physical_device_properties: Option<ExtensionFn<vk::KhrGetPhysicalDeviceProperties2Fn>>,
-    display: Option<khr::Display>,
-    external_memory_capabilities: Option<ExtensionFn<vk::KhrExternalMemoryCapabilitiesFn>>,
+    get_physical_device_properties: Option<vk::KhrGetPhysicalDeviceProperties2Fn>,
+
+    pub render_doc_entry: Result<RenderDocEntry, String>,
 }
 
 pub enum DebugMessenger {
@@ -97,10 +97,7 @@ impl Drop for RawInstance {
                 }
                 None => {}
             }
-
-            if !self.handle_is_external {
-                self.inner.destroy_instance(None);
-            }
+            self.inner.destroy_instance(None);
         }
     }
 }
@@ -150,13 +147,27 @@ impl Into<Version> for u32 {
     }
 }
 
+#[repr(C)]
+pub struct RenderDocEntry {
+    api: renderdoc_sys::RENDERDOC_API_1_4_1,
+    lib: libloading::Library,
+}
+
+unsafe impl Send for RenderDocEntry {}
+
+unsafe impl Sync for RenderDocEntry {}
+
 pub struct Instance {
     pub raw: Arc<RawInstance>,
 
     /// Supported extensions of this instance.
     pub extensions: Vec<&'static CStr>,
 
+    #[cfg(not(feature = "use-rtld-next"))]
     pub entry: Entry,
+
+    #[cfg(feature = "use-rtld-next")]
+    pub entry: EntryCustom<()>,
 }
 
 impl fmt::Debug for Instance {
@@ -342,242 +353,6 @@ unsafe extern "system" fn debug_report_callback(
     vk::FALSE
 }
 
-impl Instance {
-    pub fn required_extensions(
-        entry: &Entry,
-        driver_api_version: Version,
-    ) -> Result<Vec<&'static CStr>, hal::UnsupportedBackend> {
-        let instance_extensions = entry
-            .enumerate_instance_extension_properties()
-            .map_err(|e| {
-                info!("Unable to enumerate instance extensions: {:?}", e);
-                hal::UnsupportedBackend
-            })?;
-
-        // Check our extensions against the available extensions
-        let mut extensions: Vec<&'static CStr> = Vec::new();
-        extensions.push(khr::Surface::name());
-
-        // Platform-specific WSI extensions
-        if cfg!(all(
-            unix,
-            not(target_os = "android"),
-            not(target_os = "macos")
-        )) {
-            extensions.push(khr::XlibSurface::name());
-            extensions.push(khr::XcbSurface::name());
-            extensions.push(khr::WaylandSurface::name());
-        }
-        if cfg!(target_os = "android") {
-            extensions.push(khr::AndroidSurface::name());
-        }
-        if cfg!(target_os = "windows") {
-            extensions.push(khr::Win32Surface::name());
-        }
-        if cfg!(target_os = "macos") {
-            extensions.push(ash::extensions::mvk::MacOSSurface::name());
-        }
-
-        extensions.push(ext::DebugUtils::name());
-        if cfg!(debug_assertions) {
-            #[allow(deprecated)]
-            extensions.push(ext::DebugReport::name());
-        }
-
-        extensions.push(vk::KhrGetPhysicalDeviceProperties2Fn::name());
-
-        // VK_KHR_storage_buffer_storage_class required for `Naga` on Vulkan 1.0 devices
-        if driver_api_version == Version::V1_0 {
-            extensions.push(vk::KhrStorageBufferStorageClassFn::name());
-        }
-
-        extensions.push(vk::ExtDisplaySurfaceCounterFn::name());
-        extensions.push(khr::Display::name());
-
-        if driver_api_version < Version::V1_1 {
-            extensions.push(vk::KhrExternalMemoryCapabilitiesFn::name());
-        }
-
-        // VK_KHR_storage_buffer_storage_class required for `Naga` on Vulkan 1.0 devices
-        if driver_api_version == Version::V1_0 {
-            extensions.push(vk::KhrStorageBufferStorageClassFn::name());
-        }
-
-        // Only keep available extensions.
-        extensions.retain(|&ext| {
-            if instance_extensions
-                .iter()
-                .find(|inst_ext| unsafe { CStr::from_ptr(inst_ext.extension_name.as_ptr()) == ext })
-                .is_some()
-            {
-                true
-            } else {
-                info!("Unable to find extension: {}", ext.to_string_lossy());
-                false
-            }
-        });
-        Ok(extensions)
-    }
-
-    pub fn required_layers(entry: &Entry) -> Result<Vec<&'static CStr>, hal::UnsupportedBackend> {
-        let instance_layers = entry.enumerate_instance_layer_properties().map_err(|e| {
-            info!("Unable to enumerate instance layers: {:?}", e);
-            hal::UnsupportedBackend
-        })?;
-
-        // Check requested layers against the available layers
-        let mut layers: Vec<&'static CStr> = Vec::new();
-        if cfg!(debug_assertions) {
-            layers.push(CStr::from_bytes_with_nul(b"VK_LAYER_KHRONOS_validation\0").unwrap());
-        }
-
-        // Only keep available layers.
-        layers.retain(|&layer| {
-            if instance_layers
-                .iter()
-                .find(|inst_layer| unsafe {
-                    CStr::from_ptr(inst_layer.layer_name.as_ptr()) == layer
-                })
-                .is_some()
-            {
-                true
-            } else {
-                warn!("Unable to find layer: {}", layer.to_string_lossy());
-                false
-            }
-        });
-        Ok(layers)
-    }
-
-    /// # Safety
-    /// `raw_instance` must be created using at least the extensions provided by `Instance::required_extensions()`
-    /// and the layers provided by `Instance::required_extensions()`.
-    /// `driver_api_version` must match the version used to create `raw_instance`.
-    /// `extensions` must match the extensions used to create `raw_instance`.
-    /// `raw_instance` must be manually destroyed *after* gfx-hal Instance has been dropped.
-    pub unsafe fn from_raw(
-        entry: Entry,
-        raw_instance: ash::Instance,
-        driver_api_version: Version,
-        extensions: Vec<&'static CStr>,
-    ) -> Result<Self, hal::UnsupportedBackend> {
-        Instance::inner_create(entry, raw_instance, true, driver_api_version, extensions)
-    }
-
-    fn inner_create(
-        entry: Entry,
-        instance: ash::Instance,
-        handle_is_external: bool,
-        driver_api_version: Version,
-        extensions: Vec<&'static CStr>,
-    ) -> Result<Self, hal::UnsupportedBackend> {
-        if driver_api_version == Version::V1_0
-            && !extensions.contains(&vk::KhrStorageBufferStorageClassFn::name())
-        {
-            warn!("Unable to create Vulkan instance. Required VK_KHR_storage_buffer_storage_class extension is not supported");
-            return Err(hal::UnsupportedBackend);
-        }
-
-        let instance_extensions = entry
-            .enumerate_instance_extension_properties()
-            .map_err(|e| {
-                info!("Unable to enumerate instance extensions: {:?}", e);
-                hal::UnsupportedBackend
-            })?;
-
-        let get_physical_device_properties = if driver_api_version >= Version::V1_1 {
-            Some(ExtensionFn::Promoted)
-        } else {
-            extensions
-                .iter()
-                .find(|&&ext| ext == vk::KhrGetPhysicalDeviceProperties2Fn::name())
-                .map(|_| {
-                    ExtensionFn::Extension(vk::KhrGetPhysicalDeviceProperties2Fn::load(
-                        |name| unsafe {
-                            std::mem::transmute(
-                                entry.get_instance_proc_addr(instance.handle(), name.as_ptr()),
-                            )
-                        },
-                    ))
-                })
-        };
-
-        let display = extensions
-            .iter()
-            .find(|&&ext| ext == khr::Display::name())
-            .map(|_| khr::Display::new(&entry, &instance));
-
-        let external_memory_capabilities = if driver_api_version >= Version::V1_1 {
-            Some(ExtensionFn::Promoted)
-        } else {
-            extensions
-                .iter()
-                .find(|&&ext| ext == vk::KhrExternalMemoryCapabilitiesFn::name())
-                .map(|_| {
-                    ExtensionFn::Extension(vk::KhrExternalMemoryCapabilitiesFn::load(
-                        |name| unsafe {
-                            std::mem::transmute(
-                                entry.get_instance_proc_addr(instance.handle(), name.as_ptr()),
-                            )
-                        },
-                    ))
-                })
-        };
-
-        #[allow(deprecated)] // `DebugReport`
-        let debug_messenger = {
-            // make sure VK_EXT_debug_utils is available
-            if instance_extensions.iter().any(|props| unsafe {
-                CStr::from_ptr(props.extension_name.as_ptr()) == ext::DebugUtils::name()
-            }) {
-                let ext = ext::DebugUtils::new(&entry, &instance);
-                let info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
-                    .flags(vk::DebugUtilsMessengerCreateFlagsEXT::empty())
-                    .message_severity(vk::DebugUtilsMessageSeverityFlagsEXT::all())
-                    .message_type(vk::DebugUtilsMessageTypeFlagsEXT::all())
-                    .pfn_user_callback(Some(debug_utils_messenger_callback));
-                let handle = unsafe { ext.create_debug_utils_messenger(&info, None) }.unwrap();
-                Some(DebugMessenger::Utils(ext, handle))
-            } else if cfg!(debug_assertions)
-                && instance_extensions.iter().any(|props| unsafe {
-                    CStr::from_ptr(props.extension_name.as_ptr()) == ext::DebugReport::name()
-                })
-            {
-                let ext = ext::DebugReport::new(&entry, &instance);
-                let info = vk::DebugReportCallbackCreateInfoEXT::builder()
-                    .flags(vk::DebugReportFlagsEXT::all())
-                    .pfn_callback(Some(debug_report_callback));
-                let handle = unsafe { ext.create_debug_report_callback(&info, None) }.unwrap();
-                Some(DebugMessenger::Report(ext, handle))
-            } else {
-                None
-            }
-        };
-
-        Ok(Instance {
-            raw: Arc::new(RawInstance {
-                inner: instance,
-                handle_is_external,
-                debug_messenger,
-                get_physical_device_properties,
-                display,
-                external_memory_capabilities,
-            }),
-            extensions,
-            entry,
-        })
-    }
-
-    /// # Safety
-    /// `raw_physical_device` must be created from `self` (or from the inner raw handle)
-    pub unsafe fn adapter_from_raw(
-        &self,
-        raw_physical_device: vk::PhysicalDevice,
-    ) -> adapter::Adapter<Backend> {
-        physical_device::load_adapter(&self.raw, raw_physical_device)
-    }
-}
-
 impl hal::Instance<Backend> for Instance {
     fn create(name: &str, version: u32) -> Result<Self, hal::UnsupportedBackend> {
         #[cfg(not(feature = "use-rtld-next"))]
@@ -590,7 +365,7 @@ impl hal::Instance<Backend> for Instance {
         };
 
         #[cfg(feature = "use-rtld-next")]
-        let entry = Entry::new_custom((), |_, name| unsafe {
+        let entry = EntryCustom::new_custom((), |_, name| unsafe {
             libc::dlsym(libc::RTLD_NEXT, name.as_ptr())
         });
 
@@ -634,9 +409,105 @@ impl hal::Instance<Backend> for Instance {
                 .into()
             });
 
-        let extensions = Instance::required_extensions(&entry, driver_api_version)?;
+        let instance_extensions = entry
+            .enumerate_instance_extension_properties()
+            .map_err(|e| {
+                info!("Unable to enumerate instance extensions: {:?}", e);
+                hal::UnsupportedBackend
+            })?;
 
-        let layers = Instance::required_layers(&entry)?;
+        let instance_layers = entry.enumerate_instance_layer_properties().map_err(|e| {
+            info!("Unable to enumerate instance layers: {:?}", e);
+            hal::UnsupportedBackend
+        })?;
+
+        // Check our extensions against the available extensions
+        let extensions = {
+            let mut extensions: Vec<&'static CStr> = Vec::new();
+            extensions.push(khr::Surface::name());
+
+            // Platform-specific WSI extensions
+            if cfg!(all(
+                unix,
+                not(target_os = "android"),
+                not(target_os = "macos")
+            )) {
+                extensions.push(khr::XlibSurface::name());
+                extensions.push(khr::XcbSurface::name());
+                extensions.push(khr::WaylandSurface::name());
+            }
+            if cfg!(target_os = "android") {
+                extensions.push(khr::AndroidSurface::name());
+            }
+            if cfg!(target_os = "windows") {
+                extensions.push(khr::Win32Surface::name());
+            }
+            if cfg!(target_os = "macos") {
+                extensions.push(ash::extensions::mvk::MacOSSurface::name());
+            }
+
+            extensions.push(ext::DebugUtils::name());
+            if cfg!(debug_assertions) {
+                #[allow(deprecated)]
+                extensions.push(ext::DebugReport::name());
+            }
+
+            extensions.push(vk::KhrGetPhysicalDeviceProperties2Fn::name());
+
+            // VK_KHR_storage_buffer_storage_class required for `Naga` on Vulkan 1.0 devices
+            if driver_api_version == Version::V1_0 {
+                extensions.push(vk::KhrStorageBufferStorageClassFn::name());
+            }
+
+            // Only keep available extensions.
+            extensions.retain(|&ext| {
+                if instance_extensions
+                    .iter()
+                    .find(|inst_ext| unsafe {
+                        CStr::from_ptr(inst_ext.extension_name.as_ptr()) == ext
+                    })
+                    .is_some()
+                {
+                    true
+                } else {
+                    info!("Unable to find extension: {}", ext.to_string_lossy());
+                    false
+                }
+            });
+            extensions
+        };
+
+        if driver_api_version == Version::V1_0
+            && !extensions.contains(&vk::KhrStorageBufferStorageClassFn::name())
+        {
+            warn!("Unable to create Vulkan instance. Required VK_KHR_storage_buffer_storage_class extension is not supported");
+            return Err(hal::UnsupportedBackend);
+        }
+
+        // Check requested layers against the available layers
+        let layers = {
+            let mut layers: Vec<&'static CStr> = Vec::new();
+            if cfg!(debug_assertions) {
+                layers.push(CStr::from_bytes_with_nul(b"VK_LAYER_KHRONOS_validation\0").unwrap());
+            }
+
+            // Only keep available layers.
+            layers.retain(|&layer| {
+                if instance_layers
+                    .iter()
+                    .find(|inst_layer| unsafe {
+                        CStr::from_ptr(inst_layer.layer_name.as_ptr()) == layer
+                    })
+                    .is_some()
+                {
+                    true
+                } else {
+                    warn!("Unable to find layer: {}", layer.to_string_lossy());
+                    false
+                }
+            });
+            layers
+        };
 
         let instance = {
             let str_pointers = layers
@@ -659,7 +530,58 @@ impl hal::Instance<Backend> for Instance {
                 hal::UnsupportedBackend
             })?
         };
-        Instance::inner_create(entry, instance, false, driver_api_version, extensions)
+
+        let get_physical_device_properties = extensions
+            .iter()
+            .find(|&&ext| ext == vk::KhrGetPhysicalDeviceProperties2Fn::name())
+            .map(|_| {
+                vk::KhrGetPhysicalDeviceProperties2Fn::load(|name| unsafe {
+                    std::mem::transmute(
+                        entry.get_instance_proc_addr(instance.handle(), name.as_ptr()),
+                    )
+                })
+            });
+
+        #[allow(deprecated)] // `DebugReport`
+        let debug_messenger = {
+            // make sure VK_EXT_debug_utils is available
+            if instance_extensions.iter().any(|props| unsafe {
+                CStr::from_ptr(props.extension_name.as_ptr()) == ext::DebugUtils::name()
+            }) {
+                let ext = ext::DebugUtils::new(&entry, &instance);
+                let info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
+                    .flags(vk::DebugUtilsMessengerCreateFlagsEXT::empty())
+                    .message_severity(vk::DebugUtilsMessageSeverityFlagsEXT::all())
+                    .message_type(vk::DebugUtilsMessageTypeFlagsEXT::all())
+                    .pfn_user_callback(Some(debug_utils_messenger_callback));
+                let handle = unsafe { ext.create_debug_utils_messenger(&info, None) }.unwrap();
+                Some(DebugMessenger::Utils(ext, handle))
+            } else if cfg!(debug_assertions)
+                && instance_extensions.iter().any(|props| unsafe {
+                    CStr::from_ptr(props.extension_name.as_ptr()) == ext::DebugReport::name()
+                })
+            {
+                let ext = ext::DebugReport::new(&entry, &instance);
+                let info = vk::DebugReportCallbackCreateInfoEXT::builder()
+                    .flags(vk::DebugReportFlagsEXT::all())
+                    .pfn_callback(Some(debug_report_callback));
+                let handle = unsafe { ext.create_debug_report_callback(&info, None) }.unwrap();
+                Some(DebugMessenger::Report(ext, handle))
+            } else {
+                None
+            }
+        };
+
+        Ok(Instance {
+            raw: Arc::new(RawInstance {
+                inner: instance,
+                debug_messenger,
+                get_physical_device_properties,
+                render_doc_entry: unsafe { load_renderdoc_entrypoint() },
+            }),
+            extensions,
+            entry,
+        })
     }
 
     fn enumerate_adapters(&self) -> Vec<adapter::Adapter<Backend>> {
@@ -738,68 +660,51 @@ impl hal::Instance<Backend> for Instance {
             .functor
             .destroy_surface(surface.raw.handle, None);
     }
+}
 
-    unsafe fn create_display_plane_surface(
-        &self,
-        display_plane: &hal::display::DisplayPlane<Backend>,
-        plane_stack_index: u32,
-        transformation: hal::display::SurfaceTransform,
-        alpha: hal::display::DisplayPlaneAlpha,
-        image_extent: hal::window::Extent2D,
-    ) -> Result<window::Surface, hal::display::DisplayPlaneSurfaceError> {
-        let display_extension = match &self.raw.display {
-            Some(display_extension) => display_extension,
-            None => {
-                error!("Direct display feature not supported");
-                return Err(display::DisplayPlaneSurfaceError::UnsupportedFeature);
-            }
-        };
-        let surface_transform_flags = hal::display::SurfaceTransformFlags::from(transformation);
-        let vk_surface_transform_flags =
-            vk::SurfaceTransformFlagsKHR::from_raw(surface_transform_flags.bits());
-
-        let display_surface_ci = {
-            let builder = vk::DisplaySurfaceCreateInfoKHR::builder()
-                .display_mode(display_plane.display_mode.handle.0)
-                .plane_index(display_plane.plane.handle)
-                .plane_stack_index(plane_stack_index)
-                .image_extent(vk::Extent2D {
-                    width: image_extent.width,
-                    height: image_extent.height,
-                })
-                .transform(vk_surface_transform_flags);
-
-            match alpha {
-                hal::display::DisplayPlaneAlpha::Opaque => {
-                    builder.alpha_mode(vk::DisplayPlaneAlphaFlagsKHR::OPAQUE)
-                }
-                hal::display::DisplayPlaneAlpha::Global(value) => builder
-                    .alpha_mode(vk::DisplayPlaneAlphaFlagsKHR::GLOBAL)
-                    .global_alpha(value),
-                hal::display::DisplayPlaneAlpha::PerPixel => {
-                    builder.alpha_mode(vk::DisplayPlaneAlphaFlagsKHR::PER_PIXEL)
-                }
-                hal::display::DisplayPlaneAlpha::PerPixelPremultiplied => {
-                    builder.alpha_mode(vk::DisplayPlaneAlphaFlagsKHR::PER_PIXEL_PREMULTIPLIED)
-                }
-            }
-            .build()
-        };
-
-        let surface = match display_extension
-            .create_display_plane_surface(&display_surface_ci, None)
-        {
-            Ok(surface) => surface,
-            Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => return Err(OutOfMemory::Host.into()),
-            Err(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) => return Err(OutOfMemory::Device.into()),
-            err => panic!(
-                "Unexpected error on `create_display_plane_surface`: {:#?}",
-                err
-            ),
-        };
-
-        Ok(self.create_surface_from_vk_surface_khr(surface))
+unsafe fn load_renderdoc_entrypoint() -> Result<RenderDocEntry, String> {
+    if !cfg!(debug_assertions) {
+        return Err("RenderDoc support is only enabled with 'debug_assertions'".into());
     }
+
+    type GetApiFn = unsafe extern "C" fn(version: u32, out: *mut *mut std::ffi::c_void) -> i32;
+
+    #[cfg(windows)]
+    let renderdoc_filename = "renderdoc.dll";
+    #[cfg(all(unix, not(target_os = "android")))]
+    let renderdoc_filename = "librenderdoc.so";
+    #[cfg(target_os = "android")]
+    let renderdoc_filename = "libVkLayer_GLES_RenderDoc.so";
+
+    let renderdoc_lib = libloading::Library::new(renderdoc_filename).map_err(|e| {
+        format!(
+            "Unable to load renderdoc library '{}': {:?}",
+            renderdoc_filename, e
+        )
+    })?;
+
+    let get_api: libloading::Symbol<GetApiFn> =
+        renderdoc_lib.get(b"RENDERDOC_GetAPI\0").map_err(|e| {
+            format!(
+                "Unable to get RENDERDOC_GetAPI from renderdoc library '{}': {:?}",
+                renderdoc_filename, e
+            )
+        })?;
+    let mut obj = std::ptr::null_mut();
+    match get_api(10401, &mut obj) {
+        1 => Ok(RenderDocEntry {
+            api: *(obj as *mut renderdoc_sys::RENDERDOC_API_1_4_1),
+            lib: renderdoc_lib,
+        }),
+        return_value => Err(format!(
+            "Unable to get API from renderdoc library '{}': {}",
+            renderdoc_filename, return_value
+        )),
+    }
+    .map_err(|error| {
+        warn!("Error loading renderdoc library: {}", error);
+        error
+    })
 }
 
 #[derive(Debug, Clone)]
@@ -829,22 +734,6 @@ impl queue::QueueFamily for QueueFamily {
 struct DeviceExtensionFunctions {
     mesh_shaders: Option<ExtensionFn<MeshShader>>,
     draw_indirect_count: Option<ExtensionFn<khr::DrawIndirectCount>>,
-    display_control: Option<vk::ExtDisplayControlFn>,
-    memory_requirements2: Option<ExtensionFn<vk::KhrGetMemoryRequirements2Fn>>,
-    // The extension does not have its own functions.
-    dedicated_allocation: Option<ExtensionFn<()>>,
-    // The extension does not have its own functions.
-    external_memory: Option<ExtensionFn<()>>,
-    external_memory_host: Option<vk::ExtExternalMemoryHostFn>,
-    #[cfg(windows)]
-    external_memory_win32: Option<vk::KhrExternalMemoryWin32Fn>,
-    #[cfg(unix)]
-    external_memory_fd: Option<khr::ExternalMemoryFd>,
-    #[cfg(any(target_os = "linux", target_os = "android"))]
-    // The extension does not have its own functions.
-    external_memory_dma_buf: Option<()>,
-    #[cfg(any(target_os = "linux", target_os = "android"))]
-    image_drm_format_modifier: Option<vk::ExtImageDrmFormatModifierFn>,
 }
 
 // TODO there's no reason why this can't be unified--the function pointers should all be the same--it's not clear how to do this with `ash`.
@@ -869,7 +758,6 @@ impl<T> ExtensionFn<T> {
 #[doc(hidden)]
 pub struct RawDevice {
     raw: ash::Device,
-    handle_is_external: bool,
     features: Features,
     instance: Arc<RawInstance>,
     extension_fns: DeviceExtensionFunctions,
@@ -889,10 +777,8 @@ impl fmt::Debug for RawDevice {
 }
 impl Drop for RawDevice {
     fn drop(&mut self) {
-        if !self.handle_is_external {
-            unsafe {
-                self.raw.destroy_device(None);
-            }
+        unsafe {
+            self.raw.destroy_device(None);
         }
     }
 }
@@ -1202,7 +1088,6 @@ pub struct Device {
     shared: Arc<RawDevice>,
     vendor_id: u32,
     valid_ash_memory_types: u32,
-    render_doc: gfx_renderdoc::RenderDoc,
     #[cfg(feature = "naga")]
     naga_options: naga::back::spv::Options,
 }
@@ -1244,7 +1129,4 @@ impl hal::Backend for Backend {
     type Semaphore = native::Semaphore;
     type Event = native::Event;
     type QueryPool = native::QueryPool;
-
-    type Display = native::Display;
-    type DisplayMode = native::DisplayMode;
 }
