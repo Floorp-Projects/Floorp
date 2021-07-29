@@ -303,8 +303,6 @@ struct DocShellLoadStateInit
   bool IsMetaRefresh;
 
   nsIURI UnstrippedURI;
-
-  nsCString? RemoteTypeOverride;
 };
 
 struct TimedChannelInfo
