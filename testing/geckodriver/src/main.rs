@@ -172,16 +172,27 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
         None => None,
     };
 
+    // For Android the port on the device must be the same as the one on the
+    // host. For now default to 9222, which is the default for --remote-debugging-port.
+    let websocket_port = match matches.value_of("websocket_port") {
+        Some(s) => match u16::from_str(s) {
+            Ok(n) => n,
+            Err(e) => usage!("invalid --websocket-port: {}", e),
+        },
+        None => 9222,
+    };
+
     let op = if matches.is_present("help") {
         Operation::Help
     } else if matches.is_present("version") {
         Operation::Version
     } else {
         let settings = MarionetteSettings {
-            host: marionette_host.to_string(),
-            port: marionette_port,
             binary,
             connect_existing: matches.is_present("connect_existing"),
+            host: marionette_host.to_string(),
+            port: marionette_port,
+            websocket_port,
             jsdebugger: matches.is_present("jsdebugger"),
             android_storage,
         };
@@ -288,6 +299,14 @@ fn make_app<'a, 'b>() -> App<'a, 'b> {
                 .takes_value(true)
                 .value_name("PORT")
                 .help("Port to use to connect to Gecko [default: system-allocated port]"),
+        )
+        .arg(
+             Arg::with_name("websocket_port")
+                .long("websocket-port")
+                .takes_value(true)
+                .value_name("PORT")
+                .conflicts_with("connect_existing")
+                .help("Port to use to connect to WebDriver BiDi [default: 9222]"),
         )
         .arg(
             Arg::with_name("connect_existing")

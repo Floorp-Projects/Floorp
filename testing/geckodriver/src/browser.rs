@@ -12,6 +12,7 @@ use mozrunner::runner::{FirefoxProcess, FirefoxRunner, Runner, RunnerProcess};
 use std::fs;
 use std::path::PathBuf;
 use std::time;
+
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 
 /// A running Gecko instance.
@@ -43,8 +44,8 @@ pub(crate) struct LocalBrowser {
 
 impl LocalBrowser {
     pub(crate) fn new(
-        port: u16,
         options: FirefoxOptions,
+        marionette_port: u16,
         jsdebugger: bool,
     ) -> WebDriverResult<LocalBrowser> {
         let binary = options.binary.ok_or_else(|| {
@@ -65,7 +66,7 @@ impl LocalBrowser {
         };
 
         let prefs_backup = set_prefs(
-            port,
+            marionette_port,
             &mut profile,
             is_custom_profile,
             options.prefs,
@@ -152,10 +153,14 @@ pub(crate) struct RemoteBrowser {
 }
 
 impl RemoteBrowser {
-    pub(crate) fn new(port: u16, options: FirefoxOptions) -> WebDriverResult<RemoteBrowser> {
+    pub(crate) fn new(
+        options: FirefoxOptions,
+        marionette_port: u16,
+        websocket_port: Option<u16>,
+    ) -> WebDriverResult<RemoteBrowser> {
         let android_options = options.android.unwrap();
 
-        let handler = AndroidHandler::new(&android_options, port)?;
+        let handler = AndroidHandler::new(&android_options, marionette_port, websocket_port)?;
 
         // Profile management.
         let is_custom_profile = options.profile.is_some();
@@ -163,7 +168,7 @@ impl RemoteBrowser {
         let mut profile = options.profile.unwrap_or(Profile::new()?);
 
         set_prefs(
-            handler.target_port,
+            handler.marionette_target_port,
             &mut profile,
             is_custom_profile,
             options.prefs,
@@ -280,7 +285,6 @@ impl PrefsBackup {
 mod tests {
     use super::set_prefs;
     use crate::capabilities::FirefoxOptions;
-    use mozdevice::AndroidStorageInput;
     use mozprofile::preferences::{Pref, PrefValue};
     use mozprofile::profile::Profile;
     use serde_json::{Map, Value};
@@ -319,6 +323,8 @@ mod tests {
 
     #[test]
     fn test_prefs() {
+        let marionette_settings = Default::default();
+
         let encoded_profile = example_profile();
         let mut prefs: Map<String, Value> = Map::new();
         prefs.insert(
@@ -333,8 +339,9 @@ mod tests {
         let mut caps = Map::new();
         caps.insert("moz:firefoxOptions".into(), Value::Object(firefox_opts));
 
-        let opts = FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps)
-            .expect("Valid profile and prefs");
+        let opts =
+            FirefoxOptions::from_capabilities(None, &marionette_settings, &mut caps)
+                .expect("Valid profile and prefs");
 
         let mut profile = opts.profile.expect("valid firefox profile");
 
