@@ -17,7 +17,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
-  FileSource: "resource://gre/modules/L10nRegistry.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -193,7 +192,11 @@ class _RemoteL10n {
         OS.Constants.Path.localProfileDir,
         RS_DOWNLOADED_FILE_SUBDIR
       );
-      const fs = new FileSource("cfr", [appLocale], `file://${l10nFluentDir}/`);
+      const fs = new L10nFileSource(
+        "cfr",
+        [appLocale],
+        `file://${l10nFluentDir}/`
+      );
       // In the case that the Fluent file has not been downloaded from Remote Settings,
       // `fetchFile` will return `false` and fall back to the packaged Fluent file.
       const resource = await fs.fetchFile(appLocale, "asrouter.ftl");
