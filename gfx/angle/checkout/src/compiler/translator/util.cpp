@@ -26,6 +26,7 @@ namespace sh
 
 namespace
 {
+
 bool IsInterpolationIn(TQualifier qualifier)
 {
     switch (qualifier)
@@ -41,20 +42,6 @@ bool IsInterpolationIn(TQualifier qualifier)
     }
 }
 
-bool IsInterpolationOut(TQualifier qualifier)
-{
-    switch (qualifier)
-    {
-        case EvqSmoothOut:
-        case EvqFlatOut:
-        case EvqNoPerspectiveOut:
-        case EvqCentroidOut:
-        case EvqSampleOut:
-            return true;
-        default:
-            return false;
-    }
-}
 }  // anonymous namespace
 
 float NumericLexFloat32OutOfRangeToInfinity(const std::string &str)
@@ -564,10 +551,7 @@ bool IsVaryingOut(TQualifier qualifier)
         case EvqCentroidOut:
         case EvqVertexOut:
         case EvqGeometryOut:
-        case EvqTessControlOut:
-        case EvqTessEvaluationOut:
         case EvqSampleOut:
-        case EvqPatchOut:
             return true;
 
         default:
@@ -588,10 +572,7 @@ bool IsVaryingIn(TQualifier qualifier)
         case EvqCentroidIn:
         case EvqFragmentIn:
         case EvqGeometryIn:
-        case EvqTessControlIn:
-        case EvqTessEvaluationIn:
         case EvqSampleIn:
-        case EvqPatchIn:
             return true;
 
         default:
@@ -612,34 +593,12 @@ bool IsGeometryShaderInput(GLenum shaderType, TQualifier qualifier)
            ((shaderType == GL_GEOMETRY_SHADER_EXT) && IsInterpolationIn(qualifier));
 }
 
-bool IsTessellationControlShaderInput(GLenum shaderType, TQualifier qualifier)
-{
-    return qualifier == EvqTessControlIn ||
-           ((shaderType == GL_TESS_CONTROL_SHADER) && IsInterpolationIn(qualifier));
-}
-
-bool IsTessellationControlShaderOutput(GLenum shaderType, TQualifier qualifier)
-{
-    return qualifier == EvqTessControlOut ||
-           ((shaderType == GL_TESS_CONTROL_SHADER) && IsInterpolationOut(qualifier));
-}
-
-bool IsTessellationEvaluationShaderInput(GLenum shaderType, TQualifier qualifier)
-{
-    return qualifier == EvqTessEvaluationIn ||
-           ((shaderType == GL_TESS_EVALUATION_SHADER) && IsInterpolationIn(qualifier));
-}
-
 InterpolationType GetInterpolationType(TQualifier qualifier)
 {
     switch (qualifier)
     {
         case EvqFlatIn:
         case EvqFlatOut:
-        // The auxiliary storage qualifier patch is not used for interpolation
-        // it is a compile-time error to use interpolation qualifiers with patch
-        case EvqPatchIn:
-        case EvqPatchOut:
             return INTERPOLATION_FLAT;
 
         case EvqNoPerspectiveIn:
@@ -654,10 +613,6 @@ InterpolationType GetInterpolationType(TQualifier qualifier)
         case EvqVaryingOut:
         case EvqGeometryIn:
         case EvqGeometryOut:
-        case EvqTessControlIn:
-        case EvqTessControlOut:
-        case EvqTessEvaluationIn:
-        case EvqTessEvaluationOut:
             return INTERPOLATION_SMOOTH;
 
         case EvqCentroidIn:
@@ -672,24 +627,6 @@ InterpolationType GetInterpolationType(TQualifier qualifier)
 #if !UNREACHABLE_IS_NORETURN
             return INTERPOLATION_SMOOTH;
 #endif
-    }
-}
-
-// a field may not have qualifer without in or out.
-InterpolationType GetFieldInterpolationType(TQualifier qualifier)
-{
-    switch (qualifier)
-    {
-        case EvqFlat:
-            return INTERPOLATION_FLAT;
-        case EvqNoPerspective:
-            return INTERPOLATION_NOPERSPECTIVE;
-        case EvqSmooth:
-            return INTERPOLATION_SMOOTH;
-        case EvqCentroid:
-            return INTERPOLATION_CENTROID;
-        default:
-            return GetInterpolationType(qualifier);
     }
 }
 
@@ -777,7 +714,7 @@ bool CanBeInvariantESSL1(TQualifier qualifier)
 bool CanBeInvariantESSL3OrGreater(TQualifier qualifier)
 {
     return IsVaryingOut(qualifier) || qualifier == EvqFragmentOut ||
-           IsBuiltinOutputVariable(qualifier) || qualifier == EvqFragmentInOut;
+           IsBuiltinOutputVariable(qualifier);
 }
 
 bool IsBuiltinOutputVariable(TQualifier qualifier)
@@ -793,7 +730,6 @@ bool IsBuiltinOutputVariable(TQualifier qualifier)
         case EvqFragData:
         case EvqSecondaryFragDataEXT:
         case EvqClipDistance:
-        case EvqLastFragData:
             return true;
         default:
             break;
@@ -809,7 +745,6 @@ bool IsBuiltinFragmentInputVariable(TQualifier qualifier)
         case EvqPointCoord:
         case EvqFrontFacing:
         case EvqHelperInvocation:
-        case EvqLastFragData:
             return true;
         default:
             break;
@@ -863,11 +798,11 @@ bool IsOutputHLSL(ShShaderOutput output)
 }
 bool IsOutputVulkan(ShShaderOutput output)
 {
-    return output == SH_SPIRV_VULKAN_OUTPUT;
+    return output == SH_GLSL_VULKAN_OUTPUT;
 }
 bool IsOutputMetal(ShShaderOutput output)
 {
-    return output == SH_SPIRV_METAL_OUTPUT;
+    return output == SH_GLSL_METAL_OUTPUT;
 }
 
 bool IsInShaderStorageBlock(TIntermTyped *node)

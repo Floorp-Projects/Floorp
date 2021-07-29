@@ -12,3359 +12,2759 @@
 
 #include "common/debug.h"
 
-namespace angle
+namespace gl
 {
 const char *GetEntryPointName(EntryPoint ep)
 {
     switch (ep)
     {
-        case EntryPoint::CLBuildProgram:
-            return "clBuildProgram";
-        case EntryPoint::CLCloneKernel:
-            return "clCloneKernel";
-        case EntryPoint::CLCompileProgram:
-            return "clCompileProgram";
-        case EntryPoint::CLCreateBuffer:
-            return "clCreateBuffer";
-        case EntryPoint::CLCreateBufferWithProperties:
-            return "clCreateBufferWithProperties";
-        case EntryPoint::CLCreateCommandQueue:
-            return "clCreateCommandQueue";
-        case EntryPoint::CLCreateCommandQueueWithProperties:
-            return "clCreateCommandQueueWithProperties";
-        case EntryPoint::CLCreateContext:
-            return "clCreateContext";
-        case EntryPoint::CLCreateContextFromType:
-            return "clCreateContextFromType";
-        case EntryPoint::CLCreateImage:
-            return "clCreateImage";
-        case EntryPoint::CLCreateImage2D:
-            return "clCreateImage2D";
-        case EntryPoint::CLCreateImage3D:
-            return "clCreateImage3D";
-        case EntryPoint::CLCreateImageWithProperties:
-            return "clCreateImageWithProperties";
-        case EntryPoint::CLCreateKernel:
-            return "clCreateKernel";
-        case EntryPoint::CLCreateKernelsInProgram:
-            return "clCreateKernelsInProgram";
-        case EntryPoint::CLCreatePipe:
-            return "clCreatePipe";
-        case EntryPoint::CLCreateProgramWithBinary:
-            return "clCreateProgramWithBinary";
-        case EntryPoint::CLCreateProgramWithBuiltInKernels:
-            return "clCreateProgramWithBuiltInKernels";
-        case EntryPoint::CLCreateProgramWithIL:
-            return "clCreateProgramWithIL";
-        case EntryPoint::CLCreateProgramWithSource:
-            return "clCreateProgramWithSource";
-        case EntryPoint::CLCreateSampler:
-            return "clCreateSampler";
-        case EntryPoint::CLCreateSamplerWithProperties:
-            return "clCreateSamplerWithProperties";
-        case EntryPoint::CLCreateSubBuffer:
-            return "clCreateSubBuffer";
-        case EntryPoint::CLCreateSubDevices:
-            return "clCreateSubDevices";
-        case EntryPoint::CLCreateUserEvent:
-            return "clCreateUserEvent";
-        case EntryPoint::CLEnqueueBarrier:
-            return "clEnqueueBarrier";
-        case EntryPoint::CLEnqueueBarrierWithWaitList:
-            return "clEnqueueBarrierWithWaitList";
-        case EntryPoint::CLEnqueueCopyBuffer:
-            return "clEnqueueCopyBuffer";
-        case EntryPoint::CLEnqueueCopyBufferRect:
-            return "clEnqueueCopyBufferRect";
-        case EntryPoint::CLEnqueueCopyBufferToImage:
-            return "clEnqueueCopyBufferToImage";
-        case EntryPoint::CLEnqueueCopyImage:
-            return "clEnqueueCopyImage";
-        case EntryPoint::CLEnqueueCopyImageToBuffer:
-            return "clEnqueueCopyImageToBuffer";
-        case EntryPoint::CLEnqueueFillBuffer:
-            return "clEnqueueFillBuffer";
-        case EntryPoint::CLEnqueueFillImage:
-            return "clEnqueueFillImage";
-        case EntryPoint::CLEnqueueMapBuffer:
-            return "clEnqueueMapBuffer";
-        case EntryPoint::CLEnqueueMapImage:
-            return "clEnqueueMapImage";
-        case EntryPoint::CLEnqueueMarker:
-            return "clEnqueueMarker";
-        case EntryPoint::CLEnqueueMarkerWithWaitList:
-            return "clEnqueueMarkerWithWaitList";
-        case EntryPoint::CLEnqueueMigrateMemObjects:
-            return "clEnqueueMigrateMemObjects";
-        case EntryPoint::CLEnqueueNDRangeKernel:
-            return "clEnqueueNDRangeKernel";
-        case EntryPoint::CLEnqueueNativeKernel:
-            return "clEnqueueNativeKernel";
-        case EntryPoint::CLEnqueueReadBuffer:
-            return "clEnqueueReadBuffer";
-        case EntryPoint::CLEnqueueReadBufferRect:
-            return "clEnqueueReadBufferRect";
-        case EntryPoint::CLEnqueueReadImage:
-            return "clEnqueueReadImage";
-        case EntryPoint::CLEnqueueSVMFree:
-            return "clEnqueueSVMFree";
-        case EntryPoint::CLEnqueueSVMMap:
-            return "clEnqueueSVMMap";
-        case EntryPoint::CLEnqueueSVMMemFill:
-            return "clEnqueueSVMMemFill";
-        case EntryPoint::CLEnqueueSVMMemcpy:
-            return "clEnqueueSVMMemcpy";
-        case EntryPoint::CLEnqueueSVMMigrateMem:
-            return "clEnqueueSVMMigrateMem";
-        case EntryPoint::CLEnqueueSVMUnmap:
-            return "clEnqueueSVMUnmap";
-        case EntryPoint::CLEnqueueTask:
-            return "clEnqueueTask";
-        case EntryPoint::CLEnqueueUnmapMemObject:
-            return "clEnqueueUnmapMemObject";
-        case EntryPoint::CLEnqueueWaitForEvents:
-            return "clEnqueueWaitForEvents";
-        case EntryPoint::CLEnqueueWriteBuffer:
-            return "clEnqueueWriteBuffer";
-        case EntryPoint::CLEnqueueWriteBufferRect:
-            return "clEnqueueWriteBufferRect";
-        case EntryPoint::CLEnqueueWriteImage:
-            return "clEnqueueWriteImage";
-        case EntryPoint::CLFinish:
-            return "clFinish";
-        case EntryPoint::CLFlush:
-            return "clFlush";
-        case EntryPoint::CLGetCommandQueueInfo:
-            return "clGetCommandQueueInfo";
-        case EntryPoint::CLGetContextInfo:
-            return "clGetContextInfo";
-        case EntryPoint::CLGetDeviceAndHostTimer:
-            return "clGetDeviceAndHostTimer";
-        case EntryPoint::CLGetDeviceIDs:
-            return "clGetDeviceIDs";
-        case EntryPoint::CLGetDeviceInfo:
-            return "clGetDeviceInfo";
-        case EntryPoint::CLGetEventInfo:
-            return "clGetEventInfo";
-        case EntryPoint::CLGetEventProfilingInfo:
-            return "clGetEventProfilingInfo";
-        case EntryPoint::CLGetExtensionFunctionAddress:
-            return "clGetExtensionFunctionAddress";
-        case EntryPoint::CLGetExtensionFunctionAddressForPlatform:
-            return "clGetExtensionFunctionAddressForPlatform";
-        case EntryPoint::CLGetHostTimer:
-            return "clGetHostTimer";
-        case EntryPoint::CLGetImageInfo:
-            return "clGetImageInfo";
-        case EntryPoint::CLGetKernelArgInfo:
-            return "clGetKernelArgInfo";
-        case EntryPoint::CLGetKernelInfo:
-            return "clGetKernelInfo";
-        case EntryPoint::CLGetKernelSubGroupInfo:
-            return "clGetKernelSubGroupInfo";
-        case EntryPoint::CLGetKernelWorkGroupInfo:
-            return "clGetKernelWorkGroupInfo";
-        case EntryPoint::CLGetMemObjectInfo:
-            return "clGetMemObjectInfo";
-        case EntryPoint::CLGetPipeInfo:
-            return "clGetPipeInfo";
-        case EntryPoint::CLGetPlatformIDs:
-            return "clGetPlatformIDs";
-        case EntryPoint::CLGetPlatformInfo:
-            return "clGetPlatformInfo";
-        case EntryPoint::CLGetProgramBuildInfo:
-            return "clGetProgramBuildInfo";
-        case EntryPoint::CLGetProgramInfo:
-            return "clGetProgramInfo";
-        case EntryPoint::CLGetSamplerInfo:
-            return "clGetSamplerInfo";
-        case EntryPoint::CLGetSupportedImageFormats:
-            return "clGetSupportedImageFormats";
-        case EntryPoint::CLIcdGetPlatformIDsKHR:
-            return "clIcdGetPlatformIDsKHR";
-        case EntryPoint::CLLinkProgram:
-            return "clLinkProgram";
-        case EntryPoint::CLReleaseCommandQueue:
-            return "clReleaseCommandQueue";
-        case EntryPoint::CLReleaseContext:
-            return "clReleaseContext";
-        case EntryPoint::CLReleaseDevice:
-            return "clReleaseDevice";
-        case EntryPoint::CLReleaseEvent:
-            return "clReleaseEvent";
-        case EntryPoint::CLReleaseKernel:
-            return "clReleaseKernel";
-        case EntryPoint::CLReleaseMemObject:
-            return "clReleaseMemObject";
-        case EntryPoint::CLReleaseProgram:
-            return "clReleaseProgram";
-        case EntryPoint::CLReleaseSampler:
-            return "clReleaseSampler";
-        case EntryPoint::CLRetainCommandQueue:
-            return "clRetainCommandQueue";
-        case EntryPoint::CLRetainContext:
-            return "clRetainContext";
-        case EntryPoint::CLRetainDevice:
-            return "clRetainDevice";
-        case EntryPoint::CLRetainEvent:
-            return "clRetainEvent";
-        case EntryPoint::CLRetainKernel:
-            return "clRetainKernel";
-        case EntryPoint::CLRetainMemObject:
-            return "clRetainMemObject";
-        case EntryPoint::CLRetainProgram:
-            return "clRetainProgram";
-        case EntryPoint::CLRetainSampler:
-            return "clRetainSampler";
-        case EntryPoint::CLSVMAlloc:
-            return "clSVMAlloc";
-        case EntryPoint::CLSVMFree:
-            return "clSVMFree";
-        case EntryPoint::CLSetCommandQueueProperty:
-            return "clSetCommandQueueProperty";
-        case EntryPoint::CLSetContextDestructorCallback:
-            return "clSetContextDestructorCallback";
-        case EntryPoint::CLSetDefaultDeviceCommandQueue:
-            return "clSetDefaultDeviceCommandQueue";
-        case EntryPoint::CLSetEventCallback:
-            return "clSetEventCallback";
-        case EntryPoint::CLSetKernelArg:
-            return "clSetKernelArg";
-        case EntryPoint::CLSetKernelArgSVMPointer:
-            return "clSetKernelArgSVMPointer";
-        case EntryPoint::CLSetKernelExecInfo:
-            return "clSetKernelExecInfo";
-        case EntryPoint::CLSetMemObjectDestructorCallback:
-            return "clSetMemObjectDestructorCallback";
-        case EntryPoint::CLSetProgramReleaseCallback:
-            return "clSetProgramReleaseCallback";
-        case EntryPoint::CLSetProgramSpecializationConstant:
-            return "clSetProgramSpecializationConstant";
-        case EntryPoint::CLSetUserEventStatus:
-            return "clSetUserEventStatus";
-        case EntryPoint::CLUnloadCompiler:
-            return "clUnloadCompiler";
-        case EntryPoint::CLUnloadPlatformCompiler:
-            return "clUnloadPlatformCompiler";
-        case EntryPoint::CLWaitForEvents:
-            return "clWaitForEvents";
-        case EntryPoint::EGLBindAPI:
-            return "eglBindAPI";
-        case EntryPoint::EGLBindTexImage:
-            return "eglBindTexImage";
-        case EntryPoint::EGLChooseConfig:
-            return "eglChooseConfig";
-        case EntryPoint::EGLClientWaitSync:
-            return "eglClientWaitSync";
-        case EntryPoint::EGLClientWaitSyncKHR:
-            return "eglClientWaitSyncKHR";
-        case EntryPoint::EGLCopyBuffers:
-            return "eglCopyBuffers";
-        case EntryPoint::EGLCreateContext:
-            return "eglCreateContext";
-        case EntryPoint::EGLCreateDeviceANGLE:
-            return "eglCreateDeviceANGLE";
-        case EntryPoint::EGLCreateImage:
-            return "eglCreateImage";
-        case EntryPoint::EGLCreateImageKHR:
-            return "eglCreateImageKHR";
-        case EntryPoint::EGLCreateNativeClientBufferANDROID:
-            return "eglCreateNativeClientBufferANDROID";
-        case EntryPoint::EGLCreatePbufferFromClientBuffer:
-            return "eglCreatePbufferFromClientBuffer";
-        case EntryPoint::EGLCreatePbufferSurface:
-            return "eglCreatePbufferSurface";
-        case EntryPoint::EGLCreatePixmapSurface:
-            return "eglCreatePixmapSurface";
-        case EntryPoint::EGLCreatePlatformPixmapSurface:
-            return "eglCreatePlatformPixmapSurface";
-        case EntryPoint::EGLCreatePlatformPixmapSurfaceEXT:
-            return "eglCreatePlatformPixmapSurfaceEXT";
-        case EntryPoint::EGLCreatePlatformWindowSurface:
-            return "eglCreatePlatformWindowSurface";
-        case EntryPoint::EGLCreatePlatformWindowSurfaceEXT:
-            return "eglCreatePlatformWindowSurfaceEXT";
-        case EntryPoint::EGLCreateStreamKHR:
-            return "eglCreateStreamKHR";
-        case EntryPoint::EGLCreateStreamProducerD3DTextureANGLE:
-            return "eglCreateStreamProducerD3DTextureANGLE";
-        case EntryPoint::EGLCreateSync:
-            return "eglCreateSync";
-        case EntryPoint::EGLCreateSyncKHR:
-            return "eglCreateSyncKHR";
-        case EntryPoint::EGLCreateWindowSurface:
-            return "eglCreateWindowSurface";
-        case EntryPoint::EGLDebugMessageControlKHR:
-            return "eglDebugMessageControlKHR";
-        case EntryPoint::EGLDestroyContext:
-            return "eglDestroyContext";
-        case EntryPoint::EGLDestroyImage:
-            return "eglDestroyImage";
-        case EntryPoint::EGLDestroyImageKHR:
-            return "eglDestroyImageKHR";
-        case EntryPoint::EGLDestroyStreamKHR:
-            return "eglDestroyStreamKHR";
-        case EntryPoint::EGLDestroySurface:
-            return "eglDestroySurface";
-        case EntryPoint::EGLDestroySync:
-            return "eglDestroySync";
-        case EntryPoint::EGLDestroySyncKHR:
-            return "eglDestroySyncKHR";
-        case EntryPoint::EGLDupNativeFenceFDANDROID:
-            return "eglDupNativeFenceFDANDROID";
-        case EntryPoint::EGLGetCompositorTimingANDROID:
-            return "eglGetCompositorTimingANDROID";
-        case EntryPoint::EGLGetCompositorTimingSupportedANDROID:
-            return "eglGetCompositorTimingSupportedANDROID";
-        case EntryPoint::EGLGetConfigAttrib:
-            return "eglGetConfigAttrib";
-        case EntryPoint::EGLGetConfigs:
-            return "eglGetConfigs";
-        case EntryPoint::EGLGetCurrentContext:
-            return "eglGetCurrentContext";
-        case EntryPoint::EGLGetCurrentDisplay:
-            return "eglGetCurrentDisplay";
-        case EntryPoint::EGLGetCurrentSurface:
-            return "eglGetCurrentSurface";
-        case EntryPoint::EGLGetDisplay:
-            return "eglGetDisplay";
-        case EntryPoint::EGLGetError:
-            return "eglGetError";
-        case EntryPoint::EGLGetFrameTimestampSupportedANDROID:
-            return "eglGetFrameTimestampSupportedANDROID";
-        case EntryPoint::EGLGetFrameTimestampsANDROID:
-            return "eglGetFrameTimestampsANDROID";
-        case EntryPoint::EGLGetMscRateANGLE:
-            return "eglGetMscRateANGLE";
-        case EntryPoint::EGLGetNativeClientBufferANDROID:
-            return "eglGetNativeClientBufferANDROID";
-        case EntryPoint::EGLGetNextFrameIdANDROID:
-            return "eglGetNextFrameIdANDROID";
-        case EntryPoint::EGLGetPlatformDisplay:
-            return "eglGetPlatformDisplay";
-        case EntryPoint::EGLGetPlatformDisplayEXT:
-            return "eglGetPlatformDisplayEXT";
-        case EntryPoint::EGLGetProcAddress:
-            return "eglGetProcAddress";
-        case EntryPoint::EGLGetSyncAttrib:
-            return "eglGetSyncAttrib";
-        case EntryPoint::EGLGetSyncAttribKHR:
-            return "eglGetSyncAttribKHR";
-        case EntryPoint::EGLGetSyncValuesCHROMIUM:
-            return "eglGetSyncValuesCHROMIUM";
-        case EntryPoint::EGLHandleGPUSwitchANGLE:
-            return "eglHandleGPUSwitchANGLE";
-        case EntryPoint::EGLInitialize:
-            return "eglInitialize";
-        case EntryPoint::EGLLabelObjectKHR:
-            return "eglLabelObjectKHR";
-        case EntryPoint::EGLMakeCurrent:
-            return "eglMakeCurrent";
-        case EntryPoint::EGLPostSubBufferNV:
-            return "eglPostSubBufferNV";
-        case EntryPoint::EGLPresentationTimeANDROID:
-            return "eglPresentationTimeANDROID";
-        case EntryPoint::EGLProgramCacheGetAttribANGLE:
-            return "eglProgramCacheGetAttribANGLE";
-        case EntryPoint::EGLProgramCachePopulateANGLE:
-            return "eglProgramCachePopulateANGLE";
-        case EntryPoint::EGLProgramCacheQueryANGLE:
-            return "eglProgramCacheQueryANGLE";
-        case EntryPoint::EGLProgramCacheResizeANGLE:
-            return "eglProgramCacheResizeANGLE";
-        case EntryPoint::EGLQueryAPI:
-            return "eglQueryAPI";
-        case EntryPoint::EGLQueryContext:
-            return "eglQueryContext";
-        case EntryPoint::EGLQueryDebugKHR:
-            return "eglQueryDebugKHR";
-        case EntryPoint::EGLQueryDeviceAttribEXT:
-            return "eglQueryDeviceAttribEXT";
-        case EntryPoint::EGLQueryDeviceStringEXT:
-            return "eglQueryDeviceStringEXT";
-        case EntryPoint::EGLQueryDisplayAttribANGLE:
-            return "eglQueryDisplayAttribANGLE";
-        case EntryPoint::EGLQueryDisplayAttribEXT:
-            return "eglQueryDisplayAttribEXT";
-        case EntryPoint::EGLQueryStreamKHR:
-            return "eglQueryStreamKHR";
-        case EntryPoint::EGLQueryStreamu64KHR:
-            return "eglQueryStreamu64KHR";
-        case EntryPoint::EGLQueryString:
-            return "eglQueryString";
-        case EntryPoint::EGLQueryStringiANGLE:
-            return "eglQueryStringiANGLE";
-        case EntryPoint::EGLQuerySurface:
-            return "eglQuerySurface";
-        case EntryPoint::EGLQuerySurfacePointerANGLE:
-            return "eglQuerySurfacePointerANGLE";
-        case EntryPoint::EGLReacquireHighPowerGPUANGLE:
-            return "eglReacquireHighPowerGPUANGLE";
-        case EntryPoint::EGLReleaseDeviceANGLE:
-            return "eglReleaseDeviceANGLE";
-        case EntryPoint::EGLReleaseHighPowerGPUANGLE:
-            return "eglReleaseHighPowerGPUANGLE";
-        case EntryPoint::EGLReleaseTexImage:
-            return "eglReleaseTexImage";
-        case EntryPoint::EGLReleaseThread:
-            return "eglReleaseThread";
-        case EntryPoint::EGLSetBlobCacheFuncsANDROID:
-            return "eglSetBlobCacheFuncsANDROID";
-        case EntryPoint::EGLSignalSyncKHR:
-            return "eglSignalSyncKHR";
-        case EntryPoint::EGLStreamAttribKHR:
-            return "eglStreamAttribKHR";
-        case EntryPoint::EGLStreamConsumerAcquireKHR:
-            return "eglStreamConsumerAcquireKHR";
-        case EntryPoint::EGLStreamConsumerGLTextureExternalAttribsNV:
-            return "eglStreamConsumerGLTextureExternalAttribsNV";
-        case EntryPoint::EGLStreamConsumerGLTextureExternalKHR:
-            return "eglStreamConsumerGLTextureExternalKHR";
-        case EntryPoint::EGLStreamConsumerReleaseKHR:
-            return "eglStreamConsumerReleaseKHR";
-        case EntryPoint::EGLStreamPostD3DTextureANGLE:
-            return "eglStreamPostD3DTextureANGLE";
-        case EntryPoint::EGLSurfaceAttrib:
-            return "eglSurfaceAttrib";
-        case EntryPoint::EGLSwapBuffers:
-            return "eglSwapBuffers";
-        case EntryPoint::EGLSwapBuffersWithDamageKHR:
-            return "eglSwapBuffersWithDamageKHR";
-        case EntryPoint::EGLSwapBuffersWithFrameTokenANGLE:
-            return "eglSwapBuffersWithFrameTokenANGLE";
-        case EntryPoint::EGLSwapInterval:
-            return "eglSwapInterval";
-        case EntryPoint::EGLTerminate:
-            return "eglTerminate";
-        case EntryPoint::EGLWaitClient:
-            return "eglWaitClient";
-        case EntryPoint::EGLWaitGL:
-            return "eglWaitGL";
-        case EntryPoint::EGLWaitNative:
-            return "eglWaitNative";
-        case EntryPoint::EGLWaitSync:
-            return "eglWaitSync";
-        case EntryPoint::EGLWaitSyncKHR:
-            return "eglWaitSyncKHR";
-        case EntryPoint::GLAccum:
+        case EntryPoint::Accum:
             return "glAccum";
-        case EntryPoint::GLActiveShaderProgram:
+        case EntryPoint::ActiveShaderProgram:
             return "glActiveShaderProgram";
-        case EntryPoint::GLActiveShaderProgramEXT:
-            return "glActiveShaderProgramEXT";
-        case EntryPoint::GLActiveTexture:
+        case EntryPoint::ActiveTexture:
             return "glActiveTexture";
-        case EntryPoint::GLAlphaFunc:
+        case EntryPoint::AlphaFunc:
             return "glAlphaFunc";
-        case EntryPoint::GLAlphaFuncx:
+        case EntryPoint::AlphaFuncx:
             return "glAlphaFuncx";
-        case EntryPoint::GLAreTexturesResident:
+        case EntryPoint::AreTexturesResident:
             return "glAreTexturesResident";
-        case EntryPoint::GLArrayElement:
+        case EntryPoint::ArrayElement:
             return "glArrayElement";
-        case EntryPoint::GLAttachShader:
+        case EntryPoint::AttachShader:
             return "glAttachShader";
-        case EntryPoint::GLBegin:
+        case EntryPoint::Begin:
             return "glBegin";
-        case EntryPoint::GLBeginConditionalRender:
+        case EntryPoint::BeginConditionalRender:
             return "glBeginConditionalRender";
-        case EntryPoint::GLBeginQuery:
+        case EntryPoint::BeginQuery:
             return "glBeginQuery";
-        case EntryPoint::GLBeginQueryEXT:
+        case EntryPoint::BeginQueryEXT:
             return "glBeginQueryEXT";
-        case EntryPoint::GLBeginQueryIndexed:
+        case EntryPoint::BeginQueryIndexed:
             return "glBeginQueryIndexed";
-        case EntryPoint::GLBeginTransformFeedback:
+        case EntryPoint::BeginTransformFeedback:
             return "glBeginTransformFeedback";
-        case EntryPoint::GLBindAttribLocation:
+        case EntryPoint::BindAttribLocation:
             return "glBindAttribLocation";
-        case EntryPoint::GLBindBuffer:
+        case EntryPoint::BindBuffer:
             return "glBindBuffer";
-        case EntryPoint::GLBindBufferBase:
+        case EntryPoint::BindBufferBase:
             return "glBindBufferBase";
-        case EntryPoint::GLBindBufferRange:
+        case EntryPoint::BindBufferRange:
             return "glBindBufferRange";
-        case EntryPoint::GLBindBuffersBase:
+        case EntryPoint::BindBuffersBase:
             return "glBindBuffersBase";
-        case EntryPoint::GLBindBuffersRange:
+        case EntryPoint::BindBuffersRange:
             return "glBindBuffersRange";
-        case EntryPoint::GLBindFragDataLocation:
+        case EntryPoint::BindFragDataLocation:
             return "glBindFragDataLocation";
-        case EntryPoint::GLBindFragDataLocationEXT:
+        case EntryPoint::BindFragDataLocationEXT:
             return "glBindFragDataLocationEXT";
-        case EntryPoint::GLBindFragDataLocationIndexed:
+        case EntryPoint::BindFragDataLocationIndexed:
             return "glBindFragDataLocationIndexed";
-        case EntryPoint::GLBindFragDataLocationIndexedEXT:
+        case EntryPoint::BindFragDataLocationIndexedEXT:
             return "glBindFragDataLocationIndexedEXT";
-        case EntryPoint::GLBindFramebuffer:
+        case EntryPoint::BindFramebuffer:
             return "glBindFramebuffer";
-        case EntryPoint::GLBindFramebufferOES:
+        case EntryPoint::BindFramebufferOES:
             return "glBindFramebufferOES";
-        case EntryPoint::GLBindImageTexture:
+        case EntryPoint::BindImageTexture:
             return "glBindImageTexture";
-        case EntryPoint::GLBindImageTextures:
+        case EntryPoint::BindImageTextures:
             return "glBindImageTextures";
-        case EntryPoint::GLBindProgramPipeline:
+        case EntryPoint::BindProgramPipeline:
             return "glBindProgramPipeline";
-        case EntryPoint::GLBindProgramPipelineEXT:
-            return "glBindProgramPipelineEXT";
-        case EntryPoint::GLBindRenderbuffer:
+        case EntryPoint::BindRenderbuffer:
             return "glBindRenderbuffer";
-        case EntryPoint::GLBindRenderbufferOES:
+        case EntryPoint::BindRenderbufferOES:
             return "glBindRenderbufferOES";
-        case EntryPoint::GLBindSampler:
+        case EntryPoint::BindSampler:
             return "glBindSampler";
-        case EntryPoint::GLBindSamplers:
+        case EntryPoint::BindSamplers:
             return "glBindSamplers";
-        case EntryPoint::GLBindTexture:
+        case EntryPoint::BindTexture:
             return "glBindTexture";
-        case EntryPoint::GLBindTextureUnit:
+        case EntryPoint::BindTextureUnit:
             return "glBindTextureUnit";
-        case EntryPoint::GLBindTextures:
+        case EntryPoint::BindTextures:
             return "glBindTextures";
-        case EntryPoint::GLBindTransformFeedback:
+        case EntryPoint::BindTransformFeedback:
             return "glBindTransformFeedback";
-        case EntryPoint::GLBindUniformLocationCHROMIUM:
+        case EntryPoint::BindUniformLocationCHROMIUM:
             return "glBindUniformLocationCHROMIUM";
-        case EntryPoint::GLBindVertexArray:
+        case EntryPoint::BindVertexArray:
             return "glBindVertexArray";
-        case EntryPoint::GLBindVertexArrayOES:
+        case EntryPoint::BindVertexArrayOES:
             return "glBindVertexArrayOES";
-        case EntryPoint::GLBindVertexBuffer:
+        case EntryPoint::BindVertexBuffer:
             return "glBindVertexBuffer";
-        case EntryPoint::GLBindVertexBuffers:
+        case EntryPoint::BindVertexBuffers:
             return "glBindVertexBuffers";
-        case EntryPoint::GLBitmap:
+        case EntryPoint::Bitmap:
             return "glBitmap";
-        case EntryPoint::GLBlendBarrier:
+        case EntryPoint::BlendBarrier:
             return "glBlendBarrier";
-        case EntryPoint::GLBlendBarrierKHR:
-            return "glBlendBarrierKHR";
-        case EntryPoint::GLBlendColor:
+        case EntryPoint::BlendColor:
             return "glBlendColor";
-        case EntryPoint::GLBlendEquation:
+        case EntryPoint::BlendEquation:
             return "glBlendEquation";
-        case EntryPoint::GLBlendEquationSeparate:
+        case EntryPoint::BlendEquationSeparate:
             return "glBlendEquationSeparate";
-        case EntryPoint::GLBlendEquationSeparatei:
+        case EntryPoint::BlendEquationSeparatei:
             return "glBlendEquationSeparatei";
-        case EntryPoint::GLBlendEquationSeparateiEXT:
+        case EntryPoint::BlendEquationSeparateiEXT:
             return "glBlendEquationSeparateiEXT";
-        case EntryPoint::GLBlendEquationSeparateiOES:
+        case EntryPoint::BlendEquationSeparateiOES:
             return "glBlendEquationSeparateiOES";
-        case EntryPoint::GLBlendEquationi:
+        case EntryPoint::BlendEquationi:
             return "glBlendEquationi";
-        case EntryPoint::GLBlendEquationiEXT:
+        case EntryPoint::BlendEquationiEXT:
             return "glBlendEquationiEXT";
-        case EntryPoint::GLBlendEquationiOES:
+        case EntryPoint::BlendEquationiOES:
             return "glBlendEquationiOES";
-        case EntryPoint::GLBlendFunc:
+        case EntryPoint::BlendFunc:
             return "glBlendFunc";
-        case EntryPoint::GLBlendFuncSeparate:
+        case EntryPoint::BlendFuncSeparate:
             return "glBlendFuncSeparate";
-        case EntryPoint::GLBlendFuncSeparatei:
+        case EntryPoint::BlendFuncSeparatei:
             return "glBlendFuncSeparatei";
-        case EntryPoint::GLBlendFuncSeparateiEXT:
+        case EntryPoint::BlendFuncSeparateiEXT:
             return "glBlendFuncSeparateiEXT";
-        case EntryPoint::GLBlendFuncSeparateiOES:
+        case EntryPoint::BlendFuncSeparateiOES:
             return "glBlendFuncSeparateiOES";
-        case EntryPoint::GLBlendFunci:
+        case EntryPoint::BlendFunci:
             return "glBlendFunci";
-        case EntryPoint::GLBlendFunciEXT:
+        case EntryPoint::BlendFunciEXT:
             return "glBlendFunciEXT";
-        case EntryPoint::GLBlendFunciOES:
+        case EntryPoint::BlendFunciOES:
             return "glBlendFunciOES";
-        case EntryPoint::GLBlitFramebuffer:
+        case EntryPoint::BlitFramebuffer:
             return "glBlitFramebuffer";
-        case EntryPoint::GLBlitFramebufferANGLE:
+        case EntryPoint::BlitFramebufferANGLE:
             return "glBlitFramebufferANGLE";
-        case EntryPoint::GLBlitFramebufferNV:
-            return "glBlitFramebufferNV";
-        case EntryPoint::GLBlitNamedFramebuffer:
+        case EntryPoint::BlitNamedFramebuffer:
             return "glBlitNamedFramebuffer";
-        case EntryPoint::GLBufferData:
+        case EntryPoint::BufferData:
             return "glBufferData";
-        case EntryPoint::GLBufferStorage:
+        case EntryPoint::BufferStorage:
             return "glBufferStorage";
-        case EntryPoint::GLBufferStorageEXT:
+        case EntryPoint::BufferStorageEXT:
             return "glBufferStorageEXT";
-        case EntryPoint::GLBufferStorageExternalEXT:
+        case EntryPoint::BufferStorageExternalEXT:
             return "glBufferStorageExternalEXT";
-        case EntryPoint::GLBufferStorageMemEXT:
+        case EntryPoint::BufferStorageMemEXT:
             return "glBufferStorageMemEXT";
-        case EntryPoint::GLBufferSubData:
+        case EntryPoint::BufferSubData:
             return "glBufferSubData";
-        case EntryPoint::GLCallList:
+        case EntryPoint::CallList:
             return "glCallList";
-        case EntryPoint::GLCallLists:
+        case EntryPoint::CallLists:
             return "glCallLists";
-        case EntryPoint::GLCheckFramebufferStatus:
+        case EntryPoint::CheckFramebufferStatus:
             return "glCheckFramebufferStatus";
-        case EntryPoint::GLCheckFramebufferStatusOES:
+        case EntryPoint::CheckFramebufferStatusOES:
             return "glCheckFramebufferStatusOES";
-        case EntryPoint::GLCheckNamedFramebufferStatus:
+        case EntryPoint::CheckNamedFramebufferStatus:
             return "glCheckNamedFramebufferStatus";
-        case EntryPoint::GLClampColor:
+        case EntryPoint::ClampColor:
             return "glClampColor";
-        case EntryPoint::GLClear:
+        case EntryPoint::Clear:
             return "glClear";
-        case EntryPoint::GLClearAccum:
+        case EntryPoint::ClearAccum:
             return "glClearAccum";
-        case EntryPoint::GLClearBufferData:
+        case EntryPoint::ClearBufferData:
             return "glClearBufferData";
-        case EntryPoint::GLClearBufferSubData:
+        case EntryPoint::ClearBufferSubData:
             return "glClearBufferSubData";
-        case EntryPoint::GLClearBufferfi:
+        case EntryPoint::ClearBufferfi:
             return "glClearBufferfi";
-        case EntryPoint::GLClearBufferfv:
+        case EntryPoint::ClearBufferfv:
             return "glClearBufferfv";
-        case EntryPoint::GLClearBufferiv:
+        case EntryPoint::ClearBufferiv:
             return "glClearBufferiv";
-        case EntryPoint::GLClearBufferuiv:
+        case EntryPoint::ClearBufferuiv:
             return "glClearBufferuiv";
-        case EntryPoint::GLClearColor:
+        case EntryPoint::ClearColor:
             return "glClearColor";
-        case EntryPoint::GLClearColorx:
+        case EntryPoint::ClearColorx:
             return "glClearColorx";
-        case EntryPoint::GLClearDepth:
+        case EntryPoint::ClearDepth:
             return "glClearDepth";
-        case EntryPoint::GLClearDepthf:
+        case EntryPoint::ClearDepthf:
             return "glClearDepthf";
-        case EntryPoint::GLClearDepthx:
+        case EntryPoint::ClearDepthx:
             return "glClearDepthx";
-        case EntryPoint::GLClearIndex:
+        case EntryPoint::ClearIndex:
             return "glClearIndex";
-        case EntryPoint::GLClearNamedBufferData:
+        case EntryPoint::ClearNamedBufferData:
             return "glClearNamedBufferData";
-        case EntryPoint::GLClearNamedBufferSubData:
+        case EntryPoint::ClearNamedBufferSubData:
             return "glClearNamedBufferSubData";
-        case EntryPoint::GLClearNamedFramebufferfi:
+        case EntryPoint::ClearNamedFramebufferfi:
             return "glClearNamedFramebufferfi";
-        case EntryPoint::GLClearNamedFramebufferfv:
+        case EntryPoint::ClearNamedFramebufferfv:
             return "glClearNamedFramebufferfv";
-        case EntryPoint::GLClearNamedFramebufferiv:
+        case EntryPoint::ClearNamedFramebufferiv:
             return "glClearNamedFramebufferiv";
-        case EntryPoint::GLClearNamedFramebufferuiv:
+        case EntryPoint::ClearNamedFramebufferuiv:
             return "glClearNamedFramebufferuiv";
-        case EntryPoint::GLClearStencil:
+        case EntryPoint::ClearStencil:
             return "glClearStencil";
-        case EntryPoint::GLClearTexImage:
+        case EntryPoint::ClearTexImage:
             return "glClearTexImage";
-        case EntryPoint::GLClearTexSubImage:
+        case EntryPoint::ClearTexSubImage:
             return "glClearTexSubImage";
-        case EntryPoint::GLClientActiveTexture:
+        case EntryPoint::ClientActiveTexture:
             return "glClientActiveTexture";
-        case EntryPoint::GLClientWaitSync:
+        case EntryPoint::ClientWaitSync:
             return "glClientWaitSync";
-        case EntryPoint::GLClipControl:
+        case EntryPoint::ClipControl:
             return "glClipControl";
-        case EntryPoint::GLClipControlEXT:
-            return "glClipControlEXT";
-        case EntryPoint::GLClipPlane:
+        case EntryPoint::ClipPlane:
             return "glClipPlane";
-        case EntryPoint::GLClipPlanef:
+        case EntryPoint::ClipPlanef:
             return "glClipPlanef";
-        case EntryPoint::GLClipPlanex:
+        case EntryPoint::ClipPlanex:
             return "glClipPlanex";
-        case EntryPoint::GLColor3b:
+        case EntryPoint::Color3b:
             return "glColor3b";
-        case EntryPoint::GLColor3bv:
+        case EntryPoint::Color3bv:
             return "glColor3bv";
-        case EntryPoint::GLColor3d:
+        case EntryPoint::Color3d:
             return "glColor3d";
-        case EntryPoint::GLColor3dv:
+        case EntryPoint::Color3dv:
             return "glColor3dv";
-        case EntryPoint::GLColor3f:
+        case EntryPoint::Color3f:
             return "glColor3f";
-        case EntryPoint::GLColor3fv:
+        case EntryPoint::Color3fv:
             return "glColor3fv";
-        case EntryPoint::GLColor3i:
+        case EntryPoint::Color3i:
             return "glColor3i";
-        case EntryPoint::GLColor3iv:
+        case EntryPoint::Color3iv:
             return "glColor3iv";
-        case EntryPoint::GLColor3s:
+        case EntryPoint::Color3s:
             return "glColor3s";
-        case EntryPoint::GLColor3sv:
+        case EntryPoint::Color3sv:
             return "glColor3sv";
-        case EntryPoint::GLColor3ub:
+        case EntryPoint::Color3ub:
             return "glColor3ub";
-        case EntryPoint::GLColor3ubv:
+        case EntryPoint::Color3ubv:
             return "glColor3ubv";
-        case EntryPoint::GLColor3ui:
+        case EntryPoint::Color3ui:
             return "glColor3ui";
-        case EntryPoint::GLColor3uiv:
+        case EntryPoint::Color3uiv:
             return "glColor3uiv";
-        case EntryPoint::GLColor3us:
+        case EntryPoint::Color3us:
             return "glColor3us";
-        case EntryPoint::GLColor3usv:
+        case EntryPoint::Color3usv:
             return "glColor3usv";
-        case EntryPoint::GLColor4b:
+        case EntryPoint::Color4b:
             return "glColor4b";
-        case EntryPoint::GLColor4bv:
+        case EntryPoint::Color4bv:
             return "glColor4bv";
-        case EntryPoint::GLColor4d:
+        case EntryPoint::Color4d:
             return "glColor4d";
-        case EntryPoint::GLColor4dv:
+        case EntryPoint::Color4dv:
             return "glColor4dv";
-        case EntryPoint::GLColor4f:
+        case EntryPoint::Color4f:
             return "glColor4f";
-        case EntryPoint::GLColor4fv:
+        case EntryPoint::Color4fv:
             return "glColor4fv";
-        case EntryPoint::GLColor4i:
+        case EntryPoint::Color4i:
             return "glColor4i";
-        case EntryPoint::GLColor4iv:
+        case EntryPoint::Color4iv:
             return "glColor4iv";
-        case EntryPoint::GLColor4s:
+        case EntryPoint::Color4s:
             return "glColor4s";
-        case EntryPoint::GLColor4sv:
+        case EntryPoint::Color4sv:
             return "glColor4sv";
-        case EntryPoint::GLColor4ub:
+        case EntryPoint::Color4ub:
             return "glColor4ub";
-        case EntryPoint::GLColor4ubv:
+        case EntryPoint::Color4ubv:
             return "glColor4ubv";
-        case EntryPoint::GLColor4ui:
+        case EntryPoint::Color4ui:
             return "glColor4ui";
-        case EntryPoint::GLColor4uiv:
+        case EntryPoint::Color4uiv:
             return "glColor4uiv";
-        case EntryPoint::GLColor4us:
+        case EntryPoint::Color4us:
             return "glColor4us";
-        case EntryPoint::GLColor4usv:
+        case EntryPoint::Color4usv:
             return "glColor4usv";
-        case EntryPoint::GLColor4x:
+        case EntryPoint::Color4x:
             return "glColor4x";
-        case EntryPoint::GLColorMask:
+        case EntryPoint::ColorMask:
             return "glColorMask";
-        case EntryPoint::GLColorMaski:
+        case EntryPoint::ColorMaski:
             return "glColorMaski";
-        case EntryPoint::GLColorMaskiEXT:
+        case EntryPoint::ColorMaskiEXT:
             return "glColorMaskiEXT";
-        case EntryPoint::GLColorMaskiOES:
+        case EntryPoint::ColorMaskiOES:
             return "glColorMaskiOES";
-        case EntryPoint::GLColorMaterial:
+        case EntryPoint::ColorMaterial:
             return "glColorMaterial";
-        case EntryPoint::GLColorP3ui:
+        case EntryPoint::ColorP3ui:
             return "glColorP3ui";
-        case EntryPoint::GLColorP3uiv:
+        case EntryPoint::ColorP3uiv:
             return "glColorP3uiv";
-        case EntryPoint::GLColorP4ui:
+        case EntryPoint::ColorP4ui:
             return "glColorP4ui";
-        case EntryPoint::GLColorP4uiv:
+        case EntryPoint::ColorP4uiv:
             return "glColorP4uiv";
-        case EntryPoint::GLColorPointer:
+        case EntryPoint::ColorPointer:
             return "glColorPointer";
-        case EntryPoint::GLCompileShader:
+        case EntryPoint::CompileShader:
             return "glCompileShader";
-        case EntryPoint::GLCompressedCopyTextureCHROMIUM:
+        case EntryPoint::CompressedCopyTextureCHROMIUM:
             return "glCompressedCopyTextureCHROMIUM";
-        case EntryPoint::GLCompressedTexImage1D:
+        case EntryPoint::CompressedTexImage1D:
             return "glCompressedTexImage1D";
-        case EntryPoint::GLCompressedTexImage2D:
+        case EntryPoint::CompressedTexImage2D:
             return "glCompressedTexImage2D";
-        case EntryPoint::GLCompressedTexImage2DRobustANGLE:
+        case EntryPoint::CompressedTexImage2DRobustANGLE:
             return "glCompressedTexImage2DRobustANGLE";
-        case EntryPoint::GLCompressedTexImage3D:
+        case EntryPoint::CompressedTexImage3D:
             return "glCompressedTexImage3D";
-        case EntryPoint::GLCompressedTexImage3DOES:
+        case EntryPoint::CompressedTexImage3DOES:
             return "glCompressedTexImage3DOES";
-        case EntryPoint::GLCompressedTexImage3DRobustANGLE:
+        case EntryPoint::CompressedTexImage3DRobustANGLE:
             return "glCompressedTexImage3DRobustANGLE";
-        case EntryPoint::GLCompressedTexSubImage1D:
+        case EntryPoint::CompressedTexSubImage1D:
             return "glCompressedTexSubImage1D";
-        case EntryPoint::GLCompressedTexSubImage2D:
+        case EntryPoint::CompressedTexSubImage2D:
             return "glCompressedTexSubImage2D";
-        case EntryPoint::GLCompressedTexSubImage2DRobustANGLE:
+        case EntryPoint::CompressedTexSubImage2DRobustANGLE:
             return "glCompressedTexSubImage2DRobustANGLE";
-        case EntryPoint::GLCompressedTexSubImage3D:
+        case EntryPoint::CompressedTexSubImage3D:
             return "glCompressedTexSubImage3D";
-        case EntryPoint::GLCompressedTexSubImage3DOES:
+        case EntryPoint::CompressedTexSubImage3DOES:
             return "glCompressedTexSubImage3DOES";
-        case EntryPoint::GLCompressedTexSubImage3DRobustANGLE:
+        case EntryPoint::CompressedTexSubImage3DRobustANGLE:
             return "glCompressedTexSubImage3DRobustANGLE";
-        case EntryPoint::GLCompressedTextureSubImage1D:
+        case EntryPoint::CompressedTextureSubImage1D:
             return "glCompressedTextureSubImage1D";
-        case EntryPoint::GLCompressedTextureSubImage2D:
+        case EntryPoint::CompressedTextureSubImage2D:
             return "glCompressedTextureSubImage2D";
-        case EntryPoint::GLCompressedTextureSubImage3D:
+        case EntryPoint::CompressedTextureSubImage3D:
             return "glCompressedTextureSubImage3D";
-        case EntryPoint::GLCopyBufferSubData:
+        case EntryPoint::CopyBufferSubData:
             return "glCopyBufferSubData";
-        case EntryPoint::GLCopyImageSubData:
+        case EntryPoint::CopyImageSubData:
             return "glCopyImageSubData";
-        case EntryPoint::GLCopyImageSubDataEXT:
+        case EntryPoint::CopyImageSubDataEXT:
             return "glCopyImageSubDataEXT";
-        case EntryPoint::GLCopyImageSubDataOES:
+        case EntryPoint::CopyImageSubDataOES:
             return "glCopyImageSubDataOES";
-        case EntryPoint::GLCopyNamedBufferSubData:
+        case EntryPoint::CopyNamedBufferSubData:
             return "glCopyNamedBufferSubData";
-        case EntryPoint::GLCopyPixels:
+        case EntryPoint::CopyPixels:
             return "glCopyPixels";
-        case EntryPoint::GLCopySubTexture3DANGLE:
+        case EntryPoint::CopySubTexture3DANGLE:
             return "glCopySubTexture3DANGLE";
-        case EntryPoint::GLCopySubTextureCHROMIUM:
+        case EntryPoint::CopySubTextureCHROMIUM:
             return "glCopySubTextureCHROMIUM";
-        case EntryPoint::GLCopyTexImage1D:
+        case EntryPoint::CopyTexImage1D:
             return "glCopyTexImage1D";
-        case EntryPoint::GLCopyTexImage2D:
+        case EntryPoint::CopyTexImage2D:
             return "glCopyTexImage2D";
-        case EntryPoint::GLCopyTexSubImage1D:
+        case EntryPoint::CopyTexSubImage1D:
             return "glCopyTexSubImage1D";
-        case EntryPoint::GLCopyTexSubImage2D:
+        case EntryPoint::CopyTexSubImage2D:
             return "glCopyTexSubImage2D";
-        case EntryPoint::GLCopyTexSubImage3D:
+        case EntryPoint::CopyTexSubImage3D:
             return "glCopyTexSubImage3D";
-        case EntryPoint::GLCopyTexSubImage3DOES:
+        case EntryPoint::CopyTexSubImage3DOES:
             return "glCopyTexSubImage3DOES";
-        case EntryPoint::GLCopyTexture3DANGLE:
+        case EntryPoint::CopyTexture3DANGLE:
             return "glCopyTexture3DANGLE";
-        case EntryPoint::GLCopyTextureCHROMIUM:
+        case EntryPoint::CopyTextureCHROMIUM:
             return "glCopyTextureCHROMIUM";
-        case EntryPoint::GLCopyTextureSubImage1D:
+        case EntryPoint::CopyTextureSubImage1D:
             return "glCopyTextureSubImage1D";
-        case EntryPoint::GLCopyTextureSubImage2D:
+        case EntryPoint::CopyTextureSubImage2D:
             return "glCopyTextureSubImage2D";
-        case EntryPoint::GLCopyTextureSubImage3D:
+        case EntryPoint::CopyTextureSubImage3D:
             return "glCopyTextureSubImage3D";
-        case EntryPoint::GLCoverageModulationCHROMIUM:
+        case EntryPoint::CoverageModulationCHROMIUM:
             return "glCoverageModulationCHROMIUM";
-        case EntryPoint::GLCreateBuffers:
+        case EntryPoint::CreateBuffers:
             return "glCreateBuffers";
-        case EntryPoint::GLCreateFramebuffers:
+        case EntryPoint::CreateFramebuffers:
             return "glCreateFramebuffers";
-        case EntryPoint::GLCreateMemoryObjectsEXT:
+        case EntryPoint::CreateMemoryObjectsEXT:
             return "glCreateMemoryObjectsEXT";
-        case EntryPoint::GLCreateProgram:
+        case EntryPoint::CreateProgram:
             return "glCreateProgram";
-        case EntryPoint::GLCreateProgramPipelines:
+        case EntryPoint::CreateProgramPipelines:
             return "glCreateProgramPipelines";
-        case EntryPoint::GLCreateQueries:
+        case EntryPoint::CreateQueries:
             return "glCreateQueries";
-        case EntryPoint::GLCreateRenderbuffers:
+        case EntryPoint::CreateRenderbuffers:
             return "glCreateRenderbuffers";
-        case EntryPoint::GLCreateSamplers:
+        case EntryPoint::CreateSamplers:
             return "glCreateSamplers";
-        case EntryPoint::GLCreateShader:
+        case EntryPoint::CreateShader:
             return "glCreateShader";
-        case EntryPoint::GLCreateShaderProgramv:
+        case EntryPoint::CreateShaderProgramv:
             return "glCreateShaderProgramv";
-        case EntryPoint::GLCreateShaderProgramvEXT:
-            return "glCreateShaderProgramvEXT";
-        case EntryPoint::GLCreateTextures:
+        case EntryPoint::CreateTextures:
             return "glCreateTextures";
-        case EntryPoint::GLCreateTransformFeedbacks:
+        case EntryPoint::CreateTransformFeedbacks:
             return "glCreateTransformFeedbacks";
-        case EntryPoint::GLCreateVertexArrays:
+        case EntryPoint::CreateVertexArrays:
             return "glCreateVertexArrays";
-        case EntryPoint::GLCullFace:
+        case EntryPoint::CullFace:
             return "glCullFace";
-        case EntryPoint::GLCurrentPaletteMatrixOES:
+        case EntryPoint::CurrentPaletteMatrixOES:
             return "glCurrentPaletteMatrixOES";
-        case EntryPoint::GLDebugMessageCallback:
+        case EntryPoint::DebugMessageCallback:
             return "glDebugMessageCallback";
-        case EntryPoint::GLDebugMessageCallbackKHR:
+        case EntryPoint::DebugMessageCallbackKHR:
             return "glDebugMessageCallbackKHR";
-        case EntryPoint::GLDebugMessageControl:
+        case EntryPoint::DebugMessageControl:
             return "glDebugMessageControl";
-        case EntryPoint::GLDebugMessageControlKHR:
+        case EntryPoint::DebugMessageControlKHR:
             return "glDebugMessageControlKHR";
-        case EntryPoint::GLDebugMessageInsert:
+        case EntryPoint::DebugMessageInsert:
             return "glDebugMessageInsert";
-        case EntryPoint::GLDebugMessageInsertKHR:
+        case EntryPoint::DebugMessageInsertKHR:
             return "glDebugMessageInsertKHR";
-        case EntryPoint::GLDeleteBuffers:
+        case EntryPoint::DeleteBuffers:
             return "glDeleteBuffers";
-        case EntryPoint::GLDeleteFencesNV:
+        case EntryPoint::DeleteFencesNV:
             return "glDeleteFencesNV";
-        case EntryPoint::GLDeleteFramebuffers:
+        case EntryPoint::DeleteFramebuffers:
             return "glDeleteFramebuffers";
-        case EntryPoint::GLDeleteFramebuffersOES:
+        case EntryPoint::DeleteFramebuffersOES:
             return "glDeleteFramebuffersOES";
-        case EntryPoint::GLDeleteLists:
+        case EntryPoint::DeleteLists:
             return "glDeleteLists";
-        case EntryPoint::GLDeleteMemoryObjectsEXT:
+        case EntryPoint::DeleteMemoryObjectsEXT:
             return "glDeleteMemoryObjectsEXT";
-        case EntryPoint::GLDeleteProgram:
+        case EntryPoint::DeleteProgram:
             return "glDeleteProgram";
-        case EntryPoint::GLDeleteProgramPipelines:
+        case EntryPoint::DeleteProgramPipelines:
             return "glDeleteProgramPipelines";
-        case EntryPoint::GLDeleteProgramPipelinesEXT:
-            return "glDeleteProgramPipelinesEXT";
-        case EntryPoint::GLDeleteQueries:
+        case EntryPoint::DeleteQueries:
             return "glDeleteQueries";
-        case EntryPoint::GLDeleteQueriesEXT:
+        case EntryPoint::DeleteQueriesEXT:
             return "glDeleteQueriesEXT";
-        case EntryPoint::GLDeleteRenderbuffers:
+        case EntryPoint::DeleteRenderbuffers:
             return "glDeleteRenderbuffers";
-        case EntryPoint::GLDeleteRenderbuffersOES:
+        case EntryPoint::DeleteRenderbuffersOES:
             return "glDeleteRenderbuffersOES";
-        case EntryPoint::GLDeleteSamplers:
+        case EntryPoint::DeleteSamplers:
             return "glDeleteSamplers";
-        case EntryPoint::GLDeleteSemaphoresEXT:
+        case EntryPoint::DeleteSemaphoresEXT:
             return "glDeleteSemaphoresEXT";
-        case EntryPoint::GLDeleteShader:
+        case EntryPoint::DeleteShader:
             return "glDeleteShader";
-        case EntryPoint::GLDeleteSync:
+        case EntryPoint::DeleteSync:
             return "glDeleteSync";
-        case EntryPoint::GLDeleteTextures:
+        case EntryPoint::DeleteTextures:
             return "glDeleteTextures";
-        case EntryPoint::GLDeleteTransformFeedbacks:
+        case EntryPoint::DeleteTransformFeedbacks:
             return "glDeleteTransformFeedbacks";
-        case EntryPoint::GLDeleteVertexArrays:
+        case EntryPoint::DeleteVertexArrays:
             return "glDeleteVertexArrays";
-        case EntryPoint::GLDeleteVertexArraysOES:
+        case EntryPoint::DeleteVertexArraysOES:
             return "glDeleteVertexArraysOES";
-        case EntryPoint::GLDepthFunc:
+        case EntryPoint::DepthFunc:
             return "glDepthFunc";
-        case EntryPoint::GLDepthMask:
+        case EntryPoint::DepthMask:
             return "glDepthMask";
-        case EntryPoint::GLDepthRange:
+        case EntryPoint::DepthRange:
             return "glDepthRange";
-        case EntryPoint::GLDepthRangeArrayv:
+        case EntryPoint::DepthRangeArrayv:
             return "glDepthRangeArrayv";
-        case EntryPoint::GLDepthRangeIndexed:
+        case EntryPoint::DepthRangeIndexed:
             return "glDepthRangeIndexed";
-        case EntryPoint::GLDepthRangef:
+        case EntryPoint::DepthRangef:
             return "glDepthRangef";
-        case EntryPoint::GLDepthRangex:
+        case EntryPoint::DepthRangex:
             return "glDepthRangex";
-        case EntryPoint::GLDetachShader:
+        case EntryPoint::DetachShader:
             return "glDetachShader";
-        case EntryPoint::GLDisable:
+        case EntryPoint::Disable:
             return "glDisable";
-        case EntryPoint::GLDisableClientState:
+        case EntryPoint::DisableClientState:
             return "glDisableClientState";
-        case EntryPoint::GLDisableExtensionANGLE:
+        case EntryPoint::DisableExtensionANGLE:
             return "glDisableExtensionANGLE";
-        case EntryPoint::GLDisableVertexArrayAttrib:
+        case EntryPoint::DisableVertexArrayAttrib:
             return "glDisableVertexArrayAttrib";
-        case EntryPoint::GLDisableVertexAttribArray:
+        case EntryPoint::DisableVertexAttribArray:
             return "glDisableVertexAttribArray";
-        case EntryPoint::GLDisablei:
+        case EntryPoint::Disablei:
             return "glDisablei";
-        case EntryPoint::GLDisableiEXT:
+        case EntryPoint::DisableiEXT:
             return "glDisableiEXT";
-        case EntryPoint::GLDisableiOES:
+        case EntryPoint::DisableiOES:
             return "glDisableiOES";
-        case EntryPoint::GLDiscardFramebufferEXT:
+        case EntryPoint::DiscardFramebufferEXT:
             return "glDiscardFramebufferEXT";
-        case EntryPoint::GLDispatchCompute:
+        case EntryPoint::DispatchCompute:
             return "glDispatchCompute";
-        case EntryPoint::GLDispatchComputeIndirect:
+        case EntryPoint::DispatchComputeIndirect:
             return "glDispatchComputeIndirect";
-        case EntryPoint::GLDrawArrays:
+        case EntryPoint::DrawArrays:
             return "glDrawArrays";
-        case EntryPoint::GLDrawArraysIndirect:
+        case EntryPoint::DrawArraysIndirect:
             return "glDrawArraysIndirect";
-        case EntryPoint::GLDrawArraysInstanced:
+        case EntryPoint::DrawArraysInstanced:
             return "glDrawArraysInstanced";
-        case EntryPoint::GLDrawArraysInstancedANGLE:
+        case EntryPoint::DrawArraysInstancedANGLE:
             return "glDrawArraysInstancedANGLE";
-        case EntryPoint::GLDrawArraysInstancedBaseInstance:
+        case EntryPoint::DrawArraysInstancedBaseInstance:
             return "glDrawArraysInstancedBaseInstance";
-        case EntryPoint::GLDrawArraysInstancedBaseInstanceANGLE:
+        case EntryPoint::DrawArraysInstancedBaseInstanceANGLE:
             return "glDrawArraysInstancedBaseInstanceANGLE";
-        case EntryPoint::GLDrawArraysInstancedEXT:
+        case EntryPoint::DrawArraysInstancedEXT:
             return "glDrawArraysInstancedEXT";
-        case EntryPoint::GLDrawBuffer:
+        case EntryPoint::DrawBuffer:
             return "glDrawBuffer";
-        case EntryPoint::GLDrawBuffers:
+        case EntryPoint::DrawBuffers:
             return "glDrawBuffers";
-        case EntryPoint::GLDrawBuffersEXT:
+        case EntryPoint::DrawBuffersEXT:
             return "glDrawBuffersEXT";
-        case EntryPoint::GLDrawElements:
+        case EntryPoint::DrawElements:
             return "glDrawElements";
-        case EntryPoint::GLDrawElementsBaseVertex:
+        case EntryPoint::DrawElementsBaseVertex:
             return "glDrawElementsBaseVertex";
-        case EntryPoint::GLDrawElementsBaseVertexEXT:
+        case EntryPoint::DrawElementsBaseVertexEXT:
             return "glDrawElementsBaseVertexEXT";
-        case EntryPoint::GLDrawElementsBaseVertexOES:
+        case EntryPoint::DrawElementsBaseVertexOES:
             return "glDrawElementsBaseVertexOES";
-        case EntryPoint::GLDrawElementsIndirect:
+        case EntryPoint::DrawElementsIndirect:
             return "glDrawElementsIndirect";
-        case EntryPoint::GLDrawElementsInstanced:
+        case EntryPoint::DrawElementsInstanced:
             return "glDrawElementsInstanced";
-        case EntryPoint::GLDrawElementsInstancedANGLE:
+        case EntryPoint::DrawElementsInstancedANGLE:
             return "glDrawElementsInstancedANGLE";
-        case EntryPoint::GLDrawElementsInstancedBaseInstance:
+        case EntryPoint::DrawElementsInstancedBaseInstance:
             return "glDrawElementsInstancedBaseInstance";
-        case EntryPoint::GLDrawElementsInstancedBaseVertex:
+        case EntryPoint::DrawElementsInstancedBaseVertex:
             return "glDrawElementsInstancedBaseVertex";
-        case EntryPoint::GLDrawElementsInstancedBaseVertexBaseInstance:
+        case EntryPoint::DrawElementsInstancedBaseVertexBaseInstance:
             return "glDrawElementsInstancedBaseVertexBaseInstance";
-        case EntryPoint::GLDrawElementsInstancedBaseVertexBaseInstanceANGLE:
+        case EntryPoint::DrawElementsInstancedBaseVertexBaseInstanceANGLE:
             return "glDrawElementsInstancedBaseVertexBaseInstanceANGLE";
-        case EntryPoint::GLDrawElementsInstancedBaseVertexEXT:
+        case EntryPoint::DrawElementsInstancedBaseVertexEXT:
             return "glDrawElementsInstancedBaseVertexEXT";
-        case EntryPoint::GLDrawElementsInstancedBaseVertexOES:
+        case EntryPoint::DrawElementsInstancedBaseVertexOES:
             return "glDrawElementsInstancedBaseVertexOES";
-        case EntryPoint::GLDrawElementsInstancedEXT:
+        case EntryPoint::DrawElementsInstancedEXT:
             return "glDrawElementsInstancedEXT";
-        case EntryPoint::GLDrawPixels:
+        case EntryPoint::DrawPixels:
             return "glDrawPixels";
-        case EntryPoint::GLDrawRangeElements:
+        case EntryPoint::DrawRangeElements:
             return "glDrawRangeElements";
-        case EntryPoint::GLDrawRangeElementsBaseVertex:
+        case EntryPoint::DrawRangeElementsBaseVertex:
             return "glDrawRangeElementsBaseVertex";
-        case EntryPoint::GLDrawRangeElementsBaseVertexEXT:
+        case EntryPoint::DrawRangeElementsBaseVertexEXT:
             return "glDrawRangeElementsBaseVertexEXT";
-        case EntryPoint::GLDrawRangeElementsBaseVertexOES:
+        case EntryPoint::DrawRangeElementsBaseVertexOES:
             return "glDrawRangeElementsBaseVertexOES";
-        case EntryPoint::GLDrawTexfOES:
+        case EntryPoint::DrawTexfOES:
             return "glDrawTexfOES";
-        case EntryPoint::GLDrawTexfvOES:
+        case EntryPoint::DrawTexfvOES:
             return "glDrawTexfvOES";
-        case EntryPoint::GLDrawTexiOES:
+        case EntryPoint::DrawTexiOES:
             return "glDrawTexiOES";
-        case EntryPoint::GLDrawTexivOES:
+        case EntryPoint::DrawTexivOES:
             return "glDrawTexivOES";
-        case EntryPoint::GLDrawTexsOES:
+        case EntryPoint::DrawTexsOES:
             return "glDrawTexsOES";
-        case EntryPoint::GLDrawTexsvOES:
+        case EntryPoint::DrawTexsvOES:
             return "glDrawTexsvOES";
-        case EntryPoint::GLDrawTexxOES:
+        case EntryPoint::DrawTexxOES:
             return "glDrawTexxOES";
-        case EntryPoint::GLDrawTexxvOES:
+        case EntryPoint::DrawTexxvOES:
             return "glDrawTexxvOES";
-        case EntryPoint::GLDrawTransformFeedback:
+        case EntryPoint::DrawTransformFeedback:
             return "glDrawTransformFeedback";
-        case EntryPoint::GLDrawTransformFeedbackInstanced:
+        case EntryPoint::DrawTransformFeedbackInstanced:
             return "glDrawTransformFeedbackInstanced";
-        case EntryPoint::GLDrawTransformFeedbackStream:
+        case EntryPoint::DrawTransformFeedbackStream:
             return "glDrawTransformFeedbackStream";
-        case EntryPoint::GLDrawTransformFeedbackStreamInstanced:
+        case EntryPoint::DrawTransformFeedbackStreamInstanced:
             return "glDrawTransformFeedbackStreamInstanced";
-        case EntryPoint::GLEGLImageTargetRenderbufferStorageOES:
+        case EntryPoint::EGLImageTargetRenderbufferStorageOES:
             return "glEGLImageTargetRenderbufferStorageOES";
-        case EntryPoint::GLEGLImageTargetTexture2DOES:
+        case EntryPoint::EGLImageTargetTexture2DOES:
             return "glEGLImageTargetTexture2DOES";
-        case EntryPoint::GLEdgeFlag:
+        case EntryPoint::EdgeFlag:
             return "glEdgeFlag";
-        case EntryPoint::GLEdgeFlagPointer:
+        case EntryPoint::EdgeFlagPointer:
             return "glEdgeFlagPointer";
-        case EntryPoint::GLEdgeFlagv:
+        case EntryPoint::EdgeFlagv:
             return "glEdgeFlagv";
-        case EntryPoint::GLEnable:
+        case EntryPoint::Enable:
             return "glEnable";
-        case EntryPoint::GLEnableClientState:
+        case EntryPoint::EnableClientState:
             return "glEnableClientState";
-        case EntryPoint::GLEnableVertexArrayAttrib:
+        case EntryPoint::EnableVertexArrayAttrib:
             return "glEnableVertexArrayAttrib";
-        case EntryPoint::GLEnableVertexAttribArray:
+        case EntryPoint::EnableVertexAttribArray:
             return "glEnableVertexAttribArray";
-        case EntryPoint::GLEnablei:
+        case EntryPoint::Enablei:
             return "glEnablei";
-        case EntryPoint::GLEnableiEXT:
+        case EntryPoint::EnableiEXT:
             return "glEnableiEXT";
-        case EntryPoint::GLEnableiOES:
+        case EntryPoint::EnableiOES:
             return "glEnableiOES";
-        case EntryPoint::GLEnd:
+        case EntryPoint::End:
             return "glEnd";
-        case EntryPoint::GLEndConditionalRender:
+        case EntryPoint::EndConditionalRender:
             return "glEndConditionalRender";
-        case EntryPoint::GLEndList:
+        case EntryPoint::EndList:
             return "glEndList";
-        case EntryPoint::GLEndQuery:
+        case EntryPoint::EndQuery:
             return "glEndQuery";
-        case EntryPoint::GLEndQueryEXT:
+        case EntryPoint::EndQueryEXT:
             return "glEndQueryEXT";
-        case EntryPoint::GLEndQueryIndexed:
+        case EntryPoint::EndQueryIndexed:
             return "glEndQueryIndexed";
-        case EntryPoint::GLEndTransformFeedback:
+        case EntryPoint::EndTransformFeedback:
             return "glEndTransformFeedback";
-        case EntryPoint::GLEvalCoord1d:
+        case EntryPoint::EvalCoord1d:
             return "glEvalCoord1d";
-        case EntryPoint::GLEvalCoord1dv:
+        case EntryPoint::EvalCoord1dv:
             return "glEvalCoord1dv";
-        case EntryPoint::GLEvalCoord1f:
+        case EntryPoint::EvalCoord1f:
             return "glEvalCoord1f";
-        case EntryPoint::GLEvalCoord1fv:
+        case EntryPoint::EvalCoord1fv:
             return "glEvalCoord1fv";
-        case EntryPoint::GLEvalCoord2d:
+        case EntryPoint::EvalCoord2d:
             return "glEvalCoord2d";
-        case EntryPoint::GLEvalCoord2dv:
+        case EntryPoint::EvalCoord2dv:
             return "glEvalCoord2dv";
-        case EntryPoint::GLEvalCoord2f:
+        case EntryPoint::EvalCoord2f:
             return "glEvalCoord2f";
-        case EntryPoint::GLEvalCoord2fv:
+        case EntryPoint::EvalCoord2fv:
             return "glEvalCoord2fv";
-        case EntryPoint::GLEvalMesh1:
+        case EntryPoint::EvalMesh1:
             return "glEvalMesh1";
-        case EntryPoint::GLEvalMesh2:
+        case EntryPoint::EvalMesh2:
             return "glEvalMesh2";
-        case EntryPoint::GLEvalPoint1:
+        case EntryPoint::EvalPoint1:
             return "glEvalPoint1";
-        case EntryPoint::GLEvalPoint2:
+        case EntryPoint::EvalPoint2:
             return "glEvalPoint2";
-        case EntryPoint::GLFeedbackBuffer:
+        case EntryPoint::FeedbackBuffer:
             return "glFeedbackBuffer";
-        case EntryPoint::GLFenceSync:
+        case EntryPoint::FenceSync:
             return "glFenceSync";
-        case EntryPoint::GLFinish:
+        case EntryPoint::Finish:
             return "glFinish";
-        case EntryPoint::GLFinishFenceNV:
+        case EntryPoint::FinishFenceNV:
             return "glFinishFenceNV";
-        case EntryPoint::GLFlush:
+        case EntryPoint::Flush:
             return "glFlush";
-        case EntryPoint::GLFlushMappedBufferRange:
+        case EntryPoint::FlushMappedBufferRange:
             return "glFlushMappedBufferRange";
-        case EntryPoint::GLFlushMappedBufferRangeEXT:
+        case EntryPoint::FlushMappedBufferRangeEXT:
             return "glFlushMappedBufferRangeEXT";
-        case EntryPoint::GLFlushMappedNamedBufferRange:
+        case EntryPoint::FlushMappedNamedBufferRange:
             return "glFlushMappedNamedBufferRange";
-        case EntryPoint::GLFogCoordPointer:
+        case EntryPoint::FogCoordPointer:
             return "glFogCoordPointer";
-        case EntryPoint::GLFogCoordd:
+        case EntryPoint::FogCoordd:
             return "glFogCoordd";
-        case EntryPoint::GLFogCoorddv:
+        case EntryPoint::FogCoorddv:
             return "glFogCoorddv";
-        case EntryPoint::GLFogCoordf:
+        case EntryPoint::FogCoordf:
             return "glFogCoordf";
-        case EntryPoint::GLFogCoordfv:
+        case EntryPoint::FogCoordfv:
             return "glFogCoordfv";
-        case EntryPoint::GLFogf:
+        case EntryPoint::Fogf:
             return "glFogf";
-        case EntryPoint::GLFogfv:
+        case EntryPoint::Fogfv:
             return "glFogfv";
-        case EntryPoint::GLFogi:
+        case EntryPoint::Fogi:
             return "glFogi";
-        case EntryPoint::GLFogiv:
+        case EntryPoint::Fogiv:
             return "glFogiv";
-        case EntryPoint::GLFogx:
+        case EntryPoint::Fogx:
             return "glFogx";
-        case EntryPoint::GLFogxv:
+        case EntryPoint::Fogxv:
             return "glFogxv";
-        case EntryPoint::GLFramebufferFetchBarrierEXT:
-            return "glFramebufferFetchBarrierEXT";
-        case EntryPoint::GLFramebufferParameteri:
+        case EntryPoint::FramebufferParameteri:
             return "glFramebufferParameteri";
-        case EntryPoint::GLFramebufferRenderbuffer:
+        case EntryPoint::FramebufferRenderbuffer:
             return "glFramebufferRenderbuffer";
-        case EntryPoint::GLFramebufferRenderbufferOES:
+        case EntryPoint::FramebufferRenderbufferOES:
             return "glFramebufferRenderbufferOES";
-        case EntryPoint::GLFramebufferTexture:
+        case EntryPoint::FramebufferTexture:
             return "glFramebufferTexture";
-        case EntryPoint::GLFramebufferTexture1D:
+        case EntryPoint::FramebufferTexture1D:
             return "glFramebufferTexture1D";
-        case EntryPoint::GLFramebufferTexture2D:
+        case EntryPoint::FramebufferTexture2D:
             return "glFramebufferTexture2D";
-        case EntryPoint::GLFramebufferTexture2DMultisampleEXT:
+        case EntryPoint::FramebufferTexture2DMultisampleEXT:
             return "glFramebufferTexture2DMultisampleEXT";
-        case EntryPoint::GLFramebufferTexture2DOES:
+        case EntryPoint::FramebufferTexture2DOES:
             return "glFramebufferTexture2DOES";
-        case EntryPoint::GLFramebufferTexture3D:
+        case EntryPoint::FramebufferTexture3D:
             return "glFramebufferTexture3D";
-        case EntryPoint::GLFramebufferTexture3DOES:
+        case EntryPoint::FramebufferTexture3DOES:
             return "glFramebufferTexture3DOES";
-        case EntryPoint::GLFramebufferTextureEXT:
+        case EntryPoint::FramebufferTextureEXT:
             return "glFramebufferTextureEXT";
-        case EntryPoint::GLFramebufferTextureLayer:
+        case EntryPoint::FramebufferTextureLayer:
             return "glFramebufferTextureLayer";
-        case EntryPoint::GLFramebufferTextureMultiviewOVR:
+        case EntryPoint::FramebufferTextureMultiviewOVR:
             return "glFramebufferTextureMultiviewOVR";
-        case EntryPoint::GLFrontFace:
+        case EntryPoint::FrontFace:
             return "glFrontFace";
-        case EntryPoint::GLFrustum:
+        case EntryPoint::Frustum:
             return "glFrustum";
-        case EntryPoint::GLFrustumf:
+        case EntryPoint::Frustumf:
             return "glFrustumf";
-        case EntryPoint::GLFrustumx:
+        case EntryPoint::Frustumx:
             return "glFrustumx";
-        case EntryPoint::GLGenBuffers:
+        case EntryPoint::GenBuffers:
             return "glGenBuffers";
-        case EntryPoint::GLGenFencesNV:
+        case EntryPoint::GenFencesNV:
             return "glGenFencesNV";
-        case EntryPoint::GLGenFramebuffers:
+        case EntryPoint::GenFramebuffers:
             return "glGenFramebuffers";
-        case EntryPoint::GLGenFramebuffersOES:
+        case EntryPoint::GenFramebuffersOES:
             return "glGenFramebuffersOES";
-        case EntryPoint::GLGenLists:
+        case EntryPoint::GenLists:
             return "glGenLists";
-        case EntryPoint::GLGenProgramPipelines:
+        case EntryPoint::GenProgramPipelines:
             return "glGenProgramPipelines";
-        case EntryPoint::GLGenProgramPipelinesEXT:
-            return "glGenProgramPipelinesEXT";
-        case EntryPoint::GLGenQueries:
+        case EntryPoint::GenQueries:
             return "glGenQueries";
-        case EntryPoint::GLGenQueriesEXT:
+        case EntryPoint::GenQueriesEXT:
             return "glGenQueriesEXT";
-        case EntryPoint::GLGenRenderbuffers:
+        case EntryPoint::GenRenderbuffers:
             return "glGenRenderbuffers";
-        case EntryPoint::GLGenRenderbuffersOES:
+        case EntryPoint::GenRenderbuffersOES:
             return "glGenRenderbuffersOES";
-        case EntryPoint::GLGenSamplers:
+        case EntryPoint::GenSamplers:
             return "glGenSamplers";
-        case EntryPoint::GLGenSemaphoresEXT:
+        case EntryPoint::GenSemaphoresEXT:
             return "glGenSemaphoresEXT";
-        case EntryPoint::GLGenTextures:
+        case EntryPoint::GenTextures:
             return "glGenTextures";
-        case EntryPoint::GLGenTransformFeedbacks:
+        case EntryPoint::GenTransformFeedbacks:
             return "glGenTransformFeedbacks";
-        case EntryPoint::GLGenVertexArrays:
+        case EntryPoint::GenVertexArrays:
             return "glGenVertexArrays";
-        case EntryPoint::GLGenVertexArraysOES:
+        case EntryPoint::GenVertexArraysOES:
             return "glGenVertexArraysOES";
-        case EntryPoint::GLGenerateMipmap:
+        case EntryPoint::GenerateMipmap:
             return "glGenerateMipmap";
-        case EntryPoint::GLGenerateMipmapOES:
+        case EntryPoint::GenerateMipmapOES:
             return "glGenerateMipmapOES";
-        case EntryPoint::GLGenerateTextureMipmap:
+        case EntryPoint::GenerateTextureMipmap:
             return "glGenerateTextureMipmap";
-        case EntryPoint::GLGetActiveAtomicCounterBufferiv:
+        case EntryPoint::GetActiveAtomicCounterBufferiv:
             return "glGetActiveAtomicCounterBufferiv";
-        case EntryPoint::GLGetActiveAttrib:
+        case EntryPoint::GetActiveAttrib:
             return "glGetActiveAttrib";
-        case EntryPoint::GLGetActiveSubroutineName:
+        case EntryPoint::GetActiveSubroutineName:
             return "glGetActiveSubroutineName";
-        case EntryPoint::GLGetActiveSubroutineUniformName:
+        case EntryPoint::GetActiveSubroutineUniformName:
             return "glGetActiveSubroutineUniformName";
-        case EntryPoint::GLGetActiveSubroutineUniformiv:
+        case EntryPoint::GetActiveSubroutineUniformiv:
             return "glGetActiveSubroutineUniformiv";
-        case EntryPoint::GLGetActiveUniform:
+        case EntryPoint::GetActiveUniform:
             return "glGetActiveUniform";
-        case EntryPoint::GLGetActiveUniformBlockName:
+        case EntryPoint::GetActiveUniformBlockName:
             return "glGetActiveUniformBlockName";
-        case EntryPoint::GLGetActiveUniformBlockiv:
+        case EntryPoint::GetActiveUniformBlockiv:
             return "glGetActiveUniformBlockiv";
-        case EntryPoint::GLGetActiveUniformBlockivRobustANGLE:
+        case EntryPoint::GetActiveUniformBlockivRobustANGLE:
             return "glGetActiveUniformBlockivRobustANGLE";
-        case EntryPoint::GLGetActiveUniformName:
+        case EntryPoint::GetActiveUniformName:
             return "glGetActiveUniformName";
-        case EntryPoint::GLGetActiveUniformsiv:
+        case EntryPoint::GetActiveUniformsiv:
             return "glGetActiveUniformsiv";
-        case EntryPoint::GLGetAttachedShaders:
+        case EntryPoint::GetAttachedShaders:
             return "glGetAttachedShaders";
-        case EntryPoint::GLGetAttribLocation:
+        case EntryPoint::GetAttribLocation:
             return "glGetAttribLocation";
-        case EntryPoint::GLGetBooleani_v:
+        case EntryPoint::GetBooleani_v:
             return "glGetBooleani_v";
-        case EntryPoint::GLGetBooleani_vRobustANGLE:
+        case EntryPoint::GetBooleani_vRobustANGLE:
             return "glGetBooleani_vRobustANGLE";
-        case EntryPoint::GLGetBooleanv:
+        case EntryPoint::GetBooleanv:
             return "glGetBooleanv";
-        case EntryPoint::GLGetBooleanvRobustANGLE:
+        case EntryPoint::GetBooleanvRobustANGLE:
             return "glGetBooleanvRobustANGLE";
-        case EntryPoint::GLGetBufferParameteri64v:
+        case EntryPoint::GetBufferParameteri64v:
             return "glGetBufferParameteri64v";
-        case EntryPoint::GLGetBufferParameteri64vRobustANGLE:
+        case EntryPoint::GetBufferParameteri64vRobustANGLE:
             return "glGetBufferParameteri64vRobustANGLE";
-        case EntryPoint::GLGetBufferParameteriv:
+        case EntryPoint::GetBufferParameteriv:
             return "glGetBufferParameteriv";
-        case EntryPoint::GLGetBufferParameterivRobustANGLE:
+        case EntryPoint::GetBufferParameterivRobustANGLE:
             return "glGetBufferParameterivRobustANGLE";
-        case EntryPoint::GLGetBufferPointerv:
+        case EntryPoint::GetBufferPointerv:
             return "glGetBufferPointerv";
-        case EntryPoint::GLGetBufferPointervOES:
+        case EntryPoint::GetBufferPointervOES:
             return "glGetBufferPointervOES";
-        case EntryPoint::GLGetBufferPointervRobustANGLE:
+        case EntryPoint::GetBufferPointervRobustANGLE:
             return "glGetBufferPointervRobustANGLE";
-        case EntryPoint::GLGetBufferSubData:
+        case EntryPoint::GetBufferSubData:
             return "glGetBufferSubData";
-        case EntryPoint::GLGetClipPlane:
+        case EntryPoint::GetClipPlane:
             return "glGetClipPlane";
-        case EntryPoint::GLGetClipPlanef:
+        case EntryPoint::GetClipPlanef:
             return "glGetClipPlanef";
-        case EntryPoint::GLGetClipPlanex:
+        case EntryPoint::GetClipPlanex:
             return "glGetClipPlanex";
-        case EntryPoint::GLGetCompressedTexImage:
+        case EntryPoint::GetCompressedTexImage:
             return "glGetCompressedTexImage";
-        case EntryPoint::GLGetCompressedTextureImage:
+        case EntryPoint::GetCompressedTextureImage:
             return "glGetCompressedTextureImage";
-        case EntryPoint::GLGetCompressedTextureSubImage:
+        case EntryPoint::GetCompressedTextureSubImage:
             return "glGetCompressedTextureSubImage";
-        case EntryPoint::GLGetDebugMessageLog:
+        case EntryPoint::GetDebugMessageLog:
             return "glGetDebugMessageLog";
-        case EntryPoint::GLGetDebugMessageLogKHR:
+        case EntryPoint::GetDebugMessageLogKHR:
             return "glGetDebugMessageLogKHR";
-        case EntryPoint::GLGetDoublei_v:
+        case EntryPoint::GetDoublei_v:
             return "glGetDoublei_v";
-        case EntryPoint::GLGetDoublev:
+        case EntryPoint::GetDoublev:
             return "glGetDoublev";
-        case EntryPoint::GLGetError:
+        case EntryPoint::GetError:
             return "glGetError";
-        case EntryPoint::GLGetFenceivNV:
+        case EntryPoint::GetFenceivNV:
             return "glGetFenceivNV";
-        case EntryPoint::GLGetFixedv:
+        case EntryPoint::GetFixedv:
             return "glGetFixedv";
-        case EntryPoint::GLGetFloati_v:
+        case EntryPoint::GetFloati_v:
             return "glGetFloati_v";
-        case EntryPoint::GLGetFloatv:
+        case EntryPoint::GetFloatv:
             return "glGetFloatv";
-        case EntryPoint::GLGetFloatvRobustANGLE:
+        case EntryPoint::GetFloatvRobustANGLE:
             return "glGetFloatvRobustANGLE";
-        case EntryPoint::GLGetFragDataIndex:
+        case EntryPoint::GetFragDataIndex:
             return "glGetFragDataIndex";
-        case EntryPoint::GLGetFragDataIndexEXT:
+        case EntryPoint::GetFragDataIndexEXT:
             return "glGetFragDataIndexEXT";
-        case EntryPoint::GLGetFragDataLocation:
+        case EntryPoint::GetFragDataLocation:
             return "glGetFragDataLocation";
-        case EntryPoint::GLGetFramebufferAttachmentParameteriv:
+        case EntryPoint::GetFramebufferAttachmentParameteriv:
             return "glGetFramebufferAttachmentParameteriv";
-        case EntryPoint::GLGetFramebufferAttachmentParameterivOES:
+        case EntryPoint::GetFramebufferAttachmentParameterivOES:
             return "glGetFramebufferAttachmentParameterivOES";
-        case EntryPoint::GLGetFramebufferAttachmentParameterivRobustANGLE:
+        case EntryPoint::GetFramebufferAttachmentParameterivRobustANGLE:
             return "glGetFramebufferAttachmentParameterivRobustANGLE";
-        case EntryPoint::GLGetFramebufferParameteriv:
+        case EntryPoint::GetFramebufferParameteriv:
             return "glGetFramebufferParameteriv";
-        case EntryPoint::GLGetFramebufferParameterivRobustANGLE:
+        case EntryPoint::GetFramebufferParameterivRobustANGLE:
             return "glGetFramebufferParameterivRobustANGLE";
-        case EntryPoint::GLGetGraphicsResetStatus:
+        case EntryPoint::GetGraphicsResetStatus:
             return "glGetGraphicsResetStatus";
-        case EntryPoint::GLGetGraphicsResetStatusEXT:
+        case EntryPoint::GetGraphicsResetStatusEXT:
             return "glGetGraphicsResetStatusEXT";
-        case EntryPoint::GLGetInteger64i_v:
+        case EntryPoint::GetInteger64i_v:
             return "glGetInteger64i_v";
-        case EntryPoint::GLGetInteger64i_vRobustANGLE:
+        case EntryPoint::GetInteger64i_vRobustANGLE:
             return "glGetInteger64i_vRobustANGLE";
-        case EntryPoint::GLGetInteger64v:
+        case EntryPoint::GetInteger64v:
             return "glGetInteger64v";
-        case EntryPoint::GLGetInteger64vEXT:
+        case EntryPoint::GetInteger64vEXT:
             return "glGetInteger64vEXT";
-        case EntryPoint::GLGetInteger64vRobustANGLE:
+        case EntryPoint::GetInteger64vRobustANGLE:
             return "glGetInteger64vRobustANGLE";
-        case EntryPoint::GLGetIntegeri_v:
+        case EntryPoint::GetIntegeri_v:
             return "glGetIntegeri_v";
-        case EntryPoint::GLGetIntegeri_vRobustANGLE:
+        case EntryPoint::GetIntegeri_vRobustANGLE:
             return "glGetIntegeri_vRobustANGLE";
-        case EntryPoint::GLGetIntegerv:
+        case EntryPoint::GetIntegerv:
             return "glGetIntegerv";
-        case EntryPoint::GLGetIntegervRobustANGLE:
+        case EntryPoint::GetIntegervRobustANGLE:
             return "glGetIntegervRobustANGLE";
-        case EntryPoint::GLGetInternalformati64v:
+        case EntryPoint::GetInternalformati64v:
             return "glGetInternalformati64v";
-        case EntryPoint::GLGetInternalformativ:
+        case EntryPoint::GetInternalformativ:
             return "glGetInternalformativ";
-        case EntryPoint::GLGetInternalformativRobustANGLE:
+        case EntryPoint::GetInternalformativRobustANGLE:
             return "glGetInternalformativRobustANGLE";
-        case EntryPoint::GLGetLightfv:
+        case EntryPoint::GetLightfv:
             return "glGetLightfv";
-        case EntryPoint::GLGetLightiv:
+        case EntryPoint::GetLightiv:
             return "glGetLightiv";
-        case EntryPoint::GLGetLightxv:
+        case EntryPoint::GetLightxv:
             return "glGetLightxv";
-        case EntryPoint::GLGetMapdv:
+        case EntryPoint::GetMapdv:
             return "glGetMapdv";
-        case EntryPoint::GLGetMapfv:
+        case EntryPoint::GetMapfv:
             return "glGetMapfv";
-        case EntryPoint::GLGetMapiv:
+        case EntryPoint::GetMapiv:
             return "glGetMapiv";
-        case EntryPoint::GLGetMaterialfv:
+        case EntryPoint::GetMaterialfv:
             return "glGetMaterialfv";
-        case EntryPoint::GLGetMaterialiv:
+        case EntryPoint::GetMaterialiv:
             return "glGetMaterialiv";
-        case EntryPoint::GLGetMaterialxv:
+        case EntryPoint::GetMaterialxv:
             return "glGetMaterialxv";
-        case EntryPoint::GLGetMemoryObjectParameterivEXT:
+        case EntryPoint::GetMemoryObjectParameterivEXT:
             return "glGetMemoryObjectParameterivEXT";
-        case EntryPoint::GLGetMultisamplefv:
+        case EntryPoint::GetMultisamplefv:
             return "glGetMultisamplefv";
-        case EntryPoint::GLGetMultisamplefvANGLE:
+        case EntryPoint::GetMultisamplefvANGLE:
             return "glGetMultisamplefvANGLE";
-        case EntryPoint::GLGetMultisamplefvRobustANGLE:
+        case EntryPoint::GetMultisamplefvRobustANGLE:
             return "glGetMultisamplefvRobustANGLE";
-        case EntryPoint::GLGetNamedBufferParameteri64v:
+        case EntryPoint::GetNamedBufferParameteri64v:
             return "glGetNamedBufferParameteri64v";
-        case EntryPoint::GLGetNamedBufferParameteriv:
+        case EntryPoint::GetNamedBufferParameteriv:
             return "glGetNamedBufferParameteriv";
-        case EntryPoint::GLGetNamedBufferPointerv:
+        case EntryPoint::GetNamedBufferPointerv:
             return "glGetNamedBufferPointerv";
-        case EntryPoint::GLGetNamedBufferSubData:
+        case EntryPoint::GetNamedBufferSubData:
             return "glGetNamedBufferSubData";
-        case EntryPoint::GLGetNamedFramebufferAttachmentParameteriv:
+        case EntryPoint::GetNamedFramebufferAttachmentParameteriv:
             return "glGetNamedFramebufferAttachmentParameteriv";
-        case EntryPoint::GLGetNamedFramebufferParameteriv:
+        case EntryPoint::GetNamedFramebufferParameteriv:
             return "glGetNamedFramebufferParameteriv";
-        case EntryPoint::GLGetNamedRenderbufferParameteriv:
+        case EntryPoint::GetNamedRenderbufferParameteriv:
             return "glGetNamedRenderbufferParameteriv";
-        case EntryPoint::GLGetObjectLabel:
+        case EntryPoint::GetObjectLabel:
             return "glGetObjectLabel";
-        case EntryPoint::GLGetObjectLabelEXT:
-            return "glGetObjectLabelEXT";
-        case EntryPoint::GLGetObjectLabelKHR:
+        case EntryPoint::GetObjectLabelKHR:
             return "glGetObjectLabelKHR";
-        case EntryPoint::GLGetObjectPtrLabel:
+        case EntryPoint::GetObjectPtrLabel:
             return "glGetObjectPtrLabel";
-        case EntryPoint::GLGetObjectPtrLabelKHR:
+        case EntryPoint::GetObjectPtrLabelKHR:
             return "glGetObjectPtrLabelKHR";
-        case EntryPoint::GLGetPixelMapfv:
+        case EntryPoint::GetPixelMapfv:
             return "glGetPixelMapfv";
-        case EntryPoint::GLGetPixelMapuiv:
+        case EntryPoint::GetPixelMapuiv:
             return "glGetPixelMapuiv";
-        case EntryPoint::GLGetPixelMapusv:
+        case EntryPoint::GetPixelMapusv:
             return "glGetPixelMapusv";
-        case EntryPoint::GLGetPointerv:
+        case EntryPoint::GetPointerv:
             return "glGetPointerv";
-        case EntryPoint::GLGetPointervKHR:
+        case EntryPoint::GetPointervKHR:
             return "glGetPointervKHR";
-        case EntryPoint::GLGetPointervRobustANGLERobustANGLE:
+        case EntryPoint::GetPointervRobustANGLERobustANGLE:
             return "glGetPointervRobustANGLERobustANGLE";
-        case EntryPoint::GLGetPolygonStipple:
+        case EntryPoint::GetPolygonStipple:
             return "glGetPolygonStipple";
-        case EntryPoint::GLGetProgramBinary:
+        case EntryPoint::GetProgramBinary:
             return "glGetProgramBinary";
-        case EntryPoint::GLGetProgramBinaryOES:
+        case EntryPoint::GetProgramBinaryOES:
             return "glGetProgramBinaryOES";
-        case EntryPoint::GLGetProgramInfoLog:
+        case EntryPoint::GetProgramInfoLog:
             return "glGetProgramInfoLog";
-        case EntryPoint::GLGetProgramInterfaceiv:
+        case EntryPoint::GetProgramInterfaceiv:
             return "glGetProgramInterfaceiv";
-        case EntryPoint::GLGetProgramInterfaceivRobustANGLE:
+        case EntryPoint::GetProgramInterfaceivRobustANGLE:
             return "glGetProgramInterfaceivRobustANGLE";
-        case EntryPoint::GLGetProgramPipelineInfoLog:
+        case EntryPoint::GetProgramPipelineInfoLog:
             return "glGetProgramPipelineInfoLog";
-        case EntryPoint::GLGetProgramPipelineInfoLogEXT:
-            return "glGetProgramPipelineInfoLogEXT";
-        case EntryPoint::GLGetProgramPipelineiv:
+        case EntryPoint::GetProgramPipelineiv:
             return "glGetProgramPipelineiv";
-        case EntryPoint::GLGetProgramPipelineivEXT:
-            return "glGetProgramPipelineivEXT";
-        case EntryPoint::GLGetProgramResourceIndex:
+        case EntryPoint::GetProgramResourceIndex:
             return "glGetProgramResourceIndex";
-        case EntryPoint::GLGetProgramResourceLocation:
+        case EntryPoint::GetProgramResourceLocation:
             return "glGetProgramResourceLocation";
-        case EntryPoint::GLGetProgramResourceLocationIndex:
+        case EntryPoint::GetProgramResourceLocationIndex:
             return "glGetProgramResourceLocationIndex";
-        case EntryPoint::GLGetProgramResourceLocationIndexEXT:
+        case EntryPoint::GetProgramResourceLocationIndexEXT:
             return "glGetProgramResourceLocationIndexEXT";
-        case EntryPoint::GLGetProgramResourceName:
+        case EntryPoint::GetProgramResourceName:
             return "glGetProgramResourceName";
-        case EntryPoint::GLGetProgramResourceiv:
+        case EntryPoint::GetProgramResourceiv:
             return "glGetProgramResourceiv";
-        case EntryPoint::GLGetProgramStageiv:
+        case EntryPoint::GetProgramStageiv:
             return "glGetProgramStageiv";
-        case EntryPoint::GLGetProgramiv:
+        case EntryPoint::GetProgramiv:
             return "glGetProgramiv";
-        case EntryPoint::GLGetProgramivRobustANGLE:
+        case EntryPoint::GetProgramivRobustANGLE:
             return "glGetProgramivRobustANGLE";
-        case EntryPoint::GLGetQueryBufferObjecti64v:
+        case EntryPoint::GetQueryBufferObjecti64v:
             return "glGetQueryBufferObjecti64v";
-        case EntryPoint::GLGetQueryBufferObjectiv:
+        case EntryPoint::GetQueryBufferObjectiv:
             return "glGetQueryBufferObjectiv";
-        case EntryPoint::GLGetQueryBufferObjectui64v:
+        case EntryPoint::GetQueryBufferObjectui64v:
             return "glGetQueryBufferObjectui64v";
-        case EntryPoint::GLGetQueryBufferObjectuiv:
+        case EntryPoint::GetQueryBufferObjectuiv:
             return "glGetQueryBufferObjectuiv";
-        case EntryPoint::GLGetQueryIndexediv:
+        case EntryPoint::GetQueryIndexediv:
             return "glGetQueryIndexediv";
-        case EntryPoint::GLGetQueryObjecti64v:
+        case EntryPoint::GetQueryObjecti64v:
             return "glGetQueryObjecti64v";
-        case EntryPoint::GLGetQueryObjecti64vEXT:
+        case EntryPoint::GetQueryObjecti64vEXT:
             return "glGetQueryObjecti64vEXT";
-        case EntryPoint::GLGetQueryObjecti64vRobustANGLE:
+        case EntryPoint::GetQueryObjecti64vRobustANGLE:
             return "glGetQueryObjecti64vRobustANGLE";
-        case EntryPoint::GLGetQueryObjectiv:
+        case EntryPoint::GetQueryObjectiv:
             return "glGetQueryObjectiv";
-        case EntryPoint::GLGetQueryObjectivEXT:
+        case EntryPoint::GetQueryObjectivEXT:
             return "glGetQueryObjectivEXT";
-        case EntryPoint::GLGetQueryObjectivRobustANGLE:
+        case EntryPoint::GetQueryObjectivRobustANGLE:
             return "glGetQueryObjectivRobustANGLE";
-        case EntryPoint::GLGetQueryObjectui64v:
+        case EntryPoint::GetQueryObjectui64v:
             return "glGetQueryObjectui64v";
-        case EntryPoint::GLGetQueryObjectui64vEXT:
+        case EntryPoint::GetQueryObjectui64vEXT:
             return "glGetQueryObjectui64vEXT";
-        case EntryPoint::GLGetQueryObjectui64vRobustANGLE:
+        case EntryPoint::GetQueryObjectui64vRobustANGLE:
             return "glGetQueryObjectui64vRobustANGLE";
-        case EntryPoint::GLGetQueryObjectuiv:
+        case EntryPoint::GetQueryObjectuiv:
             return "glGetQueryObjectuiv";
-        case EntryPoint::GLGetQueryObjectuivEXT:
+        case EntryPoint::GetQueryObjectuivEXT:
             return "glGetQueryObjectuivEXT";
-        case EntryPoint::GLGetQueryObjectuivRobustANGLE:
+        case EntryPoint::GetQueryObjectuivRobustANGLE:
             return "glGetQueryObjectuivRobustANGLE";
-        case EntryPoint::GLGetQueryiv:
+        case EntryPoint::GetQueryiv:
             return "glGetQueryiv";
-        case EntryPoint::GLGetQueryivEXT:
+        case EntryPoint::GetQueryivEXT:
             return "glGetQueryivEXT";
-        case EntryPoint::GLGetQueryivRobustANGLE:
+        case EntryPoint::GetQueryivRobustANGLE:
             return "glGetQueryivRobustANGLE";
-        case EntryPoint::GLGetRenderbufferImageANGLE:
+        case EntryPoint::GetRenderbufferImageANGLE:
             return "glGetRenderbufferImageANGLE";
-        case EntryPoint::GLGetRenderbufferParameteriv:
+        case EntryPoint::GetRenderbufferParameteriv:
             return "glGetRenderbufferParameteriv";
-        case EntryPoint::GLGetRenderbufferParameterivOES:
+        case EntryPoint::GetRenderbufferParameterivOES:
             return "glGetRenderbufferParameterivOES";
-        case EntryPoint::GLGetRenderbufferParameterivRobustANGLE:
+        case EntryPoint::GetRenderbufferParameterivRobustANGLE:
             return "glGetRenderbufferParameterivRobustANGLE";
-        case EntryPoint::GLGetSamplerParameterIiv:
+        case EntryPoint::GetSamplerParameterIiv:
             return "glGetSamplerParameterIiv";
-        case EntryPoint::GLGetSamplerParameterIivEXT:
-            return "glGetSamplerParameterIivEXT";
-        case EntryPoint::GLGetSamplerParameterIivOES:
+        case EntryPoint::GetSamplerParameterIivOES:
             return "glGetSamplerParameterIivOES";
-        case EntryPoint::GLGetSamplerParameterIivRobustANGLE:
+        case EntryPoint::GetSamplerParameterIivRobustANGLE:
             return "glGetSamplerParameterIivRobustANGLE";
-        case EntryPoint::GLGetSamplerParameterIuiv:
+        case EntryPoint::GetSamplerParameterIuiv:
             return "glGetSamplerParameterIuiv";
-        case EntryPoint::GLGetSamplerParameterIuivEXT:
-            return "glGetSamplerParameterIuivEXT";
-        case EntryPoint::GLGetSamplerParameterIuivOES:
+        case EntryPoint::GetSamplerParameterIuivOES:
             return "glGetSamplerParameterIuivOES";
-        case EntryPoint::GLGetSamplerParameterIuivRobustANGLE:
+        case EntryPoint::GetSamplerParameterIuivRobustANGLE:
             return "glGetSamplerParameterIuivRobustANGLE";
-        case EntryPoint::GLGetSamplerParameterfv:
+        case EntryPoint::GetSamplerParameterfv:
             return "glGetSamplerParameterfv";
-        case EntryPoint::GLGetSamplerParameterfvRobustANGLE:
+        case EntryPoint::GetSamplerParameterfvRobustANGLE:
             return "glGetSamplerParameterfvRobustANGLE";
-        case EntryPoint::GLGetSamplerParameteriv:
+        case EntryPoint::GetSamplerParameteriv:
             return "glGetSamplerParameteriv";
-        case EntryPoint::GLGetSamplerParameterivRobustANGLE:
+        case EntryPoint::GetSamplerParameterivRobustANGLE:
             return "glGetSamplerParameterivRobustANGLE";
-        case EntryPoint::GLGetSemaphoreParameterui64vEXT:
+        case EntryPoint::GetSemaphoreParameterui64vEXT:
             return "glGetSemaphoreParameterui64vEXT";
-        case EntryPoint::GLGetShaderInfoLog:
+        case EntryPoint::GetShaderInfoLog:
             return "glGetShaderInfoLog";
-        case EntryPoint::GLGetShaderPrecisionFormat:
+        case EntryPoint::GetShaderPrecisionFormat:
             return "glGetShaderPrecisionFormat";
-        case EntryPoint::GLGetShaderSource:
+        case EntryPoint::GetShaderSource:
             return "glGetShaderSource";
-        case EntryPoint::GLGetShaderiv:
+        case EntryPoint::GetShaderiv:
             return "glGetShaderiv";
-        case EntryPoint::GLGetShaderivRobustANGLE:
+        case EntryPoint::GetShaderivRobustANGLE:
             return "glGetShaderivRobustANGLE";
-        case EntryPoint::GLGetString:
+        case EntryPoint::GetString:
             return "glGetString";
-        case EntryPoint::GLGetStringi:
+        case EntryPoint::GetStringi:
             return "glGetStringi";
-        case EntryPoint::GLGetSubroutineIndex:
+        case EntryPoint::GetSubroutineIndex:
             return "glGetSubroutineIndex";
-        case EntryPoint::GLGetSubroutineUniformLocation:
+        case EntryPoint::GetSubroutineUniformLocation:
             return "glGetSubroutineUniformLocation";
-        case EntryPoint::GLGetSynciv:
+        case EntryPoint::GetSynciv:
             return "glGetSynciv";
-        case EntryPoint::GLGetTexEnvfv:
+        case EntryPoint::GetTexEnvfv:
             return "glGetTexEnvfv";
-        case EntryPoint::GLGetTexEnviv:
+        case EntryPoint::GetTexEnviv:
             return "glGetTexEnviv";
-        case EntryPoint::GLGetTexEnvxv:
+        case EntryPoint::GetTexEnvxv:
             return "glGetTexEnvxv";
-        case EntryPoint::GLGetTexGendv:
+        case EntryPoint::GetTexGendv:
             return "glGetTexGendv";
-        case EntryPoint::GLGetTexGenfv:
+        case EntryPoint::GetTexGenfv:
             return "glGetTexGenfv";
-        case EntryPoint::GLGetTexGenfvOES:
+        case EntryPoint::GetTexGenfvOES:
             return "glGetTexGenfvOES";
-        case EntryPoint::GLGetTexGeniv:
+        case EntryPoint::GetTexGeniv:
             return "glGetTexGeniv";
-        case EntryPoint::GLGetTexGenivOES:
+        case EntryPoint::GetTexGenivOES:
             return "glGetTexGenivOES";
-        case EntryPoint::GLGetTexGenxvOES:
+        case EntryPoint::GetTexGenxvOES:
             return "glGetTexGenxvOES";
-        case EntryPoint::GLGetTexImage:
+        case EntryPoint::GetTexImage:
             return "glGetTexImage";
-        case EntryPoint::GLGetTexImageANGLE:
+        case EntryPoint::GetTexImageANGLE:
             return "glGetTexImageANGLE";
-        case EntryPoint::GLGetTexLevelParameterfv:
+        case EntryPoint::GetTexLevelParameterfv:
             return "glGetTexLevelParameterfv";
-        case EntryPoint::GLGetTexLevelParameterfvANGLE:
+        case EntryPoint::GetTexLevelParameterfvANGLE:
             return "glGetTexLevelParameterfvANGLE";
-        case EntryPoint::GLGetTexLevelParameterfvRobustANGLE:
+        case EntryPoint::GetTexLevelParameterfvRobustANGLE:
             return "glGetTexLevelParameterfvRobustANGLE";
-        case EntryPoint::GLGetTexLevelParameteriv:
+        case EntryPoint::GetTexLevelParameteriv:
             return "glGetTexLevelParameteriv";
-        case EntryPoint::GLGetTexLevelParameterivANGLE:
+        case EntryPoint::GetTexLevelParameterivANGLE:
             return "glGetTexLevelParameterivANGLE";
-        case EntryPoint::GLGetTexLevelParameterivRobustANGLE:
+        case EntryPoint::GetTexLevelParameterivRobustANGLE:
             return "glGetTexLevelParameterivRobustANGLE";
-        case EntryPoint::GLGetTexParameterIiv:
+        case EntryPoint::GetTexParameterIiv:
             return "glGetTexParameterIiv";
-        case EntryPoint::GLGetTexParameterIivEXT:
-            return "glGetTexParameterIivEXT";
-        case EntryPoint::GLGetTexParameterIivOES:
+        case EntryPoint::GetTexParameterIivOES:
             return "glGetTexParameterIivOES";
-        case EntryPoint::GLGetTexParameterIivRobustANGLE:
+        case EntryPoint::GetTexParameterIivRobustANGLE:
             return "glGetTexParameterIivRobustANGLE";
-        case EntryPoint::GLGetTexParameterIuiv:
+        case EntryPoint::GetTexParameterIuiv:
             return "glGetTexParameterIuiv";
-        case EntryPoint::GLGetTexParameterIuivEXT:
-            return "glGetTexParameterIuivEXT";
-        case EntryPoint::GLGetTexParameterIuivOES:
+        case EntryPoint::GetTexParameterIuivOES:
             return "glGetTexParameterIuivOES";
-        case EntryPoint::GLGetTexParameterIuivRobustANGLE:
+        case EntryPoint::GetTexParameterIuivRobustANGLE:
             return "glGetTexParameterIuivRobustANGLE";
-        case EntryPoint::GLGetTexParameterfv:
+        case EntryPoint::GetTexParameterfv:
             return "glGetTexParameterfv";
-        case EntryPoint::GLGetTexParameterfvRobustANGLE:
+        case EntryPoint::GetTexParameterfvRobustANGLE:
             return "glGetTexParameterfvRobustANGLE";
-        case EntryPoint::GLGetTexParameteriv:
+        case EntryPoint::GetTexParameteriv:
             return "glGetTexParameteriv";
-        case EntryPoint::GLGetTexParameterivRobustANGLE:
+        case EntryPoint::GetTexParameterivRobustANGLE:
             return "glGetTexParameterivRobustANGLE";
-        case EntryPoint::GLGetTexParameterxv:
+        case EntryPoint::GetTexParameterxv:
             return "glGetTexParameterxv";
-        case EntryPoint::GLGetTextureImage:
+        case EntryPoint::GetTextureImage:
             return "glGetTextureImage";
-        case EntryPoint::GLGetTextureLevelParameterfv:
+        case EntryPoint::GetTextureLevelParameterfv:
             return "glGetTextureLevelParameterfv";
-        case EntryPoint::GLGetTextureLevelParameteriv:
+        case EntryPoint::GetTextureLevelParameteriv:
             return "glGetTextureLevelParameteriv";
-        case EntryPoint::GLGetTextureParameterIiv:
+        case EntryPoint::GetTextureParameterIiv:
             return "glGetTextureParameterIiv";
-        case EntryPoint::GLGetTextureParameterIuiv:
+        case EntryPoint::GetTextureParameterIuiv:
             return "glGetTextureParameterIuiv";
-        case EntryPoint::GLGetTextureParameterfv:
+        case EntryPoint::GetTextureParameterfv:
             return "glGetTextureParameterfv";
-        case EntryPoint::GLGetTextureParameteriv:
+        case EntryPoint::GetTextureParameteriv:
             return "glGetTextureParameteriv";
-        case EntryPoint::GLGetTextureSubImage:
+        case EntryPoint::GetTextureSubImage:
             return "glGetTextureSubImage";
-        case EntryPoint::GLGetTransformFeedbackVarying:
+        case EntryPoint::GetTransformFeedbackVarying:
             return "glGetTransformFeedbackVarying";
-        case EntryPoint::GLGetTransformFeedbacki64_v:
+        case EntryPoint::GetTransformFeedbacki64_v:
             return "glGetTransformFeedbacki64_v";
-        case EntryPoint::GLGetTransformFeedbacki_v:
+        case EntryPoint::GetTransformFeedbacki_v:
             return "glGetTransformFeedbacki_v";
-        case EntryPoint::GLGetTransformFeedbackiv:
+        case EntryPoint::GetTransformFeedbackiv:
             return "glGetTransformFeedbackiv";
-        case EntryPoint::GLGetTranslatedShaderSourceANGLE:
+        case EntryPoint::GetTranslatedShaderSourceANGLE:
             return "glGetTranslatedShaderSourceANGLE";
-        case EntryPoint::GLGetUniformBlockIndex:
+        case EntryPoint::GetUniformBlockIndex:
             return "glGetUniformBlockIndex";
-        case EntryPoint::GLGetUniformIndices:
+        case EntryPoint::GetUniformIndices:
             return "glGetUniformIndices";
-        case EntryPoint::GLGetUniformLocation:
+        case EntryPoint::GetUniformLocation:
             return "glGetUniformLocation";
-        case EntryPoint::GLGetUniformSubroutineuiv:
+        case EntryPoint::GetUniformSubroutineuiv:
             return "glGetUniformSubroutineuiv";
-        case EntryPoint::GLGetUniformdv:
+        case EntryPoint::GetUniformdv:
             return "glGetUniformdv";
-        case EntryPoint::GLGetUniformfv:
+        case EntryPoint::GetUniformfv:
             return "glGetUniformfv";
-        case EntryPoint::GLGetUniformfvRobustANGLE:
+        case EntryPoint::GetUniformfvRobustANGLE:
             return "glGetUniformfvRobustANGLE";
-        case EntryPoint::GLGetUniformiv:
+        case EntryPoint::GetUniformiv:
             return "glGetUniformiv";
-        case EntryPoint::GLGetUniformivRobustANGLE:
+        case EntryPoint::GetUniformivRobustANGLE:
             return "glGetUniformivRobustANGLE";
-        case EntryPoint::GLGetUniformuiv:
+        case EntryPoint::GetUniformuiv:
             return "glGetUniformuiv";
-        case EntryPoint::GLGetUniformuivRobustANGLE:
+        case EntryPoint::GetUniformuivRobustANGLE:
             return "glGetUniformuivRobustANGLE";
-        case EntryPoint::GLGetUnsignedBytei_vEXT:
+        case EntryPoint::GetUnsignedBytei_vEXT:
             return "glGetUnsignedBytei_vEXT";
-        case EntryPoint::GLGetUnsignedBytevEXT:
+        case EntryPoint::GetUnsignedBytevEXT:
             return "glGetUnsignedBytevEXT";
-        case EntryPoint::GLGetVertexArrayIndexed64iv:
+        case EntryPoint::GetVertexArrayIndexed64iv:
             return "glGetVertexArrayIndexed64iv";
-        case EntryPoint::GLGetVertexArrayIndexediv:
+        case EntryPoint::GetVertexArrayIndexediv:
             return "glGetVertexArrayIndexediv";
-        case EntryPoint::GLGetVertexArrayiv:
+        case EntryPoint::GetVertexArrayiv:
             return "glGetVertexArrayiv";
-        case EntryPoint::GLGetVertexAttribIiv:
+        case EntryPoint::GetVertexAttribIiv:
             return "glGetVertexAttribIiv";
-        case EntryPoint::GLGetVertexAttribIivRobustANGLE:
+        case EntryPoint::GetVertexAttribIivRobustANGLE:
             return "glGetVertexAttribIivRobustANGLE";
-        case EntryPoint::GLGetVertexAttribIuiv:
+        case EntryPoint::GetVertexAttribIuiv:
             return "glGetVertexAttribIuiv";
-        case EntryPoint::GLGetVertexAttribIuivRobustANGLE:
+        case EntryPoint::GetVertexAttribIuivRobustANGLE:
             return "glGetVertexAttribIuivRobustANGLE";
-        case EntryPoint::GLGetVertexAttribLdv:
+        case EntryPoint::GetVertexAttribLdv:
             return "glGetVertexAttribLdv";
-        case EntryPoint::GLGetVertexAttribPointerv:
+        case EntryPoint::GetVertexAttribPointerv:
             return "glGetVertexAttribPointerv";
-        case EntryPoint::GLGetVertexAttribPointervRobustANGLE:
+        case EntryPoint::GetVertexAttribPointervRobustANGLE:
             return "glGetVertexAttribPointervRobustANGLE";
-        case EntryPoint::GLGetVertexAttribdv:
+        case EntryPoint::GetVertexAttribdv:
             return "glGetVertexAttribdv";
-        case EntryPoint::GLGetVertexAttribfv:
+        case EntryPoint::GetVertexAttribfv:
             return "glGetVertexAttribfv";
-        case EntryPoint::GLGetVertexAttribfvRobustANGLE:
+        case EntryPoint::GetVertexAttribfvRobustANGLE:
             return "glGetVertexAttribfvRobustANGLE";
-        case EntryPoint::GLGetVertexAttribiv:
+        case EntryPoint::GetVertexAttribiv:
             return "glGetVertexAttribiv";
-        case EntryPoint::GLGetVertexAttribivRobustANGLE:
+        case EntryPoint::GetVertexAttribivRobustANGLE:
             return "glGetVertexAttribivRobustANGLE";
-        case EntryPoint::GLGetnColorTable:
+        case EntryPoint::GetnColorTable:
             return "glGetnColorTable";
-        case EntryPoint::GLGetnCompressedTexImage:
+        case EntryPoint::GetnCompressedTexImage:
             return "glGetnCompressedTexImage";
-        case EntryPoint::GLGetnConvolutionFilter:
+        case EntryPoint::GetnConvolutionFilter:
             return "glGetnConvolutionFilter";
-        case EntryPoint::GLGetnHistogram:
+        case EntryPoint::GetnHistogram:
             return "glGetnHistogram";
-        case EntryPoint::GLGetnMapdv:
+        case EntryPoint::GetnMapdv:
             return "glGetnMapdv";
-        case EntryPoint::GLGetnMapfv:
+        case EntryPoint::GetnMapfv:
             return "glGetnMapfv";
-        case EntryPoint::GLGetnMapiv:
+        case EntryPoint::GetnMapiv:
             return "glGetnMapiv";
-        case EntryPoint::GLGetnMinmax:
+        case EntryPoint::GetnMinmax:
             return "glGetnMinmax";
-        case EntryPoint::GLGetnPixelMapfv:
+        case EntryPoint::GetnPixelMapfv:
             return "glGetnPixelMapfv";
-        case EntryPoint::GLGetnPixelMapuiv:
+        case EntryPoint::GetnPixelMapuiv:
             return "glGetnPixelMapuiv";
-        case EntryPoint::GLGetnPixelMapusv:
+        case EntryPoint::GetnPixelMapusv:
             return "glGetnPixelMapusv";
-        case EntryPoint::GLGetnPolygonStipple:
+        case EntryPoint::GetnPolygonStipple:
             return "glGetnPolygonStipple";
-        case EntryPoint::GLGetnSeparableFilter:
+        case EntryPoint::GetnSeparableFilter:
             return "glGetnSeparableFilter";
-        case EntryPoint::GLGetnTexImage:
+        case EntryPoint::GetnTexImage:
             return "glGetnTexImage";
-        case EntryPoint::GLGetnUniformdv:
+        case EntryPoint::GetnUniformdv:
             return "glGetnUniformdv";
-        case EntryPoint::GLGetnUniformfv:
+        case EntryPoint::GetnUniformfv:
             return "glGetnUniformfv";
-        case EntryPoint::GLGetnUniformfvEXT:
+        case EntryPoint::GetnUniformfvEXT:
             return "glGetnUniformfvEXT";
-        case EntryPoint::GLGetnUniformfvRobustANGLE:
+        case EntryPoint::GetnUniformfvRobustANGLE:
             return "glGetnUniformfvRobustANGLE";
-        case EntryPoint::GLGetnUniformiv:
+        case EntryPoint::GetnUniformiv:
             return "glGetnUniformiv";
-        case EntryPoint::GLGetnUniformivEXT:
+        case EntryPoint::GetnUniformivEXT:
             return "glGetnUniformivEXT";
-        case EntryPoint::GLGetnUniformivRobustANGLE:
+        case EntryPoint::GetnUniformivRobustANGLE:
             return "glGetnUniformivRobustANGLE";
-        case EntryPoint::GLGetnUniformuiv:
+        case EntryPoint::GetnUniformuiv:
             return "glGetnUniformuiv";
-        case EntryPoint::GLGetnUniformuivRobustANGLE:
+        case EntryPoint::GetnUniformuivRobustANGLE:
             return "glGetnUniformuivRobustANGLE";
-        case EntryPoint::GLHint:
+        case EntryPoint::Hint:
             return "glHint";
-        case EntryPoint::GLImportMemoryFdEXT:
+        case EntryPoint::ImportMemoryFdEXT:
             return "glImportMemoryFdEXT";
-        case EntryPoint::GLImportMemoryZirconHandleANGLE:
+        case EntryPoint::ImportMemoryZirconHandleANGLE:
             return "glImportMemoryZirconHandleANGLE";
-        case EntryPoint::GLImportSemaphoreFdEXT:
+        case EntryPoint::ImportSemaphoreFdEXT:
             return "glImportSemaphoreFdEXT";
-        case EntryPoint::GLImportSemaphoreZirconHandleANGLE:
+        case EntryPoint::ImportSemaphoreZirconHandleANGLE:
             return "glImportSemaphoreZirconHandleANGLE";
-        case EntryPoint::GLIndexMask:
+        case EntryPoint::IndexMask:
             return "glIndexMask";
-        case EntryPoint::GLIndexPointer:
+        case EntryPoint::IndexPointer:
             return "glIndexPointer";
-        case EntryPoint::GLIndexd:
+        case EntryPoint::Indexd:
             return "glIndexd";
-        case EntryPoint::GLIndexdv:
+        case EntryPoint::Indexdv:
             return "glIndexdv";
-        case EntryPoint::GLIndexf:
+        case EntryPoint::Indexf:
             return "glIndexf";
-        case EntryPoint::GLIndexfv:
+        case EntryPoint::Indexfv:
             return "glIndexfv";
-        case EntryPoint::GLIndexi:
+        case EntryPoint::Indexi:
             return "glIndexi";
-        case EntryPoint::GLIndexiv:
+        case EntryPoint::Indexiv:
             return "glIndexiv";
-        case EntryPoint::GLIndexs:
+        case EntryPoint::Indexs:
             return "glIndexs";
-        case EntryPoint::GLIndexsv:
+        case EntryPoint::Indexsv:
             return "glIndexsv";
-        case EntryPoint::GLIndexub:
+        case EntryPoint::Indexub:
             return "glIndexub";
-        case EntryPoint::GLIndexubv:
+        case EntryPoint::Indexubv:
             return "glIndexubv";
-        case EntryPoint::GLInitNames:
+        case EntryPoint::InitNames:
             return "glInitNames";
-        case EntryPoint::GLInsertEventMarkerEXT:
+        case EntryPoint::InsertEventMarkerEXT:
             return "glInsertEventMarkerEXT";
-        case EntryPoint::GLInterleavedArrays:
+        case EntryPoint::InterleavedArrays:
             return "glInterleavedArrays";
-        case EntryPoint::GLInvalid:
+        case EntryPoint::Invalid:
             return "glInvalid";
-        case EntryPoint::GLInvalidateBufferData:
+        case EntryPoint::InvalidateBufferData:
             return "glInvalidateBufferData";
-        case EntryPoint::GLInvalidateBufferSubData:
+        case EntryPoint::InvalidateBufferSubData:
             return "glInvalidateBufferSubData";
-        case EntryPoint::GLInvalidateFramebuffer:
+        case EntryPoint::InvalidateFramebuffer:
             return "glInvalidateFramebuffer";
-        case EntryPoint::GLInvalidateNamedFramebufferData:
+        case EntryPoint::InvalidateNamedFramebufferData:
             return "glInvalidateNamedFramebufferData";
-        case EntryPoint::GLInvalidateNamedFramebufferSubData:
+        case EntryPoint::InvalidateNamedFramebufferSubData:
             return "glInvalidateNamedFramebufferSubData";
-        case EntryPoint::GLInvalidateSubFramebuffer:
+        case EntryPoint::InvalidateSubFramebuffer:
             return "glInvalidateSubFramebuffer";
-        case EntryPoint::GLInvalidateTexImage:
+        case EntryPoint::InvalidateTexImage:
             return "glInvalidateTexImage";
-        case EntryPoint::GLInvalidateTexSubImage:
+        case EntryPoint::InvalidateTexSubImage:
             return "glInvalidateTexSubImage";
-        case EntryPoint::GLInvalidateTextureANGLE:
+        case EntryPoint::InvalidateTextureANGLE:
             return "glInvalidateTextureANGLE";
-        case EntryPoint::GLIsBuffer:
+        case EntryPoint::IsBuffer:
             return "glIsBuffer";
-        case EntryPoint::GLIsEnabled:
+        case EntryPoint::IsEnabled:
             return "glIsEnabled";
-        case EntryPoint::GLIsEnabledi:
+        case EntryPoint::IsEnabledi:
             return "glIsEnabledi";
-        case EntryPoint::GLIsEnablediEXT:
+        case EntryPoint::IsEnablediEXT:
             return "glIsEnablediEXT";
-        case EntryPoint::GLIsEnablediOES:
+        case EntryPoint::IsEnablediOES:
             return "glIsEnablediOES";
-        case EntryPoint::GLIsFenceNV:
+        case EntryPoint::IsFenceNV:
             return "glIsFenceNV";
-        case EntryPoint::GLIsFramebuffer:
+        case EntryPoint::IsFramebuffer:
             return "glIsFramebuffer";
-        case EntryPoint::GLIsFramebufferOES:
+        case EntryPoint::IsFramebufferOES:
             return "glIsFramebufferOES";
-        case EntryPoint::GLIsList:
+        case EntryPoint::IsList:
             return "glIsList";
-        case EntryPoint::GLIsMemoryObjectEXT:
+        case EntryPoint::IsMemoryObjectEXT:
             return "glIsMemoryObjectEXT";
-        case EntryPoint::GLIsProgram:
+        case EntryPoint::IsProgram:
             return "glIsProgram";
-        case EntryPoint::GLIsProgramPipeline:
+        case EntryPoint::IsProgramPipeline:
             return "glIsProgramPipeline";
-        case EntryPoint::GLIsProgramPipelineEXT:
-            return "glIsProgramPipelineEXT";
-        case EntryPoint::GLIsQuery:
+        case EntryPoint::IsQuery:
             return "glIsQuery";
-        case EntryPoint::GLIsQueryEXT:
+        case EntryPoint::IsQueryEXT:
             return "glIsQueryEXT";
-        case EntryPoint::GLIsRenderbuffer:
+        case EntryPoint::IsRenderbuffer:
             return "glIsRenderbuffer";
-        case EntryPoint::GLIsRenderbufferOES:
+        case EntryPoint::IsRenderbufferOES:
             return "glIsRenderbufferOES";
-        case EntryPoint::GLIsSampler:
+        case EntryPoint::IsSampler:
             return "glIsSampler";
-        case EntryPoint::GLIsSemaphoreEXT:
+        case EntryPoint::IsSemaphoreEXT:
             return "glIsSemaphoreEXT";
-        case EntryPoint::GLIsShader:
+        case EntryPoint::IsShader:
             return "glIsShader";
-        case EntryPoint::GLIsSync:
+        case EntryPoint::IsSync:
             return "glIsSync";
-        case EntryPoint::GLIsTexture:
+        case EntryPoint::IsTexture:
             return "glIsTexture";
-        case EntryPoint::GLIsTransformFeedback:
+        case EntryPoint::IsTransformFeedback:
             return "glIsTransformFeedback";
-        case EntryPoint::GLIsVertexArray:
+        case EntryPoint::IsVertexArray:
             return "glIsVertexArray";
-        case EntryPoint::GLIsVertexArrayOES:
+        case EntryPoint::IsVertexArrayOES:
             return "glIsVertexArrayOES";
-        case EntryPoint::GLLabelObjectEXT:
-            return "glLabelObjectEXT";
-        case EntryPoint::GLLightModelf:
+        case EntryPoint::LightModelf:
             return "glLightModelf";
-        case EntryPoint::GLLightModelfv:
+        case EntryPoint::LightModelfv:
             return "glLightModelfv";
-        case EntryPoint::GLLightModeli:
+        case EntryPoint::LightModeli:
             return "glLightModeli";
-        case EntryPoint::GLLightModeliv:
+        case EntryPoint::LightModeliv:
             return "glLightModeliv";
-        case EntryPoint::GLLightModelx:
+        case EntryPoint::LightModelx:
             return "glLightModelx";
-        case EntryPoint::GLLightModelxv:
+        case EntryPoint::LightModelxv:
             return "glLightModelxv";
-        case EntryPoint::GLLightf:
+        case EntryPoint::Lightf:
             return "glLightf";
-        case EntryPoint::GLLightfv:
+        case EntryPoint::Lightfv:
             return "glLightfv";
-        case EntryPoint::GLLighti:
+        case EntryPoint::Lighti:
             return "glLighti";
-        case EntryPoint::GLLightiv:
+        case EntryPoint::Lightiv:
             return "glLightiv";
-        case EntryPoint::GLLightx:
+        case EntryPoint::Lightx:
             return "glLightx";
-        case EntryPoint::GLLightxv:
+        case EntryPoint::Lightxv:
             return "glLightxv";
-        case EntryPoint::GLLineStipple:
+        case EntryPoint::LineStipple:
             return "glLineStipple";
-        case EntryPoint::GLLineWidth:
+        case EntryPoint::LineWidth:
             return "glLineWidth";
-        case EntryPoint::GLLineWidthx:
+        case EntryPoint::LineWidthx:
             return "glLineWidthx";
-        case EntryPoint::GLLinkProgram:
+        case EntryPoint::LinkProgram:
             return "glLinkProgram";
-        case EntryPoint::GLListBase:
+        case EntryPoint::ListBase:
             return "glListBase";
-        case EntryPoint::GLLoadIdentity:
+        case EntryPoint::LoadIdentity:
             return "glLoadIdentity";
-        case EntryPoint::GLLoadMatrixd:
+        case EntryPoint::LoadMatrixd:
             return "glLoadMatrixd";
-        case EntryPoint::GLLoadMatrixf:
+        case EntryPoint::LoadMatrixf:
             return "glLoadMatrixf";
-        case EntryPoint::GLLoadMatrixx:
+        case EntryPoint::LoadMatrixx:
             return "glLoadMatrixx";
-        case EntryPoint::GLLoadName:
+        case EntryPoint::LoadName:
             return "glLoadName";
-        case EntryPoint::GLLoadPaletteFromModelViewMatrixOES:
+        case EntryPoint::LoadPaletteFromModelViewMatrixOES:
             return "glLoadPaletteFromModelViewMatrixOES";
-        case EntryPoint::GLLoadTransposeMatrixd:
+        case EntryPoint::LoadTransposeMatrixd:
             return "glLoadTransposeMatrixd";
-        case EntryPoint::GLLoadTransposeMatrixf:
+        case EntryPoint::LoadTransposeMatrixf:
             return "glLoadTransposeMatrixf";
-        case EntryPoint::GLLogicOp:
+        case EntryPoint::LogicOp:
             return "glLogicOp";
-        case EntryPoint::GLLoseContextCHROMIUM:
+        case EntryPoint::LoseContextCHROMIUM:
             return "glLoseContextCHROMIUM";
-        case EntryPoint::GLMap1d:
+        case EntryPoint::Map1d:
             return "glMap1d";
-        case EntryPoint::GLMap1f:
+        case EntryPoint::Map1f:
             return "glMap1f";
-        case EntryPoint::GLMap2d:
+        case EntryPoint::Map2d:
             return "glMap2d";
-        case EntryPoint::GLMap2f:
+        case EntryPoint::Map2f:
             return "glMap2f";
-        case EntryPoint::GLMapBuffer:
+        case EntryPoint::MapBuffer:
             return "glMapBuffer";
-        case EntryPoint::GLMapBufferOES:
+        case EntryPoint::MapBufferOES:
             return "glMapBufferOES";
-        case EntryPoint::GLMapBufferRange:
+        case EntryPoint::MapBufferRange:
             return "glMapBufferRange";
-        case EntryPoint::GLMapBufferRangeEXT:
+        case EntryPoint::MapBufferRangeEXT:
             return "glMapBufferRangeEXT";
-        case EntryPoint::GLMapGrid1d:
+        case EntryPoint::MapGrid1d:
             return "glMapGrid1d";
-        case EntryPoint::GLMapGrid1f:
+        case EntryPoint::MapGrid1f:
             return "glMapGrid1f";
-        case EntryPoint::GLMapGrid2d:
+        case EntryPoint::MapGrid2d:
             return "glMapGrid2d";
-        case EntryPoint::GLMapGrid2f:
+        case EntryPoint::MapGrid2f:
             return "glMapGrid2f";
-        case EntryPoint::GLMapNamedBuffer:
+        case EntryPoint::MapNamedBuffer:
             return "glMapNamedBuffer";
-        case EntryPoint::GLMapNamedBufferRange:
+        case EntryPoint::MapNamedBufferRange:
             return "glMapNamedBufferRange";
-        case EntryPoint::GLMaterialf:
+        case EntryPoint::Materialf:
             return "glMaterialf";
-        case EntryPoint::GLMaterialfv:
+        case EntryPoint::Materialfv:
             return "glMaterialfv";
-        case EntryPoint::GLMateriali:
+        case EntryPoint::Materiali:
             return "glMateriali";
-        case EntryPoint::GLMaterialiv:
+        case EntryPoint::Materialiv:
             return "glMaterialiv";
-        case EntryPoint::GLMaterialx:
+        case EntryPoint::Materialx:
             return "glMaterialx";
-        case EntryPoint::GLMaterialxv:
+        case EntryPoint::Materialxv:
             return "glMaterialxv";
-        case EntryPoint::GLMatrixIndexPointerOES:
+        case EntryPoint::MatrixIndexPointerOES:
             return "glMatrixIndexPointerOES";
-        case EntryPoint::GLMatrixMode:
+        case EntryPoint::MatrixMode:
             return "glMatrixMode";
-        case EntryPoint::GLMaxShaderCompilerThreadsKHR:
+        case EntryPoint::MaxShaderCompilerThreadsKHR:
             return "glMaxShaderCompilerThreadsKHR";
-        case EntryPoint::GLMemoryBarrier:
+        case EntryPoint::MemoryBarrier:
             return "glMemoryBarrier";
-        case EntryPoint::GLMemoryBarrierByRegion:
+        case EntryPoint::MemoryBarrierByRegion:
             return "glMemoryBarrierByRegion";
-        case EntryPoint::GLMemoryObjectParameterivEXT:
+        case EntryPoint::MemoryObjectParameterivEXT:
             return "glMemoryObjectParameterivEXT";
-        case EntryPoint::GLMinSampleShading:
+        case EntryPoint::MinSampleShading:
             return "glMinSampleShading";
-        case EntryPoint::GLMinSampleShadingOES:
+        case EntryPoint::MinSampleShadingOES:
             return "glMinSampleShadingOES";
-        case EntryPoint::GLMultMatrixd:
+        case EntryPoint::MultMatrixd:
             return "glMultMatrixd";
-        case EntryPoint::GLMultMatrixf:
+        case EntryPoint::MultMatrixf:
             return "glMultMatrixf";
-        case EntryPoint::GLMultMatrixx:
+        case EntryPoint::MultMatrixx:
             return "glMultMatrixx";
-        case EntryPoint::GLMultTransposeMatrixd:
+        case EntryPoint::MultTransposeMatrixd:
             return "glMultTransposeMatrixd";
-        case EntryPoint::GLMultTransposeMatrixf:
+        case EntryPoint::MultTransposeMatrixf:
             return "glMultTransposeMatrixf";
-        case EntryPoint::GLMultiDrawArrays:
+        case EntryPoint::MultiDrawArrays:
             return "glMultiDrawArrays";
-        case EntryPoint::GLMultiDrawArraysANGLE:
+        case EntryPoint::MultiDrawArraysANGLE:
             return "glMultiDrawArraysANGLE";
-        case EntryPoint::GLMultiDrawArraysIndirect:
+        case EntryPoint::MultiDrawArraysIndirect:
             return "glMultiDrawArraysIndirect";
-        case EntryPoint::GLMultiDrawArraysIndirectCount:
+        case EntryPoint::MultiDrawArraysIndirectCount:
             return "glMultiDrawArraysIndirectCount";
-        case EntryPoint::GLMultiDrawArraysInstancedANGLE:
+        case EntryPoint::MultiDrawArraysInstancedANGLE:
             return "glMultiDrawArraysInstancedANGLE";
-        case EntryPoint::GLMultiDrawArraysInstancedBaseInstanceANGLE:
+        case EntryPoint::MultiDrawArraysInstancedBaseInstanceANGLE:
             return "glMultiDrawArraysInstancedBaseInstanceANGLE";
-        case EntryPoint::GLMultiDrawElements:
+        case EntryPoint::MultiDrawElements:
             return "glMultiDrawElements";
-        case EntryPoint::GLMultiDrawElementsANGLE:
+        case EntryPoint::MultiDrawElementsANGLE:
             return "glMultiDrawElementsANGLE";
-        case EntryPoint::GLMultiDrawElementsBaseVertex:
+        case EntryPoint::MultiDrawElementsBaseVertex:
             return "glMultiDrawElementsBaseVertex";
-        case EntryPoint::GLMultiDrawElementsBaseVertexEXT:
+        case EntryPoint::MultiDrawElementsBaseVertexEXT:
             return "glMultiDrawElementsBaseVertexEXT";
-        case EntryPoint::GLMultiDrawElementsIndirect:
+        case EntryPoint::MultiDrawElementsIndirect:
             return "glMultiDrawElementsIndirect";
-        case EntryPoint::GLMultiDrawElementsIndirectCount:
+        case EntryPoint::MultiDrawElementsIndirectCount:
             return "glMultiDrawElementsIndirectCount";
-        case EntryPoint::GLMultiDrawElementsInstancedANGLE:
+        case EntryPoint::MultiDrawElementsInstancedANGLE:
             return "glMultiDrawElementsInstancedANGLE";
-        case EntryPoint::GLMultiDrawElementsInstancedBaseVertexBaseInstanceANGLE:
+        case EntryPoint::MultiDrawElementsInstancedBaseVertexBaseInstanceANGLE:
             return "glMultiDrawElementsInstancedBaseVertexBaseInstanceANGLE";
-        case EntryPoint::GLMultiTexCoord1d:
+        case EntryPoint::MultiTexCoord1d:
             return "glMultiTexCoord1d";
-        case EntryPoint::GLMultiTexCoord1dv:
+        case EntryPoint::MultiTexCoord1dv:
             return "glMultiTexCoord1dv";
-        case EntryPoint::GLMultiTexCoord1f:
+        case EntryPoint::MultiTexCoord1f:
             return "glMultiTexCoord1f";
-        case EntryPoint::GLMultiTexCoord1fv:
+        case EntryPoint::MultiTexCoord1fv:
             return "glMultiTexCoord1fv";
-        case EntryPoint::GLMultiTexCoord1i:
+        case EntryPoint::MultiTexCoord1i:
             return "glMultiTexCoord1i";
-        case EntryPoint::GLMultiTexCoord1iv:
+        case EntryPoint::MultiTexCoord1iv:
             return "glMultiTexCoord1iv";
-        case EntryPoint::GLMultiTexCoord1s:
+        case EntryPoint::MultiTexCoord1s:
             return "glMultiTexCoord1s";
-        case EntryPoint::GLMultiTexCoord1sv:
+        case EntryPoint::MultiTexCoord1sv:
             return "glMultiTexCoord1sv";
-        case EntryPoint::GLMultiTexCoord2d:
+        case EntryPoint::MultiTexCoord2d:
             return "glMultiTexCoord2d";
-        case EntryPoint::GLMultiTexCoord2dv:
+        case EntryPoint::MultiTexCoord2dv:
             return "glMultiTexCoord2dv";
-        case EntryPoint::GLMultiTexCoord2f:
+        case EntryPoint::MultiTexCoord2f:
             return "glMultiTexCoord2f";
-        case EntryPoint::GLMultiTexCoord2fv:
+        case EntryPoint::MultiTexCoord2fv:
             return "glMultiTexCoord2fv";
-        case EntryPoint::GLMultiTexCoord2i:
+        case EntryPoint::MultiTexCoord2i:
             return "glMultiTexCoord2i";
-        case EntryPoint::GLMultiTexCoord2iv:
+        case EntryPoint::MultiTexCoord2iv:
             return "glMultiTexCoord2iv";
-        case EntryPoint::GLMultiTexCoord2s:
+        case EntryPoint::MultiTexCoord2s:
             return "glMultiTexCoord2s";
-        case EntryPoint::GLMultiTexCoord2sv:
+        case EntryPoint::MultiTexCoord2sv:
             return "glMultiTexCoord2sv";
-        case EntryPoint::GLMultiTexCoord3d:
+        case EntryPoint::MultiTexCoord3d:
             return "glMultiTexCoord3d";
-        case EntryPoint::GLMultiTexCoord3dv:
+        case EntryPoint::MultiTexCoord3dv:
             return "glMultiTexCoord3dv";
-        case EntryPoint::GLMultiTexCoord3f:
+        case EntryPoint::MultiTexCoord3f:
             return "glMultiTexCoord3f";
-        case EntryPoint::GLMultiTexCoord3fv:
+        case EntryPoint::MultiTexCoord3fv:
             return "glMultiTexCoord3fv";
-        case EntryPoint::GLMultiTexCoord3i:
+        case EntryPoint::MultiTexCoord3i:
             return "glMultiTexCoord3i";
-        case EntryPoint::GLMultiTexCoord3iv:
+        case EntryPoint::MultiTexCoord3iv:
             return "glMultiTexCoord3iv";
-        case EntryPoint::GLMultiTexCoord3s:
+        case EntryPoint::MultiTexCoord3s:
             return "glMultiTexCoord3s";
-        case EntryPoint::GLMultiTexCoord3sv:
+        case EntryPoint::MultiTexCoord3sv:
             return "glMultiTexCoord3sv";
-        case EntryPoint::GLMultiTexCoord4d:
+        case EntryPoint::MultiTexCoord4d:
             return "glMultiTexCoord4d";
-        case EntryPoint::GLMultiTexCoord4dv:
+        case EntryPoint::MultiTexCoord4dv:
             return "glMultiTexCoord4dv";
-        case EntryPoint::GLMultiTexCoord4f:
+        case EntryPoint::MultiTexCoord4f:
             return "glMultiTexCoord4f";
-        case EntryPoint::GLMultiTexCoord4fv:
+        case EntryPoint::MultiTexCoord4fv:
             return "glMultiTexCoord4fv";
-        case EntryPoint::GLMultiTexCoord4i:
+        case EntryPoint::MultiTexCoord4i:
             return "glMultiTexCoord4i";
-        case EntryPoint::GLMultiTexCoord4iv:
+        case EntryPoint::MultiTexCoord4iv:
             return "glMultiTexCoord4iv";
-        case EntryPoint::GLMultiTexCoord4s:
+        case EntryPoint::MultiTexCoord4s:
             return "glMultiTexCoord4s";
-        case EntryPoint::GLMultiTexCoord4sv:
+        case EntryPoint::MultiTexCoord4sv:
             return "glMultiTexCoord4sv";
-        case EntryPoint::GLMultiTexCoord4x:
+        case EntryPoint::MultiTexCoord4x:
             return "glMultiTexCoord4x";
-        case EntryPoint::GLMultiTexCoordP1ui:
+        case EntryPoint::MultiTexCoordP1ui:
             return "glMultiTexCoordP1ui";
-        case EntryPoint::GLMultiTexCoordP1uiv:
+        case EntryPoint::MultiTexCoordP1uiv:
             return "glMultiTexCoordP1uiv";
-        case EntryPoint::GLMultiTexCoordP2ui:
+        case EntryPoint::MultiTexCoordP2ui:
             return "glMultiTexCoordP2ui";
-        case EntryPoint::GLMultiTexCoordP2uiv:
+        case EntryPoint::MultiTexCoordP2uiv:
             return "glMultiTexCoordP2uiv";
-        case EntryPoint::GLMultiTexCoordP3ui:
+        case EntryPoint::MultiTexCoordP3ui:
             return "glMultiTexCoordP3ui";
-        case EntryPoint::GLMultiTexCoordP3uiv:
+        case EntryPoint::MultiTexCoordP3uiv:
             return "glMultiTexCoordP3uiv";
-        case EntryPoint::GLMultiTexCoordP4ui:
+        case EntryPoint::MultiTexCoordP4ui:
             return "glMultiTexCoordP4ui";
-        case EntryPoint::GLMultiTexCoordP4uiv:
+        case EntryPoint::MultiTexCoordP4uiv:
             return "glMultiTexCoordP4uiv";
-        case EntryPoint::GLNamedBufferData:
+        case EntryPoint::NamedBufferData:
             return "glNamedBufferData";
-        case EntryPoint::GLNamedBufferStorage:
+        case EntryPoint::NamedBufferStorage:
             return "glNamedBufferStorage";
-        case EntryPoint::GLNamedBufferStorageExternalEXT:
+        case EntryPoint::NamedBufferStorageExternalEXT:
             return "glNamedBufferStorageExternalEXT";
-        case EntryPoint::GLNamedBufferSubData:
+        case EntryPoint::NamedBufferSubData:
             return "glNamedBufferSubData";
-        case EntryPoint::GLNamedFramebufferDrawBuffer:
+        case EntryPoint::NamedFramebufferDrawBuffer:
             return "glNamedFramebufferDrawBuffer";
-        case EntryPoint::GLNamedFramebufferDrawBuffers:
+        case EntryPoint::NamedFramebufferDrawBuffers:
             return "glNamedFramebufferDrawBuffers";
-        case EntryPoint::GLNamedFramebufferParameteri:
+        case EntryPoint::NamedFramebufferParameteri:
             return "glNamedFramebufferParameteri";
-        case EntryPoint::GLNamedFramebufferReadBuffer:
+        case EntryPoint::NamedFramebufferReadBuffer:
             return "glNamedFramebufferReadBuffer";
-        case EntryPoint::GLNamedFramebufferRenderbuffer:
+        case EntryPoint::NamedFramebufferRenderbuffer:
             return "glNamedFramebufferRenderbuffer";
-        case EntryPoint::GLNamedFramebufferTexture:
+        case EntryPoint::NamedFramebufferTexture:
             return "glNamedFramebufferTexture";
-        case EntryPoint::GLNamedFramebufferTextureLayer:
+        case EntryPoint::NamedFramebufferTextureLayer:
             return "glNamedFramebufferTextureLayer";
-        case EntryPoint::GLNamedRenderbufferStorage:
+        case EntryPoint::NamedRenderbufferStorage:
             return "glNamedRenderbufferStorage";
-        case EntryPoint::GLNamedRenderbufferStorageMultisample:
+        case EntryPoint::NamedRenderbufferStorageMultisample:
             return "glNamedRenderbufferStorageMultisample";
-        case EntryPoint::GLNewList:
+        case EntryPoint::NewList:
             return "glNewList";
-        case EntryPoint::GLNormal3b:
+        case EntryPoint::Normal3b:
             return "glNormal3b";
-        case EntryPoint::GLNormal3bv:
+        case EntryPoint::Normal3bv:
             return "glNormal3bv";
-        case EntryPoint::GLNormal3d:
+        case EntryPoint::Normal3d:
             return "glNormal3d";
-        case EntryPoint::GLNormal3dv:
+        case EntryPoint::Normal3dv:
             return "glNormal3dv";
-        case EntryPoint::GLNormal3f:
+        case EntryPoint::Normal3f:
             return "glNormal3f";
-        case EntryPoint::GLNormal3fv:
+        case EntryPoint::Normal3fv:
             return "glNormal3fv";
-        case EntryPoint::GLNormal3i:
+        case EntryPoint::Normal3i:
             return "glNormal3i";
-        case EntryPoint::GLNormal3iv:
+        case EntryPoint::Normal3iv:
             return "glNormal3iv";
-        case EntryPoint::GLNormal3s:
+        case EntryPoint::Normal3s:
             return "glNormal3s";
-        case EntryPoint::GLNormal3sv:
+        case EntryPoint::Normal3sv:
             return "glNormal3sv";
-        case EntryPoint::GLNormal3x:
+        case EntryPoint::Normal3x:
             return "glNormal3x";
-        case EntryPoint::GLNormalP3ui:
+        case EntryPoint::NormalP3ui:
             return "glNormalP3ui";
-        case EntryPoint::GLNormalP3uiv:
+        case EntryPoint::NormalP3uiv:
             return "glNormalP3uiv";
-        case EntryPoint::GLNormalPointer:
+        case EntryPoint::NormalPointer:
             return "glNormalPointer";
-        case EntryPoint::GLObjectLabel:
+        case EntryPoint::ObjectLabel:
             return "glObjectLabel";
-        case EntryPoint::GLObjectLabelKHR:
+        case EntryPoint::ObjectLabelKHR:
             return "glObjectLabelKHR";
-        case EntryPoint::GLObjectPtrLabel:
+        case EntryPoint::ObjectPtrLabel:
             return "glObjectPtrLabel";
-        case EntryPoint::GLObjectPtrLabelKHR:
+        case EntryPoint::ObjectPtrLabelKHR:
             return "glObjectPtrLabelKHR";
-        case EntryPoint::GLOrtho:
+        case EntryPoint::Ortho:
             return "glOrtho";
-        case EntryPoint::GLOrthof:
+        case EntryPoint::Orthof:
             return "glOrthof";
-        case EntryPoint::GLOrthox:
+        case EntryPoint::Orthox:
             return "glOrthox";
-        case EntryPoint::GLPassThrough:
+        case EntryPoint::PassThrough:
             return "glPassThrough";
-        case EntryPoint::GLPatchParameterfv:
+        case EntryPoint::PatchParameterfv:
             return "glPatchParameterfv";
-        case EntryPoint::GLPatchParameteri:
+        case EntryPoint::PatchParameteri:
             return "glPatchParameteri";
-        case EntryPoint::GLPatchParameteriEXT:
-            return "glPatchParameteriEXT";
-        case EntryPoint::GLPauseTransformFeedback:
+        case EntryPoint::PauseTransformFeedback:
             return "glPauseTransformFeedback";
-        case EntryPoint::GLPixelMapfv:
+        case EntryPoint::PixelMapfv:
             return "glPixelMapfv";
-        case EntryPoint::GLPixelMapuiv:
+        case EntryPoint::PixelMapuiv:
             return "glPixelMapuiv";
-        case EntryPoint::GLPixelMapusv:
+        case EntryPoint::PixelMapusv:
             return "glPixelMapusv";
-        case EntryPoint::GLPixelStoref:
+        case EntryPoint::PixelStoref:
             return "glPixelStoref";
-        case EntryPoint::GLPixelStorei:
+        case EntryPoint::PixelStorei:
             return "glPixelStorei";
-        case EntryPoint::GLPixelTransferf:
+        case EntryPoint::PixelTransferf:
             return "glPixelTransferf";
-        case EntryPoint::GLPixelTransferi:
+        case EntryPoint::PixelTransferi:
             return "glPixelTransferi";
-        case EntryPoint::GLPixelZoom:
+        case EntryPoint::PixelZoom:
             return "glPixelZoom";
-        case EntryPoint::GLPointParameterf:
+        case EntryPoint::PointParameterf:
             return "glPointParameterf";
-        case EntryPoint::GLPointParameterfv:
+        case EntryPoint::PointParameterfv:
             return "glPointParameterfv";
-        case EntryPoint::GLPointParameteri:
+        case EntryPoint::PointParameteri:
             return "glPointParameteri";
-        case EntryPoint::GLPointParameteriv:
+        case EntryPoint::PointParameteriv:
             return "glPointParameteriv";
-        case EntryPoint::GLPointParameterx:
+        case EntryPoint::PointParameterx:
             return "glPointParameterx";
-        case EntryPoint::GLPointParameterxv:
+        case EntryPoint::PointParameterxv:
             return "glPointParameterxv";
-        case EntryPoint::GLPointSize:
+        case EntryPoint::PointSize:
             return "glPointSize";
-        case EntryPoint::GLPointSizePointerOES:
+        case EntryPoint::PointSizePointerOES:
             return "glPointSizePointerOES";
-        case EntryPoint::GLPointSizex:
+        case EntryPoint::PointSizex:
             return "glPointSizex";
-        case EntryPoint::GLPolygonMode:
+        case EntryPoint::PolygonMode:
             return "glPolygonMode";
-        case EntryPoint::GLPolygonOffset:
+        case EntryPoint::PolygonOffset:
             return "glPolygonOffset";
-        case EntryPoint::GLPolygonOffsetClamp:
+        case EntryPoint::PolygonOffsetClamp:
             return "glPolygonOffsetClamp";
-        case EntryPoint::GLPolygonOffsetx:
+        case EntryPoint::PolygonOffsetx:
             return "glPolygonOffsetx";
-        case EntryPoint::GLPolygonStipple:
+        case EntryPoint::PolygonStipple:
             return "glPolygonStipple";
-        case EntryPoint::GLPopAttrib:
+        case EntryPoint::PopAttrib:
             return "glPopAttrib";
-        case EntryPoint::GLPopClientAttrib:
+        case EntryPoint::PopClientAttrib:
             return "glPopClientAttrib";
-        case EntryPoint::GLPopDebugGroup:
+        case EntryPoint::PopDebugGroup:
             return "glPopDebugGroup";
-        case EntryPoint::GLPopDebugGroupKHR:
+        case EntryPoint::PopDebugGroupKHR:
             return "glPopDebugGroupKHR";
-        case EntryPoint::GLPopGroupMarkerEXT:
+        case EntryPoint::PopGroupMarkerEXT:
             return "glPopGroupMarkerEXT";
-        case EntryPoint::GLPopMatrix:
+        case EntryPoint::PopMatrix:
             return "glPopMatrix";
-        case EntryPoint::GLPopName:
+        case EntryPoint::PopName:
             return "glPopName";
-        case EntryPoint::GLPrimitiveBoundingBox:
+        case EntryPoint::PrimitiveBoundingBox:
             return "glPrimitiveBoundingBox";
-        case EntryPoint::GLPrimitiveBoundingBoxEXT:
-            return "glPrimitiveBoundingBoxEXT";
-        case EntryPoint::GLPrimitiveRestartIndex:
+        case EntryPoint::PrimitiveRestartIndex:
             return "glPrimitiveRestartIndex";
-        case EntryPoint::GLPrioritizeTextures:
+        case EntryPoint::PrioritizeTextures:
             return "glPrioritizeTextures";
-        case EntryPoint::GLProgramBinary:
+        case EntryPoint::ProgramBinary:
             return "glProgramBinary";
-        case EntryPoint::GLProgramBinaryOES:
+        case EntryPoint::ProgramBinaryOES:
             return "glProgramBinaryOES";
-        case EntryPoint::GLProgramParameteri:
+        case EntryPoint::ProgramParameteri:
             return "glProgramParameteri";
-        case EntryPoint::GLProgramParameteriEXT:
-            return "glProgramParameteriEXT";
-        case EntryPoint::GLProgramUniform1d:
+        case EntryPoint::ProgramUniform1d:
             return "glProgramUniform1d";
-        case EntryPoint::GLProgramUniform1dv:
+        case EntryPoint::ProgramUniform1dv:
             return "glProgramUniform1dv";
-        case EntryPoint::GLProgramUniform1f:
+        case EntryPoint::ProgramUniform1f:
             return "glProgramUniform1f";
-        case EntryPoint::GLProgramUniform1fEXT:
-            return "glProgramUniform1fEXT";
-        case EntryPoint::GLProgramUniform1fv:
+        case EntryPoint::ProgramUniform1fv:
             return "glProgramUniform1fv";
-        case EntryPoint::GLProgramUniform1fvEXT:
-            return "glProgramUniform1fvEXT";
-        case EntryPoint::GLProgramUniform1i:
+        case EntryPoint::ProgramUniform1i:
             return "glProgramUniform1i";
-        case EntryPoint::GLProgramUniform1iEXT:
-            return "glProgramUniform1iEXT";
-        case EntryPoint::GLProgramUniform1iv:
+        case EntryPoint::ProgramUniform1iv:
             return "glProgramUniform1iv";
-        case EntryPoint::GLProgramUniform1ivEXT:
-            return "glProgramUniform1ivEXT";
-        case EntryPoint::GLProgramUniform1ui:
+        case EntryPoint::ProgramUniform1ui:
             return "glProgramUniform1ui";
-        case EntryPoint::GLProgramUniform1uiEXT:
-            return "glProgramUniform1uiEXT";
-        case EntryPoint::GLProgramUniform1uiv:
+        case EntryPoint::ProgramUniform1uiv:
             return "glProgramUniform1uiv";
-        case EntryPoint::GLProgramUniform1uivEXT:
-            return "glProgramUniform1uivEXT";
-        case EntryPoint::GLProgramUniform2d:
+        case EntryPoint::ProgramUniform2d:
             return "glProgramUniform2d";
-        case EntryPoint::GLProgramUniform2dv:
+        case EntryPoint::ProgramUniform2dv:
             return "glProgramUniform2dv";
-        case EntryPoint::GLProgramUniform2f:
+        case EntryPoint::ProgramUniform2f:
             return "glProgramUniform2f";
-        case EntryPoint::GLProgramUniform2fEXT:
-            return "glProgramUniform2fEXT";
-        case EntryPoint::GLProgramUniform2fv:
+        case EntryPoint::ProgramUniform2fv:
             return "glProgramUniform2fv";
-        case EntryPoint::GLProgramUniform2fvEXT:
-            return "glProgramUniform2fvEXT";
-        case EntryPoint::GLProgramUniform2i:
+        case EntryPoint::ProgramUniform2i:
             return "glProgramUniform2i";
-        case EntryPoint::GLProgramUniform2iEXT:
-            return "glProgramUniform2iEXT";
-        case EntryPoint::GLProgramUniform2iv:
+        case EntryPoint::ProgramUniform2iv:
             return "glProgramUniform2iv";
-        case EntryPoint::GLProgramUniform2ivEXT:
-            return "glProgramUniform2ivEXT";
-        case EntryPoint::GLProgramUniform2ui:
+        case EntryPoint::ProgramUniform2ui:
             return "glProgramUniform2ui";
-        case EntryPoint::GLProgramUniform2uiEXT:
-            return "glProgramUniform2uiEXT";
-        case EntryPoint::GLProgramUniform2uiv:
+        case EntryPoint::ProgramUniform2uiv:
             return "glProgramUniform2uiv";
-        case EntryPoint::GLProgramUniform2uivEXT:
-            return "glProgramUniform2uivEXT";
-        case EntryPoint::GLProgramUniform3d:
+        case EntryPoint::ProgramUniform3d:
             return "glProgramUniform3d";
-        case EntryPoint::GLProgramUniform3dv:
+        case EntryPoint::ProgramUniform3dv:
             return "glProgramUniform3dv";
-        case EntryPoint::GLProgramUniform3f:
+        case EntryPoint::ProgramUniform3f:
             return "glProgramUniform3f";
-        case EntryPoint::GLProgramUniform3fEXT:
-            return "glProgramUniform3fEXT";
-        case EntryPoint::GLProgramUniform3fv:
+        case EntryPoint::ProgramUniform3fv:
             return "glProgramUniform3fv";
-        case EntryPoint::GLProgramUniform3fvEXT:
-            return "glProgramUniform3fvEXT";
-        case EntryPoint::GLProgramUniform3i:
+        case EntryPoint::ProgramUniform3i:
             return "glProgramUniform3i";
-        case EntryPoint::GLProgramUniform3iEXT:
-            return "glProgramUniform3iEXT";
-        case EntryPoint::GLProgramUniform3iv:
+        case EntryPoint::ProgramUniform3iv:
             return "glProgramUniform3iv";
-        case EntryPoint::GLProgramUniform3ivEXT:
-            return "glProgramUniform3ivEXT";
-        case EntryPoint::GLProgramUniform3ui:
+        case EntryPoint::ProgramUniform3ui:
             return "glProgramUniform3ui";
-        case EntryPoint::GLProgramUniform3uiEXT:
-            return "glProgramUniform3uiEXT";
-        case EntryPoint::GLProgramUniform3uiv:
+        case EntryPoint::ProgramUniform3uiv:
             return "glProgramUniform3uiv";
-        case EntryPoint::GLProgramUniform3uivEXT:
-            return "glProgramUniform3uivEXT";
-        case EntryPoint::GLProgramUniform4d:
+        case EntryPoint::ProgramUniform4d:
             return "glProgramUniform4d";
-        case EntryPoint::GLProgramUniform4dv:
+        case EntryPoint::ProgramUniform4dv:
             return "glProgramUniform4dv";
-        case EntryPoint::GLProgramUniform4f:
+        case EntryPoint::ProgramUniform4f:
             return "glProgramUniform4f";
-        case EntryPoint::GLProgramUniform4fEXT:
-            return "glProgramUniform4fEXT";
-        case EntryPoint::GLProgramUniform4fv:
+        case EntryPoint::ProgramUniform4fv:
             return "glProgramUniform4fv";
-        case EntryPoint::GLProgramUniform4fvEXT:
-            return "glProgramUniform4fvEXT";
-        case EntryPoint::GLProgramUniform4i:
+        case EntryPoint::ProgramUniform4i:
             return "glProgramUniform4i";
-        case EntryPoint::GLProgramUniform4iEXT:
-            return "glProgramUniform4iEXT";
-        case EntryPoint::GLProgramUniform4iv:
+        case EntryPoint::ProgramUniform4iv:
             return "glProgramUniform4iv";
-        case EntryPoint::GLProgramUniform4ivEXT:
-            return "glProgramUniform4ivEXT";
-        case EntryPoint::GLProgramUniform4ui:
+        case EntryPoint::ProgramUniform4ui:
             return "glProgramUniform4ui";
-        case EntryPoint::GLProgramUniform4uiEXT:
-            return "glProgramUniform4uiEXT";
-        case EntryPoint::GLProgramUniform4uiv:
+        case EntryPoint::ProgramUniform4uiv:
             return "glProgramUniform4uiv";
-        case EntryPoint::GLProgramUniform4uivEXT:
-            return "glProgramUniform4uivEXT";
-        case EntryPoint::GLProgramUniformMatrix2dv:
+        case EntryPoint::ProgramUniformMatrix2dv:
             return "glProgramUniformMatrix2dv";
-        case EntryPoint::GLProgramUniformMatrix2fv:
+        case EntryPoint::ProgramUniformMatrix2fv:
             return "glProgramUniformMatrix2fv";
-        case EntryPoint::GLProgramUniformMatrix2fvEXT:
-            return "glProgramUniformMatrix2fvEXT";
-        case EntryPoint::GLProgramUniformMatrix2x3dv:
+        case EntryPoint::ProgramUniformMatrix2x3dv:
             return "glProgramUniformMatrix2x3dv";
-        case EntryPoint::GLProgramUniformMatrix2x3fv:
+        case EntryPoint::ProgramUniformMatrix2x3fv:
             return "glProgramUniformMatrix2x3fv";
-        case EntryPoint::GLProgramUniformMatrix2x3fvEXT:
-            return "glProgramUniformMatrix2x3fvEXT";
-        case EntryPoint::GLProgramUniformMatrix2x4dv:
+        case EntryPoint::ProgramUniformMatrix2x4dv:
             return "glProgramUniformMatrix2x4dv";
-        case EntryPoint::GLProgramUniformMatrix2x4fv:
+        case EntryPoint::ProgramUniformMatrix2x4fv:
             return "glProgramUniformMatrix2x4fv";
-        case EntryPoint::GLProgramUniformMatrix2x4fvEXT:
-            return "glProgramUniformMatrix2x4fvEXT";
-        case EntryPoint::GLProgramUniformMatrix3dv:
+        case EntryPoint::ProgramUniformMatrix3dv:
             return "glProgramUniformMatrix3dv";
-        case EntryPoint::GLProgramUniformMatrix3fv:
+        case EntryPoint::ProgramUniformMatrix3fv:
             return "glProgramUniformMatrix3fv";
-        case EntryPoint::GLProgramUniformMatrix3fvEXT:
-            return "glProgramUniformMatrix3fvEXT";
-        case EntryPoint::GLProgramUniformMatrix3x2dv:
+        case EntryPoint::ProgramUniformMatrix3x2dv:
             return "glProgramUniformMatrix3x2dv";
-        case EntryPoint::GLProgramUniformMatrix3x2fv:
+        case EntryPoint::ProgramUniformMatrix3x2fv:
             return "glProgramUniformMatrix3x2fv";
-        case EntryPoint::GLProgramUniformMatrix3x2fvEXT:
-            return "glProgramUniformMatrix3x2fvEXT";
-        case EntryPoint::GLProgramUniformMatrix3x4dv:
+        case EntryPoint::ProgramUniformMatrix3x4dv:
             return "glProgramUniformMatrix3x4dv";
-        case EntryPoint::GLProgramUniformMatrix3x4fv:
+        case EntryPoint::ProgramUniformMatrix3x4fv:
             return "glProgramUniformMatrix3x4fv";
-        case EntryPoint::GLProgramUniformMatrix3x4fvEXT:
-            return "glProgramUniformMatrix3x4fvEXT";
-        case EntryPoint::GLProgramUniformMatrix4dv:
+        case EntryPoint::ProgramUniformMatrix4dv:
             return "glProgramUniformMatrix4dv";
-        case EntryPoint::GLProgramUniformMatrix4fv:
+        case EntryPoint::ProgramUniformMatrix4fv:
             return "glProgramUniformMatrix4fv";
-        case EntryPoint::GLProgramUniformMatrix4fvEXT:
-            return "glProgramUniformMatrix4fvEXT";
-        case EntryPoint::GLProgramUniformMatrix4x2dv:
+        case EntryPoint::ProgramUniformMatrix4x2dv:
             return "glProgramUniformMatrix4x2dv";
-        case EntryPoint::GLProgramUniformMatrix4x2fv:
+        case EntryPoint::ProgramUniformMatrix4x2fv:
             return "glProgramUniformMatrix4x2fv";
-        case EntryPoint::GLProgramUniformMatrix4x2fvEXT:
-            return "glProgramUniformMatrix4x2fvEXT";
-        case EntryPoint::GLProgramUniformMatrix4x3dv:
+        case EntryPoint::ProgramUniformMatrix4x3dv:
             return "glProgramUniformMatrix4x3dv";
-        case EntryPoint::GLProgramUniformMatrix4x3fv:
+        case EntryPoint::ProgramUniformMatrix4x3fv:
             return "glProgramUniformMatrix4x3fv";
-        case EntryPoint::GLProgramUniformMatrix4x3fvEXT:
-            return "glProgramUniformMatrix4x3fvEXT";
-        case EntryPoint::GLProvokingVertex:
+        case EntryPoint::ProvokingVertex:
             return "glProvokingVertex";
-        case EntryPoint::GLProvokingVertexANGLE:
+        case EntryPoint::ProvokingVertexANGLE:
             return "glProvokingVertexANGLE";
-        case EntryPoint::GLPushAttrib:
+        case EntryPoint::PushAttrib:
             return "glPushAttrib";
-        case EntryPoint::GLPushClientAttrib:
+        case EntryPoint::PushClientAttrib:
             return "glPushClientAttrib";
-        case EntryPoint::GLPushDebugGroup:
+        case EntryPoint::PushDebugGroup:
             return "glPushDebugGroup";
-        case EntryPoint::GLPushDebugGroupKHR:
+        case EntryPoint::PushDebugGroupKHR:
             return "glPushDebugGroupKHR";
-        case EntryPoint::GLPushGroupMarkerEXT:
+        case EntryPoint::PushGroupMarkerEXT:
             return "glPushGroupMarkerEXT";
-        case EntryPoint::GLPushMatrix:
+        case EntryPoint::PushMatrix:
             return "glPushMatrix";
-        case EntryPoint::GLPushName:
+        case EntryPoint::PushName:
             return "glPushName";
-        case EntryPoint::GLQueryCounter:
+        case EntryPoint::QueryCounter:
             return "glQueryCounter";
-        case EntryPoint::GLQueryCounterEXT:
+        case EntryPoint::QueryCounterEXT:
             return "glQueryCounterEXT";
-        case EntryPoint::GLQueryMatrixxOES:
+        case EntryPoint::QueryMatrixxOES:
             return "glQueryMatrixxOES";
-        case EntryPoint::GLRasterPos2d:
+        case EntryPoint::RasterPos2d:
             return "glRasterPos2d";
-        case EntryPoint::GLRasterPos2dv:
+        case EntryPoint::RasterPos2dv:
             return "glRasterPos2dv";
-        case EntryPoint::GLRasterPos2f:
+        case EntryPoint::RasterPos2f:
             return "glRasterPos2f";
-        case EntryPoint::GLRasterPos2fv:
+        case EntryPoint::RasterPos2fv:
             return "glRasterPos2fv";
-        case EntryPoint::GLRasterPos2i:
+        case EntryPoint::RasterPos2i:
             return "glRasterPos2i";
-        case EntryPoint::GLRasterPos2iv:
+        case EntryPoint::RasterPos2iv:
             return "glRasterPos2iv";
-        case EntryPoint::GLRasterPos2s:
+        case EntryPoint::RasterPos2s:
             return "glRasterPos2s";
-        case EntryPoint::GLRasterPos2sv:
+        case EntryPoint::RasterPos2sv:
             return "glRasterPos2sv";
-        case EntryPoint::GLRasterPos3d:
+        case EntryPoint::RasterPos3d:
             return "glRasterPos3d";
-        case EntryPoint::GLRasterPos3dv:
+        case EntryPoint::RasterPos3dv:
             return "glRasterPos3dv";
-        case EntryPoint::GLRasterPos3f:
+        case EntryPoint::RasterPos3f:
             return "glRasterPos3f";
-        case EntryPoint::GLRasterPos3fv:
+        case EntryPoint::RasterPos3fv:
             return "glRasterPos3fv";
-        case EntryPoint::GLRasterPos3i:
+        case EntryPoint::RasterPos3i:
             return "glRasterPos3i";
-        case EntryPoint::GLRasterPos3iv:
+        case EntryPoint::RasterPos3iv:
             return "glRasterPos3iv";
-        case EntryPoint::GLRasterPos3s:
+        case EntryPoint::RasterPos3s:
             return "glRasterPos3s";
-        case EntryPoint::GLRasterPos3sv:
+        case EntryPoint::RasterPos3sv:
             return "glRasterPos3sv";
-        case EntryPoint::GLRasterPos4d:
+        case EntryPoint::RasterPos4d:
             return "glRasterPos4d";
-        case EntryPoint::GLRasterPos4dv:
+        case EntryPoint::RasterPos4dv:
             return "glRasterPos4dv";
-        case EntryPoint::GLRasterPos4f:
+        case EntryPoint::RasterPos4f:
             return "glRasterPos4f";
-        case EntryPoint::GLRasterPos4fv:
+        case EntryPoint::RasterPos4fv:
             return "glRasterPos4fv";
-        case EntryPoint::GLRasterPos4i:
+        case EntryPoint::RasterPos4i:
             return "glRasterPos4i";
-        case EntryPoint::GLRasterPos4iv:
+        case EntryPoint::RasterPos4iv:
             return "glRasterPos4iv";
-        case EntryPoint::GLRasterPos4s:
+        case EntryPoint::RasterPos4s:
             return "glRasterPos4s";
-        case EntryPoint::GLRasterPos4sv:
+        case EntryPoint::RasterPos4sv:
             return "glRasterPos4sv";
-        case EntryPoint::GLReadBuffer:
+        case EntryPoint::ReadBuffer:
             return "glReadBuffer";
-        case EntryPoint::GLReadPixels:
+        case EntryPoint::ReadPixels:
             return "glReadPixels";
-        case EntryPoint::GLReadPixelsRobustANGLE:
+        case EntryPoint::ReadPixelsRobustANGLE:
             return "glReadPixelsRobustANGLE";
-        case EntryPoint::GLReadnPixels:
+        case EntryPoint::ReadnPixels:
             return "glReadnPixels";
-        case EntryPoint::GLReadnPixelsEXT:
+        case EntryPoint::ReadnPixelsEXT:
             return "glReadnPixelsEXT";
-        case EntryPoint::GLReadnPixelsRobustANGLE:
+        case EntryPoint::ReadnPixelsRobustANGLE:
             return "glReadnPixelsRobustANGLE";
-        case EntryPoint::GLRectd:
+        case EntryPoint::Rectd:
             return "glRectd";
-        case EntryPoint::GLRectdv:
+        case EntryPoint::Rectdv:
             return "glRectdv";
-        case EntryPoint::GLRectf:
+        case EntryPoint::Rectf:
             return "glRectf";
-        case EntryPoint::GLRectfv:
+        case EntryPoint::Rectfv:
             return "glRectfv";
-        case EntryPoint::GLRecti:
+        case EntryPoint::Recti:
             return "glRecti";
-        case EntryPoint::GLRectiv:
+        case EntryPoint::Rectiv:
             return "glRectiv";
-        case EntryPoint::GLRects:
+        case EntryPoint::Rects:
             return "glRects";
-        case EntryPoint::GLRectsv:
+        case EntryPoint::Rectsv:
             return "glRectsv";
-        case EntryPoint::GLReleaseShaderCompiler:
+        case EntryPoint::ReleaseShaderCompiler:
             return "glReleaseShaderCompiler";
-        case EntryPoint::GLRenderMode:
+        case EntryPoint::RenderMode:
             return "glRenderMode";
-        case EntryPoint::GLRenderbufferStorage:
+        case EntryPoint::RenderbufferStorage:
             return "glRenderbufferStorage";
-        case EntryPoint::GLRenderbufferStorageMultisample:
+        case EntryPoint::RenderbufferStorageMultisample:
             return "glRenderbufferStorageMultisample";
-        case EntryPoint::GLRenderbufferStorageMultisampleANGLE:
+        case EntryPoint::RenderbufferStorageMultisampleANGLE:
             return "glRenderbufferStorageMultisampleANGLE";
-        case EntryPoint::GLRenderbufferStorageMultisampleEXT:
+        case EntryPoint::RenderbufferStorageMultisampleEXT:
             return "glRenderbufferStorageMultisampleEXT";
-        case EntryPoint::GLRenderbufferStorageOES:
+        case EntryPoint::RenderbufferStorageOES:
             return "glRenderbufferStorageOES";
-        case EntryPoint::GLRequestExtensionANGLE:
+        case EntryPoint::RequestExtensionANGLE:
             return "glRequestExtensionANGLE";
-        case EntryPoint::GLResumeTransformFeedback:
+        case EntryPoint::ResumeTransformFeedback:
             return "glResumeTransformFeedback";
-        case EntryPoint::GLRotated:
+        case EntryPoint::Rotated:
             return "glRotated";
-        case EntryPoint::GLRotatef:
+        case EntryPoint::Rotatef:
             return "glRotatef";
-        case EntryPoint::GLRotatex:
+        case EntryPoint::Rotatex:
             return "glRotatex";
-        case EntryPoint::GLSampleCoverage:
+        case EntryPoint::SampleCoverage:
             return "glSampleCoverage";
-        case EntryPoint::GLSampleCoveragex:
+        case EntryPoint::SampleCoveragex:
             return "glSampleCoveragex";
-        case EntryPoint::GLSampleMaski:
+        case EntryPoint::SampleMaski:
             return "glSampleMaski";
-        case EntryPoint::GLSampleMaskiANGLE:
+        case EntryPoint::SampleMaskiANGLE:
             return "glSampleMaskiANGLE";
-        case EntryPoint::GLSamplerParameterIiv:
+        case EntryPoint::SamplerParameterIiv:
             return "glSamplerParameterIiv";
-        case EntryPoint::GLSamplerParameterIivEXT:
-            return "glSamplerParameterIivEXT";
-        case EntryPoint::GLSamplerParameterIivOES:
+        case EntryPoint::SamplerParameterIivOES:
             return "glSamplerParameterIivOES";
-        case EntryPoint::GLSamplerParameterIivRobustANGLE:
+        case EntryPoint::SamplerParameterIivRobustANGLE:
             return "glSamplerParameterIivRobustANGLE";
-        case EntryPoint::GLSamplerParameterIuiv:
+        case EntryPoint::SamplerParameterIuiv:
             return "glSamplerParameterIuiv";
-        case EntryPoint::GLSamplerParameterIuivEXT:
-            return "glSamplerParameterIuivEXT";
-        case EntryPoint::GLSamplerParameterIuivOES:
+        case EntryPoint::SamplerParameterIuivOES:
             return "glSamplerParameterIuivOES";
-        case EntryPoint::GLSamplerParameterIuivRobustANGLE:
+        case EntryPoint::SamplerParameterIuivRobustANGLE:
             return "glSamplerParameterIuivRobustANGLE";
-        case EntryPoint::GLSamplerParameterf:
+        case EntryPoint::SamplerParameterf:
             return "glSamplerParameterf";
-        case EntryPoint::GLSamplerParameterfv:
+        case EntryPoint::SamplerParameterfv:
             return "glSamplerParameterfv";
-        case EntryPoint::GLSamplerParameterfvRobustANGLE:
+        case EntryPoint::SamplerParameterfvRobustANGLE:
             return "glSamplerParameterfvRobustANGLE";
-        case EntryPoint::GLSamplerParameteri:
+        case EntryPoint::SamplerParameteri:
             return "glSamplerParameteri";
-        case EntryPoint::GLSamplerParameteriv:
+        case EntryPoint::SamplerParameteriv:
             return "glSamplerParameteriv";
-        case EntryPoint::GLSamplerParameterivRobustANGLE:
+        case EntryPoint::SamplerParameterivRobustANGLE:
             return "glSamplerParameterivRobustANGLE";
-        case EntryPoint::GLScaled:
+        case EntryPoint::Scaled:
             return "glScaled";
-        case EntryPoint::GLScalef:
+        case EntryPoint::Scalef:
             return "glScalef";
-        case EntryPoint::GLScalex:
+        case EntryPoint::Scalex:
             return "glScalex";
-        case EntryPoint::GLScissor:
+        case EntryPoint::Scissor:
             return "glScissor";
-        case EntryPoint::GLScissorArrayv:
+        case EntryPoint::ScissorArrayv:
             return "glScissorArrayv";
-        case EntryPoint::GLScissorIndexed:
+        case EntryPoint::ScissorIndexed:
             return "glScissorIndexed";
-        case EntryPoint::GLScissorIndexedv:
+        case EntryPoint::ScissorIndexedv:
             return "glScissorIndexedv";
-        case EntryPoint::GLSecondaryColor3b:
+        case EntryPoint::SecondaryColor3b:
             return "glSecondaryColor3b";
-        case EntryPoint::GLSecondaryColor3bv:
+        case EntryPoint::SecondaryColor3bv:
             return "glSecondaryColor3bv";
-        case EntryPoint::GLSecondaryColor3d:
+        case EntryPoint::SecondaryColor3d:
             return "glSecondaryColor3d";
-        case EntryPoint::GLSecondaryColor3dv:
+        case EntryPoint::SecondaryColor3dv:
             return "glSecondaryColor3dv";
-        case EntryPoint::GLSecondaryColor3f:
+        case EntryPoint::SecondaryColor3f:
             return "glSecondaryColor3f";
-        case EntryPoint::GLSecondaryColor3fv:
+        case EntryPoint::SecondaryColor3fv:
             return "glSecondaryColor3fv";
-        case EntryPoint::GLSecondaryColor3i:
+        case EntryPoint::SecondaryColor3i:
             return "glSecondaryColor3i";
-        case EntryPoint::GLSecondaryColor3iv:
+        case EntryPoint::SecondaryColor3iv:
             return "glSecondaryColor3iv";
-        case EntryPoint::GLSecondaryColor3s:
+        case EntryPoint::SecondaryColor3s:
             return "glSecondaryColor3s";
-        case EntryPoint::GLSecondaryColor3sv:
+        case EntryPoint::SecondaryColor3sv:
             return "glSecondaryColor3sv";
-        case EntryPoint::GLSecondaryColor3ub:
+        case EntryPoint::SecondaryColor3ub:
             return "glSecondaryColor3ub";
-        case EntryPoint::GLSecondaryColor3ubv:
+        case EntryPoint::SecondaryColor3ubv:
             return "glSecondaryColor3ubv";
-        case EntryPoint::GLSecondaryColor3ui:
+        case EntryPoint::SecondaryColor3ui:
             return "glSecondaryColor3ui";
-        case EntryPoint::GLSecondaryColor3uiv:
+        case EntryPoint::SecondaryColor3uiv:
             return "glSecondaryColor3uiv";
-        case EntryPoint::GLSecondaryColor3us:
+        case EntryPoint::SecondaryColor3us:
             return "glSecondaryColor3us";
-        case EntryPoint::GLSecondaryColor3usv:
+        case EntryPoint::SecondaryColor3usv:
             return "glSecondaryColor3usv";
-        case EntryPoint::GLSecondaryColorP3ui:
+        case EntryPoint::SecondaryColorP3ui:
             return "glSecondaryColorP3ui";
-        case EntryPoint::GLSecondaryColorP3uiv:
+        case EntryPoint::SecondaryColorP3uiv:
             return "glSecondaryColorP3uiv";
-        case EntryPoint::GLSecondaryColorPointer:
+        case EntryPoint::SecondaryColorPointer:
             return "glSecondaryColorPointer";
-        case EntryPoint::GLSelectBuffer:
+        case EntryPoint::SelectBuffer:
             return "glSelectBuffer";
-        case EntryPoint::GLSemaphoreParameterui64vEXT:
+        case EntryPoint::SemaphoreParameterui64vEXT:
             return "glSemaphoreParameterui64vEXT";
-        case EntryPoint::GLSetFenceNV:
+        case EntryPoint::SetFenceNV:
             return "glSetFenceNV";
-        case EntryPoint::GLShadeModel:
+        case EntryPoint::ShadeModel:
             return "glShadeModel";
-        case EntryPoint::GLShaderBinary:
+        case EntryPoint::ShaderBinary:
             return "glShaderBinary";
-        case EntryPoint::GLShaderSource:
+        case EntryPoint::ShaderSource:
             return "glShaderSource";
-        case EntryPoint::GLShaderStorageBlockBinding:
+        case EntryPoint::ShaderStorageBlockBinding:
             return "glShaderStorageBlockBinding";
-        case EntryPoint::GLSignalSemaphoreEXT:
+        case EntryPoint::SignalSemaphoreEXT:
             return "glSignalSemaphoreEXT";
-        case EntryPoint::GLSpecializeShader:
+        case EntryPoint::SpecializeShader:
             return "glSpecializeShader";
-        case EntryPoint::GLStencilFunc:
+        case EntryPoint::StencilFunc:
             return "glStencilFunc";
-        case EntryPoint::GLStencilFuncSeparate:
+        case EntryPoint::StencilFuncSeparate:
             return "glStencilFuncSeparate";
-        case EntryPoint::GLStencilMask:
+        case EntryPoint::StencilMask:
             return "glStencilMask";
-        case EntryPoint::GLStencilMaskSeparate:
+        case EntryPoint::StencilMaskSeparate:
             return "glStencilMaskSeparate";
-        case EntryPoint::GLStencilOp:
+        case EntryPoint::StencilOp:
             return "glStencilOp";
-        case EntryPoint::GLStencilOpSeparate:
+        case EntryPoint::StencilOpSeparate:
             return "glStencilOpSeparate";
-        case EntryPoint::GLTestFenceNV:
+        case EntryPoint::TestFenceNV:
             return "glTestFenceNV";
-        case EntryPoint::GLTexBuffer:
+        case EntryPoint::TexBuffer:
             return "glTexBuffer";
-        case EntryPoint::GLTexBufferEXT:
+        case EntryPoint::TexBufferEXT:
             return "glTexBufferEXT";
-        case EntryPoint::GLTexBufferOES:
+        case EntryPoint::TexBufferOES:
             return "glTexBufferOES";
-        case EntryPoint::GLTexBufferRange:
+        case EntryPoint::TexBufferRange:
             return "glTexBufferRange";
-        case EntryPoint::GLTexBufferRangeEXT:
+        case EntryPoint::TexBufferRangeEXT:
             return "glTexBufferRangeEXT";
-        case EntryPoint::GLTexBufferRangeOES:
+        case EntryPoint::TexBufferRangeOES:
             return "glTexBufferRangeOES";
-        case EntryPoint::GLTexCoord1d:
+        case EntryPoint::TexCoord1d:
             return "glTexCoord1d";
-        case EntryPoint::GLTexCoord1dv:
+        case EntryPoint::TexCoord1dv:
             return "glTexCoord1dv";
-        case EntryPoint::GLTexCoord1f:
+        case EntryPoint::TexCoord1f:
             return "glTexCoord1f";
-        case EntryPoint::GLTexCoord1fv:
+        case EntryPoint::TexCoord1fv:
             return "glTexCoord1fv";
-        case EntryPoint::GLTexCoord1i:
+        case EntryPoint::TexCoord1i:
             return "glTexCoord1i";
-        case EntryPoint::GLTexCoord1iv:
+        case EntryPoint::TexCoord1iv:
             return "glTexCoord1iv";
-        case EntryPoint::GLTexCoord1s:
+        case EntryPoint::TexCoord1s:
             return "glTexCoord1s";
-        case EntryPoint::GLTexCoord1sv:
+        case EntryPoint::TexCoord1sv:
             return "glTexCoord1sv";
-        case EntryPoint::GLTexCoord2d:
+        case EntryPoint::TexCoord2d:
             return "glTexCoord2d";
-        case EntryPoint::GLTexCoord2dv:
+        case EntryPoint::TexCoord2dv:
             return "glTexCoord2dv";
-        case EntryPoint::GLTexCoord2f:
+        case EntryPoint::TexCoord2f:
             return "glTexCoord2f";
-        case EntryPoint::GLTexCoord2fv:
+        case EntryPoint::TexCoord2fv:
             return "glTexCoord2fv";
-        case EntryPoint::GLTexCoord2i:
+        case EntryPoint::TexCoord2i:
             return "glTexCoord2i";
-        case EntryPoint::GLTexCoord2iv:
+        case EntryPoint::TexCoord2iv:
             return "glTexCoord2iv";
-        case EntryPoint::GLTexCoord2s:
+        case EntryPoint::TexCoord2s:
             return "glTexCoord2s";
-        case EntryPoint::GLTexCoord2sv:
+        case EntryPoint::TexCoord2sv:
             return "glTexCoord2sv";
-        case EntryPoint::GLTexCoord3d:
+        case EntryPoint::TexCoord3d:
             return "glTexCoord3d";
-        case EntryPoint::GLTexCoord3dv:
+        case EntryPoint::TexCoord3dv:
             return "glTexCoord3dv";
-        case EntryPoint::GLTexCoord3f:
+        case EntryPoint::TexCoord3f:
             return "glTexCoord3f";
-        case EntryPoint::GLTexCoord3fv:
+        case EntryPoint::TexCoord3fv:
             return "glTexCoord3fv";
-        case EntryPoint::GLTexCoord3i:
+        case EntryPoint::TexCoord3i:
             return "glTexCoord3i";
-        case EntryPoint::GLTexCoord3iv:
+        case EntryPoint::TexCoord3iv:
             return "glTexCoord3iv";
-        case EntryPoint::GLTexCoord3s:
+        case EntryPoint::TexCoord3s:
             return "glTexCoord3s";
-        case EntryPoint::GLTexCoord3sv:
+        case EntryPoint::TexCoord3sv:
             return "glTexCoord3sv";
-        case EntryPoint::GLTexCoord4d:
+        case EntryPoint::TexCoord4d:
             return "glTexCoord4d";
-        case EntryPoint::GLTexCoord4dv:
+        case EntryPoint::TexCoord4dv:
             return "glTexCoord4dv";
-        case EntryPoint::GLTexCoord4f:
+        case EntryPoint::TexCoord4f:
             return "glTexCoord4f";
-        case EntryPoint::GLTexCoord4fv:
+        case EntryPoint::TexCoord4fv:
             return "glTexCoord4fv";
-        case EntryPoint::GLTexCoord4i:
+        case EntryPoint::TexCoord4i:
             return "glTexCoord4i";
-        case EntryPoint::GLTexCoord4iv:
+        case EntryPoint::TexCoord4iv:
             return "glTexCoord4iv";
-        case EntryPoint::GLTexCoord4s:
+        case EntryPoint::TexCoord4s:
             return "glTexCoord4s";
-        case EntryPoint::GLTexCoord4sv:
+        case EntryPoint::TexCoord4sv:
             return "glTexCoord4sv";
-        case EntryPoint::GLTexCoordP1ui:
+        case EntryPoint::TexCoordP1ui:
             return "glTexCoordP1ui";
-        case EntryPoint::GLTexCoordP1uiv:
+        case EntryPoint::TexCoordP1uiv:
             return "glTexCoordP1uiv";
-        case EntryPoint::GLTexCoordP2ui:
+        case EntryPoint::TexCoordP2ui:
             return "glTexCoordP2ui";
-        case EntryPoint::GLTexCoordP2uiv:
+        case EntryPoint::TexCoordP2uiv:
             return "glTexCoordP2uiv";
-        case EntryPoint::GLTexCoordP3ui:
+        case EntryPoint::TexCoordP3ui:
             return "glTexCoordP3ui";
-        case EntryPoint::GLTexCoordP3uiv:
+        case EntryPoint::TexCoordP3uiv:
             return "glTexCoordP3uiv";
-        case EntryPoint::GLTexCoordP4ui:
+        case EntryPoint::TexCoordP4ui:
             return "glTexCoordP4ui";
-        case EntryPoint::GLTexCoordP4uiv:
+        case EntryPoint::TexCoordP4uiv:
             return "glTexCoordP4uiv";
-        case EntryPoint::GLTexCoordPointer:
+        case EntryPoint::TexCoordPointer:
             return "glTexCoordPointer";
-        case EntryPoint::GLTexEnvf:
+        case EntryPoint::TexEnvf:
             return "glTexEnvf";
-        case EntryPoint::GLTexEnvfv:
+        case EntryPoint::TexEnvfv:
             return "glTexEnvfv";
-        case EntryPoint::GLTexEnvi:
+        case EntryPoint::TexEnvi:
             return "glTexEnvi";
-        case EntryPoint::GLTexEnviv:
+        case EntryPoint::TexEnviv:
             return "glTexEnviv";
-        case EntryPoint::GLTexEnvx:
+        case EntryPoint::TexEnvx:
             return "glTexEnvx";
-        case EntryPoint::GLTexEnvxv:
+        case EntryPoint::TexEnvxv:
             return "glTexEnvxv";
-        case EntryPoint::GLTexGend:
+        case EntryPoint::TexGend:
             return "glTexGend";
-        case EntryPoint::GLTexGendv:
+        case EntryPoint::TexGendv:
             return "glTexGendv";
-        case EntryPoint::GLTexGenf:
+        case EntryPoint::TexGenf:
             return "glTexGenf";
-        case EntryPoint::GLTexGenfOES:
+        case EntryPoint::TexGenfOES:
             return "glTexGenfOES";
-        case EntryPoint::GLTexGenfv:
+        case EntryPoint::TexGenfv:
             return "glTexGenfv";
-        case EntryPoint::GLTexGenfvOES:
+        case EntryPoint::TexGenfvOES:
             return "glTexGenfvOES";
-        case EntryPoint::GLTexGeni:
+        case EntryPoint::TexGeni:
             return "glTexGeni";
-        case EntryPoint::GLTexGeniOES:
+        case EntryPoint::TexGeniOES:
             return "glTexGeniOES";
-        case EntryPoint::GLTexGeniv:
+        case EntryPoint::TexGeniv:
             return "glTexGeniv";
-        case EntryPoint::GLTexGenivOES:
+        case EntryPoint::TexGenivOES:
             return "glTexGenivOES";
-        case EntryPoint::GLTexGenxOES:
+        case EntryPoint::TexGenxOES:
             return "glTexGenxOES";
-        case EntryPoint::GLTexGenxvOES:
+        case EntryPoint::TexGenxvOES:
             return "glTexGenxvOES";
-        case EntryPoint::GLTexImage1D:
+        case EntryPoint::TexImage1D:
             return "glTexImage1D";
-        case EntryPoint::GLTexImage2D:
+        case EntryPoint::TexImage2D:
             return "glTexImage2D";
-        case EntryPoint::GLTexImage2DExternalANGLE:
+        case EntryPoint::TexImage2DExternalANGLE:
             return "glTexImage2DExternalANGLE";
-        case EntryPoint::GLTexImage2DMultisample:
+        case EntryPoint::TexImage2DMultisample:
             return "glTexImage2DMultisample";
-        case EntryPoint::GLTexImage2DRobustANGLE:
+        case EntryPoint::TexImage2DRobustANGLE:
             return "glTexImage2DRobustANGLE";
-        case EntryPoint::GLTexImage3D:
+        case EntryPoint::TexImage3D:
             return "glTexImage3D";
-        case EntryPoint::GLTexImage3DMultisample:
+        case EntryPoint::TexImage3DMultisample:
             return "glTexImage3DMultisample";
-        case EntryPoint::GLTexImage3DOES:
+        case EntryPoint::TexImage3DOES:
             return "glTexImage3DOES";
-        case EntryPoint::GLTexImage3DRobustANGLE:
+        case EntryPoint::TexImage3DRobustANGLE:
             return "glTexImage3DRobustANGLE";
-        case EntryPoint::GLTexParameterIiv:
+        case EntryPoint::TexParameterIiv:
             return "glTexParameterIiv";
-        case EntryPoint::GLTexParameterIivEXT:
-            return "glTexParameterIivEXT";
-        case EntryPoint::GLTexParameterIivOES:
+        case EntryPoint::TexParameterIivOES:
             return "glTexParameterIivOES";
-        case EntryPoint::GLTexParameterIivRobustANGLE:
+        case EntryPoint::TexParameterIivRobustANGLE:
             return "glTexParameterIivRobustANGLE";
-        case EntryPoint::GLTexParameterIuiv:
+        case EntryPoint::TexParameterIuiv:
             return "glTexParameterIuiv";
-        case EntryPoint::GLTexParameterIuivEXT:
-            return "glTexParameterIuivEXT";
-        case EntryPoint::GLTexParameterIuivOES:
+        case EntryPoint::TexParameterIuivOES:
             return "glTexParameterIuivOES";
-        case EntryPoint::GLTexParameterIuivRobustANGLE:
+        case EntryPoint::TexParameterIuivRobustANGLE:
             return "glTexParameterIuivRobustANGLE";
-        case EntryPoint::GLTexParameterf:
+        case EntryPoint::TexParameterf:
             return "glTexParameterf";
-        case EntryPoint::GLTexParameterfv:
+        case EntryPoint::TexParameterfv:
             return "glTexParameterfv";
-        case EntryPoint::GLTexParameterfvRobustANGLE:
+        case EntryPoint::TexParameterfvRobustANGLE:
             return "glTexParameterfvRobustANGLE";
-        case EntryPoint::GLTexParameteri:
+        case EntryPoint::TexParameteri:
             return "glTexParameteri";
-        case EntryPoint::GLTexParameteriv:
+        case EntryPoint::TexParameteriv:
             return "glTexParameteriv";
-        case EntryPoint::GLTexParameterivRobustANGLE:
+        case EntryPoint::TexParameterivRobustANGLE:
             return "glTexParameterivRobustANGLE";
-        case EntryPoint::GLTexParameterx:
+        case EntryPoint::TexParameterx:
             return "glTexParameterx";
-        case EntryPoint::GLTexParameterxv:
+        case EntryPoint::TexParameterxv:
             return "glTexParameterxv";
-        case EntryPoint::GLTexStorage1D:
+        case EntryPoint::TexStorage1D:
             return "glTexStorage1D";
-        case EntryPoint::GLTexStorage1DEXT:
+        case EntryPoint::TexStorage1DEXT:
             return "glTexStorage1DEXT";
-        case EntryPoint::GLTexStorage2D:
+        case EntryPoint::TexStorage2D:
             return "glTexStorage2D";
-        case EntryPoint::GLTexStorage2DEXT:
+        case EntryPoint::TexStorage2DEXT:
             return "glTexStorage2DEXT";
-        case EntryPoint::GLTexStorage2DMultisample:
+        case EntryPoint::TexStorage2DMultisample:
             return "glTexStorage2DMultisample";
-        case EntryPoint::GLTexStorage2DMultisampleANGLE:
+        case EntryPoint::TexStorage2DMultisampleANGLE:
             return "glTexStorage2DMultisampleANGLE";
-        case EntryPoint::GLTexStorage3D:
+        case EntryPoint::TexStorage3D:
             return "glTexStorage3D";
-        case EntryPoint::GLTexStorage3DEXT:
+        case EntryPoint::TexStorage3DEXT:
             return "glTexStorage3DEXT";
-        case EntryPoint::GLTexStorage3DMultisample:
+        case EntryPoint::TexStorage3DMultisample:
             return "glTexStorage3DMultisample";
-        case EntryPoint::GLTexStorage3DMultisampleOES:
+        case EntryPoint::TexStorage3DMultisampleOES:
             return "glTexStorage3DMultisampleOES";
-        case EntryPoint::GLTexStorageMem2DEXT:
+        case EntryPoint::TexStorageMem2DEXT:
             return "glTexStorageMem2DEXT";
-        case EntryPoint::GLTexStorageMem2DMultisampleEXT:
+        case EntryPoint::TexStorageMem2DMultisampleEXT:
             return "glTexStorageMem2DMultisampleEXT";
-        case EntryPoint::GLTexStorageMem3DEXT:
+        case EntryPoint::TexStorageMem3DEXT:
             return "glTexStorageMem3DEXT";
-        case EntryPoint::GLTexStorageMem3DMultisampleEXT:
+        case EntryPoint::TexStorageMem3DMultisampleEXT:
             return "glTexStorageMem3DMultisampleEXT";
-        case EntryPoint::GLTexStorageMemFlags2DANGLE:
+        case EntryPoint::TexStorageMemFlags2DANGLE:
             return "glTexStorageMemFlags2DANGLE";
-        case EntryPoint::GLTexStorageMemFlags2DMultisampleANGLE:
+        case EntryPoint::TexStorageMemFlags2DMultisampleANGLE:
             return "glTexStorageMemFlags2DMultisampleANGLE";
-        case EntryPoint::GLTexStorageMemFlags3DANGLE:
+        case EntryPoint::TexStorageMemFlags3DANGLE:
             return "glTexStorageMemFlags3DANGLE";
-        case EntryPoint::GLTexStorageMemFlags3DMultisampleANGLE:
+        case EntryPoint::TexStorageMemFlags3DMultisampleANGLE:
             return "glTexStorageMemFlags3DMultisampleANGLE";
-        case EntryPoint::GLTexSubImage1D:
+        case EntryPoint::TexSubImage1D:
             return "glTexSubImage1D";
-        case EntryPoint::GLTexSubImage2D:
+        case EntryPoint::TexSubImage2D:
             return "glTexSubImage2D";
-        case EntryPoint::GLTexSubImage2DRobustANGLE:
+        case EntryPoint::TexSubImage2DRobustANGLE:
             return "glTexSubImage2DRobustANGLE";
-        case EntryPoint::GLTexSubImage3D:
+        case EntryPoint::TexSubImage3D:
             return "glTexSubImage3D";
-        case EntryPoint::GLTexSubImage3DOES:
+        case EntryPoint::TexSubImage3DOES:
             return "glTexSubImage3DOES";
-        case EntryPoint::GLTexSubImage3DRobustANGLE:
+        case EntryPoint::TexSubImage3DRobustANGLE:
             return "glTexSubImage3DRobustANGLE";
-        case EntryPoint::GLTextureBarrier:
+        case EntryPoint::TextureBarrier:
             return "glTextureBarrier";
-        case EntryPoint::GLTextureBuffer:
+        case EntryPoint::TextureBuffer:
             return "glTextureBuffer";
-        case EntryPoint::GLTextureBufferRange:
+        case EntryPoint::TextureBufferRange:
             return "glTextureBufferRange";
-        case EntryPoint::GLTextureParameterIiv:
+        case EntryPoint::TextureParameterIiv:
             return "glTextureParameterIiv";
-        case EntryPoint::GLTextureParameterIuiv:
+        case EntryPoint::TextureParameterIuiv:
             return "glTextureParameterIuiv";
-        case EntryPoint::GLTextureParameterf:
+        case EntryPoint::TextureParameterf:
             return "glTextureParameterf";
-        case EntryPoint::GLTextureParameterfv:
+        case EntryPoint::TextureParameterfv:
             return "glTextureParameterfv";
-        case EntryPoint::GLTextureParameteri:
+        case EntryPoint::TextureParameteri:
             return "glTextureParameteri";
-        case EntryPoint::GLTextureParameteriv:
+        case EntryPoint::TextureParameteriv:
             return "glTextureParameteriv";
-        case EntryPoint::GLTextureStorage1D:
+        case EntryPoint::TextureStorage1D:
             return "glTextureStorage1D";
-        case EntryPoint::GLTextureStorage2D:
+        case EntryPoint::TextureStorage2D:
             return "glTextureStorage2D";
-        case EntryPoint::GLTextureStorage2DMultisample:
+        case EntryPoint::TextureStorage2DMultisample:
             return "glTextureStorage2DMultisample";
-        case EntryPoint::GLTextureStorage3D:
+        case EntryPoint::TextureStorage3D:
             return "glTextureStorage3D";
-        case EntryPoint::GLTextureStorage3DMultisample:
+        case EntryPoint::TextureStorage3DMultisample:
             return "glTextureStorage3DMultisample";
-        case EntryPoint::GLTextureSubImage1D:
+        case EntryPoint::TextureSubImage1D:
             return "glTextureSubImage1D";
-        case EntryPoint::GLTextureSubImage2D:
+        case EntryPoint::TextureSubImage2D:
             return "glTextureSubImage2D";
-        case EntryPoint::GLTextureSubImage3D:
+        case EntryPoint::TextureSubImage3D:
             return "glTextureSubImage3D";
-        case EntryPoint::GLTextureView:
+        case EntryPoint::TextureView:
             return "glTextureView";
-        case EntryPoint::GLTransformFeedbackBufferBase:
+        case EntryPoint::TransformFeedbackBufferBase:
             return "glTransformFeedbackBufferBase";
-        case EntryPoint::GLTransformFeedbackBufferRange:
+        case EntryPoint::TransformFeedbackBufferRange:
             return "glTransformFeedbackBufferRange";
-        case EntryPoint::GLTransformFeedbackVaryings:
+        case EntryPoint::TransformFeedbackVaryings:
             return "glTransformFeedbackVaryings";
-        case EntryPoint::GLTranslated:
+        case EntryPoint::Translated:
             return "glTranslated";
-        case EntryPoint::GLTranslatef:
+        case EntryPoint::Translatef:
             return "glTranslatef";
-        case EntryPoint::GLTranslatex:
+        case EntryPoint::Translatex:
             return "glTranslatex";
-        case EntryPoint::GLUniform1d:
+        case EntryPoint::Uniform1d:
             return "glUniform1d";
-        case EntryPoint::GLUniform1dv:
+        case EntryPoint::Uniform1dv:
             return "glUniform1dv";
-        case EntryPoint::GLUniform1f:
+        case EntryPoint::Uniform1f:
             return "glUniform1f";
-        case EntryPoint::GLUniform1fv:
+        case EntryPoint::Uniform1fv:
             return "glUniform1fv";
-        case EntryPoint::GLUniform1i:
+        case EntryPoint::Uniform1i:
             return "glUniform1i";
-        case EntryPoint::GLUniform1iv:
+        case EntryPoint::Uniform1iv:
             return "glUniform1iv";
-        case EntryPoint::GLUniform1ui:
+        case EntryPoint::Uniform1ui:
             return "glUniform1ui";
-        case EntryPoint::GLUniform1uiv:
+        case EntryPoint::Uniform1uiv:
             return "glUniform1uiv";
-        case EntryPoint::GLUniform2d:
+        case EntryPoint::Uniform2d:
             return "glUniform2d";
-        case EntryPoint::GLUniform2dv:
+        case EntryPoint::Uniform2dv:
             return "glUniform2dv";
-        case EntryPoint::GLUniform2f:
+        case EntryPoint::Uniform2f:
             return "glUniform2f";
-        case EntryPoint::GLUniform2fv:
+        case EntryPoint::Uniform2fv:
             return "glUniform2fv";
-        case EntryPoint::GLUniform2i:
+        case EntryPoint::Uniform2i:
             return "glUniform2i";
-        case EntryPoint::GLUniform2iv:
+        case EntryPoint::Uniform2iv:
             return "glUniform2iv";
-        case EntryPoint::GLUniform2ui:
+        case EntryPoint::Uniform2ui:
             return "glUniform2ui";
-        case EntryPoint::GLUniform2uiv:
+        case EntryPoint::Uniform2uiv:
             return "glUniform2uiv";
-        case EntryPoint::GLUniform3d:
+        case EntryPoint::Uniform3d:
             return "glUniform3d";
-        case EntryPoint::GLUniform3dv:
+        case EntryPoint::Uniform3dv:
             return "glUniform3dv";
-        case EntryPoint::GLUniform3f:
+        case EntryPoint::Uniform3f:
             return "glUniform3f";
-        case EntryPoint::GLUniform3fv:
+        case EntryPoint::Uniform3fv:
             return "glUniform3fv";
-        case EntryPoint::GLUniform3i:
+        case EntryPoint::Uniform3i:
             return "glUniform3i";
-        case EntryPoint::GLUniform3iv:
+        case EntryPoint::Uniform3iv:
             return "glUniform3iv";
-        case EntryPoint::GLUniform3ui:
+        case EntryPoint::Uniform3ui:
             return "glUniform3ui";
-        case EntryPoint::GLUniform3uiv:
+        case EntryPoint::Uniform3uiv:
             return "glUniform3uiv";
-        case EntryPoint::GLUniform4d:
+        case EntryPoint::Uniform4d:
             return "glUniform4d";
-        case EntryPoint::GLUniform4dv:
+        case EntryPoint::Uniform4dv:
             return "glUniform4dv";
-        case EntryPoint::GLUniform4f:
+        case EntryPoint::Uniform4f:
             return "glUniform4f";
-        case EntryPoint::GLUniform4fv:
+        case EntryPoint::Uniform4fv:
             return "glUniform4fv";
-        case EntryPoint::GLUniform4i:
+        case EntryPoint::Uniform4i:
             return "glUniform4i";
-        case EntryPoint::GLUniform4iv:
+        case EntryPoint::Uniform4iv:
             return "glUniform4iv";
-        case EntryPoint::GLUniform4ui:
+        case EntryPoint::Uniform4ui:
             return "glUniform4ui";
-        case EntryPoint::GLUniform4uiv:
+        case EntryPoint::Uniform4uiv:
             return "glUniform4uiv";
-        case EntryPoint::GLUniformBlockBinding:
+        case EntryPoint::UniformBlockBinding:
             return "glUniformBlockBinding";
-        case EntryPoint::GLUniformMatrix2dv:
+        case EntryPoint::UniformMatrix2dv:
             return "glUniformMatrix2dv";
-        case EntryPoint::GLUniformMatrix2fv:
+        case EntryPoint::UniformMatrix2fv:
             return "glUniformMatrix2fv";
-        case EntryPoint::GLUniformMatrix2x3dv:
+        case EntryPoint::UniformMatrix2x3dv:
             return "glUniformMatrix2x3dv";
-        case EntryPoint::GLUniformMatrix2x3fv:
+        case EntryPoint::UniformMatrix2x3fv:
             return "glUniformMatrix2x3fv";
-        case EntryPoint::GLUniformMatrix2x4dv:
+        case EntryPoint::UniformMatrix2x4dv:
             return "glUniformMatrix2x4dv";
-        case EntryPoint::GLUniformMatrix2x4fv:
+        case EntryPoint::UniformMatrix2x4fv:
             return "glUniformMatrix2x4fv";
-        case EntryPoint::GLUniformMatrix3dv:
+        case EntryPoint::UniformMatrix3dv:
             return "glUniformMatrix3dv";
-        case EntryPoint::GLUniformMatrix3fv:
+        case EntryPoint::UniformMatrix3fv:
             return "glUniformMatrix3fv";
-        case EntryPoint::GLUniformMatrix3x2dv:
+        case EntryPoint::UniformMatrix3x2dv:
             return "glUniformMatrix3x2dv";
-        case EntryPoint::GLUniformMatrix3x2fv:
+        case EntryPoint::UniformMatrix3x2fv:
             return "glUniformMatrix3x2fv";
-        case EntryPoint::GLUniformMatrix3x4dv:
+        case EntryPoint::UniformMatrix3x4dv:
             return "glUniformMatrix3x4dv";
-        case EntryPoint::GLUniformMatrix3x4fv:
+        case EntryPoint::UniformMatrix3x4fv:
             return "glUniformMatrix3x4fv";
-        case EntryPoint::GLUniformMatrix4dv:
+        case EntryPoint::UniformMatrix4dv:
             return "glUniformMatrix4dv";
-        case EntryPoint::GLUniformMatrix4fv:
+        case EntryPoint::UniformMatrix4fv:
             return "glUniformMatrix4fv";
-        case EntryPoint::GLUniformMatrix4x2dv:
+        case EntryPoint::UniformMatrix4x2dv:
             return "glUniformMatrix4x2dv";
-        case EntryPoint::GLUniformMatrix4x2fv:
+        case EntryPoint::UniformMatrix4x2fv:
             return "glUniformMatrix4x2fv";
-        case EntryPoint::GLUniformMatrix4x3dv:
+        case EntryPoint::UniformMatrix4x3dv:
             return "glUniformMatrix4x3dv";
-        case EntryPoint::GLUniformMatrix4x3fv:
+        case EntryPoint::UniformMatrix4x3fv:
             return "glUniformMatrix4x3fv";
-        case EntryPoint::GLUniformSubroutinesuiv:
+        case EntryPoint::UniformSubroutinesuiv:
             return "glUniformSubroutinesuiv";
-        case EntryPoint::GLUnmapBuffer:
+        case EntryPoint::UnmapBuffer:
             return "glUnmapBuffer";
-        case EntryPoint::GLUnmapBufferOES:
+        case EntryPoint::UnmapBufferOES:
             return "glUnmapBufferOES";
-        case EntryPoint::GLUnmapNamedBuffer:
+        case EntryPoint::UnmapNamedBuffer:
             return "glUnmapNamedBuffer";
-        case EntryPoint::GLUseProgram:
+        case EntryPoint::UseProgram:
             return "glUseProgram";
-        case EntryPoint::GLUseProgramStages:
+        case EntryPoint::UseProgramStages:
             return "glUseProgramStages";
-        case EntryPoint::GLUseProgramStagesEXT:
-            return "glUseProgramStagesEXT";
-        case EntryPoint::GLValidateProgram:
+        case EntryPoint::ValidateProgram:
             return "glValidateProgram";
-        case EntryPoint::GLValidateProgramPipeline:
+        case EntryPoint::ValidateProgramPipeline:
             return "glValidateProgramPipeline";
-        case EntryPoint::GLValidateProgramPipelineEXT:
-            return "glValidateProgramPipelineEXT";
-        case EntryPoint::GLVertex2d:
+        case EntryPoint::Vertex2d:
             return "glVertex2d";
-        case EntryPoint::GLVertex2dv:
+        case EntryPoint::Vertex2dv:
             return "glVertex2dv";
-        case EntryPoint::GLVertex2f:
+        case EntryPoint::Vertex2f:
             return "glVertex2f";
-        case EntryPoint::GLVertex2fv:
+        case EntryPoint::Vertex2fv:
             return "glVertex2fv";
-        case EntryPoint::GLVertex2i:
+        case EntryPoint::Vertex2i:
             return "glVertex2i";
-        case EntryPoint::GLVertex2iv:
+        case EntryPoint::Vertex2iv:
             return "glVertex2iv";
-        case EntryPoint::GLVertex2s:
+        case EntryPoint::Vertex2s:
             return "glVertex2s";
-        case EntryPoint::GLVertex2sv:
+        case EntryPoint::Vertex2sv:
             return "glVertex2sv";
-        case EntryPoint::GLVertex3d:
+        case EntryPoint::Vertex3d:
             return "glVertex3d";
-        case EntryPoint::GLVertex3dv:
+        case EntryPoint::Vertex3dv:
             return "glVertex3dv";
-        case EntryPoint::GLVertex3f:
+        case EntryPoint::Vertex3f:
             return "glVertex3f";
-        case EntryPoint::GLVertex3fv:
+        case EntryPoint::Vertex3fv:
             return "glVertex3fv";
-        case EntryPoint::GLVertex3i:
+        case EntryPoint::Vertex3i:
             return "glVertex3i";
-        case EntryPoint::GLVertex3iv:
+        case EntryPoint::Vertex3iv:
             return "glVertex3iv";
-        case EntryPoint::GLVertex3s:
+        case EntryPoint::Vertex3s:
             return "glVertex3s";
-        case EntryPoint::GLVertex3sv:
+        case EntryPoint::Vertex3sv:
             return "glVertex3sv";
-        case EntryPoint::GLVertex4d:
+        case EntryPoint::Vertex4d:
             return "glVertex4d";
-        case EntryPoint::GLVertex4dv:
+        case EntryPoint::Vertex4dv:
             return "glVertex4dv";
-        case EntryPoint::GLVertex4f:
+        case EntryPoint::Vertex4f:
             return "glVertex4f";
-        case EntryPoint::GLVertex4fv:
+        case EntryPoint::Vertex4fv:
             return "glVertex4fv";
-        case EntryPoint::GLVertex4i:
+        case EntryPoint::Vertex4i:
             return "glVertex4i";
-        case EntryPoint::GLVertex4iv:
+        case EntryPoint::Vertex4iv:
             return "glVertex4iv";
-        case EntryPoint::GLVertex4s:
+        case EntryPoint::Vertex4s:
             return "glVertex4s";
-        case EntryPoint::GLVertex4sv:
+        case EntryPoint::Vertex4sv:
             return "glVertex4sv";
-        case EntryPoint::GLVertexArrayAttribBinding:
+        case EntryPoint::VertexArrayAttribBinding:
             return "glVertexArrayAttribBinding";
-        case EntryPoint::GLVertexArrayAttribFormat:
+        case EntryPoint::VertexArrayAttribFormat:
             return "glVertexArrayAttribFormat";
-        case EntryPoint::GLVertexArrayAttribIFormat:
+        case EntryPoint::VertexArrayAttribIFormat:
             return "glVertexArrayAttribIFormat";
-        case EntryPoint::GLVertexArrayAttribLFormat:
+        case EntryPoint::VertexArrayAttribLFormat:
             return "glVertexArrayAttribLFormat";
-        case EntryPoint::GLVertexArrayBindingDivisor:
+        case EntryPoint::VertexArrayBindingDivisor:
             return "glVertexArrayBindingDivisor";
-        case EntryPoint::GLVertexArrayElementBuffer:
+        case EntryPoint::VertexArrayElementBuffer:
             return "glVertexArrayElementBuffer";
-        case EntryPoint::GLVertexArrayVertexBuffer:
+        case EntryPoint::VertexArrayVertexBuffer:
             return "glVertexArrayVertexBuffer";
-        case EntryPoint::GLVertexArrayVertexBuffers:
+        case EntryPoint::VertexArrayVertexBuffers:
             return "glVertexArrayVertexBuffers";
-        case EntryPoint::GLVertexAttrib1d:
+        case EntryPoint::VertexAttrib1d:
             return "glVertexAttrib1d";
-        case EntryPoint::GLVertexAttrib1dv:
+        case EntryPoint::VertexAttrib1dv:
             return "glVertexAttrib1dv";
-        case EntryPoint::GLVertexAttrib1f:
+        case EntryPoint::VertexAttrib1f:
             return "glVertexAttrib1f";
-        case EntryPoint::GLVertexAttrib1fv:
+        case EntryPoint::VertexAttrib1fv:
             return "glVertexAttrib1fv";
-        case EntryPoint::GLVertexAttrib1s:
+        case EntryPoint::VertexAttrib1s:
             return "glVertexAttrib1s";
-        case EntryPoint::GLVertexAttrib1sv:
+        case EntryPoint::VertexAttrib1sv:
             return "glVertexAttrib1sv";
-        case EntryPoint::GLVertexAttrib2d:
+        case EntryPoint::VertexAttrib2d:
             return "glVertexAttrib2d";
-        case EntryPoint::GLVertexAttrib2dv:
+        case EntryPoint::VertexAttrib2dv:
             return "glVertexAttrib2dv";
-        case EntryPoint::GLVertexAttrib2f:
+        case EntryPoint::VertexAttrib2f:
             return "glVertexAttrib2f";
-        case EntryPoint::GLVertexAttrib2fv:
+        case EntryPoint::VertexAttrib2fv:
             return "glVertexAttrib2fv";
-        case EntryPoint::GLVertexAttrib2s:
+        case EntryPoint::VertexAttrib2s:
             return "glVertexAttrib2s";
-        case EntryPoint::GLVertexAttrib2sv:
+        case EntryPoint::VertexAttrib2sv:
             return "glVertexAttrib2sv";
-        case EntryPoint::GLVertexAttrib3d:
+        case EntryPoint::VertexAttrib3d:
             return "glVertexAttrib3d";
-        case EntryPoint::GLVertexAttrib3dv:
+        case EntryPoint::VertexAttrib3dv:
             return "glVertexAttrib3dv";
-        case EntryPoint::GLVertexAttrib3f:
+        case EntryPoint::VertexAttrib3f:
             return "glVertexAttrib3f";
-        case EntryPoint::GLVertexAttrib3fv:
+        case EntryPoint::VertexAttrib3fv:
             return "glVertexAttrib3fv";
-        case EntryPoint::GLVertexAttrib3s:
+        case EntryPoint::VertexAttrib3s:
             return "glVertexAttrib3s";
-        case EntryPoint::GLVertexAttrib3sv:
+        case EntryPoint::VertexAttrib3sv:
             return "glVertexAttrib3sv";
-        case EntryPoint::GLVertexAttrib4Nbv:
+        case EntryPoint::VertexAttrib4Nbv:
             return "glVertexAttrib4Nbv";
-        case EntryPoint::GLVertexAttrib4Niv:
+        case EntryPoint::VertexAttrib4Niv:
             return "glVertexAttrib4Niv";
-        case EntryPoint::GLVertexAttrib4Nsv:
+        case EntryPoint::VertexAttrib4Nsv:
             return "glVertexAttrib4Nsv";
-        case EntryPoint::GLVertexAttrib4Nub:
+        case EntryPoint::VertexAttrib4Nub:
             return "glVertexAttrib4Nub";
-        case EntryPoint::GLVertexAttrib4Nubv:
+        case EntryPoint::VertexAttrib4Nubv:
             return "glVertexAttrib4Nubv";
-        case EntryPoint::GLVertexAttrib4Nuiv:
+        case EntryPoint::VertexAttrib4Nuiv:
             return "glVertexAttrib4Nuiv";
-        case EntryPoint::GLVertexAttrib4Nusv:
+        case EntryPoint::VertexAttrib4Nusv:
             return "glVertexAttrib4Nusv";
-        case EntryPoint::GLVertexAttrib4bv:
+        case EntryPoint::VertexAttrib4bv:
             return "glVertexAttrib4bv";
-        case EntryPoint::GLVertexAttrib4d:
+        case EntryPoint::VertexAttrib4d:
             return "glVertexAttrib4d";
-        case EntryPoint::GLVertexAttrib4dv:
+        case EntryPoint::VertexAttrib4dv:
             return "glVertexAttrib4dv";
-        case EntryPoint::GLVertexAttrib4f:
+        case EntryPoint::VertexAttrib4f:
             return "glVertexAttrib4f";
-        case EntryPoint::GLVertexAttrib4fv:
+        case EntryPoint::VertexAttrib4fv:
             return "glVertexAttrib4fv";
-        case EntryPoint::GLVertexAttrib4iv:
+        case EntryPoint::VertexAttrib4iv:
             return "glVertexAttrib4iv";
-        case EntryPoint::GLVertexAttrib4s:
+        case EntryPoint::VertexAttrib4s:
             return "glVertexAttrib4s";
-        case EntryPoint::GLVertexAttrib4sv:
+        case EntryPoint::VertexAttrib4sv:
             return "glVertexAttrib4sv";
-        case EntryPoint::GLVertexAttrib4ubv:
+        case EntryPoint::VertexAttrib4ubv:
             return "glVertexAttrib4ubv";
-        case EntryPoint::GLVertexAttrib4uiv:
+        case EntryPoint::VertexAttrib4uiv:
             return "glVertexAttrib4uiv";
-        case EntryPoint::GLVertexAttrib4usv:
+        case EntryPoint::VertexAttrib4usv:
             return "glVertexAttrib4usv";
-        case EntryPoint::GLVertexAttribBinding:
+        case EntryPoint::VertexAttribBinding:
             return "glVertexAttribBinding";
-        case EntryPoint::GLVertexAttribDivisor:
+        case EntryPoint::VertexAttribDivisor:
             return "glVertexAttribDivisor";
-        case EntryPoint::GLVertexAttribDivisorANGLE:
+        case EntryPoint::VertexAttribDivisorANGLE:
             return "glVertexAttribDivisorANGLE";
-        case EntryPoint::GLVertexAttribDivisorEXT:
+        case EntryPoint::VertexAttribDivisorEXT:
             return "glVertexAttribDivisorEXT";
-        case EntryPoint::GLVertexAttribFormat:
+        case EntryPoint::VertexAttribFormat:
             return "glVertexAttribFormat";
-        case EntryPoint::GLVertexAttribI1i:
+        case EntryPoint::VertexAttribI1i:
             return "glVertexAttribI1i";
-        case EntryPoint::GLVertexAttribI1iv:
+        case EntryPoint::VertexAttribI1iv:
             return "glVertexAttribI1iv";
-        case EntryPoint::GLVertexAttribI1ui:
+        case EntryPoint::VertexAttribI1ui:
             return "glVertexAttribI1ui";
-        case EntryPoint::GLVertexAttribI1uiv:
+        case EntryPoint::VertexAttribI1uiv:
             return "glVertexAttribI1uiv";
-        case EntryPoint::GLVertexAttribI2i:
+        case EntryPoint::VertexAttribI2i:
             return "glVertexAttribI2i";
-        case EntryPoint::GLVertexAttribI2iv:
+        case EntryPoint::VertexAttribI2iv:
             return "glVertexAttribI2iv";
-        case EntryPoint::GLVertexAttribI2ui:
+        case EntryPoint::VertexAttribI2ui:
             return "glVertexAttribI2ui";
-        case EntryPoint::GLVertexAttribI2uiv:
+        case EntryPoint::VertexAttribI2uiv:
             return "glVertexAttribI2uiv";
-        case EntryPoint::GLVertexAttribI3i:
+        case EntryPoint::VertexAttribI3i:
             return "glVertexAttribI3i";
-        case EntryPoint::GLVertexAttribI3iv:
+        case EntryPoint::VertexAttribI3iv:
             return "glVertexAttribI3iv";
-        case EntryPoint::GLVertexAttribI3ui:
+        case EntryPoint::VertexAttribI3ui:
             return "glVertexAttribI3ui";
-        case EntryPoint::GLVertexAttribI3uiv:
+        case EntryPoint::VertexAttribI3uiv:
             return "glVertexAttribI3uiv";
-        case EntryPoint::GLVertexAttribI4bv:
+        case EntryPoint::VertexAttribI4bv:
             return "glVertexAttribI4bv";
-        case EntryPoint::GLVertexAttribI4i:
+        case EntryPoint::VertexAttribI4i:
             return "glVertexAttribI4i";
-        case EntryPoint::GLVertexAttribI4iv:
+        case EntryPoint::VertexAttribI4iv:
             return "glVertexAttribI4iv";
-        case EntryPoint::GLVertexAttribI4sv:
+        case EntryPoint::VertexAttribI4sv:
             return "glVertexAttribI4sv";
-        case EntryPoint::GLVertexAttribI4ubv:
+        case EntryPoint::VertexAttribI4ubv:
             return "glVertexAttribI4ubv";
-        case EntryPoint::GLVertexAttribI4ui:
+        case EntryPoint::VertexAttribI4ui:
             return "glVertexAttribI4ui";
-        case EntryPoint::GLVertexAttribI4uiv:
+        case EntryPoint::VertexAttribI4uiv:
             return "glVertexAttribI4uiv";
-        case EntryPoint::GLVertexAttribI4usv:
+        case EntryPoint::VertexAttribI4usv:
             return "glVertexAttribI4usv";
-        case EntryPoint::GLVertexAttribIFormat:
+        case EntryPoint::VertexAttribIFormat:
             return "glVertexAttribIFormat";
-        case EntryPoint::GLVertexAttribIPointer:
+        case EntryPoint::VertexAttribIPointer:
             return "glVertexAttribIPointer";
-        case EntryPoint::GLVertexAttribL1d:
+        case EntryPoint::VertexAttribL1d:
             return "glVertexAttribL1d";
-        case EntryPoint::GLVertexAttribL1dv:
+        case EntryPoint::VertexAttribL1dv:
             return "glVertexAttribL1dv";
-        case EntryPoint::GLVertexAttribL2d:
+        case EntryPoint::VertexAttribL2d:
             return "glVertexAttribL2d";
-        case EntryPoint::GLVertexAttribL2dv:
+        case EntryPoint::VertexAttribL2dv:
             return "glVertexAttribL2dv";
-        case EntryPoint::GLVertexAttribL3d:
+        case EntryPoint::VertexAttribL3d:
             return "glVertexAttribL3d";
-        case EntryPoint::GLVertexAttribL3dv:
+        case EntryPoint::VertexAttribL3dv:
             return "glVertexAttribL3dv";
-        case EntryPoint::GLVertexAttribL4d:
+        case EntryPoint::VertexAttribL4d:
             return "glVertexAttribL4d";
-        case EntryPoint::GLVertexAttribL4dv:
+        case EntryPoint::VertexAttribL4dv:
             return "glVertexAttribL4dv";
-        case EntryPoint::GLVertexAttribLFormat:
+        case EntryPoint::VertexAttribLFormat:
             return "glVertexAttribLFormat";
-        case EntryPoint::GLVertexAttribLPointer:
+        case EntryPoint::VertexAttribLPointer:
             return "glVertexAttribLPointer";
-        case EntryPoint::GLVertexAttribP1ui:
+        case EntryPoint::VertexAttribP1ui:
             return "glVertexAttribP1ui";
-        case EntryPoint::GLVertexAttribP1uiv:
+        case EntryPoint::VertexAttribP1uiv:
             return "glVertexAttribP1uiv";
-        case EntryPoint::GLVertexAttribP2ui:
+        case EntryPoint::VertexAttribP2ui:
             return "glVertexAttribP2ui";
-        case EntryPoint::GLVertexAttribP2uiv:
+        case EntryPoint::VertexAttribP2uiv:
             return "glVertexAttribP2uiv";
-        case EntryPoint::GLVertexAttribP3ui:
+        case EntryPoint::VertexAttribP3ui:
             return "glVertexAttribP3ui";
-        case EntryPoint::GLVertexAttribP3uiv:
+        case EntryPoint::VertexAttribP3uiv:
             return "glVertexAttribP3uiv";
-        case EntryPoint::GLVertexAttribP4ui:
+        case EntryPoint::VertexAttribP4ui:
             return "glVertexAttribP4ui";
-        case EntryPoint::GLVertexAttribP4uiv:
+        case EntryPoint::VertexAttribP4uiv:
             return "glVertexAttribP4uiv";
-        case EntryPoint::GLVertexAttribPointer:
+        case EntryPoint::VertexAttribPointer:
             return "glVertexAttribPointer";
-        case EntryPoint::GLVertexBindingDivisor:
+        case EntryPoint::VertexBindingDivisor:
             return "glVertexBindingDivisor";
-        case EntryPoint::GLVertexP2ui:
+        case EntryPoint::VertexP2ui:
             return "glVertexP2ui";
-        case EntryPoint::GLVertexP2uiv:
+        case EntryPoint::VertexP2uiv:
             return "glVertexP2uiv";
-        case EntryPoint::GLVertexP3ui:
+        case EntryPoint::VertexP3ui:
             return "glVertexP3ui";
-        case EntryPoint::GLVertexP3uiv:
+        case EntryPoint::VertexP3uiv:
             return "glVertexP3uiv";
-        case EntryPoint::GLVertexP4ui:
+        case EntryPoint::VertexP4ui:
             return "glVertexP4ui";
-        case EntryPoint::GLVertexP4uiv:
+        case EntryPoint::VertexP4uiv:
             return "glVertexP4uiv";
-        case EntryPoint::GLVertexPointer:
+        case EntryPoint::VertexPointer:
             return "glVertexPointer";
-        case EntryPoint::GLViewport:
+        case EntryPoint::Viewport:
             return "glViewport";
-        case EntryPoint::GLViewportArrayv:
+        case EntryPoint::ViewportArrayv:
             return "glViewportArrayv";
-        case EntryPoint::GLViewportIndexedf:
+        case EntryPoint::ViewportIndexedf:
             return "glViewportIndexedf";
-        case EntryPoint::GLViewportIndexedfv:
+        case EntryPoint::ViewportIndexedfv:
             return "glViewportIndexedfv";
-        case EntryPoint::GLWaitSemaphoreEXT:
+        case EntryPoint::WaitSemaphoreEXT:
             return "glWaitSemaphoreEXT";
-        case EntryPoint::GLWaitSync:
+        case EntryPoint::WaitSync:
             return "glWaitSync";
-        case EntryPoint::GLWeightPointerOES:
+        case EntryPoint::WeightPointerOES:
             return "glWeightPointerOES";
-        case EntryPoint::GLWindowPos2d:
+        case EntryPoint::WindowPos2d:
             return "glWindowPos2d";
-        case EntryPoint::GLWindowPos2dv:
+        case EntryPoint::WindowPos2dv:
             return "glWindowPos2dv";
-        case EntryPoint::GLWindowPos2f:
+        case EntryPoint::WindowPos2f:
             return "glWindowPos2f";
-        case EntryPoint::GLWindowPos2fv:
+        case EntryPoint::WindowPos2fv:
             return "glWindowPos2fv";
-        case EntryPoint::GLWindowPos2i:
+        case EntryPoint::WindowPos2i:
             return "glWindowPos2i";
-        case EntryPoint::GLWindowPos2iv:
+        case EntryPoint::WindowPos2iv:
             return "glWindowPos2iv";
-        case EntryPoint::GLWindowPos2s:
+        case EntryPoint::WindowPos2s:
             return "glWindowPos2s";
-        case EntryPoint::GLWindowPos2sv:
+        case EntryPoint::WindowPos2sv:
             return "glWindowPos2sv";
-        case EntryPoint::GLWindowPos3d:
+        case EntryPoint::WindowPos3d:
             return "glWindowPos3d";
-        case EntryPoint::GLWindowPos3dv:
+        case EntryPoint::WindowPos3dv:
             return "glWindowPos3dv";
-        case EntryPoint::GLWindowPos3f:
+        case EntryPoint::WindowPos3f:
             return "glWindowPos3f";
-        case EntryPoint::GLWindowPos3fv:
+        case EntryPoint::WindowPos3fv:
             return "glWindowPos3fv";
-        case EntryPoint::GLWindowPos3i:
+        case EntryPoint::WindowPos3i:
             return "glWindowPos3i";
-        case EntryPoint::GLWindowPos3iv:
+        case EntryPoint::WindowPos3iv:
             return "glWindowPos3iv";
-        case EntryPoint::GLWindowPos3s:
+        case EntryPoint::WindowPos3s:
             return "glWindowPos3s";
-        case EntryPoint::GLWindowPos3sv:
+        case EntryPoint::WindowPos3sv:
             return "glWindowPos3sv";
-        case EntryPoint::WGLChoosePixelFormat:
-            return "wglChoosePixelFormat";
-        case EntryPoint::WGLCopyContext:
-            return "wglCopyContext";
-        case EntryPoint::WGLCreateContext:
-            return "wglCreateContext";
-        case EntryPoint::WGLCreateLayerContext:
-            return "wglCreateLayerContext";
-        case EntryPoint::WGLDeleteContext:
-            return "wglDeleteContext";
-        case EntryPoint::WGLDescribeLayerPlane:
-            return "wglDescribeLayerPlane";
-        case EntryPoint::WGLDescribePixelFormat:
-            return "wglDescribePixelFormat";
-        case EntryPoint::WGLGetCurrentContext:
-            return "wglGetCurrentContext";
-        case EntryPoint::WGLGetCurrentDC:
-            return "wglGetCurrentDC";
-        case EntryPoint::WGLGetEnhMetaFilePixelFormat:
-            return "wglGetEnhMetaFilePixelFormat";
-        case EntryPoint::WGLGetLayerPaletteEntries:
-            return "wglGetLayerPaletteEntries";
-        case EntryPoint::WGLGetPixelFormat:
-            return "wglGetPixelFormat";
-        case EntryPoint::WGLGetProcAddress:
-            return "wglGetProcAddress";
-        case EntryPoint::WGLMakeCurrent:
-            return "wglMakeCurrent";
-        case EntryPoint::WGLRealizeLayerPalette:
-            return "wglRealizeLayerPalette";
-        case EntryPoint::WGLSetLayerPaletteEntries:
-            return "wglSetLayerPaletteEntries";
-        case EntryPoint::WGLSetPixelFormat:
-            return "wglSetPixelFormat";
-        case EntryPoint::WGLShareLists:
-            return "wglShareLists";
-        case EntryPoint::WGLSwapBuffers:
-            return "wglSwapBuffers";
-        case EntryPoint::WGLSwapLayerBuffers:
-            return "wglSwapLayerBuffers";
-        case EntryPoint::WGLUseFontBitmaps:
-            return "wglUseFontBitmaps";
-        case EntryPoint::WGLUseFontBitmapsA:
-            return "wglUseFontBitmapsA";
-        case EntryPoint::WGLUseFontBitmapsW:
-            return "wglUseFontBitmapsW";
-        case EntryPoint::WGLUseFontOutlines:
-            return "wglUseFontOutlines";
-        case EntryPoint::WGLUseFontOutlinesA:
-            return "wglUseFontOutlinesA";
-        case EntryPoint::WGLUseFontOutlinesW:
-            return "wglUseFontOutlinesW";
         default:
             UNREACHABLE();
             return "error";
     }
 }
-}  // namespace angle
+}  // namespace gl

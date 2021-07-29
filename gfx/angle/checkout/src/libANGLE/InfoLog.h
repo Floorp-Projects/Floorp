@@ -39,7 +39,7 @@ class InfoLog : angle::NonCopyable
         ~StreamHelper()
         {
             // Write newline when destroyed on the stack
-            if (mStream && !mStream->str().empty())
+            if (mStream)
             {
                 (*mStream) << std::endl;
             }
