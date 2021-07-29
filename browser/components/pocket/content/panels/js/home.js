@@ -1,5 +1,6 @@
 /* global Handlebars:false */
 /* import-globals-from messages.js */
+/* import-globals-from main.js */
 
 /*
 PKT_PANEL_OVERLAY is the view itself and contains all of the methods to manipute the overlay and messaging.
@@ -14,38 +15,19 @@ var PKT_PANEL_OVERLAY = function(options) {
     const parser = new DOMParser();
     return parser.parseFromString(htmlString, `text/html`).documentElement;
   };
-  this.initCloseTabEvents = function() {
-    function clickHelper(e, linkData) {
-      e.preventDefault();
-      pktPanelMessaging.sendMessage("PKT_openTabWithUrl", {
-        url: linkData.url,
-        activate: true,
-        source: linkData.source || "",
-        position: linkData.position,
-      });
-    }
 
-    document.querySelector(`.pkt_ext_mylist`).addEventListener(`click`, e => {
-      clickHelper(e, {
-        source: "home_view_list",
-        url: e.currentTarget.getAttribute(`href`),
-      });
+  this.setupClickEvents = function() {
+    thePKT_PANEL.clickHelper(document.querySelector(`.pkt_ext_mylist`), {
+      source: `home_view_list`,
+    });
+    thePKT_PANEL.clickHelper(document.querySelector(`.pkt_ext_discover`), {
+      source: `home_discover`,
     });
 
     document.querySelectorAll(`.pkt_ext_topic`).forEach((el, position) => {
-      el.addEventListener(`click`, e => {
-        clickHelper(e, {
-          source: "home_topic",
-          url: e.currentTarget.getAttribute(`href`),
-          position,
-        });
-      });
-    });
-
-    document.querySelector(`.pkt_ext_discover`).addEventListener(`click`, e => {
-      clickHelper(e, {
-        source: "home_discover",
-        url: e.currentTarget.getAttribute(`href`),
+      thePKT_PANEL.clickHelper(el, {
+        source: `home_topic`,
+        position,
       });
     });
   };
@@ -111,8 +93,8 @@ PKT_PANEL_OVERLAY.prototype = {
         .append(this.parseHTML(Handlebars.templates.explore_more()));
     }
 
-    // close events
-    this.initCloseTabEvents();
+    // click events
+    this.setupClickEvents();
 
     // tell back end we're ready
     pktPanelMessaging.sendMessage("PKT_show_home");
