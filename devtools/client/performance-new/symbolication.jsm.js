@@ -215,6 +215,36 @@ function createLibraryMap(sharedLibraries) {
   };
 }
 
+class LocalSymbolicationService {
+  /**
+   * @param {Library[]} sharedLibraries - Information about the shared libraries
+   * @param {string[]} objdirs - An array of objdir paths
+   *   on the host machine that should be searched for relevant build artifacts.
+   * @param {PerfFront} [perfFront] - An optional perf actor, to obtain symbol
+   *   tables from remote targets
+   */
+  constructor(sharedLibraries, objdirs, perfFront) {
+    this._libraryGetter = createLibraryMap(sharedLibraries);
+    this._objdirs = objdirs;
+    this._perfFront = perfFront;
+  }
+
+  /**
+   * @param {string} debugName
+   * @param {string} breakpadId
+   * @returns {Promise<SymbolTableAsTuple>}
+   */
+  async getSymbolTable(debugName, breakpadId) {
+    const lib = this._libraryGetter(debugName, breakpadId);
+    if (!lib) {
+      throw new Error(
+        `Could not find the library for "${debugName}", "${breakpadId}".`
+      );
+    }
+    return getSymbolTableMultiModal(lib, this._objdirs, this._perfFront);
+  }
+}
+
 /**
  * Return an object that implements the SymbolicationService interface, whose
  * getSymbolTable method calls getSymbolTableMultiModal with the right arguments.
@@ -227,19 +257,7 @@ function createLibraryMap(sharedLibraries) {
  * @return {SymbolicationService}
  */
 function createLocalSymbolicationService(sharedLibraries, objdirs, perfFront) {
-  const libraryGetter = createLibraryMap(sharedLibraries);
-
-  return {
-    async getSymbolTable(debugName, breakpadId) {
-      const lib = libraryGetter(debugName, breakpadId);
-      if (!lib) {
-        throw new Error(
-          `Could not find the library for "${debugName}", "${breakpadId}".`
-        );
-      }
-      return getSymbolTableMultiModal(lib, objdirs, perfFront);
-    },
-  };
+  return new LocalSymbolicationService(sharedLibraries, objdirs, perfFront);
 }
 
 // Provide an exports object for the JSM to be properly read by TypeScript.
