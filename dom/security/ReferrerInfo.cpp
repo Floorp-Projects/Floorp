@@ -664,6 +664,51 @@ nsresult ReferrerInfo::TrimReferrerWithPolicy(nsIURI* aReferrer,
   return NS_OK;
 }
 
+bool ReferrerInfo::ShouldIgnoreLessRestrictedPolicies(
+    nsIHttpChannel* aChannel, const ReferrerPolicyEnum aPolicy) const {
+  MOZ_ASSERT(aChannel);
+
+  if (!StaticPrefs::network_http_referer_disallowCrossSiteRelaxingDefault()) {
+    return false;
+  }
+
+  // We only care about the less restricted policies.
+  if (aPolicy != ReferrerPolicy::Unsafe_url &&
+      aPolicy != ReferrerPolicy::No_referrer_when_downgrade &&
+      aPolicy != ReferrerPolicy::Origin_when_cross_origin) {
+    return false;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+
+  // Check if the channel is triggered by the system or the extension.
+  auto* triggerBasePrincipal =
+      BasePrincipal::Cast(loadInfo->TriggeringPrincipal());
+  if (triggerBasePrincipal->IsSystemPrincipal() ||
+      triggerBasePrincipal->AddonPolicy()) {
+    return false;
+  }
+
+  if (!loadInfo->TriggeringPrincipal()->GetIsContentPrincipal()) {
+    LOG(("no triggering URI via loadInfo, assuming load is cross-site"));
+    return true;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+
+  bool isCrossSite = true;
+  rv = loadInfo->TriggeringPrincipal()->IsThirdPartyURI(uri, &isCrossSite);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+
+  return isCrossSite;
+}
+
 void ReferrerInfo::LogMessageToConsole(
     nsIHttpChannel* aChannel, const char* aMsg,
     const nsTArray<nsString>& aParams) const {
@@ -1169,7 +1214,8 @@ nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {
     return NS_OK;
   }
 
-  if (mPolicy == ReferrerPolicy::_empty) {
+  if (mPolicy == ReferrerPolicy::_empty ||
+      ShouldIgnoreLessRestrictedPolicies(aChannel, mPolicy)) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     OriginAttributes attrs = loadInfo->GetOriginAttributes();
     bool isPrivate = attrs.mPrivateBrowsingId > 0;
