@@ -460,6 +460,25 @@ class DocAccessible : public HyperTextAccessibleWrap,
                                     nsAtom* aAttribute);
 
   /**
+   * Fire accessible events when attribute is changed.
+   *
+   * @param aAccessible   [in] accessible the DOM attribute is changed for
+   * @param aNameSpaceID  [in] namespace of changed attribute
+   * @param aAttribute    [in] changed attribute
+   * @param aModType      [in] modification type (changed/added/removed)
+   */
+  void AttributeChangedImpl(LocalAccessible* aAccessible, int32_t aNameSpaceID,
+                            nsAtom* aAttribute, int32_t aModType);
+
+  /**
+   * Fire accessible events when ARIA attribute is changed.
+   *
+   * @param aAccessible  [in] accesislbe the DOM attribute is changed for
+   * @param aAttribute   [in] changed attribute
+   */
+  void ARIAAttributeChanged(LocalAccessible* aAccessible, nsAtom* aAttribute);
+
+  /**
    * Process ARIA active-descendant attribute change.
    */
   void ARIAActiveDescendantChanged(LocalAccessible* aAccessible);
@@ -616,9 +635,13 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * A generic state (see items below) before the attribute value was changed.
    * @see AttributeWillChange and AttributeChanged notifications.
    */
+  union {
+    // ARIA attribute value
+    const nsAtom* mARIAAttrOldValue;
 
-  // Previous state bits before attribute change
-  uint64_t mPrevStateBits;
+    // Previous state bits before attribute change
+    uint64_t mPrevStateBits;
+  };
 
   nsTArray<RefPtr<DocAccessible>> mChildDocuments;
 
