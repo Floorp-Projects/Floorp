@@ -270,9 +270,6 @@ var whitelist = [
   },
   { file: "chrome://browser/content/screenshots/menu-fullpage.svg" },
   { file: "chrome://browser/content/screenshots/menu-visible.svg" },
-
-  // Will be resolved by bug 1722275.
-  { file: "resource://app/modules/pagedata/PageDataService.jsm" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
