@@ -95,7 +95,7 @@
 #include "xpcpublic.h"
 #include "js/HashTable.h"
 #include "js/GCHashTable.h"
-#include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetPrivate
+#include "js/Object.h"              // JS::GetClass, JS::GetCompartment
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/TracingAPI.h"
 #include "js/WeakMapPtr.h"
@@ -792,8 +792,6 @@ class MOZ_STACK_CLASS XPCCallContext final {
 extern const JSClass XPC_WN_NoHelper_JSClass;
 extern const JSClass XPC_WN_Proto_JSClass;
 extern const JSClass XPC_WN_Tearoff_JSClass;
-#define XPC_WN_TEAROFF_RESERVED_SLOTS 1
-#define XPC_WN_TEAROFF_FLAT_OBJECT_SLOT 0
 extern const JSClass XPC_WN_NoHelper_Proto_JSClass;
 
 extern bool XPC_WN_CallMethod(JSContext* cx, unsigned argc, JS::Value* vp);
@@ -1287,6 +1285,8 @@ class XPCWrappedNativeProto final {
 
 class XPCWrappedNativeTearOff final {
  public:
+  enum Slots { FlatObjectSlot, TearOffSlot, SlotCount };
+
   bool IsAvailable() const { return mInterface == nullptr; }
   bool IsReserved() const { return mInterface == (XPCNativeInterface*)1; }
   bool IsValid() const { return !IsAvailable() && !IsReserved(); }
@@ -1303,6 +1303,8 @@ class XPCWrappedNativeTearOff final {
 
   void JSObjectFinalized() { SetJSObject(nullptr); }
   void JSObjectMoved(JSObject* obj, const JSObject* old);
+
+  static XPCWrappedNativeTearOff* Get(JSObject* obj);
 
   XPCWrappedNativeTearOff() : mInterface(nullptr), mJSObject(nullptr) {
     MOZ_COUNT_CTOR(XPCWrappedNativeTearOff);
@@ -2187,8 +2189,6 @@ class XPCTraceableVariant : public XPCVariant, public XPCRootSetElem {
 
 /***************************************************************************/
 // Utilities
-
-inline void* xpc_GetJSPrivate(JSObject* obj) { return JS::GetPrivate(obj); }
 
 inline JSContext* xpc_GetSafeJSContext() {
   return XPCJSContext::Get()->Context();

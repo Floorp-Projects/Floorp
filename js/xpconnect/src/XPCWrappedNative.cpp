@@ -749,7 +749,8 @@ void XPCWrappedNative::FlatJSObjectFinalized() {
        to = to->GetNextTearOff()) {
     JSObject* jso = to->GetJSObjectPreserveColor();
     if (jso) {
-      JS::SetPrivate(jso, nullptr);
+      JS::SetReservedSlot(jso, XPCWrappedNativeTearOff::TearOffSlot,
+                          JS::UndefinedValue());
       to->JSObjectFinalized();
     }
 
@@ -827,7 +828,8 @@ void XPCWrappedNative::SystemIsBeingShutDown() {
   for (XPCWrappedNativeTearOff* to = &mFirstTearOff; to;
        to = to->GetNextTearOff()) {
     if (JSObject* jso = to->GetJSObjectPreserveColor()) {
-      JS::SetPrivate(jso, nullptr);
+      JS::SetReservedSlot(jso, XPCWrappedNativeTearOff::TearOffSlot,
+                          JS::UndefinedValue());
       to->SetJSObject(nullptr);
     }
     // We leak the tearoff mNative
@@ -1019,10 +1021,11 @@ bool XPCWrappedNative::InitTearOffJSObject(JSContext* cx,
     return false;
   }
 
-  JS::SetPrivate(obj, to);
+  JS::SetReservedSlot(obj, XPCWrappedNativeTearOff::TearOffSlot,
+                      JS::PrivateValue(to));
   to->SetJSObject(obj);
 
-  JS::SetReservedSlot(obj, XPC_WN_TEAROFF_FLAT_OBJECT_SLOT,
+  JS::SetReservedSlot(obj, XPCWrappedNativeTearOff::FlatObjectSlot,
                       JS::ObjectValue(*mFlatJSObject));
   return true;
 }
