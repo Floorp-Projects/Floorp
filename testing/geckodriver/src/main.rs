@@ -158,6 +158,12 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
         Ok(addr) => SocketAddr::new(addr, port),
         Err(e) => usage!("{}: {}:{}", e, host, port),
     };
+    if !address.ip().is_loopback() {
+        usage!(
+            "invalid --host: {}. Must be a local loopback interface",
+            host
+        )
+    }
 
     let android_storage = value_t!(matches, "android_storage", AndroidStorageInput)
         .unwrap_or(AndroidStorageInput::Auto);
