@@ -6,12 +6,20 @@
 
 /* eslint-env mozilla/chrome-worker */
 
+// FIXME: This file is currently not covered by TypeScript, there is no "@ts-check" comment.
+// We should fix this once we know how to deal with the module imports below.
+// (Maybe once Firefox supports worker module? Bug 1247687)
+
 "use strict";
 
 importScripts(
   "resource://gre/modules/osfile.jsm",
   "resource://devtools/client/performance-new/profiler_get_symbols.js"
 );
+
+/**
+ * @typedef {import("./@types/perf").SymbolicationWorkerInitialMessage} SymbolicationWorkerInitialMessage
+ */
 
 // This worker uses the wasm module that was generated from https://github.com/mstange/profiler-get-symbols.
 // See ProfilerGetSymbols.jsm for more information.
@@ -74,6 +82,7 @@ function createPlainErrorObject(e) {
   };
 }
 
+/** @param {MessageEvent<SymbolicationWorkerInitialMessage>} e */
 onmessage = async e => {
   try {
     const { binaryPath, debugPath, breakpadId, module } = e.data;
