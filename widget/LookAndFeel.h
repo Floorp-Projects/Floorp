@@ -422,8 +422,6 @@ class LookAndFeel {
   using FontID = mozilla::StyleSystemFont;
 
   // Whether we should use a light or dark appearance.
-  //
-  // This is currently ignored (but won't be for long).
   enum class ColorScheme : uint8_t { Light, Dark };
 
   static ColorScheme SystemColorScheme() {
