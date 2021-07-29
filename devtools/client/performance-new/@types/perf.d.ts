@@ -507,9 +507,9 @@ export type SymbolicationWorkerError = {
   lineNumber?: number;
 };
 
-export type SymbolicationWorkerReplyData =
+export type SymbolicationWorkerReplyData<R> =
   | {
-      result: SymbolTableAsTuple;
+      result: R;
     }
   | {
       error: SymbolicationWorkerError;
