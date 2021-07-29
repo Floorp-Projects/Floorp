@@ -13,6 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const VERSION_PREF = "browser.places.snapshots.version";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Interactions: "resource:///modules/Interactions.jsm",
   PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -197,23 +198,36 @@ const Snapshots = new (class Snapshots {
       "Snapshots: add",
       async db => {
         let now = Date.now();
-
+        await this.#maybeInsertPlace(db, new URL(url));
+        // When the user asks for a snapshot to be created, we may not yet have
+        // a corresponding interaction. We create a snapshot with 0 as the value
+        // for first_interaction_at to flag it as missing a corresponding
+        // interaction. We have a database trigger that will update this
+        // snapshot with real values from the corresponding interaction when the
+        // latter is created.
         let rows = await db.executeCached(
           `
-        INSERT INTO moz_places_metadata_snapshots
-          (place_id, first_interaction_at, last_interaction_at, document_type, created_at, user_persisted)
-        SELECT place_id, min(created_at), max(created_at),
-               first_value(document_type) OVER (PARTITION BY place_id ORDER BY created_at DESC),
-               :createdAt, :userPersisted
-        FROM moz_places_metadata
-        WHERE place_id = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url)
-        ON CONFLICT DO UPDATE SET user_persisted = :userPersisted, removed_at = NULL WHERE :userPersisted = 1
-        RETURNING place_id, created_at, user_persisted
-      `,
-          { createdAt: now, url, userPersisted }
+            INSERT INTO moz_places_metadata_snapshots
+              (place_id, first_interaction_at, last_interaction_at, document_type, created_at, user_persisted)
+            SELECT h.id, IFNULL(min(m.created_at), CASE WHEN :userPersisted THEN 0 ELSE NULL END),
+                  IFNULL(max(m.created_at), CASE WHEN :userPersisted THEN :createdAt ELSE NULL END),
+                  IFNULL(first_value(m.document_type) OVER (PARTITION BY h.id ORDER BY m.created_at DESC), :documentFallback),
+                  :createdAt, :userPersisted
+            FROM moz_places h
+            LEFT JOIN moz_places_metadata m ON m.place_id = h.id
+            WHERE h.url_hash = hash(:url) AND h.url = :url
+            GROUP BY h.id
+            ON CONFLICT DO UPDATE SET user_persisted = :userPersisted, removed_at = NULL WHERE :userPersisted = 1
+            RETURNING place_id, created_at, user_persisted
+          `,
+          {
+            createdAt: now,
+            url,
+            userPersisted,
+            documentFallback: Interactions.DOCUMENT_TYPE.GENERIC,
+          }
         );
 
-        // If the url did not exist in moz_places then rows will be empty.
         if (rows.length) {
           // If created_at doesn't match then this url was already a snapshot,
           // and we only overwrite it when the new request is user_persisted.
@@ -581,5 +595,28 @@ const Snapshots = new (class Snapshots {
         await db.executeCached(`DELETE FROM moz_places_metadata_snapshots`);
       }
     );
+  }
+
+  /**
+   * Tries to insert a new place if it doesn't exist yet.
+   * @param {mozIStorageAsyncConnection} db
+   *   The connection to the Places database.
+   * @param {URL} url
+   *   A valid URL object.
+   */
+  async #maybeInsertPlace(db, url) {
+    // The IGNORE conflict can trigger on `guid`.
+    await db.executeCached(
+      `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid)
+       VALUES (:url, hash(:url), :rev_host, 1, -1,
+               IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
+                     GENERATE_GUID()))
+      `,
+      {
+        url: url.href,
+        rev_host: PlacesUtils.getReversedHost(url),
+      }
+    );
+    await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
   }
 })();
