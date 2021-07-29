@@ -108,7 +108,7 @@ class L10nRegistryService {
       let fileSources = [];
       for (let {entry, value} of Services.catMan.enumerateCategory("l10n-registry")) {
         if (!this.hasSource(entry)) {
-          fileSources.push(new FileSource(entry, locales, value));
+          fileSources.push(new L10nFileSource(entry, locales, value));
         }
       }
       this.registerSources(fileSources);
@@ -278,7 +278,7 @@ class L10nRegistryService {
   _synchronizeSharedData() {
     const sources = new Map();
     for (const [name, source] of this.sources.entries()) {
-      if (source.indexed) {
+      if (source.index !== null) {
         continue;
       }
       sources.set(name, {
@@ -302,7 +302,7 @@ class L10nRegistryService {
     let registerSourcesList = [];
     for (let [name, data] of sources.entries()) {
       if (!this.hasSource(name)) {
-        const source = new FileSource(name, data.locales, data.prePath);
+        const source = new L10nFileSource(name, data.locales, data.prePath);
         registerSourcesList.push(source);
       }
     }
@@ -374,7 +374,7 @@ async function* generateResourceSetsForLocale(locale, sourcesOrder, resourceIds,
     // safely bail from the whole branch.
     for (let [idx, sourceName] of order.entries()) {
       const source = L10nRegistry.sources.get(sourceName);
-      if (!source || source.hasFile(locale, resourceIds[idx]) === false) {
+      if (!source || source.hasFile(locale, resourceIds[idx]) === "missing") {
         if (idx === order.length - 1) {
           continue;
         } else {
@@ -388,8 +388,8 @@ async function* generateResourceSetsForLocale(locale, sourcesOrder, resourceIds,
     if (resolvedLength + 1 === resourcesLength) {
       let dataSet = await generateResourceSet(locale, order, resourceIds);
       // Here we check again to see if the newly resolved
-      // resources returned `false` on any position.
-      if (!dataSet.includes(false)) {
+      // resources returned `null` on any position.
+      if (!dataSet.includes(null)) {
         yield dataSet;
       }
     } else if (resolvedLength < resourcesLength) {
@@ -434,7 +434,7 @@ function* generateResourceSetsForLocaleSync(locale, sourcesOrder, resourceIds, r
     // safely bail from the whole branch.
     for (let [idx, sourceName] of order.entries()) {
       const source = L10nRegistry.sources.get(sourceName);
-      if (!source || source.hasFile(locale, resourceIds[idx]) === false) {
+      if (!source || source.hasFile(locale, resourceIds[idx]) === "missing") {
         if (idx === order.length - 1) {
           continue;
         } else {
@@ -448,8 +448,8 @@ function* generateResourceSetsForLocaleSync(locale, sourcesOrder, resourceIds, r
     if (resolvedLength + 1 === resourcesLength) {
       let dataSet = generateResourceSetSync(locale, order, resourceIds);
       // Here we check again to see if the newly resolved
-      // resources returned `false` on any position.
-      if (!dataSet.includes(false)) {
+      // resources returned `null` on any position.
+      if (!dataSet.includes(null)) {
         yield dataSet;
       }
     } else if (resolvedLength < resourcesLength) {
@@ -481,13 +481,13 @@ const MSG_CONTEXT_OPTIONS = {
  * @param {String} locale
  * @param {Array} sourcesOrder
  * @param {Array} resourceIds
- * @returns {Promise<FluentBundle>}
+ * @returns {Promise<FluentBundle>?}
  */
 function generateResourceSet(locale, sourcesOrder, resourceIds) {
   return Promise.all(resourceIds.map((resourceId, i) => {
     const source = L10nRegistry.sources.get(sourcesOrder[i]);
     if (!source) {
-      return false;
+      return null;
     }
     return source.fetchFile(locale, resourceId);
   }));
@@ -501,15 +501,15 @@ function generateResourceSet(locale, sourcesOrder, resourceIds) {
  * @param {String} locale
  * @param {Array} sourcesOrder
  * @param {Array} resourceIds
- * @returns {FluentBundle}
+ * @returns {FluentBundle?}
  */
 function generateResourceSetSync(locale, sourcesOrder, resourceIds) {
   return resourceIds.map((resourceId, i) => {
     const source = L10nRegistry.sources.get(sourcesOrder[i]);
     if (!source) {
-      return false;
+      return null;
     }
-    return source.fetchFile(locale, resourceId, {sync: true});
+    return source.fetchFileSync(locale, resourceId);
   });
 }
 
