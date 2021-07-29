@@ -17,11 +17,6 @@ FOG_ROOT_PATH = path.abspath(
 sys.path.append(path.join(FOG_ROOT_PATH, "build_scripts", "glean_parser_ext"))
 import run_glean_parser
 
-# Shenanigans to import the in-tree glean_parser
-GECKO_PATH = path.join(FOG_ROOT_PATH, path.pardir, path.pardir, path.pardir)
-sys.path.append(path.join(GECKO_PATH, "third_party", "python", "glean_parser"))
-from glean_parser import lint, parser, util
-
 
 def test_gifft_codegen():
     """
@@ -37,11 +32,8 @@ def test_gifft_codegen():
     here_path = Path(path.dirname(__file__))
     input_files = [here_path / "metrics_test.yaml"]
 
-    all_objs = parser.parse_objects(input_files, options)
-    assert not util.report_validation_errors(all_objs)
-    assert not lint.lint_metrics(all_objs.value, options)
+    all_objs, options = run_glean_parser.parse_with_options(input_files, options)
 
-    all_objs = all_objs.value
     for probe_type in ("Event", "Histogram", "Scalar"):
         output_fd = io.StringIO()
         cpp_fd = io.StringIO()
