@@ -26,3 +26,8 @@ table.docutils td, table.docutils th
 span.strikethrough {
     text-decoration: line-through;
 }
+
+/* Better control over the table on this page */
+.matcher-cookbook td {
+    white-space: break-spaces !important;
+}
