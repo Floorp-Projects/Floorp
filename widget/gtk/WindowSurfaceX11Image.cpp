@@ -92,11 +92,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceX11Image::Lock(
   if (format == gfx::SurfaceFormat::X8R8G8B8_UINT32) {
     gfx::BackendType backend = gfxVars::ContentBackend();
     if (!gfx::Factory::DoesBackendSupportDataDrawtarget(backend)) {
-#ifdef USE_SKIA
       backend = gfx::BackendType::SKIA;
-#else
-      backend = gfx::BackendType::CAIRO;
-#endif
     }
     if (backend != gfx::BackendType::CAIRO) {
       format = gfx::SurfaceFormat::A8R8G8B8_UINT32;

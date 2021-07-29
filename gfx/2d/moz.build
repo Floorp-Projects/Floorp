@@ -113,22 +113,21 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
         "ScaledFontFreeType.cpp",
     ]
 
-if CONFIG["MOZ_ENABLE_SKIA"]:
-    SOURCES += [
-        "ConvolutionFilter.cpp",
-        "DrawTargetSkia.cpp",
-        "PathSkia.cpp",
-        "SourceSurfaceSkia.cpp",
-    ]
-    if CONFIG["CC_TYPE"] == "clang":
-        # Suppress warnings from Skia header files.
-        SOURCES["DrawTargetSkia.cpp"].flags += ["-Wno-implicit-fallthrough"]
-        SOURCES["PathSkia.cpp"].flags += ["-Wno-implicit-fallthrough"]
-        SOURCES["SourceSurfaceSkia.cpp"].flags += ["-Wno-implicit-fallthrough"]
-    EXPORTS.mozilla.gfx += [
-        "ConvolutionFilter.h",
-        "HelpersSkia.h",
-    ]
+SOURCES += [
+    "ConvolutionFilter.cpp",
+    "DrawTargetSkia.cpp",
+    "PathSkia.cpp",
+    "SourceSurfaceSkia.cpp",
+]
+if CONFIG["CC_TYPE"] == "clang":
+    # Suppress warnings from Skia header files.
+    SOURCES["DrawTargetSkia.cpp"].flags += ["-Wno-implicit-fallthrough"]
+    SOURCES["PathSkia.cpp"].flags += ["-Wno-implicit-fallthrough"]
+    SOURCES["SourceSurfaceSkia.cpp"].flags += ["-Wno-implicit-fallthrough"]
+EXPORTS.mozilla.gfx += [
+    "ConvolutionFilter.h",
+    "HelpersSkia.h",
+]
 
 # Are we targeting x86 or x64?  If so, build SSE2 files.
 if CONFIG["INTEL_ARCHITECTURE"]:

@@ -30,10 +30,8 @@ DIRS += [
     "config",
     "webrender_bindings",
     "wgpu_bindings",
+    "skia",
 ]
-
-if CONFIG["MOZ_ENABLE_SKIA"]:
-    DIRS += ["skia"]
 
 if CONFIG["ENABLE_TESTS"]:
     DIRS += ["tests/gtest"]

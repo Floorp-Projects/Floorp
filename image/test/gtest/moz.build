@@ -33,15 +33,9 @@ if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"):
         "TestSurfaceCache.cpp",
     ]
 
-if CONFIG["MOZ_ENABLE_SKIA"]:
-    UNIFIED_SOURCES += [
-        "TestDownscalingFilter.cpp",
-        "TestSurfacePipeIntegration.cpp",
-    ]
-
-SOURCES += [
-    # Can't be unified because it manipulates the preprocessor environment.
-    "TestDownscalingFilterNoSkia.cpp",
+UNIFIED_SOURCES += [
+    "TestDownscalingFilter.cpp",
+    "TestSurfacePipeIntegration.cpp",
 ]
 
 TEST_HARNESS_FILES.gtest += [
