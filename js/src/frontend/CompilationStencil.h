@@ -652,6 +652,10 @@ struct CompilationStencil {
   [[nodiscard]] JSFunction* instantiateSelfHostedLazyFunction(
       JSContext* cx, CompilationAtomCache& atomCache, ScriptIndex index,
       HandleAtom name);
+  [[nodiscard]] bool delazifySelfHostedFunction(JSContext* cx,
+                                                CompilationAtomCache& atomCache,
+                                                ScriptIndexRange range,
+                                                HandleFunction fun);
 
   [[nodiscard]] bool serializeStencils(JSContext* cx, CompilationInput& input,
                                        JS::TranscodeBuffer& buf,
@@ -942,7 +946,44 @@ struct CompilationGCOutput {
   // The result ScriptSourceObject. This is unused in delazifying parses.
   ScriptSourceObject* sourceObject = nullptr;
 
+ private:
+  // If we are only instantiating part of a stencil, we can reduce allocations
+  // by setting a base index and reserving only the vector capacity we need.
+  // This applies to both the `functions` and `scopes` arrays. These fields are
+  // initialized by `ensureReservedWithBaseIndex` which also reserves the vector
+  // sizes appropriately.
+  //
+  // Note: These are only used for self-hosted delazification currently.
+  ScriptIndex functionsBaseIndex{};
+  ScopeIndex scopesBaseIndex{};
+
+  // End of fields.
+
+ public:
   CompilationGCOutput() = default;
+
+  // Helper to access the `functions` vector. The NoBaseIndex version is used if
+  // the caller never uses a base index.
+  JSFunction*& getFunction(ScriptIndex index) {
+    return functions[index - functionsBaseIndex];
+  }
+  JSFunction*& getFunctionNoBaseIndex(ScriptIndex index) {
+    MOZ_ASSERT(!functionsBaseIndex);
+    return functions[index];
+  }
+
+  // Helper accessors for the `scopes` vector.
+  js::Scope*& getScope(ScopeIndex index) {
+    return scopes[index - scopesBaseIndex];
+  }
+  js::Scope*& getScopeNoBaseIndex(ScopeIndex index) {
+    MOZ_ASSERT(!scopesBaseIndex);
+    return scopes[index];
+  }
+  js::Scope* getScopeNoBaseIndex(ScopeIndex index) const {
+    MOZ_ASSERT(!scopesBaseIndex);
+    return scopes[index];
+  }
 
   // Reserve output vector capacity. This may be called before instantiate to do
   // allocations ahead of time (off thread). The stencil instantiation code will
@@ -958,6 +999,22 @@ struct CompilationGCOutput {
       return false;
     }
     return true;
+  }
+
+  // A variant of `ensureReserved` that sets a base index for the function and
+  // scope arrays. This is used when instantiating only a subset of the stencil.
+  // Currently this only applies to self-hosted delazification. The ranges
+  // include the start index and exclude the limit index.
+  [[nodiscard]] bool ensureReservedWithBaseIndex(JSContext* cx,
+                                                 ScriptIndex scriptStart,
+                                                 ScriptIndex scriptLimit,
+                                                 ScopeIndex scopeStart,
+                                                 ScopeIndex scopeLimit) {
+    this->functionsBaseIndex = scriptStart;
+    this->scopesBaseIndex = scopeStart;
+
+    return ensureReserved(cx, scriptLimit - scriptStart,
+                          scopeLimit - scopeStart);
   }
 
   // Size of dynamic data. Note that GC data is counted by GC and not here.
@@ -1047,8 +1104,8 @@ class ScriptStencilIterable {
       if (stencil_.isInitialStencil()) {
         scriptExtra = &stencil_.scriptExtra[index];
       }
-      return ScriptAndFunction(script, scriptExtra, gcOutput_.functions[index],
-                               index);
+      return ScriptAndFunction(script, scriptExtra,
+                               gcOutput_.getFunctionNoBaseIndex(index), index);
     }
 
     static Iterator end(const CompilationStencil& stencil,
