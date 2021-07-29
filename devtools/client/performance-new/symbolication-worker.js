@@ -10,7 +10,7 @@
 
 importScripts(
   "resource://gre/modules/osfile.jsm",
-  "resource://gre/modules/profiler_get_symbols.js"
+  "resource://devtools/client/performance-new/profiler_get_symbols.js"
 );
 
 // This worker uses the wasm module that was generated from https://github.com/mstange/profiler-get-symbols.
@@ -20,6 +20,7 @@ importScripts(
 // the wasm code, and returns the symbol table or an error. Then it shuts down
 // itself.
 
+/* eslint camelcase: 0*/
 const { WasmMemBuffer, get_compact_symbol_table } = wasm_bindgen;
 
 // Read an open OS.File instance into the Uint8Array dataBuf.
@@ -103,7 +104,11 @@ onmessage = async e => {
     }
 
     try {
-      let output = get_compact_symbol_table(binaryData, debugData, breakpadId);
+      const output = get_compact_symbol_table(
+        binaryData,
+        debugData,
+        breakpadId
+      );
       const result = [
         output.take_addr(),
         output.take_index(),

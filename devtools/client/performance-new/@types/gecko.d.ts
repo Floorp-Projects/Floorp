@@ -32,8 +32,6 @@ declare namespace MockedExports {
       typeof import("resource://gre/modules/osfile.jsm");
     "resource://gre/modules/AppConstants.jsm":
       typeof import("resource://gre/modules/AppConstants.jsm");
-    "resource://gre/modules/ProfilerGetSymbols.jsm":
-      typeof import("resource://gre/modules/ProfilerGetSymbols.jsm");
     "resource:///modules/CustomizableUI.jsm":
       typeof import("resource:///modules/CustomizableUI.jsm")
     "resource:///modules/CustomizableWidgets.jsm":
@@ -187,16 +185,6 @@ declare namespace MockedExports {
 
   const EventEmitter: {
     decorate: (target: object) => void;
-  };
-
-  const ProfilerGetSymbolsJSM: {
-    ProfilerGetSymbols: {
-      getSymbolTable: (
-        path: string,
-        debugPath: string,
-        breakpadId: string
-      ) => any;
-    };
   };
 
   const AppConstantsJSM: {
@@ -359,10 +347,6 @@ declare module "resource://gre/modules/AppConstants.jsm" {
   export = MockedExports.AppConstantsJSM;
 }
 
-declare module "resource://gre/modules/ProfilerGetSymbols.jsm" {
-  export = MockedExports.ProfilerGetSymbolsJSM;
-}
-
 declare module "resource://gre/modules/WebChannel.jsm" {
   export = MockedExports.WebChannelJSM;
 }
@@ -443,6 +427,8 @@ declare interface ChromeWindow extends Window {
     params?: unknown
   ) => void;
 }
+
+declare class ChromeWorker extends Worker {}
 
 declare interface MenuListElement extends XULElement {
   value: string;

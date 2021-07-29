@@ -46,13 +46,6 @@ EXTRA_JS_MODULES += [
     "WebNavigationFrames.jsm",
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
-    EXTRA_JS_MODULES += [
-        "profiler_get_symbols.js",
-        "ProfilerGetSymbols-worker.js",
-        "ProfilerGetSymbols.jsm",
-    ]
-
 EXTRA_COMPONENTS += [
     "extensions-toolkit.manifest",
 ]
