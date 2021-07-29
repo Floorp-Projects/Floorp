@@ -520,17 +520,15 @@ var gTests = [
         } else {
           let expectedMessage = aExpectStream ? "ok" : permissionError;
 
-          let observerPromises = [];
+          let observerPromises = [expectObserverCalled("getUserMedia:request")];
           if (expectedMessage == "ok") {
-            observerPromises.push(expectObserverCalled("getUserMedia:request"));
             observerPromises.push(
-              expectObserverCalled("getUserMedia:response:allow")
-            );
-            observerPromises.push(
+              expectObserverCalled("getUserMedia:response:allow"),
               expectObserverCalled("recording-device-events")
             );
           } else {
             observerPromises.push(
+              expectObserverCalled("getUserMedia:response:deny"),
               expectObserverCalled("recording-window-ended")
             );
           }

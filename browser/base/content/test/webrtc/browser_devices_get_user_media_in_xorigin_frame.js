@@ -366,13 +366,20 @@ var gTests = [
 
           await closeStream(false, aIframeId);
         } else if (aExpect == PromptResult.DENY) {
-          const observerPromise = expectObserverCalled(
-            "recording-window-ended"
+          const promises = [];
+          // frame3 disallows by feature Permissions Policy before request.
+          if (aIframeId != "frame3") {
+            promises.push(
+              expectObserverCalled("getUserMedia:request"),
+              expectObserverCalled("getUserMedia:response:deny")
+            );
+          }
+          promises.push(
+            expectObserverCalled("recording-window-ended"),
+            promiseMessage(permissionError),
+            promiseRequestDevice(audio, video, aIframeId, screen)
           );
-          const promise = promiseMessage(permissionError);
-          await promiseRequestDevice(audio, video, aIframeId, screen);
-          await promise;
-          await observerPromise;
+          await Promise.all(promises);
         }
 
         PermissionTestUtils.remove(uri, aRequestType);
