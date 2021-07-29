@@ -389,17 +389,8 @@ def pdf_printing(toolkit):
         return True
 
 
-@depends(pdf_printing)
-def pdf_surface_feature(pdf_printing):
-    if pdf_printing:
-        return "#define CAIRO_HAS_PDF_SURFACE 1"
-    else:
-        # CONFIGURE_SUBST_FILES need explicit empty values.
-        return ""
-
-
 set_config("MOZ_PDF_PRINTING", pdf_printing)
-set_config("PDF_SURFACE_FEATURE", pdf_surface_feature)
+set_define("MOZ_PDF_PRINTING", pdf_printing)
 
 
 # Event loop instrumentation
@@ -431,6 +422,7 @@ def fc_freetype(value, toolkit):
 
 
 add_old_configure_assignment("USE_FC_FREETYPE", fc_freetype)
+set_define("USE_FC_FREETYPE", fc_freetype)
 
 # Pango
 # ==============================================================
@@ -474,6 +466,7 @@ def freetype2_combined_info(fontconfig_info, freetype2_info):
 add_old_configure_assignment(
     "_HAVE_FREETYPE2", depends_if(freetype2_info)(lambda _: True)
 )
+set_define("MOZ_HAVE_FREETYPE2", depends_if(freetype2_info)(lambda _: True))
 
 # Apple platform decoder support
 # ==============================================================
