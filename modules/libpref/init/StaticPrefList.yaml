@@ -6830,7 +6830,7 @@
 # We don't use this for text, so we need a contrast of at least AA (for user
 # interface components and graphical objects), which per WCAG is 3:1
 - name: layout.css.accent-color.min-contrast-ratio
-  type: float
+  type: AtomicFloat
   value: 3.0
   mirror: always
 
@@ -6840,7 +6840,7 @@
 # We aim a bit further than the minimum contrast ratio, which seems to provide
 # nice results in practice.
 - name: layout.css.accent-color.darkening-target-contrast-ratio
-  type: float
+  type: AtomicFloat
   value: 6.0
   mirror: always
 
