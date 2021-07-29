@@ -56,7 +56,6 @@ WEBIDL_FILES = [
     "JSProcessActor.webidl",
     "JSWindowActor.webidl",
     "L10nOverlays.webidl",
-    "L10nRegistry.webidl",
     "MatchGlob.webidl",
     "MatchPattern.webidl",
     "MediaController.webidl",

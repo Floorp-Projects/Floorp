@@ -1,4 +1,4 @@
-use super::{core::Parser, core::Result, Slice};
+use super::{Parser, Result, Slice};
 use crate::ast;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -32,7 +32,7 @@ where
             if self.ptr == self.length {
                 break;
             } else if self.is_current_byte(b'\n') {
-                content.push(self.get_comment_line());
+                content.push(self.get_comment_line()?);
             } else {
                 if let Err(e) = self.expect_byte(b' ') {
                     if content.is_empty() {
@@ -42,7 +42,7 @@ where
                         break;
                     }
                 }
-                content.push(self.get_comment_line());
+                content.push(self.get_comment_line()?);
             }
             self.skip_eol();
         }
@@ -50,40 +50,31 @@ where
         Ok((ast::Comment { content }, level))
     }
 
-    pub(super) fn skip_comment(&mut self) {
-        loop {
-            while self.ptr < self.length && !self.is_current_byte(b'\n') {
-                self.ptr += 1;
-            }
-            self.ptr += 1;
-            if self.is_current_byte(b'#') {
-                self.ptr += 1;
-            } else {
-                break;
-            }
-        }
-    }
-
     fn get_comment_level(&mut self) -> Level {
-        if self.take_byte_if(b'#') {
+        let mut chars = 0;
+
+        for _ in 0..3 {
             if self.take_byte_if(b'#') {
-                if self.take_byte_if(b'#') {
-                    return Level::Resource;
-                }
-                return Level::Group;
+                chars += 1;
             }
-            return Level::Regular;
         }
-        Level::None
+
+        match chars {
+            0 => Level::None,
+            1 => Level::Regular,
+            2 => Level::Group,
+            3 => Level::Resource,
+            _ => unreachable!(),
+        }
     }
 
-    fn get_comment_line(&mut self) -> S {
+    fn get_comment_line(&mut self) -> Result<S> {
         let start_pos = self.ptr;
 
-        while !self.is_eol() {
+        while self.ptr < self.length && !self.is_eol() {
             self.ptr += 1;
         }
 
-        self.source.slice(start_pos..self.ptr)
+        Ok(self.source.slice(start_pos..self.ptr))
     }
 }

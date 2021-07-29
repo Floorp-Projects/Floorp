@@ -8,7 +8,7 @@
 /// This macro is used to turn a regular struct into a self-referencing one. An example:
 /// ```rust
 /// use ouroboros::self_referencing;
-///
+/// 
 /// #[self_referencing]
 /// struct MyStruct {
 ///     int_data: Box<i32>,
@@ -18,7 +18,7 @@
 ///     #[borrows(mut float_data)]
 ///     float_reference: &'this mut f32,
 /// }
-///
+/// 
 /// fn main() {
 ///     let mut my_value = MyStructBuilder {
 ///         int_data: Box::new(42),
@@ -26,7 +26,7 @@
 ///         int_reference_builder: |int_data: &i32| int_data,
 ///         float_reference_builder: |float_data: &mut f32| float_data,
 ///     }.build();
-///
+/// 
 ///     // Prints 42
 ///     println!("{:?}", my_value.borrow_int_data());
 ///     // Prints 3.14
@@ -35,7 +35,7 @@
 ///     my_value.with_mut(|fields| {
 ///         **fields.float_reference = (**fields.int_reference as f32) * 2.0;
 ///     });
-///
+/// 
 ///     // We can hold on to this reference...
 ///     let int_ref = *my_value.borrow_int_reference();
 ///     println!("{:?}", *int_ref);
@@ -50,7 +50,7 @@
 /// - **immutably borrowed field**: a field which is immutably borrowed by at least one other field.
 /// - **mutably borrowed field**: a field which is mutably borrowed by exactly one other field.
 /// - **self-referencing field**: a field which borrows at least one other field.
-/// - **head field**: a field which does not borrow any other fields, I.E. not self-referencing.
+/// - **head field**: a field which does not borrow any other fields, I.E. not self-referencing. 
 ///   This does not include fields with empty borrows annotations (`#[borrows()]`.)
 /// - **tail field**: a field which is not borrowed by any other fields.
 ///
@@ -63,7 +63,7 @@
 /// the third needs to be borrowed mutably. You can also use `#[borrows()]` without any arguments to
 /// indicate a field that will eventually borrow from the struct, but does not borrow anything when
 /// first created. For example, you could use this on a field like `error: Option<&'this str>`.
-///
+/// 
 /// # You must comply with these limitations
 /// - Fields must be declared before the first time they are borrowed.
 /// - Normal borrowing rules apply, E.G. a field cannot be borrowed mutably twice.
@@ -75,55 +75,7 @@
 ///   undefined at the location it was illegally used in.
 ///
 /// Violating them will result in an error message directly pointing out the violated rule.
-///
-/// # Async usage
-/// All self-referencing structs can be initialized asynchronously by using either the
-/// `MyStruct::new_async()` function or the `MyStructAsyncBuilder` builder. Due to limitations of
-/// the rust compiler you closures must return a Future trait object wrapped in a `Pin<Box<_>>`.
-///
-/// Here is the same example as above in its async version:
-///
-/// ```ignore
-/// use ouroboros::self_referencing;
-///
-/// #[self_referencing]
-/// struct MyStruct {
-///     int_data: Box<i32>,
-///     float_data: Box<f32>,
-///     #[borrows(int_data)]
-///     int_reference: &'this i32,
-///     #[borrows(mut float_data)]
-///     float_reference: &'this mut f32,
-/// }
-///
-/// #[tokio::main]
-/// async fn main() {
-///     let mut my_value = MyStructAsyncBuilder {
-///         int_data: Box::new(42),
-///         float_data: Box::new(3.14),
-///         int_reference_builder: |int_data: &i32| Box::pin(async move { int_data }),
-///         float_reference_builder: |float_data: &mut f32| Box::pin( async move { float_data }),
-///     }.build().await;
-///
-///     // Prints 42
-///     println!("{:?}", my_value.borrow_int_data());
-///     // Prints 3.14
-///     println!("{:?}", my_value.borrow_float_reference());
-///     // Sets the value of float_data to 84.0
-///     my_value.with_mut(|fields| {
-///         **fields.float_reference = (**fields.int_reference as f32) * 2.0;
-///     });
-///
-///     // We can hold on to this reference...
-///     let int_ref = *my_value.borrow_int_reference();
-///     println!("{:?}", *int_ref);
-///     // As long as the struct is still alive.
-///     drop(my_value);
-///     // This will cause an error!
-///     // println!("{:?}", *int_ref);
-/// }
-/// ```
-///
+/// 
 /// # Flexibility of this crate
 /// The example above uses plain references as the self-referencing part of the struct, but you can
 /// use anything that is dependent on lifetimes of objects inside the struct. For example, you could
@@ -159,7 +111,6 @@
 ///         immutable: Box<i32>,
 ///         mutable: Box<i32>,
 ///         #[borrows(immutable, mut mutable)]
-///         #[covariant]
 ///         complex_data: ComplexData<'this, 'this>,
 ///     }
 ///
@@ -176,19 +127,6 @@
 ///     });
 /// }
 /// ```
-/// # Covariance
-/// Many types in Rust have a property called "covariance". In practical tearms, this means that a
-/// covariant type like `Box<&'this i32>` can be used as a `Box<&'a i32>` as long as `'a` is
-/// smaller than `'this`. Since the lifetime is smaller, it does not violate the lifetime specified
-/// by the original type. Contrast this to `Fn(&'this i32)`, which is not covariant. You cannot give
-/// this function a reference with a lifetime shorter than `'this` as the function needs something
-/// that lives at *least* as long as `'this`. Unfortunately, there is no easy way to determine
-/// whether or not a type is covariant from inside the macro. As such, you may
-/// receive a compiler error letting you know that the macro is uncertain if a particular field
-/// uses a covariant type. Adding `#[covariant]` or `#[not_covariant]` will resolve this issue.
-///
-/// These annotations control whether or not a `borrow_*` method is generated for that field.
-///
 /// # Using `chain_hack`
 /// Unfortunately, as of September 2020, Rust has a
 /// [known limitation in its type checker](https://users.rust-lang.org/t/why-does-this-not-compile-box-t-target-t/49027/7?u=aaaaa)
@@ -201,7 +139,7 @@
 /// configurations may produce strange compiler errors. If you find such a configuration, please
 /// open an issue on the [Github repository](https://github.com/joshua-maros/ouroboros/issues).
 /// You can view a documented example of a struct which uses `chain_hack` [here](https://docs.rs/ouroboros_examples/latest/ouroboros_examples/struct.ChainHack.html).
-///
+/// 
 /// # What does the macro generate?
 /// The `#[self_referencing]` struct will replace your definition with an unsafe self-referencing
 /// struct with a safe public interface. Many functions will be generated depending on your original
@@ -226,52 +164,38 @@
 /// to the output. For **self-referencing fields**, you must provide a function or closure which creates
 /// the value based on the values it borrows. A field using the earlier example of
 /// `#[borrow(a, b, mut c)]` would require a function typed as
-/// `FnOnce(a: &_, b: &_, c: &mut _) -> _`. Fields which have an empty borrows annotation
-/// (`#[borrows()]`) should have their value directly passed in. A field using the earlier example
+/// `FnOnce(a: &_, b: &_, c: &mut _) -> _`. Fields which have an empty borrows annotation 
+/// (`#[borrows()]`) should have their value directly passed in. A field using the earlier example 
 /// of `Option<&'this str>` would require an input of `None`. Do not pass a function. Do not collect
 /// 200 dollars.
-/// ### `MyStruct::new_async(fields...) -> MyStruct`
-/// A basic async constructor. It works identically to the sync constructor differing only in the
-/// type of closures it expects. Whenever a closure is required it is expected to return a Pinned
-/// and Boxed Future that Outputs the same type as the synchronous version.
 /// ### `MyStructBuilder`
 /// This is the preferred way to create a new instance of your struct. It is similar to using the
 /// `MyStruct { a, b, c, d }` syntax instead of `MyStruct::new(a, b, c, d)`. It contains one field
 /// for every argument in the actual constructor. **Head fields** have the same name that you
 /// originally defined them with. **self-referencing fields** are suffixed with `_builder` since you need
-/// to provide a function instead of a value. Fields with an empty borrows annotation are not
+/// to provide a function instead of a value. Fields with an empty borrows annotation are not 
 /// initialized using builders. Calling `.build()` on an instance of `MyStructBuilder`
 /// will convert it to an instance of `MyStruct`.
-/// ### `MyStructAsyncBuilder`
-/// This is the preferred way to asynchronously create a new instance of your struct. It works
-/// identically to the synchronous builder differing only in the type of closures it expects.
-/// Whenever a closure is required it is expected to return a Pinned and Boxed Future that Outputs
-/// the same type as the synchronous version.
 /// ### `MyStruct::try_new<E>(fields...) -> Result<MyStruct, E>`
 /// Similar to the regular `new()` function, except the functions wich create values for all
 /// **self-referencing fields** can return `Result<>`s. If any of those are `Err`s, that error will be
 /// returned instead of an instance of `MyStruct`. The preferred way to use this function is through
 /// `MyStructTryBuilder` and its `try_build()` function.
-/// ### `MyStruct::try_new_async<E>(fields...) -> Result<MyStruct, E>`
-/// Similar to the regular `new_async()` function, except the functions wich create values for all
-/// **self-referencing fields** can return `Result<>`s. If any of those are `Err`s, that error will be
-/// returned instead of an instance of `MyStruct`. The preferred way to use this function is through
-/// `MyStructAsyncTryBuilder` and its `try_build()` function.
-/// ### `MyStruct::try_new_or_recover_async<E>(fields...) -> Result<MyStruct, (E, Heads)>`
-/// Similar to the `try_new_async()` function, except that all the **head fields** are returned along side
+/// ### `MyStruct::try_new_or_recover<E>(fields...) -> Result<MyStruct, (E, Heads)>`
+/// Similar to the `try_new()` function, except that all the **head fields** are returned along side
 /// the original error in case of an error. The preferred way to use this function is through
-/// `MyStructAsyncTryBuilder` and its `try_build_or_recover()` function.
+/// `MyStructTryBuilder` and its `try_build_or_recover()` function.
 /// ### `MyStruct::with_FIELD<R>(&self, user: FnOnce(field: &FieldType) -> R) -> R`
-/// This function is generated for every **tail and immutably-borrowed field** in your struct. It
+/// This function is generated for every **tail and immutably-borrowed field** in your struct. It 
 /// allows safely accessing
 /// a reference to that value. The function generates the reference and passes it to `user`. You
 /// can do anything you want with the reference, it is constructed to not outlive the struct.
 /// ### `MyStruct::borrow_FIELD(&self) -> &FieldType`
-/// This function is generated for every **tail and immutably-borrowed field** in your struct. It
-/// is equivalent to calling `my_struct.with_FIELD(|field| field)`. It is only generated for types
-/// which are known to be covariant, either through the macro being able to detect it or through the
-/// programmer adding the `#[covariant]` annotation to the field.
-/// There is no `borrow_FIELD_mut`, unfortunately, as Rust's
+/// This function is generated for every **tail and immutably-borrowed field** in your struct. It 
+/// is equivalent to calling `my_struct.with_FIELD(|field| field)`. Note that certain types of
+/// fields would cause this function to generate a compiler error, so it is ommitted. Generally, if
+/// your field uses `'this` as a lifetime parameter, the corresponding `borrow_FIELD` function will
+/// not be generated. There is no `borrow_FIELD_mut`, unfortunately, as Rust's
 /// borrow checker is currently not capable of ensuring that such a method would be used safely.
 /// ### `MyStruct::with_FIELD_mut<R>(&mut self, user: FnOnce(field: &mut FieldType) -> R) -> R`
 /// This function is generated for every **tail field** in your struct. It is the mutable version
@@ -292,20 +216,6 @@ pub mod macro_help {
     use stable_deref_trait::StableDeref;
     use std::ops::DerefMut;
 
-    pub struct CheckIfTypeIsStd<T>(std::marker::PhantomData<T>);
-
-    macro_rules! std_type_check {
-        ($fn_name:ident $T:ident $check_for:ty) => {
-            impl<$T: ?Sized> CheckIfTypeIsStd<$check_for> {
-                pub fn $fn_name() { }
-            }
-        }
-    }
-
-    std_type_check!(is_std_box_type T std::boxed::Box<T>);
-    std_type_check!(is_std_arc_type T std::sync::Arc<T>);
-    std_type_check!(is_std_rc_type T std::rc::Rc<T>);
-
     /// Converts a reference to an object implementing Deref to a static reference to the data it
     /// Derefs to. This is obviously unsafe because the compiler can no longer guarantee that the
     /// data outlives the reference. This function is templated to only work for containers that
@@ -319,25 +229,21 @@ pub mod macro_help {
     ///
     /// The caller must ensure that the returned reference is not used after the originally passed
     /// reference would become invalid.
-    pub unsafe fn stable_deref_and_change_lifetime<'old, 'new: 'old, T: StableDeref + 'new>(
-        data: &'old T,
-    ) -> &'new T::Target {
+    pub unsafe fn stable_deref_and_strip_lifetime<'a, T: StableDeref + 'static>(
+        data: &'a T,
+    ) -> &'static T::Target {
         &*((&**data) as *const _)
     }
 
-    /// Like stable_deref_and_change_lifetime, but for mutable references.
+    /// Like stable_deref_and_strip_lifetime, but for mutable references.
     ///
     /// # Safety
     ///
     /// The caller must ensure that the returned reference is not used after the originally passed
     /// reference would become invalid.
-    pub unsafe fn stable_deref_and_change_lifetime_mut<
-        'old,
-        'new: 'old,
-        T: StableDeref + DerefMut + 'new,
-    >(
-        data: &'old mut T,
-    ) -> &'new mut T::Target {
+    pub unsafe fn stable_deref_and_strip_lifetime_mut<'a, T: StableDeref + DerefMut + 'static>(
+        data: &'a mut T,
+    ) -> &'static mut T::Target {
         &mut *((&mut **data) as *mut _)
     }
 }

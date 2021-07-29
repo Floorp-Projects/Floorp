@@ -2,21 +2,26 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { L10nRegistry } =
+const { L10nRegistry, FileSource } =
   ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 
 const originalValues = {};
 
 function addMockFileSource() {
-  const fs = [
-    { path: "/localization/de/browser/menu.ftl", source: `
+  const fs = {
+    "/localization/de/browser/menu.ftl": `
 key = This is a single message
     .tooltip = This is a tooltip
-    .accesskey = f` },
-  ];
+    .accesskey = f`,
+  };
+  originalValues.load = L10nRegistry.load;
   originalValues.requested = Services.locale.requestedLocales;
 
-  const source = L10nFileSource.createMock("test", ["de"], "/localization/{locale}", fs);
+  L10nRegistry.load = async function(url) {
+    return fs[url];
+  };
+
+  const source = new FileSource("test", ["de"], "/localization/{locale}");
   L10nRegistry.registerSources([source]);
 
   return async function* generateMessages(resIds) {
@@ -98,6 +103,7 @@ add_task(async function test_accented_works() {
   }
 
   L10nRegistry.sources.clear();
+  L10nRegistry.load = originalValues.load;
   Services.locale.requestedLocales = originalValues.requested;
 });
 
@@ -129,5 +135,6 @@ add_task(async function test_unavailable_strategy_works() {
 
   Services.prefs.setStringPref("intl.l10n.pseudo", "");
   L10nRegistry.sources.clear();
+  L10nRegistry.load = originalValues.load;
   Services.locale.requestedLocales = originalValues.requested;
 });

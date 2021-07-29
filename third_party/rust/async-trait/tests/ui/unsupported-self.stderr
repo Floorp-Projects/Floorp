@@ -1,5 +1,0 @@
-error: Self type of this impl is unsupported in expression position
-  --> $DIR/unsupported-self.rs:11:17
-   |
-11 |         let _ = Self;
-   |                 ^^^^

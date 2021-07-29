@@ -110,7 +110,7 @@
   "kinto-offline-client.js": ["Kinto"],
   "kinto-storage-adapter.js": ["FirefoxAdapter"],
   "kvstore.jsm": ["KeyValueService"],
-  "L10nRegistry.jsm": ["L10nRegistry"],
+  "L10nRegistry.jsm": ["L10nRegistry", "FileSource", "IndexedFileSource"],
   "Launcher.jsm": ["BrowserToolboxLauncher"],
   "loader-plugin-raw.jsm": ["requireRawId"],
   "loader.js": ["WorkerDebuggerLoader", "worker"],

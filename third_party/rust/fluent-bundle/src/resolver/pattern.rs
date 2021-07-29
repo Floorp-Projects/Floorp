@@ -14,7 +14,7 @@ use crate::types::FluentValue;
 const MAX_PLACEABLES: u8 = 100;
 
 impl<'p> WriteValue for ast::Pattern<&'p str> {
-    fn write<'scope, 'errors, W, R, M>(
+    fn write<'scope, 'errors, W, R, M: MemoizerKind>(
         &'scope self,
         w: &mut W,
         scope: &mut Scope<'scope, 'errors, R, M>,
@@ -22,7 +22,6 @@ impl<'p> WriteValue for ast::Pattern<&'p str> {
     where
         W: fmt::Write,
         R: Borrow<FluentResource>,
-        M: MemoizerKind,
     {
         let len = self.elements.len();
 
@@ -49,16 +48,15 @@ impl<'p> WriteValue for ast::Pattern<&'p str> {
 
                     let needs_isolation = scope.bundle.use_isolating
                         && len > 1
-                        && !matches!(
-                            expression,
-                            ast::Expression::Inline(ast::InlineExpression::MessageReference { .. },)
-                                | ast::Expression::Inline(
-                                    ast::InlineExpression::TermReference { .. },
-                                )
-                                | ast::Expression::Inline(
-                                    ast::InlineExpression::StringLiteral { .. },
-                                )
-                        );
+                        && !matches!(expression, ast::Expression::InlineExpression(
+                            ast::InlineExpression::MessageReference { .. },
+                        )
+                        | ast::Expression::InlineExpression(
+                            ast::InlineExpression::TermReference { .. },
+                        )
+                        | ast::Expression::InlineExpression(
+                            ast::InlineExpression::StringLiteral { .. },
+                        ));
                     if needs_isolation {
                         w.write_char('\u{2068}')?;
                     }
@@ -81,13 +79,12 @@ impl<'p> WriteValue for ast::Pattern<&'p str> {
 }
 
 impl<'p> ResolveValue for ast::Pattern<&'p str> {
-    fn resolve<'source, 'errors, R, M>(
+    fn resolve<'source, 'errors, R, M: MemoizerKind>(
         &'source self,
         scope: &mut Scope<'source, 'errors, R, M>,
     ) -> FluentValue<'source>
     where
         R: Borrow<FluentResource>,
-        M: MemoizerKind,
     {
         let len = self.elements.len();
 

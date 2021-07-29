@@ -16,6 +16,7 @@ namespaces = ["mozilla", "intl", "ffi"]
 [parse]
 parse_deps = true
 include = ["fluent", "fluent-bundle", "intl-memoizer"]
+exclude = ["fxhash"]
 
 [enum]
 derive_helper_methods = true

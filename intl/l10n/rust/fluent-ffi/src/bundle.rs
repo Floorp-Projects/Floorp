@@ -173,10 +173,10 @@ pub unsafe extern "C" fn fluent_bundle_get_message(
 ) -> bool {
     match bundle.get_message(id.as_str_unchecked()) {
         Some(message) => {
-            attrs.reserve(message.attributes().count());
-            *has_value = message.value().is_some();
-            for attr in message.attributes() {
-                attrs.push(attr.id().into());
+            attrs.reserve(message.attributes.len());
+            *has_value = message.value.is_some();
+            for attr in message.attributes {
+                attrs.push(attr.id.into());
             }
             true
         }
@@ -206,11 +206,11 @@ pub unsafe extern "C" fn fluent_bundle_format_pattern(
 
     let pattern = if !attr.is_empty() {
         match message.get_attribute(attr.as_str_unchecked()) {
-            Some(attr) => attr.value(),
+            Some(attr) => attr.value,
             None => return false,
         }
     } else {
-        match message.value() {
+        match message.value {
             Some(value) => value,
             None => return false,
         }
@@ -257,7 +257,7 @@ fn convert_args<'a>(
             FluentArgument::Double_(d) => FluentValue::from(d),
             FluentArgument::String(s) => FluentValue::from(unsafe { (**s).to_string() }),
         };
-        args.set(id.to_string(), val);
+        args.add(id.to_string(), val);
     }
     Some(args)
 }

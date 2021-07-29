@@ -58,6 +58,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
   ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.jsm",
+  FileSource: "resource://gre/modules/L10nRegistry.jsm",
   L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   Log: "resource://gre/modules/Log.jsm",
@@ -2998,7 +2999,7 @@ class Langpack extends ExtensionData {
 
     const fileSources = Object.entries(l10nRegistrySources).map(entry => {
       const [sourceName, basePath] = entry;
-      return new L10nFileSource(
+      return new FileSource(
         `${sourceName}-${langpackId}`,
         this.startupData.languages,
         `resource://${langpackId}/${basePath}localization/{locale}/`
