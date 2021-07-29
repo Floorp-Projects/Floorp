@@ -82,6 +82,42 @@ function createPlainErrorObject(e) {
   };
 }
 
+function getCompactSymbolTableFromPath(binaryPath, debugPath, breakpadId) {
+  // Read the binary file into WASM memory.
+  const binaryFile = OS.File.open(binaryPath, { read: true });
+  const binaryData = new WasmMemBuffer(binaryFile.stat().size, array => {
+    readFileInto(binaryFile, array);
+  });
+  binaryFile.close();
+
+  // Do the same for the debug file, if it is supplied and different from the
+  // binary file. This is only the case on Windows.
+  let debugData = binaryData;
+  if (debugPath && debugPath !== binaryPath) {
+    const debugFile = OS.File.open(debugPath, { read: true });
+    debugData = new WasmMemBuffer(debugFile.stat().size, array => {
+      readFileInto(debugFile, array);
+    });
+    debugFile.close();
+  }
+
+  try {
+    const output = get_compact_symbol_table(binaryData, debugData, breakpadId);
+    const result = [
+      output.take_addr(),
+      output.take_index(),
+      output.take_buffer(),
+    ];
+    output.free();
+    return result;
+  } finally {
+    binaryData.free();
+    if (debugData != binaryData) {
+      debugData.free();
+    }
+  }
+}
+
 /** @param {MessageEvent<SymbolicationWorkerInitialMessage>} e */
 onmessage = async e => {
   try {
@@ -94,46 +130,15 @@ onmessage = async e => {
     // Instantiate the WASM module.
     await wasm_bindgen(module);
 
-    // Read the binary file into WASM memory.
-    const binaryFile = OS.File.open(binaryPath, { read: true });
-    const binaryData = new WasmMemBuffer(binaryFile.stat().size, array => {
-      readFileInto(binaryFile, array);
-    });
-    binaryFile.close();
-
-    // Do the same for the debug file, if it is supplied and different from the
-    // binary file. This is only the case on Windows.
-    let debugData = binaryData;
-    if (debugPath && debugPath !== binaryPath) {
-      const debugFile = OS.File.open(debugPath, { read: true });
-      debugData = new WasmMemBuffer(debugFile.stat().size, array => {
-        readFileInto(debugFile, array);
-      });
-      debugFile.close();
-    }
-
-    try {
-      const output = get_compact_symbol_table(
-        binaryData,
-        debugData,
-        breakpadId
-      );
-      const result = [
-        output.take_addr(),
-        output.take_index(),
-        output.take_buffer(),
-      ];
-      output.free();
-      postMessage(
-        { result },
-        result.map(r => r.buffer)
-      );
-    } finally {
-      binaryData.free();
-      if (debugData != binaryData) {
-        debugData.free();
-      }
-    }
+    const result = getCompactSymbolTableFromPath(
+      binaryPath,
+      debugPath,
+      breakpadId
+    );
+    postMessage(
+      { result },
+      result.map(r => r.buffer)
+    );
   } catch (error) {
     postMessage({ error: createPlainErrorObject(error) });
   }
