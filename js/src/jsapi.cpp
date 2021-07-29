@@ -206,8 +206,10 @@ bool JS::ObjectOpResult::reportError(JSContext* cx, HandleObject obj,
     }
 
     if (ErrorTakesObjectArgument(code_)) {
+      JSObject* unwrapped = js::CheckedUnwrapStatic(obj);
+      const char* name = unwrapped ? unwrapped->getClass()->name : "Object";
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, code_,
-                               obj->getClass()->name, propName.get());
+                               name, propName.get());
       return false;
     }
 
