@@ -35,7 +35,6 @@ required_settings = [
 
 playback_settings = [
     "playback_pageset_manifest",
-    "playback_recordings",
 ]
 
 
@@ -366,9 +365,6 @@ def get_raptor_test_list(args, oskey):
         if next_test.get("playback") is not None:
             next_test["playback_pageset_manifest"] = transform_subtest(
                 next_test["playback_pageset_manifest"], next_test["name"]
-            )
-            next_test["playback_recordings"] = transform_subtest(
-                next_test["playback_recordings"], next_test["name"]
             )
 
         if args.gecko_profile is True:
