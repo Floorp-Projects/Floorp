@@ -165,6 +165,10 @@ export type GetSymbolTableCallback = (
   breakpadId: string
 ) => Promise<SymbolTableAsTuple>;
 
+export interface SymbolicationService {
+  getSymbolTable: GetSymbolTableCallback;
+}
+
 export type ReceiveProfile = (
   geckoProfile: MinimallyTypedGeckoProfile,
   profilerViewMode: ProfilerViewMode | undefined,

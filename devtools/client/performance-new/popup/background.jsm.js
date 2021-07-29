@@ -225,10 +225,10 @@ async function captureProfile(pageContext) {
 
   const {
     openProfilerAndDisplayProfile,
-    createMultiModalGetSymbolTableFn,
+    createLocalSymbolicationService,
   } = lazy.BrowserModule();
 
-  const getSymbolTableCallback = createMultiModalGetSymbolTableFn(
+  const symbolicationService = createLocalSymbolicationService(
     sharedLibraries,
     objdirs
   );
@@ -236,7 +236,7 @@ async function captureProfile(pageContext) {
   openProfilerAndDisplayProfile(
     profile,
     profilerViewMode,
-    getSymbolTableCallback
+    symbolicationService
   );
 
   Services.profiler.StopProfiler();
