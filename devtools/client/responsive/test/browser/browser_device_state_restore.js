@@ -48,9 +48,9 @@ addRDMTask(
     await testTouchEventsOverride(ui, false);
 
     info("Select a device");
-    const reloaded = waitForViewportLoad(ui);
+    const { onPageLoaded } = await waitForViewportLoad(ui);
     await selectDevice(ui, TEST_DEVICE.name);
-    await reloaded;
+    await onPageLoaded;
     await waitForViewportResizeTo(ui, TEST_DEVICE.width, TEST_DEVICE.height);
 
     info("Checking the RDM device state.");
@@ -84,7 +84,7 @@ addRDMTask(
         state.devices.listState == Types.loadableState.LOADED
     );
     await waitForViewportResizeTo(ui, TEST_DEVICE.width, TEST_DEVICE.height);
-    await waitForViewportLoad(ui);
+    await (await waitForViewportLoad(ui)).onPageLoaded;
 
     info("Checking the restored RDM state.");
     testViewportDeviceMenuLabel(ui, TEST_DEVICE.name);
@@ -121,7 +121,7 @@ addRDMTask(
         state.devices.listState == Types.loadableState.LOADED
     );
     await waitForViewportResizeTo(ui, TEST_DEVICE.height, TEST_DEVICE.width);
-    await waitForViewportLoad(ui);
+    await (await waitForViewportLoad(ui)).onPageLoaded;
 
     info("Checking the restored RDM state.");
     testViewportDeviceMenuLabel(ui, TEST_DEVICE.name);
