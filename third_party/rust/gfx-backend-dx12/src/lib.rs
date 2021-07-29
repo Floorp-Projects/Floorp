@@ -35,7 +35,7 @@ mod window;
 
 use auxil::FastHashMap;
 use hal::{
-    adapter, display, format as f, image, memory, pso::PipelineStage, queue as q, Features, Limits,
+    adapter, format as f, image, memory, pso::PipelineStage, queue as q, Features, Limits,
     PhysicalDeviceProperties,
 };
 use range_alloc::RangeAllocator;
@@ -442,64 +442,12 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         self.memory_properties.clone()
     }
 
-    fn external_buffer_properties(
-        &self,
-        _usage: hal::buffer::Usage,
-        _sparse: hal::memory::SparseFlags,
-        _memory_type: hal::external_memory::ExternalMemoryType,
-    ) -> hal::external_memory::ExternalMemoryProperties {
-        unimplemented!()
-    }
-
-    fn external_image_properties(
-        &self,
-        _format: hal::format::Format,
-        _dimensions: u8,
-        _tiling: hal::image::Tiling,
-        _usage: hal::image::Usage,
-        _view_caps: hal::image::ViewCapabilities,
-        _memory_type: hal::external_memory::ExternalMemoryType,
-    ) -> Result<
-        hal::external_memory::ExternalMemoryProperties,
-        hal::external_memory::ExternalImagePropertiesError,
-    > {
-        unimplemented!()
-    }
-
     fn features(&self) -> Features {
         self.features
     }
 
     fn properties(&self) -> PhysicalDeviceProperties {
         self.properties
-    }
-
-    unsafe fn enumerate_displays(&self) -> Vec<display::Display<crate::Backend>> {
-        unimplemented!();
-    }
-
-    unsafe fn enumerate_compatible_planes(
-        &self,
-        _display: &display::Display<crate::Backend>,
-    ) -> Vec<display::Plane> {
-        unimplemented!();
-    }
-
-    unsafe fn create_display_mode(
-        &self,
-        _display: &display::Display<crate::Backend>,
-        _resolution: (u32, u32),
-        _refresh_rate: u32,
-    ) -> Result<display::DisplayMode<crate::Backend>, display::DisplayModeError> {
-        unimplemented!();
-    }
-
-    unsafe fn create_display_plane<'a>(
-        &self,
-        _display: &'a display::DisplayMode<crate::Backend>,
-        _plane: &'a display::Plane,
-    ) -> Result<display::DisplayPlane<'a, crate::Backend>, hal::device::OutOfMemory> {
-        unimplemented!();
     }
 }
 
@@ -826,7 +774,6 @@ pub struct Device {
     // Indicates that there is currently an active device.
     open: Arc<Mutex<bool>>,
     library: Arc<native::D3D12Lib>,
-    render_doc: gfx_renderdoc::RenderDoc,
 }
 
 impl fmt::Debug for Device {
@@ -913,7 +860,6 @@ impl Device {
             present_queue,
             queues: Vec::new(),
             open: Arc::clone(&physical_device.is_open),
-            render_doc: Default::default(),
         }
     }
 
@@ -1407,9 +1353,6 @@ impl hal::Instance<Backend> for Instance {
                     Features::UNIFORM_BUFFER_DESCRIPTOR_INDEXING |
                     Features::UNSIZED_DESCRIPTOR_ARRAY |
                     Features::DRAW_INDIRECT_COUNT |
-                    Features::INDEPENDENT_BLENDING |
-                    Features::SAMPLE_RATE_SHADING |
-                    Features::FRAGMENT_STORES_AND_ATOMICS |
                     tiled_resource_features |
                     conservative_faster_features,
                 properties: PhysicalDeviceProperties {
@@ -1550,17 +1493,6 @@ impl hal::Instance<Backend> for Instance {
     unsafe fn destroy_surface(&self, _surface: window::Surface) {
         // TODO: Implement Surface cleanup
     }
-
-    unsafe fn create_display_plane_surface(
-        &self,
-        _display_plane: &display::DisplayPlane<crate::Backend>,
-        _plane_stack_index: u32,
-        _transformation: display::SurfaceTransform,
-        _alpha: display::DisplayPlaneAlpha,
-        _image_extent: hal::window::Extent2D,
-    ) -> Result<window::Surface, display::DisplayPlaneSurfaceError> {
-        unimplemented!();
-    }
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
@@ -1600,9 +1532,6 @@ impl hal::Backend for Backend {
     type Semaphore = resource::Semaphore;
     type Event = ();
     type QueryPool = resource::QueryPool;
-
-    type Display = ();
-    type DisplayMode = ();
 }
 
 fn validate_line_width(width: f32) {
@@ -1612,7 +1541,7 @@ fn validate_line_width(width: f32) {
     assert_eq!(width, 1.0);
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 struct FormatInfo {
     properties: f::Properties,
     sample_count_mask: u8,
@@ -1647,8 +1576,7 @@ impl FormatProperties {
 
     fn resolve(&self, idx: usize) -> FormatInfo {
         let mut guard = self.info[idx].lock();
-        use std::ops::Deref;
-        if let Some(info) = guard.deref().clone() {
+        if let Some(info) = *guard {
             return info;
         }
         let format: f::Format = unsafe { mem::transmute(idx as u32) };
@@ -1657,7 +1585,7 @@ impl FormatProperties {
             Some(format) => format,
             None => {
                 let info = FormatInfo::default();
-                *guard = Some(info.clone());
+                *guard = Some(info);
                 return info;
             }
         };
@@ -1774,7 +1702,7 @@ impl FormatProperties {
             properties,
             sample_count_mask,
         };
-        *guard = Some(info.clone());
+        *guard = Some(info);
         info
     }
 }

@@ -7,6 +7,7 @@
 
 use super::*;
 
+use cocoa_foundation::foundation::NSUInteger;
 use objc::runtime::{NO, YES};
 
 #[repr(u64)]

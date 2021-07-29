@@ -195,7 +195,6 @@ impl PrivateCapabilities {
                     },
                     optimal_tiling: If::empty(),
                     linear_tiling: If::empty(),
-                    drm_format_properties: Vec::new(),
                 }
             }
         };
@@ -470,7 +469,6 @@ impl PrivateCapabilities {
                 | If::TRANSFER_DST
                 | extra_optimal,
             buffer_features: Bf::all(),
-            drm_format_properties: Vec::new(),
         }
     }
 }
