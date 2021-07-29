@@ -42,9 +42,11 @@ class AddonPermissionsDetailsViewTest {
 
     @Test
     fun `clicking learn more opens learn more page in browser`() {
-        permissionsDetailsView.bind(addon.copy(
-            rating = null
-        ))
+        permissionsDetailsView.bind(
+            addon.copy(
+                rating = null
+            )
+        )
 
         permissionsDetailsView.learn_more_label.performClick()
 

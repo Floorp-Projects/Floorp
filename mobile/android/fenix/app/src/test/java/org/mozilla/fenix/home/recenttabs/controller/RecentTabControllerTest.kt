@@ -46,12 +46,14 @@ class RecentTabControllerTest {
         store = BrowserStore(
             BrowserState()
         )
-        controller = spyk(DefaultRecentTabsController(
-            selectTabUseCase = selectTabUseCase.selectTab,
-            navController = navController,
-            metrics = metrics,
-            store = store
-        ))
+        controller = spyk(
+            DefaultRecentTabsController(
+                selectTabUseCase = selectTabUseCase.selectTab,
+                navController = navController,
+                metrics = metrics,
+                store = store
+            )
+        )
 
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment

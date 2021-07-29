@@ -295,10 +295,12 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
     }
 
     private fun deleteMulti(selected: Set<BookmarkNode>, eventType: Event = Event.RemoveBookmarks) {
-        selected.iterator().forEach { if (it.type == BookmarkNodeType.FOLDER) {
-            showRemoveFolderDialog(selected)
-            return
-        } }
+        selected.iterator().forEach {
+            if (it.type == BookmarkNodeType.FOLDER) {
+                showRemoveFolderDialog(selected)
+                return
+            }
+        }
         updatePendingBookmarksToDelete(selected)
 
         pendingBookmarkDeletionJob = getDeleteOperation(eventType)
@@ -320,9 +322,11 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
         viewLifecycleOwner.lifecycleScope.allowUndo(
             requireView(), message,
-            getString(R.string.bookmark_undo_deletion), {
+            getString(R.string.bookmark_undo_deletion),
+            {
                 undoPendingDeletion(selected)
-            }, operation = getDeleteOperation(eventType)
+            },
+            operation = getDeleteOperation(eventType)
         )
     }
 

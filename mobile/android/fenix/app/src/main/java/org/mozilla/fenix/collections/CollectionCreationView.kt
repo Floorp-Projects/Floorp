@@ -170,9 +170,12 @@ class CollectionCreationView(
             setOnClickListener {
                 name_collection_edittext.hideKeyboard()
                 val handler = Handler(Looper.getMainLooper())
-                handler.postDelayed({
-                    interactor.onBackPressed(SaveCollectionStep.NameCollection)
-                }, TRANSITION_DURATION)
+                handler.postDelayed(
+                    {
+                        interactor.onBackPressed(SaveCollectionStep.NameCollection)
+                    },
+                    TRANSITION_DURATION
+                )
             }
         }
 
@@ -216,9 +219,12 @@ class CollectionCreationView(
             setOnClickListener {
                 name_collection_edittext.hideKeyboard()
                 val handler = Handler(Looper.getMainLooper())
-                handler.postDelayed({
-                    interactor.onBackPressed(SaveCollectionStep.RenameCollection)
-                }, TRANSITION_DURATION)
+                handler.postDelayed(
+                    {
+                        interactor.onBackPressed(SaveCollectionStep.RenameCollection)
+                    },
+                    TRANSITION_DURATION
+                )
             }
         }
         transition.addListener(object : Transition.TransitionListener {

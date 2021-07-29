@@ -83,14 +83,14 @@ class MenuScreenShotTest : ScreenshotTest() {
         }.openLanguageSubMenu {
             Screengrab.screenshot("SettingsSubMenuAccessibilityRobot_settings-language")
         }.goBack {
-        // From about here we need to scroll up to ensure all settings options are visible.
+            // From about here we need to scroll up to ensure all settings options are visible.
         }.openSetDefaultBrowserSubMenu {
             Screengrab.screenshot("SettingsSubMenuDefaultBrowserRobot_settings-default-browser")
         }.goBack {
-        // Disabled for Pixel 2
-        // }.openEnhancedTrackingProtectionSubMenu {
-        //     Screengrab.screenshot("settings-enhanced-tp")
-        // }.goBack {
+            // Disabled for Pixel 2
+            // }.openEnhancedTrackingProtectionSubMenu {
+            //     Screengrab.screenshot("settings-enhanced-tp")
+            // }.goBack {
         }.openLoginsAndPasswordSubMenu {
             Screengrab.screenshot("SettingsSubMenuLoginsAndPasswords-settings-logins-passwords")
         }.goBack {
@@ -176,7 +176,7 @@ class MenuScreenShotTest : ScreenshotTest() {
     @Test
     fun saveLoginPromptTest() {
         val saveLoginTest =
-                TestAssetHelper.getSaveLoginAsset(mockWebServer)
+            TestAssetHelper.getSaveLoginAsset(mockWebServer)
         navigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
             verifySaveLoginPromptIsShownNotSave()

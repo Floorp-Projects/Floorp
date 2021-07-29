@@ -97,9 +97,11 @@ class SearchDialogControllerTest {
         val url = ""
 
         var dismissDialogInvoked = false
-        createController(dismissDialog = {
-            dismissDialogInvoked = true
-        }).handleUrlCommitted(url)
+        createController(
+            dismissDialog = {
+                dismissDialogInvoked = true
+            }
+        ).handleUrlCommitted(url)
 
         assertTrue(dismissDialogInvoked)
     }
@@ -162,9 +164,11 @@ class SearchDialogControllerTest {
     @Test
     fun handleEditingCancelled() = runBlockingTest {
         var clearToolbarFocusInvoked = false
-        createController(clearToolbarFocus = {
-            clearToolbarFocusInvoked = true
-        }).handleEditingCancelled()
+        createController(
+            clearToolbarFocus = {
+                clearToolbarFocusInvoked = true
+            }
+        ).handleEditingCancelled()
 
         assertTrue(clearToolbarFocusInvoked)
     }
@@ -277,9 +281,11 @@ class SearchDialogControllerTest {
         val searchEngine: SearchEngine = mockk(relaxed = true)
 
         var focusToolbarInvoked = false
-        createController(focusToolbar = {
-            focusToolbarInvoked = true
-        }).handleSearchShortcutEngineSelected(searchEngine)
+        createController(
+            focusToolbar = {
+                focusToolbarInvoked = true
+            }
+        ).handleSearchShortcutEngineSelected(searchEngine)
 
         assertTrue(focusToolbarInvoked)
         verify { store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine)) }

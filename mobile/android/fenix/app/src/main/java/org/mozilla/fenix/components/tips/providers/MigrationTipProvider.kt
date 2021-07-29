@@ -92,9 +92,11 @@ class MigrationTipProvider(private val context: Context) : TipProvider {
         return if (MozillaProductDetector.packageIsInstalled(context, FENIX.productName)) {
             context.startActivity(context.packageManager.getLaunchIntentForPackage(FENIX.productName))
         } else {
-            context.startActivity(Intent(
-                Intent.ACTION_VIEW, Uri.parse(SupportUtils.FIREFOX_NIGHTLY_PLAY_STORE_URL)
-            ))
+            context.startActivity(
+                Intent(
+                    Intent.ACTION_VIEW, Uri.parse(SupportUtils.FIREFOX_NIGHTLY_PLAY_STORE_URL)
+                )
+            )
         }
     }
 

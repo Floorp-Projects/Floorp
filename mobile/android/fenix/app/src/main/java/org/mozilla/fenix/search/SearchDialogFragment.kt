@@ -508,8 +508,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private fun updateSearchSuggestionsHintVisibility(state: SearchFragmentState) {
         view?.apply {
             val showHint = state.showSearchSuggestionsHint &&
-                    !state.showSearchShortcuts &&
-                    state.url != state.query
+                !state.showSearchShortcuts &&
+                state.url != state.query
 
             findViewById<View>(R.id.search_suggestions_hint)?.isVisible = showHint
             search_suggestions_hint_divider?.isVisible = showHint
@@ -522,8 +522,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         val isVisible =
             searchEngine?.id?.contains("google") == true &&
-                    isSpeechAvailable() &&
-                    requireContext().settings().shouldShowVoiceSearch
+                isSpeechAvailable() &&
+                requireContext().settings().shouldShowVoiceSearch
 
         if (isVisible) {
             toolbarView.view.addEditAction(
@@ -559,8 +559,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private fun updateClipboardSuggestion(searchState: SearchFragmentState, clipboardUrl: String?) {
         val shouldShowView = searchState.showClipboardSuggestions &&
-                searchState.query.isEmpty() &&
-                !clipboardUrl.isNullOrEmpty() && !searchState.showSearchShortcuts
+            searchState.query.isEmpty() &&
+            !clipboardUrl.isNullOrEmpty() && !searchState.showSearchShortcuts
 
         fill_link_from_clipboard.isVisible = shouldShowView
         fill_link_divider.isVisible = shouldShowView

@@ -44,19 +44,22 @@ class SyncPreferenceView(
 ) {
 
     init {
-        accountManager.register(object : AccountObserver {
-            override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-                MainScope().launch { updateSyncPreferenceStatus() }
-            }
+        accountManager.register(
+            object : AccountObserver {
+                override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+                    MainScope().launch { updateSyncPreferenceStatus() }
+                }
 
-            override fun onLoggedOut() {
-                MainScope().launch { updateSyncPreferenceNeedsLogin() }
-            }
+                override fun onLoggedOut() {
+                    MainScope().launch { updateSyncPreferenceNeedsLogin() }
+                }
 
-            override fun onAuthenticationProblems() {
-                MainScope().launch { updateSyncPreferenceNeedsReauth() }
-            }
-        }, owner = lifecycleOwner)
+                override fun onAuthenticationProblems() {
+                    MainScope().launch { updateSyncPreferenceNeedsReauth() }
+                }
+            },
+            owner = lifecycleOwner
+        )
 
         val accountExists = accountManager.authenticatedAccount() != null
         val needsReauth = accountManager.accountNeedsReauth()

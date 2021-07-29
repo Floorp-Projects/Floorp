@@ -95,11 +95,13 @@ class SecretDebugMenuTriggerTest {
         clickListener.captured.onClick(logoView)
         clickListener.captured.onClick(logoView)
 
-        verify { Toast.makeText(
-            context,
-            R.string.about_debug_menu_toast_done,
-            Toast.LENGTH_LONG
-        ) }
+        verify {
+            Toast.makeText(
+                context,
+                R.string.about_debug_menu_toast_done,
+                Toast.LENGTH_LONG
+            )
+        }
         verify { toast.show() }
         verify { settings.showSecretDebugMenuThisSession = true }
     }

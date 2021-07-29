@@ -71,7 +71,8 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
                 },
                 scanMessage =
                 if (requireContext().settings().allowDomesticChinaFxaServer &&
-                    org.mozilla.fenix.Config.channel.isMozillaOnline)
+                    org.mozilla.fenix.Config.channel.isMozillaOnline
+                )
                     R.string.pair_instructions_2_cn
                 else R.string.pair_instructions_2
             ),

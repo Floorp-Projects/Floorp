@@ -59,7 +59,8 @@ class DefaultToolbarMenuTest {
                 tabs = listOf(
                     createTab(url = "https://firefox.com", id = "1"),
                     createTab(url = "https://getpocket.com", id = "2")
-                ), selectedTabId = "1"
+                ),
+                selectedTabId = "1"
             )
         )
     }
@@ -70,15 +71,17 @@ class DefaultToolbarMenuTest {
     }
 
     private fun createMenu() {
-        toolbarMenu = spyk(DefaultToolbarMenu(
-            context = context,
-            store = store,
-            hasAccountProblem = false,
-            onItemTapped = { },
-            lifecycleOwner = lifecycleOwner,
-            bookmarksStorage = bookmarksStorage,
-            isPinningSupported = false
-        ))
+        toolbarMenu = spyk(
+            DefaultToolbarMenu(
+                context = context,
+                store = store,
+                hasAccountProblem = false,
+                onItemTapped = { },
+                lifecycleOwner = lifecycleOwner,
+                bookmarksStorage = bookmarksStorage,
+                isPinningSupported = false
+            )
+        )
 
         every { toolbarMenu.updateCurrentUrlIsBookmarked(any()) } returns mockk()
         every { toolbarMenu.shouldShowOpenInApp() } returns mockk()

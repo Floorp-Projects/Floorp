@@ -18,10 +18,10 @@ import org.hamcrest.CoreMatchers
 class SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot {
     fun verifySaveLoginsOptionsView() {
         onView(ViewMatchers.withText("Ask to save"))
-                .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
         onView(ViewMatchers.withText("Never save"))
-                .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     }
 
     class Transition {
@@ -35,4 +35,4 @@ class SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot {
 }
 
 private fun goBackButton() =
-        onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
+    onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))

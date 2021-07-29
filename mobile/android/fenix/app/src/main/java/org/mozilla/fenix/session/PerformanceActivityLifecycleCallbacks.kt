@@ -34,9 +34,9 @@ class PerformanceActivityLifecycleCallbacks(
         // They have been whitelisted in case new activities are added to the application
         // to ensure these new activities would not crash the application.
         return isTransientActivityInMigrationVariant(activity) ||
-                (activity is IntentReceiverActivity) ||
-                (activity is VoiceSearchActivity) ||
-                (activity is AuthIntentReceiverActivity)
+            (activity is IntentReceiverActivity) ||
+            (activity is VoiceSearchActivity) ||
+            (activity is AuthIntentReceiverActivity)
     }
 
     /**

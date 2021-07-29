@@ -28,7 +28,8 @@ class FenixSnackbarDelegate(private val view: View) : ContextMenuCandidate.Snack
                 .setAction(view.context.getString(action)) { listener.invoke(view) }
                 .show()
         } else {
-            FenixSnackbar.make(view,
+            FenixSnackbar.make(
+                view,
                 duration = FenixSnackbar.LENGTH_SHORT,
                 isDisplayedWithBrowserToolbar = true
             )

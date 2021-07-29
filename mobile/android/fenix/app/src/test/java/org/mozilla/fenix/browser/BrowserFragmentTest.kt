@@ -184,9 +184,11 @@ class BrowserFragmentTest {
         val toolbar: BrowserToolbarView = mockk(relaxed = true)
         every { browserFragment.browserToolbarView } returns toolbar
 
-        store.dispatch(ContentAction.UpdateLoadRequestAction(
-            testTab.id,
-            LoadRequestState("https://firefox.com", false, true))
+        store.dispatch(
+            ContentAction.UpdateLoadRequestAction(
+                testTab.id,
+                LoadRequestState("https://firefox.com", false, true)
+            )
         ).joinBlocking()
         verify(exactly = 1) { toolbar.expand() }
     }

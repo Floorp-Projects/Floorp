@@ -86,11 +86,13 @@ class LoginsFragmentStoreTest {
 
     @Test
     fun `FilterLogins action`() {
-        val store = LoginsFragmentStore(baseState.copy(
-            isLoading = true,
-            searchedForText = "firefox",
-            loginList = loginList
-        ))
+        val store = LoginsFragmentStore(
+            baseState.copy(
+                isLoading = true,
+                searchedForText = "firefox",
+                loginList = loginList
+            )
+        )
 
         store.dispatch(LoginsAction.FilterLogins(null)).joinBlocking()
 
@@ -111,13 +113,15 @@ class LoginsFragmentStoreTest {
     @Test
     fun `SortLogins action`() {
         val lastUsed = SortingStrategy.LastUsed
-        val store = LoginsFragmentStore(baseState.copy(
-            isLoading = true,
-            searchedForText = null,
-            sortingStrategy = SortingStrategy.Alphabetically(mockk()),
-            highlightedItem = SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort,
-            loginList = loginList
-        ))
+        val store = LoginsFragmentStore(
+            baseState.copy(
+                isLoading = true,
+                searchedForText = null,
+                sortingStrategy = SortingStrategy.Alphabetically(mockk()),
+                highlightedItem = SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort,
+                loginList = loginList
+            )
+        )
 
         store.dispatch(LoginsAction.SortLogins(lastUsed)).joinBlocking()
 
@@ -131,13 +135,15 @@ class LoginsFragmentStoreTest {
     @Test
     fun `SortLogins action with search text`() {
         val lastUsed = SortingStrategy.LastUsed
-        val store = LoginsFragmentStore(baseState.copy(
-            isLoading = true,
-            searchedForText = "example",
-            sortingStrategy = SortingStrategy.Alphabetically(mockk()),
-            highlightedItem = SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort,
-            loginList = loginList
-        ))
+        val store = LoginsFragmentStore(
+            baseState.copy(
+                isLoading = true,
+                searchedForText = "example",
+                sortingStrategy = SortingStrategy.Alphabetically(mockk()),
+                highlightedItem = SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort,
+                loginList = loginList
+            )
+        )
 
         store.dispatch(LoginsAction.SortLogins(lastUsed)).joinBlocking()
 
@@ -150,11 +156,13 @@ class LoginsFragmentStoreTest {
 
     @Test
     fun `LoginSelected action`() {
-        val store = LoginsFragmentStore(baseState.copy(
+        val store = LoginsFragmentStore(
+            baseState.copy(
                 isLoading = false,
                 loginList = listOf(mockk()),
                 filteredItems = listOf(mockk())
-        ))
+            )
+        )
 
         store.dispatch(LoginsAction.LoginSelected(mockk())).joinBlocking()
 

@@ -52,13 +52,15 @@ class StartupActivityLog {
             return
         }
 
-        val transformedEntries = log.map { when (it) {
-            is LogEntry.AppStarted -> "App-STARTED"
-            is LogEntry.AppStopped -> "App-STOPPED"
-            is LogEntry.ActivityCreated -> "${it.activityClass.simpleName}-CREATED"
-            is LogEntry.ActivityStarted -> "${it.activityClass.simpleName}-STARTED"
-            is LogEntry.ActivityStopped -> "${it.activityClass.simpleName}-STOPPED"
-        } }
+        val transformedEntries = log.map {
+            when (it) {
+                is LogEntry.AppStarted -> "App-STARTED"
+                is LogEntry.AppStopped -> "App-STOPPED"
+                is LogEntry.ActivityCreated -> "${it.activityClass.simpleName}-CREATED"
+                is LogEntry.ActivityStarted -> "${it.activityClass.simpleName}-STARTED"
+                is LogEntry.ActivityStopped -> "${it.activityClass.simpleName}-STOPPED"
+            }
+        }
 
         loggerArg.debug(transformedEntries.toString())
     }

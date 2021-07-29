@@ -145,26 +145,28 @@ class DefaultSessionControlControllerTest {
 
         val restoreUseCase: TabsUseCases.RestoreUseCase = mockk(relaxed = true)
 
-        controller = spyk(DefaultSessionControlController(
-            activity = activity,
-            store = store,
-            settings = settings,
-            engine = engine,
-            metrics = metrics,
-            tabCollectionStorage = tabCollectionStorage,
-            addTabUseCase = tabsUseCases.addTab,
-            reloadUrlUseCase = reloadUrlUseCase.reload,
-            selectTabUseCase = selectTabUseCase.selectTab,
-            restoreUseCase = restoreUseCase,
-            fragmentStore = fragmentStore,
-            navController = navController,
-            viewLifecycleScope = scope,
-            hideOnboarding = hideOnboarding,
-            registerCollectionStorageObserver = registerCollectionStorageObserver,
-            showDeleteCollectionPrompt = showDeleteCollectionPrompt,
-            showTabTray = showTabTray,
-            handleSwipedItemDeletionCancel = handleSwipedItemDeletionCancel
-        ))
+        controller = spyk(
+            DefaultSessionControlController(
+                activity = activity,
+                store = store,
+                settings = settings,
+                engine = engine,
+                metrics = metrics,
+                tabCollectionStorage = tabCollectionStorage,
+                addTabUseCase = tabsUseCases.addTab,
+                reloadUrlUseCase = reloadUrlUseCase.reload,
+                selectTabUseCase = selectTabUseCase.selectTab,
+                restoreUseCase = restoreUseCase,
+                fragmentStore = fragmentStore,
+                navController = navController,
+                viewLifecycleScope = scope,
+                hideOnboarding = hideOnboarding,
+                registerCollectionStorageObserver = registerCollectionStorageObserver,
+                showDeleteCollectionPrompt = showDeleteCollectionPrompt,
+                showTabTray = showTabTray,
+                handleSwipedItemDeletionCancel = handleSwipedItemDeletionCancel
+            )
+        )
     }
 
     @After
@@ -361,7 +363,7 @@ class DefaultSessionControlControllerTest {
         verify {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
-                    (SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS),
+                (SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS),
                 newTab = true,
                 from = BrowserDirection.FromHome
             )

@@ -62,18 +62,27 @@ class SettingsSubMenuDeleteBrowsingDataOnQuitRobot {
 
 private fun goBackButton() = onView(withContentDescription("Navigate up"))
 
-private fun assertNavigationToolBarHeader() = onView(allOf(withId(R.id.navigationToolbar),
-    withChild(withText(R.string.preferences_delete_browsing_data_on_quit))))
+private fun assertNavigationToolBarHeader() = onView(
+    allOf(
+        withId(R.id.navigationToolbar),
+        withChild(withText(R.string.preferences_delete_browsing_data_on_quit))
+    )
+)
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun deleteBrowsingOnQuitButton() = onView(allOf(withParentIndex(0),
-    withChild(withText(R.string.preferences_delete_browsing_data_on_quit))))
+private fun deleteBrowsingOnQuitButton() = onView(
+    allOf(
+        withParentIndex(0),
+        withChild(withText(R.string.preferences_delete_browsing_data_on_quit))
+    )
+)
 
 private fun assertDeleteBrowsingOnQuitButton() = deleteBrowsingOnQuitButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertDeleteBrowsingOnQuitButtonSummary() = onView(
-    withText(R.string.preference_summary_delete_browsing_data_on_quit_2))
+    withText(R.string.preference_summary_delete_browsing_data_on_quit_2)
+)
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertDeleteBrowsingOnQuitButtonSwitchDefault() = onView(withResourceName("switch_widget"))

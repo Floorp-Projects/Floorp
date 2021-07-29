@@ -111,8 +111,12 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
 }
 
 private fun assertNavigationToolBarHeader() {
-    onView(allOf(withParent(withId(org.mozilla.fenix.R.id.navigationToolbar)),
-        withText("Enhanced Tracking Protection")))
+    onView(
+        allOf(
+            withParent(withId(org.mozilla.fenix.R.id.navigationToolbar)),
+            withText("Enhanced Tracking Protection")
+        )
+    )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
@@ -122,21 +126,32 @@ private fun assertEnhancedTrackingProtectionHeader() {
 }
 
 private fun assertEnhancedTrackingProtectionHeaderDescription() {
-    onView(allOf(withParent(withParentIndex(0)),
-        withText("Keep your data to yourself. $appName protects you from many of the most common trackers that follow what you do online.")))
+    onView(
+        allOf(
+            withParent(withParentIndex(0)),
+            withText("Keep your data to yourself. $appName protects you from many of the most common trackers that follow what you do online.")
+        )
+    )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertLearnMoreText() {
-    onView(allOf(withParent(withParentIndex(0)),
-        withText("Learn more")))
+    onView(
+        allOf(
+            withParent(withParentIndex(0)),
+            withText("Learn more")
+        )
+    )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertEnhancedTrackingProtectionTextWithSwitchWidget() {
-    onView(allOf(
+    onView(
+        allOf(
             withParentIndex(1),
-            withChild(withText("Enhanced Tracking Protection"))))
+            withChild(withText("Enhanced Tracking Protection"))
+        )
+    )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
@@ -195,7 +210,8 @@ private fun assertTrackingProtectionSwitchEnabled() {
 }
 
 private fun assertRadioButtonDefaults() {
-    onView(withText("Strict")
+    onView(
+        withText("Strict")
     ).assertIsChecked(false)
 
     onView(
@@ -205,7 +221,8 @@ private fun assertRadioButtonDefaults() {
         )
     ).assertIsChecked(true)
 
-    onView(withText("Custom")
+    onView(
+        withText("Custom")
     ).assertIsChecked(false)
 }
 

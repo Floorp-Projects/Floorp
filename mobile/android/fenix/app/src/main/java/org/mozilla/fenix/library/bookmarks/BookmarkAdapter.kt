@@ -73,8 +73,8 @@ class BookmarkAdapter(private val emptyView: View, private val interactor: Bookm
 
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
             oldMode::class == newMode::class &&
-            old[oldItemPosition] in oldMode.selectedItems == new[newItemPosition] in newMode.selectedItems &&
-                    old[oldItemPosition] == new[newItemPosition]
+                old[oldItemPosition] in oldMode.selectedItems == new[newItemPosition] in newMode.selectedItems &&
+                old[oldItemPosition] == new[newItemPosition]
 
         override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? {
             val oldItem = old[oldItemPosition]

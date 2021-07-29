@@ -180,8 +180,10 @@ private fun BrowserStore.updateSearchTermsOfSelectedSession(
 ) {
     val selectedTabId = state.selectedTabId ?: return
 
-    dispatch(ContentAction.UpdateSearchTermsAction(
-        selectedTabId,
-        searchTerms
-    ))
+    dispatch(
+        ContentAction.UpdateSearchTermsAction(
+            selectedTabId,
+            searchTerms
+        )
+    )
 }

@@ -31,10 +31,12 @@ internal class BookmarkAdapterTest {
 
     @Test
     fun `update adapter from tree of bookmark nodes, null tree returns empty list`() {
-        val tree = testFolder("123", "root", listOf(
-            testBookmarkItem("someFolder", "http://mozilla.org"),
-            testSeparator("123"),
-            testBookmarkItem("123", "https://www.mozilla.org/en-US/firefox/")
+        val tree = testFolder(
+            "123", "root",
+            listOf(
+                testBookmarkItem("someFolder", "http://mozilla.org"),
+                testSeparator("123"),
+                testBookmarkItem("123", "https://www.mozilla.org/en-US/firefox/")
             )
         )
         bookmarkAdapter.updateData(tree, BookmarkFragmentState.Mode.Normal())
@@ -74,9 +76,12 @@ internal class BookmarkAdapterTest {
         val folder2 = testFolder("124", "123", title = "Mobile 2", children = emptyList())
         val folder3 = testFolder("125", "123", title = "Mobile 3", children = listOf(item4))
         val folder4 = testFolder("126", "123", title = "Mobile 3", children = emptyList())
-        val folder = testFolder("123", "root", title = "Mobile", children = listOf(
-            folder4, item1, sep1, item2, folder2, folder3, item3
-        ))
+        val folder = testFolder(
+            "123", "root", title = "Mobile",
+            children = listOf(
+                folder4, item1, sep1, item2, folder2, folder3, item3
+            )
+        )
         bookmarkAdapter.updateData(folder, BookmarkFragmentState.Mode.Normal())
         verifyOrder {
             bookmarkAdapter.updateData(folder, BookmarkFragmentState.Mode.Normal())

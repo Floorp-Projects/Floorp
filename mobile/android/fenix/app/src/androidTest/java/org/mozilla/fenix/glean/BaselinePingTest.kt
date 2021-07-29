@@ -79,9 +79,11 @@ class BaselinePingTest {
         @JvmStatic
         @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
         fun setupOnce() {
-            val httpClient = ConceptFetchHttpUploader(lazy {
-                GeckoViewFetchClient(ApplicationProvider.getApplicationContext())
-            })
+            val httpClient = ConceptFetchHttpUploader(
+                lazy {
+                    GeckoViewFetchClient(ApplicationProvider.getApplicationContext())
+                }
+            )
 
             // Fenix does not initialize the Glean SDK in tests/debug builds, but this test
             // requires Glean to be initialized so we need to do it manually. Additionally,
@@ -151,8 +153,11 @@ class BaselinePingTest {
         // sending the ping that was submitted on background. This can go away once bug 1634375
         // is fixed.
         device.pressRecentApps()
-        device.findObject(UiSelector().descriptionContains(
-            ApplicationProvider.getApplicationContext<Context>().getString(R.string.app_name)))
+        device.findObject(
+            UiSelector().descriptionContains(
+                ApplicationProvider.getApplicationContext<Context>().getString(R.string.app_name)
+            )
+        )
             .click()
 
         // Validate the received data.

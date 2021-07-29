@@ -127,11 +127,13 @@ class DefaultTabsTrayControllerTest {
     @Test
     fun `WHEN handleTrayScrollingToPosition is called with smoothScroll=true THEN it scrolls to that position with smoothScroll`() {
         var selectTabPositionInvoked = false
-        createController(selectTabPosition = { position, smoothScroll ->
-            assertEquals(3, position)
-            assertTrue(smoothScroll)
-            selectTabPositionInvoked = true
-        }).handleTrayScrollingToPosition(3, true)
+        createController(
+            selectTabPosition = { position, smoothScroll ->
+                assertEquals(3, position)
+                assertTrue(smoothScroll)
+                selectTabPositionInvoked = true
+            }
+        ).handleTrayScrollingToPosition(3, true)
 
         assertTrue(selectTabPositionInvoked)
     }
@@ -218,10 +220,12 @@ class DefaultTabsTrayControllerTest {
             every { browserStore.state.getNormalOrPrivateTabs(any()) } returns listOf(tab, mockk())
 
             var showUndoSnackbarForTabInvoked = false
-            createController(showUndoSnackbarForTab = {
-                assertTrue(it)
-                showUndoSnackbarForTabInvoked = true
-            }).handleTabDeletion("22")
+            createController(
+                showUndoSnackbarForTab = {
+                    assertTrue(it)
+                    showUndoSnackbarForTabInvoked = true
+                }
+            ).handleTabDeletion("22")
 
             verify { tabsUseCases.removeTab("22") }
             assertTrue(showUndoSnackbarForTabInvoked)
@@ -258,10 +262,14 @@ class DefaultTabsTrayControllerTest {
     @Test
     fun `WHEN handleMultipleTabsDeletion is called to close all private tabs THEN that it navigates to home where that tabs will be removed and shows undo snackbar`() {
         var showUndoSnackbarForTabInvoked = false
-        val controller = spyk(createController(showUndoSnackbarForTab = {
-            assertTrue(it)
-            showUndoSnackbarForTabInvoked = true
-        }))
+        val controller = spyk(
+            createController(
+                showUndoSnackbarForTab = {
+                    assertTrue(it)
+                    showUndoSnackbarForTabInvoked = true
+                }
+            )
+        )
 
         val privateTab: Tab = mockk {
             every { private } returns true
@@ -285,10 +293,14 @@ class DefaultTabsTrayControllerTest {
     @Test
     fun `WHEN handleMultipleTabsDeletion is called to close all normal tabs THEN that it navigates to home where that tabs will be removed and shows undo snackbar`() {
         var showUndoSnackbarForTabInvoked = false
-        val controller = spyk(createController(showUndoSnackbarForTab = {
-            assertFalse(it)
-            showUndoSnackbarForTabInvoked = true
-        }))
+        val controller = spyk(
+            createController(
+                showUndoSnackbarForTab = {
+                    assertFalse(it)
+                    showUndoSnackbarForTabInvoked = true
+                }
+            )
+        )
         val normalTab: Tab = mockk {
             every { private } returns false
         }
@@ -373,12 +385,14 @@ class DefaultTabsTrayControllerTest {
     fun `WHEN dismissTabsTrayAndNavigateHome is called with a spefic tab id THEN tray is dismissed and navigates home is opened to delete that tab`() {
         var dismissTrayInvoked = false
         var navigateToHomeAndDeleteSessionInvoked = false
-        createController(dismissTray = {
-            dismissTrayInvoked = true
-        }, navigateToHomeAndDeleteSession = {
-            assertEquals("randomId", it)
-            navigateToHomeAndDeleteSessionInvoked = true
-        }
+        createController(
+            dismissTray = {
+                dismissTrayInvoked = true
+            },
+            navigateToHomeAndDeleteSession = {
+                assertEquals("randomId", it)
+                navigateToHomeAndDeleteSessionInvoked = true
+            }
         ).dismissTabsTrayAndNavigateHome("randomId")
 
         assertTrue(dismissTrayInvoked)

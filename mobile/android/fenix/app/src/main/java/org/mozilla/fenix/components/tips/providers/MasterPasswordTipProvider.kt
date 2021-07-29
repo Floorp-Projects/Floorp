@@ -59,7 +59,7 @@ class MasterPasswordTipProvider(
 
     override val shouldDisplay: Boolean by lazy {
         context.settings().shouldDisplayMasterPasswordMigrationTip &&
-                fennecLoginsMPImporter?.hasMasterPassword() == true
+            fennecLoginsMPImporter?.hasMasterPassword() == true
     }
 
     private fun masterPasswordMigrationTip(): Tip =

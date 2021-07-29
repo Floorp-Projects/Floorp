@@ -34,7 +34,8 @@ class ThreeDotMenuHistoryItemRobot {
             mDevice.waitNotNull(
                 Until.findObject(
                     By.text("ALL ACTIONS")
-                ), TestAssetHelper.waitingTime
+                ),
+                TestAssetHelper.waitingTime
             )
 
             LibrarySubMenusMultipleSelectionToolbarRobot().interact()

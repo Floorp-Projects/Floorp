@@ -96,7 +96,7 @@ class SettingsAddonsTest {
                 acceptInstallAddon()
 
                 verifyDownloadAddonPrompt(addonName, activityTestRule)
-        }
+            }
     }
 
     // Opens the addons settings menu, installs an addon, then uninstalls

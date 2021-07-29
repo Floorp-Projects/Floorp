@@ -102,11 +102,16 @@ class FenixSnackbarDelegateTest {
         )
 
         verify { snackbar.setText("Firefox") }
-        verify { snackbar.setAction("Edit", withArg {
-            verify(exactly = 0) { listener(view) }
-            it.invoke()
-            verify { listener(view) }
-        }) }
+        verify {
+            snackbar.setAction(
+                "Edit",
+                withArg {
+                    verify(exactly = 0) { listener(view) }
+                    it.invoke()
+                    verify { listener(view) }
+                }
+            )
+        }
         verify { snackbar.show() }
     }
 }

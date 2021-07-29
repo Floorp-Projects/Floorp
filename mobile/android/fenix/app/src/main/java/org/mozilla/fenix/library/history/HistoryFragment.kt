@@ -122,9 +122,12 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             requireComponents.core.historyStorage.createSynchronousPagedHistoryProvider()
         )
 
-        viewModel.userHasHistory.observe(this, Observer {
-            historyView.updateEmptyState(it)
-        })
+        viewModel.userHasHistory.observe(
+            this,
+            Observer {
+                historyView.updateEmptyState(it)
+            }
+        )
 
         requireComponents.analytics.metrics.track(Event.HistoryOpened)
 
@@ -154,9 +157,12 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             historyView.update(it)
         }
 
-        viewModel.history.observe(viewLifecycleOwner, Observer {
-            historyView.historyAdapter.submitList(it)
-        })
+        viewModel.history.observe(
+            viewLifecycleOwner,
+            Observer {
+                historyView.historyAdapter.submitList(it)
+            }
+        )
     }
 
     override fun onResume() {
@@ -229,7 +235,8 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             String.format(
                 requireContext().getString(
                     R.string.history_delete_single_item_snackbar
-                ), historyItems.first().url.toShortUrl(requireComponents.publicSuffixList)
+                ),
+                historyItems.first().url.toShortUrl(requireComponents.publicSuffixList)
             )
         }
     }

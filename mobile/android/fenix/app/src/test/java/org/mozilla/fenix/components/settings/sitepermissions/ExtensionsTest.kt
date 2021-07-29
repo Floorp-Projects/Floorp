@@ -23,7 +23,8 @@ class ExtensionsTest {
     @Test
     fun `tryReloadTabBy reloads latest tab matching origin`() {
         val store = BrowserStore(
-            BrowserState(tabs = listOf(
+            BrowserState(
+                tabs = listOf(
                     createTab(id = "1", url = "https://www.mozilla.org/1", lastAccess = 1),
                     createTab(id = "2", url = "https://www.mozilla.org/2", lastAccess = 2),
                     createTab(id = "3", url = "https://www.firefox.com")

@@ -222,9 +222,16 @@ class SessionControlInteractor(
     private val recentTabController: RecentTabController,
     private val recentBookmarksController: RecentBookmarksController,
     private val historyMetadataController: HistoryMetadataController
-) : CollectionInteractor, OnboardingInteractor, TopSiteInteractor, TipInteractor,
-    TabSessionInteractor, ToolbarInteractor, ExperimentCardInteractor, RecentTabInteractor,
-    RecentBookmarksInteractor, HistoryMetadataInteractor {
+) : CollectionInteractor,
+    OnboardingInteractor,
+    TopSiteInteractor,
+    TipInteractor,
+    TabSessionInteractor,
+    ToolbarInteractor,
+    ExperimentCardInteractor,
+    RecentTabInteractor,
+    RecentBookmarksInteractor,
+    HistoryMetadataInteractor {
 
     override fun onCollectionAddTabTapped(collection: TabCollection) {
         controller.handleCollectionAddTabTapped(collection)

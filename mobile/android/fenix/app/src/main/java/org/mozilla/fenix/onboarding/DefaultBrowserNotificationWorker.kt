@@ -62,9 +62,11 @@ class DefaultBrowserNotificationWorker(
             return NotificationCompat.Builder(this, channelId)
                 .setSmallIcon(R.drawable.ic_status_logo)
                 .setContentTitle(
-                    applicationContext.getString(R.string.notification_default_browser_title, appName))
+                    applicationContext.getString(R.string.notification_default_browser_title, appName)
+                )
                 .setContentText(
-                    applicationContext.getString(R.string.notification_default_browser_text, appName))
+                    applicationContext.getString(R.string.notification_default_browser_text, appName)
+                )
                 .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
                 .setColor(ContextCompat.getColor(this, R.color.primary_text_light_theme))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)

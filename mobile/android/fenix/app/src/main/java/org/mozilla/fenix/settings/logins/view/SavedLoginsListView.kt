@@ -49,7 +49,8 @@ class SavedLoginsListView(
             text = String.format(
                 context.getString(
                     R.string.preferences_passwords_saved_logins_description_empty_text
-                ), appName
+                ),
+                appName
             )
         }
     }

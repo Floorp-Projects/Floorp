@@ -55,9 +55,9 @@ class ReaderViewRobot {
 
         val prefs = InstrumentationRegistry.getInstrumentation()
             .targetContext.getSharedPreferences(
-            "mozac_feature_reader_view",
-            Context.MODE_PRIVATE
-        )
+                "mozac_feature_reader_view",
+                Context.MODE_PRIVATE
+            )
 
         assertEquals(fontType, prefs.getString(fontTypeKey, ""))
     }
@@ -67,9 +67,9 @@ class ReaderViewRobot {
 
         val prefs = InstrumentationRegistry.getInstrumentation()
             .targetContext.getSharedPreferences(
-            "mozac_feature_reader_view",
-            Context.MODE_PRIVATE
-        )
+                "mozac_feature_reader_view",
+                Context.MODE_PRIVATE
+            )
 
         val fontSizeKeyValue = prefs.getInt(fontSizeKey, 3)
 
@@ -81,9 +81,9 @@ class ReaderViewRobot {
 
         val prefs = InstrumentationRegistry.getInstrumentation()
             .targetContext.getSharedPreferences(
-            "mozac_feature_reader_view",
-            Context.MODE_PRIVATE
-        )
+                "mozac_feature_reader_view",
+                Context.MODE_PRIVATE
+            )
 
         assertEquals(expectedColorScheme, prefs.getString(colorSchemeKey, ""))
     }

@@ -58,9 +58,11 @@ class OnboardingAutomaticSignInViewHolderTest {
     @Test
     fun `bind updates header text`() {
         val holder = OnboardingAutomaticSignInViewHolder(view)
-        holder.bind(mockk {
-            every { email } returns "email@example.com"
-        })
+        holder.bind(
+            mockk {
+                every { email } returns "email@example.com"
+            }
+        )
         assertEquals(
             "You are signed in as email@example.com on another Firefox browser on this device. Would you like to sign in with this account?",
             view.header_text.text

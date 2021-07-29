@@ -24,8 +24,10 @@ class ClipboardHandler(val context: Context) {
     var text: String?
         get() {
             if (!clipboard.isPrimaryClipEmpty() &&
-                (clipboard.isPrimaryClipPlainText() ||
-                        clipboard.isPrimaryClipHtmlText())
+                (
+                    clipboard.isPrimaryClipPlainText() ||
+                        clipboard.isPrimaryClipHtmlText()
+                    )
             ) {
                 return firstSafePrimaryClipItemText
             }

@@ -116,16 +116,20 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     private fun setupToolbarCategory() {
         val topPreference = requirePreference<RadioButtonPreference>(R.string.pref_key_toolbar_top)
         topPreference.onClickListener {
-            requireContext().components.analytics.metrics.track(Event.ToolbarPositionChanged(
-                Event.ToolbarPositionChanged.Position.TOP
-            ))
+            requireContext().components.analytics.metrics.track(
+                Event.ToolbarPositionChanged(
+                    Event.ToolbarPositionChanged.Position.TOP
+                )
+            )
         }
 
         val bottomPreference = requirePreference<RadioButtonPreference>(R.string.pref_key_toolbar_bottom)
         bottomPreference.onClickListener {
-            requireContext().components.analytics.metrics.track(Event.ToolbarPositionChanged(
-                Event.ToolbarPositionChanged.Position.BOTTOM
-            ))
+            requireContext().components.analytics.metrics.track(
+                Event.ToolbarPositionChanged(
+                    Event.ToolbarPositionChanged.Position.BOTTOM
+                )
+            )
         }
 
         val toolbarPosition = requireContext().settings().toolbarPosition

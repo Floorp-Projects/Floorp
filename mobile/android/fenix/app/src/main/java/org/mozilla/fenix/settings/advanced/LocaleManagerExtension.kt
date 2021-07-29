@@ -17,14 +17,18 @@ fun LocaleManager.getSupportedLocales(): List<Locale> {
     val resultLocaleList: MutableList<Locale> = ArrayList()
     resultLocaleList.add(0, getSystemDefault())
 
-    resultLocaleList.addAll(BuildConfig.SUPPORTED_LOCALE_ARRAY
-        .toList()
-        .map {
-            it.toLocale()
-        }.sortedWith(compareBy(
-            { it.displayLanguage },
-            { it.displayCountry }
-        )))
+    resultLocaleList.addAll(
+        BuildConfig.SUPPORTED_LOCALE_ARRAY
+            .toList()
+            .map {
+                it.toLocale()
+            }.sortedWith(
+                compareBy(
+                    { it.displayLanguage },
+                    { it.displayCountry }
+                )
+            )
+    )
     return resultLocaleList
 }
 

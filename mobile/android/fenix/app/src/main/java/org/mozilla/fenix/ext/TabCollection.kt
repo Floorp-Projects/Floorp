@@ -31,9 +31,15 @@ fun TabCollection.getIconColor(context: Context): Int {
  * Then get the numbers from all these default names, compute the maximum number and add one.
  */
 fun List<TabCollection>.getDefaultCollectionNumber(): Int {
-    return (this
-        .map { it.title }
-        .filter { it.matches(Regex("Collection\\s\\d+")) }
-        .map { Integer.valueOf(it.split(" ")[DefaultCollectionCreationController.DEFAULT_COLLECTION_NUMBER_POSITION]) }
-        .maxOrNull() ?: 0) + DefaultCollectionCreationController.DEFAULT_INCREMENT_VALUE
+    return (
+        this
+            .map { it.title }
+            .filter { it.matches(Regex("Collection\\s\\d+")) }
+            .map {
+                Integer.valueOf(
+                    it.split(" ")[DefaultCollectionCreationController.DEFAULT_COLLECTION_NUMBER_POSITION]
+                )
+            }
+            .maxOrNull() ?: 0
+        ) + DefaultCollectionCreationController.DEFAULT_INCREMENT_VALUE
 }

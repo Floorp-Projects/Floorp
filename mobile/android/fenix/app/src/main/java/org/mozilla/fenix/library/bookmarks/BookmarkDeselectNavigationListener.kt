@@ -43,6 +43,6 @@ class BookmarkDeselectNavigationListener(
      */
     private fun differentFromSelectedFolder(arguments: Bundle?): Boolean {
         return arguments != null &&
-                BookmarkFragmentArgs.fromBundle(arguments).currentRoot != viewModel.selectedFolder?.guid
+            BookmarkFragmentArgs.fromBundle(arguments).currentRoot != viewModel.selectedFolder?.guid
     }
 }

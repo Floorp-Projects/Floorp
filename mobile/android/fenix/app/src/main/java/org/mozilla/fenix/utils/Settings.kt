@@ -181,14 +181,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             appContext.getString(R.string.pref_key_migrating_from_fenix_nightly_tip),
             true
         ) &&
-                preferences.getBoolean(
-                    appContext.getString(R.string.pref_key_migrating_from_firefox_nightly_tip),
-                    true
-                ) &&
-                preferences.getBoolean(
-                    appContext.getString(R.string.pref_key_migrating_from_fenix_tip),
-                    true
-                )
+            preferences.getBoolean(
+                appContext.getString(R.string.pref_key_migrating_from_firefox_nightly_tip),
+                true
+            ) &&
+            preferences.getBoolean(
+                appContext.getString(R.string.pref_key_migrating_from_fenix_tip),
+                true
+            )
 
     var defaultSearchEngineName by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_engine),
@@ -212,10 +212,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     val isCrashReportingEnabled: Boolean
         get() = isCrashReportEnabledInBuild &&
-                preferences.getBoolean(
-                    appContext.getPreferenceKey(R.string.pref_key_crash_reporter),
-                    true
-                )
+            preferences.getBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_crash_reporter),
+                true
+            )
 
     val isRemoteDebuggingEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_remote_debugging),
@@ -242,8 +242,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     val shouldShowTrackingProtectionCfr: Boolean
         get() = !isOverrideTPPopupsForPerformanceTest && canShowCfr &&
-                (trackingProtectionOnboardingCount.underMaxCount() &&
-                        !trackingProtectionOnboardingShownThisSession)
+            (
+                trackingProtectionOnboardingCount.underMaxCount() &&
+                    !trackingProtectionOnboardingShownThisSession
+                )
 
     var showSecretDebugMenuThisSession = false
 
@@ -318,9 +320,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
                 (experimentBranch == ExperimentBranch.DEFAULT_BROWSER_NEW_TAB_BANNER)
             }
         return isExperimentBranch == true &&
-                !userDismissedExperimentCard &&
-                !browsers.isFirefoxDefaultBrowser &&
-                numberOfAppLaunches > APP_LAUNCHES_TO_SHOW_DEFAULT_BROWSER_CARD
+            !userDismissedExperimentCard &&
+            !browsers.isFirefoxDefaultBrowser &&
+            numberOfAppLaunches > APP_LAUNCHES_TO_SHOW_DEFAULT_BROWSER_CARD
     }
 
     var gridTabView by booleanPreference(

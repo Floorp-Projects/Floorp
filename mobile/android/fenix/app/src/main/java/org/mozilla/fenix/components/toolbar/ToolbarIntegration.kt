@@ -134,7 +134,7 @@ class DefaultToolbarIntegration(
                     DisplayToolbar.Indicators.HIGHLIGHT
                 )
             }
-            context.settings().shouldUseTrackingProtection
+        context.settings().shouldUseTrackingProtection
 
         toolbar.display.icons = toolbar.display.icons.copy(
             emptyIcon = null,
@@ -155,11 +155,11 @@ class DefaultToolbarIntegration(
                 interactor.onTabCounterMenuItemTapped(it)
             },
             iconColor =
-                if (isPrivate) {
-                    ContextCompat.getColor(context, R.color.primary_text_private_theme)
-                } else {
-                    null
-                }
+            if (isPrivate) {
+                ContextCompat.getColor(context, R.color.primary_text_private_theme)
+            } else {
+                null
+            }
         ).also {
             it.updateMenu(context.settings().toolbarPosition)
         }

@@ -197,28 +197,28 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
 
     data class RecentBookmarks(val recentBookmarks: List<BookmarkNode>) :
         AdapterItem(RecentBookmarksViewHolder.LAYOUT_ID) {
-            override fun sameAs(other: AdapterItem): Boolean {
-                val newBookmarks = (other as? RecentBookmarks) ?: return false
-                if (newBookmarks.recentBookmarks.size != this.recentBookmarks.size) {
-                    return false
-                }
-
-                return recentBookmarks.zip(newBookmarks.recentBookmarks).all { (new, old) ->
-                    new.guid == old.guid
-                }
+        override fun sameAs(other: AdapterItem): Boolean {
+            val newBookmarks = (other as? RecentBookmarks) ?: return false
+            if (newBookmarks.recentBookmarks.size != this.recentBookmarks.size) {
+                return false
             }
 
-            override fun contentsSameAs(other: AdapterItem): Boolean {
-                val newBookmarks = (other as? RecentBookmarks) ?: return false
-
-                val newBookmarksSequence = newBookmarks.recentBookmarks.asSequence()
-                val oldBookmarksList = this.recentBookmarks.asSequence()
-
-                return newBookmarksSequence.zip(oldBookmarksList).all { (new, old) ->
-                    new == old
-                }
+            return recentBookmarks.zip(newBookmarks.recentBookmarks).all { (new, old) ->
+                new.guid == old.guid
             }
         }
+
+        override fun contentsSameAs(other: AdapterItem): Boolean {
+            val newBookmarks = (other as? RecentBookmarks) ?: return false
+
+            val newBookmarksSequence = newBookmarks.recentBookmarks.asSequence()
+            val oldBookmarksList = this.recentBookmarks.asSequence()
+
+            return newBookmarksSequence.zip(oldBookmarksList).all { (new, old) ->
+                new == old
+            }
+        }
+    }
 
     data class HistoryMetadataItem(val historyMetadata: HistoryMetadata) : AdapterItem(
         HistoryMetadataViewHolder.LAYOUT_ID

@@ -69,7 +69,8 @@ class TrackingProtectionOverlayTest {
                 metrics,
                 store,
                 lifecycleOwner
-            ) { toolbar })
+            ) { toolbar }
+        )
         every { toolbar.findViewById<View>(R.id.mozac_browser_toolbar_tracking_protection_indicator) } returns icon
     }
 

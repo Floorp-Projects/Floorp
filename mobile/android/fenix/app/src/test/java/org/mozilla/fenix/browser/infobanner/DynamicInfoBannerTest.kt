@@ -17,9 +17,11 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 class DynamicInfoBannerTest {
     @Test
     fun `showBanner should set DynamicInfoBannerBehavior as behavior if scrollWithTopToolbar`() {
-        val banner = spyk(DynamicInfoBanner(
-            testContext, CoordinatorLayout(testContext), true, "", ""
-        ))
+        val banner = spyk(
+            DynamicInfoBanner(
+                testContext, CoordinatorLayout(testContext), true, "", ""
+            )
+        )
 
         banner.showBanner()
 
@@ -28,9 +30,11 @@ class DynamicInfoBannerTest {
 
     @Test
     fun `showBanner should not set a behavior if not scrollWithTopToolbar`() {
-        val banner = spyk(DynamicInfoBanner(
-            testContext, CoordinatorLayout(testContext), false, "", ""
-        ))
+        val banner = spyk(
+            DynamicInfoBanner(
+                testContext, CoordinatorLayout(testContext), false, "", ""
+            )
+        )
 
         banner.showBanner()
 

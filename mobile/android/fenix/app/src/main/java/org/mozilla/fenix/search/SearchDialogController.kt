@@ -132,15 +132,15 @@ class SearchDialogController(
         fragmentStore.dispatch(
             SearchFragmentAction.ShowSearchShortcutEnginePicker(
                 (textMatchesCurrentUrl || textMatchesCurrentSearch || text.isEmpty()) &&
-                        settings.shouldShowSearchShortcuts
+                    settings.shouldShowSearchShortcuts
             )
         )
         fragmentStore.dispatch(
             SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
                 text.isNotEmpty() &&
-                        activity.browsingModeManager.mode.isPrivate &&
-                        !settings.shouldShowSearchSuggestionsInPrivate &&
-                        !settings.showSearchSuggestionsInPrivateOnboardingFinished
+                    activity.browsingModeManager.mode.isPrivate &&
+                    !settings.shouldShowSearchSuggestionsInPrivate &&
+                    !settings.showSearchSuggestionsInPrivateOnboardingFinished
             )
         )
     }
@@ -244,7 +244,7 @@ class SearchDialogController(
                 dismissDialog()
             }
             setPositiveButton(R.string.camera_permissions_needed_positive_button_text) {
-                    dialog: DialogInterface, _ ->
+                dialog: DialogInterface, _ ->
                 val intent: Intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                 } else {

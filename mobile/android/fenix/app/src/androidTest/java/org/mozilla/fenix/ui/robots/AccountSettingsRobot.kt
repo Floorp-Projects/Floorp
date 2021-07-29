@@ -44,19 +44,19 @@ private fun deviceName() = Espresso.onView(CoreMatchers.allOf(ViewMatchers.withT
 private fun disconnectButton() = Espresso.onView(CoreMatchers.allOf(ViewMatchers.withId(R.id.signOutDisconnect)))
 
 private fun assertBookmarksCheckbox() = bookmarksCheckbox().check(
-        ViewAssertions.matches(
-                ViewMatchers.withEffectiveVisibility(
-                        ViewMatchers.Visibility.VISIBLE
-                )
+    ViewAssertions.matches(
+        ViewMatchers.withEffectiveVisibility(
+            ViewMatchers.Visibility.VISIBLE
         )
+    )
 )
 
 private fun assertHistoryCheckbox() = historyCheckbox().check(
-        ViewAssertions.matches(
-                ViewMatchers.withEffectiveVisibility(
-                        ViewMatchers.Visibility.VISIBLE
-                )
+    ViewAssertions.matches(
+        ViewMatchers.withEffectiveVisibility(
+            ViewMatchers.Visibility.VISIBLE
         )
+    )
 )
 
 private fun assertSignOutButton() = signOutButton().check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))

@@ -248,7 +248,7 @@ class TrackingProtectionPolicyFactoryTest {
             settingsForCustom(shouldBlockCookiesInCustom = true, blockCookiesSelection = "unvisited", blockTrackingContentInCustom = "all"),
             settingsForCustom(shouldBlockCookiesInCustom = true, blockCookiesSelection = "third-party", blockTrackingContentInCustom = "all"),
             settingsForCustom(shouldBlockCookiesInCustom = true, blockCookiesSelection = "some text!", blockTrackingContentInCustom = "all")
-            )
+        )
 
         val privateSettings = listOf(
             settingsForCustom(shouldBlockCookiesInCustom = false, blockTrackingContentInCustom = "private"),
@@ -257,21 +257,25 @@ class TrackingProtectionPolicyFactoryTest {
             settingsForCustom(shouldBlockCookiesInCustom = true, blockCookiesSelection = "unvisited", blockTrackingContentInCustom = "private"),
             settingsForCustom(shouldBlockCookiesInCustom = true, blockCookiesSelection = "third-party", blockTrackingContentInCustom = "private"),
             settingsForCustom(shouldBlockCookiesInCustom = true, blockCookiesSelection = "some text!", blockTrackingContentInCustom = "private")
-            )
+        )
 
-        allSettings.map { TrackingProtectionPolicyFactory(it).createTrackingProtectionPolicy(
-            normalMode = true,
-            privateMode = true
-        ) }
+        allSettings.map {
+            TrackingProtectionPolicyFactory(it).createTrackingProtectionPolicy(
+                normalMode = true,
+                privateMode = true
+            )
+        }
             .forEach {
                 assertTrue(it.useForRegularSessions)
                 assertTrue(it.useForPrivateSessions)
             }
 
-        privateSettings.map { TrackingProtectionPolicyFactory(it).createTrackingProtectionPolicy(
-            normalMode = true,
-            privateMode = true
-        ) }
+        privateSettings.map {
+            TrackingProtectionPolicyFactory(it).createTrackingProtectionPolicy(
+                normalMode = true,
+                privateMode = true
+            )
+        }
             .forEach {
                 assertFalse(it.useForRegularSessions)
                 assertTrue(it.useForPrivateSessions)

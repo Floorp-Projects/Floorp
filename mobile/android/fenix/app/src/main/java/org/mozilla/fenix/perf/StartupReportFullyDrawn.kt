@@ -33,7 +33,8 @@ class StartupReportFullyDrawn {
      */
     fun onActivityCreateEndHome(state: StartupState, activity: HomeActivity) {
         if (!isInstrumented &&
-                state is StartupState.Cold && state.destination == APP_LINK) {
+            state is StartupState.Cold && state.destination == APP_LINK
+        ) {
             // Instrumenting the first frame drawn should be good enough for app link for now.
             isInstrumented = true
             attachReportFullyDrawn(activity, activity.findViewById(R.id.rootContainer))
@@ -50,7 +51,8 @@ class StartupReportFullyDrawn {
      */
     fun onTopSitesItemBound(state: StartupState, holder: TopSiteItemViewHolder) {
         if (!isInstrumented &&
-                state is StartupState.Cold && state.destination == HOMESCREEN) {
+            state is StartupState.Cold && state.destination == HOMESCREEN
+        ) {
             isInstrumented = true
 
             // Ideally we wouldn't cast to HomeActivity but we want to save implementation time.

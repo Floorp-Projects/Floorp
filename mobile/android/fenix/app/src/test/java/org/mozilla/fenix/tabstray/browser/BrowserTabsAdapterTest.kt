@@ -30,12 +30,14 @@ class BrowserTabsAdapterTest {
         val adapter = BrowserTabsAdapter(context, interactor, store)
         val holder = mockk<AbstractBrowserTabViewHolder>(relaxed = true)
 
-        adapter.updateTabs(Tabs(
-            list = listOf(
-                createTab("tab1")
-            ),
-            selectedIndex = 0
-        ))
+        adapter.updateTabs(
+            Tabs(
+                list = listOf(
+                    createTab("tab1")
+                ),
+                selectedIndex = 0
+            )
+        )
 
         adapter.onBindViewHolder(holder, 0, listOf(PAYLOAD_HIGHLIGHT_SELECTED_ITEM))
 
@@ -56,12 +58,14 @@ class BrowserTabsAdapterTest {
         testSelectionHolder.internalState.add(tab)
         adapter.selectionHolder = testSelectionHolder
 
-        adapter.updateTabs(Tabs(
-            list = listOf(
-                tab
-            ),
-            selectedIndex = 0
-        ))
+        adapter.updateTabs(
+            Tabs(
+                list = listOf(
+                    tab
+                ),
+                selectedIndex = 0
+            )
+        )
 
         adapter.onBindViewHolder(holder, 0, listOf(PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM))
 

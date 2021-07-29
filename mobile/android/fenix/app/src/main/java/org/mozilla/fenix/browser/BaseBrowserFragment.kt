@@ -148,8 +148,12 @@ import mozilla.components.feature.session.behavior.ToolbarPosition as MozacToolb
  */
 @ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions", "LargeClass")
-abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, ActivityResultHandler,
-    OnBackLongPressedListener, AccessibilityManager.AccessibilityStateChangeListener {
+abstract class BaseBrowserFragment :
+    Fragment(),
+    UserInteractionHandler,
+    ActivityResultHandler,
+    OnBackLongPressedListener,
+    AccessibilityManager.AccessibilityStateChangeListener {
 
     private lateinit var browserFragmentStore: BrowserFragmentStore
     private lateinit var browserAnimator: BrowserAnimator
@@ -235,25 +239,25 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
     }
 
     final override fun onViewCreated(view: View, savedInstanceState: Bundle?) =
-            PerfStartup.baseBfragmentOnViewCreated.measureNoInline { // weird indentation to avoid breaking blame.
-        initializeUI(view)
+        PerfStartup.baseBfragmentOnViewCreated.measureNoInline { // weird indentation to avoid breaking blame.
+            initializeUI(view)
 
-        if (customTabSessionId == null) {
-            // We currently only need this observer to navigate to home
-            // in case all tabs have been removed on startup. No need to
-            // this if we have a known session to display.
-            observeRestoreComplete(requireComponents.core.store, findNavController())
+            if (customTabSessionId == null) {
+                // We currently only need this observer to navigate to home
+                // in case all tabs have been removed on startup. No need to
+                // this if we have a known session to display.
+                observeRestoreComplete(requireComponents.core.store, findNavController())
+            }
+
+            observeTabSelection(requireComponents.core.store)
+
+            if (!onboarding.userHasBeenOnboarded()) {
+                observeTabSource(requireComponents.core.store)
+            }
+
+            requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
+            Unit
         }
-
-        observeTabSelection(requireComponents.core.store)
-
-        if (!onboarding.userHasBeenOnboarded()) {
-            observeTabSource(requireComponents.core.store)
-        }
-
-        requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
-        Unit
-    }
 
     private fun initializeUI(view: View) {
         val tab = getCurrentTab()
@@ -823,15 +827,17 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
     internal fun expandToolbarOnNavigation(store: BrowserStore) {
         consumeFlow(store) { flow ->
             flow.mapNotNull {
-                state -> state.findCustomTabOrSelectedTab(customTabSessionId)
+                state ->
+                state.findCustomTabOrSelectedTab(customTabSessionId)
             }
-            .ifAnyChanged {
-                tab -> arrayOf(tab.content.url, tab.content.loadRequest)
-            }
-            .collect {
-                findInPageIntegration.onBackPressed()
-                browserToolbarView.expand()
-            }
+                .ifAnyChanged {
+                    tab ->
+                    arrayOf(tab.content.url, tab.content.loadRequest)
+                }
+                .collect {
+                    findInPageIntegration.onBackPressed()
+                    browserToolbarView.expand()
+                }
         }
     }
 
@@ -907,8 +913,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
     @VisibleForTesting
     internal fun shouldPullToRefreshBeEnabled(inFullScreen: Boolean): Boolean {
         return FeatureFlags.pullToRefreshEnabled &&
-                requireContext().settings().isPullToRefreshEnabledInBrowser &&
-                !inFullScreen
+            requireContext().settings().isPullToRefreshEnabledInBrowser &&
+            !inFullScreen
     }
 
     @VisibleForTesting
@@ -981,12 +987,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             flow.ifChanged {
                 it.selectedTabId
             }
-            .mapNotNull {
-                it.selectedTab
-            }
-            .collect {
-                handleTabSelected(it)
-            }
+                .mapNotNull {
+                    it.selectedTab
+                }
+                .collect {
+                    handleTabSelected(it)
+                }
         }
     }
 
@@ -998,14 +1004,14 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 state.selectedTab
             }
                 .collect {
-                if (!onboarding.userHasBeenOnboarded() &&
-                    it.content.loadRequest?.triggeredByRedirect != true &&
-                    it.source !in intentSourcesList &&
-                    it.content.url !in onboardingLinksList
-                ) {
-                    onboarding.finish()
+                    if (!onboarding.userHasBeenOnboarded() &&
+                        it.content.loadRequest?.triggeredByRedirect != true &&
+                        it.source !in intentSourcesList &&
+                        it.content.url !in onboardingLinksList
+                    ) {
+                        onboarding.finish()
+                    }
                 }
-            }
         }
     }
 
@@ -1070,10 +1076,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
     @CallSuper
     override fun onBackPressed(): Boolean {
         return findInPageIntegration.onBackPressed() ||
-                fullScreenFeature.onBackPressed() ||
-                promptsFeature.onBackPressed() ||
-                sessionFeature.onBackPressed() ||
-                removeSessionIfNeeded()
+            fullScreenFeature.onBackPressed() ||
+            promptsFeature.onBackPressed() ||
+            sessionFeature.onBackPressed() ||
+            removeSessionIfNeeded()
     }
 
     override fun onBackLongPressed(): Boolean {

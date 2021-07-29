@@ -113,9 +113,11 @@ class BookmarkControllerTest {
     @Test
     fun `handleBookmarkTapped should load the bookmark in a new tab`() {
         var invokePendingDeletionInvoked = false
-        createController(invokePendingDeletion = {
-            invokePendingDeletionInvoked = true
-        }).handleBookmarkTapped(item)
+        createController(
+            invokePendingDeletion = {
+                invokePendingDeletionInvoked = true
+            }
+        ).handleBookmarkTapped(item)
 
         assertTrue(invokePendingDeletionInvoked)
         verify {
@@ -142,9 +144,11 @@ class BookmarkControllerTest {
     @Test
     fun `handleBookmarkExpand clears selection and invokes pending deletions`() {
         var invokePendingDeletionInvoked = false
-        createController(invokePendingDeletion = {
-            invokePendingDeletionInvoked = true
-        }).handleBookmarkExpand(tree)
+        createController(
+            invokePendingDeletion = {
+                invokePendingDeletionInvoked = true
+            }
+        ).handleBookmarkExpand(tree)
 
         assertTrue(invokePendingDeletionInvoked)
     }
@@ -152,10 +156,12 @@ class BookmarkControllerTest {
     @Test
     fun `handleBookmarkExpand should refresh and change the active bookmark node`() {
         var loadBookmarkNodeInvoked = false
-        createController(loadBookmarkNode = {
-            loadBookmarkNodeInvoked = true
-            tree
-        }).handleBookmarkExpand(tree)
+        createController(
+            loadBookmarkNode = {
+                loadBookmarkNodeInvoked = true
+                tree
+            }
+        ).handleBookmarkExpand(tree)
 
         assertTrue(loadBookmarkNodeInvoked)
         coVerify {
@@ -176,9 +182,11 @@ class BookmarkControllerTest {
     @Test
     fun `handleBookmarkEdit should navigate to the 'Edit' fragment`() {
         var invokePendingDeletionInvoked = false
-        createController(invokePendingDeletion = {
-            invokePendingDeletionInvoked = true
-        }).handleBookmarkEdit(item)
+        createController(
+            invokePendingDeletion = {
+                invokePendingDeletionInvoked = true
+            }
+        ).handleBookmarkEdit(item)
 
         assertTrue(invokePendingDeletionInvoked)
         verify {
@@ -205,10 +213,12 @@ class BookmarkControllerTest {
         val errorMessage = context.getString(R.string.bookmark_cannot_edit_root)
 
         var showSnackbarInvoked = false
-        createController(showSnackbar = {
-            assertEquals(errorMessage, it)
-            showSnackbarInvoked = true
-        }).handleBookmarkSelected(root)
+        createController(
+            showSnackbar = {
+                assertEquals(errorMessage, it)
+                showSnackbarInvoked = true
+            }
+        ).handleBookmarkSelected(root)
 
         assertTrue(showSnackbarInvoked)
     }
@@ -236,10 +246,12 @@ class BookmarkControllerTest {
         val urlCopiedMessage = context.getString(R.string.url_copied)
 
         var showSnackbarInvoked = false
-        createController(showSnackbar = {
-            assertEquals(urlCopiedMessage, it)
-            showSnackbarInvoked = true
-        }).handleCopyUrl(item)
+        createController(
+            showSnackbar = {
+                assertEquals(urlCopiedMessage, it)
+                showSnackbarInvoked = true
+            }
+        ).handleCopyUrl(item)
 
         assertTrue(showSnackbarInvoked)
     }
@@ -259,9 +271,11 @@ class BookmarkControllerTest {
     @Test
     fun `handleBookmarkTapped should open the bookmark`() {
         var invokePendingDeletionInvoked = false
-        createController(invokePendingDeletion = {
-            invokePendingDeletionInvoked = true
-        }).handleBookmarkTapped(item)
+        createController(
+            invokePendingDeletion = {
+                invokePendingDeletionInvoked = true
+            }
+        ).handleBookmarkTapped(item)
 
         assertTrue(invokePendingDeletionInvoked)
         verify {
@@ -273,11 +287,13 @@ class BookmarkControllerTest {
     fun `handleOpeningBookmark should open the bookmark a new 'Normal' tab`() {
         var invokePendingDeletionInvoked = false
         var showTabTrayInvoked = false
-        createController(invokePendingDeletion = {
-            invokePendingDeletionInvoked = true
-        }, showTabTray = {
-            showTabTrayInvoked = true
-        }
+        createController(
+            invokePendingDeletion = {
+                invokePendingDeletionInvoked = true
+            },
+            showTabTray = {
+                showTabTrayInvoked = true
+            }
         ).handleOpeningBookmark(item, BrowsingMode.Normal)
 
         assertTrue(invokePendingDeletionInvoked)
@@ -292,11 +308,13 @@ class BookmarkControllerTest {
     fun `handleOpeningBookmark should open the bookmark a new 'Private' tab`() {
         var invokePendingDeletionInvoked = false
         var showTabTrayInvoked = false
-        createController(invokePendingDeletion = {
-            invokePendingDeletionInvoked = true
-        }, showTabTray = {
-            showTabTrayInvoked = true
-        }
+        createController(
+            invokePendingDeletion = {
+                invokePendingDeletionInvoked = true
+            },
+            showTabTray = {
+                showTabTrayInvoked = true
+            }
         ).handleOpeningBookmark(item, BrowsingMode.Private)
 
         assertTrue(invokePendingDeletionInvoked)
@@ -310,11 +328,13 @@ class BookmarkControllerTest {
     @Test
     fun `handleBookmarkDeletion for an item should properly call a passed in delegate`() {
         var deleteBookmarkNodesInvoked = false
-        createController(deleteBookmarkNodes = { nodes, event ->
-            assertEquals(setOf(item), nodes)
-            assertEquals(Event.RemoveBookmark, event)
-            deleteBookmarkNodesInvoked = true
-        }).handleBookmarkDeletion(setOf(item), Event.RemoveBookmark)
+        createController(
+            deleteBookmarkNodes = { nodes, event ->
+                assertEquals(setOf(item), nodes)
+                assertEquals(Event.RemoveBookmark, event)
+                deleteBookmarkNodesInvoked = true
+            }
+        ).handleBookmarkDeletion(setOf(item), Event.RemoveBookmark)
 
         assertTrue(deleteBookmarkNodesInvoked)
     }
@@ -322,11 +342,13 @@ class BookmarkControllerTest {
     @Test
     fun `handleBookmarkDeletion for multiple bookmarks should properly call a passed in delegate`() {
         var deleteBookmarkNodesInvoked = false
-        createController(deleteBookmarkNodes = { nodes, event ->
-            assertEquals(setOf(item, subfolder), nodes)
-            assertEquals(Event.RemoveBookmarks, event)
-            deleteBookmarkNodesInvoked = true
-        }).handleBookmarkDeletion(setOf(item, subfolder), Event.RemoveBookmarks)
+        createController(
+            deleteBookmarkNodes = { nodes, event ->
+                assertEquals(setOf(item, subfolder), nodes)
+                assertEquals(Event.RemoveBookmarks, event)
+                deleteBookmarkNodesInvoked = true
+            }
+        ).handleBookmarkDeletion(setOf(item, subfolder), Event.RemoveBookmarks)
 
         assertTrue(deleteBookmarkNodesInvoked)
     }
@@ -334,10 +356,12 @@ class BookmarkControllerTest {
     @Test
     fun `handleBookmarkDeletion for a folder should properly call the delete folder delegate`() {
         var deleteBookmarkFolderInvoked = false
-        createController(deleteBookmarkFolder = { nodes ->
-            assertEquals(setOf(subfolder), nodes)
-            deleteBookmarkFolderInvoked = true
-        }).handleBookmarkFolderDeletion(setOf(subfolder))
+        createController(
+            deleteBookmarkFolder = { nodes ->
+                assertEquals(setOf(subfolder), nodes)
+                deleteBookmarkFolderInvoked = true
+            }
+        ).handleBookmarkFolderDeletion(setOf(subfolder))
 
         assertTrue(deleteBookmarkFolderInvoked)
     }
@@ -361,9 +385,11 @@ class BookmarkControllerTest {
         every { bookmarkStore.state.tree } returns tree
 
         var invokePendingDeletionInvoked = false
-        createController(invokePendingDeletion = {
-            invokePendingDeletionInvoked = true
-        }).handleBackPressed()
+        createController(
+            invokePendingDeletion = {
+                invokePendingDeletionInvoked = true
+            }
+        ).handleBackPressed()
 
         assertTrue(invokePendingDeletionInvoked)
 

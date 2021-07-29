@@ -63,7 +63,8 @@ class OpenInAppOnboardingObserverTest {
             BrowserState(
                 tabs = listOf(
                     createTab(url = "https://www.mozilla.org", id = "1")
-                ), selectedTabId = "1"
+                ),
+                selectedTabId = "1"
             )
         )
         lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.STARTED)
@@ -73,16 +74,18 @@ class OpenInAppOnboardingObserverTest {
         container = mockk(relaxed = true)
         context = mockk(relaxed = true)
         infoBanner = mockk(relaxed = true)
-        openInAppOnboardingObserver = spyk(OpenInAppOnboardingObserver(
-            context = context,
-            store = store,
-            lifecycleOwner = lifecycleOwner,
-            navController = navigationController,
-            settings = settings,
-            appLinksUseCases = appLinksUseCases,
-            container = container,
-            shouldScrollWithTopToolbar = true
-        ))
+        openInAppOnboardingObserver = spyk(
+            OpenInAppOnboardingObserver(
+                context = context,
+                store = store,
+                lifecycleOwner = lifecycleOwner,
+                navController = navigationController,
+                settings = settings,
+                appLinksUseCases = appLinksUseCases,
+                container = container,
+                shouldScrollWithTopToolbar = true
+            )
+        )
         every { openInAppOnboardingObserver.createInfoBanner() } returns infoBanner
     }
 
@@ -167,15 +170,19 @@ class OpenInAppOnboardingObserverTest {
         // Mockk currently doesn't support verifying constructor parameters
         // But we can check the values found in the constructed objects
 
-        openInAppOnboardingObserver = spyk(OpenInAppOnboardingObserver(
-            testContext, mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), shouldScrollWithTopToolbar = true
-        ))
+        openInAppOnboardingObserver = spyk(
+            OpenInAppOnboardingObserver(
+                testContext, mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), shouldScrollWithTopToolbar = true
+            )
+        )
         val banner1 = openInAppOnboardingObserver.createInfoBanner()
         assertTrue(banner1.shouldScrollWithTopToolbar)
 
-        openInAppOnboardingObserver = spyk(OpenInAppOnboardingObserver(
-            testContext, mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), shouldScrollWithTopToolbar = false
-        ))
+        openInAppOnboardingObserver = spyk(
+            OpenInAppOnboardingObserver(
+                testContext, mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), shouldScrollWithTopToolbar = false
+            )
+        )
         val banner2 = openInAppOnboardingObserver.createInfoBanner()
         assertFalse(banner2.shouldScrollWithTopToolbar)
     }

@@ -69,9 +69,11 @@ class ShareViewModelTest {
         every { application.getSystemService<ConnectivityManager>() } returns connectivityManager
         every { application.components.backgroundServices.accountManager } returns fxaAccountManager
 
-        viewModel = spyk(ShareViewModel(application).apply {
-            this.ioDispatcher = testIoDispatcher
-        })
+        viewModel = spyk(
+            ShareViewModel(application).apply {
+                this.ioDispatcher = testIoDispatcher
+            }
+        )
     }
 
     @After

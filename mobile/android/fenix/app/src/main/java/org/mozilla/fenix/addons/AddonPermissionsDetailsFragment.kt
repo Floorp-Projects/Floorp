@@ -18,7 +18,8 @@ import org.mozilla.fenix.ext.showToolbar
 /**
  * A fragment to show the permissions of an add-on.
  */
-class AddonPermissionsDetailsFragment : Fragment(R.layout.fragment_add_on_permissions),
+class AddonPermissionsDetailsFragment :
+    Fragment(R.layout.fragment_add_on_permissions),
     AddonPermissionsDetailsInteractor {
 
     private val args by navArgs<AddonPermissionsDetailsFragmentArgs>()

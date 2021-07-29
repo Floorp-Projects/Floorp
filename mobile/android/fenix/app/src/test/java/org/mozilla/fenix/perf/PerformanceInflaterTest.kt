@@ -50,10 +50,10 @@ class PerformanceInflaterTest {
         for (file in fileList!!) {
             val layoutName = file.name.split(".")[0]
             val layoutId = testContext.resources.getIdentifier(
-                    layoutName,
-                    "layout",
-                    testContext.packageName
-                )
+                layoutName,
+                "layout",
+                testContext.packageName
+            )
 
             assertNotEquals(-1, layoutId)
             if (!layoutsNotToTest.contains(layoutName)) {

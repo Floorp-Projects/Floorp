@@ -58,7 +58,8 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
         mDevice.waitNotNull(
             Until.findObject(
                 By.text("ALL ACTIONS")
-            ), waitingTime
+            ),
+            waitingTime
         )
     }
 
@@ -68,7 +69,8 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
         mDevice.waitNotNull(
             Until.findObject(
                 By.text("ALL ACTIONS")
-            ), waitingTime
+            ),
+            waitingTime
         )
     }
 

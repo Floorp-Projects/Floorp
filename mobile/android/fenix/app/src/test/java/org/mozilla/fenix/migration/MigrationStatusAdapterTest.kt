@@ -30,19 +30,23 @@ class MigrationStatusAdapterTest {
     fun `getItemCount should return the number of items in whitelist`() {
         assertEquals(0, adapter.itemCount)
 
-        adapter.updateData(mapOf(
-            Migration.Addons to MigrationRun(0, success = true),
-            Migration.Settings to MigrationRun(0, success = true),
-            Migration.Bookmarks to MigrationRun(0, success = false)
-        ))
+        adapter.updateData(
+            mapOf(
+                Migration.Addons to MigrationRun(0, success = true),
+                Migration.Settings to MigrationRun(0, success = true),
+                Migration.Bookmarks to MigrationRun(0, success = false)
+            )
+        )
         assertEquals(4, adapter.itemCount)
     }
 
     @Test
     fun `creates and binds viewholder`() {
-        adapter.updateData(mapOf(
-            Migration.History to MigrationRun(0, success = true)
-        ))
+        adapter.updateData(
+            mapOf(
+                Migration.History to MigrationRun(0, success = true)
+            )
+        )
 
         val holder1 = adapter.createViewHolder(FrameLayout(testContext), 0)
         val holder2 = adapter.createViewHolder(FrameLayout(testContext), 0)

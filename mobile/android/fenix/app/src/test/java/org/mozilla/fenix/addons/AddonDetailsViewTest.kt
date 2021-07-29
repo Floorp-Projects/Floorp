@@ -45,17 +45,21 @@ class AddonDetailsViewTest {
 
     @Test
     fun `bind addons rating`() {
-        detailsView.bind(baseAddon.copy(
-            rating = null
-        ))
+        detailsView.bind(
+            baseAddon.copy(
+                rating = null
+            )
+        )
         assertEquals(0f, view.rating_view.rating)
 
-        detailsView.bind(baseAddon.copy(
-            rating = Addon.Rating(
-                average = 4.3f,
-                reviews = 100
+        detailsView.bind(
+            baseAddon.copy(
+                rating = Addon.Rating(
+                    average = 4.3f,
+                    reviews = 100
+                )
             )
-        ))
+        )
         assertEquals("4.30/5", view.rating_view.contentDescription)
         assertEquals(4.5f, view.rating_view.rating)
         assertEquals("100", view.users_count.text)
@@ -63,9 +67,11 @@ class AddonDetailsViewTest {
 
     @Test
     fun `bind addons website`() {
-        detailsView.bind(baseAddon.copy(
-            siteUrl = "https://mozilla.org"
-        ))
+        detailsView.bind(
+            baseAddon.copy(
+                siteUrl = "https://mozilla.org"
+            )
+        )
 
         view.home_page_label.performClick()
 
@@ -108,12 +114,14 @@ class AddonDetailsViewTest {
     @Test
     fun `bind addons authors`() {
         val baseAuthor = Addon.Author("", "", "", "")
-        detailsView.bind(baseAddon.copy(
-            authors = listOf(
-                baseAuthor.copy(name = " Sarah Jane"),
-                baseAuthor.copy(name = "John Smith ")
+        detailsView.bind(
+            baseAddon.copy(
+                authors = listOf(
+                    baseAuthor.copy(name = " Sarah Jane"),
+                    baseAuthor.copy(name = "John Smith ")
+                )
             )
-        ))
+        )
 
         assertEquals("Sarah Jane, John Smith", view.author_text.text)
     }

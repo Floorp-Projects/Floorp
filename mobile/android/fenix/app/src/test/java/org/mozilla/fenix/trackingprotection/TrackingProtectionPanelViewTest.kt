@@ -56,12 +56,14 @@ class TrackingProtectionPanelViewTest {
 
     @Test
     fun testPrivateModeUi() {
-        view.update(baseState.copy(
-            mode = TrackingProtectionState.Mode.Details(
-                selectedCategory = TrackingProtectionCategory.TRACKING_CONTENT,
-                categoryBlocked = false
+        view.update(
+            baseState.copy(
+                mode = TrackingProtectionState.Mode.Details(
+                    selectedCategory = TrackingProtectionCategory.TRACKING_CONTENT,
+                    categoryBlocked = false
+                )
             )
-        ))
+        )
         assertTrue(view.details_mode.isVisible)
         assertFalse(view.normal_mode.isVisible)
         assertEquals(

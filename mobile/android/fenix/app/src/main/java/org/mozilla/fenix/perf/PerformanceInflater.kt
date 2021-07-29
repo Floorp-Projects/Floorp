@@ -15,9 +15,9 @@ import java.lang.reflect.Modifier.PRIVATE
 import java.util.concurrent.atomic.AtomicInteger
 
 private val classPrefixList = arrayOf(
-        "android.widget.",
-        "android.webkit.",
-        "android.app."
+    "android.widget.",
+    "android.webkit.",
+    "android.app."
 )
 /**
  * Counts the number of inflations fenix does. This class behaves only as an inflation counter since

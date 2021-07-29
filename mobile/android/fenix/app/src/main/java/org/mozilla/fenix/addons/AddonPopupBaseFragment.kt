@@ -45,7 +45,8 @@ abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer, User
                     fragmentManager = parentFragmentManager,
                     onNeedToRequestPermissions = { permissions ->
                         requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
-                    }),
+                    }
+                ),
                 owner = this,
                 view = view
             )

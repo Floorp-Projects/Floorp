@@ -198,12 +198,15 @@ class SavedLoginsFragment : Fragment() {
     }
 
     private fun attachMenu() {
-        sortingStrategyMenu.menuController.register(object : MenuController.Observer {
-            override fun onDismiss() {
-                // Deactivate button on dismiss
-                sortLoginsMenuRoot.isActivated = false
-            }
-        }, view = sortLoginsMenuRoot)
+        sortingStrategyMenu.menuController.register(
+            object : MenuController.Observer {
+                override fun onDismiss() {
+                    // Deactivate button on dismiss
+                    sortLoginsMenuRoot.isActivated = false
+                }
+            },
+            view = sortLoginsMenuRoot
+        )
 
         sortLoginsMenuRoot.setOnClickListener {
             // Activate button on show

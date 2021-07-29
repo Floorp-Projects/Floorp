@@ -27,7 +27,7 @@ class SecurePrefsTelemetry(
             experiments.withExperiment(FeatureId.ANDROID_KEYSTORE) { experimentBranch ->
                 // .. and this device is not in the control group.
                 if (experimentBranch == ExperimentBranch.TREATMENT) {
-                        SecurePrefsReliabilityExperiment(appContext)()
+                    SecurePrefsReliabilityExperiment(appContext)()
                 }
             }
         }

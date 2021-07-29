@@ -29,7 +29,8 @@ class WhatsNew private constructor(private val storage: WhatsNewStorage) {
 
         // Update the version and date if *just* updated
         if (lastKnownAppVersion == null ||
-            currentVersion.majorVersionNumber > lastKnownAppVersion.majorVersionNumber) {
+            currentVersion.majorVersionNumber > lastKnownAppVersion.majorVersionNumber
+        ) {
             storage.setVersion(currentVersion)
             storage.setDateOfUpdate(System.currentTimeMillis())
             return true

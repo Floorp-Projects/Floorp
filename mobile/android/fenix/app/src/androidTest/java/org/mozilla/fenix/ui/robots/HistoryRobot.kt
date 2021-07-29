@@ -94,7 +94,7 @@ class HistoryRobot {
         }
 
         fun openThreeDotMenu(interact: ThreeDotMenuHistoryItemRobot.() -> Unit):
-                ThreeDotMenuHistoryItemRobot.Transition {
+            ThreeDotMenuHistoryItemRobot.Transition {
 
             threeDotMenu().click()
 

@@ -370,9 +370,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
                             Toast.LENGTH_LONG
                         ).show()
 
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            exitProcess(0)
-                        }, AMO_COLLECTION_OVERRIDE_EXIT_DELAY)
+                        Handler(Looper.getMainLooper()).postDelayed(
+                            {
+                                exitProcess(0)
+                            },
+                            AMO_COLLECTION_OVERRIDE_EXIT_DELAY
+                        )
                     }
 
                     binding.customAmoCollection.setText(context.settings().overrideAmoCollection)
@@ -435,9 +438,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         getString(R.string.toast_override_fxa_sync_server_done),
                         Toast.LENGTH_LONG
                     ).show()
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        exitProcess(0)
-                    }, FXA_SYNC_OVERRIDE_EXIT_DELAY)
+                    Handler(Looper.getMainLooper()).postDelayed(
+                        {
+                            exitProcess(0)
+                        },
+                        FXA_SYNC_OVERRIDE_EXIT_DELAY
+                    )
                 }
             }
         }
@@ -538,8 +544,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_sync_tokenserver))
         val settings = requireContext().settings()
         val show = settings.overrideFxAServer.isNotEmpty() ||
-                settings.overrideSyncTokenServer.isNotEmpty() ||
-                settings.showSecretDebugMenuThisSession
+            settings.overrideSyncTokenServer.isNotEmpty() ||
+            settings.showSecretDebugMenuThisSession
         // Only enable changes to these prefs when the user isn't connected to an account.
         val enabled =
             requireComponents.backgroundServices.accountManager.authenticatedAccount() == null
@@ -560,9 +566,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val preferenceAmoCollectionOverride =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_amo_collection))
 
-        val show = (Config.channel.isNightlyOrDebug && (
-            settings.amoCollectionOverrideConfigured() || settings.showSecretDebugMenuThisSession)
-        )
+        val show = (
+            Config.channel.isNightlyOrDebug && (
+                settings.amoCollectionOverrideConfigured() || settings.showSecretDebugMenuThisSession
+                )
+            )
         preferenceAmoCollectionOverride?.apply {
             isVisible = show
             summary = settings.overrideAmoCollection.ifEmpty { null }
@@ -589,9 +597,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         getString(R.string.toast_override_fxa_sync_server_done),
                         Toast.LENGTH_LONG
                     ).show()
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        exitProcess(0)
-                    }, FXA_SYNC_OVERRIDE_EXIT_DELAY)
+                    Handler(Looper.getMainLooper()).postDelayed(
+                        {
+                            exitProcess(0)
+                        },
+                        FXA_SYNC_OVERRIDE_EXIT_DELAY
+                    )
                 }
         }
     }

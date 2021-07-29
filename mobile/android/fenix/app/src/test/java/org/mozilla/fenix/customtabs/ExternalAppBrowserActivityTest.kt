@@ -108,14 +108,16 @@ class ExternalAppBrowserActivityTest {
 
     @Test
     fun `ExternalAppBrowserActivity with matching external tab`() {
-        val store = BrowserStore(BrowserState(
-            customTabs = listOf(
-                createCustomTab(
-                    url = "https://www.mozilla.org",
-                    id = "mozilla"
+        val store = BrowserStore(
+            BrowserState(
+                customTabs = listOf(
+                    createCustomTab(
+                        url = "https://www.mozilla.org",
+                        id = "mozilla"
+                    )
                 )
             )
-        ))
+        )
 
         val intent = Intent(Intent.ACTION_VIEW).apply { putSessionId("mozilla") }
 
@@ -149,14 +151,16 @@ class ExternalAppBrowserActivityTest {
 
     @Test
     fun `ExternalAppBrowserActivity with matching regular tab`() {
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(
-                createTab(
-                    url = "https://www.mozilla.org",
-                    id = "mozilla"
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(
+                        url = "https://www.mozilla.org",
+                        id = "mozilla"
+                    )
                 )
             )
-        ))
+        )
 
         val intent = Intent(Intent.ACTION_VIEW).apply { putSessionId("mozilla") }
 

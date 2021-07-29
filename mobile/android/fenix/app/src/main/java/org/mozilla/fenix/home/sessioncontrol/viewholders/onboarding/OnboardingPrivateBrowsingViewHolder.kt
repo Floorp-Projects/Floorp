@@ -43,7 +43,7 @@ class OnboardingPrivateBrowsingViewHolder(
         val text = SpannableString(view.context.getString(R.string.onboarding_private_browsing_description1)).apply {
             val spanStartIndex = indexOf(IMAGE_PLACEHOLDER)
             setSpan(
-                    inlineIcon,
+                inlineIcon,
                 spanStartIndex,
                 spanStartIndex + IMAGE_PLACEHOLDER.length,
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE

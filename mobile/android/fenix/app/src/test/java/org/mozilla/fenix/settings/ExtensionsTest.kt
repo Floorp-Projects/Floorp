@@ -52,9 +52,13 @@ class ExtensionsTest {
     fun `test radiobutton setStartCheckedIndicator`() {
         radioButton.setStartCheckedIndicator()
 
-        verify { radioButton.putCompoundDrawablesRelative(start = withArg {
-            assertEquals(Rect(0, 0, it.intrinsicWidth, it.intrinsicHeight), it.bounds)
-        }) }
+        verify {
+            radioButton.putCompoundDrawablesRelative(
+                start = withArg {
+                    assertEquals(Rect(0, 0, it.intrinsicWidth, it.intrinsicHeight), it.bounds)
+                }
+            )
+        }
     }
 
     @Test

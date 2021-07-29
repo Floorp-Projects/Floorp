@@ -30,12 +30,14 @@ class WebsiteInfoViewTest {
 
     @Test
     fun bindUrlAndTitle() {
-        view.update(WebsiteInfoState(
-            websiteUrl = "https://mozilla.org",
-            websiteTitle = "Mozilla",
-            websiteSecurityUiValues = WebsiteSecurityUiValues.SECURE,
-            certificateName = ""
-        ))
+        view.update(
+            WebsiteInfoState(
+                websiteUrl = "https://mozilla.org",
+                websiteTitle = "Mozilla",
+                websiteSecurityUiValues = WebsiteSecurityUiValues.SECURE,
+                certificateName = ""
+            )
+        )
 
         assertEquals("https://mozilla.org", binding.url.text)
         assertEquals("Mozilla", binding.title.text)
@@ -45,12 +47,14 @@ class WebsiteInfoViewTest {
 
     @Test
     fun bindCert() {
-        view.update(WebsiteInfoState(
-            websiteUrl = "https://mozilla.org",
-            websiteTitle = "Mozilla",
-            websiteSecurityUiValues = WebsiteSecurityUiValues.INSECURE,
-            certificateName = "Certificate"
-        ))
+        view.update(
+            WebsiteInfoState(
+                websiteUrl = "https://mozilla.org",
+                websiteTitle = "Mozilla",
+                websiteSecurityUiValues = WebsiteSecurityUiValues.INSECURE,
+                certificateName = "Certificate"
+            )
+        )
 
         assertEquals("Insecure Connection", binding.securityInfo.text)
         assertEquals("Verified By: Certificate", binding.certificateInfo.text)

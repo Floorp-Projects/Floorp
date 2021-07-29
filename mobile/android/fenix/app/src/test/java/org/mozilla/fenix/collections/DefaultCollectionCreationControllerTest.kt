@@ -248,14 +248,16 @@ class DefaultCollectionCreationControllerTest {
 
     @Test
     fun `GIVEN list of collections WHEN saving tabs to collection THEN dispatch NameCollection step changed`() {
-        state = state.copy(tabCollections = listOf(
-            mockk {
-                every { title } returns "Collection 1"
-            },
-            mockk {
-                every { title } returns "Random Collection"
-            }
-        ))
+        state = state.copy(
+            tabCollections = listOf(
+                mockk {
+                    every { title } returns "Collection 1"
+                },
+                mockk {
+                    every { title } returns "Random Collection"
+                }
+            )
+        )
 
         controller.saveTabsToCollection(ArrayList())
 

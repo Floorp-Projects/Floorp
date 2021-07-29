@@ -151,11 +151,14 @@ class DefaultBrowserToolbarMenuControllerTest {
             BrowserStore(BrowserState(tabs = listOf(regularTab), selectedTabId = regularTab.id))
 
         var bookmarkTappedInvoked = false
-        val controller = createController(scope = this, store = store, bookmarkTapped = { url, title ->
-            assertEquals(expectedTitle, title)
-            assertEquals(expectedUrl, url)
-            bookmarkTappedInvoked = true
-        })
+        val controller = createController(
+            scope = this, store = store,
+            bookmarkTapped = { url, title ->
+                assertEquals(expectedTitle, title)
+                assertEquals(expectedUrl, url)
+                bookmarkTappedInvoked = true
+            }
+        )
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BOOKMARK)) }
@@ -176,11 +179,14 @@ class DefaultBrowserToolbarMenuControllerTest {
             BrowserStore(BrowserState(tabs = listOf(readerTab), selectedTabId = readerTab.id))
 
         var bookmarkTappedInvoked = false
-        val controller = createController(scope = this, store = browserStore, bookmarkTapped = { url, title ->
-            assertEquals(expectedTitle, title)
-            assertEquals(readerTab.readerState.activeUrl, url)
-            bookmarkTappedInvoked = true
-        })
+        val controller = createController(
+            scope = this, store = browserStore,
+            bookmarkTapped = { url, title ->
+                assertEquals(expectedTitle, title)
+                assertEquals(readerTab.readerState.activeUrl, url)
+                bookmarkTappedInvoked = true
+            }
+        )
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BOOKMARK)) }
@@ -494,9 +500,12 @@ class DefaultBrowserToolbarMenuControllerTest {
         val item = ToolbarMenu.Item.FindInPage
 
         var launcherInvoked = false
-        val controller = createController(scope = this, store = browserStore, findInPageLauncher = {
-            launcherInvoked = true
-        })
+        val controller = createController(
+            scope = this, store = browserStore,
+            findInPageLauncher = {
+                launcherInvoked = true
+            }
+        )
         controller.handleToolbarItemInteraction(item)
 
         assertTrue(launcherInvoked)

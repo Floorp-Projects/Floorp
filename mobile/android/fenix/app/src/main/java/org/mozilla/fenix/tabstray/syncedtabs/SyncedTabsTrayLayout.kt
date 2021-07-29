@@ -34,7 +34,8 @@ class SyncedTabsTrayLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : ConstraintLayout(context, attrs, defStyleAttr), SyncedTabsView,
+) : ConstraintLayout(context, attrs, defStyleAttr),
+    SyncedTabsView,
     Observable<SyncedTabsView.Listener> by ObserverRegistry() {
 
     private val lifecycleProvider = LifecycleViewProvider(this)

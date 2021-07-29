@@ -66,9 +66,11 @@ class NavigationInteractorTest {
     @Test
     fun `onTabTrayDismissed calls dismissTabTray on DefaultNavigationInteractor`() {
         var dismissTabTrayInvoked = false
-        createInteractor(dismissTabTray = {
-            dismissTabTrayInvoked = true
-        }).onTabTrayDismissed()
+        createInteractor(
+            dismissTabTray = {
+                dismissTabTrayInvoked = true
+            }
+        ).onTabTrayDismissed()
 
         assertTrue(dismissTabTrayInvoked)
         verify {
@@ -109,9 +111,11 @@ class NavigationInteractorTest {
     @Test
     fun `onCloseAllTabsClicked calls navigation on DefaultNavigationInteractor`() {
         var dismissTabTrayAndNavigateHomeInvoked = false
-        createInteractor(dismissTabTrayAndNavigateHome = {
-            dismissTabTrayAndNavigateHomeInvoked = true
-        }).onCloseAllTabsClicked(false)
+        createInteractor(
+            dismissTabTrayAndNavigateHome = {
+                dismissTabTrayAndNavigateHomeInvoked = true
+            }
+        ).onCloseAllTabsClicked(false)
 
         assertTrue(dismissTabTrayAndNavigateHomeInvoked)
     }
@@ -142,9 +146,11 @@ class NavigationInteractorTest {
     @Test
     fun `onBookmarkTabs calls navigation on DefaultNavigationInteractor`() = runBlockingTest {
         var showBookmarkSnackbarInvoked = false
-        createInteractor(showBookmarkSnackbar = {
-            showBookmarkSnackbarInvoked = true
-        }).onSaveToBookmarks(listOf(createTrayTab()))
+        createInteractor(
+            showBookmarkSnackbar = {
+                showBookmarkSnackbarInvoked = true
+            }
+        ).onSaveToBookmarks(listOf(createTrayTab()))
 
         coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any()) }
         assertTrue(showBookmarkSnackbarInvoked)
@@ -159,9 +165,11 @@ class NavigationInteractorTest {
         every { entry.url }.answers { "https://mozilla.org" }
 
         var dismissTabTrayInvoked = false
-        createInteractor(dismissTabTray = {
-            dismissTabTrayInvoked = true
-        }).onSyncedTabClicked(tab)
+        createInteractor(
+            dismissTabTray = {
+                dismissTabTrayInvoked = true
+            }
+        ).onSyncedTabClicked(tab)
 
         assertTrue(dismissTabTrayInvoked)
         verifyOrder {

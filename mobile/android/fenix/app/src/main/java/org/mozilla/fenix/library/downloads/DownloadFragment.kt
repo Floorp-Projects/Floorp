@@ -231,7 +231,8 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
             String.format(
                 requireContext().getString(
                     R.string.download_delete_single_item_snackbar
-                ), downloadItems.first().fileName
+                ),
+                downloadItems.first().fileName
             )
         }
     }

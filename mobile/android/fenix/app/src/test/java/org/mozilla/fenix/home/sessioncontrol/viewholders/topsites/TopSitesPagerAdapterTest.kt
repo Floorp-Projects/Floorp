@@ -85,9 +85,11 @@ class TopSitesPagerAdapterTest {
             topSitesPagerAdapter.getCurrentPageChanges(payload, 1)
 
         assertEquals(
-            listOf(Pair(0, topSite),
+            listOf(
+                Pair(0, topSite),
                 Pair(1, topSite2),
-                Pair(2, topSite3)),
+                Pair(2, topSite3)
+            ),
             resultPage1
         )
 

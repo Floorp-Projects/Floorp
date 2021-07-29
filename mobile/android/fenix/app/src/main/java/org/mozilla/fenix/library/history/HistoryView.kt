@@ -175,7 +175,8 @@ class HistoryView(
                 view.context.getString(
                     if (numRecentTabs == 1)
                         R.string.recently_closed_tab else R.string.recently_closed_tabs
-                ), numRecentTabs
+                ),
+                numRecentTabs
             )
             isVisible = !userHasHistory
         }

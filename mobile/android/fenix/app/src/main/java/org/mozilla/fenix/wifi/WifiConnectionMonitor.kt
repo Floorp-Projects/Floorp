@@ -32,7 +32,7 @@ class WifiConnectionMonitor(app: Application) {
 
     @VisibleForTesting
     internal var connectivityManager = app.getSystemService(Context.CONNECTIVITY_SERVICE) as
-            ConnectivityManager
+        ConnectivityManager
 
     @VisibleForTesting
     internal var lastKnownStateWasAvailable: Boolean? = null

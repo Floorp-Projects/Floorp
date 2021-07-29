@@ -40,10 +40,12 @@ abstract class AbstractBrowserPageViewHolder(
         adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
         layoutManager: RecyclerView.LayoutManager
     ) {
-        adapter.registerAdapterDataObserver(OneTimeAdapterObserver(adapter) {
-            trayList.scrollToPosition(currentTabIndex)
-            updateTrayVisibility(adapter.itemCount)
-        })
+        adapter.registerAdapterDataObserver(
+            OneTimeAdapterObserver(adapter) {
+                trayList.scrollToPosition(currentTabIndex)
+                updateTrayVisibility(adapter.itemCount)
+            }
+        )
         trayList.layoutManager = layoutManager
         trayList.adapter = adapter
     }

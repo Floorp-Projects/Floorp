@@ -58,7 +58,7 @@ private val failureMsgRecyclerViewConstraintLayoutChildren = getErrorMessage(
 private val failureMsgNumberOfInflation = getErrorMessage(
     shortName = "Number of inflation on start up doesn't match expected count",
     implications = "The number of inflation can negatively impact start up time. Having more inflations" +
-            "will most likely mean we're adding extra work on the UI thread."
+        "will most likely mean we're adding extra work on the UI thread."
 )
 /**
  * A performance test to limit the number of StrictMode suppressions and number of runBlocking used

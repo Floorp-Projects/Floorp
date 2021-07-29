@@ -179,8 +179,8 @@ private fun assertBasicLevelTrackingContentBlocked() {
                 withText(
                     containsString(
                         "social-track-digest256.dummytracker.org\n" +
-                                "ads-track-digest256.dummytracker.org\n" +
-                                "analytics-track-digest256.dummytracker.org"
+                            "ads-track-digest256.dummytracker.org\n" +
+                            "analytics-track-digest256.dummytracker.org"
                     )
                 )
             )

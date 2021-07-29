@@ -108,8 +108,9 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                 val addons = requireContext().components.addonManager.getAddons(allowCache = allowCache)
                 // Add-ons that should be excluded in Mozilla Online builds
                 val excludedAddonIDs = if (Config.channel.isMozillaOnline &&
-                    !BuildConfig.MOZILLA_ONLINE_ADDON_EXCLUSIONS.isNullOrEmpty()) {
-                        BuildConfig.MOZILLA_ONLINE_ADDON_EXCLUSIONS.toList()
+                    !BuildConfig.MOZILLA_ONLINE_ADDON_EXCLUSIONS.isNullOrEmpty()
+                ) {
+                    BuildConfig.MOZILLA_ONLINE_ADDON_EXCLUSIONS.toList()
                 } else {
                     emptyList<String>()
                 }
@@ -200,7 +201,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
 
     private fun hasExistingAddonInstallationDialogFragment(): Boolean {
         return parentFragmentManager.findFragmentByTag(INSTALLATION_DIALOG_FRAGMENT_TAG)
-                as? AddonInstallationDialogFragment != null
+            as? AddonInstallationDialogFragment != null
     }
 
     @VisibleForTesting

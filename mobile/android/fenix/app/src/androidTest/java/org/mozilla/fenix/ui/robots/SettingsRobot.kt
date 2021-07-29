@@ -111,7 +111,7 @@ class SettingsRobot {
         }
 
         fun openAboutFirefoxPreview(interact: SettingsSubMenuAboutRobot.() -> Unit):
-                SettingsSubMenuAboutRobot.Transition {
+            SettingsSubMenuAboutRobot.Transition {
 
             assertAboutFirefoxPreview().click()
 
@@ -120,7 +120,7 @@ class SettingsRobot {
         }
 
         fun openSearchSubMenu(interact: SettingsSubMenuSearchRobot.() -> Unit):
-                SettingsSubMenuSearchRobot.Transition {
+            SettingsSubMenuSearchRobot.Transition {
 
             fun searchEngineButton() = onView(withText("Search"))
             searchEngineButton().click()
@@ -401,7 +401,7 @@ private fun assertNotificationsButton() {
 private fun assertDataCollectionButton() {
     scrollToElementByText("Data collection")
     onView(withText("Data collection"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun openLinksInAppsButton() = onView(withText("Open links in apps"))

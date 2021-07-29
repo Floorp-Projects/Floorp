@@ -18,7 +18,7 @@ fun ConnectivityManager.isOnline(network: Network? = null): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         getNetworkCapabilities(network ?: activeNetwork)?.let {
             it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                    it.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                it.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
         } ?: false
     } else {
         // for devices below android M, there's no better way to get this.

@@ -205,10 +205,12 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     }
 
     private fun openSystemSettings() {
-        startActivity(Intent().apply {
-            action = android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-            data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
-        })
+        startActivity(
+            Intent().apply {
+                action = android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+            }
+        )
     }
 
     private companion object {

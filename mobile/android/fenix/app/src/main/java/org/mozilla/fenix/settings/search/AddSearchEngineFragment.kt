@@ -43,7 +43,8 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
 
 @SuppressWarnings("LargeClass", "TooManyFunctions")
-class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
+class AddSearchEngineFragment :
+    Fragment(R.layout.fragment_add_search_engine),
     CompoundButton.OnCheckedChangeListener {
     private var availableEngines: List<SearchEngine> = listOf()
     private var selectedIndex: Int = -1

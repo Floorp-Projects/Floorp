@@ -158,12 +158,12 @@ open class DefaultToolbarMenu(
     @VisibleForTesting(otherwise = PRIVATE)
     fun canAddToHomescreen(): Boolean =
         selectedSession != null && isPinningSupported &&
-                !context.components.useCases.webAppUseCases.isInstallable()
+            !context.components.useCases.webAppUseCases.isInstallable()
 
     @VisibleForTesting(otherwise = PRIVATE)
     fun canInstall(): Boolean =
         selectedSession != null && isPinningSupported &&
-                context.components.useCases.webAppUseCases.isInstallable()
+            context.components.useCases.webAppUseCases.isInstallable()
 
     @VisibleForTesting(otherwise = PRIVATE)
     fun shouldShowOpenInApp(): Boolean = selectedSession?.let { session ->

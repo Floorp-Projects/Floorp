@@ -42,11 +42,11 @@ class SyncedTabsAdapter(
     }
 
     override fun getItemViewType(position: Int) = when (getItem(position)) {
-            is AdapterItem.Device -> DeviceViewHolder.LAYOUT_ID
-            is AdapterItem.Tab -> TabViewHolder.LAYOUT_ID
-            is AdapterItem.Error -> ErrorViewHolder.LAYOUT_ID
-            is AdapterItem.Title -> TitleViewHolder.LAYOUT_ID
-            is AdapterItem.NoTabs -> NoTabsViewHolder.LAYOUT_ID
+        is AdapterItem.Device -> DeviceViewHolder.LAYOUT_ID
+        is AdapterItem.Tab -> TabViewHolder.LAYOUT_ID
+        is AdapterItem.Error -> ErrorViewHolder.LAYOUT_ID
+        is AdapterItem.Title -> TitleViewHolder.LAYOUT_ID
+        is AdapterItem.NoTabs -> NoTabsViewHolder.LAYOUT_ID
     }
 
     fun updateData(syncedTabs: List<SyncedDeviceTabs>) {

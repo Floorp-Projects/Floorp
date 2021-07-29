@@ -353,23 +353,23 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
         }
 
         mSeekBar?.setAccessibilityDelegate(object :
-            View.AccessibilityDelegate() {
-            override fun onInitializeAccessibilityNodeInfo(
-                host: View?,
-                info: AccessibilityNodeInfo?
-            ) {
-                super.onInitializeAccessibilityNodeInfo(host, info)
-                val initialInfo = info?.rangeInfo
-                info?.rangeInfo = initialInfo?.let {
-                    AccessibilityNodeInfo.RangeInfo.obtain(
-                        RANGE_TYPE_PERCENT,
-                        MIN_VALUE.toFloat(),
-                        SEEK_BAR_MAX.toFloat(),
-                        convertCurrentValue(it.current)
-                    )
+                View.AccessibilityDelegate() {
+                override fun onInitializeAccessibilityNodeInfo(
+                    host: View?,
+                    info: AccessibilityNodeInfo?
+                ) {
+                    super.onInitializeAccessibilityNodeInfo(host, info)
+                    val initialInfo = info?.rangeInfo
+                    info?.rangeInfo = initialInfo?.let {
+                        AccessibilityNodeInfo.RangeInfo.obtain(
+                            RANGE_TYPE_PERCENT,
+                            MIN_VALUE.toFloat(),
+                            SEEK_BAR_MAX.toFloat(),
+                            convertCurrentValue(it.current)
+                        )
+                    }
                 }
-            }
-        })
+            })
     }
 
     /**

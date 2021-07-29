@@ -509,8 +509,10 @@ class BrowserRobot {
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             mDevice.waitForIdle(waitingTime)
             tabsCounter().click()
-            mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/tab_layout")),
-                waitingTime)
+            mDevice.waitNotNull(
+                Until.findObject(By.res("$packageName:id/tab_layout")),
+                waitingTime
+            )
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()

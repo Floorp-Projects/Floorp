@@ -25,9 +25,12 @@ class VisualCompletenessQueue(val queue: RunWhenReadyQueue) {
         containerWeakReference.get()?.doOnPreDraw {
             // This delay is temporary. We are delaying 5 seconds until the performance
             // team can locate the real point of visual completeness.
-            it.postDelayed({
-                queue.ready()
-            }, delay)
+            it.postDelayed(
+                {
+                    queue.ready()
+                },
+                delay
+            )
         }
     }
 }

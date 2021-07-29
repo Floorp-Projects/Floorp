@@ -30,7 +30,8 @@ object SearchStringValidator {
         // read the response stream to ensure the body is closed correctly. workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1603114
         response.body.string()
         return if (response.isSuccess ||
-            isTestQueryParamNotFound(response.status)) Result.Success else Result.CannotReach
+            isTestQueryParamNotFound(response.status)
+        ) Result.Success else Result.CannotReach
     }
 
     private fun createRequest(searchString: String): Request {

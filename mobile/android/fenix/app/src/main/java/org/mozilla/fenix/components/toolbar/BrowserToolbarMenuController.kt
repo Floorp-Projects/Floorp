@@ -118,13 +118,15 @@ class DefaultBrowserToolbarMenuController(
                     customTabUseCases.migrate(customTabSessionId, select = true)
 
                     // Switch to the actual browser which should now display our new selected session
-                    activity.startActivity(openInFenixIntent.apply {
-                        // We never want to launch the browser in the same task as the external app
-                        // activity. So we force a new task here. IntentReceiverActivity will do the
-                        // right thing and take care of routing to an already existing browser and avoid
-                        // cloning a new one.
-                        flags = flags or Intent.FLAG_ACTIVITY_NEW_TASK
-                    })
+                    activity.startActivity(
+                        openInFenixIntent.apply {
+                            // We never want to launch the browser in the same task as the external app
+                            // activity. So we force a new task here. IntentReceiverActivity will do the
+                            // right thing and take care of routing to an already existing browser and avoid
+                            // cloning a new one.
+                            flags = flags or Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                    )
 
                     // Close this activity (and the task) since it is no longer displaying any session
                     activity.finishAndRemoveTask()

@@ -94,9 +94,11 @@ class DefaultQuickSettingsControllerTest {
     @Test
     fun `handlePermissionsShown should delegate to an injected parameter`() {
         var displayPermissionsInvoked = false
-        createController(displayPermissions = {
-            displayPermissionsInvoked = true
-        }).handlePermissionsShown()
+        createController(
+            displayPermissions = {
+                displayPermissionsInvoked = true
+            }
+        ).handlePermissionsShown()
 
         assertTrue(displayPermissionsInvoked)
     }
@@ -131,9 +133,11 @@ class DefaultQuickSettingsControllerTest {
         }
         // We should also modify View's state. Not necessarily as the last operation.
         verify {
-            store.dispatch(match { action ->
-                PhoneFeature.CAMERA == (action as WebsitePermissionAction.TogglePermission).updatedFeature
-            })
+            store.dispatch(
+                match { action ->
+                    PhoneFeature.CAMERA == (action as WebsitePermissionAction.TogglePermission).updatedFeature
+                }
+            )
         }
     }
 
@@ -163,9 +167,11 @@ class DefaultQuickSettingsControllerTest {
         invalidSitePermissionsController.handlePermissionToggled(websitePermission)
 
         verify {
-            navController.navigate(directionsEq(
-                QuickSettingsSheetDialogFragmentDirections.actionGlobalSitePermissionsManagePhoneFeature(PhoneFeature.CAMERA)
-            ))
+            navController.navigate(
+                directionsEq(
+                    QuickSettingsSheetDialogFragmentDirections.actionGlobalSitePermissionsManagePhoneFeature(PhoneFeature.CAMERA)
+                )
+            )
         }
     }
 
@@ -212,12 +218,14 @@ class DefaultQuickSettingsControllerTest {
         controller.handleAndroidPermissionGranted(featureGranted)
 
         verify {
-            store.dispatch(withArg { action ->
-                action as WebsitePermissionAction.TogglePermission
-                assertEquals(featureGranted, action.updatedFeature)
-                assertEquals(permissionStatus, action.updatedStatus)
-                assertEquals(permissionEnabled, action.updatedEnabledStatus)
-            })
+            store.dispatch(
+                withArg { action ->
+                    action as WebsitePermissionAction.TogglePermission
+                    assertEquals(featureGranted, action.updatedFeature)
+                    assertEquals(permissionStatus, action.updatedStatus)
+                    assertEquals(permissionEnabled, action.updatedEnabledStatus)
+                }
+            )
         }
     }
 
@@ -226,7 +234,8 @@ class DefaultQuickSettingsControllerTest {
         val testPermissions = arrayOf("TestPermission")
 
         var requestRuntimePermissionsInvoked = false
-        createController(requestPermissions = {
+        createController(
+            requestPermissions = {
                 assertArrayEquals(testPermissions, it)
                 requestRuntimePermissionsInvoked = true
             }

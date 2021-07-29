@@ -187,7 +187,8 @@ open class SavedLoginsStorageController(
                 withContext(Dispatchers.Main) {
                     loginsFragmentStore.dispatch(
                         LoginsAction.UpdateLoginsList(
-                            logins.map { it.mapToSavedLogin() })
+                            logins.map { it.mapToSavedLogin() }
+                        )
                     )
                 }
             }

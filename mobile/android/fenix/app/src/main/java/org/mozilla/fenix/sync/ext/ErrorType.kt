@@ -31,8 +31,10 @@ fun ErrorType.toAdapterItem(
     ErrorType.MULTIPLE_DEVICES_UNAVAILABLE,
     ErrorType.SYNC_ENGINE_UNAVAILABLE,
     ErrorType.SYNC_NEEDS_REAUTHENTICATION,
-    ErrorType.NO_TABS_AVAILABLE -> SyncedTabsAdapter.AdapterItem
-        .Error(descriptionResId = stringResId)
-    ErrorType.SYNC_UNAVAILABLE -> SyncedTabsAdapter.AdapterItem
-        .Error(descriptionResId = stringResId, navController = navController)
+    ErrorType.NO_TABS_AVAILABLE ->
+        SyncedTabsAdapter.AdapterItem
+            .Error(descriptionResId = stringResId)
+    ErrorType.SYNC_UNAVAILABLE ->
+        SyncedTabsAdapter.AdapterItem
+            .Error(descriptionResId = stringResId, navController = navController)
 }

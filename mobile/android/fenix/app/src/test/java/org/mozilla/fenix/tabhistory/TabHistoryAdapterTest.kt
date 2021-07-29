@@ -65,33 +65,45 @@ class TabHistoryAdapterTest {
 
     @Test
     fun `items are the same if they have matching URLs`() {
-        assertTrue(TabHistoryAdapter.DiffCallback.areItemsTheSame(
-            selectedItem,
-            selectedItem
-        ))
-        assertTrue(TabHistoryAdapter.DiffCallback.areItemsTheSame(
-            unselectedItem,
-            unselectedItem.copy(title = "Waterbug", index = 2, isSelected = true)
-        ))
-        assertFalse(TabHistoryAdapter.DiffCallback.areItemsTheSame(
-            unselectedItem,
-            unselectedItem.copy(url = "https://firefox.com/subpage")
-        ))
+        assertTrue(
+            TabHistoryAdapter.DiffCallback.areItemsTheSame(
+                selectedItem,
+                selectedItem
+            )
+        )
+        assertTrue(
+            TabHistoryAdapter.DiffCallback.areItemsTheSame(
+                unselectedItem,
+                unselectedItem.copy(title = "Waterbug", index = 2, isSelected = true)
+            )
+        )
+        assertFalse(
+            TabHistoryAdapter.DiffCallback.areItemsTheSame(
+                unselectedItem,
+                unselectedItem.copy(url = "https://firefox.com/subpage")
+            )
+        )
     }
 
     @Test
     fun `equal items have the same contents`() {
-        assertTrue(TabHistoryAdapter.DiffCallback.areContentsTheSame(
-            selectedItem,
-            selectedItem
-        ))
-        assertFalse(TabHistoryAdapter.DiffCallback.areContentsTheSame(
-            selectedItem,
-            selectedItem.copy(title = "Waterbug", index = 2, isSelected = false)
-        ))
-        assertFalse(TabHistoryAdapter.DiffCallback.areContentsTheSame(
-            unselectedItem,
-            selectedItem
-        ))
+        assertTrue(
+            TabHistoryAdapter.DiffCallback.areContentsTheSame(
+                selectedItem,
+                selectedItem
+            )
+        )
+        assertFalse(
+            TabHistoryAdapter.DiffCallback.areContentsTheSame(
+                selectedItem,
+                selectedItem.copy(title = "Waterbug", index = 2, isSelected = false)
+            )
+        )
+        assertFalse(
+            TabHistoryAdapter.DiffCallback.areContentsTheSame(
+                unselectedItem,
+                selectedItem
+            )
+        )
     }
 }

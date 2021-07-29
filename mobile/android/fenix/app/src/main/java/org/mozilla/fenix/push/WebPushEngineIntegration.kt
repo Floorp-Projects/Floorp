@@ -81,7 +81,8 @@ internal class WebPushEngineDelegate(
             },
             onSubscribe = { subscription ->
                 onSubscribe(subscription.toEnginePushSubscription())
-            })
+            }
+        )
     }
 
     override fun onUnsubscribe(scope: String, onUnsubscribe: (Boolean) -> Unit) {
@@ -93,7 +94,8 @@ internal class WebPushEngineDelegate(
             },
             onUnsubscribe = { result ->
                 onUnsubscribe(result)
-            })
+            }
+        )
     }
 }
 

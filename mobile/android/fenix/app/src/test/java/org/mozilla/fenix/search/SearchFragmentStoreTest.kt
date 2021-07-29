@@ -201,12 +201,14 @@ class SearchFragmentStoreTest {
 
     @Test
     fun `Updating SearchFragmentState from SearchState`() = runBlocking {
-        val store = SearchFragmentStore(emptyDefaultState(
-            searchEngineSource = SearchEngineSource.None,
-            areShortcutsAvailable = false,
-            defaultEngine = null,
-            showSearchShortcutsSetting = true
-        ))
+        val store = SearchFragmentStore(
+            emptyDefaultState(
+                searchEngineSource = SearchEngineSource.None,
+                areShortcutsAvailable = false,
+                defaultEngine = null,
+                showSearchShortcutsSetting = true
+            )
+        )
 
         assertNull(store.state.defaultEngine)
         assertFalse(store.state.areShortcutsAvailable)
@@ -256,12 +258,14 @@ class SearchFragmentStoreTest {
 
     @Test
     fun `Updating SearchFragmentState from SearchState - shortcuts disabled`() = runBlocking {
-        val store = SearchFragmentStore(emptyDefaultState(
-            searchEngineSource = SearchEngineSource.None,
-            areShortcutsAvailable = false,
-            defaultEngine = null,
-            showSearchShortcutsSetting = false
-        ))
+        val store = SearchFragmentStore(
+            emptyDefaultState(
+                searchEngineSource = SearchEngineSource.None,
+                areShortcutsAvailable = false,
+                defaultEngine = null,
+                showSearchShortcutsSetting = false
+            )
+        )
 
         assertNull(store.state.defaultEngine)
         assertFalse(store.state.areShortcutsAvailable)

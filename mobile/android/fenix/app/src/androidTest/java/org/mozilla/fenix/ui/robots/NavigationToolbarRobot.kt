@@ -70,8 +70,10 @@ class NavigationToolbarRobot {
     fun typeSearchTerm(searchTerm: String) = awesomeBar().perform(typeText(searchTerm))
 
     fun toggleReaderView() {
-        mDevice.findObject(UiSelector()
-            .resourceId("$packageName:id/mozac_browser_toolbar_page_actions"))
+        mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/mozac_browser_toolbar_page_actions")
+        )
             .waitForExists(waitingTime)
 
         readerViewToggle().click()
@@ -133,7 +135,8 @@ class NavigationToolbarRobot {
             when (etpEnabled) {
                 true ->
                     try {
-                        assertTrue("Onboarding message not displayed",
+                        assertTrue(
+                            "Onboarding message not displayed",
                             onboardingDisplayed
                         )
                     } catch (e: AssertionError) {
@@ -184,8 +187,10 @@ class NavigationToolbarRobot {
         fun openTabTray(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             mDevice.waitForIdle(waitingTime)
             tabTrayButton().click()
-            mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/tab_layout")),
-                waitingTime)
+            mDevice.waitNotNull(
+                Until.findObject(By.res("$packageName:id/tab_layout")),
+                waitingTime
+            )
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()
@@ -251,7 +256,8 @@ class NavigationToolbarRobot {
                     RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
                         hasDescendant(
                             withText("Close tab")
-                        ), ViewActions.click()
+                        ),
+                        ViewActions.click()
                     )
                 )
 
@@ -267,7 +273,8 @@ class NavigationToolbarRobot {
                     RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
                         hasDescendant(
                             withText("New tab")
-                        ), ViewActions.click()
+                        ),
+                        ViewActions.click()
                     )
                 )
 
@@ -283,7 +290,8 @@ class NavigationToolbarRobot {
                     RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
                         hasDescendant(
                             withText("New private tab")
-                        ), ViewActions.click()
+                        ),
+                        ViewActions.click()
                     )
                 )
 
@@ -352,8 +360,10 @@ private fun readerViewToggle() =
     onView(withParent(withId(R.id.mozac_browser_toolbar_page_actions)))
 
 private fun assertReaderViewDetected(visible: Boolean) {
-    mDevice.findObject(UiSelector()
-        .description("Reader view"))
+    mDevice.findObject(
+        UiSelector()
+            .description("Reader view")
+    )
         .waitForExists(waitingTime)
 
     onView(
@@ -368,8 +378,10 @@ private fun assertReaderViewDetected(visible: Boolean) {
 }
 
 private fun assertCloseReaderViewDetected(visible: Boolean) {
-    mDevice.findObject(UiSelector()
-        .description("Close reader view"))
+    mDevice.findObject(
+        UiSelector()
+            .description("Close reader view")
+    )
         .waitForExists(waitingTime)
 
     onView(

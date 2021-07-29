@@ -44,13 +44,15 @@ class SpeechProcessingIntentProcessorTest {
     fun setup() {
         val searchEngine = searchEngine
 
-        store = BrowserStore(BrowserState(
-            search = SearchState(
-                customSearchEngines = listOf(searchEngine),
-                userSelectedSearchEngineId = searchEngine.id,
-                complete = true
+        store = BrowserStore(
+            BrowserState(
+                search = SearchState(
+                    customSearchEngines = listOf(searchEngine),
+                    userSelectedSearchEngineId = searchEngine.id,
+                    complete = true
+                )
             )
-        ))
+        )
 
         every { activity.applicationContext } returns ApplicationProvider.getApplicationContext()
     }

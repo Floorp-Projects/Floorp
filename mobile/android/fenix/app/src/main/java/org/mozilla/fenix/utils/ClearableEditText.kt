@@ -76,5 +76,5 @@ class ClearableEditText @JvmOverloads constructor(
      */
     private fun MotionEvent.endDrawableTouched() =
         (layoutDirection == LAYOUT_DIRECTION_LTR && rawX >= (right - compoundPaddingRight)) ||
-        (layoutDirection == LAYOUT_DIRECTION_RTL && rawX <= (left + compoundPaddingLeft))
+            (layoutDirection == LAYOUT_DIRECTION_RTL && rawX <= (left + compoundPaddingLeft))
 }

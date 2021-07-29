@@ -230,8 +230,10 @@ class TabDrawerRobot {
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             mDevice.waitForIdle(waitingTime)
             tabsCounter().click()
-            mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/tab_layout")),
-                waitingTime)
+            mDevice.waitNotNull(
+                Until.findObject(By.res("$packageName:id/tab_layout")),
+                waitingTime
+            )
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()
@@ -338,7 +340,7 @@ class TabDrawerRobot {
         }
 
         fun openRecentlyClosedTabs(interact: RecentlyClosedTabsRobot.() -> Unit):
-                RecentlyClosedTabsRobot.Transition {
+            RecentlyClosedTabsRobot.Transition {
 
             threeDotMenu().click()
 
@@ -356,7 +358,7 @@ class TabDrawerRobot {
         }
 
         fun clickSaveCollection(interact: CollectionRobot.() -> Unit):
-                CollectionRobot.Transition {
+            CollectionRobot.Transition {
             saveTabsToCollectionButton().click()
 
             CollectionRobot().interact()
@@ -395,9 +397,11 @@ private fun threeDotMenu() = onView(withId(R.id.tab_tray_overflow))
 
 private fun assertExistingOpenTabs(title: String) {
     try {
-        mDevice.findObject(UiSelector()
-            .resourceId("$packageName:id/mozac_browser_tabstray_title")
-            .textContains(title))
+        mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/mozac_browser_tabstray_title")
+                .textContains(title)
+        )
             .waitForExists(waitingTime)
 
         tab(title).check(matches(isDisplayed()))

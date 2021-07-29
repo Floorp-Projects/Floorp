@@ -98,20 +98,25 @@ class WebPushEngineIntegrationTest {
         }
 
         var actualSubscription: WebPushSubscription? = null
-        delegate.captured.onGetSubscription("scope", onSubscription = {
-            actualSubscription = it
-        })
+        delegate.captured.onGetSubscription(
+            "scope",
+            onSubscription = {
+                actualSubscription = it
+            }
+        )
 
         assertNull(actualSubscription)
         assertNotNull(subscribeFn)
 
-        subscribeFn!!(AutoPushSubscription(
-            scope = "scope",
-            publicKey = "abc",
-            endpoint = "def",
-            authKey = "xyz",
-            appServerKey = null
-        ))
+        subscribeFn!!(
+            AutoPushSubscription(
+                scope = "scope",
+                publicKey = "abc",
+                endpoint = "def",
+                authKey = "xyz",
+                appServerKey = null
+            )
+        )
 
         val expectedSubscription = WebPushSubscription(
             scope = "scope",
@@ -155,13 +160,15 @@ class WebPushEngineIntegrationTest {
         assertNull(actualSubscription)
 
         assertNotNull(onSubscribeFn)
-        onSubscribeFn!!(AutoPushSubscription(
-            scope = "scope",
-            publicKey = "abc",
-            endpoint = "def",
-            authKey = "xyz",
-            appServerKey = null
-        ))
+        onSubscribeFn!!(
+            AutoPushSubscription(
+                scope = "scope",
+                publicKey = "abc",
+                endpoint = "def",
+                authKey = "xyz",
+                appServerKey = null
+            )
+        )
 
         val expectedSubscription = WebPushSubscription(
             scope = "scope",

@@ -512,7 +512,8 @@ private fun tabSettingsButton() =
 private fun assertTabSettingsButton() {
     tabSettingsButton()
         .check(
-            matches(isDisplayed()))
+            matches(isDisplayed())
+        )
 }
 
 private fun recentlyClosedTabsButton() =
@@ -521,7 +522,8 @@ private fun recentlyClosedTabsButton() =
 private fun assertRecentlyClosedTabsButton() {
     recentlyClosedTabsButton()
         .check(
-            matches(isDisplayed()))
+            matches(isDisplayed())
+        )
 }
 
 private fun shareAllTabsButton() =
@@ -530,7 +532,8 @@ private fun shareAllTabsButton() =
 private fun assertShareAllTabsButton() {
     shareAllTabsButton()
         .check(
-            matches(isDisplayed()))
+            matches(isDisplayed())
+        )
 }
 
 private fun assertNewTabButton() = onView(withText("New tab")).check(matches(isDisplayed()))

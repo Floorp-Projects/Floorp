@@ -68,14 +68,16 @@ class UtilsKtTest {
                 BookmarkNodeWithDepth(1, folder, "root"),
                 BookmarkNodeWithDepth(1, folder2, "root"),
                 BookmarkNodeWithDepth(2, folder3, "folder2")
-            ), rootWithChildren.flatNodeList(null)
+            ),
+            rootWithChildren.flatNodeList(null)
         )
 
         assertEquals(
             listOf(
                 BookmarkNodeWithDepth(0, rootWithChildren, null),
                 BookmarkNodeWithDepth(1, folder, "root")
-            ), rootWithChildren.flatNodeList(excludeSubtreeRoot = "folder2")
+            ),
+            rootWithChildren.flatNodeList(excludeSubtreeRoot = "folder2")
         )
     }
 }

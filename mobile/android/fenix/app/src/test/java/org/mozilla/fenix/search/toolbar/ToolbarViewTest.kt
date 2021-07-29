@@ -44,10 +44,12 @@ class ToolbarViewTest {
         url = "",
         searchTerms = "",
         query = "",
-        searchEngineSource = SearchEngineSource.Default(mockk {
-            every { name } returns "Search Engine"
-            every { icon } returns testContext.getDrawable(R.drawable.ic_search)!!.toBitmap()
-        }),
+        searchEngineSource = SearchEngineSource.Default(
+            mockk {
+                every { name } returns "Search Engine"
+                every { icon } returns testContext.getDrawable(R.drawable.ic_search)!!.toBitmap()
+            }
+        ),
         defaultEngine = null,
         showSearchShortcutsSetting = false,
         showSearchSuggestionsHint = false,

@@ -214,8 +214,10 @@ class ToolbarGestureHandler(
         val reverseFling =
             abs(velocityX) >= minimumFlingVelocity && !velocityMatchesDirection
 
-        return !reverseFling && (previewWidth / windowWidth >= GESTURE_FINISH_PERCENT ||
-            abs(velocityX) >= minimumFlingVelocity)
+        return !reverseFling && (
+            previewWidth / windowWidth >= GESTURE_FINISH_PERCENT ||
+                abs(velocityX) >= minimumFlingVelocity
+            )
     }
 
     private fun getAnimator(finalContextX: Float, duration: Long): ValueAnimator {

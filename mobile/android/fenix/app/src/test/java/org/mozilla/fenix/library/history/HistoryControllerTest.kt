@@ -56,9 +56,11 @@ class HistoryControllerTest {
     @Test
     fun onPressHistoryItemInNormalMode() {
         var actualHistoryItem: HistoryItem? = null
-        val controller = createController(openInBrowser = {
-            actualHistoryItem = it
-        })
+        val controller = createController(
+            openInBrowser = {
+                actualHistoryItem = it
+            }
+        )
         controller.handleOpen(historyItem)
         assertEquals(historyItem, actualHistoryItem)
     }
@@ -67,10 +69,12 @@ class HistoryControllerTest {
     fun onOpenItemInNormalMode() {
         var actualHistoryItem: HistoryItem? = null
         var actualBrowsingMode: BrowsingMode? = null
-        val controller = createController(openAndShowTray = { historyItem, browsingMode ->
-            actualHistoryItem = historyItem
-            actualBrowsingMode = browsingMode
-        })
+        val controller = createController(
+            openAndShowTray = { historyItem, browsingMode ->
+                actualHistoryItem = historyItem
+                actualBrowsingMode = browsingMode
+            }
+        )
         controller.handleOpenInNewTab(historyItem, BrowsingMode.Normal)
         assertEquals(historyItem, actualHistoryItem)
         assertEquals(BrowsingMode.Normal, actualBrowsingMode)
@@ -80,10 +84,12 @@ class HistoryControllerTest {
     fun onOpenItemInPrivateMode() {
         var actualHistoryItem: HistoryItem? = null
         var actualBrowsingMode: BrowsingMode? = null
-        val controller = createController(openAndShowTray = { historyItem, browsingMode ->
-            actualHistoryItem = historyItem
-            actualBrowsingMode = browsingMode
-        })
+        val controller = createController(
+            openAndShowTray = { historyItem, browsingMode ->
+                actualHistoryItem = historyItem
+                actualBrowsingMode = browsingMode
+            }
+        )
         controller.handleOpenInNewTab(historyItem, BrowsingMode.Private)
         assertEquals(historyItem, actualHistoryItem)
         assertEquals(BrowsingMode.Private, actualBrowsingMode)
@@ -142,9 +148,11 @@ class HistoryControllerTest {
     @Test
     fun onModeSwitched() {
         var invalidateOptionsMenuInvoked = false
-        val controller = createController(invalidateOptionsMenu = {
-            invalidateOptionsMenuInvoked = true
-        })
+        val controller = createController(
+            invalidateOptionsMenu = {
+                invalidateOptionsMenuInvoked = true
+            }
+        )
 
         controller.handleModeSwitched()
         assertTrue(invalidateOptionsMenuInvoked)
@@ -153,9 +161,11 @@ class HistoryControllerTest {
     @Test
     fun onDeleteAll() {
         var displayDeleteAllInvoked = false
-        val controller = createController(displayDeleteAll = {
-            displayDeleteAllInvoked = true
-        })
+        val controller = createController(
+            displayDeleteAll = {
+                displayDeleteAllInvoked = true
+            }
+        )
 
         controller.handleDeleteAll()
         assertTrue(displayDeleteAllInvoked)
@@ -165,9 +175,11 @@ class HistoryControllerTest {
     fun onDeleteSome() {
         val itemsToDelete = setOf(historyItem)
         var actualItems: Set<HistoryItem>? = null
-        val controller = createController(deleteHistoryItems = { items ->
-            actualItems = items
-        })
+        val controller = createController(
+            deleteHistoryItems = { items ->
+                actualItems = items
+            }
+        )
 
         controller.handleDeleteSome(itemsToDelete)
         assertEquals(itemsToDelete, actualItems)
@@ -194,20 +206,24 @@ class HistoryControllerTest {
         createController().handleShare(historyItem)
 
         verify {
-            navController.navigate(directionsEq(
-                HistoryFragmentDirections.actionGlobalShareFragment(
-                    data = arrayOf(ShareData(url = historyItem.url, title = historyItem.title))
+            navController.navigate(
+                directionsEq(
+                    HistoryFragmentDirections.actionGlobalShareFragment(
+                        data = arrayOf(ShareData(url = historyItem.url, title = historyItem.title))
+                    )
                 )
-            ))
+            )
         }
     }
 
     @Test
     fun onRequestSync() {
         var syncHistoryInvoked = false
-        createController(syncHistory = {
-            syncHistoryInvoked = true
-        }).handleRequestSync()
+        createController(
+            syncHistory = {
+                syncHistoryInvoked = true
+            }
+        ).handleRequestSync()
 
         coVerifyOrder {
             store.dispatch(HistoryFragmentAction.StartSync)

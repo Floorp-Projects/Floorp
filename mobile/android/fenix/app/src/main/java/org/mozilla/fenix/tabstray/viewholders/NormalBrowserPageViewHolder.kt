@@ -27,7 +27,8 @@ class NormalBrowserPageViewHolder(
     store,
     interactor,
     currentTabIndex
-), SelectionHolder<Tab> {
+),
+    SelectionHolder<Tab> {
 
     init {
         trayList.browserTabType = NORMAL

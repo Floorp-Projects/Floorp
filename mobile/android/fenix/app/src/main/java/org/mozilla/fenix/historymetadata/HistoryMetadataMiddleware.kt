@@ -92,7 +92,7 @@ class HistoryMetadataMiddleware(
                     // When history state is ready, we can record metadata for this page.
                     val knownHistoryMetadata = tab.historyMetadata
                     val metadataPresentForUrl = knownHistoryMetadata != null &&
-                            knownHistoryMetadata.url == tab.content.url
+                        knownHistoryMetadata.url == tab.content.url
                     // Record metadata for tab if there is no metadata present, or if url of the
                     // tab changes since we last recorded metadata.
                     if (!metadataPresentForUrl) {

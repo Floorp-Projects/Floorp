@@ -50,7 +50,8 @@ class PwaOnboardingObserverTest {
             BrowserState(
                 tabs = listOf(
                     createTab(url = "https://firefox.com", id = "1")
-                ), selectedTabId = "1"
+                ),
+                selectedTabId = "1"
             )
         )
         lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.STARTED)

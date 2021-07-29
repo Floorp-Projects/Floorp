@@ -76,7 +76,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         learnMorePreference.setOnPreferenceClickListener {
             (activity as HomeActivity).openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
-                    (SupportUtils.SumoTopic.TRACKING_PROTECTION),
+                (SupportUtils.SumoTopic.TRACKING_PROTECTION),
                 newTab = true,
                 from = BrowserDirection.FromTrackingProtection
             )

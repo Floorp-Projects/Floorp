@@ -67,15 +67,18 @@ class SitePermissionsExceptionsFragment :
                 val adapter = ExceptionsAdapter(this@SitePermissionsExceptionsFragment)
                 val liveData = LivePagedListBuilder(sitePermissionsPaged, MAX_ITEMS_PER_PAGE).build()
 
-                liveData.observe(viewLifecycleOwner, Observer<PagedList<SitePermissions>> {
-                    if (it.isEmpty()) {
-                        showEmptyListMessage()
-                    } else {
-                        hideEmptyListMessage()
-                        adapter.submitList(it)
-                        recyclerView.adapter = adapter
+                liveData.observe(
+                    viewLifecycleOwner,
+                    Observer<PagedList<SitePermissions>> {
+                        if (it.isEmpty()) {
+                            showEmptyListMessage()
+                        } else {
+                            hideEmptyListMessage()
+                            adapter.submitList(it)
+                            recyclerView.adapter = adapter
+                        }
                     }
-                })
+                )
             }
         }
     }

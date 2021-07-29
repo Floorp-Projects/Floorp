@@ -64,13 +64,15 @@ class TrackerBucketsTest {
         assertEquals(
             mapOf(
                 FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS to listOf("facebook.com")
-            ), buckets.buckets.loadedBucketMap
+            ),
+            buckets.buckets.loadedBucketMap
         )
 
         assertEquals(
             mapOf(
                 FINGERPRINTERS to listOf("google.com")
-            ), buckets.buckets.blockedBucketMap
+            ),
+            buckets.buckets.blockedBucketMap
         )
     }
 

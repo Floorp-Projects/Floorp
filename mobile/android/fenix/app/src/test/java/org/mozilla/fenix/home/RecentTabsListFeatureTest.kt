@@ -122,10 +122,12 @@ class RecentTabsListFeatureTest {
             lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 123)
         )
         val selectedTab = createTab("https://mozilla.com", id = "43")
-        val browserStore = BrowserStore(BrowserState(
-            tabs = listOf(mediaTab, selectedTab),
-            selectedTabId = "43"
-        ))
+        val browserStore = BrowserStore(
+            BrowserState(
+                tabs = listOf(mediaTab, selectedTab),
+                selectedTabId = "43"
+            )
+        )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
             homeStore = homeStore
@@ -145,10 +147,12 @@ class RecentTabsListFeatureTest {
             "https://mozilla.com", id = "42",
             lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 123)
         )
-        val browserStore = BrowserStore(BrowserState(
-            tabs = listOf(selectedMediaTab),
-            selectedTabId = "42"
-        ))
+        val browserStore = BrowserStore(
+            BrowserState(
+                tabs = listOf(selectedMediaTab),
+                selectedTabId = "42"
+            )
+        )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
             homeStore = homeStore
@@ -237,7 +241,8 @@ class RecentTabsListFeatureTest {
         assertEquals("http://mozilla.org", homeStore.state.recentTabs[1].lastMediaAccessState.lastMediaUrl)
         // Check that the media tab is updated ignoring just the lastMediaAccess property.
         assertEquals(
-            newMediaTab, homeStore.state.recentTabs[1].copy(
+            newMediaTab,
+            homeStore.state.recentTabs[1].copy(
                 lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 100)
             )
         )

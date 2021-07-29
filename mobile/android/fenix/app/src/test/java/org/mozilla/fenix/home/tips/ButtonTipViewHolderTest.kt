@@ -47,8 +47,10 @@ class ButtonTipViewHolderTest {
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        val view = spyk(LayoutInflater.from(testContext)
-            .inflate(ButtonTipViewHolder.LAYOUT_ID, null))
+        val view = spyk(
+            LayoutInflater.from(testContext)
+                .inflate(ButtonTipViewHolder.LAYOUT_ID, null)
+        )
 
         viewHolder = ButtonTipViewHolder(view, interactor, metrics, settings)
         every { view.context } returns activity
@@ -85,11 +87,13 @@ class ButtonTipViewHolderTest {
         assertTrue(viewHolder.tip_learn_more.isVisible)
 
         viewHolder.tip_learn_more.performClick()
-        verify { activity.openToBrowserAndLoad(
-            searchTermOrURL = "https://learnmore.com",
-            newTab = true,
-            from = BrowserDirection.FromHome
-        ) }
+        verify {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = "https://learnmore.com",
+                newTab = true,
+                from = BrowserDirection.FromHome
+            )
+        }
     }
 
     @Test

@@ -87,8 +87,8 @@ class TrackingProtectionOverlay(
 
     private fun shouldShowTrackingProtectionOnboarding(tab: SessionState) =
         tab.trackingProtection.enabled &&
-                tab.trackingProtection.blockedTrackers.isNotEmpty() &&
-                settings.shouldShowTrackingProtectionCfr
+            tab.trackingProtection.blockedTrackers.isNotEmpty() &&
+            settings.shouldShowTrackingProtectionCfr
 
     @Suppress("MagicNumber", "InflateParams")
     private fun showTrackingProtectionOnboarding() {

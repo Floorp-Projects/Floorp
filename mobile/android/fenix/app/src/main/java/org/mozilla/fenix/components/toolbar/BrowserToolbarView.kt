@@ -68,7 +68,7 @@ class BrowserToolbarView(
     @VisibleForTesting
     internal val isPwaTabOrTwaTab: Boolean
         get() = customTabSession?.config?.externalAppType == ExternalAppType.PROGRESSIVE_WEB_APP ||
-                customTabSession?.config?.externalAppType == ExternalAppType.TRUSTED_WEB_ACTIVITY
+            customTabSession?.config?.externalAppType == ExternalAppType.TRUSTED_WEB_ACTIVITY
 
     init {
         val isCustomTabSession = customTabSession != null

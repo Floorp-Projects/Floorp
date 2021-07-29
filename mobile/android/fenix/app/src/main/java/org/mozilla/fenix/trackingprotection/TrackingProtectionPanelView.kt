@@ -127,11 +127,13 @@ class TrackingProtectionPanelView(
         category_title.setText(category.title)
         blocking_text_list.text = bucketedTrackers.get(category, categoryBlocked).joinToString("\n")
         category_description.setText(category.description)
-        details_blocking_header.setText(if (categoryBlocked) {
-            R.string.enhanced_tracking_protection_blocked
-        } else {
-            R.string.enhanced_tracking_protection_allowed
-        })
+        details_blocking_header.setText(
+            if (categoryBlocked) {
+                R.string.enhanced_tracking_protection_blocked
+            } else {
+                R.string.enhanced_tracking_protection_allowed
+            }
+        )
 
         details_back.requestFocus()
         details_back.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
@@ -249,15 +251,18 @@ class TrackingProtectionPanelView(
      * Makes sure [view1] is followed by [view2] when navigating in accessibility mode.
      * */
     private fun setAccessibilityViewHierarchy(view1: View, view2: View) {
-        ViewCompat.setAccessibilityDelegate(view2, object : AccessibilityDelegateCompat() {
-            override fun onInitializeAccessibilityNodeInfo(
-                host: View?,
-                info: AccessibilityNodeInfoCompat
-            ) {
-                info.setTraversalAfter(view1)
-                super.onInitializeAccessibilityNodeInfo(host, info)
+        ViewCompat.setAccessibilityDelegate(
+            view2,
+            object : AccessibilityDelegateCompat() {
+                override fun onInitializeAccessibilityNodeInfo(
+                    host: View?,
+                    info: AccessibilityNodeInfoCompat
+                ) {
+                    info.setTraversalAfter(view1)
+                    super.onInitializeAccessibilityNodeInfo(host, info)
+                }
             }
-        })
+        )
     }
 
     companion object {

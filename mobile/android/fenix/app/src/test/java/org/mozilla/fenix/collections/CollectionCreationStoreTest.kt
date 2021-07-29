@@ -103,10 +103,12 @@ class CollectionCreationStoreTest {
             )
         )
 
-        store.dispatch(CollectionCreationAction.StepChanged(
-            saveCollectionStep = SaveCollectionStep.RenameCollection,
-            defaultCollectionNumber = 3
-        )).joinBlocking()
+        store.dispatch(
+            CollectionCreationAction.StepChanged(
+                saveCollectionStep = SaveCollectionStep.RenameCollection,
+                defaultCollectionNumber = 3
+            )
+        ).joinBlocking()
         assertEquals(SaveCollectionStep.RenameCollection, store.state.saveCollectionStep)
         assertEquals(3, store.state.defaultCollectionNumber)
     }
@@ -207,11 +209,13 @@ class CollectionCreationStoreTest {
     fun `toTab uses active reader URL`() {
         val tabWithoutReaderState = createTab(url = "https://example.com", id = "1")
 
-        val tabWithInactiveReaderState = createTab(url = "https://blog.mozilla.org", id = "2",
+        val tabWithInactiveReaderState = createTab(
+            url = "https://blog.mozilla.org", id = "2",
             readerState = ReaderState(active = false, activeUrl = null)
         )
 
-        val tabWithActiveReaderState = createTab(url = "moz-extension://123", id = "3",
+        val tabWithActiveReaderState = createTab(
+            url = "moz-extension://123", id = "3",
             readerState = ReaderState(active = true, activeUrl = "https://blog.mozilla.org/123")
         )
 

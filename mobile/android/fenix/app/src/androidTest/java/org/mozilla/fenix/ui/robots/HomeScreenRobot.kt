@@ -61,9 +61,9 @@ import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
 class HomeScreenRobot {
     val privateSessionMessage =
         "$appName clears your search and browsing history from private tabs when you close them" +
-                " or quit the app. While this doesn’t make you anonymous to websites or your internet" +
-                " service provider, it makes it easier to keep what you do online private from anyone" +
-                " else who uses this device."
+            " or quit the app. While this doesn’t make you anonymous to websites or your internet" +
+            " service provider, it makes it easier to keep what you do online private from anyone" +
+            " else who uses this device."
 
     fun verifyNavigationToolbar() = assertNavigationToolbar()
     fun verifyFocusedNavigationToolbar() = assertFocusedNavigationToolbar()
@@ -207,7 +207,7 @@ class HomeScreenRobot {
         }
 
         fun triggerPrivateBrowsingShortcutPrompt(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenRobot.Transition {
-        // Loop to press the PB icon for 5 times to display the Add the Private Browsing Shortcut CFR
+            // Loop to press the PB icon for 5 times to display the Add the Private Browsing Shortcut CFR
             for (i in 1..5) {
                 mDevice.findObject(UiSelector().resourceId("$packageName:id/privateBrowsingButton"))
                     .waitForExists(
@@ -356,7 +356,7 @@ private fun assertFocusedNavigationToolbar() =
 private fun assertHomeScreen() {
     mDevice.findObject(UiSelector().resourceId("$packageName:id/homeLayout")).waitForExists(waitingTime)
     onView(ViewMatchers.withResourceName("homeLayout"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertHomeMenu() = onView(ViewMatchers.withResourceName("menuButton"))
@@ -383,7 +383,8 @@ private fun assertCollectionsHeader() =
 private fun assertNoCollectionsText() =
     onView(
         withText(
-            containsString("Collect the things that matter to you.\n" +
+            containsString(
+                "Collect the things that matter to you.\n" +
                     "Group together similar searches, sites, and tabs for quick access later."
             )
         )

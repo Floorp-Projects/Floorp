@@ -67,11 +67,13 @@ class BreadcrumbRecorderTest {
         breadCrumbRecorder.onDestinationChanged(navController, navDestination, null)
 
         verify {
-            reporter.recordCrashBreadcrumb(withArg {
-                assertEquals("test", it.message)
-                assertEquals("DestinationChanged", it.category)
-                assertEquals(Breadcrumb.Level.INFO, it.level)
-            })
+            reporter.recordCrashBreadcrumb(
+                withArg {
+                    assertEquals("test", it.message)
+                    assertEquals("DestinationChanged", it.category)
+                    assertEquals(Breadcrumb.Level.INFO, it.level)
+                }
+            )
         }
     }
 }

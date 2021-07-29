@@ -28,7 +28,8 @@ class AboutPageAdapterTest {
                 AboutItem.ExternalLink(
                     AboutItemType.WHATS_NEW,
                     "https://mozilla.org"
-                ), "Libraries"
+                ),
+                "Libraries"
             ),
             AboutPageItem(AboutItem.Libraries, "Libraries"),
             AboutPageItem(AboutItem.Crashes, "Crashes")

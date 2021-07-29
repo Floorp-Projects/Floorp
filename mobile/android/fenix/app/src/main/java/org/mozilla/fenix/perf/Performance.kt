@@ -49,7 +49,7 @@ object Performance {
         val batteryStatus = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         batteryStatus?.let {
             val isPhonePlugged = it.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ==
-                    BatteryManager.BATTERY_PLUGGED_USB
+                BatteryManager.BATTERY_PLUGGED_USB
             val isAdbEnabled = AndroidSettings.Global.getInt(
                 context.contentResolver,
                 AndroidSettings.Global.ADB_ENABLED, 0

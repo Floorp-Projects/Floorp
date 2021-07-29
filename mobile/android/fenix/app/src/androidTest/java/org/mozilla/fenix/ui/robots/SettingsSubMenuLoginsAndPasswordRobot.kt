@@ -92,10 +92,10 @@ fun settingsSubMenuLoginsAndPassword(interact: SettingsSubMenuLoginsAndPasswordR
 }
 
 private fun goBackButton() =
-        onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
+    onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
 
 private fun assertDefaultView() = onView(ViewMatchers.withText("Sync logins across devices"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertDefaultValueAutofillLogins() = onView(ViewMatchers.withText("Autofill"))
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -104,4 +104,4 @@ private fun assertDefaultValueExceptions() = onView(ViewMatchers.withText("Excep
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertDefaultValueSyncLogins() = onView(ViewMatchers.withText("Sign in to Sync"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))

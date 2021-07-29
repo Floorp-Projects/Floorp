@@ -55,7 +55,8 @@ private fun DebugInfo() {
         )
         Text(
             text = store.state.search.region?.home ?: "Unknown",
-            modifier = Modifier.padding(4.dp))
+            modifier = Modifier.padding(4.dp)
+        )
         Text(
             text = stringResource(R.string.debug_info_region_current),
             style = MaterialTheme.typography.h6,

@@ -73,8 +73,10 @@ class SearchRobot {
         selectDefaultSearchEngine(searchEngineName)
 
     fun clickSearchEngineShortcutButton() {
-        val searchEnginesShortcutButton = mDevice.findObject(UiSelector()
-            .resourceId("$packageName:id/search_engines_shortcut_button"))
+        val searchEnginesShortcutButton = mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/search_engines_shortcut_button")
+        )
         searchEnginesShortcutButton.waitForExists(waitingTime)
         searchEnginesShortcutButton.click()
     }
@@ -270,7 +272,8 @@ private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) = {
     mDevice.waitNotNull(
         Until.findObject(
             By.text("Search Engine")
-        ), waitingTime
+        ),
+        waitingTime
     )
     assertEquals(
         isExpectedToBeVisible,

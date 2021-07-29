@@ -41,7 +41,8 @@ class Services(
             interceptLinkClicks = true,
             launchInApp = {
                 PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
-                    context.getPreferenceKey(R.string.pref_key_open_links_in_external_app), false)
+                    context.getPreferenceKey(R.string.pref_key_open_links_in_external_app), false
+                )
             }
         )
     }

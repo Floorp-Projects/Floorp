@@ -47,10 +47,12 @@ class CreditCardsManagementViewTest {
         assertFalse(componentCreditCardsBinding.creditCardsList.isVisible)
 
         val creditCards: List<CreditCard> = listOf(mockk(), mockk())
-        creditCardsView.update(CreditCardsListState(
-            creditCards = creditCards,
-            isLoading = false
-        ))
+        creditCardsView.update(
+            CreditCardsListState(
+                creditCards = creditCards,
+                isLoading = false
+            )
+        )
 
         assertFalse(componentCreditCardsBinding.progressBar.isVisible)
         assertTrue(componentCreditCardsBinding.creditCardsList.isVisible)

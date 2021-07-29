@@ -41,19 +41,19 @@ class PwaOnboardingObserver(
             flow.mapNotNull { state ->
                 state.selectedTab
             }
-            .ifChanged {
-                it.content.webAppManifest
-            }
-            .collect {
-                if (webAppUseCases.isInstallable() && !settings.userKnowsAboutPwas) {
-                    settings.incrementVisitedInstallableCount()
-                    if (settings.shouldShowPwaCfr) {
-                        navigateToPwaOnboarding()
-                        settings.lastCfrShownTimeInMillis = System.currentTimeMillis()
-                        settings.userKnowsAboutPwas = true
+                .ifChanged {
+                    it.content.webAppManifest
+                }
+                .collect {
+                    if (webAppUseCases.isInstallable() && !settings.userKnowsAboutPwas) {
+                        settings.incrementVisitedInstallableCount()
+                        if (settings.shouldShowPwaCfr) {
+                            navigateToPwaOnboarding()
+                            settings.lastCfrShownTimeInMillis = System.currentTimeMillis()
+                            settings.userKnowsAboutPwas = true
+                        }
                     }
                 }
-            }
         }
     }
 

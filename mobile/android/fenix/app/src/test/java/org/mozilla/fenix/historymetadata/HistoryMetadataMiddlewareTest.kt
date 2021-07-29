@@ -398,24 +398,26 @@ class HistoryMetadataMiddlewareTest {
     }
 
     private fun setupGoogleSearchEngine() {
-        store.dispatch(SearchAction.SetSearchEnginesAction(
-            regionSearchEngines = listOf(
-                SearchEngine(
-                    id = "google",
-                    name = "Google",
-                    icon = mock(),
-                    type = SearchEngine.Type.BUNDLED,
-                    resultUrls = listOf("https://google.com?q={searchTerms}")
-                )
-            ),
-            userSelectedSearchEngineId = null,
-            userSelectedSearchEngineName = null,
-            regionDefaultSearchEngineId = "google",
-            customSearchEngines = emptyList(),
-            hiddenSearchEngines = emptyList(),
-            additionalAvailableSearchEngines = emptyList(),
-            additionalSearchEngines = emptyList(),
-            regionSearchEnginesOrder = listOf("google")
-        )).joinBlocking()
+        store.dispatch(
+            SearchAction.SetSearchEnginesAction(
+                regionSearchEngines = listOf(
+                    SearchEngine(
+                        id = "google",
+                        name = "Google",
+                        icon = mock(),
+                        type = SearchEngine.Type.BUNDLED,
+                        resultUrls = listOf("https://google.com?q={searchTerms}")
+                    )
+                ),
+                userSelectedSearchEngineId = null,
+                userSelectedSearchEngineName = null,
+                regionDefaultSearchEngineId = "google",
+                customSearchEngines = emptyList(),
+                hiddenSearchEngines = emptyList(),
+                additionalAvailableSearchEngines = emptyList(),
+                additionalSearchEngines = emptyList(),
+                regionSearchEnginesOrder = listOf("google")
+            )
+        ).joinBlocking()
     }
 }

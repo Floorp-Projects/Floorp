@@ -91,8 +91,12 @@ fun addToHomeScreen(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenR
 private fun shortcutNameField() = onView(withId(R.id.shortcut_text))
 
 private fun assertShortcutNameField(expectedText: String) {
-    onView(allOf(withId(R.id.shortcut_text),
-        withText(expectedText)))
+    onView(
+        allOf(
+            withId(R.id.shortcut_text),
+            withText(expectedText)
+        )
+    )
         .check(matches(isCompletelyDisplayed()))
 }
 

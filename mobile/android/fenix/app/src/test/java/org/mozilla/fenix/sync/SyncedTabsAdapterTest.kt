@@ -30,15 +30,19 @@ class SyncedTabsAdapterTest {
             every { displayName } returns "Charcoal"
             every { deviceType } returns DeviceType.DESKTOP
         },
-        tabs = listOf(Tab(
-            history = listOf(TabEntry(
-                title = "Mozilla",
-                url = "https://mozilla.org",
-                iconUrl = null
-            )),
-            active = 0,
-            lastUsed = 0L
-        ))
+        tabs = listOf(
+            Tab(
+                history = listOf(
+                    TabEntry(
+                        title = "Mozilla",
+                        url = "https://mozilla.org",
+                        iconUrl = null
+                    )
+                ),
+                active = 0,
+                lastUsed = 0L
+            )
+        )
     )
 
     private val threeTabDevice = SyncedDeviceTabs(
@@ -48,20 +52,24 @@ class SyncedTabsAdapterTest {
         },
         tabs = listOf(
             Tab(
-                history = listOf(TabEntry(
-                    title = "Mozilla",
-                    url = "https://mozilla.org",
-                    iconUrl = null
-                )),
+                history = listOf(
+                    TabEntry(
+                        title = "Mozilla",
+                        url = "https://mozilla.org",
+                        iconUrl = null
+                    )
+                ),
                 active = 0,
                 lastUsed = 0L
             ),
             Tab(
-                history = listOf(TabEntry(
-                    title = "Firefox",
-                    url = "https://firefox.com",
-                    iconUrl = null
-                )),
+                history = listOf(
+                    TabEntry(
+                        title = "Firefox",
+                        url = "https://firefox.com",
+                        iconUrl = null
+                    )
+                ),
                 active = 0,
                 lastUsed = 0L
             )

@@ -39,7 +39,8 @@ fun systemSettings(interact: SystemSettingsRobot.() -> Unit): SystemSettingsRobo
 private fun assertSystemNotificationsView() {
     mDevice.findObject(UiSelector().resourceId("com.android.settings:id/list"))
         .waitForExists(waitingTime)
-    assertTrue(mDevice.findObject(UiSelector().textContains("Show notifications"))
-        .waitForExists(waitingTime)
+    assertTrue(
+        mDevice.findObject(UiSelector().textContains("Show notifications"))
+            .waitForExists(waitingTime)
     )
 }

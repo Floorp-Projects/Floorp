@@ -58,22 +58,23 @@ class OpenInAppOnboardingObserver(
             flow.mapNotNull { state ->
                 state.selectedTab
             }
-            .ifAnyChanged {
-                tab -> arrayOf(tab.content.url, tab.content.loading)
-            }
-            .collect { tab ->
-                if (tab.content.url != currentUrl) {
-                    sessionDomainForDisplayedBanner?.let {
-                        if (tab.content.url.tryGetHostFromUrl() != it) {
-                            infoBanner?.dismiss()
-                        }
-                    }
-                    currentUrl = tab.content.url
-                } else {
-                    // Loading state has changed
-                    maybeShowOpenInAppBanner(tab.content.url, tab.content.loading)
+                .ifAnyChanged {
+                    tab ->
+                    arrayOf(tab.content.url, tab.content.loading)
                 }
-            }
+                .collect { tab ->
+                    if (tab.content.url != currentUrl) {
+                        sessionDomainForDisplayedBanner?.let {
+                            if (tab.content.url.tryGetHostFromUrl() != it) {
+                                infoBanner?.dismiss()
+                            }
+                        }
+                        currentUrl = tab.content.url
+                    } else {
+                        // Loading state has changed
+                        maybeShowOpenInAppBanner(tab.content.url, tab.content.loading)
+                    }
+                }
         }
     }
 

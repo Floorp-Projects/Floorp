@@ -24,7 +24,8 @@ class DefaultLocaleSettingsController(
 
     override fun handleLocaleSelected(locale: Locale) {
         if (localeSettingsStore.state.selectedLocale == locale &&
-            !LocaleManager.isDefaultLocaleSelected(activity)) {
+            !LocaleManager.isDefaultLocaleSelected(activity)
+        ) {
             return
         }
         localeSettingsStore.dispatch(LocaleSettingsAction.Select(locale))
