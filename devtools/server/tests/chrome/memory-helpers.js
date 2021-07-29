@@ -5,8 +5,8 @@
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Services = require("Services");
 const {
-  TabDescriptorFactory,
-} = require("devtools/client/framework/tab-descriptor-factory");
+  CommandsFactory,
+} = require("devtools/shared/commands/commands-factory");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
@@ -24,10 +24,11 @@ SimpleTest.registerCleanupFunction(function() {
 
 async function getTargetForSelectedTab() {
   const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  const descriptor = await TabDescriptorFactory.createDescriptorForTab(
+  const commands = await CommandsFactory.forTab(
     browserWindow.gBrowser.selectedTab
   );
-  return descriptor.getTarget();
+  await commands.targetCommand.startListening();
+  return commands.targetCommand.targetFront;
 }
 
 async function startServerAndGetSelectedTabMemory() {

@@ -15,6 +15,13 @@ Bug 1171489 - Tests if the framerate actor does not record timestamps from multi
 <script>
 "use strict";
 
+// Disable server targets as this test assume the same framerate front
+// is used across reload.
+Services.prefs.setBoolPref("devtools.target-switching.server.enabled", false);
+SimpleTest.registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.target-switching.server.enabled");
+});
+
 window.onload = async function() {
   // inspector-helpers doesnt wait for explicit finish
   SimpleTest.waitForExplicitFinish();
