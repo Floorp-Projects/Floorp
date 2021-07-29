@@ -369,7 +369,7 @@ class RecordedFillGlyphs : public RecordedDrawingEvent<RecordedFillGlyphs> {
   ReferencePtr mScaledFont;
   PatternStorage mPattern;
   DrawOptions mOptions;
-  Glyph* mGlyphs;
+  Glyph* mGlyphs = nullptr;
   uint32_t mNumGlyphs;
 };
 
@@ -878,7 +878,7 @@ class RecordedSourceSurfaceCreation
   friend class RecordedEvent;
 
   ReferencePtr mRefPtr;
-  uint8_t* mData;
+  uint8_t* mData = nullptr;
   int32_t mStride;
   IntSize mSize;
   SurfaceFormat mFormat;
@@ -1047,7 +1047,7 @@ class RecordedGradientStopsCreation
   friend class RecordedEvent;
 
   ReferencePtr mRefPtr;
-  GradientStop* mStops;
+  GradientStop* mStops = nullptr;
   uint32_t mNumStops;
   ExtendMode mExtendMode;
   bool mDataOwned;
@@ -1186,7 +1186,6 @@ class RecordedFontData : public RecordedEventDerived<RecordedFontData> {
   explicit RecordedFontData(UnscaledFont* aUnscaledFont)
       : RecordedEventDerived(FONTDATA),
         mType(aUnscaledFont->GetType()),
-        mData(nullptr),
         mFontDetails() {
     mGetFontFileDataSucceeded =
         aUnscaledFont->GetFontFileData(&FontDataProc, this) && mData;
@@ -1212,7 +1211,7 @@ class RecordedFontData : public RecordedEventDerived<RecordedFontData> {
   friend class RecordedEvent;
 
   FontType mType;
-  uint8_t* mData;
+  uint8_t* mData = nullptr;
   RecordedFontDetails mFontDetails;
 
   bool mGetFontFileDataSucceeded;
@@ -3471,7 +3470,7 @@ inline bool RecordedFontData::GetFontDetails(RecordedFontDetails& fontDetails) {
 
 template <class S>
 RecordedFontData::RecordedFontData(S& aStream)
-    : RecordedEventDerived(FONTDATA), mType(FontType::UNKNOWN), mData(nullptr) {
+    : RecordedEventDerived(FONTDATA), mType(FontType::UNKNOWN) {
   ReadElementConstrained(aStream, mType, FontType::DWRITE, FontType::UNKNOWN);
   ReadElement(aStream, mFontDetails.fontDataKey);
   ReadElement(aStream, mFontDetails.size);
