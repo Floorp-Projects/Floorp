@@ -3,29 +3,6 @@ Date: Wed, 1 Aug 2012 16:43:15 -0400
 Subject: Bug 736276 - Add a new SkFontHost that takes a cairo_scaled_font_t r=karl
 
 
-diff --git a/gfx/skia/Makefile.in b/gfx/skia/Makefile.in
-index 5ebbd2e..7c8cdbf 100644
---- a/gfx/skia/Makefile.in
-+++ b/gfx/skia/Makefile.in
-@@ -60,15 +60,15 @@ VPATH += \
- 	$(NULL)
- 
- ifeq (android,$(MOZ_WIDGET_TOOLKIT))
--OS_CXXFLAGS += $(CAIRO_FT_CFLAGS)
-+OS_CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(CAIRO_FT_CFLAGS)
- endif
- 
- ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
--OS_CXXFLAGS += $(MOZ_PANGO_CFLAGS)
-+OS_CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PANGO_CFLAGS) $(CAIRO_FT_CFLAGS)
- endif
- 
- ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
--OS_CXXFLAGS += $(MOZ_PANGO_CFLAGS)
-+OS_CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PANGO_CFLAGS) $(CAIRO_FT_CFLAGS)
- ifeq (Linux,$(OS_TARGET))
- DEFINES += -DSK_USE_POSIX_THREADS=1
- endif
 diff --git a/gfx/skia/include/ports/SkTypeface_cairo.h b/gfx/skia/include/ports/SkTypeface_cairo.h
 new file mode 100644
 index 0000000..7e44f04
