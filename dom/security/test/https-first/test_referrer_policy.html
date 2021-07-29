@@ -169,7 +169,8 @@ async function runTest() {
 }
 
 SpecialPowers.pushPrefEnv({ set: [
-    ["dom.security.https_first", true]
+    ["dom.security.https_first", true],
+    ["network.http.referer.disallowCrossSiteRelaxingDefault", false],
   ]}, runTest);
 
 </script>
