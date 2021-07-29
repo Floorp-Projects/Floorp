@@ -159,6 +159,46 @@ WINDOWS_WORKER_TYPES = {
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-ref-hw",
     },
+    "windows10-64-2004": {
+        "virtual": "win10-64-2004",
+        "virtual-with-gpu": "win10-64-2004-gpu",
+    },
+    "windows10-64-2004-ccov": {
+        "virtual": "win10-64-2004",
+        "virtual-with-gpu": "win10-64-2004-gpu",
+    },
+    "windows10-64-2004-ccov-qr": {
+        "virtual": "win10-64-2004",
+        "virtual-with-gpu": "win10-64-2004-gpu",
+    },
+    "windows10-64-2004-devedition": {
+        "virtual": "win10-64-2004",
+        "virtual-with-gpu": "win10-64-2004-gpu",
+    },
+    "windows10-64-2004-shippable": {
+        "virtual": "win10-64-2004",
+        "virtual-with-gpu": "win10-64-2004-gpu",
+    },
+    "windows10-64-2004-qr": {
+        "virtual": "win10-64-2004",
+        "virtual-with-gpu": "win10-64-2004-gpu",
+    },
+    "windows10-64-2004-shippable-qr": {
+        "virtual": "win10-64-2004",
+        "virtual-with-gpu": "win10-64-2004-gpu",
+    },
+    "windows10-64-2004-devedition-qr": {
+        "virtual": "win10-64-2004",
+        "virtual-with-gpu": "win10-64-2004-gpu",
+    },
+    "windows10-64-2004-asan-qr": {
+        "virtual": "win10-64-2004",
+        "virtual-with-gpu": "win10-64-2004-gpu",
+    },
+    "windows10-64-2004-mingwclang-qr": {
+        "virtual": "win10-64-2004",
+        "virtual-with-gpu": "win10-64-2004-gpu",
+    },
 }
 
 # os x worker types keyed by test-platform
