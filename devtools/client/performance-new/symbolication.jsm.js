@@ -4,10 +4,6 @@
 // @ts-check
 "use strict";
 
-const { createLazyLoaders } = ChromeUtils.import(
-  "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js"
-);
-
 /**
  * @typedef {import("./@types/perf").Library} Library
  * @typedef {import("./@types/perf").PerfFront} PerfFront
@@ -20,10 +16,6 @@ const { createLazyLoaders } = ChromeUtils.import(
  * @template R
  * @typedef {import("./@types/perf").SymbolicationWorkerReplyData<R>} SymbolicationWorkerReplyData<R>
  */
-
-const lazy = createLazyLoaders({
-  OS: () => ChromeUtils.import("resource://gre/modules/osfile.jsm"),
-});
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -195,23 +187,6 @@ async function getSymbolTableFromDebuggee(perfFront, path, breakpadId) {
 }
 
 /**
- * @param {string} path
- * @returns {Promise<boolean>}
- */
-async function doesFileExistAtPath(path) {
-  const { OS } = lazy.OS();
-  try {
-    const result = await OS.File.stat(path);
-    return !result.isDir;
-  } catch (e) {
-    if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
-      return false;
-    }
-    throw e;
-  }
-}
-
-/**
  * Profiling through the DevTools remote debugging protocol supports multiple
  * different modes. This class is specialized to handle various profiling
  * modes such as:
@@ -253,100 +228,19 @@ class LocalSymbolicationService {
    * @returns {Promise<SymbolTableAsTuple>}
    */
   async getSymbolTable(debugName, breakpadId) {
-    // First, enumerate the local paths at which we could find binaries (and, on
-    // Windows, PDB files) which could contain symbol information.
-    const candidatePaths = this._getCandidatePaths(debugName, breakpadId);
-
-    // Iterate over all the paths and try to get symbols from each entry.
     const module = await getWASMProfilerGetSymbolsModule();
-    const errors = [];
-    for (const { path, debugPath } of candidatePaths) {
-      if (await doesFileExistAtPath(path)) {
-        try {
-          /** @type {SymbolicationWorkerInitialMessage} */
-          const initialMessage = {
-            binaryPath: path,
-            debugPath,
-            breakpadId,
-            module,
-          };
-          return await getResultFromWorker(
-            "resource://devtools/client/performance-new/symbolication-worker.js",
-            initialMessage
-          );
-        } catch (e) {
-          // getSymbolTable was unsuccessful. So either the
-          // file wasn't parseable or its contents didn't match the specified
-          // breakpadId, or some other error occurred.
-          // Advance to the next candidate path.
-          errors.push(e);
-        }
-      }
-    }
-
-    throw new Error(
-      `Could not obtain symbols for the library ${debugName} ${breakpadId} ` +
-        `because there was no matching file at any of the candidate paths: ${JSON.stringify(
-          candidatePaths
-        )}. Errors: ${errors.map(e => e.message).join(", ")}`
+    /** @type {SymbolicationWorkerInitialMessage} */
+    const initialMessage = {
+      debugName,
+      breakpadId,
+      libInfoMap: this._libInfoMap,
+      objdirs: this._objdirs,
+      module,
+    };
+    return getResultFromWorker(
+      "resource://devtools/client/performance-new/symbolication-worker.js",
+      initialMessage
     );
-  }
-
-  /**
-   * Enumerate all paths at which we could find files with symbol information.
-   *
-   * @param {string} debugName
-   * @param {string} breakpadId
-   * @returns {Array<{ path: string, debugPath: string }>}
-   */
-  _getCandidatePaths(debugName, breakpadId) {
-    const key = `${debugName}:${breakpadId}`;
-    const lib = this._libInfoMap.get(key);
-    if (!lib) {
-      throw new Error(
-        `Could not find the library for "${debugName}", "${breakpadId}".`
-      );
-    }
-
-    const { name, path, debugPath } = lib;
-    const { OS } = lazy.OS();
-    const candidatePaths = [];
-
-    // First, try to find a binary with a matching file name and breakpadId
-    // in one of the manually specified objdirs.
-    // This is needed if the debuggee is a build running on a remote machine that
-    // was compiled by the developer on *this* machine (the "host machine"). In
-    // that case, the objdir will contain the compiled binary with full symbol and
-    // debug information, whereas the binary on the device may not exist in
-    // uncompressed form or may have been stripped of debug information and some
-    // symbol information.
-    // An objdir, or "object directory", is a directory on the host machine that's
-    // used to store build artifacts ("object files") from the compilation process.
-    // This only works if the binary is one of the Gecko binaries and not
-    // a system library.
-    for (const objdirPath of this._objdirs) {
-      // Binaries are usually expected to exist at objdir/dist/bin/filename.
-      candidatePaths.push({
-        path: OS.Path.join(objdirPath, "dist", "bin", name),
-        debugPath: OS.Path.join(objdirPath, "dist", "bin", name),
-      });
-      // Also search in the "objdir" directory itself (not just in dist/bin).
-      // If, for some unforeseen reason, the relevant binary is not inside the
-      // objdirs dist/bin/ directory, this provides a way out because it lets the
-      // user specify the actual location.
-      candidatePaths.push({
-        path: OS.Path.join(objdirPath, name),
-        debugPath: OS.Path.join(objdirPath, name),
-      });
-    }
-
-    // Check the absolute paths of the library file(s) last.
-    // We do this after the objdir search because the library's path may point
-    // to a stripped binary, which will have fewer symbols than the original
-    // binaries in the objdir.
-    candidatePaths.push({ path, debugPath });
-
-    return candidatePaths;
   }
 }
 
