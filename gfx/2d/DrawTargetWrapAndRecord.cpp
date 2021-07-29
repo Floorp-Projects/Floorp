@@ -493,10 +493,12 @@ void DrawTargetWrapAndRecord::DrawSurface(
                         aSurfOptions, aOptions);
 }
 
-void DrawTargetWrapAndRecord::DrawDependentSurface(uint64_t aId,
-                                                   const Rect& aDest) {
+void DrawTargetWrapAndRecord::DrawDependentSurface(
+    uint64_t aId, const Rect& aDest, const DrawSurfaceOptions& aSurfOptions,
+    const DrawOptions& aOptions) {
   mRecorder->AddDependentSurface(aId);
-  mRecorder->RecordEvent(RecordedDrawDependentSurface(this, aId, aDest));
+  mRecorder->RecordEvent(
+      RecordedDrawDependentSurface(this, aId, aDest, aSurfOptions, aOptions));
 }
 
 void DrawTargetWrapAndRecord::DrawSurfaceWithShadow(

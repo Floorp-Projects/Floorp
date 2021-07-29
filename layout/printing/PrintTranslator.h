@@ -13,6 +13,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Filters.h"
 #include "mozilla/gfx/RecordedEvent.h"
+#include "nsRefPtrHashtable.h"
 
 class nsDeviceContext;
 
@@ -36,6 +37,12 @@ class PrintTranslator final : public Translator {
   explicit PrintTranslator(nsDeviceContext* aDeviceContext);
 
   bool TranslateRecording(PRFileDescStream& aRecording);
+
+  void SetDependentSurfaces(
+      nsRefPtrHashtable<nsUint64HashKey, RecordedDependentSurface>&&
+          aDependentSurfaces) {
+    mDependentSurfaces = std::move(aDependentSurfaces);
+  }
 
   DrawTarget* LookupDrawTarget(ReferencePtr aRefPtr) final {
     DrawTarget* result = mDrawTargets.GetWeak(aRefPtr);
@@ -83,6 +90,8 @@ class PrintTranslator final : public Translator {
     MOZ_ASSERT(result);
     return result;
   }
+
+  already_AddRefed<SourceSurface> LookupExternalSurface(uint64_t aKey) final;
 
   void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget* aDT) final {
     mDrawTargets.InsertOrUpdate(aRefPtr, RefPtr{aDT});
@@ -162,6 +171,8 @@ class PrintTranslator final : public Translator {
   nsRefPtrHashtable<nsPtrHashKey<void>, ScaledFont> mScaledFonts;
   nsRefPtrHashtable<nsPtrHashKey<void>, UnscaledFont> mUnscaledFonts;
   nsRefPtrHashtable<nsUint64HashKey, NativeFontResource> mNativeFontResources;
+  nsRefPtrHashtable<nsUint64HashKey, RecordedDependentSurface>
+      mDependentSurfaces;
 };
 
 }  // namespace layout
