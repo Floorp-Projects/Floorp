@@ -126,7 +126,7 @@ static bool MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument) {
         if (!StringBeginsWith(attrStr, u"aria-"_ns)) continue;  // not ARIA
 
         // A global state or a property and in case of token defined.
-        uint8_t attrFlags = aria::AttrCharacteristicsFor(attrAtom);
+        int8_t attrFlags = aria::AttrCharacteristicsFor(attrAtom);
         if ((attrFlags & ATTR_GLOBAL) &&
             (!(attrFlags & ATTR_VALTOKEN) ||
              nsAccUtils::HasDefinedARIAToken(aContent, attrAtom))) {
