@@ -113,6 +113,17 @@ inline void SetReservedSlot(JSObject* obj, size_t slot, const Value& value) {
 }
 
 /**
+ * Helper function to get the pointer value (or nullptr if not set) from an
+ * object's reserved slot. The slot must contain either a PrivateValue(T*) or
+ * UndefinedValue.
+ */
+template <typename T>
+inline T* GetMaybePtrFromReservedSlot(JSObject* obj, size_t slot) {
+  Value v = GetReservedSlot(obj, slot);
+  return v.isUndefined() ? nullptr : static_cast<T*>(v.toPrivate());
+}
+
+/**
  * Helper function to get the pointer value (or nullptr if not set) from the
  * object's first reserved slot. Must only be used for objects with a JSClass
  * that has the JSCLASS_SLOT0_IS_NSISUPPORTS flag.
@@ -120,8 +131,7 @@ inline void SetReservedSlot(JSObject* obj, size_t slot, const Value& value) {
 template <typename T>
 inline T* GetObjectISupports(JSObject* obj) {
   MOZ_ASSERT(GetClass(obj)->slot0IsISupports());
-  Value v = GetReservedSlot(obj, 0);
-  return v.isUndefined() ? nullptr : static_cast<T*>(v.toPrivate());
+  return GetMaybePtrFromReservedSlot<T>(obj, 0);
 }
 
 /**
