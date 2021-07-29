@@ -12,10 +12,8 @@
 #  include "SourceSurfaceCairo.h"
 #endif
 
-#ifdef USE_SKIA
-#  include "DrawTargetSkia.h"
-#  include "ScaledFontBase.h"
-#endif
+#include "DrawTargetSkia.h"
+#include "ScaledFontBase.h"
 
 #if defined(WIN32)
 #  include "ScaledFontWin.h"
@@ -379,7 +377,6 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTarget(BackendType aBackend,
       break;
     }
 #endif
-#ifdef USE_SKIA
     case BackendType::SKIA: {
       RefPtr<DrawTargetSkia> newTarget;
       newTarget = new DrawTargetSkia();
@@ -388,7 +385,6 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTarget(BackendType aBackend,
       }
       break;
     }
-#endif
 #ifdef USE_CAIRO
     case BackendType::CAIRO: {
       RefPtr<DrawTargetCairo> newTarget;
@@ -418,14 +414,7 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTarget(BackendType aBackend,
 }
 
 already_AddRefed<PathBuilder> Factory::CreateSimplePathBuilder() {
-  RefPtr<PathBuilder> pathBuilder;
-#ifdef USE_SKIA
-  pathBuilder = MakeAndAddRef<PathBuilderSkia>(FillRule::FILL_WINDING);
-#endif
-  if (!pathBuilder) {
-    NS_WARNING("Failed to create a path builder because we don't use Skia");
-  }
-  return pathBuilder.forget();
+  return MakeAndAddRef<PathBuilderSkia>(FillRule::FILL_WINDING);
 }
 
 already_AddRefed<DrawTarget> Factory::CreateRecordingDrawTarget(
@@ -472,7 +461,6 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTargetForData(
   RefPtr<DrawTarget> retVal;
 
   switch (aBackend) {
-#ifdef USE_SKIA
     case BackendType::SKIA: {
       RefPtr<DrawTargetSkia> newTarget;
       newTarget = new DrawTargetSkia();
@@ -481,7 +469,6 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTargetForData(
       }
       break;
     }
-#endif
 #ifdef USE_CAIRO
     case BackendType::CAIRO: {
       RefPtr<DrawTargetCairo> newTarget;
@@ -555,10 +542,8 @@ uint32_t Factory::GetMaxSurfaceSize(BackendType aType) {
   switch (aType) {
     case BackendType::CAIRO:
       return DrawTargetCairo::GetMaxSurfaceSize();
-#ifdef USE_SKIA
     case BackendType::SKIA:
       return DrawTargetSkia::GetMaxSurfaceSize();
-#endif
 #ifdef WIN32
     case BackendType::DIRECT2D1_1:
       return DrawTargetD2D1::GetMaxSurfaceSize();
@@ -1040,7 +1025,6 @@ already_AddRefed<ScaledFont> Factory::CreateScaledFontForGDIFont(
 }
 #endif  // WIN32
 
-#ifdef USE_SKIA
 already_AddRefed<DrawTarget> Factory::CreateDrawTargetWithSkCanvas(
     SkCanvas* aCanvas) {
   RefPtr<DrawTargetSkia> newTarget = new DrawTargetSkia();
@@ -1049,7 +1033,6 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTargetWithSkCanvas(
   }
   return newTarget.forget();
 }
-#endif
 
 void Factory::PurgeAllCaches() {}
 

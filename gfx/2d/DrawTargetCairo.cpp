@@ -1928,30 +1928,6 @@ already_AddRefed<DrawTarget> DrawTargetCairo::CreateShadowDrawTarget(
   return nullptr;
 }
 
-#ifndef USE_SKIA
-static inline pixman_format_code_t GfxFormatToPixmanFormat(
-    SurfaceFormat aFormat) {
-  switch (aFormat) {
-    case SurfaceFormat::A8R8G8B8_UINT32:
-      return PIXMAN_a8r8g8b8;
-    case SurfaceFormat::X8R8G8B8_UINT32:
-      return PIXMAN_x8r8g8b8;
-    case SurfaceFormat::R5G6B5_UINT16:
-      return PIXMAN_r5g6b5;
-    case SurfaceFormat::A8:
-      return PIXMAN_a8;
-    default:
-      // Allow both BGRA and ARGB formats to be passed through unmodified,
-      // even though even though we are actually rendering to A8R8G8B8_UINT32.
-      if (aFormat == SurfaceFormat::B8G8R8A8 ||
-          aFormat == SurfaceFormat::A8R8G8B8) {
-        return PIXMAN_a8r8g8b8;
-      }
-      return (pixman_format_code_t)0;
-  }
-}
-#endif
-
 static inline bool GfxMatrixToPixmanTransform(const Matrix4x4& aMatrix,
                                               pixman_transform* aResult) {
   pixman_f_transform fTransform = {{{aMatrix._11, aMatrix._21, aMatrix._41},
@@ -1959,91 +1935,6 @@ static inline bool GfxMatrixToPixmanTransform(const Matrix4x4& aMatrix,
                                     {aMatrix._14, aMatrix._24, aMatrix._44}}};
   return pixman_transform_from_pixman_f_transform(aResult, &fTransform);
 }
-
-#ifndef USE_SKIA
-bool DrawTarget::Draw3DTransformedSurface(SourceSurface* aSurface,
-                                          const Matrix4x4& aMatrix) {
-  // Composite the 3D transform with the DT's transform.
-  Matrix4x4 fullMat = aMatrix * Matrix4x4::From2D(mTransform);
-  // Transform the surface bounds and clip to this DT.
-  IntRect xformBounds = RoundedOut(fullMat.TransformAndClipBounds(
-      Rect(Point(0, 0), Size(aSurface->GetSize())),
-      Rect(Point(0, 0), Size(GetSize()))));
-  if (xformBounds.IsEmpty()) {
-    return true;
-  }
-  // Offset the matrix by the transformed origin.
-  fullMat.PostTranslate(-xformBounds.x, -xformBounds.y, 0);
-  // Invert the matrix into a pattern matrix for pixman.
-  if (!fullMat.Invert()) {
-    return false;
-  }
-  pixman_transform xform;
-  if (!GfxMatrixToPixmanTransform(fullMat, &xform)) {
-    return false;
-  }
-
-  // Read in the source data.
-  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
-  pixman_format_code_t srcFormat =
-      GfxFormatToPixmanFormat(srcSurf->GetFormat());
-  if (!srcFormat) {
-    return false;
-  }
-  DataSourceSurface::ScopedMap srcMap(srcSurf, DataSourceSurface::READ);
-  if (!srcMap.IsMapped()) {
-    return false;
-  }
-
-  // Set up an intermediate destination surface only the size of the transformed
-  // bounds. Try to pass through the source's format unmodified in both the BGRA
-  // and ARGB cases.
-  RefPtr<DataSourceSurface> dstSurf = Factory::CreateDataSourceSurface(
-      xformBounds.Size(), srcFormat == PIXMAN_a8r8g8b8
-                              ? srcSurf->GetFormat()
-                              : SurfaceFormat::A8R8G8B8_UINT32);
-  if (!dstSurf) {
-    return false;
-  }
-
-  // Wrap the surfaces in pixman images and do the transform.
-  pixman_image_t* dst = pixman_image_create_bits(
-      PIXMAN_a8r8g8b8, xformBounds.width, xformBounds.height,
-      (uint32_t*)dstSurf->GetData(), dstSurf->Stride());
-  if (!dst) {
-    return false;
-  }
-  pixman_image_t* src = pixman_image_create_bits(
-      srcFormat, srcSurf->GetSize().width, srcSurf->GetSize().height,
-      (uint32_t*)srcMap.GetData(), srcMap.GetStride());
-  if (!src) {
-    pixman_image_unref(dst);
-    return false;
-  }
-
-  pixman_image_set_filter(src, PIXMAN_FILTER_BILINEAR, nullptr, 0);
-  pixman_image_set_transform(src, &xform);
-
-  pixman_image_composite32(PIXMAN_OP_SRC, src, nullptr, dst, 0, 0, 0, 0, 0, 0,
-                           xformBounds.width, xformBounds.height);
-
-  pixman_image_unref(dst);
-  pixman_image_unref(src);
-
-  // Temporarily reset the DT's transform, since it has already been composed
-  // above.
-  Matrix origTransform = mTransform;
-  SetTransform(Matrix());
-
-  // Draw the transformed surface within the transformed bounds.
-  DrawSurface(dstSurf, Rect(xformBounds),
-              Rect(Point(0, 0), Size(xformBounds.Size())));
-
-  SetTransform(origTransform);
-
-  return true;
-}
-#endif
 
 #ifdef CAIRO_HAS_XLIB_SURFACE
 static bool gXRenderInitialized = false;

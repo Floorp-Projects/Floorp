@@ -71,11 +71,9 @@ class ScaledFontDWrite final : public ScaledFontBase {
     return (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD) != 0;
   }
 
-#ifdef USE_SKIA
   SkTypeface* CreateSkTypeface() override;
   void SetupSkFontDrawOptions(SkFont& aFont) override;
   SkFontStyle mStyle;
-#endif
 
   RefPtr<IDWriteFontFace> mFontFace;
   bool mUseEmbeddedBitmap;
@@ -91,11 +89,9 @@ class ScaledFontDWrite final : public ScaledFontBase {
   Float mContrast;
   Float mClearTypeLevel;
 
-#ifdef USE_CAIRO_SCALED_FONT
   cairo_font_face_t* CreateCairoFontFace(
       cairo_font_options_t* aFontOptions) override;
   void PrepareCairoScaledFont(cairo_scaled_font_t* aFont) override;
-#endif
 
  private:
   friend class NativeFontResourceDWrite;

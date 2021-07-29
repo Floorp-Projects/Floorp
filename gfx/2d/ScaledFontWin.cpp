@@ -11,13 +11,9 @@
 #include "Logging.h"
 #include "nsString.h"
 
-#ifdef USE_SKIA
-#  include "skia/include/ports/SkTypeface_win.h"
-#endif
+#include "skia/include/ports/SkTypeface_win.h"
 
-#ifdef USE_CAIRO_SCALED_FONT
-#  include "cairo-win32.h"
-#endif
+#include "cairo-win32.h"
 
 #include "HelpersWinFonts.h"
 
@@ -109,13 +105,10 @@ AntialiasMode ScaledFontWin::GetDefaultAAMode() {
   return GetSystemDefaultAAMode();
 }
 
-#ifdef USE_SKIA
 SkTypeface* ScaledFontWin::CreateSkTypeface() {
   return SkCreateTypefaceFromLOGFONT(mLogFont);
 }
-#endif
 
-#ifdef USE_CAIRO_SCALED_FONT
 cairo_font_face_t* ScaledFontWin::CreateCairoFontFace(
     cairo_font_options_t* aFontOptions) {
   if (mLogFont.lfFaceName[0] == 0) {
@@ -123,7 +116,6 @@ cairo_font_face_t* ScaledFontWin::CreateCairoFontFace(
   }
   return cairo_win32_font_face_create_for_logfontw(&mLogFont);
 }
-#endif
 
 }  // namespace gfx
 }  // namespace mozilla

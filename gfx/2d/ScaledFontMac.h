@@ -38,10 +38,8 @@ class ScaledFontMac : public ScaledFontBase {
   ~ScaledFontMac();
 
   FontType GetType() const override { return FontType::MAC; }
-#ifdef USE_SKIA
   SkTypeface* CreateSkTypeface() override;
   void SetupSkFontDrawOptions(SkFont& aFont) override;
-#endif
   already_AddRefed<Path> GetPathForGlyphs(const GlyphBuffer& aBuffer,
                                           const DrawTarget* aTarget) override;
 
@@ -58,10 +56,8 @@ class ScaledFontMac : public ScaledFontBase {
     return mFontSmoothingBackgroundColor;
   }
 
-#ifdef USE_CAIRO_SCALED_FONT
   cairo_font_face_t* CreateCairoFontFace(
       cairo_font_options_t* aFontOptions) override;
-#endif
 
  private:
   friend class DrawTargetSkia;

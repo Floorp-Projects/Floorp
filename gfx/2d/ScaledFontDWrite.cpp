@@ -28,18 +28,14 @@
 #  include "dw-extra.h"
 #endif
 
-#ifdef USE_SKIA
-#  include "PathSkia.h"
-#  include "skia/include/core/SkPaint.h"
-#  include "skia/include/core/SkPath.h"
-#  include "skia/include/ports/SkTypeface_win.h"
-#endif
+#include "PathSkia.h"
+#include "skia/include/core/SkPaint.h"
+#include "skia/include/core/SkPath.h"
+#include "skia/include/ports/SkTypeface_win.h"
 
 #include <vector>
 
-#ifdef USE_CAIRO_SCALED_FONT
-#  include "cairo-win32.h"
-#endif
+#include "cairo-win32.h"
 
 #include "HelpersWinFonts.h"
 
@@ -162,7 +158,6 @@ already_AddRefed<Path> ScaledFontDWrite::GetPathForGlyphs(
   return pathBuilder->Finish();
 }
 
-#ifdef USE_SKIA
 SkTypeface* ScaledFontDWrite::CreateSkTypeface() {
   RefPtr<IDWriteFactory> factory = Factory::GetDWriteFactory();
   if (!factory) {
@@ -200,7 +195,6 @@ void ScaledFontDWrite::SetupSkFontDrawOptions(SkFont& aFont) {
     aFont.setSubpixel(true);
   }
 }
-#endif
 
 void ScaledFontDWrite::CopyGlyphsToBuilder(const GlyphBuffer& aBuffer,
                                            PathBuilder* aBuilder,
@@ -700,7 +694,6 @@ AntialiasMode ScaledFontDWrite::GetDefaultAAMode() {
   return defaultMode;
 }
 
-#ifdef USE_CAIRO_SCALED_FONT
 cairo_font_face_t* ScaledFontDWrite::CreateCairoFontFace(
     cairo_font_options_t* aFontOptions) {
   if (!mFontFace) {
@@ -715,7 +708,6 @@ void ScaledFontDWrite::PrepareCairoScaledFont(cairo_scaled_font_t* aFont) {
     cairo_dwrite_scaled_font_set_force_GDI_classic(aFont, true);
   }
 }
-#endif
 
 already_AddRefed<UnscaledFont> UnscaledFontDWrite::CreateFromFontDescriptor(
     const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex) {
