@@ -1,4 +1,4 @@
-use super::{conv, Error, ExpectedToken, Span, Token, TokenSpan};
+use super::{conv, Error, Span, Token, TokenSpan};
 
 fn _consume_str<'a>(input: &'a str, what: &str) -> Option<&'a str> {
     if input.starts_with(what) {
@@ -171,25 +171,6 @@ impl<'a> Lexer<'a> {
         self.source.len() - self.input.len()..self.source.len()
     }
 
-    /// Calls the function with a lexer and returns the result of the function as well as the span for everything the function parsed
-    ///
-    /// # Examples
-    /// ```ignore
-    /// let lexer = Lexer::new("5");
-    /// let (value, span) = lexer.capture_span(Lexer::next_uint_literal);
-    /// assert_eq!(value, 5);
-    /// ```
-    #[inline]
-    pub fn capture_span<T, E>(
-        &mut self,
-        inner: impl FnOnce(&mut Self) -> Result<T, E>,
-    ) -> Result<(T, Span), E> {
-        let start = self.current_byte_offset();
-        let res = inner(self)?;
-        let end = self.current_byte_offset();
-        Ok((res, start..end))
-    }
-
     fn peek_token_and_rest(&mut self) -> (TokenSpan<'a>, &'a str) {
         let mut cloned = self.clone();
         let token = cloned.next();
@@ -233,21 +214,30 @@ impl<'a> Lexer<'a> {
         token
     }
 
-    pub(super) fn expect_span(
-        &mut self,
-        expected: Token<'a>,
-    ) -> Result<std::ops::Range<usize>, Error<'a>> {
+    pub(super) fn expect(&mut self, expected: Token<'a>) -> Result<(), Error<'a>> {
         let next = self.next();
         if next.0 == expected {
-            Ok(next.1)
+            Ok(())
         } else {
-            Err(Error::Unexpected(next, ExpectedToken::Token(expected)))
+            let description = match expected {
+                Token::Separator(_) => "separator",
+                Token::DoubleColon => "::",
+                Token::Paren(_) => "paren",
+                Token::DoubleParen(_) => "double paren",
+                Token::Number { .. } => "number",
+                Token::String(string) => string,
+                Token::Word(word) => word,
+                Token::Operation(_) => "operation",
+                Token::LogicalOperation(_) => "logical op",
+                Token::ShiftOperation(_) => "shift op",
+                Token::Arrow => "->",
+                Token::Unknown(_) => "unknown",
+                Token::UnterminatedString => "string",
+                Token::Trivia => "trivia",
+                Token::End => "",
+            };
+            Err(Error::Unexpected(next, description))
         }
-    }
-
-    pub(super) fn expect(&mut self, expected: Token<'a>) -> Result<(), Error<'a>> {
-        self.expect_span(expected)?;
-        Ok(())
     }
 
     pub(super) fn expect_generic_paren(&mut self, expected: char) -> Result<(), Error<'a>> {
@@ -255,14 +245,10 @@ impl<'a> Lexer<'a> {
         if next.0 == Token::Paren(expected) {
             Ok(())
         } else {
-            Err(Error::Unexpected(
-                next,
-                ExpectedToken::Token(Token::Paren(expected)),
-            ))
+            Err(Error::Unexpected(next, "paren"))
         }
     }
 
-    /// If the next token matches it is skipped and true is returned
     pub(super) fn skip(&mut self, what: Token<'_>) -> bool {
         let (peeked_token, rest) = self.peek_token_and_rest();
         if peeked_token.0 == what {
@@ -276,81 +262,55 @@ impl<'a> Lexer<'a> {
     pub(super) fn next_ident_with_span(&mut self) -> Result<(&'a str, Span), Error<'a>> {
         match self.next() {
             (Token::Word(word), span) => Ok((word, span)),
-            other => Err(Error::Unexpected(other, ExpectedToken::Identifier)),
+            other => Err(Error::Unexpected(other, "identifier")),
         }
     }
 
     pub(super) fn next_ident(&mut self) -> Result<&'a str, Error<'a>> {
         match self.next() {
             (Token::Word(word), _) => Ok(word),
-            other => Err(Error::Unexpected(other, ExpectedToken::Identifier)),
+            other => Err(Error::Unexpected(other, "identifier")),
         }
     }
 
     fn _next_float_literal(&mut self) -> Result<f32, Error<'a>> {
         match self.next() {
-            (Token::Number { value, .. }, span) => {
-                value.parse().map_err(|e| Error::BadFloat(span, e))
-            }
-            other => Err(Error::Unexpected(other, ExpectedToken::Float)),
+            (Token::Number { value, .. }, span) => value.parse().map_err(|_| Error::BadFloat(span)),
+            other => Err(Error::Unexpected(other, "floating-point literal")),
         }
     }
 
     pub(super) fn next_uint_literal(&mut self) -> Result<u32, Error<'a>> {
         match self.next() {
             (Token::Number { value, .. }, span) => {
-                let v = value.parse();
-                v.map_err(|e| Error::BadU32(span, e))
+                value.parse().map_err(|_| Error::BadInteger(span))
             }
-            other => Err(Error::Unexpected(other, ExpectedToken::Uint)),
+            other => Err(Error::Unexpected(other, "unsigned integer literal")),
         }
     }
 
     pub(super) fn next_sint_literal(&mut self) -> Result<i32, Error<'a>> {
         match self.next() {
             (Token::Number { value, .. }, span) => {
-                value.parse().map_err(|e| Error::BadI32(span, e))
+                value.parse().map_err(|_| Error::BadInteger(span))
             }
-            other => Err(Error::Unexpected(other, ExpectedToken::Sint)),
+            other => Err(Error::Unexpected(other, "signed integer literal")),
         }
     }
 
-    /// Parses a generic scalar type, for example `<f32>`.
     pub(super) fn next_scalar_generic(
         &mut self,
     ) -> Result<(crate::ScalarKind, crate::Bytes), Error<'a>> {
         self.expect_generic_paren('<')?;
-        let pair = match self.next() {
-            (Token::Word(word), span) => {
-                conv::get_scalar_type(word).ok_or(Error::UnknownScalarType(span))
-            }
-            (_, span) => Err(Error::UnknownScalarType(span)),
-        }?;
-        self.expect_generic_paren('>')?;
-        Ok(pair)
-    }
-
-    /// Parses a generic scalar type, for example `<f32>`.
-    ///
-    /// Returns the span covering the inner type, excluding the brackets.
-    pub(super) fn next_scalar_generic_with_span(
-        &mut self,
-    ) -> Result<(crate::ScalarKind, crate::Bytes, Span), Error<'a>> {
-        self.expect_generic_paren('<')?;
-        let pair = match self.next() {
-            (Token::Word(word), span) => conv::get_scalar_type(word)
-                .map(|(a, b)| (a, b, span.clone()))
-                .ok_or(Error::UnknownScalarType(span)),
-            (_, span) => Err(Error::UnknownScalarType(span)),
-        }?;
+        let word = self.next_ident()?;
+        let pair = conv::get_scalar_type(word).ok_or(Error::UnknownScalarType(word))?;
         self.expect_generic_paren('>')?;
         Ok(pair)
     }
 
     pub(super) fn next_format_generic(&mut self) -> Result<crate::StorageFormat, Error<'a>> {
         self.expect(Token::Paren('<'))?;
-        let (ident, ident_span) = self.next_ident_with_span()?;
-        let format = conv::map_storage_format(ident, ident_span)?;
+        let format = conv::map_storage_format(self.next_ident()?)?;
         self.expect(Token::Paren('>'))?;
         Ok(format)
     }

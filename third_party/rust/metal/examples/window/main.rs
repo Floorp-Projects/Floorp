@@ -8,7 +8,6 @@
 extern crate objc;
 
 use cocoa::{appkit::NSView, base::id as cocoa_id};
-use core_graphics_types::geometry::CGSize;
 
 use metal::*;
 use objc::{rc::autoreleasepool, runtime::YES};

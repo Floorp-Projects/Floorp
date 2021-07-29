@@ -27,7 +27,7 @@ impl crate::Module {
     /// binding that can vary, and everything else either defaults to flat, or
     /// requires an explicit flat qualifier/attribute/what-have-you.
     ///
-    /// [`Binding`]: crate::Binding
+    /// [`Binding`]: super::Binding
     pub fn apply_common_default_interpolation(&mut self) {
         use crate::{Binding, ScalarKind, Type, TypeInner};
 
@@ -41,49 +41,36 @@ impl crate::Module {
             ty: Handle<Type>,
             types: &mut Arena<Type>,
         ) {
-            let inner = &mut types.get_mut(ty).inner;
-            if let TypeInner::Struct {
-                members: ref mut m, ..
-            } = *inner
-            {
+            match types.get_mut(ty).inner {
                 // A struct. It's the individual members we care about, so recurse.
+                TypeInner::Struct {
+                    members: ref mut m, ..
+                } => {
+                    // To choose the right interpolations for `members`, we must consult other
+                    // elements of `types`. But both `members` and the types it refers to are stored
+                    // in `types`, and Rust won't let us mutate one element of the `Arena`'s `Vec`
+                    // while reading others.
+                    //
+                    // So, temporarily swap the member list out its type, assign appropriate
+                    // interpolations to its members, and then swap the list back in.
+                    use std::mem::replace;
+                    let mut members = replace(m, vec![]);
 
-                // To choose the right interpolations for `members`, we must consult other
-                // elements of `types`. But both `members` and the types it refers to are stored
-                // in `types`, and Rust won't let us mutate one element of the `Arena`'s `Vec`
-                // while reading others.
-                //
-                // So, temporarily swap the member list out its type, assign appropriate
-                // interpolations to its members, and then swap the list back in.
-                use std::mem;
-                let mut members = mem::take(m);
+                    for member in &mut members {
+                        default_binding_or_struct(&mut member.binding, member.ty, types);
+                    }
 
-                for member in &mut members {
-                    default_binding_or_struct(&mut member.binding, member.ty, types);
+                    // Swap the member list back in. It's essential that we call `types.get_mut`
+                    // afresh here, rather than just using `m`: it's only because `m` was dead that
+                    // we were able to pass `types` to the recursive call.
+                    match types.get_mut(ty).inner {
+                        TypeInner::Struct {
+                            members: ref mut m, ..
+                        } => replace(m, members),
+                        _ => unreachable!("ty must be a struct"),
+                    };
                 }
 
-                // Swap the member list back in. It's essential that we call `types.get_mut`
-                // afresh here, rather than just using `m`: it's only because `m` was dead that
-                // we were able to pass `types` to the recursive call.
-                match types.get_mut(ty).inner {
-                    TypeInner::Struct {
-                        members: ref mut m, ..
-                    } => mem::replace(m, members),
-                    _ => unreachable!("ty must be a struct"),
-                };
-
-                return;
-            }
-
-            // For all other types, a binding is required. Missing bindings will
-            // be caught during validation, but this processor is meant for use
-            // by front ends before validation, so just return for now.
-            let binding = match binding.as_mut() {
-                None => return,
-                Some(binding) => binding,
-            };
-
-            match *inner {
                 // Some interpolatable type.
                 //
                 // GLSL has 64-bit floats, but it won't interpolate them. WGSL and MSL only have
@@ -98,6 +85,9 @@ impl crate::Module {
                     width: 4,
                     ..
                 } => {
+                    // unwrap: all `EntryPoint` arguments or return values must either be structures
+                    // or have a `Binding`.
+                    let binding = binding.as_mut().unwrap();
                     if let Binding::Location {
                         ref mut interpolation,
                         ref mut sampling,
@@ -116,6 +106,9 @@ impl crate::Module {
 
                 // Some type that can't be interpolated.
                 _ => {
+                    // unwrap: all `EntryPoint` arguments or return values must either be structures
+                    // or have a `Binding`.
+                    let binding = binding.as_mut().unwrap();
                     if let Binding::Location {
                         ref mut interpolation,
                         ref mut sampling,
