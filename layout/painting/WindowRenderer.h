@@ -12,8 +12,8 @@
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, ScrollableLayerGuid::ViewID
 #include "nsRefPtrHashtable.h"  // for nsRefPtrHashtable
 
-class gfxContext;
 namespace mozilla {
+
 namespace layers {
 class LayerManager;
 class WebRenderLayerManager;
@@ -24,9 +24,6 @@ class ClientLayerManager;
 class FrameUniformityData;
 class PersistentBufferProvider;
 }  // namespace layers
-class FallbackRenderer;
-class nsDisplayListBuilder;
-class nsDisplayList;
 
 class FrameRecorder {
  public:
@@ -84,26 +81,11 @@ class FrameRecorder {
   FramesTimingRecording mRecording;
 };
 
-/**
- * WindowRenderer is the retained rendering object owned by an nsIWidget for
- * drawing the contents of that window, the role previously handled by
- * LayerManager.
- *
- * It can be WebRender, (deprecated) Layers, or an immediate-mode
- * FallbackRenderer.
- *
- * The intention is for LayerManager to be removed entirely in the near future,
- * with WebRender inheriting directly from this class. It is likely that more
- * cleanup can be done once that happens.
- */
 class WindowRenderer : public FrameRecorder {
-  NS_INLINE_DECL_REFCOUNTING(WindowRenderer)
-
  public:
   // Cast to implementation types.
   virtual layers::LayerManager* AsLayerManager() { return nullptr; }
   virtual layers::WebRenderLayerManager* AsWebRender() { return nullptr; }
-  virtual FallbackRenderer* AsFallback() { return nullptr; }
 
   // Required functionality
 
@@ -134,8 +116,6 @@ class WindowRenderer : public FrameRecorder {
    */
   virtual bool EndEmptyTransaction(
       EndTransactionFlags aFlags = END_DEFAULT) = 0;
-
-  virtual void Destroy() {}
 
   /**
    * Type of layer manager this is. This is to be used sparsely in order to
@@ -173,8 +153,6 @@ class WindowRenderer : public FrameRecorder {
    * received. This will synchronsly wait on a remote compositor.
    */
   virtual void WaitOnTransactionProcessed() {}
-
-  virtual bool IsCompositingCheap() { return true; }
 
   /**
    * Return the name of the layer manager's backend.
@@ -218,64 +196,13 @@ class WindowRenderer : public FrameRecorder {
   void UpdatePartialPrerenderedAnimations(
       const nsTArray<uint64_t>& aJankedAnimations);
 
-  const TimeStamp& GetAnimationReadyTime() const { return mAnimationReadyTime; }
-
  protected:
-  virtual ~WindowRenderer() = default;
-
   // Transform animations which are not fully pre-rendered because it's on a
   // large frame.  We need to update the pre-rendered area once after we tried
   // to composite area which is outside of the pre-rendered area on the
   // compositor.
   nsRefPtrHashtable<nsUint64HashKey, dom::Animation>
       mPartialPrerenderedAnimations;
-
-  // The time when painting most recently finished. This is recorded so that
-  // we can time any play-pending animations from this point.
-  TimeStamp mAnimationReadyTime;
-};
-
-/**
- * FallbackRenderer is non-retained renderer that acts as a direct wrapper
- * around calling Paint on the provided DisplayList. This is used for cases
- * where initializing WebRender is too costly, and we don't need
- * retaining/invalidation (like small popup windows).
- *
- * It doesn't support any sort of EmptyTransaction, and only draws during
- * EndTransaction if a composite is requested (no END_NO_COMPOSITE flag
- * provided)
- */
-class FallbackRenderer : public WindowRenderer {
- public:
-  FallbackRenderer* AsFallback() override { return this; }
-
-  void SetTarget(gfxContext* aContext, layers::BufferMode aDoubleBuffering);
-
-  bool BeginTransaction(const nsCString& aURL = nsCString()) override;
-
-  bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override {
-    return false;
-  }
-
-  layers::LayersBackend GetBackendType() override {
-    return layers::LayersBackend::LAYERS_NONE;
-  }
-
-  virtual void GetBackendName(nsAString& name) override {
-    name.AssignLiteral("Fallback");
-  }
-
-  bool IsCompositingCheap() override { return false; }
-
-  void EndTransactionWithColor(const nsIntRect& aRect,
-                               const gfx::DeviceColor& aColor);
-  void EndTransactionWithList(nsDisplayListBuilder* aBuilder,
-                              nsDisplayList* aList,
-                              int32_t aAppUnitsPerDevPixel,
-                              EndTransactionFlags aFlags);
-
-  RefPtr<gfxContext> mTarget;
-  layers::BufferMode mBufferMode;
 };
 
 }  // namespace mozilla

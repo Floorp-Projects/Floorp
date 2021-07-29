@@ -49,7 +49,7 @@ class RemoteLayerTreeOwner final {
   void Destroy();
 
   void EnsureLayersConnected(CompositorOptions* aCompositorOptions);
-  bool AttachWindowRenderer();
+  LayerManager* AttachLayerManager();
   void OwnerContentChanged();
 
   LayersId GetLayersId() const { return mLayersId; }
@@ -73,7 +73,7 @@ class RemoteLayerTreeOwner final {
   CompositorOptions mCompositorOptions;
 
   dom::BrowserParent* mBrowserParent;
-  RefPtr<WindowRenderer> mWindowRenderer;
+  RefPtr<LayerManager> mLayerManager;
 
   bool mInitialized;
   // A flag that indicates whether or not the compositor knows about the
