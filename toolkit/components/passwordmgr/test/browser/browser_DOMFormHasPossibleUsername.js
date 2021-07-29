@@ -132,6 +132,13 @@ function task({ contentIds, expected }) {
   return promise;
 }
 
+add_task(async function test_initialize() {
+  Services.prefs.setBoolPref("signon.usernameOnlyForm.enabled", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("signon.usernameOnlyForm.enabled");
+  });
+});
+
 add_task(async function test_usernameOnlyForm() {
   for (let type of ["text", "email"]) {
     let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));

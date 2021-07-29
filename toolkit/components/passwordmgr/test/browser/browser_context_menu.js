@@ -20,9 +20,11 @@ const POPUP_HEADER = document.getElementById("fill-login");
  */
 add_task(async function test_initialize() {
   Services.prefs.setBoolPref("signon.autofillForms", false);
+  Services.prefs.setBoolPref("signon.usernameOnlyForm.enabled", true);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("signon.autofillForms");
     Services.prefs.clearUserPref("signon.schemeUpgrades");
+    Services.prefs.clearUserPref("signon.usernameOnlyForm.enabled");
   });
   for (let login of loginList()) {
     Services.logins.addLogin(login);
