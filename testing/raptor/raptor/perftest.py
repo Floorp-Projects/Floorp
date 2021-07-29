@@ -513,46 +513,6 @@ class Perftest(object):
     def get_page_timeout_list(self):
         return self.results_handler.page_timeout_list
 
-    def get_recording_paths(self, test):
-        recordings = test.get("playback_recordings")
-
-        if recordings:
-            recording_paths = []
-            proxy_dir = self.playback.mozproxy_dir
-
-            for recording in recordings.split():
-                if not recording:
-                    continue
-                recording_paths.append(os.path.join(proxy_dir, recording))
-
-            return recording_paths
-
-    def log_recording_dates(self, test):
-        _recording_paths = self.get_recording_paths(test)
-        if _recording_paths is None:
-            LOG.info(
-                "No playback recordings specified in the test; so not getting recording info"
-            )
-            return
-
-        for r in _recording_paths:
-            json_path = "{}.json".format(r.split(".")[0])
-
-            if os.path.exists(json_path):
-                with open(json_path) as f:
-                    recording_date = json.loads(f.read()).get("recording_date")
-
-                    if recording_date is not None:
-                        LOG.info(
-                            "Playback recording date: {} ".format(
-                                recording_date.split(" ")[0]
-                            )
-                        )
-                    else:
-                        LOG.info("Playback recording date not available")
-            else:
-                LOG.info("Playback recording information not available")
-
     def delete_proxy_settings_from_profile(self):
         # Must delete the proxy settings from the profile if running
         # the test with a host different from localhost.
@@ -571,7 +531,7 @@ class Perftest(object):
         self.config.update(
             {
                 "playback_tool": test.get("playback"),
-                "playback_version": test.get("playback_version", "4.0.4"),
+                "playback_version": test.get("playback_version", "5.1.1"),
                 "playback_files": [
                     os.path.join(playback_dir, test.get("playback_pageset_manifest"))
                 ],
@@ -584,8 +544,6 @@ class Perftest(object):
 
         # let's start it!
         self.playback.start()
-
-        self.log_recording_dates(test)
 
     def _init_gecko_profiling(self, test):
         LOG.info("initializing gecko profiler")

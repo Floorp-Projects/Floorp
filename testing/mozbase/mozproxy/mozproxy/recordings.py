@@ -58,7 +58,9 @@ class RecordingFile:
             with open(self._metadata_path) as json_file:
                 self._metadata = json.load(json_file)
             self.validate_recording()
-
+            LOG.info(
+                "Loaded recoording generated on %s" % self.metadata("recording_date")
+            )
         else:
             LOG.info("Recording file does not exists!!! Generating base structure")
             self._metadata = {"content": [], "recording_date": str(datetime.now())}
