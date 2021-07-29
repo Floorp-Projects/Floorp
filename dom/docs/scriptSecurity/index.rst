@@ -1,5 +1,5 @@
---- title: Script security slug: Mozilla/Gecko/Script_security tags: -
-Security ---
+Script Security
+===============
 
 .. container:: summary
 
@@ -8,8 +8,9 @@ Security ---
 
 Like any web browser, Gecko can load JavaScript from untrusted and
 potentially hostile web pages and run it on the user's computer. The
-security model for web content is based on the `same-origin
-policy </en-US/docs/Web/Security/Same-origin_policy>`__, in which code
+security model for web content is based on the `same-origin policy
+<https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy>`__,
+in which code
 gets full access to objects from its origin but highly restricted access
 to objects from a different origin. The rules for determining whether an
 object is same-origin with another, and what access is allowed
@@ -19,8 +20,7 @@ Gecko has an additional problem, though: while its core is written in
 C++, the front-end code is written in JavaScript. This JavaScript code,
 which is commonly referred to as c\ *hrome code*, runs with system
 privileges. If the code is compromised, the attacker can take over the
-user's computer. Legacy `SDK extensions </en-US/Add-ons/SDK>`__ also run
-with chrome privileges.
+user's computer. Legacy SDK extensions also run with chrome privileges.
 
 Having the browser front end in JavaScript has benefits: it can be much
 quicker to develop in JavaScript than in C++, and contributors do not
@@ -43,22 +43,19 @@ Gecko implements the following security policy:
    from *https://example.org/* can access each other, and they can also
    access objects served from *https://example.org/foo*.
 -  **Objects that are cross-origin** get highly restricted access to
-   each other, according to the `same-origin
-   policy </en-US/docs/Web/Security/Same-origin_policy#Cross-origin_script_API_access>`__.
+   each other, according to the same-origin policy.
    For example, code served from *https://example.org/* trying to access
    objects from *https://somewhere-else.org/* will have restricted
    access.
 -  **Objects in a privileged scope** are allowed complete access to
    objects in a less privileged scope, but by default they see a
-   `restricted
-   view </en-US/docs/Mozilla/Gecko/Script_security#Privileged_to_unprivileged_code>`__
+   `restricted view <#privileged-to-unprivileged-code>`__
    of such objects, designed to prevent them from being tricked by the
    untrusted code. An example of this scope is chrome-privileged
    JavaScript accessing web content.
 -  **Objects in a less privileged scope** don't get any access to
    objects in a more privileged scope, unless the more privileged scope
-   `explicitly clones those
-   objects </en-US/docs/Mozilla/Gecko/Script_security#Unprivileged_to_privileged_code>`__.
+   `explicitly clones those objects <#unprivileged-to-privileged-code>`__.
    An example of this scope is web content accessing objects in a
    chrome-privileged scope. 
 
@@ -73,14 +70,11 @@ Gecko, there's a separate compartment for every global object. This
 means that each global object and the objects associated with it live in
 their own region of memory.
 
-.. image:: https://mdn.mozillademos.org/files/9697/compartments.png
+.. image:: images/compartments.png
 
 Normal content windows are globals, of course, but so are chrome
-windows, `sandboxes </en-US/docs/Components.utils.Sandbox>`__,
-`workers </en-US/docs/Web/API/Worker>`__, the
-``ContentFrameMessageManager`` in a `frame
-script </en-US/Firefox/Multiprocess_Firefox/Frame_script_environment>`__,
-and so on.
+windows, sandboxes, workers, the ``ContentFrameMessageManager`` in a frame
+script, and so on.
 
 Gecko guarantees that JavaScript code running in a given compartment is
 only allowed to access objects in the same compartment. When code from
@@ -88,7 +82,7 @@ compartment A tries to access an object in compartment B, Gecko gives it
 a *cross-compartment wrapper*. This is a proxy in compartment A for the
 real object, which lives in compartment B.
 
-.. image:: https://mdn.mozillademos.org/files/9729/cross-compartment-wrapper.png
+.. image:: images/cross-compartment-wrapper.png
 
 Inside the same compartment, all objects share a global and are
 therefore same-origin with each other. Therefore there's no need for any
@@ -123,7 +117,7 @@ pages from the same protocol, port, and domain - they belong to two
 different compartments, and the caller gets a *transparent wrapper* to
 the target object.
 
-.. image:: https://mdn.mozillademos.org/files/9735/same-origin-wrapper.png
+.. image:: images/same-origin-wrapper.png
 
 Transparent wrappers allow access to all the target's properties:
 functionally, it's as if the target is in the caller's compartment.
@@ -136,13 +130,12 @@ Cross-origin
 If the two compartments are cross-origin, the caller gets a
 *cross-origin wrapper*.
 
-.. image:: https://mdn.mozillademos.org/files/9731/cross-origin-wrapper.png
+.. image:: images/cross-origin-wrapper.png
 
 This denies access to all the object's properties, except for a few
-properties of ```Window`` </en-US/docs/Web/API/Window>`__ and
-```Location`` </en-US/docs/Web/API/Location>`__ objects, as defined by
+properties of Window and Location objects, as defined by
 the `same-origin
-policy </en-US/docs/Web/Security/Same-origin_policy#Cross-origin_script_API_access>`__.
+policy <https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy#cross-origin_script_api_access>`__.
 
 .. _Privileged_to_unprivileged_code:
 
@@ -151,33 +144,26 @@ Privileged to unprivileged code
 
 The most obvious example of this kind of security relation is between
 system-privileged chrome code and untrusted web content, but there are
-other examples in Gecko. The Add-on SDK runs `content
-scripts </en-US/Add-ons/SDK/Guides/Content_Scripts>`__ in
-`sandboxes </en-US/docs/Components.utils.Sandbox>`__, which are
-initialized with an `expanded
-principal </en-US/docs/Mozilla/Gecko/Script_security#Expanded_principal>`__,
+other examples in Gecko. The Add-on SDK runs content scripts in
+sandboxes, which are initialized with an `expanded
+principal <#expanded-principal>`__,
 giving them elevated privileges with respect to the web content they
 operate on, but reduced privileges with respect to chrome.
 
 If the caller has a higher privilege than the target object, the caller
 gets an *Xray wrapper* for the object.
 
-.. image:: https://mdn.mozillademos.org/files/9737/xray-wrapper.png
+.. image:: images/xray-wrapper.png
 
 Xrays are designed to prevent untrusted code from confusing trusted code
 by redefining objects in unexpected ways. For example, privileged code
 using an Xray to a DOM object sees only the original version of the DOM
-object. Any
-`expando <https://developer.mozilla.org/en-US/docs/Glossary/Expando>`__
-properties are not visible, and if any native DOM properties have been
+object. Any expando properties are not visible, and if any native DOM properties have been
 redefined, they are not visible in the Xray.
 
-The privileged code is able to `waive
-Xrays </en-US/docs/Components.utils.waiveXrays>`__ if it wants
-unfiltered access to the untrusted object.
+The privileged code is able to waive Xrays if it wants unfiltered access to the untrusted object.
 
-See `Xray vision </en-US/docs/Xray_vision>`__ for much more information
-on Xrays.
+See `Xray vision <xray_vision.html>`__ for much more information on Xrays.
 
 .. _Unprivileged_to_privileged_code:
 
@@ -187,15 +173,14 @@ Unprivileged to privileged code
 If the caller has lower privileges than the target object, then the
 caller gets an *opaque wrapper.*
 
-.. image:: https://mdn.mozillademos.org/files/9733/opaque-wrapper.png
+.. image:: images/opaque-wrapper.png
 
 An opaque wrapper denies all access to the target object.
 
 However, the privileged target is able to copy objects and functions
-into the less privileged scope using the
-```exportFunction()`` </en-US/docs/Components.utils.exportFunction>`__
-and ```cloneInto()`` </en-US/docs/Components.utils.cloneInto>`__
-functions, and the less privileged scope is then able to use them.
+into the less privileged scope using the ``exportFunction()`` and
+``cloneInto()`` functions, and the less privileged scope is then able
+to use them.
 
 .. _Security_checks:
 
@@ -255,8 +240,7 @@ System principal
 
 The system principal passes all security checks. It subsumes itself and
 all other principals. Chrome code, by definition, runs with the system
-principal, as do `frame
-scripts </en-US/Firefox/Multiprocess_Firefox/Frame_script_environment>`__.
+principal, as do frame scripts.
 
 .. _Content_principal:
 
@@ -264,8 +248,7 @@ Content principal
 ^^^^^^^^^^^^^^^^^
 
 A content principal is associated with some web content and is defined
-by the
-`origin </en-US/docs/Web/Security/Same-origin_policy#Definition_of_an_origin>`__
+by the origin
 of the content. For example, a normal DOM window has a content principal
 defined by the window's origin. A content principal subsumes only other
 content principals with the same origin. It is subsumed by the system
@@ -300,9 +283,8 @@ disabled for web content.
 Expanded principals are useful when you want to give code extra
 privileges, including cross-origin access, but don't want to give the
 code full system privileges. For example, expanded principals are used
-in the `Add-on SDK <https://developer.mozilla.org/en-US/Add-ons/SDK>`__
-to give content scripts `cross-domain privileges for a predefined set of
-domains <https://developer.mozilla.org/en-US/Add-ons/SDK/Guides/Content_Scripts/Cross_Domain_Content_Scripts>`__,
+in the Add-on SDK to give content scripts cross-domain privileges for a predefined set of
+domains,
 and to protect content scripts from access by untrusted web content,
 without having to give content scripts system privileges.
 
@@ -326,7 +308,7 @@ The diagram below summarizes the relationships between the different
 principals. The arrow connecting principals A and B means "A subsumes
 B".  (A is the start of the arrow, and B is the end.)
 
-.. image:: https://mdn.mozillademos.org/files/9799/principal-relationships.png
+.. image:: images/principal-relationships.png
 
 .. _Computing_a_wrapper:
 
@@ -337,4 +319,4 @@ The following diagram shows the factors that determine the kind of
 wrapper that compartment A would get when trying to access an object in
 compartment B.
 
-.. image:: https://mdn.mozillademos.org/files/9801/computing-a-wrapper.png
+.. image:: images/computing-a-wrapper.png
