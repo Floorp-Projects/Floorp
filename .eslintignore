@@ -79,6 +79,9 @@ devtools/client/webconsole/test/browser/code_bundle_invalidmap.js
 devtools/server/tests/xpcshell/setBreakpoint*
 devtools/server/tests/xpcshell/sourcemapped.js
 
+# Ignore generated code from wasm-bindgen
+devtools/client/performance-new/profiler_get_symbols.js
+
 # Testing syntax error
 devtools/client/webconsole/test/browser/test-syntaxerror-worklet.js
 
@@ -184,9 +187,6 @@ testing/talos/talos/fis/tp5n/
 testing/web-platform/
 
 # toolkit/ exclusions
-
-# Ignore generated code from wasm-bindgen
-toolkit/components/extensions/profiler_get_symbols.js
 
 # Intentionally invalid JS
 toolkit/components/workerloader/tests/moduleF-syntax-error.js
