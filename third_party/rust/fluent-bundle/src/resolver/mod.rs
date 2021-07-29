@@ -1,4 +1,4 @@
-mod errors;
+pub mod errors;
 mod expression;
 mod inline_expression;
 mod pattern;
