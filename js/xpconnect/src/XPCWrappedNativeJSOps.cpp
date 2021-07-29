@@ -969,6 +969,13 @@ XPCWrappedNativeProto* XPCWrappedNativeProto::Get(JSObject* obj) {
   return JS::GetMaybePtrFromReservedSlot<XPCWrappedNativeProto>(obj, ProtoSlot);
 }
 
+/* static */
+XPCWrappedNativeTearOff* XPCWrappedNativeTearOff::Get(JSObject* obj) {
+  MOZ_ASSERT(JS::GetClass(obj) == &XPC_WN_Tearoff_JSClass);
+  return JS::GetMaybePtrFromReservedSlot<XPCWrappedNativeTearOff>(obj,
+                                                                  TearOffSlot);
+}
+
 static bool XPC_WN_Proto_Enumerate(JSContext* cx, HandleObject obj) {
   MOZ_ASSERT(JS::GetClass(obj) == &XPC_WN_Proto_JSClass, "bad proto");
   XPCWrappedNativeProto* self = XPCWrappedNativeProto::Get(obj);
@@ -1141,7 +1148,7 @@ static bool XPC_WN_TearOff_Resolve(JSContext* cx, HandleObject obj, HandleId id,
 }
 
 static void XPC_WN_TearOff_Finalize(JSFreeOp* fop, JSObject* obj) {
-  XPCWrappedNativeTearOff* p = (XPCWrappedNativeTearOff*)xpc_GetJSPrivate(obj);
+  XPCWrappedNativeTearOff* p = XPCWrappedNativeTearOff::Get(obj);
   if (!p) {
     return;
   }
@@ -1149,7 +1156,7 @@ static void XPC_WN_TearOff_Finalize(JSFreeOp* fop, JSObject* obj) {
 }
 
 static size_t XPC_WN_TearOff_ObjectMoved(JSObject* obj, JSObject* old) {
-  XPCWrappedNativeTearOff* p = (XPCWrappedNativeTearOff*)xpc_GetJSPrivate(obj);
+  XPCWrappedNativeTearOff* p = XPCWrappedNativeTearOff::Get(obj);
   if (!p) {
     return 0;
   }
@@ -1177,8 +1184,7 @@ static const js::ClassExtension XPC_WN_Tearoff_JSClassExtension = {
 
 const JSClass XPC_WN_Tearoff_JSClass = {
     "WrappedNative_TearOff",
-    JSCLASS_HAS_PRIVATE |
-        JSCLASS_HAS_RESERVED_SLOTS(XPC_WN_TEAROFF_RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(XPCWrappedNativeTearOff::SlotCount) |
         JSCLASS_FOREGROUND_FINALIZE,
     &XPC_WN_Tearoff_JSClassOps, JS_NULL_CLASS_SPEC,
     &XPC_WN_Tearoff_JSClassExtension};
