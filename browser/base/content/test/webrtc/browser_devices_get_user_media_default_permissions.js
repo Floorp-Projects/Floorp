@@ -16,24 +16,28 @@ var gTests = [
       Services.prefs.setIntPref(CAMERA_PREF, SitePermissions.BLOCK);
 
       // Requesting audio+video shouldn't work.
-      let observerPromise = expectObserverCalled("recording-window-ended");
-      let promise = promiseMessage(permissionError);
-      await promiseRequestDevice(true, true);
-      await promise;
-      await observerPromise;
+      await Promise.all([
+        expectObserverCalled("getUserMedia:request"),
+        expectObserverCalled("getUserMedia:response:deny"),
+        expectObserverCalled("recording-window-ended"),
+        promiseMessage(permissionError),
+        promiseRequestDevice(true, true),
+      ]);
       await checkNotSharing();
 
       // Requesting only video shouldn't work.
-      observerPromise = expectObserverCalled("recording-window-ended");
-      promise = promiseMessage(permissionError);
-      await promiseRequestDevice(false, true);
-      await promise;
-      await observerPromise;
+      await Promise.all([
+        expectObserverCalled("getUserMedia:request"),
+        expectObserverCalled("getUserMedia:response:deny"),
+        expectObserverCalled("recording-window-ended"),
+        promiseMessage(permissionError),
+        promiseRequestDevice(false, true),
+      ]);
       await checkNotSharing();
 
       // Requesting audio should work.
-      observerPromise = expectObserverCalled("getUserMedia:request");
-      promise = promisePopupNotificationShown("webRTC-shareDevices");
+      const observerPromise = expectObserverCalled("getUserMedia:request");
+      const promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true);
       await promise;
       await observerPromise;
@@ -110,24 +114,27 @@ var gTests = [
       Services.prefs.setIntPref(MICROPHONE_PREF, SitePermissions.BLOCK);
 
       // Requesting audio+video shouldn't work.
-      let observerPromise = expectObserverCalled("recording-window-ended");
-      let promise = promiseMessage(permissionError);
-      await promiseRequestDevice(true, true);
-      await promise;
-      await observerPromise;
+      await Promise.all([
+        expectObserverCalled("getUserMedia:request"),
+        expectObserverCalled("getUserMedia:response:deny"),
+        expectObserverCalled("recording-window-ended"),
+        promiseMessage(permissionError),
+        promiseRequestDevice(true, true),
+      ]);
       await checkNotSharing();
 
       // Requesting only audio shouldn't work.
-      observerPromise = expectObserverCalled("recording-window-ended");
-      promise = promiseMessage(permissionError);
-      await promiseRequestDevice(true);
-      await promise;
-      await observerPromise;
-      await checkNotSharing();
+      await Promise.all([
+        expectObserverCalled("getUserMedia:request"),
+        expectObserverCalled("getUserMedia:response:deny"),
+        expectObserverCalled("recording-window-ended"),
+        promiseMessage(permissionError),
+        promiseRequestDevice(true),
+      ]);
 
       // Requesting video should work.
-      observerPromise = expectObserverCalled("getUserMedia:request");
-      promise = promisePopupNotificationShown("webRTC-shareDevices");
+      const observerPromise = expectObserverCalled("getUserMedia:request");
+      const promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true);
       await promise;
       await observerPromise;

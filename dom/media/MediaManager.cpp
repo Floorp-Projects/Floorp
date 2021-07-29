@@ -2640,45 +2640,32 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
   auto placeholderListener = MakeRefPtr<DeviceListener>();
   windowListener->Register(placeholderListener);
 
-  if (!privileged) {
-    // Check if this site has had persistent permissions denied.
-    RefPtr<PermissionDelegateHandler> permDelegate =
-        doc->GetPermissionDelegateHandler();
-    MOZ_RELEASE_ASSERT(permDelegate);
-
-    uint32_t audioPerm = nsIPermissionManager::UNKNOWN_ACTION;
+  {  // Check Permissions Policy.  Reject if a requested feature is disabled.
+    bool disabled = !IsOn(c.mAudio) && !IsOn(c.mVideo);
     if (IsOn(c.mAudio)) {
       if (audioType == MediaSourceEnum::Microphone) {
-        if (Preferences::GetBool("media.getusermedia.microphone.deny", false)) {
-          audioPerm = nsIPermissionManager::DENY_ACTION;
-        } else {
-          rv = permDelegate->GetPermission("microphone"_ns, &audioPerm, true);
-          MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+        if (Preferences::GetBool("media.getusermedia.microphone.deny", false) ||
+            !FeaturePolicyUtils::IsFeatureAllowed(doc, u"microphone"_ns)) {
+          disabled = true;
         }
-      } else {
-        rv = permDelegate->GetPermission("screen"_ns, &audioPerm, true);
-        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+      } else if (!FeaturePolicyUtils::IsFeatureAllowed(doc,
+                                                       u"display-capture"_ns)) {
+        disabled = true;
       }
     }
-
-    uint32_t videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
     if (IsOn(c.mVideo)) {
       if (videoType == MediaSourceEnum::Camera) {
-        if (Preferences::GetBool("media.getusermedia.camera.deny", false)) {
-          videoPerm = nsIPermissionManager::DENY_ACTION;
-        } else {
-          rv = permDelegate->GetPermission("camera"_ns, &videoPerm, true);
-          MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+        if (Preferences::GetBool("media.getusermedia.camera.deny", false) ||
+            !FeaturePolicyUtils::IsFeatureAllowed(doc, u"camera"_ns)) {
+          disabled = true;
         }
-      } else {
-        rv = permDelegate->GetPermission("screen"_ns, &videoPerm, true);
-        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+      } else if (!FeaturePolicyUtils::IsFeatureAllowed(doc,
+                                                       u"display-capture"_ns)) {
+        disabled = true;
       }
     }
 
-    if ((!IsOn(c.mAudio) && !IsOn(c.mVideo)) ||
-        (IsOn(c.mAudio) && audioPerm == nsIPermissionManager::DENY_ACTION) ||
-        (IsOn(c.mVideo) && videoPerm == nsIPermissionManager::DENY_ACTION)) {
+    if (disabled) {
       placeholderListener->Stop();
       return StreamPromise::CreateAndReject(
           MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
