@@ -62,7 +62,7 @@ const reducers = require("devtools/client/performance-new/store/reducers");
 const actions = require("devtools/client/performance-new/store/actions");
 const {
   openProfilerAndDisplayProfile,
-  createMultiModalGetSymbolTableFn,
+  createLocalSymbolicationService,
   sharedLibrariesFromProfile,
 } = require("devtools/client/performance-new/browser");
 
@@ -144,7 +144,7 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
   const onProfileReceived = (profile, profilerViewMode) => {
     const objdirs = selectors.getObjdirs(store.getState());
     const sharedLibraries = sharedLibrariesFromProfile(profile);
-    const getSymbolTableCallback = createMultiModalGetSymbolTableFn(
+    const symbolicationService = createLocalSymbolicationService(
       sharedLibraries,
       objdirs,
       perfFront
@@ -152,7 +152,7 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
     openProfilerAndDisplayProfile(
       profile,
       profilerViewMode,
-      getSymbolTableCallback
+      symbolicationService
     );
   };
 
