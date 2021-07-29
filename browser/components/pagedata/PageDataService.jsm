@@ -27,8 +27,8 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
 /**
  * @typedef {object} Data
  *   An individual piece of data about a page.
- * @property {string} type
- *   The type of data.
+ * @property {number} type
+ *   The type of data, see Snapshots.DATA_TYPE.*
  * @property {object} data
  *   The data in a format specific to the type of data.
  *

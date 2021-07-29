@@ -13,6 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
+  Snapshots: "resource:///modules/Snapshots.jsm",
 });
 
 add_task(async function notifies() {
@@ -44,7 +45,7 @@ add_task(async function notifies() {
 
   PageDataService.pageDataDiscovered(url, [
     {
-      type: "product",
+      type: Snapshots.DATA_TYPE.PRODUCT,
       data: {
         price: 276,
       },
@@ -54,7 +55,7 @@ add_task(async function notifies() {
   pageData = await promise;
   Assert.equal(pageData.url, "https://www.mozilla.org/");
   Assert.equal(pageData.data.length, 1);
-  Assert.equal(pageData.data[0].type, "product");
+  Assert.equal(pageData.data[0].type, Snapshots.DATA_TYPE.PRODUCT);
 
   Assert.equal(PageDataService.getCached(url), pageData);
   Assert.equal(await PageDataService.queueFetch(url), pageData);
