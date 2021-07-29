@@ -20,6 +20,7 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/VideoBridgeChild.h"
+#include "mozilla/layers/VideoBridgeParent.h"
 
 namespace mozilla {
 
@@ -93,8 +94,10 @@ void RemoteDecoderManagerParent::ShutdownThreads() {
 void RemoteDecoderManagerParent::ShutdownVideoBridge() {
   if (sRemoteDecoderManagerParentThread) {
     RefPtr<Runnable> task = NS_NewRunnableFunction(
-        "RemoteDecoderManagerParent::ShutdownVideoBridge",
-        []() { VideoBridgeChild::Shutdown(); });
+        "RemoteDecoderManagerParent::ShutdownVideoBridge", []() {
+          VideoBridgeParent::Shutdown();
+          VideoBridgeChild::Shutdown();
+        });
     SyncRunnable::DispatchToThread(sRemoteDecoderManagerParentThread, task);
   }
 }
