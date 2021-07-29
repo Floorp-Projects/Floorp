@@ -77,10 +77,11 @@ struct MarionetteHandshake {
 
 #[derive(Default)]
 pub(crate) struct MarionetteSettings {
-    pub(crate) host: String,
-    pub(crate) port: Option<u16>,
     pub(crate) binary: Option<PathBuf>,
     pub(crate) connect_existing: bool,
+    pub(crate) host: String,
+    pub(crate) port: Option<u16>,
+    pub(crate) websocket_port: u16,
 
     /// Brings up the Browser Toolbox when starting Firefox,
     /// letting you debug internals.
@@ -108,7 +109,7 @@ impl MarionetteHandler {
         session_id: Option<String>,
         new_session_parameters: &NewSessionParameters,
     ) -> WebDriverResult<MarionetteConnection> {
-        let (options, capabilities) = {
+        let (capabilities, options) = {
             let mut fx_capabilities = FirefoxCapabilities::new(self.settings.binary.as_ref());
             let mut capabilities = new_session_parameters
                 .match_browser(&mut fx_capabilities)?
@@ -121,18 +122,23 @@ impl MarionetteHandler {
 
             let options = FirefoxOptions::from_capabilities(
                 fx_capabilities.chosen_binary,
-                self.settings.android_storage,
+                &self.settings,
                 &mut capabilities,
             )?;
-            (options, capabilities)
+            (capabilities, options)
         };
 
         if let Some(l) = options.log.level {
             logging::set_max_level(l);
         }
 
-        let host = self.settings.host.to_owned();
-        let port = self.settings.port.unwrap_or(get_free_port(&host)?);
+        let marionette_host = self.settings.host.to_owned();
+        let marionette_port = self.settings.port.unwrap_or(get_free_port(&marionette_host)?);
+
+        let websocket_port = match options.use_websocket {
+            true => Some(self.settings.websocket_port),
+            false => None,
+        };
 
         let browser = if options.android.is_some() {
             // TODO: support connecting to running Apps.  There's no real obstruction here,
@@ -145,14 +151,14 @@ impl MarionetteHandler {
                     "Cannot connect to an existing Android App yet",
                 ));
             }
-            Browser::Remote(RemoteBrowser::new(port, options)?)
+            Browser::Remote(RemoteBrowser::new(options, marionette_port, websocket_port)?)
         } else if !self.settings.connect_existing {
-            Browser::Local(LocalBrowser::new(port, options, self.settings.jsdebugger)?)
+            Browser::Local(LocalBrowser::new(options, marionette_port, self.settings.jsdebugger)?)
         } else {
             Browser::Existing
         };
         let session = MarionetteSession::new(session_id, capabilities);
-        MarionetteConnection::new(host, port, browser, session)
+        MarionetteConnection::new(marionette_host, marionette_port, browser, session)
     }
 
     fn close_connection(&mut self, wait_for_shutdown: bool) {
