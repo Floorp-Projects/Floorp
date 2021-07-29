@@ -13,7 +13,7 @@ use crate::resource::FluentResource;
 use crate::types::FluentValue;
 
 impl<'p> WriteValue for ast::InlineExpression<&'p str> {
-    fn write<'scope, 'errors, W, R, M: MemoizerKind>(
+    fn write<'scope, 'errors, W, R, M>(
         &'scope self,
         w: &mut W,
         scope: &mut Scope<'scope, 'errors, R, M>,
@@ -21,6 +21,7 @@ impl<'p> WriteValue for ast::InlineExpression<&'p str> {
     where
         W: fmt::Write,
         R: Borrow<FluentResource>,
+        M: MemoizerKind,
     {
         match self {
             Self::StringLiteral { value } => unescape_unicode(w, value),
@@ -58,7 +59,7 @@ impl<'p> WriteValue for ast::InlineExpression<&'p str> {
                 attribute,
                 arguments,
             } => {
-                let (_, resolved_named_args) = scope.get_arguments(arguments);
+                let (_, resolved_named_args) = scope.get_arguments(arguments.as_ref());
 
                 scope.local_args = Some(resolved_named_args);
                 let result = scope
@@ -83,7 +84,7 @@ impl<'p> WriteValue for ast::InlineExpression<&'p str> {
             }
             Self::FunctionReference { id, arguments } => {
                 let (resolved_positional_args, resolved_named_args) =
-                    scope.get_arguments(arguments);
+                    scope.get_arguments(Some(arguments));
 
                 let func = scope.bundle.get_entry_function(id.name);
 
@@ -147,12 +148,13 @@ impl<'p> WriteValue for ast::InlineExpression<&'p str> {
 }
 
 impl<'p> ResolveValue for ast::InlineExpression<&'p str> {
-    fn resolve<'source, 'errors, R, M: MemoizerKind>(
+    fn resolve<'source, 'errors, R, M>(
         &'source self,
         scope: &mut Scope<'source, 'errors, R, M>,
     ) -> FluentValue<'source>
     where
         R: Borrow<FluentResource>,
+        M: MemoizerKind,
     {
         match self {
             Self::StringLiteral { value } => unescape_unicode_to_string(value).into(),

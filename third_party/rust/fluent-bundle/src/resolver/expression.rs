@@ -12,7 +12,7 @@ use crate::resource::FluentResource;
 use crate::types::FluentValue;
 
 impl<'p> WriteValue for ast::Expression<&'p str> {
-    fn write<'scope, 'errors, W, R, M: MemoizerKind>(
+    fn write<'scope, 'errors, W, R, M>(
         &'scope self,
         w: &mut W,
         scope: &mut Scope<'scope, 'errors, R, M>,
@@ -20,10 +20,11 @@ impl<'p> WriteValue for ast::Expression<&'p str> {
     where
         W: fmt::Write,
         R: Borrow<FluentResource>,
+        M: MemoizerKind,
     {
         match self {
-            Self::InlineExpression(exp) => exp.write(w, scope),
-            Self::SelectExpression { selector, variants } => {
+            Self::Inline(exp) => exp.write(w, scope),
+            Self::Select { selector, variants } => {
                 let selector = selector.resolve(scope);
                 match selector {
                     FluentValue::String(_) | FluentValue::Number(_) => {
@@ -58,8 +59,8 @@ impl<'p> WriteValue for ast::Expression<&'p str> {
         W: fmt::Write,
     {
         match self {
-            Self::InlineExpression(exp) => exp.write_error(w),
-            Self::SelectExpression { .. } => unreachable!(),
+            Self::Inline(exp) => exp.write_error(w),
+            Self::Select { .. } => unreachable!(),
         }
     }
 }

@@ -1,22 +1,21 @@
 use super::errors::{ErrorKind, ParserError};
-use super::{Parser, Result, Slice};
+use super::{core::Parser, core::Result, slice::Slice};
 
 impl<'s, S> Parser<S>
 where
     S: Slice<'s>,
 {
     pub(super) fn is_current_byte(&self, b: u8) -> bool {
-        self.source.as_ref().as_bytes().get(self.ptr) == Some(&b)
+        get_current_byte!(self) == Some(&b)
     }
 
     pub(super) fn is_byte_at(&self, b: u8, pos: usize) -> bool {
-        self.source.as_ref().as_bytes().get(pos) == Some(&b)
+        get_byte!(self, pos) == Some(&b)
     }
 
     pub(super) fn skip_to_next_entry_start(&mut self) {
-        while let Some(b) = self.source.as_ref().as_bytes().get(self.ptr) {
-            let new_line =
-                self.ptr == 0 || self.source.as_ref().as_bytes().get(self.ptr - 1) == Some(&b'\n');
+        while let Some(b) = get_current_byte!(self) {
+            let new_line = self.ptr == 0 || get_byte!(self, self.ptr - 1) == Some(&b'\n');
 
             if new_line && (b.is_ascii_alphabetic() || [b'-', b'#'].contains(b)) {
                 break;
@@ -27,7 +26,7 @@ where
     }
 
     pub(super) fn skip_eol(&mut self) -> bool {
-        match self.source.as_ref().as_bytes().get(self.ptr) {
+        match get_current_byte!(self) {
             Some(b'\n') => {
                 self.ptr += 1;
                 true
@@ -43,7 +42,7 @@ where
     pub(super) fn skip_unicode_escape_sequence(&mut self, length: usize) -> Result<()> {
         let start = self.ptr;
         for _ in 0..length {
-            match self.source.as_ref().as_bytes().get(self.ptr) {
+            match get_current_byte!(self) {
                 Some(b) if b.is_ascii_hexdigit() => self.ptr += 1,
                 _ => break,
             }
@@ -61,7 +60,7 @@ where
     }
 
     pub(super) fn is_identifier_start(&self) -> bool {
-        matches!(self.source.as_ref().as_bytes().get(self.ptr), Some(b) if b.is_ascii_alphabetic())
+        matches!(get_current_byte!(self), Some(b) if b.is_ascii_alphabetic())
     }
 
     pub(super) fn take_byte_if(&mut self, b: u8) -> bool {
@@ -89,13 +88,9 @@ where
 
     pub(super) fn skip_blank(&mut self) {
         loop {
-            match self.source.as_ref().as_bytes().get(self.ptr) {
+            match get_current_byte!(self) {
                 Some(b' ') | Some(b'\n') => self.ptr += 1,
-                Some(b'\r')
-                    if self.source.as_ref().as_bytes().get(self.ptr + 1) == Some(&b'\n') =>
-                {
-                    self.ptr += 2
-                }
+                Some(b'\r') if get_byte!(self, self.ptr + 1) == Some(&b'\n') => self.ptr += 2,
                 _ => break,
             }
         }
@@ -103,18 +98,20 @@ where
 
     pub(super) fn skip_blank_inline(&mut self) -> usize {
         let start = self.ptr;
-        while let Some(b' ') = self.source.as_ref().as_bytes().get(self.ptr) {
+        while let Some(b' ') = get_current_byte!(self) {
             self.ptr += 1;
         }
         self.ptr - start
     }
 
     pub(super) fn is_byte_pattern_continuation(b: u8) -> bool {
-        ![b'}', b'.', b'[', b'*'].contains(&b)
+        !matches!(b, b'.' | b'}' | b'[' | b'*')
     }
 
-    pub(super) fn is_callee(name: &[u8]) -> bool {
-        name.iter()
+    pub(super) fn is_callee(name: &S) -> bool {
+        name.as_ref()
+            .as_bytes()
+            .iter()
             .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || *c == b'_' || *c == b'-')
     }
 
@@ -127,13 +124,14 @@ where
     }
 
     pub(super) fn is_number_start(&self) -> bool {
-        matches!(self.source.as_ref().as_bytes().get(self.ptr), Some(b) if (b == &b'-') || b.is_ascii_digit())
+        matches!(get_current_byte!(self), Some(b) if b.is_ascii_digit() || b == &b'-')
     }
 
     pub(super) fn is_eol(&self) -> bool {
-        match self.source.as_ref().as_bytes().get(self.ptr) {
+        match get_current_byte!(self) {
             Some(b'\n') => true,
             Some(b'\r') if self.is_byte_at(b'\n', self.ptr + 1) => true,
+            None => true,
             _ => false,
         }
     }
@@ -141,7 +139,7 @@ where
     pub(super) fn skip_digits(&mut self) -> Result<()> {
         let start = self.ptr;
         loop {
-            match self.source.as_ref().as_bytes().get(self.ptr) {
+            match get_current_byte!(self) {
                 Some(b) if b.is_ascii_digit() => self.ptr += 1,
                 _ => break,
             }
