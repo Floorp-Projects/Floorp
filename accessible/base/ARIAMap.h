@@ -268,11 +268,10 @@ uint64_t UniversalStatesFor(dom::Element* aElement);
  * Get the ARIA attribute characteristics for a given ARIA attribute.
  *
  * @param aAtom  ARIA attribute
- * @return       A bitflag representing the attribute characteristics,
- *               -1 if none found.
+ * @return       A bitflag representing the attribute characteristics
  *               (see above for possible bit masks, prefixed "ATTR_")
  */
-int8_t AttrCharacteristicsFor(nsAtom* aAtom);
+uint8_t AttrCharacteristicsFor(nsAtom* aAtom);
 
 /**
  * Return true if the element has defined aria-hidden.
