@@ -84,6 +84,11 @@ function resetState() {
  */
 var tests = (function*() {
 
+  yield SpecialPowers.pushPrefEnv(
+    { set: [["network.http.referer.disallowCrossSiteRelaxingDefault", false]] },
+    advance
+  );
+
   var iframe = document.getElementById("testframe");
   var sjs = "/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=generate-img-policy-test";
 
