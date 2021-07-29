@@ -241,17 +241,21 @@ impl AndroidHandler {
         let process = AndroidProcess::new(device, options.package.clone(), activity)?;
 
         Ok(AndroidHandler {
-            options: options.clone(),
             config,
             process,
             profile,
             test_root,
             host_port,
+            options: options.clone(),
             target_port: TARGET_PORT,
         })
     }
 
-    pub fn generate_config_file<I, K, V>(&self, envs: I) -> Result<String>
+    pub fn generate_config_file<I, K, V>(
+        &self,
+        args: Option<Vec<String>>,
+        envs: I,
+    ) -> Result<String>
     where
         I: IntoIterator<Item = (K, V)>,
         K: ToString,
@@ -262,18 +266,19 @@ impl AndroidHandler {
         #[derive(Serialize, Deserialize, PartialEq, Debug)]
         pub struct Config {
             pub env: Mapping,
-            pub args: Value,
+            pub args: Vec<String>,
         }
 
-        // TODO: Allow to write custom arguments and preferences from moz:firefoxOptions
         let mut config = Config {
-            args: Value::Sequence(vec![
-                Value::String("--marionette".into()),
-                Value::String("--profile".into()),
-                Value::String(self.profile.display().to_string()),
-            ]),
+            args: vec![
+                "--marionette".into(),
+                "--profile".into(),
+                self.profile.display().to_string(),
+            ],
             env: Mapping::new(),
         };
+
+        config.args.append(&mut args.unwrap_or_default());
 
         for (key, value) in envs {
             config.env.insert(
@@ -301,7 +306,12 @@ impl AndroidHandler {
         Ok(contents.concat())
     }
 
-    pub fn prepare<I, K, V>(&self, profile: &Profile, env: I) -> Result<()>
+    pub fn prepare<I, K, V>(
+        &self,
+        profile: &Profile,
+        args: Option<Vec<String>>,
+        env: I,
+    ) -> Result<()>
     where
         I: IntoIterator<Item = (K, V)>,
         K: ToString,
@@ -327,7 +337,7 @@ impl AndroidHandler {
             .device
             .push_dir(&profile.path, &self.profile, 0o777)?;
 
-        let contents = self.generate_config_file(env)?;
+        let contents = self.generate_config_file(args, env)?;
         debug!("Content of generated GeckoView config file:\n{}", contents);
         let reader = &mut io::BufReader::new(contents.as_bytes());
 
