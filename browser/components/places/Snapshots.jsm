@@ -13,9 +13,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 const VERSION_PREF = "browser.places.snapshots.version";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
+  PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
-  PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
 });
 
 /**
@@ -116,15 +117,6 @@ const Snapshots = new (class Snapshots {
     // PageDataService.on("page-data", this.#onPageData);
   }
 
-  /**
-   * Supported data types.
-   */
-  get DATA_TYPE() {
-    return {
-      PRODUCT: 1,
-    };
-  }
-
   #notify(topic, urls) {
     Services.obs.notifyObservers(null, topic, JSON.stringify(urls));
   }
@@ -141,7 +133,7 @@ const Snapshots = new (class Snapshots {
       let pageData = PageDataService.getCached(url);
       if (pageData?.data.length) {
         for (let data of pageData.data) {
-          if (Object.values(this.DATA_TYPE).includes(data.type)) {
+          if (Object.values(PageDataCollector.DATA_TYPE).includes(data.type)) {
             bindings[`id${index}`] = placeId;
             bindings[`type${index}`] = data.type;
             // We store the whole data object that also includes type because

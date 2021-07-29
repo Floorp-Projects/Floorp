@@ -31,7 +31,7 @@ const ALLOWED_SCHEMES = ["http", "https", "data", "blob"];
  * @typedef {object} Data
  *   An individual piece of data about a page.
  * @property {number} type
- *   The type of data, see Snapshots.DATA_TYPE.*
+ *   The type of data, see PageDataCollector.DATA_TYPE.*
  * @property {object} data
  *   The data in a format specific to the type of data.
  *
