@@ -11,6 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
   JSONHandler: "chrome://remote/content/cdp/JSONHandler.jsm",
   RecommendedPreferences:
     "chrome://remote/content/shared/RecommendedPreferences.jsm",
@@ -83,7 +85,11 @@ class CDP {
 
     await this.targetList.watchForTargets();
 
-    Cu.printStderr(`DevTools listening on ${this.address}\n`);
+    Services.obs.notifyObservers(
+      null,
+      "remote-listening",
+      `DevTools listening on ${this.address}`
+    );
   }
 
   /**
