@@ -162,11 +162,13 @@ nsresult RemotePrintJobParent::PrintPage(
     return rv;
   }
   if (aFragments) {
-    mPrintTranslator->SetDependentSurfaces(std::move(*aFragments));
+    mPrintTranslator->SetDependentSurfaces(aFragments);
   }
   if (!mPrintTranslator->TranslateRecording(aRecording)) {
+    mPrintTranslator->SetDependentSurfaces(nullptr);
     return NS_ERROR_FAILURE;
   }
+  mPrintTranslator->SetDependentSurfaces(nullptr);
 
   rv = mPrintDeviceContext->EndPage();
   if (NS_WARN_IF(NS_FAILED(rv))) {
