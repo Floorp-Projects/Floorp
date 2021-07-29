@@ -939,21 +939,16 @@ set_config("MOZ_IPDL_TESTS", depends_if("--enable-ipdl-tests")(lambda _: True))
 # ==============================================================
 set_define("USE_SKIA", True)
 
-option("--enable-skia-pdf", help="Enable Skia PDF")
+
+@depends(target, milestone)
+def skia_pdf_default(target, milestone):
+    return milestone.is_nightly and target.os != "WINNT"
 
 
-@depends("--enable-skia-pdf", target, milestone)
-def skia_pdf(value, target, milestone):
-    if value.origin == "default":
-        if milestone.is_nightly and target.os != "WINNT":
-            return True
-    if value:
-        return True
+option("--enable-skia-pdf", default=skia_pdf_default, help="{Enable|Disable} Skia PDF")
 
-
-set_config("MOZ_ENABLE_SKIA_PDF", skia_pdf)
-set_define("MOZ_ENABLE_SKIA_PDF", skia_pdf)
-
+set_config("MOZ_ENABLE_SKIA_PDF", True, when="--enable-skia-pdf")
+set_define("MOZ_ENABLE_SKIA_PDF", True, when="--enable-skia-pdf")
 
 set_config(
     "SKIA_INCLUDES",
@@ -975,7 +970,7 @@ set_config("MOZ_SYSTEM_WEBP", depends(when=system_webp)(lambda: True))
 
 # Build Freetype in the tree
 # ==============================================================
-@depends(target, skia_pdf)
+@depends(target, "--enable-skia-pdf")
 def tree_freetype(target, skia_pdf):
     if target.os == "Android" or (skia_pdf and target.os == "WINNT"):
         return True
