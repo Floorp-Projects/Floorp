@@ -2721,6 +2721,59 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
     }
   }
 
+  // Build the JSAtom -> ScriptIndexRange mapping and save on the runtime.
+  {
+    auto& scriptMap = cx->runtime()->selfHostScriptMap.ref();
+
+    // We don't easily know the number of top-level functions, so use the total
+    // number of stencil functions instead. There is very little nesting of
+    // functions in self-hosted code so this is a good approximation.
+    size_t numSelfHostedScripts = stencil.scriptData.size();
+    if (!scriptMap.reserve(numSelfHostedScripts)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+
+    auto topLevelThings =
+        stencil.scriptData[frontend::CompilationStencil::TopLevelIndex]
+            .gcthings(stencil);
+
+    // Iterate over the (named) top-level functions. We record the ScriptIndex
+    // as well as the ScriptIndex of the next top-level function. Scripts
+    // between these two indices are the inner functions of the first one. We
+    // only record named scripts here since they are what might be looked up.
+    RootedAtom prevAtom(cx);
+    frontend::ScriptIndex prevIndex;
+    for (frontend::TaggedScriptThingIndex thing : topLevelThings) {
+      if (!thing.isFunction()) {
+        continue;
+      }
+
+      frontend::ScriptIndex index = thing.toFunction();
+      const auto& script = stencil.scriptData[index];
+
+      if (prevAtom) {
+        frontend::ScriptIndexRange range{prevIndex, index};
+        scriptMap.putNewInfallible(prevAtom, range);
+      }
+
+      prevAtom = script.functionAtom ? input.atomCache.getExistingAtomAt(
+                                           cx, script.functionAtom)
+                                     : nullptr;
+      prevIndex = index;
+    }
+    if (prevAtom) {
+      frontend::ScriptIndexRange range{
+          prevIndex, frontend::ScriptIndex(stencil.scriptData.size())};
+      scriptMap.putNewInfallible(prevAtom, range);
+    }
+
+    // We over-estimated the capacity of `scriptMap`, so check that the estimate
+    // hasn't drifted too hasn't drifted too far since this was written. If this
+    // assert fails, we may need a new way to size the `scriptMap`.
+    MOZ_ASSERT(numSelfHostedScripts < (scriptMap.count() * 1.15));
+  }
+
 #ifdef DEBUG
   // Check that the list of intrinsics is well-formed.
   CheckSelfHostedIntrinsics();
@@ -2876,6 +2929,8 @@ void JSRuntime::finishSelfHosting() {
   selfHostStencilInput_ = nullptr;
   selfHostStencil_ = nullptr;
 
+  selfHostScriptMap.ref().clear();
+
   selfHostingGlobal_ = nullptr;
 }
 
@@ -2890,6 +2945,7 @@ void JSRuntime::traceSelfHostingStencil(JSTracer* trc) {
   if (selfHostStencilInput_.ref()) {
     selfHostStencilInput_->trace(trc);
   }
+  selfHostScriptMap.ref().trace(trc);
 }
 
 GeneratorKind JSRuntime::getSelfHostedFunctionGeneratorKind(
@@ -3287,6 +3343,18 @@ JSFunction* JSRuntime::getUnclonedSelfHostedFunction(PropertyName* name) {
   Value selfHostedValue;
   getUnclonedSelfHostedValue(name, &selfHostedValue);
   return &selfHostedValue.toObject().as<JSFunction>();
+}
+
+mozilla::Maybe<frontend::ScriptIndexRange>
+JSRuntime::getSelfHostedScriptIndexRange(js::PropertyName* name) {
+  if (parentRuntime) {
+    return parentRuntime->getSelfHostedScriptIndexRange(name);
+  }
+  MOZ_ASSERT(name->isPermanentAndMayBeShared());
+  if (auto ptr = selfHostScriptMap.ref().readonlyThreadsafeLookup(name)) {
+    return mozilla::Some(ptr->value());
+  }
+  return mozilla::Nothing();
 }
 
 bool JSRuntime::cloneSelfHostedValue(JSContext* cx, HandlePropertyName name,
