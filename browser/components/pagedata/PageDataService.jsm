@@ -82,7 +82,7 @@ const PageDataService = new (class PageDataService extends EventEmitter {
       if (!win.closed) {
         // Ask any existing tabs to report
         for (let tab of win.gBrowser.tabs) {
-          let parent = tab.linkedBrowser.browsingContext.currentWindowGlobal.getActor(
+          let parent = tab.linkedBrowser.browsingContext?.currentWindowGlobal.getActor(
             "PageData"
           );
 
