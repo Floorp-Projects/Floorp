@@ -1,0 +1,12 @@
+<!doctype html>
+<link rel=match href="iframe-nested-print-scaled-ref.html">
+<style>
+  body { margin: 0 }
+  div {
+    transform-origin: top left;
+    transform: scale(2);
+  }
+</style>
+<div>
+<iframe frameborder=0 scrolling=no src="//{{hosts[alt][www]}}:{{ports[http][0]}}{{location[path]}}/../resources/iframe-nested-cross-origin.html"></iframe>
+</div>
