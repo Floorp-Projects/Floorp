@@ -1443,6 +1443,56 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
   return true;
 }
 
+JSFunction* CompilationStencil::instantiateSelfHostedLazyFunction(
+    JSContext* cx, CompilationAtomCache& atomCache, ScriptIndex index,
+    HandleAtom name) {
+  GeneratorKind generatorKind = scriptExtra[index].immutableFlags.hasFlag(
+                                    ImmutableScriptFlagsEnum::IsGenerator)
+                                    ? GeneratorKind::Generator
+                                    : GeneratorKind::NotGenerator;
+  FunctionAsyncKind asyncKind = scriptExtra[index].immutableFlags.hasFlag(
+                                    ImmutableScriptFlagsEnum::IsAsync)
+                                    ? FunctionAsyncKind::AsyncFunction
+                                    : FunctionAsyncKind::SyncFunction;
+
+  RootedAtom funName(cx);
+  if (scriptData[index].hasSelfHostedCanonicalName()) {
+    // SetCanonicalName was used to override the name.
+    funName = atomCache.getExistingAtomAt(
+        cx, scriptData[index].selfHostedCanonicalName());
+  } else if (name) {
+    // Our caller has a name it wants to use.
+    funName = name;
+  } else {
+    MOZ_ASSERT(scriptData[index].functionAtom);
+    funName = atomCache.getExistingAtomAt(cx, scriptData[index].functionAtom);
+  }
+
+  RootedObject proto(cx);
+  if (!GetFunctionPrototype(cx, generatorKind, asyncKind, &proto)) {
+    return nullptr;
+  }
+
+  RootedObject env(cx, &cx->global()->lexicalEnvironment());
+
+  RootedFunction fun(
+      cx,
+      NewFunctionWithProto(cx, nullptr, scriptExtra[index].nargs,
+                           scriptData[index].functionFlags, env, funName, proto,
+                           gc::AllocKind::FUNCTION_EXTENDED, TenuredObject));
+  if (!fun) {
+    return nullptr;
+  }
+
+  fun->initSelfHostedLazyScript(&cx->runtime()->selfHostedLazyScript.ref());
+
+  JSAtom* selfHostedName =
+      atomCache.getExistingAtomAt(cx, scriptData[index].functionAtom);
+  SetClonedSelfHostedFunctionName(fun, selfHostedName->asPropertyName());
+
+  return fun;
+}
+
 /* static */
 bool CompilationStencil::prepareForInstantiate(
     JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
