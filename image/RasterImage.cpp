@@ -1345,20 +1345,12 @@ void RasterImage::RecoverFromInvalidFrames(const UnorientedIntSize& aSize,
   Decode(aSize, aFlags, PlaybackType::eStatic, unused1, unused2);
 }
 
-static bool HaveSkia() {
-#ifdef MOZ_ENABLE_SKIA
-  return true;
-#else
-  return false;
-#endif
-}
-
 bool RasterImage::CanDownscaleDuringDecode(const UnorientedIntSize& aSize,
                                            uint32_t aFlags) {
   // Check basic requirements: downscale-during-decode is enabled, Skia is
   // available, this image isn't transient, we have all the source data and know
   // our size, and the flags allow us to do it.
-  if (!LoadHasSize() || LoadTransient() || !HaveSkia() ||
+  if (!LoadHasSize() || LoadTransient() ||
       !StaticPrefs::image_downscale_during_decode_enabled() ||
       !(aFlags & imgIContainer::FLAG_HIGH_QUALITY_SCALING)) {
     return false;

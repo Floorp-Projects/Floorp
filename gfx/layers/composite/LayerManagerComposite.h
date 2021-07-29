@@ -505,13 +505,11 @@ class LayerManagerComposite final : public HostLayerManager {
   RefPtr<NativeLayer> mUnusedTransformWarningLayer;
   RefPtr<NativeLayer> mDisabledApzWarningLayer;
 
-#ifdef USE_SKIA
   /**
    * Render paint and composite times above the frame.
    */
   void DrawPaintTimes(Compositor* aCompositor);
   RefPtr<PaintCounter> mPaintCounter;
-#endif
 #if defined(MOZ_WIDGET_ANDROID)
  public:
   virtual void RequestScreenPixels(
