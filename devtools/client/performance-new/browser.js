@@ -30,8 +30,6 @@ const lazy = createLazyLoaders({
   Chrome: () => require("chrome"),
   Services: () => require("Services"),
   OS: () => ChromeUtils.import("resource://gre/modules/osfile.jsm"),
-  ProfilerGetSymbols: () =>
-    ChromeUtils.import("resource://gre/modules/ProfilerGetSymbols.jsm"),
   PerfSymbolication: () =>
     ChromeUtils.import(
       "resource://devtools/client/performance-new/symbolication.jsm.js"
