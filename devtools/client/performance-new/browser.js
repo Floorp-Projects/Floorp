@@ -11,6 +11,7 @@
  * @typedef {import("./@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("./@types/perf").RecordingState} RecordingState
  * @typedef {import("./@types/perf").GetSymbolTableCallback} GetSymbolTableCallback
+ * @typedef {import("./@types/perf").SymbolicationService} SymbolicationService
  * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
  * @typedef {import("./@types/perf").PerformancePref} PerformancePref
  * @typedef {import("./@types/perf").RecordingSettings} RecordingSettings
@@ -66,16 +67,16 @@ const UI_BASE_URL_PATH_DEFAULT = "/from-addon";
  * @param {ProfilerViewMode | undefined} profilerViewMode - View mode for the Firefox Profiler
  *   front-end timeline. While opening the url, we should append a query string
  *   if a view other than "full" needs to be displayed.
- * @param {GetSymbolTableCallback} getSymbolTableCallback - A callback function with the signature
- *   (debugName, breakpadId) => Promise<SymbolTableAsTuple>, which will be invoked
+ * @param {SymbolicationService} symbolicationService - An object which implements the
+ *   SymbolicationService interface, whose getSymbolTable method will be invoked
  *   when profiler.firefox.com sends SYMBOL_TABLE_REQUEST_EVENT messages to us. This
- *   function should obtain a symbol table for the requested binary and resolve the
+ *   method should obtain a symbol table for the requested binary and resolve the
  *   returned promise with it.
  */
 function openProfilerAndDisplayProfile(
   profile,
   profilerViewMode,
-  getSymbolTableCallback
+  symbolicationService
 ) {
   const Services = lazy.Services();
   // Find the most recently used window, as the DevTools client could be in a variety
@@ -125,7 +126,7 @@ function openProfilerAndDisplayProfile(
   mm.sendAsyncMessage(TRANSFER_EVENT, profile);
   mm.addMessageListener(SYMBOL_TABLE_REQUEST_EVENT, e => {
     const { debugName, breakpadId } = e.data;
-    getSymbolTableCallback(debugName, breakpadId).then(
+    symbolicationService.getSymbolTable(debugName, breakpadId).then(
       result => {
         const [addr, index, buffer] = result;
         mm.sendAsyncMessage(SYMBOL_TABLE_RESPONSE_EVENT, {
@@ -214,28 +215,30 @@ function createLibraryMap(sharedLibraries) {
 }
 
 /**
- * Return a function `getSymbolTable` that calls getSymbolTableMultiModal with the
- * right arguments.
+ * Return an object that implements the SymbolicationService interface, whose
+ * getSymbolTable method calls getSymbolTableMultiModal with the right arguments.
  *
  * @param {Library[]} sharedLibraries - Information about the shared libraries
  * @param {string[]} objdirs - An array of objdir paths
  *   on the host machine that should be searched for relevant build artifacts.
  * @param {PerfFront} [perfFront] - An optional perf actor, to obtain symbol
  *   tables from remote targets
- * @return {GetSymbolTableCallback}
+ * @return {SymbolicationService}
  */
-function createMultiModalGetSymbolTableFn(sharedLibraries, objdirs, perfFront) {
+function createLocalSymbolicationService(sharedLibraries, objdirs, perfFront) {
   const libraryGetter = createLibraryMap(sharedLibraries);
 
-  return async function getSymbolTable(debugName, breakpadId) {
-    const lib = libraryGetter(debugName, breakpadId);
-    if (!lib) {
-      throw new Error(
-        `Could not find the library for "${debugName}", "${breakpadId}".`
-      );
-    }
-    const { getSymbolTableMultiModal } = lazy.PerfSymbolication();
-    return getSymbolTableMultiModal(lib, objdirs, perfFront);
+  return {
+    async getSymbolTable(debugName, breakpadId) {
+      const lib = libraryGetter(debugName, breakpadId);
+      if (!lib) {
+        throw new Error(
+          `Could not find the library for "${debugName}", "${breakpadId}".`
+        );
+      }
+      const { getSymbolTableMultiModal } = lazy.PerfSymbolication();
+      return getSymbolTableMultiModal(lib, objdirs, perfFront);
+    },
   };
 }
 
@@ -295,7 +298,7 @@ function openFilePickerForObjdir(window, objdirs, changeObjdirs) {
 module.exports = {
   openProfilerAndDisplayProfile,
   sharedLibrariesFromProfile,
-  createMultiModalGetSymbolTableFn,
+  createLocalSymbolicationService,
   restartBrowserWithEnvironmentVariable,
   getEnvironmentVariable,
   openFilePickerForObjdir,
