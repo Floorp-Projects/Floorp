@@ -48,6 +48,8 @@ class TypedArrayObject : public ArrayBufferViewObject {
  public:
   static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
                 "bad inlined constant in TypedData.h");
+  static_assert(js::detail::TypedArrayDataSlot == DATA_SLOT,
+                "bad inlined constant in TypedData.h");
 
   static bool sameBuffer(Handle<TypedArrayObject*> a,
                          Handle<TypedArrayObject*> b) {
@@ -78,7 +80,7 @@ class TypedArrayObject : public ArrayBufferViewObject {
     return &protoClasses[type];
   }
 
-  static constexpr size_t FIXED_DATA_START = DATA_SLOT + 1;
+  static constexpr size_t FIXED_DATA_START = RESERVED_SLOTS;
 
   // For typed arrays which can store their data inline, the array buffer
   // object is created lazily.
@@ -111,7 +113,7 @@ class TypedArrayObject : public ArrayBufferViewObject {
   bool hasInlineElements() const;
   void setInlineElements();
   uint8_t* elementsRaw() const {
-    return *(uint8_t**)((((char*)this) + ArrayBufferViewObject::dataOffset()));
+    return maybePtrFromReservedSlot<uint8_t>(DATA_SLOT);
   }
   uint8_t* elements() const {
     assertZeroLengthArrayData();

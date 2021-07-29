@@ -1545,9 +1545,6 @@ class NativeObject : public JSObject {
     MOZ_ASSERT(slot < MAX_FIXED_SLOTS);
     return sizeof(NativeObject) + slot * sizeof(Value);
   }
-  static constexpr size_t getPrivateDataOffset(size_t nfixed) {
-    return getFixedSlotOffset(nfixed);
-  }
   static constexpr size_t getFixedSlotIndexFromOffset(size_t offset) {
     MOZ_ASSERT(offset >= sizeof(NativeObject));
     offset -= sizeof(NativeObject);

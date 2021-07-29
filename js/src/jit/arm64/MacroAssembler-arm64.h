@@ -322,6 +322,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     storePtr(temp, dest);
   }
 
+  void storePrivateValue(Register src, const Address& dest) {
+    storePtr(src, dest);
+  }
+
   void loadValue(Address src, Register val) {
     Ldr(ARMRegister(val, 64), MemOperand(src));
   }
