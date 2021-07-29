@@ -34,27 +34,28 @@ XPCOMUtils.defineLazyGetter(this, "activeProtocols", () => {
 const WEBDRIVER_BIDI_ACTIVE = 0x1;
 const CDP_ACTIVE = 0x2;
 
+const DEFAULT_PORT = 9222;
 // By default force local connections only
 const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
 const PREF_FORCE_LOCAL = "remote.force-local";
 
 class RemoteAgentClass {
   constructor() {
-    this.server = null;
+    this.classID = Components.ID("{8f685a9d-8181-46d6-a71d-869289099c6d}");
+    this.helpInfo = `  --remote-debugging-port [<port>] Start the Firefox remote agent,
+                     which is a low-level debugging interface based on the
+                     CDP protocol. Defaults to listen on localhost:9222.\n`;
 
-    if ((activeProtocols & WEBDRIVER_BIDI_ACTIVE) === WEBDRIVER_BIDI_ACTIVE) {
-      this.webDriverBiDi = new WebDriverBiDi(this);
-      logger.debug("WebDriver BiDi enabled");
-    } else {
-      this.webDriverBiDi = null;
-    }
+    this._enabled = false;
+    this._port = DEFAULT_PORT;
+    this._server = null;
 
-    if ((activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
-      this.cdp = new CDP(this);
-      logger.debug("CDP enabled");
-    } else {
-      this.cdp = null;
-    }
+    this._cdp = null;
+    this._webDriverBiDi = null;
+  }
+
+  get cdp() {
+    return this._cdp;
   }
 
   get debuggerAddress() {
@@ -63,6 +64,10 @@ class RemoteAgentClass {
     }
 
     return `${this.host}:${this.port}`;
+  }
+
+  get enabled() {
+    return this._enabled;
   }
 
   get host() {
@@ -85,7 +90,15 @@ class RemoteAgentClass {
     return this.server?.identity.primaryScheme;
   }
 
-  listen(url) {
+  get server() {
+    return this._server;
+  }
+
+  get webDriverBiDi() {
+    return this._webDriverBiDi;
+  }
+
+  async listen(url) {
     if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
       throw Components.Exception(
         "May only be instantiated in parent process",
@@ -94,7 +107,7 @@ class RemoteAgentClass {
     }
 
     if (this.listening) {
-      return Promise.resolve();
+      return;
     }
 
     if (!(url instanceof Ci.nsIURI)) {
@@ -114,14 +127,11 @@ class RemoteAgentClass {
       port = -1;
     }
 
-    this.server = new HttpServer();
-
-    return this.asyncListen(host, port);
-  }
-
-  async asyncListen(host, port) {
     try {
+      this._server = new HttpServer();
       this.server._start(port, host);
+
+      Services.obs.notifyObservers(null, "remote-listening", true);
 
       await this.cdp?.start();
       await this.webDriverBiDi?.start();
@@ -131,30 +141,134 @@ class RemoteAgentClass {
     }
   }
 
-  close() {
+  async close() {
+    if (!this.listening) {
+      return;
+    }
+
     try {
       // Stop the CDP support before stopping the server.
       // Otherwise the HTTP server will fail to stop.
       this.cdp?.stop();
       this.webDriverBiDi?.stop();
 
-      if (this.listening) {
-        return this.server.stop();
-      }
+      await this.server.stop();
+      this._server = null;
+      Services.obs.notifyObservers(null, "remote-listening");
     } catch (e) {
       // this function must never fail
       logger.error("unable to stop listener", e);
-    } finally {
-      this.server = null;
+    }
+  }
+
+  /**
+   * Handle the --remote-debugging-port command line argument.
+   *
+   * @param {nsICommandLine} cmdLine
+   *     Instance of the command line interface.
+   *
+   * @return {boolean}
+   *     Return `true` if the command line argument has been found.
+   */
+  handleRemoteDebuggingPortFlag(cmdLine) {
+    let enabled = false;
+
+    try {
+      // Catch cases when the argument, and a port have been specified.
+      const port = cmdLine.handleFlagWithParam("remote-debugging-port", false);
+      if (port !== null) {
+        enabled = true;
+
+        // In case of an invalid port keep the default port
+        const parsed = Number(port);
+        if (!isNaN(parsed)) {
+          this._port = parsed;
+        }
+      }
+    } catch (e) {
+      // If no port has been given check for the existence of the argument.
+      enabled = cmdLine.handleFlag("remote-debugging-port", false);
     }
 
-    return Promise.resolve();
+    return enabled;
+  }
+
+  async observe(subject, topic) {
+    if (this.enabled) {
+      logger.trace(`Received observer notification ${topic}`);
+    }
+
+    switch (topic) {
+      case "profile-after-change":
+        Services.obs.addObserver(this, "command-line-startup");
+        break;
+
+      case "command-line-startup":
+        Services.obs.removeObserver(this, topic);
+        this._enabled = this.handleRemoteDebuggingPortFlag(subject);
+
+        if (this.enabled) {
+          Services.obs.addObserver(this, "remote-startup-requested");
+        }
+
+        // Ideally we should only enable the Remote Agent when the command
+        // line argument has been specified. But to allow Browser Chrome tests
+        // to run the Remote Agent and the supported protocols also need to be
+        // initialized.
+        //
+        // With Bug 1717899 we will extend the lifetime of the Remote Agent to
+        // the whole Firefox session, which will be identical to Marionette. For
+        // now prevent logging if the component is not enabled during startup.
+        if (
+          (activeProtocols & WEBDRIVER_BIDI_ACTIVE) ===
+          WEBDRIVER_BIDI_ACTIVE
+        ) {
+          this._webDriverBiDi = new WebDriverBiDi(this);
+          if (this.enabled) {
+            logger.debug("WebDriver BiDi enabled");
+          }
+        }
+
+        if ((activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
+          this._cdp = new CDP(this);
+          if (this.enabled) {
+            logger.debug("CDP enabled");
+          }
+        }
+
+        break;
+
+      case "remote-startup-requested":
+        Services.obs.removeObserver(this, topic);
+
+        // Listen for application shutdown to also shutdown the Remote Agent
+        Services.obs.addObserver(this, "quit-application");
+
+        try {
+          let address = Services.io.newURI(`http://localhost:${this._port}`);
+          await this.listen(address);
+        } catch (e) {
+          throw Error(`Unable to start remote agent: ${e}`);
+        }
+
+        break;
+
+      case "quit-application":
+        Services.obs.removeObserver(this, "quit-application");
+
+        this.close();
+        break;
+    }
   }
 
   // XPCOM
 
   get QueryInterface() {
-    return ChromeUtils.generateQI(["nsIRemoteAgent"]);
+    return ChromeUtils.generateQI([
+      "nsICommandLineHandler",
+      "nsIObserver",
+      "nsIRemoteAgent",
+    ]);
   }
 }
 
