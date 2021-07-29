@@ -112,20 +112,21 @@ function createLibraryMap(sharedLibraries) {
  *   3) Profiling a remote browser on a different device.
  *
  * It's also built to handle symbolication requests for both Gecko libraries and
- * system libraries.
+ * system libraries. However, it only handles cases where symbol information
+ * can be found in a local file on this machine. There is one case that is not
+ * covered by that restriction: Android system libraries. That case requires
+ * the help of the perf actor and is implemented in
+ * LocalSymbolicationServiceWithRemoteSymbolTableFallback.
  */
 class LocalSymbolicationService {
   /**
    * @param {Library[]} sharedLibraries - Information about the shared libraries
    * @param {string[]} objdirs - An array of objdir paths
    *   on the host machine that should be searched for relevant build artifacts.
-   * @param {PerfFront} [perfFront] - An optional perf actor, to obtain symbol
-   *   tables from remote targets
    */
-  constructor(sharedLibraries, objdirs, perfFront) {
+  constructor(sharedLibraries, objdirs) {
     this._libraryGetter = createLibraryMap(sharedLibraries);
     this._objdirs = objdirs;
-    this._perfFront = perfFront;
   }
 
   /**
@@ -164,28 +165,12 @@ class LocalSymbolicationService {
       }
     }
 
-    // No local file was found to obtain symbols from.
-    // This can happen if the  debuggee is truly remote (e.g. on an Android phone).
-    if (!this._perfFront) {
-      throw new Error(
-        `Could not obtain symbols for the library ${debugName} ${breakpadId} ` +
-          `because there was no matching file at any of the candidate paths: ${JSON.stringify(
-            candidatePaths
-          )}`
-      );
-    }
-
-    // Try to obtain the symbol table on the debuggee. We get into this
-    // branch in the following cases:
-    //  - Android system libraries
-    //  - Firefox binaries that have no matching equivalent on the host
-    //    machine, for example because the user didn't point us at the
-    //    corresponding objdir, or if the build was compiled somewhere
-    //    else, or if the build on the device is outdated.
-    // For now, the "debuggee" is never a Windows machine, which is why we don't
-    // need to pass the library's debugPath. (path and debugPath are always the
-    // same on non-Windows.)
-    return getSymbolTableFromDebuggee(this._perfFront, lib.path, breakpadId);
+    throw new Error(
+      `Could not obtain symbols for the library ${debugName} ${breakpadId} ` +
+        `because there was no matching file at any of the candidate paths: ${JSON.stringify(
+          candidatePaths
+        )}`
+    );
   }
 
   /**
@@ -238,6 +223,60 @@ class LocalSymbolicationService {
 }
 
 /**
+ * An implementation of the SymbolicationService interface which also
+ * covers the Android system library case.
+ * We first try to get symbols from the wrapped SymbolicationService.
+ * If that fails, we try to get the symbol table through the perf actor.
+ */
+class LocalSymbolicationServiceWithRemoteSymbolTableFallback {
+  /**
+   * @param {SymbolicationService} symbolicationService - The regular symbolication service.
+   * @param {Library[]} sharedLibraries - Information about the shared libraries
+   * @param {PerfFront} perfFront - A perf actor, to obtain symbol
+   *   tables from remote targets
+   */
+  constructor(symbolicationService, sharedLibraries, perfFront) {
+    this._symbolicationService = symbolicationService;
+    this._libraryGetter = createLibraryMap(sharedLibraries);
+    this._perfFront = perfFront;
+  }
+
+  /**
+   * @param {string} debugName
+   * @param {string} breakpadId
+   * @returns {Promise<SymbolTableAsTuple>}
+   */
+  async getSymbolTable(debugName, breakpadId) {
+    try {
+      return await this._symbolicationService.getSymbolTable(
+        debugName,
+        breakpadId
+      );
+    } catch (errorFromLocalFiles) {
+      // Try to obtain the symbol table on the debuggee. We get into this
+      // branch in the following cases:
+      //  - Android system libraries
+      //  - Firefox binaries that have no matching equivalent on the host
+      //    machine, for example because the user didn't point us at the
+      //    corresponding objdir, or if the build was compiled somewhere
+      //    else, or if the build on the device is outdated.
+      // For now, the "debuggee" is never a Windows machine, which is why we don't
+      // need to pass the library's debugPath. (path and debugPath are always the
+      // same on non-Windows.)
+      const lib = this._libraryGetter(debugName, breakpadId);
+      if (!lib) {
+        throw new Error(
+          `Could not find the library for "${debugName}", "${breakpadId}" after falling ` +
+            `back to remote symbol table querying because regular getSymbolTable failed ` +
+            `with error: ${errorFromLocalFiles.message}.`
+        );
+      }
+      return getSymbolTableFromDebuggee(this._perfFront, lib.path, breakpadId);
+    }
+  }
+}
+
+/**
  * Return an object that implements the SymbolicationService interface.
  *
  * @param {Library[]} sharedLibraries - Information about the shared libraries
@@ -248,7 +287,15 @@ class LocalSymbolicationService {
  * @return {SymbolicationService}
  */
 function createLocalSymbolicationService(sharedLibraries, objdirs, perfFront) {
-  return new LocalSymbolicationService(sharedLibraries, objdirs, perfFront);
+  const service = new LocalSymbolicationService(sharedLibraries, objdirs);
+  if (perfFront) {
+    return new LocalSymbolicationServiceWithRemoteSymbolTableFallback(
+      service,
+      sharedLibraries,
+      perfFront
+    );
+  }
+  return service;
 }
 
 // Provide an exports object for the JSM to be properly read by TypeScript.
