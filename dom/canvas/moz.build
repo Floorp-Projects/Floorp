@@ -203,6 +203,7 @@ LOCAL_INCLUDES += [
     "/dom/workers",
     "/dom/xul",
     "/gfx/angle/checkout/include",
+    "/gfx/cairo/cairo/src",
     "/gfx/gl",
     "/image",
     "/js/xpconnect/src",
@@ -212,7 +213,6 @@ LOCAL_INCLUDES += [
     "/media/libyuv/libyuv/include",
 ]
 
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 CXXFLAGS += CONFIG["TK_CFLAGS"]
 
 LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]

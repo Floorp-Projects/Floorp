@@ -61,6 +61,7 @@ LOCAL_INCLUDES += [
     "/docshell/base",
     "/dom/base",
     "/gfx/2d",
+    "/gfx/cairo/cairo/src",
     "/layout/base",
     "/layout/generic",
     "/layout/style",
@@ -71,8 +72,6 @@ LOCAL_INCLUDES += [
 LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
 
 FINAL_LIBRARY = "xul"
-
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 
 if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += ["-Wno-error=shadow"]

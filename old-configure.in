@@ -2313,8 +2313,6 @@ else
     PKG_CHECK_MODULES(MOZ_PIXMAN, pixman-1 >= 0.19.2)
 fi
 
-MOZ_CAIRO_CFLAGS="-I${DIST}/include/cairo"
-
 if test "$OS_ARCH" = "WINNT"; then
     # For now we assume that we will have a uint64_t available through
     # one of the above headers or mozstdint.h.
@@ -2340,7 +2338,6 @@ if test "$MOZ_X11"; then
     MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_OSLIBS $XLDFLAGS -lXrender"
 fi
 
-AC_SUBST_LIST(MOZ_CAIRO_CFLAGS)
 AC_SUBST_LIST(MOZ_CAIRO_LIBS)
 AC_SUBST_LIST(MOZ_CAIRO_OSLIBS)
 AC_SUBST(MOZ_TREE_PIXMAN)

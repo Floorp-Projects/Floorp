@@ -77,6 +77,7 @@ include("/ipc/chromium/chromium-config.mozbuild")
 LOCAL_INCLUDES += [
     "/gfx/2d",
     "/gfx/2d/unittest",
+    "/gfx/cairo/cairo/src",
     "/gfx/config",
     "/gfx/layers",
     "/gfx/ots/src",
@@ -84,8 +85,6 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = "xul-gtest"
-
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 
 if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += ["-Wno-error=shadow"]

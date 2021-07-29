@@ -64,6 +64,7 @@ PREPROCESSED_IPDL_SOURCES += [
 
 LOCAL_INCLUDES += [
     "/dom/ipc",
+    "/gfx/cairo/cairo/src",
     "/toolkit/crashreporter",
     "/xpcom/threads",
 ]
@@ -72,7 +73,6 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
 
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 CXXFLAGS += CONFIG["TK_CFLAGS"]
 CXXFLAGS += ["-Werror=switch"]
 
