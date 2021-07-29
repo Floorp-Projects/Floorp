@@ -9,11 +9,11 @@
 #UITourHighlightContainer {
   appearance: none;
   -moz-window-shadow: none;
-  border: none;
-  background-color: transparent;
+  --panel-border-color: transparent;
+  --panel-background: transparent;
   /* This is a buffer to compensate for the movement in the "wobble" effect,
      and for the box-shadow of #UITourHighlight. */
-  padding: 4px;
+  --panel-padding: 4px;
   /* Compensate the displacement caused by padding. */
   margin: -4px;
 }
