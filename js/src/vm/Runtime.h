@@ -412,7 +412,7 @@ struct JSRuntime {
     MOZ_ASSERT(hasSelfHostStencil());
     return *selfHostStencil_.ref();
   }
-  bool hasSelfHostStencil() { return bool(selfHostStencil_.ref()); }
+  bool hasSelfHostStencil() const { return bool(selfHostStencil_.ref()); }
 
   // A mapping from the name of self-hosted function to a ScriptIndex range of
   // the function and inner-functions within the self-hosted stencil.
@@ -696,7 +696,7 @@ struct JSRuntime {
   // Self-hosting support
   //-------------------------------------------------------------------------
 
-  bool hasInitializedSelfHosting() const { return selfHostingGlobal_; }
+  bool hasInitializedSelfHosting() const { return hasSelfHostStencil(); }
 
   bool initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache = nullptr,
                        JS::SelfHostedWriter xdrWriter = nullptr);
@@ -710,8 +710,8 @@ struct JSRuntime {
   bool delazifySelfHostedFunction(JSContext* cx,
                                   js::Handle<js::PropertyName*> name,
                                   js::Handle<JSFunction*> targetFun);
-  bool cloneSelfHostedValue(JSContext* cx, js::Handle<js::PropertyName*> name,
-                            js::MutableHandleValue vp);
+  bool getSelfHostedValue(JSContext* cx, js::Handle<js::PropertyName*> name,
+                          js::MutableHandleValue vp);
   void assertSelfHostedFunctionHasCanonicalName(js::HandlePropertyName name);
 #if DEBUG
   bool isSelfHostingZone(const JS::Zone* zone) const {

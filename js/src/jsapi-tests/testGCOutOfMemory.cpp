@@ -65,7 +65,7 @@ virtual JSContext* createContext() override {
   // OOM. (Actually, this only happens with nursery zeal, because normally
   // the nursery will start out with only a single chunk before triggering a
   // major GC.)
-  JSContext* cx = JS_NewContext(1024 * 1024);
+  JSContext* cx = JS_NewContext(4 * 1024 * 1024);
   if (!cx) {
     return nullptr;
   }
