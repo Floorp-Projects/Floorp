@@ -466,12 +466,14 @@ enum CClosureSlot {
 };
 
 enum CDataFinalizerSlot {
+  // PrivateValue storing CDataFinalizer::Private* pointer or UndefinedValue.
+  SLOT_DATAFINALIZER_PRIVATE = 0,
   // The type of the value (a CType JSObject).
   // We hold it to permit ImplicitConvert and ToSource.
-  SLOT_DATAFINALIZER_VALTYPE = 0,
+  SLOT_DATAFINALIZER_VALTYPE = 1,
   // The type of the function used at finalization (a CType JSObject).
   // We hold it to permit |ToSource|.
-  SLOT_DATAFINALIZER_CODETYPE = 1,
+  SLOT_DATAFINALIZER_CODETYPE = 2,
   CDATAFINALIZER_SLOTS
 };
 
