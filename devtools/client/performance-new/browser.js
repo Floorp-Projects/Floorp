@@ -220,7 +220,8 @@ function createLibraryMap(sharedLibraries) {
  * @param {Library[]} sharedLibraries - Information about the shared libraries
  * @param {string[]} objdirs - An array of objdir paths
  *   on the host machine that should be searched for relevant build artifacts.
- * @param {PerfFront} perfFront
+ * @param {PerfFront} [perfFront] - An optional perf actor, to obtain symbol
+ *   tables from remote targets
  * @return {GetSymbolTableCallback}
  */
 function createMultiModalGetSymbolTableFn(sharedLibraries, objdirs, perfFront) {
