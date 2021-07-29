@@ -91,7 +91,7 @@ nsFrameLoaderOwner::ShouldPreserveBrowsingContext(
 
 void nsFrameLoaderOwner::ChangeRemotenessCommon(
     const ChangeRemotenessContextType& aContextType,
-    const RemotenessChangeOptions& aOptions, bool aSwitchingInProgressLoad,
+    const NavigationIsolationOptions& aOptions, bool aSwitchingInProgressLoad,
     bool aIsRemote, BrowsingContextGroup* aGroup,
     std::function<void()>& aFrameLoaderInit, mozilla::ErrorResult& aRv) {
   MOZ_ASSERT_IF(aGroup, aContextType != ChangeRemotenessContextType::PRESERVE);
@@ -237,7 +237,7 @@ void nsFrameLoaderOwner::ChangeRemoteness(
 
   auto shouldPreserve = ShouldPreserveBrowsingContext(
       isRemote, /* replaceBrowsingContext */ false);
-  RemotenessChangeOptions options;
+  NavigationIsolationOptions options;
   ChangeRemotenessCommon(shouldPreserve, options,
                          aOptions.mSwitchingInProgressLoad, isRemote,
                          /* group */ nullptr, frameLoaderInit, rv);
@@ -258,7 +258,7 @@ void nsFrameLoaderOwner::ChangeRemotenessWithBridge(BrowserBridgeChild* aBridge,
     mFrameLoader->mRemoteBrowser = host;
   };
 
-  RemotenessChangeOptions options;
+  NavigationIsolationOptions options;
   ChangeRemotenessCommon(ChangeRemotenessContextType::PRESERVE, options,
                          /* inProgress */ true,
                          /* isRemote */ true, /* group */ nullptr,
@@ -266,7 +266,7 @@ void nsFrameLoaderOwner::ChangeRemotenessWithBridge(BrowserBridgeChild* aBridge,
 }
 
 void nsFrameLoaderOwner::ChangeRemotenessToProcess(
-    ContentParent* aContentParent, const RemotenessChangeOptions& aOptions,
+    ContentParent* aContentParent, const NavigationIsolationOptions& aOptions,
     BrowsingContextGroup* aGroup, mozilla::ErrorResult& rv) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT_IF(aGroup, aOptions.mReplaceBrowsingContext);
@@ -309,7 +309,7 @@ void nsFrameLoaderOwner::SubframeCrashed() {
         }));
   };
 
-  RemotenessChangeOptions options;
+  NavigationIsolationOptions options;
   ChangeRemotenessCommon(ChangeRemotenessContextType::PRESERVE, options,
                          /* inProgress */ false, /* isRemote */ false,
                          /* group */ nullptr, frameLoaderInit, IgnoreErrors());
