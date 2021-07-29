@@ -28,10 +28,6 @@ impl crate::Expression {
             crate::Expression::ImageSample { .. } | crate::Expression::ImageLoad { .. } => 1,
             // derivatives use the control flow
             crate::Expression::Derivative { .. } => 1,
-            // TODO: We need a better fix for named `Load` expressions
-            // More info - https://github.com/gfx-rs/naga/pull/914
-            // And https://github.com/gfx-rs/naga/issues/910
-            crate::Expression::Load { .. } => 1,
             // cache expressions that are referenced multiple times
             _ => 2,
         }
@@ -40,7 +36,7 @@ impl crate::Expression {
 
 /// Helper function that returns the string corresponding to the [`BinaryOperator`](crate::BinaryOperator)
 /// # Notes
-/// Used by `glsl-out`, `msl-out`, `wgsl-out`, `hlsl-out`.
+/// Used by `glsl-out`, `msl-out`, `wgsl-out`.
 #[allow(dead_code)]
 fn binary_operation_str(op: crate::BinaryOperator) -> &'static str {
     use crate::BinaryOperator as Bo;
@@ -68,7 +64,7 @@ fn binary_operation_str(op: crate::BinaryOperator) -> &'static str {
 
 /// Helper function that returns the string corresponding to the [`VectorSize`](crate::VectorSize)
 /// # Notes
-/// Used by `msl-out`, `wgsl-out`, `hlsl-out`.
+/// Used by `msl-out`, `wgsl-out`.
 #[allow(dead_code)]
 fn vector_size_str(size: crate::VectorSize) -> &'static str {
     match size {
