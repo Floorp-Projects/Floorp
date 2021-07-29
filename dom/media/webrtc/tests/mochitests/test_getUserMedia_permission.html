@@ -59,8 +59,8 @@ runTest(async () => {
     const src = origin + path;
     is(await iframeGum({ src, sandbox: "allow-scripts" }),
        "NotAllowedError", "gUM fails in sandboxed iframe " + origin);
-    is(await iframeGum({ src, sandbox: "allow-scripts allow-same-origin " + origin }),
-       "success", "gUM works in regular iframe");
+    is(await iframeGum({ src, sandbox: "allow-scripts allow-same-origin" }),
+       "success", "gUM works in regular iframe" + origin);
   }
 
   // Test gUM in sandboxed vs regular srcdoc iframe
