@@ -118,7 +118,8 @@
     <string name="recent_tabs_show_all">Show all</string>
 
     <!-- History Metadata -->
-    <!-- Header text for past explorations in the home screen -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
     <string name="history_metadata_header">Past explorations</string>
 
     <!-- Browser Fragment -->
