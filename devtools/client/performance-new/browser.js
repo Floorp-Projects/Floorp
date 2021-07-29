@@ -150,7 +150,27 @@ function openProfilerAndDisplayProfile(
 }
 
 /**
- * Returns a function getDebugPathFor(debugName, breakpadId) => Library which
+ * Flatten all the sharedLibraries of the different processes in the profile
+ * into one list of libraries.
+ * @param {MinimallyTypedGeckoProfile} profile - The profile JSON object
+ * @returns {Library[]}
+ */
+function sharedLibrariesFromProfile(profile) {
+  /**
+   * @param {MinimallyTypedGeckoProfile} processProfile
+   * @returns {Library[]}
+   */
+  function getLibsRecursive(processProfile) {
+    return processProfile.libs.concat(
+      ...processProfile.processes.map(getLibsRecursive)
+    );
+  }
+
+  return getLibsRecursive(profile);
+}
+
+/**
+ * Returns a function getLibrary(debugName, breakpadId) => Library which
  * resolves a (debugName, breakpadId) pair to the library's information, which
  * contains the absolute paths on the file system where the binary and its
  * optional pdb file are stored.
@@ -175,27 +195,18 @@ function openProfilerAndDisplayProfile(
  *    retains it on the returned closure so that it can be consulted after the
  *    profile has been passed to the UI.
  *
- * @param {MinimallyTypedGeckoProfile} profile - The profile JSON object
+ * @param {Library[]} sharedLibraries
  * @returns {(debugName: string, breakpadId: string) => Library | undefined}
  */
-function createLibraryMap(profile) {
-  const map = new Map();
-
-  /**
-   * @param {MinimallyTypedGeckoProfile} processProfile
-   */
-  function fillMapForProcessRecursive(processProfile) {
-    for (const lib of processProfile.libs) {
+function createLibraryMap(sharedLibraries) {
+  const map = new Map(
+    sharedLibraries.map(lib => {
       const { debugName, breakpadId } = lib;
       const key = [debugName, breakpadId].join(":");
-      map.set(key, lib);
-    }
-    for (const subprocess of processProfile.processes) {
-      fillMapForProcessRecursive(subprocess);
-    }
-  }
+      return [key, lib];
+    })
+  );
 
-  fillMapForProcessRecursive(profile);
   return function getLibraryFor(debugName, breakpadId) {
     const key = [debugName, breakpadId].join(":");
     return map.get(key);
@@ -213,7 +224,8 @@ function createLibraryMap(profile) {
  * @return {GetSymbolTableCallback}
  */
 function createMultiModalGetSymbolTableFn(profile, objdirs, perfFront) {
-  const libraryGetter = createLibraryMap(profile);
+  const sharedLibraries = sharedLibrariesFromProfile(profile);
+  const libraryGetter = createLibraryMap(sharedLibraries);
 
   return async function getSymbolTable(debugName, breakpadId) {
     const lib = libraryGetter(debugName, breakpadId);
