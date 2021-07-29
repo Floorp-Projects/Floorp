@@ -32,7 +32,7 @@ StaticRefPtr<TimelineConsumers> TimelineConsumers::sInstance;
 // This flag makes sure the singleton never gets instantiated while a shutdown
 // is in progress. This can actually happen, and `ClearOnShutdown` doesn't work
 // in these cases.
-bool TimelineConsumers::sInShutdown = false;
+Atomic<bool> TimelineConsumers::sInShutdown{false};
 
 already_AddRefed<TimelineConsumers> TimelineConsumers::Get() {
   // Using this class is not supported yet for other processes other than
@@ -49,42 +49,26 @@ already_AddRefed<TimelineConsumers> TimelineConsumers::Get() {
     return nullptr;
   }
 
-  // Note: We don't simply check `sInstance` for null-ness here, since otherwise
-  // this can resurrect the TimelineConsumers pretty late during shutdown.
-  // We won't know if we're in shutdown or not though, because the singleton
-  // could have been destroyed or just never instantiated, so in the previous
-  // conditional `sInShutdown` would be false.
-  static bool firstTime = true;
-  if (firstTime) {
-    firstTime = false;
-
-    StaticMutexAutoLock lock(sMutex);
-    sInstance = new TimelineConsumers();
-
-    // Make sure the initialization actually suceeds, otherwise don't allow
-    // access by destroying the instance immediately.
-    if (sInstance->Init()) {
-      ClearOnShutdown(&sInstance);
-    } else {
-      sInstance->RemoveObservers();
-      sInstance = nullptr;
-    }
-  }
-
   RefPtr<TimelineConsumers> copy = sInstance.get();
   return copy.forget();
 }
 
-bool TimelineConsumers::Init() {
+/* static */
+void TimelineConsumers::Init() {
+  MOZ_ASSERT(!sInstance);
+  RefPtr<TimelineConsumers> instance = new TimelineConsumers();
+
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (!obs) {
-    return false;
+    return;
   }
   if (NS_WARN_IF(NS_FAILED(
-          obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false)))) {
-    return false;
+          obs->AddObserver(instance, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false)))) {
+    return;
   }
-  return true;
+
+  sInstance = instance;
+  ClearOnShutdown(&sInstance);
 }
 
 bool TimelineConsumers::RemoveObservers() {
