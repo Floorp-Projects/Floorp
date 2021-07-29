@@ -3245,58 +3245,30 @@ static bool CloneValue(JSContext* cx, HandleValue selfHostedValue,
   return true;
 }
 
-bool JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx,
-                                              HandlePropertyName name,
-                                              HandleFunction targetFun) {
-  RootedFunction sourceFun(cx, getUnclonedSelfHostedFunction(name));
-  if (!sourceFun) {
-    return false;
-  }
+bool JSRuntime::delazifySelfHostedFunction(JSContext* cx,
+                                           HandlePropertyName name,
+                                           HandleFunction targetFun) {
   MOZ_ASSERT(targetFun->isExtended());
   MOZ_ASSERT(targetFun->hasSelfHostedLazyScript());
 
-  RootedScript sourceScript(cx, JSFunction::getOrCreateScript(cx, sourceFun));
-  if (!sourceScript) {
+  auto indexRange = *getSelfHostedScriptIndexRange(name);
+  auto& stencil = cx->runtime()->selfHostStencil();
+
+  if (!stencil.delazifySelfHostedFunction(
+          cx, cx->runtime()->selfHostStencilInput().atomCache, indexRange,
+          targetFun)) {
     return false;
   }
 
-  Rooted<ScriptSourceObject*> sourceObject(cx,
-                                           SelfHostingScriptSourceObject(cx));
-  if (!sourceObject) {
-    return false;
-  }
-
-  // Assert that there are no intervening scopes between the global scope
-  // and the self-hosted script. Toplevel lexicals are explicitly forbidden
-  // by the parser when parsing self-hosted code. The fact they have the
-  // global lexical scope on the scope chain is for uniformity and engine
-  // invariants.
-  MOZ_ASSERT(sourceScript->outermostScope()->enclosing()->kind() ==
-             ScopeKind::Global);
-  RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
-  if (!CloneScriptIntoFunction(cx, emptyGlobalScope, targetFun, sourceScript,
-                               sourceObject)) {
-    return false;
-  }
-
-  MOZ_ASSERT(targetFun->hasBytecode());
-  RootedScript targetScript(cx, targetFun->nonLazyScript());
-
-  // Relazifiable self-hosted function may be relazified later into a
-  // SelfHostedLazyScript. It is important to note that this only applies to
-  // named self-hosted entry points (that use this clone method). Inner
-  // functions clones used by self-hosted are never relazified, even if they
-  // would be able to in normal script.
+  // Relazifiable self-hosted functions may be relazified later into a
+  // SelfHostedLazyScript, dropping the BaseScript entirely. This only applies
+  // to named function being delazified. Inner functions used by self-hosting
+  // are never relazified.
+  BaseScript* targetScript = targetFun->baseScript();
   if (targetScript->isRelazifiable()) {
     targetScript->setAllowRelazify();
   }
 
-  MOZ_ASSERT(sourceFun->nargs() == targetFun->nargs());
-  MOZ_ASSERT(sourceScript->hasRest() == targetScript->hasRest());
-  MOZ_ASSERT(targetFun->strict(), "Self-hosted builtins must be strict");
-
-  // The target function might have been relazified after its flags changed.
-  targetFun->setFlags(targetFun->flags().toRaw() | sourceFun->flags().toRaw());
   return true;
 }
 

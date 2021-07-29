@@ -99,10 +99,10 @@ bool js::frontend::EmitScriptThingsVector(
         break;
       }
       case TaggedScriptThingIndex::Kind::Scope:
-        output[i] = JS::GCCellPtr(gcOutput.scopes[thing.toScope()]);
+        output[i] = JS::GCCellPtr(gcOutput.getScope(thing.toScope()));
         break;
       case TaggedScriptThingIndex::Kind::Function:
-        output[i] = JS::GCCellPtr(gcOutput.functions[thing.toFunction()]);
+        output[i] = JS::GCCellPtr(gcOutput.getFunction(thing.toFunction()));
         break;
       case TaggedScriptThingIndex::Kind::EmptyGlobalScope: {
         Scope* scope = &cx->global()->emptyGlobalScope();
