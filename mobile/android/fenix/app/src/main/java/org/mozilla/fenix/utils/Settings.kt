@@ -1139,6 +1139,17 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         featureFlag = FeatureFlags.addressesFeature
     )
 
+    var isHistoryMetadataEnabled by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),
+        default = false
+    )
+
+    var historyMetadataFeature by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),
+        default = FeatureFlags.historyMetadataFeature,
+        featureFlag = FeatureFlags.historyMetadataFeature || isHistoryMetadataEnabled
+    )
+
     /**
      * Storing desktop item checkbox value in the home screen menu.
      * If set to true, next opened tab from home screen will be opened in desktop mode.

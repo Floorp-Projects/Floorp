@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.components
 
-import org.mozilla.fenix.gecko.GeckoProvider
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
@@ -14,8 +13,8 @@ import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.browser.engine.gecko.permission.GeckoSitePermissionsStorage
 import mozilla.components.browser.icons.BrowserIcons
-import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
@@ -66,13 +65,13 @@ import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.search.SearchMigration
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.gecko.GeckoProvider
 import org.mozilla.fenix.historymetadata.DefaultHistoryMetadataService
 import org.mozilla.fenix.historymetadata.HistoryMetadataMiddleware
 import org.mozilla.fenix.historymetadata.HistoryMetadataService
@@ -85,7 +84,6 @@ import org.mozilla.fenix.telemetry.TelemetryMiddleware
 import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.getUndoDelay
 import org.mozilla.geckoview.GeckoRuntime
-import java.lang.IllegalStateException
 
 /**
  * Component group for all core browser functionality.
@@ -213,7 +211,7 @@ class Core(
                 LastMediaAccessMiddleware()
             )
 
-        if (FeatureFlags.historyMetadataFeature) {
+        if (context.settings().historyMetadataFeature) {
             middlewareList += HistoryMetadataMiddleware(historyMetadataService)
         }
 

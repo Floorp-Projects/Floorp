@@ -45,16 +45,8 @@ import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
-import kotlinx.android.synthetic.main.fragment_home.view.bottomBarShadow
-import kotlinx.android.synthetic.main.fragment_home.view.bottom_bar
-import kotlinx.android.synthetic.main.fragment_home.view.homeAppBar
-import kotlinx.android.synthetic.main.fragment_home.view.menuButton
-import kotlinx.android.synthetic.main.fragment_home.view.sessionControlRecyclerView
-import kotlinx.android.synthetic.main.fragment_home.view.tab_button
-import kotlinx.android.synthetic.main.fragment_home.view.toolbar
-import kotlinx.android.synthetic.main.fragment_home.view.toolbarLayout
-import kotlinx.android.synthetic.main.fragment_home.view.toolbar_wrapper
-import kotlinx.android.synthetic.main.no_collections_message.view.add_tabs_to_collections_button
+import kotlinx.android.synthetic.main.fragment_home.view.*
+import kotlinx.android.synthetic.main.no_collections_message.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -117,9 +109,9 @@ import org.mozilla.fenix.historymetadata.controller.DefaultHistoryMetadataContro
 import org.mozilla.fenix.home.mozonline.showPrivacyPopWindow
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmarksFeature
 import org.mozilla.fenix.home.recentbookmarks.controller.DefaultRecentBookmarksController
+import org.mozilla.fenix.home.recenttabs.RecentTabsListFeature
 import org.mozilla.fenix.home.recenttabs.controller.DefaultRecentTabsController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
-import org.mozilla.fenix.home.recenttabs.RecentTabsListFeature
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.sessioncontrol.SessionControlView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
@@ -283,7 +275,7 @@ class HomeFragment : Fragment() {
             )
         }
 
-        if (FeatureFlags.historyMetadataFeature) {
+        if (requireContext().settings().historyMetadataFeature) {
             historyMetadataFeature.set(
                 feature = HistoryMetadataFeature(
                     homeStore = homeFragmentStore,

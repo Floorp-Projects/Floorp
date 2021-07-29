@@ -26,11 +26,11 @@ import mozilla.components.feature.syncedtabs.DeviceIndicators
 import mozilla.components.feature.syncedtabs.SyncedTabsStorageSuggestionProvider
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchEngineSource
 import org.mozilla.fenix.search.SearchFragmentState
 
@@ -250,7 +250,7 @@ class AwesomeBarView(
         val providersToAdd = mutableSetOf<AwesomeBar.SuggestionProvider>()
 
         if (state.showHistorySuggestions) {
-            if (FeatureFlags.historyMetadataFeature) {
+            if (activity.settings().historyMetadataFeature) {
                 providersToAdd.add(historyMetadataProvider)
             } else {
                 providersToAdd.add(historyStorageProvider)
@@ -284,7 +284,7 @@ class AwesomeBarView(
         providersToRemove.add(shortcutsEnginePickerProvider)
 
         if (!state.showHistorySuggestions) {
-            if (FeatureFlags.historyMetadataFeature) {
+            if (activity.settings().historyMetadataFeature) {
                 providersToRemove.add(historyMetadataProvider)
             } else {
                 providersToRemove.add(historyStorageProvider)

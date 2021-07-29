@@ -21,10 +21,10 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.readerview.ReaderViewFeature
-import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -207,7 +207,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     override fun onStop() {
         super.onStop()
         updateLastBrowseActivity()
-        if (FeatureFlags.historyMetadataFeature) {
+        if (requireContext().settings().historyMetadataFeature) {
             updateHistoryMetadata()
         }
         pwaOnboardingObserver?.stop()
