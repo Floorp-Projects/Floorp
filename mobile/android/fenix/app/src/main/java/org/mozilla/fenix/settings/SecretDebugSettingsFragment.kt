@@ -21,6 +21,7 @@ import androidx.fragment.app.Fragment
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.theme.FirefoxTheme
 
 class SecretDebugSettingsFragment : Fragment() {
 
@@ -36,7 +37,11 @@ class SecretDebugSettingsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         return ComposeView(requireContext()).apply {
-            setContent { DebugInfo() }
+            setContent {
+                FirefoxTheme {
+                    DebugInfo()
+                }
+            }
         }
     }
 }
@@ -46,24 +51,29 @@ private fun DebugInfo() {
     val store = components.core.store
 
     Column(
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier
+            .padding(8.dp)
     ) {
         Text(
             text = stringResource(R.string.debug_info_region_home),
             style = MaterialTheme.typography.h6,
-            modifier = Modifier.padding(4.dp)
+            color = MaterialTheme.colors.onBackground,
+            modifier = Modifier.padding(4.dp),
         )
         Text(
             text = store.state.search.region?.home ?: "Unknown",
+            color = MaterialTheme.colors.onBackground,
             modifier = Modifier.padding(4.dp)
         )
         Text(
             text = stringResource(R.string.debug_info_region_current),
             style = MaterialTheme.typography.h6,
+            color = MaterialTheme.colors.onBackground,
             modifier = Modifier.padding(4.dp)
         )
         Text(
             text = store.state.search.region?.current ?: "Unknown",
+            color = MaterialTheme.colors.onBackground,
             modifier = Modifier.padding(4.dp)
         )
     }
