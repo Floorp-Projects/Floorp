@@ -1465,6 +1465,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout"
 pref("browser.newtabpage.activity-stream.discoverystream.spoc-positions", "2,4,11,20");
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint-query", "");
+pref("browser.newtabpage.activity-stream.discoverystream.sponsored-collections.enabled", false);
 
 // List of regions that do not get stories, regardless of locale-list-config.
 pref("browser.newtabpage.activity-stream.discoverystream.region-stories-block", "FR");

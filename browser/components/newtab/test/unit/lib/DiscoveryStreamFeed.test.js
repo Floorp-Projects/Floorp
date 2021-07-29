@@ -325,7 +325,7 @@ describe("DiscoveryStreamFeed", () => {
         "https://spocs.getpocket.com/spocs"
       );
       const { layout } = feed.store.getState().DiscoveryStream;
-      assert.equal(layout[0].components[3].properties.items, 3);
+      assert.equal(layout[0].components[2].properties.items, 3);
     });
     it("should use 1 row layout if specified", async () => {
       feed.config.hardcoded_layout = true;
@@ -348,7 +348,7 @@ describe("DiscoveryStreamFeed", () => {
       await feed.loadLayout(feed.store.dispatch);
 
       const { layout } = feed.store.getState().DiscoveryStream;
-      assert.equal(layout[0].components[3].properties.items, 3);
+      assert.equal(layout[0].components[2].properties.items, 3);
     });
     it("should use 7 row layout if specified", async () => {
       feed.config.hardcoded_layout = true;
@@ -371,7 +371,7 @@ describe("DiscoveryStreamFeed", () => {
       await feed.loadLayout(feed.store.dispatch);
 
       const { layout } = feed.store.getState().DiscoveryStream;
-      assert.equal(layout[0].components[3].properties.items, 21);
+      assert.equal(layout[0].components[2].properties.items, 21);
     });
     it("should use new spocs endpoint if in the config", async () => {
       feed.config.spocs_endpoint = "https://spocs.getpocket.com/spocs2";
@@ -410,7 +410,7 @@ describe("DiscoveryStreamFeed", () => {
         "https://spocs.getpocket.com/spocs"
       );
       const { layout } = feed.store.getState().DiscoveryStream;
-      assert.equal(layout[0].components[3].properties.items, 3);
+      assert.equal(layout[0].components[2].properties.items, 3);
     });
     it("should use new spocs endpoint if in a FF pref", async () => {
       feed.store = createStore(combineReducers(reducers), {
@@ -2094,6 +2094,16 @@ describe("DiscoveryStreamFeed", () => {
       await feed.onAction({
         type: at.PREF_CHANGED,
         data: { name: "pocketConfig", value: false },
+      });
+
+      assert.calledOnce(feed.onPocketConfigChanged);
+    });
+    it("should fire onPocketConfigChanged when collections pref changes", async () => {
+      sandbox.stub(feed, "onPocketConfigChanged").returns(Promise.resolve());
+
+      await feed.onAction({
+        type: at.PREF_CHANGED,
+        data: { name: "discoverystream.sponsored-collections.enabled" },
       });
 
       assert.calledOnce(feed.onPocketConfigChanged);

@@ -66,6 +66,8 @@ const PREF_SHOW_SPONSORED = "showSponsored";
 const PREF_SPOC_IMPRESSIONS = "discoverystream.spoc.impressions";
 const PREF_FLIGHT_BLOCKS = "discoverystream.flight.blocks";
 const PREF_REC_IMPRESSIONS = "discoverystream.rec.impressions";
+const PREF_COLLECTIONS_ENABLED =
+  "discoverystream.sponsored-collections.enabled";
 const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
 const PREF_RECS_PERSONALIZED = "discoverystream.recs.personalized";
 const PREF_SPOCS_PERSONALIZED = "discoverystream.spocs.personalized";
@@ -451,7 +453,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
 
     if (!layoutResp || !layoutResp.layout) {
-      const isBasic =
+      const isBasicLayout =
         this.config.hardcoded_basic_layout ||
         this.store.getState().Prefs.values[PREF_HARDCODED_BASIC_LAYOUT] ||
         this.store.getState().Prefs.values[PREF_REGION_BASIC_LAYOUT];
@@ -460,12 +462,17 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         .getState()
         .Prefs.values?.pocketConfig?.spocPositions?.split(`,`);
 
+      const sponsoredCollectionsEnabled = this.store.getState().Prefs.values[
+        PREF_COLLECTIONS_ENABLED
+      ];
+
       // Set a hardcoded layout if one is needed.
       // Changing values in this layout in memory object is unnecessary.
-      layoutResp = getHardcodedLayout(
-        isBasic,
-        this.parseSpocPositions(spocPositions)
-      );
+      layoutResp = getHardcodedLayout({
+        isBasicLayout,
+        spocPositions: this.parseSpocPositions(spocPositions),
+        sponsoredCollectionsEnabled,
+      });
     }
 
     sendUpdate({
@@ -722,6 +729,19 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
+  updateSponsoredCollectionsPref(collectionEnabled = false) {
+    const currentState = this.store.getState().Prefs.values[
+      PREF_COLLECTIONS_ENABLED
+    ];
+
+    // If the current state does not match the new state, update the pref.
+    if (currentState !== collectionEnabled) {
+      this.store.dispatch(
+        ac.SetPref(PREF_COLLECTIONS_ENABLED, collectionEnabled)
+      );
+    }
+  }
+
   async loadSpocs(sendUpdate, isStartup) {
     const cachedData = (await this.cache.get()) || {};
     let spocsState;
@@ -765,6 +785,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
               // When we removed version 1, version 2 was now the defacto only version.
               // Without a version 1, the override is now a command to turn off personalization.
               !spocsResponse.settings.feature_flags.spoc_v2
+            );
+            this.updateSponsoredCollectionsPref(
+              spocsResponse.settings.feature_flags.collections
             );
           }
 
@@ -1579,6 +1602,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         // This is a config reset directly related to Discovery Stream pref.
         this.configReset();
         break;
+      case PREF_COLLECTIONS_ENABLED:
+        this.onPocketConfigChanged();
+        break;
       case PREF_USER_TOPSTORIES:
       case PREF_SYSTEM_TOPSTORIES:
         if (!action.data.value) {
@@ -1818,7 +1844,11 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 //
 // NOTE: There is some branching logic in the template based on `isBasicLayout`
 //
-getHardcodedLayout = (isBasicLayout, spocPositions = [2, 4, 11, 20]) => ({
+getHardcodedLayout = ({
+  isBasicLayout,
+  spocPositions = [2, 4, 11, 20],
+  sponsoredCollectionsEnabled = false,
+}) => ({
   lastUpdate: Date.now(),
   spocs: {
     url: "https://spocs.getpocket.com/spocs",
@@ -1836,34 +1866,38 @@ getHardcodedLayout = (isBasicLayout, spocPositions = [2, 4, 11, 20]) => ({
           },
           properties: {},
         },
-        {
-          type: "CollectionCardGrid",
-          properties: {
-            items: 3,
-          },
-          header: {
-            title: "",
-          },
-          placement: {
-            name: "sponsored-collection",
-            ad_types: [3617],
-            zone_ids: [217759, 218031],
-          },
-          spocs: {
-            probability: 1,
-            positions: [
+        ...(sponsoredCollectionsEnabled
+          ? [
               {
-                index: 0,
+                type: "CollectionCardGrid",
+                properties: {
+                  items: 3,
+                },
+                header: {
+                  title: "",
+                },
+                placement: {
+                  name: "sponsored-collection",
+                  ad_types: [3617],
+                  zone_ids: [217759, 218031],
+                },
+                spocs: {
+                  probability: 1,
+                  positions: [
+                    {
+                      index: 0,
+                    },
+                    {
+                      index: 1,
+                    },
+                    {
+                      index: 2,
+                    },
+                  ],
+                },
               },
-              {
-                index: 1,
-              },
-              {
-                index: 2,
-              },
-            ],
-          },
-        },
+            ]
+          : []),
         {
           type: "Message",
           header: {

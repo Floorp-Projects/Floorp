@@ -177,6 +177,11 @@ this.PrefsFeed = class PrefsFeed {
     this._setBoolPref(values, "logowordmark.alwaysVisible", false);
     this._setBoolPref(values, "feeds.section.topstories", false);
     this._setBoolPref(values, "discoverystream.enabled", false);
+    this._setBoolPref(
+      values,
+      "discoverystream.sponsored-collections.enabled",
+      false
+    );
     this._setBoolPref(values, "discoverystream.isCollectionDismissible", false);
     this._setBoolPref(values, "discoverystream.hardcoded-basic-layout", false);
     this._setBoolPref(values, "discoverystream.recs.personalized", false);
