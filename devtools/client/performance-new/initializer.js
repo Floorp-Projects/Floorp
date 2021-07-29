@@ -63,6 +63,7 @@ const actions = require("devtools/client/performance-new/store/actions");
 const {
   openProfilerAndDisplayProfile,
   createMultiModalGetSymbolTableFn,
+  sharedLibrariesFromProfile,
 } = require("devtools/client/performance-new/browser");
 
 const {
@@ -142,8 +143,9 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
    */
   const onProfileReceived = (profile, profilerViewMode) => {
     const objdirs = selectors.getObjdirs(store.getState());
+    const sharedLibraries = sharedLibrariesFromProfile(profile);
     const getSymbolTableCallback = createMultiModalGetSymbolTableFn(
-      profile,
+      sharedLibraries,
       objdirs,
       perfFront
     );
