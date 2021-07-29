@@ -1331,7 +1331,7 @@ static const EStateRule sWAIUnivStateMap[] = {
 
 struct AttrCharacteristics {
   const nsStaticAtom* const attributeName;
-  const int8_t characteristics;
+  const uint8_t characteristics;
 };
 
 static const AttrCharacteristics gWAIUnivAttrMap[] = {
@@ -1442,14 +1442,14 @@ uint64_t aria::UniversalStatesFor(mozilla::dom::Element* aElement) {
   return state;
 }
 
-int8_t aria::AttrCharacteristicsFor(nsAtom* aAtom) {
+uint8_t aria::AttrCharacteristicsFor(nsAtom* aAtom) {
   for (uint32_t i = 0; i < ArrayLength(gWAIUnivAttrMap); i++) {
     if (gWAIUnivAttrMap[i].attributeName == aAtom) {
       return gWAIUnivAttrMap[i].characteristics;
     }
   }
 
-  return -1;
+  return 0;
 }
 
 bool aria::HasDefinedARIAHidden(nsIContent* aContent) {
@@ -1476,7 +1476,7 @@ bool AttrIterator::Next() {
       nsDependentAtomString attrStr(mAttrAtom);
       if (!StringBeginsWith(attrStr, u"aria-"_ns)) continue;  // Not ARIA
 
-      int8_t attrFlags = aria::AttrCharacteristicsFor(mAttrAtom);
+      uint8_t attrFlags = aria::AttrCharacteristicsFor(mAttrAtom);
       if (attrFlags & ATTR_BYPASSOBJ) {
         continue;  // No need to handle exposing as obj attribute here
       }
