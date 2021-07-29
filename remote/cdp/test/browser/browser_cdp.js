@@ -17,7 +17,7 @@ add_task(async function testCDP({ client }) {
   );
   is(
     version.product,
-    isHeadless ? "Headless Firefox" : "Firefox",
+    isHeadless ? "Headless Firefox" : Services.appinfo.name,
     "Browser.getVersion works and depends on headless mode"
   );
   is(
