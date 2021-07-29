@@ -958,7 +958,7 @@ def sysroot_path(host_or_target):
             path = sysroot_input[0]
         if path:
             log.info("Using %s sysroot in %s", host_or_target_str, path)
-        return namespace(path=path, bootstrapped=bool(sysroot_input))
+        return namespace(path=path, bootstrapped=bool(path and not sysroot_input))
 
     return sysroot_path
 
