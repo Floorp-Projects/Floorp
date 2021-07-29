@@ -181,7 +181,7 @@ function getCompactSymbolTableFromPath(binaryPath, debugPath, breakpadId) {
   }
 }
 
-function getSymbolTable(debugName, breakpadId, libInfoMap, objdirs) {
+function getSymbolTableInWorker(debugName, breakpadId, libInfoMap, objdirs) {
   const helper = new PathHelper(libInfoMap, objdirs);
   const candidatePaths = helper.getCandidatePaths(debugName, breakpadId);
 
@@ -218,7 +218,12 @@ onmessage = async e => {
     // Instantiate the WASM module.
     await wasm_bindgen(module);
 
-    const result = getSymbolTable(debugName, breakpadId, libInfoMap, objdirs);
+    const result = getSymbolTableInWorker(
+      debugName,
+      breakpadId,
+      libInfoMap,
+      objdirs
+    );
     postMessage(
       { result },
       result.map(r => r.buffer)
