@@ -4910,12 +4910,18 @@ void EventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
         nsCOMPtr<nsIContent> targetContent;
         mCurrentTarget->GetContentForEvent(aDragEvent,
                                            getter_AddRefs(targetContent));
+        if (targetContent && targetContent->IsText()) {
+          targetContent = targetContent->GetFlattenedTreeParent();
+        }
 
         if (sLastDragOverFrame) {
           // The frame has changed but the content may not have. Check before
           // dispatching to content
           sLastDragOverFrame->GetContentForEvent(aDragEvent,
                                                  getter_AddRefs(lastContent));
+          if (lastContent && lastContent->IsText()) {
+            lastContent = lastContent->GetFlattenedTreeParent();
+          }
 
           FireDragEnterOrExit(sLastDragOverFrame->PresContext(), aDragEvent,
                               eDragExit, targetContent, lastContent,
