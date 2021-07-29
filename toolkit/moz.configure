@@ -937,9 +937,6 @@ set_config("MOZ_IPDL_TESTS", depends_if("--enable-ipdl-tests")(lambda _: True))
 
 # Graphics
 # ==============================================================
-set_define("USE_SKIA", True)
-
-
 @depends(target, milestone)
 def skia_pdf_default(target, milestone):
     return milestone.is_nightly and target.os != "WINNT"

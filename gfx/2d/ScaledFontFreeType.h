@@ -26,10 +26,8 @@ class ScaledFontFreeType : public ScaledFontBase {
 
   FontType GetType() const override { return FontType::FREETYPE; }
 
-#ifdef USE_SKIA
   SkTypeface* CreateSkTypeface() override;
   void SetupSkFontDrawOptions(SkFont& aFont) override;
-#endif
 
   AntialiasMode GetDefaultAAMode() override { return AntialiasMode::GRAY; }
 
@@ -47,10 +45,8 @@ class ScaledFontFreeType : public ScaledFontBase {
   bool HasVariationSettings() override;
 
  protected:
-#ifdef USE_CAIRO_SCALED_FONT
   cairo_font_face_t* CreateCairoFontFace(
       cairo_font_options_t* aFontOptions) override;
-#endif
 
  private:
   friend UnscaledFontFreeType;
