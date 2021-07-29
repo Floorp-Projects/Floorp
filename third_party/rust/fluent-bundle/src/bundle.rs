@@ -4,15 +4,13 @@
 //! internationalization formatters, functions, scopeironmental variables and are expected to be used
 //! together.
 
-use rustc_hash::FxHashMap;
 use std::borrow::Borrow;
 use std::borrow::Cow;
-use std::collections::hash_map::Entry as HashEntry;
+use std::collections::hash_map::{Entry as HashEntry, HashMap};
 use std::default::Default;
 use std::fmt;
 
 use fluent_syntax::ast;
-use intl_memoizer::IntlLangMemoizer;
 use unic_langid::LanguageIdentifier;
 
 use crate::args::FluentArgs;
@@ -20,128 +18,60 @@ use crate::entry::Entry;
 use crate::entry::GetEntry;
 use crate::errors::{EntryKind, FluentError};
 use crate::memoizer::MemoizerKind;
-use crate::message::FluentMessage;
+use crate::message::{FluentAttribute, FluentMessage};
 use crate::resolver::{ResolveValue, Scope, WriteValue};
 use crate::resource::FluentResource;
 use crate::types::FluentValue;
 
-/// A collection of localization messages for a single locale, which are meant
-/// to be used together in a single view, widget or any other UI abstraction.
+/// Base class for a [`FluentBundle`] struct. See its docs for details.
+/// It also is implemented for [`concurrent::FluentBundle`].
 ///
-/// # Examples
-///
-/// ```
-/// use fluent_bundle::{FluentBundle, FluentResource, FluentValue, FluentArgs};
-/// use unic_langid::langid;
-///
-/// // 1. Create a FluentResource
-///
-/// let ftl_string = String::from("intro = Welcome, { $name }.");
-/// let resource = FluentResource::try_new(ftl_string)
-///     .expect("Could not parse an FTL string.");
-///
-///
-/// // 2. Create a FluentBundle
-///
-/// let langid_en = langid!("en-US");
-/// let mut bundle = FluentBundle::new(vec![langid_en]);
-///
-///
-/// // 3. Add the resource to the bundle
-///
-/// bundle.add_resource(&resource)
-///     .expect("Failed to add FTL resources to the bundle.");
-///
-///
-/// // 4. Retrieve a FluentMessage from the bundle
-///
-/// let msg = bundle.get_message("intro")
-///     .expect("Message doesn't exist.");
-///
-/// let mut args = FluentArgs::new();
-/// args.set("name", "Rustacean");
-///
-///
-/// // 5. Format the value of the message
-///
-/// let mut errors = vec![];
-///
-/// let pattern = msg.value()
-///     .expect("Message has no value.");
-///
-/// assert_eq!(
-///     bundle.format_pattern(&pattern, Some(&args), &mut errors),
-///     // The placeholder is wrapper in Unicode Directionality Marks
-///     // to indicate that the placeholder may be of different direction
-///     // than surrounding string.
-///     "Welcome, \u{2068}Rustacean\u{2069}."
-/// );
-///
-/// ```
-///
-/// # `FluentBundle` Life Cycle
-///
-/// ## Create a bundle
-///
-/// To create a bundle, call [`FluentBundle::new`] with a locale list that represents the best
-/// possible fallback chain for a given locale. The simplest case is a one-locale list.
-///
-/// Fluent uses [`LanguageIdentifier`] which can be created using `langid!` macro.
-///
-/// ## Add Resources
-///
-/// Next, call [`add_resource`](FluentBundle::add_resource) one or more times, supplying translations in the FTL syntax.
-///
-/// Since [`FluentBundle`] is generic over anything that can borrow a [`FluentResource`],
-/// one can use [`FluentBundle`] to own its resources, store references to them,
-/// or even [`Rc<FluentResource>`](std::rc::Rc) or [`Arc<FluentResource>`](std::sync::Arc).
-///
-/// The [`FluentBundle`] instance is now ready to be used for localization.
-///
-/// ## Format
-///
-/// To format a translation, call [`get_message`](FluentBundle::get_message) to retrieve a [`FluentMessage`],
-/// and then call [`format_pattern`](FluentBundle::format_pattern) on the message value or attribute in order to
-/// retrieve the translated string.
-///
-/// The result of [`format_pattern`](FluentBundle::format_pattern) is an
-/// [`Cow<str>`](std::borrow::Cow). It is
-/// recommended to treat the result as opaque from the perspective of the program and use it only
-/// to display localized messages. Do not examine it or alter in any way before displaying.  This
-/// is a general good practice as far as all internationalization operations are concerned.
-///
-/// If errors were encountered during formatting, they will be
-/// accumulated in the [`Vec<FluentError>`](FluentError) passed as the third argument.
-///
-/// While they are not fatal, they usually indicate problems with the translation,
-/// and should be logged or reported in a way that allows the developer to notice
-/// and fix them.
-///
-///
-/// # Locale Fallback Chain
-///
-/// [`FluentBundle`] stores messages in a single locale, but keeps a locale fallback chain for the
-/// purpose of language negotiation with i18n formatters. For instance, if date and time formatting
-/// are not available in the first locale, [`FluentBundle`] will use its `locales` fallback chain
-/// to negotiate a sensible fallback for date and time formatting.
-///
-/// # Concurrency
-///
-/// As you may have noticed, [`fluent_bundle::FluentBundle`](crate::FluentBundle) is a specialization of [`fluent_bundle::bundle::FluentBundle`](crate::bundle::FluentBundle)
-/// which works with an [`IntlLangMemoizer`] over [`RefCell`](std::cell::RefCell).
-/// In scenarios where the memoizer must work concurrently, there's an implementation of
-/// [`IntlLangMemoizer`](intl_memoizer::concurrent::IntlLangMemoizer) that uses [`Mutex`](std::sync::Mutex) and there's [`FluentBundle::new_concurrent`] which works with that.
-pub struct FluentBundle<R, M> {
+/// [`FluentBundle`]: ../type.FluentBundle.html
+/// [`concurrent::FluentBundle`]: ../concurrent/type.FluentBundle.html
+pub struct FluentBundleBase<R, M> {
     pub locales: Vec<LanguageIdentifier>,
     pub(crate) resources: Vec<R>,
-    pub(crate) entries: FxHashMap<String, Entry>,
+    pub(crate) entries: HashMap<String, Entry>,
     pub(crate) intls: M,
     pub(crate) use_isolating: bool,
     pub(crate) transform: Option<fn(&str) -> Cow<str>>,
     pub(crate) formatter: Option<fn(&FluentValue, &M) -> Option<String>>,
 }
 
-impl<R, M> FluentBundle<R, M> {
+impl<R, M: MemoizerKind> FluentBundleBase<R, M> {
+    /// Constructs a FluentBundle. The first element in `locales` should be the
+    /// language this bundle represents, and will be used to determine the
+    /// correct plural rules for this bundle. You can optionally provide extra
+    /// languages in the list; they will be used as fallback date and time
+    /// formatters if a formatter for the primary language is unavailable.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use fluent_bundle::FluentBundle;
+    /// use fluent_bundle::FluentResource;
+    /// use unic_langid::langid;
+    ///
+    /// let langid_en = langid!("en-US");
+    /// let mut bundle: FluentBundle<FluentResource> = FluentBundle::new(vec![langid_en]);
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// This will panic if no formatters can be found for the locales.
+    pub fn new(locales: Vec<LanguageIdentifier>) -> Self {
+        let first_locale = locales.get(0).cloned().unwrap_or_default();
+        Self {
+            locales,
+            resources: vec![],
+            entries: HashMap::new(),
+            intls: M::new(first_locale),
+            use_isolating: true,
+            transform: None,
+            formatter: None,
+        }
+    }
+
     /// Adds a resource to the bundle, returning an empty [`Result<T>`] on success.
     ///
     /// If any entry in the resource uses the same identifier as an already
@@ -196,14 +126,18 @@ impl<R, M> FluentBundle<R, M> {
         let res = r.borrow();
         let res_pos = self.resources.len();
 
-        for (entry_pos, entry) in res.entries().enumerate() {
-            let (id, entry) = match entry {
-                ast::Entry::Message(ast::Message { ref id, .. }) => {
-                    (id.name, Entry::Message((res_pos, entry_pos)))
+        for (entry_pos, entry) in res.ast().body.iter().enumerate() {
+            let id = match entry {
+                ast::Entry::Message(ast::Message { ref id, .. })
+                | ast::Entry::Term(ast::Term { ref id, .. }) => id.name,
+                _ => continue,
+            };
+
+            let (entry, kind) = match entry {
+                ast::Entry::Message(..) => {
+                    (Entry::Message([res_pos, entry_pos]), EntryKind::Message)
                 }
-                ast::Entry::Term(ast::Term { ref id, .. }) => {
-                    (id.name, Entry::Term((res_pos, entry_pos)))
-                }
+                ast::Entry::Term(..) => (Entry::Term([res_pos, entry_pos]), EntryKind::Term),
                 _ => continue,
             };
 
@@ -212,11 +146,6 @@ impl<R, M> FluentBundle<R, M> {
                     empty.insert(entry);
                 }
                 HashEntry::Occupied(_) => {
-                    let kind = match entry {
-                        Entry::Message(..) => EntryKind::Message,
-                        Entry::Term(..) => EntryKind::Term,
-                        _ => unreachable!(),
-                    };
                     errors.push(FluentError::Overriding {
                         kind,
                         id: id.to_string(),
@@ -277,7 +206,7 @@ impl<R, M> FluentBundle<R, M> {
     /// let mut errors = vec![];
     /// let msg = bundle.get_message("hello")
     ///     .expect("Failed to retrieve the message");
-    /// let value = msg.value().expect("Failed to retrieve the value of the message");
+    /// let value = msg.value.expect("Failed to retrieve the value of the message");
     /// assert_eq!(bundle.format_pattern(value, None, &mut errors), "Another Hi!");
     /// ```
     ///
@@ -299,14 +228,16 @@ impl<R, M> FluentBundle<R, M> {
         let res = r.borrow();
         let res_pos = self.resources.len();
 
-        for (entry_pos, entry) in res.entries().enumerate() {
-            let (id, entry) = match entry {
-                ast::Entry::Message(ast::Message { ref id, .. }) => {
-                    (id.name, Entry::Message((res_pos, entry_pos)))
-                }
-                ast::Entry::Term(ast::Term { ref id, .. }) => {
-                    (id.name, Entry::Term((res_pos, entry_pos)))
-                }
+        for (entry_pos, entry) in res.ast().body.iter().enumerate() {
+            let id = match entry {
+                ast::Entry::Message(ast::Message { ref id, .. })
+                | ast::Entry::Term(ast::Term { ref id, .. }) => id.name,
+                _ => continue,
+            };
+
+            let entry = match entry {
+                ast::Entry::Message(..) => Entry::Message([res_pos, entry_pos]),
+                ast::Entry::Term(..) => Entry::Term([res_pos, entry_pos]),
                 _ => continue,
             };
 
@@ -338,7 +269,11 @@ impl<R, M> FluentBundle<R, M> {
     /// and `fluent-pseudo` crate provides a function
     /// that can be passed here.
     pub fn set_transform(&mut self, func: Option<fn(&str) -> Cow<str>>) {
-        self.transform = func;
+        if let Some(f) = func {
+            self.transform = Some(f);
+        } else {
+            self.transform = None;
+        }
     }
 
     /// This method allows to specify a function that will
@@ -348,7 +283,11 @@ impl<R, M> FluentBundle<R, M> {
     /// It's particularly useful for plugging in an external
     /// formatter for `FluentValue::Number`.
     pub fn set_formatter(&mut self, func: Option<fn(&FluentValue, &M) -> Option<String>>) {
-        self.formatter = func;
+        if let Some(f) = func {
+            self.formatter = Some(f);
+        } else {
+            self.formatter = None;
+        }
     }
 
     /// Returns true if this bundle contains a message with the given id.
@@ -397,11 +336,21 @@ impl<R, M> FluentBundle<R, M> {
     /// let msg = bundle.get_message("hello-world");
     /// assert_eq!(msg.is_some(), true);
     /// ```
-    pub fn get_message<'l>(&'l self, id: &str) -> Option<FluentMessage<'l>>
+    pub fn get_message(&self, id: &str) -> Option<FluentMessage>
     where
         R: Borrow<FluentResource>,
     {
-        self.get_entry_message(id).map(Into::into)
+        let message = self.get_entry_message(id)?;
+        let value = message.value.as_ref();
+        let mut attributes = Vec::with_capacity(message.attributes.len());
+
+        for attr in &message.attributes {
+            attributes.push(FluentAttribute {
+                id: attr.id.name,
+                value: &attr.value,
+            });
+        }
+        Some(FluentMessage { value, attributes })
     }
 
     /// Writes a formatted pattern which comes from a `FluentMessage`.
@@ -425,7 +374,7 @@ impl<R, M> FluentBundle<R, M> {
     /// let msg = bundle.get_message("hello-world")
     ///     .expect("Failed to retrieve a FluentMessage.");
     ///
-    /// let pattern = msg.value()
+    /// let pattern = msg.value
     ///     .expect("Missing Value.");
     /// let mut errors = vec![];
     ///
@@ -445,7 +394,6 @@ impl<R, M> FluentBundle<R, M> {
     where
         R: Borrow<FluentResource>,
         W: fmt::Write,
-        M: MemoizerKind,
     {
         let mut scope = Scope::new(self, args, Some(errors));
         pattern.write(w, &mut scope)
@@ -472,7 +420,7 @@ impl<R, M> FluentBundle<R, M> {
     /// let msg = bundle.get_message("hello-world")
     ///     .expect("Failed to retrieve a FluentMessage.");
     ///
-    /// let pattern = msg.value()
+    /// let pattern = msg.value
     ///     .expect("Missing Value.");
     /// let mut errors = vec![];
     ///
@@ -488,7 +436,6 @@ impl<R, M> FluentBundle<R, M> {
     ) -> Cow<'bundle, str>
     where
         R: Borrow<FluentResource>,
-        M: MemoizerKind,
     {
         let mut scope = Scope::new(self, args, Some(errors));
         let value = pattern.resolve(&mut scope);
@@ -524,7 +471,7 @@ impl<R, M> FluentBundle<R, M> {
     ///
     /// let msg = bundle.get_message("length").expect("Message doesn't exist.");
     /// let mut errors = vec![];
-    /// let pattern = msg.value().expect("Message has no value.");
+    /// let pattern = msg.value.expect("Message has no value.");
     /// let value = bundle.format_pattern(&pattern, None, &mut errors);
     /// assert_eq!(&value, "5");
     /// ```
@@ -547,69 +494,17 @@ impl<R, M> FluentBundle<R, M> {
     }
 }
 
-impl<R> Default for FluentBundle<R, IntlLangMemoizer> {
+impl<R, M: MemoizerKind> Default for FluentBundleBase<R, M> {
     fn default() -> Self {
-        Self::new(vec![LanguageIdentifier::default()])
-    }
-}
-
-impl<R> FluentBundle<R, IntlLangMemoizer> {
-    /// Constructs a FluentBundle. The first element in `locales` should be the
-    /// language this bundle represents, and will be used to determine the
-    /// correct plural rules for this bundle. You can optionally provide extra
-    /// languages in the list; they will be used as fallback date and time
-    /// formatters if a formatter for the primary language is unavailable.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use fluent_bundle::FluentBundle;
-    /// use fluent_bundle::FluentResource;
-    /// use unic_langid::langid;
-    ///
-    /// let langid_en = langid!("en-US");
-    /// let mut bundle: FluentBundle<FluentResource> = FluentBundle::new(vec![langid_en]);
-    /// ```
-    ///
-    /// # Errors
-    ///
-    /// This will panic if no formatters can be found for the locales.
-    pub fn new(locales: Vec<LanguageIdentifier>) -> Self {
-        let first_locale = locales.get(0).cloned().unwrap_or_default();
+        let langid = LanguageIdentifier::default();
         Self {
-            locales,
+            locales: vec![langid.clone()],
             resources: vec![],
-            entries: FxHashMap::default(),
-            intls: IntlLangMemoizer::new(first_locale),
+            entries: Default::default(),
             use_isolating: true,
+            intls: M::new(langid),
             transform: None,
             formatter: None,
         }
-    }
-}
-
-impl crate::memoizer::MemoizerKind for IntlLangMemoizer {
-    fn new(lang: LanguageIdentifier) -> Self
-    where
-        Self: Sized,
-    {
-        Self::new(lang)
-    }
-
-    fn with_try_get_threadsafe<I, R, U>(&self, args: I::Args, cb: U) -> Result<R, I::Error>
-    where
-        Self: Sized,
-        I: intl_memoizer::Memoizable + Send + Sync + 'static,
-        I::Args: Send + Sync + 'static,
-        U: FnOnce(&I) -> R,
-    {
-        self.with_try_get(args, cb)
-    }
-
-    fn stringify_value(
-        &self,
-        value: &dyn crate::types::FluentType,
-    ) -> std::borrow::Cow<'static, str> {
-        value.as_string(self)
     }
 }

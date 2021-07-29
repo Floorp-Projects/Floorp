@@ -7,6 +7,10 @@ name = "Inflector"
 version = "0.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe438c63458706e03479442743baae6c88256498e6431708f6dfc520a26515d3"
+dependencies = [
+ "lazy_static",
+ "regex",
+]
 
 [[package]]
 name = "adler"
@@ -89,17 +93,6 @@ source = "git+https://github.com/kinetiknz/ashmem-rs?rev=e47f470a54193532d60057e
 dependencies = [
  "ioctl-sys",
  "libc",
-]
-
-[[package]]
-name = "async-trait"
-version = "0.1.42"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d3a45e77e34375a7923b1e8febb049bb011f064714a8e17a1a616fef01da13d"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -589,12 +582,6 @@ dependencies = [
  "time",
  "winapi",
 ]
-
-[[package]]
-name = "chunky-vec"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb7bdea464ae038f09197b82430b921c53619fc8d2bcaf7b151013b3ca008017"
 
 [[package]]
 name = "clang-sys"
@@ -1429,9 +1416,9 @@ dependencies = [
 
 [[package]]
 name = "fluent"
-version = "0.15.0"
+version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc4d7142005e2066e4844caf9f271b93fc79836ee96ec85057b8c109687e629a"
+checksum = "e4f3359832f932e4ddbb4c56851623cb50bd08d1ae36e9ec80cfc44f412e1400"
 dependencies = [
  "fluent-bundle",
  "fluent-pseudo",
@@ -1440,31 +1427,16 @@ dependencies = [
 
 [[package]]
 name = "fluent-bundle"
-version = "0.15.1"
+version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8acf044eeb4872d9dbf2667541fbf461f5965c57e343878ad0fb24b5793fa007"
+checksum = "4c0cd40fee9f6eb74dfb38f0fa700a92ac4fe702868b04e52018ead90d415332"
 dependencies = [
  "fluent-langneg",
  "fluent-syntax",
  "intl-memoizer",
  "intl_pluralrules",
  "ouroboros",
- "rustc-hash",
  "smallvec",
- "unic-langid",
-]
-
-[[package]]
-name = "fluent-fallback"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "768feaf8a77beababd5cf3bb1154597b7161eb5a555013a3ac594fe3ed8b18ee"
-dependencies = [
- "async-trait",
- "chunky-vec",
- "fluent-bundle",
- "futures 0.3.15",
- "once_cell",
  "unic-langid",
 ]
 
@@ -1473,11 +1445,8 @@ name = "fluent-ffi"
 version = "0.1.0"
 dependencies = [
  "fluent",
- "fluent-fallback",
  "fluent-pseudo",
- "futures 0.3.15",
  "intl-memoizer",
- "l10nregistry 0.2.0 (git+https://github.com/zbraniecki/l10nregistry-rs)",
  "nsstring",
  "thin-vec",
  "unic-langid",
@@ -1516,12 +1485,9 @@ dependencies = [
 
 [[package]]
 name = "fluent-syntax"
-version = "0.11.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0abed97648395c902868fee9026de96483933faa54ea3b40d652f7dfe61ca78"
-dependencies = [
- "thiserror",
-]
+checksum = "edb1016e8c600060e0099218442fff329a204f6316d6ec974d590d3281517a52"
 
 [[package]]
 name = "fnv"
@@ -1625,7 +1591,6 @@ checksum = "0e7e43a803dae2fa37c1f6a8fe121e1f7bf9548b4dfc0522a42f34145dadfc27"
 dependencies = [
  "futures-channel",
  "futures-core",
- "futures-executor",
  "futures-io",
  "futures-sink",
  "futures-task",
@@ -1659,34 +1624,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "futures-executor"
-version = "0.3.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "badaa6a909fac9e7236d0620a2f57f7664640c56575b71a7552fbd68deafab79"
-dependencies = [
- "futures-core",
- "futures-task",
- "futures-util",
-]
-
-[[package]]
 name = "futures-io"
 version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acc499defb3b348f8d8f3f66415835a9131856ff7714bf10dadfc4ec4bdb29a1"
-
-[[package]]
-name = "futures-macro"
-version = "0.3.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4c40298486cdf52cc00cd6d6987892ba502c7656a16a4192a9992b1ccedd121"
-dependencies = [
- "autocfg",
- "proc-macro-hack",
- "proc-macro2",
- "quote",
- "syn",
-]
 
 [[package]]
 name = "futures-sink"
@@ -1707,18 +1648,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "feb5c238d27e2bf94ffdfd27b2c29e3df4a68c4193bb6427384259e2bf191967"
 dependencies = [
  "autocfg",
- "futures-channel",
  "futures-core",
- "futures-io",
- "futures-macro",
  "futures-sink",
  "futures-task",
- "memchr",
  "pin-project-lite 0.2.6",
  "pin-utils",
- "proc-macro-hack",
- "proc-macro-nested",
- "slab",
 ]
 
 [[package]]
@@ -1990,7 +1924,6 @@ dependencies = [
  "cubeb-sys",
  "encoding_glue",
  "fluent",
- "fluent-fallback",
  "fluent-ffi",
  "fluent-langneg",
  "fluent-langneg-ffi",
@@ -2002,7 +1935,6 @@ dependencies = [
  "http_sfv",
  "jsrust_shared",
  "kvstore",
- "l10nregistry 0.2.0 (git+https://github.com/zbraniecki/l10nregistry-rs?rev=92d8fbfbbbdffa2047ce01a935a389eb11031f69)",
  "l10nregistry-ffi",
  "lmdb-rkv-sys",
  "log",
@@ -2637,52 +2569,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "l10nregistry"
-version = "0.2.0"
-source = "git+https://github.com/zbraniecki/l10nregistry-rs?rev=92d8fbfbbbdffa2047ce01a935a389eb11031f69#92d8fbfbbbdffa2047ce01a935a389eb11031f69"
-dependencies = [
- "async-trait",
- "fluent-bundle",
- "fluent-fallback",
- "futures 0.3.15",
- "pin-project-lite 0.2.6",
- "replace_with",
- "rustc-hash",
- "unic-langid",
-]
-
-[[package]]
-name = "l10nregistry"
-version = "0.2.0"
-source = "git+https://github.com/zbraniecki/l10nregistry-rs#92d8fbfbbbdffa2047ce01a935a389eb11031f69"
-dependencies = [
- "async-trait",
- "fluent-bundle",
- "fluent-fallback",
- "futures 0.3.15",
- "pin-project-lite 0.2.6",
- "replace_with",
- "rustc-hash",
- "unic-langid",
-]
-
-[[package]]
 name = "l10nregistry-ffi"
 version = "0.1.0"
 dependencies = [
- "async-trait",
- "cstr",
- "fluent",
  "futures-channel",
- "l10nregistry 0.2.0 (git+https://github.com/zbraniecki/l10nregistry-rs?rev=92d8fbfbbbdffa2047ce01a935a389eb11031f69)",
  "libc",
- "log",
- "moz_task",
  "nserror",
  "nsstring",
- "thin-vec",
- "unic-langid",
- "xpcom",
 ]
 
 [[package]]
@@ -3605,9 +3498,9 @@ dependencies = [
 
 [[package]]
 name = "ouroboros"
-version = "0.9.2"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8234affc3c31a8b744cc236fd3dc7443f57c6370cbb7d61f41f9c7dcc6c2530"
+checksum = "b0b666c900ea45a357bc7915a4dc8fab7e295f2e756e843aa3c0788d94aa3a29"
 dependencies = [
  "ouroboros_macro",
  "stable_deref_trait",
@@ -3615,12 +3508,11 @@ dependencies = [
 
 [[package]]
 name = "ouroboros_macro"
-version = "0.9.2"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3633332cd8c0b6a865e2e0e705fad9cde25fe458cd0c693629b58a7b15e4d852"
+checksum = "dfc618f205c0adc415923c74369d45f5f298462fc473711dfc33056a23f23619"
 dependencies = [
  "Inflector",
- "proc-macro-error",
  "proc-macro2",
  "quote",
  "syn",
@@ -3897,40 +3789,10 @@ name = "prefs_parser"
 version = "0.0.1"
 
 [[package]]
-name = "proc-macro-error"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
-dependencies = [
- "proc-macro-error-attr",
- "proc-macro2",
- "quote",
- "syn",
- "version_check",
-]
-
-[[package]]
-name = "proc-macro-error-attr"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
-dependencies = [
- "proc-macro2",
- "quote",
- "version_check",
-]
-
-[[package]]
 name = "proc-macro-hack"
 version = "0.5.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dbf0c48bc1d91375ae5c3cd81e3722dff1abcf81a30960240640d223f59fe0e5"
-
-[[package]]
-name = "proc-macro-nested"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc881b2c22681370c6a780e47af9840ef841837bc98118431d4e1868bd0c1086"
 
 [[package]]
 name = "proc-macro2"
@@ -4224,12 +4086,6 @@ dependencies = [
  "quote",
  "syn",
 ]
-
-[[package]]
-name = "replace_with"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3a8614ee435691de62bcffcf4a66d91b3594bf1428a5722e79103249a095690"
 
 [[package]]
 name = "ringbuf"

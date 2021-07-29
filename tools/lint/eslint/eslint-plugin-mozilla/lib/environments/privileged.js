@@ -319,7 +319,6 @@ module.exports = {
     KeyEvent: false,
     KeyboardEvent: false,
     KeyframeEffect: false,
-    L10nFileSource: false,
     Localization: false,
     Location: false,
     MIDIAccess: false,

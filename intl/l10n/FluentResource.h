@@ -21,8 +21,7 @@ class FluentResource : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(FluentResource)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(FluentResource)
 
-  FluentResource(nsISupports* aParent, const ffi::FluentResource* aRaw);
-  FluentResource(nsISupports* aParent, const nsACString& aSource);
+  explicit FluentResource(nsISupports* aParent, const nsACString& aSource);
 
   static already_AddRefed<FluentResource> Constructor(
       const dom::GlobalObject& aGlobal, const nsACString& aSource);
@@ -34,10 +33,10 @@ class FluentResource : public nsWrapperCache {
   const ffi::FluentResource* Raw() const { return mRaw; }
 
  protected:
-  virtual ~FluentResource() = default;
+  virtual ~FluentResource();
 
   nsCOMPtr<nsISupports> mParent;
-  RefPtr<const ffi::FluentResource> mRaw;
+  const RefPtr<const ffi::FluentResource> mRaw;
   bool mHasErrors;
 };
 
