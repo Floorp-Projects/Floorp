@@ -168,7 +168,7 @@ The practical details of working on the Marionette code is outlined
 in [Contributing.md], but generally you do not have to re-build
 Firefox when changing code.  Any change to remote/marionette/*.js
 will be picked up on restarting Firefox.  The only notable exception
-is remote/components/marionette.js, which does require
+is remote/components/Marionette.jsm, which does require
 a re-build.
 
 [XPCOM]: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM

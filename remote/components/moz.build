@@ -6,11 +6,6 @@ DIRS += [
     "rust",
 ]
 
-EXTRA_COMPONENTS += [
-    "marionette.js",
-    "marionette.manifest",
-]
-
 XPIDL_MODULE = "remote"
 
 XPIDL_SOURCES += [
@@ -20,7 +15,7 @@ XPIDL_SOURCES += [
 
 XPCOM_MANIFESTS += ["components.conf"]
 
-with Files("marionette.*"):
+with Files("Marionette.jsm"):
     BUG_COMPONENT = ("Testing", "Marionette")
 with Files("nsIMarionette.idl"):
     BUG_COMPONENT = ("Testing", "Marionette")
