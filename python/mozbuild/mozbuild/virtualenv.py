@@ -311,35 +311,13 @@ class VirtualenvManager(VirtualenvHelper):
         """
         import distutils.sysconfig
 
-        # We always target the OS X deployment target that Python itself was
-        # built with, regardless of what's in the current environment. If we
-        # don't do this, we may run into a Python bug. See
-        # http://bugs.python.org/issue9516 and bug 659881.
-        #
-        # Note that this assumes that nothing compiled in the virtualenv is
-        # shipped as part of a distribution. If we do ship anything, the
-        # deployment target here may be different from what's targeted by the
-        # shipping binaries and # virtualenv-produced binaries may fail to
-        # work.
-        #
-        # We also ignore environment variables that may have been altered by
+        # We ignore environment variables that may have been altered by
         # configure or a mozconfig activated in the current shell. We trust
         # Python is smart enough to find a proper compiler and to use the
         # proper compiler flags. If it isn't your Python is likely broken.
         IGNORE_ENV_VARIABLES = ("CC", "CXX", "CFLAGS", "CXXFLAGS", "LDFLAGS")
 
         try:
-            old_target = os.environ.get("MACOSX_DEPLOYMENT_TARGET", None)
-            sysconfig_target = distutils.sysconfig.get_config_var(
-                "MACOSX_DEPLOYMENT_TARGET"
-            )
-
-            if sysconfig_target is not None:
-                # MACOSX_DEPLOYMENT_TARGET is usually a string (e.g.: "10.14.6"), but
-                # in some cases it is an int (e.g.: 11). Since environment variables
-                # must all be str, explicitly convert it.
-                os.environ["MACOSX_DEPLOYMENT_TARGET"] = str(sysconfig_target)
-
             old_env_variables = {}
             for k in IGNORE_ENV_VARIABLES:
                 if k not in os.environ:
@@ -364,11 +342,6 @@ class VirtualenvManager(VirtualenvHelper):
                 self.install_pip_package(pypi_requirement.full_specifier)
 
         finally:
-            os.environ.pop("MACOSX_DEPLOYMENT_TARGET", None)
-
-            if old_target is not None:
-                os.environ["MACOSX_DEPLOYMENT_TARGET"] = old_target
-
             os.environ.update(old_env_variables)
 
     def call_setup(self, directory, arguments):
