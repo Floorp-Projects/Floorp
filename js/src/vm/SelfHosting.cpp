@@ -6,6 +6,7 @@
 
 #include "vm/SelfHosting.h"
 
+#include "mozilla/BinarySearch.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
@@ -2516,6 +2517,59 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FS_END};
 
+#ifdef DEBUG
+static void CheckSelfHostedIntrinsics() {
+  // The `intrinsic_functions` list must be sorted so that we can use
+  // mozilla::BinarySearch to do lookups on demand.
+  const char* prev = "";
+  for (JSFunctionSpec spec : intrinsic_functions) {
+    if (spec.name.string()) {
+      MOZ_ASSERT(strcmp(prev, spec.name.string()) < 0,
+                 "Self-hosted intrinsics must be sorted");
+      prev = spec.name.string();
+    }
+  }
+}
+#endif
+
+const JSFunctionSpec* js::FindIntrinsicSpec(js::PropertyName* name) {
+  size_t limit = std::size(intrinsic_functions) - 1;
+  MOZ_ASSERT(!intrinsic_functions[limit].name);
+
+  MOZ_ASSERT(name->hasLatin1Chars());
+
+  JS::AutoCheckCannotGC nogc;
+  const char* chars = reinterpret_cast<const char*>(name->latin1Chars(nogc));
+  size_t len = name->length();
+
+  // NOTE: CheckSelfHostedIntrinsics checks that the intrinsic_functions list is
+  // sorted appropriately so that we can use binary search here.
+
+  size_t loc = 0;
+  bool match = mozilla::BinarySearchIf(
+      intrinsic_functions, 0, limit,
+      [chars, len](const JSFunctionSpec& spec) {
+        // The spec string is null terminated but the `name` string is not, so
+        // compare chars up until the length of `name`. Since the `name` string
+        // does not contain any nulls, seeing the null terminator of the spec
+        // string will terminate the loop appropriately. A final comparison
+        // against null is needed to determine if the spec string has an extra
+        // suffix.
+        const char* spec_chars = spec.name.string();
+        for (size_t i = 0; i < len; ++i) {
+          if (auto cmp_result = int(chars[i]) - int(spec_chars[i])) {
+            return cmp_result;
+          }
+        }
+        return int('\0') - int(spec_chars[len]);
+      },
+      &loc);
+  if (match) {
+    return &intrinsic_functions[loc];
+  }
+  return nullptr;
+}
+
 void js::FillSelfHostingCompileOptions(CompileOptions& options) {
   /*
    * In self-hosting mode, scripts use JSOp::GetIntrinsic instead of
@@ -2584,10 +2638,6 @@ GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
   MOZ_ASSERT(realm->zone()->isSelfHostingZone());
   realm->setIsSelfHostingRealm();
 
-  if (!GlobalObject::initSelfHostingBuiltins(cx, shg, intrinsic_functions)) {
-    return nullptr;
-  }
-
   JS_FireOnNewGlobalObject(cx, shg);
 
   return shg;
@@ -2615,17 +2665,6 @@ class MOZ_STACK_CLASS AutoSelfHostingErrorReporter {
 
 static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
 #ifdef DEBUG
-  // The `intrinsic_functions` list must be sorted so that we can use
-  // mozilla::BinarySearch to do lookups on demand.
-  const char* prev = "";
-  for (JSFunctionSpec spec : intrinsic_functions) {
-    if (spec.name.string()) {
-      MOZ_ASSERT(strcmp(prev, spec.name.string()) < 0,
-                 "Self-hosted intrinsics must be sorted");
-      prev = spec.name.string();
-    }
-  }
-
   RootedId id(cx);
   bool nameMissing = false;
 
@@ -2643,7 +2682,7 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
         PropertyName* name = loc.getPropertyName(script);
         id = NameToId(name);
 
-        if (shg->lookupPure(id).isNothing()) {
+        if (shg->lookupPure(id).isNothing() && !js::FindIntrinsicSpec(name)) {
           // cellIter disallows GCs, but error reporting wants to
           // have them, so we need to move it out of the loop.
           nameMissing = true;
@@ -2681,6 +2720,11 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
       return false;
     }
   }
+
+#ifdef DEBUG
+  // Check that the list of intrinsics is well-formed.
+  CheckSelfHostedIntrinsics();
+#endif
 
   if (!VerifyGlobalNames(cx, shg)) {
     return false;

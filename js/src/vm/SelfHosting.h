@@ -60,6 +60,8 @@ bool ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args);
 /* Get the compile options used when compiling self hosted code. */
 void FillSelfHostingCompileOptions(JS::CompileOptions& options);
 
+const JSFunctionSpec* FindIntrinsicSpec(PropertyName* name);
+
 #ifdef DEBUG
 /*
  * Calls a self-hosted function by name.
