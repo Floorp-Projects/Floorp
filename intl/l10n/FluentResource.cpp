@@ -17,10 +17,13 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FluentResource, mParent)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(FluentResource, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(FluentResource, Release)
 
+FluentResource::FluentResource(nsISupports* aParent,
+                               const ffi::FluentResource* aRaw)
+    : mParent(aParent), mRaw(std::move(aRaw)), mHasErrors(false) {}
+
 FluentResource::FluentResource(nsISupports* aParent, const nsACString& aSource)
-    : mParent(aParent),
-      mRaw(dont_AddRef(ffi::fluent_resource_new(&aSource, &mHasErrors))) {
-  MOZ_COUNT_CTOR(FluentResource);
+    : mParent(aParent), mHasErrors(false) {
+  mRaw = dont_AddRef(ffi::fluent_resource_new(&aSource, &mHasErrors));
 }
 
 already_AddRefed<FluentResource> FluentResource::Constructor(
@@ -40,8 +43,6 @@ JSObject* FluentResource::WrapObject(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
   return FluentResource_Binding::Wrap(aCx, this, aGivenProto);
 }
-
-FluentResource::~FluentResource() { MOZ_COUNT_DTOR(FluentResource); };
 
 }  // namespace intl
 }  // namespace mozilla
