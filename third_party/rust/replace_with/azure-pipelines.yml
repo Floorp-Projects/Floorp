@@ -1,0 +1,32 @@
+trigger: ["master"]
+pr: ["master"]
+
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: alecmocatta/azure-pipeline-templates
+      endpoint: alecmocatta
+
+jobs:
+- template: rust.yml@templates
+  parameters:
+    endpoint: alecmocatta
+    default:
+      rust_toolchain: 1.21.0 stable beta nightly
+      rust_lint_toolchain: nightly-2020-07-12
+      rust_flags: ''
+      rust_features: ';default;all'
+      rust_target_check: ''
+      rust_target_build: ''
+      rust_target_run: ''
+    matrix:
+      windows:
+        imageName: 'windows-latest'
+        rust_target_run: 'x86_64-pc-windows-msvc'
+      mac:
+        imageName: 'macos-latest'
+        rust_target_run: 'x86_64-apple-darwin'
+      linux:
+        imageName: 'ubuntu-latest'
+        rust_target_run: 'x86_64-unknown-linux-gnu'
