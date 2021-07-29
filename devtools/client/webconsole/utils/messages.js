@@ -385,7 +385,10 @@ function transformEvaluationResultPacket(packet) {
     parameter = helperResult.object;
   } else if (helperResult?.type === "error") {
     try {
-      exceptionMessage = l10n.getStr(helperResult.message);
+      exceptionMessage = l10n.getFormatStr(
+        helperResult.message,
+        helperResult.messageArgs || []
+      );
     } catch (ex) {
       exceptionMessage = helperResult.message;
     }
