@@ -130,6 +130,11 @@ bool ImageSibling::isRenderable(const gl::Context *context,
     return mTargetOf->isRenderable(context);
 }
 
+bool ImageSibling::isYUV() const
+{
+    return mTargetOf.get() && mTargetOf->isYUV();
+}
+
 void ImageSibling::notifySiblings(angle::SubjectMessage message)
 {
     if (mTargetOf.get())
@@ -193,6 +198,11 @@ bool ExternalImageSibling::isTextureable(const gl::Context *context) const
     return mImplementation->isTexturable(context);
 }
 
+bool ExternalImageSibling::isYUV() const
+{
+    return mImplementation->isYUV();
+}
+
 void ExternalImageSibling::onAttach(const gl::Context *context, rx::Serial framebufferSerial) {}
 
 void ExternalImageSibling::onDetach(const gl::Context *context, rx::Serial framebufferSerial) {}
@@ -234,6 +244,7 @@ ImageState::ImageState(EGLenum target, ImageSibling *buffer, const AttributeMap 
       source(buffer),
       targets(),
       format(GL_NONE),
+      yuv(false),
       size(),
       samples(),
       sourceType(target),
@@ -378,6 +389,11 @@ bool Image::isTexturable(const gl::Context *context) const
     return false;
 }
 
+bool Image::isYUV() const
+{
+    return mState.yuv;
+}
+
 size_t Image::getWidth() const
 {
     return mState.size.width;
@@ -407,7 +423,11 @@ Error Image::initialize(const Display *display)
 {
     if (IsExternalImageTarget(mState.sourceType))
     {
-        ANGLE_TRY(rx::GetAs<ExternalImageSibling>(mState.source)->initialize(display));
+        ExternalImageSibling *externalSibling = rx::GetAs<ExternalImageSibling>(mState.source);
+        ANGLE_TRY(externalSibling->initialize(display));
+
+        // Only external siblings can be YUV
+        mState.yuv = externalSibling->isYUV();
     }
 
     mState.format = mState.source->getAttachmentFormat(GL_NONE, mState.imageIndex);

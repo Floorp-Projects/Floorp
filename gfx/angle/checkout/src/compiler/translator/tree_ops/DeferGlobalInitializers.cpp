@@ -91,10 +91,11 @@ void GetDeferredInitializers(TIntermDeclaration *declaration,
 
         if (symbolNode->getQualifier() == EvqGlobal)
         {
-            TIntermSequence *initCode = CreateInitCode(symbolNode, canUseLoopsToInitialize,
-                                                       highPrecisionSupported, symbolTable);
-            deferredInitializersOut->insert(deferredInitializersOut->end(), initCode->begin(),
-                                            initCode->end());
+            TIntermSequence initCode;
+            CreateInitCode(symbolNode, canUseLoopsToInitialize, highPrecisionSupported, &initCode,
+                           symbolTable);
+            deferredInitializersOut->insert(deferredInitializersOut->end(), initCode.begin(),
+                                            initCode.end());
         }
     }
 }
@@ -117,8 +118,9 @@ void InsertInitCallToMain(TIntermBlock *root,
         CreateInternalFunctionDefinitionNode(*initGlobalsFunction, initGlobalsBlock);
     root->appendStatement(initGlobalsFunctionDefinition);
 
+    TIntermSequence emptySequence;
     TIntermAggregate *initGlobalsCall =
-        TIntermAggregate::CreateFunctionCall(*initGlobalsFunction, new TIntermSequence());
+        TIntermAggregate::CreateFunctionCall(*initGlobalsFunction, &emptySequence);
 
     TIntermBlock *mainBody = FindMainBody(root);
     mainBody->getSequence()->insert(mainBody->getSequence()->begin(), initGlobalsCall);
@@ -133,7 +135,7 @@ bool DeferGlobalInitializers(TCompiler *compiler,
                              bool highPrecisionSupported,
                              TSymbolTable *symbolTable)
 {
-    TIntermSequence *deferredInitializers = new TIntermSequence();
+    TIntermSequence deferredInitializers;
     std::vector<const TVariable *> variablesToReplace;
 
     // Loop over all global statements and process the declarations. This is simpler than using a
@@ -145,14 +147,14 @@ bool DeferGlobalInitializers(TCompiler *compiler,
         {
             GetDeferredInitializers(declaration, initializeUninitializedGlobals,
                                     canUseLoopsToInitialize, highPrecisionSupported,
-                                    deferredInitializers, &variablesToReplace, symbolTable);
+                                    &deferredInitializers, &variablesToReplace, symbolTable);
         }
     }
 
     // Add the function with initialization and the call to that.
-    if (!deferredInitializers->empty())
+    if (!deferredInitializers.empty())
     {
-        InsertInitCallToMain(root, deferredInitializers, symbolTable);
+        InsertInitCallToMain(root, &deferredInitializers, symbolTable);
     }
 
     // Replace constant variables with non-constant global variables.

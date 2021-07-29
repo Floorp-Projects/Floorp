@@ -423,6 +423,25 @@ ANGLE_INLINE bool IsETC2EACFormat(const GLenum format)
     }
 }
 
+ANGLE_INLINE bool IsPVRTC1Format(const GLenum format)
+{
+    switch (format)
+    {
+        case GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG:
+        case GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG:
+        case GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG:
+        case GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG:
+        case GL_COMPRESSED_SRGB_PVRTC_2BPPV1_EXT:
+        case GL_COMPRESSED_SRGB_PVRTC_4BPPV1_EXT:
+        case GL_COMPRESSED_SRGB_ALPHA_PVRTC_2BPPV1_EXT:
+        case GL_COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV1_EXT:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 // Check if an internal format is ever valid in ES3.  Makes no checks about support for a specific
 // context.
 bool ValidES3InternalFormat(GLenum internalFormat);
