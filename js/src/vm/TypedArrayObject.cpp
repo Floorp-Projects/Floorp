@@ -138,8 +138,8 @@ bool TypedArrayObject::ensureHasBuffer(JSContext* cx,
     RemoveCellMemory(tarray, nbytes, MemoryUse::TypedArrayElements);
   }
 
-  tarray->setPrivate(buffer->dataPointer());
-
+  tarray->setFixedSlot(TypedArrayObject::DATA_SLOT,
+                       PrivateValue(buffer->dataPointer()));
   tarray->setFixedSlot(TypedArrayObject::BUFFER_SLOT, ObjectValue(*buffer));
 
   return true;
@@ -249,7 +249,8 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
           "Failed to allocate typed array elements while tenuring.");
     }
     MOZ_ASSERT(!nursery.isInside(data));
-    InitObjectPrivate(newObj, data, nbytes, MemoryUse::TypedArrayElements);
+    newObj->setReservedSlot(DATA_SLOT, PrivateValue(data));
+    AddCellMemory(newObj, nbytes, MemoryUse::TypedArrayElements);
   }
 
   mozilla::PodCopy(newObj->elements(), oldObj->elements(), nbytes);
@@ -435,10 +436,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
     initTypedArraySlots(tarray, len);
 
-    // Template objects do not need memory for its elements, since there
-    // won't be any elements to store. Therefore, we set the pointer to
-    // nullptr and avoid allocating memory that will never be used.
-    tarray->initPrivate(nullptr);
+    // Template objects don't need memory for their elements, since there
+    // won't be any elements to store.
+    MOZ_ASSERT(tarray->getReservedSlot(DATA_SLOT).isUndefined());
 
     return tarray;
   }
@@ -449,9 +449,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     tarray->initFixedSlot(TypedArrayObject::LENGTH_SLOT, PrivateValue(len));
     tarray->initFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT,
                           PrivateValue(size_t(0)));
-
-    // Verify that the private slot is at the expected place.
-    MOZ_ASSERT(tarray->numFixedSlots() == TypedArrayObject::DATA_SLOT);
 
 #ifdef DEBUG
     if (len == 0) {
@@ -464,7 +461,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   static void initTypedArrayData(TypedArrayObject* tarray, void* buf,
                                  size_t nbytes, gc::AllocKind allocKind) {
     if (buf) {
-      InitObjectPrivate(tarray, buf, nbytes, MemoryUse::TypedArrayElements);
+      InitReservedSlot(tarray, TypedArrayObject::DATA_SLOT, buf, nbytes,
+                       MemoryUse::TypedArrayElements);
     } else {
 #ifdef DEBUG
       constexpr size_t dataOffset = ArrayBufferViewObject::dataOffset();
@@ -473,7 +471,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 #endif
 
       void* data = tarray->fixedData(FIXED_DATA_START);
-      tarray->initPrivate(data);
+      tarray->initReservedSlot(DATA_SLOT, PrivateValue(data));
       memset(data, 0, nbytes);
     }
   }
@@ -2234,13 +2232,13 @@ static const ClassSpec
 };
 
 const JSClass TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
-#define IMPL_TYPED_ARRAY_CLASS(NativeType, Name)                               \
-  {#Name "Array",                                                              \
-   JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |              \
-       JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_##Name##Array) | \
-       JSCLASS_DELAY_METADATA_BUILDER | JSCLASS_SKIP_NURSERY_FINALIZE |        \
-       JSCLASS_BACKGROUND_FINALIZE,                                            \
-   &TypedArrayClassOps, &TypedArrayObjectClassSpecs[Scalar::Type::Name],       \
+#define IMPL_TYPED_ARRAY_CLASS(NativeType, Name)                         \
+  {#Name "Array",                                                        \
+   JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |        \
+       JSCLASS_HAS_CACHED_PROTO(JSProto_##Name##Array) |                 \
+       JSCLASS_DELAY_METADATA_BUILDER | JSCLASS_SKIP_NURSERY_FINALIZE |  \
+       JSCLASS_BACKGROUND_FINALIZE,                                      \
+   &TypedArrayClassOps, &TypedArrayObjectClassSpecs[Scalar::Type::Name], \
    &TypedArrayClassExtension},
 
     JS_FOR_EACH_TYPED_ARRAY(IMPL_TYPED_ARRAY_CLASS)

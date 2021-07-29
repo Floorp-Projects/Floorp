@@ -1093,6 +1093,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
     store32(temp, ToPayload(dest));
   }
 
+  void storePrivateValue(Register src, const Address& dest) {
+    store32(Imm32(0), ToType(dest));
+    store32(src, ToPayload(dest));
+  }
+
   void loadValue(Address src, ValueOperand val);
   void loadValue(Operand dest, ValueOperand val) {
     loadValue(dest.toAddress(), val);
