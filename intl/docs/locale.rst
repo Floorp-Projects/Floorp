@@ -506,19 +506,28 @@ Testing Localization
 --------------------
 
 If the goal is to test that the correct localization ends up in the correct place,
-the developer needs to register a new :js:`FileSource` in :js:`L10nRegistry` and
+the developer needs to register a new :js:`L10nFileSource` in :js:`L10nRegistry` and
 provide a mock cached data to be returned by the API.
 
 It may look like this:
 
 .. code-block:: javascript
 
-    let fs = new FileSource(["ko-KR", "ar"], "resource://mock-addon/localization/{locale}");
-
-    fs.cache = {
-      "resource://mock-addon/localization/ko-KR/test.ftl": "key = Value in Korean",
-      "resource://mock-addon/localization/ar/test.ftl": "key = Value in Arabic"
-    };
+    let source = L10nFileSource.createMock(
+      "mock-source",
+      ["ko-KR", "ar"],
+      "resource://mock-addon/localization/{locale}",
+      [
+        {
+          path: "resource://mock-addon/localization/ko-KR/test.ftl",
+          source: "key = Value in Korean"
+        },
+        {
+          path: "resource://mock-addon/localization/ar/test.ftl",
+          source: "key = Value in Arabic"
+        }
+      ]
+    );
 
     L10nRegistry.registerSources([fs]);
 
