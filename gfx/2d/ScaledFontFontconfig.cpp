@@ -11,10 +11,8 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
-#ifdef USE_SKIA
-#  include "skia/include/ports/SkTypeface_cairo.h"
-#  include "HelpersSkia.h"
-#endif
+#include "skia/include/ports/SkTypeface_cairo.h"
+#include "HelpersSkia.h"
 
 #include <fontconfig/fcfreetype.h>
 
@@ -50,7 +48,6 @@ bool ScaledFontFontconfig::UseSubpixelPosition() const {
                   gfx_text_subpixel_position_force_enabled_AtStartup()));
 }
 
-#ifdef USE_SKIA
 SkTypeface* ScaledFontFontconfig::CreateSkTypeface() {
   SkPixelGeometry geo = mInstanceData.mFlags & InstanceData::SUBPIXEL_BGR
                             ? (mInstanceData.mFlags & InstanceData::LCD_VERTICAL
@@ -78,9 +75,7 @@ void ScaledFontFontconfig::SetupSkFontDrawOptions(SkFont& aFont) {
 
   aFont.setHinting(GfxHintingToSkiaHinting(mInstanceData.mHinting));
 }
-#endif
 
-#ifdef USE_CAIRO_SCALED_FONT
 cairo_font_face_t* ScaledFontFontconfig::CreateCairoFontFace(
     cairo_font_options_t* aFontOptions) {
   int loadFlags;
@@ -90,7 +85,6 @@ cairo_font_face_t* ScaledFontFontconfig::CreateCairoFontFace(
   return cairo_ft_font_face_create_for_ft_face(mFace->GetFace(), loadFlags,
                                                synthFlags, mFace.get());
 }
-#endif
 
 AntialiasMode ScaledFontFontconfig::GetDefaultAAMode() {
   return mInstanceData.mAntialias;

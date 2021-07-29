@@ -11,9 +11,7 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
-#ifdef USE_SKIA
-#  include "skia/include/ports/SkTypeface_cairo.h"
-#endif
+#include "skia/include/ports/SkTypeface_cairo.h"
 
 #include FT_MULTIPLE_MASTERS_H
 
@@ -34,7 +32,6 @@ bool ScaledFontFreeType::UseSubpixelPosition() const {
          FT_IS_SCALABLE(mFace->GetFace());
 }
 
-#ifdef USE_SKIA
 SkTypeface* ScaledFontFreeType::CreateSkTypeface() {
   return SkCreateTypefaceFromCairoFTFont(mFace->GetFace(), mFace.get());
 }
@@ -48,9 +45,7 @@ void ScaledFontFreeType::SetupSkFontDrawOptions(SkFont& aFont) {
 
   aFont.setEmbeddedBitmaps(true);
 }
-#endif
 
-#ifdef USE_CAIRO_SCALED_FONT
 cairo_font_face_t* ScaledFontFreeType::CreateCairoFontFace(
     cairo_font_options_t* aFontOptions) {
   cairo_font_options_set_hint_metrics(aFontOptions, CAIRO_HINT_METRICS_OFF);
@@ -68,7 +63,6 @@ cairo_font_face_t* ScaledFontFreeType::CreateCairoFontFace(
   return cairo_ft_font_face_create_for_ft_face(mFace->GetFace(), loadFlags,
                                                synthFlags, mFace.get());
 }
-#endif
 
 bool ScaledFontFreeType::GetFontInstanceData(FontInstanceDataOutput aCb,
                                              void* aBaton) {

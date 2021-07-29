@@ -25,10 +25,8 @@ class ScaledFontFontconfig : public ScaledFontBase {
 
   FontType GetType() const override { return FontType::FONTCONFIG; }
 
-#ifdef USE_SKIA
   SkTypeface* CreateSkTypeface() override;
   void SetupSkFontDrawOptions(SkFont& aFont) override;
-#endif
 
   AntialiasMode GetDefaultAAMode() override;
 
@@ -46,10 +44,8 @@ class ScaledFontFontconfig : public ScaledFontBase {
   bool HasVariationSettings() override;
 
  protected:
-#ifdef USE_CAIRO_SCALED_FONT
   cairo_font_face_t* CreateCairoFontFace(
       cairo_font_options_t* aFontOptions) override;
-#endif
 
  private:
   friend class NativeFontResourceFontconfig;

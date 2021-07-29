@@ -25,20 +25,14 @@ class ScaledFontWin : public ScaledFontBase {
 
   AntialiasMode GetDefaultAAMode() override;
 
-#ifdef USE_SKIA
   SkTypeface* CreateSkTypeface() override;
-#endif
 
  protected:
-#ifdef USE_CAIRO_SCALED_FONT
   cairo_font_face_t* CreateCairoFontFace(
       cairo_font_options_t* aFontOptions) override;
-#endif
 
  private:
-#ifdef USE_SKIA
   friend class DrawTargetSkia;
-#endif
   LOGFONT mLogFont;
 };
 
