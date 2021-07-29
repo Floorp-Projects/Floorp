@@ -199,9 +199,10 @@ void InsertInitCode(TCompiler *compiler,
         }
         ASSERT(initializedSymbol != nullptr);
 
-        TIntermSequence *initCode = CreateInitCode(initializedSymbol, canUseLoopsToInitialize,
-                                                   highPrecisionSupported, symbolTable);
-        mainBody->insert(mainBody->begin(), initCode->begin(), initCode->end());
+        TIntermSequence initCode;
+        CreateInitCode(initializedSymbol, canUseLoopsToInitialize, highPrecisionSupported,
+                       &initCode, symbolTable);
+        mainBody->insert(mainBody->begin(), initCode.begin(), initCode.end());
     }
 }
 
@@ -251,9 +252,10 @@ class InitializeLocalsTraverser : public TIntermTraverser
                     // about further declarators in this declaration depending on the effects of
                     // this declarator.
                     ASSERT(node->getSequence()->size() == 1);
-                    insertStatementsInParentBlock(
-                        TIntermSequence(), *CreateInitCode(symbol, mCanUseLoopsToInitialize,
-                                                           mHighPrecisionSupported, mSymbolTable));
+                    TIntermSequence initCode;
+                    CreateInitCode(symbol, mCanUseLoopsToInitialize, mHighPrecisionSupported,
+                                   &initCode, mSymbolTable);
+                    insertStatementsInParentBlock(TIntermSequence(), initCode);
                 }
                 else
                 {
@@ -274,15 +276,14 @@ class InitializeLocalsTraverser : public TIntermTraverser
 
 }  // namespace
 
-TIntermSequence *CreateInitCode(const TIntermTyped *initializedSymbol,
-                                bool canUseLoopsToInitialize,
-                                bool highPrecisionSupported,
-                                TSymbolTable *symbolTable)
+void CreateInitCode(const TIntermTyped *initializedSymbol,
+                    bool canUseLoopsToInitialize,
+                    bool highPrecisionSupported,
+                    TIntermSequence *initCode,
+                    TSymbolTable *symbolTable)
 {
-    TIntermSequence *initCode = new TIntermSequence();
     AddZeroInitSequence(initializedSymbol, canUseLoopsToInitialize, highPrecisionSupported,
                         initCode, symbolTable);
-    return initCode;
 }
 
 bool InitializeUninitializedLocals(TCompiler *compiler,

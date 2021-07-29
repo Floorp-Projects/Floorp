@@ -82,8 +82,16 @@
 #        endif
 #    endif
 
+// Macros 'near', 'far', 'NEAR' and 'FAR' are defined by 'shared/minwindef.h' in the Windows SDK.
+// Macros 'near' and 'far' are empty. They are not used by other Windows headers and are undefined
+// here to avoid identifier conflicts. Macros 'NEAR' and 'FAR' contain 'near' and 'far'. They are
+// used by other Windows headers and are cleared here to avoid compilation errors.
 #    undef near
 #    undef far
+#    undef NEAR
+#    undef FAR
+#    define NEAR
+#    define FAR
 #endif
 
 #if defined(_MSC_VER) && !defined(_M_ARM) && !defined(_M_ARM64)

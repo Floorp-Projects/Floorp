@@ -3,7 +3,7 @@
 include("../../moz.build.common")
 
 # DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
-DEFINES["CR_CLANG_REVISION"] = '"llvmorg-12-init-11060-g118c3f3c-1"'
+DEFINES["CR_CLANG_REVISION"] = '"llvmorg-13-init-9302-g897d7bce-1"'
 DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
 # DEFINES["NDEBUG"] = True
 DEFINES["NOMINMAX"] = True
@@ -39,19 +39,22 @@ LOCAL_INCLUDES += [
 #     "-D__DATE__=",
 #     "-D__TIME__=",
 #     "-D__TIMESTAMP__=",
-#     "-debug-info-kind=constructor",
 #     "-fcolor-diagnostics",
 #     "-fcomplete-member-pointers",
 #     "-fcrash-diagnostics-dir=../tools/clang/crashreports",
 #     "-fdebug-compilation-dir",
 #     "-fmerge-all-constants",
 #     "-fmsc-version=1916",
+#     "-fno-delete-null-pointer-checks",
+#     "-fno-ident",
 #     "-ftrivial-auto-var-init=pattern",
 #     "-gcodeview-ghash",
 #     "-instcombine-lower-dbg-declare=0",
 #     "-m64",
 #     "-mllvm",
+#     "-msse3",
 #     "-no-canonical-prefixes",
+#     "-plugin-arg-find-bad-constructs",
 #     "-Wextra-semi",
 #     "-Wheader-hygiene",
 #     "-Wimplicit-fallthrough",
@@ -134,11 +137,11 @@ LOCAL_INCLUDES += [
 #     "/wd4995",
 #     "/wd4996",
 #     "/WX",
-#     "/X",
 #     "/Z7",
 #     "/Zc:inline",
 #     "/Zc:sizedDealloc-",
 #     "/Zc:twoPhase",
+#     "checked-ptr-as-trivial-member",
 #     "find-bad-constructs",
 # ]
 
@@ -153,6 +156,7 @@ USE_LIBS += [
 # LDFLAGS += [
 #     "--color-diagnostics",
 #     "/call-graph-profile-sort:no",
+#     "/CETCOMPAT",
 #     "/DEBUG:GHASH",
 #     "/FIXED:NO",
 #     "/INCREMENTAL:NO",
@@ -163,7 +167,7 @@ USE_LIBS += [
 #     "/pdbaltpath:%_PDB%",
 #     "/PDBSourcePath:C:/dev/angle/out",
 #     "/PROFILE",
-#     "/TIMESTAMP:1604206800",
+#     "/TIMESTAMP:1619931600",
 #     "/WX",
 # ]
 

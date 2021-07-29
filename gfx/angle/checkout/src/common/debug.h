@@ -20,6 +20,7 @@
 #include <string>
 
 #include "common/angleutils.h"
+#include "common/entry_points_enum_autogen.h"
 #include "common/platform.h"
 
 #if !defined(TRACE_OUTPUT_FILE)
@@ -29,20 +30,19 @@
 namespace gl
 {
 class Context;
-enum class EntryPoint;
 
 // Pairs a D3D begin event with an end event.
 class ScopedPerfEventHelper : angle::NonCopyable
 {
   public:
-    ScopedPerfEventHelper(gl::Context *context, gl::EntryPoint entryPoint);
+    ScopedPerfEventHelper(Context *context, angle::EntryPoint entryPoint);
     ~ScopedPerfEventHelper();
     ANGLE_FORMAT_PRINTF(2, 3)
     void begin(const char *format, ...);
 
   private:
     gl::Context *mContext;
-    const gl::EntryPoint mEntryPoint;
+    const angle::EntryPoint mEntryPoint;
     const char *mFunctionName;
 };
 
@@ -93,14 +93,14 @@ class DebugAnnotator : angle::NonCopyable
     DebugAnnotator() {}
     virtual ~DebugAnnotator() {}
     virtual void beginEvent(gl::Context *context,
-                            gl::EntryPoint entryPoint,
+                            angle::EntryPoint entryPoint,
                             const char *eventName,
-                            const char *eventMessage) = 0;
+                            const char *eventMessage)   = 0;
     virtual void endEvent(gl::Context *context,
                           const char *eventName,
-                          gl::EntryPoint entryPoint)  = 0;
-    virtual void setMarker(const char *markerName)    = 0;
-    virtual bool getStatus()                          = 0;
+                          angle::EntryPoint entryPoint) = 0;
+    virtual void setMarker(const char *markerName)      = 0;
+    virtual bool getStatus()                            = 0;
     // Log Message Handler that gets passed every log message,
     // when debug annotations are initialized,
     // replacing default handling by LogMessage.
@@ -256,25 +256,30 @@ std::ostream &FmtHex(std::ostream &os, T value)
 // A macro to log a performance event around a scope.
 #if defined(ANGLE_TRACE_ENABLED)
 #    if defined(_MSC_VER)
-#        define EVENT(context, entryPoint, function, message, ...)                          \
-            gl::ScopedPerfEventHelper scopedPerfEventHelper##__LINE__(context, entryPoint); \
-            do                                                                              \
-            {                                                                               \
-                if (gl::ShouldBeginScopedEvent())                                           \
-                {                                                                           \
-                    scopedPerfEventHelper##__LINE__.begin("%s(" message ")", function,      \
-                                                          __VA_ARGS__);                     \
-                }                                                                           \
-            } while (0)
-#    else
-#        define EVENT(context, entryPoint, function, message, ...)                           \
-            gl::ScopedPerfEventHelper scopedPerfEventHelper(context, entryPoint);            \
+#        define EVENT(context, entryPoint, message, ...)                                     \
+            gl::ScopedPerfEventHelper scopedPerfEventHelper##__LINE__(                       \
+                context, angle::EntryPoint::entryPoint);                                     \
             do                                                                               \
             {                                                                                \
                 if (gl::ShouldBeginScopedEvent())                                            \
                 {                                                                            \
-                    scopedPerfEventHelper.begin("%s(" message ")", function, ##__VA_ARGS__); \
+                    scopedPerfEventHelper##__LINE__.begin(                                   \
+                        "%s(" message ")", GetEntryPointName(angle::EntryPoint::entryPoint), \
+                        __VA_ARGS__);                                                        \
                 }                                                                            \
+            } while (0)
+#    else
+#        define EVENT(context, entryPoint, message, ...)                                          \
+            gl::ScopedPerfEventHelper scopedPerfEventHelper(context,                              \
+                                                            angle::EntryPoint::entryPoint);       \
+            do                                                                                    \
+            {                                                                                     \
+                if (gl::ShouldBeginScopedEvent())                                                 \
+                {                                                                                 \
+                    scopedPerfEventHelper.begin("%s(" message ")",                                \
+                                                GetEntryPointName(angle::EntryPoint::entryPoint), \
+                                                ##__VA_ARGS__);                                   \
+                }                                                                                 \
             } while (0)
 #    endif  // _MSC_VER
 #else
@@ -443,6 +448,15 @@ std::ostream &FmtHex(std::ostream &os, T value)
 #else
 #    define ANGLE_DISABLE_WEAK_TEMPLATE_VTABLES_WARNING
 #    define ANGLE_REENABLE_WEAK_TEMPLATE_VTABLES_WARNING
+#endif
+
+#if defined(__clang__)
+#    define ANGLE_DISABLE_UNUSED_FUNCTION_WARNING \
+        _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wunused-function\"")
+#    define ANGLE_REENABLE_UNUSED_FUNCTION_WARNING _Pragma("clang diagnostic pop")
+#else
+#    define ANGLE_DISABLE_UNUSED_FUNCTION_WARNING
+#    define ANGLE_REENABLE_UNUSED_FUNCTION_WARNING
 #endif
 
 #endif  // COMMON_DEBUG_H_

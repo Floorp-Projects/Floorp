@@ -850,7 +850,7 @@ TString Decorate(const ImmutableString &string)
 TString DecorateVariableIfNeeded(const TVariable &variable)
 {
     if (variable.symbolType() == SymbolType::AngleInternal ||
-        variable.symbolType() == SymbolType::Empty)
+        variable.symbolType() == SymbolType::BuiltIn || variable.symbolType() == SymbolType::Empty)
     {
         // Besides handling internal variables, we generate names for nameless parameters here.
         const ImmutableString &name = variable.name();
