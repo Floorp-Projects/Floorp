@@ -1229,7 +1229,9 @@ impl Tile {
         self.update_content_validity(ctx, state, frame_context);
 
         // If there are no primitives there is no need to draw or cache it.
-        if self.current_descriptor.prims.is_empty() {
+        // Bug 1719232 - The final device valid rect does not always describe a non-empty
+        // region. Cull the tile as a workaround.
+        if self.current_descriptor.prims.is_empty() || self.device_valid_rect.is_empty() {
             // If there is a native compositor surface allocated for this (now empty) tile
             // it must be freed here, otherwise the stale tile with previous contents will
             // be composited. If the tile subsequently gets new primitives added to it, the
