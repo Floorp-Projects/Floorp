@@ -10,10 +10,8 @@ with Files("**"):
 with Files("wr/**"):
     BUG_COMPONENT = ("Core", "Graphics: WebRender")
 
-if CONFIG["MOZ_TREE_CAIRO"]:
-    DIRS += ["cairo"]
-
 DIRS += [
+    "cairo",
     "2d",
     "ycbcr",
     "angle",
