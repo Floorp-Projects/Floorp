@@ -260,6 +260,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["devtools.chrome.enabled", { what: RECORD_PREF_VALUE }],
   ["devtools.debugger.enabled", { what: RECORD_PREF_VALUE }],
   ["devtools.debugger.remote-enabled", { what: RECORD_PREF_VALUE }],
+  ["doh-rollout.doorhanger-decision", { what: RECORD_PREF_VALUE }],
   ["dom.ipc.plugins.enabled", { what: RECORD_PREF_VALUE }],
   ["dom.ipc.plugins.sandbox-level.flash", { what: RECORD_PREF_VALUE }],
   ["dom.ipc.processCount", { what: RECORD_PREF_VALUE }],
