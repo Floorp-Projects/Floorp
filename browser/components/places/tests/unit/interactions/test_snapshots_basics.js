@@ -49,14 +49,6 @@ add_task(async function test_add_simple_snapshot() {
   assertSnapshot(snapshot, { url: TEST_URL2, userPersisted: true });
 });
 
-add_task(async function test_add_snapshot_without_interaction() {
-  await Assert.rejects(
-    Snapshots.add({ url: "https://invalid.com/" }),
-    /NOT NULL constraint failed/,
-    "Should reject if an interaction is missing"
-  );
-});
-
 add_task(async function test_add_duplicate_snapshot() {
   await Snapshots.add({ url: TEST_URL3 });
 
