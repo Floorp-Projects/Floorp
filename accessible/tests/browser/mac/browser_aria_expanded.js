@@ -19,7 +19,6 @@ function waitForStateChange(id, state, isEnabled) {
   });
 }
 
-
 // Test aria-expanded on a button
 addAccessibleTask(
   `hello world<br>
