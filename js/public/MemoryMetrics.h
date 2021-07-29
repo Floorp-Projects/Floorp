@@ -500,6 +500,7 @@ struct RuntimeSizes {
   MACRO(_, MallocHeap, object)                      \
   MACRO(_, MallocHeap, atomsTable)                  \
   MACRO(_, MallocHeap, atomsMarkBitmaps)            \
+  MACRO(_, MallocHeap, selfHostStencil)             \
   MACRO(_, MallocHeap, contexts)                    \
   MACRO(_, MallocHeap, temporary)                   \
   MACRO(_, MallocHeap, interpreterStack)            \
