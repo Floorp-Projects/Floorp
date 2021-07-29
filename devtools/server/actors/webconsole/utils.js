@@ -549,7 +549,12 @@ WebConsoleCommands._registerOriginal("copy", function(owner, value) {
       payload = JSON.stringify(value, null, "  ");
     }
   } catch (ex) {
-    payload = "/* " + ex + " */";
+    owner.helperResult = {
+      type: "error",
+      message: "webconsole.error.commands.copyError",
+      messageArgs: [ex.toString()],
+    };
+    return;
   }
   owner.helperResult = {
     type: "copyValueToClipboard",
