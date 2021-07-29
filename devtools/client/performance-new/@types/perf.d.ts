@@ -500,18 +500,32 @@ export interface FeatureDescription {
   disabledReason?: string;
 }
 
-export type SymbolicationWorkerInitialMessage = {
-  // The absolute path to the binary on the local file system.
-  binaryPath: string;
-  // The absolute path to the binary's pdb file on the local file system if on
-  // Windows, otherwise the same as binaryPath.
+// The key has the shape `${debugName}:${breakpadId}`.
+export type LibInfoMapKey = string;
+
+// This is a subset of the full Library struct.
+export type LibInfoMapValue = {
+  name: string;
+  path: string;
+  debugName: string;
   debugPath: string;
-  // The breakpadId for the binary whose symbols should be obtained. This is
-  // used for two purposes: 1) to locate the correct single-arch binary in
-  // "FatArch" files, and 2) to make sure the binary at the given path is
-  // actually the one that we want. If no ID match is found, the worker returns
-  // an error.
   breakpadId: string;
+  arch: string;
+}
+
+export type SymbolicationWorkerInitialMessage = {
+  // The debugName of the binary whose symbols should be obtained.
+  debugName: string;
+  // The breakpadId for the binary whose symbols should be obtained.
+  breakpadId: string;
+  // A map that allows looking up library info based on debugName + breakpadId.
+  // This is rather redundant at the moment, but it will make more sense once
+  // we can request symbols for multiple different libraries with one worker
+  // message.
+  libInfoMap: Map<LibInfoMapKey, LibInfoMapValue>;
+  // An array of objdir paths on the host machine that should be searched for
+  // relevant build artifacts.
+  objdirs: string[];
   // The profiler-get-symbols wasm module.
   module: WebAssembly.Module;
 };
