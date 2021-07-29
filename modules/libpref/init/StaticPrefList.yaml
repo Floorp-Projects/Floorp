@@ -6825,7 +6825,7 @@
 # We don't use this for text, so we need a contrast of at least AA (for user
 # interface components and graphical objects), which per WCAG is 3:1
 - name: layout.css.accent-color.min-contrast-ratio
-  type: float
+  type: AtomicFloat
   value: 3.0
   mirror: always
 
@@ -6835,7 +6835,7 @@
 # We aim a bit further than the minimum contrast ratio, which seems to provide
 # nice results in practice.
 - name: layout.css.accent-color.darkening-target-contrast-ratio
-  type: float
+  type: AtomicFloat
   value: 6.0
   mirror: always
 
@@ -9195,6 +9195,14 @@
 - name: network.http.referer.defaultPolicy.pbmode
   type: uint32_t
   value: 2
+  mirror: always
+
+# Set to ignore referrer policies which is less restricted than the default for
+# cross-site requests, including 'unsafe-url', 'no-referrer-when-downgrade' and
+# 'origin-when-cross-origin'.
+- name: network.http.referer.disallowCrossSiteRelaxingDefault
+  type: bool
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Set the Private Browsing Default Referrer Policy applied to third-party

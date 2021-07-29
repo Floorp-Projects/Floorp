@@ -1,1849 +1,1243 @@
-use super::{
-    ast::{
-        Context, FunctionCall, FunctionCallKind, FunctionSignature, GlobalLookup, GlobalLookupKind,
-        HirExpr, HirExprKind, ParameterQualifier, Profile, StorageQualifier, StructLayout,
-        TypeQualifier,
-    },
-    error::ErrorKind,
-    lex::Lexer,
-    token::{SourceMetadata, Token, TokenValue},
-    variables::{GlobalOrConstant, VarDeclaration},
-    Program,
-};
-use crate::{
-    arena::Handle, front::glsl::error::ExpectedToken, Arena, ArraySize, BinaryOperator, Block,
-    Constant, ConstantInner, Expression, Function, FunctionResult, ResourceBinding, ScalarValue,
-    Statement, StorageClass, StructMember, SwitchCase, Type, TypeInner, UnaryOperator,
-};
-use core::convert::TryFrom;
-use std::{iter::Peekable, mem};
-
-type Result<T> = std::result::Result<T, ErrorKind>;
-
-pub struct Parser<'source, 'program, 'options> {
-    program: &'program mut Program<'options>,
-    lexer: Peekable<Lexer<'source>>,
-}
-
-impl<'source, 'program, 'options> Parser<'source, 'program, 'options> {
-    pub fn new(program: &'program mut Program<'options>, lexer: Lexer<'source>) -> Self {
-        Parser {
-            program,
-            lexer: lexer.peekable(),
+#![allow(
+    unused_braces,
+    clippy::panic,
+    clippy::needless_lifetimes,
+    clippy::upper_case_acronyms
+)]
+use pomelo::pomelo;
+pomelo! {
+    //%verbose;
+    %include {
+        use super::super::{error::ErrorKind, token::*, ast::*};
+        use crate::{
+            BOOL_WIDTH,
+            Arena, ArraySize, BinaryOperator, Binding, Block, Constant,
+            ConstantInner, Expression,
+            Function, FunctionArgument, FunctionResult,
+            GlobalVariable, Handle, Interpolation,
+            LocalVariable, ResourceBinding, Sampling, ScalarValue, ScalarKind,
+            Statement, StorageAccess, StorageClass, StructMember,
+            SwitchCase, Type, TypeInner, UnaryOperator,
+        };
+        use pp_rs::token::PreprocessorError;
+    }
+    %token #[derive(Debug)] #[cfg_attr(test, derive(PartialEq))] pub enum Token {};
+    %parser pub struct Parser<'a, 'b> {};
+    %extra_argument &'a mut Program<'b>;
+    %extra_token TokenMetadata;
+    %error ErrorKind;
+    %syntax_error {
+        match token {
+            Some(token) => Err(ErrorKind::InvalidToken(token)),
+            None => Err(ErrorKind::EndOfFile),
         }
     }
+    %parse_fail {
+        ErrorKind::ParserFail
+    }
+    %stack_overflow {
+        ErrorKind::ParserStackOverflow
+    }
 
-    fn expect_ident(&mut self) -> Result<(String, SourceMetadata)> {
-        let token = self.bump()?;
+    %type Unknown PreprocessorError;
+    %type Pragma ();
+    %type Extension ();
 
-        match token.value {
-            TokenValue::Identifier(name) => Ok((name, token.meta)),
-            _ => Err(ErrorKind::InvalidToken(
-                token,
-                vec![ExpectedToken::Identifier],
-            )),
+    %type Identifier String;
+    // constants
+    %type IntConstant i64;
+    %type UintConstant u64;
+    %type FloatConstant f32;
+    %type BoolConstant bool;
+    %type DoubleConstant f64;
+    %type String String;
+    // function
+    %type function_prototype Function;
+    %type function_declarator Function;
+    %type function_header Function;
+    %type function_header_with_parameters (Function, Vec<FunctionArgument>);
+    %type function_definition Function;
+
+    // statements
+    %type compound_statement Block;
+    %type compound_statement_no_new_scope Block;
+    %type statement_list Block;
+    %type statement Statement;
+    %type simple_statement Statement;
+    %type expression_statement Statement;
+    %type declaration_statement Statement;
+    %type jump_statement Statement;
+    %type iteration_statement Statement;
+    %type selection_statement Statement;
+    %type switch_statement_list Vec<(Option<i32>, Block, bool)>;
+    %type switch_statement (Option<i32>, Block, bool);
+    %type for_init_statement Statement;
+    %type for_rest_statement (Option<ExpressionRule>, Option<ExpressionRule>);
+    %type condition_opt Option<ExpressionRule>;
+
+    // expressions
+    %type unary_expression ExpressionRule;
+    %type postfix_expression ExpressionRule;
+    %type primary_expression ExpressionRule;
+    %type variable_identifier ExpressionRule;
+
+    %type function_call ExpressionRule;
+    %type function_call_or_method FunctionCall;
+    %type function_call_generic FunctionCall;
+    %type function_call_header_no_parameters FunctionCall;
+    %type function_call_header_with_parameters FunctionCall;
+    %type function_call_header FunctionCall;
+    %type function_identifier FunctionCallKind;
+
+    %type parameter_declarator FunctionArgument;
+    %type parameter_declaration FunctionArgument;
+    %type parameter_type_specifier Handle<Type>;
+
+    %type multiplicative_expression ExpressionRule;
+    %type additive_expression ExpressionRule;
+    %type shift_expression ExpressionRule;
+    %type relational_expression ExpressionRule;
+    %type equality_expression ExpressionRule;
+    %type and_expression ExpressionRule;
+    %type exclusive_or_expression ExpressionRule;
+    %type inclusive_or_expression ExpressionRule;
+    %type logical_and_expression ExpressionRule;
+    %type logical_xor_expression ExpressionRule;
+    %type logical_or_expression ExpressionRule;
+    %type conditional_expression ExpressionRule;
+
+    %type assignment_expression ExpressionRule;
+    %type assignment_operator BinaryOperator;
+    %type expression ExpressionRule;
+    %type constant_expression Handle<Constant>;
+
+    %type initializer ExpressionRule;
+
+    // declarations
+    %type declaration Option<VarDeclaration>;
+    %type init_declarator_list VarDeclaration;
+    %type single_declaration VarDeclaration;
+    %type layout_qualifier StructLayout;
+    %type layout_qualifier_id_list Vec<(String, u32)>;
+    %type layout_qualifier_id (String, u32);
+    %type type_qualifier Vec<TypeQualifier>;
+    %type single_type_qualifier TypeQualifier;
+    %type storage_qualifier StorageQualifier;
+    %type interpolation_qualifier Interpolation;
+    %type Interpolation Interpolation;
+    %type sampling_qualifier Sampling;
+    %type Sampling Sampling;
+
+    // types
+    %type fully_specified_type (Vec<TypeQualifier>, Option<Handle<Type>>);
+    %type type_specifier Option<Handle<Type>>;
+    %type type_specifier_nonarray Option<Type>;
+    %type struct_specifier Type;
+    %type struct_declaration_list Vec<StructMember>;
+    %type struct_declaration Vec<StructMember>;
+    %type struct_declarator_list Vec<String>;
+    %type struct_declarator String;
+
+    %type TypeName Type;
+
+    // precedence
+    %right Else;
+
+    root ::= version_pragma translation_unit;
+    version_pragma ::= Version IntConstant(V) Identifier?(P) {
+        match V.1 {
+            440 => (),
+            450 => (),
+            460 => (),
+            _ => return Err(ErrorKind::InvalidVersion(V.0, V.1))
         }
-    }
-
-    fn expect(&mut self, value: TokenValue) -> Result<Token> {
-        let token = self.bump()?;
-
-        if token.value != value {
-            Err(ErrorKind::InvalidToken(token, vec![value.into()]))
-        } else {
-            Ok(token)
-        }
-    }
-
-    fn bump(&mut self) -> Result<Token> {
-        self.lexer.next().ok_or(ErrorKind::EndOfFile)
-    }
-
-    /// Returns None on the end of the file rather than an error like other methods
-    fn bump_if(&mut self, value: TokenValue) -> Option<Token> {
-        if self.lexer.peek().filter(|t| t.value == value).is_some() {
-            self.bump().ok()
-        } else {
-            None
-        }
-    }
-
-    fn expect_peek(&mut self) -> Result<&Token> {
-        self.lexer.peek().ok_or(ErrorKind::EndOfFile)
-    }
-
-    pub fn parse(&mut self) -> Result<()> {
-        self.parse_version()?;
-
-        while self.lexer.peek().is_some() {
-            self.parse_external_declaration()?;
-        }
-
-        self.program.add_entry_points();
-
-        Ok(())
-    }
-
-    fn parse_version(&mut self) -> Result<()> {
-        self.expect(TokenValue::Version)?;
-
-        let version = self.bump()?;
-        match version.value {
-            TokenValue::IntConstant(i) => match i.value {
-                440 | 450 | 460 => self.program.version = i.value as u16,
-                _ => return Err(ErrorKind::InvalidVersion(version.meta, i.value)),
-            },
-            _ => {
-                return Err(ErrorKind::InvalidToken(
-                    version,
-                    vec![ExpectedToken::IntLiteral],
-                ))
-            }
-        }
-
-        let profile = self.lexer.peek();
-        self.program.profile = match profile {
-            Some(&Token {
-                value: TokenValue::Identifier(_),
-                ..
-            }) => {
-                let (name, meta) = self.expect_ident()?;
-
-                match name.as_str() {
+        extra.version = V.1 as u16;
+        extra.profile = match P {
+            Some((meta, profile)) => {
+                match profile.as_str() {
                     "core" => Profile::Core,
-                    _ => return Err(ErrorKind::InvalidProfile(meta, name)),
+                    _ => return Err(ErrorKind::InvalidProfile(meta, profile))
                 }
-            }
-            _ => Profile::Core,
-        };
-
-        Ok(())
-    }
-
-    /// Parses an optional array_specifier returning `Ok(None)` if there is no
-    /// LeftBracket
-    fn parse_array_specifier(&mut self) -> Result<Option<ArraySize>> {
-        if self.bump_if(TokenValue::LeftBracket).is_some() {
-            if self.bump_if(TokenValue::RightBracket).is_some() {
-                return Ok(Some(ArraySize::Dynamic));
-            }
-
-            let (constant, _) = self.parse_constant_expression()?;
-            self.expect(TokenValue::RightBracket)?;
-            Ok(Some(ArraySize::Constant(constant)))
-        } else {
-            Ok(None)
-        }
-    }
-
-    fn parse_type(&mut self) -> Result<(Option<Handle<Type>>, SourceMetadata)> {
-        let token = self.bump()?;
-        let handle = match token.value {
-            TokenValue::Void => None,
-            TokenValue::TypeName(ty) => Some(self.program.module.types.fetch_or_append(ty)),
-            TokenValue::Struct => {
-                let ty_name = self.expect_ident()?.0;
-                self.expect(TokenValue::LeftBrace)?;
-                let mut members = Vec::new();
-                let span = self.parse_struct_declaration_list(&mut members)?;
-                self.expect(TokenValue::RightBrace)?;
-
-                let ty = self.program.module.types.append(Type {
-                    name: Some(ty_name.clone()),
-                    inner: TypeInner::Struct {
-                        top_level: false,
-                        members,
-                        span,
-                    },
-                });
-                self.program.lookup_type.insert(ty_name, ty);
-                Some(ty)
-            }
-            TokenValue::Identifier(ident) => match self.program.lookup_type.get(&ident) {
-                Some(ty) => Some(*ty),
-                None => return Err(ErrorKind::UnknownType(token.meta, ident)),
             },
-            _ => {
-                return Err(ErrorKind::InvalidToken(
-                    token,
-                    vec![
-                        TokenValue::Void.into(),
-                        TokenValue::Struct.into(),
-                        ExpectedToken::TypeName,
-                    ],
-                ))
-            }
-        };
-
-        let size = self.parse_array_specifier()?;
-        Ok((handle.map(|ty| self.maybe_array(ty, size)), token.meta))
-    }
-
-    fn parse_type_non_void(&mut self) -> Result<(Handle<Type>, SourceMetadata)> {
-        let (maybe_ty, meta) = self.parse_type()?;
-        let ty =
-            maybe_ty.ok_or_else(|| ErrorKind::SemanticError(meta, "Type can't be void".into()))?;
-
-        Ok((ty, meta))
-    }
-
-    fn maybe_array(&mut self, base: Handle<Type>, size: Option<ArraySize>) -> Handle<Type> {
-        size.map(|size| {
-            self.program.module.types.fetch_or_append(Type {
-                name: None,
-                inner: TypeInner::Array {
-                    base,
-                    size,
-                    stride: self.program.module.types[base]
-                        .inner
-                        .span(&self.program.module.constants),
-                },
-            })
-        })
-        .unwrap_or(base)
-    }
-
-    fn peek_type_qualifier(&mut self) -> bool {
-        self.lexer.peek().map_or(false, |t| match t.value {
-            TokenValue::Interpolation(_)
-            | TokenValue::Sampling(_)
-            | TokenValue::Const
-            | TokenValue::In
-            | TokenValue::Out
-            | TokenValue::Uniform
-            | TokenValue::Buffer
-            | TokenValue::Layout => true,
-            _ => false,
-        })
-    }
-
-    fn parse_type_qualifiers(&mut self) -> Result<Vec<(TypeQualifier, SourceMetadata)>> {
-        let mut qualifiers = Vec::new();
-
-        while self.peek_type_qualifier() {
-            let token = self.bump()?;
-
-            // Handle layout qualifiers outside the match since this can push multiple values
-            if token.value == TokenValue::Layout {
-                self.parse_layout_qualifier_id_list(&mut qualifiers)?;
-                continue;
-            }
-
-            qualifiers.push((
-                match token.value {
-                    TokenValue::Interpolation(i) => TypeQualifier::Interpolation(i),
-                    TokenValue::Const => TypeQualifier::StorageQualifier(StorageQualifier::Const),
-                    TokenValue::In => TypeQualifier::StorageQualifier(StorageQualifier::Input),
-                    TokenValue::Out => TypeQualifier::StorageQualifier(StorageQualifier::Output),
-                    TokenValue::Uniform => TypeQualifier::StorageQualifier(
-                        StorageQualifier::StorageClass(StorageClass::Uniform),
-                    ),
-                    TokenValue::Buffer => TypeQualifier::StorageQualifier(
-                        StorageQualifier::StorageClass(StorageClass::Storage),
-                    ),
-                    TokenValue::Sampling(s) => TypeQualifier::Sampling(s),
-
-                    _ => unreachable!(),
-                },
-                token.meta,
-            ))
+            None => Profile::Core,
         }
+    };
 
-        Ok(qualifiers)
-    }
-
-    fn parse_layout_qualifier_id_list(
-        &mut self,
-        qualifiers: &mut Vec<(TypeQualifier, SourceMetadata)>,
-    ) -> Result<()> {
-        // We need both of these to produce a ResourceBinding
-        let mut group = None;
-        let mut binding = None;
-
-        self.expect(TokenValue::LeftParen)?;
-        loop {
-            self.parse_layout_qualifier_id(qualifiers, &mut group, &mut binding)?;
-
-            if self.bump_if(TokenValue::Comma).is_some() {
-                continue;
-            }
-
-            break;
-        }
-        self.expect(TokenValue::RightParen)?;
-
-        match (group, binding) {
-            (Some((group, group_meta)), Some((binding, binding_meta))) => qualifiers.push((
-                TypeQualifier::ResourceBinding(ResourceBinding { group, binding }),
-                group_meta.union(&binding_meta),
-            )),
-            // Produce an error if we have one of group or binding but not the other
-            (Some((_, meta)), None) => {
-                return Err(ErrorKind::SemanticError(
-                    meta,
-                    "set specified with no binding".into(),
-                ))
-            }
-            (None, Some((_, meta))) => {
-                return Err(ErrorKind::SemanticError(
-                    meta,
-                    "binding specified with no set".into(),
-                ))
-            }
-            (None, None) => (),
-        }
-
-        Ok(())
-    }
-
-    fn parse_uint_constant(&mut self) -> Result<(u32, SourceMetadata)> {
-        let (value, meta) = self.parse_constant_expression()?;
-
-        let int = match self.program.module.constants[value].inner {
-            ConstantInner::Scalar {
-                value: ScalarValue::Uint(int),
-                ..
-            } => u32::try_from(int)
-                .map_err(|_| ErrorKind::SemanticError(meta, "int constant overflows".into())),
-            ConstantInner::Scalar {
-                value: ScalarValue::Sint(int),
-                ..
-            } => u32::try_from(int)
-                .map_err(|_| ErrorKind::SemanticError(meta, "int constant overflows".into())),
-            _ => Err(ErrorKind::SemanticError(
-                meta,
-                "Expected a uint constant".into(),
-            )),
-        }?;
-
-        Ok((int, meta))
-    }
-
-    fn parse_layout_qualifier_id(
-        &mut self,
-        qualifiers: &mut Vec<(TypeQualifier, SourceMetadata)>,
-        group: &mut Option<(u32, SourceMetadata)>,
-        binding: &mut Option<(u32, SourceMetadata)>,
-    ) -> Result<()> {
-        // layout_qualifier_id:
-        //     IDENTIFIER
-        //     IDENTIFIER EQUAL constant_expression
-        //     SHARED
-        let mut token = self.bump()?;
-        match token.value {
-            TokenValue::Identifier(name) => {
-                if self.bump_if(TokenValue::Assign).is_some() {
-                    let (value, end_meta) = self.parse_uint_constant()?;
-                    token.meta = token.meta.union(&end_meta);
-
-                    qualifiers.push((
-                        match name.as_str() {
-                            "location" => TypeQualifier::Location(value),
-                            "set" => {
-                                *group = Some((value, end_meta));
-                                return Ok(());
-                            }
-                            "binding" => {
-                                *binding = Some((value, end_meta));
-                                return Ok(());
-                            }
-                            "local_size_x" => TypeQualifier::WorkGroupSize(0, value),
-                            "local_size_y" => TypeQualifier::WorkGroupSize(1, value),
-                            "local_size_z" => TypeQualifier::WorkGroupSize(2, value),
-                            _ => return Err(ErrorKind::UnknownLayoutQualifier(token.meta, name)),
-                        },
-                        token.meta,
-                    ))
-                } else {
-                    match name.as_str() {
-                        "push_constant" => {
-                            qualifiers.push((
-                                TypeQualifier::StorageQualifier(StorageQualifier::StorageClass(
-                                    StorageClass::PushConstant,
-                                )),
-                                token.meta,
-                            ));
-                            qualifiers
-                                .push((TypeQualifier::Layout(StructLayout::Std430), token.meta));
-                        }
-                        "std140" => qualifiers
-                            .push((TypeQualifier::Layout(StructLayout::Std140), token.meta)),
-                        "std430" => qualifiers
-                            .push((TypeQualifier::Layout(StructLayout::Std430), token.meta)),
-                        "early_fragment_tests" => {
-                            qualifiers.push((TypeQualifier::EarlyFragmentTests, token.meta))
-                        }
-                        _ => return Err(ErrorKind::UnknownLayoutQualifier(token.meta, name)),
-                    }
-                };
-
-                Ok(())
-            }
-            // TODO: handle Shared?
-            _ => Err(ErrorKind::InvalidToken(
-                token,
-                vec![ExpectedToken::Identifier],
-            )),
-        }
-    }
-
-    fn parse_constant_expression(&mut self) -> Result<(Handle<Constant>, SourceMetadata)> {
-        let mut expressions = Arena::new();
-        let mut locals = Arena::new();
-        let mut arguments = Vec::new();
-        let mut block = Block::new();
-
-        let mut ctx = Context::new(
-            self.program,
-            &mut block,
-            &mut expressions,
-            &mut locals,
-            &mut arguments,
-        );
-
-        let expr = self.parse_conditional(&mut ctx, &mut block, None)?;
-        let (root, meta) = ctx.lower_expect(self.program, expr, false, &mut block)?;
-
-        Ok((self.program.solve_constant(&ctx, root, meta)?, meta))
-    }
-
-    fn parse_external_declaration(&mut self) -> Result<()> {
-        // TODO: Create body and expressions arena to be used in all entry
-        // points to handle this case
-        // ```glsl
-        // // This is valid and the body of main will contain the assignment
-        // float b;
-        // float a = b = 1;
-        //
-        // void main() {}
-        // ```
-        let (mut e, mut l, mut a) = (Arena::new(), Arena::new(), Vec::new());
-        let mut body = Block::new();
-        let mut ctx = Context::new(self.program, &mut body, &mut e, &mut l, &mut a);
-
-        if !self.parse_declaration(&mut ctx, &mut body, true)? {
-            let token = self.bump()?;
-            match token.value {
-                TokenValue::Semicolon if self.program.version == 460 => Ok(()),
-                _ => {
-                    let expected = match self.program.version {
-                        460 => vec![TokenValue::Semicolon.into(), ExpectedToken::Eof],
-                        _ => vec![ExpectedToken::Eof],
-                    };
-                    Err(ErrorKind::InvalidToken(token, expected))
-                }
-            }
-        } else {
-            Ok(())
-        }
-    }
-
-    fn peek_type_name(&mut self) -> bool {
-        let program = &self.program;
-        self.lexer.peek().map_or(false, |t| match t.value {
-            TokenValue::TypeName(_) | TokenValue::Void => true,
-            TokenValue::Struct => true,
-            TokenValue::Identifier(ref ident) => program.lookup_type.contains_key(ident),
-            _ => false,
-        })
-    }
-
-    fn peek_parameter_qualifier(&mut self) -> bool {
-        self.lexer.peek().map_or(false, |t| match t.value {
-            TokenValue::In | TokenValue::Out | TokenValue::InOut | TokenValue::Const => true,
-            _ => false,
-        })
-    }
-
-    /// Returns the parsed `ParameterQualifier` or `ParameterQualifier::In`
-    fn parse_parameter_qualifier(&mut self) -> ParameterQualifier {
-        if self.peek_parameter_qualifier() {
-            match self.bump().unwrap().value {
-                TokenValue::In => ParameterQualifier::In,
-                TokenValue::Out => ParameterQualifier::Out,
-                TokenValue::InOut => ParameterQualifier::InOut,
-                TokenValue::Const => ParameterQualifier::Const,
-                _ => unreachable!(),
-            }
-        } else {
-            ParameterQualifier::In
-        }
-    }
-
-    fn parse_initializer(
-        &mut self,
-        ty: Handle<Type>,
-        ctx: &mut Context,
-        body: &mut Block,
-    ) -> Result<(Handle<Expression>, SourceMetadata)> {
-        // initializer:
-        //     assignment_expression
-        //     LEFT_BRACE initializer_list RIGHT_BRACE
-        //     LEFT_BRACE initializer_list COMMA RIGHT_BRACE
-        //
-        // initializer_list:
-        //     initializer
-        //     initializer_list COMMA initializer
-        if let Some(Token { mut meta, .. }) = self.bump_if(TokenValue::LeftBrace) {
-            // initializer_list
-            let mut components = Vec::new();
-            loop {
-                // TODO: Change type
-                components.push(self.parse_initializer(ty, ctx, body)?.0);
-
-                let token = self.bump()?;
-                match token.value {
-                    TokenValue::Comma => {
-                        if let Some(Token { meta: end_meta, .. }) =
-                            self.bump_if(TokenValue::RightBrace)
-                        {
-                            meta = meta.union(&end_meta);
-                            break;
-                        }
-                    }
-                    TokenValue::RightBrace => {
-                        meta = meta.union(&token.meta);
-                        break;
-                    }
-                    _ => {
-                        return Err(ErrorKind::InvalidToken(
-                            token,
-                            vec![TokenValue::Comma.into(), TokenValue::RightBrace.into()],
-                        ))
-                    }
-                }
-            }
-
-            Ok((
-                ctx.add_expression(Expression::Compose { ty, components }, body),
-                meta,
-            ))
-        } else {
-            let expr = self.parse_assignment(ctx, body)?;
-            Ok(ctx.lower_expect(self.program, expr, false, body)?)
-        }
-    }
-
-    // Note: caller preparsed the type and qualifiers
-    // Note: caller skips this if the fallthrough token is not expected to be consumed here so this
-    // produced Error::InvalidToken if it isn't consumed
-    fn parse_init_declarator_list(
-        &mut self,
-        ty: Handle<Type>,
-        mut fallthrough: Option<Token>,
-        ctx: &mut DeclarationContext,
-    ) -> Result<()> {
-        // init_declarator_list:
-        //     single_declaration
-        //     init_declarator_list COMMA IDENTIFIER
-        //     init_declarator_list COMMA IDENTIFIER array_specifier
-        //     init_declarator_list COMMA IDENTIFIER array_specifier EQUAL initializer
-        //     init_declarator_list COMMA IDENTIFIER EQUAL initializer
-        //
-        // single_declaration:
-        //     fully_specified_type
-        //     fully_specified_type IDENTIFIER
-        //     fully_specified_type IDENTIFIER array_specifier
-        //     fully_specified_type IDENTIFIER array_specifier EQUAL initializer
-        //     fully_specified_type IDENTIFIER EQUAL initializer
-
-        // Consume any leading comma, e.g. this is valid: `float, a=1;`
-        if fallthrough
-            .as_ref()
-            .or_else(|| self.lexer.peek())
-            .filter(|t| t.value == TokenValue::Comma)
-            .is_some()
-        {
-            fallthrough.take().or_else(|| self.lexer.next());
-        }
-
-        loop {
-            let token = fallthrough
-                .take()
-                .ok_or(ErrorKind::EndOfFile)
-                .or_else(|_| self.bump())?;
-            let name = match token.value {
-                TokenValue::Semicolon => break,
-                TokenValue::Identifier(name) => name,
-                _ => {
-                    return Err(ErrorKind::InvalidToken(
-                        token,
-                        vec![ExpectedToken::Identifier, TokenValue::Semicolon.into()],
-                    ))
-                }
-            };
-            let mut meta = token.meta;
-
-            // array_specifier
-            // array_specifier EQUAL initializer
-            // EQUAL initializer
-
-            // parse an array specifier if it exists
-            // NOTE: unlike other parse methods this one doesn't expect an array specifier and
-            // returns Ok(None) rather than an error if there is not one
-            let array_specifier = self.parse_array_specifier()?;
-            let ty = self.maybe_array(ty, array_specifier);
-
-            let init = self
-                .bump_if(TokenValue::Assign)
-                .map::<Result<_>, _>(|_| {
-                    let (mut expr, init_meta) = self.parse_initializer(ty, ctx.ctx, ctx.body)?;
-
-                    if let Some(kind) = self.program.module.types[ty].inner.scalar_kind() {
-                        ctx.ctx
-                            .implicit_conversion(self.program, &mut expr, init_meta, kind)?;
-                    }
-
-                    meta = meta.union(&init_meta);
-
-                    Ok((expr, init_meta))
-                })
-                .transpose()?;
-
-            // TODO: Should we try to make constants here?
-            // This is mostly a hack because we don't yet support adding
-            // bodies to entry points for variable initialization
-            let maybe_constant =
-                init.and_then(|(root, meta)| self.program.solve_constant(ctx.ctx, root, meta).ok());
-
-            let pointer = ctx.add_var(self.program, ty, name, maybe_constant, meta)?;
-
-            if let Some((value, _)) = init.filter(|_| maybe_constant.is_none()) {
-                ctx.flush_expressions();
-                ctx.body.push(Statement::Store { pointer, value });
-            }
-
-            let token = self.bump()?;
-            match token.value {
-                TokenValue::Semicolon => break,
-                TokenValue::Comma => {}
-                _ => {
-                    return Err(ErrorKind::InvalidToken(
-                        token,
-                        vec![TokenValue::Comma.into(), TokenValue::Semicolon.into()],
-                    ))
-                }
-            }
-        }
-
-        Ok(())
-    }
-
-    /// `external` whether or not we are in a global or local context
-    fn parse_declaration(
-        &mut self,
-        ctx: &mut Context,
-        body: &mut Block,
-        external: bool,
-    ) -> Result<bool> {
-        //declaration:
-        //    function_prototype  SEMICOLON
-        //
-        //    init_declarator_list SEMICOLON
-        //    PRECISION precision_qualifier type_specifier SEMICOLON
-        //
-        //    type_qualifier IDENTIFIER LEFT_BRACE struct_declaration_list RIGHT_BRACE SEMICOLON
-        //    type_qualifier IDENTIFIER LEFT_BRACE struct_declaration_list RIGHT_BRACE IDENTIFIER SEMICOLON
-        //    type_qualifier IDENTIFIER LEFT_BRACE struct_declaration_list RIGHT_BRACE IDENTIFIER array_specifier SEMICOLON
-        //    type_qualifier SEMICOLON type_qualifier IDENTIFIER SEMICOLON
-        //    type_qualifier IDENTIFIER identifier_list SEMICOLON
-
-        if self.peek_type_qualifier() || self.peek_type_name() {
-            let qualifiers = self.parse_type_qualifiers()?;
-
-            if self.peek_type_name() {
-                // This branch handles variables and function prototypes and if
-                // external is true also function definitions
-                let (ty, mut meta) = self.parse_type()?;
-
-                let token = self.bump()?;
-                let token_fallthrough = match token.value {
-                    TokenValue::Identifier(name) => match self.expect_peek()?.value {
-                        TokenValue::LeftParen => {
-                            // This branch handles function definition and prototypes
-                            self.bump()?;
-
-                            let result = ty.map(|ty| FunctionResult { ty, binding: None });
-                            let mut expressions = Arena::new();
-                            let mut local_variables = Arena::new();
-                            let mut arguments = Vec::new();
-                            let mut parameters = Vec::new();
-                            let mut body = Block::new();
-                            let mut sig = FunctionSignature {
-                                name: name.clone(),
-                                parameters: Vec::new(),
-                            };
-
-                            let mut context = Context::new(
-                                self.program,
-                                &mut body,
-                                &mut expressions,
-                                &mut local_variables,
-                                &mut arguments,
-                            );
-
-                            self.parse_function_args(
-                                &mut context,
-                                &mut body,
-                                &mut parameters,
-                                &mut sig,
-                            )?;
-
-                            let end_meta = self.expect(TokenValue::RightParen)?.meta;
-                            meta = meta.union(&end_meta);
-
-                            let token = self.bump()?;
-                            return match token.value {
-                                TokenValue::Semicolon => {
-                                    // This branch handles function prototypes
-                                    self.program.add_prototype(
-                                        Function {
-                                            name: Some(name),
-                                            result,
-                                            arguments,
-                                            ..Default::default()
-                                        },
-                                        sig,
-                                        parameters,
-                                        meta,
-                                    )?;
-
-                                    Ok(true)
-                                }
-                                TokenValue::LeftBrace if external => {
-                                    // This branch handles function definitions
-                                    // as you can see by the guard this branch
-                                    // only happens if external is also true
-
-                                    // parse the body
-                                    self.parse_compound_statement(&mut context, &mut body)?;
-
-                                    let Context { arg_use, .. } = context;
-                                    let handle = self.program.add_function(
-                                        Function {
-                                            name: Some(name),
-                                            result,
-                                            expressions,
-                                            named_expressions: crate::FastHashMap::default(),
-                                            local_variables,
-                                            arguments,
-                                            body,
-                                        },
-                                        sig,
-                                        parameters,
-                                        meta,
-                                    )?;
-
-                                    self.program.function_arg_use[handle.index()] = arg_use;
-
-                                    Ok(true)
-                                }
-                                _ if external => Err(ErrorKind::InvalidToken(
-                                    token,
-                                    vec![
-                                        TokenValue::LeftBrace.into(),
-                                        TokenValue::Semicolon.into(),
-                                    ],
-                                )),
-                                _ => Err(ErrorKind::InvalidToken(
-                                    token,
-                                    vec![TokenValue::Semicolon.into()],
-                                )),
-                            };
-                        }
-                        // Pass the token to the init_declator_list parser
-                        _ => Token {
-                            value: TokenValue::Identifier(name),
-                            meta: token.meta,
-                        },
-                    },
-                    // Pass the token to the init_declator_list parser
-                    _ => token,
-                };
-
-                // If program execution has reached here then this will be a
-                // init_declarator_list
-                // token_falltrough will have a token that was already bumped
-                if let Some(ty) = ty {
-                    let mut ctx = DeclarationContext {
-                        qualifiers,
-                        external,
-                        ctx,
-                        body,
-                    };
-
-                    self.parse_init_declarator_list(ty, Some(token_fallthrough), &mut ctx)?;
-                } else {
-                    return Err(ErrorKind::SemanticError(
-                        meta,
-                        "Declaration cannot have void type".into(),
-                    ));
-                }
-
-                Ok(true)
-            } else {
-                // This branch handles struct definitions and modifiers like
-                // ```glsl
-                // layout(early_fragment_tests);
-                // ```
-                let token = self.bump()?;
-                match token.value {
-                    TokenValue::Identifier(ty_name) => {
-                        if self.bump_if(TokenValue::LeftBrace).is_some() {
-                            self.parse_block_declaration(&qualifiers, ty_name, token.meta)
-                        } else {
-                            //TODO: declaration
-                            // type_qualifier IDENTIFIER SEMICOLON
-                            // type_qualifier IDENTIFIER identifier_list SEMICOLON
-                            todo!()
-                        }
-                    }
-                    TokenValue::Semicolon => {
-                        for &(ref qualifier, meta) in qualifiers.iter() {
-                            match *qualifier {
-                                TypeQualifier::WorkGroupSize(i, value) => {
-                                    self.program.workgroup_size[i] = value
-                                }
-                                TypeQualifier::EarlyFragmentTests => {
-                                    self.program.early_fragment_tests = true;
-                                }
-                                TypeQualifier::StorageQualifier(_) => {
-                                    // TODO: Maybe add some checks here
-                                    // This is needed because of cases like
-                                    // layout(early_fragment_tests) in;
-                                }
-                                _ => {
-                                    return Err(ErrorKind::SemanticError(
-                                        meta,
-                                        "Qualifier not supported as standalone".into(),
-                                    ));
-                                }
-                            }
-                        }
-
-                        Ok(true)
-                    }
-                    _ => Err(ErrorKind::InvalidToken(
-                        token,
-                        vec![ExpectedToken::Identifier, TokenValue::Semicolon.into()],
-                    )),
-                }
-            }
-        } else {
-            Ok(false)
-        }
-    }
-
-    fn parse_block_declaration(
-        &mut self,
-        qualifiers: &[(TypeQualifier, SourceMetadata)],
-        ty_name: String,
-        mut meta: SourceMetadata,
-    ) -> Result<bool> {
-        let mut members = Vec::new();
-        let span = self.parse_struct_declaration_list(&mut members)?;
-        self.expect(TokenValue::RightBrace)?;
-
-        let mut ty = self.program.module.types.append(Type {
-            name: Some(ty_name),
-            inner: TypeInner::Struct {
-                top_level: true,
-                members: members.clone(),
-                span,
+    // expression
+    variable_identifier ::= Identifier(v) {
+        let var = extra.lookup_variable(&v.1)?;
+        match var {
+            Some(expression) => {
+                ExpressionRule::from_expression(expression)
             },
-        });
-
-        let token = self.bump()?;
-        let name = match token.value {
-            TokenValue::Semicolon => None,
-            TokenValue::Identifier(name) => {
-                if let Some(size) = self.parse_array_specifier()? {
-                    ty = self.program.module.types.fetch_or_append(Type {
-                        name: None,
-                        inner: TypeInner::Array {
-                            base: ty,
-                            size,
-                            stride: self.program.module.types[ty]
-                                .inner
-                                .span(&self.program.module.constants),
-                        },
-                    });
-                }
-
-                self.expect(TokenValue::Semicolon)?;
-
-                Some(name)
-            }
-            _ => {
-                return Err(ErrorKind::InvalidToken(
-                    token,
-                    vec![ExpectedToken::Identifier, TokenValue::Semicolon.into()],
-                ))
-            }
-        };
-        meta = meta.union(&token.meta);
-
-        let global = self.program.add_global_var(VarDeclaration {
-            qualifiers,
-            ty,
-            name,
-            init: None,
-            meta,
-        })?;
-
-        for (i, k) in members
-            .into_iter()
-            .enumerate()
-            .filter_map(|(i, m)| m.name.map(|s| (i as u32, s)))
-        {
-            self.program.global_variables.push((
-                k,
-                GlobalLookup {
-                    kind: match global {
-                        GlobalOrConstant::Global(handle) => {
-                            GlobalLookupKind::BlockSelect(handle, i)
-                        }
-                        GlobalOrConstant::Constant(handle) => GlobalLookupKind::Constant(handle),
-                    },
-                    entry_arg: None,
-                    mutable: true,
-                },
-            ));
-        }
-
-        Ok(true)
-    }
-
-    // TODO: Accept layout arguments
-    fn parse_struct_declaration_list(&mut self, members: &mut Vec<StructMember>) -> Result<u32> {
-        let mut span = 0;
-
-        loop {
-            // TODO: type_qualifier
-
-            let ty = self.parse_type_non_void()?.0;
-            let name = self.expect_ident()?.0;
-
-            let array_specifier = self.parse_array_specifier()?;
-            let ty = self.maybe_array(ty, array_specifier);
-
-            self.expect(TokenValue::Semicolon)?;
-
-            members.push(StructMember {
-                name: Some(name),
-                ty,
-                binding: None,
-                offset: span,
-            });
-
-            span += self.program.module.types[ty]
-                .inner
-                .span(&self.program.module.constants);
-
-            if let TokenValue::RightBrace = self.expect_peek()?.value {
-                break;
+            None => {
+                return Err(ErrorKind::UnknownVariable(v.0, v.1));
             }
         }
-
-        Ok(span)
     }
 
-    fn parse_primary(&mut self, ctx: &mut Context, body: &mut Block) -> Result<Handle<HirExpr>> {
-        let mut token = self.bump()?;
-
-        let (width, value) = match token.value {
-            TokenValue::IntConstant(int) => (
-                (int.width / 8) as u8,
-                if int.signed {
-                    ScalarValue::Sint(int.value as i64)
-                } else {
-                    ScalarValue::Uint(int.value)
-                },
-            ),
-            TokenValue::FloatConstant(float) => (
-                (float.width / 8) as u8,
-                ScalarValue::Float(float.value as f64),
-            ),
-            TokenValue::BoolConstant(value) => (1, ScalarValue::Bool(value)),
-            TokenValue::LeftParen => {
-                let expr = self.parse_expression(ctx, body)?;
-                let meta = self.expect(TokenValue::RightParen)?.meta;
-
-                token.meta = token.meta.union(&meta);
-
-                return Ok(expr);
-            }
-            _ => {
-                return Err(ErrorKind::InvalidToken(
-                    token,
-                    vec![
-                        TokenValue::LeftParen.into(),
-                        ExpectedToken::IntLiteral,
-                        ExpectedToken::FloatLiteral,
-                        ExpectedToken::BoolLiteral,
-                    ],
-                ))
-            }
-        };
-
-        let handle = self.program.module.constants.append(Constant {
+    primary_expression ::= variable_identifier;
+    primary_expression ::= IntConstant(i) {
+        let ch = extra.module.constants.fetch_or_append(Constant {
             name: None,
             specialization: None,
-            inner: ConstantInner::Scalar { width, value },
+            inner: ConstantInner::Scalar {
+                width: 4,
+                value: ScalarValue::Sint(i.1),
+            },
+        });
+        ExpressionRule::from_expression(
+            extra.context.expressions.append(Expression::Constant(ch))
+        )
+    }
+    primary_expression ::= UintConstant(i) {
+        let ch = extra.module.constants.fetch_or_append(Constant {
+            name: None,
+            specialization: None,
+            inner: ConstantInner::Scalar {
+                width: 4,
+                value: ScalarValue::Uint(i.1),
+            },
+        });
+        ExpressionRule::from_expression(
+            extra.context.expressions.append(Expression::Constant(ch))
+        )
+    }
+    primary_expression ::= FloatConstant(f) {
+        let ch = extra.module.constants.fetch_or_append(Constant {
+            name: None,
+            specialization: None,
+            inner: ConstantInner::Scalar {
+                width: 4,
+                value: ScalarValue::Float(f.1 as f64),
+            },
+        });
+        ExpressionRule::from_expression(
+            extra.context.expressions.append(Expression::Constant(ch))
+        )
+    }
+    primary_expression ::= BoolConstant(b) {
+        let ch = extra.module.constants.fetch_or_append(Constant {
+            name: None,
+            specialization: None,
+            inner: ConstantInner::Scalar {
+                width: BOOL_WIDTH,
+                value: ScalarValue::Bool(b.1)
+            },
+        });
+        ExpressionRule::from_expression(
+            extra.context.expressions.append(Expression::Constant(ch))
+        )
+    }
+    primary_expression ::= DoubleConstant(f) {
+        let ch = extra.module.constants.fetch_or_append(Constant {
+            name: None,
+            specialization: None,
+            inner: ConstantInner::Scalar {
+                width: 8,
+                value: ScalarValue::Float(f.1),
+            },
+        });
+        ExpressionRule::from_expression(
+            extra.context.expressions.append(Expression::Constant(ch))
+        )
+    }
+    primary_expression ::= LeftParen expression(e) RightParen {
+        e
+    }
+
+    postfix_expression ::= primary_expression;
+    postfix_expression ::= postfix_expression LeftBracket integer_expression RightBracket {
+        //TODO
+        return Err(ErrorKind::NotImplemented("[]"))
+    }
+    postfix_expression ::= function_call;
+    postfix_expression ::= postfix_expression(e) Dot Identifier(i) /* FieldSelection in spec */ {
+        //TODO: how will this work as l-value?
+        let expression = extra.field_selection(e.expression, &*i.1, i.0)?;
+        ExpressionRule { expression, statements: e.statements, sampler: None }
+    }
+    postfix_expression ::= postfix_expression(pe) IncOp {
+        //TODO
+        return Err(ErrorKind::NotImplemented("post++"))
+    }
+    postfix_expression ::= postfix_expression(pe) DecOp {
+        //TODO
+        return Err(ErrorKind::NotImplemented("post--"))
+    }
+
+    integer_expression ::= expression;
+
+    function_call ::= function_call_or_method(fc) {
+       extra.function_call(fc)?
+    }
+    function_call_or_method ::= function_call_generic;
+    function_call_generic ::= function_call_header_with_parameters(h) RightParen {
+        h
+    }
+    function_call_generic ::= function_call_header_no_parameters(h) RightParen {
+        h
+    }
+    function_call_header_no_parameters ::= function_call_header(h) Void {
+        h
+    }
+    function_call_header_no_parameters ::= function_call_header;
+    function_call_header_with_parameters ::= function_call_header(mut h) assignment_expression(ae) {
+        h.args.push(ae);
+        h
+    }
+    function_call_header_with_parameters ::= function_call_header_with_parameters(mut h) Comma assignment_expression(ae) {
+        h.args.push(ae);
+        h
+    }
+    function_call_header ::= function_identifier(i) LeftParen {
+        FunctionCall {
+            kind: i,
+            args: vec![],
+        }
+    }
+
+    // Grammar Note: Constructors look like functions, but lexical analysis recognized most of them as
+    // keywords. They are now recognized through “type_specifier”.
+    function_identifier ::= type_specifier(t) {
+        if let Some(ty) = t {
+            FunctionCallKind::TypeConstructor(ty)
+        } else {
+            return Err(ErrorKind::NotImplemented("bad type ctor"))
+        }
+    }
+
+    //TODO
+    // Methods (.length), subroutine array calls, and identifiers are recognized through postfix_expression.
+    // function_identifier ::= postfix_expression(e) {
+    //     FunctionCallKind::Function(e.expression)
+    // }
+
+    // Simplification of above
+    function_identifier ::= Identifier(i) {
+        FunctionCallKind::Function(i.1)
+    }
+
+
+    unary_expression ::= postfix_expression;
+
+    unary_expression ::= IncOp unary_expression {
+        //TODO
+        return Err(ErrorKind::NotImplemented("++pre"))
+    }
+    unary_expression ::= DecOp unary_expression {
+        //TODO
+        return Err(ErrorKind::NotImplemented("--pre"))
+    }
+    unary_expression ::= Plus unary_expression(tgt) {
+        tgt
+    }
+    unary_expression ::= Dash unary_expression(tgt) {
+        extra.unary_expr(UnaryOperator::Negate, &tgt)
+    }
+    unary_expression ::= Bang unary_expression(tgt) {
+        if let TypeInner::Scalar { kind: ScalarKind::Bool, .. } = *extra.resolve_type(tgt.expression)? {
+            extra.unary_expr(UnaryOperator::Not, &tgt)
+        } else {
+            return Err(ErrorKind::SemanticError("Cannot apply '!' to non bool type".into()))
+        }
+    }
+    unary_expression ::= Tilde unary_expression(tgt) {
+        if extra.resolve_type(tgt.expression)?.scalar_kind() != Some(ScalarKind::Bool) {
+            extra.unary_expr(UnaryOperator::Not, &tgt)
+        } else {
+            return Err(ErrorKind::SemanticError("Cannot apply '~' to type".into()))
+        }
+    }
+
+    multiplicative_expression ::= unary_expression;
+    multiplicative_expression ::= multiplicative_expression(left) Star unary_expression(right) {
+        extra.binary_expr(BinaryOperator::Multiply, &left, &right)
+    }
+    multiplicative_expression ::= multiplicative_expression(left) Slash unary_expression(right) {
+        extra.binary_expr(BinaryOperator::Divide, &left, &right)
+    }
+    multiplicative_expression ::= multiplicative_expression(left) Percent unary_expression(right) {
+        extra.binary_expr(BinaryOperator::Modulo, &left, &right)
+    }
+    additive_expression ::= multiplicative_expression;
+    additive_expression ::= additive_expression(left) Plus multiplicative_expression(right) {
+        extra.binary_expr(BinaryOperator::Add, &left, &right)
+    }
+    additive_expression ::= additive_expression(left) Dash multiplicative_expression(right) {
+        extra.binary_expr(BinaryOperator::Subtract, &left, &right)
+    }
+    shift_expression ::= additive_expression;
+    shift_expression ::= shift_expression(left) LeftOp additive_expression(right) {
+        extra.binary_expr(BinaryOperator::ShiftLeft, &left, &right)
+    }
+    shift_expression ::= shift_expression(left) RightOp additive_expression(right) {
+        extra.binary_expr(BinaryOperator::ShiftRight, &left, &right)
+    }
+    relational_expression ::= shift_expression;
+    relational_expression ::= relational_expression(left) LeftAngle shift_expression(right) {
+        extra.binary_expr(BinaryOperator::Less, &left, &right)
+    }
+    relational_expression ::= relational_expression(left) RightAngle shift_expression(right) {
+        extra.binary_expr(BinaryOperator::Greater, &left, &right)
+    }
+    relational_expression ::= relational_expression(left) LeOp shift_expression(right) {
+        extra.binary_expr(BinaryOperator::LessEqual, &left, &right)
+    }
+    relational_expression ::= relational_expression(left) GeOp shift_expression(right) {
+        extra.binary_expr(BinaryOperator::GreaterEqual, &left, &right)
+    }
+    equality_expression ::= relational_expression;
+    equality_expression ::= equality_expression(left) EqOp relational_expression(right) {
+        extra.equality_expr(true, &left, &right)?
+    }
+    equality_expression ::= equality_expression(left) NeOp relational_expression(right) {
+        extra.equality_expr(false, &left, &right)?
+    }
+    and_expression ::= equality_expression;
+    and_expression ::= and_expression(left) Ampersand equality_expression(right) {
+        extra.binary_expr(BinaryOperator::And, &left, &right)
+    }
+    exclusive_or_expression ::= and_expression;
+    exclusive_or_expression ::= exclusive_or_expression(left) Caret and_expression(right) {
+        extra.binary_expr(BinaryOperator::ExclusiveOr, &left, &right)
+    }
+    inclusive_or_expression ::= exclusive_or_expression;
+    inclusive_or_expression ::= inclusive_or_expression(left) VerticalBar exclusive_or_expression(right) {
+        extra.binary_expr(BinaryOperator::InclusiveOr, &left, &right)
+    }
+    logical_and_expression ::= inclusive_or_expression;
+    logical_and_expression ::= logical_and_expression(left) AndOp inclusive_or_expression(right) {
+        extra.binary_expr(BinaryOperator::LogicalAnd, &left, &right)
+    }
+    logical_xor_expression ::= logical_and_expression;
+    logical_xor_expression ::= logical_xor_expression(left) XorOp logical_and_expression(right) {
+        let exp1 = extra.binary_expr(BinaryOperator::LogicalOr, &left, &right);
+        let exp2 = {
+            let tmp = extra.binary_expr(BinaryOperator::LogicalAnd, &left, &right).expression;
+            ExpressionRule::from_expression(extra.context.expressions.append(Expression::Unary { op: UnaryOperator::Not, expr: tmp }))
+        };
+        extra.binary_expr(BinaryOperator::LogicalAnd, &exp1, &exp2)
+    }
+    logical_or_expression ::= logical_xor_expression;
+    logical_or_expression ::= logical_or_expression(left) OrOp logical_xor_expression(right) {
+        extra.binary_expr(BinaryOperator::LogicalOr, &left, &right)
+    }
+
+    conditional_expression ::= logical_or_expression;
+    conditional_expression ::= logical_or_expression Question expression Colon assignment_expression(ae) {
+        //TODO: how to do ternary here in naga?
+        return Err(ErrorKind::NotImplemented("ternary exp"))
+    }
+
+    assignment_expression ::= conditional_expression;
+    assignment_expression ::= unary_expression(mut pointer) assignment_operator(op) assignment_expression(value) {
+        pointer.statements.extend(value.statements);
+        match op {
+            BinaryOperator::Equal => {
+                pointer.statements.push(Statement::Store{
+                    pointer: pointer.expression,
+                    value: value.expression
+                });
+                pointer
+            },
+            _ => {
+                let h = extra.context.expressions.append(
+                    Expression::Binary{
+                        op,
+                        left: pointer.expression,
+                        right: value.expression,
+                    }
+                );
+                pointer.statements.push(Statement::Store{
+                    pointer: pointer.expression,
+                    value: h,
+                });
+                pointer
+            }
+        }
+    }
+
+    assignment_operator ::= Equal {
+        BinaryOperator::Equal
+    }
+    assignment_operator ::= MulAssign {
+        BinaryOperator::Multiply
+    }
+    assignment_operator ::= DivAssign {
+        BinaryOperator::Divide
+    }
+    assignment_operator ::= ModAssign {
+        BinaryOperator::Modulo
+    }
+    assignment_operator ::= AddAssign {
+        BinaryOperator::Add
+    }
+    assignment_operator ::= SubAssign {
+        BinaryOperator::Subtract
+    }
+    assignment_operator ::= LeftAssign {
+        BinaryOperator::ShiftLeft
+    }
+    assignment_operator ::= RightAssign {
+        BinaryOperator::ShiftRight
+    }
+    assignment_operator ::= AndAssign {
+        BinaryOperator::And
+    }
+    assignment_operator ::= XorAssign {
+        BinaryOperator::ExclusiveOr
+    }
+    assignment_operator ::= OrAssign {
+        BinaryOperator::InclusiveOr
+    }
+
+    expression ::= assignment_expression;
+    expression ::= expression(e) Comma assignment_expression(mut ae) {
+        ae.statements.extend(e.statements);
+        ExpressionRule {
+            expression: e.expression,
+            statements: ae.statements,
+            sampler: None,
+        }
+    }
+
+    //TODO: properly handle constant expressions
+    // constant_expression ::= conditional_expression(e) {
+    //     if let Expression::Constant(h) = extra.context.expressions[e] {
+    //         h
+    //     } else {
+    //         return Err(ErrorKind::ExpectedConstant)
+    //     }
+    // }
+
+    // declaration
+    declaration ::= init_declarator_list(idl) Semicolon {
+        Some(idl)
+    }
+
+    declaration ::= type_qualifier(t) Identifier(i) LeftBrace
+        struct_declaration_list(sdl) RightBrace Semicolon {
+        if i.1 == "gl_PerVertex" {
+            None
+        } else {
+            let level = if t.is_empty() {
+                //TODO
+                crate::StructLevel::Normal { alignment: crate::Alignment::new(1).unwrap() }
+            } else {
+                crate::StructLevel::Root
+            };
+            Some(VarDeclaration {
+                type_qualifiers: t,
+                ids_initializers: vec![(None, None)],
+                ty: extra.module.types.fetch_or_append(Type{
+                    name: Some(i.1),
+                    inner: TypeInner::Struct {
+                        level,
+                        members: sdl,
+                        span: 0, //TODO
+                    },
+                }),
+            })
+        }
+    }
+
+    declaration ::= type_qualifier(t) Identifier(i1) LeftBrace
+        struct_declaration_list(sdl) RightBrace Identifier(i2) Semicolon {
+        let level = if t.is_empty() {
+            //TODO
+            crate::StructLevel::Normal { alignment: crate::Alignment::new(1).unwrap() }
+        } else {
+            crate::StructLevel::Root
+        };
+        Some(VarDeclaration {
+            type_qualifiers: t,
+            ids_initializers: vec![(Some(i2.1), None)],
+            ty: extra.module.types.fetch_or_append(Type{
+                name: Some(i1.1),
+                inner: TypeInner::Struct {
+                    level,
+                    members: sdl,
+                    span: 0, //TODO
+                },
+            }),
+        })
+    }
+
+    // declaration ::= type_qualifier(t) Identifier(i1) LeftBrace
+    //     struct_declaration_list RightBrace Identifier(i2) array_specifier Semicolon;
+
+    init_declarator_list ::= single_declaration;
+    init_declarator_list ::= init_declarator_list(mut idl) Comma Identifier(i) {
+        idl.ids_initializers.push((Some(i.1), None));
+        idl
+    }
+    // init_declarator_list ::= init_declarator_list Comma Identifier array_specifier;
+    // init_declarator_list ::= init_declarator_list Comma Identifier array_specifier Equal initializer;
+    init_declarator_list ::= init_declarator_list(mut idl) Comma Identifier(i) Equal initializer(init) {
+        idl.ids_initializers.push((Some(i.1), Some(init)));
+        idl
+    }
+
+    single_declaration ::= fully_specified_type(t) {
+        let ty = t.1.ok_or_else(||ErrorKind::SemanticError("Empty type for declaration".into()))?;
+
+        VarDeclaration {
+            type_qualifiers: t.0,
+            ids_initializers: vec![],
+            ty,
+        }
+    }
+    single_declaration ::= fully_specified_type(t) Identifier(i) {
+        let ty = t.1.ok_or_else(|| ErrorKind::SemanticError("Empty type for declaration".into()))?;
+
+        VarDeclaration {
+            type_qualifiers: t.0,
+            ids_initializers: vec![(Some(i.1), None)],
+            ty,
+        }
+    }
+
+    single_declaration ::= fully_specified_type(t) Identifier(i) LeftBracket additive_expression(exp) RightBracket  {
+        let ty_item = t.1.ok_or_else(|| ErrorKind::SemanticError("Empty type for declaration".into()))?;
+
+        let array_size = if let Ok(constant) = extra.solve_constant(exp.expression) {
+            ArraySize::Constant(constant)
+        } else {
+            ArraySize::Dynamic
+        };
+
+        let item_size = extra.type_size(ty_item)?;
+
+        let ty = extra.module.types.fetch_or_append(Type {
+            inner: TypeInner::Array {
+                base: ty_item,
+                size: array_size,
+                stride: item_size as u32,
+            },
+            name: None,
         });
 
-        Ok(ctx.hir_exprs.append(HirExpr {
-            kind: HirExprKind::Constant(handle),
-            meta: token.meta,
-        }))
+        VarDeclaration {
+            type_qualifiers: t.0,
+            ids_initializers: vec![(Some(i.1), None)],
+            ty,
+        }
     }
 
-    fn parse_function_call_args(
-        &mut self,
-        ctx: &mut Context,
-        body: &mut Block,
-        meta: &mut SourceMetadata,
-    ) -> Result<Vec<Handle<HirExpr>>> {
-        let mut args = Vec::new();
-        if let Some(token) = self.bump_if(TokenValue::RightParen) {
-            *meta = meta.union(&token.meta);
+    // single_declaration ::= fully_specified_type Identifier array_specifier;
+    // single_declaration ::= fully_specified_type Identifier array_specifier Equal initializer;
+    single_declaration ::= fully_specified_type(t) Identifier(i) Equal initializer(init) {
+        let ty = t.1.ok_or_else(|| ErrorKind::SemanticError("Empty type for declaration".into()))?;
+
+        VarDeclaration {
+            type_qualifiers: t.0,
+            ids_initializers: vec![(Some(i.1), Some(init))],
+            ty,
+        }
+    }
+
+    fully_specified_type ::= type_specifier(t) {
+        (vec![], t)
+    }
+    fully_specified_type ::= type_qualifier(q) type_specifier(t) {
+        (q,t)
+    }
+
+    interpolation_qualifier ::= Interpolation((_, i)) {
+        i
+    }
+
+    sampling_qualifier ::= Sampling((_, s)) {
+        s
+    }
+
+    layout_qualifier ::= Layout LeftParen layout_qualifier_id_list(l) RightParen {
+        if let Some(&(_, location)) = l.iter().find(|&q| q.0.as_str() == "location") {
+            let interpolation = None; //TODO
+            let sampling = None; //TODO
+            StructLayout::Binding(Binding::Location { location, interpolation, sampling })
+        } else if let Some(&(_, binding)) = l.iter().find(|&q| q.0.as_str() == "binding") {
+            let group = if let Some(&(_, set)) = l.iter().find(|&q| q.0.as_str() == "set") {
+                set
+            } else {
+                0
+            };
+            StructLayout::Resource(ResourceBinding{ group, binding })
+        } else if l.iter().any(|q| q.0.as_str() == "push_constant") {
+            StructLayout::PushConstant
         } else {
-            loop {
-                args.push(self.parse_assignment(ctx, body)?);
-
-                let token = self.bump()?;
-                match token.value {
-                    TokenValue::Comma => {}
-                    TokenValue::RightParen => {
-                        *meta = meta.union(&token.meta);
-                        break;
-                    }
-                    _ => {
-                        return Err(ErrorKind::InvalidToken(
-                            token,
-                            vec![TokenValue::Comma.into(), TokenValue::RightParen.into()],
-                        ))
-                    }
-                }
-            }
+            return Err(ErrorKind::NotImplemented("unsupported layout qualifier(s)"));
         }
+    }
+    layout_qualifier_id_list ::= layout_qualifier_id(lqi) {
+        vec![lqi]
+    }
+    layout_qualifier_id_list ::= layout_qualifier_id_list(mut l) Comma layout_qualifier_id(lqi) {
+        l.push(lqi);
+        l
+    }
+    layout_qualifier_id ::= Identifier(i) {
+        (i.1, 0)
+    }
+    //TODO: handle full constant_expression instead of IntConstant
+    layout_qualifier_id ::= Identifier(i) Equal IntConstant(ic) {
+        (i.1, ic.1 as u32)
+    }
+    // layout_qualifier_id ::= Shared;
 
-        Ok(args)
+    // precise_qualifier ::= Precise;
+
+    type_qualifier ::= single_type_qualifier(t) {
+        vec![t]
+    }
+    type_qualifier ::= type_qualifier(mut l) single_type_qualifier(t) {
+        l.push(t);
+        l
     }
 
-    fn parse_postfix(&mut self, ctx: &mut Context, body: &mut Block) -> Result<Handle<HirExpr>> {
-        let mut base = match self.expect_peek()?.value {
-            TokenValue::Identifier(_) => {
-                let (name, mut meta) = self.expect_ident()?;
+    single_type_qualifier ::= storage_qualifier(s) {
+        TypeQualifier::StorageQualifier(s)
+    }
+    single_type_qualifier ::= layout_qualifier(l) {
+        match l {
+            StructLayout::Binding(b) => TypeQualifier::Binding(b),
+            StructLayout::Resource(b) => TypeQualifier::ResourceBinding(b),
+            StructLayout::PushConstant => TypeQualifier::StorageQualifier(StorageQualifier::StorageClass(StorageClass::PushConstant)),
+        }
+    }
+    // single_type_qualifier ::= precision_qualifier;
+    single_type_qualifier ::= interpolation_qualifier(i) {
+        TypeQualifier::Interpolation(i)
+    }
+    single_type_qualifier ::= sampling_qualifier(i) {
+        TypeQualifier::Sampling(i)
+    }
+    // single_type_qualifier ::= invariant_qualifier;
+    // single_type_qualifier ::= precise_qualifier;
 
-                let expr = if self.bump_if(TokenValue::LeftParen).is_some() {
-                    let args = self.parse_function_call_args(ctx, body, &mut meta)?;
+    storage_qualifier ::= Const {
+        StorageQualifier::Const
+    }
+    // storage_qualifier ::= InOut;
+    storage_qualifier ::= In {
+        StorageQualifier::Input
+    }
+    storage_qualifier ::= Out {
+        StorageQualifier::Output
+    }
+    // storage_qualifier ::= Centroid;
+    // storage_qualifier ::= Patch;
+    // storage_qualifier ::= Sample;
+    storage_qualifier ::= Uniform {
+        StorageQualifier::StorageClass(StorageClass::Uniform)
+    }
+    //TODO: other storage qualifiers
 
-                    let kind = match self.program.lookup_type.get(&name) {
-                        Some(ty) => FunctionCallKind::TypeConstructor(*ty),
-                        None => FunctionCallKind::Function(name),
-                    };
-
-                    HirExpr {
-                        kind: HirExprKind::Call(FunctionCall { kind, args }),
-                        meta,
-                    }
-                } else {
-                    let var = match self.program.lookup_variable(ctx, body, &name)? {
-                        Some(var) => var,
-                        None => return Err(ErrorKind::UnknownVariable(meta, name)),
-                    };
-
-                    HirExpr {
-                        kind: HirExprKind::Variable(var),
-                        meta,
-                    }
-                };
-
-                ctx.hir_exprs.append(expr)
+    type_specifier ::= type_specifier_nonarray(t) {
+        t.map(|t| {
+            let name = t.name.clone();
+            let handle = extra.module.types.fetch_or_append(t);
+            if let Some(name) = name {
+                extra.lookup_type.insert(name, handle);
             }
-            TokenValue::TypeName(_) => {
-                let Token { value, mut meta } = self.bump()?;
+            handle
+        })
+    }
+    //TODO: array
 
-                let handle = if let TokenValue::TypeName(ty) = value {
-                    self.program.module.types.fetch_or_append(ty)
-                } else {
-                    unreachable!()
-                };
+    type_specifier_nonarray ::= Void {
+        None
+    }
+    type_specifier_nonarray ::= TypeName(t) {
+        Some(t.1)
+    };
+    type_specifier_nonarray ::= struct_specifier(s) {
+        Some(s)
+    }
 
-                self.expect(TokenValue::LeftParen)?;
-                let args = self.parse_function_call_args(ctx, body, &mut meta)?;
-
-                ctx.hir_exprs.append(HirExpr {
-                    kind: HirExprKind::Call(FunctionCall {
-                        kind: FunctionCallKind::TypeConstructor(handle),
-                        args,
-                    }),
-                    meta,
-                })
+    // struct
+    struct_specifier ::= Struct Identifier(i) LeftBrace  struct_declaration_list RightBrace {
+        Type{
+            name: Some(i.1),
+            inner: TypeInner::Struct {
+                level: crate::StructLevel::Normal { alignment: crate::Alignment::new(1).unwrap() },
+                members: vec![],
+                span: 0,
             }
-            _ => self.parse_primary(ctx, body)?,
+        }
+    }
+    //struct_specifier ::= Struct LeftBrace  struct_declaration_list RightBrace;
+
+    struct_declaration_list ::= struct_declaration(sd) {
+        sd
+    }
+    struct_declaration_list ::= struct_declaration_list(mut sdl) struct_declaration(sd) {
+        sdl.extend(sd);
+        sdl
+    }
+
+    struct_declaration ::= type_specifier(t) struct_declarator_list(sdl) Semicolon {
+        if let Some(ty) = t {
+            sdl.iter().map(|name| StructMember {
+                name: Some(name.clone()),
+                ty,
+                binding: None, //TODO
+                //TODO: if the struct is a uniform struct, these values have to reflect
+                // std140 layout. Otherwise, std430.
+                offset: 0,
+            }).collect()
+        } else {
+            return Err(ErrorKind::SemanticError("Struct member can't be void".into()))
+        }
+    }
+    //struct_declaration ::= type_qualifier type_specifier struct_declarator_list Semicolon;
+
+    struct_declarator_list ::= struct_declarator(sd) {
+        vec![sd]
+    }
+    struct_declarator_list ::= struct_declarator_list(mut sdl) Comma struct_declarator(sd) {
+        sdl.push(sd);
+        sdl
+    }
+
+    struct_declarator ::= Identifier(i) {
+        i.1
+    }
+    //struct_declarator ::= Identifier array_specifier;
+
+
+    initializer ::= assignment_expression;
+    // initializer ::= LeftBrace initializer_list RightBrace;
+    // initializer ::= LeftBrace initializer_list Comma RightBrace;
+
+    // initializer_list ::= initializer;
+    // initializer_list ::= initializer_list Comma initializer;
+
+    declaration_statement ::= declaration(d) {
+        let mut statements = Vec::<Statement>::new();
+        // local variables
+        if let Some(d) = d {
+            for (id, initializer) in d.ids_initializers {
+                let id = id.ok_or_else(|| ErrorKind::SemanticError("Local var must be named".into()))?;
+                // check if already declared in current scope
+                #[cfg(feature = "glsl-validate")]
+                {
+                    if extra.context.lookup_local_var_current_scope(&id).is_some() {
+                        return Err(ErrorKind::VariableAlreadyDeclared(id))
+                    }
+                }
+                let mut init_exp: Option<Handle<Expression>> = None;
+                let localVar = extra.context.local_variables.append(
+                    LocalVariable {
+                        name: Some(id.clone()),
+                        ty: d.ty,
+                        init: initializer.map(|i| {
+                            statements.extend(i.statements);
+                            if let Expression::Constant(constant) = extra.context.expressions[i.expression] {
+                                Some(constant)
+                            } else {
+                                init_exp = Some(i.expression);
+                                None
+                            }
+                        }).flatten(),
+                    }
+                );
+                let exp = extra.context.expressions.append(Expression::LocalVariable(localVar));
+                extra.context.add_local_var(id, exp);
+
+                if let Some(value) = init_exp {
+                    statements.push(
+                        Statement::Store {
+                            pointer: exp,
+                            value,
+                        }
+                    );
+                }
+            }
         };
-
-        while let TokenValue::LeftBracket
-        | TokenValue::Dot
-        | TokenValue::Increment
-        | TokenValue::Decrement = self.expect_peek()?.value
-        {
-            let Token { value, meta } = self.bump()?;
-
-            match value {
-                TokenValue::LeftBracket => {
-                    let index = self.parse_expression(ctx, body)?;
-                    let end_meta = self.expect(TokenValue::RightBracket)?.meta;
-
-                    base = ctx.hir_exprs.append(HirExpr {
-                        kind: HirExprKind::Access { base, index },
-                        meta: meta.union(&end_meta),
-                    })
-                }
-                TokenValue::Dot => {
-                    let (field, end_meta) = self.expect_ident()?;
-
-                    base = ctx.hir_exprs.append(HirExpr {
-                        kind: HirExprKind::Select { base, field },
-                        meta: meta.union(&end_meta),
-                    })
-                }
-                TokenValue::Increment => {
-                    base = ctx.hir_exprs.append(HirExpr {
-                        kind: HirExprKind::IncDec {
-                            increment: true,
-                            postfix: true,
-                            expr: base,
-                        },
-                        meta,
-                    })
-                }
-                TokenValue::Decrement => {
-                    base = ctx.hir_exprs.append(HirExpr {
-                        kind: HirExprKind::IncDec {
-                            increment: false,
-                            postfix: true,
-                            expr: base,
-                        },
-                        meta,
-                    })
-                }
-                _ => unreachable!(),
-            }
+        match statements.len() {
+            1 => statements.remove(0),
+            _ => Statement::Block(statements),
         }
-
-        Ok(base)
     }
 
-    fn parse_unary(&mut self, ctx: &mut Context, body: &mut Block) -> Result<Handle<HirExpr>> {
-        // TODO: prefix inc/dec
-        Ok(match self.expect_peek()?.value {
-            TokenValue::Plus | TokenValue::Dash | TokenValue::Bang | TokenValue::Tilde => {
-                let Token { value, meta } = self.bump()?;
-
-                let expr = self.parse_unary(ctx, body)?;
-                let end_meta = ctx.hir_exprs[expr].meta;
-
-                let kind = match value {
-                    TokenValue::Dash => HirExprKind::Unary {
-                        op: UnaryOperator::Negate,
-                        expr,
-                    },
-                    TokenValue::Bang | TokenValue::Tilde => HirExprKind::Unary {
-                        op: UnaryOperator::Not,
-                        expr,
-                    },
-                    _ => return Ok(expr),
-                };
-
-                ctx.hir_exprs.append(HirExpr {
-                    kind,
-                    meta: meta.union(&end_meta),
-                })
-            }
-            TokenValue::Increment | TokenValue::Decrement => {
-                let Token { value, meta } = self.bump()?;
-
-                let expr = self.parse_unary(ctx, body)?;
-
-                ctx.hir_exprs.append(HirExpr {
-                    kind: HirExprKind::IncDec {
-                        increment: match value {
-                            TokenValue::Increment => true,
-                            TokenValue::Decrement => false,
-                            _ => unreachable!(),
-                        },
-                        postfix: false,
-                        expr,
-                    },
-                    meta,
-                })
-            }
-            _ => self.parse_postfix(ctx, body)?,
-        })
+    // statement
+    statement ::= compound_statement(cs) {
+        Statement::Block(cs)
     }
+    statement ::= simple_statement;
 
-    fn parse_binary(
-        &mut self,
-        ctx: &mut Context,
-        body: &mut Block,
-        passtrough: Option<Handle<HirExpr>>,
-        min_bp: u8,
-    ) -> Result<Handle<HirExpr>> {
-        let mut left = passtrough
-            .ok_or(ErrorKind::EndOfFile /* Dummy error */)
-            .or_else(|_| self.parse_unary(ctx, body))?;
-        let start_meta = ctx.hir_exprs[left].meta;
+    simple_statement ::= declaration_statement;
+    simple_statement ::= expression_statement;
+    simple_statement ::= selection_statement;
+    simple_statement ::= jump_statement;
+    simple_statement ::= iteration_statement;
 
-        while let Some((l_bp, r_bp)) = binding_power(&self.expect_peek()?.value) {
-            if l_bp < min_bp {
-                break;
-            }
 
-            let Token { value, .. } = self.bump()?;
-
-            let right = self.parse_binary(ctx, body, None, r_bp)?;
-            let end_meta = ctx.hir_exprs[right].meta;
-
-            left = ctx.hir_exprs.append(HirExpr {
-                kind: HirExprKind::Binary {
-                    left,
-                    op: match value {
-                        TokenValue::LogicalOr => BinaryOperator::LogicalOr,
-                        TokenValue::LogicalXor => BinaryOperator::NotEqual,
-                        TokenValue::LogicalAnd => BinaryOperator::LogicalAnd,
-                        TokenValue::VerticalBar => BinaryOperator::InclusiveOr,
-                        TokenValue::Caret => BinaryOperator::ExclusiveOr,
-                        TokenValue::Ampersand => BinaryOperator::And,
-                        TokenValue::Equal => BinaryOperator::Equal,
-                        TokenValue::NotEqual => BinaryOperator::NotEqual,
-                        TokenValue::GreaterEqual => BinaryOperator::GreaterEqual,
-                        TokenValue::LessEqual => BinaryOperator::LessEqual,
-                        TokenValue::LeftAngle => BinaryOperator::Less,
-                        TokenValue::RightAngle => BinaryOperator::Greater,
-                        TokenValue::LeftShift => BinaryOperator::ShiftLeft,
-                        TokenValue::RightShift => BinaryOperator::ShiftRight,
-                        TokenValue::Plus => BinaryOperator::Add,
-                        TokenValue::Dash => BinaryOperator::Subtract,
-                        TokenValue::Star => BinaryOperator::Multiply,
-                        TokenValue::Slash => BinaryOperator::Divide,
-                        TokenValue::Percent => BinaryOperator::Modulo,
-                        _ => unreachable!(),
-                    },
-                    right,
-                },
-                meta: start_meta.union(&end_meta),
-            })
+    selection_statement ::= If LeftParen expression(e) RightParen statement(s1) Else statement(s2) {
+        Statement::If {
+            condition: e.expression,
+            accept: vec![s1],
+            reject: vec![s2],
         }
-
-        Ok(left)
     }
 
-    fn parse_conditional(
-        &mut self,
-        ctx: &mut Context,
-        body: &mut Block,
-        passtrough: Option<Handle<HirExpr>>,
-    ) -> Result<Handle<HirExpr>> {
-        let mut condition = self.parse_binary(ctx, body, passtrough, 0)?;
-        let start_meta = ctx.hir_exprs[condition].meta;
-
-        if self.bump_if(TokenValue::Question).is_some() {
-            let accept = self.parse_expression(ctx, body)?;
-            self.expect(TokenValue::Colon)?;
-            let reject = self.parse_assignment(ctx, body)?;
-            let end_meta = ctx.hir_exprs[reject].meta;
-
-            condition = ctx.hir_exprs.append(HirExpr {
-                kind: HirExprKind::Conditional {
-                    condition,
-                    accept,
-                    reject,
-                },
-                meta: start_meta.union(&end_meta),
-            })
+    selection_statement ::= If LeftParen expression(e) RightParen statement(s) [Else] {
+        Statement::If {
+            condition: e.expression,
+            accept: vec![s],
+            reject: vec![],
         }
-
-        Ok(condition)
     }
 
-    fn parse_assignment(&mut self, ctx: &mut Context, body: &mut Block) -> Result<Handle<HirExpr>> {
-        let tgt = self.parse_unary(ctx, body)?;
-        let start_meta = ctx.hir_exprs[tgt].meta;
-
-        Ok(match self.expect_peek()?.value {
-            TokenValue::Assign => {
-                self.bump()?;
-                let value = self.parse_assignment(ctx, body)?;
-                let end_meta = ctx.hir_exprs[value].meta;
-
-                ctx.hir_exprs.append(HirExpr {
-                    kind: HirExprKind::Assign { tgt, value },
-                    meta: start_meta.union(&end_meta),
-                })
-            }
-            TokenValue::OrAssign
-            | TokenValue::AndAssign
-            | TokenValue::AddAssign
-            | TokenValue::DivAssign
-            | TokenValue::ModAssign
-            | TokenValue::SubAssign
-            | TokenValue::MulAssign
-            | TokenValue::LeftShiftAssign
-            | TokenValue::RightShiftAssign
-            | TokenValue::XorAssign => {
-                let token = self.bump()?;
-                let right = self.parse_assignment(ctx, body)?;
-                let end_meta = ctx.hir_exprs[right].meta;
-
-                let value = ctx.hir_exprs.append(HirExpr {
-                    meta: start_meta.union(&end_meta),
-                    kind: HirExprKind::Binary {
-                        left: tgt,
-                        op: match token.value {
-                            TokenValue::OrAssign => BinaryOperator::InclusiveOr,
-                            TokenValue::AndAssign => BinaryOperator::And,
-                            TokenValue::AddAssign => BinaryOperator::Add,
-                            TokenValue::DivAssign => BinaryOperator::Divide,
-                            TokenValue::ModAssign => BinaryOperator::Modulo,
-                            TokenValue::SubAssign => BinaryOperator::Subtract,
-                            TokenValue::MulAssign => BinaryOperator::Multiply,
-                            TokenValue::LeftShiftAssign => BinaryOperator::ShiftLeft,
-                            TokenValue::RightShiftAssign => BinaryOperator::ShiftRight,
-                            TokenValue::XorAssign => BinaryOperator::ExclusiveOr,
-                            _ => unreachable!(),
-                        },
-                        right,
-                    },
+    selection_statement ::= Switch LeftParen expression(e) RightParen LeftBrace switch_statement_list(ls) RightBrace {
+        let mut default = Vec::new();
+        let mut cases = Vec::new();
+        for (v, body, fall_through) in ls {
+            if let Some(value) = v {
+                cases.push(SwitchCase {
+                    value,
+                    body,
+                    fall_through,
                 });
-
-                ctx.hir_exprs.append(HirExpr {
-                    kind: HirExprKind::Assign { tgt, value },
-                    meta: start_meta.union(&end_meta),
-                })
+            } else {
+                default.extend_from_slice(&body);
             }
-            _ => self.parse_conditional(ctx, body, Some(tgt))?,
-        })
+        }
+        Statement::Switch {
+            selector: e.expression,
+            cases,
+            default,
+        }
     }
 
-    fn parse_expression(&mut self, ctx: &mut Context, body: &mut Block) -> Result<Handle<HirExpr>> {
-        let mut expr = self.parse_assignment(ctx, body)?;
-
-        while let TokenValue::Comma = self.expect_peek()?.value {
-            self.bump()?;
-            expr = self.parse_assignment(ctx, body)?;
-        }
-
-        Ok(expr)
+    switch_statement_list ::= {
+        vec![]
+    }
+    switch_statement_list ::= switch_statement_list(mut ssl) switch_statement((v, sl, ft)) {
+        ssl.push((v, sl, ft));
+        ssl
+    }
+    switch_statement ::= Case IntConstant(v) Colon statement_list(sl) {
+        let fall_through = match sl.last() {
+            Some(&Statement::Break) => false,
+            _ => true,
+        };
+        (Some(v.1 as i32), sl, fall_through)
+    }
+    switch_statement ::= Default Colon statement_list(sl) {
+        let fall_through = match sl.last() {
+            Some(&Statement::Break) => true,
+            _ => false,
+        };
+        (None, sl, fall_through)
     }
 
-    fn parse_statement(&mut self, ctx: &mut Context, body: &mut Block) -> Result<()> {
-        // TODO: This prevents snippets like the following from working
-        // ```glsl
-        // vec4(1.0);
-        // ```
-        // But this would require us to add lookahead to also support
-        // declarations and since this statement is very unlikely and most
-        // likely an error, for now we don't support it
-        if self.peek_type_name() || self.peek_type_qualifier() {
-            self.parse_declaration(ctx, body, false)?;
-            return Ok(());
+    iteration_statement ::= While LeftParen expression(e) RightParen compound_statement_no_new_scope(sl) {
+        let mut body = Vec::with_capacity(sl.len() + 1);
+        body.push(
+            Statement::If {
+                condition: e.expression,
+                accept: vec![Statement::Break],
+                reject: vec![],
+            }
+        );
+        body.extend_from_slice(&sl);
+        Statement::Loop {
+            body,
+            continuing: vec![],
         }
+    }
 
-        match self.expect_peek()?.value {
-            TokenValue::Continue => {
-                self.bump()?;
-                body.push(Statement::Continue);
-                self.expect(TokenValue::Semicolon)?;
+    iteration_statement ::= Do compound_statement(sl) While LeftParen expression(e) RightParen  {
+        let mut body = sl;
+        body.push(
+            Statement::If {
+                condition: e.expression,
+                accept: vec![Statement::Break],
+                reject: vec![],
             }
-            TokenValue::Break => {
-                self.bump()?;
-                body.push(Statement::Break);
-                self.expect(TokenValue::Semicolon)?;
-            }
-            TokenValue::Return => {
-                self.bump()?;
-                let value = match self.expect_peek()?.value {
-                    TokenValue::Semicolon => {
-                        self.bump()?;
-                        None
-                    }
-                    _ => {
-                        // TODO: Implicit conversions
-                        let expr = self.parse_expression(ctx, body)?;
-                        self.expect(TokenValue::Semicolon)?;
-                        Some(ctx.lower_expect(self.program, expr, false, body)?.0)
-                    }
-                };
+        );
+        Statement::Loop {
+            body,
+            continuing: vec![],
+        }
+    }
 
-                ctx.emit_flush(body);
-                ctx.emit_start();
-
-                body.push(Statement::Return { value })
-            }
-            TokenValue::Discard => {
-                self.bump()?;
-                body.push(Statement::Kill);
-                self.expect(TokenValue::Semicolon)?;
-            }
-            TokenValue::If => {
-                self.bump()?;
-
-                self.expect(TokenValue::LeftParen)?;
-                let condition = {
-                    let expr = self.parse_expression(ctx, body)?;
-                    ctx.lower_expect(self.program, expr, false, body)?.0
-                };
-                self.expect(TokenValue::RightParen)?;
-
-                ctx.emit_flush(body);
-                ctx.emit_start();
-
-                let mut accept = Block::new();
-                self.parse_statement(ctx, &mut accept)?;
-
-                let mut reject = Block::new();
-                if self.bump_if(TokenValue::Else).is_some() {
-                    self.parse_statement(ctx, &mut reject)?;
-                }
-
-                body.push(Statement::If {
-                    condition,
-                    accept,
-                    reject,
-                });
-            }
-            TokenValue::Switch => {
-                self.bump()?;
-
-                self.expect(TokenValue::LeftParen)?;
-                // TODO: Implicit conversions
-                let selector = {
-                    let expr = self.parse_expression(ctx, body)?;
-                    ctx.lower_expect(self.program, expr, false, body)?.0
-                };
-                self.expect(TokenValue::RightParen)?;
-
-                ctx.emit_flush(body);
-                ctx.emit_start();
-
-                let mut cases = Vec::new();
-                let mut default = Block::new();
-
-                self.expect(TokenValue::LeftBrace)?;
-                loop {
-                    match self.expect_peek()?.value {
-                        TokenValue::Case => {
-                            self.bump()?;
-                            let value = {
-                                let expr = self.parse_expression(ctx, body)?;
-                                let (root, meta) =
-                                    ctx.lower_expect(self.program, expr, false, body)?;
-                                let constant = self.program.solve_constant(ctx, root, meta)?;
-
-                                match self.program.module.constants[constant].inner {
-                                    ConstantInner::Scalar {
-                                        value: ScalarValue::Sint(int),
-                                        ..
-                                    } => int as i32,
-                                    ConstantInner::Scalar {
-                                        value: ScalarValue::Uint(int),
-                                        ..
-                                    } => int as i32,
-                                    _ => {
-                                        return Err(ErrorKind::SemanticError(
-                                            meta,
-                                            "Case values can only be integers".into(),
-                                        ))
-                                    }
-                                }
-                            };
-
-                            self.expect(TokenValue::Colon)?;
-
-                            let mut body = Block::new();
-
-                            loop {
-                                match self.expect_peek()?.value {
-                                    TokenValue::Case
-                                    | TokenValue::Default
-                                    | TokenValue::RightBrace => break,
-                                    _ => self.parse_statement(ctx, &mut body)?,
-                                }
-                            }
-
-                            let fall_through = body.iter().any(|s| {
-                                mem::discriminant(s) == mem::discriminant(&Statement::Break)
-                            });
-
-                            cases.push(SwitchCase {
-                                value,
-                                body,
-                                fall_through,
-                            })
-                        }
-                        TokenValue::Default => {
-                            let Token { meta, .. } = self.bump()?;
-                            self.expect(TokenValue::Colon)?;
-
-                            if !default.is_empty() {
-                                return Err(ErrorKind::SemanticError(
-                                    meta,
-                                    "Can only have one default case per switch statement".into(),
-                                ));
-                            }
-
-                            loop {
-                                match self.expect_peek()?.value {
-                                    TokenValue::Case | TokenValue::RightBrace => break,
-                                    _ => self.parse_statement(ctx, &mut &mut default)?,
-                                }
-                            }
-                        }
-                        TokenValue::RightBrace => {
-                            self.bump()?;
-                            break;
-                        }
-                        _ => {
-                            return Err(ErrorKind::InvalidToken(
-                                self.bump()?,
-                                vec![
-                                    TokenValue::Case.into(),
-                                    TokenValue::Default.into(),
-                                    TokenValue::RightBrace.into(),
-                                ],
-                            ))
-                        }
-                    }
-                }
-
-                body.push(Statement::Switch {
-                    selector,
-                    cases,
-                    default,
-                });
-            }
-            TokenValue::While => {
-                self.bump()?;
-
-                let mut loop_body = Block::new();
-
-                self.expect(TokenValue::LeftParen)?;
-                let root = self.parse_expression(ctx, &mut loop_body)?;
-                self.expect(TokenValue::RightParen)?;
-
-                let expr = ctx
-                    .lower_expect(self.program, root, false, &mut loop_body)?
-                    .0;
-                let condition = ctx.add_expression(
-                    Expression::Unary {
-                        op: UnaryOperator::Not,
-                        expr,
-                    },
-                    &mut loop_body,
-                );
-
-                ctx.emit_flush(&mut loop_body);
-                ctx.emit_start();
-
-                loop_body.push(Statement::If {
-                    condition,
+    iteration_statement ::= For LeftParen for_init_statement(s_init) for_rest_statement((cond_e, loop_e)) RightParen compound_statement_no_new_scope(sl) {
+        let mut body = Vec::with_capacity(sl.len() + 2);
+        if let Some(cond_e) = cond_e {
+            body.push(
+                Statement::If {
+                    condition: cond_e.expression,
                     accept: vec![Statement::Break],
-                    reject: Block::new(),
-                });
-
-                self.parse_statement(ctx, &mut loop_body)?;
-
-                body.push(Statement::Loop {
-                    body: loop_body,
-                    continuing: Block::new(),
-                })
-            }
-            TokenValue::Do => {
-                self.bump()?;
-
-                let mut loop_body = Block::new();
-                self.parse_statement(ctx, &mut loop_body)?;
-
-                self.expect(TokenValue::While)?;
-                self.expect(TokenValue::LeftParen)?;
-                let root = self.parse_expression(ctx, &mut loop_body)?;
-                self.expect(TokenValue::RightParen)?;
-
-                let expr = ctx
-                    .lower_expect(self.program, root, false, &mut loop_body)?
-                    .0;
-                let condition = ctx.add_expression(
-                    Expression::Unary {
-                        op: UnaryOperator::Not,
-                        expr,
-                    },
-                    &mut loop_body,
-                );
-
-                ctx.emit_flush(&mut loop_body);
-                ctx.emit_start();
-
-                loop_body.push(Statement::If {
-                    condition,
-                    accept: vec![Statement::Break],
-                    reject: Block::new(),
-                });
-
-                body.push(Statement::Loop {
-                    body: loop_body,
-                    continuing: Block::new(),
-                })
-            }
-            TokenValue::For => {
-                self.bump()?;
-
-                ctx.push_scope();
-                self.expect(TokenValue::LeftParen)?;
-
-                if self.bump_if(TokenValue::Semicolon).is_none() {
-                    if self.peek_type_name() || self.peek_type_qualifier() {
-                        self.parse_declaration(ctx, body, false)?;
-                    } else {
-                        self.parse_expression(ctx, body)?;
-                        self.expect(TokenValue::Semicolon)?;
-                    }
+                    reject: vec![],
                 }
+            );
+        }
+        body.extend_from_slice(&sl);
+        if let Some(loop_e) = loop_e {
+            body.extend_from_slice(&loop_e.statements);
+        }
+        Statement::Block(vec![
+            s_init,
+            Statement::Loop {
+                body,
+                continuing: vec![],
+            }
+        ])
+    }
 
-                ctx.emit_flush(body);
-                ctx.emit_start();
+    for_init_statement ::= expression_statement;
+    for_init_statement ::= declaration_statement;
+    for_rest_statement ::= condition_opt(c) Semicolon {
+        (c, None)
+    }
+    for_rest_statement ::= condition_opt(c) Semicolon expression(e) {
+        (c, Some(e))
+    }
 
-                let (mut block, mut continuing) = (Block::new(), Block::new());
+    condition_opt ::= {
+        None
+    }
+    condition_opt ::= conditional_expression(c) {
+        Some(c)
+    }
 
-                if self.bump_if(TokenValue::Semicolon).is_none() {
-                    let expr = if self.peek_type_name() || self.peek_type_qualifier() {
-                        let qualifiers = self.parse_type_qualifiers()?;
-                        let (ty, meta) = self.parse_type_non_void()?;
-                        let name = self.expect_ident()?.0;
+    compound_statement ::= LeftBrace RightBrace {
+        vec![]
+    }
+    compound_statement ::= left_brace_scope statement_list(sl) RightBrace {
+        extra.context.remove_current_scope();
+        sl
+    }
 
-                        self.expect(TokenValue::Assign)?;
+    // extra rule to add scope before statement_list
+    left_brace_scope ::= LeftBrace {
+        extra.context.push_scope();
+    }
 
-                        let (value, end_meta) = self.parse_initializer(ty, ctx, &mut block)?;
 
-                        let decl = VarDeclaration {
-                            qualifiers: &qualifiers,
-                            ty,
-                            name: Some(name),
-                            init: None,
-                            meta: meta.union(&end_meta),
+    compound_statement_no_new_scope ::= LeftBrace RightBrace {
+        vec![]
+    }
+    compound_statement_no_new_scope ::= LeftBrace statement_list(sl) RightBrace {
+        sl
+    }
+
+    statement_list ::= statement(s) {
+        //TODO: catch this earlier and don't populate the statements
+        match s {
+            Statement::Block(ref block) if block.is_empty() => vec![],
+            _ => vec![s],
+        }
+    }
+    statement_list ::= statement_list(mut ss) statement(s) { ss.push(s); ss }
+
+    expression_statement ::= Semicolon  {
+        Statement::Block(Vec::new())
+    }
+    expression_statement ::= expression(mut e) Semicolon {
+        match e.statements.len() {
+            1 => e.statements.remove(0),
+            _ => Statement::Block(e.statements),
+        }
+    }
+
+
+
+    // function
+    function_prototype ::= function_declarator(f) RightParen {
+        extra.add_function_prelude();
+        f
+    }
+    function_declarator ::= function_header;
+    function_declarator ::= function_header_with_parameters((f, args)) {
+        for (pos, arg) in args.into_iter().enumerate() {
+            if let Some(name) = arg.name.clone() {
+                let exp = extra.context.expressions.append(Expression::FunctionArgument(pos as u32));
+                extra.context.add_function_arg(name, exp);
+            }
+            extra.context.arguments.push(arg);
+        }
+        f
+    }
+    function_header ::= fully_specified_type(t) Identifier(n) LeftParen {
+        Function {
+            name: Some(n.1),
+            arguments: vec![],
+            result: t.1.map(|ty| FunctionResult { ty, binding: None }),
+            local_variables: Arena::<LocalVariable>::new(),
+            expressions: Arena::<Expression>::new(),
+            body: vec![],
+        }
+    }
+    function_header_with_parameters ::= function_header(h) parameter_declaration(p) {
+        (h, vec![p])
+    }
+    function_header_with_parameters ::= function_header_with_parameters((h, mut args)) Comma parameter_declaration(p) {
+        args.push(p);
+        (h, args)
+    }
+    parameter_declarator ::= parameter_type_specifier(ty) Identifier(n) {
+        FunctionArgument { name: Some(n.1), ty, binding: None }
+    }
+    // parameter_declarator ::= type_specifier(ty) Identifier(ident) array_specifier;
+    parameter_declaration ::= In? parameter_declarator(arg) { arg };
+    parameter_declaration ::= In? parameter_type_specifier(ty) {
+        FunctionArgument { name: None, ty, binding: None }
+    }
+
+    parameter_type_specifier ::= type_specifier(t) {
+        if let Some(ty) = t {
+            ty
+        } else {
+            return Err(ErrorKind::SemanticError("Function parameter can't be void".into()))
+        }
+    }
+
+    jump_statement ::= Continue Semicolon {
+        Statement::Continue
+    }
+    jump_statement ::= Break Semicolon {
+        Statement::Break
+    }
+    jump_statement ::= Return Semicolon {
+        Statement::Return { value: None }
+    }
+    jump_statement ::= Return expression(mut e) Semicolon {
+        let ret = Statement::Return{ value: Some(e.expression) };
+        if !e.statements.is_empty() {
+            e.statements.push(ret);
+            Statement::Block(e.statements)
+        } else {
+            ret
+        }
+    }
+    jump_statement ::= Discard Semicolon  {
+        Statement::Kill
+    } // Fragment shader only
+
+    // Grammar Note: No 'goto'. Gotos are not supported.
+
+    // misc
+    translation_unit ::= external_declaration;
+    translation_unit ::= translation_unit external_declaration;
+
+    external_declaration ::= function_definition(f) {
+        extra.declare_function(f)?
+    }
+    external_declaration ::= declaration(d) {
+        if let Some(d) = d {
+            // TODO: handle multiple storage qualifiers
+            let storage = d.type_qualifiers.iter().find_map(|tq| {
+                if let TypeQualifier::StorageQualifier(sc) = *tq { Some(sc) } else { None }
+            }).unwrap_or(StorageQualifier::StorageClass(StorageClass::Private));
+
+            match storage {
+                StorageQualifier::StorageClass(storage_class) => {
+                    // TODO: Check that the storage qualifiers allow for the bindings
+                    let binding = d.type_qualifiers.iter().find_map(|tq| {
+                        if let TypeQualifier::ResourceBinding(ref b) = *tq { Some(b.clone()) } else { None }
+                    });
+                    for (id, initializer) in d.ids_initializers {
+                        let init = initializer.map(|init| extra.solve_constant(init.expression)).transpose()?;
+
+                        // use StorageClass::Handle for texture and sampler uniforms
+                        let class = if storage_class == StorageClass::Uniform {
+                            match extra.module.types[d.ty].inner {
+                                TypeInner::Image{..} | TypeInner::Sampler{..} => StorageClass::Handle,
+                                _ => storage_class,
+                            }
+                        } else {
+                            storage_class
                         };
 
-                        let pointer = self.program.add_local_var(ctx, &mut block, decl)?;
-
-                        ctx.emit_flush(&mut block);
-                        ctx.emit_start();
-
-                        block.push(Statement::Store { pointer, value });
-
-                        value
-                    } else {
-                        let root = self.parse_expression(ctx, &mut block)?;
-                        ctx.lower_expect(self.program, root, false, &mut block)?.0
-                    };
-
-                    let condition = ctx.add_expression(
-                        Expression::Unary {
-                            op: UnaryOperator::Not,
-                            expr,
-                        },
-                        &mut block,
-                    );
-
-                    ctx.emit_flush(&mut block);
-                    ctx.emit_start();
-
-                    block.push(Statement::If {
-                        condition,
-                        accept: vec![Statement::Break],
-                        reject: Block::new(),
-                    });
-
-                    self.expect(TokenValue::Semicolon)?;
-                }
-
-                match self.expect_peek()?.value {
-                    TokenValue::RightParen => {}
-                    _ => {
-                        let rest = self.parse_expression(ctx, &mut continuing)?;
-                        ctx.lower(self.program, rest, false, &mut continuing)?;
-                    }
-                }
-
-                self.expect(TokenValue::RightParen)?;
-
-                self.parse_statement(ctx, &mut block)?;
-
-                body.push(Statement::Loop {
-                    body: block,
-                    continuing,
-                });
-
-                ctx.remove_current_scope();
-            }
-            TokenValue::LeftBrace => {
-                self.bump()?;
-
-                let mut block = Block::new();
-                ctx.push_scope();
-
-                self.parse_compound_statement(ctx, &mut block)?;
-
-                ctx.remove_current_scope();
-                body.push(Statement::Block(block));
-            }
-            TokenValue::Plus
-            | TokenValue::Dash
-            | TokenValue::Bang
-            | TokenValue::Tilde
-            | TokenValue::LeftParen
-            | TokenValue::Identifier(_)
-            | TokenValue::TypeName(_)
-            | TokenValue::IntConstant(_)
-            | TokenValue::BoolConstant(_)
-            | TokenValue::FloatConstant(_) => {
-                let expr = self.parse_expression(ctx, body)?;
-                ctx.lower(self.program, expr, false, body)?;
-                self.expect(TokenValue::Semicolon)?;
-            }
-            TokenValue::Semicolon => {
-                self.bump()?;
-            }
-            _ => {}
-        }
-
-        Ok(())
-    }
-
-    fn parse_compound_statement(&mut self, ctx: &mut Context, body: &mut Block) -> Result<()> {
-        loop {
-            if self.bump_if(TokenValue::RightBrace).is_some() {
-                break;
-            }
-
-            self.parse_statement(ctx, body)?;
-        }
-
-        Ok(())
-    }
-
-    fn parse_function_args(
-        &mut self,
-        context: &mut Context,
-        body: &mut Block,
-        parameters: &mut Vec<ParameterQualifier>,
-        sig: &mut FunctionSignature,
-    ) -> Result<()> {
-        loop {
-            if self.peek_type_name() || self.peek_parameter_qualifier() {
-                let qualifier = self.parse_parameter_qualifier();
-                parameters.push(qualifier);
-                let ty = self.parse_type_non_void()?.0;
-
-                match self.expect_peek()?.value {
-                    TokenValue::Comma => {
-                        self.bump()?;
-                        context.add_function_arg(&mut self.program, sig, body, None, ty, qualifier);
-                        continue;
-                    }
-                    TokenValue::Identifier(_) => {
-                        let name = self.expect_ident()?.0;
-
-                        let size = self.parse_array_specifier()?;
-                        let ty = self.maybe_array(ty, size);
-
-                        context.add_function_arg(
-                            &mut self.program,
-                            sig,
-                            body,
-                            Some(name),
-                            ty,
-                            qualifier,
+                        let h = extra.module.global_variables.fetch_or_append(
+                            GlobalVariable {
+                                name: id.clone(),
+                                class,
+                                binding: binding.clone(),
+                                ty: d.ty,
+                                init,
+                                storage_access: StorageAccess::empty(), //TODO
+                            },
                         );
-
-                        if self.bump_if(TokenValue::Comma).is_some() {
-                            continue;
+                        if let Some(id) = id {
+                            extra.lookup_global_variables.insert(id, h);
                         }
-
-                        break;
                     }
-                    _ => break,
+                }
+                StorageQualifier::Input => {
+                    let mut binding = d.type_qualifiers.iter().find_map(|tq| {
+                        if let TypeQualifier::Binding(ref b) = *tq { Some(b.clone()) } else { None }
+                    });
+                    let interpolation = d.type_qualifiers.iter().find_map(|tq| {
+                        if let TypeQualifier::Interpolation(interp) = *tq { Some(interp) } else { None }
+                    });
+                    let sampling = d.type_qualifiers.iter().find_map(|tq| {
+                        if let TypeQualifier::Sampling(samp) = *tq { Some(samp) } else { None }
+                    });
+                    if let Some(Binding::Location {
+                        interpolation: ref mut interp,
+                        sampling: ref mut samp,
+                        ..
+                    }) = binding {
+                        *interp = interpolation;
+                        *samp = sampling;
+                    }
+
+                    for (id, _initializer) in d.ids_initializers {
+                        if let Some(id) = id {
+                            //TODO!
+                            let expr = extra.context.expressions.append(Expression::FunctionArgument(0));
+                            extra.context.lookup_global_var_exps.insert(id, expr);
+                        }
+                    }
+                }
+                StorageQualifier::Output => {
+                    let _binding = d.type_qualifiers.iter().find_map(|tq| {
+                        if let TypeQualifier::Binding(ref b) = *tq { Some(b.clone()) } else { None }
+                    });
+                    for (id, _initializer) in d.ids_initializers {
+                        if let Some(id) = id {
+                            //TODO!
+                            let expr = extra.context.expressions.append(Expression::FunctionArgument(0));
+                            extra.context.lookup_global_var_exps.insert(id, expr);
+                        }
+                    }
+                }
+                StorageQualifier::Const => {
+                    for (id, initializer) in d.ids_initializers {
+                        if let Some(init) = initializer {
+                            let constant = extra.solve_constant(init.expression)?;
+                            let inner = extra.module.constants[constant].inner.clone();
+
+                            let h = extra.module.constants.fetch_or_append(
+                                Constant {
+                                    name: id.clone(),
+                                    specialization: None, // TODO
+                                    inner
+                                },
+                            );
+                            if let Some(id) = id {
+                                extra.lookup_constants.insert(id.clone(), h);
+                                let expr = extra.context.expressions.append(Expression::Constant(h));
+                                extra.context.lookup_constant_exps.insert(id, expr);
+                            }
+                        } else {
+                            return Err(ErrorKind::SemanticError("Constants must have an initializer".into()))
+                        }
+                    }
                 }
             }
-
-            break;
-        }
-
-        Ok(())
-    }
-}
-
-struct DeclarationContext<'ctx, 'fun> {
-    qualifiers: Vec<(TypeQualifier, SourceMetadata)>,
-    external: bool,
-
-    ctx: &'ctx mut Context<'fun>,
-    body: &'ctx mut Block,
-}
-
-impl<'ctx, 'fun> DeclarationContext<'ctx, 'fun> {
-    fn add_var(
-        &mut self,
-        program: &mut Program,
-        ty: Handle<Type>,
-        name: String,
-        init: Option<Handle<Constant>>,
-        meta: SourceMetadata,
-    ) -> Result<Handle<Expression>> {
-        let decl = VarDeclaration {
-            qualifiers: &self.qualifiers,
-            ty,
-            name: Some(name),
-            init,
-            meta,
-        };
-
-        match self.external {
-            true => {
-                let global = program.add_global_var(decl)?;
-                let expr = match global {
-                    GlobalOrConstant::Global(handle) => Expression::GlobalVariable(handle),
-                    GlobalOrConstant::Constant(handle) => Expression::Constant(handle),
-                };
-                Ok(self.ctx.add_expression(expr, self.body))
-            }
-            false => program.add_local_var(self.ctx, self.body, decl),
         }
     }
 
-    fn flush_expressions(&mut self) {
-        self.ctx.emit_flush(self.body);
-        self.ctx.emit_start()
-    }
+    function_definition ::= function_prototype(f) compound_statement_no_new_scope(cs) {
+        extra.function_definition(f, cs)
+    };
 }
 
-fn binding_power(value: &TokenValue) -> Option<(u8, u8)> {
-    Some(match *value {
-        TokenValue::LogicalOr => (1, 2),
-        TokenValue::LogicalXor => (3, 4),
-        TokenValue::LogicalAnd => (5, 6),
-        TokenValue::VerticalBar => (7, 8),
-        TokenValue::Caret => (9, 10),
-        TokenValue::Ampersand => (11, 12),
-        TokenValue::Equal | TokenValue::NotEqual => (13, 14),
-        TokenValue::GreaterEqual
-        | TokenValue::LessEqual
-        | TokenValue::LeftAngle
-        | TokenValue::RightAngle => (15, 16),
-        TokenValue::LeftShift | TokenValue::RightShift => (17, 18),
-        TokenValue::Plus | TokenValue::Dash => (19, 20),
-        TokenValue::Star | TokenValue::Slash | TokenValue::Percent => (21, 22),
-        _ => return None,
-    })
-}
+pub use parser::*;

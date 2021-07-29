@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test for Bug 1709832</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<style>
+  @font-face {
+    font-family: Ahem;
+    src: url("/tests/dom/base/test/Ahem.ttf");
+  }
+
+  #container {
+    font: 16px/1 Ahem;
+  }
+</style>
+<div id="container">
+  <span id="start" draggable="true">start</span><span id="dest" draggable="true">dest</span>
+</div>
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  dest.addEventListener("dragenter", ev => {
+    is(ev.target, dest, "dragenter target should be element");
+    is(ev.relatedTarget, start, "dragenter relatedTarget should be element");
+  });
+  start.addEventListener("dragleave", ev => {
+    is(ev.target, start, "dragleave target should be element");
+    is(ev.relatedTarget, dest, "dragleave relatedTarget should be element");
+    SimpleTest.finish();
+  });
+
+  synthesizeMouse(start, 5, 5, { type: "mousedown" });
+
+  const utils = SpecialPowers.getDOMWindowUtils(window);
+
+  // Intentionally passing a text node to test EventStateManager behavior
+  // when GetContentForEvent gives a text node
+  // EventUtils.sendDragEvent is unusable because it requires an element as a target
+  utils.dispatchDOMEventViaPresShellForTesting(start.childNodes[0], new DragEvent("dragover", {
+    ...createDragEventObject("dragover", start, window, null, {})
+  }));
+  utils.dispatchDOMEventViaPresShellForTesting(dest.childNodes[0], new DragEvent("dragover", {
+    ...createDragEventObject("dragover", dest, window, null, {})
+  }));
+</script>

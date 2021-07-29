@@ -299,6 +299,7 @@ impl FunctionInfo {
         expression: &crate::Expression,
         expression_arena: &Arena<crate::Expression>,
         other_functions: &[FunctionInfo],
+        type_arena: &Arena<crate::Type>,
         resolve_context: &ResolveContext,
     ) -> Result<(), ExpressionError> {
         use crate::{Expression as E, SampleLevel as Sl};
@@ -512,7 +513,8 @@ impl FunctionInfo {
             },
         };
 
-        let ty = resolve_context.resolve(expression, |h| &self.expressions[h.index()].ty)?;
+        let ty =
+            resolve_context.resolve(expression, type_arena, |h| &self.expressions[h.index()].ty)?;
         self.expressions[handle.index()] = ExpressionInfo {
             uniformity,
             ref_count: 0,
@@ -569,11 +571,7 @@ impl FunctionInfo {
                 S::Break | S::Continue => FunctionUniformity::new(),
                 S::Kill => FunctionUniformity {
                     result: Uniformity::new(),
-                    exit: if disruptor.is_some() {
-                        ExitFlags::MAY_KILL
-                    } else {
-                        ExitFlags::empty()
-                    },
+                    exit: ExitFlags::MAY_KILL,
                 },
                 S::Barrier(_) => FunctionUniformity {
                     result: Uniformity {
@@ -637,11 +635,8 @@ impl FunctionInfo {
                         non_uniform_result: value.and_then(|expr| self.add_ref(expr)),
                         requirements: UniformityRequirements::empty(),
                     },
-                    exit: if disruptor.is_some() {
-                        ExitFlags::MAY_RETURN
-                    } else {
-                        ExitFlags::empty()
-                    },
+                    //TODO: if we are in the uniform control flow, should this still be an exit flag?
+                    exit: ExitFlags::MAY_RETURN,
                 },
                 // Here and below, the used expressions are already emitted,
                 // and their results do not affect the function return value,
@@ -711,7 +706,6 @@ impl ModuleInfo {
         };
         let resolve_context = ResolveContext {
             constants: &module.constants,
-            types: &module.types,
             global_vars: &module.global_variables,
             local_vars: &fun.local_variables,
             functions: &module.functions,
@@ -724,6 +718,7 @@ impl ModuleInfo {
                 expr,
                 &fun.expressions,
                 &self.functions,
+                &module.types,
                 &resolve_context,
             ) {
                 return Err(FunctionError::Expression { handle, error });
@@ -815,15 +810,21 @@ fn uniform_control_flow() {
     };
     let resolve_context = ResolveContext {
         constants: &constant_arena,
-        types: &type_arena,
         global_vars: &global_var_arena,
         local_vars: &Arena::new(),
         functions: &Arena::new(),
         arguments: &[],
     };
     for (handle, expression) in expressions.iter() {
-        info.process_expression(handle, expression, &expressions, &[], &resolve_context)
-            .unwrap();
+        info.process_expression(
+            handle,
+            expression,
+            &expressions,
+            &[],
+            &type_arena,
+            &resolve_context,
+        )
+        .unwrap();
     }
     assert_eq!(info[non_uniform_global_expr].ref_count, 1);
     assert_eq!(info[uniform_global_expr].ref_count, 1);

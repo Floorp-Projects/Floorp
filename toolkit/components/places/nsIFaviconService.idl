@@ -332,5 +332,6 @@ interface nsIFaviconDataCallback : nsISupports
 #define FAVICON_DEFAULT_MIMETYPE "image/svg+xml"
 
 #define FAVICON_ERRORPAGE_URL "chrome://global/skin/icons/info.svg"
+#define FAVICON_CERTERRORPAGE_URL "chrome://global/skin/icons/warning.svg"
 
 %}

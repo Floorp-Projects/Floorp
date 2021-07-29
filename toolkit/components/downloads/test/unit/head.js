@@ -837,6 +837,17 @@ add_task(function test_common_initialize() {
     Services.prefs.clearUserPref("browser.cache.memory.enable");
   });
 
+  // Allow relaxing default referrer.
+  Services.prefs.setBoolPref(
+    "network.http.referer.disallowCrossSiteRelaxingDefault",
+    false
+  );
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref(
+      "network.http.referer.disallowCrossSiteRelaxingDefault"
+    );
+  });
+
   registerInterruptibleHandler(
     "/interruptible.txt",
     function firstPart(aRequest, aResponse) {
