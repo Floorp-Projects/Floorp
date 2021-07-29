@@ -19,6 +19,15 @@ const { EventEmitter } = ChromeUtils.import(
  */
 class PageDataCollector extends EventEmitter {
   /**
+   * Supported data types.
+   */
+  static get DATA_TYPE() {
+    return {
+      PRODUCT: 1,
+    };
+  }
+
+  /**
    * Internal, should generally not need to be overriden by child classes.
    *
    * @param {Document} document
