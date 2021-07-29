@@ -49,15 +49,16 @@ impl<'p> WriteValue for ast::Pattern<&'p str> {
 
                     let needs_isolation = scope.bundle.use_isolating
                         && len > 1
-                        && !matches!(expression, ast::Expression::Inline(
-                            ast::InlineExpression::MessageReference { .. },
-                        )
-                        | ast::Expression::Inline(
-                            ast::InlineExpression::TermReference { .. },
-                        )
-                        | ast::Expression::Inline(
-                            ast::InlineExpression::StringLiteral { .. },
-                        ));
+                        && !matches!(
+                            expression,
+                            ast::Expression::Inline(ast::InlineExpression::MessageReference { .. },)
+                                | ast::Expression::Inline(
+                                    ast::InlineExpression::TermReference { .. },
+                                )
+                                | ast::Expression::Inline(
+                                    ast::InlineExpression::StringLiteral { .. },
+                                )
+                        );
                     if needs_isolation {
                         w.write_char('\u{2068}')?;
                     }
