@@ -1033,22 +1033,21 @@ impl RendererVAOs {
         }
 
         RendererVAOs {
-            blur_vao: device.create_vao_with_new_instances(&desc::BLUR, &prim_vao),
-            clip_rect_vao: device.create_vao_with_new_instances(&desc::CLIP_RECT, &prim_vao),
-            clip_box_shadow_vao: device
-                .create_vao_with_new_instances(&desc::CLIP_BOX_SHADOW, &prim_vao),
-            clip_image_vao: device.create_vao_with_new_instances(&desc::CLIP_IMAGE, &prim_vao),
-            border_vao: device.create_vao_with_new_instances(&desc::BORDER, &prim_vao),
-            scale_vao: device.create_vao_with_new_instances(&desc::SCALE, &prim_vao),
-            line_vao: device.create_vao_with_new_instances(&desc::LINE, &prim_vao),
-            fast_linear_gradient_vao: device.create_vao_with_new_instances(&desc::FAST_LINEAR_GRADIENT, &prim_vao),
-            linear_gradient_vao: device.create_vao_with_new_instances(&desc::LINEAR_GRADIENT, &prim_vao),
-            radial_gradient_vao: device.create_vao_with_new_instances(&desc::RADIAL_GRADIENT, &prim_vao),
-            conic_gradient_vao: device.create_vao_with_new_instances(&desc::CONIC_GRADIENT, &prim_vao),
-            resolve_vao: device.create_vao_with_new_instances(&desc::RESOLVE, &prim_vao),
-            svg_filter_vao: device.create_vao_with_new_instances(&desc::SVG_FILTER, &prim_vao),
-            composite_vao: device.create_vao_with_new_instances(&desc::COMPOSITE, &prim_vao),
-            clear_vao: device.create_vao_with_new_instances(&desc::CLEAR, &prim_vao),
+            blur_vao: device.create_vao_from_base(&desc::BLUR, &prim_vao),
+            clip_rect_vao: device.create_vao_from_base(&desc::CLIP_RECT, &prim_vao),
+            clip_box_shadow_vao: device.create_vao_from_base(&desc::CLIP_BOX_SHADOW, &prim_vao),
+            clip_image_vao: device.create_vao_from_base(&desc::CLIP_IMAGE, &prim_vao),
+            border_vao: device.create_vao_from_base(&desc::BORDER, &prim_vao),
+            scale_vao: device.create_vao_from_base(&desc::SCALE, &prim_vao),
+            line_vao: device.create_vao_from_base(&desc::LINE, &prim_vao),
+            fast_linear_gradient_vao: device.create_vao_from_base(&desc::FAST_LINEAR_GRADIENT, &prim_vao),
+            linear_gradient_vao: device.create_vao_from_base(&desc::LINEAR_GRADIENT, &prim_vao),
+            radial_gradient_vao: device.create_vao_from_base(&desc::RADIAL_GRADIENT, &prim_vao),
+            conic_gradient_vao: device.create_vao_from_base(&desc::CONIC_GRADIENT, &prim_vao),
+            resolve_vao: device.create_vao_from_base(&desc::RESOLVE, &prim_vao),
+            svg_filter_vao: device.create_vao_from_base(&desc::SVG_FILTER, &prim_vao),
+            composite_vao: device.create_vao_from_base(&desc::COMPOSITE, &prim_vao),
+            clear_vao: device.create_vao_from_base(&desc::CLEAR, &prim_vao),
             prim_vao,
         }
     }
