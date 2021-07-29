@@ -63,29 +63,30 @@ ChromeUtils.defineModuleGetter(
   // with region names based on en-US. This is
   // necessary for tests that expect to match
   // on region code display names.
-  const { L10nRegistry, FileSource } = ChromeUtils.import(
+  const { L10nRegistry } = ChromeUtils.import(
     "resource://gre/modules/L10nRegistry.jsm"
   );
 
-  const fs = {
-    "toolkit/intl/regionNames.ftl": `
+  const fs = [
+    {
+      path: "toolkit/intl/regionNames.ftl",
+      source: `
 region-name-us = United States
-region-name-nz = New Zeland
+region-name-nz = New Zealand
 region-name-au = Australia
 region-name-ca = Canada
 region-name-tw = Taiwan
     `,
-  };
-
-  L10nRegistry.loadSync = function(url) {
-    if (!fs.hasOwnProperty(url)) {
-      return false;
-    }
-    return fs[url];
-  };
+    },
+  ];
 
   let locales = Services.locale.packagedLocales;
-  const mockSource = new FileSource("mock", locales, "");
+  const mockSource = L10nFileSource.createMock(
+    "mock",
+    locales,
+    "resource://mock_path",
+    fs
+  );
   L10nRegistry.registerSources([mockSource]);
 }
 
