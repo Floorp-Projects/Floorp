@@ -2,9 +2,10 @@
 
 include("../../moz.build.common")
 
+# DEFINES["ANGLE_IS_64_BIT_CPU"] = True
 # DEFINES["ANGLE_IS_WIN"] = True
 # DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
-DEFINES["CR_CLANG_REVISION"] = '"llvmorg-13-init-9302-g897d7bce-1"'
+DEFINES["CR_CLANG_REVISION"] = '"llvmorg-12-init-11060-g118c3f3c-1"'
 DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
 # DEFINES["NDEBUG"] = True
 DEFINES["NOMINMAX"] = True
@@ -40,23 +41,22 @@ LOCAL_INCLUDES += [
 #     "-D__DATE__=",
 #     "-D__TIME__=",
 #     "-D__TIMESTAMP__=",
+#     "-debug-info-kind=constructor",
 #     "-fcolor-diagnostics",
 #     "-fcomplete-member-pointers",
 #     "-fcrash-diagnostics-dir=../tools/clang/crashreports",
 #     "-fdebug-compilation-dir",
 #     "-fmerge-all-constants",
 #     "-fmsc-version=1916",
-#     "-fno-delete-null-pointer-checks",
-#     "-fno-ident",
 #     "-ftrivial-auto-var-init=pattern",
 #     "-gcodeview-ghash",
 #     "-instcombine-lower-dbg-declare=0",
 #     "-m64",
 #     "-mllvm",
-#     "-msse3",
 #     "-no-canonical-prefixes",
 #     "-Wbad-function-cast",
 #     "-Wconditional-uninitialized",
+#     "-Wdeprecated-copy",
 #     "-Wexit-time-destructors",
 #     "-Wextra-semi",
 #     "-Wextra-semi-stmt",
@@ -87,7 +87,7 @@ LOCAL_INCLUDES += [
 #     "-Wparentheses",
 #     "-Wrange-loop-analysis",
 #     "-Wredundant-parens",
-#     "-Wreturn-std-move",
+#     "-Wreturn-std-move-in-c++11",
 #     "-Wshadow-field",
 #     "-Wshorten-64-to-32",
 #     "-Wstrict-prototypes",
@@ -167,6 +167,7 @@ LOCAL_INCLUDES += [
 #     "/we4800",
 #     "/we4838",
 #     "/WX",
+#     "/X",
 #     "/Z7",
 #     "/Zc:inline",
 #     "/Zc:sizedDealloc-",
@@ -198,7 +199,6 @@ DIRS += [
 # LDFLAGS += [
 #     "--color-diagnostics",
 #     "/call-graph-profile-sort:no",
-#     "/CETCOMPAT",
 #     "/DEBUG:GHASH",
 #     "/FIXED:NO",
 #     "/INCREMENTAL:NO",
@@ -209,7 +209,7 @@ DIRS += [
 #     "/pdbaltpath:%_PDB%",
 #     "/PDBSourcePath:C:/dev/angle/out",
 #     "/PROFILE",
-#     "/TIMESTAMP:1619931600",
+#     "/TIMESTAMP:1604206800",
 #     "/WX",
 # ]
 

@@ -21,11 +21,11 @@ inline std::size_t ComputeGenericHash(const void *key, size_t keySize)
 
     // We can't support "odd" alignments.  ComputeGenericHash requires aligned types
     ASSERT(keySize % 4 == 0);
-#if INTPTR_MAX == INT64_MAX
+#if defined(ANGLE_IS_64_BIT_CPU)
     return XXH64(key, keySize, kSeed);
 #else
     return XXH32(key, keySize, kSeed);
-#endif  // INTPTR_MAX == INT64_MAX
+#endif  // defined(ANGLE_IS_64_BIT_CPU)
 }
 
 template <typename T>

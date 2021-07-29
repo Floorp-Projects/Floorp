@@ -24,7 +24,7 @@ class CollectVariableRefCountsTraverser : public TIntermTraverser
   public:
     CollectVariableRefCountsTraverser();
 
-    using RefCountMap = angle::HashMap<int, unsigned int>;
+    using RefCountMap = std::unordered_map<int, unsigned int>;
     RefCountMap &getSymbolIdRefCounts() { return mSymbolIdRefCounts; }
     RefCountMap &getStructIdRefCounts() { return mStructIdRefCounts; }
 
@@ -216,8 +216,8 @@ void RemoveUnreferencedVariablesTraverser::removeVariableDeclaration(TIntermDecl
     if (getParentNode()->getAsBlock())
     {
         TIntermSequence emptyReplacement;
-        mMultiReplacements.emplace_back(getParentNode()->getAsBlock(), node,
-                                        std::move(emptyReplacement));
+        mMultiReplacements.push_back(
+            NodeReplaceWithMultipleEntry(getParentNode()->getAsBlock(), node, emptyReplacement));
     }
     else
     {
