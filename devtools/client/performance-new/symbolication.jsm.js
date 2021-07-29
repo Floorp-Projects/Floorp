@@ -238,7 +238,7 @@ class LocalSymbolicationServiceWithRemoteSymbolTableFallback {
    */
   constructor(symbolicationService, sharedLibraries, perfFront) {
     this._symbolicationService = symbolicationService;
-    this._libraryGetter = createLibraryMap(sharedLibraries);
+    this._libs = sharedLibraries;
     this._perfFront = perfFront;
   }
 
@@ -264,7 +264,9 @@ class LocalSymbolicationServiceWithRemoteSymbolTableFallback {
       // For now, the "debuggee" is never a Windows machine, which is why we don't
       // need to pass the library's debugPath. (path and debugPath are always the
       // same on non-Windows.)
-      const lib = this._libraryGetter(debugName, breakpadId);
+      const lib = this._libs.find(
+        l => l.debugName === debugName && l.breakpadId === breakpadId
+      );
       if (!lib) {
         throw new Error(
           `Could not find the library for "${debugName}", "${breakpadId}" after falling ` +
