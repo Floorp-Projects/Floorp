@@ -1387,9 +1387,7 @@ void gfxPlatform::WillShutdown() {
   // because cairo can assert and thus crash on shutdown, don't do this in
   // release builds
 #ifdef NS_FREE_PERMANENT_DATA
-#  if MOZ_TREE_CAIRO
   cairo_debug_reset_static_data();
-#  endif
 #endif
 }
 

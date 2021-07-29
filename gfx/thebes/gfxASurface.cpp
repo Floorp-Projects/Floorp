@@ -183,12 +183,10 @@ void gfxASurface::Init(cairo_surface_t* surface, bool existingSurface) {
     mFloatingRefs = 0;
   } else {
     mFloatingRefs = 1;
-#ifdef MOZ_TREE_CAIRO
     if (cairo_surface_get_content(surface) != CAIRO_CONTENT_COLOR) {
       cairo_surface_set_subpixel_antialiasing(
           surface, CAIRO_SUBPIXEL_ANTIALIASING_DISABLED);
     }
-#endif
   }
 }
 

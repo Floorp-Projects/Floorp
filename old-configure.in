@@ -2301,12 +2301,6 @@ dnl ========================================================
 dnl Check for pixman and cairo
 dnl ========================================================
 
-MOZ_TREE_CAIRO=1
-MOZ_ARG_ENABLE_BOOL(system-cairo,
-[ --enable-system-cairo  Obsolete: do not use this option],
-AC_MSG_ERROR(--enable-system-cairo is not supported),
-MOZ_TREE_CAIRO=1 )
-
 MOZ_TREE_PIXMAN=1
 MOZ_ARG_ENABLE_BOOL(system-pixman,
 [ --enable-system-pixman Use system pixman (located with pkgconfig)],
@@ -2321,7 +2315,6 @@ else
 fi
 
 MOZ_CAIRO_CFLAGS="-I${DIST}/include/cairo"
-AC_DEFINE(MOZ_TREE_CAIRO)
 
 if test "$OS_ARCH" = "WINNT"; then
     # For now we assume that we will have a uint64_t available through
@@ -2395,7 +2388,6 @@ android)
     ;;
 esac
 
-AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST_LIST(MOZ_CAIRO_CFLAGS)
 AC_SUBST_LIST(MOZ_CAIRO_LIBS)
 AC_SUBST_LIST(MOZ_CAIRO_OSLIBS)

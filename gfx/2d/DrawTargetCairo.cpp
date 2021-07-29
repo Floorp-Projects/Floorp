@@ -1295,12 +1295,10 @@ void DrawTargetCairo::SetFontOptions(cairo_antialias_t aAAMode) {
 
 void DrawTargetCairo::SetPermitSubpixelAA(bool aPermitSubpixelAA) {
   DrawTarget::SetPermitSubpixelAA(aPermitSubpixelAA);
-#ifdef MOZ_TREE_CAIRO
   cairo_surface_set_subpixel_antialiasing(
       cairo_get_group_target(mContext),
       aPermitSubpixelAA ? CAIRO_SUBPIXEL_ANTIALIASING_ENABLED
                         : CAIRO_SUBPIXEL_ANTIALIASING_DISABLED);
-#endif
 }
 
 static bool SupportsVariationSettings(cairo_surface_t* surface) {
