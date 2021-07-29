@@ -176,7 +176,7 @@ impl RemoteBrowser {
             )
         })?;
 
-        handler.prepare(&profile, options.env.unwrap_or_default())?;
+        handler.prepare(&profile, options.args, options.env.unwrap_or_default())?;
 
         handler.launch()?;
 
