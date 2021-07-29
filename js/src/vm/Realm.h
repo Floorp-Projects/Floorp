@@ -409,7 +409,6 @@ class JS::Realm : public JS::shadow::Realm {
   unsigned debugModeBits_ = 0;
   friend class js::AutoRestoreRealmDebugMode;
 
-  bool isSelfHostingRealm_ = false;
   bool isSystem_ = false;
 
   js::UniquePtr<js::coverage::LCovRealm> lcovRealm_ = nullptr;
@@ -499,9 +498,6 @@ class JS::Realm : public JS::shadow::Realm {
 
   /* Whether to preserve JIT code on non-shrinking GCs. */
   bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
-
-  bool isSelfHostingRealm() const { return isSelfHostingRealm_; }
-  void setIsSelfHostingRealm();
 
   /* The global object for this realm.
    *

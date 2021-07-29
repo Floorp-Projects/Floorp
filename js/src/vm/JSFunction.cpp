@@ -1571,10 +1571,6 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
     MOZ_ASSERT(!realm->hasBeenEnteredIgnoringJit());
   }
 
-  // The caller should have checked we're not in the self-hosting zone (it's
-  // shared with worker runtimes so relazifying functions in it will race).
-  MOZ_ASSERT(!realm->isSelfHostingRealm());
-
   // Don't relazify if the realm is being debugged. The debugger side-tables
   // such as the set of active breakpoints require bytecode to exist.
   if (realm->isDebuggee()) {
@@ -1963,15 +1959,6 @@ JSFunction* js::NewFunctionWithProto(
 bool js::GetFunctionPrototype(JSContext* cx, js::GeneratorKind generatorKind,
                               js::FunctionAsyncKind asyncKind,
                               js::MutableHandleObject proto) {
-  // Self-hosted functions have null [[Prototype]]. This allows self-hosting to
-  // support generators, despite this loop in the builtin object graph:
-  // - %Generator%.prototype.[[Prototype]] is Iterator.prototype;
-  // - Iterator.prototype has self-hosted methods (iterator helpers).
-  if (cx->realm()->isSelfHostingRealm()) {
-    proto.set(nullptr);
-    return true;
-  }
-
   if (generatorKind == js::GeneratorKind::NotGenerator) {
     if (asyncKind == js::FunctionAsyncKind::SyncFunction) {
       proto.set(nullptr);
@@ -2103,45 +2090,6 @@ JSFunction* js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
   return clone;
 }
 
-JSFunction* js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun,
-                                       HandleObject enclosingEnv,
-                                       HandleScope newScope,
-                                       Handle<ScriptSourceObject*> sourceObject,
-                                       gc::AllocKind allocKind,
-                                       HandleObject proto /* = nullptr */) {
-  MOZ_ASSERT(NewFunctionEnvironmentIsWellFormed(cx, enclosingEnv));
-  MOZ_ASSERT(fun->isInterpreted());
-  MOZ_ASSERT(!fun->isBoundFunction());
-
-  JSScript::AutoDelazify funScript(cx, fun);
-  if (!funScript) {
-    return nullptr;
-  }
-
-  RootedFunction clone(
-      cx, NewFunctionClone(cx, fun, TenuredObject, allocKind, proto));
-  if (!clone) {
-    return nullptr;
-  }
-
-  clone->initScript(nullptr);
-  clone->initEnvironment(enclosingEnv);
-
-  RootedScript script(cx, fun->nonLazyScript());
-  MOZ_ASSERT(script->realm() == fun->realm());
-  MOZ_ASSERT(cx->compartment() == clone->compartment(),
-             "Otherwise we could relazify clone below!");
-
-  RootedScript clonedScript(
-      cx, CloneScriptIntoFunction(cx, newScope, clone, script, sourceObject));
-  if (!clonedScript) {
-    return nullptr;
-  }
-  DebugAPI::onNewScript(cx, clonedScript);
-
-  return clone;
-}
-
 JSFunction* js::CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun) {
   MOZ_ASSERT(fun->isNativeFun());
   MOZ_ASSERT(IsAsmJSModule(fun));
@@ -2159,24 +2107,6 @@ JSFunction* js::CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun) {
   MOZ_ASSERT(!fun->hasJitInfo());
   clone->initNative(InstantiateAsmJS, nullptr);
 
-  return clone;
-}
-
-JSFunction* js::CloneSelfHostingIntrinsic(JSContext* cx, HandleFunction fun) {
-  MOZ_ASSERT(fun->isNativeFun());
-  MOZ_ASSERT(fun->realm()->isSelfHostingRealm());
-  MOZ_ASSERT(!fun->isExtended());
-  MOZ_ASSERT(cx->compartment() != fun->compartment());
-
-  JSFunction* clone =
-      NewFunctionClone(cx, fun, TenuredObject, gc::AllocKind::FUNCTION,
-                       /* proto = */ nullptr);
-  if (!clone) {
-    return nullptr;
-  }
-
-  clone->initNative(fun->native(),
-                    fun->hasJitInfo() ? fun->jitInfo() : nullptr);
   return clone;
 }
 

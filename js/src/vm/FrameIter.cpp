@@ -833,8 +833,7 @@ bool FrameIter::matchCallee(JSContext* cx, JS::Handle<JSFunction*> fun) const {
   // the script clones do not use the same script, they also have a different
   // group and Ion will not inline them interchangeably.
   //
-  // See: js::jit::InlineFrameIterator::findNextFrame(),
-  //      js::CloneFunctionAndScript()
+  // See: js::jit::InlineFrameIterator::findNextFrame()
   if (currentCallee->hasBaseScript()) {
     if (currentCallee->baseScript() != fun->baseScript()) {
       return false;

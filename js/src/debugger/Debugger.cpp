@@ -5938,10 +5938,6 @@ bool Debugger::CallData::findAllGlobals() {
 
       GlobalObject* global = r->maybeGlobal();
 
-      if (cx->runtime()->isSelfHostingGlobal(global)) {
-        continue;
-      }
-
       // We pulled |global| out of nowhere, so it's possible that it was
       // marked gray by XPConnect. Since we're now exposing it to JS code,
       // we need to mark it black.
