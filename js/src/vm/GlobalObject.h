@@ -853,9 +853,6 @@ class GlobalObject : public NativeObject {
                                      Handle<GlobalObject*> global);
 
   static bool initStandardClasses(JSContext* cx, Handle<GlobalObject*> global);
-  static bool initSelfHostingBuiltins(JSContext* cx,
-                                      Handle<GlobalObject*> global,
-                                      const JSFunctionSpec* builtins);
 
   Realm::DebuggerVector& getDebuggers() const {
     return realm()->getDebuggers();
