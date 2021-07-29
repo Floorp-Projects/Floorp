@@ -383,6 +383,20 @@ class ReferrerInfo : public nsIReferrerInfo {
                                   TrimmingPolicy aTrimmingPolicy,
                                   nsACString& aResult) const;
 
+  /**
+   * Returns true if we should ignore less restricted referrer policies,
+   * including 'unsafe_url', 'no_referrer_when_downgrade' and
+   * 'origin_when_cross_origin', for the given channel. We only apply this
+   * restriction for cross-site requests. For the same-site request, we will
+   * still allow overriding the default referrer policy with less restricted
+   * one.
+   *
+   * Note that the channel triggered by the system and the extension will be
+   * exempt from this restriction.
+   */
+  bool ShouldIgnoreLessRestrictedPolicies(
+      nsIHttpChannel* aChannel, const ReferrerPolicyEnum aPolicy) const;
+
   /*
    *  Limit referrer length using the following ruleset:
    *   - If the length of referrer URL is over max length, strip down to origin.
