@@ -17,12 +17,6 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
-// This error icon must stay in sync with FAVICON_ERRORPAGE_URL in
-// nsIFaviconService.idl, aboutCertError.xhtml and netError.xhtml.
-const FAVICON_ERRORPAGE_URI = Services.io.newURI(
-  "chrome://global/skin/icons/info.svg"
-);
-
 /**
  * Checks that the favicon for the given page matches the provided data.
  *

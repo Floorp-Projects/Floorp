@@ -335,8 +335,9 @@ nsFaviconService::SetAndFetchFaviconForPage(
   // If the page url points to an image, the icon's url will be the same.
   // TODO (Bug 403651): store a resample of the image.  For now avoid that
   // for database size and UX concerns.
-  // Don't store favicons for error pages too.
+  // Don't store favicons for error pages either.
   if (icon.spec.Equals(page.spec) ||
+      icon.spec.EqualsLiteral(FAVICON_CERTERRORPAGE_URL) ||
       icon.spec.EqualsLiteral(FAVICON_ERRORPAGE_URL)) {
     return NS_OK;
   }
