@@ -937,34 +937,17 @@ set_config("MOZ_IPDL_TESTS", depends_if("--enable-ipdl-tests")(lambda _: True))
 
 # Graphics
 # ==============================================================
-option("--disable-skia", help="Disable use of Skia")
-
-
-@depends("--disable-skia")
-def skia(value):
-    if not value:
-        die("--disable-skia is not supported anymore")
-    else:
-        return True
-
-
-set_config("MOZ_ENABLE_SKIA", skia)
-set_define("MOZ_ENABLE_SKIA", skia)
-set_define("USE_SKIA", skia)
+set_define("USE_SKIA", True)
 
 option("--enable-skia-pdf", help="Enable Skia PDF")
 
 
-@depends("--enable-skia-pdf", skia, target, milestone)
-def skia_pdf(value, skia, target, milestone):
+@depends("--enable-skia-pdf", target, milestone)
+def skia_pdf(value, target, milestone):
     if value.origin == "default":
-        if not skia:
-            return None
         if milestone.is_nightly and target.os != "WINNT":
             return True
-    elif value and not skia:
-        die("Cannot enable Skia PDF without enabling Skia")
-    if skia and value:
+    if value:
         return True
 
 
@@ -972,18 +955,13 @@ set_config("MOZ_ENABLE_SKIA_PDF", skia_pdf)
 set_define("MOZ_ENABLE_SKIA_PDF", skia_pdf)
 
 
-@depends(skia)
-def skia_includes(skia):
-    includes = []
-    if skia:
-        includes += [
-            "/gfx/skia",
-            "/gfx/skia/skia",
-        ]
-    return includes
-
-
-set_config("SKIA_INCLUDES", skia_includes)
+set_config(
+    "SKIA_INCLUDES",
+    [
+        "/gfx/skia",
+        "/gfx/skia/skia",
+    ],
+)
 
 system_lib_option(
     "--with-system-webp", help="Use system libwebp (located with pkgconfig)"
