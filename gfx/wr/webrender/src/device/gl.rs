@@ -293,6 +293,7 @@ impl VertexDescriptor {
         divisor: u32,
         gl: &dyn gl::Gl,
         vbo: VBOId,
+        mut offset: u32,
     ) {
         vbo.bind(gl);
 
@@ -301,7 +302,6 @@ impl VertexDescriptor {
             .map(|attr| attr.size_in_bytes())
             .sum();
 
-        let mut offset = 0;
         for (i, attr) in attributes.iter().enumerate() {
             let attr_index = (start_index + i) as gl::GLuint;
             attr.bind_to_vao(attr_index, divisor, stride as _, offset, gl);
@@ -309,16 +309,19 @@ impl VertexDescriptor {
         }
     }
 
-    fn bind(&self, gl: &dyn gl::Gl, main: VBOId, instance: VBOId, instance_divisor: u32) {
-        Self::bind_attributes(self.vertex_attributes, 0, 0, gl, main);
+    fn bind_main_attributes(&self, gl: &dyn gl::Gl, vbo: VBOId) {
+        Self::bind_attributes(self.vertex_attributes, 0, 0, gl, vbo, 0);
+    }
 
+    fn bind_instance_attributes(&self, gl: &dyn gl::Gl, vbo: VBOId, offset: u32, instance_divisor: u32) {
         if !self.instance_attributes.is_empty() {
             Self::bind_attributes(
                 self.instance_attributes,
                 self.vertex_attributes.len(),
                 instance_divisor,
                 gl,
-                instance,
+                vbo,
+                offset,
             );
         }
     }
@@ -380,6 +383,152 @@ impl<T> Drop for VBO<T> {
         debug_assert!(thread::panicking() || self.id == 0);
     }
 }
+
+/// A pool which allocates and recycles vertex buffers, and allows packing per-instance
+/// vertex data for multiple draw calls in to large fixed-size buffers.
+pub struct InstanceVBOPool {
+    /// The size in bytes of buffers to allocate.
+    buffer_size: usize,
+    /// The currently in use buffer. Data is added to this buffer until it is full, at
+    /// which point an available buffer is recycled or a new buffer is allocated.
+    current_vbo: Option<VBOId>,
+    /// The current offset in to the current VBO.
+    current_offset: usize,
+    /// The pool of allocated VBOs. The first Vec contains buffers that are available to
+    /// use in the current frame. The last is buffers that have already been used in the
+    /// current frame. The buffers get shifted left each frame ensuring at least 3 frames
+    /// between uses.
+    vbos: [Vec<VBOId>; 4],
+}
+
+impl InstanceVBOPool {
+    /// Creates a new pool, which allocates buffers of a specified fixed size.
+    pub fn new(buffer_size: usize) -> Self {
+        Self {
+            buffer_size,
+            current_vbo: None,
+            current_offset: 0,
+            vbos: Default::default(),
+        }
+    }
+
+    /// Writes the provided instance data to a buffer, allocating a new buffer if necessary.
+    /// Returns the used VBOId and the offset at which the data was written. This is only
+    /// guaranteed to remain valid until the subsequent call to `fill_data()` or a memory
+    /// pressure event, so must be bound to the VAO and used in a draw call prior to that.
+    pub fn fill_data<V: Clone>(
+        &mut self,
+        device: &mut Device,
+        data: &[V],
+        repeat: Option<NonZeroUsize>,
+    ) -> (VBOId, usize) {
+        let required_size = data.len() * repeat.map(NonZeroUsize::get).unwrap_or(1) * mem::size_of::<V>();
+        assert!(self.buffer_size >= required_size, "Instance VBO buffer size is {} but data requires {}", self.buffer_size, required_size);
+
+        let target = gl::ARRAY_BUFFER;
+
+        // If we do not have a current buffer, or the current buffer does not have room
+        // for the data, then find a new buffer. First look for a buffer that can be
+        // recycled, and if none can be found then allocate a new buffer.
+        if self.current_vbo.is_none() || self.current_offset + required_size > self.buffer_size {
+            let (new_vbo, needs_alloc) = match self.vbos.first_mut().unwrap().pop() {
+                Some(vbo) => (vbo, false),
+                None => (VBOId(device.gl.gen_buffers(1)[0]), true),
+            };
+
+            let old_vbo = mem::replace(&mut self.current_vbo, Some(new_vbo));
+            self.current_offset = 0;
+
+            new_vbo.bind(device.gl());
+            if needs_alloc {
+                device.gl.buffer_data_untyped(
+                    target,
+                    self.buffer_size as gl::GLsizeiptr,
+                    ptr::null(),
+                    VertexUsageHint::Dynamic.to_gl(),
+                );
+            }
+
+            if let Some(old_vbo) = old_vbo {
+                // Add the buffer we have just filled to the back of the pool so that it
+                // can later be recycled.
+                self.vbos.last_mut().unwrap().push(old_vbo);
+            }
+        }
+
+        self.current_vbo.unwrap().bind(device.gl());
+
+        // Map a region of the buffer to write our data to. We use MAP_UNSYNCHRONIZED_BIT otherwise
+        // it can be very expensive for the driver to repeatedly map small regions whilst
+        // interspersed with draw calls. This is safe because we never re-use the same region of the
+        // buffer before recycling, and if the buffer has been recycled it has been at least 3
+        // frames since it was last used.
+        // Future improvements could include using glBufferStorage and MAP_PERSISTENT_BIT on
+        // supported devices to avoid continually mapping and unmapping.
+        let ptr = device.gl.map_buffer_range(
+            target,
+            self.current_offset as gl::GLintptr,
+            required_size as gl::GLsizeiptr,
+            gl::MAP_WRITE_BIT | gl::MAP_UNSYNCHRONIZED_BIT,
+        ) as *mut V;
+
+        let dst = unsafe {
+            slice::from_raw_parts_mut(ptr, data.len() * repeat.map(NonZeroUsize::get).unwrap_or(1))
+        };
+
+        match repeat {
+            Some(repeat) => {
+                for (vertices, instance) in dst.chunks_mut(repeat.get()).zip(data) {
+                    for vertex in vertices {
+                        *vertex = instance.clone()
+                    }
+                }
+            }
+            None => dst.clone_from_slice(data)
+        }
+
+        device.gl.unmap_buffer(target);
+
+        let old_offset = self.current_offset;
+        self.current_offset += required_size;
+
+        (self.current_vbo.unwrap(), old_offset)
+    }
+
+    /// Must be called at the end of each frame to handle buffer recycling.
+    pub fn end_frame(&mut self) {
+        let (first, rest) = self.vbos.split_first_mut().unwrap();
+        rest.rotate_left(1);
+        first.append(rest.last_mut().unwrap());
+    }
+
+    /// Frees allocated buffers other than the currently in use one in response to a
+    /// memory pressure event.
+    pub fn on_memory_pressure(&mut self, device: &mut Device) {
+        for vbo in self.vbos.iter_mut().flat_map(|v| v.drain(..)) {
+            device.gl.delete_buffers(&[vbo.0]);
+        }
+    }
+
+    pub fn deinit(&mut self, device: &mut Device) {
+        if let Some(vbo) = self.current_vbo.take() {
+            device.gl.delete_buffers(&[vbo.0]);
+        }
+        for vbo in self.vbos.iter_mut().flat_map(|v| v.drain(..)) {
+            device.gl.delete_buffers(&[vbo.0]);
+        }
+    }
+}
+
+impl Drop for InstanceVBOPool {
+    fn drop(&mut self) {
+        debug_assert!(thread::panicking() || self.current_vbo.is_none());
+        for vbos in &self.vbos {
+            debug_assert!(thread::panicking() || vbos.is_empty());
+        }
+    }
+}
+
 
 #[cfg_attr(feature = "replay", derive(Clone))]
 #[derive(Debug)]
@@ -585,9 +734,9 @@ impl Drop for CustomVAO {
 
 pub struct VAO {
     id: gl::GLuint,
+    descriptor: &'static VertexDescriptor,
     ibo_id: IBOId,
     main_vbo_id: VBOId,
-    instance_vbo_id: VBOId,
     instance_stride: usize,
     instance_divisor: u32,
     owns_vertices_and_indices: bool,
@@ -3202,11 +3351,12 @@ impl Device {
         self.bind_vao_impl(vao.id)
     }
 
+    // Creates a VAO with a specified main (per-vertex) array buffer and index buffer.
+    // Buffers for per-instance data are allocated and bound dynamically.
     fn create_vao_with_vbos(
         &mut self,
-        descriptor: &VertexDescriptor,
+        descriptor: &'static VertexDescriptor,
         main_vbo_id: VBOId,
-        instance_vbo_id: VBOId,
         instance_divisor: u32,
         ibo_id: IBOId,
         owns_vertices_and_indices: bool,
@@ -3216,14 +3366,18 @@ impl Device {
 
         self.bind_vao_impl(vao_id);
 
-        descriptor.bind(self.gl(), main_vbo_id, instance_vbo_id, instance_divisor);
-        ibo_id.bind(self.gl()); // force it to be a part of VAO
+        // Bind the IBO and main VBO to the VAO. We cannot bind the instance VBO yet as
+        // it is allocated dynamically. In the future where supported we may use
+        // glVertexAttribFormat to specify the format here, and use glBindVertexBuffer
+        // to bind the VBO whenever it is updated.
+        ibo_id.bind(self.gl());
+        descriptor.bind_main_attributes(self.gl(), main_vbo_id);
 
         VAO {
             id: vao_id,
+            descriptor,
             ibo_id,
             main_vbo_id,
-            instance_vbo_id,
             instance_stride,
             instance_divisor,
             owns_vertices_and_indices,
@@ -3247,6 +3401,7 @@ impl Device {
                 0,
                 self.gl(),
                 stream.vbo,
+                0,
             );
             attrib_index += stream.attributes.len();
         }
@@ -3276,15 +3431,16 @@ impl Device {
         vbo.id = 0;
     }
 
-    pub fn create_vao(&mut self, descriptor: &VertexDescriptor, instance_divisor: u32) -> VAO {
+    // Create a VAO with a new main (per-vertex) array buffer and index buffer.
+    // Buffers for per-instance data are allocated and bound dynamically.
+    pub fn create_vao(&mut self, descriptor: &'static VertexDescriptor, instance_divisor: u32) -> VAO {
         debug_assert!(self.inside_frame);
 
-        let buffer_ids = self.gl.gen_buffers(3);
+        let buffer_ids = self.gl.gen_buffers(2);
         let ibo_id = IBOId(buffer_ids[0]);
         let main_vbo_id = VBOId(buffer_ids[1]);
-        let intance_vbo_id = VBOId(buffer_ids[2]);
 
-        self.create_vao_with_vbos(descriptor, main_vbo_id, intance_vbo_id, instance_divisor, ibo_id, true)
+        self.create_vao_with_vbos(descriptor, main_vbo_id, instance_divisor, ibo_id, true)
     }
 
     pub fn delete_vao(&mut self, mut vao: VAO) {
@@ -3295,8 +3451,6 @@ impl Device {
             self.gl.delete_buffers(&[vao.ibo_id.0]);
             self.gl.delete_buffers(&[vao.main_vbo_id.0]);
         }
-
-        self.gl.delete_buffers(&[vao.instance_vbo_id.0])
     }
 
     pub fn allocate_vbo<V>(
@@ -3348,20 +3502,19 @@ impl Device {
         gl::buffer_data(self.gl(), gl::ARRAY_BUFFER, vertices, usage_hint.to_gl());
     }
 
-    pub fn create_vao_with_new_instances(
+    // Creates a VAO which shares the main (per-vertex) array buffer and index buffer with an
+    // existing VAO. Buffers for per-instance data are allocated and bound dynamically, and
+    // per-instance data is never shared between VAOs.
+    pub fn create_vao_from_base(
         &mut self,
-        descriptor: &VertexDescriptor,
+        descriptor: &'static VertexDescriptor,
         base_vao: &VAO,
     ) -> VAO {
         debug_assert!(self.inside_frame);
 
-        let buffer_ids = self.gl.gen_buffers(1);
-        let intance_vbo_id = VBOId(buffer_ids[0]);
-
         self.create_vao_with_vbos(
             descriptor,
             base_vao.main_vbo_id,
-            intance_vbo_id,
             base_vao.instance_divisor,
             base_vao.ibo_id,
             false,
@@ -3381,51 +3534,16 @@ impl Device {
     pub fn update_vao_instances<V: Clone>(
         &mut self,
         vao: &VAO,
+        vbo_pool: &mut InstanceVBOPool,
         instances: &[V],
-        usage_hint: VertexUsageHint,
         // if `Some(count)`, each instance is repeated `count` times
         repeat: Option<NonZeroUsize>,
     ) {
         debug_assert_eq!(self.bound_vao, vao.id);
         debug_assert_eq!(vao.instance_stride as usize, mem::size_of::<V>());
 
-        match repeat {
-            Some(count) => {
-                let target = gl::ARRAY_BUFFER;
-                self.gl.bind_buffer(target, vao.instance_vbo_id.0);
-                let size = instances.len() * count.get() * mem::size_of::<V>();
-                self.gl.buffer_data_untyped(
-                    target,
-                    size as _,
-                    ptr::null(),
-                    usage_hint.to_gl(),
-                );
-
-                let ptr = match self.gl.get_type() {
-                    gl::GlType::Gl => {
-                        self.gl.map_buffer(target, gl::WRITE_ONLY)
-                    }
-                    gl::GlType::Gles => {
-                        self.gl.map_buffer_range(target, 0, size as _, gl::MAP_WRITE_BIT)
-                    }
-                };
-                assert!(!ptr.is_null());
-
-                let buffer_slice = unsafe {
-                    slice::from_raw_parts_mut(ptr as *mut V, instances.len() * count.get())
-                };
-                for (quad, instance) in buffer_slice.chunks_mut(4).zip(instances) {
-                    quad[0] = instance.clone();
-                    quad[1] = instance.clone();
-                    quad[2] = instance.clone();
-                    quad[3] = instance.clone();
-                }
-                self.gl.unmap_buffer(target);
-            }
-            None => {
-                self.update_vbo_data(vao.instance_vbo_id, instances, usage_hint);
-            }
-        }
+        let (vbo, offset) = vbo_pool.fill_data(self, instances, repeat);
+        vao.descriptor.bind_instance_attributes(self.gl(), vbo, offset as u32, vao.instance_divisor);
 
         // On some devices the VAO must be manually unbound and rebound after an attached buffer has
         // been orphaned. Failure to do so appeared to result in the orphaned buffer's contents
