@@ -1844,8 +1844,11 @@ pub extern "C" fn wr_transaction_set_display_list(
     // but I suppose it is a good default.
     let preserve_frame_state = true;
 
-    let dl_vec = dl_data.flush_into_vec();
-    let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
+    let payload = DisplayListPayload {
+        data: dl_data.flush_into_vec(),
+    };
+
+    let dl = BuiltDisplayList::from_data(payload, dl_descriptor);
 
     txn.set_display_list(epoch, color, viewport_size, (pipeline_id, dl), preserve_frame_state);
 }
@@ -3770,8 +3773,8 @@ pub unsafe extern "C" fn wr_api_finalize_builder(
 ) {
     let frame_builder = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(state.pipeline_id));
     let (_, dl) = frame_builder.dl_builder.finalize();
-    let (data, descriptor) = dl.into_data();
-    *dl_data = WrVecU8::from_vec(data);
+    let (payload, descriptor) = dl.into_data();
+    *dl_data = WrVecU8::from_vec(payload.data);
     *dl_descriptor = descriptor;
 }
 

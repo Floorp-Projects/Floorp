@@ -107,11 +107,22 @@ pub struct TempFilterData<'a> {
     pub a_values: ItemRange<'a, f32>,
 }
 
-/// A display list.
-#[derive(Clone, Default)]
-pub struct BuiltDisplayList {
+#[derive(Default, Clone)]
+pub struct DisplayListPayload {
     /// Serde encoded bytes. Mostly DisplayItems, but some mixed in slices.
-    data: Vec<u8>,
+    pub data: Vec<u8>,
+}
+
+impl MallocSizeOf for DisplayListPayload {
+    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+        self.data.size_of(ops)
+    }
+}
+
+/// A display list.
+#[derive(Default, Clone)]
+pub struct BuiltDisplayList {
+    payload: DisplayListPayload,
     descriptor: BuiltDisplayListDescriptor,
 }
 
@@ -193,7 +204,7 @@ impl DisplayListWithCache {
 
 impl MallocSizeOf for DisplayListWithCache {
     fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
-        self.display_list.data.size_of(ops) + self.cache.size_of(ops)
+        self.display_list.payload.size_of(ops) + self.cache.size_of(ops)
     }
 }
 
@@ -373,24 +384,30 @@ pub struct AuxIter<'a, T> {
 }
 
 impl BuiltDisplayList {
-    pub fn from_data(data: Vec<u8>, descriptor: BuiltDisplayListDescriptor) -> Self {
-        BuiltDisplayList { data, descriptor }
+    pub fn from_data(
+        payload: DisplayListPayload,
+        descriptor: BuiltDisplayListDescriptor,
+    ) -> Self {
+        BuiltDisplayList {
+            payload,
+            descriptor,
+        }
     }
 
-    pub fn into_data(self) -> (Vec<u8>, BuiltDisplayListDescriptor) {
-        (self.data, self.descriptor)
+    pub fn into_data(self) -> (DisplayListPayload, BuiltDisplayListDescriptor) {
+        (self.payload, self.descriptor)
     }
 
     pub fn data(&self) -> &[u8] {
-        &self.data[..]
+        &self.payload.data[..]
     }
 
     pub fn item_slice(&self) -> &[u8] {
-        &self.data[..self.descriptor.extra_data_offset]
+        &self.payload.data[..self.descriptor.extra_data_offset]
     }
 
     pub fn extra_slice(&self) -> &[u8] {
-        &self.data[self.descriptor.extra_data_offset..]
+        &self.payload.data[self.descriptor.extra_data_offset..]
     }
 
     pub fn descriptor(&self) -> &BuiltDisplayListDescriptor {
@@ -954,7 +971,9 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
         let extra_data_offset = data.len();
 
         Ok(BuiltDisplayList {
-            data,
+            payload: DisplayListPayload {
+                data,
+            },
             descriptor: BuiltDisplayListDescriptor {
                 gecko_display_list_type: GeckoDisplayListType::None,
                 builder_start_time: 0,
@@ -990,7 +1009,7 @@ pub enum DisplayListSection {
 
 #[derive(Clone)]
 pub struct DisplayListBuilder {
-    pub data: Vec<u8>,
+    payload: DisplayListPayload,
     pub pipeline_id: PipelineId,
 
     extra_data: Vec<u8>,
@@ -1020,7 +1039,9 @@ impl DisplayListBuilder {
         let start_time = precise_time_ns();
 
         DisplayListBuilder {
-            data: Vec::with_capacity(capacity),
+            payload: DisplayListPayload {
+                data: Vec::with_capacity(capacity),
+            },
             pipeline_id,
 
             extra_data: Vec::new(),
@@ -1048,7 +1069,7 @@ impl DisplayListBuilder {
         assert!(self.save_state.is_none(), "DisplayListBuilder doesn't support nested saves");
 
         self.save_state = Some(SaveState {
-            dl_len: self.data.len(),
+            dl_len: self.payload.data.len(),
             next_clip_index: self.next_clip_index,
             next_spatial_index: self.next_spatial_index,
             next_clip_chain_id: self.next_clip_chain_id,
@@ -1059,7 +1080,7 @@ impl DisplayListBuilder {
     pub fn restore(&mut self) {
         let state = self.save_state.take().expect("No save to restore DisplayListBuilder from");
 
-        self.data.truncate(state.dl_len);
+        self.payload.data.truncate(state.dl_len);
         self.next_clip_index = state.next_clip_index;
         self.next_spatial_index = state.next_spatial_index;
         self.next_clip_chain_id = state.next_clip_chain_id;
@@ -1091,9 +1112,9 @@ impl DisplayListBuilder {
         W: Write
     {
         let mut temp = BuiltDisplayList::default();
-        ensure_red_zone::<di::DisplayItem>(&mut self.data);
-        temp.descriptor.extra_data_offset = self.data.len();
-        mem::swap(&mut temp.data, &mut self.data);
+        ensure_red_zone::<di::DisplayItem>(&mut self.payload.data);
+        temp.descriptor.extra_data_offset = self.payload.data.len();
+        mem::swap(&mut temp.payload, &mut self.payload);
 
         let mut index: usize = 0;
         {
@@ -1108,8 +1129,8 @@ impl DisplayListBuilder {
             }
         }
 
-        self.data = temp.data;
-        strip_red_zone::<di::DisplayItem>(&mut self.data);
+        self.payload = temp.payload;
+        strip_red_zone::<di::DisplayItem>(&mut self.payload.data);
         index
     }
 
@@ -1140,7 +1161,7 @@ impl DisplayListBuilder {
         section: DisplayListSection
     ) -> &mut Vec<u8> {
         match section {
-            DisplayListSection::Data => &mut self.data,
+            DisplayListSection::Data => &mut self.payload.data,
             DisplayListSection::ExtraData => &mut self.extra_data,
             DisplayListSection::Chunk => &mut self.pending_chunk,
         }
@@ -1947,7 +1968,7 @@ impl DisplayListBuilder {
             self.pending_chunk.clear();
         } else {
             // Push pending chunk to data section.
-            self.data.append(&mut self.pending_chunk);
+            self.payload.data.append(&mut self.pending_chunk);
         }
     }
 
@@ -1980,13 +2001,13 @@ impl DisplayListBuilder {
         // Add `DisplayItem::max_size` zone of zeroes to the end of display list
         // so there is at least this amount available in the display list during
         // serialization.
-        ensure_red_zone::<di::DisplayItem>(&mut self.data);
+        ensure_red_zone::<di::DisplayItem>(&mut self.payload.data);
 
-        let extra_data_offset = self.data.len();
+        let extra_data_offset = self.payload.data.len();
 
         if self.extra_data.len() > 0 {
             ensure_red_zone::<di::DisplayItem>(&mut self.extra_data);
-            self.data.extend(self.extra_data);
+            self.payload.data.extend(self.extra_data);
         }
 
         let end_time = precise_time_ns();
@@ -2003,7 +2024,7 @@ impl DisplayListBuilder {
                     cache_size: self.cache_size,
                     extra_data_offset,
                 },
-                data: self.data,
+                payload: self.payload,
             },
         )
     }
