@@ -175,37 +175,6 @@ async function getResultFromWorker(workerURL, initialMessageToWorker) {
 }
 
 /**
- * Obtain symbols for the binary at the specified location.
- *
- * @param {string} binaryPath The absolute path to the binary on the local
- *   file system.
- * @param {string} debugPath The absolute path to the binary's pdb file on the
- *   local file system if on Windows, otherwise the same as binaryPath.
- * @param {string} breakpadId The breakpadId for the binary whose symbols
- *   should be obtained. This is used for two purposes: 1) to locate the
- *   correct single-arch binary in "FatArch" files, and 2) to make sure the
- *   binary at the given path is actually the one that we want. If no ID match
- *   is found, this function throws (rejects the promise).
- * @returns {Promise<SymbolTableAsTuple>} The symbol table in SymbolTableAsTuple format, see the
- *   documentation for nsIProfiler.getSymbolTable.
- */
-async function getSymbolTableFromLocalBinary(
-  binaryPath,
-  debugPath,
-  breakpadId
-) {
-  const module = await getWASMProfilerGetSymbolsModule();
-
-  /** @type {SymbolicationWorkerInitialMessage} */
-  const initialMessage = { binaryPath, debugPath, breakpadId, module };
-
-  return getResultFromWorker(
-    "resource://devtools/client/performance-new/symbolication-worker.js",
-    initialMessage
-  );
-}
-
-/**
  * @param {PerfFront} perfFront
  * @param {string} path
  * @param {string} breakpadId
@@ -324,14 +293,21 @@ class LocalSymbolicationService {
     const candidatePaths = this._getCandidatePaths(debugName, breakpadId);
 
     // Iterate over all the paths and try to get symbols from each entry.
+    const module = await getWASMProfilerGetSymbolsModule();
     const errors = [];
     for (const { path, debugPath } of candidatePaths) {
       if (await doesFileExistAtPath(path)) {
         try {
-          return await getSymbolTableFromLocalBinary(
-            path,
+          /** @type {SymbolicationWorkerInitialMessage} */
+          const initialMessage = {
+            binaryPath: path,
             debugPath,
-            breakpadId
+            breakpadId,
+            module,
+          };
+          return await getResultFromWorker(
+            "resource://devtools/client/performance-new/symbolication-worker.js",
+            initialMessage
           );
         } catch (e) {
           // getSymbolTable was unsuccessful. So either the
