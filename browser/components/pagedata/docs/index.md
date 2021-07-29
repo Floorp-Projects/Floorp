@@ -31,6 +31,6 @@ When page data has been found a `page-data` event is emitted. The event's argume
 
 ## Supported Types of page data
 
-The following types of page data are currently supported:
+The following types of page data (`Snapshots.DATA_TYPE`) are currently supported:
 
-... TBD
+- [`PRODUCT`](./schema-org.html#Product)

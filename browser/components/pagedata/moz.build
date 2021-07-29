@@ -14,6 +14,7 @@ BROWSER_CHROME_MANIFESTS += [
 EXTRA_JS_MODULES.pagedata += [
     "PageDataCollector.jsm",
     "PageDataService.jsm",
+    "SchemaOrgPageData.jsm",
 ]
 
 FINAL_TARGET_FILES.actors += [

@@ -12,7 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
+  SchemaOrgPageData: "resource:///modules/pagedata/SchemaOrgPageData.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -35,13 +35,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 /**
- * For testing purposes.
- */
-class DummyPageData extends PageDataCollector {
-  type = "dummy";
-}
-
-/**
  * Returns the list of page data collectors for a document.
  *
  * @param {Document} document
@@ -49,7 +42,7 @@ class DummyPageData extends PageDataCollector {
  * @returns {PageDataCollector[]}
  */
 function getCollectors(document) {
-  return [new DummyPageData(document)];
+  return [new SchemaOrgPageData(document)];
 }
 
 /**
