@@ -17,8 +17,15 @@ flat varying vec4 vColor1;
 // transition occurs. Used for corners only.
 flat varying vec4 vColorLine;
 
+#if defined(PLATFORM_ANDROID) && !defined(SWGL)
+// Work around Adreno 3xx driver bug. See the v_perspective comment in
+// brush_image or bug 1630356 for details.
+flat varying ivec2 vMixColorsVec;
+#define vMixColors vMixColorsVec.x
+#else
 // A boolean indicating that we should be mixing between edge colors.
 flat varying int vMixColors;
+#endif
 
 // xy = Local space position of the clip center.
 // zw = Scale the rect origin by this to get the outer
