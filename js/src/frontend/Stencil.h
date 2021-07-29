@@ -251,7 +251,10 @@ class ScopeStencil {
   // The kind determines the corresponding BaseParserScopeData.
   ScopeKind kind_{UINT8_MAX};
 
-  // True if this scope has enclosing scope.
+  // True if this scope has enclosing scope stencil. Otherwise, the enclosing
+  // scope will be read from CompilationInput while instantiating. Self-hosting
+  // is a special case and will use `emptyGlobalScope` when there is no
+  // enclosing scope stencil.
   static constexpr uint8_t HasEnclosing = 1 << 0;
 
   // If true, an environment Shape must be created. The shape itself may
