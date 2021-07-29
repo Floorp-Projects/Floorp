@@ -14,7 +14,6 @@ import platform
 import shutil
 import subprocess
 import sys
-from tempfile import TemporaryDirectory
 
 IS_NATIVE_WIN = sys.platform == "win32" and os.sep == "\\"
 IS_CYGWIN = sys.platform == "cygwin"
@@ -342,15 +341,6 @@ class VirtualenvManager(VirtualenvHelper):
             for pypi_requirement in env_requirements.pypi_requirements:
                 self.install_pip_package(pypi_requirement.full_specifier)
 
-            for requirement in env_requirements.pypi_optional_requirements:
-                try:
-                    self.install_pip_package(requirement.full_specifier)
-                except subprocess.CalledProcessError:
-                    print(
-                        f"Could not install {requirement.package_name}, so "
-                        f"{requirement.repercussion}. Continuing."
-                    )
-
         finally:
             os.environ.update(old_env_variables)
 
@@ -447,6 +437,9 @@ class VirtualenvManager(VirtualenvHelper):
         If vendored is True, no package index will be used and no dependencies
         will be installed.
         """
+        import mozfile
+        from mozfile import TemporaryDirectory
+
         if sys.executable.startswith(self.bin_path):
             # If we're already running in this interpreter, we can optimize in
             # the case that the package requirement is already satisfied.
@@ -489,7 +482,7 @@ class VirtualenvManager(VirtualenvHelper):
                     tmp, "{}-1.0-py3-none-any.whl".format(os.path.basename(package))
                 )
                 shutil.make_archive(wheel_file, "zip", package)
-                shutil.move("{}.zip".format(wheel_file), wheel_file)
+                mozfile.move("{}.zip".format(wheel_file), wheel_file)
                 package = wheel_file
 
             args.append(package)

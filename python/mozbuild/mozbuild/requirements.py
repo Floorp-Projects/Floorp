@@ -17,14 +17,6 @@ class PypiSpecifier:
         self.full_specifier = full_specifier
 
 
-class PypiOptionalSpecifier:
-    def __init__(self, repercussion, package_name, version, full_specifier):
-        self.repercussion = repercussion
-        self.package_name = package_name
-        self.version = version
-        self.full_specifier = full_specifier
-
-
 class MachEnvRequirements:
     """Requirements associated with a "virtualenv_packages.txt" definition
 
@@ -52,7 +44,6 @@ class MachEnvRequirements:
         self.requirements_paths = []
         self.pth_requirements = []
         self.pypi_requirements = []
-        self.pypi_optional_requirements = []
 
     @classmethod
     def from_requirements_definition(
@@ -69,29 +60,18 @@ def _parse_mach_env_requirements(
     requirements_output, root_requirements_path, topsrcdir, is_thunderbird
 ):
     def _parse_requirements_line(line):
-        line = line.strip()
-        if line.startswith("#"):
-            return
-
         action, params = line.rstrip().split(":", maxsplit=1)
         if action == "pth":
             requirements_output.pth_requirements.append(PthSpecifier(params))
         elif action == "pypi":
-            package_name, version = _parse_package_specifier(params)
+            if len(params.split("==")) != 2:
+                raise Exception(
+                    "Expected pypi package version to be pinned in the "
+                    'format "package==version", found "{}"'.format(params)
+                )
+            package_name, version = params.split("==")
             requirements_output.pypi_requirements.append(
                 PypiSpecifier(package_name, version, params)
-            )
-        elif action == "pypi-optional":
-            if len(params.split(":", maxsplit=1)) != 2:
-                raise Exception(
-                    "Expected pypi-optional package to have a repercussion"
-                    'description in the format "package:fallback explanation", '
-                    'found "{}"'.format(params)
-                )
-            package, repercussion = params.split(":")
-            package_name, version = _parse_package_specifier(package)
-            requirements_output.pypi_optional_requirements.append(
-                PypiOptionalSpecifier(repercussion, package_name, version, package)
             )
         elif action == "packages.txt":
             nested_definition_path = os.path.join(topsrcdir, params)
@@ -114,12 +94,3 @@ def _parse_mach_env_requirements(
             _parse_requirements_line(line)
 
     _parse_requirements_definition_file(root_requirements_path)
-
-
-def _parse_package_specifier(specifier):
-    if len(specifier.split("==")) != 2:
-        raise Exception(
-            "Expected pypi package version to be pinned in the "
-            'format "package==version", found "{}"'.format(specifier)
-        )
-    return specifier.split("==")
