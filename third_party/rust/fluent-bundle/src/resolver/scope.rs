@@ -1,4 +1,4 @@
-use crate::bundle::FluentBundleBase;
+use crate::bundle::FluentBundle;
 use crate::memoizer::MemoizerKind;
 use crate::resolver::{ResolveValue, ResolverError, WriteValue};
 use crate::types::FluentValue;
@@ -9,8 +9,8 @@ use std::fmt;
 
 /// State for a single `ResolveValue::to_value` call.
 pub struct Scope<'scope, 'errors, R, M> {
-    /// The current `FluentBundleBase` instance.
-    pub bundle: &'scope FluentBundleBase<R, M>,
+    /// The current `FluentBundle` instance.
+    pub bundle: &'scope FluentBundle<R, M>,
     /// The current arguments passed by the developer.
     pub(super) args: Option<&'scope FluentArgs<'scope>>,
     /// Local args
@@ -26,9 +26,9 @@ pub struct Scope<'scope, 'errors, R, M> {
     pub dirty: bool,
 }
 
-impl<'scope, 'errors, R, M: MemoizerKind> Scope<'scope, 'errors, R, M> {
+impl<'scope, 'errors, R, M> Scope<'scope, 'errors, R, M> {
     pub fn new(
-        bundle: &'scope FluentBundleBase<R, M>,
+        bundle: &'scope FluentBundle<R, M>,
         args: Option<&'scope FluentArgs>,
         errors: Option<&'errors mut Vec<FluentError>>,
     ) -> Self {
@@ -64,6 +64,7 @@ impl<'scope, 'errors, R, M: MemoizerKind> Scope<'scope, 'errors, R, M> {
     where
         R: Borrow<FluentResource>,
         W: fmt::Write,
+        M: MemoizerKind,
     {
         if self.travelled.is_empty() {
             self.travelled.push(pattern);
@@ -87,6 +88,7 @@ impl<'scope, 'errors, R, M: MemoizerKind> Scope<'scope, 'errors, R, M> {
     where
         R: Borrow<FluentResource>,
         W: fmt::Write,
+        M: MemoizerKind,
     {
         if self.travelled.contains(&pattern) {
             self.add_error(ResolverError::Cyclic);
@@ -117,24 +119,23 @@ impl<'scope, 'errors, R, M: MemoizerKind> Scope<'scope, 'errors, R, M> {
 
     pub fn get_arguments(
         &mut self,
-        arguments: &'scope Option<ast::CallArguments<&'scope str>>,
+        arguments: Option<&'scope ast::CallArguments<&'scope str>>,
     ) -> (Vec<FluentValue<'scope>>, FluentArgs<'scope>)
     where
         R: Borrow<FluentResource>,
+        M: MemoizerKind,
     {
-        let mut resolved_positional_args = Vec::new();
-        let mut resolved_named_args = FluentArgs::new();
+        if let Some(ast::CallArguments { positional, named }) = arguments {
+            let positional = positional.iter().map(|expr| expr.resolve(self)).collect();
 
-        if let Some(ast::CallArguments { named, positional }) = arguments {
-            for expression in positional {
-                resolved_positional_args.push(expression.resolve(self));
-            }
+            let named = named
+                .iter()
+                .map(|arg| (arg.name.name, arg.value.resolve(self)))
+                .collect();
 
-            for arg in named {
-                resolved_named_args.add(arg.name.name, arg.value.resolve(self));
-            }
+            (positional, named)
+        } else {
+            (Vec::new(), FluentArgs::new())
         }
-
-        (resolved_positional_args, resolved_named_args)
     }
 }

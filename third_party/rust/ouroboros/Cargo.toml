@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "ouroboros"
-version = "0.7.0"
+version = "0.8.0"
 authors = ["Joshua Maros <joshua-maros@github.com>"]
 description = "Easy, safe self-referential struct generation."
 documentation = "https://docs.rs/ouroboros"
@@ -21,7 +21,7 @@ readme = "../README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/joshua-maros/ouroboros"
 [dependencies.ouroboros_macro]
-version = "0.7.0"
+version = "0.8.0"
 
 [dependencies.stable_deref_trait]
 version = "1.2"
