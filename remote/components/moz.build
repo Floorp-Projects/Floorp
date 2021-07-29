@@ -2,6 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+DIRS += [
+    "rust",
+]
+
+EXTRA_COMPONENTS += [
+    "marionette.js",
+    "marionette.manifest",
+]
+
 XPIDL_MODULE = "remote"
 
 XPIDL_SOURCES += [
@@ -11,7 +20,7 @@ XPIDL_SOURCES += [
 
 XPCOM_MANIFESTS += ["components.conf"]
 
-with Files("Marionette.jsm"):
+with Files("marionette.*"):
     BUG_COMPONENT = ("Testing", "Marionette")
 with Files("nsIMarionette.idl"):
     BUG_COMPONENT = ("Testing", "Marionette")
