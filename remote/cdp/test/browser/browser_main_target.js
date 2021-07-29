@@ -27,7 +27,9 @@ add_task(async function({ CDP }) {
     const { isHeadless } = Cc["@mozilla.org/gfx/info;1"].getService(
       Ci.nsIGfxInfo
     );
-    const expectedProduct = isHeadless ? "Headless Firefox" : "Firefox";
+    const expectedProduct = isHeadless
+      ? "Headless Firefox"
+      : Services.appinfo.name;
     is(version.product, expectedProduct, "Browser.getVersion works");
 
     const { webSocketDebuggerUrl } = await CDP.Version();
