@@ -389,6 +389,21 @@ fn host_and_port_match_server(
     host_matches && port_matches
 }
 
+fn origin_is_local(url_str: &str) -> WebDriverResult<bool> {
+    // Validate that the URL string from an Origin header corresponds to a local interface
+    let make_err = || {
+        WebDriverError::new(
+            ErrorStatus::UnknownError,
+            format!("Invalid Origin {}", url_str),
+        )
+    };
+
+    let url = Url::parse(&url_str).map_err(|_| make_err())?;
+    let sockets = url.socket_addrs(|| None).map_err(|_| make_err())?;
+
+    Ok(!sockets.is_empty() && sockets.iter().all(|x| x.ip().is_loopback()))
+}
+
 fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
     server_host: Host,
     server_address: SocketAddr,
@@ -454,26 +469,6 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
                 if method == Method::HEAD {
                     return warp::reply::with_status("".into(), StatusCode::OK);
                 }
-                if let Some(origin) = origin_header {
-                    let mut valid_host = false;
-                    let host_url = Url::parse(&origin).ok();
-                    let host = host_url.as_ref().and_then(|x| x.host());
-                    if let Some(host) = host {
-                        valid_host = match host {
-                            Host::Domain("localhost") => true,
-                            Host::Domain(_) => false,
-                            Host::Ipv4(x) => server_address.is_ipv4() && x == server_address.ip(),
-                            Host::Ipv6(x) => server_address.is_ipv6() && x == server_address.ip(),
-                        };
-                    }
-                    if !valid_host {
-                        let err = WebDriverError::new(ErrorStatus::UnknownError, "Invalid Origin");
-                        return warp::reply::with_status(
-                            serde_json::to_string(&err).unwrap(),
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                        );
-                    };
-                }
                 if let Some(host) = host_header {
                     let host_port = match parse_host(&host) {
                         Ok(x) => x,
@@ -503,6 +498,22 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
                         serde_json::to_string(&err).unwrap(),
                         StatusCode::INTERNAL_SERVER_ERROR,
                     );
+                }
+                if let Some(origin) = origin_header {
+                    let origin_match_err = match origin_is_local(&origin) {
+                        Ok(true) => None,
+                        Ok(false) => Some(WebDriverError::new(
+                            ErrorStatus::UnknownError,
+                            format!("Request Origin {} isn't local", origin),
+                        )),
+                        Err(err) => Some(err),
+                    };
+                    if origin_match_err.is_some() {
+                        return warp::reply::with_status(
+                            serde_json::to_string(&origin_match_err).unwrap(),
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                        );
+                    }
                 }
                 if method == Method::POST {
                     // Disallow CORS-safelisted request headers
@@ -745,5 +756,25 @@ mod tests {
             &addr_8000,
             (localhost_host.clone(), None)
         ));
+    }
+
+    #[test]
+    fn test_origin_is_local() {
+        // This depends on network configuration; we assume that localhost, 127.0.0.1 and [::1] are loopback
+        // and that example.org and 1.1.1.1 are not.
+        assert!(origin_is_local("https://127.0.0.1").unwrap());
+        assert!(origin_is_local("http://127.0.0.1:8000").unwrap());
+        assert!(origin_is_local("http://[::1]").unwrap());
+        assert!(origin_is_local("https://[::1]:9999").unwrap());
+        assert!(origin_is_local("http://localhost").unwrap());
+        assert!(origin_is_local("https://localhost").unwrap());
+        assert!(origin_is_local("http://localhost:4444").unwrap());
+        assert!(!origin_is_local("http://example.org").unwrap());
+        assert!(!origin_is_local("https://example.org:1000").unwrap());
+        assert!(!origin_is_local("http://1.1.1.1").unwrap());
+        assert!(origin_is_local("localhost").is_err());
+        assert!(origin_is_local("localhost:443").is_err());
+        assert!(origin_is_local("127.0.0.1:443").is_err());
+        assert!(origin_is_local("[::1]").is_err());
     }
 }
