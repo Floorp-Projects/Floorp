@@ -271,8 +271,7 @@ add_task(async function test_protocol() {
       PRINT_POSTDATA
     );
 
-    // TODO: Processes should be switched due to navigation of different origins.
-    is(respExtRedirect.remoteType, "extension", "process switch");
+    ok(E10SUtils.isWebRemoteType(respExtRedirect.remoteType), "process switch");
     is(respExtRedirect.location, DATA_URL, "correct location");
     is(respExtRedirect.body, DATA_STRING, "correct POST body");
   });
