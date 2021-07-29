@@ -27,6 +27,11 @@ import mozilla.components.concept.engine.webpush.WebPushSubscription
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.feature.push.AutoPushSubscription
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -87,14 +92,20 @@ class WebPushEngineIntegrationTest {
     @Test
     fun `delegate calls getSubscription`() {
         integration.start()
-        val slot = slot<(AutoPushSubscription?) -> Unit>()
-        every { pushFeature.getSubscription("scope", block = capture(slot)) } just Runs
+        var subscribeFn: ((AutoPushSubscription?) -> Unit)? = null
+        every { pushFeature.getSubscription("scope", block = any()) } answers {
+            subscribeFn = thirdArg()
+        }
 
-        val onSubscription = mockk<(WebPushSubscription?) -> Unit>(relaxed = true)
-        delegate.captured.onGetSubscription("scope", onSubscription)
+        var actualSubscription: WebPushSubscription? = null
+        delegate.captured.onGetSubscription("scope", onSubscription = {
+            actualSubscription = it
+        })
 
-        verify { onSubscription wasNot Called }
-        slot.captured(AutoPushSubscription(
+        assertNull(actualSubscription)
+        assertNotNull(subscribeFn)
+
+        subscribeFn!!(AutoPushSubscription(
             scope = "scope",
             publicKey = "abc",
             endpoint = "def",
@@ -102,83 +113,101 @@ class WebPushEngineIntegrationTest {
             appServerKey = null
         ))
 
-        verify {
-            onSubscription(
-                WebPushSubscription(
-                    scope = "scope",
-                    publicKey = "abc".toByteArray(),
-                    endpoint = "def",
-                    authSecret = "xyz".toByteArray(),
-                    appServerKey = null
-                )
-            )
-        }
+        val expectedSubscription = WebPushSubscription(
+            scope = "scope",
+            publicKey = "abc".toByteArray(),
+            endpoint = "def",
+            authSecret = "xyz".toByteArray(),
+            appServerKey = null
+        )
+        assertEquals(expectedSubscription, actualSubscription)
     }
 
     @Test
     fun `delegate calls subscribe`() {
         integration.start()
-        val onSubscribeError = slot<(Exception) -> Unit>()
-        val onSubscribe = slot<(AutoPushSubscription?) -> Unit>()
+        var onSubscribeErrorFn: ((Exception) -> Unit)? = null
+        var onSubscribeFn: ((AutoPushSubscription?) -> Unit)? = null
         every {
             pushFeature.subscribe(
                 scope = "scope",
                 appServerKey = null,
-                onSubscribeError = capture(onSubscribeError),
-                onSubscribe = capture(onSubscribe)
+                onSubscribeError = any(),
+                onSubscribe = any()
             )
-        } just Runs
+        } answers {
+            onSubscribeErrorFn = thirdArg()
+            onSubscribeFn = lastArg()
+        }
 
-        val onSubscription = mockk<(WebPushSubscription?) -> Unit>(relaxed = true)
-        delegate.captured.onSubscribe("scope", null, onSubscription)
+        var actualSubscription: WebPushSubscription? = null
+        var onSubscribeInvoked = false
+        delegate.captured.onSubscribe("scope", null) {
+            actualSubscription = it
+            onSubscribeInvoked = true
+        }
+        assertFalse(onSubscribeInvoked)
+        assertNull(actualSubscription)
 
-        verify { onSubscription wasNot Called }
+        assertNotNull(onSubscribeErrorFn)
+        onSubscribeErrorFn!!(mockk())
+        assertTrue(onSubscribeInvoked)
+        assertNull(actualSubscription)
 
-        onSubscribeError.captured(mockk())
-        verify { onSubscription(null) }
-
-        onSubscribe.captured(AutoPushSubscription(
+        assertNotNull(onSubscribeFn)
+        onSubscribeFn!!(AutoPushSubscription(
             scope = "scope",
             publicKey = "abc",
             endpoint = "def",
             authKey = "xyz",
             appServerKey = null
         ))
-        verify {
-            onSubscription(
-                WebPushSubscription(
-                    scope = "scope",
-                    publicKey = "abc".toByteArray(),
-                    endpoint = "def",
-                    authSecret = "xyz".toByteArray(),
-                    appServerKey = null
-                )
-            )
-        }
+
+        val expectedSubscription = WebPushSubscription(
+            scope = "scope",
+            publicKey = "abc".toByteArray(),
+            endpoint = "def",
+            authSecret = "xyz".toByteArray(),
+            appServerKey = null
+        )
+
+        assertEquals(expectedSubscription, actualSubscription)
     }
 
     @Test
     fun `delegate calls unsubscribe`() {
         integration.start()
-        val onUnsubscribeError = slot<(Exception) -> Unit>()
-        val onUnsubscribe = slot<(Boolean) -> Unit>()
+        var onUnsubscribeErrorFn: ((Exception) -> Unit)? = null
+        var onUnsubscribeFn: ((Boolean) -> Unit)? = null
         every {
             pushFeature.unsubscribe(
                 scope = "scope",
-                onUnsubscribeError = capture(onUnsubscribeError),
-                onUnsubscribe = capture(onUnsubscribe)
+                onUnsubscribeError = any(),
+                onUnsubscribe = any()
             )
-        } just Runs
+        } answers {
+            onUnsubscribeErrorFn = secondArg()
+            onUnsubscribeFn = thirdArg()
+        }
 
-        val onUnsubscription = mockk<(Boolean) -> Unit>(relaxed = true)
-        delegate.captured.onUnsubscribe("scope", onUnsubscription)
+        var onSubscribeInvoked = false
+        var unsubscribeSuccess: Boolean? = null
+        delegate.captured.onUnsubscribe("scope") {
+            onSubscribeInvoked = true
+            unsubscribeSuccess = it
+        }
 
-        verify { onUnsubscription wasNot Called }
+        assertFalse(onSubscribeInvoked)
+        assertNull(unsubscribeSuccess)
 
-        onUnsubscribeError.captured(mockk())
-        verify { onUnsubscription(false) }
+        assertNotNull(onUnsubscribeErrorFn)
+        onUnsubscribeErrorFn!!(mockk())
+        assertNotNull(unsubscribeSuccess)
+        assertFalse(unsubscribeSuccess!!)
 
-        onUnsubscribe.captured(true)
-        verify { onUnsubscription(true) }
+        assertNotNull(onUnsubscribeFn)
+        onUnsubscribeFn!!(true)
+        assertNotNull(unsubscribeSuccess)
+        assertTrue(unsubscribeSuccess!!)
     }
 }
