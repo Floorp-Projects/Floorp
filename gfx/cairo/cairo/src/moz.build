@@ -284,7 +284,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc') and CONFIG['OS_TARGET'] == 'Android' an
     CXXFLAGS += ['-O2']
 
 if CONFIG['MOZ_X11']:
-    CFLAGS += CONFIG['XCFLAGS']
+    CFLAGS += CONFIG['MOZ_X11_CFLAGS']
 
 if CONFIG['MOZ_ENABLE_CAIRO_FT']:
     CFLAGS += CONFIG['CAIRO_FT_CFLAGS']
