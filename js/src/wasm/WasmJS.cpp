@@ -5029,14 +5029,37 @@ static JSObject* CreateWebAssemblyObject(JSContext* cx, JSProtoKey key) {
                                         proto);
 }
 
+struct NameAndProtoKey {
+  const char* const name;
+  JSProtoKey key;
+};
+
+static bool WebAssemblyDefineConstructor(JSContext* cx,
+                                         Handle<WasmNamespaceObject*> wasm,
+                                         NameAndProtoKey entry,
+                                         MutableHandleValue ctorValue,
+                                         MutableHandleId id) {
+  JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, entry.key);
+  if (!ctor) {
+    return false;
+  }
+  ctorValue.setObject(*ctor);
+
+  JSAtom* className = Atomize(cx, entry.name, strlen(entry.name));
+  if (!className) {
+    return false;
+  }
+  id.set(AtomToId(className));
+
+  if (!DefineDataProperty(cx, wasm, id, ctorValue, 0)) {
+    return false;
+  }
+  return true;
+}
+
 static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
                                    HandleObject proto) {
   Handle<WasmNamespaceObject*> wasm = object.as<WasmNamespaceObject>();
-
-  struct NameAndProtoKey {
-    const char* const name;
-    JSProtoKey key;
-  };
 
   constexpr NameAndProtoKey entries[] = {
       {"Module", JSProto_WasmModule},
@@ -5044,37 +5067,31 @@ static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
       {"Memory", JSProto_WasmMemory},
       {"Table", JSProto_WasmTable},
       {"Global", JSProto_WasmGlobal},
-#ifdef ENABLE_WASM_EXCEPTIONS
-      {"Tag", JSProto_WasmTag},
-      {"Exception", JSProto_WasmException},
-#endif
       {"CompileError", GetExceptionProtoKey(JSEXN_WASMCOMPILEERROR)},
       {"LinkError", GetExceptionProtoKey(JSEXN_WASMLINKERROR)},
       {"RuntimeError", GetExceptionProtoKey(JSEXN_WASMRUNTIMEERROR)},
   };
-
   RootedValue ctorValue(cx);
   RootedId id(cx);
   for (const auto& entry : entries) {
-    const char* name = entry.name;
-    JSProtoKey key = entry.key;
-
-    JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, key);
-    if (!ctor) {
-      return false;
-    }
-    ctorValue.setObject(*ctor);
-
-    JSAtom* className = Atomize(cx, name, strlen(name));
-    if (!className) {
-      return false;
-    }
-    id.set(AtomToId(className));
-
-    if (!DefineDataProperty(cx, wasm, id, ctorValue, 0)) {
+    if (!WebAssemblyDefineConstructor(cx, wasm, entry, &ctorValue, &id)) {
       return false;
     }
   }
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  if (ExceptionsAvailable(cx)) {
+    constexpr NameAndProtoKey exceptionEntries[] = {
+      {"Tag", JSProto_WasmTag},
+      {"Exception", JSProto_WasmException},
+    };
+    for (const auto& entry : exceptionEntries) {
+      if (!WebAssemblyDefineConstructor(cx, wasm, entry, &ctorValue, &id)) {
+        return false;
+      }
+    }
+  }
+#endif
 
 #ifdef ENABLE_WASM_MOZ_INTGEMM
   if (MozIntGemmAvailable(cx) &&
