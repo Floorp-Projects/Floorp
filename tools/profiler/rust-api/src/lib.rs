@@ -10,5 +10,6 @@ mod thread;
 
 pub use gecko_bindings::profiling_categories::*;
 pub use label::*;
+pub use profiler_macros::gecko_profiler_fn_label;
 pub use profiler_state::*;
 pub use thread::*;
