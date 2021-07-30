@@ -45,6 +45,7 @@ linux64/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -128,6 +129,7 @@ linux64-gcc/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -215,6 +217,7 @@ linux64-fuzzing/debug:
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
@@ -262,6 +265,7 @@ linux64-fuzzing-noopt/debug:
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
@@ -310,6 +314,7 @@ linux64/debug:
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -361,6 +366,7 @@ linux64/codeql-cpp:
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     notifications:
@@ -463,6 +469,7 @@ linux64-devedition/opt:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -505,6 +512,7 @@ linux/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
@@ -549,6 +557,7 @@ linux/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
@@ -591,6 +600,7 @@ linux-rusttests/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
@@ -635,6 +645,7 @@ linux-rusttests/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
@@ -686,6 +697,7 @@ linux-devedition/opt:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
@@ -732,6 +744,7 @@ linux-shippable/opt:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
@@ -776,6 +789,7 @@ linux-reproduced/opt:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
@@ -820,6 +834,7 @@ linux64-reproduced/opt:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -862,6 +877,7 @@ linux64-asan/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -904,6 +920,7 @@ linux64-tsan/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -949,6 +966,7 @@ linux64-tsan-fuzzing/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
@@ -996,6 +1014,7 @@ linux64-asan-fuzzing/noopt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
@@ -1043,6 +1062,7 @@ linux64-asan-fuzzing/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
@@ -1090,6 +1110,7 @@ linux64-asan-fuzzing-ccov/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -1132,6 +1153,7 @@ linux64-fuzzing-ccov/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
@@ -1187,6 +1209,7 @@ linux64-asan-reporter-shippable/opt:
             - linux64-llvm-symbolizer
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -1228,6 +1251,7 @@ linux64-asan/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
@@ -1279,6 +1303,7 @@ linux64-shippable/opt:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -1322,6 +1347,7 @@ linux64-noopt/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -1363,6 +1389,7 @@ linux64-rusttests/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
@@ -1406,6 +1433,7 @@ linux64-rusttests/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
@@ -1455,6 +1483,7 @@ linux64-ccov/opt:
             - linux64-nasm
             - linux64-node
             - linux64-grcov
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -1497,6 +1526,7 @@ linux64-ccov/debug:
             - linux64-nasm
             - linux64-node
             - linux64-grcov
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -1537,6 +1567,7 @@ linux64-add-on-devel/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
@@ -1579,6 +1610,7 @@ linux64-aarch64/opt:
             - linux64-dump_syms
             - linux64-sccache
             - linux64-node
+            - linux64-lucetc
             - sysroot-aarch64-linux-gnu
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
@@ -1626,6 +1658,7 @@ linux-gcp/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
@@ -1671,6 +1704,7 @@ linux-gcp/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
@@ -1715,6 +1749,7 @@ linux64-gcp/debug:
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
@@ -1759,5 +1794,6 @@ linux64-gcp/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
