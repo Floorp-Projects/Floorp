@@ -6,6 +6,11 @@ edition = "2018"
 
 [dependencies]
 
+[build-dependencies]
+lazy_static = "1"
+bindgen = {version = "0.56", default-features = false}
+toml = {version = "0.4.5", default-features = false}
+
 [features]
 # This feature is being set by Gecko. If it's not set, all public functions and
 # structs will be no-op.
