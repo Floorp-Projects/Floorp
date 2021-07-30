@@ -544,3 +544,16 @@ export type SymbolicationWorkerReplyData<R> =
   | {
       error: SymbolicationWorkerError;
     };
+
+// This type is used in the symbolication worker for the return type of the
+// FileAndPathHelper's readFile method.
+// FIXME: Or rather, this type *would* be used if the worker code was checked
+// by TypeScript.
+export interface FileHandle {
+  // Return the length of the file in bytes.
+  getLength: () => number;
+  // Synchronously read the bytes at offset `offset` into the array `dest`.
+  readBytesInto: (dest: Uint8Array, offset: number) => void;
+  // Called when the file is no longer needed, to allow closing the file.
+  drop: () => void;
+}

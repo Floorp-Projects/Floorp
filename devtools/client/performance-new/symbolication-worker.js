@@ -19,6 +19,7 @@ importScripts(
 
 /**
  * @typedef {import("./@types/perf").SymbolicationWorkerInitialMessage} SymbolicationWorkerInitialMessage
+ * @typedef {import("./@types/perf").FileHandle} FileHandle
  */
 
 // This worker uses the wasm module that was generated from https://github.com/mstange/profiler-get-symbols.
@@ -29,60 +30,55 @@ importScripts(
 // itself.
 
 /* eslint camelcase: 0*/
-const { WasmMemBuffer, get_compact_symbol_table } = wasm_bindgen;
+const { getCompactSymbolTable } = wasm_bindgen;
 
-// Read an open OS.File instance into the Uint8Array dataBuf.
-function readFileInto(file, dataBuf) {
-  // Ideally we'd be able to call file.readTo(dataBuf) here, but readTo no
-  // longer exists.
-  // So instead, we copy the file over into wasm memory in 4MB chunks. This
-  // will take 425 invocations for a a 1.7GB file (such as libxul.so for a
-  // Firefox for Android build) and not take up too much memory per call.
-  const dataBufLen = dataBuf.byteLength;
+// Read parts of an open OS.File instance into the Uint8Array dataBuf.
+// This reads destBuf.byteLength bytes at offset offset.
+function readFileBytesInto(file, offset, destBuf) {
+  file.setPosition(offset);
+  // We read the file in 4MB chunks. This limits the amount of temporary
+  // memory we use while we copy the file contents into wasm memory.
   const chunkSize = 4 * 1024 * 1024;
-  let pos = 0;
-  while (pos < dataBufLen) {
-    const chunkData = file.read({ bytes: chunkSize });
+  let posInDestBuf = 0;
+  let remainingBytes = destBuf.byteLength;
+  while (remainingBytes > 0) {
+    const bytes = remainingBytes > chunkSize ? chunkSize : remainingBytes;
+    const chunkData = file.read({ bytes });
     const chunkBytes = chunkData.byteLength;
     if (chunkBytes === 0) {
       break;
     }
 
-    dataBuf.set(chunkData, pos);
-    pos += chunkBytes;
+    destBuf.set(chunkData, posInDestBuf);
+    posInDestBuf += chunkBytes;
+    remainingBytes -= chunkBytes;
   }
 }
 
 // Returns a plain object that is Structured Cloneable and has name and
-// description properties.
+// message properties.
 function createPlainErrorObject(e) {
-  // OS.File.Error has an empty message property; it constructs the error
-  // message on-demand in its toString() method. So we handle those errors
-  // specially.
-  if (!(e instanceof OS.File.Error)) {
-    // Regular errors: just rewrap the object.
-    if (e instanceof Error) {
-      const { name, message, fileName, lineNumber } = e;
-      return { name, message, fileName, lineNumber };
-    }
-    // The WebAssembly code throws errors with fields error_type and error_msg.
-    if (e.error_type) {
-      return {
-        name: e.error_type,
-        message: e.error_msg,
-      };
-    }
+  if (e instanceof OS.File.Error) {
+    // OS.File.Error has an empty message property; it constructs the error
+    // message on-demand in its toString() method. So we handle those errors
+    // specially.
+    return {
+      name: "OSFileError",
+      message: e.toString(),
+      fileName: e.fileName,
+      lineNumber: e.lineNumber,
+    };
   }
-
-  return {
-    name: e instanceof OS.File.Error ? "OSFileError" : "Error",
-    message: e.toString(),
-    fileName: e.fileName,
-    lineNumber: e.lineNumber,
-  };
+  // Regular errors: just rewrap the object.
+  const { name, message, fileName, lineNumber } = e;
+  return { name, message, fileName, lineNumber };
 }
 
-class PathHelper {
+/**
+ * A FileAndPathHelper object is passed to getCompactSymbolTable, which calls
+ * the methods `getCandidatePathsForBinaryOrPdb` and `readFile` on it.
+ */
+class FileAndPathHelper {
   constructor(libInfoMap, objdirs) {
     this._libInfoMap = libInfoMap;
     this._objdirs = objdirs;
@@ -90,12 +86,13 @@ class PathHelper {
 
   /**
    * Enumerate all paths at which we could find files with symbol information.
+   * This method is called by wasm code (via the bindings).
    *
    * @param {string} debugName
    * @param {string} breakpadId
-   * @returns {Array<{ path: string, debugPath: string }>}
+   * @returns {Array<string>}
    */
-  getCandidatePaths(debugName, breakpadId) {
+  getCandidatePathsForBinaryOrPdb(debugName, breakpadId) {
     const key = `${debugName}:${breakpadId}`;
     const lib = this._libInfoMap.get(key);
     if (!lib) {
@@ -121,89 +118,64 @@ class PathHelper {
     // a system library.
     for (const objdirPath of this._objdirs) {
       // Binaries are usually expected to exist at objdir/dist/bin/filename.
-      candidatePaths.push({
-        path: OS.Path.join(objdirPath, "dist", "bin", name),
-        debugPath: OS.Path.join(objdirPath, "dist", "bin", name),
-      });
+      candidatePaths.push(OS.Path.join(objdirPath, "dist", "bin", name));
       // Also search in the "objdir" directory itself (not just in dist/bin).
       // If, for some unforeseen reason, the relevant binary is not inside the
       // objdirs dist/bin/ directory, this provides a way out because it lets the
       // user specify the actual location.
-      candidatePaths.push({
-        path: OS.Path.join(objdirPath, name),
-        debugPath: OS.Path.join(objdirPath, name),
-      });
+      candidatePaths.push(OS.Path.join(objdirPath, name));
     }
 
-    // Check the absolute paths of the library file(s) last.
+    // Check the absolute paths of the library last.
     // We do this after the objdir search because the library's path may point
     // to a stripped binary, which will have fewer symbols than the original
     // binaries in the objdir.
-    candidatePaths.push({ path, debugPath });
+    if (debugPath !== path) {
+      // We're on Windows, and debugPath points to a PDB file.
+      // On non-Windows, path and debugPath are always the same.
+
+      // Check the PDB file before the binary because the PDB has the symbol
+      // information. The binary is only used as a last-ditch fallback
+      // for things like Windows system libraries (e.g. graphics drivers).
+      candidatePaths.push(debugPath);
+    }
+
+    // The location of the binary. If the profile was obtained on this machine
+    // (and not, for example, on an Android device), this file should always
+    // exist.
+    candidatePaths.push(path);
 
     return candidatePaths;
   }
-}
 
-function getCompactSymbolTableFromPath(binaryPath, debugPath, breakpadId) {
-  // Read the binary file into WASM memory.
-  const binaryFile = OS.File.open(binaryPath, { read: true });
-  const binaryData = new WasmMemBuffer(binaryFile.stat().size, array => {
-    readFileInto(binaryFile, array);
-  });
-  binaryFile.close();
-
-  // Do the same for the debug file, if it is supplied and different from the
-  // binary file. This is only the case on Windows.
-  let debugData = binaryData;
-  if (debugPath && debugPath !== binaryPath) {
-    const debugFile = OS.File.open(debugPath, { read: true });
-    debugData = new WasmMemBuffer(debugFile.stat().size, array => {
-      readFileInto(debugFile, array);
-    });
-    debugFile.close();
-  }
-
-  try {
-    const output = get_compact_symbol_table(binaryData, debugData, breakpadId);
-    const result = [
-      output.take_addr(),
-      output.take_index(),
-      output.take_buffer(),
-    ];
-    output.free();
-    return result;
-  } finally {
-    binaryData.free();
-    if (debugData != binaryData) {
-      debugData.free();
+  /**
+   * Asynchronously prepare the file at `path` for synchronous reading.
+   * This method is called by wasm code (via the bindings).
+   *
+   * @param {string} path
+   * @returns {FileHandle}
+   */
+  async readFile(path) {
+    const file = OS.File.open(path, { read: true });
+    const info = file.stat();
+    if (info.isDir) {
+      throw new Error(`Path "${path}" is a directory.`);
     }
+
+    const fileSize = info.size;
+
+    // Create and return a FileHandle object. The methods of this object are
+    // called by wasm code (via the bindings).
+    return {
+      getLength: () => fileSize,
+      readBytesInto: (dest, offset) => {
+        readFileBytesInto(file, offset, dest);
+      },
+      drop: () => {
+        file.close();
+      },
+    };
   }
-}
-
-function getSymbolTableInWorker(debugName, breakpadId, libInfoMap, objdirs) {
-  const helper = new PathHelper(libInfoMap, objdirs);
-  const candidatePaths = helper.getCandidatePaths(debugName, breakpadId);
-
-  const errors = [];
-  for (const { path, debugPath } of candidatePaths) {
-    try {
-      return getCompactSymbolTableFromPath(path, debugPath, breakpadId);
-    } catch (e) {
-      // getCompactSymbolTableFromPath was unsuccessful. So either the
-      // file wasn't parseable or its contents didn't match the specified
-      // breakpadId, or some other error occurred.
-      // Advance to the next candidate path.
-      errors.push(e);
-    }
-  }
-
-  throw new Error(
-    `Could not obtain symbols for the library ${debugName} ${breakpadId} ` +
-      `because there was no matching file at any of the candidate paths: ${JSON.stringify(
-        candidatePaths
-      )}. Errors: ${errors.map(e => e.message).join(", ")}`
-  );
 }
 
 /** @param {MessageEvent<SymbolicationWorkerInitialMessage>} e */
@@ -218,12 +190,8 @@ onmessage = async e => {
     // Instantiate the WASM module.
     await wasm_bindgen(module);
 
-    const result = getSymbolTableInWorker(
-      debugName,
-      breakpadId,
-      libInfoMap,
-      objdirs
-    );
+    const helper = new FileAndPathHelper(libInfoMap, objdirs);
+    const result = await getCompactSymbolTable(debugName, breakpadId, helper);
     postMessage(
       { result },
       result.map(r => r.buffer)
