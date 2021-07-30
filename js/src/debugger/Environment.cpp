@@ -66,18 +66,16 @@ const JSClassOps DebuggerEnvironment::classOps_ = {
 
 const JSClass DebuggerEnvironment::class_ = {
     "Environment",
-    JSCLASS_HAS_PRIVATE |
-        JSCLASS_HAS_RESERVED_SLOTS(DebuggerEnvironment::RESERVED_SLOTS),
+    JSCLASS_HAS_RESERVED_SLOTS(DebuggerEnvironment::RESERVED_SLOTS),
     &classOps_};
 
 void DebuggerEnvironment::trace(JSTracer* trc) {
   // There is a barrier on private pointers, so the Unbarriered marking
   // is okay.
-  if (Env* referent = (JSObject*)getPrivate()) {
-    TraceManuallyBarrieredCrossCompartmentEdge(
-        trc, static_cast<JSObject*>(this), &referent,
-        "Debugger.Environment referent");
-    setPrivateUnbarriered(referent);
+  if (Env* referent = maybeReferent()) {
+    TraceManuallyBarrieredCrossCompartmentEdge(trc, this, &referent,
+                                               "Debugger.Environment referent");
+    setReservedSlotGCThingAsPrivateUnbarriered(ENV_SLOT, referent);
   }
 }
 
@@ -405,7 +403,7 @@ DebuggerEnvironment* DebuggerEnvironment::create(JSContext* cx,
     return nullptr;
   }
 
-  obj->setPrivateGCThing(referent);
+  obj->setReservedSlotGCThingAsPrivate(ENV_SLOT, referent);
   obj->setReservedSlot(OWNER_SLOT, ObjectValue(*debugger));
 
   return obj;
