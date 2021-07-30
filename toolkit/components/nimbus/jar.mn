@@ -4,6 +4,6 @@
 
 toolkit.jar:
 % resource nimbus %res/nimbus/
-  res/nimbus/lib/ (./lib/*)
+  res/nimbus/lib/ (./lib/*.jsm)
   res/nimbus/ExperimentAPI.jsm (./ExperimentAPI.jsm)
   res/nimbus/FeatureManifest.js (./FeatureManifest.js)
