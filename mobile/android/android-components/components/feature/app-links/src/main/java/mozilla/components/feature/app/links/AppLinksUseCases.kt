@@ -61,14 +61,6 @@ class AppLinksUseCases(
         return context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
     }
 
-    private fun safeParseUri(uri: String, flags: Int): Intent? {
-        return try {
-            Intent.parseUri(uri, flags)
-        } catch (e: URISyntaxException) {
-            null
-        }
-    }
-
     /**
      * Parse a URL and check if it can be handled by an app elsewhere on the Android device.
      * If that app is not available, then a market place intent is also provided.
@@ -133,14 +125,14 @@ class AppLinksUseCases(
         private fun createBrowsableIntents(url: String): RedirectData {
             val intent = safeParseUri(url, Intent.URI_INTENT_SCHEME)
             val fallbackIntent = intent?.getStringExtra(EXTRA_BROWSER_FALLBACK_URL)?.let {
-                Intent.parseUri(it, 0)
+                safeParseUri(it, 0)
             }
 
             val marketplaceIntent = intent?.`package`?.let {
                 if (includeInstallAppFallback &&
                     !context.packageManager.isPackageInstalled(it)
                 ) {
-                    Intent.parseUri(MARKET_INTENT_URI_PACKAGE_PREFIX + it, 0)
+                    safeParseUri(MARKET_INTENT_URI_PACKAGE_PREFIX + it, 0)
                 } else {
                     null
                 }
@@ -277,5 +269,14 @@ class AppLinksUseCases(
         )
 
         internal val ALWAYS_DENY_SCHEMES: Set<String> = setOf("jar", "file", "javascript", "data", "about")
+
+        @VisibleForTesting
+        internal fun safeParseUri(uri: String, flags: Int): Intent? {
+            return try {
+                Intent.parseUri(uri, flags)
+            } catch (e: URISyntaxException) {
+                null
+            }
+        }
     }
 }
