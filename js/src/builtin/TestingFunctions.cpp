@@ -1956,8 +1956,9 @@ static bool WasmIntrinsicI8VecMul(JSContext* cx, unsigned argc, Value* vp) {
 
   CallArgs args = CallArgsFromVp(argc, vp);
 
+  wasm::IntrinsicOp ops[] = {wasm::IntrinsicOp::I8VecMul};
   RootedWasmModuleObject module(cx);
-  if (!wasm::CompileIntrinsicModule(cx, wasm::IntrinsicOp::I8VecMul, &module)) {
+  if (!wasm::CompileIntrinsicModule(cx, ops, &module)) {
     ReportOutOfMemory(cx);
     return false;
   }
