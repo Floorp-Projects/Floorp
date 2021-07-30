@@ -568,8 +568,6 @@ HandlerService.prototype = {
       for (let extension of storedHandlerInfo.extensions) {
         handlerInfo.appendExtension(extension);
       }
-    } else if (this._mockedHandler) {
-      this._insertMockedHandler(handlerInfo);
     }
   },
 
@@ -733,48 +731,6 @@ HandlerService.prototype = {
       }
     }
     return "";
-  },
-
-  _mockedHandler: null,
-  _mockedProtocol: null,
-
-  _insertMockedHandler(handlerInfo) {
-    if (handlerInfo.type == this._mockedProtocol) {
-      handlerInfo.preferredApplicationHandler = this._mockedHandler;
-      handlerInfo.possibleApplicationHandlers.insertElementAt(
-        this._mockedHandler,
-        0
-      );
-    }
-  },
-
-  // test-only: mock the handler instance for a particular protocol/scheme
-  mockProtocolHandler(protocol) {
-    if (!protocol) {
-      this._mockedProtocol = null;
-      this._mockedHandler = null;
-      return;
-    }
-    this._mockedProtocol = protocol;
-    this._mockedHandler = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsILocalHandlerApp]),
-      launchWithURI(uri, context) {
-        Services.obs.notifyObservers(uri, "mocked-protocol-handler");
-      },
-      name: "Mocked handler",
-      detailedDescription: "Mocked handler for tests",
-      equals(x) {
-        return x == this;
-      },
-      executable: Services.dirsvc.get("XCurProcD", Ci.nsIFile),
-      parameterCount: 0,
-      clearParameters() {},
-      appendParameter() {},
-      getParameter() {},
-      parameterExists() {
-        return false;
-      },
-    };
   },
 };
 
