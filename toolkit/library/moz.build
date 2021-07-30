@@ -282,7 +282,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     OS_LIBS += CONFIG["XLIBS"]
     OS_LIBS += CONFIG["XEXT_LIBS"]
     OS_LIBS += CONFIG["MOZ_PANGO_LIBS"]
-    OS_LIBS += CONFIG["XT_LIBS"]
     OS_LIBS += [
         "Xrender",
     ]
