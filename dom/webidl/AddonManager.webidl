@@ -95,9 +95,6 @@ interface AddonManager : EventTarget {
    */
   Promise<boolean> reportAbuse(DOMString id);
 
-  // Indicator to content whether permissions prompts are enabled
-  readonly attribute boolean permissionPromptsEnabled;
-
   // Indicator to content whether handing off the reports to the integrated
   // abuse report panel is enabled.
   readonly attribute boolean abuseReportPanelEnabled;
