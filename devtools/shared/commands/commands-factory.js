@@ -71,7 +71,7 @@ exports.CommandsFactory = {
   },
 
   /**
-   * For now, this method is only used by browser_target_list_various_descriptors.js
+   * For now, this method is only used by browser_target_command_various_descriptors.js
    * in order to cover about:debugging codepath, where we connect to remote tabs via
    * their current outerWindowID.
    * But:
