@@ -80,11 +80,11 @@ tab-context-reopen-closed-tabs =
            *[other] Reopen Closed Tabs
         }
     .accesskey = o
-tab-context-close-tabs =
+tab-context-close-n-tabs =
     .label =
         { $tabCount ->
             [1] Close Tab
-           *[other] Close Tabs
+           *[other] Close { $tabCount } Tabs
         }
     .accesskey = C
 tab-context-move-tabs =
