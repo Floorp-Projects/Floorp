@@ -55,4 +55,8 @@ class FrameTransport {
       .getActor("MessageHandlerFrame")
       .sendCommand(command, this._messageHandler.sessionId);
   }
+
+  toString() {
+    return `[object ${this.constructor.name} ${this._messageHandler.key}]`;
+  }
 }

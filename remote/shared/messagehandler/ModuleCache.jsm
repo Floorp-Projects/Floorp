@@ -11,9 +11,12 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "chrome://remote/content/shared/Log.jsm",
   getMessageHandlerClass:
     "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 // Additional protocols might use a different root folder for their modules,
 // in which case this will no longer be a constant but will instead depend on
@@ -93,15 +96,21 @@ class ModuleCache {
       try {
         const ModuleClass = ChromeUtils.import(moduleFullPath)[moduleName];
         this._modules.set(moduleFullPath, new ModuleClass(this.messageHandler));
+        logger.trace(`Module ${moduleName} created for ${moduleFullPath}`);
       } catch (e) {
         // If the module could not be imported, set null in the module cache
         // so that the root MessageHandler can forward the message to the next
         // layer.
         this._modules.set(moduleFullPath, null);
+        logger.trace(`No module ${moduleName} found for ${moduleFullPath}`);
       }
     }
 
     return this._modules.get(moduleFullPath);
+  }
+
+  toString() {
+    return `[object ${this.constructor.name} ${this.messageHandler.key}]`;
   }
 
   _getModuleFullPath(moduleName, destination) {
