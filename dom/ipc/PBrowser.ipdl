@@ -592,15 +592,6 @@ child:
 parent:
 
     /**
-     * Child informs the parent that the graphics objects are ready for
-     * compositing.  This is sent when all pending changes have been
-     * sent to the compositor and are ready to be shown on the next composite.
-     * @see PCompositor
-     * @see RequestNotifyAfterRemotePaint
-     */
-    async RemotePaintIsReady();
-
-    /**
      * Child informs the parent that the content is ready to handle input
      * events. This is sent when the BrowserChild is created.
      */
@@ -913,14 +904,6 @@ child:
      * Navigate by key (Tab/Shift+Tab/F6/Shift+f6).
      */
     async NavigateByKey(bool aForward, bool aForDocumentNavigation);
-
-    /**
-     * The parent (chrome thread) requests that the child inform it when
-     * the graphics objects are ready to display.
-     * @see PCompositor
-     * @see RemotePaintIsReady
-     */
-    async RequestNotifyAfterRemotePaint();
 
     /**
      * Tell the child that the UI resolution changed for the containing

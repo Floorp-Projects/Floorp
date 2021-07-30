@@ -34,7 +34,6 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
  public:
   explicit ContentCompositorBridgeParent(CompositorManagerParent* aManager)
       : CompositorBridgeParentBase(aManager),
-        mNotifyAfterRemotePaint(false),
         mDestroyCalled(false) {}
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -109,12 +108,6 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
     aResolve(Nothing());
     return IPC_OK();
   }
-
-  /**
-   * Tells this CompositorBridgeParent to send a message when the compositor has
-   * received the transaction.
-   */
-  mozilla::ipc::IPCResult RecvRequestNotifyAfterRemotePaint() override;
 
   PLayerTransactionParent* AllocPLayerTransactionParent(
       const nsTArray<LayersBackend>& aBackendHints,
@@ -223,9 +216,6 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   // ourself.  This is released (deferred) in ActorDestroy().
   RefPtr<ContentCompositorBridgeParent> mSelfRef;
 
-  // If true, we should send a RemotePaintIsReady message when the layer
-  // transaction is received
-  bool mNotifyAfterRemotePaint;
   bool mDestroyCalled;
 
   RefPtr<CanvasTranslator> mCanvasTranslator;

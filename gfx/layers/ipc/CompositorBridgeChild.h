@@ -127,16 +127,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   RefPtr<webgpu::WebGPUChild> GetWebGPUChild();
 
-  /**
-   * Request that the parent tell us when graphics are ready on GPU.
-   * When we get that message, we bounce it to the BrowserParent via
-   * the BrowserChild
-   * @param browserChild The object to bounce the note to.  Non-NULL.
-   */
-  void RequestNotifyAfterRemotePaint(BrowserChild* aBrowserChild);
-
-  void CancelNotifyAfterRemotePaint(BrowserChild* aBrowserChild);
-
   // Beware that these methods don't override their super-class equivalent
   // (which are not virtual), they just overload them. All of these Send*
   // methods just add a sanity check (that it is not too late send a message)
@@ -158,7 +148,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   bool SendStopFrameTimeRecording(const uint32_t& startIndex,
                                   nsTArray<float>* intervals);
   bool SendNotifyRegionInvalidated(const nsIntRegion& region);
-  bool SendRequestNotifyAfterRemotePaint();
   bool IsSameProcess() const override;
 
   bool IPCOpen() const override { return mCanSend; }
@@ -286,8 +275,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   mozilla::ipc::IPCResult RecvReleaseSharedCompositorFrameMetrics(
       const ViewID& aId, const uint32_t& aAPZCId);
 
-  mozilla::ipc::IPCResult RecvRemotePaintIsReady();
-
   mozilla::ipc::IPCResult RecvObserveLayersUpdate(
       const LayersId& aLayersId, const LayersObserverEpoch& aEpoch,
       const bool& aActive);
@@ -339,10 +326,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   // The ViewID of the FrameMetrics is used as the key for this hash table.
   // While this should be safe to use since the ViewID is unique
   nsClassHashtable<nsUint64HashKey, SharedFrameMetricsData> mFrameMetricsTable;
-
-  // Weakly hold the BrowserChild that made a request to be alerted when
-  // the transaction has been received.
-  nsWeakPtr mWeakBrowserChild;  // type is BrowserChild
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorBridgeChild);
 
