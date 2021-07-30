@@ -8,7 +8,7 @@ const { Preferences } = ChromeUtils.import(
 );
 
 // To fully test the Remote Agent's capabilities an instance of the interface
-// needs to be used. This refers to the Rust specific implementation.
+// also needs to be used.
 const remoteAgentInstance = Cc["@mozilla.org/remote/agent;1"].createInstance(
   Ci.nsIRemoteAgent
 );
@@ -49,28 +49,23 @@ add_agent_task(async function listening() {
   is(remoteAgentInstance.listening, true, "Agent is listening");
 });
 
-add_agent_task(async function listen() {
+add_agent_task(async function remoteListeningNotification() {
+  let active;
   const port = getNonAtomicFreePort();
 
-  let boundURL;
   function observer(subject, topic, data) {
-    const prefix = "DevTools listening on ";
-    if (!data.startsWith(prefix)) {
-      return;
-    }
-
     Services.obs.removeObserver(observer, topic);
-    boundURL = Services.io.newURI(data.split(prefix)[1]);
-  }
-  Services.obs.addObserver(observer, "remote-listening");
 
+    active = data;
+  }
+
+  Services.obs.addObserver(observer, "remote-listening");
   await RemoteAgent.listen("http://localhost:" + port);
-  isnot(boundURL, undefined, "remote-listening observer notified");
-  is(
-    boundURL.port,
-    port,
-    `expected default port ${port}, got ${boundURL.port}`
-  );
+  is(active, "true", "remote-listening observer notified enabled state");
+
+  Services.obs.addObserver(observer, "remote-listening");
+  await RemoteAgent.close();
+  is(active, null, "remote-listening observer notified disabled state");
 });
 
 // TODO(ato): https://bugzil.la/1590829
