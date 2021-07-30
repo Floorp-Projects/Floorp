@@ -451,6 +451,8 @@ STUB_IMPORT_IMPL(u32, Z_envZ___cxa_thread_atexitZ_iiii, (wasm_sandbox_wasi_data*
 // errno_t environ_sizes_get(void* ctx, size_t* environ_count, size_t* environ_buf_size);
 // --- the wasm2c module evironment variable is just an empty environment
 
+// errno_t fd_prestat_get(void* ctx, fd_t fd, prestat_t* buf);
+
 ////////////// Unsupported WASI APIs
 // errno_t fd_advise(void* ctx, fd_t fd, filesize_t offset, filesize_t len, advice_t advice);
 // errno_t fd_allocate(void* ctx, fd_t fd, filesize_t offset, filesize_t len);
@@ -462,7 +464,6 @@ STUB_IMPORT_IMPL(u32, Z_envZ___cxa_thread_atexitZ_iiii, (wasm_sandbox_wasi_data*
 // errno_t fd_filestat_set_size(void* ctx, fd_t fd, filesize_t st_size);
 // errno_t fd_filestat_set_times(void* ctx, fd_t fd, timestamp_t st_atim, timestamp_t st_mtim, fstflags_t fst_flags);
 // errno_t fd_pread(void* ctx, fd_t fd, const iovec_t* iovs, size_t iovs_len, filesize_t offset, size_t* nread);
-// errno_t fd_prestat_get(void* ctx, fd_t fd, prestat_t* buf);
 // errno_t fd_prestat_dir_name(void* ctx, fd_t fd, char* path, size_t path_len);
 // errno_t fd_pwrite(void* ctx, fd_t fd, const ciovec_t* iovs, size_t iovs_len, filesize_t offset, size_t* nwritten);
 // errno_t fd_readdir(void* ctx, fd_t fd, void* buf, size_t buf_len, dircookie_t cookie, size_t* bufused);
@@ -487,8 +488,13 @@ STUB_IMPORT_IMPL(u32, Z_envZ___cxa_thread_atexitZ_iiii, (wasm_sandbox_wasi_data*
 // errno_t sock_send(void* ctx, fd_t sock, const ciovec_t* si_data, size_t si_data_len, siflags_t si_flags, size_t* so_datalen);
 // errno_t sock_shutdown(void* ctx, fd_t sock, sdflags_t how);
 
-#define WASI_DEFAULT_ERROR 63 /* __WASI_ERRNO_PERM */
-#define WASI_EINVAL 28
+// Bad file descriptor.
+#define WASI_BADF_ERROR 8
+// Invalid argument
+#define WASI_INVAL_ERROR 28
+// Operation not permitted.
+#define WASI_PERM_ERROR 63
+#define WASI_DEFAULT_ERROR WASI_PERM_ERROR
 
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_adviseZ_iijji, (u32 a, u64 b, u64 c, u32 d), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_allocateZ_iijj, (u32 a, u64 b, u64 c), WASI_DEFAULT_ERROR);
@@ -500,7 +506,6 @@ STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_filestat_getZ_iii, (u32 a, u3
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_filestat_set_sizeZ_iij, (u32 a, u64 b), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_filestat_set_timesZ_iijji, (u32 a, u64 b, u64 c, u32 d), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_preadZ_iiiiji, (u32 a, u32 b, u32 c, u64 d, u32 e), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_prestat_getZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_prestat_dir_nameZ_iiii, (u32 a, u32 b, u32 c), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_pwriteZ_iiiiji, (u32 a, u32 b, u32 c, u64 d, u32 e), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_readdirZ_iiiiji, (u32 a, u32 b, u32 c, u64 d, u32 e), WASI_DEFAULT_ERROR);
@@ -592,6 +597,16 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_environ_getZ_iii, (wasm_sandbox_wasi_
 /////////////////////////////////////////////////////////////
 ////////// File operations
 /////////////////////////////////////////////////////////////
+
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_prestat_getZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 prestat), {
+  int nfd = get_native_fd(wasi_data, fd);
+  VERBOSE_LOG("  fd_prestat_get wasm %d => native %d\n", fd, nfd);
+  if (nfd < 0) {
+    return WASI_BADF_ERROR;
+  }
+
+  return WASI_DEFAULT_ERROR;
+});
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 iov, u32 iovcnt, u32 pnum), {
   int nfd = get_native_fd(wasi_data, fd);
@@ -737,11 +752,11 @@ static int check_clock(u32 clock_id) {
 // }
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u64 max_lag, u32 out), {
   if (!check_clock(clock_id)) {
-    return WASI_EINVAL;
+    return WASI_INVAL_ERROR;
   }
 
   struct timespec out_struct;
-  int ret = os_clock_gettime(clock_id, &out_struct);
+  int ret = os_clock_gettime(wasi_data->clock_data, clock_id, &out_struct);
   wasm_i64_store(wasi_data->heap_memory, out, (u64) out_struct.tv_sec);
   wasm_i32_store(wasi_data->heap_memory, out + sizeof(u64), (u32) out_struct.tv_nsec);
   return ret;
@@ -749,11 +764,11 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (wasm_sandbox_w
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_res_getZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u32 out), {
   if (!check_clock(clock_id)) {
-    return WASI_EINVAL;
+    return WASI_INVAL_ERROR;
   }
 
   struct timespec out_struct;
-  int ret = os_clock_getres(clock_id, &out_struct);
+  int ret = os_clock_getres(wasi_data->clock_data, clock_id, &out_struct);
   wasm_i64_store(wasi_data->heap_memory, out, (u64) out_struct.tv_sec);
   wasm_i32_store(wasi_data->heap_memory, out + sizeof(u64), (u32) out_struct.tv_nsec);
   return ret;
@@ -763,11 +778,12 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_res_getZ_iii, (wasm_sandbox_was
 ////////// Misc
 /////////////////////////////////////////////////////////////
 void wasm_rt_sys_init() {
-  os_clock_init();
+  os_init();
 }
 
 void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data) {
   init_fds(wasi_data);
+  os_clock_init(&(wasi_data->clock_data));
   // Remove unused function warnings
   (void) wasm_i32_load;
   (void) wasm_i64_load;
@@ -795,5 +811,5 @@ void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data) {
 }
 
 void wasm_rt_cleanup_wasi(wasm_sandbox_wasi_data* wasi_data) {
-
+  os_clock_cleanup(&(wasi_data->clock_data));
 }

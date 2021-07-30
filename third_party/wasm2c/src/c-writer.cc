@@ -222,12 +222,16 @@ class CWriter {
   void WriteFuncDeclarations();
   void WriteFuncDeclaration(const FuncDeclaration&, const std::string&, bool add_storage_class);
   void WriteImportFuncDeclaration(const FuncDeclaration&, const std::string&);
+  std::string GetMainMemoryName();
   void WriteGlobalInitializers();
   void WriteGlobals();
+  void WriteGlobalsExport();
   void WriteGlobal(const Global&, const std::string&);
   void WriteMemories();
+  void WriteMemoriesExport();
   void WriteMemory(const std::string&);
   void WriteTables();
+  void WriteTablesExport();
   void WriteTable(const std::string&);
   void WriteDataInitializers();
   void WriteElemInitializers();
@@ -991,21 +995,68 @@ void CWriter::WriteGlobals() {
   }
 }
 
-void CWriter::WriteGlobalInitializers() {
+void CWriter::WriteGlobalsExport() {
   Index global_index = 0;
+  if (module_->globals.size() != module_->num_global_imports) {
+
+    for (const Global* global : module_->globals) {
+      bool is_import = global_index < module_->num_global_imports;
+      if (!is_import) {
+        std::string curr_global_name = GetGlobalName(global->name);
+        Writef("if (strcmp(\"%s\", name) == 0)", curr_global_name.c_str());
+        Write(OpenBrace());
+        Write("return &(sbx->", curr_global_name, ");", Newline());
+        Write(CloseBrace(), Newline());
+      }
+      ++global_index;
+    }
+  }
+}
+
+std::string CWriter::GetMainMemoryName() {
+  assert (!(module_->memories.size() == module_->num_memory_imports));
+  assert(module_->memories.size() <= 1);
+
+  std::string ret = GetGlobalName(module_->memories[0]->name);
+  return ret;
+}
+
+void CWriter::WriteGlobalInitializers() {
 
   Write(Newline(), "static void init_globals(wasm2c_sandbox_t* const sbx) ", OpenBrace());
 
-  for (const Global* global : module_->globals) {
-    bool is_import = global_index < module_->num_global_imports;
-    if (!is_import) {
-      assert(!global->init_expr.empty());
-      Write("sbx->", GlobalName(global->name), " = ");
-      WriteInitExpr(global->init_expr);
-      Write(";", Newline());
+  {
+    Index global_index = 0;
+    for (const Global* global : module_->globals) {
+      bool is_import = global_index < module_->num_global_imports;
+      if (!is_import) {
+        assert(!global->init_expr.empty());
+        Write("sbx->", GlobalName(global->name), " = ");
+        WriteInitExpr(global->init_expr);
+        Write(";", Newline());
+      }
+      ++global_index;
     }
-    ++global_index;
   }
+
+  {
+    Index global_index = 0;
+    std::string memory_name = GetMainMemoryName();
+    for (const Global* global : module_->globals) {
+      bool is_import = global_index < module_->num_global_imports;
+      if (!is_import) {
+        std::string global_name = GetGlobalName(global->name);
+        std::string global_name_expr = "sbx->" + global_name;
+        Write("WASM2C_SHADOW_MEMORY_RESERVE(&(sbx->", memory_name ,"), ", global_name_expr,  ", sizeof(", global_name_expr, "));", Newline());
+        if (global_name == "w2c___heap_base") {
+          Write("WASM2C_SHADOW_MEMORY_MARK_GLOBALS_HEAP_BOUNDARY(&(sbx->", memory_name, "), ", global_name_expr, ");", Newline());
+        }
+      }
+
+      ++global_index;
+    }
+  }
+
   Write(CloseBrace(), Newline());
 }
 
@@ -1029,6 +1080,25 @@ void CWriter::WriteMemories() {
   }
 }
 
+void CWriter::WriteMemoriesExport() {
+  if (module_->memories.size() == module_->num_memory_imports)
+    return;
+
+  assert(module_->memories.size() <= 1);
+  Index memory_index = 0;
+  for (const Memory* memory : module_->memories) {
+    bool is_import = memory_index < module_->num_memory_imports;
+    if (!is_import) {
+      std::string curr_memory_name = GetGlobalName(memory->name);
+      Writef("if (strcmp(\"%s\", name) == 0)", curr_memory_name.c_str());
+      Write(OpenBrace());
+      Write("return &(sbx->", curr_memory_name, ");", Newline());
+      Write(CloseBrace(), Newline());
+    }
+    ++memory_index;
+  }
+}
+
 void CWriter::WriteMemory(const std::string& name) {
   Write("wasm_rt_memory_t ", name, ";");
 }
@@ -1047,6 +1117,25 @@ void CWriter::WriteTables() {
       Write(Newline());
       WriteTable(curr_table_name);
       Write(Newline());
+    }
+    ++table_index;
+  }
+}
+
+void CWriter::WriteTablesExport() {
+  if (module_->tables.size() == module_->num_table_imports)
+    return;
+
+  assert(module_->tables.size() <= 1);
+  Index table_index = 0;
+  for (const Table* table : module_->tables) {
+    bool is_import = table_index < module_->num_table_imports;
+    if (!is_import) {
+      std::string curr_table_name = GetGlobalName(table->name);
+      Writef("if (strcmp(\"%s\", name) == 0)", curr_table_name.c_str());
+      Write(OpenBrace());
+      Write("return &(sbx->", curr_table_name, ");", Newline());
+      Write(CloseBrace(), Newline());
     }
     ++table_index;
   }
@@ -1156,24 +1245,10 @@ void CWriter::WriteElemInitializers() {
 void CWriter::WriteExportLookup() {
   Write(Newline(), "static void* lookup_wasm2c_nonfunc_export(void* sbx_ptr, const char* name) ", OpenBrace());
   Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
-  for (const Export* export_ : module_->exports) {
-    switch (export_->kind) {
-      case ExternalKind::Func: {
-        break;
-      }
-      case ExternalKind::Global :
-      case ExternalKind::Memory :
-      case ExternalKind::Table: {
-        Writef("if (strcmp(\"%s\", name) == 0)", export_->name.c_str());
-        Write(OpenBrace());
-        Write("return &(sbx->w2c_", export_->name, ");", Newline());
-        Write(CloseBrace(), Newline());
-        break;
-      }
-      default:
-        WABT_UNREACHABLE;
-    }
-  }
+
+  WriteMemoriesExport();
+  WriteTablesExport();
+  WriteGlobalsExport();
 
   Write("return 0;", Newline());
   Write(CloseBrace(), Newline());
@@ -1218,7 +1293,7 @@ void CWriter::WriteCallbackAddRemove() {
       Write(CloseBrace(), Newline());
     }
     Write(CloseBrace(), Newline());
-    Write("TRAP(CALL_INDIRECT);", Newline());
+    Write("(void) TRAP(CALL_INDIRECT);", Newline());
   }
   Write(CloseBrace(), Newline());
 
@@ -1285,8 +1360,16 @@ void CWriter::Write(const Func& func) {
   local_sym_map_.clear();
   stack_var_sym_map_.clear();
 
-  Write(GetFuncStaticOrExport(GetGlobalName(func.name)), ResultType(func.decl.sig.result_types), " ",
-        GlobalName(func.name), "(");
+  std::string func_name_suffix;
+  auto out_func_name = GetGlobalName(func.name);
+
+  if (out_func_name == "w2c_dlmalloc" || out_func_name == "w2c_dlfree")
+  {
+    func_name_suffix = "_wrapped";
+  }
+
+  Write(GetFuncStaticOrExport(out_func_name), ResultType(func.decl.sig.result_types), " ",
+        out_func_name + func_name_suffix, "(");
   WriteParamsAndLocals();
   Write("FUNC_PROLOGUE;", Newline());
 
@@ -1316,6 +1399,22 @@ void CWriter::Write(const Func& func) {
   stream_->WriteData(buf->data.data(), buf->data.size());
 
   Write(CloseBrace());
+
+  std::string memory_name = GetMainMemoryName();
+  if (out_func_name == "w2c_dlmalloc") {
+    Write(Newline(), Newline());
+    Write(GetFuncStaticOrExport(out_func_name), "u32 w2c_dlmalloc(wasm2c_sandbox_t* const sbx, u32 ptr_size) ", OpenBrace());
+    Write("u32 ret = w2c_dlmalloc_wrapped(sbx, ptr_size);", Newline());
+    Write("WASM2C_SHADOW_MEMORY_DLMALLOC(&(sbx->", memory_name, "), ret, ptr_size);", Newline());
+    Write("return ret;", Newline());
+    Write(CloseBrace());
+  } else if (out_func_name == "w2c_dlfree") {
+    Write(Newline(), Newline());
+    Write(GetFuncStaticOrExport(out_func_name), "void w2c_dlfree(wasm2c_sandbox_t* const sbx, u32 ptr) ", OpenBrace());
+    Write("WASM2C_SHADOW_MEMORY_DLFREE(&(sbx->", memory_name, "), ptr);", Newline());
+    Write("w2c_dlfree_wrapped(sbx, ptr);", Newline());
+    Write(CloseBrace());
+  }
 
   func_stream_.Clear();
   func_ = nullptr;
@@ -2100,6 +2199,7 @@ void CWriter::Write(const LoadExpr& expr) {
         "), (u64)(", StackVar(0), ")");
   if (expr.offset != 0)
     Write(" + ", expr.offset, "u");
+  Write(", \"", GetGlobalName(func_->name), "\"");
   Write(");", Newline());
   DropTypes(1);
   PushType(result_type);
@@ -2128,7 +2228,9 @@ void CWriter::Write(const StoreExpr& expr) {
   Write(func, "(&(sbx->", ExternalRef(memory->name), "), (u64)(", StackVar(1), ")");
   if (expr.offset != 0)
     Write(" + ", expr.offset);
-  Write(", ", StackVar(0), ");", Newline());
+  Write(", ", StackVar(0));
+  Write(", \"", GetGlobalName(func_->name), "\"");
+  Write(");", Newline());
   DropTypes(2);
 }
 
