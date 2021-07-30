@@ -58,7 +58,6 @@
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmCraneliftCompile.h"
 #include "wasm/WasmInstance.h"
-#include "wasm/WasmIntrinsic.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmProcess.h"
@@ -344,12 +343,14 @@ bool wasm::AnyCompilerAvailable(JSContext* cx) {
 JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
 
-bool wasm::IsSimdPrivilegedContext(JSContext* cx) {
+#ifdef ENABLE_WASM_SIMD_WORMHOLE
+static bool IsSimdPrivilegedContext(JSContext* cx) {
   // This may be slightly more lenient than we want in an ideal world, but it
   // remains safe.
   return cx->realm() && cx->realm()->principals() &&
          cx->realm()->principals()->isSystemOrAddonPrincipal();
 }
+#endif
 
 bool wasm::SimdWormholeAvailable(JSContext* cx) {
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
@@ -4985,27 +4986,6 @@ static bool WebAssembly_instantiateStreaming(JSContext* cx, unsigned argc,
   return true;
 }
 
-#ifdef ENABLE_WASM_MOZ_INTGEMM
-
-static bool WebAssembly_mozIntGemm(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  RootedWasmModuleObject module(cx);
-  if (!wasm::CompileIntrinsicModule(cx, mozilla::Span<IntrinsicOp>(),
-                                    Shareable::True, &module)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  args.rval().set(ObjectValue(*module.get()));
-  return true;
-}
-
-static const JSFunctionSpec WebAssembly_mozIntGemm_methods[] = {
-    JS_FN("mozIntGemm", WebAssembly_mozIntGemm, 0, JSPROP_ENUMERATE),
-    JS_FS_END};
-
-#endif  // ENABLE_WASM_MOZ_INTGEMM
-
 static const JSFunctionSpec WebAssembly_static_methods[] = {
     JS_FN(js_toSource_str, WebAssembly_toSource, 0, 0),
     JS_FN("compile", WebAssembly_compile, 1, JSPROP_ENUMERATE),
@@ -5029,37 +5009,14 @@ static JSObject* CreateWebAssemblyObject(JSContext* cx, JSProtoKey key) {
                                         proto);
 }
 
-struct NameAndProtoKey {
-  const char* const name;
-  JSProtoKey key;
-};
-
-static bool WebAssemblyDefineConstructor(JSContext* cx,
-                                         Handle<WasmNamespaceObject*> wasm,
-                                         NameAndProtoKey entry,
-                                         MutableHandleValue ctorValue,
-                                         MutableHandleId id) {
-  JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, entry.key);
-  if (!ctor) {
-    return false;
-  }
-  ctorValue.setObject(*ctor);
-
-  JSAtom* className = Atomize(cx, entry.name, strlen(entry.name));
-  if (!className) {
-    return false;
-  }
-  id.set(AtomToId(className));
-
-  if (!DefineDataProperty(cx, wasm, id, ctorValue, 0)) {
-    return false;
-  }
-  return true;
-}
-
 static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
                                    HandleObject proto) {
   Handle<WasmNamespaceObject*> wasm = object.as<WasmNamespaceObject>();
+
+  struct NameAndProtoKey {
+    const char* const name;
+    JSProtoKey key;
+  };
 
   constexpr NameAndProtoKey entries[] = {
       {"Module", JSProto_WasmModule},
@@ -5067,38 +5024,37 @@ static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
       {"Memory", JSProto_WasmMemory},
       {"Table", JSProto_WasmTable},
       {"Global", JSProto_WasmGlobal},
+#ifdef ENABLE_WASM_EXCEPTIONS
+      {"Tag", JSProto_WasmTag},
+      {"Exception", JSProto_WasmException},
+#endif
       {"CompileError", GetExceptionProtoKey(JSEXN_WASMCOMPILEERROR)},
       {"LinkError", GetExceptionProtoKey(JSEXN_WASMLINKERROR)},
       {"RuntimeError", GetExceptionProtoKey(JSEXN_WASMRUNTIMEERROR)},
   };
+
   RootedValue ctorValue(cx);
   RootedId id(cx);
   for (const auto& entry : entries) {
-    if (!WebAssemblyDefineConstructor(cx, wasm, entry, &ctorValue, &id)) {
+    const char* name = entry.name;
+    JSProtoKey key = entry.key;
+
+    JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, key);
+    if (!ctor) {
+      return false;
+    }
+    ctorValue.setObject(*ctor);
+
+    JSAtom* className = Atomize(cx, name, strlen(name));
+    if (!className) {
+      return false;
+    }
+    id.set(AtomToId(className));
+
+    if (!DefineDataProperty(cx, wasm, id, ctorValue, 0)) {
       return false;
     }
   }
-
-#ifdef ENABLE_WASM_EXCEPTIONS
-  if (ExceptionsAvailable(cx)) {
-    constexpr NameAndProtoKey exceptionEntries[] = {
-      {"Tag", JSProto_WasmTag},
-      {"Exception", JSProto_WasmException},
-    };
-    for (const auto& entry : exceptionEntries) {
-      if (!WebAssemblyDefineConstructor(cx, wasm, entry, &ctorValue, &id)) {
-        return false;
-      }
-    }
-  }
-#endif
-
-#ifdef ENABLE_WASM_MOZ_INTGEMM
-  if (MozIntGemmAvailable(cx) &&
-      !JS_DefineFunctions(cx, wasm, WebAssembly_mozIntGemm_methods)) {
-    return false;
-  }
-#endif
 
   return true;
 }

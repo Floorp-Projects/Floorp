@@ -22,7 +22,6 @@
 #include "mozilla/Span.h"
 
 #include "wasm/WasmBuiltins.h"
-#include "wasm/WasmCompileArgs.h"
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmTypeDecls.h"
 #include "wasm/WasmTypeDef.h"
@@ -49,9 +48,10 @@ struct Intrinsic {
   static const Intrinsic& getFromOp(IntrinsicOp op);
 };
 
-// Compile and return the intrinsic module for a given set of intrinsic ops.
-bool CompileIntrinsicModule(JSContext* cx, const mozilla::Span<IntrinsicOp> ops,
-                            Shareable sharedMemory,
+// Compile and return the intrinsic module for a given intrinsic op. This only
+// allows one intrinsic to be compiled at a time, but eventually we will allow
+// multiple to share a module.
+bool CompileIntrinsicModule(JSContext* cx, IntrinsicOp op,
                             MutableHandleWasmModuleObject result);
 
 }  // namespace wasm
