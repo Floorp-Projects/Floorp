@@ -3,10 +3,6 @@
  */
 "use strict";
 
-const { L10nRegistry } = ChromeUtils.import(
-  "resource://gre/modules/L10nRegistry.jsm"
-);
-
 const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
@@ -159,7 +155,9 @@ add_task(async function test_basic_lifecycle() {
 
   // Make sure that `und` locale is not installed.
   equal(
-    L10nRegistry.getAvailableLocales().includes("und"),
+    L10nRegistry.getInstance()
+      .getAvailableLocales()
+      .includes("und"),
     false,
     "und not installed"
   );
@@ -176,7 +174,9 @@ add_task(async function test_basic_lifecycle() {
 
   // Now make sure that `und` locale is available.
   equal(
-    L10nRegistry.getAvailableLocales().includes("und"),
+    L10nRegistry.getInstance()
+      .getAvailableLocales()
+      .includes("und"),
     true,
     "und is installed"
   );
@@ -190,7 +190,9 @@ add_task(async function test_basic_lifecycle() {
 
   // It is not available after the langpack has been disabled.
   equal(
-    L10nRegistry.getAvailableLocales().includes("und"),
+    L10nRegistry.getInstance()
+      .getAvailableLocales()
+      .includes("und"),
     false,
     "und not installed"
   );
@@ -206,7 +208,9 @@ add_task(async function test_basic_lifecycle() {
 
   // After re-enabling it, the `und` locale is available again.
   equal(
-    L10nRegistry.getAvailableLocales().includes("und"),
+    L10nRegistry.getInstance()
+      .getAvailableLocales()
+      .includes("und"),
     true,
     "und is installed"
   );
@@ -220,7 +224,9 @@ add_task(async function test_basic_lifecycle() {
 
   // After the langpack has been uninstalled, no more `und` in locales.
   equal(
-    L10nRegistry.getAvailableLocales().includes("und"),
+    L10nRegistry.getInstance()
+      .getAvailableLocales()
+      .includes("und"),
     false,
     "und not installed"
   );
@@ -243,7 +249,7 @@ add_task(async function test_locale_registries() {
 
   {
     // Toolkit string
-    let bundles = L10nRegistry.generateBundlesSync(
+    let bundles = L10nRegistry.getInstance().generateBundlesSync(
       ["und"],
       ["toolkit_test.ftl"]
     );
@@ -254,7 +260,10 @@ add_task(async function test_locale_registries() {
 
   {
     // Browser string
-    let bundles = L10nRegistry.generateBundlesSync(["und"], ["browser.ftl"]);
+    let bundles = L10nRegistry.getInstance().generateBundlesSync(
+      ["und"],
+      ["browser.ftl"]
+    );
     let bundle0 = bundles.next().value;
     ok(bundle0);
     equal(bundle0.hasMessage("message-browser"), true);
@@ -289,14 +298,20 @@ add_task(async function test_locale_registries_async() {
 
   {
     // Toolkit string
-    let bundles = L10nRegistry.generateBundles(["und"], ["toolkit_test.ftl"]);
+    let bundles = L10nRegistry.getInstance().generateBundles(
+      ["und"],
+      ["toolkit_test.ftl"]
+    );
     let bundle0 = (await bundles.next()).value;
     equal(bundle0.hasMessage("message-id1"), true);
   }
 
   {
     // Browser string
-    let bundles = L10nRegistry.generateBundles(["und"], ["browser.ftl"]);
+    let bundles = L10nRegistry.getInstance().generateBundles(
+      ["und"],
+      ["browser.ftl"]
+    );
     let bundle0 = (await bundles.next()).value;
     equal(bundle0.hasMessage("message-browser"), true);
   }
@@ -342,7 +357,9 @@ add_task(async function test_langpack_app_shutdown() {
 add_task(async function test_amazing_disappearing_langpacks() {
   let check = yes => {
     equal(
-      L10nRegistry.getAvailableLocales().includes("und"),
+      L10nRegistry.getInstance()
+        .getAvailableLocales()
+        .includes("und"),
       yes,
       "check L10nRegistry"
     );

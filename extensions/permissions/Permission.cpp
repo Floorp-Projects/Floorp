@@ -10,6 +10,7 @@
 #include "nsNetUtil.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_permissions.h"
+#include "mozilla/PermissionManager.h"
 
 namespace mozilla {
 
@@ -33,9 +34,7 @@ already_AddRefed<nsIPrincipal> Permission::ClonePrincipalForPermission(
   MOZ_ASSERT(aPrincipal);
 
   mozilla::OriginAttributes attrs = aPrincipal->OriginAttributesRef();
-  if (!StaticPrefs::permissions_isolateBy_userContext()) {
-    attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
-  }
+  PermissionManager::MaybeStripOriginAttributes(false, attrs);
 
   nsAutoCString originNoSuffix;
   nsresult rv = aPrincipal->GetOriginNoSuffix(originNoSuffix);
@@ -105,21 +104,6 @@ Permission::Matches(nsIPrincipal* aPrincipal, bool aExactHost, bool* aMatches) {
   NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aMatches);
 
-  *aMatches = false;
-
-  nsCOMPtr<nsIPrincipal> principal =
-      Permission::ClonePrincipalForPermission(aPrincipal);
-  if (!principal) {
-    *aMatches = false;
-    return NS_OK;
-  }
-
-  return MatchesPrincipalForPermission(principal, aExactHost, aMatches);
-}
-
-NS_IMETHODIMP
-Permission::MatchesPrincipalForPermission(nsIPrincipal* aPrincipal,
-                                          bool aExactHost, bool* aMatches) {
   return mPrincipal->EqualsForPermission(aPrincipal, aExactHost, aMatches);
 }
 

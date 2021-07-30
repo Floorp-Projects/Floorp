@@ -91,6 +91,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
+#include "mozilla/intl/L10nRegistry.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -1330,10 +1331,13 @@ void ContentChild::InitXPCOM(
 
   RecvSetOffline(aXPCOMInit.isOffline());
   RecvSetConnectivity(aXPCOMInit.isConnected());
-  // XXX(Bug 1633675) The LocaleService calls could also move the arguments.
+
   LocaleService::GetInstance()->AssignAppLocales(aXPCOMInit.appLocales());
   LocaleService::GetInstance()->AssignRequestedLocales(
       aXPCOMInit.requestedLocales());
+
+  L10nRegistry::RegisterFileSourcesFromParentProcess(
+      aXPCOMInit.l10nFileSources());
 
   RecvSetCaptivePortalState(aXPCOMInit.captivePortalState());
   RecvBidiKeyboardNotify(aXPCOMInit.isLangRTL(),
@@ -2352,6 +2356,12 @@ mozilla::ipc::IPCResult ContentChild::RecvRegisterStringBundles(
         descriptor.bundleURL(), descriptor.mapFile(), descriptor.mapSize());
   }
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvUpdateL10nFileSources(
+    nsTArray<mozilla::dom::L10nFileSourceDescriptor>&& aDescriptors) {
+  L10nRegistry::RegisterFileSourcesFromParentProcess(aDescriptors);
   return IPC_OK();
 }
 

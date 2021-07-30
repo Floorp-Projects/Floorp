@@ -568,11 +568,6 @@ JS_PUBLIC_API JSObject* JS_CloneObject(JSContext* cx, HandleObject obj,
                                 JSMSG_CANT_CLONE_OBJECT);
       return nullptr;
     }
-
-    if (obj->as<NativeObject>().hasPrivate()) {
-      clone->as<NativeObject>().setPrivate(
-          obj->as<NativeObject>().getPrivate());
-    }
   } else {
     auto* handler = GetProxyHandler(obj);
 

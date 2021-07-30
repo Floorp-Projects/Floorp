@@ -31,6 +31,7 @@ class DebuggerScript : public NativeObject {
   static const JSClass class_;
 
   enum {
+    SCRIPT_SLOT,
     OWNER_SLOT,
 
     RESERVED_SLOTS,
@@ -49,6 +50,8 @@ class DebuggerScript : public NativeObject {
   inline gc::Cell* getReferentCell() const;
   inline js::BaseScript* getReferentScript() const;
   inline DebuggerScriptReferent getReferent() const;
+
+  void clearReferent() { clearReservedSlotGCThingAsPrivate(SCRIPT_SLOT); }
 
   static DebuggerScript* check(JSContext* cx, HandleValue v);
 

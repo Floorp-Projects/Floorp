@@ -4,14 +4,14 @@
 
 "use strict";
 
+var EXPORTED_SYMBOLS = ["Marionette", "MarionetteFactory"];
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ComponentUtils: "resource://gre/modules/ComponentUtils.jsm",
-
   EnvironmentPrefs: "chrome://remote/content/marionette/prefs.js",
   Log: "chrome://remote/content/shared/Log.jsm",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
@@ -68,6 +68,9 @@ const isRemote =
 class MarionetteParentProcess {
   constructor() {
     this.server = null;
+
+    this.classID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
+    this.helpInfo = "  --marionette       Enable remote control server.\n";
 
     // holds reference to ChromeWindow
     // used to run GFX sanity tests on Windows
@@ -300,6 +303,10 @@ class MarionetteParentProcess {
 }
 
 class MarionetteContentProcess {
+  constructor() {
+    this.classID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
+  }
+
   get running() {
     let reply = Services.cpmm.sendSyncMessage("Marionette:IsRunning");
     if (reply.length == 0) {
@@ -314,37 +321,14 @@ class MarionetteContentProcess {
   }
 }
 
-const MarionetteFactory = {
-  instance_: null,
+var Marionette;
+if (isRemote) {
+  Marionette = new MarionetteContentProcess();
+} else {
+  Marionette = new MarionetteParentProcess();
+}
 
-  createInstance(outer, iid) {
-    if (outer) {
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    }
-
-    if (!this.instance_) {
-      if (isRemote) {
-        this.instance_ = new MarionetteContentProcess();
-      } else {
-        this.instance_ = new MarionetteParentProcess();
-      }
-    }
-
-    return this.instance_.QueryInterface(iid);
-  },
+// This is used by the XPCOM codepath which expects a constructor
+const MarionetteFactory = function() {
+  return Marionette;
 };
-
-function Marionette() {}
-
-Marionette.prototype = {
-  classDescription: "Marionette component",
-  classID: Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}"),
-  contractID: "@mozilla.org/remote/marionette;1",
-
-  /* eslint-disable-next-line camelcase */
-  _xpcom_factory: MarionetteFactory,
-
-  helpInfo: "  --marionette       Enable remote control server.\n",
-};
-
-this.NSGetFactory = ComponentUtils.generateNSGetFactory([Marionette]);

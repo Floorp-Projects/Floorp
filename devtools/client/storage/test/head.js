@@ -53,7 +53,6 @@ const STORAGE_PREF = "devtools.storage.enabled";
 const DOM_CACHE = "dom.caches.enabled";
 const DUMPEMIT_PREF = "devtools.dump.emit";
 const DEBUGGERLOG_PREF = "devtools.debugger.log";
-const TARGET_SWITCHING_PREF = "devtools.target-switching.server.enabled";
 
 // Allows Cache API to be working on usage `http` test page
 const CACHES_ON_HTTP_PREF = "dom.caches.testing.enabled";
@@ -224,13 +223,6 @@ function forceCollections() {
   Cu.forceGC();
   Cu.forceCC();
   Cu.forceShrinkingGC();
-}
-
-/**
- * Enables server target switching
- */
-async function enableTargetSwitching() {
-  await pushPref(TARGET_SWITCHING_PREF, true);
 }
 
 // Sends a click event on the passed DOM node in an async manner

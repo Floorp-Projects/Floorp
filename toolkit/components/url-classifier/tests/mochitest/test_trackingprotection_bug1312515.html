@@ -130,7 +130,8 @@ async function test() {
     {"set": [["network.http.tailing.enabled", false],
              ["privacy.trackingprotection.enabled", false],
              ["privacy.trackingprotection.annotate_channels", true],
-             ["privacy.trackingprotection.lower_network_priority", true]]});
+             ["privacy.trackingprotection.lower_network_priority", true],
+             ["dom.security.https_first", false]]});
   await UrlClassifierTestUtils.addTestTrackers();
   testOnWindow(false, async function(aWindow) {
     testWindow = aWindow;

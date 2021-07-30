@@ -1151,7 +1151,6 @@ static bool InitializePropertiesFromCompatibleNativeObject(
     return true;
   }
 
-  MOZ_ASSERT(!src->hasPrivate());
   RootedShape shape(cx);
   if (src->staticPrototype() == dst->staticPrototype()) {
     shape = src->shape();
@@ -1295,8 +1294,8 @@ template XDRResult js::XDRObjectLiteral(XDRState<XDR_DECODE>* xdr,
 
 /* static */
 bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
-                                   NativeObject* old, HandleValueVector values,
-                                   void* priv) {
+                                   NativeObject* old,
+                                   HandleValueVector values) {
   // This object has just been swapped with some other object, and its shape
   // no longer reflects its allocated size. Correct this information and
   // fill the slots in with the specified values.
@@ -1311,12 +1310,6 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
       return false;
     }
     MOZ_ASSERT(obj->shape()->numFixedSlots() == nfixed);
-  }
-
-  if (obj->hasPrivate()) {
-    obj->setPrivate(priv);
-  } else {
-    MOZ_ASSERT(!priv);
   }
 
   uint32_t oldDictionarySlotSpan =
@@ -1528,9 +1521,7 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
 
     // Remember the original values from the objects.
     RootedValueVector avals(cx);
-    void* apriv = nullptr;
     if (na) {
-      apriv = na->hasPrivate() ? na->getPrivate() : nullptr;
       for (size_t i = 0; i < na->slotSpan(); i++) {
         if (!avals.append(na->getSlot(i))) {
           oomUnsafe.crash("JSObject::swap");
@@ -1538,9 +1529,7 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
       }
     }
     RootedValueVector bvals(cx);
-    void* bpriv = nullptr;
     if (nb) {
-      bpriv = nb->hasPrivate() ? nb->getPrivate() : nullptr;
       for (size_t i = 0; i < nb->slotSpan(); i++) {
         if (!bvals.append(nb->getSlot(i))) {
           oomUnsafe.crash("JSObject::swap");
@@ -1573,14 +1562,12 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
     js_memcpy(b, &tmp, sizeof tmp);
 
     if (na) {
-      if (!NativeObject::fillInAfterSwap(cx, b.as<NativeObject>(), na, avals,
-                                         apriv)) {
+      if (!NativeObject::fillInAfterSwap(cx, b.as<NativeObject>(), na, avals)) {
         oomUnsafe.crash("fillInAfterSwap");
       }
     }
     if (nb) {
-      if (!NativeObject::fillInAfterSwap(cx, a.as<NativeObject>(), nb, bvals,
-                                         bpriv)) {
+      if (!NativeObject::fillInAfterSwap(cx, a.as<NativeObject>(), nb, bvals)) {
         oomUnsafe.crash("fillInAfterSwap");
       }
     }
@@ -3271,10 +3258,6 @@ void JSObject::dump(js::GenericPrinter& out) const {
   out.putChar('\n');
 
   if (nobj) {
-    if (clasp->flags & JSCLASS_HAS_PRIVATE) {
-      out.printf("  private %p\n", nobj->getPrivate());
-    }
-
     uint32_t reserved = JSCLASS_RESERVED_SLOTS(clasp);
     if (reserved) {
       out.printf("  reserved slots:\n");
@@ -3825,7 +3808,6 @@ void JSObject::debugCheckNewObject(Shape* shape, js::gc::AllocKind allocKind,
   // included in numFixedSlots.
   if (!clasp->isNativeObject()) {
     MOZ_ASSERT_IF(!clasp->isProxyObject(), JSCLASS_RESERVED_SLOTS(clasp) == 0);
-    MOZ_ASSERT(!clasp->hasPrivate());
     MOZ_ASSERT_IF(shape, shape->numFixedSlots() == 0);
   }
 }

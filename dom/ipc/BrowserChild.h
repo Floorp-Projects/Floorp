@@ -721,8 +721,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvNavigateByKey(const bool& aForward,
                                             const bool& aForDocumentNavigation);
 
-  mozilla::ipc::IPCResult RecvRequestNotifyAfterRemotePaint();
-
   mozilla::ipc::IPCResult RecvSuppressDisplayport(const bool& aEnabled);
 
   mozilla::ipc::IPCResult RecvScrollbarPreferenceChanged(ScrollbarPreference);

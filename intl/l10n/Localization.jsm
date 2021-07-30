@@ -21,7 +21,6 @@
 /* eslint no-console: ["error", { allow: ["warn", "error"] }] */
 /* global console */
 
-const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
@@ -183,12 +182,12 @@ class CachedSyncIterable extends CachedIterable {
  */
 function defaultGenerateBundles(resourceIds) {
   const appLocales = Services.locale.appLocalesAsBCP47;
-  return L10nRegistry.generateBundles(appLocales, resourceIds);
+  return L10nRegistry.getInstance().generateBundles(appLocales, resourceIds);
 }
 
 function defaultGenerateBundlesSync(resourceIds) {
   const appLocales = Services.locale.appLocalesAsBCP47;
-  return L10nRegistry.generateBundlesSync(appLocales, resourceIds);
+  return L10nRegistry.getInstance().generateBundlesSync(appLocales, resourceIds);
 }
 
 function maybeReportErrorToGecko(error) {

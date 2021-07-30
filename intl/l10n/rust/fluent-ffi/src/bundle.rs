@@ -3,15 +3,18 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::builtins::{FluentDateTime, FluentDateTimeOptions, NumberFormat};
+use cstr::cstr;
 pub use fluent::{FluentArgs, FluentBundle, FluentError, FluentResource, FluentValue};
 use fluent_pseudo::transform_dom;
 pub use intl_memoizer::IntlLangMemoizer;
 use nsstring::{nsACString, nsCString};
 use std::borrow::Cow;
+use std::ffi::CStr;
 use std::mem;
 use std::rc::Rc;
 use thin_vec::ThinVec;
 use unic_langid::LanguageIdentifier;
+use xpcom::interfaces::nsIPrefBranch;
 
 pub type FluentBundleRc = FluentBundle<Rc<FluentResource>>;
 
@@ -40,6 +43,109 @@ fn format_numbers(num: &FluentValue, intls: &IntlLangMemoizer) -> Option<String>
         }
         _ => None,
     }
+}
+
+fn get_string_pref(name: &CStr) -> Option<nsCString> {
+    let mut value = nsCString::new();
+    let prefs_service =
+        xpcom::get_service::<nsIPrefBranch>(cstr!("@mozilla.org/preferences-service;1"))?;
+    unsafe {
+        prefs_service
+            .GetCharPref(name.as_ptr(), &mut *value)
+            .to_result()
+            .ok()?;
+    }
+    Some(value)
+}
+
+fn get_bool_pref(name: &CStr) -> Option<bool> {
+    let mut value = false;
+    let prefs_service =
+        xpcom::get_service::<nsIPrefBranch>(cstr!("@mozilla.org/preferences-service;1"))?;
+    unsafe {
+        prefs_service
+            .GetBoolPref(name.as_ptr(), &mut value)
+            .to_result()
+            .ok()?;
+    }
+    Some(value)
+}
+
+pub fn adapt_bundle_for_gecko(bundle: &mut FluentBundleRc, pseudo_strategy: Option<&nsACString>) {
+    bundle.set_formatter(Some(format_numbers));
+
+    bundle
+        .add_function("PLATFORM", |_args, _named_args| {
+            if cfg!(target_os = "linux") {
+                "linux".into()
+            } else if cfg!(target_os = "windows") {
+                "windows".into()
+            } else if cfg!(target_os = "macos") {
+                "macos".into()
+            } else if cfg!(target_os = "android") {
+                "android".into()
+            } else {
+                "other".into()
+            }
+        })
+        .expect("Failed to add a function to the bundle.");
+    bundle
+        .add_function("NUMBER", |args, named| {
+            if let Some(FluentValue::Number(n)) = args.get(0) {
+                let mut num = n.clone();
+                num.options.merge(named);
+                FluentValue::Number(num)
+            } else {
+                FluentValue::None
+            }
+        })
+        .expect("Failed to add a function to the bundle.");
+    bundle
+        .add_function("DATETIME", |args, named| {
+            if let Some(FluentValue::Number(n)) = args.get(0) {
+                let mut options = FluentDateTimeOptions::default();
+                options.merge(&named);
+                FluentValue::Custom(Box::new(FluentDateTime::new(n.value, options)))
+            } else {
+                FluentValue::None
+            }
+        })
+        .expect("Failed to add a function to the bundle.");
+
+    enum PseudoStrategy {
+        Accented,
+        Bidi,
+        None,
+    }
+    // This is quirky because we can't coerce Option<&nsACString> and Option<nsCString>
+    // into bytes easily without allocating.
+    let strategy_kind = match pseudo_strategy.map(|s| &s[..]) {
+        Some(b"accented") => PseudoStrategy::Accented,
+        Some(b"bidi") => PseudoStrategy::Bidi,
+        _ => {
+            if let Some(pseudo_strategy) = get_string_pref(cstr!("intl.l10n.pseudo")) {
+                match &pseudo_strategy[..] {
+                    b"accented" => PseudoStrategy::Accented,
+                    b"bidi" => PseudoStrategy::Bidi,
+                    _ => PseudoStrategy::None,
+                }
+            } else {
+                PseudoStrategy::None
+            }
+        }
+    };
+    match strategy_kind {
+        PseudoStrategy::Accented => bundle.set_transform(Some(transform_accented)),
+        PseudoStrategy::Bidi => bundle.set_transform(Some(transform_bidi)),
+        PseudoStrategy::None => bundle.set_transform(None),
+    }
+
+    // Temporarily disable bidi isolation due to Microsoft not supporting FSI/PDI.
+    // See bug 1439018 for details.
+    let default_use_isolating = false;
+    let use_isolating =
+        get_bool_pref(cstr!("intl.l10n.enable-bidi-marks")).unwrap_or(default_use_isolating);
+    bundle.set_use_isolating(use_isolating);
 }
 
 #[no_mangle]
@@ -96,51 +202,8 @@ fn fluent_bundle_new_internal(
 
     bundle.set_formatter(Some(format_numbers));
 
-    bundle
-        .add_function("PLATFORM", |_args, _named_args| {
-            if cfg!(target_os = "linux") {
-                "linux".into()
-            } else if cfg!(target_os = "windows") {
-                "windows".into()
-            } else if cfg!(target_os = "macos") {
-                "macos".into()
-            } else if cfg!(target_os = "android") {
-                "android".into()
-            } else {
-                "other".into()
-            }
-        })
-        .expect("Failed to add a function to the bundle.");
-    bundle
-        .add_function("NUMBER", |args, named| {
-            if let Some(FluentValue::Number(n)) = args.get(0) {
-                let mut num = n.clone();
-                num.options.merge(named);
-                FluentValue::Number(num)
-            } else {
-                FluentValue::None
-            }
-        })
-        .expect("Failed to add a function to the bundle.");
-    bundle
-        .add_function("DATETIME", |args, named| {
-            if let Some(FluentValue::Number(n)) = args.get(0) {
-                let mut options = FluentDateTimeOptions::default();
-                options.merge(&named);
-                FluentValue::Custom(Box::new(FluentDateTime::new(n.value, options)))
-            } else {
-                FluentValue::None
-            }
-        })
-        .expect("Failed to add a function to the bundle.");
+    adapt_bundle_for_gecko(&mut bundle, Some(pseudo_strategy));
 
-    if !pseudo_strategy.is_empty() {
-        match &pseudo_strategy[..] {
-            b"accented" => bundle.set_transform(Some(transform_accented)),
-            b"bidi" => bundle.set_transform(Some(transform_bidi)),
-            _ => bundle.set_transform(None),
-        }
-    }
     Box::new(bundle)
 }
 

@@ -2071,7 +2071,7 @@ random-if(useDrawSnapshot) == 1546856-1.html 1546856-ref.html
 test-pref(ui.systemUsesDarkTheme,1) != 1551040.txt 1551040.txt
 test-pref(ui.systemUsesDarkTheme,1) == 1551040.html 1551040.html
 != 1552789-1.html 1552789-ref-1.html
-pref(image.downscale-during-decode.enabled,true) skip-if((webrender&&((gtkWidget&&isDebugBuild)||(gtkWidget&&AddressSanitizer)||Android))||(Android&&isDebugBuild)) random-if(useDrawSnapshot) == 1553571-1.html 1553571-1-ref.html
+pref(image.downscale-during-decode.enabled,true) skip-if((webrender&&((gtkWidget&&isDebugBuild)||(gtkWidget&&AddressSanitizer)||Android||ThreadSanitizer))||(Android&&isDebugBuild)) random-if(useDrawSnapshot) == 1553571-1.html 1553571-1-ref.html
 == 1558937-1.html 1558937-1-ref.html
 != 1563484.html 1563484-notref.html
 == 1563484.html 1563484-ref.html

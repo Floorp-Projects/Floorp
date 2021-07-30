@@ -62,15 +62,23 @@ addons[3].permissions &= ~AddonManager.PERM_CAN_UNINSTALL;
 function API_getAddonByID(browser, id) {
   return SpecialPowers.spawn(browser, [id], async function(id) {
     let addon = await content.navigator.mozAddonManager.getAddonByID(id);
-
+    let addonDetails = {};
+    for (let prop in addon) {
+      addonDetails[prop] = addon[prop];
+    }
     // We can't send native objects back so clone its properties.
-    return JSON.parse(JSON.stringify(addon));
+    return JSON.parse(JSON.stringify(addonDetails));
   });
 }
 
 add_task(
   testWithAPI(async function(browser) {
     function compareObjects(web, real) {
+      ok(
+        !!Object.keys(web).length,
+        "Got a valid mozAddonManager addon object dump"
+      );
+
       for (let prop of Object.keys(web)) {
         let webVal = web[prop];
         let realVal = real[prop];
@@ -113,31 +121,5 @@ add_task(
     compareObjects(w1, a1);
     compareObjects(w2, a2);
     compareObjects(w3, a3);
-  })
-);
-
-add_task(
-  testWithAPI(async function(browser) {
-    async function check(value, message) {
-      let enabled = await SpecialPowers.spawn(browser, [], async function() {
-        return content.navigator.mozAddonManager.permissionPromptsEnabled;
-      });
-      is(enabled, value, message);
-    }
-
-    const PERM = "extensions.webextPermissionPrompts";
-    if (!Services.prefs.getBoolPref(PERM, false)) {
-      await SpecialPowers.pushPrefEnv({ clear: [[PERM]] });
-      await check(
-        false,
-        `mozAddonManager.permissionPromptsEnabled is false when ${PERM} is unset`
-      );
-    }
-
-    await SpecialPowers.pushPrefEnv({ set: [[PERM, true]] });
-    await check(
-      true,
-      `mozAddonManager.permissionPromptsEnabled is true when ${PERM} is set`
-    );
   })
 );

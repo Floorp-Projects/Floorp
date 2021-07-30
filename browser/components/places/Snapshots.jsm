@@ -467,7 +467,7 @@ const Snapshots = new (class Snapshots {
     }
 
     logConsole.debug(
-      `Updating ${urls ? urls.length : "all"} potential snapshots`
+      `Testing ${urls ? urls.length : "all"} potential snapshots`
     );
 
     let model;
@@ -475,7 +475,9 @@ const Snapshots = new (class Snapshots {
       model = JSON.parse(snapshotCriteria);
 
       if (!model.length) {
-        logConsole.debug(`No model provided, falling back to default`);
+        logConsole.debug(
+          `No snapshot criteria provided, falling back to default`
+        );
         model = DEFAULT_CRITERIA;
       }
     } catch (e) {
@@ -576,7 +578,7 @@ const Snapshots = new (class Snapshots {
     );
 
     if (insertedUrls.length) {
-      logConsole.debug(`Inserted ${insertedUrls.length} snapshots.`);
+      logConsole.debug(`${insertedUrls.length} snapshots created`);
       await this.#addPageData(insertedUrls);
       this.#notify(
         "places-snapshots-added",

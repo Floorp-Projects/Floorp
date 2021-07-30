@@ -273,6 +273,103 @@ describe("#CacheListAttachedOAuthClients", () => {
     assert.calledOnce(fxAccounts.listAttachedOAuthClients);
   });
 });
+describe("#mainPingSubmissions", () => {
+  let promiseArchivedPingList;
+  let globals;
+  let sandbox;
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+    globals = new GlobalOverrider();
+  });
+  afterEach(() => {
+    sandbox.restore();
+    globals.restore();
+  });
+  it("should return an empty list", async () => {
+    promiseArchivedPingList = sandbox.stub().resolves([]);
+    globals.set("TelemetryArchive", { promiseArchivedPingList });
+    assert.typeOf(
+      await ASRouterTargeting.Environment.mainPingSubmissions,
+      "array",
+      "we get back an array"
+    );
+    assert.lengthOf(
+      await ASRouterTargeting.Environment.mainPingSubmissions,
+      0,
+      "no pings available"
+    );
+  });
+  it("should filter out bhr pings", async () => {
+    promiseArchivedPingList = sandbox.stub().resolves([
+      {
+        id: "5c8c786b-eca5-734b-a755-7ec0f022aaaf",
+        timestampCreated: 1622525975674,
+        type: "bhr",
+      },
+    ]);
+    globals.set("TelemetryArchive", { promiseArchivedPingList });
+    assert.lengthOf(
+      await ASRouterTargeting.Environment.mainPingSubmissions,
+      0,
+      "no `main` pings available"
+    );
+  });
+  it("should filter out pings less than 24hrs apart", async () => {
+    let startTime = 0;
+    promiseArchivedPingList = sandbox.stub().resolves([
+      {
+        id: "5c8c786b-eca5-734b-a755-7ec0f022aaaf",
+        timestampCreated: 1622525975674,
+        type: "bhr",
+      },
+      {
+        id: "5c8c786b-eca5-734b-a755-7ec0f022aaaa",
+        timestampCreated: startTime,
+        type: "main",
+      },
+      {
+        id: "5c8c786b-eca5-734b-a755-7ec0f022aaaa",
+        timestampCreated: startTime + 1000,
+        type: "main",
+      },
+      {
+        id: "5c8c786b-eca5-734b-a755-7ec0f022aaac",
+        timestampCreated: startTime + 86400001,
+        type: "main",
+      },
+    ]);
+    globals.set("TelemetryArchive", { promiseArchivedPingList });
+    assert.lengthOf(
+      await ASRouterTargeting.Environment.mainPingSubmissions,
+      2,
+      "1 main ping is removed"
+    );
+  });
+  it("should allow for pings < 24hrs apart but on different days", async () => {
+    let startTime = new Date("2020-02-20").getTime();
+    let oneDay = 86400000;
+    promiseArchivedPingList = sandbox.stub().resolves([
+      {
+        id: "5c8c786b-eca5-734b-a755-7ec0f022aaaa",
+        // Using oneDay / 2 because timezone of browser running the test
+        // affects the calculation
+        timestampCreated: startTime - oneDay / 2,
+        type: "main",
+      },
+      {
+        id: "5c8c786b-eca5-734b-a755-7ec0f022aaac",
+        timestampCreated: startTime + 1000,
+        type: "main",
+      },
+    ]);
+    globals.set("TelemetryArchive", { promiseArchivedPingList });
+    assert.lengthOf(
+      await ASRouterTargeting.Environment.mainPingSubmissions,
+      2,
+      "pings are less day oneDay apart but fall on different days"
+    );
+  });
+});
 describe("ASRouterTargeting", () => {
   let evalStub;
   let sandbox;

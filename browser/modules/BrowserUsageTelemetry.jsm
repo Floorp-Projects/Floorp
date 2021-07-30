@@ -67,6 +67,7 @@ const TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE_SCALAR_NAME =
   "browser.engagement.total_uri_count_normal_and_private_mode";
 
 const CONTENT_PROCESS_COUNT = "CONTENT_PROCESS_COUNT";
+const CONTENT_PROCESS_PRECISE_COUNT = "CONTENT_PROCESS_PRECISE_COUNT";
 
 const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
 const CONTENT_PROCESS_COUNT_INTERVAL_MS = 5 * 60 * 1000;
@@ -433,7 +434,8 @@ let BrowserUsageTelemetry = {
     Services.prefs.addObserver("browser.tabs.drawInTitlebar", this);
 
     this._recordUITelemetry();
-    this._contentProcessCountInterval = setInterval(
+
+    this._recordContentProcessCountInterval = setInterval(
       () => this._recordContentProcessCount(),
       CONTENT_PROCESS_COUNT_INTERVAL_MS
     );
@@ -480,7 +482,6 @@ let BrowserUsageTelemetry = {
     Services.obs.removeObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC);
 
     clearInterval(this._recordContentProcessCountInterval);
-    this._recordContentProcessCountDelayed = null;
   },
 
   observe(subject, topic, data) {
@@ -1276,6 +1277,9 @@ let BrowserUsageTelemetry = {
     const count = ChromeUtils.getAllDOMProcesses().length - 1;
 
     Services.telemetry.getHistogramById(CONTENT_PROCESS_COUNT).add(count);
+    Services.telemetry
+      .getHistogramById(CONTENT_PROCESS_PRECISE_COUNT)
+      .add(count);
   },
 };
 

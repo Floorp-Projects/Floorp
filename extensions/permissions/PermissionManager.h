@@ -352,6 +352,16 @@ class PermissionManager final : public nsIPermissionManager,
   void WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
                                 nsIRunnable* aRunnable);
 
+  /**
+   * Strip origin attributes for permissions, depending on permission isolation
+   * pref state.
+   * @param aForceStrip If true, strips user context and private browsing id,
+   * ignoring permission isolation prefs.
+   * @param aOriginAttributes object to strip.
+   */
+  static void MaybeStripOriginAttributes(bool aForceStrip,
+                                         OriginAttributes& aOriginAttributes);
+
  private:
   ~PermissionManager();
 

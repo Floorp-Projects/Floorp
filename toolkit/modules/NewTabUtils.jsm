@@ -1342,6 +1342,22 @@ var ActivityStreamProvider = {
   },
 
   /**
+   * Count the number of visited urls grouped by day
+   */
+  getUserMonthlyActivity() {
+    let sqlQuery = `
+      SELECT count(*),
+        strftime('%d-%m-%Y', visit_date/1000000.0, 'unixepoch') as date_format
+      FROM moz_historyvisits
+      WHERE visit_date > 0
+      AND visit_date > strftime('%s','now','localtime','start of day','-30 days','utc') * 1000000
+      GROUP BY date_format
+    `;
+
+    return this.executePlacesQuery(sqlQuery);
+  },
+
+  /**
    * Executes arbitrary query against places database
    *
    * @param {String} aQuery

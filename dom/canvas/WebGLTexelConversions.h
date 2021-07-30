@@ -314,27 +314,27 @@ template <WebGLTexelFormat Format, bool IsFloat = IsFloatFormat<Format>::Value,
           bool Is16bpp = Is16bppFormat<Format>::Value,
           bool IsHalfFloat = IsHalfFloatFormat<Format>::Value>
 struct DataTypeForFormat {
-  typedef uint8_t Type;
+  using Type = uint8_t;
 };
 
 template <WebGLTexelFormat Format>
 struct DataTypeForFormat<Format, true, false, false> {
-  typedef float Type;
+  using Type = float;
 };
 
 template <WebGLTexelFormat Format>
 struct DataTypeForFormat<Format, false, true, false> {
-  typedef uint16_t Type;
+  using Type = uint16_t;
 };
 
 template <WebGLTexelFormat Format>
 struct DataTypeForFormat<Format, false, false, true> {
-  typedef uint16_t Type;
+  using Type = uint16_t;
 };
 
 template <>
 struct DataTypeForFormat<WebGLTexelFormat::RGB11F11F10F, true, false, false> {
-  typedef uint32_t Type;
+  using Type = uint32_t;
 };
 
 template <WebGLTexelFormat Format>

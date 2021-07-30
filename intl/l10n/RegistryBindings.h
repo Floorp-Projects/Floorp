@@ -21,6 +21,33 @@ struct RefPtrTraits<intl::ffi::FileSource> {
   }
 };
 
+template <>
+class DefaultDelete<intl::ffi::GeckoFluentBundleIterator> {
+ public:
+  void operator()(intl::ffi::GeckoFluentBundleIterator* aPtr) const {
+    fluent_bundle_iterator_destroy(aPtr);
+  }
+};
+
+template <>
+class DefaultDelete<intl::ffi::GeckoFluentBundleAsyncIteratorWrapper> {
+ public:
+  void operator()(
+      intl::ffi::GeckoFluentBundleAsyncIteratorWrapper* aPtr) const {
+    fluent_bundle_async_iterator_destroy(aPtr);
+  }
+};
+
+template <>
+struct RefPtrTraits<intl::ffi::GeckoL10nRegistry> {
+  static void AddRef(const intl::ffi::GeckoL10nRegistry* aPtr) {
+    intl::ffi::l10nregistry_addref(aPtr);
+  }
+  static void Release(const intl::ffi::GeckoL10nRegistry* aPtr) {
+    intl::ffi::l10nregistry_release(aPtr);
+  }
+};
+
 }  // namespace mozilla
 
 #endif

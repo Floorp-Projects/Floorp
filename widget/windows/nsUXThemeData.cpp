@@ -39,12 +39,13 @@ void nsUXThemeData::ThemeHandle::OpenOnce(HWND aWindow, LPCWSTR aClassList) {
 }
 
 void nsUXThemeData::ThemeHandle::Close() {
-  if (mHandle.isNothing() || !mHandle.value()) {
+  if (mHandle.isNothing()) {
     return;
   }
 
-  CloseThemeData(mHandle.value());
-  mHandle = Nothing();
+  if (HANDLE rawHandle = mHandle.extract()) {
+    CloseThemeData(rawHandle);
+  }
 }
 
 nsUXThemeData::ThemeHandle::operator HANDLE() {

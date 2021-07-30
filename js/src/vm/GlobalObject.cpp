@@ -639,12 +639,6 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx,
   Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
   MOZ_ASSERT(global->isUnqualifiedVarObj());
 
-  // Initialize the private slot to null if present, as GC can call class
-  // hooks before the caller gets to set this to a non-garbage value.
-  if (clasp->flags & JSCLASS_HAS_PRIVATE) {
-    global->setPrivate(nullptr);
-  }
-
   Rooted<GlobalLexicalEnvironmentObject*> lexical(
       cx, GlobalLexicalEnvironmentObject::create(cx, global));
   if (!lexical) {

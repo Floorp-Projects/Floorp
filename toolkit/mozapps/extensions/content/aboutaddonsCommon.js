@@ -22,13 +22,6 @@ var { XPCOMUtils } = ChromeUtils.import(
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "WEBEXT_PERMISSION_PROMPTS",
-  "extensions.webextPermissionPrompts",
-  false
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "Extension",
@@ -110,10 +103,6 @@ function installPromptHandler(info) {
 }
 
 function attachUpdateHandler(install) {
-  if (!WEBEXT_PERMISSION_PROMPTS) {
-    return;
-  }
-
   install.promptHandler = installPromptHandler;
 }
 
@@ -160,7 +149,7 @@ function openOptionsInTab(optionsURL) {
 }
 
 function shouldShowPermissionsPrompt(addon) {
-  if (!WEBEXT_PERMISSION_PROMPTS || !addon.isWebExtension || addon.seen) {
+  if (!addon.isWebExtension || addon.seen) {
     return false;
   }
 

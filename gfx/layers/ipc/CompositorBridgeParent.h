@@ -262,7 +262,6 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   virtual mozilla::ipc::IPCResult RecvForcePresent() = 0;
   virtual mozilla::ipc::IPCResult RecvNotifyRegionInvalidated(
       const nsIntRegion& region) = 0;
-  virtual mozilla::ipc::IPCResult RecvRequestNotifyAfterRemotePaint() = 0;
   virtual mozilla::ipc::IPCResult RecvBeginRecording(
       const TimeStamp& aRecordingStart, BeginRecordingResolver&& aResolve) = 0;
   virtual mozilla::ipc::IPCResult RecvEndRecordingToDisk(
@@ -371,12 +370,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
       const uint32_t& sequenceNum, bool* isContentOnlyTDR) override {
     return IPC_OK();
   }
-
-  // Unused for chrome <-> compositor communication (which this class does).
-  // @see ContentCompositorBridgeParent::RecvRequestNotifyAfterRemotePaint
-  mozilla::ipc::IPCResult RecvRequestNotifyAfterRemotePaint() override {
-    return IPC_OK();
-  };
 
   mozilla::ipc::IPCResult RecvBeginRecording(
       const TimeStamp& aRecordingStart,

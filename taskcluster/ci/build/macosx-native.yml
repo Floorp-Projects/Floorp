@@ -19,7 +19,7 @@ macosx64-plain/opt:
     treeherder:
         symbol: Bp
         platform: osx/opt
-        tier: 2
+        tier: 1
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: plain
@@ -50,7 +50,7 @@ macosx64-plain/debug:
     treeherder:
         symbol: Bp
         platform: osx/debug
-        tier: 2
+        tier: 1
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: plain

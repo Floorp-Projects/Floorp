@@ -39,7 +39,7 @@ inline js::Debugger* js::DebuggerScript::owner() const {
 }
 
 js::gc::Cell* js::DebuggerScript::getReferentCell() const {
-  return static_cast<gc::Cell*>(getPrivate());
+  return maybePtrFromReservedSlot<gc::Cell>(SCRIPT_SLOT);
 }
 
 js::DebuggerScriptReferent js::DebuggerScript::getReferent() const {

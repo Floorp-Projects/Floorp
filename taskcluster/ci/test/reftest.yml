@@ -46,7 +46,7 @@ crashtest:
     variants:
         by-test-platform:
             linux1804-64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'noqr']
-            linux1804-64-asan-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
+            linux1804-64(-tsan|-asan)-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
             windows10-64-qr/debug: ['webrender-sw', 'fission', 'noqr']
             windows10-64-asan-qr/opt: ['webrender-sw', 'fission', 'noqr']
             windows10-aarch64-qr/.*: []
@@ -59,7 +59,7 @@ crashtest:
     chunks:
         by-test-platform:
             android-em-7.*: 1
-            linux.*64-tsan/opt: 12
+            linux.*64-tsan-qr/opt: 32
             default: 1
     e10s: true
     run-on-projects:
@@ -164,7 +164,7 @@ reftest:
     variants:
         by-test-platform:
             linux1804-64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'noqr']
-            linux1804-64-asan-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
+            linux1804-64(-asan|-tsan)-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
             windows10-64(-asan)?-qr/opt: ['webrender-sw', 'fission', 'noqr']
             windows10-aarch64-qr/.*: []
             windows10-32(?:-shippable)?-qr/opt: ['webrender-sw', 'fission', 'noqr']
@@ -180,7 +180,7 @@ reftest:
         by-test-platform:
             android-em-7.*: 2
             linux1804-64(-shippable|-devedition|-qr)?/opt: 5
-            linux.*64-tsan.*/opt: 10
+            linux.*64-tsan-qr/opt: 32
             macosx101.*-64-shippable(-qr)?/opt: 3
             macosx101.*-64/debug: 4
             macosx101.*-64(-ccov.*|-qr)/debug: 6
@@ -196,7 +196,7 @@ reftest:
             fission:
                 by-test-platform:
                     (linux.*64|windows10-64)(-shippable)?-qr/(debug|opt): ['trunk']
-                    linux.*64-asan/opt: ['trunk']
+                    linux.*64-asan-qr/opt: ['trunk']
                     default: []
             noqr: built-projects
             default:

@@ -314,10 +314,6 @@ def toolkit_gtk(toolkit):
     return toolkit == "gtk"
 
 
-set_config("MOZ_X11", True, when=toolkit_gtk)
-set_define("MOZ_X11", True, when=toolkit_gtk)
-add_old_configure_assignment("MOZ_X11", True, when=toolkit_gtk)
-
 # Wayland support
 # ==============================================================
 wayland_headers = pkg_check_modules(
@@ -426,11 +422,7 @@ set_define("USE_FC_FREETYPE", fc_freetype)
 
 # Pango
 # ==============================================================
-pkg_check_modules(
-    "MOZ_PANGO",
-    "pango >= 1.22.0 pangoft2 >= 1.22.0 pangocairo >= 1.22.0",
-    when=toolkit_gtk,
-)
+pkg_check_modules("MOZ_PANGO", "pango >= 1.22.0", when=toolkit_gtk)
 
 # Fontconfig
 # ==============================================================
@@ -1141,7 +1133,6 @@ def webrtc(enabled):
 
 set_config("MOZ_WEBRTC", webrtc)
 set_define("MOZ_WEBRTC", webrtc)
-add_old_configure_assignment("MOZ_WEBRTC", webrtc)
 set_config("MOZ_SCTP", webrtc)
 set_define("MOZ_SCTP", webrtc)
 set_config("MOZ_SRTP", webrtc)
@@ -1175,6 +1166,39 @@ option(
 
 set_config("MOZ_RAW", depends_if("--enable-raw")(lambda _: True))
 set_define("MOZ_RAW", depends_if("--enable-raw")(lambda _: True))
+
+
+# X11
+# ==============================================================
+set_config("MOZ_X11", True, when=toolkit_gtk)
+set_define("MOZ_X11", True, when=toolkit_gtk)
+
+
+@depends(webrtc, when=toolkit_gtk)
+def x11_libs(webrtc):
+    libs = [
+        "x11",
+        "xcb",
+        "xcb-shm",
+        "x11-xcb",
+        "xext",
+        "xrender",
+    ]
+    if webrtc:
+        # third_party/libwebrtc/webrtc/webrtc_gn/moz.build adds those
+        # manually, ensure they're available.
+        libs += [
+            "xcomposite",
+            "xcursor",
+            "xdamage",
+            "xfixes",
+            "xi",
+        ]
+    return " ".join(libs)
+
+
+pkg_check_modules("MOZ_X11", x11_libs, when=toolkit_gtk)
+
 
 # ASan Reporter Addon
 # ==============================================================

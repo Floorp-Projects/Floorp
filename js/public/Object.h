@@ -16,7 +16,7 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/Class.h"  // js::ESClass, JSCLASS_RESERVED_SLOTS, JSCLASS_HAS_PRIVATE
+#include "js/Class.h"       // js::ESClass, JSCLASS_RESERVED_SLOTS
 #include "js/Realm.h"       // JS::GetCompartmentForRealm
 #include "js/RootingAPI.h"  // JS::{,Mutable}Handle
 #include "js/Value.h"       // JS::Value
@@ -57,17 +57,6 @@ inline const JSClass* GetClass(const JSObject* obj) {
 static MOZ_ALWAYS_INLINE Compartment* GetCompartment(JSObject* obj) {
   Realm* realm = reinterpret_cast<shadow::Object*>(obj)->shape->base->realm;
   return GetCompartmentForRealm(realm);
-}
-
-/**
- * Get the private value stored for an object whose class has a private.
- *
- * It is safe to call this function within |obj|'s finalize hook.
- */
-inline void* GetPrivate(JSObject* obj) {
-  MOZ_ASSERT(GetClass(obj)->flags & JSCLASS_HAS_PRIVATE);
-  const auto* nobj = reinterpret_cast<const shadow::Object*>(obj);
-  return nobj->fixedSlots()[nobj->numFixedSlots()].toPrivate();
 }
 
 /**

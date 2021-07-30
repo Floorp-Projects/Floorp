@@ -10,6 +10,8 @@ import json
 import multiprocessing
 import ntpath
 import os
+import pathlib
+import posixpath
 import re
 import sys
 import subprocess
@@ -60,7 +62,7 @@ def build_repo_relative_path(abs_path, repo_path):
 
 
 def prompt_bool(prompt, limit=5):
-    """ Prompts the user with prompt and requires a boolean value. """
+    """Prompts the user with prompt and requires a boolean value."""
     from distutils.util import strtobool
 
     for _ in range(limit):
@@ -3044,7 +3046,9 @@ class StaticAnalysis(MachCommandBase):
                 for folder, subs, files in os.walk(f):
                     subs.sort()
                     for filename in sorted(files):
-                        f_in_dir = os.path.join(folder, filename)
+                        f_in_dir = posixpath.join(
+                            pathlib.Path(folder).as_posix(), filename
+                        )
                         if f_in_dir.endswith(extensions) and not self._is_ignored_path(
                             command_context, ignored_dir_re, f_in_dir
                         ):

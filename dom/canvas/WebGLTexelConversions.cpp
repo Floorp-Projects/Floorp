@@ -140,17 +140,17 @@ class WebGLImageConverter {
 
     // gather some compile-time meta-data about the formats at hand.
 
-    typedef typename DataTypeForFormat<SrcFormat>::Type SrcType;
-    typedef typename DataTypeForFormat<DstFormat>::Type DstType;
+    using SrcType = typename DataTypeForFormat<SrcFormat>::Type;
+    using DstType = typename DataTypeForFormat<DstFormat>::Type;
 
     const WebGLTexelFormat IntermediateSrcFormat =
         IntermediateFormat<SrcFormat>::Value;
     const WebGLTexelFormat IntermediateDstFormat =
         IntermediateFormat<DstFormat>::Value;
-    typedef typename DataTypeForFormat<IntermediateSrcFormat>::Type
-        IntermediateSrcType;
-    typedef typename DataTypeForFormat<IntermediateDstFormat>::Type
-        IntermediateDstType;
+    using IntermediateSrcType =
+        typename DataTypeForFormat<IntermediateSrcFormat>::Type;
+    using IntermediateDstType =
+        typename DataTypeForFormat<IntermediateDstFormat>::Type;
 
     const size_t NumElementsPerSrcTexel =
         NumElementsPerTexelForFormat<SrcFormat>();

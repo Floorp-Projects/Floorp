@@ -41,7 +41,6 @@ const PREF_SYS_ADDON_UPDATE_ENABLED = "extensions.systemAddon.update.enabled";
 const PREF_MIN_WEBEXT_PLATFORM_VERSION =
   "extensions.webExtensionsMinPlatformVersion";
 const PREF_WEBAPI_TESTING = "extensions.webapi.testing";
-const PREF_WEBEXT_PERM_PROMPTS = "extensions.webextPermissionPrompts";
 const PREF_EM_POSTDOWNLOAD_THIRD_PARTY =
   "extensions.postDownloadThirdPartyPrompt";
 
@@ -88,13 +87,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AbuseReporter: "resource://gre/modules/AbuseReporter.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "WEBEXT_PERMISSION_PROMPTS",
-  PREF_WEBEXT_PERM_PROMPTS,
-  false
-);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -1349,10 +1341,8 @@ var AddonManagerInternal = {
                       // XXX we really should resolve when this install is done,
                       // not when update-available check completes, no?
                       logger.debug(`Starting upgrade install of ${aAddon.id}`);
-                      if (WEBEXT_PERMISSION_PROMPTS) {
-                        aInstall.promptHandler = (...args) =>
-                          AddonManagerInternal._updatePromptHandler(...args);
-                      }
+                      aInstall.promptHandler = (...args) =>
+                        AddonManagerInternal._updatePromptHandler(...args);
                       aInstall.install();
                     }
                   },
@@ -2151,7 +2141,7 @@ var AddonManagerInternal = {
         let needsRestart =
           install.addon.pendingOperations != AddonManager.PENDING_NONE;
 
-        if (WEBEXT_PERMISSION_PROMPTS && !needsRestart) {
+        if (!needsRestart) {
           let subject = {
             wrappedJSObject: { target: browser, addon: install.addon },
           };
@@ -3150,7 +3140,7 @@ var AddonManagerInternal = {
             // the customConfirmationUI preference and responding to the
             // "addon-install-confirmation" notification.  If the application
             // does not implement its own prompt, use the built-in xul dialog.
-            if (info.addon.userPermissions && WEBEXT_PERMISSION_PROMPTS) {
+            if (info.addon.userPermissions) {
               let subject = {
                 wrappedJSObject: {
                   target: browser,
@@ -3420,14 +3410,12 @@ var AddonManagerInternal = {
         await addon.enable();
       }
 
-      if (Services.prefs.getBoolPref(PREF_WEBEXT_PERM_PROMPTS, false)) {
-        await new Promise(resolve => {
-          let subject = {
-            wrappedJSObject: { target, addon, callback: resolve },
-          };
-          Services.obs.notifyObservers(subject, "webextension-install-notify");
-        });
-      }
+      await new Promise(resolve => {
+        let subject = {
+          wrappedJSObject: { target, addon, callback: resolve },
+        };
+        Services.obs.notifyObservers(subject, "webextension-install-notify");
+      });
     },
 
     addonInstallCancel(target, id) {

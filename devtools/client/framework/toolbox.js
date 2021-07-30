@@ -3013,6 +3013,18 @@ Toolbox.prototype = {
    * Fired when user just started navigating away to another web page.
    */
   async _onWillNavigate() {
+    // On navigate, the server will resume all paused threads, but due to an
+    // issue which can cause loosing outgoing messages/RDP packets, the THREAD_STATE
+    // resources for the resumed state might not get received. So let assume it happens
+    // make use the UI is the appropriate state.
+    if (this._pausedTargets > 0) {
+      this.emit("toolbox-resumed");
+      this._pausedTargets = 0;
+      if (this.isHighlighted("jsdebugger")) {
+        this.unhighlightTool("jsdebugger");
+      }
+    }
+
     // Clearing the error count as soon as we navigate
     this.setErrorCount(0);
     this.updateToolboxButtons();

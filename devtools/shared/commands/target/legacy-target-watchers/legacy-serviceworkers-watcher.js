@@ -179,7 +179,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
       // has cleaned up its reducers, which happens on "will-navigate".
       // On the other end, "dom-complete", which is a better mapping of "navigate", is
       // happening too late (because of resources being throttled), and would cause failures
-      // in test (like browser_target_list_service_workers_navigation.js), as the new worker
+      // in test (like browser_target_command_service_workers_navigation.js), as the new worker
       // target would already be registered at this point, and seen as something that would
       // need to be destroyed.
       if (resource.name === "dom-loading") {

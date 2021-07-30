@@ -1,17 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {
-  L10nRegistry,
-} = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
+const l10nReg = new L10nRegistry();
+
 add_task(function test_methods_presence() {
-  equal(typeof L10nRegistry.generateBundles, "function");
-  equal(typeof L10nRegistry.getAvailableLocales, "function");
-  equal(typeof L10nRegistry.registerSources, "function");
-  equal(typeof L10nRegistry.removeSources, "function");
-  equal(typeof L10nRegistry.updateSources, "function");
+  equal(typeof l10nReg.generateBundles, "function");
+  equal(typeof l10nReg.getAvailableLocales, "function");
+  equal(typeof l10nReg.registerSources, "function");
+  equal(typeof l10nReg.removeSources, "function");
+  equal(typeof l10nReg.updateSources, "function");
 });
 
 /**
@@ -21,16 +20,16 @@ add_task(function test_empty_resourceids() {
   const fs = [];
 
   const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
-  L10nRegistry.registerSources([source]);
+  l10nReg.registerSources([source]);
 
-  const bundles = L10nRegistry.generateBundlesSync(["en-US"], []);
+  const bundles = l10nReg.generateBundlesSync(["en-US"], []);
 
   const done = (bundles.next()).done;
 
   equal(done, true);
 
   // cleanup
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
 });
 
 /**
@@ -38,14 +37,14 @@ add_task(function test_empty_resourceids() {
  */
 add_task(function test_empty_sources() {
   const fs = [];
-  const bundles = L10nRegistry.generateBundlesSync(["en-US"], fs);
+  const bundles = l10nReg.generateBundlesSync(["en-US"], fs);
 
   const done = (bundles.next()).done;
 
   equal(done, true);
 
   // cleanup
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
 });
 
 /**
@@ -57,16 +56,16 @@ add_task(function test_methods_calling() {
     { path: "/localization/en-US/browser/menu.ftl", source: "key = Value" }
   ];
   const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
-  L10nRegistry.registerSources([source]);
+  l10nReg.registerSources([source]);
 
-  const bundles = L10nRegistry.generateBundlesSync(["en-US"], ["/browser/menu.ftl"]);
+  const bundles = l10nReg.generateBundlesSync(["en-US"], ["/browser/menu.ftl"]);
 
   const bundle = (bundles.next()).value;
 
   equal(bundle.hasMessage("key"), true);
 
   // cleanup
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
 });
 
 /**
@@ -78,18 +77,18 @@ add_task(function test_has_one_source() {
     {path: "./app/data/locales/en-US/test.ftl", source: "key = value en-US"}
   ];
   let oneSource = L10nFileSource.createMock("app", ["en-US"], "./app/data/locales/{locale}/", fs);
-  L10nRegistry.registerSources([oneSource]);
+  l10nReg.registerSources([oneSource]);
 
 
   // has one source
 
-  equal(L10nRegistry.sources.size, 1);
-  equal(L10nRegistry.sources.has("app"), true);
+  equal(l10nReg.getSourceNames().length, 1);
+  equal(l10nReg.hasSource("app"), true);
 
 
   // returns a single context
 
-  let bundles = L10nRegistry.generateBundlesSync(["en-US"], ["test.ftl"]);
+  let bundles = l10nReg.generateBundlesSync(["en-US"], ["test.ftl"]);
   let bundle0 = (bundles.next()).value;
   equal(bundle0.hasMessage("key"), true);
 
@@ -98,12 +97,12 @@ add_task(function test_has_one_source() {
 
   // returns no contexts for missing locale
 
-  bundles = L10nRegistry.generateBundlesSync(["pl"], ["test.ftl"]);
+  bundles = l10nReg.generateBundlesSync(["pl"], ["test.ftl"]);
 
   equal((bundles.next()).done, true);
 
   // cleanup
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
 });
 
 /**
@@ -117,18 +116,18 @@ add_task(function test_has_two_sources() {
   ];
   let oneSource = L10nFileSource.createMock("platform", ["en-US"], "./platform/data/locales/{locale}/", fs);
   let secondSource = L10nFileSource.createMock("app", ["pl"], "./app/data/locales/{locale}/", fs);
-  L10nRegistry.registerSources([oneSource, secondSource]);
+  l10nReg.registerSources([oneSource, secondSource]);
 
   // has two sources
 
-  equal(L10nRegistry.sources.size, 2);
-  equal(L10nRegistry.sources.has("app"), true);
-  equal(L10nRegistry.sources.has("platform"), true);
+  equal(l10nReg.getSourceNames().length, 2);
+  equal(l10nReg.hasSource("app"), true);
+  equal(l10nReg.hasSource("platform"), true);
 
 
   // returns correct contexts for en-US
 
-  let bundles = L10nRegistry.generateBundlesSync(["en-US"], ["test.ftl"]);
+  let bundles = l10nReg.generateBundlesSync(["en-US"], ["test.ftl"]);
   let bundle0 = (bundles.next()).value;
 
   equal(bundle0.hasMessage("key"), true);
@@ -140,7 +139,7 @@ add_task(function test_has_two_sources() {
 
   // returns correct contexts for [pl, en-US]
 
-  bundles = L10nRegistry.generateBundlesSync(["pl", "en-US"], ["test.ftl"]);
+  bundles = l10nReg.generateBundlesSync(["pl", "en-US"], ["test.ftl"]);
   bundle0 = (bundles.next()).value;
   equal(bundle0.locales[0], "pl");
   equal(bundle0.hasMessage("key"), true);
@@ -156,7 +155,7 @@ add_task(function test_has_two_sources() {
   equal((bundles.next()).done, true);
 
   // cleanup
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
 });
 
 /**
@@ -170,12 +169,12 @@ add_task(function test_override() {
   ];
   let fileSource = L10nFileSource.createMock("app", ["pl"], "/app/data/locales/{locale}/", fs);
   let oneSource = L10nFileSource.createMock("langpack-pl", ["pl"], "/data/locales/{locale}/", fs);
-  L10nRegistry.registerSources([fileSource, oneSource]);
+  l10nReg.registerSources([fileSource, oneSource]);
 
-  equal(L10nRegistry.sources.size, 2);
-  equal(L10nRegistry.sources.has("langpack-pl"), true);
+  equal(l10nReg.getSourceNames().length, 2);
+  equal(l10nReg.hasSource("langpack-pl"), true);
 
-  let bundles = L10nRegistry.generateBundlesSync(["pl"], ["test.ftl"]);
+  let bundles = l10nReg.generateBundlesSync(["pl"], ["test.ftl"]);
   let bundle0 = (bundles.next()).value;
   equal(bundle0.locales[0], "pl");
   equal(bundle0.hasMessage("key"), true);
@@ -191,7 +190,7 @@ add_task(function test_override() {
   equal((bundles.next()).done, true);
 
   // cleanup
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
 });
 
 /**
@@ -203,9 +202,9 @@ add_task(function test_updating() {
     { path: "/data/locales/pl/test.ftl", source: "key = value" }
   ];
   let oneSource = L10nFileSource.createMock("langpack-pl", ["pl"], "/data/locales/{locale}/", fs);
-  L10nRegistry.registerSources([oneSource]);
+  l10nReg.registerSources([oneSource]);
 
-  let bundles = L10nRegistry.generateBundlesSync(["pl"], ["test.ftl"]);
+  let bundles = l10nReg.generateBundlesSync(["pl"], ["test.ftl"]);
   let bundle0 = (bundles.next()).value;
   equal(bundle0.locales[0], "pl");
   equal(bundle0.hasMessage("key"), true);
@@ -216,16 +215,16 @@ add_task(function test_updating() {
   const newSource = L10nFileSource.createMock("langpack-pl", ["pl"], "/data/locales/{locale}/", [
     { path: "/data/locales/pl/test.ftl", source: "key = new value" }
   ]);
-  L10nRegistry.updateSources([newSource]);
+  l10nReg.updateSources([newSource]);
 
-  equal(L10nRegistry.sources.size, 1);
-  bundles = L10nRegistry.generateBundlesSync(["pl"], ["test.ftl"]);
+  equal(l10nReg.getSourceNames().length, 1);
+  bundles = l10nReg.generateBundlesSync(["pl"], ["test.ftl"]);
   bundle0 = (bundles.next()).value;
   msg0 = bundle0.getMessage("key");
   equal(bundle0.formatPattern(msg0.value), "new value");
 
   // cleanup
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
 });
 
 /**
@@ -240,13 +239,12 @@ add_task(function test_removing() {
 
   let fileSource = L10nFileSource.createMock("app", ["pl"], "/app/data/locales/{locale}/", fs);
   let oneSource = L10nFileSource.createMock("langpack-pl", ["pl"], "/data/locales/{locale}/", fs);
+  l10nReg.registerSources([fileSource, oneSource]);
 
-  L10nRegistry.registerSources([fileSource, oneSource]);
+  equal(l10nReg.getSourceNames().length, 2);
+  equal(l10nReg.hasSource("langpack-pl"), true);
 
-  equal(L10nRegistry.sources.size, 2);
-  equal(L10nRegistry.sources.has("langpack-pl"), true);
-
-  let bundles = L10nRegistry.generateBundlesSync(["pl"], ["test.ftl"]);
+  let bundles = l10nReg.generateBundlesSync(["pl"], ["test.ftl"]);
   let bundle0 = (bundles.next()).value;
   equal(bundle0.locales[0], "pl");
   equal(bundle0.hasMessage("key"), true);
@@ -263,12 +261,12 @@ add_task(function test_removing() {
 
   // Remove langpack
 
-  L10nRegistry.removeSources(["langpack-pl"]);
+  l10nReg.removeSources(["langpack-pl"]);
 
-  equal(L10nRegistry.sources.size, 1);
-  equal(L10nRegistry.sources.has("langpack-pl"), false);
+  equal(l10nReg.getSourceNames().length, 1);
+  equal(l10nReg.hasSource("langpack-pl"), false);
 
-  bundles = L10nRegistry.generateBundlesSync(["pl"], ["test.ftl"]);
+  bundles = l10nReg.generateBundlesSync(["pl"], ["test.ftl"]);
   bundle0 = (bundles.next()).value;
   equal(bundle0.locales[0], "pl");
   equal(bundle0.hasMessage("key"), true);
@@ -279,15 +277,15 @@ add_task(function test_removing() {
 
   // Remove app source
 
-  L10nRegistry.removeSources(["app"]);
+  l10nReg.removeSources(["app"]);
 
-  equal(L10nRegistry.sources.size, 0);
+  equal(l10nReg.getSourceNames().length, 0);
 
-  bundles = L10nRegistry.generateBundlesSync(["pl"], ["test.ftl"]);
+  bundles = l10nReg.generateBundlesSync(["pl"], ["test.ftl"]);
   equal((bundles.next()).done, true);
 
   // cleanup
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
 });
 
 /**
@@ -302,18 +300,18 @@ add_task(function test_missing_file() {
   ];
   let oneSource = L10nFileSource.createMock("app", ["en-US"], "./app/data/locales/{locale}/", fs);
   let twoSource = L10nFileSource.createMock("platform", ["en-US"], "./platform/data/locales/{locale}/", fs);
-  L10nRegistry.registerSources([oneSource, twoSource]);
+  l10nReg.registerSources([oneSource, twoSource]);
 
   // has two sources
 
-  equal(L10nRegistry.sources.size, 2);
-  equal(L10nRegistry.sources.has("app"), true);
-  equal(L10nRegistry.sources.has("platform"), true);
+  equal(l10nReg.getSourceNames().length, 2);
+  equal(l10nReg.hasSource("app"), true);
+  equal(l10nReg.hasSource("platform"), true);
 
 
   // returns a single context
 
-  let bundles = L10nRegistry.generateBundlesSync(["en-US"], ["test.ftl", "test2.ftl"]);
+  let bundles = l10nReg.generateBundlesSync(["en-US"], ["test.ftl", "test2.ftl"]);
 
   // First permutation:
   //   [platform, platform] - both present
@@ -332,7 +330,7 @@ add_task(function test_missing_file() {
   equal((bundles.next()).done, true);
 
   // cleanup
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
 });
 
 /**
@@ -346,16 +344,16 @@ add_task(function test_remove_source_mid_iter_cycle() {
   ];
   let oneSource = L10nFileSource.createMock("platform", ["en-US"], "./platform/data/locales/{locale}/", fs);
   let secondSource = L10nFileSource.createMock("app", ["pl"], "./app/data/locales/{locale}/", fs);
-  L10nRegistry.registerSources([oneSource, secondSource]);
+  l10nReg.registerSources([oneSource, secondSource]);
 
-  let bundles = L10nRegistry.generateBundlesSync(["en-US", "pl"], ["test.ftl"]);
+  let bundles = l10nReg.generateBundlesSync(["en-US", "pl"], ["test.ftl"]);
 
   let bundle0 = bundles.next();
 
-  L10nRegistry.removeSources(["app"]);
+  l10nReg.removeSources(["app"]);
 
   equal((bundles.next()).done, true);
 
   // cleanup
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
 });

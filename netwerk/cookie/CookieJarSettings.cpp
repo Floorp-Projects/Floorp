@@ -263,15 +263,9 @@ CookieJarSettings::CookiePermission(nsIPrincipal* aPrincipal,
 
   // Let's see if we know this permission.
   if (!mCookiePermissions.IsEmpty()) {
-    nsCOMPtr<nsIPrincipal> principal =
-        Permission::ClonePrincipalForPermission(aPrincipal);
-    if (NS_WARN_IF(!principal)) {
-      return NS_ERROR_FAILURE;
-    }
-
     for (const RefPtr<nsIPermission>& permission : mCookiePermissions) {
       bool match = false;
-      rv = permission->MatchesPrincipalForPermission(principal, false, &match);
+      rv = permission->Matches(aPrincipal, false, &match);
       if (NS_WARN_IF(NS_FAILED(rv)) || !match) {
         continue;
       }

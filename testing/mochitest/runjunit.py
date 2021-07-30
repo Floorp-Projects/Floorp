@@ -319,7 +319,7 @@ class JUnitTestRunner(MochitestDesktop):
             match = re.match(r"INSTRUMENTATION_STATUS_CODE:\s*([+-]?\d+)", line)
             if match:
                 status = match.group(1)
-                full_name = "%s.%s" % (self.class_name, self.test_name)
+                full_name = "%s#%s" % (self.class_name, self.test_name)
                 if full_name == self.current_full_name:
                     if status == "0":
                         message = ""

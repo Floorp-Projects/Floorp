@@ -331,6 +331,9 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvRegisterStringBundles(
       nsTArray<StringBundleDescriptor>&& stringBundles);
 
+  mozilla::ipc::IPCResult RecvUpdateL10nFileSources(
+      nsTArray<L10nFileSourceDescriptor>&& aDescriptors);
+
   mozilla::ipc::IPCResult RecvUpdateSharedData(
       const FileDescriptor& aMapFile, const uint32_t& aMapSize,
       nsTArray<IPCBlob>&& aBlobs, nsTArray<nsCString>&& aChangedKeys);
