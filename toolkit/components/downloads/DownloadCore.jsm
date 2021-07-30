@@ -29,6 +29,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   DownloadHistory: "resource://gre/modules/DownloadHistory.jsm",
+  DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
@@ -657,10 +658,23 @@ Download.prototype = {
       // This ensures the verdict will not get set again after the browser
       // restarts and the download gets serialized and de-serialized again.
       delete this._unknownProperties?.errorObj;
-      this.start().catch(e => {
-        this.error = e;
-        this._notifyChange();
-      });
+      this.start()
+        .catch(err => {
+          if (err.becauseTargetFailed) {
+            // In case we cannot write to the target file
+            // retry with a new unique name
+            let uniquePath = DownloadPaths.createNiceUniqueFile(
+              new FileUtils.File(this.target.path)
+            ).path;
+            this.target.path = uniquePath;
+            return this.start();
+          }
+          return Promise.reject(err);
+        })
+        .catch(err => {
+          this.error = err;
+          this._notifyChange();
+        });
       this._notifyChange();
       this._promiseUnblock = DownloadIntegration.downloadDone(this);
       return this._promiseUnblock;
@@ -2480,7 +2494,21 @@ DownloadCopySaver.prototype = {
     }
 
     if (partFilePath) {
-      await IOUtils.move(partFilePath, targetPath);
+      try {
+        await IOUtils.move(partFilePath, targetPath);
+      } catch (e) {
+        if (e.name === "NotAllowedError") {
+          // In case we cannot write to the target file
+          // retry with a new unique name
+          let uniquePath = DownloadPaths.createNiceUniqueFile(
+            new FileUtils.File(targetPath)
+          ).path;
+          await IOUtils.move(partFilePath, uniquePath);
+          this.download.target.path = uniquePath;
+        } else {
+          throw e;
+        }
+      }
     }
   },
 
