@@ -3,10 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ///! Profiler Rust API
-mod gecko_bindings;
+pub mod gecko_bindings;
+mod label;
 mod profiler_state;
 mod thread;
 
 pub use gecko_bindings::profiling_categories::*;
+pub use label::*;
 pub use profiler_state::*;
 pub use thread::*;

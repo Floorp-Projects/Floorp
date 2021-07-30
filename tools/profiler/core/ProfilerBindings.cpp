@@ -15,3 +15,19 @@ void gecko_profiler_register_thread(const char* aName) {
 }
 
 void gecko_profiler_unregister_thread() { PROFILER_UNREGISTER_THREAD(); }
+
+void gecko_profiler_construct_label(mozilla::AutoProfilerLabel* aAutoLabel,
+                                    JS::ProfilingCategoryPair aCategoryPair) {
+#ifdef MOZ_GECKO_PROFILER
+  new (aAutoLabel) mozilla::AutoProfilerLabel(
+      "", nullptr, aCategoryPair,
+      uint32_t(
+          js::ProfilingStackFrame::Flags::LABEL_DETERMINED_BY_CATEGORY_PAIR));
+#endif
+}
+
+void gecko_profiler_destruct_label(mozilla::AutoProfilerLabel* aAutoLabel) {
+#ifdef MOZ_GECKO_PROFILER
+  aAutoLabel->~AutoProfilerLabel();
+#endif
+}
