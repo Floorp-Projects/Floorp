@@ -70,7 +70,7 @@ mochitest-plain:
                     (linux.*64|macosx.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
                     (linux.*64|macosx.*64|windows10-64)-qr/opt: ['autoland']
                     (linux.*64|macosx.*64|windows10-64)-shippable-qr/opt: ['autoland', 'mozilla-central']
-                    linux.*64-(asan|tsan)/opt: ['autoland', 'mozilla-central']
+                    linux.*64(-asan|-tsan-qr)/opt: ['autoland', 'mozilla-central']
                     default: []
             fission-xorigin:
                 by-test-platform:
@@ -78,7 +78,7 @@ mochitest-plain:
                     default: []
             default:
                 by-test-platform:
-                    .*-tsan/opt: ['trunk']
+                    .*-tsan-qr/opt: ['trunk']
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     default: built-projects
     chunks:
@@ -86,14 +86,14 @@ mochitest-plain:
             android-em-7.*: 4
             linux.*/debug: 16
             linux.*64-asan/opt: 10
-            linux.*64-tsan/opt: 20
+            linux.*64-tsan-qr/opt: 20
             linux.*64-.*cov/opt: 10
             windows10-64-ccov.*/.*: 10
             macosx.*64-ccov.*/.*: 10
             default: 5
     instance-size:
         by-test-platform:
-            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
+            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
             default: default
     e10s: true
     max-run-time: 5400
@@ -119,7 +119,7 @@ mochitest-a11y:
     e10s: false
     run-on-projects:
         by-test-platform:
-            .*-tsan/opt: ['trunk']
+            .*-tsan-qr/opt: ['trunk']
             default: built-projects
     mozharness:
         mochitest-flavor: a11y
@@ -134,7 +134,7 @@ mochitest-browser-chrome:
     variants:
         by-test-platform:
             linux.*64(-shippable)?-qr/opt: ['webrender-sw', 'webrender-sw-fission', 'webrender-sw-a11y-checks', 'webrender-sw-wayland']
-            linux.*64(-asan|-ccov|-devedition)-qr/opt: ['webrender-sw', 'webrender-sw-fission']
+            linux.*64(-asan|-ccov|-devedition|-tsan)-qr/opt: ['webrender-sw', 'webrender-sw-fission']
             linux.*64-qr/debug: ['webrender-sw', 'webrender-sw-fission', 'webrender-sw-wayland']
             windows10-64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
@@ -147,6 +147,7 @@ mochitest-browser-chrome:
             webrender-sw:
                 by-test-platform:
                     linux.*64(-asan)?-qr/(opt|debug): ['all']
+                    linux.*64-tsan-qr/opt: ['trunk']
                     linux.*64(-shippable|-ccov)-qr/opt: ['release']
                     default: built-projects
             webrender-sw-fission:
@@ -155,7 +156,6 @@ mochitest-browser-chrome:
                     default: []
             default:
                 by-test-platform:
-                    .*-tsan/opt: ['trunk']
                     linux.*-qr/.*: []
                     default: built-projects
     tier:
@@ -180,7 +180,7 @@ mochitest-browser-chrome:
         by-test-platform:
             linux.*-qr/debug: 16
             linux.*64-asan-qr/opt: 16
-            linux.*64-tsan/opt: 32
+            linux.*64-tsan-qr/opt: 32
             macosx.*64/debug: 16
             windows10-64-ccov.*/.*: 14
             windows10.*-asan-qr/opt: 9
@@ -191,7 +191,7 @@ mochitest-browser-chrome:
             linux.*64-ccov.*/.*: 9000
             windows10-64-ccov.*/.*: 10800
             macosx.*64-ccov.*/.*: 10800
-            linux.*64-tsan/opt: 9000
+            linux.*64-tsan-qr/opt: 10800
             linux.*-qr/opt: 5400
             .*/debug: 5400
             default: 3600
@@ -201,7 +201,7 @@ mochitest-browser-chrome:
     # Bug 1281241: migrating to m3.large instances
     instance-size:
         by-test-platform:
-            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
+            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
             default: default
     allow-software-gl-layers: false
 
@@ -262,14 +262,14 @@ mochitest-chrome:
     loopback-video: true
     run-on-projects:
         by-test-platform:
-            .*-tsan/opt: ['trunk']
+            .*-tsan-qr/opt: ['trunk']
             default: built-projects
     chunks:
         by-test-platform:
             .*(-ccov|-qr).*/.*: 3
             windows10-64-ccov-qr/opt: 3
             .*-asan(-qr)?/opt: 3
-            .*-tsan/opt: 6
+            .*-tsan-qr/opt: 6
             (linux.*64|windows.*|macosx1015-64)/debug: 3
             default: 2
     max-run-time: 3600
@@ -279,7 +279,7 @@ mochitest-chrome:
         chunked: true
     instance-size:
         by-test-platform:
-            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
+            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
             default: default
 
 mochitest-devtools-chrome:
@@ -303,7 +303,7 @@ mochitest-devtools-chrome:
                     default: []
             default:
                 by-test-platform:
-                    .*-tsan/opt: ['trunk']
+                    .*-tsan-qr/opt: ['trunk']
                     default: built-projects
     tier:
         by-variant:
@@ -318,7 +318,7 @@ mochitest-devtools-chrome:
             windows10-64-ccov.*/.*: 10800
             macosx.*64-ccov.*/.*: 9000
             linux.*64-ccov.*/.*: 7200
-            linux.*64-tsan/opt: 7200
+            linux.*64-tsan-qr/opt: 7200
             default: 5400
     chunks:
         by-test-platform:
@@ -326,7 +326,7 @@ mochitest-devtools-chrome:
             linux.*64-qr/debug: 12
             macosx.*64-qr/debug: 8
             .*-asan(-qr)?/opt: 8
-            .*-tsan/opt: 16
+            .*-tsan-qr/opt: 16
             default: 5
     mozharness:
         mochitest-flavor: chrome
@@ -350,7 +350,7 @@ mochitest-plain-gpu:
             fission: []
             default:
                 by-test-platform:
-                    .*-tsan/opt: ['trunk']
+                    .*-tsan-qr/opt: ['trunk']
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     default: built-projects
     virtualization:
@@ -376,7 +376,7 @@ mochitest-plain-gpu:
                     - --mochitest-suite=mochitest-plain-gpu
     instance-size:
         by-test-platform:
-            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
+            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
             default: default
 
 mochitest-chrome-gpu:
@@ -395,7 +395,7 @@ mochitest-chrome-gpu:
             fission: []
             default:
                 by-test-platform:
-                    .*-tsan/opt: ['trunk']
+                    .*-tsan-qr/opt: ['trunk']
                     android.*/.*: []
                     default: built-projects
     tier:
@@ -413,7 +413,7 @@ mochitest-chrome-gpu:
                     - --mochitest-suite=mochitest-chrome-gpu
     instance-size:
         by-test-platform:
-            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
+            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
             default: default
 
 mochitest-media:
@@ -424,7 +424,7 @@ mochitest-media:
         by-test-platform:
             windows10-64-ccov.*/.*: 7200
             macosx.*64-ccov.*/.*: 7200
-            linux.*64-tsan/opt: 7200
+            linux.*64-tsan-qr/opt: 7200
             default: 5400
     run-on-projects:
         by-variant:
@@ -433,21 +433,19 @@ mochitest-media:
                     (linux.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
                     (linux.*64|windows10-64)-qr/opt: ['autoland']
                     (linux.*64|windows10-64)-shippable-qr/opt: ['mozilla-central']
-                    linux.*64-asan-qr/opt: ['autoland', 'mozilla-central']
-                    linux.*64-tsan/opt: ['autoland', 'mozilla-central']
+                    linux.*64(-asan|-tsan)-qr/opt: ['autoland', 'mozilla-central']
                     default: []
             fission-webgl-ipc:
                 by-test-platform:
                     (linux.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
                     (linux.*64|windows10-64)-qr/opt: ['autoland']
                     (linux.*64|windows10-64)-shippable-qr/opt: ['mozilla-central']
-                    linux.*64-asan-qr/opt: ['autoland', 'mozilla-central']
-                    linux.*64-tsan/opt: ['autoland', 'mozilla-central']
+                    linux.*64(-asan|-tsan)-qr/opt: ['autoland', 'mozilla-central']
                     (linux|windows10-64|macos)(?!.*-qr).*: []
                     default: []
             socketprocess:
                 by-test-platform:
-                    .*-tsan/opt: ['trunk']
+                    .*-tsan-qr/opt: ['trunk']
                     windows10-64-asan-qr/opt: ['trunk']
                     android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
                     android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
@@ -458,7 +456,7 @@ mochitest-media:
             noqr: built-projects
             webgl-ipc:
                 by-test-platform:
-                    .*-tsan/opt: ['trunk']
+                    .*-tsan-qr/opt: ['trunk']
                     windows10-64-asan-qr/opt: ['trunk']
                     (linux.*64|windows10-64)(-shippable)?-qr/(opt|debug): ['trunk']
                     (linux|windows10-64|macos)(?!.*-qr).*: []
@@ -468,7 +466,7 @@ mochitest-media:
                     android-hw-.*/opt: []
                     android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    .*-tsan/opt: ['trunk']
+                    .*-tsan-qr/opt: ['trunk']
                     linux.*(asan|ccov)/opt: []
                     .*(ccov/|asan/|-32).*: built-projects
                     (android|linux|windows10-64|macos)(?!.*-qr).*: []
@@ -491,7 +489,7 @@ mochitest-media:
     loopback-video: true
     instance-size:
         by-test-platform:
-            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
+            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
             default: large
     chunks:
         by-test-platform:
@@ -501,7 +499,7 @@ mochitest-media:
             windows10-aarch64-qr/.*: 1
             windows.*32-shippable/.*: 2
             linux1804-64(-shippable|-devedition|-.*qr)/opt: 2
-            linux.*64-tsan/opt: 4
+            linux.*64-tsan-qr/opt: 4
             default: 3
     mozharness:
         mochitest-flavor: plain
@@ -635,7 +633,7 @@ mochitest-webgl1-core:
             default: 1800
     run-on-projects:
         by-test-platform:
-            .*-tsan/opt: ['trunk']
+            .*-tsan-qr/opt: ['trunk']
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
             default: built-projects
@@ -675,7 +673,7 @@ mochitest-webgl1-ext:
     max-run-time: 2700
     run-on-projects:
         by-test-platform:
-            .*-tsan/opt: ['trunk']
+            .*-tsan-qr/opt: ['trunk']
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
             default: built-projects
@@ -714,7 +712,7 @@ mochitest-webgl2-core:
     max-run-time: 1800
     run-on-projects:
         by-test-platform:
-            .*-tsan/opt: ['trunk']
+            .*-tsan-qr/opt: ['trunk']
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
             default: built-projects
@@ -831,7 +829,7 @@ mochitest-remote:
             fission: []
             default:
                 by-test-platform:
-                    .*-tsan/opt: ['trunk']
+                    .*-tsan-qr/opt: ['trunk']
                     default: built-projects
     tier:
         by-variant:
