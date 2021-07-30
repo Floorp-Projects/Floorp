@@ -20,11 +20,6 @@ void NimbusFeatures::GetPrefName(const nsACString& aFeatureId,
   aPref.Append(aVariable);
 }
 
-void NimbusFeatures::PreferencesCallback(const char* aPref, void* aData) {
-  PrefChangedFunc cb = reinterpret_cast<PrefChangedFunc>(aData);
-  (*cb)(aPref, nullptr);
-}
-
 bool NimbusFeatures::GetBool(const nsACString& aFeatureId,
                              const nsACString& aVariable, bool aDefault) {
   nsAutoCString pref;
@@ -41,20 +36,20 @@ int NimbusFeatures::GetInt(const nsACString& aFeatureId,
 
 nsresult NimbusFeatures::OnUpdate(const nsACString& aFeatureId,
                                   const nsACString& aVariable,
-                                  PrefChangedFunc aUserCallback) {
+                                  PrefChangedFunc aUserCallback,
+                                  void* aUserData) {
   nsAutoCString pref;
   GetPrefName(aFeatureId, aVariable, pref);
-  return Preferences::RegisterCallback(PreferencesCallback, pref,
-                                       (void*)aUserCallback);
+  return Preferences::RegisterCallback(aUserCallback, pref, aUserData);
 }
 
 nsresult NimbusFeatures::OffUpdate(const nsACString& aFeatureId,
                                    const nsACString& aVariable,
-                                   PrefChangedFunc aUserCallback) {
+                                   PrefChangedFunc aUserCallback,
+                                   void* aUserData) {
   nsAutoCString pref;
   GetPrefName(aFeatureId, aVariable, pref);
-  return Preferences::UnregisterCallback(
-      PreferencesCallback, pref, reinterpret_cast<void*>(aUserCallback));
+  return Preferences::UnregisterCallback(aUserCallback, pref, aUserData);
 }
 
 }  // namespace mozilla

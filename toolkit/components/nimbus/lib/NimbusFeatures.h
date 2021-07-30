@@ -12,13 +12,9 @@
 namespace mozilla {
 
 class NimbusFeatures {
-  using PrefChangedFunc = void (*)(const char* aPref, void* aData);
-
  private:
   static void GetPrefName(const nsACString& aFeatureId,
                           const nsACString& aVariable, nsACString& aPref);
-
-  static void PreferencesCallback(const char* aPref, void* aData);
 
  public:
   static bool GetBool(const nsACString& aFeatureId, const nsACString& aVariable,
@@ -29,11 +25,11 @@ class NimbusFeatures {
 
   static nsresult OnUpdate(const nsACString& aFeatureId,
                            const nsACString& aVariable,
-                           PrefChangedFunc aUserCallback);
+                           PrefChangedFunc aUserCallback, void* aUserData);
 
   static nsresult OffUpdate(const nsACString& aFeatureId,
                             const nsACString& aVariable,
-                            PrefChangedFunc aUserCallback);
+                            PrefChangedFunc aUserCallback, void* aUserData);
 };
 
 }  // namespace mozilla
