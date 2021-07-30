@@ -11,9 +11,7 @@ add_task(function test_methods_presence() {
 });
 
 add_task(async function test_methods_calling() {
-  const { L10nRegistry } =
-    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
-
+  const l10nReg = new L10nRegistry();
   const fs = [
     { path: "/localization/de/browser/menu.ftl", source: `
 key-value1 = [de] Value2
@@ -28,10 +26,10 @@ key-attr =
   const originalRequested = Services.locale.requestedLocales;
 
   const source = L10nFileSource.createMock("test", ["de", "en-US"], "/localization/{locale}", fs);
-  L10nRegistry.registerSources([source]);
+  l10nReg.registerSources([source]);
 
   async function* generateBundles(resIds) {
-    yield * await L10nRegistry.generateBundles(["de", "en-US"], resIds);
+    yield * l10nReg.generateBundles(["de", "en-US"], resIds);
   }
 
   const l10n = new Localization([
@@ -87,14 +85,12 @@ key-attr =
     strictEqual(messages[3].value, null);
   }
 
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
   Services.locale.requestedLocales = originalRequested;
 });
 
 add_task(async function test_builtins() {
-  const { L10nRegistry } =
-    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
-
+  const l10nReg = new L10nRegistry();
   const known_platforms = {
     "linux": "linux",
     "win": "windows",
@@ -112,10 +108,10 @@ key = { PLATFORM() ->
   ];
 
   const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
-  L10nRegistry.registerSources([source]);
+  l10nReg.registerSources([source]);
 
   async function* generateBundles(resIds) {
-    yield * await L10nRegistry.generateBundles(["en-US"], resIds);
+    yield * await l10nReg.generateBundles(["en-US"], resIds);
   }
 
   const l10n = new Localization([
@@ -127,13 +123,11 @@ key = { PLATFORM() ->
   ok(values[0].includes(
     `${ known_platforms[AppConstants.platform].toUpperCase() } Value`));
 
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
 });
 
 add_task(async function test_add_remove_resourceIds() {
-  const { L10nRegistry } =
-    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
-
+  const l10nReg = new L10nRegistry();
   const fs = [
     { path: "/localization/en-US/browser/menu.ftl", source: "key1 = Value1" },
     { path: "/localization/en-US/toolkit/menu.ftl", source: "key2 = Value2" },
@@ -142,10 +136,10 @@ add_task(async function test_add_remove_resourceIds() {
   const originalRequested = Services.locale.requestedLocales;
 
   const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
-  L10nRegistry.registerSources([source]);
+  l10nReg.registerSources([source]);
 
   async function* generateBundles(resIds) {
-    yield * await L10nRegistry.generateBundles(["en-US"], resIds);
+    yield * await l10nReg.generateBundles(["en-US"], resIds);
   }
 
   const l10n = new Localization(["/browser/menu.ftl"], false, { generateBundles });
@@ -179,14 +173,12 @@ add_task(async function test_add_remove_resourceIds() {
   strictEqual(values[0], null);
   strictEqual(values[1], "Value2");
 
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
   Services.locale.requestedLocales = originalRequested;
 });
 
 add_task(async function test_switch_to_async() {
-  const { L10nRegistry } =
-    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
-
+  const l10nReg = new L10nRegistry();
   const fs = [
     { path: "/localization/en-US/browser/menu.ftl", source: "key1 = Value1" },
     { path: "/localization/en-US/toolkit/menu.ftl", source: "key2 = Value2" },
@@ -194,14 +186,14 @@ add_task(async function test_switch_to_async() {
   const originalRequested = Services.locale.requestedLocales;
 
   const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
-  L10nRegistry.registerSources([source]);
+  l10nReg.registerSources([source]);
 
   async function* generateBundles(resIds) {
-    yield * await L10nRegistry.generateBundles(["en-US"], resIds);
+    yield * await l10nReg.generateBundles(["en-US"], resIds);
   }
 
   function* generateBundlesSync(resIds) {
-    yield * L10nRegistry.generateBundlesSync(["en-US"], resIds);
+    yield * l10nReg.generateBundlesSync(["en-US"], resIds);
   }
 
   const l10n = new Localization(["/browser/menu.ftl"], false, { generateBundles, generateBundlesSync });
@@ -229,6 +221,6 @@ add_task(async function test_switch_to_async() {
   strictEqual(values[0], null);
   strictEqual(values[1], "Value2");
 
-  L10nRegistry.sources.clear();
+  l10nReg.clearSources();
   Services.locale.requestedLocales = originalRequested;
 });
