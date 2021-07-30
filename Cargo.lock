@@ -1749,6 +1749,7 @@ version = "0.1.0"
 dependencies = [
  "bindgen",
  "lazy_static",
+ "profiler-macros",
  "toml",
 ]
 
@@ -3944,6 +3945,14 @@ dependencies = [
  "nserror",
  "winapi",
  "xpcom",
+]
+
+[[package]]
+name = "profiler-macros"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]

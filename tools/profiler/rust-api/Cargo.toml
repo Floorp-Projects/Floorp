@@ -5,6 +5,7 @@ authors = ["The Mozilla Project Developers"]
 edition = "2018"
 
 [dependencies]
+profiler-macros = { path = "./macros" }
 
 [build-dependencies]
 lazy_static = "1"
