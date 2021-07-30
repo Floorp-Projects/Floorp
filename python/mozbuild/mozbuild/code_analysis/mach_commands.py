@@ -962,8 +962,10 @@ class StaticAnalysis(MachCommandBase):
 
     def setup_coverity(self, command_context, force_download=True):
         rc, config, _ = self._get_config_environment(command_context)
-        rc, cov = rc or self.get_coverity_secrets(command_context)
+        if rc != 0:
+            return rc, None
 
+        rc, cov = self.get_coverity_secrets(command_context)
         if rc != 0:
             return rc, cov
 
