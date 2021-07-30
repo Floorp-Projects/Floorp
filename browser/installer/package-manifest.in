@@ -197,8 +197,6 @@
 
 ; WebDriver (Marionette, Remote Agent) remote protocols
 #ifdef ENABLE_WEBDRIVER
-@RESPATH@/components/marionette.manifest
-@RESPATH@/components/marionette.js
 @RESPATH@/chrome/remote@JAREXT@
 @RESPATH@/chrome/remote.manifest
 #endif
