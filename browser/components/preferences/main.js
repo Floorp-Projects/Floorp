@@ -17,9 +17,6 @@ var { TransientPrefs } = ChromeUtils.import(
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-var { L10nRegistry } = ChromeUtils.import(
-  "resource://gre/modules/L10nRegistry.jsm"
-);
 var { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
 ChromeUtils.defineModuleGetter(
   this,
@@ -263,7 +260,7 @@ function getBundleForLocales(newLocales) {
     ])
   );
   function generateBundles(resourceIds) {
-    return L10nRegistry.generateBundles(locales, resourceIds);
+    return L10nRegistry.getInstance().generateBundles(locales, resourceIds);
   }
   return new Localization(
     ["browser/preferences/preferences.ftl", "branding/brand.ftl"],
