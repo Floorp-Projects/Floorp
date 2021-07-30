@@ -267,6 +267,38 @@ windows10-32-mingwclang-qr/opt:
     test-sets:
         - mingwclang-tests-opt
 
+# win10-64 2004
+windows10-64-2004-ccov-qr/opt:
+    build-platform: win64-ccov/opt
+    test-sets:
+        - windows10-2004-tests
+
+windows10-64-2004-qr/debug:
+    build-platform: win64/debug
+    test-sets:
+        - windows10-2004-tests
+
+windows10-64-2004-qr/opt:
+    build-platform: win64/opt
+    test-sets:
+        - windows10-2004-tests
+
+windows10-64-2004-shippable-qr/opt:
+    build-platform: win64-shippable/opt
+    test-sets:
+        - windows10-2004-tests
+
+windows10-64-2004-devedition-qr/opt:
+    build-platform: win64-devedition/opt
+    test-sets:
+        - windows10-2004-tests
+
+windows10-64-2004-asan-qr/opt:
+    build-platform: win64-asan/opt
+    test-sets:
+        - windows10-2004-tests
+
+
 ##
 # MacOS X platforms (matching /macosx.*/)
 
