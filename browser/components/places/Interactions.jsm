@@ -726,6 +726,8 @@ class InteractionsStore {
     );
     this.progress.pendingUpdates = 0;
 
+    Services.obs.notifyObservers(null, "places-metadata-updated");
+
     if (this.#userIsIdle) {
       this.updateSnapshots();
     }
