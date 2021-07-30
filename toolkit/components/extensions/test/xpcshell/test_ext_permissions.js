@@ -712,11 +712,6 @@ async function test_permissions_prompt(manifest_version) {
 
   let install = await AddonManager.getInstallForFile(xpi);
 
-  Services.prefs.setBoolPref("extensions.webextPermissionPrompts", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("extensions.webextPermissionPrompts");
-  });
-
   let perminfo;
   install.promptHandler = info => {
     perminfo = info;

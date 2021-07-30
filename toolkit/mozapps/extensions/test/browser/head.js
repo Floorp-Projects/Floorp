@@ -1445,12 +1445,6 @@ function waitForCondition(condition, nextTest, errorMsg) {
 // Wait for and then acknowledge (by pressing the primary button) the
 // given notification.
 function promiseNotification(id = "addon-webext-permissions") {
-  if (
-    !Services.prefs.getBoolPref("extensions.webextPermissionPrompts", false)
-  ) {
-    return Promise.resolve();
-  }
-
   return new Promise(resolve => {
     function popupshown() {
       let notification = PopupNotifications.getNotification(id);
