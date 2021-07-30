@@ -38,11 +38,7 @@ internal class BlockingItemViewHolder(
         switchView.setOnCheckedChangeListener(this)
 
         val helpView = itemView.findViewById<View>(R.id.help_trackers)
-        helpView.setOnClickListener { view ->
-            if (browserFragment != null) {
-                browserFragment.onClick(view)
-            }
-        }
+        helpView.setOnClickListener(this)
 
         trackerCounter = itemView.findViewById(R.id.trackers_count)
 
