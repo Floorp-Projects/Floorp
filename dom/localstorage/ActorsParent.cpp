@@ -3096,6 +3096,22 @@ bool VerifyOriginKey(const nsACString& aOriginKey,
   return true;
 }
 
+LSInitializationInfo& MutableInitializationInfoRef() {
+  if (!gInitializationInfo) {
+    gInitializationInfo = new LSInitializationInfo();
+  }
+  return *gInitializationInfo;
+}
+
+nsresult ExecuteOriginInitialization(
+    const nsACString& aOrigin, const LSOriginInitialization aInitialization,
+    const nsresult aRv) {
+  return ExecuteInitialization(
+      MutableInitializationInfoRef().MutableOriginInitializationInfoRef(
+          aOrigin),
+      aInitialization, aRv);
+}
+
 }  // namespace
 
 /*******************************************************************************
@@ -6781,24 +6797,15 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   MOZ_ASSERT(mState == State::Nesting);
   MOZ_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
 
-  // XXX Maybe add GetOrCreateInitializationInfo for this.
-  if (!gInitializationInfo) {
-    gInitializationInfo = new LSInitializationInfo();
-  }
-
-  auto& originInitializationInfo =
-      gInitializationInfo->MutableOriginInitializationInfoRef(
-          mOriginMetadata.mOrigin);
-
-  const auto firstInitializationAttempt =
-      originInitializationInfo.FirstInitializationAttempt(
-          LSOriginInitialization::Datastore);
-
-  auto rv = [&firstInitializationAttempt, this]() -> nsresult {
+  const auto innerFunc = [this]() -> nsresult {
     // XXX This function is too long, refactor it into helper functions for
     // readability.
+
     const auto maybeExtraInfo =
-        firstInitializationAttempt.Pending()
+        MutableInitializationInfoRef()
+                .MutableOriginInitializationInfoRef(mOriginMetadata.mOrigin)
+                .FirstInitializationAttemptPending(
+                    LSOriginInitialization::Datastore)
             ? Some(ScopedLogExtraInfo{
                   ScopedLogExtraInfo::kTagContext,
                   "dom::localstorage::FirstOriginInitializationAttempt::Datastore"_ns})
@@ -7052,11 +7059,10 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     QM_TRY(OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
 
     return NS_OK;
-  }();
+  };
 
-  firstInitializationAttempt.MaybeRecord(rv);
-
-  return rv;
+  return ExecuteOriginInitialization(
+      mOriginMetadata.mOrigin, LSOriginInitialization::Datastore, innerFunc());
 }
 
 nsresult PrepareDatastoreOp::DatabaseNotAvailable() {
