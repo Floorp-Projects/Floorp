@@ -101,6 +101,8 @@ fn generate_bindings() {
         .header(add_include("GeckoProfiler.h"))
         .header(add_include("ProfilerBindings.h"))
         .whitelist_function("gecko_profiler_.*")
+        .whitelist_var("mozilla::profiler::detail::RacyFeatures::sActiveAndFeatures")
+        .whitelist_type("mozilla::profiler::detail::RacyFeatures")
         .raw_line("pub use self::root::*;")
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.

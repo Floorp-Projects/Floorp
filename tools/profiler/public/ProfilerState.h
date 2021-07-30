@@ -231,6 +231,8 @@ class RacyFeatures {
     return Nothing();
   }
 
+  // This implementation must be kept in sync with `gecko_profiler::is_active`
+  // in the Profiler Rust API.
   [[nodiscard]] static bool IsActive() {
     return uint32_t(sActiveAndFeatures) & Active;
   }
