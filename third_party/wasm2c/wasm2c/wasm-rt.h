@@ -18,7 +18,14 @@
 #define WASM_RT_H_
 
 #include <stdint.h>
+#include <stddef.h>
 #include <setjmp.h>
+
+#if defined(_WIN32)
+  #define WASM2C_FUNC_EXPORT __declspec(dllexport)
+#else
+  #define WASM2C_FUNC_EXPORT
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -87,6 +94,15 @@ typedef struct {
   wasm_rt_anyfunc_t func;
 } wasm_rt_elem_t;
 
+typedef uint8_t wasm2c_shadow_memory_cell_t;
+
+typedef struct {
+  wasm2c_shadow_memory_cell_t* data;
+  size_t data_size;
+  void* allocation_sizes_map;
+  uint32_t heap_base;
+} wasm2c_shadow_memory_t;
+
 /** A Memory object. */
 typedef struct {
   /** The linear memory data, with a byte length of `size`. */
@@ -100,6 +116,10 @@ typedef struct {
   uint32_t pages, max_pages;
   /** The current size of the linear memory, in bytes. */
   uint32_t size;
+
+#if defined(WASM_CHECK_SHADOW_MEMORY)
+  wasm2c_shadow_memory_t shadow_memory;
+#endif
 } wasm_rt_memory_t;
 
 /** A Table object. */
@@ -135,6 +155,8 @@ typedef struct wasm_sandbox_wasi_data {
 
   int wasm_fd_to_native[WASM2C_WASI_MAX_FDS];
   uint32_t next_wasm_fd;
+
+  void* clock_data;
 
 } wasm_sandbox_wasi_data;
 
@@ -244,6 +266,30 @@ extern void wasm_rt_cleanup_wasi(wasm_sandbox_wasi_data*);
 
 // Helper function that host can use to ensure wasm2c code is loaded correctly when using dynamic libraries
 extern void wasm2c_ensure_linked();
+
+// Runtime functions for shadow memory
+
+// Create the shadow memory
+extern void wasm2c_shadow_memory_create(wasm_rt_memory_t* mem);
+// Expand the shadow memory to match wasm memory
+extern void wasm2c_shadow_memory_expand(wasm_rt_memory_t* mem);
+// Cleanup
+extern void wasm2c_shadow_memory_destroy(wasm_rt_memory_t* mem);
+// Perform checks for the load operation that completed
+WASM2C_FUNC_EXPORT extern void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem, const char* func_name, uint32_t ptr, uint32_t ptr_size);
+// Perform checks for the store operation that completed
+WASM2C_FUNC_EXPORT extern void wasm2c_shadow_memory_store(wasm_rt_memory_t* mem, const char* func_name, uint32_t ptr, uint32_t ptr_size);
+// Mark an area as allocated, if it is currently unused. If already used, this is a noop.
+extern void wasm2c_shadow_memory_reserve(wasm_rt_memory_t* mem, uint32_t ptr, uint32_t ptr_size);
+// Perform checks for the malloc operation that completed
+extern void wasm2c_shadow_memory_dlmalloc(wasm_rt_memory_t* mem, uint32_t ptr, uint32_t ptr_size);
+// Perform checks for the free operation that will be run
+extern void wasm2c_shadow_memory_dlfree(wasm_rt_memory_t* mem, uint32_t ptr);
+// Pass on information about the boundary between wasm globals and heap
+// Shadow asan will check that all malloc metadata structures below this boundary are only accessed by malloc related functions
+extern void wasm2c_shadow_memory_mark_globals_heap_boundary(wasm_rt_memory_t* mem, uint32_t ptr);
+// Print a list of all allocations currently active
+WASM2C_FUNC_EXPORT extern void wasm2c_shadow_memory_print_allocations(wasm_rt_memory_t* mem);
 
 #ifdef __cplusplus
 }
