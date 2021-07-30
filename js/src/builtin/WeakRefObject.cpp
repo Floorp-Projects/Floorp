@@ -91,7 +91,7 @@ bool WeakRefObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   };
 
   // 5. Set weakRef.[[Target]] to target.
-  weakRef->setPrivateGCThing(target);
+  weakRef->setReservedSlotGCThingAsPrivate(TargetSlot, target);
 
   // 6. Return weakRef.
   args.rval().setObject(*weakRef);
@@ -117,7 +117,7 @@ void WeakRefObject::trace(JSTracer* trc, JSObject* obj) {
     JSObject* target = weakRef->target();
     if (target) {
       TraceManuallyBarrieredEdge(trc, &target, "WeakRefObject::target");
-      weakRef->setPrivateUnbarriered(target);
+      weakRef->setTargetUnbarriered(target);
     }
   }
 }
@@ -157,8 +157,8 @@ const ClassSpec WeakRefObject::classSpec_ = {
 
 const JSClass WeakRefObject::class_ = {
     "WeakRef",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_WeakRef) |
-        JSCLASS_FOREGROUND_FINALIZE,
+    JSCLASS_HAS_RESERVED_SLOTS(SlotCount) |
+        JSCLASS_HAS_CACHED_PROTO(JSProto_WeakRef) | JSCLASS_FOREGROUND_FINALIZE,
     &classOps_, &classSpec_};
 
 const JSClass WeakRefObject::protoClass_ = {
@@ -221,7 +221,13 @@ bool WeakRefObject::deref(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-void WeakRefObject::setTarget(JSObject* target) { setPrivate(target); }
+void WeakRefObject::setTargetUnbarriered(JSObject* target) {
+  setReservedSlotGCThingAsPrivateUnbarriered(TargetSlot, target);
+}
+
+void WeakRefObject::clearTarget() {
+  clearReservedSlotGCThingAsPrivate(TargetSlot);
+}
 
 /* static */
 void WeakRefObject::readBarrier(JSContext* cx, Handle<WeakRefObject*> self) {
@@ -237,7 +243,7 @@ void WeakRefObject::readBarrier(JSContext* cx, Handle<WeakRefObject*> self) {
     MOZ_ASSERT(cx->runtime()->hasReleasedWrapperCallback);
     bool wasReleased = cx->runtime()->hasReleasedWrapperCallback(obj);
     if (wasReleased) {
-      self->setTarget(nullptr);
+      self->clearTarget();
       return;
     }
   }
@@ -303,7 +309,7 @@ void WeakRefMap::sweep(gc::StoreBuffer* sbToLock) {
         obj = UncheckedUnwrapWithoutExpose(obj);
 
         WeakRefObject* weakRef = &obj->as<WeakRefObject>();
-        weakRef->setTarget(nullptr);
+        weakRef->clearTarget();
       }
       e->removeFront();
     } else {
@@ -331,9 +337,9 @@ void WeakRefHeapPtrVector::sweep(HeapPtrObject& target) {
     WeakRefObject* weakRef = &obj->as<WeakRefObject>();
 
     if (needsSweep) {
-      weakRef->setTarget(nullptr);
+      weakRef->clearTarget();
     } else {
-      weakRef->setTarget(target.get());
+      weakRef->setTargetUnbarriered(target.get());
 
       if (src != dst) {
         *dst = std::move(*src);
