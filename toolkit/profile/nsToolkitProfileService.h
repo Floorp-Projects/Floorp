@@ -82,8 +82,7 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
                                 nsIToolkitProfile** aProfile, bool* aDidCreate,
                                 bool* aWasDefaultSelection);
   nsresult CreateResetProfile(nsIToolkitProfile** aNewProfile);
-  nsresult ApplyResetProfile(nsIToolkitProfile* aOldProfile,
-                             bool aDeleteOldProfile = true);
+  nsresult ApplyResetProfile(nsIToolkitProfile* aOldProfile);
   void CompleteStartup();
 
  private:
@@ -107,7 +106,6 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   nsresult MaybeMakeDefaultDedicatedProfile(nsIToolkitProfile* aProfile,
                                             bool* aResult);
   bool IsSnapEnvironment();
-  bool IsWinPackageEnvironment();
   bool UseLegacyProfiles();
   nsresult CreateDefaultProfile(nsIToolkitProfile** aResult);
   void SetNormalDefault(nsIToolkitProfile* aProfile);
