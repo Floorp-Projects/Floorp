@@ -58,7 +58,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
   ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.jsm",
-  L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   Log: "resource://gre/modules/Log.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
@@ -3005,7 +3004,7 @@ class Langpack extends ExtensionData {
       );
     });
 
-    L10nRegistry.registerSources(fileSources);
+    L10nRegistry.getInstance().registerSources(fileSources);
 
     Services.obs.notifyObservers(
       { wrappedJSObject: { langpack: this } },
@@ -3023,7 +3022,7 @@ class Langpack extends ExtensionData {
     const sourcesToRemove = Object.keys(
       this.startupData.l10nRegistrySources
     ).map(sourceName => `${sourceName}-${this.startupData.langpackId}`);
-    L10nRegistry.removeSources(sourcesToRemove);
+    L10nRegistry.getInstance().removeSources(sourcesToRemove);
 
     if (this.chromeRegistryHandle) {
       this.chromeRegistryHandle.destruct();

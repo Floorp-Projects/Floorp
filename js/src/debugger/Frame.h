@@ -120,7 +120,8 @@ class DebuggerFrame : public NativeObject {
   static const JSClass class_;
 
   enum {
-    OWNER_SLOT = 0,
+    FRAME_ITER_SLOT = 0,
+    OWNER_SLOT,
     ARGUMENTS_SLOT,
     ONSTEP_HANDLER_SLOT,
     ONPOP_HANDLER_SLOT,
@@ -188,9 +189,6 @@ class DebuggerFrame : public NativeObject {
   [[nodiscard]] static DebuggerFrame* check(JSContext* cx, HandleValue thisv);
 
   bool isOnStack() const;
-
-  // Like isOnStack, but works even in the midst of a relocating GC.
-  bool isOnStackMaybeForwarded() const;
 
   bool isSuspended() const;
 

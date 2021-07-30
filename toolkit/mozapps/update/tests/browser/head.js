@@ -664,7 +664,9 @@ function runAboutDialogUpdateTest(params, steps) {
     const { panelId, checkActiveUpdate, continueFile, downloadInfo } = step;
     return (async function() {
       await TestUtils.waitForCondition(
-        () => aboutDialog.gAppUpdater.selectedPanel?.id == panelId,
+        () =>
+          aboutDialog.gAppUpdater &&
+          aboutDialog.gAppUpdater.selectedPanel?.id == panelId,
         "Waiting for the expected panel ID: " + panelId,
         undefined,
         200

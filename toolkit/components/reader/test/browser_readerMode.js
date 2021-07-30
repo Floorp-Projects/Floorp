@@ -10,7 +10,7 @@ const TEST_PREFS = [["reader.parse-on-load.enabled", true]];
 
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://example.com"
+  "https://example.com"
 );
 
 var readerButton = document.getElementById("reader-mode-button");
@@ -89,11 +89,7 @@ add_task(async function test_reader_button() {
   is(iconEl.src, favicon, "Correct favicon should be loaded");
 
   is(gURLBar.untrimmedValue, url, "gURLBar value is about:reader URL");
-  is(
-    gURLBar.value,
-    url.substring("http://".length),
-    "gURLBar is displaying original article URL"
-  );
+  is(gURLBar.value, url, "gURLBar is displaying original article URL");
 
   // Check selected value for URL bar
   await new Promise((resolve, reject) => {
@@ -188,7 +184,7 @@ add_task(async function test_getOriginalUrl() {
   let { ReaderMode } = ChromeUtils.import(
     "resource://gre/modules/ReaderMode.jsm"
   );
-  let url = "http://foo.com/article.html";
+  let url = "https://foo.com/article.html";
 
   is(
     ReaderMode.getOriginalUrl("about:reader?url=" + encodeURIComponent(url)),
@@ -206,7 +202,7 @@ add_task(async function test_getOriginalUrl() {
     "Did not find original URL from non-reader URL"
   );
 
-  let badUrl = "http://foo.com/?;$%^^";
+  let badUrl = "https://foo.com/?;$%^^";
   is(
     ReaderMode.getOriginalUrl("about:reader?url=" + encodeURIComponent(badUrl)),
     badUrl,

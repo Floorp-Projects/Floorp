@@ -259,8 +259,8 @@ bool CanvasRenderingContext2D::PatternIsOpaque(
 // GeneralPattern class in gfxContext.cpp with this one.
 class CanvasGeneralPattern {
  public:
-  typedef CanvasRenderingContext2D::Style Style;
-  typedef CanvasRenderingContext2D::ContextState ContextState;
+  using Style = CanvasRenderingContext2D::Style;
+  using ContextState = CanvasRenderingContext2D::ContextState;
 
   Pattern& ForStyle(CanvasRenderingContext2D* aCtx, Style aStyle,
                     DrawTarget* aRT) {
@@ -341,7 +341,7 @@ class CanvasGeneralPattern {
  */
 class AdjustedTargetForFilter {
  public:
-  typedef CanvasRenderingContext2D::ContextState ContextState;
+  using ContextState = CanvasRenderingContext2D::ContextState;
 
   AdjustedTargetForFilter(CanvasRenderingContext2D* aCtx,
                           DrawTarget* aFinalTarget,
@@ -488,7 +488,7 @@ class AdjustedTargetForFilter {
  */
 class AdjustedTargetForShadow {
  public:
-  typedef CanvasRenderingContext2D::ContextState ContextState;
+  using ContextState = CanvasRenderingContext2D::ContextState;
 
   AdjustedTargetForShadow(CanvasRenderingContext2D* aCtx,
                           DrawTarget* aFinalTarget, const gfx::Rect& aBounds,
@@ -574,7 +574,7 @@ class AdjustedTargetForShadow {
  */
 class AdjustedTarget {
  public:
-  typedef CanvasRenderingContext2D::ContextState ContextState;
+  using ContextState = CanvasRenderingContext2D::ContextState;
 
   explicit AdjustedTarget(CanvasRenderingContext2D* aCtx,
                           const gfx::Rect* aBounds = nullptr) {
@@ -3490,7 +3490,7 @@ bool CanvasRenderingContext2D::GetHitRegionRect(Element* aElement,
  */
 struct MOZ_STACK_CLASS CanvasBidiProcessor
     : public nsBidiPresUtils::BidiProcessor {
-  typedef CanvasRenderingContext2D::Style Style;
+  using Style = CanvasRenderingContext2D::Style;
 
   CanvasBidiProcessor()
       : nsBidiPresUtils::BidiProcessor(),
@@ -3512,7 +3512,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
     }
   }
 
-  typedef CanvasRenderingContext2D::ContextState ContextState;
+  using ContextState = CanvasRenderingContext2D::ContextState;
 
   virtual void SetText(const char16_t* aText, int32_t aLength,
                        nsBidiDirection aDirection) override {

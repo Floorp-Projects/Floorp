@@ -87,3 +87,46 @@ interface L10nFileSource {
   FluentResource? fetchFileSync(UTF8String locale, UTF8String path);
 };
 
+dictionary FluentBundleIteratorResult
+{
+  required FluentBundle? value;
+  required boolean done;
+};
+
+[LegacyNoInterfaceObject, Exposed=Window]
+interface FluentBundleIterator {
+  FluentBundleIteratorResult next();
+  [Alias="@@iterator"] FluentBundleIterator values();
+};
+
+[LegacyNoInterfaceObject, Exposed=Window]
+interface FluentBundleAsyncIterator {
+  Promise<FluentBundleIteratorResult> next();
+  [Alias="@@asyncIterator"] FluentBundleAsyncIterator values();
+};
+
+[ChromeOnly, Exposed=Window]
+interface L10nRegistry {
+  constructor();
+
+  static L10nRegistry getInstance();
+
+  sequence<UTF8String> getAvailableLocales();
+
+  void registerSources(sequence<L10nFileSource> aSources);
+  void updateSources(sequence<L10nFileSource> aSources);
+  void removeSources(sequence<UTF8String> aSources);
+
+  [Throws]
+  boolean hasSource(UTF8String aName);
+  [Throws]
+  L10nFileSource? getSource(UTF8String aName);
+  sequence<UTF8String> getSourceNames();
+  void clearSources();
+
+  [Throws, NewObject]
+  FluentBundleIterator generateBundlesSync(sequence<UTF8String> aLocales, sequence<UTF8String> aResourceIds);
+
+  [Throws, NewObject]
+  FluentBundleAsyncIterator generateBundles(sequence<UTF8String> aLocales, sequence<UTF8String> aResourceIds);
+};

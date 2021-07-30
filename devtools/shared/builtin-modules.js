@@ -29,6 +29,7 @@ const {
   DOMQuad,
   DOMRect,
   HeapSnapshot,
+  L10nRegistry,
   NamedNodeMap,
   NodeFilter,
   StructuredCloneHolder,
@@ -266,6 +267,7 @@ exports.globals = {
   FileReader,
   FormData,
   isWorker: false,
+  L10nRegistry,
   loader: {
     lazyGetter: defineLazyGetter,
     lazyImporter: defineLazyModuleGetter,

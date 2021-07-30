@@ -3656,21 +3656,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvPaintWhileInterruptingJSNoOp(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvRemotePaintIsReady() {
-  RefPtr<EventTarget> target = mFrameElement;
-  if (!target) {
-    NS_WARNING("Could not locate target for MozAfterRemotePaint message.");
-    return IPC_OK();
-  }
-
-  RefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
-  event->InitEvent(u"MozAfterRemotePaint"_ns, false, false);
-  event->SetTrusted(true);
-  event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
-  mFrameElement->DispatchEvent(*event);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserParent::RecvRemoteIsReadyToHandleInputEvents() {
   // When enabling input event prioritization, input events may preempt other
   // normal priority IPC messages. To prevent the input events preempt

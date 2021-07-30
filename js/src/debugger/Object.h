@@ -176,16 +176,19 @@ class DebuggerObject : public NativeObject {
   bool isInstance() const;
   Debugger* owner() const;
 
+  JSObject* maybeReferent() const {
+    return maybePtrFromReservedSlot<JSObject>(OBJECT_SLOT);
+  }
   JSObject* referent() const {
-    JSObject* obj = (JSObject*)getPrivate();
+    JSObject* obj = maybeReferent();
     MOZ_ASSERT(obj);
     return obj;
   }
 
- private:
-  enum { OWNER_SLOT };
+  void clearReferent() { clearReservedSlotGCThingAsPrivate(OBJECT_SLOT); }
 
-  static const unsigned RESERVED_SLOTS = 1;
+ private:
+  enum { OBJECT_SLOT, OWNER_SLOT, RESERVED_SLOTS };
 
   static const JSClassOps classOps_;
 

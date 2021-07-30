@@ -3730,20 +3730,26 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             assert needInterfacePrototypeObject
 
             def defineAlias(alias):
-                if alias == "@@iterator":
-                    symbolJSID = "SYMBOL_TO_JSID(JS::GetWellKnownSymbol(aCx, JS::SymbolCode::iterator))"
+                if alias == "@@iterator" or alias == "@@asyncIterator":
+                    name = alias[2:]
+
+                    symbolJSID = (
+                        "SYMBOL_TO_JSID(JS::GetWellKnownSymbol(aCx, JS::SymbolCode::%s))"
+                        % name
+                    )
+                    prop = "%sId" % name
                     getSymbolJSID = CGGeneric(
                         fill(
-                            "JS::Rooted<jsid> iteratorId(aCx, ${symbolJSID});",
+                            "JS::Rooted<jsid> ${prop}(aCx, ${symbolJSID});",
+                            prop=prop,
                             symbolJSID=symbolJSID,
                         )
                     )
                     defineFn = "JS_DefinePropertyById"
-                    prop = "iteratorId"
                     enumFlags = "0"  # Not enumerable, per spec.
                 elif alias.startswith("@@"):
                     raise TypeError(
-                        "Can't handle any well-known Symbol other than @@iterator"
+                        "Can't handle any well-known Symbol other than @@iterator and @@asyncIterator"
                     )
                 else:
                     getSymbolJSID = None

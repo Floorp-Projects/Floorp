@@ -233,13 +233,15 @@ void InterpreterFrame::epilogue(JSContext* cx, jsbytecode* pc) {
   MOZ_ASSERT(isEvalFrame() || isGlobalFrame() || isModuleFrame());
 }
 
-bool InterpreterFrame::checkReturn(JSContext* cx, HandleValue thisv) {
+bool InterpreterFrame::checkReturn(JSContext* cx, HandleValue thisv,
+                                   MutableHandleValue result) {
   MOZ_ASSERT(script()->isDerivedClassConstructor());
   MOZ_ASSERT(isFunctionFrame());
   MOZ_ASSERT(callee().isClassConstructor());
 
   HandleValue retVal = returnValue();
   if (retVal.isObject()) {
+    result.set(retVal);
     return true;
   }
 
@@ -253,7 +255,7 @@ bool InterpreterFrame::checkReturn(JSContext* cx, HandleValue thisv) {
     return ThrowUninitializedThis(cx);
   }
 
-  setReturnValue(thisv);
+  result.set(thisv);
   return true;
 }
 

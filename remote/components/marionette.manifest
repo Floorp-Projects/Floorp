@@ -1,4 +1,0 @@
-component {786a1369-dca5-4adc-8486-33d23c88010a} marionette.js
-contract @mozilla.org/remote/marionette;1 {786a1369-dca5-4adc-8486-33d23c88010a}
-category command-line-handler b-marionette @mozilla.org/remote/marionette;1
-category profile-after-change Marionette @mozilla.org/remote/marionette;1

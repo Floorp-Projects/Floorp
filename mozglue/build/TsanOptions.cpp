@@ -296,7 +296,9 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:webrender::profiler::register_thread\n"
 
          // Bug 1722721 - This is a false positive during SW-WR rendering.
-         "race:scale_blit"
+         "race:scale_blit\n"
+
+         "race:mozilla::gl::MesaMemoryLeakWorkaround"
 
       // End of suppressions.
       ;  // Please keep this semicolon.

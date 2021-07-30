@@ -343,7 +343,7 @@ bool WebGLContext::CreateAndInitGL(
 
   // --
 
-  typedef decltype(gl::GLContextProviderEGL::CreateHeadless) fnCreateT;
+  using fnCreateT = decltype(gl::GLContextProviderEGL::CreateHeadless);
   const auto fnCreate = [&](fnCreateT* const pfnCreate,
                             const char* const info) {
     nsCString failureId;

@@ -342,7 +342,10 @@ SelectContentHelper.prototype = {
         }
         break;
       case "transitionend":
-        if (SUPPORTED_SELECT_PROPERTIES.includes(event.propertyName)) {
+        if (
+          this.element === event.target &&
+          SUPPORTED_SELECT_PROPERTIES.includes(event.propertyName)
+        ) {
           this._updateTimer.arm();
         }
         break;

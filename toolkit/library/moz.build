@@ -242,8 +242,6 @@ if CONFIG["MOZ_ANDROID_GOOGLE_VR"]:
         "-lgvr",
     ]
 
-OS_LIBS += CONFIG["MOZ_WEBRTC_X11_LIBS"]
-
 if CONFIG["MOZ_SYSTEM_JPEG"]:
     OS_LIBS += CONFIG["MOZ_JPEG_LIBS"]
 
@@ -280,15 +278,8 @@ if CONFIG["MOZ_ENABLE_DBUS"]:
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     OS_LIBS += [l for l in CONFIG["TK_LIBS"] if l not in ("-lgtk-3", "-lgdk-3")]
-    OS_LIBS += CONFIG["XLDFLAGS"]
-    OS_LIBS += CONFIG["XLIBS"]
-    OS_LIBS += CONFIG["XEXT_LIBS"]
+    OS_LIBS += CONFIG["MOZ_X11_LIBS"]
     OS_LIBS += CONFIG["MOZ_PANGO_LIBS"]
-    OS_LIBS += CONFIG["XT_LIBS"]
-    OS_LIBS += [
-        "Xrender",
-        "gthread-2.0",
-    ]
 
 if CONFIG["MOZ_ENABLE_LIBPROXY"]:
     OS_LIBS += CONFIG["MOZ_LIBPROXY_LIBS"]

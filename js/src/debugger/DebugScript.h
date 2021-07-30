@@ -135,6 +135,8 @@ class DebugScriptObject : public NativeObject {
  public:
   static const JSClass class_;
 
+  enum { ScriptSlot, SlotCount };
+
   static DebugScriptObject* create(JSContext* cx, UniqueDebugScript debugScript,
                                    size_t nbytes);
 

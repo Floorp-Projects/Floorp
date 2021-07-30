@@ -612,7 +612,7 @@ namespace ipc {
 
 template <typename Actor>
 struct IPDLParamTraits<mozilla::dom::IpdlProducer<Actor>> {
-  typedef mozilla::dom::IpdlProducer<Actor> paramType;
+  using paramType = mozilla::dom::IpdlProducer<Actor>;
 
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
                     const paramType& aParam) {
@@ -629,7 +629,7 @@ struct IPDLParamTraits<mozilla::dom::IpdlProducer<Actor>> {
 
 template <typename Actor>
 struct IPDLParamTraits<mozilla::dom::IpdlConsumer<Actor>> {
-  typedef mozilla::dom::IpdlConsumer<Actor> paramType;
+  using paramType = mozilla::dom::IpdlConsumer<Actor>;
 
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
                     const paramType& aParam) {
@@ -648,7 +648,7 @@ struct IPDLParamTraits<mozilla::dom::IpdlConsumer<Actor>> {
 
 template <>
 struct IPDLParamTraits<mozilla::dom::IpdlQueueBuffer> {
-  typedef mozilla::dom::IpdlQueueBuffer paramType;
+  using paramType = mozilla::dom::IpdlQueueBuffer;
 
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
                     const paramType& aParam) {

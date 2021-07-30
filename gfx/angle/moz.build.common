@@ -7,6 +7,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
         '-Wno-range-loop-construct',
     ]
 
+CXXFLAGS += CONFIG['MOZ_X11_CFLAGS']
 
 if CONFIG['INTEL_ARCHITECTURE']:
     CXXFLAGS += CONFIG['SSE2_FLAGS']

@@ -6195,6 +6195,9 @@ bool BytecodeEmitter::emitCheckDerivedClassConstructorReturn() {
   if (!emit1(JSOp::CheckReturn)) {
     return false;
   }
+  if (!emit1(JSOp::SetRval)) {
+    return false;
+  }
   return true;
 }
 

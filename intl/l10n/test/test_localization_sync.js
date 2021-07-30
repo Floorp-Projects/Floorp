@@ -5,8 +5,7 @@ const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(function test_methods_calling() {
-  const { L10nRegistry } =
-    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
+  const l10nReg = new L10nRegistry();
 
   const fs = [
     { path: "/localization/de/browser/menu.ftl", source: `
@@ -22,10 +21,10 @@ key-attr =
   const originalRequested = Services.locale.requestedLocales;
 
   const source = L10nFileSource.createMock("test", ["de", "en-US"], "/localization/{locale}", fs);
-  L10nRegistry.registerSources([source]);
+  l10nReg.registerSources([source]);
 
   function* generateBundlesSync(resIds) {
-    yield * L10nRegistry.generateBundlesSync(["de", "en-US"], resIds);
+    yield * l10nReg.generateBundlesSync(["de", "en-US"], resIds);
   }
 
   const l10n = new Localization([
@@ -82,14 +81,10 @@ key-attr =
     strictEqual(messages[3].value, null);
   }
 
-  L10nRegistry.sources.clear();
   Services.locale.requestedLocales = originalRequested;
 });
 
 add_task(function test_builtins() {
-  const { L10nRegistry } =
-    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
-
   const known_platforms = {
     "linux": "linux",
     "win": "windows",
@@ -107,10 +102,11 @@ key = { PLATFORM() ->
   ];
 
   const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
-  L10nRegistry.registerSources([source]);
+  const l10nReg = new L10nRegistry();
+  l10nReg.registerSources([source]);
 
   function* generateBundlesSync(resIds) {
-    yield * L10nRegistry.generateBundlesSync(["en-US"], resIds);
+    yield * l10nReg.generateBundlesSync(["en-US"], resIds);
   }
 
   const l10n = new Localization([
@@ -122,13 +118,9 @@ key = { PLATFORM() ->
   ok(values[0].includes(
     `${ known_platforms[AppConstants.platform].toUpperCase() } Value`));
 
-  L10nRegistry.sources.clear();
 });
 
 add_task(function test_add_remove_resourceIds() {
-  const { L10nRegistry } =
-    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
-
   const fs = [
     { path: "/localization/en-US/browser/menu.ftl", source: "key1 = Value1" },
     { path: "/localization/en-US/toolkit/menu.ftl", source: "key2 = Value2" },
@@ -136,10 +128,11 @@ add_task(function test_add_remove_resourceIds() {
   const originalRequested = Services.locale.requestedLocales;
 
   const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
-  L10nRegistry.registerSources([source]);
+  const l10nReg = new L10nRegistry();
+  l10nReg.registerSources([source]);
 
   function* generateBundlesSync(resIds) {
-    yield * L10nRegistry.generateBundlesSync(["en-US"], resIds);
+    yield * l10nReg.generateBundlesSync(["en-US"], resIds);
   }
 
   const l10n = new Localization(["/browser/menu.ftl"], true, { generateBundlesSync });
@@ -173,7 +166,6 @@ add_task(function test_add_remove_resourceIds() {
   strictEqual(values[0], null);
   strictEqual(values[1], "Value2");
 
-  L10nRegistry.sources.clear();
   Services.locale.requestedLocales = originalRequested;
 });
 

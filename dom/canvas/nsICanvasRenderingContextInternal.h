@@ -52,13 +52,13 @@ class SourceSurface;
 class nsICanvasRenderingContextInternal : public nsISupports,
                                           public nsAPostRefreshObserver {
  public:
-  typedef mozilla::layers::CanvasLayer CanvasLayer;
-  typedef mozilla::layers::CanvasRenderer CanvasRenderer;
-  typedef mozilla::layers::Layer Layer;
-  typedef mozilla::layers::LayerManager LayerManager;
-  typedef mozilla::layers::WebRenderCanvasData WebRenderCanvasData;
-  typedef mozilla::layers::CompositableHandle CompositableHandle;
-  typedef mozilla::layers::LayerTransactionChild LayerTransactionChild;
+  using CanvasLayer = mozilla::layers::CanvasLayer;
+  using CanvasRenderer = mozilla::layers::CanvasRenderer;
+  using Layer = mozilla::layers::Layer;
+  using LayerManager = mozilla::layers::LayerManager;
+  using WebRenderCanvasData = mozilla::layers::WebRenderCanvasData;
+  using CompositableHandle = mozilla::layers::CompositableHandle;
+  using LayerTransactionChild = mozilla::layers::LayerTransactionChild;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
 

@@ -22,6 +22,8 @@ enum {
     MMAP_MAP_FIXED = 2
 };
 
+void os_init();
+
 size_t os_getpagesize();
 // Try allocating Memory space.
 // Returns pointer to allocated region on success, 0 on failure.
@@ -36,8 +38,9 @@ void* os_mmap_aligned(void *addr, size_t requested_length, int prot, int flags, 
 // Returns 0 on success, non zero on failure.
 int os_mmap_commit(void* curr_heap_end_pointer, size_t expanded_size, int prot);
 
-void os_clock_init();
-int os_clock_gettime(int clock_id, struct timespec* out_struct);
-int os_clock_getres(int clock_id, struct timespec* out_struct);
+void os_clock_init(void** clock_data_pointer);
+void os_clock_cleanup(void** clock_data_pointer);
+int os_clock_gettime(void* clock_data, int clock_id, struct timespec* out_struct);
+int os_clock_getres(void* clock_data, int clock_id, struct timespec* out_struct);
 
 #endif

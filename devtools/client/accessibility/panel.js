@@ -4,7 +4,6 @@
 "use strict";
 
 const Services = require("Services");
-const { L10nRegistry } = require("resource://gre/modules/L10nRegistry.jsm");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -146,7 +145,7 @@ AccessibilityPanel.prototype = {
    */
   async createFluentBundles() {
     const locales = Services.locale.appLocalesAsBCP47;
-    const generator = L10nRegistry.generateBundles(locales, [
+    const generator = L10nRegistry.getInstance().generateBundles(locales, [
       "devtools/client/accessibility.ftl",
     ]);
 

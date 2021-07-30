@@ -2889,10 +2889,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(CheckThisReinit)
 
     CASE(CheckReturn) {
-      if (!REGS.fp()->checkReturn(cx, REGS.stackHandleAt(-1))) {
+      ReservedRooted<Value> thisv(&rootValue0, REGS.sp[-1]);
+      MutableHandleValue rval = REGS.stackHandleAt(-1);
+      if (!REGS.fp()->checkReturn(cx, thisv, rval)) {
         goto error;
       }
-      REGS.sp--;
     }
     END_CASE(CheckReturn)
 

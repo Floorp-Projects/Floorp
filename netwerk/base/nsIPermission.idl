@@ -68,13 +68,6 @@ interface nsIPermission : nsISupports
                     in boolean exactHost);
 
     /**
-     * Similar to matches() but the principal's URI should be just an origin
-     * (no path, no queryString, etc).
-     */
-    [noscript] boolean matchesPrincipalForPermission(in nsIPrincipal principal,
-                                                     in boolean exactHost);
-
-    /**
      * Test whether a URI would be affected by this permission.
      * NOTE: This performs matches with default origin attribute values.
      *

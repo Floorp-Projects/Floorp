@@ -657,6 +657,9 @@ var DownloadsCommon = {
       case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
         message = s.unblockTypePotentiallyUnwanted2;
         break;
+      case Downloads.Error.BLOCK_VERDICT_INSECURE:
+        message = s.unblockInsecure;
+        break;
       default:
         // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
         message = s.unblockTypeMalware;

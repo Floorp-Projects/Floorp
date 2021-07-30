@@ -331,19 +331,9 @@ class MozperftestGatherer(FrameworkGatherer):
         return self._build_section_with_header(title, content, header_type="H4")
 
 
-class TalosGatherer(FrameworkGatherer):
+class StaticGatherer(FrameworkGatherer):
     """
-    Gatherer for the Talos framework.
-    TODO - Bug 1674220
-    """
-
-    pass
-
-
-class AWSYGatherer(FrameworkGatherer):
-    """
-    Placeholder to enable PerfDocs for AWSY.
-    Content is static so no gatherer is needed.
+    A noop gatherer for frameworks with static-only documentation.
     """
 
     pass
