@@ -23,6 +23,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.components.TabCollectionStorage
@@ -36,9 +37,9 @@ class DefaultCollectionCreationControllerTest {
     private val testCoroutineScope = TestCoroutineScope()
     private lateinit var state: CollectionCreationState
     private lateinit var controller: DefaultCollectionCreationController
+    private var dismissed = false
 
     @MockK(relaxed = true) private lateinit var store: CollectionCreationStore
-    @MockK(relaxed = true) private lateinit var dismiss: () -> Unit
     @MockK(relaxUnitFun = true) private lateinit var metrics: MetricController
     @MockK(relaxUnitFun = true) private lateinit var tabCollectionStorage: TabCollectionStorage
     private lateinit var browserStore: BrowserStore
@@ -55,10 +56,13 @@ class DefaultCollectionCreationControllerTest {
 
         browserStore = BrowserStore()
 
+        dismissed = false
         controller = DefaultCollectionCreationController(
             store,
             browserStore,
-            dismiss,
+            dismiss = {
+                dismissed = true
+            },
             metrics,
             tabCollectionStorage,
             testCoroutineScope
@@ -89,7 +93,7 @@ class DefaultCollectionCreationControllerTest {
 
         controller.saveCollectionName(tabs, "name")
 
-        verify { dismiss() }
+        assertTrue(dismissed)
         coVerify { tabCollectionStorage.createCollection("name", listOf(tab1)) }
         verify { metrics.track(Event.CollectionSaved(2, 1)) }
     }
@@ -106,7 +110,7 @@ class DefaultCollectionCreationControllerTest {
 
         state = state.copy(tabCollections = emptyList(), tabs = listOf(mockk()))
         controller.backPressed(SaveCollectionStep.NameCollection)
-        verify { dismiss() }
+        assertTrue(dismissed)
     }
 
     @Test
@@ -117,16 +121,16 @@ class DefaultCollectionCreationControllerTest {
 
         state = state.copy(tabCollections = emptyList(), tabs = listOf(mockk()))
         controller.backPressed(SaveCollectionStep.SelectCollection)
-        verify { dismiss() }
+        assertTrue(dismissed)
     }
 
     @Test
     fun `GIVEN last step WHEN backPressed is called THEN dismiss should be called`() {
         controller.backPressed(SaveCollectionStep.SelectTabs)
-        verify { dismiss() }
+        assertTrue(dismissed)
 
         controller.backPressed(SaveCollectionStep.RenameCollection)
-        verify { dismiss() }
+        assertTrue(dismissed)
     }
 
     @Test
@@ -136,8 +140,8 @@ class DefaultCollectionCreationControllerTest {
         controller.renameCollection(collection, "name")
         advanceUntilIdle()
 
+        assertTrue(dismissed)
         verifyAll {
-            dismiss()
             metrics.track(Event.CollectionRenamed)
         }
         coVerify { tabCollectionStorage.renameCollection(collection, "name") }
@@ -152,7 +156,7 @@ class DefaultCollectionCreationControllerTest {
         verify { store.dispatch(CollectionCreationAction.RemoveAllTabs) }
 
         controller.close()
-        verify { dismiss() }
+        assertTrue(dismissed)
     }
 
     @Test
@@ -183,7 +187,7 @@ class DefaultCollectionCreationControllerTest {
 
         controller.selectCollection(collection, tabs)
 
-        verify { dismiss() }
+        assertTrue(dismissed)
         coVerify { tabCollectionStorage.addTabsToCollection(collection, listOf(tab1)) }
         verify { metrics.track(Event.CollectionTabsAdded(2, 1)) }
     }
