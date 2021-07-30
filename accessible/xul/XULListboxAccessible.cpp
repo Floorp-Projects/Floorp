@@ -67,10 +67,10 @@ bool XULColumnItemAccessible::DoAction(uint8_t aIndex) const {
 XULListboxAccessible::XULListboxAccessible(nsIContent* aContent,
                                            DocAccessible* aDoc)
     : XULSelectControlAccessible(aContent, aDoc) {
-  nsIContent* parentContent = mContent->GetFlattenedTreeParent();
-  if (parentContent) {
+  dom::Element* parentEl = mContent->GetParentElement();
+  if (parentEl) {
     nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
-        parentContent->AsElement()->AsAutoCompletePopup();
+        parentEl->AsAutoCompletePopup();
     if (autoCompletePopupElm) mGenericTypes |= eAutoCompletePopup;
   }
 
