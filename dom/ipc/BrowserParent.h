@@ -722,8 +722,6 @@ class BrowserParent final : public PBrowserParent,
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
-  mozilla::ipc::IPCResult RecvRemotePaintIsReady();
-
   mozilla::ipc::IPCResult RecvRemoteIsReadyToHandleInputEvents();
 
   mozilla::ipc::IPCResult RecvPaintWhileInterruptingJSNoOp(

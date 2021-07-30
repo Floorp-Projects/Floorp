@@ -930,11 +930,6 @@ void BrowserChild::ActorDestroy(ActorDestroyReason why) {
     }
   }
 
-  CompositorBridgeChild* compositorChild = CompositorBridgeChild::Get();
-  if (compositorChild) {
-    compositorChild->CancelNotifyAfterRemotePaint(this);
-  }
-
   if (GetTabId() != 0) {
     NestedBrowserChildMap().erase(GetTabId());
   }
@@ -3314,17 +3309,6 @@ void BrowserChild::NotifyJankedAnimations(
       mPuppetWidget->GetWindowRenderer()->AsLayerManager();
   MOZ_ASSERT(lm);
   lm->UpdatePartialPrerenderedAnimations(aJankedAnimations);
-}
-
-mozilla::ipc::IPCResult BrowserChild::RecvRequestNotifyAfterRemotePaint() {
-  // Get the CompositorBridgeChild instance for this content thread.
-  CompositorBridgeChild* compositor = CompositorBridgeChild::Get();
-
-  // Tell the CompositorBridgeChild that, when it gets a RemotePaintIsReady
-  // message that it should forward it us so that we can bounce it to our
-  // BrowserParent.
-  compositor->RequestNotifyAfterRemotePaint(this);
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvUIResolutionChanged(
