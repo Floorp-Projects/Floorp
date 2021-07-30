@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ///! Profiler Rust API
+mod gecko_bindings;
 mod thread;
 
 pub use thread::*;

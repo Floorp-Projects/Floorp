@@ -159,6 +159,10 @@ EXPORTS.mozilla += [
     "public/ProfilerUtils.h",
 ]
 
+CONFIGURE_SUBST_FILES += [
+    "rust-api/extra-bindgen-flags",
+]
+
 FINAL_LIBRARY = "xul"
 
 if CONFIG["CC_TYPE"] in ("clang", "gcc"):
