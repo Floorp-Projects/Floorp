@@ -93,7 +93,6 @@ jobs:
                 - linux64-dump_syms
                 - linux64-nasm
                 - linux64-node
-                - linux64-lucetc
                 - sysroot-x86_64-linux-gnu
                 - wasi-sysroot
 
@@ -132,7 +131,6 @@ jobs:
                 - linux64-dump_syms
                 - linux64-nasm
                 - linux64-node
-                - linux64-lucetc
                 - macosx64-sdk-10.12
                 - sysroot-x86_64-linux-gnu
                 - wasi-sysroot
