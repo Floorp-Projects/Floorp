@@ -50,6 +50,8 @@ class DebuggerScript : public NativeObject {
   inline js::BaseScript* getReferentScript() const;
   inline DebuggerScriptReferent getReferent() const;
 
+  void clearReferent() { setPrivate(nullptr); }
+
   static DebuggerScript* check(JSContext* cx, HandleValue v);
 
   static bool construct(JSContext* cx, unsigned argc, Value* vp);
