@@ -33,7 +33,7 @@ index 0b14df805..7bc5151a4 100644
 -        .iter()
 -        .map(|&name| {
 -            let source_path = SourceId::for_path(&src_path.join("library").join(name))?;
--            let dep = Dependency::parse_no_deprecated(name, None, source_path)?;
+-            let dep = Dependency::parse(name, None, source_path)?;
 +
 +    // Special std packages should be pulled from `library/` and should be
 +    // prefixed with `rustc-std-workspace-` in certain places.
@@ -66,7 +66,7 @@ index 0b14df805..7bc5151a4 100644
 +                entry.path()
 +            };
 +            let source_path = SourceId::for_path(&path)?;
-+            let dep = Dependency::parse_no_deprecated(&name, None, source_path)?;
++            let dep = Dependency::parse(&name, None, source_path)?;
              Ok(dep)
          })
          .collect::<CargoResult<Vec<_>>>()?;
