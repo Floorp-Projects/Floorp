@@ -1989,12 +1989,6 @@ class ObjectType extends Type {
           `Property "${prop}" is unsupported in Manifest Version ${context.manifestVersion}`,
           `not contain an unsupported "${prop}" property`
         );
-        if (context.manifestVersion === 2) {
-          // Existing MV2 extensions might have some of the new MV3 properties.
-          // Since we've ignored them till now, we should just warn and bail.
-          this.logWarning(context, forceString(error.error));
-          return;
-        }
       }
     } else if (unsupported) {
       if (prop in properties) {
