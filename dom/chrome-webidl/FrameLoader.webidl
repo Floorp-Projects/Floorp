@@ -77,13 +77,6 @@ interface FrameLoader {
   readonly attribute MessageSender? messageManager;
 
   /**
-   * Request that the next time a remote layer transaction has been
-   * received by the Compositor, a MozAfterRemoteFrame event be sent
-   * to the window.
-   */
-  void requestNotifyAfterRemotePaint();
-
-  /**
    * Force a remote browser to recompute its dimension and screen position.
    */
   [Throws]

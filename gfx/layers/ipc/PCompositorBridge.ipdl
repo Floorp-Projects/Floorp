@@ -124,15 +124,6 @@ child:
 
   async NotifyFrameStats(FrameStats[] aFrameStats);
 
-  /**
-   * Parent informs the child that the graphics objects are ready for
-   * compositing.  This usually means that the graphics objects (textures
-   * and the like) are available on the GPU.  This is used for chrome UI.
-   * @see RequestNotifyAfterRemotePaint
-   * @see PBrowser
-   */
-  async RemotePaintIsReady();
-
   async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
 
   async ObserveLayersUpdate(LayersId aLayersId, LayersObserverEpoch aEpoch, bool aActive);
@@ -225,14 +216,6 @@ parent:
 
   // Notify the compositor that a region of the screen has been invalidated.
   async NotifyRegionInvalidated(nsIntRegion region);
-
-  /**
-   * The child (content/chrome thread) requests that the parent inform it when
-   * the graphics objects are ready to display.
-   * @see PBrowser
-   * @see RemotePaintIsReady
-   */
-  async RequestNotifyAfterRemotePaint();
 
   async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend, TextureFlags aTextureFlags, LayersId id, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
 

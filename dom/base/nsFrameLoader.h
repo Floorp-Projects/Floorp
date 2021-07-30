@@ -218,8 +218,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   void ActivateFrameEvent(const nsAString& aType, bool aCapture,
                           mozilla::ErrorResult& aRv);
 
-  void RequestNotifyAfterRemotePaint();
-
   void RequestUpdatePosition(mozilla::ErrorResult& aRv);
 
   already_AddRefed<Promise> RequestTabStateFlush(mozilla::ErrorResult& aRv);
