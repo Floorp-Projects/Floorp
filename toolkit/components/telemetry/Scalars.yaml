@@ -5495,7 +5495,6 @@ startup:
       - 1522934
       - 1570652
       - 1623406
-      - 1709969
     description: >
       How the profile was selected during startup. One of the following reasons:
         unknown:
@@ -5526,9 +5525,6 @@ startup:
           the old default profile and created a new profile.
         firstrun-created-default:
           A first run of the application created a new profile to use.
-        firstrun-migrated-default:
-          A first run of the application created a new profile to use, based on
-          migrating an existing profile from the same application.
         default:
           The default profile was selected as normal.
     expires: "99"
