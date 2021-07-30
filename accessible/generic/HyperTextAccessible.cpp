@@ -1818,8 +1818,16 @@ LayoutDeviceIntRect HyperTextAccessible::GetCaretRect(nsIWidget** aWidget) {
   // the character. This is important for font size transitions, and is
   // necessary because the Gecko caret uses the previous character's size as
   // the user moves forward in the text by character.
+  int32_t caretOffset = CaretOffset();
+  if (NS_WARN_IF(caretOffset == -1)) {
+    // The caret offset will be -1 if this Accessible isn't focused. Note that
+    // the DOM node contaning the caret might be focused, but the Accessible
+    // might not be; e.g. due to an autocomplete popup suggestion having a11y
+    // focus.
+    return LayoutDeviceIntRect();
+  }
   nsIntRect charRect = CharBounds(
-      CaretOffset(), nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
+      caretOffset, nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
   if (!charRect.IsEmpty()) {
     caretRect.SetTopEdge(charRect.Y());
   }
