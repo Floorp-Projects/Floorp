@@ -70,7 +70,7 @@ mochitest-plain:
                     (linux.*64|macosx.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
                     (linux.*64|macosx.*64|windows10-64)-qr/opt: ['autoland']
                     (linux.*64|macosx.*64|windows10-64)-shippable-qr/opt: ['autoland', 'mozilla-central']
-                    linux.*64(-asan|-tsan-qr)/opt: ['autoland', 'mozilla-central']
+                    linux.*64(-asan|-tsan)-qr/opt: ['autoland', 'mozilla-central']
                     default: []
             fission-xorigin:
                 by-test-platform:
