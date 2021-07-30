@@ -222,6 +222,11 @@ add_task(async function test_navigate_between_webpage_and_aboutaddons() {
 
   manager = gBrowser.selectedBrowser.contentWindow;
   info("Part 5");
+  await TestUtils.waitForCondition(
+    () => manager.document.querySelector("addon-list"),
+    "The add-on list should render."
+  );
+
   is_in_list(manager, "addons://list/extension", true, false);
 
   await close_manager(manager);
