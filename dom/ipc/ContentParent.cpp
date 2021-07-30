@@ -7561,7 +7561,10 @@ void ContentParent::DidLaunchSubprocess() {
   }
 
   if (count > sMaxContentProcesses) {
+    sMaxContentProcesses = count;
+
     Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_MAX, count);
+    Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_PRECISE_MAX, count);
   }
 
   if (sLastContentProcessLaunch) {

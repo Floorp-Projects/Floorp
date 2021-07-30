@@ -371,6 +371,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "The maximum number of content processes, submitted when a new maximum is reached."
   },
+  "CONTENT_PROCESS_PRECISE_MAX": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["kmadan@mozilla.com", "perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "98",
+    "bug_numbers": [1722103],
+    "kind": "enumerated",
+    "n_values": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "The enumerated maximum number of content processes, submitted when a new maximum is reached."
+  },
   "CONTENT_PROCESS_TIME_SINCE_LAST_LAUNCH_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
