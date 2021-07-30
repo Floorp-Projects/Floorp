@@ -1103,3 +1103,10 @@ add_task(async function check_is_major_upgrade() {
     "Should select the message"
   );
 });
+
+add_task(async function check_userMonthlyActivity() {
+  ok(
+    Array.isArray(await ASRouterTargeting.Environment.userMonthlyActivity),
+    "value is an array"
+  );
+});
