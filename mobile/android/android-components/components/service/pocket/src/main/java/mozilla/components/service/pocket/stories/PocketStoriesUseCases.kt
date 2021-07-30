@@ -15,7 +15,7 @@ import mozilla.components.support.base.log.Log
 /**
  * Possible actions regarding the list of recommended stories.
  */
-internal class PocketStoriesUseCases {
+class PocketStoriesUseCases {
 
     /**
      * Allows for refreshing the list of pocket stories we have cached.
@@ -65,7 +65,7 @@ internal class PocketStoriesUseCases {
     /**
      * Allows for querying the list of locally available Pocket recommended stories.
      */
-    internal inner class GetPocketStories(private val context: Context) {
+    inner class GetPocketStories(private val context: Context) {
         /**
          * Returns the current locally persisted list of Pocket recommended stories.
          */

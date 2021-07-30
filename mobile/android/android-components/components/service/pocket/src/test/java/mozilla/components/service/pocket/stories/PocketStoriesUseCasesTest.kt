@@ -54,8 +54,8 @@ class PocketStoriesUseCasesTest {
     }
 
     @Test
-    fun `GIVEN a PocketStoriesUseCases THEN its visibility is internal`() {
-        assertClassVisibility(PocketStoriesUseCases::class, KVisibility.INTERNAL)
+    fun `GIVEN a PocketStoriesUseCases THEN its visibility is public`() {
+        assertClassVisibility(PocketStoriesUseCases::class, KVisibility.PUBLIC)
     }
 
     @Test
@@ -67,8 +67,8 @@ class PocketStoriesUseCasesTest {
     }
 
     @Test
-    fun `GIVEN a GetPocketStories THEN its visibility is internal`() {
-        assertClassVisibility(PocketStoriesUseCases.GetPocketStories::class, KVisibility.INTERNAL)
+    fun `GIVEN a GetPocketStories THEN its visibility is public`() {
+        assertClassVisibility(PocketStoriesUseCases.GetPocketStories::class, KVisibility.PUBLIC)
     }
 
     @Test
