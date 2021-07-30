@@ -21,7 +21,6 @@ EXTRA_JS_MODULES += [
     "InteractionsBlocklist.jsm",
     "PlacesUIUtils.jsm",
     "Snapshots.jsm",
-    "SnapshotSelector.jsm",
 ]
 
 FINAL_TARGET_FILES.actors += [
