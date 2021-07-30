@@ -351,10 +351,7 @@ mochitest-plain-gpu:
                     .*-tsan-qr/opt: ['trunk']
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     default: built-projects
-    virtualization:
-        by-test-platform:
-            windows10-64.*: hardware
-            default: virtual-with-gpu
+    virtualization: virtual-with-gpu
     e10s: true
     tier:
         by-variant:
@@ -383,10 +380,7 @@ mochitest-chrome-gpu:
         name: mochitest-chrome-gpu
     treeherder-symbol: M(gpu-c)
     loopback-video: true
-    virtualization:
-        by-test-platform:
-            windows10-64.*: hardware
-            default: virtual-with-gpu
+    virtualization: virtual-with-gpu
     e10s: true
     run-on-projects:
         by-variant:
@@ -658,8 +652,8 @@ mochitest-webgl1-ext:
             linux.*64-qr/debug: ['fission', 'fission-webgl-ipc', 'webrender-sw', 'webgl-ipc', 'wayland']
             linux.*64(-shippable)?-qr/opt: ['fission', 'fission-webgl-ipc', 'webgl-ipc', 'wayland']
             linux.*64-asan/opt: ['fission-webgl-ipc', 'webgl-ipc']
-            windows10-64-shippable-qr/(opt|debug): ['fission', 'fission-webgl-ipc', 'webgl-ipc']
-            windows10-64-qr/(opt|debug): ['fission', 'fission-webgl-ipc']
+            windows10-64-2004-shippable-qr/(opt|debug): ['fission', 'fission-webgl-ipc', 'webgl-ipc']
+            windows10-64-2004-qr/(opt|debug): ['fission', 'fission-webgl-ipc']
             default: ['webgl-ipc']
     chunks:
         by-test-platform:
@@ -698,7 +692,7 @@ mochitest-webgl2-core:
             android.*: []
             linux.*64-qr/debug: ['fission', 'fission-webgl-ipc', 'webrender-sw', 'webgl-ipc', 'wayland']
             linux.*64(-shippable)?(-asan)?-qr/opt: ['fission', 'fission-webgl-ipc', 'webgl-ipc', 'wayland']
-            windows10-64(-shippable)?-qr/(opt|debug): ['fission', 'fission-webgl-ipc', 'webgl-ipc']
+            windows10-64-2004(-shippable)?-qr/(opt|debug): ['fission', 'fission-webgl-ipc', 'webgl-ipc']
             default: ['webgl-ipc']
     chunks:
         by-test-platform:
@@ -735,7 +729,7 @@ mochitest-webgl2-ext:
             android.*: []
             linux.*64-qr/debug: ['fission', 'fission-webgl-ipc', 'webrender-sw', 'webgl-ipc', 'wayland']
             linux.*64(-shippable)?-(qr|asan)?/opt: ['fission', 'fission-webgl-ipc', 'webgl-ipc', 'wayland']
-            windows10-64(-shippable)?-qr/(opt|debug): ['fission', 'fission-webgl-ipc', 'webgl-ipc']
+            windows10-64-2004(-shippable)?-qr/(opt|debug): ['fission', 'fission-webgl-ipc', 'webgl-ipc']
             default: ['webgl-ipc']
     chunks: 4
     e10s: true
@@ -786,10 +780,7 @@ mochitest-webgpu:
     description: "Mochitest webgpu run"
     treeherder-symbol: M(webgpu)
     schedules-component: mochitest-plain
-    virtualization:
-        by-test-platform:
-            windows10-64.*: hardware
-            default: virtual-with-gpu
+    virtualization: virtual-with-gpu
     e10s: true
     loopback-video: true
     run-on-projects:
@@ -798,7 +789,7 @@ mochitest-webgpu:
                 by-test-platform:
                     linux.*64-qr/debug: ['trunk']
                     linux.*64-shippable-qr/opt: ['mozilla-central']
-                    windows10-64-shippable-qr/opt: ['mozilla-central']
+                    windows10-64-2004-shippable-qr/opt: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
