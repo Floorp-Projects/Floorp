@@ -325,6 +325,13 @@ struct GMPCapabilityData
     GMPAPITags[] capabilities;
 };
 
+struct L10nFileSourceDescriptor {
+  nsCString name;
+  nsCString[] locales;
+  nsCString prePath;
+  nsCString[] index;
+};
+
 struct XPCOMInitData
 {
     bool isOffline;
@@ -341,6 +348,7 @@ struct XPCOMInitData
     GfxInfoFeatureStatus[] gfxFeatureStatus;
     nsCString[] appLocales;
     nsCString[] requestedLocales;
+    L10nFileSourceDescriptor[] l10nFileSources;
     DynamicScalarDefinition[] dynamicScalarDefs;
     SystemParameterKVPair[] systemParameters;
 };
@@ -649,6 +657,8 @@ child:
 
     async UpdateAppLocales(nsCString[] appLocales);
     async UpdateRequestedLocales(nsCString[] requestedLocales);
+
+    async UpdateL10nFileSources(L10nFileSourceDescriptor[] sources);
 
     async RegisterStringBundles(StringBundleDescriptor[] stringBundles);
 

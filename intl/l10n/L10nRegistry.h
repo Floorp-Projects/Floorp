@@ -12,9 +12,14 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/L10nRegistryBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/intl/RegistryBindings.h"
 #include "mozilla/intl/FluentBindings.h"
 
 class nsIGlobalObject;
+
+namespace mozilla::dom {
+class L10nFileSourceDescriptor;
+}
 
 namespace mozilla::intl {
 
@@ -77,6 +82,11 @@ class L10nRegistry final : public nsWrapperCache {
 
   static already_AddRefed<L10nRegistry> GetInstance(
       const dom::GlobalObject& aGlobal);
+
+  static void GetParentProcessFileSourceDescriptors(
+      nsTArray<dom::L10nFileSourceDescriptor>& aRetVal);
+  static void RegisterFileSourcesFromParentProcess(
+      const nsTArray<dom::L10nFileSourceDescriptor>& aDescriptors);
 
   static nsresult Load(const nsACString& aPath,
                        nsIStreamLoaderObserver* aObserver);

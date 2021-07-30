@@ -41,9 +41,7 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = "locale"
 
-LOCAL_INCLUDES += [
-    "/dom/base",
-]
+include("/ipc/chromium/chromium-config.mozbuild")
 
 USE_LIBS += ["intlcomponents"]
 
