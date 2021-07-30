@@ -15,13 +15,6 @@ ChromeUtils.defineModuleGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "WEBEXT_PERMISSION_PROMPTS",
-  "extensions.webextPermissionPrompts",
-  false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "AMO_ABUSEREPORT",
   "extensions.abuseReport.amWebAPI.enabled",
   false
@@ -271,10 +264,6 @@ class WebAPI extends APIObject {
 
   reportAbuse(id) {
     return this._apiTask("addonReportAbuse", [id]);
-  }
-
-  get permissionPromptsEnabled() {
-    return WEBEXT_PERMISSION_PROMPTS;
   }
 
   get abuseReportPanelEnabled() {

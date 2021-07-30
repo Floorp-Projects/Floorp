@@ -29,8 +29,6 @@ const URI_EXTENSION_BLOCKLIST_DIALOG =
 // Allow insecure updates
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-Services.prefs.setBoolPref("extensions.webextPermissionPrompts", false);
-
 if (AppConstants.platform == "android") {
   // test_blocklistchange_v2.js tests blocklist v2, so we should flip the pref
   // to enable the v3 blocklist on Android.
@@ -60,6 +58,26 @@ const useMLBF = Services.prefs.getBoolPref(
 var testserver = createHttpServer({ hosts: ["example.com"] });
 // Needed for updates:
 testserver.registerDirectory("/data/", do_get_file("../data"));
+
+function permissionPromptHandler(subject, topic, data) {
+  ok(
+    subject?.wrappedJSObject?.info?.resolve,
+    "Got a permission prompt notification as expected"
+  );
+  subject.wrappedJSObject.info.resolve();
+}
+
+Services.obs.addObserver(
+  permissionPromptHandler,
+  "webextension-permission-prompt"
+);
+
+registerCleanupFunction(() => {
+  Services.obs.removeObserver(
+    permissionPromptHandler,
+    "webextension-permission-prompt"
+  );
+});
 
 const XPIS = {};
 
