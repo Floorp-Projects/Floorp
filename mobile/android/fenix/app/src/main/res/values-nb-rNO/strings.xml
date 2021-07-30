@@ -1054,6 +1054,16 @@
     <string name="notification_pbm_action_delete_and_open">Slett og åpne</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Drevet av</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Markedsføring</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s er rask og privat</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Bruk %1$s som din standard nettleser</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Samling slettet</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1614,9 +1624,9 @@
     <string name="credit_cards_card_number">Kortnummer</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Utløpsdato</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Utløpsdato måned</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Utløpsdato år</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Navn på kort</string>
@@ -1676,7 +1686,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Søkestreng å bruke</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Bytt ut spørringen med «%s». Eksempel:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Bytt ut spørringen med «%s». Eksempel:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Les mer</string>
