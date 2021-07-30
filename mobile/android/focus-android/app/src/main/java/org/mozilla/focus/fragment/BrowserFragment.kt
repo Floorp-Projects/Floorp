@@ -620,6 +620,18 @@ class BrowserFragment :
                 )
             }
 
+            R.id.stop -> {
+                requireComponents.sessionUseCases.stopLoading(tabId)
+            }
+
+            R.id.refresh -> {
+                requireComponents.sessionUseCases.reload(tabId)
+            }
+
+            R.id.forward -> {
+                requireComponents.sessionUseCases.goForward(tabId)
+            }
+
             R.id.help_trackers -> {
                 val url = SupportUtils.getSumoURLForTopic(requireContext(), SupportUtils.SumoTopic.TRACKERS)
                 requireComponents.tabsUseCases.addTab(
