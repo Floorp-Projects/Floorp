@@ -383,6 +383,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   void StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) override;
 
+  mozilla::layers::LayersId GetRootLayerTreeId() override;
+
   /**
    * Use this when GetLayerManager() returns a BasicLayerManager
    * (nsBaseWidget::GetLayerManager() does). This sets up the widget's

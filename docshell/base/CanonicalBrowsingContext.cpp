@@ -2551,6 +2551,87 @@ void CanonicalBrowsingContext::CloneDocumentTreeInto(
       [self = RefPtr{this}]() { self->mClonePromise = nullptr; });
 }
 
+bool CanonicalBrowsingContext::StartApzAutoscroll(float aAnchorX,
+                                                  float aAnchorY,
+                                                  nsViewID aScrollId,
+                                                  uint32_t aPresShellId) {
+  nsCOMPtr<nsIWidget> widget = nullptr;
+  mozilla::layers::LayersId layersId{0};
+
+  if (IsInProcess()) {
+    nsCOMPtr<nsPIDOMWindowOuter> outer = GetDOMWindow();
+    if (!outer) {
+      return false;
+    }
+
+    widget = widget::WidgetUtils::DOMWindowToWidget(outer);
+    if (widget) {
+      layersId = widget->GetRootLayerTreeId();
+    }
+  } else {
+    RefPtr<BrowserParent> parent = GetBrowserParent();
+    if (!parent) {
+      return false;
+    }
+
+    widget = parent->GetWidget();
+    layersId = parent->GetLayersId();
+  }
+
+  if (!widget || !widget->AsyncPanZoomEnabled()) {
+    return false;
+  }
+
+  // The anchor coordinates that are passed in are relative to the origin
+  // of the screen, but we are sending them to APZ which only knows about
+  // coordinates relative to the widget, so convert them accordingly.
+  CSSPoint anchorCss{aAnchorX, aAnchorY};
+  LayoutDeviceIntPoint anchor =
+      RoundedToInt(anchorCss * widget->GetDefaultScale());
+  anchor -= widget->WidgetToScreenOffset();
+
+  mozilla::layers::ScrollableLayerGuid guid(layersId, aPresShellId, aScrollId);
+
+  return widget->StartAsyncAutoscroll(
+      ViewAs<ScreenPixel>(
+          anchor,
+          mozilla::PixelCastJustification::LayoutDeviceIsScreenForBounds),
+      guid);
+}
+
+void CanonicalBrowsingContext::StopApzAutoscroll(nsViewID aScrollId,
+                                                 uint32_t aPresShellId) {
+  nsCOMPtr<nsIWidget> widget = nullptr;
+  mozilla::layers::LayersId layersId{};
+
+  if (IsInProcess()) {
+    nsCOMPtr<nsPIDOMWindowOuter> outer = GetDOMWindow();
+    if (!outer) {
+      return;
+    }
+
+    widget = widget::WidgetUtils::DOMWindowToWidget(outer);
+    if (widget) {
+      layersId = widget->GetRootLayerTreeId();
+    }
+  } else {
+    RefPtr<BrowserParent> parent = GetBrowserParent();
+    if (!parent) {
+      return;
+    }
+
+    widget = parent->GetWidget();
+    layersId = parent->GetLayersId();
+  }
+
+  if (!widget || !widget->AsyncPanZoomEnabled()) {
+    return;
+  }
+
+  mozilla::layers::ScrollableLayerGuid guid(layersId, aPresShellId, aScrollId);
+  widget->StopAsyncAutoscroll(guid);
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(CanonicalBrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CanonicalBrowsingContext,
