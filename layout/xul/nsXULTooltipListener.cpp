@@ -81,7 +81,6 @@ NS_IMPL_ISUPPORTS(nsXULTooltipListener, nsIDOMEventListener)
 void nsXULTooltipListener::MouseOut(Event* aEvent) {
   // reset flag so that tooltip will display on the next MouseMove
   mTooltipShownOnce = false;
-  mPreviousMouseMoveTarget = nullptr;
 
   // if the timer is running and no tooltip is shown, we
   // have to cancel the timer here so that it doesn't
@@ -152,26 +151,16 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
   // filter out false win32 MouseMove event
   if (mMouseScreenX == newMouseX && mMouseScreenY == newMouseY) return;
 
-  nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
-  nsCOMPtr<EventTarget> eventTarget = aEvent->GetComposedTarget();
-  nsCOMPtr<nsIContent> content = do_QueryInterface(eventTarget);
-
-  bool isSameTarget = true;
-  nsCOMPtr<nsIContent> tempContent = do_QueryReferent(mPreviousMouseMoveTarget);
-  if (tempContent && tempContent != content) {
-    isSameTarget = false;
-  }
-
   // filter out minor movements due to crappy optical mice and shaky hands
-  // to prevent tooltips from hiding prematurely. Do not filter out movements
-  // if we are changing targets, as they may register new tooltips.
-  if ((currentTooltip && isSameTarget) &&
+  // to prevent tooltips from hiding prematurely.
+  nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
+
+  if ((currentTooltip) &&
       (abs(mMouseScreenX - newMouseX) <= kTooltipMouseMoveTolerance) &&
       (abs(mMouseScreenY - newMouseY) <= kTooltipMouseMoveTolerance))
     return;
   mMouseScreenX = newMouseX;
   mMouseScreenY = newMouseY;
-  mPreviousMouseMoveTarget = do_GetWeakReference(content);
 
   nsCOMPtr<nsIContent> sourceContent =
       do_QueryInterface(aEvent->GetCurrentTarget());
@@ -186,20 +175,16 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
   // the node.
   KillTooltipTimer();
 
-  // Hide the current tooltip if we change target nodes. If the new target
-  // has the same tooltip, we will open it again. We cannot compare
-  // the targets' tooltips because popupshowing events can set the tooltip.
-  if (!isSameTarget) {
-    HideTooltip();
-    mTooltipShownOnce = false;
-  }
-
   // If the mouse moves while the tooltip is up, hide it. If nothing is
   // showing and the tooltip hasn't been displayed since the mouse entered
   // the node, then start the timer to show the tooltip.
-  // If we have moved to a different target, we need to display the new tooltip,
-  // as the previous target's tooltip will have just been hidden.
-  if ((!currentTooltip && !mTooltipShownOnce) || !isSameTarget) {
+  if (!currentTooltip && !mTooltipShownOnce) {
+    nsCOMPtr<EventTarget> eventTarget = aEvent->GetComposedTarget();
+    nsCOMPtr<nsIContent> content = do_QueryInterface(eventTarget);
+    if (content && !content->GetContainingShadow()) {
+      eventTarget = aEvent->GetTarget();
+    }
+
     // don't show tooltips attached to elements outside of a menu popup
     // when hovering over an element inside it. The popupsinherittooltip
     // attribute may be used to disable this behaviour, which is useful for
@@ -238,13 +223,11 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
 #ifdef MOZ_XUL
   if (mIsSourceTree) return;
 #endif
-  // Hide the tooltip if it is currently showing.
-  if (currentTooltip) {
-    HideTooltip();
-    // set a flag so that the tooltip is only displayed once until the mouse
-    // leaves the node
-    mTooltipShownOnce = true;
-  }
+
+  HideTooltip();
+  // set a flag so that the tooltip is only displayed once until the mouse
+  // leaves the node
+  mTooltipShownOnce = true;
 }
 
 NS_IMETHODIMP
