@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "chrome://remote/content/shared/Log.jsm",
   MessageHandlerInfo:
     "chrome://remote/content/shared/messagehandler/MessageHandlerInfo.jsm",
   RootMessageHandler:
@@ -18,6 +19,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 /**
  * Map of MessageHandler type to MessageHandler subclass.
@@ -151,6 +154,10 @@ class MessageHandlerRegistryClass {
     return messageHandler;
   }
 
+  toString() {
+    return `[object ${this.constructor.name}]`;
+  }
+
   /**
    * Create a new MessageHandler instance.
    *
@@ -169,6 +176,8 @@ class MessageHandlerRegistryClass {
     const messageHandler = new messageHandlerClass(sessionId, context);
     this._registerMessageHandler(messageHandler);
 
+    logger.trace(`Created MessageHandler ${type} for session ${sessionId}`);
+
     messageHandler.on(
       "message-handler-destroyed",
       this._onMessageHandlerDestroyed
@@ -182,6 +191,9 @@ class MessageHandlerRegistryClass {
 
   _unregisterMessageHandler(messageHandler) {
     this._messageHandlersMap.delete(messageHandler.key);
+    logger.trace(
+      `Unregistered MessageHandler ${messageHandler.type} for session ${messageHandler.sessionId}`
+    );
   }
 
   // Event handlers
