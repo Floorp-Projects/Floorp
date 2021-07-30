@@ -5835,6 +5835,12 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
     return;
   }
 
+  if (GetOpacity() == 1.0f) {
+    GetChildren()->Paint(aBuilder, aCtx,
+                         mFrame->PresContext()->AppUnitsPerDevPixel());
+    return;
+  }
+
   // TODO: Compute a bounds rect to pass to PushLayer for a smaller
   // allocation.
   aCtx->GetDrawTarget()->PushLayer(false, GetOpacity(), nullptr,
