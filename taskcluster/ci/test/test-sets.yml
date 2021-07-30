@@ -245,7 +245,6 @@ windows-tests:
     - mochitest-media
     - mochitest-plain-gpu
     - mochitest-remote
-    - reftest
     - telemetry-tests-client
     - test-verify
     - test-verify-gpu
@@ -266,6 +265,7 @@ windows10-tests:
 
 windows10-2004-tests:
     - mochitest-plain
+    - reftest
 
 mingwclang-tests-debug:
     - cppunit
