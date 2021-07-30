@@ -43,6 +43,8 @@ class DebuggerSource : public NativeObject {
   NativeObject* getReferentRawObject() const;
   DebuggerSourceReferent getReferent() const;
 
+  void clearReferent() { setPrivate(nullptr); }
+
   static DebuggerSource* check(JSContext* cx, HandleValue v);
   static bool construct(JSContext* cx, unsigned argc, Value* vp);
 

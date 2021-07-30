@@ -247,12 +247,6 @@ bool DebugAPI::slowPathCheckNoExecute(JSContext* cx, HandleScript script) {
   return EnterDebuggeeNoExecute::reportIfFoundInStack(cx, script);
 }
 
-static inline void NukeDebuggerWrapper(NativeObject* wrapper) {
-  // In some OOM failure cases, we need to destroy the edge to the referent,
-  // to avoid trying to trace it during untimely collections.
-  wrapper->setPrivate(nullptr);
-}
-
 static void PropagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
                                   HandleValue rval) {
   // The Debugger's hooks may return a value that affects the completion
@@ -1380,7 +1374,9 @@ bool Debugger::wrapEnvironment(JSContext* cx, Handle<Env*> env,
     }
 
     if (!p.add(cx, environments, env, envobj)) {
-      NukeDebuggerWrapper(envobj);
+      // We need to destroy the edge to the referent, to avoid trying to trace
+      // it during untimely collections.
+      envobj->clearReferent();
       return false;
     }
 
@@ -1471,7 +1467,9 @@ bool Debugger::wrapDebuggeeObject(JSContext* cx, HandleObject obj,
     }
 
     if (!p.add(cx, objects, obj, dobj)) {
-      NukeDebuggerWrapper(dobj);
+      // We need to destroy the edge to the referent, to avoid trying to trace
+      // it during untimely collections.
+      dobj->clearReferent();
       return false;
     }
 
@@ -6296,7 +6294,9 @@ typename Map::WrapperType* Debugger::wrapVariantReferent(
     }
 
     if (!p.add(cx, map, untaggedReferent, wrapper)) {
-      NukeDebuggerWrapper(wrapper);
+      // We need to destroy the edge to the referent, to avoid trying to trace
+      // it during untimely collections.
+      wrapper->clearReferent();
       return nullptr;
     }
   }

@@ -79,6 +79,8 @@ class DebuggerEnvironment : public NativeObject {
     return env;
   }
 
+  void clearReferent() { setPrivate(nullptr); }
+
  private:
   static const JSClassOps classOps_;
 

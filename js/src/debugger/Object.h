@@ -182,6 +182,8 @@ class DebuggerObject : public NativeObject {
     return obj;
   }
 
+  void clearReferent() { setPrivate(nullptr); }
+
  private:
   enum { OWNER_SLOT };
 
