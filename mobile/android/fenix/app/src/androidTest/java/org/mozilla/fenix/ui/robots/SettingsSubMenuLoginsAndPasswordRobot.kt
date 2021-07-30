@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.content.Context
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -16,6 +17,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -40,7 +42,7 @@ class SettingsSubMenuLoginsAndPasswordRobot {
 
     fun verifyDefaultValueExceptions() = assertDefaultValueExceptions()
 
-    fun verifyDefaultValueAutofillLogins() = assertDefaultValueAutofillLogins()
+    fun verifyDefaultValueAutofillLogins(context: Context) = assertDefaultValueAutofillLogins(context)
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -97,7 +99,14 @@ private fun goBackButton() =
 private fun assertDefaultView() = onView(ViewMatchers.withText("Sync logins across devices"))
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun assertDefaultValueAutofillLogins() = onView(ViewMatchers.withText("Autofill websites"))
+private fun assertDefaultValueAutofillLogins(context: Context) = onView(
+    ViewMatchers.withText(
+        context.getString(
+            R.string.preferences_passwords_autofill2,
+            context.getString(R.string.app_name)
+        )
+    )
+)
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertDefaultValueExceptions() = onView(ViewMatchers.withText("Exceptions"))

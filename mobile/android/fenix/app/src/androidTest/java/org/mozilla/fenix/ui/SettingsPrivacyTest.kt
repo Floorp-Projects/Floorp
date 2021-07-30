@@ -176,7 +176,7 @@ class SettingsPrivacyTest {
             TestHelper.scrollToElementByText("Logins and passwords")
         }.openLoginsAndPasswordSubMenu {
             verifyDefaultView()
-            verifyDefaultValueAutofillLogins()
+            verifyDefaultValueAutofillLogins(InstrumentationRegistry.getInstrumentation().targetContext)
             verifyDefaultValueExceptions()
         }.openSavedLogins {
             verifySecurityPromptForLogins()
