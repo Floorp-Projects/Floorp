@@ -157,15 +157,12 @@ jsreftest:
 reftest:
     description: "Reftest run"
     treeherder-symbol: R(R)
-    virtualization:
-        by-test-platform:
-            windows10-64.*: hardware
-            default: virtual-with-gpu
+    virtualization: virtual-with-gpu
     variants:
         by-test-platform:
             linux1804-64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'noqr']
             linux1804-64(-asan|-tsan)-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
-            windows10-64(-asan)?-qr/opt: ['webrender-sw', 'fission', 'noqr']
+            windows10-64-2004(-asan)?-qr/opt: ['webrender-sw', 'fission', 'noqr']
             windows10-aarch64-qr/.*: []
             windows10-32(?:-shippable)?-qr/opt: ['webrender-sw', 'fission', 'noqr']
             windows7-32(?:-shippable)?-qr/opt: ['webrender-sw', 'fission', 'noqr']
@@ -185,10 +182,10 @@ reftest:
             macosx101.*-64/debug: 4
             macosx101.*-64(-ccov.*|-qr)/debug: 6
             windows.*/opt: 2
-            windows10-64.*/debug: 4
+            windows10-64-2004.*/debug: 4
             windows10-32.*/debug: 6
-            windows10-64-asan-qr/opt: 3
-            windows10-64-ccov-qr/opt: 9
+            windows10-64-2004-asan-qr/opt: 3
+            windows10-64-2004-ccov-qr/opt: 9
             default: 8
     e10s: true
     run-on-projects:
@@ -212,8 +209,8 @@ reftest:
     max-run-time:
         by-test-platform:
             windows10-32-mingwclang-qr/debug: 5400
-            windows10-64-ccov.*/.*: 5400
-            windows10-64-asan-qr/opt: 5400
+            windows10-64-2004-ccov.*/.*: 5400
+            windows10-64-2004-asan-qr/opt: 5400
             macosx.*64-ccov.*/.*: 5400
             default: 3600
     mozharness:
@@ -221,7 +218,7 @@ reftest:
             by-test-platform:
                 android-em.*: false
                 macosx.*64/opt: false
-                windows10-64.*/opt: false
+                windows10-64-2004.*/opt: false
                 default: true
     tier:
         by-variant:
@@ -254,10 +251,7 @@ reftest-qr:
     mozharness:
         chunked: true
     tier: 2
-    virtualization:
-        by-test-platform:
-            windows10-64.*: hardware
-            default: virtual
+    virtualization: virtual
 
 reftest-snapshot:
     description: "Reftest snapshot"
