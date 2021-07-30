@@ -299,11 +299,10 @@ class CraneliftContext {
       // In the huge memory configuration, we always reserve the full 4 GB
       // index space for a heap.
       staticEnv_.static_memory_bound = HugeIndexRange;
-      staticEnv_.memory_guard_size = HugeOffsetGuardLimit;
-    } else {
-      staticEnv_.memory_guard_size = OffsetGuardLimit;
     }
 #endif
+    staticEnv_.memory_guard_size =
+        GetMaxOffsetGuardLimit(moduleEnv.hugeMemoryEnabled());
     // Otherwise, heap bounds are stored in the `boundsCheckLimit` field
     // of TlsData.
   }
@@ -388,11 +387,14 @@ static size_t globalToTlsOffset(size_t globalOffset) {
 CraneliftModuleEnvironment::CraneliftModuleEnvironment(
     const ModuleEnvironment& env)
     : env(&env) {
-  // env.minMemoryLength is in bytes.  Convert it to wasm pages.
-  static_assert(sizeof(env.minMemoryLength) == 8);
-  MOZ_RELEASE_ASSERT(env.minMemoryLength <= (((uint64_t)1) << 32));
-  MOZ_RELEASE_ASSERT((env.minMemoryLength & wasm::PageMask) == 0);
-  min_memory_length = (uint32_t)(env.minMemoryLength >> wasm::PageBits);
+  if (env.memory.isSome()) {
+    // We use |auto| here rather than |uint64_t| so that the static_assert will
+    // fail if |pages| is changed to some other size.
+    auto pages = env.memory->initialPages().value();
+    static_assert(sizeof(pages) == 8);
+    MOZ_RELEASE_ASSERT(pages <= MaxMemory32LimitField);
+    min_memory_length = uint32_t(pages);
+  }
 }
 
 TypeCode env_unpack(BD_ValType valType) {
@@ -414,17 +416,22 @@ TypeCode env_elem_typecode(const CraneliftModuleEnvironment* env,
 // Returns a number of pages in the range [0..65536], or UINT32_MAX to signal
 // that no maximum has been set.
 uint32_t env_max_memory(const CraneliftModuleEnvironment* env) {
-  // env.maxMemoryLength is in bytes.  Convert it to wasm pages.
-  if (env->env->maxMemoryLength.isSome()) {
-    // We use |auto| here rather than |uint64_t| so that the static_assert will
-    // fail if |maxMemoryLength| is changed to some other size.
-    auto inBytes = *(env->env->maxMemoryLength);
-    static_assert(sizeof(inBytes) == 8);
-    MOZ_RELEASE_ASSERT(inBytes <= (((uint64_t)1) << 32));
-    MOZ_RELEASE_ASSERT((inBytes & wasm::PageMask) == 0);
-    return (uint32_t)(inBytes >> wasm::PageBits);
+  const ModuleEnvironment& moduleEnv = *env->env;
+  if (moduleEnv.memory.isNothing()) {
+    return UINT32_MAX;
   }
-  return UINT32_MAX;
+
+  Maybe<Pages> maxPages = moduleEnv.memory->maximumPages();
+  if (maxPages.isNothing()) {
+    return UINT32_MAX;
+  }
+
+  // We use |auto| here rather than |uint64_t| so that the static_assert will
+  // fail if |maxPages| is changed to some other size.
+  auto pages = maxPages->value();
+  static_assert(sizeof(pages) == 8);
+  MOZ_RELEASE_ASSERT(pages <= MaxMemory32LimitField);
+  return pages;
 }
 
 bool env_uses_shared_memory(const CraneliftModuleEnvironment* env) {
