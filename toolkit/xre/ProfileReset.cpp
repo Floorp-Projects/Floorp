@@ -30,13 +30,7 @@ extern const XREAppData* gAppData;
 static const char kProfileProperties[] =
     "chrome://mozapps/locale/profile/profileSelection.properties";
 
-/**
- * Spin up a thread to backup the old profile's main directory and delete the
- * profile's local directory. Once complete have the profile service remove the
- * old profile and if necessary make the new profile the default.
- */
-nsresult ProfileResetCleanup(nsToolkitProfileService* aService,
-                             nsIToolkitProfile* aOldProfile) {
+static nsresult ProfileResetCreateBackup(nsIToolkitProfile* aOldProfile) {
   nsresult rv;
   nsCOMPtr<nsIFile> profileDir;
   rv = aOldProfile->GetRootDir(getter_AddRefs(profileDir));
@@ -143,5 +137,22 @@ nsresult ProfileResetCleanup(nsToolkitProfileService* aService,
   auto* piWindow = nsPIDOMWindowOuter::From(progressWindow);
   piWindow->Close();
 
-  return aService->ApplyResetProfile(aOldProfile);
+  return rv;
+}
+
+/**
+ * Spin up a thread to backup the old profile's main directory and delete the
+ * profile's local directory. Once complete have the profile service remove the
+ * old profile and if necessary make the new profile the default.
+ */
+nsresult ProfileResetCleanup(nsToolkitProfileService* aService,
+                             nsIToolkitProfile* aOldProfile,
+                             bool aDeleteOldProfile) {
+  // If we're leaving the old profile in place, then there's nothing to back up.
+  if (aDeleteOldProfile) {
+    nsresult rv = ProfileResetCreateBackup(aOldProfile);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return aService->ApplyResetProfile(aOldProfile, aDeleteOldProfile);
 }
