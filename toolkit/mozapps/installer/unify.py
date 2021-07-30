@@ -5,9 +5,7 @@
 import argparse
 import os
 import six
-import sys
 import buildconfig
-import mozpack.path as mozpath
 from mozpack.packager.formats import (
     FlatFormatter,
     JarFormatter,
@@ -23,34 +21,6 @@ from mozpack.files import FileFinder
 from mozpack.mozjar import JAR_DEFLATED
 from mozpack.packager.unpack import UnpackFinder
 from mozpack.unify import UnifiedBuildFinder
-
-
-# At the moment, rlbox is not supported on aarch64, so we need to allow
-# the files to be missing on the aarch64 half of the build. This also
-# means the precomplete file doesn't match, and we want to keep the x86_64
-# version which contains the extra lines for the wasm libs.
-WASM_LIBS = ("Contents/MacOS/librlbox.dylib",)
-
-
-class UnifiedBuildFinderWasmHack(UnifiedBuildFinder):
-    def unify_file(self, path, file1, file2):
-        if path in WASM_LIBS:
-            # When this assert hits, it means rlbox is supported on aarch64,
-            # and this override, as well as precomplete below, can be removed.
-            assert not file2
-            return file1
-        if file1 and file2 and path == "Contents/Resources/precomplete":
-            # Check that the only differences are because of the missing wasm libs.
-            wasm_lines = ['remove "{}"\n'.format(l).encode("utf-8") for l in WASM_LIBS]
-            content1 = [
-                l
-                for l in file1.open().readlines()
-                if not any(x == l for x in wasm_lines)
-            ]
-            content2 = file2.open().readlines()
-            if content1 == content2:
-                return file1
-        return super(UnifiedBuildFinderWasmHack, self).unify_file(path, file1, file2)
 
 
 def main():
@@ -74,7 +44,7 @@ def main():
 
     app1_finder = UnpackFinder(FileFinder(options.app1, find_executables=True))
     app2_finder = UnpackFinder(FileFinder(options.app2, find_executables=True))
-    app_finder = UnifiedBuildFinderWasmHack(app1_finder, app2_finder)
+    app_finder = UnifiedBuildFinder(app1_finder, app2_finder)
 
     copier = FileCopier()
     compress = min(app1_finder.compressed, JAR_DEFLATED)
