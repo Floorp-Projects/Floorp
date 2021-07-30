@@ -51,8 +51,8 @@ inline bool operator!(const QueueStatus status) { return !IsSuccess(status); }
 
 template <typename T>
 struct RemoveCVR {
-  typedef typename std::remove_reference<typename std::remove_cv<T>::type>::type
-      Type;
+  using Type =
+      typename std::remove_reference<typename std::remove_cv<T>::type>::type;
 };
 
 inline size_t UsedBytes(size_t aQueueBufferSize, size_t aRead, size_t aWrite) {
@@ -341,8 +341,8 @@ struct QueueParamTraits<bool> {
 // (namely ContiguousEnumValidator and ContiguousEnumValidatorInclusive).
 template <typename E, typename EnumValidator>
 struct EnumSerializer {
-  typedef E ParamType;
-  typedef typename std::underlying_type<E>::type DataType;
+  using ParamType = E;
+  using DataType = typename std::underlying_type<E>::type;
 
   template <typename U>
   static QueueStatus Write(ProducerView<U>& aProducerView,

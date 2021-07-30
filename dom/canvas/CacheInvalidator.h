@@ -43,7 +43,7 @@ class CacheInvalidator {
 // -
 
 class AbstractCache {
-  typedef std::vector<const CacheInvalidator*> InvalidatorListT;
+  using InvalidatorListT = std::vector<const CacheInvalidator*>;
 
  private:
   InvalidatorListT mInvalidators;
@@ -122,9 +122,8 @@ class CacheWeakMap final {
     }
   };
 
-  typedef std::unordered_map<const KeyT*, UniquePtr<Entry>, DerefHash,
-                             DerefEqual>
-      MapT;
+  using MapT =
+      std::unordered_map<const KeyT*, UniquePtr<Entry>, DerefHash, DerefEqual>;
   MapT mMap;
 
  public:
