@@ -52,4 +52,13 @@ TEST(NimbusFeaturesUpdate, Errors)
             NS_OK);
   ASSERT_FALSE(NimbusFeatures::GetBool("foo"_ns, "enabled"_ns, true));
   gPrefUpdate = false;
+
+  // Verify updating foo.value no longer calls FooValueUpdated after it has
+  // been unregistered.
+  ASSERT_EQ(NimbusFeatures::OffUpdate("foo"_ns, "value"_ns, FooValueUpdated),
+            NS_OK);
+  ASSERT_EQ(Preferences::SetInt("nimbus.syncdatastore.foo.value", 25,
+                                PrefValueKind::User),
+            NS_OK);
+  ASSERT_EQ(NimbusFeatures::GetInt("foo"_ns, "value"_ns, 0), 25);
 }
