@@ -159,6 +159,13 @@ EXPORTS.mozilla += [
     "public/ProfilerUtils.h",
 ]
 
+GeneratedFile(
+    "rust-api/src/gecko_bindings/profiling_categories.rs",
+    script="../../mozglue/baseprofiler/build/generate_profiling_categories.py",
+    entry_point="generate_rust_enums",
+    inputs=["../../mozglue/baseprofiler/build/profiling_categories.yaml"],
+)
+
 CONFIGURE_SUBST_FILES += [
     "rust-api/extra-bindgen-flags",
 ]
