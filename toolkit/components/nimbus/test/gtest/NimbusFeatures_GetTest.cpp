@@ -25,8 +25,8 @@ TEST(NimbusFeaturesGet, Errors)
 }
 
 static void FooValueUpdated(const char* aPref, void* aUserData) {
-  ASSERT_EQ(strcmp(aPref, "nimbus.syncdatastore.foo.value"), 0);
-  ASSERT_EQ(aUserData, nullptr);
+  ASSERT_STREQ(aPref, "nimbus.syncdatastore.foo.value");
+  ASSERT_EQ(aUserData, reinterpret_cast<void*>(13));
 
   ASSERT_FALSE(gPrefUpdate);
   gPrefUpdate = true;
@@ -37,7 +37,8 @@ static void FooValueUpdated(const char* aPref, void* aUserData) {
 TEST(NimbusFeaturesUpdate, Errors)
 {
   // Verify updating foo.value calls FooValueUpdated.
-  ASSERT_EQ(NimbusFeatures::OnUpdate("foo"_ns, "value"_ns, FooValueUpdated),
+  ASSERT_EQ(NimbusFeatures::OnUpdate("foo"_ns, "value"_ns, FooValueUpdated,
+                                     reinterpret_cast<void*>(13)),
             NS_OK);
   ASSERT_EQ(Preferences::SetInt("nimbus.syncdatastore.foo.value", 24,
                                 PrefValueKind::User),
@@ -53,9 +54,15 @@ TEST(NimbusFeaturesUpdate, Errors)
   ASSERT_FALSE(NimbusFeatures::GetBool("foo"_ns, "enabled"_ns, true));
   gPrefUpdate = false;
 
+  // Verify OffUpdate requires a matching user data pointer to unregister.
+  ASSERT_EQ(NimbusFeatures::OffUpdate("foo"_ns, "value"_ns, FooValueUpdated,
+                                      reinterpret_cast<void*>(14)),
+            NS_ERROR_FAILURE);
+
   // Verify updating foo.value no longer calls FooValueUpdated after it has
   // been unregistered.
-  ASSERT_EQ(NimbusFeatures::OffUpdate("foo"_ns, "value"_ns, FooValueUpdated),
+  ASSERT_EQ(NimbusFeatures::OffUpdate("foo"_ns, "value"_ns, FooValueUpdated,
+                                      reinterpret_cast<void*>(13)),
             NS_OK);
   ASSERT_EQ(Preferences::SetInt("nimbus.syncdatastore.foo.value", 25,
                                 PrefValueKind::User),
