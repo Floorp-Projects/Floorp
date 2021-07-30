@@ -61,8 +61,21 @@ class SnapshotSelector extends EventEmitter {
    * selector. Global state that impacts all selectors should not be kept here.
    */
   #context = {
-    url: undefined,
+    /**
+     * The number of snapshots desired.
+     * @type {number}
+     */
     count: undefined,
+    /**
+     * The page the snapshots are for.
+     * @type {string | undefined}
+     */
+    url: undefined,
+    /**
+     * The type of snapshots desired.
+     * @type {PageDataCollector.DATA_TYPE | undefined}
+     */
+    type: undefined,
   };
 
   /**
@@ -103,7 +116,10 @@ class SnapshotSelector extends EventEmitter {
    * @param {Snapshot[]} snapshots
    */
   #snapshotsGenerated(snapshots) {
-    logConsole.debug("Generated snapshots", snapshots);
+    logConsole.debug(
+      "Generated snapshots",
+      snapshots.map(s => s.url)
+    );
     this.emit("snapshots-updated", snapshots);
   }
 
@@ -117,7 +133,11 @@ class SnapshotSelector extends EventEmitter {
     logConsole.debug("Building snapshots", context);
 
     // Query for one more than we need in case the current url is returned.
-    let snapshots = await Snapshots.query({ limit: context.count + 1 });
+    let snapshots = await Snapshots.query({
+      limit: context.count + 1,
+      type: context.type,
+    });
+
     snapshots = snapshots
       .filter(snapshot => snapshot.url != context.url)
       .slice(0, context.count);
@@ -136,7 +156,20 @@ class SnapshotSelector extends EventEmitter {
     }
 
     this.#context.url = url;
+    this.rebuild();
+  }
 
+  /**
+   * Sets the type of snapshots for this selector.
+   *
+   * @param {PageDataCollector.DATA_TYPE | undefined} type
+   */
+  async setType(type) {
+    if (this.#context.type === type) {
+      return;
+    }
+
+    this.#context.type = type;
     this.rebuild();
   }
 }
