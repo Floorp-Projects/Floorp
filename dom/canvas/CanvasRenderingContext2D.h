@@ -42,8 +42,8 @@ enum class LayersBackend : int8_t;
 namespace dom {
 class
     HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmap;
-typedef HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmap
-    CanvasImageSource;
+using CanvasImageSource =
+    HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmap;
 class ImageBitmap;
 class ImageData;
 class UTF8StringOrCanvasGradientOrCanvasPattern;

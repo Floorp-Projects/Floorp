@@ -598,9 +598,9 @@ class WebGLVertexArrayJS final : public nsWrapperCache, public webgl::ObjectJS {
 
 ////////////////////////////////////
 
-typedef dom::MaybeSharedFloat32ArrayOrUnrestrictedFloatSequence Float32ListU;
-typedef dom::MaybeSharedInt32ArrayOrLongSequence Int32ListU;
-typedef dom::MaybeSharedUint32ArrayOrUnsignedLongSequence Uint32ListU;
+using Float32ListU = dom::MaybeSharedFloat32ArrayOrUnrestrictedFloatSequence;
+using Int32ListU = dom::MaybeSharedInt32ArrayOrLongSequence;
+using Uint32ListU = dom::MaybeSharedUint32ArrayOrUnsignedLongSequence;
 
 inline Range<const float> MakeRange(const Float32ListU& list) {
   if (list.IsFloat32Array()) return MakeRangeAbv(list.GetAsFloat32Array());
