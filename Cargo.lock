@@ -1472,6 +1472,7 @@ dependencies = [
 name = "fluent-ffi"
 version = "0.1.0"
 dependencies = [
+ "cstr",
  "fluent",
  "fluent-fallback",
  "fluent-pseudo",
@@ -1481,6 +1482,7 @@ dependencies = [
  "nsstring",
  "thin-vec",
  "unic-langid",
+ "xpcom",
 ]
 
 [[package]]
@@ -2658,6 +2660,9 @@ dependencies = [
  "async-trait",
  "cstr",
  "fluent",
+ "fluent-fallback",
+ "fluent-ffi",
+ "futures 0.3.15",
  "futures-channel",
  "l10nregistry",
  "libc",

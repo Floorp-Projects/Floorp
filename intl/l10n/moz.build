@@ -9,6 +9,7 @@ EXPORTS.mozilla.intl += [
     "FluentBindings.h",
     "FluentBundle.h",
     "FluentResource.h",
+    "L10nRegistry.h",
     "Localization.h",
     "RegistryBindings.h",
 ]
