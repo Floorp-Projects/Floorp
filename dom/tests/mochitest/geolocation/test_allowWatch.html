@@ -35,6 +35,7 @@ function successCallback(position) {
 
 function test1() {
   watchID = navigator.geolocation.watchPosition(successCallback, null, null);
+  is(watchID, 1, "initially returns 1");
 }
 </script>
 </pre>
