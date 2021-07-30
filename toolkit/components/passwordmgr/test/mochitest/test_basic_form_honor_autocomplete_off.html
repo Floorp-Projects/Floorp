@@ -67,11 +67,9 @@ let {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/Cont
 
 // Set the pref before the document loads.
 SpecialPowers.setBoolPref("signon.autofillForms.autocompleteOff", false);
-SpecialPowers.setBoolPref("signon.usernameOnlyForm.enabled", true);
 
 SimpleTest.registerCleanupFunction(() => {
   SpecialPowers.clearUserPref("signon.autofillForms.autocompleteOff");
-  SpecialPowers.clearUserPref("signon.usernameOnlyForm.enabled");
 });
 
 // Check for expected username/password in form.
