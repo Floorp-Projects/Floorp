@@ -1523,6 +1523,42 @@ class NativeObject : public JSObject {
     privateRef(nfixed).unbarrieredSet(PrivateValue(data));
   }
 
+  // The methods below are used to store GC things in a reserved slot as
+  // PrivateValues. This is done to bypass the normal tracing code (debugger
+  // objects use this to store cross-compartment pointers).
+  //
+  // WARNING: make sure you REALLY need this and you know what you're doing
+  // before using these methods!
+  void setReservedSlotGCThingAsPrivate(uint32_t slot, gc::Cell* cell) {
+#ifdef DEBUG
+    if (IsMarkedBlack(this)) {
+      JS::AssertCellIsNotGray(cell);
+    }
+#endif
+    HeapSlot* pslot = getSlotAddress(slot);
+    Cell* prev = nullptr;
+    if (!pslot->isUndefined()) {
+      prev = static_cast<gc::Cell*>(pslot->toPrivate());
+      privatePreWriteBarrier(pslot);
+    }
+    setReservedSlotGCThingAsPrivateUnbarriered(slot, cell);
+    gc::PostWriteBarrierCell(this, prev, cell);
+  }
+  void setReservedSlotGCThingAsPrivateUnbarriered(uint32_t slot,
+                                                  gc::Cell* cell) {
+    MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(getClass()));
+    MOZ_ASSERT(cell);
+    getSlotAddress(slot)->unbarrieredSet(PrivateValue(cell));
+  }
+  void clearReservedSlotGCThingAsPrivate(uint32_t slot) {
+    MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(getClass()));
+    HeapSlot* pslot = getSlotAddress(slot);
+    if (!pslot->isUndefined()) {
+      privatePreWriteBarrier(pslot);
+      pslot->unbarrieredSet(UndefinedValue());
+    }
+  }
+
   /* Return the allocKind we would use if we were to tenure this object. */
   inline js::gc::AllocKind allocKindForTenure() const;
 
