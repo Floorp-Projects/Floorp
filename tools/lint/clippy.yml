@@ -39,6 +39,7 @@ clippy:
         - toolkit/components/xulstore/tests/gtest/
         - toolkit/library/rust/
         - tools/fuzzing/rust/
+        - tools/profiler/rust-api/
         - xpcom/rust/gtest/bench-collections/
         - xpcom/rust/xpcom/xpcom_macros/
     exclude:
