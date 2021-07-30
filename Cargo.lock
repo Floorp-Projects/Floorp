@@ -1796,6 +1796,7 @@ dependencies = [
  "bincode",
  "cssparser",
  "cstr",
+ "gecko-profiler",
  "libc",
  "log",
  "malloc_size_of",

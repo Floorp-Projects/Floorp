@@ -104,7 +104,6 @@ use style::invalidation::element::restyle_hints::RestyleHint;
 use style::invalidation::stylesheets::RuleChangeKind;
 use style::media_queries::MediaList;
 use style::parser::{self, Parse, ParserContext};
-use style::profiler_label;
 use style::properties::animated_properties::{AnimationValue, AnimationValueMap};
 use style::properties::{parse_one_declaration_into, parse_style_attribute};
 use style::properties::{ComputedValues, CountedUnknownProperty, Importance, NonCustomPropertyId};
@@ -1616,7 +1615,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
 
     if let Some(thread_pool) = STYLE_THREAD_POOL.pool().as_ref() {
         thread_pool.spawn(|| {
-            profiler_label!(Parse);
+            gecko_profiler_label!(Layout, CSSParsing);
             async_parser.parse();
         });
     } else {
