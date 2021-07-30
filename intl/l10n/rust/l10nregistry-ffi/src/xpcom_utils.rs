@@ -76,6 +76,18 @@ pub fn get_packaged_locales() -> Option<ThinVec<nsCString>> {
     Some(locales)
 }
 
+pub fn set_available_locales(locales: &ThinVec<nsCString>) {
+    let locale_service =
+        get_service::<mozILocaleService>(cstr!("@mozilla.org/intl/localeservice;1"))
+            .expect("Failed to get a service.");
+    unsafe {
+        locale_service
+            .SetAvailableLocales(locales)
+            .to_result()
+            .expect("Failed to set locales.");
+    }
+}
+
 pub struct CategoryEntry {
     pub entry: nsCString,
     pub value: nsCString,
