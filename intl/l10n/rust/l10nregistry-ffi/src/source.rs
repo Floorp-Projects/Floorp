@@ -263,7 +263,10 @@ pub extern "C" fn l10nfilesource_fetch_file_sync(
     };
 
     *status = L10nFileSourceStatus::None;
-    if let Some(res) = source.fetch_file_sync(&locale, &path.to_utf8(), false) {
+    //XXX: Bug 1723191 - if we encounter a request for sync load while async load is in progress
+    //                   we will discard the async load and force the sync load instead.
+    //                   There may be a better option but we haven't had time to explore it.
+    if let Some(res) = source.fetch_file_sync(&locale, &path.to_utf8(), /* overload */ true) {
         Rc::into_raw(res)
     } else {
         std::ptr::null()
