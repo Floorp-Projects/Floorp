@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 futures-channel = "0.3"
+futures = "0.3"
 libc = "0.2"
 cstr = "0.2"
 log = "0.4"
@@ -18,3 +19,5 @@ thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 async-trait = "0.1"
 moz_task = { path = "../../../../xpcom/rust/moz_task" }
 xpcom = { path = "../../../../xpcom/rust/xpcom" }
+fluent-ffi = { path = "../fluent-ffi" }
+fluent-fallback = "0.5"
