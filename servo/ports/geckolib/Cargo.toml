@@ -10,7 +10,6 @@ path = "lib.rs"
 
 [features]
 gecko_debug = ["style/gecko_debug", "nsstring/gecko_debug"]
-gecko_profiler = ["style/gecko_profiler"]
 gecko_refcount_logging = ["style/gecko_refcount_logging", "servo_arc/gecko_refcount_logging"]
 
 [dependencies]
