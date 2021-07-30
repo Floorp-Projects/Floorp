@@ -229,7 +229,7 @@ EXPORTS.js += [
 # This lives in mozglue/baseprofiler but we re-publish ourselves to support
 # standalone SpiderMonkey configurations.
 EXPORTS.js += [
-    "../../mozglue/baseprofiler/public/ProfilingCategoryList.h",
+    "!/mozglue/baseprofiler/public/ProfilingCategoryList.h",
 ]
 
 # Public APIs that are experimental: the precise contour of the APIs may still
