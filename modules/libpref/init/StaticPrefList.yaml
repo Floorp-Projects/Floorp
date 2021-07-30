@@ -5989,6 +5989,13 @@
     mirror: always
 #endif  // defined(ENABLE_WASM_RELAXED_SIMD)
 
+#if defined(ENABLE_WASM_MOZ_INTGEMM)
+-   name: javascript.options.wasm_moz_intgemm
+    type: bool
+    value: @IS_NIGHTLY_BUILD@
+    mirror: always
+#endif  // defined(ENABLE_WASM_MOZ_INTGEMM)
+
 #if defined(ENABLE_WASM_EXTENDED_CONST)
 -   name: javascript.options.wasm_extended_const
     type: bool
