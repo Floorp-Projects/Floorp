@@ -991,8 +991,6 @@ XLIBS="$X_EXTRA_LIBS"
 
 dnl ========================================================
 dnl Checks for X libraries.
-dnl Ordering is important.
-dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
 if test -n "$MOZ_X11"; then
     AC_DEFINE_UNQUOTED(FUNCPROTO,15)
@@ -1003,14 +1001,6 @@ if test -n "$MOZ_X11"; then
         [MISSING_X="$MISSING_X -lX11"], $XLIBS)
     AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
         [MISSING_X="$MISSING_X -lXext"], $XLIBS)
-
-    AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"], [
-        unset ac_cv_lib_Xt_XtFree
-        AC_CHECK_LIB(ICE, IceFlush, [XT_LIBS="-lICE $XT_LIBS"],, $XT_LIBS $XLIBS)
-        AC_CHECK_LIB(SM, SmcCloseConnection, [XT_LIBS="-lSM $XT_LIBS"],, $XT_LIBS $XLIBS)
-        AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt $XT_LIBS"],
-            [MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XT_LIBS $XLIBS)
-        ])
 
     dnl ========================================================
     dnl = Check for xcb
@@ -1030,7 +1020,6 @@ AC_SUBST_LIST(XCFLAGS)
 AC_SUBST_LIST(XLDFLAGS)
 AC_SUBST_LIST(XLIBS)
 AC_SUBST_LIST(XEXT_LIBS)
-AC_SUBST_LIST(XT_LIBS)
 
 dnl ========================================================
 dnl = pthread support
