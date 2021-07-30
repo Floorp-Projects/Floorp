@@ -41,6 +41,10 @@ class FirstInitializationAttempts {
     void Record(const nsresult aRv) const {
       mOwner.RecordFirstInitializationAttempt(mInitialization, aRv);
     }
+
+    void MaybeRecord(const nsresult aRv) const {
+      mOwner.MaybeRecordFirstInitializationAttempt(mInitialization, aRv);
+    }
   };
 
   FirstInitializationAttemptImpl FirstInitializationAttempt(
@@ -60,6 +64,15 @@ class FirstInitializationAttempts {
 
   void RecordFirstInitializationAttempt(const Initialization aInitialization,
                                         nsresult aRv);
+
+  void MaybeRecordFirstInitializationAttempt(
+      const Initialization aInitialization, const nsresult aRv) {
+    if (FirstInitializationAttemptRecorded(aInitialization)) {
+      return;
+    }
+
+    RecordFirstInitializationAttempt(aInitialization, aRv);
+  }
 
   void ResetFirstInitializationAttempts() {
     mFirstInitializationAttempts = Initialization::None;
