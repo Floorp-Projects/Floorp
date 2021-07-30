@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>alertdialog</title>
+    <title>region with an accessible name</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -21,7 +21,13 @@
                   "property",
                   "role",
                   "is",
-                  "ROLE_ALERT"
+                  "ROLE_LANDMARK"
+               ],
+               [
+                  "property",
+                  "objectAttributes",
+                  "contains",
+                  "xml-roles:region"
                ]
             ],
             "AXAPI" : [
@@ -35,21 +41,27 @@
                   "property",
                   "AXSubrole",
                   "is",
-                  "AXApplicationAlertDialog"
+                  "AXLandmarkRegion"
                ],
                [
                   "property",
                   "AXRoleDescription",
                   "is",
-                  "web alert dialog"
+                  "region"
                ]
             ],
-            "MSAA" : [
+            "IAccessible2" : [
                [
                   "property",
                   "role",
                   "is",
-                  "ROLE_SYSTEM_DIALOG"
+                  "IA2_ROLE_LANDMARK"
+               ],
+               [
+                  "property",
+                  "objectAttributes",
+                  "contains",
+                  "xml-roles:region"
                ]
             ],
             "UIA" : [
@@ -57,7 +69,25 @@
                   "property",
                   "ControlType",
                   "is",
-                  "Pane"
+                  "Group"
+               ],
+               [
+                  "property",
+                  "LocalizedControlType",
+                  "is",
+                  "region"
+               ],
+               [
+                  "property",
+                  "Landmark Type",
+                  "is",
+                  "Custom"
+               ],
+               [
+                  "property",
+                  "LocalizedLandmarkType",
+                  "is",
+                  "region"
                ]
             ]
          },
@@ -65,15 +95,15 @@
          "type" : "test"
       }
    ],
-   "title" : "alertdialog"
+   "title" : "region with an accessible name"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for alertdialog.</p>
-    <div role='alertdialog' id='test'>content</div>
+  <p>This test examines the ARIA properties for region with an accessible name.</p>
+    <div role='region' aria-label='name for region' id='test'>content</div>
 
   <div id="manualMode"></div>
   <div id="log"></div>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>alertdialog</title>
+    <title>button with aria-haspopup="dialog"</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -21,7 +21,7 @@
                   "property",
                   "role",
                   "is",
-                  "ROLE_ALERT"
+                  "ROLE_PUSH_BUTTON"
                ]
             ],
             "AXAPI" : [
@@ -29,19 +29,25 @@
                   "property",
                   "AXRole",
                   "is",
-                  "AXGroup"
+                  "AXPopUpButton"
                ],
                [
                   "property",
                   "AXSubrole",
                   "is",
-                  "AXApplicationAlertDialog"
+                  "<nil>"
                ],
                [
                   "property",
                   "AXRoleDescription",
                   "is",
-                  "web alert dialog"
+                  "pop up button"
+               ],
+               [
+                  "property",
+                  "actions",
+                  "contains",
+                  "AXShowMenu"
                ]
             ],
             "MSAA" : [
@@ -49,7 +55,7 @@
                   "property",
                   "role",
                   "is",
-                  "ROLE_SYSTEM_DIALOG"
+                  "ROLE_SYSTEM_BUTTONMENU"
                ]
             ],
             "UIA" : [
@@ -57,7 +63,7 @@
                   "property",
                   "ControlType",
                   "is",
-                  "Pane"
+                  "Button"
                ]
             ]
          },
@@ -65,15 +71,15 @@
          "type" : "test"
       }
    ],
-   "title" : "alertdialog"
+   "title" : "button with aria-haspopup=\"dialog\""
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for alertdialog.</p>
-    <div role='alertdialog' id='test'>content</div>
+  <p>This test examines the ARIA properties for button with aria-haspopup="dialog".</p>
+    <div role='button' id='test' aria-haspopup='dialog'>content</div>
 
   <div id="manualMode"></div>
   <div id="log"></div>
