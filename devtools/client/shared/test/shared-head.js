@@ -95,6 +95,8 @@ const URL_ROOT_MOCHI_8888 = CHROME_URL_ROOT.replace(
   "http://mochi.test:8888/"
 );
 
+const TARGET_SWITCHING_PREF = "devtools.target-switching.server.enabled";
+
 try {
   Services.scriptloader.loadSubScript(
     "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js",
@@ -1122,6 +1124,13 @@ function emptyClipboard() {
  */
 function isWindows() {
   return Services.appinfo.OS === "WINNT";
+}
+
+/**
+ * Enables server target switching
+ */
+async function enableTargetSwitching() {
+  await pushPref(TARGET_SWITCHING_PREF, true);
 }
 
 /**
