@@ -91,8 +91,18 @@ let FormAutofillStatus = {
       Services.prefs.addObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
     }
 
-    for (let win of Services.wm.getEnumerator("navigator:browser")) {
-      this.injectElements(win.document);
+    // We have to use empty window type to get all opened windows here because the
+    // window type parameter may not be available during startup.
+    for (let win of Services.wm.getEnumerator("")) {
+      let { documentElement } = win.document;
+      if (documentElement?.getAttribute("windowtype") == "navigator:browser") {
+        this.injectElements(win.document);
+      } else {
+        // Manually call onOpenWindow for windows that are already opened but not
+        // yet have the window type set. This ensures we inject the elements we need
+        // when its docuemnt is ready.
+        this.onOpenWindow(win);
+      }
     }
     Services.wm.addListener(this);
 
