@@ -1699,14 +1699,6 @@ AC_TRY_COMPILE([#include <linux/ethtool.h>],
 
 AC_SUBST(MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI)
 
-if test -n "$MOZ_WEBRTC"; then
-    if test -n "$MOZ_X11"; then
-      MOZ_WEBRTC_X11_LIBS="-lXext -lXdamage -lXfixes -lXcomposite"
-    fi
-fi
-
-AC_SUBST_LIST(MOZ_WEBRTC_X11_LIBS)
-
 dnl ========================================================
 dnl = Apple platform decoder support
 dnl ========================================================
