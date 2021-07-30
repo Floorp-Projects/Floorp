@@ -7,5 +7,6 @@ mod gecko_bindings;
 mod profiler_state;
 mod thread;
 
+pub use gecko_bindings::profiling_categories::*;
 pub use profiler_state::*;
 pub use thread::*;

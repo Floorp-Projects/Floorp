@@ -16,3 +16,5 @@ pub mod structs {
 }
 
 pub use self::structs as bindings;
+
+pub mod profiling_categories;
