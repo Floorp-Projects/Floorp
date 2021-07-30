@@ -20,12 +20,6 @@ let DEFAULT_ORIGIN = window.location.origin;
 <div id="content">
 <pre id="test">
 <script>
-
-SpecialPowers.setBoolPref("signon.usernameOnlyForm.enabled", true);
-SimpleTest.registerCleanupFunction(() => {
-  SpecialPowers.clearUserPref("signon.usernameOnlyForm.enabled");
-});
-
 add_task(async function test_field_highlight_on_autofill() {
   let win = window.open("about:blank");
   SimpleTest.registerCleanupFunction(() => win.close());
