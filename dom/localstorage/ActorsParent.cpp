@@ -3103,13 +3103,14 @@ LSInitializationInfo& MutableInitializationInfoRef() {
   return *gInitializationInfo;
 }
 
-nsresult ExecuteOriginInitialization(
-    const nsACString& aOrigin, const LSOriginInitialization aInitialization,
-    const nsresult aRv) {
+template <typename Func>
+auto ExecuteOriginInitialization(const nsACString& aOrigin,
+                                 const LSOriginInitialization aInitialization,
+                                 Func&& aFunc) -> std::invoke_result_t<Func> {
   return ExecuteInitialization(
       MutableInitializationInfoRef().MutableOriginInitializationInfoRef(
           aOrigin),
-      aInitialization, aRv);
+      aInitialization, std::forward<Func>(aFunc));
 }
 
 }  // namespace
@@ -6797,7 +6798,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   MOZ_ASSERT(mState == State::Nesting);
   MOZ_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
 
-  const auto innerFunc = [this]() -> nsresult {
+  const auto innerFunc = [&]() -> nsresult {
     // XXX This function is too long, refactor it into helper functions for
     // readability.
 
@@ -7062,7 +7063,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   };
 
   return ExecuteOriginInitialization(
-      mOriginMetadata.mOrigin, LSOriginInitialization::Datastore, innerFunc());
+      mOriginMetadata.mOrigin, LSOriginInitialization::Datastore, innerFunc);
 }
 
 nsresult PrepareDatastoreOp::DatabaseNotAvailable() {
