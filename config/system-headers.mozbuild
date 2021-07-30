@@ -589,7 +589,6 @@ system_headers = [
     'Palettes.h',
     'PALM_CMN.H',
     'pango/pango-break.h',
-    'pango/pangocairo.h',
     'pango/pangofc-decoder.h',
     'pango/pangofc-font.h',
     'pango/pangofc-fontmap.h',

@@ -426,11 +426,7 @@ set_define("USE_FC_FREETYPE", fc_freetype)
 
 # Pango
 # ==============================================================
-pkg_check_modules(
-    "MOZ_PANGO",
-    "pango >= 1.22.0 pangoft2 >= 1.22.0 pangocairo >= 1.22.0",
-    when=toolkit_gtk,
-)
+pkg_check_modules("MOZ_PANGO", "pango >= 1.22.0", when=toolkit_gtk)
 
 # Fontconfig
 # ==============================================================
