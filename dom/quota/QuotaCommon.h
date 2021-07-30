@@ -27,6 +27,7 @@
 #  include "mozilla/Variant.h"
 #endif
 #include "mozilla/dom/QMResult.h"
+#include "mozilla/dom/quota/FirstInitializationAttemptsImpl.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -1535,6 +1536,50 @@ auto CallWithDelayedRetriesIfAccessDenied(Func&& aFunc, uint32_t aMaxRetries,
 
     PR_Sleep(PR_MillisecondsToInterval(aDelayMs));
   }
+}
+
+template <typename Initialization, typename StringGenerator>
+nsresult ExecuteInitialization(
+    FirstInitializationAttempts<Initialization, StringGenerator>&
+        aFirstInitializationAttempts,
+    const Initialization aInitialization, const nsresult aRv) {
+  // NS_ERROR_ABORT signals a non-fatal, recoverable problem during
+  // initialization. We do not want these kind of failures to count against our
+  // overall first initialization attempt telemetry. Thus we just ignore this
+  // kind of failure and keep aFirstInitializationAttempts unflagged to stay
+  // ready to record a real success or failure on the next attempt.
+  if (aRv == NS_ERROR_ABORT) {
+    return aRv;
+  }
+
+  if (!aFirstInitializationAttempts.FirstInitializationAttemptRecorded(
+          aInitialization)) {
+    aFirstInitializationAttempts.RecordFirstInitializationAttempt(
+        aInitialization, aRv);
+  }
+
+  return aRv;
+}
+
+// XXX Get rid of this special overload.
+template <typename Initialization, typename StringGenerator>
+Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> ExecuteInitialization(
+    FirstInitializationAttempts<Initialization, StringGenerator>&
+        aFirstInitializationAttempts,
+    const Initialization aInitialization,
+    Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>&& aResult) {
+  // See the comment above for the NS_ERROR_ABORT special case.
+  if (aResult.isErr() && aResult.inspectErr() == NS_ERROR_ABORT) {
+    return std::move(aResult);
+  }
+
+  if (!aFirstInitializationAttempts.FirstInitializationAttemptRecorded(
+          aInitialization)) {
+    aFirstInitializationAttempts.RecordFirstInitializationAttempt(
+        aInitialization, aResult.isOk() ? NS_OK : aResult.inspectErr());
+  }
+
+  return std::move(aResult);
 }
 
 }  // namespace quota
