@@ -1142,40 +1142,58 @@ static nsresult HashInstallPath(nsAString& aInstallPath, nsAString& aPathHash) {
  * Gets a hash of the installation directory.
  */
 nsresult nsXREDirProvider::GetInstallHash(nsAString& aPathHash) {
-  nsCOMPtr<nsIFile> installDir;
-  nsCOMPtr<nsIFile> appFile;
-  bool per = false;
-  nsresult rv = GetFile(XRE_EXECUTABLE_FILE, &per, getter_AddRefs(appFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = appFile->GetParent(getter_AddRefs(installDir));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoString stringToHash;
 
-  // It is possible that the path we have is on a case insensitive
-  // filesystem in which case the path may vary depending on how the
-  // application is called. We want to normalize the case somehow.
 #ifdef XP_WIN
-  // Windows provides a way to get the correct case.
-  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(
-          installDir)) {
-    NS_WARNING("Failed to resolve install directory.");
-  }
-#elif defined(MOZ_WIDGET_COCOA)
-  // On OSX roundtripping through an FSRef fixes the case.
-  FSRef ref;
-  nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(installDir);
-  rv = macFile->GetFSRef(&ref);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = NS_NewLocalFileWithFSRef(&ref, true, getter_AddRefs(macFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-  installDir = static_cast<nsIFile*>(macFile);
+  if (mozilla::widget::WinUtils::HasPackageIdentity()) {
+    // For packages, the install path includes the version number, so it isn't
+    // a stable or consistent identifier for the installation. The package
+    // family name is though, so use that instead of the path.
+    stringToHash = mozilla::widget::WinUtils::GetPackageFamilyName();
+  } else
 #endif
-  // On linux XRE_EXECUTABLE_FILE already seems to be set to the correct path.
+  {
+    nsCOMPtr<nsIFile> installDir;
+    nsCOMPtr<nsIFile> appFile;
+    bool per = false;
+    nsresult rv = GetFile(XRE_EXECUTABLE_FILE, &per, getter_AddRefs(appFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = appFile->GetParent(getter_AddRefs(installDir));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString installPath;
-  rv = installDir->GetPath(installPath);
-  NS_ENSURE_SUCCESS(rv, rv);
+    // It is possible that the path we have is on a case insensitive
+    // filesystem in which case the path may vary depending on how the
+    // application is called. We want to normalize the case somehow.
+#ifdef XP_WIN
+    // Windows provides a way to get the correct case.
+    if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(
+            installDir)) {
+      NS_WARNING("Failed to resolve install directory.");
+    }
+#elif defined(MOZ_WIDGET_COCOA)
+    // On OSX roundtripping through an FSRef fixes the case.
+    FSRef ref;
+    nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(installDir);
+    rv = macFile->GetFSRef(&ref);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = NS_NewLocalFileWithFSRef(&ref, true, getter_AddRefs(macFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+    installDir = static_cast<nsIFile*>(macFile);
+#endif
+    // On linux XRE_EXECUTABLE_FILE already seems to be set to the correct path.
 
-  return HashInstallPath(installPath, aPathHash);
+    rv = installDir->GetPath(stringToHash);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // If we somehow failed to get an actual value, hashing an empty string could
+  // potentially cause some serious problems given all the things this hash is
+  // used for. So we don't allow that.
+  if (stringToHash.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return HashInstallPath(stringToHash, aPathHash);
 }
 
 /**
