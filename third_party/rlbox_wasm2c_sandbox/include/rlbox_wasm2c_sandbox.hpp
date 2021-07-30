@@ -435,7 +435,7 @@ protected:
     sandbox = sandbox_info.create_wasm2c_sandbox();
     detail::dynamic_check(sandbox != nullptr, "Sandbox could not be created");
 
-    sandbox_memory_info = (wasm_rt_memory_t*) sandbox_info.lookup_wasm2c_nonfunc_export(sandbox, "memory");
+    sandbox_memory_info = (wasm_rt_memory_t*) sandbox_info.lookup_wasm2c_nonfunc_export(sandbox, "w2c_memory");
     detail::dynamic_check(sandbox_memory_info != nullptr, "Could not get wasm2c sandbox memory info");
 
     heap_base = reinterpret_cast<uintptr_t>(impl_get_memory_location());

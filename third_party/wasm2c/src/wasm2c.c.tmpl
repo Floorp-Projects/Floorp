@@ -18,13 +18,30 @@
 
 #define FUNC_EPILOGUE
 
-#define UNREACHABLE TRAP(UNREACHABLE)
+#define UNREACHABLE (void) TRAP(UNREACHABLE)
 
 #define CALL_INDIRECT(table, t, ft, x, func_types, ...) \
   (LIKELY((x) < table.size && table.data[x].func &&     \
           table.data[x].func_type == func_types[ft])    \
        ? ((t)table.data[x].func)(__VA_ARGS__)           \
        : TRAP(CALL_INDIRECT))
+
+
+#if defined(WASM_CHECK_SHADOW_MEMORY)
+#define WASM2C_SHADOW_MEMORY_LOAD(mem, func_name, ptr, ptr_size)  wasm2c_shadow_memory_load(mem, func_name, ptr, ptr_size)
+#define WASM2C_SHADOW_MEMORY_STORE(mem, func_name, ptr, ptr_size) wasm2c_shadow_memory_store(mem, func_name, ptr, ptr_size)
+#define WASM2C_SHADOW_MEMORY_RESERVE(mem, ptr, ptr_size)          wasm2c_shadow_memory_reserve(mem, ptr, ptr_size)
+#define WASM2C_SHADOW_MEMORY_DLMALLOC(mem, ptr, ptr_size)         wasm2c_shadow_memory_dlmalloc(mem, ptr, ptr_size)
+#define WASM2C_SHADOW_MEMORY_DLFREE(mem, ptr)                     wasm2c_shadow_memory_dlfree(mem, ptr)
+#define WASM2C_SHADOW_MEMORY_MARK_GLOBALS_HEAP_BOUNDARY(mem, ptr) wasm2c_shadow_memory_mark_globals_heap_boundary(mem, ptr)
+#else
+#define WASM2C_SHADOW_MEMORY_LOAD(mem, func_name, ptr, ptr_size)
+#define WASM2C_SHADOW_MEMORY_STORE(mem, func_name, ptr, ptr_size)
+#define WASM2C_SHADOW_MEMORY_RESERVE(mem, ptr, ptr_size)
+#define WASM2C_SHADOW_MEMORY_DLMALLOC(mem, ptr, ptr_size)
+#define WASM2C_SHADOW_MEMORY_DLFREE(mem, ptr)
+#define WASM2C_SHADOW_MEMORY_MARK_GLOBALS_HEAP_BOUNDARY(mem, ptr)
+#endif
 
 #if WASM_USING_GUARD_PAGES == 1
 #define MEMCHECK(mem, a, t)
@@ -50,39 +67,51 @@ static inline void load_data(void *dest, const void *src, size_t n) {
     dest_chars[n - i - 1] = cursor;
   }
 }
-#define LOAD_DATA(m, o, i, s) load_data(&(m.data[m.size - o - s]), i, s)
-#define DEFINE_LOAD(name, t1, t2, t3)                                                 \
-  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {                            \
-    MEMCHECK(mem, addr, t1);                                                          \
-    t1 result;                                                                        \
-    memcpy(&result, MEM_ACCESS_REF(mem, mem->size - addr - sizeof(t1)), sizeof(t1)); \
-    return (t3)(t2)result;                                                            \
+#define LOAD_DATA(m, o, i, s) { load_data(&(m.data[m.size - o - s]), i, s); \
+  WASM2C_SHADOW_MEMORY_RESERVE(&m, m.size - o - s, s);                       \
+  WASM2C_SHADOW_MEMORY_STORE(&m, "GlobalDataLoad", m.size - o - s, s);       \
+}
+
+#define DEFINE_LOAD(name, t1, t2, t3)                                                      \
+  static inline t3 name(wasm_rt_memory_t* mem, u64 addr, const char* func_name) {          \
+    MEMCHECK(mem, addr, t1);                                                               \
+    t1 result;                                                                             \
+    memcpy(&result, MEM_ACCESS_REF(mem, mem->size - addr - sizeof(t1)), sizeof(t1));       \
+    WASM2C_SHADOW_MEMORY_LOAD(mem, func_name, mem->size - addr - sizeof(t1), sizeof(t1));  \
+    return (t3)(t2)result;                                                                 \
   }
 
-#define DEFINE_STORE(name, t1, t2)                                                     \
-  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) {                 \
-    MEMCHECK(mem, addr, t1);                                                           \
-    t1 wrapped = (t1)value;                                                            \
-    memcpy(MEM_ACCESS_REF(mem, mem->size - addr - sizeof(t1)), &wrapped, sizeof(t1)); \
+#define DEFINE_STORE(name, t1, t2)                                                            \
+  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value, const char* func_name) { \
+    MEMCHECK(mem, addr, t1);                                                                  \
+    t1 wrapped = (t1)value;                                                                   \
+    memcpy(MEM_ACCESS_REF(mem, mem->size - addr - sizeof(t1), &wrapped, sizeof(t1));          \
+    WASM2C_SHADOW_MEMORY_STORE(mem, func_name, mem->size - addr - sizeof(t1)), sizeof(t1));   \
   }
 #else
 static inline void load_data(void *dest, const void *src, size_t n) {
   memcpy(dest, src, n);
 }
-#define LOAD_DATA(m, o, i, s) load_data(&(m.data[o]), i, s)
-#define DEFINE_LOAD(name, t1, t2, t3)                        \
-  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \
-    MEMCHECK(mem, addr, t1);                                 \
-    t1 result;                                               \
-    memcpy(&result, MEM_ACCESS_REF(mem, addr), sizeof(t1)); \
-    return (t3)(t2)result;                                   \
+#define LOAD_DATA(m, o, i, s) { load_data(&(m.data[o]), i, s); \
+  WASM2C_SHADOW_MEMORY_RESERVE(&m, o, s);                       \
+  WASM2C_SHADOW_MEMORY_STORE(&m, "GlobalDataLoad", o, s);       \
+}
+
+#define DEFINE_LOAD(name, t1, t2, t3)                                               \
+  static inline t3 name(wasm_rt_memory_t* mem, u64 addr, const char* func_name) {   \
+    MEMCHECK(mem, addr, t1);                                                        \
+    t1 result;                                                                      \
+    memcpy(&result, MEM_ACCESS_REF(mem, addr), sizeof(t1));                         \
+    WASM2C_SHADOW_MEMORY_LOAD(mem, func_name, addr, sizeof(t1));                    \
+    return (t3)(t2)result;                                                          \
   }
 
-#define DEFINE_STORE(name, t1, t2)                                     \
-  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
-    MEMCHECK(mem, addr, t1);                                           \
-    t1 wrapped = (t1)value;                                            \
-    memcpy(MEM_ACCESS_REF(mem, addr), &wrapped, sizeof(t1));          \
+#define DEFINE_STORE(name, t1, t2)                                                            \
+  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value, const char* func_name) { \
+    MEMCHECK(mem, addr, t1);                                                                  \
+    t1 wrapped = (t1)value;                                                                   \
+    memcpy(MEM_ACCESS_REF(mem, addr), &wrapped, sizeof(t1));                                  \
+    WASM2C_SHADOW_MEMORY_STORE(mem, func_name, addr, sizeof(t1));                             \
   }
 #endif
 
