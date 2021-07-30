@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>aria-autocomplete=list</title>
+    <title>grid level not supported</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -20,28 +20,32 @@
                [
                   "property",
                   "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
-               ],
+                  "doesNotContain",
+                  "level:2"
+               ]
+            ],
+            "AXAPI" : [
                [
                   "property",
-                  "states",
-                  "contains",
-                  "STATE_SUPPORTS_AUTOCOMPLETION"
+                  "AXValue",
+                  "isNot",
+                  "2"
                ]
             ],
             "IAccessible2" : [
                [
                   "property",
                   "objectAttributes",
-                  "contains",
-                  "autocomplete:list"
-               ],
+                  "doesNotContain",
+                  "level:2"
+               ]
+            ],
+            "UIA" : [
                [
                   "property",
-                  "states",
-                  "contains",
-                  "IA2_STATE_SUPPORTS_AUTOCOMPLETION"
+                  "AriaProperties.level",
+                  "isNot",
+                  "2"
                ]
             ]
          },
@@ -49,15 +53,19 @@
          "type" : "test"
       }
    ],
-   "title" : "aria-autocomplete=list"
+   "title" : "grid level not supported"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for aria-autocomplete=list.</p>
-  <input role='combobox' id='test' aria-autocomplete='list'>
+  <p>This test examines the ARIA properties for grid with author-provided level.</p>
+  <div role='grid' id='test' aria-level='2'>
+    <div role='row'>
+      <div role='gridcell'>content</div>
+    </div>
+  </div>
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>
