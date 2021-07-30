@@ -2582,6 +2582,7 @@ static ReturnAbortOnError ShowProfileManager(
 
 static bool gDoMigration = false;
 static bool gDoProfileReset = false;
+static bool gResetDeleteOldProfile = true;
 static nsCOMPtr<nsIToolkitProfile> gResetOldProfile;
 
 static nsresult LockProfile(nsINativeAppSupport* aNative, nsIFile* aRootDir,
@@ -2683,6 +2684,19 @@ static nsresult SelectProfile(nsToolkitProfileService* aProfileSvc,
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (rv == NS_MIGRATE_INTO_PACKAGE) {
+    if (!*aProfile) {
+      NS_WARNING(
+          "Attempted package profile migration without existing profile.");
+      return NS_ERROR_ABORT;
+    }
+
+    gDoProfileReset = true;
+    gResetDeleteOldProfile = false;
+    gDoMigration = true;
+    return NS_OK;
+  }
 
   if (didCreate) {
     // For a fresh install, we would like to let users decide
@@ -4952,9 +4966,8 @@ nsresult XREMain::XRE_mainRun() {
           initializedJSContext = true;
         }
 
-        nsresult backupCreated =
-            ProfileResetCleanup(mProfileSvc, gResetOldProfile);
-        if (NS_FAILED(backupCreated)) {
+        if (NS_FAILED(ProfileResetCleanup(mProfileSvc, gResetOldProfile,
+                                          gResetDeleteOldProfile))) {
           NS_WARNING("Could not cleanup the profile that was reset");
         }
       }
