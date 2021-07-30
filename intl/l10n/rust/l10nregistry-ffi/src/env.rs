@@ -3,7 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use cstr::cstr;
-use l10nregistry::{env::ErrorReporter, errors::L10nRegistryError};
+use l10nregistry::{
+    env::ErrorReporter,
+    errors::{L10nRegistryError, L10nRegistrySetupError},
+};
 use log::warn;
 use nserror::{nsresult, NS_ERROR_NOT_AVAILABLE};
 use nsstring::nsString;
@@ -15,6 +18,24 @@ use xpcom::interfaces;
 
 #[derive(Clone)]
 pub struct GeckoEnvironment;
+
+impl GeckoEnvironment {
+    pub fn report_l10nregistry_setup_error(error: &L10nRegistrySetupError) {
+        warn!("L10nRegistry setup error: {}", error);
+        let result = log_simple_console_error(
+            &error.to_string(),
+            cstr!("l10n"),
+            false,
+            true,
+            None,
+            (0, 0),
+            interfaces::nsIScriptError::errorFlag as u32,
+        );
+        if let Err(err) = result {
+            warn!("Error while reporting an error: {}", err);
+        }
+    }
+}
 
 impl ErrorReporter for GeckoEnvironment {
     fn report_errors(&self, errors: Vec<L10nRegistryError>) {
