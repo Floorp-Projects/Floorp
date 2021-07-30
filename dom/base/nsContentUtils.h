@@ -626,8 +626,6 @@ class nsContentUtils {
    * Returns true if aChar is of class L*, N* or S* (for first-letter).
    */
   static bool IsAlphanumericOrSymbol(uint32_t aChar);
-  static bool IsAlphanumericOrSymbolAt(const nsTextFragment* aFrag,
-                                       uint32_t aOffset);
 
   /*
    * Is the character an HTML whitespace character?
