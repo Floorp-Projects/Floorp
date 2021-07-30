@@ -11,11 +11,11 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.ui.widgets.WidgetSiteItemView
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.exceptions.ExceptionsInteractor
@@ -51,13 +51,16 @@ class ExceptionsListItemViewHolderTest {
 
     @Test
     fun `delete button calls interactor`() {
-        val slot = slot<(View) -> Unit>()
+        var clickListener: ((View) -> Unit)? = null
         val exception = Exception()
-        every { view.setSecondaryButton(any(), any<Int>(), capture(slot)) } just Runs
+        every { view.setSecondaryButton(any(), any<Int>(), any()) } answers {
+            clickListener = thirdArg()
+        }
         ExceptionsListItemViewHolder(view, interactor, icons).bind(exception, url = "mozilla.org")
 
         every { interactor.onDeleteOne(exception) } just Runs
-        slot.captured.invoke(mockk())
+        assertNotNull(clickListener)
+        clickListener!!(mockk())
         verify { interactor.onDeleteOne(exception) }
     }
 
