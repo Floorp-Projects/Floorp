@@ -348,6 +348,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "A count of the number of content processes, collected every five minutes."
   },
+  "CONTENT_PROCESS_PRECISE_COUNT": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["kmadan@mozilla.com", "perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "98",
+    "bug_numbers": [1722103],
+    "kind": "enumerated",
+    "n_values": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "An enumerated count of the number of content processes, collected every five minutes."
+  },
   "CONTENT_PROCESS_MAX": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
