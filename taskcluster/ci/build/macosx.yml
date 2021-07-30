@@ -218,7 +218,6 @@ macosx64-aarch64-devedition/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - macosx64-sdk-11.0
-            - wasi-sysroot
 
 macosx64-devedition/opt:
     description: "MacOS X Dev Edition Universal"
@@ -477,7 +476,6 @@ macosx64-aarch64-shippable/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - macosx64-sdk-11.0
-            - wasi-sysroot
 
 macosx64-shippable/opt:
     description: "MacOS X Universal"
