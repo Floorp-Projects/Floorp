@@ -57,7 +57,10 @@
   </head>
   <body>
   <p>This test examines the ARIA properties for aria-autocomplete=inline.</p>
-  <input role='combobox' id='test' aria-autocomplete='inline'>
+    <div role='combobox' id='test' aria-autocomplete='inline'>
+    <div role='textbox'>content</div>
+  </div>
+
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>
