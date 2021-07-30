@@ -448,6 +448,12 @@ function withAboutProfiling(callback) {
     "about:profiling",
     async contentBrowser => {
       info("about:profiling is now open in a tab.");
+      await BrowserTestUtils.waitForCondition(
+        () =>
+        contentBrowser.contentDocument.getElementById("root")
+        .firstElementChild,
+        "Document's root has been populated"
+      );
       return callback(contentBrowser.contentDocument);
     }
   );
