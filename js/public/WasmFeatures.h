@@ -82,11 +82,6 @@
 #else
 #  define WASM_MEMORY64_ENABLED 0
 #endif
-#ifdef ENABLE_WASM_MOZ_INTGEMM
-#  define WASM_MOZ_INTGEMM_ENABLED 1
-#else
-#  define WASM_MOZ_INTGEMM_ENABLED 0
-#endif
 
 // clang-format off
 #define JS_FOR_WASM_FEATURES(DEFAULT, EXPERIMENTAL)                           \
@@ -143,16 +138,7 @@
                /* flag predicate     */ !IsFuzzingIon(cx) &&                  \
                    !IsFuzzingCranelift(cx),                                   \
                /* shell flag         */ "memory64",                           \
-               /* preference name    */ "memory64")                           \
-  EXPERIMENTAL(/* capitalized name   */ MozIntGemm,                           \
-               /* lower case name    */ mozIntGemm,                           \
-               /* compile predicate  */ WASM_MOZ_INTGEMM_ENABLED,             \
-               /* compiler predicate */ BaselineAvailable(cx) ||              \
-                  IonAvailable(cx),                                           \
-               /* flag predicate     */ IsSimdPrivilegedContext(cx) &&        \
-                  !IsFuzzingCranelift(cx),                                    \
-               /* shell flag         */ "moz-intgemm",                        \
-               /* preference name    */ "moz_intgemm")
+               /* preference name    */ "memory64")
 
 // clang-format on
 

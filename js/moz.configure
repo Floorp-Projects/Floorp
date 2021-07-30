@@ -867,34 +867,6 @@ def wasm_relaxed_simd(value, wasm_simd):
 set_config("ENABLE_WASM_RELAXED_SIMD", wasm_relaxed_simd)
 set_define("ENABLE_WASM_RELAXED_SIMD", wasm_relaxed_simd)
 
-# Support for WebAssembly intgemm private intrinsics
-# =====================================================
-
-
-@depends(milestone.is_nightly)
-def default_wasm_moz_intgemm(is_nightly):
-    if is_nightly:
-        return True
-
-
-option(
-    "--enable-wasm-moz-intgemm",
-    default=default_wasm_moz_intgemm,
-    help="{Enable|Disable} WebAssembly intgemm private intrinsics",
-)
-
-
-@depends("--enable-wasm-moz-intgemm")
-def wasm_moz_intgemm(value):
-    if not value:
-        return
-
-    return True
-
-
-set_config("ENABLE_WASM_MOZ_INTGEMM", wasm_moz_intgemm)
-set_define("ENABLE_WASM_MOZ_INTGEMM", wasm_moz_intgemm)
-
 # Support for WebAssembly Memory64.
 # ===========================
 
