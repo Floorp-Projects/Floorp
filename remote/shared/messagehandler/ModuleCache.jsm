@@ -11,6 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
   Log: "chrome://remote/content/shared/Log.jsm",
   getMessageHandlerClass:
     "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.jsm",
@@ -22,6 +24,9 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 // in which case this will no longer be a constant but will instead depend on
 // the protocol owning the MessageHandler. See Bug 1722464.
 const MODULES_FOLDER = "chrome://remote/content/webdriver-bidi/modules";
+
+const TEST_MODULES_FOLDER =
+  "chrome://mochitests/content/browser/remote/shared/messagehandler/test/browser/resources/modules";
 
 /**
  * ModuleCache instances are dedicated to lazily create and cache the instances
@@ -62,6 +67,19 @@ class ModuleCache {
   constructor(messageHandler) {
     this.messageHandler = messageHandler;
     this._messageHandlerPath = messageHandler.constructor.modulePath;
+
+    this._modulesRootFolder = MODULES_FOLDER;
+    // TODO: Temporary workaround to use a different folder for tests.
+    // After Bug 1722464 lands, we should be able to set custom root folders
+    // per session and we can remove this workaround.
+    if (
+      Services.prefs.getBoolPref(
+        "remote.messagehandler.modulecache.useBrowserTestRoot",
+        false
+      )
+    ) {
+      this._modulesRootFolder = TEST_MODULES_FOLDER;
+    }
 
     // Map of absolute module paths to module instances.
     this._modules = new Map();
@@ -127,6 +145,6 @@ class ModuleCache {
       moduleFolder = `${destinationPath}-in-${this._messageHandlerPath}`;
     }
 
-    return `${MODULES_FOLDER}/${moduleFolder}/${moduleName}.jsm`;
+    return `${this._modulesRootFolder}/${moduleFolder}/${moduleName}.jsm`;
   }
 }
