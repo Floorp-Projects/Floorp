@@ -548,15 +548,6 @@ class QuotaManager final : public BackgroundThreadObject {
   void MaybeRecordShutdownStep(Maybe<Client::Type> aClientType,
                                const nsACString& aStepDescription);
 
-  template <typename Func>
-  auto ExecuteInitialization(Initialization aInitialization, Func&& aFunc)
-      -> std::invoke_result_t<Func>;
-
-  template <typename Func>
-  auto ExecuteOriginInitialization(const nsACString& aOrigin,
-                                   const OriginInitialization aInitialization,
-                                   Func&& aFunc) -> std::invoke_result_t<Func>;
-
   template <typename Iterator>
   static void MaybeInsertNonPersistedOriginInfos(
       Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
