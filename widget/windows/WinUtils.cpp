@@ -2294,5 +2294,41 @@ bool WinUtils::PreparePathForTelemetry(nsAString& aPath,
   return true;
 }
 
+nsString WinUtils::GetPackageFamilyName() {
+  nsString rv;
+
+  if (!HasPackageIdentity()) {
+    return rv;
+  }
+
+  HMODULE kernel32Dll = ::GetModuleHandleW(L"kernel32");
+  if (!kernel32Dll) {
+    return rv;
+  }
+
+  typedef LONG(WINAPI * GetCurrentPackageFamilyNameProc)(UINT32*, PWSTR);
+  GetCurrentPackageFamilyNameProc pGetCurrentPackageFamilyName =
+      (GetCurrentPackageFamilyNameProc)::GetProcAddress(
+          kernel32Dll, "GetCurrentPackageFamilyName");
+  if (!pGetCurrentPackageFamilyName) {
+    return rv;
+  }
+
+  UINT32 packageNameSize = 0;
+  if (pGetCurrentPackageFamilyName(&packageNameSize, nullptr) !=
+      ERROR_INSUFFICIENT_BUFFER) {
+    return rv;
+  }
+
+  UniquePtr<wchar_t[]> packageIdentity = MakeUnique<wchar_t[]>(packageNameSize);
+  if (pGetCurrentPackageFamilyName(&packageNameSize, packageIdentity.get()) !=
+      ERROR_SUCCESS) {
+    return rv;
+  }
+
+  rv = packageIdentity.get();
+  return rv;
+}
+
 }  // namespace widget
 }  // namespace mozilla
