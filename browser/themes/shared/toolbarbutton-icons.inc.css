@@ -118,7 +118,7 @@ toolbar[brighttext]:-moz-lwtheme {
   position: relative;
 }
 
-:where(#reload-button, #stop-button) > .toolbarbutton-icon {
+#nav-bar-customization-target :where(#reload-button, #stop-button) > .toolbarbutton-icon {
   padding: calc(var(--toolbarbutton-inner-padding) + 1px) var(--toolbarbutton-inner-padding) calc(var(--toolbarbutton-inner-padding) - 1px ) !important; /* The animation is 18px but the other icons are 16px, lower it by 1px so it is vertically centered */
 }
 
