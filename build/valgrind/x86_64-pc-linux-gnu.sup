@@ -1054,7 +1054,6 @@
 {
    Starting with rust 1.52
    Memcheck:Cond
-   ...
    fun:_ZN5style10properties10shorthands4font10parse_into*
    fun:_ZN5style10properties19PropertyDeclaration10parse_into*
    fun:_ZN5style10properties17declaration_block31parse_property_declaration_list*
