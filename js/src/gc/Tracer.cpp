@@ -224,10 +224,8 @@ void js::gc::GetTraceThingInfo(char* buf, size_t bufsize, void* thing,
             bufsize--;
             PutEscapedString(buf, bufsize, fun->displayAtom(), 0);
           }
-        } else if (obj->getClass()->flags & JSCLASS_HAS_PRIVATE) {
-          snprintf(buf, bufsize, " %p", obj->as<NativeObject>().getPrivate());
         } else {
-          snprintf(buf, bufsize, " <no private>");
+          snprintf(buf, bufsize, " <unknown object>");
         }
         break;
       }

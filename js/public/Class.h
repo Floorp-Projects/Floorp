@@ -490,8 +490,7 @@ static constexpr const js::ObjectOps* JS_NULL_OBJECT_OPS = nullptr;
 
 // Classes, objects, and properties.
 
-// Objects have private slot.
-static const uint32_t JSCLASS_HAS_PRIVATE = 1 << 0;
+// (1 << 0 is unused)
 
 // Class's initialization code will call `SetNewObjectMetadata` itself.
 static const uint32_t JSCLASS_DELAY_METADATA_BUILDER = 1 << 1;
@@ -684,8 +683,6 @@ struct alignas(js::gc::JSClassAlignBytes) JSClass {
   //       object family for future WASM features.
   bool isNativeObject() const { return !(flags & NON_NATIVE); }
   bool isProxyObject() const { return flags & JSCLASS_IS_PROXY; }
-
-  bool hasPrivate() const { return !!(flags & JSCLASS_HAS_PRIVATE); }
 
   bool emulatesUndefined() const { return flags & JSCLASS_EMULATES_UNDEFINED; }
 
