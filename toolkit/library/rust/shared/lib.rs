@@ -80,9 +80,6 @@ extern crate l10nregistry;
 #[cfg(not(target_os = "android"))]
 extern crate viaduct;
 
-#[cfg(feature = "remote")]
-extern crate remote;
-
 extern crate gecko_logger;
 
 #[cfg(feature = "oxidized_breakpad")]

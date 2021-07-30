@@ -9,10 +9,9 @@ import pathlib
 from perfdocs.logger import PerfDocLogger
 from perfdocs.utils import read_yaml
 from perfdocs.framework_gatherers import (
-    RaptorGatherer,
     MozperftestGatherer,
-    TalosGatherer,
-    AWSYGatherer,
+    RaptorGatherer,
+    StaticGatherer,
 )
 
 logger = PerfDocLogger()
@@ -21,8 +20,6 @@ logger = PerfDocLogger()
 frameworks = {
     "raptor": RaptorGatherer,
     "mozperftest": MozperftestGatherer,
-    "talos": TalosGatherer,
-    "awsy": AWSYGatherer,
 }
 
 
@@ -135,15 +132,20 @@ class Gatherer(object):
             "test_list": {},
         }
 
+        if yaml_content["static-only"]:
+            framework_gatherer_cls = StaticGatherer
+        else:
+            framework_gatherer_cls = frameworks[framework["name"]]
+
         # Get and then store the frameworks tests
-        self.framework_gatherers[framework["name"]] = frameworks[framework["name"]](
+        framework_gatherer = self.framework_gatherers[
+            framework["name"]
+        ] = framework_gatherer_cls(
             framework["yml_path"], self.workspace_dir, self.taskgraph
         )
 
         if not yaml_content["static-only"]:
-            framework["test_list"] = self.framework_gatherers[
-                framework["name"]
-            ].get_test_list()
+            framework["test_list"] = framework_gatherer.get_test_list()
 
         self._test_list.append(framework)
         return framework

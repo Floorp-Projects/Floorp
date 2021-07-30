@@ -41,8 +41,15 @@ async function task_openPanel() {
   await promise;
 }
 
-function shouldPromptDownload() {
-  // Waits until the download Prompt is shown
+/**
+ * Waits until the download Prompt is shown, selects
+ * the choosen <action>, then accepts the dialog
+ * @param [action] Which action to select, either:
+ *        "handleInternally", "save" or "open".
+ * @returns {Promise} Resolved once done.
+ */
+
+function shouldPromptDownload(action = "save") {
   return new Promise((resolve, reject) => {
     Services.wm.addListener({
       onOpenWindow(xulWin) {
@@ -55,8 +62,8 @@ function shouldPromptDownload() {
           ) {
             let dialog = win.document.getElementById("unknownContentType");
             let button = dialog.getButton("accept");
-            let saveRadio = win.document.getElementById("save");
-            saveRadio.click();
+            let actionRadio = win.document.getElementById(action);
+            actionRadio.click();
             button.disabled = false;
             dialog.acceptDialog();
             resolve();
@@ -99,14 +106,22 @@ async function shouldNotifyDownloadUI() {
   // Waits until a Blocked download was added to the Download List
   // -> returns the blocked Download
   let list = await Downloads.getList(Downloads.ALL);
-  return new Promise(res => {
+  return new Promise((res, err) => {
     const view = {
-      onDownloadAdded: aDownload => {
+      onDownloadAdded: async aDownload => {
         let { error } = aDownload;
         if (
           error.becauseBlockedByReputationCheck &&
           error.reputationCheckVerdict == Downloads.Error.BLOCK_VERDICT_INSECURE
         ) {
+          // It's an insecure Download, now Check that it has been cleaned up properly
+          if ((await IOUtils.stat(aDownload.target.path)).size != 0) {
+            throw new Error(`Download target is not empty!`);
+          }
+          if ((await IOUtils.stat(aDownload.target.path)).size != 0) {
+            throw new Error(`Download partFile was not cleaned up properly`);
+          }
+
           res(aDownload);
           list.removeView(view);
         }
@@ -116,7 +131,7 @@ async function shouldNotifyDownloadUI() {
   });
 }
 
-async function runTest(url, link, checkFunction, decscription) {
+async function runTest(url, link, checkFunction, description) {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.block_download_insecure", true]],
   });
@@ -128,7 +143,7 @@ async function runTest(url, link, checkFunction, decscription) {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  info("Checking: " + decscription);
+  info("Checking: " + description);
 
   let checkPromise = checkFunction();
   // Click the Link to trigger the download
@@ -138,7 +153,7 @@ async function runTest(url, link, checkFunction, decscription) {
 
   await checkPromise;
 
-  ok(true, decscription);
+  ok(true, description);
   BrowserTestUtils.removeTab(tab);
 
   await SpecialPowers.popPrefEnv();
@@ -211,5 +226,33 @@ add_task(async function() {
       ok(true, "The Download Panel should have opened on blocked download");
     },
     "A Blocked Download Should open the Download Panel"
+  );
+});
+
+// Test Download an insecure pdf and choose "Open with Firefox"
+add_task(async function download_open_insecure_pdf() {
+  await promiseFocus();
+  await runTest(
+    SECURE_BASE_URL,
+    "insecurePDF",
+    async () => {
+      info("awaiting that the Download Prompt is shown");
+      await shouldPromptDownload("handleInternally");
+      let download = await shouldNotifyDownloadUI();
+      let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+      await download.unblock();
+      ok(download.error == null, "There should be no error after unblocking");
+      let tab = await newTabPromise;
+
+      // Fix (possible) windows file delemiters
+      let usablePath = download.target.path.replace("\\", "/");
+      ok(
+        tab.linkedBrowser._documentURI.filePath.includes(".pdf"),
+        "The download target was opened"
+      );
+      BrowserTestUtils.removeTab(tab);
+      ok(true, "The Content was opened in a new tab");
+    },
+    "A Blocked PDF can be opened internally"
   );
 });

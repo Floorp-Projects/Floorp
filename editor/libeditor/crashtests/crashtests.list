@@ -101,7 +101,7 @@ asserts(0-1) load 1414581.html
 load 1415231.html
 load 1423767.html
 needs-focus load 1423776.html
-needs-focus load 1424450.html
+skip-if(ThreadSanitizer) needs-focus load 1424450.html # bug 1718775, permafail on tsan
 load 1425091.html
 load 1426709.html
 needs-focus load 1429523.html

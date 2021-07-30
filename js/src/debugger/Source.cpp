@@ -65,8 +65,7 @@ const JSClassOps DebuggerSource::classOps_ = {
 };
 
 const JSClass DebuggerSource::class_ = {
-    "Source", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS),
-    &classOps_};
+    "Source", JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS), &classOps_};
 
 /* static */
 NativeObject* DebuggerSource::initClass(JSContext* cx,
@@ -86,8 +85,9 @@ DebuggerSource* DebuggerSource::create(JSContext* cx, HandleObject proto,
     return nullptr;
   }
   sourceObj->setReservedSlot(OWNER_SLOT, ObjectValue(*debugger));
-  referent.get().match(
-      [&](auto sourceHandle) { sourceObj->setPrivateGCThing(sourceHandle); });
+  referent.get().match([&](auto sourceHandle) {
+    sourceObj->setReservedSlotGCThingAsPrivate(SOURCE_SLOT, sourceHandle);
+  });
 
   return sourceObj;
 }
@@ -100,7 +100,7 @@ Debugger* DebuggerSource::owner() const {
 
 // For internal use only.
 NativeObject* DebuggerSource::getReferentRawObject() const {
-  return static_cast<NativeObject*>(getPrivate());
+  return maybePtrFromReservedSlot<NativeObject>(SOURCE_SLOT);
 }
 
 DebuggerSourceReferent DebuggerSource::getReferent() const {
@@ -117,10 +117,9 @@ void DebuggerSource::trace(JSTracer* trc) {
   // There is a barrier on private pointers, so the Unbarriered marking
   // is okay.
   if (JSObject* referent = getReferentRawObject()) {
-    TraceManuallyBarrieredCrossCompartmentEdge(
-        trc, static_cast<JSObject*>(this), &referent,
-        "Debugger.Source referent");
-    setPrivateUnbarriered(referent);
+    TraceManuallyBarrieredCrossCompartmentEdge(trc, this, &referent,
+                                               "Debugger.Source referent");
+    setReservedSlotGCThingAsPrivateUnbarriered(SOURCE_SLOT, referent);
   }
 }
 

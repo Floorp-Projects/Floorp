@@ -1,7 +1,3 @@
-const { L10nRegistry } = ChromeUtils.import(
-  "resource://gre/modules/L10nRegistry.jsm"
-);
-
 let uri =
   "chrome://mochitests/content/browser/dom/l10n/tests/mochitest//document_l10n/non-system-principal/";
 let protocol = Services.io
@@ -22,11 +18,11 @@ let locales = Services.locale.appLocalesAsBCP47;
 // This source is actually using a real `FileSource` instead of a mocked one,
 // because we want to test that fetching real I/O out of the `uri` works in non-system-principal.
 let source = new L10nFileSource("test", locales, `${uri}localization/`);
-L10nRegistry.registerSources([source]);
+L10nRegistry.getInstance().registerSources([source]);
 
 registerCleanupFunction(() => {
   protocol.setSubstitution("l10n-test", null);
-  L10nRegistry.removeSources(["test"]);
+  L10nRegistry.getInstance().removeSources(["test"]);
   SpecialPowers.pushPrefEnv({
     set: [["dom.ipc.processPrelaunch.enabled", true]],
   });

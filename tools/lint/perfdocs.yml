@@ -7,6 +7,7 @@ perfdocs:
         'python/mozperftest',
         'testing/talos',
         'testing/awsy',
+        'testing/fxrecord',
     ]
     exclude: []
     extensions: ['rst', 'ini', 'yml']

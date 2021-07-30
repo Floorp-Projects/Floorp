@@ -37,7 +37,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Management: "resource://gre/modules/Extension.jsm",
   ExtensionAddonObserver: "resource://gre/modules/Extension.jsm",
   FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
-  L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
   MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
   XPCShellContentUtils: "resource://testing-common/XPCShellContentUtils.jsm",
 });
@@ -957,7 +956,7 @@ var AddonTestUtils = {
 
     // Clear L10nRegistry entries so restaring the AOM will work correctly with locales.
     if (clearL10nRegistry) {
-      L10nRegistry.clearSources();
+      L10nRegistry.getInstance().clearSources();
     }
 
     // Clear any crash report annotations

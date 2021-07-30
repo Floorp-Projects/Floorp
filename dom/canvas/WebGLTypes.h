@@ -34,9 +34,9 @@
 
 // Manual reflection of WebIDL typedefs that are different from their
 // OpenGL counterparts.
-typedef int64_t WebGLsizeiptr;
-typedef int64_t WebGLintptr;
-typedef bool WebGLboolean;
+using WebGLsizeiptr = int64_t;
+using WebGLintptr = int64_t;
+using WebGLboolean = bool;
 
 // -
 
@@ -326,7 +326,7 @@ enum class UniformBaseType : uint8_t {
 };
 const char* ToString(UniformBaseType);
 
-typedef uint64_t ObjectId;
+using ObjectId = uint64_t;
 
 enum class BufferKind : uint8_t {
   Undefined,
@@ -491,10 +491,10 @@ struct avec3 {
   bool operator!=(const avec3& rhs) const { return !(*this == rhs); }
 };
 
-typedef avec2<int32_t> ivec2;
-typedef avec3<int32_t> ivec3;
-typedef avec2<uint32_t> uvec2;
-typedef avec3<uint32_t> uvec3;
+using ivec2 = avec2<int32_t>;
+using ivec3 = avec3<int32_t>;
+using uvec2 = avec2<uint32_t>;
+using uvec3 = avec3<uint32_t>;
 
 inline ivec2 AsVec(const gfx::IntSize& s) { return {s.width, s.height}; }
 

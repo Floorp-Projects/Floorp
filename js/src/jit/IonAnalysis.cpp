@@ -2128,6 +2128,13 @@ bool TypeAnalyzer::tryEmitFloatOperations() {
     return true;
   }
 
+  // WarpBuilder skips over code that can't be reached except through
+  // a catch block. Locals and arguments may be observable in such
+  // code after bailing out, so we can't rely on seeing all uses.
+  if (graph.hasTryBlock()) {
+    return true;
+  }
+
   if (!markPhiConsumers()) {
     return false;
   }

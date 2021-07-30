@@ -13,9 +13,6 @@ const { TelemetryController } = ChromeUtils.import(
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
-const { L10nRegistry } = ChromeUtils.import(
-  "resource://gre/modules/L10nRegistry.jsm"
-);
 
 const APPNAME = "XPCShell";
 const APPVERSION = "1";
@@ -219,7 +216,7 @@ add_task(async function test_setup() {
 
   // Register a fake it-IT locale (used to test localized AMO details in some
   // of the test case defined in this test file).
-  L10nRegistry.registerSources([
+  L10nRegistry.getInstance().registerSources([
     L10nFileSource.createMock(
       "mock",
       ["it-IT", "fr-FR"],

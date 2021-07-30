@@ -485,53 +485,6 @@ uint32_t CompositorBridgeChild::SharedFrameMetricsData::GetAPZCId() {
   return mAPZCId;
 }
 
-mozilla::ipc::IPCResult CompositorBridgeChild::RecvRemotePaintIsReady() {
-  // Used on the content thread, this bounces the message to the
-  // BrowserParent (via the BrowserChild) if the notification was previously
-  // requested. XPCOM gives a soup of compiler errors when trying to
-  // do_QueryReference so I'm using static_cast<>
-  MOZ_LAYERS_LOG(
-      ("[RemoteGfx] CompositorBridgeChild received RemotePaintIsReady"));
-  RefPtr<nsIBrowserChild> iBrowserChild(do_QueryReferent(mWeakBrowserChild));
-  if (!iBrowserChild) {
-    MOZ_LAYERS_LOG(
-        ("[RemoteGfx] Note: BrowserChild was released before "
-         "RemotePaintIsReady. "
-         "MozAfterRemotePaint will not be sent to listener."));
-    return IPC_OK();
-  }
-  BrowserChild* browserChild = static_cast<BrowserChild*>(iBrowserChild.get());
-  MOZ_ASSERT(browserChild);
-  Unused << browserChild->SendRemotePaintIsReady();
-  mWeakBrowserChild = nullptr;
-  return IPC_OK();
-}
-
-void CompositorBridgeChild::RequestNotifyAfterRemotePaint(
-    BrowserChild* aBrowserChild) {
-  MOZ_ASSERT(aBrowserChild,
-             "NULL BrowserChild not allowed in "
-             "CompositorBridgeChild::RequestNotifyAfterRemotePaint");
-  mWeakBrowserChild =
-      do_GetWeakReference(static_cast<dom::BrowserChild*>(aBrowserChild));
-  if (!mCanSend) {
-    return;
-  }
-  Unused << SendRequestNotifyAfterRemotePaint();
-}
-
-void CompositorBridgeChild::CancelNotifyAfterRemotePaint(
-    BrowserChild* aBrowserChild) {
-  RefPtr<nsIBrowserChild> iBrowserChild(do_QueryReferent(mWeakBrowserChild));
-  if (!iBrowserChild) {
-    return;
-  }
-  BrowserChild* browserChild = static_cast<BrowserChild*>(iBrowserChild.get());
-  if (browserChild == aBrowserChild) {
-    mWeakBrowserChild = nullptr;
-  }
-}
-
 bool CompositorBridgeChild::SendWillClose() {
   MOZ_RELEASE_ASSERT(mCanSend);
   return PCompositorBridgeChild::SendWillClose();
@@ -612,13 +565,6 @@ bool CompositorBridgeChild::SendNotifyRegionInvalidated(
     return false;
   }
   return PCompositorBridgeChild::SendNotifyRegionInvalidated(region);
-}
-
-bool CompositorBridgeChild::SendRequestNotifyAfterRemotePaint() {
-  if (!mCanSend) {
-    return false;
-  }
-  return PCompositorBridgeChild::SendRequestNotifyAfterRemotePaint();
 }
 
 PTextureChild* CompositorBridgeChild::AllocPTextureChild(

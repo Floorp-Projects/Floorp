@@ -187,9 +187,10 @@ add_task(async function testRememberedDecisionsUI() {
     "rememberedList has expected number of labels"
   );
 
-  // Some of the strings here are localized with Fluent, so they will only be
-  // available after the next refresh driver tick.
-  await new Promise(win.requestAnimationFrame);
+  await BrowserTestUtils.waitForCondition(
+    () => labels[10].textContent.length > 0,
+    "Localized label is populated"
+  );
 
   let expectedHosts = [
     "example.com",

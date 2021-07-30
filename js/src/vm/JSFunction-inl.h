@@ -71,7 +71,6 @@ inline JSFunction* CloneFunctionObject(JSContext* cx, HandleFunction fun,
   nobj->initEmptyDynamicSlots();
   nobj->setEmptyElements();
 
-  MOZ_ASSERT(!clasp->hasPrivate());
   MOZ_ASSERT(shape->slotSpan() == 0);
 
   JSFunction* fun = static_cast<JSFunction*>(nobj);

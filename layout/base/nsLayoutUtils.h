@@ -1241,9 +1241,13 @@ class nsLayoutUtils {
 
   class BoxCallback {
    public:
-    BoxCallback() : mIncludeCaptionBoxForTable(true) {}
+    BoxCallback() = default;
     virtual void AddBox(nsIFrame* aFrame) = 0;
-    bool mIncludeCaptionBoxForTable;
+    bool mIncludeCaptionBoxForTable = true;
+    // Whether we are in a continuation or ib-split-sibling of the target we're
+    // measuring. This is useful because if we know we're in the target subtree
+    // and measuring against it we can avoid finding the common ancestor.
+    bool mInTargetContinuation = false;
   };
   /**
    * Collect all CSS boxes associated with aFrame and its

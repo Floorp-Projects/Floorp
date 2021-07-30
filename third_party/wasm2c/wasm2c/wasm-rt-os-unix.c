@@ -10,6 +10,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
   // Macs priors to OSX 10.12 don't have the clock functions. So we will use mac specific options
@@ -171,15 +172,21 @@ int os_mmap_commit(void* curr_heap_end_pointer, size_t expanded_size, int prot) 
 }
 
 #if defined(__APPLE__) && defined(__MACH__)
-  static mach_timebase_info_data_t timebase = { 0, 0 }; /* numer = 0, denom = 0 */
-  static struct timespec           inittime = { 0, 0 }; /* nanoseconds since 1-Jan-1970 to init() */
-  static uint64_t                  initclock;           /* ticks since boot to init() */
+  typedef struct {
+    mach_timebase_info_data_t timebase; /* numer = 0, denom = 0 */
+    struct timespec           inittime; /* nanoseconds since 1-Jan-1970 to init() */
+    uint64_t                  initclock; /* ticks since boot to init() */
+  } wasi_mac_clock_info_t;
+
+  static wasi_mac_clock_info_t g_wasi_mac_clock_info;
+  static int g_os_data_initialized = 0;
 #endif
 
-void os_clock_init() {
+
+void os_init() {
   #if defined(__APPLE__) && defined(__MACH__)
     // From here: https://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x/21352348#21352348
-    if (mach_timebase_info(&timebase) != 0) {
+    if (mach_timebase_info(&g_wasi_mac_clock_info.timebase) != 0) {
       abort();
     }
 
@@ -189,24 +196,52 @@ void os_clock_init() {
       abort();
     }
 
-    initclock = mach_absolute_time();
+    g_wasi_mac_clock_info.initclock = mach_absolute_time();
 
-    inittime.tv_sec = micro.tv_sec;
-    inittime.tv_nsec = micro.tv_usec * 1000;
+    g_wasi_mac_clock_info.inittime.tv_sec = micro.tv_sec;
+    g_wasi_mac_clock_info.inittime.tv_nsec = micro.tv_usec * 1000;
+
+    g_os_data_initialized = 1;
   #endif
 }
 
-int os_clock_gettime(int clock_id, struct timespec* out_struct) {
+void os_clock_init(void** clock_data_pointer) {
+  #if defined(__APPLE__) && defined(__MACH__)
+    if (!g_os_data_initialized) {
+      os_init();
+    }
+
+    wasi_mac_clock_info_t* alloc = (wasi_mac_clock_info_t*) malloc(sizeof(wasi_mac_clock_info_t));
+    if (!alloc) {
+      abort();
+    }
+    memcpy(alloc, &g_wasi_mac_clock_info, sizeof(wasi_mac_clock_info_t));
+    *clock_data_pointer = alloc;
+  #endif
+}
+
+void os_clock_cleanup(void** clock_data_pointer) {
+  #if defined(__APPLE__) && defined(__MACH__)
+    if (*clock_data_pointer == 0) {
+      free(*clock_data_pointer);
+      *clock_data_pointer = 0;
+    }
+  #endif
+}
+
+int os_clock_gettime(void* clock_data, int clock_id, struct timespec* out_struct) {
   int ret = 0;
   #if defined(__APPLE__) && defined(__MACH__)
+    wasi_mac_clock_info_t* alloc = (wasi_mac_clock_info_t*) clock_data;
+
     // From here: https://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x/21352348#21352348
 
     (void)clock_id;
     // ticks since init
-    uint64_t clock = mach_absolute_time() - initclock;
+    uint64_t clock = mach_absolute_time() - alloc->initclock;
     // nanoseconds since init
-    uint64_t nano = clock * (uint64_t)timebase.numer / (uint64_t)timebase.denom;
-    *out_struct = inittime;
+    uint64_t nano = clock * (uint64_t)(alloc->timebase.numer) / (uint64_t)(alloc->timebase.denom);
+    *out_struct = alloc->inittime;
 
     #define BILLION 1000000000L
     out_struct->tv_sec += nano / BILLION;
@@ -221,7 +256,7 @@ int os_clock_gettime(int clock_id, struct timespec* out_struct) {
   return ret;
 }
 
-int os_clock_getres(int clock_id, struct timespec* out_struct) {
+int os_clock_getres(void* clock_data, int clock_id, struct timespec* out_struct) {
   int ret = 0;
   #if defined(__APPLE__) && defined(__MACH__)
     (void)clock_id;

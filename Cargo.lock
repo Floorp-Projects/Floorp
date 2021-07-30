@@ -1472,6 +1472,7 @@ dependencies = [
 name = "fluent-ffi"
 version = "0.1.0"
 dependencies = [
+ "cstr",
  "fluent",
  "fluent-fallback",
  "fluent-pseudo",
@@ -1481,6 +1482,7 @@ dependencies = [
  "nsstring",
  "thin-vec",
  "unic-langid",
+ "xpcom",
 ]
 
 [[package]]
@@ -2018,7 +2020,6 @@ dependencies = [
  "processtools",
  "profiler_helper",
  "qcms",
- "remote",
  "rlbox_lucet_sandbox",
  "rsdparsa_capi",
  "rusqlite",
@@ -2659,6 +2660,9 @@ dependencies = [
  "async-trait",
  "cstr",
  "fluent",
+ "fluent-fallback",
+ "fluent-ffi",
+ "futures 0.3.15",
  "futures-channel",
  "l10nregistry",
  "libc",
@@ -4174,19 +4178,6 @@ name = "regex-syntax"
 version = "0.6.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b"
-
-[[package]]
-name = "remote"
-version = "0.1.0"
-dependencies = [
- "http",
- "libc",
- "log",
- "nserror",
- "nsstring",
- "thiserror",
- "xpcom",
-]
 
 [[package]]
 name = "remove_dir_all"

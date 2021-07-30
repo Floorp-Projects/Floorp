@@ -59,6 +59,8 @@ class L10nFileSource : public nsWrapperCache {
                                                  const nsACString& aPath,
                                                  ErrorResult& aRv);
 
+  const ffi::FileSource* Raw() const { return mRaw; }
+
  protected:
   virtual ~L10nFileSource() = default;
   nsCOMPtr<nsIGlobalObject> mGlobal;

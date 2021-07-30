@@ -1232,7 +1232,6 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
     }
   }
 
-  MOZ_ASSERT(!(class_.flags & JSCLASS_HAS_PRIVATE));
   gc::AllocKind allocKind = GetArrayBufferGCObjectKind(nslots);
 
   AutoSetNewObjectMetadata metadata(cx);
@@ -1283,7 +1282,6 @@ ArrayBufferObject::createBufferAndData(
     }
   }
 
-  MOZ_ASSERT(!(class_.flags & JSCLASS_HAS_PRIVATE));
   gc::AllocKind allocKind = GetArrayBufferGCObjectKind(nslots);
 
   ArrayBufferObject* buffer = NewObjectWithClassProto<ArrayBufferObject>(

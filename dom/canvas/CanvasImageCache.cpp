@@ -62,8 +62,8 @@ struct ImageCacheEntryData {
 
 class ImageCacheEntry : public PLDHashEntryHdr {
  public:
-  typedef ImageCacheKey KeyType;
-  typedef const ImageCacheKey* KeyTypePointer;
+  using KeyType = ImageCacheKey;
+  using KeyTypePointer = const ImageCacheKey*;
 
   explicit ImageCacheEntry(const KeyType* aKey)
       : mData(new ImageCacheEntryData(*aKey)) {}
@@ -95,8 +95,8 @@ struct AllCanvasImageCacheKey {
 
 class AllCanvasImageCacheEntry : public PLDHashEntryHdr {
  public:
-  typedef AllCanvasImageCacheKey KeyType;
-  typedef const AllCanvasImageCacheKey* KeyTypePointer;
+  using KeyType = AllCanvasImageCacheKey;
+  using KeyTypePointer = const AllCanvasImageCacheKey*;
 
   explicit AllCanvasImageCacheEntry(const KeyType* aKey)
       : mImage(aKey->mImage) {}

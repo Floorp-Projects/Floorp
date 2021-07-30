@@ -14,11 +14,11 @@ add_task(async function test_chrome_opens_window() {
   });
 
   let newWinPromise = BrowserTestUtils.waitForNewWindow({
-    url: "http://example.com/",
+    url: "https://example.com/",
   });
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-    content.open("http://example.com/", "_blank");
+    content.open("https://example.com/", "_blank");
   });
 
   let win = await newWinPromise;
@@ -35,7 +35,7 @@ add_task(async function test_chrome_opens_window() {
     );
     Assert.equal(
       content.document.nodePrincipal.origin,
-      "http://example.com",
+      "https://example.com",
       "Should have the example.com principal"
     );
   });

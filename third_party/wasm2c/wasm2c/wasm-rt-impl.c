@@ -132,6 +132,10 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
   memory->size = byte_length;
   memory->pages = initial_pages;
   memory->max_pages = max_pages;
+
+#if defined(WASM_CHECK_SHADOW_MEMORY)
+  wasm2c_shadow_memory_create(memory);
+#endif
 }
 
 void wasm_rt_deallocate_memory(wasm_rt_memory_t* memory) {
@@ -139,6 +143,9 @@ void wasm_rt_deallocate_memory(wasm_rt_memory_t* memory) {
   os_munmap(memory->data, 0x200000000ul);
 #else
   os_munmap(memory->data, memory->size);
+#endif
+#if defined(WASM_CHECK_SHADOW_MEMORY)
+  wasm2c_shadow_memory_destroy(memory);
 #endif
 }
 
@@ -177,6 +184,9 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
 #endif
   memory->pages = new_pages;
   memory->size = new_size;
+#if defined(WASM_CHECK_SHADOW_MEMORY)
+  wasm2c_shadow_memory_expand(memory);
+#endif
   return old_pages;
 }
 

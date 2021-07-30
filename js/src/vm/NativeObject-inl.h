@@ -37,19 +37,9 @@ inline uint32_t NativeObject::numFixedSlotsMaybeForwarded() const {
   return gc::MaybeForwarded(shape())->numFixedSlots();
 }
 
-inline void* NativeObject::getPrivateMaybeForwarded() const {
-  MOZ_ASSERT(MaybeForwardedObjectClass(this)->hasPrivate());
-  uint32_t nfixed = numFixedSlotsMaybeForwarded();
-  HeapSlot* end = &fixedSlots()[nfixed];
-  return *reinterpret_cast<void**>(end);
-}
-
 inline uint8_t* NativeObject::fixedData(size_t nslots) const {
-  mozilla::DebugOnly<const JSClass*> clasp =
-      gc::MaybeForwardedObjectClass(this);
-  MOZ_ASSERT(ClassCanHaveFixedData(clasp));
-  MOZ_ASSERT(nslots ==
-             numFixedSlotsMaybeForwarded() + (clasp->hasPrivate() ? 1 : 0));
+  MOZ_ASSERT(ClassCanHaveFixedData(gc::MaybeForwardedObjectClass(this)));
+  MOZ_ASSERT(nslots == numFixedSlotsMaybeForwarded());
   return reinterpret_cast<uint8_t*>(&fixedSlots()[nslots]);
 }
 
@@ -454,10 +444,6 @@ inline bool NativeObject::isInWholeCellBuffer() const {
     nobj->initEmptyDynamicSlots();
   }
   nobj->setEmptyElements();
-
-  if (clasp->hasPrivate()) {
-    nobj->initPrivate(nullptr);
-  }
 
   if (size_t span = shape->slotSpan()) {
     nobj->initializeSlotRange(0, span);

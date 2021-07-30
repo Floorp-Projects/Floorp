@@ -5,4 +5,6 @@
 mod env;
 mod fetcher;
 pub mod load;
+mod registry;
 mod source;
+mod xpcom_utils;
