@@ -8,7 +8,7 @@ use std::mem;
 use std::rc::Rc;
 use thin_vec::ThinVec;
 
-use crate::{env::GeckoEnvironment, fetcher::GeckoFileFetcher};
+use crate::{env::GeckoEnvironment, fetcher::GeckoFileFetcher, xpcom_utils::is_parent_process};
 use fluent_fallback::generator::BundleGenerator;
 use futures_channel::mpsc::{unbounded, UnboundedSender};
 pub use l10nregistry::{
@@ -40,30 +40,28 @@ impl BundleAdapter for GeckoBundleAdapter {
 }
 
 thread_local!(static L10N_REGISTRY: Rc<GeckoL10nRegistry> = {
-    let env = GeckoEnvironment;
-    let mut reg = L10nRegistry::with_provider(env);
+    let sources = if is_parent_process() {
+        let packaged_locales = get_packaged_locales();
+        let entries = get_l10n_registry_category_entries();
 
-    let packaged_locales = vec!["en-US".parse().unwrap()];
+        Some(entries
+             .into_iter()
+             .map(|entry| {
+                 FileSource::new(
+                     entry.entry.to_string(),
+                     packaged_locales.clone(),
+                     entry.value.to_string(),
+                     Default::default(),
+                     GeckoFileFetcher,
+                 )
+             })
+             .collect())
 
-    let toolkit_fs = FileSource::new(
-        "0-toolkit".to_owned(),
-        packaged_locales.clone(),
-        "resource://gre/localization/{locale}/".to_owned(),
-        Default::default(),
-        GeckoFileFetcher,
-    );
-    let browser_fs = FileSource::new(
-        "5-browser".to_owned(),
-        packaged_locales,
-        "resource://app/localization/{locale}/".to_owned(),
-        Default::default(),
-        GeckoFileFetcher,
-    );
-    let _ = reg.set_adapt_bundle(GeckoBundleAdapter::default()).report_error();
+    } else {
+        None
+    };
 
-    let _ = reg.register_sources(vec![toolkit_fs, browser_fs]).report_error();
-
-    Rc::new(reg)
+    create_l10n_registry(sources)
 });
 
 pub type GeckoL10nRegistry = L10nRegistry<GeckoEnvironment, GeckoBundleAdapter>;
@@ -80,6 +78,79 @@ impl<V> GeckoReportError<V, L10nRegistrySetupError> for Result<V, L10nRegistrySe
         }
         self
     }
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub struct L10nFileSourceDescriptor {
+    name: nsCString,
+    locales: ThinVec<nsCString>,
+    pre_path: nsCString,
+    index: ThinVec<nsCString>,
+}
+
+fn get_l10n_registry_category_entries() -> Vec<crate::xpcom_utils::CategoryEntry> {
+    crate::xpcom_utils::get_category_entries(&nsCString::from("l10n-registry")).unwrap_or_default()
+}
+
+fn get_packaged_locales() -> Vec<LanguageIdentifier> {
+    crate::xpcom_utils::get_packaged_locales()
+        .map(|locales| {
+            locales
+                .into_iter()
+                .map(|s| s.to_utf8().parse().expect("Failed to parse locale."))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn create_l10n_registry(sources: Option<Vec<FileSource>>) -> Rc<GeckoL10nRegistry> {
+    let env = GeckoEnvironment;
+    let mut reg = L10nRegistry::with_provider(env);
+
+    reg.set_adapt_bundle(GeckoBundleAdapter::default())
+        .expect("Failed to set bundle adaptation closure.");
+
+    if let Some(sources) = sources {
+        reg.register_sources(sources)
+            .expect("Failed to register sources.");
+    }
+    Rc::new(reg)
+}
+
+pub fn set_l10n_registry(new_sources: &ThinVec<L10nFileSourceDescriptor>) {
+    L10N_REGISTRY.with(|reg| {
+        let new_source_names: Vec<_> = new_sources
+            .iter()
+            .map(|d| d.name.to_utf8().to_string())
+            .collect();
+        let old_sources = reg.get_source_names().unwrap();
+
+        let mut sources_to_be_removed = vec![];
+        for name in &old_sources {
+            if !new_source_names.contains(&name) {
+                sources_to_be_removed.push(name);
+            }
+        }
+        reg.remove_sources(sources_to_be_removed).unwrap();
+
+        let mut add_sources = vec![];
+        for desc in new_sources {
+            if !old_sources.contains(&desc.name.to_string()) {
+                add_sources.push(FileSource::new(
+                    desc.name.to_string(),
+                    desc.locales
+                        .iter()
+                        .map(|s| s.to_utf8().parse().unwrap())
+                        .collect(),
+                    desc.pre_path.to_string(),
+                    Default::default(),
+                    GeckoFileFetcher,
+                ));
+            }
+        }
+        reg.register_sources(add_sources).unwrap();
+    });
 }
 
 pub fn get_l10n_registry() -> Rc<GeckoL10nRegistry> {
@@ -110,6 +181,51 @@ pub extern "C" fn l10nregistry_instance_get() -> *const GeckoL10nRegistry {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn l10nregistry_get_parent_process_sources(
+    sources: &mut ThinVec<L10nFileSourceDescriptor>,
+) {
+    debug_assert!(
+        is_parent_process(),
+        "This should be called only in parent process."
+    );
+
+    // If at the point when the first content process is being initialized, the parent
+    // process `L10nRegistryService` has not been initialized yet, this will trigger it.
+    //
+    // This is architecturally imperfect, but acceptable for simplicity reasons because
+    // `L10nRegistry` instance is cheap and mainly servers as a store of state.
+    let reg = get_l10n_registry();
+    for name in reg.get_source_names().unwrap() {
+        let source = reg.get_source(&name).unwrap().unwrap();
+        let descriptor = L10nFileSourceDescriptor {
+            name: source.name.as_str().into(),
+            locales: source
+                .locales()
+                .iter()
+                .map(|l| l.to_string().into())
+                .collect(),
+            pre_path: source.pre_path.as_str().into(),
+            index: source
+                .get_index()
+                .map(|index| index.into_iter().map(|s| s.into()).collect())
+                .unwrap_or_default(),
+        };
+        sources.push(descriptor);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn l10nregistry_register_parent_process_sources(
+    sources: &ThinVec<L10nFileSourceDescriptor>,
+) {
+    debug_assert!(
+        !is_parent_process(),
+        "This should be called only in content process."
+    );
+    set_l10n_registry(sources);
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn l10nregistry_addref(reg: &GeckoL10nRegistry) {
     let raw = Rc::from_raw(reg);
     mem::forget(Rc::clone(&raw));
@@ -131,6 +247,20 @@ pub extern "C" fn l10nregistry_get_available_locales(
     }
 }
 
+fn broadcast_settings_if_parent(reg: &GeckoL10nRegistry) {
+    if !is_parent_process() {
+        return;
+    }
+
+    L10N_REGISTRY.with(|reg_service| {
+        if std::ptr::eq(Rc::as_ptr(reg_service), reg) {
+            unsafe {
+                L10nRegistrySendUpdateL10nFileSources();
+            }
+        }
+    });
+}
+
 #[no_mangle]
 pub extern "C" fn l10nregistry_register_sources(
     reg: &GeckoL10nRegistry,
@@ -139,6 +269,8 @@ pub extern "C" fn l10nregistry_register_sources(
     let _ = reg
         .register_sources(sources.iter().map(|&s| s.clone()).collect())
         .report_error();
+
+    broadcast_settings_if_parent(reg);
 }
 
 #[no_mangle]
@@ -149,6 +281,7 @@ pub extern "C" fn l10nregistry_update_sources(
     let _ = reg
         .update_sources(sources.iter().map(|&s| s.clone()).collect())
         .report_error();
+    broadcast_settings_if_parent(reg);
 }
 
 #[no_mangle]
@@ -163,6 +296,7 @@ pub unsafe extern "C" fn l10nregistry_remove_sources(
 
     let sources = std::slice::from_raw_parts(sources_elements, sources_length);
     let _ = reg.remove_sources(sources.to_vec()).report_error();
+    broadcast_settings_if_parent(reg);
 }
 
 #[no_mangle]
@@ -204,6 +338,8 @@ pub extern "C" fn l10nregistry_get_source(
 #[no_mangle]
 pub extern "C" fn l10nregistry_clear_sources(reg: &GeckoL10nRegistry) {
     let _ = reg.clear_sources().report_error();
+
+    broadcast_settings_if_parent(reg);
 }
 
 #[no_mangle]
@@ -336,4 +472,8 @@ pub extern "C" fn fluent_bundle_async_iterator_next(
     {
         callback(promise, std::ptr::null_mut());
     }
+}
+
+extern "C" {
+    pub fn L10nRegistrySendUpdateL10nFileSources();
 }
