@@ -2130,9 +2130,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
   // Our main-size is considered definite if any of these are true:
   // (a) main axis is the item's inline axis.
   // (b) flex container has definite main size.
-  // (c) flex item has a definite flex basis and is fully inflexible
-  //     (NOTE: We don't actually check "fully inflexible" because webcompat
-  //     may not agree with that restriction...)
+  // (c) flex item has a definite flex basis.
   //
   // Hence, we need to take care to treat the final main-size as *indefinite*
   // if none of these conditions are satisfied.
@@ -2166,11 +2164,6 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
     } else if (aFlexBaseSize != NS_UNCONSTRAINEDSIZE) {
       // The flex item has a definite flex basis, which we'll treat as making
       // its main-size definite.
-      // XXXdholbert Technically the spec requires the flex item to *also* be
-      // fully inflexible in order to have its size treated as definite in this
-      // scenario, but no browser implements that additional restriction, so
-      // it's not clear that this additional requirement would be
-      // web-compatible...
       mTreatBSizeAsIndefinite = false;
     } else {
       // Otherwise, we have to treat the item's BSize as indefinite.
