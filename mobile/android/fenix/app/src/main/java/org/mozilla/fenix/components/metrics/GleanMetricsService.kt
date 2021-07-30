@@ -115,10 +115,6 @@ private val Event.wrapper: EventWrapper<*>?
             { Events.appOpened.record(it) },
             { Events.appOpenedKeys.valueOf(it) }
         )
-        is Event.AppReceivedIntent -> EventWrapper(
-            { Events.appReceivedIntent.record(it) },
-            { Events.appReceivedIntentKeys.valueOf(it) }
-        )
         is Event.SearchBarTapped -> EventWrapper(
             { Events.searchBarTapped.record(it) },
             { Events.searchBarTappedKeys.valueOf(it) }

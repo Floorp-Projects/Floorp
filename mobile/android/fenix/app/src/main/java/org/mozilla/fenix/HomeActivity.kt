@@ -238,10 +238,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             safeIntent
                 ?.let(::getIntentSource)
                 ?.also { components.analytics.metrics.track(Event.OpenedApp(it)) }
-            // record on cold startup
-            safeIntent
-                ?.let(::getIntentAllSource)
-                ?.also { components.analytics.metrics.track(Event.AppReceivedIntent(it)) }
         }
         supportActionBar?.hide()
 
@@ -474,14 +470,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 ?.let { it as? TabsTrayFragment }
                 ?.also { it.dismissAllowingStateLoss() }
         }
-
-        // Note: This does not work in case of an user sending an intent with ACTION_VIEW
-        // for example, launch the application, and than use adb to send an intent with
-        // ACTION_VIEW to open a link. In this case, we will get multiple telemetry events.
-        intent
-            .toSafeIntent()
-            .let(::getIntentAllSource)
-            ?.also { components.analytics.metrics.track(Event.AppReceivedIntent(it)) }
     }
 
     /**
@@ -634,14 +622,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             intent.isLauncherIntent -> Event.OpenedApp.Source.APP_ICON
             intent.action == Intent.ACTION_VIEW -> Event.OpenedApp.Source.LINK
             else -> null
-        }
-    }
-
-    protected open fun getIntentAllSource(intent: SafeIntent): Event.AppReceivedIntent.Source? {
-        return when {
-            intent.isLauncherIntent -> Event.AppReceivedIntent.Source.APP_ICON
-            intent.action == Intent.ACTION_VIEW -> Event.AppReceivedIntent.Source.LINK
-            else -> Event.AppReceivedIntent.Source.UNKNOWN
         }
     }
 
