@@ -478,8 +478,12 @@ class MarionetteTestDriverProtocolPart(TestDriverProtocolPart):
             obj["message"] = str(message)
         self.parent.base.execute_script("window.postMessage(%s, '*')" % json.dumps(obj))
 
-    def _switch_to_frame(self, frame_number):
-        self.marionette.switch_to_frame(frame_number)
+    def _switch_to_frame(self, index_or_elem):
+        try:
+            self.marionette.switch_to_frame(index_or_elem)
+        except (errors.NoSuchFrameException,
+                errors.StaleElementException) as e:
+            raise ValueError from e
 
     def _switch_to_parent_frame(self):
         self.marionette.switch_to_parent_frame()
