@@ -5,7 +5,7 @@
 use api::{FontInstanceFlags, FontSize, BaseFontInstance};
 use api::{FontKey, FontRenderMode, FontTemplate};
 use api::{ColorU, GlyphIndex, GlyphDimensions, SyntheticItalics};
-use api::channel::{unbounded_channel, Receiver, Sender};
+use api::channel::crossbeam::{unbounded, Receiver, Sender};
 use api::units::*;
 use api::{ImageDescriptor, ImageDescriptorFlags, ImageFormat, DirtyRect};
 use crate::internal_types::ResourceCacheError;
@@ -206,18 +206,16 @@ impl GlyphRasterizer {
             // possible and in that task use rayon's fork join dispatch to rasterize the
             // glyphs in the thread pool.
             profile_scope!("spawning process_glyph jobs");
-            let glyph_tx = &self.glyph_tx;
             self.workers.install(|| {
                 glyphs.par_iter().for_each(|key| {
                     let job = process_glyph(key);
-                    glyph_tx.lock().unwrap().send(job).unwrap();
+                    self.glyph_tx.send(job).unwrap();
                 });
             });
         } else {
-            let glyph_tx = self.glyph_tx.lock().unwrap();
             for key in glyphs {
                 let job = process_glyph(&key);
-                glyph_tx.send(job).unwrap();
+                self.glyph_tx.send(job).unwrap();
             }
         }
     }
@@ -965,7 +963,7 @@ pub struct GlyphRasterizer {
 
     // Receives the rendered glyphs.
     glyph_rx: Receiver<GlyphRasterJob>,
-    glyph_tx: Mutex<Sender<GlyphRasterJob>>,
+    glyph_tx: Sender<GlyphRasterJob>,
 
     // We defer removing fonts to the end of the frame so that:
     // - this work is done outside of the critical path,
@@ -984,7 +982,7 @@ pub struct GlyphRasterizer {
 
 impl GlyphRasterizer {
     pub fn new(workers: Arc<ThreadPool>, can_use_r8_format: bool) -> Result<Self, ResourceCacheError> {
-        let (glyph_tx, glyph_rx) = unbounded_channel();
+        let (glyph_tx, glyph_rx) = unbounded();
 
         let num_workers = workers.current_num_threads();
         let mut contexts = Vec::with_capacity(num_workers);
@@ -1009,7 +1007,7 @@ impl GlyphRasterizer {
             pending_glyph_count: 0,
             glyph_request_count: 0,
             glyph_rx,
-            glyph_tx: Mutex::new(glyph_tx),
+            glyph_tx,
             workers,
             fonts_to_remove: Vec::new(),
             font_instances_to_remove: Vec::new(),
