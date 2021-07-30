@@ -239,30 +239,6 @@ BrowserHost::CreateAboutBlankContentViewer(
   return NS_OK;
 }
 
-/* boolean startApzAutoscroll (in float aAnchorX, in float aAnchorY, in nsViewID
- * aScrollId, in uint32_t aPresShellId); */
-NS_IMETHODIMP
-BrowserHost::StartApzAutoscroll(float aAnchorX, float aAnchorY,
-                                nsViewID aScrollId, uint32_t aPresShellId,
-                                bool* _retval) {
-  if (!mRoot) {
-    return NS_OK;
-  }
-  *_retval =
-      mRoot->StartApzAutoscroll(aAnchorX, aAnchorY, aScrollId, aPresShellId);
-  return NS_OK;
-}
-
-/* void stopApzAutoscroll (in nsViewID aScrollId, in uint32_t aPresShellId); */
-NS_IMETHODIMP
-BrowserHost::StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId) {
-  if (!mRoot) {
-    return NS_OK;
-  }
-  mRoot->StopApzAutoscroll(aScrollId, aPresShellId);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 BrowserHost::MaybeCancelContentJSExecutionFromScript(
     nsIRemoteTab::NavigationType aNavigationType,

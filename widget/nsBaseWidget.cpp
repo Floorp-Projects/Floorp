@@ -1978,6 +1978,11 @@ void nsBaseWidget::StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) {
   mAPZC->StopAutoscroll(aGuid);
 }
 
+LayersId nsBaseWidget::GetRootLayerTreeId() {
+  return mCompositorSession ? mCompositorSession->RootLayerTreeId()
+                            : LayersId{0};
+}
+
 already_AddRefed<nsIScreen> nsBaseWidget::GetWidgetScreen() {
   nsCOMPtr<nsIScreenManager> screenManager;
   screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
