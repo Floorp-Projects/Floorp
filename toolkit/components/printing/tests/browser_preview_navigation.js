@@ -411,3 +411,69 @@ add_task(async function testPaginatorAfterSettingsUpdate() {
     await helper.closeDialog();
   }, "longerArticle.html");
 });
+
+add_task(async function testTooltips() {
+  await SpecialPowers.pushPrefEnv({ set: [["ui.tooltipDelay", 0]] });
+  const mockPrinterName = "Fake Printer";
+  await PrintHelper.withTestPage(async helper => {
+    helper.addMockPrinter(mockPrinterName);
+    await helper.startPrint();
+
+    let paginationElem = document.querySelector(".printPreviewNavigation");
+    let paginationSheetIndicator = paginationElem.shadowRoot.querySelector(
+      "#sheetIndicator"
+    );
+
+    // Wait for the first _updatePrintPreview before interacting with the preview
+    await waitForPageStatusUpdate(
+      paginationSheetIndicator,
+      { sheetNum: 1, sheetCount: 3 },
+      "Paginator indicates the correct number of sheets"
+    );
+
+    let awaitTooltipOpen = new Promise(resolve => {
+      window.addEventListener(
+        "popupshown",
+        function(event) {
+          resolve(event.originalTarget);
+        },
+        { once: true }
+      );
+    });
+
+    let navigateEnd = paginationElem.shadowRoot.querySelector("#navigateEnd");
+    info("Initial mouse move to end navigation button");
+    EventUtils.synthesizeMouseAtCenter(navigateEnd, { type: "mousemove" });
+    let tooltip = await awaitTooltipOpen;
+    is(tooltip.label, navigateEnd.title, "Tooltip shows correct text");
+    awaitTooltipOpen = new Promise(resolve => {
+      window.addEventListener(
+        "popupshown",
+        function(event) {
+          resolve(event.originalTarget);
+        },
+        { once: true }
+      );
+    });
+
+    let navigateNext = paginationElem.shadowRoot.querySelector("#navigateNext");
+    let navigateNextRect = navigateNext.getBoundingClientRect();
+    info("Initial mouse move to next navigation button");
+    EventUtils.synthesizeMouseAtCenter(navigateNext, { type: "mousemove" });
+    info("Waiting");
+    EventUtils.synthesizeMouse(
+      navigateNext,
+      navigateNextRect.width / 2 + 5,
+      navigateNextRect.height / 2,
+      { type: "mousemove" },
+      window
+    );
+    tooltip = await awaitTooltipOpen;
+    is(tooltip.label, navigateNext.title, "Tooltip shows correct text");
+
+    // move focus before closing the dialog
+    helper.get("cancel-button").focus();
+    await helper.awaitAnimationFrame();
+    await helper.closeDialog();
+  }, "longerArticle.html");
+});
