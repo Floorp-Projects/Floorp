@@ -7,7 +7,6 @@
 #include "gtest/gtest.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/browser/NimbusFeatures.h"
-#include "mozilla/SpinEventLoopUntil.h"
 
 using namespace mozilla;
 
@@ -15,19 +14,42 @@ static bool gPrefUpdate = false;
 
 TEST(NimbusFeaturesGet, Errors)
 {
-  Preferences::SetInt("nimbus.syncdatastore.foo.value", 42,
-                      PrefValueKind::User);
+  ASSERT_EQ(Preferences::SetInt("nimbus.syncdatastore.foo.value", 42,
+                                PrefValueKind::User),
+            NS_OK);
   ASSERT_EQ(NimbusFeatures::GetInt("foo"_ns, "value"_ns, 0), 42);
-  Preferences::SetBool("nimbus.syncdatastore.foo.enabled", true,
-                       PrefValueKind::User);
+  ASSERT_EQ(Preferences::SetBool("nimbus.syncdatastore.foo.enabled", true,
+                                 PrefValueKind::User),
+            NS_OK);
   ASSERT_TRUE(NimbusFeatures::GetBool("foo"_ns, "enabled"_ns, false));
+}
+
+static void FooValueUpdated(const char* aPref, void* aUserData) {
+  ASSERT_EQ(strcmp(aPref, "nimbus.syncdatastore.foo.value"), 0);
+  ASSERT_EQ(aUserData, nullptr);
+
+  ASSERT_FALSE(gPrefUpdate);
+  gPrefUpdate = true;
+
+  ASSERT_EQ(NimbusFeatures::GetInt("foo"_ns, "value"_ns, 0), 24);
 }
 
 TEST(NimbusFeaturesUpdate, Errors)
 {
-  NimbusFeatures::OnUpdate("foo"_ns, "value"_ns,
-                           [](const char*, void*) { gPrefUpdate = true; });
-  Preferences::SetInt("nimbus.syncdatastore.foo.value", 24,
-                      PrefValueKind::User);
+  // Verify updating foo.value calls FooValueUpdated.
+  ASSERT_EQ(NimbusFeatures::OnUpdate("foo"_ns, "value"_ns, FooValueUpdated),
+            NS_OK);
+  ASSERT_EQ(Preferences::SetInt("nimbus.syncdatastore.foo.value", 24,
+                                PrefValueKind::User),
+            NS_OK);
   ASSERT_TRUE(gPrefUpdate);
+  ASSERT_EQ(NimbusFeatures::GetInt("foo"_ns, "value"_ns, 0), 24);
+
+  // Verify updating foo.enabled doesn't call FooValueUpdated.
+  ASSERT_TRUE(NimbusFeatures::GetBool("foo"_ns, "enabled"_ns, false));
+  ASSERT_EQ(Preferences::SetBool("nimbus.syncdatastore.foo.enabled", false,
+                                 PrefValueKind::User),
+            NS_OK);
+  ASSERT_FALSE(NimbusFeatures::GetBool("foo"_ns, "enabled"_ns, true));
+  gPrefUpdate = false;
 }
