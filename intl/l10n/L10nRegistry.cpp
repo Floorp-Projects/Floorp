@@ -11,9 +11,14 @@
 #include "nsString.h"
 #include "nsContentUtils.h"
 #include "FluentResource.h"
+#include "nsICategoryManager.h"
+#include "mozilla/SimpleEnumerator.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PContent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 namespace mozilla::intl {
@@ -228,6 +233,44 @@ already_AddRefed<FluentBundleAsyncIterator> L10nRegistry::GenerateBundles(
 }
 
 /* static */
+void L10nRegistry::GetParentProcessFileSourceDescriptors(
+    nsTArray<L10nFileSourceDescriptor>& aRetVal) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  nsTArray<ffi::L10nFileSourceDescriptor> sources;
+  ffi::l10nregistry_get_parent_process_sources(&sources);
+  for (const auto& source : sources) {
+    auto descriptor = aRetVal.AppendElement();
+    descriptor->name() = source.name;
+    descriptor->locales().AppendElements(std::move(source.locales));
+    descriptor->prePath() = source.pre_path;
+    descriptor->index().AppendElements(std::move(source.index));
+  }
+}
+
+/* static */
+void L10nRegistry::RegisterFileSourcesFromParentProcess(
+    const nsTArray<L10nFileSourceDescriptor>& aDescriptors) {
+  // This means that in content processes the L10nRegistry
+  // service instance is created eagerly, not lazily.
+  // It is necessary so that the instance can store the sources
+  // provided in the IPC init, which, in turn, is necessary
+  // for the service to be avialable for sync bundle generation.
+  //
+  // L10nRegistry is lightweight and performs no operations, so
+  // we believe this behavior to be acceptable.
+  MOZ_ASSERT(XRE_IsContentProcess());
+  nsTArray<ffi::L10nFileSourceDescriptor> sources;
+  for (const auto& desc : aDescriptors) {
+    auto source = sources.AppendElement();
+    source->name = desc.name();
+    source->locales.AppendElements(desc.locales());
+    source->pre_path = desc.prePath();
+    source->index.AppendElements(desc.index());
+  }
+  ffi::l10nregistry_register_parent_process_sources(&sources);
+}
+
+/* static */
 nsresult L10nRegistry::Load(const nsACString& aPath,
                             nsIStreamLoaderObserver* aObserver) {
   nsCOMPtr<nsIURI> uri;
@@ -322,6 +365,18 @@ nsresult L10nRegistryLoadSync(const nsACString* aPath, void** aData,
   }
 
   return mozilla::intl::L10nRegistry::LoadSync(*aPath, aData, aSize);
+}
+
+void L10nRegistrySendUpdateL10nFileSources() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  nsTArray<L10nFileSourceDescriptor> sources;
+  L10nRegistry::GetParentProcessFileSourceDescriptors(sources);
+
+  nsTArray<ContentParent*> parents;
+  ContentParent::GetAll(parents);
+  for (ContentParent* parent : parents) {
+    Unused << parent->SendUpdateL10nFileSources(sources);
+  }
 }
 
 }  // extern "C"
