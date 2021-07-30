@@ -109,10 +109,6 @@ inline bool TemplateNativeObject::hasDynamicElements() const {
   return asNativeObject().hasDynamicElements();
 }
 
-inline bool TemplateNativeObject::hasPrivate() const {
-  return asNativeObject().hasPrivate();
-}
-
 inline gc::Cell* TemplateNativeObject::regExpShared() const {
   RegExpObject* regexp = &obj_->as<RegExpObject>();
   MOZ_ASSERT(regexp->hasShared());

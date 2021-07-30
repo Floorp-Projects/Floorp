@@ -67,7 +67,6 @@ class TemplateNativeObject : public TemplateObject {
   inline bool hasDynamicElements() const;
   inline const Value* getDenseElements() const;
 
-  inline bool hasPrivate() const;
   inline gc::Cell* regExpShared() const;
 };
 

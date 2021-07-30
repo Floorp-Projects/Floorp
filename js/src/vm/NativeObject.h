@@ -960,8 +960,7 @@ class NativeObject : public JSObject {
   [[nodiscard]] static bool fillInAfterSwap(JSContext* cx,
                                             HandleNativeObject obj,
                                             NativeObject* old,
-                                            HandleValueVector values,
-                                            void* priv);
+                                            HandleValueVector values);
 
  public:
   // Return true if this object has been converted from shared-immutable
@@ -1468,61 +1467,6 @@ class NativeObject : public JSObject {
 
   inline void privatePreWriteBarrier(HeapSlot* pprivate);
 
-  /* Private data accessors. */
-
- private:
-  HeapSlot& privateRef(uint32_t nfixed) const {
-    /*
-     * The private field of an object is used to hold a pointer by storing it as
-     * a PrivateValue(). Private fields are stored immediately after the last
-     * fixed slot of the object.
-     */
-    MOZ_ASSERT(isNumFixedSlots(nfixed));
-    MOZ_ASSERT(hasPrivate());
-    return fixedSlots()[nfixed];
-  }
-
- public:
-  bool hasPrivate() const { return getClass()->hasPrivate(); }
-
-  void* getPrivate() const { return getPrivate(numFixedSlots()); }
-  void* getPrivate(uint32_t nfixed) const {
-    return privateRef(nfixed).toPrivate();
-  }
-
-  void initPrivate(void* data) {
-    uint32_t nfixed = numFixedSlots();
-    privateRef(nfixed).unbarrieredSet(PrivateValue(data));
-  }
-
-  void setPrivate(void* data) { setPrivate(numFixedSlots(), data); }
-  void setPrivate(uint32_t nfixed, void* data) {
-    HeapSlot* pprivate = &privateRef(nfixed);
-    privatePreWriteBarrier(pprivate);
-    setPrivateUnbarriered(nfixed, data);
-  }
-
-  void setPrivateGCThing(gc::Cell* cell) {
-#ifdef DEBUG
-    if (IsMarkedBlack(this)) {
-      JS::AssertCellIsNotGray(cell);
-    }
-#endif
-    uint32_t nfixed = numFixedSlots();
-    HeapSlot* pprivate = &privateRef(nfixed);
-    Cell* prev = static_cast<gc::Cell*>(pprivate->toPrivate());
-    privatePreWriteBarrier(pprivate);
-    setPrivateUnbarriered(nfixed, cell);
-    gc::PostWriteBarrierCell(this, prev, cell);
-  }
-
-  void setPrivateUnbarriered(void* data) {
-    setPrivateUnbarriered(numFixedSlots(), data);
-  }
-  void setPrivateUnbarriered(uint32_t nfixed, void* data) {
-    privateRef(nfixed).unbarrieredSet(PrivateValue(data));
-  }
-
   // The methods below are used to store GC things in a reserved slot as
   // PrivateValues. This is done to bypass the normal tracing code (debugger
   // objects use this to store cross-compartment pointers).
@@ -1745,22 +1689,6 @@ template <typename T>
 inline void InitReservedSlot(NativeObject* obj, uint32_t slot, T* ptr,
                              MemoryUse use) {
   InitReservedSlot(obj, slot, ptr, sizeof(T), use);
-}
-
-// Initialize an object's private slot with a pointer to malloc-allocated memory
-// and associate the memory with the object.
-//
-// This call should be matched with a call to JSFreeOp::free_/delete_ in the
-// object's finalizer to free the memory and update the memory accounting.
-
-inline void InitObjectPrivate(NativeObject* obj, void* ptr, size_t nbytes,
-                              MemoryUse use) {
-  AddCellMemory(obj, nbytes, use);
-  obj->initPrivate(ptr);
-}
-template <typename T>
-inline void InitObjectPrivate(NativeObject* obj, T* ptr, MemoryUse use) {
-  InitObjectPrivate(obj, ptr, sizeof(T), use);
 }
 
 }  // namespace js
