@@ -40,6 +40,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.isSearch
@@ -216,6 +217,7 @@ class UrlInputFragment :
     override fun onPause() {
         job.cancel()
         super.onPause()
+        view?.hideKeyboard()
     }
 
     private fun updateTipsLabel() {
