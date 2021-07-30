@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.exceptions.login
 
-import io.mockk.mockk
 import mozilla.components.feature.logins.exceptions.LoginException
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
@@ -17,7 +16,12 @@ class LoginExceptionFragmentStoreTest {
     fun onChange() {
         val initialState = ExceptionsFragmentState()
         val store = ExceptionsFragmentStore(initialState)
-        val newExceptionsItem: LoginException = mockk()
+        val newExceptionsItem: LoginException = object : LoginException {
+            override val id: Long
+                get() = 1234L
+            override val origin: String
+                get() = "test"
+        }
 
         store.dispatch(ExceptionsFragmentAction.Change(listOf(newExceptionsItem))).joinBlocking()
         assertNotSame(initialState, store.state)
