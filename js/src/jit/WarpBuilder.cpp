@@ -2409,7 +2409,7 @@ bool WarpBuilder::build_CheckReturn(BytecodeLocation loc) {
 
   auto* ins = MCheckReturn::New(alloc(), returnValue, thisValue);
   current->add(ins);
-  current->setSlot(info().returnValueSlot(), ins);
+  current->push(ins);
   return resumeAfter(ins, loc);
 }
 

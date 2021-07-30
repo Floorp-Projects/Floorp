@@ -2274,8 +2274,13 @@ bool BaselineCodeGen<Handler>::emit_CheckReturn() {
   frame.popRegsAndSync(1);
   emitLoadReturnValue(R1);
 
-  Label done, returnOK;
-  masm.branchTestObject(Assembler::Equal, R1, &done);
+  Label done, returnOK, checkThis;
+  masm.branchTestObject(Assembler::NotEqual, R1, &checkThis);
+  {
+    masm.moveValue(R1, R0);
+    masm.jump(&done);
+  }
+  masm.bind(&checkThis);
   masm.branchTestUndefined(Assembler::Equal, R1, &returnOK);
 
   prepareVMCall();
@@ -2293,11 +2298,10 @@ bool BaselineCodeGen<Handler>::emit_CheckReturn() {
     return false;
   }
 
-  // Store |this| in the return value slot.
-  masm.storeValue(R0, frame.addressOfReturnValue());
-  masm.or32(Imm32(BaselineFrame::HAS_RVAL), frame.addressOfFlags());
-
   masm.bind(&done);
+
+  // Push |rval| or |this| onto the stack.
+  frame.push(R0);
   return true;
 }
 

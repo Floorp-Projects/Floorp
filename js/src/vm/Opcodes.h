@@ -2426,10 +2426,11 @@
     /*
      * Check the return value in a derived class constructor.
      *
-     * -   If the current stack frame's `returnValue` is an object, do nothing.
+     * -   If the current stack frame's `returnValue` is an object, push
+     *     `returnValue` onto the stack.
      *
      * -   Otherwise, if the `returnValue` is undefined and `thisval` is an
-     *     object, store `thisval` in the `returnValue` slot.
+     *     object, push `thisval` onto the stack.
      *
      * -   Otherwise, throw a TypeError.
      *
@@ -2445,9 +2446,9 @@
      *   Category: Control flow
      *   Type: Return
      *   Operands:
-     *   Stack: thisval =>
+     *   Stack: thisval => rval
      */ \
-    MACRO(CheckReturn, check_return, NULL, 1, 1, 0, JOF_BYTE) \
+    MACRO(CheckReturn, check_return, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Throw `exc`. (ノಠ益ಠ)ノ彡┴──┴
      *
