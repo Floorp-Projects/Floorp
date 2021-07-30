@@ -73,25 +73,23 @@ const JSClassOps DebuggerScript::classOps_ = {
 };
 
 const JSClass DebuggerScript::class_ = {
-    "Script", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS),
-    &classOps_};
+    "Script", JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS), &classOps_};
 
 void DebuggerScript::trace(JSTracer* trc) {
-  JSObject* upcast = this;
   // This comes from a private pointer, so no barrier needed.
   gc::Cell* cell = getReferentCell();
   if (cell) {
     if (cell->is<BaseScript>()) {
       BaseScript* script = cell->as<BaseScript>();
       TraceManuallyBarrieredCrossCompartmentEdge(
-          trc, upcast, &script, "Debugger.Script script referent");
-      setPrivateUnbarriered(script);
+          trc, this, &script, "Debugger.Script script referent");
+      setReservedSlotGCThingAsPrivateUnbarriered(SCRIPT_SLOT, script);
     } else {
       JSObject* wasm = cell->as<JSObject>();
       TraceManuallyBarrieredCrossCompartmentEdge(
-          trc, upcast, &wasm, "Debugger.Script wasm referent");
+          trc, this, &wasm, "Debugger.Script wasm referent");
       MOZ_ASSERT(wasm->is<WasmInstanceObject>());
-      setPrivateUnbarriered(wasm);
+      setReservedSlotGCThingAsPrivateUnbarriered(SCRIPT_SLOT, wasm);
     }
   }
 }
@@ -116,8 +114,9 @@ DebuggerScript* DebuggerScript::create(JSContext* cx, HandleObject proto,
 
   scriptobj->setReservedSlot(DebuggerScript::OWNER_SLOT,
                              ObjectValue(*debugger));
-  referent.get().match(
-      [&](auto& scriptHandle) { scriptobj->setPrivateGCThing(scriptHandle); });
+  referent.get().match([&](auto& scriptHandle) {
+    scriptobj->setReservedSlotGCThingAsPrivate(SCRIPT_SLOT, scriptHandle);
+  });
 
   return scriptobj;
 }
