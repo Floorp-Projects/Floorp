@@ -923,7 +923,6 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
     const TemplateNativeObject& ntemplate =
         templateObj.asTemplateNativeObject();
     MOZ_ASSERT(!ntemplate.hasDynamicElements());
-    MOZ_ASSERT(!ntemplate.hasPrivate());
 
     // If the object has dynamic slots, the slots member has already been
     // filled in.
@@ -949,11 +948,9 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
               Address(obj, elementsOffset + ObjectElements::offsetOfLength()));
       store32(Imm32(0),
               Address(obj, elementsOffset + ObjectElements::offsetOfFlags()));
-      MOZ_ASSERT(!ntemplate.hasPrivate());
     } else if (ntemplate.isArgumentsObject()) {
       // The caller will initialize the reserved slots.
       MOZ_ASSERT(!initContents);
-      MOZ_ASSERT(!ntemplate.hasPrivate());
       storePtr(ImmPtr(emptyObjectElements),
                Address(obj, NativeObject::offsetOfElements()));
     } else {
