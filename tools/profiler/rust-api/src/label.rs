@@ -99,9 +99,39 @@ macro_rules! gecko_profiler_label {
 
 #[cfg(test)]
 mod tests {
+    use profiler_macros::gecko_profiler_fn_label;
+
     #[test]
     fn test_gecko_profiler_label() {
         gecko_profiler_label!(Layout);
         gecko_profiler_label!(JavaScript, Parsing);
+    }
+
+    #[gecko_profiler_fn_label(DOM)]
+    fn foo(bar: u32) -> u32 {
+        bar
+    }
+
+    #[gecko_profiler_fn_label(Javascript, IonMonkey)]
+    pub(self) fn bar(baz: i8) -> i8 {
+        baz
+    }
+
+    struct A;
+
+    impl A {
+        #[gecko_profiler_fn_label(Idle)]
+        pub fn test(&self) -> i8 {
+            1
+        }
+    }
+
+    #[test]
+    fn test_gecko_profiler_fn_label() {
+        let _: u32 = foo(100000);
+        let _: i8 = bar(127);
+
+        let a = A;
+        let _ = a.test(100);
     }
 }
