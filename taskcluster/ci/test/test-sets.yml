@@ -243,7 +243,6 @@ windows-tests:
     - mochitest-chrome-gpu
     - mochitest-devtools-chrome
     - mochitest-media
-    - mochitest-plain
     - mochitest-plain-gpu
     - mochitest-remote
     - reftest
@@ -264,6 +263,9 @@ windows10-tests:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
+
+windows10-2004-tests:
+    - mochitest-plain
 
 mingwclang-tests-debug:
     - cppunit

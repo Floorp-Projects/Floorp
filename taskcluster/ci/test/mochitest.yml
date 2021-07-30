@@ -54,10 +54,8 @@ mochitest-plain:
     treeherder-symbol: M()
     schedules-component: mochitest-plain
     loopback-video: true
-    virtualization:
-        by-test-platform:
-            windows10-64.*: hardware
-            default: virtual
+    virtualization: virtual
+
     variants:
         by-test-platform:
             linux1804-64-qr/debug: ['webrender-sw', 'fission', 'fission-xorigin', 'wayland']
@@ -67,14 +65,14 @@ mochitest-plain:
         by-variant:
             fission:
                 by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
-                    (linux.*64|macosx.*64|windows10-64)-qr/opt: ['autoland']
-                    (linux.*64|macosx.*64|windows10-64)-shippable-qr/opt: ['autoland', 'mozilla-central']
+                    (linux.*64|macosx.*64|windows10-64-2004)-qr/debug: ['autoland', 'mozilla-central']
+                    (linux.*64|macosx.*64|windows10-64-2004)-qr/opt: ['autoland']
+                    (linux.*64|macosx.*64|windows10-64-2004)-shippable-qr/opt: ['autoland', 'mozilla-central']
                     linux.*64(-asan|-tsan)-qr/opt: ['autoland', 'mozilla-central']
                     default: []
             fission-xorigin:
                 by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64)(-shippable)?-qr/(opt|debug): ['trunk']
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['trunk']
                     default: []
             default:
                 by-test-platform:
@@ -88,7 +86,7 @@ mochitest-plain:
             linux.*64-asan/opt: 10
             linux.*64-tsan-qr/opt: 20
             linux.*64-.*cov/opt: 10
-            windows10-64-ccov.*/.*: 10
+            windows10-64-2004-ccov.*/.*: 10
             macosx.*64-ccov.*/.*: 10
             default: 5
     instance-size:
