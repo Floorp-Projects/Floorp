@@ -13,10 +13,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 
+  Log: "chrome://remote/content/shared/Log.jsm",
   MessageHandlerInfo:
     "chrome://remote/content/shared/messagehandler/MessageHandlerInfo.jsm",
   ModuleCache: "chrome://remote/content/shared/messagehandler/ModuleCache.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 /**
  * MessageHandler instances are dedicated to handle both Commands and Events
@@ -75,6 +78,9 @@ class MessageHandler extends EventEmitter {
   }
 
   destroy() {
+    logger.trace(
+      `MessageHandler ${this.type} for session ${this.sessionId} is being destroyed`
+    );
     this._moduleCache.destroy();
 
     // At least the MessageHandlerRegistry will be expecting this event in order
@@ -110,6 +116,9 @@ class MessageHandler extends EventEmitter {
    */
   handleCommand(command) {
     const { moduleName, commandName, destination, params } = command;
+    logger.trace(
+      `Received command ${moduleName}:${commandName} for destination ${destination.type}`
+    );
 
     const mod = this._moduleCache.getModuleInstance(moduleName, destination);
     if (this._isCommandSupportedByModule(commandName, mod)) {
@@ -117,6 +126,10 @@ class MessageHandler extends EventEmitter {
     }
 
     return this.forwardCommand(command);
+  }
+
+  toString() {
+    return `[object ${this.constructor.name} ${this.key}]`;
   }
 
   _isCommandSupportedByModule(commandName, mod) {
