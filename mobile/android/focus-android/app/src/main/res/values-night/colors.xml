@@ -115,4 +115,7 @@
     <!-- Settings -->
     <color name="settings_summary_text">#ffbbbcc5</color>
     <color name="settings_whats_new">#FFFF4AA2</color>
+
+    <color name="trackingProtectionSheetBackground" tools:ignore="MissingDefaultResource">#1D1133</color>
+    <color name="primaryTextColor" tools:ignore="MissingDefaultResource">#FBFBFE</color>
 </resources>

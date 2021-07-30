@@ -66,6 +66,10 @@ class BrowserToolbarIntegration(
             setOnUrlLongClickListener { onUrlLongClicked() }
         }
 
+        toolbar.display.setOnTrackingProtectionClickedListener {
+            fragment.showTrackingProtectionPanel()
+        }
+
         if (customTabId != null) {
             val menu = CustomTabMenu(
                 context = fragment.requireContext(),

@@ -49,6 +49,8 @@
 
     <color name="colorOverlay">#cc000000</color>
 
+    <color name="disabledText">#BFBFC9</color>
+
     <color name="colorTextInactive">#80FFFFFF</color>
     <color name="urlBarHintText">#ffbbbcc5</color>
 

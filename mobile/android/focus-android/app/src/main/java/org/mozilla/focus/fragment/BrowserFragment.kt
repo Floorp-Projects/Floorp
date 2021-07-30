@@ -62,12 +62,14 @@ import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
 import org.mozilla.focus.browser.integration.BrowserMenuController
 import org.mozilla.focus.downloads.DownloadService
+import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.menu.browser.DefaultBrowserMenu
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.popup.PopupUtils
+import org.mozilla.focus.settings.privacy.TrackingProtectionPanel
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -75,6 +77,7 @@ import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_DOWNLOAD_PERMISSI
 import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_PROMPT_PERMISSIONS
 import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.FeatureFlags
+import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.widget.FloatingEraseButton
@@ -736,6 +739,33 @@ class BrowserFragment :
             val offsetY = requireContext().resources.getDimensionPixelOffset(R.dimen.doorhanger_offsetY)
             securityPopup.showAtLocation(urlBar, Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, offsetY)
             popupTint!!.visibility = View.VISIBLE
+        }
+    }
+
+    fun showTrackingProtectionPanel() {
+        val trackingProtectionPanel = TrackingProtectionPanel(
+            context = requireContext(),
+            tabUrl = tab.content.url,
+            isTrackingProtectionOn = tab.trackingProtection.ignoredOnTrackingProtection.not(),
+            blockedTrackersCount = Settings.getInstance(requireContext()).getTotalBlockedTrackersCount(),
+            toggleTrackingProtection = ::toggleTrackingProtection,
+            updateTrackingProtectionPolicy = {
+                EngineSharedPreferencesListener(requireContext()).updateTrackingProtectionPolicy()
+            }
+        )
+        trackingProtectionPanel.show()
+    }
+
+    private fun toggleTrackingProtection(enable: Boolean) {
+
+        tab.trackingProtection.blockedTrackers.size
+        with(requireComponents) {
+            if (enable) {
+                trackingProtectionUseCases.removeException(tab.id)
+            } else {
+                trackingProtectionUseCases.addException(tab.id)
+            }
+            sessionUseCases.reload(tab.id)
         }
     }
 

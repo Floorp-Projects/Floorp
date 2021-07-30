@@ -14,7 +14,7 @@
         style="@style/SwitchTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="48dp"
+        android:layout_marginStart="44dp"
         android:layout_marginTop="4dp"
         android:layout_marginEnd="64dp"
         android:clickable="false"
@@ -45,6 +45,7 @@
 
     <com.google.android.material.switchmaterial.SwitchMaterial
         android:id="@+id/switch_widget"
+        android:theme="@style/SwitchTheme"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="@id/description"

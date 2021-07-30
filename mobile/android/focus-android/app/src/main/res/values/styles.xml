@@ -10,6 +10,7 @@
 
         <item name="android:windowContentTransitions">true</item>
         <item name="popupMenuStyle">@style/PopupMenu</item>
+        <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogTheme</item>
         <item name="disabled">@color/disabled</item>
 
         <!-- Use the same colors for both themes until light theme it will be implemented -->
@@ -169,5 +170,66 @@
 
     <style name="progressBarStyleHorizontal" parent="@style/Widget.AppCompat.ProgressBar.Horizontal">
         <item name="android:progressDrawable">@drawable/photon_progressbar</item>
+    </style>
+
+    <style name="PanelTitle" parent="Widget.MaterialComponents.TextView">
+        <item name="fontFamily">@string/font_inter</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/primaryTextColor</item>
+        <item name="android:lineSpacingExtra">3sp</item>
+    </style>
+
+    <style name="PanelHeading" parent="Widget.MaterialComponents.TextView">
+        <item name="fontFamily">@string/font_metropolis</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/primaryTextColor</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.03</item>
+        <item name="android:lineSpacingExtra">1sp</item>
+    </style>
+
+    <style name="TrackerSwitchTitle" parent="Widget.MaterialComponents.TextView">
+        <item name="fontFamily">@string/font_inter</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/primaryTextColor</item>
+    </style>
+
+    <style name="TrackersCount" parent="Widget.MaterialComponents.TextView">
+        <item name="fontFamily">@string/font_metropolis</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/primaryTextColor</item>
+        <item name="android:lineSpacingExtra">1sp</item>
+
+    </style>
+
+    <style name="CaptionText" parent="Widget.MaterialComponents.TextView">
+        <item name="fontFamily">@string/font_inter</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/disabledText</item>
+    </style>
+
+    <style name="SwitchTitle" parent="Widget.MaterialComponents.TextView">
+        <item name="fontFamily">@string/font_inter</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/primaryTextColor</item>
+    </style>
+
+    <style name="SwitchDescription" parent="Widget.MaterialComponents.TextView">
+        <item name="fontFamily">@string/font_inter</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/disabledText</item>
+    </style>
+
+    <style name="AppBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/AppModalStyle</item>
+    </style>
+
+    <style name="AppModalStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@color/photonInk80</item>
+    </style>
+
+    <style name="SwitchTheme" parent="Theme.AppCompat.Light">
+        <item name="colorControlActivated">@color/colorAccent</item>
     </style>
 </resources>

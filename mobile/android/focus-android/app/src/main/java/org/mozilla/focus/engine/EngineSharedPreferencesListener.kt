@@ -39,7 +39,7 @@ class EngineSharedPreferencesListener(
         }
     }
 
-    private fun updateTrackingProtectionPolicy() {
+    internal fun updateTrackingProtectionPolicy() {
         val policy = Settings.getInstance(context).createTrackingProtectionPolicy()
         val components = context.components
 
