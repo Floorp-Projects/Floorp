@@ -8,7 +8,7 @@ const PREF = "reader.parse-on-load.enabled";
 
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://example.com"
+  "https://example.com"
 );
 
 var readerButton = document.getElementById("reader-mode-button");
