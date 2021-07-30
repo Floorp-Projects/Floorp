@@ -17,7 +17,7 @@ def test_query_paths(run_mach, capfd):
         "fuzzy",
         "--no-push",
         "-q",
-        "^test-linux '64/debug-xpcshell-e10s-",
+        "^test-linux '64-qr/debug-xpcshell-e10s-",
         "caps/tests/unit/test_origin.js",
     ]
     assert run_mach(cmd) == 0
@@ -29,7 +29,7 @@ def test_query_paths(run_mach, capfd):
     # with the path filtering.
     expected = """
     "tasks": [
-        "test-linux1804-64/debug-xpcshell-e10s-1"
+        "test-linux1804-64-qr/debug-xpcshell-e10s-1"
     ]""".lstrip()
 
     assert expected in output
