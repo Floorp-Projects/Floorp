@@ -144,7 +144,7 @@ class Geolocation final : public nsIGeolocationUpdate, public nsWrapperCache {
                           CallerType aCallerType, ErrorResult& aRv);
   void ClearWatch(int32_t aWatchId);
 
-  // A WatchPosition for C++ use.  Returns -1 if we failed to actually watch.
+  // A WatchPosition for C++ use. Returns 0 if we failed to actually watch.
   MOZ_CAN_RUN_SCRIPT
   int32_t WatchPosition(nsIDOMGeoPositionCallback* aCallback,
                         nsIDOMGeoPositionErrorCallback* aErrorCallback,
