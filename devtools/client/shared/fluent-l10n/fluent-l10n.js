@@ -7,7 +7,6 @@
 const Services = require("Services");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
-const { L10nRegistry } = require("resource://gre/modules/L10nRegistry.jsm");
 
 /**
  * Wrapper over FluentReact. It encapsulates instantiation of the localization
@@ -30,7 +29,10 @@ class FluentL10n {
     }
 
     const locales = Services.locale.appLocalesAsBCP47;
-    const generator = L10nRegistry.generateBundles(locales, resourceIds);
+    const generator = L10nRegistry.getInstance().generateBundles(
+      locales,
+      resourceIds
+    );
 
     this._bundles = [];
     for await (const bundle of generator) {
