@@ -3096,23 +3096,6 @@ bool VerifyOriginKey(const nsACString& aOriginKey,
   return true;
 }
 
-LSInitializationInfo& MutableInitializationInfoRef() {
-  if (!gInitializationInfo) {
-    gInitializationInfo = new LSInitializationInfo();
-  }
-  return *gInitializationInfo;
-}
-
-template <typename Func>
-auto ExecuteOriginInitialization(const nsACString& aOrigin,
-                                 const LSOriginInitialization aInitialization,
-                                 Func&& aFunc) -> std::invoke_result_t<Func> {
-  return ExecuteInitialization(
-      MutableInitializationInfoRef().MutableOriginInitializationInfoRef(
-          aOrigin),
-      aInitialization, std::forward<Func>(aFunc));
-}
-
 }  // namespace
 
 /*******************************************************************************
@@ -6798,15 +6781,24 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   MOZ_ASSERT(mState == State::Nesting);
   MOZ_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
 
-  const auto innerFunc = [&]() -> nsresult {
+  // XXX Maybe add GetOrCreateInitializationInfo for this.
+  if (!gInitializationInfo) {
+    gInitializationInfo = new LSInitializationInfo();
+  }
+
+  auto& originInitializationInfo =
+      gInitializationInfo->MutableOriginInitializationInfoRef(
+          mOriginMetadata.mOrigin);
+
+  const auto firstInitializationAttempt =
+      originInitializationInfo.FirstInitializationAttempt(
+          LSOriginInitialization::Datastore);
+
+  auto rv = [&firstInitializationAttempt, this]() -> nsresult {
     // XXX This function is too long, refactor it into helper functions for
     // readability.
-
     const auto maybeExtraInfo =
-        MutableInitializationInfoRef()
-                .MutableOriginInitializationInfoRef(mOriginMetadata.mOrigin)
-                .FirstInitializationAttemptPending(
-                    LSOriginInitialization::Datastore)
+        firstInitializationAttempt.Pending()
             ? Some(ScopedLogExtraInfo{
                   ScopedLogExtraInfo::kTagContext,
                   "dom::localstorage::FirstOriginInitializationAttempt::Datastore"_ns})
@@ -7060,10 +7052,11 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     QM_TRY(OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
 
     return NS_OK;
-  };
+  }();
 
-  return ExecuteOriginInitialization(
-      mOriginMetadata.mOrigin, LSOriginInitialization::Datastore, innerFunc);
+  firstInitializationAttempt.MaybeRecord(rv);
+
+  return rv;
 }
 
 nsresult PrepareDatastoreOp::DatabaseNotAvailable() {
