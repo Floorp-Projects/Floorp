@@ -49,7 +49,7 @@ xpcshell:
             fission: []
             default:
                 by-test-platform:
-                    .*-tsan/opt: ['trunk']
+                    .*-tsan-qr/opt: ['trunk']
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     windows10-64-asan-qr/opt: []  # No XPCShell on ASAN yet
                     default: built-projects
@@ -60,14 +60,14 @@ xpcshell:
             android-em-7.*: 2
             macosx.*-64(-shippable|-devedition|-asan)?(-qr)?/.*: 2
             linux1804-64(-qr)?/debug: 6
-            .*-tsan/opt: 8
+            .*-tsan-qr/opt: 8
             windows.*(-shippable|-devedition|-asan|.*-qr)?/.*: 2
             default: 5
     max-run-time:
         by-test-platform:
             windows.*(-shippable)/opt: 5400
             .*64-ccov(-qr)?/.*: 7200
-            .*-tsan/opt: 7200
+            .*-tsan-qr/opt: 7200
             default: 2700
     allow-software-gl-layers: false
     tier:

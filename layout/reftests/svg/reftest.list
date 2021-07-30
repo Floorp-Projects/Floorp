@@ -591,6 +591,8 @@ pref(layout.css.devPixelsPerPx,"1.0") == svg-blurry-with-subpixel-position.html 
 == currentColor-override-lighting.svg currentColor-override-lighting-ref.svg
 == currentColor-override-stop.svg pass.svg
 
+defaults skip-if(ThreadSanitizer)
+
 == mask-invalidation.html mask-invalidation-ref.html
 == filter-in-mask.html filter-in-mask-ref.html
 == overflow-visible-image.html overflow-visible-image-ref.html
