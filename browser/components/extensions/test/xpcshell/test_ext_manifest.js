@@ -22,6 +22,7 @@ async function testManifest(manifest, expectedError) {
       }`
     );
   }
+  return normalized.errors;
 }
 
 const all_actions = [
@@ -75,16 +76,7 @@ add_task(async function test_manifest() {
 
 add_task(async function test_action_version() {
   // The above test validates these work with the correct version,
-  // here we verify they fail with the incorrect version.
-  testManifest(
-    {
-      manifest_version: 2,
-      action: {
-        default_panel: "foo.html",
-      },
-    },
-    /Property "action" is unsupported in Manifest Version 2/
-  );
+  // here we verify they fail with the incorrect version for MV3.
   testManifest(
     {
       manifest_version: 3,
@@ -94,4 +86,29 @@ add_task(async function test_action_version() {
     },
     /Property "browser_action" is unsupported in Manifest Version 3/
   );
+
+  // But we still allow previously ignored keys in MV2, just warn about them.
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+
+  let warnings = await testManifest({
+    manifest_version: 2,
+    action: {
+      default_icon: "",
+      default_panel: "foo.html",
+    },
+  });
+
+  equal(warnings.length, 2, "Got exactly two warnings");
+  equal(
+    warnings[0],
+    `Property "action" is unsupported in Manifest Version 2`,
+    `Manifest v2 with "action" key first warning is clear.`
+  );
+  equal(
+    warnings[1],
+    "Warning processing action: An unexpected property was found in the WebExtension manifest.",
+    `Manifest v2 with "action" key second warning has more details.`
+  );
+
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 });

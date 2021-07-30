@@ -253,6 +253,9 @@ add_task(async function setup() {
 });
 
 add_task(async function test_inject_V2() {
+  // We want the actual errors thrown here, and not warnings recast as errors.
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+
   // Test injecting into a V2 context.
   let wrapper = getContextWrapper(2);
 
@@ -315,17 +318,26 @@ add_task(async function test_inject_V2() {
   let propObj = { prop_any: "prop_any", prop_mv2: "prop_mv2" };
   root.mixed.fun_param_change(propObj);
   wrapper.verify("call", "mixed", "fun_param_change", [propObj]);
+
+  // Still throw same error as we did before we knew of the MV3 property.
   Assert.throws(
     () => root.mixed.fun_param_change({ prop_mv3: "prop_mv3", ...propObj }),
-    /Property "prop_mv3" is unsupported in Manifest Version 2/,
-    "fun_param_change should throw for versioned type"
+    /Type error for parameter arg1 \(Unexpected property "prop_mv3"\)/,
+    "generic unexpected property message for MV3 property in MV2 extension"
   );
+
+  // But print the more specific and descriptive warning message to console.
+  wrapper.checkErrors([
+    `Property "prop_mv3" is unsupported in Manifest Version 2`,
+  ]);
 
   Assert.throws(
     () => root.mixed.fun_no_valid_param("anything"),
     /Incorrect argument types for mixed.fun_no_valid_param/,
     "fun_no_valid_param should throw for versioned type"
   );
+
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 });
 
 function normalizeTest(manifest, test, wrapper) {
