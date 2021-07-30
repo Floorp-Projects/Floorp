@@ -30,8 +30,6 @@ addLoginsInParent(
 let {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
 
 add_task(async function setup() {
-  SpecialPowers.pushPrefEnv({"set": [["signon.usernameOnlyForm.enabled", true]]});
-
   ok(readyPromise, "check promise is available");
   await readyPromise;
 });
