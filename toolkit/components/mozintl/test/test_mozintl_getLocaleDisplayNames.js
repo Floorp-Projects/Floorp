@@ -2,19 +2,16 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { L10nRegistry } = ChromeUtils.import(
-  "resource://gre/modules/L10nRegistry.jsm"
-);
 
 const fs = [
   {
-    path: "toolkit/intl/languageNames.ftl",
+    path: "resource://mock_source/toolkit/intl/languageNames.ftl",
     source: `
 language-name-en = English
   `,
   },
   {
-    path: "toolkit/intl/regionNames.ftl",
+    path: "resource://mock_source/toolkit/intl/regionNames.ftl",
     source: `
 region-name-us = United States
 region-name-ru = Russia
@@ -29,7 +26,7 @@ const mockSource = L10nFileSource.createMock(
   "resource://mock_source",
   fs
 );
-L10nRegistry.registerSources([mockSource]);
+L10nRegistry.getInstance().registerSources([mockSource]);
 
 const gLangDN = Services.intl.getLanguageDisplayNames.bind(
   Services.intl,

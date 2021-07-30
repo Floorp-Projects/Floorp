@@ -63,10 +63,6 @@ ChromeUtils.defineModuleGetter(
   // with region names based on en-US. This is
   // necessary for tests that expect to match
   // on region code display names.
-  const { L10nRegistry } = ChromeUtils.import(
-    "resource://gre/modules/L10nRegistry.jsm"
-  );
-
   const fs = [
     {
       path: "toolkit/intl/regionNames.ftl",
@@ -87,7 +83,7 @@ region-name-tw = Taiwan
     "resource://mock_path",
     fs
   );
-  L10nRegistry.registerSources([mockSource]);
+  L10nRegistry.getInstance().registerSources([mockSource]);
 }
 
 do_get_profile();
