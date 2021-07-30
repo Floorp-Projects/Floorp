@@ -10,7 +10,7 @@ const { ManifestObtainer } = ChromeUtils.import(
 );
 
 const defaultURL = new URL(
-  "http://example.org/browser/dom/manifest/test/resource.sjs"
+  "https://example.org/browser/dom/manifest/test/resource.sjs"
 );
 defaultURL.searchParams.set("Content-Type", "application/manifest+json");
 
