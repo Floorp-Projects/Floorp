@@ -5260,7 +5260,7 @@ void js::NotifyGCNukeWrapper(JSObject* wrapper) {
     WeakRefObject* weakRef = &target->as<WeakRefObject>();
     GCRuntime* gc = &weakRef->runtimeFromMainThread()->gc;
     if (weakRef->target() && gc->unregisterWeakRefWrapper(wrapper)) {
-      weakRef->setTarget(nullptr);
+      weakRef->clearTarget();
     }
   }
 
