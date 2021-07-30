@@ -1141,7 +1141,6 @@ def webrtc(enabled):
 
 set_config("MOZ_WEBRTC", webrtc)
 set_define("MOZ_WEBRTC", webrtc)
-add_old_configure_assignment("MOZ_WEBRTC", webrtc)
 set_config("MOZ_SCTP", webrtc)
 set_define("MOZ_SCTP", webrtc)
 set_config("MOZ_SRTP", webrtc)
