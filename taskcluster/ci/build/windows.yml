@@ -237,7 +237,7 @@ win64-plain/debug:
     treeherder:
         platform: windows2012-64/debug
         symbol: Bp
-        tier: 2
+        tier: 1
     worker-type: b-win2012
     worker:
         max-run-time: 7200
@@ -335,7 +335,7 @@ win64-plain/opt:
     treeherder:
         platform: windows2012-64/opt
         symbol: Bp
-        tier: 2
+        tier: 1
     worker-type: b-win2012
     worker:
         max-run-time: 7200
