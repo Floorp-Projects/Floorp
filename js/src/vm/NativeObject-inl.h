@@ -37,13 +37,6 @@ inline uint32_t NativeObject::numFixedSlotsMaybeForwarded() const {
   return gc::MaybeForwarded(shape())->numFixedSlots();
 }
 
-inline void* NativeObject::getPrivateMaybeForwarded() const {
-  MOZ_ASSERT(MaybeForwardedObjectClass(this)->hasPrivate());
-  uint32_t nfixed = numFixedSlotsMaybeForwarded();
-  HeapSlot* end = &fixedSlots()[nfixed];
-  return *reinterpret_cast<void**>(end);
-}
-
 inline uint8_t* NativeObject::fixedData(size_t nslots) const {
   mozilla::DebugOnly<const JSClass*> clasp =
       gc::MaybeForwardedObjectClass(this);
