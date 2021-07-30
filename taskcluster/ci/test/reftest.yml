@@ -196,7 +196,7 @@ reftest:
             fission:
                 by-test-platform:
                     (linux.*64|windows10-64)(-shippable)?-qr/(debug|opt): ['trunk']
-                    linux.*64-asan/opt: ['trunk']
+                    linux.*64-asan-qr/opt: ['trunk']
                     default: []
             noqr: built-projects
             default:
