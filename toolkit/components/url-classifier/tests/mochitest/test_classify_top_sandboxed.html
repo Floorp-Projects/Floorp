@@ -25,7 +25,7 @@ async function runTests() {
         !channel ||
         !classifiedChannel ||
         !channel.URI.spec.startsWith(
-          "http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"
+          "https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"
         )
       ) {
         return;
@@ -51,7 +51,7 @@ async function runTests() {
   chromeScript.addMessageListener(
     "start-test",
     async _ => {
-      window.open("http://example.org/tests/toolkit/components/url-classifier/tests/mochitest/sandboxed.html")
+      window.open("https://example.org/tests/toolkit/components/url-classifier/tests/mochitest/sandboxed.html")
     },
     { once: true }
   );
