@@ -254,7 +254,15 @@ fn broadcast_settings_if_parent(reg: &GeckoL10nRegistry) {
 
     L10N_REGISTRY.with(|reg_service| {
         if std::ptr::eq(Rc::as_ptr(reg_service), reg) {
+            let locales = reg
+                .get_available_locales()
+                .unwrap()
+                .iter()
+                .map(|loc| loc.to_string().into())
+                .collect();
+
             unsafe {
+                crate::xpcom_utils::set_available_locales(&locales);
                 L10nRegistrySendUpdateL10nFileSources();
             }
         }
