@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>aria-autocomplete=list</title>
+    <title>aria-rowcount</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -21,13 +21,21 @@
                   "property",
                   "objectAttributes",
                   "contains",
-                  "autocomplete:list"
+                  "rowcount:3"
                ],
                [
+                  "result",
+                  "atk_table_get_n_rows()",
+                  "is",
+                  "1"
+               ]
+            ],
+            "AXAPI" : [
+               [
                   "property",
-                  "states",
-                  "contains",
-                  "STATE_SUPPORTS_AUTOCOMPLETION"
+                  "AXARIARowCount",
+                  "is",
+                  "3"
                ]
             ],
             "IAccessible2" : [
@@ -35,29 +43,51 @@
                   "property",
                   "objectAttributes",
                   "contains",
-                  "autocomplete:list"
-               ],
+                  "rowcount:3"
+               ]
+            ],
+            "UIA" : [
                [
                   "property",
-                  "states",
-                  "contains",
-                  "IA2_STATE_SUPPORTS_AUTOCOMPLETION"
+                  "Grid.RowCount",
+                  "is",
+                  "3"
                ]
             ]
          },
          "title" : "step 1",
          "type" : "test"
+      },
+      {
+         "element" : "row",
+         "test" : {
+            "IAccessible2" : [
+               [
+                  "property",
+                  "groupPosition",
+                  "contains",
+                  "similarItemsInGroup:3"
+               ]
+            ]
+         },
+         "title" : "step 2",
+         "type" : "test"
       }
    ],
-   "title" : "aria-autocomplete=list"
+   "title" : "aria-rowcount"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for aria-autocomplete=list.</p>
-  <input role='combobox' id='test' aria-autocomplete='list'>
+  <p>This test examines the ARIA properties for aria-rowcount.</p>
+    <div role='table' id='test' aria-rowcount='3'>
+    <div role='row' id='row'>
+      <div role='cell'>content</div>
+    </div>
+  </div>
+
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>
