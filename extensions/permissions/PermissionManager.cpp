@@ -164,31 +164,10 @@ bool IsOAForceStripPermission(const nsACString& aType) {
   return false;
 }
 
-/**
- * Strip origin attributes depending on pref state
- * @param aForceStrip If true, strips user context and private browsing id,
- * ignoring stripping prefs.
- * @param aOriginAttributes object to strip.
- */
-void MaybeStripOAs(bool aForceStrip, OriginAttributes& aOriginAttributes) {
-  uint32_t flags = 0;
-
-  if (aForceStrip || !StaticPrefs::permissions_isolateBy_privateBrowsing()) {
-    flags |= OriginAttributes::STRIP_PRIVATE_BROWSING_ID;
-  }
-
-  if (aForceStrip || !StaticPrefs::permissions_isolateBy_userContext()) {
-    flags |= OriginAttributes::STRIP_USER_CONTEXT_ID;
-  }
-
-  if (flags != 0) {
-    aOriginAttributes.StripAttributes(flags);
-  }
-}
-
 void OriginAppendOASuffix(OriginAttributes aOriginAttributes,
                           bool aForceStripOA, nsACString& aOrigin) {
-  MaybeStripOAs(aForceStripOA, aOriginAttributes);
+  PermissionManager::MaybeStripOriginAttributes(aForceStripOA,
+                                                aOriginAttributes);
 
   nsAutoCString oaSuffix;
   aOriginAttributes.CreateSuffix(oaSuffix);
@@ -240,7 +219,7 @@ nsresult GetPrincipalFromOrigin(const nsACString& aOrigin, bool aForceStripOA,
     return NS_ERROR_FAILURE;
   }
 
-  MaybeStripOAs(aForceStripOA, attrs);
+  PermissionManager::MaybeStripOriginAttributes(aForceStripOA, attrs);
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
@@ -3083,7 +3062,7 @@ void PermissionManager::GetKeyForOrigin(const nsACString& aOrigin,
     return;
   }
 
-  MaybeStripOAs(aForceStripOA, attrs);
+  MaybeStripOriginAttributes(aForceStripOA, attrs);
 
 #ifdef DEBUG
   // Parse the origin string into a principal, and extract some useful
@@ -3670,6 +3649,23 @@ nsCOMPtr<nsIAsyncShutdownClient> PermissionManager::GetShutdownPhase() const {
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 
   return client;
+}
+
+void PermissionManager::MaybeStripOriginAttributes(
+    bool aForceStrip, OriginAttributes& aOriginAttributes) {
+  uint32_t flags = 0;
+
+  if (aForceStrip || !StaticPrefs::permissions_isolateBy_privateBrowsing()) {
+    flags |= OriginAttributes::STRIP_PRIVATE_BROWSING_ID;
+  }
+
+  if (aForceStrip || !StaticPrefs::permissions_isolateBy_userContext()) {
+    flags |= OriginAttributes::STRIP_USER_CONTEXT_ID;
+  }
+
+  if (flags != 0) {
+    aOriginAttributes.StripAttributes(flags);
+  }
 }
 
 }  // namespace mozilla
