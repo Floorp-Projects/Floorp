@@ -4238,7 +4238,7 @@ nsresult QuotaManager::LoadQuota() {
 
       QM_TRY(([&]() -> Result<Ok, nsresult> {
         QM_TRY(([this, type] {
-                 const auto innerFunc = [type, this]() -> nsresult {
+                 const auto innerFunc = [&]() -> nsresult {
                    return InitializeRepository(type);
                  };
 
@@ -4246,7 +4246,7 @@ nsresult QuotaManager::LoadQuota() {
                      type == PERSISTENCE_TYPE_DEFAULT
                          ? Initialization::DefaultRepository
                          : Initialization::TemporaryRepository,
-                     innerFunc());
+                     innerFunc);
                }()),
                OK_IN_NIGHTLY_PROPAGATE_IN_OTHERS, statusKeeperFunc);
 
@@ -5054,7 +5054,7 @@ QuotaManager::UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
   };
 
   return ExecuteInitialization(Initialization::UpgradeFromIndexedDBDirectory,
-                               innerFunc());
+                               innerFunc);
 }
 
 nsresult
@@ -5130,7 +5130,7 @@ QuotaManager::UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
     return NS_OK;
   };
   return ExecuteInitialization(
-      Initialization::UpgradeFromPersistentStorageDirectory, innerFunc());
+      Initialization::UpgradeFromPersistentStorageDirectory, innerFunc);
 }
 
 template <typename Helper>
@@ -5186,7 +5186,7 @@ nsresult QuotaManager::UpgradeStorageFrom0_0To1_0(
   };
 
   return ExecuteInitialization(Initialization::UpgradeStorageFrom0_0To1_0,
-                               innerFunc());
+                               innerFunc);
 }
 
 nsresult QuotaManager::UpgradeStorageFrom1_0To2_0(
@@ -5269,7 +5269,7 @@ nsresult QuotaManager::UpgradeStorageFrom1_0To2_0(
   };
 
   return ExecuteInitialization(Initialization::UpgradeStorageFrom1_0To2_0,
-                               innerFunc());
+                               innerFunc);
 }
 
 nsresult QuotaManager::UpgradeStorageFrom2_0To2_1(
@@ -5288,7 +5288,7 @@ nsresult QuotaManager::UpgradeStorageFrom2_0To2_1(
   };
 
   return ExecuteInitialization(Initialization::UpgradeStorageFrom2_0To2_1,
-                               innerFunc());
+                               innerFunc);
 }
 
 nsresult QuotaManager::UpgradeStorageFrom2_1To2_2(
@@ -5307,7 +5307,7 @@ nsresult QuotaManager::UpgradeStorageFrom2_1To2_2(
   };
 
   return ExecuteInitialization(Initialization::UpgradeStorageFrom2_1To2_2,
-                               innerFunc());
+                               innerFunc);
 }
 
 nsresult QuotaManager::UpgradeStorageFrom2_2To2_3(
@@ -5341,7 +5341,7 @@ nsresult QuotaManager::UpgradeStorageFrom2_2To2_3(
   };
 
   return ExecuteInitialization(Initialization::UpgradeStorageFrom2_2To2_3,
-                               innerFunc());
+                               innerFunc);
 }
 
 nsresult QuotaManager::MaybeRemoveLocalStorageDataAndArchive(
@@ -5983,7 +5983,7 @@ Result<Ok, nsresult> QuotaManager::CreateEmptyLocalStorageArchive(
 nsresult QuotaManager::EnsureStorageIsInitialized() {
   DiagnosticAssertIsOnIOThread();
 
-  const auto innerFunc = [this]() -> nsresult {
+  const auto innerFunc = [&]() -> nsresult {
     const auto firstInitializationAttempt =
         mInitializationInfo.FirstInitializationAttempt(Initialization::Storage);
 
@@ -6066,7 +6066,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     return NS_OK;
   };
 
-  return ExecuteInitialization(Initialization::Storage, innerFunc());
+  return ExecuteInitialization(Initialization::Storage, innerFunc);
 }
 
 RefPtr<ClientDirectoryLock> QuotaManager::CreateDirectoryLock(
@@ -6100,8 +6100,7 @@ QuotaManager::EnsurePersistentOriginIsInitialized(
       -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
     const auto firstInitializationAttempt =
         mInitializationInfo
-            .MutableOriginInitializationInfoRef(aOriginMetadata.mOrigin,
-                                                CreateIfNonExistent{})
+            .MutableOriginInitializationInfoRef(aOriginMetadata.mOrigin)
             .FirstInitializationAttempt(OriginInitialization::PersistentOrigin);
 
     const auto maybeExtraInfo =
@@ -6157,7 +6156,7 @@ QuotaManager::EnsurePersistentOriginIsInitialized(
 
   return ExecuteOriginInitialization(aOriginMetadata.mOrigin,
                                      OriginInitialization::PersistentOrigin,
-                                     innerFunc());
+                                     innerFunc);
 }
 
 Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
@@ -6172,8 +6171,7 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
       -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
     const auto maybeExtraInfo =
         mInitializationInfo
-                .MutableOriginInitializationInfoRef(aOriginMetadata.mOrigin,
-                                                    CreateIfNonExistent{})
+                .MutableOriginInitializationInfoRef(aOriginMetadata.mOrigin)
                 .FirstInitializationAttemptPending(
                     OriginInitialization::TemporaryOrigin)
             ? Some(ScopedLogExtraInfo{
@@ -6211,14 +6209,14 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
 
   return ExecuteOriginInitialization(aOriginMetadata.mOrigin,
                                      OriginInitialization::TemporaryOrigin,
-                                     innerFunc());
+                                     innerFunc);
 }
 
 nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   AssertIsOnIOThread();
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
-  const auto innerFunc = [this]() -> nsresult {
+  const auto innerFunc = [&]() -> nsresult {
     const auto firstInitializationAttempt =
         mInitializationInfo.FirstInitializationAttempt(
             Initialization::TemporaryStorage);
@@ -6275,7 +6273,7 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
     return NS_OK;
   };
 
-  return ExecuteInitialization(Initialization::TemporaryStorage, innerFunc());
+  return ExecuteInitialization(Initialization::TemporaryStorage, innerFunc);
 }
 
 void QuotaManager::ShutdownStorage() {
@@ -7080,20 +7078,22 @@ int64_t QuotaManager::GenerateDirectoryLockId() {
   return directorylockId;
 }
 
-nsresult QuotaManager::ExecuteInitialization(
-    const Initialization aInitialization, const nsresult aRv) {
+template <typename Func>
+auto QuotaManager::ExecuteInitialization(const Initialization aInitialization,
+                                         Func&& aFunc)
+    -> std::invoke_result_t<Func> {
   return quota::ExecuteInitialization(mInitializationInfo, aInitialization,
-                                      aRv);
+                                      std::forward<Func>(aFunc));
 }
 
-Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
-QuotaManager::ExecuteOriginInitialization(
+template <typename Func>
+auto QuotaManager::ExecuteOriginInitialization(
     const nsACString& aOrigin, const OriginInitialization aInitialization,
-    Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>&& aResult) {
+    Func&& aFunc) -> std::invoke_result_t<Func> {
   return quota::ExecuteInitialization(
       mInitializationInfo.MutableOriginInitializationInfoRef(
           aOrigin, CreateIfNonExistent{}),
-      aInitialization, std::move(aResult));
+      aInitialization, std::forward<Func>(aFunc));
 }
 
 /*******************************************************************************
