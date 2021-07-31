@@ -384,6 +384,7 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param background A custom (stateful) background drawable resource to be used.
      * @param padding a custom [Padding] for this Button.
      * @param iconTintColorResource Optional ID of color resource to tint the icon.
+     * @param longClickListener Callback that will be invoked whenever the button is long-pressed.
      * @param listener Callback that will be invoked whenever the button is pressed
      */
     @Suppress("LongParameterList")
@@ -460,6 +461,7 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param longClickListener Callback that will be invoked whenever the button is long-pressed.
      * @param listener Callback that will be invoked whenever the button is pressed.
      */
+    @Suppress("LongParameterList")
     open class TwoStateButton(
         val primaryImage: Drawable,
         val primaryContentDescription: String,
@@ -475,9 +477,9 @@ class BrowserToolbar @JvmOverloads constructor(
     ) : BrowserToolbar.Button(
         primaryImage,
         primaryContentDescription,
-        longClickListener=longClickListener,
+        background = background,
+        longClickListener = longClickListener,
         listener = listener,
-        background = background
     ) {
         var enabled: Boolean = false
             private set

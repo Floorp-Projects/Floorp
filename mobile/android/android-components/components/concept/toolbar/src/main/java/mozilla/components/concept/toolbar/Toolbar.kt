@@ -232,6 +232,7 @@ interface Toolbar {
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
      * @param padding A optional custom padding.
      * @param iconTintColorResource Optional ID of color resource to tint the icon.
+     * @param longClickListener Callback that will be invoked whenever the button is long-pressed.
      * @param listener Callback that will be invoked whenever the button is pressed
      */
     @Suppress("LongParameterList")

@@ -146,7 +146,7 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val reload = BrowserToolbar.TwoStateButton(
-            primaryImage =resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_refresh)!!,
+            primaryImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_refresh)!!,
             primaryContentDescription = "Reload",
             secondaryImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_stop)!!,
             secondaryContentDescription = "Stop",
