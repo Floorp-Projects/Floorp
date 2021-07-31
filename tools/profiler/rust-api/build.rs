@@ -15,27 +15,12 @@ use std::env;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use toml::{self, value::Table};
 
 lazy_static! {
     static ref OUTDIR_PATH: PathBuf = PathBuf::from(env::var_os("OUT_DIR").unwrap()).join("gecko");
 }
 
 const BINDINGS_FILE: &str = "bindings.rs";
-
-fn read_config(path: &Path) -> Table {
-    println!("cargo:rerun-if-changed={}", path.display());
-
-    let mut contents = String::new();
-    File::open(path)
-        .expect("Failed to open config file")
-        .read_to_string(&mut contents)
-        .expect("Failed to read config file");
-    match toml::from_str::<Table>(&contents) {
-        Ok(result) => result,
-        Err(e) => panic!("Failed to parse config file: {}", e),
-    }
-}
 
 lazy_static! {
     static ref BINDGEN_FLAGS: Vec<String> = {

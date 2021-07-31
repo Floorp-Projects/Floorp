@@ -1750,7 +1750,6 @@ dependencies = [
  "bindgen",
  "lazy_static",
  "profiler-macros",
- "toml",
 ]
 
 [[package]]
