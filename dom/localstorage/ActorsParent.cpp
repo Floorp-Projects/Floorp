@@ -3096,11 +3096,6 @@ bool VerifyOriginKey(const nsACString& aOriginKey,
   return true;
 }
 
-LSInitializationInfo& MutableInitializationInfoRef() {
-  MOZ_ASSERT(gInitializationInfo);
-  return *gInitializationInfo;
-}
-
 LSInitializationInfo& MutableInitializationInfoRef(const CreateIfNonExistent&) {
   if (!gInitializationInfo) {
     gInitializationInfo = new LSInitializationInfo();
@@ -3111,7 +3106,9 @@ LSInitializationInfo& MutableInitializationInfoRef(const CreateIfNonExistent&) {
 template <typename Func>
 auto ExecuteOriginInitialization(const nsACString& aOrigin,
                                  const LSOriginInitialization aInitialization,
-                                 Func&& aFunc) -> std::invoke_result_t<Func> {
+                                 Func&& aFunc)
+    -> std::invoke_result_t<Func, const FirstInitializationAttempt<
+                                      LSOriginInitialization, Nothing>&> {
   return ExecuteInitialization(
       MutableInitializationInfoRef(CreateIfNonExistent{})
           .MutableOriginInitializationInfoRef(aOrigin, CreateIfNonExistent{}),
@@ -6803,15 +6800,13 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   MOZ_ASSERT(mState == State::Nesting);
   MOZ_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
 
-  const auto innerFunc = [&]() -> nsresult {
+  const auto innerFunc =
+      [&](const auto& firstInitializationAttempt) -> nsresult {
     // XXX This function is too long, refactor it into helper functions for
     // readability.
 
     const auto maybeExtraInfo =
-        MutableInitializationInfoRef()
-                .MutableOriginInitializationInfoRef(mOriginMetadata.mOrigin)
-                .FirstInitializationAttemptPending(
-                    LSOriginInitialization::Datastore)
+        firstInitializationAttempt.Pending()
             ? Some(ScopedLogExtraInfo{
                   ScopedLogExtraInfo::kTagContext,
                   "dom::localstorage::FirstOriginInitializationAttempt::Datastore"_ns})
