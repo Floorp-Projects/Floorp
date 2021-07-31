@@ -117,7 +117,7 @@ add_task(async () => {
 
   // Start autoscrolling.
   ok(
-    browserForPopup.browsingContext.startApzAutoscroll(
+    browserForPopup.frameLoader.remoteTab.startApzAutoscroll(
       screenX + 100,
       screenY + 50,
       viewId,
@@ -163,7 +163,7 @@ add_task(async () => {
   });
   ok(scrollY > 0, "Autoscrolling works in the popup window");
 
-  browserForPopup.browsingContext.stopApzAutoscroll(viewId, presShellId);
+  browserForPopup.frameLoader.remoteTab.stopApzAutoscroll(viewId, presShellId);
 
   await closeBrowserAction(extension);
 

@@ -696,6 +696,10 @@ class BrowserParent final : public PBrowserParent,
   void PreserveLayers(bool aPreserveLayers);
   void NotifyResolutionChanged();
 
+  bool StartApzAutoscroll(float aAnchorX, float aAnchorY, nsViewID aScrollId,
+                          uint32_t aPresShellId);
+  void StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId);
+
   bool CanCancelContentJS(nsIRemoteTab::NavigationType aNavigationType,
                           int32_t aNavigationIndex,
                           nsIURI* aNavigationURI) const;
