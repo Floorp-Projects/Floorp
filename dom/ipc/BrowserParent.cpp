@@ -3444,6 +3444,52 @@ void BrowserParent::NotifyResolutionChanged() {
   }
 }
 
+bool BrowserParent::StartApzAutoscroll(float aAnchorX, float aAnchorY,
+                                       nsViewID aScrollId,
+                                       uint32_t aPresShellId) {
+  if (!AsyncPanZoomEnabled()) {
+    return false;
+  }
+
+  bool success = false;
+  if (mRemoteLayerTreeOwner.IsInitialized()) {
+    layers::LayersId layersId = mRemoteLayerTreeOwner.GetLayersId();
+    if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
+      ScrollableLayerGuid guid(layersId, aPresShellId, aScrollId);
+
+      // The anchor coordinates that are passed in are relative to the origin
+      // of the screen, but we are sending them to APZ which only knows about
+      // coordinates relative to the widget, so convert them accordingly.
+      CSSPoint anchorCss{aAnchorX, aAnchorY};
+      LayoutDeviceIntPoint anchor =
+          RoundedToInt(anchorCss * widget->GetDefaultScale());
+      anchor -= widget->WidgetToScreenOffset();
+
+      success = widget->StartAsyncAutoscroll(
+          ViewAs<ScreenPixel>(
+              anchor, PixelCastJustification::LayoutDeviceIsScreenForBounds),
+          guid);
+    }
+  }
+  return success;
+}
+
+void BrowserParent::StopApzAutoscroll(nsViewID aScrollId,
+                                      uint32_t aPresShellId) {
+  if (!AsyncPanZoomEnabled()) {
+    return;
+  }
+
+  if (mRemoteLayerTreeOwner.IsInitialized()) {
+    layers::LayersId layersId = mRemoteLayerTreeOwner.GetLayersId();
+    if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
+      ScrollableLayerGuid guid(layersId, aPresShellId, aScrollId);
+
+      widget->StopAsyncAutoscroll(guid);
+    }
+  }
+}
+
 bool BrowserParent::CanCancelContentJS(
     nsIRemoteTab::NavigationType aNavigationType, int32_t aNavigationIndex,
     nsIURI* aNavigationURI) const {
