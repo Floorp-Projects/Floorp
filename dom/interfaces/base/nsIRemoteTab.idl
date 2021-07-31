@@ -73,26 +73,6 @@ interface nsIRemoteTab : nsISupports
   void createAboutBlankContentViewer(in nsIPrincipal aPrincipal,
                                      in nsIPrincipal aPartitionedPrincipal);
 
-  /**
-   * Notify APZ to start autoscrolling.
-   * (aAnchorX, aAnchorY) are the coordinates of the autoscroll anchor,
-   * in CSS coordinates relative to the screen. aScrollId and
-   * aPresShellId identify the scroll frame that content chose to scroll.
-   * Returns whether we were successfully able to notify APZ.
-   * If this function returns true, APZ (which may live in another process)
-   * may still reject the autoscroll, but it's then APZ's reponsibility
-   * to notify content via an "autoscroll-rejected-by-apz" message.
-   */
-  boolean startApzAutoscroll(in float aAnchorX, in float aAnchorY,
-                             in nsViewID aScrollId, in uint32_t aPresShellId);
-
-  /**
-   * Notify APZ to stop autoscrolling.
-   * aScrollId and aPresShellId identify the scroll frame that is being
-   * autoscrolled.
-   */
-  void stopApzAutoscroll(in nsViewID aScrollId, in uint32_t aPresShellId);
-
   cenum NavigationType : 8 {
     NAVIGATE_BACK = 0,
     NAVIGATE_FORWARD = 1,
