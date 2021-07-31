@@ -145,11 +145,19 @@ class ToolbarActivity : AppCompatActivity() {
         // Add a "reload" browser action that simulates reloading the current page
         // //////////////////////////////////////////////////////////////////////////////////////////
 
-        val reload = BrowserToolbar.Button(
-            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_refresh)!!,
-            "Reload"
+        val reload = BrowserToolbar.TwoStateButton(
+            primaryImage =resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_refresh)!!,
+            primaryContentDescription = "Reload",
+            secondaryImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_stop)!!,
+            secondaryContentDescription = "Stop",
+            isInPrimaryState = { loading.value != true },
+            disableInSecondaryState = false
         ) {
-            simulateReload()
+            if (loading.value == true) {
+                job?.cancel()
+            } else {
+                simulateReload()
+            }
         }
         binding.toolbar.addBrowserAction(reload)
 
