@@ -5986,13 +5986,6 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
 
   const auto innerFunc =
       [&](const auto& firstInitializationAttempt) -> nsresult {
-    const auto maybeExtraInfo =
-        firstInitializationAttempt.Pending()
-            ? Some(ScopedLogExtraInfo{
-                  ScopedLogExtraInfo::kTagContext,
-                  "dom::quota::FirstInitializationAttempt::Storage"_ns})
-            : Nothing{};
-
     if (mStorageConnection) {
       MOZ_ASSERT(firstInitializationAttempt.Recorded());
       return NS_OK;
@@ -6065,7 +6058,9 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     return NS_OK;
   };
 
-  return ExecuteInitialization(Initialization::Storage, innerFunc);
+  return ExecuteInitialization(
+      Initialization::Storage,
+      "dom::quota::FirstInitializationAttempt::Storage"_ns, innerFunc);
 }
 
 RefPtr<ClientDirectoryLock> QuotaManager::CreateDirectoryLock(
@@ -6098,13 +6093,6 @@ QuotaManager::EnsurePersistentOriginIsInitialized(
   const auto innerFunc = [&aOriginMetadata,
                           this](const auto& firstInitializationAttempt)
       -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
-    const auto maybeExtraInfo =
-        firstInitializationAttempt.Pending()
-            ? Some(ScopedLogExtraInfo{
-                  ScopedLogExtraInfo::kTagContext,
-                  "dom::quota::FirstOriginInitializationAttempt::PersistentOrigin"_ns})
-            : Nothing{};
-
     QM_TRY_UNWRAP(auto directory,
                   GetDirectoryForOrigin(PERSISTENCE_TYPE_PERSISTENT,
                                         aOriginMetadata.mOrigin));
@@ -6149,9 +6137,10 @@ QuotaManager::EnsurePersistentOriginIsInitialized(
     return std::pair(std::move(directory), created);
   };
 
-  return ExecuteOriginInitialization(aOriginMetadata.mOrigin,
-                                     OriginInitialization::PersistentOrigin,
-                                     innerFunc);
+  return ExecuteOriginInitialization(
+      aOriginMetadata.mOrigin, OriginInitialization::PersistentOrigin,
+      "dom::quota::FirstOriginInitializationAttempt::PersistentOrigin"_ns,
+      innerFunc);
 }
 
 Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
@@ -6163,15 +6152,8 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
   MOZ_DIAGNOSTIC_ASSERT(mTemporaryStorageInitialized);
 
   const auto innerFunc = [&aPersistenceType, &aOriginMetadata,
-                          this](const auto& firstInitializationAttempt)
+                          this](const auto&)
       -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
-    const auto maybeExtraInfo =
-        firstInitializationAttempt.Pending()
-            ? Some(ScopedLogExtraInfo{
-                  ScopedLogExtraInfo::kTagContext,
-                  "dom::quota::FirstOriginInitializationAttempt::TemporaryOrigin"_ns})
-            : Nothing{};
-
     // Get directory for this origin and persistence type.
     QM_TRY_UNWRAP(
         auto directory,
@@ -6200,9 +6182,10 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
     return std::pair(std::move(directory), created);
   };
 
-  return ExecuteOriginInitialization(aOriginMetadata.mOrigin,
-                                     OriginInitialization::TemporaryOrigin,
-                                     innerFunc);
+  return ExecuteOriginInitialization(
+      aOriginMetadata.mOrigin, OriginInitialization::TemporaryOrigin,
+      "dom::quota::FirstOriginInitializationAttempt::TemporaryOrigin"_ns,
+      innerFunc);
 }
 
 nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
@@ -6211,13 +6194,6 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 
   const auto innerFunc =
       [&](const auto& firstInitializationAttempt) -> nsresult {
-    const auto maybeExtraInfo =
-        firstInitializationAttempt.Pending()
-            ? Some(ScopedLogExtraInfo{
-                  ScopedLogExtraInfo::kTagContext,
-                  "dom::quota::FirstInitializationAttempt::TemporaryStorage"_ns})
-            : Nothing{};
-
     if (mTemporaryStorageInitialized) {
       MOZ_ASSERT(firstInitializationAttempt.Recorded());
       return NS_OK;
@@ -6263,7 +6239,9 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
     return NS_OK;
   };
 
-  return ExecuteInitialization(Initialization::TemporaryStorage, innerFunc);
+  return ExecuteInitialization(
+      Initialization::TemporaryStorage,
+      "dom::quota::FirstInitializationAttempt::TemporaryStorage"_ns, innerFunc);
 }
 
 void QuotaManager::ShutdownStorage() {
@@ -7078,15 +7056,25 @@ auto QuotaManager::ExecuteInitialization(const Initialization aInitialization,
 }
 
 template <typename Func>
+auto QuotaManager::ExecuteInitialization(const Initialization aInitialization,
+                                         const nsACString& aContext,
+                                         Func&& aFunc)
+    -> std::invoke_result_t<Func, const FirstInitializationAttempt<
+                                      Initialization, StringGenerator>&> {
+  return quota::ExecuteInitialization(mInitializationInfo, aInitialization,
+                                      aContext, std::forward<Func>(aFunc));
+}
+
+template <typename Func>
 auto QuotaManager::ExecuteOriginInitialization(
     const nsACString& aOrigin, const OriginInitialization aInitialization,
-    Func&& aFunc)
+    const nsACString& aContext, Func&& aFunc)
     -> std::invoke_result_t<Func, const FirstInitializationAttempt<
                                       Initialization, StringGenerator>&> {
   return quota::ExecuteInitialization(
       mInitializationInfo.MutableOriginInitializationInfoRef(
           aOrigin, CreateIfNonExistent{}),
-      aInitialization, std::forward<Func>(aFunc));
+      aInitialization, aContext, std::forward<Func>(aFunc));
 }
 
 /*******************************************************************************
