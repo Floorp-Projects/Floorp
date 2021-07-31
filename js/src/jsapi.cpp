@@ -2075,13 +2075,19 @@ JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JS::HandleObject obj) {
 
 JS_PUBLIC_API void JS_SetReservedSlot(JSObject* obj, uint32_t index,
                                       const Value& value) {
-  obj->as<NativeObject>().setReservedSlot(index, value);
+  // Note: we don't use setReservedSlot so that this also works on swappable DOM
+  // objects. See NativeObject::getReservedSlotRef comment.
+  MOZ_ASSERT(index < JSCLASS_RESERVED_SLOTS(obj->getClass()));
+  obj->as<NativeObject>().setSlot(index, value);
 }
 
 JS_PUBLIC_API void JS_InitReservedSlot(JSObject* obj, uint32_t index, void* ptr,
                                        size_t nbytes, JS::MemoryUse use) {
-  InitReservedSlot(&obj->as<NativeObject>(), index, ptr, nbytes,
-                   js::MemoryUse(use));
+  // Note: we don't use InitReservedSlot so that this also works on swappable
+  // DOM objects. See NativeObject::getReservedSlotRef comment.
+  MOZ_ASSERT(index < JSCLASS_RESERVED_SLOTS(obj->getClass()));
+  AddCellMemory(obj, nbytes, js::MemoryUse(use));
+  obj->as<NativeObject>().initSlot(index, PrivateValue(ptr));
 }
 
 JS_PUBLIC_API bool JS::IsMapObject(JSContext* cx, JS::HandleObject obj,
