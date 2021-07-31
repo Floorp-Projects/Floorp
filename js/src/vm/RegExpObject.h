@@ -102,24 +102,28 @@ class RegExpObject : public NativeObject {
     return true;
   }
 
-  const Value& getLastIndex() const { return getSlot(LAST_INDEX_SLOT); }
+  const Value& getLastIndex() const { return getReservedSlot(LAST_INDEX_SLOT); }
 
-  void setLastIndex(double d) { setSlot(LAST_INDEX_SLOT, NumberValue(d)); }
+  void setLastIndex(double d) {
+    setReservedSlot(LAST_INDEX_SLOT, NumberValue(d));
+  }
 
   void zeroLastIndex(JSContext* cx) {
     MOZ_ASSERT(lookupPure(cx->names().lastIndex)->writable(),
                "can't infallibly zero a non-writable lastIndex on a "
                "RegExp that's been exposed to script");
-    setSlot(LAST_INDEX_SLOT, Int32Value(0));
+    setReservedSlot(LAST_INDEX_SLOT, Int32Value(0));
   }
 
   static JSLinearString* toString(JSContext* cx, Handle<RegExpObject*> obj);
 
   JSAtom* getSource() const {
-    return &getSlot(SOURCE_SLOT).toString()->asAtom();
+    return &getReservedSlot(SOURCE_SLOT).toString()->asAtom();
   }
 
-  void setSource(JSAtom* source) { setSlot(SOURCE_SLOT, StringValue(source)); }
+  void setSource(JSAtom* source) {
+    setReservedSlot(SOURCE_SLOT, StringValue(source));
+  }
 
   /* Flags. */
 

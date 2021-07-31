@@ -9404,8 +9404,8 @@ JSObject* jit::NewWrapperWithObjectShape(JSContext* cx,
     if (!wrapper) {
       return nullptr;
     }
-    wrapper->as<NativeObject>().setSlot(SHAPE_CONTAINER_SLOT,
-                                        PrivateGCThingValue(obj->shape()));
+    wrapper->as<NativeObject>().setReservedSlot(
+        SHAPE_CONTAINER_SLOT, PrivateGCThingValue(obj->shape()));
   }
   if (!JS_WrapObject(cx, &wrapper)) {
     return nullptr;
