@@ -445,6 +445,7 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param secondaryImage: The drawable to be shown if the button is in the secondary/disabled state.
      * @param secondaryContentDescription: The content description to use if the button is in the secondary state.
      * @param isInPrimaryState: Lambda that returns whether this button should be in the primary or secondary state.
+     * @param disableInSecondaryState: Disable the button entirely when in the secondary state?
      * @param background A custom (stateful) background drawable resource to be used.
      * @param longClickListener Callback that will be invoked whenever the button is long-pressed.
      * @param listener Callback that will be invoked whenever the button is pressed.
@@ -455,6 +456,7 @@ class BrowserToolbar @JvmOverloads constructor(
         val secondaryImage: Drawable = primaryImage,
         val secondaryContentDescription: String = primaryContentDescription,
         val isInPrimaryState: () -> Boolean = { true },
+        val disableInSecondaryState: Boolean = true,
         background: Int = 0,
         longClickListener: (() -> Unit)? = null,
         listener: () -> Unit
@@ -475,9 +477,11 @@ class BrowserToolbar @JvmOverloads constructor(
             if (enabled) {
                 button.setImageDrawable(primaryImage)
                 button.contentDescription = primaryContentDescription
+                button.isEnabled = true
             } else {
                 button.setImageDrawable(secondaryImage)
                 button.contentDescription = secondaryContentDescription
+                button.isEnabled = !disableInSecondaryState
             }
         }
     }
