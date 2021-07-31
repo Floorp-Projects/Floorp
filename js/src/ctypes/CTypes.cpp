@@ -4517,7 +4517,7 @@ void CType::Finalize(JSFreeOp* fop, JSObject* obj) {
 
 void CType::Trace(JSTracer* trc, JSObject* obj) {
   // Make sure our TypeCode slot is legit. If it's not, bail.
-  Value slot = obj->as<NativeObject>().getSlot(SLOT_TYPECODE);
+  Value slot = obj->as<NativeObject>().getReservedSlot(SLOT_TYPECODE);
   if (slot.isUndefined()) {
     return;
   }

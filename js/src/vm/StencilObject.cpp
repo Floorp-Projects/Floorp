@@ -45,11 +45,11 @@ using namespace js;
 
 bool StencilObject::hasStencil() const {
   // The stencil may not be present yet if we GC during initialization.
-  return !getSlot(StencilSlot).isUndefined();
+  return !getReservedSlot(StencilSlot).isUndefined();
 }
 
 JS::Stencil* StencilObject::stencil() const {
-  void* ptr = getSlot(StencilSlot).toPrivate();
+  void* ptr = getReservedSlot(StencilSlot).toPrivate();
   MOZ_ASSERT(ptr);
   return static_cast<JS::Stencil*>(ptr);
 }
@@ -95,23 +95,23 @@ JS::Stencil* StencilObject::stencil() const {
 
 bool StencilXDRBufferObject::hasBuffer() const {
   // The stencil may not be present yet if we GC during initialization.
-  return !getSlot(BufferSlot).isUndefined();
+  return !getReservedSlot(BufferSlot).isUndefined();
 }
 
 const uint8_t* StencilXDRBufferObject::buffer() const {
-  void* ptr = getSlot(BufferSlot).toPrivate();
+  void* ptr = getReservedSlot(BufferSlot).toPrivate();
   MOZ_ASSERT(ptr);
   return static_cast<const uint8_t*>(ptr);
 }
 
 uint8_t* StencilXDRBufferObject::writableBuffer() {
-  void* ptr = getSlot(BufferSlot).toPrivate();
+  void* ptr = getReservedSlot(BufferSlot).toPrivate();
   MOZ_ASSERT(ptr);
   return static_cast<uint8_t*>(ptr);
 }
 
 size_t StencilXDRBufferObject::bufferLength() const {
-  return getSlot(LengthSlot).toInt32();
+  return getReservedSlot(LengthSlot).toInt32();
 }
 
 /* static */ StencilXDRBufferObject* StencilXDRBufferObject::create(
