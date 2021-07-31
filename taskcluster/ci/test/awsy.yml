@@ -8,8 +8,7 @@ job-defaults:
     instance-size: xlarge
     virtualization:
         by-test-platform:
-            windows10-64(?:-shippable)?-qr/.*: virtual-with-gpu
-            windows10-64/.*: virtual-with-gpu
+            windows10-64-2004(?:-shippable)?-qr/.*: virtual-with-gpu
             default: virtual
     allow-software-gl-layers: false
     mozharness:
@@ -27,7 +26,7 @@ job-defaults:
             fission:
                 by-test-platform:
                     linux1804-64(?!-shippable).*: 3
-                    windows10-64(-qr)?/opt: 3
+                    windows10-64-2004(-qr)?/opt: 3
                     default: 2
             default: default
     test-manifest-loader: null  # don't load tests in the taskgraph
@@ -42,13 +41,13 @@ awsy:
             fission:
                 by-test-platform:
                     linux1804-64-shippable-qr/opt: [mozilla-central]
-                    windows10-64-shippable-qr/opt: [mozilla-central]
+                    windows10-64-2004-shippable-qr/opt: [mozilla-central]
                     default: []
             default:
                 by-test-platform:
                     .*-devedition/.*: []  # don't run on devedition
                     windows.*-32.*/opt: []
-                    (linux|windows10-64|mac)(?!.*shippable).*/opt: []
+                    (linux|windows10-64-2004|mac)(?!.*shippable).*/opt: []
                     default: [integration, mozilla-central, mozilla-beta, mozilla-release]
 
 awsy-tp6:
@@ -60,13 +59,13 @@ awsy-tp6:
             fission:
                 by-test-platform:
                     linux1804-64-shippable-qr/opt: [mozilla-central]
-                    windows10-64-shippable-qr/opt: [mozilla-central]
+                    windows10-64-2004-shippable-qr/opt: [mozilla-central]
                     default: []
             default:
                 by-test-platform:
                     .*-devedition/.*: []  # don't run on devedition
                     windows.*-32.*/opt: []
-                    (linux|windows10-64|mac)(?!.*shippable).*/opt: []
+                    (linux|windows10-64-2004|mac)(?!.*shippable).*/opt: []
                     default: [integration, mozilla-central, mozilla-beta, mozilla-release]
     mozharness:
         extra-options:
@@ -88,13 +87,13 @@ awsy-base:
             fission:
                 by-test-platform:
                     linux1804-64-shippable-qr/opt: [mozilla-central]
-                    windows10-64-shippable-qr/opt: [mozilla-central]
+                    windows10-64-2004-shippable-qr/opt: [mozilla-central]
                     default: []
             default:
                 by-test-platform:
                     .*-devedition/.*: []  # don't run on devedition
                     windows.*-32.*/opt: []
-                    (linux|windows10-64|mac)(?!.*shippable).*/opt: []
+                    (linux|windows10-64-2004|mac)(?!.*shippable).*/opt: []
                     default: [integration, mozilla-central, mozilla-beta, mozilla-release]
     mozharness:
         extra-options:
