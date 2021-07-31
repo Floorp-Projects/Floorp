@@ -1554,10 +1554,15 @@ auto ExecuteInitialization(
     FirstInitializationAttempts<Initialization, StringGenerator>&
         aFirstInitializationAttempts,
     const Initialization aInitialization, Func&& aFunc)
-    -> std::invoke_result_t<Func> {
-  using RetType = std::invoke_result_t<Func>;
+    -> std::invoke_result_t<Func, const FirstInitializationAttempt<
+                                      Initialization, StringGenerator>&> {
+  using RetType = std::invoke_result_t<
+      Func, const FirstInitializationAttempt<Initialization, StringGenerator>&>;
 
-  auto res = std::forward<Func>(aFunc)();
+  auto firstInitializationAttempt =
+      aFirstInitializationAttempts.FirstInitializationAttempt(aInitialization);
+
+  auto res = std::forward<Func>(aFunc)(firstInitializationAttempt);
 
   const auto rv = [&res]() -> nsresult {
     if constexpr (std::is_same_v<RetType, nsresult>) {
@@ -1579,10 +1584,8 @@ auto ExecuteInitialization(
     return res;
   }
 
-  if (!aFirstInitializationAttempts.FirstInitializationAttemptRecorded(
-          aInitialization)) {
-    aFirstInitializationAttempts.RecordFirstInitializationAttempt(
-        aInitialization, rv);
+  if (!firstInitializationAttempt.Recorded()) {
+    firstInitializationAttempt.Record(rv);
   }
 
   return res;

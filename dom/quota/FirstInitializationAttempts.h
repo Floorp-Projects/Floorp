@@ -66,6 +66,10 @@ class FirstInitializationAttempts {
   }
 };
 
+template <typename Initialization, typename StringGenerator>
+using FirstInitializationAttempt = typename FirstInitializationAttempts<
+    Initialization, StringGenerator>::FirstInitializationAttemptImpl;
+
 }  // namespace mozilla::dom::quota
 
 #endif  // DOM_QUOTA_FIRSTINITIALIZATIONATTEMPTS_H_

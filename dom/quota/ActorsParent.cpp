@@ -4238,7 +4238,7 @@ nsresult QuotaManager::LoadQuota() {
 
       QM_TRY(([&]() -> Result<Ok, nsresult> {
         QM_TRY(([this, type] {
-                 const auto innerFunc = [&]() -> nsresult {
+                 const auto innerFunc = [&](const auto&) -> nsresult {
                    return InitializeRepository(type);
                  };
 
@@ -5008,7 +5008,7 @@ QuotaManager::UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
   AssertIsOnIOThread();
   MOZ_ASSERT(aIndexedDBDir);
 
-  const auto innerFunc = [this, &aIndexedDBDir]() -> nsresult {
+  const auto innerFunc = [this, &aIndexedDBDir](const auto&) -> nsresult {
     bool isDirectory;
     QM_TRY(aIndexedDBDir->IsDirectory(&isDirectory));
 
@@ -5063,7 +5063,8 @@ QuotaManager::UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
   AssertIsOnIOThread();
   MOZ_ASSERT(aPersistentStorageDir);
 
-  const auto innerFunc = [this, &aPersistentStorageDir]() -> nsresult {
+  const auto innerFunc = [this,
+                          &aPersistentStorageDir](const auto&) -> nsresult {
     QM_TRY_INSPECT(const bool& isDirectory,
                    MOZ_TO_RESULT_INVOKE(aPersistentStorageDir, IsDirectory));
 
@@ -5178,7 +5179,7 @@ nsresult QuotaManager::UpgradeStorageFrom0_0To1_0(
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  const auto innerFunc = [this, &aConnection]() -> nsresult {
+  const auto innerFunc = [this, &aConnection](const auto&) -> nsresult {
     QM_TRY(UpgradeStorage<UpgradeStorageFrom0_0To1_0Helper>(
         0, MakeStorageVersion(1, 0), aConnection));
 
@@ -5261,7 +5262,7 @@ nsresult QuotaManager::UpgradeStorageFrom1_0To2_0(
   // manager directories without the ".files" suffix then prevent current
   // Firefox from initializing and using the storage.
 
-  const auto innerFunc = [this, &aConnection]() -> nsresult {
+  const auto innerFunc = [this, &aConnection](const auto&) -> nsresult {
     QM_TRY(UpgradeStorage<UpgradeStorageFrom1_0To2_0Helper>(
         MakeStorageVersion(1, 0), MakeStorageVersion(2, 0), aConnection));
 
@@ -5280,7 +5281,7 @@ nsresult QuotaManager::UpgradeStorageFrom2_0To2_1(
   // The upgrade is mainly to create a directory padding file in DOM Cache
   // directory to record the overall padding size of an origin.
 
-  const auto innerFunc = [this, &aConnection]() -> nsresult {
+  const auto innerFunc = [this, &aConnection](const auto&) -> nsresult {
     QM_TRY(UpgradeStorage<UpgradeStorageFrom2_0To2_1Helper>(
         MakeStorageVersion(2, 0), MakeStorageVersion(2, 1), aConnection));
 
@@ -5299,7 +5300,7 @@ nsresult QuotaManager::UpgradeStorageFrom2_1To2_2(
   // The upgrade is mainly to clean obsolete origins in the repositoies, remove
   // asmjs client, and ".tmp" file in the idb folers.
 
-  const auto innerFunc = [this, &aConnection]() -> nsresult {
+  const auto innerFunc = [this, &aConnection](const auto&) -> nsresult {
     QM_TRY(UpgradeStorage<UpgradeStorageFrom2_1To2_2Helper>(
         MakeStorageVersion(2, 1), MakeStorageVersion(2, 2), aConnection));
 
@@ -5315,7 +5316,7 @@ nsresult QuotaManager::UpgradeStorageFrom2_2To2_3(
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  const auto innerFunc = [&aConnection]() -> nsresult {
+  const auto innerFunc = [&aConnection](const auto&) -> nsresult {
     // Table `database`
     QM_TRY(aConnection->ExecuteSimpleSQL(
         nsLiteralCString("CREATE TABLE database"
@@ -5983,10 +5984,8 @@ Result<Ok, nsresult> QuotaManager::CreateEmptyLocalStorageArchive(
 nsresult QuotaManager::EnsureStorageIsInitialized() {
   DiagnosticAssertIsOnIOThread();
 
-  const auto innerFunc = [&]() -> nsresult {
-    const auto firstInitializationAttempt =
-        mInitializationInfo.FirstInitializationAttempt(Initialization::Storage);
-
+  const auto innerFunc =
+      [&](const auto& firstInitializationAttempt) -> nsresult {
     const auto maybeExtraInfo =
         firstInitializationAttempt.Pending()
             ? Some(ScopedLogExtraInfo{
@@ -6096,13 +6095,9 @@ QuotaManager::EnsurePersistentOriginIsInitialized(
   MOZ_ASSERT(aOriginMetadata.mPersistenceType == PERSISTENCE_TYPE_PERSISTENT);
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
-  const auto innerFunc = [&aOriginMetadata, this]()
+  const auto innerFunc = [&aOriginMetadata,
+                          this](const auto& firstInitializationAttempt)
       -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
-    const auto firstInitializationAttempt =
-        mInitializationInfo
-            .MutableOriginInitializationInfoRef(aOriginMetadata.mOrigin)
-            .FirstInitializationAttempt(OriginInitialization::PersistentOrigin);
-
     const auto maybeExtraInfo =
         firstInitializationAttempt.Pending()
             ? Some(ScopedLogExtraInfo{
@@ -6167,13 +6162,11 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
   MOZ_DIAGNOSTIC_ASSERT(mTemporaryStorageInitialized);
 
-  const auto innerFunc = [&aPersistenceType, &aOriginMetadata, this]()
+  const auto innerFunc = [&aPersistenceType, &aOriginMetadata,
+                          this](const auto& firstInitializationAttempt)
       -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
     const auto maybeExtraInfo =
-        mInitializationInfo
-                .MutableOriginInitializationInfoRef(aOriginMetadata.mOrigin)
-                .FirstInitializationAttemptPending(
-                    OriginInitialization::TemporaryOrigin)
+        firstInitializationAttempt.Pending()
             ? Some(ScopedLogExtraInfo{
                   ScopedLogExtraInfo::kTagContext,
                   "dom::quota::FirstOriginInitializationAttempt::TemporaryOrigin"_ns})
@@ -6216,11 +6209,8 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   AssertIsOnIOThread();
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
-  const auto innerFunc = [&]() -> nsresult {
-    const auto firstInitializationAttempt =
-        mInitializationInfo.FirstInitializationAttempt(
-            Initialization::TemporaryStorage);
-
+  const auto innerFunc =
+      [&](const auto& firstInitializationAttempt) -> nsresult {
     const auto maybeExtraInfo =
         firstInitializationAttempt.Pending()
             ? Some(ScopedLogExtraInfo{
@@ -7081,7 +7071,8 @@ int64_t QuotaManager::GenerateDirectoryLockId() {
 template <typename Func>
 auto QuotaManager::ExecuteInitialization(const Initialization aInitialization,
                                          Func&& aFunc)
-    -> std::invoke_result_t<Func> {
+    -> std::invoke_result_t<Func, const FirstInitializationAttempt<
+                                      Initialization, StringGenerator>&> {
   return quota::ExecuteInitialization(mInitializationInfo, aInitialization,
                                       std::forward<Func>(aFunc));
 }
@@ -7089,7 +7080,9 @@ auto QuotaManager::ExecuteInitialization(const Initialization aInitialization,
 template <typename Func>
 auto QuotaManager::ExecuteOriginInitialization(
     const nsACString& aOrigin, const OriginInitialization aInitialization,
-    Func&& aFunc) -> std::invoke_result_t<Func> {
+    Func&& aFunc)
+    -> std::invoke_result_t<Func, const FirstInitializationAttempt<
+                                      Initialization, StringGenerator>&> {
   return quota::ExecuteInitialization(
       mInitializationInfo.MutableOriginInitializationInfoRef(
           aOrigin, CreateIfNonExistent{}),

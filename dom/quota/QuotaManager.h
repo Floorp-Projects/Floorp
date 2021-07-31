@@ -550,12 +550,16 @@ class QuotaManager final : public BackgroundThreadObject {
 
   template <typename Func>
   auto ExecuteInitialization(Initialization aInitialization, Func&& aFunc)
-      -> std::invoke_result_t<Func>;
+      -> std::invoke_result_t<Func, const FirstInitializationAttempt<
+                                        Initialization, StringGenerator>&>;
 
   template <typename Func>
+
   auto ExecuteOriginInitialization(const nsACString& aOrigin,
                                    const OriginInitialization aInitialization,
-                                   Func&& aFunc) -> std::invoke_result_t<Func>;
+                                   Func&& aFunc)
+      -> std::invoke_result_t<Func, const FirstInitializationAttempt<
+                                        Initialization, StringGenerator>&>;
 
   template <typename Iterator>
   static void MaybeInsertNonPersistedOriginInfos(
