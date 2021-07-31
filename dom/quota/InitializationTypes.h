@@ -13,6 +13,10 @@
 #include "nsStringFwd.h"
 #include "nsTHashMap.h"
 
+namespace mozilla {
+struct CreateIfNonExistent;
+}
+
 namespace mozilla::dom::quota {
 
 enum class Initialization {
@@ -58,7 +62,7 @@ class InitializationInfo
 
  public:
   OriginInitializationInfo& MutableOriginInitializationInfoRef(
-      const nsACString& aOrigin) {
+      const nsACString& aOrigin, const CreateIfNonExistent&) {
     return mOriginInitializationInfos.LookupOrInsert(aOrigin);
   }
 
