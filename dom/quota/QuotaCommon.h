@@ -28,6 +28,7 @@
 #endif
 #include "mozilla/dom/QMResult.h"
 #include "mozilla/dom/quota/FirstInitializationAttemptsImpl.h"
+#include "mozilla/dom/quota/ScopedLogExtraInfo.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -1589,6 +1590,29 @@ auto ExecuteInitialization(
   }
 
   return res;
+}
+
+template <typename Initialization, typename StringGenerator, typename Func>
+auto ExecuteInitialization(
+    FirstInitializationAttempts<Initialization, StringGenerator>&
+        aFirstInitializationAttempts,
+    const Initialization aInitialization, const nsACString& aContext,
+    Func&& aFunc)
+    -> std::invoke_result_t<Func, const FirstInitializationAttempt<
+                                      Initialization, StringGenerator>&> {
+  return ExecuteInitialization(
+      aFirstInitializationAttempts, aInitialization,
+      [&](const auto& firstInitializationAttempt) -> decltype(auto) {
+#ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
+        const auto maybeScopedLogExtraInfo =
+            firstInitializationAttempt.Recorded()
+                ? Nothing{}
+                : Some(ScopedLogExtraInfo{ScopedLogExtraInfo::kTagContext,
+                                          aContext});
+#endif
+
+        return std::forward<Func>(aFunc)(firstInitializationAttempt);
+      });
 }
 
 }  // namespace quota

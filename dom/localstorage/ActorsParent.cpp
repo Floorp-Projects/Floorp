@@ -3106,13 +3106,13 @@ LSInitializationInfo& MutableInitializationInfoRef(const CreateIfNonExistent&) {
 template <typename Func>
 auto ExecuteOriginInitialization(const nsACString& aOrigin,
                                  const LSOriginInitialization aInitialization,
-                                 Func&& aFunc)
+                                 const nsACString& aContext, Func&& aFunc)
     -> std::invoke_result_t<Func, const FirstInitializationAttempt<
                                       LSOriginInitialization, Nothing>&> {
   return ExecuteInitialization(
       MutableInitializationInfoRef(CreateIfNonExistent{})
           .MutableOriginInitializationInfoRef(aOrigin, CreateIfNonExistent{}),
-      aInitialization, std::forward<Func>(aFunc));
+      aInitialization, aContext, std::forward<Func>(aFunc));
 }
 
 }  // namespace
@@ -6800,17 +6800,9 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   MOZ_ASSERT(mState == State::Nesting);
   MOZ_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
 
-  const auto innerFunc =
-      [&](const auto& firstInitializationAttempt) -> nsresult {
+  const auto innerFunc = [&](const auto&) -> nsresult {
     // XXX This function is too long, refactor it into helper functions for
     // readability.
-
-    const auto maybeExtraInfo =
-        firstInitializationAttempt.Pending()
-            ? Some(ScopedLogExtraInfo{
-                  ScopedLogExtraInfo::kTagContext,
-                  "dom::localstorage::FirstOriginInitializationAttempt::Datastore"_ns})
-            : Nothing{};
 
     if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
         !MayProceedOnNonOwningThread()) {
@@ -7063,7 +7055,9 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   };
 
   return ExecuteOriginInitialization(
-      mOriginMetadata.mOrigin, LSOriginInitialization::Datastore, innerFunc);
+      mOriginMetadata.mOrigin, LSOriginInitialization::Datastore,
+      "dom::localstorage::FirstOriginInitializationAttempt::Datastore"_ns,
+      innerFunc);
 }
 
 nsresult PrepareDatastoreOp::DatabaseNotAvailable() {
