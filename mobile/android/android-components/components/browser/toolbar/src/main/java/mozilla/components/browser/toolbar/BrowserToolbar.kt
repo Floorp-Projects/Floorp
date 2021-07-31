@@ -437,46 +437,47 @@ class BrowserToolbar @JvmOverloads constructor(
 
     /**
      * An action that either shows an active button or an inactive button based on the provided
-     * <code>isEnabled</code> lambda.
+     * <code>isInPrimaryState</code> lambda. All secondary characteristics default to their
+     * corresponding primary.
      *
-     * @param enabledImage The drawable to be show if the button is in the enabled stated.
-     * @param enabledContentDescription The content description to use if the button is in the enabled state.
-     * @param disabledImage The drawable to be show if the button is in the disabled stated.
-     * @param disabledContentDescription The content description to use if the button is in the enabled state.
-     * @param isEnabled Lambda that returns true of false to indicate whether this button should be enabled/disabled.
+     * @param primaryImage: The drawable to be shown if the button is in the primary/enabled state
+     * @param primaryContentDescription: The content description to use if the button is in the primary state.
+     * @param secondaryImage: The drawable to be shown if the button is in the secondary/disabled state.
+     * @param secondaryContentDescription: The content description to use if the button is in the secondary state.
+     * @param isInPrimaryState: Lambda that returns whether this button should be in the primary or secondary state.
      * @param background A custom (stateful) background drawable resource to be used.
-     * @param listener Callback that will be invoked whenever the checked state changes.
+     * @param longClickListener Callback that will be invoked whenever the button is long-pressed.
+     * @param listener Callback that will be invoked whenever the button is pressed.
      */
     open class TwoStateButton(
-        private val enabledImage: Drawable,
-        private val enabledContentDescription: String,
-        private val disabledImage: Drawable,
-        private val disabledContentDescription: String,
-        private val isEnabled: () -> Boolean = { true },
+        val primaryImage: Drawable,
+        val primaryContentDescription: String,
+        val secondaryImage: Drawable = primaryImage,
+        val secondaryContentDescription: String = primaryContentDescription,
+        val isInPrimaryState: () -> Boolean = { true },
         background: Int = 0,
         longClickListener: (() -> Unit)? = null,
         listener: () -> Unit
     ) : BrowserToolbar.Button(
-        enabledImage,
-        enabledContentDescription,
-        listener = listener,
+        primaryImage,
+        primaryContentDescription,
         longClickListener=longClickListener,
+        listener = listener,
         background = background
     ) {
         var enabled: Boolean = false
             private set
 
         override fun bind(view: View) {
-            enabled = isEnabled.invoke()
+            enabled = isInPrimaryState.invoke()
 
             val button = view as ImageButton
-
             if (enabled) {
-                button.setImageDrawable(enabledImage)
-                button.contentDescription = enabledContentDescription
+                button.setImageDrawable(primaryImage)
+                button.contentDescription = primaryContentDescription
             } else {
-                button.setImageDrawable(disabledImage)
-                button.contentDescription = disabledContentDescription
+                button.setImageDrawable(secondaryImage)
+                button.contentDescription = secondaryContentDescription
             }
         }
     }
