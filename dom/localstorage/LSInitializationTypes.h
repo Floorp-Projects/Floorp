@@ -33,6 +33,11 @@ class LSInitializationInfo final {
 
  public:
   LSOriginInitializationInfo& MutableOriginInitializationInfoRef(
+      const nsACString& aOrigin) {
+    return *mOriginInitializationInfos.Lookup(aOrigin);
+  }
+
+  LSOriginInitializationInfo& MutableOriginInitializationInfoRef(
       const nsACString& aOrigin, const CreateIfNonExistent&) {
     return mOriginInitializationInfos.LookupOrInsert(aOrigin);
   }

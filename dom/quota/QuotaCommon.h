@@ -1540,48 +1540,52 @@ auto CallWithDelayedRetriesIfAccessDenied(Func&& aFunc, uint32_t aMaxRetries,
   }
 }
 
-template <typename Initialization, typename StringGenerator>
-nsresult ExecuteInitialization(
+namespace detail {
+
+template <bool flag = false>
+void UnsupportedReturnType() {
+  static_assert(flag, "Unsupported return type!");
+}
+
+}  // namespace detail
+
+template <typename Initialization, typename StringGenerator, typename Func>
+auto ExecuteInitialization(
     FirstInitializationAttempts<Initialization, StringGenerator>&
         aFirstInitializationAttempts,
-    const Initialization aInitialization, const nsresult aRv) {
+    const Initialization aInitialization, Func&& aFunc)
+    -> std::invoke_result_t<Func> {
+  using RetType = std::invoke_result_t<Func>;
+
+  auto res = std::forward<Func>(aFunc)();
+
+  const auto rv = [&res]() -> nsresult {
+    if constexpr (std::is_same_v<RetType, nsresult>) {
+      return res;
+    } else if constexpr (mozilla::detail::IsResult<RetType>::value &&
+                         std::is_same_v<typename RetType::err_type, nsresult>) {
+      return res.isOk() ? NS_OK : res.inspectErr();
+    } else {
+      detail::UnsupportedReturnType();
+    }
+  }();
+
   // NS_ERROR_ABORT signals a non-fatal, recoverable problem during
   // initialization. We do not want these kind of failures to count against our
   // overall first initialization attempt telemetry. Thus we just ignore this
   // kind of failure and keep aFirstInitializationAttempts unflagged to stay
   // ready to record a real success or failure on the next attempt.
-  if (aRv == NS_ERROR_ABORT) {
-    return aRv;
+  if (rv == NS_ERROR_ABORT) {
+    return res;
   }
 
   if (!aFirstInitializationAttempts.FirstInitializationAttemptRecorded(
           aInitialization)) {
     aFirstInitializationAttempts.RecordFirstInitializationAttempt(
-        aInitialization, aRv);
+        aInitialization, rv);
   }
 
-  return aRv;
-}
-
-// XXX Get rid of this special overload.
-template <typename Initialization, typename StringGenerator>
-Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> ExecuteInitialization(
-    FirstInitializationAttempts<Initialization, StringGenerator>&
-        aFirstInitializationAttempts,
-    const Initialization aInitialization,
-    Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>&& aResult) {
-  // See the comment above for the NS_ERROR_ABORT special case.
-  if (aResult.isErr() && aResult.inspectErr() == NS_ERROR_ABORT) {
-    return std::move(aResult);
-  }
-
-  if (!aFirstInitializationAttempts.FirstInitializationAttemptRecorded(
-          aInitialization)) {
-    aFirstInitializationAttempts.RecordFirstInitializationAttempt(
-        aInitialization, aResult.isOk() ? NS_OK : aResult.inspectErr());
-  }
-
-  return std::move(aResult);
+  return res;
 }
 
 }  // namespace quota

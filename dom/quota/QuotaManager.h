@@ -548,13 +548,14 @@ class QuotaManager final : public BackgroundThreadObject {
   void MaybeRecordShutdownStep(Maybe<Client::Type> aClientType,
                                const nsACString& aStepDescription);
 
-  nsresult ExecuteInitialization(Initialization aInitialization, nsresult aRv);
+  template <typename Func>
+  auto ExecuteInitialization(Initialization aInitialization, Func&& aFunc)
+      -> std::invoke_result_t<Func>;
 
-  // XXX Generalize this method.
-  Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
-  ExecuteOriginInitialization(
-      const nsACString& aOrigin, const OriginInitialization aInitialization,
-      Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>&& aResult);
+  template <typename Func>
+  auto ExecuteOriginInitialization(const nsACString& aOrigin,
+                                   const OriginInitialization aInitialization,
+                                   Func&& aFunc) -> std::invoke_result_t<Func>;
 
   template <typename Iterator>
   static void MaybeInsertNonPersistedOriginInfos(

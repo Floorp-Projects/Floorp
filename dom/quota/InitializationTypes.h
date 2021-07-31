@@ -62,6 +62,11 @@ class InitializationInfo
 
  public:
   OriginInitializationInfo& MutableOriginInitializationInfoRef(
+      const nsACString& aOrigin) {
+    return *mOriginInitializationInfos.Lookup(aOrigin);
+  }
+
+  OriginInitializationInfo& MutableOriginInitializationInfoRef(
       const nsACString& aOrigin, const CreateIfNonExistent&) {
     return mOriginInitializationInfos.LookupOrInsert(aOrigin);
   }
