@@ -1129,16 +1129,6 @@ class NativeObject : public JSObject {
     return getSlot(index);
   }
 
-  MOZ_ALWAYS_INLINE const HeapSlot& getReservedSlotRef(uint32_t index) const {
-    MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
-    return getSlotRef(index);
-  }
-
-  MOZ_ALWAYS_INLINE HeapSlot& getReservedSlotRef(uint32_t index) {
-    MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
-    return getSlotRef(index);
-  }
-
   MOZ_ALWAYS_INLINE void initReservedSlot(uint32_t index, const Value& v) {
     MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
     initSlot(index, v);
