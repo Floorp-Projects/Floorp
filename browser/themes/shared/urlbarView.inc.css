@@ -95,7 +95,6 @@
 }
 
 .urlbarView-row-inner {
-  line-height: 1.2;
   display: flex;
   flex-wrap: nowrap;
   overflow: hidden;
@@ -446,6 +445,9 @@
 .urlbarView-title {
   overflow: hidden;
   white-space: nowrap;
+  /* Explicitly set line-height to avoid excessively tall rows if the title triggers use of
+     fallback fonts with extreme metrics. */
+  line-height: 1.4;
 }
 
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title {
