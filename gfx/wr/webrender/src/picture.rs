@@ -546,9 +546,6 @@ struct TilePostUpdateContext<'a> {
     /// If true, the scale factor of the root transform for this picture
     /// cache changed, so we need to invalidate the tile and re-render.
     invalidate_all: bool,
-
-    /// Index of the compositor transform mapping local -> device pixels.
-    transform_index: CompositorTransformIndex,
 }
 
 // Mutable state passed to picture cache tiles during post_update
@@ -1232,16 +1229,10 @@ impl Tile {
         // Invalidate the tile based on the content changing.
         self.update_content_validity(ctx, state, frame_context);
 
-        // Bug 1719232 - The valid rect once converted to i32 does not describe
-        // a non-empty region. Cull the tile as a workaround.
-        let compositor_valid_rect = state.composite_state.get_surface_rect(
-            &self.current_descriptor.local_valid_rect,
-            &self.local_tile_rect,
-            ctx.transform_index,
-        ).to_i32();
-
         // If there are no primitives there is no need to draw or cache it.
-        if self.current_descriptor.prims.is_empty() || compositor_valid_rect.is_empty() {
+        // Bug 1719232 - The final device valid rect does not always describe a non-empty
+        // region. Cull the tile as a workaround.
+        if self.current_descriptor.prims.is_empty() || self.device_valid_rect.is_empty() {
             // If there is a native compositor surface allocated for this (now empty) tile
             // it must be freed here, otherwise the stale tile with previous contents will
             // be composited. If the tile subsequently gets new primitives added to it, the
@@ -3930,7 +3921,6 @@ impl TileCacheInstance {
             local_rect: self.local_rect,
             z_id: ZBufferId::invalid(),
             invalidate_all: self.invalidate_all_tiles,
-            transform_index: self.transform_index,
         };
 
         let mut state = TilePostUpdateState {
