@@ -446,6 +446,8 @@ void JS::detail::SetReservedSlotWithBarrier(JSObject* obj, size_t slot,
   if (obj->is<ProxyObject>()) {
     obj->as<ProxyObject>().setReservedSlot(slot, value);
   } else {
+    // Note: we don't use setReservedSlot so that this also works on swappable
+    // DOM objects. See NativeObject::getReservedSlotRef comment.
     obj->as<NativeObject>().setSlot(slot, value);
   }
 }
