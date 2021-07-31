@@ -9,13 +9,16 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.NO_ID
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.ImageView
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.forEach
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +44,11 @@ import kotlin.coroutines.CoroutineContext
 // https://github.com/mozilla-mobile/android-components/issues/5249
 const val MAX_URI_LENGTH = 25000
 
+internal fun ImageView.setTintResource(@ColorRes tintColorResource: Int) {
+    if (tintColorResource != NO_ID) {
+        imageTintList = ContextCompat.getColorStateList(context, tintColorResource)
+    }
+}
 /**
  * A customizable toolbar for browsers.
  *
@@ -445,6 +453,8 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param secondaryImage: The drawable to be shown if the button is in the secondary/disabled state.
      * @param secondaryContentDescription: The content description to use if the button is in the secondary state.
      * @param isInPrimaryState: Lambda that returns whether this button should be in the primary or secondary state.
+     * @param primaryImageTintResource: Optional ID of color resource to tint the icon in the primary state.
+     * @param secondaryImageTintResource: ID of color resource to tint the icon in the secondary state.
      * @param disableInSecondaryState: Disable the button entirely when in the secondary state?
      * @param background A custom (stateful) background drawable resource to be used.
      * @param longClickListener Callback that will be invoked whenever the button is long-pressed.
@@ -456,6 +466,8 @@ class BrowserToolbar @JvmOverloads constructor(
         val secondaryImage: Drawable = primaryImage,
         val secondaryContentDescription: String = primaryContentDescription,
         val isInPrimaryState: () -> Boolean = { true },
+        @ColorRes val primaryImageTintResource: Int = NO_ID,
+        @ColorRes val secondaryImageTintResource: Int = primaryImageTintResource,
         val disableInSecondaryState: Boolean = true,
         background: Int = 0,
         longClickListener: (() -> Unit)? = null,
@@ -477,10 +489,12 @@ class BrowserToolbar @JvmOverloads constructor(
             if (enabled) {
                 button.setImageDrawable(primaryImage)
                 button.contentDescription = primaryContentDescription
+                button.setTintResource(primaryImageTintResource)
                 button.isEnabled = true
             } else {
                 button.setImageDrawable(secondaryImage)
                 button.contentDescription = secondaryContentDescription
+                button.setTintResource(secondaryImageTintResource)
                 button.isEnabled = !disableInSecondaryState
             }
         }
