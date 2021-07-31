@@ -242,6 +242,7 @@ interface Toolbar {
         private val background: Int = 0,
         private val padding: Padding? = null,
         @ColorRes val iconTintColorResource: Int = ViewGroup.NO_ID,
+        private val longClickListener: (() -> Unit)? = null,
         private val listener: () -> Unit
     ) : Action {
 
@@ -250,6 +251,11 @@ interface Toolbar {
             imageButton.contentDescription = contentDescription
             imageButton.setTintResource(iconTintColorResource)
             imageButton.setOnClickListener { listener.invoke() }
+            imageButton.setOnLongClickListener {
+                longClickListener?.invoke()
+                true
+            }
+            imageButton.isLongClickable = longClickListener != null
 
             val backgroundResource = if (background == 0) {
                 parent.context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)

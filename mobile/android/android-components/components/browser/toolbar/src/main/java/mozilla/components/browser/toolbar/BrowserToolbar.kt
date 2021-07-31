@@ -386,6 +386,7 @@ class BrowserToolbar @JvmOverloads constructor(
         @DrawableRes background: Int = 0,
         val padding: Padding = DEFAULT_PADDING,
         @ColorRes iconTintColorResource: Int = NO_ID,
+        longClickListener: (() -> Unit)? = null,
         listener: () -> Unit
     ) : Toolbar.ActionButton(
         imageDrawable,
@@ -394,6 +395,7 @@ class BrowserToolbar @JvmOverloads constructor(
         background,
         padding,
         iconTintColorResource,
+        longClickListener,
         listener
     )
 
