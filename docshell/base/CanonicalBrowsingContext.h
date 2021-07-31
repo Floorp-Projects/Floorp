@@ -345,6 +345,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     return mClonePromise;
   }
 
+  bool StartApzAutoscroll(float aAnchorX, float aAnchorY, nsViewID aScrollId,
+                          uint32_t aPresShellId);
+  void StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId);
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
