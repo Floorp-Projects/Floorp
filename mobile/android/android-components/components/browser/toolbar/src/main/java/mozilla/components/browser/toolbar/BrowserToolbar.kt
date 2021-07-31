@@ -454,11 +454,13 @@ class BrowserToolbar @JvmOverloads constructor(
         private val disabledContentDescription: String,
         private val isEnabled: () -> Boolean = { true },
         background: Int = 0,
+        longClickListener: (() -> Unit)? = null,
         listener: () -> Unit
     ) : BrowserToolbar.Button(
         enabledImage,
         enabledContentDescription,
         listener = listener,
+        longClickListener=longClickListener,
         background = background
     ) {
         var enabled: Boolean = false
@@ -470,11 +472,11 @@ class BrowserToolbar @JvmOverloads constructor(
             val button = view as ImageButton
 
             if (enabled) {
-                button.setImageDrawable(disabledImage)
-                button.contentDescription = disabledContentDescription
-            } else {
                 button.setImageDrawable(enabledImage)
                 button.contentDescription = enabledContentDescription
+            } else {
+                button.setImageDrawable(disabledImage)
+                button.contentDescription = disabledContentDescription
             }
         }
     }
