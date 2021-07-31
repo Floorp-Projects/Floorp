@@ -155,16 +155,12 @@ const JSFunctionSpec MapIteratorObject::methods[] = {
 
 static inline ValueMap::Range* MapIteratorObjectRange(NativeObject* obj) {
   MOZ_ASSERT(obj->is<MapIteratorObject>());
-  Value value = obj->getSlot(MapIteratorObject::RangeSlot);
-  if (value.isUndefined()) {
-    return nullptr;
-  }
-
-  return static_cast<ValueMap::Range*>(value.toPrivate());
+  return obj->maybePtrFromReservedSlot<ValueMap::Range>(
+      MapIteratorObject::RangeSlot);
 }
 
 inline MapObject::IteratorKind MapIteratorObject::kind() const {
-  int32_t i = getSlot(KindSlot).toInt32();
+  int32_t i = getReservedSlot(KindSlot).toInt32();
   MOZ_ASSERT(i == MapObject::Keys || i == MapObject::Values ||
              i == MapObject::Entries);
   return MapObject::IteratorKind(i);
@@ -253,7 +249,7 @@ MapIteratorObject* MapIteratorObject::create(JSContext* cx, HandleObject obj,
   }
 
   auto range = data->createRange(buffer, insideNursery);
-  iterobj->setSlot(RangeSlot, PrivateValue(range));
+  iterobj->setReservedSlot(RangeSlot, PrivateValue(range));
 
   return iterobj;
 }
@@ -974,16 +970,12 @@ const JSFunctionSpec SetIteratorObject::methods[] = {
 
 static inline ValueSet::Range* SetIteratorObjectRange(NativeObject* obj) {
   MOZ_ASSERT(obj->is<SetIteratorObject>());
-  Value value = obj->getSlot(SetIteratorObject::RangeSlot);
-  if (value.isUndefined()) {
-    return nullptr;
-  }
-
-  return static_cast<ValueSet::Range*>(value.toPrivate());
+  return obj->maybePtrFromReservedSlot<ValueSet::Range>(
+      SetIteratorObject::RangeSlot);
 }
 
 inline SetObject::IteratorKind SetIteratorObject::kind() const {
-  int32_t i = getSlot(KindSlot).toInt32();
+  int32_t i = getReservedSlot(KindSlot).toInt32();
   MOZ_ASSERT(i == SetObject::Values || i == SetObject::Entries);
   return SetObject::IteratorKind(i);
 }
@@ -1063,7 +1055,7 @@ SetIteratorObject* SetIteratorObject::create(JSContext* cx, HandleObject obj,
   }
 
   auto range = data->createRange(buffer, insideNursery);
-  iterobj->setSlot(RangeSlot, PrivateValue(range));
+  iterobj->setReservedSlot(RangeSlot, PrivateValue(range));
 
   return iterobj;
 }

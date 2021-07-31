@@ -153,12 +153,12 @@ class GlobalObject : public NativeObject {
   GlobalScope& emptyGlobalScope() const;
 
   void setOriginalEval(JSObject* evalobj) {
-    MOZ_ASSERT(getSlotRef(EVAL).isUndefined());
-    setSlot(EVAL, ObjectValue(*evalobj));
+    MOZ_ASSERT(getReservedSlot(EVAL).isUndefined());
+    setReservedSlot(EVAL, ObjectValue(*evalobj));
   }
 
   Value getConstructor(JSProtoKey key) const {
-    return getSlot(constructorSlot(key));
+    return getReservedSlot(constructorSlot(key));
   }
   static bool skipDeselectedConstructor(JSContext* cx, JSProtoKey key);
   static bool initBuiltinConstructor(JSContext* cx,
@@ -218,15 +218,15 @@ class GlobalObject : public NativeObject {
                                      bool* resolved);
 
   void setConstructor(JSProtoKey key, const Value& v) {
-    setSlot(constructorSlot(key), v);
+    setReservedSlot(constructorSlot(key), v);
   }
 
   Value getPrototype(JSProtoKey key) const {
-    return getSlot(prototypeSlot(key));
+    return getReservedSlot(prototypeSlot(key));
   }
 
   void setPrototype(JSProtoKey key, const Value& value) {
-    setSlot(prototypeSlot(key), value);
+    setReservedSlot(prototypeSlot(key), value);
   }
 
   /*
@@ -551,7 +551,7 @@ class GlobalObject : public NativeObject {
   static JSObject* getOrCreateObject(JSContext* cx,
                                      Handle<GlobalObject*> global,
                                      unsigned slot, ObjectInitOp init) {
-    Value v = global->getSlotRef(slot);
+    Value v = global->getReservedSlot(slot);
     if (v.isObject()) {
       return &v.toObject();
     }
@@ -563,7 +563,7 @@ class GlobalObject : public NativeObject {
                                      Handle<GlobalObject*> global,
                                      unsigned slot, HandleAtom tag,
                                      ObjectInitWithTagOp init) {
-    Value v = global->getSlotRef(slot);
+    Value v = global->getReservedSlot(slot);
     if (v.isObject()) {
       return &v.toObject();
     }
@@ -593,7 +593,7 @@ class GlobalObject : public NativeObject {
       JSContext* cx, Handle<GlobalObject*> global);
 
   NativeObject* maybeGetArrayIteratorPrototype() {
-    Value v = getSlotRef(ARRAY_ITERATOR_PROTO);
+    Value v = getReservedSlot(ARRAY_ITERATOR_PROTO);
     if (v.isObject()) {
       return &v.toObject().as<NativeObject>();
     }
@@ -607,7 +607,7 @@ class GlobalObject : public NativeObject {
       JSContext* cx, Handle<GlobalObject*> global);
 
   void setGeneratorObjectPrototype(JSObject* obj) {
-    setSlot(GENERATOR_OBJECT_PROTO, ObjectValue(*obj));
+    setReservedSlot(GENERATOR_OBJECT_PROTO, ObjectValue(*obj));
   }
 
   static JSObject* getOrCreateGeneratorObjectPrototype(
@@ -615,7 +615,7 @@ class GlobalObject : public NativeObject {
     if (!ensureConstructor(cx, global, JSProto_GeneratorFunction)) {
       return nullptr;
     }
-    return &global->getSlot(GENERATOR_OBJECT_PROTO).toObject();
+    return &global->getReservedSlot(GENERATOR_OBJECT_PROTO).toObject();
   }
 
   static JSObject* getOrCreateGeneratorFunctionPrototype(
@@ -686,7 +686,7 @@ class GlobalObject : public NativeObject {
   }
 
   void setAsyncGeneratorPrototype(JSObject* obj) {
-    setSlot(ASYNC_GENERATOR_PROTO, ObjectValue(*obj));
+    setReservedSlot(ASYNC_GENERATOR_PROTO, ObjectValue(*obj));
   }
 
   static JSObject* getOrCreateAsyncGeneratorPrototype(
@@ -694,7 +694,7 @@ class GlobalObject : public NativeObject {
     if (!ensureConstructor(cx, global, JSProto_AsyncGeneratorFunction)) {
       return nullptr;
     }
-    return &global->getSlot(ASYNC_GENERATOR_PROTO).toObject();
+    return &global->getReservedSlot(ASYNC_GENERATOR_PROTO).toObject();
   }
 
   static JSObject* getOrCreateMapIteratorPrototype(
@@ -894,11 +894,11 @@ class GlobalObject : public NativeObject {
   }
 
   void setArrayShape(Shape* shape) {
-    MOZ_ASSERT(getSlot(ARRAY_SHAPE).isUndefined());
-    initSlot(ARRAY_SHAPE, PrivateGCThingValue(shape));
+    MOZ_ASSERT(getReservedSlot(ARRAY_SHAPE).isUndefined());
+    initReservedSlot(ARRAY_SHAPE, PrivateGCThingValue(shape));
   }
   Shape* maybeArrayShape() const {
-    Value v = getSlot(ARRAY_SHAPE);
+    Value v = getReservedSlot(ARRAY_SHAPE);
     MOZ_ASSERT(v.isUndefined() || v.isPrivateGCThing());
     return v.isPrivateGCThing() ? v.toGCThing()->as<Shape>() : nullptr;
   }

@@ -4693,11 +4693,11 @@ class ShapeSnapshotObject : public NativeObject {
 
   bool hasSnapshot() const {
     // The snapshot may not be present yet if we GC during initialization.
-    return !getSlot(SnapshotSlot).isUndefined();
+    return !getReservedSlot(SnapshotSlot).isUndefined();
   }
 
   ShapeSnapshot& snapshot() const {
-    void* ptr = getSlot(SnapshotSlot).toPrivate();
+    void* ptr = getReservedSlot(SnapshotSlot).toPrivate();
     MOZ_ASSERT(ptr);
     return *static_cast<ShapeSnapshot*>(ptr);
   }
