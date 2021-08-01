@@ -109,7 +109,8 @@ class nsFrameLoaderOwner : public nsISupports {
       mozilla::dom::BrowsingContextGroup* aGroup,
       std::function<void()>& aFrameLoaderInit, mozilla::ErrorResult& aRv);
 
-  void ChangeFrameLoaderCommon(mozilla::dom::Element* aOwner);
+  void ChangeFrameLoaderCommon(mozilla::dom::Element* aOwner,
+                               bool aRetainPaint);
 
  protected:
   virtual ~nsFrameLoaderOwner() = default;

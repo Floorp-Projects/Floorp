@@ -223,7 +223,8 @@ parent:
      */
     sync DispatchFocusToTopLevelWindow();
 
-parent:
+    async DidUnsuppressPainting();
+
     /**
      * When child sends this message, parent should move focus to
      * the next or previous focusable element or document.
