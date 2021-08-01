@@ -940,10 +940,41 @@ nsFrameLoader* nsSubDocumentFrame::FrameLoader() const {
   return mFrameLoader;
 }
 
-void nsSubDocumentFrame::ResetFrameLoader() {
+auto nsSubDocumentFrame::GetRemotePaintData() const -> RemoteFramePaintData {
+  if (mRetainedRemoteFrame) {
+    return *mRetainedRemoteFrame;
+  }
+
+  RemoteFramePaintData data;
+  nsFrameLoader* fl = FrameLoader();
+  if (!fl) {
+    return data;
+  }
+
+  auto* rb = fl->GetRemoteBrowser();
+  if (!rb) {
+    return data;
+  }
+  data.mLayersId = rb->GetLayersId();
+  data.mTabId = rb->GetTabId();
+  return data;
+}
+
+void nsSubDocumentFrame::ResetFrameLoader(RetainPaintData aRetain) {
+  if (aRetain == RetainPaintData::Yes && mFrameLoader) {
+    mRetainedRemoteFrame = Some(GetRemotePaintData());
+  } else {
+    mRetainedRemoteFrame.reset();
+  }
   mFrameLoader = nullptr;
   ClearDisplayItems();
   nsContentUtils::AddScriptRunner(new AsyncFrameInit(this));
+}
+
+void nsSubDocumentFrame::ClearRetainedPaintData() {
+  mRetainedRemoteFrame.reset();
+  ClearDisplayItems();
+  InvalidateFrameSubtree();
 }
 
 // XXX this should be called ObtainDocShell or something like that,
@@ -1213,7 +1244,6 @@ inline static bool IsTempLayerManager(LayerManager* aManager) {
 nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
                                  nsSubDocumentFrame* aFrame)
     : nsPaintedDisplayItem(aBuilder, aFrame),
-      mTabId{0},
       mEventRegionsOverride(EventRegionsOverride::NoOverride) {
   bool frameIsPointerEventsNone = aFrame->StyleUI()->GetEffectivePointerEvents(
                                       aFrame) == StylePointerEvents::None;
@@ -1225,12 +1255,7 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
     mEventRegionsOverride |= EventRegionsOverride::ForceDispatchToContent;
   }
 
-  nsFrameLoader* frameLoader = GetFrameLoader();
-  MOZ_ASSERT(frameLoader && frameLoader->IsRemoteFrame());
-  if (frameLoader->GetRemoteBrowser()) {
-    mLayersId = frameLoader->GetLayersId();
-    mTabId = frameLoader->GetRemoteBrowser()->GetTabId();
-  }
+  mPaintData = aFrame->GetRemotePaintData();
 }
 
 mozilla::LayerState nsDisplayRemote::GetLayerState(
@@ -1268,7 +1293,7 @@ already_AddRefed<mozilla::layers::Layer> nsDisplayRemote::BuildLayer(
     return nullptr;
   }
 
-  if (!mLayersId.IsValid()) {
+  if (!mPaintData.mLayersId.IsValid()) {
     return nullptr;
   }
 
@@ -1325,7 +1350,7 @@ already_AddRefed<mozilla::layers::Layer> nsDisplayRemote::BuildLayer(
   m.PostScale(aContainerParameters.mXScale, aContainerParameters.mYScale, 1.0);
   refLayer->SetBaseTransform(m);
   refLayer->SetEventRegionsOverride(mEventRegionsOverride);
-  refLayer->SetReferentId(mLayersId);
+  refLayer->SetReferentId(mPaintData.mLayersId);
   refLayer->SetRemoteDocumentSize(GetFrameSize(mFrame));
 
   return layer.forget();
@@ -1342,7 +1367,7 @@ void nsDisplayRemote::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   }
 
   DrawTarget* target = aCtx->GetDrawTarget();
-  if (!target->IsRecording() || mTabId == 0) {
+  if (!target->IsRecording() || mPaintData.mTabId == 0) {
     NS_WARNING("Remote iframe not rendered");
     return;
   }
@@ -1350,7 +1375,7 @@ void nsDisplayRemote::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   int32_t appUnitsPerDevPixel = pc->AppUnitsPerDevPixel();
   Rect destRect =
       NSRectToSnappedRect(GetContentRect(), appUnitsPerDevPixel, *target);
-  target->DrawDependentSurface(mTabId, destRect);
+  target->DrawDependentSurface(mPaintData.mTabId, destRect);
 }
 
 bool nsDisplayRemote::CreateWebRenderCommands(
@@ -1359,7 +1384,7 @@ bool nsDisplayRemote::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  if (!mLayersId.IsValid()) {
+  if (!mPaintData.mLayersId.IsValid()) {
     return true;
   }
 
@@ -1410,7 +1435,7 @@ bool nsDisplayRemote::CreateWebRenderCommands(
   rect += mOffset;
 
   aBuilder.PushIFrame(mozilla::wr::ToLayoutRect(rect), !BackfaceIsHidden(),
-                      mozilla::wr::AsPipelineId(mLayersId),
+                      mozilla::wr::AsPipelineId(mPaintData.mLayersId),
                       /*ignoreMissingPipelines*/ true);
 
   return true;
@@ -1419,12 +1444,12 @@ bool nsDisplayRemote::CreateWebRenderCommands(
 bool nsDisplayRemote::UpdateScrollData(
     mozilla::layers::WebRenderScrollData* aData,
     mozilla::layers::WebRenderLayerScrollData* aLayerData) {
-  if (!mLayersId.IsValid()) {
+  if (!mPaintData.mLayersId.IsValid()) {
     return true;
   }
 
   if (aLayerData) {
-    aLayerData->SetReferentId(mLayersId);
+    aLayerData->SetReferentId(mPaintData.mLayersId);
 
     // Apply the top level resolution if we are in the same process of the top
     // level document. We don't need to apply it in cases where we are in OOP
@@ -1447,8 +1472,7 @@ bool nsDisplayRemote::UpdateScrollData(
 }
 
 nsFrameLoader* nsDisplayRemote::GetFrameLoader() const {
-  return mFrame ? static_cast<nsSubDocumentFrame*>(mFrame)->FrameLoader()
-                : nullptr;
+  return static_cast<nsSubDocumentFrame*>(mFrame)->FrameLoader();
 }
 
 }  // namespace mozilla

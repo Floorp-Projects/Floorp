@@ -184,7 +184,7 @@ void nsFrameLoaderOwner::ChangeFrameLoaderCommon(Element* aOwner) {
   // Now that we've got a new FrameLoader, we need to reset our
   // nsSubDocumentFrame to use the new FrameLoader.
   if (nsSubDocumentFrame* ourFrame = do_QueryFrame(aOwner->GetPrimaryFrame())) {
-    ourFrame->ResetFrameLoader();
+    ourFrame->ResetFrameLoader(nsSubDocumentFrame::RetainPaintData::No);
   }
 
   // If the element is focused, or the current mouse over target then
