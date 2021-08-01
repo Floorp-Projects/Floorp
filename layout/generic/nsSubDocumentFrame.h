@@ -129,7 +129,10 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   }
 
   nsFrameLoader* FrameLoader() const;
-  void ResetFrameLoader();
+
+  enum class RetainPaintData : bool { No, Yes };
+  void ResetFrameLoader(RetainPaintData);
+  void ClearRetainedPaintData();
 
   void PropagateIsUnderHiddenEmbedderElementToSubView(
       bool aIsUnderHiddenEmbedderElement);
@@ -137,6 +140,13 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   void ClearDisplayItems();
 
   void SubdocumentIntrinsicSizeOrRatioChanged();
+
+  struct RemoteFramePaintData {
+    mozilla::layers::LayersId mLayersId;
+    mozilla::dom::TabId mTabId{0};
+  };
+
+  RemoteFramePaintData GetRemotePaintData() const;
 
  protected:
   friend class AsyncFrameInit;
@@ -170,10 +180,14 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   nsView* mOuterView;
   nsView* mInnerView;
 
-  bool mIsInline;
-  bool mPostedReflowCallback;
-  bool mDidCreateDoc;
-  bool mCallingShow;
+  // When process-switching a remote tab, we might temporarily paint the old
+  // one.
+  Maybe<RemoteFramePaintData> mRetainedRemoteFrame;
+
+  bool mIsInline : 1;
+  bool mPostedReflowCallback : 1;
+  bool mDidCreateDoc : 1;
+  bool mCallingShow : 1;
 };
 
 namespace mozilla {
@@ -222,10 +236,11 @@ class nsDisplayRemote final : public nsPaintedDisplayItem {
 
  private:
   friend class nsDisplayItem;
+  using RemoteFramePaintData = nsSubDocumentFrame::RemoteFramePaintData;
+
   nsFrameLoader* GetFrameLoader() const;
 
-  TabId mTabId;
-  LayersId mLayersId;
+  RemoteFramePaintData mPaintData;
   LayoutDevicePoint mOffset;
   EventRegionsOverride mEventRegionsOverride;
 };
