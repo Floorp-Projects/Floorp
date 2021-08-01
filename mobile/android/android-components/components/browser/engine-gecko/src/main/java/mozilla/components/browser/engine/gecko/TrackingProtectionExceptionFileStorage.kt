@@ -15,6 +15,8 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.kotlin.getOrigin
+import mozilla.components.support.ktx.kotlin.stripDefaultPort
 import mozilla.components.support.ktx.util.readAndDeserialize
 import org.json.JSONArray
 import org.mozilla.geckoview.ContentBlockingController.ContentBlockingException
@@ -53,8 +55,8 @@ internal class TrackingProtectionExceptionFileStorage(
     override fun contains(session: EngineSession, onResult: (Boolean) -> Unit) {
         val url = (session as GeckoEngineSession).currentUrl
         if (!url.isNullOrEmpty()) {
-            runtime.storageController.getPermissions(url).accept { permissions ->
-                val contains = permissions.filterTrackingProtectionExceptions().isNotEmpty()
+            getPermissions(url) { permissions ->
+                val contains = permissions.isNotEmpty()
                 onResult(contains)
             }
         } else {
@@ -71,6 +73,10 @@ internal class TrackingProtectionExceptionFileStorage(
 
     private fun List<ContentPermission>?.filterTrackingProtectionExceptions() =
         this.orEmpty().filter { it.isExcluded }
+
+    private fun List<ContentPermission>?.filterTrackingProtectionExceptions(url: String) =
+        this.orEmpty()
+            .filter { it.isExcluded && it.uri.getOrigin().orEmpty().stripDefaultPort() == url }
 
     private val ContentPermission.isExcluded: Boolean
         get() = this.permission == PERMISSION_TRACKING && value == VALUE_ALLOW
@@ -103,10 +109,23 @@ internal class TrackingProtectionExceptionFileStorage(
     @VisibleForTesting
     internal fun remove(url: String) {
         val storage = runtime.storageController
-        storage.getPermissions(url).accept { permissions ->
-            permissions.filterTrackingProtectionExceptions().forEach { geckoPermissions ->
+        getPermissions(url) { permissions ->
+            permissions.forEach { geckoPermissions ->
                 storage.setPermission(geckoPermissions, VALUE_DENY)
             }
+        }
+    }
+
+    // This is a workaround until https://bugzilla.mozilla.org/show_bug.cgi?id=1723280 gets addressed
+    private fun getPermissions(url: String, onFinish: (List<ContentPermission>) -> Unit) {
+        val localUrl = url.getOrigin().orEmpty().stripDefaultPort()
+        val storage = runtime.storageController
+        if (localUrl.isNotEmpty()) {
+            storage.allPermissions.accept { permissions ->
+                onFinish(permissions.filterTrackingProtectionExceptions(localUrl))
+            }
+        } else {
+            onFinish(emptyList())
         }
     }
 

@@ -200,7 +200,7 @@ class TrackingProtectionExceptionFileStorageTest {
         val geckoResult = GeckoResult<List<ContentPermission>>()
 
         whenever(runtime.storageController).thenReturn(storageController)
-        whenever(runtime.storageController.getPermissions(anyString())).thenReturn(geckoResult)
+        whenever(runtime.storageController.allPermissions).thenReturn(geckoResult)
 
         storage.remove("https://example.com/")
 
@@ -272,7 +272,7 @@ class TrackingProtectionExceptionFileStorageTest {
         val geckoResult = GeckoResult<List<ContentPermission>>()
 
         whenever(runtime.storageController).thenReturn(storageController)
-        whenever(runtime.storageController.getPermissions(anyString())).thenReturn(geckoResult)
+        whenever(runtime.storageController.allPermissions).thenReturn(geckoResult)
 
         whenever(session.currentUrl).thenReturn("https://example.com/")
         whenever(session.geckoSession).thenReturn(mockGeckoSession)
