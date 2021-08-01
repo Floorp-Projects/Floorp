@@ -646,13 +646,13 @@ class BrowserToolbarTest {
         var reloadPageAction = BrowserToolbar.TwoStateButton(reloadImage, "reload", stopImage, "stop") {}
         assertFalse(reloadPageAction.enabled)
         reloadPageAction.bind(view)
-        verify(view).setImageDrawable(stopImage)
-        verify(view).contentDescription = "stop"
+        verify(view).setImageDrawable(reloadImage)
+        verify(view).contentDescription = "reload"
 
         reloadPageAction = BrowserToolbar.TwoStateButton(reloadImage, "reload", stopImage, "stop", { false }) {}
         reloadPageAction.bind(view)
         verify(view).setImageDrawable(stopImage)
-        verify(view).contentDescription = "reload"
+        verify(view).contentDescription = "stop"
     }
 
     @Test
