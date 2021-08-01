@@ -28,7 +28,6 @@ UNIFIED_SOURCES += [
     "nsBoxLayoutState.cpp",
     "nsButtonBoxFrame.cpp",
     "nsRepeatService.cpp",
-    "nsRootBoxFrame.cpp",
     "nsScrollbarButtonFrame.cpp",
     "nsScrollbarFrame.cpp",
     "nsSliderFrame.cpp",

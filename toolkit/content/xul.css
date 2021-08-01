@@ -31,6 +31,7 @@
 :root {
   text-rendering: optimizeLegibility;
   -moz-control-character-visibility: visible;
+  height: 100%;
 }
 
 :root:-moz-locale-dir(rtl) {
