@@ -2535,8 +2535,7 @@ auto nsIFrame::ComputeShouldPaintBackground() const -> ShouldPaintBackground {
 }
 
 bool nsIFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
-                                              const nsDisplayListSet& aLists,
-                                              bool aForceBackground) {
+                                              const nsDisplayListSet& aLists) {
   const bool hitTesting = aBuilder->IsForEventDelivery();
   if (hitTesting && !aBuilder->HitTestIsForVisibility()) {
     // For hit-testing, we generally just need a light-weight data structure
@@ -2549,11 +2548,9 @@ bool nsIFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
   }
 
   AppendedBackgroundType result = AppendedBackgroundType::None;
-
-  // Here we don't try to detect background propagation. Frames that might
-  // receive a propagated background should just set aForceBackground to
-  // true.
-  if (hitTesting || aForceBackground ||
+  // Here we don't try to detect background propagation, canvas frame does its
+  // own thing.
+  if (hitTesting ||
       !StyleBackground()->IsTransparent(this) ||
       StyleDisplay()->HasAppearance() ||
       // We do forcibly create a display item for background color animations
@@ -2576,8 +2573,7 @@ bool nsIFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
 }
 
 void nsIFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
-                                              const nsDisplayListSet& aLists,
-                                              bool aForceBackground) {
+                                              const nsDisplayListSet& aLists) {
   // The visibility check belongs here since child elements have the
   // opportunity to override the visibility property and display even if
   // their parent is hidden.
@@ -2587,9 +2583,7 @@ void nsIFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
 
   DisplayOutsetBoxShadowUnconditional(aBuilder, aLists.BorderBackground());
 
-  bool bgIsThemed =
-      DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground);
-
+  bool bgIsThemed = DisplayBackgroundUnconditional(aBuilder, aLists);
   DisplayInsetBoxShadowUnconditional(aBuilder, aLists.BorderBackground());
 
   // If there's a themed background, we should not create a border item.
@@ -12125,7 +12119,6 @@ void DR_State::InitFrameTypeTable() {
   AddFrameTypeInfo(LayoutFrameType::Page, "page", "page");
   AddFrameTypeInfo(LayoutFrameType::Placeholder, "place", "placeholder");
   AddFrameTypeInfo(LayoutFrameType::Canvas, "canvas", "canvas");
-  AddFrameTypeInfo(LayoutFrameType::XULRoot, "xulroot", "xulroot");
   AddFrameTypeInfo(LayoutFrameType::Scroll, "scroll", "scroll");
   AddFrameTypeInfo(LayoutFrameType::TableCell, "cell", "tableCell");
   AddFrameTypeInfo(LayoutFrameType::TableCol, "col", "tableCol");
