@@ -35,9 +35,6 @@ mochitest-devtools-chrome:
 mochitest-webgpu:
     - mochitest-webgpu
 
-xpcshell:
-    - xpcshell
-
 talos:
     - talos-bcv
     - talos-chrome
@@ -246,7 +243,6 @@ windows-tests:
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
-    - xpcshell
 
 windows-ccov-tests:
     # jittest run on regular windows builds is redundant with SM(p), so we omit
@@ -266,6 +262,7 @@ windows10-2004-tests:
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
     - reftest
+    - xpcshell
 
 mingwclang-tests-debug:
     - cppunit

@@ -174,11 +174,6 @@ windows10-64-ccov-qr/opt:
         - ccov-code-coverage-tests
         - mochitest-webgpu
 
-windows10-64/opt:
-    build-platform: win64/opt
-    test-sets:
-        - xpcshell
-
 windows10-64-qr/debug:
     build-platform: win64/debug
     test-sets:

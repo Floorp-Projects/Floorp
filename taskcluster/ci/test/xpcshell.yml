@@ -33,11 +33,11 @@ job-defaults:
         requires-signed-builds:
             by-test-platform:
                 macosx1100.*: true
-                windows10-64-asan-qr/opt: false    # No XPCShell on ASAN yet
+                windows10-64-2004-asan-qr/opt: false    # No XPCShell on ASAN yet
                 windows10-32-mingwclang-qr/opt: false
                 windows10-32-mingwclang-qr/debug: false
-                windows10-64-mingwclang-qr/opt: false
-                windows10-64-mingwclang-qr/debug: false
+                windows10-64-2004-mingwclang-qr/opt: false
+                windows10-64-2004-mingwclang-qr/debug: false
                 windows.*: true
                 default: false
 
@@ -51,12 +51,12 @@ xpcshell:
                 by-test-platform:
                     .*-tsan-qr/opt: ['trunk']
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    windows10-64-asan-qr/opt: []  # No XPCShell on ASAN yet
+                    windows10-64-2004-asan-qr/opt: []  # No XPCShell on ASAN yet
                     default: built-projects
     chunks:
         by-test-platform:
             .*-ccov.*/.*: 6
-            windows10-64-ccov-qr/opt: 6
+            windows10-64-2004-ccov-qr/opt: 6
             android-em-7.*: 2
             macosx.*-64(-shippable|-devedition|-asan)?(-qr)?/.*: 2
             linux1804-64(-qr)?/debug: 6
@@ -75,7 +75,7 @@ xpcshell:
             fission: 2
             default:
                 by-test-platform:
-                    windows10-64-asan.*: 3
+                    windows10-64-2004-asan.*: 3
                     macosx1100.*: 2
                     android-em-7.0-x86_64-qr/debug-isolated-process: 3
                     default: default
