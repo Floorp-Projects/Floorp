@@ -214,9 +214,6 @@ static FrameCtorDebugFlags gFlags[] = {
 
 //------------------------------------------------------------------
 
-nsContainerFrame* NS_NewRootBoxFrame(PresShell* aPresShell,
-                                     ComputedStyle* aStyle);
-
 nsContainerFrame* NS_NewDocElementBoxFrame(PresShell* aPresShell,
                                            ComputedStyle* aStyle);
 
@@ -2595,7 +2592,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   Galley presentation, XUL
 
       ViewportFrame [fixed-cb]
-        nsRootBoxFrame
+        nsCanvasFrame [abs-cb]
           root element frame (nsDocElementBoxFrame)
 
   Print presentation, non-XUL
@@ -2632,7 +2629,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
     mRootElementFrame is "root element frame".  This is the primary frame for
       the root element.
     mDocElementContainingBlock is the parent of mRootElementFrame
-      (i.e. nsCanvasFrame or nsRootBoxFrame)
+      (i.e. nsCanvasFrame)
     mPageSequenceFrame is the nsPageSequenceFrame, or null if there isn't
       one
   */
@@ -2675,21 +2672,10 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
       static_cast<nsContainerFrame*>(GetRootFrame());
   ComputedStyle* viewportPseudoStyle = viewportFrame->Style();
 
-  nsContainerFrame* rootFrame = nullptr;
-
-#ifdef MOZ_XUL
-  if (aDocElement->IsXULElement()) {
-    // pass a temporary stylecontext, the correct one will be set later
-    rootFrame = NS_NewRootBoxFrame(mPresShell, viewportPseudoStyle);
-  } else
-#endif
-  {
-    // pass a temporary stylecontext, the correct one will be set later
-    rootFrame = NS_NewCanvasFrame(mPresShell, viewportPseudoStyle);
-    mHasRootAbsPosContainingBlock = true;
-  }
-
+  nsContainerFrame* rootFrame =
+    NS_NewCanvasFrame(mPresShell, viewportPseudoStyle);
   PseudoStyleType rootPseudo = PseudoStyleType::canvas;
+  mHasRootAbsPosContainingBlock = true;
   mDocElementContainingBlock = rootFrame;
 
   // --------- IF SCROLLABLE WRAP IN SCROLLFRAME --------
