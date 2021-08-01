@@ -220,7 +220,7 @@ void gfxFT2FontBase::InitMetrics() {
 
   if (FontSizeAdjust::Tag(mStyle.sizeAdjustBasis) !=
           FontSizeAdjust::Tag::None &&
-      mStyle.sizeAdjust >= 0.0 && mFTSize == 0.0) {
+      mStyle.sizeAdjust >= 0.0 && GetAdjustedSize() > 0.0 && mFTSize == 0.0) {
     // If font-size-adjust is in effect, we need to get metrics in order to
     // determine the aspect ratio, then compute the final adjusted size and
     // re-initialize metrics.
