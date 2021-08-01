@@ -147,6 +147,7 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   };
 
   RemoteFramePaintData GetRemotePaintData() const;
+  bool HasRetainedPaintData() const { return mRetainedRemoteFrame.isSome(); }
 
  protected:
   friend class AsyncFrameInit;

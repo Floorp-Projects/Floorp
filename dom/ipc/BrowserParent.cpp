@@ -132,6 +132,7 @@
 #include "nsISecureBrowserUI.h"
 #include "nsIXULRuntime.h"
 #include "VsyncSource.h"
+#include "nsSubDocumentFrame.h"
 
 #ifdef XP_WIN
 #  include "FxRWindowManager.h"
@@ -161,6 +162,8 @@ using namespace mozilla::gfx;
 
 using mozilla::LazyLogModule;
 using mozilla::Unused;
+
+extern mozilla::LazyLogModule gSHIPBFCacheLog;
 
 LazyLogModule gBrowserFocusLog("BrowserFocus");
 
@@ -646,6 +649,18 @@ void BrowserParent::Destroy() {
   mMarkedDestroying = true;
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvDidUnsuppressPainting() {
+  if (!mFrameElement) {
+    return IPC_OK();
+  }
+  nsSubDocumentFrame* subdocFrame =
+      do_QueryFrame(mFrameElement->GetPrimaryFrame());
+  if (subdocFrame && subdocFrame->HasRetainedPaintData()) {
+    subdocFrame->ClearRetainedPaintData();
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult BrowserParent::RecvEnsureLayersConnected(
     CompositorOptions* aCompositorOptions) {
   if (mRemoteLayerTreeOwner.IsInitialized()) {
@@ -663,10 +678,19 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
   ContentProcessManager::GetSingleton()->UnregisterRemoteFrame(mTabId);
 
   if (mRemoteLayerTreeOwner.IsInitialized()) {
+    auto layersId = mRemoteLayerTreeOwner.GetLayersId();
+    if (mFrameElement) {
+      nsSubDocumentFrame* f = do_QueryFrame(mFrameElement->GetPrimaryFrame());
+      if (f && f->HasRetainedPaintData() &&
+          f->GetRemotePaintData().mLayersId == layersId) {
+        f->ClearRetainedPaintData();
+      }
+    }
+
     // It's important to unmap layers after the remote browser has been
     // destroyed, otherwise it may still send messages to the compositor which
     // will reject them, causing assertions.
-    RemoveBrowserParentFromTable(mRemoteLayerTreeOwner.GetLayersId());
+    RemoveBrowserParentFromTable(layersId);
     mRemoteLayerTreeOwner.Destroy();
   }
 
@@ -3581,15 +3605,15 @@ void BrowserParent::LayerTreeUpdate(const LayersObserverEpoch& aEpoch,
     return;
   }
 
-  RefPtr<EventTarget> target = mFrameElement;
-  if (!target) {
+  RefPtr<Element> frameElement = mFrameElement;
+  if (!frameElement) {
     NS_WARNING("Could not locate target for layer tree message.");
     return;
   }
 
   mHasLayers = aActive;
 
-  RefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
+  RefPtr<Event> event = NS_NewDOMEvent(frameElement, nullptr, nullptr);
   if (aActive) {
     mHasPresented = true;
     event->InitEvent(u"MozLayerTreeReady"_ns, true, false);
@@ -3598,7 +3622,7 @@ void BrowserParent::LayerTreeUpdate(const LayersObserverEpoch& aEpoch,
   }
   event->SetTrusted(true);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
-  mFrameElement->DispatchEvent(*event);
+  frameElement->DispatchEvent(*event);
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvPaintWhileInterruptingJSNoOp(

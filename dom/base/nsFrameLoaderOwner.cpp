@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsFrameLoaderOwner.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "nsFrameLoader.h"
 #include "nsFocusManager.h"
 #include "nsNetUtil.h"
@@ -114,6 +115,10 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
   doc->BlockOnload();
   auto cleanup = MakeScopeExit([&]() { doc->UnblockOnload(false); });
 
+  // If we store the previous nsFrameLoader in the bfcache, this will be filled
+  // with the SessionHistoryEntry which now owns the frame.
+  RefPtr<SessionHistoryEntry> bfcacheEntry;
+
   {
     // Introduce a script blocker to ensure no JS is executed during the
     // nsFrameLoader teardown & recreation process. Unload listeners will be run
@@ -133,16 +138,16 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
 
       MOZ_ASSERT_IF(aOptions.mTryUseBFCache, aOptions.mReplaceBrowsingContext);
       if (aOptions.mTryUseBFCache && bc) {
-        SessionHistoryEntry* she =
-            bc->Canonical()->GetActiveSessionHistoryEntry();
-        bool useBFCache = she && she == aOptions.mActiveSessionHistoryEntry &&
-                          !she->GetFrameLoader();
+        bfcacheEntry = bc->Canonical()->GetActiveSessionHistoryEntry();
+        bool useBFCache = bfcacheEntry &&
+                          bfcacheEntry == aOptions.mActiveSessionHistoryEntry &&
+                          !bfcacheEntry->GetFrameLoader();
         if (useBFCache) {
           MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
                   ("nsFrameLoaderOwner::ChangeRemotenessCommon: store the old "
                    "page in bfcache"));
           Unused << bc->SetIsInBFCache(true);
-          she->SetFrameLoader(mFrameLoader);
+          bfcacheEntry->SetFrameLoader(mFrameLoader);
           // Session history owns now the frameloader.
           mFrameLoader = nullptr;
         }
@@ -177,14 +182,35 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
     }
   }
 
-  ChangeFrameLoaderCommon(owner);
+  // Now that we have a new FrameLoader, we'll eventually need to reset
+  // nsSubDocumentFrame to use the new one. We can delay doing this if we're
+  // keeping our old frameloader around in the BFCache and the new frame hasn't
+  // presented yet to continue painting the previous document.
+  //
+  // We may not have a `BrowserParent` yet, so if `IsRemoteFrame` is true, and
+  // `browserParent` is null, we know it hasn't painted yet.
+  bool retainPaint = true;
+  auto* browserParent = BrowserParent::GetFrom(mFrameLoader);
+  if (!bfcacheEntry || !mFrameLoader->IsRemoteFrame()) {
+    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
+            ("Previous frameLoader not entering BFCache - immediately "
+             "resetting nsSubDocumentFrame (bfcacheEntry=%p, isRemoteFrame=%d, "
+             "browserParent=%p)",
+             bfcacheEntry.get(), mFrameLoader->IsRemoteFrame(), browserParent));
+    retainPaint = false;
+  }
+
+  ChangeFrameLoaderCommon(owner, retainPaint);
 }
 
-void nsFrameLoaderOwner::ChangeFrameLoaderCommon(Element* aOwner) {
+void nsFrameLoaderOwner::ChangeFrameLoaderCommon(Element* aOwner,
+                                                 bool aRetainPaint) {
   // Now that we've got a new FrameLoader, we need to reset our
   // nsSubDocumentFrame to use the new FrameLoader.
   if (nsSubDocumentFrame* ourFrame = do_QueryFrame(aOwner->GetPrimaryFrame())) {
-    ourFrame->ResetFrameLoader(nsSubDocumentFrame::RetainPaintData::No);
+    auto retain = aRetainPaint ? nsSubDocumentFrame::RetainPaintData::Yes
+                               : nsSubDocumentFrame::RetainPaintData::No;
+    ourFrame->ResetFrameLoader(retain);
   }
 
   // If the element is focused, or the current mouse over target then
@@ -326,7 +352,7 @@ void nsFrameLoaderOwner::ReplaceFrameLoader(nsFrameLoader* aNewFrameLoader) {
   }
 
   RefPtr<Element> owner = do_QueryObject(this);
-  ChangeFrameLoaderCommon(owner);
+  ChangeFrameLoaderCommon(owner, /* aRetainPaint = */ false);
 }
 
 void nsFrameLoaderOwner::AttachFrameLoader(nsFrameLoader* aFrameLoader) {
