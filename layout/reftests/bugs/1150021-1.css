@@ -1,0 +1,10 @@
+window { direction: rtl; }
+.wide { background: red; width: 800px; height: 30px; display: inline-block;}
+
+#container {
+  background-color: yellow;
+}
+
+#rightBox {
+  margin-left: 1000px;
+}

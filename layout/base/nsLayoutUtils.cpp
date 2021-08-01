@@ -6089,7 +6089,7 @@ nsIFrame* nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame) {
 SamplingFilter nsLayoutUtils::GetSamplingFilterForFrame(nsIFrame* aForFrame) {
   SamplingFilter defaultFilter = SamplingFilter::GOOD;
   ComputedStyle* sc;
-  if (aForFrame->IsCanvasFrame()) {
+  if (nsCSSRendering::IsCanvasFrame(aForFrame)) {
     nsCSSRendering::FindBackground(aForFrame, &sc);
   } else {
     sc = aForFrame->Style();

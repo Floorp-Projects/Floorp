@@ -466,6 +466,8 @@ void APZCCallbackHelper::InitializeRootDisplayport(PresShell* aPresShell) {
       DisplayPortUtils::SetDisplayPortBaseIfNotSet(content, *baseRect);
     }
 
+    // Note that we also set the base rect that goes with these margins in
+    // nsRootBoxFrame::BuildDisplayList.
     DisplayPortUtils::SetDisplayPortMargins(
         content, aPresShell, DisplayPortMargins::Empty(content),
         DisplayPortUtils::ClearMinimalDisplayPortProperty::Yes, 0);
