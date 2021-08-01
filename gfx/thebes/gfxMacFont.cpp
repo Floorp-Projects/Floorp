@@ -247,7 +247,7 @@ void gfxMacFont::InitMetrics() {
 
   // Apply any size-adjust from the font enty to the given size; this may be
   // re-adjusted below if font-size-adjust is in effect.
-  mAdjustedSize = std::max(GetAdjustedSize(), 1.0);
+  mAdjustedSize = GetAdjustedSize();
   mFUnitsConvFactor = mAdjustedSize / upem;
 
   // For CFF fonts, when scaling values read from CGFont* APIs, we need to
@@ -288,7 +288,7 @@ void gfxMacFont::InitMetrics() {
 
   if (FontSizeAdjust::Tag(mStyle.sizeAdjustBasis) !=
           FontSizeAdjust::Tag::None &&
-      mStyle.sizeAdjust >= 0.0) {
+      mStyle.sizeAdjust >= 0.0 && GetAdjustedSize() > 0.0) {
     // apply font-size-adjust, and recalculate metrics
     gfxFloat aspect;
     switch (FontSizeAdjust::Tag(mStyle.sizeAdjustBasis)) {
