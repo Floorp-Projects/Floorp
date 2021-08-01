@@ -12,9 +12,8 @@ extern crate lazy_static;
 
 use bindgen::{Builder, CargoCallbacks, CodegenConfig};
 use std::env;
-use std::fs::{self, File};
-use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::fs;
+use std::path::PathBuf;
 
 lazy_static! {
     static ref OUTDIR_PATH: PathBuf = PathBuf::from(env::var_os("OUT_DIR").unwrap()).join("gecko");
