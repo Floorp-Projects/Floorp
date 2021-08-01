@@ -13,6 +13,7 @@ permalink: /changelog/
 
 * **browser-toolbar**
   * 🚒 Bug fixed [issue #10555](https://github.com/mozilla-mobile/android-components/issues/10555) - Prevent new touches from expanding a collapsed toolbar. Wait until there's a response from GeckoView on how the touch was handled to expand/collapse the toolbar.
+  * 🌟️ Adds Long-click support to `Button` and gives `TwoStateButton` all the features of `BrowserMenuItemToolbar.TwoStateButton`
 
 * **support-test**
   * ⚠️  Deprecation: `createTestCoroutinesDispatcher()` should be replaced with the preferred `TestCoroutineDispatcher()` from the `kotlinx-coroutines-test` library.
