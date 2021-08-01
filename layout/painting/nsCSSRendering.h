@@ -278,6 +278,11 @@ struct nsCSSRendering {
   static nsIFrame* FindBackgroundStyleFrame(nsIFrame* aForFrame);
 
   /**
+   * @return true if |aFrame| is a canvas frame, in the CSS sense.
+   */
+  static bool IsCanvasFrame(const nsIFrame* aFrame);
+
+  /**
    * Fill in an aBackgroundSC to be used to paint the background
    * for an element.  This applies the rules for propagating
    * backgrounds between BODY, the root element, and the canvas.
@@ -300,7 +305,7 @@ struct nsCSSRendering {
    *
    * @param aForFrame
    *   the frame used to represent the canvas, in the CSS sense (i.e.
-   *   aForFrame->IsCanvasFrame() must be true)
+   *   nsCSSRendering::IsCanvasFrame(aForFrame) must be true)
    * @param aRootElementFrame
    *   the frame representing the root element of the document
    * @param aBackground
@@ -309,7 +314,7 @@ struct nsCSSRendering {
 
   static nsIFrame* FindCanvasBackgroundFrame(const nsIFrame* aForFrame,
                                              nsIFrame* aRootElementFrame) {
-    MOZ_ASSERT(aForFrame->IsCanvasFrame(), "not a canvas frame");
+    MOZ_ASSERT(IsCanvasFrame(aForFrame), "not a canvas frame");
     if (aRootElementFrame) {
       return FindBackgroundStyleFrame(aRootElementFrame);
     }

@@ -3626,9 +3626,13 @@ AppendedBackgroundType nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
   }
 
   bool drawBackgroundColor = false;
-  bool drawBackgroundImage = false;
+  // XUL root frames need special handling for now even though they return true
+  // from nsCSSRendering::IsCanvasFrame they rely on us painting the background
+  // image from here, see bug 1665476.
+  bool drawBackgroundImage =
+      aFrame->IsXULRootFrame() && aFrame->ComputeShouldPaintBackground().mImage;
   nscolor color = NS_RGBA(0, 0, 0, 0);
-  if (bg && !(aFrame->IsCanvasFrame() || aFrame->IsViewportFrame())) {
+  if (!nsCSSRendering::IsCanvasFrame(aFrame) && bg) {
     color = nsCSSRendering::DetermineBackgroundColor(
         presContext, bgSC, aFrame, drawBackgroundImage, drawBackgroundColor);
   }

@@ -192,7 +192,7 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
       aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::_default,
                                          nsGkAtoms::_true, eIgnoreCase)) {
     nsIPopupContainer* popupContainer =
-        nsIPopupContainer::GetPopupContainer(PresShell());
+        nsIPopupContainer::GetPopupContainer(PresContext()->GetPresShell());
     if (popupContainer) {
       popupContainer->SetDefaultTooltip(aContent->AsElement());
     }
@@ -2369,7 +2369,7 @@ void nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot,
   if (pm) pm->PopupDestroyed(this);
 
   nsIPopupContainer* popupContainer =
-      nsIPopupContainer::GetPopupContainer(PresShell());
+      nsIPopupContainer::GetPopupContainer(PresContext()->GetPresShell());
   if (popupContainer && popupContainer->GetDefaultTooltip() == mContent) {
     popupContainer->SetDefaultTooltip(nullptr);
   }
