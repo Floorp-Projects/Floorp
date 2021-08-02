@@ -5620,6 +5620,33 @@ void LIRGenerator::visitBigIntAsUintN(MBigIntAsUintN* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitGuardNonGCThing(MGuardNonGCThing* ins) {
+  MDefinition* input = ins->input();
+
+  auto* guard = new (alloc()) LGuardNonGCThing(useBox(input));
+  assignSnapshot(guard, ins->bailoutKind());
+  add(guard, ins);
+  redefine(ins, input);
+}
+
+void LIRGenerator::visitToHashableNonGCThing(MToHashableNonGCThing* ins) {
+  auto* lir =
+      new (alloc()) LToHashableNonGCThing(useBox(ins->input()), tempDouble());
+  defineBox(lir, ins);
+}
+
+void LIRGenerator::visitHashNonGCThing(MHashNonGCThing* ins) {
+  auto* lir = new (alloc()) LHashNonGCThing(useBox(ins->input()), temp());
+  define(lir, ins);
+}
+
+void LIRGenerator::visitSetObjectHasNonBigInt(MSetObjectHasNonBigInt* ins) {
+  auto* lir = new (alloc())
+      LSetObjectHasNonBigInt(useRegister(ins->set()), useBox(ins->value()),
+                             useRegister(ins->hash()), temp(), temp());
+  define(lir, ins);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);

@@ -8957,6 +8957,73 @@ class LBigIntAsUintN32 : public LInstructionHelper<1, 1, 1 + INT64_PIECES> {
   LInt64Definition temp64() { return getInt64Temp(1); }
 };
 
+class LGuardNonGCThing : public LInstructionHelper<0, BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(GuardNonGCThing)
+
+  explicit LGuardNonGCThing(const LBoxAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Input, input);
+  }
+
+  static constexpr size_t Input = 0;
+};
+
+class LToHashableNonGCThing
+    : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1> {
+ public:
+  LIR_HEADER(ToHashableNonGCThing)
+
+  LToHashableNonGCThing(const LBoxAllocation& input,
+                        const LDefinition& tempFloat)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Input, input);
+    setTemp(0, tempFloat);
+  }
+
+  static constexpr size_t Input = 0;
+
+  const LDefinition* tempFloat() { return getTemp(0); }
+};
+
+class LHashNonGCThing : public LInstructionHelper<1, BOX_PIECES, 1> {
+ public:
+  LIR_HEADER(HashNonGCThing)
+
+  LHashNonGCThing(const LBoxAllocation& input, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Input, input);
+    setTemp(0, temp);
+  }
+
+  static constexpr size_t Input = 0;
+
+  const LDefinition* temp() { return getTemp(0); }
+};
+
+class LSetObjectHasNonBigInt : public LInstructionHelper<1, 2 + BOX_PIECES, 2> {
+ public:
+  LIR_HEADER(SetObjectHasNonBigInt)
+
+  LSetObjectHasNonBigInt(const LAllocation& setObject,
+                         const LBoxAllocation& input, const LAllocation& hash,
+                         const LDefinition& temp1, const LDefinition& temp2)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, setObject);
+    setBoxOperand(Input, input);
+    setOperand(Input + BOX_PIECES, hash);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  static constexpr size_t Input = 1;
+
+  const LAllocation* setObject() { return getOperand(0); }
+  const LAllocation* hash() { return getOperand(Input + BOX_PIECES); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
