@@ -49,7 +49,16 @@ class VulkanLibrary final : NonCopyable
         {
             mLibVulkan = OpenSharedLibraryWithExtension(libraryName);
             if (mLibVulkan)
-                break;
+            {
+                if (mLibVulkan->getNative())
+                {
+                    break;
+                }
+                else
+                {
+                    SafeDelete(mLibVulkan);
+                }
+            }
         }
 
         if (!mLibVulkan)

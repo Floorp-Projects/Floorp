@@ -89,23 +89,19 @@ class TOutputGLSLBase : public TIntermTraverser
 
     void declareStruct(const TStructure *structure);
     void writeQualifier(TQualifier qualifier, const TType &type, const TSymbol *symbol);
-    bool structDeclared(const TStructure *structure) const;
 
     const char *mapQualifierToString(TQualifier qualifier);
 
     sh::GLenum getShaderType() { return mShaderType; }
 
   private:
-    void declareInterfaceBlockLayout(const TInterfaceBlock *interfaceBlock);
-    void declareInterfaceBlock(const TInterfaceBlock *interfaceBlock);
+    void declareInterfaceBlockLayout(const TType &type);
+    void declareInterfaceBlock(const TType &type);
 
     void writeBuiltInFunctionTriplet(Visit visit, TOperator op, bool useEmulatedFunction);
 
     TInfoSinkBase &mObjSink;
     bool mDeclaringVariable;
-
-    // This set contains all the ids of the structs from every scope.
-    std::set<int> mDeclaredStructs;
 
     ShArrayIndexClampingStrategy mClampingStrategy;
 
@@ -128,6 +124,14 @@ void WriteGeometryShaderLayoutQualifiers(TInfoSinkBase &out,
                                          int invocations,
                                          sh::TLayoutPrimitiveType outputPrimitive,
                                          int maxVertices);
+
+void WriteTessControlShaderLayoutQualifiers(TInfoSinkBase &out, int inputVertices);
+
+void WriteTessEvaluationShaderLayoutQualifiers(TInfoSinkBase &out,
+                                               sh::TLayoutTessEvaluationType inputPrimitive,
+                                               sh::TLayoutTessEvaluationType inputVertexSpacing,
+                                               sh::TLayoutTessEvaluationType inputOrdering,
+                                               sh::TLayoutTessEvaluationType inputPoint);
 
 bool NeedsToWriteLayoutQualifier(const TType &type);
 

@@ -200,6 +200,8 @@ angle::Result Image11::recoverFromAssociatedStorage(const gl::Context *context)
 
         // Reset all the recovery parameters, even if the texture storage association is broken.
         disassociateStorage();
+
+        markDirty();
     }
 
     return angle::Result::Continue;
