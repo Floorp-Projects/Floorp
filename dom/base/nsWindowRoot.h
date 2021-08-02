@@ -94,7 +94,7 @@ class nsWindowRoot final : public nsPIWindowRoot {
 
   // The BrowserParents that are currently registered with this top-level
   // window.
-  typedef nsTHashSet<RefPtr<nsIWeakReference>> WeakBrowserTable;
+  using WeakBrowserTable = nsTHashSet<RefPtr<nsIWeakReference>>;
   WeakBrowserTable mWeakBrowsers;
 };
 

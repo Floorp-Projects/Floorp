@@ -17,8 +17,8 @@
 class nsDocShell;
 class nsIURI;
 
-typedef unsigned long long DOMTimeMilliSec;
-typedef double DOMHighResTimeStamp;
+using DOMTimeMilliSec = unsigned long long;
+using DOMHighResTimeStamp = double;
 
 class PickleIterator;
 namespace IPC {

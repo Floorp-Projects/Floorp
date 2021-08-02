@@ -19,8 +19,8 @@
 
 class nsAtom;
 
-typedef void (*NSPropertyFunc)(void* aObject, nsAtom* aPropertyName,
-                               void* aPropertyValue, void* aData);
+using NSPropertyFunc = void (*)(void* aObject, nsAtom* aPropertyName,
+                                void* aPropertyValue, void* aData);
 
 /**
  * Callback type for property destructors.  |aObject| is the object
@@ -28,7 +28,7 @@ typedef void (*NSPropertyFunc)(void* aObject, nsAtom* aPropertyName,
  * being removed, |aPropertyValue| is the value of the property, and |aData|
  * is the opaque destructor data that was passed to SetProperty().
  **/
-typedef NSPropertyFunc NSPropertyDtorFunc;
+using NSPropertyDtorFunc = NSPropertyFunc;
 class nsINode;
 class nsIFrame;
 

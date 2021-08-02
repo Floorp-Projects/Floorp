@@ -5707,7 +5707,7 @@ CallState nsGlobalWindowInner::CallOnInProcessDescendantsInternal(
         // method. This allows us to handle both void returning methods and
         // methods that return CallState explicitly.  For void returning methods
         // we assume CallState::Continue.
-        typedef decltype((inner->*aMethod)(aArgs...)) returnType;
+        using returnType = decltype((inner->*aMethod)(aArgs...));
         state = CallDescendant<returnType>(inner, aMethod, aArgs...);
 
         if (state == CallState::Stop) {

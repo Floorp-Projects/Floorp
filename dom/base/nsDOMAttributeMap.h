@@ -60,8 +60,8 @@ class nsAttrKey {
  */
 class nsAttrHashKey : public PLDHashEntryHdr {
  public:
-  typedef const nsAttrKey& KeyType;
-  typedef const nsAttrKey* KeyTypePointer;
+  using KeyType = const nsAttrKey&;
+  using KeyTypePointer = const nsAttrKey*;
 
   explicit nsAttrHashKey(KeyTypePointer aKey) : mKey(*aKey) {}
   nsAttrHashKey(const nsAttrHashKey& aCopy)
@@ -88,11 +88,11 @@ class nsAttrHashKey : public PLDHashEntryHdr {
 
 class nsDOMAttributeMap final : public nsISupports, public nsWrapperCache {
  public:
-  typedef mozilla::dom::Attr Attr;
-  typedef mozilla::dom::DocGroup DocGroup;
-  typedef mozilla::dom::Document Document;
-  typedef mozilla::dom::Element Element;
-  typedef mozilla::ErrorResult ErrorResult;
+  using Attr = mozilla::dom::Attr;
+  using DocGroup = mozilla::dom::DocGroup;
+  using Document = mozilla::dom::Document;
+  using Element = mozilla::dom::Element;
+  using ErrorResult = mozilla::ErrorResult;
 
   explicit nsDOMAttributeMap(Element* aContent);
 
@@ -124,7 +124,7 @@ class nsDOMAttributeMap final : public nsISupports, public nsWrapperCache {
    */
   uint32_t Count() const;
 
-  typedef nsRefPtrHashtable<nsAttrHashKey, Attr> AttrCache;
+  using AttrCache = nsRefPtrHashtable<nsAttrHashKey, Attr>;
 
   static void BlastSubtreeToPieces(nsINode* aNode);
 

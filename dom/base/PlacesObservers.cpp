@@ -57,10 +57,10 @@ StaticAutoPtr<FlaggedArray<T>> ListenerCollection<T>::gListeners;
 template <class T>
 StaticAutoPtr<FlaggedArray<T>> ListenerCollection<T>::gListenersToRemove;
 
-typedef ListenerCollection<RefPtr<PlacesEventCallback>> JSListeners;
-typedef ListenerCollection<WeakPtr<PlacesWeakCallbackWrapper>> WeakJSListeners;
-typedef ListenerCollection<WeakPtr<places::INativePlacesEventCallback>>
-    WeakNativeListeners;
+using JSListeners = ListenerCollection<RefPtr<PlacesEventCallback>>;
+using WeakJSListeners = ListenerCollection<WeakPtr<PlacesWeakCallbackWrapper>>;
+using WeakNativeListeners =
+    ListenerCollection<WeakPtr<places::INativePlacesEventCallback>>;
 
 static bool gCallingListeners = false;
 

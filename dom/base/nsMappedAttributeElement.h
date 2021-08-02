@@ -22,10 +22,10 @@ class MappedDeclarations;
 class nsMappedAttributes;
 struct nsRuleData;
 
-typedef void (*nsMapRuleToAttributesFunc)(const nsMappedAttributes* aAttributes,
-                                          mozilla::MappedDeclarations&);
+using nsMapRuleToAttributesFunc = void (*)(
+    const nsMappedAttributes* aAttributes, mozilla::MappedDeclarations&);
 
-typedef nsStyledElement nsMappedAttributeElementBase;
+using nsMappedAttributeElementBase = nsStyledElement;
 
 class nsMappedAttributeElement : public nsMappedAttributeElementBase {
  protected:

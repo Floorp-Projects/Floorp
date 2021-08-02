@@ -285,18 +285,18 @@ class nsINode : public mozilla::dom::EventTarget {
   void AssertInvariantsOnNodeInfoChange();
 #endif
  public:
-  typedef mozilla::dom::BoxQuadOptions BoxQuadOptions;
-  typedef mozilla::dom::ConvertCoordinateOptions ConvertCoordinateOptions;
-  typedef mozilla::dom::DocGroup DocGroup;
-  typedef mozilla::dom::Document Document;
-  typedef mozilla::dom::DOMPoint DOMPoint;
-  typedef mozilla::dom::DOMPointInit DOMPointInit;
-  typedef mozilla::dom::DOMQuad DOMQuad;
-  typedef mozilla::dom::DOMRectReadOnly DOMRectReadOnly;
-  typedef mozilla::dom::OwningNodeOrString OwningNodeOrString;
-  typedef mozilla::dom::TextOrElementOrDocument TextOrElementOrDocument;
-  typedef mozilla::dom::CallerType CallerType;
-  typedef mozilla::ErrorResult ErrorResult;
+  using BoxQuadOptions = mozilla::dom::BoxQuadOptions;
+  using ConvertCoordinateOptions = mozilla::dom::ConvertCoordinateOptions;
+  using DocGroup = mozilla::dom::DocGroup;
+  using Document = mozilla::dom::Document;
+  using DOMPoint = mozilla::dom::DOMPoint;
+  using DOMPointInit = mozilla::dom::DOMPointInit;
+  using DOMQuad = mozilla::dom::DOMQuad;
+  using DOMRectReadOnly = mozilla::dom::DOMRectReadOnly;
+  using OwningNodeOrString = mozilla::dom::OwningNodeOrString;
+  using TextOrElementOrDocument = mozilla::dom::TextOrElementOrDocument;
+  using CallerType = mozilla::dom::CallerType;
+  using ErrorResult = mozilla::ErrorResult;
 
   // XXXbz Maybe we should codegen a class holding these constants and
   // inherit from it...

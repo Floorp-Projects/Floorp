@@ -20,7 +20,7 @@ class ShadowParts;
 }
 
 struct MiscContainer final {
-  typedef nsAttrValue::ValueType ValueType;
+  using ValueType = nsAttrValue::ValueType;
 
   ValueType mType;
   // mStringBits points to either nsAtom* or nsStringBuffer* and is used when

@@ -78,7 +78,7 @@ class nsContentSink : public nsICSSLoaderObserver,
                       public nsITimerCallback,
                       public nsINamed {
  protected:
-  typedef mozilla::dom::Document Document;
+  using Document = mozilla::dom::Document;
 
  private:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

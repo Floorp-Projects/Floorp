@@ -43,7 +43,7 @@ class Element;
  */
 class IDTracker {
  public:
-  typedef mozilla::dom::Element Element;
+  using Element = mozilla::dom::Element;
 
   IDTracker();
 
