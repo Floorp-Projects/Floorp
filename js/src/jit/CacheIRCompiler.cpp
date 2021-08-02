@@ -1645,6 +1645,20 @@ bool CacheIRCompiler::emitGuardToInt32(ValOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardToNonGCThing(ValOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  ValueOperand input = allocator.useValueRegister(masm, inputId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.branchTestGCThing(Assembler::Equal, input, failure->label());
+  return true;
+}
+
 // Infallible |emitDouble| emitters can use this implementation to avoid
 // generating extra clean-up instructions to restore the scratch float register.
 // To select this function simply omit the |Label* fail| parameter for the
@@ -8139,6 +8153,29 @@ bool CacheIRCompiler::emitSetHasResult(ObjOperandId setId, ValOperandId valId) {
 
   using Fn = bool (*)(JSContext*, HandleObject, HandleValue, bool*);
   callvm.call<Fn, jit::SetObjectHas>();
+  return true;
+}
+
+bool CacheIRCompiler::emitSetHasNonGCThingResult(ObjOperandId setId,
+                                                 ValOperandId valId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register set = allocator.useRegister(masm, setId);
+  ValueOperand val = allocator.useValueRegister(masm, valId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
+  AutoScratchRegister scratch4(allocator, masm);
+  AutoAvailableFloatRegister scratchFloat(*this, FloatReg0);
+
+  masm.toHashableNonGCThing(val, output.valueReg(), scratchFloat);
+  masm.prepareHashNonGCThing(output.valueReg(), scratch1, scratch2);
+
+  masm.setObjectHasNonBigInt(set, output.valueReg(), scratch1, scratch2,
+                             scratch3, scratch4);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch2, output.valueReg());
   return true;
 }
 
