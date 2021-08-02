@@ -2823,6 +2823,11 @@ bool SetObjectHas(JSContext* cx, HandleObject obj, HandleValue key,
   return SetObject::has(cx, obj, key, rval);
 }
 
+bool MapObjectHas(JSContext* cx, HandleObject obj, HandleValue key,
+                  bool* rval) {
+  return MapObject::has(cx, obj, key, rval);
+}
+
 void AssumeUnreachable(const char* output) {
   MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
 }
