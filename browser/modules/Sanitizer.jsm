@@ -111,7 +111,9 @@ var Sanitizer = {
       throw new Error("Sanitizer.showUI expected a browser window argument.");
     }
 
-    parentWindow.gDialogBox.open("chrome://browser/content/sanitize.xhtml", {});
+    parentWindow.gDialogBox.open("chrome://browser/content/sanitize.xhtml", {
+      inBrowserWindow: true,
+    });
   },
 
   /**

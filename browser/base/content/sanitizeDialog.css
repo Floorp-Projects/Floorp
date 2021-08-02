@@ -34,3 +34,12 @@
   padding: 0 16px;
   margin: 0;
 }
+
+#titleText {
+  margin-block-start: 0;
+  margin-inline: 4px;
+}
+
+dialog:not([inbrowserwindow]) #titleText {
+  display: none;
+}
