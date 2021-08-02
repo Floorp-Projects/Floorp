@@ -140,32 +140,31 @@ already_AddRefed<Localization> Localization::Create(
   return MakeAndAddRef<Localization>(aResourceIds, aIsSync);
 }
 
-Localization::Localization(const nsTArray<nsCString>& aResIds, bool aIsSync)
-    : mIsSync(aIsSync) {
-  ffi::localization_new(&aResIds, mIsSync, nullptr, getter_AddRefs(mRaw));
+Localization::Localization(const nsTArray<nsCString>& aResIds, bool aIsSync) {
+  ffi::localization_new(&aResIds, aIsSync, nullptr, getter_AddRefs(mRaw));
 
   RegisterObservers();
 }
 
 Localization::Localization(nsIGlobalObject* aGlobal,
                            const nsTArray<nsCString>& aResIds, bool aIsSync)
-    : mGlobal(aGlobal), mIsSync(aIsSync) {
-  ffi::localization_new(&aResIds, mIsSync, nullptr, getter_AddRefs(mRaw));
+    : mGlobal(aGlobal) {
+  ffi::localization_new(&aResIds, aIsSync, nullptr, getter_AddRefs(mRaw));
 
   RegisterObservers();
 }
 
 Localization::Localization(nsIGlobalObject* aGlobal, bool aIsSync)
-    : mGlobal(aGlobal), mIsSync(aIsSync) {
+    : mGlobal(aGlobal) {
   nsTArray<nsCString> resIds;
-  ffi::localization_new(&resIds, mIsSync, nullptr, getter_AddRefs(mRaw));
+  ffi::localization_new(&resIds, aIsSync, nullptr, getter_AddRefs(mRaw));
 
   RegisterObservers();
 }
 
 Localization::Localization(nsIGlobalObject* aGlobal, bool aIsSync,
                            const ffi::LocalizationRc* aRaw)
-    : mGlobal(aGlobal), mRaw(aRaw), mIsSync(aIsSync) {
+    : mGlobal(aGlobal), mRaw(aRaw) {
   RegisterObservers();
 }
 
@@ -237,12 +236,6 @@ void Localization::RegisterObservers() {
 }
 
 void Localization::OnChange() { ffi::localization_on_change(mRaw.get()); }
-
-void Localization::SetIsSync(bool aIsSync) {
-  MOZ_ASSERT(!aIsSync, "We should only move from sync to async!");
-  mIsSync = aIsSync;
-  Upgrade();
-}
 
 void Localization::AddResourceId(const nsAString& aResourceId) {
   NS_ConvertUTF16toUTF8 resId(aResourceId);
@@ -464,7 +457,8 @@ void Localization::FormatMessagesSync(
   aRetVal = ConvertToL10nMessages(result, aRv);
 }
 
-void Localization::Upgrade() { ffi::localization_upgrade(mRaw.get()); }
+void Localization::SetAsync() { ffi::localization_set_async(mRaw.get()); }
+bool Localization::IsSync() { return ffi::localization_is_sync(mRaw.get()); }
 
 /**
  * PromiseResolver is a PromiseNativeHandler used
