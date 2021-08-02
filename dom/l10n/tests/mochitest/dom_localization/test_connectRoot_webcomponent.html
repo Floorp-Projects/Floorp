@@ -44,18 +44,20 @@
   </script>
   <script type="application/javascript">
   "use strict";
-  async function* generateBundles(resourceIds) {
-    const bundle = new FluentBundle("en-US");
-    bundle.addResource(new FluentResource(`
+  const l10nReg = new L10nRegistry();
+  const fs = [
+    { path: "/localization/en-US/mock.ftl", source: `
 key1 = Value for Key 1
-    `));
-    yield bundle;
-  }
+` },
+  ];
+  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
+  l10nReg.registerSources([source]);
 
   document.domLoc = new DOMLocalization(
-    [],
+    ["/mock.ftl"],
     false,
-    { generateBundles }
+    l10nReg,
+    ["en-US"],
   );
   </script>
 </head>

@@ -4171,7 +4171,7 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
     mDocumentL10n = DocumentL10n::Create(this, isSync);
     MOZ_ASSERT(mDocumentL10n);
   }
-  mDocumentL10n->AddResourceId(href);
+  mDocumentL10n->AddResourceId(NS_ConvertUTF16toUTF8(href));
 
   if (mReadyState >= READYSTATE_INTERACTIVE) {
     mDocumentL10n->TriggerInitialTranslation();
@@ -4194,7 +4194,8 @@ void Document::LocalizationLinkRemoved(Element* aLinkElement) {
   if (mDocumentL10n) {
     nsAutoString href;
     aLinkElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
-    uint32_t remaining = mDocumentL10n->RemoveResourceId(href);
+    uint32_t remaining =
+        mDocumentL10n->RemoveResourceId(NS_ConvertUTF16toUTF8(href));
     if (remaining == 0) {
       if (mDocumentL10n->mBlockingLayout) {
         mDocumentL10n->mBlockingLayout = false;
