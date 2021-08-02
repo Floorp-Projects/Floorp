@@ -9,7 +9,7 @@
 requestLongerTimeout(2);
 
 const TEST_PATH =
-  "http://example.com/browser/devtools/client/webconsole/" + "test/browser/";
+  "https://example.com/browser/devtools/client/webconsole/" + "test/browser/";
 const TEST_URI_WARNING = `${TEST_PATH}test-ineffective-iframe-sandbox-warning0.html`;
 const TEST_URI_NOWARNING = [
   `${TEST_PATH}test-ineffective-iframe-sandbox-warning1.html`,

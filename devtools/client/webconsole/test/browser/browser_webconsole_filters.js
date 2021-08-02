@@ -10,6 +10,7 @@ const TEST_URI =
   "test/browser/test-console-filters.html";
 
 add_task(async function() {
+  await pushPref("dom.security.https_first", false);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const filterState = await getFilterState(hud);

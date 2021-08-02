@@ -5,7 +5,7 @@
 // Test top-level target switching in the DOM panel.
 
 const PARENT_PROCESS_URI = "about:robots";
-const CONTENT_PROCESS_URI = URL_ROOT + "page_basic.html";
+const CONTENT_PROCESS_URI = URL_ROOT_SSL + "page_basic.html";
 
 add_task(async function() {
   // We use about:robots as the starting page because it will run in the parent process.

@@ -179,7 +179,7 @@ add_task(async function() {
 });
 
 function getDocumentBuilderUrl(origin, gridContainerId) {
-  return `http://${origin}/document-builder.sjs?html=${encodeURIComponent(
+  return `https://${origin}/document-builder.sjs?html=${encodeURIComponent(
     `<style>
       #${gridContainerId} {
         display: grid;

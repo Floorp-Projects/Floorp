@@ -5,7 +5,7 @@
 // Check that the font editor has a section for "All fonts" which shows all fonts
 // used on the page.
 
-const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
+const TEST_URI = URL_ROOT_SSL + "doc_browser_fontinspector.html";
 
 add_task(async function() {
   const { view } = await openFontInspectorForURL(TEST_URI);
@@ -27,25 +27,25 @@ add_task(async function() {
       familyName: ["bar"],
       name: ["Ostrich Sans Medium"],
       remote: true,
-      url: URL_ROOT + "ostrich-regular.ttf",
+      url: URL_ROOT_SSL + "ostrich-regular.ttf",
     },
     {
       familyName: ["bar"],
       name: ["Ostrich Sans Black"],
       remote: true,
-      url: URL_ROOT + "ostrich-black.ttf",
+      url: URL_ROOT_SSL + "ostrich-black.ttf",
     },
     {
       familyName: ["bar"],
       name: ["Ostrich Sans Black"],
       remote: true,
-      url: URL_ROOT + "ostrich-black.ttf",
+      url: URL_ROOT_SSL + "ostrich-black.ttf",
     },
     {
       familyName: ["barnormal"],
       name: ["Ostrich Sans Medium"],
       remote: true,
-      url: URL_ROOT + "ostrich-regular.ttf",
+      url: URL_ROOT_SSL + "ostrich-regular.ttf",
     },
     {
       // On Linux, Arial does not exist. Liberation Sans is used instead.
