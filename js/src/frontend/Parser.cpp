@@ -22,7 +22,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
 #include "mozilla/Range.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Utf8.h"
@@ -897,122 +896,6 @@ bool ParserBase::noteUsedNameInternal(TaggedParserAtomIndex name,
 
   return usedNames_.noteUse(cx_, name, visibility, pc_->scriptId(), scope->id(),
                             tokenPosition);
-}
-
-bool CompilationInput::cacheScript(JSContext* cx, LifoAlloc& alloc,
-                                   ParserAtomsTable& parseAtoms) {
-  using ScriptDataSpan = mozilla::Span<ScriptStencil>;
-  using ScriptExtraSpan = mozilla::Span<ScriptStencilExtra>;
-  cachedScriptData_ = ScriptDataSpan(nullptr);
-  cachedScriptExtra_ = ScriptExtraSpan(nullptr);
-  if (!lazy_) {
-    return true;
-  }
-
-  auto gcthings = lazy_->gcthings();
-  size_t length = gcthings.Length();
-  if (length == 0) {
-    return true;
-  }
-
-  // Reduce the length to the first element which is not a function.
-  for (size_t i = 0; i < length; i++) {
-    gc::Cell* cell = gcthings[i].asCell();
-    if (!cell || !cell->is<JSObject>()) {
-      length = i;
-      break;
-    }
-    MOZ_ASSERT(cell->as<JSObject>()->is<JSFunction>());
-  }
-
-  ScriptStencil* scriptData =
-      alloc.newArrayUninitialized<ScriptStencil>(length);
-  ScriptStencilExtra* scriptExtra =
-      alloc.newArrayUninitialized<ScriptStencilExtra>(length);
-  if (!scriptData || !scriptExtra) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  for (size_t i = 0; i < length; i++) {
-    gc::Cell* cell = gcthings[i].asCell();
-    RootedFunction fun(cx, &cell->as<JSObject>()->as<JSFunction>());
-    new (mozilla::KnownNotNull, &scriptData[i]) ScriptStencil();
-    ScriptStencil& data = scriptData[i];
-    new (mozilla::KnownNotNull, &scriptExtra[i]) ScriptStencilExtra();
-    ScriptStencilExtra& extra = scriptExtra[i];
-
-    if (fun->displayAtom()) {
-      TaggedParserAtomIndex displayAtom =
-          parseAtoms.internJSAtom(cx, atomCache, fun->displayAtom());
-      if (!displayAtom) {
-        return false;
-      }
-      data.functionAtom = displayAtom;
-    }
-    data.functionFlags = fun->flags();
-
-    BaseScript* lazy = fun->baseScript();
-    extra.immutableFlags = lazy->immutableFlags();
-    extra.extent = lazy->extent();
-
-    // Info derived from parent compilation should not be set yet for our inner
-    // lazy functions. Instead that info will be updated when we finish our
-    // compilation.
-    MOZ_ASSERT(lazy->hasEnclosingScript());
-  }
-
-  cachedScriptData_ = ScriptDataSpan(scriptData, length);
-  cachedScriptExtra_ = ScriptExtraSpan(scriptExtra, length);
-  return true;
-}
-
-bool CompilationInput::cacheGCThings(JSContext* cx, LifoAlloc& alloc,
-                                     ParserAtomsTable& parseAtoms) {
-  using GCThingsSpan = mozilla::Span<TaggedScriptThingIndex>;
-  cachedGCThings_ = GCThingsSpan(nullptr);
-  if (!lazy_) {
-    return true;
-  }
-  auto gcthings = lazy_->gcthings();
-  size_t length = gcthings.Length();
-  if (length == 0) {
-    return true;
-  }
-
-  TaggedScriptThingIndex* gcThingsData =
-      alloc.newArrayUninitialized<TaggedScriptThingIndex>(length);
-  if (!gcThingsData) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  size_t scriptIndex = 0;
-  for (size_t i = 0; i < length; i++) {
-    gc::Cell* cell = gcthings[i].asCell();
-    if (!cell) {
-      gcThingsData[i] = TaggedScriptThingIndex();
-      continue;
-    }
-    if (cell->is<JSObject>()) {
-      MOZ_ASSERT(cell->as<JSObject>()->is<JSFunction>());
-      MOZ_ASSERT(scriptIndex < cachedScriptData_.Length());
-      gcThingsData[i] = TaggedScriptThingIndex(ScriptIndex(scriptIndex++));
-      continue;
-    }
-
-    MOZ_ASSERT(cell->as<JSString>()->isAtom());
-    auto name = static_cast<JSAtom*>(cell);
-    auto parserAtom = parseAtoms.internJSAtom(cx, atomCache, name);
-    if (!parserAtom) {
-      return false;
-    }
-
-    gcThingsData[i] = TaggedScriptThingIndex(parserAtom);
-  }
-
-  cachedGCThings_ = GCThingsSpan(gcThingsData, length);
-  return true;
 }
 
 template <class ParseHandler>

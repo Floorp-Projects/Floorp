@@ -53,9 +53,7 @@ class FullParseHandler {
   // - lazyClosedOverBindingIndex is used to synchronize binding computation
   //   with the scope traversal.
   //   (see propagateFreeNamesAndMarkClosedOverBindings),
-  const mozilla::Span<TaggedScriptThingIndex> gcThingsData;
-  const mozilla::Span<ScriptStencil> scriptData_;
-  const mozilla::Span<ScriptStencilExtra> scriptExtra_;
+  const CompilationSyntaxParseCache& previousParseCache_;
 
   size_t lazyInnerFunctionIndex;
   size_t lazyClosedOverBindingIndex;
@@ -109,9 +107,7 @@ class FullParseHandler {
 
   FullParseHandler(JSContext* cx, CompilationState& compilationState)
       : allocator(cx, compilationState.allocScope.alloc()),
-        gcThingsData(compilationState.input.gcThings()),
-        scriptData_(compilationState.input.scriptData()),
-        scriptExtra_(compilationState.input.scriptExtra()),
+        previousParseCache_(compilationState.previousParseCache),
         lazyInnerFunctionIndex(0),
         lazyClosedOverBindingIndex(0),
         reuseGCThings(compilationState.input.isDelazifying()) {
@@ -120,11 +116,14 @@ class FullParseHandler {
     // closed-over bindings to the end of the inner functions. The
     // nextLazyInnerFunction / nextLazyClosedOverBinding accessors confirm we
     // have the expected types. See also: BaseScript::CreateLazy.
-    for (auto gcThing : gcThingsData) {
-      if (gcThing.isNull() || gcThing.isAtom()) {
-        break;
+    if (reuseGCThings) {
+      auto gcThings = compilationState.previousParseCache.gcThings();
+      for (auto gcThing : gcThings) {
+        if (gcThing.isNull() || gcThing.isAtom()) {
+          break;
+        }
+        lazyClosedOverBindingIndex++;
       }
-      lazyClosedOverBindingIndex++;
     }
   }
 
@@ -1098,23 +1097,25 @@ class FullParseHandler {
   bool reuseClosedOverBindings() { return reuseGCThings; }
   bool reuseRegexpSyntaxParse() { return reuseGCThings; }
   ScriptIndex nextLazyInnerFunction() {
-    auto taggedScriptIndex = gcThingsData[lazyInnerFunctionIndex++];
+    auto gcThings = previousParseCache_.gcThings();
+    auto taggedScriptIndex = gcThings[lazyInnerFunctionIndex++];
     MOZ_ASSERT(taggedScriptIndex.isFunction());
     return taggedScriptIndex.toFunction();
   }
   TaggedParserAtomIndex nextLazyClosedOverBinding() {
     // Trailing nullptrs were elided in PerHandlerParser::finishFunction().
-    if (lazyClosedOverBindingIndex >= gcThingsData.Length()) {
+    auto gcThings = previousParseCache_.gcThings();
+    if (lazyClosedOverBindingIndex >= gcThings.Length()) {
       return TaggedParserAtomIndex::null();
     }
 
-    return gcThingsData[lazyClosedOverBindingIndex++].toAtomOrNull();
+    return gcThings[lazyClosedOverBindingIndex++].toAtomOrNull();
   }
   const ScriptStencil& cachedScriptData(ScriptIndex index) const {
-    return scriptData_[index];
+    return previousParseCache_.scriptData()[index];
   }
   const ScriptStencilExtra& cachedScriptExtra(ScriptIndex index) const {
-    return scriptExtra_[index];
+    return previousParseCache_.scriptExtra()[index];
   }
 
   void setPrivateNameKind(Node node, PrivateNameKind kind) {
