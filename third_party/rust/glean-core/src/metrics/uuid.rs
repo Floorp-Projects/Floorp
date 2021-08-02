@@ -69,7 +69,7 @@ impl UuidMetric {
             return;
         }
 
-        if let Ok(uuid) = uuid::Uuid::parse_str(&value) {
+        if let Ok(uuid) = uuid::Uuid::parse_str(value) {
             self.set(glean, uuid);
         } else {
             let msg = format!("Unexpected UUID value '{}'", value);
