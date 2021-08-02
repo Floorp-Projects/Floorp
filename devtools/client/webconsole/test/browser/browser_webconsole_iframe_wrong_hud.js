@@ -18,6 +18,7 @@ const TEST_DUMMY_URI =
   "test/browser/test-console.html";
 
 add_task(async function() {
+  await pushPref("dom.security.https_first", false);
   await pushPref("devtools.webconsole.filter.net", true);
   const tab1 = await addTab(TEST_URI);
   const hud1 = await openConsole(tab1);

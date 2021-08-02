@@ -2,9 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const TEST_URL_1 = `http://example.org/document-builder.sjs?html=
+const TEST_URL_1 = `https://example.com/document-builder.sjs?html=
 <meta charset=utf8><iframe srcdoc="<div>"></iframe><body>`;
-const TEST_URL_2 = `http://example.org/document-builder.sjs?html=<meta charset=utf8><div id=url2>`;
+const TEST_URL_2 = `https://example.com/document-builder.sjs?html=<meta charset=utf8><div id=url2>`;
 
 // Test that deleting a node in a same-process iframe and doing a navigation
 // does not freeze the browser or break the toolbox.
