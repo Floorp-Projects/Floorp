@@ -9406,44 +9406,8 @@ void CodeGenerator::visitCompareBigInt(LCompareBigInt* lir) {
     notSameDigit = &compareDigit;
   }
 
-  // Jump to |notSameSign| when the sign aren't the same.
-  masm.load32(Address(left, BigInt::offsetOfFlags()), temp1);
-  masm.xor32(Address(right, BigInt::offsetOfFlags()), temp1);
-  masm.branchTest32(Assembler::NonZero, temp1, Imm32(BigInt::signBitMask()),
-                    notSameSign);
-
-  // Jump to |notSameLength| when the digits length is different.
-  masm.load32(Address(right, BigInt::offsetOfLength()), temp1);
-  masm.branch32(Assembler::NotEqual, Address(left, BigInt::offsetOfLength()),
-                temp1, notSameLength);
-
-  // Both BigInts have the same sign and the same number of digits. Loop over
-  // each digit, starting with the left-most one, and break from the loop when
-  // the first non-matching digit was found.
-
-  masm.loadBigIntDigits(left, temp2);
-  masm.loadBigIntDigits(right, temp3);
-
-  static_assert(sizeof(BigInt::Digit) == sizeof(void*),
-                "BigInt::Digit is pointer sized");
-
-  masm.computeEffectiveAddress(BaseIndex(temp2, temp1, ScalePointer), temp2);
-  masm.computeEffectiveAddress(BaseIndex(temp3, temp1, ScalePointer), temp3);
-
-  Label start, loop;
-  masm.jump(&start);
-  masm.bind(&loop);
-
-  masm.subPtr(Imm32(sizeof(BigInt::Digit)), temp2);
-  masm.subPtr(Imm32(sizeof(BigInt::Digit)), temp3);
-
-  masm.loadPtr(Address(temp3, 0), output);
-  masm.branchPtr(Assembler::NotEqual, Address(temp2, 0), output, notSameDigit);
-
-  masm.bind(&start);
-  masm.branchSub32(Assembler::NotSigned, Imm32(1), temp1, &loop);
-
-  // No different digits were found, both BigInts are equal to each other.
+  masm.equalBigInts(left, right, temp1, temp2, temp3, output, notSameSign,
+                    notSameLength, notSameDigit);
 
   Label done;
   masm.move32(Imm32(op == JSOp::Eq || op == JSOp::StrictEq || op == JSOp::Le ||
