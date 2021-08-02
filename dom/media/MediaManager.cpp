@@ -3090,22 +3090,23 @@ RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateDevices(
   // Only expose devices which are allowed to use:
   // https://w3c.github.io/mediacapture-main/#dom-mediadevices-enumeratedevices
   MediaSourceEnum videoType =
-      dom::FeaturePolicyUtils::IsFeatureAllowed(doc, u"camera"_ns)
+      FeaturePolicyUtils::IsFeatureAllowed(doc, u"camera"_ns)
           ? MediaSourceEnum::Camera
           : MediaSourceEnum::Other;
   MediaSourceEnum audioType =
-      dom::FeaturePolicyUtils::IsFeatureAllowed(doc, u"microphone"_ns)
+      FeaturePolicyUtils::IsFeatureAllowed(doc, u"microphone"_ns)
           ? MediaSourceEnum::Microphone
           : MediaSourceEnum::Other;
+  MediaSinkEnum audioOutputType =
+      Preferences::GetBool("media.setsinkid.enabled") &&
+              FeaturePolicyUtils::IsFeatureAllowed(doc, u"speaker-selection"_ns)
+          ? MediaSinkEnum::Speaker
+          : MediaSinkEnum::Other;
 
   auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
-  MediaSinkEnum audioOutputType = MediaSinkEnum::Other;
-  // TODO bug Bug 1577199 we don't seem to support the "speaker" feature policy
-  // yet.
-  if (Preferences::GetBool("media.setsinkid.enabled")) {
-    audioOutputType = MediaSinkEnum::Speaker;
-  } else if (audioType == MediaSourceEnum::Other &&
-             videoType == MediaSourceEnum::Other) {
+  if (audioType == MediaSourceEnum::Other &&
+      videoType == MediaSourceEnum::Other &&
+      audioOutputType == MediaSinkEnum::Other) {
     return DeviceSetPromise::CreateAndResolve(devices, __func__);
   }
 
@@ -3161,6 +3162,14 @@ RefPtr<MediaManager::DevicePromise> MediaManager::SelectAudioOutput(
   bool isHandlingUserInput = UserActivation::IsHandlingUserInput();
   nsCOMPtr<nsIPrincipal> principal =
       nsGlobalWindowInner::Cast(aWindow)->GetPrincipal();
+  if (!FeaturePolicyUtils::IsFeatureAllowed(aWindow->GetExtantDoc(),
+                                            u"speaker-selection"_ns)) {
+    return DevicePromise::CreateAndReject(
+        MakeRefPtr<MediaMgrError>(
+            MediaMgrError::Name::NotAllowedError,
+            "Document's Permissions Policy does not allow selectAudioOutput()"),
+        __func__);
+  }
   if (NS_WARN_IF(!principal)) {
     return DevicePromise::CreateAndReject(
         MakeRefPtr<MediaMgrError>(MediaMgrError::Name::SecurityError),
