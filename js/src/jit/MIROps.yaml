@@ -1644,7 +1644,6 @@
     name: PropertyName*
   result_type: Value
   possibly_calls: true
-  alias_set: none
 
 - name: DeleteProperty
   operands: 
