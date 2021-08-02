@@ -73,12 +73,14 @@ class L10nRegistry final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(L10nRegistry)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(L10nRegistry)
 
-  explicit L10nRegistry(nsIGlobalObject* aGlobal);
+  L10nRegistry(nsIGlobalObject* aGlobal, bool aUseIsolating);
+
   L10nRegistry(nsIGlobalObject* aGlobal,
                RefPtr<const ffi::GeckoL10nRegistry> aRaw);
 
   static already_AddRefed<L10nRegistry> Constructor(
-      const dom::GlobalObject& aGlobal);
+      const dom::GlobalObject& aGlobal,
+      const dom::L10nRegistryOptions& aOptions);
 
   static already_AddRefed<L10nRegistry> GetInstance(
       const dom::GlobalObject& aGlobal);
@@ -118,6 +120,8 @@ class L10nRegistry final : public nsWrapperCache {
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+
+  const ffi::GeckoL10nRegistry* Raw() const { return mRaw; }
 
  protected:
   virtual ~L10nRegistry() = default;

@@ -12,10 +12,11 @@ line_length = 100
 tab_width = 2
 language = "C++"
 namespaces = ["mozilla", "intl", "ffi"]
+includes = ["mozilla/intl/RegistryBindings.h"]
 
 [parse]
 parse_deps = true
-include = ["fluent-fallback"]
+include = ["fluent-fallback", "l10nregistry-ffi"]
 
 [enum]
 derive_helper_methods = true

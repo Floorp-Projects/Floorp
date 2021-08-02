@@ -93,7 +93,8 @@ interface Localization {
    */
   [Throws]
   constructor(sequence<UTF8String> aResourceIds,
-              optional boolean aSync = false);
+              optional boolean aSync = false,
+	      optional L10nRegistry aRegistry);
 
   /**
    * A method for adding resources to the localization context.

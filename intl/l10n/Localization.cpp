@@ -108,6 +108,14 @@ Localization::Localization(nsIGlobalObject* aGlobal,
   ffi::localization_new(&aResIds, mIsSync, getter_AddRefs(mRaw));
 }
 
+Localization::Localization(nsIGlobalObject* aGlobal,
+                           const nsTArray<nsCString>& aResIds, bool aIsSync,
+                           const L10nRegistry& aRegistry)
+    : mGlobal(aGlobal), mIsSync(aIsSync) {
+  ffi::localization_new_with_reg(&aResIds, mIsSync, aRegistry.Raw(),
+                                 getter_AddRefs(mRaw));
+}
+
 Localization::Localization(nsIGlobalObject* aGlobal, bool aIsSync)
     : mGlobal(aGlobal), mIsSync(aIsSync) {
   nsTArray<nsCString> resIds;
@@ -122,12 +130,18 @@ Localization::Localization(nsIGlobalObject* aGlobal)
 
 already_AddRefed<Localization> Localization::Constructor(
     const GlobalObject& aGlobal, const Sequence<nsCString>& aResourceIds,
-    bool aIsSync, ErrorResult& aRv) {
+    bool aIsSync, const Optional<NonNull<L10nRegistry>>& aRegistry,
+    ErrorResult& aRv) {
   nsTArray<nsCString> resIds = ToTArray<nsTArray<nsCString>>(aResourceIds);
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
-  return do_AddRef(new Localization(global, resIds, aIsSync));
+  if (aRegistry.WasPassed()) {
+    return do_AddRef(
+        new Localization(global, resIds, aIsSync, aRegistry.Value()));
+  } else {
+    return do_AddRef(new Localization(global, resIds, aIsSync));
+  }
 }
 
 JSObject* Localization::WrapObject(JSContext* aCx,
@@ -230,10 +244,15 @@ already_AddRefed<Promise> Localization::FormatValues(
       mRaw.get(), &l10nKeys, promise,
       // callback function which will be invoked by the rust code, passing the
       // promise back in.
-      [](const Promise* aPromise, const nsTArray<nsCString>* aRaw) {
+      [](const Promise* aPromise, const nsTArray<nsCString>* aValues,
+         const nsTArray<nsCString>* aErrors) {
         Promise* promise = const_cast<Promise*>(aPromise);
 
-        promise->MaybeResolve(*aRaw);
+        if (!aErrors->IsEmpty()) {
+          promise->MaybeRejectWithInvalidStateError(aErrors->ElementAt(0));
+        } else {
+          promise->MaybeResolve(*aValues);
+        }
       });
 
   return MaybeWrapPromise(promise);

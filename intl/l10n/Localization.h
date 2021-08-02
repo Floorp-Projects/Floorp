@@ -15,6 +15,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/LocalizationBinding.h"
 #include "mozilla/intl/LocalizationBindings.h"
+#include "mozilla/intl/L10nRegistry.h"
 
 namespace mozilla {
 namespace intl {
@@ -31,6 +32,7 @@ class Localization : public nsIObserver, public nsWrapperCache {
   static already_AddRefed<Localization> Constructor(
       const dom::GlobalObject& aGlobal,
       const dom::Sequence<nsCString>& aResourceIds, bool aIsSync,
+      const dom::Optional<dom::NonNull<L10nRegistry>>& aRegistry,
       ErrorResult& aRv);
   static already_AddRefed<Localization> Create(
       const nsTArray<nsCString>& aResourceIds, bool aIsSync);
@@ -74,6 +76,8 @@ class Localization : public nsIObserver, public nsWrapperCache {
   Localization(const nsTArray<nsCString>& aResIds, bool aIsSync);
   Localization(nsIGlobalObject* aGlobal, const nsTArray<nsCString>& aResIds,
                bool aIsSync);
+  Localization(nsIGlobalObject* aGlobal, const nsTArray<nsCString>& aResIds,
+               bool aIsSync, const L10nRegistry& aRegistry);
   explicit Localization(nsIGlobalObject* aGlobal);
   Localization(nsIGlobalObject* aGlobal, bool aIsSync);
   virtual ~Localization();
