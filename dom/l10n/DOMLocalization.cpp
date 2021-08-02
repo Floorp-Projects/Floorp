@@ -42,14 +42,12 @@ already_AddRefed<DOMLocalization> DOMLocalization::Create(
   RefPtr<DOMLocalization> domLoc =
       new DOMLocalization(aGlobal, aSync, aBundleGenerator);
 
-  domLoc->Init();
-
   return domLoc.forget();
 }
 
 DOMLocalization::DOMLocalization(nsIGlobalObject* aGlobal, const bool aSync,
                                  const BundleGenerator& aBundleGenerator)
-    : Localization(aGlobal, aSync, aBundleGenerator) {
+    : Localization(aGlobal, aSync) {
   mMutations = new L10nMutations(this);
 }
 
@@ -69,8 +67,6 @@ already_AddRefed<DOMLocalization> DOMLocalization::Constructor(
   if (aResourceIds.Length()) {
     domLoc->AddResourceIds(aResourceIds);
   }
-
-  domLoc->Activate(true);
 
   return domLoc.forget();
 }
@@ -302,9 +298,6 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
     return nullptr;
   }
 
-  AutoEntryScript aes(mGlobal, "DOMLocalization TranslateElements");
-  JSContext* cx = aes.cx();
-
   for (auto& domElement : aElements) {
     if (!domElement->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nid)) {
       continue;
@@ -335,7 +328,7 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
   if (mIsSync) {
     nsTArray<Nullable<L10nMessage>> l10nMessages;
 
-    FormatMessagesSync(cx, l10nKeys, l10nMessages, aRv);
+    FormatMessagesSync(l10nKeys, l10nMessages, aRv);
 
     bool allTranslated =
         ApplyTranslations(domElements, l10nMessages, aProto, aRv);
@@ -346,7 +339,7 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
 
     promise->MaybeResolveWithUndefined();
   } else {
-    RefPtr<Promise> callbackResult = FormatMessages(cx, l10nKeys, aRv);
+    RefPtr<Promise> callbackResult = FormatMessages(l10nKeys, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -528,10 +521,7 @@ bool DOMLocalization::ApplyTranslations(
 
 void DOMLocalization::OnChange() {
   Localization::OnChange();
-  if (mLocalization && !mResourceIds.IsEmpty()) {
-    ErrorResult rv;
-    RefPtr<Promise> promise = TranslateRoots(rv);
-  }
+  RefPtr<Promise> promise = TranslateRoots(IgnoreErrors());
 }
 
 void DOMLocalization::DisconnectMutations() {
