@@ -557,6 +557,10 @@ FINAL_LIBRARY = "js"
 
 selfhosted_inputs = [
     "../public/friend/ErrorNumbers.msg",
+    # ProfilingCategoryList.h is being indirectly included, and it must be passed
+    # here as an input, so it's generated before this self-hosted JS code
+    # generation. Otherwise, it will intermittently fail to build.
+    "!/mozglue/baseprofiler/public/ProfilingCategoryList.h",
     "builtin/TypedArrayConstants.h",
     "builtin/SelfHostingDefines.h",
     "builtin/Utilities.js",
