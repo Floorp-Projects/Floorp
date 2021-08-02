@@ -58,7 +58,7 @@ export class ReturnToAMO extends React.PureComponent {
     // For experiments, when needed below rendered UI allows settings hard coded strings
     // directly inside JSON except for ReturnToAMOText which picks add-on name and icon from fluent string
     return (
-      <div className="outer-wrapper onboardingContainer">
+      <div className="outer-wrapper onboardingContainer rtamo">
         <main className="screen">
           <div className="brand-logo" />
           <div className="welcome-text">
