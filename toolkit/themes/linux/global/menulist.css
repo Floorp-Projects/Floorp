@@ -6,7 +6,6 @@
 
 %include ../../shared/menulist.inc.css
 
-@media (-moz-proton) {
 label {
   margin: 1px 3px;
 }
@@ -48,55 +47,3 @@ label {
 dropmarker[native] {
   display: none;
 }
-} /** END Proton **/
-
-@media not (-moz-proton) {
-:host {
-  appearance: auto;
-  -moz-default-appearance: menulist;
-  margin: 2px 4px;
-  color: -moz-DialogText;
-  font: menu;
-  text-shadow: none;
-}
-
-:host(:not([disabled="true"]):hover) {
-  color: -moz-buttonhovertext;
-}
-
-:host(:not([disabled="true"]):hover:active),
-:host(:not([disabled="true"])[open="true"]) {
-  color: -moz-gtk-buttonactivetext;
-}
-
-:host([disabled="true"]) {
-  color: GrayText;
-}
-
-/* Label box */
-
-#label-box {
-  appearance: auto;
-  -moz-default-appearance: menulist-text;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  color: inherit;
-}
-
-/* Labels */
-
-label {
-  margin: 1px 3px !important;
-}
-
-#highlightable-label:not([highlightable="true"]),
-#label[highlightable="true"] {
-  display: none;
-}
-
-/* Dropmarker */
-
-dropmarker {
-  display: none;
-}
-} /** END not Proton **/

@@ -5,19 +5,16 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-@media (-moz-proton) {
 checkbox {
   appearance: none;
   -moz-box-align: center;
   margin: 4px 2px;
 }
-} /*** END Proton ***/
 
 .checkbox-icon[src] {
   margin-inline-end: 2px;
 }
 
-@media (-moz-proton) {
 .checkbox-label {
   margin: 1px 0;
 }
@@ -95,4 +92,3 @@ checkbox:not([native]):-moz-focusring > .checkbox-check {
     fill: var(--checkbox-checked-border-color-hover, -moz-accent-color-foreground);
   }
 }
-} /** END Proton **/
