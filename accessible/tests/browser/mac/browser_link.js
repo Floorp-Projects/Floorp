@@ -40,6 +40,18 @@ addAccessibleTask(
   }
 );
 
+function waitForLinkedChange(id, isEnabled) {
+  return waitForEvent(EVENT_STATE_CHANGE, e => {
+    e.QueryInterface(nsIAccessibleStateChangeEvent);
+    return (
+      e.state == STATE_LINKED &&
+      !e.isExtraState &&
+      isEnabled == e.isEnabled &&
+      id == getAccessibleDOMNodeID(e.accessible)
+    );
+  });
+}
+
 /**
  * Test linked vs unlinked anchor tags
  */
@@ -81,7 +93,7 @@ addAccessibleTask(
       "bare <a> gets correct group role"
     );
 
-    let stateChanged = waitForEvent(EVENT_STATE_CHANGE, "link1");
+    let stateChanged = waitForLinkedChange("link1", false);
     await SpecialPowers.spawn(browser, [], () => {
       content.document.getElementById("link1").removeAttribute("href");
     });
@@ -92,7 +104,7 @@ addAccessibleTask(
       "<a> stripped from href gets group role"
     );
 
-    stateChanged = waitForEvent(EVENT_STATE_CHANGE, "link2");
+    stateChanged = waitForLinkedChange("link2", false);
     await SpecialPowers.spawn(browser, [], () => {
       content.document.getElementById("link2").removeAttribute("onclick");
     });
@@ -103,7 +115,7 @@ addAccessibleTask(
       "<a> stripped from onclick gets group role"
     );
 
-    stateChanged = waitForEvent(EVENT_STATE_CHANGE, "link3");
+    stateChanged = waitForLinkedChange("link3", true);
     await SpecialPowers.spawn(browser, [], () => {
       content.document
         .getElementById("link3")
