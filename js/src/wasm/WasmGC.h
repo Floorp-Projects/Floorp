@@ -58,8 +58,9 @@ struct StackMap final {
   // as to limit its range to 11 bits, where
   // 11 == ceil(log2(MaxParams * sizeof-biggest-param-type-in-words))
   //
-  // The stackmap may also cover a DebugFrame (all DebugFrames get a map).  If
-  // so that can be noted, since users of the map need to trace pointers in a
+  // The stackmap may also cover a DebugFrame (all DebugFrames which may
+  // potentially contain live pointers into the JS heap get a map).  If so that
+  // can be noted, since users of the map need to trace pointers in a
   // DebugFrame.
   //
   // Finally, for sanity checking only, for stackmaps associated with a wasm
@@ -76,11 +77,11 @@ struct StackMap final {
   // Where is Frame* relative to the top?  This is an offset in words.
   uint32_t frameOffsetFromTop : 11;
 
-  // Notes the presence of a DebugFrame.  The DebugFrame may or may not contain
-  // GC-managed data but always gets a stackmap, as computing whether a stack
-  // map is definitively needed is brittle and ultimately not a worthwhile
-  // optimization.
-  uint32_t hasDebugFrame : 1;
+  // Notes the presence of a DebugFrame with possibly-live references.  A
+  // DebugFrame may or may not contain GC-managed data; in situations when it is
+  // possible that any pointers in the DebugFrame are non-null, the DebugFrame
+  // gets a stackmap.
+  uint32_t hasDebugFrameWithLiveRefs : 1;
 
  private:
   static constexpr uint32_t maxMappedWords = (1 << 30) - 1;
@@ -93,7 +94,7 @@ struct StackMap final {
       : numMappedWords(numMappedWords),
         numExitStubWords(0),
         frameOffsetFromTop(0),
-        hasDebugFrame(0) {
+        hasDebugFrameWithLiveRefs(0) {
     const uint32_t nBitmap = calcNBitmap(numMappedWords);
     memset(bitmap, 0, nBitmap * sizeof(bitmap[0]));
   }
@@ -131,9 +132,9 @@ struct StackMap final {
 
   // If the frame described by this StackMap includes a DebugFrame, call here to
   // record that fact.
-  void setHasDebugFrame() {
-    MOZ_ASSERT(hasDebugFrame == 0);
-    hasDebugFrame = 1;
+  void setHasDebugFrameWithLiveRefs() {
+    MOZ_ASSERT(hasDebugFrameWithLiveRefs == 0);
+    hasDebugFrameWithLiveRefs = 1;
   }
 
   inline void setBit(uint32_t bitIndex) {
