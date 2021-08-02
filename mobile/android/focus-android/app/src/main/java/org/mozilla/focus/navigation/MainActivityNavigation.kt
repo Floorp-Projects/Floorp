@@ -125,9 +125,17 @@ class MainActivityNavigation(
     fun edit(
         tabId: String
     ) {
+        val fragmentManager = activity.supportFragmentManager
+
+        val urlInputFragment = fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG) as UrlInputFragment?
+        if (urlInputFragment != null && urlInputFragment.tab?.id == tabId) {
+            // There's already an UrlInputFragment for this tab.
+            return
+        }
+
         val urlFragment = UrlInputFragment.createWithTab(tabId)
 
-        activity.supportFragmentManager
+        fragmentManager
             .beginTransaction()
             .add(R.id.container, urlFragment, UrlInputFragment.FRAGMENT_TAG)
             .commit()

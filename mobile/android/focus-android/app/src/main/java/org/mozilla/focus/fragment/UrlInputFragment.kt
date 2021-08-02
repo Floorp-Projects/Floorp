@@ -145,7 +145,8 @@ class UrlInputFragment :
     @Volatile
     private var isAnimating: Boolean = false
 
-    private var tab: TabSessionState? = null
+    var tab: TabSessionState? = null
+        private set
 
     private val isOverlay: Boolean
         get() = tab != null
