@@ -104,6 +104,8 @@ class Symbol
   void dump();  // Debugger-friendly stderr dump.
   void dump(js::GenericPrinter& out);
 #endif
+
+  static constexpr size_t offsetOfHash() { return offsetof(Symbol, hash_); }
 };
 
 } /* namespace JS */

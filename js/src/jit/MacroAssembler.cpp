@@ -4752,6 +4752,15 @@ void MacroAssembler::prepareHashString(Register str, Register result,
   scrambleHashCode(result);
 }
 
+void MacroAssembler::prepareHashSymbol(Register sym, Register result) {
+  // Inline implementation of |OrderedHashTable::prepareHash()| and
+  // |Symbol::hash()|.
+
+  load32(Address(sym, JS::Symbol::offsetOfHash()), result);
+
+  scrambleHashCode(result);
+}
+
 template <typename OrderedHashTable>
 void MacroAssembler::orderedHashTableLookup(Register setOrMapObj,
                                             ValueOperand value, Register hash,
