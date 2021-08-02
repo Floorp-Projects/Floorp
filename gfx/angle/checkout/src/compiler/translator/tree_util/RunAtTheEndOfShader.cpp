@@ -89,8 +89,8 @@ void WrapMainAndAppend(TIntermBlock *root,
     //     codeToRun
     // }
     TIntermBlock *newMainBody = new TIntermBlock();
-    TIntermAggregate *oldMainCall =
-        TIntermAggregate::CreateFunctionCall(*oldMain, new TIntermSequence());
+    TIntermSequence emptySequence;
+    TIntermAggregate *oldMainCall = TIntermAggregate::CreateFunctionCall(*oldMain, &emptySequence);
     newMainBody->appendStatement(oldMainCall);
     newMainBody->appendStatement(codeToRun);
 

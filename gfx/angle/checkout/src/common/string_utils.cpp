@@ -251,4 +251,45 @@ std::vector<std::string> GetCachedStringsFromEnvironmentVarOrAndroidProperty(
     std::string environment = GetEnvironmentVarOrAndroidProperty(varName, propertyName);
     return SplitString(environment, separator, TRIM_WHITESPACE, SPLIT_WANT_NONEMPTY);
 }
+
+// reference name can have *.
+bool NamesMatchWithWildcard(const char *ref, const char *testName)
+{
+    // Find the first * in ref.
+    const char *firstWildcard = strchr(ref, '*');
+
+    // If there are no wildcards, match the strings precisely.
+    if (firstWildcard == nullptr)
+    {
+        return strcmp(ref, testName) == 0;
+    }
+
+    // Otherwise, match up to the wildcard first.
+    size_t preWildcardLen = firstWildcard - ref;
+    if (strncmp(ref, testName, preWildcardLen) != 0)
+    {
+        return false;
+    }
+
+    const char *postWildcardRef = ref + preWildcardLen + 1;
+
+    // As a small optimization, if the wildcard is the last character in ref, accept the match
+    // already.
+    if (postWildcardRef[0] == '\0')
+    {
+        return true;
+    }
+
+    // Try to match the wildcard with a number of characters.
+    for (size_t matchSize = 0; testName[matchSize] != '\0'; ++matchSize)
+    {
+        if (NamesMatchWithWildcard(postWildcardRef, testName + matchSize))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 }  // namespace angle
