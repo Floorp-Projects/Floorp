@@ -69,6 +69,7 @@ type_policies = {
     "BigInt": "BigIntPolicy",
     "Double": "DoublePolicy",
     "String": "StringPolicy",
+    "Symbol": "SymbolPolicy",
 }
 
 

@@ -15416,6 +15416,13 @@ void CodeGenerator::visitHashString(LHashString* ins) {
   masm.prepareHashString(input, output, temp);
 }
 
+void CodeGenerator::visitHashSymbol(LHashSymbol* ins) {
+  Register input = ToRegister(ins->input());
+  Register output = ToRegister(ins->output());
+
+  masm.prepareHashSymbol(input, output);
+}
+
 void CodeGenerator::visitSetObjectHasNonBigInt(LSetObjectHasNonBigInt* ins) {
   Register setObj = ToRegister(ins->setObject());
   ValueOperand input = ToValue(ins, LSetObjectHasNonBigInt::Input);
