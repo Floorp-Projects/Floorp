@@ -16,6 +16,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,6 +42,7 @@ class StorageStatsMetricsTest {
     }
 
     @Test
+    @Ignore("These metrics have expired.")
     fun `WHEN reporting THEN the values from the storageStats are accumulated`() {
         every { storageStats.appBytes } returns 100
         every { storageStats.cacheBytes } returns 200
@@ -54,6 +56,7 @@ class StorageStatsMetricsTest {
     }
 
     @Test
+    @Ignore("These metrics have expired.")
     fun `WHEN reporting THEN the query duration is measured`() {
         StorageStatsMetrics.reportSync(mockContext)
         assertTrue(Metrics.queryStatsDuration.testHasValue())

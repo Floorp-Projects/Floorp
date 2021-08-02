@@ -60,7 +60,6 @@ import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.Tabs
 import org.mozilla.fenix.GleanMetrics.TabsTray
-import org.mozilla.fenix.GleanMetrics.TabsTrayCfr
 import org.mozilla.fenix.GleanMetrics.Tip
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
@@ -701,12 +700,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.TabsTrayCloseAllTabsPressed -> EventWrapper<NoExtraKeys>(
             { TabsTray.closeAllTabs.record(it) }
-        )
-        is Event.TabsTrayCfrDismissed -> EventWrapper<NoExtraKeys>(
-            { TabsTrayCfr.dismiss.record(it) }
-        )
-        is Event.TabsTrayCfrTapped -> EventWrapper<NoExtraKeys>(
-            { TabsTrayCfr.goToSettings.record(it) }
         )
         is Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(
             { Autoplay.visitedSetting.record(it) }

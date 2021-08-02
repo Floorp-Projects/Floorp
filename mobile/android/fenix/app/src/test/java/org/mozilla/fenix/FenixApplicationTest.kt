@@ -162,8 +162,6 @@ class FenixApplicationTest {
         assertEquals(true, Preferences.bookmarksSuggestion.testGetValue())
         assertEquals(true, Preferences.clipboardSuggestionsEnabled.testGetValue())
         assertEquals(true, Preferences.searchShortcutsEnabled.testGetValue())
-        assertEquals(true, Preferences.openLinksInPrivate.testGetValue())
-        assertEquals(true, Preferences.privateSearchSuggestions.testGetValue())
         assertEquals(true, Preferences.voiceSearchEnabled.testGetValue())
         assertEquals(true, Preferences.openLinksInAppEnabled.testGetValue())
         assertEquals(true, Preferences.signedInSync.testGetValue())

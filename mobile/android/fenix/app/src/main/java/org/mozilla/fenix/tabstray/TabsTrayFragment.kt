@@ -201,8 +201,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 store = requireComponents.core.store,
                 infoBannerView = view.info_banner,
                 settings = requireComponents.settings,
-                navigationInteractor = navigationInteractor,
-                metrics = requireComponents.analytics.metrics
+                navigationInteractor = navigationInteractor
             ),
             owner = this,
             view = view

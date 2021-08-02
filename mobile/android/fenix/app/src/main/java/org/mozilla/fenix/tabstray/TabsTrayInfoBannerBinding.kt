@@ -21,8 +21,6 @@ import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.infobanner.InfoBanner
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.utils.Settings
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -31,8 +29,7 @@ class TabsTrayInfoBannerBinding(
     store: BrowserStore,
     private val infoBannerView: ViewGroup,
     private val settings: Settings,
-    private val navigationInteractor: NavigationInteractor,
-    private val metrics: MetricController?
+    private val navigationInteractor: NavigationInteractor
 ) : AbstractBinding<BrowserState>(store) {
 
     @VisibleForTesting
@@ -70,12 +67,10 @@ class TabsTrayInfoBannerBinding(
                 container = infoBannerView,
                 dismissByHiding = true,
                 dismissAction = {
-                    metrics?.track(Event.TabsTrayCfrDismissed)
                     settings.shouldShowAutoCloseTabsBanner = false
                 }
             ) {
                 navigationInteractor.onTabSettingsClicked()
-                metrics?.track(Event.TabsTrayCfrTapped)
                 settings.shouldShowAutoCloseTabsBanner = false
             }
         } else {

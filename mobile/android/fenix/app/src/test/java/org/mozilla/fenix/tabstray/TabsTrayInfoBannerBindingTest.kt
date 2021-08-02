@@ -22,8 +22,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TabsTrayInfoBannerBinding.Companion.TAB_COUNT_SHOW_CFR
 import org.mozilla.fenix.utils.Settings
@@ -35,7 +33,6 @@ class TabsTrayInfoBannerBindingTest {
     private lateinit var store: BrowserStore
     private lateinit var view: ViewGroup
     private lateinit var interactor: NavigationInteractor
-    private lateinit var metrics: MetricController
     private lateinit var settings: Settings
 
     @get:Rule
@@ -46,7 +43,6 @@ class TabsTrayInfoBannerBindingTest {
         store = BrowserStore()
         view = CoordinatorLayout(testContext)
         interactor = mockk(relaxed = true)
-        metrics = mockk(relaxed = true)
         settings = Settings(testContext)
     }
 
@@ -60,8 +56,7 @@ class TabsTrayInfoBannerBindingTest {
                 store = store,
                 infoBannerView = view,
                 settings = settings,
-                navigationInteractor = interactor,
-                metrics = metrics
+                navigationInteractor = interactor
             )
 
         binding.start()
@@ -88,8 +83,7 @@ class TabsTrayInfoBannerBindingTest {
                 store = store,
                 infoBannerView = view,
                 settings = settings,
-                navigationInteractor = interactor,
-                metrics = metrics
+                navigationInteractor = interactor
             )
 
         binding.start()
@@ -103,7 +97,5 @@ class TabsTrayInfoBannerBindingTest {
 
         verify(exactly = 0) { interactor.onTabSettingsClicked() }
         assert(!settings.shouldShowAutoCloseTabsBanner)
-        verify(exactly = 0) { metrics.track(Event.TabsTrayCfrTapped) }
-        verify(exactly = 1) { metrics.track(Event.TabsTrayCfrDismissed) }
     }
 }
