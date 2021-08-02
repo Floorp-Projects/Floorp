@@ -2704,7 +2704,7 @@ class MachineStackTracker {
 
 // StackMapGenerator, which carries all state needed to create stackmaps.
 
-enum class HasDebugFrame { No, Yes };
+enum class HasDebugFrameWithLiveRefs { No, Maybe };
 
 struct StackMapGenerator {
  private:
@@ -2796,17 +2796,17 @@ struct StackMapGenerator {
   // |assemblerOffset|, incorporating pointers from the current operand
   // stack |stk|, incorporating possible extra pointers in |extra| at the
   // lower addressed end, and possibly with the associated frame having a
-  // DebugFrame as indicated by |debugFrame|.
-  [[nodiscard]] bool createStackMap(const char* who,
-                                    const ExitStubMapVector& extras,
-                                    uint32_t assemblerOffset,
-                                    HasDebugFrame debugFrame,
-                                    const StkVector& stk) {
+  // DebugFrame that must be traced, as indicated by |debugFrameWithLiveRefs|.
+  [[nodiscard]] bool createStackMap(
+      const char* who, const ExitStubMapVector& extras,
+      uint32_t assemblerOffset,
+      HasDebugFrameWithLiveRefs debugFrameWithLiveRefs, const StkVector& stk) {
     size_t countedPointers = machineStackTracker.numPtrs() + memRefsOnStk;
 #ifndef DEBUG
     // An important optimization.  If there are obviously no pointers, as
     // we expect in the majority of cases, exit quickly.
-    if (countedPointers == 0 && debugFrame == HasDebugFrame::No) {
+    if (countedPointers == 0 &&
+        debugFrameWithLiveRefs == HasDebugFrameWithLiveRefs::No) {
       // We can skip creating the map if there are no |true| elements in
       // |extras|.
       bool extrasHasRef = false;
@@ -3016,9 +3016,9 @@ struct StackMapGenerator {
     }
 #endif
 
-    // Note the presence of a DebugFrame, if any.
-    if (debugFrame == HasDebugFrame::Yes) {
-      stackMap->setHasDebugFrame();
+    // Note the presence of a DebugFrame with live pointers, if any.
+    if (debugFrameWithLiveRefs != HasDebugFrameWithLiveRefs::No) {
+      stackMap->setHasDebugFrameWithLiveRefs();
     }
 
     // Add the completed map to the running collection thereof.
@@ -4213,24 +4213,36 @@ class BaseCompiler final : public BaseCompilerInterface {
   // Create a vanilla stackmap.
   [[nodiscard]] bool createStackMap(const char* who) {
     const ExitStubMapVector noExtras;
-    return createStackMap(who, noExtras, masm.currentOffset());
+    return stackMapGenerator_.createStackMap(
+        who, noExtras, masm.currentOffset(), HasDebugFrameWithLiveRefs::No,
+        stk_);
   }
 
   // Create a stackmap as vanilla, but for a custom assembler offset.
   [[nodiscard]] bool createStackMap(const char* who,
                                     CodeOffset assemblerOffset) {
     const ExitStubMapVector noExtras;
-    return createStackMap(who, noExtras, assemblerOffset.offset());
+    return stackMapGenerator_.createStackMap(
+        who, noExtras, assemblerOffset.offset(), HasDebugFrameWithLiveRefs::No,
+        stk_);
+  }
+
+  // Create a stack map as vanilla, and note the presence of a ref-typed
+  // DebugFrame on the stack.
+  [[nodiscard]] bool createStackMap(
+      const char* who, HasDebugFrameWithLiveRefs debugFrameWithLiveRefs) {
+    const ExitStubMapVector noExtras;
+    return stackMapGenerator_.createStackMap(
+        who, noExtras, masm.currentOffset(), debugFrameWithLiveRefs, stk_);
   }
 
   // The most general stackmap construction.
-  [[nodiscard]] bool createStackMap(const char* who,
-                                    const ExitStubMapVector& extras,
-                                    uint32_t assemblerOffset) {
-    auto debugFrame =
-        compilerEnv_.debugEnabled() ? HasDebugFrame::Yes : HasDebugFrame::No;
+  [[nodiscard]] bool createStackMap(
+      const char* who, const ExitStubMapVector& extras,
+      uint32_t assemblerOffset,
+      HasDebugFrameWithLiveRefs debugFrameWithLiveRefs) {
     return stackMapGenerator_.createStackMap(who, extras, assemblerOffset,
-                                             debugFrame, stk_);
+                                             debugFrameWithLiveRefs, stk_);
   }
 
   // This is an optimization used to avoid calling sync() for
@@ -5627,7 +5639,8 @@ class BaseCompiler final : public BaseCompilerInterface {
     if (!stackMapGenerator_.generateStackmapEntriesForTrapExit(args, &extras)) {
       return false;
     }
-    if (!createStackMap("stack check", extras, masm.currentOffset())) {
+    if (!createStackMap("stack check", extras, masm.currentOffset(),
+                        HasDebugFrameWithLiveRefs::No)) {
       return false;
     }
 
@@ -5869,11 +5882,13 @@ class BaseCompiler final : public BaseCompilerInterface {
       // it can be clobbered, and/or modified by the debug trap.
       saveRegisterReturnValues(resultType);
       insertBreakablePoint(CallSiteDesc::Breakpoint);
-      if (!createStackMap("debug: return-point breakpoint")) {
+      if (!createStackMap("debug: return-point breakpoint",
+                          HasDebugFrameWithLiveRefs::Maybe)) {
         return false;
       }
       insertBreakablePoint(CallSiteDesc::LeaveFrame);
-      if (!createStackMap("debug: leave-frame breakpoint")) {
+      if (!createStackMap("debug: leave-frame breakpoint",
+                          HasDebugFrameWithLiveRefs::Maybe)) {
         return false;
       }
       restoreRegisterReturnValues(resultType);

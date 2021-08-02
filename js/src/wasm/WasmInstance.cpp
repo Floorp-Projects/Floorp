@@ -1632,8 +1632,8 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   }
 
   // Finally, deal with any GC-managed fields in the DebugFrame, if it is
-  // present.
-  if (map->hasDebugFrame) {
+  // present and those fields may be live.
+  if (map->hasDebugFrameWithLiveRefs) {
     DebugFrame* debugFrame = DebugFrame::from(frame);
     char* debugFrameP = (char*)debugFrame;
 
