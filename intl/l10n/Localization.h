@@ -71,10 +71,10 @@ class Localization : public nsIObserver,
       const dom::Sequence<dom::OwningUTF8StringOrL10nIdArgs>& aKeys,
       nsTArray<dom::Nullable<dom::L10nMessage>>& aRetVal, ErrorResult& aRv);
 
-  void AddResourceId(const nsAString& aResourceId);
-  uint32_t RemoveResourceId(const nsAString& aResourceId);
-  void AddResourceIds(const nsTArray<nsString>& aResourceIds);
-  uint32_t RemoveResourceIds(const nsTArray<nsString>& aResourceIds);
+  void AddResourceId(const nsACString& aResourceId);
+  uint32_t RemoveResourceId(const nsACString& aResourceId);
+  void AddResourceIds(const nsTArray<nsCString>& aResourceIds);
+  uint32_t RemoveResourceIds(const nsTArray<nsCString>& aResourceIds);
 
   void SetAsync();
   bool IsSync();
