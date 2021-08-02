@@ -2935,11 +2935,9 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   // so we can skip over them after accounting for their free variables.
 
   MOZ_ASSERT(pc_->isOutermostOfCurrentCompile());
-  ScriptIndex cachedScriptIndex = handler_.nextLazyInnerFunction();
-  const ScriptStencil& cachedData =
-      handler_.cachedScriptData(cachedScriptIndex);
-  const ScriptStencilExtra& cachedExtra =
-      handler_.cachedScriptExtra(cachedScriptIndex);
+  handler_.nextLazyInnerFunction();
+  const ScriptStencil& cachedData = handler_.cachedScriptData();
+  const ScriptStencilExtra& cachedExtra = handler_.cachedScriptExtra();
   MOZ_ASSERT(toStringStart == cachedExtra.extent.toStringStart);
 
   FunctionBox* funbox = newFunctionBox(funNode, cachedData, cachedExtra);
