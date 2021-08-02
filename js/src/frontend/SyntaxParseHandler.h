@@ -12,6 +12,7 @@
 
 #include <string.h>
 
+#include "frontend/CompilationStencil.h"  // CompilationState
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
 #include "frontend/ParseNode.h"
@@ -172,8 +173,9 @@ class SyntaxParseHandler {
   }
 
  public:
-  SyntaxParseHandler(JSContext* cx, LifoAlloc& alloc,
-                     BaseScript* lazyOuterFunction) {}
+  SyntaxParseHandler(JSContext* cx, CompilationState& compilationState) {
+    MOZ_ASSERT(!compilationState.input.isDelazifying());
+  }
 
   static NullNode null() { return NodeFailure; }
 
@@ -750,7 +752,7 @@ class SyntaxParseHandler {
 
   bool canSkipLazyInnerFunctions() { return false; }
   bool canSkipLazyClosedOverBindings() { return false; }
-  JSAtom* nextLazyClosedOverBinding() {
+  TaggedParserAtomIndex nextLazyClosedOverBinding() {
     MOZ_CRASH(
         "SyntaxParseHandler::canSkipLazyClosedOverBindings must return false");
   }

@@ -53,6 +53,7 @@ struct CompilationInput;
 struct CompilationStencil;
 struct CompilationGCOutput;
 class ScriptStencilIterable;
+class ParserAtomsTable;
 
 // ScopeContext holds information derived from the scope and environment chains
 // to try to avoid the parser needing to traverse VM structures directly.
@@ -229,6 +230,10 @@ struct CompilationInput {
  private:
   BaseScript* lazy_ = nullptr;
 
+  // When delazifying, we should prepare an array which contains all
+  // stencil-like gc-things such that it can be used by the parser.
+  mozilla::Span<TaggedScriptThingIndex> cachedGCThings_;
+
  public:
   RefPtr<ScriptSource> source;
 
@@ -354,6 +359,21 @@ struct CompilationInput {
   // Whether this CompilationInput is parsing the top-level of a script, or
   // false if we are parsing an inner function.
   bool isInitialStencil() { return !lazy_; }
+
+  // Whether this CompilationInput is parsing a specific function with already
+  // pre-parsed contextual information.
+  bool isDelazifying() { return target == CompilationTarget::Delazification; }
+
+  // When doing a full-parse of an incomplete BaseScript*, we have to iterate
+  // over functions and closed-over bindings, to avoid costly recursive decent
+  // in inner functions. This function will clone the BaseScript* information to
+  // make it available as a stencil-like data to the full-parser.
+  mozilla::Span<TaggedScriptThingIndex> gcThings() const {
+    return cachedGCThings_;
+  }
+
+  [[nodiscard]] bool cacheGCThings(JSContext* cx, LifoAlloc& alloc,
+                                   ParserAtomsTable& parseAtoms);
 
   void trace(JSTracer* trc);
 
@@ -835,7 +855,18 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
   bool init(JSContext* cx, InheritThis inheritThis = InheritThis::No,
             JSObject* enclosingEnv = nullptr) {
-    return scopeContext.init(cx, input, parserAtoms, inheritThis, enclosingEnv);
+    if (!scopeContext.init(cx, input, parserAtoms, inheritThis, enclosingEnv)) {
+      return false;
+    }
+
+    // gcThings is later used by the full parser initialization.
+    if (input.isDelazifying()) {
+      if (!input.cacheGCThings(cx, alloc, parserAtoms)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   // Track the state of key allocations and roll them back as parts of parsing
