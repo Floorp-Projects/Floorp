@@ -69,6 +69,13 @@ const testCases = [
   },
 ];
 
+add_task(async function test_initialize() {
+  Services.prefs.setBoolPref("signon.usernameOnlyForm.enabled", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("signon.usernameOnlyForm.enabled");
+  });
+});
+
 for (let testData of testCases) {
   let tmp = {
     async [testData.name]() {

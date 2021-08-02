@@ -110,6 +110,15 @@ const TESTCASES = [
   },
 ];
 
+function _setPrefs() {
+  Services.prefs.setBoolPref("signon.usernameOnlyForm.enabled", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("signon.usernameOnlyForm.enabled");
+  });
+}
+
+this._setPrefs();
+
 for (let tc of TESTCASES) {
   info("Sanity checking the testcase: " + tc.description);
 
