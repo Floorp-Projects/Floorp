@@ -10,10 +10,9 @@
 
 %include ../../shared/checkbox.inc.css
 
-@media (-moz-proton) {
 /* ::::: checkbox ::::: */
 
-checkbox[native] {
+checkbox:where([native]) {
   appearance: auto;
   -moz-default-appearance: checkbox-container;
   -moz-box-align: center;
@@ -57,53 +56,3 @@ checkbox[native][disabled="true"] {
   min-height: 13px;
   margin-inline-end: 5px;
 }
-} /** END Proton **/
-
-@media not (-moz-proton) {
-/* ::::: checkbox ::::: */
-
-checkbox {
-  appearance: auto;
-  -moz-default-appearance: checkbox-container;
-  -moz-box-align: center;
-  margin: 2px 4px;
-  padding-top: 1px;
-  padding-bottom: 1px;
-  padding-inline-start: 4px;
-  padding-inline-end: 2px;
-}
-
-.checkbox-label {
-  margin: 0;
-}
-
-/* ..... focused state ..... */
-
-checkbox:-moz-focusring > .checkbox-label-box {
-  outline: 1px dotted;
-}
-
-/* ..... disabled state ..... */
-
-checkbox[disabled="true"] {
-  color: GrayText;
-}
-
-@media (-moz-windows-classic) {
-  checkbox[disabled="true"] {
-    color: ThreeDShadow;
-    text-shadow: 1px 1px ThreeDHighlight;
-  }
-}
-
-/* ::::: checkmark image ::::: */
-
-.checkbox-check {
-  appearance: auto;
-  -moz-default-appearance: checkbox;
-  -moz-box-align: center;
-  min-width: 13px;
-  min-height: 13px;
-  margin-inline-end: 3px;
-}
-} /** END not Proton **/

@@ -6,7 +6,6 @@
 
 %include ../../shared/menulist.inc.css
 
-@media (-moz-proton) {
 label {
   margin: 0 3px;
 }
@@ -57,63 +56,3 @@ label {
     margin-inline: 3px -3px;
   }
 }
-} /** END Proton **/
-
-@media not (-moz-proton) {
-:host {
-  appearance: auto;
-  -moz-default-appearance: menulist;
-  margin: 2px 4px;
-  color: FieldText;
-  text-shadow: none;
-}
-
-:host([disabled="true"]) {
-  background-color: -moz-Dialog;
-  color: GrayText;
-}
-
-/* Label box */
-
-#label-box {
-  -moz-box-align: center;
-  -moz-box-pack: center;
-}
-
-:host(:not([open="true"]):focus) > #label-box {
-  background-color: Highlight;
-  color: HighlightText;
-}
-
-:host(:not([open="true"]):-moz-focusring) > #label-box {
-  outline: 1px dotted;
-}
-
-/* Labels */
-
-label {
-  margin: 0 3px !important;
-}
-
-#highlightable-label:not([highlightable="true"]),
-#label[highlightable="true"] {
-  display: none;
-}
-
-@media (-moz-windows-default-theme) {
-  #label-box {
-    background-color: transparent !important;
-    color: inherit !important;
-  }
-
-  image,
-  label {
-    margin-block: -1px !important;
-  }
-
-  dropmarker {
-    margin-top: -2px;
-    margin-inline: 3px -3px;
-  }
-}
-} /** END not Proton **/

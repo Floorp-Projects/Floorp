@@ -4,7 +4,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-@media (-moz-proton) {
 :host(:not([native])) {
   appearance: none;
   background-color: var(--button-bgcolor, ButtonFace);
@@ -61,4 +60,3 @@ dropmarker:not([native])::part(icon) {
 #label[highlightable="true"] {
   display: none;
 }
-} /** END Proton **/
