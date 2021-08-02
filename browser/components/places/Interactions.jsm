@@ -204,12 +204,12 @@ class _Interactions {
       },
       child: {
         moduleURI: "resource:///actors/InteractionsChild.jsm",
-        group: "browsers",
         events: {
           DOMContentLoaded: {},
           pagehide: { mozSystemGroup: true },
         },
       },
+      messageManagerGroups: ["browsers"],
     });
 
     this.#activeWindow = Services.wm.getMostRecentBrowserWindow();
