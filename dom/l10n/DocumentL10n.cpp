@@ -48,7 +48,7 @@ RefPtr<DocumentL10n> DocumentL10n::Create(Document* aDocument, bool aSync) {
 }
 
 DocumentL10n::DocumentL10n(Document* aDocument, bool aSync)
-    : DOMLocalization(aDocument->GetScopeObject(), aSync, {}),
+    : DOMLocalization(aDocument->GetScopeObject(), aSync),
       mDocument(aDocument),
       mState(DocumentL10nState::Constructed) {
   mContentSink = do_QueryInterface(aDocument->GetCurrentContentSink());
