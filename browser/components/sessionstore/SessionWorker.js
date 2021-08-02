@@ -92,6 +92,8 @@ var Agent = {
    */
   maxUpgradeBackups: null,
 
+  _objIdsToObjs: new Map(),
+
   /**
    * Initialize (or reinitialize) the worker
    *
@@ -99,9 +101,10 @@ var Agent = {
    *   was used. One of the `STATE_*` constants defined above.
    * @param {boolean} a flag indicate whether we loaded a session file with ext .js
    * @param {object} paths The paths at which to find the various files.
+   * @param {object[]} cacheObjects Pre-existing cache objects
    * @param {object} prefs The preferences the worker needs to known.
    */
-  init(origin, useOldExtension, paths, prefs = {}) {
+  init(origin, useOldExtension, paths, cacheObjects, prefs = {}) {
     if (!(origin in paths || origin == STATE_EMPTY)) {
       throw new TypeError("Invalid origin: " + origin);
     }
@@ -124,6 +127,10 @@ var Agent = {
     this.maxSerializeBack = prefs.maxSerializeBack;
     this.maxSerializeForward = prefs.maxSerializeForward;
     this.upgradeBackupNeeded = paths.nextUpgradeBackup != paths.upgradeBackup;
+    for (let [id, value] of cacheObjects) {
+      this._objIdsToObjs.set(id, value);
+    }
+
     return { result: true };
   },
 
@@ -162,6 +169,10 @@ var Agent = {
           tab.index -= lower;
         }
       }
+    }
+
+    if (state) {
+      state._cachedObjs = [...this._objIdsToObjs.entries()];
     }
 
     let stateString = JSON.stringify(state);
@@ -359,6 +370,37 @@ var Agent = {
     }
 
     return { result: true };
+  },
+
+  /**
+   * Define an entry in the session worker cache. We write this cache to disk
+   * alongside the session state, and entries in the session state can
+   * reference entries in this cache.
+   *
+   * @param {number} id The ID of the cache item
+   * @param {object} value The value that the ID should map to
+   */
+  define(id, value) {
+    if (this._objIdsToObjs.has(id)) {
+      throw new Error("Cannot define a obj with occupied id " + id);
+    }
+    this._objIdsToObjs.set(id, value);
+  },
+
+  /**
+   * Removes an item from the session worker cache.
+   *
+   * @param {number} id The ID of the cache item
+   */
+  delete(id) {
+    this._objIdsToObjs.delete(id);
+  },
+
+  /**
+   * Removes everything from the session worker cache.
+   */
+  clearSessionWorkerCache() {
+    this._objIdsToObjs.clear();
   },
 
   /**

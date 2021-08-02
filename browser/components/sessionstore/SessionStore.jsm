@@ -205,6 +205,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionFile: "resource:///modules/sessionstore/SessionFile.jsm",
   SessionSaver: "resource:///modules/sessionstore/SessionSaver.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
+  SessionWorkerCache: "resource:///modules/sessionstore/SessionWorkerCache.jsm",
   TabAttributes: "resource:///modules/sessionstore/TabAttributes.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabState: "resource:///modules/sessionstore/TabState.jsm",
@@ -1891,6 +1892,7 @@ var SessionStoreInternal = {
             TabState.copyFromCache(browser.permanentKey, tabData);
             this._closedWindowTabs.delete(browser.permanentKey);
           }
+          SessionWorkerCache.release(browser.mIconURL);
         }
 
         // Save non-private windows if they have at
@@ -2471,7 +2473,7 @@ var SessionStoreInternal = {
       permanentKey,
       state: tabState,
       title: aTab.label,
-      image: aWindow.gBrowser.getIcon(aTab),
+      image: aWindow.gBrowser.getIconBlobKey(aTab),
       pos: aTab._tPos,
       closedAt: Date.now(),
     };
@@ -3439,9 +3441,15 @@ var SessionStoreInternal = {
         !activePageData ||
         (activePageData && activePageData.url != "about:blank")
       ) {
+        let iconURL = SessionWorkerCache.getById(tabData.image);
+        if (!iconURL && typeof tabData.image == "string") {
+          iconURL = tabData.image;
+        } else if (!iconURL) {
+          iconURL = "";
+        }
         win.gBrowser.setIcon(
           tab,
-          tabData.image,
+          iconURL,
           undefined,
           tabData.iconLoadingPrincipal
         );
@@ -4493,7 +4501,7 @@ var SessionStoreInternal = {
       // This information is only needed until the tab has finished restoring.
       // When that's done it will be removed from the cache and we always
       // collect it in TabState._collectBaseTabData().
-      image: tabData.image || "",
+      image: tabData.image || null,
       iconLoadingPrincipal: tabData.iconLoadingPrincipal || null,
       searchMode: tabData.searchMode || null,
       userTypedValue: tabData.userTypedValue || "",
