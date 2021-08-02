@@ -435,6 +435,7 @@ option(
     env="GRADLE_MAVEN_REPOSITORIES",
     nargs="+",
     default=(
+        "https://maven.mozilla.org/maven2/",
         "https://maven.google.com/",
         "https://repo.maven.apache.org/maven2/",
         "https://plugins.gradle.org/m2/",
