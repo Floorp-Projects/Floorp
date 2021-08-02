@@ -361,6 +361,14 @@ class HashCodeScrambler {
     return HashNumber(hasher.sipHash(aHashCode));
   }
 
+  static constexpr size_t offsetOfMK0() {
+    return offsetof(HashCodeScrambler, mK0);
+  }
+
+  static constexpr size_t offsetOfMK1() {
+    return offsetof(HashCodeScrambler, mK1);
+  }
+
  private:
   struct SipHasher {
     SipHasher(uint64_t aK0, uint64_t aK1) {

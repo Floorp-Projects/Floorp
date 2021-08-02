@@ -4819,6 +4819,127 @@ void MacroAssembler::prepareHashBigInt(Register bigInt, Register result,
   scrambleHashCode(result);
 }
 
+void MacroAssembler::prepareHashObject(Register setObj, ValueOperand value,
+                                       Register result, Register temp1,
+                                       Register temp2, Register temp3,
+                                       Register temp4) {
+#ifdef JS_PUNBOX64
+  // Inline implementation of |OrderedHashTable::prepareHash()| and
+  // |HashCodeScrambler::scramble(v.asRawBits())|.
+
+  // Load the |ValueSet|.
+  loadPrivate(Address(setObj, SetObject::getDataSlotOffset()), temp1);
+
+  // Load |HashCodeScrambler::mK0| and |HashCodeScrambler::mK0|.
+  auto k0 = Register64(temp1);
+  auto k1 = Register64(temp2);
+  load64(Address(temp1, ValueSet::offsetOfImplHcsK1()), k1);
+  load64(Address(temp1, ValueSet::offsetOfImplHcsK0()), k0);
+
+  // Hash numbers are 32-bit values, so only hash the lower double-word.
+  static_assert(sizeof(mozilla::HashNumber) == 4);
+  move64To32(value.toRegister64(), result);
+
+  // Inline implementation of |SipHasher::sipHash()|.
+  auto m = Register64(result);
+  auto v0 = Register64(temp3);
+  auto v1 = Register64(temp4);
+  auto v2 = k0;
+  auto v3 = k1;
+
+  auto sipRound = [&]() {
+    // mV0 = WrappingAdd(mV0, mV1);
+    add64(v1, v0);
+
+    // mV1 = RotateLeft(mV1, 13);
+    rotateLeft64(Imm32(13), v1, v1, InvalidReg);
+
+    // mV1 ^= mV0;
+    xor64(v0, v1);
+
+    // mV0 = RotateLeft(mV0, 32);
+    rotateLeft64(Imm32(32), v0, v0, InvalidReg);
+
+    // mV2 = WrappingAdd(mV2, mV3);
+    add64(v3, v2);
+
+    // mV3 = RotateLeft(mV3, 16);
+    rotateLeft64(Imm32(16), v3, v3, InvalidReg);
+
+    // mV3 ^= mV2;
+    xor64(v2, v3);
+
+    // mV0 = WrappingAdd(mV0, mV3);
+    add64(v3, v0);
+
+    // mV3 = RotateLeft(mV3, 21);
+    rotateLeft64(Imm32(21), v3, v3, InvalidReg);
+
+    // mV3 ^= mV0;
+    xor64(v0, v3);
+
+    // mV2 = WrappingAdd(mV2, mV1);
+    add64(v1, v2);
+
+    // mV1 = RotateLeft(mV1, 17);
+    rotateLeft64(Imm32(17), v1, v1, InvalidReg);
+
+    // mV1 ^= mV2;
+    xor64(v2, v1);
+
+    // mV2 = RotateLeft(mV2, 32);
+    rotateLeft64(Imm32(32), v2, v2, InvalidReg);
+  };
+
+  // 1. Initialization.
+  // mV0 = aK0 ^ UINT64_C(0x736f6d6570736575);
+  move64(Imm64(0x736f6d6570736575), v0);
+  xor64(k0, v0);
+
+  // mV1 = aK1 ^ UINT64_C(0x646f72616e646f6d);
+  move64(Imm64(0x646f72616e646f6d), v1);
+  xor64(k1, v1);
+
+  // mV2 = aK0 ^ UINT64_C(0x6c7967656e657261);
+  MOZ_ASSERT(v2 == k0);
+  xor64(Imm64(0x6c7967656e657261), v2);
+
+  // mV3 = aK1 ^ UINT64_C(0x7465646279746573);
+  MOZ_ASSERT(v3 == k1);
+  xor64(Imm64(0x7465646279746573), v3);
+
+  // 2. Compression.
+  // mV3 ^= aM;
+  xor64(m, v3);
+
+  // sipRound();
+  sipRound();
+
+  // mV0 ^= aM;
+  xor64(m, v0);
+
+  // 3. Finalization.
+  // mV2 ^= 0xff;
+  xor64(Imm64(0xff), v2);
+
+  // for (int i = 0; i < 3; i++) sipRound();
+  for (int i = 0; i < 3; i++) {
+    sipRound();
+  }
+
+  // return mV0 ^ mV1 ^ mV2 ^ mV3;
+  xor64(v1, v0);
+  xor64(v2, v3);
+  xor64(v3, v0);
+
+  move64To32(v0, result);
+
+  scrambleHashCode(result);
+#else
+  MOZ_CRASH("Not implemented");
+#endif
+}
+
 template <typename OrderedHashTable>
 void MacroAssembler::orderedHashTableLookup(Register setOrMapObj,
                                             ValueOperand value, Register hash,
