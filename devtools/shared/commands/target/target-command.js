@@ -223,14 +223,15 @@ class TargetCommand extends EventEmitter {
     for (const target of this._targets) {
       // We only consider the top level target to be switched
       const isDestroyedTargetSwitching = target == this.targetFront;
+      const isServiceWorker = target.targetType === this.TYPES.SERVICE_WORKER;
 
-      // Only destroy service worker targets if this.destroyServiceWorkersOnNavigation is true
-      if (
-        target.targetType !== this.TYPES.SERVICE_WORKER ||
-        this.destroyServiceWorkersOnNavigation
-      ) {
+      // Only notify about service worker targets if this.destroyServiceWorkersOnNavigation
+      // is true
+      if (!isServiceWorker || this.destroyServiceWorkersOnNavigation) {
         this._onTargetDestroyed(target, {
           isTargetSwitching: isDestroyedTargetSwitching,
+          // Do not destroy service worker front as we may want to keep using it.
+          shouldDestroyTargetFront: !isServiceWorker,
         });
         destroyedTargets.push(target);
       }
