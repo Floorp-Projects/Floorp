@@ -23,6 +23,7 @@
   border: 1px solid var(--in-content-box-border-color, ThreeDDarkShadow);
   border-radius: 5px;
   padding: 16px;
+  margin-block: 6px;
 }
 
 #sanitizeEverythingWarningIcon {
@@ -42,4 +43,27 @@
 
 dialog:not([inbrowserwindow]) #titleText {
   display: none;
+}
+
+dialog[inbrowserwindow] {
+  --grid-padding: 16px;
+  padding: var(--grid-padding) calc(var(--grid-padding) - 4px);
+}
+
+dialog[inbrowserwindow] groupbox,
+dialog[inbrowserwindow] #sanitizeEverythingWarningBox,
+dialog[inbrowserwindow] #SanitizeDurationBox {
+  margin-inline: 4px;
+}
+
+dialog[inbrowserwindow] #sanitizeDurationLabel {
+  margin-inline-start: 0;
+}
+
+dialog[inbrowserwindow] #sanitizeDurationSuffixLabel {
+  margin-inline-end: 0;
+}
+
+dialog[inbrowserwindow] groupbox:last-child {
+  margin-block-end: 16px;
 }
