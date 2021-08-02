@@ -138,6 +138,10 @@ template <>
 struct TypeToDataType<JSLinearString*> {
   static const DataType result = Type_Object;
 };
+template <>
+struct TypeToDataType<JSAtom*> {
+  static const DataType result = Type_Object;
+};
 
 template <>
 struct TypeToDataType<BigInt*> {
@@ -2805,6 +2809,13 @@ BigInt* AtomicsXor64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
         return jit::AtomicOperations::fetchXorSeqCst(addr, val);
       },
       value);
+}
+
+JSAtom* AtomizeStringNoGC(JSContext* cx, JSString* str) {
+  // Called with GC values on the stack, so we better don't trigger GC.
+  JS::AutoCheckCannotGC nogc;
+
+  return AtomizeString(cx, str);
 }
 
 bool SetObjectHas(JSContext* cx, HandleObject obj, HandleValue key,
