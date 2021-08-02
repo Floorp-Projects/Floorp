@@ -5930,6 +5930,22 @@ AliasSet MSetObjectHasValueVMCall::getAliasSet() const {
   return AliasSet::Load(AliasSet::MapOrSetHashTable);
 }
 
+AliasSet MMapObjectHasNonBigInt::getAliasSet() const {
+  return AliasSet::Load(AliasSet::MapOrSetHashTable);
+}
+
+AliasSet MMapObjectHasBigInt::getAliasSet() const {
+  return AliasSet::Load(AliasSet::MapOrSetHashTable);
+}
+
+AliasSet MMapObjectHasValue::getAliasSet() const {
+  return AliasSet::Load(AliasSet::MapOrSetHashTable);
+}
+
+AliasSet MMapObjectHasValueVMCall::getAliasSet() const {
+  return AliasSet::Load(AliasSet::MapOrSetHashTable);
+}
+
 MIonToWasmCall* MIonToWasmCall::New(TempAllocator& alloc,
                                     WasmInstanceObject* instanceObj,
                                     const wasm::FuncExport& funcExport) {

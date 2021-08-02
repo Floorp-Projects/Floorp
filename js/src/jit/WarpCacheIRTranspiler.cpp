@@ -3995,6 +3995,110 @@ bool WarpCacheIRTranspiler::emitSetHasResult(ObjOperandId setId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMapHasNonGCThingResult(ObjOperandId mapId,
+                                                       ValOperandId valId) {
+  MDefinition* map = getOperand(mapId);
+  MDefinition* val = getOperand(valId);
+
+  auto* hashValue = MToHashableNonGCThing::New(alloc(), val);
+  add(hashValue);
+
+  auto* hash = MHashNonGCThing::New(alloc(), hashValue);
+  add(hash);
+
+  auto* ins = MMapObjectHasNonBigInt::New(alloc(), map, hashValue, hash);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitMapHasStringResult(ObjOperandId mapId,
+                                                   StringOperandId strId) {
+  MDefinition* map = getOperand(mapId);
+  MDefinition* str = getOperand(strId);
+
+  auto* hashValue = MToHashableString::New(alloc(), str);
+  add(hashValue);
+
+  auto* hash = MHashString::New(alloc(), hashValue);
+  add(hash);
+
+  auto* ins = MMapObjectHasNonBigInt::New(alloc(), map, hashValue, hash);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitMapHasSymbolResult(ObjOperandId mapId,
+                                                   SymbolOperandId symId) {
+  MDefinition* map = getOperand(mapId);
+  MDefinition* sym = getOperand(symId);
+
+  auto* hash = MHashSymbol::New(alloc(), sym);
+  add(hash);
+
+  auto* ins = MMapObjectHasNonBigInt::New(alloc(), map, sym, hash);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitMapHasBigIntResult(ObjOperandId mapId,
+                                                   BigIntOperandId bigIntId) {
+  MDefinition* map = getOperand(mapId);
+  MDefinition* bigInt = getOperand(bigIntId);
+
+  auto* hash = MHashBigInt::New(alloc(), bigInt);
+  add(hash);
+
+  auto* ins = MMapObjectHasBigInt::New(alloc(), map, bigInt, hash);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitMapHasObjectResult(ObjOperandId mapId,
+                                                   ObjOperandId objId) {
+  MDefinition* map = getOperand(mapId);
+  MDefinition* obj = getOperand(objId);
+
+  auto* hash = MHashObject::New(alloc(), map, obj);
+  add(hash);
+
+  auto* ins = MMapObjectHasNonBigInt::New(alloc(), map, obj, hash);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitMapHasResult(ObjOperandId mapId,
+                                             ValOperandId valId) {
+  MDefinition* map = getOperand(mapId);
+  MDefinition* val = getOperand(valId);
+
+#ifdef JS_PUNBOX64
+  auto* hashValue = MToHashableValue::New(alloc(), val);
+  add(hashValue);
+
+  auto* hash = MHashValue::New(alloc(), map, hashValue);
+  add(hash);
+
+  auto* ins = MMapObjectHasValue::New(alloc(), map, hashValue, hash);
+  add(ins);
+#else
+  auto* ins = MMapObjectHasValueVMCall::New(alloc(), map, val);
+  add(ins);
+#endif
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitTruthyResult(OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
