@@ -38,7 +38,7 @@
     document.l10n.setAttributes(inputElem, "about-telemetry-filter-all-placeholder");
 
     // Due to the async iteractions between nsINode.localize
-    // and DOMLocalization.jsm, we'll need to wait two frames
+    // and DOMLocalization, we'll need to wait two frames
     // to verify that no mutations happened.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
