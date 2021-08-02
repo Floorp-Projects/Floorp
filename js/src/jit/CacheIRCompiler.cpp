@@ -1956,6 +1956,9 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     case GuardClassKind::Set:
       clasp = &SetObject::class_;
       break;
+    case GuardClassKind::Map:
+      clasp = &MapObject::class_;
+      break;
   }
   MOZ_ASSERT(clasp);
 
@@ -8255,6 +8258,127 @@ bool CacheIRCompiler::emitSetHasObjectResult(ObjOperandId setId,
                          scratch4, scratch5);
 
   masm.setObjectHasNonBigInt(set, output.valueReg(), scratch1, scratch2,
+                             scratch3, scratch4);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch2, output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::emitMapHasResult(ObjOperandId mapId, ValOperandId valId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register map = allocator.useRegister(masm, mapId);
+  ValueOperand val = allocator.useValueRegister(masm, valId);
+
+  callvm.prepare();
+  masm.Push(val);
+  masm.Push(map);
+
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, bool*);
+  callvm.call<Fn, jit::MapObjectHas>();
+  return true;
+}
+
+bool CacheIRCompiler::emitMapHasNonGCThingResult(ObjOperandId mapId,
+                                                 ValOperandId valId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register map = allocator.useRegister(masm, mapId);
+  ValueOperand val = allocator.useValueRegister(masm, valId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
+  AutoScratchRegister scratch4(allocator, masm);
+  AutoAvailableFloatRegister scratchFloat(*this, FloatReg0);
+
+  masm.toHashableNonGCThing(val, output.valueReg(), scratchFloat);
+  masm.prepareHashNonGCThing(output.valueReg(), scratch1, scratch2);
+
+  masm.mapObjectHasNonBigInt(map, output.valueReg(), scratch1, scratch2,
+                             scratch3, scratch4);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch2, output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::emitMapHasSymbolResult(ObjOperandId mapId,
+                                             SymbolOperandId symId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register map = allocator.useRegister(masm, mapId);
+  Register sym = allocator.useRegister(masm, symId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
+  AutoScratchRegister scratch4(allocator, masm);
+
+  masm.prepareHashSymbol(sym, scratch1);
+
+  masm.tagValue(JSVAL_TYPE_SYMBOL, sym, output.valueReg());
+  masm.mapObjectHasNonBigInt(map, output.valueReg(), scratch1, scratch2,
+                             scratch3, scratch4);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch2, output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::emitMapHasBigIntResult(ObjOperandId mapId,
+                                             BigIntOperandId bigIntId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register map = allocator.useRegister(masm, mapId);
+  Register bigInt = allocator.useRegister(masm, bigIntId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
+  AutoScratchRegister scratch4(allocator, masm);
+  AutoScratchRegister scratch5(allocator, masm);
+#ifndef JS_CODEGEN_ARM
+  AutoScratchRegister scratch6(allocator, masm);
+#else
+  // We don't have more registers available on ARM32.
+  Register scratch6 = map;
+
+  masm.push(map);
+#endif
+
+  masm.prepareHashBigInt(bigInt, scratch1, scratch2, scratch3, scratch4);
+
+  masm.tagValue(JSVAL_TYPE_BIGINT, bigInt, output.valueReg());
+  masm.mapObjectHasBigInt(map, output.valueReg(), scratch1, scratch2, scratch3,
+                          scratch4, scratch5, scratch6);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch2, output.valueReg());
+
+#ifdef JS_CODEGEN_ARM
+  masm.pop(map);
+#endif
+  return true;
+}
+
+bool CacheIRCompiler::emitMapHasObjectResult(ObjOperandId mapId,
+                                             ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register map = allocator.useRegister(masm, mapId);
+  Register obj = allocator.useRegister(masm, objId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
+  AutoScratchRegister scratch4(allocator, masm);
+  AutoScratchRegister scratch5(allocator, masm);
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
+  masm.prepareHashObject(map, output.valueReg(), scratch1, scratch2, scratch3,
+                         scratch4, scratch5);
+
+  masm.mapObjectHasNonBigInt(map, output.valueReg(), scratch1, scratch2,
                              scratch3, scratch4);
   masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch2, output.valueReg());
   return true;
