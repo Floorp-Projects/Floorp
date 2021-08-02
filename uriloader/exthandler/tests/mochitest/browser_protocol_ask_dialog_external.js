@@ -7,12 +7,17 @@ let gHandlerService = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
   Ci.nsIHandlerService
 );
 
+const TEST_PATH = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "http://example.com"
+);
+
 /**
  * Creates dummy protocol handler
  */
 function initTestHandlers() {
   let handlerInfoThatAsks = HandlerServiceTestUtils.getBlankHandlerInfo(
-    "should-ask"
+    "local-app-test"
   );
 
   let appHandler = Cc[
@@ -108,7 +113,7 @@ add_task(async function test_external_asks_anyway() {
     gBrowser,
     true
   );
-  let fakeCmdLine = makeCmdLineHelper("should-ask:dummy");
+  let fakeCmdLine = makeCmdLineHelper("local-app-test:dummy");
   cmdLineHandler.handle(fakeCmdLine);
   let dialog = await chooserDialogOpenPromise;
   ok(dialog, "Should have prompted.");
@@ -168,4 +173,53 @@ add_task(async function test_web_app_doesnt_ask() {
     "dialogopen",
     dialogOpenListener
   );
+});
+
+add_task(async function external_https_redirect_doesnt_ask() {
+  // Listen for a dialog open and fail the test if it does:
+  let dialogOpenListener = () => ok(false, "Shouldn't have opened a dialog!");
+  document.documentElement.addEventListener("dialogopen", dialogOpenListener);
+  registerCleanupFunction(() =>
+    document.documentElement.removeEventListener(
+      "dialogopen",
+      dialogOpenListener
+    )
+  );
+
+  let initialTab = gBrowser.selectedTab;
+
+  gHandlerService.wrappedJSObject.mockProtocolHandler("local-app-test");
+  registerCleanupFunction(() =>
+    gHandlerService.wrappedJSObject.mockProtocolHandler()
+  );
+
+  // Set up a promise for an app to have launched with the right URI:
+  let loadPromise = TestUtils.topicObserved("mocked-protocol-handler");
+
+  // Load the URL:
+  const kURL = "local-app-test:redirect";
+  let cmdLineHandler = Cc["@mozilla.org/browser/final-clh;1"].getService(
+    Ci.nsICommandLineHandler
+  );
+  let fakeCmdLine = makeCmdLineHelper(
+    TEST_PATH + "redirect_helper.sjs?uri=" + encodeURIComponent(kURL)
+  );
+  cmdLineHandler.handle(fakeCmdLine);
+
+  // Check that the mock app was launched. If the dialog showed instead,
+  // the test will fail.
+  let [uri] = await loadPromise;
+  is(uri.spec, "local-app-test:redirect", "Should have seen correct URI.");
+  // We might have opened a blank tab, see bug 1718104 and friends.
+  if (gBrowser.selectedTab != initialTab) {
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  }
+
+  // We do this both here and in cleanup so it's easy to add tasks to this test,
+  // and so we clean up correctly if the test aborts before we get here.
+  document.documentElement.removeEventListener(
+    "dialogopen",
+    dialogOpenListener
+  );
+  gHandlerService.wrappedJSObject.mockProtocolHandler();
 });
