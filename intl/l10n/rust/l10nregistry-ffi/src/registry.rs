@@ -165,11 +165,11 @@ pub enum L10nRegistryStatus {
 }
 
 #[no_mangle]
-pub extern "C" fn l10nregistry_new() -> *const GeckoL10nRegistry {
+pub extern "C" fn l10nregistry_new(use_isolating: bool) -> *const GeckoL10nRegistry {
     let env = GeckoEnvironment;
     let mut reg = L10nRegistry::with_provider(env);
     let _ = reg
-        .set_adapt_bundle(GeckoBundleAdapter::default())
+        .set_adapt_bundle(GeckoBundleAdapter { use_isolating })
         .report_error();
     Rc::into_raw(Rc::new(reg))
 }

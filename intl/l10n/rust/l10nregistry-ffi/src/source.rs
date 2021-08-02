@@ -6,7 +6,7 @@ use super::fetcher::{GeckoFileFetcher, MockFileFetcher};
 use crate::env::GeckoEnvironment;
 
 use fluent::FluentResource;
-use l10nregistry::source::{FileSource, ResourceStatus};
+use l10nregistry::source::{FileSource, FileSourceOptions, ResourceStatus};
 
 use nsstring::{nsACString, nsCString};
 use thin_vec::ThinVec;
@@ -29,6 +29,7 @@ pub extern "C" fn l10nfilesource_new(
     name: &nsACString,
     locales: &ThinVec<nsCString>,
     pre_path: &nsACString,
+    allow_override: bool,
     status: &mut L10nFileSourceStatus,
 ) -> *const FileSource {
     if name.is_empty() {
@@ -55,7 +56,7 @@ pub extern "C" fn l10nfilesource_new(
         name.to_string(),
         locales,
         pre_path.to_string(),
-        Default::default(),
+        FileSourceOptions { allow_override },
         GeckoFileFetcher,
     );
     source.set_reporter(GeckoEnvironment);
@@ -71,6 +72,7 @@ pub unsafe extern "C" fn l10nfilesource_new_with_index(
     pre_path: &nsACString,
     index_elements: *const nsCString,
     index_length: usize,
+    allow_override: bool,
     status: &mut L10nFileSourceStatus,
 ) -> *const FileSource {
     if name.is_empty() {
@@ -107,7 +109,7 @@ pub unsafe extern "C" fn l10nfilesource_new_with_index(
         name.to_string(),
         locales,
         pre_path.to_string(),
-        Default::default(),
+        FileSourceOptions { allow_override },
         GeckoFileFetcher,
         index,
     );
