@@ -466,7 +466,6 @@ let JSWINDOWACTORS = {
 
     child: {
       moduleURI: "resource:///actors/DOMFullscreenChild.jsm",
-      group: "browsers",
       events: {
         "MozDOMFullscreen:Request": {},
         "MozDOMFullscreen:Entered": {},
@@ -476,6 +475,7 @@ let JSWINDOWACTORS = {
       },
     },
 
+    messageManagerGroups: ["browsers"],
     allFrames: true,
   },
 
