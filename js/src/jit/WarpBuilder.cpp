@@ -2504,7 +2504,7 @@ bool WarpBuilder::build_GetIntrinsic(BytecodeLocation loc) {
   MCallGetIntrinsicValue* ins = MCallGetIntrinsicValue::New(alloc(), name);
   current->add(ins);
   current->push(ins);
-  return true;
+  return resumeAfter(ins, loc);
 }
 
 bool WarpBuilder::build_ImportMeta(BytecodeLocation loc) {
