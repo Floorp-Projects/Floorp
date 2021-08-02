@@ -1124,8 +1124,8 @@ void GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock) {
 
 GCRuntime::GCRuntime(JSRuntime* rt)
     : rt(rt),
-      systemZone(nullptr),
       atomsZone(nullptr),
+      systemZone(nullptr),
       heapState_(JS::HeapState::Idle),
       stats_(this),
       marker(rt),
