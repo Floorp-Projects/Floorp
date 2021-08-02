@@ -625,14 +625,6 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   return nsCocoaUtils::ToNSString(title);
 }
 
-- (id)moxValue {
-  if ([self stateWithMask:states::CHECKABLE] != 0) {
-    return @([self stateWithMask:states::CHECKED] != 0);
-  }
-
-  return nil;
-}
-
 - (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled {
   [super stateChanged:state isEnabled:enabled];
 
