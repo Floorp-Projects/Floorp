@@ -124,9 +124,9 @@ class FormData final : public nsISupports,
   virtual nsresult AddNameDirectoryPair(const nsAString& aName,
                                         Directory* aDirectory) override;
 
-  typedef bool (*FormDataEntryCallback)(
-      const nsString& aName, const OwningBlobOrDirectoryOrUSVString& aValue,
-      void* aClosure);
+  using FormDataEntryCallback =
+      bool (*)(const nsString& aName,
+               const OwningBlobOrDirectoryOrUSVString& aValue, void* aClosure);
 
   uint32_t Length() const { return mFormData.Length(); }
 

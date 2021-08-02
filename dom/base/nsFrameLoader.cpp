@@ -152,7 +152,7 @@ using namespace mozilla::dom::ipc;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
-typedef ScrollableLayerGuid::ViewID ViewID;
+using ViewID = ScrollableLayerGuid::ViewID;
 
 using PrintPreviewResolver = std::function<void(const PrintPreviewResultInfo&)>;
 

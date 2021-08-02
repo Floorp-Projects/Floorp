@@ -27,7 +27,7 @@ class RemoteOuterWindowProxy
     : public RemoteObjectProxy<BrowsingContext,
                                Window_Binding::sCrossOriginProperties> {
  public:
-  typedef RemoteObjectProxy Base;
+  using Base = RemoteObjectProxy;
 
   constexpr RemoteOuterWindowProxy()
       : RemoteObjectProxy(prototypes::id::Window) {}

@@ -32,10 +32,10 @@ namespace mozilla {
 
 class TextInputProcessorNotification final
     : public nsITextInputProcessorNotification {
-  typedef IMENotification::SelectionChangeData SelectionChangeData;
-  typedef IMENotification::SelectionChangeDataBase SelectionChangeDataBase;
-  typedef IMENotification::TextChangeData TextChangeData;
-  typedef IMENotification::TextChangeDataBase TextChangeDataBase;
+  using SelectionChangeData = IMENotification::SelectionChangeData;
+  using SelectionChangeDataBase = IMENotification::SelectionChangeDataBase;
+  using TextChangeData = IMENotification::TextChangeData;
+  using TextChangeDataBase = IMENotification::TextChangeDataBase;
 
  public:
   explicit TextInputProcessorNotification(const char* aType)

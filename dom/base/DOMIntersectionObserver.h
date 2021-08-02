@@ -84,7 +84,7 @@ class DOMIntersectionObserver final : public nsISupports,
                                       public nsWrapperCache {
   virtual ~DOMIntersectionObserver() { Disconnect(); }
 
-  typedef void (*NativeCallback)(
+  using NativeCallback = void (*)(
       const Sequence<OwningNonNull<DOMIntersectionObserverEntry>>& aEntries);
   DOMIntersectionObserver(Document&, NativeCallback);
 

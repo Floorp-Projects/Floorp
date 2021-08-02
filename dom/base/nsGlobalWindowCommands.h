@@ -25,7 +25,7 @@ class nsWindowCommandRegistration {
 
 class nsGlobalWindowCommands {
  public:
-  typedef mozilla::layers::KeyboardScrollAction KeyboardScrollAction;
+  using KeyboardScrollAction = mozilla::layers::KeyboardScrollAction;
 
   /**
    * Search through nsGlobalWindowCommands to find the keyboard scrolling action

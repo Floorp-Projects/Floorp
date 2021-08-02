@@ -250,15 +250,15 @@ enum class PreventDefaultResult : uint8_t { No, ByContent, ByChrome };
 
 class nsContentUtils {
   friend class nsAutoScriptBlockerSuppressNodeRemoved;
-  typedef mozilla::dom::Element Element;
-  typedef mozilla::dom::Document Document;
-  typedef mozilla::Cancelable Cancelable;
-  typedef mozilla::CanBubble CanBubble;
-  typedef mozilla::Composed Composed;
-  typedef mozilla::ChromeOnlyDispatch ChromeOnlyDispatch;
-  typedef mozilla::EventMessage EventMessage;
-  typedef mozilla::TimeDuration TimeDuration;
-  typedef mozilla::Trusted Trusted;
+  using Element = mozilla::dom::Element;
+  using Document = mozilla::dom::Document;
+  using Cancelable = mozilla::Cancelable;
+  using CanBubble = mozilla::CanBubble;
+  using Composed = mozilla::Composed;
+  using ChromeOnlyDispatch = mozilla::ChromeOnlyDispatch;
+  using EventMessage = mozilla::EventMessage;
+  using TimeDuration = mozilla::TimeDuration;
+  using Trusted = mozilla::Trusted;
 
  public:
   static nsresult Init();

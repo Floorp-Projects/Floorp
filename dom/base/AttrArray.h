@@ -30,7 +30,7 @@ class nsRuleWalker;
 class nsMappedAttributeElement;
 
 class AttrArray {
-  typedef mozilla::dom::BorrowedAttrInfo BorrowedAttrInfo;
+  using BorrowedAttrInfo = mozilla::dom::BorrowedAttrInfo;
 
  public:
   AttrArray() = default;

@@ -39,13 +39,13 @@ class nsRange final : public mozilla::dom::AbstractRange,
                       public nsStubMutationObserver,
                       // For linking together selection-associated ranges.
                       public mozilla::LinkedListElement<nsRange> {
-  typedef mozilla::ErrorResult ErrorResult;
-  typedef mozilla::dom::AbstractRange AbstractRange;
-  typedef mozilla::dom::DocGroup DocGroup;
-  typedef mozilla::dom::DOMRect DOMRect;
-  typedef mozilla::dom::DOMRectList DOMRectList;
-  typedef mozilla::RangeBoundary RangeBoundary;
-  typedef mozilla::RawRangeBoundary RawRangeBoundary;
+  using ErrorResult = mozilla::ErrorResult;
+  using AbstractRange = mozilla::dom::AbstractRange;
+  using DocGroup = mozilla::dom::DocGroup;
+  using DOMRect = mozilla::dom::DOMRect;
+  using DOMRectList = mozilla::dom::DOMRectList;
+  using RangeBoundary = mozilla::RangeBoundary;
+  using RawRangeBoundary = mozilla::RawRangeBoundary;
 
   virtual ~nsRange();
   explicit nsRange(nsINode* aNode);

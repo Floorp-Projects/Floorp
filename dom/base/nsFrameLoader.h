@@ -105,13 +105,13 @@ class nsFrameLoader final : public nsStubMutationObserver,
   friend class AutoResetInShow;
   friend class AutoResetInFrameSwap;
   friend class nsFrameLoaderOwner;
-  typedef mozilla::dom::Document Document;
-  typedef mozilla::dom::Element Element;
-  typedef mozilla::dom::BrowserParent BrowserParent;
-  typedef mozilla::dom::BrowserBridgeChild BrowserBridgeChild;
-  typedef mozilla::dom::BrowsingContext BrowsingContext;
-  typedef mozilla::dom::BrowsingContextGroup BrowsingContextGroup;
-  typedef mozilla::dom::Promise Promise;
+  using Document = mozilla::dom::Document;
+  using Element = mozilla::dom::Element;
+  using BrowserParent = mozilla::dom::BrowserParent;
+  using BrowserBridgeChild = mozilla::dom::BrowserBridgeChild;
+  using BrowsingContext = mozilla::dom::BrowsingContext;
+  using BrowsingContextGroup = mozilla::dom::BrowsingContextGroup;
+  using Promise = mozilla::dom::Promise;
 
  public:
   // Called by Frame Elements to create a new FrameLoader.

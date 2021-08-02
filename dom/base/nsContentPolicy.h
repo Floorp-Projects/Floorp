@@ -29,7 +29,7 @@ class nsContentPolicy : public nsIContentPolicy {
   nsCategoryCache<nsIContentPolicy> mPolicies;
 
   // Helper type for CheckPolicy
-  typedef decltype(&nsIContentPolicy::ShouldProcess) CPMethod;
+  using CPMethod = decltype(&nsIContentPolicy::ShouldProcess);
 
   // Helper method that applies policyMethod across all policies in mPolicies
   // with the given parameters

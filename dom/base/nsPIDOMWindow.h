@@ -48,7 +48,7 @@ class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
 class nsPIWindowRoot;
 
-typedef uint32_t SuspendTypes;
+using SuspendTypes = uint32_t;
 
 namespace mozilla {
 namespace dom {
@@ -113,7 +113,7 @@ enum class FullscreenReason {
 
 class nsPIDOMWindowInner : public mozIDOMWindow {
  protected:
-  typedef mozilla::dom::Document Document;
+  using Document = mozilla::dom::Document;
   friend nsGlobalWindowInner;
   friend nsGlobalWindowOuter;
 
@@ -727,7 +727,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)
 
 class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
  protected:
-  typedef mozilla::dom::Document Document;
+  using Document = mozilla::dom::Document;
 
   explicit nsPIDOMWindowOuter(uint64_t aWindowID);
 

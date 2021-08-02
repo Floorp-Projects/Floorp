@@ -129,7 +129,7 @@ nsTextFragment& nsTextFragment::operator=(const nsTextFragment& aOther) {
 
 static inline int32_t FirstNon8BitUnvectorized(const char16_t* str,
                                                const char16_t* end) {
-  typedef Non8BitParameters<sizeof(size_t)> p;
+  using p = Non8BitParameters<sizeof(size_t)>;
   const size_t mask = p::mask();
   const uint32_t alignMask = p::alignMask();
   const uint32_t numUnicharsPerWord = p::numUnicharsPerWord();

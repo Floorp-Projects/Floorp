@@ -59,7 +59,7 @@ class nsPIWindowRoot : public mozilla::dom::EventTarget {
   virtual void AddBrowser(nsIRemoteTab* aBrowser) = 0;
   virtual void RemoveBrowser(nsIRemoteTab* aBrowser) = 0;
 
-  typedef void (*BrowserEnumerator)(nsIRemoteTab* aTab, void* aArg);
+  using BrowserEnumerator = void (*)(nsIRemoteTab* aTab, void* aArg);
 
   // Enumerate all stored browsers that for which the weak reference is valid.
   virtual void EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg) = 0;
