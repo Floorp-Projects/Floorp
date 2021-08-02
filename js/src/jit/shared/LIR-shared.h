@@ -8996,6 +8996,21 @@ class LToHashableString : public LInstructionHelper<1, 1, 0> {
   }
 };
 
+class LToHashableValue : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1> {
+ public:
+  LIR_HEADER(ToHashableValue)
+
+  LToHashableValue(const LBoxAllocation& input, const LDefinition& tempFloat)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Input, input);
+    setTemp(0, tempFloat);
+  }
+
+  static constexpr size_t Input = 0;
+
+  const LDefinition* tempFloat() { return getTemp(0); }
+};
+
 class LHashNonGCThing : public LInstructionHelper<1, BOX_PIECES, 1> {
  public:
   LIR_HEADER(HashNonGCThing)
@@ -9077,6 +9092,31 @@ class LHashObject : public LInstructionHelper<1, 1 + BOX_PIECES, 4> {
   const LDefinition* temp4() { return getTemp(3); }
 };
 
+class LHashValue : public LInstructionHelper<1, 1 + BOX_PIECES, 4> {
+ public:
+  LIR_HEADER(HashValue)
+
+  LHashValue(const LAllocation& setObject, const LBoxAllocation& input,
+             const LDefinition& temp1, const LDefinition& temp2,
+             const LDefinition& temp3, const LDefinition& temp4)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, setObject);
+    setBoxOperand(Input, input);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+    setTemp(2, temp3);
+    setTemp(3, temp4);
+  }
+
+  static constexpr size_t Input = 1;
+
+  const LAllocation* setObject() { return getOperand(0); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+  const LDefinition* temp3() { return getTemp(2); }
+  const LDefinition* temp4() { return getTemp(3); }
+};
+
 class LSetObjectHasNonBigInt : public LInstructionHelper<1, 2 + BOX_PIECES, 2> {
  public:
   LIR_HEADER(SetObjectHasNonBigInt)
@@ -9126,6 +9166,51 @@ class LSetObjectHasBigInt : public LInstructionHelper<1, 2 + BOX_PIECES, 4> {
   const LDefinition* temp2() { return getTemp(1); }
   const LDefinition* temp3() { return getTemp(2); }
   const LDefinition* temp4() { return getTemp(3); }
+};
+
+class LSetObjectHasValue : public LInstructionHelper<1, 2 + BOX_PIECES, 4> {
+ public:
+  LIR_HEADER(SetObjectHasValue)
+
+  LSetObjectHasValue(const LAllocation& setObject, const LBoxAllocation& input,
+                     const LAllocation& hash, const LDefinition& temp1,
+                     const LDefinition& temp2, const LDefinition& temp3,
+                     const LDefinition& temp4)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, setObject);
+    setBoxOperand(Input, input);
+    setOperand(Input + BOX_PIECES, hash);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+    setTemp(2, temp3);
+    setTemp(3, temp4);
+  }
+
+  static constexpr size_t Input = 1;
+
+  const LAllocation* setObject() { return getOperand(0); }
+  const LAllocation* hash() { return getOperand(Input + BOX_PIECES); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+  const LDefinition* temp3() { return getTemp(2); }
+  const LDefinition* temp4() { return getTemp(3); }
+};
+
+class LSetObjectHasValueVMCall
+    : public LCallInstructionHelper<1, 1 + BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(SetObjectHasValueVMCall)
+
+  LSetObjectHasValueVMCall(const LAllocation& setObject,
+                           const LBoxAllocation& input)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, setObject);
+    setBoxOperand(Input, input);
+  }
+
+  static constexpr size_t Input = 1;
+
+  const LAllocation* setObject() { return getOperand(0); }
 };
 
 template <size_t NumDefs>
