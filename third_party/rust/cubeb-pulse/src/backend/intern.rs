@@ -8,7 +8,7 @@ use std::os::raw::c_char;
 
 #[derive(Debug)]
 pub struct Intern {
-    vec: Vec<Box<CString>>,
+    vec: Vec<CString>,
 }
 
 impl Intern {
@@ -26,7 +26,7 @@ impl Intern {
             }
         }
 
-        self.vec.push(Box::new(string.to_owned()));
+        self.vec.push(string.to_owned());
         self.vec.last().unwrap().as_ptr()
     }
 }

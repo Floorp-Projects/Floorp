@@ -5,8 +5,8 @@
 
 mod context;
 mod cork_state;
-mod stream;
 mod intern;
+mod stream;
 
 pub use self::context::PulseContext;
 use self::intern::Intern;

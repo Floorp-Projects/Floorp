@@ -4,8 +4,10 @@
 // accompanying file LICENSE for details.
 
 use backend::*;
-use cubeb_backend::{ffi, log_enabled, Context, ContextOps, DeviceCollectionRef, DeviceId,
-                    DeviceType, Error, Ops, Result, Stream, StreamParams, StreamParamsRef};
+use cubeb_backend::{
+    ffi, log_enabled, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceType, Error, Ops,
+    Result, Stream, StreamParams, StreamParamsRef,
+};
 use pulse::{self, ProplistExt};
 use pulse_ffi::*;
 use semver;
@@ -92,17 +94,8 @@ impl PulseContext {
         }))
     }
 
-    fn server_info_cb(
-        context: &pulse::Context,
-        info: Option<&pulse::ServerInfo>,
-        u: *mut c_void,
-    ) {
-        fn sink_info_cb(
-            _: &pulse::Context,
-            i: *const pulse::SinkInfo,
-            eol: i32,
-            u: *mut c_void,
-        ) {
+    fn server_info_cb(context: &pulse::Context, info: Option<&pulse::ServerInfo>, u: *mut c_void) {
+        fn sink_info_cb(_: &pulse::Context, i: *const pulse::SinkInfo, eol: i32, u: *mut c_void) {
             let ctx = unsafe { &mut *(u as *mut PulseContext) };
             if eol == 0 {
                 let info = unsafe { &*i };
@@ -110,7 +103,7 @@ impl PulseContext {
                 ctx.default_sink_info = Some(DefaultInfo {
                     sample_spec: info.sample_spec,
                     channel_map: info.channel_map,
-                    flags: flags,
+                    flags,
                 });
             }
             ctx.mainloop.signal();
@@ -220,11 +213,13 @@ impl PulseContext {
                     }
                 }
             } else if (f == pulse::SubscriptionEventFacility::Server)
-                       && (t == pulse::SubscriptionEventType::Change) {
+                && (t == pulse::SubscriptionEventType::Change)
+            {
                 cubeb_log!("Server changed {}", index as i32);
                 let user_data: *mut c_void = ctx as *mut _ as *mut _;
                 if let Some(ref context) = ctx.context {
-                    if let Err(e) = context.get_server_info(PulseContext::server_info_cb, user_data) {
+                    if let Err(e) = context.get_server_info(PulseContext::server_info_cb, user_data)
+                    {
                         cubeb_log!("get_server_info ignored failure: {}", e);
                     }
                 }
@@ -335,14 +330,14 @@ impl ContextOps for PulseContext {
             let device_id = ctx.devids.borrow_mut().add(info_name);
             let friendly_name = info_description.into_raw();
             let devinfo = ffi::cubeb_device_info {
-                device_id: device_id,
+                device_id,
                 devid: device_id as ffi::cubeb_devid,
-                friendly_name: friendly_name,
-                group_id: group_id,
-                vendor_name: vendor_name,
+                friendly_name,
+                group_id,
+                vendor_name,
                 device_type: ffi::CUBEB_DEVICE_TYPE_OUTPUT,
                 state: ctx.state_from_port(info.active_port),
-                preferred: preferred,
+                preferred,
                 format: ffi::CUBEB_DEVICE_FMT_ALL,
                 default_format: pulse_format_to_cubeb_format(info.sample_spec.format),
                 max_channels: u32::from(info.channel_map.channels),
@@ -396,14 +391,14 @@ impl ContextOps for PulseContext {
             let device_id = ctx.devids.borrow_mut().add(info_name);
             let friendly_name = info_description.into_raw();
             let devinfo = ffi::cubeb_device_info {
-                device_id: device_id,
+                device_id,
                 devid: device_id as ffi::cubeb_devid,
-                friendly_name: friendly_name,
-                group_id: group_id,
-                vendor_name: vendor_name,
+                friendly_name,
+                group_id,
+                vendor_name,
                 device_type: ffi::CUBEB_DEVICE_TYPE_INPUT,
                 state: ctx.state_from_port(info.active_port),
-                preferred: preferred,
+                preferred,
                 format: ffi::CUBEB_DEVICE_FMT_ALL,
                 default_format: pulse_format_to_cubeb_format(info.sample_spec.format),
                 max_channels: u32::from(info.channel_map.channels),
@@ -506,7 +501,7 @@ impl ContextOps for PulseContext {
         Ok(())
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
     fn stream_init(
         &mut self,
         stream_name: Option<&CStr>,
@@ -591,10 +586,7 @@ impl PulseContext {
         }
 
         self.context = {
-            let name = match self.context_name.as_ref() {
-                Some(s) => Some(s.as_ref()),
-                None => None,
-            };
+            let name = self.context_name.as_ref().map(|s| s.as_ref());
             pulse::Context::new(&self.mainloop.get_api(), name)
         };
 
@@ -723,7 +715,7 @@ impl<'a> PulseDevListData<'a> {
             default_sink_name: CString::default(),
             default_source_name: CString::default(),
             devinfo: Vec::new(),
-            context: context,
+            context,
         }
     }
 }

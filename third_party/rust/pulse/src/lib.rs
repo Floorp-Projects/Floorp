@@ -86,10 +86,10 @@ impl ContextState {
     // It must match the version from PA headers.
     pub fn is_good(self) -> bool {
         match self {
-            ContextState::Connecting |
-            ContextState::Authorizing |
-            ContextState::SettingName |
-            ContextState::Ready => true,
+            ContextState::Connecting
+            | ContextState::Authorizing
+            | ContextState::SettingName
+            | ContextState::Ready => true,
             _ => false,
         }
     }
@@ -216,7 +216,6 @@ impl Into<ffi::pa_device_type_t> for DeviceType {
     }
 }
 
-
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StreamDirection {
@@ -269,18 +268,29 @@ bitflags! {
 
 impl StreamFlags {
     pub fn try_from(x: ffi::pa_stream_flags_t) -> Option<Self> {
-        if (x &
-            !(ffi::PA_STREAM_NOFLAGS | ffi::PA_STREAM_START_CORKED | ffi::PA_STREAM_INTERPOLATE_TIMING |
-              ffi::PA_STREAM_NOT_MONOTONIC | ffi::PA_STREAM_AUTO_TIMING_UPDATE |
-              ffi::PA_STREAM_NO_REMAP_CHANNELS |
-              ffi::PA_STREAM_NO_REMIX_CHANNELS | ffi::PA_STREAM_FIX_FORMAT | ffi::PA_STREAM_FIX_RATE |
-              ffi::PA_STREAM_FIX_CHANNELS |
-              ffi::PA_STREAM_DONT_MOVE | ffi::PA_STREAM_VARIABLE_RATE | ffi::PA_STREAM_PEAK_DETECT |
-              ffi::PA_STREAM_START_MUTED | ffi::PA_STREAM_ADJUST_LATENCY |
-              ffi::PA_STREAM_EARLY_REQUESTS |
-              ffi::PA_STREAM_DONT_INHIBIT_AUTO_SUSPEND |
-              ffi::PA_STREAM_START_UNMUTED | ffi::PA_STREAM_FAIL_ON_SUSPEND |
-              ffi::PA_STREAM_RELATIVE_VOLUME | ffi::PA_STREAM_PASSTHROUGH)) == 0 {
+        if (x & !(ffi::PA_STREAM_NOFLAGS
+            | ffi::PA_STREAM_START_CORKED
+            | ffi::PA_STREAM_INTERPOLATE_TIMING
+            | ffi::PA_STREAM_NOT_MONOTONIC
+            | ffi::PA_STREAM_AUTO_TIMING_UPDATE
+            | ffi::PA_STREAM_NO_REMAP_CHANNELS
+            | ffi::PA_STREAM_NO_REMIX_CHANNELS
+            | ffi::PA_STREAM_FIX_FORMAT
+            | ffi::PA_STREAM_FIX_RATE
+            | ffi::PA_STREAM_FIX_CHANNELS
+            | ffi::PA_STREAM_DONT_MOVE
+            | ffi::PA_STREAM_VARIABLE_RATE
+            | ffi::PA_STREAM_PEAK_DETECT
+            | ffi::PA_STREAM_START_MUTED
+            | ffi::PA_STREAM_ADJUST_LATENCY
+            | ffi::PA_STREAM_EARLY_REQUESTS
+            | ffi::PA_STREAM_DONT_INHIBIT_AUTO_SUSPEND
+            | ffi::PA_STREAM_START_UNMUTED
+            | ffi::PA_STREAM_FAIL_ON_SUSPEND
+            | ffi::PA_STREAM_RELATIVE_VOLUME
+            | ffi::PA_STREAM_PASSTHROUGH))
+            == 0
+        {
             Some(unsafe { ::std::mem::transmute(x) })
         } else {
             None
@@ -299,7 +309,7 @@ pub enum StreamLatency {
     Negative(u64),
 }
 
-bitflags!{
+bitflags! {
     pub struct SubscriptionMask : u32 {
         const SINK = ffi::PA_SUBSCRIPTION_MASK_SINK;
         const SOURCE = ffi::PA_SUBSCRIPTION_MASK_SOURCE;
@@ -358,7 +368,9 @@ pub enum SubscriptionEventType {
 pub struct SubscriptionEvent(ffi::pa_subscription_event_type_t);
 impl SubscriptionEvent {
     pub fn try_from(x: ffi::pa_subscription_event_type_t) -> Option<Self> {
-        if (x & !(ffi::PA_SUBSCRIPTION_EVENT_TYPE_MASK | ffi::PA_SUBSCRIPTION_EVENT_FACILITY_MASK)) == 0 {
+        if (x & !(ffi::PA_SUBSCRIPTION_EVENT_TYPE_MASK | ffi::PA_SUBSCRIPTION_EVENT_FACILITY_MASK))
+            == 0
+        {
             Some(SubscriptionEvent(x))
         } else {
             None
@@ -415,11 +427,18 @@ bitflags! {
 
 impl SinkFlags {
     pub fn try_from(x: ffi::pa_sink_flags_t) -> Option<SinkFlags> {
-        if (x &
-            !(ffi::PA_SINK_NOFLAGS | ffi::PA_SINK_HW_VOLUME_CTRL | ffi::PA_SINK_LATENCY |
-              ffi::PA_SINK_HARDWARE | ffi::PA_SINK_NETWORK | ffi::PA_SINK_HW_MUTE_CTRL |
-              ffi::PA_SINK_DECIBEL_VOLUME | ffi::PA_SINK_DYNAMIC_LATENCY |
-              ffi::PA_SINK_FLAT_VOLUME | ffi::PA_SINK_SET_FORMATS)) == 0 {
+        if (x & !(ffi::PA_SINK_NOFLAGS
+            | ffi::PA_SINK_HW_VOLUME_CTRL
+            | ffi::PA_SINK_LATENCY
+            | ffi::PA_SINK_HARDWARE
+            | ffi::PA_SINK_NETWORK
+            | ffi::PA_SINK_HW_MUTE_CTRL
+            | ffi::PA_SINK_DECIBEL_VOLUME
+            | ffi::PA_SINK_DYNAMIC_LATENCY
+            | ffi::PA_SINK_FLAT_VOLUME
+            | ffi::PA_SINK_SET_FORMATS))
+            == 0
+        {
             Some(unsafe { ::std::mem::transmute(x) })
         } else {
             None
@@ -438,7 +457,7 @@ pub enum SinkState {
     Unlinked = ffi::PA_SINK_UNLINKED,
 }
 
-bitflags!{
+bitflags! {
     pub struct SourceFlags: u32 {
         const HW_VOLUME_CTRL = ffi::PA_SOURCE_HW_VOLUME_CTRL;
         const LATENCY = ffi::PA_SOURCE_LATENCY;
@@ -607,9 +626,8 @@ impl ChannelMapExt for ChannelMap {
     }
     fn init_auto(ch: u32, def: ffi::pa_channel_map_def_t) -> Option<ChannelMap> {
         let mut cm = ChannelMap::default();
-        let r: *mut ffi::pa_channel_map = unsafe {
-            ffi::pa_channel_map_init_auto(&mut cm, ch, def)
-        };
+        let r: *mut ffi::pa_channel_map =
+            unsafe { ffi::pa_channel_map_init_auto(&mut cm, ch, def) };
         if r.is_null() {
             None
         } else {

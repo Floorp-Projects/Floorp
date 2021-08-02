@@ -3,13 +3,13 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
 
-use ::*;
 use ffi;
 use std::ffi::CStr;
 use std::mem::{forget, MaybeUninit};
 use std::os::raw::{c_int, c_void};
 use std::ptr;
 use util::UnwrapCStr;
+use *;
 
 // A note about `wrapped` functions
 //
@@ -57,7 +57,7 @@ macro_rules! op_or_err {
         } else {
             Ok(unsafe { operation::from_raw_ptr(o) })
         }
-    }}
+    }};
 }
 
 #[repr(C)]
@@ -66,7 +66,8 @@ pub struct Context(*mut ffi::pa_context);
 
 impl Context {
     pub fn new<'a, OPT>(api: &MainloopApi, name: OPT) -> Option<Self>
-        where OPT: Into<Option<&'a CStr>>
+    where
+        OPT: Into<Option<&'a CStr>>,
     {
         let ptr = unsafe { ffi::pa_context_new(api.raw_mut(), name.unwrap_cstr()) };
         if ptr.is_null() {
@@ -94,13 +95,15 @@ impl Context {
     }
 
     pub fn set_state_callback<CB>(&self, _: CB, userdata: *mut c_void)
-        where CB: Fn(&Context, *mut c_void)
+    where
+        CB: Fn(&Context, *mut c_void),
     {
         assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, userdata: *mut c_void)
-            where F: Fn(&Context, *mut c_void)
+        where
+            F: Fn(&Context, *mut c_void),
         {
             let ctx = context::from_raw_ptr(c);
             let cb = MaybeUninit::<F>::uninit();
@@ -120,19 +123,26 @@ impl Context {
     }
 
     pub fn get_state(&self) -> ContextState {
-        ContextState::try_from(unsafe {
-            ffi::pa_context_get_state(self.raw_mut())
-        }).expect("pa_context_get_state returned invalid ContextState")
+        ContextState::try_from(unsafe { ffi::pa_context_get_state(self.raw_mut()) })
+            .expect("pa_context_get_state returned invalid ContextState")
     }
 
-    pub fn connect<'a, OPT>(&self, server: OPT, flags: ContextFlags, api: *const ffi::pa_spawn_api) -> Result<()>
-        where OPT: Into<Option<&'a CStr>>
+    pub fn connect<'a, OPT>(
+        &self,
+        server: OPT,
+        flags: ContextFlags,
+        api: *const ffi::pa_spawn_api,
+    ) -> Result<()>
+    where
+        OPT: Into<Option<&'a CStr>>,
     {
         let r = unsafe {
-            ffi::pa_context_connect(self.raw_mut(),
-                                    server.into().unwrap_cstr(),
-                                    flags.into(),
-                                    api)
+            ffi::pa_context_connect(
+                self.raw_mut(),
+                server.into().unwrap_cstr(),
+                flags.into(),
+                api,
+            )
         };
         error_result!((), r)
     }
@@ -143,15 +153,16 @@ impl Context {
         }
     }
 
-
     pub fn drain<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
-        where CB: Fn(&Context, *mut c_void)
+    where
+        CB: Fn(&Context, *mut c_void),
     {
         assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, userdata: *mut c_void)
-            where F: Fn(&Context, *mut c_void)
+        where
+            F: Fn(&Context, *mut c_void),
         {
             let ctx = context::from_raw_ptr(c);
             let cb = MaybeUninit::<F>::uninit();
@@ -161,21 +172,31 @@ impl Context {
             result
         }
 
-        op_or_err!(self,
-                   ffi::pa_context_drain(self.raw_mut(), Some(wrapped::<CB>), userdata))
+        op_or_err!(
+            self,
+            ffi::pa_context_drain(self.raw_mut(), Some(wrapped::<CB>), userdata)
+        )
     }
 
-    pub fn rttime_new<CB>(&self, usec: USec, _: CB, userdata: *mut c_void) -> *mut ffi::pa_time_event
-        where CB: Fn(&MainloopApi, *mut ffi::pa_time_event, &TimeVal, *mut c_void)
+    pub fn rttime_new<CB>(
+        &self,
+        usec: USec,
+        _: CB,
+        userdata: *mut c_void,
+    ) -> *mut ffi::pa_time_event
+    where
+        CB: Fn(&MainloopApi, *mut ffi::pa_time_event, &TimeVal, *mut c_void),
     {
         assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(a: *mut ffi::pa_mainloop_api,
-                                        e: *mut ffi::pa_time_event,
-                                        tv: *const TimeVal,
-                                        userdata: *mut c_void)
-            where F: Fn(&MainloopApi, *mut ffi::pa_time_event, &TimeVal, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            a: *mut ffi::pa_mainloop_api,
+            e: *mut ffi::pa_time_event,
+            tv: *const TimeVal,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&MainloopApi, *mut ffi::pa_time_event, &TimeVal, *mut c_void),
         {
             let api = mainloop_api::from_raw_ptr(a);
             let timeval = &*tv;
@@ -190,19 +211,20 @@ impl Context {
     }
 
     pub fn get_server_info<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
-        where CB: Fn(&Context, Option<&ServerInfo>, *mut c_void)
+    where
+        CB: Fn(&Context, Option<&ServerInfo>, *mut c_void),
     {
         assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, i: *const ffi::pa_server_info, userdata: *mut c_void)
-            where F: Fn(&Context, Option<&ServerInfo>, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            c: *mut ffi::pa_context,
+            i: *const ffi::pa_server_info,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Context, Option<&ServerInfo>, *mut c_void),
         {
-            let info = if i.is_null() {
-                None
-            } else {
-                Some(&*i)
-            };
+            let info = if i.is_null() { None } else { Some(&*i) };
             let ctx = context::from_raw_ptr(c);
             let cb = MaybeUninit::<F>::uninit();
             let result = (*cb.as_ptr())(&ctx, info, userdata);
@@ -211,11 +233,18 @@ impl Context {
             result
         }
 
-        op_or_err!(self,
-                   ffi::pa_context_get_server_info(self.raw_mut(), Some(wrapped::<CB>), userdata))
+        op_or_err!(
+            self,
+            ffi::pa_context_get_server_info(self.raw_mut(), Some(wrapped::<CB>), userdata)
+        )
     }
 
-    pub fn get_sink_info_by_name<'str, CS, CB>(&self, name: CS, _: CB, userdata: *mut c_void) -> Result<Operation>
+    pub fn get_sink_info_by_name<'str, CS, CB>(
+        &self,
+        name: CS,
+        _: CB,
+        userdata: *mut c_void,
+    ) -> Result<Operation>
     where
         CB: Fn(&Context, *const SinkInfo, i32, *mut c_void),
         CS: Into<Option<&'str CStr>>,
@@ -223,11 +252,13 @@ impl Context {
         assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
-                                        info: *const ffi::pa_sink_info,
-                                        eol: c_int,
-                                        userdata: *mut c_void)
-            where F: Fn(&Context, *const SinkInfo, i32, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            c: *mut ffi::pa_context,
+            info: *const ffi::pa_sink_info,
+            eol: c_int,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Context, *const SinkInfo, i32, *mut c_void),
         {
             let ctx = context::from_raw_ptr(c);
             let cb = MaybeUninit::<F>::uninit();
@@ -237,24 +268,31 @@ impl Context {
             result
         }
 
-        op_or_err!(self,
-                   ffi::pa_context_get_sink_info_by_name(self.raw_mut(),
-                                                        name.into().unwrap_cstr(),
-                                                        Some(wrapped::<CB>),
-                                                        userdata))
+        op_or_err!(
+            self,
+            ffi::pa_context_get_sink_info_by_name(
+                self.raw_mut(),
+                name.into().unwrap_cstr(),
+                Some(wrapped::<CB>),
+                userdata
+            )
+        )
     }
 
     pub fn get_sink_info_list<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
-        where CB: Fn(&Context, *const SinkInfo, i32, *mut c_void)
+    where
+        CB: Fn(&Context, *const SinkInfo, i32, *mut c_void),
     {
         assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
-                                        info: *const ffi::pa_sink_info,
-                                        eol: c_int,
-                                        userdata: *mut c_void)
-            where F: Fn(&Context, *const SinkInfo, i32, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            c: *mut ffi::pa_context,
+            info: *const ffi::pa_sink_info,
+            eol: c_int,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Context, *const SinkInfo, i32, *mut c_void),
         {
             let ctx = context::from_raw_ptr(c);
             let cb = MaybeUninit::<F>::uninit();
@@ -264,21 +302,31 @@ impl Context {
             result
         }
 
-        op_or_err!(self,
-                   ffi::pa_context_get_sink_info_list(self.raw_mut(), Some(wrapped::<CB>), userdata))
+        op_or_err!(
+            self,
+            ffi::pa_context_get_sink_info_list(self.raw_mut(), Some(wrapped::<CB>), userdata)
+        )
     }
 
-    pub fn get_sink_input_info<CB>(&self, idx: u32, _: CB, userdata: *mut c_void) -> Result<Operation>
-        where CB: Fn(&Context, *const SinkInputInfo, i32, *mut c_void)
+    pub fn get_sink_input_info<CB>(
+        &self,
+        idx: u32,
+        _: CB,
+        userdata: *mut c_void,
+    ) -> Result<Operation>
+    where
+        CB: Fn(&Context, *const SinkInputInfo, i32, *mut c_void),
     {
         assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
-                                        info: *const ffi::pa_sink_input_info,
-                                        eol: c_int,
-                                        userdata: *mut c_void)
-            where F: Fn(&Context, *const SinkInputInfo, i32, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            c: *mut ffi::pa_context,
+            info: *const ffi::pa_sink_input_info,
+            eol: c_int,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Context, *const SinkInputInfo, i32, *mut c_void),
         {
             let ctx = context::from_raw_ptr(c);
             let cb = MaybeUninit::<F>::uninit();
@@ -288,21 +336,26 @@ impl Context {
             result
         }
 
-        op_or_err!(self,
-                   ffi::pa_context_get_sink_input_info(self.raw_mut(), idx, Some(wrapped::<CB>), userdata))
+        op_or_err!(
+            self,
+            ffi::pa_context_get_sink_input_info(self.raw_mut(), idx, Some(wrapped::<CB>), userdata)
+        )
     }
 
     pub fn get_source_info_list<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
-        where CB: Fn(&Context, *const SourceInfo, i32, *mut c_void)
+    where
+        CB: Fn(&Context, *const SourceInfo, i32, *mut c_void),
     {
         assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
-                                        info: *const ffi::pa_source_info,
-                                        eol: c_int,
-                                        userdata: *mut c_void)
-            where F: Fn(&Context, *const SourceInfo, i32, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            c: *mut ffi::pa_context,
+            info: *const ffi::pa_source_info,
+            eol: c_int,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Context, *const SourceInfo, i32, *mut c_void),
         {
             let ctx = context::from_raw_ptr(c);
             let cb = MaybeUninit::<F>::uninit();
@@ -312,23 +365,31 @@ impl Context {
             result
         }
 
-        op_or_err!(self,
-                   ffi::pa_context_get_source_info_list(self.raw_mut(), Some(wrapped::<CB>), userdata))
+        op_or_err!(
+            self,
+            ffi::pa_context_get_source_info_list(self.raw_mut(), Some(wrapped::<CB>), userdata)
+        )
     }
 
-    pub fn set_sink_input_volume<CB>(&self,
-                                     idx: u32,
-                                     volume: &CVolume,
-                                     _: CB,
-                                     userdata: *mut c_void)
-                                     -> Result<Operation>
-        where CB: Fn(&Context, i32, *mut c_void)
+    pub fn set_sink_input_volume<CB>(
+        &self,
+        idx: u32,
+        volume: &CVolume,
+        _: CB,
+        userdata: *mut c_void,
+    ) -> Result<Operation>
+    where
+        CB: Fn(&Context, i32, *mut c_void),
     {
         assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, success: c_int, userdata: *mut c_void)
-            where F: Fn(&Context, i32, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            c: *mut ffi::pa_context,
+            success: c_int,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Context, i32, *mut c_void),
         {
             let ctx = context::from_raw_ptr(c);
             let cb = MaybeUninit::<F>::uninit();
@@ -338,18 +399,36 @@ impl Context {
             result
         }
 
-        op_or_err!(self,
-                   ffi::pa_context_set_sink_input_volume(self.raw_mut(), idx, volume, Some(wrapped::<CB>), userdata))
+        op_or_err!(
+            self,
+            ffi::pa_context_set_sink_input_volume(
+                self.raw_mut(),
+                idx,
+                volume,
+                Some(wrapped::<CB>),
+                userdata
+            )
+        )
     }
 
-    pub fn subscribe<CB>(&self, m: SubscriptionMask, _: CB, userdata: *mut c_void) -> Result<Operation>
-        where CB: Fn(&Context, i32, *mut c_void)
+    pub fn subscribe<CB>(
+        &self,
+        m: SubscriptionMask,
+        _: CB,
+        userdata: *mut c_void,
+    ) -> Result<Operation>
+    where
+        CB: Fn(&Context, i32, *mut c_void),
     {
         assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, success: c_int, userdata: *mut c_void)
-            where F: Fn(&Context, i32, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            c: *mut ffi::pa_context,
+            success: c_int,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Context, i32, *mut c_void),
         {
             let ctx = context::from_raw_ptr(c);
             let cb = MaybeUninit::<F>::uninit();
@@ -359,8 +438,10 @@ impl Context {
             result
         }
 
-        op_or_err!(self,
-                   ffi::pa_context_subscribe(self.raw_mut(), m.into(), Some(wrapped::<CB>), userdata))
+        op_or_err!(
+            self,
+            ffi::pa_context_subscribe(self.raw_mut(), m.into(), Some(wrapped::<CB>), userdata)
+        )
     }
 
     pub fn clear_subscribe_callback(&self) {
@@ -370,20 +451,23 @@ impl Context {
     }
 
     pub fn set_subscribe_callback<CB>(&self, _: CB, userdata: *mut c_void)
-        where CB: Fn(&Context, SubscriptionEvent, u32, *mut c_void)
+    where
+        CB: Fn(&Context, SubscriptionEvent, u32, *mut c_void),
     {
         assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
-                                        t: ffi::pa_subscription_event_type_t,
-                                        idx: u32,
-                                        userdata: *mut c_void)
-            where F: Fn(&Context, SubscriptionEvent, u32, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            c: *mut ffi::pa_context,
+            t: ffi::pa_subscription_event_type_t,
+            idx: u32,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Context, SubscriptionEvent, u32, *mut c_void),
         {
             let ctx = context::from_raw_ptr(c);
             let event = SubscriptionEvent::try_from(t)
-            .expect("pa_context_subscribe_cb_t passed invalid pa_subscription_event_type_t");
+                .expect("pa_context_subscribe_cb_t passed invalid pa_subscription_event_type_t");
             let cb = MaybeUninit::<F>::uninit();
             let result = (*cb.as_ptr())(&ctx, event, idx, userdata);
             forget(ctx);
