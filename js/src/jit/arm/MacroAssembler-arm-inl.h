@@ -408,6 +408,12 @@ void MacroAssembler::mul32(Register rhs, Register srcDest) {
   as_mul(srcDest, srcDest, rhs);
 }
 
+void MacroAssembler::mul32(Imm32 imm, Register srcDest) {
+  ScratchRegisterScope scratch(*this);
+  move32(imm, scratch);
+  mul32(scratch, srcDest);
+}
+
 void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
   as_mul(srcDest, srcDest, rhs);
 }
