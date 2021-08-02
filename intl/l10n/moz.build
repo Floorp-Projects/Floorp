@@ -11,7 +11,6 @@ EXPORTS.mozilla.intl += [
     "FluentResource.h",
     "L10nRegistry.h",
     "Localization.h",
-    "LocalizationBindings.h",
     "RegistryBindings.h",
 ]
 
@@ -21,6 +20,10 @@ UNIFIED_SOURCES += [
     "FluentResource.cpp",
     "L10nRegistry.cpp",
     "Localization.cpp",
+]
+
+EXTRA_JS_MODULES += [
+    "Localization.jsm",
 ]
 
 TESTING_JS_MODULES += [
@@ -43,19 +46,13 @@ USE_LIBS += ["intlcomponents"]
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
     CbindgenHeader("fluent_ffi_generated.h", inputs=["/intl/l10n/rust/fluent-ffi"])
-
     CbindgenHeader(
         "l10nregistry_ffi_generated.h", inputs=["/intl/l10n/rust/l10nregistry-ffi"]
-    )
-
-    CbindgenHeader(
-        "localization_ffi_generated.h", inputs=["/intl/l10n/rust/localization-ffi"]
     )
 
     EXPORTS.mozilla.intl += [
         "!fluent_ffi_generated.h",
         "!l10nregistry_ffi_generated.h",
-        "!localization_ffi_generated.h",
     ]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]

@@ -27,13 +27,11 @@ class L10nFileSource : public nsWrapperCache {
 
   static already_AddRefed<L10nFileSource> Create(
       const nsACString& aName, const nsTArray<nsCString>& aLocales,
-      const nsACString& aPrePath, const dom::FileSourceOptions& aOptions,
-      ErrorResult& aRv);
+      const nsACString& aPrePath, ErrorResult& aRv);
 
   static already_AddRefed<L10nFileSource> Constructor(
       const dom::GlobalObject& aGlobal, const nsACString& aName,
       const nsTArray<nsCString>& aLocales, const nsACString& aPrePath,
-      const dom::FileSourceOptions& aOptions,
       const dom::Optional<dom::Sequence<nsCString>>& aIndex, ErrorResult& aRv);
 
   static already_AddRefed<L10nFileSource> CreateMock(
