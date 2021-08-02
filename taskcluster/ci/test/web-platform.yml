@@ -142,7 +142,7 @@ web-platform-tests-reftest:
     treeherder-symbol: W(Wr)
     virtualization:
         by-test-platform:
-            windows10-64.*-qr/.*: virtual-with-gpu
+            windows10-64-2004.*-qr/.*: virtual-with-gpu
             default: virtual
     chunks:
         by-test-platform:
@@ -159,8 +159,8 @@ web-platform-tests-reftest:
         by-variant:
             fission:
                 by-test-platform:
-                    (linux.*64|windows10-64)-qr/debug: ['trunk']
-                    (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
+                    (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
+                    (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-(asan|tsan)(-qr)?/opt: ['trunk']
                     default: []
             default:
@@ -174,7 +174,7 @@ web-platform-tests-reftest:
                 by-test-platform:
                     linux.*64-qr/debug: 1
                     linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64(-shippable)?-qr/opt: 1
+                    windows10-64-2004(-shippable)?-qr/opt: 1
                     default: 2
             default:
                 by-test-platform:
@@ -201,7 +201,7 @@ web-platform-tests-reftest-backlog:
                 by-test-platform:
                     linux.*64-qr/debug: ['trunk']
                     linux.*64(-shippable)?-qr/opt: ['trunk']
-                    windows10-64(-shippable)?-qr/opt: ['trunk']
+                    windows10-64-2004(-shippable)?-qr/opt: ['trunk']
                     default: []
             default: ['mozilla-central']
     test-manifest-loader: null  # don't load tests in the taskgraph
@@ -211,7 +211,7 @@ web-platform-tests-reftest-backlog:
                 by-test-platform:
                     linux.*64-qr/debug: 1
                     linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64(-shippable)?-qr/opt: 1
+                    windows10-64-2004(-shippable)?-qr/opt: 1
                     default: 2
             default: 2
     mozharness:
@@ -397,15 +397,15 @@ web-platform-tests-print-reftest:
                 by-test-platform:
                     linux.*64-qr/debug: 1
                     linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64(-shippable)?-qr/opt: 1
+                    windows10-64-2004(-shippable)?-qr/opt: 1
                     default: 2
             default: default
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
-                    (linux.*64|windows10-64)-qr/debug: ['trunk']
-                    (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
+                    (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
+                    (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-asan(-qr)?/opt: ['trunk']
                     default: []
             default: built-projects
