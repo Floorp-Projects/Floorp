@@ -1646,6 +1646,49 @@ void GCRuntime::finish() {
   stats().printTotalProfileTimes();
 }
 
+void GCRuntime::freezePermanentAtoms() {
+  // This is called just after the permanent atoms have been created. At this
+  // point all existing atoms are permanent. Move the arenas containing atoms
+  // out of atoms zone arena lists until shutdown. Since we won't sweep them, we
+  // don't need to mark them at the start of every GC.
+
+  MOZ_ASSERT(atomsZone);
+  MOZ_ASSERT(zones().empty());
+
+  atomsZone->arenas.clearFreeLists();
+  freezePermanentAtomsOfKind(AllocKind::ATOM, permanentAtoms.ref());
+  freezePermanentAtomsOfKind(AllocKind::FAT_INLINE_ATOM,
+                             permanentFatInlineAtoms.ref());
+}
+
+void GCRuntime::freezePermanentAtomsOfKind(AllocKind kind,
+                                           ArenaList& arenaList) {
+  for (auto atom = atomsZone->cellIterUnsafe<JSAtom>(kind); !atom.done();
+       atom.next()) {
+    MOZ_ASSERT(atom->isPermanentAtom());
+    atom->asTenured().markBlack();
+  }
+
+  arenaList = std::move(atomsZone->arenas.arenaList(kind));
+}
+
+void GCRuntime::restorePermanentAtoms() {
+  // Move the arenas containing permanent atoms that were removed by
+  // freezePermanentAtoms() back to the atoms zone arena lists so we can collect
+  // them.
+
+  MOZ_ASSERT(heapState() == JS::HeapState::MajorCollecting);
+
+  restorePermanentAtomsOfKind(AllocKind::ATOM, permanentAtoms.ref());
+  restorePermanentAtomsOfKind(AllocKind::FAT_INLINE_ATOM,
+                              permanentFatInlineAtoms.ref());
+}
+
+void GCRuntime::restorePermanentAtomsOfKind(AllocKind kind,
+                                            ArenaList& arenaList) {
+  atomsZone->arenas.arenaList(kind).insertListWithCursorAtEnd(arenaList);
+}
+
 bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   waitBackgroundSweepEnd();
@@ -4412,6 +4455,10 @@ bool GCRuntime::beginPreparePhase(JS::GCReason reason, AutoGCSession& session) {
   /* Check it's safe to access the atoms zone if we are collecting it. */
   if (atomsZone->isCollecting()) {
     session.maybeCheckAtomsAccess.emplace(rt);
+  }
+
+  if (reason == JS::GCReason::DESTROY_RUNTIME) {
+    restorePermanentAtoms();
   }
 
   /*
