@@ -5,8 +5,8 @@ authors = ["Zibi Braniecki <zibi@braniecki.net>"]
 edition = "2018"
 
 [dependencies]
-fluent = { version = "0.15", features = ["fluent-pseudo"] }
-fluent-pseudo = "0.2.3"
+fluent = { version = "0.16", features = ["fluent-pseudo"] }
+fluent-pseudo = "0.3.1"
 intl-memoizer = "0.5"
 unic-langid = "0.9"
 nsstring = { path = "../../../../xpcom/rust/nsstring" }

@@ -1457,9 +1457,9 @@ dependencies = [
 
 [[package]]
 name = "fluent"
-version = "0.15.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc4d7142005e2066e4844caf9f271b93fc79836ee96ec85057b8c109687e629a"
+checksum = "61f69378194459db76abd2ce3952b790db103ceb003008d3d50d97c41ff847a7"
 dependencies = [
  "fluent-bundle",
  "fluent-pseudo",
@@ -1537,9 +1537,9 @@ dependencies = [
 
 [[package]]
 name = "fluent-pseudo"
-version = "0.2.3"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f028d6802c52903b3d8fa1cc37264ae5b8b630161e600eccfa68d4ee6ce5163a"
+checksum = "fded62f95114baa010b4fcd54aedc7b0762059cf6dfb0097f5b5c95fb56ed42f"
 dependencies = [
  "regex",
 ]

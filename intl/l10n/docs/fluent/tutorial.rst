@@ -616,7 +616,8 @@ The three classes of potential problems that this can help with are:
 
    Many languages use longer strings than English. For example, German strings
    may be 30% longer (or more). Turning on pseudolocalization is a quick way to
-   test how the layout handles such locales.
+   test how the layout handles such locales. Strings that don't fit the space
+   available are truncated and pseudolocalization can also help with detecting them.
 
 
  - Bidi adaptation.
@@ -627,10 +628,11 @@ The three classes of potential problems that this can help with are:
 To turn on pseudolocalization, add a new string pref :js:`intl.l10n.pseudo` and
 select the strategy to be used:
 
- - :js:`accented` - Ȧȧƈƈḗḗƞŧḗḗḓ Ḗḗƞɠŀīīşħ
+ - :js:`accented` - [Ȧȧƈƈḗḗƞŧḗḗḓ Ḗḗƞɠŀīīşħ]
 
    This strategy replaces all Latin characters with their accented equivalents,
-   and duplicates some vowels to create roughly 30% longer strings.
+   and duplicates some vowels to create roughly 30% longer strings. Strings are
+   wrapped in markers (square brackets), which help with detecting truncation.
 
 
  - :js:`bidi` - ɥsıʅƃuƎ ıpıԐ

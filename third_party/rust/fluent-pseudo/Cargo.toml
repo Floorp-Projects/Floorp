@@ -13,9 +13,9 @@
 [package]
 edition = "2018"
 name = "fluent-pseudo"
-version = "0.2.3"
+version = "0.3.1"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>", "Staś Małolepszy <stas@mozilla.com>"]
-include = ["src/**/*", "benches/*.rs", "Cargo.toml", "README.md"]
+include = ["src/**/*", "benches/*.rs", "Cargo.toml", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "Pseudolocalization transformation API for use with Project Fluent API.\n"
 homepage = "http://www.projectfluent.org"
 readme = "README.md"
