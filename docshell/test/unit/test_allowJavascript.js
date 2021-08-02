@@ -65,6 +65,7 @@ function createSubframe(bc, url) {
 }
 
 add_task(async function() {
+  Services.prefs.setBoolPref("dom.security.https_first", false);
   ChromeUtils.registerWindowActor(ACTOR, {
     allFrames: true,
     child: {
@@ -268,4 +269,5 @@ add_task(async function() {
   await assertScriptsAllowed(bc, false, "top BC with scripts disabled");
 
   await page.close();
+  Services.prefs.clearUserPref("dom.security.https_first");
 });
