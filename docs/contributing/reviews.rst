@@ -40,9 +40,9 @@ Review groups
    * - #dom-workers-and-storage-reviewers
      - DOM Workers & Storage
      - `Member list <https://phabricator.services.mozilla.com/project/members/115/>`__
-   * - #devtools-inspector-reviewers
-     - The devtools inspector tool
-     - `Member list <https://phabricator.services.mozilla.com/project/members/109/>`__
+   * - #devtools-reviewers
+     - Firefox DevTools
+     - `Member list <https://phabricator.services.mozilla.com/project/members/153/>`__
    * - #fluent-reviewers
      - Changes to Fluent (FTL) files (translation).
      - `Member list <https://phabricator.services.mozilla.com/project/members/105/>`__
