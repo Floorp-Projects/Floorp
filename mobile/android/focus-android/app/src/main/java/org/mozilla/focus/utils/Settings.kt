@@ -219,6 +219,10 @@ class Settings private constructor(
             getPreferenceKey(R.string.app_launch_count),
             0)
 
+    fun getTotalBlockedTrackersCount() = preferences.getInt(
+        getPreferenceKey(R.string.pref_key_privacy_total_trackers_blocked_count),
+        0)
+
     private fun getPreferenceKey(resourceId: Int): String =
             resources.getString(resourceId)
 }

@@ -39,6 +39,7 @@ import mozilla.components.lib.crash.service.SentryService
 import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
 import org.mozilla.focus.activity.MainActivity
+import org.mozilla.focus.browser.BlockedTrackersMiddleware
 import org.mozilla.focus.components.EngineProvider
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.ClientWrapper
@@ -122,7 +123,8 @@ class Components(
                 SearchMiddleware(context, migration = SearchMigration(context)),
                 SearchFilterMiddleware(),
                 PromptMiddleware(),
-                AdsTelemetryMiddleware(adsTelemetry)
+                AdsTelemetryMiddleware(adsTelemetry),
+                BlockedTrackersMiddleware(context)
             ) + EngineMiddleware.create(engine)
         )
     }
