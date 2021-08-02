@@ -66,6 +66,12 @@ const test = new SearchConfigTest({
           matches: ["en-US"],
         },
       },
+      {
+        regions: ["gb"],
+        locales: {
+          matches: ["sco"],
+        },
+      },
     ],
   },
   suggestionUrlBase: "https://autosug.ebay.com/autosug",
@@ -203,7 +209,7 @@ const test = new SearchConfigTest({
           locales: { matches: DOMAIN_LOCALES["ebay-uk"] },
         },
         {
-          locales: { matches: ["unknown", "en-US"] },
+          locales: { matches: ["unknown", "en-US", "sco"] },
           regions: ["gb"],
         },
       ],
