@@ -27,6 +27,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StyleSheet.h"
+#include "mozilla/Telemetry.h"
 #include "nsIWebProgressListener.h"
 
 static mozilla::LazyLogModule gReferrerInfoLog("ReferrerInfo");
@@ -506,6 +507,36 @@ bool ReferrerInfo::IsCrossOriginRequest(nsIHttpChannel* aChannel) {
   return !isSameOrigin;
 }
 
+/* static */
+bool ReferrerInfo::IsCrossSiteRequest(nsIHttpChannel* aChannel) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+
+  if (!loadInfo->TriggeringPrincipal()->GetIsContentPrincipal()) {
+    LOG(("no triggering URI via loadInfo, assuming load is cross-site"));
+    return true;
+  }
+
+  if (LOG_ENABLED()) {
+    nsAutoCString triggeringURISpec;
+    loadInfo->TriggeringPrincipal()->GetAsciiSpec(triggeringURISpec);
+    LOG(("triggeringURI=%s\n", triggeringURISpec.get()));
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+
+  bool isCrossSite = true;
+  rv = loadInfo->TriggeringPrincipal()->IsThirdPartyURI(uri, &isCrossSite);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+
+  return isCrossSite;
+}
+
 ReferrerInfo::TrimmingPolicy ReferrerInfo::ComputeTrimmingPolicy(
     nsIHttpChannel* aChannel) const {
   uint32_t trimmingPolicy = GetUserTrimmingPolicy();
@@ -689,24 +720,7 @@ bool ReferrerInfo::ShouldIgnoreLessRestrictedPolicies(
     return false;
   }
 
-  if (!loadInfo->TriggeringPrincipal()->GetIsContentPrincipal()) {
-    LOG(("no triggering URI via loadInfo, assuming load is cross-site"));
-    return true;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return true;
-  }
-
-  bool isCrossSite = true;
-  rv = loadInfo->TriggeringPrincipal()->IsThirdPartyURI(uri, &isCrossSite);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return true;
-  }
-
-  return isCrossSite;
+  return IsCrossSiteRequest(aChannel);
 }
 
 void ReferrerInfo::LogMessageToConsole(
@@ -1455,6 +1469,23 @@ ReferrerInfo::Write(nsIObjectOutputStream* aStream) {
     return rv;
   }
   return NS_OK;
+}
+
+void ReferrerInfo::RecordTelemetry(nsIHttpChannel* aChannel) {
+#ifdef DEBUG
+  MOZ_ASSERT(!mTelemetryRecorded);
+  mTelemetryRecorded = true;
+#endif  // DEBUG
+
+  // The telemetry probe has 18 buckets. The first 9 buckets are for same-site
+  // requests and the rest 9 buckets are for cross-site requests.
+  uint32_t telemetryOffset =
+      IsCrossSiteRequest(aChannel)
+          ? static_cast<uint32_t>(ReferrerPolicy::EndGuard_)
+          : 0;
+
+  Telemetry::Accumulate(Telemetry::REFERRER_POLICY_COUNT,
+                        static_cast<uint32_t>(mPolicy) + telemetryOffset);
 }
 
 }  // namespace dom
