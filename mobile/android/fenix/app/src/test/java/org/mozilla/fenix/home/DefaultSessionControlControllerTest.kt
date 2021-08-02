@@ -34,6 +34,7 @@ import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
@@ -72,13 +73,6 @@ class DefaultSessionControlControllerTest {
     private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
     private val reloadUrlUseCase: SessionUseCases = mockk(relaxed = true)
     private val selectTabUseCase: TabsUseCases = mockk(relaxed = true)
-    private val showDeleteCollectionPrompt: (
-        tabCollection: TabCollection,
-        title: String?,
-        message: String,
-        wasSwiped: Boolean,
-        handleSwipedItemDeletionCancel: () -> Unit
-    ) -> Unit = mockk(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
     private val analytics: Analytics = mockk(relaxed = true)
     private val scope = TestCoroutineScope()
@@ -253,7 +247,7 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun `handleCollectionRemoveTab one tab`() {
-        val collection = mockk<TabCollection> {
+        val expectedCollection = mockk<TabCollection> {
             every { tabs } returns listOf(mockk())
             every { title } returns "Collection"
         }
@@ -268,18 +262,26 @@ class DefaultSessionControlControllerTest {
             activity.resources.getString(R.string.delete_tab_and_collection_dialog_message)
         } returns "Deleting this tab will delete everything."
 
-        createController().handleCollectionRemoveTab(collection, tab, false)
+        var actualCollection: TabCollection? = null
+        var actualTitle: String? = null
+        var actualMessage: String? = null
+        var actualWasSwipe: Boolean? = null
+
+        createController(
+            showDeleteCollectionPrompt = { collection, title, message, wasSwipe, _ ->
+                actualCollection = collection
+                actualTitle = title
+                actualMessage = message
+                actualWasSwipe = wasSwipe
+            }
+        ).handleCollectionRemoveTab(expectedCollection, tab, false)
 
         verify { metrics.track(Event.CollectionTabRemoved) }
-        verify {
-            showDeleteCollectionPrompt(
-                collection,
-                "Delete Collection?",
-                "Deleting this tab will delete everything.",
-                false,
-                any()
-            )
-        }
+
+        assertEquals(expectedCollection, actualCollection)
+        assertEquals("Delete Collection?", actualTitle)
+        assertEquals("Deleting this tab will delete everything.", actualMessage)
+        assertEquals(false, actualWasSwipe)
     }
 
     @Test
@@ -309,23 +311,31 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handleDeleteCollectionTapped() {
-        val collection = mockk<TabCollection> {
+        val expectedCollection = mockk<TabCollection> {
             every { title } returns "Collection"
         }
         every {
             activity.resources.getString(R.string.tab_collection_dialog_message, "Collection")
         } returns "Are you sure you want to delete Collection?"
 
-        createController().handleDeleteCollectionTapped(collection)
-        verify {
-            showDeleteCollectionPrompt(
-                collection,
-                null,
-                "Are you sure you want to delete Collection?",
-                false,
-                any()
-            )
-        }
+        var actualCollection: TabCollection? = null
+        var actualTitle: String? = null
+        var actualMessage: String? = null
+        var actualWasSwipe: Boolean? = null
+
+        createController(
+            showDeleteCollectionPrompt = { collection, title, message, wasSwipe, _ ->
+                actualCollection = collection
+                actualTitle = title
+                actualMessage = message
+                actualWasSwipe = wasSwipe
+            }
+        ).handleDeleteCollectionTapped(expectedCollection)
+
+        assertEquals(expectedCollection, actualCollection)
+        assertEquals(null, actualTitle)
+        assertEquals("Are you sure you want to delete Collection?", actualMessage)
+        assertEquals(false, actualWasSwipe)
     }
 
     @Test
@@ -733,7 +743,14 @@ class DefaultSessionControlControllerTest {
         hideOnboarding: () -> Unit = { },
         registerCollectionStorageObserver: () -> Unit = { },
         showTabTray: () -> Unit = { },
-        handleSwipedItemDeletionCancel: () -> Unit = { }
+        handleSwipedItemDeletionCancel: () -> Unit = { },
+        showDeleteCollectionPrompt: (
+            tabCollection: TabCollection,
+            title: String?,
+            message: String,
+            wasSwiped: Boolean,
+            handleSwipedItemDeletionCancel: () -> Unit
+        ) -> Unit = { _, _, _, _, _ -> }
     ): DefaultSessionControlController {
         return DefaultSessionControlController(
             activity = activity,
