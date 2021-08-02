@@ -1214,6 +1214,8 @@ class NormalAtom : public JSAtom {
  public:
   HashNumber hash() const { return hash_; }
   void initHash(HashNumber hash) { hash_ = hash; }
+
+  static constexpr size_t offsetOfHash() { return offsetof(NormalAtom, hash_); }
 };
 
 static_assert(sizeof(NormalAtom) == sizeof(JSString) + sizeof(uint64_t),
@@ -1230,6 +1232,10 @@ class FatInlineAtom : public JSAtom {
   void initHash(HashNumber hash) { hash_ = hash; }
 
   inline void finalize(JSFreeOp* fop);
+
+  static constexpr size_t offsetOfHash() {
+    return offsetof(FatInlineAtom, hash_);
+  }
 };
 
 static_assert(

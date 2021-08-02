@@ -2020,6 +2020,11 @@ bool IonCacheIRCompiler::emitSameValueResult(ValOperandId lhs,
   MOZ_CRASH("Call ICs not used in ion");
 }
 
+bool IonCacheIRCompiler::emitSetHasStringResult(ObjOperandId setId,
+                                                StringOperandId strId) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
 bool IonCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
                                                   uint32_t shapeOffset,
                                                   uint32_t siteOffset) {
