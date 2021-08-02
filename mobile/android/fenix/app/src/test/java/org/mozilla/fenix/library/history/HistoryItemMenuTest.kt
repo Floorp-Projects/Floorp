@@ -6,8 +6,6 @@ package org.mozilla.fenix.library.history
 
 import android.content.Context
 import androidx.appcompat.view.ContextThemeWrapper
-import io.mockk.mockk
-import io.mockk.verify
 import mozilla.components.concept.menu.candidate.TextStyle
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.test.robolectric.testContext
@@ -23,14 +21,16 @@ import org.mozilla.fenix.library.history.HistoryItemMenu.Item
 class HistoryItemMenuTest {
 
     private lateinit var context: Context
-    private lateinit var onItemTapped: (Item) -> Unit
     private lateinit var menu: HistoryItemMenu
+    private var onItemTappedCaptured: Item? = null
 
     @Before
     fun setup() {
         context = ContextThemeWrapper(testContext, R.style.NormalTheme)
-        onItemTapped = mockk(relaxed = true)
-        menu = HistoryItemMenu(context, onItemTapped)
+        onItemTappedCaptured = null
+        menu = HistoryItemMenu(context) {
+            onItemTappedCaptured = it
+        }
     }
 
     @Test
@@ -43,7 +43,7 @@ class HistoryItemMenuTest {
         )
 
         deleteItem.onClick()
-        verify { onItemTapped(Item.Delete) }
+        assertEquals(Item.Delete, onItemTappedCaptured)
     }
 
     @Test
@@ -59,18 +59,18 @@ class HistoryItemMenuTest {
         assertEquals("Delete", delete.text)
 
         copy.onClick()
-        verify { onItemTapped(Item.Copy) }
+        assertEquals(Item.Copy, onItemTappedCaptured)
 
         share.onClick()
-        verify { onItemTapped(Item.Share) }
+        assertEquals(Item.Share, onItemTappedCaptured)
 
         openInNewTab.onClick()
-        verify { onItemTapped(Item.OpenInNewTab) }
+        assertEquals(Item.OpenInNewTab, onItemTappedCaptured)
 
         openInPrivateTab.onClick()
-        verify { onItemTapped(Item.OpenInPrivateTab) }
+        assertEquals(Item.OpenInPrivateTab, onItemTappedCaptured)
 
         delete.onClick()
-        verify { onItemTapped(Item.Delete) }
+        assertEquals(Item.Delete, onItemTappedCaptured)
     }
 }
