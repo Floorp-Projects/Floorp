@@ -288,6 +288,11 @@ class GCRuntime {
   void finishRoots();
   void finish();
 
+  void freezePermanentAtoms();
+  void freezePermanentAtomsOfKind(AllocKind kind, ArenaList& arenaList);
+  void restorePermanentAtoms();
+  void restorePermanentAtomsOfKind(AllocKind kind, ArenaList& arenaList);
+
   JS::HeapState heapState() const { return heapState_; }
 
   inline bool hasZealMode(ZealMode mode);
@@ -934,6 +939,10 @@ class GCRuntime {
   AtomMarkingRuntime atomMarking;
 
  private:
+  // Arenas used for permanent atoms and static strings created at startup.
+  MainThreadData<ArenaList> permanentAtoms;
+  MainThreadData<ArenaList> permanentFatInlineAtoms;
+
   // When chunks are empty, they reside in the emptyChunks pool and are
   // re-used as needed or eventually expired if not re-used. The emptyChunks
   // pool gets refilled from the background allocation task heuristically so
