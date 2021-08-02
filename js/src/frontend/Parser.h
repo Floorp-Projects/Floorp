@@ -504,7 +504,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
       mozilla::Maybe<TokenPos> tokenPosition = mozilla::Nothing()) {
     // If the we are delazifying, the BaseScript already has all the closed-over
     // info for bindings and there's no need to track used names.
-    if (handler_.reuseClosedOverBindings()) {
+    if (handler_.canSkipLazyClosedOverBindings()) {
       return true;
     }
 
@@ -584,10 +584,6 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
                               Directives directives,
                               GeneratorKind generatorKind,
                               FunctionAsyncKind asyncKind);
-
-  FunctionBox* newFunctionBox(FunctionNodeType funNode,
-                              const ScriptStencil& cachedScriptData,
-                              const ScriptStencilExtra& cachedScriptExtra);
 
  public:
   // ErrorReportMixin.
