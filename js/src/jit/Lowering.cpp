@@ -5662,6 +5662,13 @@ void LIRGenerator::visitHashBigInt(MHashBigInt* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitHashObject(MHashObject* ins) {
+  auto* lir =
+      new (alloc()) LHashObject(useRegister(ins->set()), useBox(ins->input()),
+                                temp(), temp(), temp(), temp());
+  define(lir, ins);
+}
+
 void LIRGenerator::visitSetObjectHasNonBigInt(MSetObjectHasNonBigInt* ins) {
   auto* lir = new (alloc())
       LSetObjectHasNonBigInt(useRegister(ins->set()), useBox(ins->value()),
