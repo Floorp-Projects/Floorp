@@ -1,7 +1,7 @@
 The content of this directory is partially sourced from the fluent.js project.
 
 The following files are affected:
- - Localization.jsm
+ - FluentSyntax.jsm
 
 At the moment, the tool used to produce those files in fluent.js repository, doesn't
 fully align with how the code is structured here, so we perform a manual adjustments
