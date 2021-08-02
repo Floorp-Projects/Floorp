@@ -8986,6 +8986,16 @@ class LToHashableNonGCThing
   const LDefinition* tempFloat() { return getTemp(0); }
 };
 
+class LToHashableString : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(ToHashableString)
+
+  explicit LToHashableString(const LAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, input);
+  }
+};
+
 class LHashNonGCThing : public LInstructionHelper<1, BOX_PIECES, 1> {
  public:
   LIR_HEADER(HashNonGCThing)
@@ -8997,6 +9007,19 @@ class LHashNonGCThing : public LInstructionHelper<1, BOX_PIECES, 1> {
   }
 
   static constexpr size_t Input = 0;
+
+  const LDefinition* temp() { return getTemp(0); }
+};
+
+class LHashString : public LInstructionHelper<1, 1, 1> {
+ public:
+  LIR_HEADER(HashString)
+
+  LHashString(const LAllocation& input, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, input);
+    setTemp(0, temp);
+  }
 
   const LDefinition* temp() { return getTemp(0); }
 };
