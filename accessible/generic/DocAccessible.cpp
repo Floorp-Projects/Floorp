@@ -688,11 +688,10 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
     RelocateARIAOwnedIfNeeded(aElement);
   }
 
-  // For these attributes we store the state before the attribute changes so we
-  // can determine if the attribute change changes the state.
-  if (aAttribute == nsGkAtoms::aria_disabled || aAttribute == nsGkAtoms::href ||
-      aAttribute == nsGkAtoms::disabled || aAttribute == nsGkAtoms::tabindex ||
-      aAttribute == nsGkAtoms::contenteditable) {
+  // If attribute affects accessible's state, store the old state so we can
+  // later compare it against the state of the accessible after the attribute
+  // change.
+  if (accessible->AttributeChangesState(aAttribute)) {
     mPrevStateBits = accessible->State();
   } else {
     mPrevStateBits = 0;
