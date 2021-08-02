@@ -1,100 +1,4 @@
-commit 91ae60c0b043b45512ef16539f8a134f2ffed7f2
-Author: Jeff Gilbert <jgilbert@mozilla.com>
-Date:   Mon Jul 19 16:46:50 2021 -0700
-
-    Define ANGLE_IS_64_BIT_CPU in common/platform.h.
-    
-    This is more reliable and reduces reliance on build flags.
-    Vendoring into Firefox, it's not trivial to replicate build flags,
-    but C++-native checks always work.
-    
-    Bug: angleproject:6186
-    Change-Id: Idafd4ef1954efbfa79eae86cddfaa8f2e3992296
-
-commit 4dce2b131ba7d2c9b3ed156fa318ff1d1d59c156
-Author: Jeff Gilbert <jgilbert@mozilla.com>
-Date:   Thu Jul 29 10:40:38 2021 -0700
-
-    Always include mac-only sources.
-    
-    Fixes build issues on mac until we can take b8d6f8aa93 instead.
-    
-    Change-Id: I4dafc86cdb167d23e8dd419ded9d0edfb3f76f3a
-
-commit a6756002091533ee8b56ddc5d93afa5c6ee61c93
-Author: Jeff Gilbert <jdashg@gmail.com>
-Date:   Thu Jul 15 15:56:45 2021 -0700
-
-    Add missing header to build config.
-
-commit b2e06bee92a94e79939717ef96c8c3c4f8e92820
-Author: Jeff Gilbert <jdashg@gmail.com>
-Date:   Thu Feb 11 17:34:00 2021 -0800
-
-    Don't assert for non-sampleable non-ms sources in blitRenderbufferRect if we can CopySubResource.
-    
-    In Firefox, we can have a source from DirectComposition without
-    D3D11_BIND_SHADER_RESOURCE. This is fine so long as our formats etc
-    match enough to hit the CopySubResource path.
-    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1692355
-
-commit 740a05090adf10e604d7ce125ee30f2c78e28439
-Author: Jeff Gilbert <jdashg@gmail.com>
-Date:   Wed Feb 3 18:50:38 2021 -0800
-
-    Add ANGLE_TRANSLATOR_ESSL_ONLY instead of using build system logic to choose.
-    
-    Build system logic is really hard to handle when vendoring into Gecko for Firefox.
-
-commit 182acfcea2ec56d4cd92a7b24c396b7723a7a346
-Author: Jeff Gilbert <jdashg@gmail.com>
-Date:   Mon Feb 1 17:35:56 2021 -0800
-
-    Build fixes needed by Gecko.
-
-commit 365549b832b48bfdbc0d6e93a8ca2f7cca032732
-Author: Jeff Muizelaar <jrmuizel@gmail.com>
-Date:   Mon Nov 9 17:09:12 2020 -0500
-
-    Bug 1620075. Add a feature flag to allow ES3 on 10.0 devices. (#26)
-    
-    This lets us run WebRender on devices that only support D3D 10.0
-
-commit 623732abf7baa0d0ce457b9926e8e66b670c49c9
-Author: Jeff Muizelaar <jrmuizel@gmail.com>
-Date:   Wed May 6 14:04:42 2020 -0400
-
-    Don't use ClearView if we previously used dual source blending on Intel gen6. (#22)
-    
-    Doing a ClearView after a dual source blend seems to cause a TDR on
-    Intel SandyBridge. Presumeably this is because the ClearView is
-    implemented as a regular draw and the driver doesn't properly set up the
-    state.
-    
-    If we detect that this is going to happen we fall back to the manual
-    draw call path. This lets us use ClearView most of the time still.
-
-commit 1c30fcaa1ba575e9e3f517a267aa56032db483ec
-Author: Dzmitry Malyshau <dmalyshau@mozilla.com>
-Date:   Thu Dec 5 13:02:14 2019 -0500
-
-    Restrict the slow texture upload workaround to 128bit formats. (#21)
-    
-    The workaround is slow for having a CPU-visible mirror of the texture, but that mirror is not properly recycled with regards to GPU usage, thus causing a CPU stall on update.
-    
-    Original reports were related to WebRender vertex texture updates that are RGBA32F and RGBA32U formats. Limiting the workaround to these formats would allow the affected platforms to upload regular texture data faster without stalls.
-
-commit 9e4afb8ef2312893c054bcae4c8d89f1449dff6a
-Author: Miko Mynttinen <mikokm@gmail.com>
-Date:   Tue Sep 3 18:54:54 2019 +0200
-
-    Disable debug layers
-
-Cherries picked
-================================================================================
-Merge base from: origin/chromium/4515
-
-commit 10b8a6d1c1a11be89cfc504106bd6446f5792d11
+commit 31a43497be0980c7bb2b7e3c069fc431705c849e
 Author: Jamie Madill <jmadill@chromium.org>
 Date:   Thu May 20 12:22:46 2021 -0400
 
@@ -108,6 +12,97 @@ Date:   Thu May 20 12:22:46 2021 -0400
     Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/2911032
     Reviewed-by: Geoff Lang <geofflang@chromium.org>
     Commit-Queue: Jamie Madill <jmadill@chromium.org>
-    (cherry picked from commit 2697358464cf20576701987f60300b6c4086c11e)
-    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/2921448
-    Reviewed-by: Jamie Madill <jmadill@chromium.org>
+
+commit 3778168311ca10e8d57b3bce16bfcbc0f5b0dd01
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Feb 11 17:34:00 2021 -0800
+
+    Don't assert for non-sampleable non-ms sources in blitRenderbufferRect if we can CopySubResource.
+    
+    In Firefox, we can have a source from DirectComposition without
+    D3D11_BIND_SHADER_RESOURCE. This is fine so long as our formats etc
+    match enough to hit the CopySubResource path.
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1692355
+
+commit f96c68edb00194eebccd998cfd4ceb7207810092
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Feb 3 18:50:38 2021 -0800
+
+    Add ANGLE_TRANSLATOR_ESSL_ONLY instead of using build system logic to choose.
+    
+    Build system logic is really hard to handle when vendoring into Gecko for Firefox.
+
+commit 2a40d0f143e00c46db28c664678529a36daf4e41
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Feb 1 17:35:56 2021 -0800
+
+    Build fixes needed by Gecko.
+
+commit 226aa28ce47cf20769f8f27f23255ca1eca83942
+Author: Jeff Muizelaar <jrmuizel@gmail.com>
+Date:   Mon Nov 9 17:09:12 2020 -0500
+
+    Bug 1620075. Add a feature flag to allow ES3 on 10.0 devices. (#26)
+    
+    This lets us run WebRender on devices that only support D3D 10.0
+
+commit c0645aac0a4b4ad6bc9691ce381e5043115737b5
+Author: Jeff Muizelaar <jrmuizel@gmail.com>
+Date:   Wed May 6 14:04:42 2020 -0400
+
+    Don't use ClearView if we previously used dual source blending on Intel gen6. (#22)
+    
+    Doing a ClearView after a dual source blend seems to cause a TDR on
+    Intel SandyBridge. Presumeably this is because the ClearView is
+    implemented as a regular draw and the driver doesn't properly set up the
+    state.
+    
+    If we detect that this is going to happen we fall back to the manual
+    draw call path. This lets us use ClearView most of the time still.
+
+commit 36ee8b401e9dccd34c0f9de21a0e44ec9912b098
+Author: Dzmitry Malyshau <dmalyshau@mozilla.com>
+Date:   Thu Dec 5 13:02:14 2019 -0500
+
+    Restrict the slow texture upload workaround to 128bit formats. (#21)
+    
+    The workaround is slow for having a CPU-visible mirror of the texture, but that mirror is not properly recycled with regards to GPU usage, thus causing a CPU stall on update.
+    
+    Original reports were related to WebRender vertex texture updates that are RGBA32F and RGBA32U formats. Limiting the workaround to these formats would allow the affected platforms to upload regular texture data faster without stalls.
+
+commit 0a46d4ba4d2a907b2d95f884fe5c76fca0ae75a4
+Author: Miko Mynttinen <mikokm@gmail.com>
+Date:   Tue Sep 3 18:54:54 2019 +0200
+
+    Disable debug layers
+
+Cherries picked
+================================================================================
+Merge base from: origin/chromium/4324
+
+commit f9e59ad078552424ca165644f4da3b4e2687c3dc
+Author: angle-autoroll <angle-autoroll@skia-public.iam.gserviceaccount.com>
+Date:   Thu Nov 12 10:01:18 2020 +0000
+
+    Roll SPIRV-Tools from a61d07a72763 to 1cda495274bb (1 revision)
+    
+    https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Tools.git/+log/a61d07a72763..1cda495274bb
+    
+    If this roll has caused a breakage, revert this CL and stop the roller
+    using the controls here:
+    https://autoroll.skia.org/r/spirv-tools-angle-autoroll
+    Please CC timvp@google.com on the revert to ensure that a human
+    is aware of the problem.
+    
+    To report a problem with the AutoRoller itself, please file a bug:
+    https://bugs.chromium.org/p/skia/issues/entry?template=Autoroller+Bug
+    
+    Documentation for the AutoRoller is here:
+    https://skia.googlesource.com/buildbot/+doc/master/autoroll/README.md
+    
+    Bug: None
+    Tbr: timvp@google.com
+    Change-Id: I49edf81578b995ec51b3f4078c5d76aba3669439
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/2533429
+    Reviewed-by: angle-autoroll <angle-autoroll@skia-public.iam.gserviceaccount.com>
+    Commit-Queue: angle-autoroll <angle-autoroll@skia-public.iam.gserviceaccount.com>

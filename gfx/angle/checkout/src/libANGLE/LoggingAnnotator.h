@@ -25,10 +25,10 @@ class LoggingAnnotator : public gl::DebugAnnotator
     LoggingAnnotator() {}
     ~LoggingAnnotator() override {}
     void beginEvent(gl::Context *context,
-                    EntryPoint entryPoint,
+                    gl::EntryPoint entryPoint,
                     const char *eventName,
                     const char *eventMessage) override;
-    void endEvent(gl::Context *context, const char *eventName, EntryPoint entryPoint) override;
+    void endEvent(gl::Context *context, const char *eventName, gl::EntryPoint entryPoint) override;
     void setMarker(const char *markerName) override;
     bool getStatus() override;
     void logMessage(const gl::LogMessage &msg) const override;

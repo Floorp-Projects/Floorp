@@ -25,159 +25,50 @@ void error(const TIntermSymbol &symbol, const char *reason, TDiagnostics *diagno
     diagnostics->error(symbol.getLine(), reason, symbol.getName().data());
 }
 
-int GetStructLocationCount(const TStructure *structure);
-
-int GetFieldLocationCount(const TField *field)
+unsigned int GetLocationCount(const TIntermSymbol *varying, bool ignoreVaryingArraySize)
 {
-    int field_size         = 0;
-    const TType *fieldType = field->type();
-
-    if (fieldType->getStruct() != nullptr)
-    {
-        field_size = GetStructLocationCount(fieldType->getStruct());
-    }
-    else if (fieldType->isMatrix())
-    {
-        field_size = fieldType->getNominalSize();
-    }
-    else
-    {
-        ASSERT(fieldType->getSecondarySize() == 1);
-        field_size = 1;
-    }
-
-    if (fieldType->isArray())
-    {
-        field_size *= fieldType->getArraySizeProduct();
-    }
-
-    return field_size;
-}
-
-int GetStructLocationCount(const TStructure *structure)
-{
-    int totalLocation = 0;
-    for (const TField *field : structure->fields())
-    {
-        totalLocation += GetFieldLocationCount(field);
-    }
-    return totalLocation;
-}
-
-int GetInterfaceBlockLocationCount(const TType &varyingType, bool ignoreVaryingArraySize)
-{
-    int totalLocation = 0;
-    for (const TField *field : varyingType.getInterfaceBlock()->fields())
-    {
-        totalLocation += GetFieldLocationCount(field);
-    }
-
-    if (!ignoreVaryingArraySize && varyingType.isArray())
-    {
-        totalLocation *= varyingType.getArraySizeProduct();
-    }
-    return totalLocation;
-}
-
-int GetLocationCount(const TIntermSymbol *varying, bool ignoreVaryingArraySize)
-{
-    const TType &varyingType = varying->getType();
-    ASSERT(!varyingType.isInterfaceBlock());
-
+    const auto &varyingType = varying->getType();
     if (varyingType.getStruct() != nullptr)
     {
-        int totalLocation = 0;
-        for (const TField *field : varyingType.getStruct()->fields())
+        ASSERT(!varyingType.isArray());
+        unsigned int totalLocation = 0;
+        for (const auto *field : varyingType.getStruct()->fields())
         {
-            const TType *fieldType = field->type();
+            const auto *fieldType = field->type();
             ASSERT(fieldType->getStruct() == nullptr && !fieldType->isArray());
 
-            totalLocation += GetFieldLocationCount(field);
+            totalLocation +=
+                fieldType->isMatrix() ? fieldType->getNominalSize() : fieldType->getSecondarySize();
         }
         return totalLocation;
     }
-
-    ASSERT(varyingType.isMatrix() || varyingType.getSecondarySize() == 1);
-    int elementLocationCount = varyingType.isMatrix() ? varyingType.getNominalSize() : 1;
-
     // [GL_EXT_shader_io_blocks SPEC Chapter 4.4.1]
     // Geometry shader inputs, tessellation control shader inputs and outputs, and tessellation
     // evaluation inputs all have an additional level of arrayness relative to other shader inputs
     // and outputs. This outer array level is removed from the type before considering how many
     // locations the type consumes.
-    if (ignoreVaryingArraySize)
+    else if (ignoreVaryingArraySize)
     {
         // Array-of-arrays cannot be inputs or outputs of a geometry shader.
         // (GL_EXT_geometry_shader SPEC issues(5))
         ASSERT(!varyingType.isArrayOfArrays());
-        return elementLocationCount;
+        return varyingType.getSecondarySize();
     }
-
-    return elementLocationCount * varyingType.getArraySizeProduct();
-}
-
-bool ShouldIgnoreVaryingArraySize(TQualifier qualifier, GLenum shaderType)
-{
-    bool isVaryingIn = IsShaderIn(qualifier) && qualifier != EvqPatchIn;
-
-    switch (shaderType)
+    else if (varyingType.isMatrix())
     {
-        case GL_GEOMETRY_SHADER:
-        case GL_TESS_EVALUATION_SHADER:
-            return isVaryingIn;
-        case GL_TESS_CONTROL_SHADER:
-            return (IsShaderOut(qualifier) && qualifier != EvqPatchOut) || isVaryingIn;
-        default:
-            return false;
+        return varyingType.getNominalSize() * varyingType.getArraySizeProduct();
     }
-}
-
-struct SymbolAndField
-{
-    const TIntermSymbol *symbol;
-    const TField *field;
-};
-using LocationMap = std::map<int, SymbolAndField>;
-
-void MarkVaryingLocations(TDiagnostics *diagnostics,
-                          const TIntermSymbol *varying,
-                          const TField *field,
-                          int location,
-                          int elementCount,
-                          LocationMap *locationMap)
-{
-    for (int elementIndex = 0; elementIndex < elementCount; ++elementIndex)
+    else
     {
-        const int offsetLocation = location + elementIndex;
-        auto conflict            = locationMap->find(offsetLocation);
-        if (conflict != locationMap->end())
-        {
-            std::stringstream strstr = sh::InitializeStream<std::stringstream>();
-            strstr << "'" << varying->getName();
-            if (field)
-            {
-                strstr << "." << field->name();
-            }
-            strstr << "' conflicting location with '" << conflict->second.symbol->getName();
-            if (conflict->second.field)
-            {
-                strstr << "." << conflict->second.field->name();
-            }
-            strstr << "'";
-            error(*varying, strstr.str().c_str(), diagnostics);
-        }
-        else
-        {
-            (*locationMap)[offsetLocation] = {varying, field};
-        }
+        return varyingType.getArraySizeProduct();
     }
 }
 
 using VaryingVector = std::vector<const TIntermSymbol *>;
 
-void ValidateShaderInterfaceAndAssignLocations(TDiagnostics *diagnostics,
-                                               const VaryingVector &varyingVector,
-                                               GLenum shaderType)
+void ValidateShaderInterface(TDiagnostics *diagnostics,
+                             VaryingVector &varyingVector,
+                             bool ignoreVaryingArraySize)
 {
     // Location conflicts can only happen when there are two or more varyings in varyingVector.
     if (varyingVector.size() <= 1)
@@ -185,91 +76,28 @@ void ValidateShaderInterfaceAndAssignLocations(TDiagnostics *diagnostics,
         return;
     }
 
-    LocationMap locationMap;
+    std::map<int, const TIntermSymbol *> locationMap;
     for (const TIntermSymbol *varying : varyingVector)
     {
-        const TType &varyingType = varying->getType();
-        const int location       = varyingType.getLayoutQualifier().location;
+        const int location = varying->getType().getLayoutQualifier().location;
         ASSERT(location >= 0);
 
-        bool ignoreVaryingArraySize =
-            ShouldIgnoreVaryingArraySize(varying->getQualifier(), shaderType);
-
-        // A varying is either:
-        //
-        // - A vector or matrix, which can take a number of contiguous locations
-        // - A struct, which also takes a number of contiguous locations
-        // - An interface block.
-        //
-        // Interface blocks can assign arbitrary locations to their fields, for example:
-        //
-        //     layout(location = 4) in block {
-        //         vec4 a;                         // gets location 4
-        //         vec4 b;                         // gets location 5
-        //         layout(location = 7) vec4 c;    // gets location 7
-        //         vec4 d;                         // gets location 8
-        //         layout (location = 1) vec4 e;   // gets location 1
-        //         vec4 f;                         // gets location 2
-        //     };
-        //
-        // The following code therefore takes two paths.  For non-interface-block types, the number
-        // of locations for the varying is calculated (elementCount), and all locations in
-        // [location, location + elementCount) are marked as occupied.
-        //
-        // For interface blocks, a similar algorithm is implemented except each field is
-        // individually marked with the location either advancing automatically or taking its value
-        // from the field's layout qualifier.
-
-        if (varyingType.isInterfaceBlock())
+        const int elementCount = GetLocationCount(varying, ignoreVaryingArraySize);
+        for (int elementIndex = 0; elementIndex < elementCount; ++elementIndex)
         {
-            int currentLocation       = location;
-            bool anyFieldWithLocation = false;
-
-            for (const TField *field : varyingType.getInterfaceBlock()->fields())
+            const int offsetLocation = location + elementIndex;
+            if (locationMap.find(offsetLocation) != locationMap.end())
             {
-                const int fieldLocation = field->type()->getLayoutQualifier().location;
-                if (fieldLocation >= 0)
-                {
-                    currentLocation      = fieldLocation;
-                    anyFieldWithLocation = true;
-                }
-
-                const int fieldLocationCount = GetFieldLocationCount(field);
-                MarkVaryingLocations(diagnostics, varying, field, currentLocation,
-                                     fieldLocationCount, &locationMap);
-
-                currentLocation += fieldLocationCount;
+                std::stringstream strstr = sh::InitializeStream<std::stringstream>();
+                strstr << "'" << varying->getName()
+                       << "' conflicting location with previously defined '"
+                       << locationMap[offsetLocation]->getName() << "'";
+                error(*varying, strstr.str().c_str(), diagnostics);
             }
-
-            // Array interface blocks can't have location qualifiers on fields.
-            ASSERT(ignoreVaryingArraySize || !anyFieldWithLocation || !varyingType.isArray());
-
-            if (!ignoreVaryingArraySize && varyingType.isArray())
+            else
             {
-                // This is only reached if the varying is an array of interface blocks, with only a
-                // layout qualifier on the block itself, for example:
-                //
-                //     layout(location = 4) in block {
-                //         vec4 a;
-                //         vec4 b;
-                //         vec4 c;
-                //         vec4 d;
-                //     } instance[N];
-                //
-                // The locations for instance[0] are already marked by the above code, so we need to
-                // further mark locations occupied by instances [1, N).  |currentLocation| is
-                // already just past the end of instance[0], which is the beginning of instance[1].
-                //
-                int remainingLocations = currentLocation * (varyingType.getArraySizeProduct() - 1);
-                MarkVaryingLocations(diagnostics, varying, nullptr, currentLocation,
-                                     remainingLocations, &locationMap);
+                locationMap[offsetLocation] = varying;
             }
-        }
-        else
-        {
-            const int elementCount = GetLocationCount(varying, ignoreVaryingArraySize);
-            MarkVaryingLocations(diagnostics, varying, nullptr, location, elementCount,
-                                 &locationMap);
         }
     }
 }
@@ -337,25 +165,16 @@ void ValidateVaryingLocationsTraverser::validate(TDiagnostics *diagnostics)
 {
     ASSERT(diagnostics);
 
-    ValidateShaderInterfaceAndAssignLocations(diagnostics, mInputVaryingsWithLocation, mShaderType);
-    ValidateShaderInterfaceAndAssignLocations(diagnostics, mOutputVaryingsWithLocation,
-                                              mShaderType);
+    ValidateShaderInterface(diagnostics, mInputVaryingsWithLocation,
+                            mShaderType == GL_GEOMETRY_SHADER_EXT);
+    ValidateShaderInterface(diagnostics, mOutputVaryingsWithLocation, false);
 }
 
 }  // anonymous namespace
 
 unsigned int CalculateVaryingLocationCount(TIntermSymbol *varying, GLenum shaderType)
 {
-    const TType &varyingType          = varying->getType();
-    const TQualifier qualifier        = varyingType.getQualifier();
-    const bool ignoreVaryingArraySize = ShouldIgnoreVaryingArraySize(qualifier, shaderType);
-
-    if (varyingType.isInterfaceBlock())
-    {
-        return GetInterfaceBlockLocationCount(varyingType, ignoreVaryingArraySize);
-    }
-
-    return GetLocationCount(varying, ignoreVaryingArraySize);
+    return GetLocationCount(varying, shaderType == GL_GEOMETRY_SHADER_EXT);
 }
 
 bool ValidateVaryingLocations(TIntermBlock *root, TDiagnostics *diagnostics, GLenum shaderType)

@@ -110,9 +110,9 @@ Error Device::getAttribute(EGLint attribute, EGLAttrib *value)
     return error;
 }
 
-EGLint Device::getType() const
+EGLint Device::getType()
 {
-    return mImplementation.get()->getType();
+    return getImplementation()->getType();
 }
 
 void Device::initDeviceExtensions()

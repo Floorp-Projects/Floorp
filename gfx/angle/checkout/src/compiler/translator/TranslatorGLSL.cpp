@@ -11,9 +11,9 @@
 #include "compiler/translator/ExtensionGLSL.h"
 #include "compiler/translator/OutputGLSL.h"
 #include "compiler/translator/VersionGLSL.h"
+#include "compiler/translator/tree_ops/RewriteRowMajorMatrices.h"
 #include "compiler/translator/tree_ops/RewriteTexelFetchOffset.h"
-#include "compiler/translator/tree_ops/gl/mac/RewriteRowMajorMatrices.h"
-#include "compiler/translator/tree_ops/gl/mac/RewriteUnaryMinusOperatorFloat.h"
+#include "compiler/translator/tree_ops/RewriteUnaryMinusOperatorFloat.h"
 
 namespace sh
 {
@@ -25,17 +25,17 @@ TranslatorGLSL::TranslatorGLSL(sh::GLenum type, ShShaderSpec spec, ShShaderOutpu
 void TranslatorGLSL::initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu,
                                                  ShCompileOptions compileOptions)
 {
-    if ((compileOptions & SH_EMULATE_ABS_INT_FUNCTION) != 0)
+    if (compileOptions & SH_EMULATE_ABS_INT_FUNCTION)
     {
         InitBuiltInAbsFunctionEmulatorForGLSLWorkarounds(emu, getShaderType());
     }
 
-    if ((compileOptions & SH_EMULATE_ISNAN_FLOAT_FUNCTION) != 0)
+    if (compileOptions & SH_EMULATE_ISNAN_FLOAT_FUNCTION)
     {
         InitBuiltInIsnanFunctionEmulatorForGLSLWorkarounds(emu, getShaderVersion());
     }
 
-    if ((compileOptions & SH_EMULATE_ATAN2_FLOAT_FUNCTION) != 0)
+    if (compileOptions & SH_EMULATE_ATAN2_FLOAT_FUNCTION)
     {
         InitBuiltInAtanFunctionEmulatorForGLSLWorkarounds(emu);
     }
@@ -234,7 +234,7 @@ bool TranslatorGLSL::shouldFlattenPragmaStdglInvariantAll()
 
 bool TranslatorGLSL::shouldCollectVariables(ShCompileOptions compileOptions)
 {
-    return (compileOptions & SH_FLATTEN_PRAGMA_STDGL_INVARIANT_ALL) != 0 ||
+    return (compileOptions & SH_FLATTEN_PRAGMA_STDGL_INVARIANT_ALL) ||
            TCompiler::shouldCollectVariables(compileOptions);
 }
 

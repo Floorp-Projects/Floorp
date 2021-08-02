@@ -81,8 +81,6 @@ class VertexArrayState final : angle::NonCopyable
     }
 
   private:
-    void updateCachedMutableOrNonPersistentArrayBuffers(size_t index);
-
     friend class VertexArray;
     std::string mLabel;
     std::vector<VertexAttribute> mVertexAttributes;
@@ -103,8 +101,7 @@ class VertexArrayState final : angle::NonCopyable
 
     // Used for validation cache. Indexed by attribute.
     AttributesMask mCachedMappedArrayBuffers;
-    AttributesMask mCachedMutableOrImpersistentArrayBuffers;
-    AttributesMask mCachedInvalidMappedArrayBuffer;
+    AttributesMask mCachedEnabledMappedArrayBuffers;
 };
 
 class VertexArray final : public angle::ObserverInterface,
@@ -254,9 +251,9 @@ class VertexArray final : public angle::ObserverInterface,
         return mState.hasEnabledNullPointerClientArray();
     }
 
-    bool hasInvalidMappedArrayBuffer() const
+    bool hasMappedEnabledArrayBuffer() const
     {
-        return mState.mCachedInvalidMappedArrayBuffer.any();
+        return mState.mCachedEnabledMappedArrayBuffers.any();
     }
 
     const VertexArrayState &getState() const { return mState; }
@@ -312,10 +309,7 @@ class VertexArray final : public angle::ObserverInterface,
     // These are used to optimize draw call validation.
     void updateCachedBufferBindingSize(VertexBinding *binding);
     void updateCachedTransformFeedbackBindingValidation(size_t bindingIndex, const Buffer *buffer);
-    void updateCachedArrayBuffersMasks(bool isMapped,
-                                       bool isImmutable,
-                                       bool isPersistent,
-                                       const AttributesMask &boundAttributesMask);
+    void updateCachedMappedArrayBuffers(bool isMapped, const AttributesMask &boundAttributesMask);
     void updateCachedMappedArrayBuffersBinding(const VertexBinding &binding);
 
     angle::Result getIndexRangeImpl(const Context *context,

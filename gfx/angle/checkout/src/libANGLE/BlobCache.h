@@ -48,13 +48,6 @@ struct hash<egl::BlobCacheKey>
 namespace egl
 {
 
-bool CompressBlobCacheData(const size_t cacheSize,
-                           const uint8_t *cacheData,
-                           angle::MemoryBuffer *compressedData);
-bool DecompressBlobCacheData(const uint8_t *compressedData,
-                             const size_t compressedSize,
-                             angle::MemoryBuffer *uncompressedData);
-
 class BlobCache final : angle::NonCopyable
 {
   public:
@@ -150,8 +143,6 @@ class BlobCache final : angle::NonCopyable
   private:
     // This internal cache is used only if the application is not providing caching callbacks
     using CacheEntry = std::pair<angle::MemoryBuffer, CacheSource>;
-
-    std::mutex mBlobCacheMutex;
     angle::SizedMRUCache<BlobCache::Key, CacheEntry> mBlobCache;
 
     EGLSetBlobFuncANDROID mSetBlobFunc;

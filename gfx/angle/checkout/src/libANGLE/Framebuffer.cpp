@@ -15,7 +15,6 @@
 #include "libANGLE/Config.h"
 #include "libANGLE/Context.h"
 #include "libANGLE/Display.h"
-#include "libANGLE/ErrorStrings.h"
 #include "libANGLE/FramebufferAttachment.h"
 #include "libANGLE/Renderbuffer.h"
 #include "libANGLE/Surface.h"
@@ -36,48 +35,40 @@ namespace gl
 namespace
 {
 
-FramebufferStatus CheckMultiviewStateMatchesForCompleteness(
-    const FramebufferAttachment *firstAttachment,
-    const FramebufferAttachment *secondAttachment)
+bool CheckMultiviewStateMatchesForCompleteness(const FramebufferAttachment *firstAttachment,
+                                               const FramebufferAttachment *secondAttachment)
 {
     ASSERT(firstAttachment && secondAttachment);
     ASSERT(firstAttachment->isAttached() && secondAttachment->isAttached());
 
     if (firstAttachment->getNumViews() != secondAttachment->getNumViews())
     {
-        return FramebufferStatus::Incomplete(GL_FRAMEBUFFER_INCOMPLETE_VIEW_TARGETS_OVR,
-                                             err::kFramebufferIncompleteMultiviewViewsMismatch);
+        return false;
     }
     if (firstAttachment->getBaseViewIndex() != secondAttachment->getBaseViewIndex())
     {
-        return FramebufferStatus::Incomplete(GL_FRAMEBUFFER_INCOMPLETE_VIEW_TARGETS_OVR,
-                                             err::kFramebufferIncompleteMultiviewBaseViewMismatch);
+        return false;
     }
     if (firstAttachment->isMultiview() != secondAttachment->isMultiview())
     {
-        return FramebufferStatus::Incomplete(GL_FRAMEBUFFER_INCOMPLETE_VIEW_TARGETS_OVR,
-                                             err::kFramebufferIncompleteMultiviewMismatch);
+        return false;
     }
-
-    return FramebufferStatus::Complete();
+    return true;
 }
 
-FramebufferStatus CheckAttachmentCompleteness(const Context *context,
-                                              const FramebufferAttachment &attachment)
+bool CheckAttachmentCompleteness(const Context *context, const FramebufferAttachment &attachment)
 {
     ASSERT(attachment.isAttached());
 
     const Extents &size = attachment.getSize();
     if (size.width == 0 || size.height == 0)
     {
-        return FramebufferStatus::Incomplete(GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                                             err::kFramebufferIncompleteAttachmentZeroSize);
+        return false;
     }
 
     if (!attachment.isRenderable(context))
     {
-        return FramebufferStatus::Incomplete(GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                                             err::kFramebufferIncompleteAttachmentNotRenderable);
+        return false;
     }
 
     if (attachment.type() == GL_TEXTURE)
@@ -90,9 +81,7 @@ FramebufferStatus CheckAttachmentCompleteness(const Context *context,
         {
             if (attachment.layer() >= size.depth)
             {
-                return FramebufferStatus::Incomplete(
-                    GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                    err::kFramebufferIncompleteAttachmentLayerGreaterThanDepth);
+                return false;
             }
         }
         // If <image> is a three-dimensional texture or a two-dimensional array texture and the
@@ -102,9 +91,7 @@ FramebufferStatus CheckAttachmentCompleteness(const Context *context,
         {
             if (size.depth >= context->getCaps().maxFramebufferLayers)
             {
-                return FramebufferStatus::Incomplete(
-                    GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                    err::kFramebufferIncompleteAttachmentDepthGreaterThanMaxLayers);
+                return false;
             }
         }
 
@@ -117,9 +104,7 @@ FramebufferStatus CheckAttachmentCompleteness(const Context *context,
         if (texture->getType() == TextureType::CubeMap &&
             !texture->getTextureState().isCubeComplete())
         {
-            return FramebufferStatus::Incomplete(
-                GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                err::kFramebufferIncompleteAttachmentNotCubeComplete);
+            return false;
         }
 
         if (!texture->getImmutableFormat())
@@ -136,9 +121,7 @@ FramebufferStatus CheckAttachmentCompleteness(const Context *context,
             if (attachmentMipLevel < texture->getBaseLevel() ||
                 attachmentMipLevel > texture->getMipmapMaxLevel())
             {
-                return FramebufferStatus::Incomplete(
-                    GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                    err::kFramebufferIncompleteAttachmentLevelOutOfBaseMaxLevelRange);
+                return false;
             }
 
             // Form the ES 3.0 spec, pg 213/214:
@@ -149,20 +132,18 @@ FramebufferStatus CheckAttachmentCompleteness(const Context *context,
             // a cubemap texture, the texture must also be cube complete.
             if (attachmentMipLevel != texture->getBaseLevel() && !texture->isMipmapComplete())
             {
-                return FramebufferStatus::Incomplete(
-                    GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                    err::kFramebufferIncompleteAttachmentLevelNotBaseLevelForIncompleteMipTexture);
+                return false;
             }
         }
     }
 
-    return FramebufferStatus::Complete();
+    return true;
 }
 
-FramebufferStatus CheckAttachmentSampleCounts(const Context *context,
-                                              GLsizei currAttachmentSamples,
-                                              GLsizei samples,
-                                              bool colorAttachment)
+bool CheckAttachmentSampleCounts(const Context *context,
+                                 GLsizei currAttachmentSamples,
+                                 GLsizei samples,
+                                 bool colorAttachment)
 {
     if (currAttachmentSamples != samples)
     {
@@ -170,9 +151,7 @@ FramebufferStatus CheckAttachmentSampleCounts(const Context *context,
         {
             // APPLE_framebuffer_multisample, which EXT_draw_buffers refers to, requires that
             // all color attachments have the same number of samples for the FBO to be complete.
-            return FramebufferStatus::Incomplete(
-                GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE,
-                err::kFramebufferIncompleteMultisampleInconsistentSampleCounts);
+            return false;
         }
         else
         {
@@ -180,30 +159,24 @@ FramebufferStatus CheckAttachmentSampleCounts(const Context *context,
             // when its depth or stencil samples are a multiple of the number of color samples.
             if (!context->getExtensions().framebufferMixedSamples)
             {
-                return FramebufferStatus::Incomplete(
-                    GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE,
-                    err::kFramebufferIncompleteMultisampleInconsistentSampleCounts);
+                return false;
             }
 
             if ((currAttachmentSamples % std::max(samples, 1)) != 0)
             {
-                return FramebufferStatus::Incomplete(
-                    GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE,
-                    err::
-                        kFramebufferIncompleteMultisampleDepthStencilSampleCountDivisibleByColorSampleCount);
+                return false;
             }
         }
     }
-
-    return FramebufferStatus::Complete();
+    return true;
 }
 
-FramebufferStatus CheckAttachmentSampleCompleteness(const Context *context,
-                                                    const FramebufferAttachment &attachment,
-                                                    bool colorAttachment,
-                                                    Optional<int> *samples,
-                                                    Optional<bool> *fixedSampleLocations,
-                                                    Optional<int> *renderToTextureSamples)
+bool CheckAttachmentSampleCompleteness(const Context *context,
+                                       const FramebufferAttachment &attachment,
+                                       bool colorAttachment,
+                                       Optional<int> *samples,
+                                       Optional<bool> *fixedSampleLocations,
+                                       Optional<int> *renderToTextureSamples)
 {
     ASSERT(attachment.isAttached());
 
@@ -215,18 +188,14 @@ FramebufferStatus CheckAttachmentSampleCompleteness(const Context *context,
         const TextureCaps &formatCaps = context->getTextureCaps().get(internalFormat);
         if (static_cast<GLuint>(attachment.getSamples()) > formatCaps.getMaxSamples())
         {
-            return FramebufferStatus::Incomplete(
-                GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE,
-                err::kFramebufferIncompleteAttachmentSamplesGreaterThanMaxSupportedSamples);
+            return false;
         }
 
         const ImageIndex &attachmentImageIndex = attachment.getTextureImageIndex();
         bool fixedSampleloc = texture->getAttachmentFixedSampleLocations(attachmentImageIndex);
         if (fixedSampleLocations->valid() && fixedSampleloc != fixedSampleLocations->value())
         {
-            return FramebufferStatus::Incomplete(
-                GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE,
-                err::kFramebufferIncompleteMultisampleInconsistentFixedSampleLocations);
+            return false;
         }
         else
         {
@@ -240,12 +209,10 @@ FramebufferStatus CheckAttachmentSampleCompleteness(const Context *context,
         if (renderToTextureSamples->value() !=
             FramebufferAttachment::kDefaultRenderToTextureSamples)
         {
-            FramebufferStatus sampleCountStatus =
-                CheckAttachmentSampleCounts(context, attachment.getRenderToTextureSamples(),
-                                            renderToTextureSamples->value(), colorAttachment);
-            if (!sampleCountStatus.isComplete())
+            if (!CheckAttachmentSampleCounts(context, attachment.getRenderToTextureSamples(),
+                                             renderToTextureSamples->value(), colorAttachment))
             {
-                return sampleCountStatus;
+                return false;
             }
         }
     }
@@ -260,12 +227,10 @@ FramebufferStatus CheckAttachmentSampleCompleteness(const Context *context,
         if (renderToTextureSamples->value() ==
             FramebufferAttachment::kDefaultRenderToTextureSamples)
         {
-
-            FramebufferStatus sampleCountStatus = CheckAttachmentSampleCounts(
-                context, attachment.getSamples(), samples->value(), colorAttachment);
-            if (!sampleCountStatus.isComplete())
+            if (!CheckAttachmentSampleCounts(context, attachment.getSamples(), samples->value(),
+                                             colorAttachment))
             {
-                return sampleCountStatus;
+                return false;
             }
         }
     }
@@ -274,7 +239,7 @@ FramebufferStatus CheckAttachmentSampleCompleteness(const Context *context,
         *samples = attachment.getSamples();
     }
 
-    return FramebufferStatus::Complete();
+    return true;
 }
 
 // Needed to index into the attachment arrays/bitsets.
@@ -307,43 +272,19 @@ bool AttachmentOverlapsWithTexture(const FramebufferAttachment &attachment,
         return false;
     }
 
-    const gl::ImageIndex &index      = attachment.getTextureImageIndex();
-    GLuint attachmentLevel           = static_cast<GLuint>(index.getLevelIndex());
-    GLuint textureEffectiveBaseLevel = texture->getTextureState().getEffectiveBaseLevel();
-    GLuint textureMaxLevel           = textureEffectiveBaseLevel;
+    const gl::ImageIndex &index = attachment.getTextureImageIndex();
+    GLuint attachmentLevel      = static_cast<GLuint>(index.getLevelIndex());
+    GLuint textureBaseLevel     = texture->getBaseLevel();
+    GLuint textureMaxLevel      = textureBaseLevel;
     if ((sampler && IsMipmapFiltered(sampler->getSamplerState().getMinFilter())) ||
         IsMipmapFiltered(texture->getSamplerState().getMinFilter()))
     {
         textureMaxLevel = texture->getMipmapMaxLevel();
     }
 
-    return attachmentLevel >= textureEffectiveBaseLevel && attachmentLevel <= textureMaxLevel;
+    return attachmentLevel >= textureBaseLevel && attachmentLevel <= textureMaxLevel;
 }
-
 }  // anonymous namespace
-
-bool FramebufferStatus::isComplete() const
-{
-    return status == GL_FRAMEBUFFER_COMPLETE;
-}
-
-FramebufferStatus FramebufferStatus::Complete()
-{
-    FramebufferStatus result;
-    result.status = GL_FRAMEBUFFER_COMPLETE;
-    result.reason = nullptr;
-    return result;
-}
-
-FramebufferStatus FramebufferStatus::Incomplete(GLenum status, const char *reason)
-{
-    ASSERT(status != GL_FRAMEBUFFER_COMPLETE);
-
-    FramebufferStatus result;
-    result.status = status;
-    result.reason = reason;
-    return result;
-}
 
 // This constructor is only used for default framebuffers.
 FramebufferState::FramebufferState(rx::Serial serial)
@@ -361,8 +302,7 @@ FramebufferState::FramebufferState(rx::Serial serial)
       mDefaultFixedSampleLocations(GL_FALSE),
       mDefaultLayers(0),
       mWebGLDepthStencilConsistent(true),
-      mDefaultFramebufferReadAttachmentInitialized(false),
-      mSrgbWriteControlMode(SrgbWriteControlMode::Default)
+      mDefaultFramebufferReadAttachmentInitialized(false)
 {
     ASSERT(mDrawBufferStates.size() > 0);
     mEnabledDrawBuffers.set(0);
@@ -383,8 +323,7 @@ FramebufferState::FramebufferState(const Caps &caps, FramebufferID id, rx::Seria
       mDefaultFixedSampleLocations(GL_FALSE),
       mDefaultLayers(0),
       mWebGLDepthStencilConsistent(true),
-      mDefaultFramebufferReadAttachmentInitialized(false),
-      mSrgbWriteControlMode(SrgbWriteControlMode::Default)
+      mDefaultFramebufferReadAttachmentInitialized(false)
 {
     ASSERT(mId != Framebuffer::kDefaultDrawFramebufferHandle);
     ASSERT(mDrawBufferStates.size() > 0);
@@ -576,34 +515,6 @@ const FramebufferAttachment *FramebufferState::getDepthStencilAttachment() const
     return nullptr;
 }
 
-const Extents FramebufferState::getAttachmentExtentsIntersection() const
-{
-    int32_t width  = std::numeric_limits<int32_t>::max();
-    int32_t height = std::numeric_limits<int32_t>::max();
-    for (const FramebufferAttachment &attachment : mColorAttachments)
-    {
-        if (attachment.isAttached())
-        {
-            width  = std::min(width, attachment.getSize().width);
-            height = std::min(height, attachment.getSize().height);
-        }
-    }
-
-    if (mDepthAttachment.isAttached())
-    {
-        width  = std::min(width, mDepthAttachment.getSize().width);
-        height = std::min(height, mDepthAttachment.getSize().height);
-    }
-
-    if (mStencilAttachment.isAttached())
-    {
-        width  = std::min(width, mStencilAttachment.getSize().width);
-        height = std::min(height, mStencilAttachment.getSize().height);
-    }
-
-    return Extents(width, height, 0);
-}
-
 bool FramebufferState::attachmentsHaveSameDimensions() const
 {
     Optional<Extents> attachmentSize;
@@ -719,19 +630,6 @@ bool FramebufferState::hasStencil() const
     return (mStencilAttachment.isAttached() && mStencilAttachment.getStencilSize() > 0);
 }
 
-bool FramebufferState::hasExternalTextureAttachment() const
-{
-    // External textures can only be bound to color attachment 0
-    return (mColorAttachments[0].isAttached() && mColorAttachments[0].isExternalTexture());
-}
-
-bool FramebufferState::hasYUVAttachment() const
-{
-    // The only attachments that can be YUV are external textures and surfaces, both are attached at
-    // color attachment 0.
-    return (mColorAttachments[0].isAttached() && mColorAttachments[0].isYUV());
-}
-
 bool FramebufferState::isMultiview() const
 {
     const FramebufferAttachment *attachment = getFirstNonNullAttachment();
@@ -760,12 +658,11 @@ Box FramebufferState::getDimensions() const
 
 Extents FramebufferState::getExtents() const
 {
-    // OpenGLES3.0 (https://www.khronos.org/registry/OpenGL/specs/es/3.0/es_spec_3.0.pdf
-    // section 4.4.4.2) allows attachments have unequal size.
+    ASSERT(attachmentsHaveSameDimensions());
     const FramebufferAttachment *first = getFirstNonNullAttachment();
     if (first)
     {
-        return getAttachmentExtentsIntersection();
+        return first->getSize();
     }
     return Extents(getDefaultWidth(), getDefaultHeight(), 0);
 }
@@ -795,16 +692,13 @@ Framebuffer::Framebuffer(const Caps &caps,
     {
         mDirtyColorAttachmentBindings.emplace_back(this, DIRTY_BIT_COLOR_ATTACHMENT_0 + colorIndex);
     }
-    if (caps.maxDrawBuffers > 1)
-    {
-        mDirtyBits.set(DIRTY_BIT_READ_BUFFER);
-    }
+    mDirtyBits.set(DIRTY_BIT_READ_BUFFER);
 }
 
 Framebuffer::Framebuffer(const Context *context, egl::Surface *surface, egl::Surface *readSurface)
     : mState(context->getShareGroup()->generateFramebufferSerial()),
       mImpl(surface->getImplementation()->createDefaultFramebuffer(context, mState)),
-      mCachedStatus(FramebufferStatus::Complete()),
+      mCachedStatus(GL_FRAMEBUFFER_COMPLETE),
       mDirtyDepthAttachmentBinding(this, DIRTY_BIT_DEPTH_ATTACHMENT),
       mDirtyStencilAttachmentBinding(this, DIRTY_BIT_STENCIL_ATTACHMENT)
 {
@@ -846,8 +740,7 @@ Framebuffer::Framebuffer(const Context *context,
                          egl::Surface *readSurface)
     : mState(context->getShareGroup()->generateFramebufferSerial()),
       mImpl(factory->createFramebuffer(mState)),
-      mCachedStatus(FramebufferStatus::Incomplete(GL_FRAMEBUFFER_UNDEFINED_OES,
-                                                  err::kFramebufferIncompleteSurfaceless)),
+      mCachedStatus(GL_FRAMEBUFFER_UNDEFINED_OES),
       mDirtyDepthAttachmentBinding(this, DIRTY_BIT_DEPTH_ATTACHMENT),
       mDirtyStencilAttachmentBinding(this, DIRTY_BIT_STENCIL_ATTACHMENT)
 {
@@ -1144,16 +1037,6 @@ bool Framebuffer::hasStencil() const
     return mState.hasStencil();
 }
 
-bool Framebuffer::hasExternalTextureAttachment() const
-{
-    return mState.hasExternalTextureAttachment();
-}
-
-bool Framebuffer::hasYUVAttachment() const
-{
-    return mState.hasYUVAttachment();
-}
-
 bool Framebuffer::usingExtendedDrawBuffers() const
 {
     for (size_t drawbufferIdx = 1; drawbufferIdx < mState.mDrawBufferStates.size(); ++drawbufferIdx)
@@ -1176,14 +1059,14 @@ void Framebuffer::invalidateCompletenessCache()
     onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
-const FramebufferStatus &Framebuffer::checkStatusImpl(const Context *context) const
+GLenum Framebuffer::checkStatusImpl(const Context *context) const
 {
     ASSERT(!isDefault());
     ASSERT(hasAnyDirtyBit() || !mCachedStatus.valid());
 
     mCachedStatus = checkStatusWithGLFrontEnd(context);
 
-    if (mCachedStatus.value().isComplete())
+    if (mCachedStatus.value() == GL_FRAMEBUFFER_COMPLETE)
     {
         // We can skip syncState on several back-ends.
         if (mImpl->shouldSyncStateBeforeCheckStatus())
@@ -1193,19 +1076,20 @@ const FramebufferStatus &Framebuffer::checkStatusImpl(const Context *context) co
             angle::Result err = syncState(context, GL_FRAMEBUFFER, Command::Other);
             if (err != angle::Result::Continue)
             {
-                mCachedStatus =
-                    FramebufferStatus::Incomplete(0, err::kFramebufferIncompleteInternalError);
-                return mCachedStatus.value();
+                return 0;
             }
         }
 
-        mCachedStatus = mImpl->checkStatus(context);
+        if (!mImpl->checkStatus(context))
+        {
+            mCachedStatus = GL_FRAMEBUFFER_UNSUPPORTED;
+        }
     }
 
     return mCachedStatus.value();
 }
 
-FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context) const
+GLenum Framebuffer::checkStatusWithGLFrontEnd(const Context *context) const
 {
     const State &state = context->getState();
 
@@ -1227,27 +1111,21 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
     {
         if (colorAttachment.isAttached())
         {
-            FramebufferStatus attachmentCompleteness =
-                CheckAttachmentCompleteness(context, colorAttachment);
-            if (!attachmentCompleteness.isComplete())
+            if (!CheckAttachmentCompleteness(context, colorAttachment))
             {
-                return attachmentCompleteness;
+                return GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
             }
 
             const InternalFormat &format = *colorAttachment.getFormat().info;
             if (format.depthBits > 0 || format.stencilBits > 0)
             {
-                return FramebufferStatus::Incomplete(
-                    GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                    err::kFramebufferIncompleteDepthStencilInColorBuffer);
+                return GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
             }
 
-            FramebufferStatus attachmentSampleCompleteness =
-                CheckAttachmentSampleCompleteness(context, colorAttachment, true, &samples,
-                                                  &fixedSampleLocations, &renderToTextureSamples);
-            if (!attachmentSampleCompleteness.isComplete())
+            if (!CheckAttachmentSampleCompleteness(context, colorAttachment, true, &samples,
+                                                   &fixedSampleLocations, &renderToTextureSamples))
             {
-                return attachmentSampleCompleteness;
+                return GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE;
             }
 
             // in GLES 2.0, all color attachments attachments must have the same number of bitplanes
@@ -1258,9 +1136,7 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
                 {
                     if (format.pixelBytes != colorbufferSize.value())
                     {
-                        return FramebufferStatus::Incomplete(
-                            GL_FRAMEBUFFER_UNSUPPORTED,
-                            err::kFramebufferIncompleteAttachmentInconsistantBitPlanes);
+                        return GL_FRAMEBUFFER_UNSUPPORTED;
                     }
                 }
                 else
@@ -1269,11 +1145,9 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
                 }
             }
 
-            FramebufferStatus attachmentMultiviewCompleteness =
-                CheckMultiviewStateMatchesForCompleteness(firstAttachment, &colorAttachment);
-            if (!attachmentMultiviewCompleteness.isComplete())
+            if (!CheckMultiviewStateMatchesForCompleteness(firstAttachment, &colorAttachment))
             {
-                return attachmentMultiviewCompleteness;
+                return GL_FRAMEBUFFER_INCOMPLETE_VIEW_TARGETS_OVR;
             }
 
             hasRenderbuffer = hasRenderbuffer || (colorAttachment.type() == GL_RENDERBUFFER);
@@ -1296,9 +1170,7 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
                 ASSERT(isLayered.valid());
                 if (isLayered.value() != colorAttachment.isLayered())
                 {
-                    return FramebufferStatus::Incomplete(
-                        GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS_EXT,
-                        err::kFramebufferIncompleteMismatchedLayeredAttachments);
+                    return GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS_EXT;
                 }
                 else if (isLayered.value())
                 {
@@ -1306,9 +1178,7 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
                     if (colorAttachmentsTextureType.value() !=
                         colorAttachment.getTextureImageIndex().getType())
                     {
-                        return FramebufferStatus::Incomplete(
-                            GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS_EXT,
-                            err::kFramebufferIncompleteMismatchedLayeredTexturetypes);
+                        return GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS_EXT;
                     }
                 }
             }
@@ -1318,34 +1188,26 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
     const FramebufferAttachment &depthAttachment = mState.mDepthAttachment;
     if (depthAttachment.isAttached())
     {
-        FramebufferStatus attachmentCompleteness =
-            CheckAttachmentCompleteness(context, depthAttachment);
-        if (!attachmentCompleteness.isComplete())
+        if (!CheckAttachmentCompleteness(context, depthAttachment))
         {
-            return attachmentCompleteness;
+            return GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
         }
 
         const InternalFormat &format = *depthAttachment.getFormat().info;
         if (format.depthBits == 0)
         {
-            return FramebufferStatus::Incomplete(
-                GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                err::kFramebufferIncompleteAttachmentNoDepthBitsInDepthBuffer);
+            return GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
         }
 
-        FramebufferStatus attachmentSampleCompleteness =
-            CheckAttachmentSampleCompleteness(context, depthAttachment, false, &samples,
-                                              &fixedSampleLocations, &renderToTextureSamples);
-        if (!attachmentSampleCompleteness.isComplete())
+        if (!CheckAttachmentSampleCompleteness(context, depthAttachment, false, &samples,
+                                               &fixedSampleLocations, &renderToTextureSamples))
         {
-            return attachmentSampleCompleteness;
+            return GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE;
         }
 
-        FramebufferStatus attachmentMultiviewCompleteness =
-            CheckMultiviewStateMatchesForCompleteness(firstAttachment, &depthAttachment);
-        if (!attachmentMultiviewCompleteness.isComplete())
+        if (!CheckMultiviewStateMatchesForCompleteness(firstAttachment, &depthAttachment))
         {
-            return attachmentMultiviewCompleteness;
+            return GL_FRAMEBUFFER_INCOMPLETE_VIEW_TARGETS_OVR;
         }
 
         hasRenderbuffer = hasRenderbuffer || (depthAttachment.type() == GL_RENDERBUFFER);
@@ -1363,9 +1225,7 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
             ASSERT(isLayered.valid());
             if (isLayered.value() != depthAttachment.isLayered())
             {
-                return FramebufferStatus::Incomplete(
-                    GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS_EXT,
-                    err::kFramebufferIncompleteMismatchedLayeredAttachments);
+                return GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS_EXT;
             }
         }
     }
@@ -1373,34 +1233,26 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
     const FramebufferAttachment &stencilAttachment = mState.mStencilAttachment;
     if (stencilAttachment.isAttached())
     {
-        FramebufferStatus attachmentCompleteness =
-            CheckAttachmentCompleteness(context, stencilAttachment);
-        if (!attachmentCompleteness.isComplete())
+        if (!CheckAttachmentCompleteness(context, stencilAttachment))
         {
-            return attachmentCompleteness;
+            return GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
         }
 
         const InternalFormat &format = *stencilAttachment.getFormat().info;
         if (format.stencilBits == 0)
         {
-            return FramebufferStatus::Incomplete(
-                GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                err::kFramebufferIncompleteAttachmentNoStencilBitsInStencilBuffer);
+            return GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
         }
 
-        FramebufferStatus attachmentSampleCompleteness =
-            CheckAttachmentSampleCompleteness(context, stencilAttachment, false, &samples,
-                                              &fixedSampleLocations, &renderToTextureSamples);
-        if (!attachmentSampleCompleteness.isComplete())
+        if (!CheckAttachmentSampleCompleteness(context, stencilAttachment, false, &samples,
+                                               &fixedSampleLocations, &renderToTextureSamples))
         {
-            return attachmentSampleCompleteness;
+            return GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE;
         }
 
-        FramebufferStatus attachmentMultiviewCompleteness =
-            CheckMultiviewStateMatchesForCompleteness(firstAttachment, &stencilAttachment);
-        if (!attachmentMultiviewCompleteness.isComplete())
+        if (!CheckMultiviewStateMatchesForCompleteness(firstAttachment, &stencilAttachment))
         {
-            return attachmentMultiviewCompleteness;
+            return GL_FRAMEBUFFER_INCOMPLETE_VIEW_TARGETS_OVR;
         }
 
         hasRenderbuffer = hasRenderbuffer || (stencilAttachment.type() == GL_RENDERBUFFER);
@@ -1418,9 +1270,7 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
             ASSERT(isLayered.valid());
             if (isLayered.value() != stencilAttachment.isLayered())
             {
-                return FramebufferStatus::Incomplete(
-                    GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS_EXT,
-                    err::kFramebufferIncompleteMismatchedLayeredAttachments);
+                return GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS_EXT;
             }
         }
     }
@@ -1429,9 +1279,7 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
     if (state.getClientMajorVersion() >= 3 && depthAttachment.isAttached() &&
         stencilAttachment.isAttached() && stencilAttachment != depthAttachment)
     {
-        return FramebufferStatus::Incomplete(
-            GL_FRAMEBUFFER_UNSUPPORTED,
-            err::kFramebufferIncompleteDepthAndStencilBuffersNotTheSame);
+        return GL_FRAMEBUFFER_UNSUPPORTED;
     }
 
     // Special additional validation for WebGL 1 DEPTH/STENCIL/DEPTH_STENCIL.
@@ -1439,9 +1287,7 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
     {
         if (!mState.mWebGLDepthStencilConsistent)
         {
-            return FramebufferStatus::Incomplete(
-                GL_FRAMEBUFFER_UNSUPPORTED,
-                err::kFramebufferIncompleteWebGLDepthStencilInconsistant);
+            return GL_FRAMEBUFFER_UNSUPPORTED;
         }
 
         if (mState.mWebGLDepthStencilAttachment.isAttached())
@@ -1449,32 +1295,24 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
             if (mState.mWebGLDepthStencilAttachment.getDepthSize() == 0 ||
                 mState.mWebGLDepthStencilAttachment.getStencilSize() == 0)
             {
-                return FramebufferStatus::Incomplete(
-                    GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                    err::kFramebufferIncompleteAttachmentWebGLDepthStencilNoDepthOrStencilBits);
+                return GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
             }
 
-            FramebufferStatus attachmentMultiviewCompleteness =
-                CheckMultiviewStateMatchesForCompleteness(firstAttachment,
-                                                          &mState.mWebGLDepthStencilAttachment);
-            if (!attachmentMultiviewCompleteness.isComplete())
+            if (!CheckMultiviewStateMatchesForCompleteness(firstAttachment,
+                                                           &mState.mWebGLDepthStencilAttachment))
             {
-                return attachmentMultiviewCompleteness;
+                return GL_FRAMEBUFFER_INCOMPLETE_VIEW_TARGETS_OVR;
             }
         }
         else if (mState.mStencilAttachment.isAttached() &&
                  mState.mStencilAttachment.getDepthSize() > 0)
         {
-            return FramebufferStatus::Incomplete(
-                GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                err::kFramebufferIncompleteAttachmentWebGLStencilBufferHasDepthBits);
+            return GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
         }
         else if (mState.mDepthAttachment.isAttached() &&
                  mState.mDepthAttachment.getStencilSize() > 0)
         {
-            return FramebufferStatus::Incomplete(
-                GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-                err::kFramebufferIncompleteAttachmentWebGLDepthBufferHasStencilBits);
+            return GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
         }
     }
 
@@ -1485,8 +1323,7 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
     GLint defaultHeight = mState.getDefaultHeight();
     if (!hasAttachments && (defaultWidth == 0 || defaultHeight == 0))
     {
-        return FramebufferStatus::Incomplete(GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT,
-                                             err::kFramebufferIncompleteDefaultZeroSize);
+        return GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT;
     }
 
     // In ES 2.0 and WebGL, all color attachments must have the same width and height.
@@ -1494,18 +1331,14 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
     if ((state.getClientMajorVersion() < 3 || state.getExtensions().webglCompatibility) &&
         !mState.attachmentsHaveSameDimensions())
     {
-        return FramebufferStatus::Incomplete(
-            GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS,
-            err::kFramebufferIncompleteInconsistantAttachmentSizes);
+        return GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS;
     }
 
     // ES3.1(section 9.4) requires that if the attached images are a mix of renderbuffers and
     // textures, the value of TEXTURE_FIXED_SAMPLE_LOCATIONS must be TRUE for all attached textures.
     if (fixedSampleLocations.valid() && hasRenderbuffer && !fixedSampleLocations.value())
     {
-        return FramebufferStatus::Incomplete(
-            GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE,
-            err::kFramebufferIncompleteMultisampleNonFixedSamplesWithRenderbuffers);
+        return GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE;
     }
 
     // The WebGL conformance tests implicitly define that all framebuffer
@@ -1515,12 +1348,11 @@ FramebufferStatus Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
     {
         if (!mState.colorAttachmentsAreUniqueImages())
         {
-            return FramebufferStatus::Incomplete(GL_FRAMEBUFFER_UNSUPPORTED,
-                                                 err::kFramebufferIncompleteAttachmentsNotUnique);
+            return GL_FRAMEBUFFER_UNSUPPORTED;
         }
     }
 
-    return FramebufferStatus::Complete();
+    return GL_FRAMEBUFFER_COMPLETE;
 }
 
 angle::Result Framebuffer::discard(const Context *context, size_t count, const GLenum *attachments)
@@ -1718,7 +1550,7 @@ int Framebuffer::getSamples(const Context *context) const
         return 0;
     }
 
-    ASSERT(mCachedStatus.valid() && mCachedStatus.value().isComplete());
+    ASSERT(mCachedStatus.valid() && mCachedStatus.value() == GL_FRAMEBUFFER_COMPLETE);
 
     // For a complete framebuffer, all attachments must have the same sample count.
     // In this case return the first nonzero sample size.
@@ -1735,7 +1567,7 @@ int Framebuffer::getReadBufferResourceSamples(const Context *context) const
         return 0;
     }
 
-    ASSERT(mCachedStatus.valid() && mCachedStatus.value().isComplete());
+    ASSERT(mCachedStatus.valid() && mCachedStatus.value() == GL_FRAMEBUFFER_COMPLETE);
 
     const FramebufferAttachment *readAttachment = mState.getReadAttachment();
     ASSERT(readAttachment == nullptr || readAttachment->isAttached());
@@ -2019,15 +1851,6 @@ void Framebuffer::updateAttachment(const Context *context,
 void Framebuffer::resetAttachment(const Context *context, GLenum binding)
 {
     setAttachment(context, GL_NONE, binding, ImageIndex(), nullptr);
-}
-
-void Framebuffer::setWriteControlMode(SrgbWriteControlMode srgbWriteControlMode)
-{
-    if (srgbWriteControlMode != mState.getWriteControlMode())
-    {
-        mState.mSrgbWriteControlMode = srgbWriteControlMode;
-        mDirtyBits.set(DIRTY_BIT_FRAMEBUFFER_SRGB_WRITE_CONTROL_MODE);
-    }
 }
 
 angle::Result Framebuffer::syncState(const Context *context,

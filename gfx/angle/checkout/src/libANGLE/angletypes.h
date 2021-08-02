@@ -83,16 +83,8 @@ struct Rectangle
 bool operator==(const Rectangle &a, const Rectangle &b);
 bool operator!=(const Rectangle &a, const Rectangle &b);
 
-enum class ClipSpaceOrigin
-{
-    LowerLeft = 0,
-    UpperLeft = 1
-};
-
 // Calculate the intersection of two rectangles.  Returns false if the intersection is empty.
-ANGLE_NO_DISCARD bool ClipRectangle(const Rectangle &source,
-                                    const Rectangle &clip,
-                                    Rectangle *intersection);
+bool ClipRectangle(const Rectangle &source, const Rectangle &clip, Rectangle *intersection);
 // Calculate the smallest rectangle that covers both rectangles.  This rectangle may cover areas
 // not covered by the two rectangles, for example in this situation:
 //
@@ -295,49 +287,49 @@ class SamplerState final
 
     GLenum getMinFilter() const { return mMinFilter; }
 
-    bool setMinFilter(GLenum minFilter);
+    void setMinFilter(GLenum minFilter);
 
     GLenum getMagFilter() const { return mMagFilter; }
 
-    bool setMagFilter(GLenum magFilter);
+    void setMagFilter(GLenum magFilter);
 
     GLenum getWrapS() const { return mWrapS; }
 
-    bool setWrapS(GLenum wrapS);
+    void setWrapS(GLenum wrapS);
 
     GLenum getWrapT() const { return mWrapT; }
 
-    bool setWrapT(GLenum wrapT);
+    void setWrapT(GLenum wrapT);
 
     GLenum getWrapR() const { return mWrapR; }
 
-    bool setWrapR(GLenum wrapR);
+    void setWrapR(GLenum wrapR);
 
     float getMaxAnisotropy() const { return mMaxAnisotropy; }
 
-    bool setMaxAnisotropy(float maxAnisotropy);
+    void setMaxAnisotropy(float maxAnisotropy);
 
     GLfloat getMinLod() const { return mMinLod; }
 
-    bool setMinLod(GLfloat minLod);
+    void setMinLod(GLfloat minLod);
 
     GLfloat getMaxLod() const { return mMaxLod; }
 
-    bool setMaxLod(GLfloat maxLod);
+    void setMaxLod(GLfloat maxLod);
 
     GLenum getCompareMode() const { return mCompareMode; }
 
-    bool setCompareMode(GLenum compareMode);
+    void setCompareMode(GLenum compareMode);
 
     GLenum getCompareFunc() const { return mCompareFunc; }
 
-    bool setCompareFunc(GLenum compareFunc);
+    void setCompareFunc(GLenum compareFunc);
 
     GLenum getSRGBDecode() const { return mSRGBDecode; }
 
-    bool setSRGBDecode(GLenum sRGBDecode);
+    void setSRGBDecode(GLenum sRGBDecode);
 
-    bool setBorderColor(const ColorGeneric &color);
+    void setBorderColor(const ColorGeneric &color);
 
     const ColorGeneric &getBorderColor() const { return mBorderColor; }
 
@@ -843,8 +835,8 @@ using UniformBuffersArray = std::array<T, IMPLEMENTATION_MAX_UNIFORM_BUFFER_BIND
 template <typename T>
 using StorageBuffersArray = std::array<T, IMPLEMENTATION_MAX_SHADER_STORAGE_BUFFER_BINDINGS>;
 template <typename T>
-using AtomicCounterBuffersArray = std::array<T, IMPLEMENTATION_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS>;
-using AtomicCounterBufferMask   = angle::BitSet<IMPLEMENTATION_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS>;
+using AtomicCounterBuffersArray = std::array<T, IMPLEMENTATION_MAX_ATOMIC_COUNTER_BUFFERS>;
+using AtomicCounterBufferMask   = angle::BitSet<IMPLEMENTATION_MAX_ATOMIC_COUNTER_BUFFERS>;
 template <typename T>
 using ImagesArray = std::array<T, IMPLEMENTATION_MAX_IMAGE_UNITS>;
 
@@ -855,9 +847,6 @@ using SupportedSampleSet = std::set<GLuint>;
 template <typename T>
 using TransformFeedbackBuffersArray =
     std::array<T, gl::IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS>;
-
-template <typename T>
-using QueryTypeMap = angle::PackedEnumMap<QueryType, T>;
 
 constexpr size_t kBarrierVectorDefaultSize = 16;
 
