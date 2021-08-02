@@ -198,8 +198,7 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
     JSContext* cx, const ReadOnlyCompileOptions& options, bool foldConstants,
     CompilationState& compilationState, void* internalSyntaxParser)
     : ParserBase(cx, options, foldConstants, compilationState),
-      handler_(cx, compilationState.parserAllocScope.alloc(),
-               compilationState.input.lazyOuterScript()),
+      handler_(cx, compilationState),
       internalSyntaxParser_(internalSyntaxParser) {
   MOZ_ASSERT(compilationState.isInitialStencil() ==
              compilationState.input.isInitialStencil());
@@ -861,6 +860,51 @@ bool ParserBase::noteUsedNameInternal(TaggedParserAtomIndex name,
                             tokenPosition);
 }
 
+bool CompilationInput::cacheGCThings(JSContext* cx, LifoAlloc& alloc,
+                                     ParserAtomsTable& parseAtoms) {
+  using GCThingsSpan = mozilla::Span<TaggedScriptThingIndex>;
+  cachedGCThings_ = GCThingsSpan(nullptr);
+  if (!lazy_) {
+    return true;
+  }
+  auto gcthings = lazy_->gcthings();
+  size_t length = gcthings.Length();
+  if (length == 0) {
+    return true;
+  }
+
+  TaggedScriptThingIndex* gcThingsData =
+      alloc.newArrayUninitialized<TaggedScriptThingIndex>(length);
+  if (!gcThingsData) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  for (size_t i = 0; i < length; i++) {
+    gc::Cell* cell = gcthings[i].asCell();
+    if (!cell) {
+      gcThingsData[i] = TaggedScriptThingIndex();
+      continue;
+    }
+    if (cell->is<JSObject>()) {
+      gcThingsData[i] = TaggedScriptThingIndex(OpaqueThingType());
+      continue;
+    }
+
+    MOZ_ASSERT(cell->as<JSString>()->isAtom());
+    auto name = static_cast<JSAtom*>(cell);
+    auto parserAtom = parseAtoms.internJSAtom(cx, atomCache, name);
+    if (!parserAtom) {
+      return false;
+    }
+
+    gcThingsData[i] = TaggedScriptThingIndex(parserAtom);
+  }
+
+  cachedGCThings_ = GCThingsSpan(gcThingsData, length);
+  return true;
+}
+
 template <class ParseHandler>
 bool PerHandlerParser<ParseHandler>::
     propagateFreeNamesAndMarkClosedOverBindings(ParseContext::Scope& scope) {
@@ -873,19 +917,11 @@ bool PerHandlerParser<ParseHandler>::
   if (handler_.canSkipLazyClosedOverBindings()) {
     MOZ_ASSERT(pc_->isOutermostOfCurrentCompile());
 
-    // Scopes are nullptr-delimited in the BaseScript closed over bindings
-    // array.
+    // Closed over bindings for all scopes are stored in a contiguous array, in
+    // the same order as the order in which scopes are visited, and seprated by
+    // TaggedParserAtomIndex::null().
     uint32_t slotCount = scope.declaredCount();
-    while (JSAtom* name = handler_.nextLazyClosedOverBinding()) {
-      // TODO-Stencil
-      //   After closed-over-bindings are snapshotted in the handler,
-      //   remove this.
-      auto parserAtom = this->parserAtoms().internJSAtom(
-          cx_, this->getCompilationState().input.atomCache, name);
-      if (!parserAtom) {
-        return false;
-      }
-
+    while (auto parserAtom = handler_.nextLazyClosedOverBinding()) {
       scope.lookupDeclaredName(parserAtom)->value()->setClosedOver();
       MOZ_ASSERT(slotCount > 0);
       slotCount--;
