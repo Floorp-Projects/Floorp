@@ -187,7 +187,7 @@ class TableViewer {
 const metadataHandler = new (class extends TableViewer {
   title = "Interactions";
   cssGridTemplateColumns =
-    "max-content fit-content(100%) repeat(4, max-content);";
+    "max-content fit-content(100%) repeat(5, max-content);";
 
   /**
    * @see TableViewer.columnMap
@@ -217,6 +217,7 @@ const metadataHandler = new (class extends TableViewer {
       },
     ],
     ["key_presses", { header: "Key Presses" }],
+    ["referrer", { header: "Referrer", includeTitle: true }],
   ]);
 
   /**
@@ -246,8 +247,10 @@ const metadataHandler = new (class extends TableViewer {
   async updateDisplay() {
     let rows = await this.#getRows(
       `SELECT m.id AS id, h.url AS url, updated_at, total_view_time,
-              typing_time, key_presses FROM moz_places_metadata m
+              typing_time, key_presses, h2.url as referrer
+       FROM moz_places_metadata m
        JOIN moz_places h ON h.id = m.place_id
+       LEFT JOIN moz_places h2 ON h2.id = m.referrer_place_id
        ORDER BY updated_at DESC
        LIMIT ${this.maxRows}`
     );
