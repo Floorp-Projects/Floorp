@@ -4761,6 +4761,64 @@ void MacroAssembler::prepareHashSymbol(Register sym, Register result) {
   scrambleHashCode(result);
 }
 
+void MacroAssembler::prepareHashBigInt(Register bigInt, Register result,
+                                       Register temp1, Register temp2,
+                                       Register temp3) {
+  // Inline implementation of |OrderedHashTable::prepareHash()| and
+  // |BigInt::hash()|.
+
+  // Inline implementation of |mozilla::AddU32ToHash()|.
+  auto addU32ToHash = [&](Register toAdd) {
+    rotateLeft(Imm32(5), result, result);
+    xor32(toAdd, result);
+    mul32(Imm32(mozilla::kGoldenRatioU32), result);
+  };
+
+  move32(Imm32(0), result);
+
+  // Inline |mozilla::HashBytes()|.
+
+  load32(Address(bigInt, BigInt::offsetOfLength()), temp1);
+  loadBigIntDigits(bigInt, temp2);
+
+  Label start, loop;
+  jump(&start);
+  bind(&loop);
+
+  loadPtr(Address(temp2, 0), temp3);
+  {
+    // Compute |AddToHash(AddToHash(hash, data), sizeof(Digit))|.
+
+#if JS_PUNBOX64
+    // Hash the lower 32-bits.
+    addU32ToHash(temp3);
+
+    // Hash the upper 32-bits.
+    rshift64(Imm32(32), Register64(temp3));
+    addU32ToHash(temp3);
+#else
+    addU32ToHash(temp3);
+#endif
+  }
+  addPtr(Imm32(sizeof(BigInt::Digit)), temp2);
+
+  bind(&start);
+  branchSub32(Assembler::NotSigned, Imm32(1), temp1, &loop);
+
+  // Compute |mozilla::AddToHash(h, isNegative())|.
+  {
+    static_assert(mozilla::IsPowerOfTwo(BigInt::signBitMask()));
+
+    load32(Address(bigInt, BigInt::offsetOfFlags()), temp1);
+    and32(Imm32(BigInt::signBitMask()), temp1);
+    rshift32(Imm32(mozilla::FloorLog2(BigInt::signBitMask())), temp1);
+
+    addU32ToHash(temp1);
+  }
+
+  scrambleHashCode(result);
+}
+
 template <typename OrderedHashTable>
 void MacroAssembler::orderedHashTableLookup(Register setOrMapObj,
                                             ValueOperand value, Register hash,
