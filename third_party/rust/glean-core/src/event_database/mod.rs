@@ -208,7 +208,7 @@ impl EventDatabase {
                 store.push(event.clone());
                 self.write_event_to_disk(store_name, &event_json);
                 if store.len() == glean.get_max_events() {
-                    stores_to_submit.push(&store_name);
+                    stores_to_submit.push(store_name);
                 }
             }
         }
@@ -366,7 +366,7 @@ mod test {
         let t = tempfile::tempdir().unwrap();
 
         {
-            let db = EventDatabase::new(&t.path()).unwrap();
+            let db = EventDatabase::new(t.path()).unwrap();
             db.write_event_to_disk("events", "{\"timestamp\": 500");
             db.write_event_to_disk("events", "{\"timestamp\"");
             db.write_event_to_disk(
@@ -376,7 +376,7 @@ mod test {
         }
 
         {
-            let db = EventDatabase::new(&t.path()).unwrap();
+            let db = EventDatabase::new(t.path()).unwrap();
             db.load_events_from_disk().unwrap();
             let events = &db.event_stores.read().unwrap()["events"];
             assert_eq!(1, events.len());
@@ -448,11 +448,8 @@ mod test {
             extra: Some(data),
         };
 
-        assert_eq!(
-            event_empty,
-            serde_json::from_str(&event_empty_json).unwrap()
-        );
-        assert_eq!(event_data, serde_json::from_str(&event_data_json).unwrap());
+        assert_eq!(event_empty, serde_json::from_str(event_empty_json).unwrap());
+        assert_eq!(event_data, serde_json::from_str(event_data_json).unwrap());
     }
 
     #[test]

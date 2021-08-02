@@ -179,9 +179,7 @@ fn test_that_truncation_works() {
 
         assert_eq!(
             t.expected_result,
-            metric
-                .test_get_value_as_string(&glean, &store_name)
-                .unwrap()
+            metric.test_get_value_as_string(&glean, store_name).unwrap()
         );
     }
 }
