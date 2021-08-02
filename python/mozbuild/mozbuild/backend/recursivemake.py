@@ -10,10 +10,7 @@ import os
 import re
 import six
 
-from collections import (
-    defaultdict,
-    namedtuple,
-)
+from collections import defaultdict, namedtuple
 from itertools import chain
 from operator import itemgetter
 from six import StringIO
@@ -77,12 +74,7 @@ from ..frontend.data import (
     WasmSources,
     XPIDLModule,
 )
-from ..util import (
-    ensureParentDir,
-    FileAvoidWrite,
-    OrderedDefaultDict,
-    pairwise,
-)
+from ..util import ensureParentDir, FileAvoidWrite, OrderedDefaultDict, pairwise
 from ..makeutil import Makefile
 from mozbuild.shellutil import quote as shell_quote
 
@@ -478,8 +470,7 @@ class RecursiveMakeBackend(MakeBackend):
                 prefix = ""
             for f in sorted(obj.files):
                 p = self._pretty_path(
-                    cls(obj._context, prefix + mozpath.relpath(f, base)),
-                    backend_file,
+                    cls(obj._context, prefix + mozpath.relpath(f, base)), backend_file
                 )
                 for var in variables:
                     backend_file.write("%s += %s\n" % (var, p))
@@ -501,17 +492,13 @@ class RecursiveMakeBackend(MakeBackend):
                 prefix = ""
             for f in sorted(obj.files):
                 p = self._pretty_path(
-                    cls(obj._context, prefix + mozpath.relpath(f, base)),
-                    backend_file,
+                    cls(obj._context, prefix + mozpath.relpath(f, base)), backend_file
                 )
                 for var in variables:
                     backend_file.write("%s += %s\n" % (var, p))
             self._compile_graph[mozpath.join(backend_file.relobjdir, "host-objects")]
         elif isinstance(obj, (WasmSources, WasmGeneratedSources)):
-            suffix_map = {
-                ".c": "WASM_CSRCS",
-                ".cpp": "WASM_CPPSRCS",
-            }
+            suffix_map = {".c": "WASM_CSRCS", ".cpp": "WASM_CPPSRCS"}
             variables = [suffix_map[obj.canonical_suffix]]
             if isinstance(obj, WasmGeneratedSources):
                 base = backend_file.objdir
@@ -523,8 +510,7 @@ class RecursiveMakeBackend(MakeBackend):
                 prefix = ""
             for f in sorted(obj.files):
                 p = self._pretty_path(
-                    cls(obj._context, prefix + mozpath.relpath(f, base)),
-                    backend_file,
+                    cls(obj._context, prefix + mozpath.relpath(f, base)), backend_file
                 )
                 for var in variables:
                     backend_file.write("%s += %s\n" % (var, p))
@@ -653,6 +639,7 @@ class RecursiveMakeBackend(MakeBackend):
         elif isinstance(obj, SandboxedWasmLibrary):
             self._process_sandboxed_wasm_library(obj, backend_file)
             self._process_linked_libraries(obj, backend_file)
+            self._no_skip["syms"].add(backend_file.relobjdir)
 
         elif isinstance(obj, HostLibrary):
             self._process_linked_libraries(obj, backend_file)
@@ -986,10 +973,7 @@ class RecursiveMakeBackend(MakeBackend):
                     # topobjdir is handled separatedly, don't do anything for
                     # it.
                     if bf.relobjdir:
-                        for tier in (
-                            "export",
-                            "libs",
-                        ):
+                        for tier in ("export", "libs"):
                             self._no_skip[tier].add(bf.relobjdir)
                 else:
                     self.log(
@@ -1209,8 +1193,7 @@ class RecursiveMakeBackend(MakeBackend):
         self._create_makefile(
             obj,
             extra=dict(
-                xpidl_rules=rules.getvalue(),
-                xpidl_modules=" ".join(xpt_modules),
+                xpidl_rules=rules.getvalue(), xpidl_modules=" ".join(xpt_modules)
             ),
         )
 
@@ -1524,13 +1507,7 @@ class RecursiveMakeBackend(MakeBackend):
     def _process_final_target_files(self, obj, files, backend_file):
         target = obj.install_target
         path = mozpath.basedir(
-            target,
-            (
-                "dist/bin",
-                "dist/xpi-stage",
-                "_tests",
-                "dist/include",
-            ),
+            target, ("dist/bin", "dist/xpi-stage", "_tests", "dist/include")
         )
         if not path:
             raise Exception("Cannot install to " + target)
@@ -1746,13 +1723,7 @@ class RecursiveMakeBackend(MakeBackend):
     class Substitution(object):
         """BaseConfigSubstitution-like class for use with _create_makefile."""
 
-        __slots__ = (
-            "input_path",
-            "output_path",
-            "topsrcdir",
-            "topobjdir",
-            "config",
-        )
+        __slots__ = ("input_path", "output_path", "topsrcdir", "topobjdir", "config")
 
     def _create_makefile(self, obj, stub=False, extra=None):
         """Creates the given makefile. Makefiles are treated the same as
