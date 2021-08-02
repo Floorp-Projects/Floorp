@@ -15423,6 +15423,16 @@ void CodeGenerator::visitHashSymbol(LHashSymbol* ins) {
   masm.prepareHashSymbol(input, output);
 }
 
+void CodeGenerator::visitHashBigInt(LHashBigInt* ins) {
+  Register input = ToRegister(ins->input());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register temp3 = ToRegister(ins->temp3());
+  Register output = ToRegister(ins->output());
+
+  masm.prepareHashBigInt(input, output, temp1, temp2, temp3);
+}
+
 void CodeGenerator::visitSetObjectHasNonBigInt(LSetObjectHasNonBigInt* ins) {
   Register setObj = ToRegister(ins->setObject());
   ValueOperand input = ToValue(ins, LSetObjectHasNonBigInt::Input);
@@ -15432,6 +15442,20 @@ void CodeGenerator::visitSetObjectHasNonBigInt(LSetObjectHasNonBigInt* ins) {
   Register output = ToRegister(ins->output());
 
   masm.setObjectHasNonBigInt(setObj, input, hash, output, temp1, temp2);
+}
+
+void CodeGenerator::visitSetObjectHasBigInt(LSetObjectHasBigInt* ins) {
+  Register setObj = ToRegister(ins->setObject());
+  ValueOperand input = ToValue(ins, LSetObjectHasBigInt::Input);
+  Register hash = ToRegister(ins->hash());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register temp3 = ToRegister(ins->temp3());
+  Register temp4 = ToRegister(ins->temp4());
+  Register output = ToRegister(ins->output());
+
+  masm.setObjectHasBigInt(setObj, input, hash, output, temp1, temp2, temp3,
+                          temp4);
 }
 
 template <size_t NumDefs>
