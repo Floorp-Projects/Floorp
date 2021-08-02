@@ -25,7 +25,7 @@ class TabsTouchHelperTest {
         val recyclerView = RecyclerView(testContext)
         val layout = FrameLayout(testContext)
         val viewHolder = SyncedTabsPageViewHolder(layout, mockk())
-        val callback = TouchCallback(mockk(), { true }, mockk())
+        val callback = TouchCallback(mockk(), { true }, { false })
 
         assertEquals(0, callback.getDragDirs(recyclerView, viewHolder))
         assertEquals(
@@ -44,7 +44,7 @@ class TabsTouchHelperTest {
         val recyclerView = RecyclerView(testContext)
         val layout = FrameLayout(testContext)
         val viewHolder = SyncedTabsPageViewHolder(layout, mockk())
-        val callback = TouchCallback(mockk(), { false }, mockk())
+        val callback = TouchCallback(mockk(), { false }, { false })
 
         assertEquals(0, callback.getDragDirs(recyclerView, viewHolder))
         assertEquals(
