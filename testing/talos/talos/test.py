@@ -507,6 +507,7 @@ class cross_origin_pageload(PageloaderTest):
     has 20 cross origin iframes
     """
 
+    preferences = {"dom.ipc.processPrelaunch.fission.number": 30}
     extensions = ["${talos}/pageloader"]
     tpmanifest = "${talos}/tests/cross_origin_pageload/cross_origin_pageload.manifest"
     tppagecycles = 10
