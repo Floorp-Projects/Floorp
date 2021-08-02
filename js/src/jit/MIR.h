@@ -373,10 +373,13 @@ class AliasSet {
     // the ExpandoAndGeneration.
     DOMProxyExpando = 1 << 14,
 
-    Last = DOMProxyExpando,
+    // Hash table of a Map or Set object.
+    MapOrSetHashTable = 1 << 15,
+
+    Last = MapOrSetHashTable,
     Any = Last | (Last - 1),
 
-    NumCategories = 15,
+    NumCategories = 16,
 
     // Indicates load or store.
     Store_ = 1 << 31
