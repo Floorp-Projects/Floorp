@@ -1664,9 +1664,12 @@ class EditorBase : public nsIEditor,
    * should be used for handling it as an edit sub-action.
    *
    * @param aStringToInsert     The string to insert.
+   * @param aSelectionHandling  Specify whether selected content should be
+   *                            deleted or ignored.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  InsertTextAsSubAction(const nsAString& aStringToInsert);
+  enum class SelectionHandling { Ignore, Delete };
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertTextAsSubAction(
+      const nsAString& aStringToInsert, SelectionHandling aSelectionHandling);
 
   /**
    * InsertTextWithTransaction() inserts aStringToInsert to aPointToInsert or
@@ -2050,9 +2053,12 @@ class EditorBase : public nsIEditor,
    * @param aEditSubAction      Must be EditSubAction::eInsertText or
    *                            EditSubAction::eInsertTextComingFromIME.
    * @param aInsertionString    String to be inserted at selection.
+   * @param aSelectionHandling  Specify whether selected content should be
+   *                            deleted or ignored.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual EditActionResult HandleInsertText(
-      EditSubAction aEditSubAction, const nsAString& aInsertionString) = 0;
+      EditSubAction aEditSubAction, const nsAString& aInsertionString,
+      SelectionHandling aSelectionHandling) = 0;
 
   /**
    * InsertWithQuotationsAsSubAction() inserts aQuotedText with appending ">"

@@ -1785,7 +1785,7 @@ nsresult EditorBase::InsertTextAt(const nsAString& aStringToInsert,
     return rv;
   }
 
-  rv = InsertTextAsSubAction(aStringToInsert);
+  rv = InsertTextAsSubAction(aStringToInsert, SelectionHandling::Delete);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::InsertTextAsSubAction() failed");
   return rv;
@@ -3650,6 +3650,7 @@ nsresult EditorBase::OnCompositionChange(
   MOZ_ASSERT(
       !mPlaceholderBatch,
       "UpdateIMEComposition() must be called without place holder batch");
+  bool wasComposing = mComposition->IsComposing();
   TextComposition::CompositionChangeEventHandlingMarker
       compositionChangeEventHandlingMarker(mComposition,
                                            &aCompositionChangeEvent);
@@ -3667,7 +3668,10 @@ nsresult EditorBase::OnCompositionChange(
     if (IsHTMLEditor()) {
       nsContentUtils::PlatformToDOMLineBreaks(data);
     }
-    rv = InsertTextAsSubAction(data);
+    // If we're updating composition, we need to ignore normal selection
+    // which may be updated by the web content.
+    rv = InsertTextAsSubAction(data, wasComposing ? SelectionHandling::Ignore
+                                                  : SelectionHandling::Delete);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "EditorBase::InsertTextAsSubAction() failed");
 
@@ -5000,7 +5004,7 @@ nsresult EditorBase::OnInputText(const nsAString& aStringToInsert) {
 
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName,
                                              ScrollSelectionIntoView::Yes);
-  rv = InsertTextAsSubAction(aStringToInsert);
+  rv = InsertTextAsSubAction(aStringToInsert, SelectionHandling::Delete);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::InsertTextAsSubAction() failed");
   return EditorBase::ToGenericNSResult(rv);
@@ -5129,7 +5133,7 @@ nsresult EditorBase::ReplaceSelectionAsSubAction(const nsAString& aString) {
     return rv;
   }
 
-  nsresult rv = InsertTextAsSubAction(aString);
+  nsresult rv = InsertTextAsSubAction(aString, SelectionHandling::Delete);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::InsertTextAsSubAction() failed");
   return rv;
@@ -5963,20 +5967,26 @@ nsresult EditorBase::InsertTextAsAction(const nsAString& aStringToInsert,
   }
   AutoPlaceholderBatch treatAsOneTransaction(*this,
                                              ScrollSelectionIntoView::Yes);
-  rv = InsertTextAsSubAction(stringToInsert);
+  rv = InsertTextAsSubAction(stringToInsert, SelectionHandling::Delete);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::InsertTextAsSubAction() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
-nsresult EditorBase::InsertTextAsSubAction(const nsAString& aStringToInsert) {
+nsresult EditorBase::InsertTextAsSubAction(
+    const nsAString& aStringToInsert, SelectionHandling aSelectionHandling) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch);
   MOZ_ASSERT(IsHTMLEditor() ||
              aStringToInsert.FindChar(nsCRT::CR) == kNotFound);
+  MOZ_ASSERT_IF(aSelectionHandling == SelectionHandling::Ignore, mComposition);
 
   if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
 
   EditSubAction editSubAction = ShouldHandleIMEComposition()
@@ -5993,7 +6003,8 @@ nsresult EditorBase::InsertTextAsSubAction(const nsAString& aStringToInsert) {
       !ignoredError.Failed(),
       "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  EditActionResult result = HandleInsertText(editSubAction, aStringToInsert);
+  EditActionResult result =
+      HandleInsertText(editSubAction, aStringToInsert, aSelectionHandling);
   NS_WARNING_ASSERTION(result.Succeeded(),
                        "EditorBase::HandleInsertText() failed");
   return result.Rv();
