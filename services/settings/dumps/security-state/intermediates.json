@@ -1,6 +1,78 @@
 {
   "data": [
     {
+      "schema": 1627740208946,
+      "derHash": "wt/7PBuwbeTBCSblF/82b5OJLV4C3G95CAJ121f9b8g=",
+      "subject": "CN=TI Trust Technologies EV CA,OU=Controlled by Sectigo exclusively for TI Trust Technologies,O=Telecom Italia Trust Technologies S.R.L.,L=Pomezia,ST=Roma,C=IT",
+      "subjectDN": "MIHNMQswCQYDVQQGEwJJVDENMAsGA1UECBMEUm9tYTEQMA4GA1UEBxMHUG9tZXppYTExMC8GA1UEChMoVGVsZWNvbSBJdGFsaWEgVHJ1c3QgVGVjaG5vbG9naWVzIFMuUi5MLjFEMEIGA1UECxM7Q29udHJvbGxlZCBieSBTZWN0aWdvIGV4Y2x1c2l2ZWx5IGZvciBUSSBUcnVzdCBUZWNobm9sb2dpZXMxJDAiBgNVBAMTG1RJIFRydXN0IFRlY2hub2xvZ2llcyBFViBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "f3a3288bc3b67208c3f1e4164cb00b27794763ac59477eb6171158b3507ab3e8",
+        "size": 2288,
+        "filename": "lG0jsaBDRslBBApGfnJu_ukJ5x3uoc841KUU1OMrO1E=.pem",
+        "location": "security-state-staging/intermediates/48b456c7-6568-4b6a-b3a6-e6d3c9384968.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "lG0jsaBDRslBBApGfnJu/ukJ5x3uoc841KUU1OMrO1E=",
+      "crlite_enrolled": true,
+      "id": "3eca5483-9836-4680-82c5-bb0774a0b4ad",
+      "last_modified": 1627743575700
+    },
+    {
+      "schema": 1627657085658,
+      "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
+      "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a02a5c8205e62c2ef5dc42345a1585558c86f166ed9875d861601a465bcc4651",
+        "size": 2016,
+        "filename": "0JA1q1ctk_4J8qS0t-GhJaG5egVDq9SB33oMY7SMpfs=.pem",
+        "location": "security-state-staging/intermediates/caec957d-379a-4c23-bf42-3bd122e7cf33.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
+      "crlite_enrolled": true,
+      "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
+      "last_modified": 1627696694103
+    },
+    {
+      "schema": 1627696659687,
+      "derHash": "ClUqZfIv+CDn7D1Du/iLAqvDS9JH4MNQWJG2NC8WpfI=",
+      "subject": "CN=SHECA RSA Domain Validation Server CA G3,O=UniTrust,C=CN",
+      "subjectDN": "MFMxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDExMC8GA1UEAwwoU0hFQ0EgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "42516b0068507cb60d6383aaefa05ac169921cff9e4616761151efe098d3e1fe",
+        "size": 2008,
+        "filename": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS_84dpbLl_qNOnU=.pem",
+        "location": "security-state-staging/intermediates/525578e5-a94b-4525-b9e7-801be6e0ff89.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS/84dpbLl/qNOnU=",
+      "crlite_enrolled": true,
+      "id": "4b6a2421-1677-41c0-8103-bc13fb7e09f9",
+      "last_modified": 1627696694071
+    },
+    {
+      "schema": 1627527491679,
+      "derHash": "PzHbdYKNqpbk3luCoGeP4gI71bJGw/klDL9nGOEJWPU=",
+      "subject": "CN=Domain The Net Technologies Ltd CA for EV SSL R2,O=Domain The Net Technologies Ltd,C=IL",
+      "subjectDN": "MHIxCzAJBgNVBAYTAklMMSgwJgYDVQQKDB9Eb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkMTkwNwYDVQQDDDBEb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkIENBIGZvciBFViBTU0wgUjI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "cf5351124dd205109785f9b65c288b991342bec54071a6a24020c197870d64f5",
+        "size": 2487,
+        "filename": "Lk19AkNIC7AwHNF5HsU_phCEnUBI-eiA0mbFhxxeQsQ=.pem",
+        "location": "security-state-staging/intermediates/e3c32426-ee59-4729-9b1d-1ad5faa81c2c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Lk19AkNIC7AwHNF5HsU/phCEnUBI+eiA0mbFhxxeQsQ=",
+      "crlite_enrolled": true,
+      "id": "dafe281c-5c26-4b1e-b927-70b741e43b25",
+      "last_modified": 1627567413849
+    },
+    {
       "schema": 1627505857328,
       "derHash": "k6B4mNibLMoWa6bx+KFBOM5Dgo5JG4MZJryCR9ORzHI=",
       "subject": "CN=Starfield Secure Certificate Authority - G2,OU=http://certs.starfieldtech.com/repository/,O=Starfield Technologies\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
@@ -19,24 +91,6 @@
       "last_modified": 1627527490628
     },
     {
-      "schema": 1627462733339,
-      "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
-      "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a02a5c8205e62c2ef5dc42345a1585558c86f166ed9875d861601a465bcc4651",
-        "size": 2016,
-        "filename": "0JA1q1ctk_4J8qS0t-GhJaG5egVDq9SB33oMY7SMpfs=.pem",
-        "location": "security-state-staging/intermediates/caec957d-379a-4c23-bf42-3bd122e7cf33.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
-      "crlite_enrolled": true,
-      "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
-      "last_modified": 1627484269985
-    },
-    {
       "schema": 1627354662566,
       "derHash": "MaCWocuRiHbuV8hbI0n8nMLCy0/Pm903eHzp2levR5A=",
       "subject": "CN=Alibaba Cloud GCC R3 TLS OV CA 2021,O=Alibaba Cloud Computing Co.\\, Ltd.,C=CN",
@@ -53,24 +107,6 @@
       "crlite_enrolled": true,
       "id": "136cca7b-196b-4678-a6b0-4b880a8df6c5",
       "last_modified": 1627397859276
-    },
-    {
-      "schema": 1627333083363,
-      "derHash": "ClUqZfIv+CDn7D1Du/iLAqvDS9JH4MNQWJG2NC8WpfI=",
-      "subject": "CN=SHECA RSA Domain Validation Server CA G3,O=UniTrust,C=CN",
-      "subjectDN": "MFMxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDExMC8GA1UEAwwoU0hFQ0EgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "42516b0068507cb60d6383aaefa05ac169921cff9e4616761151efe098d3e1fe",
-        "size": 2008,
-        "filename": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS_84dpbLl_qNOnU=.pem",
-        "location": "security-state-staging/intermediates/525578e5-a94b-4525-b9e7-801be6e0ff89.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS/84dpbLl/qNOnU=",
-      "crlite_enrolled": true,
-      "id": "4b6a2421-1677-41c0-8103-bc13fb7e09f9",
-      "last_modified": 1627354661542
     },
     {
       "schema": 1627329796081,
@@ -28027,24 +28063,6 @@
       "last_modified": 1576536533226
     },
     {
-      "schema": 1576535692634,
-      "derHash": "wt/7PBuwbeTBCSblF/82b5OJLV4C3G95CAJ121f9b8g=",
-      "subject": "CN=TI Trust Technologies EV CA,OU=Controlled by Sectigo exclusively for TI Trust Technologies,O=Telecom Italia Trust Technologies S.R.L.,L=Pomezia,ST=Roma,C=IT",
-      "subjectDN": "MIHNMQswCQYDVQQGEwJJVDENMAsGA1UECBMEUm9tYTEQMA4GA1UEBxMHUG9tZXppYTExMC8GA1UEChMoVGVsZWNvbSBJdGFsaWEgVHJ1c3QgVGVjaG5vbG9naWVzIFMuUi5MLjFEMEIGA1UECxM7Q29udHJvbGxlZCBieSBTZWN0aWdvIGV4Y2x1c2l2ZWx5IGZvciBUSSBUcnVzdCBUZWNobm9sb2dpZXMxJDAiBgNVBAMTG1RJIFRydXN0IFRlY2hub2xvZ2llcyBFViBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "f3a3288bc3b67208c3f1e4164cb00b27794763ac59477eb6171158b3507ab3e8",
-        "size": 2288,
-        "filename": "lG0jsaBDRslBBApGfnJu_ukJ5x3uoc841KUU1OMrO1E=.pem",
-        "location": "security-state-staging/intermediates/48b456c7-6568-4b6a-b3a6-e6d3c9384968.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "lG0jsaBDRslBBApGfnJu/ukJ5x3uoc841KUU1OMrO1E=",
-      "crlite_enrolled": false,
-      "id": "3eca5483-9836-4680-82c5-bb0774a0b4ad",
-      "last_modified": 1576536533221
-    },
-    {
       "schema": 1576535691263,
       "derHash": "j3Y2enra5GQiWOZYaiqWQqAPPsux63JfGLXnrT2Vrtk=",
       "subject": "CN=Saudi Enaya Public Issuing CA,OU=Class 2 DigiCert PKI Platform Individual Subscriber CA,O=Saudi Enaya Cooperative Insurance Company,C=SA",
@@ -31931,24 +31949,6 @@
       "crlite_enrolled": false,
       "id": "954d0ac8-d979-4964-a8f1-6ae3ae761ebc",
       "last_modified": 1576536531183
-    },
-    {
-      "schema": 1576536078694,
-      "derHash": "PzHbdYKNqpbk3luCoGeP4gI71bJGw/klDL9nGOEJWPU=",
-      "subject": "CN=Domain The Net Technologies Ltd CA for EV SSL R2,O=Domain The Net Technologies Ltd,C=IL",
-      "subjectDN": "MHIxCzAJBgNVBAYTAklMMSgwJgYDVQQKDB9Eb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkMTkwNwYDVQQDDDBEb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkIENBIGZvciBFViBTU0wgUjI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "cf5351124dd205109785f9b65c288b991342bec54071a6a24020c197870d64f5",
-        "size": 2487,
-        "filename": "Lk19AkNIC7AwHNF5HsU_phCEnUBI-eiA0mbFhxxeQsQ=.pem",
-        "location": "security-state-staging/intermediates/e3c32426-ee59-4729-9b1d-1ad5faa81c2c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Lk19AkNIC7AwHNF5HsU/phCEnUBI+eiA0mbFhxxeQsQ=",
-      "crlite_enrolled": false,
-      "id": "dafe281c-5c26-4b1e-b927-70b741e43b25",
-      "last_modified": 1576536531160
     },
     {
       "schema": 1576536136786,
