@@ -71,6 +71,7 @@ struct MonitorConfig {
   explicit MonitorConfig(int aId) : id(aId){};
 };
 
+#ifdef MOZ_WAYLAND
 class ScreenGetterWayland : public ScreenGetter {
  public:
   ScreenGetterWayland() : mRegistry() {};
@@ -96,6 +97,7 @@ class ScreenGetterWayland : public ScreenGetter {
   AutoTArray<MonitorConfig, 4> mMonitors;
   AutoTArray<RefPtr<Screen>, 4> mScreenList;
 };
+#endif
 
 class ScreenHelperGTK final : public ScreenManager::Helper {
  public:
