@@ -234,6 +234,12 @@ struct CompilationInput {
   // stencil-like gc-things such that it can be used by the parser.
   mozilla::Span<TaggedScriptThingIndex> cachedGCThings_;
 
+  // When delazifying, we should perpare an array which contains all
+  // stencil-like information about scripts, such that it can be used by the
+  // parser.
+  mozilla::Span<ScriptStencil> cachedScriptData_;
+  mozilla::Span<ScriptStencilExtra> cachedScriptExtra_;
+
  public:
   RefPtr<ScriptSource> source;
 
@@ -371,7 +377,13 @@ struct CompilationInput {
   mozilla::Span<TaggedScriptThingIndex> gcThings() const {
     return cachedGCThings_;
   }
+  mozilla::Span<ScriptStencil> scriptData() const { return cachedScriptData_; }
+  mozilla::Span<ScriptStencilExtra> scriptExtra() const {
+    return cachedScriptExtra_;
+  }
 
+  [[nodiscard]] bool cacheScript(JSContext* cx, LifoAlloc& alloc,
+                                 ParserAtomsTable& parseAtoms);
   [[nodiscard]] bool cacheGCThings(JSContext* cx, LifoAlloc& alloc,
                                    ParserAtomsTable& parseAtoms);
 
@@ -861,6 +873,9 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
     // gcThings is later used by the full parser initialization.
     if (input.isDelazifying()) {
+      if (!input.cacheScript(cx, alloc, parserAtoms)) {
+        return false;
+      }
       if (!input.cacheGCThings(cx, alloc, parserAtoms)) {
         return false;
       }
