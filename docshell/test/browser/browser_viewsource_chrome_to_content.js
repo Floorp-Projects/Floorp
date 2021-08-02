@@ -4,7 +4,7 @@
 
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://example.com"
+  "https://example.com"
 );
 const TEST_URI = `view-source:${TEST_PATH}dummy_page.html`;
 

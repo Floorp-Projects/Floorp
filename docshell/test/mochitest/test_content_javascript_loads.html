@@ -51,7 +51,7 @@ async function runTests(resourcePath) {
     let iframe = doc.createElement("iframe");
     iframe.id = id;
     iframe.name = id;
-    iframe.src = `http://${host}${resourcePath}file_content_javascript_loads_frame.html`;
+    iframe.src = `https://${host}${resourcePath}file_content_javascript_loads_frame.html`;
     doc.body.appendChild(iframe);
     return promiseEvent(iframe, "load");
   }
@@ -149,7 +149,7 @@ add_task(async function() {
   const resourcePath = location.pathname.replace(/[^\/]+$/, "");
 
   let win = window.open(
-    `http://example.com${resourcePath}file_content_javascript_loads_root.html`
+    `https://example.com${resourcePath}file_content_javascript_loads_root.html`
   );
   await promiseMessage(win, event => event.data == "ready");
 
