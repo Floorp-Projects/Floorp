@@ -814,8 +814,19 @@ mochitest-remote:
     loopback-video: true
     run-on-projects:
         by-variant:
-            # Bug 1600054: Remote Agent not Fission compatible
-            fission: []
+            fission:
+                by-test-platform:
+                    (windows10-64|macosx.*64)(-shippable)?-qr/(opt|debug): ['trunk']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    linux.*64(-asan)?-qr/(opt|debug): ['all']
+                    linux.*64(-shippable|-ccov)-qr/opt: ['release']
+                    default: built-projects
+            webrender-sw-fission:
+                by-test-platform:
+                    linux.*64(-asan|-shippable)?-qr/(opt|debug): ['trunk']
+                    default: []
             default:
                 by-test-platform:
                     .*-tsan-qr/opt: ['trunk']
