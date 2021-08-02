@@ -1043,17 +1043,6 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   line-height: 30px;
 }
 
-#no-results-message[query*=🔥🦊] {
-  background-image: url("chrome://browser/skin/preferences/critters-postcard.jpg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-#no-results-message[query*=🔥🦊] > .no-results-container {
-  visibility: hidden;
-}
-
 /* Proxy port input */
 
 .proxy-port-input {
