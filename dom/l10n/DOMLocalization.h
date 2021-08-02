@@ -14,6 +14,7 @@
 #include "mozilla/dom/L10nMutations.h"
 #include "mozilla/dom/L10nOverlaysBinding.h"
 #include "mozilla/dom/LocalizationBinding.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 
 // XXX Avoid including this here by moving function bodies to the cpp file
 #include "nsINode.h"
