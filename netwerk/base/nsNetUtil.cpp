@@ -3319,7 +3319,7 @@ void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
   nsAutoCString host;
   aURI->GetHost(host);
   // Ignore test hits.
-  if (host.EqualsLiteral("mochitests")) {
+  if (host.EqualsLiteral("mochitests") || host.EqualsLiteral("reftest")) {
     return;
   }
 
@@ -3352,6 +3352,11 @@ void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
   }
   // See bug 1722485
   if (StringEndsWith(filePath, "/SessionStore.jsm"_ns)) {
+    return;
+  }
+
+  // See bug 1722082
+  if (StringEndsWith(filePath, "/AttributionCode.jsm"_ns)) {
     return;
   }
 #endif
