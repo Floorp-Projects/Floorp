@@ -1551,90 +1551,49 @@ bool ValidateGenFramebuffersOES(const Context *context,
                                 GLsizei n,
                                 const FramebufferID *framebuffers)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    return ValidateGenOrDelete(context, n);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateDeleteFramebuffersOES(const Context *context,
                                    GLsizei n,
                                    const FramebufferID *framebuffers)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    return ValidateGenOrDelete(context, n);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateGenRenderbuffersOES(const Context *context,
                                  GLsizei n,
                                  const RenderbufferID *renderbuffers)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    return ValidateGenOrDelete(context, n);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateDeleteRenderbuffersOES(const Context *context,
                                     GLsizei n,
                                     const RenderbufferID *renderbuffers)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    return ValidateGenOrDelete(context, n);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateBindFramebufferOES(const Context *context, GLenum target, FramebufferID framebuffer)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    return ValidateBindFramebufferBase(context, target, framebuffer);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateBindRenderbufferOES(const Context *context, GLenum target, RenderbufferID renderbuffer)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    return ValidateBindRenderbufferBase(context, target, renderbuffer);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateCheckFramebufferStatusOES(const Context *context, GLenum target)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    if (!ValidFramebufferTarget(context, target))
-    {
-        context->validationError(GL_INVALID_ENUM, kInvalidFramebufferTarget);
-        return false;
-    }
-
+    UNIMPLEMENTED();
     return true;
 }
 
@@ -1644,13 +1603,8 @@ bool ValidateFramebufferRenderbufferOES(const Context *context,
                                         GLenum rbtarget,
                                         RenderbufferID renderbuffer)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    return ValidateFramebufferRenderbufferBase(context, target, attachment, rbtarget, renderbuffer);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateFramebufferTexture2DOES(const Context *context,
@@ -1660,91 +1614,14 @@ bool ValidateFramebufferTexture2DOES(const Context *context,
                                      TextureID texture,
                                      GLint level)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    if (level != 0)
-    {
-        context->validationError(GL_INVALID_VALUE, kInvalidFramebufferTextureLevel);
-        return false;
-    }
-
-    if (!ValidateFramebufferTextureBase(context, target, attachment, texture, level))
-    {
-        return false;
-    }
-
-    if (texture.value != 0)
-    {
-        Texture *tex = context->getTexture(texture);
-        ASSERT(tex);
-
-        const Caps &caps = context->getCaps();
-
-        switch (textarget)
-        {
-            case TextureTarget::_2D:
-            {
-                if (level > log2(caps.max2DTextureSize))
-                {
-                    context->validationError(GL_INVALID_VALUE, kInvalidMipLevel);
-                    return false;
-                }
-                if (tex->getType() != TextureType::_2D)
-                {
-                    context->validationError(GL_INVALID_OPERATION, kInvalidTextureTarget);
-                    return false;
-                }
-            }
-            break;
-
-            case TextureTarget::CubeMapNegativeX:
-            case TextureTarget::CubeMapNegativeY:
-            case TextureTarget::CubeMapNegativeZ:
-            case TextureTarget::CubeMapPositiveX:
-            case TextureTarget::CubeMapPositiveY:
-            case TextureTarget::CubeMapPositiveZ:
-            {
-                if (!context->getExtensions().textureCubeMapOES)
-                {
-                    context->validationError(GL_INVALID_ENUM, kInvalidTextureTarget);
-                    return false;
-                }
-
-                if (level > log2(caps.maxCubeMapTextureSize))
-                {
-                    context->validationError(GL_INVALID_VALUE, kInvalidMipLevel);
-                    return false;
-                }
-                if (tex->getType() != TextureType::CubeMap)
-                {
-                    context->validationError(GL_INVALID_OPERATION, kTextureTargetMismatch);
-                    return false;
-                }
-            }
-            break;
-
-            default:
-                context->validationError(GL_INVALID_ENUM, kInvalidTextureTarget);
-                return false;
-        }
-    }
-
+    UNIMPLEMENTED();
     return true;
 }
 
 bool ValidateGenerateMipmapOES(const Context *context, TextureType target)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    return ValidateGenerateMipmapBase(context, target);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateGetFramebufferAttachmentParameterivOES(const Context *context,
@@ -1753,14 +1630,8 @@ bool ValidateGetFramebufferAttachmentParameterivOES(const Context *context,
                                                     GLenum pname,
                                                     const GLint *params)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    return ValidateGetFramebufferAttachmentParameterivBase(context, target, attachment, pname,
-                                                           nullptr);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateGetRenderbufferParameterivOES(const Context *context,
@@ -1768,34 +1639,19 @@ bool ValidateGetRenderbufferParameterivOES(const Context *context,
                                            GLenum pname,
                                            const GLint *params)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    return ValidateGetRenderbufferParameterivBase(context, target, pname, nullptr);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateIsFramebufferOES(const Context *context, FramebufferID framebuffer)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
+    UNIMPLEMENTED();
     return true;
 }
 
 bool ValidateIsRenderbufferOES(const Context *context, RenderbufferID renderbuffer)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
+    UNIMPLEMENTED();
     return true;
 }
 
@@ -1805,14 +1661,8 @@ bool ValidateRenderbufferStorageOES(const Context *context,
                                     GLsizei width,
                                     GLsizei height)
 {
-    if (!context->getExtensions().framebufferObjectOES)
-    {
-        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
-        return false;
-    }
-
-    return ValidateRenderbufferStorageParametersBase(context, target, 0, internalformat, width,
-                                                     height);
+    UNIMPLEMENTED();
+    return true;
 }
 
 // GL_OES_texture_cube_map

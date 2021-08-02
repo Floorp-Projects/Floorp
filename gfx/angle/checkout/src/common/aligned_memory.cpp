@@ -54,7 +54,7 @@ void *AlignedAlloc(size_t size, size_t alignment)
 
 void AlignedFree(void *ptr)
 {
-#if defined(ANGLE_PLATFORM_WINDOWS)
+#if defined(_MSC_VER)
     _aligned_free(ptr);
 #else
     free(ptr);

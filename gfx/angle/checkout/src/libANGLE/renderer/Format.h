@@ -44,7 +44,6 @@ struct Format final : private angle::NonCopyable
                             bool isFixed,
                             bool isScaled,
                             bool isSRGB,
-                            bool isYUV,
                             gl::VertexAttribType vertexAttribType);
 
     static const Format &Get(FormatID id) { return gFormatInfoTable[static_cast<int>(id)]; }
@@ -53,7 +52,6 @@ struct Format final : private angle::NonCopyable
 
     constexpr bool hasDepthOrStencilBits() const;
     constexpr bool isLUMA() const;
-    constexpr bool isBGRA() const;
 
     constexpr bool isSint() const;
     constexpr bool isUint() const;
@@ -108,7 +106,6 @@ struct Format final : private angle::NonCopyable
     bool isFixed;
     bool isScaled;
     bool isSRGB;
-    bool isYUV;
 
     // For vertex formats only. Returns the "type" value for glVertexAttribPointer etc.
     gl::VertexAttribType vertexAttribType;
@@ -148,7 +145,6 @@ constexpr Format::Format(FormatID id,
                          bool isFixed,
                          bool isScaled,
                          bool isSRGB,
-                         bool isYUV,
                          gl::VertexAttribType vertexAttribType)
     : id(id),
       glInternalFormat(glFormat),
@@ -178,7 +174,6 @@ constexpr Format::Format(FormatID id,
       isFixed(isFixed),
       isScaled(isScaled),
       isSRGB(isSRGB),
-      isYUV(isYUV),
       vertexAttribType(vertexAttribType)
 {}
 
@@ -192,12 +187,6 @@ constexpr bool Format::isLUMA() const
     // There's no format with G or B without R
     ASSERT(redBits > 0 || (greenBits == 0 && blueBits == 0));
     return redBits == 0 && (luminanceBits > 0 || alphaBits > 0);
-}
-
-constexpr bool Format::isBGRA() const
-{
-    return id == FormatID::B8G8R8A8_UNORM || id == FormatID::B8G8R8A8_UNORM_SRGB ||
-           id == FormatID::B8G8R8A8_TYPELESS || id == FormatID::B8G8R8A8_TYPELESS_SRGB;
 }
 
 constexpr bool Format::isSint() const
@@ -229,9 +218,6 @@ constexpr bool Format::isVertexTypeHalfFloat() const
 {
     return vertexAttribType == gl::VertexAttribType::HalfFloat;
 }
-
-template <typename T>
-using FormatMap = PackedEnumMap<FormatID, T, kNumANGLEFormats>;
 
 }  // namespace angle
 
