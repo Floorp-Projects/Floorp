@@ -14,7 +14,12 @@
 
 class nsICookieJarSettings;
 class nsWindow;
+
+#ifdef MOZ_WAYLAND
 class DataOffer;
+#else
+typedef nsISupports DataOffer;
+#endif
 
 namespace mozilla {
 namespace gfx {
