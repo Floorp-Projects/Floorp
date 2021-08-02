@@ -5656,10 +5656,23 @@ void LIRGenerator::visitHashSymbol(MHashSymbol* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitHashBigInt(MHashBigInt* ins) {
+  auto* lir = new (alloc())
+      LHashBigInt(useRegister(ins->input()), temp(), temp(), temp());
+  define(lir, ins);
+}
+
 void LIRGenerator::visitSetObjectHasNonBigInt(MSetObjectHasNonBigInt* ins) {
   auto* lir = new (alloc())
       LSetObjectHasNonBigInt(useRegister(ins->set()), useBox(ins->value()),
                              useRegister(ins->hash()), temp(), temp());
+  define(lir, ins);
+}
+
+void LIRGenerator::visitSetObjectHasBigInt(MSetObjectHasBigInt* ins) {
+  auto* lir = new (alloc()) LSetObjectHasBigInt(
+      useRegister(ins->set()), useBox(ins->value()), useRegister(ins->hash()),
+      temp(), temp(), temp(), temp());
   define(lir, ins);
 }
 
