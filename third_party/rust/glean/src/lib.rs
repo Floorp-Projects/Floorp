@@ -296,7 +296,7 @@ fn initialize_internal(
                 // The next times we start, we would have them around already.
                 let is_first_run = glean.is_first_run();
                 if is_first_run {
-                    initialize_core_metrics(&glean, &state.client_info, state.channel.clone());
+                    initialize_core_metrics(glean, &state.client_info, state.channel.clone());
                 }
 
                 // Deal with any pending events so we can start recording new ones
@@ -333,7 +333,7 @@ fn initialize_internal(
                 // Any new value will be sent in newly generated pings after startup.
                 if !is_first_run {
                     glean.clear_application_lifetime_metrics();
-                    initialize_core_metrics(&glean, &state.client_info, state.channel.clone());
+                    initialize_core_metrics(glean, &state.client_info, state.channel.clone());
                 }
             });
 
@@ -342,7 +342,7 @@ fn initialize_internal(
                 Ok(task_count) if task_count > 0 => {
                     with_glean(|glean| {
                         glean_metrics::error::preinit_tasks_overflow
-                            .add_sync(&glean, task_count as i32);
+                            .add_sync(glean, task_count as i32);
                     });
                 }
                 Ok(_) => {}
@@ -477,7 +477,7 @@ pub fn set_upload_enabled(enabled: bool) {
             glean.start_metrics_ping_scheduler();
             // If uploading is being re-enabled, we have to restore the
             // application-lifetime metrics.
-            initialize_core_metrics(&glean, &state.client_info, state.channel.clone());
+            initialize_core_metrics(glean, &state.client_info, state.channel.clone());
         }
 
         if old_enabled && !enabled {
@@ -564,7 +564,7 @@ pub(crate) fn submit_ping_by_name_sync(ping: &str, reason: Option<&str>) {
             return false;
         }
 
-        glean.submit_ping_by_name(&ping, reason.as_deref())
+        glean.submit_ping_by_name(ping, reason.as_deref())
     });
 
     if submitted_ping {

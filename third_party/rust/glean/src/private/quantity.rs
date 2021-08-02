@@ -54,7 +54,7 @@ impl glean_core::traits::Quantity for QuantityMetric {
         crate::block_on_dispatcher();
 
         crate::with_glean_mut(|glean| {
-            glean_core::test_get_num_recorded_errors(&glean, self.0.meta(), error, ping_name.into())
+            glean_core::test_get_num_recorded_errors(glean, self.0.meta(), error, ping_name.into())
                 .unwrap_or(0)
         })
     }

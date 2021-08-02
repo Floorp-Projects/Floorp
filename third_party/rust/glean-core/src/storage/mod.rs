@@ -86,7 +86,7 @@ impl StorageManager {
         let mut snapshotter = |metric_id: &[u8], metric: &Metric| {
             let metric_id = String::from_utf8_lossy(metric_id).into_owned();
             if metric_id.contains('/') {
-                snapshot_labeled_metrics(&mut snapshot, &metric_id, &metric);
+                snapshot_labeled_metrics(&mut snapshot, &metric_id, metric);
             } else {
                 let map = snapshot
                     .entry(metric.ping_section().into())
@@ -95,9 +95,9 @@ impl StorageManager {
             }
         };
 
-        storage.iter_store_from(Lifetime::Ping, &store_name, None, &mut snapshotter);
-        storage.iter_store_from(Lifetime::Application, &store_name, None, &mut snapshotter);
-        storage.iter_store_from(Lifetime::User, &store_name, None, &mut snapshotter);
+        storage.iter_store_from(Lifetime::Ping, store_name, None, &mut snapshotter);
+        storage.iter_store_from(Lifetime::Application, store_name, None, &mut snapshotter);
+        storage.iter_store_from(Lifetime::User, store_name, None, &mut snapshotter);
 
         if clear_store {
             if let Err(e) = storage.clear_ping_lifetime_storage(store_name) {
@@ -139,7 +139,7 @@ impl StorageManager {
             }
         };
 
-        storage.iter_store_from(metric_lifetime, &store_name, None, &mut snapshotter);
+        storage.iter_store_from(metric_lifetime, store_name, None, &mut snapshotter);
 
         snapshot
     }

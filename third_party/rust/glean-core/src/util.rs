@@ -103,7 +103,7 @@ pub(crate) fn local_now_with_offset_and_record(glean: &Glean) -> DateTime<FixedO
         glean
             .additional_metrics
             .invalid_timezone_offset
-            .add(&glean, 1);
+            .add(glean, 1);
     }
 
     now

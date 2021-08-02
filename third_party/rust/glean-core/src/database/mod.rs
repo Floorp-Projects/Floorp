@@ -149,7 +149,7 @@ mod backend {
 
         if should_delete {
             log::debug!("Need to delete remaining LMDB files.");
-            delete_lmdb_database(&path);
+            delete_lmdb_database(path);
         }
 
         log::debug!("Migration ended. Safe-mode database in {}", path.display());
@@ -296,7 +296,7 @@ impl Database {
     fn open_rkv(path: &Path) -> Result<Rkv> {
         fs::create_dir_all(&path)?;
 
-        let rkv = rkv_new(&path)?;
+        let rkv = rkv_new(path)?;
         migrate(path, &rkv);
 
         log::info!("Database initialized");
