@@ -48,6 +48,10 @@ MobileViewportManager::MobileViewportManager(MVMContext* aContext,
   mContext->AddEventListener(LOAD, this, true);
 
   mContext->AddObserver(this, BEFORE_FIRST_PAINT.Data(), false);
+
+  // We need to initialize the display size and the CSS viewport size before
+  // the initial reflow happens.
+  UpdateSizesBeforeReflow();
 }
 
 MobileViewportManager::~MobileViewportManager() = default;
@@ -566,10 +570,6 @@ void MobileViewportManager::RefreshVisualViewportSize() {
 void MobileViewportManager::UpdateSizesBeforeReflow() {
   if (Maybe<LayoutDeviceIntSize> newDisplaySize =
           mContext->GetContentViewerSize()) {
-    if (mDisplaySize == *newDisplaySize) {
-      return;
-    }
-
     mDisplaySize = *newDisplaySize;
     MVM_LOG("%p: Reflow starting, display size updated to %s\n", this,
             ToString(mDisplaySize).c_str());
