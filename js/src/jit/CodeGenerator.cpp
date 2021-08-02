@@ -66,6 +66,7 @@
 #include "vm/AsyncIteration.h"
 #include "vm/BuiltinObjectKind.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
+#include "vm/JSAtom.h"
 #include "vm/MatchPairs.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
@@ -15385,12 +15386,34 @@ void CodeGenerator::visitToHashableNonGCThing(LToHashableNonGCThing* ins) {
   masm.toHashableNonGCThing(input, output, tempFloat);
 }
 
+void CodeGenerator::visitToHashableString(LToHashableString* ins) {
+  Register input = ToRegister(ins->input());
+  Register output = ToRegister(ins->output());
+
+  using Fn = JSAtom* (*)(JSContext*, JSString*, PinningBehavior);
+  auto* ool = oolCallVM<Fn, js::AtomizeString>(
+      ins, ArgList(input, Imm32(DoNotPinAtom)), StoreRegisterTo(output));
+
+  masm.branchTest32(Assembler::Zero, Address(input, JSString::offsetOfFlags()),
+                    Imm32(JSString::ATOM_BIT), ool->entry());
+  masm.movePtr(input, output);
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitHashNonGCThing(LHashNonGCThing* ins) {
   ValueOperand input = ToValue(ins, LHashNonGCThing::Input);
   Register temp = ToRegister(ins->temp());
   Register output = ToRegister(ins->output());
 
   masm.prepareHashNonGCThing(input, output, temp);
+}
+
+void CodeGenerator::visitHashString(LHashString* ins) {
+  Register input = ToRegister(ins->input());
+  Register temp = ToRegister(ins->temp());
+  Register output = ToRegister(ins->output());
+
+  masm.prepareHashString(input, output, temp);
 }
 
 void CodeGenerator::visitSetObjectHasNonBigInt(LSetObjectHasNonBigInt* ins) {
