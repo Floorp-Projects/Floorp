@@ -132,28 +132,29 @@ var gIdentityHandler = {
     return this._state & Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN;
   },
 
-  get _isCertErrorPage() {
-    let { documentURI } = gBrowser.selectedBrowser;
-    if (documentURI?.scheme != "about") {
-      return false;
-    }
-
+  get _isAboutCertErrorPage() {
     return (
-      documentURI.filePath == "certerror" ||
-      (documentURI.filePath == "neterror" &&
-        new URLSearchParams(documentURI.query).get("e") == "nssFailure2")
+      gBrowser.selectedBrowser.documentURI &&
+      gBrowser.selectedBrowser.documentURI.scheme == "about" &&
+      gBrowser.selectedBrowser.documentURI.pathQueryRef.startsWith("certerror")
     );
   },
 
   get _isAboutNetErrorPage() {
-    let { documentURI } = gBrowser.selectedBrowser;
-    return documentURI?.scheme == "about" && documentURI.filePath == "neterror";
+    return (
+      gBrowser.selectedBrowser.documentURI &&
+      gBrowser.selectedBrowser.documentURI.scheme == "about" &&
+      gBrowser.selectedBrowser.documentURI.pathQueryRef.startsWith("neterror")
+    );
   },
 
   get _isAboutHttpsOnlyErrorPage() {
-    let { documentURI } = gBrowser.selectedBrowser;
     return (
-      documentURI?.scheme == "about" && documentURI.filePath == "httpsonlyerror"
+      gBrowser.selectedBrowser.documentURI &&
+      gBrowser.selectedBrowser.documentURI.scheme == "about" &&
+      gBrowser.selectedBrowser.documentURI.pathQueryRef.startsWith(
+        "httpsonlyerror"
+      )
     );
   },
 
@@ -172,13 +173,17 @@ var gIdentityHandler = {
       !this._isBrokenConnection &&
       !this._isPDFViewer &&
       (this._isSecureContext ||
-        gBrowser.selectedBrowser.documentURI?.scheme == "chrome")
+        (gBrowser.selectedBrowser.documentURI &&
+          gBrowser.selectedBrowser.documentURI.scheme == "chrome"))
     );
   },
 
   get _isAboutBlockedPage() {
-    let { documentURI } = gBrowser.selectedBrowser;
-    return documentURI?.scheme == "about" && documentURI.filePath == "blocked";
+    return (
+      gBrowser.selectedBrowser.documentURI &&
+      gBrowser.selectedBrowser.documentURI.scheme == "about" &&
+      gBrowser.selectedBrowser.documentURI.pathQueryRef.startsWith("blocked")
+    );
   },
 
   _popupInitialized: false,
@@ -818,11 +823,9 @@ var gIdentityHandler = {
       } else {
         this._identityBox.classList.add("weakCipher");
       }
-    } else if (this._isCertErrorPage) {
-      // We show a warning lock icon for certificate errors, and
-      // show the "Not Secure" text.
-      this._identityBox.className = "certErrorPage notSecureText";
-      icon_label = gNavigatorBundle.getString("identity.notSecure.label");
+    } else if (this._isAboutCertErrorPage) {
+      // We show a warning lock icon for 'about:certerror' page.
+      this._identityBox.className = "certErrorPage";
     } else if (this._isAboutHttpsOnlyErrorPage) {
       // We show a not secure lock icon for 'about:httpsonlyerror' page.
       this._identityBox.className = "httpsOnlyErrorPage";
@@ -961,7 +964,7 @@ var gIdentityHandler = {
     } else if (this._isSecureConnection) {
       connection = "secure";
       customRoot = this._hasCustomRoot();
-    } else if (this._isCertErrorPage) {
+    } else if (this._isAboutCertErrorPage) {
       connection = "cert-error-page";
     } else if (this._isAboutHttpsOnlyErrorPage) {
       connection = "https-only-error-page";
