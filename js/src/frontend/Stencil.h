@@ -936,14 +936,7 @@ class ScriptStencilExtra {
 
   ScriptStencilExtra() = default;
 
-  bool isModule() const {
-    return immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsModule);
-  }
-
-  bool useMemberInitializers() const {
-    return immutableFlags.hasFlag(
-        ImmutableScriptFlagsEnum::UseMemberInitializers);
-  }
+  RO_IMMUTABLE_SCRIPT_FLAGS(immutableFlags)
 
   void setMemberInitializers(MemberInitializers member) {
     MOZ_ASSERT(useMemberInitializers());
