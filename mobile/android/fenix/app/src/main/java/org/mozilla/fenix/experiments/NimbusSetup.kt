@@ -63,7 +63,10 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
             // Note: Using BuildConfig.BUILD_TYPE is important here so that it matches the value
             // passed into Glean. `Config.channel.toString()` turned out to be non-deterministic
             // and would mostly produce the value `Beta` and rarely would produce `beta`.
-            channel = BuildConfig.BUILD_TYPE
+            channel = BuildConfig.BUILD_TYPE,
+            customTargetingAttributes = mapOf(
+                "isFirstRun" to context.settings().isFirstRun.toString()
+            )
         )
         Nimbus(context, appInfo, serverSettings, errorReporter).apply {
             // This performs the minimal amount of work required to load branch and enrolment data

@@ -352,6 +352,25 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
+    val isFirstRun: Boolean
+        get() {
+            val isFirstRun = preferences.getBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_is_first_run),
+                true
+            )
+
+            if (isFirstRun) {
+                preferences.edit()
+                    .putBoolean(
+                        appContext.getPreferenceKey(R.string.pref_key_is_first_run),
+                        false
+                    )
+                    .apply()
+            }
+
+            return isFirstRun
+        }
+
     /**
      * Indicates the last time when the user was interacting with the [BrowserFragment],
      * This is useful to determine if the user has to start on the [HomeFragment]
