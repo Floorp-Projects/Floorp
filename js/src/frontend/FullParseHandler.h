@@ -13,7 +13,6 @@
 #include <cstddef>  // std::nullptr_t
 #include <string.h>
 
-#include "frontend/CompilationStencil.h"  // CompilationState
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
 #include "frontend/ParseNode.h"
@@ -39,26 +38,22 @@ class FullParseHandler {
     return static_cast<ParseNode*>(allocator.allocNode(size));
   }
 
-  // If this is a full parse to construct the bytecode for a function that
-  // was previously lazily parsed, we still don't want to full parse the
-  // inner functions. These members are used for this functionality:
-  //
-  // - reuseGCThings if ture it means that the following fields are valid.
-  // - gcThingsData holds an incomplete stencil-like copy of inner functions as
-  //   well as atoms.
-  // - scriptData and scriptExtra_ hold information necessary to locate inner
-  //   functions to skip over each.
-  // - lazyInnerFunctionIndex is used as we skip over inner functions
-  //   (see skipLazyInnerFunction),
-  // - lazyClosedOverBindingIndex is used to synchronize binding computation
-  //   with the scope traversal.
-  //   (see propagateFreeNamesAndMarkClosedOverBindings),
-  const CompilationSyntaxParseCache& previousParseCache_;
-
+  /*
+   * If this is a full parse to construct the bytecode for a function that
+   * was previously lazily parsed, we still don't want to full parse the
+   * inner functions. These members are used for this functionality:
+   *
+   * - lazyOuterFunction_ holds the lazyScript for this current parse
+   * - lazyInnerFunctionIndex is used as we skip over inner functions
+   *   (see skipLazyInnerFunction),
+   *
+   *  TODO-Stencil: We probably need to snapshot the atoms from the
+   *                lazyOuterFunction here.
+   */
+  const Rooted<BaseScript*> lazyOuterFunction_;
   size_t lazyInnerFunctionIndex;
-  size_t lazyClosedOverBindingIndex;
 
-  bool reuseGCThings;
+  size_t lazyClosedOverBindingIndex;
 
  public:
   /* new_ methods for creating parse nodes. These report OOM on context. */
@@ -105,12 +100,27 @@ class FullParseHandler {
                                   node->isKind(ParseNodeKind::ArrayExpr));
   }
 
-  FullParseHandler(JSContext* cx, CompilationState& compilationState)
-      : allocator(cx, compilationState.allocScope.alloc()),
-        previousParseCache_(compilationState.previousParseCache),
+  FullParseHandler(JSContext* cx, LifoAlloc& alloc,
+                   BaseScript* lazyOuterFunction)
+      : allocator(cx, alloc),
+        lazyOuterFunction_(cx, lazyOuterFunction),
         lazyInnerFunctionIndex(0),
-        lazyClosedOverBindingIndex(0),
-        reuseGCThings(compilationState.input.isDelazifying()) {}
+        lazyClosedOverBindingIndex(0) {
+    // The BaseScript::gcthings() array contains the inner function list
+    // followed by the closed-over bindings data. Advance the index for
+    // closed-over bindings to the end of the inner functions. The
+    // nextLazyInnerFunction / nextLazyClosedOverBinding accessors confirm we
+    // have the expected types. See also: BaseScript::CreateLazy.
+    if (lazyOuterFunction) {
+      for (JS::GCCellPtr gcThing : lazyOuterFunction->gcthings()) {
+        if (gcThing.is<JSObject>()) {
+          lazyClosedOverBindingIndex++;
+        } else {
+          break;
+        }
+      }
+    }
+  }
 
   static NullNode null() { return NullNode(); }
 
@@ -1078,30 +1088,27 @@ class FullParseHandler {
     return TaggedParserAtomIndex::null();
   }
 
-  bool reuseLazyInnerFunctions() { return reuseGCThings; }
-  bool reuseClosedOverBindings() { return reuseGCThings; }
-  bool reuseRegexpSyntaxParse() { return reuseGCThings; }
-  void nextLazyInnerFunction() { lazyInnerFunctionIndex++; }
-  TaggedParserAtomIndex nextLazyClosedOverBinding() {
+  bool canSkipLazyInnerFunctions() { return !!lazyOuterFunction_; }
+  bool canSkipLazyClosedOverBindings() { return !!lazyOuterFunction_; }
+  bool canSkipRegexpSyntaxParse() { return !!lazyOuterFunction_; }
+  JSFunction* nextLazyInnerFunction() {
+    return &lazyOuterFunction_->gcthings()[lazyInnerFunctionIndex++]
+                .as<JSObject>()
+                .as<JSFunction>();
+  }
+  JSAtom* nextLazyClosedOverBinding() {
+    auto gcthings = lazyOuterFunction_->gcthings();
+
     // Trailing nullptrs were elided in PerHandlerParser::finishFunction().
-    auto closedOverBindings = previousParseCache_.closedOverBindings();
-    if (lazyClosedOverBindingIndex >= closedOverBindings.Length()) {
-      return TaggedParserAtomIndex::null();
+    if (lazyClosedOverBindingIndex >= gcthings.Length()) {
+      return nullptr;
     }
 
-    return closedOverBindings[lazyClosedOverBindingIndex++];
-  }
-  const ScriptStencil& cachedScriptData() const {
-    // lazyInnerFunctionIndex is incremented with nextLazyInnferFunction before
-    // reading the content, thus we need -1 to access the element that we just
-    // skipped.
-    return previousParseCache_.scriptData(lazyInnerFunctionIndex - 1);
-  }
-  const ScriptStencilExtra& cachedScriptExtra() const {
-    // lazyInnerFunctionIndex is incremented with nextLazyInnferFunction before
-    // reading the content, thus we need -1 to access the element that we just
-    // skipped.
-    return previousParseCache_.scriptExtra(lazyInnerFunctionIndex - 1);
+    // These entries are either JSAtom* or nullptr, so use the 'asCell()'
+    // accessor which is faster.
+    gc::Cell* cell = gcthings[lazyClosedOverBindingIndex++].asCell();
+    MOZ_ASSERT_IF(cell, cell->as<JSString>()->isAtom());
+    return static_cast<JSAtom*>(cell);
   }
 
   void setPrivateNameKind(Node node, PrivateNameKind kind) {
