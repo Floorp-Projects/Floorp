@@ -617,13 +617,6 @@ class StencilModuleMetadata
 // NOTE: This is only used for the self-hosting global.
 class EmptyGlobalScopeType {};
 
-// When delazifying, we reuse GC things information to skip over costly parts
-// already handled by the SyntaxParser. Some of these are of little value and
-// skip over these by flagging them as opaque things.
-//
-// NOTE: This is only used in CompileLazyFunction case.
-class OpaqueThingType {};
-
 // Things pointed by this index all end up being baked into GC things as part
 // of stencil instantiation.
 //
@@ -636,7 +629,6 @@ class OpaqueThingType {};
 // 0x6YYY_YYYY  28-bit Scope
 // 0x7YYY_YYYY  28-bit Function
 // 0x8000_0000  EmptyGlobalScope
-// 0x9000_0000  OpaqueThing
 class TaggedScriptThingIndex {
   uint32_t data_;
 
@@ -658,7 +650,6 @@ class TaggedScriptThingIndex {
     Scope,
     Function,
     EmptyGlobalScope,
-    OpaqueThing,
   };
 
  private:
@@ -680,8 +671,6 @@ class TaggedScriptThingIndex {
   static constexpr uint32_t FunctionTag = uint32_t(Kind::Function) << TagShift;
   static constexpr uint32_t EmptyGlobalScopeTag =
       uint32_t(Kind::EmptyGlobalScope) << TagShift;
-  static constexpr uint32_t OpaqueThingTag = uint32_t(Kind::OpaqueThing)
-                                             << TagShift;
 
  public:
   static constexpr uint32_t IndexLimit = Bit(IndexBit);
@@ -712,7 +701,6 @@ class TaggedScriptThingIndex {
   }
   explicit TaggedScriptThingIndex(EmptyGlobalScopeType t)
       : data_(EmptyGlobalScopeTag) {}
-  explicit TaggedScriptThingIndex(OpaqueThingType t) : data_(OpaqueThingTag) {}
 
   bool isAtom() const {
     return (data_ & TagMask) == ParserAtomIndexTag ||
@@ -731,7 +719,6 @@ class TaggedScriptThingIndex {
   bool isEmptyGlobalScope() const {
     return (data_ & TagMask) == EmptyGlobalScopeTag;
   }
-  bool isOpaqueThing() const { return (data_ & TagMask) == OpaqueThingTag; }
 
   TaggedParserAtomIndex toAtom() const {
     MOZ_ASSERT(isAtom());
