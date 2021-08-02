@@ -2274,29 +2274,25 @@ bool BaselineCodeGen<Handler>::emit_CheckReturn() {
   frame.popRegsAndSync(1);
   emitLoadReturnValue(R1);
 
-  Label done, returnOK, checkThis;
+  Label done, returnBad, checkThis;
   masm.branchTestObject(Assembler::NotEqual, R1, &checkThis);
   {
     masm.moveValue(R1, R0);
     masm.jump(&done);
   }
   masm.bind(&checkThis);
-  masm.branchTestUndefined(Assembler::Equal, R1, &returnOK);
+  masm.branchTestUndefined(Assembler::NotEqual, R1, &returnBad);
+  masm.branchTestMagic(Assembler::NotEqual, R0, &done);
+  masm.bind(&returnBad);
 
   prepareVMCall();
   pushArg(R1);
 
   using Fn = bool (*)(JSContext*, HandleValue);
-  if (!callVM<Fn, ThrowBadDerivedReturn>()) {
+  if (!callVM<Fn, ThrowBadDerivedReturnOrUninitializedThis>()) {
     return false;
   }
   masm.assumeUnreachable("Should throw on bad derived constructor return");
-
-  masm.bind(&returnOK);
-
-  if (!emitCheckThis(R0)) {
-    return false;
-  }
 
   masm.bind(&done);
 
