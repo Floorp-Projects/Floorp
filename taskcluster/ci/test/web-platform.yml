@@ -13,7 +13,7 @@ job-defaults:
     variants:
         by-test-platform:
             linux1804-64-qr/debug: ['webrender-sw', 'fission']
-            windows10-64-qr/debug: ['webrender-sw', 'fission']
+            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     mozharness:
@@ -42,17 +42,14 @@ web-platform-tests:
     description: "Web platform test run"
     suite: web-platform-tests
     treeherder-symbol: W(wpt)
-    virtualization:
-        by-test-platform:
-            windows10-64.*/.*: hardware
-            default: virtual
+    virtualization: virtual
     tier:
         by-variant:
             fission:
                 by-test-platform:
                     linux.*64-qr/debug: 1
                     linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64(-shippable)?-qr/opt: 1
+                    windows10-64-2004(-shippable)?-qr/opt: 1
                     default: 2
             default:
                 by-test-platform:
@@ -68,7 +65,7 @@ web-platform-tests:
             macosx.*/debug: 18
             windows.*32.*/opt: 12
             windows.*/debug: 14
-            windows10-64-ccov.*/opt: 14
+            windows10-64-2004-ccov.*/opt: 14
             default: 10
     max-run-time:
         by-test-platform:
@@ -83,8 +80,8 @@ web-platform-tests:
         by-variant:
             fission:
                 by-test-platform:
-                    (linux.*64|windows10-64)-qr/debug: ['trunk']
-                    (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
+                    (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
+                    (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-(asan|tsan)(-qr)?/opt: ['trunk']
                     default: []
             default:
@@ -118,7 +115,7 @@ web-platform-tests-backlog:
                 by-test-platform:
                     linux.*64-qr/debug: ['trunk']
                     linux.*64(-shippable)?-qr/opt: ['trunk']
-                    windows10-64(-shippable)?-qr/opt: ['trunk']
+                    windows10-64-2004(-shippable)?-qr/opt: ['trunk']
                     default: []
             default: ['mozilla-central']
     test-manifest-loader: null  # don't load tests in the taskgraph
@@ -128,7 +125,7 @@ web-platform-tests-backlog:
                 by-test-platform:
                     linux.*64-qr/debug: 1
                     linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64(-shippable)?-qr/opt: 1
+                    windows10-64-2004(-shippable)?-qr/opt: 1
                     default: 2
             default: 2
     mozharness:
@@ -240,8 +237,8 @@ web-platform-tests-wdspec:
         by-variant:
             fission:
                 by-test-platform:
-                    (linux.*64|windows10-64)-qr/debug: ['trunk']
-                    (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
+                    (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
+                    (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-asan(-qr)?/opt: ['trunk']
                     default: []
             default: built-projects
@@ -251,7 +248,7 @@ web-platform-tests-wdspec:
                 by-test-platform:
                     linux.*64-qr/debug: 1
                     linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64(-shippable)?-qr/opt: 1
+                    windows10-64-2004(-shippable)?-qr/opt: 1
                     default: 2
             default:
                 by-test-platform:
@@ -297,8 +294,8 @@ web-platform-tests-wdspec-headless:
         by-variant:
             fission:
                 by-test-platform:
-                    (linux.*64|windows10-64)-qr/debug: ['trunk']
-                    (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
+                    (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
+                    (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-asan(-qr)?/opt: ['trunk']
                     default: []
             webrender-sw: []
@@ -309,7 +306,7 @@ web-platform-tests-wdspec-headless:
                 by-test-platform:
                     linux.*64-qr/debug: 1
                     linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64(-shippable)?-qr/opt: 1
+                    windows10-64-2004(-shippable)?-qr/opt: 1
                     default: 2
             default: default
     mozharness:
@@ -364,7 +361,7 @@ web-platform-tests-crashtest:
     variants:
         by-test-platform:
             linux1804-64-qr/debug: ['webrender-sw', 'fission']
-            windows10-64-qr/debug: ['webrender-sw', 'fission']
+            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
             macosx101.*64-qr/debug: ['webrender-sw', 'fission']
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
             linux.*64/debug: ['fission']
@@ -373,8 +370,8 @@ web-platform-tests-crashtest:
         by-variant:
             fission:
                 by-test-platform:
-                    (linux.*64|windows10-64)-qr/debug: ['trunk']
-                    (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
+                    (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
+                    (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-asan(-qr)?/opt: ['trunk']
                     default: []
             default: built-projects
@@ -384,7 +381,7 @@ web-platform-tests-crashtest:
                 by-test-platform:
                     linux.*64-qr/debug: 1
                     linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64(-shippable)?-qr/opt: 1
+                    windows10-64-2004(-shippable)?-qr/opt: 1
                     default: 2
             default: default
 
@@ -430,7 +427,7 @@ test-verify-wpt:
                 by-test-platform:
                     linux.*64-qr/debug: ['trunk']
                     linux.*64(-shippable)?-qr/opt: ['trunk']
-                    windows10-64(-shippable)?-qr/opt: ['trunk']
+                    windows10-64-2004(-shippable)?-qr/opt: ['trunk']
                     default: []
             default:
                 by-test-platform:
@@ -450,7 +447,7 @@ test-verify-wpt:
                 by-test-platform:
                     linux.*64-qr/debug: 1
                     linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64(-shippable)?-qr/opt: 1
+                    windows10-64-2004(-shippable)?-qr/opt: 1
                     default: 2
             default: 2
     mozharness:
@@ -471,7 +468,7 @@ test-coverage-wpt:
                 by-test-platform:
                     linux.*64-qr/debug: ['trunk']
                     linux.*64(-shippable)?-qr/opt: ['trunk']
-                    windows10-64(-shippable)?-qr/opt: ['trunk']
+                    windows10-64-2004(-shippable)?-qr/opt: ['trunk']
                     default: []
             default:
                 by-test-platform:
@@ -484,7 +481,7 @@ test-coverage-wpt:
                 by-test-platform:
                     linux.*64-qr/debug: 1
                     linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64(-shippable)?-qr/opt: 1
+                    windows10-64-2004(-shippable)?-qr/opt: 1
                     default: 2
             default: 2
     mozharness:
