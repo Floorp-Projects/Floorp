@@ -9024,6 +9024,16 @@ class LHashString : public LInstructionHelper<1, 1, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
+class LHashSymbol : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(HashSymbol)
+
+  explicit LHashSymbol(const LAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, input);
+  }
+};
+
 class LSetObjectHasNonBigInt : public LInstructionHelper<1, 2 + BOX_PIECES, 2> {
  public:
   LIR_HEADER(SetObjectHasNonBigInt)

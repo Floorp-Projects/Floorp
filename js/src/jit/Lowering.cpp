@@ -5651,6 +5651,11 @@ void LIRGenerator::visitHashString(MHashString* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitHashSymbol(MHashSymbol* ins) {
+  auto* lir = new (alloc()) LHashSymbol(useRegister(ins->input()));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitSetObjectHasNonBigInt(MSetObjectHasNonBigInt* ins) {
   auto* lir = new (alloc())
       LSetObjectHasNonBigInt(useRegister(ins->set()), useBox(ins->value()),
