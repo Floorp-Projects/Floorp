@@ -370,7 +370,7 @@ def assignment_node_to_source_filename_list(code, node):
     return []
 
 
-def mozbuild_file_to_source_assignments(normalized_mozbuild_filename):
+def mozbuild_file_to_source_assignments(normalized_mozbuild_filename, assignment_type):
     """
     Returns a dictionary of 'source-assignment-location' -> 'normalized source filename list'
     contained in the moz.build file specified
@@ -378,6 +378,11 @@ def mozbuild_file_to_source_assignments(normalized_mozbuild_filename):
     normalized_mozbuild_filename: the moz.build file to read
     """
     source_assignments = {}
+
+    if assignment_type == "source-files":
+        targets = ["SOURCES", "UNIFIED_SOURCES"]
+    else:
+        targets = ["EXPORTS"]
 
     # Parse the AST of the moz.build file
     code = open(normalized_mozbuild_filename).read()
@@ -390,48 +395,80 @@ def mozbuild_file_to_source_assignments(normalized_mozbuild_filename):
             child.parent = node
 
     # Find all the assignments of SOURCES or UNIFIED_SOURCES
-    source_assignment_nodes = [
-        node
-        for node in ast.walk(root)
-        if isinstance(node, ast.AugAssign)
-        and isinstance(node.target, ast.Name)
-        and node.target.id in ["SOURCES", "UNIFIED_SOURCES"]
-    ]
-    assert (
-        len([n for n in source_assignment_nodes if not isinstance(n.op, ast.Add)]) == 0
-    ), "We got a Source assignment that wasn't +="
+    if assignment_type == "source-files":
+        source_assignment_nodes = [
+            node
+            for node in ast.walk(root)
+            if isinstance(node, ast.AugAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id in targets
+        ]
+        assert (
+            len([n for n in source_assignment_nodes if not isinstance(n.op, ast.Add)])
+            == 0
+        ), "We got a Source assignment that wasn't +="
 
-    # Recurse and find nodes where we do SOURCES += other_var or SOURCES += FILES['foo']
-    recursive_assignment_nodes = [
-        node
-        for node in source_assignment_nodes
-        if isinstance(node.value, ast.Name) or isinstance(node.value, ast.Subscript)
-    ]
+        # Recurse and find nodes where we do SOURCES += other_var or SOURCES += FILES['foo']
+        recursive_assignment_nodes = [
+            node
+            for node in source_assignment_nodes
+            if isinstance(node.value, ast.Name) or isinstance(node.value, ast.Subscript)
+        ]
 
-    recursive_assignment_nodes_names = [
-        node.value.id
-        for node in recursive_assignment_nodes
-        if isinstance(node.value, ast.Name)
-    ]
+        recursive_assignment_nodes_names = [
+            node.value.id
+            for node in recursive_assignment_nodes
+            if isinstance(node.value, ast.Name)
+        ]
 
-    # TODO: We do not dig into subscript variables. These are currently only used by two libraries
-    #       that use external sources.mozbuild files.
-    # recursive_assignment_nodes_names.extend([something<node> for node in
-    #    recursive_assignment_nodes if isinstance(node.value, ast.Subscript)]
+        # TODO: We do not dig into subscript variables. These are currently only used by two
+        #       libraries that use external sources.mozbuild files.
+        # recursive_assignment_nodes_names.extend([something<node> for node in
+        #    recursive_assignment_nodes if isinstance(node.value, ast.Subscript)]
 
-    additional_assignment_nodes = [
-        node
-        for node in ast.walk(root)
-        if isinstance(node, ast.Assign)
-        and isinstance(node.targets[0], ast.Name)
-        and node.targets[0].id in recursive_assignment_nodes_names
-    ]
+        additional_assignment_nodes = [
+            node
+            for node in ast.walk(root)
+            if isinstance(node, ast.Assign)
+            and isinstance(node.targets[0], ast.Name)
+            and node.targets[0].id in recursive_assignment_nodes_names
+        ]
 
-    # Remove the original, useless assignment node (the SOURCES += other_var)
-    for node in recursive_assignment_nodes:
-        source_assignment_nodes.remove(node)
-    # Add the other_var += [''] source-assignment
-    source_assignment_nodes.extend(additional_assignment_nodes)
+        # Remove the original, useless assignment node (the SOURCES += other_var)
+        for node in recursive_assignment_nodes:
+            source_assignment_nodes.remove(node)
+        # Add the other_var += [''] source-assignment
+        source_assignment_nodes.extend(additional_assignment_nodes)
+    else:
+        source_assignment_nodes = [
+            node
+            for node in ast.walk(root)
+            if isinstance(node, ast.AugAssign)
+            and (
+                (isinstance(node.target, ast.Name) and node.target.id == "EXPORTS")
+                or (
+                    isinstance(node.target, ast.Attribute)
+                    and "EXPORTS" in ast.get_source_segment(code, node)
+                )
+            )
+        ]
+        source_assignment_nodes.extend(
+            [
+                node
+                for node in ast.walk(root)
+                if isinstance(node, ast.Assign)
+                and (
+                    (
+                        isinstance(node.targets[0], ast.Name)
+                        and node.targets[0].id == "EXPORTS"
+                    )
+                    or (
+                        isinstance(node.targets[0], ast.Attribute)
+                        and "EXPORTS" in ast.get_source_segment(code, node)
+                    )
+                )
+            ]
+        )
 
     # Get the source-assignment-location for the node:
     assignment_index = 1
@@ -911,9 +948,17 @@ def remove_file_from_moz_build_file(
     #    save the original normalized filename for this purpose
     original_normalized_filename_to_remove = normalized_filename_to_remove
 
+    # These are the two header file types specified in vendor_manifest.py > source_suffixes
+    if normalized_filename_to_remove.endswith(
+        ".h"
+    ) or normalized_filename_to_remove.endswith(".hpp"):
+        assignment_type = "header-files"
+    else:
+        assignment_type = "source-files"
+
     for normalized_mozbuild_filename in all_possible_normalized_mozbuild_filenames:
         source_assignments, root, code = mozbuild_file_to_source_assignments(
-            normalized_mozbuild_filename
+            normalized_mozbuild_filename, assignment_type
         )
 
         modes = get_file_reference_modes(source_assignments)
@@ -968,9 +1013,16 @@ def add_file_to_moz_build_file(
     #    save the original normalized filename for this purpose
     original_normalized_filename_to_add = normalized_filename_to_add
 
+    if normalized_filename_to_add.endswith(".h") or normalized_filename_to_add.endswith(
+        ".hpp"
+    ):
+        assignment_type = "header-files"
+    else:
+        assignment_type = "source-files"
+
     for normalized_mozbuild_filename in all_possible_normalized_mozbuild_filenames:
         source_assignments, root, code = mozbuild_file_to_source_assignments(
-            normalized_mozbuild_filename
+            normalized_mozbuild_filename, assignment_type
         )
 
         modes = get_file_reference_modes(source_assignments)
