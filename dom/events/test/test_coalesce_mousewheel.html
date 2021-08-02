@@ -9,26 +9,48 @@
   <script src="apz_test_native_event_utils.js"></script>
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   <script>
-  var mousewheelCount = 0;
-  function mousewheel() {
+  let wheelEvents = [];
+  function mousewheel(aWheelEvent) {
     // Make mousewheel handling slow
     var start = performance.now();
     while (performance.now() < (start + 10));
-    ++mousewheelCount;
+    wheelEvents.push(aWheelEvent);
   }
 
   function resolveIfProcessed(resolve, minamount) {
-    if (mousewheelCount >= minamount) {
+    if (wheelEvents.length >= minamount) {
       SimpleTest.requestFlakyTimeout("Make sure we got all events.");
-      setTimeout(function() { resolve(mousewheelCount); }, 20);
+      setTimeout(function() { resolve(); }, 20);
     } else {
       setTimeout(function() { resolveIfProcessed(resolve, minamount); });
     }
   }
 
-  async function fireOneSingleWheelEvent() {
-    var ret = new Promise(function(resolve) {
-      mousewheelCount = 0;
+  const kLineDeltaFactor =
+    SpecialPowers.getBoolPref("mousewheel.system_scroll_override.enabled", false)
+      ? SpecialPowers.getIntPref("mousewheel.system_scroll_override.vertical.factor", 200) / 100
+      : 1;
+
+  function checkWheelEvents(aExpectedDeltaMode, aExpectedSumOfDeltaY, aDescription) {
+    const lineDeltaFactor =
+      aExpectedDeltaMode === WheelEvent.DOM_DELTA_LINE ? kLineDeltaFactor : 1;
+    let succeeded = true;
+    let deltaY = 0;
+    for (const wheelEvent of wheelEvents) {
+      succeeded &= wheelEvent.deltaMode === aExpectedDeltaMode;
+      is(wheelEvent.deltaMode, aExpectedDeltaMode,
+        `When ${aDescription}, the deltaMode of all wheel events should be ${aExpectedDeltaMode}`);
+      deltaY += wheelEvent.deltaY;
+    }
+    succeeded &= deltaY == aExpectedSumOfDeltaY * lineDeltaFactor;
+    is(deltaY, aExpectedSumOfDeltaY * lineDeltaFactor,
+      `When ${aDescription}, sum of the deltaY of all wheel events should be ${aExpectedSumOfDeltaY * lineDeltaFactor}`);
+    return succeeded;
+  }
+
+  async function testOneSingleWheelEvent() {
+    await new Promise(function(resolve) {
+      wheelEvents = [];
       var element = document.getElementById("wheelEventReceiver");
       element.addEventListener("wheel", mousewheel, true);
 
@@ -36,77 +58,176 @@
 
       setTimeout(function() { resolveIfProcessed(resolve, 1); });
     });
-
-    return ret
+    is(wheelEvents.length, 1,
+      "Synthesizing a wheel event via the parent process should cause 1 wheel event");
+    is(wheelEvents[0]?.deltaMode, WheelEvent.DOM_DELTA_LINE,
+      "When Synthesizing a wheel event via the parent process, the deltaMode of a wheel event should be WheelEvent.DOM_DELTA_LINE");
+    is(wheelEvents[0]?.deltaY, 3 * kLineDeltaFactor,
+      `When Synthesizing a wheel event via the parent process, the deltaY of a wheel event should be ${3 * kLineDeltaFactor}`);
   }
 
-  async function fireTwoSingleWheelEvents() {
-    var ret = new Promise(function(resolve) {
-      mousewheelCount = 0;
-      var element = document.getElementById("wheelEventReceiver");
-      element.addEventListener("wheel", mousewheel, true);
+  const kMaxRetry = 10;
 
-      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
-      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+  async function testTwoSingleWheelEvents() {
+    function tryIt() {
+      return new Promise(function(resolve) {
+        info("Synthesizing 2 wheel events via the parent process...");
+        wheelEvents = [];
+        var element = document.getElementById("wheelEventReceiver");
+        element.addEventListener("wheel", mousewheel, true);
 
-      setTimeout(function() { resolveIfProcessed(resolve, 1); });
-    });
+        synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+        synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
 
-    return ret
+        setTimeout(function() { resolveIfProcessed(resolve, 1); });
+      });
+    }
+    for (let i = 0; i < kMaxRetry; i++) {
+      await tryIt();
+      if (wheelEvents.length == 2) {
+        // Even if failed to coalescing, the sum of deltaY values should be same
+        // as sum of the synthesized ones.
+        if (!checkWheelEvents(WheelEvent.DOM_DELTA_LINE, 6,
+                              "synthesizing 2 wheel events via the parent process")) {
+          return false;
+        }
+        continue;  // retry
+      }
+      is(wheelEvents.length, 1,
+        "Synthesizing 2 wheel events via the parent process should cause only 1 wheel event");
+      checkWheelEvents(WheelEvent.DOM_DELTA_LINE, 6,
+                       "synthesizing 2 wheel events via the parent process");
+      return;
+    }
   }
-  async function fireManySingleWheelEvents() {
-    var ret = new Promise(function(resolve) {
-      mousewheelCount = 0;
-      var element = document.getElementById("wheelEventReceiver");
-      element.addEventListener("wheel", mousewheel, true);
 
-      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
-      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
-      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
-      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
-      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+  async function testManySingleWheelEvents() {
+    function tryIt() {
+      return new Promise(function(resolve) {
+        info("Synthesizing 5 wheel events via the parent process...");
+        wheelEvents = [];
+        var element = document.getElementById("wheelEventReceiver");
+        element.addEventListener("wheel", mousewheel, true);
 
-      setTimeout(function() { resolveIfProcessed(resolve, 1); });
-    });
+        synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+        synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+        synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+        synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+        synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
 
-    return ret
+        setTimeout(function() { resolveIfProcessed(resolve, 1); });
+      });
+    }
+    for (let i = 0; i < kMaxRetry; i++) {
+      await tryIt();
+      if (wheelEvents.length > 1 && wheelEvents.length <= 5) {
+        // Even if failed to coalescing, the sum of deltaY values should be same
+        // as sum of the synthesized ones.
+        if (!checkWheelEvents(WheelEvent.DOM_DELTA_LINE, 15,
+                              "synthesizing 5 wheel events via the parent process")) {
+          return false;
+        }
+        continue;  // retry
+      }
+      is(wheelEvents.length, 1,
+        "Synthesizing 5 wheel events via the parent process should cause only 1 wheel event");
+      checkWheelEvents(WheelEvent.DOM_DELTA_LINE, 15,
+                       "synthesizing 5 wheel events via the parent process");
+      return;
+    }
   }
-  async function fireMixedWheelEvents() {
-    var ret = new Promise(function(resolve) {
-      mousewheelCount = 0;
-      var element = document.getElementById("wheelEventReceiver");
-      element.addEventListener("wheel", mousewheel, true);
 
-      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
-      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
-      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_PAGE });
-      synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+  async function testMixedWheelEvents() {
+    function tryIt() {
+      return new Promise(function(resolve) {
+        info("Synthesizing 2 line wheel events, 1 page wheel event and 1 line wheel event...");
+        wheelEvents = [];
+        var element = document.getElementById("wheelEventReceiver");
+        element.addEventListener("wheel", mousewheel, true);
 
-      setTimeout(function() { resolveIfProcessed(resolve, 3); });
-    });
+        synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+        synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+        synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_PAGE });
+        synthesizeWheel(element, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
 
-    return ret
+        setTimeout(function() { resolveIfProcessed(resolve, 3); });
+      });
+    }
+    function checkGroupsOfWheelEvents() {
+      let succeeded = true;
+      let deltaY = [0, 0, 0];
+      let index = 0;
+      const description = "synthesizing 2 line wheel events, 1 page wheel event and 1 line wheel event";
+      for (const wheelEvent of wheelEvents) {
+        switch (index) {
+          case 0:
+            if (wheelEvent.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+              is(wheelEvent.deltaMode, WheelEvent.DOM_DELTA_LINE,
+                `When ${description}, the deltaMode of the first group should be WheelEvent.DOM_DELTA_LINE`);
+              break;
+            }
+            index++;
+            // fallthrough
+          case 1:
+            if (wheelEvent.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+              is(wheelEvent.deltaMode, WheelEvent.DOM_DELTA_PAGE,
+                `When ${description}, the deltaMode of the seconde group should be WheelEvent.DOM_DELTA_PAGE`);
+              break;
+            }
+            index++;
+            // fallthrough
+          case 2:
+            succeeded &= wheelEvent.deltaMode === WheelEvent.DOM_DELTA_LINE;
+            is(wheelEvent.deltaMode, WheelEvent.DOM_DELTA_LINE,
+              `When ${description}, the deltaMode of the last group should be WheelEvent.DOM_DELTA_LINE`);
+            break;
+        }
+        deltaY[index] += wheelEvent.deltaY;
+      }
+      succeeded &= deltaY == [6 * kLineDeltaFactor, 3, 3 * kLineDeltaFactor];
+      isDeeply(deltaY, [6 * kLineDeltaFactor, 3, 3 * kLineDeltaFactor],
+        `When ${description}, sum of the deltaY of the each wheel event group should be same as sum of the synthesized ones`);
+      return succeeded;
+    }
+    for (let i = 0; i < kMaxRetry; i++) {
+      await tryIt();
+      if (wheelEvents.length != 3 && wheelEvents.length > 1 && wheelEvents.length <= 5) {
+        // Even if failed to coalescing, the sum of deltaY values should be same
+        // as sum of the synthesized ones and the wheel events shouldn't be
+        // reordered.
+        if (!checkGroupsOfWheelEvents()) {
+          return false;
+        }
+        continue;  // retry
+      }
+      is(wheelEvents.length, 3,
+        "Synthesizing 2 line wheel events, 1 page wheel event and 1 line wheel event via the parent process should cause only 3 wheel events");
+      checkGroupsOfWheelEvents();
+      return;
+    }
   }
 
   async function runTests() {
     var enabled = SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled;
 
-  await SpecialPowers.pushPrefEnv({set: [["test.events.async.enabled", true]]});
-  await promiseElementReadyForUserInput(document.documentElement);
-  await SpecialPowers.pushPrefEnv({clear: [["test.events.async.enabled"]]});
+    // Avoid synthesized mousemove events to be fired at the system cursor.
+    await promiseNativeMouseEvent({
+      type: "mousemove",
+      screenX: 0,
+      screenY: 0,
+    });
 
-    var oneMouseWheels = await fireOneSingleWheelEvent();
-    is(oneMouseWheels, 1,
-       "Should have gotten 1 wheel event");
-    var twoMouseWheelsWithCoalescing = await fireTwoSingleWheelEvents();
-    is(twoMouseWheelsWithCoalescing, 1,
-       "Should have gotten 1 wheel event");
-    var manyMouseWheelsWithCoalescing = await fireManySingleWheelEvents();
-    is(manyMouseWheelsWithCoalescing, 1,
-       "Should have gotten 1 wheel event");
-    var mixedMouseWheelsWithCoalescing = await fireMixedWheelEvents();
-    is(mixedMouseWheelsWithCoalescing, 3,
-       "Should have got 3 wheel event");
+    await SpecialPowers.pushPrefEnv({set: [
+      ["test.events.async.enabled", true],
+      ["dom.event.wheel-coalesced.testing", true],
+    ]});
+    await promiseElementReadyForUserInput(document.documentElement);
+    await SpecialPowers.pushPrefEnv({clear: [["test.events.async.enabled"]]});
+
+    await testOneSingleWheelEvent();
+    await testTwoSingleWheelEvents();
+    await testManySingleWheelEvents();
+    await testMixedWheelEvents();
 
     setTimeout("SimpleTest.finish()");
     window.close();
