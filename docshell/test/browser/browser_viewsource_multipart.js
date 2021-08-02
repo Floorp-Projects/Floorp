@@ -4,7 +4,7 @@
 
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://example.com"
+  "https://example.com"
 );
 const MULTIPART_URI = `${TEST_PATH}file_basic_multipart.sjs`;
 

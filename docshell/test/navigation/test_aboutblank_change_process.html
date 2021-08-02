@@ -5,7 +5,7 @@
   <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
 </head>
 <script>
-// Open a window and navigate it from http://example.net to about:blank
+// Open a window and navigate it from https://example.com to about:blank
 // With fission, we should switch processes and about:blank should load in
 // the same process as this test page.
 // This is a crash test.
@@ -20,7 +20,7 @@ add_task(async function test_aboutblank_change_process() {
     window.addEventListener("message", onMessage);
   });
   let win = window.open();
-  win.location = "http://example.net/tests/docshell/test/navigation/file_tell_opener.html";
+  win.location = "https://example.com/tests/docshell/test/navigation/file_tell_opener.html";
   await exampleLoaded;
 
   win.location = "about:blank";
@@ -33,7 +33,7 @@ add_task(async function test_aboutblank_change_process() {
     try {
       return win.location.href == "about:blank";
     } catch (e) {
-      // While the `win` still has example.net page loaded, `win.location` will
+      // While the `win` still has example.com page loaded, `win.location` will
       // be a cross origin object and querying win.location.href will throw a
       // SecurityError. Return false as long as this is the case.
       return false;
