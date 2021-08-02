@@ -6,6 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["InteractionsChild"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 ChromeUtils.defineModuleGetter(
   this,
   "PrivateBrowsingUtils",
@@ -87,9 +89,14 @@ class InteractionsChild extends JSWindowActorChild {
     ) {
       return null;
     }
+    let referrer;
+    if (doc.referrer) {
+      referrer = Services.io.newURI(doc.referrer);
+    }
     return {
       isActive: this.manager.browsingContext.isActive,
       url: doc.documentURIObject.specIgnoringRef,
+      referrer: referrer?.specIgnoringRef,
     };
   }
 }

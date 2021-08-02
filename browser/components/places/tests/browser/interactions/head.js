@@ -45,13 +45,15 @@ async function assertDatabaseValues(expected) {
     "head.js::assertDatabaseValues",
     async db => {
       let rows = await db.execute(`
-        SELECT url, total_view_time, key_presses, typing_time
+        SELECT h.url AS url, h2.url as referrer_url, total_view_time, key_presses, typing_time
         FROM moz_places_metadata m
         JOIN moz_places h ON h.id = m.place_id
+        LEFT JOIN moz_places h2 ON h2.id = m.referrer_place_id
         ORDER BY created_at ASC
       `);
       return rows.map(r => ({
         url: r.getResultByName("url"),
+        referrerUrl: r.getResultByName("referrer_url"),
         keypresses: r.getResultByName("key_presses"),
         typingTime: r.getResultByName("typing_time"),
         totalViewTime: r.getResultByName("total_view_time"),
