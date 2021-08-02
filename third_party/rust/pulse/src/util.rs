@@ -12,7 +12,8 @@ pub trait UnwrapCStr {
 }
 
 impl<'a, U> UnwrapCStr for U
-    where U: Into<Option<&'a CStr>>
+where
+    U: Into<Option<&'a CStr>>,
 {
     fn unwrap_cstr(self) -> *const c_char {
         self.into().map(|o| o.as_ptr()).unwrap_or(0 as *const _)

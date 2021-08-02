@@ -11,7 +11,8 @@ pub struct Proplist(*mut ffi::pa_proplist);
 
 impl Proplist {
     pub fn gets<T>(&self, key: T) -> Option<&CStr>
-        where T: Into<Vec<u8>>
+    where
+        T: Into<Vec<u8>>,
     {
         let key = match CString::new(key) {
             Ok(k) => k,

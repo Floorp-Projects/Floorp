@@ -14,7 +14,7 @@ macro_rules! error_result {
         } else {
             Err(ErrorCode::from_error_result($err))
         }
-    }
+    };
 }
 
 #[derive(Debug, PartialEq)]
@@ -32,9 +32,7 @@ impl ErrorCode {
 
     pub fn from_error_code(err: ffi::pa_error_code_t) -> Self {
         debug_assert!(err > 0);
-        ErrorCode {
-            err: err,
-        }
+        ErrorCode { err: err }
     }
 
     fn desc(&self) -> &'static str {

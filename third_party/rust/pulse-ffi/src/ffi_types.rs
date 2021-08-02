@@ -54,7 +54,10 @@ pub type pa_context_state_t = c_int;
 
 #[allow(non_snake_case)]
 pub fn PA_CONTEXT_IS_GOOD(x: pa_context_state_t) -> bool {
-    x == PA_CONTEXT_CONNECTING || x == PA_CONTEXT_AUTHORIZING || x == PA_CONTEXT_SETTING_NAME || x == PA_CONTEXT_READY
+    x == PA_CONTEXT_CONNECTING
+        || x == PA_CONTEXT_AUTHORIZING
+        || x == PA_CONTEXT_SETTING_NAME
+        || x == PA_CONTEXT_READY
 }
 
 pub const PA_STREAM_UNCONNECTED: c_int = 0;
@@ -297,46 +300,63 @@ pub const PA_IO_EVENT_HANGUP: c_int = 4;
 pub const PA_IO_EVENT_ERROR: c_int = 8;
 pub type pa_io_event_flags_t = c_int;
 
-pub enum pa_io_event { }
-pub type pa_io_event_cb_t = Option<unsafe extern "C" fn(ea: *mut pa_mainloop_api,
-                                                        e: *mut pa_io_event,
-                                                        fd: c_int,
-                                                        events: pa_io_event_flags_t,
-                                                        userdata: *mut c_void)>;
-pub type pa_io_event_destroy_cb_t = Option<unsafe extern "C" fn(a: *mut pa_mainloop_api,
-                                                                e: *mut pa_io_event,
-                                                                userdata: *mut c_void)>;
-pub enum pa_time_event { }
-pub type pa_time_event_cb_t = Option<unsafe extern "C" fn(a: *mut pa_mainloop_api,
-                                                          e: *mut pa_time_event,
-                                                          tv: *const timeval,
-                                                          userdata: *mut c_void)>;
-pub type pa_time_event_destroy_cb_t = Option<unsafe extern "C" fn(a: *mut pa_mainloop_api,
-                                                                  e: *mut pa_time_event,
-                                                                  userdata: *mut c_void)>;
+pub enum pa_io_event {}
+pub type pa_io_event_cb_t = Option<
+    unsafe extern "C" fn(
+        ea: *mut pa_mainloop_api,
+        e: *mut pa_io_event,
+        fd: c_int,
+        events: pa_io_event_flags_t,
+        userdata: *mut c_void,
+    ),
+>;
+pub type pa_io_event_destroy_cb_t = Option<
+    unsafe extern "C" fn(a: *mut pa_mainloop_api, e: *mut pa_io_event, userdata: *mut c_void),
+>;
+pub enum pa_time_event {}
+pub type pa_time_event_cb_t = Option<
+    unsafe extern "C" fn(
+        a: *mut pa_mainloop_api,
+        e: *mut pa_time_event,
+        tv: *const timeval,
+        userdata: *mut c_void,
+    ),
+>;
+pub type pa_time_event_destroy_cb_t = Option<
+    unsafe extern "C" fn(a: *mut pa_mainloop_api, e: *mut pa_time_event, userdata: *mut c_void),
+>;
 
-pub enum pa_defer_event { }
-pub type pa_defer_event_cb_t = Option<unsafe extern "C" fn(a: *mut pa_mainloop_api,
-                                                           e: *mut pa_defer_event,
-                                                           userdata: *mut c_void)>;
-pub type pa_defer_event_destroy_cb_t = Option<unsafe extern "C" fn(a: *mut pa_mainloop_api,
-                                                                   e: *mut pa_defer_event,
-                                                                   userdata: *mut c_void)>;
-pub type IoNewFn = Option<unsafe extern "C" fn(a: *mut pa_mainloop_api,
-                                               fd: c_int,
-                                               events: pa_io_event_flags_t,
-                                               cb: pa_io_event_cb_t,
-                                               userdata: *mut c_void)
-                                               -> *mut pa_io_event>;
-pub type TimeNewFn = Option<unsafe extern "C" fn(a: *mut pa_mainloop_api,
-                                                 tv: *const timeval,
-                                                 cb: pa_time_event_cb_t,
-                                                 userdata: *mut c_void)
-                                                 -> *mut pa_time_event>;
-pub type DeferNewFn = Option<unsafe extern "C" fn(a: *mut pa_mainloop_api,
-                                                  cb: pa_defer_event_cb_t,
-                                                  userdata: *mut c_void)
-                                                  -> *mut pa_defer_event>;
+pub enum pa_defer_event {}
+pub type pa_defer_event_cb_t = Option<
+    unsafe extern "C" fn(a: *mut pa_mainloop_api, e: *mut pa_defer_event, userdata: *mut c_void),
+>;
+pub type pa_defer_event_destroy_cb_t = Option<
+    unsafe extern "C" fn(a: *mut pa_mainloop_api, e: *mut pa_defer_event, userdata: *mut c_void),
+>;
+pub type IoNewFn = Option<
+    unsafe extern "C" fn(
+        a: *mut pa_mainloop_api,
+        fd: c_int,
+        events: pa_io_event_flags_t,
+        cb: pa_io_event_cb_t,
+        userdata: *mut c_void,
+    ) -> *mut pa_io_event,
+>;
+pub type TimeNewFn = Option<
+    unsafe extern "C" fn(
+        a: *mut pa_mainloop_api,
+        tv: *const timeval,
+        cb: pa_time_event_cb_t,
+        userdata: *mut c_void,
+    ) -> *mut pa_time_event,
+>;
+pub type DeferNewFn = Option<
+    unsafe extern "C" fn(
+        a: *mut pa_mainloop_api,
+        cb: pa_defer_event_cb_t,
+        userdata: *mut c_void,
+    ) -> *mut pa_defer_event,
+>;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -345,15 +365,18 @@ pub struct pa_mainloop_api {
     pub io_new: IoNewFn,
     pub io_enable: Option<unsafe extern "C" fn(e: *mut pa_io_event, events: pa_io_event_flags_t)>,
     pub io_free: Option<unsafe extern "C" fn(e: *mut pa_io_event)>,
-    pub io_set_destroy: Option<unsafe extern "C" fn(e: *mut pa_io_event, cb: pa_io_event_destroy_cb_t)>,
+    pub io_set_destroy:
+        Option<unsafe extern "C" fn(e: *mut pa_io_event, cb: pa_io_event_destroy_cb_t)>,
     pub time_new: TimeNewFn,
     pub time_restart: Option<unsafe extern "C" fn(e: *mut pa_time_event, tv: *const timeval)>,
     pub time_free: Option<unsafe extern "C" fn(e: *mut pa_time_event)>,
-    pub time_set_destroy: Option<unsafe extern "C" fn(e: *mut pa_time_event, cb: pa_time_event_destroy_cb_t)>,
+    pub time_set_destroy:
+        Option<unsafe extern "C" fn(e: *mut pa_time_event, cb: pa_time_event_destroy_cb_t)>,
     pub defer_new: DeferNewFn,
     pub defer_enable: Option<unsafe extern "C" fn(e: *mut pa_defer_event, b: c_int)>,
     pub defer_free: Option<unsafe extern "C" fn(e: *mut pa_defer_event)>,
-    pub defer_set_destroy: Option<unsafe extern "C" fn(e: *mut pa_defer_event, cb: pa_defer_event_destroy_cb_t)>,
+    pub defer_set_destroy:
+        Option<unsafe extern "C" fn(e: *mut pa_defer_event, cb: pa_defer_event_destroy_cb_t)>,
     pub quit: Option<unsafe extern "C" fn(a: *mut pa_mainloop_api, retval: c_int)>,
 }
 
@@ -363,9 +386,10 @@ impl ::std::default::Default for pa_mainloop_api {
     }
 }
 
-pub type pa_mainloop_api_once_cb_t = Option<unsafe extern "C" fn(m: *mut pa_mainloop_api, userdata: *mut c_void)>;
+pub type pa_mainloop_api_once_cb_t =
+    Option<unsafe extern "C" fn(m: *mut pa_mainloop_api, userdata: *mut c_void)>;
 
-pub enum pa_proplist { }
+pub enum pa_proplist {}
 
 pub const PA_UPDATE_SET: c_int = 0;
 pub const PA_UPDATE_MERGE: c_int = 1;
@@ -486,18 +510,23 @@ pub const PA_PROP_TYPE_STRING_ARRAY: c_int = 4;
 pub const PA_PROP_TYPE_INVALID: c_int = -1;
 pub type pa_prop_type_t = c_int;
 
-pub enum pa_operation { }
-pub type pa_operation_notify_cb_t = Option<unsafe extern "C" fn(o: *mut pa_operation, userdata: *mut c_void)>;
+pub enum pa_operation {}
+pub type pa_operation_notify_cb_t =
+    Option<unsafe extern "C" fn(o: *mut pa_operation, userdata: *mut c_void)>;
 
-pub enum pa_context { }
-pub type pa_context_notify_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context, userdata: *mut c_void)>;
-pub type pa_context_success_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                               success: c_int,
-                                                               userdata: *mut c_void)>;
-pub type pa_context_event_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                             name: *const c_char,
-                                                             p: *mut pa_proplist,
-                                                             userdata: *mut c_void)>;
+pub enum pa_context {}
+pub type pa_context_notify_cb_t =
+    Option<unsafe extern "C" fn(c: *mut pa_context, userdata: *mut c_void)>;
+pub type pa_context_success_cb_t =
+    Option<unsafe extern "C" fn(c: *mut pa_context, success: c_int, userdata: *mut c_void)>;
+pub type pa_context_event_cb_t = Option<
+    unsafe extern "C" fn(
+        c: *mut pa_context,
+        name: *const c_char,
+        p: *mut pa_proplist,
+        userdata: *mut c_void,
+    ),
+>;
 
 pub type pa_volume_t = u32;
 
@@ -514,16 +543,21 @@ impl ::std::default::Default for pa_cvolume {
     }
 }
 
-pub enum pa_stream { }
-pub type pa_stream_success_cb_t = Option<unsafe extern "C" fn(s: *mut pa_stream,
-                                                              success: c_int,
-                                                              userdata: *mut c_void)>;
-pub type pa_stream_request_cb_t = Option<unsafe extern "C" fn(p: *mut pa_stream, nbytes: usize, userdata: *mut c_void)>;
-pub type pa_stream_notify_cb_t = Option<unsafe extern "C" fn(p: *mut pa_stream, userdata: *mut c_void)>;
-pub type pa_stream_event_cb_t = Option<unsafe extern "C" fn(p: *mut pa_stream,
-                                                            name: *const c_char,
-                                                            pl: *mut pa_proplist,
-                                                            userdata: *mut c_void)>;
+pub enum pa_stream {}
+pub type pa_stream_success_cb_t =
+    Option<unsafe extern "C" fn(s: *mut pa_stream, success: c_int, userdata: *mut c_void)>;
+pub type pa_stream_request_cb_t =
+    Option<unsafe extern "C" fn(p: *mut pa_stream, nbytes: usize, userdata: *mut c_void)>;
+pub type pa_stream_notify_cb_t =
+    Option<unsafe extern "C" fn(p: *mut pa_stream, userdata: *mut c_void)>;
+pub type pa_stream_event_cb_t = Option<
+    unsafe extern "C" fn(
+        p: *mut pa_stream,
+        name: *const c_char,
+        pl: *mut pa_proplist,
+        userdata: *mut c_void,
+    ),
+>;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -575,10 +609,14 @@ impl ::std::default::Default for pa_sink_info {
     }
 }
 
-pub type pa_sink_info_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                         i: *const pa_sink_info,
-                                                         eol: c_int,
-                                                         userdata: *mut c_void)>;
+pub type pa_sink_info_cb_t = Option<
+    unsafe extern "C" fn(
+        c: *mut pa_context,
+        i: *const pa_sink_info,
+        eol: c_int,
+        userdata: *mut c_void,
+    ),
+>;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -615,10 +653,14 @@ impl ::std::default::Default for pa_source_info {
     }
 }
 
-pub type pa_source_info_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                           i: *const pa_source_info,
-                                                           eol: c_int,
-                                                           userdata: *mut c_void)>;
+pub type pa_source_info_cb_t = Option<
+    unsafe extern "C" fn(
+        c: *mut pa_context,
+        i: *const pa_source_info,
+        eol: c_int,
+        userdata: *mut c_void,
+    ),
+>;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -640,9 +682,9 @@ impl ::std::default::Default for pa_server_info {
     }
 }
 
-pub type pa_server_info_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                           i: *const pa_server_info,
-                                                           userdata: *mut c_void)>;
+pub type pa_server_info_cb_t = Option<
+    unsafe extern "C" fn(c: *mut pa_context, i: *const pa_server_info, userdata: *mut c_void),
+>;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -661,11 +703,16 @@ impl ::std::default::Default for pa_module_info {
     }
 }
 
-pub type pa_module_info_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                           i: *const pa_module_info,
-                                                           eol: c_int,
-                                                           userdata: *mut c_void)>;
-pub type pa_context_index_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context, idx: u32, userdata: *mut c_void)>;
+pub type pa_module_info_cb_t = Option<
+    unsafe extern "C" fn(
+        c: *mut pa_context,
+        i: *const pa_module_info,
+        eol: c_int,
+        userdata: *mut c_void,
+    ),
+>;
+pub type pa_context_index_cb_t =
+    Option<unsafe extern "C" fn(c: *mut pa_context, idx: u32, userdata: *mut c_void)>;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -683,10 +730,14 @@ impl ::std::default::Default for pa_client_info {
     }
 }
 
-pub type pa_client_info_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                           i: *const pa_client_info,
-                                                           eol: c_int,
-                                                           userdata: *mut c_void)>;
+pub type pa_client_info_cb_t = Option<
+    unsafe extern "C" fn(
+        c: *mut pa_context,
+        i: *const pa_client_info,
+        eol: c_int,
+        userdata: *mut c_void,
+    ),
+>;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -765,10 +816,14 @@ impl ::std::default::Default for pa_card_info {
     }
 }
 
-pub type pa_card_info_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                         i: *const pa_card_info,
-                                                         eol: c_int,
-                                                         userdata: *mut c_void)>;
+pub type pa_card_info_cb_t = Option<
+    unsafe extern "C" fn(
+        c: *mut pa_context,
+        i: *const pa_card_info,
+        eol: c_int,
+        userdata: *mut c_void,
+    ),
+>;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -799,10 +854,14 @@ impl ::std::default::Default for pa_sink_input_info {
     }
 }
 
-pub type pa_sink_input_info_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                               i: *const pa_sink_input_info,
-                                                               eol: c_int,
-                                                               userdata: *mut c_void)>;
+pub type pa_sink_input_info_cb_t = Option<
+    unsafe extern "C" fn(
+        c: *mut pa_context,
+        i: *const pa_sink_input_info,
+        eol: c_int,
+        userdata: *mut c_void,
+    ),
+>;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -833,10 +892,14 @@ impl ::std::default::Default for pa_source_output_info {
     }
 }
 
-pub type pa_source_output_info_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                                  i: *const pa_source_output_info,
-                                                                  eol: c_int,
-                                                                  userdata: *mut c_void)>;
+pub type pa_source_output_info_cb_t = Option<
+    unsafe extern "C" fn(
+        c: *mut pa_context,
+        i: *const pa_source_output_info,
+        eol: c_int,
+        userdata: *mut c_void,
+    ),
+>;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -854,9 +917,8 @@ impl ::std::default::Default for pa_stat_info {
     }
 }
 
-pub type pa_stat_info_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                         i: *const pa_stat_info,
-                                                         userdata: *mut c_void)>;
+pub type pa_stat_info_cb_t =
+    Option<unsafe extern "C" fn(c: *mut pa_context, i: *const pa_stat_info, userdata: *mut c_void)>;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -879,10 +941,14 @@ impl ::std::default::Default for pa_sample_info {
     }
 }
 
-pub type pa_sample_info_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                           i: *const pa_sample_info,
-                                                           eol: c_int,
-                                                           userdata: *mut c_void)>;
+pub type pa_sample_info_cb_t = Option<
+    unsafe extern "C" fn(
+        c: *mut pa_context,
+        i: *const pa_sample_info,
+        eol: c_int,
+        userdata: *mut c_void,
+    ),
+>;
 
 pub const PA_AUTOLOAD_SINK: c_int = 0;
 pub const PA_AUTOLOAD_SOURCE: c_int = 1;
@@ -904,33 +970,47 @@ impl ::std::default::Default for pa_autoload_info {
     }
 }
 
-pub type pa_autoload_info_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                             i: *const pa_autoload_info,
-                                                             eol: c_int,
-                                                             userdata: *mut c_void)>;
-pub type pa_context_subscribe_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                                 t: pa_subscription_event_type_t,
-                                                                 idx: u32,
-                                                                 userdata: *mut c_void)>;
-pub type pa_context_play_sample_cb_t = Option<unsafe extern "C" fn(c: *mut pa_context,
-                                                                   idx: u32,
-                                                                   userdata: *mut c_void)>;
+pub type pa_autoload_info_cb_t = Option<
+    unsafe extern "C" fn(
+        c: *mut pa_context,
+        i: *const pa_autoload_info,
+        eol: c_int,
+        userdata: *mut c_void,
+    ),
+>;
+pub type pa_context_subscribe_cb_t = Option<
+    unsafe extern "C" fn(
+        c: *mut pa_context,
+        t: pa_subscription_event_type_t,
+        idx: u32,
+        userdata: *mut c_void,
+    ),
+>;
+pub type pa_context_play_sample_cb_t =
+    Option<unsafe extern "C" fn(c: *mut pa_context, idx: u32, userdata: *mut c_void)>;
 
-pub enum pa_threaded_mainloop { }
-pub enum pollfd { }
-pub enum pa_mainloop { }
+pub enum pa_threaded_mainloop {}
+pub enum pollfd {}
+pub enum pa_mainloop {}
 
-pub type pa_poll_func = Option<unsafe extern "C" fn(ufds: *mut pollfd,
-                                                    nfds: c_ulong,
-                                                    timeout: c_int,
-                                                    userdata: *mut c_void)
-                                                    -> c_int>;
-pub enum pa_signal_event { }
+pub type pa_poll_func = Option<
+    unsafe extern "C" fn(
+        ufds: *mut pollfd,
+        nfds: c_ulong,
+        timeout: c_int,
+        userdata: *mut c_void,
+    ) -> c_int,
+>;
+pub enum pa_signal_event {}
 
-pub type pa_signal_cb_t = Option<unsafe extern "C" fn(api: *mut pa_mainloop_api,
-                                                      e: *mut pa_signal_event,
-                                                      sig: c_int,
-                                                      userdata: *mut c_void)>;
-pub type pa_signal_destroy_cb_t = Option<unsafe extern "C" fn(api: *mut pa_mainloop_api,
-                                                              e: *mut pa_signal_event,
-                                                              userdata: *mut c_void)>;
+pub type pa_signal_cb_t = Option<
+    unsafe extern "C" fn(
+        api: *mut pa_mainloop_api,
+        e: *mut pa_signal_event,
+        sig: c_int,
+        userdata: *mut c_void,
+    ),
+>;
+pub type pa_signal_destroy_cb_t = Option<
+    unsafe extern "C" fn(api: *mut pa_mainloop_api, e: *mut pa_signal_event, userdata: *mut c_void),
+>;

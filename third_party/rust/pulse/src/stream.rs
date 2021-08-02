@@ -3,7 +3,6 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
 
-use ::*;
 use context;
 use ffi;
 use operation;
@@ -12,19 +11,28 @@ use std::mem::{self, forget, MaybeUninit};
 use std::os::raw::{c_int, c_void};
 use std::ptr;
 use util::*;
+use *;
 
 #[derive(Debug)]
 pub struct Stream(*mut ffi::pa_stream);
 
 impl Stream {
-    pub fn new<'a, CM>(c: &Context, name: &::std::ffi::CStr, ss: &SampleSpec, map: CM) -> Option<Self>
-        where CM: Into<Option<&'a ChannelMap>>
+    pub fn new<'a, CM>(
+        c: &Context,
+        name: &::std::ffi::CStr,
+        ss: &SampleSpec,
+        map: CM,
+    ) -> Option<Self>
+    where
+        CM: Into<Option<&'a ChannelMap>>,
     {
         let ptr = unsafe {
-            ffi::pa_stream_new(c.raw_mut(),
-                               name.as_ptr(),
-                               ss as *const _,
-                               to_ptr(map.into()))
+            ffi::pa_stream_new(
+                c.raw_mut(),
+                name.as_ptr(),
+                ss as *const _,
+                to_ptr(map.into()),
+            )
         };
         if ptr.is_null() {
             None
@@ -45,9 +53,8 @@ impl Stream {
     }
 
     pub fn get_state(&self) -> StreamState {
-        StreamState::try_from(unsafe {
-            ffi::pa_stream_get_state(self.raw_mut())
-        }).expect("pa_stream_get_state returned invalid StreamState")
+        StreamState::try_from(unsafe { ffi::pa_stream_get_state(self.raw_mut()) })
+            .expect("pa_stream_get_state returned invalid StreamState")
     }
 
     pub fn get_context(&self) -> Option<Context> {
@@ -87,38 +94,45 @@ impl Stream {
         error_result!(r != 0, r)
     }
 
-    pub fn connect_playback<'a, D, A, V, S>(&self,
-                                            dev: D,
-                                            attr: A,
-                                            flags: StreamFlags,
-                                            volume: V,
-                                            sync_stream: S)
-                                            -> Result<()>
-        where D: Into<Option<&'a CStr>>,
-              A: Into<Option<&'a BufferAttr>>,
-              V: Into<Option<&'a CVolume>>,
-              S: Into<Option<&'a mut Stream>>
+    pub fn connect_playback<'a, D, A, V, S>(
+        &self,
+        dev: D,
+        attr: A,
+        flags: StreamFlags,
+        volume: V,
+        sync_stream: S,
+    ) -> Result<()>
+    where
+        D: Into<Option<&'a CStr>>,
+        A: Into<Option<&'a BufferAttr>>,
+        V: Into<Option<&'a CVolume>>,
+        S: Into<Option<&'a mut Stream>>,
     {
         let r = unsafe {
-            ffi::pa_stream_connect_playback(self.raw_mut(),
-                                            str_to_ptr(dev.into()),
-                                            to_ptr(attr.into()),
-                                            flags.into(),
-                                            to_ptr(volume.into()),
-                                            map_to_mut_ptr(sync_stream.into(), |p| p.0))
+            ffi::pa_stream_connect_playback(
+                self.raw_mut(),
+                str_to_ptr(dev.into()),
+                to_ptr(attr.into()),
+                flags.into(),
+                to_ptr(volume.into()),
+                map_to_mut_ptr(sync_stream.into(), |p| p.0),
+            )
         };
         error_result!((), r)
     }
 
     pub fn connect_record<'a, D, A>(&self, dev: D, attr: A, flags: StreamFlags) -> Result<()>
-        where D: Into<Option<&'a CStr>>,
-              A: Into<Option<&'a BufferAttr>>
+    where
+        D: Into<Option<&'a CStr>>,
+        A: Into<Option<&'a BufferAttr>>,
     {
         let r = unsafe {
-            ffi::pa_stream_connect_record(self.raw_mut(),
-                                          str_to_ptr(dev.into()),
-                                          to_ptr(attr.into()),
-                                          flags.into())
+            ffi::pa_stream_connect_record(
+                self.raw_mut(),
+                str_to_ptr(dev.into()),
+                to_ptr(attr.into()),
+                flags.into(),
+            )
         };
         error_result!((), r)
     }
@@ -140,8 +154,16 @@ impl Stream {
         error_result!((), r)
     }
 
-    pub fn write(&self, data: *const c_void, nbytes: usize, offset: i64, seek: SeekMode) -> Result<()> {
-        let r = unsafe { ffi::pa_stream_write(self.raw_mut(), data, nbytes, None, offset, seek.into()) };
+    pub fn write(
+        &self,
+        data: *const c_void,
+        nbytes: usize,
+        offset: i64,
+        seek: SeekMode,
+    ) -> Result<()> {
+        let r = unsafe {
+            ffi::pa_stream_write(self.raw_mut(), data, nbytes, None, offset, seek.into())
+        };
         error_result!((), r)
     }
 
@@ -182,13 +204,18 @@ impl Stream {
     }
 
     pub fn update_timing_info<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
-        where CB: Fn(&Stream, i32, *mut c_void)
+    where
+        CB: Fn(&Stream, i32, *mut c_void),
     {
         assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, success: c_int, userdata: *mut c_void)
-            where F: Fn(&Stream, i32, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            s: *mut ffi::pa_stream,
+            success: c_int,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Stream, i32, *mut c_void),
         {
             let mut stm = stream::from_raw_ptr(s);
             let cb = MaybeUninit::<F>::uninit();
@@ -198,7 +225,9 @@ impl Stream {
             result
         }
 
-        let r = unsafe { ffi::pa_stream_update_timing_info(self.raw_mut(), Some(wrapped::<CB>), userdata) };
+        let r = unsafe {
+            ffi::pa_stream_update_timing_info(self.raw_mut(), Some(wrapped::<CB>), userdata)
+        };
         if r.is_null() {
             let err = if let Some(c) = self.get_context() {
                 c.errno()
@@ -217,13 +246,15 @@ impl Stream {
     }
 
     pub fn set_state_callback<CB>(&self, _: CB, userdata: *mut c_void)
-        where CB: Fn(&Stream, *mut c_void)
+    where
+        CB: Fn(&Stream, *mut c_void),
     {
         assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, userdata: *mut c_void)
-            where F: Fn(&Stream, *mut c_void)
+        where
+            F: Fn(&Stream, *mut c_void),
         {
             let mut stm = stream::from_raw_ptr(s);
             let cb = MaybeUninit::<F>::uninit();
@@ -245,13 +276,18 @@ impl Stream {
     }
 
     pub fn set_write_callback<CB>(&self, _: CB, userdata: *mut c_void)
-        where CB: Fn(&Stream, usize, *mut c_void)
+    where
+        CB: Fn(&Stream, usize, *mut c_void),
     {
         assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, nbytes: usize, userdata: *mut c_void)
-            where F: Fn(&Stream, usize, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            s: *mut ffi::pa_stream,
+            nbytes: usize,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Stream, usize, *mut c_void),
         {
             let mut stm = stream::from_raw_ptr(s);
             let cb = MaybeUninit::<F>::uninit();
@@ -273,13 +309,18 @@ impl Stream {
     }
 
     pub fn set_read_callback<CB>(&self, _: CB, userdata: *mut c_void)
-        where CB: Fn(&Stream, usize, *mut c_void)
+    where
+        CB: Fn(&Stream, usize, *mut c_void),
     {
         assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, nbytes: usize, userdata: *mut c_void)
-            where F: Fn(&Stream, usize, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            s: *mut ffi::pa_stream,
+            nbytes: usize,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Stream, usize, *mut c_void),
         {
             let mut stm = stream::from_raw_ptr(s);
             let cb = MaybeUninit::<F>::uninit();
@@ -295,13 +336,18 @@ impl Stream {
     }
 
     pub fn cork<CB>(&self, b: i32, _: CB, userdata: *mut c_void) -> Result<Operation>
-        where CB: Fn(&Stream, i32, *mut c_void)
+    where
+        CB: Fn(&Stream, i32, *mut c_void),
     {
         assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, success: c_int, userdata: *mut c_void)
-            where F: Fn(&Stream, i32, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            s: *mut ffi::pa_stream,
+            success: c_int,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Stream, i32, *mut c_void),
         {
             let mut stm = stream::from_raw_ptr(s);
             let cb = MaybeUninit::<F>::uninit();
@@ -368,13 +414,18 @@ impl Stream {
     }
 
     pub fn set_name<CB>(&self, name: &CStr, _: CB, userdata: *mut c_void) -> Result<Operation>
-        where CB: Fn(&Stream, i32, *mut c_void) 
+    where
+        CB: Fn(&Stream, i32, *mut c_void),
     {
         assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
-        unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, success: c_int, userdata: *mut c_void)
-            where F: Fn(&Stream, i32, *mut c_void)
+        unsafe extern "C" fn wrapped<F>(
+            s: *mut ffi::pa_stream,
+            success: c_int,
+            userdata: *mut c_void,
+        ) where
+            F: Fn(&Stream, i32, *mut c_void),
         {
             let mut stm = stream::from_raw_ptr(s);
             let cb = MaybeUninit::<F>::uninit();
@@ -384,7 +435,9 @@ impl Stream {
             result
         }
 
-        let r = unsafe { ffi::pa_stream_set_name(self.raw_mut(), name.as_ptr(), Some(wrapped::<CB>), userdata) };
+        let r = unsafe {
+            ffi::pa_stream_set_name(self.raw_mut(), name.as_ptr(), Some(wrapped::<CB>), userdata)
+        };
         if r.is_null() {
             let err = if let Some(c) = self.get_context() {
                 c.errno()
