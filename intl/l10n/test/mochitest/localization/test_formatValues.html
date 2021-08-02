@@ -7,18 +7,22 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  async function* generateBundles(resourceIds) {
-    const bundle = new FluentBundle("en-US",
+  const mockSource = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}/", [
     {
-      useIsolating: false,
-    });
-    bundle.addResource(new FluentResource(`
+      path: "/localization/en-US/mock.ftl",
+      source: `
 key1 = Value
 key2 = Value { $user }
 key3 = Value { $count }
-    `));
-    yield bundle;
-  }
+`
+    }
+  ]);
+  let registry = new L10nRegistry({
+    bundleOptions: {
+      useIsolating: false
+    }
+  });
+  registry.registerSources([mockSource]);
 
   (async () => {
     SimpleTest.waitForExplicitFinish();
@@ -26,7 +30,7 @@ key3 = Value { $count }
     const loc = new Localization(
       ['mock.ftl'],
       false,
-      { generateBundles },
+      registry,
     );
 
     {
@@ -51,8 +55,8 @@ key3 = Value { $count }
         ]);
         ok(false, "Missing argument didn't cause an exception.");
       } catch (e) {
-        is(e,
-          "[fluent][resolver] errors in en-US/key2: Resolver error: Unknown variable: $user.",
+        is(e.message,
+          "[fluent][resolver] errors in en-US/key2: Resolver error: Unknown variable: $user",
           "Missing key causes an exception.");
       }
     }
@@ -66,8 +70,8 @@ key3 = Value { $count }
         ]);
         ok(false, "Missing key didn't cause an exception.");
       } catch (e) {
-        is(e,
-           "[fluent] Missing translations in en-US: key4.",
+        is(e.message,
+	   "[fluent] Missing message: key4",
            "Missing key causes an exception.");
       }
     }
