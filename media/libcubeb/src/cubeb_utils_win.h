@@ -8,26 +8,23 @@
 #if !defined(CUBEB_UTILS_WIN)
 #define CUBEB_UTILS_WIN
 
-#include <windows.h>
 #include "cubeb-internal.h"
+#include <windows.h>
 
 /* This wraps a critical section to track the owner in debug mode, adapted from
-   NSPR and http://blogs.msdn.com/b/oldnewthing/archive/2013/07/12/10433554.aspx */
-class owned_critical_section
-{
+   NSPR and http://blogs.msdn.com/b/oldnewthing/archive/2013/07/12/10433554.aspx
+ */
+class owned_critical_section {
 public:
   owned_critical_section()
 #ifndef NDEBUG
-    : owner(0)
+      : owner(0)
 #endif
   {
     InitializeCriticalSection(&critical_section);
   }
 
-  ~owned_critical_section()
-  {
-    DeleteCriticalSection(&critical_section);
-  }
+  ~owned_critical_section() { DeleteCriticalSection(&critical_section); }
 
   void lock()
   {
@@ -64,8 +61,8 @@ private:
 #endif
 
   // Disallow copy and assignment because CRICICAL_SECTION cannot be copied.
-  owned_critical_section(const owned_critical_section&);
-  owned_critical_section& operator=(const owned_critical_section&);
+  owned_critical_section(const owned_critical_section &);
+  owned_critical_section & operator=(const owned_critical_section &);
 };
 
 #endif /* CUBEB_UTILS_WIN */

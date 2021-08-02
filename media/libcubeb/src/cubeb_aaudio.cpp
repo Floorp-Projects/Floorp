@@ -997,8 +997,10 @@ aaudio_stream_init(cubeb * ctx, cubeb_stream ** stream,
   stm->user_ptr = user_ptr;
   stm->data_callback = data_callback;
   stm->state_callback = state_callback;
-  stm->voice_input = input_stream_params && !!(input_stream_params->prefs & CUBEB_STREAM_PREF_VOICE);
-  stm->voice_output = output_stream_params && !!(output_stream_params->prefs & CUBEB_STREAM_PREF_VOICE);
+  stm->voice_input = input_stream_params &&
+                     !!(input_stream_params->prefs & CUBEB_STREAM_PREF_VOICE);
+  stm->voice_output = output_stream_params &&
+                      !!(output_stream_params->prefs & CUBEB_STREAM_PREF_VOICE);
   stm->previous_clock = 0;
 
   LOG("cubeb stream prefs: voice_input: %s voice_output: %s",
