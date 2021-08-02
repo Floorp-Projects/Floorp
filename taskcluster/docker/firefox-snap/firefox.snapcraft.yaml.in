@@ -34,6 +34,7 @@ apps:
       - pulseaudio
       - removable-media
       - screen-inhibit-control
+      - system-packages-doc
       - u2f-devices
       - unity7
       - upower-observe
