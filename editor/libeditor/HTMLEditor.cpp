@@ -1828,15 +1828,9 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
     return NS_OK;
   }
 
-  Element* editingHost = GetActiveEditingHost();
+  Element* editingHost = GetActiveEditingHost(LimitInBodyElement::No);
   if (NS_WARN_IF(!editingHost)) {
-    // In theory, we should return NS_ERROR_FAILURE here, but we've not
-    // thrown exception in this case.  Therefore, we should allow to use
-    // the root element instead for now.
-    editingHost = GetRoot();
-    if (NS_WARN_IF(!editingHost)) {
-      return EditorBase::ToGenericNSResult(NS_ERROR_FAILURE);
-    }
+    return EditorBase::ToGenericNSResult(NS_ERROR_FAILURE);
   }
 
   EditorRawDOMPoint atAnchor(SelectionRef().AnchorRef());

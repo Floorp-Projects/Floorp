@@ -674,16 +674,10 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
     }
   }
 
-  Element* editingHost = mHTMLEditor.GetActiveEditingHost();
+  Element* editingHost =
+      mHTMLEditor.GetActiveEditingHost(HTMLEditor::LimitInBodyElement::No);
   if (NS_WARN_IF(!editingHost)) {
-    // In theory, we should return NS_ERROR_FAILURE here, but we've not
-    // thrown exception in this case.  Therefore, we should allow to use
-    // the root element instead for now.
-    // XXX test_bug795418-2.html depends on this behavior
-    editingHost = mHTMLEditor.GetRoot();
-    if (NS_WARN_IF(!editingHost)) {
-      return NS_ERROR_FAILURE;
-    }
+    return NS_ERROR_FAILURE;
   }
 
   // Adjust position based on the first node we are going to insert.
