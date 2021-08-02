@@ -1384,7 +1384,12 @@ gfxFontEntry* gfxMacPlatformFontList::PlatformGlobalFontFallback(const uint32_t 
             }
           }
         }
-      } else {
+      }
+
+      // The macOS system font does not appear in the shared font list, so if
+      // we didn't find the fallback font above, we should also check for an
+      // unshared fontFamily in the system list.
+      if (!fontEntry) {
         gfxFontFamily* family = FindSystemFontFamily(familyNameString);
         if (family) {
           fontEntry = family->FindFontForStyle(*aMatchStyle);
