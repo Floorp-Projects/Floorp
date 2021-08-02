@@ -142,53 +142,64 @@ already_AddRefed<Localization> Localization::Create(
 
 Localization::Localization(const nsTArray<nsCString>& aResIds, bool aIsSync)
     : mIsSync(aIsSync) {
-  ffi::localization_new(&aResIds, mIsSync, getter_AddRefs(mRaw));
+  ffi::localization_new(&aResIds, mIsSync, nullptr, getter_AddRefs(mRaw));
+
   RegisterObservers();
 }
 
 Localization::Localization(nsIGlobalObject* aGlobal,
                            const nsTArray<nsCString>& aResIds, bool aIsSync)
     : mGlobal(aGlobal), mIsSync(aIsSync) {
-  ffi::localization_new(&aResIds, mIsSync, getter_AddRefs(mRaw));
-  RegisterObservers();
-}
+  ffi::localization_new(&aResIds, mIsSync, nullptr, getter_AddRefs(mRaw));
 
-Localization::Localization(nsIGlobalObject* aGlobal,
-                           const nsTArray<nsCString>& aResIds, bool aIsSync,
-                           const L10nRegistry& aRegistry)
-    : mGlobal(aGlobal), mIsSync(aIsSync) {
-  ffi::localization_new_with_reg(&aResIds, mIsSync, aRegistry.Raw(),
-                                 getter_AddRefs(mRaw));
+  RegisterObservers();
 }
 
 Localization::Localization(nsIGlobalObject* aGlobal, bool aIsSync)
     : mGlobal(aGlobal), mIsSync(aIsSync) {
   nsTArray<nsCString> resIds;
-  ffi::localization_new(&resIds, mIsSync, getter_AddRefs(mRaw));
+  ffi::localization_new(&resIds, mIsSync, nullptr, getter_AddRefs(mRaw));
+
   RegisterObservers();
 }
 
-Localization::Localization(nsIGlobalObject* aGlobal)
-    : mGlobal(aGlobal), mIsSync(false) {
-  nsTArray<nsCString> resIds;
-  ffi::localization_new(&resIds, mIsSync, getter_AddRefs(mRaw));
+Localization::Localization(nsIGlobalObject* aGlobal, bool aIsSync,
+                           const ffi::LocalizationRc* aRaw)
+    : mGlobal(aGlobal), mRaw(aRaw), mIsSync(aIsSync) {
   RegisterObservers();
 }
 
 already_AddRefed<Localization> Localization::Constructor(
     const GlobalObject& aGlobal, const Sequence<nsCString>& aResourceIds,
     bool aIsSync, const Optional<NonNull<L10nRegistry>>& aRegistry,
-    ErrorResult& aRv) {
+    const Optional<Sequence<nsCString>>& aLocales, ErrorResult& aRv) {
   nsTArray<nsCString> resIds = ToTArray<nsTArray<nsCString>>(aResourceIds);
+  Maybe<nsTArray<nsCString>> locales;
+
+  if (aLocales.WasPassed()) {
+    locales.emplace();
+    locales->SetCapacity(aLocales.Value().Length());
+    for (const auto& locale : aLocales.Value()) {
+      locales->AppendElement(locale);
+    }
+  }
+
+  RefPtr<const ffi::LocalizationRc> raw;
+
+  bool result = ffi::localization_new_with_locales(
+      &resIds, aIsSync,
+      aRegistry.WasPassed() ? aRegistry.Value().Raw() : nullptr,
+      locales.ptrOr(nullptr), getter_AddRefs(raw));
+
+  if (!result) {
+    aRv.ThrowInvalidStateError(
+        "Failed to create the Localization. Check the locales arguments.");
+    return nullptr;
+  }
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
-  if (aRegistry.WasPassed()) {
-    return do_AddRef(
-        new Localization(global, resIds, aIsSync, aRegistry.Value()));
-  } else {
-    return do_AddRef(new Localization(global, resIds, aIsSync));
-  }
+  return do_AddRef(new Localization(global, aIsSync, raw));
 }
 
 JSObject* Localization::WrapObject(JSContext* aCx,
