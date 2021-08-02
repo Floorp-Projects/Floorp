@@ -71,7 +71,7 @@ key3 = Value { $count }
         ok(false, "Missing key didn't cause an exception.");
       } catch (e) {
         is(e.message,
-	   "[fluent] Missing message: key4",
+	   "[fluent] Missing message in locale en-US: key4",
            "Missing key causes an exception.");
       }
     }
