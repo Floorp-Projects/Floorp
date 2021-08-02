@@ -45,6 +45,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RunState: "resource:///modules/sessionstore/RunState.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   SessionWorker: "resource:///modules/sessionstore/SessionWorker.jsm",
+  SessionWorkerCache: "resource:///modules/sessionstore/SessionWorkerCache.jsm",
 });
 
 const PREF_UPGRADE_BACKUP = "browser.sessionstore.upgradeBackup.latestBuildID";
@@ -79,6 +80,12 @@ var SessionFile = {
    */
   wipe() {
     return SessionFileInternal.wipe();
+  },
+  /**
+   * Terminate and reinitialize the worker.
+   */
+  resetWorker() {
+    return SessionFileInternal.resetWorker();
   },
 
   /**
@@ -212,6 +219,10 @@ var SessionFileInternal = {
   // `true` once we have started initialization of the worker.
   _initializationStarted: false,
 
+  // For use if we have to terminate the session worker. Contains a list of
+  // cache objects to initialize the session worker's internal cache.
+  _cachedObjsForInitialization: [],
+
   // A string that will be set to the session file name part that was read from
   // disk. It will be available _after_ a session file read() is done.
   _readOrigin: null,
@@ -254,6 +265,9 @@ var SessionFileInternal = {
         }
         let source = await OS.File.read(path, options);
         let parsed = JSON.parse(source);
+        if (parsed._cachedObjs) {
+          SessionWorkerCache.import(parsed._cachedObjs);
+        }
 
         if (
           !SessionStore.isFormatVersionCompatible(
@@ -287,6 +301,7 @@ var SessionFileInternal = {
         );
         break;
       } catch (ex) {
+        SessionWorkerCache.clear();
         if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
           exists = false;
         } else if (ex instanceof OS.File.Error) {
@@ -382,6 +397,7 @@ var SessionFileInternal = {
         this._readOrigin,
         this._usingOldExtension,
         this.Paths,
+        this._cachedObjsForInitialization,
         {
           maxUpgradeBackups: Services.prefs.getIntPref(
             PREF_MAX_UPGRADE_BACKUPS,
@@ -402,6 +418,7 @@ var SessionFileInternal = {
           Promise.reject(err);
         })
         .then(resolve);
+      this._cachedObjsForInitialization = [];
     });
   },
 
@@ -419,13 +436,22 @@ var SessionFileInternal = {
    */
   _checkWorkerHealth() {
     if (this._workerHealth.failures >= kMaxWriteFailures) {
-      SessionWorker.terminate();
-      // Flag as not-initialized, to ensure that the worker state init is performed
-      // upon the next request.
-      this._initializationStarted = false;
-      // Reset the counter and report to telemetry.
-      this._workerHealth.failures = 0;
+      this.resetWorker();
     }
+  },
+
+  resetWorker() {
+    SessionWorker.terminate();
+    // Flag as not-initialized, to ensure that the worker state init is performed
+    // upon the next request.
+    this._initializationStarted = false;
+    // Reset the counter and report to telemetry.
+    this._workerHealth.failures = 0;
+    // Snapshot the SessionWorkerCache and ensure that we send that along to the
+    // new worker we create. Any updates to the cache after this point will
+    // trigger messages which will come after initialization with the given
+    // state snapshot.
+    this._cachedObjsForInitialization = SessionWorkerCache.getCacheObjects();
   },
 
   write(aData) {

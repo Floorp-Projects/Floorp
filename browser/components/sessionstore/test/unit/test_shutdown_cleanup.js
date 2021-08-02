@@ -72,7 +72,7 @@ function createSessionState(index) {
     tabState.entries.push({ url: URL + i });
   }
 
-  return { windows: [{ tabs: [tabState] }] };
+  return { windows: [{ tabs: [tabState] }], _cachedObjs: [] };
 }
 
 async function writeAndParse(state, path, options = {}) {

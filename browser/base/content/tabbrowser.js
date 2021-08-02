@@ -29,6 +29,11 @@
         "UrlbarProviderOpenTabs",
         "resource:///modules/UrlbarProviderOpenTabs.jsm"
       );
+      ChromeUtils.defineModuleGetter(
+        this,
+        "SessionWorkerCache",
+        "resource:///modules/sessionstore/SessionWorkerCache.jsm"
+      );
 
       if (AppConstants.MOZ_CRASHREPORTER) {
         ChromeUtils.defineModuleGetter(
@@ -950,7 +955,18 @@
       let browser = this.getBrowserForTab(aTab);
       browser.mIconURL = aIconURL;
 
-      if (aIconURL != aTab.getAttribute("image")) {
+      let imageAttr = aTab.getAttribute("image");
+      if (!aIconURL) {
+        browser.mIconBlobKey = null;
+      }
+      if (aIconURL != imageAttr) {
+        if (aIconURL) {
+          browser.mIconBlobKey = this.SessionWorkerCache.addRef(aIconURL);
+        }
+        if (imageAttr) {
+          this.SessionWorkerCache.release(imageAttr);
+        }
+
         if (aIconURL) {
           if (aLoadingPrincipal) {
             aTab.setAttribute("iconloadingprincipal", aLoadingPrincipal);
@@ -975,6 +991,11 @@
     getIcon(aTab) {
       let browser = aTab ? this.getBrowserForTab(aTab) : this.selectedBrowser;
       return browser.mIconURL;
+    },
+
+    getIconBlobKey(aTab) {
+      let browser = aTab ? this.getBrowserForTab(aTab) : this.selectedBrowser;
+      return browser.mIconBlobKey;
     },
 
     setPageInfo(aURL, aDescription, aPreviewImage) {
@@ -3921,6 +3942,10 @@
       this._tabListeners.delete(aTab);
 
       var browser = this.getBrowserForTab(aTab);
+      if (browser.mIconURL && browser.mIconURL.length) {
+        this.SessionWorkerCache.release(browser.mIconURL);
+      }
+      browser.mIconBlobKey = null;
 
       if (aTab.linkedPanel) {
         // Because of the fact that we are setting JS properties on
@@ -6545,6 +6570,7 @@
             // Removing the tab's image here causes flickering, wait until the
             // load is complete.
             this.mBrowser.mIconURL = null;
+            this.mBrowser.mIconBlobKey = null;
           }
         }
 

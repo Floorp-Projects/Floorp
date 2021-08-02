@@ -1,3 +1,4 @@
 {
-  "windows": []
+  "windows": [],
+  "_cachedObjs": []
 }
