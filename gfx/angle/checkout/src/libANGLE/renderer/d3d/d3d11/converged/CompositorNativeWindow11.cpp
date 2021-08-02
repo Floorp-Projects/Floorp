@@ -118,9 +118,7 @@ HRESULT CompositorNativeWindow11::createSwapChain(ID3D11Device *device,
     swapChainDesc.Scaling     = DXGI_SCALING_STRETCH;
     swapChainDesc.SwapEffect  = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
     swapChainDesc.AlphaMode   = mHasAlpha ? DXGI_ALPHA_MODE_PREMULTIPLIED : DXGI_ALPHA_MODE_IGNORE;
-#ifndef ANGLE_ENABLE_WINDOWS_UWP
     swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG::DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
-#endif
     Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1;
     hr = factory2->CreateSwapChainForComposition(device, &swapChainDesc, nullptr, &swapChain1);
     if (SUCCEEDED(hr))
@@ -239,17 +237,10 @@ RoHelper::RoHelper()
       mComBaseModule(nullptr),
       mCoreMessagingModule(nullptr)
 {
-
-#ifdef ANGLE_ENABLE_WINDOWS_UWP
-    mFpWindowsCreateStringReference    = &::WindowsCreateStringReference;
-    mFpRoInitialize                    = &::RoInitialize;
-    mFpRoUninitialize                  = &::RoUninitialize;
-    mFpWindowsDeleteString             = &::WindowsDeleteString;
-    mFpGetActivationFactory            = &::RoGetActivationFactory;
-    mFpWindowsCompareStringOrdinal     = &::WindowsCompareStringOrdinal;
-    mFpCreateDispatcherQueueController = &::CreateDispatcherQueueController;
-    mWinRtAvailable                    = true;
-#else
+    if (!IsWindows10OrGreater())
+    {
+        return;
+    }
 
     mComBaseModule = LoadLibraryA("ComBase.dll");
 
@@ -303,18 +294,14 @@ RoHelper::RoHelper()
         return;
     }
 
-    auto result = RoInitialize(RO_INIT_MULTITHREADED);
-
-    if (SUCCEEDED(result) || result == S_FALSE || result == RPC_E_CHANGED_MODE)
+    if (SUCCEEDED(RoInitialize(RO_INIT_MULTITHREADED)))
     {
         mWinRtAvailable = true;
     }
-#endif
 }
 
 RoHelper::~RoHelper()
 {
-#ifndef ANGLE_ENABLE_WINDOWS_UWP
     if (mWinRtAvailable)
     {
         RoUninitialize();
@@ -331,7 +318,6 @@ RoHelper::~RoHelper()
         FreeLibrary(mComBaseModule);
         mComBaseModule = nullptr;
     }
-#endif
 }
 
 bool RoHelper::WinRtAvailable() const
@@ -341,7 +327,7 @@ bool RoHelper::WinRtAvailable() const
 
 bool RoHelper::SupportedWindowsRelease()
 {
-    if (!mWinRtAvailable)
+    if (!IsWindows10OrGreater() || !mWinRtAvailable)
     {
         return false;
     }

@@ -1609,7 +1609,7 @@ void GenerateCaps(ID3D11Device *device,
     extensions->blendMinMax                = true;
     // https://docs.microsoft.com/en-us/windows/desktop/direct3ddxgi/format-support-for-direct3d-11-0-feature-level-hardware
     extensions->floatBlend             = true;
-    extensions->framebufferBlitANGLE   = GetFramebufferBlitSupport(featureLevel);
+    extensions->framebufferBlit        = GetFramebufferBlitSupport(featureLevel);
     extensions->framebufferMultisample = GetFramebufferMultisampleSupport(featureLevel);
     extensions->instancedArraysANGLE   = GetInstancingSupport(featureLevel);
     extensions->instancedArraysEXT     = GetInstancingSupport(featureLevel);
@@ -2138,12 +2138,10 @@ void MakeValidSize(bool isImage,
                    int *levelOffset)
 {
     const DXGIFormatSize &dxgiFormatInfo = d3d11::GetDXGIFormatSizeInfo(format);
-    bool validFormat                     = format != DXGI_FORMAT_UNKNOWN;
-    bool validImage                      = isImage && validFormat;
 
     int upsampleCount = 0;
     // Don't expand the size of full textures that are at least (blockWidth x blockHeight) already.
-    if (validImage || *requestWidth < static_cast<GLsizei>(dxgiFormatInfo.blockWidth) ||
+    if (isImage || *requestWidth < static_cast<GLsizei>(dxgiFormatInfo.blockWidth) ||
         *requestHeight < static_cast<GLsizei>(dxgiFormatInfo.blockHeight))
     {
         while (*requestWidth % dxgiFormatInfo.blockWidth != 0 ||
@@ -2154,7 +2152,7 @@ void MakeValidSize(bool isImage,
             upsampleCount++;
         }
     }
-    else if (validFormat)
+    else
     {
         if (*requestWidth % dxgiFormatInfo.blockWidth != 0)
         {
@@ -2284,6 +2282,7 @@ bool operator!=(const RasterizerStateKey &a, const RasterizerStateKey &b)
 
 HRESULT SetDebugName(ID3D11DeviceChild *resource, const char *name)
 {
+#if defined(_DEBUG)
     UINT existingDataSize = 0;
     resource->GetPrivateData(WKPDID_D3DDebugObjectName, &existingDataSize, nullptr);
     // Don't check the HRESULT- if it failed then that probably just means that no private data
@@ -2295,22 +2294,28 @@ HRESULT SetDebugName(ID3D11DeviceChild *resource, const char *name)
         // a D3D SDK Layers warning. This can occur if, for example, you 'create' two objects
         // (e.g.Rasterizer States) with identical DESCs on the same device. D3D11 will optimize
         // these calls and return the same object both times.
-        static const char *multipleNamesUsed = "MultipleNamesSetByANGLE";
+        static const char *multipleNamesUsed = "Multiple names set by ANGLE";
 
         // Remove the existing name
-        const HRESULT hr = resource->SetPrivateData(WKPDID_D3DDebugObjectName, 0, nullptr);
+        HRESULT hr = resource->SetPrivateData(WKPDID_D3DDebugObjectName, 0, nullptr);
         if (FAILED(hr))
         {
             return hr;
         }
 
-        name = multipleNamesUsed;
+        // Apply the new name
+        return resource->SetPrivateData(WKPDID_D3DDebugObjectName,
+                                        static_cast<unsigned int>(strlen(multipleNamesUsed)),
+                                        multipleNamesUsed);
     }
-
-    // Prepend ANGLE_ to separate names from other components in the same process.
-    const std::string d3dName = std::string("ANGLE_") + name;
-    return resource->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(d3dName.size()),
-                                    d3dName.c_str());
+    else
+    {
+        return resource->SetPrivateData(WKPDID_D3DDebugObjectName,
+                                        static_cast<unsigned int>(strlen(name)), name);
+    }
+#else
+    return S_OK;
+#endif
 }
 
 // Keep this in cpp file where it has visibility of Renderer11.h, otherwise calling

@@ -697,7 +697,7 @@ void ResourcesHLSL::imageMetadataUniforms(TInfoSinkBase &out, unsigned int regIn
 
 TString ResourcesHLSL::uniformBlocksHeader(
     const ReferencedInterfaceBlocks &referencedInterfaceBlocks,
-    const std::map<int, const TInterfaceBlock *> &uniformBlockOptimizedMap)
+    const std::map<int, const TInterfaceBlock *> &uniformBlockTranslatedToStructuredBuffer)
 {
     TString interfaceBlocks;
 
@@ -712,7 +712,7 @@ TString ResourcesHLSL::uniformBlocksHeader(
 
         // In order to avoid compile performance issue, translate uniform block to structured
         // buffer. anglebug.com/3682.
-        if (uniformBlockOptimizedMap.count(interfaceBlock.uniqueId().get()) != 0)
+        if (uniformBlockTranslatedToStructuredBuffer.count(interfaceBlock.uniqueId().get()) != 0)
         {
             unsigned int structuredBufferRegister = mSRVRegister;
             if (instanceVariable != nullptr && instanceVariable->getType().isArray())
@@ -915,8 +915,7 @@ TString ResourcesHLSL::uniformBlockMembersString(const TInterfaceBlock &interfac
 
     Std140PaddingHelper padHelper = mStructureHLSL->getPaddingHelper();
 
-    const unsigned int fieldCount = static_cast<unsigned int>(interfaceBlock.fields().size());
-    for (unsigned int typeIndex = 0; typeIndex < fieldCount; typeIndex++)
+    for (unsigned int typeIndex = 0; typeIndex < interfaceBlock.fields().size(); typeIndex++)
     {
         const TField &field    = *interfaceBlock.fields()[typeIndex];
         const TType &fieldType = *field.type();
@@ -936,8 +935,7 @@ TString ResourcesHLSL::uniformBlockMembersString(const TInterfaceBlock &interfac
         {
             const bool useHLSLRowMajorPacking =
                 (fieldType.getLayoutQualifier().matrixPacking == EmpColumnMajor);
-            hlsl += padHelper.postPaddingString(fieldType, useHLSLRowMajorPacking,
-                                                typeIndex == fieldCount - 1, false);
+            hlsl += padHelper.postPaddingString(fieldType, useHLSLRowMajorPacking, false);
         }
     }
 
