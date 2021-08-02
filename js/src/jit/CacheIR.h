@@ -1770,6 +1770,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachBigIntAsUintN(HandleFunction callee);
   AttachDecision tryAttachSetHas(HandleFunction callee);
   AttachDecision tryAttachMapHas(HandleFunction callee);
+  AttachDecision tryAttachMapGet(HandleFunction callee);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);

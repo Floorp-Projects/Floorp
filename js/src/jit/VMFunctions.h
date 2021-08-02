@@ -667,6 +667,8 @@ JSAtom* AtomizeStringNoGC(JSContext* cx, JSString* str);
 
 bool SetObjectHas(JSContext* cx, HandleObject obj, HandleValue key, bool* rval);
 bool MapObjectHas(JSContext* cx, HandleObject obj, HandleValue key, bool* rval);
+bool MapObjectGet(JSContext* cx, HandleObject obj, HandleValue key,
+                  MutableHandleValue rval);
 
 // Functions used when JS_MASM_VERBOSE is enabled.
 void AssumeUnreachable(const char* output);
