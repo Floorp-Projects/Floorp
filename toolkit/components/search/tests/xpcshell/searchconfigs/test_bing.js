@@ -72,6 +72,7 @@ const test = new SearchConfigTest({
             "pt-BR",
             "rm",
             "ro",
+            "sco",
             "son",
             "sq",
             "sr",
