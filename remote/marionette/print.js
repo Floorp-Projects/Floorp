@@ -12,7 +12,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   clearInterval: "resource://gre/modules/Timer.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   setInterval: "resource://gre/modules/Timer.jsm",
 
   Log: "chrome://remote/content/shared/Log.jsm",
@@ -100,9 +99,9 @@ function getPrintSettings(settings, filePath) {
 
 print.printToFile = async function(browser, settings) {
   // Create a unique filename for the temporary PDF file
-  const basePath = OS.Path.join(OS.Constants.Path.tmpDir, "marionette.pdf");
-  const { file, path: filePath } = await OS.File.openUnique(basePath);
-  await file.close();
+  const tempDir = await PathUtils.getTempDir();
+  const basePath = PathUtils.join(tempDir, "marionette.pdf");
+  const filePath = await PathUtils.createUniquePath(basePath);
 
   let printSettings = getPrintSettings(settings, filePath);
 
@@ -115,7 +114,7 @@ print.printToFile = async function(browser, settings) {
 
     let lastSize = 0;
     const timerId = setInterval(async () => {
-      const fileInfo = await OS.File.stat(filePath);
+      const fileInfo = await IOUtils.stat(filePath);
       if (lastSize > 0 && fileInfo.size == lastSize) {
         clearInterval(timerId);
         resolve();

@@ -13,7 +13,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
 
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
@@ -785,14 +784,12 @@ browserRect.height: ${browserRect.height}`);
 
     const filePath = await print.printToFile(win.gBrowser, settings);
 
-    const fp = await OS.File.open(filePath, { read: true });
     try {
-      const pdf = await this.loadPdf(url, fp);
+      const pdf = await this.loadPdf(url, filePath);
       let pages = this.getPages(pageRanges, url, pdf.numPages);
       return [this.renderPages(pdf, pages), pages.size];
     } finally {
-      fp.close();
-      await OS.File.remove(filePath);
+      await IOUtils.remove(filePath);
     }
   }
 
@@ -810,8 +807,8 @@ browserRect.height: ${browserRect.height}`);
       "resource://pdf.js/build/pdf.worker.js";
   }
 
-  async loadPdf(url, fp) {
-    const data = await fp.read();
+  async loadPdf(url, filePath) {
+    const data = await IOUtils.read(filePath);
     return this.parentWindow.pdfjsLib.getDocument({ data }).promise;
   }
 
