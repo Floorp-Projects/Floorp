@@ -14,8 +14,6 @@
 #include "mozilla/dom/L10nMutations.h"
 #include "mozilla/dom/L10nOverlaysBinding.h"
 #include "mozilla/dom/LocalizationBinding.h"
-#include "mozilla/dom/PromiseNativeHandler.h"
-#include "mozilla/intl/L10nRegistry.h"
 
 // XXX Avoid including this here by moving function bodies to the cpp file
 #include "nsINode.h"
@@ -31,13 +29,15 @@ class DOMLocalization : public intl::Localization {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMLocalization, Localization)
 
+  static already_AddRefed<DOMLocalization> Create(
+      nsIGlobalObject* aGlobal, const bool aSync,
+      const BundleGenerator& aBundleGenerator);
+
   void Destroy();
 
   static already_AddRefed<DOMLocalization> Constructor(
-      const dom::GlobalObject& aGlobal,
-      const dom::Sequence<nsCString>& aResourceIds, bool aIsSync,
-      const dom::Optional<dom::NonNull<intl::L10nRegistry>>& aRegistry,
-      const dom::Optional<dom::Sequence<nsCString>>& aLocales,
+      const GlobalObject& aGlobal, const Sequence<nsString>& aResourceIds,
+      const bool aSync, const BundleGenerator& aBundleGenerator,
       ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -111,11 +111,9 @@ class DOMLocalization : public intl::Localization {
     return false;
   }
 
-  DOMLocalization(nsIGlobalObject* aGlobal, bool aSync);
-  DOMLocalization(nsIGlobalObject* aGlobal, bool aIsSync,
-                  const intl::ffi::LocalizationRc* aRaw);
-
  protected:
+  explicit DOMLocalization(nsIGlobalObject* aGlobal, const bool aSync,
+                           const BundleGenerator& aBundleGenerator);
   virtual ~DOMLocalization();
   void OnChange() override;
   void DisconnectMutations();

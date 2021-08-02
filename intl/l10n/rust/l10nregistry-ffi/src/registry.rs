@@ -105,7 +105,7 @@ fn get_packaged_locales() -> Vec<LanguageIdentifier> {
 }
 
 fn create_l10n_registry(sources: Option<Vec<FileSource>>) -> Rc<GeckoL10nRegistry> {
-    let env = GeckoEnvironment::new(None);
+    let env = GeckoEnvironment;
     let mut reg = L10nRegistry::with_provider(env);
 
     reg.set_adapt_bundle(GeckoBundleAdapter::default())
@@ -165,11 +165,11 @@ pub enum L10nRegistryStatus {
 }
 
 #[no_mangle]
-pub extern "C" fn l10nregistry_new(use_isolating: bool) -> *const GeckoL10nRegistry {
-    let env = GeckoEnvironment::new(None);
+pub extern "C" fn l10nregistry_new() -> *const GeckoL10nRegistry {
+    let env = GeckoEnvironment;
     let mut reg = L10nRegistry::with_provider(env);
     let _ = reg
-        .set_adapt_bundle(GeckoBundleAdapter { use_isolating })
+        .set_adapt_bundle(GeckoBundleAdapter::default())
         .report_error();
     Rc::into_raw(Rc::new(reg))
 }

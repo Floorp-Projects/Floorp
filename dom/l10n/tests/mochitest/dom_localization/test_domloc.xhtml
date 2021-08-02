@@ -10,9 +10,9 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript">
   <![CDATA[
-  const l10nReg = new L10nRegistry();
-  const fs = [
-    { path: "/localization/en-US/mock.ftl", source: `
+  async function* generateBundles(resourceIds) {
+    const bundle = new FluentBundle("en-US");
+    bundle.addResource(new FluentResource(`
 file-menu =
     .label = File
     .accesskey = F
@@ -20,10 +20,9 @@ new-tab =
     .label = New Tab
     .accesskey = N
 container = Some text with an <image data-l10n-name="foo"> inside it.
-` },
-  ];
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
-  l10nReg.registerSources([source]);
+`));
+    yield bundle;
+  }
 
   SimpleTest.waitForExplicitFinish();
 
@@ -31,12 +30,11 @@ container = Some text with an <image data-l10n-name="foo"> inside it.
   const domLoc = new DOMLocalization(
     [],
     false,
-    l10nReg,
-    ["en-US"],
+    { generateBundles },
   );
 
   async function foo() {
-    domLoc.addResourceIds(["/mock.ftl"]);
+    domLoc.addResourceIds(["dummy.ftl"]);
     domLoc.connectRoot(document.documentElement);
     await domLoc.translateRoots();
 

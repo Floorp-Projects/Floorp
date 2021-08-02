@@ -29,6 +29,7 @@ extern crate gkrust_utils;
 extern crate http_sfv;
 extern crate jsrust_shared;
 extern crate kvstore;
+extern crate l10nregistry_ffi;
 extern crate mapped_hyph;
 extern crate mozurl;
 extern crate mp4parse_capi;
@@ -74,8 +75,7 @@ extern crate fluent;
 extern crate fluent_ffi;
 
 extern crate fluent_fallback;
-extern crate l10nregistry_ffi;
-extern crate localization_ffi;
+extern crate l10nregistry;
 
 #[cfg(not(target_os = "android"))]
 extern crate viaduct;
