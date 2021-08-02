@@ -604,7 +604,12 @@ bool FunctionScriptEmitter::emitEndBody() {
     }
   }
 
+  // Execute |CheckReturn| right before exiting the class constructor.
   if (funbox_->isDerivedClassConstructor()) {
+    if (!bce_->emitJumpTargetAndPatch(bce_->endOfDerivedClassConstructorBody)) {
+      return false;
+    }
+
     if (!bce_->emitCheckDerivedClassConstructorReturn()) {
       //            [stack]
       return false;

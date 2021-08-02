@@ -1,3 +1,5 @@
+load(libdir + "asserts.js");
+
 function main() {
   class Base {}
 
@@ -20,7 +22,7 @@ function main() {
   }
 
   for (let i = 0; i < 15; i++) {
-    new Derived();
+    assertThrowsInstanceOf(() => new Derived(), TypeError);
   }
 }
 main();

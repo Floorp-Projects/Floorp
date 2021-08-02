@@ -307,6 +307,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // The end location of a function body that is being emitted.
   mozilla::Maybe<uint32_t> functionBodyEndPos = {};
 
+  // Jump target just before the final CheckReturn opcode in a derived class
+  // constructor body.
+  JumpList endOfDerivedClassConstructorBody = {};
+
   /*
    * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"
    * space above their tempMark points. This means that you cannot alloc from
