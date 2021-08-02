@@ -584,6 +584,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
     storePtr(temp, dest);
   }
 
+  void storePrivateValue(Register src, const Address& dest) {
+    storePtr(src, dest);
+  }
+
   void loadValue(Address src, ValueOperand val);
   void loadValue(Operand dest, ValueOperand val) {
     loadValue(dest.toAddress(), val);
