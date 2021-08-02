@@ -12,7 +12,7 @@ cstr = "0.2"
 log = "0.4"
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
-l10nregistry = { git = "https://github.com/zbraniecki/l10nregistry-rs", rev = "92d8fbfbbbdffa2047ce01a935a389eb11031f69" }
+l10nregistry = { git = "https://github.com/mozilla/l10nregistry-rs", rev = "55bf7f826d773303a67d8d7fdab099a04322d4fb" }
 fluent = { version = "0.16", features = ["fluent-pseudo"] }
 unic-langid = "0.9"
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }

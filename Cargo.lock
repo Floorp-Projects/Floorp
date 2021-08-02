@@ -2695,7 +2695,7 @@ dependencies = [
 [[package]]
 name = "l10nregistry"
 version = "0.2.0"
-source = "git+https://github.com/zbraniecki/l10nregistry-rs?rev=92d8fbfbbbdffa2047ce01a935a389eb11031f69#92d8fbfbbbdffa2047ce01a935a389eb11031f69"
+source = "git+https://github.com/mozilla/l10nregistry-rs?rev=55bf7f826d773303a67d8d7fdab099a04322d4fb#55bf7f826d773303a67d8d7fdab099a04322d4fb"
 dependencies = [
  "async-trait",
  "fluent-bundle",
