@@ -13,13 +13,11 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
@@ -33,6 +31,8 @@ import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -59,11 +59,7 @@ class DefaultBrowserToolbarControllerTest {
     @MockK(relaxUnitFun = true)
     private lateinit var navController: NavController
 
-    @RelaxedMockK
-    private lateinit var onTabCounterClicked: () -> Unit
-
-    @RelaxedMockK
-    private lateinit var onCloseTab: (SessionState) -> Unit
+    private var tabCounterClicked = false
 
     @MockK(relaxUnitFun = true)
     private lateinit var engineView: EngineView
@@ -106,8 +102,13 @@ class DefaultBrowserToolbarControllerTest {
             every { id } returns R.id.browserFragment
         }
 
-        val onComplete = slot<() -> Unit>()
-        every { browserAnimator.captureEngineViewAndDrawStatically(capture(onComplete)) } answers { onComplete.captured.invoke() }
+        every {
+            browserAnimator.captureEngineViewAndDrawStatically(any())
+        } answers {
+            firstArg<() -> Unit>()()
+        }
+
+        tabCounterClicked = false
 
         store = BrowserStore(
             initialState = BrowserState(
@@ -193,10 +194,12 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleTabCounterClick() {
+        assertFalse(tabCounterClicked)
+
         val controller = createController()
         controller.handleTabCounterClick()
 
-        verify { onTabCounterClicked() }
+        assertTrue(tabCounterClicked)
     }
 
     @Test
@@ -334,7 +337,9 @@ class DefaultBrowserToolbarControllerTest {
         homeViewModel = homeViewModel,
         customTabSessionId = customTabSessionId,
         readerModeController = readerModeController,
-        onTabCounterClicked = onTabCounterClicked,
-        onCloseTab = onCloseTab
+        onTabCounterClicked = {
+            tabCounterClicked = true
+        },
+        onCloseTab = {}
     )
 }
