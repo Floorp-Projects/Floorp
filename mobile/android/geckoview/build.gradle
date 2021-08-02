@@ -241,7 +241,9 @@ dependencies {
     compileOnly "org.jetbrains.kotlin:kotlin-annotations-jvm:1.3.70"
 
     // The Glean Kotlin, which will be re-exported.
-    api "org.mozilla.telemetry:glean:36.0.1"
+    if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
+        api "org.mozilla.telemetry:glean:${project.ext.gleanVersion}"
+    }
 
     implementation "androidx.annotation:annotation:1.1.0"
     implementation "androidx.legacy:legacy-support-v4:1.0.0"
