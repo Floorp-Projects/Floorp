@@ -8201,6 +8201,41 @@ bool CacheIRCompiler::emitSetHasSymbolResult(ObjOperandId setId,
   return true;
 }
 
+bool CacheIRCompiler::emitSetHasBigIntResult(ObjOperandId setId,
+                                             BigIntOperandId bigIntId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register set = allocator.useRegister(masm, setId);
+  Register bigInt = allocator.useRegister(masm, bigIntId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
+  AutoScratchRegister scratch4(allocator, masm);
+  AutoScratchRegister scratch5(allocator, masm);
+#ifndef JS_CODEGEN_ARM
+  AutoScratchRegister scratch6(allocator, masm);
+#else
+  // We don't have more registers available on ARM32.
+  Register scratch6 = set;
+
+  masm.push(set);
+#endif
+
+  masm.prepareHashBigInt(bigInt, scratch1, scratch2, scratch3, scratch4);
+
+  masm.tagValue(JSVAL_TYPE_BIGINT, bigInt, output.valueReg());
+  masm.setObjectHasBigInt(set, output.valueReg(), scratch1, scratch2, scratch3,
+                          scratch4, scratch5, scratch6);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch2, output.valueReg());
+
+#ifdef JS_CODEGEN_ARM
+  masm.pop(set);
+#endif
+  return true;
+}
+
 bool CacheIRCompiler::emitBailout() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
