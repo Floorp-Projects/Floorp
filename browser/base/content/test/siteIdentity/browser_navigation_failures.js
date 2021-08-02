@@ -33,7 +33,7 @@ add_task(async function() {
       .className;
     is(
       newIdentityMode,
-      "unknownIdentity",
+      "certErrorPage notSecureText",
       "identity should be unknown (not secure) after"
     );
   });
@@ -173,6 +173,10 @@ add_task(async function() {
     );
 
     let identityMode = window.document.getElementById("identity-box").className;
-    is(identityMode, "unknownIdentity", "identity should be 'unknown'");
+    is(
+      identityMode,
+      "certErrorPage notSecureText",
+      "identity should be 'unknown'"
+    );
   });
 });
