@@ -9034,6 +9034,24 @@ class LHashSymbol : public LInstructionHelper<1, 1, 0> {
   }
 };
 
+class LHashBigInt : public LInstructionHelper<1, 1, 3> {
+ public:
+  LIR_HEADER(HashBigInt)
+
+  LHashBigInt(const LAllocation& input, const LDefinition& temp1,
+              const LDefinition& temp2, const LDefinition& temp3)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, input);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+    setTemp(2, temp3);
+  }
+
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+  const LDefinition* temp3() { return getTemp(2); }
+};
+
 class LSetObjectHasNonBigInt : public LInstructionHelper<1, 2 + BOX_PIECES, 2> {
  public:
   LIR_HEADER(SetObjectHasNonBigInt)
@@ -9055,6 +9073,34 @@ class LSetObjectHasNonBigInt : public LInstructionHelper<1, 2 + BOX_PIECES, 2> {
   const LAllocation* hash() { return getOperand(Input + BOX_PIECES); }
   const LDefinition* temp1() { return getTemp(0); }
   const LDefinition* temp2() { return getTemp(1); }
+};
+
+class LSetObjectHasBigInt : public LInstructionHelper<1, 2 + BOX_PIECES, 4> {
+ public:
+  LIR_HEADER(SetObjectHasBigInt)
+
+  LSetObjectHasBigInt(const LAllocation& setObject, const LBoxAllocation& input,
+                      const LAllocation& hash, const LDefinition& temp1,
+                      const LDefinition& temp2, const LDefinition& temp3,
+                      const LDefinition& temp4)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, setObject);
+    setBoxOperand(Input, input);
+    setOperand(Input + BOX_PIECES, hash);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+    setTemp(2, temp3);
+    setTemp(3, temp4);
+  }
+
+  static constexpr size_t Input = 1;
+
+  const LAllocation* setObject() { return getOperand(0); }
+  const LAllocation* hash() { return getOperand(Input + BOX_PIECES); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+  const LDefinition* temp3() { return getTemp(2); }
+  const LDefinition* temp4() { return getTemp(3); }
 };
 
 template <size_t NumDefs>

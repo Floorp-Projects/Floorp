@@ -425,6 +425,8 @@ bool BigIntPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
   return UnboxOperand(alloc, ins, Op, MIRType::BigInt);
 }
 
+template bool BigIntPolicy<0>::staticAdjustInputs(TempAllocator& alloc,
+                                                  MInstruction* ins);
 template bool BigIntPolicy<1>::staticAdjustInputs(TempAllocator& alloc,
                                                   MInstruction* ins);
 
@@ -1013,6 +1015,7 @@ bool ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   _(ToInt64Policy)
 
 #define TEMPLATE_TYPE_POLICY_LIST(_)                                          \
+  _(BigIntPolicy<0>)                                                          \
   _(BoxExceptPolicy<0, MIRType::Object>)                                      \
   _(BoxPolicy<0>)                                                             \
   _(ConvertToInt32Policy<0>)                                                  \
