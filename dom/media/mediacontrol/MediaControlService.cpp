@@ -114,18 +114,15 @@ void MediaControlService::Init() {
   mControllerManager = MakeUnique<ControllerManager>(this);
 
   // Initialize the fallback title
-  nsCOMPtr<nsIGlobalObject> global =
-      xpc::NativeGlobal(xpc::PrivilegedJunkScope());
-  RefPtr<Localization> l10n = Localization::Create(global, true, {});
-  l10n->AddResourceId(u"branding/brand.ftl"_ns);
-  l10n->AddResourceId(u"dom/media.ftl"_ns);
+  nsTArray<nsCString> resIds{
+      "branding/brand.ftl"_ns,
+      "dom/media.ftl"_ns,
+  };
+  RefPtr<Localization> l10n = Localization::Create(resIds, true);
   {
-    AutoSafeJSContext cx;
-
     nsAutoCString translation;
-    ErrorResult rv;
-    l10n->FormatValueSync(cx, "mediastatus-fallback-title"_ns, {}, translation,
-                          rv);
+    IgnoredErrorResult rv;
+    l10n->FormatValueSync("mediastatus-fallback-title"_ns, {}, translation, rv);
     if (!rv.Failed()) {
       mFallbackTitle = NS_ConvertUTF8toUTF16(translation);
     }

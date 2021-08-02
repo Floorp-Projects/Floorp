@@ -3854,8 +3854,6 @@ class Document : public nsINode,
  private:
   bool IsErrorPage() const;
 
-  void EnsureL10n();
-
   // Takes the bits from mStyleUseCounters if appropriate, and sets them in
   // mUseCounters.
   void SetCssUseCounterBits();
