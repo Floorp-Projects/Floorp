@@ -7,7 +7,11 @@ use backend::PulseContext;
 use cubeb_backend::{capi, ffi};
 use std::os::raw::{c_char, c_int};
 
-/// Entry point from C code.
+/// # Safety
+///
+/// Entry point from C code. This function is unsafe because it dereferences
+/// the given `c` and `context_name` pointers. The caller should ensure those
+/// pointers are valid.
 #[no_mangle]
 pub unsafe extern "C" fn pulse_rust_init(
     c: *mut *mut ffi::cubeb,

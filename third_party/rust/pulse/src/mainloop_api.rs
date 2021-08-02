@@ -7,17 +7,18 @@ use ffi;
 use std::mem;
 use std::os::raw::c_void;
 
-
 #[allow(non_camel_case_types)]
-type pa_once_cb_t = Option<unsafe extern "C" fn(m: *mut ffi::pa_mainloop_api,
-                                                userdata: *mut c_void)>;
+type pa_once_cb_t =
+    Option<unsafe extern "C" fn(m: *mut ffi::pa_mainloop_api, userdata: *mut c_void)>;
 fn wrap_once_cb<F>(_: F) -> pa_once_cb_t
-    where F: Fn(&MainloopApi, *mut c_void)
+where
+    F: Fn(&MainloopApi, *mut c_void),
 {
     assert!(mem::size_of::<F>() == 0);
 
     unsafe extern "C" fn wrapped<F>(m: *mut ffi::pa_mainloop_api, userdata: *mut c_void)
-        where F: Fn(&MainloopApi, *mut c_void)
+    where
+        F: Fn(&MainloopApi, *mut c_void),
     {
         let api = from_raw_ptr(m);
         let result = mem::transmute::<_, &F>(&())(&api, userdata);
@@ -36,7 +37,8 @@ impl MainloopApi {
     }
 
     pub fn once<CB>(&self, cb: CB, userdata: *mut c_void)
-        where CB: Fn(&MainloopApi, *mut c_void)
+    where
+        CB: Fn(&MainloopApi, *mut c_void),
     {
         let wrapped = wrap_once_cb(cb);
         unsafe {
