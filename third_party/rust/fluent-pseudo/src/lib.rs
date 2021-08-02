@@ -23,7 +23,7 @@ static FLIPPED_CAPS_MAP: &[char] = &[
 static mut RE_EXCLUDED: Option<Regex> = None;
 static mut RE_AZ: Option<Regex> = None;
 
-pub fn transform_dom(s: &str, flipped: bool, elongate: bool) -> Cow<str> {
+pub fn transform_dom(s: &str, flipped: bool, elongate: bool, with_markers: bool) -> Cow<str> {
     // Exclude access-keys and other single-char messages
     if s.len() == 1 {
         return s.into();
@@ -56,6 +56,11 @@ pub fn transform_dom(s: &str, flipped: bool, elongate: bool) -> Cow<str> {
     let result_range = pos + diff..result.len();
     let transform_sub = transform(&s[range], flipped, elongate);
     result.to_mut().replace_range(result_range, &transform_sub);
+
+    if with_markers {
+        return Cow::from("[") + result + "]"
+    }
+
     result
 }
 
@@ -71,7 +76,7 @@ pub fn transform(s: &str, flipped: bool, elongate: bool) -> Cow<str> {
     re_az.replace_all(s, |caps: &Captures| {
         let ch = caps[0].chars().next().unwrap();
         let cc = ch as u8;
-        if cc >= 97 && cc <= 122 {
+        if (97..=122).contains(&cc) {
             let pos = cc - 97;
             let new_char = small_map[pos as usize];
             // duplicate "a", "e", "o" and "u" to emulate ~30% longer text
@@ -82,7 +87,7 @@ pub fn transform(s: &str, flipped: bool, elongate: bool) -> Cow<str> {
             } else {
                 new_char.to_string()
             }
-        } else if cc >= 65 && cc <= 90 {
+        } else if (65..=90).contains(&cc) {
             let pos = cc - 65;
             let new_char = caps_map[pos as usize];
             new_char.to_string()
@@ -113,14 +118,18 @@ mod tests {
 
     #[test]
     fn dom_test() {
-        let x = transform_dom("Hello <a>World</a>", false, true);
+        let x = transform_dom("Hello <a>World</a>", false, true, false);
         assert_eq!(x, "Ħeeŀŀoo <a>Ẇoořŀḓ</a>");
 
-        let x = transform_dom("Hello <a>World</a> in <b>my</b> House.", false, true);
+        let x = transform_dom("Hello <a>World</a> in <b>my</b> House.", false, true, false);
         assert_eq!(x, "Ħeeŀŀoo <a>Ẇoořŀḓ</a> iƞ <b>ḿẏ</b> Ħoouuşee.");
 
+        // Use markers.
+        let x = transform_dom("Hello World within markers", false, false, true);
+        assert_eq!(x, "[Ħeŀŀo Ẇořŀḓ ẇiŧħiƞ ḿařķeřş]");
+
         // Don't touch single character values.
-        let x = transform_dom("f", false, true);
+        let x = transform_dom("f", false, true, false);
         assert_eq!(x, "f");
     }
 }

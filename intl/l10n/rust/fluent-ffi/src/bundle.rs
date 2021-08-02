@@ -26,11 +26,11 @@ pub enum FluentArgument {
 }
 
 fn transform_accented(s: &str) -> Cow<str> {
-    transform_dom(s, false, true)
+    transform_dom(s, false, true, true)
 }
 
 fn transform_bidi(s: &str) -> Cow<str> {
-    transform_dom(s, false, false)
+    transform_dom(s, false, false, false)
 }
 
 fn format_numbers(num: &FluentValue, intls: &IntlLangMemoizer) -> Option<String> {
