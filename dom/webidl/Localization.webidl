@@ -87,14 +87,14 @@ interface Localization {
    *    - aSync                - Specifies if the initial state of the Localization API is synchronous.
    *                             This enables a number of synchronous methods on the
    *                             Localization API.
-   *    - aBundleGenerator     - an object with two methods - `generateBundles` and
-   *                             `generateBundlesSync` allowing consumers to overload the
-   *                             default generators provided by Gecko.
+   *    - aRegistry            - optional custom L10nRegistry to be used by this Localization instance.
+   *    - aLocales             - custom set of locales to be used for this Localization.
    */
   [Throws]
   constructor(sequence<UTF8String> aResourceIds,
               optional boolean aSync = false,
-	      optional L10nRegistry aRegistry);
+              optional L10nRegistry aRegistry,
+              optional sequence<UTF8String> aLocales);
 
   /**
    * A method for adding resources to the localization context.
