@@ -95,7 +95,7 @@ namespace dom {
 #undef HTML_TAG
 #undef HTML_OTHER
 
-typedef JSObject* (*constructorGetterCallback)(JSContext*);
+using constructorGetterCallback = JSObject* (*)(JSContext*);
 
 // Mapping of html tag and GetConstructorObject methods.
 #define HTML_TAG(_tag, _classname, _interfacename) \
