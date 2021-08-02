@@ -672,6 +672,11 @@ static inline bool IsMagicType(MIRType type) {
          type == MIRType::MagicUninitializedLexical;
 }
 
+static inline bool IsNonGCThing(MIRType type) {
+  return type == MIRType::Undefined || type == MIRType::Null ||
+         type == MIRType::Boolean || IsNumberType(type);
+}
+
 static inline MIRType ScalarTypeToMIRType(Scalar::Type type) {
   switch (type) {
     case Scalar::Int8:
