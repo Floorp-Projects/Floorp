@@ -34,6 +34,11 @@ var gSanitizePromptDialog = {
     // This is used by selectByTimespan() to determine if the window has loaded.
     this._inited = true;
     this._dialog = document.querySelector("dialog");
+    let { inBrowserWindow = false } = window.arguments?.[0] || {};
+    if (inBrowserWindow) {
+      this._dialog.setAttribute("inbrowserwindow", "true");
+      this._observeTitleForChanges();
+    }
 
     let OKButton = this._dialog.getButton("accept");
     document.l10n.setAttributes(OKButton, "sanitize-button-ok");
@@ -215,6 +220,24 @@ var gSanitizePromptDialog = {
     for (let checkbox of checkboxes) {
       Preferences.addSyncFromPrefListener(checkbox, () => this.onReadGeneric());
     }
+  },
+
+  _titleChanged() {
+    let title = document.documentElement.getAttribute("title");
+    if (title) {
+      document.getElementById("titleText").textContent = title;
+    }
+  },
+
+  _observeTitleForChanges() {
+    this._titleChanged();
+    this._mutObs = new MutationObserver(() => {
+      this._titleChanged();
+    });
+    this._mutObs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["title"],
+    });
   },
 };
 
