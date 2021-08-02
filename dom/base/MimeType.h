@@ -16,11 +16,11 @@ template <typename char_type>
 struct HashKeyType;
 template <>
 struct HashKeyType<char16_t> {
-  typedef nsStringHashKey HashType;
+  using HashType = nsStringHashKey;
 };
 template <>
 struct HashKeyType<char> {
-  typedef nsCStringHashKey HashType;
+  using HashType = nsCStringHashKey;
 };
 
 template <typename char_type>

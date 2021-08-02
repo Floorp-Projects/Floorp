@@ -21,7 +21,7 @@ static inline bool is_zero(__m128i x) {
 
 int32_t FirstNon8Bit(const char16_t* str, const char16_t* end) {
   const uint32_t numUnicharsPerVector = 8;
-  typedef Non8BitParameters<sizeof(size_t)> p;
+  using p = Non8BitParameters<sizeof(size_t)>;
   const size_t mask = p::mask();
   const uint32_t numUnicharsPerWord = p::numUnicharsPerWord();
   const int32_t len = end - str;

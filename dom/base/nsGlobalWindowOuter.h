@@ -166,8 +166,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                                   public nsIInterfaceRequestor,
                                   public PRCListStr {
  public:
-  typedef nsTHashMap<nsUint64HashKey, nsGlobalWindowOuter*>
-      OuterWindowByIdTable;
+  using OuterWindowByIdTable =
+      nsTHashMap<nsUint64HashKey, nsGlobalWindowOuter*>;
 
   using PrintPreviewResolver =
       std::function<void(const mozilla::dom::PrintPreviewResultInfo&)>;

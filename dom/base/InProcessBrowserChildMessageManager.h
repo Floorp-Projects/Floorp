@@ -39,7 +39,7 @@ class InProcessBrowserChildMessageManager final
       public nsIInProcessContentFrameMessageManager,
       public nsSupportsWeakReference,
       public mozilla::dom::ipc::MessageManagerCallback {
-  typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
+  using StructuredCloneData = mozilla::dom::ipc::StructuredCloneData;
 
  private:
   InProcessBrowserChildMessageManager(nsDocShell* aShell, nsIContent* aOwner,

@@ -356,7 +356,7 @@ static const size_t OUTER_WINDOW_SLOT = 0;
 static const size_t HOLDER_WEAKMAP_SLOT = 1;
 
 class nsOuterWindowProxy : public MaybeCrossOriginObject<js::Wrapper> {
-  typedef MaybeCrossOriginObject<js::Wrapper> Base;
+  using Base = MaybeCrossOriginObject<js::Wrapper>;
 
  public:
   constexpr nsOuterWindowProxy() : Base(0) {}

@@ -99,10 +99,10 @@ struct nsMessageListenerInfo {
 
 class nsFrameMessageManager : public nsIMessageSender {
   friend class mozilla::dom::MessageManagerReporter;
-  typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
+  using StructuredCloneData = mozilla::dom::ipc::StructuredCloneData;
 
  protected:
-  typedef mozilla::dom::ipc::MessageManagerFlags MessageManagerFlags;
+  using MessageManagerFlags = mozilla::dom::ipc::MessageManagerFlags;
 
   nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
                         MessageManagerFlags aFlags);
@@ -287,7 +287,7 @@ class nsFrameMessageManager : public nsIMessageSender {
 */
 class nsSameProcessAsyncMessageBase {
  public:
-  typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
+  using StructuredCloneData = mozilla::dom::ipc::StructuredCloneData;
 
   nsSameProcessAsyncMessageBase();
   nsresult Init(const nsAString& aMessage, StructuredCloneData& aData);

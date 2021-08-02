@@ -30,7 +30,7 @@ struct MutationClosureData;
     }                                                \
   }
 
-typedef mozilla::dom::Element nsStyledElementBase;
+using nsStyledElementBase = mozilla::dom::Element;
 
 class nsStyledElement : public nsStyledElementBase {
  protected:

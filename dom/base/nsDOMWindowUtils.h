@@ -59,7 +59,7 @@ class nsTranslationNodeList final : public nsITranslationNodeList {
 
 class nsDOMWindowUtils final : public nsIDOMWindowUtils,
                                public nsSupportsWeakReference {
-  typedef mozilla::widget::TextEventDispatcher TextEventDispatcher;
+  using TextEventDispatcher = mozilla::widget::TextEventDispatcher;
 
  public:
   explicit nsDOMWindowUtils(nsGlobalWindowOuter* aWindow);

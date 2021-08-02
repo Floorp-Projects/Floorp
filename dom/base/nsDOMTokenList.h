@@ -34,10 +34,10 @@ class nsAtom;
 
 class nsDOMTokenList : public nsISupports, public nsWrapperCache {
  protected:
-  typedef mozilla::dom::Element Element;
-  typedef mozilla::dom::DocGroup DocGroup;
-  typedef nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
-      WhitespaceTokenizer;
+  using Element = mozilla::dom::Element;
+  using DocGroup = mozilla::dom::DocGroup;
+  using WhitespaceTokenizer =
+      nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>;
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

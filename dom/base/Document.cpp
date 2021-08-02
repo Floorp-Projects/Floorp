@@ -438,7 +438,7 @@ mozilla::LazyLogModule gUseCountersLog("UseCounters");
 namespace mozilla {
 namespace dom {
 
-typedef nsTArray<Link*> LinkArray;
+using LinkArray = nsTArray<Link*>;
 
 AutoTArray<Document*, 8>* Document::sLoadingForegroundTopLevelContentDocument =
     nullptr;
@@ -16677,7 +16677,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
                   p->Reject(false, __func__);
                 });
 
-        typedef ContentPermissionRequestBase::PromptResult PromptResult;
+        using PromptResult = ContentPermissionRequestBase::PromptResult;
         PromptResult pr = sapr->CheckPromptPrefs();
 
         if (pr == PromptResult::Pending) {
@@ -16813,7 +16813,7 @@ bool Document::AutomaticStorageAccessPermissionCanBeGranted(
     return false;
   }
 
-  typedef nsTArray<RefPtr<nsIPermission>> Permissions;
+  using Permissions = nsTArray<RefPtr<nsIPermission>>;
   Permissions perms;
   nsresult rv = permManager->GetAllWithTypePrefix(prefix, perms);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -16822,7 +16822,7 @@ bool Document::AutomaticStorageAccessPermissionCanBeGranted(
 
   nsAutoCString prefix2(prefix);
   prefix2.Append('^');
-  typedef nsTArray<nsCString> Origins;
+  using Origins = nsTArray<nsCString>;
   Origins origins;
 
   for (const auto& perm : perms) {

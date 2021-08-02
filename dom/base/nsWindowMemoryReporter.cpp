@@ -169,7 +169,7 @@ static void AppendWindowURI(nsGlobalWindowInner* aWindow, nsACString& aStr,
 MOZ_DEFINE_MALLOC_SIZE_OF(WindowsMallocSizeOf)
 
 // The key is the window ID.
-typedef nsTHashMap<nsUint64HashKey, nsCString> WindowPaths;
+using WindowPaths = nsTHashMap<nsUint64HashKey, nsCString>;
 
 static void ReportAmount(const nsCString& aBasePath, const char* aPathTail,
                          size_t aAmount, const nsCString& aDescription,
@@ -510,7 +510,7 @@ static void CollectWindowReports(nsGlobalWindowInner* aWindow,
 #undef REPORT_COUNT
 }
 
-typedef nsTArray<RefPtr<nsGlobalWindowInner>> WindowArray;
+using WindowArray = nsTArray<RefPtr<nsGlobalWindowInner>>;
 
 NS_IMETHODIMP
 nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
