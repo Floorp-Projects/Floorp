@@ -15433,6 +15433,18 @@ void CodeGenerator::visitHashBigInt(LHashBigInt* ins) {
   masm.prepareHashBigInt(input, output, temp1, temp2, temp3);
 }
 
+void CodeGenerator::visitHashObject(LHashObject* ins) {
+  Register setObj = ToRegister(ins->setObject());
+  ValueOperand input = ToValue(ins, LHashObject::Input);
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register temp3 = ToRegister(ins->temp3());
+  Register temp4 = ToRegister(ins->temp4());
+  Register output = ToRegister(ins->output());
+
+  masm.prepareHashObject(setObj, input, output, temp1, temp2, temp3, temp4);
+}
+
 void CodeGenerator::visitSetObjectHasNonBigInt(LSetObjectHasNonBigInt* ins) {
   Register setObj = ToRegister(ins->setObject());
   ValueOperand input = ToValue(ins, LSetObjectHasNonBigInt::Input);
