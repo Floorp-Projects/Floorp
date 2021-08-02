@@ -22,8 +22,6 @@ struct nsRoleMapEntry;
 
 class nsIFrame;
 
-class nsAttrValue;
-
 namespace mozilla::dom {
 class Element;
 }
@@ -930,23 +928,6 @@ class LocalAccessible : public nsISupports, public Accessible {
    * account ARIA.
    */
   virtual already_AddRefed<AccAttributes> NativeAttributes();
-
-  /**
-   * The given attribute has the potential of changing the accessible's state.
-   * This is used to capture the state before the attribute change and compare
-   * it with the state after.
-   */
-  bool AttributeChangesState(nsAtom* aAttribute);
-
-  /**
-   * Notify accessible that a DOM attribute on its associated content has
-   * changed. This allows the accessible to update its state and emit any
-   * relevant events.
-   */
-  virtual void DOMAttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                   int32_t aModType,
-                                   const nsAttrValue* aOldValue,
-                                   uint64_t aOldState);
 
   //////////////////////////////////////////////////////////////////////////////
   // Initializing, cache and tree traverse methods
