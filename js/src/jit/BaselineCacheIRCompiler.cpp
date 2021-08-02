@@ -1434,6 +1434,32 @@ bool BaselineCacheIRCompiler::emitMapHasStringResult(ObjOperandId mapId,
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitMapGetStringResult(ObjOperandId mapId,
+                                                     StringOperandId strId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register map = allocator.useRegister(masm, mapId);
+  Register str = allocator.useRegister(masm, strId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
+  AutoScratchRegister scratch4(allocator, masm);
+
+  LiveGeneralRegisterSet save;
+  save.add(map);
+  save.add(ICStubReg);
+
+  emitAtomizeString(str, scratch1, save);
+  masm.prepareHashString(str, scratch1, scratch2);
+
+  masm.tagValue(JSVAL_TYPE_STRING, str, output.valueReg());
+  masm.mapObjectGetNonBigInt(map, output.valueReg(), scratch1,
+                             output.valueReg(), scratch2, scratch3, scratch4);
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitCallNativeSetter(
     ObjOperandId receiverId, uint32_t setterOffset, ValOperandId rhsId,
     bool sameRealm, uint32_t nargsAndFlagsOffset) {

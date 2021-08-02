@@ -63,6 +63,7 @@
   _(IntlGuardToPluralRules)                        \
   _(IntlGuardToRelativeTimeFormat)                 \
                                                    \
+  _(MapGet)                                        \
   _(MapHas)                                        \
                                                    \
   _(MathAbs)                                       \

@@ -2828,6 +2828,11 @@ bool MapObjectHas(JSContext* cx, HandleObject obj, HandleValue key,
   return MapObject::has(cx, obj, key, rval);
 }
 
+bool MapObjectGet(JSContext* cx, HandleObject obj, HandleValue key,
+                  MutableHandleValue rval) {
+  return MapObject::get(cx, obj, key, rval);
+}
+
 void AssumeUnreachable(const char* output) {
   MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
 }
