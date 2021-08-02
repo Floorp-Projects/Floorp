@@ -12,7 +12,6 @@
   visibility: hidden;
 }
 
-@media (-moz-proton) {
 dialog {
   padding: 16px calc(16px - 4px);
 }
@@ -53,5 +52,4 @@ label, description {
 #rememberContainer:not([hidden]) {
   /* Ensure we don't get sized to the smallest child when the checkbox text wraps. */
   display: block;
-}
 }
