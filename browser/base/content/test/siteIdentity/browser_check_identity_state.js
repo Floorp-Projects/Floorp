@@ -379,7 +379,7 @@ async function noCertErrorTest(secureCheck) {
   await promise;
   is(
     getIdentityMode(),
-    "certErrorPage",
+    "certErrorPage notSecureText",
     "Identity should be the cert error page."
   );
   is(
@@ -394,7 +394,7 @@ async function noCertErrorTest(secureCheck) {
   gBrowser.selectedTab = newTab;
   is(
     getIdentityMode(),
-    "certErrorPage",
+    "certErrorPage notSecureText",
     "Identity should be the cert error page."
   );
   is(
@@ -481,7 +481,7 @@ async function noCertErrorFromNavigationTest(secureCheck) {
   );
   is(
     getIdentityMode(),
-    "certErrorPage",
+    "certErrorPage notSecureText",
     "Identity should be the cert error page."
   );
   is(
@@ -500,10 +500,14 @@ add_task(async function test_about_net_error_uri_from_navigation_tab() {
   await noCertErrorFromNavigationTest(false);
 });
 
-add_task(async function netErrorPageTest() {
+add_task(async function tlsErrorPageTest() {
   const TLS10_PAGE = "https://tls1.example.com/";
-  Services.prefs.setIntPref("security.tls.version.min", 3);
-  Services.prefs.setIntPref("security.tls.version.max", 4);
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["security.tls.version.min", 3],
+      ["security.tls.version.max", 4],
+    ],
+  });
 
   let browser;
   let pageLoaded;
@@ -530,13 +534,56 @@ add_task(async function netErrorPageTest() {
 
   is(
     getConnectionState(),
-    "net-error-page",
-    "Connection should be the net error page."
+    "cert-error-page",
+    "Connection state should be the cert error page."
   );
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function netErrorPageTest() {
+  // Connect to a server that rejects all requests, to test network error pages:
+  let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+  let server = new HttpServer();
+  server.registerPrefixHandler("/", (req, res) =>
+    res.abort(new Error("Noooope."))
+  );
+  server.start(-1);
+  let port = server.identity.primaryPort;
+  const ERROR_PAGE = `http://localhost:${port}/`;
+
+  let browser;
+  let pageLoaded;
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    () => {
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, ERROR_PAGE);
+      browser = gBrowser.selectedBrowser;
+      pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
+    },
+    false
+  );
+
+  info("Loading and waiting for the net error");
+  await pageLoaded;
+
+  await SpecialPowers.spawn(browser, [], function() {
+    const doc = content.document;
+    ok(
+      doc.documentURI.startsWith("about:neterror"),
+      "Should be showing error page"
+    );
+  });
+
+  is(
+    getConnectionState(),
+    "net-error-page",
+    "Connection should be the net error page."
+  );
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 async function aboutBlockedTest(secureCheck) {
