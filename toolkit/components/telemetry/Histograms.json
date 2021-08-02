@@ -16633,18 +16633,5 @@
     "n_buckets": 100,
     "keyed": true,
     "description": "The time that a transaction is waiting for HTTPS RR"
-  },
-  "WINDOW_OPEN_TYPE": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "alert_emails": ["arai.unmht@gmail.com"],
-    "expires_in_version": "93",
-    "kind": "categorical",
-    "labels": ["NoPopup_Empty", "NoPopup_Other",
-               "Popup_Width", "Popup_Location",
-               "Popup_Menubar", "Popup_Resizable",
-               "Popup_Scrollbars", "Popup_Status"],
-    "bug_numbers": [1710010],
-    "description": "Whether and how window.open opens a new popup or a new tab"
   }
 }
