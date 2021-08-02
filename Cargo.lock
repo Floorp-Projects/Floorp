@@ -2013,7 +2013,6 @@ dependencies = [
  "l10nregistry",
  "l10nregistry-ffi",
  "lmdb-rkv-sys",
- "localization-ffi",
  "log",
  "mapped_hyph",
  "mdns_service",
@@ -2808,27 +2807,6 @@ dependencies = [
  "cc",
  "libc",
  "pkg-config",
-]
-
-[[package]]
-name = "localization-ffi"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "cstr",
- "fluent",
- "fluent-fallback",
- "fluent-ffi",
- "futures 0.3.15",
- "futures-channel",
- "l10nregistry",
- "l10nregistry-ffi",
- "moz_task",
- "nserror",
- "nsstring",
- "thin-vec",
- "unic-langid",
- "xpcom",
 ]
 
 [[package]]

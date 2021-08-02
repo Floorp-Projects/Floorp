@@ -114,9 +114,8 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(L10nRegistry, mGlobal)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(L10nRegistry, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(L10nRegistry, Release)
 
-L10nRegistry::L10nRegistry(nsIGlobalObject* aGlobal, bool aUseIsolating)
-    : mGlobal(aGlobal),
-      mRaw(dont_AddRef(ffi::l10nregistry_new(aUseIsolating))) {}
+L10nRegistry::L10nRegistry(nsIGlobalObject* aGlobal)
+    : mGlobal(aGlobal), mRaw(dont_AddRef(ffi::l10nregistry_new())) {}
 
 L10nRegistry::L10nRegistry(nsIGlobalObject* aGlobal,
                            RefPtr<const ffi::GeckoL10nRegistry> aRaw)
@@ -124,10 +123,9 @@ L10nRegistry::L10nRegistry(nsIGlobalObject* aGlobal,
 
 /* static */
 already_AddRefed<L10nRegistry> L10nRegistry::Constructor(
-    const GlobalObject& aGlobal, const L10nRegistryOptions& aOptions) {
+    const GlobalObject& aGlobal) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  return MakeAndAddRef<L10nRegistry>(global,
-                                     aOptions.mBundleOptions.mUseIsolating);
+  return MakeAndAddRef<L10nRegistry>(global);
 }
 
 /* static */

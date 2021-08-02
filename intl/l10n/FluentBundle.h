@@ -81,9 +81,6 @@ class FluentBundle final : public nsWrapperCache {
                      const dom::Optional<JS::Handle<JSObject*>>& aErrors,
                      nsACString& aRetVal, ErrorResult& aRv);
 
-  static void ConvertArgs(const L10nArgs& aArgs,
-                          nsTArray<ffi::L10nArg>& aRetVal);
-
  protected:
   virtual ~FluentBundle();
 

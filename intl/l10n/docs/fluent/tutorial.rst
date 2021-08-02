@@ -495,6 +495,10 @@ Localization object manually using the `Localization` class:
 
 .. code-block:: javascript
 
+  const { Localization } =
+    ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
+
+
   const myL10n = new Localization([
     "branding/brand.ftl",
     "browser/preferences/preferences.ftl"
@@ -523,6 +527,10 @@ on the class.
 
 
 .. code-block:: javascript
+
+  const { Localization } =
+    ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
+
 
   const myL10n = new Localization([
     "branding/brand.ftl",

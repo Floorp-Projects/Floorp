@@ -7,15 +7,18 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  const l10nReg = new L10nRegistry();
+  async function* generateBundles(resourceIds) {
+    const bundle = new FluentBundle("en-US");
+    // No translations!
+    yield bundle;
+  }
 
   SimpleTest.waitForExplicitFinish();
   addLoadEvent(async () => {
     const domLoc = new DOMLocalization(
       [],
       false,
-      l10nReg,
-      ["en-US"],
+      { generateBundles },
     );
 
     await domLoc.translateFragment(document.body).then(() => {

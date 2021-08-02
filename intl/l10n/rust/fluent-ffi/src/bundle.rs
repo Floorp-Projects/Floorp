@@ -20,16 +20,9 @@ pub type FluentBundleRc = FluentBundle<Rc<FluentResource>>;
 
 #[derive(Debug)]
 #[repr(C, u8)]
-pub enum FluentArgument<'s> {
+pub enum FluentArgument {
     Double_(f64),
-    String(&'s nsACString),
-}
-
-#[derive(Debug)]
-#[repr(C)]
-pub struct L10nArg<'s> {
-    pub id: &'s nsACString,
-    pub value: FluentArgument<'s>,
+    String(*const nsCString),
 }
 
 fn transform_accented(s: &str) -> Cow<str> {
@@ -156,12 +149,14 @@ pub fn adapt_bundle_for_gecko(bundle: &mut FluentBundleRc, pseudo_strategy: Opti
 }
 
 #[no_mangle]
-pub extern "C" fn fluent_bundle_new_single(
+pub unsafe extern "C" fn fluent_bundle_new_single(
     locale: &nsACString,
     use_isolating: bool,
     pseudo_strategy: &nsACString,
 ) -> *mut FluentBundleRc {
-    let id = match locale.to_utf8().parse::<LanguageIdentifier>() {
+    // We can use as_str_unchecked because this string comes from WebIDL and is
+    // guaranteed utf-8.
+    let id = match locale.as_str_unchecked().parse::<LanguageIdentifier>() {
         Ok(id) => id,
         Err(..) => return std::ptr::null_mut(),
     };
@@ -183,7 +178,7 @@ pub unsafe extern "C" fn fluent_bundle_new(
     let mut langids = Vec::with_capacity(locale_count);
     let locales = std::slice::from_raw_parts(locales, locale_count);
     for locale in locales {
-        let id = match locale.to_utf8().parse::<LanguageIdentifier>() {
+        let id = match locale.as_str_unchecked().parse::<LanguageIdentifier>() {
             Ok(id) => id,
             Err(..) => return std::ptr::null_mut(),
         };
@@ -233,13 +228,13 @@ pub extern "C" fn fluent_bundle_has_message(bundle: &FluentBundleRc, id: &nsACSt
 }
 
 #[no_mangle]
-pub extern "C" fn fluent_bundle_get_message(
+pub unsafe extern "C" fn fluent_bundle_get_message(
     bundle: &FluentBundleRc,
     id: &nsACString,
     has_value: &mut bool,
     attrs: &mut ThinVec<nsCString>,
 ) -> bool {
-    match bundle.get_message(&id.to_utf8()) {
+    match bundle.get_message(id.as_str_unchecked()) {
         Some(message) => {
             attrs.reserve(message.attributes().count());
             *has_value = message.value().is_some();
@@ -256,23 +251,24 @@ pub extern "C" fn fluent_bundle_get_message(
 }
 
 #[no_mangle]
-pub extern "C" fn fluent_bundle_format_pattern(
+pub unsafe extern "C" fn fluent_bundle_format_pattern(
     bundle: &FluentBundleRc,
     id: &nsACString,
     attr: &nsACString,
-    args: &ThinVec<L10nArg>,
+    arg_ids: &ThinVec<nsCString>,
+    arg_vals: &ThinVec<FluentArgument>,
     ret_val: &mut nsACString,
     ret_errors: &mut ThinVec<nsCString>,
 ) -> bool {
-    let args = convert_args(&args);
+    let args = convert_args(arg_ids, arg_vals);
 
-    let message = match bundle.get_message(&id.to_utf8()) {
+    let message = match bundle.get_message(id.as_str_unchecked()) {
         Some(message) => message,
         None => return false,
     };
 
     let pattern = if !attr.is_empty() {
-        match message.get_attribute(&attr.to_utf8()) {
+        match message.get_attribute(attr.as_str_unchecked()) {
             Some(attr) => attr.value(),
             None => return false,
         }
@@ -308,20 +304,25 @@ pub unsafe extern "C" fn fluent_bundle_add_resource(
     }
 }
 
-pub fn convert_args<'s>(args: &[L10nArg<'s>]) -> Option<FluentArgs<'s>> {
-    if args.is_empty() {
+fn convert_args<'a>(
+    arg_ids: &'a [nsCString],
+    arg_vals: &'a [FluentArgument],
+) -> Option<FluentArgs<'a>> {
+    debug_assert_eq!(arg_ids.len(), arg_vals.len());
+
+    if arg_ids.is_empty() {
         return None;
     }
 
-    let mut result = FluentArgs::with_capacity(args.len());
-    for arg in args {
-        let val = match arg.value {
+    let mut args = FluentArgs::with_capacity(arg_ids.len());
+    for (id, val) in arg_ids.iter().zip(arg_vals.iter()) {
+        let val = match val {
             FluentArgument::Double_(d) => FluentValue::from(d),
-            FluentArgument::String(s) => FluentValue::from(s.to_utf8()),
+            FluentArgument::String(s) => FluentValue::from(unsafe { (**s).to_string() }),
         };
-        result.set(arg.id.to_string(), val);
+        args.set(id.to_string(), val);
     }
-    Some(result)
+    Some(args)
 }
 
 fn append_fluent_errors_to_ret_errors(ret_errors: &mut ThinVec<nsCString>, errors: &[FluentError]) {

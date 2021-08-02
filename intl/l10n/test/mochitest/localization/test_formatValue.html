@@ -7,22 +7,17 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  const mockSource = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}/", [
-    {
-      path: "/localization/en-US/mock.ftl",
-      source: `
+  async function* generateBundles(resourceIds) {
+    const bundle = new FluentBundle("en-US", {
+      useIsolating: false,
+    });
+    bundle.addResource(new FluentResource(`
 key1 = Value
 key2 = Value { $user }
 key3 = Value { $count }
-`
-    }
-  ]);
-  let registry = new L10nRegistry({
-    bundleOptions: {
-      useIsolating: false
-    }
-  });
-  registry.registerSources([mockSource]);
+    `));
+    yield bundle;
+  }
 
   (async () => {
     SimpleTest.waitForExplicitFinish();
@@ -30,7 +25,7 @@ key3 = Value { $count }
     const loc = new Localization(
       ['mock.ftl'],
       false,
-      registry,
+      { generateBundles },
     );
 
     {
@@ -58,8 +53,8 @@ key3 = Value { $count }
         let val = await loc.formatValue("key3");
         ok(false, "Missing argument didn't cause an exception.");
       } catch (e) {
-        is(e.message,
-          "[fluent][resolver] errors in en-US/key3: Resolver error: Unknown variable: $count",
+        is(e,
+          "[fluent][resolver] errors in en-US/key3: Resolver error: Unknown variable: $count.",
           "Missing key causes an exception.");
       }
     }
