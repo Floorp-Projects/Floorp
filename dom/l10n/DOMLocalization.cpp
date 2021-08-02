@@ -325,7 +325,7 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
     return nullptr;
   }
 
-  if (mIsSync) {
+  if (IsSync()) {
     nsTArray<Nullable<L10nMessage>> l10nMessages;
 
     FormatMessagesSync(l10nKeys, l10nMessages, aRv);

@@ -296,7 +296,7 @@ void DocumentL10n::InitialTranslationCompleted(bool aL10nCached) {
 
   // From now on, the state of Localization is unconditionally
   // async.
-  SetIsSync(false);
+  SetAsync();
 }
 
 void DocumentL10n::ConnectRoot(nsINode& aNode, bool aTranslate,
