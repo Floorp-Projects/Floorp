@@ -4680,6 +4680,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
  public:
   void prepareHashNonGCThing(ValueOperand value, Register result,
                              Register temp);
+  void prepareHashString(Register str, Register result, Register temp);
 
  private:
   enum class IsBigInt { No, Yes, Maybe };

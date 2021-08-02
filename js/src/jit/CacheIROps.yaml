@@ -2629,6 +2629,14 @@
     set: ObjId
     val: ValId
 
+- name: SetHasStringResult
+  shared: false
+  transpile: false
+  cost_estimate: 5
+  args:
+    set: ObjId
+    str: StringId
+
 - name: CallPrintString
   shared: true
   transpile: false

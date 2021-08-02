@@ -71,6 +71,9 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   enum class StringCode { CodeUnit, CodePoint };
   bool emitStringFromCodeResult(Int32OperandId codeId, StringCode stringCode);
 
+  void emitAtomizeString(Register str, Register temp,
+                         LiveGeneralRegisterSet save);
+
   bool emitCallScriptedGetterShared(ValOperandId receiverId,
                                     uint32_t getterOffset, bool sameRealm,
                                     uint32_t nargsAndFlagsOffset,
