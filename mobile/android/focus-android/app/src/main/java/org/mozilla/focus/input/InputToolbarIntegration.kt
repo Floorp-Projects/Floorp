@@ -42,7 +42,7 @@ class InputToolbarIntegration(
         })
         toolbar.setOnUrlCommitListener { url ->
             fragment.onCommit(url)
-            true
+            false
         }
 
         toolbar.setAutocompleteListener { text, delegate ->
