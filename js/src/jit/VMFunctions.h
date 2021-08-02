@@ -523,8 +523,6 @@ bool ObjectIsConstructor(JSObject* obj);
 [[nodiscard]] bool ThrowRuntimeLexicalError(JSContext* cx,
                                             unsigned errorNumber);
 
-[[nodiscard]] bool ThrowBadDerivedReturn(JSContext* cx, HandleValue v);
-
 [[nodiscard]] bool ThrowBadDerivedReturnOrUninitializedThis(JSContext* cx,
                                                             HandleValue v);
 
