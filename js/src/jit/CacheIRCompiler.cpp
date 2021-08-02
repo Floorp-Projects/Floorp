@@ -1939,6 +1939,9 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     case GuardClassKind::JSFunction:
       clasp = &JSFunction::class_;
       break;
+    case GuardClassKind::Set:
+      clasp = &SetObject::class_;
+      break;
   }
   MOZ_ASSERT(clasp);
 
@@ -8119,6 +8122,23 @@ bool CacheIRCompiler::emitBigIntAsUintNResult(Int32OperandId bitsId,
 
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, int32_t);
   callvm.call<Fn, jit::BigIntAsUintN>();
+  return true;
+}
+
+bool CacheIRCompiler::emitSetHasResult(ObjOperandId setId, ValOperandId valId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register set = allocator.useRegister(masm, setId);
+  ValueOperand val = allocator.useValueRegister(masm, valId);
+
+  callvm.prepare();
+  masm.Push(val);
+  masm.Push(set);
+
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, bool*);
+  callvm.call<Fn, jit::SetObjectHas>();
   return true;
 }
 

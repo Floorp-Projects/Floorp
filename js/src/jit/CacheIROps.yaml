@@ -2606,6 +2606,14 @@
     bits: Int32Id
     bigInt: BigIntId
 
+- name: SetHasResult
+  shared: true
+  transpile: false
+  cost_estimate: 5
+  args:
+    set: ObjId
+    val: ValId
+
 - name: CallPrintString
   shared: true
   transpile: false
