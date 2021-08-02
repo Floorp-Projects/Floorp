@@ -305,12 +305,13 @@ void FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset() {
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
 void FFmpegVideoDecoder<LIBAV_VER>::InitHWDecodingPrefs() {
-  bool isWebRenderUsed =
-      mImageAllocator && (mImageAllocator->GetCompositorBackendType() ==
-                          layers::LayersBackend::LAYERS_WR);
-  if (!isWebRenderUsed) {
+  bool isHardwareWebRenderUsed = mImageAllocator &&
+                                 (mImageAllocator->GetCompositorBackendType() ==
+                                  layers::LayersBackend::LAYERS_WR) &&
+                                 !mImageAllocator->UsingSoftwareWebRender();
+  if (!isHardwareWebRenderUsed) {
     mEnableHardwareDecoding = false;
-    FFMPEG_LOG("WebRender is off, disabled DMABuf & VAAPI.");
+    FFMPEG_LOG("Hardware WebRender is off, disabled DMABuf & VAAPI.");
     return;
   }
 
