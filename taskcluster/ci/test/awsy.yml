@@ -34,21 +34,9 @@ job-defaults:
 
 
 awsy:
-    description: Are we slim yet
+    description: Are we slim yet - tp5 pageset
     treeherder-symbol: SY(sy)
-    run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    linux1804-64-shippable-qr/opt: [mozilla-central]
-                    windows10-64-2004-shippable-qr/opt: [mozilla-central]
-                    default: []
-            default:
-                by-test-platform:
-                    .*-devedition/.*: []  # don't run on devedition
-                    windows.*-32.*/opt: []
-                    (linux|windows10-64-2004|mac)(?!.*shippable).*/opt: []
-                    default: [integration, mozilla-central, mozilla-beta, mozilla-release]
+    run-on-projects: []
 
 awsy-tp6:
     description: Are we slim yet - tp6 pageset
