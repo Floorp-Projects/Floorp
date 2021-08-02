@@ -24,6 +24,10 @@ namespace gl
 
 namespace
 {
+constexpr angle::SubjectIndex kBufferSubjectIndex = 2;
+static_assert(kBufferSubjectIndex != rx::kTextureImageImplObserverMessageIndex, "Index collision");
+static_assert(kBufferSubjectIndex != rx::kTextureImageSiblingMessageIndex, "Index collision");
+
 bool IsPointSampled(const SamplerState &samplerState)
 {
     return (samplerState.getMagFilter() == GL_NEAREST &&
@@ -259,6 +263,12 @@ const ImageDesc &TextureState::getBaseLevelDesc() const
     return getImageDesc(getBaseImageTarget(), getEffectiveBaseLevel());
 }
 
+const ImageDesc &TextureState::getLevelZeroDesc() const
+{
+    ASSERT(mType != TextureType::CubeMap || isCubeComplete());
+    return getImageDesc(getBaseImageTarget(), 0);
+}
+
 void TextureState::setCrop(const Rectangle &rect)
 {
     mCropRect = rect;
@@ -315,7 +325,7 @@ bool TextureState::computeSamplerCompleteness(const SamplerState &samplerState,
         return true;
     }
 
-    if (mBaseLevel > mMaxLevel)
+    if (!mImmutableFormat && mBaseLevel > mMaxLevel)
     {
         return false;
     }
@@ -713,6 +723,7 @@ Texture::Texture(rx::GLImplFactory *factory, TextureID id, TextureType type)
       mState(type),
       mTexture(factory->createTexture(mState)),
       mImplObserver(this, rx::kTextureImageImplObserverMessageIndex),
+      mBufferObserver(this, kBufferSubjectIndex),
       mLabel(),
       mBoundSurface(nullptr),
       mBoundStream(nullptr)
@@ -808,8 +819,10 @@ GLenum Texture::getSwizzleAlpha() const
 
 void Texture::setMinFilter(const Context *context, GLenum minFilter)
 {
-    mState.mSamplerState.setMinFilter(minFilter);
-    signalDirtyState(DIRTY_BIT_MIN_FILTER);
+    if (mState.mSamplerState.setMinFilter(minFilter))
+    {
+        signalDirtyState(DIRTY_BIT_MIN_FILTER);
+    }
 }
 
 GLenum Texture::getMinFilter() const
@@ -819,8 +832,10 @@ GLenum Texture::getMinFilter() const
 
 void Texture::setMagFilter(const Context *context, GLenum magFilter)
 {
-    mState.mSamplerState.setMagFilter(magFilter);
-    signalDirtyState(DIRTY_BIT_MAG_FILTER);
+    if (mState.mSamplerState.setMagFilter(magFilter))
+    {
+        signalDirtyState(DIRTY_BIT_MAG_FILTER);
+    }
 }
 
 GLenum Texture::getMagFilter() const
@@ -830,8 +845,10 @@ GLenum Texture::getMagFilter() const
 
 void Texture::setWrapS(const Context *context, GLenum wrapS)
 {
-    mState.mSamplerState.setWrapS(wrapS);
-    signalDirtyState(DIRTY_BIT_WRAP_S);
+    if (mState.mSamplerState.setWrapS(wrapS))
+    {
+        signalDirtyState(DIRTY_BIT_WRAP_S);
+    }
 }
 
 GLenum Texture::getWrapS() const
@@ -841,8 +858,12 @@ GLenum Texture::getWrapS() const
 
 void Texture::setWrapT(const Context *context, GLenum wrapT)
 {
-    mState.mSamplerState.setWrapT(wrapT);
-    signalDirtyState(DIRTY_BIT_WRAP_T);
+    if (mState.mSamplerState.getWrapT() == wrapT)
+        return;
+    if (mState.mSamplerState.setWrapT(wrapT))
+    {
+        signalDirtyState(DIRTY_BIT_WRAP_T);
+    }
 }
 
 GLenum Texture::getWrapT() const
@@ -852,8 +873,10 @@ GLenum Texture::getWrapT() const
 
 void Texture::setWrapR(const Context *context, GLenum wrapR)
 {
-    mState.mSamplerState.setWrapR(wrapR);
-    signalDirtyState(DIRTY_BIT_WRAP_R);
+    if (mState.mSamplerState.setWrapR(wrapR))
+    {
+        signalDirtyState(DIRTY_BIT_WRAP_R);
+    }
 }
 
 GLenum Texture::getWrapR() const
@@ -863,8 +886,10 @@ GLenum Texture::getWrapR() const
 
 void Texture::setMaxAnisotropy(const Context *context, float maxAnisotropy)
 {
-    mState.mSamplerState.setMaxAnisotropy(maxAnisotropy);
-    signalDirtyState(DIRTY_BIT_MAX_ANISOTROPY);
+    if (mState.mSamplerState.setMaxAnisotropy(maxAnisotropy))
+    {
+        signalDirtyState(DIRTY_BIT_MAX_ANISOTROPY);
+    }
 }
 
 float Texture::getMaxAnisotropy() const
@@ -874,8 +899,10 @@ float Texture::getMaxAnisotropy() const
 
 void Texture::setMinLod(const Context *context, GLfloat minLod)
 {
-    mState.mSamplerState.setMinLod(minLod);
-    signalDirtyState(DIRTY_BIT_MIN_LOD);
+    if (mState.mSamplerState.setMinLod(minLod))
+    {
+        signalDirtyState(DIRTY_BIT_MIN_LOD);
+    }
 }
 
 GLfloat Texture::getMinLod() const
@@ -885,8 +912,10 @@ GLfloat Texture::getMinLod() const
 
 void Texture::setMaxLod(const Context *context, GLfloat maxLod)
 {
-    mState.mSamplerState.setMaxLod(maxLod);
-    signalDirtyState(DIRTY_BIT_MAX_LOD);
+    if (mState.mSamplerState.setMaxLod(maxLod))
+    {
+        signalDirtyState(DIRTY_BIT_MAX_LOD);
+    }
 }
 
 GLfloat Texture::getMaxLod() const
@@ -896,8 +925,10 @@ GLfloat Texture::getMaxLod() const
 
 void Texture::setCompareMode(const Context *context, GLenum compareMode)
 {
-    mState.mSamplerState.setCompareMode(compareMode);
-    signalDirtyState(DIRTY_BIT_COMPARE_MODE);
+    if (mState.mSamplerState.setCompareMode(compareMode))
+    {
+        signalDirtyState(DIRTY_BIT_COMPARE_MODE);
+    }
 }
 
 GLenum Texture::getCompareMode() const
@@ -907,8 +938,10 @@ GLenum Texture::getCompareMode() const
 
 void Texture::setCompareFunc(const Context *context, GLenum compareFunc)
 {
-    mState.mSamplerState.setCompareFunc(compareFunc);
-    signalDirtyState(DIRTY_BIT_COMPARE_FUNC);
+    if (mState.mSamplerState.setCompareFunc(compareFunc))
+    {
+        signalDirtyState(DIRTY_BIT_COMPARE_FUNC);
+    }
 }
 
 GLenum Texture::getCompareFunc() const
@@ -918,8 +951,10 @@ GLenum Texture::getCompareFunc() const
 
 void Texture::setSRGBDecode(const Context *context, GLenum sRGBDecode)
 {
-    mState.mSamplerState.setSRGBDecode(sRGBDecode);
-    signalDirtyState(DIRTY_BIT_SRGB_DECODE);
+    if (mState.mSamplerState.setSRGBDecode(sRGBDecode))
+    {
+        signalDirtyState(DIRTY_BIT_SRGB_DECODE);
+    }
 }
 
 GLenum Texture::getSRGBDecode() const
@@ -1488,12 +1523,11 @@ angle::Result Texture::setStorage(Context *context,
 
     mState.mImmutableFormat = true;
     mState.mImmutableLevels = static_cast<GLuint>(levels);
-
-    ANGLE_TRY(mTexture->setStorage(context, type, levels, internalFormat, size));
-
     mState.clearImageDescs();
     mState.setImageDescChain(0, static_cast<GLuint>(levels - 1), size, Format(internalFormat),
                              InitState::MayNeedInit);
+
+    ANGLE_TRY(mTexture->setStorage(context, type, levels, internalFormat, size));
 
     // Changing the texture to immutable can trigger a change in the base and max levels:
     // GLES 3.0.4 section 3.8.10 pg 158:
@@ -1552,14 +1586,14 @@ angle::Result Texture::setStorageMultisample(Context *context,
     const TextureCaps &formatCaps = context->getTextureCaps().get(internalFormat);
     samples                       = formatCaps.getNearestSamples(samples);
 
-    ANGLE_TRY(mTexture->setStorageMultisample(context, type, samples, internalFormat, size,
-                                              fixedSampleLocations));
-
     mState.mImmutableFormat = true;
     mState.mImmutableLevels = static_cast<GLuint>(1);
     mState.clearImageDescs();
     mState.setImageDescChainMultisample(size, Format(internalFormat), samples, fixedSampleLocations,
                                         InitState::MayNeedInit);
+
+    ANGLE_TRY(mTexture->setStorageMultisample(context, type, samples, internalFormat, size,
+                                              fixedSampleLocations));
 
     signalDirtyStorage(InitState::MayNeedInit);
 
@@ -1874,6 +1908,17 @@ const ColorGeneric &Texture::getBorderColor() const
     return mState.mSamplerState.getBorderColor();
 }
 
+GLint Texture::getRequiredTextureImageUnits(const Context *context) const
+{
+    // Only external texture types can return non-1.
+    if (mState.mType != TextureType::External)
+    {
+        return 1;
+    }
+
+    return mTexture->getRequiredExternalTextureImageUnits(context);
+}
+
 void Texture::setCrop(const Rectangle &rect)
 {
     mState.setCrop(rect);
@@ -1896,16 +1941,34 @@ GLenum Texture::getGenerateMipmapHint() const
 
 angle::Result Texture::setBuffer(const gl::Context *context,
                                  gl::Buffer *buffer,
-                                 GLenum internalFormat,
-                                 GLintptr offset,
-                                 GLsizeiptr size)
+                                 GLenum internalFormat)
+{
+    // Use 0 to indicate that the size is taken from whatever size the buffer has when the texture
+    // buffer is used.
+    return setBufferRange(context, buffer, internalFormat, 0, 0);
+}
+
+angle::Result Texture::setBufferRange(const gl::Context *context,
+                                      gl::Buffer *buffer,
+                                      GLenum internalFormat,
+                                      GLintptr offset,
+                                      GLsizeiptr size)
 {
     mState.mImmutableFormat = true;
     mState.mBuffer.set(context, buffer, offset, size);
     ANGLE_TRY(mTexture->setBuffer(context, internalFormat));
 
-    mState.mImmutableLevels = static_cast<GLuint>(1);
     mState.clearImageDescs();
+    if (buffer == nullptr)
+    {
+        mBufferObserver.reset();
+        signalDirtyStorage(InitState::MayNeedInit);
+        return angle::Result::Continue;
+    }
+
+    size = GetBoundBufferAvailableSize(mState.mBuffer);
+
+    mState.mImmutableLevels           = static_cast<GLuint>(1);
     InternalFormat internalFormatInfo = GetSizedInternalFormatInfo(internalFormat);
     Format format(internalFormat);
     Extents extents(static_cast<GLuint>(size / internalFormatInfo.pixelBytes), 1, 1);
@@ -1913,6 +1976,9 @@ angle::Result Texture::setBuffer(const gl::Context *context,
                         ImageDesc(extents, format, InitState::MayNeedInit));
 
     signalDirtyStorage(InitState::MayNeedInit);
+
+    // Observe modifications to the buffer, so that extents can be updated.
+    mBufferObserver.bind(buffer);
 
     return angle::Result::Continue;
 }
@@ -2125,11 +2191,21 @@ void Texture::onSubjectStateChange(angle::SubjectIndex index, angle::SubjectMess
     switch (message)
     {
         case angle::SubjectMessage::ContentsChanged:
-            // ContentsChange is originates from TextureStorage11::resolveAndReleaseTexture
-            // which resolves the underlying multisampled texture if it exists and so
-            // Texture will signal dirty storage to invalidate its own cache and the
-            // attached framebuffer's cache.
-            signalDirtyStorage(InitState::Initialized);
+            if (index == kBufferSubjectIndex)
+            {
+                // If the contents of the buffer attached to a texture buffer has changed, mark the
+                // texture dirty.
+                signalDirtyState(DIRTY_BIT_IMPLEMENTATION);
+                onStateChange(angle::SubjectMessage::ContentsChanged);
+            }
+            else
+            {
+                // ContentsChange originates from TextureStorage11::resolveAndReleaseTexture
+                // which resolves the underlying multisampled texture if it exists and so
+                // Texture will signal dirty storage to invalidate its own cache and the
+                // attached framebuffer's cache.
+                signalDirtyStorage(InitState::Initialized);
+            }
             break;
         case angle::SubjectMessage::DirtyBitsFlagged:
             signalDirtyState(DIRTY_BIT_IMPLEMENTATION);
@@ -2150,6 +2226,25 @@ void Texture::onSubjectStateChange(angle::SubjectIndex index, angle::SubjectMess
             {
                 notifySiblings(message);
             }
+            else if (index == kBufferSubjectIndex)
+            {
+                const gl::Buffer *buffer = mState.mBuffer.get();
+                ASSERT(buffer != nullptr);
+
+                // Update cached image desc based on buffer size.
+                GLsizeiptr size = GetBoundBufferAvailableSize(mState.mBuffer);
+
+                ImageDesc desc          = mState.getImageDesc(TextureTarget::Buffer, 0);
+                const GLuint pixelBytes = desc.format.info->pixelBytes;
+                desc.size.width         = static_cast<GLuint>(size / pixelBytes);
+
+                mState.setImageDesc(TextureTarget::Buffer, 0, desc);
+            }
+            break;
+        case angle::SubjectMessage::SubjectMapped:
+        case angle::SubjectMessage::SubjectUnmapped:
+        case angle::SubjectMessage::BindingChanged:
+            ASSERT(index == kBufferSubjectIndex);
             break;
         default:
             UNREACHABLE();

@@ -22,6 +22,7 @@ class AttributeMap final
   public:
     AttributeMap();
     AttributeMap(const AttributeMap &other);
+    AttributeMap &operator=(const AttributeMap &other);
     ~AttributeMap();
 
     void insert(EGLAttrib key, EGLAttrib value);

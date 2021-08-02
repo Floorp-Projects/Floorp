@@ -49,6 +49,25 @@ constexpr std::array<SamplePositionsArray, 5> kSamplePositions = {
        0.375f,  0.875f,  0.5f,    0.0625f, 0.25f,   0.125f,  0.125f,  0.75f,
        0.0f,    0.5f,    0.9375f, 0.25f,   0.875f,  0.9375f, 0.0625f, 0.0f}}}};
 
+struct IncompleteTextureParameters
+{
+    GLenum sizedInternalFormat;
+    GLenum format;
+    GLenum type;
+    GLubyte clearColor[4];
+};
+
+// Note that for gl::SamplerFormat::Shadow, the clearColor datatype needs to be GLushort and as such
+// we will reinterpret GLubyte[4] as GLushort[2].
+constexpr angle::PackedEnumMap<gl::SamplerFormat, IncompleteTextureParameters>
+    kIncompleteTextureParameters = {
+        {gl::SamplerFormat::Float, {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, {0, 0, 0, 255}}},
+        {gl::SamplerFormat::Unsigned,
+         {GL_RGBA8UI, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE, {0, 0, 0, 255}}},
+        {gl::SamplerFormat::Signed, {GL_RGBA8I, GL_RGBA_INTEGER, GL_BYTE, {0, 0, 0, 127}}},
+        {gl::SamplerFormat::Shadow,
+         {GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, {0, 0, 0, 0}}}};
+
 void CopyColor(gl::ColorF *color)
 {
     // No-op
@@ -206,6 +225,7 @@ void SetFloatUniformMatrixFast(unsigned int arrayElementOffset,
 
     memcpy(targetData, valueData, matrixSize * count);
 }
+
 }  // anonymous namespace
 
 void RotateRectangle(const SurfaceRotation rotation,
@@ -548,30 +568,39 @@ void CopyImageCHROMIUM(const uint8_t *sourceData,
 }
 
 // IncompleteTextureSet implementation.
-IncompleteTextureSet::IncompleteTextureSet() {}
+IncompleteTextureSet::IncompleteTextureSet() : mIncompleteTextureBufferAttachment(nullptr) {}
 
 IncompleteTextureSet::~IncompleteTextureSet() {}
 
 void IncompleteTextureSet::onDestroy(const gl::Context *context)
 {
     // Clear incomplete textures.
-    for (auto &incompleteTexture : mIncompleteTextures)
+    for (auto &incompleteTextures : mIncompleteTextures)
     {
-        if (incompleteTexture.get() != nullptr)
+        for (auto &incompleteTexture : incompleteTextures)
         {
-            incompleteTexture->onDestroy(context);
-            incompleteTexture.set(context, nullptr);
+            if (incompleteTexture.get() != nullptr)
+            {
+                incompleteTexture->onDestroy(context);
+                incompleteTexture.set(context, nullptr);
+            }
         }
+    }
+    if (mIncompleteTextureBufferAttachment != nullptr)
+    {
+        mIncompleteTextureBufferAttachment->onDestroy(context);
+        mIncompleteTextureBufferAttachment = nullptr;
     }
 }
 
 angle::Result IncompleteTextureSet::getIncompleteTexture(
     const gl::Context *context,
     gl::TextureType type,
+    gl::SamplerFormat format,
     MultisampleTextureInitializer *multisampleInitializer,
     gl::Texture **textureOut)
 {
-    *textureOut = mIncompleteTextures[type].get();
+    *textureOut = mIncompleteTextures[format][type].get();
     if (*textureOut != nullptr)
     {
         return angle::Result::Continue;
@@ -579,11 +608,12 @@ angle::Result IncompleteTextureSet::getIncompleteTexture(
 
     ContextImpl *implFactory = context->getImplementation();
 
-    const GLubyte color[] = {0, 0, 0, 255};
     const gl::Extents colorSize(1, 1, 1);
     gl::PixelUnpackState unpack;
     unpack.alignment = 1;
     const gl::Box area(0, 0, 0, 1, 1, 1);
+    const IncompleteTextureParameters &incompleteTextureParam =
+        kIncompleteTextureParameters[format];
 
     // If a texture is external use a 2D texture for the incomplete texture
     gl::TextureType createType = (type == gl::TextureType::External) ? gl::TextureType::_2D : type;
@@ -595,22 +625,34 @@ angle::Result IncompleteTextureSet::getIncompleteTexture(
     // This is a bit of a kludge but is necessary to consume the error.
     gl::Context *mutableContext = const_cast<gl::Context *>(context);
 
-    if (createType == gl::TextureType::_2DMultisample)
+    if (createType == gl::TextureType::Buffer)
     {
-        ANGLE_TRY(
-            t->setStorageMultisample(mutableContext, createType, 1, GL_RGBA8, colorSize, true));
+        constexpr uint32_t kBufferInitData = 0;
+        mIncompleteTextureBufferAttachment =
+            new gl::Buffer(implFactory, {std::numeric_limits<GLuint>::max()});
+        ANGLE_TRY(mIncompleteTextureBufferAttachment->bufferData(
+            mutableContext, gl::BufferBinding::Texture, &kBufferInitData, sizeof(kBufferInitData),
+            gl::BufferUsage::StaticDraw));
+    }
+    else if (createType == gl::TextureType::_2DMultisample)
+    {
+        ANGLE_TRY(t->setStorageMultisample(mutableContext, createType, 1,
+                                           incompleteTextureParam.sizedInternalFormat, colorSize,
+                                           true));
     }
     else
     {
-        ANGLE_TRY(t->setStorage(mutableContext, createType, 1, GL_RGBA8, colorSize));
+        ANGLE_TRY(t->setStorage(mutableContext, createType, 1,
+                                incompleteTextureParam.sizedInternalFormat, colorSize));
     }
 
     if (type == gl::TextureType::CubeMap)
     {
         for (gl::TextureTarget face : gl::AllCubeFaceTextureTargets())
         {
-            ANGLE_TRY(t->setSubImage(mutableContext, unpack, nullptr, face, 0, area, GL_RGBA,
-                                     GL_UNSIGNED_BYTE, color));
+            ANGLE_TRY(t->setSubImage(mutableContext, unpack, nullptr, face, 0, area,
+                                     incompleteTextureParam.format, incompleteTextureParam.type,
+                                     incompleteTextureParam.clearColor));
         }
     }
     else if (type == gl::TextureType::_2DMultisample)
@@ -618,17 +660,31 @@ angle::Result IncompleteTextureSet::getIncompleteTexture(
         // Call a specialized clear function to init a multisample texture.
         ANGLE_TRY(multisampleInitializer->initializeMultisampleTextureToBlack(context, t.get()));
     }
+    else if (type == gl::TextureType::Buffer)
+    {
+        ANGLE_TRY(t->setBuffer(context, mIncompleteTextureBufferAttachment,
+                               incompleteTextureParam.sizedInternalFormat));
+    }
     else
     {
         ANGLE_TRY(t->setSubImage(mutableContext, unpack, nullptr,
-                                 gl::NonCubeTextureTypeToTarget(createType), 0, area, GL_RGBA,
-                                 GL_UNSIGNED_BYTE, color));
+                                 gl::NonCubeTextureTypeToTarget(createType), 0, area,
+                                 incompleteTextureParam.format, incompleteTextureParam.type,
+                                 incompleteTextureParam.clearColor));
+    }
+
+    if (format == gl::SamplerFormat::Shadow)
+    {
+        // To avoid the undefined spec behavior for shadow samplers with a depth texture, we set the
+        // compare mode to GL_COMPARE_REF_TO_TEXTURE
+        ASSERT(!t->hasObservers());
+        t->setCompareMode(context, GL_COMPARE_REF_TO_TEXTURE);
     }
 
     ANGLE_TRY(t->syncState(context, gl::Command::Other));
 
-    mIncompleteTextures[type].set(context, t.release());
-    *textureOut = mIncompleteTextures[type].get();
+    mIncompleteTextures[format][type].set(context, t.release());
+    *textureOut = mIncompleteTextures[format][type].get();
     return angle::Result::Continue;
 }
 
@@ -1220,4 +1276,130 @@ ResetBaseVertexBaseInstance::~ResetBaseVertexBaseInstance()
     }
 }
 
+angle::FormatID ConvertToSRGB(angle::FormatID formatID)
+{
+    switch (formatID)
+    {
+        case angle::FormatID::R8_UNORM:
+            return angle::FormatID::R8_UNORM_SRGB;
+        case angle::FormatID::R8G8B8_UNORM:
+            return angle::FormatID::R8G8B8_UNORM_SRGB;
+        case angle::FormatID::R8G8B8A8_UNORM:
+            return angle::FormatID::R8G8B8A8_UNORM_SRGB;
+        case angle::FormatID::B8G8R8A8_UNORM:
+            return angle::FormatID::B8G8R8A8_UNORM_SRGB;
+        case angle::FormatID::BC1_RGB_UNORM_BLOCK:
+            return angle::FormatID::BC1_RGB_UNORM_SRGB_BLOCK;
+        case angle::FormatID::BC1_RGBA_UNORM_BLOCK:
+            return angle::FormatID::BC1_RGBA_UNORM_SRGB_BLOCK;
+        case angle::FormatID::BC2_RGBA_UNORM_BLOCK:
+            return angle::FormatID::BC2_RGBA_UNORM_SRGB_BLOCK;
+        case angle::FormatID::BC3_RGBA_UNORM_BLOCK:
+            return angle::FormatID::BC3_RGBA_UNORM_SRGB_BLOCK;
+        case angle::FormatID::BC7_RGBA_UNORM_BLOCK:
+            return angle::FormatID::BC7_RGBA_UNORM_SRGB_BLOCK;
+        case angle::FormatID::ETC2_R8G8B8_UNORM_BLOCK:
+            return angle::FormatID::ETC2_R8G8B8_SRGB_BLOCK;
+        case angle::FormatID::ETC2_R8G8B8A1_UNORM_BLOCK:
+            return angle::FormatID::ETC2_R8G8B8A1_SRGB_BLOCK;
+        case angle::FormatID::ETC2_R8G8B8A8_UNORM_BLOCK:
+            return angle::FormatID::ETC2_R8G8B8A8_SRGB_BLOCK;
+        case angle::FormatID::ASTC_4x4_UNORM_BLOCK:
+            return angle::FormatID::ASTC_4x4_SRGB_BLOCK;
+        case angle::FormatID::ASTC_5x4_UNORM_BLOCK:
+            return angle::FormatID::ASTC_5x4_SRGB_BLOCK;
+        case angle::FormatID::ASTC_5x5_UNORM_BLOCK:
+            return angle::FormatID::ASTC_5x5_SRGB_BLOCK;
+        case angle::FormatID::ASTC_6x5_UNORM_BLOCK:
+            return angle::FormatID::ASTC_6x5_SRGB_BLOCK;
+        case angle::FormatID::ASTC_6x6_UNORM_BLOCK:
+            return angle::FormatID::ASTC_6x6_SRGB_BLOCK;
+        case angle::FormatID::ASTC_8x5_UNORM_BLOCK:
+            return angle::FormatID::ASTC_8x5_SRGB_BLOCK;
+        case angle::FormatID::ASTC_8x6_UNORM_BLOCK:
+            return angle::FormatID::ASTC_8x6_SRGB_BLOCK;
+        case angle::FormatID::ASTC_8x8_UNORM_BLOCK:
+            return angle::FormatID::ASTC_8x8_SRGB_BLOCK;
+        case angle::FormatID::ASTC_10x5_UNORM_BLOCK:
+            return angle::FormatID::ASTC_10x5_SRGB_BLOCK;
+        case angle::FormatID::ASTC_10x6_UNORM_BLOCK:
+            return angle::FormatID::ASTC_10x6_SRGB_BLOCK;
+        case angle::FormatID::ASTC_10x8_UNORM_BLOCK:
+            return angle::FormatID::ASTC_10x8_SRGB_BLOCK;
+        case angle::FormatID::ASTC_10x10_UNORM_BLOCK:
+            return angle::FormatID::ASTC_10x10_SRGB_BLOCK;
+        case angle::FormatID::ASTC_12x10_UNORM_BLOCK:
+            return angle::FormatID::ASTC_12x10_SRGB_BLOCK;
+        case angle::FormatID::ASTC_12x12_UNORM_BLOCK:
+            return angle::FormatID::ASTC_12x12_SRGB_BLOCK;
+        default:
+            return angle::FormatID::NONE;
+    }
+}
+
+angle::FormatID ConvertToLinear(angle::FormatID formatID)
+{
+    switch (formatID)
+    {
+        case angle::FormatID::R8_UNORM_SRGB:
+            return angle::FormatID::R8_UNORM;
+        case angle::FormatID::R8G8B8_UNORM_SRGB:
+            return angle::FormatID::R8G8B8_UNORM;
+        case angle::FormatID::R8G8B8A8_UNORM_SRGB:
+            return angle::FormatID::R8G8B8A8_UNORM;
+        case angle::FormatID::B8G8R8A8_UNORM_SRGB:
+            return angle::FormatID::B8G8R8A8_UNORM;
+        case angle::FormatID::BC1_RGB_UNORM_SRGB_BLOCK:
+            return angle::FormatID::BC1_RGB_UNORM_BLOCK;
+        case angle::FormatID::BC1_RGBA_UNORM_SRGB_BLOCK:
+            return angle::FormatID::BC1_RGBA_UNORM_BLOCK;
+        case angle::FormatID::BC2_RGBA_UNORM_SRGB_BLOCK:
+            return angle::FormatID::BC2_RGBA_UNORM_BLOCK;
+        case angle::FormatID::BC3_RGBA_UNORM_SRGB_BLOCK:
+            return angle::FormatID::BC3_RGBA_UNORM_BLOCK;
+        case angle::FormatID::BC7_RGBA_UNORM_SRGB_BLOCK:
+            return angle::FormatID::BC7_RGBA_UNORM_BLOCK;
+        case angle::FormatID::ETC2_R8G8B8_SRGB_BLOCK:
+            return angle::FormatID::ETC2_R8G8B8_UNORM_BLOCK;
+        case angle::FormatID::ETC2_R8G8B8A1_SRGB_BLOCK:
+            return angle::FormatID::ETC2_R8G8B8A1_UNORM_BLOCK;
+        case angle::FormatID::ETC2_R8G8B8A8_SRGB_BLOCK:
+            return angle::FormatID::ETC2_R8G8B8A8_UNORM_BLOCK;
+        case angle::FormatID::ASTC_4x4_SRGB_BLOCK:
+            return angle::FormatID::ASTC_4x4_UNORM_BLOCK;
+        case angle::FormatID::ASTC_5x4_SRGB_BLOCK:
+            return angle::FormatID::ASTC_5x4_UNORM_BLOCK;
+        case angle::FormatID::ASTC_5x5_SRGB_BLOCK:
+            return angle::FormatID::ASTC_5x5_UNORM_BLOCK;
+        case angle::FormatID::ASTC_6x5_SRGB_BLOCK:
+            return angle::FormatID::ASTC_6x5_UNORM_BLOCK;
+        case angle::FormatID::ASTC_6x6_SRGB_BLOCK:
+            return angle::FormatID::ASTC_6x6_UNORM_BLOCK;
+        case angle::FormatID::ASTC_8x5_SRGB_BLOCK:
+            return angle::FormatID::ASTC_8x5_UNORM_BLOCK;
+        case angle::FormatID::ASTC_8x6_SRGB_BLOCK:
+            return angle::FormatID::ASTC_8x6_UNORM_BLOCK;
+        case angle::FormatID::ASTC_8x8_SRGB_BLOCK:
+            return angle::FormatID::ASTC_8x8_UNORM_BLOCK;
+        case angle::FormatID::ASTC_10x5_SRGB_BLOCK:
+            return angle::FormatID::ASTC_10x5_UNORM_BLOCK;
+        case angle::FormatID::ASTC_10x6_SRGB_BLOCK:
+            return angle::FormatID::ASTC_10x6_UNORM_BLOCK;
+        case angle::FormatID::ASTC_10x8_SRGB_BLOCK:
+            return angle::FormatID::ASTC_10x8_UNORM_BLOCK;
+        case angle::FormatID::ASTC_10x10_SRGB_BLOCK:
+            return angle::FormatID::ASTC_10x10_UNORM_BLOCK;
+        case angle::FormatID::ASTC_12x10_SRGB_BLOCK:
+            return angle::FormatID::ASTC_12x10_UNORM_BLOCK;
+        case angle::FormatID::ASTC_12x12_SRGB_BLOCK:
+            return angle::FormatID::ASTC_12x12_UNORM_BLOCK;
+        default:
+            return angle::FormatID::NONE;
+    }
+}
+
+bool IsOverridableLinearFormat(angle::FormatID formatID)
+{
+    return ConvertToSRGB(formatID) != angle::FormatID::NONE;
+}
 }  // namespace rx

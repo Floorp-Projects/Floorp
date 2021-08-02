@@ -24,12 +24,17 @@ namespace gl
 // This small structure encapsulates binding sampler uniforms to active GL textures.
 struct SamplerBinding
 {
-    SamplerBinding(TextureType textureTypeIn, SamplerFormat formatIn, size_t elementCount);
+    SamplerBinding(TextureType textureTypeIn,
+                   GLenum samplerTypeIn,
+                   SamplerFormat formatIn,
+                   size_t elementCount);
     SamplerBinding(const SamplerBinding &other);
     ~SamplerBinding();
 
     // Necessary for retrieving active textures from the GL state.
     TextureType textureType;
+
+    GLenum samplerType;
 
     SamplerFormat format;
 
@@ -40,10 +45,13 @@ struct SamplerBinding
 
 struct ImageBinding
 {
-    ImageBinding(size_t count);
-    ImageBinding(GLuint imageUnit, size_t count);
+    ImageBinding(size_t count, TextureType textureTypeIn);
+    ImageBinding(GLuint imageUnit, size_t count, TextureType textureTypeIn);
     ImageBinding(const ImageBinding &other);
     ~ImageBinding();
+
+    // Necessary for distinguishing between textures with images and texture buffers.
+    TextureType textureType;
 
     // List of all textures bound.
     // Cropped by the amount of unused elements reported by the driver.
@@ -67,8 +75,14 @@ struct TransformFeedbackVarying : public sh::ShaderVariable
         *thisVar                    = field;
         interpolation               = parent.interpolation;
         isInvariant                 = parent.isInvariant;
-        name                        = parent.name + "." + name;
-        mappedName                  = parent.mappedName + "." + mappedName;
+        ASSERT(parent.isShaderIOBlock || !parent.name.empty());
+        if (!parent.name.empty())
+        {
+            name       = parent.name + "." + name;
+            mappedName = parent.mappedName + "." + mappedName;
+        }
+        structOrBlockName       = parent.structOrBlockName;
+        mappedStructOrBlockName = parent.mappedStructOrBlockName;
     }
 
     std::string nameWithArrayIndex() const
@@ -101,8 +115,8 @@ class ProgramExecutable final : public angle::Subject
 
     void reset();
 
-    void save(gl::BinaryOutputStream *stream) const;
-    void load(gl::BinaryInputStream *stream);
+    void save(bool isSeparable, gl::BinaryOutputStream *stream) const;
+    void load(bool isSeparable, gl::BinaryInputStream *stream);
 
     int getInfoLogLength() const;
     InfoLog &getInfoLog() { return mInfoLog; }
@@ -143,6 +157,15 @@ class ProgramExecutable final : public angle::Subject
         return isCompute() ? mLinkedComputeShaderStages.count()
                            : mLinkedGraphicsShaderStages.count();
     }
+    bool hasLinkedTessellationShader() const
+    {
+        return mLinkedGraphicsShaderStages[ShaderType::TessControl] ||
+               mLinkedGraphicsShaderStages[ShaderType::TessEvaluation];
+    }
+
+    ShaderType getTransformFeedbackStage() const;
+
+    ShaderType getLinkedTransformFeedbackStage() const;
 
     // A PPO can have both graphics and compute programs attached, so
     // we don't know if the PPO is a 'graphics' or 'compute' PPO until the
@@ -177,6 +200,8 @@ class ProgramExecutable final : public angle::Subject
         return mActiveImageShaderBits;
     }
 
+    const ActiveTextureMask &getActiveYUVSamplers() const { return mActiveSamplerYUV; }
+
     const ActiveTextureArray<TextureType> &getActiveSamplerTypes() const
     {
         return mActiveSamplerTypes;
@@ -198,12 +223,10 @@ class ProgramExecutable final : public angle::Subject
     {
         return !getLinkedTransformFeedbackVaryings().empty();
     }
+    bool usesFramebufferFetch() const;
 
     // Count the number of uniform and storage buffer declarations, counting arrays as one.
     size_t getTransformFeedbackBufferCount() const { return mTransformFeedbackStrides.size(); }
-
-    bool linkValidateGlobalNames(InfoLog &infoLog,
-                                 const ShaderMap<const ProgramState *> &programStates) const;
 
     void updateCanDrawWith();
     bool hasVertexAndFragmentShader() const { return mCanDrawWith; }
@@ -211,8 +234,16 @@ class ProgramExecutable final : public angle::Subject
     const std::vector<sh::ShaderVariable> &getProgramInputs() const { return mProgramInputs; }
     const std::vector<sh::ShaderVariable> &getOutputVariables() const { return mOutputVariables; }
     const std::vector<VariableLocation> &getOutputLocations() const { return mOutputLocations; }
+    const std::vector<VariableLocation> &getSecondaryOutputLocations() const
+    {
+        return mSecondaryOutputLocations;
+    }
     const std::vector<LinkedUniform> &getUniforms() const { return mUniforms; }
     const std::vector<InterfaceBlock> &getUniformBlocks() const { return mUniformBlocks; }
+    const UniformBlockBindingMask &getActiveUniformBlockBindings() const
+    {
+        return mActiveUniformBlockBindings;
+    }
     const std::vector<SamplerBinding> &getSamplerBindings() const { return mSamplerBindings; }
     const std::vector<ImageBinding> &getImageBindings() const
     {
@@ -225,6 +256,7 @@ class ProgramExecutable final : public angle::Subject
     const RangeUI &getDefaultUniformRange() const { return mDefaultUniformRange; }
     const RangeUI &getSamplerUniformRange() const { return mSamplerUniformRange; }
     const RangeUI &getImageUniformRange() const { return mImageUniformRange; }
+    const RangeUI &getFragmentInoutRange() const { return mFragmentInoutRange; }
     const std::vector<TransformFeedbackVarying> &getLinkedTransformFeedbackVaryings() const
     {
         return mLinkedTransformFeedbackVaryings;
@@ -279,22 +311,52 @@ class ProgramExecutable final : public angle::Subject
 
     GLuint getUniformIndexFromImageIndex(GLuint imageIndex) const;
 
-    gl::ProgramLinkedResources &getResources() const
-    {
-        ASSERT(mResources);
-        return *mResources;
-    }
-
     void saveLinkedStateInfo(const ProgramState &state);
-    std::vector<sh::ShaderVariable> getLinkedOutputVaryings(ShaderType shaderType)
+    const std::vector<sh::ShaderVariable> &getLinkedOutputVaryings(ShaderType shaderType) const
     {
         return mLinkedOutputVaryings[shaderType];
     }
-    std::vector<sh::ShaderVariable> getLinkedInputVaryings(ShaderType shaderType)
+    const std::vector<sh::ShaderVariable> &getLinkedInputVaryings(ShaderType shaderType) const
     {
         return mLinkedInputVaryings[shaderType];
     }
-    int getLinkedShaderVersion(ShaderType shaderType) { return mLinkedShaderVersions[shaderType]; }
+
+    int getLinkedShaderVersion(ShaderType shaderType) const
+    {
+        return mLinkedShaderVersions[shaderType];
+    }
+
+    bool isYUVOutput() const;
+
+    PrimitiveMode getGeometryShaderInputPrimitiveType() const
+    {
+        return mGeometryShaderInputPrimitiveType;
+    }
+
+    PrimitiveMode getGeometryShaderOutputPrimitiveType() const
+    {
+        return mGeometryShaderOutputPrimitiveType;
+    }
+
+    int getGeometryShaderInvocations() const { return mGeometryShaderInvocations; }
+
+    int getGeometryShaderMaxVertices() const { return mGeometryShaderMaxVertices; }
+
+    GLenum getTessGenMode() const { return mTessGenMode; }
+
+    void resetCachedValidateSamplersResult() { mCachedValidateSamplersResult.reset(); }
+    bool validateSamplers(InfoLog *infoLog, const Caps &caps) const
+    {
+        // Use the cache if:
+        // - we aren't using an infolog (which gives the full error).
+        // - The sample mapping hasn't changed and we've already validated.
+        if (infoLog == nullptr && mCachedValidateSamplersResult.valid())
+        {
+            return mCachedValidateSamplersResult.value();
+        }
+
+        return validateSamplersImpl(infoLog, caps);
+    }
 
   private:
     // TODO(timvp): http://anglebug.com/3570: Investigate removing these friend
@@ -308,6 +370,28 @@ class ProgramExecutable final : public angle::Subject
     // Scans the sampler bindings for type conflicts with sampler 'textureUnitIndex'.
     void setSamplerUniformTextureTypeAndFormat(size_t textureUnitIndex,
                                                std::vector<SamplerBinding> &samplerBindings);
+
+    bool linkMergedVaryings(const Context *context,
+                            const HasAttachedShaders &programOrPipeline,
+                            const ProgramMergedVaryings &mergedVaryings,
+                            const std::vector<std::string> &transformFeedbackVaryingNames,
+                            bool isSeparable,
+                            ProgramVaryingPacking *varyingPacking);
+
+    bool linkValidateTransformFeedback(
+        const Context *context,
+        const ProgramMergedVaryings &varyings,
+        ShaderType stage,
+        const std::vector<std::string> &transformFeedbackVaryingNames);
+
+    void gatherTransformFeedbackVaryings(
+        const ProgramMergedVaryings &varyings,
+        ShaderType stage,
+        const std::vector<std::string> &transformFeedbackVaryingNames);
+
+    void updateTransformFeedbackStrides();
+
+    bool validateSamplersImpl(InfoLog *infoLog, const Caps &caps) const;
 
     InfoLog mInfoLog;
 
@@ -324,6 +408,7 @@ class ProgramExecutable final : public angle::Subject
     ActiveTextureMask mActiveSamplersMask;
     ActiveTextureArray<uint32_t> mActiveSamplerRefCounts;
     ActiveTextureArray<TextureType> mActiveSamplerTypes;
+    ActiveTextureMask mActiveSamplerYUV;
     ActiveTextureArray<SamplerFormat> mActiveSamplerFormats;
     ActiveTextureArray<ShaderBitSet> mActiveSamplerShaderBits;
 
@@ -337,6 +422,9 @@ class ProgramExecutable final : public angle::Subject
     // to uniforms.
     std::vector<sh::ShaderVariable> mOutputVariables;
     std::vector<VariableLocation> mOutputLocations;
+    // EXT_blend_func_extended secondary outputs (ones with index 1)
+    std::vector<VariableLocation> mSecondaryOutputLocations;
+    bool mYUVOutput;
     // Vertex attributes, Fragment input varyings, etc.
     std::vector<sh::ShaderVariable> mProgramInputs;
     std::vector<TransformFeedbackVarying> mLinkedTransformFeedbackVaryings;
@@ -348,7 +436,8 @@ class ProgramExecutable final : public angle::Subject
     //  2. Sampler uniforms
     //  3. Image uniforms
     //  4. Atomic counter uniforms
-    //  5. Uniform block uniforms
+    //  5. Subpass Input uniforms (Only for Vulkan)
+    //  6. Uniform block uniforms
     // This makes opaque uniform validation easier, since we don't need a separate list.
     // For generating the entries and naming them we follow the spec: GLES 3.1 November 2016 section
     // 7.3.1.1 Naming Active Resources. There's a separate entry for each struct member and each
@@ -358,10 +447,15 @@ class ProgramExecutable final : public angle::Subject
     RangeUI mDefaultUniformRange;
     RangeUI mSamplerUniformRange;
     std::vector<InterfaceBlock> mUniformBlocks;
+
+    // For faster iteration on the blocks currently being bound.
+    UniformBlockBindingMask mActiveUniformBlockBindings;
+
     std::vector<AtomicCounterBuffer> mAtomicCounterBuffers;
     RangeUI mImageUniformRange;
     std::vector<InterfaceBlock> mComputeShaderStorageBlocks;
     std::vector<InterfaceBlock> mGraphicsShaderStorageBlocks;
+    RangeUI mFragmentInoutRange;
 
     // An array of the samplers that are used by the program
     std::vector<SamplerBinding> mSamplerBindings;
@@ -390,10 +484,23 @@ class ProgramExecutable final : public angle::Subject
     ShaderMap<std::vector<sh::ShaderVariable>> mLinkedOutputVaryings;
     ShaderMap<std::vector<sh::ShaderVariable>> mLinkedInputVaryings;
     ShaderMap<int> mLinkedShaderVersions;
-    // TODO: http://anglebug.com/4514: Remove
-    std::unique_ptr<gl::ProgramLinkedResources> mResources;
-};
 
+    // GL_EXT_geometry_shader.
+    PrimitiveMode mGeometryShaderInputPrimitiveType;
+    PrimitiveMode mGeometryShaderOutputPrimitiveType;
+    int mGeometryShaderInvocations;
+    int mGeometryShaderMaxVertices;
+
+    // GL_EXT_tessellation_shader
+    int mTessControlShaderVertices;
+    GLenum mTessGenMode;
+    GLenum mTessGenSpacing;
+    GLenum mTessGenVertexOrder;
+    GLenum mTessGenPointMode;
+
+    // Cache for sampler validation
+    mutable Optional<bool> mCachedValidateSamplersResult;
+};
 }  // namespace gl
 
 #endif  // LIBANGLE_PROGRAMEXECUTABLE_H_
