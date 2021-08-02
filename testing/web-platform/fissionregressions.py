@@ -61,7 +61,6 @@ run_infos = {
         "fission": True,
         "sessionHistoryInParent": True,
         "swgl": False,
-        "win10_2004": False,
     },
     "linux-debug": {
         "os": "linux",
@@ -113,7 +112,6 @@ run_infos = {
         "fission": False,
         "sessionHistoryInParent": False,
         "swgl": False,
-        "win10_2004": False,
     },
     "win-opt": {
         "os": "win",
@@ -165,7 +163,6 @@ run_infos = {
         "fission": False,
         "sessionHistoryInParent": False,
         "swgl": False,
-        "win10_2004": False,
     },
 }
 
