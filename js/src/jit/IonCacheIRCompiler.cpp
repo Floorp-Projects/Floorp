@@ -2025,6 +2025,11 @@ bool IonCacheIRCompiler::emitSetHasStringResult(ObjOperandId setId,
   MOZ_CRASH("Call ICs not used in ion");
 }
 
+bool IonCacheIRCompiler::emitMapHasStringResult(ObjOperandId mapId,
+                                                StringOperandId strId) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
 bool IonCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
                                                   uint32_t shapeOffset,
                                                   uint32_t siteOffset) {
