@@ -457,3 +457,66 @@ addAccessibleTask(
     is(treeItems[1].getAttributeValue("AXDisclosing"), 1);
   }
 );
+
+// Test outline rows correctly expose checkable, checked/unchecked status
+addAccessibleTask(
+  `
+  <div role="tree" id="tree">
+    <div role="treeitem" aria-checked="false" id="l1">
+      Leaf 1
+    </div>
+    <div role="treeitem" aria-checked="true" id="l2">
+      Leaf 2
+    </div>
+    <div role="treeitem" id="l3">
+      Leaf 3
+    </div>
+  </div>
+
+  `,
+  async (browser, accDoc) => {
+    const tree = getNativeInterface(accDoc, "tree");
+    const treeItems = tree.getAttributeValue("AXChildren");
+
+    is(treeItems.length, 3, "Outline has three direct children");
+    is(
+      treeItems[0].getAttributeValue("AXValue"),
+      0,
+      "Child one is not checked"
+    );
+    is(treeItems[1].getAttributeValue("AXValue"), 1, "Child two is checked");
+    is(
+      treeItems[2].getAttributeValue("AXValue"),
+      "",
+      "Child three is not checkable and has no val"
+    );
+
+    let stateChanged = waitForEvent(EVENT_STATE_CHANGE, "l1");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document
+        .getElementById("l1")
+        .setAttribute("aria-checked", "true");
+    });
+    await stateChanged;
+    is(treeItems[0].getAttributeValue("AXValue"), 1, "Child one is checked");
+
+    stateChanged = waitForEvent(EVENT_STATE_CHANGE, "l2");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document.getElementById("l2").removeAttribute("aria-checked");
+    });
+    is(
+      treeItems[1].getAttributeValue("AXValue"),
+      "",
+      "Child two is not checkable and has no val"
+    );
+
+    stateChanged = waitForEvent(EVENT_STATE_CHANGE, "l3");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document
+        .getElementById("l3")
+        .setAttribute("aria-checked", "true");
+    });
+    await stateChanged;
+    is(treeItems[2].getAttributeValue("AXValue"), 1, "Child three is checked");
+  }
+);
