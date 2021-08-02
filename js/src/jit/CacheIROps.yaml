@@ -2639,7 +2639,7 @@
 
 - name: SetHasSymbolResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 3
   args:
     set: ObjId
