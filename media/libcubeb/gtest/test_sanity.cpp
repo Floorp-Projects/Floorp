@@ -612,7 +612,7 @@ TEST(cubeb, drain)
   r = cubeb_stream_start(stream);
   ASSERT_EQ(r, CUBEB_OK);
 
-  delay(500);
+  delay(5000);
 
   do_drain = 1;
 
