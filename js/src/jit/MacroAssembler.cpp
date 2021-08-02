@@ -4645,6 +4645,59 @@ void MacroAssembler::toHashableNonGCThing(ValueOperand value,
   bind(&done);
 }
 
+void MacroAssembler::toHashableValue(ValueOperand value, ValueOperand result,
+                                     FloatRegister tempFloat,
+                                     Label* atomizeString, Label* tagString) {
+  // Inline implementation of |HashableValue::setValue()|.
+
+  ScratchTagScope tag(*this, value);
+  splitTagForTest(value, tag);
+
+  Label notString, useInput, done;
+  branchTestString(Assembler::NotEqual, tag, &notString);
+  {
+    ScratchTagScopeRelease _(&tag);
+
+    Register str = result.scratchReg();
+    unboxString(value, str);
+
+    branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+                 Imm32(JSString::ATOM_BIT), &useInput);
+
+    jump(atomizeString);
+    bind(tagString);
+
+    tagValue(JSVAL_TYPE_STRING, str, result);
+    jump(&done);
+  }
+  bind(&notString);
+  branchTestDouble(Assembler::NotEqual, tag, &useInput);
+  {
+    ScratchTagScopeRelease _(&tag);
+
+    Register int32 = result.scratchReg();
+    unboxDouble(value, tempFloat);
+
+    Label canonicalize;
+    convertDoubleToInt32(tempFloat, int32, &canonicalize, false);
+    {
+      tagValue(JSVAL_TYPE_INT32, int32, result);
+      jump(&done);
+    }
+    bind(&canonicalize);
+    {
+      branchDouble(Assembler::DoubleOrdered, tempFloat, tempFloat, &useInput);
+      moveValue(JS::NaNValue(), result);
+      jump(&done);
+    }
+  }
+
+  bind(&useInput);
+  moveValue(value, result);
+
+  bind(&done);
+}
+
 void MacroAssembler::scrambleHashCode(Register result) {
   // Inline implementation of |mozilla::ScrambleHashCode()|.
 
@@ -4938,6 +4991,54 @@ void MacroAssembler::prepareHashObject(Register setObj, ValueOperand value,
 #else
   MOZ_CRASH("Not implemented");
 #endif
+}
+
+void MacroAssembler::prepareHashValue(Register setObj, ValueOperand value,
+                                      Register result, Register temp1,
+                                      Register temp2, Register temp3,
+                                      Register temp4) {
+  Label isString, isObject, isSymbol, isBigInt;
+  {
+    ScratchTagScope tag(*this, value);
+    splitTagForTest(value, tag);
+
+    branchTestString(Assembler::Equal, tag, &isString);
+    branchTestObject(Assembler::Equal, tag, &isObject);
+    branchTestSymbol(Assembler::Equal, tag, &isSymbol);
+    branchTestBigInt(Assembler::Equal, tag, &isBigInt);
+  }
+
+  Label done;
+  {
+    prepareHashNonGCThing(value, result, temp1);
+    jump(&done);
+  }
+  bind(&isString);
+  {
+    unboxString(value, temp1);
+    prepareHashString(temp1, result, temp2);
+    jump(&done);
+  }
+  bind(&isObject);
+  {
+    prepareHashObject(setObj, value, result, temp1, temp2, temp3, temp4);
+    jump(&done);
+  }
+  bind(&isSymbol);
+  {
+    unboxSymbol(value, temp1);
+    prepareHashSymbol(temp1, result);
+    jump(&done);
+  }
+  bind(&isBigInt);
+  {
+    unboxBigInt(value, temp1);
+    prepareHashBigInt(temp1, result, temp2, temp3, temp4);
+
+    // Fallthrough to |done|.
+  }
+
+  bind(&done);
 }
 
 template <typename OrderedHashTable>

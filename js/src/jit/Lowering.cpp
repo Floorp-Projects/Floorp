@@ -5641,6 +5641,13 @@ void LIRGenerator::visitToHashableString(MToHashableString* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitToHashableValue(MToHashableValue* ins) {
+  auto* lir =
+      new (alloc()) LToHashableValue(useBox(ins->input()), tempDouble());
+  defineBox(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitHashNonGCThing(MHashNonGCThing* ins) {
   auto* lir = new (alloc()) LHashNonGCThing(useBox(ins->input()), temp());
   define(lir, ins);
@@ -5669,6 +5676,13 @@ void LIRGenerator::visitHashObject(MHashObject* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitHashValue(MHashValue* ins) {
+  auto* lir =
+      new (alloc()) LHashValue(useRegister(ins->set()), useBox(ins->input()),
+                               temp(), temp(), temp(), temp());
+  define(lir, ins);
+}
+
 void LIRGenerator::visitSetObjectHasNonBigInt(MSetObjectHasNonBigInt* ins) {
   auto* lir = new (alloc())
       LSetObjectHasNonBigInt(useRegister(ins->set()), useBox(ins->value()),
@@ -5681,6 +5695,20 @@ void LIRGenerator::visitSetObjectHasBigInt(MSetObjectHasBigInt* ins) {
       useRegister(ins->set()), useBox(ins->value()), useRegister(ins->hash()),
       temp(), temp(), temp(), temp());
   define(lir, ins);
+}
+
+void LIRGenerator::visitSetObjectHasValue(MSetObjectHasValue* ins) {
+  auto* lir = new (alloc()) LSetObjectHasValue(
+      useRegister(ins->set()), useBox(ins->value()), useRegister(ins->hash()),
+      temp(), temp(), temp(), temp());
+  define(lir, ins);
+}
+
+void LIRGenerator::visitSetObjectHasValueVMCall(MSetObjectHasValueVMCall* ins) {
+  auto* lir = new (alloc()) LSetObjectHasValueVMCall(
+      useRegisterAtStart(ins->set()), useBoxAtStart(ins->value()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitConstant(MConstant* ins) {
