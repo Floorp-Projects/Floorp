@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -197,7 +198,10 @@ class ProviderInputHistory extends UrlbarProvider {
         search_string: queryContext.searchString,
         matchBehavior: Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE,
         searchBehavior: UrlbarPrefs.get("defaultBehavior"),
-        userContextId: queryContext.userContextId,
+        userContextId: UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
+          queryContext.userContextId,
+          queryContext.isPrivate
+        ),
         maxResults: queryContext.maxResults,
       },
     ];
