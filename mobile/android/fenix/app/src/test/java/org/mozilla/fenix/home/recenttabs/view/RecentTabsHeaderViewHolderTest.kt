@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.recenttabs.view
 
 import android.view.LayoutInflater
 import android.view.View
+import androidx.navigation.Navigation
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.android.synthetic.main.recent_tabs_header.view.*
@@ -24,7 +25,9 @@ class RecentTabsHeaderViewHolderTest {
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext).inflate(RecentTabsHeaderViewHolder.LAYOUT_ID, null)
+        view = LayoutInflater.from(testContext)
+            .inflate(RecentTabsHeaderViewHolder.LAYOUT_ID, null)
+        Navigation.setViewNavController(view, mockk(relaxed = true))
         interactor = mockk(relaxed = true)
     }
 

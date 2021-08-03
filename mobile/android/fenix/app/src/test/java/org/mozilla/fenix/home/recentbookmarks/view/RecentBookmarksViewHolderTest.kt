@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.recentbookmarks.view
 
 import android.view.LayoutInflater
 import android.view.View
+import androidx.navigation.Navigation
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.android.synthetic.main.recent_bookmarks_header.view.*
@@ -39,7 +40,7 @@ class RecentBookmarksViewHolderTest {
     fun setup() {
         view = LayoutInflater.from(testContext)
             .inflate(RecentBookmarksViewHolder.LAYOUT_ID, null)
-
+        Navigation.setViewNavController(view, mockk(relaxed = true))
         interactor = mockk(relaxed = true)
     }
 

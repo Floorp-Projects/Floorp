@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.recentbookmarks.view
 
 import android.view.View
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL
 import kotlinx.android.synthetic.main.component_recent_bookmarks.view.*
@@ -31,12 +32,20 @@ class RecentBookmarksViewHolder(
         }
 
         showAllBookmarksButton.setOnClickListener {
+            dismissSearchDialogIfDisplayed()
             interactor.onShowAllBookmarksClicked()
         }
     }
 
     fun bind(bookmarks: List<BookmarkNode>) {
         recentBookmarksAdapter.submitList(bookmarks)
+    }
+
+    private fun dismissSearchDialogIfDisplayed() {
+        val navController = itemView.findNavController()
+        if (navController.currentDestination?.id == R.id.searchDialogFragment) {
+            navController.navigateUp()
+        }
     }
 
     companion object {

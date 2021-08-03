@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.recenttabs.view
 
 import android.view.View
+import androidx.navigation.findNavController
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.RecentTabsHeaderBinding
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
@@ -24,7 +25,15 @@ class RecentTabsHeaderViewHolder(
 
         val binding = RecentTabsHeaderBinding.bind(view)
         binding.showAllButton.setOnClickListener {
+            dismissSearchDialogIfDisplayed()
             interactor.onRecentTabShowAllClicked()
+        }
+    }
+
+    private fun dismissSearchDialogIfDisplayed() {
+        val navController = itemView.findNavController()
+        if (navController.currentDestination?.id == R.id.searchDialogFragment) {
+            navController.navigateUp()
         }
     }
 
