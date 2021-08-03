@@ -21,8 +21,11 @@
 #include "mozilla/dom/AudioContextBinding.h"
 #include "mozilla/dom/BaseAudioContextBinding.h"
 #include "mozilla/dom/BiquadFilterNodeBinding.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ChannelMergerNodeBinding.h"
 #include "mozilla/dom/ChannelSplitterNodeBinding.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ConvolverNodeBinding.h"
 #include "mozilla/dom/DelayNodeBinding.h"
 #include "mozilla/dom/DynamicsCompressorNodeBinding.h"
@@ -220,6 +223,7 @@ void AudioContext::StartBlockedAudioContextIfAllowed() {
 }
 
 void AudioContext::DisconnectFromWindow() {
+  MaybeClearPageAwakeRequest();
   nsPIDOMWindowInner* window = GetOwner();
   if (window) {
     window->RemoveAudioContext(this);
@@ -229,6 +233,7 @@ void AudioContext::DisconnectFromWindow() {
 AudioContext::~AudioContext() {
   DisconnectFromWindow();
   UnregisterWeakMemoryReporter(this);
+  MOZ_ASSERT(!mSetPageAwakeRequest, "forgot to revoke for page awake?");
 }
 
 JSObject* AudioContext::WrapObject(JSContext* aCx,
@@ -766,6 +771,7 @@ nsISerialEventTarget* AudioContext::GetMainThread() const {
 
 void AudioContext::DisconnectFromOwner() {
   mIsDisconnecting = true;
+  MaybeClearPageAwakeRequest();
   OnWindowDestroy();
   DOMEventTargetHelper::DisconnectFromOwner();
 }
@@ -894,6 +900,60 @@ void AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState) {
 
   mAudioContextState = aNewState;
   Destination()->NotifyAudioContextStateChanged();
+  MaybeUpdatePageAwakeRequest();
+}
+
+BrowsingContext* AudioContext::GetTopLevelBrowsingContext() {
+  nsCOMPtr<nsPIDOMWindowInner> window = GetParentObject();
+  if (!window) {
+    return nullptr;
+  }
+  BrowsingContext* bc = window->GetBrowsingContext();
+  if (!bc || bc->IsDiscarded()) {
+    return nullptr;
+  }
+  return bc->Top();
+}
+
+void AudioContext::MaybeUpdatePageAwakeRequest() {
+  // No need to keep page awake for offline context.
+  if (IsOffline()) {
+    return;
+  }
+
+  if (mIsShutDown) {
+    return;
+  }
+
+  if (IsRunning() && !mSetPageAwakeRequest) {
+    SetPageAwakeRequest(true);
+  } else if (!IsRunning() && mSetPageAwakeRequest) {
+    SetPageAwakeRequest(false);
+  }
+}
+
+void AudioContext::SetPageAwakeRequest(bool aShouldSet) {
+  mSetPageAwakeRequest = aShouldSet;
+  BrowsingContext* bc = GetTopLevelBrowsingContext();
+  if (!bc) {
+    return;
+  }
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendAddOrRemovePageAwakeRequest(bc, aShouldSet);
+    return;
+  }
+  if (aShouldSet) {
+    bc->Canonical()->AddPageAwakeRequest();
+  } else {
+    bc->Canonical()->RemovePageAwakeRequest();
+  }
+}
+
+void AudioContext::MaybeClearPageAwakeRequest() {
+  if (mSetPageAwakeRequest) {
+    SetPageAwakeRequest(false);
+  }
 }
 
 nsTArray<RefPtr<mozilla::MediaTrack>> AudioContext::GetAllTracks() const {
