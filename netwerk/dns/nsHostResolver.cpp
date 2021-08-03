@@ -118,10 +118,11 @@ class nsResState {
       return false;
     }
 
-    LOG(("Calling 'res_ninit'.\n"));
-
     mLastReset = PR_IntervalNow();
-    return (res_ninit(&_res) == 0);
+    auto result = res_ninit(&_res);
+
+    LOG(("nsResState::Reset() > 'res_ninit' returned %d", result));
+    return (result == 0);
   }
 
  private:
@@ -205,8 +206,8 @@ nsresult nsHostResolver::Init() {
   // during application startup.
   static int initCount = 0;
   if (initCount++ > 0) {
-    LOG(("Calling 'res_ninit'.\n"));
-    res_ninit(&_res);
+    auto result = res_ninit(&_res);
+    LOG(("nsHostResolver::Init > 'res_ninit' returned %d", result));
   }
 #endif
 
