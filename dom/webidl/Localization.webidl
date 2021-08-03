@@ -157,7 +157,7 @@ interface Localization {
    */
   [NewObject] Promise<sequence<L10nMessage?>> formatMessages(sequence<L10nKey> aKeys);
 
-  void setIsSync(boolean aIsSync);
+  void setAsync();
 
   [NewObject, Throws]
   UTF8String? formatValueSync(UTF8String aId, optional L10nArgs aArgs);
