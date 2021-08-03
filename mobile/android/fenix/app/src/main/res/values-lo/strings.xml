@@ -365,12 +365,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">ການແຈ້ງເຕືອນ</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">ປັບແຕ່ງການເກັບສະສົມ Add-on</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">ໂອເຄ</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">ຍົກເລີກ</string>
     <!-- Hint displayed on input field for custom collection name -->
     <string name="customize_addon_collection_hint">ຊື່ການເກັບສະສົມ</string>
+
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">ເຈົ້າຂອງການເກັບສະສົມ (ໄອດີຜູ້ໃຊ້)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">ປັບແກ້ການເກັບສະສົມ Add-on ແລ້ວ. ກຳລັງອອກຈາກແອັບພຣິເຄຊັນເພື່ອນຳໃຊ້ການປ່ຽນແປງ…</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -461,6 +469,8 @@
     <string name="preferences_marketing_data">ຂໍ້ມູນດ້ານການຕະຫຼາດ</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">ແບ່ງປັນຂໍ້ມູນກ່ຽວກັບຟິວເຈີທີ່ທ່ານໃຊ້ຢູ່ໃນ %1$s ກັບ Leanplum ຊຶ່ງເປັນຜູ້ໃຫ້ບໍລິການດ້ານການຕະລາດມືຖືຂອງພວກເຮົາ.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">ແບ່ງປັນການນຳໃຊ້ຂໍ້ມູນພື້ນຖານດ້ວຍ Adjust ຜູ້ໃຫ້ສະຫນອງດ້ານການຕະຫຼາດໂທລະສັບຂອງພວກເຮົາ</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">ການສຶກສາ</string>
     <!-- Summary for studies preferences -->
@@ -1584,7 +1594,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ຂໍ້ຄວາມທີ່ຈະໃຊ້ໃນການຄົ້ນຫາ</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">ແທນທີ່ຄິວລີດ້ວຍ “%s”. ຕົວຢ່າ: \nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">ແທນທີ່ຄິວລີດ້ວຍ “%s”. ຕົວຢ່າ: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
 

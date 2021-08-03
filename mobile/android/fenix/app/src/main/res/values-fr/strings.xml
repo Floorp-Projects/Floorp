@@ -1612,7 +1612,7 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
 
     <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Cartes de paiement</string>
+    <string name="preferences_credit_cards">Cartes bancaires</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Enregistrer et remplir automatiquement les cartes</string>
     <!-- Preference summary for saving and autofilling credit card data -->
@@ -1622,7 +1622,7 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Synchroniser les cartes</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Ajouter une carte de paiement</string>
+    <string name="preferences_credit_cards_add_credit_card">Ajouter une carte bancaire</string>
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Gérer les cartes enregistrées</string>

@@ -5,6 +5,7 @@
     <string name="app_name_private_5">Pribatua %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Pribatua)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Aukera gehiago</string>
@@ -48,6 +49,16 @@
     <string name="tab_tray_enter_multiselect_content_description">Hautapen anitzeko moduan sartuta, hautatu fitxak bilduman gordetzeko</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Hautatuta</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">Gordetako azkenak</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">Gordetako azken laster-markak</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">Erakutsi denak</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Erakutsi gordetako laster-marka guztien botoia</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s Mozillak egina da.</string>
@@ -95,13 +106,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Baztertu</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Aldatu irekitako fitxen diseinua. Zoaz ezarpenetara eta fitxen ikuspegian, hautatu sareta.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Joan ezarpenetara</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Baztertu</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Fitxa berria</string>
@@ -110,6 +114,12 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Gune erabilienak</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Itzuli zeudenera</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Erakutsi denak</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -187,6 +197,10 @@
     <string name="browser_menu_add">Gehitu</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Editatu</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Hasiera-pantaila</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -419,6 +433,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s / %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Kreditu-txartelak</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Helbideak</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Jasotako fitxak</string>
@@ -551,8 +570,6 @@
     <string name="library_new_tab">Fitxa berria</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Bilatu orrian</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Sinkronizatutako fitxak</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Irakurketa-zerrenda</string>
     <!-- Menu Item Label for Search in Library -->
@@ -597,6 +614,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Hilabete ondoren</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Hasi hasierako pantailan</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Lau ordu ondoren</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Beti</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Inoiz ez</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Itxi eskuz</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1032,6 +1058,16 @@
     <string name="notification_pbm_action_delete_and_open">Ezabatu eta ireki</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Hornitzailea</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Marketina</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s azkarra eta pribatua da</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Egizu %1$s zure nabigatzaile lehenetsia</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Bilduma ezabatuta</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1462,10 +1498,8 @@
     <string name="preferences_passwords_autofill">Betetze automatikoa</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sinkronizatu saio-hasierak</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Aktibatuta</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Desaktibatuta</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sinkronizatu saio-hasierak gailuen artean</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Birkonektatu</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1566,6 +1600,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Datuak zifratuta daude</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sinkronizatu txartelak gailuen artean</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sinkronizatu txartelak</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Gehitu kreditu-txartela</string>
 
@@ -1579,6 +1615,10 @@
     <string name="credit_cards_card_number">Txartelaren zenbakia</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Iraungitze-data</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">Iraungitze-dataren hilabetea</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">Iraungitze-dataren urtea</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Txarteleko izena</string>
     <!-- The header for the nickname for a credit card -->
@@ -1595,6 +1635,26 @@
     <string name="credit_cards_cancel_button">Utzi</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Gordetako txartelak</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Idatzi baliozko kreditu-txartel zenbakia</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Bete eremu hau mesedez</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Desblokeatu gordetako txartelak ikusteko</string>
+
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Bermatu zure kreditu-txartelak</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Konfiguratu gailua blokeatzeko patroia, PINa edo pasahitza zure gordetako kreditu-txartelak babesteko zure gailua beste norbaitek izango balu.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Konfiguratu orain</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Geroago</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Desblokeatu zure gailua</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Desblokeatu gordetako kreditu txartelaren informazioa erabiltzeko</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Gehitu bilaketa-motorra</string>
@@ -1616,7 +1676,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Erabili beharreko bilaketa-katea</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Ordezkatu galdera-katea &quot;%s&quot; testuarekin. Adibidez:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Ordezkatu galdera-katea &quot;%s&quot; testuarekin. Adibidez:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Argibide gehiago</string>
 
@@ -1765,4 +1825,10 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Egin klik xehetasun gehiagorako</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Nabigatu gora</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Itxi</string>
+
+</resources>
