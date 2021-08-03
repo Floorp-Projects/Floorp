@@ -188,8 +188,10 @@ bool extendJSArrayWithErrors(JSContext* aCx, JS::Handle<JSObject*> aErrors,
   return true;
 }
 
-static void ConvertArgs(const L10nArgs& aArgs,
-                        nsTArray<ffi::L10nArg>& aRetVal) {
+/* static */
+void FluentBundle::ConvertArgs(const L10nArgs& aArgs,
+                               nsTArray<ffi::L10nArg>& aRetVal) {
+  aRetVal.SetCapacity(aArgs.Entries().Length());
   for (const auto& entry : aArgs.Entries()) {
     if (!entry.mValue.IsNull()) {
       const auto& value = entry.mValue.Value();
