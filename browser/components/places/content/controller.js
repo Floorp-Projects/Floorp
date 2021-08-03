@@ -450,14 +450,14 @@ PlacesController.prototype = {
    */
   _shouldShowMenuItem(aMenuItem, aMetaData) {
     if (
-      aMenuItem.hasAttribute("hideifprivatebrowsing") &&
+      aMenuItem.hasAttribute("hide-if-private-browsing") &&
       !PrivateBrowsingUtils.enabled
     ) {
       return false;
     }
 
     let selectiontype =
-      aMenuItem.getAttribute("selectiontype") || "single|multiple";
+      aMenuItem.getAttribute("selection-type") || "single|multiple";
 
     var selectionTypes = selectiontype.split("|");
     if (selectionTypes.includes("any")) {
@@ -480,7 +480,7 @@ PlacesController.prototype = {
       aMetaData = [this._selectionMetadataForNode(this._view.result.root)];
     }
 
-    let attr = aMenuItem.getAttribute("hideifnodetype");
+    let attr = aMenuItem.getAttribute("hide-if-node-type");
     if (attr) {
       let rules = attr.split("|");
       if (aMetaData.some(d => rules.some(r => r in d))) {
@@ -488,7 +488,7 @@ PlacesController.prototype = {
       }
     }
 
-    attr = aMenuItem.getAttribute("hideifnodetypeisonly");
+    attr = aMenuItem.getAttribute("hide-if-node-type-is-only");
     if (attr) {
       let rules = attr.split("|");
       if (rules.some(r => aMetaData.every(d => r in d))) {
@@ -496,7 +496,7 @@ PlacesController.prototype = {
       }
     }
 
-    attr = aMenuItem.getAttribute("nodetype");
+    attr = aMenuItem.getAttribute("node-type");
     if (!attr) {
       return true;
     }
@@ -519,9 +519,9 @@ PlacesController.prototype = {
    * visibility state for each menuitem according to the following rules:
    *  1) The visibility state is unchanged if none of the attributes are set.
    *  2) Attributes should not be set on menuseparators.
-   *  3) The boolean `ignoreitem` attribute may be set when this code should
+   *  3) The boolean `ignore-item` attribute may be set when this code should
    *     not handle that menuitem.
-   *  4) The `selectiontype` attribute may be set to:
+   *  4) The `selection-type` attribute may be set to:
    *      - `single` if it should be visible only when there is a single node
    *         selected
    *      - `multiple` if it should be visible only when multiple nodes are
@@ -529,22 +529,22 @@ PlacesController.prototype = {
    *      - `none` if it should be visible when there are no selected nodes
    *      - `any` if it should be visible for any kind of selection
    *      - a `|` separated combination of the above.
-   *  5) The `nodetype` attribute may be set to values representing the
+   *  5) The `node-type` attribute may be set to values representing the
    *     type of the node triggering the context menu. The menuitem will be
    *     visible when one of the rules (separated by `|`) matches.
    *     In case of multiple selection, the menuitem is visible only if all of
    *     the selected nodes match one of the rule.
-   *  6) The `hideifnodetype` accepts the same rules as `nodetype`, but
+   *  6) The `hide-if-node-type` accepts the same rules as `node-type`, but
    *     hides the menuitem if the nodes match at least one of the rules.
    *     It takes priority over `nodetype`.
-   *  7) The `hideifnodetypeisonly` accepts the same rules as `nodetype`, but
+   *  7) The `hide-if-node-type-is-only` accepts the same rules as `node-type`, but
    *     hides the menuitem if any of the rules match all of the nodes.
-   *  8) The boolean `hideifnoinsertionpoint` attribute may be set to hide a
+   *  8) The boolean `hide-if-no-insertion-point` attribute may be set to hide a
    *     menuitem when there's no insertion point. An insertion point represents
    *     a point in the view where a new item can be inserted.
-   *  9) The boolean `hideifprivatebrowsing` attribute may be set to hide a
+   *  9) The boolean `hide-if-private-browsing` attribute may be set to hide a
    *     menuitem in private browsing mode
-   * 10) The boolean `hideifsingleclickopens` attribute may be set to hide a
+   * 10) The boolean `hide-if-single-click-opens` attribute may be set to hide a
    *     menuitem in views opening entries with a single click.
    *
    * @param {object} aPopup
@@ -561,21 +561,21 @@ PlacesController.prototype = {
     var usableItemCount = 0;
     for (var i = 0; i < aPopup.children.length; ++i) {
       var item = aPopup.children[i];
-      if (item.getAttribute("ignoreitem") == "true") {
+      if (item.getAttribute("ignore-item") == "true") {
         continue;
       }
       if (item.localName != "menuseparator") {
         // We allow pasting into tag containers, so special case that.
         let hideIfNoIP =
-          item.getAttribute("hideifnoinsertionpoint") == "true" &&
+          item.getAttribute("hide-if-no-insertion-point") == "true" &&
           noIp &&
           !(ip && ip.isTag && item.id == "placesContext_paste");
         let hideIfPrivate =
-          item.getAttribute("hideifprivatebrowsing") == "true" &&
+          item.getAttribute("hide-if-private-browsing") == "true" &&
           PrivateBrowsingUtils.isWindowPrivate(window);
         // Hide `Open` if the primary action on click is opening.
         let hideIfSingleClickOpens =
-          item.getAttribute("hideifsingleclickopens") == "true" &&
+          item.getAttribute("hide-if-single-click-opens") == "true" &&
           !PlacesUIUtils.loadBookmarksInBackground &&
           !PlacesUIUtils.loadBookmarksInTabs &&
           this._view.singleClickOpens;
