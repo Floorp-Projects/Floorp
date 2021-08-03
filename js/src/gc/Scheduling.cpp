@@ -71,7 +71,6 @@ GCSchedulingTunables::GCSchedulingTunables()
       minLastDitchGCPeriod_(
           TimeDuration::FromSeconds(TuningDefaults::MinLastDitchGCPeriod)),
       mallocThresholdBase_(TuningDefaults::MallocThresholdBase),
-      mallocGrowthFactor_(TuningDefaults::MallocGrowthFactor),
       urgentThresholdBytes_(TuningDefaults::UrgentThresholdBytes) {}
 
 bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
@@ -223,14 +222,6 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     case JSGC_MALLOC_THRESHOLD_BASE:
       mallocThresholdBase_ = value * 1024 * 1024;
       break;
-    case JSGC_MALLOC_GROWTH_FACTOR: {
-      double newGrowth = value / 100.0;
-      if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
-        return false;
-      }
-      mallocGrowthFactor_ = newGrowth;
-      break;
-    }
     case JSGC_URGENT_THRESHOLD_BYTES:
       urgentThresholdBytes_ = value * 1024 * 1024;
       break;
@@ -371,9 +362,6 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
       break;
     case JSGC_MALLOC_THRESHOLD_BASE:
       mallocThresholdBase_ = TuningDefaults::MallocThresholdBase;
-      break;
-    case JSGC_MALLOC_GROWTH_FACTOR:
-      mallocGrowthFactor_ = TuningDefaults::MallocGrowthFactor;
       break;
     case JSGC_URGENT_THRESHOLD_BYTES:
       urgentThresholdBytes_ = TuningDefaults::UrgentThresholdBytes;

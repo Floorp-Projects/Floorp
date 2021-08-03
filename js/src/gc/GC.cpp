@@ -1888,8 +1888,6 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return tunables.zoneAllocDelayBytes() / 1024;
     case JSGC_MALLOC_THRESHOLD_BASE:
       return tunables.mallocThresholdBase() / 1024 / 1024;
-    case JSGC_MALLOC_GROWTH_FACTOR:
-      return uint32_t(tunables.mallocGrowthFactor() * 100);
     case JSGC_CHUNK_BYTES:
       return ChunkSize;
     case JSGC_HELPER_THREAD_RATIO:
