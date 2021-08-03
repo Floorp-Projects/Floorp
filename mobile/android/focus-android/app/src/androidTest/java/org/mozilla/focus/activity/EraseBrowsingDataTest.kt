@@ -35,6 +35,7 @@ import org.mozilla.focus.helpers.TestHelper.restartApp
 import org.mozilla.focus.helpers.TestHelper.verifySnackBarText
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
+import org.mozilla.focus.testAnnotations.SmokeTest
 import org.mozilla.focus.utils.FeatureFlags
 import java.io.IOException
 
@@ -78,6 +79,7 @@ class EraseBrowsingDataTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun trashButtonTest() {
         // Establish feedback message id
@@ -98,6 +100,7 @@ class EraseBrowsingDataTest {
     }
 
     @Ignore("Failing on Firebase: https://github.com/mozilla-mobile/focus-android/issues/4823")
+    @SmokeTest
     @Test
     fun notificationEraseAndOpenButtonTest() {
         notificationTray {
@@ -127,6 +130,7 @@ class EraseBrowsingDataTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun deleteHistoryOnRestartTest() {
         searchScreen {
@@ -138,6 +142,7 @@ class EraseBrowsingDataTest {
     }
 
     @Ignore("Ignore until https://github.com/mozilla-mobile/focus-android/issues/4788 is solved")
+    @SmokeTest
     @Test
     fun systemBarHomeViewTest() {
         val LAUNCH_TIMEOUT = 5000

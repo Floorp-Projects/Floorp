@@ -11,6 +11,7 @@ import org.junit.Test
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
+import org.mozilla.focus.testAnnotations.SmokeTest
 
 class MediaPlaybackTest {
     private lateinit var webServer: MockWebServer
@@ -29,6 +30,7 @@ class MediaPlaybackTest {
         webServer.shutdown()
     }
 
+    @SmokeTest
     @Test
     fun testVideoPlayback() {
         webServer.enqueue(createMockResponseFromAsset("videoPage.html"))
@@ -48,6 +50,7 @@ class MediaPlaybackTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun testAudioPlayback() {
         webServer.enqueue(createMockResponseFromAsset("audioPage.html"))

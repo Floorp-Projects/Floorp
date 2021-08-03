@@ -8,6 +8,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
+import org.mozilla.focus.testAnnotations.SmokeTest
 
 /**
  * Tests to verify the functionality of the Set Default browser setting
@@ -16,6 +17,7 @@ class SetDefaultBrowserTest {
     @get: Rule
     var mActivityTestRule = MainActivityIntentsTestRule(showFirstRun = false)
 
+    @SmokeTest
     @Test
     fun changeDefaultBrowserTest() {
         homeScreen {

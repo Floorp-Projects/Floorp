@@ -21,6 +21,7 @@ import org.mozilla.focus.helpers.MainActivityIntentsTestRule
 import org.mozilla.focus.helpers.TestHelper.isPackageInstalled
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
 // This test verifies the "Open in..." option from the main menu
@@ -51,6 +52,7 @@ class OpenInExternalBrowserDialogueTest {
         webServer.shutdown()
     }
 
+    @SmokeTest
     @Test
     fun openPageInExternalAppTest() {
         val pageUrl = webServer.url("").toString()

@@ -16,6 +16,7 @@ import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.mDevice
+import org.mozilla.focus.testAnnotations.SmokeTest
 
 // These tests verify the Safe Browsing feature by visiting unsafe URLs and checking they are blocked
 class SafeBrowsingTest {
@@ -41,6 +42,7 @@ class SafeBrowsingTest {
         webServer.shutdown()
     }
 
+    @SmokeTest
     @Test
     fun blockMalwarePageTest() {
         val malwareURl = "http://itisatrap.org/firefox/its-an-attack.html"
@@ -52,6 +54,7 @@ class SafeBrowsingTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun blockPhishingPageTest() {
         val phishingURl = "http://itisatrap.org/firefox/its-a-trap.html"
@@ -63,6 +66,7 @@ class SafeBrowsingTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun blockUnwantedSoftwarePageTest() {
         val unwantedURl = "http://itisatrap.org/firefox/unwanted.html"
@@ -74,6 +78,7 @@ class SafeBrowsingTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun blockHarmfulPageTest() {
         val harmfulURl = "https://www.itisatrap.org/firefox/harmful.html"
@@ -85,6 +90,7 @@ class SafeBrowsingTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun unblockSafeBrowsingTest() {
         val malwareURl = "http://itisatrap.org/firefox/its-an-attack.html"
@@ -102,6 +108,7 @@ class SafeBrowsingTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun verifyPageSecurityIconAndInfo() {
         val safePageUrl = "https://rpappalax.github.io/testapp"

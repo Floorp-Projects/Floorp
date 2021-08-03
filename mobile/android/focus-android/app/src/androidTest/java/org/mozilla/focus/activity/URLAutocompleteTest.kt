@@ -12,6 +12,7 @@ import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.mDevice
+import org.mozilla.focus.testAnnotations.SmokeTest
 
 // Tests url autocompletion and adding custom autocomplete urls
 @RunWith(AndroidJUnit4ClassRunner::class)
@@ -24,6 +25,7 @@ class URLAutocompleteTest {
     @get: Rule
     var mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
 
+    @SmokeTest
     @Test
     // Test the url autocomplete feature with default settings
     fun defaultAutoCompleteURLTest() {
@@ -38,6 +40,7 @@ class URLAutocompleteTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun disableTopSitesAutocompleteTest() {
         homeScreen {

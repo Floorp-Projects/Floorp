@@ -22,6 +22,7 @@ import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.verifySnackBarText
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
 @RunWith(AndroidJUnit4ClassRunner::class)
@@ -79,6 +80,7 @@ class DownloadFileTest {
         deleteFileUsingDisplayName(context, "download.jpg")
     }
 
+    @SmokeTest
     @Test
     fun downloadNotificationTest() {
         val downloadPageUrl = webServer.url("").toString()
@@ -102,6 +104,7 @@ class DownloadFileTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun cancelDownloadTest() {
         val downloadPageUrl = webServer.url("").toString()
@@ -120,6 +123,7 @@ class DownloadFileTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun openDownloadFileTest() {
         val downloadPageUrl = webServer.url("").toString()

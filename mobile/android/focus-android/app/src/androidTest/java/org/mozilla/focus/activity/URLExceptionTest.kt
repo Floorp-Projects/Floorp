@@ -26,6 +26,7 @@ import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.waitForWebContent
+import org.mozilla.focus.testAnnotations.SmokeTest
 
 // https://testrail.stage.mozaws.net/index.php?/cases/view/104577
 @Ignore("Failing because of: https://github.com/mozilla-mobile/focus-android/issues/4729")
@@ -63,6 +64,7 @@ class URLExceptionTest {
         mDevice.waitForIdle()
     }
 
+    @SmokeTest
     @Test
     @Throws(UiObjectNotFoundException::class)
     fun AddAndRemoveExceptionTest() {

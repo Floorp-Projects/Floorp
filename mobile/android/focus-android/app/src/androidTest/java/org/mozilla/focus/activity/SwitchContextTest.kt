@@ -28,6 +28,7 @@ import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.pressHomeKey
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
 // This test switches out of Focus and opens it from the private browsing notification
@@ -80,6 +81,7 @@ class SwitchContextTest {
     }
 
     @Ignore("Failing on Firebase: https://github.com/mozilla-mobile/focus-android/issues/4823")
+    @SmokeTest
     @Test
     fun notificationOpenButtonTest() {
         // Open a webpage

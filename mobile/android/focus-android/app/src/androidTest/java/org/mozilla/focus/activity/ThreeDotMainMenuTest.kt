@@ -12,6 +12,7 @@ import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper
+import org.mozilla.focus.testAnnotations.SmokeTest
 
 /**
  * Verifies main menu items on the homescreen and on a browser page.
@@ -34,6 +35,7 @@ class ThreeDotMainMenuTest {
         webServer.shutdown()
     }
 
+    @SmokeTest
     @Test
     fun homeScreenMenuItemsTest() {
         homeScreen {
@@ -44,6 +46,7 @@ class ThreeDotMainMenuTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun browserMenuItemsTest() {
         val pageUrl = webServer.url("tab1.html").toString()

@@ -14,6 +14,7 @@ import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
+import org.mozilla.focus.testAnnotations.SmokeTest
 
 // Tests the First run onboarding screens
 @RunWith(AndroidJUnit4ClassRunner::class)
@@ -59,6 +60,7 @@ class FirstRunDialogueTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun homeScreenTipsTest() {
         webServer.start()

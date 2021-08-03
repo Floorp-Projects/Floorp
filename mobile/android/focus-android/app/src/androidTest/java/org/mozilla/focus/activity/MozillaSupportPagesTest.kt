@@ -13,6 +13,7 @@ import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.appContext
 import org.mozilla.focus.helpers.TestHelper.exitToTop
+import org.mozilla.focus.testAnnotations.SmokeTest
 
 // This test visits each About page and checks whether some essential elements are being displayed
 @RunWith(AndroidJUnit4ClassRunner::class)
@@ -20,6 +21,7 @@ class MozillaSupportPagesTest {
     @get: Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
 
+    @SmokeTest
     @Test
     fun openMenuWhatsNewPageTest() {
         homeScreen {
@@ -29,6 +31,7 @@ class MozillaSupportPagesTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun openMenuHelpPageTest() {
         homeScreen {
@@ -96,6 +99,7 @@ class MozillaSupportPagesTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun turnOffHomeScreenTipsTest() {
         homeScreen {

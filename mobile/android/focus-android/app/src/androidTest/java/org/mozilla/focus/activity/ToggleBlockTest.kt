@@ -27,6 +27,7 @@ import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.waitForWebContent
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
+import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
 // This test toggles blocking within the browser view
@@ -78,6 +79,7 @@ class ToggleBlockTest {
     }
 
     @Suppress("LongMethod")
+    @SmokeTest
     @Test
     fun SimpleToggleTest() {
         // Load mozilla.org

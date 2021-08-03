@@ -16,6 +16,7 @@ import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
+import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
 // This test opens and verifies the share overlay
@@ -49,6 +50,7 @@ class ShareWebsiteTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun shareTabTest() {
         /* Go to a webpage */

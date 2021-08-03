@@ -23,6 +23,7 @@ import org.mozilla.focus.helpers.TestHelper.clickSnackBarActionButton
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.verifySnackBarText
+import org.mozilla.focus.testAnnotations.SmokeTest
 import org.mozilla.focus.utils.FeatureFlags
 
 /**
@@ -56,6 +57,7 @@ class MultitaskingTest {
     }
 
     @Ignore("Failing on Firebase, see: https://github.com/mozilla-mobile/focus-android/issues/4996")
+    @SmokeTest
     @Test
     fun testVisitingMultipleSites() {
         val firstPageUrl = webServer.url("tab1.html").toString()
