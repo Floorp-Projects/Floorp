@@ -544,6 +544,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   bool mSupportsRedirectToRealChannel = true;
 
+  Maybe<nsCString> mRemoteTypeOverride;
+
   // The process id of the content process that we are being called from
   // or 0 initiated from a parent process load.
   base::ProcessId mOtherPid = 0;
