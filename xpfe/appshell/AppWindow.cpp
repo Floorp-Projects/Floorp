@@ -113,9 +113,11 @@ using dom::AutoNoJSAPI;
 using dom::BrowserHost;
 using dom::BrowsingContext;
 using dom::Document;
+using dom::DocumentL10n;
 using dom::Element;
 using dom::EventTarget;
 using dom::LoadURIOptions;
+using dom::Promise;
 
 AppWindow::AppWindow(uint32_t aChromeFlags)
     : mChromeTreeOwner(nullptr),
