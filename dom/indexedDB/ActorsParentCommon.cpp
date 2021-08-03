@@ -67,6 +67,8 @@ static_assert(SNAPPY_VERSION == 0x010108);
 
 using mozilla::ipc::IsOnBackgroundThread;
 
+const nsLiteralString kJournalDirectoryName = u"journals"_ns;
+
 namespace {
 
 constexpr StructuredCloneFileBase::FileType ToStructuredCloneFileType(

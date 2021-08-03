@@ -39,6 +39,8 @@ class DatabaseFileManager;
 struct StructuredCloneFileParent;
 struct StructuredCloneReadInfoParent;
 
+extern const nsLiteralString kJournalDirectoryName;
+
 using IndexedDBCipherStrategy = quota::IPCStreamCipherStrategy;
 using CipherKey = IndexedDBCipherStrategy::KeyType;
 
