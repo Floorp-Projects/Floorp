@@ -2626,18 +2626,14 @@ void BrowsingContext::DidSet(FieldIndex<IDX_ExplicitActive>,
   });
 }
 
-auto BrowsingContext::CanSet(FieldIndex<IDX_HasMainMediaController>,
-                             bool aNewValue, ContentParent* aSource)
-    -> CanSetResult {
-  if (!IsTop()) {
-    return CanSetResult::Deny;
-  }
-  return LegacyRevertIfNotOwningOrParentProcess(aSource);
+bool BrowsingContext::CanSet(FieldIndex<IDX_PageAwakeRequestCount>,
+                             uint32_t aNewValue, ContentParent* aSource) {
+  return IsTop() && XRE_IsParentProcess() && !aSource;
 }
 
-void BrowsingContext::DidSet(FieldIndex<IDX_HasMainMediaController>,
-                             bool aOldValue) {
-  if (!IsTop() || aOldValue == GetHasMainMediaController()) {
+void BrowsingContext::DidSet(FieldIndex<IDX_PageAwakeRequestCount>,
+                             uint32_t aOldValue) {
+  if (!IsTop() || aOldValue == GetPageAwakeRequestCount()) {
     return;
   }
   Group()->UpdateToplevelsSuspendedIfNeeded();
@@ -2684,11 +2680,11 @@ bool BrowsingContext::InactiveForSuspend() const {
   if (!StaticPrefs::dom_suspend_inactive_enabled()) {
     return false;
   }
-  // We should suspend a page only when it's inactive and doesn't have a main
-  // media controller. Having a main controller in context means it might be
-  // playing media, or waiting media keys to control media (could be not playing
-  // anything currently)
-  return !IsActive() && !GetHasMainMediaController();
+  // We should suspend a page only when it's inactive and doesn't have any awake
+  // request that is used to prevent page from being suspended because web page
+  // might still need to run their script. Eg. waiting for media keys to resume
+  // media, playing web audio, waiting in a video call conference room.
+  return !IsActive() && GetPageAwakeRequestCount() == 0;
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_TouchEventsOverrideInternal>,

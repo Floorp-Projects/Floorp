@@ -2513,6 +2513,20 @@ void CanonicalBrowsingContext::SetTouchEventsOverride(
   SetTouchEventsOverrideInternal(aOverride, aRv);
 }
 
+void CanonicalBrowsingContext::AddPageAwakeRequest() {
+  MOZ_ASSERT(IsTop());
+  auto count = GetPageAwakeRequestCount();
+  MOZ_ASSERT(count < UINT32_MAX);
+  Unused << SetPageAwakeRequestCount(++count);
+}
+
+void CanonicalBrowsingContext::RemovePageAwakeRequest() {
+  MOZ_ASSERT(IsTop());
+  auto count = GetPageAwakeRequestCount();
+  MOZ_ASSERT(count > 0);
+  Unused << SetPageAwakeRequestCount(--count);
+}
+
 void CanonicalBrowsingContext::CloneDocumentTreeInto(
     CanonicalBrowsingContext* aSource, const nsACString& aRemoteType,
     embedding::PrintData&& aPrintData) {
