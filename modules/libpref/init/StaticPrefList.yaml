@@ -3704,6 +3704,12 @@
   value: false
   mirror: always
 
+# Is support for custom element disabledFeatures enabled?
+- name: dom.webcomponents.disabledFeatures.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Is support for form-associated custom element enabled?
 - name: dom.webcomponents.formAssociatedCustomElement.enabled
   type: bool
