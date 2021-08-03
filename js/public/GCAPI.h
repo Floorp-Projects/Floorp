@@ -339,13 +339,6 @@ typedef enum JSGCParamKey {
   JSGC_MALLOC_THRESHOLD_BASE = 35,
 
   /**
-   * Growth factor for calculating malloc heap threshold.
-   *
-   * Default: MallocGrowthFactor
-   */
-  JSGC_MALLOC_GROWTH_FACTOR = 36,
-
-  /**
    * Whether incremental weakmap marking is enabled.
    *
    * Pref: javascript.options.mem.incremental_weakmap
