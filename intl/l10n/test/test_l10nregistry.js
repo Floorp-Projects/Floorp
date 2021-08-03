@@ -166,7 +166,7 @@ add_task(async function test_has_two_sources() {
  * missing files as `false` instead of `undefined`.
  */
 add_task(function test_indexed() {
-  let oneSource = new L10nFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
+  let oneSource = new L10nFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", {}, [
     "/data/locales/pl/test.ftl",
   ]);
   equal(oneSource.hasFile("pl", "test.ftl"), "present");
