@@ -76,6 +76,19 @@ pub fn get_packaged_locales() -> Option<ThinVec<nsCString>> {
     Some(locales)
 }
 
+pub fn get_app_locales() -> Option<ThinVec<nsCString>> {
+    let locale_service =
+        get_service::<mozILocaleService>(cstr!("@mozilla.org/intl/localeservice;1"))?;
+    let mut locales = ThinVec::new();
+    unsafe {
+        locale_service
+            .GetAppLocalesAsBCP47(&mut locales)
+            .to_result()
+            .ok()?;
+    }
+    Some(locales)
+}
+
 pub fn set_available_locales(locales: &ThinVec<nsCString>) {
     let locale_service =
         get_service::<mozILocaleService>(cstr!("@mozilla.org/intl/localeservice;1"))
