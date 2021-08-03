@@ -35,31 +35,23 @@ NS_INTERFACE_MAP_END_INHERITING(DOMLocalization)
 bool DocumentL10n::mIsFirstBrowserWindow = true;
 
 /* static */
-RefPtr<DocumentL10n> DocumentL10n::Create(Document* aDocument,
-                                          const bool aSync) {
+RefPtr<DocumentL10n> DocumentL10n::Create(Document* aDocument, bool aSync) {
   RefPtr<DocumentL10n> l10n = new DocumentL10n(aDocument, aSync);
 
-  if (!l10n->Init()) {
+  IgnoredErrorResult rv;
+  l10n->mReady = Promise::Create(l10n->mGlobal, rv);
+  if (NS_WARN_IF(rv.Failed())) {
     return nullptr;
   }
+
   return l10n.forget();
 }
 
-DocumentL10n::DocumentL10n(Document* aDocument, const bool aSync)
+DocumentL10n::DocumentL10n(Document* aDocument, bool aSync)
     : DOMLocalization(aDocument->GetScopeObject(), aSync, {}),
       mDocument(aDocument),
       mState(DocumentL10nState::Constructed) {
   mContentSink = do_QueryInterface(aDocument->GetCurrentContentSink());
-}
-
-bool DocumentL10n::Init() {
-  DOMLocalization::Init();
-  ErrorResult rv;
-  mReady = Promise::Create(mGlobal, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return false;
-  }
-  return true;
 }
 
 JSObject* DocumentL10n::WrapObject(JSContext* aCx,
