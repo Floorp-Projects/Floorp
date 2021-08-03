@@ -60,7 +60,7 @@ use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSu
 use crate::composite::TileKind;
 use crate::c_str;
 use crate::debug_colors;
-use crate::device::{DepthFunction, Device, DrawTarget, ExternalTexture, GpuFrameId};
+use crate::device::{DepthFunction, Device, DrawTarget, ExternalTexture, GpuFrameId, InstanceVBOPool};
 use crate::device::{ProgramCache, ReadTarget, ShaderError, Texture, TextureFilter, TextureFlags, TextureSlot};
 use crate::device::{UploadMethod, UploadPBOPool, VertexUsageHint};
 use crate::device::query::{GpuSampler, GpuTimer};
@@ -789,6 +789,7 @@ pub struct Renderer {
 
     pub gpu_profiler: GpuProfiler,
     vaos: vertex::RendererVAOs,
+    instance_vbo_pool: InstanceVBOPool,
 
     gpu_cache_texture: gpu_cache::GpuCacheTexture,
     vertex_data_textures: Vec<vertex::VertexDataTextures>,
@@ -877,7 +878,6 @@ pub struct Renderer {
     /// partial present (e.g. unix desktop with EGL_EXT_buffer_age).
     buffer_damage_tracker: BufferDamageTracker,
 
-    max_primitive_instance_count: usize,
     enable_instancing: bool,
 }
 
@@ -1100,6 +1100,7 @@ impl Renderer {
             &mut device,
             if options.enable_instancing { None } else { NonZeroUsize::new(max_primitive_instance_count) },
         );
+        let instance_vbo_pool = InstanceVBOPool::new(RendererOptions::MAX_INSTANCE_BUFFER_SIZE);
 
         let texture_upload_pbo_pool = UploadPBOPool::new(&mut device, options.upload_pbo_default_size);
         let staging_texture_pool = UploadTexturePool::new();
@@ -1360,6 +1361,7 @@ impl Renderer {
             last_time: 0,
             gpu_profiler,
             vaos,
+            instance_vbo_pool,
             vertex_data_textures,
             current_vertex_data_textures: 0,
             pipeline_info: PipelineInfo::default(),
@@ -1394,7 +1396,6 @@ impl Renderer {
             allocated_native_surfaces: FastHashSet::default(),
             debug_overlay_state: DebugOverlayState::new(),
             buffer_damage_tracker: BufferDamageTracker::default(),
-            max_primitive_instance_count,
             enable_instancing: options.enable_instancing,
         };
 
@@ -1589,6 +1590,7 @@ impl Renderer {
                     // the device module asserts if we delete textures while
                     // not in a frame.
                     if memory_pressure {
+                        self.instance_vbo_pool.on_memory_pressure(&mut self.device);
                         self.texture_upload_pbo_pool.on_memory_pressure(&mut self.device);
                         self.staging_texture_pool.delete_textures(&mut self.device);
                     }
@@ -2102,6 +2104,7 @@ impl Renderer {
             );
         }
 
+        self.instance_vbo_pool.end_frame();
         self.staging_texture_pool.end_frame(&mut self.device);
         self.texture_upload_pbo_pool.end_frame(&mut self.device);
         self.device.end_frame();
@@ -2370,23 +2373,27 @@ impl Renderer {
         let vao = &self.vaos[vertex_array_kind];
         self.device.bind_vao(vao);
 
+        let repeat = if self.enable_instancing {
+            None
+        } else {
+            NonZeroUsize::new(4)
+        };
+
         let chunk_size = if self.debug_flags.contains(DebugFlags::DISABLE_BATCHING) {
             1
-        } else if vertex_array_kind == VertexArrayKind::Primitive {
-            self.max_primitive_instance_count
         } else {
-            data.len()
+            RendererOptions::MAX_INSTANCE_BUFFER_SIZE /
+                (mem::size_of::<T>() * repeat.map(NonZeroUsize::get).unwrap_or(1))
         };
 
         for chunk in data.chunks(chunk_size) {
+            self.device
+                .update_vao_instances(vao, &mut self.instance_vbo_pool, chunk, repeat);
+
             if self.enable_instancing {
-                self.device
-                    .update_vao_instances(vao, chunk, ONE_TIME_USAGE_HINT, None);
                 self.device
                     .draw_indexed_triangles_instanced_u16(6, chunk.len() as i32);
             } else {
-                self.device
-                    .update_vao_instances(vao, chunk, ONE_TIME_USAGE_HINT, NonZeroUsize::new(4));
                 self.device
                     .draw_indexed_triangles(6 * chunk.len() as i32);
             }
@@ -5187,6 +5194,7 @@ impl Renderer {
         self.staging_texture_pool.delete_textures(&mut self.device);
         self.texture_resolver.deinit(&mut self.device);
         self.vaos.deinit(&mut self.device);
+        self.instance_vbo_pool.deinit(&mut self.device);
         self.debug.deinit(&mut self.device);
 
         if let Ok(shaders) = Rc::try_unwrap(self.shaders) {
@@ -5240,6 +5248,9 @@ impl Renderer {
 
         // Texture upload PBO memory.
         report += self.texture_upload_pbo_pool.report_memory();
+
+        // Instance data VBO memory
+        report += self.instance_vbo_pool.report_memory();
 
         // Textures held internally within the device layer.
         report += self.device.report_memory(self.size_of_ops.as_ref().unwrap(), swgl);
