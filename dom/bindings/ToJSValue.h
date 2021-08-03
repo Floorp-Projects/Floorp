@@ -435,6 +435,17 @@ template <typename K, typename V>
   return true;
 }
 
+template <typename T>
+[[nodiscard]] bool ToJSValue(JSContext* aCx, const Nullable<T>& aArgument,
+                             JS::MutableHandle<JS::Value> aValue) {
+  if (aArgument.IsNull()) {
+    aValue.setNull();
+    return true;
+  }
+
+  return ToJSValue(aCx, aArgument.Value(), aValue);
+}
+
 }  // namespace dom
 }  // namespace mozilla
 
