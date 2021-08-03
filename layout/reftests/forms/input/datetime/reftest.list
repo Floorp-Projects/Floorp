@@ -20,3 +20,6 @@ skip-if(Android) fuzzy-if(!nativeThemePref,0-24,0-4) == time-reset-button-right-
 == reset-button-visibility-hidden.html reset-button-visibility-hidden-ref.html
 
 != text-align.html text-align-notref.html
+
+== line-height-01.html line-height-01-ref.html
+== line-height-02.html line-height-02-ref.html

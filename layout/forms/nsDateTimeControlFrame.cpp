@@ -155,8 +155,9 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
 
     if (contentBoxBSize == NS_UNCONSTRAINEDSIZE) {
       // We are intrinsically sized -- we should shrinkwrap the input area's
-      // block-size:
-      contentBoxBSize = childMarginBoxBSize;
+      // block-size, or our line-height:
+      contentBoxBSize =
+          std::max(aReflowInput.GetLineHeight(), childMarginBoxBSize);
 
       // Make sure we obey min/max-bsize in the case when we're doing intrinsic
       // sizing (we get it for free when we have a non-intrinsic
