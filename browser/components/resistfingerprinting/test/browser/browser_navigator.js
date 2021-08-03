@@ -341,11 +341,17 @@ add_task(async function setupDefaultUserAgent() {
     userAgentNavigator: defaultUserAgent,
     userAgentHeader: defaultUserAgent,
   };
+});
 
+add_task(async function runDefaultNavigatorTest() {
   await testNavigator();
+});
 
+add_task(async function runDefaultHTTPHeaderTest() {
   await testUserAgentHeader();
+});
 
+add_task(async function runDefaultWorkerNavigatorTest() {
   await testWorkerNavigator();
 });
 
@@ -373,11 +379,17 @@ add_task(async function setupResistFingerprinting() {
     userAgentNavigator: spoofedUserAgentNavigator,
     userAgentHeader: spoofedUserAgentHeader,
   };
+});
 
+add_task(async function runSpoofedNavigatorTest() {
   await testNavigator();
+});
 
+add_task(async function runSpoofedHTTPHeaderTest() {
   await testUserAgentHeader();
+});
 
+add_task(async function runSpoofedWorkerNavigatorTest() {
   await testWorkerNavigator();
 });
 
@@ -398,49 +410,4 @@ add_task(async function runOverrideTest() {
   await testWorkerNavigator();
 
   await testUserAgentHeader();
-
-  // Pop general.appname.override etc
-  await SpecialPowers.popPrefEnv();
-
-  // Pop privacy.resistFingerprinting
-  await SpecialPowers.popPrefEnv();
 });
-
-// Only test the Firefox and Gecko experiment prefs on desktop.
-if (AppConstants.platform != "android") {
-  add_task(async function testFirefoxVersionExperiment() {
-    // Mock Nimbus experiment settings
-    const { ExperimentFakes } = ChromeUtils.import(
-      "resource://testing-common/NimbusTestUtils.jsm"
-    );
-    let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-      featureId: "firefox100",
-      value: { firefoxVersion: 100 },
-    });
-
-    let experimentUserAgent = `Mozilla/5.0 (${
-      DEFAULT_UA_OS[AppConstants.platform]
-    }; rv:100.0) Gecko/${
-      DEFAULT_UA_GECKO_TRAIL[AppConstants.platform]
-    } Firefox/100.0`;
-
-    expectedResults = {
-      testDesc: "FirefoxVersionExperimentTest",
-      appVersion: DEFAULT_APPVERSION[AppConstants.platform],
-      hardwareConcurrency: navigator.hardwareConcurrency,
-      oscpu: DEFAULT_OSCPU[AppConstants.platform],
-      platform: DEFAULT_PLATFORM[AppConstants.platform],
-      userAgentNavigator: experimentUserAgent,
-      userAgentHeader: experimentUserAgent,
-    };
-
-    await testNavigator();
-
-    await testWorkerNavigator();
-
-    await testUserAgentHeader();
-
-    // Clear Nimbus experiment prefs and session data
-    await doExperimentCleanup();
-  });
-}
