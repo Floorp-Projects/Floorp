@@ -6,10 +6,10 @@
 // wrong action or target. This test ensures that such flushes happen properly.
 
 const kTestPage =
-  "http://example.org/browser/dom/html/test/submission_flush.html";
+  "https://example.org/browser/dom/html/test/submission_flush.html";
 // This is the page pointed to by the form action in the test HTML page.
 const kPostActionPage =
-  "http://example.org/browser/dom/html/test/post_action_page.html";
+  "https://example.org/browser/dom/html/test/post_action_page.html";
 
 const kFormId = "test_form";
 const kFrameId = "test_frame";
