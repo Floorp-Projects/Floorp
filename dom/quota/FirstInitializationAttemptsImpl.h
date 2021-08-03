@@ -20,7 +20,7 @@ template <typename Initialization, typename StringGenerator>
 void FirstInitializationAttempts<Initialization, StringGenerator>::
     RecordFirstInitializationAttempt(const Initialization aInitialization,
                                      const nsresult aRv) {
-  MOZ_ASSERT(FirstInitializationAttemptPending(aInitialization));
+  MOZ_ASSERT(!FirstInitializationAttemptRecorded(aInitialization));
 
   mFirstInitializationAttempts |= aInitialization;
 
