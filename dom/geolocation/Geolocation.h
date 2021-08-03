@@ -138,6 +138,8 @@ class Geolocation final : public nsIGeolocationUpdate, public nsWrapperCache {
                         PositionErrorCallback* aErrorCallback,
                         const PositionOptions& aOptions, CallerType aCallerType,
                         ErrorResult& aRv);
+
+  MOZ_CAN_RUN_SCRIPT
   void GetCurrentPosition(PositionCallback& aCallback,
                           PositionErrorCallback* aErrorCallback,
                           const PositionOptions& aOptions,
@@ -185,10 +187,12 @@ class Geolocation final : public nsIGeolocationUpdate, public nsWrapperCache {
  private:
   ~Geolocation();
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult GetCurrentPosition(GeoPositionCallback aCallback,
                               GeoPositionErrorCallback aErrorCallback,
                               UniquePtr<PositionOptions>&& aOptions,
                               CallerType aCallerType);
+
   MOZ_CAN_RUN_SCRIPT
   int32_t WatchPosition(GeoPositionCallback aCallback,
                         GeoPositionErrorCallback aErrorCallback,
@@ -203,6 +207,10 @@ class Geolocation final : public nsIGeolocationUpdate, public nsWrapperCache {
   // Returns whether the Geolocation object should block requests
   // within a context that is not secure.
   bool ShouldBlockInsecureRequests() const;
+
+  // Checks if the request is in a content window that is fully active, or the
+  // request is coming from a chrome window.
+  bool IsFullyActiveOrChrome();
 
   // Two callback arrays.  The first |mPendingCallbacks| holds objects for only
   // one callback and then they are released/removed from the array.  The second
