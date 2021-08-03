@@ -307,6 +307,9 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1723351 and Bug 1723142
          "race:mozilla::layers::AsyncPanZoomController::ApplyAsyncTestAttributes\n"
 
+         // Bug 1723170
+         "race:mozilla::layers::APZCTreeManager::NewAPZCInstance\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
