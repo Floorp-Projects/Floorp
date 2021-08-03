@@ -18,18 +18,13 @@ key-attr =
     .label = [en] Label 3
 ` },
   ];
-  const originalRequested = Services.locale.requestedLocales;
 
   const source = L10nFileSource.createMock("test", ["de", "en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
-  function* generateBundlesSync(resIds) {
-    yield * l10nReg.generateBundlesSync(["de", "en-US"], resIds);
-  }
-
   const l10n = new Localization([
     "/browser/menu.ftl",
-  ], true, { generateBundlesSync });
+  ], true, l10nReg, ["de", "en-US"]);
 
 
   {
@@ -80,8 +75,6 @@ key-attr =
     strictEqual(messages[2].value, "[en] Value3");
     strictEqual(messages[3].value, null);
   }
-
-  Services.locale.requestedLocales = originalRequested;
 });
 
 add_task(function test_builtins() {
@@ -105,19 +98,14 @@ key = { PLATFORM() ->
   const l10nReg = new L10nRegistry();
   l10nReg.registerSources([source]);
 
-  function* generateBundlesSync(resIds) {
-    yield * l10nReg.generateBundlesSync(["en-US"], resIds);
-  }
-
   const l10n = new Localization([
     "/test.ftl",
-  ], true, { generateBundlesSync });
+  ], true, l10nReg, ["en-US"]);
 
   let values = l10n.formatValuesSync([{id: "key"}]);
 
   ok(values[0].includes(
     `${ known_platforms[AppConstants.platform].toUpperCase() } Value`));
-
 });
 
 add_task(function test_add_remove_resourceIds() {
@@ -131,11 +119,7 @@ add_task(function test_add_remove_resourceIds() {
   const l10nReg = new L10nRegistry();
   l10nReg.registerSources([source]);
 
-  function* generateBundlesSync(resIds) {
-    yield * l10nReg.generateBundlesSync(["en-US"], resIds);
-  }
-
-  const l10n = new Localization(["/browser/menu.ftl"], true, { generateBundlesSync });
+  const l10n = new Localization(["/browser/menu.ftl"], true, l10nReg, ["en-US"]);
 
   let values = l10n.formatValuesSync([{id: "key1"}, {id: "key2"}]);
 
@@ -165,8 +149,6 @@ add_task(function test_add_remove_resourceIds() {
 
   strictEqual(values[0], null);
   strictEqual(values[1], "Value2");
-
-  Services.locale.requestedLocales = originalRequested;
 });
 
 add_task(function test_calling_sync_methods_in_async_mode_fails() {
