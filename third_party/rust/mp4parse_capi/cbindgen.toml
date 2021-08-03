@@ -19,6 +19,7 @@ rename_variants = "QualifiedScreamingSnakeCase"
 [defines]
 "feature = 3gpp" = "MP4PARSE_FEATURE_3GPP"
 "feature = meta-xml" = "MP4PARSE_FEATURE_META_XML"
+"feature = unstable-api" = "MP4PARSE_UNSTABLE_API"
 
 [parse]
 parse_deps = true
