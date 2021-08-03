@@ -85,9 +85,13 @@ if CONFIG["OS_ARCH"] == "WINNT":
 
     if not CONFIG["JS_STANDALONE"]:
         SOURCES += [
-            "/ipc/mscom/ActivationContext.cpp",
             "/ipc/mscom/ProcessRuntime.cpp",
             "PreXULSkeletonUI.cpp",
+        ]
+
+    if CONFIG["ACCESSIBILITY"]:
+        SOURCES += [
+            "/ipc/mscom/ActivationContext.cpp",
         ]
 
 elif CONFIG["HAVE_CLOCK_MONOTONIC"]:
