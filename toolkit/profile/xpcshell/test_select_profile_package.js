@@ -7,14 +7,14 @@
 
 add_task(async () => {
   // Create a default profile to migrate from.
-  let dir = makeRandomProfileDir("default");
+  let dir = makeRandomProfileDir(DEDICATED_NAME);
   let profileData = {
     options: {
       startWithLastProfile: true,
     },
     profiles: [
       {
-        name: "default",
+        name: DEDICATED_NAME,
         path: dir.leafName,
         default: true,
       },
