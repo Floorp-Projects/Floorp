@@ -239,7 +239,6 @@ class EncryptedMediaParent extends JSWindowActorParent {
         aBrowser.ownerGlobal.openPreferences("general-drm");
       },
       dismiss: true,
-      disableHighlight: true,
     };
 
     let secondaryActions = [

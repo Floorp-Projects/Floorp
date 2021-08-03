@@ -771,8 +771,6 @@ class LoginManagerPrompter {
       showOptions
     );
 
-    mainAction.disableHighlight = true;
-
     let notification = PopupNotifications.show(
       browser,
       notificationID,

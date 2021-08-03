@@ -276,7 +276,6 @@ var tests = [
     id: "Test#11",
     run() {
       this.notifyObj = new BasicNotification(this.id);
-      this.notifyObj.mainAction.disableHighlight = true;
       this.notifyObj.secondaryActions = undefined;
       this.notification = showNotification(this.notifyObj);
     },

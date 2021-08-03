@@ -410,8 +410,6 @@ PopupNotifications.prototype = {
    *            will be dismissed instead of removed after running the callback.
    *          - [optional] disabled (boolean): If this is true, the button
    *            will be disabled.
-   *          - [optional] disableHighlight (boolean): If this is true, the button
-   *            will not apply the default highlight style.
    *        If null, the notification will have a default "OK" action button
    *        that can be used to dismiss the popup and secondaryActions will be ignored.
    * @param secondaryActions
@@ -1025,10 +1023,6 @@ PopupNotifications.prototype = {
         popupnotification.setAttribute(
           "buttonaccesskey",
           n.mainAction.accessKey
-        );
-        popupnotification.toggleAttribute(
-          "buttonhighlight",
-          !n.mainAction.disableHighlight
         );
         popupnotification.setAttribute(
           "buttoncommand",
