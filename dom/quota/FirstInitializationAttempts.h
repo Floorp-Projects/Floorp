@@ -39,9 +39,12 @@ class FirstInitializationAttempts {
     }
   };
 
-  FirstInitializationAttemptImpl FirstInitializationAttempt(
-      const Initialization aInitialization) {
-    return FirstInitializationAttemptImpl(*this, aInitialization);
+  template <typename Func>
+  auto WithFirstInitializationAttempt(const Initialization aInitialization,
+                                      Func&& aFunc)
+      -> std::invoke_result_t<Func, FirstInitializationAttemptImpl&&> {
+    return std::forward<Func>(aFunc)(
+        FirstInitializationAttemptImpl(*this, aInitialization));
   }
 
   bool FirstInitializationAttemptRecorded(
