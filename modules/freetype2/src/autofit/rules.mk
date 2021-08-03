@@ -3,7 +3,7 @@
 #
 
 
-# Copyright (C) 2003-2020 by
+# Copyright (C) 2003-2021 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -28,8 +28,7 @@ AUTOF_COMPILE := $(CC) $(ANSIFLAGS)                              \
 
 # AUTOF driver sources (i.e., C files)
 #
-AUTOF_DRV_SRC := $(AUTOF_DIR)/afangles.c \
-                 $(AUTOF_DIR)/afblue.c   \
+AUTOF_DRV_SRC := $(AUTOF_DIR)/afblue.c   \
                  $(AUTOF_DIR)/afcjk.c    \
                  $(AUTOF_DIR)/afdummy.c  \
                  $(AUTOF_DIR)/afglobal.c \
@@ -40,7 +39,6 @@ AUTOF_DRV_SRC := $(AUTOF_DIR)/afangles.c \
                  $(AUTOF_DIR)/afmodule.c \
                  $(AUTOF_DIR)/afranges.c \
                  $(AUTOF_DIR)/afshaper.c \
-                 $(AUTOF_DIR)/afwarp.c
 
 # AUTOF driver headers
 #

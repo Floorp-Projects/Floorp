@@ -30,6 +30,7 @@ SOURCES += [
     'src/cid/type1cid.c',       # Type 1 CID-keyed font driver.
     'src/pcf/pcf.c',            # PCF font driver.
     'src/pfr/pfr.c',            # PFR/TrueDoc font driver.
+    'src/sdf/sdf.c',            # SDF font driver.
     'src/sfnt/sfnt.c',          # SFNT files support.
     'src/truetype/truetype.c',  # TrueType font driver.
     'src/type1/type1.c',        # PostScript Type 1 font driver.

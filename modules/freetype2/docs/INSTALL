@@ -4,10 +4,32 @@ your system and the level of  customization you need.  Here is a short
 overview of the documentation available:
 
 
-I. Normal installation and upgrades
-===================================
+I. Prerequisites and dependencies
+=================================
 
-  1. Unix Systems (including Mac OS X, Cygwin, and MSys on Windows)
+  FreeType is a low level C library  that only depends on the standard
+  C library with very few platform-dependent optimizations utilized at
+  build time.  System libraries, such as  zlib,  Gzip,  bzip2, Brotli,
+  and libpng,  might  be  used  to handle  compressed fonts  or decode
+  embedded PNG glyphs.
+
+  FreeType  auto-configuration scripts  should be  able to detect  the
+  prerequisites if the necessary headers are available  at the default
+  locations.  Otherwise,  modify  `include/freetype/config/ftoption.h'
+  to control how the FreeType library gets built.  Normally, you don't
+  need to change anything.
+
+  Applications have very limited control over FreeType's behaviour  at
+  run-time;  look at the documentation of function `FT_Property_Set'.
+
+
+II. Normal installation and upgrades
+====================================
+
+  1. Unix and Unix-like systems
+
+    This also includes MacOS, Cygwin, MinGW + MSYS, Mingw-w64 + MSYS2,
+    and possibly other, similar environments.
 
     Please read `INSTALL.UNIX' to install or upgrade FreeType  2 on  a
     Unix system.   Note  that  you  *need*  GNU  Make   for  automatic
@@ -26,10 +48,11 @@ I. Normal installation and upgrades
 
   3. Other systems using GNU Make
 
-    On non-Unix platforms,  it is possible to build  the library using
-    GNU Make  utility.  Note that  *NO OTHER MAKE TOOL  WILL WORK*[1]!
-    This  methods supports  several  compilers on  Windows, OS/2,  and
-    BeOS, including MinGW, Visual C++, Borland C++, and more.
+    On some  non-Unix platforms, it  is possible to build  the library
+    using only  the GNU Make utility.   Note that *NO OTHER  MAKE TOOL
+    WILL  WORK*[1]!   This  methods   supports  several  compilers  on
+    Windows, OS/2, and BeOS,  including MinGW* (without MSYS*), Visual
+    C++, Borland C++, and more.
 
     Instructions are provided in the file `INSTALL.GNU'.
 
@@ -57,8 +80,8 @@ I. Normal installation and upgrades
     directory.
 
 
-II. Custom builds of the library
-================================
+III. Custom builds of the library
+=================================
 
   Customizing the compilation  of FreeType is easy, and  allows you to
   select only the components of  the font engine that you really need.
@@ -77,7 +100,7 @@ II. Custom builds of the library
 
 ----------------------------------------------------------------------
 
-Copyright (C) 2000-2020 by
+Copyright (C) 2000-2021 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,
