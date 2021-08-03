@@ -67,7 +67,6 @@ fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 l10nregistry-ffi = { path = "../../../../intl/l10n/rust/l10nregistry-ffi" }
 l10nregistry = { git = "https://github.com/mozilla/l10nregistry-rs", rev = "55bf7f826d773303a67d8d7fdab099a04322d4fb" }
 fluent-fallback = "0.5"
-localization-ffi = { path = "../../../../intl/l10n/rust/localization-ffi" }
 
 processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }

@@ -7,7 +7,8 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  const l10nReg = new L10nRegistry();
+
+  async function* generateBundles(resourceIds) {}
 
   window.onload = function() {
     SimpleTest.waitForExplicitFinish();
@@ -15,7 +16,7 @@
     const domLoc = new DOMLocalization(
       [],
       false,
-      l10nReg,
+      { generateBundles },
     );
 
     const p1 = document.querySelectorAll("p")[0];

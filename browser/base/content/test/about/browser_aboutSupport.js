@@ -88,7 +88,7 @@ add_task(async function test_nimbus_experiments() {
             () =>
               content.document.querySelector(
                 "#remote-experiments-tbody tr:first-child td"
-              )?.innerText
+              ).innerText
           );
           return content.document.querySelector(
             "#remote-experiments-tbody tr:first-child td"
@@ -124,7 +124,7 @@ add_task(async function test_remote_configuration() {
           () =>
             content.document.querySelector(
               "#remote-features-tbody tr:first-child td"
-            )?.innerText
+            ).innerText
         );
         return content.document.querySelector(
           "#remote-features-tbody tr:first-child td"

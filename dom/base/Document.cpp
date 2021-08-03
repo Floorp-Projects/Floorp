@@ -4140,6 +4140,18 @@ bool Document::GetAllowPlugins() {
   return true;
 }
 
+void Document::EnsureL10n() {
+  if (!mDocumentL10n) {
+    Element* elem = GetDocumentElement();
+    if (NS_WARN_IF(!elem)) {
+      return;
+    }
+    bool isSync = elem->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nsync);
+    mDocumentL10n = DocumentL10n::Create(this, isSync);
+    MOZ_ASSERT(mDocumentL10n);
+  }
+}
+
 bool Document::HasPendingInitialTranslation() {
   return mDocumentL10n && mDocumentL10n->GetState() != DocumentL10nState::Ready;
 }
@@ -4162,20 +4174,15 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
     return;
   }
 
+  EnsureL10n();
+
   nsAutoString href;
   aLinkElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
 
-  if (!mDocumentL10n) {
-    Element* elem = GetDocumentElement();
-    MOZ_DIAGNOSTIC_ASSERT(elem);
-
-    bool isSync = elem->HasAttr(nsGkAtoms::datal10nsync);
-    mDocumentL10n = DocumentL10n::Create(this, isSync);
-    MOZ_ASSERT(mDocumentL10n);
-  }
-  mDocumentL10n->AddResourceId(NS_ConvertUTF16toUTF8(href));
+  mDocumentL10n->AddResourceId(href);
 
   if (mReadyState >= READYSTATE_INTERACTIVE) {
+    mDocumentL10n->Activate(true);
     mDocumentL10n->TriggerInitialTranslation();
   } else {
     if (!mDocumentL10n->mBlockingLayout) {
@@ -4196,8 +4203,7 @@ void Document::LocalizationLinkRemoved(Element* aLinkElement) {
   if (mDocumentL10n) {
     nsAutoString href;
     aLinkElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
-    uint32_t remaining =
-        mDocumentL10n->RemoveResourceId(NS_ConvertUTF16toUTF8(href));
+    uint32_t remaining = mDocumentL10n->RemoveResourceId(href);
     if (remaining == 0) {
       if (mDocumentL10n->mBlockingLayout) {
         mDocumentL10n->mBlockingLayout = false;
@@ -4221,8 +4227,9 @@ void Document::LocalizationLinkRemoved(Element* aLinkElement) {
  * collected.
  */
 void Document::OnL10nResourceContainerParsed() {
-  // XXX: This is a scaffolding for where we might inject prefetch
-  // in bug 1717241.
+  if (mDocumentL10n) {
+    mDocumentL10n->Activate(false);
+  }
 }
 
 void Document::OnParsingCompleted() {

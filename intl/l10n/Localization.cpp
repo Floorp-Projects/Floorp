@@ -5,208 +5,162 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Localization.h"
+#include "nsImportModule.h"
+#include "nsIObserverService.h"
 #include "nsContentUtils.h"
+#include "mozilla/BasePrincipal.h"
+#include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty
 
 #define INTL_APP_LOCALES_CHANGED "intl:app-locales-changed"
 #define L10N_PSEUDO_PREF "intl.l10n.pseudo"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-using namespace mozilla::intl;
-
 static const char* kObservedPrefs[] = {L10N_PSEUDO_PREF, nullptr};
 
-// The state where the application contains incomplete localization resources
-// is much more common than for other types of core resources.
-//
-// In result, we our localization is designed to handle missing resources
-// gracefully, and we need a more fine-tuned way to communicate those problems
-// to developers.
-//
-// In particular, we want developers and early adopters to be able to reason
-// about missing translations, without bothering end user in production, where
-// the user cannot react to that.
-//
-// We currently differentiate between nightly/dev-edition builds or automation
-// where we report the errors, and beta/release, where we silence them.
-static bool MaybeReportErrorsToGecko(const nsTArray<nsCString>& aErrors,
-                                     ErrorResult& aRv,
-                                     nsIGlobalObject* global) {
-  if (!aErrors.IsEmpty()) {
-    if (xpc::IsInAutomation()) {
-      aRv.ThrowInvalidStateError(aErrors.ElementAt(0));
-      return true;
-    }
+using namespace mozilla::intl;
+using namespace mozilla::dom;
 
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
-    Document* doc = nullptr;
-    if (global) {
-      nsPIDOMWindowInner* innerWindow = global->AsInnerWindow();
-      if (innerWindow) {
-        doc = innerWindow->GetExtantDoc();
-      }
-    }
+NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(Localization)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Localization)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalization)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
+  tmp->Destroy();
+  mozilla::DropJSObjects(tmp);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Localization)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalization)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-    for (const auto& error : aErrors) {
-      nsContentUtils::ReportToConsoleNonLocalized(NS_ConvertUTF8toUTF16(error),
-                                                  nsIScriptError::warningFlag,
-                                                  "l10n"_ns, doc);
-    }
-#endif
-  }
-
-  return false;
-}
-
-static nsTArray<ffi::L10nKey> ConvertFromL10nKeys(
-    const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys) {
-  nsTArray<ffi::L10nKey> l10nKeys(aKeys.Length());
-
-  for (const auto& entry : aKeys) {
-    if (entry.IsUTF8String()) {
-      const auto& id = entry.GetAsUTF8String();
-      ffi::L10nKey* key = l10nKeys.AppendElement();
-      key->id = &id;
-    } else {
-      const auto& e = entry.GetAsL10nIdArgs();
-      ffi::L10nKey* key = l10nKeys.AppendElement();
-      key->id = &e.mId;
-      if (!e.mArgs.IsNull()) {
-        FluentBundle::ConvertArgs(e.mArgs.Value(), key->args);
-      }
-    }
-  }
-
-  return l10nKeys;
-}
-
-static FallibleTArray<AttributeNameValue> ConvertToAttributeNameValue(
-    const nsTArray<ffi::L10nAttribute>& aAttributes, OOMReporter& aError) {
-  FallibleTArray<AttributeNameValue> result(aAttributes.Length());
-  for (const auto& attr : aAttributes) {
-    auto cvtAttr = AttributeNameValue();
-    cvtAttr.mName = attr.name;
-    cvtAttr.mValue = attr.value;
-    if (!result.AppendElement(std::move(cvtAttr), fallible)) {
-      result.Clear();
-      aError.ReportOOM();
-      return result;
-    }
-  }
-
-  return result;
-}
-
-static FallibleTArray<Nullable<L10nMessage>> ConvertToL10nMessages(
-    const nsTArray<ffi::OptionalL10nMessage>& aMessages, ErrorResult& aError) {
-  FallibleTArray<Nullable<L10nMessage>> l10nMessages(aMessages.Length());
-
-  for (const auto& entry : aMessages) {
-    Nullable<L10nMessage> msg;
-    if (entry.is_present) {
-      L10nMessage& m = msg.SetValue();
-      if (!entry.message.value.IsVoid()) {
-        m.mValue = entry.message.value;
-      }
-      if (!entry.message.attributes.IsEmpty()) {
-        m.mAttributes.SetValue(
-            ConvertToAttributeNameValue(entry.message.attributes, aError));
-      }
-    }
-
-    if (!l10nMessages.AppendElement(std::move(msg), fallible)) {
-      l10nMessages.Clear();
-      aError.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return l10nMessages;
-    }
-  }
-
-  return l10nMessages;
-}
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Localization)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mGenerateBundles)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mGenerateBundlesSync)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mBundles)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Localization)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Localization)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Localization)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
 NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK(Localization, mGlobal)
 
 /* static */
 already_AddRefed<Localization> Localization::Create(
-    const nsTArray<nsCString>& aResourceIds, bool aIsSync) {
-  return MakeAndAddRef<Localization>(aResourceIds, aIsSync);
+    nsIGlobalObject* aGlobal, const bool aSync,
+    const BundleGenerator& aBundleGenerator) {
+  RefPtr<Localization> loc = new Localization(aGlobal, aSync, aBundleGenerator);
+
+  loc->Init();
+
+  return loc.forget();
 }
 
-Localization::Localization(const nsTArray<nsCString>& aResIds, bool aIsSync) {
-  ffi::localization_new(&aResIds, aIsSync, nullptr, getter_AddRefs(mRaw));
-
-  RegisterObservers();
+Localization::Localization(nsIGlobalObject* aGlobal, const bool aSync,
+                           const BundleGenerator& aBundleGenerator)
+    : mGlobal(aGlobal), mIsSync(aSync) {
+  if (aBundleGenerator.mGenerateBundles.WasPassed()) {
+    GenerateBundles& generateBundles =
+        aBundleGenerator.mGenerateBundles.Value();
+    mGenerateBundles.setObject(*generateBundles.CallbackOrNull());
+  }
+  if (aBundleGenerator.mGenerateBundlesSync.WasPassed()) {
+    GenerateBundlesSync& generateBundlesSync =
+        aBundleGenerator.mGenerateBundlesSync.Value();
+    mGenerateBundlesSync.setObject(*generateBundlesSync.CallbackOrNull());
+  }
+  mIsSync = aSync;
 }
 
-Localization::Localization(nsIGlobalObject* aGlobal,
-                           const nsTArray<nsCString>& aResIds, bool aIsSync)
-    : mGlobal(aGlobal) {
-  ffi::localization_new(&aResIds, aIsSync, nullptr, getter_AddRefs(mRaw));
-
+bool Localization::Init() {
   RegisterObservers();
+
+  return true;
 }
 
-Localization::Localization(nsIGlobalObject* aGlobal, bool aIsSync)
-    : mGlobal(aGlobal) {
-  nsTArray<nsCString> resIds;
-  ffi::localization_new(&resIds, aIsSync, nullptr, getter_AddRefs(mRaw));
+void Localization::Activate(const bool aEager) {
+  mLocalization = do_ImportModule("resource://gre/modules/Localization.jsm",
+                                  "Localization");
 
-  RegisterObservers();
-}
+  AutoJSContext cx;
 
-Localization::Localization(nsIGlobalObject* aGlobal, bool aIsSync,
-                           const ffi::LocalizationRc* aRaw)
-    : mGlobal(aGlobal), mRaw(aRaw) {
-  RegisterObservers();
+  JS::Rooted<JS::Value> generateBundlesJS(cx, mGenerateBundles);
+  JS::Rooted<JS::Value> generateBundlesSyncJS(cx, mGenerateBundlesSync);
+  JS::Rooted<JS::Value> bundlesJS(cx);
+  mLocalization->GenerateBundles(mResourceIds, mIsSync, aEager,
+                                 generateBundlesJS, generateBundlesSyncJS,
+                                 &bundlesJS);
+  mBundles.set(bundlesJS);
+
+  mozilla::HoldJSObjects(this);
 }
 
 already_AddRefed<Localization> Localization::Constructor(
-    const GlobalObject& aGlobal, const Sequence<nsCString>& aResourceIds,
-    bool aIsSync, const Optional<NonNull<L10nRegistry>>& aRegistry,
-    const Optional<Sequence<nsCString>>& aLocales, ErrorResult& aRv) {
-  nsTArray<nsCString> resIds = ToTArray<nsTArray<nsCString>>(aResourceIds);
-  Maybe<nsTArray<nsCString>> locales;
-
-  if (aLocales.WasPassed()) {
-    locales.emplace();
-    locales->SetCapacity(aLocales.Value().Length());
-    for (const auto& locale : aLocales.Value()) {
-      locales->AppendElement(locale);
-    }
-  }
-
-  RefPtr<const ffi::LocalizationRc> raw;
-
-  bool result = ffi::localization_new_with_locales(
-      &resIds, aIsSync,
-      aRegistry.WasPassed() ? aRegistry.Value().Raw() : nullptr,
-      locales.ptrOr(nullptr), getter_AddRefs(raw));
-
-  if (!result) {
-    aRv.ThrowInvalidStateError(
-        "Failed to create the Localization. Check the locales arguments.");
+    const GlobalObject& aGlobal, const Sequence<nsString>& aResourceIds,
+    const bool aSync, const BundleGenerator& aBundleGenerator,
+    ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Localization> loc =
+      Localization::Create(global, aSync, aBundleGenerator);
 
-  return do_AddRef(new Localization(global, aIsSync, raw));
+  if (aResourceIds.Length()) {
+    loc->AddResourceIds(aResourceIds);
+  }
+
+  loc->Activate(true);
+
+  return loc.forget();
 }
+
+nsIGlobalObject* Localization::GetParentObject() const { return mGlobal; }
 
 JSObject* Localization::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
   return Localization_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-Localization::~Localization() = default;
+Localization::~Localization() {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, INTL_APP_LOCALES_CHANGED);
+  }
+
+  Preferences::RemoveObservers(this, kObservedPrefs);
+
+  Destroy();
+  mozilla::DropJSObjects(this);
+}
+
+void Localization::Destroy() {
+  mGenerateBundles.setUndefined();
+  mGenerateBundlesSync.setUndefined();
+  mBundles.setUndefined();
+}
+
+/* Protected */
+
+void Localization::RegisterObservers() {
+  DebugOnly<nsresult> rv = Preferences::AddWeakObservers(this, kObservedPrefs);
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "Adding observers failed.");
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, INTL_APP_LOCALES_CHANGED, true);
+  }
+}
 
 NS_IMETHODIMP
 Localization::Observe(nsISupports* aSubject, const char* aTopic,
@@ -224,231 +178,260 @@ Localization::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-void Localization::RegisterObservers() {
-  DebugOnly<nsresult> rv = Preferences::AddWeakObservers(this, kObservedPrefs);
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "Adding observers failed.");
-
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-
-  if (obs) {
-    obs->AddObserver(this, INTL_APP_LOCALES_CHANGED, true);
+void Localization::OnChange() {
+  if (mLocalization) {
+    AutoJSContext cx;
+    JS::Rooted<JS::Value> generateBundlesJS(cx, mGenerateBundles);
+    JS::Rooted<JS::Value> generateBundlesSyncJS(cx, mGenerateBundlesSync);
+    JS::Rooted<JS::Value> bundlesJS(cx);
+    mLocalization->GenerateBundles(mResourceIds, mIsSync, false,
+                                   generateBundlesJS, generateBundlesSyncJS,
+                                   &bundlesJS);
+    mBundles.set(bundlesJS);
   }
 }
 
-void Localization::OnChange() { ffi::localization_on_change(mRaw.get()); }
-
-void Localization::AddResourceId(const nsACString& aResourceId) {
-  ffi::localization_add_res_id(mRaw.get(), &aResourceId);
+uint32_t Localization::AddResourceId(const nsAString& aResourceId) {
+  if (!mResourceIds.Contains(aResourceId)) {
+    mResourceIds.AppendElement(aResourceId);
+    Localization::OnChange();
+  }
+  return mResourceIds.Length();
 }
 
-uint32_t Localization::RemoveResourceId(const nsACString& aResourceId) {
-  return ffi::localization_remove_res_id(mRaw.get(), &aResourceId);
+uint32_t Localization::RemoveResourceId(const nsAString& aResourceId) {
+  if (mResourceIds.RemoveElement(aResourceId)) {
+    Localization::OnChange();
+  }
+  return mResourceIds.Length();
 }
 
-void Localization::AddResourceIds(const nsTArray<nsCString>& aResourceIds) {
-  ffi::localization_add_res_ids(mRaw.get(), &aResourceIds);
+/**
+ * Localization API
+ */
+
+uint32_t Localization::AddResourceIds(const nsTArray<nsString>& aResourceIds) {
+  bool added = false;
+
+  for (const auto& resId : aResourceIds) {
+    if (!mResourceIds.Contains(resId)) {
+      mResourceIds.AppendElement(resId);
+      added = true;
+    }
+  }
+  if (added) {
+    Localization::OnChange();
+  }
+  return mResourceIds.Length();
 }
 
 uint32_t Localization::RemoveResourceIds(
-    const nsTArray<nsCString>& aResourceIds) {
-  return ffi::localization_remove_res_ids(mRaw.get(), &aResourceIds);
+    const nsTArray<nsString>& aResourceIds) {
+  bool removed = false;
+
+  for (const auto& resId : aResourceIds) {
+    if (mResourceIds.RemoveElement(resId)) {
+      removed = true;
+    }
+  }
+  if (removed) {
+    Localization::OnChange();
+  }
+  return mResourceIds.Length();
 }
 
 already_AddRefed<Promise> Localization::FormatValue(
-    const nsACString& aId, const Optional<L10nArgs>& aArgs, ErrorResult& aRv) {
-  nsTArray<ffi::L10nArg> l10nArgs;
-  nsTArray<nsCString> errors;
+    JSContext* aCx, const nsACString& aId, const Optional<L10nArgs>& aArgs,
+    ErrorResult& aRv) {
+  if (!mLocalization) {
+    Activate(false);
+  }
+  JS::Rooted<JS::Value> args(aCx);
 
   if (aArgs.WasPassed()) {
-    const L10nArgs& args = aArgs.Value();
-    FluentBundle::ConvertArgs(args, l10nArgs);
+    ConvertL10nArgsToJSValue(aCx, aArgs.Value(), &args, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+  } else {
+    args = JS::UndefinedValue();
   }
-  RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
 
-  ffi::localization_format_value(
-      mRaw.get(), &aId, &l10nArgs, promise,
-      [](const Promise* aPromise, const nsACString* aValue,
-         const nsTArray<nsCString>* aErrors) {
-        Promise* promise = const_cast<Promise*>(aPromise);
-
-        ErrorResult rv;
-        if (MaybeReportErrorsToGecko(*aErrors, rv,
-                                     promise->GetParentObject())) {
-          promise->MaybeReject(std::move(rv));
-        } else {
-          promise->MaybeResolve(aValue);
-        }
-      });
-
+  RefPtr<Promise> promise;
+  JS::Rooted<JS::Value> bundlesJS(aCx, mBundles);
+  nsresult rv = mLocalization->FormatValue(mResourceIds, bundlesJS, aId, args,
+                                           getter_AddRefs(promise));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
   return MaybeWrapPromise(promise);
 }
 
-already_AddRefed<Promise> Localization::FormatValues(
-    const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys, ErrorResult& aRv) {
-  nsTArray<ffi::L10nKey> l10nKeys = ConvertFromL10nKeys(aKeys);
+void Localization::SetIsSync(const bool aIsSync) { mIsSync = aIsSync; }
 
-  RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
+already_AddRefed<Promise> Localization::FormatValues(
+    JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
+    ErrorResult& aRv) {
+  if (!mLocalization) {
+    Activate(false);
+  }
+  nsTArray<JS::Value> jsKeys;
+  SequenceRooter<JS::Value> rooter(aCx, &jsKeys);
+  for (auto& key : aKeys) {
+    JS::RootedValue jsKey(aCx);
+    if (!ToJSValue(aCx, key, &jsKey)) {
+      aRv.NoteJSContextException(aCx);
+      return nullptr;
+    }
+    jsKeys.AppendElement(jsKey);
   }
 
-  ffi::localization_format_values(
-      mRaw.get(), &l10nKeys, promise,
-      // callback function which will be invoked by the rust code, passing the
-      // promise back in.
-      [](const Promise* aPromise, const nsTArray<nsCString>* aValues,
-         const nsTArray<nsCString>* aErrors) {
-        Promise* promise = const_cast<Promise*>(aPromise);
-
-        ErrorResult rv;
-        if (MaybeReportErrorsToGecko(*aErrors, rv,
-                                     promise->GetParentObject())) {
-          promise->MaybeReject(std::move(rv));
-        } else {
-          promise->MaybeResolve(*aValues);
-        }
-      });
+  RefPtr<Promise> promise;
+  JS::Rooted<JS::Value> bundlesJS(aCx, mBundles);
+  aRv = mLocalization->FormatValues(mResourceIds, bundlesJS, jsKeys,
+                                    getter_AddRefs(promise));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
 
   return MaybeWrapPromise(promise);
 }
 
 already_AddRefed<Promise> Localization::FormatMessages(
-    const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys, ErrorResult& aRv) {
-  auto l10nKeys = ConvertFromL10nKeys(aKeys);
-
-  RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
+    JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
+    ErrorResult& aRv) {
+  if (!mLocalization) {
+    Activate(false);
+  }
+  nsTArray<JS::Value> jsKeys;
+  SequenceRooter<JS::Value> rooter(aCx, &jsKeys);
+  for (auto& key : aKeys) {
+    JS::RootedValue jsKey(aCx);
+    if (!ToJSValue(aCx, key, &jsKey)) {
+      aRv.NoteJSContextException(aCx);
+      return nullptr;
+    }
+    jsKeys.AppendElement(jsKey);
   }
 
-  ffi::localization_format_messages(
-      mRaw.get(), &l10nKeys, promise,
-      // callback function which will be invoked by the rust code, passing the
-      // promise back in.
-      [](const Promise* aPromise,
-         const nsTArray<ffi::OptionalL10nMessage>* aRaw,
-         const nsTArray<nsCString>* aErrors) {
-        Promise* promise = const_cast<Promise*>(aPromise);
-
-        ErrorResult rv;
-        if (MaybeReportErrorsToGecko(*aErrors, rv,
-                                     promise->GetParentObject())) {
-          promise->MaybeReject(std::move(rv));
-        } else {
-          ErrorResult rv;
-          FallibleTArray<Nullable<L10nMessage>> messages;
-          messages = ConvertToL10nMessages(*aRaw, rv);
-          if (rv.Failed()) {
-            promise->MaybeReject(std::move(rv));
-          } else {
-            promise->MaybeResolve(messages);
-          }
-        }
-      });
+  RefPtr<Promise> promise;
+  JS::Rooted<JS::Value> bundlesJS(aCx, mBundles);
+  aRv = mLocalization->FormatMessages(mResourceIds, bundlesJS, jsKeys,
+                                      getter_AddRefs(promise));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
 
   return MaybeWrapPromise(promise);
 }
 
-void Localization::FormatValueSync(const nsACString& aId,
+void Localization::FormatValueSync(JSContext* aCx, const nsACString& aId,
                                    const Optional<L10nArgs>& aArgs,
                                    nsACString& aRetVal, ErrorResult& aRv) {
-  nsTArray<ffi::L10nArg> l10nArgs;
-  nsTArray<nsCString> errors;
-
-  if (aArgs.WasPassed()) {
-    const L10nArgs& args = aArgs.Value();
-    FluentBundle::ConvertArgs(args, l10nArgs);
-  }
-
-  bool rv = ffi::localization_format_value_sync(mRaw.get(), &aId, &l10nArgs,
-                                                &aRetVal, &errors);
-
-  if (rv) {
-    MaybeReportErrorsToGecko(errors, aRv, GetParentObject());
-  } else {
+  if (!mIsSync) {
     aRv.ThrowInvalidStateError(
         "Can't use formatValueSync when state is async.");
+    return;
   }
+  if (!mLocalization) {
+    Activate(false);
+  }
+  JS::Rooted<JS::Value> args(aCx);
+
+  if (aArgs.WasPassed()) {
+    ConvertL10nArgsToJSValue(aCx, aArgs.Value(), &args, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+  } else {
+    args = JS::UndefinedValue();
+  }
+
+  JS::Rooted<JS::Value> bundlesJS(aCx, mBundles);
+  aRv = mLocalization->FormatValueSync(mResourceIds, bundlesJS, aId, args,
+                                       aRetVal);
 }
 
 void Localization::FormatValuesSync(
-    const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
+    JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
     nsTArray<nsCString>& aRetVal, ErrorResult& aRv) {
-  nsTArray<ffi::L10nKey> l10nKeys(aKeys.Length());
-  nsTArray<nsCString> errors;
-
-  for (const auto& entry : aKeys) {
-    if (entry.IsUTF8String()) {
-      const auto& id = entry.GetAsUTF8String();
-      nsTArray<ffi::L10nArg> l10nArgs;
-      ffi::L10nKey* key = l10nKeys.AppendElement();
-      key->id = &id;
-    } else {
-      const auto& e = entry.GetAsL10nIdArgs();
-      nsTArray<ffi::L10nArg> l10nArgs;
-      ffi::L10nKey* key = l10nKeys.AppendElement();
-      key->id = &e.mId;
-      if (!e.mArgs.IsNull()) {
-        FluentBundle::ConvertArgs(e.mArgs.Value(), key->args);
-      }
-    }
-  }
-
-  bool rv = ffi::localization_format_values_sync(mRaw.get(), &l10nKeys,
-                                                 &aRetVal, &errors);
-
-  if (rv) {
-    MaybeReportErrorsToGecko(errors, aRv, GetParentObject());
-  } else {
+  if (!mIsSync) {
     aRv.ThrowInvalidStateError(
         "Can't use formatValuesSync when state is async.");
+    return;
   }
+  if (!mLocalization) {
+    Activate(false);
+  }
+  nsTArray<JS::Value> jsKeys;
+  SequenceRooter<JS::Value> rooter(aCx, &jsKeys);
+  for (auto& key : aKeys) {
+    JS::RootedValue jsKey(aCx);
+    if (!ToJSValue(aCx, key, &jsKey)) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
+    jsKeys.AppendElement(jsKey);
+  }
+
+  JS::Rooted<JS::Value> bundlesJS(aCx, mBundles);
+  aRv =
+      mLocalization->FormatValuesSync(mResourceIds, bundlesJS, jsKeys, aRetVal);
 }
 
 void Localization::FormatMessagesSync(
-    const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
+    JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
     nsTArray<Nullable<L10nMessage>>& aRetVal, ErrorResult& aRv) {
-  nsTArray<ffi::L10nKey> l10nKeys(aKeys.Length());
-  nsTArray<nsCString> errors;
-
-  for (const auto& entry : aKeys) {
-    if (entry.IsUTF8String()) {
-      const auto& id = entry.GetAsUTF8String();
-      nsTArray<ffi::L10nArg> l10nArgs;
-      ffi::L10nKey* key = l10nKeys.AppendElement();
-      key->id = &id;
-    } else {
-      const auto& e = entry.GetAsL10nIdArgs();
-      nsTArray<ffi::L10nArg> l10nArgs;
-      ffi::L10nKey* key = l10nKeys.AppendElement();
-      key->id = &e.mId;
-      if (!e.mArgs.IsNull()) {
-        FluentBundle::ConvertArgs(e.mArgs.Value(), key->args);
-      }
-    }
-  }
-
-  nsTArray<ffi::OptionalL10nMessage> result(l10nKeys.Length());
-
-  bool rv = ffi::localization_format_messages_sync(mRaw.get(), &l10nKeys,
-                                                   &result, &errors);
-
-  if (rv) {
-    MaybeReportErrorsToGecko(errors, aRv, GetParentObject());
-    if (!aRv.Failed()) {
-      aRetVal = ConvertToL10nMessages(result, aRv);
-    }
-  } else {
+  if (!mIsSync) {
     aRv.ThrowInvalidStateError(
         "Can't use formatMessagesSync when state is async.");
     return;
   }
+  if (!mLocalization) {
+    Activate(false);
+  }
+  nsTArray<JS::Value> jsKeys;
+  SequenceRooter<JS::Value> rooter(aCx, &jsKeys);
+  for (auto& key : aKeys) {
+    JS::RootedValue jsKey(aCx);
+    if (!ToJSValue(aCx, key, &jsKey)) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
+    jsKeys.AppendElement(jsKey);
+  }
 
-  aRetVal = ConvertToL10nMessages(result, aRv);
+  nsTArray<JS::Value> messages;
+
+  SequenceRooter<JS::Value> messagesRooter(aCx, &messages);
+  JS::Rooted<JS::Value> bundlesJS(aCx, mBundles);
+  aRv = mLocalization->FormatMessagesSync(mResourceIds, bundlesJS, jsKeys,
+                                          messages);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  JS::Rooted<JS::Value> rootedMsg(aCx);
+  for (auto& msg : messages) {
+    rootedMsg.set(msg);
+    Nullable<L10nMessage>* slotPtr = aRetVal.AppendElement(mozilla::fallible);
+    if (!slotPtr) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+
+    if (rootedMsg.isNull()) {
+      slotPtr->SetNull();
+    } else {
+      JS_WrapValue(aCx, &rootedMsg);
+      if (!slotPtr->SetValue().Init(aCx, rootedMsg)) {
+        aRv.NoteJSContextException(aCx);
+        return;
+      }
+    }
+  }
 }
-
-void Localization::SetAsync() { ffi::localization_set_async(mRaw.get()); }
-bool Localization::IsSync() { return ffi::localization_is_sync(mRaw.get()); }
 
 /**
  * PromiseResolver is a PromiseNativeHandler used
@@ -517,4 +500,34 @@ already_AddRefed<Promise> Localization::MaybeWrapPromise(
   RefPtr<PromiseResolver> resolver = new PromiseResolver(docPromise);
   aInnerPromise->AppendNativeHandler(resolver);
   return docPromise.forget();
+}
+
+void Localization::ConvertL10nArgsToJSValue(
+    JSContext* aCx, const L10nArgs& aArgs, JS::MutableHandle<JS::Value> aRetVal,
+    ErrorResult& aRv) {
+  // This method uses a temporary dictionary to automate
+  // converting an IDL Record to a JS Value via a dictionary.
+  //
+  // Once we get ToJSValue for Record, we'll switch to that.
+  L10nArgsHelperDict helperDict;
+  for (auto& entry : aArgs.Entries()) {
+    L10nArgs::EntryType* newEntry =
+        helperDict.mArgs.Entries().AppendElement(fallible);
+    if (!newEntry) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+    newEntry->mKey = entry.mKey;
+    newEntry->mValue = entry.mValue;
+  }
+  JS::Rooted<JS::Value> jsVal(aCx);
+  if (!ToJSValue(aCx, helperDict, &jsVal)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+  JS::Rooted<JSObject*> jsObj(aCx, &jsVal.toObject());
+  if (!JS_GetProperty(aCx, jsObj, "args", aRetVal)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
 }

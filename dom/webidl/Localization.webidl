@@ -44,6 +44,24 @@ dictionary L10nMessage {
 };
 
 /**
+ * A callback function which takes a list of localization resources
+ * and produces an iterator over FluentBundle objects used for
+ * localization with fallbacks.
+ */
+callback GenerateBundles = Promise<any> (sequence<DOMString> aResourceIds);
+callback GenerateBundlesSync = any (sequence<DOMString> aResourceIds);
+
+/**
+ * The structure provides custom methods for the Localization API that
+ * will be used to generate the `FluentBundle` iterator.
+ * This allows the consumer to overload the default Gecko generator.
+ */
+dictionary BundleGenerator {
+  GenerateBundles generateBundles;
+  GenerateBundlesSync generateBundlesSync;
+};
+
+/**
  * Localization is an implementation of the Fluent Localization API.
  *
  * An instance of a Localization class stores a state of a mix
@@ -69,26 +87,28 @@ interface Localization {
    *    - aSync                - Specifies if the initial state of the Localization API is synchronous.
    *                             This enables a number of synchronous methods on the
    *                             Localization API.
-   *    - aRegistry            - optional custom L10nRegistry to be used by this Localization instance.
-   *    - aLocales             - custom set of locales to be used for this Localization.
+   *    - aBundleGenerator     - an object with two methods - `generateBundles` and
+   *                             `generateBundlesSync` allowing consumers to overload the
+   *                             default generators provided by Gecko.
    */
   [Throws]
-  constructor(sequence<UTF8String> aResourceIds,
+  constructor(sequence<DOMString> aResourceIds,
               optional boolean aSync = false,
-              optional L10nRegistry aRegistry,
-              optional sequence<UTF8String> aLocales);
+              optional BundleGenerator aBundleGenerator = {});
 
   /**
    * A method for adding resources to the localization context.
+   *
+   * Returns a new count of resources used by the context.
    */
-  void addResourceIds(sequence<UTF8String> aResourceIds);
+  unsigned long addResourceIds(sequence<DOMString> aResourceIds);
 
   /**
    * A method for removing resources from the localization context.
    *
    * Returns a new count of resources used by the context.
    */
-  unsigned long removeResourceIds(sequence<UTF8String> aResourceIds);
+  unsigned long removeResourceIds(sequence<DOMString> aResourceIds);
 
   /**
    * Formats a value of a localization message with a given id.
@@ -139,7 +159,7 @@ interface Localization {
    */
   [NewObject] Promise<sequence<L10nMessage?>> formatMessages(sequence<L10nKey> aKeys);
 
-  void setAsync();
+  void setIsSync(boolean aIsSync);
 
   [NewObject, Throws]
   UTF8String? formatValueSync(UTF8String aId, optional L10nArgs aArgs);
