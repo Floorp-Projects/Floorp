@@ -14,10 +14,6 @@ enum L10nFileSourceHasFileStatus {
     "unknown"
 };
 
-dictionary FileSourceOptions {
-  FluentBundleAddResourceOptions addResourceOptions = {};
-};
-
 /**
  * The interface represents a single source location for
  * the registry.
@@ -41,7 +37,7 @@ interface L10nFileSource {
    * files not available in the source.
    */
   [Throws]
-  constructor(UTF8String name, sequence<UTF8String> locales, UTF8String prePath, optional FileSourceOptions options = {}, optional sequence<UTF8String> index);
+  constructor(UTF8String name, sequence<UTF8String> locales, UTF8String prePath, optional sequence<UTF8String> index);
 
   /**
    * Tests may want to introduce custom file sources and
@@ -109,13 +105,9 @@ interface FluentBundleAsyncIterator {
   [Alias="@@asyncIterator"] FluentBundleAsyncIterator values();
 };
 
-dictionary L10nRegistryOptions {
-  FluentBundleOptions bundleOptions = {};
-};
-
 [ChromeOnly, Exposed=Window]
 interface L10nRegistry {
-  constructor(optional L10nRegistryOptions aOptions = {});
+  constructor();
 
   static L10nRegistry getInstance();
 

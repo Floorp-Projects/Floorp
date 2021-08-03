@@ -6,7 +6,6 @@
 async function checkNonEmptyFields(url) {
   await BrowserTestUtils.withNewTab(url, async function(browser) {
     await SpecialPowers.spawn(browser, [], async function() {
-      await content.document.l10n.ready;
       let certificateSection = await ContentTaskUtils.waitForCondition(() => {
         return content.document.querySelector("certificate-section");
       }, "Certificate section found");
@@ -56,12 +55,8 @@ async function checkNonEmptyFields(url) {
 
           for (let infoItem of infoItems) {
             let item = infoItem.shadowRoot.querySelector(".info");
-            if (item.textContent.length === 0) {
-              await ContentTaskUtils.waitForCondition(
-                () => parseInt(item.textContent.length) > 0,
-                "info-item has not been localized."
-              );
-            }
+            let info = item.textContent;
+            Assert.notEqual(info, "", "Empty strings shouldn't be rendered");
           }
         }
       }
@@ -79,5 +74,7 @@ add_task(async function test() {
 
   let urls = [url1, url2, url3];
 
-  await Promise.all(urls.map(checkNonEmptyFields));
+  for (let url of urls) {
+    await checkNonEmptyFields(url);
+  }
 });

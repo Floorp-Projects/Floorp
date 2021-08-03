@@ -7,14 +7,13 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  const l10nReg = new L10nRegistry();
-  const fs = [
-    { path: "/localization/en-US/mock.ftl", source: `
+  async function* generateBundles(resourceIds) {
+    const bundle = new FluentBundle("en-US");
+    bundle.addResource(new FluentResource(`
 key1 = Value for Key 1
-` },
-  ];
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
-  l10nReg.registerSources([source]);
+    `));
+    yield bundle;
+  }
 
   window.onload = async function() {
     SimpleTest.waitForExplicitFinish();
@@ -22,10 +21,9 @@ key1 = Value for Key 1
     const p1 = document.getElementById("p1");
 
     const domLoc = new DOMLocalization(
-      ["/mock.ftl"],
+      [],
       false,
-      l10nReg,
-      ["en-US"],
+      { generateBundles },
     );
 
     await domLoc.translateRoots();

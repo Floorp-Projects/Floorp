@@ -36,14 +36,14 @@ interface DOMLocalization : Localization {
    *                           This enables a number of synchronous methods on the
    *                           Localization API and uses it for `TranslateElements`
    *                           making the method return a synchronusly resolved promise.
-   *    - aRegistry            - optional custom L10nRegistry to be used by this Localization instance.
-   *    - aLocales             - custom set of locales to be used for this Localization.
+   *    - aBundleGenerator   - an object with two methods - `generateBundles` and
+   *                           `generateBundlesSync` allowing consumers to overload the
+   *                           default generators provided by Gecko.
    */
   [Throws]
-  constructor(sequence<UTF8String> aResourceIds,
+  constructor(sequence<DOMString> aResourceIds,
               optional boolean aSync = false,
-              optional L10nRegistry aRegistry,
-              optional sequence<UTF8String> aLocales);
+              optional BundleGenerator aBundleGenerator = {});
 
   /**
    * Adds a node to nodes observed for localization
