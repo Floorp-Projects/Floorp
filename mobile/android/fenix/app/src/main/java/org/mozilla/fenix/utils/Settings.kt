@@ -332,7 +332,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var manuallyCloseTabs by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_close_tabs_manually),
-        default = FeatureFlags.inactiveTabs.not()
+        default = true
     )
 
     var closeTabsAfterOneDay by booleanPreference(
@@ -347,7 +347,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var closeTabsAfterOneMonth by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_close_tabs_after_one_month),
-        default = FeatureFlags.inactiveTabs
+        default = false
     )
 
     var allowThirdPartyRootCerts by booleanPreference(
