@@ -1744,12 +1744,23 @@ bool CompilationStencil::delazifySelfHostedFunction(
     gcOutput.get().scopes.infallibleAppend(scope);
   }
 
-  // Phase 4, 5: Instantiate BaseScripts.
-  for (size_t i = range.start; i < range.limit; i++) {
+  // Phase 4: Instantiate (inner) BaseScripts.
+  ScriptIndex innerStart(range.start + 1);
+  for (size_t i = innerStart; i < range.limit; i++) {
     if (!JSScript::fromStencil(cx, atomCache, *this, gcOutput.get(),
                                ScriptIndex(i))) {
       return false;
     }
+  }
+
+  // Phase 5: Finish top-level handling
+  // NOTE: We do not have a `CompilationInput` handy here, so avoid using the
+  //       `InstantiateTopLevel` helper and directly create the JSScript. Our
+  //       caller also handles the `AllowRelazify` flag for us since self-hosted
+  //       delazification is a special case.
+  if (!JSScript::fromStencil(cx, atomCache, *this, gcOutput.get(),
+                             range.start)) {
+    return false;
   }
 
   // Phase 6: Update lazy scripts.
