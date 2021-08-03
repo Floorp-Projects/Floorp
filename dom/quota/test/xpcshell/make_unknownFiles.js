@@ -74,7 +74,8 @@ async function testSteps() {
     createUnknownDirectoryIn(originRelativePath);
   }
 
-  // Unknown files in idb client directory and its subdirectories
+  // Unknown files in idb client directory and its subdirectories and unknown
+  // directory in .files directory
   {
     const request = indexedDB.openForPrincipal(principal, "myIndexedDB");
     await openDBRequestUpgradeNeeded(request);
@@ -91,6 +92,9 @@ async function testSteps() {
 
     createUnknownFileIn(`${originRelativePath}/idb`);
     createUnknownFileIn(
+      `${originRelativePath}/idb/2320029346mByDIdnedxe.files`
+    );
+    createUnknownDirectoryIn(
       `${originRelativePath}/idb/2320029346mByDIdnedxe.files`
     );
     createUnknownFileIn(
