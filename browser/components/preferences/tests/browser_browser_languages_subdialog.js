@@ -284,6 +284,12 @@ add_task(async function testDisabledBrowserLanguages() {
   is(pl.version, "1.0", "pl is the old 1.0 version");
   assertLocaleOrder(selected, "en-US,he");
 
+  // Wait for the children menu to be populated.
+  await BrowserTestUtils.waitForCondition(
+    () => !!available.children.length,
+    "Children list populated"
+  );
+
   // Only fr is enabled and not selected, so it's the only locale available.
   assertAvailableLocales(available, ["fr"]);
 
@@ -413,7 +419,7 @@ add_task(async function testReorderingBrowserLanguages() {
   ok(secondDialogId, "There was an id on the second dialog");
   ok(firstDialogId != secondDialogId, "The dialog ids are different");
   ok(
-    firstDialogId < secondDialogId,
+    parseInt(firstDialogId) < parseInt(secondDialogId),
     "The second dialog id is larger than the first"
   );
 
