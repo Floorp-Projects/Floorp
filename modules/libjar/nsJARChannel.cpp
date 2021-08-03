@@ -278,7 +278,13 @@ nsresult nsJARChannel::CreateJarInput(nsIZipReaderCache* jarCache,
   RefPtr<nsJARInputThunk> input =
       new nsJARInputThunk(reader, mJarURI, mJarEntry, jarCache != nullptr);
   rv = input->Init();
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_FILE_NOT_FOUND ||
+        rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+      CheckForBrokenChromeURL(mLoadInfo, mOriginalURI);
+    }
+    return rv;
+  }
 
   // Make GetContentLength meaningful
   mContentLength = input->GetContentLength();
