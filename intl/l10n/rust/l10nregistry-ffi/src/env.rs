@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use crate::xpcom_utils::get_app_locales;
 use cstr::cstr;
 use fluent_fallback::env::LocalesProvider;
 use l10nregistry::{
@@ -15,12 +16,19 @@ use std::{
     ffi::CStr,
     fmt::{self, Write},
 };
+use unic_langid::LanguageIdentifier;
 use xpcom::interfaces;
 
 #[derive(Clone)]
-pub struct GeckoEnvironment;
+pub struct GeckoEnvironment {
+    custom_locales: Option<Vec<LanguageIdentifier>>,
+}
 
 impl GeckoEnvironment {
+    pub fn new(custom_locales: Option<Vec<LanguageIdentifier>>) -> Self {
+        Self { custom_locales }
+    }
+
     pub fn report_l10nregistry_setup_error(error: &L10nRegistrySetupError) {
         warn!("L10nRegistry setup error: {}", error);
         let result = log_simple_console_error(
@@ -72,7 +80,16 @@ impl ErrorReporter for GeckoEnvironment {
 impl LocalesProvider for GeckoEnvironment {
     type Iter = std::vec::IntoIter<unic_langid::LanguageIdentifier>;
     fn locales(&self) -> Self::Iter {
-        vec!["en-US".parse().unwrap()].into_iter()
+        if let Some(custom_locales) = &self.custom_locales {
+            custom_locales.clone().into_iter()
+        } else {
+            let result = get_app_locales()
+                .expect("Failed to retrieve app locales")
+                .into_iter()
+                .map(|s| LanguageIdentifier::from_bytes(&s).expect("Failed to parse a locale"))
+                .collect::<Vec<_>>();
+            result.into_iter()
+        }
     }
 }
 
