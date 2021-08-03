@@ -3,7 +3,7 @@
 #
 
 
-# Copyright (C) 1996-2020 by
+# Copyright (C) 1996-2021 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -27,7 +27,7 @@ PYTHON := @PYTHON@
 BIN    := bin
 
 # this is used for `make distclean' and `make install'
-OBJ_BUILD ?= $(BUILD_DIR)
+OBJ_BUILD ?= $(PLATFORM_DIR)
 
 # don't use `:=' here since the path stuff will be included after this file
 #

@@ -4,7 +4,7 @@
  *
  *   Type 1 font loader (body).
  *
- * Copyright (C) 1996-2020 by
+ * Copyright (C) 1996-2021 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -130,10 +130,10 @@
 
 
         /* allocate the blend `private' and `font_info' dictionaries */
-        if ( FT_NEW_ARRAY( blend->font_infos[1], num_designs     ) ||
-             FT_NEW_ARRAY( blend->privates  [1], num_designs     ) ||
-             FT_NEW_ARRAY( blend->bboxes    [1], num_designs     ) ||
-             FT_NEW_ARRAY( blend->weight_vector, num_designs * 2 ) )
+        if ( FT_QNEW_ARRAY( blend->font_infos[1], num_designs     ) ||
+             FT_QNEW_ARRAY( blend->privates  [1], num_designs     ) ||
+             FT_QNEW_ARRAY( blend->bboxes    [1], num_designs     ) ||
+             FT_QNEW_ARRAY( blend->weight_vector, num_designs * 2 ) )
           goto Exit;
 
         blend->default_weight_vector = blend->weight_vector + num_designs;
@@ -167,12 +167,12 @@
     /* allocate the blend design pos table if needed */
     num_designs = blend->num_designs;
     num_axis    = blend->num_axis;
-    if ( num_designs && num_axis && blend->design_pos[0] == 0 )
+    if ( num_designs && num_axis && blend->design_pos[0] == NULL )
     {
       FT_UInt  n;
 
 
-      if ( FT_NEW_ARRAY( blend->design_pos[0], num_designs * num_axis ) )
+      if ( FT_QNEW_ARRAY( blend->design_pos[0], num_designs * num_axis ) )
         goto Exit;
 
       for ( n = 1; n < num_designs; n++ )
@@ -851,7 +851,7 @@
         FT_FREE( name );
       }
 
-      if ( FT_ALLOC( blend->axis_names[n], len + 1 ) )
+      if ( FT_QALLOC( blend->axis_names[n], len + 1 ) )
         goto Exit;
 
       name = (FT_Byte*)blend->axis_names[n];
@@ -1044,7 +1044,7 @@
       }
 
       /* allocate design map data */
-      if ( FT_NEW_ARRAY( map->design_points, num_points * 2 ) )
+      if ( FT_QNEW_ARRAY( map->design_points, num_points * 2 ) )
         goto Exit;
       map->blend_points = map->design_points + num_points;
       map->num_points   = (FT_Byte)num_points;
@@ -1122,8 +1122,8 @@
     else if ( blend->num_designs != (FT_UInt)num_designs )
     {
       FT_ERROR(( "parse_weight_vector:"
-                 " /BlendDesignPosition and /WeightVector have\n"
-                 "                    "
+                 " /BlendDesignPosition and /WeightVector have\n" ));
+      FT_ERROR(( "                    "
                  " different number of elements\n" ));
       error = FT_THROW( Invalid_File_Format );
       goto Exit;
@@ -1307,9 +1307,9 @@
     else
     {
       FT_TRACE1(( "t1_load_keyword: ignoring keyword `%s'"
-                  " which is not valid at this point\n"
-                  "                 (probably due to missing keywords)\n",
+                  " which is not valid at this point\n",
                  field->ident ));
+      FT_TRACE1(( "                 (probably due to missing keywords)\n" ));
       error = FT_Err_Ok;
     }
 
@@ -1858,7 +1858,7 @@
         }
 
         /* t1_decrypt() shouldn't write to base -- make temporary copy */
-        if ( FT_ALLOC( temp, size ) )
+        if ( FT_QALLOC( temp, size ) )
           goto Fail;
         FT_MEM_COPY( temp, base, size );
         psaux->t1_decrypt( temp, size, 4330 );
@@ -2068,7 +2068,7 @@
           }
 
           /* t1_decrypt() shouldn't write to base -- make temporary copy */
-          if ( FT_ALLOC( temp, size ) )
+          if ( FT_QALLOC( temp, size ) )
             goto Fail;
           FT_MEM_COPY( temp, base, size );
           psaux->t1_decrypt( temp, size, 4330 );

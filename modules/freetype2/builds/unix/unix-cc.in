@@ -2,7 +2,7 @@
 # FreeType 2 template for Unix-specific compiler definitions
 #
 
-# Copyright (C) 1996-2020 by
+# Copyright (C) 1996-2021 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -14,7 +14,7 @@
 
 CC           := @CC@
 COMPILER_SEP := $(SEP)
-FT_LIBTOOL_DIR ?= $(BUILD_DIR)
+FT_LIBTOOL_DIR ?= $(PLATFORM_DIR)
 
 LIBTOOL := $(FT_LIBTOOL_DIR)/libtool
 
@@ -73,7 +73,7 @@ T := -o$(space)
 #
 #   These should concern: debug output, optimization & warnings.
 #
-#   Use the ANSIFLAGS variable to define the compiler flags used to enfore
+#   Use the ANSIFLAGS variable to define the compiler flags used to enforce
 #   ANSI compliance.
 #
 #   We use our own FreeType configuration files overriding defaults.

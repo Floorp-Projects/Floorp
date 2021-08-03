@@ -3,7 +3,7 @@
 #
 
 
-# Copyright (C) 1996-2020 by
+# Copyright (C) 1996-2021 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,8 +13,8 @@
 # fully.
 
 # We need these declarations here since unix-def.mk is a generated file.
-BUILD_DIR := $(TOP_DIR)/builds/unix
-PLATFORM  := unix
+PLATFORM_DIR := $(TOP_DIR)/builds/unix
+PLATFORM     := unix
 
 have_mk := $(wildcard $(OBJ_DIR)/unix-def.mk)
 ifneq ($(have_mk),)
@@ -22,8 +22,8 @@ ifneq ($(have_mk),)
   include $(OBJ_DIR)/unix-def.mk
   include $(OBJ_DIR)/unix-cc.mk
 else
-  include $(BUILD_DIR)/unix-def.mk
-  include $(BUILD_DIR)/unix-cc.mk
+  include $(PLATFORM_DIR)/unix-def.mk
+  include $(PLATFORM_DIR)/unix-cc.mk
 endif
 
 ifdef BUILD_PROJECT

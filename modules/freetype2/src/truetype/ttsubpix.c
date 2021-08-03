@@ -4,7 +4,7 @@
  *
  *   TrueType Subpixel Hinting.
  *
- * Copyright (C) 2010-2020 by
+ * Copyright (C) 2010-2021 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -891,12 +891,12 @@
 #define TWEAK_RULES( x )                                       \
   if ( sph_test_tweak( face, family, ppem, style, glyph_index, \
                        x##_Rules, x##_RULES_SIZE ) )           \
-    loader->exec->sph_tweak_flags |= SPH_TWEAK_##x;
+    loader->exec->sph_tweak_flags |= SPH_TWEAK_##x
 
 #define TWEAK_RULES_EXCEPTIONS( x )                                        \
   if ( sph_test_tweak( face, family, ppem, style, glyph_index,             \
                        x##_Rules_Exceptions, x##_RULES_EXCEPTIONS_SIZE ) ) \
-    loader->exec->sph_tweak_flags &= ~SPH_TWEAK_##x;
+    loader->exec->sph_tweak_flags &= ~SPH_TWEAK_##x
 
 
   FT_LOCAL_DEF( void )

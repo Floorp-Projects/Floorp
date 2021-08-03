@@ -185,12 +185,12 @@
                  "Added `FONT_ASCENT %hd'.\n"
 #define ACMSG2   "FONT_DESCENT property missing.  " \
                  "Added `FONT_DESCENT %hd'.\n"
-#define ACMSG3   "Font width != actual width.  Old: %hd New: %hd.\n"
+#define ACMSG3   "Font width != actual width.  Old: %d New: %d.\n"
 #define ACMSG4   "Font left bearing != actual left bearing.  " \
                  "Old: %hd New: %hd.\n"
 #define ACMSG5   "Font ascent != actual ascent.  Old: %hd New: %hd.\n"
-#define ACMSG6   "Font descent != actual descent.  Old: %hd New: %hd.\n"
-#define ACMSG7   "Font height != actual height. Old: %hd New: %hd.\n"
+#define ACMSG6   "Font descent != actual descent.  Old: %d New: %d.\n"
+#define ACMSG7   "Font height != actual height. Old: %d New: %d.\n"
 #define ACMSG8   "Glyph scalable width (SWIDTH) adjustments made.\n"
 #define ACMSG9   "SWIDTH field missing at line %ld.  Set automatically.\n"
 #define ACMSG10  "DWIDTH field missing at line %ld.  Set to glyph width.\n"
@@ -328,7 +328,7 @@
       else if ( newsize < oldsize || newsize > bigsize )
         newsize = bigsize;
 
-      if ( FT_RENEW_ARRAY( list->field, oldsize, newsize ) )
+      if ( FT_QRENEW_ARRAY( list->field, oldsize, newsize ) )
         goto Exit;
 
       list->size = newsize;
@@ -538,7 +538,7 @@
     /* initial size and allocation of the input buffer */
     buf_size = 1024;
 
-    if ( FT_NEW_ARRAY( buf, buf_size ) )
+    if ( FT_QALLOC( buf, buf_size ) )
       goto Exit;
 
     cb      = callback;
@@ -599,7 +599,7 @@
           }
 
           new_size = buf_size * 2;
-          if ( FT_RENEW_ARRAY( buf, buf_size, new_size ) )
+          if ( FT_QREALLOC( buf, buf_size, new_size ) )
             goto Exit;
 
           cursor   = (ptrdiff_t)buf_size;
@@ -807,7 +807,7 @@
 
 
   /* Routine to compare two glyphs by encoding so they can be sorted. */
-  static int
+  FT_COMPARE_DEF( int )
   by_encoding( const void*  a,
                const void*  b )
   {
@@ -844,19 +844,18 @@
     if ( ft_hash_str_lookup( name, &(font->proptbl) ) )
       goto Exit;
 
-    if ( FT_RENEW_ARRAY( font->user_props,
-                         font->nuser_props,
-                         font->nuser_props + 1 ) )
+    if ( FT_QRENEW_ARRAY( font->user_props,
+                          font->nuser_props,
+                          font->nuser_props + 1 ) )
       goto Exit;
 
     p = font->user_props + font->nuser_props;
-    FT_ZERO( p );
 
     n = ft_strlen( name ) + 1;
     if ( n > FT_ULONG_MAX )
       return FT_THROW( Invalid_Argument );
 
-    if ( FT_NEW_ARRAY( p->name, n ) )
+    if ( FT_QALLOC( p->name, n ) )
       goto Exit;
 
     FT_MEM_COPY( (char *)p->name, name, n );
@@ -942,9 +941,9 @@
     FT_Error   error  = FT_Err_Ok;
 
 
-    if ( FT_RENEW_ARRAY( font->comments,
-                         font->comments_len,
-                         font->comments_len + len + 1 ) )
+    if ( FT_QRENEW_ARRAY( font->comments,
+                          font->comments_len,
+                          font->comments_len + len + 1 ) )
       goto Exit;
 
     cp = font->comments + font->comments_len;
@@ -1159,21 +1158,12 @@
     /* Allocate another property if this is overflowing. */
     if ( font->props_used == font->props_size )
     {
-      if ( font->props_size == 0 )
-      {
-        if ( FT_NEW_ARRAY( font->props, 1 ) )
-          goto Exit;
-      }
-      else
-      {
-        if ( FT_RENEW_ARRAY( font->props,
-                             font->props_size,
-                             font->props_size + 1 ) )
-          goto Exit;
-      }
+      if ( FT_QRENEW_ARRAY( font->props,
+                            font->props_size,
+                            font->props_size + 1 ) )
+        goto Exit;
 
       fp = font->props + font->props_size;
-      FT_ZERO( fp );
       font->props_size++;
     }
 
@@ -1438,7 +1428,7 @@
         goto Exit;
       }
 
-      if ( FT_NEW_ARRAY( p->glyph_name, slen + 1 ) )
+      if ( FT_QALLOC( p->glyph_name, slen + 1 ) )
         goto Exit;
 
       FT_MEM_COPY( p->glyph_name, s, slen + 1 );
@@ -1735,7 +1725,7 @@
       else
         glyph->bytes = (unsigned short)bitmap_size;
 
-      if ( FT_NEW_ARRAY( glyph->bitmap, glyph->bytes ) )
+      if ( FT_ALLOC( glyph->bitmap, glyph->bytes ) )
         goto Exit;
 
       p->row    = 0;
@@ -2055,7 +2045,7 @@
       /* Allowing multiple `FONT' lines (which is invalid) doesn't hurt... */
       FT_FREE( p->font->name );
 
-      if ( FT_NEW_ARRAY( p->font->name, slen + 1 ) )
+      if ( FT_QALLOC( p->font->name, slen + 1 ) )
         goto Exit;
       FT_MEM_COPY( p->font->name, s, slen + 1 );
 
@@ -2289,9 +2279,9 @@
 
       if ( p->font->comments_len > 0 )
       {
-        if ( FT_RENEW_ARRAY( p->font->comments,
-                             p->font->comments_len,
-                             p->font->comments_len + 1 ) )
+        if ( FT_QRENEW_ARRAY( p->font->comments,
+                              p->font->comments_len,
+                              p->font->comments_len + 1 ) )
           goto Fail;
 
         p->font->comments[p->font->comments_len] = 0;

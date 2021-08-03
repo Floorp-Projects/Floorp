@@ -1340,9 +1340,9 @@
                       if ( decoder->glyph_names == 0 )
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
                       {
-                        FT_ERROR((
-                          "cf2_interpT2CharString: (Type 1 seac)"
-                          " glyph names table not available in this font\n" ));
+                        FT_ERROR(( "cf2_interpT2CharString:\n" ));
+                        FT_ERROR(( "  (Type 1 seac) glyph names table"
+                                   " not available in this font\n" ));
                         lastError = FT_THROW( Invalid_Glyph_Format );
                         goto exit;
                       }
@@ -1368,9 +1368,9 @@
 
                     if ( bchar_index < 0 || achar_index < 0 )
                     {
-                      FT_ERROR((
-                        "cf2_interpT2CharString: (Type 1 seac)"
-                        " invalid seac character code arguments\n" ));
+                      FT_ERROR(( "cf2_interpT2CharString:\n" ));
+                      FT_ERROR(( "  (Type 1 seac) invalid"
+                                 " seac character code arguments\n" ));
                       lastError = FT_THROW( Invalid_Glyph_Format );
                       goto exit;
                     }
@@ -1670,7 +1670,13 @@
                      */
 
                     count = cf2_stack_count( opStack );
-                    FT_ASSERT( (CF2_UInt)arg_cnt <= count );
+                    if ( (CF2_UInt)arg_cnt > count )
+                    {
+                      FT_ERROR(( "cf2_interpT2CharString (Type 1 mode):"
+                                 " stack underflow\n" ));
+                      lastError = FT_THROW( Invalid_Glyph_Format );
+                      goto exit;
+                    }
 
                     opIdx += count - (CF2_UInt)arg_cnt;
 

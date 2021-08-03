@@ -4,7 +4,7 @@
  *
  *   Objects manager (body).
  *
- * Copyright (C) 1996-2020 by
+ * Copyright (C) 1996-2021 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -712,8 +712,8 @@
              tt_check_single_notdef( ttface ) )
         {
           FT_TRACE5(( "tt_face_init:"
-                      " Only the `.notdef' glyph has an outline.\n"
-                      "             "
+                      " Only the `.notdef' glyph has an outline.\n" ));
+          FT_TRACE5(( "             "
                       " Resetting scalable flag to FALSE.\n" ));
 
           ttface->face_flags &= ~FT_FACE_FLAG_SCALABLE;

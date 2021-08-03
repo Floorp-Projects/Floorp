@@ -4,7 +4,7 @@
  *
  *   Arithmetic computations (body).
  *
- * Copyright (C) 1996-2020 by
+ * Copyright (C) 1996-2021 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -109,7 +109,7 @@
 
 #ifndef FT_MSB
 
-  FT_BASE_DEF ( FT_Int )
+  FT_BASE_DEF( FT_Int )
   FT_MSB( FT_UInt32 z )
   {
     FT_Int  shift = 0;

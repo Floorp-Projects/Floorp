@@ -3,7 +3,7 @@
 #
 
 
-# Copyright (C) 1996-2020 by
+# Copyright (C) 1996-2021 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,11 +13,11 @@
 # fully.
 
 
-DELETE    := del
-CAT       := type
-SEP       := $(strip \ )
-BUILD_DIR := $(TOP_DIR)/builds/os2
-PLATFORM  := os2
+DELETE       := del
+CAT          := type
+SEP          := $(strip \ )
+PLATFORM_DIR := $(TOP_DIR)/builds/os2
+PLATFORM     := os2
 
 # This is used for `make refdoc' and `make refdoc-venv'
 #

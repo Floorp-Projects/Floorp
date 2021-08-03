@@ -4,7 +4,7 @@
  *
  *   TrueTypeGX/AAT common tables validation (body).
  *
- * Copyright (C) 2004-2020 by
+ * Copyright (C) 2004-2021 by
  * suzuki toshiya, Masatake YAMATO, Red Hat K.K.,
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
@@ -46,16 +46,11 @@
   /*************************************************************************/
   /*************************************************************************/
 
-  static int
-  gxv_compare_ushort_offset( FT_UShort*  a,
-                             FT_UShort*  b )
+  FT_COMPARE_DEF( int )
+  gxv_compare_ushort_offset( const void*  a,
+                             const void*  b )
   {
-    if ( *a < *b )
-      return -1;
-    else if ( *a > *b )
-      return 1;
-    else
-      return 0;
+    return  *(FT_UShort*)a - *(FT_UShort*)b;
   }
 
 
@@ -78,7 +73,7 @@
     buff[nmemb] = limit;
 
     ft_qsort( buff, ( nmemb + 1 ), sizeof ( FT_UShort ),
-              ( int(*)(const void*, const void*) )gxv_compare_ushort_offset );
+              gxv_compare_ushort_offset );
 
     if ( buff[nmemb] > limit )
       FT_INVALID_OFFSET;
@@ -111,13 +106,17 @@
   /*************************************************************************/
   /*************************************************************************/
 
-  static int
-  gxv_compare_ulong_offset( FT_ULong*  a,
-                            FT_ULong*  b )
+  FT_COMPARE_DEF( int )
+  gxv_compare_ulong_offset( const void*  a,
+                            const void*  b )
   {
-    if ( *a < *b )
+    FT_ULong  a_ = *(FT_ULong*)a;
+    FT_ULong  b_ = *(FT_ULong*)b;
+
+
+    if ( a_ < b_ )
       return -1;
-    else if ( *a > *b )
+    else if ( a_ > b_ )
       return 1;
     else
       return 0;
@@ -143,7 +142,7 @@
     buff[nmemb] = limit;
 
     ft_qsort( buff, ( nmemb + 1 ), sizeof ( FT_ULong ),
-              ( int(*)(const void*, const void*) )gxv_compare_ulong_offset );
+              gxv_compare_ulong_offset );
 
     if ( buff[nmemb] > limit )
       FT_INVALID_OFFSET;
@@ -1493,9 +1492,11 @@
       state = (FT_UShort)( newState_idx / ( 1 + maxClassID ) );
       if ( 0 != ( newState_idx % ( 1 + maxClassID ) ) )
       {
-        FT_TRACE4(( "-> new state = %d (supposed)\n"
-                    "but newState index 0x%04x is not aligned to %d-classes\n",
-                    state, newState_idx,  1 + maxClassID ));
+        FT_TRACE4(( "-> new state = %d (supposed)\n",
+                    state ));
+        FT_TRACE4(( "but newState index 0x%04x"
+                    " is not aligned to %d-classes\n",
+                    newState_idx, 1 + maxClassID ));
         GXV_SET_ERR_IF_PARANOID( FT_INVALID_OFFSET );
       }
 

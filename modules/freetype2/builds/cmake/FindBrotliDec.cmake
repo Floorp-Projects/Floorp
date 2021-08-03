@@ -1,6 +1,6 @@
 # FindBrotliDec.cmake
 #
-# Copyright (C) 2019-2020 by
+# Copyright (C) 2019-2021 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # Written by Werner Lemberg <wl@gnu.org>
@@ -19,7 +19,8 @@
 #   BROTLIDEC_INCLUDE_DIRS
 #   BROTLIDEC_LIBRARIES
 
-include(FindPkgConfig)
+find_package(PkgConfig QUIET)
+
 pkg_check_modules(PC_BROTLIDEC QUIET libbrotlidec)
 
 if (PC_BROTLIDEC_VERSION)
@@ -41,7 +42,7 @@ find_library(BROTLIDEC_LIBRARIES
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
-  brotlidec
+  BrotliDec
   REQUIRED_VARS BROTLIDEC_INCLUDE_DIRS BROTLIDEC_LIBRARIES
   FOUND_VAR BROTLIDEC_FOUND
   VERSION_VAR BROTLIDEC_VERSION)

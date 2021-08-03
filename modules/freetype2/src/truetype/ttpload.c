@@ -4,7 +4,7 @@
  *
  *   TrueType-specific tables loader (body).
  *
- * Copyright (C) 1996-2020 by
+ * Copyright (C) 1996-2021 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -237,10 +237,11 @@
     if ( pos1 > face->glyf_len )
     {
       FT_TRACE1(( "tt_face_get_location:"
-                  " too large offset (0x%08lx) found for glyph index %d,\n"
-                  "                     "
+                  " too large offset (0x%08lx) found for glyph index %d,\n",
+                  pos1, gindex ));
+      FT_TRACE1(( "                     "
                   " exceeding the end of `glyf' table (0x%08lx)\n",
-                  pos1, gindex, face->glyf_len ));
+                  face->glyf_len ));
       *asize = 0;
       return 0;
     }
@@ -251,19 +252,21 @@
       if ( gindex == face->num_locations - 2 )
       {
         FT_TRACE1(( "tt_face_get_location:"
-                    " too large size (%ld bytes) found for glyph index %d,\n"
-                    "                     "
+                    " too large size (%ld bytes) found for glyph index %d,\n",
+                    pos2 - pos1, gindex ));
+        FT_TRACE1(( "                     "
                     " truncating at the end of `glyf' table to %ld bytes\n",
-                    pos2 - pos1, gindex, face->glyf_len - pos1 ));
+                    face->glyf_len - pos1 ));
         pos2 = face->glyf_len;
       }
       else
       {
         FT_TRACE1(( "tt_face_get_location:"
-                    " too large offset (0x%08lx) found for glyph index %d,\n"
-                    "                     "
+                    " too large offset (0x%08lx) found for glyph index %d,\n",
+                    pos2, gindex + 1 ));
+        FT_TRACE1(( "                     "
                     " exceeding the end of `glyf' table (0x%08lx)\n",
-                    pos2, gindex + 1, face->glyf_len ));
+                    face->glyf_len ));
         *asize = 0;
         return 0;
       }
@@ -344,7 +347,7 @@
 
     face->cvt_size = table_len / 2;
 
-    if ( FT_NEW_ARRAY( face->cvt, face->cvt_size ) )
+    if ( FT_QNEW_ARRAY( face->cvt, face->cvt_size ) )
       goto Exit;
 
     if ( FT_FRAME_ENTER( face->cvt_size * 2L ) )
