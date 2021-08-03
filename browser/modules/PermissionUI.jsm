@@ -583,10 +583,6 @@ var PermissionPromptPrototype = {
       options.hideClose = true;
     }
 
-    if (!mainAction.hasOwnProperty("disableHighlight")) {
-      mainAction.disableHighlight = true;
-    }
-
     options.eventCallback = (topic, nextRemovalReason, isCancel) => {
       // When the docshell of the browser is aboout to be swapped to another one,
       // the "swapping" event is called. Returning true causes the notification
