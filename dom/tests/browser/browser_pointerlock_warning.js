@@ -55,7 +55,10 @@ add_task(async function show_pointerlock_warning_escape() {
       ""
     );
 
-    is(warning.innerText, expectedWarningText, "Warning text");
+    await BrowserTestUtils.waitForCondition(
+      () => warning.innerText == expectedWarningText,
+      "Warning text"
+    );
 
     EventUtils.synthesizeKey("KEY_Escape");
     await warningHiddenPromise;

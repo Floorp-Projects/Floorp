@@ -92,6 +92,13 @@ add_task(async function testPrintDoesNotWaitForPreview() {
 
     helper.mockFilePicker("print_does_not_wait_for_preview.pdf");
     await helper.setupMockPrint();
+
+    let systemPrint = helper.get("system-print");
+    await BrowserTestUtils.waitForCondition(
+      () => BrowserTestUtils.is_visible(systemPrint),
+      "Wait for the system-print to be visible"
+    );
+
     helper.click(helper.get("open-dialog-link"));
 
     helper.assertDialogHidden();
