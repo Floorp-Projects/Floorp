@@ -39,6 +39,15 @@ TEST(SanitizeRenderer, TestLinuxRadeonWithoutGeneration)
   EXPECT_EQ(sanitized, expectation);
 }
 
+TEST(SanitizeRenderer, TestLinuxRenoir)
+{
+  const std::string renderer(
+      "AMD RENOIR (DRM 3.41.0, 5.13.4-1-default, LLVM 11.1.0)");
+  const std::string expectation("Radeon R9 200 Series");
+  const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
+  EXPECT_EQ(sanitized, expectation);
+}
+
 TEST(SanitizeRenderer, TestWindowsVega)
 {
   const std::string renderer("Radeon RX Vega");
