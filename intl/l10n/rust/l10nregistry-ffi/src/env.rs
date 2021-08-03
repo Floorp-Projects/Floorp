@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use cstr::cstr;
+use fluent_fallback::env::LocalesProvider;
 use l10nregistry::{
     env::ErrorReporter,
     errors::{L10nRegistryError, L10nRegistrySetupError},
@@ -65,6 +66,13 @@ impl ErrorReporter for GeckoEnvironment {
                 warn!("Error while reporting an error: {}", err);
             }
         }
+    }
+}
+
+impl LocalesProvider for GeckoEnvironment {
+    type Iter = std::vec::IntoIter<unic_langid::LanguageIdentifier>;
+    fn locales(&self) -> Self::Iter {
+        vec!["en-US".parse().unwrap()].into_iter()
     }
 }
 
