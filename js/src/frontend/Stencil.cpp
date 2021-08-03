@@ -2923,9 +2923,6 @@ static void DumpScriptThing(js::JSONPrinter& json,
     case TaggedScriptThingIndex::Kind::EmptyGlobalScope:
       json.value("EmptyGlobalScope");
       break;
-    case TaggedScriptThingIndex::Kind::OpaqueThing:
-      json.value("OpaqueThing");
-      break;
   }
 }
 
