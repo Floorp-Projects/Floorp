@@ -31,7 +31,8 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
 
   // -
 
-  if (Contains(str, "FirePro") || Contains(str, "Radeon")) {
+  if (Contains(str, "AMD ") || Contains(str, "FirePro") ||
+      Contains(str, "Radeon")) {
     static const std::string RADEON_HD_3000 = "Radeon HD 3200 Graphics";
     static const std::string RADEON_HD_5850 = "Radeon HD 5850";
     static const std::string RADEON_R9_290 = "Radeon R9 200 Series";
@@ -72,6 +73,10 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
       if (vdw == "V") {
         return RADEON_HD_3000;  // FL10_1
       }
+      return RADEON_R9_290;
+    }
+
+    if (Contains(str, "RENOIR")) {
       return RADEON_R9_290;
     }
 
