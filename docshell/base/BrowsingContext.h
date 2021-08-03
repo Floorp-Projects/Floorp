@@ -192,8 +192,6 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(MediumOverride, nsString)                                             \
   FIELD(PrefersColorSchemeOverride, mozilla::dom::PrefersColorSchemeOverride) \
   FIELD(DisplayMode, mozilla::dom::DisplayMode)                               \
-  /* True if the top level browsing context owns a main media controller */   \
-  FIELD(HasMainMediaController, bool)                                         \
   /* The number of entries added to the session history because of this       \
    * browsing context. */                                                     \
   FIELD(HistoryEntryCount, uint32_t)                                          \
@@ -203,7 +201,11 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(SessionStoreEpoch, uint32_t)                                          \
   /* Whether we can execute scripts in this BrowsingContext. Has no effect    \
    * unless scripts are also allowed in the parent WindowContext. */          \
-  FIELD(AllowJavascript, bool)
+  FIELD(AllowJavascript, bool)                                                \
+  /* The count of request that are used to prevent the browsing context tree  \
+   * from being suspended, which would ONLY be modified on the top level      \
+   * context in the chrome process because that's a non-atomic counter */     \
+  FIELD(PageAwakeRequestCount, uint32_t)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -861,6 +863,14 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   uint32_t DefaultLoadFlags() const { return GetDefaultLoadFlags(); }
 
+  // When request for page awake, it would increase a count that is used to
+  // prevent whole browsing context tree from being suspended. The request can
+  // be called multiple times. When calling the revoke, it would decrease the
+  // count and once the count reaches to zero, the browsing context tree could
+  // be suspended when the tree is inactive.
+  void RequestForPageAwake();
+  void RevokeForPageAwake();
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
@@ -1081,9 +1091,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_PendingInitialization>, bool aNewValue,
               ContentParent* aSource);
 
-  CanSetResult CanSet(FieldIndex<IDX_HasMainMediaController>, bool aNewValue,
-                      ContentParent* aSource);
-  void DidSet(FieldIndex<IDX_HasMainMediaController>, bool aOldValue);
+  bool CanSet(FieldIndex<IDX_PageAwakeRequestCount>, uint32_t aNewValue,
+              ContentParent* aSource);
+  void DidSet(FieldIndex<IDX_PageAwakeRequestCount>, uint32_t aOldValue);
 
   CanSetResult CanSet(FieldIndex<IDX_AllowJavascript>, bool aValue,
                       ContentParent* aSource);
