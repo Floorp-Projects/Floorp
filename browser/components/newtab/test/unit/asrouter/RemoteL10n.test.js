@@ -5,11 +5,28 @@ describe("RemoteL10n", () => {
   let sandbox;
   let globals;
   let domL10nStub;
+  let l10nRegStub;
+  let l10nRegInstance;
+  let fileSourceStub;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     globals = new GlobalOverrider();
     domL10nStub = sandbox.stub();
+    l10nRegInstance = {
+      hasSource: sandbox.stub(),
+      registerSources: sandbox.stub(),
+      removeSources: sandbox.stub(),
+    };
+
+    fileSourceStub = sandbox.stub();
+    l10nRegStub = {
+      getInstance: () => {
+        return l10nRegInstance;
+      },
+    };
     globals.set("DOMLocalization", domL10nStub);
+    globals.set("L10nRegistry", l10nRegStub);
+    globals.set("L10nFileSource", fileSourceStub);
   });
   afterEach(() => {
     sandbox.restore();
@@ -51,6 +68,7 @@ describe("RemoteL10n", () => {
   describe("#_createDOML10n", () => {
     it("should load the remote Fluent file if USE_REMOTE_L10N_PREF is true", async () => {
       sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
+      l10nRegInstance.hasSource.returns(false);
       RemoteL10n._createDOML10n();
 
       assert.calledOnce(domL10nStub);
@@ -58,7 +76,7 @@ describe("RemoteL10n", () => {
       // The first arg is the resource array,
       // the second one is false (use async),
       // and the third one is the bundle generator.
-      assert.equal(args.length, 3);
+      assert.equal(args.length, 2);
       assert.deepEqual(args[0], [
         "browser/newtab/asrouter.ftl",
         "browser/branding/brandings.ftl",
@@ -67,17 +85,20 @@ describe("RemoteL10n", () => {
         "browser/defaultBrowserNotification.ftl",
       ]);
       assert.isFalse(args[1]);
-      assert.isFunction(args[2].generateBundles);
+      assert.calledOnce(l10nRegInstance.hasSource);
+      assert.calledOnce(l10nRegInstance.registerSources);
+      assert.notCalled(l10nRegInstance.removeSources);
     });
     it("should load the local Fluent file if USE_REMOTE_L10N_PREF is false", () => {
       sandbox.stub(global.Services.prefs, "getBoolPref").returns(false);
+      l10nRegInstance.hasSource.returns(true);
       RemoteL10n._createDOML10n();
 
       const { args } = domL10nStub.firstCall;
       // The first arg is the resource array,
       // the second one is false (use async),
       // and the third one is null.
-      assert.equal(args.length, 3);
+      assert.equal(args.length, 2);
       assert.deepEqual(args[0], [
         "browser/newtab/asrouter.ftl",
         "browser/branding/brandings.ftl",
@@ -86,7 +107,9 @@ describe("RemoteL10n", () => {
         "browser/defaultBrowserNotification.ftl",
       ]);
       assert.isFalse(args[1]);
-      assert.isEmpty(args[2]);
+      assert.calledOnce(l10nRegInstance.hasSource);
+      assert.notCalled(l10nRegInstance.registerSources);
+      assert.calledOnce(l10nRegInstance.removeSources);
     });
   });
   describe("#createElement", () => {
