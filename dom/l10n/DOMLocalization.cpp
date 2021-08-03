@@ -35,40 +35,53 @@ NS_IMPL_RELEASE_INHERITED(DOMLocalization, Localization)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMLocalization)
 NS_INTERFACE_MAP_END_INHERITING(Localization)
 
-/* static */
-already_AddRefed<DOMLocalization> DOMLocalization::Create(
-    nsIGlobalObject* aGlobal, const bool aSync,
-    const BundleGenerator& aBundleGenerator) {
-  RefPtr<DOMLocalization> domLoc =
-      new DOMLocalization(aGlobal, aSync, aBundleGenerator);
-
-  return domLoc.forget();
-}
-
-DOMLocalization::DOMLocalization(nsIGlobalObject* aGlobal, const bool aSync,
-                                 const BundleGenerator& aBundleGenerator)
+DOMLocalization::DOMLocalization(nsIGlobalObject* aGlobal, bool aSync)
     : Localization(aGlobal, aSync) {
   mMutations = new L10nMutations(this);
 }
 
+DOMLocalization::DOMLocalization(nsIGlobalObject* aGlobal, bool aIsSync,
+                                 const ffi::LocalizationRc* aRaw)
+    : Localization(aGlobal, aIsSync, aRaw) {
+  mMutations = new L10nMutations(this);
+}
+
 already_AddRefed<DOMLocalization> DOMLocalization::Constructor(
-    const GlobalObject& aGlobal, const Sequence<nsString>& aResourceIds,
-    const bool aSync, const BundleGenerator& aBundleGenerator,
-    ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!global) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+    const GlobalObject& aGlobal, const Sequence<nsCString>& aResourceIds,
+    bool aIsSync, const Optional<NonNull<L10nRegistry>>& aRegistry,
+    const Optional<Sequence<nsCString>>& aLocales, ErrorResult& aRv) {
+  nsTArray<nsCString> resIds = ToTArray<nsTArray<nsCString>>(aResourceIds);
+  Maybe<nsTArray<nsCString>> locales;
+
+  if (aLocales.WasPassed()) {
+    locales.emplace();
+    locales->SetCapacity(aLocales.Value().Length());
+    for (const auto& locale : aLocales.Value()) {
+      locales->AppendElement(locale);
+    }
   }
 
-  RefPtr<DOMLocalization> domLoc =
-      DOMLocalization::Create(global, aSync, aBundleGenerator);
+  RefPtr<const ffi::LocalizationRc> raw;
+  bool result;
 
-  if (aResourceIds.Length()) {
-    domLoc->AddResourceIds(aResourceIds);
+  if (aRegistry.WasPassed()) {
+    result = ffi::localization_new_with_locales(
+        &resIds, aIsSync, aRegistry.Value().Raw(), locales.ptrOr(nullptr),
+        getter_AddRefs(raw));
+  } else {
+    result = ffi::localization_new_with_locales(
+        &resIds, aIsSync, nullptr, locales.ptrOr(nullptr), getter_AddRefs(raw));
   }
 
-  return domLoc.forget();
+  if (result) {
+    nsCOMPtr<nsIGlobalObject> global =
+        do_QueryInterface(aGlobal.GetAsSupports());
+
+    return do_AddRef(new DOMLocalization(global, aIsSync, raw));
+  }
+  aRv.ThrowInvalidStateError(
+      "Failed to create the Localization. Check the locales arguments.");
+  return nullptr;
 }
 
 JSObject* DOMLocalization::WrapObject(JSContext* aCx,
