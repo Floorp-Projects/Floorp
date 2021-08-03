@@ -1415,7 +1415,9 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_wasm_sources(self):
         """Test that WASM_SOURCES works properly."""
-        reader = self.reader("wasm-sources", extra_substs={"OS_TARGET": "Linux"})
+        reader = self.reader(
+            "wasm-sources", extra_substs={"WASM_CC": "clang", "WASM_CXX": "clang++"}
+        )
         objs = list(self.read_topsrcdir(reader))
 
         # The second to last object is a linkable.
@@ -1833,7 +1835,10 @@ class TestEmitterBasic(unittest.TestCase):
             self.read_topsrcdir(reader)
 
     def test_wasm_compile_flags(self):
-        reader = self.reader("wasm-compile-flags", extra_substs={"OS_TARGET": "Linux"})
+        reader = self.reader(
+            "wasm-compile-flags",
+            extra_substs={"WASM_CC": "clang", "WASM_CXX": "clang++"},
+        )
         flags = list(self.read_topsrcdir(reader))[2]
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(
