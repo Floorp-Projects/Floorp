@@ -491,9 +491,11 @@ def mozbuild_file_to_source_assignments(normalized_mozbuild_filename, assignment
         if source_assignment_location in source_assignments:
             source_assignment_location = node_to_readable_file_location(code, a)
 
-        assert source_assignment_location not in source_assignments, (
-            "In %s, two assignments have the same key ('%s')"
-            % (normalized_mozbuild_filename, source_assignment_location)
+        assert (
+            source_assignment_location not in source_assignments
+        ), "In %s, two assignments have the same key ('%s')" % (
+            normalized_mozbuild_filename,
+            source_assignment_location,
         )
         source_assignments[source_assignment_location] = normalized_source_filename_list
         assignment_index += 1
