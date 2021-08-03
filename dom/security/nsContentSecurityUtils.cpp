@@ -1090,8 +1090,8 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     return true;
   }
 
-  bool bergamont_disabled;
-  Preferences::GetBool("extensions.translations.disabled", &bergamont_disabled);
+  bool bergamont_disabled =
+      Preferences::GetBool("extensions.translations.disabled", true);
   if (!bergamont_disabled &&
       StringBeginsWith(filenameU, u"moz-extension://"_ns)) {
     // Allow all moz-extensions through if bergamont is enabled; because there
