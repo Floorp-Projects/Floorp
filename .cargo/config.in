@@ -25,7 +25,7 @@ rev = "5326af6b54cec885cdb9e7be282a6db6e757b964"
 [source."https://github.com/mozilla/l10nregistry-rs"]
 git = "https://github.com/mozilla/l10nregistry-rs"
 replace-with = "vendored-sources"
-rev = "55bf7f826d773303a67d8d7fdab099a04322d4fb"
+rev = "a69df9836b1ef536727195209013b9ad6b132618"
 
 [source."https://github.com/mozilla/cubeb-pulse-rs"]
 git = "https://github.com/mozilla/cubeb-pulse-rs"
