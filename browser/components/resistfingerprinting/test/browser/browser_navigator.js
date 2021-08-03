@@ -341,17 +341,11 @@ add_task(async function setupDefaultUserAgent() {
     userAgentNavigator: defaultUserAgent,
     userAgentHeader: defaultUserAgent,
   };
-});
 
-add_task(async function runDefaultNavigatorTest() {
   await testNavigator();
-});
 
-add_task(async function runDefaultHTTPHeaderTest() {
   await testUserAgentHeader();
-});
 
-add_task(async function runDefaultWorkerNavigatorTest() {
   await testWorkerNavigator();
 });
 
@@ -379,17 +373,11 @@ add_task(async function setupResistFingerprinting() {
     userAgentNavigator: spoofedUserAgentNavigator,
     userAgentHeader: spoofedUserAgentHeader,
   };
-});
 
-add_task(async function runSpoofedNavigatorTest() {
   await testNavigator();
-});
 
-add_task(async function runSpoofedHTTPHeaderTest() {
   await testUserAgentHeader();
-});
 
-add_task(async function runSpoofedWorkerNavigatorTest() {
   await testWorkerNavigator();
 });
 
