@@ -201,20 +201,18 @@ JSString* GCRuntime::tryNewNurseryString(JSContext* cx, size_t thingSize,
   return nullptr;
 }
 
-template <typename StringAllocT, AllowGC allowGC /* = CanGC */>
-StringAllocT* js::AllocateStringImpl(JSContext* cx, InitialHeap heap) {
-  static_assert(std::is_convertible_v<StringAllocT*, JSString*>,
-                "must be JSString derived");
-
-  AllocKind kind = MapTypeToFinalizeKind<StringAllocT>::kind;
-  size_t size = sizeof(StringAllocT);
+template <AllowGC allowGC /* = CanGC */>
+JSString* js::AllocateStringImpl(JSContext* cx, AllocKind kind, size_t size,
+                                 InitialHeap heap) {
   MOZ_ASSERT(size == Arena::thingSize(kind));
   MOZ_ASSERT(size == sizeof(JSString) || size == sizeof(JSFatInlineString));
+  MOZ_ASSERT(
+      IsNurseryAllocable(kind));  // Atoms are allocated using Allocate().
 
   // Off-thread alloc cannot trigger GC or make runtime assertions.
   if (cx->isNurseryAllocSuppressed()) {
-    StringAllocT* str =
-        GCRuntime::tryNewTenuredThing<StringAllocT, NoGC>(cx, kind, size);
+    JSString* str =
+        GCRuntime::tryNewTenuredThing<JSString, NoGC>(cx, kind, size);
     if (MOZ_UNLIKELY(allowGC && !str)) {
       ReportOutOfMemory(cx);
     }
@@ -228,7 +226,7 @@ StringAllocT* js::AllocateStringImpl(JSContext* cx, InitialHeap heap) {
 
   if (cx->nursery().isEnabled() && heap != TenuredHeap &&
       cx->nursery().canAllocateStrings() && cx->zone()->allocNurseryStrings) {
-    auto* str = static_cast<StringAllocT*>(
+    auto* str = static_cast<JSString*>(
         rt->gc.tryNewNurseryString<allowGC>(cx, size, kind));
     if (str) {
       return str;
@@ -244,8 +242,13 @@ StringAllocT* js::AllocateStringImpl(JSContext* cx, InitialHeap heap) {
     }
   }
 
-  return GCRuntime::tryNewTenuredThing<StringAllocT, allowGC>(cx, kind, size);
+  return GCRuntime::tryNewTenuredThing<JSString, allowGC>(cx, kind, size);
 }
+
+template JSString* js::AllocateStringImpl<NoGC>(JSContext*, AllocKind, size_t,
+                                                InitialHeap);
+template JSString* js::AllocateStringImpl<CanGC>(JSContext*, AllocKind, size_t,
+                                                 InitialHeap);
 
 // Attempt to allocate a new BigInt out of the nursery. If there is not enough
 // room in the nursery or there is an OOM, this method will return nullptr.
@@ -323,24 +326,16 @@ template JS::BigInt* js::AllocateBigInt<NoGC>(JSContext* cx,
 template JS::BigInt* js::AllocateBigInt<CanGC>(JSContext* cx,
                                                gc::InitialHeap heap);
 
-#define DECL_ALLOCATOR_INSTANCES(allocKind, traceKind, type, sizedType, \
-                                 bgfinal, nursery, compact)             \
-  template type* js::AllocateStringImpl<type, NoGC>(JSContext * cx,     \
-                                                    InitialHeap heap);  \
-  template type* js::AllocateStringImpl<type, CanGC>(JSContext * cx,    \
-                                                     InitialHeap heap);
-FOR_EACH_NURSERY_STRING_ALLOCKIND(DECL_ALLOCATOR_INSTANCES)
-#undef DECL_ALLOCATOR_INSTANCES
-
 template <typename T, AllowGC allowGC /* = CanGC */>
 T* js::Allocate(JSContext* cx) {
-  static_assert(!std::is_convertible_v<T*, JSObject*>,
-                "must not be JSObject derived");
+  static_assert(std::is_base_of_v<gc::Cell, T>);
   static_assert(
       sizeof(T) >= MinCellSize,
       "All allocations must be at least the allocator-imposed minimum size.");
 
   AllocKind kind = MapTypeToFinalizeKind<T>::kind;
+  MOZ_ASSERT(!IsNurseryAllocable(kind));
+
   size_t thingSize = sizeof(T);
   MOZ_ASSERT(thingSize == Arena::thingSize(kind));
 

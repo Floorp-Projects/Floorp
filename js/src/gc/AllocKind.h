@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * vim: set ts=8 sts=2 et sw=2 tw=80:
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -20,9 +21,18 @@
 #include "js/TraceKind.h"
 #include "js/Utility.h"
 
+class JSDependentString;
+class JSExternalString;
+class JSFatInlineString;
+class JSLinearString;
+class JSRope;
+class JSThinInlineString;
+
 namespace js {
 
 class CompactPropMap;
+class FatInlineAtom;
+class NormalAtom;
 class NormalPropMap;
 class DictionaryPropMap;
 
@@ -182,6 +192,43 @@ using AllAllocKindArray =
 template <typename ValueType>
 using ObjectAllocKindArray =
     mozilla::EnumeratedArray<AllocKind, AllocKind::OBJECT_LIMIT, ValueType>;
+
+/*
+ * Map from C++ type to alloc kind for non-object types. JSObject does not have
+ * a 1:1 mapping, so must use Arena::thingSize.
+ *
+ * The AllocKind is available as MapTypeToFinalizeKind<SomeType>::kind.
+ *
+ * There are specializations for strings since more than one derived string type
+ * shares the same alloc kind.
+ */
+template <typename T>
+struct MapTypeToFinalizeKind {};
+#define EXPAND_MAPTYPETOFINALIZEKIND(allocKind, traceKind, type, sizedType, \
+                                     bgFinal, nursery, compact)             \
+  template <>                                                               \
+  struct MapTypeToFinalizeKind<type> {                                      \
+    static const AllocKind kind = AllocKind::allocKind;                     \
+  };
+FOR_EACH_NONOBJECT_ALLOCKIND(EXPAND_MAPTYPETOFINALIZEKIND)
+#undef EXPAND_MAPTYPETOFINALIZEKIND
+
+template <>
+struct MapTypeToFinalizeKind<JSDependentString> {
+  static const AllocKind kind = AllocKind::STRING;
+};
+template <>
+struct MapTypeToFinalizeKind<JSRope> {
+  static const AllocKind kind = AllocKind::STRING;
+};
+template <>
+struct MapTypeToFinalizeKind<JSLinearString> {
+  static const AllocKind kind = AllocKind::STRING;
+};
+template <>
+struct MapTypeToFinalizeKind<JSThinInlineString> {
+  static const AllocKind kind = AllocKind::STRING;
+};
 
 static inline JS::TraceKind MapAllocToTraceKind(AllocKind kind) {
   static const JS::TraceKind map[] = {
