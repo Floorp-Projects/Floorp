@@ -2232,7 +2232,7 @@ MOZ_TREE_PIXMAN=1 )
 if test "$MOZ_TREE_PIXMAN"; then
     AC_DEFINE(MOZ_TREE_PIXMAN)
 else
-    PKG_CHECK_MODULES(MOZ_PIXMAN, pixman-1 >= 0.19.2)
+    PKG_CHECK_MODULES(MOZ_PIXMAN, pixman-1 >= 0.36.0)
 fi
 
 if test "$OS_ARCH" = "WINNT"; then
