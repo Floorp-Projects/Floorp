@@ -5,18 +5,19 @@
 
 use pkcs11::types::*;
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::thread;
+use std::thread::JoinHandle;
+use std::time::{Duration, Instant};
 
 #[cfg(target_os = "macos")]
 use crate::backend_macos as backend;
 #[cfg(target_os = "windows")]
 use crate::backend_windows as backend;
-use crate::util::*;
 use backend::*;
 
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::thread;
-use std::thread::JoinHandle;
-use std::time::{Duration, Instant};
+use crate::error::{Error, ErrorType};
+use crate::util::*;
 
 /// Helper enum to differentiate between sessions on the modern slot and sessions on the legacy
 /// slot. The former is for EC keys and RSA keys that can be used with RSA-PSS whereas the latter is
@@ -57,17 +58,17 @@ enum ManagerArguments {
 /// `ManagerProxy`. `ManagerReturnValue::Stop` is a special variant that indicates that the
 /// `Manager` will stop.
 enum ManagerReturnValue {
-    OpenSession(Result<CK_SESSION_HANDLE, ()>),
-    CloseSession(Result<(), ()>),
-    CloseAllSessions(Result<(), ()>),
-    StartSearch(Result<(), ()>),
-    Search(Result<Vec<CK_OBJECT_HANDLE>, ()>),
-    ClearSearch(Result<(), ()>),
-    GetAttributes(Result<Vec<Option<Vec<u8>>>, ()>),
-    StartSign(Result<(), ()>),
-    GetSignatureLength(Result<usize, ()>),
-    Sign(Result<Vec<u8>, ()>),
-    Stop(Result<(), ()>),
+    OpenSession(Result<CK_SESSION_HANDLE, Error>),
+    CloseSession(Result<(), Error>),
+    CloseAllSessions(Result<(), Error>),
+    StartSearch(Result<(), Error>),
+    Search(Result<Vec<CK_OBJECT_HANDLE>, Error>),
+    ClearSearch(Result<(), Error>),
+    GetAttributes(Result<Vec<Option<Vec<u8>>>, Error>),
+    StartSign(Result<(), Error>),
+    GetSignatureLength(Result<usize, Error>),
+    Sign(Result<Vec<u8>, Error>),
+    Stop(Result<(), Error>),
 }
 
 /// Helper macro to implement the body of each public `ManagerProxy` function. Takes a
@@ -78,11 +79,8 @@ macro_rules! manager_proxy_fn_impl {
     ($manager:ident, $argument_enum:expr, $return_type:path) => {
         match $manager.proxy_call($argument_enum) {
             Ok($return_type(result)) => result,
-            Ok(_) => {
-                error!("unexpected return value from manager");
-                Err(())
-            }
-            Err(()) => Err(()),
+            Ok(_) => Err(error_here!(ErrorType::LibraryFailure)),
+            Err(e) => Err(e),
         }
     };
 }
@@ -98,7 +96,7 @@ pub struct ManagerProxy {
 }
 
 impl ManagerProxy {
-    pub fn new() -> Result<ManagerProxy, ()> {
+    pub fn new() -> Result<ManagerProxy, Error> {
         let (proxy_sender, manager_receiver) = channel();
         let (manager_sender, proxy_receiver) = channel();
         let thread_handle = thread::Builder::new()
@@ -108,8 +106,7 @@ impl ManagerProxy {
                 loop {
                     let arguments = match manager_receiver.recv() {
                         Ok(arguments) => arguments,
-                        Err(e) => {
-                            error!("error recv()ing arguments from ManagerProxy: {}", e);
+                        Err(_) => {
                             break;
                         }
                     };
@@ -156,10 +153,7 @@ impl ManagerProxy {
                         ManagerArguments::Sign(session, data) => {
                             ManagerReturnValue::Sign(real_manager.sign(session, &data))
                         }
-                        ManagerArguments::Stop => {
-                            debug!("ManagerArguments::Stop received - stopping Manager thread.");
-                            ManagerReturnValue::Stop(Ok(()))
-                        }
+                        ManagerArguments::Stop => ManagerReturnValue::Stop(Ok(())),
                     };
                     let stop_after_send = match &results {
                         &ManagerReturnValue::Stop(_) => true,
@@ -167,8 +161,7 @@ impl ManagerProxy {
                     };
                     match manager_sender.send(results) {
                         Ok(()) => {}
-                        Err(e) => {
-                            error!("error send()ing results from Manager: {}", e);
+                        Err(_) => {
                             break;
                         }
                     }
@@ -183,32 +176,27 @@ impl ManagerProxy {
                 receiver: proxy_receiver,
                 thread_handle: Some(thread_handle),
             }),
-            Err(e) => {
-                error!("error creating manager proxy: {}", e);
-                Err(())
-            }
+            Err(_) => Err(error_here!(ErrorType::LibraryFailure)),
         }
     }
 
-    fn proxy_call(&self, args: ManagerArguments) -> Result<ManagerReturnValue, ()> {
+    fn proxy_call(&self, args: ManagerArguments) -> Result<ManagerReturnValue, Error> {
         match self.sender.send(args) {
             Ok(()) => {}
-            Err(e) => {
-                error!("error send()ing arguments to Manager: {}", e);
-                return Err(());
+            Err(_) => {
+                return Err(error_here!(ErrorType::LibraryFailure));
             }
         };
         let result = match self.receiver.recv() {
             Ok(result) => result,
-            Err(e) => {
-                error!("error recv()ing result from Manager: {}", e);
-                return Err(());
+            Err(_) => {
+                return Err(error_here!(ErrorType::LibraryFailure));
             }
         };
         Ok(result)
     }
 
-    pub fn open_session(&mut self, slot_type: SlotType) -> Result<CK_SESSION_HANDLE, ()> {
+    pub fn open_session(&mut self, slot_type: SlotType) -> Result<CK_SESSION_HANDLE, Error> {
         manager_proxy_fn_impl!(
             self,
             ManagerArguments::OpenSession(slot_type),
@@ -216,7 +204,7 @@ impl ManagerProxy {
         )
     }
 
-    pub fn close_session(&mut self, session: CK_SESSION_HANDLE) -> Result<(), ()> {
+    pub fn close_session(&mut self, session: CK_SESSION_HANDLE) -> Result<(), Error> {
         manager_proxy_fn_impl!(
             self,
             ManagerArguments::CloseSession(session),
@@ -224,7 +212,7 @@ impl ManagerProxy {
         )
     }
 
-    pub fn close_all_sessions(&mut self, slot_type: SlotType) -> Result<(), ()> {
+    pub fn close_all_sessions(&mut self, slot_type: SlotType) -> Result<(), Error> {
         manager_proxy_fn_impl!(
             self,
             ManagerArguments::CloseAllSessions(slot_type),
@@ -236,7 +224,7 @@ impl ManagerProxy {
         &mut self,
         session: CK_SESSION_HANDLE,
         attrs: Vec<(CK_ATTRIBUTE_TYPE, Vec<u8>)>,
-    ) -> Result<(), ()> {
+    ) -> Result<(), Error> {
         manager_proxy_fn_impl!(
             self,
             ManagerArguments::StartSearch(session, attrs),
@@ -248,7 +236,7 @@ impl ManagerProxy {
         &mut self,
         session: CK_SESSION_HANDLE,
         max_objects: usize,
-    ) -> Result<Vec<CK_OBJECT_HANDLE>, ()> {
+    ) -> Result<Vec<CK_OBJECT_HANDLE>, Error> {
         manager_proxy_fn_impl!(
             self,
             ManagerArguments::Search(session, max_objects),
@@ -256,7 +244,7 @@ impl ManagerProxy {
         )
     }
 
-    pub fn clear_search(&mut self, session: CK_SESSION_HANDLE) -> Result<(), ()> {
+    pub fn clear_search(&mut self, session: CK_SESSION_HANDLE) -> Result<(), Error> {
         manager_proxy_fn_impl!(
             self,
             ManagerArguments::ClearSearch(session),
@@ -268,7 +256,7 @@ impl ManagerProxy {
         &self,
         object_handle: CK_OBJECT_HANDLE,
         attr_types: Vec<CK_ATTRIBUTE_TYPE>,
-    ) -> Result<Vec<Option<Vec<u8>>>, ()> {
+    ) -> Result<Vec<Option<Vec<u8>>>, Error> {
         manager_proxy_fn_impl!(
             self,
             ManagerArguments::GetAttributes(object_handle, attr_types,),
@@ -281,7 +269,7 @@ impl ManagerProxy {
         session: CK_SESSION_HANDLE,
         key_handle: CK_OBJECT_HANDLE,
         params: Option<CK_RSA_PKCS_PSS_PARAMS>,
-    ) -> Result<(), ()> {
+    ) -> Result<(), Error> {
         manager_proxy_fn_impl!(
             self,
             ManagerArguments::StartSign(session, key_handle, params),
@@ -293,7 +281,7 @@ impl ManagerProxy {
         &self,
         session: CK_SESSION_HANDLE,
         data: Vec<u8>,
-    ) -> Result<usize, ()> {
+    ) -> Result<usize, Error> {
         manager_proxy_fn_impl!(
             self,
             ManagerArguments::GetSignatureLength(session, data),
@@ -301,7 +289,7 @@ impl ManagerProxy {
         )
     }
 
-    pub fn sign(&mut self, session: CK_SESSION_HANDLE, data: Vec<u8>) -> Result<Vec<u8>, ()> {
+    pub fn sign(&mut self, session: CK_SESSION_HANDLE, data: Vec<u8>) -> Result<Vec<u8>, Error> {
         manager_proxy_fn_impl!(
             self,
             ManagerArguments::Sign(session, data),
@@ -309,23 +297,15 @@ impl ManagerProxy {
         )
     }
 
-    pub fn stop(&mut self) -> Result<(), ()> {
+    pub fn stop(&mut self) -> Result<(), Error> {
         manager_proxy_fn_impl!(self, ManagerArguments::Stop, ManagerReturnValue::Stop)?;
         let thread_handle = match self.thread_handle.take() {
             Some(thread_handle) => thread_handle,
-            None => {
-                error!("stop should only be called once");
-                return Err(());
-            }
+            None => return Err(error_here!(ErrorType::LibraryFailure)),
         };
-        match thread_handle.join() {
-            Ok(()) => {}
-            Err(e) => {
-                error!("manager thread panicked: {:?}", e);
-                return Err(());
-            }
-        };
-        Ok(())
+        thread_handle
+            .join()
+            .map_err(|_| error_here!(ErrorType::LibraryFailure))
     }
 }
 
@@ -338,7 +318,7 @@ impl ManagerProxy {
 // nssToken_FindPrivateKeys)
 fn search_is_for_all_certificates_or_keys(
     attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)],
-) -> Result<bool, ()> {
+) -> Result<bool, Error> {
     if attrs.len() != 2 {
         return Ok(false);
     }
@@ -418,7 +398,6 @@ impl Manager {
         }
         self.last_scan_time = Some(now);
         let objects = list_objects();
-        debug!("found {} objects", objects.len());
         for object in objects {
             match &object {
                 Object::Cert(cert) => {
@@ -441,18 +420,21 @@ impl Manager {
         }
     }
 
-    pub fn open_session(&mut self, slot_type: SlotType) -> Result<CK_SESSION_HANDLE, ()> {
+    pub fn open_session(&mut self, slot_type: SlotType) -> Result<CK_SESSION_HANDLE, Error> {
         let next_session = self.next_session;
         self.next_session += 1;
         self.sessions.insert(next_session, slot_type);
         Ok(next_session)
     }
 
-    pub fn close_session(&mut self, session: CK_SESSION_HANDLE) -> Result<(), ()> {
-        self.sessions.remove(&session).ok_or(()).map(|_| ())
+    pub fn close_session(&mut self, session: CK_SESSION_HANDLE) -> Result<(), Error> {
+        self.sessions
+            .remove(&session)
+            .ok_or(error_here!(ErrorType::InvalidInput))
+            .map(|_| ())
     }
 
-    pub fn close_all_sessions(&mut self, slot_type: SlotType) -> Result<(), ()> {
+    pub fn close_all_sessions(&mut self, slot_type: SlotType) -> Result<(), Error> {
         let mut to_remove = Vec::new();
         for (session, open_slot_type) in self.sessions.iter() {
             if slot_type == *open_slot_type {
@@ -461,7 +443,7 @@ impl Manager {
         }
         for session in to_remove {
             if self.sessions.remove(&session).is_none() {
-                return Err(());
+                return Err(error_here!(ErrorType::LibraryFailure));
             }
         }
         Ok(())
@@ -481,10 +463,10 @@ impl Manager {
         &mut self,
         session: CK_SESSION_HANDLE,
         attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)],
-    ) -> Result<(), ()> {
+    ) -> Result<(), Error> {
         let slot_type = match self.sessions.get(&session) {
             Some(slot_type) => *slot_type,
-            None => return Err(()),
+            None => return Err(error_here!(ErrorType::InvalidArgument)),
         };
         // If the search is for an attribute we don't support, no objects will match. This check
         // saves us having to look through all of our objects.
@@ -519,9 +501,9 @@ impl Manager {
         &mut self,
         session: CK_SESSION_HANDLE,
         max_objects: usize,
-    ) -> Result<Vec<CK_OBJECT_HANDLE>, ()> {
+    ) -> Result<Vec<CK_OBJECT_HANDLE>, Error> {
         if max_objects == 0 {
-            return Err(());
+            return Err(error_here!(ErrorType::InvalidArgument));
         }
         match self.searches.get_mut(&session) {
             Some(search) => {
@@ -532,20 +514,15 @@ impl Manager {
                 };
                 let to_return = search.split_off(split_at);
                 if to_return.len() > max_objects {
-                    error!(
-                        "search trying to return too many handles: {} > {}",
-                        to_return.len(),
-                        max_objects
-                    );
-                    return Err(());
+                    return Err(error_here!(ErrorType::LibraryFailure));
                 }
                 Ok(to_return)
             }
-            None => Err(()),
+            None => Err(error_here!(ErrorType::InvalidArgument)),
         }
     }
 
-    pub fn clear_search(&mut self, session: CK_SESSION_HANDLE) -> Result<(), ()> {
+    pub fn clear_search(&mut self, session: CK_SESSION_HANDLE) -> Result<(), Error> {
         self.searches.remove(&session);
         Ok(())
     }
@@ -554,10 +531,10 @@ impl Manager {
         &self,
         object_handle: CK_OBJECT_HANDLE,
         attr_types: Vec<CK_ATTRIBUTE_TYPE>,
-    ) -> Result<Vec<Option<Vec<u8>>>, ()> {
+    ) -> Result<Vec<Option<Vec<u8>>>, Error> {
         let object = match self.objects.get(&object_handle) {
             Some(object) => object,
-            None => return Err(()),
+            None => return Err(error_here!(ErrorType::InvalidArgument)),
         };
         let mut results = Vec::with_capacity(attr_types.len());
         for attr_type in attr_types {
@@ -579,13 +556,13 @@ impl Manager {
         session: CK_SESSION_HANDLE,
         key_handle: CK_OBJECT_HANDLE,
         params: Option<CK_RSA_PKCS_PSS_PARAMS>,
-    ) -> Result<(), ()> {
+    ) -> Result<(), Error> {
         if self.signs.contains_key(&session) {
-            return Err(());
+            return Err(error_here!(ErrorType::InvalidArgument));
         }
         match self.objects.get(&key_handle) {
             Some(Object::Key(_)) => {}
-            _ => return Err(()),
+            _ => return Err(error_here!(ErrorType::InvalidArgument)),
         };
         self.signs.insert(session, (key_handle, params));
         Ok(())
@@ -595,28 +572,28 @@ impl Manager {
         &mut self,
         session: CK_SESSION_HANDLE,
         data: &[u8],
-    ) -> Result<usize, ()> {
+    ) -> Result<usize, Error> {
         let (key_handle, params) = match self.signs.get(&session) {
             Some((key_handle, params)) => (key_handle, params),
-            None => return Err(()),
+            None => return Err(error_here!(ErrorType::InvalidArgument)),
         };
         let key = match self.objects.get_mut(&key_handle) {
             Some(Object::Key(key)) => key,
-            _ => return Err(()),
+            _ => return Err(error_here!(ErrorType::InvalidArgument)),
         };
         key.get_signature_length(data, params)
     }
 
-    pub fn sign(&mut self, session: CK_SESSION_HANDLE, data: &[u8]) -> Result<Vec<u8>, ()> {
+    pub fn sign(&mut self, session: CK_SESSION_HANDLE, data: &[u8]) -> Result<Vec<u8>, Error> {
         // Performing the signature (via C_Sign, which is the only way we support) finishes the sign
         // operation, so it needs to be removed here.
         let (key_handle, params) = match self.signs.remove(&session) {
             Some((key_handle, params)) => (key_handle, params),
-            None => return Err(()),
+            None => return Err(error_here!(ErrorType::InvalidArgument)),
         };
         let key = match self.objects.get_mut(&key_handle) {
             Some(Object::Key(key)) => key,
-            _ => return Err(()),
+            _ => return Err(error_here!(ErrorType::InvalidArgument)),
         };
         key.sign(data, &params)
     }

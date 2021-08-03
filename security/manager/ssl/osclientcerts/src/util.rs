@@ -6,6 +6,8 @@
 use byteorder::{BigEndian, NativeEndian, ReadBytesExt, WriteBytesExt};
 use std::convert::TryInto;
 
+use crate::error::{Error, ErrorType};
+
 /// Accessing fields of packed structs is unsafe (it may be undefined behavior if the field isn't
 /// aligned). Since we're implementing a PKCS#11 module, we already have to trust the caller not to
 /// give us bad data, so normally we would deal with this by adding an unsafe block. If we do that,
@@ -44,13 +46,15 @@ pub const OID_BYTES_SHA_1: &[u8] = &[0x2b, 0x0e, 0x03, 0x02, 0x1a];
 
 // This is a helper function to take a value and lay it out in memory how
 // PKCS#11 is expecting it.
-pub fn serialize_uint<T: TryInto<u64>>(value: T) -> Result<Vec<u8>, ()> {
+pub fn serialize_uint<T: TryInto<u64>>(value: T) -> Result<Vec<u8>, Error> {
     let value_size = std::mem::size_of::<T>();
     let mut value_buf = Vec::with_capacity(value_size);
-    let value_as_u64 = value.try_into().map_err(|_| ())?;
+    let value_as_u64 = value
+        .try_into()
+        .map_err(|_| error_here!(ErrorType::ValueTooLarge))?;
     value_buf
         .write_uint::<NativeEndian>(value_as_u64, value_size)
-        .map_err(|_| ())?;
+        .map_err(|_| error_here!(ErrorType::LibraryFailure))?;
     Ok(value_buf)
 }
 
@@ -62,12 +66,12 @@ pub fn serialize_uint<T: TryInto<u64>>(value: T) -> Result<Vec<u8>, ()> {
 ///     modulus           INTEGER,  -- n
 ///     publicExponent    INTEGER   -- e
 /// }
-pub fn read_rsa_modulus(public_key: &[u8]) -> Result<Vec<u8>, ()> {
+pub fn read_rsa_modulus(public_key: &[u8]) -> Result<Vec<u8>, Error> {
     let mut sequence = Sequence::new(public_key)?;
     let modulus_value = sequence.read_unsigned_integer()?;
     let _exponent = sequence.read_unsigned_integer()?;
     if !sequence.at_end() {
-        return Err(());
+        return Err(error_here!(ErrorType::ExtraInput));
     }
     Ok(modulus_value.to_vec())
 }
@@ -85,19 +89,17 @@ pub fn read_rsa_modulus(public_key: &[u8]) -> Result<Vec<u8>, ()> {
 ///      parameters              ANY DEFINED BY algorithm OPTIONAL  }
 ///
 /// Digest ::= OCTET STRING
-pub fn read_digest_info<'a>(digest_info: &'a [u8]) -> Result<(&'a [u8], &'a [u8]), ()> {
+pub fn read_digest_info<'a>(digest_info: &'a [u8]) -> Result<(&'a [u8], &'a [u8]), Error> {
     let mut sequence = Sequence::new(digest_info)?;
     let mut algorithm = sequence.read_sequence()?;
     let oid = algorithm.read_oid()?;
     algorithm.read_null()?;
     if !algorithm.at_end() {
-        error!("read_digest: extra input");
-        return Err(());
+        return Err(error_here!(ErrorType::ExtraInput));
     }
     let digest = sequence.read_octet_string()?;
     if !sequence.at_end() {
-        error!("read_digest: extra input");
-        return Err(());
+        return Err(error_here!(ErrorType::ExtraInput));
     }
     Ok((oid, digest))
 }
@@ -108,12 +110,12 @@ pub fn read_digest_info<'a>(digest_info: &'a [u8]) -> Result<(&'a [u8], &'a [u8]
 ///        r     INTEGER,
 ///        s     INTEGER  }
 #[cfg(target_os = "macos")]
-pub fn read_ec_sig_point<'a>(signature: &'a [u8]) -> Result<(&'a [u8], &'a [u8]), ()> {
+pub fn read_ec_sig_point<'a>(signature: &'a [u8]) -> Result<(&'a [u8], &'a [u8]), Error> {
     let mut sequence = Sequence::new(signature)?;
     let r = sequence.read_unsigned_integer()?;
     let s = sequence.read_unsigned_integer()?;
     if !sequence.at_end() {
-        return Err(());
+        return Err(error_here!(ErrorType::ExtraInput));
     }
     Ok((r, s))
 }
@@ -147,7 +149,7 @@ pub fn read_ec_sig_point<'a>(signature: &'a [u8]) -> Result<(&'a [u8], &'a [u8])
 ///        notAfter       Time  }
 pub fn read_encoded_certificate_identifiers(
     certificate: &[u8],
-) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>), ()> {
+) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>), Error> {
     let mut certificate_sequence = Sequence::new(certificate)?;
     let mut tbs_certificate_sequence = certificate_sequence.read_sequence()?;
     let _version = tbs_certificate_sequence.read_tagged_value(0)?;
@@ -167,7 +169,7 @@ pub fn read_encoded_certificate_identifiers(
 macro_rules! try_read_bytes {
     ($data:ident, $len:expr) => {{
         if $data.len() < $len {
-            return Err(());
+            return Err(error_here!(ErrorType::TruncatedInput));
         }
         $data.split_at($len)
     }};
@@ -196,12 +198,12 @@ struct Sequence<'a> {
 }
 
 impl<'a> Sequence<'a> {
-    fn new(input: &'a [u8]) -> Result<Sequence<'a>, ()> {
+    fn new(input: &'a [u8]) -> Result<Sequence<'a>, Error> {
         let mut der = Der::new(input);
         let (_, _, sequence_bytes) = der.read_tlv(SEQUENCE | CONSTRUCTED)?;
         // We're assuming we want to consume the entire input for now.
         if !der.at_end() {
-            return Err(());
+            return Err(error_here!(ErrorType::ExtraInput));
         }
         Ok(Sequence {
             contents: Der::new(sequence_bytes),
@@ -209,10 +211,10 @@ impl<'a> Sequence<'a> {
     }
 
     // TODO: we're not exhaustively validating this integer
-    fn read_unsigned_integer(&mut self) -> Result<&'a [u8], ()> {
+    fn read_unsigned_integer(&mut self) -> Result<&'a [u8], Error> {
         let (_, _, bytes) = self.contents.read_tlv(INTEGER)?;
         if bytes.is_empty() {
-            return Err(());
+            return Err(error_here!(ErrorType::InvalidInput));
         }
         // There may be a leading zero (we should also check that the first bit
         // of the rest of the integer is set).
@@ -224,40 +226,40 @@ impl<'a> Sequence<'a> {
         }
     }
 
-    fn read_octet_string(&mut self) -> Result<&'a [u8], ()> {
+    fn read_octet_string(&mut self) -> Result<&'a [u8], Error> {
         let (_, _, bytes) = self.contents.read_tlv(OCTET_STRING)?;
         Ok(bytes)
     }
 
-    fn read_oid(&mut self) -> Result<&'a [u8], ()> {
+    fn read_oid(&mut self) -> Result<&'a [u8], Error> {
         let (_, _, bytes) = self.contents.read_tlv(OBJECT_IDENTIFIER)?;
         Ok(bytes)
     }
 
-    fn read_null(&mut self) -> Result<(), ()> {
+    fn read_null(&mut self) -> Result<(), Error> {
         let (_, _, bytes) = self.contents.read_tlv(NULL)?;
         if bytes.len() == 0 {
             Ok(())
         } else {
-            Err(())
+            Err(error_here!(ErrorType::InvalidInput))
         }
     }
 
-    fn read_sequence(&mut self) -> Result<Sequence<'a>, ()> {
+    fn read_sequence(&mut self) -> Result<Sequence<'a>, Error> {
         let (_, _, sequence_bytes) = self.contents.read_tlv(SEQUENCE | CONSTRUCTED)?;
         Ok(Sequence {
             contents: Der::new(sequence_bytes),
         })
     }
 
-    fn read_tagged_value(&mut self, tag: u8) -> Result<&'a [u8], ()> {
+    fn read_tagged_value(&mut self, tag: u8) -> Result<&'a [u8], Error> {
         let (_, _, tagged_value_bytes) = self
             .contents
             .read_tlv(CONTEXT_SPECIFIC | CONSTRUCTED | tag)?;
         Ok(tagged_value_bytes)
     }
 
-    fn read_encoded_sequence_component(&mut self, tag: u8) -> Result<Vec<u8>, ()> {
+    fn read_encoded_sequence_component(&mut self, tag: u8) -> Result<Vec<u8>, Error> {
         let (tag, length, value) = self.contents.read_tlv(tag)?;
         let mut encoded_component_bytes = length;
         encoded_component_bytes.insert(0, tag);
@@ -288,11 +290,11 @@ impl<'a> Der<'a> {
     /// Given an expected tag, reads the next (tag, lengh, value) from the contents. Most
     /// consumers will only be interested in the value, but some may want the entire encoded
     /// contents, in which case the returned tuple can be concatenated.
-    fn read_tlv(&mut self, tag: u8) -> Result<(u8, Vec<u8>, &'a [u8]), ()> {
+    fn read_tlv(&mut self, tag: u8) -> Result<(u8, Vec<u8>, &'a [u8]), Error> {
         let contents = self.contents;
         let (tag_read, rest) = try_read_bytes!(contents, 1);
         if tag_read[0] != tag {
-            return Err(());
+            return Err(error_here!(ErrorType::InvalidInput));
         }
         let mut accumulated_length_bytes = Vec::with_capacity(4);
         let (length1, rest) = try_read_bytes!(rest, 1);
@@ -303,7 +305,7 @@ impl<'a> Der<'a> {
             let (length, rest) = try_read_bytes!(rest, 1);
             accumulated_length_bytes.extend_from_slice(length);
             if length[0] < 0x80 {
-                return Err(());
+                return Err(error_here!(ErrorType::InvalidInput));
             }
             (length[0] as usize, rest)
         } else if length1[0] == 0x82 {
@@ -311,13 +313,13 @@ impl<'a> Der<'a> {
             accumulated_length_bytes.extend_from_slice(lengths);
             let length = (&mut &lengths[..])
                 .read_u16::<BigEndian>()
-                .map_err(|_| ())?;
+                .map_err(|_| error_here!(ErrorType::LibraryFailure))?;
             if length < 256 {
-                return Err(());
+                return Err(error_here!(ErrorType::InvalidInput));
             }
             (length as usize, rest)
         } else {
-            return Err(());
+            return Err(error_here!(ErrorType::UnsupportedInput));
         };
         let (contents, rest) = try_read_bytes!(to_read_from, length);
         self.contents = rest;
