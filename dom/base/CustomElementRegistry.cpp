@@ -916,16 +916,16 @@ void CustomElementRegistry::Define(
       }
     }
 
-    /**
-     * 14.6. Let disabledFeatures be an empty sequence<DOMString>.
-     * 14.7. Let disabledFeaturesIterable be Get(constructor,
-     *       "disabledFeatures"). Rethrow any exceptions.
-     * 14.8. If disabledFeaturesIterable is not undefined, then set
-     *       disabledFeatures to the result of converting
-     *       disabledFeaturesIterable to a sequence<DOMString>.
-     *       Rethrow any exceptions from the conversion.
-     */
-    if (StaticPrefs::dom_webcomponents_formAssociatedCustomElement_enabled()) {
+    if (StaticPrefs::dom_webcomponents_disabledFeatures_enabled()) {
+      /**
+       * 14.6. Let disabledFeatures be an empty sequence<DOMString>.
+       * 14.7. Let disabledFeaturesIterable be Get(constructor,
+       *       "disabledFeatures"). Rethrow any exceptions.
+       * 14.8. If disabledFeaturesIterable is not undefined, then set
+       *       disabledFeatures to the result of converting
+       *       disabledFeaturesIterable to a sequence<DOMString>.
+       *       Rethrow any exceptions from the conversion.
+       */
       if (!JSObjectToAtomArray(aCx, constructor, u"disabledFeatures"_ns,
                                disabledFeatures, aRv)) {
         return;
@@ -940,7 +940,9 @@ void CustomElementRegistry::Define(
       //        "shadow".
       disableShadow = disabledFeatures.Contains(
           static_cast<nsStaticAtom*>(nsGkAtoms::shadow));
+    }
 
+    if (StaticPrefs::dom_webcomponents_formAssociatedCustomElement_enabled()) {
       // 14.11. Let formAssociatedValue be Get(constructor, "formAssociated").
       //        Rethrow any exceptions.
       JS::Rooted<JS::Value> formAssociatedValue(aCx);
