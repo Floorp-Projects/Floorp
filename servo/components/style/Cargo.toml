@@ -75,7 +75,7 @@ thin-slice = "0.1.0"
 to_shmem = {path = "../to_shmem"}
 to_shmem_derive = {path = "../to_shmem_derive"}
 time = "0.1"
-uluru = "0.4"
+uluru = "1.1"
 unicode-bidi = "0.3"
 unicode-segmentation = "1.0"
 void = "1.0.2"
