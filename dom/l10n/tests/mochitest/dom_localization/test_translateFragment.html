@@ -7,20 +7,24 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  async function* generateBundles(resourceIds) {
-    const bundle = new FluentBundle("en-US");
-    bundle.addResource(new FluentResource("title = Hello World"));
-    bundle.addResource(new FluentResource("subtitle = Welcome to FluentBundle"));
-    yield bundle;
-  }
+  const l10nReg = new L10nRegistry();
+  const fs = [
+    { path: "/localization/en-US/mock.ftl", source: `
+title = Hello World
+subtitle = Welcome to FluentBundle
+` },
+  ];
+  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
+  l10nReg.registerSources([source]);
 
   window.onload = async function() {
     SimpleTest.waitForExplicitFinish();
 
     const domLoc = new DOMLocalization(
-      [],
+      ["/mock.ftl"],
       false,
-      { generateBundles },
+      l10nReg,
+      ["en-US"],
     );
 
     const frag = document.querySelectorAll("div")[0];
