@@ -58,29 +58,33 @@ class HistoryStorageSuggestionProvider(
 
         suggestions.firstOrNull()?.url?.let { url -> engine?.speculativeConnect(url) }
 
-        return suggestions.into()
+        return suggestions.into(this, icons, loadUrlUseCase)
     }
 
     override val shouldClearSuggestions: Boolean
         // We do not want the suggestion of this provider to disappear and re-appear when text changes.
         get() = false
+}
 
-    private suspend fun Iterable<SearchResult>.into(): List<AwesomeBar.Suggestion> {
-        val iconRequests = this.map { icons?.loadIcon(IconRequest(it.url)) }
-        return this.zip(iconRequests) { result, icon ->
-            AwesomeBar.Suggestion(
-                provider = this@HistoryStorageSuggestionProvider,
-                id = result.id,
-                icon = icon?.await()?.bitmap,
-                title = result.title,
-                description = result.url,
-                editSuggestion = result.url,
-                score = result.score,
-                onSuggestionClicked = {
-                    loadUrlUseCase.invoke(result.url)
-                    emitHistorySuggestionClickedFact()
-                }
-            )
-        }
+internal suspend fun Iterable<SearchResult>.into(
+    provider: AwesomeBar.SuggestionProvider,
+    icons: BrowserIcons?,
+    loadUrlUseCase: SessionUseCases.LoadUrlUseCase
+): List<AwesomeBar.Suggestion> {
+    val iconRequests = this.map { icons?.loadIcon(IconRequest(it.url)) }
+    return this.zip(iconRequests) { result, icon ->
+        AwesomeBar.Suggestion(
+            provider = provider,
+            id = result.id,
+            icon = icon?.await()?.bitmap,
+            title = result.title,
+            description = result.url,
+            editSuggestion = result.url,
+            score = result.score,
+            onSuggestionClicked = {
+                loadUrlUseCase.invoke(result.url)
+                emitHistorySuggestionClickedFact()
+            }
+        )
     }
 }

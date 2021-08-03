@@ -12,7 +12,6 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.concept.storage.HistoryStorage
-import mozilla.components.feature.awesomebar.facts.emitHistorySuggestionClickedFact
 import mozilla.components.feature.session.SessionUseCases
 import java.util.UUID
 
@@ -57,23 +56,26 @@ class HistoryMetadataSuggestionProvider(
             .filter { it.totalViewTime > 0 }
 
         suggestions.firstOrNull()?.key?.url?.let { url -> engine?.speculativeConnect(url) }
-        return suggestions.into()
+        return suggestions.into(this, icons, loadUrlUseCase)
     }
+}
 
-    private suspend fun Iterable<HistoryMetadata>.into(): List<AwesomeBar.Suggestion> {
-        val iconRequests = this.map { icons?.loadIcon(IconRequest(it.key.url)) }
-        return this.zip(iconRequests) { result, icon ->
-            AwesomeBar.Suggestion(
-                provider = this@HistoryMetadataSuggestionProvider,
-                icon = icon?.await()?.bitmap,
-                title = result.title,
-                description = result.key.url,
-                editSuggestion = result.key.url,
-                onSuggestionClicked = {
-                    loadUrlUseCase.invoke(result.key.url)
-                    emitHistorySuggestionClickedFact()
-                }
-            )
-        }
+internal suspend fun Iterable<HistoryMetadata>.into(
+    provider: AwesomeBar.SuggestionProvider,
+    icons: BrowserIcons?,
+    loadUrlUseCase: SessionUseCases.LoadUrlUseCase
+): List<AwesomeBar.Suggestion> {
+    val iconRequests = this.map { icons?.loadIcon(IconRequest(it.key.url)) }
+    return this.zip(iconRequests) { result, icon ->
+        AwesomeBar.Suggestion(
+            provider = provider,
+            icon = icon?.await()?.bitmap,
+            title = result.title,
+            description = result.key.url,
+            editSuggestion = result.key.url,
+            onSuggestionClicked = {
+                loadUrlUseCase.invoke(result.key.url)
+            }
+        )
     }
 }

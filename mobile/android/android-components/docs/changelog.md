@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **browser-feature-awesomebar**:
+  * 🌟️ Adds `CombinedHistorySuggestionProvider` that combines the results from `HistoryMetadataSuggestionProvider` and `HistoryStorageSuggestionProvider` so that if not enough metadata history results are available then storage history results are added to return the requested maxNumberOfSuggestions of awesomeBar suggestions.
+
 * **browser-toolbar**
   * 🚒 Bug fixed [issue #10555](https://github.com/mozilla-mobile/android-components/issues/10555) - Prevent new touches from expanding a collapsed toolbar. Wait until there's a response from GeckoView on how the touch was handled to expand/collapse the toolbar.
   * 🌟️ Adds Long-click support to `Button` and gives `TwoStateButton` all the features of `BrowserMenuItemToolbar.TwoStateButton`
