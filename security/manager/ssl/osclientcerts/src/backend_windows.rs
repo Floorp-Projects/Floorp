@@ -17,6 +17,7 @@ use winapi::um::errhandlingapi::GetLastError;
 use winapi::um::ncrypt::*;
 use winapi::um::wincrypt::{HCRYPTHASH, HCRYPTPROV, *};
 
+use crate::error::{Error, ErrorType};
 use crate::manager::SlotType;
 use crate::util::*;
 
@@ -37,7 +38,7 @@ extern "system" {
 /// Given a `CERT_INFO`, tries to return the bytes of the subject distinguished name as formatted by
 /// `CertNameToStrA` using the flag `CERT_SIMPLE_NAME_STR`. This is used as the label for the
 /// certificate.
-fn get_cert_subject_dn(cert_info: &CERT_INFO) -> Result<Vec<u8>, ()> {
+fn get_cert_subject_dn(cert_info: &CERT_INFO) -> Result<Vec<u8>, Error> {
     let mut cert_info_subject = cert_info.Subject;
     let subject_dn_len = unsafe {
         CertNameToStrA(
@@ -56,11 +57,14 @@ fn get_cert_subject_dn(cert_info: &CERT_INFO) -> Result<Vec<u8>, ()> {
             &mut cert_info_subject,
             CERT_SIMPLE_NAME_STR,
             subject_dn_string_bytes.as_mut_ptr() as *mut i8,
-            subject_dn_string_bytes.len().try_into().map_err(|_| ())?,
+            subject_dn_string_bytes
+                .len()
+                .try_into()
+                .map_err(|_| error_here!(ErrorType::ValueTooLarge))?,
         )
     };
     if subject_dn_len as usize != subject_dn_string_bytes.len() {
-        return Err(());
+        return Err(error_here!(ErrorType::ExternalError));
     }
     Ok(subject_dn_string_bytes)
 }
@@ -88,7 +92,7 @@ pub struct Cert {
 }
 
 impl Cert {
-    fn new(cert_context: PCCERT_CONTEXT) -> Result<Cert, ()> {
+    fn new(cert_context: PCCERT_CONTEXT) -> Result<Cert, Error> {
         let cert = unsafe { &*cert_context };
         let cert_info = unsafe { &*cert.pCertInfo };
         let value =
@@ -211,7 +215,7 @@ enum KeyHandle {
 }
 
 impl KeyHandle {
-    fn from_cert(cert: &CertContext) -> Result<KeyHandle, ()> {
+    fn from_cert(cert: &CertContext) -> Result<KeyHandle, Error> {
         let mut key_handle = 0;
         let mut key_spec = 0;
         let mut must_free = 0;
@@ -225,16 +229,14 @@ impl KeyHandle {
                 &mut must_free,
             ) != 1
             {
-                error!(
-                    "CryptAcquireCertificatePrivateKey failed: 0x{:x}",
-                    GetLastError()
-                );
-                return Err(());
+                return Err(error_here!(
+                    ErrorType::ExternalError,
+                    GetLastError().to_string()
+                ));
             }
         }
         if must_free == 0 {
-            error!("CryptAcquireCertificatePrivateKey returned shared key handle");
-            return Err(());
+            return Err(error_here!(ErrorType::ExternalError));
         }
         if key_spec == CERT_NCRYPT_KEY_SPEC {
             Ok(KeyHandle::NCrypt(key_handle as NCRYPT_KEY_HANDLE))
@@ -249,7 +251,7 @@ impl KeyHandle {
         params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
         do_signature: bool,
         key_type: KeyType,
-    ) -> Result<Vec<u8>, ()> {
+    ) -> Result<Vec<u8>, Error> {
         match &self {
             KeyHandle::NCrypt(ncrypt_handle) => {
                 sign_ncrypt(ncrypt_handle, data, params, do_signature, key_type)
@@ -280,7 +282,7 @@ fn sign_ncrypt(
     params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
     do_signature: bool,
     key_type: KeyType,
-) -> Result<Vec<u8>, ()> {
+) -> Result<Vec<u8>, Error> {
     let mut sign_params = SignParams::new(key_type, params)?;
     let params_ptr = sign_params.params_ptr();
     let flags = sign_params.flags();
@@ -293,7 +295,9 @@ fn sign_ncrypt(
             *ncrypt_handle,
             params_ptr,
             data.as_mut_ptr(),
-            data.len().try_into().map_err(|_| ())?,
+            data.len()
+                .try_into()
+                .map_err(|_| error_here!(ErrorType::ValueTooLarge))?,
             std::ptr::null_mut(),
             0,
             &mut signature_len,
@@ -302,11 +306,7 @@ fn sign_ncrypt(
     };
     // 0 is "ERROR_SUCCESS" (but "ERROR_SUCCESS" is unsigned, whereas SECURITY_STATUS is signed)
     if status != 0 {
-        error!(
-            "NCryptSignHash failed trying to get signature buffer length, {}",
-            status
-        );
-        return Err(());
+        return Err(error_here!(ErrorType::ExternalError, status.to_string()));
     }
     let mut signature = vec![0; signature_len as usize];
     if !do_signature {
@@ -318,7 +318,9 @@ fn sign_ncrypt(
             *ncrypt_handle,
             params_ptr,
             data.as_mut_ptr(),
-            data.len().try_into().map_err(|_| ())?,
+            data.len()
+                .try_into()
+                .map_err(|_| error_here!(ErrorType::ValueTooLarge))?,
             signature.as_mut_ptr(),
             signature_len,
             &mut final_signature_len,
@@ -326,15 +328,10 @@ fn sign_ncrypt(
         )
     };
     if status != 0 {
-        error!("NCryptSignHash failed signing data {}", status);
-        return Err(());
+        return Err(error_here!(ErrorType::ExternalError, status.to_string()));
     }
     if final_signature_len != signature_len {
-        error!(
-            "NCryptSignHash: inconsistent signature lengths? {} != {}",
-            final_signature_len, signature_len
-        );
-        return Err(());
+        return Err(error_here!(ErrorType::ExternalError));
     }
     Ok(signature)
 }
@@ -345,10 +342,9 @@ fn sign_cryptoapi(
     data: &[u8],
     params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
     do_signature: bool,
-) -> Result<Vec<u8>, ()> {
+) -> Result<Vec<u8>, Error> {
     if params.is_some() {
-        error!("non-None signature params cannot be used with CryptoAPI");
-        return Err(());
+        return Err(error_here!(ErrorType::LibraryFailure));
     }
     // data will be an encoded DigestInfo, which specifies the hash algorithm and bytes of the hash
     // to sign. However, CryptoAPI requires directly specifying the bytes of the hash, so it must
@@ -367,11 +363,10 @@ fn sign_cryptoapi(
         )
     } != 1
     {
-        error!(
-            "CryptSignHash failed trying to get signature buffer length: 0x{:x}",
-            unsafe { GetLastError() }
-        );
-        return Err(());
+        return Err(error_here!(
+            ErrorType::ExternalError,
+            unsafe { GetLastError() }.to_string()
+        ));
     }
     let mut signature = vec![0; signature_len as usize];
     if !do_signature {
@@ -389,17 +384,13 @@ fn sign_cryptoapi(
         )
     } != 1
     {
-        error!("CryptSignHash failed signing data: 0x{:x}", unsafe {
-            GetLastError()
-        });
-        return Err(());
+        return Err(error_here!(
+            ErrorType::ExternalError,
+            unsafe { GetLastError() }.to_string()
+        ));
     }
     if final_signature_len != signature_len {
-        error!(
-            "CryptSignHash: inconsistent signature lengths? {} != {}",
-            final_signature_len, signature_len
-        );
-        return Err(());
+        return Err(error_here!(ErrorType::ExternalError));
     }
     // CryptoAPI returns the signature with the most significant byte last (little-endian),
     // whereas PKCS#11 expects the most significant byte first (big-endian).
@@ -410,30 +401,28 @@ fn sign_cryptoapi(
 struct HCryptHash(HCRYPTHASH);
 
 impl HCryptHash {
-    fn new(hcryptprov: &HCRYPTPROV, hash_bytes: &[u8]) -> Result<HCryptHash, ()> {
+    fn new(hcryptprov: &HCRYPTPROV, hash_bytes: &[u8]) -> Result<HCryptHash, Error> {
         let alg = match hash_bytes.len() {
             20 => CALG_SHA1,
             32 => CALG_SHA_256,
             48 => CALG_SHA_384,
             64 => CALG_SHA_512,
             _ => {
-                error!(
-                    "HCryptHash::new: invalid hash of length {}",
-                    hash_bytes.len()
-                );
-                return Err(());
+                return Err(error_here!(ErrorType::UnsupportedInput));
             }
         };
         let mut hash: HCRYPTHASH = 0;
         if unsafe { CryptCreateHash(*hcryptprov, alg, 0, 0, &mut hash) } != 1 {
-            error!("CryptCreateHash failed: 0x{:x}", unsafe { GetLastError() });
-            return Err(());
+            return Err(error_here!(
+                ErrorType::ExternalError,
+                unsafe { GetLastError() }.to_string()
+            ));
         }
         if unsafe { CryptSetHashParam(hash, HP_HASHVAL, hash_bytes.as_ptr(), 0) } != 1 {
-            error!("CryptSetHashParam failed: 0x{:x}", unsafe {
-                GetLastError()
-            });
-            return Err(());
+            return Err(error_here!(
+                ErrorType::ExternalError,
+                unsafe { GetLastError() }.to_string()
+            ));
         }
         Ok(HCryptHash(hash))
     }
@@ -477,7 +466,10 @@ enum SignParams {
 }
 
 impl SignParams {
-    fn new(key_type: KeyType, params: &Option<CK_RSA_PKCS_PSS_PARAMS>) -> Result<SignParams, ()> {
+    fn new(
+        key_type: KeyType,
+        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+    ) -> Result<SignParams, Error> {
         // EC is easy, so handle that first.
         match key_type {
             KeyType::EC => return Ok(SignParams::EC),
@@ -500,11 +492,7 @@ impl SignParams {
             CKM_SHA384 => SHA384_ALGORITHM_STRING,
             CKM_SHA512 => SHA512_ALGORITHM_STRING,
             _ => {
-                error!(
-                    "unsupported algorithm to use with RSA-PSS: {}",
-                    unsafe_packed_field_access!(pss_params.hashAlg)
-                );
-                return Err(());
+                return Err(error_here!(ErrorType::UnsupportedInput));
             }
         };
         Ok(SignParams::RSA_PSS(BCRYPT_PSS_PADDING_INFO {
@@ -569,7 +557,7 @@ pub struct Key {
 }
 
 impl Key {
-    fn new(cert_context: PCCERT_CONTEXT) -> Result<Key, ()> {
+    fn new(cert_context: PCCERT_CONTEXT) -> Result<Key, Error> {
         let cert = unsafe { *cert_context };
         let cert_der =
             unsafe { slice::from_raw_parts(cert.pbCertEncoded, cert.cbCertEncoded as usize) };
@@ -581,10 +569,10 @@ impl Key {
         let spki = &cert_info.SubjectPublicKeyInfo;
         let algorithm_oid = unsafe { CStr::from_ptr(spki.Algorithm.pszObjId) }
             .to_str()
-            .map_err(|_| ())?;
+            .map_err(|_| error_here!(ErrorType::ExternalError))?;
         let (key_type_enum, key_type_attribute) = if algorithm_oid == szOID_RSA_RSA {
             if spki.PublicKey.cUnusedBits != 0 {
-                return Err(());
+                return Err(error_here!(ErrorType::ExternalError));
             }
             let public_key_bytes = unsafe {
                 std::slice::from_raw_parts(spki.PublicKey.pbData, spki.PublicKey.cbData as usize)
@@ -600,7 +588,7 @@ impl Key {
             );
             (KeyType::EC, CKK_EC)
         } else {
-            return Err(());
+            return Err(error_here!(ErrorType::LibraryFailure));
         };
         let cert = CertContext::new(cert_context);
         Ok(Key {
@@ -703,10 +691,10 @@ impl Key {
         &mut self,
         data: &[u8],
         params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
-    ) -> Result<usize, ()> {
+    ) -> Result<usize, Error> {
         match self.sign_with_retry(data, params, false) {
             Ok(dummy_signature_bytes) => Ok(dummy_signature_bytes.len()),
-            Err(()) => Err(()),
+            Err(e) => Err(e),
         }
     }
 
@@ -714,7 +702,7 @@ impl Key {
         &mut self,
         data: &[u8],
         params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
-    ) -> Result<Vec<u8>, ()> {
+    ) -> Result<Vec<u8>, Error> {
         self.sign_with_retry(data, params, true)
     }
 
@@ -723,7 +711,7 @@ impl Key {
         data: &[u8],
         params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
         do_signature: bool,
-    ) -> Result<Vec<u8>, ()> {
+    ) -> Result<Vec<u8>, Error> {
         let result = self.sign_internal(data, params, do_signature);
         if result.is_ok() {
             return result;
@@ -743,7 +731,7 @@ impl Key {
         data: &[u8],
         params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
         do_signature: bool,
-    ) -> Result<Vec<u8>, ()> {
+    ) -> Result<Vec<u8>, Error> {
         // If this key hasn't been used for signing yet, there won't be a cached key handle. Obtain
         // and cache it if this is the case. Doing so can cause the underlying implementation to
         // show an authentication or pin prompt to the user. Caching the handle can avoid causing
@@ -753,10 +741,7 @@ impl Key {
         }
         let key = match &self.key_handle {
             Some(key) => key,
-            None => {
-                error!("key_handle not set when it should have just been set?");
-                return Err(());
-            }
+            None => return Err(error_here!(ErrorType::LibraryFailure)),
         };
         key.sign(data, params, do_signature, self.key_type_enum)
     }
@@ -935,11 +920,11 @@ pub fn list_objects() -> Vec<Object> {
             Some(cert_context) => {
                 let key = match Key::new(*cert_context) {
                     Ok(key) => key,
-                    Err(()) => continue,
+                    Err(_) => continue,
                 };
                 let cert = match Cert::new(*cert_context) {
                     Ok(cert) => cert,
-                    Err(()) => continue,
+                    Err(_) => continue,
                 };
                 objects.push(Object::Cert(cert));
                 objects.push(Object::Key(key));
