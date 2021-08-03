@@ -298,7 +298,11 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1722721 - This is a false positive during SW-WR rendering.
          "race:scale_blit\n"
 
-         "race:mozilla::gl::MesaMemoryLeakWorkaround"
+         "race:mozilla::gl::MesaMemoryLeakWorkaround\n"
+
+
+         // Bug 1723321
+         "race:mozilla::layers::AsyncPanZoomController::AsyncPanZoomController\n"
 
       // End of suppressions.
       ;  // Please keep this semicolon.
