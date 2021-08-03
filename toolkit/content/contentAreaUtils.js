@@ -454,7 +454,8 @@ function internalPersist(persistArgs) {
     null,
     persist,
     persistArgs.isPrivate,
-    Ci.nsITransfer.DOWNLOAD_ACCEPTABLE
+    Ci.nsITransfer.DOWNLOAD_ACCEPTABLE,
+    persistArgs.sourceReferrerInfo
   );
   persist.progressListener = new DownloadListener(window, tr);
 

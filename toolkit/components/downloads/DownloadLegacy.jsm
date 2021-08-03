@@ -270,7 +270,8 @@ DownloadLegacyTransfer.prototype = {
     aTempFile,
     aCancelable,
     aIsPrivate,
-    aDownloadClassification
+    aDownloadClassification,
+    aReferrerInfo
   ) {
     return this._nsITransferInitInternal(
       aSource,
@@ -281,7 +282,8 @@ DownloadLegacyTransfer.prototype = {
       aTempFile,
       aCancelable,
       aIsPrivate,
-      aDownloadClassification
+      aDownloadClassification,
+      aReferrerInfo
     );
   },
 
@@ -296,6 +298,7 @@ DownloadLegacyTransfer.prototype = {
     aCancelable,
     aIsPrivate,
     aDownloadClassification,
+    aReferrerInfo,
     aBrowsingContext,
     aHandleInternally
   ) {
@@ -317,6 +320,7 @@ DownloadLegacyTransfer.prototype = {
       aCancelable,
       aIsPrivate,
       aDownloadClassification,
+      aReferrerInfo,
       userContextId,
       browsingContextId,
       aHandleInternally
@@ -333,6 +337,7 @@ DownloadLegacyTransfer.prototype = {
     aCancelable,
     isPrivate,
     aDownloadClassification,
+    referrerInfo,
     userContextId = 0,
     browsingContextId = 0,
     handleInternally = false
@@ -364,6 +369,7 @@ DownloadLegacyTransfer.prototype = {
         isPrivate,
         userContextId,
         browsingContextId,
+        referrerInfo,
       },
       target: {
         path: aTarget.QueryInterface(Ci.nsIFileURL).file.path,
