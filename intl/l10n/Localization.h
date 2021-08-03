@@ -11,6 +11,7 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
+#include "nsWeakReference.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/BindingDeclarations.h"
