@@ -197,36 +197,36 @@ using ObjectAllocKindArray =
  * Map from C++ type to alloc kind for non-object types. JSObject does not have
  * a 1:1 mapping, so must use Arena::thingSize.
  *
- * The AllocKind is available as MapTypeToFinalizeKind<SomeType>::kind.
+ * The AllocKind is available as MapTypeToAllocKind<SomeType>::kind.
  *
  * There are specializations for strings since more than one derived string type
  * shares the same alloc kind.
  */
 template <typename T>
-struct MapTypeToFinalizeKind {};
-#define EXPAND_MAPTYPETOFINALIZEKIND(allocKind, traceKind, type, sizedType, \
-                                     bgFinal, nursery, compact)             \
-  template <>                                                               \
-  struct MapTypeToFinalizeKind<type> {                                      \
-    static const AllocKind kind = AllocKind::allocKind;                     \
+struct MapTypeToAllocKind {};
+#define EXPAND_MAPTYPETOALLOCKIND(allocKind, traceKind, type, sizedType, \
+                                  bgFinal, nursery, compact)             \
+  template <>                                                            \
+  struct MapTypeToAllocKind<type> {                                      \
+    static const AllocKind kind = AllocKind::allocKind;                  \
   };
-FOR_EACH_NONOBJECT_ALLOCKIND(EXPAND_MAPTYPETOFINALIZEKIND)
-#undef EXPAND_MAPTYPETOFINALIZEKIND
+FOR_EACH_NONOBJECT_ALLOCKIND(EXPAND_MAPTYPETOALLOCKIND)
+#undef EXPAND_MAPTYPETOALLOCKIND
 
 template <>
-struct MapTypeToFinalizeKind<JSDependentString> {
+struct MapTypeToAllocKind<JSDependentString> {
   static const AllocKind kind = AllocKind::STRING;
 };
 template <>
-struct MapTypeToFinalizeKind<JSRope> {
+struct MapTypeToAllocKind<JSRope> {
   static const AllocKind kind = AllocKind::STRING;
 };
 template <>
-struct MapTypeToFinalizeKind<JSLinearString> {
+struct MapTypeToAllocKind<JSLinearString> {
   static const AllocKind kind = AllocKind::STRING;
 };
 template <>
-struct MapTypeToFinalizeKind<JSThinInlineString> {
+struct MapTypeToAllocKind<JSThinInlineString> {
   static const AllocKind kind = AllocKind::STRING;
 };
 

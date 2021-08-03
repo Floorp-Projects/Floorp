@@ -232,17 +232,17 @@ template <typename GCType>
 class ZoneAllCellIter : public ZoneAllCellIter<TenuredCell> {
  public:
   // Non-nursery allocated (equivalent to having an entry in
-  // MapTypeToFinalizeKind). The template declaration here is to discard this
-  // constructor overload if MapTypeToFinalizeKind<GCType>::kind does not
-  // exist. Note that there will be no remaining overloads that will work,
-  // which makes sense given that you haven't specified which of the
-  // AllocKinds to use for GCType.
+  // MapTypeToAllocKind). The template declaration here is to discard this
+  // constructor overload if MapTypeToAllocKind<GCType>::kind does not
+  // exist. Note that there will be no remaining overloads that will work, which
+  // makes sense given that you haven't specified which of the AllocKinds to use
+  // for GCType.
   //
-  // If we later add a nursery allocable GCType with a single AllocKind, we
-  // will want to add an overload of this constructor that does the right
-  // thing (ie, it empties the nursery before iterating.)
+  // If we later add a nursery allocable GCType with a single AllocKind, we will
+  // want to add an overload of this constructor that does the right thing (ie,
+  // it empties the nursery before iterating.)
   explicit ZoneAllCellIter(JS::Zone* zone) : ZoneAllCellIter<TenuredCell>() {
-    init(zone, MapTypeToFinalizeKind<GCType>::kind);
+    init(zone, MapTypeToAllocKind<GCType>::kind);
   }
 
   // Non-nursery allocated, nursery is known to be empty: same behavior as

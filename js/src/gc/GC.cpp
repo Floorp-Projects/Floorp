@@ -6094,7 +6094,7 @@ static bool SweepArenaList(JSFreeOp* fop, Arena** arenasToSweep,
     MOZ_ASSERT_IF(next, next->zone == arena->zone);
     *arenasToSweep = next;
 
-    AllocKind kind = MapTypeToFinalizeKind<T>::kind;
+    AllocKind kind = MapTypeToAllocKind<T>::kind;
     sliceBudget.step(Arena::thingsPerArena(kind));
     if (sliceBudget.isOverBudget()) {
       return false;
