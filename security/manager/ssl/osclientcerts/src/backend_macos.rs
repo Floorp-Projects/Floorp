@@ -26,7 +26,7 @@ use std::os::raw::c_void;
 include!("bindings_macos.rs");
 
 use crate::error::{Error, ErrorType};
-use crate::manager::SlotType;
+use crate::manager::{ClientCertsBackend, CryptokiObject, Sign, SlotType};
 use crate::util::*;
 
 #[repr(C)]
@@ -427,7 +427,7 @@ impl Cert {
         &self.token
     }
 
-    pub fn id(&self) -> &[u8] {
+    fn id(&self) -> &[u8] {
         &self.id
     }
 
@@ -450,8 +450,20 @@ impl Cert {
     fn subject(&self) -> &[u8] {
         &self.subject
     }
+}
 
-    fn matches(&self, attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)]) -> bool {
+impl CryptokiObject for Cert {
+    fn matches(&self, slot_type: SlotType, attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)]) -> bool {
+        // The modern/legacy slot distinction in theory enables differentiation
+        // between keys that are from modules that can use modern cryptography
+        // (namely EC keys and RSA-PSS signatures) and those that cannot.
+        // However, the function that would enable this
+        // (SecKeyIsAlgorithmSupported) causes a password dialog to appear on
+        // our test machines, so this backend pretends that everything supports
+        // modern crypto for now.
+        if slot_type != SlotType::Modern {
+            return false;
+        }
         for (attr_type, attr_value) in attrs {
             let comparison = match *attr_type {
                 CKA_CLASS => self.class(),
@@ -660,7 +672,7 @@ impl Key {
         &self.token
     }
 
-    pub fn id(&self) -> &[u8] {
+    fn id(&self) -> &[u8] {
         &self.id
     }
 
@@ -684,77 +696,6 @@ impl Key {
             Some(ec_params) => Some(ec_params.as_slice()),
             None => None,
         }
-    }
-
-    fn matches(&self, attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)]) -> bool {
-        for (attr_type, attr_value) in attrs {
-            let comparison = match *attr_type {
-                CKA_CLASS => self.class(),
-                CKA_TOKEN => self.token(),
-                CKA_ID => self.id(),
-                CKA_PRIVATE => self.private(),
-                CKA_KEY_TYPE => self.key_type(),
-                CKA_MODULUS => {
-                    if let Some(modulus) = self.modulus() {
-                        modulus
-                    } else {
-                        return false;
-                    }
-                }
-                CKA_EC_PARAMS => {
-                    if let Some(ec_params) = self.ec_params() {
-                        ec_params
-                    } else {
-                        return false;
-                    }
-                }
-                _ => return false,
-            };
-            if attr_value.as_slice() != comparison {
-                return false;
-            }
-        }
-        true
-    }
-
-    fn get_attribute(&self, attribute: CK_ATTRIBUTE_TYPE) -> Option<&[u8]> {
-        match attribute {
-            CKA_CLASS => Some(self.class()),
-            CKA_TOKEN => Some(self.token()),
-            CKA_ID => Some(self.id()),
-            CKA_PRIVATE => Some(self.private()),
-            CKA_KEY_TYPE => Some(self.key_type()),
-            CKA_MODULUS => self.modulus(),
-            CKA_EC_PARAMS => self.ec_params(),
-            _ => None,
-        }
-    }
-
-    pub fn get_signature_length(
-        &mut self,
-        data: &[u8],
-        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
-    ) -> Result<usize, Error> {
-        // Unfortunately we don't have a way of getting the length of a signature without creating
-        // one.
-        let dummy_signature_bytes = self.sign(data, params)?;
-        Ok(dummy_signature_bytes.len())
-    }
-
-    // The input data is a hash. What algorithm we use depends on the size of the hash.
-    pub fn sign(
-        &mut self,
-        data: &[u8],
-        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
-    ) -> Result<Vec<u8>, Error> {
-        let result = self.sign_internal(data, params);
-        if result.is_ok() {
-            return result;
-        }
-        // Some devices appear to not work well when the key handle is held for too long or if a
-        // card is inserted/removed while Firefox is running. Try refreshing the key handle.
-        let _ = self.key_handle.take();
-        self.sign_internal(data, params)
     }
 
     fn sign_internal(
@@ -805,13 +746,8 @@ impl Key {
     }
 }
 
-pub enum Object {
-    Cert(Cert),
-    Key(Key),
-}
-
-impl Object {
-    pub fn matches(&self, slot_type: SlotType, attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)]) -> bool {
+impl CryptokiObject for Key {
+    fn matches(&self, slot_type: SlotType, attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)]) -> bool {
         // The modern/legacy slot distinction in theory enables differentiation
         // between keys that are from modules that can use modern cryptography
         // (namely EC keys and RSA-PSS signatures) and those that cannot.
@@ -822,34 +758,78 @@ impl Object {
         if slot_type != SlotType::Modern {
             return false;
         }
-        match self {
-            Object::Cert(cert) => cert.matches(attrs),
-            Object::Key(key) => key.matches(attrs),
+        for (attr_type, attr_value) in attrs {
+            let comparison = match *attr_type {
+                CKA_CLASS => self.class(),
+                CKA_TOKEN => self.token(),
+                CKA_ID => self.id(),
+                CKA_PRIVATE => self.private(),
+                CKA_KEY_TYPE => self.key_type(),
+                CKA_MODULUS => {
+                    if let Some(modulus) = self.modulus() {
+                        modulus
+                    } else {
+                        return false;
+                    }
+                }
+                CKA_EC_PARAMS => {
+                    if let Some(ec_params) = self.ec_params() {
+                        ec_params
+                    } else {
+                        return false;
+                    }
+                }
+                _ => return false,
+            };
+            if attr_value.as_slice() != comparison {
+                return false;
+            }
         }
+        true
     }
 
-    pub fn get_attribute(&self, attribute: CK_ATTRIBUTE_TYPE) -> Option<&[u8]> {
-        match self {
-            Object::Cert(cert) => cert.get_attribute(attribute),
-            Object::Key(key) => key.get_attribute(attribute),
+    fn get_attribute(&self, attribute: CK_ATTRIBUTE_TYPE) -> Option<&[u8]> {
+        match attribute {
+            CKA_CLASS => Some(self.class()),
+            CKA_TOKEN => Some(self.token()),
+            CKA_ID => Some(self.id()),
+            CKA_PRIVATE => Some(self.private()),
+            CKA_KEY_TYPE => Some(self.key_type()),
+            CKA_MODULUS => self.modulus(),
+            CKA_EC_PARAMS => self.ec_params(),
+            _ => None,
         }
     }
 }
 
-pub const SUPPORTED_ATTRIBUTES: &[CK_ATTRIBUTE_TYPE] = &[
-    CKA_CLASS,
-    CKA_TOKEN,
-    CKA_LABEL,
-    CKA_ID,
-    CKA_VALUE,
-    CKA_ISSUER,
-    CKA_SERIAL_NUMBER,
-    CKA_SUBJECT,
-    CKA_PRIVATE,
-    CKA_KEY_TYPE,
-    CKA_MODULUS,
-    CKA_EC_PARAMS,
-];
+impl Sign for Key {
+    fn get_signature_length(
+        &mut self,
+        data: &[u8],
+        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+    ) -> Result<usize, Error> {
+        // Unfortunately we don't have a way of getting the length of a signature without creating
+        // one.
+        let dummy_signature_bytes = self.sign(data, params)?;
+        Ok(dummy_signature_bytes.len())
+    }
+
+    // The input data is a hash. What algorithm we use depends on the size of the hash.
+    fn sign(
+        &mut self,
+        data: &[u8],
+        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+    ) -> Result<Vec<u8>, Error> {
+        let result = self.sign_internal(data, params);
+        if result.is_ok() {
+            return result;
+        }
+        // Some devices appear to not work well when the key handle is held for too long or if a
+        // card is inserted/removed while Firefox is running. Try refreshing the key handle.
+        let _ = self.key_handle.take();
+        self.sign_internal(data, params)
+    }
+}
 
 fn get_key_attribute<T: TCFType + Clone>(key: &SecKey, attr: CFStringRef) -> Result<T, Error> {
     let attributes: CFDictionary<CFString, T> = SECURITY_FRAMEWORK.sec_key_copy_attributes(&key)?;
@@ -914,51 +894,56 @@ fn get_issuers(identity: &SecIdentity) -> Result<Vec<SecCertificate>, Error> {
     Ok(certificates)
 }
 
-pub fn list_objects() -> Vec<Object> {
-    let mut objects = Vec::new();
-    let identities = unsafe {
-        let class_key = CFString::wrap_under_get_rule(kSecClass);
-        let class_value = CFString::wrap_under_get_rule(kSecClassIdentity);
-        let return_ref_key = CFString::wrap_under_get_rule(kSecReturnRef);
-        let return_ref_value = CFBoolean::wrap_under_get_rule(kCFBooleanTrue);
-        let match_key = CFString::wrap_under_get_rule(kSecMatchLimit);
-        let match_value = CFString::wrap_under_get_rule(kSecMatchLimitAll);
-        let vals = vec![
-            (class_key.as_CFType(), class_value.as_CFType()),
-            (return_ref_key.as_CFType(), return_ref_value.as_CFType()),
-            (match_key.as_CFType(), match_value.as_CFType()),
-        ];
-        let dict = CFDictionary::from_CFType_pairs(&vals);
-        let mut result = std::ptr::null();
-        let status = SecItemCopyMatching(dict.as_CFTypeRef() as CFDictionaryRef, &mut result);
-        if status != errSecSuccess {
-            error!("SecItemCopyMatching failed: {}", status);
-            return objects;
-        }
-        if result.is_null() {
-            debug!("no client certs?");
-            return objects;
-        }
-        CFArray::<SecIdentityRef>::wrap_under_create_rule(result as CFArrayRef)
-    };
-    for identity in identities.get_all_values().iter() {
-        let identity = unsafe { SecIdentity::wrap_under_get_rule(*identity as SecIdentityRef) };
-        let cert = Cert::new_from_identity(&identity);
-        let key = Key::new(&identity);
-        if let (Ok(cert), Ok(key)) = (cert, key) {
-            objects.push(Object::Cert(cert));
-            objects.push(Object::Key(key));
-        } else {
-            continue;
-        }
-        if let Ok(issuers) = get_issuers(&identity) {
-            for issuer in issuers {
-                if let Ok(cert) = Cert::new_from_certificate(&issuer) {
-                    objects.push(Object::Cert(cert));
+pub struct Backend {}
+
+impl ClientCertsBackend for Backend {
+    type Cert = Cert;
+    type Key = Key;
+
+    fn find_objects(&self) -> Result<(Vec<Cert>, Vec<Key>), Error> {
+        let mut certs = Vec::new();
+        let mut keys = Vec::new();
+        let identities = unsafe {
+            let class_key = CFString::wrap_under_get_rule(kSecClass);
+            let class_value = CFString::wrap_under_get_rule(kSecClassIdentity);
+            let return_ref_key = CFString::wrap_under_get_rule(kSecReturnRef);
+            let return_ref_value = CFBoolean::wrap_under_get_rule(kCFBooleanTrue);
+            let match_key = CFString::wrap_under_get_rule(kSecMatchLimit);
+            let match_value = CFString::wrap_under_get_rule(kSecMatchLimitAll);
+            let vals = vec![
+                (class_key.as_CFType(), class_value.as_CFType()),
+                (return_ref_key.as_CFType(), return_ref_value.as_CFType()),
+                (match_key.as_CFType(), match_value.as_CFType()),
+            ];
+            let dict = CFDictionary::from_CFType_pairs(&vals);
+            let mut result = std::ptr::null();
+            let status = SecItemCopyMatching(dict.as_CFTypeRef() as CFDictionaryRef, &mut result);
+            if status != errSecSuccess {
+                return Err(error_here!(ErrorType::ExternalError, status.to_string()));
+            }
+            if result.is_null() {
+                return Err(error_here!(ErrorType::ExternalError));
+            }
+            CFArray::<SecIdentityRef>::wrap_under_create_rule(result as CFArrayRef)
+        };
+        for identity in identities.get_all_values().iter() {
+            let identity = unsafe { SecIdentity::wrap_under_get_rule(*identity as SecIdentityRef) };
+            let cert = Cert::new_from_identity(&identity);
+            let key = Key::new(&identity);
+            if let (Ok(cert), Ok(key)) = (cert, key) {
+                certs.push(cert);
+                keys.push(key);
+            } else {
+                continue;
+            }
+            if let Ok(issuers) = get_issuers(&identity) {
+                for issuer in issuers {
+                    if let Ok(cert) = Cert::new_from_certificate(&issuer) {
+                        certs.push(cert);
+                    }
                 }
             }
         }
+        Ok((certs, keys))
     }
-    debug!("found {} objects", objects.len());
-    objects
 }
