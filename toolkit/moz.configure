@@ -2253,18 +2253,21 @@ with only_when(requires_wasm_sandboxing & compile_environment):
     set_config("LUCETC_TARGET", rust_target_triple)
 
 
-@depends("--with-wasm-sandboxed-libraries", target)
-def wasm_sandboxing(libraries, target):
+@depends("--with-wasm-sandboxed-libraries", target, lucetc)
+def wasm_sandboxing(libraries, target, lucetc):
     if not libraries:
         return
 
     # Wasm sandboxing is only enabled on specific targets.
-    if not (
+    if lucetc and not (
         target.cpu in ("x86_64",)
         and (target.kernel == "Linux" and target.os != "Android")
         or target.kernel == "Darwin"
     ):
         die("wasm sandboxing is only enabled on x86-64 Linux and Mac")
+
+    if not lucetc and target.bitness != 64:
+        die("wasm sandboxing is only supported on 64-bits platforms")
 
     return namespace(**{name: True for name in libraries})
 
