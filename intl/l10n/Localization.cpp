@@ -82,14 +82,15 @@ static FallibleTArray<Nullable<L10nMessage>> ConvertToL10nMessages(
   return l10nMessages;
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Localization, mGlobal)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Localization)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Localization)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Localization)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
 NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK(Localization, mGlobal)
 
 /* static */
 already_AddRefed<Localization> Localization::Create(
@@ -100,12 +101,14 @@ already_AddRefed<Localization> Localization::Create(
 Localization::Localization(const nsTArray<nsCString>& aResIds, bool aIsSync)
     : mIsSync(aIsSync) {
   ffi::localization_new(&aResIds, mIsSync, getter_AddRefs(mRaw));
+  RegisterObservers();
 }
 
 Localization::Localization(nsIGlobalObject* aGlobal,
                            const nsTArray<nsCString>& aResIds, bool aIsSync)
     : mGlobal(aGlobal), mIsSync(aIsSync) {
   ffi::localization_new(&aResIds, mIsSync, getter_AddRefs(mRaw));
+  RegisterObservers();
 }
 
 Localization::Localization(nsIGlobalObject* aGlobal,
@@ -120,12 +123,14 @@ Localization::Localization(nsIGlobalObject* aGlobal, bool aIsSync)
     : mGlobal(aGlobal), mIsSync(aIsSync) {
   nsTArray<nsCString> resIds;
   ffi::localization_new(&resIds, mIsSync, getter_AddRefs(mRaw));
+  RegisterObservers();
 }
 
 Localization::Localization(nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal), mIsSync(false) {
   nsTArray<nsCString> resIds;
   ffi::localization_new(&resIds, mIsSync, getter_AddRefs(mRaw));
+  RegisterObservers();
 }
 
 already_AddRefed<Localization> Localization::Constructor(
@@ -167,7 +172,18 @@ Localization::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-void Localization::OnChange() {}
+void Localization::RegisterObservers() {
+  DebugOnly<nsresult> rv = Preferences::AddWeakObservers(this, kObservedPrefs);
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "Adding observers failed.");
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+
+  if (obs) {
+    obs->AddObserver(this, INTL_APP_LOCALES_CHANGED, true);
+  }
+}
+
+void Localization::OnChange() { ffi::localization_on_change(mRaw.get()); }
 
 void Localization::SetIsSync(bool aIsSync) {
   MOZ_ASSERT(!aIsSync, "We should only move from sync to async!");
