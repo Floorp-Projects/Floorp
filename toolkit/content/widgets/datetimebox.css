@@ -4,6 +4,7 @@
 
 .datetimebox {
   display: flex;
+  line-height: normal;
   /* TODO: Enable selection once bug 1455893 is fixed */
   user-select: none;
 }
