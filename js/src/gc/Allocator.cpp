@@ -326,18 +326,13 @@ template JS::BigInt* js::AllocateBigInt<NoGC>(JSContext* cx,
 template JS::BigInt* js::AllocateBigInt<CanGC>(JSContext* cx,
                                                gc::InitialHeap heap);
 
-template <typename T, AllowGC allowGC /* = CanGC */>
-T* js::Allocate(JSContext* cx) {
-  static_assert(std::is_base_of_v<gc::Cell, T>);
-  static_assert(
-      sizeof(T) >= MinCellSize,
-      "All allocations must be at least the allocator-imposed minimum size.");
-
-  AllocKind kind = MapTypeToAllocKind<T>::kind;
+template <AllowGC allowGC /* = CanGC */>
+Cell* js::AllocateTenuredImpl(JSContext* cx, gc::AllocKind kind, size_t size) {
   MOZ_ASSERT(!IsNurseryAllocable(kind));
-
-  size_t thingSize = sizeof(T);
-  MOZ_ASSERT(thingSize == Arena::thingSize(kind));
+  MOZ_ASSERT(size == Arena::thingSize(kind));
+  MOZ_ASSERT(
+      size >= gc::MinCellSize,
+      "All allocations must be at least the allocator-imposed minimum size.");
 
   if (!cx->isHelperThreadContext()) {
     if (!cx->runtime()->gc.checkAllocatorState<allowGC>(cx, kind)) {
@@ -345,15 +340,11 @@ T* js::Allocate(JSContext* cx) {
     }
   }
 
-  return GCRuntime::tryNewTenuredThing<T, allowGC>(cx, kind, thingSize);
+  return GCRuntime::tryNewTenuredThing<Cell, allowGC>(cx, kind, size);
 }
 
-#define DECL_ALLOCATOR_INSTANCES(allocKind, traceKind, type, sizedType, \
-                                 bgFinal, nursery, compact)             \
-  template type* js::Allocate<type, NoGC>(JSContext * cx);              \
-  template type* js::Allocate<type, CanGC>(JSContext * cx);
-FOR_EACH_NONOBJECT_NONNURSERY_ALLOCKIND(DECL_ALLOCATOR_INSTANCES)
-#undef DECL_ALLOCATOR_INSTANCES
+template Cell* js::AllocateTenuredImpl<NoGC>(JSContext*, AllocKind, size_t);
+template Cell* js::AllocateTenuredImpl<CanGC>(JSContext*, AllocKind, size_t);
 
 template <typename T, AllowGC allowGC>
 /* static */
