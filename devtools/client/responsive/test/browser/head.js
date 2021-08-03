@@ -688,10 +688,19 @@ function testViewportDeviceMenuLabel(ui, expectedDeviceName) {
 async function toggleTouchSimulation(ui) {
   const { document } = ui.toolWindow;
   const touchButton = document.getElementById("touch-simulation-button");
-  const changed = once(ui, "touch-simulation-changed");
+  const wasChecked = touchButton.classList.contains("checked");
+  const onTouchSimulationChanged = once(ui, "touch-simulation-changed");
   const { onPageLoaded } = await waitForViewportLoad(ui);
+  const onTouchButtonStateChanged = waitFor(
+    () => touchButton.classList.contains("checked") !== wasChecked
+  );
+
   touchButton.click();
-  await Promise.all([changed, onPageLoaded]);
+  await Promise.all([
+    onTouchSimulationChanged,
+    onTouchButtonStateChanged,
+    onPageLoaded,
+  ]);
 }
 
 async function testUserAgent(ui, expected) {
