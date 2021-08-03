@@ -7,11 +7,10 @@ It currently depends on [glean-core] from crates.io.
 
 To update the dependency:
 
-1. Bump the version of the `glean` crate in
+1. Bump the version of the `glean-core` and `glean` crates in
    `toolkit/components/glean/Cargo.toml` and `toolkit/components/glean/api/Cargo.toml`.
 2. Run `mach vendor rust`.
-   This fetches all dependencies and adds them to `third_pary/rust`.
-3. Update the version of `gleanVersion` in `build.gradle` to the same version.
+   This fetches all dependencies and adds them to `mozilla-central/third_pary/rust`.
 
 ## Version mismatches of Rust dependencies
 
