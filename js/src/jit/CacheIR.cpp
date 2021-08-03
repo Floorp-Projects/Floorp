@@ -5991,9 +5991,8 @@ AttachDecision CallIRGenerator::tryAttachObjectHasPrototype(
 }
 
 AttachDecision CallIRGenerator::tryAttachString(HandleFunction callee) {
-  // Need a single string argument.
-  // TODO(Warp): Support all or more conversions to strings.
-  if (argc_ != 1 || !args_[0].isString()) {
+  // Need a single argument that is or can be converted to a string.
+  if (argc_ != 1 || !(args_[0].isString() || args_[0].isNumber())) {
     return AttachDecision::NoAction;
   }
 
@@ -6003,9 +6002,9 @@ AttachDecision CallIRGenerator::tryAttachString(HandleFunction callee) {
   // Guard callee is the 'String' function.
   emitNativeCalleeGuard(callee);
 
-  // Guard that the argument is a string.
+  // Guard that the argument is a string or can be converted to one.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-  StringOperandId strId = writer.guardToString(argId);
+  StringOperandId strId = emitToStringGuard(argId, args_[0]);
 
   // Return the string.
   writer.loadStringResult(strId);
@@ -6017,9 +6016,8 @@ AttachDecision CallIRGenerator::tryAttachString(HandleFunction callee) {
 
 AttachDecision CallIRGenerator::tryAttachStringConstructor(
     HandleFunction callee) {
-  // Need a single string argument.
-  // TODO(Warp): Support all or more conversions to strings.
-  if (argc_ != 1 || !args_[0].isString()) {
+  // Need a single argument that is or can be converted to a string.
+  if (argc_ != 1 || !(args_[0].isString() || args_[0].isNumber())) {
     return AttachDecision::NoAction;
   }
 
@@ -6039,10 +6037,11 @@ AttachDecision CallIRGenerator::tryAttachStringConstructor(
 
   CallFlags flags(IsConstructPC(pc_), IsSpreadPC(pc_));
 
-  // Guard that the argument is a string.
+  // Guard on number and convert to string.
   ValOperandId argId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_, flags);
-  StringOperandId strId = writer.guardToString(argId);
+  StringOperandId strId = emitToStringGuard(argId, args_[0]);
+
   writer.newStringObjectResult(templateObj, strId);
   writer.returnFromIC();
 
