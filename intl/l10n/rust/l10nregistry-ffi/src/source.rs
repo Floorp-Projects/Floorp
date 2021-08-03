@@ -59,7 +59,7 @@ pub extern "C" fn l10nfilesource_new(
         FileSourceOptions { allow_override },
         GeckoFileFetcher,
     );
-    source.set_reporter(GeckoEnvironment);
+    source.set_reporter(GeckoEnvironment::new(None));
 
     *status = L10nFileSourceStatus::None;
     Rc::into_raw(Rc::new(source))
@@ -113,7 +113,7 @@ pub unsafe extern "C" fn l10nfilesource_new_with_index(
         GeckoFileFetcher,
         index,
     );
-    source.set_reporter(GeckoEnvironment);
+    source.set_reporter(GeckoEnvironment::new(None));
 
     *status = L10nFileSourceStatus::None;
     Rc::into_raw(Rc::new(source))
@@ -165,7 +165,7 @@ pub extern "C" fn l10nfilesource_new_mock(
         Default::default(),
         fetcher,
     );
-    source.set_reporter(GeckoEnvironment);
+    source.set_reporter(GeckoEnvironment::new(None));
 
     *status = L10nFileSourceStatus::None;
     Rc::into_raw(Rc::new(source))
