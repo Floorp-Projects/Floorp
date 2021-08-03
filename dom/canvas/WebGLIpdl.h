@@ -112,9 +112,9 @@ template <>
 struct IPDLParamTraits<mozilla::webgl::FrontBufferSnapshotIpc> final {
   using T = mozilla::webgl::FrontBufferSnapshotIpc;
 
-  static void Write(IPC::Message* const msg, IProtocol* actor, T& in) {
+  static void Write(IPC::Message* const msg, IProtocol* actor, const T& in) {
     WriteParam(msg, in.surfSize);
-    WriteIPDLParam(msg, actor, std::move(in.shmem));
+    WriteIPDLParam(msg, actor, in.shmem);
   }
 
   static bool Read(const IPC::Message* const msg, PickleIterator* const itr,
@@ -130,10 +130,10 @@ template <>
 struct IPDLParamTraits<mozilla::webgl::ReadPixelsResultIpc> final {
   using T = mozilla::webgl::ReadPixelsResultIpc;
 
-  static void Write(IPC::Message* const msg, IProtocol* actor, T& in) {
+  static void Write(IPC::Message* const msg, IProtocol* actor, const T& in) {
     WriteParam(msg, in.subrect);
     WriteParam(msg, in.byteStride);
-    WriteIPDLParam(msg, actor, std::move(in.shmem));
+    WriteIPDLParam(msg, actor, in.shmem);
   }
 
   static bool Read(const IPC::Message* const msg, PickleIterator* const itr,

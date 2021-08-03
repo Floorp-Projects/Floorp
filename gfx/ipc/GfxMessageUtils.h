@@ -1213,7 +1213,7 @@ struct IPDLParamTraits<gfx::PaintFragment> {
            aParam.mRecording.mLen);
 
     WriteParam(aMsg, aParam.mSize);
-    WriteIPDLParam(aMsg, aActor, std::move(shmem));
+    WriteIPDLParam(aMsg, aActor, shmem);
     WriteParam(aMsg, aParam.mDependencies);
   }
 

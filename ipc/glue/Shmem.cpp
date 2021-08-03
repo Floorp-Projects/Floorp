@@ -265,7 +265,7 @@ void Shmem::AssertInvariants() const {
   Unused << checkMappingBack;
 }
 
-void Shmem::RevokeRights(PrivateIPDLCaller) {
+void Shmem::RevokeRights(PrivateIPDLCaller) const {
   AssertInvariants();
 
   size_t pageSize = SharedMemory::SystemPageSize();
@@ -437,11 +437,11 @@ UniquePtr<IPC::Message> Shmem::UnshareFrom(PrivateIPDLCaller,
 }
 
 void IPDLParamTraits<Shmem>::Write(IPC::Message* aMsg, IProtocol* aActor,
-                                   Shmem&& aParam) {
+                                   const Shmem& aParam) {
+  MOZ_ASSERT(aParam.IsReadable());
   WriteIPDLParam(aMsg, aActor, aParam.mId);
 
   aParam.RevokeRights(Shmem::PrivateIPDLCaller());
-  aParam.forget(Shmem::PrivateIPDLCaller());
 }
 
 bool IPDLParamTraits<Shmem>::Read(const IPC::Message* aMsg,
