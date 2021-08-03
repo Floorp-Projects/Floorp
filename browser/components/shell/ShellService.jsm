@@ -154,19 +154,6 @@ let ShellServiceInternal = {
         throw new Error("checkBrowserUserChoiceHashes() failed");
       }
 
-      // We can't set the hash consistently until Win 10 1703 (build 15063).
-      // This check is after the hash check so that telemetry can indicate
-      // when the hash check unexpectedly succeeds on an early build.
-      if (
-        !(
-          AppConstants.isPlatformAndVersionAtLeast("win", "10") &&
-          parseInt(Services.sysinfo.getProperty("build")) >= 15063
-        )
-      ) {
-        telemetryResult = "ErrBuild";
-        throw new Error("Windows build is unsupported");
-      }
-
       const wdba = Services.dirsvc.get("XREExeF", Ci.nsIFile);
       wdba.leafName = "default-browser-agent.exe";
       const aumi = XreDirProvider.getInstallHash();
@@ -184,6 +171,7 @@ let ShellServiceInternal = {
       const MOZ_E_NO_PROGID = 0xa0000001;
       const MOZ_E_HASH_CHECK = 0xa0000002;
       const MOZ_E_REJECTED = 0xa0000003;
+      const MOZ_E_BUILD = 0xa0000004;
 
       const exeWaitTimeoutMs = 2000; // 2 seconds
       const exeWaitPromise = exeProcess.wait();
@@ -199,6 +187,7 @@ let ShellServiceInternal = {
             [MOZ_E_NO_PROGID, "ErrExeProgID"],
             [MOZ_E_HASH_CHECK, "ErrExeHash"],
             [MOZ_E_REJECTED, "ErrExeRejected"],
+            [MOZ_E_BUILD, "ErrBuild"],
           ]).get(exitCode) ?? "ErrExeOther";
         throw new Error(
           `WDBA nonzero exit code ${exitCode}: ${telemetryResult}`

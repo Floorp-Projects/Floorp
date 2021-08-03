@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "WindowsUserChoice.h"
 
@@ -215,6 +216,11 @@ HRESULT SetDefaultBrowserUserChoice(const wchar_t* aAumi) {
   if (!CheckBrowserUserChoiceHashes()) {
     LOG_ERROR_MESSAGE(L"UserChoice Hash mismatch");
     return MOZ_E_HASH_CHECK;
+  }
+
+  if (!mozilla::IsWin10CreatorsUpdateOrLater()) {
+    LOG_ERROR_MESSAGE(L"UserChoice hash matched, but Windows build is too old");
+    return MOZ_E_BUILD;
   }
 
   auto sid = GetCurrentUserStringSid();
