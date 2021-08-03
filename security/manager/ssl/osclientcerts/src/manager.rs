@@ -10,12 +10,6 @@ use std::thread;
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-#[cfg(target_os = "macos")]
-use crate::backend_macos as backend;
-#[cfg(target_os = "windows")]
-use crate::backend_windows as backend;
-use backend::*;
-
 use crate::error::{Error, ErrorType};
 use crate::util::*;
 
@@ -26,6 +20,31 @@ use crate::util::*;
 pub enum SlotType {
     Modern,
     Legacy,
+}
+
+pub trait CryptokiObject {
+    fn matches(&self, slot_type: SlotType, attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)]) -> bool;
+    fn get_attribute(&self, attribute: CK_ATTRIBUTE_TYPE) -> Option<&[u8]>;
+}
+
+pub trait Sign {
+    fn get_signature_length(
+        &mut self,
+        data: &[u8],
+        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+    ) -> Result<usize, Error>;
+    fn sign(
+        &mut self,
+        data: &[u8],
+        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+    ) -> Result<Vec<u8>, Error>;
+}
+
+pub trait ClientCertsBackend {
+    type Cert: CryptokiObject;
+    type Key: CryptokiObject + Sign;
+
+    fn find_objects(&self) -> Result<(Vec<Self::Cert>, Vec<Self::Key>), Error>;
 }
 
 /// Helper type for sending `ManagerArguments` to the real `Manager`.
@@ -96,13 +115,13 @@ pub struct ManagerProxy {
 }
 
 impl ManagerProxy {
-    pub fn new() -> Result<ManagerProxy, Error> {
+    pub fn new<B: ClientCertsBackend + Send + 'static>(backend: B) -> Result<ManagerProxy, Error> {
         let (proxy_sender, manager_receiver) = channel();
         let (manager_sender, proxy_receiver) = channel();
         let thread_handle = thread::Builder::new()
             .name("osclientcert".into())
             .spawn(move || {
-                let mut real_manager = Manager::new();
+                let mut real_manager = Manager::new(backend);
                 loop {
                     let arguments = match manager_receiver.recv() {
                         Ok(arguments) => arguments,
@@ -340,10 +359,73 @@ fn search_is_for_all_certificates_or_keys(
     Ok(found_token && found_certificate_or_private_key)
 }
 
+const SUPPORTED_ATTRIBUTES: &[CK_ATTRIBUTE_TYPE] = &[
+    CKA_CLASS,
+    CKA_TOKEN,
+    CKA_LABEL,
+    CKA_ID,
+    CKA_VALUE,
+    CKA_ISSUER,
+    CKA_SERIAL_NUMBER,
+    CKA_SUBJECT,
+    CKA_PRIVATE,
+    CKA_KEY_TYPE,
+    CKA_MODULUS,
+    CKA_EC_PARAMS,
+];
+
+enum Object<B: ClientCertsBackend> {
+    Cert(B::Cert),
+    Key(B::Key),
+}
+
+impl<B: ClientCertsBackend> Object<B> {
+    fn matches(&self, slot_type: SlotType, attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)]) -> bool {
+        match self {
+            Object::Cert(cert) => cert.matches(slot_type, attrs),
+            Object::Key(key) => key.matches(slot_type, attrs),
+        }
+    }
+
+    fn get_attribute(&self, attribute: CK_ATTRIBUTE_TYPE) -> Option<&[u8]> {
+        match self {
+            Object::Cert(cert) => cert.get_attribute(attribute),
+            Object::Key(key) => key.get_attribute(attribute),
+        }
+    }
+
+    fn id(&self) -> Result<&[u8], Error> {
+        self.get_attribute(CKA_ID)
+            .ok_or(error_here!(ErrorType::LibraryFailure))
+    }
+
+    fn get_signature_length(
+        &mut self,
+        data: &[u8],
+        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+    ) -> Result<usize, Error> {
+        match self {
+            Object::Cert(_) => Err(error_here!(ErrorType::InvalidArgument)),
+            Object::Key(key) => key.get_signature_length(data, params),
+        }
+    }
+
+    fn sign(
+        &mut self,
+        data: &[u8],
+        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+    ) -> Result<Vec<u8>, Error> {
+        match self {
+            Object::Cert(_) => Err(error_here!(ErrorType::InvalidArgument)),
+            Object::Key(key) => key.sign(data, params),
+        }
+    }
+}
+
 /// The `Manager` keeps track of the state of this module with respect to the PKCS #11
 /// specification. This includes what sessions are open, which search and sign operations are
 /// ongoing, and what objects are known and by what handle.
-struct Manager {
+struct Manager<B: ClientCertsBackend> {
     /// A map of session to session type (modern or legacy). Sessions can be created (opened) and
     /// later closed.
     sessions: BTreeMap<CK_SESSION_HANDLE, SlotType>,
@@ -353,11 +435,11 @@ struct Manager {
     /// used by each one.
     signs: BTreeMap<CK_SESSION_HANDLE, (CK_OBJECT_HANDLE, Option<CK_RSA_PKCS_PSS_PARAMS>)>,
     /// A map of object handles to the underlying objects.
-    objects: BTreeMap<CK_OBJECT_HANDLE, Object>,
+    objects: BTreeMap<CK_OBJECT_HANDLE, Object<B>>,
     /// A set of certificate identifiers (not the same as handles).
     cert_ids: BTreeSet<Vec<u8>>,
     /// A set of key identifiers (not the same as handles). For each id in this set, there should be
-    /// a corresponding identical id in the `cert_ids` set, and vice-versa.
+    /// a corresponding identical id in the `cert_ids` set.
     key_ids: BTreeSet<Vec<u8>>,
     /// The next session handle to hand out.
     next_session: CK_SESSION_HANDLE,
@@ -366,10 +448,11 @@ struct Manager {
     /// The last time the implementation looked for new objects in the backend.
     /// The implementation does this search no more than once every 3 seconds.
     last_scan_time: Option<Instant>,
+    backend: B,
 }
 
-impl Manager {
-    pub fn new() -> Manager {
+impl<B: ClientCertsBackend> Manager<B> {
+    pub fn new(backend: B) -> Manager<B> {
         Manager {
             sessions: BTreeMap::new(),
             searches: BTreeMap::new(),
@@ -380,44 +463,44 @@ impl Manager {
             next_session: 1,
             next_handle: 1,
             last_scan_time: None,
+            backend,
         }
     }
 
     /// When a new search session is opened (provided at least 3 seconds have elapsed since the
     /// last session was opened), this searches for certificates and keys to expose. We
     /// de-duplicate previously-found certificates and keys by keeping track of their IDs.
-    fn maybe_find_new_objects(&mut self) {
+    fn maybe_find_new_objects(&mut self) -> Result<(), Error> {
         let now = Instant::now();
         match self.last_scan_time {
             Some(last_scan_time) => {
                 if now.duration_since(last_scan_time) < Duration::new(3, 0) {
-                    return;
+                    return Ok(());
                 }
             }
             None => {}
         }
         self.last_scan_time = Some(now);
-        let objects = list_objects();
-        for object in objects {
-            match &object {
-                Object::Cert(cert) => {
-                    if self.cert_ids.contains(cert.id()) {
-                        continue;
-                    }
-                    self.cert_ids.insert(cert.id().to_vec());
-                    let handle = self.get_next_handle();
-                    self.objects.insert(handle, object);
-                }
-                Object::Key(key) => {
-                    if self.key_ids.contains(key.id()) {
-                        continue;
-                    }
-                    self.key_ids.insert(key.id().to_vec());
-                    let handle = self.get_next_handle();
-                    self.objects.insert(handle, object);
-                }
+        let (certs, keys) = self.backend.find_objects()?;
+        for cert in certs {
+            let object = Object::Cert(cert);
+            if self.cert_ids.contains(object.id()?) {
+                continue;
             }
+            self.cert_ids.insert(object.id()?.to_vec());
+            let handle = self.get_next_handle();
+            self.objects.insert(handle, object);
         }
+        for key in keys {
+            let object = Object::Key(key);
+            if self.key_ids.contains(object.id()?) {
+                continue;
+            }
+            self.key_ids.insert(object.id()?.to_vec());
+            let handle = self.get_next_handle();
+            self.objects.insert(handle, object);
+        }
+        Ok(())
     }
 
     pub fn open_session(&mut self, slot_type: SlotType) -> Result<CK_SESSION_HANDLE, Error> {
@@ -482,7 +565,7 @@ impl Manager {
         // inserted or certificates that may have been imported into the OS. Since these searches
         // are relatively rare, this minimizes the impact of doing these re-scans.
         if search_is_for_all_certificates_or_keys(attrs)? {
-            self.maybe_find_new_objects();
+            self.maybe_find_new_objects()?;
         }
         let mut handles = Vec::new();
         for (handle, object) in &self.objects {
@@ -560,10 +643,6 @@ impl Manager {
         if self.signs.contains_key(&session) {
             return Err(error_here!(ErrorType::InvalidArgument));
         }
-        match self.objects.get(&key_handle) {
-            Some(Object::Key(_)) => {}
-            _ => return Err(error_here!(ErrorType::InvalidArgument)),
-        };
         self.signs.insert(session, (key_handle, params));
         Ok(())
     }
@@ -578,8 +657,8 @@ impl Manager {
             None => return Err(error_here!(ErrorType::InvalidArgument)),
         };
         let key = match self.objects.get_mut(&key_handle) {
-            Some(Object::Key(key)) => key,
-            _ => return Err(error_here!(ErrorType::InvalidArgument)),
+            Some(key) => key,
+            None => return Err(error_here!(ErrorType::InvalidArgument)),
         };
         key.get_signature_length(data, params)
     }
@@ -592,8 +671,8 @@ impl Manager {
             None => return Err(error_here!(ErrorType::InvalidArgument)),
         };
         let key = match self.objects.get_mut(&key_handle) {
-            Some(Object::Key(key)) => key,
-            _ => return Err(error_here!(ErrorType::InvalidArgument)),
+            Some(key) => key,
+            None => return Err(error_here!(ErrorType::InvalidArgument)),
         };
         key.sign(data, &params)
     }
