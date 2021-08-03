@@ -28,13 +28,9 @@ key-attr =
   const source = L10nFileSource.createMock("test", ["de", "en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
-  async function* generateBundles(resIds) {
-    yield * l10nReg.generateBundles(["de", "en-US"], resIds);
-  }
-
   const l10n = new Localization([
     "/browser/menu.ftl",
-  ], false, { generateBundles });
+  ], false, l10nReg, ["de", "en-US"]);
 
   {
     let values = await l10n.formatValues([
@@ -84,9 +80,6 @@ key-attr =
     strictEqual(messages[2].value, "[en] Value3");
     strictEqual(messages[3].value, null);
   }
-
-  l10nReg.clearSources();
-  Services.locale.requestedLocales = originalRequested;
 });
 
 add_task(async function test_builtins() {
@@ -110,20 +103,14 @@ key = { PLATFORM() ->
   const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
-  async function* generateBundles(resIds) {
-    yield * await l10nReg.generateBundles(["en-US"], resIds);
-  }
-
   const l10n = new Localization([
     "/test.ftl",
-  ], false, { generateBundles });
+  ], false, l10nReg, ["en-US"]);
 
   let values = await l10n.formatValues([{id: "key"}]);
 
   ok(values[0].includes(
     `${ known_platforms[AppConstants.platform].toUpperCase() } Value`));
-
-  l10nReg.clearSources();
 });
 
 add_task(async function test_add_remove_resourceIds() {
@@ -133,16 +120,11 @@ add_task(async function test_add_remove_resourceIds() {
     { path: "/localization/en-US/toolkit/menu.ftl", source: "key2 = Value2" },
   ];
 
-  const originalRequested = Services.locale.requestedLocales;
 
   const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
-  async function* generateBundles(resIds) {
-    yield * await l10nReg.generateBundles(["en-US"], resIds);
-  }
-
-  const l10n = new Localization(["/browser/menu.ftl"], false, { generateBundles });
+  const l10n = new Localization(["/browser/menu.ftl"], false, l10nReg, ["en-US"]);
 
   let values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
 
@@ -172,31 +154,20 @@ add_task(async function test_add_remove_resourceIds() {
 
   strictEqual(values[0], null);
   strictEqual(values[1], "Value2");
-
-  l10nReg.clearSources();
-  Services.locale.requestedLocales = originalRequested;
 });
 
 add_task(async function test_switch_to_async() {
   const l10nReg = new L10nRegistry();
+
   const fs = [
     { path: "/localization/en-US/browser/menu.ftl", source: "key1 = Value1" },
     { path: "/localization/en-US/toolkit/menu.ftl", source: "key2 = Value2" },
   ];
-  const originalRequested = Services.locale.requestedLocales;
 
   const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
-  async function* generateBundles(resIds) {
-    yield * await l10nReg.generateBundles(["en-US"], resIds);
-  }
-
-  function* generateBundlesSync(resIds) {
-    yield * l10nReg.generateBundlesSync(["en-US"], resIds);
-  }
-
-  const l10n = new Localization(["/browser/menu.ftl"], false, { generateBundles, generateBundlesSync });
+  const l10n = new Localization(["/browser/menu.ftl"], false, l10nReg, ["en-US"]);
 
   let values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
 
@@ -220,7 +191,4 @@ add_task(async function test_switch_to_async() {
 
   strictEqual(values[0], null);
   strictEqual(values[1], "Value2");
-
-  l10nReg.clearSources();
-  Services.locale.requestedLocales = originalRequested;
 });
