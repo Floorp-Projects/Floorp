@@ -1106,6 +1106,10 @@ RefreshDriverTimer* nsRefreshDriver::ChooseTimer() {
   return sRegularRateTimer;
 }
 
+static nsDocShell* GetDocShell(nsPresContext* aPresContext) {
+  return static_cast<nsDocShell*>(aPresContext->GetDocShell());
+}
+
 nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
     : mActiveTimer(nullptr),
       mOwnTimer(nullptr),
@@ -1333,19 +1337,44 @@ bool nsRefreshDriver::AddImageRequest(imgIRequest* aRequest) {
 
   EnsureTimerStarted();
 
+  if (profiler_can_accept_markers()) {
+    nsCOMPtr<nsIURI> uri;
+    aRequest->GetURI(getter_AddRefs(uri));
+    nsAutoCString uristr;
+    uri->GetAsciiSpec(uristr);
+
+    PROFILER_MARKER_TEXT("Image Animation", GRAPHICS,
+                         MarkerOptions(MarkerTiming::IntervalStart(),
+                                       MarkerInnerWindowIdFromDocShell(
+                                           GetDocShell(mPresContext))),
+                         uristr);
+  }
+
   return true;
 }
 
 void nsRefreshDriver::RemoveImageRequest(imgIRequest* aRequest) {
-  // Try to remove from both places, just in case, because we can't tell
-  // whether RemoveEntry() succeeds.
-  mRequests.Remove(aRequest);
+  // Try to remove from both places, just in case.
+  bool removed = mRequests.EnsureRemoved(aRequest);
   uint32_t delay = GetFirstFrameDelay(aRequest);
   if (delay != 0) {
     ImageStartData* start = mStartTable.Get(delay);
     if (start) {
-      start->mEntries.Remove(aRequest);
+      removed = removed | start->mEntries.EnsureRemoved(aRequest);
     }
+  }
+
+  if (removed && profiler_can_accept_markers()) {
+    nsCOMPtr<nsIURI> uri;
+    aRequest->GetURI(getter_AddRefs(uri));
+    nsAutoCString uristr;
+    uri->GetAsciiSpec(uristr);
+
+    PROFILER_MARKER_TEXT("Image Animation", GRAPHICS,
+                         MarkerOptions(MarkerTiming::IntervalEnd(),
+                                       MarkerInnerWindowIdFromDocShell(
+                                           GetDocShell(mPresContext))),
+                         uristr);
   }
 }
 
@@ -1699,7 +1728,7 @@ void nsRefreshDriver::AppendTickReasonsToString(TickReasons aReasons,
     aStr.AppendLiteral(")");
   }
   if (aReasons & TickReasons::eHasImageRequests) {
-    aStr.AppendLiteral(" HasImageRequests");
+    aStr.AppendLiteral(" HasImageAnimations");
   }
   if (aReasons & TickReasons::eNeedsToUpdateIntersectionObservations) {
     aStr.AppendLiteral(" NeedsToUpdateIntersectionObservations");
@@ -1812,10 +1841,6 @@ struct DocumentFrameCallbacks {
   RefPtr<Document> mDocument;
   nsTArray<Document::FrameRequest> mCallbacks;
 };
-
-static nsDocShell* GetDocShell(nsPresContext* aPresContext) {
-  return static_cast<nsDocShell*>(aPresContext->GetDocShell());
-}
 
 static bool HasPendingAnimations(PresShell* aPresShell) {
   Document* doc = aPresShell->GetDocument();
