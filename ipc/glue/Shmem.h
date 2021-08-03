@@ -138,9 +138,9 @@ class Shmem final {
   SharedMemory* Segment(PrivateIPDLCaller) const { return mSegment; }
 
 #ifndef DEBUG
-  void RevokeRights(PrivateIPDLCaller) {}
+  void RevokeRights(PrivateIPDLCaller) const {}
 #else
-  void RevokeRights(PrivateIPDLCaller);
+  void RevokeRights(PrivateIPDLCaller) const;
 #endif
 
   void forget(PrivateIPDLCaller) {
