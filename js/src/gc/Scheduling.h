@@ -833,6 +833,10 @@ class HeapThreshold {
   bool hasSliceThreshold() const { return sliceBytes_ != SIZE_MAX; }
 
  protected:
+  static double computeZoneHeapGrowthFactorForHeapSize(
+      size_t lastBytes, const GCSchedulingTunables& tunables,
+      const GCSchedulingState& state);
+
   void setIncrementalLimitFromStartBytes(size_t retainedBytes,
                                          const GCSchedulingTunables& tunables);
 };
@@ -848,9 +852,6 @@ class GCHeapThreshold : public HeapThreshold {
                             const AutoLockGC& lock);
 
  private:
-  static double computeZoneHeapGrowthFactorForHeapSize(
-      size_t lastBytes, const GCSchedulingTunables& tunables,
-      const GCSchedulingState& state);
   static size_t computeZoneTriggerBytes(double growthFactor, size_t lastBytes,
                                         JS::GCOptions options,
                                         const GCSchedulingTunables& tunables,
@@ -864,6 +865,7 @@ class MallocHeapThreshold : public HeapThreshold {
  public:
   void updateStartThreshold(size_t lastBytes,
                             const GCSchedulingTunables& tunables,
+                            const GCSchedulingState& state,
                             const AutoLockGC& lock);
 
  private:

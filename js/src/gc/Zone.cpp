@@ -68,8 +68,8 @@ void js::ZoneAllocator::updateGCStartThresholds(GCRuntime& gc,
   gcHeapThreshold.updateStartThreshold(gcHeapSize.retainedBytes(), options,
                                        gc.tunables, gc.schedulingState,
                                        isAtomsZone, lock);
-  mallocHeapThreshold.updateStartThreshold(mallocHeapSize.retainedBytes(),
-                                           gc.tunables, lock);
+  mallocHeapThreshold.updateStartThreshold(
+      mallocHeapSize.retainedBytes(), gc.tunables, gc.schedulingState, lock);
 }
 
 void js::ZoneAllocator::setGCSliceThresholds(GCRuntime& gc) {
