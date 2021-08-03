@@ -14,6 +14,7 @@ lazy_static = "1"
 log = "0.4"
 mozilla-central-workspace-hack = { path = "../../../../build/workspace-hack" }
 pkcs11 = "0.4"
+rsclientcerts = { path = "../rsclientcerts" }
 sha2 = "0.8"
 
 [target."cfg(target_os = \"macos\")".dependencies.core-foundation]

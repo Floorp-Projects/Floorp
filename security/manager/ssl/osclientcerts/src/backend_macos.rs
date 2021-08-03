@@ -15,6 +15,9 @@ use core_foundation::number::*;
 use core_foundation::string::*;
 use libloading::{Library, Symbol};
 use pkcs11::types::*;
+use rsclientcerts::error::{Error, ErrorType};
+use rsclientcerts::manager::{ClientCertsBackend, CryptokiObject, Sign, SlotType};
+use rsclientcerts::util::*;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::convert::TryInto;
@@ -24,10 +27,6 @@ use std::os::raw::c_void;
 // cross-compiled on linux, and we'd have to figure out e.g. include paths,
 // etc.. This is easier.
 include!("bindings_macos.rs");
-
-use crate::error::{Error, ErrorType};
-use crate::manager::{ClientCertsBackend, CryptokiObject, Sign, SlotType};
-use crate::util::*;
 
 #[repr(C)]
 pub struct __SecIdentity(c_void);

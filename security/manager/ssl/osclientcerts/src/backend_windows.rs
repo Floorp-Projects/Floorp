@@ -6,6 +6,9 @@
 #![allow(non_camel_case_types)]
 
 use pkcs11::types::*;
+use rsclientcerts::error::{Error, ErrorType};
+use rsclientcerts::manager::{ClientCertsBackend, CryptokiObject, Sign, SlotType};
+use rsclientcerts::util::*;
 use sha2::{Digest, Sha256};
 use std::convert::TryInto;
 use std::ffi::{c_void, CStr, CString};
@@ -16,10 +19,6 @@ use winapi::shared::minwindef::{DWORD, PBYTE};
 use winapi::um::errhandlingapi::GetLastError;
 use winapi::um::ncrypt::*;
 use winapi::um::wincrypt::{HCRYPTHASH, HCRYPTPROV, *};
-
-use crate::error::{Error, ErrorType};
-use crate::manager::{ClientCertsBackend, CryptokiObject, Sign, SlotType};
-use crate::util::*;
 
 // winapi has some support for ncrypt.h, but not for this function.
 extern "system" {

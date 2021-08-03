@@ -20,30 +20,26 @@ extern crate pkcs11;
 #[cfg(target_os = "macos")]
 #[macro_use]
 extern crate rental;
+#[macro_use]
+extern crate rsclientcerts;
 extern crate sha2;
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
 use pkcs11::types::*;
+use rsclientcerts::manager::{ManagerProxy, SlotType};
 use std::sync::Mutex;
 use std::thread;
 
-#[macro_use]
-mod error;
 #[cfg(target_os = "macos")]
 mod backend_macos;
 #[cfg(target_os = "windows")]
 mod backend_windows;
-mod manager;
-#[macro_use]
-mod util;
 
 #[cfg(target_os = "macos")]
 use crate::backend_macos::Backend;
 #[cfg(target_os = "windows")]
 use crate::backend_windows::Backend;
-
-use manager::{ManagerProxy, SlotType};
 
 lazy_static! {
     /// The singleton `ManagerProxy` that handles state with respect to PKCS #11. Only one thread
