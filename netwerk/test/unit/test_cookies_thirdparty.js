@@ -17,6 +17,7 @@ add_task(async () => {
     "network.cookie.rejectForeignWithExceptions.enabled",
     false
   );
+  Services.prefs.setBoolPref("dom.security.https_first", false);
 
   CookieXPCShellUtils.createServer({
     hosts: ["foo.com", "bar.com", "third.com"],
@@ -159,4 +160,5 @@ add_task(async () => {
     await do_set_cookies(uri1, channel2, true, [1, 2]);
     Services.cookies.removeAll();
   }
+  Services.prefs.clearUserPref("dom.security.https_first");
 });

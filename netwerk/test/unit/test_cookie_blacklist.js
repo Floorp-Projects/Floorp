@@ -8,6 +8,7 @@ add_task(async () => {
     "network.cookieJarSettings.unblocked_for_testing",
     true
   );
+  Services.prefs.setBoolPref("dom.security.https_first", false);
 
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   var cookieURI = ios.newURI("http://mozilla.org/test_cookie_blacklist.js");
@@ -36,4 +37,5 @@ add_task(async () => {
     cookieURI.spec
   );
   Assert.equal(storedCookie, GOOD_COOKIE + "; " + SPACEY_COOKIE);
+  Services.prefs.clearUserPref("dom.security.https_first");
 });

@@ -30,6 +30,7 @@ add_task(async () => {
 
   // Test with cookies enabled.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+  Services.prefs.setBoolPref("dom.security.https_first", false);
 
   // Test with https-first-mode disabled in PBM
   Services.prefs.setBoolPref("dom.security.https_first_pbm", false);
@@ -139,4 +140,5 @@ add_task(async () => {
 
   // Let's release the last PB window.
   privateBrowsingHolder.close();
+  Services.prefs.clearUserPref("dom.security.https_first");
 });

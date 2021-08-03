@@ -26,6 +26,7 @@ let cookie;
 add_task(async () => {
   // Set up a profile.
   profile = do_get_profile();
+  Services.prefs.setBoolPref("dom.security.https_first", false);
 
   // Allow all cookies.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
@@ -66,6 +67,7 @@ add_task(async () => {
   await run_test_3();
   await run_test_4();
   await run_test_5();
+  Services.prefs.clearUserPref("dom.security.https_first");
 });
 
 function do_get_backup_file(profile) {
