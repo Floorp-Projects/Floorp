@@ -12498,44 +12498,67 @@ Result<FileUsageType, nsresult> DatabaseFileManager::GetUsage(
   QM_TRY(CollectEachFile(
       *aDirectory,
       [&usage](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
-        QM_TRY_INSPECT(const auto& leafName,
-                       MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
+        QM_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*file));
 
-        if (leafName.Equals(kJournalDirectoryName)) {
-          return Ok{};
-        }
+        switch (dirEntryKind) {
+          case nsIFileKind::ExistsAsDirectory: {
+            QM_TRY_INSPECT(
+                const auto& leafName,
+                MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
 
-        nsresult rv;
-        leafName.ToInteger64(&rv);
-        if (NS_SUCCEEDED(rv)) {
-          // Usually we only use QM_OR_ELSE_LOG_VERBOSE(_IF) with Remove and
-          // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
-          // check, but the file was found by a directory traversal and
-          // ToInteger on the name succeeded, so it should be our file and if
-          // the file disappears, the use of QM_OR_ELSE_WARN_IF is ok here.
-          QM_TRY_INSPECT(
-              const auto& thisUsage,
-              QM_OR_ELSE_WARN_IF(
-                  // Expression.
-                  MOZ_TO_RESULT_INVOKE(file, GetFileSize)
-                      .map([](const int64_t fileSize) {
-                        return FileUsageType(Some(uint64_t(fileSize)));
+            if (leafName.Equals(kJournalDirectoryName)) {
+              break;
+            }
+
+            Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
+            break;
+          }
+
+          case nsIFileKind::ExistsAsFile: {
+            QM_TRY_INSPECT(
+                const auto& leafName,
+                MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
+
+            nsresult rv;
+            leafName.ToInteger64(&rv);
+            if (NS_SUCCEEDED(rv)) {
+              // Usually we only use QM_OR_ELSE_LOG_VERBOSE(_IF) with Remove and
+              // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
+              // check, but the file was found by a directory traversal and
+              // ToInteger on the name succeeded, so it should be our file and
+              // if the file disappears, the use of QM_OR_ELSE_WARN_IF is ok
+              // here.
+              QM_TRY_INSPECT(
+                  const auto& thisUsage,
+                  QM_OR_ELSE_WARN_IF(
+                      // Expression.
+                      MOZ_TO_RESULT_INVOKE(file, GetFileSize)
+                          .map([](const int64_t fileSize) {
+                            return FileUsageType(Some(uint64_t(fileSize)));
+                          }),
+                      // Predicate.
+                      ([](const nsresult rv) {
+                        return rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
+                               rv == NS_ERROR_FILE_NOT_FOUND;
                       }),
-                  // Predicate.
-                  ([](const nsresult rv) {
-                    return rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
-                           rv == NS_ERROR_FILE_NOT_FOUND;
-                  }),
-                  // Fallback. If the file does no longer exist, treat it as
-                  // 0-sized.
-                  ErrToDefaultOk<FileUsageType>));
+                      // Fallback. If the file does no longer exist, treat it as
+                      // 0-sized.
+                      ErrToDefaultOk<FileUsageType>));
 
-          usage += thisUsage;
+              usage += thisUsage;
 
-          return Ok{};
+              break;
+            }
+
+            Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
+
+            break;
+          }
+
+          case nsIFileKind::DoesNotExist:
+            // Ignore files that got removed externally while iterating.
+            break;
         }
-
-        UNKNOWN_FILE_WARNING(leafName);
 
         return Ok{};
       }));
