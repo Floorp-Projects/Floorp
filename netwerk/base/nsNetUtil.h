@@ -988,4 +988,6 @@ bool SchemeIsFTP(nsIURI* aURI);
 nsresult NS_HasRootDomain(const nsACString& aInput, const nsACString& aHost,
                           bool* aResult);
 
+void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI);
+
 #endif  // !nsNetUtil_h__
