@@ -2808,7 +2808,7 @@ var gMainPane = {
     var fph = Services.io
       .getProtocolHandler("file")
       .QueryInterface(Ci.nsIFileProtocolHandler);
-    var urlSpec = fph.getURLSpecFromFile(aFile);
+    var urlSpec = fph.getURLSpecFromActualFile(aFile);
 
     return "moz-icon://" + urlSpec + "?size=16";
   },
@@ -3064,19 +3064,19 @@ var gMainPane = {
       downloadFolder.value = currentDirPref.value
         ? `\u2066${currentDirPref.value.path}\u2069`
         : "";
-      iconUrlSpec = fph.getURLSpecFromFile(currentDirPref.value);
+      iconUrlSpec = fph.getURLSpecFromDir(currentDirPref.value);
     } else if (folderIndex == 1) {
       // 'Downloads'
       [downloadFolder.value] = await document.l10n.formatValues([
         { id: "downloads-folder-name" },
       ]);
-      iconUrlSpec = fph.getURLSpecFromFile(await this._indexToFolder(1));
+      iconUrlSpec = fph.getURLSpecFromDir(await this._indexToFolder(1));
     } else {
       // 'Desktop'
       [downloadFolder.value] = await document.l10n.formatValues([
         { id: "desktop-folder-name" },
       ]);
-      iconUrlSpec = fph.getURLSpecFromFile(
+      iconUrlSpec = fph.getURLSpecFromDir(
         await this._getDownloadsFolder("Desktop")
       );
     }

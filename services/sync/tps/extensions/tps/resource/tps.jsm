@@ -1032,7 +1032,7 @@ var TPS = {
         testFile,
         "testing/modules/ajv-4.1.1.js"
       );
-      let ajvURL = fileProtocolHandler.getURLSpecFromFile(ajvFile);
+      let ajvURL = fileProtocolHandler.getURLSpecFromActualFile(ajvFile);
       let ns = {};
       ChromeUtils.import(ajvURL, ns);
       let ajv = new ns.Ajv({ async: "co*" });
