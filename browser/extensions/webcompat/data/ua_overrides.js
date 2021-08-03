@@ -599,25 +599,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1704663 - Add UA override for automotivesuperstore.com.au
-     * Webcompat issue #65664 - https://webcompat.com/issues/65664
-     *
-     * Page jumps back to top after scrolling down due to incorrect
-     * UA detection
-     */
-    id: "bug1704663",
-    platform: "android",
-    domain: "automotivesuperstore.com.au",
-    bug: "1704663",
-    config: {
-      matches: ["*://automotivesuperstore.com.au/*"],
-      uaTransformer: () => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1704673 - Add UA override for app.xiaomi.com
      * Webcompat issue #66163 - https://webcompat.com/issues/66163
      *
@@ -728,6 +709,44 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://*.saxoinvestor.fr/*"],
       uaTransformer: originalUA => {
         return originalUA + " Chrome/91.0.4472.114";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1722955 - Add UA override for frontgate.com
+     * Webcompat issue #36277 - https://github.com/webcompat/web-bugs/issues/36277
+     *
+     * The website is sending the desktop version to Firefox on mobile devices
+     * based on UA sniffing. Spoofing as Chrome fixes this.
+     */
+    id: "bug1722955",
+    platform: "android",
+    domain: "frontgate.com",
+    bug: "1722955",
+    config: {
+      matches: ["*://frontgate.com/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1722954 - Add UA override for game.granbluefantasy.jp
+     * Webcompat issue #34310 - https://github.com/webcompat/web-bugs/issues/34310
+     *
+     * The website is sending a version of the site which is too small. Adding a partial
+     * safari iOS version of the UA sends us the right layout.
+     */
+    id: "bug1722954",
+    platform: "android",
+    domain: "granbluefantasy.jp",
+    bug: "1722954",
+    config: {
+      matches: ["*://*.granbluefantasy.jp/*"],
+      uaTransformer: originalUA => {
+        return originalUA + " iPhone OS 12_0 like Mac OS X";
       },
     },
   },
