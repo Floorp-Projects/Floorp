@@ -304,6 +304,14 @@ class nsDocShellLoadState final {
 
   bool IsMetaRefresh() const { return mIsMetaRefresh; }
 
+  const mozilla::Maybe<nsCString>& GetRemoteTypeOverride() const {
+    return mRemoteTypeOverride;
+  }
+
+  void SetRemoteTypeOverride(const nsCString& aRemoteTypeOverride) {
+    mRemoteTypeOverride = mozilla::Some(aRemoteTypeOverride);
+  }
+
   // When loading a document through nsDocShell::LoadURI(), a special set of
   // flags needs to be set based on other values in nsDocShellLoadState. This
   // function calculates those flags, before the LoadState is passed to
@@ -524,6 +532,9 @@ class nsDocShellLoadState final {
   // The original URI before query stripping happened. If it's present, it shows
   // the query stripping happened. Otherwise, it will be a nullptr.
   nsCOMPtr<nsIURI> mUnstrippedURI;
+
+  // If set, the remote type which the load should be completed within.
+  mozilla::Maybe<nsCString> mRemoteTypeOverride;
 };
 
 #endif /* nsDocShellLoadState_h__ */
