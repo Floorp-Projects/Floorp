@@ -52,7 +52,8 @@ class HttpIconLoader(
             connectTimeout = Pair(CONNECT_TIMEOUT, TimeUnit.SECONDS),
             readTimeout = Pair(READ_TIMEOUT, TimeUnit.SECONDS),
             redirect = Request.Redirect.FOLLOW,
-            useCaches = true
+            useCaches = true,
+            private = request.isPrivate
         )
 
         return try {
