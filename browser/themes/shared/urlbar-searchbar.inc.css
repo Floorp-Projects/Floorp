@@ -423,20 +423,26 @@
   color: inherit;
 }
 
-:root[uidensity=compact] .urlbar-icon {
+:root[uidensity=compact] .urlbar-page-action,
+:root[uidensity=compact] #urlbar-go-button,
+:root[uidensity=compact] .search-go-button {
   margin-inline: 1px;
 }
 
-.urlbar-icon:not([disabled]):hover {
+.urlbar-page-action:not([disabled]):hover,
+#urlbar-go-button:hover,
+.search-go-button:hover {
   background-color: hsla(0,0%,70%,.2);
 }
 
-.urlbar-icon:not([disabled])[open],
-.urlbar-icon:not([disabled]):hover:active {
+.urlbar-page-action:not([disabled])[open],
+.urlbar-page-action:not([disabled]):hover:active,
+#urlbar-go-button:hover:active,
+.search-go-button:hover:active {
   background-color: hsla(0,0%,70%,.3);
 }
 
-.urlbar-icon:-moz-focusring {
+.urlbar-page-action:-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
   outline-offset: -2px;
 }
