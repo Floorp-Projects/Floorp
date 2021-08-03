@@ -92,16 +92,13 @@ interface Localization {
    *                             default generators provided by Gecko.
    */
   [Throws]
-  constructor(sequence<DOMString> aResourceIds,
-              optional boolean aSync = false,
-              optional BundleGenerator aBundleGenerator = {});
+  constructor(sequence<UTF8String> aResourceIds,
+              optional boolean aSync = false);
 
   /**
    * A method for adding resources to the localization context.
-   *
-   * Returns a new count of resources used by the context.
    */
-  unsigned long addResourceIds(sequence<DOMString> aResourceIds);
+  void addResourceIds(sequence<DOMString> aResourceIds);
 
   /**
    * A method for removing resources from the localization context.

@@ -301,7 +301,7 @@ impl LocalizationRc {
         &self,
         keys: &ThinVec<L10nKey>,
         promise: &xpcom::Promise,
-        callback: extern "C" fn(&xpcom::Promise, Option<&ThinVec<nsCString>>),
+        callback: extern "C" fn(&xpcom::Promise, &ThinVec<nsCString>),
     ) {
         let bundles = self.inner.borrow().bundles().clone();
 
@@ -326,7 +326,7 @@ impl LocalizationRc {
                 })
                 .collect::<ThinVec<_>>();
 
-            callback(&strong_promise, Some(&ret_val));
+            callback(&strong_promise, &ret_val);
         })
         .expect("Failed to spawn future");
     }
@@ -337,7 +337,7 @@ impl LocalizationRc {
         promise: &xpcom::Promise,
         callback: extern "C" fn(
             &xpcom::Promise,
-            Option<&ThinVec<OptionalL10nMessage>>,
+            &ThinVec<OptionalL10nMessage>,
             &ThinVec<nsCString>,
         ),
     ) {
@@ -375,7 +375,7 @@ impl LocalizationRc {
                 .map(|err| err.to_string().into())
                 .collect();
 
-            callback(&strong_promise, Some(&ret_val), &errors);
+            callback(&strong_promise, &ret_val, &errors);
         })
         .expect("Failed to spawn future");
     }
@@ -483,7 +483,7 @@ pub extern "C" fn localization_format_values(
     loc: &LocalizationRc,
     keys: &ThinVec<L10nKey>,
     promise: &xpcom::Promise,
-    callback: extern "C" fn(&xpcom::Promise, Option<&ThinVec<nsCString>>),
+    callback: extern "C" fn(&xpcom::Promise, &ThinVec<nsCString>),
 ) {
     loc.format_values(keys, promise, callback);
 }
@@ -493,11 +493,7 @@ pub extern "C" fn localization_format_messages(
     loc: &LocalizationRc,
     keys: &ThinVec<L10nKey>,
     promise: &xpcom::Promise,
-    callback: extern "C" fn(
-        &xpcom::Promise,
-        Option<&ThinVec<OptionalL10nMessage>>,
-        &ThinVec<nsCString>,
-    ),
+    callback: extern "C" fn(&xpcom::Promise, &ThinVec<OptionalL10nMessage>, &ThinVec<nsCString>),
 ) {
     loc.format_messages(keys, promise, callback);
 }
