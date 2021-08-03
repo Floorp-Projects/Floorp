@@ -161,9 +161,8 @@ pub fn create_sample_table(
     // With large numbers of samples, the cost of many allocations dominates,
     // so it's worth iterating twice to allocate sample_table just once.
     let total_sample_count = sample_to_chunk_iter(&stsc.samples, &stco.offsets)
-        .by_ref()
         .map(|(_, sample_counts)| sample_counts.to_usize())
-        .sum();
+        .try_fold(0usize, usize::checked_add)?;
     let mut sample_table = TryVec::with_capacity(total_sample_count).ok()?;
 
     for i in sample_to_chunk_iter(&stsc.samples, &stco.offsets) {
@@ -226,7 +225,7 @@ pub fn create_sample_table(
     };
 
     // sum_delta is the sum of stts_iter delta.
-    // According to sepc:
+    // According to spec:
     //      decode time => DT(n) = DT(n-1) + STTS(n)
     //      composition time => CT(n) = DT(n) + CTTS(n)
     // Note:
