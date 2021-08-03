@@ -4,29 +4,51 @@
 <!--
   Test for Geolocation in chrome
   -->
-<window id="sample-window" width="400" height="400"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" 
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+<window
+  id="sample-window"
+  width="400"
+  height="400"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+>
+  <script
+    src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"
+  ></script>
 
-<script>
-SimpleTest.waitForExplicitFinish();
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    async function test() {
+      /** @type {Geolocation} */
+      const geolocation = Cc["@mozilla.org/geolocation;1"].getService(
+        Ci.nsISupports
+      );
+      try {
+        // Watch position
+        let watchId;
+        let position = await new Promise((resolve, reject) => {
+          watchId = geolocation.watchPosition(resolve, reject, { timeout: 0 });
+        });
+        ok(position, "watchPosition() callable from chrome");
+        geolocation.clearWatch(watchId);
 
-var geolocation = Cc["@mozilla.org/geolocation;1"].getService(Ci.nsISupports);
-geolocation.getCurrentPosition(done, error);
+        // Get position
+        position = await new Promise((resolve, reject) =>
+          geolocation.getCurrentPosition(resolve, reject)
+        );
+        ok(position, "getCurrentPosition() callable from chrome");
+      } catch (err) {
+        ok(
+          false,
+          "error occurred trying to get geolocation from chrome: " + err.message
+        );
+      } finally {
+        SimpleTest.finish();
+      }
+    }
+  </script>
 
-function error(error)
-{
-  ok(0, "error occured trying to get geolocation from chrome");
-  SimpleTest.finish();
-}
-function done(position)
-{
-  ok(position, "geolocation was found from chrome");
-  SimpleTest.finish();
-}
-</script>
-
-<body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
-
+  <body
+    xmlns="http://www.w3.org/1999/xhtml"
+    style="height: 300px; overflow: auto;"
+    onload="test()"
+  />
 </window>
