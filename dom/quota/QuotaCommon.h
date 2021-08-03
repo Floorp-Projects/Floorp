@@ -1557,39 +1557,42 @@ auto ExecuteInitialization(
     const Initialization aInitialization, Func&& aFunc)
     -> std::invoke_result_t<Func, const FirstInitializationAttempt<
                                       Initialization, StringGenerator>&> {
-  using RetType = std::invoke_result_t<
-      Func, const FirstInitializationAttempt<Initialization, StringGenerator>&>;
+  return aFirstInitializationAttempts.WithFirstInitializationAttempt(
+      aInitialization, [&aFunc](auto&& firstInitializationAttempt) {
+        auto res = std::forward<Func>(aFunc)(firstInitializationAttempt);
 
-  auto firstInitializationAttempt =
-      aFirstInitializationAttempts.FirstInitializationAttempt(aInitialization);
+        const auto rv = [&res]() -> nsresult {
+          using RetType =
+              std::invoke_result_t<Func, const FirstInitializationAttempt<
+                                             Initialization, StringGenerator>&>;
 
-  auto res = std::forward<Func>(aFunc)(firstInitializationAttempt);
+          if constexpr (std::is_same_v<RetType, nsresult>) {
+            return res;
+          } else if constexpr (mozilla::detail::IsResult<RetType>::value &&
+                               std::is_same_v<typename RetType::err_type,
+                                              nsresult>) {
+            return res.isOk() ? NS_OK : res.inspectErr();
+          } else {
+            detail::UnsupportedReturnType();
+          }
+        }();
 
-  const auto rv = [&res]() -> nsresult {
-    if constexpr (std::is_same_v<RetType, nsresult>) {
-      return res;
-    } else if constexpr (mozilla::detail::IsResult<RetType>::value &&
-                         std::is_same_v<typename RetType::err_type, nsresult>) {
-      return res.isOk() ? NS_OK : res.inspectErr();
-    } else {
-      detail::UnsupportedReturnType();
-    }
-  }();
+        // NS_ERROR_ABORT signals a non-fatal, recoverable problem during
+        // initialization. We do not want these kind of failures to count
+        // against our overall first initialization attempt telemetry. Thus we
+        // just ignore this kind of failure and keep
+        // aFirstInitializationAttempts unflagged to stay ready to record a real
+        // success or failure on the next attempt.
+        if (rv == NS_ERROR_ABORT) {
+          return res;
+        }
 
-  // NS_ERROR_ABORT signals a non-fatal, recoverable problem during
-  // initialization. We do not want these kind of failures to count against our
-  // overall first initialization attempt telemetry. Thus we just ignore this
-  // kind of failure and keep aFirstInitializationAttempts unflagged to stay
-  // ready to record a real success or failure on the next attempt.
-  if (rv == NS_ERROR_ABORT) {
-    return res;
-  }
+        if (!firstInitializationAttempt.Recorded()) {
+          firstInitializationAttempt.Record(rv);
+        }
 
-  if (!firstInitializationAttempt.Recorded()) {
-    firstInitializationAttempt.Record(rv);
-  }
-
-  return res;
+        return res;
+      });
 }
 
 template <typename Initialization, typename StringGenerator, typename Func>
