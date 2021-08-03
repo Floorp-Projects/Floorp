@@ -53,6 +53,9 @@ class FullParseHandler {
    */
   const Rooted<BaseScript*> lazyOuterFunction_;
   const mozilla::Span<TaggedScriptThingIndex> gcThingsData;
+  const mozilla::Span<ScriptStencil> scriptData_;
+  const mozilla::Span<ScriptStencilExtra> scriptExtra_;
+
   size_t lazyInnerFunctionIndex;
 
   size_t lazyClosedOverBindingIndex;
@@ -106,6 +109,8 @@ class FullParseHandler {
       : allocator(cx, compilationState.parserAllocScope.alloc()),
         lazyOuterFunction_(cx, compilationState.input.lazyOuterScript()),
         gcThingsData(compilationState.input.gcThings()),
+        scriptData_(compilationState.input.scriptData()),
+        scriptExtra_(compilationState.input.scriptExtra()),
         lazyInnerFunctionIndex(0),
         lazyClosedOverBindingIndex(0) {
     // The gcthings() array contains the inner function list
@@ -1090,10 +1095,10 @@ class FullParseHandler {
   bool canSkipLazyInnerFunctions() { return !!lazyOuterFunction_; }
   bool canSkipLazyClosedOverBindings() { return !!lazyOuterFunction_; }
   bool canSkipRegexpSyntaxParse() { return !!lazyOuterFunction_; }
-  JSFunction* nextLazyInnerFunction() {
-    return &lazyOuterFunction_->gcthings()[lazyInnerFunctionIndex++]
-                .as<JSObject>()
-                .as<JSFunction>();
+  ScriptIndex nextLazyInnerFunction() {
+    auto taggedScriptIndex = gcThingsData[lazyInnerFunctionIndex++];
+    MOZ_ASSERT(taggedScriptIndex.isFunction());
+    return taggedScriptIndex.toFunction();
   }
   TaggedParserAtomIndex nextLazyClosedOverBinding() {
     // Trailing nullptrs were elided in PerHandlerParser::finishFunction().
@@ -1102,6 +1107,12 @@ class FullParseHandler {
     }
 
     return gcThingsData[lazyClosedOverBindingIndex++].toAtomOrNull();
+  }
+  const ScriptStencil& cachedScriptData(ScriptIndex index) const {
+    return scriptData_[index];
+  }
+  const ScriptStencilExtra& cachedScriptExtra(ScriptIndex index) const {
+    return scriptExtra_[index];
   }
 
   void setPrivateNameKind(Node node, PrivateNameKind kind) {
