@@ -3617,6 +3617,7 @@ dependencies = [
  "mozilla-central-workspace-hack",
  "pkcs11",
  "rental",
+ "rsclientcerts",
  "sha2",
  "winapi",
 ]
@@ -4320,6 +4321,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "284de9dae38774e2813aaabd7e947b4a6fe9b8c58c2309f754a487cdd50de1c2"
 dependencies = [
  "petgraph",
+]
+
+[[package]]
+name = "rsclientcerts"
+version = "0.1.0"
+dependencies = [
+ "byteorder",
+ "pkcs11",
 ]
 
 [[package]]
