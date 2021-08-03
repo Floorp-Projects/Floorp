@@ -5130,6 +5130,7 @@ QuotaManager::UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
 
     return NS_OK;
   };
+
   return ExecuteInitialization(
       Initialization::UpgradeFromPersistentStorageDirectory, innerFunc);
 }
