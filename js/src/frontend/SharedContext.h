@@ -445,6 +445,7 @@ class FunctionBox : public SuspendableContext {
   void initFromLazyFunction(JSFunction* fun, ScopeContext& scopeContext,
                             FunctionFlags flags, FunctionSyntaxKind kind);
   void initFromLazyFunctionToSkip(JSFunction* fun);
+  void initFromScriptStencilExtra(const ScriptStencilExtra& extra);
   void initStandalone(ScopeContext& scopeContext, FunctionFlags flags,
                       FunctionSyntaxKind kind);
 
