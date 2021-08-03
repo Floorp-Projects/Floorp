@@ -22,6 +22,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
 #include "mozilla/Range.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Utf8.h"
@@ -292,6 +293,44 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
   }
 
   handler_.setFunctionBox(funNode, funbox);
+
+  return funbox;
+}
+
+template <class ParseHandler>
+FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
+    FunctionNodeType funNode, const ScriptStencil& cachedScriptData,
+    const ScriptStencilExtra& cachedScriptExtra) {
+  MOZ_ASSERT(funNode);
+
+  ScriptIndex index = ScriptIndex(compilationState_.scriptData.length());
+  if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
+    ReportAllocationOverflow(cx_);
+    return nullptr;
+  }
+  if (!compilationState_.appendScriptStencilAndData(cx_)) {
+    return nullptr;
+  }
+
+  /*
+   * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
+   * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
+   * arenas containing the entries must be alive until we are done with
+   * scanning, parsing and code generation for the whole script or top-level
+   * function.
+   */
+  FunctionBox* funbox = alloc_.new_<FunctionBox>(
+      cx_, cachedScriptExtra.extent, compilationState_,
+      Directives(/* strict = */ false), cachedScriptExtra.generatorKind(),
+      cachedScriptExtra.asyncKind(), compilationState_.isInitialStencil(),
+      cachedScriptData.functionAtom, cachedScriptData.functionFlags, index);
+  if (!funbox) {
+    ReportOutOfMemory(cx_);
+    return nullptr;
+  }
+
+  handler_.setFunctionBox(funNode, funbox);
+  funbox->initFromScriptStencilExtra(cachedScriptExtra);
 
   return funbox;
 }
@@ -860,6 +899,74 @@ bool ParserBase::noteUsedNameInternal(TaggedParserAtomIndex name,
                             tokenPosition);
 }
 
+bool CompilationInput::cacheScript(JSContext* cx, LifoAlloc& alloc,
+                                   ParserAtomsTable& parseAtoms) {
+  using ScriptDataSpan = mozilla::Span<ScriptStencil>;
+  using ScriptExtraSpan = mozilla::Span<ScriptStencilExtra>;
+  cachedScriptData_ = ScriptDataSpan(nullptr);
+  cachedScriptExtra_ = ScriptExtraSpan(nullptr);
+  if (!lazy_) {
+    return true;
+  }
+
+  auto gcthings = lazy_->gcthings();
+  size_t length = gcthings.Length();
+  if (length == 0) {
+    return true;
+  }
+
+  // Reduce the length to the first element which is not a function.
+  for (size_t i = 0; i < length; i++) {
+    gc::Cell* cell = gcthings[i].asCell();
+    if (!cell || !cell->is<JSObject>()) {
+      length = i;
+      break;
+    }
+    MOZ_ASSERT(cell->as<JSObject>()->is<JSFunction>());
+  }
+
+  ScriptStencil* scriptData =
+      alloc.newArrayUninitialized<ScriptStencil>(length);
+  ScriptStencilExtra* scriptExtra =
+      alloc.newArrayUninitialized<ScriptStencilExtra>(length);
+  if (!scriptData || !scriptExtra) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  for (size_t i = 0; i < length; i++) {
+    gc::Cell* cell = gcthings[i].asCell();
+    RootedFunction fun(cx, &cell->as<JSObject>()->as<JSFunction>());
+    new (mozilla::KnownNotNull, &scriptData[i]) ScriptStencil();
+    ScriptStencil& data = scriptData[i];
+    new (mozilla::KnownNotNull, &scriptExtra[i]) ScriptStencilExtra();
+    ScriptStencilExtra& extra = scriptExtra[i];
+
+    if (fun->displayAtom()) {
+      TaggedParserAtomIndex displayAtom =
+          parseAtoms.internJSAtom(cx, atomCache, fun->displayAtom());
+      if (!displayAtom) {
+        return false;
+      }
+      data.functionAtom = displayAtom;
+    }
+    data.functionFlags = fun->flags();
+
+    BaseScript* lazy = fun->baseScript();
+    extra.immutableFlags = lazy->immutableFlags();
+    extra.extent = lazy->extent();
+
+    // Info derived from parent compilation should not be set yet for our inner
+    // lazy functions. Instead that info will be updated when we finish our
+    // compilation.
+    MOZ_ASSERT(lazy->hasEnclosingScript());
+  }
+
+  cachedScriptData_ = ScriptDataSpan(scriptData, length);
+  cachedScriptExtra_ = ScriptExtraSpan(scriptExtra, length);
+  return true;
+}
+
 bool CompilationInput::cacheGCThings(JSContext* cx, LifoAlloc& alloc,
                                      ParserAtomsTable& parseAtoms) {
   using GCThingsSpan = mozilla::Span<TaggedScriptThingIndex>;
@@ -880,6 +987,7 @@ bool CompilationInput::cacheGCThings(JSContext* cx, LifoAlloc& alloc,
     return false;
   }
 
+  size_t scriptIndex = 0;
   for (size_t i = 0; i < length; i++) {
     gc::Cell* cell = gcthings[i].asCell();
     if (!cell) {
@@ -887,7 +995,9 @@ bool CompilationInput::cacheGCThings(JSContext* cx, LifoAlloc& alloc,
       continue;
     }
     if (cell->is<JSObject>()) {
-      gcThingsData[i] = TaggedScriptThingIndex(OpaqueThingType());
+      MOZ_ASSERT(cell->as<JSObject>()->is<JSFunction>());
+      MOZ_ASSERT(scriptIndex < cachedScriptData_.Length());
+      gcThingsData[i] = TaggedScriptThingIndex(ScriptIndex(scriptIndex++));
       continue;
     }
 
@@ -2943,28 +3053,19 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   // so we can skip over them after accounting for their free variables.
 
   MOZ_ASSERT(pc_->isOutermostOfCurrentCompile());
+  ScriptIndex cachedScriptIndex = handler_.nextLazyInnerFunction();
+  const ScriptStencil& cachedData =
+      handler_.cachedScriptData(cachedScriptIndex);
+  const ScriptStencilExtra& cachedExtra =
+      handler_.cachedScriptExtra(cachedScriptIndex);
+  MOZ_ASSERT(toStringStart == cachedExtra.extent.toStringStart);
 
-  RootedFunction fun(cx_, handler_.nextLazyInnerFunction());
-
-  // TODO-Stencil: Consider for snapshotting.
-  TaggedParserAtomIndex displayAtom;
-  if (fun->displayAtom()) {
-    displayAtom = this->parserAtoms().internJSAtom(
-        cx_, this->compilationState_.input.atomCache, fun->displayAtom());
-    if (!displayAtom) {
-      return false;
-    }
-  }
-
-  FunctionBox* funbox = newFunctionBox(
-      funNode, displayAtom, fun->flags(), toStringStart,
-      Directives(/* strict = */ false), fun->generatorKind(), fun->asyncKind());
+  FunctionBox* funbox = newFunctionBox(funNode, cachedData, cachedExtra);
   if (!funbox) {
     return false;
   }
 
   ScriptStencil& script = funbox->functionStencil();
-  funbox->initFromLazyFunctionToSkip(fun);
   funbox->copyFunctionFields(script);
 
   // If the inner lazy function is class constructor, connect it to the class
@@ -2978,11 +3079,6 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
 
   MOZ_ASSERT_IF(pc_->isFunctionBox(),
                 pc_->functionBox()->index() < funbox->index());
-
-  // Info derived from parent compilation should not be set yet for our inner
-  // lazy functions. Instead that info will be updated when we finish our
-  // compilation.
-  MOZ_ASSERT(fun->baseScript()->hasEnclosingScript());
 
   PropagateTransitiveParseFlags(funbox, pc_->sc());
 
