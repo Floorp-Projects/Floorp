@@ -2740,6 +2740,11 @@ DownloadLegacySaver.prototype = {
       }
     }
 
+    // For legacy downloads, we must update the referrerInfo at this time.
+    if (aRequest instanceof Ci.nsIHttpChannel) {
+      this.download.source.referrerInfo = aRequest.referrerInfo;
+    }
+
     this.addToHistory();
   },
 
