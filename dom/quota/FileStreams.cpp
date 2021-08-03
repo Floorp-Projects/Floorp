@@ -49,9 +49,9 @@ NS_IMETHODIMP FileQuotaStream<FileStreamBase>::Close() {
 template <class FileStreamBase>
 nsresult FileQuotaStream<FileStreamBase>::DoOpen() {
   QuotaManager* quotaManager = QuotaManager::Get();
-  NS_ASSERTION(quotaManager, "Shouldn't be null!");
+  MOZ_ASSERT(quotaManager, "Shouldn't be null!");
 
-  NS_ASSERTION(!mQuotaObject, "Creating quota object more than once?");
+  MOZ_ASSERT(!mQuotaObject, "Creating quota object more than once?");
   mQuotaObject = quotaManager->GetQuotaObject(
       mPersistenceType, mOriginMetadata, mClientType,
       FileStreamBase::mOpenParams.localFile);
