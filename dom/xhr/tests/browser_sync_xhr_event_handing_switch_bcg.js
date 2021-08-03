@@ -1,6 +1,6 @@
 const baseURL = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://example.com"
+  "https://example.com"
 );
 
 const childURL = `${baseURL}empty.html`;
