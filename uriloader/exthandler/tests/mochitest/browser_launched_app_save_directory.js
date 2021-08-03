@@ -15,49 +15,28 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 // is actually saved in default Downloads directory.
 add_task(async function aDownloadLaunchedWithAppIsSavedInDownloadsFolder() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.improvements_to_download_panel", true],
-      ["browser.download.useDownloadDir", false],
-    ],
+    set: [["browser.download.improvements_to_download_panel", true]],
   });
 
   let publicList = await Downloads.getList(Downloads.PUBLIC);
   registerCleanupFunction(async () => {
     await publicList.removeFinished();
   });
-  let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
+  let downloadFinishedPromise = promiseDownloadFinished(publicList);
+  let initialTabsCount = gBrowser.tabs.length;
+
   let loadingTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     TEST_PATH + "file_pdf_application_pdf.pdf"
   );
 
-  let dialogWindow = await dialogWindowPromise;
-  let doc = dialogWindow.document;
-  let dialog = doc.querySelector("#unknownContentType");
-  let button = dialog.getButton("accept");
-
-  await TestUtils.waitForCondition(
-    () => !button.disabled,
-    "Wait for Accept button to get enabled"
+  let download = await downloadFinishedPromise;
+  await BrowserTestUtils.waitForCondition(
+    () => gBrowser.tabs.length == initialTabsCount + 2
   );
 
-  let downloadFinishedPromise = promiseDownloadFinished(publicList);
-  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
-
-  button.disabled = false;
-  dialog.acceptDialog();
-  let newTab = await newTabPromise;
-
-  await ContentTask.spawn(newTab.linkedBrowser, null, async () => {
-    await ContentTaskUtils.waitForCondition(
-      () => content.document.readyState == "complete"
-    );
-  });
-
-  let download = await downloadFinishedPromise;
-
+  gBrowser.removeCurrentTab();
   BrowserTestUtils.removeTab(loadingTab);
-  BrowserTestUtils.removeTab(newTab);
 
   let downloadDir = await DownloadIntegration.getSystemDownloadsDirectory();
   ok(

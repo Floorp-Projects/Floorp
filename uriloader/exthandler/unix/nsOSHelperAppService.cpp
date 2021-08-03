@@ -34,6 +34,7 @@
 #include "ContentHandlerService.h"
 #include "prenv.h"  // for PR_GetEnv()
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "nsMimeTypes.h"
 
 using namespace mozilla;
@@ -1209,7 +1210,9 @@ already_AddRefed<nsMIMEInfoBase> nsOSHelperAppService::GetFromExtension(
 
     if (NS_SUCCEEDED(rv)) {
       mimeInfo->SetDefaultApplication(handlerFile);
-      mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+      mozilla::StaticPrefs::browser_download_improvements_to_download_panel()
+          ? mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk)
+          : mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
       mimeInfo->SetDefaultDescription(handler);
     }
   }
@@ -1325,7 +1328,9 @@ already_AddRefed<nsMIMEInfoBase> nsOSHelperAppService::GetFromType(
 
   if (NS_SUCCEEDED(rv)) {
     mimeInfo->SetDefaultApplication(handlerFile);
-    mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+    StaticPrefs::browser_download_improvements_to_download_panel()
+        ? mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk)
+        : mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
     mimeInfo->SetDefaultDescription(handler);
   } else {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);

@@ -1081,7 +1081,7 @@ nsUnknownContentTypeDialog.prototype = {
         );
         this._saveToDiskTimer.initWithCallback(this, 0, nsITimer.TYPE_ONE_SHOT);
       } else {
-        this.mLauncher.launchWithApplication(this.handleInternally);
+        this.mLauncher.launchWithApplication(this.handleInternally, null);
       }
 
       // Update user pref for this mime type (if necessary). We do not

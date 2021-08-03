@@ -17,6 +17,7 @@
 #include "nsLocalFile.h"
 #include "nsIWindowsRegKey.h"
 #include "nsXULAppAPI.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WindowsVersion.h"
 
@@ -377,7 +378,9 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(
       NS_ConvertUTF16toUTF8(Substring(fileExtToUse, 1));
   ToLowerCase(lowerFileExt);
   mimeInfo->AppendExtension(lowerFileExt);
-  mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+  mozilla::StaticPrefs::browser_download_improvements_to_download_panel()
+      ? mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk)
+      : mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 
   nsAutoString appInfo;
   bool found;
