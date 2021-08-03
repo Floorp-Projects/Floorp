@@ -101,7 +101,7 @@ impl Default for Mp4parseTrackType {
     }
 }
 
-#[allow(non_camel_case_types)]
+#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[repr(C)]
 #[derive(PartialEq, Debug)]
 pub enum Mp4parseCodec {
@@ -175,7 +175,11 @@ impl Mp4parseByteData {
     fn with_data(slice: &[u8]) -> Self {
         Self {
             length: slice.len(),
-            data: slice.as_ptr(),
+            data: if !slice.is_empty() {
+                slice.as_ptr()
+            } else {
+                std::ptr::null()
+            },
             indices: std::ptr::null(),
         }
     }
@@ -328,6 +332,8 @@ pub struct Mp4parseAvifImage {
     pub primary_item: Mp4parseByteData,
     /// The size of the image; should never be null unless using permissive parsing
     pub spatial_extents: *const mp4parse::ImageSpatialExtentsProperty,
+    pub nclx_colour_information: *const mp4parse::NclxColourInformation,
+    pub icc_colour_information: Mp4parseByteData,
     pub image_rotation: mp4parse::ImageRotation,
     pub image_mirror: *const mp4parse::ImageMirror,
     /// If no alpha item exists, `.length` will be 0 and `.data` will be null
@@ -1073,25 +1079,32 @@ pub unsafe extern "C" fn mp4parse_avif_get_image(
         return Mp4parseStatus::BadArg;
     }
 
-    *avif_image = mp4parse_avif_get_image_safe(&*parser);
-
-    Mp4parseStatus::Ok
+    if let Ok(image) = mp4parse_avif_get_image_safe(&*parser) {
+        *avif_image = image;
+        Mp4parseStatus::Ok
+    } else {
+        Mp4parseStatus::Invalid
+    }
 }
 
-pub fn mp4parse_avif_get_image_safe(parser: &Mp4parseAvifParser) -> Mp4parseAvifImage {
+pub fn mp4parse_avif_get_image_safe(
+    parser: &Mp4parseAvifParser,
+) -> mp4parse::Result<Mp4parseAvifImage> {
     let context = parser.context();
 
-    Mp4parseAvifImage {
+    Ok(Mp4parseAvifImage {
         primary_item: Mp4parseByteData::with_data(context.primary_item()),
-        spatial_extents: context.spatial_extents_ptr(),
-        image_rotation: context.image_rotation(),
-        image_mirror: context.image_mirror_ptr(),
+        spatial_extents: context.spatial_extents_ptr()?,
+        nclx_colour_information: context.nclx_colour_information_ptr()?,
+        icc_colour_information: Mp4parseByteData::with_data(context.icc_colour_information()?),
+        image_rotation: context.image_rotation()?,
+        image_mirror: context.image_mirror_ptr()?,
         alpha_item: context
             .alpha_item()
             .map(Mp4parseByteData::with_data)
             .unwrap_or_default(),
         premultiplied_alpha: context.premultiplied_alpha,
-    }
+    })
 }
 
 /// Fill the supplied `Mp4parseByteData` with index information from `track`.
