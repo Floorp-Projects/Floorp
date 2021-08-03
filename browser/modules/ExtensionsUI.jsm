@@ -481,7 +481,6 @@ var ExtensionsUI = {
       let action = {
         label: strings.acceptText,
         accessKey: strings.acceptKey,
-        disableHighlight: true,
         callback: () => {
           resolve(true);
         },

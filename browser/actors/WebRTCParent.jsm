@@ -1304,8 +1304,6 @@ function prompt(aActor, aBrowser, aRequest) {
     );
   }
 
-  mainAction.disableHighlight = true;
-
   notification = chromeDoc.defaultView.PopupNotifications.show(
     aBrowser,
     "webRTC-shareDevices",

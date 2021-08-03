@@ -7686,7 +7686,6 @@ var IndexedDBPromptHelper = {
           Ci.nsIPermissionManager.ALLOW_ACTION
         );
       },
-      disableHighlight: true,
     };
 
     var secondaryActions = [
@@ -7785,7 +7784,6 @@ var CanvasPermissionPromptHelper = {
           state && state.checkboxChecked
         );
       },
-      disableHighlight: true,
     };
 
     let secondaryActions = [
@@ -7958,8 +7956,6 @@ var WebAuthnPromptHelper = {
         this._tid = 0;
       }
     };
-
-    mainAction.disableHighlight = true;
 
     this._tid = tid;
     this._current = PopupNotifications.show(
