@@ -16,6 +16,48 @@ using namespace mozilla::intl;
 
 static const char* kObservedPrefs[] = {L10N_PSEUDO_PREF, nullptr};
 
+// The state where the application contains incomplete localization resources
+// is much more common than for other types of core resources.
+//
+// In result, we our localization is designed to handle missing resources
+// gracefully, and we need a more fine-tuned way to communicate those problems
+// to developers.
+//
+// In particular, we want developers and early adopters to be able to reason
+// about missing translations, without bothering end user in production, where
+// the user cannot react to that.
+//
+// We currently differentiate between nightly/dev-edition builds or automation
+// where we report the errors, and beta/release, where we silence them.
+static bool MaybeReportErrorsToGecko(const nsTArray<nsCString>& aErrors,
+                                     ErrorResult& aRv,
+                                     nsIGlobalObject* global) {
+  if (!aErrors.IsEmpty()) {
+    if (xpc::IsInAutomation()) {
+      aRv.ThrowInvalidStateError(aErrors.ElementAt(0));
+      return true;
+    }
+
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
+    Document* doc = nullptr;
+    if (global) {
+      nsPIDOMWindowInner* innerWindow = global->AsInnerWindow();
+      if (innerWindow) {
+        doc = innerWindow->GetExtantDoc();
+      }
+    }
+
+    for (const auto& error : aErrors) {
+      nsContentUtils::ReportToConsoleNonLocalized(NS_ConvertUTF8toUTF16(error),
+                                                  nsIScriptError::warningFlag,
+                                                  "l10n"_ns, doc);
+    }
+#endif
+  }
+
+  return false;
+}
+
 static nsTArray<ffi::L10nKey> ConvertFromL10nKeys(
     const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys) {
   nsTArray<ffi::L10nKey> l10nKeys(aKeys.Length());
@@ -235,9 +277,9 @@ already_AddRefed<Promise> Localization::FormatValue(
          const nsTArray<nsCString>* aErrors) {
         Promise* promise = const_cast<Promise*>(aPromise);
 
-        if (!aErrors->IsEmpty()) {
-          ErrorResult rv;
-          rv.ThrowInvalidStateError(aErrors->ElementAt(0));
+        ErrorResult rv;
+        if (MaybeReportErrorsToGecko(*aErrors, rv,
+                                     promise->GetParentObject())) {
           promise->MaybeReject(std::move(rv));
         } else {
           promise->MaybeResolve(aValue);
@@ -264,8 +306,10 @@ already_AddRefed<Promise> Localization::FormatValues(
          const nsTArray<nsCString>* aErrors) {
         Promise* promise = const_cast<Promise*>(aPromise);
 
-        if (!aErrors->IsEmpty()) {
-          promise->MaybeRejectWithInvalidStateError(aErrors->ElementAt(0));
+        ErrorResult rv;
+        if (MaybeReportErrorsToGecko(*aErrors, rv,
+                                     promise->GetParentObject())) {
+          promise->MaybeReject(std::move(rv));
         } else {
           promise->MaybeResolve(*aValues);
         }
@@ -292,15 +336,14 @@ already_AddRefed<Promise> Localization::FormatMessages(
          const nsTArray<nsCString>* aErrors) {
         Promise* promise = const_cast<Promise*>(aPromise);
 
-        if (!aErrors->IsEmpty()) {
-          // XXX: We should consider throwing an array of errors here.
-          promise->MaybeRejectWithInvalidStateError(aErrors->ElementAt(0));
+        ErrorResult rv;
+        if (MaybeReportErrorsToGecko(*aErrors, rv,
+                                     promise->GetParentObject())) {
+          promise->MaybeReject(std::move(rv));
         } else {
           ErrorResult rv;
           FallibleTArray<Nullable<L10nMessage>> messages;
-          if (aRaw) {
-            messages = ConvertToL10nMessages(*aRaw, rv);
-          }
+          messages = ConvertToL10nMessages(*aRaw, rv);
           if (rv.Failed()) {
             promise->MaybeReject(std::move(rv));
           } else {
@@ -323,11 +366,14 @@ void Localization::FormatValueSync(const nsACString& aId,
     FluentBundle::ConvertArgs(args, l10nArgs);
   }
 
-  ffi::localization_format_value_sync(mRaw.get(), &aId, &l10nArgs, &aRetVal,
-                                      &errors);
+  bool rv = ffi::localization_format_value_sync(mRaw.get(), &aId, &l10nArgs,
+                                                &aRetVal, &errors);
 
-  if (!errors.IsEmpty()) {
-    aRv.ThrowInvalidStateError(errors.ElementAt(0));
+  if (rv) {
+    MaybeReportErrorsToGecko(errors, aRv, GetParentObject());
+  } else {
+    aRv.ThrowInvalidStateError(
+        "Can't use formatValueSync when state is async.");
   }
 }
 
@@ -354,11 +400,14 @@ void Localization::FormatValuesSync(
     }
   }
 
-  ffi::localization_format_values_sync(mRaw.get(), &l10nKeys, &aRetVal,
-                                       &errors);
+  bool rv = ffi::localization_format_values_sync(mRaw.get(), &l10nKeys,
+                                                 &aRetVal, &errors);
 
-  if (!errors.IsEmpty()) {
-    aRv.ThrowInvalidStateError(errors.ElementAt(0));
+  if (rv) {
+    MaybeReportErrorsToGecko(errors, aRv, GetParentObject());
+  } else {
+    aRv.ThrowInvalidStateError(
+        "Can't use formatValuesSync when state is async.");
   }
 }
 
@@ -387,11 +436,17 @@ void Localization::FormatMessagesSync(
 
   nsTArray<ffi::OptionalL10nMessage> result(l10nKeys.Length());
 
-  ffi::localization_format_messages_sync(mRaw.get(), &l10nKeys, &result,
-                                         &errors);
+  bool rv = ffi::localization_format_messages_sync(mRaw.get(), &l10nKeys,
+                                                   &result, &errors);
 
-  if (!errors.IsEmpty()) {
-    aRv.ThrowInvalidStateError(errors.ElementAt(0));
+  if (rv) {
+    MaybeReportErrorsToGecko(errors, aRv, GetParentObject());
+    if (!aRv.Failed()) {
+      aRetVal = ConvertToL10nMessages(result, aRv);
+    }
+  } else {
+    aRv.ThrowInvalidStateError(
+        "Can't use formatMessagesSync when state is async.");
     return;
   }
 
