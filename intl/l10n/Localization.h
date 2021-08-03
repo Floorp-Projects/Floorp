@@ -7,109 +7,83 @@
 #ifndef mozilla_intl_l10n_Localization_h
 #define mozilla_intl_l10n_Localization_h
 
-#include "nsWeakReference.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
-#include "mozILocalization.h"
+#include "nsWrapperCache.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/LocalizationBinding.h"
-#include "mozilla/dom/PromiseNativeHandler.h"
-
-class nsIGlobalObject;
-
-using namespace mozilla::dom;
+#include "mozilla/intl/LocalizationBindings.h"
 
 namespace mozilla {
-class ErrorResult;
-
 namespace intl {
 
-typedef Record<nsCString, Nullable<OwningUTF8StringOrDouble>> L10nArgs;
+class Localization : public nsIObserver, public nsWrapperCache {
+  template <typename T, typename... Args>
+  friend already_AddRefed<T> mozilla::MakeAndAddRef(Args&&... aArgs);
 
-class Localization : public nsIObserver,
-                     public nsSupportsWeakReference,
-                     public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Localization,
-                                                         nsIObserver)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Localization)
   NS_DECL_NSIOBSERVER
 
-  static already_AddRefed<Localization> Create(
-      nsIGlobalObject* aGlobal, const bool aSync,
-      const BundleGenerator& aBundleGenerator);
-
-  void Activate(const bool aEager);
-
-  void Destroy();
-
   static already_AddRefed<Localization> Constructor(
-      const GlobalObject& aGlobal, const Sequence<nsString>& aResourceIds,
-      const bool aSync, const BundleGenerator& aBundleGenerator,
+      const dom::GlobalObject& aGlobal,
+      const dom::Sequence<nsCString>& aResourceIds, bool aIsSync,
+      ErrorResult& aRv);
+  static already_AddRefed<Localization> Create(
+      const nsTArray<nsCString>& aResourceIds, bool aIsSync);
+
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
+
+  void SetIsSync(bool aIsSync);
+
+  already_AddRefed<dom::Promise> FormatValue(
+      const nsACString& aId, const dom::Optional<L10nArgs>& aArgs,
       ErrorResult& aRv);
 
-  nsIGlobalObject* GetParentObject() const;
+  already_AddRefed<dom::Promise> FormatValues(
+      const dom::Sequence<dom::OwningUTF8StringOrL10nIdArgs>& aKeys,
+      ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  already_AddRefed<dom::Promise> FormatMessages(
+      const dom::Sequence<dom::OwningUTF8StringOrL10nIdArgs>& aKeys,
+      ErrorResult& aRv);
 
-  uint32_t AddResourceId(const nsAString& aResourceId);
+  void FormatValueSync(const nsACString& aId,
+                       const dom::Optional<L10nArgs>& aArgs,
+                       nsACString& aRetVal, ErrorResult& aRv);
+  void FormatValuesSync(
+      const dom::Sequence<dom::OwningUTF8StringOrL10nIdArgs>& aKeys,
+      nsTArray<nsCString>& aRetVal, ErrorResult& aRv);
+  void FormatMessagesSync(
+      const dom::Sequence<dom::OwningUTF8StringOrL10nIdArgs>& aKeys,
+      nsTArray<dom::Nullable<dom::L10nMessage>>& aRetVal, ErrorResult& aRv);
+
+  void AddResourceId(const nsAString& aResourceId);
   uint32_t RemoveResourceId(const nsAString& aResourceId);
-
-  /**
-   * Localization API
-   *
-   * Methods documentation in Localization.webidl
-   */
-  uint32_t AddResourceIds(const nsTArray<nsString>& aResourceIds);
-
+  void AddResourceIds(const nsTArray<nsString>& aResourceIds);
   uint32_t RemoveResourceIds(const nsTArray<nsString>& aResourceIds);
 
-  already_AddRefed<Promise> FormatValue(JSContext* aCx, const nsACString& aId,
-                                        const Optional<L10nArgs>& aArgs,
-                                        ErrorResult& aRv);
-
-  already_AddRefed<Promise> FormatValues(
-      JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
-      ErrorResult& aRv);
-
-  already_AddRefed<Promise> FormatMessages(
-      JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
-      ErrorResult& aRv);
-
-  void SetIsSync(const bool aIsSync);
-
-  void FormatValueSync(JSContext* aCx, const nsACString& aId,
-                       const Optional<L10nArgs>& aArgs, nsACString& aRetVal,
-                       ErrorResult& aRv);
-  void FormatValuesSync(JSContext* aCx,
-                        const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
-                        nsTArray<nsCString>& aRetVal, ErrorResult& aRv);
-  void FormatMessagesSync(JSContext* aCx,
-                          const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
-                          nsTArray<Nullable<L10nMessage>>& aRetVal,
-                          ErrorResult& aRv);
+  void Upgrade();
 
  protected:
-  Localization(nsIGlobalObject* aGlobal, const bool aSync,
-               const BundleGenerator& aBundleGenerator);
-  virtual bool Init();
-
+  Localization(const nsTArray<nsCString>& aResIds, bool aIsSync);
+  Localization(nsIGlobalObject* aGlobal, const nsTArray<nsCString>& aResIds,
+               bool aIsSync);
+  explicit Localization(nsIGlobalObject* aGlobal);
+  Localization(nsIGlobalObject* aGlobal, bool aIsSync);
   virtual ~Localization();
-  void RegisterObservers();
+
   virtual void OnChange();
-  already_AddRefed<Promise> MaybeWrapPromise(Promise* aInnerPromise);
-  void ConvertL10nArgsToJSValue(JSContext* aCx, const L10nArgs& aArgs,
-                                JS::MutableHandle<JS::Value> aRetVal,
-                                ErrorResult& aRv);
+  already_AddRefed<dom::Promise> MaybeWrapPromise(dom::Promise* aInnerPromise);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  nsCOMPtr<mozILocalization> mLocalization;
-
+  RefPtr<const ffi::LocalizationRc> mRaw;
   bool mIsSync;
-  nsTArray<nsString> mResourceIds;
-
-  JS::Heap<JS::Value> mBundles;
-  JS::Heap<JS::Value> mGenerateBundles;
-  JS::Heap<JS::Value> mGenerateBundlesSync;
 };
 
 }  // namespace intl
