@@ -657,6 +657,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       kidReflowInput.mFlags.mIsTopOfPage = true;
       kidReflowInput.mFlags.mTableIsSplittable = false;
       kidReflowInput.mFlags.mIsColumnBalancing = aConfig.mIsBalancing;
+      kidReflowInput.mBreakType = ReflowInput::BreakType::Column;
 
       // We need to reflow any float placeholders, even if our column block-size
       // hasn't changed.
