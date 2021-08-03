@@ -457,7 +457,7 @@ size_t HeapThreshold::incrementalBytesRemaining(
 }
 
 /* static */
-double GCHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
+double HeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
     size_t lastBytes, const GCSchedulingTunables& tunables,
     const GCSchedulingState& state) {
   // For small zones, our collection heuristics do not matter much: favor
@@ -534,10 +534,12 @@ size_t MallocHeapThreshold::computeZoneTriggerBytes(double growthFactor,
 
 void MallocHeapThreshold::updateStartThreshold(
     size_t lastBytes, const GCSchedulingTunables& tunables,
-    const AutoLockGC& lock) {
-  startBytes_ =
-      computeZoneTriggerBytes(tunables.mallocGrowthFactor(), lastBytes,
-                              tunables.mallocThresholdBase(), lock);
+    const GCSchedulingState& state, const AutoLockGC& lock) {
+  double growthFactor =
+      computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
+
+  startBytes_ = computeZoneTriggerBytes(growthFactor, lastBytes,
+                                        tunables.mallocThresholdBase(), lock);
 
   setIncrementalLimitFromStartBytes(lastBytes, tunables);
 }
