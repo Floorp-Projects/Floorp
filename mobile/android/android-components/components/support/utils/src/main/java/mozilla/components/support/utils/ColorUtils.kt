@@ -23,6 +23,10 @@ object ColorUtils {
     @JvmStatic
     @SuppressWarnings("MagicNumber")
     fun isDark(@ColorInt color: Int): Boolean {
+        if (color == Color.WHITE || Color.alpha(color) < 128) {
+            return false
+        }
+
         val greyValue = grayscaleFromRGB(color)
         // 186 chosen rather than the seemingly obvious 128 because of gamma.
         return greyValue < 186
