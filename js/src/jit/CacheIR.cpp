@@ -6935,8 +6935,8 @@ AttachDecision CallIRGenerator::tryAttachMathFunction(HandleFunction callee,
   return AttachDecision::Attach;
 }
 
-static StringOperandId EmitToStringGuard(CacheIRWriter& writer, ValOperandId id,
-                                         const Value& v) {
+StringOperandId IRGenerator::emitToStringGuard(ValOperandId id,
+                                               const Value& v) {
   if (v.isString()) {
     return writer.guardToString(id);
   }
@@ -6973,7 +6973,7 @@ AttachDecision CallIRGenerator::tryAttachNumberToString(HandleFunction callee) {
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
 
   // Guard on number and convert to string.
-  StringOperandId strId = EmitToStringGuard(writer, thisValId, thisval_);
+  StringOperandId strId = emitToStringGuard(thisValId, thisval_);
 
   // Return the string.
   writer.loadStringResult(strId);
@@ -11004,8 +11004,8 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringNumberConcat() {
   ValOperandId lhsId(writer.setInputOperandId(0));
   ValOperandId rhsId(writer.setInputOperandId(1));
 
-  StringOperandId lhsStrId = EmitToStringGuard(writer, lhsId, lhs_);
-  StringOperandId rhsStrId = EmitToStringGuard(writer, rhsId, rhs_);
+  StringOperandId lhsStrId = emitToStringGuard(lhsId, lhs_);
+  StringOperandId rhsStrId = emitToStringGuard(rhsId, rhs_);
 
   writer.callStringConcatResult(lhsStrId, rhsStrId);
 
