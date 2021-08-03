@@ -5242,8 +5242,6 @@ exports.CSS_PROPERTIES = {
     "values": [
       "auto",
       "avoid",
-      "avoid-column",
-      "avoid-page",
       "inherit",
       "initial",
       "revert",
@@ -8952,8 +8950,6 @@ exports.CSS_PROPERTIES = {
     "values": [
       "auto",
       "avoid",
-      "avoid-column",
-      "avoid-page",
       "inherit",
       "initial",
       "revert",

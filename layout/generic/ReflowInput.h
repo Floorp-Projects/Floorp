@@ -411,13 +411,6 @@ struct ReflowInput : public SizeComputationInput {
   const nsStylePadding* mStylePadding = nullptr;
   const nsStyleText* mStyleText = nullptr;
 
-  enum class BreakType : uint8_t {
-    Auto,
-    Column,
-    Page,
-  };
-  BreakType mBreakType = BreakType::Auto;
-
   // a frame (e.g. nsTableCellFrame) which may need to generate a special
   // reflow for percent bsize calculations
   nsIPercentBSizeObserver* mPercentBSizeObserver = nullptr;

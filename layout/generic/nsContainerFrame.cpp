@@ -2714,32 +2714,9 @@ bool nsContainerFrame::IsFrameTreeTooDeep(const ReflowInput& aReflowInput,
 bool nsContainerFrame::ShouldAvoidBreakInside(
     const ReflowInput& aReflowInput) const {
   const auto* disp = StyleDisplay();
-  const bool mayAvoidBreak = [&] {
-    switch (disp->mBreakInside) {
-      case StyleBreakWithin::Auto:
-        return false;
-      case StyleBreakWithin::Avoid:
-        return true;
-      case StyleBreakWithin::AvoidPage:
-        return aReflowInput.mBreakType == ReflowInput::BreakType::Page;
-      case StyleBreakWithin::AvoidColumn:
-        return aReflowInput.mBreakType == ReflowInput::BreakType::Column;
-    }
-  }();
-
-  if (!mayAvoidBreak) {
-    return false;
-  }
-  if (aReflowInput.mFlags.mIsTopOfPage) {
-    return false;
-  }
-  if (IsAbsolutelyPositioned(disp)) {
-    return false;
-  }
-  if (GetPrevInFlow()) {
-    return false;
-  }
-  return true;
+  return !aReflowInput.mFlags.mIsTopOfPage &&
+         StyleBreakWithin::Avoid == disp->mBreakInside &&
+         !IsAbsolutelyPositioned(disp) && !GetPrevInFlow();
 }
 
 void nsContainerFrame::ConsiderChildOverflow(OverflowAreas& aOverflowAreas,
