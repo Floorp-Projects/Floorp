@@ -2823,7 +2823,6 @@ dependencies = [
  "futures-channel",
  "l10nregistry",
  "l10nregistry-ffi",
- "libc",
  "moz_task",
  "nserror",
  "nsstring",

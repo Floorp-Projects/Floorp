@@ -15,10 +15,11 @@ use l10nregistry_ffi::{
     env::GeckoEnvironment,
     registry::{get_l10n_registry, GeckoL10nRegistry},
 };
-use nserror::{nsresult, NS_OK};
 use nsstring::{nsACString, nsCString};
+use std::os::raw::c_void;
 use std::{borrow::Cow, cell::RefCell};
 use thin_vec::ThinVec;
+use unic_langid::LanguageIdentifier;
 use xpcom::{interfaces::nsrefcnt, RefCounted, RefPtr, Refcnt};
 
 #[derive(Debug)]
@@ -127,8 +128,19 @@ unsafe impl RefCounted for LocalizationRc {
 }
 
 impl LocalizationRc {
-    pub fn new(reg: &GeckoL10nRegistry, res_ids: Vec<String>, is_sync: bool) -> RefPtr<Self> {
-        let inner = Localization::with_env(res_ids, is_sync, GeckoEnvironment, reg.clone());
+    pub fn new(
+        res_ids: Vec<String>,
+        is_sync: bool,
+        registry: Option<&GeckoL10nRegistry>,
+        locales: Option<Vec<LanguageIdentifier>>,
+    ) -> RefPtr<Self> {
+        let env = GeckoEnvironment::new(locales);
+        let inner = if let Some(reg) = registry {
+            Localization::with_env(res_ids, is_sync, env, reg.clone())
+        } else {
+            let reg = (*get_l10n_registry()).clone();
+            Localization::with_env(res_ids, is_sync, env, reg)
+        };
 
         let loc = Box::new(LocalizationRc {
             inner: RefCell::new(inner),
@@ -393,30 +405,50 @@ impl LocalizationRc {
 }
 
 #[no_mangle]
-pub extern "C" fn localization_new(
-    res_ids: &ThinVec<nsCString>,
-    is_sync: bool,
-    result: &mut *const LocalizationRc,
-) -> nsresult {
-    *result = std::ptr::null();
-
-    let reg = get_l10n_registry();
-    let res_ids: Vec<String> = res_ids.iter().map(|res| res.to_string()).collect();
-    *result = RefPtr::forget_into_raw(LocalizationRc::new(&reg, res_ids, is_sync));
-    NS_OK
+pub extern "C" fn localization_parse_locale(input: &nsCString) -> *const c_void {
+    let l: LanguageIdentifier = input.to_utf8().parse().unwrap();
+    Box::into_raw(Box::new(l)) as *const c_void
 }
 
 #[no_mangle]
-pub extern "C" fn localization_new_with_reg(
+pub extern "C" fn localization_new(
     res_ids: &ThinVec<nsCString>,
     is_sync: bool,
-    reg: &GeckoL10nRegistry,
+    reg: Option<&GeckoL10nRegistry>,
     result: &mut *const LocalizationRc,
 ) {
-    *result = std::ptr::null_mut();
+    *result = std::ptr::null();
 
     let res_ids: Vec<String> = res_ids.iter().map(|res| res.to_string()).collect();
-    *result = RefPtr::forget_into_raw(LocalizationRc::new(&reg, res_ids, is_sync));
+    *result = RefPtr::forget_into_raw(LocalizationRc::new(res_ids, is_sync, reg, None));
+}
+
+#[no_mangle]
+pub extern "C" fn localization_new_with_locales(
+    res_ids: &ThinVec<nsCString>,
+    is_sync: bool,
+    reg: Option<&GeckoL10nRegistry>,
+    locales: Option<&ThinVec<nsCString>>,
+    result: &mut *const LocalizationRc,
+) -> bool {
+    *result = std::ptr::null();
+
+    let res_ids: Vec<String> = res_ids.iter().map(|res| res.to_string()).collect();
+    let locales: Result<Option<Vec<LanguageIdentifier>>, _> = locales
+        .map(|locales| {
+            locales
+                .iter()
+                .map(|s| LanguageIdentifier::from_bytes(&s))
+                .collect()
+        })
+        .transpose();
+
+    if let Ok(locales) = locales {
+        *result = RefPtr::forget_into_raw(LocalizationRc::new(res_ids, is_sync, reg, locales));
+        true
+    } else {
+        false
+    }
 }
 
 #[no_mangle]
