@@ -80,7 +80,9 @@ async function setupPage(htmlPageName, blockedPage) {
     let iframe = content.document.getElementById("theIframe");
 
     await ContentTaskUtils.waitForCondition(() =>
-      iframe.contentDocument.body.classList.contains("neterror")
+      SpecialPowers.spawn(iframe, [], () =>
+        content.document.body.classList.contains("neterror")
+      )
     );
   });
 
