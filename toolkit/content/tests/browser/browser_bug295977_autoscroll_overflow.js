@@ -190,14 +190,6 @@ body > div > div {width: 1000px;height: 1000px;}\
       );
       BrowserTestUtils.loadURI(gBrowser, test.dataUri);
       await loadedPromise;
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
-        // Wait for a paint so that hit-testing works correctly.
-        await new Promise(resolve =>
-          content.requestAnimationFrame(() =>
-            content.requestAnimationFrame(resolve)
-          )
-        );
-      });
       continue;
     }
 
@@ -216,10 +208,10 @@ body > div > div {width: 1000px;height: 1000px;}\
 
     // This ensures bug 605127 is fixed: pagehide in an unrelated document
     // should not cancel the autoscroll.
-    await SpecialPowers.spawn(
+    await ContentTask.spawn(
       gBrowser.selectedBrowser,
-      [test.expected != expectScrollNone],
-      async waitForAutoScrollStart => {
+      { waitForAutoScrollStart: test.expected != expectScrollNone },
+      async ({ waitForAutoScrollStart }) => {
         var iframe = content.document.getElementById("iframe");
 
         if (iframe) {
