@@ -228,9 +228,13 @@ function testCpu(element, total, slope, assumptions) {
   );
 }
 
-function testMemory(element, total, delta, assumptions) {
+async function testMemory(element, total, delta, assumptions) {
   info(
     `Testing memory display ${element.textContent} - ${element.title} vs total ${total}, delta ${delta}`
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !!element.textContent.length,
+    "waiting for l10n to populate"
   );
   const MEMORY_TEXT_CONTENT_REGEXP = /([0-9.,]+)(TB|GB|MB|KB|B)/;
   // Example: "383.55MB"
@@ -566,7 +570,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
     Assert.equal(pid, row.process.pid);
 
     info("Sanity checks: memory resident");
-    testMemory(
+    await testMemory(
       memory,
       row.process.totalRamSize,
       row.process.deltaRamSize,
