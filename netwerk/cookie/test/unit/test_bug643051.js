@@ -8,6 +8,8 @@ CookieXPCShellUtils.init(this);
 CookieXPCShellUtils.createServer({ hosts: ["example.net"] });
 
 add_task(async () => {
+  Services.prefs.setBoolPref("dom.security.https_first", false);
+
   // Allow all cookies.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
   Services.prefs.setBoolPref(
@@ -38,4 +40,5 @@ add_task(async () => {
 
   expected = "foo=bar";
   Assert.equal(actual, expected);
+  Services.prefs.clearUserPref("dom.security.https_first");
 });

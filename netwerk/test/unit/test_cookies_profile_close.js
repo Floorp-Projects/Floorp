@@ -15,6 +15,7 @@ add_task(async () => {
     "network.cookieJarSettings.unblocked_for_testing",
     true
   );
+  Services.prefs.setBoolPref("dom.security.https_first", false);
 
   // Start the cookieservice.
   Services.cookies;
@@ -109,4 +110,5 @@ add_task(async () => {
   Assert.ok(
     Services.cookiemgr.cookieExists(cookie.host, cookie.path, cookie.name, {})
   );
+  Services.prefs.clearUserPref("dom.security.https_first");
 });

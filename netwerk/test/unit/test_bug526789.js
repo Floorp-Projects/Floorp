@@ -11,6 +11,7 @@ add_task(async () => {
 
   // Allow all cookies.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+  Services.prefs.setBoolPref("dom.security.https_first", false);
 
   // test that variants of 'baz.com' get normalized appropriately, but that
   // malformed hosts are rejected
@@ -284,4 +285,5 @@ async function testTrailingDotCookie(uriString, domain) {
   Assert.equal(cm.countCookiesFromHost(domain), 0);
   Assert.equal(cm.countCookiesFromHost(domain + "."), 0);
   cm.removeAll();
+  Services.prefs.clearUserPref("dom.security.https_first");
 }
