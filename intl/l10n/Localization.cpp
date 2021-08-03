@@ -237,31 +237,21 @@ void Localization::RegisterObservers() {
 
 void Localization::OnChange() { ffi::localization_on_change(mRaw.get()); }
 
-void Localization::AddResourceId(const nsAString& aResourceId) {
-  NS_ConvertUTF16toUTF8 resId(aResourceId);
-  ffi::localization_add_res_id(mRaw.get(), &resId);
+void Localization::AddResourceId(const nsACString& aResourceId) {
+  ffi::localization_add_res_id(mRaw.get(), &aResourceId);
 }
 
-uint32_t Localization::RemoveResourceId(const nsAString& aResourceId) {
-  NS_ConvertUTF16toUTF8 resId(aResourceId);
-  return ffi::localization_remove_res_id(mRaw.get(), &resId);
+uint32_t Localization::RemoveResourceId(const nsACString& aResourceId) {
+  return ffi::localization_remove_res_id(mRaw.get(), &aResourceId);
 }
 
-void Localization::AddResourceIds(const nsTArray<nsString>& aResourceIds) {
-  nsTArray<nsCString> resIds(aResourceIds.Length());
-  for (const auto& resId : aResourceIds) {
-    resIds.AppendElement(NS_ConvertUTF16toUTF8(resId));
-  }
-  ffi::localization_add_res_ids(mRaw.get(), &resIds);
+void Localization::AddResourceIds(const nsTArray<nsCString>& aResourceIds) {
+  ffi::localization_add_res_ids(mRaw.get(), &aResourceIds);
 }
 
 uint32_t Localization::RemoveResourceIds(
-    const nsTArray<nsString>& aResourceIds) {
-  nsTArray<nsCString> resIds(aResourceIds.Length());
-  for (const auto& resId : aResourceIds) {
-    resIds.AppendElement(NS_ConvertUTF16toUTF8(resId));
-  }
-  return ffi::localization_remove_res_ids(mRaw.get(), &resIds);
+    const nsTArray<nsCString>& aResourceIds) {
+  return ffi::localization_remove_res_ids(mRaw.get(), &aResourceIds);
 }
 
 already_AddRefed<Promise> Localization::FormatValue(
