@@ -516,7 +516,7 @@ void L10nOverlays::TranslateElement(Element& aElement,
               DocumentFragment(aElement.OwnerDoc()->NodeInfoManager());
       nsContentUtils::ParseFragmentHTML(
           NS_ConvertUTF8toUTF16(aTranslation.mValue), fragment,
-          nsGkAtoms::_template, kNameSpaceID_XHTML, false, true);
+          nsGkAtoms::_template, kNameSpaceID_XHTML, false, true, 0);
       if (NS_WARN_IF(aRv.Failed())) {
         return;
       }
