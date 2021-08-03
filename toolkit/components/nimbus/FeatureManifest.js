@@ -91,6 +91,17 @@ const FeatureManifest = {
       },
     },
   },
+  firefox100: {
+    description: "Firefox 100 User-Agent string",
+    isEarlyStartup: true,
+    variables: {
+      firefoxVersion: {
+        type: "int",
+        fallbackPref: "nimbus.syncdatastore.firefox100.firefoxVersion",
+        description: "Firefox version to spoof (or `0` to use default version)",
+      },
+    },
+  },
   newtab: {
     description: "The about:newtab page",
     isEarlyStartup: true,
