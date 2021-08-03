@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.DefaultSettings
@@ -162,6 +163,8 @@ class Components(
     val adsTelemetry: AdsTelemetry by lazy { AdsTelemetry() }
 
     val searchTelemetry: InContentTelemetry by lazy { InContentTelemetry() }
+
+    val icons by lazy { BrowserIcons(context, client) }
 }
 
 private fun determineInitialScreen(context: Context): Screen {
