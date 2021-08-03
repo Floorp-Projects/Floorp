@@ -725,7 +725,6 @@ function chromeFileExists(aURI) {
     let channel = NetUtil.newChannel({
       uri: aURI,
       loadUsingSystemPrincipal: true,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_FETCH,
     });
     let stream = channel.open();
     let sstream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
