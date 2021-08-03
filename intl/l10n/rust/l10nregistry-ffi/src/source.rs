@@ -6,7 +6,7 @@ use super::fetcher::{GeckoFileFetcher, MockFileFetcher};
 use crate::env::GeckoEnvironment;
 
 use fluent::FluentResource;
-use l10nregistry::source::{FileSource, FileSourceOptions, ResourceStatus};
+use l10nregistry::source::{FileSource, ResourceStatus};
 
 use nsstring::{nsACString, nsCString};
 use thin_vec::ThinVec;
@@ -29,7 +29,6 @@ pub extern "C" fn l10nfilesource_new(
     name: &nsACString,
     locales: &ThinVec<nsCString>,
     pre_path: &nsACString,
-    allow_override: bool,
     status: &mut L10nFileSourceStatus,
 ) -> *const FileSource {
     if name.is_empty() {
@@ -56,10 +55,10 @@ pub extern "C" fn l10nfilesource_new(
         name.to_string(),
         locales,
         pre_path.to_string(),
-        FileSourceOptions { allow_override },
+        Default::default(),
         GeckoFileFetcher,
     );
-    source.set_reporter(GeckoEnvironment::new(None));
+    source.set_reporter(GeckoEnvironment);
 
     *status = L10nFileSourceStatus::None;
     Rc::into_raw(Rc::new(source))
@@ -72,7 +71,6 @@ pub unsafe extern "C" fn l10nfilesource_new_with_index(
     pre_path: &nsACString,
     index_elements: *const nsCString,
     index_length: usize,
-    allow_override: bool,
     status: &mut L10nFileSourceStatus,
 ) -> *const FileSource {
     if name.is_empty() {
@@ -109,11 +107,11 @@ pub unsafe extern "C" fn l10nfilesource_new_with_index(
         name.to_string(),
         locales,
         pre_path.to_string(),
-        FileSourceOptions { allow_override },
+        Default::default(),
         GeckoFileFetcher,
         index,
     );
-    source.set_reporter(GeckoEnvironment::new(None));
+    source.set_reporter(GeckoEnvironment);
 
     *status = L10nFileSourceStatus::None;
     Rc::into_raw(Rc::new(source))
@@ -165,7 +163,7 @@ pub extern "C" fn l10nfilesource_new_mock(
         Default::default(),
         fetcher,
     );
-    source.set_reporter(GeckoEnvironment::new(None));
+    source.set_reporter(GeckoEnvironment);
 
     *status = L10nFileSourceStatus::None;
     Rc::into_raw(Rc::new(source))

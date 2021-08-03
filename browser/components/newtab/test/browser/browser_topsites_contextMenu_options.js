@@ -17,8 +17,13 @@ test_newtab({
     const contextMenuItems = await content.openContextMenuAndGetOptions(
       siteSelector
     );
+    const contextMenuItemsText = contextMenuItems.map(v => v.textContent);
 
-    Assert.equal(contextMenuItems.length, 5, "Number of options is correct");
+    Assert.equal(
+      contextMenuItemsText.length,
+      5,
+      "Number of options is correct"
+    );
 
     const expectedItemsText = [
       "Pin",
@@ -28,9 +33,10 @@ test_newtab({
       "Dismiss",
     ];
 
-    for (let i = 0; i < contextMenuItems.length; i++) {
-      await ContentTaskUtils.waitForCondition(
-        () => contextMenuItems[i].textContent === expectedItemsText[i],
+    for (let i = 0; i < contextMenuItemsText.length; i++) {
+      Assert.equal(
+        contextMenuItemsText[i],
+        expectedItemsText[i],
         "Name option is correct"
       );
     }
@@ -61,8 +67,9 @@ test_newtab({
     const contextMenuItems = await content.openContextMenuAndGetOptions(
       siteSelector
     );
-    await ContentTaskUtils.waitForCondition(
-      () => contextMenuItems[4].textContent === "Dismiss",
+    Assert.equal(
+      contextMenuItems[4].textContent,
+      "Dismiss",
       "'Dismiss' is the 5th item in the context menu list"
     );
 

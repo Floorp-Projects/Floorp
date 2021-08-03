@@ -9,17 +9,18 @@ const SUGGEST_ALL_PREF = "browser.search.suggest.enabled";
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
-async function getResultText(element, expectedValue, description = "") {
+async function getResultText(element) {
   await initAccessibilityService();
 
-  await BrowserTestUtils.waitForCondition(
-    () => {
-      let accessible = accService.getAccessibleFor(element);
-      return accessible !== null && accessible.name === expectedValue;
-    },
-    description,
-    200
-  );
+  // Text localized with Fluent will only be available after the next refresh.
+  // requestAnimationFrame resolves at the beginning of the refresh driver tick
+  // at a time when accessible events haven't been processed yet.
+  // waitForTick puts us at the end of the event queue.
+  await new Promise(requestAnimationFrame);
+  await TestUtils.waitForTick();
+
+  let accessible = accService.getAccessibleFor(element);
+  return accessible.name;
 }
 
 let accService;
@@ -74,8 +75,8 @@ add_task(async function switchToTab() {
     window,
     index
   );
-  await getResultText(
-    element,
+  is(
+    await getResultText(element),
     "about: robots— Switch to Tab",
     "Result a11y label should be: <title>— Switch to Tab"
   );
@@ -136,15 +137,15 @@ add_task(async function searchSuggestions() {
         element.toggleAttribute("selected", true);
       }
       if (result.searchParams.inPrivateWindow) {
-        await getResultText(
-          element,
+        Assert.equal(
+          await getResultText(element),
           searchTerm + "— Search in a Private Window",
           "Check result label"
         );
       } else {
         let suggestion = expectedSearches.shift();
-        await getResultText(
-          element,
+        Assert.equal(
+          await getResultText(element),
           suggestion +
             "— Search with browser_searchSuggestionEngine searchSuggestionEngine.xml",
           "Check result label"

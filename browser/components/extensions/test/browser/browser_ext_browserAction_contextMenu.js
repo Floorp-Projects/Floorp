@@ -69,12 +69,10 @@ if (AppConstants.platform == "macosx") {
 
 const type = "extension";
 
-async function assertTelemetryMatches(events) {
+function assertTelemetryMatches(events) {
   events = events.map(([method, object, value, extra]) => {
     return { method, object, value, extra };
   });
-  // Wait a tick for telemetry
-  await Promise.resolve().then();
   TelemetryTestUtils.assertEvents(events, {
     category: "addonsManager",
     method: /^(action|link|view)$/,
@@ -369,7 +367,7 @@ add_task(async function browseraction_contextmenu_manage_extension() {
 
   info("Run tests in normal mode");
   await main(false);
-  await assertTelemetryMatches([
+  assertTelemetryMatches([
     ["action", "browserAction", null, { action: "manage", addonId: id }],
     ["view", "aboutAddons", "detail", { addonId: id, type }],
     ["action", "browserAction", null, { action: "manage", addonId: id }],
@@ -378,7 +376,7 @@ add_task(async function browseraction_contextmenu_manage_extension() {
 
   info("Run tests in customize mode");
   await main(true);
-  await assertTelemetryMatches([
+  assertTelemetryMatches([
     ["action", "browserAction", null, { action: "manage", addonId: id }],
     ["view", "aboutAddons", "detail", { addonId: id, type }],
     ["action", "browserAction", null, { action: "manage", addonId: id }],
@@ -472,13 +470,8 @@ add_task(async function browseraction_contextmenu_remove_extension() {
     _response: 1,
     QueryInterface: ChromeUtils.generateQI(["nsIPromptService"]),
     confirmEx: function(...args) {
-      promptService._resolveArgs(args);
+      promptService._confirmExArgs = args;
       return promptService._response;
-    },
-    confirmArgs() {
-      return new Promise(resolve => {
-        promptService._resolveArgs = resolve;
-      });
     },
   };
   Services.prompt = promptService;
@@ -488,7 +481,6 @@ add_task(async function browseraction_contextmenu_remove_extension() {
 
   async function testContextMenu(menuId, customizing) {
     info(`Open browserAction context menu in ${menuId}`);
-    let confirmArgs = promptService.confirmArgs();
     let menu = await openContextMenu(menuId, buttonId, win);
 
     info(`Choosing 'Remove Extension' in ${menuId} should show confirm dialog`);
@@ -496,12 +488,11 @@ add_task(async function browseraction_contextmenu_remove_extension() {
       ".customize-context-removeExtension"
     );
     await closeChromeContextMenu(menuId, removeExtension, win);
-    let args = await confirmArgs;
-    is(args[1], `Remove ${name}?`);
+    is(promptService._confirmExArgs[1], `Remove ${name}?`);
     if (!Services.prefs.getBoolPref("prompts.windowPromptSubDialog", false)) {
-      is(args[2], `Remove ${name} from ${brand}?`);
+      is(promptService._confirmExArgs[2], `Remove ${name} from ${brand}?`);
     }
-    is(args[4], "Remove");
+    is(promptService._confirmExArgs[4], "Remove");
     return menu;
   }
 
@@ -515,7 +506,7 @@ add_task(async function browseraction_contextmenu_remove_extension() {
     win,
   });
 
-  await assertTelemetryMatches([
+  assertTelemetryMatches([
     [
       "action",
       "browserAction",
@@ -538,7 +529,7 @@ add_task(async function browseraction_contextmenu_remove_extension() {
     win,
   });
 
-  await assertTelemetryMatches([
+  assertTelemetryMatches([
     [
       "action",
       "browserAction",
@@ -569,7 +560,7 @@ add_task(async function browseraction_contextmenu_remove_extension() {
   await testContextMenu("toolbar-context-menu", false);
   await uninstalled;
 
-  await assertTelemetryMatches([
+  assertTelemetryMatches([
     [
       "action",
       "browserAction",

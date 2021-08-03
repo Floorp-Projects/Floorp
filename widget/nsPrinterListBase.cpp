@@ -133,10 +133,9 @@ void nsPrinterListBase::EnsureCommonPaperInfo(JSContext* aCx) {
   // available (otherwise leave them as the internal keys, which are at least
   // somewhat recognizable).
   IgnoredErrorResult rv;
-  nsTArray<nsCString> resIds = {
-      "toolkit/printing/printUI.ftl"_ns,
-  };
-  RefPtr<Localization> l10n = Localization::Create(resIds, true);
+  nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
+  RefPtr<Localization> l10n = Localization::Create(global, true, {});
+  l10n->AddResourceId(u"toolkit/printing/printUI.ftl"_ns);
 
   for (auto i : IntegerRange(nsPaper::kNumCommonPaperSizes)) {
     const CommonPaperSize& size = nsPaper::kCommonPaperSizes[i];
@@ -145,7 +144,7 @@ void nsPrinterListBase::EnsureCommonPaperInfo(JSContext* aCx) {
     nsAutoCString key{"printui-paper-"};
     key.Append(size.mLocalizableNameKey);
     nsAutoCString name;
-    l10n->FormatValueSync(key, {}, name, rv);
+    l10n->FormatValueSync(aCx, key, {}, name, rv);
 
     // Fill out the info with our PWG size and the localized name.
     info.mId = size.mPWGName;

@@ -7,15 +7,12 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  const l10nReg = new L10nRegistry();
-  const fs = [
-    { path: "/localization/en-US/mock.ftl", source: `
-title = Hello World
-title2 = Hello Another World
-` },
-  ];
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
-  l10nReg.registerSources([source]);
+  async function* generateBundles(resourceIds) {
+    const bundle = new FluentBundle("en-US");
+    bundle.addResource(new FluentResource("title = Hello World"));
+    bundle.addResource(new FluentResource("title2 = Hello Another World"));
+    yield bundle;
+  }
 
   window.onload = async function() {
     SimpleTest.waitForExplicitFinish();
@@ -23,8 +20,7 @@ title2 = Hello Another World
     const domLoc = new DOMLocalization(
       [],
       false,
-      l10nReg,
-      ["en-US"],
+      { generateBundles },
     );
 
     const frag1 = document.querySelectorAll("div")[0];
@@ -32,7 +28,7 @@ title2 = Hello Another World
     const h1 = document.querySelectorAll("h1")[0];
     const h2 = document.querySelectorAll("h2")[0];
 
-    domLoc.addResourceIds(["/mock.ftl"]);
+    domLoc.addResourceIds(["dummy.ftl"]);
     domLoc.connectRoot(frag1);
     domLoc.connectRoot(frag2);
 
