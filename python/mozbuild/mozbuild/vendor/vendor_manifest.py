@@ -19,7 +19,6 @@ from mozbuild.base import MozbuildObject
 from mozbuild.vendor.rewrite_mozbuild import (
     add_file_to_moz_build_file,
     remove_file_from_moz_build_file,
-    MozBuildRewriteException,
 )
 
 DEFAULT_EXCLUDE_FILES = [".git*"]
@@ -282,8 +281,6 @@ class VendorManifest(MozbuildObject):
         if vendoring_dir == moz_yaml_dir:
             vendoring_dir = moz_yaml_dir = None
 
-        # If you edit this (especially for header files) you should double check
-        # rewrite_mozbuild.py around 'assignment_type'
         source_suffixes = [".cc", ".c", ".cpp", ".h", ".hpp", ".S", ".asm"]
 
         files_removed = self.repository.get_changed_files(diff_filter="D")
@@ -305,7 +302,7 @@ class VendorManifest(MozbuildObject):
         for f in files_added:
             try:
                 add_file_to_moz_build_file(f, moz_yaml_dir, vendoring_dir)
-            except MozBuildRewriteException:
+            except Exception:
                 self.log(
                     logging.ERROR,
                     "vendor",
@@ -317,7 +314,7 @@ class VendorManifest(MozbuildObject):
         for f in files_removed:
             try:
                 remove_file_from_moz_build_file(f, moz_yaml_dir, vendoring_dir)
-            except MozBuildRewriteException:
+            except Exception:
                 self.log(
                     logging.ERROR,
                     "vendor",
