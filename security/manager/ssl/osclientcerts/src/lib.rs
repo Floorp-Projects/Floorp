@@ -30,13 +30,18 @@ use std::thread;
 
 #[macro_use]
 mod error;
-mod manager;
-#[macro_use]
-mod util;
 #[cfg(target_os = "macos")]
 mod backend_macos;
 #[cfg(target_os = "windows")]
 mod backend_windows;
+mod manager;
+#[macro_use]
+mod util;
+
+#[cfg(target_os = "macos")]
+use crate::backend_macos::Backend;
+#[cfg(target_os = "windows")]
+use crate::backend_windows::Backend;
 
 use manager::{ManagerProxy, SlotType};
 
@@ -99,7 +104,7 @@ extern "C" fn C_Initialize(_pInitArgs: CK_C_INITIALIZE_ARGS_PTR) -> CK_RV {
     // logging has been initialized.
     let _ = env_logger::try_init();
     let mut manager_guard = try_to_get_manager_guard!();
-    let manager_proxy = match ManagerProxy::new() {
+    let manager_proxy = match ManagerProxy::new(Backend {}) {
         Ok(p) => p,
         Err(e) => {
             log_with_thread_id!(error, "C_Initialize: ManagerProxy: {}", e);
