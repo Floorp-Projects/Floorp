@@ -76,7 +76,8 @@ class Localization : public nsIObserver,
   void AddResourceIds(const nsTArray<nsString>& aResourceIds);
   uint32_t RemoveResourceIds(const nsTArray<nsString>& aResourceIds);
 
-  void Upgrade();
+  void SetAsync();
+  bool IsSync();
 
  protected:
   Localization(const nsTArray<nsCString>& aResIds, bool aIsSync);
@@ -96,7 +97,6 @@ class Localization : public nsIObserver,
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<const ffi::LocalizationRc> mRaw;
-  bool mIsSync;
 };
 
 }  // namespace intl
