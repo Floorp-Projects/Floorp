@@ -4,6 +4,22 @@
 
 @import url("chrome://browser/skin/error-pages.css");
 
+body {
+  --warning-color: #ffa436;
+}
+
+@media (-moz-toolbar-prefers-color-scheme: dark)  {
+  body {
+    --warning-color: #ffbd4f;
+  }
+}
+
+@media (prefers-contrast) {
+  body {
+    --warning-color: var(--in-content-page-color);
+  }
+}
+
 body.certerror {
   width: 100%;
   justify-content: normal;
@@ -14,7 +30,11 @@ body.captiveportal .title {
 }
 
 body.certerror .title {
-  background-image: url("cert-error.svg");
+  background-image: url("chrome://global/skin/icons/warning.svg");
+}
+
+body.certerror .title {
+  color: var(--warning-color);
 }
 
 body.blocked .title {
@@ -238,5 +258,19 @@ body:not(.neterror) #advancedButton {
     /* Break the error code to avoid long codes overflowing the screen */
     white-space: normal;
     word-wrap: anywhere;
+  }
+}
+
+@media (max-width: 970px) {
+  body.certerror .title {
+    /* !important is necessary here until Bug 1723718 is resolved */
+    background-image: url("chrome://global/skin/icons/warning.svg") !important;
+    background-position: top left;
+    padding-top: 60px;
+    margin-top: -60px;
+  }
+
+  body.certerror .title:dir(rtl) {
+    background-position-x: right;
   }
 }
