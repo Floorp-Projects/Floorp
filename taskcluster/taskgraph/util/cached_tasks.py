@@ -12,8 +12,10 @@ import six
 
 TARGET_CACHE_INDEX = "{trust_domain}.cache.level-{level}.{type}.{name}.hash.{digest}"
 EXTRA_CACHE_INDEXES = [
-    "{trust_domain}.cache.level-{level}.{type}.{name}.latest",
     "{trust_domain}.cache.level-{level}.{type}.{name}.pushdate.{build_date_long}",
+]
+MOZILLA_CENTRAL_ONLY_EXTRA_CACHE_INDEXES = [
+    "{trust_domain}.cache.level-{level}.{type}.{name}.latest",
 ]
 
 
@@ -74,6 +76,13 @@ def add_optimization(
     taskdesc["routes"].extend(
         ["index.{}".format(route.format(**subs)) for route in EXTRA_CACHE_INDEXES]
     )
+    if config.params["project"] == "mozilla-central":
+        taskdesc["routes"].extend(
+            [
+                "index.{}".format(route.format(**subs))
+                for route in MOZILLA_CENTRAL_ONLY_EXTRA_CACHE_INDEXES
+            ]
+        )
 
     taskdesc["attributes"]["cached_task"] = {
         "type": cache_type,
