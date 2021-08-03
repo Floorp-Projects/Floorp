@@ -23,11 +23,14 @@ L10nFileSource::L10nFileSource(RefPtr<const ffi::FileSource> aRaw,
 /* static */
 already_AddRefed<L10nFileSource> L10nFileSource::Create(
     const nsACString& aName, const nsTArray<nsCString>& aLocales,
-    const nsACString& aPrePath, ErrorResult& aRv) {
+    const nsACString& aPrePath, const FileSourceOptions& aOptions,
+    ErrorResult& aRv) {
   ffi::L10nFileSourceStatus status;
 
-  RefPtr<const ffi::FileSource> raw(dont_AddRef(
-      ffi::l10nfilesource_new(&aName, &aLocales, &aPrePath, &status)));
+  bool allowOverrides = aOptions.mAddResourceOptions.mAllowOverrides;
+
+  RefPtr<const ffi::FileSource> raw(dont_AddRef(ffi::l10nfilesource_new(
+      &aName, &aLocales, &aPrePath, allowOverrides, &status)));
 
   if (PopulateError(aRv, status)) {
     return nullptr;
@@ -40,19 +43,22 @@ already_AddRefed<L10nFileSource> L10nFileSource::Create(
 already_AddRefed<L10nFileSource> L10nFileSource::Constructor(
     const GlobalObject& aGlobal, const nsACString& aName,
     const nsTArray<nsCString>& aLocales, const nsACString& aPrePath,
+    const dom::FileSourceOptions& aOptions,
     const Optional<Sequence<nsCString>>& aIndex, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
   ffi::L10nFileSourceStatus status;
 
+  bool allowOverrides = aOptions.mAddResourceOptions.mAllowOverrides;
+
   RefPtr<const ffi::FileSource> raw;
   if (aIndex.WasPassed()) {
     raw = dont_AddRef(ffi::l10nfilesource_new_with_index(
         &aName, &aLocales, &aPrePath, aIndex.Value().Elements(),
-        aIndex.Value().Length(), &status));
+        aIndex.Value().Length(), allowOverrides, &status));
   } else {
-    raw = dont_AddRef(
-        ffi::l10nfilesource_new(&aName, &aLocales, &aPrePath, &status));
+    raw = dont_AddRef(ffi::l10nfilesource_new(&aName, &aLocales, &aPrePath,
+                                              allowOverrides, &status));
   }
 
   if (PopulateError(aRv, status)) {
