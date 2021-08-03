@@ -18,7 +18,10 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-
+    let PromEvents = {};
+    Services.scriptloader.loadSubScript(
+      "chrome://mochitests/content/a11y/accessible/tests/mochitest/promisified-events.js",
+      PromEvents);
 
     /**
      * Do tests.
@@ -77,63 +80,71 @@
       };
     }
 
-    function setAttrOfMixedType(aID, aAttr, aState, aValue) {
-      this.DOMNode = getNode(aID);
+    function waitForStateChange(aID, aState, aIsEnabled) {
+      return PromEvents.waitForEvent(EVENT_STATE_CHANGE, e => {
+        e.QueryInterface(nsIAccessibleStateChangeEvent);
+        return e.state == aState && !e.isExtraState &&
+          aIsEnabled == e.isEnabled && getAccessible(aID) == e.accessible;
+      });
+    }
 
-      this.eventSeq = [
-        new stateChangeChecker(aState, kOrdinalState,
-                               aValue == "true", this.DOMNode),
-      ];
+    async function testToggleAttribute(aID, aAttribute, aIncludeMixed) {
+      let toggleState = aAttribute == "aria-pressed" ? STATE_PRESSED : STATE_CHECKED;
 
-      if (hasState(aID, STATE_MIXED) || aValue == "mixed") {
-        this.eventSeq.push(
-          new stateChangeChecker(STATE_MIXED, kOrdinalState,
-                                 aValue == "mixed", this.DOMNode)
-        );
+      // bug 472142. Role changes here if aria-pressed is added,
+      // accessible should be recreated?
+      let stateChange = waitForStateChange(aID, toggleState, true);
+      getNode(aID).setAttribute(aAttribute, "true");
+      await stateChange;
+
+      stateChange = waitForStateChange(aID, toggleState, false);
+      getNode(aID).setAttribute(aAttribute, "false");
+      await stateChange;
+
+      if (aIncludeMixed) {
+        stateChange = waitForStateChange(aID, STATE_MIXED, true);
+        getNode(aID).setAttribute(aAttribute, "mixed");
+        await stateChange;
+
+        stateChange = waitForStateChange(aID, STATE_MIXED, false);
+        getNode(aID).setAttribute(aAttribute, "");
+        await stateChange;
       }
 
-      this.invoke = function setAttrOfMixedType_invoke() {
-        this.DOMNode.setAttribute(aAttr, aValue);
-      };
+      stateChange = waitForStateChange(aID, toggleState, true);
+      getNode(aID).setAttribute(aAttribute, "true");
+      await stateChange;
 
-      this.getID = function setAttrOfMixedType_getID() {
-        return prettyName(aID) + " " + aAttr + " changed to '" + aValue + "'";
-      };
-    }
+      if (aIncludeMixed) {
+        stateChange = Promise.all([
+          waitForStateChange(aID, STATE_MIXED, true),
+          waitForStateChange(aID, toggleState, false)]);
+        getNode(aID).setAttribute(aAttribute, "mixed");
+        await stateChange;
 
-    function setPressed(aID, aValue) {
-      this.__proto__ =
-        new setAttrOfMixedType(aID, "aria-pressed", STATE_PRESSED, aValue);
-    }
-
-    function setChecked(aID, aValue) {
-      this.__proto__ =
-        new setAttrOfMixedType(aID, "aria-checked", STATE_CHECKED, aValue);
-    }
-
-    function buildQueueForAttr(aList, aQueue, aID, aInvokerFunc) {
-      for (var i = 0; i < aList.length; i++) {
-        for (var j = i + 1; j < aList.length; j++) {
-          // XXX: changes from/to "undefined"/"" shouldn't fire state change
-          // events, bug 472142.
-          aQueue.push(new aInvokerFunc(aID, aList[i]));
-          aQueue.push(new aInvokerFunc(aID, aList[j]));
-        }
+        stateChange = Promise.all([
+          waitForStateChange(aID, STATE_MIXED, false),
+          waitForStateChange(aID, toggleState, true)]);
+        getNode(aID).setAttribute(aAttribute, "true");
+        await stateChange;
       }
+
+      // bug 472142. Role changes here too if aria-pressed is removed,
+      // accessible should be recreated?
+      stateChange = waitForStateChange(aID, toggleState, false);
+      getNode(aID).removeAttribute(aAttribute);
+      await stateChange;
     }
 
-    function buildQueueForAttrOfMixedType(aQueue, aID, aInvokerFunc) {
-      var list = [ "", "undefined", "false", "true", "mixed" ];
-      buildQueueForAttr(list, aQueue, aID, aInvokerFunc);
-    }
-
-    function buildQueueForAttrOfBoolType(aQueue, aID, aInvokerFunc) {
-      var list = [ "", "undefined", "false", "true" ];
-      buildQueueForAttr(list, aQueue, aID, aInvokerFunc);
-    }
-
-    function doTests() {
+    async function doTests() {
       gQueue = new eventQueue();
+
+      let queueFinished = new Promise(resolve => {
+        gQueue.onFinish = function() {
+          resolve();
+          return DO_NOT_FINISH_TEST;
+        };
+      });
 
       gQueue.push(new expandNode("section", true));
       gQueue.push(new expandNode("section", false));
@@ -143,18 +154,22 @@
       gQueue.push(new busyify("aria_doc", true));
       gQueue.push(new busyify("aria_doc", false));
 
-      buildQueueForAttrOfMixedType(gQueue, "pressable", setPressed);
-      buildQueueForAttrOfMixedType(gQueue, "pressable_native", setPressed);
-      buildQueueForAttrOfMixedType(gQueue, "checkable", setChecked);
-      buildQueueForAttrOfBoolType(gQueue, "checkableBool", setChecked);
-
       gQueue.push(new makeCurrent("current_page_1", false, "false"));
       gQueue.push(new makeCurrent("current_page_2", true, "page"));
       gQueue.push(new makeCurrent("current_page_2", false, "false"));
       gQueue.push(new makeCurrent("current_page_3", true, "true"));
       gQueue.push(new makeCurrent("current_page_3", false, ""));
 
-      gQueue.invoke(); // Will call SimpleTest.finish();
+      gQueue.invoke();
+      await queueFinished;
+      // Tests beyond this point use await rather than eventQueue.
+
+      await testToggleAttribute("pressable", "aria-pressed", true);
+      await testToggleAttribute("pressable_native", "aria-pressed", true);
+      await testToggleAttribute("checkable", "aria-checked", true);
+      await testToggleAttribute("checkableBool", "aria-checked", false);
+
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
