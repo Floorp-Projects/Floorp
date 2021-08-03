@@ -4,7 +4,7 @@
  *
  *   Type 1 objects manager (body).
  *
- * Copyright (C) 1996-2020 by
+ * Copyright (C) 1996-2021 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -217,7 +217,6 @@
     {
       FT_FREE( face->buildchar );
 
-      face->buildchar     = NULL;
       face->len_buildchar = 0;
     }
 
@@ -598,11 +597,7 @@
 
 
     /* set default property values, cf. `ftt1drv.h' */
-#ifdef T1_CONFIG_OPTION_OLD_ENGINE
-    driver->hinting_engine = FT_HINTING_FREETYPE;
-#else
     driver->hinting_engine = FT_HINTING_ADOBE;
-#endif
 
     driver->no_stem_darkening = TRUE;
 

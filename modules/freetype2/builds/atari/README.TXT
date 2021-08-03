@@ -15,7 +15,7 @@ To compile FreeType 2 as a library the following changes must be applied:
 
     INCLUDE;E:\freetype2\include
 
-- The file `freetype2/include/Ft2build.h' must be patched as follows to
+- The file `freetype/include/Ft2build.h' must be patched as follows to
   include ATARI.H:
 
     #ifndef FT2_BUILD_GENERIC_H_
@@ -40,7 +40,7 @@ geÑndert werden:
 
     INCLUDE;E:\freetype2\include
 
-- In der Datei freetype2/include/Ft2build.h muss zu Beginn
+- In der Datei freetype/include/Ft2build.h muss zu Beginn
   ein #include "ATARI.H" wie folgt eingefÅgt werden:
 
     #ifndef FT2_BUILD_GENERIC_H_

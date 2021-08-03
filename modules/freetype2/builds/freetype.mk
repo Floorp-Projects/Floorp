@@ -3,7 +3,7 @@
 #
 
 
-# Copyright (C) 1996-2020 by
+# Copyright (C) 1996-2021 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -20,8 +20,8 @@
 # The following variables (set by other Makefile components, in the
 # environment, or on the command line) are used:
 #
-#   BUILD_DIR      The architecture dependent directory,
-#                  e.g. `$(TOP_DIR)/builds/unix'.  Added to INCLUDES also.
+#   PLATFORM_DIR   The architecture-dependent directory,
+#                  e.g., `$(TOP_DIR)/builds/unix'.  Added to INCLUDES also.
 #
 #   OBJ_DIR        The directory in which object files are created.
 #
@@ -121,7 +121,7 @@ PROJECT_LIBRARY := $(LIB_DIR)/$(LIBRARY).$A
 #
 INCLUDES := $(subst /,$(COMPILER_SEP),$(OBJ_DIR) \
                                       $(DEVEL_DIR) \
-                                      $(BUILD_DIR) \
+                                      $(PLATFORM_DIR) \
                                       $(TOP_DIR)/include)
 
 INCLUDE_FLAGS := $(INCLUDES:%=$I%)
@@ -150,9 +150,9 @@ endif
 #
 # `CPPFLAGS' might be specified by the user in the environment.
 #
-FT_CFLAGS  = $(CPPFLAGS) \
-             $(CFLAGS) \
-             $DFT2_BUILD_LIBRARY
+FT_CFLAGS = $(CPPFLAGS) \
+            $(CFLAGS) \
+            $DFT2_BUILD_LIBRARY
 
 FT_COMPILE := $(CC) $(ANSIFLAGS) $(INCLUDE_FLAGS) $(FT_CFLAGS)
 
@@ -175,16 +175,16 @@ OBJECTS_LIST :=
 # changes, the whole library is recompiled.
 #
 ifneq ($(wildcard $(OBJ_DIR)/ftoption.h),)
-  FTOPTION_H    := $(OBJ_DIR)/ftoption.h
-else ifneq ($(wildcard $(BUILD_DIR)/ftoption.h),)
-  FTOPTION_H    := $(BUILD_DIR)/ftoption.h
+  FTOPTION_H := $(OBJ_DIR)/ftoption.h
+else ifneq ($(wildcard $(PLATFORM_DIR)/ftoption.h),)
+  FTOPTION_H := $(PLATFORM_DIR)/ftoption.h
 endif
 
 PUBLIC_H   := $(wildcard $(PUBLIC_DIR)/*.h)
 INTERNAL_H := $(wildcard $(INTERNAL_DIR)/*.h) \
               $(wildcard $(SERVICES_DIR)/*.h)
 CONFIG_H   := $(wildcard $(CONFIG_DIR)/*.h) \
-              $(wildcard $(BUILD_DIR)/config/*.h) \
+              $(wildcard $(PLATFORM_DIR)/config/*.h) \
               $(FTMODULE_H) \
               $(FTOPTION_H)
 DEVEL_H    := $(wildcard $(TOP_DIR)/devel/*.h)
@@ -220,6 +220,7 @@ $(FTDEBUG_OBJ): $(FTDEBUG_SRC) $(FREETYPE_H)
 #
 include $(SRC_DIR)/base/rules.mk
 include $(patsubst %,$(SRC_DIR)/%/rules.mk,$(MODULES))
+include $(SRC_DIR)/dlg/rules.mk
 
 
 # ftinit component
@@ -260,8 +261,8 @@ endif
 
 # All FreeType library objects.
 #
-OBJ_M := $(BASE_OBJ_M) $(BASE_EXT_OBJ) $(DRV_OBJS_M)
-OBJ_S := $(BASE_OBJ_S) $(BASE_EXT_OBJ) $(DRV_OBJS_S)
+OBJ_M := $(BASE_OBJ_M) $(BASE_EXT_OBJ) $(DRV_OBJS_M) $(DLG_OBJS_M)
+OBJ_S := $(BASE_OBJ_S) $(BASE_EXT_OBJ) $(DRV_OBJS_S) $(DLG_OBJS_S)
 
 
 # The target `multi' on the Make command line indicates that we want to

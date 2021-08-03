@@ -4,7 +4,7 @@
  *
  *   PostScript Type 1 decoding routines (body).
  *
- * Copyright (C) 2000-2020 by
+ * Copyright (C) 2000-2021 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -517,7 +517,7 @@
 #ifdef FT_DEBUG_LEVEL_TRACE
       if ( bol )
       {
-        FT_TRACE5(( " (%d)", decoder->top - decoder->stack ));
+        FT_TRACE5(( " (%ld)", decoder->top - decoder->stack ));
         bol = FALSE;
       }
 #endif
@@ -1162,9 +1162,9 @@
           if ( top - decoder->stack != num_args )
             FT_TRACE0(( "t1_decoder_parse_charstrings:"
                         " too much operands on the stack"
-                        " (seen %d, expected %d)\n",
+                        " (seen %ld, expected %d)\n",
                         top - decoder->stack, num_args ));
-            break;
+          break;
         }
 
 #endif /* FT_DEBUG_LEVEL_TRACE */
@@ -1209,7 +1209,7 @@
             FT_TRACE4(( "BuildCharArray = [ " ));
 
             for ( i = 0; i < decoder->len_buildchar; i++ )
-              FT_TRACE4(( "%d ", decoder->buildchar[i] ));
+              FT_TRACE4(( "%ld ", decoder->buildchar[i] ));
 
             FT_TRACE4(( "]\n" ));
           }
@@ -1650,7 +1650,8 @@
 
     } /* while ip < limit */
 
-    FT_TRACE4(( "..end..\n\n" ));
+    FT_TRACE4(( "..end..\n" ));
+    FT_TRACE4(( "\n" ));
 
   Fail:
     return error;
@@ -2070,7 +2071,8 @@
 
     } /* while ip < limit */
 
-    FT_TRACE4(( "..end..\n\n" ));
+    FT_TRACE4(( "..end..\n" ));
+    FT_TRACE4(( "\n" ));
 
   No_Width:
     FT_ERROR(( "t1_decoder_parse_metrics:"

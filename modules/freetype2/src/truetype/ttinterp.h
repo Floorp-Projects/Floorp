@@ -4,7 +4,7 @@
  *
  *   TrueType bytecode interpreter (specification).
  *
- * Copyright (C) 1996-2020 by
+ * Copyright (C) 1996-2021 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -175,6 +175,7 @@ FT_BEGIN_HEADER
 
     TT_GraphicsState   GS;         /* current graphics state */
 
+    FT_Int             iniRange;  /* initial code range number   */
     FT_Int             curRange;  /* current code range number   */
     FT_Byte*           code;      /* current code range          */
     FT_Long            IP;        /* current instruction pointer */
@@ -187,6 +188,9 @@ FT_BEGIN_HEADER
                                   /* increment IP after ins. exec */
     FT_ULong           cvtSize;
     FT_Long*           cvt;
+    FT_ULong           glyfCvtSize;
+    FT_Long*           glyfCvt;   /* cvt working copy for glyph */
+    FT_Long*           origCvt;
 
     FT_UInt            glyphSize; /* glyph instructions buffer size */
     FT_Byte*           glyphIns;  /* glyph instructions buffer */
@@ -213,8 +217,11 @@ FT_BEGIN_HEADER
     TT_CodeRangeTable  codeRangeTable;  /* table of valid code ranges */
                                         /* useful for the debugger   */
 
-    FT_UShort          storeSize;  /* size of current storage */
-    FT_Long*           storage;    /* storage area            */
+    FT_UShort          storeSize;    /* size of current storage */
+    FT_Long*           storage;      /* storage area            */
+    FT_UShort          glyfStoreSize;
+    FT_Long*           glyfStorage;  /* storage working copy for glyph */
+    FT_Long*           origStorage;
 
     FT_F26Dot6         period;     /* values used for the */
     FT_F26Dot6         phase;      /* `SuperRounding'     */
@@ -469,16 +476,15 @@ FT_BEGIN_HEADER
    *   TT_New_Context
    *
    * @Description:
-   *   Queries the face context for a given font.  Note that there is
-   *   now a _single_ execution context in the TrueType driver which is
-   *   shared among faces.
+   *   Create a `TT_ExecContext`.  Note that there is now an execution
+   *   context per `TT_Size` that is not shared among faces.
    *
    * @Input:
-   *   face ::
-   *     A handle to the source face object.
+   *   driver ::
+   *     A handle to the driver, used for memory allocation.
    *
    * @Return:
-   *   A handle to the execution context.  Initialized for `face'.
+   *   A handle to a new empty execution context.
    *
    * @Note:
    *   Only the glyph loader and debugger should call this function.

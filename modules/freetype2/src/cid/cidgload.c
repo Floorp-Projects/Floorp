@@ -4,7 +4,7 @@
  *
  *   CID-keyed Type1 Glyph Loader (body).
  *
- * Copyright (C) 1996-2020 by
+ * Copyright (C) 1996-2021 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -85,10 +85,10 @@
       if ( glyph_data.length != 0 )
       {
         glyph_length = (FT_ULong)( glyph_data.length - cid->fd_bytes );
-        (void)FT_ALLOC( charstring, glyph_length );
-        if ( !error )
-          ft_memcpy( charstring, glyph_data.pointer + cid->fd_bytes,
-                     glyph_length );
+
+        if ( !FT_QALLOC( charstring, glyph_length ) )
+          FT_MEM_COPY( charstring, glyph_data.pointer + cid->fd_bytes,
+                       glyph_length );
       }
 
       inc->funcs->free_glyph_data( inc->object, &glyph_data );
@@ -130,11 +130,10 @@
       }
 
       glyph_length = off2 - off1;
-      if ( glyph_length == 0 )
-        goto Exit;
-      if ( FT_ALLOC( charstring, glyph_length ) )
-        goto Exit;
-      if ( FT_STREAM_READ_AT( cid->data_offset + off1,
+
+      if ( glyph_length == 0                             ||
+           FT_QALLOC( charstring, glyph_length )         ||
+           FT_STREAM_READ_AT( cid->data_offset + off1,
                               charstring, glyph_length ) )
         goto Exit;
     }

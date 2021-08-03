@@ -4,7 +4,7 @@
  *
  *   Auto-fitter routines to compute global hinting values (body).
  *
- * Copyright (C) 2003-2020 by
+ * Copyright (C) 2003-2021 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -285,10 +285,10 @@
 
 #ifdef FT_DEBUG_LEVEL_TRACE
 
-    FT_TRACE4(( "\n"
-                "style coverage\n"
-                "==============\n"
-                "\n" ));
+    FT_TRACE4(( "\n" ));
+    FT_TRACE4(( "style coverage\n" ));
+    FT_TRACE4(( "==============\n" ));
+    FT_TRACE4(( "\n" ));
 
     for ( ss = 0; af_style_classes[ss]; ss++ )
     {
@@ -478,6 +478,10 @@
           {
             style = (AF_Style)( globals->glyph_styles[gindex] &
                                 AF_STYLE_UNASSIGNED           );
+            /* IMPORTANT: Clear the error code, see
+             * https://gitlab.freedesktop.org/freetype/freetype/-/issues/1063
+             */
+            error = 0;
             goto Again;
           }
 

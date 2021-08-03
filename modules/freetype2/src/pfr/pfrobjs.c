@@ -4,7 +4,7 @@
  *
  *   FreeType PFR object methods (body).
  *
- * Copyright (C) 2002-2020 by
+ * Copyright (C) 2002-2021 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -213,7 +213,7 @@
         FT_Memory        memory = pfrface->stream->memory;
 
 
-        if ( FT_NEW_ARRAY( pfrface->available_sizes, count ) )
+        if ( FT_QNEW_ARRAY( pfrface->available_sizes, count ) )
           goto Exit;
 
         size   = pfrface->available_sizes;
