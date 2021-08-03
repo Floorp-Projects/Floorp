@@ -903,8 +903,10 @@ RefPtr<gfx::SourceSurface> ClientWebGLContext::GetFrontBufferSnapshot(
     if (!child->SendGetFrontBufferSnapshot(&res)) {
       res = {};
     }
+    if (!res.shmem) return nullptr;
+
     const auto& surfSize = res.surfSize;
-    const webgl::RaiiShmem shmem{child, res.shmem};
+    const webgl::RaiiShmem shmem{child, res.shmem.ref()};
     const auto& shmemBytes = shmem.ByteRange();
     if (!surfSize.x) return nullptr;  // Zero means failure.
 
