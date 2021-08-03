@@ -19,8 +19,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=451958
 
 /** Test for Bug 451958 **/
 
-function run() {
+function openWindow() {
   window.open("http://example.org:80/tests/dom/media/test/file_access_controls.html", "", "width=500,height=500");
+}
+
+function run() {
+  SpecialPowers.pushPrefEnv({
+    "set": [
+      ["dom.security.https_first", false],
+    ],
+  }, openWindow);
 }
 
 function done() {
