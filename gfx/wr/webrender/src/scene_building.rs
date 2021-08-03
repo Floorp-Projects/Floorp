@@ -2808,14 +2808,8 @@ impl<'a> SceneBuilder<'a> {
         // changing because the shadow has the same raster space as the
         // primitive, and thus we know the size is already rounded.
         let mut info = pending_primitive.info.clone();
-        info.rect = self.snap_rect(
-            &info.rect.translate(pending_shadow.shadow.offset),
-            pending_primitive.spatial_node_index,
-        );
-        info.clip_rect = self.snap_rect(
-            &info.clip_rect.translate(pending_shadow.shadow.offset),
-            pending_primitive.spatial_node_index,
-        );
+        info.rect = info.rect.translate(pending_shadow.shadow.offset);
+        info.clip_rect = info.clip_rect.translate(pending_shadow.shadow.offset);
 
         // Construct and add a primitive for the given shadow.
         let shadow_prim_instance = self.create_primitive(
