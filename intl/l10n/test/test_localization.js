@@ -167,18 +167,22 @@ add_task(async function test_switch_to_async() {
   const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
-  const l10n = new Localization(["/browser/menu.ftl"], false, l10nReg, ["en-US"]);
+  const l10n = new Localization(["/browser/menu.ftl"], true, l10nReg, ["en-US"]);
 
-  let values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
+  let values = l10n.formatValuesSync([{id: "key1"}, {id: "key2"}]);
 
   strictEqual(values[0], "Value1");
   strictEqual(values[1], null);
 
-  l10n.setIsSync(true);
+  l10n.setAsync();
+
+  Assert.throws(() => {
+    l10n.formatValuesSync([{ id: "key1" }, { id: "key2" }]);
+  }, /Can't use formatValuesSync when state is async./);
 
   l10n.addResourceIds(["/toolkit/menu.ftl"]);
 
-  values = l10n.formatValuesSync([{id: "key1"}, {id: "key2"}]);
+  values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
   let values2 = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
 
   deepEqual(values, values2);
