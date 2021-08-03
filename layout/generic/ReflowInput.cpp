@@ -162,6 +162,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
       mLineLayout(mFrame->IsFrameOfType(nsIFrame::eLineParticipant)
                       ? aParentReflowInput.mLineLayout
                       : nullptr),
+      mBreakType(aParentReflowInput.mBreakType),
       mPercentBSizeObserver(
           (aParentReflowInput.mPercentBSizeObserver &&
            aParentReflowInput.mPercentBSizeObserver->NeedsToObserve(*this))
