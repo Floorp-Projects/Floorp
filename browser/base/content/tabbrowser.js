@@ -2125,17 +2125,11 @@
 
       /*
        * This attribute is meant to describe if the browser is the
-       * preloaded browser. There are 2 defined states: "preloaded" or
-       * "consumed". The order of events goes as follows:
-       *   1. The preloaded browser is created and the 'preloadedState'
-       *      attribute for that browser is set to "preloaded".
-       *   2. When a new tab is opened and it is time to show that
-       *      preloaded browser, the 'preloadedState' attribute for that
-       *      browser is set to "consumed"
-       *   3. When we then navigate away from about:newtab, the "consumed"
-       *      browsers will attempt to switch to a new content process,
-       *      therefore the 'preloadedState' attribute is removed from
-       *      that browser altogether
+       * preloaded browser. When the preloaded browser is created, the
+       * 'preloadedState' attribute for that browser is set to "preloaded", and
+       * when a new tab is opened, and it is time to show that preloaded
+       * browser, the 'preloadedState' attribute for that browser is removed.
+       *
        * See more details on Bug 1420285.
        */
       if (isPreloadBrowser) {

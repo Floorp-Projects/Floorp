@@ -1,7 +1,6 @@
 const TEST_URL = "http://www.example.com/browser/dom/base/test/dummy.html";
 const TEST_URL_2 = "http://example.org/browser/dom/base/test/dummy.html";
 const PRELOADED_STATE = "preloaded";
-const CONSUMED_STATE = "consumed";
 
 var ppmm = Services.ppmm;
 
@@ -122,13 +121,10 @@ add_task(async function preloaded_state_attribute() {
   await BrowserTestUtils.maybeCreatePreloadedBrowser(gBrowser);
 
   // Now check that the tabs have the correct browser attributes set
-  let consumedTabState = gBrowser.selectedBrowser.getAttribute(
-    "preloadedState"
-  );
   is(
-    consumedTabState,
-    CONSUMED_STATE,
-    "The opened tab consumed the preloaded browser and updated the attribute"
+    gBrowser.selectedBrowser.hasAttribute("preloadedState"),
+    false,
+    "The opened tab consumed the preloaded browser and removed the attribute"
   );
 
   preloadedTabState = gBrowser.preloadedBrowser.getAttribute("preloadedState");
@@ -136,21 +132,6 @@ add_task(async function preloaded_state_attribute() {
     preloadedTabState,
     PRELOADED_STATE,
     "The preloaded browser has the correct attribute"
-  );
-
-  // Navigate away and check that the attribute has been removed altogether
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URL);
-  await BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser,
-    false,
-    TEST_URL
-  );
-  let navigatedTabHasState = gBrowser.selectedBrowser.hasAttribute(
-    "preloadedState"
-  );
-  ok(
-    !navigatedTabHasState,
-    "Correctly removed the preloadState attribute when navigating away"
   );
 
   // Remove tabs and preloaded browsers
