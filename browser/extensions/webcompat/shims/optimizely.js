@@ -38,7 +38,9 @@ if (!window.optimizely?.state) {
 
   const state = {
     getActivationId() {},
-    getActiveExperimentIds() {},
+    getActiveExperimentIds() {
+      return [];
+    },
     getCampaignStateLists() {},
     getCampaignStates() {},
     getDecisionObject() {},
