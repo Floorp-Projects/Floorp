@@ -1,6 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /Unable to arm timer, the object has been finalized\./
+);
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /IOUtils\.profileBeforeChange getter: IOUtils: profileBeforeChange phase has already finished/
+);
+
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
