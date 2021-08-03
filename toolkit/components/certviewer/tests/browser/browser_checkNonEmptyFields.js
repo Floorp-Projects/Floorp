@@ -56,11 +56,12 @@ async function checkNonEmptyFields(url) {
 
           for (let infoItem of infoItems) {
             let item = infoItem.shadowRoot.querySelector(".info");
-            let info = item.textContent;
-            Assert.ok(
-              parseInt(info.length) > 0,
-              "Empty strings shouldn't be rendered"
-            );
+            if (item.textContent.length === 0) {
+              await ContentTaskUtils.waitForCondition(
+                () => parseInt(item.textContent.length) > 0,
+                "info-item has not been localized."
+              );
+            }
           }
         }
       }
