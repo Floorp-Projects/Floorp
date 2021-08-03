@@ -282,6 +282,8 @@ class VendorManifest(MozbuildObject):
         if vendoring_dir == moz_yaml_dir:
             vendoring_dir = moz_yaml_dir = None
 
+        # If you edit this (especially for header files) you should double check
+        # rewrite_mozbuild.py around 'assignment_type'
         source_suffixes = [".cc", ".c", ".cpp", ".h", ".hpp", ".S", ".asm"]
 
         files_removed = self.repository.get_changed_files(diff_filter="D")
