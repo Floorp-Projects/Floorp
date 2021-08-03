@@ -50,8 +50,10 @@ class DatabaseFileManager final
                                 const nsACString& aOrigin,
                                 uint32_t aTelemetryId);
 
-  template <typename Func>
-  static Result<Ok, nsresult> TraverseFiles(nsIFile& aDirectory, Func&& aFunc);
+  template <typename KnownDirEntryOp, typename UnknownDirEntryOp>
+  static Result<Ok, nsresult> TraverseFiles(
+      nsIFile& aDirectory, KnownDirEntryOp&& aKnownDirEntryOp,
+      UnknownDirEntryOp&& aUnknownDirEntryOp);
 
   static Result<quota::FileUsageType, nsresult> GetUsage(nsIFile* aDirectory);
 
