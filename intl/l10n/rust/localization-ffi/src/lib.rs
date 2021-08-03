@@ -301,7 +301,7 @@ impl LocalizationRc {
         &self,
         keys: &ThinVec<L10nKey>,
         promise: &xpcom::Promise,
-        callback: extern "C" fn(&xpcom::Promise, &ThinVec<nsCString>),
+        callback: extern "C" fn(&xpcom::Promise, &ThinVec<nsCString>, &ThinVec<nsCString>),
     ) {
         let bundles = self.inner.borrow().bundles().clone();
 
@@ -326,7 +326,11 @@ impl LocalizationRc {
                 })
                 .collect::<ThinVec<_>>();
 
-            callback(&strong_promise, &ret_val);
+            assert_eq!(keys.len(), ret_val.len());
+
+            let errors = errors.into_iter().map(|err| err.to_string().into()).collect();
+
+            callback(&strong_promise, &ret_val, &errors);
         })
         .expect("Failed to spawn future");
     }
@@ -393,6 +397,19 @@ pub extern "C" fn localization_new(
     let res_ids: Vec<String> = res_ids.iter().map(|res| res.to_string()).collect();
     *result = RefPtr::forget_into_raw(LocalizationRc::new(&reg, res_ids, is_sync));
     NS_OK
+}
+
+#[no_mangle]
+pub extern "C" fn localization_new_with_reg(
+    res_ids: &ThinVec<nsCString>,
+    is_sync: bool,
+    reg: &GeckoL10nRegistry,
+    result: &mut *const LocalizationRc,
+) {
+    *result = std::ptr::null_mut();
+
+    let res_ids: Vec<String> = res_ids.iter().map(|res| res.to_string()).collect();
+    *result = RefPtr::forget_into_raw(LocalizationRc::new(&reg, res_ids, is_sync));
 }
 
 #[no_mangle]
@@ -483,7 +500,7 @@ pub extern "C" fn localization_format_values(
     loc: &LocalizationRc,
     keys: &ThinVec<L10nKey>,
     promise: &xpcom::Promise,
-    callback: extern "C" fn(&xpcom::Promise, &ThinVec<nsCString>),
+    callback: extern "C" fn(&xpcom::Promise, &ThinVec<nsCString>, &ThinVec<nsCString>),
 ) {
     loc.format_values(keys, promise, callback);
 }
