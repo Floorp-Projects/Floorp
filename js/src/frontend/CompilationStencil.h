@@ -380,15 +380,22 @@ struct CompilationInput {
 class CompilationSyntaxParseCache {
   // When delazifying, we should prepare an array which contains all
   // stencil-like gc-things such that it can be used by the parser.
+  //
+  // When compiling from a Stencil, this will alias the existing Stencil.
   mozilla::Span<TaggedScriptThingIndex> cachedGCThings_;
 
   // When delazifying, we should perpare an array which contains all
   // stencil-like information about scripts, such that it can be used by the
   // parser.
   //
-  // Note, these field by refer to the actual stencil of a function.
+  // When compiling from a Stencil, these will alias the existing Stencil.
   mozilla::Span<ScriptStencil> cachedScriptData_;
   mozilla::Span<ScriptStencilExtra> cachedScriptExtra_;
+
+  // When delazifying, we copy the atom, either from JSAtom, or from another
+  // Stencil into TaggedParserAtomIndex which are valid in this current
+  // CompilationState.
+  mozilla::Span<TaggedParserAtomIndex> closedOverBindings_;
 
 #ifdef DEBUG
   // Whether any of these data should be considered or not.
@@ -400,17 +407,15 @@ class CompilationSyntaxParseCache {
   // over functions and closed-over bindings, to avoid costly recursive decent
   // in inner functions. This function will clone the BaseScript* information to
   // make it available as a stencil-like data to the full-parser.
-  mozilla::Span<TaggedScriptThingIndex> gcThings() const {
+  mozilla::Span<TaggedParserAtomIndex> closedOverBindings() const {
     MOZ_ASSERT(isInitialized);
-    return cachedGCThings_;
+    return closedOverBindings_;
   }
-  mozilla::Span<ScriptStencil> scriptData() const {
-    MOZ_ASSERT(isInitialized);
-    return cachedScriptData_;
+  const ScriptStencil& scriptData(size_t functionIndex) const {
+    return cachedScriptData_[scriptIndex(functionIndex)];
   }
-  mozilla::Span<ScriptStencilExtra> scriptExtra() const {
-    MOZ_ASSERT(isInitialized);
-    return cachedScriptExtra_;
+  const ScriptStencilExtra& scriptExtra(size_t functionIndex) const {
+    return cachedScriptExtra_[scriptIndex(functionIndex)];
   }
 
   // Initialize the SynaxParse cache given a LifoAlloc. The JSContext is only
@@ -420,6 +425,20 @@ class CompilationSyntaxParseCache {
                           CompilationAtomCache& atomCache, BaseScript* lazy);
 
  private:
+  // Return the script index of a given inner function.
+  //
+  // WARNING: The ScriptIndex returned by this function corresponds to the index
+  // in the cachedScriptExtra_ and cachedScriptData_ spans. With the
+  // cachedGCThings_ span, these might be reference to an actual Stencil from
+  // another compilation. Thus, the ScriptIndex returned by this function should
+  // not be confused with any ScriptIndex from the CompilationState.
+  ScriptIndex scriptIndex(size_t functionIndex) const {
+    MOZ_ASSERT(isInitialized);
+    auto taggedScriptIndex = cachedGCThings_[functionIndex];
+    MOZ_ASSERT(taggedScriptIndex.isFunction());
+    return taggedScriptIndex.toFunction();
+  }
+
   [[nodiscard]] bool copyScriptInfo(JSContext* cx, LifoAlloc& alloc,
                                     ParserAtomsTable& parseAtoms,
                                     CompilationAtomCache& atomCache,
