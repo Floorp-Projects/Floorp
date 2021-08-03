@@ -28,8 +28,9 @@ enum class HistoryItemTimeGroup {
     }
 }
 
-class HistoryAdapter(private val historyInteractor: HistoryInteractor) :
-    PagedListAdapter<HistoryItem, HistoryListItemViewHolder>(historyDiffCallback),
+class HistoryAdapter(
+    private val historyInteractor: HistoryInteractor,
+) : PagedListAdapter<HistoryItem, HistoryListItemViewHolder>(historyDiffCallback),
     SelectionHolder<HistoryItem> {
 
     private var mode: HistoryFragmentState.Mode = HistoryFragmentState.Mode.Normal
@@ -41,6 +42,7 @@ class HistoryAdapter(private val historyInteractor: HistoryInteractor) :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryListItemViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+
         return HistoryListItemViewHolder(view, historyInteractor, this)
     }
 

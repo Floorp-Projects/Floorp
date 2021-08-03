@@ -5,13 +5,10 @@
 package org.mozilla.fenix.library.history.viewholders
 
 import android.view.View
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.history_list_item.view.*
-import kotlinx.android.synthetic.main.library_site_item.view.*
-import kotlinx.android.synthetic.main.recently_closed_nav_item.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.HistoryListItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
@@ -30,11 +27,12 @@ class HistoryListItemViewHolder(
 ) : RecyclerView.ViewHolder(view) {
 
     private var item: HistoryItem? = null
+    private val binding = HistoryListItemBinding.bind(view)
 
     init {
         setupMenu()
 
-        itemView.delete_button.setOnClickListener {
+        binding.deleteButton.setOnClickListener {
             val selected = selectionHolder.selectedItems
             if (selected.isEmpty()) {
                 historyInteractor.onDeleteAll()
@@ -43,7 +41,7 @@ class HistoryListItemViewHolder(
             }
         }
 
-        itemView.findViewById<ConstraintLayout>(R.id.recently_closed_nav).setOnClickListener {
+        binding.recentlyClosedNavEmpty.recentlyClosedNav.setOnClickListener {
             historyInteractor.onRecentlyClosedClicked()
         }
     }
@@ -56,30 +54,30 @@ class HistoryListItemViewHolder(
         isPendingDeletion: Boolean = false
     ) {
         if (isPendingDeletion) {
-            itemView.history_layout.visibility = View.GONE
+            binding.historyLayout.visibility = View.GONE
         } else {
-            itemView.history_layout.visibility = View.VISIBLE
+            binding.historyLayout.visibility = View.VISIBLE
         }
 
-        itemView.history_layout.titleView.text = item.title
-        itemView.history_layout.urlView.text = item.url
+        binding.historyLayout.titleView.text = item.title
+        binding.historyLayout.urlView.text = item.url
 
         toggleTopContent(showDeleteButton, mode === HistoryFragmentState.Mode.Normal)
 
         val headerText = timeGroup?.humanReadable(itemView.context)
         toggleHeader(headerText)
 
-        itemView.history_layout.setSelectionInteractor(item, selectionHolder, historyInteractor)
-        itemView.history_layout.changeSelected(item in selectionHolder.selectedItems)
+        binding.historyLayout.setSelectionInteractor(item, selectionHolder, historyInteractor)
+        binding.historyLayout.changeSelected(item in selectionHolder.selectedItems)
 
         if (this.item?.url != item.url) {
-            itemView.history_layout.loadFavicon(item.url)
+            binding.historyLayout.loadFavicon(item.url)
         }
 
         if (mode is HistoryFragmentState.Mode.Editing) {
-            itemView.overflow_menu.hideAndDisable()
+            binding.historyLayout.overflowView.hideAndDisable()
         } else {
-            itemView.overflow_menu.showAndEnable()
+            binding.historyLayout.overflowView.showAndEnable()
         }
 
         this.item = item
@@ -87,10 +85,10 @@ class HistoryListItemViewHolder(
 
     private fun toggleHeader(headerText: String?) {
         if (headerText != null) {
-            itemView.header_title.visibility = View.VISIBLE
-            itemView.header_title.text = headerText
+            binding.headerTitle.visibility = View.VISIBLE
+            binding.headerTitle.text = headerText
         } else {
-            itemView.header_title.visibility = View.GONE
+            binding.headerTitle.visibility = View.GONE
         }
     }
 
@@ -98,11 +96,11 @@ class HistoryListItemViewHolder(
         showTopContent: Boolean,
         isNormalMode: Boolean
     ) {
-        itemView.delete_button.isVisible = showTopContent
-        itemView.findViewById<ConstraintLayout>(R.id.recently_closed_nav).isVisible = showTopContent
+        binding.deleteButton.isVisible = showTopContent
+        binding.recentlyClosedNavEmpty.recentlyClosedNav.isVisible = showTopContent
 
         if (showTopContent) {
-            itemView.delete_button.run {
+            binding.deleteButton.run {
                 if (isNormalMode) {
                     isEnabled = true
                     alpha = 1f
@@ -112,14 +110,14 @@ class HistoryListItemViewHolder(
                 }
             }
             val numRecentTabs = itemView.context.components.core.store.state.closedTabs.size
-            itemView.recently_closed_tabs_description.text = String.format(
+            binding.recentlyClosedNavEmpty.recentlyClosedTabsDescription.text = String.format(
                 itemView.context.getString(
                     if (numRecentTabs == 1)
                         R.string.recently_closed_tab else R.string.recently_closed_tabs
                 ),
                 numRecentTabs
             )
-            itemView.findViewById<ConstraintLayout>(R.id.recently_closed_nav).run {
+            binding.recentlyClosedNavEmpty.recentlyClosedNav.run {
                 if (isNormalMode) {
                     isEnabled = true
                     alpha = 1f
@@ -143,7 +141,7 @@ class HistoryListItemViewHolder(
             }
         }
 
-        itemView.history_layout.attachMenu(historyMenu.menuController)
+        binding.historyLayout.attachMenu(historyMenu.menuController)
     }
 
     companion object {

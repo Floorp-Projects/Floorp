@@ -18,7 +18,9 @@
         android:visibility="gone"
         tools:visibility="visible" />
 
-    <include layout="@layout/recently_closed_nav_item" />
+    <include
+        android:id="@+id/recently_closed_nav_empty"
+        layout="@layout/recently_closed_nav_item" />
 
     <TextView
         android:id="@+id/header_title"
