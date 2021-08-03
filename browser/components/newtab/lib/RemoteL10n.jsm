@@ -184,34 +184,27 @@ class _RemoteL10n {
    */
   _createDOML10n() {
     /* istanbul ignore next */
-    async function* generateBundles(resourceIds) {
+    let useRemoteL10n = Services.prefs.getBoolPref(USE_REMOTE_L10N_PREF, true);
+    if (useRemoteL10n && !L10nRegistry.getInstance().hasSource("cfr")) {
       const appLocale = Services.locale.appLocaleAsBCP47;
-      const appLocales = Services.locale.appLocalesAsBCP47;
       const l10nFluentDir = OS.Path.join(
         OS.Constants.Path.localProfileDir,
         RS_DOWNLOADED_FILE_SUBDIR
       );
-      const fs = new L10nFileSource(
+      let cfrIndexedFileSource = new L10nFileSource(
         "cfr",
         [appLocale],
-        `file://${l10nFluentDir}/`
+        `file://${l10nFluentDir}/`,
+        {
+          addResourceOptions: {
+            allowOverrides: true,
+          },
+        },
+        [`file://${l10nFluentDir}/browser/newtab/asrouter.ftl`]
       );
-      // In the case that the Fluent file has not been downloaded from Remote Settings,
-      // `fetchFile` will return `false` and fall back to the packaged Fluent file.
-      const resource = await fs.fetchFile(appLocale, "asrouter.ftl");
-      for await (let bundle of L10nRegistry.getInstance().generateBundles(
-        appLocales.slice(0, 1),
-        resourceIds
-      )) {
-        // Override built-in messages with the resource loaded from remote settings for
-        // the app locale, i.e. the first item of `appLocales`.
-        if (resource) {
-          bundle.addResource(resource, { allowOverrides: true });
-        }
-        yield bundle;
-      }
-      // Now generating bundles for the rest of locales of `appLocales`.
-      yield* L10nRegistry.generateBundles(appLocales.slice(1), resourceIds);
+      L10nRegistry.getInstance().registerSources([cfrIndexedFileSource]);
+    } else if (!useRemoteL10n && L10nRegistry.getInstance().hasSource("cfr")) {
+      L10nRegistry.getInstance().removeSources(["cfr"]);
     }
 
     return new DOMLocalization(
@@ -222,10 +215,7 @@ class _RemoteL10n {
         "branding/brand.ftl",
         "browser/defaultBrowserNotification.ftl",
       ],
-      false,
-      Services.prefs.getBoolPref(USE_REMOTE_L10N_PREF, true)
-        ? { generateBundles }
-        : {}
+      false
     );
   }
 
