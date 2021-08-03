@@ -68,6 +68,26 @@ add_task(async function testInactiveTabEverStartPlayingWontBeSuspended() {
   await Promise.all([tab1.close(), tab2.close()]);
 });
 
+add_task(
+  async function testInactiveTabWithRunningAudioContextWontBeSuspended() {
+    info(`open tab and start an audio context (AC)`);
+    const tab = await createTab("about:blank");
+    await startAudioContext(tab);
+    await assertIfWindowGetSuspended(tab, { shouldBeSuspended: false });
+
+    info(`tab with running AC won't be suspended when it becomes inactive`);
+    setTabActive(tab, false);
+    await assertIfWindowGetSuspended(tab, { shouldBeSuspended: false });
+
+    info(`if AC has been suspended, then inactive tab should be suspended`);
+    await suspendAudioContext(tab);
+    await assertIfWindowGetSuspended(tab, { shouldBeSuspended: true });
+
+    info(`remove tab`);
+    await tab.close();
+  }
+);
+
 /**
  * The following are helper functions.
  */
@@ -93,4 +113,19 @@ function assertIfWindowGetSuspended(tab, { shouldBeSuspended }) {
 
 function setTabActive(tab, isActive) {
   tab.linkedBrowser.docShellIsActive = isActive;
+}
+
+function startAudioContext(tab) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
+    content.ac = new content.AudioContext();
+    await new Promise(r => (content.ac.onstatechange = r));
+    ok(content.ac.state == "running", `Audio context started running`);
+  });
+}
+
+function suspendAudioContext(tab) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
+    await content.ac.suspend();
+    ok(content.ac.state == "suspended", `Audio context is suspended`);
+  });
 }

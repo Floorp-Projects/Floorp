@@ -1319,6 +1319,10 @@ class ContentParent final
       const MaybeDiscarded<BrowsingContext>& aContext,
       const PositionState& aState);
 
+  mozilla::ipc::IPCResult RecvAddOrRemovePageAwakeRequest(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      const bool& aShouldAddCount);
+
   mozilla::ipc::IPCResult RecvGetModulesTrust(
       ModulePaths&& aModPaths, bool aRunAtNormalPriority,
       GetModulesTrustResolver&& aResolver);

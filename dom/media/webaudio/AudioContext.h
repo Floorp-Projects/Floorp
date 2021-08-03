@@ -51,6 +51,7 @@ class AudioDestinationNode;
 class AudioListener;
 class AudioNode;
 class BiquadFilterNode;
+class BrowsingContext;
 class ChannelMergerNode;
 class ChannelSplitterNode;
 class ConstantSourceNode;
@@ -376,6 +377,15 @@ class AudioContext final : public DOMEventTargetHelper,
   void MaybeUpdateAutoplayTelemetry();
   void MaybeUpdateAutoplayTelemetryWhenShutdown();
 
+  // If the pref `dom.suspend_inactive.enabled` is enabled, the dom window will
+  // be suspended when the window becomes inactive. In order to keep audio
+  // context running still, we will ask pages to keep awake in that situation.
+  void MaybeUpdatePageAwakeRequest();
+  void MaybeClearPageAwakeRequest();
+  void SetPageAwakeRequest(bool aShouldSet);
+
+  BrowsingContext* GetTopLevelBrowsingContext();
+
  private:
   // Each AudioContext has an id, that is passed down the MediaTracks that
   // back the AudioNodes, so we can easily compute the set of all the
@@ -434,6 +444,11 @@ class AudioContext final : public DOMEventTargetHelper,
   bool mWasEverAllowedToStart;
   bool mWasEverBlockedToStart;
   bool mWouldBeAllowedToStart;
+
+  // Whether we have set the page awake reqeust when non-offline audio context
+  // is running. That will keep the audio context being able to continue running
+  // even if the window is inactive.
+  bool mSetPageAwakeRequest = false;
 };
 
 static const dom::AudioContext::AudioContextId NO_AUDIO_CONTEXT = 0;
