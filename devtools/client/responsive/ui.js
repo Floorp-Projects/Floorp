@@ -741,8 +741,10 @@ class ResponsiveUI {
 
   /**
    * Restores the previous actor state.
+   *
+   * @param {Boolean} isTargetSwitching
    */
-  async restoreActorState() {
+  async restoreActorState(isTargetSwitching) {
     // It's possible the target will switch to a page loaded in the
     // parent-process (i.e: about:robots). When this happens, the values set
     // on the BrowsingContext by RDM are not preserved. So we need to call
@@ -754,6 +756,18 @@ class ResponsiveUI {
 
     // Attach current target to the selected browser tab.
     await this.currentTarget.attach();
+
+    // If the target follows the window global lifecycle, the configuration was already
+    // restored from the server during target switch, so we can stop here.
+    // This function is still called at startup to restore potential state from previous
+    // RDM session so we only stop here during target switching.
+    if (
+      isTargetSwitching &&
+      this.commands.targetCommand.targetFront.targetForm
+        .followWindowGlobalLifeCycle
+    ) {
+      return;
+    }
 
     const hasDeviceState = await this.hasDeviceState();
     if (hasDeviceState) {
@@ -1022,7 +1036,7 @@ class ResponsiveUI {
     return this.browserWindow;
   }
 
-  async onTargetAvailable({ targetFront }) {
+  async onTargetAvailable({ targetFront, isTargetSwitching }) {
     if (this.destroying) {
       return;
     }
@@ -1034,7 +1048,7 @@ class ResponsiveUI {
         return;
       }
 
-      await this.restoreActorState();
+      await this.restoreActorState(isTargetSwitching);
     }
   }
   // This just needed to setup watching for network resources,
