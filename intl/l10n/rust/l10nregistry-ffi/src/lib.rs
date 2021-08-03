@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-mod env;
+pub mod env;
 mod fetcher;
 pub mod load;
-mod registry;
+pub mod registry;
 mod source;
 mod xpcom_utils;
