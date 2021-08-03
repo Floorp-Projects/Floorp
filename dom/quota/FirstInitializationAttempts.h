@@ -34,10 +34,6 @@ class FirstInitializationAttempts {
       return mOwner.FirstInitializationAttemptRecorded(mInitialization);
     }
 
-    bool Pending() const {
-      return mOwner.FirstInitializationAttemptPending(mInitialization);
-    }
-
     void Record(const nsresult aRv) const {
       mOwner.RecordFirstInitializationAttempt(mInitialization, aRv);
     }
@@ -51,11 +47,6 @@ class FirstInitializationAttempts {
   bool FirstInitializationAttemptRecorded(
       const Initialization aInitialization) const {
     return static_cast<bool>(mFirstInitializationAttempts & aInitialization);
-  }
-
-  bool FirstInitializationAttemptPending(
-      const Initialization aInitialization) const {
-    return !(mFirstInitializationAttempts & aInitialization);
   }
 
   void RecordFirstInitializationAttempt(const Initialization aInitialization,
