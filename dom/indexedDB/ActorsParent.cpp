@@ -23,6 +23,7 @@
 #include "CrashAnnotations.h"
 #include "DatabaseFileInfo.h"
 #include "DatabaseFileManager.h"
+#include "DatabaseFileManagerImpl.h"
 #include "DBSchema.h"
 #include "ErrorList.h"
 #include "IDBCursorType.h"
@@ -317,8 +318,6 @@ static_assert(kEncryptedStreamBlockSize % 4096 == 0);
 // Similarly, the file copy buffer size must be a multiple of the encrypted
 // block size.
 static_assert(kFileCopyBufferSize % kEncryptedStreamBlockSize == 0);
-
-constexpr auto kJournalDirectoryName = u"journals"_ns;
 
 constexpr auto kFileManagerDirectoryNameSuffix = u".files"_ns;
 constexpr auto kSQLiteSuffix = u".sqlite"_ns;
@@ -12487,78 +12486,32 @@ Result<FileUsageType, nsresult> DatabaseFileManager::GetUsage(
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
 
-  QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(aDirectory, Exists));
-
-  if (!exists) {
-    return FileUsageType{};
-  }
-
   FileUsageType usage;
 
-  QM_TRY(CollectEachFile(
-      *aDirectory,
-      [&usage](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
-        QM_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*file));
+  QM_TRY(TraverseFiles(
+      *aDirectory, [&usage](nsIFile& file) -> Result<Ok, nsresult> {
+        // Usually we only use QM_OR_ELSE_LOG_VERBOSE(_IF) with Remove and
+        // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
+        // check, but the file was found by a directory traversal and ToInteger
+        // on the name succeeded, so it should be our file and if the file
+        // disappears, the use of QM_OR_ELSE_WARN_IF is ok here.
+        QM_TRY_INSPECT(const auto& thisUsage,
+                       QM_OR_ELSE_WARN_IF(
+                           // Expression.
+                           MOZ_TO_RESULT_INVOKE(file, GetFileSize)
+                               .map([](const int64_t fileSize) {
+                                 return FileUsageType(Some(uint64_t(fileSize)));
+                               }),
+                           // Predicate.
+                           ([](const nsresult rv) {
+                             return rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
+                                    rv == NS_ERROR_FILE_NOT_FOUND;
+                           }),
+                           // Fallback. If the file does no longer exist, treat
+                           // it as 0-sized.
+                           ErrToDefaultOk<FileUsageType>));
 
-        switch (dirEntryKind) {
-          case nsIFileKind::ExistsAsDirectory: {
-            QM_TRY_INSPECT(
-                const auto& leafName,
-                MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
-
-            if (leafName.Equals(kJournalDirectoryName)) {
-              break;
-            }
-
-            Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
-            break;
-          }
-
-          case nsIFileKind::ExistsAsFile: {
-            QM_TRY_INSPECT(
-                const auto& leafName,
-                MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
-
-            nsresult rv;
-            leafName.ToInteger64(&rv);
-            if (NS_SUCCEEDED(rv)) {
-              // Usually we only use QM_OR_ELSE_LOG_VERBOSE(_IF) with Remove and
-              // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
-              // check, but the file was found by a directory traversal and
-              // ToInteger on the name succeeded, so it should be our file and
-              // if the file disappears, the use of QM_OR_ELSE_WARN_IF is ok
-              // here.
-              QM_TRY_INSPECT(
-                  const auto& thisUsage,
-                  QM_OR_ELSE_WARN_IF(
-                      // Expression.
-                      MOZ_TO_RESULT_INVOKE(file, GetFileSize)
-                          .map([](const int64_t fileSize) {
-                            return FileUsageType(Some(uint64_t(fileSize)));
-                          }),
-                      // Predicate.
-                      ([](const nsresult rv) {
-                        return rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
-                               rv == NS_ERROR_FILE_NOT_FOUND;
-                      }),
-                      // Fallback. If the file does no longer exist, treat it as
-                      // 0-sized.
-                      ErrToDefaultOk<FileUsageType>));
-
-              usage += thisUsage;
-
-              break;
-            }
-
-            Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
-
-            break;
-          }
-
-          case nsIFileKind::DoesNotExist:
-            // Ignore files that got removed externally while iterating.
-            break;
-        }
+        usage += thisUsage;
 
         return Ok{};
       }));
