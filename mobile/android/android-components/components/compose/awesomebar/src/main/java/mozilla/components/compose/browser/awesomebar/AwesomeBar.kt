@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.Text
@@ -59,8 +61,10 @@ private fun Suggestions(
     suggestions: List<AwesomeBar.Suggestion>,
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit
 ) {
-    suggestions.forEach { suggestion ->
-        Suggestion(suggestion, onSuggestionClicked)
+    LazyColumn {
+        items(suggestions) { suggestion ->
+            Suggestion(suggestion, onSuggestionClicked)
+        }
     }
 }
 
