@@ -677,7 +677,6 @@ static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
   _("pretenureGroupThreshold", JSGC_PRETENURE_GROUP_THRESHOLD, true)       \
   _("zoneAllocDelayKB", JSGC_ZONE_ALLOC_DELAY_KB, true)                    \
   _("mallocThresholdBase", JSGC_MALLOC_THRESHOLD_BASE, true)               \
-  _("mallocGrowthFactor", JSGC_MALLOC_GROWTH_FACTOR, true)                 \
   _("chunkBytes", JSGC_CHUNK_BYTES, false)                                 \
   _("helperThreadRatio", JSGC_HELPER_THREAD_RATIO, true)                   \
   _("maxHelperThreads", JSGC_MAX_HELPER_THREADS, true)                     \

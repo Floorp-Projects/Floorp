@@ -431,9 +431,6 @@ static const auto MinLastDitchGCPeriod = 60;  // in seconds
 /* JSGC_MALLOC_THRESHOLD_BASE */
 static const size_t MallocThresholdBase = 38 * 1024 * 1024;
 
-/* JSGC_MALLOC_GROWTH_FACTOR */
-static const double MallocGrowthFactor = 1.5;
-
 /* JSGC_HELPER_THREAD_RATIO */
 static const double HelperThreadRatio = 0.5;
 
@@ -601,13 +598,6 @@ class GCSchedulingTunables {
   MainThreadOrGCTaskData<size_t> mallocThresholdBase_;
 
   /*
-   * JSGC_MALLOC_GROWTH_FACTOR
-   *
-   * Malloc memory growth factor.
-   */
-  MainThreadOrGCTaskData<double> mallocGrowthFactor_;
-
-  /*
    * JSGC_URGENT_THRESHOLD_BYTES
    *
    * The base value used to compute the GC trigger for malloc allocated memory.
@@ -667,7 +657,6 @@ class GCSchedulingTunables {
   }
 
   size_t mallocThresholdBase() const { return mallocThresholdBase_; }
-  double mallocGrowthFactor() const { return mallocGrowthFactor_; }
 
   size_t urgentThresholdBytes() const { return urgentThresholdBytes_; }
 
