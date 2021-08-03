@@ -65,9 +65,13 @@ where
         // Mutex ensures that future is polled serially.
         self.enter(|cx| {
             // The only way to have this `LocalTask` dispatched to the named
-            // event target is for it to be dispatched by the Waker, which will
-            // put the state into POLL before dispatching the runnable.
-            assert!(self.state.is(POLL));
+            // event target is for it to be dispatched by the `Waker`, which will
+            // put the state into `POLL` before dispatching the runnable.
+            // Another waker may have put the state into `REPOLL` in the
+            // meantime, however we can clear that back to `POLL` now as we're
+            // about to begin polling.
+            self.state.start_poll();
+
             loop {
                 // # Safety
                 //
@@ -128,10 +132,6 @@ impl Default for TaskState {
 }
 
 impl TaskState {
-    fn is(&self, state: usize) -> bool {
-        self.state.load(SeqCst) == state
-    }
-
     /// Attempt to "wake up" the task and poll the future.
     ///
     /// A `true` result indicates that the `POLL` state has been entered, and
@@ -198,6 +198,14 @@ impl TaskState {
     unsafe fn complete(&self) {
         debug_assert!(matches!(self.state.load(SeqCst), POLL | REPOLL));
         self.state.store(COMPLETE, SeqCst);
+    }
+
+    /// We're about to begin polling, clear any accumulated re-poll requests.
+    ///
+    /// Should only be called from the `POLL`/`REPOLL` states immediately before polling.
+    fn start_poll(&self) {
+        assert!(matches!(self.state.load(SeqCst), POLL | REPOLL));
+        self.state.store(POLL, SeqCst);
     }
 }
 
