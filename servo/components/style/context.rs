@@ -568,7 +568,7 @@ impl<E: TElement> SelectorFlagsMap<E> {
     /// Applies the flags. Must be called on the main thread.
     fn apply_flags(&mut self) {
         debug_assert_eq!(thread_state::get(), ThreadState::LAYOUT);
-        self.cache.evict_all();
+        self.cache.clear();
         for (el, flags) in self.map.drain() {
             unsafe {
                 el.set_selector_flags(flags);

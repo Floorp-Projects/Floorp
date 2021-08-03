@@ -470,11 +470,11 @@ impl<Candidate> Default for SharingCacheBase<Candidate> {
 
 impl<Candidate> SharingCacheBase<Candidate> {
     fn clear(&mut self) {
-        self.entries.evict_all();
+        self.entries.clear();
     }
 
     fn is_empty(&self) -> bool {
-        self.entries.num_entries() == 0
+        self.entries.len() == 0
     }
 }
 

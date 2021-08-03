@@ -12,8 +12,8 @@
 
 [package]
 name = "uluru"
-version = "0.4.0"
-authors = ["The Servo Project Developers"]
+version = "1.1.1"
+authors = ["The Servo Project Developers", "Matt Brubeck <mbrubeck@limpet.net>"]
 description = "A simple, fast, LRU cache implementation"
 readme = "README.md"
 keywords = ["cache", "linkedlist", "array", "no_std"]
@@ -27,3 +27,8 @@ path = "lib.rs"
 [dependencies.arrayvec]
 version = "0.5"
 default-features = false
+[dev-dependencies.quickcheck]
+version = "0.9"
+
+[dev-dependencies.quickcheck_macros]
+version = "0.9"
