@@ -10,6 +10,7 @@ import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
@@ -30,6 +31,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibilit
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+@Ignore("Screenshots not required for now, to be re-enabled if needed")
 @RunWith(AndroidJUnit4.class)
 public class HomeScreenScreenshots extends ScreenshotTest {
 
@@ -80,7 +82,7 @@ public class HomeScreenScreenshots extends ScreenshotTest {
             onView(withId(R.id.homeViewTipsLabel))
                     .check(matches(isDisplayed()));
             Screengrab.screenshot("MainViewTip_" + tip.name());
-            onView(withId(R.id.mozac_browser_toolbar_url_view)).perform(click());
+            onView(withId(R.id.mozac_browser_toolbar_edit_url_view)).perform(click());
         }
     }
 }

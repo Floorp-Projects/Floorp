@@ -84,8 +84,8 @@ class SearchTest {
             // Search on blank spaces should not do anything
             typeInSearchBar(" ")
             pressEnterKey()
-            homeScreen {
-                verifyNavBarIsDisplayed()
+            searchScreen {
+                verifySearchEditBarContainsText(" ")
             }
         }
     }

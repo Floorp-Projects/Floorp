@@ -24,10 +24,6 @@ class HomeScreenRobot {
         assertTrue(editURLBar.text.equals(getStringResource(R.string.urlbar_hint)))
     }
 
-    fun verifyNavBarIsDisplayed() {
-        assertTrue(navURLBar.waitForExists(waitingTime))
-    }
-
     fun skipFirstRun() = onView(withId(R.id.skip)).perform(click())
 
     fun verifyOnboardingFirstSlide() {
@@ -82,11 +78,6 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
 private val editURLBar =
         mDevice.findObject(
                 UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view")
-        )
-
-private val navURLBar =
-        mDevice.findObject(
-                UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view")
         )
 
 private val mainMenu = onView(withId(R.id.menuView))
