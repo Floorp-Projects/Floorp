@@ -282,7 +282,7 @@ JS::BigInt* GCRuntime::tryNewNurseryBigInt(JSContext* cx, size_t thingSize,
 
 template <AllowGC allowGC /* = CanGC */>
 JS::BigInt* js::AllocateBigInt(JSContext* cx, InitialHeap heap) {
-  AllocKind kind = MapTypeToFinalizeKind<JS::BigInt>::kind;
+  AllocKind kind = MapTypeToAllocKind<JS::BigInt>::kind;
   size_t size = sizeof(JS::BigInt);
   MOZ_ASSERT(size == Arena::thingSize(kind));
 
@@ -333,7 +333,7 @@ T* js::Allocate(JSContext* cx) {
       sizeof(T) >= MinCellSize,
       "All allocations must be at least the allocator-imposed minimum size.");
 
-  AllocKind kind = MapTypeToFinalizeKind<T>::kind;
+  AllocKind kind = MapTypeToAllocKind<T>::kind;
   MOZ_ASSERT(!IsNurseryAllocable(kind));
 
   size_t thingSize = sizeof(T);
