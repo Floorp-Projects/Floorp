@@ -128,7 +128,7 @@ AppPicker.prototype = {
       return "";
     }
 
-    var urlSpec = fph.getURLSpecFromFile(file);
+    var urlSpec = fph.getURLSpecFromActualFile(file);
     return "moz-icon://" + urlSpec + "?size=32";
   },
 
