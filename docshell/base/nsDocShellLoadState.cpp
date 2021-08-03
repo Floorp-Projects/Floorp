@@ -88,6 +88,7 @@ nsDocShellLoadState::nsDocShellLoadState(
         aLoadState.loadingSessionHistoryInfo().ref());
   }
   mUnstrippedURI = aLoadState.UnstrippedURI();
+  mRemoteTypeOverride = aLoadState.RemoteTypeOverride();
 }
 
 nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
@@ -133,7 +134,8 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mLoadIdentifier(aOther.mLoadIdentifier),
       mChannelInitialized(aOther.mChannelInitialized),
       mIsMetaRefresh(aOther.mIsMetaRefresh),
-      mUnstrippedURI(aOther.mUnstrippedURI) {
+      mUnstrippedURI(aOther.mUnstrippedURI),
+      mRemoteTypeOverride(aOther.mRemoteTypeOverride) {
   if (aOther.mLoadingSessionHistoryInfo) {
     mLoadingSessionHistoryInfo = MakeUnique<LoadingSessionHistoryInfo>(
         *aOther.mLoadingSessionHistoryInfo);
@@ -367,6 +369,11 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
 
   if (didFixup) {
     nsDocShell::MaybeNotifyKeywordSearchLoading(searchProvider, keyword);
+  }
+
+  if (aLoadURIOptions.mRemoteTypeOverride.WasPassed()) {
+    loadState->SetRemoteTypeOverride(
+        aLoadURIOptions.mRemoteTypeOverride.Value());
   }
 
   loadState.forget(aResult);
@@ -1046,6 +1053,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
     loadState.loadingSessionHistoryInfo().emplace(*mLoadingSessionHistoryInfo);
   }
   loadState.UnstrippedURI() = mUnstrippedURI;
+  loadState.RemoteTypeOverride() = mRemoteTypeOverride;
   return loadState;
 }
 
