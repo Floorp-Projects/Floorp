@@ -6,6 +6,9 @@ package org.mozilla.fenix.settings.quicksettings
 
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
+import kotlinx.android.synthetic.main.library_site_item.title
+import kotlinx.android.synthetic.main.library_site_item.url
+import kotlinx.android.synthetic.main.quicksettings_website_info.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -13,19 +16,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.databinding.QuicksettingsWebsiteInfoBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
 class WebsiteInfoViewTest {
 
     private lateinit var view: WebsiteInfoView
-    private lateinit var binding: QuicksettingsWebsiteInfoBinding
 
     @Before
     fun setup() {
         view = WebsiteInfoView(FrameLayout(testContext))
-        binding = view.binding
     }
 
     @Test
@@ -39,10 +39,10 @@ class WebsiteInfoViewTest {
             )
         )
 
-        assertEquals("https://mozilla.org", binding.url.text)
-        assertEquals("Mozilla", binding.title.text)
-        assertEquals("Secure Connection", binding.securityInfo.text)
-        assertFalse(binding.certificateInfo.isVisible)
+        assertEquals("https://mozilla.org", view.url.text)
+        assertEquals("Mozilla", view.title.text)
+        assertEquals("Secure Connection", view.securityInfo.text)
+        assertFalse(view.certificateInfo.isVisible)
     }
 
     @Test
@@ -56,8 +56,8 @@ class WebsiteInfoViewTest {
             )
         )
 
-        assertEquals("Insecure Connection", binding.securityInfo.text)
-        assertEquals("Verified By: Certificate", binding.certificateInfo.text)
-        assertTrue(binding.certificateInfo.isVisible)
+        assertEquals("Insecure Connection", view.securityInfo.text)
+        assertEquals("Verified By: Certificate", view.certificateInfo.text)
+        assertTrue(view.certificateInfo.isVisible)
     }
 }

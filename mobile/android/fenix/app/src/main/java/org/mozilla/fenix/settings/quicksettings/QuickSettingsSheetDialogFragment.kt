@@ -25,6 +25,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.*
+import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.plus
@@ -33,7 +35,6 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.databinding.FragmentQuickSettingsDialogSheetBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.PhoneFeature
 import com.google.android.material.R as MaterialR
@@ -54,9 +55,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private var tryToRequestPermissions: Boolean = false
     private val args by navArgs<QuickSettingsSheetDialogFragmentArgs>()
 
-    private var _binding: FragmentQuickSettingsDialogSheetBinding? = null
-    private val binding get() = _binding!!
-
     @Suppress("DEPRECATION")
     // https://github.com/mozilla-mobile/fenix/issues/19920
     override fun onCreateView(
@@ -66,10 +64,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     ): View {
         val context = requireContext()
         val components = context.components
-
         val rootView = inflateRootView(container)
-        _binding = FragmentQuickSettingsDialogSheetBinding.bind(rootView)
-
         quickSettingsStore = QuickSettingsFragmentStore.createStore(
             context = context,
             websiteUrl = args.url,
@@ -103,9 +98,9 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
 
         interactor = QuickSettingsInteractor(quickSettingsController)
 
-        websiteInfoView = WebsiteInfoView(binding.websiteInfoLayout)
+        websiteInfoView = WebsiteInfoView(rootView.websiteInfoLayout)
         websitePermissionsView =
-            WebsitePermissionsView(binding.websitePermissionsLayout, interactor)
+            WebsitePermissionsView(rootView.websitePermissionsLayout, interactor)
 
         return rootView
     }
@@ -157,8 +152,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
                 quickSettingsController.handleAndroidPermissionGranted(it)
             }
         } else {
-            val shouldShowRequestPermissionRationale =
-                permissions.all { shouldShowRequestPermissionRationale(it) }
+            val shouldShowRequestPermissionRationale = permissions.all { shouldShowRequestPermissionRationale(it) }
 
             if (!shouldShowRequestPermissionRationale && tryToRequestPermissions) {
                 // The user has permanently blocked these permissions and he/she is trying to enabling them.
@@ -193,7 +187,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
         requestCode == REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS && grantResults.all { it == PERMISSION_GRANTED }
 
     private fun showPermissionsView() {
-        binding.websitePermissionsGroup.isVisible = true
+        websitePermissionsGroup.isVisible = true
     }
 
     private fun launchIntentReceiver() {
