@@ -156,12 +156,20 @@ class SchemaOrgPageData extends PageDataCollector {
     };
 
     let scopes = this.document.querySelectorAll(
-      "[itemscope][itemtype^='https://schema.org/']"
+      "[itemscope][itemtype^='https://schema.org/'], [itemscope][itemtype^='http://schema.org/']"
     );
 
     for (let scope of scopes) {
-      switch (scope.getAttribute("itemtype")) {
-        case "https://schema.org/Product":
+      let itemType = scope.getAttribute("itemtype");
+      // Strip off the protocol
+      if (itemType.startsWith("https://")) {
+        itemType = itemType.substring(8);
+      } else {
+        itemType = itemType.substring(7);
+      }
+
+      switch (itemType) {
+        case "schema.org/Product":
           insert(
             PageDataCollector.DATA_TYPE.PRODUCT,
             this.#collectProduct(scope)
