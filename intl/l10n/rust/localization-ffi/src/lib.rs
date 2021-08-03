@@ -169,8 +169,7 @@ impl LocalizationRc {
         self.inner.borrow_mut().remove_resource_ids(res_ids)
     }
 
-    /// Upgrade synchronous mode to asynchronous.
-    pub fn upgrade(&self) {
+    pub fn set_async(&self) {
         if self.is_sync() {
             self.inner.borrow_mut().set_async();
         }
@@ -555,8 +554,13 @@ pub extern "C" fn localization_format_messages(
 }
 
 #[no_mangle]
-pub extern "C" fn localization_upgrade(loc: &LocalizationRc) {
-    loc.upgrade();
+pub extern "C" fn localization_set_async(loc: &LocalizationRc) {
+    loc.set_async();
+}
+
+#[no_mangle]
+pub extern "C" fn localization_is_sync(loc: &LocalizationRc) -> bool {
+    loc.is_sync()
 }
 
 #[no_mangle]
