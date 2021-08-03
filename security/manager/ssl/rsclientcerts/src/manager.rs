@@ -10,6 +10,7 @@ use std::thread;
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
+use crate::error_here;
 use crate::error::{Error, ErrorType};
 use crate::util::*;
 

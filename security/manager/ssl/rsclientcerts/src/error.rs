@@ -7,6 +7,7 @@ use std::fmt;
 
 /// Helper macro to create an Error that knows which file and line it occurred
 /// on. Can optionally have some extra information as a String.
+#[macro_export]
 macro_rules! error_here {
     ($error_type:expr) => {
         Error::new($error_type, file!(), line!(), None)

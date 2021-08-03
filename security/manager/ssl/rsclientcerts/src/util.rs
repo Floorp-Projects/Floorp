@@ -6,6 +6,7 @@
 use byteorder::{BigEndian, NativeEndian, ReadBytesExt, WriteBytesExt};
 use std::convert::TryInto;
 
+use crate::error_here;
 use crate::error::{Error, ErrorType};
 
 /// Accessing fields of packed structs is unsafe (it may be undefined behavior if the field isn't
@@ -13,6 +14,7 @@ use crate::error::{Error, ErrorType};
 /// give us bad data, so normally we would deal with this by adding an unsafe block. If we do that,
 /// though, the compiler complains that the unsafe block is unnecessary. Thus, we use this macro to
 /// annotate the unsafe block to silence the compiler.
+#[macro_export]
 macro_rules! unsafe_packed_field_access {
     ($e:expr) => {{
         #[allow(unused_unsafe)]
