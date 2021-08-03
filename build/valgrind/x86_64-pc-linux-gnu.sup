@@ -424,130 +424,9 @@
 # Suppressions rooted at *style*values*specified*color*Color*style*parser*Parse*parse*
 
 {
-   bug1447137-01
+   bug1447137
    Memcheck:Cond
    fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*SimpleShadow*
-   fun:*style*parse_value*
-   fun:*style*parse_into*
-}
-
-{
-   bug1447137-02
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*UrlPaintServer*
-   fun:*style*parse_value*
-   fun:*style*parse_into*
-}
-
-{
-   bug1447137-03
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*parse_fallback*
-   fun:*style*UrlPaintServer*
-   fun:*style*parse_value*
-}
-
-{
-   bug1447137-04
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*parse_border*
-   fun:*style*parse_into*
-   fun:*style*parse_value*
-}
-
-{
-   bug1447137-05
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*parse_quirky*
-   fun:*style*parse_value*
-   fun:*style*parse_into*
-}
-
-{
-   bug1447137-06
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*parse_value*
-   fun:*style*parse_into*
-   fun:*style*parse_value*
-}
-
-{
-   bug1447137-07
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*parse_border*
-   fun:*style*parse_value*
-   fun:*style*parse_into*
-}
-
-{
-   bug1447137-08
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*parse_quirky*
-   fun:*style*parse_value*
-   fun:*style*substitute_variables*
-}
-
-{
-   bug1447137-09
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*Gradient*
-   fun:*style*Parse*
-   fun:*style*parse_value*
-}
-
-{
-   bug1447137-10
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*SimpleShadow*
-   fun:*style*parse*closure*
-   fun:*style*parse_value*
-}
-
-{
-   bug1447137-11
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*parse_border*
-   fun:*style*substitute_variables*
-   fun:*style*substitute_variables*
-}
-
-{
-   bug1447137-12
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*parse_border*
-   fun:*style*parse_value*
-   fun:*style*substitute_variables*
-}
-
-{
-   bug1447137-13
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*parse_value*
-   fun:*style*substitute_variables*
-   fun:*style*substitute_variables*
-}
-
-
-{
-   bug1447137-14
-   Memcheck:Cond
-   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
-   fun:*style*parse_value*
-   fun:*style*parse_into*
-   fun:*geckoservo*parse_property_into*
 }
 
 ##########################################
@@ -1054,6 +933,7 @@
 {
    Starting with rust 1.52
    Memcheck:Cond
+   ...
    fun:_ZN5style10properties10shorthands4font10parse_into*
    fun:_ZN5style10properties19PropertyDeclaration10parse_into*
    fun:_ZN5style10properties17declaration_block31parse_property_declaration_list*
