@@ -108,7 +108,7 @@ var SessionWorkerCacheInternal = {
       // If we made it to this point, we've finished defining everything and
       // now can clean up our temporary references once the session store has
       // finished restoring all windows.
-      SessionStore.promiseAllWindowsRestored.then(() => {
+      SessionStore.promiseAllWindowsRestored().then(() => {
         for (let [id] of objs) {
           this._releaseById(id);
         }
