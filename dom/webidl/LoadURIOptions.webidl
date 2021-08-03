@@ -79,4 +79,14 @@ dictionary LoadURIOptions {
    * when initiating the load.
    */
   long cancelContentJSEpoch = 0;
+
+  /**
+   * If this is passed, it will control which remote type is used to finish this
+   * load. Ignored for non-`about:` loads.
+   *
+   * NOTE: This is _NOT_ defaulted to `null`, as `null` is the value for
+   * `NOT_REMOTE_TYPE`, and we need to determine the difference between no
+   * `remoteTypeOverride` and a `remoteTypeOverride` of `NOT_REMOTE_TYPE`.
+   */
+  UTF8String? remoteTypeOverride;
 };
