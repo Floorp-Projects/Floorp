@@ -52,7 +52,7 @@ JSString* AllocateStringImpl(JSContext* cx, gc::AllocKind kind, size_t size,
 template <typename StringT, AllowGC allowGC = CanGC>
 StringT* AllocateString(JSContext* cx, gc::InitialHeap heap) {
   static_assert(std::is_base_of_v<JSString, StringT>);
-  gc::AllocKind kind = gc::MapTypeToFinalizeKind<StringT>::kind;
+  gc::AllocKind kind = gc::MapTypeToAllocKind<StringT>::kind;
   JSString* string =
       AllocateStringImpl<allowGC>(cx, kind, sizeof(StringT), heap);
   return static_cast<StringT*>(string);
