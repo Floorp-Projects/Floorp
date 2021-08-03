@@ -96,7 +96,7 @@ class MochitestRunner(MozbuildObject):
         tests = list(resolver.resolve_tests(paths=test_paths, cwd=cwd))
         return tests
 
-    def run_desktop_test(self, context, tests=None, **kwargs):
+    def run_desktop_test(self, command_context, tests=None, **kwargs):
         """Runs a mochitest."""
         # runtests.py is ambiguous, so we load the file/module manually.
         if "mochitest" not in sys.modules:
@@ -150,7 +150,7 @@ class MochitestRunner(MozbuildObject):
         self.log_manager.disable_unstructured()
         return result
 
-    def run_android_test(self, context, tests, **kwargs):
+    def run_android_test(self, command_context, tests, **kwargs):
         host_ret = verify_host_bin()
         if host_ret != 0:
             return host_ret
@@ -508,9 +508,7 @@ class MachCommands(MachCommandBase):
             # specific mochitest suite has to be loaded. See Bug 1637463.
             harness_args.update({"suite_name": suite_name})
 
-            result = run_mochitest(
-                command_context._mach_context, tests=tests, **harness_args
-            )
+            result = run_mochitest(command_context, tests=tests, **harness_args)
 
             if result:
                 overall = result
