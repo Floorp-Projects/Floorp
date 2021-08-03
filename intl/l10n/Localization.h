@@ -38,6 +38,7 @@ class Localization : public nsIObserver,
       const dom::GlobalObject& aGlobal,
       const dom::Sequence<nsCString>& aResourceIds, bool aIsSync,
       const dom::Optional<dom::NonNull<L10nRegistry>>& aRegistry,
+      const dom::Optional<dom::Sequence<nsCString>>& aLocales,
       ErrorResult& aRv);
   static already_AddRefed<Localization> Create(
       const nsTArray<nsCString>& aResourceIds, bool aIsSync);
@@ -79,12 +80,14 @@ class Localization : public nsIObserver,
 
  protected:
   Localization(const nsTArray<nsCString>& aResIds, bool aIsSync);
+  Localization(nsIGlobalObject* aGlobal, bool aIsSync);
+
   Localization(nsIGlobalObject* aGlobal, const nsTArray<nsCString>& aResIds,
                bool aIsSync);
-  Localization(nsIGlobalObject* aGlobal, const nsTArray<nsCString>& aResIds,
-               bool aIsSync, const L10nRegistry& aRegistry);
-  explicit Localization(nsIGlobalObject* aGlobal);
-  Localization(nsIGlobalObject* aGlobal, bool aIsSync);
+
+  Localization(nsIGlobalObject* aGlobal, bool aIsSync,
+               const ffi::LocalizationRc* aRaw);
+
   virtual ~Localization();
 
   void RegisterObservers();
