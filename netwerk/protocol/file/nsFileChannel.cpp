@@ -295,6 +295,10 @@ nsresult nsFileChannel::MakeFileInputStream(nsIFile* file,
     // canonicalize error message
     if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) rv = NS_ERROR_FILE_NOT_FOUND;
 
+    if (rv == NS_ERROR_FILE_NOT_FOUND) {
+      CheckForBrokenChromeURL(mLoadInfo, OriginalURI());
+    }
+
     if (async && (NS_ERROR_FILE_NOT_FOUND == rv)) {
       // We don't return "Not Found" errors here. Since we could not find
       // the file, it's not a directory anyway.
