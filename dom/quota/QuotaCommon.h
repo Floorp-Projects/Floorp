@@ -93,6 +93,7 @@ class NotNull;
 // that are unknown for given directory traversal. It should only be called
 // after all known (directory traversal specific) files or directories have
 // been checked and handled.
+// XXX Consider renaming the macro to QM_LOG_UNKNOWN_DIR_ENTRY.
 #ifdef DEBUG
 #  define WARN_IF_FILE_IS_UNKNOWN(_file) \
     mozilla::dom::quota::WarnIfFileIsUnknown(_file, __FILE__, __LINE__)

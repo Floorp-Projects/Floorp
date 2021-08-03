@@ -19,9 +19,10 @@
 
 namespace mozilla::dom::indexedDB {
 
-template <typename Func>
-Result<Ok, nsresult> DatabaseFileManager::TraverseFiles(nsIFile& aDirectory,
-                                                        Func&& aFunc) {
+template <typename KnownDirEntryOp, typename UnknownDirEntryOp>
+Result<Ok, nsresult> DatabaseFileManager::TraverseFiles(
+    nsIFile& aDirectory, KnownDirEntryOp&& aKnownDirEntryOp,
+    UnknownDirEntryOp&& aUnknownDirEntryOp) {
   quota::AssertIsOnIOThread();
 
   QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(aDirectory, Exists));
@@ -32,7 +33,8 @@ Result<Ok, nsresult> DatabaseFileManager::TraverseFiles(nsIFile& aDirectory,
 
   QM_TRY(quota::CollectEachFile(
       aDirectory,
-      [&aFunc](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
+      [&aKnownDirEntryOp, &aUnknownDirEntryOp](
+          const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
         QM_TRY_INSPECT(const auto& dirEntryKind, quota::GetDirEntryKind(*file));
 
         switch (dirEntryKind) {
@@ -42,10 +44,17 @@ Result<Ok, nsresult> DatabaseFileManager::TraverseFiles(nsIFile& aDirectory,
                 MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
 
             if (leafName.Equals(kJournalDirectoryName)) {
+              QM_TRY(std::forward<KnownDirEntryOp>(aKnownDirEntryOp)(
+                  *file, /* isDirectory */ true));
+
               break;
             }
 
             Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
+
+            QM_TRY(std::forward<UnknownDirEntryOp>(aUnknownDirEntryOp)(
+                *file, /* isDirectory */ true));
+
             break;
           }
 
@@ -57,12 +66,16 @@ Result<Ok, nsresult> DatabaseFileManager::TraverseFiles(nsIFile& aDirectory,
             nsresult rv;
             leafName.ToInteger64(&rv);
             if (NS_SUCCEEDED(rv)) {
-              QM_TRY(std::forward<Func>(aFunc)(*file));
+              QM_TRY(std::forward<KnownDirEntryOp>(aKnownDirEntryOp)(
+                  *file, /* isDirectory */ false));
 
               break;
             }
 
             Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
+
+            QM_TRY(std::forward<UnknownDirEntryOp>(aUnknownDirEntryOp)(
+                *file, /* isDirectory */ false));
 
             break;
           }
