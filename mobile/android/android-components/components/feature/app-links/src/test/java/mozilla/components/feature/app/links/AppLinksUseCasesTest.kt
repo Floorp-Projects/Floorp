@@ -583,8 +583,13 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `Failed to parse uri should not cause a crash`() {
-        val uri = "intent://blank#Intent;package=test"
-        val result = AppLinksUseCases.safeParseUri(uri, 0)
+        var uri = "intent://blank#Intent;package=test"
+        var result = AppLinksUseCases.safeParseUri(uri, 0)
+
+        assertNull(result)
+
+        uri = "intent://blank#Intent;package=test;i.android.support.customtabs.extra.TOOLBAR_COLOR=2239095040;end"
+        result = AppLinksUseCases.safeParseUri(uri, 0)
 
         assertNull(result)
     }
