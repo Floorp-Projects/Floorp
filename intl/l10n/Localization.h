@@ -9,6 +9,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
+#include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
@@ -20,13 +21,16 @@
 namespace mozilla {
 namespace intl {
 
-class Localization : public nsIObserver, public nsWrapperCache {
+class Localization : public nsIObserver,
+                     public nsWrapperCache,
+                     public nsSupportsWeakReference {
   template <typename T, typename... Args>
   friend already_AddRefed<T> mozilla::MakeAndAddRef(Args&&... aArgs);
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Localization)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Localization,
+                                                         nsIObserver)
   NS_DECL_NSIOBSERVER
 
   static already_AddRefed<Localization> Constructor(
@@ -82,6 +86,7 @@ class Localization : public nsIObserver, public nsWrapperCache {
   Localization(nsIGlobalObject* aGlobal, bool aIsSync);
   virtual ~Localization();
 
+  void RegisterObservers();
   virtual void OnChange();
   already_AddRefed<dom::Promise> MaybeWrapPromise(dom::Promise* aInnerPromise);
 

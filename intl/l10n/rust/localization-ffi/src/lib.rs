@@ -168,6 +168,10 @@ impl LocalizationRc {
         self.inner.borrow().is_sync()
     }
 
+    pub fn on_change(&self) {
+        self.inner.borrow_mut().on_change();
+    }
+
     pub fn format_value_sync(
         &self,
         id: &nsACString,
@@ -328,7 +332,10 @@ impl LocalizationRc {
 
             assert_eq!(keys.len(), ret_val.len());
 
-            let errors = errors.into_iter().map(|err| err.to_string().into()).collect();
+            let errors = errors
+                .into_iter()
+                .map(|err| err.to_string().into())
+                .collect();
 
             callback(&strong_promise, &ret_val, &errors);
         })
@@ -518,4 +525,9 @@ pub extern "C" fn localization_format_messages(
 #[no_mangle]
 pub extern "C" fn localization_upgrade(loc: &LocalizationRc) {
     loc.upgrade();
+}
+
+#[no_mangle]
+pub extern "C" fn localization_on_change(loc: &LocalizationRc) {
+    loc.on_change();
 }
