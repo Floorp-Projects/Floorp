@@ -259,13 +259,11 @@ function getBundleForLocales(newLocales) {
       Services.locale.lastFallbackLocale,
     ])
   );
-  function generateBundles(resourceIds) {
-    return L10nRegistry.getInstance().generateBundles(locales, resourceIds);
-  }
   return new Localization(
     ["browser/preferences/preferences.ftl", "branding/brand.ftl"],
     false,
-    { generateBundles }
+    undefined,
+    locales
   );
 }
 
