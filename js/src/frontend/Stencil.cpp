@@ -647,6 +647,134 @@ void CompilationInput::trace(JSTracer* trc) {
   TraceNullableRoot(trc, &enclosingScope, "compilation-input-enclosing-scope");
 }
 
+bool CompilationSyntaxParseCache::init(JSContext* cx, LifoAlloc& alloc,
+                                       ParserAtomsTable& parseAtoms,
+                                       CompilationAtomCache& atomCache,
+                                       BaseScript* lazy) {
+  if (!copyScriptInfo(cx, alloc, parseAtoms, atomCache, lazy)) {
+    return false;
+  }
+  if (!copyClosedOverBindings(cx, alloc, parseAtoms, atomCache, lazy)) {
+    return false;
+  }
+#ifdef DEBUG
+  isInitialized = true;
+#endif
+  return true;
+}
+
+bool CompilationSyntaxParseCache::copyScriptInfo(
+    JSContext* cx, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
+    CompilationAtomCache& atomCache, BaseScript* lazy) {
+  using ScriptDataSpan = mozilla::Span<ScriptStencil>;
+  using ScriptExtraSpan = mozilla::Span<ScriptStencilExtra>;
+  cachedScriptData_ = ScriptDataSpan(nullptr);
+  cachedScriptExtra_ = ScriptExtraSpan(nullptr);
+
+  auto gcthings = lazy->gcthings();
+  size_t length = gcthings.Length();
+  if (length == 0) {
+    return true;
+  }
+
+  // Reduce the length to the first element which is not a function.
+  for (size_t i = 0; i < length; i++) {
+    gc::Cell* cell = gcthings[i].asCell();
+    if (!cell || !cell->is<JSObject>()) {
+      length = i;
+      break;
+    }
+    MOZ_ASSERT(cell->as<JSObject>()->is<JSFunction>());
+  }
+
+  ScriptStencil* scriptData =
+      alloc.newArrayUninitialized<ScriptStencil>(length);
+  ScriptStencilExtra* scriptExtra =
+      alloc.newArrayUninitialized<ScriptStencilExtra>(length);
+  if (!scriptData || !scriptExtra) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  for (size_t i = 0; i < length; i++) {
+    gc::Cell* cell = gcthings[i].asCell();
+    RootedFunction fun(cx, &cell->as<JSObject>()->as<JSFunction>());
+    new (mozilla::KnownNotNull, &scriptData[i]) ScriptStencil();
+    ScriptStencil& data = scriptData[i];
+    new (mozilla::KnownNotNull, &scriptExtra[i]) ScriptStencilExtra();
+    ScriptStencilExtra& extra = scriptExtra[i];
+
+    if (fun->displayAtom()) {
+      TaggedParserAtomIndex displayAtom =
+          parseAtoms.internJSAtom(cx, atomCache, fun->displayAtom());
+      if (!displayAtom) {
+        return false;
+      }
+      data.functionAtom = displayAtom;
+    }
+    data.functionFlags = fun->flags();
+
+    BaseScript* lazy = fun->baseScript();
+    extra.immutableFlags = lazy->immutableFlags();
+    extra.extent = lazy->extent();
+
+    // Info derived from parent compilation should not be set yet for our inner
+    // lazy functions. Instead that info will be updated when we finish our
+    // compilation.
+    MOZ_ASSERT(lazy->hasEnclosingScript());
+  }
+
+  cachedScriptData_ = ScriptDataSpan(scriptData, length);
+  cachedScriptExtra_ = ScriptExtraSpan(scriptExtra, length);
+  return true;
+}
+
+bool CompilationSyntaxParseCache::copyClosedOverBindings(
+    JSContext* cx, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
+    CompilationAtomCache& atomCache, BaseScript* lazy) {
+  using GCThingsSpan = mozilla::Span<TaggedScriptThingIndex>;
+  cachedGCThings_ = GCThingsSpan(nullptr);
+  auto gcthings = lazy->gcthings();
+  size_t length = gcthings.Length();
+  if (length == 0) {
+    return true;
+  }
+
+  TaggedScriptThingIndex* gcThingsData =
+      alloc.newArrayUninitialized<TaggedScriptThingIndex>(length);
+  if (!gcThingsData) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  size_t scriptIndex = 0;
+  for (size_t i = 0; i < length; i++) {
+    gc::Cell* cell = gcthings[i].asCell();
+    if (!cell) {
+      gcThingsData[i] = TaggedScriptThingIndex();
+      continue;
+    }
+    if (cell->is<JSObject>()) {
+      MOZ_ASSERT(cell->as<JSObject>()->is<JSFunction>());
+      MOZ_ASSERT(scriptIndex < cachedScriptData_.Length());
+      gcThingsData[i] = TaggedScriptThingIndex(ScriptIndex(scriptIndex++));
+      continue;
+    }
+
+    MOZ_ASSERT(cell->as<JSString>()->isAtom());
+    auto name = static_cast<JSAtom*>(cell);
+    auto parserAtom = parseAtoms.internJSAtom(cx, atomCache, name);
+    if (!parserAtom) {
+      return false;
+    }
+
+    gcThingsData[i] = TaggedScriptThingIndex(parserAtom);
+  }
+
+  cachedGCThings_ = GCThingsSpan(gcThingsData, length);
+  return true;
+}
+
 void CompilationAtomCache::trace(JSTracer* trc) { atoms_.trace(trc); }
 
 void CompilationGCOutput::trace(JSTracer* trc) {
