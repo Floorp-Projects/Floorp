@@ -4,6 +4,7 @@
 "use strict";
 
 add_task(async () => {
+  Services.prefs.setBoolPref("dom.security.https_first", false);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   var expiry = (Date.now() + 1000) * 1000;
 
@@ -29,4 +30,5 @@ add_task(async () => {
     "http://a/"
   );
   Assert.equal(cookies, "foo=bar");
+  Services.prefs.clearUserPref("dom.security.https_first");
 });

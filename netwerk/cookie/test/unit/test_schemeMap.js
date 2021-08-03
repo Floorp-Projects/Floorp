@@ -96,6 +96,7 @@ add_task(async _ => {
 [true, false].forEach(schemefulComparison => {
   add_task(async () => {
     do_get_profile();
+    Services.prefs.setBoolPref("dom.security.https_first", false);
 
     maybeInitializeCookieXPCShellUtils();
 
@@ -157,11 +158,13 @@ add_task(async _ => {
     }
 
     Services.cookies.removeAll();
+    Services.prefs.clearUserPref("dom.security.https_first");
   });
 });
 
 add_task(async _ => {
   do_get_profile();
+  Services.prefs.setBoolPref("dom.security.https_first", false);
 
   // Allow all cookies if the pref service is available in this process.
   if (!inChildProcess()) {
@@ -209,6 +212,7 @@ add_task(async _ => {
   });
 
   Services.cookies.removeAll();
+  Services.prefs.clearUserPref("dom.security.https_first");
 });
 
 [
@@ -223,6 +227,7 @@ add_task(async _ => {
 ].forEach(test => {
   add_task(async () => {
     do_get_profile();
+    Services.prefs.setBoolPref("dom.security.https_first", false);
 
     maybeInitializeCookieXPCShellUtils();
 
@@ -283,5 +288,6 @@ add_task(async _ => {
 
     await consolePromise;
     Services.cookies.removeAll();
+    Services.prefs.clearUserPref("dom.security.https_first");
   });
 });

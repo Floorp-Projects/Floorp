@@ -16,6 +16,7 @@ add_task(async () => {
     "network.cookieJarSettings.unblocked_for_testing",
     true
   );
+  Services.prefs.setBoolPref("dom.security.https_first", false);
 
   CookieXPCShellUtils.createServer({
     hosts: ["foo.com", "bar.com", "third.com"],
@@ -68,4 +69,5 @@ add_task(async () => {
   do_load_profile();
   Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 0);
   Assert.equal(Services.cookies.countCookiesFromHost(uri2.host), 0);
+  Services.prefs.clearUserPref("dom.security.https_first");
 });
