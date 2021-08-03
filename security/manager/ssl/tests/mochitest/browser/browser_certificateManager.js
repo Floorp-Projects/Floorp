@@ -13,13 +13,20 @@ async function checkServerCertificates(win, expectedValues = []) {
       expectedValues.length
     );
   }, `Expected to have ${expectedValues.length} but got ${win.document.getElementById("serverList").itemChildren.length}`);
-  // The strings we will get from the DOM are localized with Fluent,
-  // so they will only be available after the next refresh driver tick.
   await new Promise(win.requestAnimationFrame);
 
   let labels = win.document
     .getElementById("serverList")
     .querySelectorAll("label");
+
+  // The strings we will get from the DOM are localized with Fluent.
+  // This will wait until the translation is applied.
+  if (expectedValues.length > 0) {
+    await BrowserTestUtils.waitForCondition(
+      () => labels[1].value || labels[1].textContent.length > 0,
+      "At least one label is populated"
+    );
+  }
 
   expectedValues.forEach((item, i) => {
     let hostPort = labels[i * 3].value;
