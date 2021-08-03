@@ -326,6 +326,14 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void ClearPermanentKey() { mPermanentKey.setNull(); }
   void MaybeSetPermanentKey(Element* aEmbedder);
 
+  // When request for page awake, it would increase a count that is used to
+  // prevent whole browsing context tree from being suspended. The request can
+  // be called multiple times. When calling the revoke, it would decrease the
+  // count and once the count reaches to zero, the browsing context tree could
+  // be suspended when the tree is inactive.
+  void AddPageAwakeRequest();
+  void RemovePageAwakeRequest();
+
   void CloneDocumentTreeInto(CanonicalBrowsingContext* aSource,
                              const nsACString& aRemoteType,
                              embedding::PrintData&& aPrintData);
