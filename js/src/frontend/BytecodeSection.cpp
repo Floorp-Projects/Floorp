@@ -109,6 +109,10 @@ bool js::frontend::EmitScriptThingsVector(
         output[i] = JS::GCCellPtr(scope);
         break;
       }
+      case TaggedScriptThingIndex::Kind::OpaqueThing: {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Never used in stencil");
+        break;
+      }
     }
   }
 
