@@ -47,16 +47,6 @@ class ASRouterTabs {
     );
   }
 
-  messagePreloaded(message, data) {
-    return Promise.all(
-      [...this.actors]
-        .filter(a =>
-          a.browsingContext.embedderElement.getAttribute("preloadedState")
-        )
-        .map(a => a.sendAsyncMessage(message, data))
-    );
-  }
-
   registerActor(actor) {
     this.actors.add(actor);
   }

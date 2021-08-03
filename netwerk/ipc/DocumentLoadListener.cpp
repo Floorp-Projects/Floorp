@@ -1566,30 +1566,6 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   nsAutoCString preferredRemoteType(currentRemoteType);
   RemotenessChangeOptions options;
 
-  // If we're in a preloaded browser, force browsing context replacement to
-  // ensure the current process is re-selected.
-  if (Element* browserElement = browsingContext->Top()->GetEmbedderElement()) {
-    nsAutoString isPreloadBrowserStr;
-    if (browserElement->GetAttr(kNameSpaceID_None, nsGkAtoms::preloadedState,
-                                isPreloadBrowserStr) &&
-        isPreloadBrowserStr.EqualsLiteral("consumed")) {
-      nsCOMPtr<nsIURI> originalURI;
-      if (NS_SUCCEEDED(mChannel->GetOriginalURI(getter_AddRefs(originalURI))) &&
-          !originalURI->GetSpecOrDefault().EqualsLiteral("about:newtab")) {
-        LOG(("Process Switch: leaving preloaded browser"));
-        options.mReplaceBrowsingContext = true;
-        browserElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::preloadedState,
-                                  true);
-      }
-    }
-  } else {
-    // Note: ContextCanProcessSwitch should return false if the embedder
-    // element is null, but it also runs JS, which has the potential to allow
-    // code to run which may null the embedder element.
-    LOG(("Process Switch Abort: top embedder element disappeared"));
-    return false;
-  }
-
   // Update the preferred final process for our load based on the
   // Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy headers.
   {

@@ -177,7 +177,7 @@ let NewTabPagePreloading = {
         ? "private"
         : "normal";
       this.browserCounts[countKey]--;
-      browser.setAttribute("preloadedState", "consumed");
+      browser.removeAttribute("preloadedState");
       browser.setAttribute("autocompletepopup", "PopupAutoComplete");
     }
 
