@@ -32,7 +32,7 @@ add_task(async function test() {
     .getProtocolHandler("file")
     .QueryInterface(Ci.nsIFileProtocolHandler);
 
-  let fileURL = fileHandler.getURLSpecFromFile(file);
+  let fileURL = fileHandler.getURLSpecFromActualFile(file);
 
   info("Opening url: " + fileURL);
   let tab = BrowserTestUtils.addTab(gBrowser, fileURL);
