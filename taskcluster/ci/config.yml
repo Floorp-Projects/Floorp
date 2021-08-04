@@ -69,6 +69,7 @@ treeherder:
         'M-f-swr-1proc': 'Mochitests failures with software webrender enabled without e10s'
         'MSI': 'Repack installers into MSIs'
         'MSIs': 'Signing of Repacked installers of MSIs'
+        'MSIX': 'Repack into MSIX package'
         'R': 'Reftests'
         'R-fis': 'Reftests with fission enabled'
         'R-swr': 'Reftests with software webrender enabled'
