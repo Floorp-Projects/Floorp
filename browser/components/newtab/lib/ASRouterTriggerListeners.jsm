@@ -585,6 +585,44 @@ this.ASRouterTriggerListeners = new Map([
       },
     },
   ],
+
+  [
+    "captivePortalLogin",
+    {
+      id: "captivePortalLogin",
+      _initialized: false,
+      _triggerHandler: null,
+
+      init(triggerHandler) {
+        if (!this._initialized) {
+          Services.obs.addObserver(this, "captive-portal-login-success");
+          this._initialized = true;
+        }
+        this._triggerHandler = triggerHandler;
+      },
+
+      observe(aSubject, aTopic, aData) {
+        switch (aTopic) {
+          case "captive-portal-login-success":
+            const browser = Services.wm.getMostRecentBrowserWindow();
+            if (browser) {
+              this._triggerHandler(browser.gBrowser.selectedBrowser, {
+                id: this.id,
+              });
+            }
+            break;
+        }
+      },
+
+      uninit() {
+        if (this._initialized) {
+          this._triggerHandler = null;
+          this._initialized = false;
+          Services.obs.removeObserver(this, "captive-portal-login-success");
+        }
+      },
+    },
+  ],
 ]);
 
 const EXPORTED_SYMBOLS = ["ASRouterTriggerListeners"];

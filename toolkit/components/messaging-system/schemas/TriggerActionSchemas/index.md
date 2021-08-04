@@ -119,3 +119,8 @@ On the newtab/homepage it reports the `source` as `newtab`.
 let source = "newtab" | undefined;
 let willShowDefaultPrompt = boolean;
 ```
+
+### `captivePortalLogin`
+
+Happens when the user successfully goes through a captive portal authentication flow.
+
