@@ -29,6 +29,11 @@ ChromeUtils.defineModuleGetter(
   "PluralForm",
   "resource://gre/modules/PluralForm.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "NimbusFeatures",
+  "resource://nimbus/ExperimentAPI.jsm"
+);
 
 var gStrings = Services.strings.createBundle(
   "chrome://global/locale/aboutReader.properties"
@@ -971,6 +976,9 @@ AboutReader.prototype = {
         cancelable: false,
       })
     );
+
+    // Show Pocket CTA block after article has loaded to prevent it flashing in prematurely
+    this._setupPocketCTA();
   },
 
   _hideContent() {
@@ -1226,6 +1234,20 @@ AboutReader.prototype = {
   _goToReference(ref) {
     if (ref) {
       this._win.location.hash = ref;
+    }
+  },
+
+  _setupPocketCTA() {
+    let ctaVersion = NimbusFeatures.readerMode.getAllVariables()
+      ?.pocketCTAVersion;
+    let elPocketCTAWrapper = this._doc.querySelector("#pocket-cta-container");
+
+    // Show the Pocket CTA container if the pref is set
+    if (ctaVersion) {
+      elPocketCTAWrapper.hidden = false;
+
+      // TODO: Show the corresponding CTA version. This is just a placeholder visualization.
+      elPocketCTAWrapper.classList.add(`pocket-cta-container-${ctaVersion}`);
     }
   },
 };
