@@ -10,8 +10,8 @@
 #include "nsString.h"
 #include "mozilla/MozPromise.h"
 
-using SharePromise =
-    mozilla::MozPromise<bool, nsresult, /* IsExclusive */ true>;
+typedef mozilla::MozPromise<bool, nsresult, /* IsExclusive */ true>
+    SharePromise;
 
 enum TabletModeState { eTabletModeUnknown = 0, eTabletModeOff, eTabletModeOn };
 
