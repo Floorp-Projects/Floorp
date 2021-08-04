@@ -250,4 +250,16 @@ const FeatureManifest = {
       },
     },
   },
+  readerMode: {
+    description: "Firefox Reader Mode",
+    isEarlyStartup: true,
+    variables: {
+      pocketCTAVersion: {
+        type: "string",
+        fallbackPref: "reader.pocket.ctaVersion",
+        description:
+          "What version of Pocket CTA to show in Reader Mode (Empty string is no CTA)",
+      },
+    },
+  },
 };
