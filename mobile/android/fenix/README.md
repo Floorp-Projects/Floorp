@@ -1,6 +1,6 @@
 # Firefox for Android
 
-[![Task Status](https://github.taskcluster.net/v1/repository/mozilla-mobile/fenix/main/badge.svg)](https://github.taskcluster.net/v1/repository/mozilla-mobile/fenix/main/latest)
+[![Task Status](https://firefox-ci-tc.services.mozilla.com/api/github/v1/repository/mozilla-mobile/fenix/main/badge.svg)](https://firefox-ci-tc.services.mozilla.com/api/github/v1/repository/mozilla-mobile/fenix/main/latest)
 [![codecov](https://codecov.io/gh/mozilla-mobile/fenix/branch/main/graph/badge.svg)](https://codecov.io/gh/mozilla-mobile/fenix)
 
 Fenix (internal codename) is the all-new Firefox for Android browser, based on [GeckoView](https://mozilla.github.io/geckoview/) and [Mozilla Android Components](https://mozac.org/).
@@ -153,7 +153,7 @@ git push <remote> --no-verify
 
 Note: If while pushing you encounter this error "Could not initialize class org.codehaus.groovy.runtime.InvokerHelper" and are currently on Java14 then downgrading your Java version to Java13 or lower can resolve the issue
 
-Steps to downgrade Java Version on Mac with Brew: 
+Steps to downgrade Java Version on Mac with Brew:
 1. Install Homebrew (https://brew.sh/)
 2. run ```brew update```
 3. To uninstall your current java version, run ```sudo rm -fr /Library/Java/JavaVirtualMachines/<jdk-version>```
