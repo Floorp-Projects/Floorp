@@ -275,6 +275,7 @@ class TaskController {
   static bool Initialize();
 
   void SetThreadObserver(nsIThreadObserver* aObserver) {
+    MutexAutoLock lock(mGraphMutex);
     mObserver = aObserver;
   }
   void SetConditionVariable(CondVar* aExternalCondVar) {
