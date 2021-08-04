@@ -31,6 +31,7 @@
 
   --toolbar-field-background-color: Field;
   --toolbar-field-color: FieldText;
+  --toolbar-field-border-color: ThreeDShadow;
   --toolbar-field-focus-background-color: Field;
   --toolbar-field-focus-color: FieldText;
 }
@@ -41,6 +42,7 @@
      LightweightThemeConsumer.jsm. */
   --toolbar-field-color: black;
   --toolbar-field-focus-color: black;
+  --toolbar-field-border-color: transparent;
 }
 
 :is(menupopup, panel)[type=arrow] {

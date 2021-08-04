@@ -134,7 +134,7 @@ const toolkitVariableMap = [
     },
   ],
   [
-    "--lwt-toolbar-field-border-color",
+    "--toolbar-field-border-color",
     {
       lwtProperty: "toolbar_field_border",
     },
