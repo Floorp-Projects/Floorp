@@ -211,6 +211,7 @@ typedef struct _cairo_pdf_outline_entry {
 
 typedef struct _cairo_pdf_forward_link {
     cairo_pdf_resource_t res;
+    char *dest;
     int page;
     cairo_bool_t has_pos;
     cairo_point_double_t pos;
