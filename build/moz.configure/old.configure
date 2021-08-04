@@ -73,11 +73,7 @@ def prepare_configure(mozconfig, old_configure_assignments):
 @template
 def old_configure_options(*options):
     for opt in options:
-        if opt in (
-            "--enable-system-png",
-            "--with-system-libevent",
-            "--with-system-png",
-        ):
+        if "-system-" in opt and opt != "--enable-system-extension-dirs":
             cb = system_lib_option
         else:
             cb = option
