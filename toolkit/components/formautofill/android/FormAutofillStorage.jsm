@@ -64,7 +64,7 @@ class GeckoViewStorage extends JSONFile {
   }
 
   async _save() {
-    // TODO: Implement saving support in bug 1703977.
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 }
 
