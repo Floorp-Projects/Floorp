@@ -13,7 +13,7 @@
 #include "nsTArray.h"
 #include "nsWaylandDisplay.h"
 #include "nsWindow.h"
-#include "WaylandShmBuffer.h"
+#include "WaylandBuffer.h"
 #include "WindowSurface.h"
 
 namespace mozilla::widget {
@@ -44,10 +44,10 @@ class WindowSurfaceWaylandMB : public WindowSurface {
  private:
   void Commit(const MutexAutoLock& aProofOfLock,
               const LayoutDeviceIntRegion& aInvalidRegion);
-  RefPtr<WaylandShmBuffer> ObtainBufferFromPool(
+  RefPtr<WaylandBufferSHM> ObtainBufferFromPool(
       const MutexAutoLock& aProofOfLock, const LayoutDeviceIntSize& aSize);
   void ReturnBufferToPool(const MutexAutoLock& aProofOfLock,
-                          const RefPtr<WaylandShmBuffer>& aBuffer);
+                          const RefPtr<WaylandBufferSHM>& aBuffer);
   void EnforcePoolSizeLimit(const MutexAutoLock& aProofOfLock);
   void CollectPendingSurfaces(const MutexAutoLock& aProofOfLock);
   void HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
@@ -59,14 +59,14 @@ class WindowSurfaceWaylandMB : public WindowSurface {
   nsWindow* mWindow;
   LayoutDeviceIntSize mMozContainerSize;
 
-  RefPtr<WaylandShmBuffer> mInProgressBuffer;
-  RefPtr<WaylandShmBuffer> mFrontBuffer;
+  RefPtr<WaylandBufferSHM> mInProgressBuffer;
+  RefPtr<WaylandBufferSHM> mFrontBuffer;
   LayoutDeviceIntRegion mFrontBufferInvalidRegion;
 
   // buffer pool
-  nsTArray<RefPtr<WaylandShmBuffer>> mInUseBuffers;
-  nsTArray<RefPtr<WaylandShmBuffer>> mPendingBuffers;
-  nsTArray<RefPtr<WaylandShmBuffer>> mAvailableBuffers;
+  nsTArray<RefPtr<WaylandBufferSHM>> mInUseBuffers;
+  nsTArray<RefPtr<WaylandBufferSHM>> mPendingBuffers;
+  nsTArray<RefPtr<WaylandBufferSHM>> mAvailableBuffers;
 
   // delayed commits
   bool mFrameInProcess;
