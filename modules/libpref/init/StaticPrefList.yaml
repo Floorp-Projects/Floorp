@@ -3864,7 +3864,11 @@
 # WebShare API - exposes navigator.share()
 - name: dom.webshare.enabled
   type: bool
+#ifdef XP_WIN
+  value: @IS_EARLY_BETA_OR_EARLIER@
+#else
   value: false
+#endif
   mirror: always
 
 # WebShare API - allows WebShare without user interaction (for tests only).
