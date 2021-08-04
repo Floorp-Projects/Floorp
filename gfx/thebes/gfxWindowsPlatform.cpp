@@ -307,10 +307,13 @@ gfxWindowsPlatform::~gfxWindowsPlatform() {
 
   DeviceManagerDx::Shutdown();
 
-  /*
-   * Uninitialize COM
-   */
-  CoUninitialize();
+  // We don't initialize COM when win32k is locked down.
+  if (!IsWin32kLockedDown()) {
+    /*
+     * Uninitialize COM
+     */
+    CoUninitialize();
+  }
 }
 
 /* static */
