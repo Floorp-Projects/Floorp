@@ -87,7 +87,7 @@ extern const __declspec(selectany) IID& IID_IUIViewSettings =
 
 #  ifndef IUIViewSettingsInterop
 
-typedef interface IUIViewSettingsInterop IUIViewSettingsInterop;
+using IUIViewSettingsInterop = interface IUIViewSettingsInterop;
 
 MIDL_INTERFACE("3694dbf9-8f68-44be-8ff5-195c98ede8a6")
 IUIViewSettingsInterop : public IInspectable {
@@ -100,7 +100,7 @@ IUIViewSettingsInterop : public IInspectable {
 #  ifndef __IDataTransferManagerInterop_INTERFACE_DEFINED__
 #    define __IDataTransferManagerInterop_INTERFACE_DEFINED__
 
-typedef interface IDataTransferManagerInterop IDataTransferManagerInterop;
+using IDataTransferManagerInterop = interface IDataTransferManagerInterop;
 
 MIDL_INTERFACE("3A3DCD6C-3EAB-43DC-BCDE-45671CE800C8")
 IDataTransferManagerInterop : public IUnknown {
@@ -135,7 +135,7 @@ using namespace mozilla;
 
 WindowsUIUtils::WindowsUIUtils() : mInTabletMode(eTabletModeUnknown) {}
 
-WindowsUIUtils::~WindowsUIUtils() {}
+WindowsUIUtils::~WindowsUIUtils() = default;
 
 /*
  * Implement the nsISupports methods...
@@ -239,7 +239,9 @@ WindowsUIUtils::UpdateTabletModeState() {
   nsPIDOMWindowOuter* win = nsPIDOMWindowOuter::From(navWin);
   widget = widget::WidgetUtils::DOMWindowToWidget(win);
 
-  if (!widget) return NS_ERROR_FAILURE;
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
 
   HWND winPtr = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
   ComPtr<IUIViewSettingsInterop> uiViewSettingsInterop;
@@ -277,11 +279,11 @@ WindowsUIUtils::UpdateTabletModeState() {
 
 #ifndef __MINGW32__
 struct HStringDeleter {
-  typedef HSTRING pointer;
+  using pointer = HSTRING;
   void operator()(pointer aString) { WindowsDeleteString(aString); }
 };
 
-typedef UniquePtr<HSTRING, HStringDeleter> HStringUniquePtr;
+using HStringUniquePtr = UniquePtr<HSTRING, HStringDeleter>;
 
 Result<HStringUniquePtr, HRESULT> ConvertToWindowsString(
     const nsAString& aStr) {
