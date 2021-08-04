@@ -63,8 +63,7 @@ StorageAccess StorageAllowedForWindow(nsPIDOMWindowInner* aWindow,
  * the window's extant document has not been set yet.  The code in
  * StorageAllowedForWindow(), however, will not work in these cases.
  */
-StorageAccess StorageAllowedForDocument(const dom::Document* aDoc,
-                                        uint32_t* aRejectedReason = nullptr);
+StorageAccess StorageAllowedForDocument(const dom::Document* aDoc);
 
 /*
  * Checks if storage should be allowed for a new window with the given
