@@ -8,7 +8,8 @@ const { CookieXPCShellUtils } = ChromeUtils.import(
 
 CookieXPCShellUtils.init(this);
 
-let gHits = 0;
+let gCookieHits = 0;
+let gLoadingHits = 0;
 
 add_task(async function() {
   do_get_profile();
@@ -32,16 +33,19 @@ add_task(async function() {
       request.hasHeader("Cookie") &&
       request.getHeader("Cookie") == "foo=bar"
     ) {
-      gHits++;
+      gCookieHits++;
     } else {
       response.setHeader("Set-Cookie", "foo=bar");
     }
+
+    gLoadingHits++;
     var body = "<html></html>";
     response.bodyOutputStream.write(body, body.length);
   });
 
   info("Reset the hits count");
-  gHits = 0;
+  gCookieHits = 0;
+  gLoadingHits = 0;
 
   info("Let's load a page");
   let contentPage = await CookieXPCShellUtils.loadContentPage(
@@ -49,13 +53,26 @@ add_task(async function() {
   );
   await contentPage.close();
 
-  Assert.equal(gHits, 0, "The number of hits match");
+  Assert.equal(gCookieHits, 0, "The number of cookie hits match");
+  Assert.equal(gLoadingHits, 1, "The number of loading hits match");
 
-  info("Let's load the source of the page");
+  info("Let's load the source of the page again to see if it loads from cache");
+  contentPage = await CookieXPCShellUtils.loadContentPage(
+    "view-source:http://example.org/test?1"
+  );
+  await contentPage.close();
+
+  Assert.equal(gCookieHits, 0, "The number of cookie hits match");
+  Assert.equal(gLoadingHits, 1, "The number of loading hits match");
+
+  info(
+    "Let's load the source of the page without hitting the cache to see if the cookie is sent properly"
+  );
   contentPage = await CookieXPCShellUtils.loadContentPage(
     "view-source:http://example.org/test?2"
   );
   await contentPage.close();
 
-  Assert.equal(gHits, 1, "The number of hits match");
+  Assert.equal(gCookieHits, 1, "The number of cookie hits match");
+  Assert.equal(gLoadingHits, 2, "The number of loading hits match");
 });
