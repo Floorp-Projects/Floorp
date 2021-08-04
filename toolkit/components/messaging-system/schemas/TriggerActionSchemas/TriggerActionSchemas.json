@@ -185,6 +185,18 @@
           "additionalProperties": false,
           "required": ["id"],
           "description": "Happens when starting the browser or navigating to about:home/newtab"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": ["captivePortalLogin"]
+            }
+          },
+          "additionalProperties": false,
+          "required": ["id"],
+          "description": "Happens when the user successfully goes through a captive portal authentication flow."
         }
       ]
     }
