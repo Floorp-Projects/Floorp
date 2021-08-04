@@ -8,19 +8,23 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.LocalContentAlpha
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -28,12 +32,13 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 @Composable
 internal fun Suggestion(
     suggestion: AwesomeBar.Suggestion,
-    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit
+    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
+    onAutoComplete: (AwesomeBar.Suggestion) -> Unit
 ) {
     Row(
         modifier = Modifier
             .clickable { onSuggestionClicked(suggestion) }
-            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp)
     ) {
         val icon = suggestion.icon
         if (icon != null) {
@@ -45,7 +50,14 @@ internal fun Suggestion(
         SuggestionTitleAndDescription(
             title = suggestion.title,
             description = suggestion.description,
+            modifier = Modifier.weight(1f)
         )
+        if (suggestion.editSuggestion != null) {
+            AutocompleteButton(
+                onAutoComplete = { onAutoComplete(suggestion) },
+                modifier = Modifier.align(Alignment.CenterVertically)
+            )
+        }
     }
 }
 
@@ -53,14 +65,17 @@ internal fun Suggestion(
 private fun SuggestionTitleAndDescription(
     title: String?,
     description: String?,
+    modifier: Modifier = Modifier
 ) {
-    Column {
+    Column(
+        modifier = modifier
+    ) {
         Text(
             text = title ?: "",
             fontSize = 15.sp,
             maxLines = 1,
             modifier = Modifier
-                .fillMaxWidth()
+                .width(IntrinsicSize.Max)
                 .padding(start = 8.dp, end = 8.dp)
         )
         if (description?.isNotEmpty() == true) {
@@ -70,7 +85,7 @@ private fun SuggestionTitleAndDescription(
                     fontSize = 12.sp,
                     maxLines = 1,
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .width(IntrinsicSize.Max)
                         .padding(start = 8.dp, end = 8.dp)
                 )
             }
@@ -89,5 +104,21 @@ private fun SuggestionIcon(
         modifier = modifier
             .width(24.dp)
             .height(24.dp)
+    )
+}
+
+@Composable
+private fun AutocompleteButton(
+    onAutoComplete: () -> Unit,
+    modifier: Modifier
+) {
+    Image(
+        painterResource(R.drawable.mozac_ic_edit_suggestion),
+        colorFilter = ColorFilter.tint(MaterialTheme.colors.onSurface),
+        contentDescription = stringResource(R.string.mozac_browser_awesomebar_edit_suggestion),
+        modifier = modifier
+            .width(24.dp)
+            .height(24.dp)
+            .clickable { onAutoComplete() }
     )
 }

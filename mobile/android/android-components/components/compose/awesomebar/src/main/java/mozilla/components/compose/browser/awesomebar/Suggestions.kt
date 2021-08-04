@@ -12,11 +12,12 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 @Composable
 internal fun Suggestions(
     suggestions: List<AwesomeBar.Suggestion>,
-    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit
+    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
+    onAutoComplete: (AwesomeBar.Suggestion) -> Unit
 ) {
     LazyColumn {
         items(suggestions) { suggestion ->
-            Suggestion(suggestion, onSuggestionClicked)
+            Suggestion(suggestion, onSuggestionClicked, onAutoComplete)
         }
     }
 }

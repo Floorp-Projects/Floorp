@@ -99,6 +99,9 @@ fun BrowserScreen(navController: NavController) {
                         onSuggestionClicked = { suggestion ->
                             store.dispatch(BrowserScreenAction.ToggleEditMode(false))
                             suggestion.onSuggestionClicked?.invoke()
+                        },
+                        onAutoComplete = { suggestion ->
+                            store.dispatch(BrowserScreenAction.UpdateEditText(suggestion.editSuggestion!!))
                         }
                     )
                 }
@@ -166,7 +169,8 @@ fun TabsTray(
 @Composable
 private fun Suggestions(
     url: String,
-    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit
+    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
+    onAutoComplete: (AwesomeBar.Suggestion) -> Unit
 ) {
     val context = LocalContext.current
     val components = components()
@@ -210,6 +214,7 @@ private fun Suggestions(
             searchSuggestionProvider,
             clipboardSuggestionProvider
         ),
-        onSuggestionClicked = { suggestion -> onSuggestionClicked(suggestion) }
+        onSuggestionClicked = { suggestion -> onSuggestionClicked(suggestion) },
+        onAutoComplete = { suggestion -> onAutoComplete(suggestion) }
     )
 }

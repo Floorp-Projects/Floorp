@@ -21,7 +21,8 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 fun AwesomeBar(
     text: String,
     providers: List<AwesomeBar.SuggestionProvider>,
-    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit
+    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
+    onAutoComplete: (AwesomeBar.Suggestion) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -34,6 +35,10 @@ fun AwesomeBar(
             fetcher.fetch(text)
         }
 
-        Suggestions(fetcher.state.value, onSuggestionClicked)
+        Suggestions(
+            fetcher.state.value,
+            onSuggestionClicked,
+            onAutoComplete
+        )
     }
 }
