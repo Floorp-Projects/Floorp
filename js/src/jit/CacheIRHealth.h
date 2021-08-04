@@ -71,6 +71,9 @@ class CacheIRHealth {
   bool spewICEntryHealth(AutoStructuredSpewer& spew, HandleScript script,
                          ICEntry* entry, ICFallbackStub* fallback,
                          jsbytecode* pc, JSOp op, Happiness* entryHappiness);
+  // Spews first and last property name for each shape checked by
+  // GuardShape in the stub.
+  void spewShapeInformation(AutoStructuredSpewer& spew, ICStub* stub);
 
  public:
   // Spews the final hit count for scripts where we care about its final hit
