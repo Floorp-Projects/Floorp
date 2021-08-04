@@ -1658,6 +1658,14 @@ parent:
         PositionState aState);
 
     /**
+     * This method will make canonical browsing context to update the count of
+     * callers which want to keep the page from being suspended even if the page
+     * is inactive.
+     */
+    async AddOrRemovePageAwakeRequest(MaybeDiscardedBrowsingContext aContext,
+                                      bool aShouldAddCount);
+
+    /**
      * Due to sandboxing, a child process's UntrustedModulesProcessor cannot
      * obtain enough information about a DLL file to determine its
      * trustworthiness. This API asks the chrome process to perform that

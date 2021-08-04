@@ -129,6 +129,11 @@
       getNode("lateLabelChild").textContent = "l2";
       await nameChanged;
 
+      nameChanged = PromEvents.waitForEvent(EVENT_NAME_CHANGE, "listitem");
+      info("Changing text of listitem child");
+      getNode("listitem").textContent = "world";
+      await nameChanged;
+
       SimpleTest.finish();
     }
 
@@ -160,6 +165,8 @@
 
   <div id="lateLabelledBy"></div>
   <div id="lateLabel"><p id="lateLabelChild">l1</p></div>
+
+  <ul><li id="listitem">hello</li></ul>
 
   <div id="eventdump"></div>
 </body>

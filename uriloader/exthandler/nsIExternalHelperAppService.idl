@@ -134,8 +134,10 @@ interface nsIHelperAppLauncher : nsICancelable
    * Tell the launcher that we will want to open the file.
    * NOTE: This will release the reference to the nsIHelperAppLauncherDialog.
    * @param aHandleInternally TRUE if we should handle opening this internally.
+   * @param aNewFileLocation a preferred location choosen through the File Picker.
+   * Null if going through the fast save without File Picker.
    */
-  void launchWithApplication(in boolean aHandleInternally);
+  void launchWithApplication(in boolean aHandleInternally, in nsIFile aFile);
 
   /**
    * Callback invoked by nsIHelperAppLauncherDialog::promptForSaveToFileAsync

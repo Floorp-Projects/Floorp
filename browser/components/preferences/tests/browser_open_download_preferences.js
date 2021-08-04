@@ -1,3 +1,8 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
 const { HandlerServiceTestUtils } = ChromeUtils.import(
   "resource://testing-common/HandlerServiceTestUtils.jsm"
 );
@@ -272,6 +277,65 @@ add_task(async function useSystemDefaultPreferenceWorks() {
   DownloadIntegration.launchFile = oldLaunchFile;
 
   await removeTheFile(download);
+
+  BrowserTestUtils.removeTab(loadingTab);
+
+  gBrowser.removeCurrentTab();
+});
+
+add_task(async function useSystemDefaultAndAskForDestinationWorks() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.useDownloadDir", false],
+    ],
+  });
+
+  let pdfCategory = await selectPdfCategoryItem();
+  let list = pdfCategory.querySelector(".actionsMenu");
+
+  let useSystemDefaultItem = list.querySelector(
+    `menuitem[action='${Ci.nsIHandlerInfo.useSystemDefault}']`
+  );
+
+  // Whether there's a "use default" item depends on the OS, there might not be a system default viewer.
+  if (!useSystemDefaultItem) {
+    info(
+      "No 'Use default' item, so no testing for setting 'use system default' preference"
+    );
+    gBrowser.removeCurrentTab();
+    return;
+  }
+
+  await selectItemInPopup(useSystemDefaultItem, list);
+  Assert.equal(
+    list.selectedItem,
+    useSystemDefaultItem,
+    "Should have selected 'use system default' for pdf"
+  );
+
+  let MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window);
+  let filePickerShown = new Promise(resolve => {
+    MockFilePicker.showCallback = function(fp) {
+      ok(true, "filepicker should have been shown");
+      setTimeout(resolve, 0);
+      return Ci.nsIFilePicker.returnCancel;
+    };
+  });
+
+  let publicList = await Downloads.getList(Downloads.PUBLIC);
+  registerCleanupFunction(async () => {
+    await publicList.removeFinished();
+    MockFilePicker.cleanup();
+  });
+
+  let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    TEST_PATH + "empty_pdf_file.pdf"
+  );
+
+  await filePickerShown;
 
   BrowserTestUtils.removeTab(loadingTab);
 
