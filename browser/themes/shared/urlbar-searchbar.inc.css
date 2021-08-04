@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-%define fieldHoverBorderColor hsla(240,5%,5%,.35)
 %define urlbarMarginInline 5px
 %define urlbarSearchButtonWidth calc(16px + 2 * var(--urlbar-icon-padding))
 
@@ -94,16 +93,6 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23),
               0 0 0 1px var(--toolbar-field-focus-border-color) inset;
   border-color: var(--toolbar-field-focus-border-color);
-}
-
-#urlbar:not([focused="true"], [open]):-moz-lwtheme > #urlbar-background,
-#searchbar:not(:focus-within):-moz-lwtheme {
-  border-color: var(--lwt-toolbar-field-border-color, var(--toolbar-field-border-color));
-}
-
-#urlbar:not([focused="true"], [open]):-moz-lwtheme:hover > #urlbar-background,
-#searchbar:not(:focus-within):-moz-lwtheme:hover {
-  border-color: var(--lwt-toolbar-field-border-color, @fieldHoverBorderColor@);
 }
 
 #urlbar:is([focused="true"], [open]),
