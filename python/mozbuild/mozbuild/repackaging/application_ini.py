@@ -20,9 +20,11 @@ def get_application_ini_value(
 
     Raises an `Exception` if no string is found."""
 
-    return get_application_ini_values(
-        finder_or_application_directory,
-        dict(section=section, value=value, fallback=fallback),
+    return next(
+        get_application_ini_values(
+            finder_or_application_directory,
+            dict(section=section, value=value, fallback=fallback),
+        )
     )
 
 
