@@ -493,7 +493,7 @@ class FormAutofillParent extends JSWindowActorParent {
 
         showDoorhanger = async () => {
           const description = FormAutofillUtils.getAddressLabel(address.record);
-          const state = await FormAutofillPrompter.show(
+          const state = await FormAutofillPrompter.promptToSaveAddress(
             browser,
             "updateAddress",
             description
@@ -567,7 +567,7 @@ class FormAutofillParent extends JSWindowActorParent {
         );
         showDoorhanger = async () => {
           const description = FormAutofillUtils.getAddressLabel(address.record);
-          const state = await FormAutofillPrompter.show(
+          const state = await FormAutofillPrompter.promptToSaveAddress(
             browser,
             "firstTimeUse",
             description

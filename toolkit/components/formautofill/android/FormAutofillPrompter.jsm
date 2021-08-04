@@ -39,6 +39,10 @@ let FormAutofillPrompter = {
     };
   },
 
+  async promptToSaveAddress(browser, type, description) {
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
+  },
+
   async promptToSaveCreditCard(browser, creditCard, storage) {
     const prompt = new GeckoViewPrompter(browser.ownerGlobal);
 

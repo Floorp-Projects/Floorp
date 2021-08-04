@@ -366,6 +366,10 @@ let FormAutofillPrompter = {
     }
   },
 
+  async promptToSaveAddress(browser, type, description) {
+    return this._showCCorAddressCaptureDoorhanger(browser, type, description);
+  },
+
   async promptToSaveCreditCard(browser, creditCard, storage) {
     let number =
       creditCard.record["cc-number"] ||
@@ -383,7 +387,7 @@ let FormAutofillPrompter = {
       creditCard.flowId
     );
 
-    const state = await FormAutofillPrompter.show(
+    const state = await FormAutofillPrompter._showCCorAddressCaptureDoorhanger(
       browser,
       creditCard.guid ? "updateCreditCard" : "addCreditCard",
       description
@@ -470,7 +474,7 @@ let FormAutofillPrompter = {
    * @returns {Promise}
               Resolved with action type when action callback is triggered.
    */
-  async show(browser, type, description) {
+  async _showCCorAddressCaptureDoorhanger(browser, type, description) {
     log.debug("show doorhanger with type:", type);
     return new Promise(resolve => {
       let {
