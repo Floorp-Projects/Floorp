@@ -13,6 +13,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/PublicSSL.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/Services.h"
@@ -668,16 +669,38 @@ int32_t nsSocketTransportService::Poll(TimeDuration* pollDuration,
   SOCKET_LOG(("    timeout = %i milliseconds\n",
               PR_IntervalToMilliseconds(pollTimeout)));
 
-  int32_t rv = [&]() {
+  int32_t rv;
+  {
+#ifdef MOZ_GECKO_PROFILER
+    TimeStamp startTime = TimeStamp::Now();
     if (pollTimeout != PR_INTERVAL_NO_WAIT) {
-      // There will be an actual non-zero wait, let the profiler record
-      // idle time and mark thread as sleeping around the polling call.
-      AUTO_PROFILER_LABEL("nsSocketTransportService::Poll", IDLE);
-      AUTO_PROFILER_THREAD_SLEEP;
-      return PR_Poll(pollList, pollCount, pollTimeout);
+      // There will be an actual non-zero wait, let the profiler know about it
+      // by marking thread as sleeping around the polling call.
+      profiler_thread_sleep();
     }
-    return PR_Poll(pollList, pollCount, pollTimeout);
-  }();
+#endif
+
+    rv = PR_Poll(pollList, pollCount, pollTimeout);
+
+#ifdef MOZ_GECKO_PROFILER
+    if (pollTimeout != PR_INTERVAL_NO_WAIT) {
+      profiler_thread_wake();
+    }
+    if (profiler_can_accept_markers()) {
+      PROFILER_MARKER_TEXT(
+          "SocketTransportService::Poll", NETWORK,
+          MarkerTiming::IntervalUntilNowFrom(startTime),
+          pollTimeout == PR_INTERVAL_NO_TIMEOUT
+              ? nsPrintfCString("Poll count: %u, Poll timeout: NO_TIMEOUT",
+                                pollCount)
+          : pollTimeout == PR_INTERVAL_NO_WAIT
+              ? nsPrintfCString("Poll count: %u, Poll timeout: NO_WAIT",
+                                pollCount)
+              : nsPrintfCString("Poll count: %u, Poll timeout: %ums", pollCount,
+                                PR_IntervalToMilliseconds(pollTimeout)));
+    }
+#endif
+  }
 
   if (Telemetry::CanRecordPrereleaseData() && !pollStart.IsNull()) {
     *pollDuration = TimeStamp::NowLoRes() - pollStart;
