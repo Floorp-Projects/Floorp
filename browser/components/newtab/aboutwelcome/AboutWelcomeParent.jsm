@@ -183,6 +183,16 @@ class AboutWelcomeParent extends JSWindowActorParent {
     this.AboutWelcomeObserver = new AboutWelcomeObserver(this);
   }
 
+  // Static methods that calls into ShellService to check
+  // if Firefox is pinned or already default
+  static doesAppNeedPin() {
+    return ShellService.doesAppNeedPin();
+  }
+
+  static isDefaultBrowser() {
+    return ShellService.isDefaultBrowser();
+  }
+
   didDestroy() {
     if (this.AboutWelcomeObserver) {
       this.AboutWelcomeObserver.stop();
@@ -255,12 +265,12 @@ class AboutWelcomeParent extends JSWindowActorParent {
         }
         return this.RegionHomeObserver.promiseRegionHome();
       case "AWPage:DOES_APP_NEED_PIN":
-        return ShellService.doesAppNeedPin();
+        return AboutWelcomeParent.doesAppNeedPin();
       case "AWPage:NEED_DEFAULT":
         // Only need to set default if we're supposed to check and not default.
         return (
           Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser") &&
-          !ShellService.isDefaultBrowser()
+          !AboutWelcomeParent.isDefaultBrowser()
         );
       case "AWPage:WAIT_FOR_MIGRATION_CLOSE":
         return new Promise(resolve =>

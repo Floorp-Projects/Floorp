@@ -34,7 +34,10 @@ export const MultiStageAboutWelcome = props => {
 
   useEffect(() => {
     // Switch to the screen tracked in state (null for initial state)
-    const handler = ({ state }) => setScreenIndex(Number(state));
+    // or last screen index if a user navigates by pressing back
+    // button from about:home
+    const handler = ({ state }) =>
+      setScreenIndex(Math.min(state, props.screens.length - 1));
 
     // Handle page load, e.g., going back to about:welcome from about:home
     handler(window.history);
