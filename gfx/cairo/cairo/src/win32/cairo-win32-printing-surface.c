@@ -534,7 +534,8 @@ _cairo_win32_printing_surface_paint_solid_pattern (cairo_win32_printing_surface_
 
 static cairo_status_t
 _cairo_win32_printing_surface_paint_recording_pattern (cairo_win32_printing_surface_t   *surface,
-						       cairo_surface_pattern_t *pattern)
+						       cairo_surface_pattern_t *pattern,
+						       cairo_surface_t *source)
 {
     cairo_content_t old_content;
     cairo_matrix_t old_ctm;
@@ -546,9 +547,8 @@ _cairo_win32_printing_surface_paint_recording_pattern (cairo_win32_printing_surf
     XFORM xform;
     int x_tile, y_tile, left, right, top, bottom;
     RECT clip;
-    cairo_recording_surface_t *recording_surface = (cairo_recording_surface_t *) pattern->surface;
+    cairo_recording_surface_t *recording_surface = (cairo_recording_surface_t *) source;
     cairo_box_t bbox;
-    cairo_surface_t *free_me = NULL;
     cairo_bool_t is_subsurface;
 
     extend = cairo_pattern_get_extend (&pattern->base);
@@ -564,11 +564,6 @@ _cairo_win32_printing_surface_paint_recording_pattern (cairo_win32_printing_surf
     surface->ctm = p2d;
     SaveDC (surface->win32.dc);
     _cairo_matrix_to_win32_xform (&p2d, &xform);
-
-    if (_cairo_surface_is_snapshot (&recording_surface->base)) {
-	free_me = _cairo_surface_snapshot_get_target (&recording_surface->base);
-	recording_surface = (cairo_recording_surface_t *) free_me;
-    }
 
     if (recording_surface->base.backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) recording_surface;
@@ -679,7 +674,6 @@ _cairo_win32_printing_surface_paint_recording_pattern (cairo_win32_printing_surf
     RestoreDC (surface->win32.dc, -1);
 
   err:
-    cairo_surface_destroy (free_me);
     return status;
 }
 
@@ -1118,11 +1112,18 @@ _cairo_win32_printing_surface_paint_pattern (cairo_win32_printing_surface_t *sur
 
     case CAIRO_PATTERN_TYPE_SURFACE: {
 	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
+	cairo_surface_t *source = surface_pattern->surface;
+	cairo_surface_t *to_destroy = NULL;
 
-	if ( _cairo_surface_is_recording (surface_pattern->surface))
-	    status = _cairo_win32_printing_surface_paint_recording_pattern (surface, surface_pattern);
+	if (_cairo_surface_is_snapshot (source))
+	    to_destroy = source = _cairo_surface_snapshot_get_target (source);
+
+	if ( _cairo_surface_is_recording (source))
+	    status = _cairo_win32_printing_surface_paint_recording_pattern (surface, surface_pattern, source);
 	else
 	    status = _cairo_win32_printing_surface_paint_image_pattern (surface, pattern, extents);
+
+	cairo_surface_destroy (to_destroy);
 
 	if (status)
 	    return status;
