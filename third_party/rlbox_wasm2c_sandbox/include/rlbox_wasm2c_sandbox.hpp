@@ -397,7 +397,7 @@ protected:
     detail::dynamic_check(sandbox == nullptr, "Sandbox already initialized");
 
     #if defined(_WIN32)
-    library = LoadLibraryA(wasm2c_module_path);
+    library = (void*) LoadLibraryA(wasm2c_module_path);
     #else
     library = dlopen(wasm2c_module_path, RTLD_LAZY);
     #endif
@@ -439,16 +439,16 @@ protected:
     detail::dynamic_check(sandbox_memory_info != nullptr, "Could not get wasm2c sandbox memory info");
 
     heap_base = reinterpret_cast<uintptr_t>(impl_get_memory_location());
-    // Check that the address space is larger than the sandbox heap i.e. 4GB
-    // sandbox heap, host has to have more than 4GB
-    static_assert(sizeof(uintptr_t) > sizeof(T_PointerType));
-    // Check that the heap is aligned to the pointer size i.e. 32-bit pointer =>
-    // aligned to 4GB. The implementations of
-    // impl_get_unsandboxed_pointer_no_ctx and impl_get_sandboxed_pointer_no_ctx
-    // below rely on this.
-    uintptr_t heap_offset_mask = std::numeric_limits<T_PointerType>::max();
-    detail::dynamic_check((heap_base & heap_offset_mask) == 0,
-                          "Sandbox heap not aligned to 4GB");
+
+    if constexpr (sizeof(uintptr_t) != sizeof(uint32_t)) {
+      // On larger platforms, check that the heap is aligned to the pointer size
+      // i.e. 32-bit pointer => aligned to 4GB. The implementations of
+      // impl_get_unsandboxed_pointer_no_ctx and impl_get_sandboxed_pointer_no_ctx
+      // below rely on this.
+      uintptr_t heap_offset_mask = std::numeric_limits<T_PointerType>::max();
+      detail::dynamic_check((heap_base & heap_offset_mask) == 0,
+                            "Sandbox heap not aligned to 4GB");
+    }
 
     // cache these for performance
     exec_env = sandbox;
@@ -509,7 +509,11 @@ protected:
       }
       return static_cast<T_PointerType>(slot_number);
     } else {
-      return static_cast<T_PointerType>(reinterpret_cast<uintptr_t>(p));
+      if constexpr (sizeof(uintptr_t) == sizeof(uint32_t)) {
+        return static_cast<T_PointerType>(reinterpret_cast<uintptr_t>(p) - heap_base);
+      } else {
+        return static_cast<T_PointerType>(reinterpret_cast<uintptr_t>(p));
+      }
     }
   }
 
@@ -520,20 +524,26 @@ protected:
     rlbox_wasm2c_sandbox* (*expensive_sandbox_finder)(
       const void* example_unsandboxed_ptr))
   {
-    if constexpr (std::is_function_v<std::remove_pointer_t<T>>) {
-      // swizzling function pointers needs access to the function pointer tables
-      // and thus cannot be done without context
+    // on 32-bit platforms we don't assume the heap is aligned
+    if constexpr (sizeof(uintptr_t) == sizeof(uint32_t)) {
       auto sandbox = expensive_sandbox_finder(example_unsandboxed_ptr);
       return sandbox->impl_get_unsandboxed_pointer<T>(p);
     } else {
-      // grab the memory base from the example_unsandboxed_ptr
-      uintptr_t heap_base_mask =
-        std::numeric_limits<uintptr_t>::max() &
-        ~(static_cast<uintptr_t>(std::numeric_limits<T_PointerType>::max()));
-      uintptr_t computed_heap_base =
-        reinterpret_cast<uintptr_t>(example_unsandboxed_ptr) & heap_base_mask;
-      uintptr_t ret = computed_heap_base | p;
-      return reinterpret_cast<void*>(ret);
+      if constexpr (std::is_function_v<std::remove_pointer_t<T>>) {
+        // swizzling function pointers needs access to the function pointer tables
+        // and thus cannot be done without context
+        auto sandbox = expensive_sandbox_finder(example_unsandboxed_ptr);
+        return sandbox->impl_get_unsandboxed_pointer<T>(p);
+      } else {
+        // grab the memory base from the example_unsandboxed_ptr
+        uintptr_t heap_base_mask =
+          std::numeric_limits<uintptr_t>::max() &
+          ~(static_cast<uintptr_t>(std::numeric_limits<T_PointerType>::max()));
+        uintptr_t computed_heap_base =
+          reinterpret_cast<uintptr_t>(example_unsandboxed_ptr) & heap_base_mask;
+        uintptr_t ret = computed_heap_base | p;
+        return reinterpret_cast<void*>(ret);
+      }
     }
   }
 
@@ -544,17 +554,23 @@ protected:
     rlbox_wasm2c_sandbox* (*expensive_sandbox_finder)(
       const void* example_unsandboxed_ptr))
   {
-    if constexpr (std::is_function_v<std::remove_pointer_t<T>>) {
-      // swizzling function pointers needs access to the function pointer tables
-      // and thus cannot be done without context
+    // on 32-bit platforms we don't assume the heap is aligned
+    if constexpr (sizeof(uintptr_t) == sizeof(uint32_t)) {
       auto sandbox = expensive_sandbox_finder(example_unsandboxed_ptr);
       return sandbox->impl_get_sandboxed_pointer<T>(p);
     } else {
-      // Just clear the memory base to leave the offset
-      RLBOX_WASM2C_UNUSED(example_unsandboxed_ptr);
-      uintptr_t ret = reinterpret_cast<uintptr_t>(p) &
-                      std::numeric_limits<T_PointerType>::max();
-      return static_cast<T_PointerType>(ret);
+      if constexpr (std::is_function_v<std::remove_pointer_t<T>>) {
+        // swizzling function pointers needs access to the function pointer tables
+        // and thus cannot be done without context
+        auto sandbox = expensive_sandbox_finder(example_unsandboxed_ptr);
+        return sandbox->impl_get_sandboxed_pointer<T>(p);
+      } else {
+        // Just clear the memory base to leave the offset
+        RLBOX_WASM2C_UNUSED(example_unsandboxed_ptr);
+        uintptr_t ret = reinterpret_cast<uintptr_t>(p) &
+                        std::numeric_limits<T_PointerType>::max();
+        return static_cast<T_PointerType>(ret);
+      }
     }
   }
 
@@ -580,7 +596,7 @@ protected:
 
   inline size_t impl_get_total_memory() { return sandbox_memory_info->size; }
 
-  inline void* impl_get_memory_location()
+  inline void* impl_get_memory_location() const
   {
     return sandbox_memory_info->data;
   }
@@ -695,8 +711,10 @@ protected:
 
   inline T_PointerType impl_malloc_in_sandbox(size_t size)
   {
-    detail::dynamic_check(size <= std::numeric_limits<uint32_t>::max(),
-                          "Attempting to malloc more than the heap size");
+    if constexpr(sizeof(size) > sizeof(uint32_t)) {
+      detail::dynamic_check(size <= std::numeric_limits<uint32_t>::max(),
+                            "Attempting to malloc more than the heap size");
+    }
     using T_Func = void*(size_t);
     using T_Converted = T_PointerType(uint32_t);
     T_PointerType ret = impl_invoke_with_func_ptr<T_Func, T_Converted>(

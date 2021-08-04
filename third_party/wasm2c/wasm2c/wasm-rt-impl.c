@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PAGE_SIZE 65536
+#define WASM_PAGE_SIZE 65536
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
@@ -99,15 +99,28 @@ void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs, uint32_t
 void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
-  uint32_t byte_length = initial_pages * PAGE_SIZE;
+  uint32_t byte_length = initial_pages * WASM_PAGE_SIZE;
 #if WASM_USING_GUARD_PAGES == 1
-  /* Reserve 8GiB. */
-  const uint64_t heap_alignment = 0x100000000ul;
+  /* Reserve 8GiB, aligned to 4GB. */
+  const size_t heap_alignment = 0x100000000ull;
+  const size_t reserve_size = 0x200000000ull;
+  const uint32_t chosen_max_pages = max_pages;
+#else
+  /* Reserve 8MB, aligned to 8MB. */
+  const size_t heap_alignment = 0x800000ul;
+  const size_t reserve_size = 0x800000ul;
+  const uint32_t allowed_max_pages = reserve_size / WASM_PAGE_SIZE;
+  uint32_t chosen_max_pages = max_pages;
+  if (allowed_max_pages < max_pages) {
+    chosen_max_pages = allowed_max_pages;
+  }
+#endif
+
   void* addr = NULL;
   const uint64_t retries = 10;
 
   for (uint64_t i = 0; i < retries; i++) {
-    addr = os_mmap_aligned(NULL, 0x200000000ul, MMAP_PROT_NONE, MMAP_MAP_NONE, heap_alignment, 0 /* alignment_offset */);
+    addr = os_mmap_aligned(NULL, reserve_size, MMAP_PROT_NONE, MMAP_MAP_NONE, heap_alignment, 0 /* alignment_offset */);
     if (addr) {
       break;
     }
@@ -126,12 +139,10 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
   // Summary: malloc of a struct, followed by a write to the constant fields is still defined behavior iff
   //   there is no prior read of the field
   *(uint8_t**) &memory->data = addr;
-#else
-  memory->data = calloc(byte_length, 1);
-#endif
+
   memory->size = byte_length;
   memory->pages = initial_pages;
-  memory->max_pages = max_pages;
+  memory->max_pages = chosen_max_pages;
 
 #if defined(WASM_CHECK_SHADOW_MEMORY)
   wasm2c_shadow_memory_create(memory);
@@ -140,10 +151,12 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 
 void wasm_rt_deallocate_memory(wasm_rt_memory_t* memory) {
 #if WASM_USING_GUARD_PAGES == 1
-  os_munmap(memory->data, 0x200000000ul);
+  const size_t reserve_size = 0x200000000ull;
 #else
-  os_munmap(memory->data, memory->size);
+  const size_t reserve_size = 0x800000ul;
 #endif
+  os_munmap(memory->data, reserve_size);
+
 #if defined(WASM_CHECK_SHADOW_MEMORY)
   wasm2c_shadow_memory_destroy(memory);
 #endif
@@ -158,25 +171,14 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   if (new_pages < old_pages || new_pages > memory->max_pages) {
     return (uint32_t)-1;
   }
-  uint32_t old_size = old_pages * PAGE_SIZE;
-  uint32_t new_size = new_pages * PAGE_SIZE;
-  uint32_t delta_size = delta * PAGE_SIZE;
+  uint32_t old_size = old_pages * WASM_PAGE_SIZE;
+  uint32_t new_size = new_pages * WASM_PAGE_SIZE;
+  uint32_t delta_size = delta * WASM_PAGE_SIZE;
 
-#if WASM_USING_GUARD_PAGES == 1
   int ret = os_mmap_commit(memory->data + old_size, delta_size, MMAP_PROT_READ | MMAP_PROT_WRITE);
   if (ret != 0) {
     return (uint32_t)-1;
   }
-#else
-  uint8_t* new_data = realloc(memory->data, new_size);
-  if (new_data == NULL) {
-    return (uint32_t)-1;
-  }
-  #if !WABT_BIG_ENDIAN
-    memset(new_data + old_size, 0, delta_size);
-  #endif
-  memory->data = new_data;
-#endif
 
 #if WABT_BIG_ENDIAN
   memmove(memory->data + new_size - old_size, memory->data, old_size);
@@ -250,4 +252,4 @@ void wasm2c_ensure_linked() {
   // We use this to ensure the dynamic library with the wasi symbols is loaded for the host application
 }
 
-#undef PAGE_SIZE
+#undef WASM_PAGE_SIZE
