@@ -753,7 +753,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Send a native event as if the user double tapped the touchpad with two
    * fingers.
-   * 
+   *
    * Widget support: macOS.
    * @param aScreenX, aScreenY screen coords of the focus point of this event.
    * @param aModifierFlags is expected to contain native modifier values.
@@ -2228,6 +2228,9 @@ interface nsIDOMWindowUtils : nsISupports {
   // will intentionally crash any non-parent process that tries to access
   // it.
   readonly attribute AString webrtcRawDeviceId;
+
+  // Used for testing to check the suspend status.
+  readonly attribute bool suspendedByBrowsingContextGroup;
 };
 
 [scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]

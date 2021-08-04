@@ -542,13 +542,13 @@ CopyableTArray<MediaControlKey> MediaController::GetSupportedMediaKeys() const {
 
 void MediaController::Select() const {
   if (RefPtr<BrowsingContext> bc = BrowsingContext::Get(Id())) {
-    Unused << bc->SetHasMainMediaController(true);
+    bc->Canonical()->AddPageAwakeRequest();
   }
 }
 
 void MediaController::Unselect() const {
   if (RefPtr<BrowsingContext> bc = BrowsingContext::Get(Id())) {
-    Unused << bc->SetHasMainMediaController(false);
+    bc->Canonical()->RemovePageAwakeRequest();
   }
 }
 

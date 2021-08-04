@@ -1,0 +1,2 @@
+`mp4parse` is a parser for ISO base media file format (mp4) written in rust.
+See [the README in the mp4parse-rust repo](https://github.com/mozilla/mp4parse-rust/blob/master/README.md) for more details.

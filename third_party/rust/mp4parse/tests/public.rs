@@ -105,7 +105,7 @@ fn public_api() {
 
                 // track.tkhd part
                 let tkhd = track.tkhd.unwrap();
-                assert_eq!(tkhd.disabled, false);
+                assert!(!tkhd.disabled);
                 assert_eq!(tkhd.duration, 40);
                 assert_eq!(tkhd.width, 20_971_520);
                 assert_eq!(tkhd.height, 15_728_640);
@@ -155,7 +155,7 @@ fn public_api() {
 
                 // track.tkhd part
                 let tkhd = track.tkhd.unwrap();
-                assert_eq!(tkhd.disabled, false);
+                assert!(!tkhd.disabled);
                 assert_eq!(tkhd.duration, 62);
                 assert_eq!(tkhd.width, 0);
                 assert_eq!(tkhd.height, 0);
@@ -242,9 +242,9 @@ fn public_metadata() {
     assert_eq!(meta.total_discs.unwrap(), 10);
     assert_eq!(meta.beats_per_minute.unwrap(), 128);
     assert_eq!(meta.composer.unwrap(), "Composer");
-    assert_eq!(meta.compilation.unwrap(), true);
-    assert_eq!(meta.gapless_playback.unwrap(), false);
-    assert_eq!(meta.podcast.unwrap(), false);
+    assert!(meta.compilation.unwrap());
+    assert!(!meta.gapless_playback.unwrap());
+    assert!(!meta.podcast.unwrap());
     assert_eq!(meta.advisory.unwrap(), mp4::AdvisoryRating::Clean);
     assert_eq!(meta.media_type.unwrap(), mp4::MediaType::Normal);
     assert_eq!(meta.rating.unwrap(), "50");
@@ -259,7 +259,7 @@ fn public_metadata() {
     assert_eq!(meta.tv_episode_number.unwrap(), 15);
     assert_eq!(meta.tv_season.unwrap(), 10);
     assert_eq!(meta.tv_show_name.unwrap(), "Show Name");
-    assert_eq!(meta.hd_video.unwrap(), true);
+    assert!(meta.hd_video.unwrap());
     assert_eq!(meta.owner.unwrap(), "Owner");
     assert_eq!(meta.sort_name.unwrap(), "Sort Name");
     assert_eq!(meta.sort_album.unwrap(), "Sort Album");
@@ -305,9 +305,9 @@ fn public_metadata_gnre() {
     assert_eq!(meta.total_discs.unwrap(), 10);
     assert_eq!(meta.beats_per_minute.unwrap(), 128);
     assert_eq!(meta.composer.unwrap(), "Composer");
-    assert_eq!(meta.compilation.unwrap(), true);
-    assert_eq!(meta.gapless_playback.unwrap(), false);
-    assert_eq!(meta.podcast.unwrap(), false);
+    assert!(meta.compilation.unwrap());
+    assert!(!meta.gapless_playback.unwrap());
+    assert!(!meta.podcast.unwrap());
     assert_eq!(meta.advisory.unwrap(), mp4::AdvisoryRating::Clean);
     assert_eq!(meta.media_type.unwrap(), mp4::MediaType::Normal);
     assert_eq!(meta.rating.unwrap(), "50");
@@ -322,7 +322,7 @@ fn public_metadata_gnre() {
     assert_eq!(meta.tv_episode_number.unwrap(), 15);
     assert_eq!(meta.tv_season.unwrap(), 10);
     assert_eq!(meta.tv_show_name.unwrap(), "Show Name");
-    assert_eq!(meta.hd_video.unwrap(), true);
+    assert!(meta.hd_video.unwrap());
     assert_eq!(meta.owner.unwrap(), "Owner");
     assert_eq!(meta.sort_name.unwrap(), "Sort Name");
     assert_eq!(meta.sort_album.unwrap(), "Sort Album");
@@ -362,7 +362,7 @@ fn public_invalid_metadata() {
             mp4::TrackType::Video => {
                 // Check some of the values in the video tkhd.
                 let tkhd = track.tkhd.unwrap();
-                assert_eq!(tkhd.disabled, false);
+                assert!(!tkhd.disabled);
                 assert_eq!(tkhd.duration, 231232);
                 assert_eq!(tkhd.width, 83_886_080);
                 assert_eq!(tkhd.height, 47_185_920);
@@ -370,7 +370,7 @@ fn public_invalid_metadata() {
             mp4::TrackType::Audio => {
                 // Check some of the values in the audio tkhd.
                 let tkhd = track.tkhd.unwrap();
-                assert_eq!(tkhd.disabled, false);
+                assert!(!tkhd.disabled);
                 assert_eq!(tkhd.duration, 231338);
                 assert_eq!(tkhd.width, 0);
                 assert_eq!(tkhd.height, 0);
@@ -401,7 +401,7 @@ fn public_audio_tenc() {
         };
         assert_eq!(a.codec_type, mp4::CodecType::EncryptedAudio);
         match a.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
-            Some(ref p) => {
+            Some(p) => {
                 assert_eq!(p.original_format, b"mp4a");
                 if let Some(ref schm) = p.scheme_type {
                     assert_eq!(schm.scheme_type, b"cenc");
@@ -459,7 +459,7 @@ fn public_video_cenc() {
         };
         assert_eq!(v.codec_type, mp4::CodecType::EncryptedVideo);
         match v.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
-            Some(ref p) => {
+            Some(p) => {
                 assert_eq!(p.original_format, b"avc1");
                 if let Some(ref schm) = p.scheme_type {
                     assert_eq!(schm.scheme_type, b"cenc");
@@ -671,7 +671,7 @@ fn public_video_av1() {
 
         // track.tkhd part
         let tkhd = track.tkhd.unwrap();
-        assert_eq!(tkhd.disabled, false);
+        assert!(!tkhd.disabled);
         assert_eq!(tkhd.duration, 42);
         assert_eq!(tkhd.width, 4_194_304);
         assert_eq!(tkhd.height, 4_194_304);
@@ -693,11 +693,11 @@ fn public_video_av1() {
                 assert_eq!(av1c.level, 0);
                 assert_eq!(av1c.tier, 0);
                 assert_eq!(av1c.bit_depth, 8);
-                assert_eq!(av1c.monochrome, false);
+                assert!(!av1c.monochrome);
                 assert_eq!(av1c.chroma_subsampling_x, 1);
                 assert_eq!(av1c.chroma_subsampling_y, 1);
                 assert_eq!(av1c.chroma_sample_position, 0);
-                assert_eq!(av1c.initial_presentation_delay_present, false);
+                assert!(!av1c.initial_presentation_delay_present);
                 assert_eq!(av1c.initial_presentation_delay_minus_one, 0);
             }
             _ => panic!("Invalid test condition"),
@@ -721,6 +721,13 @@ fn public_mp4_bug_1185230() {
         .count();
     assert_eq!(number_video_tracks, 2);
     assert_eq!(number_audio_tracks, 2);
+}
+
+#[test]
+fn public_mp4_ctts_overflow() {
+    let input = &mut File::open("tests/clusterfuzz-testcase-minimized-mp4-6093954524250112")
+        .expect("Unknown file");
+    assert_invalid_data(mp4::read_mp4(input), "insufficient data in 'ctts' box");
 }
 
 #[test]

@@ -22,6 +22,7 @@
 #include "DefaultBrowser.h"
 #include "EventLog.h"
 #include "Registry.h"
+#include "SetDefaultBrowser.h"
 
 #include "wintoastlib.h"
 
@@ -88,6 +89,14 @@ static ULONGLONG GetFollowupNotificationRequestTime() {
   return RegistryGetValueQword(IsPrefixed::Unprefixed, L"FollowupRequestTime")
       .unwrapOr(mozilla::Some(0))
       .valueOr(0);
+}
+
+// Returns false if no value is set.
+static bool GetPrefSetDefaultBrowserUserChoice() {
+  return RegistryGetValueBool(IsPrefixed::Prefixed,
+                              L"SetDefaultBrowserUserChoice")
+      .unwrapOr(mozilla::Some(false))
+      .valueOr(false);
 }
 
 struct ToastStrings {
@@ -226,6 +235,35 @@ static bool GetStrings(Strings& strings) {
   return true;
 }
 
+/*
+ * Set the default browser.
+ *
+ * First check if we can directly write UserChoice, if so attempt that.
+ * If we can't write UserChoice, or if the attempt fails, fall back to
+ * showing the Default Apps page of Settings.
+ *
+ * @param aAumi The AUMI of the installation to set as default.
+ *
+ * @return Success (SUCCEEDED(hr)) if all associations were set with
+ *         UserChoice and checked successfully.
+ *         Other return codes indicate a failure which causes us to
+ *         fall back to Settings, see return codes of
+ *         SetDefaultBrowserUserChoice().
+ */
+static HRESULT SetDefaultBrowserFromNotification(const wchar_t* aumi) {
+  // TODO maybe fall back to protocol dialog on Windows 11 (bug 1719832)?
+
+  HRESULT hr = E_FAIL;
+  if (GetPrefSetDefaultBrowserUserChoice()) {
+    hr = SetDefaultBrowserUserChoice(aumi);
+  }
+
+  if (FAILED(hr)) {
+    LaunchModernSettingsDialogDefaultApps();
+  }
+  return hr;
+}
+
 // This encapsulates the data that needs to be protected by a mutex because it
 // will be shared by the main thread and the handler thread.
 // To ensure the data is only written once, handlerDataHasBeenSet should be
@@ -254,14 +292,15 @@ class ToastHandler : public WinToastLib::IWinToastHandler {
   NotificationType mWhichNotification;
   bool mIsLocalizedNotification;
   HANDLE mEvent;
+  const std::wstring mAumiStr;
 
  public:
   ToastHandler(NotificationType whichNotification, bool isEnglishInstall,
-               HANDLE event) {
-    mWhichNotification = whichNotification;
-    mIsLocalizedNotification = !isEnglishInstall;
-    mEvent = event;
-  }
+               HANDLE event, const wchar_t* aumi)
+      : mWhichNotification(whichNotification),
+        mIsLocalizedNotification(!isEnglishInstall),
+        mEvent(event),
+        mAumiStr(aumi) {}
 
   void FinishHandler(NotificationActivities& returnData) const {
     SetReturnData(returnData);
@@ -305,6 +344,9 @@ class ToastHandler : public WinToastLib::IWinToastHandler {
     activitiesPerformed.shown = NotificationShown::Shown;
     activitiesPerformed.action = NotificationAction::ToastClicked;
 
+    // An activation without clicking a specific button does not clearly
+    // signal that the default should be changed, so just show the settings
+    // dialog instead of SetDefaultBrowserFromNotification().
     LaunchModernSettingsDialogDefaultApps();
 
     FinishHandler(activitiesPerformed);
@@ -343,7 +385,8 @@ class ToastHandler : public WinToastLib::IWinToastHandler {
       // "Make Firefox the default" button, on both the initial and followup
       // notifications. "Yes" button on the localized notification.
       activitiesPerformed.action = NotificationAction::MakeFirefoxDefaultButton;
-      LaunchModernSettingsDialogDefaultApps();
+
+      SetDefaultBrowserFromNotification(mAumiStr.c_str());
     }
 
     FinishHandler(activitiesPerformed);
@@ -481,7 +524,7 @@ static NotificationActivities ShowNotification(
   toastTemplate.addAction(toastStrings->action2.get());
   toastTemplate.setImagePath(absImagePath.get());
   ToastHandler* handler =
-      new ToastHandler(whichNotification, isEnglishInstall, event.get());
+      new ToastHandler(whichNotification, isEnglishInstall, event.get(), aumi);
   INT64 id = WinToast::instance()->showToast(toastTemplate, handler, &error);
   if (id < 0) {
     LOG_ERROR_MESSAGE(WinToast::strerror(error).c_str());

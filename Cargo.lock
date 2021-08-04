@@ -2648,7 +2648,7 @@ dependencies = [
 [[package]]
 name = "l10nregistry"
 version = "0.2.0"
-source = "git+https://github.com/mozilla/l10nregistry-rs?rev=55bf7f826d773303a67d8d7fdab099a04322d4fb#55bf7f826d773303a67d8d7fdab099a04322d4fb"
+source = "git+https://github.com/mozilla/l10nregistry-rs?rev=a69df9836b1ef536727195209013b9ad6b132618#a69df9836b1ef536727195209013b9ad6b132618"
 dependencies = [
  "async-trait",
  "fluent-bundle",
@@ -3278,13 +3278,12 @@ dependencies = [
 [[package]]
 name = "mp4parse"
 version = "0.11.5"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=1bb484e96ae724309e3346968e8ffd4c25e61616#1bb484e96ae724309e3346968e8ffd4c25e61616"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=5326af6b54cec885cdb9e7be282a6db6e757b964#5326af6b54cec885cdb9e7be282a6db6e757b964"
 dependencies = [
  "bitreader",
  "byteorder",
  "env_logger",
  "fallible_collections",
- "hashbrown",
  "log",
  "num-traits",
  "static_assertions",
@@ -3297,7 +3296,7 @@ version = "0.1.0"
 [[package]]
 name = "mp4parse_capi"
 version = "0.11.5"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=1bb484e96ae724309e3346968e8ffd4c25e61616#1bb484e96ae724309e3346968e8ffd4c25e61616"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=5326af6b54cec885cdb9e7be282a6db6e757b964#5326af6b54cec885cdb9e7be282a6db6e757b964"
 dependencies = [
  "byteorder",
  "fallible_collections",

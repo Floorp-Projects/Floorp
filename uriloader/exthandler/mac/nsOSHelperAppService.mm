@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "mozilla/net/NeckoCommon.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "nsComponentManagerUtils.h"
 #include "nsOSHelperAppService.h"
 #include "nsObjCExceptions.h"
@@ -511,7 +512,11 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     }
 
     mimeInfoMac->SetDefaultApplication(app);
-    mimeInfoMac->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+
+    mozilla::StaticPrefs::browser_download_improvements_to_download_panel()
+        ? mimeInfoMac->SetPreferredAction(nsIMIMEInfo::saveToDisk)
+        : mimeInfoMac->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+
   } else {
     mimeInfoMac->SetPreferredAction(nsIMIMEInfo::saveToDisk);
   }
