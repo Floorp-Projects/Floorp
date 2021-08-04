@@ -116,10 +116,6 @@ if (AppConstants.platform === "win") {
       certSubject: "Microsoft Windows",
     },
   ];
-} else if (AppConstants.platform === "android") {
-  // Listing shared libraries doesn't work in Android xpcshell tests.
-  // https://hg.mozilla.org/mozilla-central/file/0eef1d5a39366059677c6d7944cfe8a97265a011/tools/profiler/core/shared-libraries-linux.cc#l95
-  expectedLibs = [];
 } else {
   expectedLibs = [
     {
@@ -151,14 +147,12 @@ add_task(async function setup() {
   await OS.File.copy(libModulesFile, libUnicodeFile);
   await OS.File.copy(libModulesFile, libLongName);
 
-  if (AppConstants.platform !== "android") {
-    libModulesHandle = ctypes.open(libModulesFile);
-    libUnicodeHandle = ctypes.open(libUnicodeFile);
-    libLongNameHandle = ctypes.open(libLongNameFile);
-    if (AppConstants.platform === "win") {
-      libUnicodePDBHandle = ctypes.open(libUnicodePDBFile);
-      libNoPDBHandle = ctypes.open(libNoPDBFile);
-    }
+  libModulesHandle = ctypes.open(libModulesFile);
+  libUnicodeHandle = ctypes.open(libUnicodeFile);
+  libLongNameHandle = ctypes.open(libLongNameFile);
+  if (AppConstants.platform === "win") {
+    libUnicodePDBHandle = ctypes.open(libUnicodePDBFile);
+    libNoPDBHandle = ctypes.open(libNoPDBFile);
   }
 
   // Force the timer to fire (using a small interval).
