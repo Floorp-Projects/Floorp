@@ -476,7 +476,8 @@ var currentStateObj = async function(isPrivateWindowValue, hiddenEngine = "") {
     });
   }
   if (typeof isPrivateWindowValue == "boolean") {
-    state.isPrivateWindow = isPrivateWindowValue;
+    state.isInPrivateBrowsingMode = isPrivateWindowValue;
+    state.isAboutPrivateBrowsing = isPrivateWindowValue;
   }
   return state;
 };
