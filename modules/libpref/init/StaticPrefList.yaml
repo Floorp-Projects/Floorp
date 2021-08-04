@@ -11775,6 +11775,20 @@
   mirror: once
 #endif
 
+#ifdef XP_WIN
+# WindowsUIUtils::Share to wait for user action on Windows share dialog
+# `true` means the promise resolves when user completes or cancels the share
+# action. This can be unsafe since selecting copy action fires no DataPackage
+# event as of 21H1.
+# `false` means the promise resolves when the share data is passed to
+# DataPackage.
+# This affects the behavior of `navigator.share()`.
+- name: widget.windows.share.wait_action.enabled
+  type: bool
+  value: false
+  mirror: always
+#endif
+
 #---------------------------------------------------------------------------
 # Prefs starting with "xul."
 #---------------------------------------------------------------------------
