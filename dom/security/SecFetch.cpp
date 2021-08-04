@@ -218,6 +218,12 @@ bool IsUserTriggeredForSecFetchSite(nsIHttpChannel* aHTTPChannel) {
     return false;
   }
 
+  // The load is considered user triggered if it was triggered by an external
+  // application.
+  if (loadInfo->GetLoadTriggeredFromExternal()) {
+    return true;
+  }
+
   // sec-fetch-site can only be user triggered if the load was user triggered.
   if (!loadInfo->GetHasValidUserGestureActivation()) {
     return false;
@@ -324,8 +330,10 @@ void mozilla::dom::SecFetch::AddSecFetchUser(nsIHttpChannel* aHTTPChannel) {
     return;
   }
 
-  // sec-fetch-user only applies if the request is user triggered
-  if (!loadInfo->GetHasValidUserGestureActivation()) {
+  // sec-fetch-user only applies if the request is user triggered.
+  // requests triggered by an external application are considerd user triggered.
+  if (!loadInfo->GetLoadTriggeredFromExternal() &&
+      !loadInfo->GetHasValidUserGestureActivation()) {
     return;
   }
 
