@@ -221,7 +221,7 @@ async function captureProfile(pageContext) {
 
   const profilerViewMode = getProfilerViewModeForCurrentPreset(pageContext);
   const sharedLibraries = Services.profiler.sharedLibraries;
-  const objdirs = getObjdirPrefValue("");
+  const objdirs = getObjdirPrefValue();
 
   const { createLocalSymbolicationService } = lazy.PerfSymbolication();
   const symbolicationService = createLocalSymbolicationService(
@@ -314,15 +314,6 @@ function _getArrayOfStringsPref(prefName) {
 }
 
 /**
- * @param {string} prefName
- * @return {string[]}
- */
-function _getArrayOfStringsHostPref(prefName) {
-  const text = Services.prefs.getStringPref(prefName);
-  return JSON.parse(text);
-}
-
-/**
  * The profiler recording workflow uses two different pref paths. One set of prefs
  * is stored for local profiling, and another for remote profiling. This function
  * decides which to use. The remote prefs have ".remote" appended to the end of
@@ -348,11 +339,40 @@ function getPrefPostfix(pageContext) {
 }
 
 /**
- * @param {PrefPostfix} prefPostfix
+ * @param {string[]} objdirs
+ */
+function setObjdirPrefValue(objdirs) {
+  Services.prefs.setCharPref(OBJDIRS_PREF, JSON.stringify(objdirs));
+}
+
+/**
+ * Before Firefox 92, the objdir lists for local and remote profiling were
+ * stored in separate lists. In Firefox 92 those two prefs were merged into
+ * one. This function performs the migration.
+ */
+function migrateObjdirsPrefsIfNeeded() {
+  const OLD_REMOTE_OBJDIRS_PREF = OBJDIRS_PREF + ".remote";
+  const remoteString = Services.prefs.getCharPref(OLD_REMOTE_OBJDIRS_PREF, "");
+  if (remoteString === "") {
+    // No migration necessary.
+    return;
+  }
+
+  const remoteList = JSON.parse(remoteString);
+  const localList = _getArrayOfStringsPref(OBJDIRS_PREF);
+
+  // Merge the two lists, eliminating any duplicates.
+  const mergedList = [...new Set(localList.concat(remoteList))];
+  setObjdirPrefValue(mergedList);
+  Services.prefs.clearUserPref(OLD_REMOTE_OBJDIRS_PREF);
+}
+
+/**
  * @returns {string[]}
  */
-function getObjdirPrefValue(prefPostfix) {
-  return _getArrayOfStringsHostPref(OBJDIRS_PREF + prefPostfix);
+function getObjdirPrefValue() {
+  migrateObjdirsPrefsIfNeeded();
+  return _getArrayOfStringsPref(OBJDIRS_PREF);
 }
 
 /**
@@ -361,8 +381,8 @@ function getObjdirPrefValue(prefPostfix) {
  * @returns {RecordingSettings}
  */
 function getRecordingSettings(pageContext, supportedFeatures) {
+  const objdirs = getObjdirPrefValue();
   const prefPostfix = getPrefPostfix(pageContext);
-  const objdirs = getObjdirPrefValue(prefPostfix);
   const presetName = Services.prefs.getCharPref(PRESET_PREF + prefPostfix);
 
   // First try to get the values from a preset. If the preset is "custom" or
@@ -466,10 +486,7 @@ function setRecordingSettings(pageContext, prefs) {
     THREADS_PREF + prefPostfix,
     JSON.stringify(prefs.threads)
   );
-  Services.prefs.setCharPref(
-    OBJDIRS_PREF + prefPostfix,
-    JSON.stringify(prefs.objdirs)
-  );
+  setObjdirPrefValue(prefs.objdirs);
 }
 
 const platform = AppConstants.platform;
@@ -485,9 +502,9 @@ function revertRecordingSettings() {
     Services.prefs.clearUserPref(INTERVAL_PREF + prefPostfix);
     Services.prefs.clearUserPref(FEATURES_PREF + prefPostfix);
     Services.prefs.clearUserPref(THREADS_PREF + prefPostfix);
-    Services.prefs.clearUserPref(OBJDIRS_PREF + prefPostfix);
     Services.prefs.clearUserPref(DURATION_PREF + prefPostfix);
   }
+  Services.prefs.clearUserPref(OBJDIRS_PREF);
   Services.prefs.clearUserPref(POPUP_FEATURE_FLAG_PREF);
 }
 
@@ -501,7 +518,7 @@ function revertRecordingSettings() {
  */
 function changePreset(pageContext, presetName, supportedFeatures) {
   const prefPostfix = getPrefPostfix(pageContext);
-  const objdirs = _getArrayOfStringsHostPref(OBJDIRS_PREF + prefPostfix);
+  const objdirs = getObjdirPrefValue();
   let recordingSettings = getRecordingSettingsFromPreset(
     presetName,
     supportedFeatures,
