@@ -42,7 +42,9 @@ function getToolbarNodeForItemGuid(aItemGuid) {
 }
 
 function waitForLoad(browser, url) {
-  return BrowserTestUtils.browserLoaded(browser, false, url);
+  return BrowserTestUtils.browserLoaded(browser, false, url).then(() => {
+    return BrowserTestUtils.loadURI(browser, "about:blank");
+  });
 }
 
 function waitForNewTab(url, inBackground) {

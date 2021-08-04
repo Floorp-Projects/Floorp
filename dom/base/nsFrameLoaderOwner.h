@@ -20,7 +20,7 @@ class BrowserBridgeChild;
 class ContentParent;
 class Element;
 struct RemotenessOptions;
-struct NavigationIsolationOptions;
+struct RemotenessChangeOptions;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -75,7 +75,7 @@ class nsFrameLoaderOwner : public nsISupports {
   // disabled for this process switch.
   void ChangeRemotenessToProcess(
       mozilla::dom::ContentParent* aContentParent,
-      const mozilla::dom::NavigationIsolationOptions& aOptions,
+      const mozilla::dom::RemotenessChangeOptions& aOptions,
       mozilla::dom::BrowsingContextGroup* aGroup, mozilla::ErrorResult& rv);
 
   void SubframeCrashed();
@@ -104,7 +104,7 @@ class nsFrameLoaderOwner : public nsISupports {
 
   void ChangeRemotenessCommon(
       const ChangeRemotenessContextType& aContextType,
-      const mozilla::dom::NavigationIsolationOptions& aOptions,
+      const mozilla::dom::RemotenessChangeOptions& aOptions,
       bool aSwitchingInProgressLoad, bool aIsRemote,
       mozilla::dom::BrowsingContextGroup* aGroup,
       std::function<void()>& aFrameLoaderInit, mozilla::ErrorResult& aRv);
