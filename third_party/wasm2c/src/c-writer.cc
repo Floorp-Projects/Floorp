@@ -159,7 +159,6 @@ class CWriter {
   void PopLabel();
 
   static std::string AddressOf(const std::string&);
-  static std::string Deref(const std::string&);
 
   static char MangleType(Type);
   static std::string MangleTypes(const TypeVector&);
@@ -383,11 +382,6 @@ std::string CWriter::AddressOf(const std::string& s) {
 }
 
 // static
-std::string CWriter::Deref(const std::string& s) {
-  return "(*" + s + ")";
-}
-
-// static
 char CWriter::MangleType(Type type) {
   switch (type) {
     case Type::I32: return 'i';
@@ -489,7 +483,7 @@ std::string CWriter::DefineImportName(const std::string& name,
   import_syms_.insert(name);
   global_syms_.insert(mangled);
   global_sym_map_.insert(SymbolMap::value_type(name, mangled));
-  return "(*" + mangled + ")";
+  return mangled;
 }
 
 std::string CWriter::DefineGlobalScopeName(const std::string& name) {
@@ -600,12 +594,7 @@ void CWriter::Write(const ExternalPtr& name) {
 }
 
 void CWriter::Write(const ExternalRef& name) {
-  bool is_import = import_syms_.count(name.name) != 0;
-  if (is_import) {
-    Write(Deref(GetGlobalName(name.name)));
-  } else {
-    Write(GetGlobalName(name.name));
-  }
+  Write(GetGlobalName(name.name));
 }
 
 void CWriter::Write(const Var& var) {

@@ -50,7 +50,7 @@ const char SECTION_NAME(declarations)[] =
 "#define MEMCHECK(mem, a, t)\n"
 "#else\n"
 "#define MEMCHECK(mem, a, t)  \\\n"
-"  if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)\n"
+"  if (UNLIKELY((a) + sizeof(t) > mem->size)) (void) TRAP(OOB)\n"
 "#endif\n"
 "\n"
 "#if defined(WASM_USING_GLOBAL_HEAP)\n"
