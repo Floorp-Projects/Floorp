@@ -581,10 +581,7 @@
    thus we invert the background, using the panel color, instead. */
 .urlbarView-row:is([type=switchtab], [type=remotetab]):is([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
   background-color: var(--toolbar-field-focus-background-color);
-  color: FieldText;
-}
-.urlbarView-row:is([type=switchtab], [type=remotetab]):is([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action:-moz-lwtheme {
-  color: var(--lwt-toolbar-field-focus-color);
+  color: var(--toolbar-field-focus-color);
 }
 
 .urlbarView-row[type=remotetab]:not([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator::before,
@@ -722,8 +719,8 @@
   --panel-padding: var(--panel-subview-body-padding);
 }
 
-#PopupSearchAutoComplete:-moz-lwtheme {
-  --panel-color: var(--lwt-toolbar-field-focus-color);
+#PopupSearchAutoComplete {
+  --panel-color: var(--toolbar-field-focus-color);
   --panel-background: var(--toolbar-field-focus-background-color);
 }
 
