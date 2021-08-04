@@ -279,7 +279,7 @@ void CanonicalBrowsingContext::MaybeAddAsProgressListener(
 
 void CanonicalBrowsingContext::ReplacedBy(
     CanonicalBrowsingContext* aNewContext,
-    const NavigationIsolationOptions& aRemotenessOptions) {
+    const RemotenessChangeOptions& aRemotenessOptions) {
   MOZ_ASSERT(!aNewContext->mWebProgress);
   MOZ_ASSERT(!aNewContext->mSessionHistory);
   MOZ_ASSERT(IsTop() && aNewContext->IsTop());
@@ -1696,7 +1696,7 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Clear() {
 
 CanonicalBrowsingContext::PendingRemotenessChange::PendingRemotenessChange(
     CanonicalBrowsingContext* aTarget, RemotenessPromise::Private* aPromise,
-    uint64_t aPendingSwitchId, const NavigationIsolationOptions& aOptions)
+    uint64_t aPendingSwitchId, const RemotenessChangeOptions& aOptions)
     : mTarget(aTarget),
       mPromise(aPromise),
       mPendingSwitchId(aPendingSwitchId),
@@ -1732,7 +1732,7 @@ void CanonicalBrowsingContext::SetCurrentBrowserParent(
 
 RefPtr<CanonicalBrowsingContext::RemotenessPromise>
 CanonicalBrowsingContext::ChangeRemoteness(
-    const NavigationIsolationOptions& aOptions, uint64_t aPendingSwitchId) {
+    const RemotenessChangeOptions& aOptions, uint64_t aPendingSwitchId) {
   MOZ_DIAGNOSTIC_ASSERT(IsContent(),
                         "cannot change the process of chrome contexts");
   MOZ_DIAGNOSTIC_ASSERT(
@@ -2530,7 +2530,7 @@ void CanonicalBrowsingContext::RemovePageAwakeRequest() {
 void CanonicalBrowsingContext::CloneDocumentTreeInto(
     CanonicalBrowsingContext* aSource, const nsACString& aRemoteType,
     embedding::PrintData&& aPrintData) {
-  NavigationIsolationOptions options;
+  RemotenessChangeOptions options;
   options.mRemoteType = aRemoteType;
 
   mClonePromise =
