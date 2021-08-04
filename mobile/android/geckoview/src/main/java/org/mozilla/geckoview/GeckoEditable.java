@@ -819,12 +819,26 @@ import android.view.inputmethod.EditorInfo;
             }
 
             if (found) {
-                icSendComposition(text, selStart, selEnd, composingStart, composingEnd);
-                if (notifyGecko) {
-                    mFocusedChild.onImeUpdateComposition(
-                            composingStart, composingEnd, updateFlags);
+                if (selStart < composingStart || selEnd > composingEnd) {
+                    // GBoard will set caret position that is out of composing
+                    // range. Unfortunately, Gecko doesn't support this caret
+                    // position. So we shouldn't set composing range data now.
+                    // But this is temporary composing range, then GBoard will
+                    // set valid range soon.
+                    if (DEBUG) {
+                        final StringBuilder sb = new StringBuilder("icSendComposition(): invalid caret position. ");
+                        sb.append("composing = ").append(composingStart).append("-").append(composingEnd)
+                          .append(", selection = ").append(selStart).append("-").append(selEnd);
+                        Log.d(LOGTAG, sb.toString());
+                    }
+                } else {
+                    icSendComposition(text, selStart, selEnd, composingStart, composingEnd);
+                    if (notifyGecko) {
+                        mFocusedChild.onImeUpdateComposition(
+                                composingStart, composingEnd, updateFlags);
+                    }
+                    return true;
                 }
-                return true;
             }
         }
 
@@ -855,12 +869,11 @@ import android.view.inputmethod.EditorInfo;
             throws RemoteException {
         if (DEBUG) {
             assertOnIcThread();
-            Log.d(LOGTAG, "icSendComposition(\"" + text + "\", " +
-                                             composingStart + ", " + composingEnd + ")");
-        }
-        if (DEBUG) {
-            Log.d(LOGTAG, " range = " + composingStart + "-" + composingEnd);
-            Log.d(LOGTAG, " selection = " + selStart + "-" + selEnd);
+            final StringBuilder sb = new StringBuilder("icSendComposition(");
+            sb.append("\"").append(text).append("\"")
+              .append(", range = ").append(composingStart).append("-").append(composingEnd)
+              .append(", selection = ").append(selStart).append("-").append(selEnd).append(")");
+            Log.d(LOGTAG, sb.toString());
         }
 
         if (selEnd >= composingStart && selEnd <= composingEnd) {
