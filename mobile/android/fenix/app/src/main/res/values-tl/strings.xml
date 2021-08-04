@@ -46,8 +46,16 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Napili</string>
 
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">Nai-save kamakailan</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">Mga na-bookmark kamakailan</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Ipakita lahat</string>
+
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Button para maipakita lahat ng mga naka-save na bookmark</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Ang %1$s ay gawa ng Mozilla.</string>
