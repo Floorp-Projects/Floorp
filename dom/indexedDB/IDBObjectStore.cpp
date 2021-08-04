@@ -1386,7 +1386,7 @@ RefPtr<IDBIndex> IDBObjectStore::CreateIndex(
     return keyPath;
   };
 
-  QM_NOTEONLY_TRY_UNWRAP(
+  QM_INFOONLY_TRY_UNWRAP(
       const auto maybeKeyPath,
       ([&aKeyPath, checkValid]() -> Result<KeyPath, nsresult> {
         if (aKeyPath.IsString()) {

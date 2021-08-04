@@ -368,7 +368,7 @@ RefPtr<IDBObjectStore> IDBDatabase::CreateObjectStore(
     return nullptr;
   }
 
-  QM_NOTEONLY_TRY_UNWRAP(const auto maybeKeyPath,
+  QM_INFOONLY_TRY_UNWRAP(const auto maybeKeyPath,
                          KeyPath::Parse(aOptionalParameters.mKeyPath));
   if (!maybeKeyPath) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
