@@ -1923,6 +1923,9 @@ pref("reader.parse-node-limit", 0);
 // and because (normally) these errors are not persisted anywhere.
 pref("reader.errors.includeURLs", true);
 
+// What version of Pocket CTA to show in Reader Mode (Empty string is no CTA)
+pref("reader.pocket.ctaVersion", "");
+
 pref("view_source.tab", true);
 
 pref("dom.serviceWorkers.enabled", true);
