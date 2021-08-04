@@ -44,6 +44,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/OwningNonNull.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/TimeStamp.h"
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/EventTarget.h"
@@ -1289,6 +1290,15 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   nsTArray<uint32_t>& GetScrollMarks() { return mScrollMarks; }
   void SetScrollMarks(const nsTArray<uint32_t>& aScrollMarks);
 
+  // Don't use this value directly, call StorageAccess::StorageAllowedForWindow
+  // instead.
+  mozilla::Maybe<mozilla::StorageAccess> GetStorageAllowedCache() {
+    return mStorageAllowedCache;
+  }
+  void SetStorageAllowed(const mozilla::StorageAccess& storageAllowed) {
+    mStorageAllowedCache = Some(storageAllowed);
+  }
+
  private:
   RefPtr<mozilla::dom::ContentMediaController> mContentMediaController;
 
@@ -1401,6 +1411,11 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   nsCOMPtr<nsIPrincipal> mDocumentStoragePrincipal;
   nsCOMPtr<nsIPrincipal> mDocumentPartitionedPrincipal;
   nsCOMPtr<nsIContentSecurityPolicy> mDocumentCsp;
+
+  // Used to cache the result of StorageAccess::StorageAllowedForWindow.
+  // Don't use this field directly, use StorageAccess::StorageAllowedForWindow
+  // instead.
+  mozilla::Maybe<mozilla::StorageAccess> mStorageAllowedCache;
 
   RefPtr<mozilla::dom::DebuggerNotificationManager>
       mDebuggerNotificationManager;
