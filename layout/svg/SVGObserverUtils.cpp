@@ -257,6 +257,12 @@ void SVGRenderingObserver::AttributeChanged(dom::Element* aElement,
                                             nsAtom* aAttribute,
                                             int32_t aModType,
                                             const nsAttrValue* aOldValue) {
+  if (aElement->IsInNativeAnonymousSubtree()) {
+    // Don't observe attribute changes in native-anonymous subtrees like
+    // scrollbars.
+    return;
+  }
+
   // An attribute belonging to the element that we are observing *or one of its
   // descendants* has changed.
   //
