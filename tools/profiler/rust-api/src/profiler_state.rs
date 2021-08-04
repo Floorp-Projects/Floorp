@@ -18,17 +18,9 @@
 #[inline]
 pub fn is_active() -> bool {
     use crate::gecko_bindings::structs::mozilla::profiler::detail;
-    use std::mem;
-    use std::sync::atomic::{AtomicU32, Ordering};
 
-    // This is reaching for the C++ atomic value, instead of calling an FFI
-    // function to return this value. Because calling an FFI function is much
-    // more expensive compared to this method. That's why it's worth to go with
-    // this solution for performance. But it's crucial to keep the implementation
-    // in sync with the C++ counterpart.
-    let active_and_features: &AtomicU32 =
-        unsafe { mem::transmute(&detail::RacyFeatures_sActiveAndFeatures) };
-    (active_and_features.load(Ordering::Relaxed) & detail::RacyFeatures_Active) != 0
+    let active_and_features = get_active_and_features();
+    (active_and_features & detail::RacyFeatures_Active) != 0
 }
 
 /// Always false when the Gecko profiler is disabled.
@@ -36,4 +28,51 @@ pub fn is_active() -> bool {
 #[inline]
 pub fn is_active() -> bool {
     false
+}
+
+/// Whether the Gecko Profiler can accept markers.
+/// Similar to `is_active`, but with some extra checks that determine if the
+/// profiler would currently store markers. So this should be used before
+/// doing some potentially-expensive work that's used in a marker. E.g.:
+///
+/// ```rust
+/// if gecko_profiler::can_accept_markers() {
+///   // Do something expensive and add the marker with that data.
+/// }
+/// ```
+///
+/// This implementation must be kept in sync with
+/// `mozilla::profiler::detail::RacyFeatures::IsActiveAndUnpaused`.
+#[cfg(feature = "enabled")]
+#[inline]
+pub fn can_accept_markers() -> bool {
+    use crate::gecko_bindings::structs::mozilla::profiler::detail;
+
+    let active_and_features = get_active_and_features();
+    (active_and_features & detail::RacyFeatures_Active) != 0
+        && (active_and_features & detail::RacyFeatures_Paused) == 0
+}
+
+/// Always false when the Gecko Profiler is disabled.
+#[cfg(not(feature = "enabled"))]
+#[inline]
+pub fn can_accept_markers() -> bool {
+    false
+}
+
+/// Returns the value of atomic `RacyFeatures::sActiveAndFeatures` from the C++ side.
+#[cfg(feature = "enabled")]
+#[inline]
+fn get_active_and_features() -> u32 {
+    use crate::gecko_bindings::structs::mozilla::profiler::detail;
+    use std::mem;
+    use std::sync::atomic::{AtomicU32, Ordering};
+
+    // This is reaching for the C++ atomic value instead of calling an FFI
+    // function to return this value. Because, calling an FFI function is much
+    // more expensive compared to this method. That's why it's worth to go with
+    // this solution for performance. But it's crucial to keep the implementation
+    // of this and the callers in sync with the C++ counterparts.
+    unsafe { mem::transmute::<_, &AtomicU32>(&detail::RacyFeatures_sActiveAndFeatures) }
+        .load(Ordering::Relaxed)
 }
