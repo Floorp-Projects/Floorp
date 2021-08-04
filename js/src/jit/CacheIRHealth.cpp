@@ -228,15 +228,17 @@ static bool addScriptToFinalWarmUpCountMap(JSContext* cx, HandleScript script) {
     zone->scriptFinalWarmUpCountMap = std::move(map);
   }
 
-  auto* filename = js_pod_malloc<char>(strlen(script->filename()) + 1);
-  if (!filename) {
+  SharedImmutableString sfilename =
+      cx->runtime()->sharedImmutableStrings().getOrCreate(
+          script->filename(), strlen(script->filename()));
+  if (!sfilename) {
+    ReportOutOfMemory(cx);
     return false;
   }
-  strcpy(filename, script->filename());
 
   if (!zone->scriptFinalWarmUpCountMap->put(
-          script, mozilla::MakeTuple(uint32_t(0), filename))) {
-    js_free(filename);
+          script, mozilla::MakeTuple(uint32_t(0), std::move(sfilename)))) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
