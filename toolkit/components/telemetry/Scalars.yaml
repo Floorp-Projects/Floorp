@@ -2161,9 +2161,10 @@ media:
   wmf_process_usage:
     bug_numbers:
       - 1690372
+      - 1720616
     description: >
       Record whether the WMF decoder module is used in content or chrome process.
-    expires: "93"
+    expires: "99"
     kind: boolean
     notification_emails:
       - alwu@mozilla.com
