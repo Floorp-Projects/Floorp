@@ -254,6 +254,7 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       clearkey.mSessionTypes.AppendElement(MediaKeySessionType::Temporary);
       clearkey.mEncryptionSchemes.AppendElement(u"cenc"_ns);
       clearkey.mEncryptionSchemes.AppendElement(u"cbcs"_ns);
+      clearkey.mEncryptionSchemes.AppendElement(u"cbcs-1-9"_ns);
       if (StaticPrefs::media_clearkey_persistent_license_enabled()) {
         clearkey.mSessionTypes.AppendElement(
             MediaKeySessionType::Persistent_license);
@@ -299,6 +300,7 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       widevine.mVideoRobustness.AppendElement(u"SW_SECURE_DECODE"_ns);
       widevine.mEncryptionSchemes.AppendElement(u"cenc"_ns);
       widevine.mEncryptionSchemes.AppendElement(u"cbcs"_ns);
+      widevine.mEncryptionSchemes.AppendElement(u"cbcs-1-9"_ns);
 
 #if defined(MOZ_WIDGET_ANDROID)
       // MediaDrm.isCryptoSchemeSupported only allows passing
