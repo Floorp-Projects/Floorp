@@ -409,6 +409,8 @@ class nsFlexContainerFrame::FlexItem final {
         mAscent = mFrame->SynthesizeBaselineBOffsetFromBorderBox(
             mWM, BaselineSharingGroup::First);
       }
+
+      FLEX_LOGV("Resolved ascent %d for flex item %p", mAscent, Frame());
     }
     return mAscent;
   }
@@ -1763,7 +1765,6 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
  *   - its AvailableBSize
  * ...and we cache the following as the "value", from the item's ReflowOutput:
  *   - its final content-box BSize
- *   - its ascent
  *
  * The assumption here is that a given flex item measurement from our "value"
  * won't change unless one of the pieces of the "key" change, or the flex
@@ -1816,12 +1817,11 @@ class nsFlexContainerFrame::CachedBAxisMeasurement {
   // This could/should be const, but it's non-const for now just because it's
   // assigned via a series of steps in the constructor body:
   nscoord mBSize;
-  const nscoord mAscent;
 
  public:
   CachedBAxisMeasurement(const ReflowInput& aReflowInput,
                          const ReflowOutput& aReflowOutput)
-      : mKey(aReflowInput), mAscent(aReflowOutput.BlockStartAscent()) {
+      : mKey(aReflowInput) {
     // To get content-box bsize, we have to subtract off border & padding
     // (and floor at 0 in case the border/padding are too large):
     WritingMode itemWM = aReflowInput.GetWritingMode();
@@ -1842,8 +1842,6 @@ class nsFlexContainerFrame::CachedBAxisMeasurement {
   }
 
   nscoord BSize() const { return mBSize; }
-
-  nscoord Ascent() const { return mAscent; }
 };
 
 /**
@@ -1953,8 +1951,7 @@ void nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(
   }
 }
 
-const CachedBAxisMeasurement&
-nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
+const CachedBAxisMeasurement& nsFlexContainerFrame::MeasureBSizeForFlexItem(
     FlexItem& aItem, ReflowInput& aChildReflowInput) {
   auto* cachedData = aItem.Frame()->GetProperty(CachedFlexItemData::Prop());
 
@@ -1994,6 +1991,8 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
   FinishReflowChild(aItem.Frame(), PresContext(), childReflowOutput,
                     &aChildReflowInput, outerWM, dummyPosition,
                     dummyContainerSize, flags);
+
+  aItem.SetAscent(childReflowOutput.BlockStartAscent());
 
   // Update (or add) our cached measurement, so that we can hopefully skip this
   // measuring reflow the next time around:
@@ -2063,9 +2062,8 @@ nscoord nsFlexContainerFrame::MeasureFlexItemContentBSize(
   }
 
   const CachedBAxisMeasurement& measurement =
-      MeasureAscentAndBSizeForFlexItem(aFlexItem, childRIForMeasuringBSize);
+      MeasureBSizeForFlexItem(aFlexItem, childRIForMeasuringBSize);
 
-  aFlexItem.SetAscent(measurement.Ascent());
   return measurement.BSize();
 }
 
@@ -4412,14 +4410,13 @@ void nsFlexContainerFrame::SizeItemInCrossAxis(ReflowInput& aChildReflowInput,
 
   // Potentially reflow the item, and get the sizing info.
   const CachedBAxisMeasurement& measurement =
-      MeasureAscentAndBSizeForFlexItem(aItem, aChildReflowInput);
+      MeasureBSizeForFlexItem(aItem, aChildReflowInput);
 
   // Save the sizing info that we learned from this reflow
   // -----------------------------------------------------
 
   // Tentatively store the child's desired content-box cross-size.
   aItem.SetCrossSize(measurement.BSize());
-  aItem.SetAscent(measurement.Ascent());
 }
 
 void FlexLine::PositionItemsInCrossAxis(
