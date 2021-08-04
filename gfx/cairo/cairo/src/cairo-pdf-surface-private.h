@@ -55,6 +55,7 @@ typedef struct _cairo_pdf_resource {
     unsigned int id;
 } cairo_pdf_resource_t;
 
+
 #define CAIRO_NUM_OPERATORS (CAIRO_OPERATOR_HSL_LUMINOSITY + 1)
 
 typedef struct _cairo_pdf_group_resources {
@@ -208,6 +209,13 @@ typedef struct _cairo_pdf_outline_entry {
     int count;
 } cairo_pdf_outline_entry_t;
 
+typedef struct _cairo_pdf_forward_link {
+    cairo_pdf_resource_t res;
+    int page;
+    cairo_bool_t has_pos;
+    cairo_point_double_t pos;
+} cairo_pdf_forward_link_t;
+
 struct docinfo {
     char *title;
     char *author;
@@ -281,7 +289,7 @@ struct _cairo_pdf_surface {
     cairo_pdf_resource_t struct_tree_root;
 
     cairo_pdf_version_t pdf_version;
-    cairo_bool_t compress_content;
+    cairo_bool_t compress_streams;
 
     cairo_pdf_resource_t content;
     cairo_pdf_resource_t content_resources;
@@ -308,6 +316,13 @@ struct _cairo_pdf_surface {
 	cairo_bool_t is_knockout;
     } group_stream;
 
+    struct {
+	cairo_bool_t active;
+	cairo_output_stream_t *stream;
+	cairo_pdf_resource_t resource;
+	cairo_array_t objects;
+    } object_stream;
+
     cairo_surface_clipper_t clipper;
 
     cairo_pdf_operators_t pdf_operators;
@@ -327,6 +342,7 @@ struct _cairo_pdf_surface {
     cairo_pdf_interchange_t interchange;
     int page_parent_tree; /* -1 if not used */
     cairo_array_t page_annots;
+    cairo_array_t forward_links;
     cairo_bool_t tagged;
     char *current_page_label;
     cairo_array_t page_labels;
@@ -355,7 +371,7 @@ _cairo_utf8_to_pdf_string (const char *utf8, char **str_out);
 cairo_private cairo_int_status_t
 _cairo_pdf_interchange_init (cairo_pdf_surface_t *surface);
 
-cairo_private cairo_int_status_t
+cairo_private void
 _cairo_pdf_interchange_fini (cairo_pdf_surface_t *surface);
 
 cairo_private cairo_int_status_t
@@ -368,6 +384,13 @@ cairo_private cairo_int_status_t
 _cairo_pdf_interchange_tag_begin (cairo_pdf_surface_t    *surface,
 				  const char             *name,
 				  const char             *attributes);
+
+cairo_private cairo_int_status_t
+_cairo_pdf_surface_object_begin (cairo_pdf_surface_t *surface,
+				 cairo_pdf_resource_t resource);
+
+cairo_private void
+_cairo_pdf_surface_object_end (cairo_pdf_surface_t *surface);
 
 cairo_private cairo_int_status_t
 _cairo_pdf_interchange_tag_end (cairo_pdf_surface_t *surface,
