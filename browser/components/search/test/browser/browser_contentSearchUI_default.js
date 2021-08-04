@@ -168,3 +168,17 @@ add_task(async function test_content_search_attributes_in_private_window() {
 
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(async function test_content_search_permanent_private_browsing() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [HANDOFF_PREF, true],
+      ["browser.privatebrowsing.autostart", true],
+    ],
+  });
+
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await runNewTabTest(true);
+  await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
+});
