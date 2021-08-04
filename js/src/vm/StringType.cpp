@@ -252,7 +252,7 @@ mozilla::Maybe<mozilla::Tuple<size_t, size_t> > JSString::encodeUTF8Partial(
   return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
 }
 
-#if defined(DEBUG) || defined(JS_JITSPEW)
+#if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
 
 template <typename CharT>
 /*static */
@@ -419,7 +419,7 @@ bool JSString::equals(const char* s) {
 
   return StringEqualsAscii(linear, s);
 }
-#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW) */
 
 template <typename CharT>
 static MOZ_ALWAYS_INLINE bool AllocChars(JSString* str, size_t length,
@@ -541,7 +541,7 @@ bool JSRope::hash(uint32_t* outHash) const {
   return true;
 }
 
-#if defined(DEBUG) || defined(JS_JITSPEW)
+#if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
 void JSRope::dumpRepresentation(js::GenericPrinter& out, int indent) const {
   dumpRepresentationHeader(out, "JSRope");
   indent += 2;
@@ -1034,7 +1034,7 @@ static inline void FillFromCompatible(unsigned char* dest,
   }
 }
 
-#if defined(DEBUG) || defined(JS_JITSPEW)
+#if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
 void JSDependentString::dumpRepresentation(js::GenericPrinter& out,
                                            int indent) const {
   dumpRepresentationHeader(out, "JSDependentString");
@@ -1534,7 +1534,7 @@ bool AutoStableStringChars::copyTwoByteChars(JSContext* cx,
   return true;
 }
 
-#if defined(DEBUG) || defined(JS_JITSPEW)
+#if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
 void JSAtom::dump(js::GenericPrinter& out) {
   out.printf("JSAtom* (%p) = ", (void*)this);
   this->JSString::dump(out);
@@ -1554,7 +1554,7 @@ void JSExternalString::dumpRepresentation(js::GenericPrinter& out,
              callbacks());
   dumpRepresentationChars(out, indent);
 }
-#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW) */
 
 JSLinearString* js::NewDependentString(JSContext* cx, JSString* baseArg,
                                        size_t start, size_t length,
@@ -1974,7 +1974,7 @@ JSString* NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n,
 
 } /* namespace js */
 
-#if defined(DEBUG) || defined(JS_JITSPEW)
+#if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
 void JSExtensibleString::dumpRepresentation(js::GenericPrinter& out,
                                             int indent) const {
   dumpRepresentationHeader(out, "JSExtensibleString");
