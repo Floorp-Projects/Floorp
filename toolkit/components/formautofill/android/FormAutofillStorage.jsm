@@ -190,6 +190,33 @@ class CreditCards extends CreditCardsBase {
     return super.getSavedFieldNames();
   }
 
+  /**
+   * Normalize the given record and return the first matched guid if storage has the same record.
+   * @param {Object} targetCreditCard
+   *        The credit card for duplication checking.
+   * @returns {Promise<string|null>}
+   *          Return the first guid if storage has the same credit card and null otherwise.
+   */
+  async getDuplicateGuid(targetCreditCard) {
+    let clonedTargetCreditCard = this._clone(targetCreditCard);
+    this._normalizeRecord(clonedTargetCreditCard);
+    if (!clonedTargetCreditCard["cc-number"]) {
+      return null;
+    }
+
+    await this._store.updateCreditCards();
+    for (let creditCard of this._data) {
+      if (creditCard.deleted) {
+        continue;
+      }
+
+      if (creditCard["cc-number"] == clonedTargetCreditCard["cc-number"]) {
+        return creditCard.guid;
+      }
+    }
+    return null;
+  }
+
   async reconcile(remoteRecord) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
