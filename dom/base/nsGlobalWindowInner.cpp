@@ -7521,10 +7521,6 @@ void nsGlobalWindowInner::ForgetSharedWorker(SharedWorker* aSharedWorker) {
 }
 
 void nsGlobalWindowInner::StorageAccessPermissionGranted() {
-  // Invalidate cached StorageAllowed field so that calls to GetLocalStorage
-  // give us the updated localStorage object.
-  mStorageAllowedCache = Nothing();
-
   PropagateStorageAccessPermissionGrantedToWorkers(*this);
 
   // If we have a partitioned localStorage, it's time to replace it with a real
