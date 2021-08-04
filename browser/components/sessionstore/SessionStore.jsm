@@ -3657,7 +3657,6 @@ var SessionStoreInternal = {
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
         userContextId: aTab.userContextId,
       }),
-      remoteTypeOverride: E10SUtils.NOT_REMOTE,
     });
 
     let data = TabState.collect(aTab, TAB_CUSTOM_VALUES.get(aTab));
