@@ -50,7 +50,7 @@ HEADER = b"""
  * This is a file generated directly from the official OpenGL registry
  * xml available http://www.opengl.org/registry/#specfiles.
  *
- * To generate this file, see tutorial in \'GLParseRegistryXML.py\'.
+ * To generate this file, see tutorial in \'GLConsts.py\'.
  */
 """[
     1:

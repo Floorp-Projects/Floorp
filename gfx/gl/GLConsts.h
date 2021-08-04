@@ -12,7 +12,7 @@
  * This is a file generated directly from the official OpenGL registry
  * xml available http://www.opengl.org/registry/#specfiles.
  *
- * To generate this file, see tutorial in 'GLParseRegistryXML.py'.
+ * To generate this file, see tutorial in 'GLConsts.py'.
  */
 
 // GL
@@ -1756,6 +1756,7 @@
 #define LOCAL_GL_FRAMEBUFFER_DEFAULT_WIDTH                   0x9310
 #define LOCAL_GL_FRAMEBUFFER_EXT                             0x8D40
 #define LOCAL_GL_FRAMEBUFFER_FETCH_NONCOHERENT_QCOM          0x96A2
+#define LOCAL_GL_FRAMEBUFFER_FLIP_X_MESA                     0x8BBC
 #define LOCAL_GL_FRAMEBUFFER_FLIP_Y_MESA                     0x8BBB
 #define LOCAL_GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT           0x8CD6
 #define LOCAL_GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT       0x8CD6
@@ -1800,6 +1801,7 @@
 #define LOCAL_GL_FRAMEBUFFER_SRGB                            0x8DB9
 #define LOCAL_GL_FRAMEBUFFER_SRGB_CAPABLE_EXT                0x8DBA
 #define LOCAL_GL_FRAMEBUFFER_SRGB_EXT                        0x8DB9
+#define LOCAL_GL_FRAMEBUFFER_SWAP_XY_MESA                    0x8BBD
 #define LOCAL_GL_FRAMEBUFFER_UNDEFINED                       0x8219
 #define LOCAL_GL_FRAMEBUFFER_UNDEFINED_OES                   0x8219
 #define LOCAL_GL_FRAMEBUFFER_UNSUPPORTED                     0x8CDD
@@ -2972,6 +2974,7 @@
 #define LOCAL_GL_MAX_TEXTURE_STACK_DEPTH                     0x0D39
 #define LOCAL_GL_MAX_TEXTURE_UNITS                           0x84E2
 #define LOCAL_GL_MAX_TEXTURE_UNITS_ARB                       0x84E2
+#define LOCAL_GL_MAX_TIMELINE_SEMAPHORE_VALUE_DIFFERENCE_NV  0x95B6
 #define LOCAL_GL_MAX_TRACK_MATRICES_NV                       0x862F
 #define LOCAL_GL_MAX_TRACK_MATRIX_STACK_DEPTH_NV             0x862E
 #define LOCAL_GL_MAX_TRANSFORM_FEEDBACK_BUFFERS              0x8E70
@@ -3133,6 +3136,8 @@
 #define LOCAL_GL_MODULATE_COLOR_IMG                          0x8C04
 #define LOCAL_GL_MODULATE_SIGNED_ADD_ATI                     0x8745
 #define LOCAL_GL_MODULATE_SUBTRACT_ATI                       0x8746
+#define LOCAL_GL_MOTION_ESTIMATION_SEARCH_BLOCK_X_QCOM       0x8C90
+#define LOCAL_GL_MOTION_ESTIMATION_SEARCH_BLOCK_Y_QCOM       0x8C91
 #define LOCAL_GL_MOVE_TO_CONTINUES_NV                        0x90B6
 #define LOCAL_GL_MOVE_TO_NV                                  0x02
 #define LOCAL_GL_MOVE_TO_RESETS_NV                           0x90B5
@@ -4441,6 +4446,9 @@
 #define LOCAL_GL_SELECT                                      0x1C02
 #define LOCAL_GL_SELECTION_BUFFER_POINTER                    0x0DF3
 #define LOCAL_GL_SELECTION_BUFFER_SIZE                       0x0DF4
+#define LOCAL_GL_SEMAPHORE_TYPE_BINARY_NV                    0x95B4
+#define LOCAL_GL_SEMAPHORE_TYPE_NV                           0x95B3
+#define LOCAL_GL_SEMAPHORE_TYPE_TIMELINE_NV                  0x95B5
 #define LOCAL_GL_SEPARABLE_2D                                0x8012
 #define LOCAL_GL_SEPARABLE_2D_EXT                            0x8012
 #define LOCAL_GL_SEPARATE_ATTRIBS                            0x8C8D
@@ -4485,6 +4493,9 @@
 #define LOCAL_GL_SHADING_LANGUAGE_VERSION                    0x8B8C
 #define LOCAL_GL_SHADING_LANGUAGE_VERSION_ARB                0x8B8C
 #define LOCAL_GL_SHADING_RATE_16_INVOCATIONS_PER_PIXEL_NV    0x956F
+#define LOCAL_GL_SHADING_RATE_1X1_PIXELS_QCOM                0x96A6
+#define LOCAL_GL_SHADING_RATE_1X2_PIXELS_QCOM                0x96A7
+#define LOCAL_GL_SHADING_RATE_1X4_PIXELS_QCOM                0x96AA
 #define LOCAL_GL_SHADING_RATE_1_INVOCATION_PER_1X2_PIXELS_NV 0x9566
 #define LOCAL_GL_SHADING_RATE_1_INVOCATION_PER_2X1_PIXELS_NV 0x9567
 #define LOCAL_GL_SHADING_RATE_1_INVOCATION_PER_2X2_PIXELS_NV 0x9568
@@ -4492,15 +4503,25 @@
 #define LOCAL_GL_SHADING_RATE_1_INVOCATION_PER_4X2_PIXELS_NV 0x956A
 #define LOCAL_GL_SHADING_RATE_1_INVOCATION_PER_4X4_PIXELS_NV 0x956B
 #define LOCAL_GL_SHADING_RATE_1_INVOCATION_PER_PIXEL_NV      0x9565
+#define LOCAL_GL_SHADING_RATE_2X1_PIXELS_QCOM                0x96A8
+#define LOCAL_GL_SHADING_RATE_2X2_PIXELS_QCOM                0x96A9
+#define LOCAL_GL_SHADING_RATE_2X4_PIXELS_QCOM                0x96AD
 #define LOCAL_GL_SHADING_RATE_2_INVOCATIONS_PER_PIXEL_NV     0x956C
+#define LOCAL_GL_SHADING_RATE_4X1_PIXELS_QCOM                0x96AB
+#define LOCAL_GL_SHADING_RATE_4X2_PIXELS_QCOM                0x96AC
+#define LOCAL_GL_SHADING_RATE_4X4_PIXELS_QCOM                0x96AE
 #define LOCAL_GL_SHADING_RATE_4_INVOCATIONS_PER_PIXEL_NV     0x956D
 #define LOCAL_GL_SHADING_RATE_8_INVOCATIONS_PER_PIXEL_NV     0x956E
 #define LOCAL_GL_SHADING_RATE_IMAGE_BINDING_NV               0x955B
 #define LOCAL_GL_SHADING_RATE_IMAGE_NV                       0x9563
+#define LOCAL_GL_SHADING_RATE_IMAGE_PALETTE_COUNT_NV         0x95B2
 #define LOCAL_GL_SHADING_RATE_IMAGE_PALETTE_SIZE_NV          0x955E
+#define LOCAL_GL_SHADING_RATE_IMAGE_PER_PRIMITIVE_NV         0x95B1
 #define LOCAL_GL_SHADING_RATE_IMAGE_TEXEL_HEIGHT_NV          0x955D
 #define LOCAL_GL_SHADING_RATE_IMAGE_TEXEL_WIDTH_NV           0x955C
 #define LOCAL_GL_SHADING_RATE_NO_INVOCATIONS_NV              0x9564
+#define LOCAL_GL_SHADING_RATE_PRESERVE_ASPECT_RATIO_QCOM     0x96A5
+#define LOCAL_GL_SHADING_RATE_QCOM                           0x96A4
 #define LOCAL_GL_SHADING_RATE_SAMPLE_ORDER_DEFAULT_NV        0x95AE
 #define LOCAL_GL_SHADING_RATE_SAMPLE_ORDER_PIXEL_MAJOR_NV    0x95AF
 #define LOCAL_GL_SHADING_RATE_SAMPLE_ORDER_SAMPLE_MAJOR_NV   0x95B0
@@ -5125,6 +5146,7 @@
 #define LOCAL_GL_TEXTURE_FLOAT_COMPONENTS_NV                 0x888C
 #define LOCAL_GL_TEXTURE_FORMAT_QCOM                         0x8BD6
 #define LOCAL_GL_TEXTURE_FORMAT_SRGB_OVERRIDE_EXT            0x8FBF
+#define LOCAL_GL_TEXTURE_FOVEATED_CUTOFF_DENSITY_QCOM        0x96A0
 #define LOCAL_GL_TEXTURE_FOVEATED_FEATURE_BITS_QCOM          0x8BFB
 #define LOCAL_GL_TEXTURE_FOVEATED_FEATURE_QUERY_QCOM         0x8BFD
 #define LOCAL_GL_TEXTURE_FOVEATED_MIN_PIXEL_DENSITY_QCOM     0x8BFC
@@ -5246,6 +5268,7 @@
 #define LOCAL_GL_TEXTURE_TILING_EXT                          0x9580
 #define LOCAL_GL_TEXTURE_TOO_LARGE_EXT                       0x8065
 #define LOCAL_GL_TEXTURE_TYPE_QCOM                           0x8BD7
+#define LOCAL_GL_TEXTURE_UNNORMALIZED_COORDINATES_ARM        0x8F6A
 #define LOCAL_GL_TEXTURE_UNSIGNED_REMAP_MODE_NV              0x888F
 #define LOCAL_GL_TEXTURE_UPDATE_BARRIER_BIT                  0x00000100
 #define LOCAL_GL_TEXTURE_UPDATE_BARRIER_BIT_EXT              0x00000100
@@ -5276,6 +5299,7 @@
 #define LOCAL_GL_TILE_RASTER_ORDER_INCREASING_X_MESA         0x8BB9
 #define LOCAL_GL_TILE_RASTER_ORDER_INCREASING_Y_MESA         0x8BBA
 #define LOCAL_GL_TILING_TYPES_EXT                            0x9583
+#define LOCAL_GL_TIMELINE_SEMAPHORE_VALUE_NV                 0x9595
 #define LOCAL_GL_TIMEOUT_EXPIRED                             0x911B
 #define LOCAL_GL_TIMEOUT_EXPIRED_APPLE                       0x911B
 #define LOCAL_GL_TIMEOUT_IGNORED                             0xFFFFFFFFFFFFFFFF
@@ -5979,6 +6003,8 @@
 #define LOCAL_EGL_COLOR_COMPONENT_TYPE_EXT                   0x3339
 #define LOCAL_EGL_COLOR_COMPONENT_TYPE_FIXED_EXT             0x333A
 #define LOCAL_EGL_COLOR_COMPONENT_TYPE_FLOAT_EXT             0x333B
+#define LOCAL_EGL_COLOR_COMPONENT_TYPE_INTEGER_ARM           0x3288
+#define LOCAL_EGL_COLOR_COMPONENT_TYPE_UNSIGNED_INTEGER_ARM  0x3287
 #define LOCAL_EGL_COLOR_FORMAT_HI                            0x8F70
 #define LOCAL_EGL_COLOR_RGBA_HI                              0x8F72
 #define LOCAL_EGL_COLOR_RGB_HI                               0x8F71
@@ -5993,6 +6019,7 @@
 #define LOCAL_EGL_CONDITION_SATISFIED_NV                     0x30EC
 #define LOCAL_EGL_CONFIG_CAVEAT                              0x3027
 #define LOCAL_EGL_CONFIG_ID                                  0x3028
+#define LOCAL_EGL_CONFIG_SELECT_GROUP_EXT                    0x34C0
 #define LOCAL_EGL_CONFORMANT                                 0x3042
 #define LOCAL_EGL_CONFORMANT_KHR                             0x3042
 #define LOCAL_EGL_CONSUMER_ACQUIRE_TIMEOUT_USEC_KHR          0x321E
@@ -6059,6 +6086,7 @@
 #define LOCAL_EGL_DEPTH_SIZE                                 0x3025
 #define LOCAL_EGL_DEQUEUE_READY_TIME_ANDROID                 0x343B
 #define LOCAL_EGL_DEVICE_EXT                                 0x322C
+#define LOCAL_EGL_DEVICE_UUID_EXT                            0x335C
 #define LOCAL_EGL_DISCARD_SAMPLES_ARM                        0x3286
 #define LOCAL_EGL_DISPLAY_PRESENT_TIME_ANDROID               0x343A
 #define LOCAL_EGL_DISPLAY_SCALING                            10000
@@ -6084,6 +6112,8 @@
 #define LOCAL_EGL_DMA_BUF_PLANE3_PITCH_EXT                   0x3442
 #define LOCAL_EGL_DONT_CARE                                  EGL_CAST(EGLint,-1)
 #define LOCAL_EGL_DRAW                                       0x3059
+#define LOCAL_EGL_DRIVER_NAME_EXT                            0x335E
+#define LOCAL_EGL_DRIVER_UUID_EXT                            0x335D
 #define LOCAL_EGL_DRM_BUFFER_FORMAT_ARGB32_MESA              0x31D2
 #define LOCAL_EGL_DRM_BUFFER_FORMAT_MESA                     0x31D0
 #define LOCAL_EGL_DRM_BUFFER_MESA                            0x31D3
@@ -6097,6 +6127,7 @@
 #define LOCAL_EGL_DRM_DEVICE_FILE_EXT                        0x3233
 #define LOCAL_EGL_DRM_MASTER_FD_EXT                          0x333C
 #define LOCAL_EGL_DRM_PLANE_EXT                              0x3235
+#define LOCAL_EGL_DRM_RENDER_NODE_FILE_EXT                   0x3377
 #define LOCAL_EGL_EXTENSIONS                                 0x3055
 #define LOCAL_EGL_EXTERNAL_REF_ID_EXT                        0x3461
 #define LOCAL_EGL_FALSE                                      0
@@ -6370,6 +6401,8 @@
 #define LOCAL_EGL_PLATFORM_X11_KHR                           0x31D5
 #define LOCAL_EGL_PLATFORM_X11_SCREEN_EXT                    0x31D6
 #define LOCAL_EGL_PLATFORM_X11_SCREEN_KHR                    0x31D6
+#define LOCAL_EGL_PLATFORM_XCB_EXT                           0x31DC
+#define LOCAL_EGL_PLATFORM_XCB_SCREEN_EXT                    0x31DE
 #define LOCAL_EGL_POST_SUB_BUFFER_SUPPORTED_NV               0x30BE
 #define LOCAL_EGL_PRIMARY_COMPOSITOR_CONTEXT_EXT             0x3460
 #define LOCAL_EGL_PRODUCER_AUTO_ORIENTATION_NV               0x336A
@@ -6384,6 +6417,7 @@
 #define LOCAL_EGL_RECORDABLE_ANDROID                         0x3142
 #define LOCAL_EGL_RED_SIZE                                   0x3024
 #define LOCAL_EGL_RENDERABLE_TYPE                            0x3040
+#define LOCAL_EGL_RENDERER_EXT                               0x335F
 #define LOCAL_EGL_RENDERING_COMPLETE_TIME_ANDROID            0x3435
 #define LOCAL_EGL_RENDER_BUFFER                              0x3086
 #define LOCAL_EGL_REQUESTED_PRESENT_TIME_ANDROID             0x3434
@@ -6414,6 +6448,7 @@
 #define LOCAL_EGL_SOCKET_TYPE_UNIX_NV                        0x324E
 #define LOCAL_EGL_STENCIL_SIZE                               0x3026
 #define LOCAL_EGL_STREAM_BIT_KHR                             0x0800
+#define LOCAL_EGL_STREAM_CONSUMER_IMAGE_NV                   0x3373
 #define LOCAL_EGL_STREAM_CONSUMER_NV                         0x3248
 #define LOCAL_EGL_STREAM_CROSS_DISPLAY_NV                    0x334E
 #define LOCAL_EGL_STREAM_CROSS_OBJECT_NV                     0x334D
@@ -6428,6 +6463,9 @@
 #define LOCAL_EGL_STREAM_FRAME_MAJOR_AXIS_NV                 0x3368
 #define LOCAL_EGL_STREAM_FRAME_ORIGIN_X_NV                   0x3366
 #define LOCAL_EGL_STREAM_FRAME_ORIGIN_Y_NV                   0x3367
+#define LOCAL_EGL_STREAM_IMAGE_ADD_NV                        0x3374
+#define LOCAL_EGL_STREAM_IMAGE_AVAILABLE_NV                  0x3376
+#define LOCAL_EGL_STREAM_IMAGE_REMOVE_NV                     0x3375
 #define LOCAL_EGL_STREAM_LOCAL_NV                            0x3244
 #define LOCAL_EGL_STREAM_PRODUCER_NV                         0x3247
 #define LOCAL_EGL_STREAM_PROTOCOL_FD_NV                      0x3246
@@ -6486,10 +6524,14 @@
 #define LOCAL_EGL_SYNC_TYPE_KHR                              0x30F7
 #define LOCAL_EGL_SYNC_TYPE_NV                               0x30ED
 #define LOCAL_EGL_TEXTURE_2D                                 0x305F
+#define LOCAL_EGL_TEXTURE_EXTERNAL_WL                        0x31DA
 #define LOCAL_EGL_TEXTURE_FORMAT                             0x3080
 #define LOCAL_EGL_TEXTURE_RGB                                0x305D
 #define LOCAL_EGL_TEXTURE_RGBA                               0x305E
 #define LOCAL_EGL_TEXTURE_TARGET                             0x3081
+#define LOCAL_EGL_TEXTURE_Y_UV_WL                            0x31D8
+#define LOCAL_EGL_TEXTURE_Y_U_V_WL                           0x31D7
+#define LOCAL_EGL_TEXTURE_Y_XUXV_WL                          0x31D9
 #define LOCAL_EGL_TIMEOUT_EXPIRED                            0x30F5
 #define LOCAL_EGL_TIMEOUT_EXPIRED_KHR                        0x30F5
 #define LOCAL_EGL_TIMEOUT_EXPIRED_NV                         0x30EB
@@ -6524,6 +6566,9 @@
 #define LOCAL_EGL_VG_COLORSPACE_LINEAR_BIT_KHR               0x0020
 #define LOCAL_EGL_VG_COLORSPACE_sRGB                         0x3089
 #define LOCAL_EGL_VG_PARENT_IMAGE_KHR                        0x30BA
+#define LOCAL_EGL_WAYLAND_BUFFER_WL                          0x31D5
+#define LOCAL_EGL_WAYLAND_PLANE_WL                           0x31D6
+#define LOCAL_EGL_WAYLAND_Y_INVERTED_WL                      0x31DB
 #define LOCAL_EGL_WIDTH                                      0x3057
 #define LOCAL_EGL_WINDOW_BIT                                 0x0004
 #define LOCAL_EGL_WRITE_SURFACE_BIT_KHR                      0x0002
@@ -6631,6 +6676,11 @@
 #define LOCAL_GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB         0x00000002
 #define LOCAL_GLX_CONTEXT_MAJOR_VERSION_ARB                  0x2091
 #define LOCAL_GLX_CONTEXT_MINOR_VERSION_ARB                  0x2092
+#define LOCAL_GLX_CONTEXT_MULTIGPU_ATTRIB_AFR_NV             0x20AC
+#define LOCAL_GLX_CONTEXT_MULTIGPU_ATTRIB_MULTICAST_NV       0x20AD
+#define LOCAL_GLX_CONTEXT_MULTIGPU_ATTRIB_MULTI_DISPLAY_MULTICAST_NV 0x20AE
+#define LOCAL_GLX_CONTEXT_MULTIGPU_ATTRIB_NV                 0x20AA
+#define LOCAL_GLX_CONTEXT_MULTIGPU_ATTRIB_SINGLE_NV          0x20AB
 #define LOCAL_GLX_CONTEXT_OPENGL_NO_ERROR_ARB                0x31B3
 #define LOCAL_GLX_CONTEXT_PRIORITY_HIGH_EXT                  0x3101
 #define LOCAL_GLX_CONTEXT_PRIORITY_LEVEL_EXT                 0x3100
