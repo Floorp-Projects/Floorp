@@ -17,3 +17,57 @@ if (window.adsbygoogle?.loaded === undefined) {
     push() {},
   };
 }
+
+if (window.gapi?._pl === undefined) {
+  const stub = {
+    go() {},
+    render: () => "",
+  };
+  window.gapi = {
+    _pl: true,
+    additnow: stub,
+    autocomplete: stub,
+    backdrop: stub,
+    blogger: stub,
+    commentcount: stub,
+    comments: stub,
+    community: stub,
+    donation: stub,
+    family_creation: stub,
+    follow: stub,
+    hangout: stub,
+    health: stub,
+    interactivepost: stub,
+    load() {},
+    logutil: {
+      enableDebugLogging() {},
+    },
+    page: stub,
+    partnersbadge: stub,
+    person: stub,
+    platform: {
+      go() {},
+    },
+    playemm: stub,
+    playreview: stub,
+    plus: stub,
+    plusone: stub,
+    post: stub,
+    profile: stub,
+    ratingbadge: stub,
+    recobar: stub,
+    savetoandroidpay: stub,
+    savetodrive: stub,
+    savetowallet: stub,
+    share: stub,
+    sharetoclassroom: stub,
+    shortlists: stub,
+    signin: stub,
+    signin2: stub,
+    surveyoptin: stub,
+    visibility: stub,
+    youtube: stub,
+    ytsubscribe: stub,
+    zoomableimage: stub,
+  };
+}
