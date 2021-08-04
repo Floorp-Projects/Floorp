@@ -903,10 +903,13 @@ void nsHttpResponseHead::UpdateHeaders(nsHttpResponseHead* aOther) {
   for (i = 0; i < count; ++i) {
     nsHttpAtom header;
     nsAutoCString headerNameOriginal;
-    const char* val =
-        aOther->mHeaders.PeekHeaderAt(i, header, headerNameOriginal);
 
-    if (!val) {
+    if (!aOther->mHeaders.PeekHeaderAt(i, header, headerNameOriginal)) {
+      continue;
+    }
+
+    nsAutoCString val;
+    if (NS_FAILED(aOther->GetHeader(header, val))) {
       continue;
     }
 
@@ -926,13 +929,13 @@ void nsHttpResponseHead::UpdateHeaders(nsHttpResponseHead* aOther) {
         // this one is for MS servers that send "Content-Length: 0"
         // on 304 responses
         header == nsHttp::Content_Length) {
-      LOG(("ignoring response header [%s: %s]\n", header.get(), val));
+      LOG(("ignoring response header [%s: %s]\n", header.get(), val.get()));
     } else {
-      LOG(("new response header [%s: %s]\n", header.get(), val));
+      LOG(("new response header [%s: %s]\n", header.get(), val.get()));
 
       // overwrite the current header value with the new value...
       DebugOnly<nsresult> rv =
-          SetHeader_locked(header, headerNameOriginal, nsDependentCString(val));
+          SetHeader_locked(header, headerNameOriginal, val);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
