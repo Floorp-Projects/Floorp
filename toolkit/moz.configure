@@ -2092,13 +2092,9 @@ with only_when(requires_wasm_sandboxing & compile_environment):
     def lucetc(value):
         return value
 
-    # Allow setting LUCETC to an explicit empty value to force building
-    # with wasm2c.
     @depends("LUCETC")
     def lucetc_not_empty(lucetc):
-        if lucetc.origin != "default" and not lucetc:
-            return False
-        return True
+        return bool(lucetc)
 
     lucetc = check_prog(
         "LUCETC", ["lucetc"], input=lucetc, bootstrap="lucetc", when=lucetc_not_empty
