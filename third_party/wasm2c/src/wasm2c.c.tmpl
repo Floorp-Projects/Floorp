@@ -47,7 +47,7 @@
 #define MEMCHECK(mem, a, t)
 #else
 #define MEMCHECK(mem, a, t)  \
-  if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)
+  if (UNLIKELY((a) + sizeof(t) > mem->size)) (void) TRAP(OOB)
 #endif
 
 #if defined(WASM_USING_GLOBAL_HEAP)

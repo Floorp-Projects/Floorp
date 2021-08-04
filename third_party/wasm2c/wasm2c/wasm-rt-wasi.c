@@ -140,14 +140,11 @@ DEFINE_WASI_STORE(wasm_i64_store32, u32, u64);
 #define VERBOSE_LOG(...)
 #endif
 
-#define IMPORT_IMPL(ret, name, params, body) \
-static ret _##name params { \
-  VERBOSE_LOG("[import: " #name "]\n"); \
-  body \
-} \
-ret (*name) params = _##name
-
-#define STUB_IMPORT_IMPL(ret, name, params, returncode) IMPORT_IMPL(ret, name, params, { return returncode; })
+#define STUB_IMPORT_IMPL(ret, name, params, returncode) \
+ret name params { \
+  VERBOSE_LOG("[stub import: " #name "]\n"); \
+  return returncode; \
+}
 
 // Generic abort method for a runtime error in the runtime.
 
@@ -159,21 +156,21 @@ static void abort_with_message(const char* message) {
 /////////////////////////////////////////// Emscripten runtime ///////////////////////////////////////////////
 
 // Setjmp/longjmp are not currently supported safely. So lonjmp with abort, setjmp can be a noop.
-IMPORT_IMPL(void, Z_envZ_emscripten_longjmpZ_vii, (wasm_sandbox_wasi_data* wasi_data, u32 buf, u32 value), {
+void Z_envZ_emscripten_longjmpZ_vii(wasm_sandbox_wasi_data* wasi_data, u32 buf, u32 value) {
   abort_with_message("longjmp not supported");
-});
+}
 
 STUB_IMPORT_IMPL(u32,  Z_envZ_emscripten_setjmpZ_ii, (wasm_sandbox_wasi_data* wasi_data, u32 buf), 0);
 
-IMPORT_IMPL(void, Z_envZ_emscripten_notify_memory_growthZ_vi, (wasm_sandbox_wasi_data* wasi_data, u32 size), {});
+void Z_envZ_emscripten_notify_memory_growthZ_vi(wasm_sandbox_wasi_data* wasi_data, u32 size) {}
 
-IMPORT_IMPL(u32, Z_envZ_getTempRet0Z_iv, (wasm_sandbox_wasi_data* wasi_data), {
+u32 Z_envZ_getTempRet0Z_iv(wasm_sandbox_wasi_data* wasi_data) {
   return wasi_data->tempRet0;
-});
+}
 
-IMPORT_IMPL(void, Z_envZ_setTempRet0Z_vi, (wasm_sandbox_wasi_data* wasi_data, u32 x), {
+void Z_envZ_setTempRet0Z_vi(wasm_sandbox_wasi_data* wasi_data, u32 x) {
   wasi_data->tempRet0 = x;
-});
+}
 
 static const char* get_null_file_path()
 {
@@ -318,7 +315,7 @@ static int get_native_fd(wasm_sandbox_wasi_data* wasi_data, u32 fd) {
   return wasi_data->wasm_fd_to_native[fd];
 }
 
-IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 pathname, u32 mode), {
+u32 Z_envZ___sys_accessZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 pathname, u32 mode) {
   VERBOSE_LOG("  access: %s 0x%x\n", MEMACCESS(wasi_data->heap_memory, pathname), mode);
 
   // only permit access checks on the the null file
@@ -335,10 +332,9 @@ IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (wasm_sandbox_wasi_data* wasi_data, u
     return EM_EACCES;
   }
   return 0;
-});
+}
 
-
-IMPORT_IMPL(u32, Z_envZ___sys_openZ_iiii, (wasm_sandbox_wasi_data* wasi_data, u32 path, u32 flags, u32 varargs), {
+u32 Z_envZ___sys_openZ_iiii(wasm_sandbox_wasi_data* wasi_data, u32 path, u32 flags, u32 varargs) {
   VERBOSE_LOG("  open: %s %d\n", MEMACCESS(wasi_data->heap_memory, path), flags);
 
   // only permit opening the null file
@@ -359,18 +355,18 @@ IMPORT_IMPL(u32, Z_envZ___sys_openZ_iiii, (wasm_sandbox_wasi_data* wasi_data, u3
     return fd;
   }
   return -1;
-});
+}
 
-IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 buf), {
+u32 Z_envZ___sys_fstat64Z_iii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 buf) {
   int nfd = get_native_fd(wasi_data, fd);
   VERBOSE_LOG("  fstat64 %d (=> %d) %d\n", fd, nfd, buf);
   if (nfd < 0) {
     return EM_EACCES;
   }
   return do_stat(wasi_data, nfd, buf);
-});
+}
 
-IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (wasm_sandbox_wasi_data* wasi_data, u32 path, u32 buf), {
+u32 Z_envZ___sys_stat64Z_iii(wasm_sandbox_wasi_data* wasi_data, u32 path, u32 buf) {
   VERBOSE_LOG("  stat64: %s\n", MEMACCESS(wasi_data->heap_memory, path));
   int fd = Z_envZ___sys_openZ_iiii(wasi_data, path, 0 /* read_only */, 0);
   int nfd = get_native_fd(wasi_data, fd);
@@ -379,9 +375,9 @@ IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (wasm_sandbox_wasi_data* wasi_data, u
     return EM_EACCES;
   }
   return do_stat(wasi_data, nfd, buf);
-});
+}
 
-IMPORT_IMPL(u32, Z_envZ___sys_readZ_iiii, (wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 buf, u32 count), {
+u32 Z_envZ___sys_readZ_iiii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 buf, u32 count) {
   int nfd = get_native_fd(wasi_data, fd);
   VERBOSE_LOG("  read %d (=> %d) %d %d\n", fd, nfd, buf, count);
   if (nfd < 0) {
@@ -399,7 +395,7 @@ IMPORT_IMPL(u32, Z_envZ___sys_readZ_iiii, (wasm_sandbox_wasi_data* wasi_data, u3
     return EM_EACCES;
   }
   return ret;
-});
+}
 
 
 STUB_IMPORT_IMPL(u32, Z_envZ_dlopenZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b), 1);
@@ -536,7 +532,7 @@ STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_sock_shutdownZ_iii, (u32 a, u32 
 
 // Original file: Modified emscripten/tools/wasm2c/main.c
 
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_args_getZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 argv, u32 argv_buf), {
+u32 Z_wasi_snapshot_preview1Z_args_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 argv, u32 argv_buf) {
   u32 buf_size = 0;
   for (u32 i = 0; i < wasi_data->main_argc; i++) {
     u32 ptr = argv_buf + buf_size;
@@ -554,9 +550,9 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_args_getZ_iii, (wasm_sandbox_wasi_dat
     buf_size += len;
   }
   return 0;
-});
+}
 
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 pargc, u32 pargv_buf_size), {
+u32 Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 pargc, u32 pargv_buf_size) {
   wasm_i32_store(wasi_data->heap_memory, pargc, wasi_data->main_argc);
   u32 buf_size = 0;
   for (u32 i = 0; i < wasi_data->main_argc; i++) {
@@ -564,41 +560,41 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii, (wasm_sandbox_wa
   }
   wasm_i32_store(wasi_data->heap_memory, pargv_buf_size, buf_size);
   return 0;
-});
+}
 
 // Original file: Modified emscripten/tools/wasm2c/os.c
 
 #ifdef WASM2C_WASI_EXIT_HOST_ON_MODULE_EXIT
-IMPORT_IMPL(void, Z_wasi_snapshot_preview1Z_proc_exitZ_vi, (wasm_sandbox_wasi_data* wasi_data, u32 x), {
+void Z_wasi_snapshot_preview1Z_proc_exitZ_vi(wasm_sandbox_wasi_data* wasi_data, u32 x) {
     exit(1);
-  });
+  }
 #else
-IMPORT_IMPL(void, Z_wasi_snapshot_preview1Z_proc_exitZ_vi, (wasm_sandbox_wasi_data* wasi_data, u32 x), {
+void Z_wasi_snapshot_preview1Z_proc_exitZ_vi(wasm_sandbox_wasi_data* wasi_data, u32 x) {
     // upstream emscripten implements this as exit(x)
     // This seems like a bad idea as a misbehaving sandbox will cause the app to exit
     // Since this is a library sandboxing runtime, it's fine to do nothing here.
     // Worst case the library continues execution and returns malformed data, which is already a possibility in any sandbox library
     VERBOSE_LOG("wasm2c module called proc_exit: this is a noop in this runtime\n");
-});
+}
 #endif
 
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_environ_sizes_getZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 pcount, u32 pbuf_size), {
+u32 Z_wasi_snapshot_preview1Z_environ_sizes_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 pcount, u32 pbuf_size) {
   // TODO: Allow the sandbox to have its own env
   wasm_i32_store(wasi_data->heap_memory, pcount, 0);
   wasm_i32_store(wasi_data->heap_memory, pbuf_size, 0);
   return 0;
-});
+}
 
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_environ_getZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 __environ, u32 environ_buf), {
+u32 Z_wasi_snapshot_preview1Z_environ_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 __environ, u32 environ_buf) {
   // TODO: Allow the sandbox to have its own env
   return 0;
-});
+}
 
 /////////////////////////////////////////////////////////////
 ////////// File operations
 /////////////////////////////////////////////////////////////
 
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_prestat_getZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 prestat), {
+u32 Z_wasi_snapshot_preview1Z_fd_prestat_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 prestat) {
   int nfd = get_native_fd(wasi_data, fd);
   VERBOSE_LOG("  fd_prestat_get wasm %d => native %d\n", fd, nfd);
   if (nfd < 0) {
@@ -606,9 +602,9 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_prestat_getZ_iii, (wasm_sandbox_wa
   }
 
   return WASI_DEFAULT_ERROR;
-});
+}
 
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 iov, u32 iovcnt, u32 pnum), {
+u32 Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 iov, u32 iovcnt, u32 pnum) {
   int nfd = get_native_fd(wasi_data, fd);
   VERBOSE_LOG("  fd_write wasm %d => native %d\n", fd, nfd);
   if (nfd < 0) {
@@ -637,7 +633,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (wasm_sandbox_wasi_d
       VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
       return WASI_DEFAULT_ERROR;
     }
-    if (result != len) {
+    if ((size_t) result != len) {
       VERBOSE_LOG("    amount error, %ld %d\n", result, len);
       return WASI_DEFAULT_ERROR;
     }
@@ -646,9 +642,9 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (wasm_sandbox_wasi_d
   VERBOSE_LOG("    success: %d\n", num);
   wasm_i32_store(wasi_data->heap_memory, pnum, num);
   return 0;
-});
+}
 
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_readZ_iiiii, (wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 iov, u32 iovcnt, u32 pnum), {
+u32 Z_wasi_snapshot_preview1Z_fd_readZ_iiiii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 iov, u32 iovcnt, u32 pnum) {
   int nfd = get_native_fd(wasi_data, fd);
   VERBOSE_LOG("  fd_read wasm %d => native %d\n", fd, nfd);
   if (nfd < 0) {
@@ -669,16 +665,16 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_readZ_iiiii, (wasm_sandbox_wasi_da
       return WASI_DEFAULT_ERROR;
     }
     num += result;
-    if (result != len) {
+    if ((size_t) result != len) {
       break; // nothing more to read
     }
   }
   VERBOSE_LOG("    success: %d\n", num);
   wasm_i32_store(wasi_data->heap_memory, pnum, num);
   return 0;
-});
+}
 
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_closeZ_ii, (wasm_sandbox_wasi_data* wasi_data, u32 fd), {
+u32 Z_wasi_snapshot_preview1Z_fd_closeZ_ii(wasm_sandbox_wasi_data* wasi_data, u32 fd) {
   int nfd = get_native_fd(wasi_data, fd);
   VERBOSE_LOG("  close wasm %d => native %d\n", fd, nfd);
   if (nfd < 0) {
@@ -690,7 +686,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_closeZ_ii, (wasm_sandbox_wasi_data
   }
   POSIX_PREFIX(close)(nfd);
   return 0;
-});
+}
 
 static int whence_to_native(u32 whence) {
   if (whence == 0) return SEEK_SET;
@@ -699,7 +695,7 @@ static int whence_to_native(u32 whence) {
   return -1;
 }
 
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (wasm_sandbox_wasi_data* wasi_data, u32 fd, u64 offset, u32 whence, u32 new_offset), {
+u32 Z_wasi_snapshot_preview1Z_fd_seekZ_iijii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u64 offset, u32 whence, u32 new_offset) {
   int nfd = get_native_fd(wasi_data, fd);
   int nwhence = whence_to_native(whence);
   VERBOSE_LOG("  seek %d (=> native %d) %ld %d (=> %d) %d\n", fd, nfd, offset, whence, nwhence, new_offset);
@@ -720,12 +716,12 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (wasm_sandbox_wasi_da
   }
   wasm_i64_store(wasi_data->heap_memory, new_offset, off);
   return 0;
-});
+}
 
 // wasm2c includes a version of seek, the u64 offset in two u32 parts. Unclear if this is needed, as WASI does not require this, but no harm in including it.
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iiiiii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b, u32 c, u32 d, u32 e), {
+u32 Z_wasi_snapshot_preview1Z_fd_seekZ_iiiiii(wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b, u32 c, u32 d, u32 e) {
   return Z_wasi_snapshot_preview1Z_fd_seekZ_iijii(wasi_data, a, b + (((u64)c) << 32), d, e);
-});
+}
 
 /////////////////////////////////////////////////////////////
 ////////// Clock operations
@@ -741,38 +737,31 @@ static int check_clock(u32 clock_id) {
          clock_id == WASM_CLOCK_PROCESS_CPUTIME || clock_id == WASM_CLOCK_THREAD_CPUTIME_ID;
 }
 
-// out is a pointer index to a struct of the form
-// // https://github.com/WebAssembly/wasi-libc/blob/659ff414560721b1660a19685110e484a081c3d4/libc-bottom-half/headers/public/__struct_timespec.h
-// struct timespec {
-//   // https://github.com/WebAssembly/wasi-libc/blob/659ff414560721b1660a19685110e484a081c3d4/libc-bottom-half/headers/public/__typedef_time_t.h
-//   // time is long long in wasm32 which is an i64
-//   time_t tv_sec
-//   // long in wasm is an i32
-//   long tv_nsec;
-// }
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u64 max_lag, u32 out), {
+// out is a pointer to a u64 timestamp in nanoseconds
+// https://github.com/WebAssembly/WASI/blob/main/phases/snapshot/docs.md#-timestamp-u64
+u32 Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji(wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u32 precision, u32 out) {
   if (!check_clock(clock_id)) {
     return WASI_INVAL_ERROR;
   }
 
   struct timespec out_struct;
   int ret = os_clock_gettime(wasi_data->clock_data, clock_id, &out_struct);
-  wasm_i64_store(wasi_data->heap_memory, out, (u64) out_struct.tv_sec);
-  wasm_i32_store(wasi_data->heap_memory, out + sizeof(u64), (u32) out_struct.tv_nsec);
+  u64 result = ((u64)out_struct.tv_sec)*1000000 + ((u64)out_struct.tv_nsec)/1000;
+  wasm_i64_store(wasi_data->heap_memory, out, result);
   return ret;
-});
+}
 
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_res_getZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u32 out), {
+u32 Z_wasi_snapshot_preview1Z_clock_res_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u32 out) {
   if (!check_clock(clock_id)) {
     return WASI_INVAL_ERROR;
   }
 
   struct timespec out_struct;
   int ret = os_clock_getres(wasi_data->clock_data, clock_id, &out_struct);
-  wasm_i64_store(wasi_data->heap_memory, out, (u64) out_struct.tv_sec);
-  wasm_i32_store(wasi_data->heap_memory, out + sizeof(u64), (u32) out_struct.tv_nsec);
+  u64 result = ((u64)out_struct.tv_sec)*1000000 + ((u64)out_struct.tv_nsec)/1000;
+  wasm_i64_store(wasi_data->heap_memory, out, result);
   return ret;
-});
+}
 
 /////////////////////////////////////////////////////////////
 ////////// Misc

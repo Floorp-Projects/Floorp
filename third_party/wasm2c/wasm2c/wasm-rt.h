@@ -106,11 +106,7 @@ typedef struct {
 /** A Memory object. */
 typedef struct {
   /** The linear memory data, with a byte length of `size`. */
-#if WASM_USING_GUARD_PAGES == 1
   uint8_t* const data;
-#else
-  uint8_t* data;
-#endif
   /** The current and maximum page count for this Memory object. If there is no
    * maximum, `max_pages` is 0xffffffffu (i.e. UINT32_MAX). */
   uint32_t pages, max_pages;
