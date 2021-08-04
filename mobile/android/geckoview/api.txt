@@ -629,8 +629,6 @@ package org.mozilla.geckoview {
     method @NonNull public <U> GeckoResult<U> then(@NonNull GeckoResult.OnValueListener<T,U>);
     method @NonNull public <U> GeckoResult<U> then(@Nullable GeckoResult.OnValueListener<T,U>, @Nullable GeckoResult.OnExceptionListener<U>);
     method @NonNull public GeckoResult<T> withHandler(@Nullable Handler);
-    field @Deprecated @DeprecationSchedule(id="allowdeny",version=92) public static final GeckoResult<AllowOrDeny> ALLOW;
-    field @Deprecated @DeprecationSchedule(id="allowdeny",version=92) public static final GeckoResult<AllowOrDeny> DENY;
   }
 
   @AnyThread public static interface GeckoResult.CancellationDelegate {
