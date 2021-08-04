@@ -83,6 +83,7 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/DisplayConfigWindows.h"
 #include "mozilla/layers/DeviceAttachmentsD3D11.h"
+#include "mozilla/WindowsProcessMitigations.h"
 #include "D3D11Checks.h"
 
 using namespace mozilla;
@@ -287,14 +288,18 @@ NS_IMPL_ISUPPORTS(D3DSharedTexturesReporter, nsIMemoryReporter)
 gfxWindowsPlatform::gfxWindowsPlatform()
     : mRenderMode(RENDER_GDI),
       mDwmCompositionStatus(DwmCompositionStatus::Unknown) {
-  /*
-   * Initialize COM
-   */
-  CoInitialize(nullptr);
+  // If win32k is locked down then we can't use COM STA and shouldn't need it.
+  // Also, we won't be using any GPU memory in this process.
+  if (!IsWin32kLockedDown()) {
+    /*
+     * Initialize COM
+     */
+    CoInitialize(nullptr);
 
-  RegisterStrongMemoryReporter(new GfxD2DVramReporter());
-  RegisterStrongMemoryReporter(new GPUAdapterReporter());
-  RegisterStrongMemoryReporter(new D3DSharedTexturesReporter());
+    RegisterStrongMemoryReporter(new GfxD2DVramReporter());
+    RegisterStrongMemoryReporter(new GPUAdapterReporter());
+    RegisterStrongMemoryReporter(new D3DSharedTexturesReporter());
+  }
 }
 
 gfxWindowsPlatform::~gfxWindowsPlatform() {
