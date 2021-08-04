@@ -552,13 +552,9 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
 }
 
 nsDisplayListBuilder::Linkifier::Linkifier(nsDisplayListBuilder* aBuilder,
-                                           nsIFrame* aFrame) {
-  // Links don't nest, so if the builder already has a destination, no need to
-  // check for a link element here.
-  if (!aBuilder->mLinkSpec.IsEmpty()) {
-    return;
-  }
-
+                                           nsIFrame* aFrame,
+                                           nsDisplayList* aList)
+    : mList(aList) {
   // Find the element that we need to check for link-ness, bailing out if
   // we can't find one.
   Element* elem = Element::FromNodeOrNull(aFrame->GetContent());
@@ -566,14 +562,65 @@ nsDisplayListBuilder::Linkifier::Linkifier(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  // Check if we have actually found a link and it has a usable spec.
-  nsCOMPtr<nsIURI> linkURI;
-  if (!elem->IsLink(getter_AddRefs(linkURI))) {
+  // If the element has an id and/or name attribute, generate a destination
+  // for possible internal linking.
+  auto maybeGenerateDest = [&](const nsAtom* aAttr) {
+    nsAutoString attrValue;
+    elem->GetAttr(aAttr, attrValue);
+    if (!attrValue.IsEmpty()) {
+      NS_ConvertUTF16toUTF8 dest(attrValue);
+      // Ensure that we only emit a given destination once, although there may
+      // be multiple frames associated with a given element; we'll simply use
+      // the first of them as the target of any links to it.
+      // XXX(jfkthame) This prevents emitting duplicate destinations *on the
+      // same page*, but does not prevent duplicates on subsequent pages, as
+      // each new page is handled by a new temporary DisplayListBuilder. This
+      // seems to be harmless in practice, though a bit wasteful of space. To
+      // fix, we need to maintain the set of already-seen destinations globally
+      // for the print job, rather than attached to the (per-page) builder.
+      if (aBuilder->mDestinations.EnsureInserted(dest)) {
+        auto* destination = MakeDisplayItem<nsDisplayDestination>(
+            aBuilder, aFrame, dest.get(), aFrame->GetRect().TopLeft());
+        mList->AppendToTop(destination);
+      }
+    }
+  };
+  if (elem->HasID()) {
+    maybeGenerateDest(nsGkAtoms::id);
+  }
+  if (elem->HasName()) {
+    maybeGenerateDest(nsGkAtoms::name);
+  }
+
+  // Links don't nest, so if the builder already has a destination, no need to
+  // check for a link element here.
+  if (!aBuilder->mLinkSpec.IsEmpty()) {
     return;
   }
-  if (NS_FAILED(linkURI->GetSpec(aBuilder->mLinkSpec)) ||
-      aBuilder->mLinkSpec.IsEmpty()) {
+
+  // Check if we have actually found a link.
+  nsCOMPtr<nsIURI> uri;
+  if (!elem->IsLink(getter_AddRefs(uri))) {
     return;
+  }
+
+  // Is it a local (in-page) destination?
+  bool hasRef, eqExRef;
+  nsIURI* docURI;
+  if (NS_SUCCEEDED(uri->GetHasRef(&hasRef)) && hasRef &&
+      (docURI = aFrame->PresContext()->Document()->GetDocumentURI()) &&
+      NS_SUCCEEDED(uri->EqualsExceptRef(docURI, &eqExRef)) && eqExRef) {
+    if (NS_FAILED(uri->GetRef(aBuilder->mLinkSpec)) ||
+        aBuilder->mLinkSpec.IsEmpty()) {
+      return;
+    }
+    // Mark the link spec as being an internal destination
+    aBuilder->mLinkSpec.Insert('#', 0);
+  } else {
+    if (NS_FAILED(uri->GetSpec(aBuilder->mLinkSpec)) ||
+        aBuilder->mLinkSpec.IsEmpty()) {
+      return;
+    }
   }
 
   // Record that we need to reset the builder's state on destruction.
@@ -581,14 +628,14 @@ nsDisplayListBuilder::Linkifier::Linkifier(nsDisplayListBuilder* aBuilder,
 }
 
 void nsDisplayListBuilder::Linkifier::MaybeAppendLink(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList) {
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
   // Note that we may generate a link here even if the constructor bailed out
   // without updating aBuilder->LinkSpec(), because it may have been set by
   // an ancestor that was associated with a link element.
   if (!aBuilder->mLinkSpec.IsEmpty()) {
     auto* link = MakeDisplayItem<nsDisplayLink>(
         aBuilder, aFrame, aBuilder->mLinkSpec.get(), aFrame->GetRect());
-    aList->AppendToTop(link);
+    mList->AppendToTop(link);
   }
 }
 
@@ -8323,7 +8370,9 @@ void nsDisplayTransform::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
   }
 
   gfxContextMatrixAutoSaveRestore saveMatrix(aCtx);
-  Matrix4x4 trans = ShouldSkipTransform(aBuilder) ? Matrix4x4() : GetAccumulatedPreserved3DTransform(aBuilder);
+  Matrix4x4 trans = ShouldSkipTransform(aBuilder)
+                        ? Matrix4x4()
+                        : GetAccumulatedPreserved3DTransform(aBuilder);
   if (!IsFrameVisible(mFrame, trans)) {
     return;
   }
@@ -10345,6 +10394,14 @@ void nsDisplayLink::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   auto appPerDev = mFrame->PresContext()->AppUnitsPerDevPixel();
   aCtx->GetDrawTarget()->Link(mLinkSpec.get(),
                               NSRectToRect(GetPaintRect(), appPerDev));
+}
+
+void nsDisplayDestination::Paint(nsDisplayListBuilder* aBuilder,
+                                 gfxContext* aCtx) {
+  auto appPerDev = mFrame->PresContext()->AppUnitsPerDevPixel();
+  aCtx->GetDrawTarget()->Destination(
+      mDestinationName.get(),
+      NSPointToPoint(GetPaintRect().TopLeft(), appPerDev));
 }
 
 void nsDisplayListCollection::SerializeWithCorrectZOrder(

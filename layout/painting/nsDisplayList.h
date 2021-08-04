@@ -1787,9 +1787,12 @@ class nsDisplayListBuilder {
 
   // Helper class to find what link spec (if any) to associate with a frame,
   // recording it in the builder, and generate the corresponding DisplayItem.
+  // This also takes care of generating a named destination for internal links
+  // if the element has an id or name attribute.
   class Linkifier {
    public:
-    Linkifier(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
+    Linkifier(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+              nsDisplayList* aList);
 
     ~Linkifier() {
       if (mBuilderToReset) {
@@ -1797,11 +1800,11 @@ class nsDisplayListBuilder {
       }
     }
 
-    void MaybeAppendLink(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                         nsDisplayList* aList);
+    void MaybeAppendLink(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
 
    private:
     nsDisplayListBuilder* mBuilderToReset = nullptr;
+    nsDisplayList* mList;
   };
 
  private:
@@ -1984,6 +1987,7 @@ class nsDisplayListBuilder {
   const ActiveScrolledRoot* mFilterASR;
   std::unordered_set<nsIScrollableFrame*> mScrollFramesToNotify;
   nsCString mLinkSpec;  // Destination of link currently being emitted, if any.
+  nsTHashSet<nsCString> mDestinations;  // Destination names emitted.
   bool mContainsBlendMode;
   bool mIsBuildingScrollbar;
   bool mCurrentScrollbarWillHaveLayer;
@@ -7305,6 +7309,26 @@ class nsDisplayLink : public nsPaintedDisplayItem {
  private:
   nsCString mLinkSpec;
   nsRect mRect;
+};
+
+/**
+ * A display item to represent a destination within the document.
+ */
+class nsDisplayDestination : public nsPaintedDisplayItem {
+ public:
+  nsDisplayDestination(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                       const char* aDestinationName, const nsPoint& aPosition)
+      : nsPaintedDisplayItem(aBuilder, aFrame),
+        mDestinationName(aDestinationName),
+        mPosition(aPosition) {}
+
+  NS_DISPLAY_DECL_NAME("Destination", TYPE_DESTINATION)
+
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+
+ private:
+  nsCString mDestinationName;
+  nsPoint mPosition;
 };
 
 class FlattenedDisplayListIterator {
