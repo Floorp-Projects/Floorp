@@ -748,9 +748,9 @@ function prompt(aActor, aBrowser, aRequest) {
         return false;
       }
 
-      // BLOCK is handled immediately by MediaManager if it has been set
-      // persistently in the permission manager. If it has been set on the tab,
-      // it is handled synchronously before we add the notification.
+      // If BLOCK has been set persistently in the permission manager or has
+      // been set on the tab, then it is handled synchronously before we add
+      // the notification.
       // Handling of ALLOW is delayed until the popupshowing event,
       // to avoid granting permissions automatically to background tabs.
       if (aActor.checkRequestAllowed(aRequest, principal, aBrowser)) {
