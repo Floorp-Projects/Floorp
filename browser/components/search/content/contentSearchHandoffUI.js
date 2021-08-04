@@ -5,8 +5,7 @@
 "use strict";
 
 function ContentSearchHandoffUIController() {
-  this._isPrivateEngine = false;
-  this._isAboutPrivateBrowsing = false;
+  this._isPrivateWindow = false;
   this._engineIcon = null;
 
   window.addEventListener("ContentSearchService", this);
@@ -26,20 +25,19 @@ ContentSearchHandoffUIController.prototype = {
     return this._defaultEngine;
   },
 
-  _onMsgEngine({ isPrivateEngine, isAboutPrivateBrowsing, engine }) {
-    this._isPrivateEngine = isPrivateEngine;
-    this._isAboutPrivateBrowsing = isAboutPrivateBrowsing;
+  _onMsgEngine({ isPrivateWindow, engine }) {
+    this._isPrivateWindow = isPrivateWindow;
     this._updateEngine(engine);
   },
 
   _onMsgCurrentEngine(engine) {
-    if (!this._isPrivateEngine) {
+    if (!this._isPrivateWindow) {
       this._updateEngine(engine);
     }
   },
 
   _onMsgCurrentPrivateEngine(engine) {
-    if (this._isPrivateEngine) {
+    if (this._isPrivateWindow) {
       this._updateEngine(engine);
     }
   },
@@ -82,33 +80,33 @@ ContentSearchHandoffUIController.prototype = {
     if (!engine || this._shouldHandOffToSearchMode) {
       document.l10n.setAttributes(
         fakeButton,
-        this._isAboutPrivateBrowsing
+        this._isPrivateWindow
           ? "about-private-browsing-search-btn"
           : "newtab-search-box-input"
       );
       document.l10n.setAttributes(
         fakeInput,
-        this._isAboutPrivateBrowsing
+        this._isPrivateWindow
           ? "about-private-browsing-search-placeholder"
           : "newtab-search-box-text"
       );
     } else if (!engine.isAppProvided) {
       document.l10n.setAttributes(
         fakeButton,
-        this._isAboutPrivateBrowsing
+        this._isPrivateWindow
           ? "about-private-browsing-handoff-no-engine"
           : "newtab-search-box-handoff-input-no-engine"
       );
       document.l10n.setAttributes(
         fakeInput,
-        this._isAboutPrivateBrowsing
+        this._isPrivateWindow
           ? "about-private-browsing-handoff-text-no-engine"
           : "newtab-search-box-handoff-text-no-engine"
       );
     } else {
       document.l10n.setAttributes(
         fakeButton,
-        this._isAboutPrivateBrowsing
+        this._isPrivateWindow
           ? "about-private-browsing-handoff"
           : "newtab-search-box-handoff-input",
         {
@@ -117,7 +115,7 @@ ContentSearchHandoffUIController.prototype = {
       );
       document.l10n.setAttributes(
         fakeInput,
-        this._isAboutPrivateBrowsing
+        this._isPrivateWindow
           ? "about-private-browsing-handoff-text"
           : "newtab-search-box-handoff-text",
         {
