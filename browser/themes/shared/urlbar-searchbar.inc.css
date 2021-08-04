@@ -105,6 +105,11 @@
   background-color: var(--toolbar-field-focus-background-color);
 }
 
+#urlbar-input::placeholder,
+.searchbar-textbox::placeholder {
+  opacity: 0.69;
+}
+
 #TabsToolbar #searchbar:not(:focus-within) {
   /* The tabs toolbar is usually a different color than the other toolbars, and
      we can't predict it, to avoid a transparent field we enforce a border. */
@@ -299,6 +304,11 @@
     outline-color: Highlight;
     color: HighlightText;
   }
+
+  #urlbar-search-mode-indicator-close {
+    fill: HighlightText;
+    fill-opacity: 1.0;
+  }
 }
 
 #urlbar-search-mode-indicator-title {
@@ -324,14 +334,6 @@
 #urlbar-search-mode-indicator-close:hover:active {
   background-color: hsla(0,0%,70%,.3);
 }
-
-@media (prefers-contrast) {
-  #urlbar-search-mode-indicator-close {
-    fill: HighlightText;
-    fill-opacity: 1.0;
-  }
-}
-
 /* Page action panel */
 .pageAction-panel-button > .toolbarbutton-icon {
   width: 16px;
@@ -712,9 +714,4 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left::after {
 }
 .searchbar-engine-one-off-add-engine[image]:hover > .button-box > .button-icon {
   opacity: 1;
-}
-
-#urlbar-input::placeholder,
-.searchbar-textbox::placeholder {
-  opacity: 0.69;
 }
