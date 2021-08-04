@@ -44,10 +44,10 @@ findbar[noanim] {
 contrast issues, see bug 1506913 */
 html|html[lwtheme-image] findbar {
   --toolbar-field-background-color: initial;
-  --lwt-toolbar-field-color: initial;
+  --toolbar-field-color: initial;
   --lwt-toolbar-field-border-color: initial;
   --toolbar-field-focus-background-color: initial;
-  --lwt-toolbar-field-focus-color: initial;
+  --toolbar-field-focus-color: initial;
 }
 
 html|input.findbar-textbox {
@@ -64,7 +64,7 @@ html|input.findbar-textbox {
 
 html|input.findbar-textbox:-moz-lwtheme {
   background-color: var(--input-bgcolor, var(--toolbar-field-background-color));
-  color: var(--input-color, var(--lwt-toolbar-field-color, FieldText));
+  color: var(--input-color, var(--toolbar-field-color));
 }
 
 html|input.findbar-textbox:focus {
