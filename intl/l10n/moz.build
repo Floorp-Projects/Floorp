@@ -31,12 +31,6 @@ TEST_DIRS += [
     "rust/gtest",
 ]
 
-XPIDL_SOURCES += [
-    "mozILocalization.idl",
-]
-
-XPIDL_MODULE = "locale"
-
 include("/ipc/chromium/chromium-config.mozbuild")
 
 USE_LIBS += ["intlcomponents"]
