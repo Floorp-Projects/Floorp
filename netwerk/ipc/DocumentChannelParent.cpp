@@ -36,9 +36,6 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
   LOG(("DocumentChannelParent Init [this=%p, uri=%s]", this,
        loadState->URI()->GetSpecOrDefault().get()));
 
-  ContentParent* contentParent =
-      static_cast<ContentParent*>(Manager()->Manager());
-
   RefPtr<DocumentLoadListener::OpenPromise> promise;
   if (loadState->GetChannelInitialized()) {
     promise = DocumentLoadListener::ClaimParentLoad(
@@ -65,7 +62,7 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
           loadState, aArgs.cacheKey(), Some(aArgs.channelId()),
           aArgs.asyncOpenTime(), aArgs.timing().refOr(nullptr),
           std::move(clientInfo), Some(docArgs.uriModified()),
-          Some(docArgs.isXFOError()), contentParent, &rv);
+          Some(docArgs.isXFOError()), IProtocol::OtherPid(), &rv);
     } else {
       const ObjectCreationArgs& objectArgs = aArgs.elementCreationArgs();
 
@@ -74,7 +71,7 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
           aArgs.asyncOpenTime(), aArgs.timing().refOr(nullptr),
           std::move(clientInfo), objectArgs.embedderInnerWindowId(),
           objectArgs.loadFlags(), objectArgs.contentPolicyType(),
-          objectArgs.isUrgentStart(), contentParent,
+          objectArgs.isUrgentStart(), IProtocol::OtherPid(),
           this /* ObjectUpgradeHandler */, &rv);
     }
 
