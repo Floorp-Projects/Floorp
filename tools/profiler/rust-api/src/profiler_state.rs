@@ -23,7 +23,7 @@ pub fn is_active() -> bool {
     (active_and_features & detail::RacyFeatures_Active) != 0
 }
 
-/// Always false when the Gecko profiler is disabled.
+/// Always false when MOZ_GECKO_PROFILER is not defined.
 #[cfg(not(feature = "enabled"))]
 #[inline]
 pub fn is_active() -> bool {
@@ -53,7 +53,7 @@ pub fn can_accept_markers() -> bool {
         && (active_and_features & detail::RacyFeatures_Paused) == 0
 }
 
-/// Always false when the Gecko Profiler is disabled.
+/// Always false when MOZ_GECKO_PROFILER is not defined.
 #[cfg(not(feature = "enabled"))]
 #[inline]
 pub fn can_accept_markers() -> bool {
