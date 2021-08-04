@@ -169,12 +169,14 @@ class TextServicesDocument final : public nsIEditActionListener {
             Some(aOffsetInTextInBlock);
       }
       void SetIndexes(size_t aStartIndex, size_t aEndIndex) {
+        MOZ_DIAGNOSTIC_ASSERT(aStartIndex <= aEndIndex);
         mStartIndex = Some(aStartIndex);
         mEndIndex = Some(aEndIndex);
       }
       void Set(size_t aStartIndex, size_t aEndIndex,
                uint32_t aStartOffsetInTextInBlock,
                uint32_t aEndOffsetInTextInBlock) {
+        MOZ_DIAGNOSTIC_ASSERT(aStartIndex <= aEndIndex);
         mStartIndex = Some(aStartIndex);
         mEndIndex = Some(aEndIndex);
         mStartOffsetInTextInBlock = Some(aStartOffsetInTextInBlock);
