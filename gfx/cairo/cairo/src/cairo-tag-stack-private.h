@@ -104,4 +104,7 @@ _cairo_tag_stack_free_elem (cairo_tag_stack_elem_t *elem);
 cairo_private cairo_tag_type_t
 _cairo_tag_get_type (const char *name);
 
+cairo_private cairo_status_t
+_cairo_tag_error (const char *fmt, ...) CAIRO_PRINTF_FORMAT (1, 2);
+
 #endif /* CAIRO_TAG_STACK_PRIVATE_H */

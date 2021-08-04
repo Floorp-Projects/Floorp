@@ -85,6 +85,9 @@ _cairo_array_num_elements (const cairo_array_t *array);
 cairo_private unsigned int
 _cairo_array_size (const cairo_array_t *array);
 
+cairo_private void
+_cairo_array_sort (const cairo_array_t *array, int (*compar)(const void *, const void *));
+
 CAIRO_END_DECLS
 
 #endif /* CAIRO_ARRAY_PRIVATE_H */

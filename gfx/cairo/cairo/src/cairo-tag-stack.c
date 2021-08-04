@@ -163,7 +163,7 @@ _cairo_tag_stack_push (cairo_tag_stack_t *stack,
 	! name_in_list (name, _cairo_tag_stack_cairo_tag_list))
     {
 	stack->type = TAG_TYPE_INVALID;
-	return _cairo_error (CAIRO_STATUS_TAG_ERROR);
+	return _cairo_tag_error ("Invalid tag: %s", name);
     }
 
     if (stack->type == TAG_TREE_TYPE_NO_TAGS) {
@@ -227,7 +227,7 @@ _cairo_tag_stack_pop (cairo_tag_stack_t *stack,
     top = _cairo_tag_stack_top_elem (stack);
     if (!top) {
 	stack->type = TAG_TYPE_INVALID;
-	return _cairo_error (CAIRO_STATUS_TAG_ERROR);
+	return _cairo_tag_error ("cairo_tag_end(\"%s\") no matching begin tag", name);
     }
 
     cairo_list_del (&top->link);
@@ -235,7 +235,8 @@ _cairo_tag_stack_pop (cairo_tag_stack_t *stack,
     if (strcmp (top->name, name) != 0) {
 	stack->type = TAG_TYPE_INVALID;
 	_cairo_tag_stack_free_elem (top);
-	return _cairo_error (CAIRO_STATUS_TAG_ERROR);
+	return _cairo_tag_error ("cairo_tag_end(\"%s\") does not matching previous begin tag \"%s\"",
+				 name, top->name);
     }
 
     if (elem)
@@ -277,4 +278,19 @@ _cairo_tag_get_type (const char *name)
 	return TAG_TYPE_DEST;
 
     return TAG_TYPE_STRUCTURE;
+}
+
+cairo_status_t
+_cairo_tag_error (const char *fmt, ...)
+{
+    va_list ap;
+
+    if (getenv ("CAIRO_DEBUG_TAG") != NULL) {
+	printf ("TAG ERROR: ");
+	va_start (ap, fmt);
+	vprintf (fmt, ap);
+	va_end (ap);
+	printf ("\n");
+    }
+    return _cairo_error (CAIRO_STATUS_TAG_ERROR);
 }
