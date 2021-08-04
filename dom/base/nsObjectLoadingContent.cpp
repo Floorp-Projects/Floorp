@@ -263,7 +263,7 @@ class AutoSetLoadingToFalse {
 /// Helper functions
 ///
 
-static bool IsSuccessfulRequest(nsIRequest* aRequest, nsresult* aStatus) {
+bool nsObjectLoadingContent::IsSuccessfulRequest(nsIRequest* aRequest, nsresult* aStatus) {
   nsresult rv = aRequest->GetStatus(aStatus);
   if (NS_FAILED(rv) || NS_FAILED(*aStatus)) {
     return false;
