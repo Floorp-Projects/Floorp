@@ -740,7 +740,7 @@ struct GetUniformData final {
 
 struct FrontBufferSnapshotIpc final {
   uvec2 surfSize = {};
-  Maybe<mozilla::ipc::Shmem> shmem = {};
+  mozilla::ipc::Shmem shmem = {};
 };
 
 struct ReadPixelsResult {

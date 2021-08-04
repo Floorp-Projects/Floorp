@@ -559,6 +559,9 @@ def _cxxConstRefType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
     if ipdltype.isIPDL() and ipdltype.isActor():
         return t
+    if ipdltype.isIPDL() and ipdltype.isShmem():
+        t.ref = True
+        return t
     if ipdltype.isIPDL() and ipdltype.isByteBuf():
         t.ref = True
         return t
@@ -610,7 +613,8 @@ def _cxxTypeNeedsMoveForSend(ipdltype):
         if ipdltype.hasBaseType():
             return _cxxTypeNeedsMove(ipdltype.basetype)
         return (
-            ipdltype.isByteBuf()
+            ipdltype.isShmem()
+            or ipdltype.isByteBuf()
             or ipdltype.isEndpoint()
             or ipdltype.isManagedEndpoint()
         )
@@ -845,6 +849,8 @@ class _StructField(_CompoundTypeComponent):
     def constRefExpr(self, thisexpr=None):
         # sigh, gross hack
         refexpr = self.refExpr(thisexpr)
+        if "Shmem" == self.ipdltype.name():
+            refexpr = ExprCast(refexpr, Type("Shmem", ref=True), const=True)
         if "ByteBuf" == self.ipdltype.name():
             refexpr = ExprCast(refexpr, Type("ByteBuf", ref=True), const=True)
         if "FileDescriptor" == self.ipdltype.name():
@@ -1024,6 +1030,8 @@ class _UnionMember(_CompoundTypeComponent):
         # sigh
         if "ByteBuf" == self.ipdltype.name():
             v = ExprCast(v, Type("ByteBuf", ref=True), const=True)
+        if "Shmem" == self.ipdltype.name():
+            v = ExprCast(v, Type("Shmem", ref=True), const=True)
         if "FileDescriptor" == self.ipdltype.name():
             v = ExprCast(v, Type("FileDescriptor", ref=True), const=True)
         return v
