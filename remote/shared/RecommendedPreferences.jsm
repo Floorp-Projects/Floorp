@@ -118,9 +118,6 @@ const COMMON_PREFERENCES = new Map([
   // unloaded
   ["browser.tabs.disableBackgroundZombification", false],
 
-  // Bug 1557457: Disable because modal dialogs might not appear in Firefox
-  ["browser.tabs.remote.separatePrivilegedContentProcess", false],
-
   // Don't unload tabs when available memory is running low
   ["browser.tabs.unloadOnLowMemory", false],
 
