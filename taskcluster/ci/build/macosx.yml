@@ -25,7 +25,6 @@ job-defaults:
             - linux64-cbindgen
             - linux64-nasm
             - linux64-node
-            - linux64-lucetc
             - sysroot-x86_64-linux-gnu
 
 macosx64/debug:

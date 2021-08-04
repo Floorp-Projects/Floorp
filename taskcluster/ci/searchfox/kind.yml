@@ -57,7 +57,6 @@ jobs:
                 - linux64-rust
                 - linux64-cbindgen
                 - linux64-dump_syms
-                - linux64-lucetc
                 - sysroot-x86_64-linux-gnu
                 - wasi-sysroot
 
@@ -98,7 +97,6 @@ jobs:
                 - linux64-rust-macos
                 - linux64-cbindgen
                 - linux64-dump_syms
-                - linux64-lucetc
                 - macosx64-sdk-10.12
                 - sysroot-x86_64-linux-gnu
                 - wasi-sysroot
