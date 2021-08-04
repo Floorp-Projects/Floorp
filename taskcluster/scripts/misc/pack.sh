@@ -1,6 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
 set -x
+set -e
+set -o pipefail
 
 [ -z "$1" ] && echo Missing argument && exit 1
 
