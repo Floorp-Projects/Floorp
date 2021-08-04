@@ -89,7 +89,7 @@ macro_rules! gecko_profiler_label {
     };
 }
 
-/// No-op when the Gecko profiler is not available.
+/// No-op when MOZ_GECKO_PROFILER is not defined.
 #[cfg(not(feature = "enabled"))]
 #[macro_export]
 macro_rules! gecko_profiler_label {
