@@ -874,6 +874,8 @@ nsresult TextServicesDocument::OffsetEntryArray::WillDeleteSelection() {
           }
 
           // Adjust selection indexes to account for new entry:
+          MOZ_DIAGNOSTIC_ASSERT(mSelection.StartIndex() + 1 < Length());
+          MOZ_DIAGNOSTIC_ASSERT(mSelection.EndIndex() + 1 < Length());
           mSelection.SetIndexes(mSelection.StartIndex() + 1,
                                 mSelection.EndIndex() + 1);
           entry = ElementAt(++i).get();
@@ -1051,6 +1053,7 @@ OffsetEntry* TextServicesDocument::OffsetEntryArray::DidDeleteSelection() {
     if (!entry->mIsValid) {
       entry = nullptr;
     } else {
+      MOZ_DIAGNOSTIC_ASSERT(i - 1 < Length());
       mSelection.Set(i - 1, entry->EndOffsetInTextInBlock());
     }
   }
@@ -1062,6 +1065,7 @@ OffsetEntry* TextServicesDocument::OffsetEntryArray::DidDeleteSelection() {
     if (!entry->mIsValid) {
       entry = nullptr;
     } else {
+      MOZ_DIAGNOSTIC_ASSERT(i < Length());
       mSelection.Set(i, entry->mOffsetInTextInBlock);
     }
   }
@@ -1203,6 +1207,7 @@ nsresult TextServicesDocument::OffsetEntryArray::DidInsertText(
 
     insertedTextEntry->mLength += aInsertedString.Length();
 
+    MOZ_DIAGNOSTIC_ASSERT(nextIndex < Length());
     mSelection.SetIndex(nextIndex);
 
     if (!aSelection) {
@@ -1241,6 +1246,7 @@ nsresult TextServicesDocument::OffsetEntryArray::DidInsertText(
                                 aInsertedString.Length()));
     insertedTextEntry->mIsInsertedText = true;
     insertedTextEntry->mOffsetInTextNode = entry->EndOffsetInTextNode();
+    MOZ_DIAGNOSTIC_ASSERT(mSelection.StartIndex() + 1 < Length());
     mSelection.SetIndex(mSelection.StartIndex() + 1);
   }
 
@@ -1641,6 +1647,7 @@ TextServicesDocument::OffsetEntryArray::WillSetSelection(
       }
 
       if (newStart.IsSet()) {
+        MOZ_DIAGNOSTIC_ASSERT(i < Length());
         mSelection.Set(i, aOffsetInTextInBlock);
       }
     }
@@ -1674,6 +1681,8 @@ TextServicesDocument::OffsetEntryArray::WillSetSelection(
       }
 
       if (newEnd.IsSet()) {
+        MOZ_DIAGNOSTIC_ASSERT(mSelection.StartIndex() < Length());
+        MOZ_DIAGNOSTIC_ASSERT(i - 1 < Length());
         mSelection.Set(mSelection.StartIndex(), i - 1,
                        mSelection.StartOffsetInTextInBlock(), endOffset);
       }
@@ -2523,18 +2532,26 @@ TextServicesDocument::OffsetEntryArray::Init(
 
 void TextServicesDocument::OffsetEntryArray::RemoveInvalidElements() {
   for (size_t i = 0; i < Length();) {
-    if (!ElementAt(i)->mIsValid) {
-      RemoveElementAt(i);
-      if (mSelection.IsSet() && mSelection.StartIndex() >= i) {
-        // We are deleting an entry that comes before
-        // mSelection.StartIndex(), decrement it so
-        // that it points to the correct entry!
-        NS_ASSERTION(i != mSelection.StartIndex(), "Invalid selection index.");
-        mSelection.SetIndexes(mSelection.StartIndex() - 1,
-                              mSelection.EndIndex() - 1);
-      }
-    } else {
+    if (ElementAt(i)->mIsValid) {
       i++;
+      continue;
+    }
+
+    RemoveElementAt(i);
+    if (!mSelection.IsSet()) {
+      continue;
+    }
+    if (mSelection.StartIndex() == i) {
+      NS_ASSERTION(false, "What should we do in this case?");
+      mSelection.Reset();
+    } else if (mSelection.StartIndex() > i) {
+      MOZ_DIAGNOSTIC_ASSERT(mSelection.StartIndex() - 1 < Length());
+      MOZ_DIAGNOSTIC_ASSERT(mSelection.EndIndex() - 1 < Length());
+      mSelection.SetIndexes(mSelection.StartIndex() - 1,
+                            mSelection.EndIndex() - 1);
+    } else if (mSelection.EndIndex() >= i) {
+      MOZ_DIAGNOSTIC_ASSERT(mSelection.EndIndex() - 1 < Length());
+      mSelection.SetIndexes(mSelection.StartIndex(), mSelection.EndIndex() - 1);
     }
   }
 }
