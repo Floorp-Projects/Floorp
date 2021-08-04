@@ -456,11 +456,11 @@ function areEnterpriseOnlyPoliciesAllowed() {
     return true;
   }
 
-  if (AppConstants.MOZ_UPDATE_CHANNEL != "release") {
-    return true;
-  }
-
-  return false;
+  return (
+    AppConstants.IS_ESR ||
+    AppConstants.MOZ_DEV_EDITION ||
+    AppConstants.NIGHTLY_BUILD
+  );
 }
 
 /*
