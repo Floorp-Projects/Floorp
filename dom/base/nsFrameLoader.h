@@ -72,7 +72,7 @@ class MutableTabContext;
 class BrowserBridgeChild;
 class RemoteBrowser;
 struct RemotenessOptions;
-struct NavigationIsolationOptions;
+struct RemotenessChangeOptions;
 class SessionStoreChangeListener;
 
 namespace ipc {
@@ -123,7 +123,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // FrameLoaders.
   static already_AddRefed<nsFrameLoader> Recreate(
       Element* aOwner, BrowsingContext* aContext, BrowsingContextGroup* aGroup,
-      const mozilla::dom::NavigationIsolationOptions& aRemotenessOptions,
+      const mozilla::dom::RemotenessChangeOptions& aRemotenessOptions,
       bool aIsRemote, bool aNetworkCreated, bool aPreserveContext);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_FRAMELOADER_IID)
