@@ -654,9 +654,6 @@ gboolean moz_container_wayland_can_draw(MozContainer* container) {
 }
 
 double moz_container_wayland_get_scale(MozContainer* container) {
-  MozContainerWayland* wl_container = &container->wl_container;
-  MutexAutoLock lock(*wl_container->container_lock);
-
   nsWindow* window = moz_container_get_nsWindow(container);
   return window ? window->FractionalScaleFactor() : 1;
 }

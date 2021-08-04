@@ -15,7 +15,7 @@
 #include "mozilla/Mutex.h"
 #include "nsWaylandDisplay.h"
 #include "nsWindow.h"
-#include "WaylandShmBuffer.h"
+#include "WaylandBuffer.h"
 #include "WindowSurface.h"
 
 #define BACK_BUFFER_NUM 3
@@ -60,7 +60,7 @@ class WindowSurfaceWayland : public WindowSurface {
   // Try to commit all queued drawings to Wayland compositor. This is usually
   // called from other routines but can be used to explicitly flush
   // all drawings as we do when wl_buffer is released
-  // (see WaylandShmBufferShm::Detach() for instance).
+  // (see WaylandBufferSHMShm::Detach() for instance).
   void FlushPendingCommits();
 
   RefPtr<nsWaylandDisplay> GetWaylandDisplay() { return mWaylandDisplay; };
@@ -76,10 +76,10 @@ class WindowSurfaceWayland : public WindowSurface {
  private:
   ~WindowSurfaceWayland();
 
-  WaylandShmBuffer* GetWaylandBuffer();
-  WaylandShmBuffer* SetNewWaylandBuffer();
-  WaylandShmBuffer* CreateWaylandBuffer(const LayoutDeviceIntSize& aSize);
-  WaylandShmBuffer* WaylandBufferFindAvailable(
+  WaylandBufferSHM* GetWaylandBuffer();
+  WaylandBufferSHM* SetNewWaylandBuffer();
+  WaylandBufferSHM* CreateWaylandBuffer(const LayoutDeviceIntSize& aSize);
+  WaylandBufferSHM* WaylandBufferFindAvailable(
       const LayoutDeviceIntSize& aSize);
 
   already_AddRefed<gfx::DrawTarget> LockWaylandBuffer();
@@ -117,8 +117,8 @@ class WindowSurfaceWayland : public WindowSurface {
   // Drawn areas are stored at mWaylandBufferDamage and if there's
   // any uncommited drawings which needs to be send to wayland compositor
   // the mWLBufferIsDirty is set.
-  RefPtr<WaylandShmBuffer> mWaylandBuffer;
-  RefPtr<WaylandShmBuffer> mShmBackupBuffer[BACK_BUFFER_NUM];
+  RefPtr<WaylandBufferSHM> mWaylandBuffer;
+  RefPtr<WaylandBufferSHM> mShmBackupBuffer[BACK_BUFFER_NUM];
 
   // When mWaylandFullscreenDamage we invalidate whole surface,
   // otherwise partial screen updates (mWaylandBufferDamage) are used.

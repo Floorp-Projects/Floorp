@@ -87,7 +87,7 @@ if CONFIG["MOZ_WAYLAND"]:
         "MozContainerWayland.cpp",
         "nsClipboardWayland.cpp",
         "nsWaylandDisplay.cpp",
-        "WaylandShmBuffer.cpp",
+        "WaylandBuffer.cpp",
         "WindowSurfaceWayland.cpp",
         "WindowSurfaceWaylandMultiBuffer.cpp",
     ]
@@ -96,7 +96,7 @@ if CONFIG["MOZ_WAYLAND"]:
         "DMABufSurface.h",
         "MozContainerWayland.h",
         "nsWaylandDisplay.h",
-        "WaylandShmBuffer.h",
+        "WaylandBuffer.h",
     ]
 
 if CONFIG["MOZ_X11"]:

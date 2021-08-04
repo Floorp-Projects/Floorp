@@ -221,6 +221,7 @@ void RenderCompositorNative::CompositorBeginFrame() {
   mAddedClippedPixelCount = 0;
   mBeginFrameTimeStamp = TimeStamp::Now();
   mSurfacePoolHandle->OnBeginFrame();
+  mNativeLayerRoot->PrepareForCommit();
 }
 
 void RenderCompositorNative::CompositorEndFrame() {
