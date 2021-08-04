@@ -371,8 +371,8 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
         return "ERROR"_ns;
       case Severity::Warning:
         return "WARNING"_ns;
-      case Severity::Note:
-        return "NOTE"_ns;
+      case Severity::Info:
+        return "INFO"_ns;
       case Severity::Verbose:
         return "VERBOSE"_ns;
     }
