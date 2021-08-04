@@ -136,6 +136,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   // id.  If in doubt, return true.
   static bool MayResolve(jsid aId);
 
+  static bool IsSuccessfulRequest(nsIRequest*, nsresult* aStatus);
+
   // Helper for WebIDL enumeration
   void GetOwnPropertyNames(JSContext* aCx,
                            JS::MutableHandleVector<jsid> /* unused */,

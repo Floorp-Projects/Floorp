@@ -33,6 +33,7 @@
 #include "nsDocShellLoadState.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsDOMNavigationTiming.h"
+#include "nsObjectLoadingContent.h"
 #include "nsExternalHelperAppService.h"
 #include "nsHttpChannel.h"
 #include "nsIBrowser.h"
@@ -1526,9 +1527,16 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   // If we're doing an <object>/<embed> load, we may be doing a document load at
   // this point. We never need to do a process switch for a non-document
   // <object> or <embed> load.
-  if (!mIsDocumentLoad && !mChannel->IsDocument()) {
-    LOG(("Process Switch Abort: non-document load"));
-    return false;
+  if (!mIsDocumentLoad) {
+    if (!mChannel->IsDocument()) {
+      LOG(("Process Switch Abort: non-document load"));
+      return false;
+    }
+    nsresult status;
+    if (!nsObjectLoadingContent::IsSuccessfulRequest(mChannel, &status)) {
+      LOG(("Process Switch Abort: error page"));
+      return false;
+    }
   }
 
   // Get the loading BrowsingContext. This may not be the context which will be
