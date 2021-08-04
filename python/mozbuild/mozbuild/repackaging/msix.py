@@ -407,4 +407,225 @@ def repackage_msix(
             sys.stderr.write(e.output)
             raise
 
+    return output
+
+
+def sign_msix(output, force=False, log=None, verbose=False):
+    """Sign an MSIX with a locally generated self-signed certificate."""
+
+    # TODO: sign on non-Windows hosts.
+    if sys.platform != "win32":
+        raise Exception("sign msix only works on Windows")
+
+    powershell_exe = find_sdk_tool("powershell.exe", log=log)
+    if not powershell_exe:
+        raise ValueError("powershell is required; " "set POWERSHELL or PATH")
+
+    def powershell(argstring):
+        "Invoke `powershell.exe`.  Arguments are given as a string to allow consumer to quote."
+        args = [powershell_exe, "-c", argstring]
+        joined = " ".join(shlex_quote(arg) for arg in args)
+        log(
+            logging.INFO, "msix", {"args": args, "joined": joined}, "Invoking: {joined}"
+        )
+        return subprocess.check_output(args)
+
+    signtool = find_sdk_tool("signtool.exe", log=log)
+    if not signtool:
+        raise ValueError(
+            "signtool is required; " "set SIGNTOOL or WINDOWSSDKDIR or PATH"
+        )
+
+    # Our first order of business is to find, or generate, a (self-signed)
+    # certificate.
+
+    # These are baked into enough places under `browser/` that we need not
+    # extract constants.
+    vendor = "Mozilla"
+    publisher = "Mozilla Corporation"
+    friendly_name = "{} MSIX Packaging Test Certificate".format(publisher)
+
+    # The convention is $MOZBUILD_STATE_PATH/cache/$FEATURE.
+    crt_path = mozpath.join(
+        get_state_dir(),
+        "cache",
+        "mach-msix",
+        "{}.crt".format(friendly_name).replace(" ", "_").lower(),
+    )
+    crt_path = mozpath.abspath(crt_path)
+    ensureParentDir(crt_path)
+
+    pfx_path = crt_path.replace(".crt", ".pfx")
+
+    # TODO: maybe use an actual password.  For now, just something that won't be
+    # brute-forced.
+    password = "193dbfc6-8ff7-4a95-8f32-6b4468626bd0"
+
+    if force or not os.path.isfile(crt_path):
+        log(
+            logging.INFO,
+            "msix",
+            {"crt_path": crt_path},
+            "Creating new self signed certificate at: {}".format(crt_path),
+        )
+
+        thumbprints = [
+            thumbprint.decode("utf-8").strip()
+            for thumbprint in powershell(
+                (
+                    "Get-ChildItem -Path Cert:\CurrentUser\My"
+                    '| Where-Object {{$_.Subject -Match "{}"}}'
+                    '| Where-Object {{$_.FriendlyName -Match "{}"}}'
+                    "| Select-Object -ExpandProperty Thumbprint"
+                ).format(vendor, friendly_name)
+            ).splitlines()
+        ]
+        if len(thumbprints) > 1:
+            raise Exception(
+                "Multiple certificates with friendly name found: {}".format(
+                    friendly_name
+                )
+            )
+
+        if len(thumbprints) == 1:
+            thumbprint = thumbprints[0]
+        else:
+            thumbprint = None
+
+        if not thumbprint:
+            thumbprint = (
+                powershell(
+                    (
+                        'New-SelfSignedCertificate -Type Custom -Subject "CN={}" '
+                        '-KeyUsage DigitalSignature -FriendlyName "{}"'
+                        " -CertStoreLocation Cert:\CurrentUser\My"
+                        ' -TextExtension @("2.5.29.37={{text}}1.3.6.1.5.5.7.3.3", '
+                        '"2.5.29.19={{text}}")'
+                        "| Select-Object -ExpandProperty Thumbprint"
+                    ).format(publisher, friendly_name)
+                )
+                .strip()
+                .upper()
+            )
+
+        if not thumbprint:
+            raise Exception(
+                "Failed to find or create certificate with friendly name: {}".format(
+                    friendly_name
+                )
+            )
+
+        powershell(
+            'Export-Certificate -Cert Cert:\CurrentUser\My\{} -FilePath "{}"'.format(
+                thumbprint, crt_path
+            )
+        )
+        log(
+            logging.INFO,
+            "msix",
+            {"crt_path": crt_path},
+            "Exported public certificate: {crt_path}",
+        )
+
+        powershell(
+            (
+                'Export-PfxCertificate -Cert Cert:\CurrentUser\My\{} -FilePath "{}"'
+                ' -Password (ConvertTo-SecureString -String "{}" -Force -AsPlainText)'
+            ).format(thumbprint, pfx_path, password)
+        )
+        log(
+            logging.INFO,
+            "msix",
+            {"pfx_path": pfx_path},
+            "Exported private certificate: {pfx_path}",
+        )
+
+    # Second, to find the right thumbprint to use.  We do this here in case
+    # we're coming back to an existing certificate.
+
+    log(
+        logging.INFO,
+        "msix",
+        {"crt_path": crt_path},
+        "Signing with existing self signed certificate: {crt_path}",
+    )
+
+    thumbprints = [
+        thumbprint.decode("utf-8").strip()
+        for thumbprint in powershell(
+            'Get-PfxCertificate -FilePath "{}" | Select-Object -ExpandProperty Thumbprint'.format(
+                crt_path
+            )
+        ).splitlines()
+    ]
+    if len(thumbprints) > 1:
+        raise Exception("Multiple thumbprints found for PFX: {}".format(pfx_path))
+    if len(thumbprints) == 0:
+        raise Exception("No thumbprints found for PFX: {}".format(pfx_path))
+    thumbprint = thumbprints[0]
+    log(
+        logging.INFO,
+        "msix",
+        {"thumbprint": thumbprint},
+        "Signing with certificate with thumbprint: {thumbprint}",
+    )
+
+    # Third, do the actual signing.
+
+    args = [
+        signtool,
+        "sign",
+        "/a",
+        "/fd",
+        "SHA256",
+        "/f",
+        pfx_path,
+        "/p",
+        password,
+        output,
+    ]
+    if not verbose:
+        subprocess.check_call(args)
+    else:
+        # Suppress output unless we fail.
+        try:
+            subprocess.check_output(args)
+        except subprocess.CalledProcessError as e:
+            sys.stderr.write(e.output.decode("utf-8"))
+            raise
+
+    # As a convenience to the user, tell how to use this certificate if it's not
+    # already trusted, and how to work with MSIX files more generally.
+    if verbose:
+        root_thumbprints = [
+            root_thumbprint.strip()
+            for root_thumbprint in powershell(
+                "Get-ChildItem -Path Cert:\LocalMachine\Root\{} "
+                "| Select-Object -ExpandProperty Thumbprint".format(thumbprint)
+            ).splitlines()
+        ]
+        if thumbprint not in root_thumbprints:
+            log(
+                logging.INFO,
+                "msix",
+                {"thumbprint": thumbprint},
+                "Certificate with thumbprint not found in trusted roots: {thumbprint}",
+            )
+            log(
+                logging.INFO,
+                "msix",
+                {"crt_path": crt_path, "output": output},
+                r"""\
+# Usage
+To trust this certificate (requires an elevated shell):
+powershell -c 'Import-Certificate -FilePath "{crt_path}" -Cert Cert:\LocalMachine\Root\'
+To verify this MSIX signature exists and is trusted:
+powershell -c 'Get-AuthenticodeSignature -FilePath "{output}" | Format-List *'
+To install this MSIX:
+powershell -c 'Add-AppPackage -path "{output}"'
+To see details after installing:
+powershell -c 'Get-AppPackage -name Mozilla.Firefox(.Beta,...)'
+                """.strip(),
+            )
+
     return 0
