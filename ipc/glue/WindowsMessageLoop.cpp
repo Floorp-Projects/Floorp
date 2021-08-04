@@ -857,6 +857,7 @@ SuppressedNeuteringRegion::~SuppressedNeuteringRegion() {
 
 bool SuppressedNeuteringRegion::sSuppressNeutering = false;
 
+#if defined(ACCESSIBILITY)
 static DWORD WaitForSingleObjectExWrapper(HANDLE aEvent, DWORD aTimeout) {
   return ::WaitForSingleObjectEx(aEvent, aTimeout, TRUE);
 }
@@ -875,7 +876,6 @@ static DWORD CoWaitForMultipleHandlesWrapper(HANDLE aEvent, DWORD aTimeout) {
   return WAIT_FAILED;
 }
 
-#if defined(ACCESSIBILITY)
 bool MessageChannel::WaitForSyncNotifyWithA11yReentry() {
   mMonitor->AssertCurrentThreadOwns();
   MonitorAutoUnlock unlock(*mMonitor);
