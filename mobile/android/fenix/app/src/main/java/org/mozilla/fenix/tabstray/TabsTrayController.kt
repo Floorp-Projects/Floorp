@@ -21,7 +21,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.HomeFragment
-import org.mozilla.fenix.tabstray.browser.DEFAULT_INACTIVE_DAYS
+import org.mozilla.fenix.tabstray.browser.DEFAULT_ACTIVE_DAYS
 import java.util.concurrent.TimeUnit
 
 interface TabsTrayController {
@@ -67,7 +67,7 @@ interface TabsTrayController {
      */
     fun forceTabsAsInactive(
         tabs: Collection<Tab>,
-        numOfDays: Long = DEFAULT_INACTIVE_DAYS + 1
+        numOfDays: Long = DEFAULT_ACTIVE_DAYS + 1
     )
 }
 

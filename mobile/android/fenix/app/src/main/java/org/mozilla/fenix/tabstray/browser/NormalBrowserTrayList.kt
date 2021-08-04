@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 /**
  * The time until which a tab is considered in-active (in days).
  */
-const val DEFAULT_INACTIVE_DAYS = 4L
+const val DEFAULT_ACTIVE_DAYS = 4L
 
 class NormalBrowserTrayList @JvmOverloads constructor(
     context: Context,
@@ -31,7 +31,7 @@ class NormalBrowserTrayList @JvmOverloads constructor(
     /**
      * The maximum time from when a tab was created or accessed until it is considered "inactive".
      */
-    var maxActiveTime = TimeUnit.DAYS.toMillis(DEFAULT_INACTIVE_DAYS)
+    var maxActiveTime = TimeUnit.DAYS.toMillis(DEFAULT_ACTIVE_DAYS)
 
     private val concatAdapter by lazy { adapter as ConcatAdapter }
 

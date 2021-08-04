@@ -7,8 +7,9 @@ package org.mozilla.fenix.tabstray.ext
 import mozilla.components.browser.state.state.TabSessionState
 
 private fun TabSessionState.isActive(maxActiveTime: Long): Boolean {
+    val lastActiveTime = maxOf(lastAccess, createdAt)
     val now = System.currentTimeMillis()
-    return (now - lastAccess <= maxActiveTime)
+    return (now - lastActiveTime <= maxActiveTime)
 }
 
 /**
