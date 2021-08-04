@@ -86,13 +86,10 @@ using namespace mozilla;
 using namespace xpc;
 using namespace JS;
 
-// The watchdog thread loop is pretty trivial, and should not require much stack
-// space to do its job. So only give it 32KiB or the platform minimum.
+// We will clamp to reasonable values if this isn't set.
 #if !defined(PTHREAD_STACK_MIN)
 #  define PTHREAD_STACK_MIN 0
 #endif
-static constexpr size_t kWatchdogStackSize =
-    PTHREAD_STACK_MIN < 32 * 1024 ? 32 * 1024 : PTHREAD_STACK_MIN;
 
 static void WatchdogMain(void* arg);
 class Watchdog;
@@ -159,12 +156,19 @@ class Watchdog {
     {
       AutoLockWatchdog lock(this);
 
+      // The watchdog thread loop is pretty trivial, and should not
+      // require much stack space to do its job. So only give it 32KiB
+      // or the platform minimum. On modern Linux libc this might resolve to
+      // a runtime call.
+      size_t watchdogStackSize = PTHREAD_STACK_MIN;
+      watchdogStackSize = std::max<size_t>(32 * 1024, watchdogStackSize);
+
       // Gecko uses thread private for accounting and has to clean up at thread
       // exit. Therefore, even though we don't have a return value from the
       // watchdog, we need to join it on shutdown.
       mThread = PR_CreateThread(PR_USER_THREAD, WatchdogMain, this,
                                 PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-                                PR_JOINABLE_THREAD, kWatchdogStackSize);
+                                PR_JOINABLE_THREAD, watchdogStackSize);
       if (!mThread) {
         MOZ_CRASH("PR_CreateThread failed!");
       }
