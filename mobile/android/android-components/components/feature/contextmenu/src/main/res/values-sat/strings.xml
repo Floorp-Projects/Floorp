@@ -1,35 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Text for context menu item to open the link in a new tab. -->
-    <string name="mozac_feature_contextmenu_open_link_in_new_tab">ᱱᱟᱶᱟ ᱴᱮᱵ ᱨᱮ ᱞᱤᱸᱠ ᱡᱷᱤᱡ ᱢᱮ</string>
+    <string name="mozac_feature_contextmenu_open_link_in_new_tab">ᱱᱟᱶᱟ ᱴᱮᱵ ᱨᱮ ᱞᱤᱝᱠ ᱡᱷᱤᱡ ᱢᱮ</string>
     <!-- Text for context menu item to open the link in a private tab. -->
-    <string name="mozac_feature_contextmenu_open_link_in_private_tab">ᱯᱨᱭᱣᱮᱴ ᱴᱮᱵ ᱨᱮ ᱞᱤᱸᱠ ᱡᱷᱤᱡ ᱢᱮ</string>
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">ᱯᱨᱭᱣᱮᱴ ᱴᱮᱵ ᱨᱮ ᱞᱤᱝᱠ ᱡᱷᱤᱡ ᱢᱮ</string>
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">ᱱᱟᱶᱟ ᱴᱮᱵ ᱨᱮ ᱪᱤᱛᱟᱹᱨ ᱡᱷᱤᱡ ᱢᱮ</string>
     <!-- Text for context menu item to save / download the link. -->
-    <string name="mozac_feature_contextmenu_download_link">ᱰᱟᱩᱱᱞᱳᱰ ᱞᱤᱸᱠ</string>
+    <string name="mozac_feature_contextmenu_download_link">ᱰᱟᱩᱱᱞᱚᱰ ᱞᱤᱝᱠ</string>
     <!-- Text for context menu item to share the link with an other app. -->
-    <string name="mozac_feature_contextmenu_share_link">ᱞᱤᱸᱠ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+    <string name="mozac_feature_contextmenu_share_link">ᱞᱤᱝᱠ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
     <!-- Text for context menu item to share the image with an other app. -->
     <string name="mozac_feature_contextmenu_share_image">ᱪᱤᱛᱟᱹᱨ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
-    <string name="mozac_feature_contextmenu_copy_link">ᱞᱤᱸᱠ ᱱᱚᱠᱚᱞ ᱢᱮ</string>
+    <string name="mozac_feature_contextmenu_copy_link">ᱞᱤᱝᱠ ᱱᱚᱠᱚᱞ ᱢᱮ</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_image_location">ᱪᱤᱛᱟᱹᱨ ᱨᱮᱭᱟᱜ ᱡᱟᱭᱜᱟ ᱱᱚᱠᱚᱞ ᱢᱮ</string>
     <!-- Text for context menu item to save / download the image. -->
-    <string name="mozac_feature_contextmenu_save_image">ᱪᱤᱛᱟᱹᱨ ᱥᱟᱸᱪᱟᱣ ᱢᱮ</string>
+    <string name="mozac_feature_contextmenu_save_image">ᱪᱤᱛᱟᱹᱨ ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
     <!-- Text for context menu item to save / download the file. -->
-    <string name="mozac_feature_contextmenu_save_file_to_device">ᱨᱮᱫ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱥᱟᱸᱪᱟᱣ ᱢᱮ</string>
+    <string name="mozac_feature_contextmenu_save_file_to_device">ᱨᱮᱫ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">ᱱᱟᱶᱟ ᱴᱮᱵ ᱠᱷᱩᱞᱟᱹᱭ ᱮᱱᱟ</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">ᱱᱟᱶᱟ ᱱᱤᱡᱚᱨᱟᱜ ᱴᱮᱵ ᱠᱷᱩᱞᱟᱹᱭ ᱮᱱᱟ</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
-    <string name="mozac_feature_contextmenu_snackbar_link_copied">ᱞᱤᱸᱠ ᱨᱮᱴᱚᱵᱼᱵᱚᱰ ᱨᱮ ᱱᱚᱠᱚᱞᱮᱱᱟ</string>
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">ᱞᱤᱝᱠ ᱨᱮᱴᱚᱵᱼᱵᱚᱰ ᱨᱮ ᱱᱚᱠᱚᱞᱮᱱᱟ</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">ᱵᱚᱫᱚᱞ ᱢᱮ</string>
     <!-- Text for context menu item to open the link in an external app. -->
-    <string name="mozac_feature_contextmenu_open_link_in_external_app">ᱞᱤᱸᱠ ᱵᱟᱦᱨᱮ ᱮᱯ ᱨᱮ ᱡᱷᱤᱡ ᱢᱮ</string>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">ᱞᱤᱝᱠ ᱵᱟᱦᱨᱮ ᱮᱯ ᱨᱮ ᱡᱷᱤᱡ ᱢᱮ</string>
     <!-- Text for context menu item to share the email with another app. -->
     <string name="mozac_feature_contextmenu_share_email_address">ᱤᱼᱢᱮᱞ ᱴᱷᱤᱠᱬᱟᱹ ᱠᱚ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
     <!-- Text for context menu item to copy the email address to the clipboard. -->

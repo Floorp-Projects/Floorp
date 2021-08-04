@@ -103,4 +103,8 @@
     <string name="mozac_feature_prompts_select_credit_card">Pumili ng credit card</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">Palawakin ang naka-mungkahing mga credit card</string>
-    </resources>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Itago ang mga minungkahing credit card</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <string name="mozac_feature_prompts_manage_credit_cards">Pamahalaan ang mga credit card</string>
+</resources>

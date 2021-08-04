@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">ᱥᱟᱦᱴᱟ ᱞᱟᱫᱮ ᱰᱤᱜᱟᱹᱣ</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">ᱫᱚᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">ᱯᱟᱹᱪᱷᱞᱟᱹ ᱥᱮᱫᱽ ᱥᱮᱱᱚᱜ ᱢᱮ</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">ᱱᱮᱦᱚᱨ ᱵᱟᱝ ᱯᱩᱨᱟᱹᱣ ᱞᱮᱱᱟ</string>
@@ -57,7 +52,7 @@
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
       <p>ᱱᱮᱦᱚᱨ ᱟᱠᱟᱱ ᱥᱟᱭᱤᱴ ᱫᱚ ᱡᱩᱲᱟᱹᱣ ᱵᱟᱭ ᱟᱸᱡᱚᱢ ᱮᱫᱟᱭ ᱟᱨ ᱵᱷᱮᱡᱟ ᱨᱩᱟᱹᱲ ᱮ ᱵᱚᱸᱫᱚ ᱠᱮᱜᱼᱟᱭ ᱾</p>
       <ul>
-        <li>ᱥᱟᱹᱨᱣᱟᱹᱨ ᱦᱟᱤ ᱰᱤᱢᱟᱸᱰ ᱟᱨ ᱵᱟᱝ ᱵᱟᱛᱷᱟᱱᱤᱛ ᱟᱩᱴᱨᱮᱡ ᱞᱟᱹᱤᱫ ᱦᱩᱭ ᱠᱚᱜᱼᱟ? ᱯᱚᱨᱮ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</li>
+        <li>ᱥᱟᱹᱨᱣᱟᱹᱨ ᱦᱟᱤ ᱰᱤᱢᱟᱸᱰ ᱟᱨ ᱵᱟᱝ ᱵᱟᱛᱷᱟᱱᱤᱛ ᱟᱩᱴᱨᱮᱡ ᱞᱟᱹᱤᱫ ᱦᱩᱭ ᱠᱚᱜᱼᱟ? ᱛᱟᱭᱚᱢ ᱛᱮ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</li>
         <li>ᱟᱢ ᱪᱮᱫ ᱚᱞᱜᱟ ᱥᱟᱭᱤ ᱵᱟᱧ ᱵᱟᱨᱩᱡ ᱫᱟᱲᱟᱭᱟᱜ ᱠᱟᱱᱟᱢ? ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱾</li>
         <li>ᱪᱮᱫ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱫᱚ ᱯᱷᱟᱭᱟᱨᱣᱟᱞᱞ ᱟᱨ ᱵᱟᱝ ᱯᱨᱳᱠᱥᱭ ᱱᱮᱣᱴᱣᱟᱨᱠ ᱯᱨᱚᱴᱮᱠᱴᱮᱰ ᱜᱮᱭᱟ? ᱵᱷᱩᱞ ᱥᱟᱡᱟᱣ ᱠᱚ ᱠᱟᱹᱜᱤᱫ ᱣᱮᱵ ᱵᱨᱟᱩᱡᱤᱝ ᱨᱮ ᱵᱟᱫᱷᱟ ᱮᱢ ᱫᱟᱲᱮᱜᱼᱟᱭ ᱾</li>
         <li>ᱱᱤᱛ ᱦᱟᱹᱵᱤᱡ ᱥᱸᱝᱠᱚᱴ ᱨᱮ?ᱜᱚᱲᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱤᱡ ᱱᱮᱴᱣᱟᱨᱠ ᱟᱰᱢᱤᱱᱤᱥᱴᱨᱮᱴᱚᱨ ᱟᱨ ᱵᱟᱝ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱯᱨᱚᱣᱟᱭᱰᱟᱹᱨ ᱥᱟᱞᱟᱜ ᱡᱩᱜᱟᱡᱩᱜ ᱢᱮ</li>
@@ -70,7 +65,7 @@
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
       <ul>
-        <li>ᱥᱟᱭᱤᱴ ᱵᱮᱛᱷᱟᱱᱤᱠ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟ ᱟᱨ ᱵᱟᱝ ᱡᱟᱹᱛᱤ ᱵᱤᱡᱭ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟ ᱾ ᱠᱤᱪᱷᱤ ᱥᱚᱢᱚᱭ ᱯᱚᱨᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</li>
+        <li>ᱥᱟᱭᱤᱴ ᱵᱮᱛᱷᱟᱱᱤᱠ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟ ᱟᱨ ᱵᱟᱝ ᱡᱟᱹᱛᱤ ᱵᱤᱡᱭ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟ ᱾ ᱠᱤᱪᱷᱤ ᱥᱚᱢᱚᱭ ᱛᱟᱭᱚᱢ ᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</li>
         <li>ᱟᱢ ᱡᱚᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱞᱚᱰ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟᱢ, ᱥᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱰᱟᱴᱟ ᱟᱨ ᱵᱟᱝ Wi-Fi ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱾</li>
       </ul>
     ]]></string>
@@ -119,7 +114,7 @@
     <string name="mozac_browser_errorpages_net_reset_title">ᱡᱚᱱᱚᱲᱟᱹᱣ ᱫᱚ ᱨᱤᱥᱮᱴ ᱮᱱᱟ</string>
 
     <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
-    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[¶•<p>ᱡᱩᱲᱟᱹᱣ ᱱᱮᱜᱚᱥᱤᱭᱮᱴ ᱡᱚᱠᱷᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱞᱤᱸᱠ ᱠᱚᱴᱟᱣᱮᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮ ᱫᱚᱦᱲᱟ ᱨᱤᱠᱟᱹᱭ ᱢᱮ </p>¶•<ul>•<li>ᱥᱟᱭᱤᱴ ᱵᱟᱝ ᱧᱟᱢ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱥᱮ ᱠᱟᱹᱢᱤ ᱨᱮ ᱛᱟᱦᱮᱱᱟ ᱾ ᱠᱤᱪᱷᱩ ᱜᱷᱟᱹᱲᱤᱡ ᱛᱟᱭᱚᱢ ᱨᱤᱠᱟᱹᱭ ᱢᱮ ᱾ </li>¶•<li> ᱡᱩᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱮᱢ ᱞᱟᱫᱮ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ, ᱟᱢᱟᱜ ᱰᱤᱵᱷᱟᱭᱥ ᱨᱮᱱᱟᱜ ᱰᱟᱴᱟ ᱥᱮ ᱣᱟᱭ-ᱯᱷᱟᱭ ᱡᱚᱲᱟᱣ ᱧᱮᱞ ᱞᱮᱜᱟᱭ ᱢᱮ ᱾ </li>¶•</ul¶•]]></string>
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[¶•<p>ᱡᱩᱲᱟᱹᱣ ᱱᱮᱜᱚᱥᱤᱭᱮᱴ ᱡᱚᱠᱷᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱞᱤᱝᱠ ᱠᱚᱴᱟᱣᱮᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮ ᱫᱚᱦᱲᱟ ᱨᱤᱠᱟᱹᱭ ᱢᱮ </p>¶•<ul>•<li>ᱥᱟᱭᱤᱴ ᱵᱟᱝ ᱧᱟᱢ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱥᱮ ᱠᱟᱹᱢᱤ ᱨᱮ ᱛᱟᱦᱮᱱᱟ ᱾ ᱠᱤᱪᱷᱩ ᱜᱷᱟᱹᱲᱤᱡ ᱛᱟᱭᱚᱢ ᱨᱤᱠᱟᱹᱭ ᱢᱮ ᱾ </li>¶•<li> ᱡᱩᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱮᱢ ᱞᱟᱫᱮ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ, ᱟᱢᱟᱜ ᱰᱤᱵᱷᱟᱭᱥ ᱨᱮᱱᱟᱜ ᱰᱟᱴᱟ ᱥᱮ ᱣᱟᱭ-ᱯᱷᱟᱭ ᱡᱚᱲᱟᱣ ᱧᱮᱞ ᱞᱮᱜᱟᱭ ᱢᱮ ᱾ </li>¶•</ul¶•]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">ᱨᱮᱫ ᱯᱨᱚᱠᱟᱨ ᱵᱟᱝᱨᱟᱠᱷᱭᱟᱼᱟᱜ ᱠᱟᱱᱟ</string>
@@ -178,7 +173,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">ᱤᱱᱴᱟᱹᱨᱱᱮᱴ ᱡᱚᱱᱚᱲᱟᱣ ᱵᱟᱹᱱᱩᱜ-ᱟ</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
-    <string name="mozac_browser_errorpages_no_internet_message">ᱱᱮᱴᱣᱟᱨᱠ ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱟᱨ ᱵᱟᱝ ᱠᱤᱪᱷᱤ ᱥᱚᱢᱚᱭ ᱯᱚᱨᱮ ᱥᱟᱦᱴᱟ ᱫᱩᱦᱲᱟᱹ ᱨᱤᱞᱚᱰ ᱢᱮ ᱾</string>
+    <string name="mozac_browser_errorpages_no_internet_message">ᱱᱮᱴᱣᱟᱨᱠ ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱟᱨ ᱵᱟᱝ ᱠᱤᱪᱷᱤ ᱥᱚᱢᱚᱭ ᱛᱟᱭᱚᱢ ᱛᱮ ᱥᱟᱦᱴᱟ ᱫᱩᱦᱲᱟᱹ ᱨᱤᱞᱚᱰ ᱢᱮ ᱾</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">ᱫᱚᱦᱲᱟ ᱞᱟᱫᱤ</string>
 
