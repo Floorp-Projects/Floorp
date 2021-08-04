@@ -109,7 +109,7 @@ const toolkitVariableMap = [
     },
   ],
   [
-    "--lwt-toolbar-field-background-color",
+    "--toolbar-field-background-color",
     {
       lwtProperty: "toolbar_field",
     },
@@ -140,7 +140,7 @@ const toolkitVariableMap = [
     },
   ],
   [
-    "--lwt-toolbar-field-focus",
+    "--toolbar-field-focus-background-color",
     {
       lwtProperty: "toolbar_field_focus",
       fallbackProperty: "toolbar_field",

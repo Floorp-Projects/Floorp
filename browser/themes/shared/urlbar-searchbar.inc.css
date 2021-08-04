@@ -41,15 +41,10 @@
 
 #urlbar-background,
 #searchbar {
-  background-color: Field;
+  background-color: var(--toolbar-field-background-color);
   background-clip: border-box;
   border: 1px solid var(--toolbar-field-border-color);
   border-radius: var(--toolbarbutton-border-radius);
-}
-
-#urlbar:not([focused="true"], [open]) > #urlbar-background,
-#searchbar:not(:focus-within) {
-  background-color: var(--toolbar-field-non-lwt-bgcolor, Field);
 }
 
 #urlbar-input-container,
@@ -106,11 +101,6 @@
   color: var(--lwt-toolbar-field-color, black);
 }
 
-#urlbar:-moz-lwtheme > #urlbar-background,
-#searchbar:-moz-lwtheme {
-  background-color: var(--lwt-toolbar-field-background-color, hsla(0,0%,100%,.8));
-}
-
 #urlbar:not([focused="true"], [open]):-moz-lwtheme > #urlbar-background,
 #searchbar:not(:focus-within):-moz-lwtheme {
   border-color: var(--lwt-toolbar-field-border-color, var(--toolbar-field-border-color));
@@ -121,19 +111,14 @@
   border-color: var(--lwt-toolbar-field-border-color, @fieldHoverBorderColor@);
 }
 
-#urlbar:-moz-lwtheme:hover > #urlbar-background,
-#searchbar:-moz-lwtheme:hover {
-  background-color: var(--lwt-toolbar-field-background-color, white);
-}
-
 #urlbar:is([focused="true"], [open]):-moz-lwtheme,
 #searchbar:focus-within:-moz-lwtheme {
   color: var(--lwt-toolbar-field-focus-color);
 }
 
-#urlbar:is([focused="true"], [open]):-moz-lwtheme > #urlbar-background,
-#searchbar:focus-within:-moz-lwtheme {
-  background-color: var(--lwt-toolbar-field-focus);
+#urlbar:is([focused="true"], [open]) > #urlbar-background,
+#searchbar:focus-within {
+  background-color: var(--toolbar-field-focus-background-color);
 }
 
 #TabsToolbar #searchbar:not(:focus-within) {

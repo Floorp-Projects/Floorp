@@ -43,10 +43,10 @@ findbar[noanim] {
 /* Don't apply theme colors on findbar when header image is applied to avoid
 contrast issues, see bug 1506913 */
 html|html[lwtheme-image] findbar {
-  --lwt-toolbar-field-background-color: initial;
+  --toolbar-field-background-color: initial;
   --lwt-toolbar-field-color: initial;
   --lwt-toolbar-field-border-color: initial;
-  --lwt-toolbar-field-focus: initial;
+  --toolbar-field-focus-background-color: initial;
   --lwt-toolbar-field-focus-color: initial;
 }
 
@@ -63,7 +63,7 @@ html|input.findbar-textbox {
 }
 
 html|input.findbar-textbox:-moz-lwtheme {
-  background-color: var(--input-bgcolor, var(--lwt-toolbar-field-background-color, Field));
+  background-color: var(--input-bgcolor, var(--toolbar-field-background-color));
   color: var(--input-color, var(--lwt-toolbar-field-color, FieldText));
 }
 
