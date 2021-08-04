@@ -15,23 +15,29 @@ namespace mozilla {
 namespace mscom {
 namespace detail {
 
-MFBT_API bool& BeginProcessRuntimeInit();
+enum class ProcessInitState : uint32_t {
+  Uninitialized = 0,
+  PartialSecurityInitialized,
+  PartialGlobalOptions,
+  FullyInitialized,
+};
+
+MFBT_API ProcessInitState& BeginProcessRuntimeInit();
 MFBT_API void EndProcessRuntimeInit();
 
 }  // namespace detail
 
 class MOZ_RAII ProcessInitLock final {
  public:
-  ProcessInitLock()
-      : mIsProcessInitialized(detail::BeginProcessRuntimeInit()) {}
+  ProcessInitLock() : mInitState(detail::BeginProcessRuntimeInit()) {}
 
   ~ProcessInitLock() { detail::EndProcessRuntimeInit(); }
 
-  bool IsInitialized() const { return mIsProcessInitialized; }
+  detail::ProcessInitState GetInitState() const { return mInitState; }
 
-  void SetInitialized() {
-    MOZ_ASSERT(!mIsProcessInitialized);
-    mIsProcessInitialized = true;
+  void SetInitState(const detail::ProcessInitState aNewState) {
+    MOZ_DIAGNOSTIC_ASSERT(aNewState > mInitState);
+    mInitState = aNewState;
   }
 
   ProcessInitLock(const ProcessInitLock&) = delete;
@@ -40,7 +46,7 @@ class MOZ_RAII ProcessInitLock final {
   ProcessInitLock operator=(ProcessInitLock&&) = delete;
 
  private:
-  bool& mIsProcessInitialized;
+  detail::ProcessInitState& mInitState;
 };
 
 }  // namespace mscom
