@@ -2339,23 +2339,16 @@ nsresult nsExternalAppHandler::CreateTransfer() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mRequest);
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = nullptr;
-  if (httpChannel) {
-    referrerInfo = httpChannel->GetReferrerInfo();
-  }
-
   if (mBrowsingContext) {
     rv = transfer->InitWithBrowsingContext(
         mSourceUrl, target, u""_ns, mMimeInfo, mTimeDownloadStarted, mTempFile,
         this, channel && NS_UsePrivateBrowsing(channel),
-        mDownloadClassification, referrerInfo, mBrowsingContext,
-        mHandleInternally);
+        mDownloadClassification, mBrowsingContext, mHandleInternally);
   } else {
     rv = transfer->Init(mSourceUrl, target, u""_ns, mMimeInfo,
                         mTimeDownloadStarted, mTempFile, this,
                         channel && NS_UsePrivateBrowsing(channel),
-                        mDownloadClassification, referrerInfo);
+                        mDownloadClassification);
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2431,23 +2424,16 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
   }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mRequest);
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = nullptr;
-  if (httpChannel) {
-    referrerInfo = httpChannel->GetReferrerInfo();
-  }
-
   if (mBrowsingContext) {
     rv = transfer->InitWithBrowsingContext(
         mSourceUrl, pseudoTarget, u""_ns, mMimeInfo, mTimeDownloadStarted,
         mTempFile, this, channel && NS_UsePrivateBrowsing(channel),
-        mDownloadClassification, referrerInfo, mBrowsingContext,
-        mHandleInternally);
+        mDownloadClassification, mBrowsingContext, mHandleInternally);
   } else {
     rv = transfer->Init(mSourceUrl, pseudoTarget, u""_ns, mMimeInfo,
                         mTimeDownloadStarted, mTempFile, this,
                         channel && NS_UsePrivateBrowsing(channel),
-                        mDownloadClassification, referrerInfo);
+                        mDownloadClassification);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
