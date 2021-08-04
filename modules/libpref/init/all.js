@@ -329,7 +329,9 @@ pref("pdfjs.renderInteractiveForms", true);
 pref("pdfjs.enableScripting", true);
 
 // Enable XFA form support in the PDF viewer.
+#ifdef EARLY_BETA_OR_EARLIER
 pref("pdfjs.enableXfa", true);
+#endif
 
 // Disable support for MathML
 pref("mathml.disabled",    false);
