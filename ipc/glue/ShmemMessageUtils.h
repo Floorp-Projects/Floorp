@@ -18,20 +18,7 @@ template <>
 struct IPDLParamTraits<Shmem> {
   typedef Shmem paramType;
 
-  // NB: std::move(Shmem) is a /copy/.
-  // It would be nice to make a Shmem a move-only class, but the ipdlh
-  // generator can't handle those yet. One solution would be to use a dumb
-  // struct/descriptor for ipdlh purposes. Arguably this dumb non-move-only
-  // struct *is* Shmem.
-  // Because Shmem is not move-only, when previous versions of this code
-  // required Shmem&& here, it caused devs to assume that Shmem was move-aware,
-  // when it is not. People would then cargo-cult std::move(shmem), even though
-  // that's a copy. This can be a sign that people are getting the wrong idea
-  // about how to use it, and when things happen. In particular,
-  // `std::move(shmem)` leaves the strong references in `shmem` intact, and we
-  // should avoid causing readers to believe otherwise.
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    const paramType& aParam);
+  static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam);
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
                    IProtocol* aActor, paramType* aResult);
 
