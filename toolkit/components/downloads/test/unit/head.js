@@ -371,8 +371,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
           null,
           persist,
           isPrivate,
-          Ci.nsITransfer.DOWNLOAD_ACCEPTABLE,
-          null
+          Ci.nsITransfer.DOWNLOAD_ACCEPTABLE
         );
         persist.progressListener = transfer;
 
