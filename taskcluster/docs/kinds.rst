@@ -592,6 +592,15 @@ The signed langpacks are produced on Linux, since langpacks are platform agnosti
 These tasks are for releases; they are complete, and therefore slower, and not intended for rapid iteration in
 ```try```.
 
+repackage-signing-msix
+----------------------
+Repackage-signing-msix takes Windows MSIX packages produced in ```repackage-msix``` and signs them.
+
+repackage-signing-shippable-l10n-msix
+-------------------------------------
+Repackage-signing-shippable-l10n-msix takes Windows MSIX packages produced in
+```repackage-signing-shippable-l10n-msix``` and signs them.
+
 repo-update
 -----------
 Repo-Update tasks are tasks that perform some action on the project repo itself,
