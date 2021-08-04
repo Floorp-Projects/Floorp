@@ -9,7 +9,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["FormAutofillPrompter"];
+var EXPORTED_SYMBOLS = ["FormAutofillDoorhanger"];
 
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -21,13 +21,6 @@ const { FormAutofill } = ChromeUtils.import(
 const { FormAutofillUtils } = ChromeUtils.import(
   "resource://autofill/FormAutofillUtils.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  CreditCard: "resource://gre/modules/CreditCard.jsm",
-});
 
 this.log = null;
 FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
@@ -211,7 +204,7 @@ const CONTENT = {
   },
 };
 
-let FormAutofillPrompter = {
+let FormAutofillDoorhanger = {
   /**
    * Generate the main action and secondary actions from content parameters and
    * promise resolve.
@@ -365,104 +358,6 @@ let FormAutofillPrompter = {
       checkbox.removeEventListener("command", options.checkbox.callback);
     }
   },
-
-  async promptToSaveAddress(browser, type, description) {
-    return this._showCCorAddressCaptureDoorhanger(browser, type, description);
-  },
-
-  async promptToSaveCreditCard(browser, creditCard, storage) {
-    let number =
-      creditCard.record["cc-number"] ||
-      creditCard.record["cc-number-decrypted"];
-    let name = creditCard.record["cc-name"];
-    const description = await CreditCard.getLabel({ name, number });
-
-    const telemetryObject = creditCard.guid
-      ? "update_doorhanger"
-      : "capture_doorhanger";
-    Services.telemetry.recordEvent(
-      "creditcard",
-      "show",
-      telemetryObject,
-      creditCard.flowId
-    );
-
-    const state = await FormAutofillPrompter._showCCorAddressCaptureDoorhanger(
-      browser,
-      creditCard.guid ? "updateCreditCard" : "addCreditCard",
-      description
-    );
-
-    if (state == "cancel") {
-      Services.telemetry.recordEvent(
-        "creditcard",
-        "cancel",
-        telemetryObject,
-        creditCard.flowId
-      );
-      return;
-    }
-
-    if (state == "disable") {
-      Services.prefs.setBoolPref(
-        "extensions.formautofill.creditCards.enabled",
-        false
-      );
-      Services.telemetry.recordEvent(
-        "creditcard",
-        "disable",
-        telemetryObject,
-        creditCard.flowId
-      );
-      return;
-    }
-
-    if (!(await FormAutofillUtils.ensureLoggedIn()).authenticated) {
-      log.warn("User canceled encryption login");
-      return;
-    }
-
-    let changedGUIDs = [];
-    if (creditCard.guid) {
-      if (state == "update") {
-        Services.telemetry.recordEvent(
-          "creditcard",
-          "update",
-          telemetryObject,
-          creditCard.flowId
-        );
-        await storage.creditCards.update(
-          creditCard.guid,
-          creditCard.record,
-          true
-        );
-        changedGUIDs.push(creditCard.guid);
-      } else if ("create") {
-        Services.telemetry.recordEvent(
-          "creditcard",
-          "save",
-          telemetryObject,
-          creditCard.flowId
-        );
-        changedGUIDs.push(await storage.creditCards.add(creditCard.record));
-      }
-    } else {
-      changedGUIDs.push(
-        ...(await storage.creditCards.mergeToStorage(creditCard.record))
-      );
-      if (!changedGUIDs.length) {
-        Services.telemetry.recordEvent(
-          "creditcard",
-          "save",
-          telemetryObject,
-          creditCard.flowId
-        );
-        changedGUIDs.push(await storage.creditCards.add(creditCard.record));
-      }
-    }
-    changedGUIDs.forEach(guid => storage.creditCards.notifyUsed(guid));
-  },
-
   /**
    * Show different types of doorhanger by leveraging PopupNotifications.
    * @param  {XULElement} browser
@@ -474,7 +369,7 @@ let FormAutofillPrompter = {
    * @returns {Promise}
               Resolved with action type when action callback is triggered.
    */
-  async _showCCorAddressCaptureDoorhanger(browser, type, description) {
+  async show(browser, type, description) {
     log.debug("show doorhanger with type:", type);
     return new Promise(resolve => {
       let {

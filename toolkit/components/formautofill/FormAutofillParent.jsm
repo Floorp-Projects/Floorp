@@ -43,7 +43,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CreditCard: "resource://gre/modules/CreditCard.jsm",
   FormAutofillPreferences: "resource://autofill/FormAutofillPreferences.jsm",
-  FormAutofillPrompter: "resource://autofill/FormAutofillPrompter.jsm",
+  FormAutofillDoorhanger: "resource://autofill/FormAutofillDoorhanger.jsm",
   FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
   OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
 });
@@ -493,7 +493,7 @@ class FormAutofillParent extends JSWindowActorParent {
 
         showDoorhanger = async () => {
           const description = FormAutofillUtils.getAddressLabel(address.record);
-          const state = await FormAutofillPrompter.promptToSaveAddress(
+          const state = await FormAutofillDoorhanger.show(
             browser,
             "updateAddress",
             description
@@ -567,7 +567,7 @@ class FormAutofillParent extends JSWindowActorParent {
         );
         showDoorhanger = async () => {
           const description = FormAutofillUtils.getAddressLabel(address.record);
-          const state = await FormAutofillPrompter.promptToSaveAddress(
+          const state = await FormAutofillDoorhanger.show(
             browser,
             "firstTimeUse",
             description
@@ -716,10 +716,102 @@ class FormAutofillParent extends JSWindowActorParent {
         return;
       }
 
-      await FormAutofillPrompter.promptToSaveCreditCard(
+      let number =
+        creditCard.record["cc-number"] ||
+        creditCard.record["cc-number-decrypted"];
+      let name = creditCard.record["cc-name"];
+      const description = await CreditCard.getLabel({ name, number });
+
+      const telemetryObject = creditCard.guid
+        ? "update_doorhanger"
+        : "capture_doorhanger";
+      Services.telemetry.recordEvent(
+        "creditcard",
+        "show",
+        telemetryObject,
+        creditCard.flowId
+      );
+
+      const state = await FormAutofillDoorhanger.show(
         browser,
-        creditCard,
-        gFormAutofillStorage
+        creditCard.guid ? "updateCreditCard" : "addCreditCard",
+        description
+      );
+      if (state == "cancel") {
+        Services.telemetry.recordEvent(
+          "creditcard",
+          "cancel",
+          telemetryObject,
+          creditCard.flowId
+        );
+        return;
+      }
+
+      if (state == "disable") {
+        Services.prefs.setBoolPref(
+          "extensions.formautofill.creditCards.enabled",
+          false
+        );
+        Services.telemetry.recordEvent(
+          "creditcard",
+          "disable",
+          telemetryObject,
+          creditCard.flowId
+        );
+        return;
+      }
+
+      if (!(await FormAutofillUtils.ensureLoggedIn()).authenticated) {
+        log.warn("User canceled encryption login");
+        return;
+      }
+
+      let changedGUIDs = [];
+      if (creditCard.guid) {
+        if (state == "update") {
+          Services.telemetry.recordEvent(
+            "creditcard",
+            "update",
+            telemetryObject,
+            creditCard.flowId
+          );
+          await gFormAutofillStorage.creditCards.update(
+            creditCard.guid,
+            creditCard.record,
+            true
+          );
+          changedGUIDs.push(creditCard.guid);
+        } else if ("create") {
+          Services.telemetry.recordEvent(
+            "creditcard",
+            "save",
+            telemetryObject,
+            creditCard.flowId
+          );
+          changedGUIDs.push(
+            await gFormAutofillStorage.creditCards.add(creditCard.record)
+          );
+        }
+      } else {
+        changedGUIDs.push(
+          ...(await gFormAutofillStorage.creditCards.mergeToStorage(
+            creditCard.record
+          ))
+        );
+        if (!changedGUIDs.length) {
+          Services.telemetry.recordEvent(
+            "creditcard",
+            "save",
+            telemetryObject,
+            creditCard.flowId
+          );
+          changedGUIDs.push(
+            await gFormAutofillStorage.creditCards.add(creditCard.record)
+          );
+        }
+      }
+      changedGUIDs.forEach(guid =>
+        gFormAutofillStorage.creditCards.notifyUsed(guid)
       );
     };
   }
