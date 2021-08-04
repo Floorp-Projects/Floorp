@@ -10,26 +10,37 @@
 #include <unordered_map>
 
 #include "mozilla/Mutex.h"
-
 #include "mozilla/layers/NativeLayer.h"
 #include "mozilla/layers/SurfacePoolWayland.h"
 #include "mozilla/widget/MozContainerWayland.h"
-#include "mozilla/widget/WaylandShmBuffer.h"
 #include "nsRegion.h"
 #include "nsTArray.h"
 
 namespace mozilla::layers {
 
-using gfx::BackendType;
-using gfx::DrawTarget;
-using gfx::IntPoint;
-using gfx::IntRect;
-using gfx::IntRegion;
-using gfx::IntSize;
-using gfx::Matrix4x4;
-using gfx::SamplingFilter;
+typedef void (*CallbackFunc)(void* aData, uint32_t aTime);
 
-class NativeLayerRootWayland : public NativeLayerRoot {
+class CallbackMultiplexHelper final {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CallbackMultiplexHelper);
+
+  explicit CallbackMultiplexHelper(CallbackFunc aCallbackFunc,
+                                   void* aCallbackData);
+
+  void Callback(uint32_t aTime);
+  bool IsActive() { return mActive; }
+
+ private:
+  ~CallbackMultiplexHelper() = default;
+
+  void RunCallback(uint32_t aTime);
+
+  bool mActive = true;
+  CallbackFunc mCallbackFunc = nullptr;
+  void* mCallbackData = nullptr;
+};
+
+class NativeLayerRootWayland final : public NativeLayerRoot {
  public:
   static already_AddRefed<NativeLayerRootWayland> CreateForMozContainer(
       MozContainer* aContainer);
@@ -40,13 +51,16 @@ class NativeLayerRootWayland : public NativeLayerRoot {
 
   // Overridden methods
   already_AddRefed<NativeLayer> CreateLayer(
-      const IntSize& aSize, bool aIsOpaque,
+      const gfx::IntSize& aSize, bool aIsOpaque,
       SurfacePoolHandle* aSurfacePoolHandle) override;
+  already_AddRefed<NativeLayer> CreateLayerForExternalTexture(
+      bool aIsOpaque) override;
+
   void AppendLayer(NativeLayer* aLayer) override;
   void RemoveLayer(NativeLayer* aLayer) override;
   void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) override;
-  void UpdateLayersOnMainThread();
-  UniquePtr<NativeLayerRootSnapshotter> CreateSnapshotter() override;
+
+  void PrepareForCommit() override { mFrameInProcess = true; };
   bool CommitToScreen() override;
 
   // When the compositor is paused the wl_surface of the MozContainer will
@@ -54,88 +68,118 @@ class NativeLayerRootWayland : public NativeLayerRoot {
   // all tiles after resume. This is a implementation specific quirk of
   // our GTK-Wayland backend.
   void PauseCompositor() override;
-  bool ResumeCompositor() override;
 
-  already_AddRefed<NativeLayer> CreateLayerForExternalTexture(
-      bool aIsOpaque) override;
-
+  void UpdateLayersOnMainThread();
   void AfterFrameClockAfterPaint();
   void RequestFrameCallback(CallbackFunc aCallbackFunc, void* aCallbackData);
 
- protected:
+ private:
   explicit NativeLayerRootWayland(MozContainer* aContainer);
-  ~NativeLayerRootWayland() = default;
+  ~NativeLayerRootWayland();
 
-  void EnsureSurfaceInitialized();
-  bool EnsureShowLayer(const RefPtr<NativeLayerWayland>& aLayer);
-  void EnsureHideLayer(const RefPtr<NativeLayerWayland>& aLayer);
-  void UnmapLayer(const RefPtr<NativeLayerWayland>& aLayer);
+  bool CommitToScreen(const MutexAutoLock& aProofOfLock);
 
   Mutex mMutex;
 
-  nsTArray<RefPtr<NativeLayerWayland>> mSublayers;
-  nsTArray<RefPtr<NativeLayerWayland>> mSublayersOnMainThread;
   MozContainer* mContainer = nullptr;
-  RefPtr<widget::WaylandShmBuffer> mShmBuffer;
-  bool mCompositorRunning = true;
+  wl_surface* mWlSurface = nullptr;
+  RefPtr<widget::WaylandBufferSHM> mShmBuffer;
+
+  nsTArray<RefPtr<NativeLayerWayland>> mSublayers;
+  nsTArray<RefPtr<NativeLayerWayland>> mOldSublayers;
+  nsTArray<RefPtr<NativeLayerWayland>> mSublayersOnMainThread;
+  bool mNewLayers = false;
+
+  bool mFrameInProcess = false;
+  bool mCallbackRequested = false;
+
   gulong mGdkAfterPaintId = 0;
   RefPtr<CallbackMultiplexHelper> mCallbackMultiplexHelper;
-  bool mCommitRequested = false;
 };
 
-class NativeLayerWayland : public NativeLayer {
+class NativeLayerWayland final : public NativeLayer {
  public:
   virtual NativeLayerWayland* AsNativeLayerWayland() override { return this; }
 
   // Overridden methods
-  IntSize GetSize() override;
-  void SetPosition(const IntPoint& aPosition) override;
-  IntPoint GetPosition() override;
-  void SetTransform(const Matrix4x4& aTransform) override;
-  Matrix4x4 GetTransform() override;
-  IntRect GetRect() override;
-  void SetSamplingFilter(SamplingFilter aSamplingFilter) override;
-  RefPtr<DrawTarget> NextSurfaceAsDrawTarget(const IntRect& aDisplayRect,
-                                             const IntRegion& aUpdateRegion,
-                                             BackendType aBackendType) override;
-  Maybe<GLuint> NextSurfaceAsFramebuffer(const IntRect& aDisplayRect,
-                                         const IntRegion& aUpdateRegion,
+  gfx::IntSize GetSize() override;
+  void SetPosition(const gfx::IntPoint& aPosition) override;
+  gfx::IntPoint GetPosition() override;
+  void SetTransform(const gfx::Matrix4x4& aTransform) override;
+  gfx::Matrix4x4 GetTransform() override;
+  gfx::IntRect GetRect() override;
+  void SetSamplingFilter(gfx::SamplingFilter aSamplingFilter) override;
+  RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
+      const gfx::IntRect& aDisplayRect, const gfx::IntRegion& aUpdateRegion,
+      gfx::BackendType aBackendType) override;
+  Maybe<GLuint> NextSurfaceAsFramebuffer(const gfx::IntRect& aDisplayRect,
+                                         const gfx::IntRegion& aUpdateRegion,
                                          bool aNeedsDepth) override;
   void NotifySurfaceReady() override;
   void DiscardBackbuffers() override;
   bool IsOpaque() override;
-  void SetClipRect(const Maybe<IntRect>& aClipRect) override;
-  Maybe<IntRect> ClipRect() override;
-  IntRect CurrentSurfaceDisplayRect() override;
+  void SetClipRect(const Maybe<gfx::IntRect>& aClipRect) override;
+  Maybe<gfx::IntRect> ClipRect() override;
+  gfx::IntRect CurrentSurfaceDisplayRect() override;
   void SetSurfaceIsFlipped(bool aIsFlipped) override;
   bool SurfaceIsFlipped() override;
 
   void AttachExternalImage(wr::RenderTextureHost* aExternalImage) override;
 
- protected:
+  void Commit();
+  void Unmap();
+  void EnsureParentSurface(wl_surface* aParentSurface);
+  const RefPtr<SurfacePoolHandleWayland> GetSurfacePoolHandle() {
+    return mSurfacePoolHandle;
+  };
+  void SetBufferTransformFlipped(bool aFlipped);
+  void SetSubsurfacePosition(int aX, int aY);
+  void SetViewportSourceRect(const gfx::Rect aSourceRect);
+  void SetViewportDestinationSize(int aWidth, int aHeight);
+
+  void RequestFrameCallback(
+      const RefPtr<CallbackMultiplexHelper>& aMultiplexHelper);
+  static void FrameCallbackHandler(void* aData, wl_callback* aCallback,
+                                   uint32_t aTime);
+
+ private:
   friend class NativeLayerRootWayland;
 
-  NativeLayerWayland(const IntSize& aSize, bool aIsOpaque,
+  NativeLayerWayland(const gfx::IntSize& aSize, bool aIsOpaque,
                      SurfacePoolHandleWayland* aSurfacePoolHandle);
   explicit NativeLayerWayland(bool aIsOpaque);
   ~NativeLayerWayland() override;
 
+  void HandlePartialUpdate(const MutexAutoLock& aProofOfLock);
+  void FrameCallbackHandler(wl_callback* aCallback, uint32_t aTime);
+
   Mutex mMutex;
 
-  RefPtr<SurfacePoolHandleWayland> mSurfacePoolHandle;
-  IntPoint mPosition;
-  Matrix4x4 mTransform;
-  IntRect mDisplayRect;
-  IntRect mValidRect;
-  IntRegion mDirtyRegion;
-  IntSize mSize;
-  Maybe<IntRect> mClipRect;
-  SamplingFilter mSamplingFilter = SamplingFilter::POINT;
-  bool mSurfaceIsFlipped = false;
+  const RefPtr<SurfacePoolHandleWayland> mSurfacePoolHandle;
+  const gfx::IntSize mSize;
   const bool mIsOpaque = false;
-  bool mIsShown = false;
+  gfx::IntPoint mPosition;
+  gfx::Matrix4x4 mTransform;
+  gfx::IntRect mDisplayRect;
+  gfx::IntRegion mDirtyRegion;
+  Maybe<gfx::IntRect> mClipRect;
+  gfx::SamplingFilter mSamplingFilter = gfx::SamplingFilter::POINT;
+  bool mSurfaceIsFlipped = false;
+  bool mHasBufferAttached = false;
 
-  RefPtr<NativeSurfaceWayland> mNativeSurface;
+  wl_surface* mWlSurface = nullptr;
+  wl_surface* mParentWlSurface = nullptr;
+  wl_subsurface* mWlSubsurface = nullptr;
+  wl_callback* mCallback = nullptr;
+  wp_viewport* mViewport = nullptr;
+  bool mBufferTransformFlipped = false;
+  gfx::IntPoint mSubsurfacePosition = gfx::IntPoint(0, 0);
+  gfx::Rect mViewportSourceRect = gfx::Rect(-1, -1, -1, -1);
+  gfx::IntSize mViewportDestinationSize = gfx::IntSize(-1, -1);
+  nsTArray<RefPtr<CallbackMultiplexHelper>> mCallbackMultiplexHelpers;
+
+  RefPtr<widget::WaylandBuffer> mInProgressBuffer;
+  RefPtr<widget::WaylandBuffer> mFrontBuffer;
 };
 
 }  // namespace mozilla::layers

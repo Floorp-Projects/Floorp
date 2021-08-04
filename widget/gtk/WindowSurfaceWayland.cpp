@@ -60,7 +60,7 @@ namespace mozilla::widget {
         |       | WindowSurfaceWayland          |<------>| nsWindow       |
         |       |                               |        ------------------
         |       |  -----------------------      |
-        |       |  | WaylandShmBuffer    |      |
+        |       |  | WaylandBufferSHM    |      |
         |       |  |                     |      |
         |       |  | ------------------- |      |
         |       |  | |  WaylandShmPool | |      |
@@ -68,7 +68,7 @@ namespace mozilla::widget {
         |       |  -----------------------      |
         |       |                               |
         |       |  -----------------------      |
-        |       |  | WaylandShmBuffer    |      |
+        |       |  | WaylandBufferSHM    |      |
         |       |  |                     |      |
         |       |  | ------------------- |      |
         |       |  | |  WaylandShmPool | |      |
@@ -81,7 +81,7 @@ namespace mozilla::widget {
   | WindowSurfaceWayland          |<------>| nsWindow       |
   |                               |        ------------------
   |  -----------------------      |
-  |  | WaylandShmBuffer    |      |
+  |  | WaylandBufferSHM    |      |
   |  |                     |      |
   |  | ------------------- |      |
   |  | |  WaylandShmPool | |      |
@@ -89,7 +89,7 @@ namespace mozilla::widget {
   |  -----------------------      |
   |                               |
   |  -----------------------      |
-  |  | WaylandShmBuffer    |      |
+  |  | WaylandBufferSHM    |      |
   |  |                     |      |
   |  | ------------------- |      |
   |  | |  WaylandShmPool | |      |
@@ -118,7 +118,7 @@ One WindowSurfaceWayland draws one nsWindow so those are tied 1:1.
 At Wayland level it holds one wl_surface object.
 
 To perform visualiation of nsWindow, WindowSurfaceWayland contains one
-wl_surface and two wl_buffer objects (owned by WaylandShmBuffer)
+wl_surface and two wl_buffer objects (owned by WaylandBufferSHM)
 as we use double buffering. When nsWindow drawing is finished to wl_buffer,
 the wl_buffer is attached to wl_surface and it's sent to Wayland compositor.
 
@@ -127,7 +127,7 @@ compositor for instance) we store the drawing to WindowImageSurface object
 and draw later when wl_buffer becomes available or discard the
 WindowImageSurface cache when whole screen is invalidated.
 
-WaylandShmBuffer
+WaylandBufferSHM
 
 Is a class which provides a wl_buffer for drawing.
 Wl_buffer is a main Wayland object with actual graphics data.
@@ -136,18 +136,18 @@ When double buffering is involved every window (GdkWindow for instance)
 utilises two wl_buffers which are cycled. One is filed with data by application
 and one is rendered by compositor.
 
-WaylandShmBuffer is implemented by shared memory (shm).
+WaylandBufferSHM is implemented by shared memory (shm).
 It owns wl_buffer object, owns WaylandShmPool
 (which provides the shared memory) and ties them together.
 
 WaylandShmPool
 
-WaylandShmPool acts as a manager of shared memory for WaylandShmBuffer.
+WaylandShmPool acts as a manager of shared memory for WaylandBufferSHM.
 Allocates it, holds reference to it and releases it.
 
 We allocate shared memory (shm) by mmap(..., MAP_SHARED,...) as an interface
 between us and wayland compositor. We draw our graphics data to the shm and
-handle to wayland compositor by WaylandShmBuffer/WindowSurfaceWayland
+handle to wayland compositor by WaylandBufferSHM/WindowSurfaceWayland
 (wl_buffer/wl_surface).
 */
 
@@ -198,7 +198,7 @@ WindowSurfaceWayland::~WindowSurfaceWayland() {
   }
 }
 
-WaylandShmBuffer* WindowSurfaceWayland::CreateWaylandBuffer(
+WaylandBufferSHM* WindowSurfaceWayland::CreateWaylandBuffer(
     const LayoutDeviceIntSize& aSize) {
   int availableBuffer;
 
@@ -220,8 +220,7 @@ WaylandShmBuffer* WindowSurfaceWayland::CreateWaylandBuffer(
     return nullptr;
   }
 
-  RefPtr<WaylandShmBuffer> buffer =
-      WaylandShmBuffer::Create(GetWaylandDisplay(), aSize);
+  RefPtr<WaylandBufferSHM> buffer = WaylandBufferSHM::Create(aSize);
   if (!buffer) {
     LOGWAYLAND(("    failed to create back buffer!\n"));
     return nullptr;
@@ -237,7 +236,7 @@ WaylandShmBuffer* WindowSurfaceWayland::CreateWaylandBuffer(
   return buffer.get();
 }
 
-WaylandShmBuffer* WindowSurfaceWayland::WaylandBufferFindAvailable(
+WaylandBufferSHM* WindowSurfaceWayland::WaylandBufferFindAvailable(
     const LayoutDeviceIntSize& aSize) {
   LOGWAYLAND(("WindowSurfaceWayland::WaylandBufferFindAvailable %d x %d\n",
               aSize.width, aSize.height));
@@ -245,7 +244,7 @@ WaylandShmBuffer* WindowSurfaceWayland::WaylandBufferFindAvailable(
   // Try to find a buffer which matches the size
   for (int availableBuffer = 0; availableBuffer < BACK_BUFFER_NUM;
        availableBuffer++) {
-    RefPtr<WaylandShmBuffer> buffer = mShmBackupBuffer[availableBuffer];
+    RefPtr<WaylandBufferSHM> buffer = mShmBackupBuffer[availableBuffer];
     if (buffer && !buffer->IsAttached() && buffer->IsMatchingSize(aSize)) {
       LOGWAYLAND(("    found match %d [%p]\n", availableBuffer, buffer.get()));
       return buffer.get();
@@ -256,7 +255,7 @@ WaylandShmBuffer* WindowSurfaceWayland::WaylandBufferFindAvailable(
   return nullptr;
 }
 
-WaylandShmBuffer* WindowSurfaceWayland::SetNewWaylandBuffer() {
+WaylandBufferSHM* WindowSurfaceWayland::SetNewWaylandBuffer() {
   LOGWAYLAND(
       ("WindowSurfaceWayland::NewWaylandBuffer [%p] Requested buffer [%d "
        "x %d]\n",
@@ -272,7 +271,7 @@ WaylandShmBuffer* WindowSurfaceWayland::SetNewWaylandBuffer() {
 }
 
 // Recent
-WaylandShmBuffer* WindowSurfaceWayland::GetWaylandBuffer() {
+WaylandBufferSHM* WindowSurfaceWayland::GetWaylandBuffer() {
   LOGWAYLAND(
       ("WindowSurfaceWayland::GetWaylandBuffer [%p] Requested buffer [%d "
        "x %d] can switch %d\n",
@@ -280,13 +279,13 @@ WaylandShmBuffer* WindowSurfaceWayland::GetWaylandBuffer() {
        mCanSwitchWaylandBuffer));
 
 #if MOZ_LOGGING
-  LOGWAYLAND(("    Recent WaylandShmBuffer [%p]\n", mWaylandBuffer.get()));
+  LOGWAYLAND(("    Recent WaylandBufferSHM [%p]\n", mWaylandBuffer.get()));
   for (int i = 0; i < BACK_BUFFER_NUM; i++) {
     if (!mShmBackupBuffer[i]) {
-      LOGWAYLAND(("        WaylandShmBuffer [%d] null\n", i));
+      LOGWAYLAND(("        WaylandBufferSHM [%d] null\n", i));
     } else {
       LOGWAYLAND(
-          ("        WaylandShmBuffer [%d][%p] width %d height %d attached %d\n",
+          ("        WaylandBufferSHM [%d][%p] width %d height %d attached %d\n",
            i, mShmBackupBuffer[i].get(), mShmBackupBuffer[i]->GetSize().width,
            mShmBackupBuffer[i]->GetSize().height,
            mShmBackupBuffer[i]->IsAttached()));
@@ -334,7 +333,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockWaylandBuffer() {
        "%d\n",
        (void*)this, mWLBufferSize.width, mWLBufferSize.height));
 
-  WaylandShmBuffer* buffer = GetWaylandBuffer();
+  WaylandBufferSHM* buffer = GetWaylandBuffer();
   LOGWAYLAND(("WindowSurfaceWayland::LockWaylandBuffer [%p] Got buffer %p\n",
               (void*)this, (void*)buffer));
 
@@ -361,7 +360,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockImageSurface(
     const gfx::IntSize& aLockSize) {
   if (!mImageSurface || !(aLockSize <= mImageSurface->GetSize())) {
     mImageSurface = gfx::Factory::CreateDataSourceSurface(
-        aLockSize, WaylandShmBuffer::GetSurfaceFormat());
+        aLockSize, WaylandBufferSHM::GetSurfaceFormat());
   }
   gfx::DataSourceSurface::MappedSurface map = {nullptr, 0};
   if (!mImageSurface->Map(gfx::DataSourceSurface::READ_WRITE, &map)) {
@@ -369,7 +368,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockImageSurface(
   }
   return gfxPlatform::CreateDrawTargetForData(
       map.mData, mImageSurface->GetSize(), map.mStride,
-      WaylandShmBuffer::GetSurfaceFormat());
+      WaylandBufferSHM::GetSurfaceFormat());
 }
 
 static bool IsWindowFullScreenUpdate(
