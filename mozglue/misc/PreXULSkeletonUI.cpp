@@ -1341,7 +1341,7 @@ ThemeColors GetTheme(ThemeMode themeId) {
       theme.tabBarColor = 0x1c1b22;
       // controlled by --toolbar-non-lwt-textcolor in browser.css
       theme.chromeContentDividerColor = 0x0c0c0d;
-      // controlled by css variable --lwt-toolbar-field-background-color
+      // controlled by css variable --toolbar-field-background-color
       theme.urlbarColor = 0x42414d;
       theme.urlbarBorderColor = 0x42414d;
       theme.animationColor = theme.urlbarColor;

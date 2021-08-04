@@ -28,6 +28,15 @@
 
   --popup-notification-body-width: calc(31em - calc(2 * var(--arrowpanel-padding)));
   --toolbarbutton-icon-fill: currentColor;
+
+  --toolbar-field-background-color: Field;
+  --toolbar-field-focus-background-color: Field;
+}
+
+:root:-moz-lwtheme {
+  --toolbar-field-background-color: rgba(255, 255, 255, 0.8);
+  /* --toolbar-field-focus-background-color is given a `white` fallback in
+     LightweightThemeConsumer.jsm. */
 }
 
 :is(menupopup, panel)[type=arrow] {
