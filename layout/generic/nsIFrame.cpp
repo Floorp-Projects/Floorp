@@ -4004,8 +4004,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   Maybe<nsDisplayListBuilder::Linkifier> linkifier;
   if (StaticPrefs::print_save_as_pdf_links_enabled() &&
       aBuilder->IsForPrinting()) {
-    linkifier.emplace(aBuilder, aChild);
-    linkifier->MaybeAppendLink(aBuilder, aChild, aLists.Content());
+    linkifier.emplace(aBuilder, aChild, aLists.Content());
+    linkifier->MaybeAppendLink(aBuilder, aChild);
   }
 
   nsIFrame* child = aChild;
