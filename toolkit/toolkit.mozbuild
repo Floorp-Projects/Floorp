@@ -42,7 +42,7 @@ DIRS += [
 if CONFIG['MOZ_SANDBOX']:
     DIRS += ['/security/sandbox']
 
-if CONFIG["MOZ_USING_WASM_SANDBOXING"]:
+if CONFIG["MOZ_USING_WASM_SANDBOXING"] and CONFIG["COMPILE_ENVIRONMENT"]:
     DIRS += ["/security/rlbox"]
 
 DIRS += [
