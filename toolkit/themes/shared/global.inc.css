@@ -30,13 +30,17 @@
   --toolbarbutton-icon-fill: currentColor;
 
   --toolbar-field-background-color: Field;
+  --toolbar-field-color: FieldText;
   --toolbar-field-focus-background-color: Field;
+  --toolbar-field-focus-color: FieldText;
 }
 
 :root:-moz-lwtheme {
   --toolbar-field-background-color: rgba(255, 255, 255, 0.8);
   /* --toolbar-field-focus-background-color is given a `white` fallback in
      LightweightThemeConsumer.jsm. */
+  --toolbar-field-color: black;
+  --toolbar-field-focus-color: black;
 }
 
 :is(menupopup, panel)[type=arrow] {

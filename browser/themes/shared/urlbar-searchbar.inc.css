@@ -36,7 +36,7 @@
 #searchbar {
   min-height: var(--urlbar-min-height);
   text-shadow: none;
-  color: var(--toolbar-field-non-lwt-color, FieldText);
+  color: var(--toolbar-field-color);
 }
 
 #urlbar-background,
@@ -96,11 +96,6 @@
   border-color: var(--toolbar-field-focus-border-color);
 }
 
-#urlbar:-moz-lwtheme,
-#searchbar:-moz-lwtheme {
-  color: var(--lwt-toolbar-field-color, black);
-}
-
 #urlbar:not([focused="true"], [open]):-moz-lwtheme > #urlbar-background,
 #searchbar:not(:focus-within):-moz-lwtheme {
   border-color: var(--lwt-toolbar-field-border-color, var(--toolbar-field-border-color));
@@ -111,9 +106,9 @@
   border-color: var(--lwt-toolbar-field-border-color, @fieldHoverBorderColor@);
 }
 
-#urlbar:is([focused="true"], [open]):-moz-lwtheme,
-#searchbar:focus-within:-moz-lwtheme {
-  color: var(--lwt-toolbar-field-focus-color);
+#urlbar:is([focused="true"], [open]),
+#searchbar:focus-within {
+  color: var(--toolbar-field-focus-color);
 }
 
 #urlbar:is([focused="true"], [open]) > #urlbar-background,
@@ -330,7 +325,7 @@
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: 0.6;
   stroke-opacity: var(--identity-box-label-opacity);
-  fill: var(--lwt-toolbar-field-focus-color);
+  fill: inherit;
   border-radius: var(--urlbar-icon-border-radius);
 }
 

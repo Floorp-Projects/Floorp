@@ -115,7 +115,7 @@ const toolkitVariableMap = [
     },
   ],
   [
-    "--lwt-toolbar-field-color",
+    "--toolbar-field-color",
     {
       lwtProperty: "toolbar_field_text",
       processColor(rgbaChannels, element) {
@@ -164,7 +164,7 @@ const toolkitVariableMap = [
     },
   ],
   [
-    "--lwt-toolbar-field-focus-color",
+    "--toolbar-field-focus-color",
     {
       lwtProperty: "toolbar_field_text_focus",
       fallbackProperty: "toolbar_field_text",
