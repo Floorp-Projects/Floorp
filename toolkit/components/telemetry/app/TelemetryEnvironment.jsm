@@ -1588,7 +1588,9 @@ EnvironmentCache.prototype = {
     this._currentEnvironment.settings.addonCompatibilityCheckEnabled =
       AddonManager.checkCompatibility;
 
-    this._updateAttribution();
+    if (AppConstants.MOZ_BUILD_APP == "browser") {
+      this._updateAttribution();
+    }
     this._updateDefaultBrowser();
     await this._updateSearchEngine();
     this._loadAsyncUpdateSettingsFromCache();

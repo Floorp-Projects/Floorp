@@ -4851,3 +4851,15 @@ nsDOMWindowUtils::ResetMobileViewportManager() {
   // Unable to reset, so let's error out
   return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetSuspendedByBrowsingContextGroup(bool* aResult) {
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsPIDOMWindowInner> inner = window->GetCurrentInnerWindow();
+  NS_ENSURE_TRUE(inner, NS_ERROR_FAILURE);
+
+  *aResult = inner->GetWasSuspendedByGroup();
+  return NS_OK;
+}

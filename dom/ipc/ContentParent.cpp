@@ -6555,6 +6555,20 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyPositionStateChanged(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvAddOrRemovePageAwakeRequest(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const bool& aShouldAddCount) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  if (aShouldAddCount) {
+    aContext.get_canonical()->AddPageAwakeRequest();
+  } else {
+    aContext.get_canonical()->RemovePageAwakeRequest();
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvGetModulesTrust(
     ModulePaths&& aModPaths, bool aRunAtNormalPriority,
     GetModulesTrustResolver&& aResolver) {

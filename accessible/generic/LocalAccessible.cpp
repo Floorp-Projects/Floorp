@@ -2163,7 +2163,8 @@ void LocalAccessible::BindToParent(LocalAccessible* aParent,
   mIndexInParent = aIndexInParent;
 
   if (mParent->HasNameDependent() || mParent->IsXULListItem() ||
-      RelationByType(RelationType::LABEL_FOR).Next()) {
+      RelationByType(RelationType::LABEL_FOR).Next() ||
+      nsTextEquivUtils::HasNameRule(mParent, eNameFromSubtreeRule)) {
     mContextFlags |= eHasNameDependent;
   } else {
     mContextFlags &= ~eHasNameDependent;
