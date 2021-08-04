@@ -532,3 +532,9 @@ _cairo_user_data_array_foreach (cairo_user_data_array_t     *array,
 	    func (slots[i].key, slots[i].user_data, closure);
     }
 }
+
+void
+_cairo_array_sort (const cairo_array_t *array, int (*compar)(const void *, const void *))
+{
+    qsort (array->elements, array->num_elements, array->element_size, compar);
+}
