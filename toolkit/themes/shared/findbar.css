@@ -45,7 +45,7 @@ contrast issues, see bug 1506913 */
 html|html[lwtheme-image] findbar {
   --toolbar-field-background-color: initial;
   --toolbar-field-color: initial;
-  --lwt-toolbar-field-border-color: initial;
+  --toolbar-field-border-color: initial;
   --toolbar-field-focus-background-color: initial;
   --toolbar-field-focus-color: initial;
 }
@@ -53,7 +53,7 @@ html|html[lwtheme-image] findbar {
 html|input.findbar-textbox {
   appearance: none;
   background-color: Field;
-  border: 1px solid var(--input-border-color, var(--lwt-toolbar-field-border-color, ThreeDShadow));
+  border: 1px solid var(--input-border-color, var(--toolbar-field-border-color));
   border-radius: 4px;
   outline: none;
   margin: 0;
