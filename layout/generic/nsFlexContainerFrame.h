@@ -382,7 +382,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * This avoids exponential reflows - see the comment above the
    * CachedBAxisMeasurement struct.
    */
-  const CachedBAxisMeasurement& MeasureBSizeForFlexItem(
+  const CachedBAxisMeasurement& MeasureAscentAndBSizeForFlexItem(
       FlexItem& aItem, ReflowInput& aChildReflowInput);
 
   /**
