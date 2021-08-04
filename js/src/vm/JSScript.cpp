@@ -4104,9 +4104,9 @@ void js::maybeSpewScriptFinalWarmUpCount(JSScript* script) {
     MOZ_ASSERT(map);
     ScriptFinalWarmUpCountMap::Ptr p = map->lookup(script);
     MOZ_ASSERT(p);
-    uint32_t warmUpCount;
-    const char* scriptName;
-    mozilla::Tie(warmUpCount, scriptName) = p->value();
+    auto& tuple = p->value();
+    uint32_t warmUpCount = mozilla::Get<0>(tuple);
+    SharedImmutableString& scriptName = mozilla::Get<1>(tuple);
 
     JSContext* cx = TlsContext.get();
     cx->spewer().enableSpewing();
@@ -4117,7 +4117,7 @@ void js::maybeSpewScriptFinalWarmUpCount(JSScript* script) {
     // up count.
     AutoSpewChannel channel(cx, SpewChannel::CacheIRHealthReport, script);
     jit::CacheIRHealth cih;
-    cih.spewScriptFinalWarmUpCount(cx, scriptName, script, warmUpCount);
+    cih.spewScriptFinalWarmUpCount(cx, scriptName.chars(), script, warmUpCount);
 
     script->zone()->scriptFinalWarmUpCountMap->remove(script);
     script->setNeedsFinalWarmUpCount(false);

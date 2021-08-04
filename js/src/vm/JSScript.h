@@ -175,7 +175,8 @@ using ScriptVTuneIdMap = HashMap<BaseScript*, uint32_t,
                                  DefaultHasher<BaseScript*>, SystemAllocPolicy>;
 #endif
 #ifdef JS_CACHEIR_SPEW
-using ScriptFinalWarmUpCountEntry = mozilla::Tuple<uint32_t, char*>;
+using ScriptFinalWarmUpCountEntry =
+    mozilla::Tuple<uint32_t, SharedImmutableString>;
 using ScriptFinalWarmUpCountMap =
     HashMap<BaseScript*, ScriptFinalWarmUpCountEntry,
             DefaultHasher<BaseScript*>, SystemAllocPolicy>;
