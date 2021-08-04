@@ -281,6 +281,11 @@ function CaptivePortalDetector() {
   this._requestQueue = []; // Maintain a progress table, store callbacks and the ongoing XHR
   this._interfaceNames = {}; // Maintain names of the requested network interfaces
 
+  Services.telemetry.setEventRecordingEnabled(
+    "networking.captive_portal",
+    true
+  );
+
   debug(
     "CaptiveProtalDetector initiated, waiting for network connection established"
   );
