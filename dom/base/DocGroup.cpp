@@ -359,7 +359,8 @@ void DocGroup::SignalSlotChange(HTMLSlotElement& aSlot) {
 }
 
 bool DocGroup::TryToLoadIframesInBackground() {
-  return StaticPrefs::dom_separate_event_queue_for_post_message_enabled() &&
+  return !FissionAutostart() &&
+         StaticPrefs::dom_separate_event_queue_for_post_message_enabled() &&
          StaticPrefs::dom_cross_origin_iframes_loaded_in_background();
 }
 
