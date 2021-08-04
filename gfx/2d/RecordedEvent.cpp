@@ -117,6 +117,8 @@ std::string RecordedEvent::GetEventName(EventType aType) {
       return "ExternalSourceSurfaceCreation";
     case LINK:
       return "Link";
+    case DESTINATION:
+      return "Destination";
     default:
       return "Unknown";
   }

@@ -678,14 +678,42 @@ void DrawTargetCairo::Link(const char* aDestination, const Rect& aRect) {
   cairo_user_to_device(mContext, &x, &y);
   cairo_user_to_device_distance(mContext, &w, &h);
 
-  nsPrintfCString attributes("rect=[%f %f %f %f] uri='%s'", x, y, w, h,
-                             dest.get());
+  nsPrintfCString attributes("rect=[%f %f %f %f] ", x, y, w, h);
+  if (dest[0] == '#') {
+    // The actual destination does not have a leading '#'.
+    attributes.AppendPrintf("dest='%s'", dest.get() + 1);
+  } else {
+    attributes.AppendPrintf("uri='%s'", dest.get());
+  }
 
   // We generate a begin/end pair with no content in between, because we are
   // using the rect attribute of the begin tag to specify the link region
   // rather than depending on cairo to accumulate the painted area.
   cairo_tag_begin(mContext, CAIRO_TAG_LINK, attributes.get());
   cairo_tag_end(mContext, CAIRO_TAG_LINK);
+}
+
+void DrawTargetCairo::Destination(const char* aDestination,
+                                  const Point& aPoint) {
+  if (!aDestination || !*aDestination) {
+    // No destination? Just bail out.
+    return;
+  }
+
+  nsAutoCString dest(aDestination);
+  for (size_t i = dest.Length(); i > 0;) {
+    --i;
+    if (dest[i] == '\'') {
+      dest.ReplaceLiteral(i, 1, "\\'");
+    }
+  }
+
+  double x = aPoint.x, y = aPoint.y;
+  cairo_user_to_device(mContext, &x, &y);
+
+  nsPrintfCString attributes("name='%s' x=%f y=%f internal", dest.get(), x, y);
+  cairo_tag_begin(mContext, CAIRO_TAG_DEST, attributes.get());
+  cairo_tag_end(mContext, CAIRO_TAG_DEST);
 }
 
 already_AddRefed<SourceSurface> DrawTargetCairo::Snapshot() {

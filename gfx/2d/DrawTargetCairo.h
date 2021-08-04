@@ -61,6 +61,8 @@ class DrawTargetCairo final : public DrawTarget {
   }
 
   virtual void Link(const char* aDestination, const Rect& aRect) override;
+  virtual void Destination(const char* aDestination,
+                           const Point& aPoint) override;
 
   virtual already_AddRefed<SourceSurface> Snapshot() override;
   virtual IntSize GetSize() const override;

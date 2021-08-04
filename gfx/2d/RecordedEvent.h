@@ -30,7 +30,7 @@ const uint32_t kMagicInt = 0xc001feed;
 const uint16_t kMajorRevision = 10;
 // A change in minor revision means additions of new events. New streams will
 // not play in older players.
-const uint16_t kMinorRevision = 2;
+const uint16_t kMinorRevision = 3;
 
 struct ReferencePtr {
   ReferencePtr() : mLongPtr(0) {}
@@ -392,6 +392,7 @@ class RecordedEvent {
     DETACHALLSNAPSHOTS,
     OPTIMIZESOURCESURFACE,
     LINK,
+    DESTINATION,
     LAST,
   };
 
