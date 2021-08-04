@@ -12,7 +12,6 @@
 #include "nsMixedContentBlocker.h"
 #include "nsNetUtil.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/BasePrincipal.h"
 
 // Helper function which maps an internal content policy type
 // to the corresponding destination for the context of SecFetch.
@@ -118,14 +117,6 @@ bool IsSameOrigin(nsIHttpChannel* aHTTPChannel) {
   NS_GetFinalChannelURI(aHTTPChannel, getter_AddRefs(channelURI));
 
   nsCOMPtr<nsILoadInfo> loadInfo = aHTTPChannel->LoadInfo();
-
-  if (BasePrincipal::Cast(loadInfo->TriggeringPrincipal())->AddonPolicy()) {
-    // If an extension triggered the load that has access to the URI then the
-    // load is considered as same-origin.
-    return BasePrincipal::Cast(loadInfo->TriggeringPrincipal())
-        ->AddonAllowsLoad(channelURI);
-  }
-
   bool isPrivateWin = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
   bool isSameOrigin = false;
   nsresult rv = loadInfo->TriggeringPrincipal()->IsSameOrigin(
