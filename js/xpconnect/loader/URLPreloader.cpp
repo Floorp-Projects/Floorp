@@ -304,6 +304,11 @@ Result<Ok, nsresult> URLPreloader::ReadCache(
       auto entry = mCachedURLs.GetOrInsertNew(key, key);
       entry->mResultCode = NS_ERROR_NOT_INITIALIZED;
 
+      if (entry->isInList()) {
+        MOZ_DIAGNOSTIC_ASSERT(false, "Entry should be new and not in any list");
+        return Err(NS_ERROR_UNEXPECTED);
+      }
+
       pendingURLs.insertBack(entry);
     }
 
