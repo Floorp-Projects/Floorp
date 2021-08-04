@@ -210,45 +210,64 @@ namespace mozilla {
 
 StorageAccess StorageAllowedForWindow(nsPIDOMWindowInner* aWindow,
                                       uint32_t* aRejectedReason) {
+  MOZ_ASSERT(aWindow);
+
+  const Document* document = aWindow->GetExtantDoc();
+  if (!document) {
+    // No document? Let's return a generic rejected reason.
+    if (aRejectedReason) {
+      *aRejectedReason = 0;
+    }
+    return StorageAccess::eDeny;
+  }
+
+  return StorageAllowedForDocument(document, aRejectedReason);
+}
+
+StorageAccess StorageAllowedForDocument(const Document* aDoc,
+                                        uint32_t* aRejectedReason) {
+  MOZ_ASSERT(aDoc);
+
   uint32_t rejectedReason;
   if (!aRejectedReason) {
     aRejectedReason = &rejectedReason;
   }
-
   *aRejectedReason = 0;
 
-  if (Document* document = aWindow->GetExtantDoc()) {
-    nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
-    // Note that GetChannel() below may return null, but that's OK, since the
-    // callee is able to deal with a null channel argument, and if passed null,
-    // will only fail to notify the UI in case storage gets blocked.
-    nsIChannel* channel = document->GetChannel();
-    return InternalStorageAllowedCheck(principal, aWindow, nullptr, channel,
-                                       document->CookieJarSettings(),
-                                       *aRejectedReason);
+  nsPIDOMWindowInner* inner = aDoc->GetInnerWindow();
+  if (!inner) {
+    return StorageAccess::eDeny;
   }
 
-  // No document? Let's return a generic rejected reason.
-  return StorageAccess::eDeny;
-}
+  MOZ_ASSERT(inner->GetExtantDoc() == aDoc);
 
-StorageAccess StorageAllowedForDocument(const Document* aDoc) {
-  MOZ_ASSERT(aDoc);
-
-  if (nsPIDOMWindowInner* inner = aDoc->GetInnerWindow()) {
-    nsCOMPtr<nsIPrincipal> principal = aDoc->NodePrincipal();
-    // Note that GetChannel() below may return null, but that's OK, since the
-    // callee is able to deal with a null channel argument, and if passed null,
-    // will only fail to notify the UI in case storage gets blocked.
-    nsIChannel* channel = aDoc->GetChannel();
-
-    uint32_t rejectedReason = 0;
-    return InternalStorageAllowedCheck(
-        principal, inner, nullptr, channel,
-        const_cast<Document*>(aDoc)->CookieJarSettings(), rejectedReason);
+  // Check if we have already computed the storage access field for this
+  // documents window. This avoids repeated calls to
+  // InternalStorageAllowedCheck.
+  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(inner);
+  if (StaticPrefs::privacy_antitracking_cacheStorageAllowedForWindow()) {
+    Maybe<StorageAccess> storageAccess = win->GetStorageAllowedCache();
+    if (storageAccess.isSome()) {
+      return storageAccess.value();
+    }
   }
 
-  return StorageAccess::eDeny;
+  nsCOMPtr<nsIPrincipal> principal = aDoc->NodePrincipal();
+  // Note that GetChannel() below may return null, but that's OK, since the
+  // callee is able to deal with a null channel argument, and if passed null,
+  // will only fail to notify the UI in case storage gets blocked.
+  nsIChannel* channel = aDoc->GetChannel();
+
+  StorageAccess result = InternalStorageAllowedCheck(
+      principal, inner, nullptr, channel,
+      const_cast<Document*>(aDoc)->CookieJarSettings(), *aRejectedReason);
+
+  // Remember check result for the lifetime of the window. It's the windows
+  // responsibility to invalidate this field if storage access changes
+  // because a storage access permission is granted.
+  win->SetStorageAllowed(result);
+
+  return result;
 }
 
 StorageAccess StorageAllowedForNewWindow(nsIPrincipal* aPrincipal, nsIURI* aURI,
