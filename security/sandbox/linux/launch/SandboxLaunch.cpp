@@ -509,8 +509,7 @@ static int CloneCallee(void* aPtr) {
 MOZ_NEVER_INLINE MOZ_ASAN_BLACKLIST static pid_t DoClone(int aFlags,
                                                          jmp_buf* aCtx) {
   static constexpr size_t kStackAlignment = 16;
-  uint8_t miniStack[PTHREAD_STACK_MIN]
-      __attribute__((aligned(kStackAlignment)));
+  uint8_t miniStack[4096] __attribute__((aligned(kStackAlignment)));
 #ifdef __hppa__
   void* stackPtr = miniStack;
 #else
@@ -531,13 +530,19 @@ static pid_t ForkWithFlags(int aFlags) {
                                CLONE_CHILD_CLEARTID;
   MOZ_RELEASE_ASSERT((aFlags & kBadFlags) == 0);
 
+  // Block signals due to small stack in DoClone.
+  sigset_t oldSigs;
+  BlockAllSignals(&oldSigs);
+
+  int ret = 0;
   jmp_buf ctx;
   if (setjmp(ctx) == 0) {
     // In the parent and just called setjmp:
-    return DoClone(aFlags | SIGCHLD, &ctx);
+    ret = DoClone(aFlags | SIGCHLD, &ctx);
   }
+  RestoreSignals(&oldSigs);
   // In the child and have longjmp'ed:
-  return 0;
+  return ret;
 }
 
 static bool WriteStringToFile(const char* aPath, const char* aStr,
