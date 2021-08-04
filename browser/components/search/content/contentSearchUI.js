@@ -47,7 +47,7 @@ this.ContentSearchUIController = (function() {
     this._idPrefix = idPrefix;
     this._healthReportKey = healthReportKey;
     this._searchPurpose = searchPurpose;
-    this._isPrivateEngine = false;
+    this._isPrivateWindow = false;
 
     let tableID = idPrefix + "searchSuggestionTable";
     this.input.autocomplete = "off";
@@ -636,13 +636,13 @@ this.ContentSearchUIController = (function() {
     _onMsgState(state) {
       // Not all state messages broadcast the windows' privateness info.
       if ("isPrivateWindow" in state) {
-        this._isPrivateEngine = state.isPrivateEngine;
+        this._isPrivateWindow = state.isPrivateWindow;
       }
 
       this.engines = state.engines;
 
       let currentEngine = state.currentEngine;
-      if (this._isPrivateEngine) {
+      if (this._isPrivateWindow) {
         currentEngine = state.currentPrivateEngine;
       }
 
@@ -662,7 +662,7 @@ this.ContentSearchUIController = (function() {
     },
 
     _onMsgCurrentEngine(engine) {
-      if (this._isPrivateEngine) {
+      if (this._isPrivateWindow) {
         return;
       }
       this.defaultEngine = engine;
@@ -670,7 +670,7 @@ this.ContentSearchUIController = (function() {
     },
 
     _onMsgCurrentPrivateEngine(engine) {
-      if (!this._isPrivateEngine) {
+      if (!this._isPrivateWindow) {
         return;
       }
       this.defaultEngine = engine;

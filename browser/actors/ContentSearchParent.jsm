@@ -370,11 +370,9 @@ let ContentSearch = {
     }
 
     if (window) {
-      state.isInPrivateBrowsingMode = PrivateBrowsingUtils.isContentWindowPrivate(
+      state.isPrivateWindow = PrivateBrowsingUtils.isContentWindowPrivate(
         window
       );
-      state.isAboutPrivateBrowsing =
-        window.gBrowser.currentURI.spec == "about:privatebrowsing";
     }
 
     return state;
@@ -442,9 +440,8 @@ let ContentSearch = {
   _onMessageGetEngine({ actor, browser }) {
     return this.currentStateObj(browser.ownerGlobal).then(state => {
       this._reply(actor, "Engine", {
-        isPrivateEngine: state.isInPrivateBrowsingMode,
-        isAboutPrivateBrowsing: state.isAboutPrivateBrowsing,
-        engine: state.isInPrivateBrowsingMode
+        isPrivateWindow: state.isPrivateWindow,
+        engine: state.isPrivateWindow
           ? state.currentPrivateEngine
           : state.currentEngine,
       });
