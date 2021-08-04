@@ -1689,7 +1689,7 @@ var BookmarkingUI = {
 
     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.menuGuid}`, {
       extraClasses,
-      insertionPoint: ".panel-subview-footer-button",
+      insertionPoint: "#BMB_bookmarksShowAll",
     });
   },
 
