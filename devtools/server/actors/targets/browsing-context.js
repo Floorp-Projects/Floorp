@@ -247,10 +247,6 @@ const browsingContextTargetPrototype = {
    *        Object with following attributes:
    *        - docShell nsIDocShell
    *          The |docShell| for the debugged frame.
-   *        - doNotFireFrameUpdates Boolean
-   *          If true, omit emitting `frameUpdate` events. This is only useful
-   *          for the top level target, in order to populate the toolbox iframe selector dropdown.
-   *          But we can avoid sending these RDP messages for any additional remote target.
    *        - followWindowGlobalLifeCycle Boolean
    *          If true, the target actor will only inspect the current WindowGlobal (and its children windows).
    *          But won't inspect next document loaded in the same BrowsingContext.
@@ -270,12 +266,7 @@ const browsingContextTargetPrototype = {
    */
   initialize: function(
     connection,
-    {
-      docShell,
-      doNotFireFrameUpdates,
-      followWindowGlobalLifeCycle,
-      isTopLevelTarget,
-    }
+    { docShell, followWindowGlobalLifeCycle, isTopLevelTarget }
   ) {
     Actor.prototype.initialize.call(this, connection);
 
@@ -287,7 +278,6 @@ const browsingContextTargetPrototype = {
     this.docShell = docShell;
 
     this.followWindowGlobalLifeCycle = followWindowGlobalLifeCycle;
-    this.doNotFireFrameUpdates = doNotFireFrameUpdates;
     this.isTopLevelTarget = !!isTopLevelTarget;
 
     // A map of actor names to actor instances provided by extensions.
@@ -949,13 +939,25 @@ const browsingContextTargetPrototype = {
 
   // Convert docShell list to windows objects list being sent to the client
   _docShellsToWindows(docshells) {
-    return docshells.map(docShell => this._docShellToWindow(docShell));
+    return docshells
+      .filter(docShell => {
+        // Ensure docShell.document is available.
+        docShell.QueryInterface(Ci.nsIWebNavigation);
+
+        // don't include transient about:blank documents
+        if (docShell.document.isInitialDocument) {
+          return false;
+        }
+
+        return true;
+      })
+      .map(docShell => this._docShellToWindow(docShell));
   },
 
   _notifyDocShellsUpdate(docshells) {
     // Only top level target uses frameUpdate in order to update the iframe dropdown.
     // This may eventually be replaced by Target listening and target switching.
-    if (this.doNotFireFrameUpdates) {
+    if (!this.isTopLevelTarget) {
       return;
     }
 
@@ -978,7 +980,7 @@ const browsingContextTargetPrototype = {
   _notifyDocShellDestroy(webProgress) {
     // Only top level target uses frameUpdate in order to update the iframe dropdown.
     // This may eventually be replaced by Target listening and target switching.
-    if (this.doNotFireFrameUpdates) {
+    if (!this.isTopLevelTarget) {
       return;
     }
 
@@ -997,7 +999,7 @@ const browsingContextTargetPrototype = {
   _notifyDocShellDestroyAll() {
     // Only top level target uses frameUpdate in order to update the iframe dropdown.
     // This may eventually be replaced by Target listening and target switching.
-    if (this.doNotFireFrameUpdates) {
+    if (!this.isTopLevelTarget) {
       return;
     }
 

@@ -359,13 +359,11 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // Create the actual target actor.
     const targetActor = new FrameTargetActor(connection, {
       docShell: this.docShell,
-      // All targets created from the server side, via Watcher actor and DevToolsFrame JSWindow actor pair are:
-      // - not emitting frame-update events, used to update the iframe dropdown. This should probably be revisited.
-      // (see bug 1719156)
-      // - following WindowGlobal lifecycle. i.e. will be destroyed on any type of navigation/reload.
+      // Targets created from the server side, via Watcher actor and DevToolsFrame JSWindow
+      // actor pair are following WindowGlobal lifecycle. i.e. will be destroyed on any
+      // type of navigation/reload.
       // Note that if devtools.target-switching.server.enabled is false, the top level target
       // won't be created via the codepath. Except if we have a bfcache-in-parent navigation.
-      doNotFireFrameUpdates: true,
       followWindowGlobalLifeCycle: true,
       isTopLevelTarget,
     });
