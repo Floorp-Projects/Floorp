@@ -244,22 +244,6 @@ public class GeckoResult<T> {
     }
 
     /**
-     * A GeckoResult that resolves to AllowOrDeny.ALLOW
-     * @deprecated use {@link #allow} instead.
-     */
-    @Deprecated
-    @DeprecationSchedule(id = "allowdeny", version = 92)
-    public static final GeckoResult<AllowOrDeny> ALLOW = GeckoResult.fromValue(AllowOrDeny.ALLOW);
-
-    /**
-     * A GeckoResult that resolves to AllowOrDeny.DENY
-     * @deprecated use {@link #deny} instead.
-     */
-    @Deprecated
-    @DeprecationSchedule(id = "allowdeny", version = 92)
-    public static final GeckoResult<AllowOrDeny> DENY = GeckoResult.fromValue(AllowOrDeny.DENY);
-
-    /**
      * @return a {@link GeckoResult} that resolves to {@link AllowOrDeny#DENY}
      */
     @AnyThread
