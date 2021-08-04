@@ -32,6 +32,10 @@ android {
 dependencies {
     implementation project(":concept-awesomebar")
     implementation project(":browser-state")
+    implementation project(":support-base")
+
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
     implementation Dependencies.androidx_compose_ui
     implementation Dependencies.androidx_compose_ui_tooling

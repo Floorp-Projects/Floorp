@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,12 +28,12 @@ fun AwesomeBar(
             .fillMaxWidth()
             .background(Color.White)
     ) {
-        val suggestions = remember { mutableStateOf(emptyList<AwesomeBar.Suggestion>()) }
+        val fetcher = remember { SuggestionFetcher(providers) }
 
         LaunchedEffect(text) {
-            suggestions.value = providers.flatMap { provider -> provider.onInputChanged(text) }
+            fetcher.fetch(text)
         }
 
-        Suggestions(suggestions.value, onSuggestionClicked)
+        Suggestions(fetcher.state.value, onSuggestionClicked)
     }
 }
