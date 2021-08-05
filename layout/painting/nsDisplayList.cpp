@@ -88,6 +88,7 @@
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "ActiveLayerTracker.h"
+#include "nsEscape.h"
 #include "nsPrintfCString.h"
 #include "UnitTransforms.h"
 #include "LayerAnimationInfo.h"
@@ -614,6 +615,9 @@ nsDisplayListBuilder::Linkifier::Linkifier(nsDisplayListBuilder* aBuilder,
         aBuilder->mLinkSpec.IsEmpty()) {
       return;
     }
+    // The destination name is simply a string; we don't want URL-escaping
+    // applied to it.
+    NS_UnescapeURL(aBuilder->mLinkSpec);
     // Mark the link spec as being an internal destination
     aBuilder->mLinkSpec.Insert('#', 0);
   } else {
