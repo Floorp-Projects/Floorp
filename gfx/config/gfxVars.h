@@ -65,6 +65,12 @@ class gfxVarReceiver;
   _(UseOMTP, bool, false)                                          \
   _(AllowD3D11KeyedMutex, bool, false)                             \
   _(SystemTextQuality, int32_t, 5 /* CLEARTYPE_QUALITY */)         \
+  _(SystemTextClearTypeLevel, float, 1.0f)                         \
+  _(SystemTextEnhancedContrast, float, 1.0f)                       \
+  _(SystemTextGamma, float, 2.2f)                                  \
+  _(SystemTextPixelGeometry, int32_t, 1 /* pixel geometry RGB */)  \
+  _(SystemTextRenderingMode, int32_t, 0)                           \
+  _(SystemGDIGamma, float, 1.4f)                                   \
   _(LayersWindowRecordingPath, nsCString, nsCString())             \
   _(RemoteCanvasEnabled, bool, false)                              \
   _(UseDoubleBufferingWithCompositor, bool, false)                 \

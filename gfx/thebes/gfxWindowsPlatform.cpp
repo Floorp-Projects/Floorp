@@ -121,17 +121,6 @@ class GfxD2DVramReporter final : public nsIMemoryReporter {
 
 NS_IMPL_ISUPPORTS(GfxD2DVramReporter, nsIMemoryReporter)
 
-#define GFX_CLEARTYPE_PARAMS "gfx.font_rendering.cleartype_params."
-#define GFX_CLEARTYPE_PARAMS_GAMMA "gfx.font_rendering.cleartype_params.gamma"
-#define GFX_CLEARTYPE_PARAMS_CONTRAST \
-  "gfx.font_rendering.cleartype_params.enhanced_contrast"
-#define GFX_CLEARTYPE_PARAMS_LEVEL \
-  "gfx.font_rendering.cleartype_params.cleartype_level"
-#define GFX_CLEARTYPE_PARAMS_STRUCTURE \
-  "gfx.font_rendering.cleartype_params.pixel_structure"
-#define GFX_CLEARTYPE_PARAMS_MODE \
-  "gfx.font_rendering.cleartype_params.rendering_mode"
-
 class GPUAdapterReporter final : public nsIMemoryReporter {
   // Callers must Release the DXGIAdapter after use or risk mem-leak
   static bool GetDXGIAdapter(IDXGIAdapter** aDXGIAdapter) {
@@ -408,7 +397,7 @@ bool gfxWindowsPlatform::CanUseHardwareVideoDecoding() {
 
 bool gfxWindowsPlatform::InitDWriteSupport() {
   mozilla::ScopedGfxFeatureReporter reporter("DWrite");
-  if (!Factory::EnsureDWriteFactory()) {
+  if (!gfxDWriteFont::InitDWriteSupport()) {
     return false;
   }
 
@@ -1074,6 +1063,9 @@ void gfxWindowsPlatform::FontsPrefsChanged(const char* aPref) {
   if (aPref &&
       !strncmp(GFX_CLEARTYPE_PARAMS, aPref, strlen(GFX_CLEARTYPE_PARAMS))) {
     SetupClearTypeParams();
+    if (XRE_IsParentProcess()) {
+      gfxDWriteFont::UpdateClearTypeVars();
+    }
   } else {
     clearTextFontCaches = false;
   }
@@ -1085,11 +1077,6 @@ void gfxWindowsPlatform::FontsPrefsChanged(const char* aPref) {
     }
   }
 }
-
-#define DISPLAY1_REGISTRY_KEY \
-  HKEY_CURRENT_USER, L"Software\\Microsoft\\Avalon.Graphics\\DISPLAY1"
-
-#define ENHANCED_CONTRAST_VALUE_NAME L"EnhancedContrastLevel"
 
 void gfxWindowsPlatform::SetupClearTypeParams() {
   if (DWriteEnabled()) {
