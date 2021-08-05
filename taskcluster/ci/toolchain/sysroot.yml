@@ -78,3 +78,5 @@ linux64-toolchain-sysroot:
             - libcurl4-openssl-dev
             - libssl-dev
             - libbz2-dev
+            # For msix-package
+            - libicu-dev
