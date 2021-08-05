@@ -125,7 +125,7 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD CheckMayLoadWithReporting(nsIURI* uri,
                                        bool allowIfInheritsPrincipal,
                                        uint64_t innerWindowID) final;
-  NS_IMETHOD GetAddonPolicy(nsISupports** aResult) final;
+  NS_IMETHOD GetAddonPolicy(extensions::WebExtensionPolicy** aResult) final;
   NS_IMETHOD GetIsNullPrincipal(bool* aResult) override;
   NS_IMETHOD GetIsContentPrincipal(bool* aResult) override;
   NS_IMETHOD GetIsExpandedPrincipal(bool* aResult) override;
