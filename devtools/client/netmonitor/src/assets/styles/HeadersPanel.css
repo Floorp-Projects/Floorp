@@ -128,7 +128,7 @@
 }
 
 .network-monitor .headers-panel-container .accordion .properties-view tr.treeRow {
-  padding: 3px 0 0 0;
+  padding: 1px 0 2px;
 }
 .network-monitor .headers-panel-container .accordion .properties-view tr.treeRow .treeLabelCell {
   float: left;
