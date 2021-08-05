@@ -24,6 +24,9 @@ class ClientLayerManager;
 class FrameUniformityData;
 class PersistentBufferProvider;
 }  // namespace layers
+class FallbackRenderer;
+class nsDisplayListBuilder;
+class nsDisplayList;
 
 class FrameRecorder {
  public:
@@ -100,6 +103,7 @@ class WindowRenderer : public FrameRecorder {
   // Cast to implementation types.
   virtual layers::LayerManager* AsLayerManager() { return nullptr; }
   virtual layers::WebRenderLayerManager* AsWebRender() { return nullptr; }
+  virtual FallbackRenderer* AsFallback() { return nullptr; }
 
   // Required functionality
 
@@ -229,6 +233,49 @@ class WindowRenderer : public FrameRecorder {
   // The time when painting most recently finished. This is recorded so that
   // we can time any play-pending animations from this point.
   TimeStamp mAnimationReadyTime;
+};
+
+/**
+ * FallbackRenderer is non-retained renderer that acts as a direct wrapper
+ * around calling Paint on the provided DisplayList. This is used for cases
+ * where initializing WebRender is too costly, and we don't need
+ * retaining/invalidation (like small popup windows).
+ *
+ * It doesn't support any sort of EmptyTransaction, and only draws during
+ * EndTransaction if a composite is requested (no END_NO_COMPOSITE flag
+ * provided)
+ */
+class FallbackRenderer : public WindowRenderer {
+ public:
+  FallbackRenderer* AsFallback() override { return this; }
+
+  void SetTarget(gfxContext* aContext, layers::BufferMode aDoubleBuffering);
+
+  bool BeginTransaction(const nsCString& aURL = nsCString()) override;
+
+  bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override {
+    return false;
+  }
+
+  layers::LayersBackend GetBackendType() override {
+    return layers::LayersBackend::LAYERS_NONE;
+  }
+
+  virtual void GetBackendName(nsAString& name) override {
+    name.AssignLiteral("Fallback");
+  }
+
+  bool IsCompositingCheap() override { return false; }
+
+  void EndTransactionWithColor(const nsIntRect& aRect,
+                               const gfx::DeviceColor& aColor);
+  void EndTransactionWithList(nsDisplayListBuilder* aBuilder,
+                              nsDisplayList* aList,
+                              int32_t aAppUnitsPerDevPixel,
+                              EndTransactionFlags aFlags);
+
+  RefPtr<gfxContext> mTarget;
+  layers::BufferMode mBufferMode;
 };
 
 }  // namespace mozilla
