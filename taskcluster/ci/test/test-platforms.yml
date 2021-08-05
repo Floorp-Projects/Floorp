@@ -170,7 +170,7 @@ windows10-64-ccov-qr/opt:
         - windows-tests
         - windows-ccov-tests
         - windows10-tests
-        - web-platform-tests
+        - web-platform-tests-reftest
         - ccov-code-coverage-tests
         - mochitest-webgpu
 
@@ -180,8 +180,7 @@ windows10-64-qr/debug:
         - mochitest-webgpu
         - windows-tests
         - windows10-tests
-        - web-platform-tests
-        - web-platform-tests-wdspec-headless
+        - web-platform-tests-reftest
 
 windows10-64-qr/opt:
     build-platform: win64/opt
@@ -190,12 +189,11 @@ windows10-64-qr/opt:
         - windows-talos
         - windows-tests
         - windows10-tests
-        - web-platform-tests
-        - web-platform-tests-backlog
+        - web-platform-tests-reftest
+        - web-platform-tests-reftest-backlog
         - raptor-firefox
         - browsertime
         - mochitest-webgpu
-        - web-platform-tests-wdspec-headless
 
 windows10-aarch64-qr/opt:
     build-platform: win64-aarch64-shippable/opt
@@ -216,9 +214,8 @@ windows10-64-shippable-qr/opt:
         - windows-talos
         - windows-tests
         - windows10-tests
-        - web-platform-tests
-        - web-platform-tests-backlog
-        - web-platform-tests-wdspec-headless
+        - web-platform-tests-reftest
+        - web-platform-tests-reftest-backlog
         - raptor-chrome
         - raptor-firefox
         - browsertime
@@ -230,7 +227,7 @@ windows10-64-devedition-qr/opt:
         - desktop-screenshot-capture
         - windows-tests
         - windows10-tests
-        - web-platform-tests
+        - web-platform-tests-reftest
         - mochitest-webgpu
 
 windows10-64-asan-qr/opt:
@@ -264,35 +261,44 @@ windows10-32-mingwclang-qr/opt:
 windows10-64-2004-ccov-qr/opt:
     build-platform: win64-ccov/opt
     test-sets:
+        - web-platform-tests-no-reftest
         - windows10-2004-tests
 
 windows10-64-2004-qr/debug:
     build-platform: win64/debug
     test-sets:
+        - web-platform-tests-no-reftest
+        - web-platform-tests-wdspec-headless
         - windows10-2004-tests
 
 windows10-64-2004-qr/opt:
     build-platform: win64/opt
     test-sets:
         - awsy
+        - web-platform-tests-no-reftest
+        - web-platform-tests-no-reftest-backlog
+        - web-platform-tests-wdspec-headless
         - windows10-2004-tests
 
 windows10-64-2004-shippable-qr/opt:
     build-platform: win64-shippable/opt
     test-sets:
         - awsy
+        - web-platform-tests-no-reftest
+        - web-platform-tests-no-reftest-backlog
+        - web-platform-tests-wdspec-headless
         - windows10-2004-tests
 
 windows10-64-2004-devedition-qr/opt:
     build-platform: win64-devedition/opt
     test-sets:
+        - web-platform-tests-no-reftest
         - windows10-2004-tests
 
 windows10-64-2004-asan-qr/opt:
     build-platform: win64-asan/opt
     test-sets:
         - windows10-2004-tests
-
 
 ##
 # MacOS X platforms (matching /macosx.*/)
