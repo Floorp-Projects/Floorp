@@ -304,22 +304,22 @@ async function assertPseudoElementRulesNumbers(
   const rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.pseudoElement),
     firstLineRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === ":first-line"
+      rule => rule.pseudoElement === "::first-line"
     ),
     firstLetterRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === ":first-letter"
+      rule => rule.pseudoElement === "::first-letter"
     ),
     selectionRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === ":selection"
+      rule => rule.pseudoElement === "::selection"
     ),
     markerRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === ":marker"
+      rule => rule.pseudoElement === "::marker"
     ),
     beforeRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === ":before"
+      rule => rule.pseudoElement === "::before"
     ),
     afterRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === ":after"
+      rule => rule.pseudoElement === "::after"
     ),
   };
 
@@ -331,32 +331,32 @@ async function assertPseudoElementRulesNumbers(
   is(
     rules.firstLineRules.length,
     ruleNbs.firstLineRulesNb,
-    selector + " has the correct number of :first-line rules"
+    selector + " has the correct number of ::first-line rules"
   );
   is(
     rules.firstLetterRules.length,
     ruleNbs.firstLetterRulesNb,
-    selector + " has the correct number of :first-letter rules"
+    selector + " has the correct number of ::first-letter rules"
   );
   is(
     rules.selectionRules.length,
     ruleNbs.selectionRulesNb,
-    selector + " has the correct number of :selection rules"
+    selector + " has the correct number of ::selection rules"
   );
   is(
     rules.markerRules.length,
     ruleNbs.markerRulesNb,
-    selector + " has the correct number of :marker rules"
+    selector + " has the correct number of ::marker rules"
   );
   is(
     rules.beforeRules.length,
     ruleNbs.beforeRulesNb,
-    selector + " has the correct number of :before rules"
+    selector + " has the correct number of ::before rules"
   );
   is(
     rules.afterRules.length,
     ruleNbs.afterRulesNb,
-    selector + " has the correct number of :after rules"
+    selector + " has the correct number of ::after rules"
   );
 
   return rules;
