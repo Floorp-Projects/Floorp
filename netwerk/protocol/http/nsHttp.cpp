@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <functional>
 #include "nsLiteralString.h"
+#include <string.h>
 
 namespace mozilla {
 namespace net {
@@ -852,7 +853,7 @@ void LogHeaders(const char* lineStart) {
     if (StaticPrefs::network_http_sanitize_headers_in_logs() &&
         (nsCRT::strcasestr(buf.get(), "authorization: ") ||
          nsCRT::strcasestr(buf.get(), "proxy-authorization: "))) {
-      char* p = PL_strchr(buf.get(), ' ');
+      char* p = strchr(buf.BeginWriting(), ' ');
       while (p && *++p) {
         *p = '*';
       }
