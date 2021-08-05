@@ -2163,9 +2163,6 @@ nsToolkitProfileService::GetProfileCount(uint32_t* aResult) {
   return NS_OK;
 }
 
-NS_IMETHODIMP_(bool)
-nsToolkitProfileService::GetIsFirstRun() { return mIsFirstRun; }
-
 NS_IMETHODIMP
 nsToolkitProfileService::Flush() {
   if (GetIsListOutdated()) {
