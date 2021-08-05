@@ -1,0 +1,67 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.single_dep:loader
+
+transforms:
+    - taskgraph.transforms.name_sanity:transforms
+    - taskgraph.transforms.repackage:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    # We're going to generate tasks based on this.  We `depend` on and fetch the package from this.
+    - build-signing
+    - toolchain
+
+group-by: platform
+
+only-for-build-platforms:
+    - win32/opt
+    - win64/opt
+    - win32-shippable/opt
+    - win64-shippable/opt
+    - win32-devedition/opt
+    - win64-devedition/opt
+
+job-template:
+    worker-type: 'b-linux'
+    # This is for fast try iteration; `repackage-shippable-l10n-msix` is the "real one".
+    run-on-projects: []
+    worker:
+        docker-image: {"in-tree": "debian10-amd64-build"}
+    mozharness:
+        config:
+            by-build-platform:
+                win32\b.*:
+                    - repackage/base.py
+                    - repackage/win32_sfx_stub.py
+                    - repackage/win32_signed.py
+                win64(?!-aarch64)\b.*:
+                    - repackage/base.py
+                    - repackage/win32_sfx_stub.py
+                    - repackage/win64_signed.py
+                win64-aarch64\b.*:
+                    - repackage/base.py
+                    - repackage/win64-aarch64_sfx_stub.py
+                    - repackage/win64_signed.py
+    package-formats: [msix]
+    fetches:
+        toolchain:
+            - linux64-msix-packaging
+    msix:
+        channel:
+            by-release-type:
+                nightly.*: nightly
+                beta.*:
+                    by-shipping-product:
+                        devedition: aurora
+                        default: beta
+                release.*: official
+                esr.*: official
+                default: nightly
+        publisher:
+            by-level:
+                "3": "Mozilla Corporation"
+                default: "Mozilla Fake SPC"
