@@ -4,6 +4,7 @@
     <string name="app_name_private_5">သီးသန့် %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (သီးသန့်)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">ရွေးချယ်စရာများ</string>
@@ -55,9 +56,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">နေပါစေ</string>
 
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">ယခု မဟုတ်</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">တပ်ဗ် အသစ်</string>
@@ -106,8 +104,6 @@
     <string name="browser_menu_find_in_page">စာမျက်နှာထဲတွင် ရှာပါ</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">ကိုယ်ပိုင်သီးသန့်တက်ဗ်</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">တပ်ဗ် အသစ်</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">စုဆောင်းမှုသို့သိမ်းဆည်းပါ</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -130,6 +126,9 @@
 
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">အသွင်အပြင်</string>
+
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">ထည့်ပါ</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -159,7 +158,6 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">ပိုမိုလေ့လာရန်</string>
 
-    <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">ရှာပါ</string>
     <!-- Text preview for larger sized widgets -->
@@ -332,9 +330,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">ပိုမိုလေ့လာရန်</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">ပြင်ပသို့ ပိတ်ထားသည်။ အပြင်အဆင်သို့သွား၍ဖွင့်ပါ။</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">ကြေးနန်း</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -440,6 +435,8 @@
     <string name="tab_tray_title">ပွင့်နေသည့် တက်ဗ်များ</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">စုစည်းမှု ထဲသို့ သိမ်းရန်</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">ရွေးချယ်ပါ</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">တက်ဗ်များ အားလုံး မျှဝေရန်</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -483,7 +480,7 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">တပ်ဗ်များကို ဖွင့်ပါ</string>
     <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">ဖယ်ရှားပါ</string>
+	<string name="remove_top_site">ဖယ်ရှားပါ</string>
 
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">သိမ်းရန်</string>
@@ -524,6 +521,7 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">မှတ်တမ်းများ ဒီမှာ မရှိပါ</string>
 
+
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">တောင်းပန်ပါတယ်။ ဒီစာမျက်နှာကို %1$s မှမတင်နိုင်ပါ။</string>
@@ -551,8 +549,6 @@
     <string name="bookmark_select_folder">ဖိုင်တွဲကိုရွေးပါ</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">ဖိုင်တွဲထည့်ပါ</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">စာမှတ်ဖန်တီးပြီးပြီ</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">စာမှတ်သိမ်းပြီးပြီ</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -649,15 +645,15 @@
     <string name="tracking_protection_on">ဖွင့်ပါ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ပိတ်ပါ</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">အသံနှင့်ဗီဒီယိုကိုခွင့်ပြုပါ။</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">ဆယ်လူလာ ဒေတာတွင် အသံ နှင့် ဗွီဒီယိုကို သာပိတ်ပါ</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">အသံ နှင့် ဗွီဒီယို ကိုဝိုင်ဖိုင်တွင် ဖွင့်နိုင်သည်</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">အသံကိုသာပိတ်ပါ</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">အသံ နှင့် ဗီဒီယိုကို ခွင့်ပြုပါ။</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">ဖွင့်ပါ</string>
@@ -669,10 +665,6 @@
     <string name="collections_header">စုဆည်းမှုများ</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">စုဆောင်းခြင်းမီနူး</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">သင် အတွက် အရေးပါသည်များ ကို စုစည်းပါ</string>
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">ရှာဖွေခြင်းများ၊ ဆိုက်များ နှင့် တက်ဗ်များ ကို အမျိုးအစားတူစုခြင်းဖြင့် နောင်တွင် မြန်မြန် ရယူနိုင်လိမ့်မည်။</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">တက်ပ်များကိုရွေးပါ</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -765,6 +757,8 @@
     <string name="notification_pbm_action_delete_and_open">ဖျက်ပါ။ ဖွင့်ပါ</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">မှပံ့ပိုးသည်</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">စုဆောင်းမှုကိုဖျက်လိုက်သည်</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -880,9 +874,6 @@
     <string name="onboarding_header">%s မှကြိုဆိုပါတယ်</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">အကောင့် ရှိပြီးသားလား။</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">%s ကိုရယူပါ</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">အသစ်တွေကြည့်ရန်</string>
     <!-- text for the "what's new" onboarding card description
@@ -890,19 +881,10 @@
     <string name="onboarding_whats_new_description">ပြန်လည်ပြင်ဆင်ထားသော %s နှင့် ပတ်သက်၍ မေးခွန်းများရှိပါသလား။ ဘာတွေပြောင်းလဲလဲဆိုတာသိချင်လား။</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">ဤနေရာတွင်အဖြေများရယူပါ</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">%s မှအများဆုံးရယူပါ။</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">ဤဖုန်းရှိအခြား Firefox ဘရောင်ဇာတွင် %s အဖြစ်သင်ဆိုင်းအင်လုပ်ပါ။ဒီအကောင့်နဲ့ဆိုင်းအင်ဝင်ချင်ပါသလား။</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">ဟုတ်ကဲ့၊ ဆိုင်းအင်လုပ်ပါ</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">၀င်ပါ …</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Firefox သို့ဆိုင်းအင်လုပ်ပါ</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">ထွက်လက်မှတ်ရေးထိုးခဲ့ပါ</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -912,12 +894,6 @@
 
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">တင်းကြပ်စွာ (အကြံပြုသည်)</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">နေရာယူပါ</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">အောက်ခြေ toolbar ကို သုံး၍ တစ်ဖက်တည်းကြည့်ခြင်းဖြင့်စမ်းကြည့်ပါသို့မဟုတ်ထိပ်သို့ရွှေ့ပါ။</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">သီးသန့်ရှာဖွေပါ</string>
 
@@ -931,10 +907,6 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">သင့်အတွက်သီးသန့်လုံခြုံမှု</string>
 
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">%s ကို သင့်အွန်လိုင်းမျှဝေခြင်းများ၊ကျွန်ုပ်တို့နှင့်မျှဝေခြင်းပြုသည့်အရာများအတွက်စီမံခွင့်ပေးနိုင်ရန် 
-       ဆောင်ရွက်ထားပါသည်။</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ကျွန်ုပ်တို့သီးသန့်ထားရှိမှု သတိပေးချက်များကိုဖတ်ပါ။</string>
 
@@ -944,8 +916,6 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">အခင်းအကျင်းရွေးပါ</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">ဘက်ထရီကိုချွေတာပြီး အမှောင်အပြင်အဆင်ကိုဖွင့်၍သင့်မျက်စိကိုသက်သာပါစေ။</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">အလိုအလျောက်</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1120,10 +1090,6 @@
     <string name="preferences_passwords_autofill">အလိုအလျောက် စာဖြည့်စနစ်</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">လော့အင်များကိုထပ်တူပြုခြင်း</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">ဖွင့်ပါ</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">ပိတ်</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">ပြန်လည်ချိတ်ဆက်ပါ</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1223,7 +1189,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">အသုံးပြုရန် စာကြောင်းရှာဖွေပါ။</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">စုံစမ်းမှုကို “%s” ဖြင့်အစားထိုးပါ။ ဥပမာ။ \n https://www.google.com/search?q= %s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">စုံစမ်းမှုကို “%s” ဖြင့်အစားထိုးပါ။ ဥပမာ။ \n https://www.google.com/search?q= %s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">ပိုမိုလေ့လာရန်</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
