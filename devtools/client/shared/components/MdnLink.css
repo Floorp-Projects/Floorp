@@ -26,3 +26,8 @@
 .network-monitor .tree-container tr:not(:hover) .learn-more-link {
   opacity: 0.4;
 }
+
+.network-monitor .tabpanel-summary-value.status {
+  display: flex;
+  align-items: center;
+}
