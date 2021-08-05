@@ -79,7 +79,7 @@ class PendingAnimationTracker final {
 
   void EnsurePaintIsScheduled();
 
-  typedef nsTHashSet<nsRefPtrHashKey<dom::Animation>> AnimationSet;
+  using AnimationSet = nsTHashSet<nsRefPtrHashKey<dom::Animation>>;
 
   void AddPending(dom::Animation& aAnimation, AnimationSet& aSet);
   void RemovePending(dom::Animation& aAnimation, AnimationSet& aSet);
