@@ -133,7 +133,7 @@ var TabStateInternal = {
     // Store the tab icon.
     if (!("image" in tabData)) {
       let tabbrowser = tab.ownerGlobal.gBrowser;
-      tabData.image = tabbrowser.getIconBlobKey(tab);
+      tabData.image = tabbrowser.getIcon(tab);
     }
 
     // If there is a userTypedValue set, then either the user has typed something
