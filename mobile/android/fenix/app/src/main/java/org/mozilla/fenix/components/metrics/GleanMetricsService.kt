@@ -23,6 +23,7 @@ import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.ContextualHintTrackingProtection
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CrashReporter
+import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.DownloadNotification
 import org.mozilla.fenix.GleanMetrics.DownloadsMisc
@@ -875,6 +876,16 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.AndroidAutofillConfirmationSuccessful -> EventWrapper<NoExtraKeys>(
             { AndroidAutofill.confirmSuccessful.record(it) }
+
+        // Credit cards
+        is Event.CreditCardManualSave -> EventWrapper<NoExtraKeys>(
+            { CreditCards.manualSave.add(1) }
+        )
+        is Event.CreditCardDelete -> EventWrapper<NoExtraKeys>(
+            { CreditCards.deleteCard.add(1) }
+        )
+        is Event.CreditCardAutofill -> EventWrapper<NoExtraKeys>(
+            { CreditCards.autofillCard.add(1) }
         )
 
         // Don't record other events in Glean:

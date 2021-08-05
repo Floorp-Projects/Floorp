@@ -257,6 +257,11 @@ sealed class Event {
     object AndroidAutofillRequestWithLogins : Event()
     object AndroidAutofillRequestWithoutLogins : Event()
 
+    // Credit cards
+    object CreditCardManualSave : Event()
+    object CreditCardDelete : Event()
+    object CreditCardAutofill : Event()
+
     // Interaction events with extras
 
     data class TopSiteSwipeCarousel(val page: Int) : Event() {
