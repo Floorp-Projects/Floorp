@@ -421,14 +421,16 @@ def sign_msix(output, force=False, log=None, verbose=False):
     if not powershell_exe:
         raise ValueError("powershell is required; " "set POWERSHELL or PATH")
 
-    def powershell(argstring):
+    def powershell(argstring, check=True):
         "Invoke `powershell.exe`.  Arguments are given as a string to allow consumer to quote."
         args = [powershell_exe, "-c", argstring]
         joined = " ".join(shlex_quote(arg) for arg in args)
         log(
             logging.INFO, "msix", {"args": args, "joined": joined}, "Invoking: {joined}"
         )
-        return subprocess.check_output(args)
+        return subprocess.run(
+            args, check=check, universal_newlines=True, capture_output=True
+        ).stdout
 
     signtool = find_sdk_tool("signtool.exe", log=log)
     if not signtool:
@@ -442,7 +444,7 @@ def sign_msix(output, force=False, log=None, verbose=False):
     # These are baked into enough places under `browser/` that we need not
     # extract constants.
     vendor = "Mozilla"
-    publisher = "CN=Mozilla Corporation"
+    publisher = "CN=Mozilla Corporation, OU=MSIX Packaging"
     friendly_name = "Mozilla Corporation MSIX Packaging Test Certificate"
 
     # The convention is $MOZBUILD_STATE_PATH/cache/$FEATURE.
@@ -470,7 +472,7 @@ def sign_msix(output, force=False, log=None, verbose=False):
         )
 
         thumbprints = [
-            thumbprint.decode("utf-8").strip()
+            thumbprint.strip()
             for thumbprint in powershell(
                 (
                     "Get-ChildItem -Path Cert:\CurrentUser\My"
@@ -551,7 +553,7 @@ def sign_msix(output, force=False, log=None, verbose=False):
     )
 
     thumbprints = [
-        thumbprint.decode("utf-8").strip()
+        thumbprint.strip()
         for thumbprint in powershell(
             'Get-PfxCertificate -FilePath "{}" | Select-Object -ExpandProperty Thumbprint'.format(
                 crt_path
@@ -585,13 +587,13 @@ def sign_msix(output, force=False, log=None, verbose=False):
         output,
     ]
     if not verbose:
-        subprocess.check_call(args)
+        subprocess.check_call(args, universal_newlines=True)
     else:
         # Suppress output unless we fail.
         try:
-            subprocess.check_output(args)
+            subprocess.check_output(args, universal_newlines=True)
         except subprocess.CalledProcessError as e:
-            sys.stderr.write(e.output.decode("utf-8"))
+            sys.stderr.write(e.output)
             raise
 
     # As a convenience to the user, tell how to use this certificate if it's not
@@ -601,7 +603,8 @@ def sign_msix(output, force=False, log=None, verbose=False):
             root_thumbprint.strip()
             for root_thumbprint in powershell(
                 "Get-ChildItem -Path Cert:\LocalMachine\Root\{} "
-                "| Select-Object -ExpandProperty Thumbprint".format(thumbprint)
+                "| Select-Object -ExpandProperty Thumbprint".format(thumbprint),
+                check=False,
             ).splitlines()
         ]
         if thumbprint not in root_thumbprints:
