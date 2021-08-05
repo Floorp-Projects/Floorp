@@ -255,6 +255,10 @@ class PretenuringNursery {
   void maybeStopPretenuring(GCRuntime* gc);
 
   void* addressOfAllocatedSites() { return &allocatedSites; }
+
+ private:
+  void reportAndResetCatchAllSite(AllocSite* site, bool reportInfo,
+                                  size_t reportThreshold);
 };
 
 }  // namespace gc

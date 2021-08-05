@@ -155,16 +155,13 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
     site = next;
   }
 
-  // Optimized sites don't end up on the list if it is only used from optimized
-  // JIT code so process them here.
+  // Catch-all sites don't end up on the list if they are only used from
+  // optimized JIT code, so process them here.
   for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
-    AllocSite* site = zone->optimizedAllocSite();
-    if (site->hasNurseryAllocations()) {
-      if (reportInfo && site->allocCount() >= reportThreshold) {
-        site->printInfo(false, 0.0, false);
-      }
-      site->resetNurseryAllocations();
-    }
+    reportAndResetCatchAllSite(zone->unknownAllocSite(), reportInfo,
+                               reportThreshold);
+    reportAndResetCatchAllSite(zone->optimizedAllocSite(), reportInfo,
+                               reportThreshold);
   }
 
   if (reportInfo) {
@@ -179,6 +176,20 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
   allocSitesCreated = 0;
 
   return sitesPretenured;
+}
+
+void PretenuringNursery::reportAndResetCatchAllSite(AllocSite* site,
+                                                    bool reportInfo,
+                                                    size_t reportThreshold) {
+  if (!site->hasNurseryAllocations()) {
+    return;
+  }
+
+  if (reportInfo && site->allocCount() >= reportThreshold) {
+    site->printInfo(false, 0.0, false);
+  }
+
+  site->resetNurseryAllocations();
 }
 
 bool AllocSite::invalidateScript(GCRuntime* gc) {
