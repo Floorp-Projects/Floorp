@@ -21,7 +21,7 @@
 #  include <process.h>
 #  include <shobjidl.h>
 #  include "mozilla/ipc/WindowsMessageLoop.h"
-#  ifdef MOZ_ASAN
+#  ifdef MOZ_SANDBOX
 #    include "mozilla/RandomNum.h"
 #  endif
 #  include "mozilla/ScopeExit.h"
@@ -640,6 +640,10 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     SandboxBroker::Initialize(aChildData->sandboxBrokerServices);
     SandboxBroker::GeckoDependentInitialize();
   }
+
+  // Call RandomUint64 to pre-load bcryptPrimitives.dll while the current
+  // thread still has an unrestricted impersonation token.
+  RandomUint64OrDie();
 #endif
 
   {
@@ -673,16 +677,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
           break;
 
         case GeckoProcessType_GMPlugin:
-#if defined(XP_WIN) && defined(MOZ_ASAN)
-          // RandomUint64 delayloads bcryptPrimitives.dll.  Without ASan,
-          // it's loaded in the main thread which has the non-restricted
-          // impersonation token.  With ASan, on the other hand, the first
-          // call to RandomUint64 happens in a non-main thread before loading
-          // PreloadLibs, resulting in failure because the thread is not
-          // impersonated and the process token is restricted.  RandomUint64
-          // below is a quick workaround to make delayload modules loaded.
-          RandomUint64OrDie();
-#endif
           process = MakeUnique<gmp::GMPProcessChild>(parentPID);
           break;
 
