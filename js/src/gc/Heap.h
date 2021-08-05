@@ -575,12 +575,6 @@ MOZ_ALWAYS_INLINE void MarkBitmap::unmark(const TenuredCell* cell) {
   *word &= ~mask;
 }
 
-inline void MarkBitmap::clear() {
-  for (size_t i = 0; i < MarkBitmap::WordCount; i++) {
-    bitmap[i] = 0;
-  }
-}
-
 inline MarkBitmapWord* MarkBitmap::arenaBits(Arena* arena) {
   static_assert(
       ArenaBitmapBits == ArenaBitmapWords * JS_BITS_PER_WORD,
