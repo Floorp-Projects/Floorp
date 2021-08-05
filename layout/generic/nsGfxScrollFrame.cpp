@@ -5694,8 +5694,7 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent,
     return;
   }
 
-  if (mScrollbarActivity &&
-      (mHasHorizontalScrollbar || mHasVerticalScrollbar)) {
+  if (mScrollbarActivity) {
     RefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
     scrollbarActivity->ActivityOccurred();
   }
@@ -6988,8 +6987,7 @@ void ScrollFrameHelper::SetCoordAttribute(Element* aElement, nsAtom* aAtom,
     return;
   }
 
-  if (mScrollbarActivity &&
-      (mHasHorizontalScrollbar || mHasVerticalScrollbar)) {
+  if (mScrollbarActivity) {
     RefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
     scrollbarActivity->ActivityOccurred();
   }
