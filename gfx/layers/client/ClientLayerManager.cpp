@@ -766,8 +766,10 @@ ShadowableLayer* ClientLayerManager::Hold(Layer* aLayer) {
 bool ClientLayerManager::IsCompositingCheap() {
   // Whether compositing is cheap depends on the parent backend.
   return mForwarder->mShadowManager &&
-         LayerManager::IsCompositingCheap(
-             mForwarder->GetCompositorBackendType());
+         (mForwarder->GetCompositorBackendType() !=
+              LayersBackend::LAYERS_NONE &&
+          mForwarder->GetCompositorBackendType() !=
+              LayersBackend::LAYERS_BASIC);
 }
 
 bool ClientLayerManager::AreComponentAlphaLayersEnabled() {

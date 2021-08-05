@@ -141,7 +141,7 @@ void BrowserBridgeParent::Destroy() {
 }
 
 IPCResult BrowserBridgeParent::RecvShow(const OwnerShowInfo& aOwnerInfo) {
-  mBrowserParent->AttachLayerManager();
+  mBrowserParent->AttachWindowRenderer();
   Unused << mBrowserParent->SendShow(mBrowserParent->GetShowInfo(), aOwnerInfo);
   return IPC_OK();
 }
