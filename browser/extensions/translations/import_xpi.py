@@ -65,7 +65,13 @@ if have_xpi.lower() != "y":
         cwd=extension_folder,
     )
     # build the final xpi
-    subprocess.call("yarn build:firefox-infobar-ui".split(), cwd=extension_folder)
+    env = {
+        **os.environ,
+        "MC": str(1),
+    }
+    subprocess.call(
+        "yarn build:firefox-infobar-ui".split(), cwd=extension_folder, env=env
+    )
 
 shutil.rmtree("extension", ignore_errors=True)
 os.mkdir("extension")
