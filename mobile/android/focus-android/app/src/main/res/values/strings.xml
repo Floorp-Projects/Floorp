@@ -734,6 +734,10 @@
     <string name="enhanced_tracking_protection_state_off">Protections are OFF for this site</string>
     <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
     <string name="enhanced_tracking_protection_state_on">Protections are ON for this site</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Connection is secure</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Connection is not secure</string>
     <!-- Title for the list of trackers enhanced tracking ptotection can block-->
     <string name="trackers_and_scripts">Trackers and Scripts to Block</string>
 

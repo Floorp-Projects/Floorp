@@ -12,7 +12,9 @@ import org.mozilla.focus.R
 import org.mozilla.focus.databinding.DialogTrackingProtectionSheetBinding
 import org.mozilla.focus.ext.installedDate
 import android.widget.FrameLayout
+import androidx.appcompat.content.res.AppCompatResources
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.focus.ext.beautifyUrl
 import org.mozilla.focus.ext.components
 
@@ -22,8 +24,10 @@ class TrackingProtectionPanel(
     private val tabUrl: String,
     private val blockedTrackersCount: Int,
     private val isTrackingProtectionOn: Boolean,
+    private val isConnectionSecure: Boolean,
     private val toggleTrackingProtection: (Boolean) -> Unit,
-    private val updateTrackingProtectionPolicy: () -> Unit
+    private val updateTrackingProtectionPolicy: () -> Unit,
+    private val showConnectionInfo: () -> Unit
 ) : BottomSheetDialog(context) {
 
     private var binding: DialogTrackingProtectionSheetBinding =
@@ -31,19 +35,77 @@ class TrackingProtectionPanel(
 
     init {
         setContentView(binding.root)
-        expandBottomSheet()
+        expand()
 
         updateTitle()
+        updateConnectionState()
         updateTrackingProtection()
         updateTrackersBlocked()
         updateTrackersState()
         setListeners()
     }
 
-    private fun expandBottomSheet() {
+    private fun expand() {
         val bottomSheet =
             findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as FrameLayout
         BottomSheetBehavior.from(bottomSheet).state = BottomSheetBehavior.STATE_EXPANDED
+    }
+
+    private fun updateTitle() {
+        binding.siteTitle.text = tabUrl.beautifyUrl()
+        context.components.icons.loadIntoView(
+            binding.siteFavicon,
+            IconRequest(tabUrl, isPrivate = true)
+        )
+    }
+
+    private fun updateConnectionState() {
+        binding.securityInfo.text = if (isConnectionSecure) {
+            context.getString(R.string.secure_connection)
+        } else {
+            context.getString(R.string.insecure_connection)
+        }
+
+        val nextIcon = AppCompatResources.getDrawable(context, R.drawable.mozac_ic_arrowhead_right)
+
+        val securityIcon = if (isConnectionSecure) {
+            AppCompatResources.getDrawable(context, R.drawable.ic_lock)
+        } else {
+            AppCompatResources.getDrawable(context, R.drawable.ic_warning)
+        }
+
+        binding.securityInfo.putCompoundDrawablesRelativeWithIntrinsicBounds(
+            start = securityIcon,
+            end = nextIcon,
+            top = null,
+            bottom = null
+        )
+    }
+
+    private fun updateTrackingProtection() {
+        val description = if (isTrackingProtectionOn) {
+            context.getString(R.string.enhanced_tracking_protection_state_on)
+        } else {
+            context.getString(R.string.enhanced_tracking_protection_state_off)
+        }
+
+        val icon = if (isTrackingProtectionOn) {
+            R.drawable.mozac_ic_tracking_protection_on_trackers_blocked
+        } else {
+            R.drawable.mozac_ic_tracking_protection_off_for_a_site
+        }
+
+        binding.enhancedTracking.apply {
+            updateDescription(description)
+            updateIcon(icon)
+            binding.switchWidget.isChecked = isTrackingProtectionOn
+        }
+    }
+
+    private fun updateTrackersBlocked() {
+        binding.trackersCount.text = blockedTrackersCount.toString()
+        binding.trackersCountNote.text =
+            context.getString(R.string.trackers_count_note, context.installedDate)
     }
 
     private fun updateTrackersState() {
@@ -77,40 +139,10 @@ class TrackingProtectionPanel(
             content.onClickListener {
                 updateTrackingProtectionPolicy()
             }
-        }
-    }
 
-    private fun updateTrackersBlocked() {
-        binding.trackersCount.text = blockedTrackersCount.toString()
-        binding.trackersCountNote.text =
-            context.getString(R.string.trackers_count_note, context.installedDate())
-    }
-
-    private fun updateTitle() {
-        binding.siteTitle.text = tabUrl.beautifyUrl()
-        context.components.icons.loadIntoView(
-            binding.siteFavicon,
-            IconRequest(tabUrl, isPrivate = true)
-        )
-    }
-
-    private fun updateTrackingProtection() {
-        val description = if (isTrackingProtectionOn) {
-            context.getString(R.string.enhanced_tracking_protection_state_on)
-        } else {
-            context.getString(R.string.enhanced_tracking_protection_state_off)
-        }
-
-        val icon = if (isTrackingProtectionOn) {
-            R.drawable.mozac_ic_tracking_protection_on_trackers_blocked
-        } else {
-            R.drawable.mozac_ic_tracking_protection_off_for_a_site
-        }
-
-        binding.enhancedTracking.apply {
-            updateDescription(description)
-            updateIcon(icon)
-            binding.switchWidget.isChecked = isTrackingProtectionOn
+            securityInfo.setOnClickListener {
+                showConnectionInfo.invoke()
+            }
         }
     }
 }

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/connection_details_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/details_back"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:contentDescription="@string/go_back"
+        android:scaleType="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_back" />
+
+    <ImageView
+        android:id="@+id/site_favicon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="20dp"
+        android:importantForAccessibility="no"
+        app:layout_constraintStart_toEndOf="@id/details_back"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@drawable/ic_favorite" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/site_title"
+        style="@style/PanelTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="@id/site_favicon"
+        app:layout_constraintStart_toEndOf="@id/site_favicon"
+        app:layout_constraintTop_toTopOf="@id/site_favicon"
+
+        tools:text="url.com" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/site_full_url"
+        style="@style/PanelTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintStart_toStartOf="@id/site_favicon"
+        app:layout_constraintTop_toBottomOf="@id/site_title"
+        tools:text="url.com" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/security_info"
+        style="@style/PanelTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawablePadding="8dp"
+        android:gravity="center_vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        app:drawableStartCompat="@drawable/ic_lock"
+        app:layout_constraintStart_toStartOf="@id/site_favicon"
+        app:layout_constraintTop_toBottomOf="@id/site_full_url"
+        tools:text="@string/secure_connection" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

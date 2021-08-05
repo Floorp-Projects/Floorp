@@ -69,6 +69,7 @@ import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.menu.browser.DefaultBrowserMenu
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.popup.PopupUtils
+import org.mozilla.focus.settings.privacy.ConnectionDetailsPanel
 import org.mozilla.focus.settings.privacy.TrackingProtectionPanel
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
@@ -110,7 +111,7 @@ class BrowserFragment :
 
     private val blockingThemeBinding = ViewBoundFeatureWrapper<BlockingThemeBinding>()
     private val tabCountBinding = ViewBoundFeatureWrapper<TabCountBinding>()
-
+    private lateinit var trackingProtectionPanel: TrackingProtectionPanel
     /**
      * The ID of the tab associated with this fragment.
      */
@@ -743,17 +744,32 @@ class BrowserFragment :
     }
 
     fun showTrackingProtectionPanel() {
-        val trackingProtectionPanel = TrackingProtectionPanel(
+        trackingProtectionPanel = TrackingProtectionPanel(
             context = requireContext(),
             tabUrl = tab.content.url,
             isTrackingProtectionOn = tab.trackingProtection.ignoredOnTrackingProtection.not(),
-            blockedTrackersCount = Settings.getInstance(requireContext()).getTotalBlockedTrackersCount(),
+            isConnectionSecure = tab.content.securityInfo.secure,
+            blockedTrackersCount = Settings.getInstance(requireContext())
+                .getTotalBlockedTrackersCount(),
             toggleTrackingProtection = ::toggleTrackingProtection,
             updateTrackingProtectionPolicy = {
                 EngineSharedPreferencesListener(requireContext()).updateTrackingProtectionPolicy()
-            }
+            },
+            showConnectionInfo = ::showConnectionInfo
         )
         trackingProtectionPanel.show()
+    }
+
+    private fun showConnectionInfo() {
+        val connectionInfoPanel = ConnectionDetailsPanel(
+            context = requireContext(),
+            tabTitle = tab.content.title,
+            tabUrl = tab.content.url,
+            isConnectionSecure = tab.content.securityInfo.secure,
+            goBack = { trackingProtectionPanel.show() }
+        )
+        trackingProtectionPanel.hide()
+        connectionInfoPanel.show()
     }
 
     private fun toggleTrackingProtection(enable: Boolean) {

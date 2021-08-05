@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -30,14 +32,28 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="url.com" />
 
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/security_info"
+        style="@style/PanelTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:drawablePadding="20dp"
+        android:gravity="center_vertical"
+        app:drawableEndCompat="@drawable/mozac_ic_arrowhead_right"
+        app:drawableStartCompat="@drawable/ic_lock"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/site_title"
+        tools:text="@string/secure_connection" />
+
     <org.mozilla.focus.widget.SwitchWithDescription
         android:id="@+id/enhanced_tracking"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:minHeight="48dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/site_title"
+        app:layout_constraintTop_toBottomOf="@id/security_info"
         app:switchDescription="@string/enhanced_tracking_protection_state_on"
         app:switchIcon="@drawable/mozac_ic_tracking_protection_on_trackers_blocked"
         app:switchTitle="@string/enhanced_tracking_protection" />
@@ -47,7 +63,7 @@
         style="@style/PanelHeading"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="18dp"
         android:text="@string/trackers_and_scripts"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/enhanced_tracking" />
@@ -94,7 +110,6 @@
         android:id="@+id/content"
         style="@style/TrackerSwitchTitle"
         android:layout_width="match_parent"
-
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:theme="@style/SwitchTheme"
