@@ -1722,7 +1722,7 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
     const IPCTabContext& aContext, const WindowGlobalInit& aWindowInit,
     const uint32_t& aChromeFlags, const ContentParentId& aCpID,
     const bool& aIsForBrowser, const bool& aIsTopLevel) {
-  MOZ_ASSERT(!IsShuttingDown());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShuttingDown());
 
   static bool hasRunOnce = false;
   if (!hasRunOnce) {
@@ -1741,7 +1741,10 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
   RefPtr<BrowsingContext> browsingContext =
       BrowsingContext::Get(aWindowInit.context().mBrowsingContextId);
   if (!browsingContext || browsingContext->IsDiscarded()) {
-    return IPC_FAIL(this, "Null or discarded initial BrowsingContext");
+    nsPrintfCString reason("%s initial %s BrowsingContext",
+                           browsingContext ? "discarded" : "missing",
+                           aIsTopLevel ? "top" : "frame");
+    return IPC_FAIL(this, reason.get());
   }
 
   if (!aWindowInit.isInitialDocument() ||
