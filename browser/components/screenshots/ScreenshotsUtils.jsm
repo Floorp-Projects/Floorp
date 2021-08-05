@@ -13,7 +13,15 @@ var ScreenshotsUtils = {
     Services.obs.addObserver(this, "menuitem-screenshot");
   },
   observe(subj, topic, data) {
-    let document = subj.document;
-    document.createXULElement("screenshots-div");
+    let { gBrowser } = subj;
+    let browser = gBrowser.selectedBrowser;
+
+    // init UI as a tab dialog box
+    let dialogBox = gBrowser.getTabDialogBox(browser);
+
+    return dialogBox.open(
+      `chrome://browser/content/screenshots/screenshots.html?browsingContextId=${browser.browsingContext.id}`,
+      { features: "resizable=no", sizeTo: "available" }
+    );
   },
 };
