@@ -183,6 +183,10 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(IsSingleToplevelInHistory, bool)                                      \
   FIELD(UseErrorPages, bool)                                                  \
   FIELD(PlatformOverride, nsString)                                           \
+  /* Specifies if this BC has loaded documents besides the initial            \
+   * about:blank document. about:privatebrowsing, about:home, about:newtab    \
+   * and non-initial about:blank are not considered to be initial             \
+   * documents. */                                                            \
   FIELD(HasLoadedNonInitialDocument, bool)                                    \
   /* Default value for nsIContentViewer::authorStyleDisabled in any new       \
    * browsing contexts created as a descendant of this one.  Valid only for   \
