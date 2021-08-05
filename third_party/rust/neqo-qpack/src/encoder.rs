@@ -415,7 +415,7 @@ impl QPackEncoder {
                 if !static_table && ref_entries.insert(index) {
                     self.table.add_ref(index);
                 }
-            } else if can_block & !encoder_blocked {
+            } else if can_block && !encoder_blocked {
                 // Insert using an InsertWithNameLiteral instruction. This entry name does not match any name in the
                 // tables therefore we cannot use any other instruction.
                 match self.send_and_insert(conn, &name, &value) {
