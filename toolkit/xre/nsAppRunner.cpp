@@ -17,6 +17,7 @@
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MacRunFromDmgUtils.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Poison.h"
 #include "mozilla/Preferences.h"
@@ -5474,6 +5475,13 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 
   rv = mScopedXPCOM->Initialize(/* aInitJSContext = */ false);
   NS_ENSURE_SUCCESS(rv, 1);
+
+#ifdef XP_MACOSX
+  if (mProfileSvc->GetIsFirstRun()) {
+    Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_FIRST_RUN_IS_FROM_DMG,
+                         MacRunFromDmgUtils::IsAppRunningFromDmg());
+  }
+#endif
 
   // run!
   rv = XRE_mainRun();
