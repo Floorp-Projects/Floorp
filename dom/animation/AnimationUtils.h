@@ -29,7 +29,7 @@ class Element;
 
 class AnimationUtils {
  public:
-  typedef dom::Document Document;
+  using Document = dom::Document;
 
   static dom::Nullable<double> TimeDurationToDouble(
       const dom::Nullable<TimeDuration>& aTime) {
