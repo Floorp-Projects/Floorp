@@ -28,7 +28,7 @@ struct GPUImageCopyTexture;
 struct GPUImageBitmapCopyView;
 struct GPUImageDataLayout;
 struct GPURenderPassDescriptor;
-typedef RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict GPUExtent3D;
+using GPUExtent3D = RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
 }  // namespace dom
 namespace webgpu {
 namespace ffi {

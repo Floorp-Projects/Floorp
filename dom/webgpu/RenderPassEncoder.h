@@ -36,7 +36,7 @@ class RenderPipeline;
 class TextureView;
 
 struct ScopedFfiRenderTraits {
-  typedef ffi::WGPURenderPass* type;
+  using type = ffi::WGPURenderPass*;
   static type empty();
   static void release(type raw);
 };

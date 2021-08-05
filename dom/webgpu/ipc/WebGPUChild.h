@@ -23,8 +23,8 @@ struct WGPUClient;
 struct WGPUTextureViewDescriptor;
 }  // namespace ffi
 
-typedef MozPromise<ipc::ByteBuf, Maybe<ipc::ResponseRejectReason>, true>
-    AdapterPromise;
+using AdapterPromise =
+    MozPromise<ipc::ByteBuf, Maybe<ipc::ResponseRejectReason>, true>;
 
 ffi::WGPUByteBuf* ToFFI(ipc::ByteBuf* x);
 
