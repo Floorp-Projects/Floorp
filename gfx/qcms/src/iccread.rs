@@ -94,7 +94,10 @@ pub(crate) struct lutmABType {
 #[derive(Clone, Debug)]
 pub(crate) enum curveType {
     Curve(Vec<uInt16Number>),
-    Parametric(Vec<f32>), // XXX should this be `s15Fixed16Number` rather than `f32`?
+    /// The ICC parametricCurveType is specified in terms of s15Fixed16Number,
+    /// so it's possible to use this variant to specify greater precision than
+    /// any raw ICC profile could
+    Parametric(Vec<f32>),
 }
 type uInt16Number = u16;
 
@@ -139,6 +142,26 @@ pub struct qcms_CIE_xyY {
     pub x: f64,
     pub y: f64,
     pub Y: f64,
+}
+
+/// A more convenient type for specifying primaries and white points where
+/// luminosity is irrelevant
+struct qcms_chromaticity {
+    x: f64,
+    y: f64,
+}
+
+impl qcms_chromaticity {
+    const D65: Self = Self {
+        x: 0.3127,
+        y: 0.3290,
+    };
+}
+
+impl From<qcms_chromaticity> for qcms_CIE_xyY {
+    fn from(qcms_chromaticity { x, y }: qcms_chromaticity) -> Self {
+        Self { x, y, Y: 1.0 }
+    }
 }
 
 /// a set of CIE_xyY values that can use to describe the primaries of a color space
@@ -860,25 +883,37 @@ fn build_sRGB_gamma_table(num_entries: i32) -> Vec<u16> {
     let b: f64 = 0.055 / 1.055;
     let c: f64 = 1.0 / 12.92;
     let d: f64 = 0.04045;
+
+    build_trc_table(
+        num_entries,
+        // IEC 61966-2.1 (sRGB)
+        // Y = (aX + b)^Gamma | X >= d
+        // Y = cX             | X < d
+        |x| {
+            if x >= d {
+                let e: f64 = a * x + b;
+                if e > 0. {
+                    e.powf(gamma)
+                } else {
+                    0.
+                }
+            } else {
+                c * x
+            }
+        },
+    )
+}
+
+/// eotf: electro-optical transfer characteristic function, maps from [0, 1]
+/// in non-linear (voltage) space to [0, 1] in linear (optical) space. Should
+/// generally be a concave up function.
+fn build_trc_table(num_entries: i32, eotf: impl Fn(f64) -> f64) -> Vec<u16> {
     let mut table = Vec::with_capacity(num_entries as usize);
 
     for i in 0..num_entries {
         let x: f64 = i as f64 / (num_entries - 1) as f64;
-        let y: f64;
+        let y: f64 = eotf(x);
         let mut output: f64;
-        // IEC 61966-2.1 (sRGB)
-        // Y = (aX + b)^Gamma | X >= d
-        // Y = cX             | X < d
-        if x >= d {
-            let e: f64 = a * x + b;
-            if e > 0. {
-                y = e.powf(gamma)
-            } else {
-                y = 0.
-            }
-        } else {
-            y = c * x
-        }
         // Saturate -- this could likely move to a separate function
         output = y * 65535.0 + 0.5;
         if output > 65535.0 {
@@ -957,6 +992,457 @@ pub extern "C" fn qcms_white_point_sRGB() -> qcms_CIE_xyY {
     white_point_from_temp(6504)
 }
 
+/// See [Rec. ITU-T H.273 (12/2016)](https://www.itu.int/rec/T-REC-H.273-201612-I/en) Table 2
+/// Values 0, 3, 13–21, 23–255 are all reserved so all map to the same variant
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ColourPrimaries {
+    /// For future use by ITU-T | ISO/IEC
+    Reserved,
+    /// Rec. ITU-R BT.709-6<br />
+    /// Rec. ITU-R BT.1361-0 conventional colour gamut system and extended colour gamut system (historical)<br />
+    /// IEC 61966-2-1 sRGB or sYCC IEC 61966-2-4<br />
+    /// Society of Motion Picture and Television Engineers (MPTE) RP 177 (1993) Annex B<br />
+    Bt709 = 1,
+    /// Unspecified<br />
+    /// Image characteristics are unknown or are determined by the application.
+    Unspecified = 2,
+    /// Rec. ITU-R BT.470-6 System M (historical)<br />
+    /// United States National Television System Committee 1953 Recommendation for transmission standards for color television<br />
+    /// United States Federal Communications Commission (2003) Title 47 Code of Federal Regulations 73.682 (a) (20)<br />
+    Bt470M = 4,
+    /// Rec. ITU-R BT.470-6 System B, G (historical) Rec. ITU-R BT.601-7 625<br />
+    /// Rec. ITU-R BT.1358-0 625 (historical)<br />
+    /// Rec. ITU-R BT.1700-0 625 PAL and 625 SECAM<br />
+    Bt470Bg = 5,
+    /// Rec. ITU-R BT.601-7 525<br />
+    /// Rec. ITU-R BT.1358-1 525 or 625 (historical) Rec. ITU-R BT.1700-0 NTSC<br />
+    /// SMPTE 170M (2004)<br />
+    /// (functionally the same as the value 7)<br />
+    Bt601 = 6,
+    /// SMPTE 240M (1999) (historical) (functionally the same as the value 6)<br />
+    Smpte240 = 7,
+    /// Generic film (colour filters using Illuminant C)<br />
+    Generic_film = 8,
+    /// Rec. ITU-R BT.2020-2<br />
+    /// Rec. ITU-R BT.2100-0<br />
+    Bt2020 = 9,
+    /// SMPTE ST 428-1<br />
+    /// (CIE 1931 XYZ as in ISO 11664-1)<br />
+    Xyz = 10,
+    /// SMPTE RP 431-2 (2011)<br />
+    Smpte431 = 11,
+    /// SMPTE EG 432-1 (2010)<br />
+    Smpte432 = 12,
+    /// EBU Tech. 3213-E (1975)<br />
+    Ebu3213 = 22,
+}
+
+impl From<u8> for ColourPrimaries {
+    fn from(value: u8) -> Self {
+        match value {
+            0 | 3 | 13..=21 | 23..=255 => Self::Reserved,
+            1 => Self::Bt709,
+            2 => Self::Unspecified,
+            4 => Self::Bt470M,
+            5 => Self::Bt470Bg,
+            6 => Self::Bt601,
+            7 => Self::Smpte240,
+            8 => Self::Generic_film,
+            9 => Self::Bt2020,
+            10 => Self::Xyz,
+            11 => Self::Smpte431,
+            12 => Self::Smpte432,
+            22 => Self::Ebu3213,
+        }
+    }
+}
+
+#[test]
+fn colour_primaries() {
+    for value in 0..=u8::MAX {
+        match ColourPrimaries::from(value) {
+            ColourPrimaries::Reserved => {}
+            variant => assert_eq!(value, variant as u8),
+        }
+    }
+}
+
+impl From<ColourPrimaries> for qcms_CIE_xyYTRIPLE {
+    fn from(value: ColourPrimaries) -> Self {
+        let red;
+        let green;
+        let blue;
+
+        match value {
+            ColourPrimaries::Reserved => panic!("CP={} is reserved", value as u8),
+            ColourPrimaries::Bt709 => {
+                green = qcms_chromaticity { x: 0.300, y: 0.600 };
+                blue = qcms_chromaticity { x: 0.150, y: 0.060 };
+                red = qcms_chromaticity { x: 0.640, y: 0.330 };
+            }
+            ColourPrimaries::Unspecified => panic!("CP={} is unspecified", value as u8),
+            ColourPrimaries::Bt470M => {
+                green = qcms_chromaticity { x: 0.21, y: 0.71 };
+                blue = qcms_chromaticity { x: 0.14, y: 0.08 };
+                red = qcms_chromaticity { x: 0.67, y: 0.33 };
+            }
+            ColourPrimaries::Bt470Bg => {
+                green = qcms_chromaticity { x: 0.29, y: 0.60 };
+                blue = qcms_chromaticity { x: 0.15, y: 0.06 };
+                red = qcms_chromaticity { x: 0.64, y: 0.33 };
+            }
+            ColourPrimaries::Bt601 | ColourPrimaries::Smpte240 => {
+                green = qcms_chromaticity { x: 0.310, y: 0.595 };
+                blue = qcms_chromaticity { x: 0.155, y: 0.070 };
+                red = qcms_chromaticity { x: 0.630, y: 0.340 };
+            }
+            ColourPrimaries::Generic_film => {
+                green = qcms_chromaticity { x: 0.243, y: 0.692 };
+                blue = qcms_chromaticity { x: 0.145, y: 0.049 };
+                red = qcms_chromaticity { x: 0.681, y: 0.319 };
+            }
+            ColourPrimaries::Bt2020 => {
+                green = qcms_chromaticity { x: 0.170, y: 0.797 };
+                blue = qcms_chromaticity { x: 0.131, y: 0.046 };
+                red = qcms_chromaticity { x: 0.708, y: 0.292 };
+            }
+            ColourPrimaries::Xyz => {
+                green = qcms_chromaticity { x: 0.0, y: 1.0 };
+                blue = qcms_chromaticity { x: 0.0, y: 0.0 };
+                red = qcms_chromaticity { x: 1.0, y: 0.0 };
+            }
+            // These two share primaries, but have distinct white points
+            ColourPrimaries::Smpte431 | ColourPrimaries::Smpte432 => {
+                green = qcms_chromaticity { x: 0.265, y: 0.690 };
+                blue = qcms_chromaticity { x: 0.150, y: 0.060 };
+                red = qcms_chromaticity { x: 0.680, y: 0.320 };
+            }
+            ColourPrimaries::Ebu3213 => {
+                green = qcms_chromaticity { x: 0.295, y: 0.605 };
+                blue = qcms_chromaticity { x: 0.155, y: 0.077 };
+                red = qcms_chromaticity { x: 0.630, y: 0.340 };
+            }
+        }
+
+        Self {
+            red: red.into(),
+            green: green.into(),
+            blue: blue.into(),
+        }
+    }
+}
+
+impl ColourPrimaries {
+    fn white_point(self) -> qcms_CIE_xyY {
+        match self {
+            Self::Reserved => panic!("CP={} is reserved", self as u8),
+            Self::Bt709
+            | Self::Bt470Bg
+            | Self::Bt601
+            | Self::Smpte240
+            | Self::Bt2020
+            | Self::Smpte432
+            | Self::Ebu3213 => qcms_chromaticity::D65,
+            Self::Unspecified => panic!("CP={} is unspecified", self as u8),
+            Self::Bt470M => qcms_chromaticity { x: 0.310, y: 0.316 },
+            Self::Generic_film => qcms_chromaticity { x: 0.310, y: 0.316 },
+            Self::Xyz => qcms_chromaticity {
+                x: 1. / 3.,
+                y: 1. / 3.,
+            },
+            Self::Smpte431 => qcms_chromaticity { x: 0.314, y: 0.351 },
+        }
+        .into()
+    }
+}
+
+/// See [Rec. ITU-T H.273 (12/2016)](https://www.itu.int/rec/T-REC-H.273-201612-I/en) Table 3
+/// Values 0, 3, 19–255 are all reserved so all map to the same variant
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum TransferCharacteristics {
+    /// For future use by ITU-T | ISO/IEC
+    Reserved,
+    /// Rec. ITU-R BT.709-6<br />
+    /// Rec. ITU-R BT.1361-0 conventional colour gamut system (historical)<br />
+    /// (functionally the same as the values 6, 14 and 15)    <br />
+    Bt709 = 1,
+    /// Image characteristics are unknown or are determined by the application.<br />
+    Unspecified = 2,
+    /// Rec. ITU-R BT.470-6 System M (historical)<br />
+    /// United States National Television System Committee 1953 Recommendation for transmission standards for color television<br />
+    /// United States Federal Communications Commission (2003) Title 47 Code of Federal Regulations 73.682 (a) (20)<br />
+    /// Rec. ITU-R BT.1700-0 625 PAL and 625 SECAM<br />
+    Bt470M = 4,
+    /// Rec. ITU-R BT.470-6 System B, G (historical)<br />
+    Bt470Bg = 5,
+    /// Rec. ITU-R BT.601-7 525 or 625<br />
+    /// Rec. ITU-R BT.1358-1 525 or 625 (historical)<br />
+    /// Rec. ITU-R BT.1700-0 NTSC SMPTE 170M (2004)<br />
+    /// (functionally the same as the values 1, 14 and 15)<br />
+    Bt601 = 6,
+    /// SMPTE 240M (1999) (historical)<br />
+    Smpte240 = 7,
+    /// Linear transfer characteristics<br />
+    Linear = 8,
+    /// Logarithmic transfer characteristic (100:1 range)<br />
+    Log_100 = 9,
+    /// Logarithmic transfer characteristic (100 * Sqrt( 10 ) : 1 range)<br />
+    Log_100_sqrt10 = 10,
+    /// IEC 61966-2-4<br />
+    Iec61966 = 11,
+    /// Rec. ITU-R BT.1361-0 extended colour gamut system (historical)<br />
+    Bt_1361 = 12,
+    /// IEC 61966-2-1 sRGB or sYCC<br />
+    Srgb = 13,
+    /// Rec. ITU-R BT.2020-2 (10-bit system)<br />
+    /// (functionally the same as the values 1, 6 and 15)<br />
+    Bt2020_10bit = 14,
+    /// Rec. ITU-R BT.2020-2 (12-bit system)<br />
+    /// (functionally the same as the values 1, 6 and 14)<br />
+    Bt2020_12bit = 15,
+    /// SMPTE ST 2084 for 10-, 12-, 14- and 16-bitsystems<br />
+    /// Rec. ITU-R BT.2100-0 perceptual quantization (PQ) system<br />
+    Smpte2084 = 16,
+    /// SMPTE ST 428-1<br />
+    Smpte428 = 17,
+    /// ARIB STD-B67<br />
+    /// Rec. ITU-R BT.2100-0 hybrid log- gamma (HLG) system<br />
+    Hlg = 18,
+}
+
+#[test]
+fn transfer_characteristics() {
+    for value in 0..=u8::MAX {
+        match TransferCharacteristics::from(value) {
+            TransferCharacteristics::Reserved => {}
+            variant => assert_eq!(value, variant as u8),
+        }
+    }
+}
+
+impl From<u8> for TransferCharacteristics {
+    fn from(value: u8) -> Self {
+        match value {
+            0 | 3 | 19..=255 => Self::Reserved,
+            1 => Self::Bt709,
+            2 => Self::Unspecified,
+            4 => Self::Bt470M,
+            5 => Self::Bt470Bg,
+            6 => Self::Bt601,
+            7 => Self::Smpte240, // unimplemented
+            8 => Self::Linear,
+            9 => Self::Log_100,
+            10 => Self::Log_100_sqrt10,
+            11 => Self::Iec61966, // unimplemented
+            12 => Self::Bt_1361,  // unimplemented
+            13 => Self::Srgb,
+            14 => Self::Bt2020_10bit,
+            15 => Self::Bt2020_12bit,
+            16 => Self::Smpte2084,
+            17 => Self::Smpte428, // unimplemented
+            18 => Self::Hlg,
+        }
+    }
+}
+
+impl From<TransferCharacteristics> for curveType {
+    /// See [ICC.1:2010](https://www.color.org/specification/ICC1v43_2010-12.pdf)
+    /// See [Rec. ITU-R BT.2100-2](https://www.itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.2100-2-201807-I!!PDF-E.pdf)
+    fn from(value: TransferCharacteristics) -> Self {
+        const NUM_TRC_TABLE_ENTRIES: i32 = 1024;
+
+        match value {
+            TransferCharacteristics::Reserved => panic!("TC={} is reserved", value as u8),
+            TransferCharacteristics::Bt709
+            | TransferCharacteristics::Bt601
+            | TransferCharacteristics::Bt2020_10bit
+            | TransferCharacteristics::Bt2020_12bit => {
+                // The opto-electronic transfer characteristic function (OETF)
+                // as defined in ITU-T H.273 table 3, row 1:
+                //
+                // V = (α * Lc^0.45) − (α − 1)  for 1 >= Lc >= β
+                // V = 4.500 * Lc               for β >  Lc >= 0
+                //
+                // Inverting gives the electro-optical transfer characteristic
+                // function (EOTF) which can be represented as ICC
+                // parametricCurveType with 4 parameters (ICC.1:2010 Table 5).
+                // Converting between the two (Lc ↔︎ Y, V ↔︎ X):
+                //
+                // Y = (a * X + b)^g  for (X >= d)
+                // Y = c * X          for (X < d)
+                //
+                // g, a, b, c, d can then be defined in terms of α and β:
+                //
+                // g = 1 / 0.45
+                // a = 1 / α
+                // b = 1 - α
+                // c = 1 / 4.500
+                // d = 4.500 * β
+                //
+                // α and β are determined by solving the piecewise equations to
+                // ensure continuity of both value and slope at the value β.
+                // We use the values specified for 10-bit systems in
+                // https://www.itu.int/rec/R-REC-BT.2020-2-201510-I Table 4
+                // since this results in the similar values as available ICC
+                // profiles after converting to s15Fixed16Number, providing us
+                // good test coverage.
+
+                type Float = f32;
+
+                const alpha: Float = 1.099;
+                const beta: Float = 0.018;
+
+                const linear_coef: Float = 4.500;
+                const pow_exp: Float = 0.45;
+
+                const g: Float = 1. / pow_exp;
+                const a: Float = 1. / alpha;
+                const b: Float = 1. - a;
+                const c: Float = 1. / linear_coef;
+                const d: Float = linear_coef * beta;
+
+                curveType::Parametric(vec![g, a, b, c, d])
+            }
+            TransferCharacteristics::Unspecified => panic!("TC={} is unspecified", value as u8),
+            TransferCharacteristics::Bt470M => *curve_from_gamma(2.2),
+            TransferCharacteristics::Bt470Bg => *curve_from_gamma(2.8),
+            TransferCharacteristics::Smpte240 => unimplemented!(),
+            TransferCharacteristics::Linear => *curve_from_gamma(1.),
+            TransferCharacteristics::Log_100 => {
+                // See log_100_transfer_characteristics() for derivation
+                // The opto-electronic transfer characteristic function (OETF)
+                // as defined in ITU-T H.273 table 3, row 9:
+                //
+                // V = 1.0 + Log10(Lc) ÷ 2  for 1    >= Lc >= 0.01
+                // V = 0.0                  for 0.01 >  Lc >= 0
+                //
+                // Inverting this to give the EOTF required for the profile gives
+                //
+                // Lc = 10^(2*V - 2)  for 1 >= V >= 0
+                let table = build_trc_table(NUM_TRC_TABLE_ENTRIES, |v| 10f64.powf(2. * v - 2.));
+                curveType::Curve(table)
+            }
+            TransferCharacteristics::Log_100_sqrt10 => {
+                // The opto-electronic transfer characteristic function (OETF)
+                // as defined in ITU-T H.273 table 3, row 10:
+                //
+                // V = 1.0 + Log10(Lc) ÷ 2.5  for               1 >= Lc >= Sqrt(10) ÷ 1000
+                // V = 0.0                    for Sqrt(10) ÷ 1000 >  Lc >= 0
+                //
+                // Inverting this to give the EOTF required for the profile gives
+                //
+                // Lc = 10^(2.5*V - 2.5)  for 1 >= V >= 0
+                let table = build_trc_table(NUM_TRC_TABLE_ENTRIES, |v| 10f64.powf(2.5 * v - 2.5));
+                curveType::Curve(table)
+            }
+            TransferCharacteristics::Iec61966 => unimplemented!(),
+            TransferCharacteristics::Bt_1361 => unimplemented!(),
+            TransferCharacteristics::Srgb => {
+                // Should we prefer this or curveType::Parametric?
+                curveType::Curve(build_sRGB_gamma_table(NUM_TRC_TABLE_ENTRIES))
+            }
+
+            TransferCharacteristics::Smpte2084 => {
+                // Despite using Lo rather than Lc, H.273 gives the OETF:
+                //
+                // V = ( ( c1 + c2 * (Lo)^n ) ÷ ( 1 + c3 * (Lo)^n ) )^m
+                const c1: f64 = 0.8359375;
+                const c2: f64 = 18.8515625;
+                const c3: f64 = 18.6875;
+                const m: f64 = 78.84375;
+                const n: f64 = 0.1593017578125;
+
+                // Inverting this to give the EOTF required for the profile
+                // (and confirmed by Rec. ITU-R BT.2100-2, Table 4) gives
+                //
+                // Y = ( max[( X^(1/m) - c1 ), 0] ÷ ( c2 - c3 * X^(1/m) ) )^(1/n)
+                let table = build_trc_table(NUM_TRC_TABLE_ENTRIES, |x| {
+                    ((x.powf(1. / m) - c1).max(0.) / (c2 - c3 * x.powf(1. / m))).powf(1. / n)
+                });
+                curveType::Curve(table)
+            }
+            TransferCharacteristics::Smpte428 => unimplemented!(),
+            TransferCharacteristics::Hlg => {
+                // The opto-electronic transfer characteristic function (OETF)
+                // as defined in ITU-T H.273 table 3, row 18:
+                //
+                // V = a * Ln(12 * Lc - b) + c  for 1      >= Lc >  1 ÷ 12
+                // V = Sqrt(3) * Lc^0.5         for 1 ÷ 12 >= Lc >= 0
+                const a: f64 = 0.17883277;
+                const b: f64 = 0.28466892;
+                const c: f64 = 0.55991073;
+
+                // Inverting this to give the EOTF required for the profile
+                // (and confirmed by Rec. ITU-R BT.2100-2, Table 4) gives
+                //
+                // Y = (X^2) / 3             for 0   <= X <= 0.5
+                // Y = ((e^((X-c)/a))+b)/12  for 0.5 <  X <= 1
+                let table = build_trc_table(NUM_TRC_TABLE_ENTRIES, |x| {
+                    if x <= 0.5 {
+                        let y1 = x.powf(2.) / 3.;
+                        assert!((0. ..=1. / 12.).contains(&y1));
+                        y1
+                    } else {
+                        let y2 = (std::f64::consts::E.powf((x - c) / a) + b) / 12.;
+                        assert!(y2 > 1. / 12. && y2 <= 1.);
+                        y2
+                    }
+                });
+                curveType::Curve(table)
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+fn check_transfer_characteristics(cicp: TransferCharacteristics, icc_path: &str) {
+    let mut cicp_out = [0u8; crate::transform::PRECACHE_OUTPUT_SIZE];
+    let mut icc_out = [0u8; crate::transform::PRECACHE_OUTPUT_SIZE];
+    let cicp_tc = curveType::from(cicp);
+    let icc = Profile::new_from_path(icc_path).unwrap();
+    let icc_tc = icc.redTRC.as_ref().unwrap();
+
+    eprintln!("cicp_tc: {:?}", cicp_tc);
+    eprintln!("icc_tc: {:?}", icc_tc);
+
+    crate::transform_util::compute_precache(icc_tc, &mut icc_out);
+    crate::transform_util::compute_precache(&cicp_tc, &mut cicp_out);
+
+    let mut off_by_one = 0;
+    for i in 0..cicp_out.len() {
+        match (cicp_out[i] as i16) - (icc_out[i] as i16) {
+            0 => {}
+            1 | -1 => {
+                off_by_one += 1;
+            }
+            _ => assert_eq!(cicp_out[i], icc_out[i], "difference at index {}", i),
+        }
+    }
+    eprintln!("{} / {} off by one", off_by_one, cicp_out.len());
+}
+
+#[test]
+fn srgb_transfer_characteristics() {
+    check_transfer_characteristics(TransferCharacteristics::Srgb, "sRGB_lcms.icc");
+}
+
+#[test]
+fn bt709_transfer_characteristics() {
+    check_transfer_characteristics(TransferCharacteristics::Bt709, "ITU-709.icc");
+}
+
+#[test]
+fn bt2020_10bit_transfer_characteristics() {
+    check_transfer_characteristics(TransferCharacteristics::Bt2020_10bit, "ITU-2020.icc");
+}
+
+#[test]
+fn bt2020_12bit_transfer_characteristics() {
+    check_transfer_characteristics(TransferCharacteristics::Bt2020_12bit, "ITU-2020.icc");
+}
+
 impl Profile {
     //XXX: it would be nice if we had a way of ensuring
     // everything in a profile was initialized regardless of how it was created
@@ -982,33 +1468,15 @@ impl Profile {
         Some(profile)
     }
     pub fn new_sRGB() -> Box<Profile> {
-        let Rec709Primaries = qcms_CIE_xyYTRIPLE {
-            red: {
-                qcms_CIE_xyY {
-                    x: 0.6400,
-                    y: 0.3300,
-                    Y: 1.0,
-                }
-            },
-            green: {
-                qcms_CIE_xyY {
-                    x: 0.3000,
-                    y: 0.6000,
-                    Y: 1.0,
-                }
-            },
-            blue: {
-                qcms_CIE_xyY {
-                    x: 0.1500,
-                    y: 0.0600,
-                    Y: 1.0,
-                }
-            },
-        };
         let D65 = qcms_white_point_sRGB();
         let table = build_sRGB_gamma_table(1024);
 
-        let mut srgb = Profile::new_rgb_with_table(D65, Rec709Primaries, &table).unwrap();
+        let mut srgb = Profile::new_rgb_with_table(
+            D65,
+            qcms_CIE_xyYTRIPLE::from(ColourPrimaries::Bt709),
+            &table,
+        )
+        .unwrap();
         srgb.is_srgb = true;
         srgb
     }
@@ -1019,29 +1487,7 @@ impl Profile {
     }
 
     pub(crate) fn new_sRGB_parametric() -> Box<Profile> {
-        let primaries = qcms_CIE_xyYTRIPLE {
-            red: {
-                qcms_CIE_xyY {
-                    x: 0.6400,
-                    y: 0.3300,
-                    Y: 1.0,
-                }
-            },
-            green: {
-                qcms_CIE_xyY {
-                    x: 0.3000,
-                    y: 0.6000,
-                    Y: 1.0,
-                }
-            },
-            blue: {
-                qcms_CIE_xyY {
-                    x: 0.1500,
-                    y: 0.0600,
-                    Y: 1.0,
-                }
-            },
-        };
+        let primaries = qcms_CIE_xyYTRIPLE::from(ColourPrimaries::Bt709);
         let white_point = qcms_white_point_sRGB();
         let mut profile = profile_create();
         set_rgb_colorants(&mut profile, white_point, primaries);
@@ -1085,6 +1531,25 @@ impl Profile {
         profile.color_space = RGB_SIGNATURE;
         profile.pcs = XYZ_TYPE;
         profile
+    }
+
+    pub fn new_cicp(cp: ColourPrimaries, tc: TransferCharacteristics) -> Option<Box<Profile>> {
+        let mut profile = profile_create();
+        //XXX: should store the whitepoint
+        if !set_rgb_colorants(&mut profile, cp.white_point(), qcms_CIE_xyYTRIPLE::from(cp)) {
+            return None;
+        }
+        let curve = curveType::from(tc);
+        profile.redTRC = Some(Box::new(curve.clone()));
+        profile.blueTRC = Some(Box::new(curve.clone()));
+        profile.greenTRC = Some(Box::new(curve));
+        profile.class_type = DISPLAY_DEVICE_PROFILE;
+        profile.rendering_intent = Perceptual;
+        profile.color_space = RGB_SIGNATURE;
+        profile.pcs = XYZ_TYPE;
+
+        profile.is_srgb = (cp, tc) == (ColourPrimaries::Bt709, TransferCharacteristics::Srgb);
+        Some(profile)
     }
 
     pub fn new_gray_with_gamma(gamma: f32) -> Box<Profile> {
