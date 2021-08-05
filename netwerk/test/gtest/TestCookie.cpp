@@ -174,10 +174,10 @@ static inline bool CheckResult(const char* aLhs, uint32_t aRule,
       return PL_strcmp(aLhs, aRhs);
 
     case MUST_CONTAIN:
-      return PL_strstr(aLhs, aRhs) != nullptr;
+      return strstr(aLhs, aRhs) != nullptr;
 
     case MUST_NOT_CONTAIN:
-      return PL_strstr(aLhs, aRhs) == nullptr;
+      return strstr(aLhs, aRhs) == nullptr;
 
     default:
       return false;  // failure

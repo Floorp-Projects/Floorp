@@ -2653,7 +2653,7 @@ bool nsHttpHandler::IsHttp3SupportedByServer(
   for (uint32_t i = 0; i < kHttp3VersionCount; i++) {
     nsAutoCString value(kHttp3Versions[i]);
     value.Append("="_ns);
-    if (PL_strstr(altSvc.get(), value.get())) {
+    if (strstr(altSvc.get(), value.get())) {
       return true;
     }
   }
