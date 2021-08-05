@@ -58,17 +58,16 @@ bool CrashGenerationClient::RequestDumpForException(
 
   message.SetData(&info, sizeof(info));
 
-  const mach_msg_timeout_t kSendTimeoutMs = 2 * 1000;
-  kern_return_t result = sender_.SendMessage(message, kSendTimeoutMs);
+  kern_return_t result = sender_.SendMessage(message, MACH_MSG_TIMEOUT_NONE);
   if (result != KERN_SUCCESS)
     return false;
 
   // Give the server slightly longer to reply since it has to
   // inspect this task and write the minidump.
-  const mach_msg_timeout_t kReceiveTimeoutMs = 5 * 1000;
   MachReceiveMessage acknowledge_message;
   result = acknowledge_port.WaitForMessage(&acknowledge_message,
-					   kReceiveTimeoutMs);
+                                           MACH_MSG_TIMEOUT_NONE);
+
   return result == KERN_SUCCESS;
 }
 
