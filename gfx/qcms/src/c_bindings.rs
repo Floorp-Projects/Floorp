@@ -63,6 +63,14 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_table(
     profile.map_or_else(null_mut, Box::into_raw)
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn qcms_profile_create_cicp(
+    cp: ColourPrimaries,
+    tc: TransferCharacteristics,
+) -> *mut Profile {
+    Profile::new_cicp(cp, tc).map_or_else(null_mut, Box::into_raw)
+}
+
 /* qcms_profile_from_memory does not hold a reference to the memory passed in */
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_from_memory(
