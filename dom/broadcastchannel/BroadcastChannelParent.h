@@ -23,7 +23,7 @@ class BroadcastChannelService;
 class BroadcastChannelParent final : public PBroadcastChannelParent {
   friend class mozilla::ipc::BackgroundParentImpl;
 
-  typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
+  using PrincipalInfo = mozilla::ipc::PrincipalInfo;
 
  private:
   explicit BroadcastChannelParent(const nsAString& aOriginChannelKey);
