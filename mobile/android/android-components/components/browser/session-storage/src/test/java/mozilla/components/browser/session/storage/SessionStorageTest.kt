@@ -421,6 +421,7 @@ internal fun TabSessionState.assertSameAs(tab: RecoverableTab) {
     assertEquals(contextId, tab.contextId)
     assertEquals(lastAccess, tab.lastAccess)
     assertEquals(readerState, tab.readerState)
+    assertEquals(content.private, tab.private)
     assertEquals(
         (engineState.engineSessionState as? FakeEngineSessionState)?.value ?: "---",
         (tab.state as FakeEngineSessionState).value

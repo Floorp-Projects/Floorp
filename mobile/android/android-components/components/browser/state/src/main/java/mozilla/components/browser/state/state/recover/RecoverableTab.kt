@@ -83,6 +83,7 @@ fun RecoverableTab.toTabSessionState() = createTab(
     lastAccess = lastAccess,
     createdAt = createdAt,
     lastMediaAccessState = lastMediaAccessState,
+    private = private,
     historyMetadata = historyMetadata,
     source = source,
     restored = true
