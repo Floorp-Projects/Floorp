@@ -22,10 +22,23 @@ class ScreenshotsUI extends HTMLElement {
     );
     let templateContent = template.content;
     this.appendChild(templateContent.cloneNode(true));
+
+    this._cancelButton = this.querySelector(".highlight-button-cancel");
+    this._cancelButton.addEventListener("click", this);
+    this._copyButton = this.querySelector(".highlight-button-copy");
+    this._copyButton.addEventListener("click", this);
+    this._downloadButton = this.querySelector(".highlight-button-download");
+    this._downloadButton.addEventListener("click", this);
   }
 
   handleEvent(event) {
-    // TODO: handle button clicks
+    if (event.type == "click" && event.target == this._cancelButton) {
+      //TODO hook up close functionality
+    } else if (event.type == "click" && event.target == this._copyButton) {
+      //TODO hook up copy functionality
+    } else if (event.type == "click" && event.target == this._downloadButton) {
+      //TODO hook up download functionality
+    }
   }
 }
 customElements.define("screenshots-ui", ScreenshotsUI);
