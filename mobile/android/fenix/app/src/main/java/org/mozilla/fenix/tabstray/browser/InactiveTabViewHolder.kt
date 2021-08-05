@@ -11,6 +11,7 @@ import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.concept.tabstray.Tab
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.InactiveFooterItemBinding
+import org.mozilla.fenix.databinding.InactiveRecentlyClosedItemBinding
 import org.mozilla.fenix.databinding.InactiveTabListItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
@@ -58,6 +59,28 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 
         companion object {
             const val LAYOUT_ID = R.layout.inactive_tab_list_item
+        }
+    }
+
+    class RecentlyClosedHolder(
+        itemView: View,
+        private val browserTrayInteractor: BrowserTrayInteractor,
+    ) : InactiveTabViewHolder(itemView) {
+
+        val binding = InactiveRecentlyClosedItemBinding.bind(itemView)
+
+        fun bind() {
+            val context = itemView.context
+            binding.inactiveRecentlyClosedText.text =
+                context.getString(R.string.tab_tray_inactive_recently_closed)
+
+            binding.inactiveRecentlyClosed.setOnClickListener {
+                browserTrayInteractor.onRecentlyClosedClicked()
+            }
+        }
+
+        companion object {
+            const val LAYOUT_ID = R.layout.inactive_recently_closed_item
         }
     }
 

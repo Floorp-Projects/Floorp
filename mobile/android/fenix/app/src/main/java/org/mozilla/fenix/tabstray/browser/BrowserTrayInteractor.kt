@@ -30,6 +30,11 @@ interface BrowserTrayInteractor : SelectionInteractor<Tab>, UserInteractionHandl
      * TabTray's Floating Action Button clicked.
      */
     fun onFabClicked(isPrivate: Boolean)
+
+    /**
+     * Recently Closed item is clicked.
+     */
+    fun onRecentlyClosedClicked()
 }
 
 /**
@@ -102,5 +107,12 @@ class DefaultBrowserTrayInteractor(
      */
     override fun onFabClicked(isPrivate: Boolean) {
         controller.handleOpeningNewTab(isPrivate)
+    }
+
+    /**
+     * See [BrowserTrayInteractor.onRecentlyClosedClicked]
+     */
+    override fun onRecentlyClosedClicked() {
+        controller.handleNavigateToRecentlyClosed()
     }
 }

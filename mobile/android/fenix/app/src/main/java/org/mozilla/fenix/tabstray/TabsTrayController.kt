@@ -59,6 +59,11 @@ interface TabsTrayController {
     fun handleMultipleTabsDeletion(tabs: Collection<Tab>)
 
     /**
+     * Navigate from TabsTray to Recently Closed section in the History fragment.
+     */
+    fun handleNavigateToRecentlyClosed()
+
+    /**
      * Set the list of [tabs] into the inactive state.
      *
      * ⚠️ DO NOT USE THIS OUTSIDE OF DEBUGGING/TESTING.
@@ -158,6 +163,15 @@ class DefaultTabsTrayController(
             }
         }
         showUndoSnackbarForTab(isPrivate)
+    }
+
+    /**
+     * Dismisses the tabs tray and navigates to the Recently Closed section in the History fragment.
+     */
+    override fun handleNavigateToRecentlyClosed() {
+        dismissTray()
+
+        navController.navigate(R.id.recentlyClosedFragment)
     }
 
     /**
