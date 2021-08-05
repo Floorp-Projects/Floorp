@@ -70,8 +70,6 @@ static GtkWidget* get_gtk_widget_for_wl_surface(struct wl_surface* surface) {
   return GTK_WIDGET(user_data);
 }
 
-NS_IMPL_ISUPPORTS(DataOffer, nsISupports);
-
 static void data_offer_offer(void* data, struct wl_data_offer* wl_data_offer,
                              const char* type) {
   auto* offer = static_cast<DataOffer*>(data);
@@ -86,12 +84,8 @@ static void data_offer_offer(void* data, struct wl_data_offer* wl_data_offer,
 static void data_offer_source_actions(void* data,
                                       struct wl_data_offer* wl_data_offer,
                                       uint32_t source_actions) {
-  auto* offer = static_cast<DataOffer*>(data);
-  WaylandDragAndDropDataOffer* dragContext =
-      offer->GetAsWaylandDragAndDropDataOffer();
-  if (dragContext) {
-    dragContext->SetAvailableDragActions(source_actions);
-  }
+  auto* dragContext = static_cast<DataOffer*>(data);
+  dragContext->SetAvailableDragActions(source_actions);
 }
 
 /* Advertise recently selected drag and drop action by compositor, based
@@ -99,16 +93,13 @@ static void data_offer_source_actions(void* data,
  */
 static void data_offer_action(void* data, struct wl_data_offer* wl_data_offer,
                               uint32_t dnd_action) {
-  auto* offer = static_cast<DataOffer*>(data);
-  WaylandDragAndDropDataOffer* dropContext =
-      offer->GetAsWaylandDragAndDropDataOffer();
-  if (dropContext) {
-    dropContext->SetSelectedDragAction(dnd_action);
+  auto* dropContext = static_cast<DataOffer*>(data);
+  dropContext->SetSelectedDragAction(dnd_action);
 
+  if (dropContext->GetWidget()) {
     uint32_t time;
     nscoord x, y;
     dropContext->GetLastDropInfo(&time, &x, &y);
-
     WindowDragMotionHandler(dropContext->GetWidget(), nullptr, dropContext, x,
                             y, time);
   }
@@ -131,7 +122,13 @@ DataOffer::DataOffer(wl_data_offer* aDataOffer)
       mMutex("DataOffer"),
       mAsyncContentLength(),
       mAsyncContentData(),
-      mGetterFinished() {
+      mGetterFinished(),
+      mSelectedDragAction(),
+      mAvailableDragActions(),
+      mTime(),
+      mGtkWidget(),
+      mX(),
+      mY() {
   if (mWaylandDataOffer) {
     wl_data_offer_add_listener(
         mWaylandDataOffer, (struct wl_data_offer_listener*)&data_offer_listener,
@@ -263,7 +260,7 @@ char* DataOffer::GetDataInternal(const char* aMimeType,
       if (PR_Now() - entryTime > kClipboardTimeout) {
         break;
       }
-    } else { // G_IO_STATUS_ERROR
+    } else {  // G_IO_STATUS_ERROR
       if (error) {
         NS_WARNING(
             nsPrintfCString("Unexpected error when reading clipboard data: %s",
@@ -336,12 +333,12 @@ char* DataOffer::GetDataAsync(const char* aMimeType, uint32_t* aContentLength) {
   mGetterFinished = false;
 
   RefPtr<DataOffer> offer(this);
-  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
-      "DataOffer::GetDataInternal",
-      [offer, aMimeType]() -> void {
-        offer->GetDataAsyncInternal(aMimeType);
-      }),
-    nsIEventTarget::NS_DISPATCH_NORMAL);
+  NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction("DataOffer::GetDataInternal",
+                             [offer, aMimeType]() -> void {
+                               offer->GetDataAsyncInternal(aMimeType);
+                             }),
+      nsIEventTarget::NS_DISPATCH_NORMAL);
 
   PRTime entryTime = PR_Now();
   while (!mGetterFinished) {
@@ -360,18 +357,16 @@ char* DataOffer::GetDataAsync(const char* aMimeType, uint32_t* aContentLength) {
     return nullptr;
   }
 
-  LOGCLIP(("  ineration over, got data %p len %d\n", mAsyncContentData, mAsyncContentLength));
+  LOGCLIP(("  ineration over, got data %p len %d\n", mAsyncContentData,
+           mAsyncContentLength));
   *aContentLength = mAsyncContentLength;
   return mAsyncContentData;
 }
 
-void WaylandDragAndDropDataOffer::DragOfferAccept(const char* aMimeType) {
-  LOGDRAG(("WaylandDragAndDropDataOffer::DragOfferAccept MIME %s mTime %d\n",
-           aMimeType, mTime));
+void DataOffer::DragOfferAccept(const char* aMimeType) {
+  LOGDRAG(("DataOffer::DragOfferAccept MIME %s mTime %d\n", aMimeType, mTime));
   if (!HasTarget(aMimeType)) {
-    LOGCLIP(
-        ("  WaylandDragAndDropDataOffer: DataOffer does not contain %s MIME!\n",
-         aMimeType));
+    LOGCLIP(("  DataOffer: DataOffer does not contain %s MIME!\n", aMimeType));
     return;
   }
   wl_data_offer_accept(mWaylandDataOffer, mTime, aMimeType);
@@ -380,13 +375,11 @@ void WaylandDragAndDropDataOffer::DragOfferAccept(const char* aMimeType) {
 /* We follow logic of gdk_wayland_drag_context_commit_status()/gdkdnd-wayland.c
  * here.
  */
-void WaylandDragAndDropDataOffer::SetDragStatus(
-    GdkDragAction aPreferredAction) {
+void DataOffer::SetDragStatus(GdkDragAction aPreferredAction) {
   uint32_t preferredAction = gdk_to_wl_actions(aPreferredAction);
   uint32_t allActions = WL_DATA_DEVICE_MANAGER_DND_ACTION_NONE;
 
-  LOGDRAG(("WaylandDragAndDropDataOffer::SetDragStatus aPreferredAction %d\n",
-           aPreferredAction));
+  LOGDRAG(("DataOffer::SetDragStatus aPreferredAction %d\n", aPreferredAction));
 
   /* We only don't choose a preferred action if we don't accept any.
    * If we do accept any, it is currently alway copy and move
@@ -411,29 +404,17 @@ void WaylandDragAndDropDataOffer::SetDragStatus(
   }
 }
 
-void WaylandDragAndDropDataOffer::SetSelectedDragAction(
-    uint32_t aWaylandAction) {
+void DataOffer::SetSelectedDragAction(uint32_t aWaylandAction) {
   mSelectedDragAction = aWaylandAction;
 }
 
-GdkDragAction WaylandDragAndDropDataOffer::GetSelectedDragAction() {
+GdkDragAction DataOffer::GetSelectedDragAction() {
   return wl_to_gdk_actions(mSelectedDragAction);
 }
 
-void WaylandDragAndDropDataOffer::SetAvailableDragActions(
-    uint32_t aWaylandActions) {
+void DataOffer::SetAvailableDragActions(uint32_t aWaylandActions) {
   mAvailableDragActions = aWaylandActions;
 }
-
-WaylandDragAndDropDataOffer::WaylandDragAndDropDataOffer(
-    wl_data_offer* aDataOffer)
-    : DataOffer(aDataOffer),
-      mSelectedDragAction(),
-      mAvailableDragActions(),
-      mTime(),
-      mGtkWidget(),
-      mX(),
-      mY() {}
 
 bool PrimaryDataOffer::RequestDataTransfer(const char* aMimeType, int fd) {
   if (mPrimaryDataOfferGtk) {
@@ -504,30 +485,27 @@ PrimaryDataOffer::~PrimaryDataOffer(void) {
   }
 }
 
-void WaylandDragAndDropDataOffer::DropDataEnter(GtkWidget* aGtkWidget,
-                                                uint32_t aTime, nscoord aX,
-                                                nscoord aY) {
+void DataOffer::DropDataEnter(GtkWidget* aGtkWidget, uint32_t aTime, nscoord aX,
+                              nscoord aY) {
   mTime = aTime;
   mGtkWidget = aGtkWidget;
   mX = aX;
   mY = aY;
 }
 
-void WaylandDragAndDropDataOffer::DropMotion(uint32_t aTime, nscoord aX,
-                                             nscoord aY) {
+void DataOffer::DropMotion(uint32_t aTime, nscoord aX, nscoord aY) {
   mTime = aTime;
   mX = aX;
   mY = aY;
 }
 
-void WaylandDragAndDropDataOffer::GetLastDropInfo(uint32_t* aTime, nscoord* aX,
-                                                  nscoord* aY) {
+void DataOffer::GetLastDropInfo(uint32_t* aTime, nscoord* aX, nscoord* aY) {
   *aTime = mTime;
   *aX = mX;
   *aY = mY;
 }
 
-GdkDragAction WaylandDragAndDropDataOffer::GetAvailableDragActions() {
+GdkDragAction DataOffer::GetAvailableDragActions() {
   GdkDragAction gdkAction = GetSelectedDragAction();
 
   // We emulate gdk_drag_context_get_actions() here.
@@ -538,7 +516,7 @@ GdkDragAction WaylandDragAndDropDataOffer::GetAvailableDragActions() {
   return gdkAction;
 }
 
-GList* WaylandDragAndDropDataOffer::GetDragTargets() {
+GList* DataOffer::GetDragTargets() {
   int targetNums;
   GdkAtom* atoms = GetTargets(&targetNums);
 
@@ -550,9 +528,8 @@ GList* WaylandDragAndDropDataOffer::GetDragTargets() {
   return targetList;
 }
 
-char* WaylandDragAndDropDataOffer::GetDragData(const char* aMimeType,
-                                               uint32_t* aContentLength) {
-  LOGDRAG(("WaylandDragAndDropDataOffer::GetData %s\n", aMimeType));
+char* DataOffer::GetDragData(const char* aMimeType, uint32_t* aContentLength) {
+  LOGDRAG(("DataOffer::GetData %s\n", aMimeType));
   if (!HasTarget(aMimeType)) {
     return nullptr;
   }
@@ -681,7 +658,6 @@ void nsRetrievalContextWayland::AddDragAndDropDataOffer(
 
   // Remove any existing D&D contexts.
   mDragContext = nullptr;
-
   if (aDropDataOffer) {
     mDragContext = FindActiveOffer(aDropDataOffer, /* remove */ true);
   }
@@ -713,14 +689,12 @@ static void data_device_enter(void* data, struct wl_data_device* data_device,
                               uint32_t time, struct wl_surface* surface,
                               int32_t x_fixed, int32_t y_fixed,
                               struct wl_data_offer* offer) {
+  LOGDRAG(("nsWindow data_device_enter"));
   nsRetrievalContextWayland* context =
       static_cast<nsRetrievalContextWayland*>(data);
   context->AddDragAndDropDataOffer(offer);
 
-  RefPtr<DataOffer> dataOffer = context->GetDragContext();
-  WaylandDragAndDropDataOffer* dragContext =
-      dataOffer->GetAsWaylandDragAndDropDataOffer();
-
+  RefPtr<DataOffer> dragContext = context->GetDragContext();
   if (dragContext) {
     GtkWidget* gtkWidget = get_gtk_widget_for_wl_surface(surface);
     if (!gtkWidget) {
@@ -736,12 +710,11 @@ static void data_device_enter(void* data, struct wl_data_device* data_device,
 }
 
 static void data_device_leave(void* data, struct wl_data_device* data_device) {
+  LOGDRAG(("nsWindow data_device_leave"));
   nsRetrievalContextWayland* context =
       static_cast<nsRetrievalContextWayland*>(data);
 
-  RefPtr<DataOffer> dataOffer = context->GetDragContext();
-  WaylandDragAndDropDataOffer* dropContext =
-      dataOffer->GetAsWaylandDragAndDropDataOffer();
+  RefPtr<DataOffer> dropContext = context->GetDragContext();
   if (dropContext) {
     WindowDragLeaveHandler(dropContext->GetWidget());
 
@@ -754,13 +727,11 @@ static void data_device_leave(void* data, struct wl_data_device* data_device) {
 static void data_device_motion(void* data, struct wl_data_device* data_device,
                                uint32_t time, int32_t x_fixed,
                                int32_t y_fixed) {
+  LOGDRAG(("nsWindow data_device_motion"));
   nsRetrievalContextWayland* context =
       static_cast<nsRetrievalContextWayland*>(data);
 
-  RefPtr<DataOffer> dataOffer = context->GetDragContext();
-  WaylandDragAndDropDataOffer* dropContext =
-      dataOffer->GetAsWaylandDragAndDropDataOffer();
-
+  RefPtr<DataOffer> dropContext = context->GetDragContext();
   if (dropContext) {
     nscoord x = wl_fixed_to_int(x_fixed);
     nscoord y = wl_fixed_to_int(y_fixed);
@@ -774,13 +745,11 @@ static void data_device_motion(void* data, struct wl_data_device* data_device,
 }
 
 static void data_device_drop(void* data, struct wl_data_device* data_device) {
+  LOGDRAG(("nsWindow data_device_drop"));
   nsRetrievalContextWayland* context =
       static_cast<nsRetrievalContextWayland*>(data);
 
-  RefPtr<DataOffer> dataOffer = context->GetDragContext();
-  WaylandDragAndDropDataOffer* dropContext =
-      dataOffer->GetAsWaylandDragAndDropDataOffer();
-
+  RefPtr<DataOffer> dropContext = context->GetDragContext();
   if (dropContext) {
     uint32_t time;
     nscoord x, y;
@@ -801,9 +770,9 @@ static void data_device_drop(void* data, struct wl_data_device* data_device) {
  *
  * data_device_selection - It's called when the new wl_data_offer
  *                         is a clipboard content.
- *
  * data_device_enter - It's called when the new wl_data_offer is a drag & drop
  *                     content and it's tied to actual wl_surface.
+ *
  * data_device_leave - It's called when the wl_data_offer (drag & dop) is not
  *                     valid any more.
  * data_device_motion - It's called when the drag and drop selection moves
@@ -1045,7 +1014,8 @@ const char* nsRetrievalContextWayland::GetClipboardData(
   NS_ASSERTION(mClipboardData == nullptr && mClipboardDataLength == 0,
                "Looks like we're leaking clipboard data here!");
 
-  LOGCLIP(("nsRetrievalContextWayland::GetClipboardData [%p] mime %s\n", this, aMimeType));
+  LOGCLIP(("nsRetrievalContextWayland::GetClipboardData [%p] mime %s\n", this,
+           aMimeType));
 
   /* If actual clipboard data is owned by us we don't need to go
    * through Wayland but we ask Gtk+ to directly call data
