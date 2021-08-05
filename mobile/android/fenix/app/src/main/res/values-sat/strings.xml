@@ -472,6 +472,8 @@
     <string name="preferences_marketing_data">ᱢᱟᱨᱠᱮᱴᱤᱝ ᱰᱟᱴᱟ</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Leanplum ᱚᱠᱚᱭ ᱫᱚ ᱟᱞᱮᱭᱤᱡ ᱢᱚᱵᱟᱭᱤᱞ ᱢᱟᱨᱠᱮᱴᱤᱝ ᱣᱮᱱᱰᱚᱨ ᱠᱟᱱᱟᱭ ᱩᱱᱤ ᱥᱟᱞᱟᱜ %1$s ᱨᱮ ᱯᱷᱤᱪᱚᱨ ᱵᱟᱵᱚᱛ ᱵᱮᱵᱷᱟᱨᱚᱜ ᱠᱟᱱ ᱰᱟᱴᱟ ᱦᱟᱹᱴᱤᱧᱚᱜᱼᱟ ᱾</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Adjust, ᱟᱞᱮᱭᱤᱡ ᱢᱚᱵᱟᱭᱤᱠ ᱢᱟᱨᱠᱮᱴᱤᱝ ᱣᱮᱱᱰᱚᱨ ᱥᱟᱶ ᱵᱮᱥᱤᱠ ᱭᱩᱥᱮᱡᱽ ᱰᱟᱴᱟ ᱦᱟᱹᱴᱤᱧᱚᱜᱼᱟ ᱾</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">ᱯᱟᱲᱦᱟᱣ ᱠᱚ</string>
     <!-- Summary for studies preferences -->
@@ -1051,6 +1053,10 @@
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_title">%1$s ᱫᱚ ᱞᱚᱜᱚᱱ ᱜᱮ ᱟᱨ ᱯᱨᱟᱭᱣᱮᱴ ᱜᱮ ᱠᱟᱹᱢᱤᱟᱭ</string>
 
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">%1$s ᱫᱚ ᱟᱢᱟᱜ ᱢᱩᱞ ᱯᱷᱮᱲᱟᱛ ᱵᱽᱨᱟᱩᱡᱚᱨ ᱥᱮᱴ ᱢᱮ</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">ᱛᱩᱢᱟᱹᱞ ᱢᱮᱴᱟᱣᱮᱱᱟ</string>
@@ -1217,6 +1223,8 @@
     <string name="onboarding_whats_new_description_linktext">ᱱᱚᱰᱮ ᱛᱮᱞᱟ ᱠᱚ ᱧᱟᱢ ᱟᱢ</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">ᱥᱟᱫᱷᱚᱱ ᱵᱷᱤᱛᱨᱭ ᱨᱮ Firefox ᱥᱤᱝᱠ ᱢᱮ</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">ᱯᱷᱟᱭᱟᱹᱨᱯᱷᱚᱠᱥ ᱨᱮ ᱵᱩᱠᱢᱟᱨᱠᱥ, ᱦᱤᱛᱟᱹᱞ, ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱨᱮ ᱟᱹᱜᱩ ᱪᱷᱚᱭ ᱢᱮ ᱾</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1245,6 +1253,12 @@
     <string name="onboarding_tracking_protection_strict_button">ᱱᱤᱦᱟᱹᱛ (ᱵᱟᱛᱟᱣᱮᱢᱠᱟᱱᱟ)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">ᱱᱤᱦᱟᱹᱛ</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">ᱥᱟᱦᱴᱟ ᱞᱚᱜᱚᱱ ᱞᱳᱰ ᱞᱟᱹᱜᱤᱫ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱞᱚᱠ ᱠᱚᱟᱭ, ᱦᱮᱞᱮ ᱥᱟᱦᱴᱟ ᱞᱳᱰ ᱨᱮ ᱰᱤᱜᱟᱹᱣ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">ᱟᱢᱟᱜ ᱴᱩᱞᱵᱟᱨ ᱯᱞᱮᱥᱢᱮᱱᱴ ᱨᱟᱠᱟᱵᱽ ᱛᱟᱢ</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">ᱴᱩᱞᱵᱟᱨ ᱫᱚ ᱥᱮᱴᱮᱨᱚᱜ ᱴᱷᱮᱱ ᱫᱚᱦᱚᱭ ᱢᱮ ᱾ ᱞᱟᱛᱟᱨ ᱨᱮ ᱫᱚᱦᱚᱭ ᱢᱮ, ᱟᱨ ᱵᱟᱝ ᱪᱮᱛᱟᱱ ᱥᱮᱫ ᱩᱪᱟᱹᱲ ᱢᱮ ᱾</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">ᱱᱤᱡᱮᱨᱟᱜ ᱨᱮ ᱵᱨᱟᱩᱡ ᱢᱮ</string>
     <!-- text for the private browsing onboarding card description
@@ -1257,6 +1271,9 @@
 
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">ᱟᱢᱟᱜ ᱱᱤᱥᱚᱱ</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
+    <string name="onboarding_privacy_notice_description2">ᱟᱞᱮ  %s ᱞᱮ ᱰᱤᱡᱟᱭᱤᱱ ᱟᱠᱟᱫᱼᱟ ᱚᱠᱟ ᱫᱚ ᱡᱟᱦᱟᱱᱟᱜ ᱠᱚ ᱚᱱᱞᱟᱭᱤᱱ ᱦᱟᱹᱴᱤᱧ ᱨᱮ ᱟᱨ ᱚᱠᱟ ᱠᱚ ᱟᱞᱮ ᱦᱟᱹᱤᱧ ᱟᱞᱮᱭᱟᱢ, ᱜᱚᱲᱚ ᱮᱢᱟᱭ ᱾</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ᱟᱞᱮᱭᱟᱜ ᱱᱤᱥᱚᱱ ᱱᱚᱴᱤᱥ ᱯᱟᱲᱦᱟᱣ ᱯᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
@@ -1268,6 +1285,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">ᱩᱭᱦᱟᱹᱨ ᱵᱟᱪᱷᱟᱣ ᱛᱟᱢ</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱵᱮᱴᱨᱭ ᱵᱚᱪᱚᱛ ᱢᱮ ᱟᱨ ᱟᱢᱟᱜ ᱢᱮᱫ ᱵᱟᱧᱪᱟᱣ ᱛᱟᱢ ᱧᱩᱛ ᱩᱭᱦᱟᱹᱨ ᱪᱟᱹᱞᱩ ᱠᱟᱛᱮ ᱾</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">ᱟᱪᱛᱮ</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1321,10 +1340,14 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">ᱱᱟᱯ (ᱢᱩᱞ ᱯᱷᱮᱲᱟᱛ)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">ᱯᱨᱟᱭᱣᱮᱥᱭ ᱟᱨ ᱯᱚᱨᱯᱷᱚᱨᱢᱮᱱᱥ ᱞᱟᱹᱜᱤᱫ ᱥᱚᱢᱟᱱ ᱾ ᱥᱟᱦᱴᱟ ᱢᱩᱞ ᱞᱮᱠᱷᱟᱛᱮ ᱞᱟᱫᱮᱜᱼᱟ ᱾</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">ᱢᱩᱞ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱨᱚᱠᱷᱭᱟ ᱫᱚ ᱪᱮᱫ ᱮ ᱵᱞᱚᱠ ᱪᱷᱚ ᱠᱮᱜᱼᱟᱭ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">ᱱᱤᱦᱟᱹᱛ</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">ᱥᱟᱦᱴᱟ ᱞᱚᱜᱚᱱ ᱞᱳᱰ ᱞᱟᱹᱜᱤᱫ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱞᱚᱠ ᱠᱚᱟᱭ, ᱦᱮᱞᱮ ᱥᱟᱦᱴᱟ ᱞᱳᱰ ᱨᱮ ᱰᱤᱜᱟᱹᱣ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">ᱴᱷᱤᱴ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱨᱩᱠᱷᱭᱟ ᱫᱚ ᱪᱮᱫ ᱵᱞᱚᱠ ᱠᱮᱜᱼᱟᱭ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1465,6 +1488,8 @@
     <string name="preferences_passwords_autofill">ᱟᱪᱛᱮ ᱯᱮᱨᱮᱡᱽ</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ᱞᱚᱜᱤᱱ ᱠᱚ ᱥᱤᱸᱠ ᱢᱮ</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">ᱡᱷᱚᱛᱚ ᱥᱟᱫᱷᱚᱱ ᱵᱷᱤᱛᱨᱤ ᱨᱮ ᱵᱚᱞᱚ ᱠᱚ ᱥᱤᱝᱠ ᱢᱮ</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">ᱨᱤᱠᱚᱱᱮᱠᱼᱴ</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1559,6 +1584,10 @@
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ</string>
 
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">ᱥᱟᱺᱪᱟᱣ ᱟᱨ ᱠᱟᱰ ᱠᱚ ᱟᱡ ᱛᱮ ᱯᱮᱨᱮᱡᱽ ᱢᱮ</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">ᱰᱟᱴᱟ ᱫᱚ ᱮᱱᱠᱨᱤᱯᱴᱮᱰ ᱠᱟᱱᱟ</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">ᱡᱷᱚᱛᱚ ᱥᱟᱫᱷᱚᱱ ᱵᱷᱤᱛᱨᱤ ᱨᱮ ᱠᱟᱰ ᱥᱤᱝᱠ ᱢᱮ</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1567,10 +1596,55 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
 
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">ᱥᱟᱺᱪᱟᱣ ᱠᱟᱰ ᱠᱚ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">ᱠᱟᱰ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Title of the "Edit card" screen -->
     <string name="credit_cards_edit_card">ᱠᱟᱰ ᱥᱟᱯᱲᱟᱣ ᱢᱮ</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">ᱠᱟᱲ ᱮᱞ</string>
+
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">ᱮᱠᱥᱯᱟᱭᱨᱮᱥᱚᱱ ᱢᱟᱦᱟᱸ</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">ᱮᱠᱥᱯᱟᱭᱨᱮᱥᱚᱱ ᱢᱟᱦᱟᱸ ᱪᱟᱸᱫᱚ</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">ᱮᱠᱥᱯᱟᱭᱨᱮᱥᱚᱱ ᱢᱟᱦᱟᱸ ᱥᱮᱨᱢᱟ</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">ᱠᱟᱰ ᱨᱮ ᱧᱩᱛᱩᱢ</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">ᱠᱟᱰ ᱱᱤᱠᱱᱮᱢ</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">ᱠᱟᱰ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">ᱠᱟᱰ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">ᱥᱟᱺᱪᱟᱣ</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">ᱥᱟᱺᱪᱟᱣ</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">ᱵᱟᱹᱰᱨᱟᱹ</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">ᱥᱟᱺᱪᱟᱣ ᱠᱟᱱ ᱠᱟᱰ</string>
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">ᱴᱷᱤᱠ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱮᱞ ᱟᱫᱮᱨ ᱢᱮ</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">ᱱᱚᱶᱟ ᱡᱟᱭᱜᱟ ᱯᱮᱨᱮᱡᱽ ᱢᱮ</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">ᱥᱟᱺᱪᱟᱣᱟᱠᱟᱱ ᱠᱟᱰ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">ᱟᱢᱟᱜ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮ</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">ᱥᱟᱫᱷᱚᱱ ᱠᱩᱞᱩᱯ ᱪᱤᱱᱦᱟᱹ, ᱯᱤᱱ, ᱟᱨ ᱵᱟᱝ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱟᱢᱟᱜ ᱥᱟᱺᱪᱟᱣ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱠᱚ ᱮᱢᱟᱱ ᱨᱩᱠᱷᱭᱟ ᱞᱟᱹᱜᱤᱫ ᱡᱩᱫᱤ ᱚᱞᱜᱟ ᱦᱚᱲ ᱴᱷᱮᱱ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱛᱟᱦᱮᱸᱱ ᱠᱷᱟᱱ ᱾</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">ᱱᱤᱛᱚᱜ ᱥᱟᱡᱟᱣ ᱢᱮ</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">ᱛᱟᱭᱚᱢ ᱛᱮ</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱚᱱᱞᱚᱠ ᱢᱮ</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">ᱫᱚᱦᱚ ᱠᱟᱱ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱵᱤᱵᱨᱚᱬ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
@@ -1729,10 +1803,19 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Firefox ᱟᱡ ᱛᱮ ᱠᱷᱩᱞᱟᱹ ᱪᱷᱚ ᱞᱟᱹᱜᱤᱫ ᱣᱮᱵᱥᱟᱭᱤᱴ, ᱤᱢᱮᱞ, ᱟᱨ ᱢᱮᱥᱮᱡᱽ ᱨᱮᱭᱟᱜ ᱞᱤᱝᱠ ᱥᱮᱴ ᱢᱮ ᱾ </string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ᱚᱪᱟᱜ</string>
 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">ᱟᱨᱦᱚᱸ ᱵᱤᱵᱨᱚᱬ ᱞᱟᱹᱜᱤᱫ ᱱᱚᱰᱮ ᱚᱛᱟᱭ ᱢᱮ</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">ᱪᱮᱛᱟᱱ ᱥᱮᱱ ᱱᱮᱣᱤᱜᱮᱴ ᱢᱮ</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">ᱵᱚᱸᱫ</string>
+
+</resources>
