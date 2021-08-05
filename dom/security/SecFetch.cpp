@@ -11,6 +11,7 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsMixedContentBlocker.h"
 #include "nsNetUtil.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
 
 // Helper function which maps an internal content policy type
@@ -117,6 +118,15 @@ bool IsSameOrigin(nsIHttpChannel* aHTTPChannel) {
   NS_GetFinalChannelURI(aHTTPChannel, getter_AddRefs(channelURI));
 
   nsCOMPtr<nsILoadInfo> loadInfo = aHTTPChannel->LoadInfo();
+
+  if (mozilla::BasePrincipal::Cast(loadInfo->TriggeringPrincipal())
+          ->AddonPolicy()) {
+    // If an extension triggered the load that has access to the URI then the
+    // load is considered as same-origin.
+    return mozilla::BasePrincipal::Cast(loadInfo->TriggeringPrincipal())
+        ->AddonAllowsLoad(channelURI);
+  }
+
   bool isPrivateWin = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
   bool isSameOrigin = false;
   nsresult rv = loadInfo->TriggeringPrincipal()->IsSameOrigin(
