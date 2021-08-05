@@ -255,6 +255,25 @@ var SessionFileInternal = {
         let source = await OS.File.read(path, options);
         let parsed = JSON.parse(source);
 
+        if (parsed._cachedObjs) {
+          try {
+            let cacheMap = new Map(parsed._cachedObjs);
+            for (let win of parsed.windows.concat(
+              parsed._closedWindows || []
+            )) {
+              for (let tab of win.tabs.concat(win._closedTabs || [])) {
+                tab.image = cacheMap.get(tab.image) || tab.image;
+              }
+            }
+          } catch (e) {
+            // This is temporary code to clean up after the backout of bug
+            // 1546847. Just in case there are problems in the format of
+            // the parsed data, continue on. Favicons might be broken, but
+            // the session will at least be recovered
+            Cu.reportError(e);
+          }
+        }
+
         if (
           !SessionStore.isFormatVersionCompatible(
             parsed.version || [
