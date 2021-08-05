@@ -44,6 +44,7 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler ondrag;
            attribute EventHandler ondragend;
            attribute EventHandler ondragenter;
+           [Func="Event::IsDragExitEnabled"]
            attribute EventHandler ondragexit;
            attribute EventHandler ondragleave;
            attribute EventHandler ondragover;

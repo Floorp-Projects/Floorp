@@ -844,6 +844,11 @@ void Event::GetWidgetEventType(WidgetEvent* aEvent, nsAString& aType) {
   aType.Truncate();
 }
 
+bool Event::IsDragExitEnabled(JSContext* aCx, JSObject* aGlobal) {
+  return StaticPrefs::dom_event_dragexit_enabled() ||
+         nsContentUtils::IsSystemCaller(aCx);
+}
+
 }  // namespace mozilla::dom
 
 using namespace mozilla;

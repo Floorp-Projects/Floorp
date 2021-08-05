@@ -5004,6 +5004,10 @@ void EventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
   event.mFlags.mIsSynthesizedForTests =
       aDragEvent->mFlags.mIsSynthesizedForTests;
   event.mRelatedTarget = aRelatedTarget;
+  if (aMessage == eDragExit && !StaticPrefs::dom_event_dragexit_enabled()) {
+    event.mFlags.mOnlyChromeDispatch = true;
+  }
+
   mCurrentTargetContent = aTargetContent;
 
   if (aTargetContent != aRelatedTarget) {
