@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::super::{Connection, Output, State, LOCAL_IDLE_TIMEOUT};
+use super::super::{Connection, ConnectionParameters, Output, State};
 use super::{
     assert_full_cwnd, connect, connect_force_idle, connect_rtt_idle, connect_with_rtt,
     default_client, default_server, fill_cwnd, maybe_authenticate, send_and_receive,
@@ -33,7 +33,8 @@ fn pto_works_basic() {
     let mut now = now();
 
     let res = client.process(None, now);
-    assert_eq!(res, Output::Callback(LOCAL_IDLE_TIMEOUT));
+    let idle_timeout = ConnectionParameters::default().get_idle_timeout();
+    assert_eq!(res, Output::Callback(idle_timeout));
 
     // Send data on two streams
     let stream1 = client.stream_create(StreamType::UniDi).unwrap();
@@ -95,7 +96,10 @@ fn pto_works_ping() {
     let mut now = now();
 
     let res = client.process(None, now);
-    assert_eq!(res, Output::Callback(LOCAL_IDLE_TIMEOUT));
+    assert_eq!(
+        res,
+        Output::Callback(ConnectionParameters::default().get_idle_timeout())
+    );
 
     now += Duration::from_secs(10);
 
@@ -313,7 +317,8 @@ fn pto_handshake_complete() {
     // We don't send another PING because the handshake space is done and there
     // is nothing to probe for.
 
-    assert_eq!(cb, LOCAL_IDLE_TIMEOUT - expected_ack_delay);
+    let idle_timeout = ConnectionParameters::default().get_idle_timeout();
+    assert_eq!(cb, idle_timeout - expected_ack_delay);
 }
 
 /// Test that PTO in the Handshake space contains the right frames.

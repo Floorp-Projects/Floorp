@@ -291,6 +291,7 @@ impl Http3Client {
             .conn
             .stream_create(StreamType::BiDi)
             .map_err(|e| Error::map_stream_create_errors(&e))?;
+        self.conn.stream_keep_alive(id, true)?;
 
         // Transform pseudo-header fields
         let mut final_headers = vec![
@@ -439,10 +440,13 @@ impl Http3Client {
         push_id: u64,
         buf: &mut [u8],
     ) -> Res<(usize, bool)> {
-        let stream_id = self.push_handler.borrow_mut().get_active_stream_id(push_id);
-        stream_id.map_or(Err(Error::InvalidStreamId), |id| {
-            self.read_response_data(now, id, buf)
-        })
+        let stream_id = self
+            .push_handler
+            .borrow_mut()
+            .get_active_stream_id(push_id)
+            .ok_or(Error::InvalidStreamId)?;
+        self.conn.stream_keep_alive(stream_id, true)?;
+        self.read_response_data(now, stream_id, buf)
     }
 
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
@@ -759,7 +763,7 @@ mod tests {
     use crate::qpack_encoder_receiver::EncoderRecvStream;
     use crate::settings::{HSetting, HSettingType, H3_RESERVED_SETTINGS};
     use crate::{Http3Server, RecvStream};
-    use neqo_common::{event::Provider, Datagram, Decoder, Encoder};
+    use neqo_common::{event::Provider, qtrace, Datagram, Decoder, Encoder};
     use neqo_crypto::{AllowZeroRtt, AntiReplay, ResumptionToken};
     use neqo_qpack::encoder::QPackEncoder;
     use neqo_transport::tparams::{self, TransportParameter};
@@ -814,6 +818,7 @@ mod tests {
 
     // Encoder stream data
     const ENCODER_STREAM_DATA: &[u8] = &[0x2];
+    const ENCODER_STREAM_CAP_INSTRUCTION: &[u8] = &[0x3f, 0x45];
 
     // Encoder stream data with a change capacity instruction(0x3f, 0x45 = change capacity to 100)
     // This data will be send when 0-RTT is used and we already have a max_table_capacity from
@@ -929,7 +934,9 @@ mod tests {
 
         pub fn create_control_stream(&mut self) {
             // Create control stream
-            self.control_stream_id = Some(self.conn.stream_create(StreamType::UniDi).unwrap());
+            let control = self.conn.stream_create(StreamType::UniDi).unwrap();
+            qtrace!(["TestServer"], "control stream: {}", control);
+            self.control_stream_id = Some(control);
             // Send stream type on the control stream.
             assert_eq!(
                 self.conn
@@ -1126,7 +1133,7 @@ mod tests {
         assert!(client.events().any(connected));
 
         assert_eq!(client.state(), Http3State::Connected);
-        mem::drop(server.conn.process(out.dgram(), now()));
+        server.conn.process_input(out.dgram().unwrap(), now());
         assert!(server.conn.state().connected());
     }
 
@@ -1140,8 +1147,8 @@ mod tests {
 
     fn send_and_receive_client_settings(client: &mut Http3Client, server: &mut TestServer) {
         // send and receive client settings
-        let out = client.process(None, now());
-        mem::drop(server.conn.process(out.dgram(), now()));
+        let dgram = client.process(None, now()).dgram();
+        server.conn.process_input(dgram.unwrap(), now());
         server.check_client_control_qpack_streams_no_resumption();
     }
 
@@ -1155,8 +1162,8 @@ mod tests {
 
         server.create_qpack_streams();
         // Send the server's control and qpack streams data.
-        let out = server.conn.process(None, now());
-        client.process(out.dgram(), now());
+        let dgram = server.conn.process(None, now()).dgram();
+        client.process_input(dgram.unwrap(), now());
 
         // assert no error occured.
         assert_eq!(client.state(), Http3State::Connected);
@@ -1270,8 +1277,8 @@ mod tests {
     ) -> u64 {
         let request_stream_id = make_request(client, close_sending_side, &[]);
 
-        let out = client.process(None, now());
-        mem::drop(server.conn.process(out.dgram(), now()));
+        let dgram = client.process(None, now()).dgram();
+        server.conn.process_input(dgram.unwrap(), now());
 
         // find the new request/response stream and send frame v on it.
         while let Some(e) = server.conn.next_event() {
@@ -1281,18 +1288,28 @@ mod tests {
                     assert_eq!(stream_id.stream_type(), StreamType::BiDi);
                 }
                 ConnectionEvent::RecvStreamReadable { stream_id } => {
-                    assert_eq!(stream_id, request_stream_id);
-                    server.read_and_check_stream_data(
-                        stream_id,
-                        EXPECTED_REQUEST_HEADER_FRAME,
-                        close_sending_side,
-                    );
+                    if stream_id == CLIENT_SIDE_ENCODER_STREAM_ID {
+                        server.read_and_check_stream_data(
+                            stream_id,
+                            ENCODER_STREAM_CAP_INSTRUCTION,
+                            false,
+                        );
+                    } else {
+                        assert_eq!(stream_id, request_stream_id);
+                        server.read_and_check_stream_data(
+                            stream_id,
+                            EXPECTED_REQUEST_HEADER_FRAME,
+                            close_sending_side,
+                        );
+                    }
                 }
                 _ => {}
             }
         }
-        let out = server.conn.process(None, now());
-        client.process(out.dgram(), now());
+        let dgram = server.conn.process_output(now()).dgram();
+        if let Some(d) = dgram {
+            client.process_input(d, now());
+        }
         request_stream_id
     }
 
@@ -1971,6 +1988,44 @@ mod tests {
         assert_eq!(res.unwrap_err(), Error::InvalidStreamId);
 
         client.close(now(), 0, "");
+    }
+
+    /// Force both endpoints into an idle state.
+    /// Do this by opening unidirectional streams at both endpoints and sending
+    /// a partial unidirectional stream type (which the receiver has to buffer),
+    /// then delivering packets out of order.
+    /// This forces the receiver to create an acknowledgment, which will allow
+    /// the peer to become idle.
+    fn force_idle(client: &mut Http3Client, server: &mut TestServer) {
+        // Send a partial unidirectional stream ID.
+        // Note that this can't close the stream as that causes the receiver
+        // to send `MAX_STREAMS`, which would prevent it from becoming idle.
+        fn dgram(c: &mut Connection) -> Datagram {
+            let stream = c.stream_create(StreamType::UniDi).unwrap();
+            let _ = c.stream_send(stream, &[0xc0]).unwrap();
+            c.process_output(now()).dgram().unwrap()
+        }
+
+        let d1 = dgram(&mut client.conn);
+        let d2 = dgram(&mut client.conn);
+        server.conn.process_input(d2, now());
+        server.conn.process_input(d1, now());
+        let d3 = dgram(&mut server.conn);
+        let d4 = dgram(&mut server.conn);
+        client.process_input(d4, now());
+        client.process_input(d3, now());
+        let ack = client.process_output(now()).dgram();
+        server.conn.process_input(ack.unwrap(), now());
+    }
+
+    /// The client should keep a connection alive if it has unanswered requests.
+    #[test]
+    fn fetch_keep_alive() {
+        let (mut client, mut server, _request_stream_id) = connect_and_send_request(true);
+        force_idle(&mut client, &mut server);
+
+        let idle_timeout = ConnectionParameters::default().get_idle_timeout();
+        assert_eq!(client.process_output(now()).callback(), idle_timeout / 2);
     }
 
     // Helper function: read response when a server sends HTTP_RESPONSE_2.
@@ -4292,8 +4347,7 @@ mod tests {
         let _ = server.conn.stream_send(request_stream_id, &[0, 0]).unwrap();
         server.conn.stream_close_send(request_stream_id).unwrap();
         let dgram = server.conn.process_output(now()).dgram();
-        let dgram = client.process(dgram, now()).dgram();
-        server.conn.process_input(dgram.unwrap(), now());
+        client.process_input(dgram.unwrap(), now());
 
         let data_readable_event = |e: &_| matches!(e, Http3ClientEvent::DataReadable { stream_id } if *stream_id == request_stream_id);
         assert_eq!(client.events().filter(data_readable_event).count(), 1);
@@ -4402,6 +4456,52 @@ mod tests {
 
         // Check that the push has been closed, e.g. calling cancel_push should return InvalidStreamId.
         assert_eq!(client.cancel_push(0), Err(Error::InvalidStreamId));
+    }
+
+    /// We can't keep the connection alive on the basis of a push promise,
+    /// nor do we want to if the push promise is not interesting to the client.
+    /// We do the next best thing, which is keep any push stream alive if the
+    /// client reads from it.
+    #[test]
+    fn push_keep_alive() {
+        let (mut client, mut server, request_stream_id) = connect_and_send_request(true);
+        let idle_timeout = ConnectionParameters::default().get_idle_timeout();
+
+        // Promise a push and deliver, but don't close the stream.
+        send_push_promise(&mut server.conn, request_stream_id, 0);
+        server_send_response_and_exchange_packet(
+            &mut client,
+            &mut server,
+            request_stream_id,
+            HTTP_RESPONSE_2,
+            true,
+        );
+        read_response_and_push_events(
+            &mut client,
+            &[PushPromiseInfo {
+                push_id: 0,
+                ref_stream_id: request_stream_id,
+            }],
+            &[], // No push streams yet.
+            request_stream_id,
+        );
+
+        // The client will become idle here.
+        force_idle(&mut client, &mut server);
+        assert_eq!(client.process_output(now()).callback(), idle_timeout);
+
+        // Reading push data will stop the client from being idle.
+        let _ = send_push_data(&mut server.conn, 0, false);
+        let dgram = server.conn.process_output(now()).dgram();
+        client.process_input(dgram.unwrap(), now());
+
+        let mut buf = [0; 16];
+        let (read, fin) = client.push_read_data(now(), 0, &mut buf).unwrap();
+        assert!(read < buf.len());
+        assert!(!fin);
+
+        force_idle(&mut client, &mut server);
+        assert_eq!(client.process_output(now()).callback(), idle_timeout / 2);
     }
 
     #[test]
@@ -5682,7 +5782,7 @@ mod tests {
         assert_eq!(server.encoder.borrow_mut().stats().stream_cancelled_recv, 0);
         let out = client.process(None, now());
         mem::drop(server.conn.process(out.dgram(), now()));
-        let _ = server.encoder_receiver.receive(&mut server.conn).unwrap();
+        mem::drop(server.encoder_receiver.receive(&mut server.conn).unwrap());
         assert_eq!(server.encoder.borrow_mut().stats().stream_cancelled_recv, 1);
     }
 
@@ -5719,7 +5819,7 @@ mod tests {
         assert_eq!(server.encoder.borrow_mut().stats().stream_cancelled_recv, 0);
         let out = client.process(None, now());
         mem::drop(server.conn.process(out.dgram(), now()));
-        let _ = server.encoder_receiver.receive(&mut server.conn).unwrap();
+        mem::drop(server.encoder_receiver.receive(&mut server.conn).unwrap());
         assert_eq!(server.encoder.borrow_mut().stats().stream_cancelled_recv, 0);
     }
 
@@ -5775,7 +5875,7 @@ mod tests {
 
         let out = client.process(None, now());
         mem::drop(server.conn.process(out.dgram(), now()));
-        let _ = server.encoder_receiver.receive(&mut server.conn).unwrap();
+        mem::drop(server.encoder_receiver.receive(&mut server.conn).unwrap());
         assert_eq!(server.encoder.borrow_mut().stats().stream_cancelled_recv, 1);
     }
 
@@ -5789,7 +5889,7 @@ mod tests {
         assert_eq!(server.encoder.borrow_mut().stats().stream_cancelled_recv, 0);
         let out = client.process(None, now());
         mem::drop(server.conn.process(out.dgram(), now()));
-        let _ = server.encoder_receiver.receive(&mut server.conn).unwrap();
+        mem::drop(server.encoder_receiver.receive(&mut server.conn).unwrap());
         assert_eq!(server.encoder.borrow_mut().stats().stream_cancelled_recv, 0);
     }
 
