@@ -19,10 +19,9 @@
 #include "nsWaylandDisplay.h"
 
 struct FastTrackClipboard;
-class WaylandDragAndDropDataOffer;
 
-class DataOffer : public nsISupports {
-  NS_DECL_THREADSAFE_ISUPPORTS
+class DataOffer {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataOffer)
 
  public:
   explicit DataOffer(wl_data_offer* aDataOffer);
@@ -39,16 +38,23 @@ class DataOffer : public nsISupports {
   char* GetData(const char* aMimeType, uint32_t* aContentLength);
   char* GetDataAsync(const char* aMimeType, uint32_t* aContentLength);
 
-  virtual WaylandDragAndDropDataOffer* GetAsWaylandDragAndDropDataOffer() {
-    return nullptr;
-  }
-  virtual GtkWidget* GetWidget() { return nullptr; }
-  virtual GList* GetDragTargets() { return nullptr; }
-  virtual char* GetDragData(const char* aMimeType, uint32_t* aContentLength) {
-    return nullptr;
-  }
-  virtual void SetDragStatus(GdkDragAction aPreferredAction){};
-  virtual GdkDragAction GetAvailableDragActions() { return (GdkDragAction)0; };
+  void DragOfferAccept(const char* aMimeType);
+  void SetDragStatus(GdkDragAction aPreferredAction);
+
+  GdkDragAction GetSelectedDragAction();
+  void SetSelectedDragAction(uint32_t aWaylandAction);
+
+  void SetAvailableDragActions(uint32_t aWaylandActions);
+  GdkDragAction GetAvailableDragActions();
+
+  void DropDataEnter(GtkWidget* aGtkWidget, uint32_t aTime, nscoord aX,
+                     nscoord aY);
+  void DropMotion(uint32_t aTime, nscoord aX, nscoord aY);
+  void GetLastDropInfo(uint32_t* aTime, nscoord* aX, nscoord* aY);
+
+  GtkWidget* GetWidget() { return mGtkWidget; }
+  GList* GetDragTargets();
+  char* GetDragData(const char* aMimeType, uint32_t* aContentLength);
 
  protected:
   virtual ~DataOffer();
@@ -60,45 +66,15 @@ class DataOffer : public nsISupports {
   void GetDataAsyncInternal(const char* aMimeType);
   bool EnsureDataGetterThread();
 
- protected:
+ private:
   wl_data_offer* mWaylandDataOffer;
+
   nsTArray<GdkAtom> mTargetMIMETypes;
   mozilla::Mutex mMutex;
   uint32_t mAsyncContentLength;
   char* mAsyncContentData;
   mozilla::Atomic<bool> mGetterFinished;
-};
 
-class WaylandDragAndDropDataOffer : public DataOffer {
- public:
-  explicit WaylandDragAndDropDataOffer(
-      wl_data_offer* aWaylandDragAndDropDataOffer);
-
-  void DragOfferAccept(const char* aMimeType);
-  void SetDragStatus(GdkDragAction aPreferredAction) override;
-
-  GdkDragAction GetSelectedDragAction();
-  void SetSelectedDragAction(uint32_t aWaylandAction);
-
-  void SetAvailableDragActions(uint32_t aWaylandActions);
-  GdkDragAction GetAvailableDragActions() override;
-
-  void DropDataEnter(GtkWidget* aGtkWidget, uint32_t aTime, nscoord aX,
-                     nscoord aY);
-  void DropMotion(uint32_t aTime, nscoord aX, nscoord aY);
-  void GetLastDropInfo(uint32_t* aTime, nscoord* aX, nscoord* aY);
-
-  GtkWidget* GetWidget() override { return mGtkWidget; }
-  GList* GetDragTargets() override;
-  char* GetDragData(const char* aMimeType, uint32_t* aContentLength) override;
-
-  WaylandDragAndDropDataOffer* GetAsWaylandDragAndDropDataOffer() override {
-    return this;
-  }
-
-  virtual ~WaylandDragAndDropDataOffer() = default;
-
- private:
   uint32_t mSelectedDragAction;
   uint32_t mAvailableDragActions;
   uint32_t mTime;
