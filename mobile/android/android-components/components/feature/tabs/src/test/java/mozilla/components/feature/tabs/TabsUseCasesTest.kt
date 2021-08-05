@@ -327,10 +327,13 @@ class TabsUseCasesTest {
         val useCases = TabsUseCases(BrowserStore())
 
         val now = System.currentTimeMillis()
+        val twoDays = now - 2 * DAY_IN_MS
+        val threeDays = now - 3 * DAY_IN_MS
         val tabs = listOf(
+            createTab("https://mozilla.org", lastAccess = 0).toRecoverableTab(),
             createTab("https://mozilla.org", lastAccess = now).toRecoverableTab(),
-            createTab("https://firefox.com", lastAccess = now - 2 * DAY_IN_MS).toRecoverableTab(),
-            createTab("https://getpocket.com", lastAccess = now - 3 * DAY_IN_MS).toRecoverableTab()
+            createTab("https://firefox.com", lastAccess = twoDays, createdAt = threeDays).toRecoverableTab(),
+            createTab("https://getpocket.com", lastAccess = threeDays, createdAt = threeDays).toRecoverableTab()
         )
 
         val sessionStorage: SessionStorage = mock()
@@ -339,9 +342,9 @@ class TabsUseCasesTest {
         val predicateCaptor = argumentCaptor<(RecoverableTab) -> Boolean>()
         verify(sessionStorage).restore(predicateCaptor.capture())
 
-        // Only the first tab should be restored, all others "timed out."
+        // Only the first two tab should be restored, all others "timed out."
         val restoredTabs = tabs.filter(predicateCaptor.value)
-        assertEquals(1, restoredTabs.size)
+        assertEquals(2, restoredTabs.size)
         assertEquals(tabs.first(), restoredTabs.first())
     }
 

@@ -349,7 +349,8 @@ class TabsUseCases(
         ) = withContext(Dispatchers.IO) {
             val now = System.currentTimeMillis()
             val state = storage.restore {
-                now - it.lastAccess <= tabTimeoutInMs
+                val lastActiveTime = maxOf(it.lastAccess, it.createdAt)
+                now - lastActiveTime <= tabTimeoutInMs
             }
             if (state != null) {
                 withContext(Dispatchers.Main) {
