@@ -8,6 +8,7 @@
 #define MOZILLA_GFX_SCALEDFONTDWRITE_H_
 
 #include <dwrite.h>
+#include "DWriteSettings.h"
 #include "ScaledFontBase.h"
 
 struct ID2D1GeometrySink;
@@ -22,22 +23,9 @@ class UnscaledFontDWrite;
 class ScaledFontDWrite final : public ScaledFontBase {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontDWrite, override)
-  ScaledFontDWrite(IDWriteFontFace* aFont,
-                   const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize)
-      : ScaledFontBase(aUnscaledFont, aSize),
-        mFontFace(aFont),
-        mUseEmbeddedBitmap(false),
-        mRenderingMode(DWRITE_RENDERING_MODE_DEFAULT),
-        mGamma(2.2f),
-        mContrast(1.0f),
-        mClearTypeLevel(1.0f) {}
-
   ScaledFontDWrite(IDWriteFontFace* aFontFace,
                    const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-                   bool aUseEmbeddedBitmap,
-                   DWRITE_RENDERING_MODE aRenderingMode,
-                   IDWriteRenderingParams* aParams, Float aGamma,
-                   Float aContrast, Float aClearTypeLevel,
+                   bool aUseEmbeddedBitmap, bool aGDIForced,
                    const gfxFontStyle* aStyle = nullptr);
 
   FontType GetType() const override { return FontType::DWRITE; }
@@ -59,13 +47,12 @@ class ScaledFontDWrite final : public ScaledFontBase {
       Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
       std::vector<FontVariation>* aOutVariations) override;
 
+  DWriteSettings& DWriteSettings() const;
+
   AntialiasMode GetDefaultAAMode() override;
 
   bool UseEmbeddedBitmaps() const { return mUseEmbeddedBitmap; }
-  bool ForceGDIMode() const {
-    return mRenderingMode == DWRITE_RENDERING_MODE_GDI_CLASSIC;
-  }
-  DWRITE_RENDERING_MODE GetRenderingMode() const { return mRenderingMode; }
+  bool ForceGDIMode() const { return mGDIForced; }
 
   bool HasSyntheticBold() const {
     return (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD) != 0;
@@ -77,17 +64,7 @@ class ScaledFontDWrite final : public ScaledFontBase {
 
   RefPtr<IDWriteFontFace> mFontFace;
   bool mUseEmbeddedBitmap;
-  DWRITE_RENDERING_MODE mRenderingMode;
-  // DrawTargetD2D1 requires the IDWriteRenderingParams,
-  // but we also separately need to store the gamma and contrast
-  // since Skia needs to be able to access these without having
-  // to use the full set of DWrite parameters (which would be
-  // required to recreate an IDWriteRenderingParams) in a
-  // DrawTargetRecording playback.
-  RefPtr<IDWriteRenderingParams> mParams;
-  Float mGamma;
-  Float mContrast;
-  Float mClearTypeLevel;
+  bool mGDIForced = false;
 
   cairo_font_face_t* CreateCairoFontFace(
       cairo_font_options_t* aFontOptions) override;
@@ -101,20 +78,14 @@ class ScaledFontDWrite final : public ScaledFontBase {
     explicit InstanceData(ScaledFontDWrite* aScaledFont)
         : mUseEmbeddedBitmap(aScaledFont->mUseEmbeddedBitmap),
           mApplySyntheticBold(aScaledFont->HasSyntheticBold()),
-          mRenderingMode(aScaledFont->mRenderingMode),
-          mGamma(aScaledFont->mGamma),
-          mContrast(aScaledFont->mContrast),
-          mClearTypeLevel(aScaledFont->mClearTypeLevel) {}
+          mGDIForced(aScaledFont->mGDIForced) {}
 
     InstanceData(const wr::FontInstanceOptions* aOptions,
                  const wr::FontInstancePlatformOptions* aPlatformOptions);
 
     bool mUseEmbeddedBitmap;
     bool mApplySyntheticBold;
-    DWRITE_RENDERING_MODE mRenderingMode;
-    Float mGamma;
-    Float mContrast;
-    Float mClearTypeLevel;
+    bool mGDIForced = false;
   };
 };
 

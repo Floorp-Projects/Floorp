@@ -64,6 +64,7 @@
 #  include <process.h>
 #  include <windows.h>
 
+#  include "gfxDWriteFonts.h"
 #  include "gfxWindowsPlatform.h"
 #  include "mozilla/WindowsVersion.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
@@ -263,7 +264,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
     if (DeviceManagerDx::Get()->CreateCompositorDevices() &&
         gfxVars::RemoteCanvasEnabled()) {
       if (DeviceManagerDx::Get()->CreateCanvasDevice()) {
-        MOZ_ALWAYS_TRUE(Factory::EnsureDWriteFactory());
+        gfxDWriteFont::InitDWriteSupport();
       } else {
         gfxWarning() << "Failed to create canvas device.";
       }

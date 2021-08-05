@@ -635,9 +635,7 @@ bool gfxDWriteFont::GetForceGDIClassic() const {
 
 DWRITE_MEASURING_MODE
 gfxDWriteFont::GetMeasuringMode() const {
-  return GetForceGDIClassic()
-             ? DWRITE_MEASURING_MODE_GDI_CLASSIC
-             : gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode();
+  return DWriteSettings::Get(GetForceGDIClassic()).MeasuringMode();
 }
 
 gfxFloat gfxDWriteFont::MeasureGlyphWidth(uint16_t aGlyph) {
@@ -735,36 +733,15 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
   if (!mAzureScaledFont) {
     gfxDWriteFontEntry* fe = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
     bool forceGDI = GetForceGDIClassic();
-
-    // params may be null, if initialization failed
-    IDWriteRenderingParams* params =
-        gfxWindowsPlatform::GetPlatform()->GetRenderingParams(
-            UsingClearType()
-                ? (forceGDI ? gfxWindowsPlatform::TEXT_RENDERING_GDI_CLASSIC
-                            : gfxWindowsPlatform::TEXT_RENDERING_NORMAL)
-                : gfxWindowsPlatform::TEXT_RENDERING_NO_CLEARTYPE);
-
-    DWRITE_RENDERING_MODE renderingMode =
-        params ? params->GetRenderingMode() : DWRITE_RENDERING_MODE_DEFAULT;
-    FLOAT gamma = params ? params->GetGamma() : 2.2;
-    FLOAT contrast = params ? params->GetEnhancedContrast() : 1.0;
-    FLOAT clearTypeLevel = params ? params->GetClearTypeLevel() : 1.0;
-    if (forceGDI || renderingMode == DWRITE_RENDERING_MODE_GDI_CLASSIC) {
-      renderingMode = DWRITE_RENDERING_MODE_GDI_CLASSIC;
-      gamma = GetSystemGDIGamma();
-      contrast = 0.0f;
-    }
-
     bool useEmbeddedBitmap =
-        (renderingMode == DWRITE_RENDERING_MODE_DEFAULT ||
-         renderingMode == DWRITE_RENDERING_MODE_GDI_CLASSIC) &&
+        (gfxVars::SystemTextRenderingMode() == DWRITE_RENDERING_MODE_DEFAULT ||
+         forceGDI) &&
         fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize));
 
     const gfxFontStyle* fontStyle = GetStyle();
     mAzureScaledFont = Factory::CreateScaledFontForDWriteFont(
         mFontFace, fontStyle, GetUnscaledFont(), GetAdjustedSize(),
-        useEmbeddedBitmap, (int)renderingMode, params, gamma, contrast,
-        clearTypeLevel);
+        useEmbeddedBitmap, forceGDI);
     if (!mAzureScaledFont) {
       return nullptr;
     }
@@ -780,7 +757,5 @@ bool gfxDWriteFont::ShouldRoundXOffset(cairo_t* aCairo) const {
   // show_glyphs is implemented on the font and so is used for all Cairo
   // surface types; however, it may pixel-snap depending on the dwrite
   // rendering mode
-  return GetForceGDIClassic() ||
-         gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode() !=
-             DWRITE_MEASURING_MODE_NATURAL;
+  return GetMeasuringMode() != DWRITE_MEASURING_MODE_NATURAL;
 }
