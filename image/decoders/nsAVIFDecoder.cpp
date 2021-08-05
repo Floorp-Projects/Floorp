@@ -10,6 +10,8 @@
 
 #include "aom/aomdx.h"
 
+#include "DAV1DDecoder.h"
+#include "gfxPlatform.h"
 #include "mozilla/gfx/Types.h"
 #include "YCbCrUtils.h"
 #include "libyuv.h"
@@ -22,8 +24,6 @@
 using namespace mozilla::gfx;
 
 namespace mozilla {
-
-Maybe<gfx::YUVColorSpace> GetColorSpace(const Dav1dPicture&, LazyLogModule&);
 
 namespace image {
 
@@ -222,6 +222,160 @@ class AVIFParser {
   Maybe<Mp4parseAvifImage> mAvifImage;
 };
 
+// Additional AVIF-specific storage for the CICP values (either from the BMFF
+// container or the AV1 sequence header) which are used to create the
+// colorspace transform. qcms_MatrixCoefficients is not needed, since the
+// relevant information for YUV -> RGB conversion is stored in mYUVColorSpace.
+//
+// There are three potential sources of color information for an AVIF:
+// 1. ICC profile via a ColourInformationBox (colr) defined in [ISOBMFF]
+//    § 12.1.5 "Colour information" and [MIAF] § 7.3.6.4 "Colour information
+//    property"
+// 2. NCLX (AKA CICP see [ITU-T H.273]) values in the same ColourInformationBox
+//    which can have an ICC profile or NCLX values, not both).
+// 3. NCLX values in the AV1 bitstream
+//
+// The 'colr' box is optional, but there are always CICP values in the AV1
+// bitstream, so it is possible to have both. Per ISOBMFF § 12.1.5.1
+// > If colour information is supplied in both this box, and also in the
+// > video bitstream, this box takes precedence, and over-rides the
+// > information in the bitstream.
+//
+// If present, the ICC profile takes precedence over CICP values, but only
+// specifies the color space, not the matrix coefficients necessary to convert
+// YCbCr data (as most AVIF are encoded) to RGB. The matrix coefficients are
+// always derived from the CICP values for matrix_coefficients (and potentially
+// colour_primaries, but in that case only the CICP values for colour_primaries
+// will be used, not anything harvested from the ICC profile).
+//
+// If there is no ICC profile, the color space transform will be based on the
+// CICP values either from the 'colr' box, or if absent/unspecified, the
+// decoded AV1 sequence header.
+//
+// For values that are 2 (meaning unspecified) after trying both, the
+// fallback values are:
+// - CP:  1 (BT.709/sRGB)
+// - TC: 13 (sRGB)
+// - MC:  6 (BT.601)
+// - Range: Full
+//
+// Additional details here:
+// <https://github.com/AOMediaCodec/libavif/wiki/CICP#unspecified>. Note
+// that this contradicts the current version of [MIAF] § 7.3.6.4 which
+// specifies MC=1 (BT.709). This is revised in [MIAF DAMD2] and confirmed by
+// <https://github.com/AOMediaCodec/av1-avif/issues/77#issuecomment-676526097>
+//
+// The precedence for applying the various values and defaults in the event
+// no valid values are found are managed by the following functions.
+//
+// References:
+// [ISOBMFF]: ISO/IEC 14496-12:2020 <https://www.iso.org/standard/74428.html>
+// [MIAF]: ISO/IEC 23000-22:2019 <https://www.iso.org/standard/74417.html>
+// [MIAF DAMD2]: ISO/IEC 23000-22:2019/FDAmd 2
+// <https://www.iso.org/standard/81634.html>
+// [ITU-T H.273]: Rec. ITU-T H.273 (12/2016)
+//     <https://www.itu.int/rec/T-REC-H.273-201612-I/en>
+struct AVIFDecodedData : layers::PlanarYCbCrAData {
+  qcms_ColourPrimaries mColourPrimaries = cp_Unspecified;
+  qcms_TransferCharacteristics mTransferCharacteristics = tc_Unspecified;
+};
+
+// The gfx::YUVColorSpace value is only used in the conversion from YUV -> RGB.
+// Typically this comes directly from the CICP matrix_coefficients value, but
+// certain values require additionally considering the colour_primaries value.
+// See `gfxUtils::CicpToColorSpace` for details. We return a gfx::YUVColorSpace
+// rather than qcms_MatrixCoefficients, since that's what
+// `gfx::ConvertYCbCrATo[A]RGB` uses. `aBitstreamColorSpaceFunc` abstracts the
+// fact that different decoder libraries require different methods for
+// extracting the CICP values from the AV1 bitstream and we don't want to do
+// that work unnecessarily because in addition to wasted effort, it would make
+// the logging more confusing.
+template <typename F>
+static gfx::YUVColorSpace GetAVIFColorSpace(const NclxColourInformation* aNclx,
+                                            F&& aBitstreamColorSpaceFunc) {
+  return ToMaybe(aNclx)
+      .map([=](const auto& nclx) {
+        return gfxUtils::CicpToColorSpace(
+            static_cast<qcms_MatrixCoefficients>(nclx.matrix_coefficients),
+            static_cast<qcms_ColourPrimaries>(nclx.colour_primaries), sAVIFLog);
+      })
+      .valueOrFrom(aBitstreamColorSpaceFunc)
+      .valueOr(gfx::YUVColorSpace::BT601);
+}
+
+static gfx::ColorRange GetAVIFColorRange(
+    const NclxColourInformation* aNclx,
+    const Maybe<gfx::ColorRange> av1ColorRange) {
+  return ToMaybe(aNclx)
+      .map([=](const auto& nclx) {
+        return Some(aNclx->full_range_flag ? gfx::ColorRange::FULL
+                                           : gfx::ColorRange::LIMITED);
+      })
+      .valueOr(av1ColorRange)
+      .valueOr(gfx::ColorRange::FULL);
+}
+
+static void SetTransformCicpValues(
+    const NclxColourInformation* aNclx,
+    const qcms_ColourPrimaries aAv1ColourPrimaries,
+    const qcms_TransferCharacteristics aAv1TransferCharacteristics,
+    qcms_ColourPrimaries& aOutColourPrimaries,
+    qcms_TransferCharacteristics& aOutTransferCharacteristics) {
+  auto cp = cp_Unspecified;
+  auto tc = tc_Unspecified;
+
+  if (aNclx) {
+    cp = static_cast<qcms_ColourPrimaries>(aNclx->colour_primaries);
+    tc = static_cast<qcms_TransferCharacteristics>(
+        aNclx->transfer_characteristics);
+  }
+
+  if (cp == cp_Unspecified) {
+    if (aAv1ColourPrimaries != cp_Unspecified) {
+      cp = aAv1ColourPrimaries;
+      MOZ_LOG(sAVIFLog, LogLevel::Info,
+              ("No colour_primaries value specified in colr box, "
+               "using AV1 sequence header (%u)",
+               cp));
+    } else {
+      cp = cp_Bt709;
+      MOZ_LOG(sAVIFLog, LogLevel::Warning,
+              ("No colour_primaries value specified in colr box "
+               "or AV1 sequence header, using fallback value (%u)",
+               cp));
+    }
+  } else if (cp != aAv1ColourPrimaries) {
+    MOZ_LOG(sAVIFLog, LogLevel::Warning,
+            ("colour_primaries mismatch: colr box = %u, AV1 "
+             "sequence header = %u, using colr box",
+             cp, aAv1ColourPrimaries));
+  }
+
+  if (tc == tc_Unspecified) {
+    if (aAv1TransferCharacteristics != tc_Unspecified) {
+      tc = aAv1TransferCharacteristics;
+      MOZ_LOG(sAVIFLog, LogLevel::Info,
+              ("No transfer_characteristics value specified in "
+               "colr box, using AV1 sequence header (%u)",
+               tc));
+    } else {
+      tc = tc_Srgb;
+      MOZ_LOG(sAVIFLog, LogLevel::Warning,
+              ("No transfer_characteristics value specified in "
+               "colr box or AV1 sequence header, using fallback value (%u)",
+               tc));
+    }
+  } else if (tc != aAv1TransferCharacteristics) {
+    MOZ_LOG(sAVIFLog, LogLevel::Warning,
+            ("transfer_characteristics mismatch: colr box = %u, "
+             "AV1 sequence header = %u, using colr box",
+             tc, aAv1TransferCharacteristics));
+  }
+
+  aOutColourPrimaries = cp;
+  aOutTransferCharacteristics = tc;
+}
+
 // An interface to do decode and get the decoded data
 class AVIFDecoderInterface {
  public:
@@ -237,7 +391,7 @@ class AVIFDecoderInterface {
   virtual DecodeResult Decode(bool aIsMetadataDecode,
                               const Mp4parseAvifImage& parsedImg) = 0;
   // Must be called after Decode() succeeds
-  layers::PlanarYCbCrAData& GetDecodedData() {
+  AVIFDecodedData& GetDecodedData() {
     MOZ_ASSERT(mDecodedData.isSome());
     return mDecodedData.ref();
   }
@@ -255,7 +409,7 @@ class AVIFDecoderInterface {
   UniquePtr<AVIFParser> mParser;
 
   // The mDecodedData is valid after Decode() succeeds
-  Maybe<layers::PlanarYCbCrAData> mDecodedData;
+  Maybe<AVIFDecodedData> mDecodedData;
 };
 
 class Dav1dDecoder final : AVIFDecoderInterface {
@@ -319,8 +473,8 @@ class Dav1dDecoder final : AVIFDecoderInterface {
       }
 
       // Per § 4 of the AVIF spec
-      // https://aomediacodec.github.io/av1-avif/#auxiliary-images: An AV1 Alpha
-      // Image Item […] shall be encoded with the same bit depth as the
+      // https://aomediacodec.github.io/av1-avif/#auxiliary-images: An AV1
+      // Alpha Image Item […] shall be encoded with the same bit depth as the
       // associated master AV1 Image Item
       if (mPicture->p.bpc != mAlphaPlane->p.bpc) {
         return AsVariant(NonDecoderResult::AlphaYColorDepthMismatch);
@@ -328,9 +482,9 @@ class Dav1dDecoder final : AVIFDecoderInterface {
     }
 
     MOZ_ASSERT_IF(mAlphaPlane.isNothing(), !parsedImg.premultiplied_alpha);
-    mDecodedData.emplace(
-        Dav1dPictureToYCbCrAData(mPicture.ptr(), mAlphaPlane.ptrOr(nullptr),
-                                 parsedImg.premultiplied_alpha));
+    mDecodedData.emplace(Dav1dPictureToDecodedData(
+        parsedImg.nclx_colour_information, mPicture.ptr(),
+        mAlphaPlane.ptrOr(nullptr), parsedImg.premultiplied_alpha));
 
     return AsVariant(r);
   }
@@ -388,8 +542,9 @@ class Dav1dDecoder final : AVIFDecoderInterface {
 
     // We already have the AVIF_DECODE_RESULT histogram to record all the
     // successful calls, so only bother recording what type of errors we see
-    // via events. Unlike AOM, dav1d returns an int, not an enum, so this is the
-    // easiest way to see if we're getting unexpected behavior to investigate.
+    // via events. Unlike AOM, dav1d returns an int, not an enum, so this is
+    // the easiest way to see if we're getting unexpected behavior to
+    // investigate.
     if (aIsMetadataDecode && r != 0) {
       // Uncomment once bug 1691156 is fixed
       // mozilla::Telemetry::SetEventRecordingEnabled("avif"_ns, true);
@@ -404,13 +559,13 @@ class Dav1dDecoder final : AVIFDecoderInterface {
 
   // A dummy callback for dav1d_data_wrap
   static void Dav1dFreeCallback_s(const uint8_t* aBuf, void* aCookie) {
-    // The buf is managed by the mParser inside Dav1dDecoder itself. Do nothing
-    // here.
+    // The buf is managed by the mParser inside Dav1dDecoder itself. Do
+    // nothing here.
   }
 
-  static layers::PlanarYCbCrAData Dav1dPictureToYCbCrAData(
-      Dav1dPicture* aPicture, Dav1dPicture* aAlphaPlane,
-      bool aPremultipliedAlpha);
+  static AVIFDecodedData Dav1dPictureToDecodedData(
+      const NclxColourInformation* aNclx, Dav1dPicture* aPicture,
+      Dav1dPicture* aAlphaPlane, bool aPremultipliedAlpha);
 
   Dav1dContext* mContext = nullptr;
 
@@ -487,8 +642,8 @@ class AOMDecoder final : AVIFDecoderInterface {
       mOwnedAlphaPlane.reset(clonedAlphaImg);
 
       // Per § 4 of the AVIF spec
-      // https://aomediacodec.github.io/av1-avif/#auxiliary-images: An AV1 Alpha
-      // Image Item […] shall be encoded with the same bit depth as the
+      // https://aomediacodec.github.io/av1-avif/#auxiliary-images: An AV1
+      // Alpha Image Item […] shall be encoded with the same bit depth as the
       // associated master AV1 Image Item
       MOZ_ASSERT(mOwnedImage->GetImage() && mOwnedAlphaPlane->GetImage());
       if (mOwnedImage->GetImage()->bit_depth !=
@@ -498,8 +653,8 @@ class AOMDecoder final : AVIFDecoderInterface {
     }
 
     MOZ_ASSERT_IF(!mOwnedAlphaPlane, !parsedImg.premultiplied_alpha);
-    mDecodedData.emplace(AOMImageToYCbCrAData(
-        mOwnedImage->GetImage(),
+    mDecodedData.emplace(AOMImageToToDecodedData(
+        parsedImg.nclx_colour_information, mOwnedImage->GetImage(),
         mOwnedAlphaPlane ? mOwnedAlphaPlane->GetImage() : nullptr,
         parsedImg.premultiplied_alpha));
 
@@ -687,8 +842,9 @@ class AOMDecoder final : AVIFDecoderInterface {
     UniquePtr<uint8_t[]> mBuffer;
   };
 
-  static layers::PlanarYCbCrAData AOMImageToYCbCrAData(
-      aom_image_t* aImage, aom_image_t* aAlphaPlane, bool aPremultipliedAlpha);
+  static AVIFDecodedData AOMImageToToDecodedData(
+      const NclxColourInformation* aNclx, aom_image_t* aImage,
+      aom_image_t* aAlphaPlane, bool aPremultipliedAlpha);
 
   Maybe<aom_codec_ctx_t> mContext;
   UniquePtr<OwnedAOMImage> mOwnedImage;
@@ -696,15 +852,15 @@ class AOMDecoder final : AVIFDecoderInterface {
 };
 
 /* static */
-layers::PlanarYCbCrAData Dav1dDecoder::Dav1dPictureToYCbCrAData(
-    Dav1dPicture* aPicture, Dav1dPicture* aAlphaPlane,
-    bool aPremultipliedAlpha) {
+AVIFDecodedData Dav1dDecoder::Dav1dPictureToDecodedData(
+    const NclxColourInformation* aNclx, Dav1dPicture* aPicture,
+    Dav1dPicture* aAlphaPlane, bool aPremultipliedAlpha) {
   MOZ_ASSERT(aPicture);
 
   static_assert(std::is_same<int, decltype(aPicture->p.w)>::value);
   static_assert(std::is_same<int, decltype(aPicture->p.h)>::value);
 
-  layers::PlanarYCbCrAData data;
+  AVIFDecodedData data;
 
   data.mYChannel = static_cast<uint8_t*>(aPicture->data[0]);
   data.mYStride = aPicture->stride[0];
@@ -740,15 +896,30 @@ layers::PlanarYCbCrAData Dav1dDecoder::Dav1dPictureToYCbCrAData(
   data.mStereoMode = StereoMode::MONO;
   data.mColorDepth = ColorDepthForBitDepth(aPicture->p.bpc);
 
-  auto colorSpace = GetColorSpace(*aPicture, sAVIFLog);
-  if (!colorSpace) {
-    // MIAF specific: UNKNOWN color space should be treated as BT601
-    colorSpace = Some(gfx::YUVColorSpace::BT601);
-  }
-  data.mYUVColorSpace = *colorSpace;
+  data.mYUVColorSpace = GetAVIFColorSpace(aNclx, [=]() {
+    MOZ_LOG(sAVIFLog, LogLevel::Info,
+            ("YUVColorSpace cannot be determined from colr box, using AV1 "
+             "sequence header"));
+    return DAV1DDecoder::GetColorSpace(*aPicture, sAVIFLog);
+  });
 
-  data.mColorRange = aPicture->seq_hdr->color_range ? gfx::ColorRange::FULL
-                                                    : gfx::ColorRange::LIMITED;
+  auto av1ColourPrimaries = cp_Unspecified;
+  auto av1TransferCharacteristics = tc_Unspecified;
+  Maybe<gfx::ColorRange> av1ColorRange = Nothing();
+
+  if (aPicture->seq_hdr && aPicture->seq_hdr->color_description_present) {
+    auto& seq_hdr = *aPicture->seq_hdr;
+    av1ColourPrimaries = static_cast<qcms_ColourPrimaries>(seq_hdr.pri);
+    av1TransferCharacteristics =
+        static_cast<qcms_TransferCharacteristics>(seq_hdr.trc);
+    av1ColorRange = seq_hdr.color_range ? Some(gfx::ColorRange::FULL)
+                                        : Some(gfx::ColorRange::LIMITED);
+  }
+
+  SetTransformCicpValues(aNclx, av1ColourPrimaries, av1TransferCharacteristics,
+                         data.mColourPrimaries, data.mTransferCharacteristics);
+
+  data.mColorRange = GetAVIFColorRange(aNclx, av1ColorRange);
 
   if (aAlphaPlane) {
     MOZ_ASSERT(aAlphaPlane->stride[0] == data.mYStride);
@@ -761,8 +932,9 @@ layers::PlanarYCbCrAData Dav1dDecoder::Dav1dPictureToYCbCrAData(
 }
 
 /* static */
-layers::PlanarYCbCrAData AOMDecoder::AOMImageToYCbCrAData(
-    aom_image_t* aImage, aom_image_t* aAlphaPlane, bool aPremultipliedAlpha) {
+AVIFDecodedData AOMDecoder::AOMImageToToDecodedData(
+    const NclxColourInformation* aNclx, aom_image_t* aImage,
+    aom_image_t* aAlphaPlane, bool aPremultipliedAlpha) {
   MOZ_ASSERT(aImage);
   MOZ_ASSERT(aImage->stride[AOM_PLANE_Y] == aImage->stride[AOM_PLANE_ALPHA]);
   MOZ_ASSERT(aImage->stride[AOM_PLANE_Y] >=
@@ -777,7 +949,7 @@ layers::PlanarYCbCrAData AOMDecoder::AOMImageToYCbCrAData(
   MOZ_ASSERT(aom_img_plane_height(aImage, AOM_PLANE_U) ==
              aom_img_plane_height(aImage, AOM_PLANE_V));
 
-  layers::PlanarYCbCrAData data;
+  AVIFDecodedData data;
 
   data.mYChannel = aImage->planes[AOM_PLANE_Y];
   data.mYStride = aImage->stride[AOM_PLANE_Y];
@@ -800,61 +972,29 @@ layers::PlanarYCbCrAData AOMDecoder::AOMImageToYCbCrAData(
   data.mStereoMode = StereoMode::MONO;
   data.mColorDepth = ColorDepthForBitDepth(aImage->bit_depth);
 
-  Maybe<gfx::YUVColorSpace> colorSpace;
-  switch (aImage->mc) {
-    case AOM_CICP_MC_BT_601:
-      colorSpace = Some(gfx::YUVColorSpace::BT601);
-      break;
-    case AOM_CICP_MC_BT_709:
-      colorSpace = Some(gfx::YUVColorSpace::BT709);
-      break;
-    case AOM_CICP_MC_BT_2020_NCL:
-      colorSpace = Some(gfx::YUVColorSpace::BT2020);
-      break;
-    case AOM_CICP_MC_BT_2020_CL:
-      colorSpace = Some(gfx::YUVColorSpace::BT2020);
-      break;
-    case AOM_CICP_MC_IDENTITY:
-      colorSpace = Some(gfx::YUVColorSpace::Identity);
-      break;
-    case AOM_CICP_MC_CHROMAT_NCL:
-    case AOM_CICP_MC_CHROMAT_CL:
-    case AOM_CICP_MC_UNSPECIFIED:  // MIAF specific
-      switch (aImage->cp) {
-        case AOM_CICP_CP_BT_601:
-          colorSpace = Some(gfx::YUVColorSpace::BT601);
-          break;
-        case AOM_CICP_CP_BT_709:
-          colorSpace = Some(gfx::YUVColorSpace::BT709);
-          break;
-        case AOM_CICP_CP_BT_2020:
-          colorSpace = Some(gfx::YUVColorSpace::BT2020);
-          break;
-        default:
-          break;
-      }
-      break;
-    default:
-      MOZ_LOG(sAVIFLog, LogLevel::Debug,
-              ("unsupported aom_matrix_coefficients value: %u", aImage->mc));
-      break;
-  }
-  if (!colorSpace) {
-    // MIAF specific: UNKNOWN color space should be treated as BT601
-    colorSpace = Some(gfx::YUVColorSpace::BT601);
-  }
-  data.mYUVColorSpace = *colorSpace;
+  auto av1ColourPrimaries = static_cast<qcms_ColourPrimaries>(aImage->cp);
+  auto av1TransferCharacteristics =
+      static_cast<qcms_TransferCharacteristics>(aImage->tc);
+  auto av1MatrixCoefficients = static_cast<qcms_MatrixCoefficients>(aImage->mc);
 
-  switch (aImage->range) {
-    case AOM_CR_STUDIO_RANGE:
-      data.mColorRange = gfx::ColorRange::LIMITED;
-      break;
-    case AOM_CR_FULL_RANGE:
-      data.mColorRange = gfx::ColorRange::FULL;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unknown color range");
+  data.mYUVColorSpace = GetAVIFColorSpace(aNclx, [=]() {
+    MOZ_LOG(sAVIFLog, LogLevel::Info,
+            ("YUVColorSpace cannot be determined from colr box, using AV1 "
+             "sequence header"));
+    return gfxUtils::CicpToColorSpace(av1MatrixCoefficients, av1ColourPrimaries,
+                                      sAVIFLog);
+  });
+
+  Maybe<gfx::ColorRange> av1ColorRange = Nothing();
+  if (aImage->range == AOM_CR_STUDIO_RANGE) {
+    av1ColorRange = Some(gfx::ColorRange::LIMITED);
+  } else if (aImage->range == AOM_CR_FULL_RANGE) {
+    av1ColorRange = Some(gfx::ColorRange::FULL);
   }
+  data.mColorRange = GetAVIFColorRange(aNclx, av1ColorRange);
+
+  SetTransformCicpValues(aNclx, av1ColourPrimaries, av1TransferCharacteristics,
+                         data.mColourPrimaries, data.mTransferCharacteristics);
 
   if (aAlphaPlane) {
     MOZ_ASSERT(aAlphaPlane->stride[AOM_PLANE_Y] == data.mYStride);
@@ -904,6 +1044,9 @@ nsAVIFDecoder::~nsAVIFDecoder() {
 
 LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
                                     IResumable* aOnResume) {
+  MOZ_LOG(sAVIFLog, LogLevel::Info,
+          ("[this=%p] nsAVIFDecoder::DoDecode start", this));
+
   DecodeResult result = Decode(aIterator, aOnResume);
 
   RecordDecodeResultTelemetry(result);
@@ -919,8 +1062,11 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
   }
 
   MOZ_ASSERT(result.is<Dav1dResult>() || result.is<AOMResult>());
-  return LexerResult(IsDecodeSuccess(result) ? TerminalState::SUCCESS
-                                             : TerminalState::FAILURE);
+  auto rv = LexerResult(IsDecodeSuccess(result) ? TerminalState::SUCCESS
+                                                : TerminalState::FAILURE);
+  MOZ_LOG(sAVIFLog, LogLevel::Info,
+          ("[this=%p] nsAVIFDecoder::DoDecode end", this));
+  return rv;
 }
 
 nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
@@ -1028,11 +1174,33 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
            StaticPrefs::image_avif_use_dav1d() ? "Dav1d" : "AOM",
            IsDecodeSuccess(r) ? "succeeds" : "fails"));
 
+  if (parsedImg.icc_colour_information.data) {
+    auto& icc = parsedImg.icc_colour_information;
+    MOZ_LOG(
+        sAVIFLog, LogLevel::Debug,
+        ("[this=%p] colr type ICC: %zu bytes %p", this, icc.length, icc.data));
+  } else if (parsedImg.nclx_colour_information) {
+    auto& nclx = *parsedImg.nclx_colour_information;
+    MOZ_LOG(
+        sAVIFLog, LogLevel::Debug,
+        ("[this=%p] colr type CICP: cp/tc/mc/full-range %u/%u/%u/%s", this,
+         nclx.colour_primaries, nclx.transfer_characteristics,
+         nclx.matrix_coefficients, nclx.full_range_flag ? "true" : "false"));
+  } else {
+    MOZ_LOG(sAVIFLog, LogLevel::Debug,
+            ("[this=%p] colr box not present", this));
+  }
+
   if (!IsDecodeSuccess(r)) {
     return r;
   }
 
-  layers::PlanarYCbCrAData& decodedData = decoder->GetDecodedData();
+  AVIFDecodedData& decodedData = decoder->GetDecodedData();
+
+  MOZ_ASSERT(decodedData.mColourPrimaries != cp_Unspecified);
+  MOZ_ASSERT(decodedData.mTransferCharacteristics != tc_Unspecified);
+  MOZ_ASSERT(decodedData.mColorRange <= gfx::ColorRange::_Last);
+  MOZ_ASSERT(decodedData.mYUVColorSpace <= gfx::YUVColorSpace::_Last);
 
   // Technically it's valid but we don't handle it now (Bug 1682318).
   if (decodedData.hasAlpha() && decodedData.mAlphaSize != decodedData.mYSize) {
@@ -1076,13 +1244,92 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
   IntSize rgbSize = Size();
   MOZ_ASSERT(rgbSize == decodedData.mPicSize);
 
+  // Read color profile
+  if (mCMSMode != CMSMode::Off) {
+    MOZ_LOG(sAVIFLog, LogLevel::Debug,
+            ("[this=%p] Processing color profile", this));
+
+    // See comment on AVIFDecodedData
+    if (parsedImg.icc_colour_information.data) {
+      auto& icc = parsedImg.icc_colour_information;
+      mInProfile = qcms_profile_from_memory(icc.data, icc.length);
+    } else {
+      auto& cp = decodedData.mColourPrimaries;
+      auto& tc = decodedData.mTransferCharacteristics;
+
+      if (cp == cp_Reserved) {
+        MOZ_LOG(sAVIFLog, LogLevel::Error,
+                ("[this=%p] colour_primaries reserved value (%u) is invalid; "
+                 "failing",
+                 this, cp));
+        return AsVariant(NonDecoderResult::ParseError);
+      }
+
+      if (tc == tc_Reserved) {
+        MOZ_LOG(sAVIFLog, LogLevel::Error,
+                ("[this=%p] transfer_characteristics reserved value (%u) is "
+                 "invalid; failing",
+                 this, tc));
+        return AsVariant(NonDecoderResult::ParseError);
+      }
+
+      MOZ_ASSERT(cp != cp_Unspecified && cp != cp_Reserved);
+      MOZ_ASSERT(tc != tc_Unspecified && tc != tc_Reserved);
+
+      mInProfile = qcms_profile_create_cicp(cp, tc);
+    }
+
+    MOZ_LOG(sAVIFLog, LogLevel::Debug,
+            ("[this=%p] mInProfile %p", this, mInProfile));
+  } else {
+    MOZ_LOG(sAVIFLog, LogLevel::Debug,
+            ("[this=%p] CMSMode::Off, skipping color profile", this));
+  }
+
+  if (mInProfile && GetCMSOutputProfile()) {
+    auto intent = static_cast<qcms_intent>(gfxPlatform::GetRenderingIntent());
+    qcms_data_type inType;
+    qcms_data_type outType;
+
+    // If we're not mandating an intent, use the one from the image.
+    if (gfxPlatform::GetRenderingIntent() == -1) {
+      intent = qcms_profile_get_rendering_intent(mInProfile);
+    }
+
+    uint32_t profileSpace = qcms_profile_get_color_space(mInProfile);
+    if (profileSpace != icSigGrayData) {
+      // If the transform happens with SurfacePipe, it will be in RGBA if we
+      // have an alpha channel, because the swizzle and premultiplication
+      // happens after color management. Otherwise it will be in BGRA because
+      // the swizzle happens at the start.
+      if (hasAlpha) {
+        inType = QCMS_DATA_RGBA_8;
+        outType = QCMS_DATA_RGBA_8;
+      } else {
+        inType = gfxPlatform::GetCMSOSRGBAType();
+        outType = inType;
+      }
+    } else {
+      if (hasAlpha) {
+        inType = QCMS_DATA_GRAYA_8;
+        outType = gfxPlatform::GetCMSOSRGBAType();
+      } else {
+        inType = QCMS_DATA_GRAY_8;
+        outType = gfxPlatform::GetCMSOSRGBAType();
+      }
+    }
+
+    mTransform = qcms_transform_create(mInProfile, inType,
+                                       GetCMSOutputProfile(), outType, intent);
+  }
+
   // Get suggested format and size. Note that GetYCbCrToRGBDestFormatAndSize
   // force format to be B8G8R8X8 if it's not.
   gfx::SurfaceFormat format = SurfaceFormat::OS_RGBX;
   gfx::GetYCbCrToRGBDestFormatAndSize(decodedData, format, rgbSize);
   if (hasAlpha) {
-    // We would use libyuv to do the YCbCrA -> ARGB convertion, which only works
-    // for B8G8R8A8.
+    // We would use libyuv to do the YCbCrA -> ARGB convertion, which only
+    // works for B8G8R8A8.
     format = SurfaceFormat::B8G8R8A8;
   }
 
@@ -1138,7 +1385,7 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
           ("[this=%p] calling SurfacePipeFactory::CreateSurfacePipe", this));
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
       this, rgbSize, OutputSize(), FullFrame(), format, format, Nothing(),
-      nullptr, SurfacePipeFlags());
+      mTransform, SurfacePipeFlags());
 
   if (!pipe) {
     MOZ_LOG(sAVIFLog, LogLevel::Debug,

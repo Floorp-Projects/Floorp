@@ -171,6 +171,24 @@ typedef enum {
     tc_Hlg = 18,
 } qcms_TransferCharacteristics;
 
+/* Not used by qcms, but provided for CICP completeness */
+typedef enum {
+    mc_Identity = 0,
+    mc_Bt709 = 1,
+    mc_Unspecified = 2,
+    mc_Fcc = 4,
+    mc_Bt470Bg = 5,
+    mc_Bt601 = 6,
+    mc_Smpte240 = 7,
+    mc_YCgCo = 8,
+    mc_Bt2020_Ncl = 9,
+    mc_Bt2020_Cl = 10,
+    mc_Smpte2085 = 11,
+    mc_Chromat_Ncl = 12,
+    mc_Chromat_Cl = 13,
+    mc_ICtCp = 14,
+} qcms_MatrixCoefficients;
+
 qcms_profile* qcms_profile_create_rgb_with_gamma_set(
                 qcms_CIE_xyY white_point,
                 qcms_CIE_xyYTRIPLE primaries,
