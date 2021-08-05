@@ -33,7 +33,7 @@ class SearchSuggestionsViewModelTest {
     fun setup() {
         lifecycle = LifecycleRegistry(mock(LifecycleOwner::class.java))
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
-        MockitoAnnotations.initMocks(this)
+        MockitoAnnotations.openMocks(this)
 
         viewModel = SearchSuggestionsViewModel(ApplicationProvider.getApplicationContext())
     }

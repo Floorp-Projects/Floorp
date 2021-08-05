@@ -36,7 +36,7 @@ object Versions {
 
     object Test {
         const val robolectric = "4.6.1"
-        const val mockito = "2.24.5"
+        const val mockito = "3.11.0"
     }
 }
 

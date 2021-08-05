@@ -65,7 +65,6 @@ import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.menu.browser.CustomTabMenu
 import org.mozilla.focus.menu.browser.DefaultBrowserMenu
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.popup.PopupUtils
@@ -243,45 +242,29 @@ class BrowserFragment :
 
     private fun customizeToolbar(view: View) {
         val browserToolbar = view.findViewById<BrowserToolbar>(R.id.browserToolbar)
+        val controller = BrowserMenuController(
+            requireComponents.sessionUseCases,
+            requireComponents.appStore,
+            requireComponents.store,
+            findInPageIntegration.get(),
+            tabId,
+            ::shareCurrentUrl,
+            ::setShouldRequestDesktop,
+            ::showAddToHomescreenDialog,
+            ::openSelectBrowser
+        )
 
         if (FeatureFlags.isMvp) {
-            val controller = BrowserMenuController(
-                requireComponents.sessionUseCases,
-                requireComponents.appStore,
-                requireComponents.store,
-                findInPageIntegration.get(),
-                tabId,
-                ::shareCurrentUrl,
-                ::setShouldRequestDesktop,
-                ::showAddToHomescreenDialog,
-                ::openSelectBrowser
-            )
-
-            val browserMenu = if (tab.ifCustomTab()?.config == null) {
-                DefaultBrowserMenu(
+            if (tab.ifCustomTab()?.config == null) {
+                val browserMenu = DefaultBrowserMenu(
                     context = requireContext(),
                     store = requireComponents.store,
                     onItemTapped = { controller.handleMenuInteraction(it) }
                 )
-            } else {
-                CustomTabMenu(
-                    context = requireContext(),
-                    store = requireComponents.store,
-                    currentTabId = tabId,
-                    onItemTapped = { controller.handleMenuInteraction(it) }
-                )
+                browserToolbar.display.menuBuilder = browserMenu.menuBuilder
             }
-            browserToolbar.display.menuBuilder = browserMenu.menuBuilder
         } else {
             browserToolbar.display.menuController = BrowserMenuControllerAdapter(this)
-        }
-
-        with(browserToolbar.display) {
-            onUrlClicked = {
-                edit()
-                false // Do not switch to edit mode
-            }
-            setOnUrlLongClickListener { onUrlLongClicked() }
         }
 
         toolbarIntegration.set(
@@ -289,9 +272,11 @@ class BrowserFragment :
                 requireComponents.store,
                 browserToolbar,
                 fragment = this,
+                controller = controller,
                 customTabId = if (tab.isCustomTab()) { tab.id } else { null },
                 customTabsUseCases = requireComponents.customTabsUseCases,
-                sessionUseCases = requireComponents.sessionUseCases
+                sessionUseCases = requireComponents.sessionUseCases,
+                onUrlLongClicked = ::onUrlLongClicked
             ),
             owner = this,
             view = browserToolbar

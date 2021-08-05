@@ -15,15 +15,19 @@ import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.BrowserFragment
+import org.mozilla.focus.menu.browser.CustomTabMenu
 import org.mozilla.focus.utils.HardwareUtils
 
+@Suppress("LongParameterList")
 class BrowserToolbarIntegration(
-    private val store: BrowserStore,
+    store: BrowserStore,
     toolbar: BrowserToolbar,
     fragment: BrowserFragment,
-    private val customTabId: String? = null,
-    private val sessionUseCases: SessionUseCases,
-    customTabsUseCases: CustomTabsUseCases
+    controller: BrowserMenuController,
+    sessionUseCases: SessionUseCases,
+    customTabsUseCases: CustomTabsUseCases,
+    private val onUrlLongClicked: () -> Boolean,
+    customTabId: String? = null
 ) : LifecycleAwareFeature {
     private val presenter = ToolbarPresenter(
         toolbar,
@@ -37,28 +41,45 @@ class BrowserToolbarIntegration(
     init {
         val context = toolbar.context
 
-        toolbar.display.colors = toolbar.display.colors.copy(
-            hint = ContextCompat.getColor(context, R.color.urlBarHintText),
-            text = 0xFFFFFFFF.toInt()
-        )
+        toolbar.display.apply {
+            colors = colors.copy(
+                hint = ContextCompat.getColor(context, R.color.urlBarHintText),
+                text = 0xFFFFFFFF.toInt()
+            )
 
-        toolbar.display.indicators = listOf(
-            DisplayToolbar.Indicators.SECURITY,
-            DisplayToolbar.Indicators.TRACKING_PROTECTION
-        )
+            indicators = listOf(
+                DisplayToolbar.Indicators.SECURITY,
+                DisplayToolbar.Indicators.TRACKING_PROTECTION
+            )
 
-        toolbar.display.displayIndicatorSeparator = false
+            displayIndicatorSeparator = false
 
-        toolbar.display.setOnSiteSecurityClickedListener {
-            fragment.showSecurityPopUp()
+            setOnSiteSecurityClickedListener {
+                fragment.showSecurityPopUp()
+            }
+
+            onUrlClicked = {
+                toolbar.editMode()
+                false // Do not switch to edit mode
+            }
+
+            setOnUrlLongClickListener { onUrlLongClicked() }
         }
 
         if (customTabId != null) {
+            val menu = CustomTabMenu(
+                context = fragment.requireContext(),
+                store = store,
+                currentTabId = customTabId,
+                onItemTapped = { controller.handleMenuInteraction(it) }
+            )
             customTabsFeature = CustomTabsToolbarFeature(
                 store,
                 toolbar,
                 sessionId = customTabId,
                 useCases = customTabsUseCases,
+                menuBuilder = menu.menuBuilder,
+                menuItemIndex = menu.menuBuilder.items.size - 1,
                 closeListener = { fragment.closeCustomTab() }
             )
         }

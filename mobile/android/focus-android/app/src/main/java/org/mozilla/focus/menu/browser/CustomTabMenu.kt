@@ -5,19 +5,17 @@ package org.mozilla.focus.menu.browser
 
 import android.content.Context
 import androidx.core.content.ContextCompat
+import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuHighlight
-import mozilla.components.browser.menu.WebExtensionBrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuHighlightableItem
-import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import org.mozilla.focus.R
 import org.mozilla.focus.menu.ToolbarMenu
 import org.mozilla.focus.theme.resolveAttribute
@@ -33,8 +31,8 @@ class CustomTabMenu(
         get() = store.state.findCustomTab(currentTabId)
 
     override val menuBuilder by lazy {
-        WebExtensionBrowserMenuBuilder(
-            items = mvpMenuItems, store = store, showAddonsInMenu = false
+        BrowserMenuBuilder(
+            items = menuItems
         )
     }
 
@@ -89,7 +87,7 @@ class CustomTabMenu(
         BrowserMenuItemToolbar(listOf(back, forward, refresh))
     }
 
-    val mvpMenuItems by lazy {
+    private val menuItems by lazy {
         val findInPage = BrowserMenuImageText(
             label = context.getString(R.string.find_in_page),
             imageResource = R.drawable.ic_search
@@ -99,18 +97,13 @@ class CustomTabMenu(
 
         val desktopMode = BrowserMenuImageSwitch(
             imageResource = R.drawable.ic_device_desktop,
-            label = context.getString(R.string.mvp_preference_performance_request_desktop_site),
+            label = context.getString(R.string.preference_performance_request_desktop_site2),
             initialState = {
                 selectedSession?.content?.desktopMode ?: true
             }
         ) { checked ->
             onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
         }
-
-        val reportSiteIssuePlaceholder = WebExtensionPlaceholderMenuItem(
-            id = WebCompatReporterFeature.WEBCOMPAT_REPORTER_EXTENSION_ID,
-            iconTintColorResource = context.theme.resolveAttribute(R.attr.primaryText)
-        )
 
         val addToHomescreen = BrowserMenuImageText(
             label = context.getString(R.string.menu_add_to_home_screen),
@@ -143,7 +136,6 @@ class CustomTabMenu(
             BrowserMenuDivider(),
             findInPage,
             desktopMode,
-            reportSiteIssuePlaceholder,
             BrowserMenuDivider(),
             addToHomescreen,
             openInApp,

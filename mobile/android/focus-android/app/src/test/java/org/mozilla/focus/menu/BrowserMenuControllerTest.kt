@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.menu
 
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases
 import org.junit.Before
@@ -16,7 +18,6 @@ import org.mockito.Spy
 import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.BrowserMenuController
 import org.mozilla.focus.state.AppStore
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -32,10 +33,9 @@ class BrowserMenuControllerTest {
 
     @Mock
     private lateinit var findInPageIntegration: FindInPageIntegration
-    @Mock
-    private lateinit var telemetryWrapper: TelemetryWrapper
 
     private val currentTabId: String = "1"
+    private val selectedTab = createTab("https://www.mozilla.org", id = "1")
     private val shareCallback: () -> Unit = {}
 
     @Mock
@@ -49,7 +49,12 @@ class BrowserMenuControllerTest {
 
     @Before
     fun setup() {
-        store = BrowserStore()
+        store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(selectedTab),
+                selectedTabId = selectedTab.id
+            )
+        )
         sessionUseCases = SessionUseCases(store)
         MockitoAnnotations.openMocks(this)
 
@@ -121,6 +126,6 @@ class BrowserMenuControllerTest {
     fun `GIVEN FindInPage menu item WHEN the item is pressed THEN findInPageMenuEvent method is called`() {
         val menuItem = ToolbarMenu.Item.FindInPage
         browserMenuController.handleMenuInteraction(menuItem)
-        Mockito.verify(telemetryWrapper, times(1)).findInPageMenuEvent()
+        Mockito.verify(findInPageIntegration).show(selectedTab)
     }
 }

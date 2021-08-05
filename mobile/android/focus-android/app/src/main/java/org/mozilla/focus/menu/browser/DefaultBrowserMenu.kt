@@ -107,7 +107,7 @@ class DefaultBrowserMenu(
 
         val desktopMode = BrowserMenuImageSwitch(
             imageResource = R.drawable.ic_device_desktop,
-            label = context.getString(R.string.mvp_preference_performance_request_desktop_site),
+            label = context.getString(R.string.preference_performance_request_desktop_site2),
             initialState = {
                 selectedSession?.content?.desktopMode ?: false
             }

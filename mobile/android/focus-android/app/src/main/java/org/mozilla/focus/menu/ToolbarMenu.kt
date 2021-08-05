@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.menu
 
-import mozilla.components.browser.menu.WebExtensionBrowserMenuBuilder
+import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 
 interface ToolbarMenu {
@@ -21,6 +21,6 @@ interface ToolbarMenu {
         object Stop : Item()
     }
 
-    val menuBuilder: WebExtensionBrowserMenuBuilder
+    val menuBuilder: BrowserMenuBuilder
     val menuToolbar: BrowserMenuItemToolbar
 }
