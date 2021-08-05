@@ -85,7 +85,6 @@ jobs:
         original: build-linux64-shippable/opt
         fail-on-diff: true
         run-on-projects: ['mozilla-central']
-        pre-diff-commands: ['rm {a,b}/firefox/librlbox.so']  # Bug 1612035
 
     reproducible-linux64-generated-files:
         symbol: Linux64g
