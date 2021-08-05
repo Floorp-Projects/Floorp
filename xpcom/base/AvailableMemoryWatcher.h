@@ -10,21 +10,11 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/UniquePtr.h"
+#include "MemoryPressureLevelMac.h"
 #include "nsCOMPtr.h"
 #include "nsIAvailableMemoryWatcherBase.h"
 
 namespace mozilla {
-
-#if defined(XP_MACOSX)
-// An internal representation of the Mac memory-pressure level constants.
-enum class MacMemoryPressureLevel {
-  Unset,
-  Unexpected,
-  Normal,
-  Warning,
-  Critical,
-};
-#endif
 
 // This class implements a platform-independent part to watch the system's
 // memory situation and invoke the registered callbacks when we detect
