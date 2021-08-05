@@ -73,6 +73,8 @@ add_task(async function test_valid_handlers() {
   );
   is(handlerInfo.preferredApplicationHandler, null);
 
+  gHandlerService.remove(handlerInfo);
+
   handlerInfo = gExternalProtocolService.getProtocolHandlerInfo("fake_scheme");
   is(handlerInfo.preferredAction, handlerInfo.useHelperApp);
   is(handlerInfo.alwaysAskBeforeHandling, false);
@@ -88,6 +90,8 @@ add_task(async function test_valid_handlers() {
   handlerInfo = gExternalProtocolService.getProtocolHandlerInfo("fake_scheme");
   is(handlerInfo.preferredApplicationHandler, null);
 
+  gHandlerService.remove(handlerInfo);
+
   handlerInfo = gMIMEService.getFromTypeAndExtension("", "txt");
   is(handlerInfo.preferredAction, handlerInfo.saveToDisk);
   is(handlerInfo.alwaysAskBeforeHandling, false);
@@ -96,6 +100,8 @@ add_task(async function test_valid_handlers() {
   gHandlerService.store(handlerInfo);
   handlerInfo = gMIMEService.getFromTypeAndExtension("", "txt");
   is(handlerInfo.preferredApplicationHandler, null);
+
+  gHandlerService.remove(handlerInfo);
 });
 
 add_task(async function test_no_handler() {
@@ -117,6 +123,8 @@ add_task(async function test_no_handler() {
   is(handlerInfo.preferredAction, handlerInfo.alwaysAsk);
   is(handlerInfo.alwaysAskBeforeHandling, true);
   is(handlerInfo.preferredApplicationHandler, null);
+
+  gHandlerService.remove(handlerInfo);
 });
 
 add_task(async function test_bad_web_handler1() {
@@ -144,6 +152,8 @@ add_task(async function test_bad_web_handler1() {
   is(handlerInfo.preferredAction, handlerInfo.alwaysAsk);
   is(handlerInfo.alwaysAskBeforeHandling, true);
   is(handlerInfo.preferredApplicationHandler, null);
+
+  gHandlerService.remove(handlerInfo);
 });
 
 add_task(async function test_bad_web_handler2() {
@@ -171,4 +181,6 @@ add_task(async function test_bad_web_handler2() {
   is(handlerInfo.preferredAction, handlerInfo.alwaysAsk);
   is(handlerInfo.alwaysAskBeforeHandling, true);
   is(handlerInfo.preferredApplicationHandler, null);
+
+  gHandlerService.remove(handlerInfo);
 });
