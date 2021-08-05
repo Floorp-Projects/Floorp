@@ -2197,6 +2197,13 @@ class Repackage(MachCommandBase):
     @CommandArgument(
         "--output", "-o", type=str, help="Output filename (Default: auto-generated)"
     )
+    @CommandArgument(
+        "--sign",
+        default=False,
+        action="store_true",
+        help="Sign repackaged MSIX with self-signed certificate for local testing. "
+        "(Default: false)",
+    )
     def repackage_msix(
         self,
         command_context,
@@ -2209,6 +2216,7 @@ class Repackage(MachCommandBase):
         verbose=False,
         output=None,
         makeappx=None,
+        sign=False,
     ):
         from mozbuild.repackaging.msix import repackage_msix
 
@@ -2225,7 +2233,7 @@ class Repackage(MachCommandBase):
             channel if channel != "beta" else "official",
         )
 
-        repackage_msix(
+        output = repackage_msix(
             input,
             channel=channel,
             template=template,
@@ -2241,6 +2249,34 @@ class Repackage(MachCommandBase):
             output=output,
             makeappx=makeappx,
         )
+
+        if sign:
+            self.repackage_sign_msix(
+                command_context, output, force=False, verbose=verbose
+            )
+
+    @SubCommand("repackage", "sign-msix", description="Sign an MSIX for local testing")
+    @CommandArgument("--input", type=str, required=True, help="MSIX to sign.")
+    @CommandArgument(
+        "--force",
+        default=False,
+        action="store_true",
+        help="Force recreating self-signed certificate.  (Default: false)",
+    )
+    @CommandArgument(
+        "--verbose",
+        default=False,
+        action="store_true",
+        help="Be verbose.  (Default: false)",
+    )
+    def repackage_sign_msix(self, command_context, input, force=False, verbose=False):
+        from mozbuild.repackaging.msix import sign_msix
+
+        self._set_log_level(verbose)
+
+        sign_msix(input, force=force, log=self.log, verbose=verbose)
+
+        return 0
 
     @SubCommand("repackage", "mar", description="Repackage into complete MAR file")
     @CommandArgument("--input", "-i", type=str, required=True, help="Input filename")
