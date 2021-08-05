@@ -346,6 +346,15 @@ class VirtualenvManager(VirtualenvHelper):
             for pypi_requirement in env_requirements.pypi_requirements:
                 self.install_pip_package(pypi_requirement.full_specifier)
 
+            for requirement in env_requirements.pypi_optional_requirements:
+                try:
+                    self.install_pip_package(requirement.full_specifier)
+                except subprocess.CalledProcessError:
+                    print(
+                        f"Could not install {requirement.package_name}, so "
+                        f"{requirement.repercussion}. Continuing."
+                    )
+
         finally:
             os.environ.update(old_env_variables)
 
