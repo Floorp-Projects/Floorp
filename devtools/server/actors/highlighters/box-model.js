@@ -790,7 +790,8 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
 
     let pseudos = this._getPseudoClasses(node).join("");
     if (pseudo) {
-      pseudos += pseudo;
+      // Display :after as ::after
+      pseudos += ":" + pseudo;
     }
 
     // We want to display the original `width` and `height`, instead of the ones affected
