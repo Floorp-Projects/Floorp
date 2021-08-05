@@ -333,7 +333,12 @@ void nsViewManager::Refresh(nsView* aView,
       if (!renderer->NeedsWidgetInvalidation()) {
         renderer->FlushRendering();
       } else {
-        presShell->Paint(aView, damageRegion, PaintFlags::PaintComposite);
+        // Try to just Composite the current WindowRenderer contents. If
+        // that fails then we need tor repaint, and request that it gets
+        // composited as well.
+        if (!presShell->Composite(aView)) {
+          presShell->Paint(aView, damageRegion, PaintFlags::PaintComposite);
+        }
       }
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -456,7 +461,7 @@ void nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget) {
       }
 #endif
 
-      presShell->Paint(view, nsRegion(), PaintFlags::PaintLayers);
+      presShell->Paint(view, nsRegion(), PaintFlags::None);
       view->SetForcedRepaint(false);
 
 #ifdef MOZ_DUMP_PAINTING

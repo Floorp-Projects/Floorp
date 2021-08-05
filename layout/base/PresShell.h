@@ -1268,6 +1268,8 @@ class PresShell final : public nsStubDocumentObserver,
   void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
              PaintFlags aFlags);
 
+  bool Composite(nsView* aViewToPaint);
+
   /**
    * Notify that we're going to call Paint with PaintFlags::PaintLayers
    * on the pres shell for a widget (which might not be this one, since
