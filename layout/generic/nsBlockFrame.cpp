@@ -3743,6 +3743,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       *aKeepReflowGoing = false;
       if (ShouldAvoidBreakInside(aState.mReflowInput)) {
         aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
+        aLine->MarkDirty();
       } else {
         PushLines(aState, aLine.prev());
         aState.mReflowStatus.SetIncomplete();
@@ -3993,6 +3994,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       *aKeepReflowGoing = false;
       if (ShouldAvoidBreakInside(aState.mReflowInput)) {
         aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
+        aLine->MarkDirty();
       } else {
         PushLines(aState, aLine.prev());
         aState.mReflowStatus.SetIncomplete();
@@ -4016,6 +4018,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       if (!frameReflowStatus.IsFullyComplete() &&
           ShouldAvoidBreakInside(aState.mReflowInput)) {
         *aKeepReflowGoing = false;
+        aLine->MarkDirty();
       }
 
       if (aLine->SetCarriedOutBEndMargin(collapsedBEndMargin)) {
