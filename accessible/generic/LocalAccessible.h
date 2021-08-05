@@ -968,6 +968,8 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual LocalAccessible* GetSiblingAtOffset(int32_t aOffset,
                                               nsresult* aError = nullptr) const;
 
+  void ModifySubtreeContextFlags(uint32_t aContextFlags, bool aAdd);
+
   /**
    * Flags used to describe the state of this accessible.
    */

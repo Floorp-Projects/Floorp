@@ -415,6 +415,15 @@ void HTMLTableAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
                                                aModType, aOldValue, aOldState);
 
   if (aAttribute == nsGkAtoms::summary) {
+    nsAutoString name;
+    ARIAName(name);
+    if (name.IsEmpty()) {
+      if (!Caption()) {
+        // XXX: Should really be checking if caption provides a name.
+        mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+      }
+    }
+
     mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
                            this);
   }

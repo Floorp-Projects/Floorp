@@ -204,6 +204,28 @@ ENameValueFlag HTMLButtonAccessible::NativeName(nsString& aName) const {
   return eNameOK;
 }
 
+void HTMLButtonAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
+                                               nsAtom* aAttribute,
+                                               int32_t aModType,
+                                               const nsAttrValue* aOldValue,
+                                               uint64_t aOldState) {
+  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
+                                               aModType, aOldValue, aOldState);
+
+  if (aAttribute == nsGkAtoms::value) {
+    dom::Element* elm = Elm();
+    if (elm->IsHTMLElement(nsGkAtoms::input) ||
+        (elm->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type, nsGkAtoms::image,
+                          eCaseMatters) &&
+         !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::alt))) {
+      if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_labelledby) &&
+          !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label)) {
+        mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+      }
+    }
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLButtonAccessible: Widgets
 
