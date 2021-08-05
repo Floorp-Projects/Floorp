@@ -42,12 +42,21 @@ packaging_description_schema = schema.extend(
         Optional("extra"): job_description_schema["extra"],
         # passed through to job description
         Optional("fetches"): job_description_schema["fetches"],
+        Optional("run-on-projects"): job_description_schema["run-on-projects"],
         # Shipping product and phase
         Optional("shipping-product"): job_description_schema["shipping-product"],
         Optional("shipping-phase"): job_description_schema["shipping-phase"],
         Required("package-formats"): optionally_keyed_by(
             "build-platform", "release-type", [text_type]
         ),
+        Optional("msix"): {
+            Optional("channel"): optionally_keyed_by(
+                "level", "build-platform", "release-type", "shipping-product", text_type
+            ),
+            Optional("publisher"): optionally_keyed_by(
+                "level", "build-platform", "release-type", "shipping-product", text_type
+            ),
+        },
         # All l10n jobs use mozharness
         Required("mozharness"): {
             Extra: object,
@@ -108,6 +117,27 @@ PACKAGE_FORMATS = {
             "setupexe": "target.installer.exe",
         },
         "output": "target.installer.msi",
+    },
+    "msix": {
+        "args": [
+            "msix",
+            "--channel",
+            "{msix-channel}",
+            "--arch",
+            "{architecture}",
+            "--publisher",
+            "{msix-publisher}",
+            # For langpacks.  Ignored if directory does not exist.
+            "--distribution-dir",
+            "{fetch-dir}/distribution",
+            "--verbose",
+            "--makeappx",
+            "{fetch-dir}/msix-packaging/makemsix",
+        ],
+        "inputs": {
+            "input": "target{archive_format}",
+        },
+        "output": "target.installer.msix",
     },
     "dmg": {
         "args": ["dmg"],
@@ -174,6 +204,8 @@ def handle_keyed_by(config, jobs):
     fields = [
         "mozharness.config",
         "package-formats",
+        "msix.channel",
+        "msix.publisher",
     ]
     for job in jobs:
         job = copy.deepcopy(job)  # don't overwrite dict values here
@@ -184,7 +216,8 @@ def handle_keyed_by(config, jobs):
                 item_name="?",
                 **{
                     "release-type": config.params["release_type"],
-                }
+                    "level": config.params["level"],
+                },
             )
         yield job
 
@@ -213,6 +246,15 @@ def make_job_description(config, jobs):
         if locale:
             attributes["locale"] = locale
 
+        description = (
+            "Repackaging for locale '{locale}' for build '"
+            "{build_platform}/{build_type}'".format(
+                locale=attributes.get("locale", "en-US"),
+                build_platform=attributes.get("build_platform"),
+                build_type=attributes.get("build_type"),
+            )
+        )
+
         treeherder = job.get("treeherder", {})
         treeherder.setdefault("symbol", "Rpk")
         dep_th_platform = dep_job.task.get("extra", {}).get("treeherder-platform")
@@ -220,9 +262,7 @@ def make_job_description(config, jobs):
         treeherder.setdefault("tier", 1)
         treeherder.setdefault("kind", "build")
 
-        if config.kind == "repackage-msi":
-            treeherder["symbol"] = "MSI({})".format(locale or "N")
-
+        # Search dependencies before adding langpack dependencies.
         signing_task = None
         repackage_signing_task = None
         for dependency in dependencies.keys():
@@ -230,6 +270,65 @@ def make_job_description(config, jobs):
                 repackage_signing_task = dependency
             elif "signing" in dependency:
                 signing_task = dependency
+
+        if config.kind == "repackage-msi":
+            treeherder["symbol"] = "MSI({})".format(locale or "N")
+
+        elif config.kind == "repackage-msix":
+            assert not locale
+
+            # Like "MSIXs(Bs)".
+            treeherder["symbol"] = "MSIX({})".format(
+                dep_job.task.get("extra", {}).get("treeherder", {}).get("symbol", "B")
+            )
+
+        elif config.kind == "repackage-shippable-l10n-msix":
+            assert not locale
+
+            if attributes.get("l10n_chunk") or attributes.get("chunk_locales"):
+                # We don't want to produce MSIXes for single-locale repack builds.
+                continue
+
+            description = (
+                "Repackaging with multiple locales for build '"
+                "{build_platform}/{build_type}'".format(
+                    build_platform=attributes.get("build_platform"),
+                    build_type=attributes.get("build_type"),
+                )
+            )
+
+            # Like "MSIXs(Bs-multi)".
+            treeherder["symbol"] = "MSIX({}-multi)".format(
+                dep_job.task.get("extra", {}).get("treeherder", {}).get("symbol", "B")
+            )
+
+            fetches = job.setdefault("fetches", {})
+
+            # The keys are unique, like `shippable-l10n-signing-linux64-shippable-1/opt`, so we
+            # can't ask for the tasks directly, we must filter for them.
+            for t in config.kind_dependencies_tasks.values():
+                if t.kind != "shippable-l10n-signing":
+                    continue
+                if t.attributes["build_platform"] != "linux64-shippable":
+                    continue
+                if t.attributes["build_type"] != "opt":
+                    continue
+
+                dependencies.update({t.label: t.label})
+
+                fetches.update(
+                    {
+                        t.label: [
+                            {
+                                "artifact": f"{loc}/target.langpack.xpi",
+                                "extract": False,
+                                # Otherwise we can't disambiguate locales!
+                                "dest": f"distribution/extensions/{loc}",
+                            }
+                            for loc in t.attributes["chunk_locales"]
+                        ]
+                    }
+                )
 
         _fetch_subst_locale = "en-US"
         if locale:
@@ -242,7 +341,7 @@ def make_job_description(config, jobs):
 
         repackage_config = []
         package_formats = job.get("package-formats")
-        if use_stub and not repackage_signing_task:
+        if use_stub and not repackage_signing_task and "msix" not in package_formats:
             # if repackage_signing_task doesn't exists, generate the stub installer
             package_formats += ["installer-stub"]
         for format in package_formats:
@@ -259,6 +358,15 @@ def make_job_description(config, jobs):
             substs.update(
                 {name: "{{{}}}".format(name) for name in MOZHARNESS_EXPANSIONS}
             )
+            for msix_key in ("channel", "publisher"):
+                # Turn `msix.channel` into `msix-channel` and `msix.publisher`
+                # into `msix-publisher`.
+                value = job.get("msix", {}).get(msix_key)
+                if value:
+                    substs.update(
+                        {f"msix-{msix_key}": value},
+                    )
+
             command["inputs"] = {
                 name: filename.format(**substs)
                 for name, filename in command["inputs"].items()
@@ -266,6 +374,7 @@ def make_job_description(config, jobs):
             command["args"] = [arg.format(**substs) for arg in command["args"]]
             if "installer" in format and "aarch64" not in build_platform:
                 command["args"].append("--use-upx")
+
             repackage_config.append(command)
 
         run = job.get("mozharness", {})
@@ -302,15 +411,6 @@ def make_job_description(config, jobs):
             locale=locale,
         )
 
-        description = (
-            "Repackaging for locale '{locale}' for build '"
-            "{build_platform}/{build_type}'".format(
-                locale=attributes.get("locale", "en-US"),
-                build_platform=attributes.get("build_platform"),
-                build_type=attributes.get("build_type"),
-            )
-        )
-
         task = {
             "label": job["label"],
             "description": description,
@@ -318,7 +418,9 @@ def make_job_description(config, jobs):
             "dependencies": dependencies,
             "if-dependencies": [dep_job.kind],
             "attributes": attributes,
-            "run-on-projects": dep_job.attributes.get("run_on_projects"),
+            "run-on-projects": job.get(
+                "run-on-projects", dep_job.attributes.get("run_on_projects")
+            ),
             "optimization": dep_job.optimization,
             "treeherder": treeherder,
             "routes": job.get("routes", []),
