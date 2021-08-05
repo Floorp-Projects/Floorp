@@ -247,7 +247,7 @@ if (!window.FB) {
     const oldWindowOpen = window.open;
     window.open = function(href, name, params) {
       try {
-        const url = new URL(href);
+        const url = new URL(href, window.location.href);
         if (
           url.protocol === "https:" &&
           (url.hostname === "m.facebook.com" ||
