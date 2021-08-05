@@ -135,6 +135,11 @@ interface nsIToolkitProfileService : nsISupports
     readonly attribute unsigned long profileCount;
 
     /**
+     * Returns true if this is the first time the current install has run.
+     */
+    [noscript, notxpcom] readonly attribute boolean isFirstRun;
+
+    /**
      * Flush the profiles list file. This will fail with
      * NS_ERROR_DATABASE_CHANGED if the files on disk have changed since the
      * profiles were loaded.

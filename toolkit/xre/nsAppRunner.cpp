@@ -48,6 +48,7 @@
 #  include "MacLaunchHelper.h"
 #  include "MacApplicationDelegate.h"
 #  include "MacAutoreleasePool.h"
+#  include "MacRunFromDmgUtils.h"
 // these are needed for sysctl
 #  include <sys/types.h>
 #  include <sys/sysctl.h>
@@ -5474,6 +5475,13 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 
   rv = mScopedXPCOM->Initialize(/* aInitJSContext = */ false);
   NS_ENSURE_SUCCESS(rv, 1);
+
+#ifdef XP_MACOSX
+  if (mProfileSvc->GetIsFirstRun()) {
+    Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_FIRST_RUN_IS_FROM_DMG,
+                         MacRunFromDmgUtils::IsAppRunningFromDmg());
+  }
+#endif
 
   // run!
   rv = XRE_mainRun();
