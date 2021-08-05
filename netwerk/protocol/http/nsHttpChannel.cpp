@@ -1978,9 +1978,9 @@ nsresult nsHttpChannel::ProcessResponse() {
     Unused << mResponseHead->GetHeader(nsHttp::Alternate_Service, alt_service);
     uint32_t saw_quic = 0;
     if (!alt_service.IsEmpty()) {
-      if (PL_strstr(alt_service.get(), "h3-")) {
+      if (strstr(alt_service.get(), "h3-")) {
         saw_quic = 1;
-      } else if (PL_strstr(alt_service.get(), "quic")) {
+      } else if (strstr(alt_service.get(), "quic")) {
         saw_quic = 2;
       }
     }

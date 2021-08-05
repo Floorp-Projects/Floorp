@@ -754,7 +754,7 @@ nsresult internalDecodeRFC2047Header(const char* aHeaderVal,
   // If aHeaderVal is RFC 2047 encoded or is not a UTF-8 string  but
   // aDefaultCharset is specified, decodes RFC 2047 encoding and converts
   // to UTF-8. Otherwise, just strips away CRLF.
-  if (PL_strstr(aHeaderVal, "=?") ||
+  if (strstr(aHeaderVal, "=?") ||
       (!aDefaultCharset.IsEmpty() &&
        (!IsUtf8(nsDependentCString(aHeaderVal)) ||
         Is7bitNonAsciiString(aHeaderVal, strlen(aHeaderVal))))) {
@@ -1174,7 +1174,7 @@ nsresult DecodeRFC2047Str(const char* aHeader,
   // safe because we don't use a raw *char any more.
   aResult.SetCapacity(3 * strlen(aHeader));
 
-  while ((p = PL_strstr(begin, "=?")) != nullptr) {
+  while ((p = strstr(begin, "=?")) != nullptr) {
     if (isLastEncodedWord) {
       // See if it's all whitespace.
       for (q = begin; q < p; ++q) {

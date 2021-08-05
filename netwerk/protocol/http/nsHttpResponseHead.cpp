@@ -12,7 +12,6 @@
 #include "nsIHttpHeaderVisitor.h"
 #include "nsPrintfCString.h"
 #include "prtime.h"
-#include "plstr.h"
 #include "nsCRT.h"
 #include "nsURLHelper.h"
 #include "CacheControlParser.h"
@@ -270,7 +269,7 @@ nsresult nsHttpResponseHead::ParseCachedHead(const char* block) {
   // this command works on a buffer as prepared by Flatten, as such it is
   // not very forgiving ;-)
 
-  char* p = PL_strstr(block, "\r\n");
+  const char* p = strstr(block, "\r\n");
   if (!p) return NS_ERROR_UNEXPECTED;
 
   ParseStatusLine_locked(nsDependentCSubstring(block, p - block));
@@ -280,7 +279,7 @@ nsresult nsHttpResponseHead::ParseCachedHead(const char* block) {
 
     if (*block == 0) break;
 
-    p = PL_strstr(block, "\r\n");
+    p = strstr(block, "\r\n");
     if (!p) return NS_ERROR_UNEXPECTED;
 
     Unused << ParseHeaderLine_locked(nsDependentCSubstring(block, p - block),
@@ -313,7 +312,7 @@ nsresult nsHttpResponseHead::ParseCachedOriginalHeaders(char* block) {
 
     if (*block == 0) break;
 
-    p = PL_strstr(block, "\r\n");
+    p = strstr(block, "\r\n");
     if (!p) return NS_ERROR_UNEXPECTED;
 
     *p = 0;

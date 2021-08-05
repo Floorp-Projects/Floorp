@@ -847,8 +847,8 @@ void LogCallingScriptLocation(void* instance) {
 
 void LogHeaders(const char* lineStart) {
   nsAutoCString buf;
-  char* endOfLine;
-  while ((endOfLine = PL_strstr(lineStart, "\r\n"))) {
+  const char* endOfLine;
+  while ((endOfLine = strstr(lineStart, "\r\n"))) {
     buf.Assign(lineStart, endOfLine - lineStart);
     if (StaticPrefs::network_http_sanitize_headers_in_logs() &&
         (nsCRT::strcasestr(buf.get(), "authorization: ") ||
