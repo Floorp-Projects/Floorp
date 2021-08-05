@@ -10,6 +10,29 @@
 
 namespace mozilla {
 
+void CCGCScheduler::NoteGCBegin() {
+  // Treat all GC as incremental here; non-incremental GC will just appear to
+  // be one slice.
+  mInIncrementalGC = true;
+  mReadyForMajorGC = false;
+}
+
+void CCGCScheduler::NoteGCEnd() {
+  mMajorGCReason = JS::GCReason::NO_REASON;
+
+  mInIncrementalGC = false;
+  mCCBlockStart = TimeStamp();
+  mReadyForMajorGC = false;
+  mNeedsFullCC = true;
+  mHasRunGC = true;
+  mIsCompactingOnUserInactive = false;
+
+  mCleanupsSinceLastGC = 0;
+  mCCollectedWaitingForGC = 0;
+  mCCollectedZonesWaitingForGC = 0;
+  mLikelyShortLivingObjectsNeedingGC = 0;
+}
+
 void CCGCScheduler::FullGCTimerFired(nsITimer* aTimer) {
   KillFullGCTimer();
 
