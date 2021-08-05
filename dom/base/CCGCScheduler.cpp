@@ -631,7 +631,7 @@ CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
   };
 }
 
-GCRunnerStep CCGCScheduler::GetNextGCRunnerAction(TimeStamp aDeadline) {
+GCRunnerStep CCGCScheduler::GetNextGCRunnerAction(TimeStamp aDeadline) const {
   MOZ_ASSERT(mMajorGCReason != JS::GCReason::NO_REASON);
 
   if (InIncrementalGC()) {
