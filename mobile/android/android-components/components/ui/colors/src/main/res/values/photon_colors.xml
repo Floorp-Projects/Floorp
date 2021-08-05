@@ -79,7 +79,9 @@
     <!-- Ink -->
     <color name="photonInk20">#312A65</color>
     <color name="photonInk20A48">#7A312A65</color>
+    <color name="photonInk30">#2E255D</color>
     <color name="photonInk50">#291D4F</color>
+    <color name="photonInk60">#271948</color>
     <color name="photonInk70">#363959</color>
     <color name="photonInk80">#20123A</color>
     <color name="photonInk90">#0f1126</color>
