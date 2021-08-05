@@ -15,7 +15,7 @@
 
 /// These values match the Rendering Intent values from the ICC spec
 #[repr(u32)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Intent {
     AbsoluteColorimetric = 3,
     Saturation = 2,

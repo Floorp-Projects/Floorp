@@ -1,3 +1,5 @@
+#![allow(clippy::missing_safety_doc)]
+
 use std::{ptr::null_mut, slice};
 
 use libc::{fclose, fopen, fread, free, malloc, memset, FILE};
@@ -31,10 +33,7 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
 ) -> *mut Profile {
     let profile =
         Profile::new_rgb_with_gamma_set(white_point, primaries, redGamma, greenGamma, blueGamma);
-    match profile {
-        Some(profile) => Box::into_raw(profile),
-        None => null_mut(),
-    }
+    profile.map_or_else(null_mut, Box::into_raw)
 }
 
 #[no_mangle]
@@ -61,10 +60,7 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_table(
 ) -> *mut Profile {
     let table = slice::from_raw_parts(table, num_entries as usize);
     let profile = Profile::new_rgb_with_table(white_point, primaries, table);
-    match profile {
-        Some(profile) => Box::into_raw(profile),
-        None => null_mut(),
-    }
+    profile.map_or_else(null_mut, Box::into_raw)
 }
 
 /* qcms_profile_from_memory does not hold a reference to the memory passed in */
@@ -75,10 +71,7 @@ pub unsafe extern "C" fn qcms_profile_from_memory(
 ) -> *mut Profile {
     let mem = slice::from_raw_parts(mem as *const libc::c_uchar, size);
     let profile = Profile::new_from_slice(mem);
-    match profile {
-        Some(profile) => Box::into_raw(profile),
-        None => null_mut(),
-    }
+    profile.map_or_else(null_mut, Box::into_raw)
 }
 
 #[no_mangle]
@@ -165,14 +158,16 @@ pub unsafe extern "C" fn qcms_profile_from_file(file: *mut FILE) -> *mut Profile
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_from_path(path: *const libc::c_char) -> *mut Profile {
-    let mut profile: *mut Profile = std::ptr::null_mut::<Profile>();
-    let file = fopen(path, b"rb\x00" as *const u8 as *const libc::c_char);
-    if !file.is_null() {
-        profile = qcms_profile_from_file(file);
-        fclose(file);
+    if let Ok(Some(boxed_profile)) = std::ffi::CStr::from_ptr(path)
+        .to_str()
+        .map(Profile::new_from_path)
+    {
+        Box::into_raw(boxed_profile)
+    } else {
+        std::ptr::null_mut()
     }
-    profile
 }
+
 #[no_mangle]
 pub unsafe extern "C" fn qcms_data_from_path(
     path: *const libc::c_char,
