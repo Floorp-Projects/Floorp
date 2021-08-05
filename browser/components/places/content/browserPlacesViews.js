@@ -964,7 +964,7 @@ PlacesToolbar.prototype = {
   _cbEvents: [
     "dragstart",
     "dragover",
-    "dragexit",
+    "dragleave",
     "dragend",
     "drop",
     "mousemove",
@@ -1246,8 +1246,8 @@ PlacesToolbar.prototype = {
       case "dragover":
         this._onDragOver(aEvent);
         break;
-      case "dragexit":
-        this._onDragExit(aEvent);
+      case "dragleave":
+        this._onDragLeave(aEvent);
         break;
       case "dragend":
         this._onDragEnd(aEvent);
@@ -1706,10 +1706,6 @@ PlacesToolbar.prototype = {
     if (aTimer == this._updateNodesVisibilityTimer) {
       this._updateNodesVisibilityTimer = null;
       this._updateNodesVisibilityTimerCallback();
-    } else if (aTimer == this._ibTimer) {
-      // * Timer to turn off indicator bar.
-      this._dropIndicator.collapsed = true;
-      this._ibTimer = null;
     } else if (aTimer == this._overFolder.openTimer) {
       // * Timer to open a menubutton that's being dragged over.
       // Set the autoopen attribute on the folder's menupopup so that
@@ -1777,10 +1773,6 @@ PlacesToolbar.prototype = {
     // Called on dragend and drop.
     PlacesControllerDragHelper.currentDropTarget = null;
     this._draggedElt = null;
-    if (this._ibTimer) {
-      this._ibTimer.cancel();
-    }
-
     this._dropIndicator.collapsed = true;
   },
 
@@ -1836,11 +1828,6 @@ PlacesToolbar.prototype = {
       this._dropIndicator.collapsed = true;
       aEvent.stopPropagation();
       return;
-    }
-
-    if (this._ibTimer) {
-      this._ibTimer.cancel();
-      this._ibTimer = null;
     }
 
     if (dropPoint.folderElt || aEvent.originalTarget == this._chevron) {
@@ -1920,16 +1907,10 @@ PlacesToolbar.prototype = {
     aEvent.stopPropagation();
   },
 
-  _onDragExit: function PT__onDragExit(aEvent) {
+  _onDragLeave(aEvent) {
     PlacesControllerDragHelper.currentDropTarget = null;
 
-    // Set timer to turn off indicator bar (if we turn it off
-    // here, dragenter might be called immediately after, creating
-    // flicker).
-    if (this._ibTimer) {
-      this._ibTimer.cancel();
-    }
-    this._ibTimer = this._setTimer(10);
+    this._dropIndicator.collapsed = true;
 
     // If we hovered over a folder, close it now.
     if (this._overFolder.elt) {
