@@ -1239,11 +1239,14 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     mDoc->Controller()->ScheduleRelocation(this);
   }
 
-  // Fire name change and description change events. XXX: it's not complete and
-  // dupes the code logic of accessible name and description calculation, we do
-  // that for performance reasons.
+  // Fire name change and description change events.
   if (aAttribute == nsGkAtoms::aria_label) {
-    mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+    // A valid aria-labelledby would take precedence so an aria-label change
+    // won't change the name.
+    IDRefsIterator iter(mDoc, elm, nsGkAtoms::aria_labelledby);
+    if (!iter.NextElem()) {
+      mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+    }
     return;
   }
 
@@ -1256,21 +1259,13 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       // the eHasDescriptionDependent flag on all Accessibles in these subtrees.
       IDRefsIterator iter(mDoc, elm, nsGkAtoms::aria_describedby);
       while (LocalAccessible* target = iter.Next()) {
-        Pivot pivot(target);
-        LocalAccInSameDocRule rule;
-        for (Accessible* anchor = target; anchor;
-             anchor = pivot.Next(anchor, rule)) {
-          LocalAccessible* acc = anchor->AsLocal();
-          MOZ_ASSERT(acc);
-          acc->mContextFlags |= eHasDescriptionDependent;
-        }
+        target->ModifySubtreeContextFlags(eHasDescriptionDependent, true);
       }
     }
     return;
   }
 
-  if (aAttribute == nsGkAtoms::aria_labelledby &&
-      !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label)) {
+  if (aAttribute == nsGkAtoms::aria_labelledby) {
     mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
     if (aModType == dom::MutationEvent_Binding::MODIFICATION ||
         aModType == dom::MutationEvent_Binding::ADDITION) {
@@ -1279,14 +1274,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       // the eHasNameDependent flag on all Accessibles in these subtrees.
       IDRefsIterator iter(mDoc, elm, nsGkAtoms::aria_labelledby);
       while (LocalAccessible* target = iter.Next()) {
-        Pivot pivot(target);
-        LocalAccInSameDocRule rule;
-        for (Accessible* anchor = target; anchor;
-             anchor = pivot.Next(anchor, rule)) {
-          LocalAccessible* acc = anchor->AsLocal();
-          MOZ_ASSERT(acc);
-          acc->mContextFlags |= eHasNameDependent;
-        }
+        target->ModifySubtreeContextFlags(eHasNameDependent, true);
       }
     }
     return;
@@ -1300,11 +1288,14 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
   }
 
   if (aAttribute == nsGkAtoms::title) {
-    if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label) &&
-        !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_labelledby) &&
-        !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::alt)) {
-      mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
-      return;
+    nsAutoString name;
+    ARIAName(name);
+    if (name.IsEmpty()) {
+      NativeName(name);
+      if (name.IsEmpty()) {
+        mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+        return;
+      }
     }
 
     if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_describedby)) {
@@ -2381,6 +2372,23 @@ void LocalAccessible::BindToParent(LocalAccessible* aParent,
     mContextFlags &= ~eHasDescriptionDependent;
   }
 
+  // Add name/description dependent flags for dependent content once
+  // a name/description provider is added to doc.
+  Relation rel = RelationByType(RelationType::LABELLED_BY);
+  LocalAccessible* relTarget = nullptr;
+  while ((relTarget = rel.Next())) {
+    if (!relTarget->HasNameDependent()) {
+      relTarget->ModifySubtreeContextFlags(eHasNameDependent, true);
+    }
+  }
+
+  rel = RelationByType(RelationType::DESCRIBED_BY);
+  while ((relTarget = rel.Next())) {
+    if (!relTarget->HasDescriptionDependent()) {
+      relTarget->ModifySubtreeContextFlags(eHasDescriptionDependent, true);
+    }
+  }
+
   mContextFlags |=
       static_cast<uint32_t>((mParent->IsAlert() || mParent->IsInsideAlert())) &
       eInsideAlert;
@@ -2883,6 +2891,21 @@ LocalAccessible* LocalAccessible::GetSiblingAtOffset(int32_t aOffset,
   if (aError && !child) *aError = NS_ERROR_UNEXPECTED;
 
   return child;
+}
+
+void LocalAccessible::ModifySubtreeContextFlags(uint32_t aContextFlags,
+                                                bool aAdd) {
+  Pivot pivot(this);
+  LocalAccInSameDocRule rule;
+  for (Accessible* anchor = this; anchor; anchor = pivot.Next(anchor, rule)) {
+    MOZ_ASSERT(anchor->IsLocal());
+    LocalAccessible* acc = anchor->AsLocal();
+    if (aAdd) {
+      acc->mContextFlags |= aContextFlags;
+    } else {
+      acc->mContextFlags &= ~aContextFlags;
+    }
+  }
 }
 
 double LocalAccessible::AttrNumericValue(nsAtom* aAttr) const {

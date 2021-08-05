@@ -74,18 +74,20 @@
 
       gQueue.push(new setAttr("tst1", "aria-label", "hi",
                               new invokerChecker(EVENT_NAME_CHANGE, "tst1")));
-      gQueue.push(new setAttr("tst1", "aria-labelledby", "display",
-                              new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst1")));
       gQueue.push(new setAttr("tst1", "alt", "alt",
                               new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst1")));
       gQueue.push(new setAttr("tst1", "title", "title",
                               new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst1")));
+      gQueue.push(new setAttr("tst1", "aria-labelledby", "display",
+                              new invokerChecker(EVENT_NAME_CHANGE, "tst1")));
 
       gQueue.push(new setAttr("tst2", "aria-labelledby", "display",
                               new invokerChecker(EVENT_NAME_CHANGE, "tst2")));
       gQueue.push(new setAttr("tst2", "alt", "alt",
                               new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst2")));
       gQueue.push(new setAttr("tst2", "title", "title",
+                              new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst2")));
+      gQueue.push(new setAttr("tst2", "aria-label", "hi",
                               new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst2")));
 
       // When `alt` attribute is added or removed from a broken img,
