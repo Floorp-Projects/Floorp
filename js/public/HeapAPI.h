@@ -209,7 +209,6 @@ struct MarkBitmap {
   inline void copyMarkBit(TenuredCell* dst, const TenuredCell* src,
                           ColorBit colorBit);
   inline void unmark(const TenuredCell* cell);
-  inline void clear();
   inline MarkBitmapWord* arenaBits(Arena* arena);
 };
 
