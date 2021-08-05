@@ -86,7 +86,7 @@ mochitest-plain:
             linux.*64-asan/opt: 10
             linux.*64-tsan-qr/opt: 20
             linux.*64-.*cov/opt: 10
-            windows10-64-2004-ccov.*/.*: 10
+            windows10-64-ccov.*/.*: 10
             macosx.*64-ccov.*/.*: 10
             default: 5
     instance-size:
@@ -414,7 +414,7 @@ mochitest-media:
     schedules-component: mochitest-plain
     max-run-time:
         by-test-platform:
-            windows10-64-2004-ccov.*/.*: 7200
+            windows10-64-ccov.*/.*: 7200
             macosx.*64-ccov.*/.*: 7200
             linux.*64-tsan-qr/opt: 7200
             default: 5400

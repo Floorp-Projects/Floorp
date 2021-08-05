@@ -185,7 +185,7 @@ reftest:
             windows10-64-2004.*/debug: 4
             windows10-32.*/debug: 6
             windows10-64-2004-asan-qr/opt: 3
-            windows10-64-2004-ccov-qr/opt: 9
+            windows10-64-ccov-qr/opt: 9
             default: 8
     e10s: true
     run-on-projects:
@@ -209,7 +209,7 @@ reftest:
     max-run-time:
         by-test-platform:
             windows10-32-mingwclang-qr/debug: 5400
-            windows10-64-2004-ccov.*/.*: 5400
+            windows10-64-ccov.*/.*: 5400
             windows10-64-2004-asan-qr/opt: 5400
             macosx.*64-ccov.*/.*: 5400
             default: 3600
