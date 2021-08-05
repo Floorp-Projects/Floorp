@@ -1930,6 +1930,11 @@
   value: true
   mirror: always
 
+- name: dom.event.dragexit.enabled
+  type: bool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether WheelEvent should return pixels instead of lines for
 # WheelEvent.deltaX/Y/Z, when deltaMode hasn't been checked.
 #

@@ -298,6 +298,8 @@ class Event : public nsISupports, public nsWrapperCache {
     return mEvent->IsHandledInRemoteProcess();
   }
 
+  static bool IsDragExitEnabled(JSContext* aCx, JSObject* aGlobal);
+
  protected:
   // Internal helper functions
   void SetEventType(const nsAString& aEventTypeArg);
