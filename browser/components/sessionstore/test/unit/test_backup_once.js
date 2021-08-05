@@ -76,10 +76,7 @@ function promise_check_contents(path, expect) {
 
 function generateFileContents(id) {
   let url = `http://example.com/test_backup_once#${id}_${Math.random()}`;
-  return {
-    windows: [{ tabs: [{ entries: [{ url }], index: 1 }] }],
-    _cachedObjs: [],
-  };
+  return { windows: [{ tabs: [{ entries: [{ url }], index: 1 }] }] };
 }
 
 // Write to the store, and check that it creates:

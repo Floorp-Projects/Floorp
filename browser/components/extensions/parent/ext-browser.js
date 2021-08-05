@@ -27,11 +27,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "SessionWorkerCache",
-  "resource:///modules/sessionstore/SessionWorkerCache.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "AboutReaderParent",
   "resource:///actors/AboutReaderParent.jsm"
 );
@@ -960,7 +955,7 @@ class Tab extends TabBase {
       result.url = entry.url;
       result.title = entry.title;
       if (tabData.image) {
-        result.favIconUrl = SessionWorkerCache.getById(tabData.image);
+        result.favIconUrl = tabData.image;
       }
     }
 
