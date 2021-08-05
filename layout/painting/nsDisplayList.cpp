@@ -2331,7 +2331,7 @@ static void TriggerPendingAnimations(Document& aDoc,
   aDoc.EnumerateSubDocuments(recurse);
 }
 
-LayerManager* nsDisplayListBuilder::GetWidgetLayerManager(nsView** aView) {
+WindowRenderer* nsDisplayListBuilder::GetWidgetWindowRenderer(nsView** aView) {
   if (aView) {
     *aView = RootReferenceFrame()->GetView();
   }
@@ -2341,10 +2341,15 @@ LayerManager* nsDisplayListBuilder::GetWidgetLayerManager(nsView** aView) {
   }
   nsIWidget* window = RootReferenceFrame()->GetNearestWidget();
   if (window) {
-    WindowRenderer* renderer = window->GetWindowRenderer();
-    if (renderer) {
-      return renderer->AsLayerManager();
-    }
+    return window->GetWindowRenderer();
+  }
+  return nullptr;
+}
+
+LayerManager* nsDisplayListBuilder::GetWidgetLayerManager(nsView** aView) {
+  WindowRenderer* renderer = GetWidgetWindowRenderer();
+  if (renderer) {
+    return renderer->AsLayerManager();
   }
   return nullptr;
 }
@@ -2512,13 +2517,17 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
   AUTO_PROFILER_LABEL("nsDisplayList::PaintRoot", GRAPHICS);
 
   RefPtr<LayerManager> layerManager;
+  WindowRenderer* renderer = nullptr;
   bool widgetTransaction = false;
   bool doBeginTransaction = true;
   nsView* view = nullptr;
   if (aFlags & PAINT_USE_WIDGET_LAYERS) {
-    layerManager = aBuilder->GetWidgetLayerManager(&view);
-    if (layerManager) {
-      layerManager->SetContainsSVG(false);
+    renderer = aBuilder->GetWidgetWindowRenderer(&view);
+    if (renderer) {
+      layerManager = renderer->AsLayerManager();
+      if (layerManager) {
+        layerManager->SetContainsSVG(false);
+      }
 
       doBeginTransaction = !(aFlags & PAINT_EXISTING_TRANSACTION);
       widgetTransaction = true;
@@ -2530,7 +2539,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
   PresShell* presShell = presContext->PresShell();
   Document* document = presShell->GetDocument();
 
-  if (!layerManager) {
+  if (!renderer) {
     if (!aCtx) {
       NS_WARNING("Nowhere to paint into");
       return nullptr;
@@ -2546,7 +2555,8 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     return nullptr;
   }
 
-  if (layerManager->GetBackendType() == LayersBackend::LAYERS_WR) {
+  if (renderer->GetBackendType() == LayersBackend::LAYERS_WR) {
+    MOZ_ASSERT(layerManager);
     if (doBeginTransaction) {
       if (aCtx) {
         if (!layerManager->BeginTransactionWithTarget(aCtx)) {
@@ -2618,39 +2628,40 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
   UniquePtr<LayerProperties> props;
 
   bool computeInvalidRect =
-      (computeInvalidFunc || (!layerManager->IsCompositingCheap() &&
-                              layerManager->NeedsWidgetInvalidation())) &&
+      (computeInvalidFunc || (!renderer->IsCompositingCheap() &&
+                              renderer->NeedsWidgetInvalidation())) &&
       widgetTransaction;
 
-  if (computeInvalidRect) {
+  if (computeInvalidRect && layerManager) {
     props = LayerProperties::CloneFrom(layerManager->GetRoot());
   }
 
   if (doBeginTransaction) {
     if (aCtx) {
+      MOZ_ASSERT(layerManager);
       if (!layerManager->BeginTransactionWithTarget(aCtx)) {
         return nullptr;
       }
     } else {
-      if (!layerManager->BeginTransaction()) {
+      if (!renderer->BeginTransaction()) {
         return nullptr;
       }
     }
   }
 
-  bool temp =
-      aBuilder->SetIsCompositingCheap(layerManager->IsCompositingCheap());
+  bool temp = aBuilder->SetIsCompositingCheap(renderer->IsCompositingCheap());
   LayerManager::EndTransactionFlags flags = LayerManager::END_DEFAULT;
-  if (layerManager->NeedsWidgetInvalidation() &&
-      (aFlags & PAINT_NO_COMPOSITE)) {
+  if (renderer->NeedsWidgetInvalidation() && (aFlags & PAINT_NO_COMPOSITE)) {
     flags = LayerManager::END_NO_COMPOSITE;
   }
 
-  MaybeSetupTransactionIdAllocator(layerManager, presContext);
+  if (layerManager) {
+    MaybeSetupTransactionIdAllocator(layerManager, presContext);
+  }
 
   bool sent = false;
   if (aFlags & PAINT_IDENTICAL_DISPLAY_LIST) {
-    sent = layerManager->EndEmptyTransaction(flags);
+    sent = renderer->EndEmptyTransaction(flags);
   }
 
   if (!sent) {
@@ -2681,7 +2692,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
 
   aBuilder->SetIsCompositingCheap(temp);
 
-  if (document && widgetTransaction) {
+  if (document && widgetTransaction && layerManager) {
     TriggerPendingAnimations(*document, layerManager->GetAnimationReadyTime());
   }
 
@@ -2691,11 +2702,11 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
                                    computeInvalidFunc)) {
       invalid = nsIntRect::MaxIntRect();
     }
-  } else if (widgetTransaction) {
+  } else if (widgetTransaction && layerManager) {
     LayerProperties::ClearInvalidations(layerManager->GetRoot());
   }
 
-  bool shouldInvalidate = layerManager->NeedsWidgetInvalidation();
+  bool shouldInvalidate = renderer->NeedsWidgetInvalidation();
 
   if (view) {
     if (props) {
@@ -2724,7 +2735,9 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     }
   }
 
-  layerManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
+  if (layerManager) {
+    layerManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
+  }
   return layerManager.forget();
 }
 

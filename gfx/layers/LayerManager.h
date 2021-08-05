@@ -144,8 +144,6 @@ class DidCompositeObserver {
  * root layer, and each container layer holds a reference to its children.
  */
 class LayerManager : public WindowRenderer {
-  NS_INLINE_DECL_REFCOUNTING(LayerManager)
-
  protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::IntSize IntSize;
@@ -160,7 +158,7 @@ class LayerManager : public WindowRenderer {
    * for its widget going away.  After this call, only user data calls
    * are valid on the layer manager.
    */
-  virtual void Destroy();
+  void Destroy() override;
   bool IsDestroyed() { return mDestroyed; }
 
   virtual LayerManager* AsLayerManager() override { return this; }
@@ -507,15 +505,6 @@ class LayerManager : public WindowRenderer {
   static bool IsLogEnabled();
   static mozilla::LogModule* GetLog();
 
-  bool IsCompositingCheap(LayersBackend aBackend) {
-    // LayersBackend::LAYERS_NONE is an error state, but in that case we should
-    // try to avoid loading the compositor!
-    return LayersBackend::LAYERS_BASIC != aBackend &&
-           LayersBackend::LAYERS_NONE != aBackend;
-  }
-
-  virtual bool IsCompositingCheap() { return true; }
-
   bool IsInTransaction() const { return mInTransaction; }
 
   virtual void SetRegionToClear(const nsIntRegion& aRegion) {
@@ -523,8 +512,6 @@ class LayerManager : public WindowRenderer {
   }
 
   virtual float RequestProperty(const nsAString& property) { return -1; }
-
-  const TimeStamp& GetAnimationReadyTime() const { return mAnimationReadyTime; }
 
   virtual bool AsyncPanZoomEnabled() const { return false; }
 
@@ -600,9 +587,6 @@ class LayerManager : public WindowRenderer {
 
   // Used for tracking CONTENT_FRAME_TIME_WITH_SVG
   bool mContainsSVG;
-  // The time when painting most recently finished. This is recorded so that
-  // we can time any play-pending animations from this point.
-  TimeStamp mAnimationReadyTime;
   // The count of pixels that were painted in the current transaction.
   uint32_t mPaintedPixelCount;
   // The payload associated with currently pending painting work, for
