@@ -201,7 +201,6 @@ class CCGCScheduler {
 
     mInIncrementalGC = false;
     mCCBlockStart = TimeStamp();
-    mInIncrementalGC = false;
     mReadyForMajorGC = false;
     mNeedsFullCC = true;
     mHasRunGC = true;
