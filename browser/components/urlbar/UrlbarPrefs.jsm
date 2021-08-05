@@ -71,6 +71,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // but this would mean flushing layout.)
   ["disableExtendForTests", false],
 
+  // Ensure we use trailing dots for DNS lookups for single words that could
+  // be hosts.
+  ["dnsResolveFullyQualifiedNames", true],
+
   // Controls when to DNS resolve single word search strings, after they were
   // searched for. If the string is resolved as a valid host, show a
   // "Did you mean to go to 'host'" prompt.
