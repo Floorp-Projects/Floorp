@@ -32,5 +32,5 @@ jobs:
     firefox-rc:
         shipping-product: firefox
         notifications:
-            subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} updates are ready for signoff in Balrog!"
-            message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} updates are ready for signoff in Balrog!"
+            subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} RC updates are ready!"
+            message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} RC updates are ready!"
