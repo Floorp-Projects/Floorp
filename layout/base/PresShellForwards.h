@@ -188,10 +188,6 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AddCanvasBackgroundColorFlags)
 
 enum class PaintFlags {
   None = 0,
-  /* Update the layer tree and paint PaintedLayers. If this is not specified,
-   * we may still have to do it if the layer tree lost PaintedLayer contents
-   * we need for compositing. */
-  PaintLayers = 1 << 0,
   /* Composite layers to the window. */
   PaintComposite = 1 << 1,
   /* Sync-decode images. */
