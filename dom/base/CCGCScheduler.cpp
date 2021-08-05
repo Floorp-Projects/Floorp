@@ -193,7 +193,7 @@ void CCGCScheduler::PokeShrinkingGC() {
         CCGCScheduler* s = static_cast<CCGCScheduler*>(aClosure);
         s->KillShrinkingGCTimer();
         s->SetWantMajorGC(JS::GCReason::USER_INACTIVE);
-        s->GCRunnerFired(TimeStamp::Now() + s->mActiveIntersliceGCBudget);
+        s->EnsureGCRunner(0);
       },
       this, StaticPrefs::javascript_options_compact_on_user_inactive_delay(),
       nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "ShrinkingGCTimerFired");
@@ -208,7 +208,7 @@ void CCGCScheduler::PokeFullGC() {
           s->KillFullGCTimer();
           s->SetNeedsFullGC();
           s->SetWantMajorGC(JS::GCReason::FULL_GC_TIMER);
-          s->GCRunnerFired(TimeStamp::Now() + s->mActiveIntersliceGCBudget);
+          s->EnsureGCRunner(0);
         },
         this, StaticPrefs::javascript_options_gc_delay_full(),
         nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "FullGCTimerFired");
