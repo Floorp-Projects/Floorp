@@ -12,6 +12,7 @@ import mozilla.components.concept.tabstray.Tab
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.InactiveFooterItemBinding
 import org.mozilla.fenix.databinding.InactiveRecentlyClosedItemBinding
+import org.mozilla.fenix.databinding.InactiveHeaderItemBinding
 import org.mozilla.fenix.databinding.InactiveTabListItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
@@ -22,9 +23,32 @@ import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.OneMonth
 import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.OneWeek
 
 sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    class HeaderHolder(itemView: View) : InactiveTabViewHolder(itemView) {
+
+    class HeaderHolder(
+        itemView: View,
+        interactor: InactiveTabsInteractor
+    ) : InactiveTabViewHolder(itemView) {
+
+        private val binding = InactiveHeaderItemBinding.bind(itemView)
+
+        init {
+            itemView.apply {
+                isActivated = InactiveTabsState.isExpanded
+
+                setOnClickListener {
+                    val newState = !it.isActivated
+
+                    interactor.onHeaderClicked(newState)
+
+                    it.isActivated = newState
+                    binding.chevron.rotation = ROTATION_DEGREE
+                }
+            }
+        }
+
         companion object {
             const val LAYOUT_ID = R.layout.inactive_header_item
+            private const val ROTATION_DEGREE = 180F
         }
     }
 

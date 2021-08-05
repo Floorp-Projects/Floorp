@@ -39,12 +39,14 @@ class InactiveTabsAdapter(
     delegate: Observable = ObserverRegistry()
 ) : Adapter(DiffCallback), TabsTray, Observable by delegate {
 
+    internal lateinit var inactiveTabsInteractor: InactiveTabsInteractor
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): InactiveTabViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(viewType, parent, false)
 
         return when (viewType) {
-            HeaderHolder.LAYOUT_ID -> HeaderHolder(view)
+            HeaderHolder.LAYOUT_ID -> HeaderHolder(view, inactiveTabsInteractor)
             TabViewHolder.LAYOUT_ID -> TabViewHolder(view, browserTrayInteractor)
             FooterHolder.LAYOUT_ID -> FooterHolder(view)
             RecentlyClosedHolder.LAYOUT_ID -> RecentlyClosedHolder(view, browserTrayInteractor)
@@ -81,9 +83,15 @@ class InactiveTabsAdapter(
     }
 
     override fun updateTabs(tabs: Tabs) {
+        // Early return with an empty list to remove the header/footer items.
         if (tabs.list.isEmpty()) {
-            // Early return with an empty list to remove the header/footer items.
             submitList(emptyList())
+            return
+        }
+
+        // If we have items, but we should be in a collapsed state.
+        if (!InactiveTabsState.isExpanded) {
+            submitList(listOf(Item.Header))
             return
         }
 

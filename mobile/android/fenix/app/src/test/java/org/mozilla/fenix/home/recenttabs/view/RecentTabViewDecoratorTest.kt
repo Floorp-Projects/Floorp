@@ -63,7 +63,7 @@ class RecentTabViewDecoratorTest {
             RecentTabViewDecorator.SingleTabDecoration(view)
 
             verify { view.background = drawable }
-            assertEquals(R.drawable.home_list_row_background, drawableResCaptor.captured)
+            assertEquals(R.drawable.card_list_row_background, drawableResCaptor.captured)
         } finally {
             unmockkStatic(AppCompatResources::class)
         }

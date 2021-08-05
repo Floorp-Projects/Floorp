@@ -74,7 +74,7 @@ sealed class RecentTabViewDecorator {
             val context = itemView.context
 
             itemView.background =
-                AppCompatResources.getDrawable(context, R.drawable.home_list_row_background)
+                AppCompatResources.getDrawable(context, R.drawable.card_list_row_background)
 
             return itemView
         }

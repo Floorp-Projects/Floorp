@@ -8,7 +8,7 @@
     android:layout_width="match_parent"
     android:layout_height="48dp"
     android:layout_marginTop="12dp"
-    android:background="@drawable/home_list_row_background"
+    android:background="@drawable/card_list_row_background"
     android:clickable="true"
     android:clipToPadding="false"
     android:elevation="@dimen/home_item_elevation"

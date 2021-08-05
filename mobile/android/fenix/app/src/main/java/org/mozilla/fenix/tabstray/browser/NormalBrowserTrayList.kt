@@ -7,6 +7,7 @@ package org.mozilla.fenix.tabstray.browser
 import android.content.Context
 import android.util.AttributeSet
 import androidx.recyclerview.widget.ConcatAdapter
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import org.mozilla.fenix.FeatureFlags
@@ -53,20 +54,30 @@ class NormalBrowserTrayList @JvmOverloads constructor(
         )
     }
 
+    /**
+     * NB: The setup for this feature is a bit complicated without a better dependency injection
+     * solution to scope it down to just this view.
+     */
     private val inactiveFeature by lazy {
-        val tabsAdapter = concatAdapter.inactiveTabsAdapter
+        val store = context.components.core.store
+        val tabFilter: (TabSessionState) -> Boolean = filter@{
+            if (!FeatureFlags.inactiveTabs) {
+                return@filter false
+            }
+            it.isNormalTabInactive(maxActiveTime)
+        }
+        val tabsAdapter = concatAdapter.inactiveTabsAdapter.apply {
+            inactiveTabsInteractor = DefaultInactiveTabsInteractor(
+                InactiveTabsController(store, tabFilter, this)
+            )
+        }
 
         TabsFeature(
             tabsAdapter,
-            context.components.core.store,
+            store,
             selectTabUseCase,
             removeTabUseCase,
-            { state ->
-                if (!FeatureFlags.inactiveTabs) {
-                    return@TabsFeature false
-                }
-                state.isNormalTabInactive(maxActiveTime)
-            },
+            tabFilter,
             {}
         )
     }
