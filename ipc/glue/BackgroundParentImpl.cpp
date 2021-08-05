@@ -896,6 +896,7 @@ class CheckPrincipalRunnable final : public Runnable {
     if (NS_WARN_IF(principalOrErr.isErr())) {
       mContentParent->KillHard(
           "BroadcastChannel killed: PrincipalInfoToPrincipal failed.");
+      return NS_OK;
     }
 
     nsAutoCString origin;
