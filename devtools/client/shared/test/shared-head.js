@@ -1629,3 +1629,23 @@ async function waitForNextTopLevelDomCompleteResource(commands) {
   );
   return { onDomCompleteResource };
 }
+
+/**
+ * Wait for the provided context to have a valid presShell. This can be useful
+ * for tests which try to create popup panels or interact with the document very
+ * early.
+ *
+ * @param {BrowsingContext} context
+ **/
+const waitForPresShell = function(context) {
+  return SpecialPowers.spawn(context, [], async () => {
+    const winUtils = SpecialPowers.getDOMWindowUtils(content);
+    await ContentTaskUtils.waitForCondition(() => {
+      try {
+        return !!winUtils.getPresShellId();
+      } catch (e) {
+        return false;
+      }
+    }, "Waiting for a valid presShell");
+  });
+};
