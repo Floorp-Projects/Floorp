@@ -2700,8 +2700,9 @@ slow_script_warning:
       - "firefox"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
-    expiry_version: "93"
+    expiry_version: "never"
     notification_emails:
+      - dothayer@mozilla.com
       - esmyth@mozilla.com
       - gkruitbosch@mozilla.com
       - perf-telemetry-alerts@mozilla.com
