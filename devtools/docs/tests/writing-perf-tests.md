@@ -1,6 +1,6 @@
-# Writing new performance test
+# Writing new DAMP performance tests
 
-See [Performance tests (DAMP)](performance-tests.md) for an overall description of our performance tests.
+See [DAMP Performance tests](performance-tests.md) for an overall description of our performance tests.
 Here, we will describe how to write a new test and register it to run in DAMP.
 
 ```note::

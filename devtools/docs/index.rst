@@ -44,7 +44,8 @@ Automated tests
    Node tests <tests/node-tests.md>
    Writing tests <tests/writing-tests.md>
    Debugging intermittent failures <tests/debugging-intermittents.md>
-   Performance tests (DAMP) <tests/performance-tests.md>
+   Performance tests overview<tests/performance-tests-overview.md>
+   DAMP Performance tests <tests/performance-tests-damp.md>
    Writing a new test <tests/writing-perf-tests.md>
    Example <tests/writing-perf-tests-example.md>
    Advanced tips <tests/writing-perf-tests-tips.md>
