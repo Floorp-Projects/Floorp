@@ -361,7 +361,7 @@ class CCGCScheduler {
 
   void DeactivateCCRunner() { mCCRunnerState = CCRunnerState::Inactive; }
 
-  GCRunnerStep GetNextGCRunnerAction(TimeStamp aDeadline) const;
+  GCRunnerStep GetNextGCRunnerAction() const;
 
   CCRunnerStep AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
                                uint32_t aSuspectedCCObjects);
