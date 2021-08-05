@@ -84,7 +84,7 @@ void CCGCScheduler::ShrinkingGCTimerFired(nsITimer* aTimer) {
 bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
   MOZ_ASSERT(!mDidShutdown, "GCRunner still alive during shutdown");
 
-  GCRunnerStep step = GetNextGCRunnerAction(aDeadline);
+  GCRunnerStep step = GetNextGCRunnerAction();
   switch (step.mAction) {
     case GCRunnerAction::None:
       MOZ_CRASH("Unexpected GCRunnerAction");
@@ -654,7 +654,7 @@ CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
   };
 }
 
-GCRunnerStep CCGCScheduler::GetNextGCRunnerAction(TimeStamp aDeadline) const {
+GCRunnerStep CCGCScheduler::GetNextGCRunnerAction() const {
   MOZ_ASSERT(mMajorGCReason != JS::GCReason::NO_REASON);
 
   if (InIncrementalGC()) {
