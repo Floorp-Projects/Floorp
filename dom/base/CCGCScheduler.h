@@ -163,6 +163,13 @@ class CCGCScheduler {
   void SetNeedsFullGC(bool aNeedGC = true) { mNeedsFullGC = aNeedGC; }
 
   void SetWantMajorGC(JS::GCReason aReason) {
+    MOZ_ASSERT(aReason != JS::GCReason::NO_REASON);
+
+    if (mMajorGCReason != JS::GCReason::NO_REASON &&
+        mMajorGCReason != JS::GCReason::USER_INACTIVE &&
+        aReason != JS::GCReason::USER_INACTIVE) {
+      mWantAtLeastRegularGC = true;
+    }
     mMajorGCReason = aReason;
 
     // Force full GCs when called from reftests so that we collect dead zones
@@ -207,8 +214,6 @@ class CCGCScheduler {
     mGCUnnotifiedTotalTime += aSliceDuration;
   }
 
-  void FullGCTimerFired(nsITimer* aTimer);
-  void ShrinkingGCTimerFired(nsITimer* aTimer);
   bool GCRunnerFired(TimeStamp aDeadline);
 
   using MayGCPromise =
@@ -380,6 +385,10 @@ class CCGCScheduler {
 
   // The parent process is ready for us to do a major GC.
   bool mReadyForMajorGC = false;
+
+  // When a shrinking GC has been requested but we back-out, if this is true
+  // we run a non-shrinking GC.
+  bool mWantAtLeastRegularGC = false;
 
   // When the CC started actually waiting for the GC to finish. This will be
   // set to non-null at a later time than mCCLockedOut.
