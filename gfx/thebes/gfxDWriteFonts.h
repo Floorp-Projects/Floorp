@@ -29,7 +29,13 @@ class gfxDWriteFont final : public gfxFont {
                 AntialiasOption = kAntialiasDefault);
   ~gfxDWriteFont();
 
-  static void UpdateSystemTextQuality();
+  static bool InitDWriteSupport();
+
+  // These Update functions update gfxVars with font settings, they must only be
+  // called in the parent process.
+  static void UpdateSystemTextVars();
+  static void UpdateClearTypeVars();
+
   static void SystemTextQualityChanged();
 
   mozilla::UniquePtr<gfxFont> CopyWithAntialiasOption(

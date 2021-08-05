@@ -5249,7 +5249,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       }
       if (wParam == SPI_SETFONTSMOOTHING ||
           wParam == SPI_SETFONTSMOOTHINGTYPE) {
-        gfxDWriteFont::UpdateSystemTextQuality();
+        gfxDWriteFont::UpdateSystemTextVars();
         break;
       }
       if (lParam) {
@@ -5443,7 +5443,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
        * ClearType changes often don't send a WM_SETTINGCHANGE message. But they
        * do seem to always send a WM_NCPAINT message, so let's update on that.
        */
-      gfxDWriteFont::UpdateSystemTextQuality();
+      gfxDWriteFont::UpdateSystemTextVars();
 
       /*
        * Reset the non-client paint region so that it excludes the

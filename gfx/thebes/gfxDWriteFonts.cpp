@@ -9,8 +9,10 @@
 #include "gfxDWriteFontList.h"
 #include "gfxContext.h"
 #include "gfxTextRun.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/Preferences.h"
 
 #include "harfbuzz/hb.h"
 #include "mozilla/FontPropertyTypes.h"
@@ -61,16 +63,12 @@ static BYTE GetSystemTextQuality() {
 // "Retrieves a contrast value that is used in ClearType smoothing. Valid
 // contrast values are from 1000 to 2200. The default value is 1400."
 static FLOAT GetSystemGDIGamma() {
-  static FLOAT sGDIGamma = 0.0f;
-  if (!sGDIGamma) {
-    UINT value = 0;
-    if (!SystemParametersInfo(SPI_GETFONTSMOOTHINGCONTRAST, 0, &value, 0) ||
-        value < 1000 || value > 2200) {
-      value = 1400;
-    }
-    sGDIGamma = value / 1000.0f;
+  UINT value = 0;
+  if (!SystemParametersInfo(SPI_GETFONTSMOOTHINGCONTRAST, 0, &value, 0) ||
+      value < 1000 || value > 2200) {
+    value = 1400;
   }
-  return sGDIGamma;
+  return value / 1000.0f;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,11 +94,34 @@ gfxDWriteFont::gfxDWriteFont(const RefPtr<UnscaledFontDWrite>& aUnscaledFont,
 
 gfxDWriteFont::~gfxDWriteFont() { delete mMetrics; }
 
-void gfxDWriteFont::UpdateSystemTextQuality() {
+/* static */
+bool gfxDWriteFont::InitDWriteSupport() {
+  if (!Factory::EnsureDWriteFactory()) {
+    return false;
+  }
+
+  if (XRE_IsParentProcess()) {
+    UpdateSystemTextVars();
+  }
+
+  return true;
+}
+
+/* static */
+void gfxDWriteFont::UpdateSystemTextVars() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   BYTE newQuality = GetSystemTextQuality();
   if (gfxVars::SystemTextQuality() != newQuality) {
     gfxVars::SetSystemTextQuality(newQuality);
   }
+
+  FLOAT newGDIGamma = GetSystemGDIGamma();
+  if (gfxVars::SystemGDIGamma() != newGDIGamma) {
+    gfxVars::SetSystemGDIGamma(newGDIGamma);
+  }
+
+  UpdateClearTypeVars();
 }
 
 void gfxDWriteFont::SystemTextQualityChanged() {
@@ -110,6 +131,105 @@ void gfxDWriteFont::SystemTextQualityChanged() {
   // reflow everywhere to ensure we are using correct glyph metrics.
   gfxPlatform::FlushFontAndWordCaches();
   gfxPlatform::ForceGlobalReflow();
+}
+
+/* static */
+void gfxDWriteFont::UpdateClearTypeVars() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (!Factory::GetDWriteFactory()) {
+    return;
+  }
+
+  // First set sensible hard coded defaults.
+  float clearTypeLevel = 1.0f;
+  float enhancedContrast = 1.0f;
+  float gamma = 2.2f;
+  int pixelGeometry = DWRITE_PIXEL_GEOMETRY_RGB;
+  int renderingMode = DWRITE_RENDERING_MODE_DEFAULT;
+
+  // Override these from DWrite function if available.
+  RefPtr<IDWriteRenderingParams> defaultRenderingParams;
+  HRESULT hr = Factory::GetDWriteFactory()->CreateRenderingParams(
+      getter_AddRefs(defaultRenderingParams));
+  if (SUCCEEDED(hr) && defaultRenderingParams) {
+    clearTypeLevel = defaultRenderingParams->GetClearTypeLevel();
+
+    // For enhanced contrast, we only use the default if the user has set it
+    // in the registry (by using the ClearType Tuner).
+    // XXXbobowen it seems slightly odd that we do this and only for enhanced
+    // contrast, but this reproduces previous functionality from
+    // gfxWindowsPlatform::SetupClearTypeParams.
+    HKEY hKey;
+    LONG res = RegOpenKeyExW(DISPLAY1_REGISTRY_KEY, 0, KEY_READ, &hKey);
+    if (res == ERROR_SUCCESS) {
+      res = RegQueryValueExW(hKey, ENHANCED_CONTRAST_VALUE_NAME, nullptr,
+                             nullptr, nullptr, nullptr);
+      if (res == ERROR_SUCCESS) {
+        enhancedContrast = defaultRenderingParams->GetEnhancedContrast();
+      }
+      RegCloseKey(hKey);
+    }
+
+    gamma = defaultRenderingParams->GetGamma();
+    pixelGeometry = defaultRenderingParams->GetPixelGeometry();
+    renderingMode = defaultRenderingParams->GetRenderingMode();
+  } else {
+    gfxWarning() << "Failed to create default rendering params";
+  }
+
+  // Finally override from prefs if valid values are set. If ClearType is
+  // turned off we just use the default params, this reproduces the previous
+  // functionality that was spread across gfxDWriteFont::GetScaledFont and
+  // gfxWindowsPlatform::SetupClearTypeParams, but it seems odd because the
+  // default params will still be the ClearType ones although we won't use the
+  // anti-alias for ClearType because of GetSystemDefaultAAMode.
+  if (gfxVars::SystemTextQuality() == CLEARTYPE_QUALITY) {
+    int32_t prefInt = Preferences::GetInt(GFX_CLEARTYPE_PARAMS_LEVEL, -1);
+    if (prefInt >= 0 && prefInt <= 100) {
+      clearTypeLevel = float(prefInt / 100.0);
+    }
+
+    prefInt = Preferences::GetInt(GFX_CLEARTYPE_PARAMS_CONTRAST, -1);
+    if (prefInt >= 0 && prefInt <= 1000) {
+      enhancedContrast = float(prefInt / 100.0);
+    }
+
+    prefInt = Preferences::GetInt(GFX_CLEARTYPE_PARAMS_GAMMA, -1);
+    if (prefInt >= 1000 && prefInt <= 2200) {
+      gamma = float(prefInt / 1000.0);
+    }
+
+    prefInt = Preferences::GetInt(GFX_CLEARTYPE_PARAMS_STRUCTURE, -1);
+    if (prefInt >= 0 && prefInt <= 2) {
+      pixelGeometry = prefInt;
+    }
+
+    prefInt = Preferences::GetInt(GFX_CLEARTYPE_PARAMS_MODE, -1);
+    if (prefInt >= 0 && prefInt <= 5) {
+      renderingMode = prefInt;
+    }
+  }
+
+  if (gfxVars::SystemTextClearTypeLevel() != clearTypeLevel) {
+    gfxVars::SetSystemTextClearTypeLevel(clearTypeLevel);
+  }
+
+  if (gfxVars::SystemTextEnhancedContrast() != enhancedContrast) {
+    gfxVars::SetSystemTextEnhancedContrast(enhancedContrast);
+  }
+
+  if (gfxVars::SystemTextGamma() != gamma) {
+    gfxVars::SetSystemTextGamma(gamma);
+  }
+
+  if (gfxVars::SystemTextPixelGeometry() != pixelGeometry) {
+    gfxVars::SetSystemTextPixelGeometry(pixelGeometry);
+  }
+
+  if (gfxVars::SystemTextRenderingMode() != renderingMode) {
+    gfxVars::SetSystemTextRenderingMode(renderingMode);
+  }
 }
 
 UniquePtr<gfxFont> gfxDWriteFont::CopyWithAntialiasOption(
