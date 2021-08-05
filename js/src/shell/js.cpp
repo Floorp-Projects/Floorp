@@ -4061,29 +4061,6 @@ static bool DummyPreserveWrapperCallback(JSContext* cx, HandleObject obj) {
 
 static bool DummyHasReleasedWrapperCallback(HandleObject obj) { return true; }
 
-static bool Intern(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  JSString* str = JS::ToString(cx, args.get(0));
-  if (!str) {
-    return false;
-  }
-
-  AutoStableStringChars strChars(cx);
-  if (!strChars.initTwoByte(cx, str)) {
-    return false;
-  }
-
-  mozilla::Range<const char16_t> chars = strChars.twoByteRange();
-
-  if (!JS_AtomizeAndPinUCStringN(cx, chars.begin().get(), chars.length())) {
-    return false;
-  }
-
-  args.rval().setUndefined();
-  return true;
-}
-
 #ifdef FUZZING_JS_FUZZILLI
 // We have to assume that the fuzzer will be able to call this function e.g. by
 // enumerating the properties of the global object and eval'ing them. As such
@@ -9523,10 +9500,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Similar to the DumpJSStack() function in the browser."),
 
 #endif
-
-    JS_FN_HELP("intern", Intern, 1, 0,
-"intern(str)",
-"  Internalize str in the atom table."),
 
     JS_FN_HELP("getslx", GetSLX, 1, 0,
 "getslx(obj)",
