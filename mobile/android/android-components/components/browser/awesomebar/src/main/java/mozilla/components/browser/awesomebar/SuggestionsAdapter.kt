@@ -75,21 +75,6 @@ internal class SuggestionsAdapter(
     }
 
     /**
-     * Removes all suggestions except the ones from providers that have set shouldClearSuggestions to false.
-     */
-    fun optionallyClearSuggestions() = synchronized(suggestions) {
-        val updatedSuggestions = suggestions.toMutableList()
-
-        suggestionMap.keys.forEach { provider ->
-            if (provider.shouldClearSuggestions) {
-                suggestionMap[provider]?.let { updatedSuggestions.removeAll(it) }
-            }
-        }
-
-        updateTo(updatedSuggestions)
-    }
-
-    /**
      * Takes an updated list of suggestions, calculates the diff and then dispatches the appropriate notifications to
      * update the RecyclerView.
      */

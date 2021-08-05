@@ -46,7 +46,9 @@ class ClipboardSuggestionProvider(
 
     private val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
-    override fun onInputStarted(): List<AwesomeBar.Suggestion> = createClipboardSuggestion()
+    override fun onInputStarted(): List<AwesomeBar.Suggestion> {
+        return createClipboardSuggestion()
+    }
 
     override suspend fun onInputChanged(text: String) =
         if ((requireEmptyText && text.isEmpty()) || !requireEmptyText) createClipboardSuggestion() else emptyList()
@@ -74,10 +76,6 @@ class ClipboardSuggestionProvider(
             )
         )
     }
-
-    override val shouldClearSuggestions: Boolean
-        // We do not want the suggestion of this provider to disappear and re-appear when text changes.
-        get() = false
 }
 
 private fun findUrl(text: String): String? {

@@ -160,8 +160,6 @@ class BrowserAwesomeBar @JvmOverloads constructor(
         job?.cancel()
 
         job = scope.launch {
-            suggestionsAdapter.optionallyClearSuggestions()
-
             providers.forEach { provider ->
                 launch {
                     // At this point, we have a timing value for a provider.

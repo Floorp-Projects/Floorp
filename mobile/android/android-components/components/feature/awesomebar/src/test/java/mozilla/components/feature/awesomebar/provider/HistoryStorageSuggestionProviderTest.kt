@@ -15,7 +15,6 @@ import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
@@ -87,12 +86,6 @@ class HistoryStorageSuggestionProviderTest {
 
         val suggestions = provider.onInputChanged("moz")
         assertEquals(22, suggestions.size)
-    }
-
-    @Test
-    fun `Provider suggestion should not get cleared when text changes`() {
-        val provider = HistoryStorageSuggestionProvider(mock(), mock())
-        assertFalse(provider.shouldClearSuggestions)
     }
 
     @Test

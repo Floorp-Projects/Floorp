@@ -179,13 +179,5 @@ interface AwesomeBar {
          * Fired when the user has cancelled their interaction with the awesome bar.
          */
         fun onInputCancelled() = Unit
-
-        /**
-         * If true an [AwesomeBar] implementation can clear the previous suggestions of this provider as soon as the
-         * user continues to type. If this is false an [AwesomeBar] implementation is allowed to keep the previous
-         * suggestions around until the provider returns a new list of suggestions for the updated text.
-         */
-        val shouldClearSuggestions
-            get() = true
     }
 }

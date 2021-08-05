@@ -89,12 +89,6 @@ class BookmarksStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider suggestion should get cleared when text changes`() {
-        val provider = BookmarksStorageSuggestionProvider(mock(), mock())
-        assertTrue(provider.shouldClearSuggestions)
-    }
-
-    @Test
     fun `provider calls speculative connect for URL of first suggestion`() = runBlocking {
         val engine: Engine = mock()
         val provider = BookmarksStorageSuggestionProvider(bookmarks, mock(), engine = engine)

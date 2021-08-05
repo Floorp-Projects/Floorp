@@ -60,10 +60,6 @@ class HistoryStorageSuggestionProvider(
 
         return suggestions.into(this, icons, loadUrlUseCase)
     }
-
-    override val shouldClearSuggestions: Boolean
-        // We do not want the suggestion of this provider to disappear and re-appear when text changes.
-        get() = false
 }
 
 internal suspend fun Iterable<SearchResult>.into(

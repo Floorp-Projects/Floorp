@@ -164,16 +164,6 @@ class SessionSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider suggestion should get cleared when text changes`() {
-        val resources: Resources = mock()
-        `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
-
-        val provider = SessionSuggestionProvider(resources, mock(), mock())
-
-        assertTrue(provider.shouldClearSuggestions)
-    }
-
-    @Test
     fun `When excludeSelectedSession is true provider should not include the selected session`() = runBlocking {
         val store = BrowserStore(
             BrowserState(

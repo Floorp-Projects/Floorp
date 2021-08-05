@@ -51,6 +51,4 @@ class SearchActionProvider(
             )
         )
     }
-
-    override val shouldClearSuggestions: Boolean = false
 }

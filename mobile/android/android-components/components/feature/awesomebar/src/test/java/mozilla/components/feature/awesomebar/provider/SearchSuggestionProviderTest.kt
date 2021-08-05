@@ -26,7 +26,6 @@ import mozilla.components.support.test.robolectric.testContext
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -299,12 +298,6 @@ class SearchSuggestionProviderTest {
                 server.shutdown()
             }
         }
-    }
-
-    @Test
-    fun `Provider should not clear suggestions`() {
-        val provider = SearchSuggestionProvider(mock(), mock(), mock())
-        assertFalse(provider.shouldClearSuggestions)
     }
 
     @Test
