@@ -26,13 +26,14 @@ internal object Keys {
     const val SESSION_LAST_MEDIA_URL = "lastMediaUrl"
     const val SESSION_LAST_MEDIA_ACCESS = "lastMediaAccess"
     const val SESSION_LAST_MEDIA_SESSION_ACTIVE = "mediaSessionActive"
-    const val SESSION_SOURCE_KEY = "source"
+    // Deprecated for SESSION_SOURCE_ID, kept around for backwards compatibility.
+    const val SESSION_DEPRECATED_SOURCE_KEY = "source"
 
     const val SESSION_HISTORY_METADATA_URL = "historyMetadataUrl"
     const val SESSION_HISTORY_METADATA_SEARCH_TERM = "historyMetadataSearchTerm"
     const val SESSION_HISTORY_METADATA_REFERRER_URL = "historyMetadataReferrerUrl"
 
-    const val SESSION_EXTERNAL_SOURCE_ID = "externalSourceId"
+    const val SESSION_SOURCE_ID = "sourceId"
     const val SESSION_EXTERNAL_SOURCE_PACKAGE_ID = "externalPackageId"
     const val SESSION_EXTERNAL_SOURCE_PACKAGE_CATEGORY = "externalPackageCategory"
 

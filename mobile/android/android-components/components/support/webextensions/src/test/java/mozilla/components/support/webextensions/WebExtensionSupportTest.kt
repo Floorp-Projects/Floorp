@@ -837,9 +837,9 @@ class WebExtensionSupportTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab(id = "1", url = "https://www.mozilla.org", source = SessionState.Source.Internal.Restored),
-                    createTab(id = "2", url = "moz-extension://1234-5678/test", source = SessionState.Source.Internal.Restored),
-                    createTab(id = "3", url = "moz-extension://1234-5678-9/", source = SessionState.Source.Internal.Restored)
+                    createTab(id = "1", url = "https://www.mozilla.org", restored = true),
+                    createTab(id = "2", url = "moz-extension://1234-5678/test", restored = true),
+                    createTab(id = "3", url = "moz-extension://1234-5678-9/", restored = true)
                 )
             )
         )

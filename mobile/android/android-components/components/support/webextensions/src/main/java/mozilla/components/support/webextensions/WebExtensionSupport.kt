@@ -345,7 +345,7 @@ object WebExtensionSupport {
         // startup and might not be ready yet.
         var scope: CoroutineScope? = null
         scope = store.flowScoped { flow ->
-            flow.map { state -> state.tabs.filter { it.source == SessionState.Source.Internal.Restored }.size }
+            flow.map { state -> state.tabs.filter { it.restored }.size }
                 .ifChanged()
                 .collect { size ->
                     if (size > 0) {

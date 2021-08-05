@@ -121,11 +121,11 @@ private fun JsonWriter.tab(
             value(metadata.referrerUrl)
         }
 
-        (tab.source as? SessionState.Source.External)?.let { source ->
-            name(Keys.SESSION_EXTERNAL_SOURCE_ID)
-            value(source.id)
+        name(Keys.SESSION_SOURCE_ID)
+        value(tab.source.id)
 
-            source.caller?.let { caller ->
+        (tab.source as? SessionState.Source.External)?.let { externalSource ->
+            externalSource.caller?.let { caller ->
                 name(Keys.SESSION_EXTERNAL_SOURCE_PACKAGE_ID)
                 value(caller.packageId)
 

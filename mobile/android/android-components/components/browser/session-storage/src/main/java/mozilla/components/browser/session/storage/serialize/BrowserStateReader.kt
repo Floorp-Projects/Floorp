@@ -181,7 +181,7 @@ private fun JsonReader.tabSession(): RecoverableTab {
     var historyMetadataSearchTerm: String? = null
     var historyMetadataReferrerUrl: String? = null
 
-    var externalSourceId: Int? = null
+    var sourceId: Int? = null
     var externalSourcePackageId: String? = null
     var externalSourceCategory: Int? = null
 
@@ -204,10 +204,10 @@ private fun JsonReader.tabSession(): RecoverableTab {
             Keys.SESSION_LAST_MEDIA_URL -> lastMediaUrl = nextString()
             Keys.SESSION_LAST_MEDIA_SESSION_ACTIVE -> mediaSessionActive = nextBoolean()
             Keys.SESSION_LAST_MEDIA_ACCESS -> lastMediaAccess = nextLong()
-            Keys.SESSION_EXTERNAL_SOURCE_ID -> externalSourceId = nextInt()
+            Keys.SESSION_SOURCE_ID -> sourceId = nextInt()
             Keys.SESSION_EXTERNAL_SOURCE_PACKAGE_ID -> externalSourcePackageId = nextStringOrNull()
             Keys.SESSION_EXTERNAL_SOURCE_PACKAGE_CATEGORY -> externalSourceCategory = nextIntOrNull()
-            Keys.SESSION_SOURCE_KEY -> nextString()
+            Keys.SESSION_DEPRECATED_SOURCE_KEY -> nextString()
             else -> throw IllegalArgumentException("Unknown session key: $name")
         }
     }
@@ -242,6 +242,6 @@ private fun JsonReader.tabSession(): RecoverableTab {
             lastMediaAccess = lastMediaAccess ?: 0,
             mediaSessionActive = mediaSessionActive ?: false
         ),
-        source = SessionState.Source.restore(externalSourceId, externalSourcePackageId, externalSourceCategory)
+        source = SessionState.Source.restore(sourceId, externalSourcePackageId, externalSourceCategory)
     )
 }

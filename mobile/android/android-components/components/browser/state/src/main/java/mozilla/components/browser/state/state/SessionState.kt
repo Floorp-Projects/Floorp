@@ -21,7 +21,7 @@ import mozilla.components.support.utils.SafeIntent
  * @property contextId the session context ID of the session. The session context ID specifies the
  * contextual identity to use for the session's cookie store.
  * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Work_with_contextual_identities
- * @property source the [Source] of this session to describe how and why it was created.
+ * @property restored Indicates if this session was restored from a hydrated state.
  */
 interface SessionState {
     val id: String
@@ -32,6 +32,7 @@ interface SessionState {
     val mediaSessionState: MediaSessionState?
     val contextId: String?
     val source: Source
+    val restored: Boolean
 
     /**
      * Copy the class and override some parameters.
@@ -69,9 +70,15 @@ interface SessionState {
                     2 -> External.ActionView(caller)
                     3 -> External.ActionSearch(caller)
                     4 -> External.CustomTab(caller)
-                    // We only care about restoring 'external' types, so collapse other source types.
-                    // This also silently handles abnormalities (like unknown or null sourceId).
-                    else -> Internal.Restored
+                    5 -> Internal.HomeScreen
+                    6 -> Internal.Menu
+                    7 -> Internal.NewTab
+                    8 -> Internal.None
+                    9 -> Internal.TextSelection
+                    10 -> Internal.UserEntered
+                    11 -> Internal.CustomTab
+                    // Silently handle abnormalities (like invalid or null sourceId).
+                    else -> Internal.None
                 }
             }
         }
@@ -136,14 +143,9 @@ interface SessionState {
             object UserEntered : Internal(10)
 
             /**
-             * This session was restored.
-             */
-            object Restored : Internal(11)
-
-            /**
              * Created to handle a CustomTabs intent of internal origin.
              */
-            object CustomTab : Internal(12)
+            object CustomTab : Internal(11)
         }
     }
 }
@@ -167,19 +169,7 @@ enum class PackageCategory(val id: Int) {
         /**
          * Maps an int category (as it can be obtained from a package manager) to our internal representation.
          */
-        fun fromInt(id: Int?): PackageCategory = when (id) {
-            0 -> GAME
-            1 -> AUDIO
-            2 -> VIDEO
-            3 -> IMAGE
-            4 -> SOCIAL
-            5 -> NEWS
-            6 -> MAPS
-            7 -> PRODUCTIVITY
-            -1 -> UNKNOWN
-            null -> UNKNOWN
-            else -> UNKNOWN
-        }
+        fun fromInt(id: Int?): PackageCategory = values().find { category -> category.id == id } ?: UNKNOWN
     }
 }
 

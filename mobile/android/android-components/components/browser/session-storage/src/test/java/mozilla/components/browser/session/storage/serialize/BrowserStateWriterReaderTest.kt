@@ -97,7 +97,7 @@ class BrowserStateWriterReaderTest {
     }
 
     @Test
-    fun `Read tab with session source`() {
+    fun `Read tab with deprecated session source`() {
         // We don't persist session source of tabs unless it's an external source.
         // However, in older versions we did persist other types of sources so need to be tolerant
         // if these older cases are encountered in JSON to remain backward compatible.
@@ -107,14 +107,14 @@ class BrowserStateWriterReaderTest {
         val file = AtomicFile(
             File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
         )
-        writeTabWithSource(tab, file)
+        writeTabWithDeprecatedSource(tab, file)
 
-        // When reading a tab that didn't have an external source persisted, we just need to make sure
+        // When reading a tab that didn't have a source persisted, we just need to make sure
         // it is deserialized correctly. In this case, source defaults to `Internal.Restored`.
         val reader = BrowserStateReader()
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
-        assertEquals(SessionState.Source.Internal.Restored, restoredTab.source)
+        assertEquals(SessionState.Source.Internal.None, restoredTab.source)
 
         assertEquals("https://www.mozilla.org", restoredTab.url)
         assertEquals("Mozilla", restoredTab.title)
@@ -356,11 +356,11 @@ private fun createFakeEngine(engineState: EngineSessionState): Engine {
     return engine
 }
 
-private fun writeTabWithSource(tab: TabSessionState, file: AtomicFile) {
-    file.streamJSON { tabWithSource(tab) }
+private fun writeTabWithDeprecatedSource(tab: TabSessionState, file: AtomicFile) {
+    file.streamJSON { tabWithDeprecatedSource(tab) }
 }
 
-private fun JsonWriter.tabWithSource(
+private fun JsonWriter.tabWithDeprecatedSource(
     tab: TabSessionState
 ) {
     beginObject()
@@ -376,7 +376,7 @@ private fun JsonWriter.tabWithSource(
         name(Keys.SESSION_TITLE)
         value(tab.content.title)
 
-        name(Keys.SESSION_SOURCE_KEY)
+        name(Keys.SESSION_DEPRECATED_SOURCE_KEY)
         value(tab.source.toString())
 
         endObject()

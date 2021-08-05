@@ -47,7 +47,7 @@ data class RecoverableTab(
     val lastMediaAccessState: LastMediaAccessState = LastMediaAccessState(),
     val private: Boolean = false,
     val historyMetadata: HistoryMetadataKey? = null,
-    val source: Source = Source.Internal.Restored
+    val source: Source = Source.Internal.None
 )
 
 /**
@@ -84,10 +84,11 @@ fun RecoverableTab.toTabSessionState() = createTab(
     createdAt = createdAt,
     lastMediaAccessState = lastMediaAccessState,
     historyMetadata = historyMetadata,
-    source = source
+    source = source,
+    restored = true
 )
 
 /**
- * Creates a list of [TabSessionState]s from a List of [TabSessionState]s.
+ * Creates a list of [TabSessionState]s from a List of [RecoverableTab]s.
  */
 fun List<RecoverableTab>.toTabSessionStates() = map { it.toTabSessionState() }
