@@ -33,7 +33,9 @@ this.analytics = (function() {
   };
 
   function shouldSendEvents() {
-    return false;
+    return (
+      !hasReturnedGone && serverFailedResponses > 0 && myGaSegment < GA_PORTION
+    );
   }
 
   function flushEvents() {
