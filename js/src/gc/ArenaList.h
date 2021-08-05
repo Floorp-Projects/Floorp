@@ -313,8 +313,6 @@ class ArenaLists {
 
   inline bool arenaListsAreEmpty() const;
 
-  inline void unmarkAll();
-
   inline bool doneBackgroundFinalize(AllocKind kind) const;
   inline bool needBackgroundFinalizeWait(AllocKind kind) const;
 
