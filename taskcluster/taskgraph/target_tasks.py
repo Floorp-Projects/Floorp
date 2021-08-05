@@ -507,24 +507,6 @@ def target_tasks_graphics(full_task_graph, parameters, graph_config):
     return [l for l in filtered_for_project if filter(full_task_graph[l])]
 
 
-@_target_task("mochitest_valgrind")
-def target_tasks_valgrind(full_task_graph, parameters, graph_config):
-    """Target tasks for mochitest valgrind jobs."""
-
-    def filter(task):
-        platform = task.attributes.get("test_platform", "").split("/")[0]
-        if platform not in ["linux64"]:
-            return False
-
-        if task.attributes.get("unittest_suite", "").startswith(
-            "mochitest-valgrind-plain"
-        ):
-            return True
-        return False
-
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
-
-
 @_target_task("mozilla_beta_tasks")
 def target_tasks_mozilla_beta(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a promotable beta or release build
