@@ -212,6 +212,10 @@ if CONFIG["OS_TARGET"] == "Darwin":
     UNIFIED_SOURCES += [
         "AvailableMemoryWatcherMac.cpp",
     ]
+    EXPORTS.mozilla += [
+        "MemoryPressureLevelMac.h",
+    ]
+
 
 GeneratedFile("ErrorList.h", script="ErrorList.py", entry_point="error_list_h")
 GeneratedFile(

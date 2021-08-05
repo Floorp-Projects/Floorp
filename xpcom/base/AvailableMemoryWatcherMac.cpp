@@ -83,7 +83,7 @@ NS_IMPL_ISUPPORTS(nsAvailableMemoryWatcher, nsIAvailableMemoryWatcherBase);
 
 nsAvailableMemoryWatcher::nsAvailableMemoryWatcher()
     : mInitialized(false),
-      mLevel(MacMemoryPressureLevel::Unset),
+      mLevel(MacMemoryPressureLevel::Value::eUnset),
       mLevelSysctl(0xFFFFFFFF),
       mAvailMemSysctl(-1),
       mLevelStr("Unset"),
@@ -132,21 +132,6 @@ already_AddRefed<nsAvailableMemoryWatcherBase> CreateAvailableMemoryWatcher() {
   return watcher.forget();
 }
 
-const char* LevelToString(MacMemoryPressureLevel aLevel) {
-  switch (aLevel) {
-    case MacMemoryPressureLevel::Unset:
-      return "Unset";
-    case MacMemoryPressureLevel::Unexpected:
-      return "Unexpected";
-    case MacMemoryPressureLevel::Normal:
-      return "Normal";
-    case MacMemoryPressureLevel::Warning:
-      return "Warning";
-    case MacMemoryPressureLevel::Critical:
-      return "Critical";
-  }
-}
-
 // Update the memory pressure level, level change timestamps, and sysctl
 // level crash report annotations.
 void nsAvailableMemoryWatcher::UpdateParentAnnotations() {
@@ -159,20 +144,20 @@ void nsAvailableMemoryWatcher::UpdateParentAnnotations() {
   nsAutoCString pressureLevelString;
   Maybe<CrashReporter::Annotation> pressureLevelKey;
 
-  switch (mLevel) {
-    case MacMemoryPressureLevel::Normal:
+  switch (mLevel.GetValue()) {
+    case MacMemoryPressureLevel::Value::eNormal:
       mNormalTimeStr = timeChangedString;
       pressureLevelString = "Normal";
       pressureLevelKey.emplace(
           CrashReporter::Annotation::MacMemoryPressureNormalTime);
       break;
-    case MacMemoryPressureLevel::Warning:
+    case MacMemoryPressureLevel::Value::eWarning:
       mWarningTimeStr = timeChangedString;
       pressureLevelString = "Warning";
       pressureLevelKey.emplace(
           CrashReporter::Annotation::MacMemoryPressureWarningTime);
       break;
-    case MacMemoryPressureLevel::Critical:
+    case MacMemoryPressureLevel::Value::eCritical:
       mCriticalTimeStr = timeChangedString;
       pressureLevelString = "Critical";
       pressureLevelKey.emplace(
@@ -214,8 +199,8 @@ void nsAvailableMemoryWatcher::ReadSysctls() {
   // Available memory percent
   int availPercent;
   size = sizeof(availPercent);
-  if (sysctlbyname("kern.memorystatus_level", &availPercent, &size, NULL,
-                   0) == -1) {
+  if (sysctlbyname("kern.memorystatus_level", &availPercent, &size, NULL, 0) ==
+      -1) {
     MP_LOG("Failure reading available memory level");
   }
   mAvailMemSysctl = availPercent;
@@ -228,7 +213,7 @@ void nsAvailableMemoryWatcher::OnMemoryPressureChanged(
   mLevel = aLevel;
   ReadSysctls();
   MP_LOG("level: %s, level sysctl: %d, available memory: %d percent",
-      LevelToString(aLevel), mLevelSysctl, mAvailMemSysctl);
+         aLevel.ToString(), mLevelSysctl, mAvailMemSysctl);
   UpdateParentAnnotations();
 }
 
