@@ -141,7 +141,7 @@ To push your current patch to try, execute:
 It will print in your Terminal a link to perfherder like this one:
 [https://treeherder.mozilla.org/perf.html#/comparechooser?newProject=try&newRevision=9bef6cb13c43bbce21d40ffaea595e082a4c28db](https://treeherder.mozilla.org/perf.html#/comparechooser?newProject=try&newRevision=9bef6cb13c43bbce21d40ffaea595e082a4c28db)
 Running performance tests takes time, so you should open it 30 minutes up to 2 hours later to see your results.
-See [Performance tests (DAMP)](../tests/performance-tests.md) for more information about PerfHerder/try.
+See [DAMP Performance tests](../tests/performance-tests-damp.md) for more information about PerfHerder/try.
 
 Let's look at how to interpret an actual real-life [set of perfherder results](https://treeherder.mozilla.org/perf.html#/comparesubtest?originalProject=mozilla-central&newProject=try&newRevision=9bef6cb13c43bbce21d40ffaea595e082a4c28db&originalSignature=edaec66500db21d37602c99daa61ac983f21a6ac&newSignature=edaec66500db21d37602c99daa61ac983f21a6ac&showOnlyImportant=1&framework=1&selectedTimeRange=172800):
 
