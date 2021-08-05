@@ -2340,6 +2340,7 @@ def as_with_flags(as_info, assembler, provided_assembler, c_compiler):
 
 add_old_configure_assignment("AS", as_with_flags)
 add_old_configure_assignment("ac_cv_prog_AS", as_with_flags)
+add_old_configure_assignment("ac_cv_path_AS", as_with_flags)
 
 
 @depends(assembler, c_compiler, extra_toolchain_flags)
