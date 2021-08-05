@@ -442,8 +442,8 @@ def sign_msix(output, force=False, log=None, verbose=False):
     # These are baked into enough places under `browser/` that we need not
     # extract constants.
     vendor = "Mozilla"
-    publisher = "Mozilla Corporation"
-    friendly_name = "{} MSIX Packaging Test Certificate".format(publisher)
+    publisher = "CN=Mozilla Corporation"
+    friendly_name = "Mozilla Corporation MSIX Packaging Test Certificate"
 
     # The convention is $MOZBUILD_STATE_PATH/cache/$FEATURE.
     crt_path = mozpath.join(
@@ -496,7 +496,7 @@ def sign_msix(output, force=False, log=None, verbose=False):
             thumbprint = (
                 powershell(
                     (
-                        'New-SelfSignedCertificate -Type Custom -Subject "CN={}" '
+                        'New-SelfSignedCertificate -Type Custom -Subject "{}" '
                         '-KeyUsage DigitalSignature -FriendlyName "{}"'
                         " -CertStoreLocation Cert:\CurrentUser\My"
                         ' -TextExtension @("2.5.29.37={{text}}1.3.6.1.5.5.7.3.3", '
