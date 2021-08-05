@@ -49,7 +49,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import mozilla.appservices.fxaclient.AccountEvent as ASAccountEvent
 import mozilla.appservices.fxaclient.Device as NativeDevice
 import mozilla.appservices.fxaclient.DevicePushSubscription as NativeDevicePushSubscription
@@ -108,7 +108,7 @@ class FxaDeviceConstellationTest {
                     verify(account).ensureCapabilities(setOf(mozilla.appservices.fxaclient.DeviceCapability.SEND_TAB))
                 }
                 FxaDeviceConstellation.DeviceFinalizeAction.None -> {
-                    verifyZeroInteractions(account)
+                    verifyNoInteractions(account)
                 }
             }
             reset(account)

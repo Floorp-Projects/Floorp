@@ -27,7 +27,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 
 @RunWith(AndroidJUnit4::class)
 class ConstellationObserverTest {
@@ -49,14 +49,14 @@ class ConstellationObserverTest {
 
         observer.onDevicesUpdate(state)
 
-        verifyZeroInteractions(push)
+        verifyNoInteractions(push)
 
         `when`(state.currentDevice).thenReturn(device)
         `when`(device.subscriptionExpired).thenReturn(false)
 
         observer.onDevicesUpdate(state)
 
-        verifyZeroInteractions(push)
+        verifyNoInteractions(push)
     }
 
     @Test
@@ -65,19 +65,19 @@ class ConstellationObserverTest {
 
         observer.onDevicesUpdate(state)
 
-        verifyZeroInteractions(push)
+        verifyNoInteractions(push)
 
         `when`(state.currentDevice).thenReturn(device)
         `when`(device.subscriptionExpired).thenReturn(true)
         `when`(verifier.allowedToRenew()).thenReturn(false)
 
-        verifyZeroInteractions(push)
+        verifyNoInteractions(push)
 
         `when`(device.subscriptionExpired).thenReturn(true)
 
         observer.onDevicesUpdate(state)
 
-        verifyZeroInteractions(push)
+        verifyNoInteractions(push)
     }
 
     @Test

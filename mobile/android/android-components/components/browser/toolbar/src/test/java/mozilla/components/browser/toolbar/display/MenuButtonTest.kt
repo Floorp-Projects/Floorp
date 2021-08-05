@@ -43,7 +43,7 @@ class MenuButtonTest {
 
     @Before
     fun setup() {
-        MockitoAnnotations.initMocks(this)
+        MockitoAnnotations.openMocks(this)
         `when`(menuBuilder.build(testContext)).thenReturn(menu)
         `when`(menuButtonInternal.context).thenReturn(testContext)
 

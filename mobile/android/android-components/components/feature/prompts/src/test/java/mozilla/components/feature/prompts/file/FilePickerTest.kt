@@ -44,7 +44,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import java.io.File
 
 @RunWith(AndroidJUnit4::class)
@@ -140,7 +140,7 @@ class FilePickerTest {
 
         // The original prompt that started the request permission flow is persisted in the store
         // That should not be accesses / modified in any way.
-        verifyZeroInteractions(store)
+        verifyNoInteractions(store)
         // After the permission is granted we should retry picking a file based on the original request.
         verify(filePicker).handleFileRequest(eq(request), eq(false))
     }

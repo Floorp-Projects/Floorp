@@ -65,7 +65,7 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlockingController
@@ -2207,7 +2207,7 @@ class GeckoEngineSessionTest {
 
         engineSession.clearData()
 
-        verifyZeroInteractions(observer)
+        verifyNoInteractions(observer)
     }
 
     @Test

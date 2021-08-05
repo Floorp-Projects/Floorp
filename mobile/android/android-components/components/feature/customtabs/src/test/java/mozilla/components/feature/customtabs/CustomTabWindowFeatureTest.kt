@@ -31,7 +31,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 
 @RunWith(AndroidJUnit4::class)
 class CustomTabWindowFeatureTest {
@@ -151,7 +151,7 @@ class CustomTabWindowFeatureTest {
         whenever(windowRequest.url).thenReturn("https://www.firefox.com")
         store.dispatch(ContentAction.UpdateWindowRequestAction(sessionId, windowRequest)).joinBlocking()
         verify(activity, never()).startActivity(any(), any())
-        verifyZeroInteractions(launchUrlFallback)
+        verifyNoInteractions(launchUrlFallback)
         verify(store, never()).dispatch(ContentAction.ConsumeWindowRequestAction(sessionId))
     }
 }

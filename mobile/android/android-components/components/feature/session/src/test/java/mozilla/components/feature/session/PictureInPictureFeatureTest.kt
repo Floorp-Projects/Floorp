@@ -30,7 +30,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.verification.VerificationMode
 import org.robolectric.annotation.Config
 
@@ -57,8 +57,8 @@ class PictureInPictureFeatureTest {
             spy(PictureInPictureFeature(store, activity, crashReporting))
 
         assertFalse(pictureInPictureFeature.onHomePressed())
-        verifyZeroInteractions(store)
-        verifyZeroInteractions(activity.packageManager)
+        verifyNoInteractions(store)
+        verifyNoInteractions(activity.packageManager)
         verify(pictureInPictureFeature, never()).enterPipModeCompat()
     }
 
@@ -73,7 +73,7 @@ class PictureInPictureFeatureTest {
             spy(PictureInPictureFeature(store, activity, crashReporting))
 
         assertFalse(pictureInPictureFeature.onHomePressed())
-        verifyZeroInteractions(store)
+        verifyNoInteractions(store)
         verify(activity.packageManager).hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
         verify(pictureInPictureFeature, never()).enterPipModeCompat()
     }

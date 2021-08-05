@@ -13,7 +13,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import java.io.File
 import java.lang.IllegalArgumentException
 
@@ -96,7 +96,7 @@ class FennecLoginsMigrationTest {
                 this.records
             )
         }
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
     }
 
     @Test
@@ -148,7 +148,7 @@ class FennecLoginsMigrationTest {
                 this.records
             )
         }
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
     }
 
     @Test
@@ -197,7 +197,7 @@ class FennecLoginsMigrationTest {
                 this.records
             )
         }
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
     }
 
     @Test

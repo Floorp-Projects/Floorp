@@ -27,8 +27,8 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.Mockito.verifyZeroInteractions
 
 @RunWith(AndroidJUnit4::class)
 class BrowserThumbnailsTest {
@@ -111,7 +111,7 @@ class BrowserThumbnailsTest {
 
         feature.requestScreenshot()
 
-        verifyZeroInteractions(store)
+        verifyNoInteractions(store)
     }
 
     @Suppress("UNCHECKED_CAST")

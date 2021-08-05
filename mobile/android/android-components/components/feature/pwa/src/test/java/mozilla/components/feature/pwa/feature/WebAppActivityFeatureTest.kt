@@ -23,7 +23,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.MockitoAnnotations.initMocks
+import org.mockito.MockitoAnnotations.openMocks
 
 @RunWith(AndroidJUnit4::class)
 class WebAppActivityFeatureTest {
@@ -35,7 +35,7 @@ class WebAppActivityFeatureTest {
 
     @Before
     fun setup() {
-        initMocks(this)
+        openMocks(this)
 
         `when`(activity.window).thenReturn(window)
         `when`(window.decorView).thenReturn(decorView)

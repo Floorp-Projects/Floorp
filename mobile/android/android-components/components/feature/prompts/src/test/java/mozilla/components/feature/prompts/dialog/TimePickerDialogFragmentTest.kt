@@ -36,7 +36,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.MockitoAnnotations.initMocks
+import org.mockito.MockitoAnnotations.openMocks
 import org.robolectric.annotation.Config
 import java.util.Calendar
 import java.util.Date
@@ -48,7 +48,7 @@ class TimePickerDialogFragmentTest {
 
     @Before
     fun setup() {
-        initMocks(this)
+        openMocks(this)
     }
 
     @Test

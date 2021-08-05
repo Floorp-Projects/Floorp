@@ -23,7 +23,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import java.io.File
 
 @RunWith(AndroidJUnit4::class)
@@ -37,7 +37,7 @@ class FennecFxaMigrationTest {
             assertTrue(this.value is FxaMigrationResult.Success.NoAccount)
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -55,7 +55,7 @@ class FennecFxaMigrationTest {
             assertEquals("Unauthenticated account in state Separated", state.toString())
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -73,7 +73,7 @@ class FennecFxaMigrationTest {
             assertEquals("Unauthenticated account in state Doghouse", state.toString())
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -301,7 +301,7 @@ class FennecFxaMigrationTest {
             assertTrue(corruptAccountResult.toString().startsWith("Corrupt account state, exception: org.json.JSONException"))
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -323,7 +323,7 @@ class FennecFxaMigrationTest {
             assertEquals("Corrupt account state, exception: org.json.JSONException: No value for pickle_version", corruptAccountResult.toString())
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -345,7 +345,7 @@ class FennecFxaMigrationTest {
             assertEquals("Corrupt account state, exception: org.json.JSONException: No value for version", corruptAccountResult.toString())
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -370,7 +370,7 @@ class FennecFxaMigrationTest {
             assertEquals("Unsupported version(s): account=23, pickle=3, state=null", unsupportedVersionsResult.toString())
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -395,7 +395,7 @@ class FennecFxaMigrationTest {
             assertEquals("Unsupported version(s): account=3, pickle=34, state=null", unsupportedVersionsResult.toString())
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -419,6 +419,6 @@ class FennecFxaMigrationTest {
             assertEquals("Unsupported version(s): account=3, pickle=3, state=10", unsupportedVersionsResult.toString())
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 }

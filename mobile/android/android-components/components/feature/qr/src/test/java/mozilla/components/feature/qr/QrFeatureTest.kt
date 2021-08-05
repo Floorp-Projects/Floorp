@@ -27,7 +27,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.MockitoAnnotations.initMocks
+import org.mockito.MockitoAnnotations.openMocks
 
 @RunWith(AndroidJUnit4::class)
 class QrFeatureTest {
@@ -37,7 +37,7 @@ class QrFeatureTest {
 
     @Before
     fun setUp() {
-        initMocks(this)
+        openMocks(this)
 
         mock<FragmentTransaction>().let { transaction ->
             whenever(fragmentManager.beginTransaction())

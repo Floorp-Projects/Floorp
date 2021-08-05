@@ -38,7 +38,7 @@ class ReaderViewConfigTest {
 
     @Before
     fun setup() {
-        MockitoAnnotations.initMocks(this)
+        MockitoAnnotations.openMocks(this)
         whenever(context.getSharedPreferences(anyString(), anyInt())).thenReturn(prefs)
         whenever(prefs.edit()).thenReturn(editor)
 

@@ -23,7 +23,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 
 class UtilsKtTest {
     @Test
@@ -73,7 +73,7 @@ class UtilsKtTest {
             )
         )
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
 
         assertEquals(
             "pass!",
@@ -109,7 +109,7 @@ class UtilsKtTest {
                 }
             )
         )
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -151,7 +151,7 @@ class UtilsKtTest {
             }
         )
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
 
         assertFalse(
             handleFxaExceptions(mock(), "test op") {
@@ -169,7 +169,7 @@ class UtilsKtTest {
             }
         )
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -180,7 +180,7 @@ class UtilsKtTest {
         handleFxaExceptions(mock(), "test op") {
             throw IllegalStateException("bad state")
         }
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test(expected = FxaPanicException::class)
@@ -192,7 +192,7 @@ class UtilsKtTest {
             throw FxaPanicException("dunno")
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -214,7 +214,7 @@ class UtilsKtTest {
             }
         )
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
 
         assertEquals(
             -1,
@@ -234,7 +234,7 @@ class UtilsKtTest {
             }
         )
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -245,7 +245,7 @@ class UtilsKtTest {
         handleFxaExceptions(mock(), "test op", { "nope" }) {
             throw IllegalStateException("bad state")
         }
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test(expected = FxaPanicException::class)
@@ -256,7 +256,7 @@ class UtilsKtTest {
         handleFxaExceptions(mock(), "test op", { "nope" }) {
             throw FxaPanicException("dunno")
         }
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test

@@ -19,7 +19,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 
 @RunWith(AndroidJUnit4::class)
 class AutofillCryptoTest {
@@ -43,7 +43,7 @@ class AutofillCryptoTest {
         assertNull(key2.wasGenerated)
 
         assertEquals(key.key, key2.key)
-        verifyZeroInteractions(handler)
+        verifyNoInteractions(handler)
     }
 
     @Test

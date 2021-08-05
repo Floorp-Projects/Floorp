@@ -72,7 +72,7 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import org.robolectric.Robolectric
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
@@ -627,7 +627,7 @@ class SystemEngineViewTest {
             null,
             "http://failed.random"
         )
-        verifyZeroInteractions(requestInterceptor)
+        verifyNoInteractions(requestInterceptor)
 
         // Session attached, but not interceptor.
         engineView.render(engineSession)
@@ -637,7 +637,7 @@ class SystemEngineViewTest {
             null,
             "http://failed.random"
         )
-        verifyZeroInteractions(requestInterceptor)
+        verifyNoInteractions(requestInterceptor)
 
         // Session and interceptor.
         engineSession.settings.requestInterceptor = requestInterceptor
@@ -707,11 +707,11 @@ class SystemEngineViewTest {
         val url: Uri = mock()
 
         webViewClient.onReceivedError(engineSession.webView, webRequest, webError)
-        verifyZeroInteractions(requestInterceptor)
+        verifyNoInteractions(requestInterceptor)
 
         engineView.render(engineSession)
         webViewClient.onReceivedError(engineSession.webView, webRequest, webError)
-        verifyZeroInteractions(requestInterceptor)
+        verifyNoInteractions(requestInterceptor)
 
         whenever(webError.errorCode).thenReturn(WebViewClient.ERROR_UNKNOWN)
         whenever(webRequest.url).thenReturn(url)
@@ -761,11 +761,11 @@ class SystemEngineViewTest {
         val error: SslError = mock()
 
         webViewClient.onReceivedSslError(engineSession.webView, handler, error)
-        verifyZeroInteractions(requestInterceptor)
+        verifyNoInteractions(requestInterceptor)
 
         engineView.render(engineSession)
         webViewClient.onReceivedSslError(engineSession.webView, handler, error)
-        verifyZeroInteractions(requestInterceptor)
+        verifyNoInteractions(requestInterceptor)
 
         whenever(error.primaryError).thenReturn(SslError.SSL_EXPIRED)
         whenever(error.url).thenReturn("http://failed.random")

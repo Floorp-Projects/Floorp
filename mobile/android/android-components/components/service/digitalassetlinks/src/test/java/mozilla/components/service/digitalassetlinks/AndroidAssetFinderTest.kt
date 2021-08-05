@@ -39,7 +39,7 @@ class AndroidAssetFinderTest {
     fun setup() {
         assetFinder = spy(AndroidAssetFinder())
 
-        MockitoAnnotations.initMocks(this)
+        MockitoAnnotations.openMocks(this)
         packageInfo = PackageInfo()
         `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
     }

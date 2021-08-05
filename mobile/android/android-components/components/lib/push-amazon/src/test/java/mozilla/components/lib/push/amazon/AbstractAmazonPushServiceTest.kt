@@ -30,7 +30,7 @@ import org.mockito.Mockito.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.Implementation
@@ -128,7 +128,7 @@ class AbstractAmazonPushServiceTest {
         val messageIntent = Intent()
         service.onMessage(messageIntent)
 
-        verifyZeroInteractions(processor)
+        verifyNoInteractions(processor)
     }
 
     @Test

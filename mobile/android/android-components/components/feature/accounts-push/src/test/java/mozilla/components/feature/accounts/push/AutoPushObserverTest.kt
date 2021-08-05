@@ -21,7 +21,7 @@ import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.stubbing.OngoingStubbing
 
 class AutoPushObserverTest {
@@ -105,7 +105,7 @@ class AutoPushObserverTest {
         observer.onSubscriptionChanged("test")
 
         verify(constellation, never()).setDevicePushSubscription(any())
-        verifyZeroInteractions(pushFeature)
+        verifyNoInteractions(pushFeature)
     }
 
     @Suppress("UNCHECKED_CAST")

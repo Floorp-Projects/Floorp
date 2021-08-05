@@ -46,7 +46,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import java.io.File
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
@@ -187,7 +187,7 @@ class FennecMigratorTest {
         assertTrue(historyStore.getVisited().isEmpty())
         assertTrue(bookmarksStore.searchBookmarks("mozilla").isEmpty())
 
-        verifyZeroInteractions(topSiteStorage)
+        verifyNoInteractions(topSiteStorage)
 
         // Can run once.
         with(migrator.migrateAsync(mock()).await()) {
@@ -215,7 +215,7 @@ class FennecMigratorTest {
 
         assertEquals(6, historyStore.getVisited().size)
         assertEquals(4, bookmarksStore.searchBookmarks("mozilla").size)
-        verifyZeroInteractions(topSiteStorage)
+        verifyNoInteractions(topSiteStorage)
 
         // Do not run again for the same version.
         with(migrator.migrateAsync(mock()).await()) {
@@ -504,7 +504,7 @@ class FennecMigratorTest {
             assertFalse(this.getValue(Migration.FxA).success)
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -523,7 +523,7 @@ class FennecMigratorTest {
             assertFalse(this.getValue(Migration.FxA).success)
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -542,7 +542,7 @@ class FennecMigratorTest {
             assertFalse(this.getValue(Migration.FxA).success)
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -561,14 +561,14 @@ class FennecMigratorTest {
             assertTrue(this.getValue(Migration.FxA).success)
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
 
         // Does not run FxA migration again.
         with(migrator.migrateAsync(mock()).await()) {
             assertEquals(0, this.size)
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -588,14 +588,14 @@ class FennecMigratorTest {
             assertTrue(this.getValue(Migration.FxA).success)
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
 
         // Does not run FxA migration again.
         with(migrator.migrateAsync(mock()).await()) {
             assertEquals(0, this.size)
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -632,7 +632,7 @@ class FennecMigratorTest {
             assertEquals(0, this.size)
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -669,7 +669,7 @@ class FennecMigratorTest {
             assertEquals(0, this.size)
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -707,7 +707,7 @@ class FennecMigratorTest {
             assertEquals(0, this.size)
         }
 
-        verifyZeroInteractions(accountManager)
+        verifyNoInteractions(accountManager)
     }
 
     @Test
@@ -938,7 +938,7 @@ class FennecMigratorTest {
             assertTrue(this.containsKey(Migration.Settings))
             assertTrue(this.getValue(Migration.Settings).success)
         }
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
     }
 
     @Test
@@ -989,7 +989,7 @@ class FennecMigratorTest {
             assertTrue(this.containsKey(Migration.Addons))
             assertTrue(this.getValue(Migration.Addons).success)
         }
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
     }
 
     @Test
@@ -1022,7 +1022,7 @@ class FennecMigratorTest {
             assertTrue(this.containsKey(Migration.Addons))
             assertTrue(this.getValue(Migration.Addons).success)
         }
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
     }
 
     @Test
@@ -1128,7 +1128,7 @@ class FennecMigratorTest {
             assertTrue(this.containsKey(Migration.Gecko))
             assertTrue(this.getValue(Migration.Gecko).success)
         }
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
     }
 
     @Test
@@ -1150,7 +1150,7 @@ class FennecMigratorTest {
             assertTrue(this.containsKey(Migration.Gecko))
             assertTrue(this.getValue(Migration.Gecko).success)
         }
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
     }
 
     @Test
@@ -1172,7 +1172,7 @@ class FennecMigratorTest {
             assertTrue(this.containsKey(Migration.Gecko))
             assertTrue(this.getValue(Migration.Gecko).success)
         }
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
     }
 
     @Test
@@ -1194,6 +1194,6 @@ class FennecMigratorTest {
             assertTrue(this.containsKey(Migration.Gecko))
             assertTrue(this.getValue(Migration.Gecko).success)
         }
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
     }
 }

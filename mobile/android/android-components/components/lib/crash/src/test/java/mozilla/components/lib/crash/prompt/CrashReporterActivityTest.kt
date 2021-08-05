@@ -33,7 +33,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.verify
-import org.mockito.MockitoAnnotations.initMocks
+import org.mockito.MockitoAnnotations.openMocks
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -48,7 +48,7 @@ class CrashReporterActivityTest {
 
     @Before
     fun setUp() {
-        initMocks(this)
+        openMocks(this)
     }
 
     @Test

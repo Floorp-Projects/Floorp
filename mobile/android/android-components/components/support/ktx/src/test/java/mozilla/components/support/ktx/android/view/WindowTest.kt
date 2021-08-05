@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
-import org.mockito.MockitoAnnotations.initMocks
+import org.mockito.MockitoAnnotations.openMocks
 import org.robolectric.util.ReflectionHelpers.setStaticField
 import kotlin.reflect.jvm.javaField
 
@@ -31,7 +31,7 @@ class WindowTest {
     fun setup() {
         setStaticField(Build.VERSION::SDK_INT.javaField, 0)
 
-        initMocks(this)
+        openMocks(this)
 
         `when`(window.decorView).thenAnswer { decorView }
     }

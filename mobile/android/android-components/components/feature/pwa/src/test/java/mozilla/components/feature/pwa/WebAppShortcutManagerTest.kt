@@ -41,7 +41,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.MockitoAnnotations.initMocks
+import org.mockito.MockitoAnnotations.openMocks
 import org.robolectric.util.ReflectionHelpers.setStaticField
 import kotlin.reflect.jvm.javaField
 
@@ -63,7 +63,7 @@ class WebAppShortcutManagerTest {
     @Before
     fun setup() {
         setSdkInt(0)
-        initMocks(this)
+        openMocks(this)
         context = spy(testContext)
 
         doReturn(packageManager).`when`(context).packageManager

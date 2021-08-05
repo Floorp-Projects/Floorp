@@ -19,7 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 
 @RunWith(AndroidJUnit4::class)
 class DefaultPresenterTest {
@@ -198,7 +198,7 @@ class DefaultPresenterTest {
         prefs.edit().putBoolean("tabs", false).apply()
         presenter.eventObserver.onIdle()
 
-        verifyZeroInteractions(controller)
+        verifyNoInteractions(controller)
         verify(view).onError(ErrorType.SYNC_ENGINE_UNAVAILABLE)
     }
 

@@ -88,8 +88,8 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
-import org.mockito.MockitoAnnotations.initMocks
+import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.MockitoAnnotations.openMocks
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.Implementation
@@ -118,7 +118,7 @@ class AbstractFetchDownloadServiceTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        initMocks(this)
+        openMocks(this)
         browserStore = BrowserStore()
         service = spy(object : AbstractFetchDownloadService() {
             override val httpClient = client
@@ -1231,7 +1231,7 @@ class AbstractFetchDownloadServiceTest {
         service.performDownload(downloadJob)
 
         verify(responseFromDownloadState, atLeastOnce()).status
-        verifyZeroInteractions(client)
+        verifyNoInteractions(client)
     }
 
     @Test
@@ -1261,7 +1261,7 @@ class AbstractFetchDownloadServiceTest {
         service.performDownload(downloadJob)
 
         verify(responseFromClient, atLeastOnce()).status
-        verifyZeroInteractions(responseFromDownloadState)
+        verifyNoInteractions(responseFromDownloadState)
     }
 
     @Test

@@ -17,7 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 
 @RunWith(AndroidJUnit4::class)
 class RustLogTest {
@@ -54,19 +54,19 @@ class RustLogTest {
         val onLog = CrashReporterOnLog(crashReporter)
 
         onLog(android.util.Log.VERBOSE, "sync15:multiple", "Stuff broke")
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
 
         onLog(android.util.Log.DEBUG, "sync15:multiple", "Stuff broke")
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
 
         onLog(android.util.Log.INFO, "sync15:multiple", "Stuff broke")
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
 
         onLog(android.util.Log.WARN, "sync15:multiple", "Stuff broke")
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
 
         onLog(android.util.Log.WARN, null, "Stuff broke")
-        verifyZeroInteractions(crashReporter)
+        verifyNoInteractions(crashReporter)
     }
 
     @Test

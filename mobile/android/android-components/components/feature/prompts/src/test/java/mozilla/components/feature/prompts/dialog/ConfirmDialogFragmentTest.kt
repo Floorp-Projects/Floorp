@@ -20,7 +20,7 @@ import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.MockitoAnnotations.initMocks
+import org.mockito.MockitoAnnotations.openMocks
 
 @RunWith(AndroidJUnit4::class)
 class ConfirmDialogFragmentTest {
@@ -30,7 +30,7 @@ class ConfirmDialogFragmentTest {
 
     @Before
     fun setup() {
-        initMocks(this)
+        openMocks(this)
         fragment = spy(
             ConfirmDialogFragment.newInstance(
                 "sessionId",

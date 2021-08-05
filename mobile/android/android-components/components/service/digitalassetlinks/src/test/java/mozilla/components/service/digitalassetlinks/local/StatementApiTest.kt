@@ -39,7 +39,7 @@ class StatementApiTest {
 
     @Before
     fun setup() {
-        MockitoAnnotations.initMocks(this)
+        MockitoAnnotations.openMocks(this)
         listFetcher = StatementApi(httpClient)
     }
 

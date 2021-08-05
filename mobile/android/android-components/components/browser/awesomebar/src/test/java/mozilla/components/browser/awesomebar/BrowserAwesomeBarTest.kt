@@ -30,7 +30,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import org.robolectric.Shadows.shadowOf
 import java.util.UUID
 
@@ -63,8 +63,8 @@ class BrowserAwesomeBarTest {
             awesomeBar.awaitForAllJobsToFinish()
 
             verify(provider1).onInputChanged("Hello World!")
-            verifyZeroInteractions(provider2)
-            verifyZeroInteractions(provider3)
+            verifyNoInteractions(provider2)
+            verifyNoInteractions(provider3)
 
             assertEquals(1, facts.size)
             assertBrowserAwesomebarFact(facts[0], provider1)

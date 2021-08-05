@@ -30,7 +30,6 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.stubbing.OngoingStubbing
 import org.robolectric.RobolectricTestRunner
 
@@ -151,15 +150,15 @@ class AccountObserverTest {
             false
         )
 
-        verify(pushFeature).config
-
         observer.onAuthenticated(account, AuthType.Existing)
 
-        verifyZeroInteractions(pushFeature)
+        verify(pushFeature).config
+
+        verifyNoMoreInteractions(pushFeature)
 
         observer.onAuthenticated(account, AuthType.Recovered)
 
-        verifyZeroInteractions(pushFeature)
+        verifyNoMoreInteractions(pushFeature)
     }
 
     @Test

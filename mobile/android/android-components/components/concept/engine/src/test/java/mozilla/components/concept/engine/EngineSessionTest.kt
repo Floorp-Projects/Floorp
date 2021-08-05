@@ -24,8 +24,8 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.Mockito.verifyZeroInteractions
 import java.lang.reflect.Modifier
 
 class EngineSessionTest {
@@ -843,7 +843,7 @@ class EngineSessionTest {
 
         session.clearData()
 
-        verifyZeroInteractions(observer)
+        verifyNoInteractions(observer)
     }
 
     @Test

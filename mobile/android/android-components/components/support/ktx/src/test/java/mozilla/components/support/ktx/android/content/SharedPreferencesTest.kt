@@ -19,7 +19,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.verify
-import org.mockito.MockitoAnnotations.initMocks
+import org.mockito.MockitoAnnotations.openMocks
 
 class SharedPreferencesTest {
     @Mock private lateinit var sharedPrefs: SharedPreferences
@@ -27,7 +27,7 @@ class SharedPreferencesTest {
 
     @Before
     fun setup() {
-        initMocks(this)
+        openMocks(this)
 
         `when`(sharedPrefs.edit()).thenReturn(editor)
         `when`(editor.putBoolean(anyString(), anyBoolean())).thenReturn(editor)

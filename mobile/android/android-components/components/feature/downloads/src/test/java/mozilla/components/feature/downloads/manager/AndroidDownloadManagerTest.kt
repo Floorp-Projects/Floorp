@@ -25,7 +25,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 
 @RunWith(AndroidJUnit4::class)
 class AndroidDownloadManagerTest {
@@ -147,11 +147,11 @@ class AndroidDownloadManagerTest {
 
         mockRequest.addRequestHeaderSafely("User-Agent", "")
 
-        verifyZeroInteractions(mockRequest)
+        verifyNoInteractions(mockRequest)
 
         mockRequest.addRequestHeaderSafely("User-Agent", null)
 
-        verifyZeroInteractions(mockRequest)
+        verifyNoInteractions(mockRequest)
 
         val fireFox = "Mozilla/5.0 (Windows NT 5.1; rv:7.0.1) Gecko/20100101 Firefox/7.0.1"
 
