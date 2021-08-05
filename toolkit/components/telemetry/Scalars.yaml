@@ -5668,28 +5668,6 @@ startup:
     record_in_processes:
       - main
 
-  first_run_is_from_dmg:
-    bug_numbers:
-      - 1700795
-    description: >
-      Recorded on first run of a Firefox install on macOS, with a boolean value
-      indicating whether Firefox is being run directly from .dmg without
-      installing, or not. Note if running from a .dmg we will get a new ping
-      everytime the .dmg is remounted due to App Translocation.
-    expires: "99"
-    keyed: false
-    kind: boolean
-    notification_emails:
-      - jwatt@jwatt.org
-      - mbalfanz@mozilla.com
-    operating_systems:
-      - mac
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-    release_channel_collection: opt-out
-
 script.preloader:
   mainthread_recompile:
     bug_numbers:
