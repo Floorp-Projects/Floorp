@@ -56,3 +56,4 @@ pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.implicit-keyf
 pref(layout.animation.prerender.partial,true) load 1656419.html
 pref(layout.css.step-position-jump.enabled,true) load 1706157.html
 pref(gfx.omta.background-color,true) load 1699890.html
+pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.getAnimations.enabled,true) pref(dom.animations-api.timelines.enabled,true) load 1714421.html
