@@ -79,7 +79,7 @@ class MessageHandler extends EventEmitter {
 
   destroy() {
     logger.trace(
-      `MessageHandler ${this.type} for session ${this.sessionId} is being destroyed`
+      `MessageHandler ${this.constructor.type} for session ${this.sessionId} is being destroyed`
     );
     this._moduleCache.destroy();
 
