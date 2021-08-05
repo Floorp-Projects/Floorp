@@ -75,10 +75,7 @@ def before_runs(env):
             recording_file,
         )
 
-        add_option(
-            env, "browsertime.test_url", test_site.get("test_url"), overwrite=True
-        )
-        add_option(env, "browsertime.secondary_url", test_site.get("secondary_url"))
+        add_option(env, "browsertime.url", test_site.get("test_url"), overwrite=True)
         add_option(env, "browsertime.screenshot", "true")
         add_option(env, "browsertime.testName", test_site.get("name"))
 
