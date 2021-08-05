@@ -280,16 +280,6 @@ bool js::gc::ArenaLists::arenaListsAreEmpty() const {
   return true;
 }
 
-void js::gc::ArenaLists::unmarkAll() {
-  for (auto i : AllAllocKinds()) {
-    /* The background finalization must have stopped at this point. */
-    MOZ_ASSERT(concurrentUse(i) == ConcurrentUse::None);
-    for (Arena* arena = arenaList(i).head(); arena; arena = arena->next) {
-      arena->unmarkAll();
-    }
-  }
-}
-
 bool js::gc::ArenaLists::doneBackgroundFinalize(AllocKind kind) const {
   return concurrentUse(kind) != ConcurrentUse::BackgroundFinalize;
 }
