@@ -65,5 +65,5 @@ job-template:
                 default: nightly
         publisher:
             by-level:
-                "3": "Mozilla Corporation"
-                default: "Mozilla Fake SPC"
+                "3": "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
+                default: "CN=Mozilla Fake SPC"
