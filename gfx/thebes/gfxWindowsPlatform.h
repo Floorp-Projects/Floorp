@@ -172,17 +172,8 @@ class gfxWindowsPlatform final : public gfxPlatform {
 
   void FontsPrefsChanged(const char* aPref) override;
 
-  void SetupClearTypeParams();
-
   static inline bool DWriteEnabled() {
     return !!mozilla::gfx::Factory::GetDWriteFactory();
-  }
-  inline DWRITE_MEASURING_MODE DWriteMeasuringMode() { return mMeasuringMode; }
-
-  // Note that this may return nullptr, if we encountered an error initializing
-  // the default rendering params.
-  IDWriteRenderingParams* GetRenderingParams(TextRenderingMode aRenderMode) {
-    return mRenderingParams[aRenderMode];
   }
 
  public:
@@ -257,9 +248,6 @@ class gfxWindowsPlatform final : public gfxPlatform {
   void InitializeDirectDrawConfig();
 
   void RecordStartupTelemetry();
-
-  RefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
-  DWRITE_MEASURING_MODE mMeasuringMode;
 
   RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
   bool mInitializedDevices = false;

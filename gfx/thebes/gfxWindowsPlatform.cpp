@@ -401,7 +401,6 @@ bool gfxWindowsPlatform::InitDWriteSupport() {
     return false;
   }
 
-  SetupClearTypeParams();
   reporter.SetSuccessful();
   return true;
 }
@@ -1062,7 +1061,6 @@ void gfxWindowsPlatform::FontsPrefsChanged(const char* aPref) {
 
   if (aPref &&
       !strncmp(GFX_CLEARTYPE_PARAMS, aPref, strlen(GFX_CLEARTYPE_PARAMS))) {
-    SetupClearTypeParams();
     if (XRE_IsParentProcess()) {
       gfxDWriteFont::UpdateClearTypeVars();
     }
@@ -1074,141 +1072,6 @@ void gfxWindowsPlatform::FontsPrefsChanged(const char* aPref) {
     gfxFontCache* fc = gfxFontCache::GetCache();
     if (fc) {
       fc->Flush();
-    }
-  }
-}
-
-void gfxWindowsPlatform::SetupClearTypeParams() {
-  if (DWriteEnabled()) {
-    // any missing prefs will default to invalid (-1) and be ignored;
-    // out-of-range values will also be ignored
-    FLOAT gamma = -1.0;
-    FLOAT contrast = -1.0;
-    FLOAT level = -1.0;
-    int geometry = -1;
-    int mode = -1;
-    int32_t value;
-    if (NS_SUCCEEDED(Preferences::GetInt(GFX_CLEARTYPE_PARAMS_GAMMA, &value))) {
-      if (value >= 1000 && value <= 2200) {
-        gamma = FLOAT(value / 1000.0);
-      }
-    }
-
-    if (NS_SUCCEEDED(
-            Preferences::GetInt(GFX_CLEARTYPE_PARAMS_CONTRAST, &value))) {
-      if (value >= 0 && value <= 1000) {
-        contrast = FLOAT(value / 100.0);
-      }
-    }
-
-    if (NS_SUCCEEDED(Preferences::GetInt(GFX_CLEARTYPE_PARAMS_LEVEL, &value))) {
-      if (value >= 0 && value <= 100) {
-        level = FLOAT(value / 100.0);
-      }
-    }
-
-    if (NS_SUCCEEDED(
-            Preferences::GetInt(GFX_CLEARTYPE_PARAMS_STRUCTURE, &value))) {
-      if (value >= 0 && value <= 2) {
-        geometry = value;
-      }
-    }
-
-    if (NS_SUCCEEDED(Preferences::GetInt(GFX_CLEARTYPE_PARAMS_MODE, &value))) {
-      if (value >= 0 && value <= 5) {
-        mode = value;
-      }
-    }
-
-    cairo_dwrite_set_cleartype_params(gamma, contrast, level, geometry, mode);
-
-    switch (mode) {
-      case DWRITE_RENDERING_MODE_ALIASED:
-      case DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC:
-        mMeasuringMode = DWRITE_MEASURING_MODE_GDI_CLASSIC;
-        break;
-      case DWRITE_RENDERING_MODE_CLEARTYPE_GDI_NATURAL:
-        mMeasuringMode = DWRITE_MEASURING_MODE_GDI_NATURAL;
-        break;
-      default:
-        mMeasuringMode = DWRITE_MEASURING_MODE_NATURAL;
-        break;
-    }
-
-    RefPtr<IDWriteRenderingParams> defaultRenderingParams;
-    HRESULT hr = Factory::GetDWriteFactory()->CreateRenderingParams(
-        getter_AddRefs(defaultRenderingParams));
-    if (FAILED(hr)) {
-      gfxWarning() << "Failed to create default rendering params";
-    }
-    // For EnhancedContrast, we override the default if the user has not set it
-    // in the registry (by using the ClearType Tuner).
-    if (contrast < 0.0 || contrast > 10.0) {
-      if (defaultRenderingParams) {
-        HKEY hKey;
-        LONG res = RegOpenKeyExW(DISPLAY1_REGISTRY_KEY, 0, KEY_READ, &hKey);
-        if (res == ERROR_SUCCESS) {
-          res = RegQueryValueExW(hKey, ENHANCED_CONTRAST_VALUE_NAME, nullptr,
-                                 nullptr, nullptr, nullptr);
-          if (res == ERROR_SUCCESS) {
-            contrast = defaultRenderingParams->GetEnhancedContrast();
-          }
-          RegCloseKey(hKey);
-        }
-      }
-
-      if (contrast < 0.0 || contrast > 10.0) {
-        contrast = 1.0;
-      }
-    }
-
-    // For parameters that have not been explicitly set,
-    // we copy values from default params (or our overridden value for contrast)
-    if (gamma < 1.0 || gamma > 2.2) {
-      gamma = defaultRenderingParams ? defaultRenderingParams->GetGamma() : 2.2;
-    }
-
-    if (level < 0.0 || level > 1.0) {
-      level = defaultRenderingParams
-                  ? defaultRenderingParams->GetClearTypeLevel()
-                  : 1.0;
-    }
-
-    DWRITE_PIXEL_GEOMETRY dwriteGeometry =
-        static_cast<DWRITE_PIXEL_GEOMETRY>(geometry);
-    DWRITE_RENDERING_MODE renderMode = static_cast<DWRITE_RENDERING_MODE>(mode);
-
-    if (dwriteGeometry < DWRITE_PIXEL_GEOMETRY_FLAT ||
-        dwriteGeometry > DWRITE_PIXEL_GEOMETRY_BGR) {
-      dwriteGeometry = defaultRenderingParams
-                           ? defaultRenderingParams->GetPixelGeometry()
-                           : DWRITE_PIXEL_GEOMETRY_FLAT;
-    }
-
-    Factory::SetBGRSubpixelOrder(dwriteGeometry == DWRITE_PIXEL_GEOMETRY_BGR);
-
-    if (renderMode < DWRITE_RENDERING_MODE_DEFAULT ||
-        renderMode > DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC) {
-      renderMode = defaultRenderingParams
-                       ? defaultRenderingParams->GetRenderingMode()
-                       : DWRITE_RENDERING_MODE_DEFAULT;
-    }
-
-    mRenderingParams[TEXT_RENDERING_NO_CLEARTYPE] = defaultRenderingParams;
-
-    hr = Factory::GetDWriteFactory()->CreateCustomRenderingParams(
-        gamma, contrast, level, dwriteGeometry, renderMode,
-        getter_AddRefs(mRenderingParams[TEXT_RENDERING_NORMAL]));
-    if (FAILED(hr) || !mRenderingParams[TEXT_RENDERING_NORMAL]) {
-      mRenderingParams[TEXT_RENDERING_NORMAL] = defaultRenderingParams;
-    }
-
-    hr = Factory::GetDWriteFactory()->CreateCustomRenderingParams(
-        gamma, contrast, level, dwriteGeometry,
-        DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
-        getter_AddRefs(mRenderingParams[TEXT_RENDERING_GDI_CLASSIC]));
-    if (FAILED(hr) || !mRenderingParams[TEXT_RENDERING_GDI_CLASSIC]) {
-      mRenderingParams[TEXT_RENDERING_GDI_CLASSIC] = defaultRenderingParams;
     }
   }
 }
