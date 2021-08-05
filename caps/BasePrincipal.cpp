@@ -1070,7 +1070,8 @@ BasePrincipal::GetIsInIsolatedMozBrowserElement(
   return NS_OK;
 }
 
-nsresult BasePrincipal::GetAddonPolicy(nsISupports** aResult) {
+nsresult BasePrincipal::GetAddonPolicy(
+    extensions::WebExtensionPolicy** aResult) {
   RefPtr<extensions::WebExtensionPolicy> policy(AddonPolicy());
   policy.forget(aResult);
   return NS_OK;
