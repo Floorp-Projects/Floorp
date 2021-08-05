@@ -76,12 +76,14 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXPORTS.mozilla.gfx += [
         "dw-extra.h",
+        "DWriteSettings.h",
         "UnscaledFontDWrite.h",
         "UnscaledFontGDI.h",
     ]
     SOURCES += [
         "ConicGradientEffectD2D1.cpp",
         "DrawTargetD2D1.cpp",
+        "DWriteSettings.cpp",
         "ExtendInputEffectD2D1.cpp",
         "FilterNodeD2D1.cpp",
         "NativeFontResourceDWrite.cpp",

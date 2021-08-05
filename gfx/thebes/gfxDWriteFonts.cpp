@@ -10,6 +10,7 @@
 #include "gfxContext.h"
 #include "gfxTextRun.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/DWriteSettings.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Preferences.h"
@@ -103,6 +104,7 @@ bool gfxDWriteFont::InitDWriteSupport() {
   if (XRE_IsParentProcess()) {
     UpdateSystemTextVars();
   }
+  DWriteSettings::Initialize();
 
   return true;
 }
