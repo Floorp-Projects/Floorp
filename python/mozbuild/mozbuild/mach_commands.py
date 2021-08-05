@@ -2177,7 +2177,7 @@ class Repackage(MachCommandBase):
         type=str,
         # This default is baked into enough places under `browser/` that we need
         # not extract a constant.
-        default="CN=Mozilla Corporation",
+        default="CN=Mozilla Corporation, OU=MSIX Packaging",
         required=False,
         help="The Publisher string to use in the App Manifest."
         + " It must match the subject on the certificate used for signing",
