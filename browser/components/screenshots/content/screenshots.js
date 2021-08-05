@@ -8,10 +8,24 @@ class ScreenshotsUI extends HTMLElement {
   constructor() {
     super();
   }
-  get markup() {
-    return `
-    `;
+  connectedCallback() {
+    this.initialize();
+  }
+
+  initialize() {
+    if (this._initialized) {
+      return;
+    }
+    this._initialized = true;
+    let template = this.ownerDocument.getElementById(
+      "screenshots-dialog-template"
+    );
+    let templateContent = template.content;
+    this.appendChild(templateContent.cloneNode(true));
+  }
+
+  handleEvent(event) {
+    // TODO: handle button clicks
   }
 }
-
-customElements.define("screenshots-div", ScreenshotsUI);
+customElements.define("screenshots-ui", ScreenshotsUI);
