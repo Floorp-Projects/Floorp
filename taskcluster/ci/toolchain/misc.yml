@@ -134,21 +134,6 @@ linux64-upx:
         script: build-upx.sh
         toolchain-artifact: public/build/upx.tar.xz
 
-linux64-msix-packaging:
-    description: "msix-packaging build"
-    treeherder:
-        symbol: TL(msix-packaging)
-        tier: 1
-    run:
-        script: build-msix-packaging.sh
-        toolchain-artifact: public/build/msix-packaging.tar.zst
-    fetches:
-        fetch:
-            - msix-packaging
-        toolchain:
-            - linux64-clang
-            - linux64-toolchain-sysroot
-
 linux64-custom-v8:
     description: "Custom v8 build"
     treeherder:
