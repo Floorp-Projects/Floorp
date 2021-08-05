@@ -4,6 +4,8 @@
     <string name="mozac_feature_addons_permissions_privacy_description">ကိုယ်ရေးကာကွယ်မှု အပြင်အဆင်များကို ဖတ်ရှုပြင်ဆင်ရန်</string>
     <!-- Description for all_urls add-on permission. -->
     <string name="mozac_feature_addons_permissions_all_urls_description">ဝဘ်ဆိုက်အားလုံးအတွက် သင့်အချက်အလက်များကို ကြည့်မည်</string>
+    <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
+    <string name="mozac_feature_addons_permissions_one_site_description">%1$s အတွက် သင်၏ အချက်အလက် များ ရယူမည်</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">ဘယောက်ဆာတပ်ဗ်များအားသုံးမည်</string>
     <!-- Description for unlimited_storage permission. -->
