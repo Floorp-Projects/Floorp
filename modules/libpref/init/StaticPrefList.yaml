@@ -5638,7 +5638,7 @@
 - name: image.avif.enabled
   type: RelaxedAtomicBool
 #if defined(MOZ_AV1)
-  value: false
+  value: true
 #else
   value: false
 #endif
