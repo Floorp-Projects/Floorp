@@ -34,8 +34,7 @@ timeout_prefs.push(["apz.content_response_timeout", 0]);
 var subtests = [
   {"file": "helper_scroll_on_position_fixed.html", "prefs": prefs},
   {"file": "helper_bug1271432.html", "prefs": prefs},
-  // Disabled for now due to a memory leak (bug 1567448).
-  // {"file": "helper_overscroll_behavior_bug1425573.html", "prefs": timeout_prefs},
+  {"file": "helper_overscroll_behavior_bug1425573.html", "prefs": timeout_prefs},
   {"file": "helper_overscroll_behavior_bug1425603.html", "prefs": prefs},
   {"file": "helper_overscroll_behavior_bug1494440.html", "prefs": prefs},
   {"file": "helper_scroll_inactive_perspective.html", "prefs": prefs},
