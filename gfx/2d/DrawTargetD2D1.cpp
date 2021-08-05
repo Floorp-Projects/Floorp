@@ -727,7 +727,8 @@ void DrawTargetD2D1::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
   ScaledFontDWrite* font = static_cast<ScaledFontDWrite*>(aFont);
 
   // May be null, if we failed to initialize the default rendering params.
-  IDWriteRenderingParams* params = font->mParams;
+  RefPtr<IDWriteRenderingParams> params =
+      font->DWriteSettings().RenderingParams();
 
   AntialiasMode aaMode = font->GetDefaultAAMode();
 

@@ -118,19 +118,14 @@ static inline DWRITE_FONT_STRETCH DWriteFontStretchFromStretch(
   return DWRITE_FONT_STRETCH_UNDEFINED;
 }
 
-ScaledFontDWrite::ScaledFontDWrite(
-    IDWriteFontFace* aFontFace, const RefPtr<UnscaledFont>& aUnscaledFont,
-    Float aSize, bool aUseEmbeddedBitmap, DWRITE_RENDERING_MODE aRenderingMode,
-    IDWriteRenderingParams* aParams, Float aGamma, Float aContrast,
-    Float aClearTypeLevel, const gfxFontStyle* aStyle)
+ScaledFontDWrite::ScaledFontDWrite(IDWriteFontFace* aFontFace,
+                                   const RefPtr<UnscaledFont>& aUnscaledFont,
+                                   Float aSize, bool aUseEmbeddedBitmap,
+                                   bool aGDIForced, const gfxFontStyle* aStyle)
     : ScaledFontBase(aUnscaledFont, aSize),
       mFontFace(aFontFace),
       mUseEmbeddedBitmap(aUseEmbeddedBitmap),
-      mRenderingMode(aRenderingMode),
-      mParams(aParams),
-      mGamma(aGamma),
-      mContrast(aContrast),
-      mClearTypeLevel(aClearTypeLevel) {
+      mGDIForced(aGDIForced) {
   if (aStyle) {
     mStyle = SkFontStyle(aStyle->weight.ToIntRounded(),
                          DWriteFontStretchFromStretch(aStyle->stretch),
@@ -164,26 +159,27 @@ SkTypeface* ScaledFontDWrite::CreateSkTypeface() {
     return nullptr;
   }
 
-  Float gamma = mGamma;
+  auto& settings = DWriteSettings();
+  Float gamma = settings.Gamma();
   // Skia doesn't support a gamma value outside of 0-4, so default to 2.2
   if (gamma < 0.0f || gamma > 4.0f) {
     gamma = 2.2f;
   }
 
-  Float contrast = mContrast;
+  Float contrast = settings.EnhancedContrast();
   // Skia doesn't support a contrast value outside of 0-1, so default to 1.0
   if (contrast < 0.0f || contrast > 1.0f) {
     contrast = 1.0f;
   }
 
-  Float clearTypeLevel = mClearTypeLevel;
+  Float clearTypeLevel = settings.ClearTypeLevel();
   if (clearTypeLevel < 0.0f || clearTypeLevel > 1.0f) {
     clearTypeLevel = 1.0f;
   }
 
   return SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle,
-                                        (int)mRenderingMode, gamma, contrast,
-                                        clearTypeLevel);
+                                        (int)settings.RenderingMode(), gamma,
+                                        contrast, clearTypeLevel);
 }
 
 void ScaledFontDWrite::SetupSkFontDrawOptions(SkFont& aFont) {
@@ -402,12 +398,7 @@ bool UnscaledFontDWrite::GetFontDescriptor(FontDescriptorOutput aCb,
 ScaledFontDWrite::InstanceData::InstanceData(
     const wr::FontInstanceOptions* aOptions,
     const wr::FontInstancePlatformOptions* aPlatformOptions)
-    : mUseEmbeddedBitmap(false),
-      mApplySyntheticBold(false),
-      mRenderingMode(DWRITE_RENDERING_MODE_DEFAULT),
-      mGamma(2.2f),
-      mContrast(1.0f),
-      mClearTypeLevel(1.0f) {
+    : mUseEmbeddedBitmap(false), mApplySyntheticBold(false) {
   if (aOptions) {
     if (aOptions->flags & wr::FontInstanceFlags::EMBEDDED_BITMAPS) {
       mUseEmbeddedBitmap = true;
@@ -416,17 +407,8 @@ ScaledFontDWrite::InstanceData::InstanceData(
       mApplySyntheticBold = true;
     }
     if (aOptions->flags & wr::FontInstanceFlags::FORCE_GDI) {
-      mRenderingMode = DWRITE_RENDERING_MODE_GDI_CLASSIC;
-    } else if (aOptions->flags & wr::FontInstanceFlags::FORCE_SYMMETRIC) {
-      mRenderingMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;
-    } else if (aOptions->flags & wr::FontInstanceFlags::NO_SYMMETRIC) {
-      mRenderingMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL;
+      mGDIForced = true;
     }
-  }
-  if (aPlatformOptions) {
-    mGamma = aPlatformOptions->gamma / 100.0f;
-    mContrast = aPlatformOptions->contrast / 100.0f;
-    mClearTypeLevel = aPlatformOptions->cleartype_level / 100.0f;
   }
 }
 
@@ -501,7 +483,8 @@ bool ScaledFontDWrite::GetWRFontInstanceOptions(
   } else {
     options.flags |= wr::FontInstanceFlags::SUBPIXEL_POSITION;
   }
-  switch (GetRenderingMode()) {
+  auto& settings = DWriteSettings();
+  switch (settings.RenderingMode()) {
     case DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC:
       options.flags |= wr::FontInstanceFlags::FORCE_SYMMETRIC;
       break;
@@ -519,11 +502,11 @@ bool ScaledFontDWrite::GetWRFontInstanceOptions(
       wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
 
   wr::FontInstancePlatformOptions platformOptions;
-  platformOptions.gamma = uint16_t(std::round(mGamma * 100.0f));
+  platformOptions.gamma = uint16_t(std::round(settings.Gamma() * 100.0f));
   platformOptions.contrast =
-      uint8_t(std::round(std::min(mContrast, 1.0f) * 100.0f));
+      uint8_t(std::round(std::min(settings.EnhancedContrast(), 1.0f) * 100.0f));
   platformOptions.cleartype_level =
-      uint8_t(std::round(std::min(mClearTypeLevel, 1.0f) * 100.0f));
+      uint8_t(std::round(std::min(settings.ClearTypeLevel(), 1.0f) * 100.0f));
 
   *aOutOptions = Some(options);
   *aOutPlatformOptions = Some(platformOptions);
@@ -531,6 +514,10 @@ bool ScaledFontDWrite::GetWRFontInstanceOptions(
   GetVariationsFromFontFace(mFontFace, aOutVariations);
 
   return true;
+}
+
+DWriteSettings& ScaledFontDWrite::DWriteSettings() const {
+  return DWriteSettings::Get(mGDIForced);
 }
 
 // Helper for UnscaledFontDWrite::CreateScaledFont: create a clone of the
@@ -655,12 +642,9 @@ already_AddRefed<ScaledFont> UnscaledFontDWrite::CreateScaledFont(
     }
   }
 
-  RefPtr<ScaledFontBase> scaledFont = new ScaledFontDWrite(
-      face, this, aGlyphSize, instanceData.mUseEmbeddedBitmap,
-      instanceData.mRenderingMode, nullptr, instanceData.mGamma,
-      instanceData.mContrast, instanceData.mClearTypeLevel);
-
-  return scaledFont.forget();
+  return MakeAndAddRef<ScaledFontDWrite>(face, this, aGlyphSize,
+                                         instanceData.mUseEmbeddedBitmap,
+                                         instanceData.mGDIForced);
 }
 
 already_AddRefed<ScaledFont> UnscaledFontDWrite::CreateScaledFontFromWRFont(
@@ -678,7 +662,7 @@ AntialiasMode ScaledFontDWrite::GetDefaultAAMode() {
   switch (defaultMode) {
     case AntialiasMode::SUBPIXEL:
     case AntialiasMode::DEFAULT:
-      if (mClearTypeLevel == 0.0f) {
+      if (DWriteSettings().ClearTypeLevel() == 0.0f) {
         defaultMode = AntialiasMode::GRAY;
       }
       break;
@@ -704,7 +688,7 @@ cairo_font_face_t* ScaledFontDWrite::CreateCairoFontFace(
 }
 
 void ScaledFontDWrite::PrepareCairoScaledFont(cairo_scaled_font_t* aFont) {
-  if (mRenderingMode == DWRITE_RENDERING_MODE_GDI_CLASSIC) {
+  if (mGDIForced) {
     cairo_dwrite_scaled_font_set_force_GDI_classic(aFont, true);
   }
 }
