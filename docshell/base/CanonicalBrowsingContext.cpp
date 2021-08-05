@@ -2231,6 +2231,11 @@ nsresult CanonicalBrowsingContext::WriteSessionStorageToSessionStore(
 
 void CanonicalBrowsingContext::UpdateSessionStoreSessionStorage(
     const std::function<void()>& aDone) {
+  if constexpr (!SessionStoreUtils::NATIVE_LISTENER) {
+    aDone();
+    return;
+  }
+
   using DataPromise = BackgroundSessionStorageManager::DataPromise;
   BackgroundSessionStorageManager::GetData(
       this, StaticPrefs::browser_sessionstore_dom_storage_limit(),
@@ -2259,6 +2264,10 @@ void CanonicalBrowsingContext::UpdateSessionStoreForStorage(
 }
 
 void CanonicalBrowsingContext::MaybeScheduleSessionStoreUpdate() {
+  if constexpr (!SessionStoreUtils::NATIVE_LISTENER) {
+    return;
+  }
+
   if (!IsTop()) {
     Top()->MaybeScheduleSessionStoreUpdate();
     return;
