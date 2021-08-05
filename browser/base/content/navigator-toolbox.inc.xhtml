@@ -71,7 +71,6 @@
                          ondrop="newTabButtonObserver.onDrop(event)"
                          ondragover="newTabButtonObserver.onDragOver(event)"
                          ondragenter="newTabButtonObserver.onDragOver(event)"
-                         ondragexit="newTabButtonObserver.onDragExit(event)"
                          cui-areatype="toolbar"
                          removable="true"/>
 
@@ -569,8 +568,7 @@
                    tooltip="dynamic-shortcut-tooltip"
                    ondrop="newWindowButtonObserver.onDrop(event)"
                    ondragover="newWindowButtonObserver.onDragOver(event)"
-                   ondragenter="newWindowButtonObserver.onDragOver(event)"
-                   ondragexit="newWindowButtonObserver.onDragExit(event)"/>
+                   ondragenter="newWindowButtonObserver.onDragOver(event)"/>
 
     <toolbarbutton id="fullscreen-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                    observes="View:FullScreen"
@@ -690,7 +688,6 @@
                    ondragover="homeButtonObserver.onDragOver(event)"
                    ondragenter="homeButtonObserver.onDragOver(event)"
                    ondrop="homeButtonObserver.onDrop(event)"
-                   ondragexit="homeButtonObserver.onDragExit(event)"
                    key="goHome"
                    onclick="BrowserHome(event);"
                    cui-areatype="toolbar"
