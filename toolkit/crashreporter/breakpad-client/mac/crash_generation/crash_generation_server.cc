@@ -144,12 +144,10 @@ bool CrashGenerationServer::WaitForOneMessage() {
         if (ack_port != MACH_PORT_DEAD && ack_port != MACH_PORT_NULL) {
           MachPortSender sender(ack_port);
           MachSendMessage ack_message(kAcknowledgementMessage);
-          const mach_msg_timeout_t kSendTimeoutMs = 2 * 1000;
-
-          sender.SendMessage(ack_message, kSendTimeoutMs);
+          sender.SendMessage(ack_message, MACH_MSG_TIMEOUT_NONE);
         }
 
-        if (exit_callback_) {
+        if (result && exit_callback_) {
           exit_callback_(exit_context_, client);
         }
         break;
