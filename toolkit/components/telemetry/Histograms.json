@@ -15767,7 +15767,7 @@
     "products": ["geckoview_streaming"],
     "alert_emails": [
       "geckoview-team@mozilla.com",
-      "aklotz@mozilla.com"
+      "asferro@mozilla.com"
     ],
     "expires_in_version": "never",
     "kind": "exponential",
