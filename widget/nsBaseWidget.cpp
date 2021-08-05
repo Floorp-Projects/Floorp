@@ -884,6 +884,11 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
     nsBaseWidget* aWidget, gfxContext* aTarget, BufferMode aDoubleBuffering)
     : mWidget(aWidget) {
   WindowRenderer* renderer = mWidget->GetWindowRenderer();
+  if (renderer->AsFallback()) {
+    mRenderer = renderer->AsFallback();
+    mRenderer->SetTarget(aTarget, aDoubleBuffering);
+    return;
+  }
   LayerManager* lm = renderer ? renderer->AsLayerManager() : nullptr;
   NS_ASSERTION(
       !lm || lm->GetBackendType() == LayersBackend::LAYERS_BASIC,
@@ -903,6 +908,9 @@ nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup() {
     mLayerManager->SetDefaultTarget(nullptr);
     mLayerManager->SetDefaultTargetConfiguration(
         mozilla::layers::BufferMode::BUFFER_NONE, ROTATION_0);
+  }
+  if (mRenderer) {
+    mRenderer->SetTarget(nullptr, mozilla::layers::BufferMode::BUFFER_NONE);
   }
 }
 
@@ -1525,7 +1533,11 @@ WindowRenderer* nsBaseWidget::GetWindowRenderer() {
 }
 
 WindowRenderer* nsBaseWidget::CreateBasicLayerManager() {
-  return new BasicLayerManager(this);
+  if (StaticPrefs::gfx_basic_layer_manager_force_enabled()) {
+    return new BasicLayerManager(this);
+  } else {
+    return new FallbackRenderer;
+  }
 }
 
 CompositorBridgeChild* nsBaseWidget::GetRemoteRenderer() {

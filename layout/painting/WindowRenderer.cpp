@@ -167,4 +167,53 @@ void WindowRenderer::UpdatePartialPrerenderedAnimations(
   }
 }
 
+void FallbackRenderer::SetTarget(gfxContext* aTarget,
+                                 layers::BufferMode aDoubleBuffering) {
+  mTarget = aTarget;
+  mBufferMode = aDoubleBuffering;
+}
+
+bool FallbackRenderer::BeginTransaction(const nsCString& aURL) {
+  if (!mTarget) {
+    return false;
+  }
+
+  return true;
+}
+
+void FallbackRenderer::EndTransactionWithColor(const nsIntRect& aRect,
+                                               const gfx::DeviceColor& aColor) {
+  mTarget->GetDrawTarget()->FillRect(Rect(aRect), ColorPattern(aColor));
+}
+
+void FallbackRenderer::EndTransactionWithList(nsDisplayListBuilder* aBuilder,
+                                              nsDisplayList* aList,
+                                              int32_t aAppUnitsPerDevPixel,
+                                              EndTransactionFlags aFlags) {
+  if (aFlags & EndTransactionFlags::END_NO_COMPOSITE) {
+    return;
+  }
+
+  DrawTarget* dt = mTarget->GetDrawTarget();
+
+  BackendType backend = gfxPlatform::GetPlatform()->GetContentBackendFor(
+      LayersBackend::LAYERS_BASIC);
+  RefPtr<DrawTarget> dest =
+      gfxPlatform::GetPlatform()->CreateDrawTargetForBackend(
+          backend, dt->GetSize(), dt->GetFormat());
+  RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(dest);
+
+  nsRegion opaque = aList->GetOpaqueRegion(aBuilder);
+  if (opaque.Contains(aList->GetComponentAlphaBounds(aBuilder))) {
+    dest->SetPermitSubpixelAA(true);
+  }
+
+  aList->Paint(aBuilder, ctx, aAppUnitsPerDevPixel);
+
+  RefPtr<SourceSurface> snapshot = dest->Snapshot();
+  dt->DrawSurface(snapshot, Rect(dest->GetRect()), Rect(dest->GetRect()),
+                  DrawSurfaceOptions(),
+                  DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+}
+
 }  // namespace mozilla
