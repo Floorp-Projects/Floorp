@@ -64,7 +64,6 @@ mod state;
 pub mod test_internal;
 
 use idle::IdleTimeout;
-pub use idle::LOCAL_IDLE_TIMEOUT;
 use params::PreferredAddressConfig;
 pub use params::{ConnectionParameters, ACK_RATIO_SCALE};
 use saved::SavedDatagrams;
@@ -379,7 +378,7 @@ impl Connection {
             saved_datagrams: SavedDatagrams::default(),
             crypto,
             acks: AckTracker::default(),
-            idle_timeout: IdleTimeout::default(),
+            idle_timeout: IdleTimeout::new(conn_params.get_idle_timeout()),
             streams: Streams::new(tphandler, role, events.clone()),
             connection_ids: ConnectionIdStore::default(),
             state_signaling: StateSignaling::Idle,
@@ -897,8 +896,9 @@ impl Connection {
             let rtt = path.rtt();
             let pto = rtt.pto(PacketNumberSpace::ApplicationData);
 
-            let idle_time = self.idle_timeout.expiry(now, pto);
-            qtrace!([self], "Idle timer {:?}", idle_time);
+            let keep_alive = self.streams.need_keep_alive();
+            let idle_time = self.idle_timeout.expiry(now, pto, keep_alive);
+            qtrace!([self], "Idle/keepalive timer {:?}", idle_time);
             delays.push(idle_time);
 
             if let Some(lr_time) = self.loss_recovery.next_timeout(rtt) {
@@ -1859,6 +1859,53 @@ impl Connection {
         Ok(())
     }
 
+    // Maybe send a probe.  Return true if the packet was ack-eliciting.
+    fn maybe_probe(
+        &mut self,
+        path: &PathRef,
+        force_probe: bool,
+        builder: &mut PacketBuilder,
+        ack_end: usize,
+        tokens: &mut Vec<RecoveryToken>,
+        now: Instant,
+    ) -> bool {
+        // Anything written after an ACK already elicits acknowledgment.
+        // If we need to probe and nothing has been written, send a PING.
+        if builder.len() > ack_end {
+            return true;
+        }
+        let probe = if force_probe {
+            // The packet might be empty, but we need to probe.
+            true
+        } else {
+            let pto = path.borrow().rtt().pto(PacketNumberSpace::ApplicationData);
+            if !builder.packet_empty() {
+                // The packet only contains an ACK.  Check whether we want to
+                // force an ACK with a PING so we can stop tracking packets.
+                self.loss_recovery.should_probe(pto, now)
+            } else if self.streams.need_keep_alive() {
+                // We need to keep the connection alive, including sending
+                // a PING again.
+                let keep_alive = self.idle_timeout.send_keep_alive(now, pto);
+                if keep_alive {
+                    tokens.push(RecoveryToken::KeepAlive);
+                }
+                keep_alive
+            } else {
+                false
+            }
+        };
+        if probe {
+            // Nothing ack-eliciting and we need to probe; send PING.
+            debug_assert_ne!(builder.remaining(), 0);
+            builder.encode_varint(crate::frame::FRAME_TYPE_PING);
+            let stats = &mut self.stats.borrow_mut().frame_tx;
+            stats.ping += 1;
+            stats.all += 1;
+        }
+        probe
+    }
+
     /// Write frames to the provided builder.  Returns a list of tokens used for
     /// tracking loss or acknowledgment, whether any frame was ACK eliciting, and
     /// whether the packet was padded.
@@ -1911,40 +1958,17 @@ impl Connection {
             }
         }
 
-        let stats = &mut self.stats.borrow_mut().frame_tx;
-        // Anything written after an ACK already elicits acknowledgment.
-        // If we need to probe and nothing has been written, send a PING.
-        if builder.len() == ack_end {
-            let probe = if profile.should_probe(space) {
-                // The packet might be empty, but we need to probe.
-                true
-            } else if !builder.packet_empty() {
-                // The packet only contains an ACK.  Check whether we want to
-                // force an ACK with a PING so we can stop tracking packets.
-                let pto = path.borrow().rtt().pto(PacketNumberSpace::ApplicationData);
-                self.loss_recovery.should_probe(pto, now)
-            } else {
-                false
-            };
-            if probe {
-                // Nothing ack-eliciting and we need to probe; send PING.
-                debug_assert_ne!(builder.remaining(), 0);
-                builder.encode_varint(crate::frame::FRAME_TYPE_PING);
-                if builder.len() > builder.limit() {
-                    return Err(Error::InternalError(11));
-                }
-                stats.ping += 1;
-                stats.all += 1;
-            }
-        }
+        // Maybe send a probe now, either to probe for losses or to keep the connection live.
+        let force_probe = profile.should_probe(space);
+        let ack_eliciting = self.maybe_probe(path, force_probe, builder, ack_end, &mut tokens, now);
         // If this is not the primary path, this should be ack-eliciting.
-        let ack_eliciting = builder.len() > ack_end;
         debug_assert!(primary || ack_eliciting);
 
         // Add padding.  Only pad 1-RTT packets so that we don't prevent coalescing.
         // And avoid padding packets that otherwise only contain ACK because adding PADDING
         // causes those packets to consume congestion window, which is not tracked (yet).
         // And avoid padding if we don't have a full MTU available.
+        let stats = &mut self.stats.borrow_mut().frame_tx;
         let padded = if ack_eliciting && full_mtu && builder.pad() {
             stats.padding += 1;
             stats.all += 1;
@@ -2185,9 +2209,11 @@ impl Connection {
 
             let max_ad = Duration::from_millis(remote.get_integer(tparams::MAX_ACK_DELAY));
             let min_ad = if remote.has_value(tparams::MIN_ACK_DELAY) {
-                Some(Duration::from_micros(
-                    remote.get_integer(tparams::MIN_ACK_DELAY),
-                ))
+                let min_ad = Duration::from_micros(remote.get_integer(tparams::MIN_ACK_DELAY));
+                if min_ad > max_ad {
+                    return Err(Error::TransportParameterError);
+                }
+                Some(min_ad)
             } else {
                 None
             };
@@ -2494,6 +2520,7 @@ impl Connection {
                     RecoveryToken::NewConnectionId(ncid) => self.cid_manager.lost(ncid),
                     RecoveryToken::RetireConnectionId(seqno) => self.paths.lost_retire_cid(*seqno),
                     RecoveryToken::AckFrequency(rate) => self.paths.lost_ack_frequency(rate),
+                    RecoveryToken::KeepAlive => self.idle_timeout.lost_keep_alive(),
                     _ => unreachable!("All other tokens are for streams"),
                 }
             }
@@ -2760,6 +2787,17 @@ impl Connection {
 
         stream.set_stream_max_data(max_data);
         Ok(())
+    }
+
+    /// Mark a receive stream as being important enough to keep the connection alive
+    /// (if `keep` is `true`) or no longer important (if `keep` is `false`).  If any
+    /// stream is marked this way, PING frames will be used to keep the connection
+    /// alive, even when there is no activity.
+    /// # Errors
+    /// Returns `InvalidStreamId` if a stream does not exist or the receiving
+    /// side is closed.
+    pub fn stream_keep_alive(&mut self, stream_id: u64, keep: bool) -> Res<()> {
+        self.streams.keep_alive(stream_id.into(), keep)
     }
 }
 

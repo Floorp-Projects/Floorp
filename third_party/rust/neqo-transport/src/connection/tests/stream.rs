@@ -6,15 +6,15 @@
 
 use super::super::State;
 use super::{
-    connect, connect_force_idle, default_client, default_server, maybe_authenticate, new_client,
-    send_something, DEFAULT_STREAM_DATA,
+    assert_error, connect, connect_force_idle, default_client, default_server, maybe_authenticate,
+    new_client, new_server, send_something, DEFAULT_STREAM_DATA,
 };
 use crate::events::ConnectionEvent;
 use crate::recv_stream::RECV_BUFFER_SIZE;
 use crate::send_stream::{SendStreamState, SEND_BUFFER_SIZE};
 use crate::tparams::{self, TransportParameter};
 use crate::tracking::DEFAULT_ACK_PACKET_TOLERANCE;
-use crate::ConnectionParameters;
+use crate::{Connection, ConnectionError, ConnectionParameters};
 use crate::{Error, StreamId, StreamType};
 
 use neqo_common::{event::Provider, qdebug};
@@ -137,6 +137,63 @@ fn report_fin_when_stream_closed_wo_data() {
     assert!(client.events().any(stream_readable));
 }
 
+fn exchange_data(client: &mut Connection, server: &mut Connection) {
+    let mut input = None;
+    loop {
+        let out = client.process(input, now()).dgram();
+        let c_done = out.is_none();
+        let out = server.process(out, now()).dgram();
+        if out.is_none() && c_done {
+            break;
+        }
+        input = out;
+    }
+}
+
+#[test]
+fn sending_max_data() {
+    const SMALL_MAX_DATA: usize = 2048;
+
+    let mut client = default_client();
+    let mut server = new_server(
+        ConnectionParameters::default().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()),
+    );
+
+    connect(&mut client, &mut server);
+
+    let stream_id = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(client.events().count(), 2); // SendStreamWritable, StateChange(connected)
+    assert_eq!(stream_id, 2);
+    assert_eq!(
+        client.stream_avail_send_space(stream_id).unwrap(),
+        SMALL_MAX_DATA
+    );
+
+    assert_eq!(
+        client
+            .stream_send(stream_id, &[b'a'; SMALL_MAX_DATA + 1])
+            .unwrap(),
+        SMALL_MAX_DATA
+    );
+
+    exchange_data(&mut client, &mut server);
+
+    let mut buf = vec![0; 40000];
+    let (received, fin) = server.stream_recv(stream_id, &mut buf).unwrap();
+    assert_eq!(received, SMALL_MAX_DATA);
+    assert!(!fin);
+
+    let out = server.process(None, now()).dgram();
+    client.process_input(out.unwrap(), now());
+
+    assert_eq!(
+        client
+            .stream_send(stream_id, &[b'a'; SMALL_MAX_DATA + 1])
+            .unwrap(),
+        SMALL_MAX_DATA
+    );
+}
+
 #[test]
 fn max_data() {
     const SMALL_MAX_DATA: usize = 16383;
@@ -162,7 +219,7 @@ fn max_data() {
     );
     assert_eq!(
         client
-            .stream_send(stream_id, &vec![b'a'; RECV_BUFFER_SIZE].into_boxed_slice())
+            .stream_send(stream_id, &[b'a'; SMALL_MAX_DATA + 1])
             .unwrap(),
         SMALL_MAX_DATA
     );
@@ -210,6 +267,49 @@ fn max_data() {
         evts[0],
         ConnectionEvent::SendStreamWritable { .. }
     ));
+}
+
+#[test]
+fn exceed_max_data() {
+    const SMALL_MAX_DATA: usize = 1024;
+
+    let mut client = default_client();
+    let mut server = new_server(
+        ConnectionParameters::default().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()),
+    );
+
+    connect(&mut client, &mut server);
+
+    let stream_id = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(client.events().count(), 2); // SendStreamWritable, StateChange(connected)
+    assert_eq!(stream_id, 2);
+    assert_eq!(
+        client.stream_avail_send_space(stream_id).unwrap(),
+        SMALL_MAX_DATA
+    );
+    assert_eq!(
+        client
+            .stream_send(stream_id, &[b'a'; SMALL_MAX_DATA + 1])
+            .unwrap(),
+        SMALL_MAX_DATA
+    );
+
+    assert_eq!(client.stream_send(stream_id, b"hello").unwrap(), 0);
+
+    // Artificially trick the client to think that it has more flow control credit.
+    client.streams.handle_max_data(100_000_000);
+    assert_eq!(client.stream_send(stream_id, b"h").unwrap(), 1);
+
+    exchange_data(&mut client, &mut server);
+
+    assert_error(
+        &client,
+        &ConnectionError::Transport(Error::PeerError(Error::FlowControlError.code())),
+    );
+    assert_error(
+        &server,
+        &ConnectionError::Transport(Error::FlowControlError),
+    );
 }
 
 #[test]
@@ -617,4 +717,207 @@ fn increase_decrease_flow_control() {
 
     change_flow_control(StreamType::UniDi, RECV_BUFFER_NEW_SMALLER);
     change_flow_control(StreamType::BiDi, RECV_BUFFER_NEW_SMALLER);
+}
+
+#[test]
+fn session_flow_control_stop_sending_state_recv() {
+    const SMALL_MAX_DATA: usize = 1024;
+
+    let mut client = default_client();
+    let mut server = new_server(
+        ConnectionParameters::default().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()),
+    );
+
+    connect(&mut client, &mut server);
+
+    let stream_id = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(
+        client.stream_avail_send_space(stream_id).unwrap(),
+        SMALL_MAX_DATA
+    );
+
+    // send 1 byte so that the server learns about the stream.
+    assert_eq!(client.stream_send(stream_id, b"a").unwrap(), 1);
+
+    exchange_data(&mut client, &mut server);
+
+    server
+        .stream_stop_sending(stream_id, Error::NoError.code())
+        .unwrap();
+
+    assert_eq!(
+        client
+            .stream_send(stream_id, &[b'a'; SMALL_MAX_DATA])
+            .unwrap(),
+        SMALL_MAX_DATA - 1
+    );
+
+    // In this case the final size is only known after RESET frame is received.
+    // The server sends STOP_SENDING -> the client sends RESET -> the server
+    // sends MAX_DATA.
+    let out = server.process(None, now()).dgram();
+    let out = client.process(out, now()).dgram();
+    // the client is still limited.
+    let stream_id2 = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(client.stream_avail_send_space(stream_id2).unwrap(), 0);
+    let out = server.process(out, now()).dgram();
+    client.process_input(out.unwrap(), now());
+    assert_eq!(
+        client.stream_avail_send_space(stream_id2).unwrap(),
+        SMALL_MAX_DATA
+    );
+}
+
+#[test]
+fn session_flow_control_stop_sending_state_size_known() {
+    const SMALL_MAX_DATA: usize = 1024;
+
+    let mut client = default_client();
+    let mut server = new_server(
+        ConnectionParameters::default().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()),
+    );
+
+    connect(&mut client, &mut server);
+
+    let stream_id = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(
+        client.stream_avail_send_space(stream_id).unwrap(),
+        SMALL_MAX_DATA
+    );
+
+    // send 1 byte so that the server learns about the stream.
+    assert_eq!(
+        client
+            .stream_send(stream_id, &[b'a'; SMALL_MAX_DATA + 1])
+            .unwrap(),
+        SMALL_MAX_DATA
+    );
+
+    let out1 = client.process(None, now()).dgram();
+    // Delay this packet and let the server receive fin first (it will enter SizeKnown state).
+    client.stream_close_send(stream_id).unwrap();
+    let out2 = client.process(None, now()).dgram();
+
+    server.process_input(out2.unwrap(), now());
+
+    server
+        .stream_stop_sending(stream_id, Error::NoError.code())
+        .unwrap();
+
+    // In this case the final size is known when stream_stop_sending is called
+    // and the server releases flow control immediately and sends STOP_SENDING and
+    // MAX_DATA in the same packet.
+    let out = server.process(out1, now()).dgram();
+    client.process_input(out.unwrap(), now());
+
+    // The flow control should have been updated and the client can again send
+    // SMALL_MAX_DATA.
+    let stream_id2 = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(
+        client.stream_avail_send_space(stream_id2).unwrap(),
+        SMALL_MAX_DATA
+    );
+}
+
+#[test]
+fn session_flow_control_stop_sending_state_data_recvd() {
+    const SMALL_MAX_DATA: usize = 1024;
+
+    let mut client = default_client();
+    let mut server = new_server(
+        ConnectionParameters::default().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()),
+    );
+
+    connect(&mut client, &mut server);
+
+    let stream_id = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(
+        client.stream_avail_send_space(stream_id).unwrap(),
+        SMALL_MAX_DATA
+    );
+
+    // send 1 byte so that the server learns about the stream.
+    assert_eq!(
+        client
+            .stream_send(stream_id, &[b'a'; SMALL_MAX_DATA + 1])
+            .unwrap(),
+        SMALL_MAX_DATA
+    );
+
+    client.stream_close_send(stream_id).unwrap();
+
+    exchange_data(&mut client, &mut server);
+
+    // The stream is DataRecvd state
+    server
+        .stream_stop_sending(stream_id, Error::NoError.code())
+        .unwrap();
+
+    exchange_data(&mut client, &mut server);
+
+    // The flow control should have been updated and the client can again send
+    // SMALL_MAX_DATA.
+    let stream_id2 = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(
+        client.stream_avail_send_space(stream_id2).unwrap(),
+        SMALL_MAX_DATA
+    );
+}
+
+#[test]
+fn session_flow_control_affects_all_streams() {
+    const SMALL_MAX_DATA: usize = 1024;
+
+    let mut client = default_client();
+    let mut server = new_server(
+        ConnectionParameters::default().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()),
+    );
+
+    connect(&mut client, &mut server);
+
+    let stream_id = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(
+        client.stream_avail_send_space(stream_id).unwrap(),
+        SMALL_MAX_DATA
+    );
+
+    let stream_id2 = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(
+        client.stream_avail_send_space(stream_id2).unwrap(),
+        SMALL_MAX_DATA
+    );
+
+    assert_eq!(
+        client
+            .stream_send(stream_id, &[b'a'; SMALL_MAX_DATA / 2 + 1])
+            .unwrap(),
+        SMALL_MAX_DATA / 2 + 1
+    );
+
+    assert_eq!(
+        client.stream_avail_send_space(stream_id).unwrap(),
+        SMALL_MAX_DATA / 2 - 1
+    );
+    assert_eq!(
+        client.stream_avail_send_space(stream_id2).unwrap(),
+        SMALL_MAX_DATA / 2 - 1
+    );
+
+    exchange_data(&mut client, &mut server);
+
+    let mut buf = [0x0; SMALL_MAX_DATA];
+    let (read, _) = server.stream_recv(stream_id, &mut buf).unwrap();
+    assert_eq!(read, SMALL_MAX_DATA / 2 + 1);
+
+    exchange_data(&mut client, &mut server);
+
+    assert_eq!(
+        client.stream_avail_send_space(stream_id).unwrap(),
+        SMALL_MAX_DATA
+    );
+
+    assert_eq!(
+        client.stream_avail_send_space(stream_id2).unwrap(),
+        SMALL_MAX_DATA
+    );
 }

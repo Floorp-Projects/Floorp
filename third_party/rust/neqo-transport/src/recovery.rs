@@ -20,7 +20,6 @@ use neqo_common::{qdebug, qlog::NeqoQlog, qtrace, qwarn};
 
 use crate::ackrate::AckRate;
 use crate::cid::ConnectionIdEntry;
-use crate::connection::LOCAL_IDLE_TIMEOUT;
 use crate::crypto::CryptoRecoveryToken;
 use crate::packet::PacketNumber;
 use crate::path::{Path, PathRef};
@@ -52,6 +51,7 @@ pub enum RecoveryToken {
     Stream(StreamRecoveryToken),
     Crypto(CryptoRecoveryToken),
     HandshakeDone,
+    KeepAlive, // Special PING.
     NewToken(usize),
     NewConnectionId(ConnectionIdEntry<[u8; 16]>),
     RetireConnectionId(u64),
@@ -831,7 +831,7 @@ impl LossRecovery {
     ) -> Duration {
         rtt.pto(pn_space)
             .checked_mul(1 << pto_state.map_or(0, |p| p.count))
-            .unwrap_or(LOCAL_IDLE_TIMEOUT * 2)
+            .unwrap_or_else(|| Duration::from_secs(3600))
     }
 
     /// Get the current PTO period for the given packet number space.
