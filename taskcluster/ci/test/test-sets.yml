@@ -22,21 +22,6 @@ web-platform-tests:
     - web-platform-tests-reftest
     - web-platform-tests-wdspec
 
-web-platform-tests-no-reftest:
-    - web-platform-tests
-    - web-platform-tests-crashtest
-    - web-platform-tests-wdspec
-
-web-platform-tests-no-reftest-backlog:
-    - web-platform-tests-backlog
-
-web-platform-tests-reftest:
-    - web-platform-tests-reftest
-    - web-platform-tests-print-reftest
-
-web-platform-tests-reftest-backlog:
-    - web-platform-tests-reftest-backlog
-
 web-platform-tests-backlog:
     - web-platform-tests-backlog
     - web-platform-tests-reftest-backlog
