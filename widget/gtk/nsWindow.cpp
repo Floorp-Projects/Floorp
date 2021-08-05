@@ -5989,12 +5989,13 @@ void nsWindow::NativeShow(bool aAction) {
 
     if (mIsTopLevel) {
       if (IsWaylandPopup()) {
+        mPopupClosed = false;
         if (WaylandPopupNeedsTrackInHierarchy()) {
           AddWindowToPopupHierarchy();
           UpdateWaylandPopupHierarchy();
-        }
-        if (mPopupClosed) {
-          return;
+          if (mPopupClosed) {
+            return;
+          }
         }
       }
       // Set up usertime/startupID metadata for the created window.
