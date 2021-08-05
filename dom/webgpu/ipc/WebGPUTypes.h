@@ -12,8 +12,8 @@
 namespace mozilla {
 namespace webgpu {
 
-typedef uint64_t RawId;
-typedef uint64_t BufferAddress;
+using RawId = uint64_t;
+using BufferAddress = uint64_t;
 
 struct ScopedError {
   bool operationError = false;

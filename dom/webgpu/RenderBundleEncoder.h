@@ -20,7 +20,7 @@ class Device;
 class RenderBundle;
 
 struct ScopedFfiBundleTraits {
-  typedef ffi::WGPURenderBundleEncoder* type;
+  using type = ffi::WGPURenderBundleEncoder*;
   static type empty();
   static void release(type raw);
 };
