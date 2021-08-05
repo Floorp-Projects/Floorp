@@ -1179,6 +1179,13 @@ bool nsWebBrowser::PaintWindow(nsIWidget* aWidget,
                                LayoutDeviceIntRegion aRegion) {
   WindowRenderer* renderer = aWidget->GetWindowRenderer();
   NS_ASSERTION(renderer, "Must be in paint event");
+  if (FallbackRenderer* fallback = renderer->AsFallback()) {
+    if (fallback->BeginTransaction()) {
+      fallback->EndTransactionWithColor(aRegion.GetBounds().ToUnknownRect(),
+                                        ToDeviceColor(mBackgroundColor));
+    }
+    return true;
+  }
   LayerManager* layerManager = renderer->AsLayerManager();
   NS_ASSERTION(layerManager, "Must be in paint event");
 

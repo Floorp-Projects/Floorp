@@ -196,7 +196,9 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
   mLastPaintBounds = mBounds;
 
 #ifdef MOZ_XUL
-  if (!aDC && (renderer->GetBackendType() == LayersBackend::LAYERS_BASIC) &&
+  if (!aDC &&
+      (renderer->GetBackendType() == LayersBackend::LAYERS_NONE ||
+       renderer->GetBackendType() == LayersBackend::LAYERS_BASIC) &&
       (eTransparencyTransparent == mTransparencyMode)) {
     // For layered translucent windows all drawing should go to memory DC and no
     // WM_PAINT messages are normally generated. To support asynchronous
@@ -270,6 +272,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
 #endif  // WIDGET_DEBUG_OUTPUT
 
     switch (renderer->GetBackendType()) {
+      case LayersBackend::LAYERS_NONE:
       case LayersBackend::LAYERS_BASIC: {
         RefPtr<gfxASurface> targetSurface;
 
