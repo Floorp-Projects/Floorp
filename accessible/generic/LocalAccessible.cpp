@@ -1315,17 +1315,6 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     return;
   }
 
-  // These attributes can change whether or not a table is a layout table.
-  // We currently cache that information on Mac, so we fire a
-  // EVENT_OBJECT_ATTRIBUTE_CHANGED, which Mac listens for, to invalidate.
-  if (IsTable() || IsTableRow() || IsTableCell()) {
-    if (aAttribute == nsGkAtoms::summary || aAttribute == nsGkAtoms::headers ||
-        aAttribute == nsGkAtoms::scope || aAttribute == nsGkAtoms::abbr) {
-      mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
-                             this);
-    }
-  }
-
   // ARIA or XUL selection
   if ((mContent->IsXULElement() && aAttribute == nsGkAtoms::selected) ||
       aAttribute == nsGkAtoms::aria_selected) {
@@ -1345,12 +1334,6 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     return;
   }
 
-  if (aAttribute == nsGkAtoms::value) {
-    if (IsProgress()) {
-      mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, this);
-    }
-    return;
-  }
 }
 
 GroupPos LocalAccessible::GroupPosition() {
