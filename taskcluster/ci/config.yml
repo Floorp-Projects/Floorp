@@ -70,6 +70,7 @@ treeherder:
         'MSI': 'Repack installers into MSIs'
         'MSIs': 'Signing of Repacked installers of MSIs'
         'MSIX': 'Repack into MSIX package'
+        'MSIXs': 'Signing of Repack into MSIX package'
         'R': 'Reftests'
         'R-fis': 'Reftests with fission enabled'
         'R-swr': 'Reftests with software webrender enabled'
