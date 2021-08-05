@@ -43,7 +43,7 @@ class DropHarHandler extends Component {
     // Drag and drop event handlers.
     this.onDragEnter = this.onDragEnter.bind(this);
     this.onDragOver = this.onDragOver.bind(this);
-    this.onDragExit = this.onDragExit.bind(this);
+    this.onDragLeave = this.onDragLeave.bind(this);
     this.onDrop = this.onDrop.bind(this);
   }
 
@@ -58,9 +58,11 @@ class DropHarHandler extends Component {
     startDragging(findDOMNode(this));
   }
 
-  onDragExit(event) {
-    event.preventDefault();
-    stopDragging(findDOMNode(this));
+  onDragLeave(event) {
+    const node = findDOMNode(this);
+    if (!node.contains(event.relatedTarget)) {
+      stopDragging(node);
+    }
   }
 
   onDragOver(event) {
@@ -99,7 +101,7 @@ class DropHarHandler extends Component {
       {
         onDragEnter: this.onDragEnter,
         onDragOver: this.onDragOver,
-        onDragExit: this.onDragExit,
+        onDragLeave: this.onDragLeave,
         onDrop: this.onDrop,
       },
       this.props.children,
