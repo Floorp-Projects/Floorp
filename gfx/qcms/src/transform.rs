@@ -20,6 +20,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#![allow(clippy::missing_safety_doc)]
 #[cfg(all(any(target_arch = "arm", target_arch = "aarch64"), feature = "neon"))]
 use crate::transform_neon::{
     qcms_transform_data_bgra_out_lut_neon, qcms_transform_data_rgb_out_lut_neon,
@@ -61,6 +62,7 @@ pub const FLOATSCALE: f32 = PRECACHE_OUTPUT_SIZE as f32;
 pub const CLAMPMAXVAL: f32 = ((PRECACHE_OUTPUT_SIZE - 1) as f32) / PRECACHE_OUTPUT_SIZE as f32;
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct PrecacheOuput {
     /* We previously used a count of 65536 here but that seems like more
      * precision than we actually need.  By reducing the size we can
@@ -118,6 +120,7 @@ pub type transform_fn_t =
 /// The format of pixel data
 #[repr(u32)]
 #[derive(PartialEq, Eq, Clone, Copy)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum DataType {
     RGB8 = 0,
     RGBA8 = 1,
@@ -144,6 +147,7 @@ use DataType::*;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct CIE_XYZ {
     pub X: f64,
     pub Y: f64,
@@ -157,6 +161,7 @@ pub trait Format {
     const kAIndex: usize;
 }
 
+#[allow(clippy::upper_case_acronyms)]
 pub struct BGRA;
 impl Format for BGRA {
     const kBIndex: usize = 0;
@@ -165,6 +170,7 @@ impl Format for BGRA {
     const kAIndex: usize = 3;
 }
 
+#[allow(clippy::upper_case_acronyms)]
 pub struct RGBA;
 impl Format for RGBA {
     const kRIndex: usize = 0;
@@ -173,6 +179,7 @@ impl Format for RGBA {
     const kAIndex: usize = 3;
 }
 
+#[allow(clippy::upper_case_acronyms)]
 pub struct RGB;
 impl Format for RGB {
     const kRIndex: usize = 0;
@@ -324,14 +331,13 @@ fn compute_chromatic_adaption(
 // Bradford is assumed
 fn adaption_matrix(source_illumination: CIE_XYZ, target_illumination: CIE_XYZ) -> Option<Matrix> {
     let lam_rigg: Matrix = {
-        let init = Matrix {
+        Matrix {
             m: [
                 [0.8951, 0.2664, -0.1614],
                 [-0.7502, 1.7135, 0.0367],
                 [0.0389, -0.0685, 1.0296],
             ],
-        };
-        init
+        }
     };
     compute_chromatic_adaption(source_illumination, target_illumination, lam_rigg)
 }
@@ -373,8 +379,7 @@ pub(crate) fn get_rgb_colorants(
     primaries: qcms_CIE_xyYTRIPLE,
 ) -> Option<Matrix> {
     let colorants = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
-    let colorants = adapt_matrix_to_D50(colorants, white_point);
-    colorants
+    adapt_matrix_to_D50(colorants, white_point)
 }
 /* Alpha is not corrected.
    A rationale for this is found in Alvy Ray's "Should Alpha Be Nonlinear If
@@ -950,6 +955,7 @@ fn lerp(a: f32, b: f32, t: f32) -> f32 {
 
 // lerp between two tetrahedral interpolations
 // See lcms:Eval4InputsFloat
+#[allow(clippy::many_single_char_names)]
 unsafe fn qcms_transform_data_tetra_clut_cmyk(
     transform: &qcms_transform,
     mut src: *const u8,
@@ -1101,8 +1107,7 @@ fn precache_create() -> Arc<PrecacheOuput> {
 
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_release(t: *mut qcms_transform) {
-    let t = Box::from_raw(t);
-    drop(t)
+    drop(Box::from_raw(t));
 }
 
 const bradford_matrix: Matrix = Matrix {
@@ -1414,7 +1419,8 @@ pub fn transform_create(
         while i < 3 {
             let mut j: u32 = 0;
             while j < 3 {
-                if result_0.m[i as usize][j as usize] != result_0.m[i as usize][j as usize] {
+                #[allow(clippy::eq_op, clippy::float_cmp)]
+                if result_0.m[i as usize][j as usize].is_nan() {
                     return None;
                 }
                 j += 1

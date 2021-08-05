@@ -41,7 +41,7 @@ pub const LAB_SIGNATURE: u32 = 0x4C616220;
 pub const CMYK_SIGNATURE: u32 = 0x434D594B; // 'CMYK'
 
 /// A color profile
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Profile {
     pub(crate) class_type: u32,
     pub(crate) color_space: u32,
@@ -62,10 +62,11 @@ pub struct Profile {
     pub(crate) output_table_r: Option<Arc<PrecacheOuput>>,
     pub(crate) output_table_g: Option<Arc<PrecacheOuput>>,
     pub(crate) output_table_b: Option<Arc<PrecacheOuput>>,
-    is_srgb: Option<bool>,
+    is_srgb: bool,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
+#[allow(clippy::upper_case_acronyms)]
 pub(crate) struct lutmABType {
     pub num_in_channels: u8,
     pub num_out_channels: u8,
@@ -90,14 +91,15 @@ pub(crate) struct lutmABType {
     pub b_curves: [Option<Box<curveType>>; MAX_CHANNELS],
     pub m_curves: [Option<Box<curveType>>; MAX_CHANNELS],
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) enum curveType {
     Curve(Vec<uInt16Number>),
-    Parametric(Vec<f32>),
+    Parametric(Vec<f32>), // XXX should this be `s15Fixed16Number` rather than `f32`?
 }
 type uInt16Number = u16;
 
 /* should lut8Type and lut16Type be different types? */
+#[derive(Debug)]
 pub(crate) struct lutType {
     // used by lut8Type/lut16Type (mft2) only
     pub num_input_channels: u8,
@@ -120,7 +122,8 @@ pub(crate) struct lutType {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Debug, Default)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct XYZNumber {
     pub X: s15Fixed16Number,
     pub Y: s15Fixed16Number,
@@ -131,6 +134,7 @@ pub struct XYZNumber {
 /* the names for the following two types are sort of ugly */
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct qcms_CIE_xyY {
     pub x: f64,
     pub y: f64,
@@ -140,6 +144,7 @@ pub struct qcms_CIE_xyY {
 /// a set of CIE_xyY values that can use to describe the primaries of a color space
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct qcms_CIE_xyYTRIPLE {
     pub red: qcms_CIE_xyY,
     pub green: qcms_CIE_xyY,
@@ -455,10 +460,7 @@ fn read_tag_s15Fixed16ArrayType(src: &mut MemSource, tag: &Tag) -> Matrix {
     matrix
 }
 fn read_tag_XYZType(src: &mut MemSource, index: &TagIndex, tag_id: u32) -> XYZNumber {
-    let mut num: XYZNumber = {
-        let init = XYZNumber { X: 0, Y: 0, Z: 0 };
-        init
-    };
+    let mut num = XYZNumber { X: 0, Y: 0, Z: 0 };
     let tag = find_tag(&index, tag_id);
     if let Some(tag) = tag {
         let offset: u32 = tag.offset;
@@ -546,6 +548,7 @@ fn read_nested_curveType(
     curve_offset: u32,
 ) {
     let mut channel_offset: u32 = 0;
+    #[allow(clippy::needless_range_loop)]
     for i in 0..usize::from(num_channels) {
         let mut tag_len: u32 = 0;
         curveArray[i] = read_curveType(src, curve_offset + channel_offset, &mut tag_len);
@@ -638,6 +641,7 @@ fn read_tag_lutmABType(src: &mut MemSource, tag: &Tag) -> Option<Box<lutmABType>
     lut.reversed = type_0 == LUT_MBA_TYPE;
     lut.num_in_channels = num_in_channels;
     lut.num_out_channels = num_out_channels;
+    #[allow(clippy::identity_op, clippy::erasing_op)]
     if matrix_offset != 0 {
         // read the matrix if we have it
         lut.e00 = read_s15Fixed16Number(src, (matrix_offset + (4 * 0) as u32) as usize); // the caller checks that this doesn't happen
@@ -671,7 +675,7 @@ fn read_tag_lutmABType(src: &mut MemSource, tag: &Tag) -> Option<Box<lutmABType>
             for i in 0..clut_size {
                 clut_table.push(uInt8Number_to_float(read_uInt8Number(
                     src,
-                    (clut_offset + 20 + i * 1) as usize,
+                    (clut_offset + 20 + i) as usize,
                 )));
             }
             lut.clut_table = Some(clut_table);
@@ -709,10 +713,8 @@ fn read_tag_lutType(src: &mut MemSource, tag: &Tag) -> Option<Box<lutType>> {
         num_output_table_entries = read_u16(src, (offset + 50) as usize);
 
         // these limits come from the spec
-        if num_input_table_entries < 2
-            || num_input_table_entries > 4096
-            || num_output_table_entries < 2
-            || num_output_table_entries > 4096
+        if !(2..=4096).contains(&num_input_table_entries)
+            || !(2..=4096).contains(&num_output_table_entries)
         {
             invalid_source(src, "Bad channel count");
             return None;
@@ -739,13 +741,16 @@ fn read_tag_lutType(src: &mut MemSource, tag: &Tag) -> Option<Box<lutType>> {
             return None;
         }
     };
-    if clut_size > MAX_LUT_SIZE {
-        invalid_source(src, "CLUT too large");
-        return None;
-    }
-    if clut_size <= 0 {
-        invalid_source(src, "CLUT must not be empty.");
-        return None;
+    match clut_size {
+        1..=MAX_LUT_SIZE => {} // OK
+        0 => {
+            invalid_source(src, "CLUT must not be empty.");
+            return None;
+        }
+        _ => {
+            invalid_source(src, "CLUT too large");
+            return None;
+        }
     }
 
     let e00 = read_s15Fixed16Number(src, (offset + 12) as usize);
@@ -847,6 +852,7 @@ fn profile_create() -> Box<Profile> {
 }
 /* build sRGB gamma table */
 /* based on cmsBuildParametricGamma() */
+#[allow(clippy::many_single_char_names)]
 fn build_sRGB_gamma_table(num_entries: i32) -> Vec<u16> {
     /* taken from lcms: Build_sRGBGamma() */
     let gamma: f64 = 2.4;
@@ -922,7 +928,7 @@ fn white_point_from_temp(temp_K: i32) -> qcms_CIE_xyY {
     let T2 = T * T; // Cube
     let T3 = T2 * T;
     // For correlated color temperature (T) between 4000K and 7000K:
-    let x = if T >= 4000.0 && T <= 7000.0 {
+    let x = if (4000.0..=7000.0).contains(&T) {
         -4.6070 * (1E9 / T3) + 2.9678 * (1E6 / T2) + 0.09911 * (1E3 / T) + 0.244063
     } else if T > 7000.0 && T <= 25000.0 {
         -2.0064 * (1E9 / T3) + 1.9018 * (1E6 / T2) + 0.24748 * (1E3 / T) + 0.237040
@@ -1003,13 +1009,13 @@ impl Profile {
         let table = build_sRGB_gamma_table(1024);
 
         let mut srgb = Profile::new_rgb_with_table(D65, Rec709Primaries, &table).unwrap();
-        srgb.is_srgb = Some(true);
+        srgb.is_srgb = true;
         srgb
     }
 
     /// Returns true if this profile is sRGB
     pub fn is_sRGB(&self) -> bool {
-        matches!(self.is_srgb, Some(true))
+        self.is_srgb
     }
 
     pub(crate) fn new_sRGB_parametric() -> Box<Profile> {
@@ -1054,6 +1060,7 @@ impl Profile {
         profile.rendering_intent = Perceptual;
         profile.color_space = RGB_SIGNATURE;
         profile.pcs = XYZ_TYPE;
+        profile.is_srgb = true;
         profile
     }
 
@@ -1112,6 +1119,10 @@ impl Profile {
         profile.color_space = RGB_SIGNATURE;
         profile.pcs = XYZ_TYPE;
         Some(profile)
+    }
+
+    pub fn new_from_path(file: &str) -> Option<Box<Profile>> {
+        Profile::new_from_slice(&std::fs::read(file).ok()?)
     }
 
     pub fn new_from_slice(mem: &[u8]) -> Option<Box<Profile>> {
