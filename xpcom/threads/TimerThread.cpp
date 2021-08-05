@@ -149,6 +149,7 @@ class nsTimerEvent final : public CancelableRunnable {
   }
   void operator delete(void* aPtr) {
     sAllocator->Free(aPtr);
+    sAllocatorUsers--;
     DeleteAllocatorIfNeeded();
   }
 
@@ -163,7 +164,6 @@ class nsTimerEvent final : public CancelableRunnable {
     MOZ_ASSERT(!sCanDeleteAllocator || sAllocatorUsers > 0,
                "This will result in us attempting to deallocate the "
                "nsTimerEvent allocator twice");
-    sAllocatorUsers--;
   }
 
   TimeStamp mInitTime;
