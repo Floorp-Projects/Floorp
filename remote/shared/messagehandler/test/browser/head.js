@@ -16,3 +16,33 @@ function createRootMessageHandler(sessionId) {
     RootMessageHandler.type
   );
 }
+
+/**
+ * Load the provided url in an existing browser.
+ * Returns a promise which will resolve when the page is loaded.
+ *
+ * @param {Browser} browser
+ *     The browser element where the URL should be loaded.
+ * @param {String} url
+ *     The URL to load in the new tab
+ */
+async function loadURL(browser, url) {
+  const loaded = BrowserTestUtils.browserLoaded(browser);
+  BrowserTestUtils.loadURI(browser, url);
+  return loaded;
+}
+
+/**
+ * Create a new foreground tab loading the provided url.
+ * Returns a promise which will resolve when the page is loaded.
+ *
+ * @param {String} url
+ *     The URL to load in the new tab
+ */
+async function addTab(url) {
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  registerCleanupFunction(() => {
+    gBrowser.removeTab(tab);
+  });
+  return tab;
+}

@@ -20,4 +20,16 @@ class TestOnlyInWindowGlobalModule {
   testOnlyInWindowGlobal() {
     return "only-in-windowglobal";
   }
+
+  testBroadcast() {
+    return `broadcast-${this.messageHandler.contextId}`;
+  }
+
+  testBroadcastWithParameter(params) {
+    return `broadcast-${this.messageHandler.contextId}-${params.value}`;
+  }
+
+  testError() {
+    throw new Error("error-from-module");
+  }
 }
