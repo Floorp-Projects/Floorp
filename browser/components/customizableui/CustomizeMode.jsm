@@ -1210,7 +1210,7 @@ CustomizeMode.prototype = {
     }
     aTarget.addEventListener("dragstart", this, true);
     aTarget.addEventListener("dragover", this, true);
-    aTarget.addEventListener("dragexit", this, true);
+    aTarget.addEventListener("dragleave", this, true);
     aTarget.addEventListener("drop", this, true);
     aTarget.addEventListener("dragend", this, true);
   },
@@ -1231,7 +1231,7 @@ CustomizeMode.prototype = {
     }
     aTarget.removeEventListener("dragstart", this, true);
     aTarget.removeEventListener("dragover", this, true);
-    aTarget.removeEventListener("dragexit", this, true);
+    aTarget.removeEventListener("dragleave", this, true);
     aTarget.removeEventListener("drop", this, true);
     aTarget.removeEventListener("dragend", this, true);
   },
@@ -1713,8 +1713,8 @@ CustomizeMode.prototype = {
       case "drop":
         this._onDragDrop(aEvent);
         break;
-      case "dragexit":
-        this._onDragExit(aEvent);
+      case "dragleave":
+        this._onDragLeave(aEvent);
         break;
       case "dragend":
         this._onDragEnd(aEvent);
@@ -2292,7 +2292,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _onDragExit(aEvent) {
+  _onDragLeave(aEvent) {
     if (this._isUnwantedDragDrop(aEvent)) {
       return;
     }
@@ -2301,7 +2301,7 @@ CustomizeMode.prototype = {
 
     // When leaving customization areas, cancel the drag on the last dragover item
     // We've attached the listener to areas, so aEvent.currentTarget will be the area.
-    // We don't care about dragexit events fired on descendants of the area,
+    // We don't care about dragleave events fired on descendants of the area,
     // so we check that the event's target is the same as the area to which the listener
     // was attached.
     if (this._dragOverItem && aEvent.target == aEvent.currentTarget) {
