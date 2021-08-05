@@ -575,32 +575,6 @@ repackage-signing-msi
 ---------------------
 Repackage-signing-msi takes the repackaged msi installers and signs them.
 
-repackage-msix
---------------
-Repackage-msix takes a (possibly unsigned) package and produces a Windows MSIX package containing no langpacks using the
-```./mach repackage``` command.
-
-These tasks are supposed intended for rapid iteration in ```try```.
-
-repackage-shippable-l10n-msix
------------------------------
-Repackage-msix takes a signed package and a list of signed langpacks and produces a Windows MSIX package using the
-```./mach repackage``` command.
-
-The signed langpacks are produced on Linux, since langpacks are platform agnostic.
-
-These tasks are for releases; they are complete, and therefore slower, and not intended for rapid iteration in
-```try```.
-
-repackage-signing-msix
-----------------------
-Repackage-signing-msix takes Windows MSIX packages produced in ```repackage-msix``` and signs them.
-
-repackage-signing-shippable-l10n-msix
--------------------------------------
-Repackage-signing-shippable-l10n-msix takes Windows MSIX packages produced in
-```repackage-signing-shippable-l10n-msix``` and signs them.
-
 repo-update
 -----------
 Repo-Update tasks are tasks that perform some action on the project repo itself,

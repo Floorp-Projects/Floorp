@@ -684,10 +684,3 @@ gnumake:
         artifact-name: make.tar.zst
         strip-components: 1
         add-prefix: make/
-
-msix-packaging:
-    description: Microsoft msix-packaging
-    fetch:
-        type: git
-        repo: https://github.com/mozilla/msix-packaging
-        revision: 8164b7ac5a67688e18fa2497fb31ba13ce9bfb15

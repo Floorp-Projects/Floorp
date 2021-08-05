@@ -2103,7 +2103,7 @@ class Repackage(MachCommandBase):
         "--locale", type=str, required=True, help="The locale of the installer"
     )
     @CommandArgument(
-        "--arch", type=str, required=True, help="The architecture you are building."
+        "--arch", type=str, required=True, help="The archtecture you are building."
     )
     @CommandArgument("--setupexe", type=str, required=True, help="setup.exe installer")
     @CommandArgument(
@@ -2139,151 +2139,12 @@ class Repackage(MachCommandBase):
             output=output,
         )
 
-    @SubCommand("repackage", "msix", description="Repackage into an MSIX")
-    @CommandArgument(
-        "--input",
-        type=str,
-        required=True,
-        help="Package (ZIP) or directory to repackage.",
-    )
-    @CommandArgument(
-        "--version",
-        type=str,
-        help="The Firefox version used to create the package "
-        "(Default: generated from package 'application.ini')",
-    )
-    @CommandArgument(
-        "--channel",
-        required=True,
-        choices=["official", "beta", "aurora", "nightly", "unofficial"],
-        help="Release channel.",
-    )
-    @CommandArgument(
-        "--distribution-dir",
-        metavar="DISTRIBUTION",
-        nargs="*",
-        dest="distribution_dirs",
-        default=[],
-        help="List of distribution directories to include.",
-    )
-    @CommandArgument(
-        "--arch",
-        type=str,
-        required=True,
-        help="The architecture you are building (Choices: 'x86', 'x86_64', 'aarch64').",
-    )
-    @CommandArgument(
-        "--publisher",
-        type=str,
-        # This default is baked into enough places under `browser/` that we need
-        # not extract a constant.
-        default="Mozilla Corporation",
-        required=False,
-        help="The Publisher string to use in the App Manifest."
-        + " It must match the CN on the certificate used for signing",
-    )
-    @CommandArgument(
-        "--makeappx",
-        type=str,
-        default=None,
-        help="makeappx/makemsix binary name (required if you haven't run configure)",
-    )
-    @CommandArgument(
-        "--verbose",
-        default=False,
-        action="store_true",
-        help="Be verbose.  (Default: false)",
-    )
-    @CommandArgument(
-        "--output", "-o", type=str, help="Output filename (Default: auto-generated)"
-    )
-    @CommandArgument(
-        "--sign",
-        default=False,
-        action="store_true",
-        help="Sign repackaged MSIX with self-signed certificate for local testing. "
-        "(Default: false)",
-    )
-    def repackage_msix(
-        self,
-        command_context,
-        input,
-        version=None,
-        channel=None,
-        distribution_dirs=[],
-        arch=None,
-        publisher=None,
-        verbose=False,
-        output=None,
-        makeappx=None,
-        sign=False,
-    ):
-        from mozbuild.repackaging.msix import repackage_msix
-
-        self._set_log_level(verbose)
-
-        template = os.path.join(
-            self.topsrcdir, "browser", "installer", "windows", "msix"
-        )
-        # Release (official) and Beta share branding.
-        branding = os.path.join(
-            self.topsrcdir,
-            "browser",
-            "branding",
-            channel if channel != "beta" else "official",
-        )
-
-        output = repackage_msix(
-            input,
-            channel=channel,
-            template=template,
-            branding=branding,
-            arch=arch,
-            publisher=publisher,
-            version=version,
-            distribution_dirs=distribution_dirs,
-            # Configure this run.
-            force=True,
-            verbose=verbose,
-            log=self.log,
-            output=output,
-            makeappx=makeappx,
-        )
-
-        if sign:
-            self.repackage_sign_msix(
-                command_context, output, force=False, verbose=verbose
-            )
-
-    @SubCommand("repackage", "sign-msix", description="Sign an MSIX for local testing")
-    @CommandArgument("--input", type=str, required=True, help="MSIX to sign.")
-    @CommandArgument(
-        "--force",
-        default=False,
-        action="store_true",
-        help="Force recreating self-signed certificate.  (Default: false)",
-    )
-    @CommandArgument(
-        "--verbose",
-        default=False,
-        action="store_true",
-        help="Be verbose.  (Default: false)",
-    )
-    def repackage_sign_msix(self, command_context, input, force=False, verbose=False):
-        from mozbuild.repackaging.msix import sign_msix
-
-        self._set_log_level(verbose)
-
-        sign_msix(input, force=force, log=self.log, verbose=verbose)
-
-        return 0
-
     @SubCommand("repackage", "mar", description="Repackage into complete MAR file")
     @CommandArgument("--input", "-i", type=str, required=True, help="Input filename")
     @CommandArgument("--mar", type=str, required=True, help="Mar binary path")
     @CommandArgument("--output", "-o", type=str, required=True, help="Output filename")
     @CommandArgument(
-        "--arch", type=str, required=True, help="The architecture you are building."
+        "--arch", type=str, required=True, help="The archtecture you are building."
     )
     @CommandArgument("--mar-channel-id", type=str, help="Mar channel id")
     def repackage_mar(self, command_context, input, mar, output, arch, mar_channel_id):
