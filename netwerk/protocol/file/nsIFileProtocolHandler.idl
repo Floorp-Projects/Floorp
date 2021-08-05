@@ -30,30 +30,45 @@ interface nsIFileProtocolHandler : nsIProtocolHandler
     nsIURIMutator newFileURIMutator(in nsIFile file);
 
     /**
-     * Converts the nsIFile to the corresponding URL string.  NOTE: under
-     * some platforms this is a lossy conversion (e.g., Mac Carbon build).
-     * If the nsIFile is a local file, then the result will be a file://
-     * URL string.
+     * DEPRECATED, AVOID IF AT ALL POSSIBLE.
      *
-     * The resulting string may contain URL-escaped characters.
-     * NOTE: Callers should use getURLSpecFromActualFile or
-     * getURLSpecFromDirFile if possible, for performance reasons.
+     * Calling this will cause IO on the calling thread, to determine
+     * if the file is a directory or file, and based on that behaves as
+     * if you called getURLSpecFromDir or getURLSpecFromActualFile,
+     * respectively. This IO may take multiple seconds (e.g. for network
+     * paths, slow external drives that need to be woken up, etc.).
+     *
+     * Usually, the caller should *know* that the `file` argument is
+     * either a directory (in which case it should call getURLSpecFromDir)
+     * or a non-directory file (in which case it should call
+     * getURLSpecFromActualFile), and not need to call this method.
      */
-    AUTF8String getURLSpecFromFile(in nsIFile file);
+    [noscript] AUTF8String getURLSpecFromFile(in nsIFile file);
 
     /**
-     * Converts the nsIFile to the corresponding URL string. Should
-     * only be called on files which are not directories. Otherwise
-     * identical to getURLSpecFromFile, but is usually more efficient.
-     * WARNING: This restriction may not be enforced at runtime!
+     * Converts a non-directory nsIFile to the corresponding URL string.
+     * NOTE: under some platforms this is a lossy conversion (e.g., Mac
+     * Carbon build). If the nsIFile is a local file, then the result
+     * will be a file:// URL string.
+     *
+     * The resulting string may contain URL-escaped characters.
+     *
+     * Should only be called on files which are not directories. If
+     * called on directories, the resulting URL may lack a trailing slash
+     * and cause relative URLs in such a document to misbehave.
      */
     AUTF8String getURLSpecFromActualFile(in nsIFile file);
 
     /**
-     * Converts the nsIFile to the corresponding URL string. Should
-     * only be called on files which are directories. Otherwise
-     * identical to getURLSpecFromFile, but is usually more efficient.
-     * WARNING: This restriction may not be enforced at runtime!
+     * Converts a directory nsIFile to the corresponding URL string.
+     * NOTE: under some platforms this is a lossy conversion (e.g., Mac
+     * Carbon build). If the nsIFile is a local file, then the result
+     * will be a file:// URL string.
+     *
+     * The resulting string may contain URL-escaped characters.
+     *
+     * Should only be called on files which are directories (will enforce
+     * the URL ends with a slash).
      */
     AUTF8String getURLSpecFromDir(in nsIFile file);
 
