@@ -70,7 +70,7 @@ class ToolbarViewTest {
 
     @Test
     fun `sets up interactor listeners`() {
-        var urlCommitListener: ((String) -> Boolean)? = null
+        lateinit var urlCommitListener: ((String) -> Boolean)
         var editListener: Toolbar.OnEditListener? = null
         every { toolbar.setOnUrlCommitListener(any()) } answers {
             urlCommitListener = firstArg()
@@ -81,8 +81,7 @@ class ToolbarViewTest {
 
         buildToolbarView(isPrivate = false)
 
-        assertNotNull(urlCommitListener)
-        assertFalse(urlCommitListener!!("test"))
+        assertFalse(urlCommitListener("test"))
         verify { interactor.onUrlCommitted("test") }
 
         assertNotNull(editListener)
