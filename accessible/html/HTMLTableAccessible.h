@@ -40,7 +40,13 @@ class HTMLTableCellAccessible : public HyperTextAccessibleWrap,
   virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual mozilla::a11y::GroupPos GroupPosition() override;
 
+ protected:
+  virtual void DOMAttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                   int32_t aModType,
+                                   const nsAttrValue* aOldValue,
+                                   uint64_t aOldState) override;
   // TableCellAccessible
+ public:
   virtual TableAccessible* Table() const override;
   virtual uint32_t ColIdx() const override;
   virtual uint32_t RowIdx() const override;
@@ -171,6 +177,11 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap,
 
   // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
+
+  virtual void DOMAttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                   int32_t aModType,
+                                   const nsAttrValue* aOldValue,
+                                   uint64_t aOldState) override;
 
   // HTMLTableAccessible
 

@@ -138,6 +138,21 @@ GroupPos HTMLTableCellAccessible::GroupPosition() {
   return HyperTextAccessibleWrap::GroupPosition();
 }
 
+void HTMLTableCellAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
+                                                  nsAtom* aAttribute,
+                                                  int32_t aModType,
+                                                  const nsAttrValue* aOldValue,
+                                                  uint64_t aOldState) {
+  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
+                                               aModType, aOldValue, aOldState);
+
+  if (aAttribute == nsGkAtoms::headers || aAttribute == nsGkAtoms::abbr ||
+      aAttribute == nsGkAtoms::scope) {
+    mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
+                           this);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableCellAccessible: TableCellAccessible implementation
 
@@ -389,6 +404,20 @@ ENameValueFlag HTMLTableAccessible::NativeName(nsString& aName) const {
   // If no caption then use summary as a name.
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::summary, aName);
   return eNameOK;
+}
+
+void HTMLTableAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
+                                              nsAtom* aAttribute,
+                                              int32_t aModType,
+                                              const nsAttrValue* aOldValue,
+                                              uint64_t aOldState) {
+  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
+                                               aModType, aOldValue, aOldState);
+
+  if (aAttribute == nsGkAtoms::summary) {
+    mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
+                           this);
+  }
 }
 
 already_AddRefed<AccAttributes> HTMLTableAccessible::NativeAttributes() {
