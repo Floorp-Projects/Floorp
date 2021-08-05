@@ -21,8 +21,8 @@ class TestModule {
     return "windowglobal-value";
   }
 
-  testSetValue(destination, value) {
-    this._testValue = value;
+  testSetValue(params) {
+    this._testValue = params;
   }
 
   testGetValue() {

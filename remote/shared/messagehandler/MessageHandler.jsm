@@ -122,7 +122,7 @@ class MessageHandler extends EventEmitter {
 
     const mod = this._moduleCache.getModuleInstance(moduleName, destination);
     if (this._isCommandSupportedByModule(commandName, mod)) {
-      return mod[commandName](destination, params);
+      return mod[commandName](params, destination);
     }
 
     return this.forwardCommand(command);

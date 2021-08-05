@@ -21,7 +21,7 @@ class TestModule {
     return "intercepted-value";
   }
 
-  async testInterceptAndForwardModule(destination) {
+  async testInterceptAndForwardModule(params, destination) {
     const windowGlobalValue = await this.messageHandler.handleCommand({
       moduleName: "TestModule",
       commandName: "testForwardToWindowGlobal",
