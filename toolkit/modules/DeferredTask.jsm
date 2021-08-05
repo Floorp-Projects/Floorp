@@ -118,6 +118,16 @@ var DeferredTask = function(aTaskFn, aDelayMs, aIdleTimeoutMs) {
   this._taskFn = aTaskFn;
   this._delayMs = aDelayMs;
   this._timeoutMs = aIdleTimeoutMs;
+  this._caller = new Error().stack.split("\n", 2)[1];
+  let markerString = `delay: ${aDelayMs}ms`;
+  if (aIdleTimeoutMs) {
+    markerString += `, idle timeout: ${aIdleTimeoutMs}`;
+  }
+  ChromeUtils.addProfilerMarker(
+    "DeferredTask",
+    { captureStack: true },
+    markerString
+  );
 };
 
 DeferredTask.prototype = {
@@ -329,10 +339,17 @@ DeferredTask.prototype = {
    * Executes the associated task and catches exceptions.
    */
   async _runTask() {
+    let startTime = Cu.now();
     try {
       await this._taskFn();
     } catch (ex) {
       Cu.reportError(ex);
+    } finally {
+      ChromeUtils.addProfilerMarker(
+        "DeferredTask",
+        { startTime },
+        this._caller
+      );
     }
   },
 };
