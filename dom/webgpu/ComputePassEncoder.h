@@ -28,7 +28,7 @@ class CommandEncoder;
 class ComputePipeline;
 
 struct ScopedFfiComputeTraits {
-  typedef ffi::WGPUComputePass* type;
+  using type = ffi::WGPUComputePass*;
   static type empty();
   static void release(type raw);
 };
