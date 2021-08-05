@@ -1,0 +1,10 @@
+[
+    {
+    "filename": "mitm6-darwin-firefox-amazon-sec.zip",
+    "size": 25277108,
+    "algorithm": "sha512",
+    "digest": "5a5578f22327a0f515f700109c8ee909dc4cb5d9d7429abaab46731a0bf0f96ac4c08c26b5fdd0d976e2149c409418f9e9b21f4cc365cd46d72961592cf65899",
+    "visibility": "public",
+    "unpack": true
+    }
+]
