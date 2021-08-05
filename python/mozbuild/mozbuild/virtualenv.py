@@ -14,6 +14,7 @@ import platform
 import shutil
 import subprocess
 import sys
+from tempfile import TemporaryDirectory
 
 IS_NATIVE_WIN = sys.platform == "win32" and os.sep == "\\"
 IS_CYGWIN = sys.platform == "cygwin"
@@ -441,9 +442,6 @@ class VirtualenvManager(VirtualenvHelper):
         If vendored is True, no package index will be used and no dependencies
         will be installed.
         """
-        import mozfile
-        from mozfile import TemporaryDirectory
-
         if sys.executable.startswith(self.bin_path):
             # If we're already running in this interpreter, we can optimize in
             # the case that the package requirement is already satisfied.
@@ -486,7 +484,7 @@ class VirtualenvManager(VirtualenvHelper):
                     tmp, "{}-1.0-py3-none-any.whl".format(os.path.basename(package))
                 )
                 shutil.make_archive(wheel_file, "zip", package)
-                mozfile.move("{}.zip".format(wheel_file), wheel_file)
+                shutil.move("{}.zip".format(wheel_file), wheel_file)
                 package = wheel_file
 
             args.append(package)
