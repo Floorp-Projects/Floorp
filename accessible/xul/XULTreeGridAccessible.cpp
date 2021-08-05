@@ -174,7 +174,7 @@ void XULTreeGridAccessible::UnselectRow(uint32_t aRowIdx) {
 // XULTreeGridAccessible: LocalAccessible implementation
 
 role XULTreeGridAccessible::NativeRole() const {
-  RefPtr<nsTreeColumns> treeColumns = mTree->GetColumns();
+  RefPtr<nsTreeColumns> treeColumns = mTree->GetColumns(FlushType::None);
   if (!treeColumns) {
     NS_ERROR("No treecolumns object for tree!");
     return roles::NOTHING;
@@ -316,7 +316,7 @@ XULTreeGridCellAccessible* XULTreeGridRowAccessible::GetCellAccessible(
 
 void XULTreeGridRowAccessible::RowInvalidated(int32_t aStartColIdx,
                                               int32_t aEndColIdx) {
-  RefPtr<nsTreeColumns> treeColumns = mTree->GetColumns();
+  RefPtr<nsTreeColumns> treeColumns = mTree->GetColumns(FlushType::None);
   if (!treeColumns) return;
 
   bool nameChanged = false;
