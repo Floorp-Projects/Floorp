@@ -696,7 +696,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
  public:
   bool hadNondeterministicException() const {
-    return hadOverRecursed_ || runtime()->hadOutOfMemory;
+    return hadOverRecursed_ || runtime()->hadOutOfMemory ||
+           js::oom::simulator.isThreadSimulatingAny();
   }
 #endif
 
