@@ -51,11 +51,7 @@ def raptor(options):
 
 @pytest.fixture
 def mock_test():
-    return {
-        "name": "raptor-firefox-tp6",
-        "test_url": "/dummy/url",
-        "secondary_url": "/dummy/url-2",
-    }
+    return {"name": "raptor-firefox-tp6", "test_url": "/dummy/url"}
 
 
 @pytest.fixture(scope="session")
