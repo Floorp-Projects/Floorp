@@ -815,6 +815,10 @@ void BackgroundSessionStorageManager::SetCurrentBrowsingContextId(
 }
 
 void BackgroundSessionStorageManager::MaybeScheduleSessionStoreUpdate() {
+  if constexpr (!SessionStoreUtils::NATIVE_LISTENER) {
+    return;
+  }
+
   if (mSessionStoreCallbackTimer) {
     return;
   }
