@@ -1,4 +1,5 @@
 #[cfg(all(test, feature = "c_bindings"))]
+#[allow(clippy::all)]
 mod gtest {
     use crate::{
         c_bindings::*, iccread::*, transform::DataType::*, transform::*,
