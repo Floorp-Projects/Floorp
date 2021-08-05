@@ -58,7 +58,7 @@ geckoview:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1625325#c2
     notification_emails:
       - geckoview-team@mozilla.com
-      - aklotz@mozilla.com
+      - asferro@mozilla.com
     expires: never
 
   page_load_progress_time:
