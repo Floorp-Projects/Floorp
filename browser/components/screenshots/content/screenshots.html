@@ -16,7 +16,30 @@
   </head>
 
   <body>
-    <template id="screenshots-dialog-template"></template>
+    <template id="screenshots-dialog-template">
+      <div class="image-view">
+        <div class="preview-buttons">
+          <button class="highlight-button-cancel" title="Cancel">
+            <img src="chrome://browser/content/screenshots/cancel.svg"/>
+          </button>
+          <button class="highlight-button-copy" title="Copy">
+            <img src="chrome://browser/content/screenshots/copy.svg"/>
+            <span data-l10n-id="screenshots-copy-button"/>
+          </button>
+          <button class="highlight-button-download" title="Download">
+            <img src="chrome://browser/content/screenshots/download-white.svg"/>
+            <span data-l10n-id="screenshots-download-button"/>
+          </button>
+        </div>
+        <div class="preview-image">
+          <div class="preview-image-area">
+            <!-- This is a placeholder image. -->
+            <img src="chrome://browser/content/screenshots/cancel.svg"/>
+          </div>
+        </div>
+      </div>
+    </template>
+
     <screenshots-ui></screenshots-ui>
   </body>
 </html>
