@@ -2,6 +2,22 @@
   "data": [
     {
       "stash": {
+        "blocked": [
+          "{c36cb301-48a8-47e4-95e3-2dbdfb22eb73}:9.5.2",
+          "{c36cb301-48a8-47e4-95e3-2dbdfb22eb73}:6.2.2",
+          "{c36cb301-48a8-47e4-95e3-2dbdfb22eb73}:8.4.2",
+          "{c36cb301-48a8-47e4-95e3-2dbdfb22eb73}:7.3.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1627605467964,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1628015710443,
+      "id": "9fe034e6-967e-45e9-aa3c-f33fa5d1d575",
+      "last_modified": 1628015874766
+    },
+    {
+      "stash": {
         "blocked": [],
         "unblocked": []
       },
