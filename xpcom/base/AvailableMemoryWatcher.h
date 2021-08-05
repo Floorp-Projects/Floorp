@@ -41,7 +41,7 @@ class nsAvailableMemoryWatcherBase : public nsIAvailableMemoryWatcherBase {
   nsAvailableMemoryWatcherBase();
 
 #if defined(XP_MACOSX)
-  virtual void OnMemoryPressureChanged(MacMemoryPressureLevel aLevel){};
+  virtual void OnMemoryPressureChanged(MacMemoryPressureLevel aNewLevel){};
   virtual void AddChildAnnotations(
       const UniquePtr<ipc::CrashReporterHost>& aCrashReporter){};
 #endif

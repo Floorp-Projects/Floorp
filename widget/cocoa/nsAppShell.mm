@@ -877,6 +877,10 @@ void nsAppShell::InitMemoryPressureObserver() {
   });
 
   dispatch_resume(mMemoryPressureSource);
+
+  // Initialize the memory watcher.
+  RefPtr<mozilla::nsAvailableMemoryWatcherBase> watcher(
+      nsAvailableMemoryWatcherBase::GetSingleton());
 }
 
 void nsAppShell::OnMemoryPressureChanged(dispatch_source_memorypressure_flags_t aPressureLevel) {
