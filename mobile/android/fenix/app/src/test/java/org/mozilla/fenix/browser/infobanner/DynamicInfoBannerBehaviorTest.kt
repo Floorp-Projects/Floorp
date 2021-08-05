@@ -12,10 +12,7 @@ import io.mockk.verify
 import mozilla.components.browser.toolbar.BrowserToolbar
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
-@RunWith(FenixRobolectricTestRunner::class)
 class DynamicInfoBannerBehaviorTest {
     @Test
     fun `layoutDependsOn should not do anything if not for BrowserToolbar as a dependency`() {

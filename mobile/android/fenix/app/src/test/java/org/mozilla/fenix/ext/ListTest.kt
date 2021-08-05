@@ -7,12 +7,9 @@ package org.mozilla.fenix.ext
 import mozilla.components.browser.state.state.content.DownloadState
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.library.downloads.DownloadItem
 import java.io.File
 
-@RunWith(FenixRobolectricTestRunner::class)
 class ListTest {
 
     @Test

@@ -13,11 +13,8 @@ import io.mockk.verify
 import mozilla.components.feature.addons.Addon
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
-@RunWith(FenixRobolectricTestRunner::class)
 class AddonsManagementFragmentTest {
 
     private lateinit var context: Context

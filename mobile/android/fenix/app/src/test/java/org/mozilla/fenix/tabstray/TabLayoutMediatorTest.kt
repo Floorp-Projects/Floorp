@@ -9,16 +9,13 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_NORMAL_TABS
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_PRIVATE_TABS
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_SYNCED_TABS
 
-@RunWith(FenixRobolectricTestRunner::class)
 class TabLayoutMediatorTest {
     private val modeManager: BrowsingModeManager = mockk(relaxed = true)
     private val tabsTrayStore: TabsTrayStore = mockk(relaxed = true)

@@ -14,13 +14,10 @@ import mozilla.components.browser.menu.view.MenuButton
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
 @ExperimentalCoroutinesApi
-@RunWith(FenixRobolectricTestRunner::class)
 class HomeFragmentTest {
 
     private lateinit var settings: Settings

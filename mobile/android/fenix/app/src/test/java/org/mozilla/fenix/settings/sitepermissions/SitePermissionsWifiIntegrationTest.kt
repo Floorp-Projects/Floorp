@@ -11,15 +11,12 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.AL
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY_AUDIBLE
 import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY_INAUDIBLE
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import org.mozilla.fenix.wifi.WifiConnectionMonitor
 
-@RunWith(FenixRobolectricTestRunner::class)
 class SitePermissionsWifiIntegrationTest {
     lateinit var settings: Settings
     lateinit var wifiIntegration: SitePermissionsWifiIntegration

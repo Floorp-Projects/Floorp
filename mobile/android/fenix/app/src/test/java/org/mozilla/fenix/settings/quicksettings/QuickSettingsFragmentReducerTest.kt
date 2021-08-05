@@ -8,11 +8,8 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature
 
-@RunWith(FenixRobolectricTestRunner::class)
 class QuickSettingsFragmentReducerTest {
 
     @Test

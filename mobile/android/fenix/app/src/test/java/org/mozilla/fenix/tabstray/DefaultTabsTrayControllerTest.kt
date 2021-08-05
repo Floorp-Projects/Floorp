@@ -29,15 +29,12 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeFragment
 
-@RunWith(FenixRobolectricTestRunner::class)
 class DefaultTabsTrayControllerTest {
     @MockK(relaxed = true)
     private lateinit var trayStore: TabsTrayStore

@@ -12,12 +12,9 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.ktx.kotlin.getOrigin
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.sitepermissions.tryReloadTabBy
 
-@RunWith(FenixRobolectricTestRunner::class)
 class ExtensionsTest {
 
     @Test

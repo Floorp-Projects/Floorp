@@ -10,14 +10,11 @@ import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import org.junit.Assert
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 /**
  * Just the Roboelectric tests for MetricsUtil. Splitting these files out means our other tests will run more quickly.
  * FenixRobolectricTestRunner also breaks our ability to use mockkStatic on Base64.
  */
-@RunWith(FenixRobolectricTestRunner::class)
 class MetricsUtilsTestRoboelectric {
 
     @Test
