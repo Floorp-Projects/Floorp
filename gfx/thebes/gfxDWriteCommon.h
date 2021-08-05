@@ -19,6 +19,22 @@
 #include <windows.h>
 #include <dwrite.h>
 
+#define GFX_CLEARTYPE_PARAMS "gfx.font_rendering.cleartype_params."
+#define GFX_CLEARTYPE_PARAMS_GAMMA "gfx.font_rendering.cleartype_params.gamma"
+#define GFX_CLEARTYPE_PARAMS_CONTRAST \
+  "gfx.font_rendering.cleartype_params.enhanced_contrast"
+#define GFX_CLEARTYPE_PARAMS_LEVEL \
+  "gfx.font_rendering.cleartype_params.cleartype_level"
+#define GFX_CLEARTYPE_PARAMS_STRUCTURE \
+  "gfx.font_rendering.cleartype_params.pixel_structure"
+#define GFX_CLEARTYPE_PARAMS_MODE \
+  "gfx.font_rendering.cleartype_params.rendering_mode"
+
+#define DISPLAY1_REGISTRY_KEY \
+  HKEY_CURRENT_USER, L"Software\\Microsoft\\Avalon.Graphics\\DISPLAY1"
+
+#define ENHANCED_CONTRAST_VALUE_NAME L"EnhancedContrastLevel"
+
 static inline DWRITE_FONT_STRETCH DWriteFontStretchFromStretch(
     mozilla::FontStretch aStretch) {
   if (aStretch == mozilla::FontStretch::UltraCondensed()) {
