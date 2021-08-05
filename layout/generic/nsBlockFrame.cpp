@@ -235,13 +235,15 @@ static Maybe<nscolor> GetBackplateColor(nsIFrame* aFrame) {
     if (!drawColor && !drawImage) {
       continue;
     }
-    if (NS_GET_A(backgroundColor) != 0) {
-      // NOTE: We intentionally disregard the alpha channel here for the purpose
-      // of the backplate, in order to guarantee contrast.
-      return Some(NS_RGB(NS_GET_R(backgroundColor), NS_GET_G(backgroundColor),
-                         NS_GET_B(backgroundColor)));
+    if (NS_GET_A(backgroundColor) == 0) {
+      // Even if there's a background image, if there's no background color we
+      // keep going up the frame tree, see bug 1723938.
+      continue;
     }
-    break;
+    // NOTE: We intentionally disregard the alpha channel here for the purpose
+    // of the backplate, in order to guarantee contrast.
+    return Some(NS_RGB(NS_GET_R(backgroundColor), NS_GET_G(backgroundColor),
+                       NS_GET_B(backgroundColor)));
   }
   return Some(aFrame->PresContext()->DefaultBackgroundColor());
 }
