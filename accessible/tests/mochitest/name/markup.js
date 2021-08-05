@@ -259,32 +259,14 @@ function testNameForAttrRule(aElm, aRule) {
     testAbsentAttrs(aElm, { "explicit-name": "true" });
   }
 
-  // If @recreated attribute is used then this attribute change recreates an
-  // accessible. Wait for reorder event in this case or otherwise proceed next
-  // test immediately.
-  if (aRule.hasAttribute("recreated")) {
-    waitForEvent(
-      EVENT_REORDER,
-      aElm.parentNode,
-      gTestIterator.iterateNext,
-      gTestIterator
-    );
-    aElm.removeAttribute(attr);
-  } else if (aRule.hasAttribute("textchanged")) {
-    waitForEvent(
-      EVENT_TEXT_INSERTED,
-      aElm,
-      gTestIterator.iterateNext,
-      gTestIterator
-    );
-    aElm.removeAttribute(attr);
-  } else if (aRule.hasAttribute("contentchanged")) {
-    waitForEvent(EVENT_REORDER, aElm, gTestIterator.iterateNext, gTestIterator);
-    aElm.removeAttribute(attr);
-  } else {
-    aElm.removeAttribute(attr);
-    gTestIterator.iterateNext();
-  }
+  waitForEvent(
+    EVENT_NAME_CHANGE,
+    aElm,
+    gTestIterator.iterateNext,
+    gTestIterator
+  );
+
+  aElm.removeAttribute(attr);
 }
 
 function testNameForElmRule(aElm, aRule) {
@@ -338,14 +320,14 @@ function testNameForElmRule(aElm, aRule) {
 
   if (gDumpToConsole) {
     dump(
-      "\nProcessed elm rule. Wait for reorder event on " +
-        prettyName(parentNode) +
+      "\nProcessed elm rule. Wait for name change event on " +
+        prettyName(aElm) +
         "\n"
     );
   }
   waitForEvent(
-    EVENT_REORDER,
-    parentNode,
+    EVENT_NAME_CHANGE,
+    aElm,
     gTestIterator.iterateNext,
     gTestIterator
   );
@@ -365,7 +347,12 @@ function testNameForSubtreeRule(aElm, aRule) {
         "\n"
     );
   }
-  waitForEvent(EVENT_REORDER, aElm, gTestIterator.iterateNext, gTestIterator);
+  waitForEvent(
+    EVENT_NAME_CHANGE,
+    aElm,
+    gTestIterator.iterateNext,
+    gTestIterator
+  );
 
   while (aElm.firstChild) {
     aElm.firstChild.remove();

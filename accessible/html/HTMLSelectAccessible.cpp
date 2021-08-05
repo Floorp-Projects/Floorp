@@ -123,7 +123,8 @@ ENameValueFlag HTMLSelectOptionAccessible::NativeName(nsString& aName) const {
 
   // CASE #2 -- no label parameter, get the first child,
   // use it if it is a text node
-  nsIContent* text = mContent->GetFirstChild();
+  LocalAccessible* firstChild = LocalFirstChild();
+  nsIContent* text = firstChild ? firstChild->GetContent() : nullptr;
   if (text && text->IsText()) {
     nsTextEquivUtils::AppendTextEquivFromTextContent(text, &aName);
     aName.CompressWhitespace();
@@ -131,6 +132,21 @@ ENameValueFlag HTMLSelectOptionAccessible::NativeName(nsString& aName) const {
   }
 
   return eNameOK;
+}
+
+void HTMLSelectOptionAccessible::DOMAttributeChanged(
+    int32_t aNameSpaceID, nsAtom* aAttribute, int32_t aModType,
+    const nsAttrValue* aOldValue, uint64_t aOldState) {
+  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
+                                               aModType, aOldValue, aOldState);
+
+  if (aAttribute == nsGkAtoms::label) {
+    dom::Element* elm = Elm();
+    if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_labelledby) &&
+        !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label)) {
+      mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+    }
+  }
 }
 
 uint64_t HTMLSelectOptionAccessible::NativeState() const {

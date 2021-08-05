@@ -59,8 +59,9 @@
       gQueue.push(new setAttr("tst1", "title", "title",
                               new unexpectedInvokerChecker(EVENT_DESCRIPTION_CHANGE, "tst1")));
 
+      // A title has lower priority over text content. There should be no name change event.
       gQueue.push(new setAttr("tst2", "title", "title",
-                              new invokerChecker(EVENT_NAME_CHANGE, "tst2")));
+                              new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst2")));
 
       gQueue.invoke();
       await queueFinished;

@@ -19,19 +19,11 @@ loadScripts({ name: "name.js", dir: MOCHITESTS_DIR });
  *   { elm } - calculated from another element
  *   { fromsubtree } - calculated from element's subtree
  *
- *
- * Options include:
- *   * waitFor - changes in the subtree will result in an accessible event
- *                     being fired, the test must only continue after the event
- *                     is receieved.
  */
-const ARIARule = [
-  { attr: "aria-labelledby" },
-  { attr: "aria-label", waitFor: EVENT_NAME_CHANGE },
-];
-const HTMLControlHeadRule = [...ARIARule, { elm: "label", isSibling: true }];
+const ARIARule = [{ attr: "aria-labelledby" }, { attr: "aria-label" }];
+const HTMLControlHeadRule = [...ARIARule, { elm: "label" }];
 const rules = {
-  CSSContent: [{ elm: "style", isSibling: true }, { fromsubtree: true }],
+  CSSContent: [{ elm: "style" }, { fromsubtree: true }],
   HTMLARIAGridCell: [...ARIARule, { fromsubtree: true }, { attr: "title" }],
   HTMLControl: [
     ...HTMLControlHeadRule,
@@ -39,11 +31,7 @@ const rules = {
     { attr: "title" },
   ],
   HTMLElm: [...ARIARule, { attr: "title" }],
-  HTMLImg: [
-    ...ARIARule,
-    { attr: "alt", waitFor: EVENT_NAME_CHANGE },
-    { attr: "title" },
-  ],
+  HTMLImg: [...ARIARule, { attr: "alt" }, { attr: "title" }],
   HTMLImgEmptyAlt: [...ARIARule, { attr: "title" }, { attr: "alt" }],
   HTMLInputButton: [
     ...HTMLControlHeadRule,
@@ -52,25 +40,19 @@ const rules = {
   ],
   HTMLInputImage: [
     ...HTMLControlHeadRule,
-    { attr: "alt", waitFor: EVENT_NAME_CHANGE },
+    { attr: "alt" },
     { attr: "value" },
     { attr: "title" },
   ],
   HTMLInputImageNoValidSrc: [
     ...HTMLControlHeadRule,
-    { attr: "alt", waitFor: EVENT_NAME_CHANGE },
+    { attr: "alt" },
     { attr: "value" },
   ],
-  HTMLInputReset: [
-    ...HTMLControlHeadRule,
-    { attr: "value", waitFor: EVENT_TEXT_INSERTED },
-  ],
-  HTMLInputSubmit: [
-    ...HTMLControlHeadRule,
-    { attr: "value", waitFor: EVENT_TEXT_INSERTED },
-  ],
+  HTMLInputReset: [...HTMLControlHeadRule, { attr: "value" }],
+  HTMLInputSubmit: [...HTMLControlHeadRule, { attr: "value" }],
   HTMLLink: [...ARIARule, { fromsubtree: true }, { attr: "title" }],
-  HTMLLinkImage: [...ARIARule, { elm: "img" }, { attr: "title" }],
+  HTMLLinkImage: [...ARIARule, { fromsubtree: true }, { attr: "title" }],
   HTMLOption: [
     ...ARIARule,
     { attr: "label" },
@@ -396,34 +378,26 @@ const markupTests = [
  * becomes defunct, update its reference using the one that is attached to one
  * of the above events.
  * @param {Object} browser      current "tabbrowser" element
- * @param {Object} target       { acc, parent, id } structure that contains an
- *                               accessible, its parent and its content element
+ * @param {Object} target       { acc, id } structure that contains an
+ *                               accessible and its content element
  *                               id.
  * @param {Object} rule         current attr rule for name calculation
  * @param {[type]} expected     expected name value
  */
 async function testAttrRule(browser, target, rule, expected) {
-  let { id, parent, acc } = target;
-  let { waitFor, attr } = rule;
+  let { id, acc } = target;
+  let { attr } = rule;
 
   testName(acc, expected);
 
-  if (waitFor) {
-    let [event] = await contentSpawnMutation(
-      browser,
-      {
-        expected: [[waitFor, waitFor === EVENT_REORDER ? parent : id]],
-      },
-      (contentId, contentAttr) =>
-        content.document.getElementById(contentId).removeAttribute(contentAttr),
-      [id, attr]
-    );
+  let nameChange = waitForEvent(EVENT_NAME_CHANGE, id);
+  await invokeContentTask(browser, [id, attr], (contentId, contentAttr) => {
+    content.document.getElementById(contentId).removeAttribute(contentAttr);
+  });
+  let event = await nameChange;
 
-    // Update accessible just in case it is now defunct.
-    target.acc = findAccessibleChildByID(event.accessible, id);
-  } else {
-    await invokeSetAttribute(browser, id, attr);
-  }
+  // Update accessible just in case it is now defunct.
+  target.acc = findAccessibleChildByID(event.accessible, id);
 }
 
 /**
@@ -432,25 +406,23 @@ async function testAttrRule(browser, target, rule, expected) {
  * in a reorder event - wait for it. If accessible becomes defunct, update its
  * reference using the one that is attached to a possible reorder event.
  * @param {Object} browser      current "tabbrowser" element
- * @param {Object} target       { acc, parent, id } structure that contains an
- *                               accessible, its parent and its content element
+ * @param {Object} target       { acc, id } structure that contains an
+ *                               accessible and its content element
  *                               id.
  * @param {Object} rule         current elm rule for name calculation
  * @param {[type]} expected     expected name value
  */
 async function testElmRule(browser, target, rule, expected) {
-  let { id, parent, acc } = target;
-  let { isSibling, elm } = rule;
+  let { id, acc } = target;
+  let { elm } = rule;
 
   testName(acc, expected);
-  let [event] = await contentSpawnMutation(
-    browser,
-    {
-      expected: [[EVENT_REORDER, isSibling ? parent : id]],
-    },
-    contentElm => content.document.querySelector(`${contentElm}`).remove(),
-    [elm]
-  );
+  let nameChange = waitForEvent(EVENT_NAME_CHANGE, id);
+
+  await invokeContentTask(browser, [elm], contentElm => {
+    content.document.querySelector(`${contentElm}`).remove();
+  });
+  let event = await nameChange;
 
   // Update accessible just in case it is now defunct.
   target.acc = findAccessibleChildByID(event.accessible, id);
@@ -462,8 +434,8 @@ async function testElmRule(browser, target, rule, expected) {
  * accessible becomes defunct, update its reference using the one that is
  * attached to a reorder event.
  * @param {Object} browser      current "tabbrowser" element
- * @param {Object} target       { acc, parent, id } structure that contains an
- *                               accessible, its parent and its content element
+ * @param {Object} target       { acc, id } structure that contains an
+ *                               accessible and its content element
  *                               id.
  * @param {Object} rule         current subtree rule for name calculation
  * @param {[type]} expected     expected name value
@@ -472,19 +444,15 @@ async function testSubtreeRule(browser, target, rule, expected) {
   let { id, acc } = target;
 
   testName(acc, expected);
-  let [event] = await contentSpawnMutation(
-    browser,
-    {
-      expected: [[EVENT_REORDER, id]],
-    },
-    contentId => {
-      let elm = content.document.getElementById(contentId);
-      while (elm.firstChild) {
-        elm.firstChild.remove();
-      }
-    },
-    [id]
-  );
+  let nameChange = waitForEvent(EVENT_NAME_CHANGE, id);
+
+  await invokeContentTask(browser, [id], contentId => {
+    let elm = content.document.getElementById(contentId);
+    while (elm.firstChild) {
+      elm.firstChild.remove();
+    }
+  });
+  let event = await nameChange;
 
   // Update accessible just in case it is now defunct.
   target.acc = findAccessibleChildByID(event.accessible, id);
@@ -494,8 +462,8 @@ async function testSubtreeRule(browser, target, rule, expected) {
  * Iterate over a list of rules and test accessible names for each one of the
  * rules.
  * @param {Object} browser      current "tabbrowser" element
- * @param {Object} target       { acc, parent, id } structure that contains an
- *                               accessible, its parent and its content element
+ * @param {Object} target       { acc, id } structure that contains an
+ *                               accessible and its content element
  *                               id.
  * @param {Array}  ruleset      A list of rules to test a target with
  * @param {Array}  expected     A list of expected name value for each rule
@@ -528,9 +496,7 @@ markupTests.forEach(({ id, ruleset, markup, expected }) =>
       Services.obs.addObserver(observer, "accessible-event");
       // Find a target accessible from an accessible subtree.
       let acc = findAccessibleChildByID(accDoc, id);
-      // Find target's parent accessible from an accessible subtree.
-      let parent = getAccessibleDOMNodeID(acc.parent);
-      let target = { id, parent, acc };
+      let target = { id, acc };
       await testNameRule(browser, target, rules[ruleset], expected);
       Services.obs.removeObserver(observer, "accessible-event");
     },

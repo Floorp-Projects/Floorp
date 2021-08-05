@@ -63,12 +63,11 @@ bool EventQueue::PushNameOrDescriptionChange(LocalAccessible* aTarget) {
   // Only continue traversing up the tree if it's possible that the parent
   // LocalAccessible's name (or a LocalAccessible being labelled by this
   // LocalAccessible or an ancestor) can depend on this LocalAccessible's name.
-  LocalAccessible* parent = aTarget->LocalParent();
-  while (parent &&
-         nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeIfReqRule)) {
+  LocalAccessible* parent = aTarget;
+  do {
     // Test possible name dependent parent.
     if (doName) {
-      if (nameCheckAncestor &&
+      if (nameCheckAncestor && parent != aTarget &&
           nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeRule)) {
         nsAutoString name;
         ENameValueFlag nameFlag = parent->Name(name);
@@ -99,7 +98,9 @@ bool EventQueue::PushNameOrDescriptionChange(LocalAccessible* aTarget) {
     }
 
     parent = parent->LocalParent();
-  }
+  } while (parent &&
+           nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeIfReqRule));
+
   return pushed;
 }
 
