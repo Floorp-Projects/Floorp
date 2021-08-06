@@ -19,6 +19,7 @@
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/CSPMessageUtils.h"
@@ -1376,8 +1377,12 @@ void SessionHistoryEntry::SetFrameLoader(nsFrameLoader* aFrameLoader) {
   MOZ_RELEASE_ASSERT(!aFrameLoader || mozilla::BFCacheInParent());
   SharedInfo()->SetFrameLoader(aFrameLoader);
   if (aFrameLoader) {
-    if (BrowserParent* bp = aFrameLoader->GetBrowserParent()) {
-      bp->Deactivated();
+    if (BrowsingContext* bc = aFrameLoader->GetMaybePendingBrowsingContext()) {
+      bc->PreOrderWalk([&](BrowsingContext* aContext) {
+        if (BrowserParent* bp = aContext->Canonical()->GetBrowserParent()) {
+          bp->Deactivated();
+        }
+      });
     }
 
     // When a new frameloader is stored, try to evict some older
