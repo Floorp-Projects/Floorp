@@ -38,6 +38,7 @@ internal fun Suggestion(
     Row(
         modifier = Modifier
             .clickable { onSuggestionClicked(suggestion) }
+            .height(56.dp)
             .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp)
     ) {
         val icon = suggestion.icon
@@ -50,7 +51,9 @@ internal fun Suggestion(
         SuggestionTitleAndDescription(
             title = suggestion.title,
             description = suggestion.description,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .align(Alignment.CenterVertically)
         )
         if (suggestion.editSuggestion != null) {
             AutocompleteButton(
