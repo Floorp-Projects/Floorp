@@ -41,6 +41,50 @@ def test_html_document(session, inline):
     # TODO: Test that the output is reasonable
     assert_pdf(pdf)
 
+def test_large_html_document(session, inline):
+    session.url = inline("<div id=\"root\"></div>")
+
+    session.execute_script(
+        """
+        const root = document.getElementById("root");
+
+        const width = 400;
+        const height = 600;
+        const rects = [];
+
+        for (let x = 0; x < width; ++x) {
+            for (let y = 0; y < height; ++y) {
+                const colourHex = Math.floor(Math.random() * 0xffffff).toString(16);
+
+                rects.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="#${colourHex}" />`);
+            }
+        }
+
+        const svg = `
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 ${width} ${height}"
+                width="${width}"
+                height="${height}"
+            >
+                ${rects.join("")}
+            </svg>
+        `;
+
+        root.insertAdjacentHTML("beforeend", svg);
+        """
+    )
+
+    response = do_print(session, {})
+    value = assert_success(response)
+    pdf = decodebytes(value.encode())
+
+    # This was added to test the fix for a bug in firefox where a PDF larger
+    # than 500kb would cause an error. If the resulting PDF is smaller than that
+    # it could pass incorrectly.
+    assert len(pdf) > 500000
+    assert_pdf(pdf)
+
 
 @pytest.mark.parametrize("options", [{"orientation": 0},
                                      {"orientation": "foo"},
