@@ -481,7 +481,7 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
 already_AddRefed<nsFrameLoader> nsFrameLoader::Recreate(
     mozilla::dom::Element* aOwner, BrowsingContext* aContext,
     BrowsingContextGroup* aSpecificGroup,
-    const NavigationIsolationOptions& aRemotenessOptions, bool aIsRemote,
+    const RemotenessChangeOptions& aRemotenessOptions, bool aIsRemote,
     bool aNetworkCreated, bool aPreserveContext) {
   NS_ENSURE_TRUE(aOwner, nullptr);
 
@@ -719,16 +719,6 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
     loadState->SetLoadFlags(flags);
 
     loadState->SetFirstParty(false);
-
-    // If we're loading the default about:blank document in a <browser> element,
-    // prevent the load from causing a process switch by explicitly overriding
-    // remote type selection.
-    if (mPendingBrowsingContext->IsTopContent() &&
-        mOwnerContent->IsXULElement(nsGkAtoms::browser) &&
-        NS_IsAboutBlank(mURIToLoad) &&
-        loadState->TriggeringPrincipal()->IsSystemPrincipal()) {
-      loadState->SetRemoteTypeOverride(mRemoteType);
-    }
   }
 
   if (IsRemoteFrame()) {

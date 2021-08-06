@@ -2074,6 +2074,7 @@
 
       const defaultBrowserAttributes = {
         contextmenu: "contentAreaContextMenu",
+        maychangeremoteness: "true",
         message: "true",
         messagemanagergroup: "browsers",
         selectmenulist: "ContentSelectDropdown",
@@ -2082,10 +2083,6 @@
       };
       for (let attribute in defaultBrowserAttributes) {
         b.setAttribute(attribute, defaultBrowserAttributes[attribute]);
-      }
-
-      if (gMultiProcessBrowser || remoteType) {
-        b.setAttribute("maychangeremoteness", "true");
       }
 
       if (!initiallyActive) {
