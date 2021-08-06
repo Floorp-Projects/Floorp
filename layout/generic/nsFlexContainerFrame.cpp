@@ -412,6 +412,13 @@ class nsFlexContainerFrame::FlexItem final {
       return mAscent;
     }
 
+    // If the nsLayoutUtils getter fails, then ask the frame directly:
+    auto baselineGroup = aUseFirstBaseline ? BaselineSharingGroup::First
+                                           : BaselineSharingGroup::Last;
+    if (mFrame->GetNaturalBaselineBOffset(mWM, baselineGroup, &mAscent)) {
+      return mAscent;
+    }
+
     // We couldn't determine a baseline, so we synthesize one from border box:
     mAscent = mFrame->SynthesizeBaselineBOffsetFromBorderBox(
         mWM, BaselineSharingGroup::First);
