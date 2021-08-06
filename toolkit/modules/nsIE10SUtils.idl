@@ -21,31 +21,6 @@ interface nsIE10SUtils : nsISupports {
   };
 
   /**
-   * Determine what remote type should be used to load a document with the given
-   * principal.
-   *
-   * @param aPrincipal  The result principal for the document being loaded.
-   * @param aChannelOriginalURI. The original URI being loaded
-   *                             (which isn't always the same as the Principal's
-   *                              URI)
-   * @param aMultiProcess  Does the browser have remote tabs enabled.
-   * @param aRemoteSubframes  Does the browser have remote subframes enabled.
-   * @param aPreferredRemoteType  If multiple remote types are compatible with
-   *                              the load, prefer staying in this remote type.
-   * @param aCurrentPrincipal  The principal of the currently loaded document.
-   * @param aIsSubframe  Is the process switch occuring in a subframe.
-   *
-   * @return  The remote type to complete this load in.
-   */
-  AUTF8String getRemoteTypeForPrincipal(in nsIPrincipal aPrincipal,
-                                        in nsIURI aChannelOriginalURI,
-                                        in boolean aMultiProcess,
-                                        in boolean aRemoteSubframes,
-                                        in AUTF8String aPreferredRemoteType,
-                                        in nsIPrincipal aCurrentPrincipal,
-                                        in boolean aIsSubframe);
-
-  /**
    * Determine what remote type should be used to launch a worker script with
    * the given principal.
    *

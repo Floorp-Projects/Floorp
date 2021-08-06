@@ -481,7 +481,7 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
 already_AddRefed<nsFrameLoader> nsFrameLoader::Recreate(
     mozilla::dom::Element* aOwner, BrowsingContext* aContext,
     BrowsingContextGroup* aSpecificGroup,
-    const RemotenessChangeOptions& aRemotenessOptions, bool aIsRemote,
+    const NavigationIsolationOptions& aRemotenessOptions, bool aIsRemote,
     bool aNetworkCreated, bool aPreserveContext) {
   NS_ENSURE_TRUE(aOwner, nullptr);
 
