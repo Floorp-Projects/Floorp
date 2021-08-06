@@ -875,8 +875,8 @@ void gfxDWriteFontEntry::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 // gfxDWriteFontList
 
 gfxDWriteFontList::gfxDWriteFontList() : mForceGDIClassicMaxFontSize(0.0) {
-  CheckFamilyList(kBaseFonts, ArrayLength(kBaseFonts));
-  CheckFamilyList(kLangPackFonts, ArrayLength(kLangPackFonts));
+  CheckFamilyList(kBaseFonts);
+  CheckFamilyList(kLangPackFonts);
 }
 
 // bug 602792 - CJK systems default to large CJK fonts which cause excessive
@@ -1100,10 +1100,10 @@ gfxFontEntry* gfxDWriteFontList::CreateFontEntry(
 
 FontVisibility gfxDWriteFontList::GetVisibilityForFamily(
     const nsACString& aName) const {
-  if (FamilyInList(aName, kBaseFonts, ArrayLength(kBaseFonts))) {
+  if (FamilyInList(aName, kBaseFonts)) {
     return FontVisibility::Base;
   }
-  if (FamilyInList(aName, kLangPackFonts, ArrayLength(kLangPackFonts))) {
+  if (FamilyInList(aName, kLangPackFonts)) {
     return FontVisibility::LangPack;
   }
   return FontVisibility::User;

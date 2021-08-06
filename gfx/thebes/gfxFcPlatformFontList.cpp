@@ -1273,11 +1273,9 @@ gfxFcPlatformFontList::gfxFcPlatformFontList()
       mFcSubstituteCache(64),
       mLastConfig(nullptr),
       mAlwaysUseFontconfigGenerics(true) {
-  CheckFamilyList(kBaseFonts_Ubuntu_20_04,
-                  ArrayLength(kBaseFonts_Ubuntu_20_04));
-  CheckFamilyList(kLangFonts_Ubuntu_20_04,
-                  ArrayLength(kLangFonts_Ubuntu_20_04));
-  CheckFamilyList(kBaseFonts_Fedora_32, ArrayLength(kBaseFonts_Fedora_32));
+  CheckFamilyList(kBaseFonts_Ubuntu_20_04);
+  CheckFamilyList(kLangFonts_Ubuntu_20_04);
+  CheckFamilyList(kBaseFonts_Fedora_32);
   mLastConfig = FcConfigGetCurrent();
   if (XRE_IsParentProcess()) {
     // if the rescan interval is set, start the timer
@@ -1870,18 +1868,15 @@ FontVisibility gfxFcPlatformFontList::GetVisibilityForFamily(
     const nsACString& aName) const {
   switch (GetDistroID()) {
     case DistroID::Ubuntu:
-      if (FamilyInList(aName, kBaseFonts_Ubuntu_20_04,
-                       ArrayLength(kBaseFonts_Ubuntu_20_04))) {
+      if (FamilyInList(aName, kBaseFonts_Ubuntu_20_04)) {
         return FontVisibility::Base;
       }
-      if (FamilyInList(aName, kLangFonts_Ubuntu_20_04,
-                       ArrayLength(kLangFonts_Ubuntu_20_04))) {
+      if (FamilyInList(aName, kLangFonts_Ubuntu_20_04)) {
         return FontVisibility::LangPack;
       }
       return FontVisibility::User;
     case DistroID::Fedora:
-      if (FamilyInList(aName, kBaseFonts_Fedora_32,
-                       ArrayLength(kBaseFonts_Fedora_32))) {
+      if (FamilyInList(aName, kBaseFonts_Fedora_32)) {
         return FontVisibility::Base;
       }
       return FontVisibility::User;
