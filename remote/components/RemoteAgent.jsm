@@ -98,6 +98,17 @@ class RemoteAgentClass {
     return this._webDriverBiDi;
   }
 
+  handle(cmdLine) {
+    // remote-debugging-port has to be consumed in nsICommandLineHandler:handle
+    // to avoid issues on macos. See Marionette.jsm::handle() for more details.
+    // TODO: remove after Bug 1724251 is fixed.
+    try {
+      cmdLine.handleFlagWithParam("remote-debugging-port", false);
+    } catch (e) {
+      cmdLine.handleFlag("remote-debugging-port", false);
+    }
+  }
+
   async listen(url) {
     if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
       throw Components.Exception(
