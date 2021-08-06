@@ -228,7 +228,9 @@ inline NSString* ToNSString(id aValue) {
   GeckoTextMarkerRange markerRange =
       [self textMarkerRangeFromRange:selectedTextRange];
 
-  markerRange.Select();
+  if (markerRange.IsValid()) {
+    markerRange.Select();
+  }
 }
 
 - (void)moxSetVisibleCharacterRange:(NSValue*)visibleCharacterRange {
