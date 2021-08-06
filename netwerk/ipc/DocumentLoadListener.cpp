@@ -22,6 +22,7 @@
 #include "mozilla/dom/ClientChannelHelper.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
+#include "mozilla/dom/ProcessIsolation.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ipc/IdType.h"
@@ -37,7 +38,6 @@
 #include "nsExternalHelperAppService.h"
 #include "nsHttpChannel.h"
 #include "nsIBrowser.h"
-#include "nsIE10SUtils.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIStreamConverterService.h"
 #include "nsIViewSourceChannel.h"
@@ -1474,52 +1474,28 @@ void DocumentLoadListener::SerializeRedirectData(
   }
 }
 
-static bool IsLargeAllocationLoad(CanonicalBrowsingContext* aBrowsingContext,
-                                  nsIChannel* aChannel) {
-  if (!StaticPrefs::dom_largeAllocationHeader_enabled() ||
-      aBrowsingContext->UseRemoteSubframes()) {
-    return false;
-  }
-
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (!httpChannel) {
-    return false;
-  }
-
-  nsAutoCString ignoredHeaderValue;
-  nsresult rv =
-      httpChannel->GetResponseHeader("Large-Allocation"_ns, ignoredHeaderValue);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  // On all platforms other than win32, LargeAllocation is disabled by default,
-  // and has to be force-enabled using `dom.largeAllocation.forceEnable`.
-#if defined(XP_WIN) && defined(_X86_)
-  return true;
-#else
-  return StaticPrefs::dom_largeAllocation_forceEnable();
-#endif
-}
-
 static bool ContextCanProcessSwitch(CanonicalBrowsingContext* aBrowsingContext,
                                     WindowGlobalParent* aParentWindow) {
   if (NS_WARN_IF(!aBrowsingContext)) {
-    LOG(("Process Switch Abort: no browsing context"));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+            ("Process Switch Abort: no browsing context"));
     return false;
   }
   if (!aBrowsingContext->IsContent()) {
-    LOG(("Process Switch Abort: non-content browsing context"));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+            ("Process Switch Abort: non-content browsing context"));
     return false;
   }
 
   if (aParentWindow && !aBrowsingContext->UseRemoteSubframes()) {
-    LOG(("Process Switch Abort: remote subframes disabled"));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+            ("Process Switch Abort: remote subframes disabled"));
     return false;
   }
 
   if (aParentWindow && aParentWindow->IsInProcess()) {
-    LOG(("Process Switch Abort: Subframe with in-process parent"));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+            ("Process Switch Abort: Subframe with in-process parent"));
     return false;
   }
 
@@ -1527,12 +1503,14 @@ static bool ContextCanProcessSwitch(CanonicalBrowsingContext* aBrowsingContext,
   // <browser> element.
   Element* browserElement = aBrowsingContext->Top()->GetEmbedderElement();
   if (!browserElement) {
-    LOG(("Process Switch Abort: cannot get embedder element"));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+            ("Process Switch Abort: cannot get embedder element"));
     return false;
   }
   nsCOMPtr<nsIBrowser> browser = browserElement->AsBrowser();
   if (!browser) {
-    LOG(("Process Switch Abort: not loaded within nsIBrowser"));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+            ("Process Switch Abort: not loaded within nsIBrowser"));
     return false;
   }
 
@@ -1542,19 +1520,22 @@ static bool ContextCanProcessSwitch(CanonicalBrowsingContext* aBrowsingContext,
   if (NS_FAILED(rv)) {
     MOZ_ASSERT_UNREACHABLE(
         "nsIBrowser::GetProcessSwitchBehavior shouldn't fail");
-    LOG(("Process Switch Abort: failed to get process switch behavior"));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+            ("Process Switch Abort: failed to get process switch behavior"));
     return false;
   }
 
   // Check if the process switch we're considering is disabled by the
   // <browser>'s process behavior.
   if (processBehavior == nsIBrowser::PROCESS_BEHAVIOR_DISABLED) {
-    LOG(("Process Switch Abort: switch disabled by <browser>"));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+            ("Process Switch Abort: switch disabled by <browser>"));
     return false;
   }
   if (!aParentWindow &&
       processBehavior == nsIBrowser::PROCESS_BEHAVIOR_SUBFRAME_ONLY) {
-    LOG(("Process Switch Abort: toplevel switch disabled by <browser>"));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+            ("Process Switch Abort: toplevel switch disabled by <browser>"));
     return false;
   }
 
@@ -1570,19 +1551,25 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   MOZ_DIAGNOSTIC_ASSERT(mParentChannelListener);
   MOZ_DIAGNOSTIC_ASSERT(aWillSwitchToRemote);
 
-  LOG(("DocumentLoadListener MaybeTriggerProcessSwitch [this=%p]", this));
+  MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+          ("DocumentLoadListener MaybeTriggerProcessSwitch [this=%p, uri=%s, "
+           "browserid=%" PRIx64 "]",
+           this, mChannelCreationURI->GetSpecOrDefault().get(),
+           GetLoadingBrowsingContext()->Top()->BrowserId()));
 
   // If we're doing an <object>/<embed> load, we may be doing a document load at
   // this point. We never need to do a process switch for a non-document
   // <object> or <embed> load.
   if (!mIsDocumentLoad) {
     if (!mChannel->IsDocument()) {
-      LOG(("Process Switch Abort: non-document load"));
+      MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+              ("Process Switch Abort: non-document load"));
       return false;
     }
     nsresult status;
     if (!nsObjectLoadingContent::IsSuccessfulRequest(mChannel, &status)) {
-      LOG(("Process Switch Abort: error page"));
+      MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+              ("Process Switch Abort: error page"));
       return false;
     }
   }
@@ -1602,178 +1589,77 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     return false;
   }
 
-  // Get the final principal, used to select which process to load into.
-  nsCOMPtr<nsIPrincipal> resultPrincipal;
-  nsresult rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
-      mChannel, getter_AddRefs(resultPrincipal));
-  if (NS_FAILED(rv)) {
-    LOG(("Process Switch Abort: failed to get channel result principal"));
+  if (!browsingContext->IsOwnedByProcess(GetContentProcessId(mContentParent))) {
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Error,
+            ("Process Switch Abort: context no longer owned by creator"));
+    Cancel(NS_BINDING_ABORTED);
+    return false;
+  }
+
+  if (browsingContext->IsReplaced()) {
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+            ("Process Switch Abort: replaced browsing context"));
+    Cancel(NS_BINDING_ABORTED);
     return false;
   }
 
   nsAutoCString currentRemoteType(NOT_REMOTE_TYPE);
-  if (RefPtr<ContentParent> contentParent =
-          browsingContext->GetContentParent()) {
-    currentRemoteType = contentParent->GetRemoteType();
-  }
-  MOZ_ASSERT_IF(currentRemoteType.IsEmpty(), !OtherPid());
-
-  // Determine what type of content process this load should finish in.
-  nsAutoCString preferredRemoteType(currentRemoteType);
-  RemotenessChangeOptions options;
-
-  // If there is a remote type override, default to it.
-  if (mRemoteTypeOverride) {
-    preferredRemoteType = *mRemoteTypeOverride;
+  if (mContentParent) {
+    currentRemoteType = mContentParent->GetRemoteType();
   }
 
-  // Update the preferred final process for our load based on the
-  // Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy headers.
-  {
-    bool isCOOPSwitch = HasCrossOriginOpenerPolicyMismatch();
-    options.mReplaceBrowsingContext |= isCOOPSwitch;
-
-    // Determine our COOP status, which will be used to determine our preferred
-    // remote type.
-    nsILoadInfo::CrossOriginOpenerPolicy coop =
-        nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
-    if (parentWindow) {
-      coop = browsingContext->Top()->GetOpenerPolicy();
-    } else if (nsCOMPtr<nsIHttpChannelInternal> httpChannel =
-                   do_QueryInterface(mChannel)) {
-      MOZ_ALWAYS_SUCCEEDS(httpChannel->GetCrossOriginOpenerPolicy(&coop));
-    }
-
-    if (coop ==
-        nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP) {
-      // We want documents with SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP COOP
-      // policy to be loaded in a separate process in which we can enable
-      // high-resolution timers.
-      nsAutoCString siteOrigin;
-      resultPrincipal->GetSiteOrigin(siteOrigin);
-      preferredRemoteType = WITH_COOP_COEP_REMOTE_TYPE_PREFIX;
-      preferredRemoteType.Append(siteOrigin);
-    } else if (isCOOPSwitch) {
-      // If we're doing a COOP switch, we do not need any affinity to the
-      // current remote type. Clear it back to the default value.
-      preferredRemoteType = DEFAULT_REMOTE_TYPE;
-    }
-  }
-
-  // If we're performing a large allocation load, override the remote type
-  // with `LARGE_ALLOCATION_REMOTE_TYPE` to move it into an exclusive content
-  // process. If we're already in one, and don't otherwise we force ourselves
-  // out of that content process.
-  if (!parentWindow && browsingContext->Group()->Toplevels().Length() == 1) {
-    if (IsLargeAllocationLoad(browsingContext, mChannel)) {
-      preferredRemoteType = LARGE_ALLOCATION_REMOTE_TYPE;
-      options.mReplaceBrowsingContext = true;
-    } else if (preferredRemoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
-      preferredRemoteType = DEFAULT_REMOTE_TYPE;
-      options.mReplaceBrowsingContext = true;
-    }
-  }
-
-  // Put toplevel BrowsingContexts which load within the extension process into
-  // a specific BrowsingContextGroup.
-  if (auto* addonPolicy = BasePrincipal::Cast(resultPrincipal)->AddonPolicy()) {
-    if (!parentWindow) {
-      // Toplevel extension BrowsingContexts must be loaded in the extension
-      // browsing context group, within the extension content process.
-      if (ExtensionPolicyService::GetSingleton().UseRemoteExtensions()) {
-        preferredRemoteType = EXTENSION_REMOTE_TYPE;
-      } else {
-        preferredRemoteType = NOT_REMOTE_TYPE;
-      }
-
-      if (browsingContext->Group()->Id() !=
-          addonPolicy->GetBrowsingContextGroupId()) {
-        options.mReplaceBrowsingContext = true;
-        options.mSpecificGroupId = addonPolicy->GetBrowsingContextGroupId();
-      }
-    } else {
-      // As a temporary measure, extension iframes must be loaded within the
-      // same process as their parent document.
-      preferredRemoteType = parentWindow->GetRemoteType();
-    }
-  }
-
-  LOG(
-      ("DocumentLoadListener GetRemoteTypeForPrincipal "
-       "[this=%p, contentParent=%s, preferredRemoteType=%s]",
-       this, currentRemoteType.get(), preferredRemoteType.get()));
-
-  nsCOMPtr<nsIE10SUtils> e10sUtils = do_ImportModule(
-      "resource://gre/modules/E10SUtils.jsm", "E10SUtils", fallible);
-  if (!e10sUtils) {
-    LOG(("Process Switch Abort: Could not import E10SUtils"));
+  auto optionsResult = IsolationOptionsForNavigation(
+      browsingContext->Top(), parentWindow, mChannelCreationURI, mChannel,
+      currentRemoteType, HasCrossOriginOpenerPolicyMismatch(),
+      mLoadStateLoadType, mDocumentChannelId, mRemoteTypeOverride);
+  if (optionsResult.isErr()) {
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Error,
+            ("Process Switch Abort: CheckIsolationForNavigation Failed with %s",
+             GetStaticErrorName(optionsResult.inspectErr())));
+    Cancel(optionsResult.unwrapErr());
     return false;
   }
 
-  // Get information about the current document loaded in our BrowsingContext.
-  nsCOMPtr<nsIPrincipal> currentPrincipal;
-  RefPtr<WindowGlobalParent> wgp = browsingContext->GetCurrentWindowGlobal();
-  if (wgp) {
-    currentPrincipal = wgp->DocumentPrincipal();
-  }
+  NavigationIsolationOptions options = optionsResult.unwrap();
 
-  rv = e10sUtils->GetRemoteTypeForPrincipal(
-      resultPrincipal, mChannelCreationURI, browsingContext->UseRemoteTabs(),
-      browsingContext->UseRemoteSubframes(), preferredRemoteType,
-      currentPrincipal, parentWindow, options.mRemoteType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Process Switch Abort: getRemoteTypeForPrincipal threw an exception"));
-    return false;
-  }
-
-  // If the final decision is to switch from an 'extension' remote type to any
-  // other remote type, ensure the browsing context is replaced so that we leave
-  // the extension-specific BrowsingContextGroup.
-  if (!parentWindow && currentRemoteType != options.mRemoteType &&
-      currentRemoteType == EXTENSION_REMOTE_TYPE) {
-    options.mReplaceBrowsingContext = true;
-  }
-
-  if (mozilla::BFCacheInParent() && nsSHistory::GetMaxTotalViewers() > 0 &&
-      !parentWindow && !browsingContext->HadOriginalOpener() &&
-      !options.mRemoteType.IsEmpty() &&
-      browsingContext->GetHasLoadedNonInitialDocument() &&
-      (mLoadStateLoadType == LOAD_NORMAL ||
-       mLoadStateLoadType == LOAD_HISTORY || mLoadStateLoadType == LOAD_LINK ||
-       mLoadStateLoadType == LOAD_STOP_CONTENT ||
-       mLoadStateLoadType == LOAD_STOP_CONTENT_AND_REPLACE) &&
-      (!browsingContext->GetActiveSessionHistoryEntry() ||
-       browsingContext->GetActiveSessionHistoryEntry()
-           ->GetSaveLayoutStateFlag())) {
-    MOZ_ASSERT(mIsDocumentLoad);
-    options.mTryUseBFCache =
-        browsingContext->AllowedInBFCache(mDocumentChannelId);
-    if (options.mTryUseBFCache) {
-      options.mReplaceBrowsingContext = true;
-      options.mActiveSessionHistoryEntry =
-          browsingContext->GetActiveSessionHistoryEntry();
-      // We only reset the window name for content.
-      mLoadingSessionHistoryInfo->mForceMaybeResetName.emplace(
-          StaticPrefs::privacy_window_name_update_enabled() &&
-          browsingContext->IsContent() &&
-          (!currentPrincipal ||
-           !currentPrincipal->EqualsConsideringDomain(resultPrincipal)));
+  if (options.mTryUseBFCache) {
+    MOZ_ASSERT(!parentWindow, "Can only BFCache toplevel windows");
+    bool sameOrigin = false;
+    if (auto* wgp = browsingContext->GetCurrentWindowGlobal()) {
+      nsCOMPtr<nsIPrincipal> resultPrincipal;
+      MOZ_ALWAYS_SUCCEEDS(
+          nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+              mChannel, getter_AddRefs(resultPrincipal)));
+      sameOrigin =
+          wgp->DocumentPrincipal()->EqualsConsideringDomain(resultPrincipal);
     }
+
+    // We only reset the window name for content.
+    mLoadingSessionHistoryInfo->mForceMaybeResetName.emplace(
+        StaticPrefs::privacy_window_name_update_enabled() &&
+        browsingContext->IsContent() && !sameOrigin);
   }
 
-  LOG(("GetRemoteTypeForPrincipal -> current:%s remoteType:%s",
-       currentRemoteType.get(), options.mRemoteType.get()));
+  MOZ_LOG(
+      gProcessIsolationLog, LogLevel::Verbose,
+      ("CheckIsolationForNavigation -> current:(%s) remoteType:(%s) replace:%d "
+       "group:%" PRIx64 " bfcache:%d shentry:%p",
+       currentRemoteType.get(), options.mRemoteType.get(),
+       options.mReplaceBrowsingContext, options.mSpecificGroupId,
+       options.mTryUseBFCache, options.mActiveSessionHistoryEntry.get()));
 
   // Check if a process switch is needed.
   if (currentRemoteType == options.mRemoteType &&
       !options.mReplaceBrowsingContext) {
-    LOG(("Process Switch Abort: type (%s) is compatible",
-         options.mRemoteType.get()));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Info,
+            ("Process Switch Abort: type (%s) is compatible",
+             options.mRemoteType.get()));
     return false;
   }
 
   if (NS_WARN_IF(parentWindow && options.mRemoteType.IsEmpty())) {
-    LOG(("Process Switch Abort: non-remote target process for subframe"));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Error,
+            ("Process Switch Abort: non-remote target process for subframe"));
     return false;
   }
 
@@ -1790,29 +1676,32 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   // object load. We need a BrowsingContext to perform the switch in, so will
   // trigger an upgrade.
   if (!mObjectUpgradeHandler) {
-    LOG(("Process Switch Abort: no object upgrade handler"));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+            ("Process Switch Abort: no object upgrade handler"));
     return false;
   }
 
   if (!StaticPrefs::fission_remoteObjectEmbed()) {
-    LOG(("Process Switch Abort: remote <object>/<embed> disabled"));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+            ("Process Switch Abort: remote <object>/<embed> disabled"));
     return false;
   }
 
   mObjectUpgradeHandler->UpgradeObjectLoad()->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self = RefPtr{this}, options,
-       wgp](const RefPtr<CanonicalBrowsingContext>& aBrowsingContext) mutable {
+      [self = RefPtr{this}, options, parentWindow](
+          const RefPtr<CanonicalBrowsingContext>& aBrowsingContext) mutable {
         if (aBrowsingContext->IsDiscarded() ||
-            wgp != aBrowsingContext->GetParentWindowContext()) {
-          LOG(
-              ("Process Switch: Got invalid BrowsingContext from object "
-               "upgrade!"));
+            parentWindow != aBrowsingContext->GetParentWindowContext()) {
+          MOZ_LOG(gProcessIsolationLog, LogLevel::Error,
+                  ("Process Switch: Got invalid BrowsingContext from object "
+                   "upgrade!"));
           self->RedirectToRealChannelFinished(NS_ERROR_FAILURE);
           return;
         }
 
-        LOG(("Process Switch: Upgraded Object to Document Load"));
+        MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+                ("Process Switch: Upgraded Object to Document Load"));
         self->TriggerProcessSwitch(aBrowsingContext, options);
       },
       [self = RefPtr{this}](nsresult aStatusCode) {
@@ -1824,7 +1713,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 
 void DocumentLoadListener::TriggerProcessSwitch(
     CanonicalBrowsingContext* aContext,
-    const RemotenessChangeOptions& aOptions) {
+    const NavigationIsolationOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(
       aContext->IsOwnedByProcess(GetContentProcessId(mContentParent)),
       "not owned by creator process anymore?");
@@ -1833,8 +1722,9 @@ void DocumentLoadListener::TriggerProcessSwitch(
     currentRemoteType = mContentParent->GetRemoteType();
   }
 
-  LOG(("Process Switch: Changing Remoteness from '%s' to '%s'",
-       currentRemoteType.get(), aOptions.mRemoteType.get()));
+  MOZ_LOG(gProcessIsolationLog, LogLevel::Info,
+          ("Process Switch: Changing Remoteness from '%s' to '%s'",
+           currentRemoteType.get(), aOptions.mRemoteType.get()));
 
   // We're now committing to a process switch, so we can disconnect from
   // the listeners in the old process.
@@ -1842,7 +1732,8 @@ void DocumentLoadListener::TriggerProcessSwitch(
 
   DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, true);
 
-  LOG(("Process Switch: Calling ChangeRemoteness"));
+  MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+          ("Process Switch: Calling ChangeRemoteness"));
   aContext->ChangeRemoteness(aOptions, mLoadIdentifier)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
