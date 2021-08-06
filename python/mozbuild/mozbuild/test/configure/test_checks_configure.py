@@ -749,7 +749,7 @@ and/or set $JAVA_HOME.
                 compile_environment = depends(when='--enable-compile-environment')(lambda: True)
                 toolchain_prefix = depends(when=True)(lambda: None)
                 multiarch_dir = depends(when=True)(lambda: None)
-                target_sysroot_path = depends(when=True)(lambda: None)
+                target_sysroot = depends(when=True)(lambda: None)
                 include('%(topsrcdir)s/build/moz.configure/util.configure')
                 include('%(topsrcdir)s/build/moz.configure/checks.configure')
                 include('%(topsrcdir)s/build/moz.configure/pkg.configure')
