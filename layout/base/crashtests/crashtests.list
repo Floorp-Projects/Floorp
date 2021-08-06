@@ -511,7 +511,7 @@ load 1470499.html
 pref(layout.accessiblecaret.enabled,true) load 1472020.html
 load 1472027.html
 asserts-if(Android,0-3) load 1477847.html
-skip-if(verify&&Android) pref(layout.accessiblecaret.enabled,true) load 1486521.html
+pref(layout.accessiblecaret.enabled,true) load 1486521.html
 load 1489149.html
 load 1490037.html
 load 1494332.html
