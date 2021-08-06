@@ -16,7 +16,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Services.h"
 #include "nsString.h"
-#include "js/PropertyAndElement.h" // JS_Enumerate, JS_GetElement, JS_GetProperty, JS_GetPropertyById, JS_HasOwnProperty, JS_SetUCProperty
+#include "js/PropertyAndElement.h"  // JS_Enumerate, JS_GetElement, JS_GetProperty, JS_GetPropertyById, JS_HasOwnProperty, JS_SetUCProperty
 
 #import "mozAccessible.h"
 
