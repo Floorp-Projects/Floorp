@@ -57,9 +57,6 @@ extern JS_PUBLIC_API JSString* JS_NewStringCopyUTF8Z(
 extern JS_PUBLIC_API JSString* JS_NewStringCopyUTF8N(JSContext* cx,
                                                      const JS::UTF8Chars s);
 
-extern JS_PUBLIC_API JSString* JS_AtomizeAndPinJSString(JSContext* cx,
-                                                        JS::HandleString str);
-
 extern JS_PUBLIC_API JSString* JS_AtomizeStringN(JSContext* cx, const char* s,
                                                  size_t length);
 
@@ -95,13 +92,6 @@ extern JS_PUBLIC_API JSString* JS_AtomizeUCStringN(JSContext* cx,
 
 extern JS_PUBLIC_API JSString* JS_AtomizeUCString(JSContext* cx,
                                                   const char16_t* s);
-
-extern JS_PUBLIC_API JSString* JS_AtomizeAndPinUCStringN(JSContext* cx,
-                                                         const char16_t* s,
-                                                         size_t length);
-
-extern JS_PUBLIC_API JSString* JS_AtomizeAndPinUCString(JSContext* cx,
-                                                        const char16_t* s);
 
 extern JS_PUBLIC_API bool JS_CompareStrings(JSContext* cx, JSString* str1,
                                             JSString* str2, int32_t* result);
