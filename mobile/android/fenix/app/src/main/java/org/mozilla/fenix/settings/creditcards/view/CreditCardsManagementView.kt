@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.settings.creditcards.view
 
-import android.view.LayoutInflater
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import org.mozilla.fenix.R
@@ -23,8 +22,6 @@ class CreditCardsManagementView(
     private val creditCardsAdapter = CreditCardsAdapter(interactor)
 
     init {
-        LayoutInflater.from(binding.root.context).inflate(LAYOUT_ID, binding.root, true)
-
         binding.creditCardsList.apply {
             adapter = creditCardsAdapter
             layoutManager = LinearLayoutManager(binding.root.context)
