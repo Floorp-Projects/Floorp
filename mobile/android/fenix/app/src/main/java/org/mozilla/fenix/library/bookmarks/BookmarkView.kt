@@ -5,16 +5,15 @@
 package org.mozilla.fenix.library.bookmarks
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.navigation.NavController
-import kotlinx.android.synthetic.main.component_bookmark.view.*
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.ComponentBookmarkBinding
 import org.mozilla.fenix.library.LibraryPageView
 import org.mozilla.fenix.selection.SelectionInteractor
 
@@ -106,22 +105,23 @@ class BookmarkView(
     private val navController: NavController
 ) : LibraryPageView(container), UserInteractionHandler {
 
-    val view: View = LayoutInflater.from(container.context)
-        .inflate(R.layout.component_bookmark, container, true)
+    val binding = ComponentBookmarkBinding.inflate(
+        LayoutInflater.from(container.context), container, true
+    )
 
     private var mode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal()
     private var tree: BookmarkNode? = null
 
-    private val bookmarkAdapter = BookmarkAdapter(view.bookmarks_empty_view, interactor)
+    private val bookmarkAdapter = BookmarkAdapter(binding.bookmarksEmptyView, interactor)
 
     init {
-        view.bookmark_list.apply {
+        binding.bookmarkList.apply {
             adapter = bookmarkAdapter
         }
-        view.bookmark_folders_sign_in.setOnClickListener {
+        binding.bookmarkFoldersSignIn.setOnClickListener {
             navController.navigate(NavGraphDirections.actionGlobalTurnOnSync())
         }
-        view.swipe_refresh.setOnRefreshListener {
+        binding.swipeRefresh.setOnRefreshListener {
             interactor.onRequestSync()
         }
     }
@@ -150,10 +150,10 @@ class BookmarkView(
                 )
             }
         }
-        view.bookmarks_progress_bar.isVisible = state.isLoading
-        view.swipe_refresh.isEnabled =
+        binding.bookmarksProgressBar.isVisible = state.isLoading
+        binding.swipeRefresh.isEnabled =
             state.mode is BookmarkFragmentState.Mode.Normal || state.mode is BookmarkFragmentState.Mode.Syncing
-        view.swipe_refresh.isRefreshing = state.mode is BookmarkFragmentState.Mode.Syncing
+        binding.swipeRefresh.isRefreshing = state.mode is BookmarkFragmentState.Mode.Syncing
     }
 
     override fun onBackPressed(): Boolean {
