@@ -685,6 +685,7 @@ void nsPACMan::ContinueLoadingAfterPACUriKnown() {
         // allow deprecated HTTP request from SystemPrincipal
         nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
         loadInfo->SetAllowDeprecatedSystemRequests(true);
+        loadInfo->SetHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_EXEMPT);
 
         channel->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE);
         channel->SetNotificationCallbacks(this);
