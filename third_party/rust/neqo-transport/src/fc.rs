@@ -17,7 +17,7 @@ use crate::recovery::RecoveryToken;
 use crate::stats::FrameStats;
 use crate::stream_id::{StreamId, StreamType};
 use crate::{Error, Res};
-use neqo_common::{qtrace, Role};
+use neqo_common::Role;
 
 use std::convert::TryFrom;
 use std::fmt::Debug;
@@ -203,11 +203,6 @@ where
     max_active: u64,
     /// Last max allowed sent.
     max_allowed: u64,
-    /// Item received, but not retired yet.
-    /// This will be used for byte flow control: each stream will remember is largest byte
-    /// offset received and session flow control will remember the sum of all bytes consumed
-    /// by all streams.
-    consumed: u64,
     /// Retired items.
     retired: u64,
     frame_pending: bool,
@@ -223,15 +218,19 @@ where
             subject,
             max_active: max,
             max_allowed: max,
-            consumed: 0,
             retired: 0,
             frame_pending: false,
         }
     }
 
+    /// Check if received item exceeds the allowed flow control limit.
+    pub fn check_allowed(&self, new_end: u64) -> bool {
+        new_end < self.max_allowed
+    }
+
     /// Retired some items and maybe send flow control
     /// update.
-    pub fn retire(&mut self, retired: u64) {
+    pub fn retired(&mut self, retired: u64) {
         if retired <= self.retired {
             return;
         }
@@ -278,14 +277,6 @@ where
         self.frame_pending |= self.max_active < max;
         self.max_active = max;
     }
-
-    pub fn retired(&self) -> u64 {
-        self.retired
-    }
-
-    pub fn consumed(&self) -> u64 {
-        self.consumed
-    }
 }
 
 impl ReceiverFlowControl<()> {
@@ -302,34 +293,6 @@ impl ReceiverFlowControl<()> {
                 self.frame_sent(max_allowed);
             }
         }
-    }
-
-    pub fn add_retired(&mut self, count: u64) {
-        debug_assert!(self.retired + count <= self.consumed);
-        self.retired += count;
-        if self.retired + self.max_active / 2 > self.max_allowed {
-            self.frame_pending = true;
-        }
-    }
-
-    pub fn consume(&mut self, count: u64) -> Res<()> {
-        if self.consumed + count > self.max_allowed {
-            qtrace!(
-                "Session RX window exceeded: consumed:{} new:{} limit:{}",
-                self.consumed,
-                count,
-                self.max_allowed
-            );
-            return Err(Error::FlowControlError);
-        }
-        self.consumed += count;
-        Ok(())
-    }
-}
-
-impl Default for ReceiverFlowControl<()> {
-    fn default() -> Self {
-        Self::new((), 0)
     }
 }
 
@@ -355,34 +318,6 @@ impl ReceiverFlowControl<StreamId> {
             }
         }
     }
-
-    pub fn add_retired(&mut self, count: u64) {
-        debug_assert!(self.retired + count <= self.consumed);
-        self.retired += count;
-        if self.retired + self.max_active / 2 > self.max_allowed {
-            self.frame_pending = true;
-        }
-    }
-
-    pub fn set_consumed(&mut self, consumed: u64) -> Res<u64> {
-        if consumed <= self.consumed {
-            return Ok(0);
-        }
-
-        if consumed > self.max_allowed {
-            qtrace!("Stream RX window exceeded: {}", consumed);
-            return Err(Error::FlowControlError);
-        }
-        let new_consumed = consumed - self.consumed;
-        self.consumed = consumed;
-        Ok(new_consumed)
-    }
-}
-
-impl Default for ReceiverFlowControl<StreamId> {
-    fn default() -> Self {
-        Self::new(StreamId::new(0), 0)
-    }
 }
 
 impl ReceiverFlowControl<StreamType> {
@@ -407,11 +342,6 @@ impl ReceiverFlowControl<StreamType> {
                 self.frame_sent(max_streams);
             }
         }
-    }
-
-    /// Check if received item exceeds the allowed flow control limit.
-    pub fn check_allowed(&self, new_end: u64) -> bool {
-        new_end < self.max_allowed
     }
 
     /// Retire given amount of additional data.
@@ -646,16 +576,16 @@ mod test {
     #[test]
     fn max_allowed_after_items_retired() {
         let mut fc = ReceiverFlowControl::new((), 100);
-        fc.retire(49);
+        fc.retired(49);
         assert_eq!(fc.frame_needed(), None);
-        fc.retire(51);
+        fc.retired(51);
         assert_eq!(fc.frame_needed(), Some(151));
     }
 
     #[test]
     fn need_max_allowed_frame_after_loss() {
         let mut fc = ReceiverFlowControl::new((), 100);
-        fc.retire(100);
+        fc.retired(100);
         assert_eq!(fc.frame_needed(), Some(200));
         fc.frame_sent(200);
         assert_eq!(fc.frame_needed(), None);
@@ -666,11 +596,11 @@ mod test {
     #[test]
     fn no_max_allowed_frame_after_old_loss() {
         let mut fc = ReceiverFlowControl::new((), 100);
-        fc.retire(51);
+        fc.retired(51);
         assert_eq!(fc.frame_needed(), Some(151));
         fc.frame_sent(151);
         assert_eq!(fc.frame_needed(), None);
-        fc.retire(102);
+        fc.retired(102);
         assert_eq!(fc.frame_needed(), Some(202));
         fc.frame_sent(202);
         assert_eq!(fc.frame_needed(), None);
@@ -681,24 +611,24 @@ mod test {
     #[test]
     fn force_send_max_allowed() {
         let mut fc = ReceiverFlowControl::new((), 100);
-        fc.retire(10);
+        fc.retired(10);
         assert_eq!(fc.frame_needed(), None);
     }
 
     #[test]
     fn multiple_retries_after_frame_pending_is_set() {
         let mut fc = ReceiverFlowControl::new((), 100);
-        fc.retire(51);
+        fc.retired(51);
         assert_eq!(fc.frame_needed(), Some(151));
-        fc.retire(61);
+        fc.retired(61);
         assert_eq!(fc.frame_needed(), Some(161));
-        fc.retire(88);
+        fc.retired(88);
         assert_eq!(fc.frame_needed(), Some(188));
-        fc.retire(90);
+        fc.retired(90);
         assert_eq!(fc.frame_needed(), Some(190));
         fc.frame_sent(190);
         assert_eq!(fc.frame_needed(), None);
-        fc.retire(141);
+        fc.retired(141);
         assert_eq!(fc.frame_needed(), Some(241));
         fc.frame_sent(241);
         assert_eq!(fc.frame_needed(), None);
@@ -707,11 +637,11 @@ mod test {
     #[test]
     fn new_retired_before_loss() {
         let mut fc = ReceiverFlowControl::new((), 100);
-        fc.retire(51);
+        fc.retired(51);
         assert_eq!(fc.frame_needed(), Some(151));
         fc.frame_sent(151);
         assert_eq!(fc.frame_needed(), None);
-        fc.retire(62);
+        fc.retired(62);
         assert_eq!(fc.frame_needed(), None);
         fc.frame_lost(151);
         assert_eq!(fc.frame_needed(), Some(162));
@@ -724,10 +654,10 @@ mod test {
         // There is no MAX_STREAM_DATA frame needed.
         assert_eq!(fc.frame_needed(), None);
         // We can still retire more than 50.
-        fc.retire(60);
+        fc.retired(60);
         // There is no MAX_STREAM_DATA fame needed yet.
         assert_eq!(fc.frame_needed(), None);
-        fc.retire(76);
+        fc.retired(76);
         assert_eq!(fc.frame_needed(), Some(126));
 
         // Increase max_active.
@@ -735,7 +665,7 @@ mod test {
         assert_eq!(fc.frame_needed(), Some(136));
 
         // We can retire more than 60.
-        fc.retire(136);
+        fc.retired(136);
         assert_eq!(fc.frame_needed(), Some(196));
     }
 
