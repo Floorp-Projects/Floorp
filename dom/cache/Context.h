@@ -64,7 +64,7 @@ class Manager;
 // the "profile-before-change" shutdown event to complete.  This is ensured
 // via the code in ShutdownObserver.cpp.
 class Context final : public SafeRefCounted<Context> {
-  typedef mozilla::dom::quota::DirectoryLock DirectoryLock;
+  using DirectoryLock = mozilla::dom::quota::DirectoryLock;
 
  public:
   // Define a class allowing other threads to hold the Context alive.  This also
