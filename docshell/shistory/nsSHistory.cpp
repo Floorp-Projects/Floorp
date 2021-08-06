@@ -41,6 +41,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProcessPriorityManager.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPtr.h"
@@ -1230,6 +1231,14 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
       aBrowsingContext->GetActiveSessionHistoryEntry()->SetFrameLoader(
           currentFrameLoader);
       Unused << aBrowsingContext->SetIsInBFCache(true);
+    }
+
+    if (aBrowsingContext->IsActive()) {
+      loadingBC->PreOrderWalk([&](BrowsingContext* aContext) {
+        if (BrowserParent* bp = aContext->Canonical()->GetBrowserParent()) {
+          ProcessPriorityManager::ActivityChanged(bp, true);
+        }
+      });
     }
 
     // ReplacedBy will swap the entry back.
