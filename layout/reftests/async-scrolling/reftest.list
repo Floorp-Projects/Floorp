@@ -28,14 +28,14 @@ fuzzy-if(Android,0-8,0-4) fuzzy-if(webrender&&gtkWidget,20-33,14-32) fuzzy-if(we
 skip-if(!asyncPan) == split-layers-1.html split-layers-1-ref.html
 skip-if(!asyncPan) == split-layers-multi-scrolling-1.html split-layers-multi-scrolling-1-ref.html
 fuzzy-if(skiaContent,0-2,0-240000) fuzzy-if(browserIsRemote&&!skiaContent&&(cocoaWidget||winWidget),0-1,0-240000) skip-if(!asyncPan) == split-opacity-layers-1.html split-opacity-layers-1-ref.html
-skip-if(!asyncPan) == sticky-pos-scrollable-1.html sticky-pos-scrollable-1-ref.html
+skip-if(!asyncPan) fuzzy-if(appleSilicon,0-1,0-8) == sticky-pos-scrollable-1.html sticky-pos-scrollable-1-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-2.html sticky-pos-scrollable-2-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-3.html sticky-pos-scrollable-3-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-4.html sticky-pos-scrollable-4-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-5.html sticky-pos-scrollable-5-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-6.html sticky-pos-scrollable-6-ref.html
-skip-if(!asyncPan) fuzzy-if(appleSilicon,1-1,8-8) == sticky-pos-scrollable-7.html sticky-pos-scrollable-7-ref.html
-skip-if(!asyncPan) fuzzy(0-2,0-2) fuzzy-if(gtkWidget&&!nativeThemePref,0-1,0-4) fuzzy-if(winWidget&&!nativeThemePref,0-1,0-51) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
+skip-if(!asyncPan) fuzzy-if(appleSilicon,0-1,0-8) == sticky-pos-scrollable-7.html sticky-pos-scrollable-7-ref.html
+skip-if(!asyncPan) fuzzy(0-2,0-2) fuzzy-if(gtkWidget&&!nativeThemePref,0-1,0-4) fuzzy-if(winWidget&&!nativeThemePref,0-1,0-51) fuzzy-if(appleSilicon,0-1,0-8) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
 skip-if(!asyncPan) == culling-1.html culling-1-ref.html
 skip-if(!asyncPan) == position-fixed-iframe-1.html position-fixed-iframe-1-ref.html
 skip-if(!asyncPan) == position-fixed-iframe-2.html position-fixed-iframe-2-ref.html
