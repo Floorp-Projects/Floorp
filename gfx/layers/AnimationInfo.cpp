@@ -807,7 +807,7 @@ static Maybe<TransformData> CreateAnimationData(
     // is also reference frame too, so the parent's reference frame
     // are used.
     nsIFrame* referenceFrame = nsLayoutUtils::GetReferenceFrame(
-        nsLayoutUtils::GetCrossDocParentFrame(aFrame));
+        nsLayoutUtils::GetCrossDocParentFrameInProcess(aFrame));
     origin = aFrame->GetOffsetToCrossDoc(referenceFrame);
   }
 
