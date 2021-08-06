@@ -328,6 +328,11 @@ uint32_t GetARMFlags() {
   return armHwCapFlags;
 }
 
+bool HasNEON() {
+  MOZ_ASSERT(armHwCapFlags != HWCAP_UNINITIALIZED);
+  return armHwCapFlags & HWCAP_NEON;
+}
+
 bool HasARMv7() {
   MOZ_ASSERT(armHwCapFlags != HWCAP_UNINITIALIZED);
   return armHwCapFlags & HWCAP_ARMv7;

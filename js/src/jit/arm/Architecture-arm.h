@@ -650,6 +650,7 @@ bool HasVFPv3();
 bool HasVFP();
 bool Has32DP();
 bool HasIDIV();
+bool HasNEON();
 
 extern volatile uint32_t armHwCapFlags;
 

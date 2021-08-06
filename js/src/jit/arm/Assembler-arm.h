@@ -1645,6 +1645,12 @@ class Assembler : public AssemblerShared {
   BufferOffset as_vdtm(LoadStore st, Register rn, VFPRegister vd, int length,
                        /* also has update conditions */ Condition c = Always);
 
+  // vldr/vstr variants that handle unaligned accesses.  These encode as NEON
+  // single-element instructions and can only be used if NEON is available.
+  // Here, vd must be tagged as a float or double register.
+  BufferOffset as_vldr_unaligned(VFPRegister vd, Register rn);
+  BufferOffset as_vstr_unaligned(VFPRegister vd, Register rn);
+
   BufferOffset as_vimm(VFPRegister vd, VFPImm imm, Condition c = Always);
 
   BufferOffset as_vmrs(Register r, Condition c = Always);
