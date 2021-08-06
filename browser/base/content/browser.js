@@ -3172,6 +3172,7 @@ async function BrowserViewSourceOfDocument(args) {
     preferredRemoteType,
     initialBrowsingContextGroupId,
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    skipLoad: true,
   });
   args.viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
   top.gViewSourceUtils.viewSourceInBrowser(args);
