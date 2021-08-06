@@ -9,14 +9,9 @@
 this.analytics = (function() {
   const exports = {};
 
-  const GA_PORTION = 0.1; // 10% of users will send to the server/GA
-  // This is set from storage, or randomly; if it is less that GA_PORTION then we send analytics:
   let myGaSegment = 1;
   let telemetryPrefKnown = false;
   let telemetryEnabled;
-  // If we ever get a 410 Gone response (or 404) from the server, we'll stop trying to send events for the rest
-  // of the session
-  let hasReturnedGone = false;
   // If there's this many entirely failed responses (e.g., server can't be contacted), then stop sending events
   // for the rest of the session:
   let serverFailedResponses = 3;
@@ -33,9 +28,7 @@ this.analytics = (function() {
   };
 
   function shouldSendEvents() {
-    return (
-      !hasReturnedGone && serverFailedResponses > 0 && myGaSegment < GA_PORTION
-    );
+    return false;
   }
 
   function flushEvents() {
@@ -364,7 +357,6 @@ this.analytics = (function() {
       .then(response => {
         if (response.status === 410 || response.status === 404) {
           // Gone
-          hasReturnedGone = true;
           pendingEvents = [];
           pendingTimings = [];
         }
