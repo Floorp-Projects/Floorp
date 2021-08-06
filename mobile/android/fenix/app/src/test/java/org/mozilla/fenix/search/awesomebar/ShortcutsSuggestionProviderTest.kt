@@ -19,7 +19,6 @@ import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.store.BrowserStore
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -42,12 +41,6 @@ class ShortcutsSuggestionProviderTest {
     @After
     fun teardown() {
         unmockkStatic(AppCompatResources::class)
-    }
-
-    @Test
-    fun `should clear is always false`() {
-        val provider = ShortcutsSuggestionProvider(mockk(), mockk(), mockk(), mockk())
-        assertFalse(provider.shouldClearSuggestions)
     }
 
     @Test

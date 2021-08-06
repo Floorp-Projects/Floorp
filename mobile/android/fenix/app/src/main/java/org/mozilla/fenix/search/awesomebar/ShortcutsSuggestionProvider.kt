@@ -25,9 +25,6 @@ class ShortcutsSuggestionProvider(
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
-    override val shouldClearSuggestions: Boolean
-        get() = false
-
     private val settingsIcon by lazy {
         AppCompatResources.getDrawable(context, R.drawable.ic_settings)?.toBitmap()
     }
