@@ -60,6 +60,10 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
         _selectedSearchSuggestion.postValue(suggestion)
     }
 
+    fun clearSearchSuggestion() {
+        _selectedSearchSuggestion.postValue(null)
+    }
+
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
 

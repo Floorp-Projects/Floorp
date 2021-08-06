@@ -186,6 +186,7 @@ class UrlInputFragment :
                 } else {
                     onSearch(it, isSuggestion)
                 }
+                searchSuggestionsViewModel.clearSearchSuggestion()
             }
         })
     }
