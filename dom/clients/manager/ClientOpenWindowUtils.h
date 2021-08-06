@@ -12,8 +12,8 @@
 namespace mozilla {
 namespace dom {
 
-typedef MozPromise<RefPtr<BrowsingContext>, CopyableErrorResult, false>
-    BrowsingContextCallbackReceivedPromise;
+using BrowsingContextCallbackReceivedPromise =
+    MozPromise<RefPtr<BrowsingContext>, CopyableErrorResult, false>;
 
 [[nodiscard]] RefPtr<ClientOpPromise> ClientOpenWindow(
     const ClientOpenWindowArgs& aArgs);

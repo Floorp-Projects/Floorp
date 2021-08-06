@@ -16,14 +16,14 @@ namespace dom {
 class ClientOpResult;
 class ClientState;
 
-typedef MozPromise<ClientOpResult, CopyableErrorResult, false> ClientOpPromise;
+using ClientOpPromise = MozPromise<ClientOpResult, CopyableErrorResult, false>;
 
-typedef MozPromise<ClientState, CopyableErrorResult, false> ClientStatePromise;
+using ClientStatePromise = MozPromise<ClientState, CopyableErrorResult, false>;
 
-typedef MozPromise<bool, CopyableErrorResult, /* IsExclusive = */ true>
-    GenericErrorResultPromise;
+using GenericErrorResultPromise =
+    MozPromise<bool, CopyableErrorResult, /* IsExclusive = */ true>;
 
-typedef std::function<void(const ClientOpResult&)> ClientOpCallback;
+using ClientOpCallback = std::function<void(const ClientOpResult&)>;
 
 }  // namespace dom
 }  // namespace mozilla
