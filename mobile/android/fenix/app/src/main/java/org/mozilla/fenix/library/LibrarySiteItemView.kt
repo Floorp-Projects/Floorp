@@ -12,10 +12,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
-import kotlinx.android.synthetic.main.library_site_item.view.*
 import mozilla.components.concept.menu.MenuController
 import mozilla.components.concept.menu.Orientation
-import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.LibrarySiteItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
@@ -29,40 +28,45 @@ class LibrarySiteItemView @JvmOverloads constructor(
     defStyleRes: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr, defStyleRes) {
 
-    val titleView: TextView get() = title
+    private val binding = LibrarySiteItemBinding.inflate(
+        LayoutInflater.from(context),
+        this,
+        true
+    )
 
-    val urlView: TextView get() = url
+    val titleView: TextView get() = binding.title
 
-    val iconView: ImageView get() = favicon
+    val urlView: TextView get() = binding.url
 
-    val overflowView: ImageButton get() = overflow_menu
+    val iconView: ImageView get() = binding.favicon
+
+    val overflowView: ImageButton get() = binding.overflowMenu
 
     init {
-        LayoutInflater.from(context).inflate(R.layout.library_site_item, this, true)
 
-        overflow_menu.increaseTapArea(OVERFLOW_EXTRA_DIPS)
+        overflowView.increaseTapArea(OVERFLOW_EXTRA_DIPS)
     }
 
     /**
      * Change visibility of parts of this view based on what type of item is being represented.
      */
     fun displayAs(mode: ItemType) {
-        url.isVisible = mode == ItemType.SITE
+        urlView.isVisible = mode == ItemType.SITE
     }
 
     /**
      * Changes the icon to show a check mark if [isSelected]
      */
     fun changeSelected(isSelected: Boolean) {
-        icon.displayedChild = if (isSelected) 1 else 0
+        binding.icon.displayedChild = if (isSelected) 1 else 0
     }
 
     fun loadFavicon(url: String) {
-        context.components.core.icons.loadIntoView(favicon, url)
+        context.components.core.icons.loadIntoView(iconView, url)
     }
 
     fun attachMenu(menuController: MenuController) {
-        overflow_menu.setOnClickListener {
+        overflowView.setOnClickListener {
             menuController.show(
                 anchor = it,
                 orientation = Orientation.DOWN
@@ -89,7 +93,7 @@ class LibrarySiteItemView @JvmOverloads constructor(
             }
         }
 
-        favicon.setOnClickListener {
+        iconView.setOnClickListener {
             if (item in holder.selectedItems) {
                 interactor.deselect(item)
             } else {
