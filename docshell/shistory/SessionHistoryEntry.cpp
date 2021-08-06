@@ -1376,12 +1376,8 @@ void SessionHistoryEntry::SetFrameLoader(nsFrameLoader* aFrameLoader) {
   MOZ_RELEASE_ASSERT(!aFrameLoader || mozilla::BFCacheInParent());
   SharedInfo()->SetFrameLoader(aFrameLoader);
   if (aFrameLoader) {
-    if (BrowsingContext* bc = aFrameLoader->GetMaybePendingBrowsingContext()) {
-      bc->PreOrderWalk([&](BrowsingContext* aContext) {
-        if (BrowserParent* bp = aContext->Canonical()->GetBrowserParent()) {
-          bp->Deactivated();
-        }
-      });
+    if (BrowserParent* bp = aFrameLoader->GetBrowserParent()) {
+      bp->Deactivated();
     }
 
     // When a new frameloader is stored, try to evict some older
