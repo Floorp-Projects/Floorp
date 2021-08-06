@@ -160,6 +160,21 @@ class SnapshotSelector extends EventEmitter {
   }
 
   /**
+   * Like setUrl, but rebuilds immediately instead of after a delay. Useful for
+   * startup.
+   *
+   * @param {string} url
+   */
+  setUrlAndRebuildNow(url) {
+    if (this.#context.url == url) {
+      return;
+    }
+
+    this.#context.url = url;
+    this.#buildSnapshots();
+  }
+
+  /**
    * Sets the type of snapshots for this selector.
    *
    * @param {PageDataCollector.DATA_TYPE | undefined} type
