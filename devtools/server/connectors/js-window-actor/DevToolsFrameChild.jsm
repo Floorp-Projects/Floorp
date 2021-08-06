@@ -602,10 +602,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
         if (!existingTarget) {
           continue;
         }
-
-        // Use `originalWindow` as `window` can be set when a document was selected from
-        // the iframe picker in the toolbox toolbar.
-        if (existingTarget.originalWindow.document != target) {
+        if (existingTarget.window.document != target) {
           throw new Error("Existing target actor is for a distinct document");
         }
         // Do not do anything if both bfcache in parent and server targets are disabled
