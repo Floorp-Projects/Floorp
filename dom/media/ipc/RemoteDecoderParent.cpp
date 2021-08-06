@@ -124,11 +124,6 @@ void RemoteDecoderParent::DecodeNextSample(
 mozilla::ipc::IPCResult RemoteDecoderParent::RecvDecode(
     ArrayOfRemoteMediaRawData* aData, DecodeResolver&& aResolver) {
   MOZ_ASSERT(OnManagerThread());
-  // XXX: This copies the data into a buffer owned by the MediaRawData. Ideally
-  // we'd just take ownership of the shmem.
-  // Use the passed bufferSize in MediaRawDataIPDL since we can get a Shmem
-  // buffer from ShmemPool larger than the requested size.
-
   // If we are here, we know all previously returned DecodedOutputIPDL got
   // used by the child. We can mark all previously sent ShmemBuffer as
   // available again.
