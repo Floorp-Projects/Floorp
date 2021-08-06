@@ -34,10 +34,17 @@ var gSanitizePromptDialog = {
     // This is used by selectByTimespan() to determine if the window has loaded.
     this._inited = true;
     this._dialog = document.querySelector("dialog");
-    let { inBrowserWindow = false } = window.arguments?.[0] || {};
-    if (inBrowserWindow) {
+    let arg = window.arguments?.[0] || {};
+    if (arg.inBrowserWindow) {
       this._dialog.setAttribute("inbrowserwindow", "true");
       this._observeTitleForChanges();
+    } else if (arg.wrappedJSObject?.needNativeUI) {
+      document
+        .getElementById("sanitizeDurationChoice")
+        .setAttribute("native", "true");
+      for (let cb of document.querySelectorAll("checkbox")) {
+        cb.setAttribute("native", "true");
+      }
     }
 
     let OKButton = this._dialog.getButton("accept");
