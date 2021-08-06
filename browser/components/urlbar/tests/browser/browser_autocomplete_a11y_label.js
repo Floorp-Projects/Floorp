@@ -74,10 +74,12 @@ add_task(async function switchToTab() {
     window,
     index
   );
+  // The a11y text will include the "Firefox Suggest" pseudo-element label shown
+  // before the result.
   await getResultText(
     element,
-    "about: robots— Switch to Tab",
-    "Result a11y label should be: <title>— Switch to Tab"
+    "Firefox Suggest about: robots— Switch to Tab",
+    "Result a11y text is correct"
   );
 
   await UrlbarTestUtils.promisePopupClose(window);
