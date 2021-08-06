@@ -690,7 +690,7 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
   }
 
   if (caps & NS_HTTP_LARGE_KEEPALIVE) {
-    mDefaultTimeoutFactor = 10;  // don't ever lower
+    mDefaultTimeoutFactor = StaticPrefs::network_http_largeKeepaliveFactor();
   }
 
   mTransactionCaps = caps;
