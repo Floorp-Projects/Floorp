@@ -22,6 +22,7 @@
 #include "mozilla/Span.h"
 
 #include "wasm/WasmBuiltins.h"
+#include "wasm/WasmCompileArgs.h"
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmTypeDecls.h"
 #include "wasm/WasmTypeDef.h"
@@ -50,6 +51,7 @@ struct Intrinsic {
 
 // Compile and return the intrinsic module for a given set of intrinsic ops.
 bool CompileIntrinsicModule(JSContext* cx, const mozilla::Span<IntrinsicOp> ops,
+                            Shareable sharedMemory,
                             MutableHandleWasmModuleObject result);
 
 }  // namespace wasm
