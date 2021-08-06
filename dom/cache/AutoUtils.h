@@ -47,8 +47,8 @@ class StreamList;
 
 class MOZ_STACK_CLASS AutoChildOpArgs final {
  public:
-  typedef TypeUtils::BodyAction BodyAction;
-  typedef TypeUtils::SchemeAction SchemeAction;
+  using BodyAction = TypeUtils::BodyAction;
+  using SchemeAction = TypeUtils::SchemeAction;
 
   AutoChildOpArgs(TypeUtils* aTypeUtils, const CacheOpArgs& aOpArgs,
                   uint32_t aEntryCount);
