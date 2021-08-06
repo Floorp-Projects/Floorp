@@ -61,9 +61,8 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 
         fun bind(tab: Tab) {
             val components = itemView.context.components
-            val makePrettyUrl: (String) -> String = {
-                it.toShortUrl(components.publicSuffixList).take(MAX_URI_LENGTH)
-            }
+            val title = tab.title.ifEmpty { tab.url.take(MAX_URI_LENGTH) }
+            val url = tab.url.toShortUrl(components.publicSuffixList).take(MAX_URI_LENGTH)
 
             itemView.setOnClickListener {
                 browserTrayInteractor.open(tab)
@@ -71,7 +70,7 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 
             binding.siteListItem.apply {
                 components.core.icons.loadIntoView(iconView, tab.url)
-                setText(tab.title, makePrettyUrl(tab.url))
+                setText(title, url)
                 setSecondaryButton(
                     R.drawable.mozac_ic_close,
                     R.string.content_description_close_button
