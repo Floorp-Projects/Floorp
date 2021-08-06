@@ -346,7 +346,7 @@ macosx1100-64-qr-tests:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
-    # - reftest
+    - reftest
     # - xpcshell
 
 macosx1015-64-qr-failure-tests:
