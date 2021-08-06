@@ -116,6 +116,16 @@ class MarionetteParentProcess {
     }
   }
 
+  handle(cmdLine) {
+    // `handle` is called too late in certain cases (eg safe mode, see comment
+    // above "command-line-startup"). So the marionette command line argument
+    // will always be processed in `observe`.
+    // However it still needs to be consumed by the command-line-handler API,
+    // to avoid issues on macos.
+    // TODO: remove after Bug 1724251 is fixed.
+    cmdLine.handleFlag("marionette", false);
+  }
+
   observe(subject, topic) {
     if (this.enabled) {
       logger.trace(`Received observer notification ${topic}`);

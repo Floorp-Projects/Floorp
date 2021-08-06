@@ -23,6 +23,17 @@ class TestCommandLineArguments(MarionetteTestCase):
 
         super(TestCommandLineArguments, self).tearDown()
 
+    def is_bidi_enabled(self):
+        with self.marionette.using_context("chrome"):
+            bidi_enabled = self.marionette.execute_script(
+                """
+              const { RemoteAgent } = ChromeUtils.import(
+                "chrome://remote/content/components/RemoteAgent.jsm"
+              );
+              return !!RemoteAgent.webDriverBiDi;
+            """
+            )
+
     def test_debugger_address_cdp_status(self):
         # By default Remote Agent is not enabled
         debugger_address = self.marionette.session_capabilities.get(
@@ -59,16 +70,6 @@ class TestCommandLineArguments(MarionetteTestCase):
         self.assertTrue(result.ok)
 
     def test_websocket_url(self):
-        with self.marionette.using_context("chrome"):
-            bidi_enabled = self.marionette.execute_script(
-                """
-              const { RemoteAgent } = ChromeUtils.import(
-                "chrome://remote/content/components/RemoteAgent.jsm"
-              );
-              return !!RemoteAgent.webDriverBiDi;
-            """
-            )
-
         # By default Remote Agent is not enabled
         self.assertNotIn("webSocketUrl", self.marionette.session_capabilities)
 
@@ -85,7 +86,7 @@ class TestCommandLineArguments(MarionetteTestCase):
             self.marionette.restart()
 
         # With BiDi enabled the capability has to be returned
-        if bidi_enabled:
+        if self.is_bidi_enabled():
             self.marionette.quit()
             self.marionette.instance.switch_profile()
             self.marionette.start_session({"webSocketUrl": True})
@@ -112,6 +113,16 @@ class TestCommandLineArguments(MarionetteTestCase):
             """
             )
             self.assertTrue(safe_mode, "Safe Mode has not been enabled")
+
+    # An issue in the command line argument handling lead to open Firefox on
+    # random URLs when remote-debugging-port is set to an explicit value, on macos.
+    # See Bug 1724251.
+    def test_start_page_about_blank(self):
+        if self.is_bidi_enabled():
+            self.marionette.quit()
+            self.marionette.instance.app_args.append("-remote-debugging-port=0")
+            self.marionette.start_session({"webSocketUrl": True})
+            self.assertEqual(self.marionette.get_url(), "about:blank")
 
     def test_startup_timeout(self):
         try:
