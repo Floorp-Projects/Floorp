@@ -134,7 +134,7 @@ mod tests {
                     self.decoder.receive(&mut self.conn_c).unwrap(),
                     ReceiveOutput::NoOutput
                 );
-                assert!(!self.decoder.done());
+                assert_eq!(self.decoder.done(), false);
             }
             self.conn_s
                 .stream_send(self.stream_id, &enc[enc.len() - 1..])
