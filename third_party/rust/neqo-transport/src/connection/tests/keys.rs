@@ -5,7 +5,7 @@
 // except according to those terms.
 
 use super::super::super::{ConnectionError, ERROR_AEAD_LIMIT_REACHED};
-use super::super::{Connection, ConnectionParameters, Error, Output, State, StreamType};
+use super::super::{Connection, Error, Output, State, StreamType, LOCAL_IDLE_TIMEOUT};
 use super::{
     connect, connect_force_idle, default_client, default_server, maybe_authenticate,
     send_and_receive, send_something, AT_LEAST_PTO,
@@ -104,8 +104,10 @@ fn key_update_client() {
     assert_update_blocked(&mut client);
 
     // Initiating an update should only increase the write epoch.
-    let idle_timeout = ConnectionParameters::default().get_idle_timeout();
-    assert_eq!(Output::Callback(idle_timeout), client.process(None, now));
+    assert_eq!(
+        Output::Callback(LOCAL_IDLE_TIMEOUT),
+        client.process(None, now)
+    );
     assert_eq!(client.get_epochs(), (Some(4), Some(3)));
 
     // Send something to propagate the update.
@@ -115,7 +117,7 @@ fn key_update_client() {
     assert_eq!(server.get_epochs(), (Some(4), Some(3)));
     let res = server.process(None, now);
     if let Output::Callback(t) = res {
-        assert!(t < idle_timeout);
+        assert!(t < LOCAL_IDLE_TIMEOUT);
     } else {
         panic!("server should now be waiting to clear keys");
     }
@@ -147,7 +149,7 @@ fn key_update_client() {
     // This is the first packet that the client has received from the server
     // with new keys, so its read timer just started.
     if let Output::Callback(t) = res {
-        assert!(t < ConnectionParameters::default().get_idle_timeout());
+        assert!(t < LOCAL_IDLE_TIMEOUT);
     } else {
         panic!("client should now be waiting to clear keys");
     }

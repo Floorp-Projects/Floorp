@@ -86,11 +86,11 @@ impl Streams {
             Frame::ResetStream {
                 stream_id,
                 application_error_code,
-                final_size,
+                ..
             } => {
                 stats.reset_stream += 1;
                 if let (_, Some(rs)) = self.obtain_stream(stream_id)? {
-                    rs.reset(application_error_code, final_size)?;
+                    rs.reset(application_error_code);
                 }
             }
             Frame::StopSending {
@@ -279,8 +279,7 @@ impl Streams {
             | RecoveryToken::StreamDataBlocked { .. }
             | RecoveryToken::MaxStreamData { .. }
             | RecoveryToken::StreamsBlocked { .. }
-            | RecoveryToken::MaxStreams { .. }
-            | RecoveryToken::MaxData(_) => (),
+            | RecoveryToken::MaxStreams { .. } => (),
             _ => unreachable!("This is not a stream RecoveryToken"),
         }
     }
@@ -330,7 +329,6 @@ impl Streams {
                 RecvStream::new(
                     next_stream_id,
                     recv_initial_max_stream_data,
-                    Rc::clone(&self.receiver_fc),
                     self.events.clone(),
                 ),
             );
@@ -404,12 +402,7 @@ impl Streams {
 
                     self.recv.insert(
                         new_id,
-                        RecvStream::new(
-                            new_id,
-                            recv_initial_max_stream_data,
-                            Rc::clone(&self.receiver_fc),
-                            self.events.clone(),
-                        ),
+                        RecvStream::new(new_id, recv_initial_max_stream_data, self.events.clone()),
                     );
                 }
                 Ok(new_id.as_u64())
@@ -481,13 +474,5 @@ impl Streams {
 
     pub fn get_recv_stream_mut(&mut self, stream_id: StreamId) -> Res<&mut RecvStream> {
         self.recv.get_mut(stream_id)
-    }
-
-    pub fn keep_alive(&mut self, stream_id: StreamId, keep: bool) -> Res<()> {
-        self.recv.keep_alive(stream_id, keep)
-    }
-
-    pub fn need_keep_alive(&mut self) -> bool {
-        self.recv.need_keep_alive()
     }
 }
