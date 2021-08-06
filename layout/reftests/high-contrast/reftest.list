@@ -27,6 +27,7 @@ test-pref(browser.display.suppress_canvas_background_image_on_forced_colors,true
 test-pref(browser.display.suppress_canvas_background_image_on_forced_colors,false) != bg-image-root-001.html bg-image-root-001-ref.html
 
 == bg-image-div-001.html bg-image-div-001-ref.html
+== bg-image-div-002.html bg-image-div-002-ref.html
 
 needs-focus == selection-001.html selection-001-ref.html
 pref(browser.display.document_color_use,0) needs-focus != selection-001.html selection-001-ref.html
