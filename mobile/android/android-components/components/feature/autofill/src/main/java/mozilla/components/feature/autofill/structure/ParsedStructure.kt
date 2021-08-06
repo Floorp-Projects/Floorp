@@ -6,8 +6,10 @@ package mozilla.components.feature.autofill.structure
 
 import android.content.Context
 import android.os.Build
+import android.os.Parcelable
 import android.view.autofill.AutofillId
 import androidx.annotation.RequiresApi
+import kotlinx.parcelize.Parcelize
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.utils.Browsers
 
@@ -18,12 +20,13 @@ import mozilla.components.support.utils.Browsers
  * https://github.com/mozilla-lockwise/lockwise-android/blob/d3c0511f73c34e8759e1bb597f2d3dc9bcc146f0/app/src/main/java/mozilla/lockbox/autofill/ParsedStructure.kt#L52
  */
 @RequiresApi(Build.VERSION_CODES.O)
+@Parcelize
 internal data class ParsedStructure(
     val usernameId: AutofillId? = null,
     val passwordId: AutofillId? = null,
     val webDomain: String? = null,
     val packageName: String
-)
+) : Parcelable
 
 /**
  * Try to find a domain in the [ParsedStructure] for looking up logins. This is either a "web domain"

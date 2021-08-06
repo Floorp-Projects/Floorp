@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.autofill.ui
 
-import android.app.assist.AssistStructure
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -22,7 +21,7 @@ import mozilla.components.feature.autofill.authenticator.Authenticator
 import mozilla.components.feature.autofill.authenticator.createAuthenticator
 import mozilla.components.feature.autofill.facts.emitAutofillLock
 import mozilla.components.feature.autofill.handler.FillRequestHandler
-import mozilla.components.feature.autofill.structure.toRawStructure
+import mozilla.components.feature.autofill.structure.ParsedStructure
 
 /**
  * Activity responsible for unlocking the autofill service by asking the user to verify with a
@@ -39,14 +38,14 @@ abstract class AbstractAutofillUnlockActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val structure: AssistStructure? = intent.getParcelableExtra(AutofillManager.EXTRA_ASSIST_STRUCTURE)
+        val parsedStructure = intent.getParcelableExtra<ParsedStructure>(EXTRA_PARSED_STRUCTURE)
 
         // While the user is asked to authenticate, we already try to build the fill response asynchronously.
-        val rawStructure = structure?.toRawStructure()
-        if (rawStructure != null) {
+        if (parsedStructure != null) {
             fillResponse = lifecycleScope.async(Dispatchers.IO) {
-                val builder = fillHandler.handle(rawStructure, forceUnlock = true)
-                builder?.build(this@AbstractAutofillUnlockActivity, configuration)
+                val builder = fillHandler.handle(parsedStructure, forceUnlock = true)
+                val result = builder.build(this@AbstractAutofillUnlockActivity, configuration)
+                result
             }
         }
 
@@ -95,5 +94,9 @@ abstract class AbstractAutofillUnlockActivity : FragmentActivity() {
             setResult(RESULT_CANCELED)
             finish()
         }
+    }
+
+    companion object {
+        const val EXTRA_PARSED_STRUCTURE = "parsed_structure"
     }
 }

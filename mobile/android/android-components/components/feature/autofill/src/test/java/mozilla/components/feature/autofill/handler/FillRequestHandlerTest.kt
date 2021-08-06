@@ -73,7 +73,9 @@ internal class FillRequestHandlerTest {
                 packageName = "com.twitter.android",
                 logins = emptyMap(),
                 assertThat = { builder ->
-                    assertNull(builder)
+                    assertNotNull(builder!!)
+                    assertEquals(0, builder.logins.size)
+                    assertEquals(false, builder.needsConfirmation)
                 }
             )
 
@@ -82,8 +84,9 @@ internal class FillRequestHandlerTest {
                 assertEquals(Component.FEATURE_AUTOFILL, component)
                 assertEquals(Action.SYSTEM, action)
                 assertEquals(AutofillFacts.Items.AUTOFILL_REQUEST, item)
-                assertEquals(1, metadata?.size)
+                assertEquals(2, metadata?.size)
                 assertEquals(false, metadata?.get(AutofillFacts.Metadata.HAS_MATCHING_LOGINS))
+                assertEquals(false, metadata?.get(AutofillFacts.Metadata.NEEDS_CONFIRMATION))
             }
         }
     }
@@ -171,7 +174,9 @@ internal class FillRequestHandlerTest {
             packageName = "org.chromium.webview_shell",
             logins = mapOf(credentials),
             assertThat = { builder ->
-                assertNull(builder)
+                assertNotNull(builder!!)
+                assertEquals(0, builder.logins.size)
+                assertEquals(false, builder.needsConfirmation)
             }
         )
     }
