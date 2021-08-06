@@ -73,7 +73,7 @@ object TestHelper {
         editor.apply()
     }
 
-    fun restartApp(activity: HomeActivityTestRule) {
+    fun restartApp(activity: HomeActivityIntentTestRule) {
         with(activity) {
             finishActivity()
             mDevice.waitForIdle()

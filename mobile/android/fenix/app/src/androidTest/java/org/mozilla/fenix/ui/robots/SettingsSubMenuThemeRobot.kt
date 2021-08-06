@@ -36,6 +36,10 @@ class SettingsSubMenuThemeRobot {
 
     fun selectLightMode() = lightModeToggle().click()
 
+    fun clickTopToolbarToggle() = topToolbarToggle().click()
+
+    fun clickBottomToolbarToggle() = bottomToolbarToggle().click()
+
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
@@ -61,6 +65,10 @@ private fun assertThemes() {
 private fun darkModeToggle() = onView(withText("Dark"))
 
 private fun lightModeToggle() = onView(withText("Light"))
+
+private fun topToolbarToggle() = onView(withText("Top"))
+
+private fun bottomToolbarToggle() = onView(withText("Bottom"))
 
 private fun deviceModeToggle(): ViewInteraction {
     val followDeviceThemeText =
