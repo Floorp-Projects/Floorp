@@ -39,7 +39,7 @@ class CacheWorkerRef;
 class CacheStorage final : public nsISupports,
                            public nsWrapperCache,
                            public TypeUtils {
-  typedef mozilla::ipc::PBackgroundChild PBackgroundChild;
+  using PBackgroundChild = mozilla::ipc::PBackgroundChild;
 
  public:
   static already_AddRefed<CacheStorage> CreateOnMainThread(

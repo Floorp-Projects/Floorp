@@ -2030,39 +2030,6 @@ void CodeGenerator::visitWasmLoad(LWasmLoad* lir) { emitWasmLoad(lir); }
 
 void CodeGenerator::visitWasmLoadI64(LWasmLoadI64* lir) { emitWasmLoad(lir); }
 
-template <typename T>
-void CodeGeneratorARM::emitWasmUnalignedLoad(T* lir) {
-  const MWasmLoad* mir = lir->mir();
-  MIRType resultType = mir->type();
-
-  Register ptr = ToRegister(lir->ptrCopy());
-  Register tmp1 = ToRegister(lir->getTemp(1));
-
-  if (resultType == MIRType::Int64) {
-    masm.wasmUnalignedLoadI64(mir->access(), HeapReg, ptr, ptr,
-                              ToOutRegister64(lir), tmp1);
-  } else if (IsFloatingPointType(resultType)) {
-    Register tmp2(ToRegister(lir->getTemp(2)));
-    Register tmp3(Register::Invalid());
-    if (mir->access().byteSize() == 8) {
-      tmp3 = ToRegister(lir->getTemp(3));
-    }
-    masm.wasmUnalignedLoadFP(mir->access(), HeapReg, ptr, ptr,
-                             ToFloatRegister(lir->output()), tmp1, tmp2, tmp3);
-  } else {
-    masm.wasmUnalignedLoad(mir->access(), HeapReg, ptr, ptr,
-                           ToRegister(lir->output()), tmp1);
-  }
-}
-
-void CodeGenerator::visitWasmUnalignedLoad(LWasmUnalignedLoad* lir) {
-  emitWasmUnalignedLoad(lir);
-}
-
-void CodeGenerator::visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* lir) {
-  emitWasmUnalignedLoad(lir);
-}
-
 void CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir) {
   MWasmAddOffset* mir = lir->mir();
   Register base = ToRegister(lir->base());
@@ -2106,37 +2073,6 @@ void CodeGenerator::visitWasmStore(LWasmStore* lir) { emitWasmStore(lir); }
 
 void CodeGenerator::visitWasmStoreI64(LWasmStoreI64* lir) {
   emitWasmStore(lir);
-}
-
-template <typename T>
-void CodeGeneratorARM::emitWasmUnalignedStore(T* lir) {
-  const MWasmStore* mir = lir->mir();
-  MIRType valueType = mir->value()->type();
-  Register ptr = ToRegister(lir->ptrCopy());
-  Register valOrTmp = ToRegister(lir->valueHelper());
-
-  if (valueType == MIRType::Int64) {
-    masm.wasmUnalignedStoreI64(
-        mir->access(),
-        ToRegister64(lir->getInt64Operand(LWasmUnalignedStoreI64::ValueIndex)),
-        HeapReg, ptr, ptr, valOrTmp);
-  } else if (valueType == MIRType::Float32 || valueType == MIRType::Double) {
-    FloatRegister value =
-        ToFloatRegister(lir->getOperand(LWasmUnalignedStore::ValueIndex));
-    masm.wasmUnalignedStoreFP(mir->access(), value, HeapReg, ptr, ptr,
-                              valOrTmp);
-  } else {
-    masm.wasmUnalignedStore(mir->access(), valOrTmp, HeapReg, ptr, ptr,
-                            Register::Invalid());
-  }
-}
-
-void CodeGenerator::visitWasmUnalignedStore(LWasmUnalignedStore* lir) {
-  emitWasmUnalignedStore(lir);
-}
-
-void CodeGenerator::visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* lir) {
-  emitWasmUnalignedStore(lir);
 }
 
 void CodeGenerator::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins) {

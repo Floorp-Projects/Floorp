@@ -227,9 +227,6 @@ ignore-flag(--more-compartments) script test262/built-ins/Function/internals/Cal
 skip script test262/language/expressions/assignmenttargettype/parenthesized-callexpression-arguments.js
 skip script test262/language/expressions/assignmenttargettype/direct-callexpression-arguments.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1720782
-skip script test262/intl402/DateTimeFormat/constructor-options-style-conflict.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1297179
 # All of these tests pass except with --more-compartments.
 ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/arguments-realm.js
@@ -644,10 +641,6 @@ skip script test262/built-ins/AsyncFunction/is-not-a-global.js
 # hour-cycle to "h24", which isn't allowed per the above CLDR data.
 # https://github.com/tc39/ecma402/issues/402
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-default.js
-
-# Tests not yet updated for https://github.com/tc39/proposal-intl-displaynames/pull/83
-skip script test262/intl402/DisplayNames/locales-length-tolength-throws.js
-skip script test262/intl402/DisplayNames/locales-length-poison-throws.js
 
 # Tests not yet updated for https://github.com/tc39/intl-displaynames-v2
 skip script test262/intl402/DisplayNames/prototype/resolvedOptions/return-object.js

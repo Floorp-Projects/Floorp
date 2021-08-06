@@ -2980,15 +2980,6 @@ JS_PUBLIC_API bool JS_StringHasBeenPinned(JSContext* cx, JSString* str) {
   return AtomIsPinned(cx, &str->asAtom());
 }
 
-JS_PUBLIC_API JSString* JS_AtomizeAndPinJSString(JSContext* cx,
-                                                 HandleString str) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  JSAtom* atom = AtomizeString(cx, str, PinAtom);
-  MOZ_ASSERT_IF(atom, JS_StringHasBeenPinned(cx, atom));
-  return atom;
-}
-
 JS_PUBLIC_API JSString* JS_AtomizeString(JSContext* cx, const char* s) {
   return JS_AtomizeStringN(cx, s, strlen(s));
 }
@@ -3065,21 +3056,6 @@ JS_PUBLIC_API JSString* JS_AtomizeUCStringN(JSContext* cx, const char16_t* s,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   return AtomizeChars(cx, s, length, DoNotPinAtom);
-}
-
-JS_PUBLIC_API JSString* JS_AtomizeAndPinUCStringN(JSContext* cx,
-                                                  const char16_t* s,
-                                                  size_t length) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  JSAtom* atom = AtomizeChars(cx, s, length, PinAtom);
-  MOZ_ASSERT_IF(atom, JS_StringHasBeenPinned(cx, atom));
-  return atom;
-}
-
-JS_PUBLIC_API JSString* JS_AtomizeAndPinUCString(JSContext* cx,
-                                                 const char16_t* s) {
-  return JS_AtomizeAndPinUCStringN(cx, s, js_strlen(s));
 }
 
 JS_PUBLIC_API size_t JS_GetStringLength(JSString* str) { return str->length(); }
