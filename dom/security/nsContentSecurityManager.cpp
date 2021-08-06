@@ -869,6 +869,11 @@ void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
   if (!StaticPrefs::dom_security_unexpected_system_load_telemetry_enabled()) {
     return;
   }
+  nsContentSecurityUtils::DetectJsHacks();
+  if (MOZ_UNLIKELY(sJSHacksPresent)) {
+    return;
+  }
+
   ExtContentPolicyType contentPolicyType =
       aLoadInfo->GetExternalContentPolicyType();
   // restricting reported types to script and styles
