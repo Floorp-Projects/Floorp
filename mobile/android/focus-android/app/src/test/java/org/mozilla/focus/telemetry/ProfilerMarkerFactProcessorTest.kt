@@ -38,24 +38,31 @@ class ProfilerMarkerFactProcessorTest {
     }
 
     @Test
-    fun `GIVEN we are on the main thread WHEN a fact with an implementation detail action is received THEN a profiler marker is added now`() {
+    fun `Test on the main thread`() {
+        // GIVEN we are on the main thread
         myLooper = mainHandler.looper // main thread
 
+        // WHEN a fact with an implementation detail action is received
         val fact = newFact(Action.IMPLEMENTATION_DETAIL)
         processor.process(fact)
 
+        // THEN a profiler marker is added now
         verify(profiler).addMarker(fact.item)
     }
 
     @Test
-    fun `GIVEN we are not on the main thread WHEN a fact with an implementation detail action is received THEN adding the marker is posted to the main thread`() {
+    fun `Test not on the main thread`() {
+        // GIVEN we are not on the main thread
         myLooper = mock(Looper::class.java) // off main thread
+
+        // WHEN a fact with an implementation detail action is received
         val mainThreadPostedArg = argumentCaptor<Runnable>()
         `when`(profiler.getProfilerTime()).thenReturn(100.0)
 
         val fact = newFact(Action.IMPLEMENTATION_DETAIL)
         processor.process(fact)
 
+        // THEN adding the marker is posted to the main thread
         verify(mainHandler).post(mainThreadPostedArg.capture())
         verifyProfilerAddMarkerWasNotCalled()
 
@@ -64,9 +71,12 @@ class ProfilerMarkerFactProcessorTest {
     }
 
     @Test
-    fun `WHEN a fact with a non-implementation detail action is received THEN no profiler marker is added`() {
+    fun `Test non-implementation detail`() {
+        // WHEN a fact with a non-implementation detail action is received
         val fact = newFact(Action.CANCEL)
         processor.process(fact)
+
+        // THEN no profiler marker is added
         verifyZeroInteractions(profiler)
     }
 
