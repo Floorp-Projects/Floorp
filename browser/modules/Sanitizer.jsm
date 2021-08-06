@@ -107,13 +107,31 @@ var Sanitizer = {
    * @throws if parentWindow is undefined or doesn't have a gDialogBox.
    */
   showUI(parentWindow) {
-    if (!parentWindow?.gDialogBox) {
-      throw new Error("Sanitizer.showUI expected a browser window argument.");
+    // Treat the hidden window as not being a parent window:
+    if (
+      parentWindow?.document.documentURI ==
+      "chrome://browser/content/hiddenWindowMac.xhtml"
+    ) {
+      parentWindow = null;
     }
-
-    parentWindow.gDialogBox.open("chrome://browser/content/sanitize.xhtml", {
-      inBrowserWindow: true,
-    });
+    if (parentWindow?.gDialogBox) {
+      parentWindow.gDialogBox.open("chrome://browser/content/sanitize.xhtml", {
+        inBrowserWindow: true,
+      });
+    } else {
+      let arg = {
+        needNativeUI: true,
+        QueryInterface: ChromeUtils.generateQI([]),
+      };
+      arg.wrappedJSObject = arg;
+      Services.ww.openWindow(
+        parentWindow,
+        "chrome://browser/content/sanitize.xhtml",
+        "Sanitize",
+        "chrome,titlebar,dialog,centerscreen,modal",
+        arg
+      );
+    }
   },
 
   /**
