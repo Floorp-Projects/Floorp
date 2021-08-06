@@ -101,6 +101,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Applies URL highlighting and other styling to the text in the urlbar input.
   ["formatting.enabled", true],
 
+  // Whether Firefox Suggest group labels are shown in the urlbar view in en-*
+  // locales. Labels are not shown in other locales but likely will be in the
+  // future.
+  ["groupLabels.enabled", true],
+
   // Whether the results panel should be kept open during IME composition.
   ["keepPanelOpenDuringImeComposition", false],
 

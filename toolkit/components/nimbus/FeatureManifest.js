@@ -14,13 +14,6 @@ const FeatureManifest = {
   urlbar: {
     description: "The Address Bar",
     variables: {
-      firefoxSuggestLabelsEnabled: {
-        type: "boolean",
-        fallbackPref:
-          "browser.urlbar.experimental.firefoxSuggestLabels.enabled",
-        description:
-          "Whether to show the Firefox Suggest label above the general group in the urlbar view",
-      },
       quickSuggestEnabled: {
         type: "boolean",
         fallbackPref: "browser.urlbar.quicksuggest.enabled",

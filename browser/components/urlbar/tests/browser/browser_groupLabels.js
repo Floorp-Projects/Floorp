@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests Firefox Suggest group labels in the view.
+// Tests group labels in the view.
 
 "use strict";
 
@@ -22,10 +22,20 @@ const FIREFOX_SUGGEST_LABEL = "Firefox Suggest";
 // %s is replaced with the engine name.
 const ENGINE_SUGGESTIONS_LABEL = "%s Suggestions";
 
+// Allow more time for Mac machines so they don't time out in verify mode.
+if (AppConstants.platform == "macosx") {
+  requestLongerTimeout(3);
+}
+
 add_task(async function init() {
   Assert.ok(
     UrlbarPrefs.get("showSearchSuggestionsFirst"),
     "Precondition: Search suggestions shown first by default"
+  );
+  Assert.equal(
+    Services.locale.appLocaleAsBCP47,
+    "en-US",
+    "Precondition: App locale is en-US"
   );
 
   // Add some history.
@@ -57,22 +67,22 @@ add_task(async function init() {
   });
 });
 
-// The Firefox Suggest label should not appear when the view shows top sites.
-add_task(async function topSites() {
-  await withExperiment(async () => {
+// The Firefox Suggest label should not appear when the locale is not en-*.
+add_task(async function unsupportedLocale() {
+  await withLocales(["de"], async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      value: "",
+      value: "test",
     });
-    await checkLabels(-1, {});
+    await checkLabels(MAX_RESULTS, {});
     await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 
-// The Firefox Suggest label should appear when the search string is non-empty
-// and there are only general results.
-add_task(async function general() {
-  await withExperiment(async () => {
+// The Firefox Suggest label should appear when the locale is en-* but not
+// en-US.
+add_task(async function supportedLocaleNonUS() {
+  await withLocales(["en-GB"], async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: "test",
@@ -84,20 +94,55 @@ add_task(async function general() {
   });
 });
 
+// The Firefox Suggest label should not appear when the labels pref is disabled.
+add_task(async function prefDisabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.groupLabels.enabled", false]],
+  });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "test",
+  });
+  await checkLabels(MAX_RESULTS, {});
+  await UrlbarTestUtils.promisePopupClose(window);
+  await SpecialPowers.popPrefEnv();
+});
+
+// The Firefox Suggest label should not appear when the view shows top sites.
+add_task(async function topSites() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+  });
+  await checkLabels(-1, {});
+  await UrlbarTestUtils.promisePopupClose(window);
+});
+
+// The Firefox Suggest label should appear when the search string is non-empty
+// and there are only general results.
+add_task(async function general() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "test",
+  });
+  await checkLabels(MAX_RESULTS, {
+    1: FIREFOX_SUGGEST_LABEL,
+  });
+  await UrlbarTestUtils.promisePopupClose(window);
+});
+
 // The Firefox Suggest label should appear when the search string is non-empty
 // and there are suggestions followed by general results.
 add_task(async function suggestionsBeforeGeneral() {
-  await withExperiment(async () => {
-    await withSuggestions(async () => {
-      await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window,
-        value: "test",
-      });
-      await checkLabels(MAX_RESULTS, {
-        3: FIREFOX_SUGGEST_LABEL,
-      });
-      await UrlbarTestUtils.promisePopupClose(window);
+  await withSuggestions(async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
     });
+    await checkLabels(MAX_RESULTS, {
+      3: FIREFOX_SUGGEST_LABEL,
+    });
+    await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 
@@ -105,22 +150,20 @@ add_task(async function suggestionsBeforeGeneral() {
 // string is non-empty, general results are shown before suggestions, and there
 // are general and suggestion results.
 add_task(async function generalBeforeSuggestions() {
-  await withExperiment(async () => {
-    await withSuggestions(async engine => {
-      Assert.ok(engine.name, "Engine name is non-empty");
-      await SpecialPowers.pushPrefEnv({
-        set: [[SUGGESTIONS_FIRST_PREF, false]],
-      });
-      await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window,
-        value: "test",
-      });
-      await checkLabels(MAX_RESULTS, {
-        1: FIREFOX_SUGGEST_LABEL,
-        [MAX_RESULTS - 2]: engineSuggestionsLabel(engine.name),
-      });
-      await UrlbarTestUtils.promisePopupClose(window);
+  await withSuggestions(async engine => {
+    Assert.ok(engine.name, "Engine name is non-empty");
+    await SpecialPowers.pushPrefEnv({
+      set: [[SUGGESTIONS_FIRST_PREF, false]],
     });
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+    });
+    await checkLabels(MAX_RESULTS, {
+      1: FIREFOX_SUGGEST_LABEL,
+      [MAX_RESULTS - 2]: engineSuggestionsLabel(engine.name),
+    });
+    await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 
@@ -130,18 +173,16 @@ add_task(async function generalBeforeSuggestions() {
 add_task(async function generalBeforeSuggestions_suggestionsOnly() {
   await PlacesUtils.history.clear();
 
-  await withExperiment(async () => {
-    await withSuggestions(async engine => {
-      await SpecialPowers.pushPrefEnv({
-        set: [[SUGGESTIONS_FIRST_PREF, false]],
-      });
-      await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window,
-        value: "test",
-      });
-      await checkLabels(3, {});
-      await UrlbarTestUtils.promisePopupClose(window);
+  await withSuggestions(async engine => {
+    await SpecialPowers.pushPrefEnv({
+      set: [[SUGGESTIONS_FIRST_PREF, false]],
     });
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+    });
+    await checkLabels(3, {});
+    await UrlbarTestUtils.promisePopupClose(window);
   });
 
   // Add back history so subsequent tasks run with this test's initial state.
@@ -160,23 +201,21 @@ add_task(async function suggestedIndex_only() {
   let provider = new SuggestedIndexProvider(index);
   UrlbarProvidersManager.registerProvider(provider);
 
-  await withExperiment(async () => {
-    await withSuggestions(async engine => {
-      await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window,
-        value: "test",
-      });
-      let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 3);
-      Assert.equal(
-        result.element.row.result.suggestedIndex,
-        index,
-        "Sanity check: Our suggested-index result is present"
-      );
-      await checkLabels(4, {
-        3: FIREFOX_SUGGEST_LABEL,
-      });
-      await UrlbarTestUtils.promisePopupClose(window);
+  await withSuggestions(async engine => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
     });
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 3);
+    Assert.equal(
+      result.element.row.result.suggestedIndex,
+      index,
+      "Sanity check: Our suggested-index result is present"
+    );
+    await checkLabels(4, {
+      3: FIREFOX_SUGGEST_LABEL,
+    });
+    await UrlbarTestUtils.promisePopupClose(window);
   });
 
   UrlbarProvidersManager.unregisterProvider(provider);
@@ -192,22 +231,20 @@ add_task(async function suggestedIndex_first() {
   let provider = new SuggestedIndexProvider(index);
   UrlbarProvidersManager.registerProvider(provider);
 
-  await withExperiment(async () => {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "test",
-    });
-    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
-    Assert.equal(
-      result.element.row.result.suggestedIndex,
-      index,
-      "Sanity check: Our suggested-index result is present"
-    );
-    await checkLabels(MAX_RESULTS, {
-      [index]: FIREFOX_SUGGEST_LABEL,
-    });
-    await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "test",
   });
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
+  Assert.equal(
+    result.element.row.result.suggestedIndex,
+    index,
+    "Sanity check: Our suggested-index result is present"
+  );
+  await checkLabels(MAX_RESULTS, {
+    [index]: FIREFOX_SUGGEST_LABEL,
+  });
+  await UrlbarTestUtils.promisePopupClose(window);
 
   UrlbarProvidersManager.unregisterProvider(provider);
 });
@@ -219,25 +256,23 @@ add_task(async function suggestedIndex_notFirst() {
   let provider = new SuggestedIndexProvider(index);
   UrlbarProvidersManager.registerProvider(provider);
 
-  await withExperiment(async () => {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "test",
-    });
-    let result = await UrlbarTestUtils.getDetailsOfResultAt(
-      window,
-      MAX_RESULTS + index
-    );
-    Assert.equal(
-      result.element.row.result.suggestedIndex,
-      index,
-      "Sanity check: Our suggested-index result is present"
-    );
-    await checkLabels(MAX_RESULTS, {
-      1: FIREFOX_SUGGEST_LABEL,
-    });
-    await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "test",
   });
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    MAX_RESULTS + index
+  );
+  Assert.equal(
+    result.element.row.result.suggestedIndex,
+    index,
+    "Sanity check: Our suggested-index result is present"
+  );
+  await checkLabels(MAX_RESULTS, {
+    1: FIREFOX_SUGGEST_LABEL,
+  });
+  await UrlbarTestUtils.promisePopupClose(window);
 
   UrlbarProvidersManager.unregisterProvider(provider);
 });
@@ -278,19 +313,17 @@ add_task(async function repeatLabels() {
   });
   UrlbarProvidersManager.registerProvider(provider);
 
-  await withExperiment(async () => {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "test",
-    });
-    await checkLabels(results.length, {
-      0: FIREFOX_SUGGEST_LABEL,
-      1: engineSuggestionsLabel(engineName),
-      2: FIREFOX_SUGGEST_LABEL,
-      3: engineSuggestionsLabel(engineName),
-    });
-    await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "test",
   });
+  await checkLabels(results.length, {
+    0: FIREFOX_SUGGEST_LABEL,
+    1: engineSuggestionsLabel(engineName),
+    2: FIREFOX_SUGGEST_LABEL,
+    3: engineSuggestionsLabel(engineName),
+  });
+  await UrlbarTestUtils.promisePopupClose(window);
 
   UrlbarProvidersManager.unregisterProvider(provider);
 });
@@ -298,88 +331,84 @@ add_task(async function repeatLabels() {
 // Clicking a row label shouldn't do anything.
 add_task(async function clickLabel() {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
-    await withExperiment(async () => {
-      // Do a search. The mock history added in init() should appear with the
-      // Firefox Suggest label at index 1.
-      await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window,
-        value: "test",
-      });
-      await checkLabels(MAX_RESULTS, {
-        1: FIREFOX_SUGGEST_LABEL,
-      });
-
-      // Check the result at index 2.
-      let result2 = await UrlbarTestUtils.getDetailsOfResultAt(window, 2);
-      Assert.ok(result2.url, "Result at index 2 has a URL");
-      let url2 = result2.url;
-      Assert.ok(
-        url2.startsWith("http://example.com/"),
-        "Result at index 2 is one of our mock history results"
-      );
-
-      // Get the row at index 3 and click above it. The click should hit the row
-      // at index 2 and load its URL. We do this to make sure our click code
-      // here in the test works properly and that performing a similar click
-      // relative to index 1 (see below) would hit the row at index 0 if not for
-      // the label at index 1.
-      let result3 = await UrlbarTestUtils.getDetailsOfResultAt(window, 3);
-      let loadPromise = BrowserTestUtils.browserLoaded(
-        gBrowser.selectedBrowser
-      );
-
-      info("Performing click relative to index 3");
-      await UrlbarTestUtils.promisePopupClose(window, () =>
-        click(result3.element.row, { y: -2 })
-      );
-      info("Waiting for load after performing click relative to index 3");
-      await loadPromise;
-      Assert.equal(gBrowser.currentURI.spec, url2, "Loaded URL at index 2");
-      // Now do the search again.
-      await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window,
-        value: "test",
-      });
-
-      await checkLabels(MAX_RESULTS, {
-        1: FIREFOX_SUGGEST_LABEL,
-      });
-
-      // Check the result at index 1, the one with the label.
-      let result1 = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-      Assert.ok(result1.url, "Result at index 1 has a URL");
-      let url1 = result1.url;
-      Assert.ok(
-        url1.startsWith("http://example.com/"),
-        "Result at index 1 is one of our mock history results"
-      );
-      Assert.notEqual(url1, url2, "URLs at indexes 1 and 2 are different");
-
-      // Do a click on the row at index 1 in the same way as before. This time
-      // nothing should happen because the click should hit the label, not the
-      // row at index 0.
-      info("Clicking row label at index 1");
-      click(result1.element.row, { y: -2 });
-      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-      await new Promise(r => setTimeout(r, 500));
-      Assert.ok(UrlbarTestUtils.isPopupOpen(window), "View remains open");
-      Assert.equal(
-        gBrowser.currentURI.spec,
-        url2,
-        "Current URL is still URL from index 2"
-      );
-
-      // Now click the main part of the row at index 1. Its URL should load.
-      loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-      let { height } = result1.element.row.getBoundingClientRect();
-      info(`Clicking main part of the row at index 1, height=${height}`);
-      await UrlbarTestUtils.promisePopupClose(window, () =>
-        click(result1.element.row)
-      );
-      info("Waiting for load after clicking row at index 1");
-      await loadPromise;
-      Assert.equal(gBrowser.currentURI.spec, url1, "Loaded URL at index 1");
+    // Do a search. The mock history added in init() should appear with the
+    // Firefox Suggest label at index 1.
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
     });
+    await checkLabels(MAX_RESULTS, {
+      1: FIREFOX_SUGGEST_LABEL,
+    });
+
+    // Check the result at index 2.
+    let result2 = await UrlbarTestUtils.getDetailsOfResultAt(window, 2);
+    Assert.ok(result2.url, "Result at index 2 has a URL");
+    let url2 = result2.url;
+    Assert.ok(
+      url2.startsWith("http://example.com/"),
+      "Result at index 2 is one of our mock history results"
+    );
+
+    // Get the row at index 3 and click above it. The click should hit the row
+    // at index 2 and load its URL. We do this to make sure our click code
+    // here in the test works properly and that performing a similar click
+    // relative to index 1 (see below) would hit the row at index 0 if not for
+    // the label at index 1.
+    let result3 = await UrlbarTestUtils.getDetailsOfResultAt(window, 3);
+    let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+    info("Performing click relative to index 3");
+    await UrlbarTestUtils.promisePopupClose(window, () =>
+      click(result3.element.row, { y: -2 })
+    );
+    info("Waiting for load after performing click relative to index 3");
+    await loadPromise;
+    Assert.equal(gBrowser.currentURI.spec, url2, "Loaded URL at index 2");
+    // Now do the search again.
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+    });
+
+    await checkLabels(MAX_RESULTS, {
+      1: FIREFOX_SUGGEST_LABEL,
+    });
+
+    // Check the result at index 1, the one with the label.
+    let result1 = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+    Assert.ok(result1.url, "Result at index 1 has a URL");
+    let url1 = result1.url;
+    Assert.ok(
+      url1.startsWith("http://example.com/"),
+      "Result at index 1 is one of our mock history results"
+    );
+    Assert.notEqual(url1, url2, "URLs at indexes 1 and 2 are different");
+
+    // Do a click on the row at index 1 in the same way as before. This time
+    // nothing should happen because the click should hit the label, not the
+    // row at index 0.
+    info("Clicking row label at index 1");
+    click(result1.element.row, { y: -2 });
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(r => setTimeout(r, 500));
+    Assert.ok(UrlbarTestUtils.isPopupOpen(window), "View remains open");
+    Assert.equal(
+      gBrowser.currentURI.spec,
+      url2,
+      "Current URL is still URL from index 2"
+    );
+
+    // Now click the main part of the row at index 1. Its URL should load.
+    loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    let { height } = result1.element.row.getBoundingClientRect();
+    info(`Clicking main part of the row at index 1, height=${height}`);
+    await UrlbarTestUtils.promisePopupClose(window, () =>
+      click(result1.element.row)
+    );
+    info("Waiting for load after clicking row at index 1");
+    await loadPromise;
+    Assert.equal(gBrowser.currentURI.spec, url1, "Loaded URL at index 1");
   });
 });
 
@@ -472,19 +501,6 @@ function engineSuggestionsLabel(engineName) {
 }
 
 /**
- * Calls a callback while enrolled in a mock experiment that enables bucket
- * titles.
- *
- * @param {function} callback
- */
-async function withExperiment(callback) {
-  await UrlbarTestUtils.withExperiment({
-    callback,
-    valueOverrides: { firefoxSuggestLabelsEnabled: true },
-  });
-}
-
-/**
  * Adds a search engine that provides suggestions, calls your callback, and then
  * remove the engine.
  *
@@ -507,6 +523,43 @@ async function withSuggestions(callback) {
     await Services.search.removeEngine(engine);
     await SpecialPowers.popPrefEnv();
   }
+}
+
+/**
+ * Sets the app's locales, calls your callback, and resets locales.
+ *
+ * @param {array} locales
+ *   An array of locale strings. The entire array will be set as the available
+ *   locales, and the first locale in the array will be set as the requested
+ *   locale.
+ * @param {function} callback
+ */
+async function withLocales(locales, callback) {
+  let available = Services.locale.availableLocales;
+  let requested = Services.locale.requestedLocales;
+
+  // Wait for engines to reload after changing locales. Otherwise there are TV
+  // failures.
+  let enginesPromise = SearchTestUtils.promiseSearchNotification(
+    "engines-reloaded"
+  );
+  Services.locale.availableLocales = locales;
+  Services.locale.requestedLocales = locales.slice(0, 1);
+  await enginesPromise;
+  Assert.equal(
+    Services.locale.appLocaleAsBCP47,
+    locales[0],
+    "App locale is now " + locales[0]
+  );
+
+  await callback();
+
+  enginesPromise = SearchTestUtils.promiseSearchNotification(
+    "engines-reloaded"
+  );
+  Services.locale.availableLocales = available;
+  Services.locale.requestedLocales = requested;
+  await enginesPromise;
 }
 
 function click(element, { x = undefined, y = undefined } = {}) {

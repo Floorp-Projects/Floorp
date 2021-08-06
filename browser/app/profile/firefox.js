@@ -446,8 +446,8 @@ pref("browser.urlbar.dnsResolveSingleWordsAfterSearch", 1);
 // for everyone.
 pref("browser.urlbar.keepPanelOpenDuringImeComposition", false);
 
-// Whether Firefox Suggest labels are shown in the urlbar view.
-pref("browser.urlbar.experimental.firefoxSuggestLabels.enabled", false);
+// Whether Firefox Suggest group labels are shown in the urlbar view.
+pref("browser.urlbar.groupLabels.enabled", true);
 
 pref("browser.altClickSave", false);
 
