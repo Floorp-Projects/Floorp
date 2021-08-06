@@ -314,7 +314,8 @@ void DnsAndConnectSocket::SetupBackupTimer() {
 
   // When using Fast Open the correct transport will be setup for sure (it is
   // guaranteed), but it can be that it will happened a bit later.
-  if (timeout && !mSpeculative && !mIsHttp3) {
+  if (timeout && (!mSpeculative || mConnInfo->GetFallbackConnection()) &&
+      !mIsHttp3) {
     // Setup the timer that will establish a backup socket
     // if we do not get a writable event on the main one.
     // We do this because a lost SYN takes a very long time
