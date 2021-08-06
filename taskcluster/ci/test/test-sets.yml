@@ -330,7 +330,7 @@ windows-talos:
 macosx1100-64-qr-failure-tests:
     # - xpcshell-failures
     - mochitest-media-failures
-    # - mochitest-browser-chrome-failures
+    - mochitest-browser-chrome-failures
 
 macosx1100-64-jittests:
     - jittest
@@ -338,7 +338,7 @@ macosx1100-64-jittests:
 macosx1100-64-qr-tests:
     - crashtest
     - jsreftest
-    # - mochitest-browser-chrome
+    - mochitest-browser-chrome
     # - mochitest-chrome-gpu
     # - mochitest-media
     - mochitest-webgpu
