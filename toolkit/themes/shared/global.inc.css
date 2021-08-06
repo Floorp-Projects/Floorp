@@ -38,8 +38,7 @@
 
 :root:-moz-lwtheme {
   --toolbar-field-background-color: rgba(255, 255, 255, 0.8);
-  /* --toolbar-field-focus-background-color is given a `white` fallback in
-     LightweightThemeConsumer.jsm. */
+  --toolbar-field-focus-background-color: white;
   --toolbar-field-color: black;
   --toolbar-field-focus-color: black;
   --toolbar-field-border-color: transparent;
