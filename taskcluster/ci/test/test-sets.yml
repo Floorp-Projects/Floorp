@@ -336,7 +336,7 @@ macosx1100-64-jittests:
     - jittest
 
 macosx1100-64-qr-tests:
-    # - crashtest
+    - crashtest
     - jsreftest
     # - mochitest-browser-chrome
     # - mochitest-chrome-gpu
