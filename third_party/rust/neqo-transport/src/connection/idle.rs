@@ -7,6 +7,8 @@
 use std::cmp::{max, min};
 use std::time::{Duration, Instant};
 
+pub const LOCAL_IDLE_TIMEOUT: Duration = Duration::from_secs(30);
+
 #[derive(Debug, Clone)]
 /// There's a little bit of different behavior for resetting idle timeout. See
 /// -transport 10.2 ("Idle Timeout").
@@ -22,15 +24,23 @@ enum IdleTimeoutState {
 pub struct IdleTimeout {
     timeout: Duration,
     state: IdleTimeoutState,
-    keep_alive_outstanding: bool,
 }
 
+#[cfg(test)]
 impl IdleTimeout {
     pub fn new(timeout: Duration) -> Self {
         Self {
             timeout,
             state: IdleTimeoutState::Init,
-            keep_alive_outstanding: false,
+        }
+    }
+}
+
+impl Default for IdleTimeout {
+    fn default() -> Self {
+        Self {
+            timeout: LOCAL_IDLE_TIMEOUT,
+            state: IdleTimeoutState::Init,
         }
     }
 }
@@ -40,19 +50,12 @@ impl IdleTimeout {
         self.timeout = min(self.timeout, peer_timeout);
     }
 
-    pub fn expiry(&self, now: Instant, pto: Duration, keep_alive: bool) -> Instant {
+    pub fn expiry(&self, now: Instant, pto: Duration) -> Instant {
         let start = match self.state {
             IdleTimeoutState::Init => now,
             IdleTimeoutState::PacketReceived(t) | IdleTimeoutState::AckElicitingPacketSent(t) => t,
         };
-        let delay = if keep_alive {
-            // For a keep-alive timer, wait for half the timeout interval, but be sure
-            // not to wait too little or we will send many unnecessary probes.
-            max(self.timeout / 2, pto)
-        } else {
-            max(self.timeout, pto * 3)
-        };
-        start + delay
+        start + max(self.timeout, pto * 3)
     }
 
     pub fn on_packet_sent(&mut self, now: Instant) {
@@ -82,19 +85,6 @@ impl IdleTimeout {
     }
 
     pub fn expired(&self, now: Instant, pto: Duration) -> bool {
-        now >= self.expiry(now, pto, false)
-    }
-
-    pub fn send_keep_alive(&mut self, now: Instant, pto: Duration) -> bool {
-        if !self.keep_alive_outstanding && now >= self.expiry(now, pto, true) {
-            self.keep_alive_outstanding = true;
-            true
-        } else {
-            false
-        }
-    }
-
-    pub fn lost_keep_alive(&mut self) {
-        self.keep_alive_outstanding = false;
+        now >= self.expiry(now, pto)
     }
 }
