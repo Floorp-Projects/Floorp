@@ -973,6 +973,9 @@ class BrowserParent final : public PBrowserParent,
   // True after RecvLockNativePointer has been called and until
   // UnlockNativePointer has been called.
   bool mLockedNativePointer : 1;
+
+  // True between ShowTooltip and HideTooltip messages.
+  bool mShowingTooltip : 1;
 };
 
 struct MOZ_STACK_CLASS BrowserParent::AutoUseNewTab final {
