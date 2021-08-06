@@ -213,12 +213,16 @@ class CPUInfo {
 
   static void SetSSEVersion();
 
-  static void SetMaxEnabledSSEVersion(SSEVersion v) {
-    if (maxEnabledSSEVersion == UnknownSSE) {
-      maxEnabledSSEVersion = v;
-    } else {
-      maxEnabledSSEVersion = std::min(v, maxEnabledSSEVersion);
-    }
+  // The flags can become set at startup when we JIT non-JS code eagerly; thus
+  // we reset the flags before setting any flags explicitly during testing, so
+  // that the flags can be in a consistent state.
+
+  static void reset() {
+    maxSSEVersion = UnknownSSE;
+    maxEnabledSSEVersion = UnknownSSE;
+    avxPresent = false;
+    avxEnabled = false;
+    popcntPresent = false;
   }
 
  public:
@@ -238,37 +242,30 @@ class CPUInfo {
   static bool IsBMI2Present() { return bmi2Present; }
   static bool IsLZCNTPresent() { return lzcntPresent; }
 
-  // The SSE flags can become set at startup when we JIT non-JS code eagerly;
-  // thus we must reset the flags before setting any flags explicitly during
-  // testing, so that the flags can be in a consistent state.
-
-  static void ResetSSEFlagsForTesting() {
-    maxSSEVersion = UnknownSSE;
-    maxEnabledSSEVersion = UnknownSSE;
-    avxPresent = false;
-    avxEnabled = false;
-  }
-
-  // The following should be called only after calling ResetSSEFlagsForTesting.
-  // If several are called, the most restrictive setting is kept.
-
   static void SetSSE3Disabled() {
-    SetMaxEnabledSSEVersion(SSE2);
+    reset();
+    maxEnabledSSEVersion = SSE2;
     avxEnabled = false;
   }
   static void SetSSSE3Disabled() {
-    SetMaxEnabledSSEVersion(SSE3);
+    reset();
+    maxEnabledSSEVersion = SSE3;
     avxEnabled = false;
   }
   static void SetSSE41Disabled() {
-    SetMaxEnabledSSEVersion(SSSE3);
+    reset();
+    maxEnabledSSEVersion = SSSE3;
     avxEnabled = false;
   }
   static void SetSSE42Disabled() {
-    SetMaxEnabledSSEVersion(SSE4_1);
+    reset();
+    maxEnabledSSEVersion = SSE4_1;
     avxEnabled = false;
   }
-  static void SetAVXEnabled() { avxEnabled = true; }
+  static void SetAVXEnabled() {
+    reset();
+    avxEnabled = true;
+  }
 };
 
 class AssemblerX86Shared : public AssemblerShared {
