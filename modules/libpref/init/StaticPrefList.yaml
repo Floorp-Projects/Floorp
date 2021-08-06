@@ -9250,6 +9250,13 @@
   value: false
   mirror: always
 
+# The factor by which to increase the keepalive timeout when the
+# NS_HTTP_LARGE_KEEPALIVE flag is used for a connection
+- name: network.http.largeKeepaliveFactor
+  type: RelaxedAtomicUint32
+  value: 10
+  mirror: always
+
 # If set to true, IOService.offline depends on IOService.connectivity.
 - name: network.offline-mirrors-connectivity
   type: RelaxedAtomicBool
