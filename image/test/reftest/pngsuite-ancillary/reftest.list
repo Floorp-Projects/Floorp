@@ -3,9 +3,9 @@
 # cHRM chunks
 #
 # ccwn2c08 - gamma 1.0000 chunk, chroma chunk w:0.3127,0.3290 r:0.64,0.33 g:0.30,0.60 b:0.15,0.06
-fuzzy-if(winWidget,0-8,0-569) fuzzy-if(Android,0-1,0-6) == ccwn2c08.png ccwn2c08.html
+fuzzy-if(appleSilicon,1-1,12-12) fuzzy-if(winWidget,0-8,0-569) fuzzy-if(Android,0-1,0-6) == ccwn2c08.png ccwn2c08.html
 # ccwn3p08 - gamma 1.0000 chunk, chroma chunk w:0.3127,0.3290 r:0.64,0.33 g:0.30,0.60 b:0.15,0.06
-fuzzy-if(winWidget,0-8,0-577) fuzzy-if(Android,0-1,0-19) == ccwn3p08.png ccwn3p08.html
+fuzzy-if(appleSilicon,1-1,4-4) fuzzy-if(winWidget,0-8,0-577) fuzzy-if(Android,0-1,0-19) == ccwn3p08.png ccwn3p08.html
 
 # pHYs chunks
 #
