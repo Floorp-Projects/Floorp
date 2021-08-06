@@ -121,6 +121,10 @@ async function shouldNotifyDownloadUI() {
           if ((await IOUtils.stat(aDownload.target.path)).size != 0) {
             throw new Error(`Download partFile was not cleaned up properly`);
           }
+          // Assert that the Referrer is presnt
+          if (!aDownload.source.referrerInfo) {
+            throw new Error("The Blocked download is missing the ReferrerInfo");
+          }
 
           res(aDownload);
           list.removeView(view);
