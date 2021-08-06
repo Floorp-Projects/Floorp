@@ -1141,6 +1141,7 @@ static bool CreateExportObject(
     propertyAttr |= JSPROP_READONLY | JSPROP_PERMANENT;
   }
   if (!exportObj) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
@@ -1261,6 +1262,7 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
 
     maybeDebug = cx->make_unique<DebugState>(*code, *this);
     if (!maybeDebug) {
+      ReportOutOfMemory(cx);
       return false;
     }
   } else {
@@ -1288,6 +1290,7 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
   // final pre-requisite for a live instance.
 
   if (!cx->realm()->wasm.registerInstance(cx, instance)) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
