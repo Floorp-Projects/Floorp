@@ -48,7 +48,6 @@ class BrowserToolbarIntegration(
             )
 
             indicators = listOf(
-                DisplayToolbar.Indicators.SECURITY,
                 DisplayToolbar.Indicators.TRACKING_PROTECTION
             )
 
