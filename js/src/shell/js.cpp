@@ -12765,6 +12765,11 @@ int main(int argc, char** argv) {
   //   order.  For example: --wasm-compiler=optimizing --wasm-compiler=baseline.
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  // It's benign always to reset the SSE flags because they will just be
+  // recomputed to their original values as needed if we don't set any limits
+  // here.
+  js::jit::CPUInfo::ResetSSEFlagsForTesting();
+
   if (op.getBoolOption("no-sse3")) {
     js::jit::CPUInfo::SetSSE3Disabled();
     if (!sCompilerProcessFlags.append("--no-sse3")) {
