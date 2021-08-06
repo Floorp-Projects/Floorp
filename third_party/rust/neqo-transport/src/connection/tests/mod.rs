@@ -6,7 +6,7 @@
 
 #![deny(clippy::pedantic)]
 
-use super::{Connection, ConnectionError, ConnectionId, Output, State};
+use super::{Connection, ConnectionError, ConnectionId, Output, State, LOCAL_IDLE_TIMEOUT};
 use crate::addr_valid::{AddressValidation, ValidateAddress};
 use crate::cc::{CWND_INITIAL_PKTS, CWND_MIN};
 use crate::cid::ConnectionIdRef;
@@ -17,7 +17,6 @@ use crate::stats::MAX_PTO_COUNTS;
 use crate::{ConnectionIdDecoder, ConnectionIdGenerator, ConnectionParameters, Error, StreamType};
 
 use std::cell::RefCell;
-use std::cmp::min;
 use std::convert::TryFrom;
 use std::mem;
 use std::rc::Rc;
@@ -255,13 +254,15 @@ fn force_idle(
     // Delivering s1 should not have the client change its mind about the ACK.
     let ack = client.process(Some(s1), now).dgram();
     assert!(ack.is_some());
-    let idle_timeout = min(
-        client.conn_params.get_idle_timeout(),
-        server.conn_params.get_idle_timeout(),
+    assert_eq!(
+        client.process_output(now),
+        Output::Callback(LOCAL_IDLE_TIMEOUT)
     );
-    assert_eq!(client.process_output(now), Output::Callback(idle_timeout));
     now += rtt / 2;
-    assert_eq!(server.process(ack, now), Output::Callback(idle_timeout));
+    assert_eq!(
+        server.process(ack, now),
+        Output::Callback(LOCAL_IDLE_TIMEOUT)
+    );
     now
 }
 
