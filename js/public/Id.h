@@ -119,8 +119,8 @@ struct PropertyKey {
   bool isWellKnownSymbol(JS::SymbolCode code) const;
 
   // This API can be used by embedders to convert pinned (aka interned) strings,
-  // as created by JS_AtomizeAndPinJSString, into PropertyKeys.
-  // This means the string does not have to be explicitly rooted.
+  // as created by JS_AtomizeAndPinString, into PropertyKeys. This means the
+  // string does not have to be explicitly rooted.
   //
   // Only use this API when absolutely necessary, otherwise use JS_StringToId.
   static PropertyKey fromPinnedString(JSString* str);
