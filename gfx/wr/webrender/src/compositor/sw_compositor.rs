@@ -7,7 +7,7 @@ use std::cell::{Cell, UnsafeCell};
 use std::collections::{hash_map::HashMap, VecDeque};
 use std::ops::{Deref, DerefMut, Range};
 use std::ptr;
-use std::sync::atomic::{AtomicBool, AtomicI8, AtomicIsize, AtomicPtr, AtomicU32, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI8, AtomicPtr, AtomicU32, AtomicU8, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread;
 use crate::{
@@ -433,8 +433,6 @@ struct SwCompositeThread {
     /// fact that SwCompositor maintains a strong reference to the contents
     /// in an SwTile to keep it alive while this is in use.
     current_job: AtomicPtr<SwCompositeGraphNode>,
-    /// Count of unprocessed jobs still in the queue
-    job_count: AtomicIsize,
     /// Condition signaled when either there are jobs available to process or
     /// there are no more jobs left to process. Otherwise stated, this signals
     /// when the job queue transitions from an empty to non-empty state or from
@@ -442,6 +440,10 @@ struct SwCompositeThread {
     jobs_available: Condvar,
     /// Whether all available jobs have been processed.
     jobs_completed: AtomicBool,
+    /// Whether the main thread is waiting for for job completeion.
+    waiting_for_jobs: AtomicBool,
+    /// Whether the SwCompositor is shutting down
+    shutting_down: AtomicBool,
 }
 
 /// The SwCompositeThread struct is shared between the SwComposite thread
@@ -461,9 +463,10 @@ impl SwCompositeThread {
         let info = Arc::new(SwCompositeThread {
             jobs: Mutex::new(SwCompositeJobQueue::new()),
             current_job: AtomicPtr::new(ptr::null_mut()),
-            job_count: AtomicIsize::new(0),
             jobs_available: Condvar::new(),
-            jobs_completed: AtomicBool::new(false),
+            jobs_completed: AtomicBool::new(true),
+            waiting_for_jobs: AtomicBool::new(false),
+            shutting_down: AtomicBool::new(false),
         });
         let result = info.clone();
         let thread_name = "SwComposite";
@@ -490,8 +493,8 @@ impl SwCompositeThread {
     }
 
     fn deinit(&self) {
-        // Force the job count to be negative to signal the thread needs to exit.
-        self.job_count.store(isize::MIN / 2, Ordering::SeqCst);
+        // Signal that the thread needs to exit.
+        self.shutting_down.store(true, Ordering::SeqCst);
         // Wake up the thread in case it is blocked waiting for new jobs
         self.jobs_available.notify_all();
     }
@@ -504,8 +507,6 @@ impl SwCompositeThread {
         graph_node.process_job(band);
         // Unblock any child dependencies now that this job has been processed.
         graph_node.unblock_children(self);
-        // Decrement the job count.
-        self.job_count.fetch_sub(1, Ordering::SeqCst);
     }
 
     /// Queue a tile for composition by adding to the queue and increasing the job count.
@@ -545,17 +546,15 @@ impl SwCompositeThread {
             filter,
             num_bands,
         };
-        self.job_count.fetch_add(num_bands as isize, Ordering::SeqCst);
         if graph_node.set_job(job, num_bands) {
             self.send_job(job_queue, graph_node);
         }
     }
 
     fn prepare_for_composites(&self) {
-        // Initialize the job count to 1 to prevent spurious signaling of job completion
-        // in the middle of queuing compositing jobs until we're actually waiting for
-        // composition.
-        self.job_count.store(1, Ordering::SeqCst);
+        // Initially, the job queue is empty. Trivially, this means we consider all
+        // jobs queued so far as completed.
+        self.jobs_completed.store(true, Ordering::SeqCst);
     }
 
     /// Lock the thread for access to the job queue.
@@ -622,29 +621,35 @@ impl SwCompositeThread {
                 continue;
             }
             // Otherwise, the job queue is currently empty. Depending on the
-            // value of the job count we may either wait for jobs to become
-            // available or exit.
+            // job status, we may either wait for jobs to become available or exit.
             if wait {
+                // For the SwComposite thread, if we arrive here, the job queue
+                // is empty. Signal that all available jobs have been completed.
                 self.jobs_completed.store(true, Ordering::SeqCst);
-            }
-            match self.job_count.load(Ordering::SeqCst) {
-                // If we completed all available jobs, signal completion. If
-                // waiting inside the SwCompositeThread, then block waiting for
-                // more jobs to become available in a new frame. Otherwise,
-                // return immediately.
-                0 => {
+                if self.waiting_for_jobs.load(Ordering::SeqCst) {
+                    // Wake the main thread if it is waiting for a change in job status.
                     self.jobs_available.notify_all();
-                    if !wait {
-                        return None;
-                    }
+                } else if self.shutting_down.load(Ordering::SeqCst) {
+                    // If SwComposite thread needs to shut down, then exit and stop
+                    // waiting for jobs.
+                    return None;
                 }
-                // A negative job count signals to exit immediately.
-                job_count if job_count < 0 => return None,
-                _ => {}
+            } else {
+                // If all available jobs have been completed by the SwComposite
+                // thread, then the main thread no longer needs to wait for any
+                // new jobs to appear in the queue and should exit.
+                if self.jobs_completed.load(Ordering::SeqCst) {
+                    return None;
+                }
+                // Otherwise, signal that the main thread is waiting for jobs.
+                self.waiting_for_jobs.store(true, Ordering::SeqCst);
             }
-            // The SwCompositeThread needs to wait for jobs to become
-            // available to avoid busy waiting on the queue.
+            // Wait until jobs are added before checking the job queue again.
             jobs = self.jobs_available.wait(jobs).unwrap();
+            if !wait {
+                // The main thread is done waiting for jobs.
+                self.waiting_for_jobs.store(false, Ordering::SeqCst);
+            }
         }
     }
 
@@ -660,9 +665,6 @@ impl SwCompositeThread {
     /// they were queued without having to rely upon possibly unavailable
     /// graph dependencies.
     fn wait_for_composites(&self, sync: bool) {
-        // Subtract off the bias to signal we're now waiting on composition and
-        // need to know if jobs are completed.
-        self.job_count.fetch_sub(1, Ordering::SeqCst);
         // If processing asynchronously, try to steal jobs from the composite
         // thread if it is busy.
         if !sync {
@@ -675,17 +677,21 @@ impl SwCompositeThread {
         // If processing synchronously, just wait for the composite thread
         // to complete processing any in-flight jobs, then bail.
         let mut jobs = self.lock();
-        // If the job count is non-zero here, then there are in-flight jobs.
+        // Signal that the main thread may wait for job completion so that the
+        // SwComposite thread can wake it up if necessary.
+        self.waiting_for_jobs.store(true, Ordering::SeqCst);
+        // Wait for job completion to ensure there are no more in-flight jobs.
         while !self.jobs_completed.load(Ordering::SeqCst) {
             jobs = self.jobs_available.wait(jobs).unwrap();
         }
+        // Done waiting for job completion.
+        self.waiting_for_jobs.store(false, Ordering::SeqCst);
     }
 
-    /// Check if there is a non-zero job count (including sentinel job) that
-    /// would indicate we are starting to already process jobs in the composite
-    /// thread.
+    /// Check if all in-flight jobs have not been completed yet. If they have
+    /// not, then we assume the SwComposite thread is currently busy compositing.
     fn is_busy_compositing(&self) -> bool {
-        self.job_count.load(Ordering::SeqCst) > 0
+        !self.jobs_completed.load(Ordering::SeqCst)
     }
 }
 
