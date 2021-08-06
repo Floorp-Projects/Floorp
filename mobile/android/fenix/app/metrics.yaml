@@ -1040,8 +1040,8 @@ metrics:
       - technical
       - interaction
     notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-08-01"
+      - android-probes@mozilla.com
+    expires: "2022-02-01"
   mozilla_products:
     type: string_list
     lifetime: application
