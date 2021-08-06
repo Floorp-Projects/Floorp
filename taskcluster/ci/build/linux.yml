@@ -48,6 +48,45 @@ linux64/opt:
             - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
+linux64-x11/opt:
+    description: "Linux64 Opt (X11-only)"
+    index:
+        product: firefox
+        job-name: linux64-x11-opt
+    treeherder:
+        platform: linux64/opt
+        symbol: Bx
+        tier: 2
+    worker-type: b-linux
+    worker:
+        max-run-time: 7200
+        env:
+            PERFHERDER_EXTRA_OPTIONS: x11
+    run:
+        using: mozharness
+        actions: [get-secrets, build]
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_linux_64_builds.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+    run-on-projects: ['integration']
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-clang
+            - linux64-rust
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node
+            - linux64-lucetc
+            - sysroot-x86_64-linux-gnu-x11
+            - wasi-sysroot
+
 linux64-plain/opt:
     description: "Linux64 Opt Plain"
     index:
