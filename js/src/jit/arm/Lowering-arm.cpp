@@ -682,37 +682,6 @@ void LIRGenerator::visitWasmLoad(MWasmLoad* ins) {
 
   LAllocation ptr = useRegisterAtStart(base);
 
-  if (IsUnaligned(ins->access())) {
-    MOZ_ASSERT(!ins->access().isAtomic());
-
-    // Unaligned access expected! Revert to a byte load.
-    LDefinition ptrCopy = tempCopy(base, 0);
-
-    LDefinition noTemp = LDefinition::BogusTemp();
-    if (ins->type() == MIRType::Int64) {
-      auto* lir = new (alloc())
-          LWasmUnalignedLoadI64(ptr, ptrCopy, temp(), noTemp, noTemp);
-      defineInt64(lir, ins);
-      return;
-    }
-
-    LDefinition temp2 = noTemp;
-    LDefinition temp3 = noTemp;
-    if (IsFloatingPointType(ins->type())) {
-      // For putting the low value in a GPR.
-      temp2 = temp();
-      // For putting the high value in a GPR.
-      if (ins->type() == MIRType::Double) {
-        temp3 = temp();
-      }
-    }
-
-    auto* lir =
-        new (alloc()) LWasmUnalignedLoad(ptr, ptrCopy, temp(), temp2, temp3);
-    define(lir, ins);
-    return;
-  }
-
   if (ins->type() == MIRType::Int64) {
     auto* lir = new (alloc()) LWasmLoadI64(ptr);
     if (ins->access().offset() || ins->access().type() == Scalar::Int64) {
@@ -744,32 +713,6 @@ void LIRGenerator::visitWasmStore(MWasmStore* ins) {
   }
 
   LAllocation ptr = useRegisterAtStart(base);
-
-  if (IsUnaligned(ins->access())) {
-    MOZ_ASSERT(!ins->access().isAtomic());
-
-    // Unaligned access expected! Revert to a byte store.
-    LDefinition ptrCopy = tempCopy(base, 0);
-
-    MIRType valueType = ins->value()->type();
-    if (valueType == MIRType::Int64) {
-      LInt64Allocation value = useInt64RegisterAtStart(ins->value());
-      auto* lir =
-          new (alloc()) LWasmUnalignedStoreI64(ptr, value, ptrCopy, temp());
-      add(lir, ins);
-      return;
-    }
-
-    LAllocation value = useRegisterAtStart(ins->value());
-    LDefinition valueHelper = IsFloatingPointType(valueType)
-                                  ? temp()  // to do a FPU -> GPR move.
-                                  : tempCopy(base, 1);  // to clobber the value.
-
-    auto* lir =
-        new (alloc()) LWasmUnalignedStore(ptr, value, ptrCopy, valueHelper);
-    add(lir, ins);
-    return;
-  }
 
   if (ins->value()->type() == MIRType::Int64) {
     LInt64Allocation value = useInt64RegisterAtStart(ins->value());

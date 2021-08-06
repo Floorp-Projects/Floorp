@@ -7024,8 +7024,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       // there's no constraint on what the output register may be.
       masm.wasmLoad(*access, srcAddr, dest.any());
     }
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || \
-    defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     if (IsUnaligned(*access)) {
       switch (dest.tag) {
         case AnyReg::I64:
@@ -7053,6 +7052,12 @@ class BaseCompiler final : public BaseCompilerInterface {
         masm.wasmLoad(*access, HeapReg, ptr, ptr, dest.any());
       }
     }
+#elif defined(JS_CODEGEN_ARM)
+    if (dest.tag == AnyReg::I64) {
+      masm.wasmLoadI64(*access, HeapReg, ptr, ptr, dest.i64());
+    } else {
+      masm.wasmLoad(*access, HeapReg, ptr, ptr, dest.any());
+    }
 #elif defined(JS_CODEGEN_ARM64)
     if (dest.tag == AnyReg::I64) {
       masm.wasmLoadI64(*access, HeapReg, ptr, dest.i64());
@@ -7067,11 +7072,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   RegI32 needStoreTemp(const MemoryAccessDesc& access, ValType srcType) {
-#if defined(JS_CODEGEN_ARM)
-    if (IsUnaligned(access) && srcType != ValType::I32) {
-      return needI32();
-    }
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     return needI32();
 #endif
     return RegI32::Invalid();
@@ -7116,36 +7117,13 @@ class BaseCompiler final : public BaseCompilerInterface {
       masm.wasmStore(*access, value, dstAddr);
     }
 #elif defined(JS_CODEGEN_ARM)
-    if (IsUnaligned(*access)) {
-      switch (src.tag) {
-        case AnyReg::I64:
-          masm.wasmUnalignedStoreI64(*access, src.i64(), HeapReg, ptr, ptr,
-                                     temp);
-          break;
-        case AnyReg::F32:
-          masm.wasmUnalignedStoreFP(*access, src.f32(), HeapReg, ptr, ptr,
-                                    temp);
-          break;
-        case AnyReg::F64:
-          masm.wasmUnalignedStoreFP(*access, src.f64(), HeapReg, ptr, ptr,
-                                    temp);
-          break;
-        case AnyReg::I32:
-          MOZ_ASSERT(temp.isInvalid());
-          masm.wasmUnalignedStore(*access, src.i32(), HeapReg, ptr, ptr, temp);
-          break;
-        default:
-          MOZ_CRASH("Unexpected type");
-      }
+    MOZ_ASSERT(temp.isInvalid());
+    if (access->type() == Scalar::Int64) {
+      masm.wasmStoreI64(*access, src.i64(), HeapReg, ptr, ptr);
+    } else if (src.tag == AnyReg::I64) {
+      masm.wasmStore(*access, AnyRegister(src.i64().low), HeapReg, ptr, ptr);
     } else {
-      MOZ_ASSERT(temp.isInvalid());
-      if (access->type() == Scalar::Int64) {
-        masm.wasmStoreI64(*access, src.i64(), HeapReg, ptr, ptr);
-      } else if (src.tag == AnyReg::I64) {
-        masm.wasmStore(*access, AnyRegister(src.i64().low), HeapReg, ptr, ptr);
-      } else {
-        masm.wasmStore(*access, src.any(), HeapReg, ptr, ptr);
-      }
+      masm.wasmStore(*access, src.any(), HeapReg, ptr, ptr);
     }
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     if (IsUnaligned(*access)) {
