@@ -681,3 +681,45 @@ add_task(async function test_web_audio_background_tab() {
     });
   });
 });
+
+/**
+ * Test that foreground tab's process priority isn't changed when going back to
+ * a bfcached session history entry.
+ */
+add_task(async function test_audio_background_tab() {
+  let page1 = "http://example.com";
+  let page2 = page1 + "/?2";
+
+  await BrowserTestUtils.withNewTab(page1, async browser => {
+    let childID = browsingContextChildID(browser.browsingContext);
+    Assert.equal(
+      gTabPriorityWatcher.currentPriority(childID),
+      PROCESS_PRIORITY_FOREGROUND,
+      "Loading a new tab should make it prioritized."
+    );
+    let loaded = BrowserTestUtils.browserLoaded(browser, false, page2);
+    BrowserTestUtils.loadURI(browser, page2);
+    await loaded;
+
+    childID = browsingContextChildID(browser.browsingContext);
+    Assert.equal(
+      gTabPriorityWatcher.currentPriority(childID),
+      PROCESS_PRIORITY_FOREGROUND,
+      "Loading a new page should keep the tab prioritized."
+    );
+
+    let pageShowPromise = BrowserTestUtils.waitForContentEvent(
+      browser,
+      "pageshow"
+    );
+    browser.goBack();
+    await pageShowPromise;
+
+    childID = browsingContextChildID(browser.browsingContext);
+    Assert.equal(
+      gTabPriorityWatcher.currentPriority(childID),
+      PROCESS_PRIORITY_FOREGROUND,
+      "Loading a page from the bfcache should keep the tab prioritized."
+    );
+  });
+});
