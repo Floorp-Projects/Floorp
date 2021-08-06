@@ -13,6 +13,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.AddonsManagerAdapterDelegate
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,8 +27,9 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 class AddonsManagementViewTest {
 
     @RelaxedMockK private lateinit var navController: NavController
-    @RelaxedMockK private lateinit var showPermissionDialog: (Addon) -> Unit
     private lateinit var managementView: AddonsManagerAdapterDelegate
+    private var showPermissionDialog: (Addon) -> Unit = { permissionDialogDisplayed = true }
+    private var permissionDialogDisplayed = false
 
     @Before
     fun setup() {
@@ -111,7 +113,7 @@ class AddonsManagementViewTest {
     fun `onInstallAddonButtonClicked shows permission dialog`() {
         val addon = mockk<Addon>()
         managementView.onInstallAddonButtonClicked(addon)
-        verify { showPermissionDialog(addon) }
+        assertTrue(permissionDialogDisplayed)
     }
 
     @Test
