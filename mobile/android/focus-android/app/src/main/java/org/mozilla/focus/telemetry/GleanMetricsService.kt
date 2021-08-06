@@ -36,6 +36,7 @@ import java.util.UUID
  */
 class GleanMetricsService(context: Context) : MetricsService {
 
+    @Suppress("UnusedPrivateMember")
     private val activationPing = ActivationPing(context)
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -77,7 +78,8 @@ class GleanMetricsService(context: Context) : MetricsService {
                     Browser.defaultSearchEngine.set(getDefaultSearchEngineIdentifierForTelemetry(context))
                 }
 
-                activationPing.checkAndSend()
+                // Disabled until data-review r+
+                // activationPing.checkAndSend()
             }
         }
     }

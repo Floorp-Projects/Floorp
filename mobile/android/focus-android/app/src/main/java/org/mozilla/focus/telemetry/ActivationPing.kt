@@ -11,8 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.focus.GleanMetrics.Activation
-import org.mozilla.focus.GleanMetrics.Pings
 
 /**
  * Ensures that only one activation ping is ever sent.
@@ -58,11 +56,13 @@ class ActivationPing(private val context: Context) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun triggerPing() {
         // Generate the activation_id.
-        Activation.activationId.generateAndSet()
+        // Activation.activationId.generateAndSet()
 
         CoroutineScope(Dispatchers.IO).launch {
-            Pings.activation.submit()
-            markAsTriggered()
+            // Disabled until data-review r+
+            // See: https://github.com/mozilla-mobile/focus-android/pull/5065
+            // Pings.activation.submit()
+            // markAsTriggered()
         }
     }
 

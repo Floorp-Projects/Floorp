@@ -14,12 +14,12 @@ browser:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/4545
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/issues/4901
+      - https://github.com/mozilla-mobile/focus-android/pull/5065#issuecomment-894328647
     data_sensitivity:
       - interaction
     notification_emails:
-      - jalmeida@mozilla.com
-    expires: "2022-08-01"
+      - android-probes@mozilla.com
+    expires: "2022-07-01"
   default_search_engine:
     type: string
     lifetime: application
@@ -28,12 +28,12 @@ browser:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/4545
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/issues/4901
+      - https://github.com/mozilla-mobile/focus-android/pull/5065#issuecomment-894328647
     data_sensitivity:
       - interaction
     notification_emails:
-      - jalmeida@mozilla.com
-    expires: never
+      - android-probes@mozilla.com
+    expires: "2022-07-01"
   locale_override:
     type: string
     lifetime: application
@@ -43,31 +43,12 @@ browser:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/4545
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/issues/4901
+      - https://github.com/mozilla-mobile/focus-android/pull/5065#issuecomment-894328647
     data_sensitivity:
       - technical
     notification_emails:
-      - jalmeida@mozilla.com
-    expires: never
-
-activation:
-  activation_id:
-    type: uuid
-    lifetime: user
-    description: |
-      An alternate identifier, not correlated with the client_id, generated once
-      and only sent with the activation ping.
-    send_in_pings:
-      - activation
-    bugs:
-      - https://github.com/mozilla-mobile/focus-android/issues/4545
-    data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/issues/4901
-    data_sensitivity:
-      - highly_sensitive
-    notification_emails:
-      - jalmeida@mozilla.com
-    expires: never
+      - android-probes@mozilla.com
+    expires: "2022-07-01"
 
 legacy_ids:
   client_id:
@@ -82,6 +63,7 @@ legacy_ids:
       - https://github.com/mozilla-mobile/focus-android/issues/4901
     notification_emails:
       - jalmeida@mozilla.com
+      - android-probes@mozilla.com
     expires: never
 
 browser.search:
