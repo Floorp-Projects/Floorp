@@ -46,12 +46,6 @@ class nsContentSecurityUtils {
                               uint64_t aWindowID, uint32_t aLineNumber,
                               uint32_t aColumnNumber);
 
-  // Helper function for various checks:
-  // This function detects profiles with userChrome.js or extension signatures
-  // disabled. We can't/won't enforce strong security for people with those
-  // hacks
-  static void DetectJsHacks();
-
   // Helper function to query the HTTP Channel of a potential
   // multi-part channel. Mostly used for querying response headers
   static nsresult GetHttpChannelFromPotentialMultiPart(
