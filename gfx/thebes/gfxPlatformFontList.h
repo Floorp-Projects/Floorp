@@ -541,9 +541,18 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   friend class mozilla::fontlist::FontList;
   friend class InitOtherFamilyNamesForStylo;
 
+  template <size_t N>
+  static bool FamilyInList(const nsACString& aName, const char* (&aList)[N]) {
+    return FamilyInList(aName, aList, N);
+  }
   static bool FamilyInList(const nsACString& aName, const char* aList[],
                            size_t aCount);
+
   // Check list is correctly sorted (in debug build only; no-op on release).
+  template <size_t N>
+  static void CheckFamilyList(const char* (&aList)[N]) {
+    CheckFamilyList(aList, N);
+  }
   static void CheckFamilyList(const char* aList[], size_t aCount);
 
   class InitOtherFamilyNamesRunnable : public mozilla::CancelableRunnable {

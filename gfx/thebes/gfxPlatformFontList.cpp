@@ -24,6 +24,7 @@
 
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BinarySearch.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
@@ -412,12 +413,14 @@ void gfxPlatformFontList::ApplyWhitelist(
 
 bool gfxPlatformFontList::FamilyInList(const nsACString& aName,
                                        const char* aList[], size_t aCount) {
-  auto cmp = [&](const char* const aVal) -> int {
-    return nsCaseInsensitiveUTF8StringComparator(aName.BeginReading(), aVal,
-                                                 aName.Length(), strlen(aVal));
-  };
   size_t result;
-  return BinarySearchIf(aList, 0, aCount, cmp, &result);
+  return BinarySearchIf(
+      aList, 0, aCount,
+      [&](const char* const aVal) -> int {
+        return nsCaseInsensitiveUTF8StringComparator(
+            aName.BeginReading(), aVal, aName.Length(), strlen(aVal));
+      },
+      &result);
 }
 
 void gfxPlatformFontList::CheckFamilyList(const char* aList[], size_t aCount) {
