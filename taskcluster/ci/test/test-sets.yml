@@ -340,7 +340,7 @@ macosx1100-64-qr-tests:
     - jsreftest
     - mochitest-browser-chrome
     # - mochitest-chrome-gpu
-    # - mochitest-media
+    - mochitest-media
     - mochitest-webgpu
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
