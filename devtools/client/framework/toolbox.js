@@ -3012,7 +3012,7 @@ Toolbox.prototype = {
   /**
    * Fired when user just started navigating away to another web page.
    */
-  async _onWillNavigate({ isFrameSwitching } = {}) {
+  async _onWillNavigate() {
     // On navigate, the server will resume all paused threads, but due to an
     // issue which can cause loosing outgoing messages/RDP packets, the THREAD_STATE
     // resources for the resumed state might not get received. So let assume it happens
@@ -3025,13 +3025,9 @@ Toolbox.prototype = {
       }
     }
 
-    // Clearing the error count and the iframe list as soon as we navigate
+    // Clearing the error count as soon as we navigate
     this.setErrorCount(0);
-    if (!isFrameSwitching) {
-      this._updateFrames({ destroyAll: true });
-    }
     this.updateToolboxButtons();
-
     const toolId = this.currentToolId;
     // For now, only inspector, webconsole, netmonitor and accessibility fire "reloaded" event
     if (
@@ -4377,9 +4373,7 @@ Toolbox.prototype = {
         resource.name === "will-navigate" &&
         resource.targetFront.isTopLevel
       ) {
-        this._onWillNavigate({
-          isFrameSwitching: resource.isFrameSwitching,
-        });
+        this._onWillNavigate();
         // While we will call `setErrorCount(0)` from onWillNavigate, we also need to reset
         // `errors` local variable in order to clear previous errors processed in the same
         // throttling bucket as this will-navigate resource.
