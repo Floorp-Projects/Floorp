@@ -6158,11 +6158,37 @@ void MacroAssemblerARM::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
     if (isFloat) {
       MOZ_ASSERT((byteSize == 4) == output.fpu().isSingle());
       ScratchRegisterScope scratch(asMasm());
+      FloatRegister dest = output.fpu();
       ma_add(memoryBase, ptr, scratch);
 
-      // See HandleUnalignedTrap() in WasmSignalHandler.cpp.  We depend on this
-      // being a single, unconditional VLDR with a base pointer other than PC.
-      load = ma_vldr(Operand(Address(scratch, 0)).toVFPAddr(), output.fpu());
+      // FP loads can't use VLDR as that has stringent alignment checks and will
+      // SIGBUS on unaligned accesses.  Choose a different strategy depending on
+      // the available hardware. We don't gate Wasm on the presence of NEON.
+      if (HasNEON()) {
+        // NEON available: The VLD1 multiple-single-elements variant will only
+        // trap if SCTRL.A==1, but we already assume (for integer accesses) that
+        // the hardware/OS handles that transparently.
+        load = as_vldr_unaligned(dest, scratch);
+      } else {
+        // NEON not available: Load to GPR scratch, move to FPR destination.  We
+        // don't have adjacent scratches for the f64, so use individual LDRs,
+        // not LDRD.
+        SecondScratchRegisterScope scratch2(asMasm());
+        if (byteSize == 4) {
+          load = as_dtr(IsLoad, 32, Offset, scratch2,
+                        DTRAddr(scratch, DtrOffImm(0)), Always);
+          as_vxfer(scratch2, InvalidReg, VFPRegister(dest), CoreToFloat,
+                   Always);
+        } else {
+          // The trap information is associated with the load of the high word,
+          // which must be done first.
+          load = as_dtr(IsLoad, 32, Offset, scratch2,
+                        DTRAddr(scratch, DtrOffImm(4)), Always);
+          as_dtr(IsLoad, 32, Offset, scratch, DTRAddr(scratch, DtrOffImm(0)),
+                 Always);
+          as_vxfer(scratch, scratch2, VFPRegister(dest), CoreToFloat, Always);
+        }
+      }
       append(access, load.getOffset());
     } else {
       load = ma_dataTransferN(IsLoad, byteSize * 8, isSigned, memoryBase, ptr,
@@ -6225,9 +6251,32 @@ void MacroAssemblerARM::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
       MOZ_ASSERT((byteSize == 4) == val.isSingle());
       ma_add(memoryBase, ptr, scratch);
 
-      // See HandleUnalignedTrap() in WasmSignalHandler.cpp.  We depend on this
-      // being a single, unconditional VLDR with a base pointer other than PC.
-      store = ma_vstr(val, Operand(Address(scratch, 0)).toVFPAddr());
+      // See comments above at wasmLoadImpl for more about this logic.
+      if (HasNEON()) {
+        store = as_vstr_unaligned(val, scratch);
+      } else {
+        // NEON not available: Move FPR to GPR scratch, store GPR.  We have only
+        // one scratch to hold the value, so for f64 we must do two separate
+        // moves.  That's OK - this is really a corner case.  If we really cared
+        // we would pass in a temp to avoid the second move.
+        SecondScratchRegisterScope scratch2(asMasm());
+        if (byteSize == 4) {
+          as_vxfer(scratch2, InvalidReg, VFPRegister(val), FloatToCore, Always);
+          store = as_dtr(IsStore, 32, Offset, scratch2,
+                         DTRAddr(scratch, DtrOffImm(0)), Always);
+        } else {
+          // The trap information is associated with the store of the high word,
+          // which must be done first.
+          as_vxfer(scratch2, InvalidReg, VFPRegister(val).singleOverlay(1),
+                   FloatToCore, Always);
+          store = as_dtr(IsStore, 32, Offset, scratch2,
+                         DTRAddr(scratch, DtrOffImm(4)), Always);
+          as_vxfer(scratch2, InvalidReg, VFPRegister(val).singleOverlay(0),
+                   FloatToCore, Always);
+          as_dtr(IsStore, 32, Offset, scratch2, DTRAddr(scratch, DtrOffImm(0)),
+                 Always);
+        }
+      }
       append(access, store.getOffset());
     } else {
       bool isSigned = type == Scalar::Uint32 ||
