@@ -227,9 +227,6 @@ ignore-flag(--more-compartments) script test262/built-ins/Function/internals/Cal
 skip script test262/language/expressions/assignmenttargettype/parenthesized-callexpression-arguments.js
 skip script test262/language/expressions/assignmenttargettype/direct-callexpression-arguments.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1720782
-skip script test262/intl402/DateTimeFormat/constructor-options-style-conflict.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1297179
 # All of these tests pass except with --more-compartments.
 ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/arguments-realm.js
