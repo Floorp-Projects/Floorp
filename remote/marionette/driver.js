@@ -2912,20 +2912,9 @@ GeckoDriver.prototype.print = async function(cmd) {
   }
 
   // Each UCS2 character has an upper byte of 0 and a lower byte matching
-  // the binary data. Splitting the file into chunks to avoid hitting the
-  // internal argument length limit.
-  const chunks = [];
-  // This is the largest power of 2 smaller than MAX_ARGS_LENGTH defined in Spidermonkey
-  const argLengthLimit = 262144;
-
-  for (let offset = 0; offset < bytes.length; offset += argLengthLimit) {
-    const chunkData = bytes.subarray(offset, offset + argLengthLimit);
-
-    chunks.push(String.fromCharCode.apply(null, chunkData));
-  }
-
+  // the binary data
   return {
-    value: btoa(chunks.join("")),
+    value: btoa(String.fromCharCode.apply(null, bytes)),
   };
 };
 
