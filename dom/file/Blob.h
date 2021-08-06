@@ -41,7 +41,7 @@ class Blob : public nsSupportsWeakReference, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Blob)
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_BLOB_IID)
 
-  typedef OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString BlobPart;
+  using BlobPart = OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString;
 
   // This creates a Blob or a File based on the type of BlobImpl.
   static Blob* Create(nsIGlobalObject* aGlobal, BlobImpl* aImpl);

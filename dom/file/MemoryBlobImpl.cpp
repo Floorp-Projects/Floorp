@@ -108,7 +108,7 @@ class MemoryBlobImplDataOwnerMemoryReporter final : public nsIMemoryReporter {
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override {
-    typedef MemoryBlobImpl::DataOwner DataOwner;
+    using DataOwner = MemoryBlobImpl::DataOwner;
 
     StaticMutexAutoLock lock(DataOwner::sDataOwnerMutex);
 

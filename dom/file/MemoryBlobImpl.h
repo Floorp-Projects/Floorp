@@ -108,7 +108,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
                                  public nsISeekableStream,
                                  public nsIIPCSerializableInputStream,
                                  public nsICloneableInputStream {
-    typedef MemoryBlobImpl::DataOwner DataOwner;
+    using DataOwner = MemoryBlobImpl::DataOwner;
 
    public:
     static nsresult Create(DataOwner* aDataOwner, uint32_t aStart,
