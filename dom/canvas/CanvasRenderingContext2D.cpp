@@ -5048,8 +5048,10 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     nsIPrincipal& aSubjectPrincipal, JSObject** aRetval) {
   MOZ_ASSERT(aWidth && aHeight);
 
+  // Restrict the typed array length to INT32_MAX because that's all we support
+  // in dom::TypedArray::ComputeState.
   CheckedInt<uint32_t> len = CheckedInt<uint32_t>(aWidth) * aHeight * 4;
-  if (!len.isValid()) {
+  if (!len.isValid() || len.value() > INT32_MAX) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -5334,8 +5336,10 @@ static already_AddRefed<ImageData> CreateImageData(
   if (aW == 0) aW = 1;
   if (aH == 0) aH = 1;
 
+  // Restrict the typed array length to INT32_MAX because that's all we support
+  // in dom::TypedArray::ComputeState.
   CheckedInt<uint32_t> len = CheckedInt<uint32_t>(aW) * aH * 4;
-  if (!len.isValid()) {
+  if (!len.isValid() || len.value() > INT32_MAX) {
     aError.ThrowIndexSizeError("Invalid width or height");
     return nullptr;
   }
