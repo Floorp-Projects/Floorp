@@ -1493,14 +1493,8 @@ function _loadURI(browser, uri, params = {}) {
     uri = "about:blank";
   }
 
-  let {
-    triggeringPrincipal,
-    referrerInfo,
-    postData,
-    userContextId,
-    csp,
-    remoteTypeOverride,
-  } = params || {};
+  let { triggeringPrincipal, referrerInfo, postData, userContextId, csp } =
+    params || {};
   let loadFlags =
     params.loadFlags || params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
   let hasValidUserGestureActivation =
@@ -1545,7 +1539,6 @@ function _loadURI(browser, uri, params = {}) {
     referrerInfo,
     postData,
     hasValidUserGestureActivation,
-    remoteTypeOverride,
   };
   try {
     browser.webNavigation.loadURI(uri, loadURIOptions);
@@ -3172,7 +3165,6 @@ async function BrowserViewSourceOfDocument(args) {
     preferredRemoteType,
     initialBrowsingContextGroupId,
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    skipLoad: true,
   });
   args.viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
   top.gViewSourceUtils.viewSourceInBrowser(args);
