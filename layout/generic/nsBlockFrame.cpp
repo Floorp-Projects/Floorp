@@ -577,12 +577,12 @@ nscoord nsBlockFrame::GetLogicalBaseline(WritingMode aWM) const {
 bool nsBlockFrame::GetNaturalBaselineBOffset(
     mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
     nscoord* aBaseline) const {
-  if (aBaselineGroup == BaselineSharingGroup::First) {
-    return nsLayoutUtils::GetFirstLineBaseline(aWM, this, aBaseline);
-  }
-
   if (StyleDisplay()->IsContainLayout()) {
     return false;
+  }
+
+  if (aBaselineGroup == BaselineSharingGroup::First) {
+    return nsLayoutUtils::GetFirstLineBaseline(aWM, this, aBaseline);
   }
 
   for (ConstReverseLineIterator line = LinesRBegin(), line_end = LinesREnd();

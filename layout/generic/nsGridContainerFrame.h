@@ -143,7 +143,8 @@ class nsGridContainerFrame final : public nsContainerFrame {
   bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
                                  BaselineSharingGroup aBaselineGroup,
                                  nscoord* aBaseline) const override {
-    if (HasAnyStateBits(NS_STATE_GRID_SYNTHESIZE_BASELINE)) {
+    if (StyleDisplay()->IsContainLayout() ||
+        HasAnyStateBits(NS_STATE_GRID_SYNTHESIZE_BASELINE)) {
       return false;
     }
     return GetBBaseline(aBaselineGroup, aBaseline);
