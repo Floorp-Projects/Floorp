@@ -19,7 +19,7 @@ def pkg_config_version(pkg_config):
     return Version(check_cmd_output(pkg_config, "--version").rstrip())
 
 
-@depends(target_sysroot_path, multiarch_dir, when=pkg_config)
+@depends(target_sysroot.path, multiarch_dir, when=pkg_config)
 @imports(_from="os", _import="environ")
 def pkg_config_vars(sysroot_path, multiarch_dir):
     if sysroot_path:
