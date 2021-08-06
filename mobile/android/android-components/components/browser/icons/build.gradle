@@ -41,12 +41,6 @@ android {
     }
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-    kotlinOptions.freeCompilerArgs += [
-            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
-    ]
-}
-
 tasks.register("updateBuiltInExtensionVersion", Copy) { task ->
     updateExtensionVersion(task, 'src/main/assets/extensions/browser-icons')
 }

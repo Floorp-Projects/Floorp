@@ -70,16 +70,16 @@ class MediaSession {
     data class Feature(val flags: Long = 0) {
         companion object {
             const val NONE: Long = 0
-            const val PLAY: Long = 1 shl 0
-            const val PAUSE: Long = 1 shl 1
-            const val STOP: Long = 1 shl 2
-            const val SEEK_TO: Long = 1 shl 3
-            const val SEEK_FORWARD: Long = 1 shl 4
-            const val SEEK_BACKWARD: Long = 1 shl 5
-            const val SKIP_AD: Long = 1 shl 6
-            const val NEXT_TRACK: Long = 1 shl 7
-            const val PREVIOUS_TRACK: Long = 1 shl 8
-            const val FOCUS: Long = 1 shl 9
+            const val PLAY: Long = 1L shl 0
+            const val PAUSE: Long = 1L shl 1
+            const val STOP: Long = 1L shl 2
+            const val SEEK_TO: Long = 1L shl 3
+            const val SEEK_FORWARD: Long = 1L shl 4
+            const val SEEK_BACKWARD: Long = 1L shl 5
+            const val SKIP_AD: Long = 1L shl 6
+            const val NEXT_TRACK: Long = 1L shl 7
+            const val PREVIOUS_TRACK: Long = 1L shl 8
+            const val FOCUS: Long = 1L shl 9
         }
 
         /**

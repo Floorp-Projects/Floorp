@@ -21,14 +21,14 @@ android {
     }
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-    kotlinOptions.freeCompilerArgs += [
-            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
-    ]
-}
-
 tasks.register("updateBuiltInExtensionVersion", Copy) { task ->
     updateExtensionVersion(task, 'src/main/assets/extensions/readerview')
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        freeCompilerArgs += "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+    }
 }
 
 dependencies {

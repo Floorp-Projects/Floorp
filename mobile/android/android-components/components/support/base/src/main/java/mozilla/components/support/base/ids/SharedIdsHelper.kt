@@ -11,7 +11,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationManagerCompat
 
 // If the tag is not used again in one week then clear the id
-private const val ID_LIFETIME: Long = 1000 * 60 * 60 * 24 * 7
+private const val ID_LIFETIME: Long = 1000L * 60L * 60L * 24L * 7L
 
 // We start at 10000 instead of 0 to avoid conflicts with app code using random low numbers.
 private const val ID_OFFSET = 10000

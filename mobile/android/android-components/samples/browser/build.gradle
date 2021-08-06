@@ -66,12 +66,6 @@ tasks.register("updateTestExtensionVersion", Copy) { task ->
     updateExtensionVersion(task, 'src/main/assets/extensions/test')
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach() {
-    kotlinOptions.freeCompilerArgs += [
-            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
-    ]
-}
-
 dependencies {
     implementation project(':concept-awesomebar')
     implementation project(':concept-fetch')

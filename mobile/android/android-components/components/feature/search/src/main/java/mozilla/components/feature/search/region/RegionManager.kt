@@ -26,7 +26,7 @@ private const val UPDATE_INTERVAL_MS = 14 * 24 * 60 * 60 * 1000
 private const val MAX_RETRIES = 3
 
 // Timeout until we try to fetch the region again after a failure.
-private const val RETRY_TIMEOUT_MS: Long = 10 * 60 * 1000
+private const val RETRY_TIMEOUT_MS: Long = 10L * 60L * 1000L
 
 private const val PREFERENCE_FILE = "mozac_feature_search_region"
 private const val PREFERENCE_KEY_HOME_REGION = "region.home"

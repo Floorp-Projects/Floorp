@@ -7,7 +7,6 @@ package mozilla.components.support.locale
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.LocaleAction
@@ -31,7 +30,6 @@ class LocaleMiddleware(
     private val logger = Logger("LocaleMiddleware")
     private var scope = CoroutineScope(coroutineContext)
 
-    @InternalCoroutinesApi
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,

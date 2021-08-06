@@ -30,7 +30,6 @@ class WebExtensionBrowserMenu internal constructor(
 ) : BrowserMenu(adapter) {
     private var scope: CoroutineScope? = null
 
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     override fun show(
         anchor: View,
         orientation: Orientation,

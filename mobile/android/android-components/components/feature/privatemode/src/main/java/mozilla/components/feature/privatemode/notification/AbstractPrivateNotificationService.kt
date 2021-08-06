@@ -18,7 +18,6 @@ import androidx.core.app.NotificationCompat.VISIBILITY_SECRET
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -112,7 +111,6 @@ abstract class AbstractPrivateNotificationService : Service() {
      *
      * The service should be started only if private tabs are open.
      */
-    @ExperimentalCoroutinesApi
     final override fun onCreate() {
         val notificationId = getNotificationId()
         val channelId = getChannelId()

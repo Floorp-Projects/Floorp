@@ -7,7 +7,6 @@ package mozilla.components.feature.privatemode.notification
 import android.content.Context
 import android.content.Intent
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -33,7 +32,6 @@ class PrivateNotificationFeature<T : AbstractPrivateNotificationService>(
     private val applicationContext = context.applicationContext
     private var scope: CoroutineScope? = null
 
-    @ExperimentalCoroutinesApi
     override fun start() {
         scope = store.flowScoped { flow ->
             flow.map { state -> state.privateTabs.isNotEmpty() }

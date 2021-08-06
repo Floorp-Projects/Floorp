@@ -15,7 +15,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
@@ -110,7 +109,6 @@ class SitePermissionsFeature(
     private var appPermissionScope: CoroutineScope? = null
     private var loadingScope: CoroutineScope? = null
 
-    @ExperimentalCoroutinesApi
     override fun start() {
         fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let { fragment ->
             // There's still a [SitePermissionsDialogFragment] visible from the last time. Re-attach

@@ -7,7 +7,6 @@ package mozilla.components.feature.pwa.feature
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -32,7 +31,6 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  * @param sessionId ID of the web app session to observe.
  * @param initialManifest Loaded manifest for the current web app.
  */
-@ExperimentalCoroutinesApi
 @Suppress("LongParameterList")
 class ManifestUpdateFeature(
     private val applicationContext: Context,

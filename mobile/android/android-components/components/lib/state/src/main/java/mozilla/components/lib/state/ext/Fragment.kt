@@ -9,7 +9,6 @@ import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
@@ -28,7 +27,6 @@ import mozilla.components.support.ktx.android.view.toScope
  * [Store].
  */
 @MainThread
-@ExperimentalCoroutinesApi // Channel
 fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) -> Unit) {
     val fragment = this
     val view = checkNotNull(view) { "Fragment has no view yet. Call from onViewCreated()." }
@@ -79,7 +77,6 @@ fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) 
  * By default, the fragment itself is used as a [LifecycleOwner].
  */
 @MainThread
-@ExperimentalCoroutinesApi // Flow
 fun <S : State, A : Action> Fragment.consumeFlow(
     from: Store<S, A>,
     owner: LifecycleOwner? = this,

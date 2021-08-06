@@ -150,7 +150,6 @@ fun <S : State, A : Action> Store<S, A>.channel(
  * Once the [Lifecycle] switches back to at least STARTED state then the latest [State] and further
  * updates will be emitted.
  */
-@ExperimentalCoroutinesApi
 @MainThread
 fun <S : State, A : Action> Store<S, A>.flow(
     owner: LifecycleOwner? = null
@@ -212,7 +211,6 @@ fun <S : State, A : Action> Store<S, A>.flow(
  * updates will be emitted.
  * @return The [CoroutineScope] [block] is getting executed in.
  */
-@ExperimentalCoroutinesApi
 @MainThread
 fun <S : State, A : Action> Store<S, A>.flowScoped(
     owner: LifecycleOwner? = null,

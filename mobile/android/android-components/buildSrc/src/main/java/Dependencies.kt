@@ -7,8 +7,8 @@
 
 // Synchronized version numbers for dependencies used by (some) modules
 object Versions {
-    const val kotlin = "1.5.10"
-    const val coroutines = "1.5.0"
+    const val kotlin = "1.5.31"
+    const val coroutines = "1.5.2"
 
     const val junit = "4.12"
     const val robolectric = "4.1"
@@ -35,10 +35,10 @@ object Versions {
 
     const val material = "1.2.1"
 
-    const val compose_version = "1.0.0"
+    const val compose_version = "1.0.4"
 
     object AndroidX {
-        const val activityCompose = "1.3.0"
+        const val activityCompose = "1.3.1"
         const val annotation = "1.1.0"
         const val appcompat = "1.3.0"
         const val autofill = "1.1.0"

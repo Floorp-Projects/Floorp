@@ -42,7 +42,7 @@ class SampleApplication : Application() {
 
     val components by lazy { Components(this) }
 
-    @DelicateCoroutinesApi // Usage of GlobalScope
+    @OptIn(DelicateCoroutinesApi::class) // Usage of GlobalScope
     override fun onCreate() {
         super.onCreate()
 

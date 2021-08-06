@@ -7,7 +7,6 @@
 package mozilla.components.browser.awesomebar
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.awesomebar.facts.BrowserAwesomeBarFacts
@@ -36,7 +35,6 @@ import org.mockito.Mockito.verifyNoInteractions
 import org.robolectric.Shadows.shadowOf
 import java.util.UUID
 
-@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class BrowserAwesomeBarTest {
 

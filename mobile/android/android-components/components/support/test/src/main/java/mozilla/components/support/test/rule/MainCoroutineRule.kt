@@ -29,9 +29,8 @@ fun createTestCoroutinesDispatcher(): CoroutineDispatcher = Executors.newSingleT
 /**
  * JUnit rule to change Dispatchers.Main in coroutines.
  */
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 class MainCoroutineRule(val testDispatcher: TestCoroutineDispatcher = TestCoroutineDispatcher()) : TestWatcher() {
-
     override fun starting(description: Description?) {
         super.starting(description)
         Dispatchers.setMain(testDispatcher)

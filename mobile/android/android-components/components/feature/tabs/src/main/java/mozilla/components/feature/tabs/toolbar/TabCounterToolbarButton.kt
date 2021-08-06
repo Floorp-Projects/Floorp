@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
@@ -27,7 +26,6 @@ import java.lang.ref.WeakReference
 /**
  * A [Toolbar.Action] implementation that shows a [TabCounter].
  */
-@ExperimentalCoroutinesApi
 @Suppress("LongParameterList")
 open class TabCounterToolbarButton(
     private val lifecycleOwner: LifecycleOwner,

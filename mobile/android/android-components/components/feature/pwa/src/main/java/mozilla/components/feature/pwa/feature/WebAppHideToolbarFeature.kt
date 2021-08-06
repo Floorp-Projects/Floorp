@@ -6,7 +6,6 @@ package mozilla.components.feature.pwa.feature
 
 import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
@@ -63,7 +62,6 @@ class WebAppHideToolbarFeature(
         setToolbarVisibility(shouldToolbarBeVisible(tab, customTabState))
     }
 
-    @ExperimentalCoroutinesApi
     override fun start() {
         scope = MainScope().apply {
             launch {

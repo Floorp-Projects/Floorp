@@ -26,8 +26,8 @@ import java.io.IOException
 private const val RESOURCES_DISK_CACHE_VERSION = 1
 private const val ICON_DATA_DISK_CACHE_VERSION = 1
 
-private const val MAXIMUM_CACHE_RESOURCES_BYTES: Long = 1024 * 1024 * 10 // 10 MB
-private const val MAXIMUM_CACHE_ICON_DATA_BYTES: Long = 1024 * 1024 * 100 // 100 MB
+private const val MAXIMUM_CACHE_RESOURCES_BYTES: Long = 1024L * 1024L * 10L // 10 MB
+private const val MAXIMUM_CACHE_ICON_DATA_BYTES: Long = 1024L * 1024L * 100L // 100 MB
 
 private const val WEBP_QUALITY = 90
 

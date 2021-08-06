@@ -7,7 +7,6 @@ package mozilla.components.feature.media.fullscreen
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -27,7 +26,6 @@ class MediaSessionFullscreenFeature(
 
     private var scope: CoroutineScope? = null
 
-    @ExperimentalCoroutinesApi
     override fun start() {
         scope = store.flowScoped { flow ->
             flow.map {

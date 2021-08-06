@@ -7,7 +7,6 @@ package mozilla.components.feature.privatemode.feature
 import android.view.Window
 import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -36,7 +35,6 @@ class SecureWindowFeature(
 
     private var scope: CoroutineScope? = null
 
-    @ExperimentalCoroutinesApi
     override fun start() {
         scope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(customTabId) }

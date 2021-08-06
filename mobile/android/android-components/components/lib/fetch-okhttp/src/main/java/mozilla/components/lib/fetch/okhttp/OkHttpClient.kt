@@ -62,7 +62,7 @@ class OkHttpClient(
     }
 
     companion object {
-        internal const val CACHE_MAX_SIZE: Long = 10 * 1024 * 1024
+        internal const val CACHE_MAX_SIZE: Long = 10L * 1024L * 1024L
 
         fun getOrCreateCookieManager(): CookieManager {
             if (CookieHandler.getDefault() == null) {

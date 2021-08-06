@@ -12,7 +12,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 private const val TEST_SHARED_PREFERENCES_FILE = "mozilla.test.pref"
-private const val NOTIFICATION_ID_LIFETIME: Long = 1000 * 60 * 60 * 24 * 7
+private const val NOTIFICATION_ID_LIFETIME: Long = 1000L * 60L * 60L * 24L * 7L
 private const val ID_OFFSET = 10000
 
 @RunWith(AndroidJUnit4::class)
