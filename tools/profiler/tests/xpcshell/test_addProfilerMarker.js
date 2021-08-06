@@ -76,8 +76,42 @@ function expectNoStack(marker) {
   Assert.ok(!marker.data || !marker.data.stack, "There should be no stack");
 }
 
-function expectStack(marker) {
-  Assert.ok(marker.data.stack, "There should be a stack");
+function expectStack(marker, thread) {
+  let stack = marker.data.stack;
+  Assert.ok(!!stack, "There should be a stack");
+
+  // Marker stacks are recorded as a profile of a thread with a single sample,
+  // get the stack id.
+  stack = stack.samples.data[0][stack.samples.schema.stack];
+
+  const stackPrefixCol = thread.stackTable.schema.prefix;
+  const stackFrameCol = thread.stackTable.schema.frame;
+  const frameLocationCol = thread.frameTable.schema.location;
+
+  // Get the entire stack in an array for easier processing.
+  let result = [];
+  while (stack != null) {
+    let stackEntry = thread.stackTable.data[stack];
+    let frame = thread.frameTable.data[stackEntry[stackFrameCol]];
+    result.push(thread.stringTable[frame[frameLocationCol]]);
+    stack = stackEntry[stackPrefixCol];
+  }
+
+  Assert.greaterOrEqual(
+    result.length,
+    1,
+    "There should be at least one frame in the stack"
+  );
+
+  Assert.ok(
+    result.some(frame => frame.includes("testMarker")),
+    "the 'testMarker' function should be visible in the stack"
+  );
+
+  Assert.ok(
+    !result.some(frame => frame.includes("ChromeUtils.addProfilerMarker")),
+    "the 'ChromeUtils.addProfilerMarker' label frame should not be visible in the stack"
+  );
 }
 
 add_task(async () => {
@@ -179,7 +213,7 @@ add_task(async () => {
     marker.category = profile.meta.categories[marker.category].name;
     info(`${testCases[marker.name]} -> ${marker.toSource()}`);
 
-    testFunctions[marker.name](marker);
+    testFunctions[marker.name](marker, mainThread);
     delete testFunctions[marker.name];
   }
 
