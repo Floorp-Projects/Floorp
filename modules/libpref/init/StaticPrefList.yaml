@@ -6882,7 +6882,7 @@
 # Whether the system-ui generic family is enabled.
 - name: layout.css.system-ui.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 

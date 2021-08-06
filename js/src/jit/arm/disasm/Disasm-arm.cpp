@@ -1733,6 +1733,35 @@ void Decoder::DecodeSpecialCondition(Instruction* instr) {
         Unknown(instr);
       }
       break;
+    case 9:
+      if (instr->Bits(21, 20) == 0 && instr->Bits(9, 8) == 0) {
+        // vst1
+        int Vd = (instr->Bit(22) << 4) | instr->VdValue();
+        int Rn = instr->VnValue();
+        int size = instr->Bits(11, 10);
+        int index = instr->Bits(7, 5);
+        int align = instr->Bit(4);
+        int Rm = instr->VmValue();
+        out_buffer_pos_ +=
+            SNPrintF(out_buffer_ + out_buffer_pos_, "vst1.%d {d%d[%d]}, ",
+                     (1 << size) << 3, Vd, index);
+        FormatNeonMemory(Rn, align, Rm);
+      } else if (instr->Bits(21, 20) == 2 && instr->Bits(9, 8) == 0) {
+        // vld1
+        int Vd = (instr->Bit(22) << 4) | instr->VdValue();
+        int Rn = instr->VnValue();
+        int size = instr->Bits(11, 10);
+        int index = instr->Bits(7, 5);
+        int align = instr->Bit(4);
+        int Rm = instr->VmValue();
+        out_buffer_pos_ +=
+            SNPrintF(out_buffer_ + out_buffer_pos_, "vld1.%d {d%d[%d]}, ",
+                     (1 << size) << 3, Vd, index);
+        FormatNeonMemory(Rn, align, Rm);
+      } else {
+        Unknown(instr);
+      }
+      break;
     case 0xA:
       if (instr->Bits(22, 20) == 7) {
         const char* option = "?";

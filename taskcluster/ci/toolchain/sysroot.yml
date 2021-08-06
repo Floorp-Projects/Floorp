@@ -45,6 +45,24 @@ sysroot-x86_64-linux-gnu:
         arguments:
             - amd64
 
+sysroot-x86_64-linux-gnu-x11:
+    description: "Sysroot for linux64 builds (X11-only)"
+    attributes:
+        local-toolchain: true
+    run-on-projects: [trunk]
+    worker:
+        env:
+            PACKAGES_TASKS: {task-reference: '<gcc-7> <gtk3>'}
+    treeherder:
+        symbol: TL(sysroot64-x11)
+    dependencies:
+        gcc-7: packages-deb8-gcc-7
+        gtk3: packages-deb8-gtk3
+    run:
+        toolchain-artifact: public/build/sysroot-x86_64-linux-gnu.tar.zst
+        arguments:
+            - amd64
+
 sysroot-aarch64-linux-gnu:
     description: "Sysroot for linux64 aarch64 builds"
     attributes:
