@@ -642,10 +642,6 @@ skip script test262/built-ins/AsyncFunction/is-not-a-global.js
 # https://github.com/tc39/ecma402/issues/402
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-default.js
 
-# Tests not yet updated for https://github.com/tc39/proposal-intl-displaynames/pull/83
-skip script test262/intl402/DisplayNames/locales-length-tolength-throws.js
-skip script test262/intl402/DisplayNames/locales-length-poison-throws.js
-
 # Tests not yet updated for https://github.com/tc39/intl-displaynames-v2
 skip script test262/intl402/DisplayNames/prototype/resolvedOptions/return-object.js
 

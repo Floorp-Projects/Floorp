@@ -182,11 +182,6 @@ static bool DisplayNames(JSContext* cx, const CallArgs& args,
     }
   }
 
-  // TypeError anyway, but this gives a better error message.
-  if (!args.requireAtLeast(cx, "DisplayNames", 2)) {
-    return false;
-  }
-
   Rooted<DisplayNamesObject*> displayNames(cx);
   displayNames = NewObjectWithClassProto<DisplayNamesObject>(cx, proto);
   if (!displayNames) {
