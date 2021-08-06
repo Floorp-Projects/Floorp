@@ -344,7 +344,7 @@ static_assert(
 
 namespace {
 
-typedef int32_t EntryId;
+using EntryId = int32_t;
 
 struct IdCount {
   explicit IdCount(int32_t aId) : mId(aId), mCount(1) {}
@@ -2285,7 +2285,7 @@ nsresult Validate(mozIStorageConnection& aConn) {
 // Schema migration code
 // -----
 
-typedef nsresult (*MigrationFunc)(mozIStorageConnection&, bool&);
+using MigrationFunc = nsresult (*)(mozIStorageConnection&, bool&);
 struct Migration {
   int32_t mFromVersion;
   MigrationFunc mFunc;

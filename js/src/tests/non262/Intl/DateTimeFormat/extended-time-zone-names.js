@@ -111,6 +111,11 @@ for (let [timeZone, {timeZoneName, date, locales}] of Object.entries(tests)) {
   for (let [locale, expected] of Object.entries(locales)) {
     let dtf = new Intl.DateTimeFormat(locale, {timeZone, timeZoneName});
     assertEq(dtf.format(date), expected);
+
+    let parts = dtf.formatToParts(date);
+    assertEq(parts.map(p => p.value).join(""), expected);
+    assertEq(parts.filter(p => p.type === "timeZoneName").length, 1);
+
     assertEq(dtf.resolvedOptions().timeZoneName, timeZoneName);
   }
 }

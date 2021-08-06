@@ -417,7 +417,7 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
 
     if (dateStyle !== undefined || timeStyle !== undefined) {
       var optionsList = [
-          "weekday", "era", "year", "month", "day", "hour", "minute", "second",
+          "weekday", "era", "year", "month", "day", "dayPeriod", "hour", "minute", "second",
           "fractionalSecondDigits", "timeZoneName",
       ];
 

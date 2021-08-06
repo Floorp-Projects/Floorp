@@ -132,3 +132,21 @@ deb8-32-gcc-7:
             echo OFFLOAD_BUILD_DEP= >> debian/rules.conf &&
             debian/rules control NT=
         arch: i386
+
+deb8-gtk3:
+    description: "X11-only gtk+3 for Debian jessie"
+    treeherder:
+        symbol: Deb8(gtk)
+    worker:
+        max-run-time: 3600
+        env:
+            DEB_BUILD_OPTIONS: nocheck
+    run:
+        dist: jessie
+        dsc:
+            url: http://snapshot.debian.org/archive/debian/20150819T212910Z/pool/main/g/gtk+3.0/gtk+3.0_3.14.5-1+deb8u1.dsc
+            sha256: b1808b03317b171c813e31185a4520df4dbde54580842a72a4c44540cd6bde17
+        pre-build-command: >-
+            sed -i /linux-any/d debian/control* debian/libgtk-3-0.symbols &&
+            sed -i s/--enable-wayland-backend/--disable-wayland-backend/ debian/rules &&
+            debchange -v 3.14.5-1.deb8moz --distribution jessie-backports "Mozilla rebuild without wayland support"
