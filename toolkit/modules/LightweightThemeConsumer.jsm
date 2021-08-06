@@ -145,11 +145,10 @@ const toolkitVariableMap = [
       lwtProperty: "toolbar_field_focus",
       fallbackProperty: "toolbar_field",
       processColor(rgbaChannels, element, propertyOverrides) {
-        // Ensure minimum opacity as this is used behind address bar results.
         if (!rgbaChannels) {
-          propertyOverrides.set("toolbar_field_text_focus", "black");
-          return "white";
+          return null;
         }
+        // Ensure minimum opacity as this is used behind address bar results.
         const min_opacity = 0.9;
         let { r, g, b, a } = rgbaChannels;
         if (a < min_opacity) {
