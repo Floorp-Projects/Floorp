@@ -7,6 +7,7 @@ package mozilla.components.compose.browser.awesomebar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -27,7 +28,7 @@ fun AwesomeBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(MaterialTheme.colors.background)
     ) {
         val fetcher = remember { SuggestionFetcher(providers) }
 
