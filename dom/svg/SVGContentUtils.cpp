@@ -368,7 +368,7 @@ float SVGContentUtils::GetFontSize(Element* aElement) {
   }
 
   if (RefPtr<ComputedStyle> style =
-          nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr)) {
+          nsComputedDOMStyle::GetComputedStyleNoFlush(aElement)) {
     return GetFontSize(style, pc);
   }
 
@@ -406,7 +406,7 @@ float SVGContentUtils::GetFontXHeight(Element* aElement) {
   }
 
   if (RefPtr<ComputedStyle> style =
-          nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr)) {
+          nsComputedDOMStyle::GetComputedStyleNoFlush(aElement)) {
     return GetFontXHeight(style, pc);
   }
 

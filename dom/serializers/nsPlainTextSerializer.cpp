@@ -399,7 +399,7 @@ bool nsPlainTextSerializer::IsIgnorableRubyAnnotation(
 // Return true if aElement has 'display:none' or if we just don't know.
 static bool IsDisplayNone(Element* aElement) {
   RefPtr<ComputedStyle> computedStyle =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
+      nsComputedDOMStyle::GetComputedStyleNoFlush(aElement);
   return !computedStyle ||
          computedStyle->StyleDisplay()->mDisplay == StyleDisplay::None;
 }
@@ -1709,7 +1709,7 @@ bool nsPlainTextSerializer::IsElementPreformatted() const {
 
 bool nsPlainTextSerializer::IsElementPreformatted(Element* aElement) {
   RefPtr<ComputedStyle> computedStyle =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
+      nsComputedDOMStyle::GetComputedStyleNoFlush(aElement);
   if (computedStyle) {
     const nsStyleText* textStyle = computedStyle->StyleText();
     return textStyle->WhiteSpaceOrNewlineIsSignificant();
@@ -1720,7 +1720,7 @@ bool nsPlainTextSerializer::IsElementPreformatted(Element* aElement) {
 
 bool nsPlainTextSerializer::IsCssBlockLevelElement(Element* aElement) {
   RefPtr<ComputedStyle> computedStyle =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
+      nsComputedDOMStyle::GetComputedStyleNoFlush(aElement);
   if (computedStyle) {
     const nsStyleDisplay* displayStyle = computedStyle->StyleDisplay();
     return displayStyle->IsBlockOutsideStyle();

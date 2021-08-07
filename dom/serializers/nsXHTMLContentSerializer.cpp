@@ -634,7 +634,7 @@ bool nsXHTMLContentSerializer::IsElementPreformatted(nsIContent* aNode) {
     return false;
   }
   RefPtr<ComputedStyle> computedStyle =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(aNode->AsElement(), nullptr);
+      nsComputedDOMStyle::GetComputedStyleNoFlush(aNode->AsElement());
   if (computedStyle) {
     const nsStyleText* textStyle = computedStyle->StyleText();
     return textStyle->WhiteSpaceOrNewlineIsSignificant();

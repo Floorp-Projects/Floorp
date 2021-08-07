@@ -547,7 +547,7 @@ bool EditorUtils::IsContentPreformatted(nsIContent& aContent) {
   }
 
   RefPtr<ComputedStyle> elementStyle =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(element, nullptr);
+      nsComputedDOMStyle::GetComputedStyleNoFlush(element);
   if (!elementStyle) {
     // Consider nodes without a ComputedStyle to be NOT preformatted:
     // For instance, this is true of JS tags inside the body (which show
