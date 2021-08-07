@@ -15793,7 +15793,7 @@ void Document::ReportHasScrollLinkedEffect() {
   mHasScrollLinkedEffect = true;
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, "Async Pan/Zoom"_ns, this,
-      nsContentUtils::eLAYOUT_PROPERTIES, "ScrollLinkedEffectFound2");
+      nsContentUtils::eLAYOUT_PROPERTIES, "ScrollLinkedEffectFound3");
 }
 
 void Document::SetSHEntryHasUserInteraction(bool aHasInteraction) {
