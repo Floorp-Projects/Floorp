@@ -51,7 +51,14 @@ for (const pseudo of NON_CONTENT_ACCESIBLE_PSEUDOS) {
     assert_equals(sheet.sheet.cssRules.length, 0,
       pseudo + " shouldn't be accessible to content");
     if (pseudo.indexOf("::") === 0) {
-      let pseudoStyle = getComputedStyle(document.documentElement, pseudo);
+      let pseudoStyle;
+      try {
+        pseudoStyle = getComputedStyle(document.documentElement, pseudo);
+      } catch (ex) {
+        // We can hit this when layout.css.computed-style.throw-on-invalid-pseudo is true
+        assert_true(true, `${pseudo} shouldn't be visible to content`);
+        return;
+      }
       let elementStyle = getComputedStyle(document.documentElement);
       for (prop of pseudoStyle) {
         assert_equals(pseudoStyle[prop], elementStyle[prop],

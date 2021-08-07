@@ -6880,6 +6880,16 @@
   value: true
   mirror: always
 
+# Whether we should throw on invalid pseudo-elements passed to
+# getComputedStyle() as per spec.
+#
+# Old behavior is a bit odd: returning an empty style if the string starts with
+# a double colon, and return the regular style otherwise.
+- name: layout.css.computed-style.throw-on-invalid-pseudo
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Are implicit tracks in computed grid templates serialized?
 - name: layout.css.serialize-grid-implicit-tracks
   type: RelaxedAtomicBool

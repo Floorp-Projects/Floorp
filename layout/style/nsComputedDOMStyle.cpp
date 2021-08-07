@@ -78,11 +78,17 @@ static bool StartsWithTwoColons(const nsAString& aPseudoElt) {
 
 already_AddRefed<nsComputedDOMStyle> NS_NewComputedDOMStyle(
     dom::Element* aElement, const nsAString& aPseudoElt, Document* aDocument,
-    nsComputedDOMStyle::StyleType aStyleType) {
+    nsComputedDOMStyle::StyleType aStyleType, mozilla::ErrorResult& aRv) {
   Maybe<PseudoStyleType> pseudo = nsCSSPseudoElements::GetPseudoType(
       aPseudoElt, CSSEnabledState::ForAllContent);
   auto returnEmpty = nsComputedDOMStyle::AlwaysReturnEmptyStyle::No;
   if (!pseudo) {
+    if (StaticPrefs::layout_css_computed_style_throw_on_invalid_pseudo()) {
+      aRv.ThrowTypeError(
+          nsPrintfCString("'%s' is not a valid pseudo-element",
+                          NS_ConvertUTF16toUTF8(aPseudoElt).get()));
+      return nullptr;
+    }
     pseudo.emplace(PseudoStyleType::NotPseudo);
     if (StartsWithTwoColons(aPseudoElt)) {
       returnEmpty = nsComputedDOMStyle::AlwaysReturnEmptyStyle::Yes;

@@ -4598,8 +4598,8 @@ already_AddRefed<nsICSSDeclaration> nsGlobalWindowInner::GetComputedStyleHelper(
     Element& aElt, const nsAString& aPseudoElt, bool aDefaultStylesOnly,
     ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetComputedStyleHelperOuter,
-                            (aElt, aPseudoElt, aDefaultStylesOnly), aError,
-                            nullptr);
+                            (aElt, aPseudoElt, aDefaultStylesOnly, aError),
+                            aError, nullptr);
 }
 
 Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
