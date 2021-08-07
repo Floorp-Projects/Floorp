@@ -46,6 +46,7 @@ import mozilla.components.concept.engine.webextension.WebExtensionPageAction
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.lib.state.Action
+import mozilla.components.lib.state.DelicateAction
 import mozilla.components.support.base.android.Clock
 import java.util.Locale
 
@@ -1220,4 +1221,23 @@ sealed class SearchAction : BrowserAction() {
      * back to [SearchState.additionalAvailableSearchEngines].
      */
     data class RemoveAdditionalSearchEngineAction(val searchEngineId: String) : SearchAction()
+}
+
+/**
+ * [BrowserAction] implementations for updating state needed for debugging. These actions should
+ * be carefully considered before being used.
+ *
+ * Every action **should** be annotated with [DelicateAction] to bring consumers to attention that
+ * this is a delicate action.
+ */
+sealed class DebugAction : BrowserAction() {
+
+    /**
+     * Updates the [TabSessionState.createdAt] timestamp of the tab with the given [tabId].
+     *
+     * @property tabId the ID of the tab to update.
+     * @property createdAt the value to signify when the tab was created.
+     */
+    @DelicateAction
+    data class UpdateCreatedAtAction(val tabId: String, val createdAt: Long) : DebugAction()
 }
