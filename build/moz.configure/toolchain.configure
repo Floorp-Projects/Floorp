@@ -1102,13 +1102,7 @@ def compiler(
         wrapper = list(compiler_wrapper or ())
         flags = list(sysroot_flags or ())
         if provided_compiler:
-            provided_wrapper = list(provided_compiler.wrapper)
-            # When doing a subconfigure, the compiler is set by old-configure
-            # and it contains the wrappers from --with-compiler-wrapper and
-            # --with-ccache.
-            if provided_wrapper[: len(wrapper)] == wrapper:
-                provided_wrapper = provided_wrapper[len(wrapper) :]
-            wrapper.extend(provided_wrapper)
+            wrapper.extend(provided_compiler.wrapper)
             flags.extend(provided_compiler.flags)
 
         info = check_compiler(wrapper + [compiler] + flags, language, host_or_target)
