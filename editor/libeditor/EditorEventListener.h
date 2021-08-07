@@ -77,13 +77,13 @@ class EditorEventListener : public nsIDOMEventListener {
       WidgetMouseEvent* aMouseClickEvent);
   MOZ_CAN_RUN_SCRIPT nsresult Focus(InternalFocusEvent* aFocusEvent);
   nsresult Blur(InternalFocusEvent* aBlurEvent);
-  MOZ_CAN_RUN_SCRIPT nsresult DragEnter(dom::DragEvent* aDragEvent);
   MOZ_CAN_RUN_SCRIPT nsresult DragOverOrDrop(dom::DragEvent* aDragEvent);
-  nsresult DragExit(dom::DragEvent* aDragEvent);
+  nsresult DragLeave(dom::DragEvent* aDragEvent);
 
   void RefuseToDropAndHideCaret(dom::DragEvent* aDragEvent);
   bool DragEventHasSupportingData(dom::DragEvent* aDragEvent) const;
   MOZ_CAN_RUN_SCRIPT bool CanInsertAtDropPosition(dom::DragEvent* aDragEvent);
+  void InitializeDragDropCaret();
   void CleanupDragDropCaret();
   PresShell* GetPresShell() const;
   nsPresContext* GetPresContext() const;

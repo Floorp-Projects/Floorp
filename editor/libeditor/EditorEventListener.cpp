@@ -158,11 +158,9 @@ nsresult EditorEventListener::InstallToEditor() {
   eventListenerManager->AddEventListenerByType(
       this, u"keypress"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->AddEventListenerByType(
-      this, u"dragenter"_ns, TrustedEventsAtSystemGroupBubble());
-  eventListenerManager->AddEventListenerByType(
       this, u"dragover"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->AddEventListenerByType(
-      this, u"dragexit"_ns, TrustedEventsAtSystemGroupBubble());
+      this, u"dragleave"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->AddEventListenerByType(
       this, u"drop"_ns, TrustedEventsAtSystemGroupBubble());
   // XXX We should add the mouse event listeners as system event group.
@@ -241,11 +239,9 @@ void EditorEventListener::UninstallFromEditor() {
   eventListenerManager->RemoveEventListenerByType(
       this, u"keypress"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->RemoveEventListenerByType(
-      this, u"dragenter"_ns, TrustedEventsAtSystemGroupBubble());
-  eventListenerManager->RemoveEventListenerByType(
       this, u"dragover"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->RemoveEventListenerByType(
-      this, u"dragexit"_ns, TrustedEventsAtSystemGroupBubble());
+      this, u"dragleave"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->RemoveEventListenerByType(
       this, u"drop"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->RemoveEventListenerByType(this, u"mousedown"_ns,
@@ -336,32 +332,24 @@ NS_IMETHODIMP EditorEventListener::HandleEvent(Event* aEvent) {
   //       you don't need to check if the QI succeeded before each call.
   WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
   switch (internalEvent->mMessage) {
-    // dragenter
-    case eDragEnter: {
-      // aEvent should be grabbed by the caller since this is
-      // nsIDOMEventListener method.  However, our clang plugin cannot check it
-      // if we use Event::As*Event().  So, we need to grab it by ourselves.
-      RefPtr<DragEvent> dragEvent = aEvent->AsDragEvent();
-      nsresult rv = DragEnter(dragEvent);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "EditorEventListener::DragEnter() failed");
-      return rv;
-    }
     // dragover and drop
     case eDragOver:
     case eDrop: {
+      // aEvent should be grabbed by the caller since this is
+      // nsIDOMEventListener method.  However, our clang plugin cannot check it
+      // if we use Event::As*Event().  So, we need to grab it by ourselves.
       RefPtr<DragEvent> dragEvent = aEvent->AsDragEvent();
       nsresult rv = DragOverOrDrop(dragEvent);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "EditorEventListener::DragOverOrDrop() failed");
       return rv;
     }
-    // dragexit
-    case eDragExit: {
+    // DragLeave
+    case eDragLeave: {
       RefPtr<DragEvent> dragEvent = aEvent->AsDragEvent();
-      nsresult rv = DragExit(dragEvent);
+      nsresult rv = DragLeave(dragEvent);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "EditorEventListener::DragExit() failed");
+                           "EditorEventListener::DragLeave() failed");
       return rv;
     }
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
@@ -769,36 +757,6 @@ nsresult EditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
  * Drag event implementation
  */
 
-nsresult EditorEventListener::DragEnter(DragEvent* aDragEvent) {
-  if (NS_WARN_IF(!aDragEvent) || DetachedFromEditor()) {
-    return NS_OK;
-  }
-
-  RefPtr<PresShell> presShell = GetPresShell();
-  if (NS_WARN_IF(!presShell)) {
-    return NS_OK;
-  }
-
-  if (!mCaret) {
-    mCaret = new nsCaret();
-    DebugOnly<nsresult> rvIgnored = mCaret->Init(presShell);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "nsCaret::Init() failed, but ignored");
-    mCaret->SetCaretReadOnly(true);
-    // This is to avoid the requirement that the Selection is Collapsed which
-    // it can't be when dragging a selection in the same shell.
-    // See nsCaret::IsVisible().
-    mCaret->SetVisibilityDuringSelection(true);
-  }
-
-  presShell->SetCaret(mCaret);
-
-  nsresult rv = DragOverOrDrop(aDragEvent);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorEventListener::DragOverOrDrop() failed");
-  return rv;
-}
-
 void EditorEventListener::RefuseToDropAndHideCaret(DragEvent* aDragEvent) {
   MOZ_ASSERT(aDragEvent->WidgetEventPtr()->mFlags.mInSystemGroup);
 
@@ -816,12 +774,14 @@ void EditorEventListener::RefuseToDropAndHideCaret(DragEvent* aDragEvent) {
 nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
   MOZ_ASSERT(aDragEvent);
   MOZ_ASSERT(aDragEvent->WidgetEventPtr()->mMessage == eDrop ||
-             aDragEvent->WidgetEventPtr()->mMessage == eDragOver ||
-             aDragEvent->WidgetEventPtr()->mMessage == eDragEnter);
+             aDragEvent->WidgetEventPtr()->mMessage == eDragOver);
 
   if (aDragEvent->WidgetEventPtr()->mMessage == eDrop) {
     CleanupDragDropCaret();
     MOZ_ASSERT(!mCaret);
+  } else {
+    InitializeDragDropCaret();
+    MOZ_ASSERT(mCaret);
   }
 
   if (DetachedFromEditorOrDefaultPrevented(aDragEvent->WidgetEventPtr())) {
@@ -897,8 +857,7 @@ nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
     return rv;
   }
 
-  MOZ_ASSERT(aDragEvent->WidgetEventPtr()->mMessage == eDragOver ||
-             aDragEvent->WidgetEventPtr()->mMessage == eDragEnter);
+  MOZ_ASSERT(aDragEvent->WidgetEventPtr()->mMessage == eDragOver);
 
   // If we handle the dragged item, we need to adjust drop effect here
   // because once DataTransfer is retrieved, DragEvent has initialized it
@@ -927,6 +886,29 @@ nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
   return NS_OK;
 }
 
+void EditorEventListener::InitializeDragDropCaret() {
+  if (mCaret) {
+    return;
+  }
+
+  RefPtr<PresShell> presShell = GetPresShell();
+  if (NS_WARN_IF(!presShell)) {
+    return;
+  }
+
+  mCaret = new nsCaret();
+  DebugOnly<nsresult> rvIgnored = mCaret->Init(presShell);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                        "nsCaret::Init() failed, but ignored");
+  mCaret->SetCaretReadOnly(true);
+  // This is to avoid the requirement that the Selection is Collapsed which
+  // it can't be when dragging a selection in the same shell.
+  // See nsCaret::IsVisible().
+  mCaret->SetVisibilityDuringSelection(true);
+
+  presShell->SetCaret(mCaret);
+}
+
 void EditorEventListener::CleanupDragDropCaret() {
   if (!mCaret) {
     return;
@@ -943,12 +925,12 @@ void EditorEventListener::CleanupDragDropCaret() {
   mCaret = nullptr;
 }
 
-nsresult EditorEventListener::DragExit(DragEvent* aDragEvent) {
+nsresult EditorEventListener::DragLeave(DragEvent* aDragEvent) {
   // XXX If aDragEvent was created by chrome script, its defaultPrevented
   //     may be true, though.  We shouldn't handle such event but we don't
   //     have a way to distinguish if coming event is created by chrome script.
   NS_WARNING_ASSERTION(!aDragEvent->WidgetEventPtr()->DefaultPrevented(),
-                       "eDragExit shouldn't be cancelable");
+                       "eDragLeave shouldn't be cancelable");
   if (NS_WARN_IF(!aDragEvent) || DetachedFromEditor()) {
     return NS_OK;
   }
