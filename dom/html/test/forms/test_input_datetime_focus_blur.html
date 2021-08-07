@@ -14,6 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1288591
 <div id="content">
   <input id="input_time" type="time">
   <input id="input_date" type="date">
+  <input id="input_datetime-local" type="datetime-local">
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -53,10 +54,8 @@ function testFocusBlur(type) {
 }
 
 function test() {
-  let inputTypes = ["time", "date"];
-
-  for (let i = 0; i < inputTypes.length; i++) {
-    testFocusBlur(inputTypes[i]);
+  for (let inputType of ["time", "date", "datetime-local"]) {
+    testFocusBlur(inputType);
   }
 }
 </script>
