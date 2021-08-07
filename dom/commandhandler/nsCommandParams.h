@@ -14,8 +14,8 @@
 #include "PLDHashTable.h"
 
 class nsCommandParams : public nsICommandParams {
-  typedef mozilla::ErrorResult ErrorResult;
-  typedef mozilla::IgnoredErrorResult IgnoredErrorResult;
+  using ErrorResult = mozilla::ErrorResult;
+  using IgnoredErrorResult = mozilla::IgnoredErrorResult;
 
  public:
   nsCommandParams();

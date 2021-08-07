@@ -155,7 +155,7 @@ nsBaseCommandController::GetSupportedCommands(nsTArray<nsCString>& aCommands) {
   return mCommandTable->GetSupportedCommands(aCommands);
 }
 
-typedef already_AddRefed<nsControllerCommandTable> (*CommandTableCreatorFn)();
+using CommandTableCreatorFn = already_AddRefed<nsControllerCommandTable> (*)();
 
 static already_AddRefed<nsBaseCommandController>
 CreateControllerWithSingletonCommandTable(CommandTableCreatorFn aCreatorFn) {
