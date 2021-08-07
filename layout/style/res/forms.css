@@ -985,13 +985,13 @@ input[type=search]::-moz-search-clear-button {
   background-size: contain;
 }
 
-input:is([type=date], [type=time]) {
+input:is([type=date], [type=time], [type=datetime-local]) {
   overflow: hidden !important;
   font-family: -moz-fixed;
   cursor: default;
 }
 
-input:is([type=date], [type=time]):is(:disabled, :read-only) {
+input:is([type=date], [type=time], [type=datetime-local]):is(:disabled, :read-only) {
   color: GrayText;
 }
 

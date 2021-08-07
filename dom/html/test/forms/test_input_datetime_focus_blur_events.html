@@ -19,6 +19,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301306
 <input type="date" id="input_date" onfocus="++focusEvents[1]"
        onblur="++blurEvents[1]" onfocusin="++focusInEvents[1]"
        onfocusout="++focusOutEvents[1]">
+<input type="datetime-local" id="input_datetime-local" onfocus="++focusEvents[2]"
+       onblur="++blurEvents[2]" onfocusin="++focusInEvents[2]"
+       onfocusout="++focusOutEvents[2]">
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -29,11 +32,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301306
  * through the inner text boxes, does not fire extra focus/blur events.
  **/
 
-var inputTypes = ["time", "date"];
-var focusEvents = [0, 0];
-var focusInEvents = [0, 0];
-var focusOutEvents = [0, 0];
-var blurEvents = [0, 0];
+var inputTypes = ["time", "date", "datetime-local"];
+var focusEvents = [0, 0, 0];
+var focusInEvents = [0, 0, 0];
+var focusOutEvents = [0, 0, 0];
+var blurEvents = [0, 0, 0];
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
