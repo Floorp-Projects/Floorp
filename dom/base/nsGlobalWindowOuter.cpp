@@ -6818,7 +6818,8 @@ void nsGlobalWindowOuter::PageHidden() {
 already_AddRefed<nsICSSDeclaration>
 nsGlobalWindowOuter::GetComputedStyleHelperOuter(Element& aElt,
                                                  const nsAString& aPseudoElt,
-                                                 bool aDefaultStylesOnly) {
+                                                 bool aDefaultStylesOnly,
+                                                 ErrorResult& aRv) {
   if (!mDoc) {
     return nullptr;
   }
@@ -6826,7 +6827,8 @@ nsGlobalWindowOuter::GetComputedStyleHelperOuter(Element& aElt,
   RefPtr<nsICSSDeclaration> compStyle = NS_NewComputedDOMStyle(
       &aElt, aPseudoElt, mDoc,
       aDefaultStylesOnly ? nsComputedDOMStyle::StyleType::DefaultOnly
-                         : nsComputedDOMStyle::StyleType::All);
+                         : nsComputedDOMStyle::StyleType::All,
+      aRv);
 
   return compStyle.forget();
 }
