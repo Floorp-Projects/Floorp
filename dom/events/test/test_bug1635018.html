@@ -10,14 +10,18 @@
 <script>
   SimpleTest.waitForExplicitFinish();
 
-  start.addEventListener("dragexit", ev => {
-    ok(false, "dragexit should not fire at non-chrome element")
-  });
-  start.addEventListener("dragleave", ev => {
-    ok(true, "got dragleave")
-    SimpleTest.finish();
-  });
+  SpecialPowers.pushPrefEnv({
+    set: [["dom.event.dragexit.enabled", false]]
+  }).then(() => {
+    start.addEventListener("dragexit", ev => {
+      ok(false, "dragexit should not fire at non-chrome element")
+    });
+    start.addEventListener("dragleave", ev => {
+      ok(true, "got dragleave")
+      SimpleTest.finish();
+    });
 
-  sendDragEvent({ type: "dragover" }, start);
-  sendDragEvent({ type: "dragover" }, dest);
+    sendDragEvent({ type: "dragover" }, start);
+    sendDragEvent({ type: "dragover" }, dest);
+  });
 </script>
