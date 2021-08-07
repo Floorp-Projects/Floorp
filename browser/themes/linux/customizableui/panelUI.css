@@ -28,7 +28,7 @@
 
 #BMB_bookmarksPopup menupopup {
   margin-top: -9px; /* The top component of --panel-subview-body-padding and the 1px border */
- }
+}
 
 #PlacesToolbar menupopup {
   color: var(--arrowpanel-color);
@@ -41,6 +41,12 @@
   background: var(--arrowpanel-background);
   border: 1px solid var(--arrowpanel-border-color);
   margin-top: -1px
+}
+
+/* Styled differently to allow for user interaction with menu separator */
+#PlacesToolbar menupopup[placespopup="true"] menuseparator {
+  appearance: none !important;
+  -moz-default-appearance: menuseparator !important;
 }
 
 menuitem.subviewbutton {
