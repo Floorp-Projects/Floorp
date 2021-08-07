@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace dom {
 
-typedef nsTArray<RefPtr<TextClause>> TextClauseArray;
+using TextClauseArray = nsTArray<RefPtr<TextClause>>;
 
 class CompositionEvent : public UIEvent {
  public:

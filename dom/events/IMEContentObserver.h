@@ -41,11 +41,11 @@ class IMEContentObserver final : public nsStubMutationObserver,
                                  public nsIScrollObserver,
                                  public nsSupportsWeakReference {
  public:
-  typedef widget::IMENotification::SelectionChangeData SelectionChangeData;
-  typedef widget::IMENotification::TextChangeData TextChangeData;
-  typedef widget::IMENotification::TextChangeDataBase TextChangeDataBase;
-  typedef widget::IMENotificationRequests IMENotificationRequests;
-  typedef widget::IMEMessage IMEMessage;
+  using SelectionChangeData = widget::IMENotification::SelectionChangeData;
+  using TextChangeData = widget::IMENotification::TextChangeData;
+  using TextChangeDataBase = widget::IMENotification::TextChangeDataBase;
+  using IMENotificationRequests = widget::IMENotificationRequests;
+  using IMEMessage = widget::IMEMessage;
 
   IMEContentObserver();
 

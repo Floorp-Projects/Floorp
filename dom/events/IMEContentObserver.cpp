@@ -37,8 +37,8 @@
 
 namespace mozilla {
 
-typedef ContentEventHandler::NodePosition NodePosition;
-typedef ContentEventHandler::NodePositionBefore NodePositionBefore;
+using NodePosition = ContentEventHandler::NodePosition;
+using NodePositionBefore = ContentEventHandler::NodePositionBefore;
 
 using namespace widget;
 

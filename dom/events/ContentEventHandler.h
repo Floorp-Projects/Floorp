@@ -97,7 +97,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
   };
 
  public:
-  typedef dom::Selection Selection;
+  using Selection = dom::Selection;
 
   explicit ContentEventHandler(nsPresContext* aPresContext);
 
@@ -315,7 +315,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
   nsresult ExpandToClusterBoundary(nsIContent* aContent, bool aForward,
                                    uint32_t* aXPOffset);
 
-  typedef nsTArray<mozilla::FontRange> FontRangeArray;
+  using FontRangeArray = nsTArray<mozilla::FontRange>;
   static void AppendFontRanges(FontRangeArray& aFontRanges,
                                nsIContent* aContent, uint32_t aBaseOffset,
                                uint32_t aXPStartOffset, uint32_t aXPEndOffset,
