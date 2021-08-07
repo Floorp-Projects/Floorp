@@ -2421,6 +2421,70 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-live-firefox-amazon-fis-e10s: None
 
 
+.. dropdown:: amazon-sec (BT, FF, CH, CU)
+   :container: + anchor-id-amazon-sec-d
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm6-linux-firefox-amazon-sec.manifest
+   * **playback version**: 6.0.2
+   * **secondary url**: `<https://www.amazon.com/Acer-A515-46-R14K-Quad-Core-Processor-Backlit/dp/B08VKNVDDR/ref=sr_1_3?dchild=1&keywords=laptop&qid=1627047187&sr=8-3>`__
+   * **test url**: `<https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk/opt
+            * browsertime-tp6-firefox-amazon-sec-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-tp6-firefox-amazon-sec-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-tp6-chrome-amazon-sec-e10s: None
+            * browsertime-tp6-chromium-amazon-sec-e10s: None
+            * browsertime-tp6-firefox-amazon-sec-e10s: mozilla-beta, trunk
+            * browsertime-tp6-firefox-amazon-sec-fis-e10s: mozilla-central
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-tp6-chrome-amazon-sec-e10s: None
+            * browsertime-tp6-chromium-amazon-sec-e10s: None
+            * browsertime-tp6-firefox-amazon-sec-e10s: trunk
+            * browsertime-tp6-firefox-amazon-sec-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-tp6-chrome-amazon-sec-e10s: None
+            * browsertime-tp6-chromium-amazon-sec-e10s: None
+            * browsertime-tp6-firefox-amazon-sec-e10s: mozilla-beta, trunk
+            * browsertime-tp6-firefox-amazon-sec-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable/opt
+            * browsertime-tp6-chrome-amazon-sec-e10s: None
+            * browsertime-tp6-chromium-amazon-sec-e10s: None
+            * browsertime-tp6-firefox-amazon-sec-e10s: None
+      * test-windows10-32-qr/opt
+            * browsertime-tp6-firefox-amazon-sec-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-tp6-chrome-amazon-sec-e10s: None
+            * browsertime-tp6-chromium-amazon-sec-e10s: None
+            * browsertime-tp6-firefox-amazon-sec-e10s: None
+            * browsertime-tp6-firefox-amazon-sec-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-tp6-firefox-amazon-sec-e10s: None
+      * test-windows10-64-ref-hw-2017/opt
+            * browsertime-tp6-firefox-amazon-sec-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-tp6-chrome-amazon-sec-e10s: None
+            * browsertime-tp6-chromium-amazon-sec-e10s: None
+            * browsertime-tp6-firefox-amazon-sec-e10s: mozilla-beta, trunk
+            * browsertime-tp6-firefox-amazon-sec-fis-e10s: mozilla-central
+
+
 .. dropdown:: bing-search (BT, FF, CH, CU)
    :container: + anchor-id-bing-search-d
 

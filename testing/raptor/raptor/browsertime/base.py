@@ -221,7 +221,11 @@ class Browsertime(Perftest):
         browsertime_script.extend(
             ["--browsertime.page_cycles", str(test.get("page_cycles", 1))]
         )
-        browsertime_script.extend(["--browsertime.url", test["test_url"]])
+        browsertime_script.extend(["--browsertime.test_url", test["test_url"]])
+        if test.get("secondary_url"):
+            browsertime_script.extend(
+                ["--browsertime.secondary_url", test.get("secondary_url")]
+            )
 
         # Raptor's `pageCycleDelay` delay (ms) between pageload cycles
         browsertime_script.extend(["--browsertime.page_cycle_delay", "1000"])
