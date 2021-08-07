@@ -17,11 +17,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1370858
                                    oninput="++inputEvents[0]">
 <input type="date" id="input_date" onchange="++changeEvents[1]"
                                    oninput="++inputEvents[1]">
-<input type="datetime-local" id="input_datetime-local" onchange="++changeEvents[2]"
-                                                       oninput="++inputEvents[2]">
 </div>
 <pre id="test">
-<script class="testbody">
+<script class="testbody" type="text/javascript">
 
 /**
  * Test for Bug 1370858.
@@ -30,11 +28,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1370858
 
 const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
 
-var inputTypes = ["time", "date", "datetime-local"];
-var changeEvents = [0, 0, 0];
-var inputEvents = [0, 0, 0];
-var values = ["10:30", "2017-06-08", "2017-06-08T10:30"];
-var expectedValues = [["09:30", "01:30"], ["2017-05-08", "2017-01-08"], ["2017-05-08T10:30", "2017-01-08T10:30"]];
+var inputTypes = ["time", "date"];
+var changeEvents = [0, 0];
+var inputEvents = [0, 0];
+var values = ["10:30", "2017-06-08"];
+var expectedValues = [["09:30", "01:30"], ["2017-05-08", "2017-01-08"]];
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
