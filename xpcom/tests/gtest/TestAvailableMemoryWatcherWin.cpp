@@ -386,8 +386,8 @@ class AvailableMemoryWatcherFixture : public TelemetryTestFixture {
     Preferences::SetUint(kPrefLowCommitSpaceThreshold, newVal);
   }
 
-  static constexpr uint32_t kStateChangeTimeoutMs = 10000;
-  static constexpr uint32_t kNotificationTimeoutMs = 5000;
+  static constexpr uint32_t kStateChangeTimeoutMs = 20000;
+  static constexpr uint32_t kNotificationTimeoutMs = 20000;
 
   RefPtr<Spinner> mHighMemoryObserver;
   RefPtr<MockTabUnloader> mTabUnloader;
@@ -423,11 +423,13 @@ class AvailableMemoryWatcherFixture : public TelemetryTestFixture {
   }
 
   bool WaitForMemoryResourceNotification() {
+    uint64_t t0 = ::GetTickCount64();
     if (::WaitForSingleObject(mLowMemoryHandle, kNotificationTimeoutMs) !=
         WAIT_OBJECT_0) {
       fprintf(stderr, "The memory notification was not triggered.\n");
       return false;
     }
+    fprintf(stderr, "Notified in %llu msec\n", ::GetTickCount64() - t0);
     return true;
   }
 
