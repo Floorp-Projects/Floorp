@@ -192,7 +192,8 @@ void AnonymousContent::GetComputedStylePropertyValue(
   }
 
   RefPtr<nsComputedDOMStyle> cs = new nsComputedDOMStyle(
-      element, u""_ns, element->OwnerDoc(), nsComputedDOMStyle::eAll);
+      element, PseudoStyleType::NotPseudo, element->OwnerDoc(),
+      nsComputedDOMStyle::StyleType::All);
   aRv = cs->GetPropertyValue(aPropertyName, aResult);
 }
 

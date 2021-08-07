@@ -37,9 +37,6 @@ using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
-using nsStyleTransformMatrix::Decompose2DMatrix;
-using nsStyleTransformMatrix::Decompose3DMatrix;
-using nsStyleTransformMatrix::ShearType;
 
 bool AnimationValue::operator==(const AnimationValue& aOther) const {
   if (mServo && aOther.mServo) {
@@ -199,7 +196,7 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
   // GetComputedStyle() flushes style, so we shouldn't assume that any
   // non-owning references we have are still valid.
   RefPtr<ComputedStyle> computedStyle =
-      nsComputedDOMStyle::GetComputedStyle(aElement, nullptr);
+      nsComputedDOMStyle::GetComputedStyle(aElement);
   MOZ_ASSERT(computedStyle);
 
   RefPtr<RawServoDeclarationBlock> declarations = ServoCSSParser::ParseProperty(

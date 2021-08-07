@@ -120,7 +120,7 @@ nsresult StatusBarEntry::Init() {
       return NS_ERROR_FAILURE;
     }
 
-    sc = nsComputedDOMStyle::GetComputedStyle(mMenu, nullptr);
+    sc = nsComputedDOMStyle::GetComputedStyle(mMenu);
     if (!sc) {
       return NS_ERROR_FAILURE;
     }

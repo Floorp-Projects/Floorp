@@ -15,8 +15,7 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 
 StyleInfo::StyleInfo(dom::Element* aElement) : mElement(aElement) {
-  mComputedStyle =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
+  mComputedStyle = nsComputedDOMStyle::GetComputedStyleNoFlush(aElement);
 }
 
 already_AddRefed<nsAtom> StyleInfo::Display() {

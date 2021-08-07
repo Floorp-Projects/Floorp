@@ -74,7 +74,8 @@ void CSSStyleRule::SetRawAfterClone(RefPtr<RawServoStyleRule> aRaw) {
   mDecls.SetRawAfterClone(Servo_StyleRule_GetStyle(mRawRule).Consume());
 }
 
-void CSSStyleRuleDeclaration::SetRawAfterClone(RefPtr<RawServoDeclarationBlock> aRaw) {
+void CSSStyleRuleDeclaration::SetRawAfterClone(
+    RefPtr<RawServoDeclarationBlock> aRaw) {
   RefPtr<DeclarationBlock> block = new DeclarationBlock(aRaw.forget());
   mDecls->SetOwningRule(nullptr);
   mDecls = std::move(block);
@@ -226,21 +227,15 @@ nsresult CSSStyleRule::SelectorMatchesElement(Element* aElement,
                                               const nsAString& aPseudo,
                                               bool aRelevantLinkVisited,
                                               bool* aMatches) {
-  PseudoStyleType pseudoType = PseudoStyleType::NotPseudo;
-  if (!aPseudo.IsEmpty()) {
-    RefPtr<nsAtom> pseudoElt = NS_Atomize(aPseudo);
-    pseudoType = nsCSSPseudoElements::GetPseudoType(
-        pseudoElt, CSSEnabledState::IgnoreEnabledState);
-
-    if (pseudoType == PseudoStyleType::NotPseudo) {
-      *aMatches = false;
-      return NS_OK;
-    }
+  Maybe<PseudoStyleType> pseudoType = nsCSSPseudoElements::GetPseudoType(
+      aPseudo, CSSEnabledState::IgnoreEnabledState);
+  if (!pseudoType) {
+    *aMatches = false;
+    return NS_OK;
   }
 
   *aMatches = Servo_StyleRule_SelectorMatchesElement(
-      mRawRule, aElement, aSelectorIndex, pseudoType, aRelevantLinkVisited);
-
+      mRawRule, aElement, aSelectorIndex, *pseudoType, aRelevantLinkVisited);
   return NS_OK;
 }
 

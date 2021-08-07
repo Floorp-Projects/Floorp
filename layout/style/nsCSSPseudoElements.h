@@ -62,10 +62,6 @@ class nsCSSPseudoElements {
   typedef mozilla::CSSEnabledState EnabledState;
 
  public:
-  static bool IsPseudoElement(nsAtom* aAtom);
-
-  static bool IsCSS2PseudoElement(nsAtom* aAtom);
-
   static bool IsEagerlyCascadedInServo(const Type aType) {
     return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_IS_CSS2);
   }
@@ -85,7 +81,11 @@ class nsCSSPseudoElements {
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
-  static Type GetPseudoType(nsAtom* aAtom, EnabledState aEnabledState);
+  // Returns Nothing() for a syntactically invalid pseudo-element, and NotPseudo
+  // for the empty / null string.
+  static mozilla::Maybe<Type> GetPseudoType(
+      const nsAString& aPseudoElement,
+      EnabledState = EnabledState::ForAllContent);
 
   // Get the atom for a given Type. aType must be <
   // PseudoType::CSSPseudoElementsEnd.

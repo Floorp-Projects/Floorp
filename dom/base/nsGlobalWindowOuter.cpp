@@ -6825,8 +6825,8 @@ nsGlobalWindowOuter::GetComputedStyleHelperOuter(Element& aElt,
 
   RefPtr<nsICSSDeclaration> compStyle = NS_NewComputedDOMStyle(
       &aElt, aPseudoElt, mDoc,
-      aDefaultStylesOnly ? nsComputedDOMStyle::eDefaultOnly
-                         : nsComputedDOMStyle::eAll);
+      aDefaultStylesOnly ? nsComputedDOMStyle::StyleType::DefaultOnly
+                         : nsComputedDOMStyle::StyleType::All);
 
   return compStyle.forget();
 }
