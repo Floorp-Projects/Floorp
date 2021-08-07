@@ -485,20 +485,20 @@ exports.prettifyCSS = prettifyCSS;
  *
  * @returns {Object}
  *            - {DOMNode} node The non-anonymous node
- *            - {string} pseudo One of ':marker', ':before', ':after', or null.
+ *            - {string} pseudo One of '::marker', '::before', '::after', or null.
  */
 function getBindingElementAndPseudo(node) {
   let bindingElement = node;
   let pseudo = null;
   if (node.nodeName == "_moz_generated_content_marker") {
     bindingElement = node.parentNode;
-    pseudo = ":marker";
+    pseudo = "::marker";
   } else if (node.nodeName == "_moz_generated_content_before") {
     bindingElement = node.parentNode;
-    pseudo = ":before";
+    pseudo = "::before";
   } else if (node.nodeName == "_moz_generated_content_after") {
     bindingElement = node.parentNode;
-    pseudo = ":after";
+    pseudo = "::after";
   }
   return {
     bindingElement: bindingElement,
