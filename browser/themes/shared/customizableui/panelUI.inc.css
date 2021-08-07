@@ -25,13 +25,6 @@
 
 
 :root {
-  --arrowpanel-menuitem-margin: 0;
-  --arrowpanel-menuitem-padding-block: 4px;
-  --arrowpanel-menuitem-padding: var(--arrowpanel-menuitem-padding-block) 12px;
-  --arrowpanel-menuitem-border-radius: unset;
-  --panel-separator-margin: 6px 0;
-  --panel-subview-body-padding: 6px 0;
-
   --panel-separator-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
   --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px var(--focus-outline-color);
 
@@ -47,7 +40,9 @@
   --arrowpanel-menuitem-padding-block: 8px;
   --arrowpanel-menuitem-padding: var(--arrowpanel-menuitem-padding-block);
   --arrowpanel-menuitem-border-radius: 4px;
-  --panel-separator-margin: 4px 8px;
+  --panel-separator-margin-vertical: 4px;
+  --panel-separator-margin-horizontal: 8px;
+  --panel-separator-margin: var(--panel-separator-margin-vertical) var(--panel-separator-margin-horizontal);
   --panel-subview-body-padding: 8px 0;
 }
 
@@ -1424,8 +1419,8 @@ menuitem.subviewbutton@menuStateActive@,
   padding-left: 6px;
 }
 
+.PanelUI-subView menuseparator,
 #PlacesToolbar menupopup[placespopup=true] toolbarseparator,
-#PlacesToolbar menupopup[placespopup=true] menuseparator,
 #widget-overflow-mainView > toolbarseparator,
 #widget-overflow-mainView > .panel-subview-body > toolbarseparator,
 .PanelUI-subView toolbarseparator,
@@ -1445,13 +1440,24 @@ menuitem.subviewbutton@menuStateActive@,
   padding: 0;
 }
 
-.PanelUI-subView menuseparator {
+/* Styled differently to allow for user interaction with menu separator */
+#PlacesToolbar menupopup[placespopup="true"] menuseparator {
+  position: relative;
   appearance: none;
+  border: none;
   min-height: 0;
+  margin: 0 var(--panel-separator-margin-horizontal);
+  padding-inline: 0;
+  padding-top: var(--panel-separator-margin-vertical);
+  padding-bottom: calc(var(--panel-separator-margin-vertical) + 1px);
+}
+
+#PlacesToolbar menupopup[placespopup="true"] menuseparator::before {
+  content: '';
+  position: absolute;
+  width: 100%;
   border-top: 1px solid var(--panel-separator-color);
   border-bottom: none;
-  margin: var(--panel-separator-margin);
-  padding: 0;
 }
 
 .PanelUI-subView toolbarseparator.proton-zap {
