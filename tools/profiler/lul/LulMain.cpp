@@ -1422,10 +1422,7 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
       }
     }
 
-    // For the innermost frame, the IA value is what we need.  For all
-    // other frames, it's actually the return address, so back up one
-    // byte so as to get it into the calling instruction.
-    aFramePCs[*aFramesUsed] = ia.Value() - (*aFramesUsed == 0 ? 0 : 1);
+    aFramePCs[*aFramesUsed] = ia.Value();
     aFrameSPs[*aFramesUsed] = sp.Valid() ? sp.Value() : 0;
     (*aFramesUsed)++;
 
