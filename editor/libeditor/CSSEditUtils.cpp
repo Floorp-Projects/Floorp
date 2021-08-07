@@ -562,8 +562,9 @@ already_AddRefed<nsComputedDOMStyle> CSSEditUtils::GetComputedStyle(
     return nullptr;
   }
 
-  RefPtr<nsComputedDOMStyle> computedDOMStyle =
-      NS_NewComputedDOMStyle(aElement, u""_ns, document);
+  RefPtr<nsComputedDOMStyle> computedDOMStyle = NS_NewComputedDOMStyle(
+      aElement, u""_ns, document, nsComputedDOMStyle::StyleType::All,
+      IgnoreErrors());
   return computedDOMStyle.forget();
 }
 

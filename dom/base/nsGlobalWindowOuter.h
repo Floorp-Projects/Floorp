@@ -921,7 +921,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // Helper for getComputedStyle and getDefaultComputedStyle
   already_AddRefed<nsICSSDeclaration> GetComputedStyleHelperOuter(
       mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
-      bool aDefaultStylesOnly);
+      bool aDefaultStylesOnly,
+      mozilla::ErrorResult& aRv);
 
   // Outer windows only.
   void PreloadLocalStorage();

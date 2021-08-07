@@ -401,7 +401,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
 already_AddRefed<nsComputedDOMStyle> NS_NewComputedDOMStyle(
     mozilla::dom::Element*, const nsAString& aPseudoElt,
-    mozilla::dom::Document*,
-    nsComputedDOMStyle::StyleType = nsComputedDOMStyle::StyleType::All);
+    mozilla::dom::Document*, nsComputedDOMStyle::StyleType,
+    mozilla::ErrorResult&);
 
 #endif /* nsComputedDOMStyle_h__ */
