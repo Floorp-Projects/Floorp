@@ -43,11 +43,11 @@ this.DateTimeBoxWidget = class {
   }
 
   shouldShowTime() {
-    return this.type == "time" || this.type == "datetime-local";
+    return this.type == "time";
   }
 
   shouldShowDate() {
-    return this.type == "date" || this.type == "datetime-local";
+    return this.type == "date";
   }
 
   destructor() {
@@ -530,16 +530,6 @@ this.DateTimeBoxWidget = class {
     this.updateResetButtonVisibility();
   }
 
-  openDateTimePicker() {
-    this.mInputElement.openDateTimePicker(this.getCurrentValue());
-  }
-
-  closeDateTimePicker() {
-    if (this.mIsPickerOpen) {
-      this.mInputElement.closeDateTimePicker();
-    }
-  }
-
   notifyPicker() {
     if (this.mIsPickerOpen && this.isAnyFieldAvailable(true)) {
       this.mInputElement.updateDateTimePicker(this.getCurrentValue());
@@ -644,9 +634,6 @@ this.DateTimeBoxWidget = class {
       this.mLastFocusedField = target;
       this.mInputElement.setFocusState(true);
     }
-    if (this.mIsPickerOpen && this.isPickerIrrelevantField(target)) {
-      this.closeDateTimePicker();
-    }
   }
 
   onBlur(aEvent) {
@@ -667,39 +654,9 @@ this.DateTimeBoxWidget = class {
     if (aEvent.relatedTarget != this.mInputElement) {
       this.mInputElement.setFocusState(false);
       if (this.mIsPickerOpen) {
-        this.closeDateTimePicker();
+        this.mInputElement.closeDateTimePicker();
       }
     }
-  }
-
-  isTimeField(field) {
-    return (
-      field == this.mHourField ||
-      field == this.mMinuteField ||
-      field == this.mSecondField ||
-      field == this.mDayPeriodField
-    );
-  }
-
-  shouldOpenDateTimePickerOnKeyPress() {
-    if (!this.mLastFocusedField) {
-      return true;
-    }
-    return !this.isPickerIrrelevantField(this.mLastFocusedField);
-  }
-
-  shouldOpenDateTimePickerOnClick(target) {
-    return !this.isPickerIrrelevantField(target);
-  }
-
-  // Whether a given field is irrelevant for the purposes of the datetime
-  // picker. This is useful for datetime-local, which as of right now only
-  // shows a date picker (not a time picker).
-  isPickerIrrelevantField(field) {
-    if (this.type != "datetime-local") {
-      return false;
-    }
-    return this.isTimeField(field);
   }
 
   onKeyPress(aEvent) {
@@ -711,12 +668,9 @@ this.DateTimeBoxWidget = class {
       case "Escape":
       case " ": {
         if (this.mIsPickerOpen) {
-          this.closeDateTimePicker();
-        } else if (
-          aEvent.key != "Escape" &&
-          this.shouldOpenDateTimePickerOnKeyPress()
-        ) {
-          this.openDateTimePicker();
+          this.mInputElement.closeDateTimePicker();
+        } else if (aEvent.key != "Escape") {
+          this.mInputElement.openDateTimePicker(this.getCurrentValue());
         } else {
           // Don't preventDefault();
           break;
@@ -779,11 +733,8 @@ this.DateTimeBoxWidget = class {
 
     if (aEvent.originalTarget == this.mResetButton) {
       this.clearInputFields(false);
-    } else if (
-      !this.mIsPickerOpen &&
-      this.shouldOpenDateTimePickerOnClick(aEvent.originalTarget)
-    ) {
-      this.openDateTimePicker();
+    } else if (!this.mIsPickerOpen) {
+      this.mInputElement.openDateTimePicker(this.getCurrentValue());
     }
   }
 
@@ -1051,12 +1002,13 @@ this.DateTimeBoxWidget = class {
       dayPeriod,
     } = this.getCurrentValue();
 
-    let time = "";
-    let date = "";
+    let value = "";
 
     // Convert to a valid time string according to:
     // https://html.spec.whatwg.org/multipage/infrastructure.html#valid-time-string
-    if (this.shouldShowTime()) {
+    //
+    // TODO(emilio): Handle datetime-local.
+    if (this.type == "time") {
       if (this.mHour12) {
         if (dayPeriod == this.mPMIndicator && hour < this.mMaxHour) {
           hour += this.mMaxHour;
@@ -1068,10 +1020,10 @@ this.DateTimeBoxWidget = class {
       hour = hour < 10 ? "0" + hour : hour;
       minute = minute < 10 ? "0" + minute : minute;
 
-      time = hour + ":" + minute;
+      value = hour + ":" + minute;
       if (second != undefined) {
         second = second < 10 ? "0" + second : second;
-        time += ":" + second;
+        value += ":" + second;
       }
 
       if (millisecond != undefined) {
@@ -1079,26 +1031,17 @@ this.DateTimeBoxWidget = class {
         millisecond = millisecond
           .toString()
           .padStart(this.mMillisecMaxLength, "0");
-        time += "." + millisecond;
+        value += "." + millisecond;
       }
     }
 
-    if (this.shouldShowDate()) {
+    if (this.type == "date") {
       // Convert to a valid date string according to:
       // https://html.spec.whatwg.org/multipage/infrastructure.html#valid-date-string
       year = year.toString().padStart(this.mYearLength, "0");
       month = month < 10 ? "0" + month : month;
       day = day < 10 ? "0" + day : day;
-      date = [year, month, day].join("-");
-    }
-
-    let value;
-    if (date) {
-      value = date;
-    }
-    if (time) {
-      // https://html.spec.whatwg.org/#valid-normalised-local-date-and-time-string
-      value = value ? value + "T" + time : time;
+      value = [year, month, day].join("-");
     }
 
     if (value == this.mInputElement.value) {
@@ -1330,24 +1273,15 @@ this.DateTimeBoxWidget = class {
       return {};
     }
 
-    let date, time;
-
     let year, month, day, hour, minute, second, millisecond;
+
+    // TODO(emilio): Handle datetime-local.
     if (this.type == "date") {
-      date = value;
+      [year, month, day] = value.split("-");
     }
+
     if (this.type == "time") {
-      time = value;
-    }
-    if (this.type == "datetime-local") {
-      // https://html.spec.whatwg.org/#valid-normalised-local-date-and-time-string
-      [date, time] = value.split("T");
-    }
-    if (date) {
-      [year, month, day] = date.split("-");
-    }
-    if (time) {
-      [hour, minute, second] = time.split(":");
+      [hour, minute, second] = value.split(":");
       if (second) {
         [second, millisecond] = second.split(".");
 
@@ -1359,6 +1293,7 @@ this.DateTimeBoxWidget = class {
         }
       }
     }
+
     return { year, month, day, hour, minute, second, millisecond };
   }
 
