@@ -597,29 +597,13 @@ class OrderedHashTable {
     return offsetof(OrderedHashTable, dataLength);
   }
   static size_t offsetOfData() { return offsetof(OrderedHashTable, data); }
-  static constexpr size_t offsetOfHashTable() {
-    return offsetof(OrderedHashTable, hashTable);
-  }
-  static constexpr size_t offsetOfHashShift() {
-    return offsetof(OrderedHashTable, hashShift);
-  }
   static constexpr size_t offsetOfDataElement() {
     static_assert(offsetof(Data, element) == 0,
                   "RangeFront and RangePopFront depend on offsetof(Data, "
                   "element) being 0");
     return offsetof(Data, element);
   }
-  static constexpr size_t offsetOfDataChain() { return offsetof(Data, chain); }
   static constexpr size_t sizeofData() { return sizeof(Data); }
-
-  static constexpr size_t offsetOfHcsK0() {
-    return offsetof(OrderedHashTable, hcs) +
-           mozilla::HashCodeScrambler::offsetOfMK0();
-  }
-  static constexpr size_t offsetOfHcsK1() {
-    return offsetof(OrderedHashTable, hcs) +
-           mozilla::HashCodeScrambler::offsetOfMK1();
-  }
 
  private:
   /* Logarithm base 2 of the number of buckets in the hash table initially. */
@@ -862,22 +846,10 @@ class OrderedHashMap {
   static size_t offsetOfEntryKey() { return Entry::offsetOfKey(); }
   static size_t offsetOfImplDataLength() { return Impl::offsetOfDataLength(); }
   static size_t offsetOfImplData() { return Impl::offsetOfData(); }
-  static constexpr size_t offsetOfImplHashTable() {
-    return Impl::offsetOfHashTable();
-  }
-  static constexpr size_t offsetOfImplHashShift() {
-    return Impl::offsetOfHashShift();
-  }
   static constexpr size_t offsetOfImplDataElement() {
     return Impl::offsetOfDataElement();
   }
-  static constexpr size_t offsetOfImplDataChain() {
-    return Impl::offsetOfDataChain();
-  }
   static constexpr size_t sizeofImplData() { return Impl::sizeofData(); }
-
-  static constexpr size_t offsetOfImplHcsK0() { return Impl::offsetOfHcsK0(); }
-  static constexpr size_t offsetOfImplHcsK1() { return Impl::offsetOfHcsK1(); }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return impl.sizeOfExcludingThis(mallocSizeOf);
@@ -929,22 +901,10 @@ class OrderedHashSet {
   static size_t offsetOfEntryKey() { return 0; }
   static size_t offsetOfImplDataLength() { return Impl::offsetOfDataLength(); }
   static size_t offsetOfImplData() { return Impl::offsetOfData(); }
-  static constexpr size_t offsetOfImplHashTable() {
-    return Impl::offsetOfHashTable();
-  }
-  static constexpr size_t offsetOfImplHashShift() {
-    return Impl::offsetOfHashShift();
-  }
   static constexpr size_t offsetOfImplDataElement() {
     return Impl::offsetOfDataElement();
   }
-  static constexpr size_t offsetOfImplDataChain() {
-    return Impl::offsetOfDataChain();
-  }
   static constexpr size_t sizeofImplData() { return Impl::sizeofData(); }
-
-  static constexpr size_t offsetOfImplHcsK0() { return Impl::offsetOfHcsK0(); }
-  static constexpr size_t offsetOfImplHcsK1() { return Impl::offsetOfHcsK1(); }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return impl.sizeOfExcludingThis(mallocSizeOf);
