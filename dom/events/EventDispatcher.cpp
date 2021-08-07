@@ -383,7 +383,7 @@ class EventTargetChainItem {
     bool mIsChromeHandler : 1;
 
    private:
-    typedef uint32_t RawFlags;
+    using RawFlags = uint32_t;
     void SetRawFlags(RawFlags aRawFlags) {
       static_assert(
           sizeof(EventTargetChainFlags) <= sizeof(RawFlags),

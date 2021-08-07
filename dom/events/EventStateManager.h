@@ -536,11 +536,11 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   /**
    * The phases of WalkESMTreeToHandleAccessKey processing. See below.
    */
-  typedef enum {
+  enum ProcessingAccessKeyState {
     eAccessKeyProcessingNormal = 0,
     eAccessKeyProcessingUp,
     eAccessKeyProcessingDown
-  } ProcessingAccessKeyState;
+  };
 
   /**
    * Walk EMS to look for access key and execute found access key when aExecute
