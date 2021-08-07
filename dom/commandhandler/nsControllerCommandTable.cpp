@@ -176,7 +176,7 @@ nsControllerCommandTable::GetSupportedCommands(nsTArray<nsCString>& aCommands) {
   return NS_OK;
 }
 
-typedef nsresult (*CommandTableRegistrar)(nsControllerCommandTable*);
+using CommandTableRegistrar = nsresult (*)(nsControllerCommandTable*);
 
 static already_AddRefed<nsControllerCommandTable>
 CreateCommandTableWithCommands(CommandTableRegistrar aRegistrar) {

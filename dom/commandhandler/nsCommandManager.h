@@ -21,7 +21,7 @@ class nsCOMArray;
 class nsCommandManager final : public nsICommandManager,
                                public nsSupportsWeakReference {
  public:
-  typedef nsTArray<nsCOMPtr<nsIObserver> > ObserverList;
+  using ObserverList = nsTArray<nsCOMPtr<nsIObserver>>;
 
   nsCommandManager() = delete;
 
