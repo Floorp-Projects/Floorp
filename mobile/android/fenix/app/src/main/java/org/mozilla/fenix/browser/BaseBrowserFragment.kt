@@ -133,10 +133,8 @@ import mozilla.components.feature.webauthn.WebAuthnFeature
 import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.ktx.android.view.enterToImmersiveMode
 import mozilla.components.support.ktx.kotlin.getOrigin
-import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.components.toolbar.interactor.DefaultBrowserToolbarInteractor
-import org.mozilla.fenix.ext.measureNoInline
 import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
 import mozilla.components.feature.session.behavior.ToolbarPosition as MozacToolbarPosition
@@ -212,7 +210,7 @@ abstract class BaseBrowserFragment :
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View = PerfStartup.baseBfragmentOnCreateView.measureNoInline {
+    ): View {
         customTabSessionId = requireArguments().getString(EXTRA_SESSION_ID)
 
         // Diagnostic breadcrumb for "Display already aquired" crash:
@@ -235,29 +233,28 @@ abstract class BaseBrowserFragment :
             )
         }
 
-        view
+        return view
     }
 
-    final override fun onViewCreated(view: View, savedInstanceState: Bundle?) =
-        PerfStartup.baseBfragmentOnViewCreated.measureNoInline { // weird indentation to avoid breaking blame.
-            initializeUI(view)
+    final override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // weird indentation to avoid breaking blame.
+        initializeUI(view)
 
-            if (customTabSessionId == null) {
-                // We currently only need this observer to navigate to home
-                // in case all tabs have been removed on startup. No need to
-                // this if we have a known session to display.
-                observeRestoreComplete(requireComponents.core.store, findNavController())
-            }
-
-            observeTabSelection(requireComponents.core.store)
-
-            if (!onboarding.userHasBeenOnboarded()) {
-                observeTabSource(requireComponents.core.store)
-            }
-
-            requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
-            Unit
+        if (customTabSessionId == null) {
+            // We currently only need this observer to navigate to home
+            // in case all tabs have been removed on startup. No need to
+            // this if we have a known session to display.
+            observeRestoreComplete(requireComponents.core.store, findNavController())
         }
+
+        observeTabSelection(requireComponents.core.store)
+
+        if (!onboarding.userHasBeenOnboarded()) {
+            observeTabSource(requireComponents.core.store)
+        }
+
+        requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
+    }
 
     private fun initializeUI(view: View) {
         val tab = getCurrentTab()

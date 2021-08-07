@@ -78,7 +78,6 @@ import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
-import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
@@ -97,7 +96,6 @@ import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
-import org.mozilla.fenix.ext.measureNoInline
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -200,7 +198,7 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = PerfStartup.homeFragmentOnCreateView.measureNoInline {
+    ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         val activity = activity as HomeActivity
         val components = requireComponents
@@ -339,7 +337,7 @@ class HomeFragment : Fragment() {
         appBarLayout = view.homeAppBar
 
         activity.themeManager.applyStatusBarTheme(activity)
-        view
+        return view
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -421,87 +419,86 @@ class HomeFragment : Fragment() {
     }
 
     @Suppress("LongMethod", "ComplexMethod")
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) =
-        PerfStartup.homeFragmentOnViewCreated.measureNoInline {
-            super.onViewCreated(view, savedInstanceState)
-            context?.metrics?.track(Event.HomeScreenDisplayed)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        context?.metrics?.track(Event.HomeScreenDisplayed)
 
-            observeSearchEngineChanges()
-            createHomeMenu(requireContext(), WeakReference(view.menuButton))
-            createTabCounterMenu(view)
+        observeSearchEngineChanges()
+        createHomeMenu(requireContext(), WeakReference(view.menuButton))
+        createTabCounterMenu(view)
 
-            view.menuButton.setColorFilter(
-                ContextCompat.getColor(
-                    requireContext(),
-                    ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
-                )
+        view.menuButton.setColorFilter(
+            ContextCompat.getColor(
+                requireContext(),
+                ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
             )
+        )
 
-            view.toolbar.compoundDrawablePadding =
-                view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
-            view.toolbar_wrapper.setOnClickListener {
-                navigateToSearch()
-                requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
+        view.toolbar.compoundDrawablePadding =
+            view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
+        view.toolbar_wrapper.setOnClickListener {
+            navigateToSearch()
+            requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
+        }
+
+        view.toolbar_wrapper.setOnLongClickListener {
+            ToolbarPopupWindow.show(
+                WeakReference(it),
+                handlePasteAndGo = sessionControlInteractor::onPasteAndGo,
+                handlePaste = sessionControlInteractor::onPaste,
+                copyVisible = false
+            )
+            true
+        }
+
+        view.tab_button.setOnClickListener {
+            if (FeatureFlags.showStartOnHomeSettings) {
+                requireComponents.analytics.metrics.track(Event.StartOnHomeOpenTabsTray)
+            }
+            openTabsTray()
+        }
+
+        PrivateBrowsingButtonView(
+            privateBrowsingButton,
+            browsingModeManager
+        ) { newMode ->
+            if (newMode == BrowsingMode.Private) {
+                requireContext().settings().incrementNumTimesPrivateModeOpened()
             }
 
-            view.toolbar_wrapper.setOnLongClickListener {
-                ToolbarPopupWindow.show(
-                    WeakReference(it),
-                    handlePasteAndGo = sessionControlInteractor::onPasteAndGo,
-                    handlePaste = sessionControlInteractor::onPaste,
-                    copyVisible = false
+            if (onboarding.userHasBeenOnboarded()) {
+                homeFragmentStore.dispatch(
+                    HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode))
                 )
-                true
-            }
-
-            view.tab_button.setOnClickListener {
-                if (FeatureFlags.showStartOnHomeSettings) {
-                    requireComponents.analytics.metrics.track(Event.StartOnHomeOpenTabsTray)
-                }
-                openTabsTray()
-            }
-
-            PrivateBrowsingButtonView(
-                privateBrowsingButton,
-                browsingModeManager
-            ) { newMode ->
-                if (newMode == BrowsingMode.Private) {
-                    requireContext().settings().incrementNumTimesPrivateModeOpened()
-                }
-
-                if (onboarding.userHasBeenOnboarded()) {
-                    homeFragmentStore.dispatch(
-                        HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode))
-                    )
-                }
-            }
-
-            consumeFrom(requireComponents.core.store) {
-                updateTabCounter(it)
-            }
-
-            homeViewModel.sessionToDelete?.also {
-                if (it == ALL_NORMAL_TABS || it == ALL_PRIVATE_TABS) {
-                    removeAllTabsAndShowSnackbar(it)
-                } else {
-                    removeTabAndShowSnackbar(it)
-                }
-            }
-
-            homeViewModel.sessionToDelete = null
-
-            updateTabCounter(requireComponents.core.store.state)
-
-            if (bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR)) {
-                navigateToSearch()
-            } else if (bundleArgs.getLong(FOCUS_ON_COLLECTION, -1) >= 0) {
-                // No need to scroll to async'd loaded TopSites if we want to scroll to collections.
-                homeViewModel.shouldScrollToTopSites = false
-                /* Triggered when the user has added a tab to a collection and has tapped
-                * the View action on the [TabsTrayDialogFragment] snackbar.*/
-                scrollAndAnimateCollection(bundleArgs.getLong(FOCUS_ON_COLLECTION, -1))
             }
         }
+
+        consumeFrom(requireComponents.core.store) {
+            updateTabCounter(it)
+        }
+
+        homeViewModel.sessionToDelete?.also {
+            if (it == ALL_NORMAL_TABS || it == ALL_PRIVATE_TABS) {
+                removeAllTabsAndShowSnackbar(it)
+            } else {
+                removeTabAndShowSnackbar(it)
+            }
+        }
+
+        homeViewModel.sessionToDelete = null
+
+        updateTabCounter(requireComponents.core.store.state)
+
+        if (bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR)) {
+            navigateToSearch()
+        } else if (bundleArgs.getLong(FOCUS_ON_COLLECTION, -1) >= 0) {
+            // No need to scroll to async'd loaded TopSites if we want to scroll to collections.
+            homeViewModel.shouldScrollToTopSites = false
+            /* Triggered when the user has added a tab to a collection and has tapped
+            * the View action on the [TabsTrayDialogFragment] snackbar.*/
+            scrollAndAnimateCollection(bundleArgs.getLong(FOCUS_ON_COLLECTION, -1))
+        }
+    }
 
     private fun observeSearchEngineChanges() {
         consumeFlow(store) { flow ->

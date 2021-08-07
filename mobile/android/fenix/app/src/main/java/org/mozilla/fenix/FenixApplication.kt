@@ -51,7 +51,6 @@ import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.components.metrics.SecurePrefsTelemetry
-import org.mozilla.fenix.ext.measureNoInline
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.ProfilerMarkerFactProcessor
 import org.mozilla.fenix.perf.StartupTimeline
@@ -98,7 +97,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     override fun onCreate() {
         // We use start/stop instead of measure so we don't measure outside the main process.
         val completeMethodDurationTimerId = PerfStartup.applicationOnCreate.start() // DO NOT MOVE ANYTHING ABOVE HERE.
-        val subsectionThroughGleanTimerId = PerfStartup.appOnCreateToGleanInit.start()
 
         super.onCreate()
 
@@ -119,8 +117,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             // user's choice from Fennec.
             initializeGlean()
         }
-
-        PerfStartup.appOnCreateToGleanInit.stopAndAccumulate(subsectionThroughGleanTimerId)
 
         setupInMainProcessOnly()
 
@@ -163,54 +159,50 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
     @CallSuper
     open fun setupInMainProcessOnly() {
-        PerfStartup.appOnCreateToMegazordInit.measureNoInline {
-            ProfilerMarkerFactProcessor.create { components.core.engine.profiler }.register()
+        ProfilerMarkerFactProcessor.create { components.core.engine.profiler }.register()
 
-            run {
-                // Attention: Do not invoke any code from a-s in this scope.
-                val megazordSetup = setupMegazord()
+        run {
+            // Attention: Do not invoke any code from a-s in this scope.
+            val megazordSetup = setupMegazord()
 
-                setDayNightTheme()
-                components.strictMode.enableStrictMode(true)
-                warmBrowsersCache()
+            setDayNightTheme()
+            components.strictMode.enableStrictMode(true)
+            warmBrowsersCache()
 
-                // Make sure the engine is initialized and ready to use.
-                components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-                    components.core.engine.warmUp()
-                }
-                initializeWebExtensionSupport()
-                restoreBrowserState()
-                restoreDownloads()
+            // Make sure the engine is initialized and ready to use.
+            components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+                components.core.engine.warmUp()
+            }
+            initializeWebExtensionSupport()
+            restoreBrowserState()
+            restoreDownloads()
 
-                // Just to make sure it is impossible for any application-services pieces
-                // to invoke parts of itself that require complete megazord initialization
-                // before that process completes, we wait here, if necessary.
-                if (!megazordSetup.isCompleted) {
-                    runBlockingIncrement { megazordSetup.await() }
-                }
+            // Just to make sure it is impossible for any application-services pieces
+            // to invoke parts of itself that require complete megazord initialization
+            // before that process completes, we wait here, if necessary.
+            if (!megazordSetup.isCompleted) {
+                runBlockingIncrement { megazordSetup.await() }
             }
         }
 
-        PerfStartup.appOnCreateToSetupInMain.measureNoInline {
-            setupLeakCanary()
-            startMetricsIfEnabled()
-            setupPush()
+        setupLeakCanary()
+        startMetricsIfEnabled()
+        setupPush()
 
-            visibilityLifecycleCallback = VisibilityLifecycleCallback(getSystemService())
-            registerActivityLifecycleCallbacks(visibilityLifecycleCallback)
+        visibilityLifecycleCallback = VisibilityLifecycleCallback(getSystemService())
+        registerActivityLifecycleCallbacks(visibilityLifecycleCallback)
 
-            // Storage maintenance disabled, for now, as it was interfering with background migrations.
-            // See https://github.com/mozilla-mobile/fenix/issues/7227 for context.
-            // if ((System.currentTimeMillis() - settings().lastPlacesStorageMaintenance) > ONE_DAY_MILLIS) {
-            //    runStorageMaintenance()
-            // }
+        // Storage maintenance disabled, for now, as it was interfering with background migrations.
+        // See https://github.com/mozilla-mobile/fenix/issues/7227 for context.
+        // if ((System.currentTimeMillis() - settings().lastPlacesStorageMaintenance) > ONE_DAY_MILLIS) {
+        //    runStorageMaintenance()
+        // }
 
-            components.appStartReasonProvider.registerInAppOnCreate(this)
-            components.startupActivityLog.registerInAppOnCreate(this)
-            initVisualCompletenessQueueAndQueueTasks()
+        components.appStartReasonProvider.registerInAppOnCreate(this)
+        components.startupActivityLog.registerInAppOnCreate(this)
+        initVisualCompletenessQueueAndQueueTasks()
 
-            ProcessLifecycleOwner.get().lifecycle.addObserver(TelemetryLifecycleObserver(components.core.store))
-        }
+        ProcessLifecycleOwner.get().lifecycle.addObserver(TelemetryLifecycleObserver(components.core.store))
     }
 
     @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
