@@ -704,12 +704,17 @@ static inline GLenum DoCopyTexSubImage(gl::GLContext* gl, TexImageTarget target,
 static bool ValidateCompressedTexImageRestrictions(
     const WebGLContext* webgl, TexImageTarget target, uint32_t level,
     const webgl::FormatInfo* format, const uvec3& size) {
-  const auto fnIsDimValid_S3TC = [level](uint32_t size, uint32_t blockSize) {
-    if (size % blockSize == 0) return true;
-
-    if (level == 0) return false;
-
-    return (size == 0 || size == 1 || size == 2);
+  const auto fnIsDimValid_S3TC = [&](const char* const name, uint32_t levelSize,
+                                     uint32_t blockSize) {
+    const auto impliedBaseSize = levelSize << level;
+    if (impliedBaseSize % blockSize == 0) return true;
+    webgl->ErrorInvalidOperation(
+        "%u is never a valid %s for level %u, because it implies a base mip %s "
+        "of %u."
+        " %s requires that base mip levels have a %s multiple of %u.",
+        levelSize, name, level, name, impliedBaseSize, format->name, name,
+        blockSize);
+    return false;
   };
 
   switch (format->compression->family) {
@@ -728,24 +733,22 @@ static bool ValidateCompressedTexImageRestrictions(
                                  format->name);
         return false;
       }
-
       break;
 
+    case webgl::CompressionFamily::BPTC:
+    case webgl::CompressionFamily::RGTC:
     case webgl::CompressionFamily::S3TC:
-      if (!fnIsDimValid_S3TC(size.x, format->compression->blockWidth) ||
-          !fnIsDimValid_S3TC(size.y, format->compression->blockHeight)) {
-        webgl->ErrorInvalidOperation(
-            "%s requires that width and height are"
-            " block-aligned, or, if level>0, equal to 0, 1,"
-            " or 2.",
-            format->name);
+      if (!fnIsDimValid_S3TC("width", size.x,
+                             format->compression->blockWidth) ||
+          !fnIsDimValid_S3TC("height", size.y,
+                             format->compression->blockHeight)) {
         return false;
       }
-
       break;
 
     // Default: There are no restrictions on CompressedTexImage.
-    default:  // ETC1, ES3
+    case webgl::CompressionFamily::ES3:
+    case webgl::CompressionFamily::ETC1:
       break;
   }
 
