@@ -261,10 +261,6 @@ class InspectorUtils {
    */
   static bool IsCustomElementName(GlobalObject&, const nsAString& aName,
                                   const nsAString& aNamespaceURI);
-
- private:
-  static already_AddRefed<ComputedStyle> GetCleanComputedStyleForElement(
-      Element* aElement, nsAtom* aPseudo);
 };
 
 }  // namespace dom

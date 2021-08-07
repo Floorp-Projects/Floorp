@@ -3153,9 +3153,13 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsAtom> pseudo = nsCSSPseudoElements::GetPseudoAtom(aPseudoElement);
+  Maybe<PseudoStyleType> pseudo =
+      nsCSSPseudoElements::GetPseudoType(aPseudoElement);
+  if (!pseudo) {
+    return NS_ERROR_FAILURE;
+  }
   RefPtr<ComputedStyle> computedStyle =
-      nsComputedDOMStyle::GetUnanimatedComputedStyleNoFlush(aElement, pseudo);
+      nsComputedDOMStyle::GetUnanimatedComputedStyleNoFlush(aElement, *pseudo);
   if (!computedStyle) {
     return NS_ERROR_FAILURE;
   }

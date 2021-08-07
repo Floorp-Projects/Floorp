@@ -63,20 +63,33 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-#if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
-#  define DEBUG_ComputedDOMStyle
-#endif
-
 /*
  * This is the implementation of the readonly CSSStyleDeclaration that is
  * returned by the getComputedStyle() function.
  */
 
+static bool StartsWithTwoColons(const nsAString& aPseudoElt) {
+  if (aPseudoElt.Length() < 2) {
+    return false;
+  }
+  const char16_t* chars = aPseudoElt.BeginReading();
+  return chars[0] == u':' && chars[1] == u':';
+}
+
 already_AddRefed<nsComputedDOMStyle> NS_NewComputedDOMStyle(
     dom::Element* aElement, const nsAString& aPseudoElt, Document* aDocument,
     nsComputedDOMStyle::StyleType aStyleType) {
-  RefPtr<nsComputedDOMStyle> computedStyle =
-      new nsComputedDOMStyle(aElement, aPseudoElt, aDocument, aStyleType);
+  Maybe<PseudoStyleType> pseudo = nsCSSPseudoElements::GetPseudoType(
+      aPseudoElt, CSSEnabledState::ForAllContent);
+  auto returnEmpty = nsComputedDOMStyle::AlwaysReturnEmptyStyle::No;
+  if (!pseudo) {
+    pseudo.emplace(PseudoStyleType::NotPseudo);
+    if (StartsWithTwoColons(aPseudoElt)) {
+      returnEmpty = nsComputedDOMStyle::AlwaysReturnEmptyStyle::Yes;
+    }
+  }
+  RefPtr<nsComputedDOMStyle> computedStyle = new nsComputedDOMStyle(
+      aElement, *pseudo, aDocument, aStyleType, returnEmpty);
   return computedStyle.forget();
 }
 
@@ -85,24 +98,24 @@ static nsDOMCSSValueList* GetROCSSValueList(bool aCommaDelimited) {
 }
 
 static const Element* GetRenderedElement(const Element* aElement,
-                                         nsAtom* aPseudo) {
-  if (aPseudo == nsCSSPseudoElements::before()) {
+                                         PseudoStyleType aPseudo) {
+  if (aPseudo == PseudoStyleType::NotPseudo) {
+    return aElement;
+  }
+  if (aPseudo == PseudoStyleType::before) {
     return nsLayoutUtils::GetBeforePseudo(aElement);
   }
-  if (aPseudo == nsCSSPseudoElements::after()) {
+  if (aPseudo == PseudoStyleType::after) {
     return nsLayoutUtils::GetAfterPseudo(aElement);
   }
-  if (aPseudo == nsCSSPseudoElements::marker()) {
+  if (aPseudo == PseudoStyleType::marker) {
     return nsLayoutUtils::GetMarkerPseudo(aElement);
-  }
-  if (!aPseudo) {
-    return aElement;
   }
   return nullptr;
 }
 
 // Whether aDocument needs to restyle for aElement
-static bool ElementNeedsRestyle(Element* aElement, nsAtom* aPseudo,
+static bool ElementNeedsRestyle(Element* aElement, PseudoStyleType aPseudo,
                                 bool aMayNeedToFlushLayout) {
   const Document* doc = aElement->GetComposedDoc();
   if (!doc) {
@@ -142,16 +155,16 @@ static bool ElementNeedsRestyle(Element* aElement, nsAtom* aPseudo,
   }
 
   // If the pseudo-element is animating, make sure to flush.
-  if (aElement->MayHaveAnimations() && aPseudo) {
-    if (aPseudo == nsCSSPseudoElements::before()) {
+  if (aElement->MayHaveAnimations() && aPseudo != PseudoStyleType::NotPseudo) {
+    if (aPseudo == PseudoStyleType::before) {
       if (EffectSet::GetEffectSet(aElement, PseudoStyleType::before)) {
         return true;
       }
-    } else if (aPseudo == nsCSSPseudoElements::after()) {
+    } else if (aPseudo == PseudoStyleType::after) {
       if (EffectSet::GetEffectSet(aElement, PseudoStyleType::after)) {
         return true;
       }
-    } else if (aPseudo == nsCSSPseudoElements::marker()) {
+    } else if (aPseudo == PseudoStyleType::marker) {
       if (EffectSet::GetEffectSet(aElement, PseudoStyleType::marker)) {
         return true;
       }
@@ -297,23 +310,23 @@ void ComputedStyleMap::Update() {
 }
 
 nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
-                                       const nsAString& aPseudoElt,
+                                       PseudoStyleType aPseudo,
                                        Document* aDocument,
-                                       StyleType aStyleType)
+                                       StyleType aStyleType,
+                                       AlwaysReturnEmptyStyle aAlwaysEmpty)
     : mDocumentWeak(nullptr),
       mOuterFrame(nullptr),
       mInnerFrame(nullptr),
       mPresShell(nullptr),
+      mPseudo(aPseudo),
       mStyleType(aStyleType),
-      mExposeVisitedStyle(false),
-      mResolvedComputedStyle(false) {
+      mAlwaysReturnEmpty(aAlwaysEmpty) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(aDocument);
   // TODO(emilio, bug 548397, https://github.com/w3c/csswg-drafts/issues/2403):
   // Should use aElement->OwnerDoc() instead.
   mDocumentWeak = do_GetWeakReference(aDocument);
   mElement = aElement;
-  mPseudo = nsCSSPseudoElements::GetPseudoAtom(aPseudoElt);
 }
 
 nsComputedDOMStyle::~nsComputedDOMStyle() {
@@ -466,7 +479,7 @@ nsresult nsComputedDOMStyle::GetPropertyValue(
 
 /* static */
 already_AddRefed<ComputedStyle> nsComputedDOMStyle::GetComputedStyle(
-    Element* aElement, nsAtom* aPseudo, StyleType aStyleType) {
+    Element* aElement, PseudoStyleType aPseudo, StyleType aStyleType) {
   if (Document* doc = aElement->GetComposedDoc()) {
     doc->FlushPendingNotifications(FlushType::Style);
   }
@@ -489,16 +502,8 @@ static bool MustReresolveStyle(const mozilla::ComputedStyle* aStyle) {
   return aStyle->HasPseudoElementData() && !aStyle->IsPseudoElement();
 }
 
-static inline PseudoStyleType GetPseudoType(nsAtom* aPseudo) {
-  if (!aPseudo) {
-    return PseudoStyleType::NotPseudo;
-  }
-  return nsCSSPseudoElements::GetPseudoType(aPseudo,
-                                            CSSEnabledState::ForAllContent);
-}
-
 already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
-    const Element* aElement, nsAtom* aPseudo, PresShell* aPresShell,
+    const Element* aElement, PseudoStyleType aPseudo, PresShell* aPresShell,
     StyleType aStyleType) {
   MOZ_ASSERT(aElement, "NULL element");
 
@@ -517,11 +522,8 @@ already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
     }
   }
 
-  PseudoStyleType pseudoType = GetPseudoType(aPseudo);
-  if (aPseudo && !PseudoStyle::IsPseudoElement(pseudoType)) {
-    return nullptr;
-  }
-
+  MOZ_ASSERT(aPseudo == PseudoStyleType::NotPseudo ||
+             PseudoStyle::IsPseudoElement(aPseudo));
   if (!aElement->IsInComposedDoc()) {
     // Don't return styles for disconnected elements, that makes no sense. This
     // can only happen with a non-null presShell for cross-document calls.
@@ -534,7 +536,7 @@ already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
   // XXX the !aElement->IsHTMLElement(nsGkAtoms::area)
   // check is needed due to bug 135040 (to avoid using
   // mPrimaryFrame). Remove it once that's fixed.
-  if (inDocWithShell && aStyleType == eAll &&
+  if (inDocWithShell && aStyleType == StyleType::All &&
       !aElement->IsHTMLElement(nsGkAtoms::area)) {
     if (const Element* element = GetRenderedElement(aElement, aPseudo)) {
       if (nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(element)) {
@@ -553,29 +555,28 @@ already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
   // for the default style, so resolve the style ourselves.
   ServoStyleSet* styleSet = presShell->StyleSet();
 
-  StyleRuleInclusion rules = aStyleType == eDefaultOnly
+  StyleRuleInclusion rules = aStyleType == StyleType::DefaultOnly
                                  ? StyleRuleInclusion::DefaultOnly
                                  : StyleRuleInclusion::All;
   RefPtr<ComputedStyle> result =
-      styleSet->ResolveStyleLazily(*aElement, pseudoType, rules);
+      styleSet->ResolveStyleLazily(*aElement, aPseudo, rules);
   return result.forget();
 }
 
 already_AddRefed<ComputedStyle>
 nsComputedDOMStyle::GetUnanimatedComputedStyleNoFlush(Element* aElement,
-                                                      nsAtom* aPseudo) {
+                                                      PseudoStyleType aPseudo) {
   RefPtr<ComputedStyle> style = GetComputedStyleNoFlush(aElement, aPseudo);
   if (!style) {
     return nullptr;
   }
 
-  PseudoStyleType pseudoType = GetPseudoType(aPseudo);
   PresShell* presShell = aElement->OwnerDoc()->GetPresShell();
   MOZ_ASSERT(presShell,
              "How in the world did we get a style a few lines above?");
 
   Element* elementOrPseudoElement =
-      EffectCompositor::GetElementToRestyle(aElement, pseudoType);
+      EffectCompositor::GetElementToRestyle(aElement, aPseudo);
   if (!elementOrPseudoElement) {
     return nullptr;
   }
@@ -823,7 +824,8 @@ bool nsComputedDOMStyle::NeedsToFlushStyle(nsCSSPropertyID aPropID) const {
   // that needs to flush this document (e.g. size change for iframe).
   while (doc->StyleOrLayoutObservablyDependsOnParentDocumentLayout()) {
     if (Element* element = doc->GetEmbedderElement()) {
-      if (ElementNeedsRestyle(element, nullptr, mayNeedToFlushLayout)) {
+      if (ElementNeedsRestyle(element, PseudoStyleType::NotPseudo,
+                              mayNeedToFlushLayout)) {
         return true;
       }
     }
@@ -963,15 +965,15 @@ void nsComputedDOMStyle::Flush(Document& aDocument, FlushType aFlushType) {
 }
 
 nsIFrame* nsComputedDOMStyle::GetOuterFrame() const {
-  if (!mPseudo) {
+  if (mPseudo == PseudoStyleType::NotPseudo) {
     return mElement->GetPrimaryFrame();
   }
   nsAtom* property = nullptr;
-  if (mPseudo == nsCSSPseudoElements::before()) {
+  if (mPseudo == PseudoStyleType::before) {
     property = nsGkAtoms::beforePseudoProperty;
-  } else if (mPseudo == nsCSSPseudoElements::after()) {
+  } else if (mPseudo == PseudoStyleType::after) {
     property = nsGkAtoms::afterPseudoProperty;
-  } else if (mPseudo == nsCSSPseudoElements::marker()) {
+  } else if (mPseudo == PseudoStyleType::marker) {
     property = nsGkAtoms::markerPseudoProperty;
   }
   if (!property) {
@@ -994,6 +996,11 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(nsCSSPropertyID aPropID) {
   // TODO(emilio): We may want to return earlier for elements outside of the
   // flat tree too: https://github.com/w3c/csswg-drafts/issues/1964
   if (!mElement->IsInComposedDoc()) {
+    ClearComputedStyle();
+    return;
+  }
+
+  if (mAlwaysReturnEmpty == AlwaysReturnEmptyStyle::Yes) {
     ClearComputedStyle();
     return;
   }
@@ -1048,7 +1055,8 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(nsCSSPropertyID aPropID) {
   // XXX the !mElement->IsHTMLElement(nsGkAtoms::area)
   // check is needed due to bug 135040 (to avoid using
   // mPrimaryFrame). Remove it once that's fixed.
-  if (mStyleType == eAll && !mElement->IsHTMLElement(nsGkAtoms::area)) {
+  if (mStyleType == StyleType::All &&
+      !mElement->IsHTMLElement(nsGkAtoms::area)) {
     mOuterFrame = GetOuterFrame();
     mInnerFrame = mOuterFrame;
     if (mOuterFrame) {
@@ -1080,7 +1088,8 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(nsCSSPropertyID aPropID) {
 
     SetResolvedComputedStyle(std::move(resolvedComputedStyle),
                              currentGeneration);
-    NS_ASSERTION(mPseudo || !mComputedStyle->HasPseudoElementData(),
+    NS_ASSERTION(mPseudo != PseudoStyleType::NotPseudo ||
+                     !mComputedStyle->HasPseudoElementData(),
                  "should not have pseudo-element data");
   }
 

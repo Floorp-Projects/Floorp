@@ -1018,7 +1018,7 @@ bool CanvasRenderingContext2D::ParseColor(const nsACString& aString,
     // Otherwise, get the value of the color property, flushing style
     // if necessary.
     RefPtr<ComputedStyle> canvasStyle =
-        nsComputedDOMStyle::GetComputedStyle(mCanvasElement, nullptr);
+        nsComputedDOMStyle::GetComputedStyle(mCanvasElement);
     if (canvasStyle) {
       *aColor = canvasStyle->StyleText()->mColor.ToColor();
     }
@@ -1545,7 +1545,7 @@ void CanvasRenderingContext2D::ClearTarget(int32_t aWidth, int32_t aHeight) {
   // For vertical writing-mode, unless text-orientation is sideways,
   // we'll modify the initial value of textBaseline to 'middle'.
   RefPtr<ComputedStyle> canvasStyle =
-      nsComputedDOMStyle::GetComputedStyle(mCanvasElement, nullptr);
+      nsComputedDOMStyle::GetComputedStyle(mCanvasElement);
   if (canvasStyle) {
     WritingMode wm(canvasStyle);
     if (wm.IsVertical() && !wm.IsSideways()) {
@@ -2290,7 +2290,7 @@ static already_AddRefed<ComputedStyle> GetFontStyleForServo(
   // have to get a parent ComputedStyle for inherit-like relative
   // values (2em, bolder, etc.)
   if (aElement && aElement->IsInComposedDoc()) {
-    parentStyle = nsComputedDOMStyle::GetComputedStyle(aElement, nullptr);
+    parentStyle = nsComputedDOMStyle::GetComputedStyle(aElement);
     if (!parentStyle) {
       // The flush killed the shell, so we couldn't get any meaningful style
       // back.
@@ -3790,7 +3790,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   RefPtr<ComputedStyle> canvasStyle;
   if (mCanvasElement && mCanvasElement->IsInComposedDoc()) {
     // try to find the closest context
-    canvasStyle = nsComputedDOMStyle::GetComputedStyle(mCanvasElement, nullptr);
+    canvasStyle = nsComputedDOMStyle::GetComputedStyle(mCanvasElement);
     if (!canvasStyle) {
       aError = NS_ERROR_FAILURE;
       return nullptr;

@@ -52,6 +52,30 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace dom {
 
+static already_AddRefed<ComputedStyle> GetCleanComputedStyleForElement(
+    dom::Element* aElement, PseudoStyleType aPseudo) {
+  MOZ_ASSERT(aElement);
+
+  Document* doc = aElement->GetComposedDoc();
+  if (!doc) {
+    return nullptr;
+  }
+
+  PresShell* presShell = doc->GetPresShell();
+  if (!presShell) {
+    return nullptr;
+  }
+
+  nsPresContext* presContext = presShell->GetPresContext();
+  if (!presContext) {
+    return nullptr;
+  }
+
+  presContext->EnsureSafeToHandOutCSSRules();
+
+  return nsComputedDOMStyle::GetComputedStyle(aElement, aPseudo);
+}
+
 /* static */
 void InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
                                        Document& aDocument, bool aDocumentOnly,
@@ -155,13 +179,14 @@ already_AddRefed<nsINodeList> InspectorUtils::GetChildrenForNode(
 void InspectorUtils::GetCSSStyleRules(
     GlobalObject& aGlobalObject, Element& aElement, const nsAString& aPseudo,
     bool aIncludeVisitedStyle, nsTArray<RefPtr<BindingStyleRule>>& aResult) {
-  RefPtr<nsAtom> pseudoElt;
-  if (!aPseudo.IsEmpty()) {
-    pseudoElt = NS_Atomize(aPseudo);
+  Maybe<PseudoStyleType> type = nsCSSPseudoElements::GetPseudoType(
+      aPseudo, CSSEnabledState::ForAllContent);
+  if (!type) {
+    return;
   }
 
   RefPtr<ComputedStyle> computedStyle =
-      GetCleanComputedStyleForElement(&aElement, pseudoElt);
+      GetCleanComputedStyleForElement(&aElement, *type);
   if (!computedStyle) {
     // This can fail for elements that are not in the document or
     // if the document they're in doesn't have a presshell.  Bail out.
@@ -567,31 +592,6 @@ uint64_t InspectorUtils::GetContentState(GlobalObject& aGlobalObject,
   // NOTE: if this method is removed,
   // please remove GetInternalValue from EventStates
   return aElement.State().GetInternalValue();
-}
-
-/* static */
-already_AddRefed<ComputedStyle> InspectorUtils::GetCleanComputedStyleForElement(
-    dom::Element* aElement, nsAtom* aPseudo) {
-  MOZ_ASSERT(aElement);
-
-  Document* doc = aElement->GetComposedDoc();
-  if (!doc) {
-    return nullptr;
-  }
-
-  PresShell* presShell = doc->GetPresShell();
-  if (!presShell) {
-    return nullptr;
-  }
-
-  nsPresContext* presContext = presShell->GetPresContext();
-  if (!presContext) {
-    return nullptr;
-  }
-
-  presContext->EnsureSafeToHandOutCSSRules();
-
-  return nsComputedDOMStyle::GetComputedStyle(aElement, aPseudo);
 }
 
 /* static */
