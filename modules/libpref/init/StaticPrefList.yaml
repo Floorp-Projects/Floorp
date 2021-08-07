@@ -2401,13 +2401,13 @@
 # Support for input type=datetime-local.
 - name: dom.forms.datetime-local
   type: bool
-  value: true
+  value: @IS_ANDROID@
   mirror: always
 
 # Support for input type=datetime-local widget. Disabled for now.
 - name: dom.forms.datetime-local.widget
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Support for input type=month, type=week. By default, disabled.
