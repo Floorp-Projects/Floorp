@@ -84,6 +84,16 @@ const FeatureManifest = {
       },
     },
   },
+  firefox100: {
+    description: "Firefox User-Agent version",
+    isEarlyStartup: true,
+    variables: {
+      firefoxVersion: {
+        type: "int",
+        description: "Firefox version to spoof (or `0` to use default version)",
+      },
+    },
+  },
   newtab: {
     description: "The about:newtab page",
     isEarlyStartup: true,

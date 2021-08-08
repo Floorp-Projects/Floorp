@@ -647,6 +647,11 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   nsCString mUserAgent;
   nsCString mSpoofedUserAgent;
   nsCString mUserAgentOverride;
+
+#ifndef ANDROID
+  nsCString mExperimentUserAgent;
+#endif  // ANDROID
+
   bool mUserAgentIsDirty{true};  // true if mUserAgent should be rebuilt
   bool mAcceptLanguagesIsDirty{true};
 
