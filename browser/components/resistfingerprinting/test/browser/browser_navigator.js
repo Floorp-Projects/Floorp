@@ -398,4 +398,63 @@ add_task(async function runOverrideTest() {
   await testWorkerNavigator();
 
   await testUserAgentHeader();
+
+  // Pop general.appname.override etc
+  await SpecialPowers.popPrefEnv();
+
+  // Pop privacy.resistFingerprinting
+  await SpecialPowers.popPrefEnv();
 });
+
+// Only test the Firefox and Gecko experiment prefs on desktop.
+if (AppConstants.platform != "android") {
+  add_task(async function setupFirefoxVersionExperiment() {
+    // Mock Nimbus experiment settings
+    const { ExperimentFakes } = ChromeUtils.import(
+      "resource://testing-common/NimbusTestUtils.jsm"
+    );
+    let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+      featureId: "firefox100",
+      value: { firefoxVersion: 100 },
+    });
+
+    let experimentOscpu;
+    switch (AppConstants.platform) {
+      case "win":
+        experimentOscpu =
+          cpuArch == "x86_64"
+            ? "Windows NT 10.0; Win64; x64"
+            : "Windows NT 10.0";
+        break;
+      case "macosx":
+        experimentOscpu = "Macintosh; Intel Mac OS X 10.15";
+        break;
+      default:
+        experimentOscpu = "X11; Linux x86_64";
+        break;
+    }
+
+    let experimentUserAgent = `Mozilla/5.0 (${experimentOscpu}; rv:100.0) Gecko/20100101 Firefox/100.0`;
+
+    expectedResults = {
+      testDesc: "FirefoxVersionExperimentTest",
+      appVersion: DEFAULT_APPVERSION[AppConstants.platform],
+      hardwareConcurrency: navigator.hardwareConcurrency,
+      oscpu: DEFAULT_OSCPU[AppConstants.platform],
+      platform: DEFAULT_PLATFORM[AppConstants.platform],
+      userAgentNavigator: experimentUserAgent,
+      userAgentHeader: experimentUserAgent,
+    };
+
+    await testNavigator();
+
+    // Skip worker tests due to intermittent bug 1713764. This is unlikely to be
+    // a scenario that affects users enrolled in our "Firefox 100" experiment.
+    // await testWorkerNavigator();
+
+    await testUserAgentHeader();
+
+    // Clear Nimbus experiment prefs and session data
+    await doExperimentCleanup();
+  });
+}
