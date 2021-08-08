@@ -308,7 +308,7 @@
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">ᱠᱩᱥᱤᱭᱟᱜ ᱥᱤᱸᱠ ᱥᱟᱹᱨᱣᱟᱹᱨ</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Firefox ᱠᱷᱟᱛᱟ/ ᱥᱭᱸᱠ ᱠᱟᱹᱨᱣᱟᱹᱨ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
+    <string name="toast_override_fxa_sync_server_done">Firefox ᱠᱷᱟᱛᱟ/ ᱥᱭᱝᱠ ᱠᱟᱹᱨᱣᱟᱹᱨ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">ᱠᱷᱟᱛᱟ</string>
     <!-- Preference shown on banner to sign into account -->
@@ -324,11 +324,11 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ᱠᱩᱥᱤᱭᱟᱜ ᱛᱮᱭᱟᱨ</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">ᱵᱩᱠᱢᱟᱨᱠ, ᱱᱟᱜᱟᱢ ᱟᱨ ᱵᱟᱹᱲᱛᱤ ᱠᱚ ᱟᱢᱟᱜ Firefox ᱠᱷᱟᱛᱟ ᱥᱟᱶᱛᱮ ᱥᱭᱸᱠ ᱢᱮ</string>
+    <string name="preferences_sign_in_description">ᱵᱩᱠᱢᱟᱨᱠ, ᱱᱟᱜᱟᱢ ᱟᱨ ᱵᱟᱹᱲᱛᱤ ᱠᱚ ᱟᱢᱟᱜ Firefox ᱠᱷᱟᱛᱟ ᱥᱟᱶᱛᱮ ᱥᱭᱝᱠ ᱢᱮ</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox ᱠᱷᱟᱛᱟ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
-    <string name="preferences_account_sync_error">ᱥᱭᱸᱠ ᱠᱚ ᱪᱟᱹᱞᱩ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱫᱩᱦᱲᱟᱹ ᱡᱩᱰᱟᱹᱣ</string>
+    <string name="preferences_account_sync_error">ᱥᱭᱝᱠ ᱠᱚ ᱪᱟᱹᱞᱩ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱫᱩᱦᱲᱟᱹ ᱡᱩᱰᱟᱹᱣ</string>
     <!-- Preference for language -->
     <string name="preferences_language">ᱯᱟᱹᱨᱥᱤ</string>
     <!-- Preference for data choices -->
@@ -356,7 +356,7 @@
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
     <!-- Preference title for switch preference to suggest synced tabs when searching -->
-    <string name="preferences_search_synced_tabs">ᱥᱭᱸᱠ ᱟᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
+    <string name="preferences_search_synced_tabs">ᱥᱭᱝᱠ ᱟᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">ᱠᱷᱟᱛᱟ ᱨᱮᱭᱟᱜ ᱥᱟᱡᱟᱣ ᱠᱚ</string>
     <!-- Preference for enabling url autocomplete-->
@@ -393,9 +393,9 @@
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
-    <string name="preferences_sync_now">ᱱᱤᱛᱚᱜ ᱥᱭᱸᱠ ᱢᱮ</string>
+    <string name="preferences_sync_now">ᱱᱤᱛᱚᱜ ᱥᱭᱝᱠ ᱢᱮ</string>
     <!-- Preference category for sync -->
-    <string name="preferences_sync_category">ᱚᱠᱟ ᱥᱭᱸᱠ ᱨᱮᱭᱟᱜ ᱛᱟᱦᱮᱸᱱᱟ ᱵᱟᱪᱷᱟᱣ ᱢᱮ </string>
+    <string name="preferences_sync_category">ᱚᱠᱟ ᱥᱭᱝᱠ ᱨᱮᱭᱟᱜ ᱛᱟᱦᱮᱸᱱᱟ ᱵᱟᱪᱷᱟᱣ ᱢᱮ </string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">ᱱᱟᱜᱟᱢ</string>
     <!-- Preference for syncing bookmarks -->
@@ -413,13 +413,13 @@
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">ᱥᱤᱸᱠ ᱦᱩᱭᱩ ᱠᱟᱱᱟ...</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
-    <string name="sync_failed_summary">ᱥᱭᱸᱠ ᱰᱤᱜᱟᱹᱣ ᱾ ᱢᱟᱲᱟᱝ ᱨᱟᱹᱥ ᱞᱮᱠᱟᱛᱮ ᱪᱟᱵᱟ:%s</string>
+    <string name="sync_failed_summary">ᱥᱭᱝᱠ ᱰᱤᱜᱟᱹᱣ ᱾ ᱢᱟᱲᱟᱝ ᱨᱟᱹᱥ ᱞᱮᱠᱟᱛᱮ ᱪᱟᱵᱟ:%s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_failed_never_synced_summary">ᱥᱭᱸᱠ ᱰᱤᱜᱟᱹᱣ ᱾ ᱢᱟᱲᱟᱝ ᱥᱭᱸᱠᱼᱰ:ᱛᱤᱥ ᱦᱚᱸ ᱵᱟᱝᱼᱟ</string>
+    <string name="sync_failed_never_synced_summary">ᱥᱭᱝᱠ ᱰᱤᱜᱟᱹᱣ ᱾ ᱢᱟᱲᱟᱝ ᱥᱭᱝᱠᱼᱰ:ᱛᱤᱥ ᱦᱚᱸ ᱵᱟᱝᱼᱟ</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
-    <string name="sync_last_synced_summary">ᱢᱟᱲᱟᱝ ᱥᱭᱸᱠ ᱠᱚᱺ %s</string>
+    <string name="sync_last_synced_summary">ᱢᱟᱲᱟᱝ ᱥᱭᱝᱠ ᱠᱚᱺ %s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_never_synced_summary">ᱢᱟᱲᱟᱝ ᱥᱭᱸᱠ ᱠᱚᱺ ᱛᱤᱥ ᱦᱚᱸ ᱵᱟᱝᱟ</string>
+    <string name="sync_never_synced_summary">ᱢᱟᱲᱟᱝ ᱥᱭᱝᱠ ᱠᱚᱺ ᱛᱤᱥ ᱦᱚᱸ ᱵᱟᱝᱟ</string>
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
@@ -492,7 +492,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">ᱥᱭᱸᱠ ᱪᱟᱹᱞᱩᱭ ᱢᱮ</string>
+    <string name="preferences_sync">ᱥᱭᱝᱠ ᱪᱟᱹᱞᱩᱭ ᱢᱮ</string>
     <!-- Preference for pairing -->
     <string name="preferences_sync_pair">ᱡᱚᱲᱟᱣ ᱠᱳᱰ ᱥᱠᱟᱱ ᱢᱮ ᱰᱮᱥᱠᱴᱚᱯ Firefox ᱨᱮ</string>
     <!-- Preference for account login -->
@@ -850,7 +850,7 @@
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">ᱯᱚᱴᱚᱢ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Bookmark sign in button message -->
-    <string name="bookmark_sign_in_button">ᱥᱭᱸᱠᱼᱰ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
+    <string name="bookmark_sign_in_button">ᱥᱭᱝᱠᱼᱰ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->
@@ -1009,11 +1009,11 @@
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">ᱛᱷᱟᱨ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">ᱥᱭᱸᱠ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
+    <string name="sync_sign_in">ᱥᱭᱝᱠ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">ᱡᱚᱛᱚ ᱥᱟᱫᱷᱚᱱ ᱛᱮ ᱵᱷᱮᱡᱟᱭᱢᱮ</string>
     <!-- An option from the share dialog to reconnect to sync -->
-    <string name="sync_reconnect">ᱥᱭᱸᱠ ᱞᱟᱹᱜᱤᱫ ᱫᱩᱦᱲᱟᱹ ᱡᱩᱲᱟᱹᱣ</string>
+    <string name="sync_reconnect">ᱥᱭᱝᱠ ᱞᱟᱹᱜᱤᱫ ᱫᱩᱦᱲᱟᱹ ᱡᱩᱲᱟᱹᱣ</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">ᱟᱸᱯᱷᱞᱟᱭᱤᱱ</string>
     <!-- An option to connect additional devices -->
@@ -1238,7 +1238,7 @@
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">ᱵᱟᱦᱨᱮ ᱨᱮᱜᱮ ᱛᱟᱦᱮᱸ ᱠᱚᱜ ᱢᱮ</string>
     <!-- text to display in the snackbar once account is signed-in -->
-    <string name="onboarding_firefox_account_sync_is_on">ᱥᱭᱸᱠ ᱪᱟᱹᱞᱩ ᱢᱮᱱᱟᱜ-ᱟ</string>
+    <string name="onboarding_firefox_account_sync_is_on">ᱥᱭᱝᱠ ᱪᱟᱹᱞᱩ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱰᱤᱜᱟᱹᱣᱮᱱᱟ</string>
     <!-- text for the tracking protection onboarding card header -->
@@ -1315,11 +1315,11 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">ᱵᱟᱹᱫᱟᱹᱞ ᱛᱮ ᱮᱢᱮᱞ ᱵᱮᱵᱷᱟᱨ ᱢᱮ</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
-    <string name="sign_in_create_account_text"><![CDATA[ᱠᱷᱟᱛᱟ ᱵᱟᱹᱱᱩᱜᱼᱟ? <u>ᱢᱤᱫᱴᱟᱹᱝ ᱛᱮᱭᱟᱨ ᱢᱮ</u> ᱰᱥᱫᱷᱚᱱ ᱠᱚ ᱵᱷᱤᱛᱨᱭ ᱨᱮ Firefox ᱥᱭᱸᱠ ᱞᱟᱹᱜᱤᱫ ᱾]]></string>
+    <string name="sign_in_create_account_text"><![CDATA[ᱠᱷᱟᱛᱟ ᱵᱟᱹᱱᱩᱜᱼᱟ? <u>ᱢᱤᱫᱴᱟᱹᱝ ᱛᱮᱭᱟᱨ ᱢᱮ</u> ᱰᱥᱫᱷᱚᱱ ᱠᱚ ᱵᱷᱤᱛᱨᱭ ᱨᱮ Firefox ᱥᱭᱝᱠ ᱞᱟᱹᱜᱤᱫ ᱾]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox ᱟᱢᱟᱜ ᱠᱷᱟᱛᱟ ᱥᱟᱞᱟᱜ ᱟᱭᱩᱨ ᱢᱤᱫ ᱵᱚᱸᱫᱭ ᱟᱭ, ᱦᱮᱞᱮ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱪᱮᱫ ᱦᱚᱸ ᱵᱟᱭ ᱢᱮᱴᱟᱣᱟᱭ ᱾</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="sign_out_confirmation_message_2">%s ᱫᱚ ᱟᱢᱟᱜ ᱠᱷᱟᱛᱟ ᱥᱟᱞᱟᱜ ᱥᱭᱸᱠ ᱵᱚᱸᱫᱽᱚᱭ ᱟ , ᱦᱮᱞᱮ ᱟᱢᱟᱜ ᱚᱠᱟ ᱵᱨᱟᱩᱡᱤᱸᱝ ᱰᱟᱴᱟ ᱦᱚᱸ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱵᱟᱭ ᱢᱮᱴᱟᱣᱜᱼᱟ ᱾</string>
+    <string name="sign_out_confirmation_message_2">%s ᱫᱚ ᱟᱢᱟᱜ ᱠᱷᱟᱛᱟ ᱥᱟᱞᱟᱜ ᱥᱭᱝᱠ ᱵᱚᱸᱫᱽᱚᱭ ᱟ , ᱦᱮᱞᱮ ᱟᱢᱟᱜ ᱚᱠᱟ ᱵᱨᱟᱩᱡᱤᱸᱝ ᱰᱟᱴᱟ ᱦᱚᱸ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱵᱟᱭ ᱢᱮᱴᱟᱣᱜᱼᱟ ᱾</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">ᱡᱚᱱᱚᱲᱟᱣ ᱚᱪᱚᱜ</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1497,9 +1497,9 @@
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">ᱥᱟᱺᱪᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">ᱞᱚᱜᱤᱱ ᱚᱠᱟ %s ᱨᱮ ᱥᱟᱺᱪᱟᱣ ᱟᱨ ᱥᱭᱸᱠ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱚᱱᱟ ᱠᱚ ᱱᱚᱰᱮ ᱫᱮᱠᱷᱟᱣᱜᱼᱟ ᱾</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text">ᱞᱚᱜᱤᱱ ᱚᱠᱟ %s ᱨᱮ ᱥᱟᱺᱪᱟᱣ ᱟᱨ ᱥᱭᱝᱠ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱚᱱᱟ ᱠᱚ ᱱᱚᱰᱮ ᱫᱮᱠᱷᱟᱣᱜᱼᱟ ᱾</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">ᱥᱭᱸᱠ ᱵᱟᱵᱚᱛ ᱡᱟᱹᱥᱛᱤ ᱵᱟᱰᱟᱭ ᱢᱮ ᱾</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">ᱥᱭᱝᱠ ᱵᱟᱵᱚᱛ ᱡᱟᱹᱥᱛᱤ ᱵᱟᱰᱟᱭ ᱢᱮ ᱾</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">ᱪᱷᱟᱰᱟ ᱠᱚ</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1594,7 +1594,7 @@
     <string name="preferences_credit_cards_sync_cards">ᱠᱟᱰ ᱥᱤᱝᱠ ᱢᱮ</string>
 
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="preferences_credit_cards_add_credit_card">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">ᱥᱟᱺᱪᱟᱣ ᱠᱟᱰ ᱠᱚ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
@@ -1774,7 +1774,7 @@
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">ᱫᱚᱭᱟᱠᱟᱛᱮ ᱨᱤᱼᱚᱛᱷᱮᱱᱴᱤᱠᱮᱴ ᱢᱮ ᱾</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
-    <string name="synced_tabs_enable_tab_syncing">ᱫᱚᱭᱟᱠᱟᱛᱮ ᱴᱮᱵ ᱥᱭᱸᱠᱤᱝ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ ᱾</string>
+    <string name="synced_tabs_enable_tab_syncing">ᱫᱚᱭᱟᱠᱟᱛᱮ ᱴᱮᱵ ᱥᱭᱝᱠᱤᱝ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ ᱾</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">ᱟᱢ ᱴᱷᱮᱱ ᱚᱠᱟ ᱦᱚᱸ ᱴᱮᱵᱽ ᱠᱚ ᱚᱞᱜᱟ Firefox ᱢᱮᱱᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱵᱟᱝ ᱠᱷᱩᱞᱟᱹ ᱟᱠᱟᱱᱟ ᱾</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
@@ -1782,7 +1782,7 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">ᱛᱷᱟᱨ ᱞᱟᱹᱜᱤᱛ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
-    <string name="synced_tabs_no_open_tabs">ᱵᱟᱝᱟ ᱴᱮᱵ ᱠᱚ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
+    <string name="synced_tabs_no_open_tabs">ᱠᱷᱩᱞᱟᱹᱟᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
