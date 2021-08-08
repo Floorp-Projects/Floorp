@@ -92,6 +92,14 @@ class DManipEventHandler : public IDirectManipulationViewportEventHandler,
   // deltaY for the corresponding WidgetWheelEvent would be non-zero.)
   bool SendPinch(Phase aPhase, float aScale);
   void SendPan(Phase aPhase, float x, float y, bool aIsInertia);
+  static void SendPanCommon(nsWindow* aWindow, Phase aPhase,
+                            ScreenPoint aPosition, double aDeltaX,
+                            double aDeltaY, Modifiers aMods, bool aIsInertia);
+
+  static void SynthesizeNativeTouchpadPan(
+      nsWindow* aWindow, nsIWidget::TouchpadGesturePhase aEventPhase,
+      LayoutDeviceIntPoint aPoint, double aDeltaX, double aDeltaY,
+      int32_t aModifierFlags);
 
  private:
   virtual ~DManipEventHandler() = default;
@@ -459,6 +467,27 @@ void DManipEventHandler::SendPan(Phase aPhase, float x, float y,
     return;
   }
 
+  ModifierKeyState modifierKeyState;
+  Modifiers mods = modifierKeyState.GetModifiers();
+
+  POINT cursor_pos;
+  ::GetCursorPos(&cursor_pos);
+  HWND wnd = static_cast<HWND>(mWindow->GetNativeData(NS_NATIVE_WINDOW));
+  ::ScreenToClient(wnd, &cursor_pos);
+  ScreenPoint position = {(float)cursor_pos.x, (float)cursor_pos.y};
+
+  SendPanCommon(mWindow, aPhase, position, x, y, mods, aIsInertia);
+}
+
+/* static */
+void DManipEventHandler::SendPanCommon(nsWindow* aWindow, Phase aPhase,
+                                       ScreenPoint aPosition, double aDeltaX,
+                                       double aDeltaY, Modifiers aMods,
+                                       bool aIsInertia) {
+  if (!aWindow) {
+    return;
+  }
+
   PanGestureInput::PanGestureType panGestureType =
       PanGestureInput::PANGESTURE_PAN;
   if (aIsInertia) {
@@ -494,19 +523,14 @@ void DManipEventHandler::SendPan(Phase aPhase, float x, float y,
   PRIntervalTime eventIntervalTime = PR_IntervalNow();
   TimeStamp eventTimeStamp = TimeStamp::Now();
 
-  ModifierKeyState modifierKeyState;
-  Modifiers mods = modifierKeyState.GetModifiers();
+  PanGestureInput event{panGestureType,
+                        eventIntervalTime,
+                        eventTimeStamp,
+                        aPosition,
+                        ScreenPoint(aDeltaX, aDeltaY),
+                        aMods};
 
-  POINT cursor_pos;
-  ::GetCursorPos(&cursor_pos);
-  HWND wnd = static_cast<HWND>(mWindow->GetNativeData(NS_NATIVE_WINDOW));
-  ::ScreenToClient(wnd, &cursor_pos);
-  ScreenPoint position = {(float)cursor_pos.x, (float)cursor_pos.y};
-
-  PanGestureInput event{panGestureType, eventIntervalTime, eventTimeStamp,
-                        position,       ScreenPoint(x, y), mods};
-
-  mWindow->SendAnAPZEvent(event);
+  aWindow->SendAnAPZEvent(event);
 }
 
 #endif  // !defined(__MINGW32__) && !defined(__MINGW64__)
@@ -709,6 +733,35 @@ void DirectManipulationOwner::SetContact(UINT aContactId) {
   }
 #endif
 }
+
+/*static  */ void DirectManipulationOwner::SynthesizeNativeTouchpadPan(
+    nsWindow* aWindow, nsIWidget::TouchpadGesturePhase aEventPhase,
+    LayoutDeviceIntPoint aPoint, double aDeltaX, double aDeltaY,
+    int32_t aModifierFlags) {
+#if !defined(__MINGW32__) && !defined(__MINGW64__)
+  DManipEventHandler::SynthesizeNativeTouchpadPan(
+      aWindow, aEventPhase, aPoint, aDeltaX, aDeltaY, aModifierFlags);
+#endif
+}
+
+#if !defined(__MINGW32__) && !defined(__MINGW64__)
+/*static  */ void DManipEventHandler::SynthesizeNativeTouchpadPan(
+    nsWindow* aWindow, nsIWidget::TouchpadGesturePhase aEventPhase,
+    LayoutDeviceIntPoint aPoint, double aDeltaX, double aDeltaY,
+    int32_t aModifierFlags) {
+  ScreenPoint position = {(float)aPoint.x, (float)aPoint.y};
+  Phase phase = Phase::eStart;
+  if (aEventPhase == nsIWidget::PHASE_UPDATE) {
+    phase = Phase::eMiddle;
+  }
+
+  if (aEventPhase == nsIWidget::PHASE_END) {
+    phase = Phase::eEnd;
+  }
+  SendPanCommon(aWindow, phase, position, aDeltaX, aDeltaY, aModifierFlags,
+                /* aIsInertia = */ false);
+}
+#endif
 
 }  // namespace widget
 }  // namespace mozilla

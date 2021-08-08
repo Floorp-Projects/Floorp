@@ -523,6 +523,10 @@ parent:
                                    uint64_t aObserverId);
     async SynthesizeNativeTouchpadDoubleTap(LayoutDeviceIntPoint aPoint,
                                             uint32_t aModifierFlags);
+    async SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
+                                      LayoutDeviceIntPoint aPoint,
+                                      double aDeltaX, double aDeltaY,
+                                      int32_t aModifierFlags);
 
     async LockNativePointer();
     async UnlockNativePointer();
