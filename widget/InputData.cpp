@@ -430,7 +430,8 @@ PanGestureInput::PanGestureInput()
       mFollowedByMomentum(false),
       mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(false),
       mOverscrollBehaviorAllowsSwipe(false),
-      mSimulateMomentum(false) {}
+      mSimulateMomentum(false),
+      mIsNoLineOrPageDelta(true) {}
 
 PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
                                  TimeStamp aTimeStamp,
@@ -449,7 +450,15 @@ PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
       mFollowedByMomentum(false),
       mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(false),
       mOverscrollBehaviorAllowsSwipe(false),
-      mSimulateMomentum(false) {}
+      mSimulateMomentum(false),
+      mIsNoLineOrPageDelta(true) {}
+
+void PanGestureInput::SetLineOrPageDeltas(int32_t aLineOrPageDeltaX,
+                                          int32_t aLineOrPageDeltaY) {
+  mLineOrPageDeltaX = aLineOrPageDeltaX;
+  mLineOrPageDeltaY = aLineOrPageDeltaY;
+  mIsNoLineOrPageDelta = false;
+}
 
 bool PanGestureInput::IsMomentum() const {
   switch (mType) {
@@ -480,10 +489,12 @@ WidgetWheelEvent PanGestureInput::ToWidgetEvent(nsIWidget* aWidget) const {
   wheelEvent.mDeltaY = mPanDisplacement.y;
   wheelEvent.mFlags.mHandledByAPZ = mHandledByAPZ;
   wheelEvent.mFocusSequenceNumber = mFocusSequenceNumber;
+  wheelEvent.mIsNoLineOrPageDelta = mIsNoLineOrPageDelta;
   if (mDeltaType == PanGestureInput::PANDELTA_PAGE) {
+    // widget/gtk is currently the only consumer that uses delta type
+    // PANDELTA_PAGE
     // Emulate legacy widget/gtk behavior
     wheelEvent.mDeltaMode = WheelEvent_Binding::DOM_DELTA_LINE;
-    wheelEvent.mIsNoLineOrPageDelta = true;
     wheelEvent.mScrollType = WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY;
     wheelEvent.mDeltaX *= 3;
     wheelEvent.mDeltaY *= 3;
