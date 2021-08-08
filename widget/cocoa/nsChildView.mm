@@ -3393,8 +3393,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   if (usePreciseDeltas && hasPhaseInformation) {
     PanGestureInput panEvent(PanGestureTypeForEvent(theEvent), eventIntervalTime, eventTimeStamp,
                              position, preciseDelta, modifiers);
-    panEvent.mLineOrPageDeltaX = lineOrPageDelta.x;
-    panEvent.mLineOrPageDeltaY = lineOrPageDelta.y;
+    panEvent.SetLineOrPageDeltas(lineOrPageDelta.x, lineOrPageDelta.y);
 
     if (panEvent.mType == PanGestureInput::PANGESTURE_END) {
       // Check if there's a momentum start event in the event queue, so that we

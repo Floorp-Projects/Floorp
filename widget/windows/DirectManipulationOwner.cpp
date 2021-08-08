@@ -506,11 +506,6 @@ void DManipEventHandler::SendPan(Phase aPhase, float x, float y,
   PanGestureInput event{panGestureType, eventIntervalTime, eventTimeStamp,
                         position,       ScreenPoint(x, y), mods};
 
-  gfx::IntPoint lineOrPageDelta =
-      PanGestureInput::GetIntegerDeltaForEvent((aPhase == Phase::eStart), x, y);
-  event.mLineOrPageDeltaX = lineOrPageDelta.x;
-  event.mLineOrPageDeltaY = lineOrPageDelta.y;
-
   mWindow->SendAnAPZEvent(event);
 }
 
