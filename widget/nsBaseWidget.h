@@ -532,7 +532,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsresult SynthesizeNativeTouchPadPinch(TouchpadPinchPhase aEventPhase,
+  nsresult SynthesizeNativeTouchPadPinch(TouchpadGesturePhase aEventPhase,
                                          float aScale,
                                          LayoutDeviceIntPoint aPoint,
                                          int32_t aModifierFlags) override {

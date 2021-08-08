@@ -509,7 +509,7 @@ nsresult HeadlessWidget::SynthesizeNativeTouchPoint(
 }
 
 nsresult HeadlessWidget::SynthesizeNativeTouchPadPinch(
-    TouchpadPinchPhase aEventPhase, float aScale, LayoutDeviceIntPoint aPoint,
+    TouchpadGesturePhase aEventPhase, float aScale, LayoutDeviceIntPoint aPoint,
     int32_t aModifierFlags) {
   MOZ_ASSERT(NS_IsMainThread());
 
