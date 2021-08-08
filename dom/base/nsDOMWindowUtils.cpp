@@ -1142,11 +1142,11 @@ nsDOMWindowUtils::SendNativeTouchpadPinch(uint32_t aEventPhase, float aScale,
     return NS_ERROR_FAILURE;
   }
   NS_DispatchToMainThread(NativeInputRunnable::Create(
-      NewRunnableMethod<nsIWidget::TouchpadPinchPhase, float,
+      NewRunnableMethod<nsIWidget::TouchpadGesturePhase, float,
                         LayoutDeviceIntPoint, int32_t>(
           "nsIWidget::SynthesizeNativeTouchPadPinch", widget,
           &nsIWidget::SynthesizeNativeTouchPadPinch,
-          (nsIWidget::TouchpadPinchPhase)aEventPhase, aScale,
+          (nsIWidget::TouchpadGesturePhase)aEventPhase, aScale,
           LayoutDeviceIntPoint(aScreenX, aScreenY), aModifierFlags)));
   return NS_OK;
 }

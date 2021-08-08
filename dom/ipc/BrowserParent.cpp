@@ -1910,7 +1910,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativeTouchPoint(
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativeTouchPadPinch(
-    const TouchpadPinchPhase& aEventPhase, const float& aScale,
+    const TouchpadGesturePhase& aEventPhase, const float& aScale,
     const LayoutDeviceIntPoint& aPoint, const int32_t& aModifierFlags) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
