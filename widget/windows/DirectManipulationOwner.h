@@ -8,6 +8,7 @@
 
 #include <windows.h>
 #include "Units.h"
+#include "nsIWidget.h"  // for TouchpadGesturePhase
 
 class nsWindow;
 class IDirectManipulationManager;
@@ -32,6 +33,11 @@ class DirectManipulationOwner {
   void SetContact(UINT aContactId);
 
   void Update();
+
+  static void SynthesizeNativeTouchpadPan(
+      nsWindow* aWindow, nsIWidget::TouchpadGesturePhase aEventPhase,
+      LayoutDeviceIntPoint aPoint, double aDeltaX, double aDeltaY,
+      int32_t aModifierFlags);
 
  private:
   nsWindow* mWindow;
