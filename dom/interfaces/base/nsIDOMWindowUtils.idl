@@ -763,6 +763,22 @@ interface nsIDOMWindowUtils : nsISupports {
                                    in long aModifierFlags);
 
   /**
+   * Send a native event as if the user panned on the touchpad with two
+   * fingers.
+   * 
+   * Widget support: Windows.
+   * @param aScreenX, aScreenY screen coords of the focus point of this event.
+   * @param aDeltaX, aDeltaY the amount of delta in the pan.
+   * @param aModifierFlags is expected to contain native modifier values.
+   */
+  void sendNativeTouchpadPan(in unsigned long aEventPhase,
+                             in long aScreenX,
+                             in long aScreenY,
+                             in double aDeltaX,
+                             in double aDeltaY,
+                             in long aModifierFlags);
+
+  /**
    * Clears the SharedStyleSheetCache.
    */
   void clearSharedStyleSheetCache();

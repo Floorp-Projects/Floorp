@@ -1675,8 +1675,8 @@ class nsIWidget : public nsISupports {
     ALL_BITS = (1 << 4) - 1
   };
   /*
-   * TouchpadGesturePhase states for SynthesizeNativeTouchPadPinch. Match
-   * phase states in nsIDOMWindowUtils.idl.
+   * TouchpadGesturePhase states for SynthesizeNativeTouchPadPinch and
+   * SynthesizeNativeTouchpadPan. Match phase states in nsIDOMWindowUtils.idl.
    */
   enum TouchpadGesturePhase {
     PHASE_BEGIN = 0,
@@ -1743,6 +1743,14 @@ class nsIWidget : public nsISupports {
    */
   virtual nsresult SynthesizeNativeTouchpadDoubleTap(
       LayoutDeviceIntPoint aPoint, uint32_t aModifierFlags) = 0;
+
+  /*
+   * See nsIDOMWindowUtils.sendNativeTouchpadPan().
+   */
+  virtual nsresult SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
+                                               LayoutDeviceIntPoint aPoint,
+                                               double aDeltaX, double aDeltaY,
+                                               int32_t aModifierFlags) = 0;
 
   virtual void StartAsyncScrollbarDrag(
       const AsyncDragMetrics& aDragMetrics) = 0;

@@ -578,6 +578,60 @@ async function synthesizeTouchpadPinch(scales, focusX, focusY, options) {
     await transformEndPromise;
   }
 }
+
+async function synthesizeTouchpadPan(
+  focusX,
+  focusY,
+  deltaXs,
+  deltaYs,
+  options
+) {
+  // Check for options, fill in defaults if appropriate.
+  let waitForTransformEnd =
+    options.waitForTransformEnd !== undefined
+      ? options.waitForTransformEnd
+      : true;
+  let waitForFrames =
+    options.waitForFrames !== undefined ? options.waitForFrames : false;
+
+  // Register the listener for the TransformEnd observer topic
+  let transformEndPromise = promiseTransformEnd();
+
+  var modifierFlags = 0;
+  var pt = coordinatesRelativeToScreen({
+    offsetX: focusX,
+    offsetY: focusY,
+    target: document.body,
+  });
+  var utils = utilsForTarget(document.body);
+  for (let i = 0; i < deltaXs.length; i++) {
+    var phase;
+    if (i === 0) {
+      phase = SpecialPowers.DOMWindowUtils.PHASE_BEGIN;
+    } else if (i === deltaXs.length - 1) {
+      phase = SpecialPowers.DOMWindowUtils.PHASE_END;
+    } else {
+      phase = SpecialPowers.DOMWindowUtils.PHASE_UPDATE;
+    }
+    utils.sendNativeTouchpadPan(
+      phase,
+      pt.x,
+      pt.y,
+      deltaXs[i],
+      deltaYs[i],
+      modifierFlags
+    );
+    if (waitForFrames) {
+      await promiseFrame();
+    }
+  }
+
+  // Wait for TransformEnd to fire.
+  if (waitForTransformEnd) {
+    await transformEndPromise;
+  }
+}
+
 // Synthesizes a native touch event and dispatches it. aX and aY in CSS pixels
 // relative to the top-left of |aTarget|'s bounding rect.
 function synthesizeNativeTouch(

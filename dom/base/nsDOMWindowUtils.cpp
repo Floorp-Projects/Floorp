@@ -1214,6 +1214,28 @@ nsDOMWindowUtils::SendNativeTouchpadDoubleTap(int32_t aScreenX,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SendNativeTouchpadPan(uint32_t aEventPhase, int32_t aScreenX,
+                                        int32_t aScreenY, double aDeltaX,
+                                        double aDeltaY,
+                                        int32_t aModifierFlags) {
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ASSERT(aModifierFlags >= 0);
+  NS_DispatchToMainThread(NativeInputRunnable::Create(
+      NewRunnableMethod<nsIWidget::TouchpadGesturePhase, LayoutDeviceIntPoint,
+                        double, double, uint32_t>(
+          "nsIWidget::SynthesizeNativeTouchpadPan", widget,
+          &nsIWidget::SynthesizeNativeTouchpadPan,
+          (nsIWidget::TouchpadGesturePhase)aEventPhase,
+          LayoutDeviceIntPoint(aScreenX, aScreenY), aDeltaX, aDeltaY,
+          aModifierFlags)));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SuppressAnimation(bool aSuppress) {
   nsIWidget* widget = GetWidget();
   if (widget) {

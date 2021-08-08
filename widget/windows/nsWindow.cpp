@@ -6664,6 +6664,15 @@ nsresult nsWindow::SynthesizeNativeMouseScrollEvent(
       aModifierFlags, aAdditionalFlags);
 }
 
+nsresult nsWindow::SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
+                                               LayoutDeviceIntPoint aPoint,
+                                               double aDeltaX, double aDeltaY,
+                                               int32_t aModifierFlags) {
+  DirectManipulationOwner::SynthesizeNativeTouchpadPan(
+      this, aEventPhase, aPoint, aDeltaX, aDeltaY, aModifierFlags);
+  return NS_OK;
+}
+
 /**************************************************************
  *
  * SECTION: OnXXX message handlers
