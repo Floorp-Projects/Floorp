@@ -20,6 +20,11 @@ task-priority:
     by-project:
         "fenix": highest
         "staging-fenix": low
+        # This handles cases where a fork may end up not being named
+        # as one of the explicit names above. Ideally anything forked
+        # from "fenix" would inherit its setting, but "low" is the
+        # safer default
+        default: low
 
 taskgraph:
     register: fenix_taskgraph:register
