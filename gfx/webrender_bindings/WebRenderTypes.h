@@ -738,7 +738,8 @@ struct ByteBuffer {
 };
 
 struct BuiltDisplayList {
-  wr::VecU8 dl;
+  wr::VecU8 dl_items;
+  wr::VecU8 dl_cache;
   wr::BuiltDisplayListDescriptor dl_desc;
 };
 

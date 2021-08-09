@@ -112,7 +112,8 @@ class TransactionBuilder final {
                       const wr::LayoutSize& aViewportSize,
                       wr::WrPipelineId pipeline_id,
                       wr::BuiltDisplayListDescriptor dl_descriptor,
-                      wr::Vec<uint8_t>& dl_data);
+                      wr::Vec<uint8_t>& dl_items_data,
+                      wr::Vec<uint8_t>& dl_cache_data);
 
   void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId aPipeline);
 
@@ -431,7 +432,7 @@ class DisplayListBuilder final {
  public:
   explicit DisplayListBuilder(wr::PipelineId aId,
                               layers::WebRenderBackend aBackend,
-                              size_t aCapacity = 0,
+                              wr::DisplayListCapacity aCapacity,
                               layers::DisplayItemCache* aCache = nullptr);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 

@@ -16,7 +16,8 @@ void IPDLParamTraits<mozilla::layers::DisplayListData>::Write(
   WriteIPDLParam(aMsg, aActor, aParam.mIdNamespace);
   WriteIPDLParam(aMsg, aActor, aParam.mRect);
   WriteIPDLParam(aMsg, aActor, aParam.mCommands);
-  WriteIPDLParam(aMsg, aActor, std::move(aParam.mDL));
+  WriteIPDLParam(aMsg, aActor, std::move(aParam.mDLItems));
+  WriteIPDLParam(aMsg, aActor, std::move(aParam.mDLCache));
   WriteIPDLParam(aMsg, aActor, aParam.mDLDesc);
   WriteIPDLParam(aMsg, aActor, aParam.mRemotePipelineIds);
   WriteIPDLParam(aMsg, aActor, aParam.mResourceUpdates);
@@ -31,7 +32,8 @@ bool IPDLParamTraits<mozilla::layers::DisplayListData>::Read(
   if (ReadIPDLParam(aMsg, aIter, aActor, &aResult->mIdNamespace) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRect) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCommands) &&
-      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDL) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDLItems) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDLCache) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDLDesc) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRemotePipelineIds) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResourceUpdates) &&

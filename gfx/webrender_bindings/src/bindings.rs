@@ -1835,7 +1835,8 @@ pub extern "C" fn wr_transaction_set_display_list(
     viewport_size: LayoutSize,
     pipeline_id: WrPipelineId,
     dl_descriptor: BuiltDisplayListDescriptor,
-    dl_data: &mut WrVecU8,
+    dl_items_data: &mut WrVecU8,
+    dl_cache_data: &mut WrVecU8,
 ) {
     let color = if background.a == 0.0 { None } else { Some(background) };
 
@@ -1845,7 +1846,8 @@ pub extern "C" fn wr_transaction_set_display_list(
     let preserve_frame_state = true;
 
     let payload = DisplayListPayload {
-        data: dl_data.flush_into_vec(),
+        items_data: dl_items_data.flush_into_vec(),
+        cache_data: dl_cache_data.flush_into_vec(),
     };
 
     let dl = BuiltDisplayList::from_data(payload, dl_descriptor);
@@ -2355,7 +2357,10 @@ impl WebRenderFrameBuilder {
             dl_builder: DisplayListBuilder::new(root_pipeline_id),
         }
     }
-    pub fn with_capacity(root_pipeline_id: WrPipelineId, capacity: usize) -> WebRenderFrameBuilder {
+    pub fn with_capacity(
+        root_pipeline_id: WrPipelineId,
+        capacity: DisplayListCapacity,
+    ) -> WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id,
             dl_builder: DisplayListBuilder::with_capacity(root_pipeline_id, capacity),
@@ -2369,7 +2374,10 @@ pub struct WrState {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId, capacity: usize) -> *mut WrState {
+pub extern "C" fn wr_state_new(
+    pipeline_id: WrPipelineId,
+    capacity: DisplayListCapacity,
+) -> *mut WrState {
     assert!(unsafe { !is_in_render_thread() });
 
     let state = Box::new(WrState {
@@ -3769,12 +3777,14 @@ pub extern "C" fn wr_dump_serialized_display_list(state: &mut WrState) {
 pub unsafe extern "C" fn wr_api_finalize_builder(
     state: &mut WrState,
     dl_descriptor: &mut BuiltDisplayListDescriptor,
-    dl_data: &mut WrVecU8,
+    dl_items_data: &mut WrVecU8,
+    dl_cache_data: &mut WrVecU8,
 ) {
     let frame_builder = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(state.pipeline_id));
     let (_, dl) = frame_builder.dl_builder.finalize();
     let (payload, descriptor) = dl.into_data();
-    *dl_data = WrVecU8::from_vec(payload.data);
+    *dl_items_data = WrVecU8::from_vec(payload.items_data);
+    *dl_cache_data = WrVecU8::from_vec(payload.cache_data);
     *dl_descriptor = descriptor;
 }
 
