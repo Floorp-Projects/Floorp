@@ -426,7 +426,7 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
 bool GlobalObject::maybeResolveGlobalThis(JSContext* cx,
                                           Handle<GlobalObject*> global,
                                           bool* resolved) {
-  if (global->getReservedSlot(GLOBAL_THIS_RESOLVED).isUndefined()) {
+  if (!global->data().globalThisResolved) {
     RootedValue v(cx, ObjectValue(*ToWindowProxyIfWindow(global)));
     if (!DefineDataProperty(cx, global, cx->names().globalThis, v,
                             JSPROP_RESOLVING)) {
@@ -434,7 +434,7 @@ bool GlobalObject::maybeResolveGlobalThis(JSContext* cx,
     }
 
     *resolved = true;
-    global->setReservedSlot(GLOBAL_THIS_RESOLVED, BooleanValue(true));
+    global->data().globalThisResolved = true;
   }
 
   return true;
