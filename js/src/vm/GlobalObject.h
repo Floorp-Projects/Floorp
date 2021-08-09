@@ -143,52 +143,25 @@ class GlobalObjectData {
   void trace(JSTracer* trc);
 };
 
-/*
- * Global object slots are reserved as follows:
- *
- * [0, APPLICATION_SLOTS)
- *   Pre-reserved slots in all global objects set aside for the embedding's
- *   use. As with all reserved slots these start out as UndefinedValue() and
- *   are traced for GC purposes. Apart from that the engine never touches
- *   these slots, so the embedding can do whatever it wants with them.
- * [APPLICATION_SLOTS, APPLICATION_SLOTS + JSProto_LIMIT)
- *   Stores the original value of the constructor for the corresponding
- *   JSProtoKey.
- * [APPLICATION_SLOTS + JSProto_LIMIT, APPLICATION_SLOTS + 2 * JSProto_LIMIT)
- *   Stores the prototype, if any, for the constructor for the corresponding
- *   JSProtoKey offset from JSProto_LIMIT.
- * [APPLICATION_SLOTS + 2 * JSProto_LIMIT, RESERVED_SLOTS)
- *   Various one-off values: ES5 13.2.3's [[ThrowTypeError]], RegExp statics,
- *   the original eval for this global object (implementing |var eval =
- *   otherWindow.eval; eval(...)| as an indirect eval), a bit indicating
- *   whether this object has been cleared (see JS_ClearScope), and a cache for
- *   whether eval is allowed (per the global's Content Security Policy).
- *
- * The two JSProto_LIMIT-sized ranges are necessary to implement
- * js::FindClassObject, and spec language speaking in terms of "the original
- * Array prototype object", or "as if by the expression new Array()" referring
- * to the original Array constructor. The actual (writable and even deletable)
- * Object, Array, &c. properties are not stored in reserved slots.
- */
 class GlobalObject : public NativeObject {
-  /* Count of slots set aside for application use. */
-  static const unsigned APPLICATION_SLOTS = JSCLASS_GLOBAL_APPLICATION_SLOTS;
-
   enum : unsigned {
-    GLOBAL_DATA_SLOT = APPLICATION_SLOTS,
+    GLOBAL_DATA_SLOT = JSCLASS_GLOBAL_APPLICATION_SLOTS,
     WINDOW_PROXY,
 
-    /* Total reserved-slot count for global objects. */
+    // Total reserved-slot count for global objects.
     RESERVED_SLOTS
   };
 
-  /*
-   * The slot count must be in the public API for JSCLASS_GLOBAL_FLAGS, and
-   * we won't expose GlobalObject, so just assert that the two values are
-   * synchronized.
-   */
+  // The slot count must be in the public API for JSCLASS_GLOBAL_FLAGS, and
+  // we won't expose GlobalObject, so just assert that the two values are
+  // synchronized.
   static_assert(JSCLASS_GLOBAL_SLOT_COUNT == RESERVED_SLOTS,
                 "global object slot counts are inconsistent");
+
+  // Ensure GlobalObjectData is only one dereference away.
+  static_assert(GLOBAL_DATA_SLOT < MAX_FIXED_SLOTS,
+                "GlobalObjectData should be stored in a fixed slot for "
+                "performance reasons");
 
   using ProtoKind = GlobalObjectData::ProtoKind;
 
