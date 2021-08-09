@@ -82,8 +82,9 @@ struct nsFont final {
   // that include an 'opsz' axis
   uint8_t opticalSizing = NS_FONT_OPTICAL_SIZING_AUTO;
 
-  // Synthesis setting, controls use of fake bolding/italics
-  uint8_t synthesis = NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE;
+  // Synthesis setting, controls use of fake bolding/italics/small-caps
+  uint8_t synthesis = NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE |
+                      NS_FONT_SYNTHESIS_SMALL_CAPS;
 
   // initialize the font with a fontlist
   nsFont(const mozilla::StyleFontFamily&, mozilla::Length aSize);
