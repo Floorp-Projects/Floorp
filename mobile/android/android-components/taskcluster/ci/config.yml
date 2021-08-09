@@ -135,6 +135,11 @@ task-priority:
     by-project:
         "android-components": highest
         "staging-android-components": low
+        # This handles cases where a fork may end up not being named
+        # as one of the explicit names above. Ideally anything forked
+        # from "android-components" would inherit its setting, but
+        # "low" is the safer default
+        default: low
 
 taskgraph:
     register: ac_taskgraph:register
