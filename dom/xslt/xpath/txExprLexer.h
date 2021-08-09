@@ -84,7 +84,7 @@ class Token {
   /**
    * Constructors
    */
-  typedef nsAString::const_char_iterator iterator;
+  using iterator = nsAString::const_char_iterator;
 
   Token(iterator aStart, iterator aEnd, Type aType)
       : mStart(aStart), mEnd(aEnd), mType(aType), mNext(nullptr) {}
@@ -119,7 +119,7 @@ class txExprLexer {
    */
   nsresult parse(const nsAString& aPattern);
 
-  typedef nsAString::const_char_iterator iterator;
+  using iterator = nsAString::const_char_iterator;
   iterator mPosition;
 
   /**

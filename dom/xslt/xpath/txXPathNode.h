@@ -12,7 +12,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsContentUtils.h"  // For NameSpaceManager().
 
-typedef nsINode txXPathNodeType;
+using txXPathNodeType = nsINode;
 
 class txXPathNode {
  public:
