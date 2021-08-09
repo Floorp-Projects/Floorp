@@ -21,7 +21,7 @@ class BrowserChild;
 template <class InputEventType>
 class CoalescedInputData {
  protected:
-  typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
+  using ScrollableLayerGuid = mozilla::layers::ScrollableLayerGuid;
 
   UniquePtr<InputEventType> mCoalescedInputEvent;
   ScrollableLayerGuid mGuid;

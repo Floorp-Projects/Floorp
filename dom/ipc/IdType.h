@@ -41,8 +41,8 @@ class IdType {
   uint64_t mId;
 };
 
-typedef IdType<BrowserParent> TabId;
-typedef IdType<ContentParent> ContentParentId;
+using TabId = IdType<BrowserParent>;
+using ContentParentId = IdType<ContentParent>;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -50,7 +50,7 @@ namespace IPC {
 
 template <typename T>
 struct ParamTraits<mozilla::dom::IdType<T>> {
-  typedef mozilla::dom::IdType<T> paramType;
+  using paramType = mozilla::dom::IdType<T>;
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mId);

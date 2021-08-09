@@ -85,9 +85,9 @@ class ContentChild final : public PContentChild,
                            public mozilla::ipc::IShmemAllocator,
                            public mozilla::ipc::ChildToParentStreamActorManager,
                            public ProcessActor {
-  typedef mozilla::dom::ClonedMessageData ClonedMessageData;
-  typedef mozilla::ipc::FileDescriptor FileDescriptor;
-  typedef mozilla::ipc::PFileDescriptorSetChild PFileDescriptorSetChild;
+  using ClonedMessageData = mozilla::dom::ClonedMessageData;
+  using FileDescriptor = mozilla::ipc::FileDescriptor;
+  using PFileDescriptorSetChild = mozilla::ipc::PFileDescriptorSetChild;
 
   friend class PContentChild;
 
@@ -604,7 +604,7 @@ class ContentChild final : public PContentChild,
   static void FatalErrorIfNotUsingGPUProcess(const char* const aErrorMsg,
                                              base::ProcessId aOtherPid);
 
-  typedef std::function<void(PRFileDesc*)> AnonymousTemporaryFileCallback;
+  using AnonymousTemporaryFileCallback = std::function<void(PRFileDesc*)>;
   nsresult AsyncOpenAnonymousTemporaryFile(
       const AnonymousTemporaryFileCallback& aCallback);
 
