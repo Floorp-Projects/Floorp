@@ -314,6 +314,11 @@ Download.prototype = {
   _currentAttempt: null,
 
   /**
+   * The download was launched to open from the Downloads Panel.
+   */
+  _launchedFromPanel: false,
+
+  /**
    * Starts the download for the first time, or restarts a download that failed
    * or has been canceled.
    *
@@ -771,6 +776,10 @@ Download.prototype = {
       return Promise.reject(
         new Error("launch can only be called if the download succeeded")
       );
+    }
+
+    if (this._launchedFromPanel) {
+      Services.telemetry.scalarAdd("downloads.file_opened", 1);
     }
 
     return DownloadIntegration.launchDownload(this, options);

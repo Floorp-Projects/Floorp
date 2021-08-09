@@ -825,8 +825,10 @@ var DownloadsView = {
       while (target.nodeName != "richlistitem") {
         target = target.parentNode;
       }
-      Services.telemetry.scalarAdd("downloads.file_opened", 1);
       let download = DownloadsView.itemForElement(target).download;
+      if (download.succeeded) {
+        download._launchedFromPanel = true;
+      }
       let command = "downloadsCmd_open";
       if (download.hasBlockedData) {
         command = "downloadsCmd_showBlockedInfo";
@@ -847,6 +849,7 @@ var DownloadsView = {
         )
       ) {
         download.launchWhenSucceeded = !download.launchWhenSucceeded;
+        download._launchedFromPanel = download.launchWhenSucceeded;
       }
 
       DownloadsCommon.log("onDownloadClick, resolved command: ", command);
