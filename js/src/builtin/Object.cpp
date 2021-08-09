@@ -2161,7 +2161,7 @@ static bool FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor,
 
   /* ES5 15.1.2.1. */
   RootedId evalId(cx, NameToId(cx->names().eval));
-  JSObject* evalobj =
+  JSFunction* evalobj =
       DefineFunction(cx, global, evalId, IndirectEval, 1, JSPROP_RESOLVING);
   if (!evalobj) {
     return false;

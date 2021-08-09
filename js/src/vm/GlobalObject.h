@@ -87,6 +87,9 @@ class GlobalObjectData {
   // The unique %ThrowTypeError% function for this global.
   HeapPtr<JSFunction*> throwTypeError;
 
+  // The unique %eval% function (for indirect eval) for this global.
+  HeapPtr<JSFunction*> eval;
+
   // Cached shape for new arrays with Array.prototype as prototype.
   HeapPtr<Shape*> arrayShape;
 
@@ -134,11 +137,8 @@ class GlobalObject : public NativeObject {
   static const unsigned STANDARD_CLASS_SLOTS = JSProto_LIMIT * 2;
 
   enum : unsigned {
-    /* Various function values needed by the engine. */
-    EVAL = APPLICATION_SLOTS + STANDARD_CLASS_SLOTS,
-
     /* One-off properties stored after slots for built-ins. */
-    GLOBAL_DATA_SLOT,
+    GLOBAL_DATA_SLOT = APPLICATION_SLOTS + STANDARD_CLASS_SLOTS,
     ITERATOR_PROTO,
     ARRAY_ITERATOR_PROTO,
     STRING_ITERATOR_PROTO,
@@ -204,9 +204,9 @@ class GlobalObject : public NativeObject {
     return mallocSizeOf(maybeData());
   }
 
-  void setOriginalEval(JSObject* evalobj) {
-    MOZ_ASSERT(getReservedSlot(EVAL).isUndefined());
-    setReservedSlot(EVAL, ObjectValue(*evalobj));
+  void setOriginalEval(JSFunction* evalFun) {
+    MOZ_ASSERT(!data().eval);
+    data().eval.init(evalFun);
   }
 
   Value getConstructor(JSProtoKey key) const {
