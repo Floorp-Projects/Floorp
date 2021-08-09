@@ -32,7 +32,7 @@ class Event;
 class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
                                        public nsIObserver,
                                        public nsSupportsWeakReference {
-  typedef mozilla::ErrorResult ErrorResult;
+  using ErrorResult = mozilla::ErrorResult;
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
