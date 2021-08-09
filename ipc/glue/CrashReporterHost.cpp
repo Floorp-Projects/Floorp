@@ -95,15 +95,6 @@ bool CrashReporterHost::AdoptMinidump(nsIFile* aFile,
   return true;
 }
 
-int32_t CrashReporterHost::GetCrashType() {
-  if (mExtraAnnotations[CrashReporter::Annotation::PluginHang].EqualsLiteral(
-          "1")) {
-    return nsICrashService::CRASH_TYPE_HANG;
-  }
-
-  return nsICrashService::CRASH_TYPE_CRASH;
-}
-
 bool CrashReporterHost::FinalizeCrashReport() {
   MOZ_ASSERT(!mFinalized);
   MOZ_ASSERT(HasMinidump());
@@ -118,7 +109,7 @@ bool CrashReporterHost::FinalizeCrashReport() {
 
   CrashReporter::WriteExtraFile(mDumpID, mExtraAnnotations);
 
-  RecordCrash(mProcessType, GetCrashType(), mDumpID);
+  RecordCrash(mProcessType, nsICrashService::CRASH_TYPE_CRASH, mDumpID);
 
   mFinalized = true;
   return true;
