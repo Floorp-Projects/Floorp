@@ -10717,7 +10717,7 @@
 
 -   name: security.sandbox.rdd.shadow-stack.enabled
     type: RelaxedAtomicBool
-    value: false
+    value: @IS_NIGHTLY_BUILD@
     mirror: always
 
 -   name: security.sandbox.socket.shadow-stack.enabled
