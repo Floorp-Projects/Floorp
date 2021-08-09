@@ -20,7 +20,8 @@ struct DisplayListData {
   wr::IdNamespace mIdNamespace;
   LayoutDeviceRect mRect;
   nsTArray<WebRenderParentCommand> mCommands;
-  Maybe<mozilla::ipc::ByteBuf> mDL;
+  Maybe<mozilla::ipc::ByteBuf> mDLItems;
+  Maybe<mozilla::ipc::ByteBuf> mDLCache;
   wr::BuiltDisplayListDescriptor mDLDesc;
   nsTArray<wr::PipelineId> mRemotePipelineIds;
   nsTArray<OpUpdateResource> mResourceUpdates;

@@ -262,10 +262,11 @@ void TransactionBuilder::RemovePipeline(PipelineId aPipelineId) {
 void TransactionBuilder::SetDisplayList(
     const gfx::DeviceColor& aBgColor, Epoch aEpoch,
     const wr::LayoutSize& aViewportSize, wr::WrPipelineId pipeline_id,
-    wr::BuiltDisplayListDescriptor dl_descriptor, wr::Vec<uint8_t>& dl_data) {
+    wr::BuiltDisplayListDescriptor dl_descriptor,
+    wr::Vec<uint8_t>& dl_items_data, wr::Vec<uint8_t>& dl_cache_data) {
   wr_transaction_set_display_list(mTxn, aEpoch, ToColorF(aBgColor),
                                   aViewportSize, pipeline_id, dl_descriptor,
-                                  &dl_data.inner);
+                                  &dl_items_data.inner, &dl_cache_data.inner);
 }
 
 void TransactionBuilder::ClearDisplayList(Epoch aEpoch,
@@ -960,7 +961,7 @@ void WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent) {
 
 DisplayListBuilder::DisplayListBuilder(PipelineId aId,
                                        WebRenderBackend aBackend,
-                                       size_t aCapacity,
+                                       wr::DisplayListCapacity aCapacity,
                                        layers::DisplayItemCache* aCache)
     : mCurrentSpaceAndClipChain(wr::RootScrollNodeWithChain()),
       mActiveFixedPosTracker(nullptr),
@@ -996,7 +997,8 @@ void DisplayListBuilder::DumpSerializedDisplayList() {
 
 void DisplayListBuilder::Finalize(BuiltDisplayList& aOutDisplayList) {
   wr_api_finalize_builder(mWrState, &aOutDisplayList.dl_desc,
-                          &aOutDisplayList.dl.inner);
+                          &aOutDisplayList.dl_items.inner,
+                          &aOutDisplayList.dl_cache.inner);
 }
 
 void DisplayListBuilder::Finalize(layers::DisplayListData& aOutTransaction) {
@@ -1004,13 +1006,18 @@ void DisplayListBuilder::Finalize(layers::DisplayListData& aOutTransaction) {
     wr_dp_set_cache_size(mWrState, mDisplayItemCache->CurrentSize());
   }
 
-  wr::VecU8 dl;
-  wr_api_finalize_builder(mWrState, &aOutTransaction.mDLDesc, &dl.inner);
-  aOutTransaction.mDL.emplace(dl.inner.data, dl.inner.length,
-                              dl.inner.capacity);
+  wr::VecU8 dlItems, dlCache;
+  wr_api_finalize_builder(mWrState, &aOutTransaction.mDLDesc, &dlItems.inner,
+                          &dlCache.inner);
+  aOutTransaction.mDLItems.emplace(dlItems.inner.data, dlItems.inner.length,
+                                   dlItems.inner.capacity);
+  aOutTransaction.mDLCache.emplace(dlCache.inner.data, dlCache.inner.length,
+                                   dlCache.inner.capacity);
   aOutTransaction.mRemotePipelineIds = std::move(mRemotePipelineIds);
-  dl.inner.capacity = 0;
-  dl.inner.data = nullptr;
+  dlItems.inner.capacity = 0;
+  dlItems.inner.data = nullptr;
+  dlCache.inner.capacity = 0;
+  dlCache.inner.data = nullptr;
 }
 
 Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(

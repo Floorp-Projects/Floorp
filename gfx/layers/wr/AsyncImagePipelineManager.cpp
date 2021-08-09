@@ -406,7 +406,8 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
 
   aPipeline->mIsChanged = false;
 
-  wr::DisplayListBuilder builder(aPipelineId, mApi->GetBackendType());
+  wr::DisplayListCapacity capacity = {};
+  wr::DisplayListBuilder builder(aPipelineId, mApi->GetBackendType(), capacity);
 
   float opacity = 1.0f;
   wr::StackingContextParams params;
@@ -463,7 +464,8 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   builder.Finalize(dl);
   aSceneBuilderTxn.SetDisplayList(gfx::DeviceColor(0.f, 0.f, 0.f, 0.f), aEpoch,
                                   wr::ToLayoutSize(aPipeline->mScBounds.Size()),
-                                  aPipelineId, dl.dl_desc, dl.dl);
+                                  aPipelineId, dl.dl_desc, dl.dl_items,
+                                  dl.dl_cache);
 }
 
 void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
@@ -511,13 +513,14 @@ void AsyncImagePipelineManager::SetEmptyDisplayList(
   auto& txn = pipeline->mImageHost->GetAsyncRef() ? aTxnForImageBridge : aTxn;
 
   wr::Epoch epoch = GetNextImageEpoch();
-  wr::DisplayListBuilder builder(aPipelineId, mApi->GetBackendType());
+  wr::DisplayListCapacity capacity = {};
+  wr::DisplayListBuilder builder(aPipelineId, mApi->GetBackendType(), capacity);
 
   wr::BuiltDisplayList dl;
   builder.Finalize(dl);
   txn.SetDisplayList(gfx::DeviceColor(0.f, 0.f, 0.f, 0.f), epoch,
                      wr::ToLayoutSize(pipeline->mScBounds.Size()), aPipelineId,
-                     dl.dl_desc, dl.dl);
+                     dl.dl_desc, dl.dl_items, dl.dl_cache);
 }
 
 void AsyncImagePipelineManager::HoldExternalImage(

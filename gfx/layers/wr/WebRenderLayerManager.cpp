@@ -43,7 +43,7 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
       mTarget(nullptr),
       mPaintSequenceNumber(0),
       mWebRenderCommandBuilder(this),
-      mLastDisplayListSize(0) {
+      mLastDisplayListSize{0} {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
   mStateManager.mLayerManager = this;
 
@@ -338,12 +338,15 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   // So don't let the spike of the first allocation make us allocate a large
   // contiguous buffer (with some likelihood of OOM, see bug 1531819).
   static const size_t kMaxPrealloc = 300000;
-  size_t preallocate =
-      mLastDisplayListSize < kMaxPrealloc ? mLastDisplayListSize : kMaxPrealloc;
+
+  mLastDisplayListSize.items_size =
+      std::min(mLastDisplayListSize.items_size, kMaxPrealloc);
+  mLastDisplayListSize.cache_size =
+      std::min(mLastDisplayListSize.cache_size, kMaxPrealloc);
 
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline(),
-                                 WrBridge()->GetWebRenderBackend(), preallocate,
-                                 &mDisplayItemCache);
+                                 WrBridge()->GetWebRenderBackend(),
+                                 mLastDisplayListSize, &mDisplayItemCache);
 
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
   wr::usize builderDumpIndex = 0;
@@ -450,7 +453,8 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     AUTO_PROFILER_TRACING_MARKER("Paint", "ForwardDPTransaction", GRAPHICS);
     DisplayListData dlData;
     builder.Finalize(dlData);
-    mLastDisplayListSize = dlData.mDL->mCapacity;
+    mLastDisplayListSize.items_size = dlData.mDLItems->mCapacity;
+    mLastDisplayListSize.cache_size = dlData.mDLCache->mCapacity;
     resourceUpdates.Flush(dlData.mResourceUpdates, dlData.mSmallShmems,
                           dlData.mLargeShmems);
     dlData.mRect =

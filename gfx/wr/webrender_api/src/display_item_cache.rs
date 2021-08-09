@@ -93,7 +93,7 @@ impl DisplayItemCache {
     pub fn update(&mut self, display_list: &BuiltDisplayList) {
         self.grow_if_needed(display_list.cache_size());
 
-        let mut iter = display_list.extra_data_iter();
+        let mut iter = display_list.cache_data_iter();
         let mut current_key: Option<ItemKey> = None;
         loop {
             let item = match iter.next() {
