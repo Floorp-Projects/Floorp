@@ -2,6 +2,17 @@
   "data": [
     {
       "stash": {
+        "blocked": [],
+        "unblocked": []
+      },
+      "schema": 1628162494559,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1628166910962,
+      "id": "88588883-714d-4c7f-87ce-c706777b06f7",
+      "last_modified": 1628167092474
+    },
+    {
+      "stash": {
         "blocked": [
           "{c36cb301-48a8-47e4-95e3-2dbdfb22eb73}:9.5.2",
           "{c36cb301-48a8-47e4-95e3-2dbdfb22eb73}:6.2.2",
