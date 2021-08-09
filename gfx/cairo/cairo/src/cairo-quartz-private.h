@@ -107,6 +107,9 @@ CairoQuartzCreateCGImage (cairo_format_t format,
 cairo_private CGFontRef
 _cairo_quartz_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont);
 
+cairo_private CTFontRef
+_cairo_quartz_scaled_font_get_ct_font_ref (cairo_scaled_font_t *sfont);
+
 #else
 
 # error Cairo was not compiled with support for the quartz backend
