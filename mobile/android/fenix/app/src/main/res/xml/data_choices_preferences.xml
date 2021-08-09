@@ -11,8 +11,8 @@
         android:key="@string/pref_key_marketing_telemetry"
         android:summary="@string/preferences_marketing_data_description2"
         android:title="@string/preferences_marketing_data" />
-    <SwitchPreference
-        android:key="@string/pref_key_experimentation"
-        android:summary="@string/preference_experiments_summary_2"
+
+    <androidx.preference.Preference
+        android:key="@string/pref_key_studies_section"
         android:title="@string/preference_experiments_2" />
 </PreferenceScreen>

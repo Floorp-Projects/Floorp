@@ -553,7 +553,20 @@
     <fragment
         android:id="@+id/dataChoicesFragment"
         android:name="org.mozilla.fenix.settings.DataChoicesFragment"
-        android:label="@string/preferences_data_choices" />
+        android:label="@string/preferences_data_choices">
+        <action
+            android:id="@+id/action_dataChoicesFragment_to_studiesFragment"
+            app:destination="@id/studiesFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
+            app:popUpTo="@id/dataChoicesFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/studiesFragment"
+        android:name="org.mozilla.fenix.settings.studies.StudiesFragment"
+        android:label="@string/preference_experiments_2" />
     <fragment
         android:id="@+id/sitePermissionsFragment"
         android:name="org.mozilla.fenix.settings.sitepermissions.SitePermissionsFragment"

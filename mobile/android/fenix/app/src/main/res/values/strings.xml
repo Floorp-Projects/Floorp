@@ -614,6 +614,14 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Close after one month</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Remove</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Active</string>
+    <!-- Description for studies, it indicates why Firefox use studies and links to an article for more information. The %1 will be replaced with the corresponding article URL -->
+    <string name="studies_description"><![CDATA[Firefox may install and run studies from time to time. <a href="%1$s">Learn more</a>]]></string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Open tabs</string>
@@ -929,6 +937,10 @@
     <string name="delete_browsing_data_quit_on">On</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Off</string>
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">On</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Off</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->

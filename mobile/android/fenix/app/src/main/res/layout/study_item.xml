@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:layout_marginStart="@dimen/top_bar_alignment_margin_start"
+    android:background="?android:attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/studyTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="?primaryText"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="HTTP3 on Firefox" />
+
+    <TextView
+        android:id="@+id/study_description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="?secondaryText"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toStartOf="@id/remove_button"
+        app:layout_constraintStart_toStartOf="@id/studyTitle"
+        app:layout_constraintTop_toBottomOf="@id/studyTitle"
+        tools:text="HTTP3 is a new protocol that will improve web page load performance. This experiment should measure the performance of our implementation of the HTTP3 protocol." />
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/remove_button"
+        style="@style/DestructiveButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:text="@string/studies_remove"
+        android:layout_marginStart="0dp"
+        android:layout_marginEnd="6dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/studyTitle"
+        app:tint="?android:attr/textColorPrimary" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,12 +5,15 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
+import androidx.navigation.findNavController
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
@@ -40,9 +43,6 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
                 } else {
                     context.components.analytics.metrics.stop(MetricServiceType.Marketing)
                 }
-            } else if (key == getPreferenceKey(R.string.pref_key_experimentation)) {
-                val enabled = context.settings().isExperimentationEnabled
-                context.components.analytics.experiments.globalUserParticipation = enabled
             }
         }
     }
@@ -50,6 +50,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.preferences_data_collection))
+        updateStudiesSection()
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -68,10 +69,22 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().isMarketingTelemetryEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+    }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_experimentation).apply {
-            isChecked = context.settings().isExperimentationEnabled
-            onPreferenceChangeListener = SharedPreferenceUpdater()
+    private fun updateStudiesSection() {
+        val studiesPreference = requirePreference<Preference>(R.string.pref_key_studies_section)
+        val settings = requireContext().settings()
+        val stringId = if (settings.isExperimentationEnabled) {
+            R.string.studies_on
+        } else {
+            R.string.studies_off
+        }
+        studiesPreference.summary = getString(stringId)
+
+        studiesPreference.setOnPreferenceClickListener {
+            val action = DataChoicesFragmentDirections.actionDataChoicesFragmentToStudiesFragment()
+            view?.findNavController()?.nav(R.id.dataChoicesFragment, action)
+            true
         }
     }
 }

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="16dp">
+
+    <TextView
+        android:id="@+id/studiesTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/top_bar_alignment_margin_start"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:textAppearance="@style/ListItemTextStyle"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toStartOf="@id/studies_switch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="On" />
+
+    <TextView
+        android:id="@+id/studiesDescription"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        android:text="@string/preference_experiments_summary_2"
+        android:textColor="?attr/secondaryText"
+        android:textColorLink="?aboutLink"
+        app:layout_constraintEnd_toEndOf="@id/studiesTitle"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@id/studiesTitle"
+        app:layout_constraintTop_toBottomOf="@id/studiesTitle" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/studies_switch"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:minHeight="48dp"
+        android:textOff="@string/studies_off"
+        android:textOn="@string/studies_on"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/studies_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/studiesDescription" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
