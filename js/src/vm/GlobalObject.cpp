@@ -875,7 +875,7 @@ NativeObject* GlobalObject::getOrCreateForOfPICObject(
   if (!forOfPIC) {
     return nullptr;
   }
-  global->setReservedSlot(FOR_OF_PIC_CHAIN, ObjectValue(*forOfPIC));
+  global->data().forOfPICChain.init(forOfPIC);
   return forOfPIC;
 }
 
@@ -1138,4 +1138,5 @@ void GlobalObjectData::trace(JSTracer* trc) {
   TraceEdge(trc, &emptyGlobalScope, "global-empty-scope");
   TraceNullableEdge(trc, &regExpStatics, "global-regexp-statics");
   TraceNullableEdge(trc, &intrinsicsHolder, "global-intrinsics-holder");
+  TraceNullableEdge(trc, &forOfPICChain, "global-for-of-pic");
 }
