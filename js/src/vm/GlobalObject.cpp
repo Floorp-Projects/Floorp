@@ -581,11 +581,9 @@ static bool ThrowTypeError(JSContext* cx, unsigned argc, Value* vp) {
 /* static */
 JSObject* GlobalObject::getOrCreateThrowTypeError(
     JSContext* cx, Handle<GlobalObject*> global) {
-  Value v = global->getReservedSlot(THROWTYPEERROR);
-  if (v.isObject()) {
-    return &v.toObject();
+  if (JSFunction* fun = global->data().throwTypeError) {
+    return fun;
   }
-  MOZ_ASSERT(v.isUndefined());
 
   // Construct the unique [[%ThrowTypeError%]] function object, used only for
   // "callee" and "caller" accessors on strict mode arguments objects.  (The
@@ -622,7 +620,7 @@ JSObject* GlobalObject::getOrCreateThrowTypeError(
   }
   MOZ_ASSERT(nameResult);
 
-  global->setReservedSlot(THROWTYPEERROR, ObjectValue(*throwTypeError));
+  global->data().throwTypeError.init(throwTypeError);
   return throwTypeError;
 }
 
@@ -1141,6 +1139,7 @@ void GlobalObjectData::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &forOfPICChain, "global-for-of-pic");
   TraceNullableEdge(trc, &sourceURLsHolder, "global-source-urls");
   TraceNullableEdge(trc, &realmKeyObject, "global-realm-key");
+  TraceNullableEdge(trc, &throwTypeError, "global-throw-type-error");
 
   TraceNullableEdge(trc, &arrayShape, "global-array-shape");
 }
