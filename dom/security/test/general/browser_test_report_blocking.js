@@ -27,7 +27,7 @@ const kTestExpectedPingXFO = [
   ],
   [
     ["payload", "top_uri"],
-    "http//example.com/browser/dom/security/test/general/file_framing_error_pages_xfo.html",
+    "http://example.com/browser/dom/security/test/general/file_framing_error_pages_xfo.html",
   ],
 ];
 
@@ -43,7 +43,7 @@ const kTestExpectedPingCSP = [
   ],
   [
     ["payload", "top_uri"],
-    "http//example.com/browser/dom/security/test/general/file_framing_error_pages_csp.html",
+    "http://example.com/browser/dom/security/test/general/file_framing_error_pages_csp.html",
   ],
 ];
 

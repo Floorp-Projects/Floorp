@@ -525,8 +525,11 @@ function reportBlockingError() {
     csp_header,
   };
 
+  // Trimming the tail colon symbol.
+  let scheme = document.location.protocol.slice(0, -1);
+
   RPMSendAsyncMessage("ReportBlockingError", {
-    scheme: document.location.protocol,
+    scheme,
     host: document.location.host,
     port: parseInt(document.location.port) || -1,
     path: document.location.pathname,
