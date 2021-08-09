@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 const TEST_SJS =
@@ -321,6 +322,41 @@ add_task(async function enableToggled() {
   await SpecialPowers.popPrefEnv();
 
   UrlbarPrefs.clear(SUGGEST_PREF);
+});
+
+// Tests the Nimbus "exposure" event gets recorded when the user is enrolled in
+// a Nimbus experiment for urlbar
+add_task(async function nimbusExposure() {
+  Services.telemetry.clearEvents();
+  NimbusFeatures.urlbar._sendExposureEventOnce = true;
+  let doExperimentCleanup = await UrlbarTestUtils.enrollExperiment({
+    valueOverrides: {
+      quickSuggestEnabled: true,
+      quickSuggestShouldShowOnboardingDialog: true,
+    },
+  });
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        category: "normandy",
+        method: "expose",
+        object: "nimbus_experiment",
+        extra: {
+          branchSlug: "control",
+          featureId: "urlbar",
+        },
+      },
+    ],
+    // This filter is needed to exclude the enrollment event.
+    {
+      category: "normandy",
+      method: "expose",
+      object: "nimbus_experiment",
+    }
+  );
+
+  await doExperimentCleanup();
 });
 
 /**
