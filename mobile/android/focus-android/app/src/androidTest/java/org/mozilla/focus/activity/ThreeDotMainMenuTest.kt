@@ -54,7 +54,6 @@ class ThreeDotMainMenuTest {
         searchScreen {
         }.loadPage(pageUrl) {
         }.openMainMenu {
-            verifyTrackersToggleExists()
             verifyShareButtonExists()
             verifyAddToHSButtonExists()
             verifyFindInPageExists()
