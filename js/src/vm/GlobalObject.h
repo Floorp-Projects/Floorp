@@ -72,6 +72,9 @@ class GlobalObjectData {
   // Global state for regular expressions.
   HeapPtr<RegExpStaticsObject*> regExpStatics;
 
+  // Functions and other top-level values for self-hosted code.
+  HeapPtr<NativeObject*> intrinsicsHolder;
+
   void trace(JSTracer* trc);
 };
 
@@ -137,7 +140,6 @@ class GlobalObject : public NativeObject {
     EXPORT_ENTRY_PROTO,
     REQUESTED_MODULE_PROTO,
     MODULE_REQUEST_PROTO,
-    INTRINSICS,
     FOR_OF_PIC_CHAIN,
     WINDOW_PROXY,
     GLOBAL_THIS_RESOLVED,
@@ -778,15 +780,11 @@ class GlobalObject : public NativeObject {
                                            Handle<GlobalObject*> global);
 
   bool maybeExistingIntrinsicValue(PropertyName* name, Value* vp) {
-    Value slot = getReservedSlot(INTRINSICS);
-    // If we're in the self-hosting compartment itself, the
-    // intrinsics-holder isn't initialized at this point.
-    if (slot.isUndefined()) {
-      *vp = UndefinedValue();
+    NativeObject* holder = data().intrinsicsHolder;
+    if (!holder) {
       return false;
     }
 
-    NativeObject* holder = &slot.toObject().as<NativeObject>();
     mozilla::Maybe<PropertyInfo> prop = holder->lookupPure(name);
     if (prop.isNothing()) {
       *vp = UndefinedValue();
