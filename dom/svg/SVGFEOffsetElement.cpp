@@ -7,6 +7,8 @@
 #include "mozilla/dom/SVGFEOffsetElement.h"
 #include "mozilla/dom/SVGFEOffsetElementBinding.h"
 #include "mozilla/SVGFilterInstance.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/BindContext.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEOffset)
 
@@ -71,6 +73,14 @@ bool SVGFEOffsetElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 void SVGFEOffsetElement::GetSourceImageNames(
     nsTArray<SVGStringInfo>& aSources) {
   aSources.AppendElement(SVGStringInfo(&mStringAttributes[IN1], this));
+}
+
+nsresult SVGFEOffsetElement::BindToTree(BindContext& aCtx, nsINode& aParent) {
+  if (aCtx.InComposedDoc()) {
+    aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feOffset);
+  }
+
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

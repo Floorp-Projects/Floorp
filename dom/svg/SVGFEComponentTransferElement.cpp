@@ -9,6 +9,8 @@
 #include "mozilla/dom/SVGComponentTransferFunctionElement.h"
 #include "mozilla/dom/SVGFEComponentTransferElementBinding.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/BindContext.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEComponentTransfer)
 
@@ -86,6 +88,15 @@ bool SVGFEComponentTransferElement::AttributeAffectsRendering(
 void SVGFEComponentTransferElement::GetSourceImageNames(
     nsTArray<SVGStringInfo>& aSources) {
   aSources.AppendElement(SVGStringInfo(&mStringAttributes[IN1], this));
+}
+
+nsresult SVGFEComponentTransferElement::BindToTree(BindContext& aCtx,
+                                                   nsINode& aParent) {
+  if (aCtx.InComposedDoc()) {
+    aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feComponentTransfer);
+  }
+
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 }  // namespace dom
