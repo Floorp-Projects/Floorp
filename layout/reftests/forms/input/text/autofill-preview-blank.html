@@ -1,0 +1,8 @@
+<!doctype html>
+<input type=text>
+<script>
+  let input = SpecialPowers.wrap(document.querySelector("input"));
+  SpecialPowers.Cc["@mozilla.org/satchel/form-fill-controller;1"].getService(SpecialPowers.Ci.nsIFormFillController).markAsAutofillField(input);
+  input.getBoundingClientRect();
+  SpecialPowers.wrap(window).windowUtils.addManuallyManagedState(input, "-moz-autofill-preview");
+</script>
