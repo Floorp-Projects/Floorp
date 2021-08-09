@@ -331,34 +331,28 @@ SkScalerContext_DW::SkScalerContext_DW(sk_sp<DWriteFontTypeface> typefaceRef,
         fTextSizeMeasure = gdiTextSize;
         fMeasuringMode = DWRITE_MEASURING_MODE_GDI_CLASSIC;
 
-    // If the font has a gasp table version 1, use it to determine symmetric rendering.
-    } else if ((get_gasp_range(typeface, SkScalarRoundToInt(gdiTextSize), &range) &&
-                range.fVersion >= 1) ||
-               realTextSize > SkIntToScalar(20) || !is_hinted(this, typeface)) {
+    // Force symmetric if the font is above the threshold or there is an explicit mode.
+    // Here we check if the size exceeds 20 before checking the GASP table to match the
+    // results of calling GetRecommendedRenderingMode/Direct2D, which skip looking at
+    // the GASP table if the text is too large.
+    } else if (realTextSize > SkIntToScalar(20) ||
+               typeface->GetRenderingMode() == DWRITE_RENDERING_MODE_NATURAL ||
+               typeface->GetRenderingMode() == DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC) {
         fTextSizeRender = realTextSize;
-        fRenderingMode = DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC;
+        fRenderingMode = typeface->GetRenderingMode() == DWRITE_RENDERING_MODE_NATURAL ?
+            DWRITE_RENDERING_MODE_NATURAL : DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC;
         fTextureType = DWRITE_TEXTURE_CLEARTYPE_3x1;
         fTextSizeMeasure = realTextSize;
         fMeasuringMode = DWRITE_MEASURING_MODE_NATURAL;
-
-        switch (typeface->GetRenderingMode()) {
-        case DWRITE_RENDERING_MODE_NATURAL:
-        case DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC:
-            fRenderingMode = typeface->GetRenderingMode();
-            break;
-        default:
-            if (IDWriteRenderingParams* params = sk_get_dwrite_default_rendering_params()) {
-                typeface->fDWriteFontFace->GetRecommendedRenderingMode(
-                    fTextSizeRender, 1.0f, fMeasuringMode, params, &fRenderingMode);
-            }
-            break;
-        }
-
-        // We don't support outline mode right now.
-        if (fRenderingMode == DWRITE_RENDERING_MODE_OUTLINE) {
-            fRenderingMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;
-        }
-
+    // If the font has a gasp table version 1, use it to determine symmetric rendering.
+    } else if (get_gasp_range(typeface, SkScalarRoundToInt(gdiTextSize), &range) &&
+               range.fVersion >= 1) {
+        fTextSizeRender = realTextSize;
+        fRenderingMode = !range.fFlags.field.SymmetricSmoothing ?
+            DWRITE_RENDERING_MODE_NATURAL : DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC;
+        fTextureType = DWRITE_TEXTURE_CLEARTYPE_3x1;
+        fTextSizeMeasure = realTextSize;
+        fMeasuringMode = DWRITE_MEASURING_MODE_NATURAL;
     // Fonts with hints, no gasp or gasp version 0, and below 20px get non-symmetric rendering.
     // Often such fonts have hints which were only tested with GDI ClearType classic.
     // Some of these fonts rely on drop out control in the y direction in order to be legible.
@@ -369,7 +363,7 @@ SkScalerContext_DW::SkScalerContext_DW(sk_sp<DWriteFontTypeface> typefaceRef,
     //    https://na.leagueoflegends.com/en/news/game-updates/patch/patch-410-notes
     // See https://crbug.com/385897
     } else {
-        fTextSizeRender = gdiTextSize;
+        fTextSizeRender = is_hinted(this, typeface) ? gdiTextSize : realTextSize;
         fRenderingMode = DWRITE_RENDERING_MODE_NATURAL;
         fTextureType = DWRITE_TEXTURE_CLEARTYPE_3x1;
         fTextSizeMeasure = realTextSize;
