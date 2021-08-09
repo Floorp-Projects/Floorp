@@ -21,14 +21,21 @@ class MOZ_STACK_CLASS AutoRestoreSVGState final {
   AutoRestoreSVGState(const SVGDrawingParameters& aParams,
                       SVGDocumentWrapper* aSVGDocumentWrapper,
                       bool aContextPaint)
+      : AutoRestoreSVGState(aParams.svgContext, aParams.animationTime,
+                            aSVGDocumentWrapper, aContextPaint) {}
+
+  AutoRestoreSVGState(const Maybe<SVGImageContext>& aSVGContext,
+                      float aAnimationTime,
+                      SVGDocumentWrapper* aSVGDocumentWrapper,
+                      bool aContextPaint)
       : mIsDrawing(aSVGDocumentWrapper->mIsDrawing)
         // Apply any 'preserveAspectRatio' override (if specified) to the root
         // element:
         ,
-        mPAR(aParams.svgContext, aSVGDocumentWrapper->GetRootSVGElem())
+        mPAR(aSVGContext, aSVGDocumentWrapper->GetRootSVGElem())
         // Set the animation time:
         ,
-        mTime(aSVGDocumentWrapper->GetRootSVGElem(), aParams.animationTime) {
+        mTime(aSVGDocumentWrapper->GetRootSVGElem(), aAnimationTime) {
     MOZ_ASSERT(!mIsDrawing.SavedValue());
     MOZ_ASSERT(aSVGDocumentWrapper->GetDocument());
 
@@ -36,8 +43,8 @@ class MOZ_STACK_CLASS AutoRestoreSVGState final {
 
     // Set context paint (if specified) on the document:
     if (aContextPaint) {
-      MOZ_ASSERT(aParams.svgContext->GetContextPaint());
-      mContextPaint.emplace(*aParams.svgContext->GetContextPaint(),
+      MOZ_ASSERT(aSVGContext->GetContextPaint());
+      mContextPaint.emplace(*aSVGContext->GetContextPaint(),
                             *aSVGDocumentWrapper->GetDocument());
     }
   }
