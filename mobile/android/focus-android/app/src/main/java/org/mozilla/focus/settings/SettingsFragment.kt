@@ -1,26 +1,36 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-@file:Suppress("ForbiddenComment")
 
 package org.mozilla.focus.settings
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
+import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.FeatureFlags
+import org.mozilla.focus.utils.SupportUtils
+import org.mozilla.focus.whatsnew.WhatsNew
 
 class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
 
     override fun onCreatePreferences(bundle: Bundle?, s: String?) {
+        setHasOptionsMenu(true)
         addPreferencesFromResource(R.xml.settings)
     }
 
     override fun onResume() {
         super.onResume()
+
+        (requireActivity() as AppCompatActivity).supportActionBar?.customView
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
@@ -53,6 +63,30 @@ class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPrefe
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        if (FeatureFlags.isMvp) {
+            inflater.inflate(R.menu.menu_settings_main, menu)
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.menu_whats_new) {
+            whatsNewClicked()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun whatsNewClicked() {
+        val context = requireContext()
+
+        TelemetryWrapper.openWhatsNewEvent(WhatsNew.shouldHighlightWhatsNew(context))
+        WhatsNew.userViewedWhatsNew(context)
+
+        val url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.WHATS_NEW)
+        requireComponents.tabsUseCases.addTab(url, source = SessionState.Source.MENU, private = true)
     }
 
     companion object {

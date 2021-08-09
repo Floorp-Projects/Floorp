@@ -33,7 +33,7 @@ class HomeMenuAdapter(
                 R.id.whats_new,
                 WhatsNewViewHolder.LAYOUT_ID,
                 context.getString(R.string.menu_whats_new)
-            ),
+            )
         )
     }
 

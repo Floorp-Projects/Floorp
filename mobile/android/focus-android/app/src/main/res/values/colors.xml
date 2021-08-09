@@ -112,4 +112,5 @@
     <color name="home_screen_dialog_warning_text">#96f9f9fa</color>
 
     <color name="settings_summary_text">#ffbbbcc5</color>
+    <color name="settings_whats_new">#FFFF1AD9</color>
 </resources>
