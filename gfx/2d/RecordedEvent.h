@@ -17,6 +17,7 @@
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/ipc/ByteBuf.h"
+#include "nsRefPtrHashtable.h"
 
 namespace mozilla {
 namespace gfx {
@@ -101,6 +102,8 @@ class Translator {
   virtual already_AddRefed<SourceSurface> LookupExternalSurface(uint64_t aKey) {
     return nullptr;
   }
+  void DrawDependentSurface(ReferencePtr aDrawTarget, uint64_t aKey,
+                            const Rect& aRect);
   virtual void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget* aDT) = 0;
   virtual void RemoveDrawTarget(ReferencePtr aRefPtr) = 0;
   virtual void AddPath(ReferencePtr aRefPtr, Path* aPath) = 0;
@@ -137,7 +140,17 @@ class Translator {
                                                         const IntSize& aSize,
                                                         SurfaceFormat aFormat);
   virtual DrawTarget* GetReferenceDrawTarget() = 0;
+  virtual Matrix GetReferenceDrawTargetTransform() { return Matrix(); }
   virtual void* GetFontContext() { return nullptr; }
+
+  void SetDependentSurfaces(
+      nsRefPtrHashtable<nsUint64HashKey, RecordedDependentSurface>*
+          aDependentSurfaces) {
+    mDependentSurfaces = aDependentSurfaces;
+  }
+
+  nsRefPtrHashtable<nsUint64HashKey, RecordedDependentSurface>*
+      mDependentSurfaces = nullptr;
 };
 
 struct ColorPatternStorage {
