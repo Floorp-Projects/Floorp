@@ -17,22 +17,15 @@
 
 #include "vm/JSContext-inl.h"
 
-inline void JS::Realm::initGlobal(
-    js::GlobalObject& global, js::GlobalLexicalEnvironmentObject& lexicalEnv) {
+inline void JS::Realm::initGlobal(js::GlobalObject& global) {
   MOZ_ASSERT(global.realm() == this);
   MOZ_ASSERT(!global_);
   global_.set(&global);
-  lexicalEnv_.set(&lexicalEnv);
 }
 
 js::GlobalObject* JS::Realm::maybeGlobal() const {
   MOZ_ASSERT_IF(global_, global_->realm() == this);
   return global_;
-}
-
-js::GlobalLexicalEnvironmentObject* JS::Realm::unbarrieredLexicalEnvironment()
-    const {
-  return lexicalEnv_.unbarrieredGet();
 }
 
 inline bool JS::Realm::globalIsAboutToBeFinalized() {

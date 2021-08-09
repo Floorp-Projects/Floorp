@@ -679,11 +679,12 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx,
       return nullptr;
     }
     data->emptyGlobalScope.init(emptyGlobalScope);
+    data->lexicalEnvironment.init(lexical);
 
     // Note: it's important for the realm's global to be initialized at the
     // same time as the global's GlobalObjectData, because we free the global's
     // data when Realm::global_ is cleared.
-    cx->realm()->initGlobal(*global, *lexical);
+    cx->realm()->initGlobal(*global);
     InitReservedSlot(global, GLOBAL_DATA_SLOT, data.release(),
                      MemoryUse::GlobalObjectData);
   }
@@ -733,12 +734,6 @@ GlobalObject* GlobalObject::new_(JSContext* cx, const JSClass* clasp,
   }
 
   return global;
-}
-
-GlobalLexicalEnvironmentObject& GlobalObject::lexicalEnvironment() const {
-  // The lexical environment is marked when marking the global, so we don't need
-  // a read barrier here because we know the global is live.
-  return *realm()->unbarrieredLexicalEnvironment();
 }
 
 GlobalScope& GlobalObject::emptyGlobalScope() const {
@@ -1169,6 +1164,7 @@ void GlobalObjectData::trace(JSTracer* trc) {
 
   TraceEdge(trc, &emptyGlobalScope, "global-empty-scope");
 
+  TraceNullableEdge(trc, &lexicalEnvironment, "global-lexical-env");
   TraceNullableEdge(trc, &regExpStatics, "global-regexp-statics");
   TraceNullableEdge(trc, &intrinsicsHolder, "global-intrinsics-holder");
   TraceNullableEdge(trc, &forOfPICChain, "global-for-of-pic");
