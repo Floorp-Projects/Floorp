@@ -16645,17 +16645,5 @@
       "Fetch",
       "Unexpected"
     ]
-  },
-  "HTTPS_RR_WAITING_TIME": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
-    "bug_numbers": [1714506],
-    "expires_in_version": "93",
-    "kind": "exponential",
-    "high": 5000,
-    "n_buckets": 100,
-    "keyed": true,
-    "description": "The time that a transaction is waiting for HTTPS RR"
   }
 }
