@@ -241,9 +241,6 @@ enum JSWhyMagic {
   /** arguments object can't be created because environment is dead. */
   JS_MISSING_ARGUMENTS,
 
-  /** standard constructors are not created for off-thread parsing. */
-  JS_OFF_THREAD_CONSTRUCTOR,
-
   /** for local use */
   JS_GENERIC_MAGIC,
 
