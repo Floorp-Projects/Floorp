@@ -4134,6 +4134,31 @@ void nsGlobalWindowInner::GetOrigin(nsAString& aOrigin) {
   nsContentUtils::GetUTFOrigin(GetPrincipal(), aOrigin);
 }
 
+// See also AutoJSAPI::ReportException
+void nsGlobalWindowInner::ReportError(JSContext* aCx,
+                                      JS::Handle<JS::Value> aError,
+                                      CallerType aCallerType,
+                                      ErrorResult& aRv) {
+  if (MOZ_UNLIKELY(!HasActiveDocument())) {
+    return aRv.Throw(NS_ERROR_XPC_SECURITY_MANAGER_VETO);
+  }
+
+  JS::ErrorReportBuilder jsReport(aCx);
+  JS::ExceptionStack exnStack(aCx, aError, nullptr);
+  if (!jsReport.init(aCx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
+    return aRv.NoteJSContextException(aCx);
+  }
+
+  RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
+  bool isChrome = aCallerType == CallerType::System;
+  xpcReport->Init(jsReport.report(), jsReport.toStringResult().c_str(),
+                  isChrome, WindowID());
+
+  JS::RootingContext* rcx = JS::RootingContext::get(aCx);
+  DispatchScriptErrorEvent(this, rcx, xpcReport, exnStack.exception(),
+                           exnStack.stack());
+}
+
 void nsGlobalWindowInner::Atob(const nsAString& aAsciiBase64String,
                                nsAString& aBinaryData, ErrorResult& aError) {
   aError = nsContentUtils::Atob(aAsciiBase64String, aBinaryData);
