@@ -38,11 +38,10 @@ class nsGeolocationRequest;
 namespace mozilla {
 namespace dom {
 class Geolocation;
-typedef CallbackObjectHolder<PositionCallback, nsIDOMGeoPositionCallback>
-    GeoPositionCallback;
-typedef CallbackObjectHolder<PositionErrorCallback,
-                             nsIDOMGeoPositionErrorCallback>
-    GeoPositionErrorCallback;
+using GeoPositionCallback =
+    CallbackObjectHolder<PositionCallback, nsIDOMGeoPositionCallback>;
+using GeoPositionErrorCallback =
+    CallbackObjectHolder<PositionErrorCallback, nsIDOMGeoPositionErrorCallback>;
 }  // namespace dom
 }  // namespace mozilla
 
