@@ -154,7 +154,6 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsEscape.h"
-#include "nsExceptionHandler.h"
 #include "nsHashKeys.h"
 #include "nsIAsyncInputStream.h"
 #include "nsID.h"

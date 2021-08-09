@@ -31,7 +31,6 @@
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsExceptionHandler.h"
 #include "nsIComponentManager.h"
 #include "mozilla/Module.h"
 #include "nsIFile.h"

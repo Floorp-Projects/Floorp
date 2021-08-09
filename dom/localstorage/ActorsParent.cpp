@@ -19,7 +19,6 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
-#include "CrashAnnotations.h"
 #include "ErrorList.h"
 #include "MainThreadUtils.h"
 #include "mozIStorageAsyncConnection.h"
@@ -97,7 +96,6 @@
 #include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsExceptionHandler.h"
 #include "nsHashKeys.h"
 #include "nsIBinaryInputStream.h"
 #include "nsIBinaryOutputStream.h"

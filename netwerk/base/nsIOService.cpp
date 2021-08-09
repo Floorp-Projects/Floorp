@@ -56,7 +56,6 @@
 #include "mozilla/Unused.h"
 #include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
-#include "nsExceptionHandler.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "nsNSSComponent.h"

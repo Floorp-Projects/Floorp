@@ -23,7 +23,6 @@
 #include "mozilla/mscom/Utils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
 #include "nsRefPtrHashtable.h"
 #include "nsThreadUtils.h"
