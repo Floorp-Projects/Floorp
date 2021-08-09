@@ -7,9 +7,9 @@
 #include "SourceSurfaceBlobImage.h"
 #include "AutoRestoreSVGState.h"
 #include "ImageRegion.h"
-#include "SVGDrawingParameters.h"
-#include "SVGDrawingCallback.h"
 #include "SVGDocumentWrapper.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -178,43 +178,80 @@ Maybe<BlobImageKeyData> SourceSurfaceBlobImage::RecordDrawing(
     return Nothing();
   }
 
+  bool contextPaint = mSVGContext && mSVGContext->GetContextPaint();
+
+  float animTime = (mWhichFrame == imgIContainer::FRAME_FIRST)
+                       ? 0.0f
+                       : mSVGDocumentWrapper->GetCurrentTimeAsFloat();
+
+  IntSize viewportSize = mSize;
+  if (mSVGContext) {
+    auto cssViewportSize = mSVGContext->GetViewportSize();
+    if (cssViewportSize) {
+      // XXX losing unit
+      viewportSize.SizeTo(cssViewportSize->width, cssViewportSize->height);
+    }
+  }
+
   {
-    bool contextPaint = mSVGContext && mSVGContext->GetContextPaint();
+    // Get (& sanity-check) the helper-doc's presShell
+    RefPtr<PresShell> presShell = mSVGDocumentWrapper->GetPresShell();
+    MOZ_ASSERT(presShell, "GetPresShell returned null for an SVG image?");
 
-    float animTime = (mWhichFrame == imgIContainer::FRAME_FIRST)
-                         ? 0.0f
-                         : mSVGDocumentWrapper->GetCurrentTimeAsFloat();
+    nsPresContext* presContext = presShell->GetPresContext();
+    MOZ_ASSERT(presContext, "pres shell w/out pres context");
 
-    auto region =
-        mRegion
-            ? mRegion->ToImageRegion()
-            : ImageRegion::Create(gfxRect(imageRect.x, imageRect.y,
-                                          imageRect.width, imageRect.height));
+    auto* doc = presShell->GetDocument();
+    [[maybe_unused]] nsIURI* uri = doc ? doc->GetDocumentURI() : nullptr;
+    AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
+        "SVG Image recording", GRAPHICS,
+        nsPrintfCString("(%d,%d) %dx%d from %dx%d %s", imageRect.x, imageRect.y,
+                        imageRect.width, imageRect.height, mSize.width,
+                        mSize.height,
+                        uri ? uri->GetSpecOrDefault().get() : "N/A"));
 
-    SVGDrawingParameters params(nullptr, mSize, mSize, region,
-                                SamplingFilter::POINT, mSVGContext, animTime,
-                                mImageFlags, 1.0);
+    AutoRestoreSVGState autoRestore(mSVGContext, animTime, mSVGDocumentWrapper,
+                                    contextPaint);
 
-    AutoRestoreSVGState autoRestore(params, mSVGDocumentWrapper, contextPaint);
-
-    RefPtr<gfxDrawingCallback> cb = new SVGDrawingCallback(
-        mSVGDocumentWrapper, params.viewportSize, params.size, params.flags);
-    RefPtr<gfxDrawable> svgDrawable = new gfxCallbackDrawable(cb, params.size);
-
-    mSVGDocumentWrapper->UpdateViewportBounds(params.viewportSize);
+    mSVGDocumentWrapper->UpdateViewportBounds(viewportSize);
     mSVGDocumentWrapper->FlushImageTransformInvalidation();
 
-    // Draw using the drawable the caller provided.
     RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(ctx);  // Already checked the draw target above.
 
-    ctx->SetMatrix(
-        ctx->CurrentMatrix().PreTranslate(-imageRect.x, -imageRect.y));
+    nsRect svgRect;
+    auto auPerDevPixel = presContext->AppUnitsPerDevPixel();
+    if (mSize != viewportSize) {
+      auto scaleX = double(mSize.width) / viewportSize.width;
+      auto scaleY = double(mSize.height) / viewportSize.height;
+      ctx->SetMatrix(Matrix::Scaling(float(scaleX), float(scaleY)));
 
-    gfxUtils::DrawPixelSnapped(ctx, svgDrawable, SizeDouble(mSize), region,
-                               SurfaceFormat::OS_RGBA, SamplingFilter::POINT,
-                               mImageFlags, /* aOpacity */ 1.0,
-                               /* aUseOptimalFillOp */ false);
+      auto scaledVisibleRect = IntRectToRect(imageRect);
+      scaledVisibleRect.Scale(float(auPerDevPixel / scaleX),
+                              float(auPerDevPixel / scaleY));
+      scaledVisibleRect.Round();
+      svgRect.SetRect(
+          int32_t(scaledVisibleRect.x), int32_t(scaledVisibleRect.y),
+          int32_t(scaledVisibleRect.width), int32_t(scaledVisibleRect.height));
+    } else {
+      auto scaledVisibleRect(imageRect);
+      scaledVisibleRect.Scale(auPerDevPixel);
+      svgRect.SetRect(scaledVisibleRect.x, scaledVisibleRect.y,
+                      scaledVisibleRect.width, scaledVisibleRect.height);
+    }
+
+    RenderDocumentFlags renderDocFlags =
+        RenderDocumentFlags::IgnoreViewportScrolling;
+    if (!(mImageFlags & imgIContainer::FLAG_SYNC_DECODE)) {
+      renderDocFlags |= RenderDocumentFlags::AsyncDecodeImages;
+    }
+    if (mImageFlags & imgIContainer::FLAG_HIGH_QUALITY_SCALING) {
+      renderDocFlags |= RenderDocumentFlags::UseHighQualityScaling;
+    }
+
+    presShell->RenderDocument(svgRect, renderDocFlags,
+                              NS_RGBA(0, 0, 0, 0),  // transparent
+                              ctx);
   }
 
   recorder->FlushItem(imageRectOrigin);
