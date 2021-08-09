@@ -144,31 +144,10 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
                                        const uint8_t* aData,
                                        const uint32_t aLength,
                                        nsACString& aSniffedType) {
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-  if (channel) {
-    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-    if (loadInfo->GetSkipContentSniffing()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    nsLoadFlags loadFlags = 0;
-    channel->GetLoadFlags(&loadFlags);
-    if (!(loadFlags & nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE)) {
-      // For media, we want to sniff only if the Content-Type is unknown, or if
-      // it is application/octet-stream.
-      nsAutoCString contentType;
-      nsresult rv = channel->GetContentType(contentType);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!contentType.IsEmpty() &&
-          !contentType.EqualsLiteral(APPLICATION_OCTET_STREAM) &&
-          !contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
-        return NS_ERROR_NOT_AVAILABLE;
-      }
-    }
-  }
-
   const uint32_t clampedLength = std::min(aLength, MAX_BYTES_SNIFFED);
 
-  auto maybeUpdate = mozilla::MakeScopeExit([&channel]() {
+  auto maybeUpdate = mozilla::MakeScopeExit([request = RefPtr{aRequest}]() {
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
     if (channel && XRE_IsParentProcess()) {
       if (RefPtr<mozilla::net::nsHttpChannel> httpChannel =
               do_QueryObject(channel)) {
