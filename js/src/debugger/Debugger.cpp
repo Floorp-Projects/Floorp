@@ -2411,7 +2411,7 @@ static bool RememberSourceURL(JSContext* cx, HandleScript script) {
     return true;
   }
 
-  RootedObject holder(cx, script->global().getSourceURLsHolder());
+  Rooted<ArrayObject*> holder(cx, script->global().getSourceURLsHolder());
   if (!holder) {
     holder = NewDenseEmptyArray(cx);
     if (!holder) {
@@ -2420,7 +2420,7 @@ static bool RememberSourceURL(JSContext* cx, HandleScript script) {
     script->global().setSourceURLsHolder(holder);
   }
 
-  if (holder->as<ArrayObject>().length() >= SourceURLRealmLimit) {
+  if (holder->length() >= SourceURLRealmLimit) {
     return true;
   }
 
