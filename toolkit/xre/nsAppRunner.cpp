@@ -213,7 +213,6 @@
 
 #include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
-#define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #include "nsIPrefService.h"
 #include "nsIMemoryInfoDumper.h"
 #if defined(XP_LINUX) && !defined(ANDROID)
