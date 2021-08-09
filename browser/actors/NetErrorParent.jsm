@@ -124,8 +124,8 @@ class NetErrorParent extends JSWindowActorParent {
     let topURI = topBC.currentWindowGlobal.documentURI;
 
     // Get the URLs without query strings.
-    let frame_uri = `${scheme}//${host}${port == -1 ? "" : ":" + port}${path}`;
-    let top_uri = `${topURI.scheme}//${topURI.hostPort}${topURI.filePath}`;
+    let frame_uri = `${scheme}://${host}${port == -1 ? "" : ":" + port}${path}`;
+    let top_uri = `${topURI.scheme}://${topURI.hostPort}${topURI.filePath}`;
 
     TelemetryController.submitExternalPing(
       "xfocsp-error-report",
