@@ -113,6 +113,9 @@ class GlobalObjectData {
 
   HeapPtr<GlobalScope*> emptyGlobalScope;
 
+  // The lexical environment for global let/const/class bindings.
+  HeapPtr<GlobalLexicalEnvironmentObject*> lexicalEnvironment;
+
   // Global state for regular expressions.
   HeapPtr<RegExpStaticsObject*> regExpStatics;
 
@@ -141,6 +144,12 @@ class GlobalObjectData {
   bool globalThisResolved = false;
 
   void trace(JSTracer* trc);
+
+  static constexpr size_t offsetOfLexicalEnvironment() {
+    static_assert(sizeof(lexicalEnvironment) == sizeof(uintptr_t),
+                  "JIT code assumes field is pointer-sized");
+    return offsetof(GlobalObjectData, lexicalEnvironment);
+  }
 };
 
 class GlobalObject : public NativeObject {
@@ -193,7 +202,9 @@ class GlobalObject : public NativeObject {
   }
 
  public:
-  GlobalLexicalEnvironmentObject& lexicalEnvironment() const;
+  GlobalLexicalEnvironmentObject& lexicalEnvironment() {
+    return *data().lexicalEnvironment;
+  }
   GlobalScope& emptyGlobalScope() const;
 
   void traceData(JSTracer* trc) { data().trace(trc); }
@@ -959,6 +970,10 @@ class GlobalObject : public NativeObject {
   }
 
   JSObject* getPrototypeForOffThreadPlaceholder(JSObject* placeholder);
+
+  static size_t offsetOfGlobalDataSlot() {
+    return getFixedSlotOffset(GLOBAL_DATA_SLOT);
+  }
 
  private:
   static bool resolveOffThreadConstructor(JSContext* cx,
