@@ -720,6 +720,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   // They are used for reporting telemetry related results.
   double GetTotalPlayTimeInSeconds() const;
+  double GetVisibleVideoPlayTimeInSeconds() const;
   double GetInvisibleVideoPlayTimeInSeconds() const;
   double GetVideoDecodeSuspendedTimeInSeconds() const;
 
