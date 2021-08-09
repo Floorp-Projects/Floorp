@@ -1139,4 +1139,5 @@ void GlobalObjectData::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &regExpStatics, "global-regexp-statics");
   TraceNullableEdge(trc, &intrinsicsHolder, "global-intrinsics-holder");
   TraceNullableEdge(trc, &forOfPICChain, "global-for-of-pic");
+  TraceNullableEdge(trc, &sourceURLsHolder, "global-source-urls");
 }
