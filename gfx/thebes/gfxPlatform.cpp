@@ -776,7 +776,6 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
                              "render-texture-hosts");
         helper.ReportTexture(aReport.upload_staging_textures,
                              "upload-staging-textures");
-        helper.Report(aReport.instance_data_vbos, "instance-data-vbos");
 
         FinishAsyncMemoryReport();
       },
