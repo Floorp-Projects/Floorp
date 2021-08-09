@@ -30,13 +30,13 @@ using JS::Value;
 using js::NativeObject;
 
 JSFunction* js::PromiseLookup::getPromiseConstructor(JSContext* cx) {
-  const Value& val = cx->global()->getConstructor(JSProto_Promise);
-  return val.isObject() ? &val.toObject().as<JSFunction>() : nullptr;
+  JSObject* obj = cx->global()->maybeGetConstructor(JSProto_Promise);
+  return obj ? &obj->as<JSFunction>() : nullptr;
 }
 
 NativeObject* js::PromiseLookup::getPromisePrototype(JSContext* cx) {
-  const Value& val = cx->global()->getPrototype(JSProto_Promise);
-  return val.isObject() ? &val.toObject().as<NativeObject>() : nullptr;
+  JSObject* obj = cx->global()->maybeGetPrototype(JSProto_Promise);
+  return obj ? &obj->as<NativeObject>() : nullptr;
 }
 
 bool js::PromiseLookup::isDataPropertyNative(JSContext* cx, NativeObject* obj,

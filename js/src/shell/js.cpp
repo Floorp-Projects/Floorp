@@ -7940,8 +7940,8 @@ static bool GetSharedObject(JSContext* cx, unsigned argc, Value* vp) {
                                                JSProto_WebAssembly)) {
             return false;
           }
-          RootedObject proto(
-              cx, &cx->global()->getPrototype(JSProto_WasmMemory).toObject());
+          RootedObject proto(cx,
+                             &cx->global()->getPrototype(JSProto_WasmMemory));
           newObj = WasmMemoryObject::create(cx, maybesab, proto);
           MOZ_ASSERT_IF(newObj, newObj->as<WasmMemoryObject>().isShared());
           if (!newObj) {

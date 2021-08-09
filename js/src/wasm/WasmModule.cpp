@@ -350,8 +350,7 @@ JSObject* Module::createObject(JSContext* cx) const {
     return nullptr;
   }
 
-  RootedObject proto(
-      cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
+  RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule));
   return WasmModuleObject::create(cx, *this, proto);
 }
 
@@ -741,8 +740,7 @@ bool Module::instantiateMemory(JSContext* cx,
       return false;
     }
 
-    RootedObject proto(
-        cx, &cx->global()->getPrototype(JSProto_WasmMemory).toObject());
+    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmMemory));
     memory.set(WasmMemoryObject::create(cx, buffer, proto));
     if (!memory) {
       return false;
@@ -788,8 +786,7 @@ bool Module::instantiateLocalTag(JSContext* cx, const TagDesc& ed,
   if (ed.isExport) {
     // If the tag description is exported, create an export tag
     // object for it.
-    RootedObject proto(cx,
-                       &cx->global()->getPrototype(JSProto_WasmTag).toObject());
+    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTag));
     RootedWasmTagObject tagObj(cx, WasmTagObject::create(cx, ed.type, proto));
     if (!tagObj) {
       return false;
@@ -875,8 +872,7 @@ bool Module::instantiateLocalTable(JSContext* cx, const TableDesc& td,
   SharedTable table;
   Rooted<WasmTableObject*> tableObj(cx);
   if (td.importedOrExported) {
-    RootedObject proto(
-        cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
+    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTable));
     tableObj.set(WasmTableObject::create(cx, td.initialLength, td.maximumLength,
                                          td.elemType, proto));
     if (!tableObj) {
@@ -950,8 +946,7 @@ static bool EnsureExportedGlobalObject(JSContext* cx,
     val.set(Val(global.type()));
   }
 
-  RootedObject proto(
-      cx, &cx->global()->getPrototype(JSProto_WasmGlobal).toObject());
+  RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmGlobal));
   RootedWasmGlobalObject go(
       cx, WasmGlobalObject::create(cx, val, global.isMutable(), proto));
   if (!go) {
