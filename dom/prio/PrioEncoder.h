@@ -11,8 +11,8 @@
 #include "mozilla/dom/RootedDictionary.h"
 
 class nsIGlobalObject;
-typedef struct SECKEYPublicKeyStr SECKEYPublicKey;
-typedef SECKEYPublicKey* PublicKey;
+using SECKEYPublicKey = struct SECKEYPublicKeyStr;
+using PublicKey = SECKEYPublicKey*;
 
 namespace mozilla {
 namespace dom {
