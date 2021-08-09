@@ -20,7 +20,7 @@ namespace dom {
 // http://www.w3.org/TR/resource-timing/#performanceresourcetiming
 class PerformanceResourceTiming : public PerformanceEntry {
  public:
-  typedef mozilla::TimeStamp TimeStamp;
+  using TimeStamp = mozilla::TimeStamp;
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
