@@ -35,7 +35,7 @@ class Element;
  */
 class nsXULPrototypeDocument final : public nsISerializable {
  public:
-  typedef std::function<void()> Callback;
+  using Callback = std::function<void()>;
 
   // nsISupports interface
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

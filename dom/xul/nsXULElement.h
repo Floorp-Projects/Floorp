@@ -60,7 +60,7 @@ class nsXULPrototypeDocument;
 class nsXULPrototypeNode;
 struct JSContext;
 
-typedef nsTArray<RefPtr<nsXULPrototypeNode>> nsPrototypeArray;
+using nsPrototypeArray = nsTArray<RefPtr<nsXULPrototypeNode>>;
 
 namespace JS {
 class CompileOptions;
@@ -329,7 +329,7 @@ ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2);
 
 class nsXULElement : public nsStyledElement {
  protected:
-  typedef mozilla::dom::Document Document;
+  using Document = mozilla::dom::Document;
 
   // Use Construct to construct elements instead of this constructor.
   explicit nsXULElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -395,7 +395,7 @@ class nsXULElement : public nsStyledElement {
 
   virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
-  typedef mozilla::dom::DOMString DOMString;
+  using DOMString = mozilla::dom::DOMString;
   void GetXULAttr(nsAtom* aName, DOMString& aResult) const {
     GetAttr(kNameSpaceID_None, aName, aResult);
   }
