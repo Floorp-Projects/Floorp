@@ -285,7 +285,7 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
   // A workaround in initIteratorProto prevents runaway mutual recursion while
   // setting these up. Ensure the workaround is triggered already:
   if (key == JSProto_GeneratorFunction &&
-      !global->getReservedSlot(ITERATOR_PROTO).isObject()) {
+      !global->hasBuiltinProto(ProtoKind::IteratorProto)) {
     if (!getOrCreateIteratorPrototype(cx, global)) {
       return false;
     }
@@ -441,11 +441,11 @@ bool GlobalObject::maybeResolveGlobalThis(JSContext* cx,
 }
 
 /* static */
-JSObject* GlobalObject::createObject(JSContext* cx,
-                                     Handle<GlobalObject*> global,
-                                     unsigned slot, ObjectInitOp init) {
+JSObject* GlobalObject::createBuiltinProto(JSContext* cx,
+                                           Handle<GlobalObject*> global,
+                                           ProtoKind kind, ObjectInitOp init) {
   if (global->zone()->createdForHelperThread()) {
-    return createOffThreadObject(cx, global, slot);
+    return createOffThreadBuiltinProto(cx, global, kind);
   }
 
   MOZ_ASSERT(!cx->isHelperThreadContext());
@@ -453,15 +453,15 @@ JSObject* GlobalObject::createObject(JSContext* cx,
     return nullptr;
   }
 
-  return &global->getSlot(slot).toObject();
+  return &global->getBuiltinProto(kind);
 }
 
-JSObject* GlobalObject::createObject(JSContext* cx,
-                                     Handle<GlobalObject*> global,
-                                     unsigned slot, HandleAtom tag,
-                                     ObjectInitWithTagOp init) {
+JSObject* GlobalObject::createBuiltinProto(JSContext* cx,
+                                           Handle<GlobalObject*> global,
+                                           ProtoKind kind, HandleAtom tag,
+                                           ObjectInitWithTagOp init) {
   if (global->zone()->createdForHelperThread()) {
-    return createOffThreadObject(cx, global, slot);
+    return createOffThreadBuiltinProto(cx, global, kind);
   }
 
   MOZ_ASSERT(!cx->isHelperThreadContext());
@@ -469,7 +469,7 @@ JSObject* GlobalObject::createObject(JSContext* cx,
     return nullptr;
   }
 
-  return &global->getSlot(slot).toObject();
+  return &global->getBuiltinProto(kind);
 }
 
 const JSClass GlobalObject::OffThreadPlaceholderObject::class_ = {
@@ -484,12 +484,27 @@ GlobalObject::OffThreadPlaceholderObject::New(JSContext* cx, unsigned slot) {
     return nullptr;
   }
 
-  placeholder->setReservedSlot(SlotIndexSlot, Int32Value(slot));
+  placeholder->setReservedSlot(SlotIndexOrProtoKindSlot, Int32Value(slot));
   return placeholder;
 }
 
-inline int32_t GlobalObject::OffThreadPlaceholderObject::getSlotIndex() const {
-  return getReservedSlot(SlotIndexSlot).toInt32();
+/* static */ GlobalObject::OffThreadPlaceholderObject*
+GlobalObject::OffThreadPlaceholderObject::New(JSContext* cx, ProtoKind kind) {
+  Rooted<OffThreadPlaceholderObject*> placeholder(cx);
+  placeholder =
+      NewObjectWithGivenProto<OffThreadPlaceholderObject>(cx, nullptr);
+  if (!placeholder) {
+    return nullptr;
+  }
+
+  placeholder->setReservedSlot(SlotIndexOrProtoKindSlot,
+                               Int32Value(-int32_t(kind)));
+  return placeholder;
+}
+
+inline int32_t
+GlobalObject::OffThreadPlaceholderObject::getSlotIndexOrProtoKind() const {
+  return getReservedSlot(SlotIndexOrProtoKindSlot).toInt32();
 }
 
 /* static */
@@ -524,30 +539,36 @@ bool GlobalObject::resolveOffThreadConstructor(JSContext* cx,
 }
 
 /* static */
-JSObject* GlobalObject::createOffThreadObject(JSContext* cx,
-                                              Handle<GlobalObject*> global,
-                                              unsigned slot) {
+JSObject* GlobalObject::createOffThreadBuiltinProto(
+    JSContext* cx, Handle<GlobalObject*> global, ProtoKind kind) {
   // Don't create prototype objects for off-thread parse globals. Instead
   // create a placeholder object which we can use to find the real prototype
   // when the off-thread compartment is merged back into the target
   // compartment.
 
   MOZ_ASSERT(global->zone()->createdForHelperThread());
-  MOZ_ASSERT(slot == MODULE_PROTO || slot == IMPORT_ENTRY_PROTO ||
-             slot == EXPORT_ENTRY_PROTO || slot == REQUESTED_MODULE_PROTO);
+  MOZ_ASSERT(kind == ProtoKind::ModuleProto ||
+             kind == ProtoKind::ImportEntryProto ||
+             kind == ProtoKind::ExportEntryProto ||
+             kind == ProtoKind::RequestedModuleProto);
 
-  auto placeholder = OffThreadPlaceholderObject::New(cx, slot);
+  auto placeholder = OffThreadPlaceholderObject::New(cx, kind);
   if (!placeholder) {
     return nullptr;
   }
 
-  global->setSlot(slot, ObjectValue(*placeholder));
+  global->initBuiltinProto(kind, placeholder);
   return placeholder;
 }
 
 JSObject* GlobalObject::getPrototypeForOffThreadPlaceholder(JSObject* obj) {
   auto placeholder = &obj->as<OffThreadPlaceholderObject>();
-  return &getSlot(placeholder->getSlotIndex()).toObject();
+  int32_t value = placeholder->getSlotIndexOrProtoKind();
+  if (value >= 0) {
+    return &getSlot(value).toObject();
+  }
+  MOZ_ASSERT(-value < int32_t(ProtoKind::Limit));
+  return &getBuiltinProto(ProtoKind(-value));
 }
 
 /* static */
@@ -1098,14 +1119,15 @@ bool GlobalObject::ensureModulePrototypesCreated(JSContext* cx,
 JSObject* GlobalObject::createIteratorPrototype(JSContext* cx,
                                                 Handle<GlobalObject*> global) {
   if (!cx->realm()->creationOptions().getIteratorHelpersEnabled()) {
-    return getOrCreateObject(cx, global, ITERATOR_PROTO, initIteratorProto);
+    return getOrCreateBuiltinProto(cx, global, ProtoKind::IteratorProto,
+                                   initIteratorProto);
   }
 
   if (!ensureConstructor(cx, global, JSProto_Iterator)) {
     return nullptr;
   }
   JSObject* proto = &global->getPrototype(JSProto_Iterator).toObject();
-  global->setReservedSlot(ITERATOR_PROTO, ObjectValue(*proto));
+  global->initBuiltinProto(ProtoKind::IteratorProto, proto);
   return proto;
 }
 
@@ -1113,15 +1135,15 @@ JSObject* GlobalObject::createIteratorPrototype(JSContext* cx,
 JSObject* GlobalObject::createAsyncIteratorPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
   if (!cx->realm()->creationOptions().getIteratorHelpersEnabled()) {
-    return getOrCreateObject(cx, global, ASYNC_ITERATOR_PROTO,
-                             initAsyncIteratorProto);
+    return getOrCreateBuiltinProto(cx, global, ProtoKind::AsyncIteratorProto,
+                                   initAsyncIteratorProto);
   }
 
   if (!ensureConstructor(cx, global, JSProto_AsyncIterator)) {
     return nullptr;
   }
   JSObject* proto = &global->getPrototype(JSProto_AsyncIterator).toObject();
-  global->setReservedSlot(ASYNC_ITERATOR_PROTO, ObjectValue(*proto));
+  global->initBuiltinProto(ProtoKind::AsyncIteratorProto, proto);
   return proto;
 }
 
@@ -1132,6 +1154,10 @@ void GlobalObject::releaseData(JSFreeOp* fop) {
 }
 
 void GlobalObjectData::trace(JSTracer* trc) {
+  for (auto& proto : builtinProtos) {
+    TraceNullableEdge(trc, &proto, "global-builtin-proto");
+  }
+
   TraceEdge(trc, &emptyGlobalScope, "global-empty-scope");
 
   TraceNullableEdge(trc, &regExpStatics, "global-regexp-statics");

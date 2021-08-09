@@ -138,7 +138,7 @@ bool GlobalObject::initImportEntryProto(JSContext* cx,
     return false;
   }
 
-  global->initReservedSlot(IMPORT_ENTRY_PROTO, ObjectValue(*proto));
+  global->initBuiltinProto(ProtoKind::ImportEntryProto, proto);
   return true;
 }
 
@@ -217,7 +217,7 @@ bool GlobalObject::initExportEntryProto(JSContext* cx,
     return false;
   }
 
-  global->initReservedSlot(EXPORT_ENTRY_PROTO, ObjectValue(*proto));
+  global->initBuiltinProto(ProtoKind::ExportEntryProto, proto);
   return true;
 }
 
@@ -293,7 +293,7 @@ bool GlobalObject::initRequestedModuleProto(JSContext* cx,
     return false;
   }
 
-  global->initReservedSlot(REQUESTED_MODULE_PROTO, ObjectValue(*proto));
+  global->initBuiltinProto(ProtoKind::RequestedModuleProto, proto);
   return true;
 }
 
@@ -351,7 +351,7 @@ bool GlobalObject::initModuleRequestProto(JSContext* cx,
     return false;
   }
 
-  global->initReservedSlot(MODULE_REQUEST_PROTO, ObjectValue(*proto));
+  global->initBuiltinProto(ProtoKind::ModuleRequestProto, proto);
   return true;
 }
 
@@ -1401,7 +1401,7 @@ bool GlobalObject::initModuleProto(JSContext* cx,
     return false;
   }
 
-  global->setReservedSlot(MODULE_PROTO, ObjectValue(*proto));
+  global->initBuiltinProto(ProtoKind::ModuleProto, proto);
   return true;
 }
 

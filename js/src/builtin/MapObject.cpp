@@ -183,7 +183,7 @@ bool GlobalObject::initMapIteratorProto(JSContext* cx,
       !DefineToStringTag(cx, proto, cx->names().MapIterator)) {
     return false;
   }
-  global->setReservedSlot(MAP_ITERATOR_PROTO, ObjectValue(*proto));
+  global->initBuiltinProto(ProtoKind::MapIteratorProto, proto);
   return true;
 }
 
@@ -997,7 +997,7 @@ bool GlobalObject::initSetIteratorProto(JSContext* cx,
       !DefineToStringTag(cx, proto, cx->names().SetIterator)) {
     return false;
   }
-  global->setReservedSlot(SET_ITERATOR_PROTO, ObjectValue(*proto));
+  global->initBuiltinProto(ProtoKind::SetIteratorProto, proto);
   return true;
 }
 

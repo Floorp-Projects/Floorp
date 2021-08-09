@@ -1577,7 +1577,7 @@ static const JSFunctionSpec iterator_methods_with_helpers[] = {
 /* static */
 bool GlobalObject::initIteratorProto(JSContext* cx,
                                      Handle<GlobalObject*> global) {
-  if (global->getReservedSlot(ITERATOR_PROTO).isObject()) {
+  if (global->hasBuiltinProto(ProtoKind::IteratorProto)) {
     return true;
   }
 
@@ -1590,7 +1590,7 @@ bool GlobalObject::initIteratorProto(JSContext* cx,
   // %IteratorPrototype%.map.[[Prototype]] is %Generator% and
   // %Generator%.prototype.[[Prototype]] is %IteratorPrototype%.
   // Populate the slot early, to prevent runaway mutual recursion.
-  global->setReservedSlot(ITERATOR_PROTO, ObjectValue(*proto));
+  global->initBuiltinProto(ProtoKind::IteratorProto, proto);
 
   if (!DefinePropertiesAndFunctions(cx, proto, nullptr, iterator_methods)) {
     // In this case, we leave a partially initialized object in the
@@ -1603,12 +1603,12 @@ bool GlobalObject::initIteratorProto(JSContext* cx,
 }
 
 /* static */
-template <unsigned Slot, const JSClass* ProtoClass,
+template <GlobalObject::ProtoKind Kind, const JSClass* ProtoClass,
           const JSFunctionSpec* Methods>
 bool GlobalObject::initObjectIteratorProto(JSContext* cx,
                                            Handle<GlobalObject*> global,
                                            HandleAtom tag) {
-  if (global->getReservedSlot(Slot).isObject()) {
+  if (global->hasBuiltinProto(Kind)) {
     return true;
   }
 
@@ -1625,16 +1625,17 @@ bool GlobalObject::initObjectIteratorProto(JSContext* cx,
     return false;
   }
 
-  global->setReservedSlot(Slot, ObjectValue(*proto));
+  global->initBuiltinProto(Kind, proto);
   return true;
 }
 
 /* static */
 NativeObject* GlobalObject::getOrCreateArrayIteratorPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
-  return MaybeNativeObject(getOrCreateObject(
-      cx, global, ARRAY_ITERATOR_PROTO, cx->names().ArrayIterator.toHandle(),
-      initObjectIteratorProto<ARRAY_ITERATOR_PROTO,
+  return MaybeNativeObject(getOrCreateBuiltinProto(
+      cx, global, ProtoKind::ArrayIteratorProto,
+      cx->names().ArrayIterator.toHandle(),
+      initObjectIteratorProto<ProtoKind::ArrayIteratorProto,
                               &ArrayIteratorPrototypeClass,
                               array_iterator_methods>));
 }
@@ -1642,9 +1643,10 @@ NativeObject* GlobalObject::getOrCreateArrayIteratorPrototype(
 /* static */
 JSObject* GlobalObject::getOrCreateStringIteratorPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
-  return getOrCreateObject(
-      cx, global, STRING_ITERATOR_PROTO, cx->names().StringIterator.toHandle(),
-      initObjectIteratorProto<STRING_ITERATOR_PROTO,
+  return getOrCreateBuiltinProto(
+      cx, global, ProtoKind::StringIteratorProto,
+      cx->names().StringIterator.toHandle(),
+      initObjectIteratorProto<ProtoKind::StringIteratorProto,
                               &StringIteratorPrototypeClass,
                               string_iterator_methods>);
 }
@@ -1652,10 +1654,10 @@ JSObject* GlobalObject::getOrCreateStringIteratorPrototype(
 /* static */
 JSObject* GlobalObject::getOrCreateRegExpStringIteratorPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
-  return getOrCreateObject(
-      cx, global, REGEXP_STRING_ITERATOR_PROTO,
+  return getOrCreateBuiltinProto(
+      cx, global, ProtoKind::RegExpStringIteratorProto,
       cx->names().RegExpStringIterator.toHandle(),
-      initObjectIteratorProto<REGEXP_STRING_ITERATOR_PROTO,
+      initObjectIteratorProto<ProtoKind::RegExpStringIteratorProto,
                               &RegExpStringIteratorPrototypeClass,
                               regexp_string_iterator_methods>);
 }
@@ -1736,9 +1738,9 @@ const JSClass WrapForValidIteratorObject::class_ = {
 /* static */
 NativeObject* GlobalObject::getOrCreateWrapForValidIteratorPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
-  return MaybeNativeObject(getOrCreateObject(
-      cx, global, WRAP_FOR_VALID_ITERATOR_PROTO, HandleAtom(nullptr),
-      initObjectIteratorProto<WRAP_FOR_VALID_ITERATOR_PROTO,
+  return MaybeNativeObject(getOrCreateBuiltinProto(
+      cx, global, ProtoKind::WrapForValidIteratorProto, HandleAtom(nullptr),
+      initObjectIteratorProto<ProtoKind::WrapForValidIteratorProto,
                               &WrapForValidIteratorPrototypeClass,
                               wrap_for_valid_iterator_methods>));
 }
@@ -1768,11 +1770,11 @@ const JSClass IteratorHelperObject::class_ = {
 /* static */
 NativeObject* GlobalObject::getOrCreateIteratorHelperPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
-  return MaybeNativeObject(
-      getOrCreateObject(cx, global, ITERATOR_HELPER_PROTO, HandleAtom(nullptr),
-                        initObjectIteratorProto<ITERATOR_HELPER_PROTO,
-                                                &IteratorHelperPrototypeClass,
-                                                iterator_helper_methods>));
+  return MaybeNativeObject(getOrCreateBuiltinProto(
+      cx, global, ProtoKind::IteratorHelperProto, HandleAtom(nullptr),
+      initObjectIteratorProto<ProtoKind::IteratorHelperProto,
+                              &IteratorHelperPrototypeClass,
+                              iterator_helper_methods>));
 }
 
 IteratorHelperObject* js::NewIteratorHelper(JSContext* cx) {
