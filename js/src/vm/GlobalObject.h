@@ -84,6 +84,9 @@ class GlobalObjectData {
   // Realm-specific object that can be used as key in WeakMaps.
   HeapPtr<PlainObject*> realmKeyObject;
 
+  // The unique %ThrowTypeError% function for this global.
+  HeapPtr<JSFunction*> throwTypeError;
+
   // Cached shape for new arrays with Array.prototype as prototype.
   HeapPtr<Shape*> arrayShape;
 
@@ -133,7 +136,6 @@ class GlobalObject : public NativeObject {
   enum : unsigned {
     /* Various function values needed by the engine. */
     EVAL = APPLICATION_SLOTS + STANDARD_CLASS_SLOTS,
-    THROWTYPEERROR,
 
     /* One-off properties stored after slots for built-ins. */
     GLOBAL_DATA_SLOT,
