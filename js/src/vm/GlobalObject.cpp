@@ -883,9 +883,8 @@ NativeObject* GlobalObject::getOrCreateForOfPICObject(
 JSObject* GlobalObject::getOrCreateRealmKeyObject(
     JSContext* cx, Handle<GlobalObject*> global) {
   cx->check(global);
-  Value v = global->getReservedSlot(REALM_KEY_OBJECT);
-  if (v.isObject()) {
-    return &v.toObject();
+  if (PlainObject* key = global->data().realmKeyObject) {
+    return key;
   }
 
   PlainObject* key = NewBuiltinClassInstance<PlainObject>(cx);
@@ -893,7 +892,7 @@ JSObject* GlobalObject::getOrCreateRealmKeyObject(
     return nullptr;
   }
 
-  global->setReservedSlot(REALM_KEY_OBJECT, ObjectValue(*key));
+  global->data().realmKeyObject.init(key);
   return key;
 }
 
@@ -1140,4 +1139,5 @@ void GlobalObjectData::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &intrinsicsHolder, "global-intrinsics-holder");
   TraceNullableEdge(trc, &forOfPICChain, "global-for-of-pic");
   TraceNullableEdge(trc, &sourceURLsHolder, "global-source-urls");
+  TraceNullableEdge(trc, &realmKeyObject, "global-realm-key");
 }

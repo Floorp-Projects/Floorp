@@ -81,6 +81,9 @@ class GlobalObjectData {
   // List of source URLs for this realm. This is used by the debugger.
   HeapPtr<ArrayObject*> sourceURLsHolder;
 
+  // Realm-specific object that can be used as key in WeakMaps.
+  HeapPtr<PlainObject*> realmKeyObject;
+
   // Whether the |globalThis| property has been resolved on the global object.
   bool globalThisResolved = false;
 
@@ -150,7 +153,6 @@ class GlobalObject : public NativeObject {
     REQUESTED_MODULE_PROTO,
     MODULE_REQUEST_PROTO,
     WINDOW_PROXY,
-    REALM_KEY_OBJECT,
     ARRAY_SHAPE,
 
     /* Total reserved-slot count for global objects. */
