@@ -163,14 +163,14 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                            public TabContext,
                            public nsITooltipListener,
                            public mozilla::ipc::IShmemAllocator {
-  typedef mozilla::widget::PuppetWidget PuppetWidget;
-  typedef mozilla::dom::ClonedMessageData ClonedMessageData;
-  typedef mozilla::dom::CoalescedMouseData CoalescedMouseData;
-  typedef mozilla::dom::CoalescedWheelData CoalescedWheelData;
-  typedef mozilla::layers::APZEventState APZEventState;
-  typedef mozilla::layers::SetAllowedTouchBehaviorCallback
-      SetAllowedTouchBehaviorCallback;
-  typedef mozilla::layers::TouchBehaviorFlags TouchBehaviorFlags;
+  using PuppetWidget = mozilla::widget::PuppetWidget;
+  using ClonedMessageData = mozilla::dom::ClonedMessageData;
+  using CoalescedMouseData = mozilla::dom::CoalescedMouseData;
+  using CoalescedWheelData = mozilla::dom::CoalescedWheelData;
+  using APZEventState = mozilla::layers::APZEventState;
+  using SetAllowedTouchBehaviorCallback =
+      mozilla::layers::SetAllowedTouchBehaviorCallback;
+  using TouchBehaviorFlags = mozilla::layers::TouchBehaviorFlags;
 
   friend class PBrowserChild;
 
@@ -877,7 +877,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   Maybe<mozilla::layers::CompositorOptions> mCompositorOptions;
 
   friend class ContentChild;
-
 
   CSSSize mUnscaledInnerSize;
 

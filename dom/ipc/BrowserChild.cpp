@@ -174,7 +174,7 @@ static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 
 static uint32_t sConsecutiveTouchMoveCount = 0;
 
-typedef nsTHashMap<nsUint64HashKey, BrowserChild*> BrowserChildMap;
+using BrowserChildMap = nsTHashMap<nsUint64HashKey, BrowserChild*>;
 static BrowserChildMap* sBrowserChildren;
 StaticMutex sBrowserChildrenMutex;
 

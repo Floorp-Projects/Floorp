@@ -233,7 +233,7 @@ struct MemoryTraits {};
 
 template <>
 struct MemoryTraits<BorrowMemory> {
-  typedef const mozilla::dom::ClonedMessageData ClonedMessageType;
+  using ClonedMessageType = const mozilla::dom::ClonedMessageData;
 
   static void ProvideBuffer(const ClonedMessageData& aClonedData,
                             StructuredCloneData& aData) {
@@ -244,7 +244,7 @@ struct MemoryTraits<BorrowMemory> {
 
 template <>
 struct MemoryTraits<CopyMemory> {
-  typedef const mozilla::dom::ClonedMessageData ClonedMessageType;
+  using ClonedMessageType = const mozilla::dom::ClonedMessageData;
 
   static void ProvideBuffer(const ClonedMessageData& aClonedData,
                             StructuredCloneData& aData) {
@@ -256,7 +256,7 @@ struct MemoryTraits<CopyMemory> {
 template <>
 struct MemoryTraits<StealMemory> {
   // note: not const!
-  typedef mozilla::dom::ClonedMessageData ClonedMessageType;
+  using ClonedMessageType = mozilla::dom::ClonedMessageData;
 
   static void ProvideBuffer(ClonedMessageData& aClonedData,
                             StructuredCloneData& aData) {

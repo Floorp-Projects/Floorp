@@ -23,7 +23,7 @@ namespace dom {
  * the main thread where tab instances live.
  */
 class ContentProcess : public mozilla::ipc::ProcessChild {
-  typedef mozilla::ipc::ProcessChild ProcessChild;
+  using ProcessChild = mozilla::ipc::ProcessChild;
 
  public:
   explicit ContentProcess(ProcessId aParentPid) : ProcessChild(aParentPid) {}
