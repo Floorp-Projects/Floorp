@@ -123,7 +123,8 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
       gfxFloat(aFont.size.ToAppUnits()) / mP2A, aFont.sizeAdjust,
       aFont.family.is_system_font, mDeviceContext->IsPrinterContext(),
       aFont.synthesis & NS_FONT_SYNTHESIS_WEIGHT,
-      aFont.synthesis & NS_FONT_SYNTHESIS_STYLE, aFont.languageOverride);
+      aFont.synthesis & NS_FONT_SYNTHESIS_STYLE,
+      aFont.synthesis & NS_FONT_SYNTHESIS_SMALL_CAPS, aFont.languageOverride);
 
   aFont.AddFontFeaturesToStyle(&style, mOrientation == eVertical);
   style.featureValueLookup = aParams.featureValueLookup;

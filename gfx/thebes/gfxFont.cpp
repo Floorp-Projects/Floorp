@@ -4032,6 +4032,7 @@ gfxFontStyle::gfxFontStyle()
       useGrayscaleAntialiasing(false),
       allowSyntheticWeight(true),
       allowSyntheticStyle(true),
+      allowSyntheticSmallCaps(true),
       noFallbackVariantFeatures(true) {}
 
 gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
@@ -4039,6 +4040,7 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
                            const FontSizeAdjust& aSizeAdjust, bool aSystemFont,
                            bool aPrinterFont, bool aAllowWeightSynthesis,
                            bool aAllowStyleSynthesis,
+                           bool aAllowSmallCapsSynthesis,
                            uint32_t aLanguageOverride)
     : size(aSize),
       baselineOffset(0.0f),
@@ -4054,6 +4056,7 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
       useGrayscaleAntialiasing(false),
       allowSyntheticWeight(aAllowWeightSynthesis),
       allowSyntheticStyle(aAllowStyleSynthesis),
+      allowSyntheticSmallCaps(aAllowSmallCapsSynthesis),
       noFallbackVariantFeatures(true) {
   MOZ_ASSERT(!mozilla::IsNaN(size));
 
