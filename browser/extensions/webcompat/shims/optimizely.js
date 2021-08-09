@@ -36,28 +36,114 @@ if (!window.optimizely?.state) {
     variations: {},
   };
 
+  const activationId = String(Date.now());
+
   const state = {
-    getActivationId() {},
+    getActivationId() {
+      return activationId;
+    },
     getActiveExperimentIds() {
       return [];
     },
-    getCampaignStateLists() {},
-    getCampaignStates() {},
-    getDecisionObject() {},
-    getDecisionString() {},
-    getExperimentStates() {},
-    getPageStates() {},
-    getRedirectInfo() {},
-    getVariationMap() {},
-    isGlobalHoldback() {},
+    getCampaignStateLists() {
+      return {};
+    },
+    getCampaignStates() {
+      return {};
+    },
+    getDecisionObject() {
+      return null;
+    },
+    getDecisionString() {
+      return null;
+    },
+    getExperimentStates() {
+      return {};
+    },
+    getPageStates() {
+      return {};
+    },
+    getRedirectInfo() {
+      return null;
+    },
+    getVariationMap() {
+      return {};
+    },
+    isGlobalHoldback() {
+      return false;
+    },
+  };
+
+  const poll = (fn, to) => {
+    setInterval(() => {
+      try {
+        fn();
+      } catch (_) {}
+    }, to);
+  };
+
+  const waitUntil = test => {
+    let interval, resolve;
+    function check() {
+      try {
+        if (test()) {
+          clearInterval(interval);
+          resolve?.();
+          return true;
+        }
+      } catch (_) {}
+      return false;
+    }
+    return new Promise(r => {
+      resolve = r;
+      if (check()) {
+        resolve();
+        return;
+      }
+      interval = setInterval(check, 250);
+    });
+  };
+
+  const waitForElement = sel => {
+    return waitUntil(() => {
+      document.querySelector(sel);
+    });
+  };
+
+  const observeSelector = (sel, fn, opts) => {
+    let interval;
+    const observed = new Set();
+    function check() {
+      try {
+        for (const e of document.querySelectorAll(sel)) {
+          if (observed.has(e)) {
+            continue;
+          }
+          observed.add(e);
+          try {
+            fn(e);
+          } catch (_) {}
+          if (opts.once) {
+            clearInterval(interval);
+          }
+        }
+      } catch (_) {}
+    }
+    interval = setInterval(check, 250);
+    const timeout = { opts };
+    if (timeout) {
+      setTimeout(() => {
+        clearInterval(interval);
+      }, timeout);
+    }
   };
 
   const utils = {
     Promise: window.Promise,
-    observeSelector() {},
-    poll() {},
-    waitForElement() {},
-    waitUntil() {},
+    observeSelector,
+    poll,
+    waitForElement,
+    waitUntil,
   };
 
   const visitorId = {
