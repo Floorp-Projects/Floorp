@@ -44,7 +44,7 @@ void ViewportFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // No need to call CreateView() here - the frame ctor will call SetView()
   // with the ViewManager's root view, so we'll assign it in SetViewInternal().
 
-  nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(this);
+  nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrameInProcess(this);
   if (parent) {
     nsFrameState state = parent->GetStateBits();
 
