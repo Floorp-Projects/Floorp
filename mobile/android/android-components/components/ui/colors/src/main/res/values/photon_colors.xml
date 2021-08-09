@@ -42,6 +42,7 @@
     <color name="photonGreen90">#003706</color>
 
     <!-- Red -->
+    <color name="photonRed30">#FF848B</color>
     <color name="photonRed50">#ff0039</color>
     <color name="photonRed60">#d70022</color>
     <color name="photonRed70">#a4000f</color>
@@ -77,6 +78,7 @@
     <color name="photonOrange90">#3e1300</color>
 
     <!-- Ink -->
+    <color name="photonInk10">#342F6D</color>
     <color name="photonInk20">#312A65</color>
     <color name="photonInk20A48">#7A312A65</color>
     <color name="photonInk30">#2E255D</color>
