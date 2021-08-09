@@ -32,6 +32,12 @@ const Accordion = createFactory(
   require("devtools/client/shared/components/Accordion")
 );
 
+loader.lazyGetter(this, "TreeRow", function() {
+  return createFactory(
+    require("devtools/client/shared/components/tree/TreeRow")
+  );
+});
+
 const { div } = dom;
 
 const COOKIES_EMPTY_TEXT = L10N.getStr("cookiesEmptyText");
@@ -83,8 +89,8 @@ class CookiesPanel extends Component {
    * @param {Object[]} arr - key-value pair array like cookies or params
    * @returns {Object}
    */
-  getProperties(arr) {
-    return arr.reduce((map, obj) => {
+  getProperties(arr, title) {
+    const cookies = arr.reduce((map, obj) => {
       // Generally cookies object contains only name and value properties and can
       // be rendered as name: value pair.
       // When there are more properties in cookies object such as extra or path,
@@ -97,6 +103,46 @@ class CookiesPanel extends Component {
       }
       return map;
     }, {});
+
+    // To have different roots for Request and Response cookies
+    return { [title]: cookies };
+  }
+
+  /**
+   * Custom rendering method passed to PropertiesView. It's
+   * responsible to filter out level 0 node in the tree
+   *
+   * @param {Object} props
+   */
+  renderRow(props) {
+    const { level } = props.member;
+
+    if (level === 0) {
+      return null;
+    }
+
+    return TreeRow(props);
+  }
+
+  /**
+   * Get the selected cookies path
+   * @param {Object} searchResult
+   * @returns {string}
+   */
+  getTargetCookiePath(searchResult) {
+    if (!searchResult) {
+      return null;
+    }
+
+    switch (searchResult.type) {
+      case "requestCookies": {
+        return `/${REQUEST_COOKIES}/${searchResult.label}`;
+      }
+      case "responseCookies":
+        return `/${RESPONSE_COOKIES}/${searchResult.label}`;
+    }
+
+    return null;
   }
 
   render() {
@@ -123,10 +169,14 @@ class CookiesPanel extends Component {
       items.push({
         component: PropertiesView,
         componentProps: {
-          object: sortObjectKeys(this.getProperties(responseCookies)),
+          object: sortObjectKeys(
+            this.getProperties(responseCookies, RESPONSE_COOKIES)
+          ),
           filterText,
           targetSearchResult,
           defaultSelectFirstNode: false,
+          selectPath: this.getTargetCookiePath,
+          renderRow: this.renderRow,
         },
         header: RESPONSE_COOKIES,
         id: "responseCookies",
@@ -138,10 +188,14 @@ class CookiesPanel extends Component {
       items.push({
         component: PropertiesView,
         componentProps: {
-          object: sortObjectKeys(this.getProperties(requestCookies)),
+          object: sortObjectKeys(
+            this.getProperties(requestCookies, REQUEST_COOKIES)
+          ),
           filterText,
           targetSearchResult,
           defaultSelectFirstNode: false,
+          selectPath: this.getTargetCookiePath,
+          renderRow: this.renderRow,
         },
         header: REQUEST_COOKIES,
         id: "requestCookies",
@@ -150,7 +204,7 @@ class CookiesPanel extends Component {
     }
 
     return div(
-      { className: "panel-container" },
+      { className: "panel-container cookies-panel-container" },
       div(
         { className: "devtools-toolbar devtools-input-toolbar" },
         SearchBox({

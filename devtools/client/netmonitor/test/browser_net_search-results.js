@@ -148,7 +148,7 @@ add_task(async function() {
     monitor,
     matches[9],
     "#cookies-panel",
-    "#requestCookies .properties-view",
+    "#responseCookies .properties-view",
     ".treeRow.selected",
     [SEARCH_STRING]
   );
@@ -156,7 +156,7 @@ add_task(async function() {
     monitor,
     matches[10],
     "#cookies-panel",
-    "#responseCookies .properties-view",
+    "#requestCookies .properties-view",
     ".treeRow.selected",
     [SEARCH_STRING]
   );
@@ -216,6 +216,16 @@ async function checkSearchResult(
       expected.length === 1 ? "" : "s"
     } displayed in this tabpanel`
   );
+
+  // Make sure only 1 item is selected
+  if (panelDetailSelector === ".treeRow.selected") {
+    const selectedElements = tabpanel.querySelectorAll(panelDetailSelector);
+    is(
+      selectedElements.length,
+      1,
+      `There should be only 1 item selected, found ${selectedElements.length} items selected`
+    );
+  }
 
   if (content.length === expected.length) {
     for (let i = 0; i < expected.length; i++) {
