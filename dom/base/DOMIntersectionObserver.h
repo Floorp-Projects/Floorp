@@ -13,6 +13,7 @@
 #include "mozilla/Variant.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsTArray.h"
+#include "nsTHashSet.h"
 
 namespace mozilla {
 namespace dom {
@@ -147,8 +148,12 @@ class DOMIntersectionObserver final : public nsISupports,
   StyleRect<LengthPercentage> mRootMargin;
   nsTArray<double> mThresholds;
 
-  // Holds raw pointers which are explicitly cleared by UnlinkTarget().
+  // These hold raw pointers which are explicitly cleared by UnlinkTarget().
+  //
+  // We keep a set and an array because we need ordered access, but also
+  // constant time lookup.
   nsTArray<Element*> mObservationTargets;
+  nsTHashSet<Element*> mObservationTargetSet;
 
   nsTArray<RefPtr<DOMIntersectionObserverEntry>> mQueuedEntries;
   bool mConnected;
