@@ -57,6 +57,67 @@ async function verifyResultInPage(browser, expected) {
   });
 }
 
+function getExpectedConsoleMessage(expected, isPrefOn, url) {
+  let msg;
+
+  if (isPrefOn) {
+    msg =
+      "Referrer Policy: Ignoring the less restricted referrer policy “" +
+      expected +
+      "” for the cross-site request: " +
+      url;
+  } else {
+    msg =
+      "Referrer Policy: Less restricted policies, including " +
+      "‘no-referrer-when-downgrade’, ‘origin-when-cross-origin’ and " +
+      "‘unsafe-url’, will be ignored soon for the cross-site request: " +
+      url;
+  }
+
+  return msg;
+}
+
+function createConsoleMessageVerificationPromise(expected, isPrefOn, url) {
+  if (!expected) {
+    return Promise.resolve();
+  }
+
+  return new Promise(resolve => {
+    let listener = {
+      observe(msg) {
+        let message = msg.QueryInterface(Ci.nsIScriptError);
+
+        if (message.category.startsWith("Security")) {
+          is(
+            message.errorMessage,
+            getExpectedConsoleMessage(expected, isPrefOn, url),
+            "The console message is correct."
+          );
+          Services.console.unregisterListener(listener);
+          resolve();
+        }
+      },
+    };
+
+    Services.console.registerListener(listener);
+  });
+}
+
+function verifyNoConsoleMessage() {
+  // Verify that there is no referrer policy console message.
+  let allMessages = Services.console.getMessageArray();
+
+  for (let msg of allMessages) {
+    let message = msg.QueryInterface(Ci.nsIScriptError);
+    if (
+      message.category.startsWith("Security") &&
+      message.errorMessage.startsWith("Referrer Policy:")
+    ) {
+      ok(false, "There should be no console message for referrer policy.");
+    }
+  }
+}
+
 const TEST_CASES = [
   // Testing that the referrer policy can be overridden with less restricted
   // policy in the same-origin scenario.
@@ -93,18 +154,21 @@ const TEST_CASES = [
     referrer: TEST_PAGE,
     test_url: TEST_CROSS_SITE_PAGE,
     expect: REFERRER_ORIGIN,
+    expect_console: "unsafe-url",
   },
   {
     policy: "no-referrer-when-downgrade",
     referrer: TEST_PAGE,
     test_url: TEST_CROSS_SITE_PAGE,
     expect: REFERRER_ORIGIN,
+    expect_console: "no-referrer-when-downgrade",
   },
   {
     policy: "origin-when-cross-origin",
     referrer: TEST_PAGE,
     test_url: TEST_CROSS_SITE_PAGE_HTTP,
     expect: REFERRER_NONE,
+    expect_console: "origin-when-cross-origin",
   },
   // Testing that the referrer policy can still be overridden with more
   // restricted policy in the cross-site scenario.
@@ -133,9 +197,16 @@ add_task(async function test_iframe() {
       let referrerURL = `${test.referrer}?${type}=${test.policy}`;
       let expected = getExpectedReferrer(referrerURL, test.expect);
 
+      Services.console.reset();
+
       await BrowserTestUtils.withNewTab(referrerURL, async browser => {
         let iframeURL = test.test_url + "?show";
 
+        let consolePromise = createConsoleMessageVerificationPromise(
+          test.expect_console,
+          true,
+          iframeURL
+        );
         // Create an iframe and load the url.
         let bc = await SpecialPowers.spawn(browser, [iframeURL], async url => {
           let iframe = content.document.createElement("iframe");
@@ -153,6 +224,10 @@ add_task(async function test_iframe() {
         });
 
         await verifyResultInPage(bc, expected);
+        await consolePromise;
+        if (!test.expect_console) {
+          verifyNoConsoleMessage();
+        }
       });
     }
   }
@@ -165,8 +240,16 @@ add_task(async function test_link_click() {
       let referrerURL = `${test.referrer}?${type}=${test.policy}`;
       let expected = getExpectedReferrer(referrerURL, test.expect);
 
+      Services.console.reset();
+
       await BrowserTestUtils.withNewTab(referrerURL, async browser => {
         let linkURL = test.test_url + "?show";
+
+        let consolePromise = createConsoleMessageVerificationPromise(
+          test.expect_console,
+          true,
+          linkURL
+        );
 
         // Create the promise to wait for the navigation finishes.
         let loadedPromise = BrowserTestUtils.browserLoaded(
@@ -188,7 +271,54 @@ add_task(async function test_link_click() {
         await loadedPromise;
 
         await verifyResultInPage(browser, expected);
+        await consolePromise;
+        if (!test.expect_console) {
+          verifyNoConsoleMessage();
+        }
       });
     }
+  }
+});
+
+add_task(async function test_console_message_if_pref_off() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["network.http.referer.disallowCrossSiteRelaxingDefault", false]],
+  });
+
+  for (let test of TEST_CASES) {
+    info(`Test console message if pref off: ${test.toSource()}`);
+    let referrerURL = `${test.referrer}?meta=${test.policy}`;
+
+    Services.console.reset();
+
+    await BrowserTestUtils.withNewTab(referrerURL, async browser => {
+      let iframeURL = test.test_url + "?show";
+
+      let consolePromise = createConsoleMessageVerificationPromise(
+        test.expect_console,
+        false,
+        iframeURL
+      );
+      // Create an iframe and load the url.
+      await SpecialPowers.spawn(browser, [iframeURL], async url => {
+        let iframe = content.document.createElement("iframe");
+        iframe.src = url;
+
+        await new content.Promise(resolve => {
+          iframe.onload = () => {
+            resolve();
+          };
+
+          content.document.body.appendChild(iframe);
+        });
+
+        return iframe.browsingContext;
+      });
+
+      await consolePromise;
+      if (!test.expect_console) {
+        verifyNoConsoleMessage();
+      }
+    });
   }
 });
