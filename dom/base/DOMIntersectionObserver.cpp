@@ -224,11 +224,14 @@ void DOMIntersectionObserver::GetThresholds(nsTArray<double>& aRetVal) {
 }
 
 void DOMIntersectionObserver::Observe(Element& aTarget) {
-  if (mObservationTargets.Contains(&aTarget)) {
+  if (!mObservationTargetSet.EnsureInserted(&aTarget)) {
     return;
   }
   aTarget.RegisterIntersectionObserver(this);
   mObservationTargets.AppendElement(&aTarget);
+
+  MOZ_ASSERT(mObservationTargets.Length() == mObservationTargetSet.Count());
+
   Connect();
   if (mDocument) {
     if (nsPresContext* pc = mDocument->GetPresContext()) {
@@ -238,22 +241,24 @@ void DOMIntersectionObserver::Observe(Element& aTarget) {
 }
 
 void DOMIntersectionObserver::Unobserve(Element& aTarget) {
-  if (!mObservationTargets.Contains(&aTarget)) {
-    return;
-  }
-
-  if (mObservationTargets.Length() == 1) {
-    Disconnect();
+  if (!mObservationTargetSet.EnsureRemoved(&aTarget)) {
     return;
   }
 
   mObservationTargets.RemoveElement(&aTarget);
   aTarget.UnregisterIntersectionObserver(this);
+
+  MOZ_ASSERT(mObservationTargets.Length() == mObservationTargetSet.Count());
+
+  if (mObservationTargets.IsEmpty()) {
+    Disconnect();
+  }
 }
 
 void DOMIntersectionObserver::UnlinkTarget(Element& aTarget) {
   mObservationTargets.RemoveElement(&aTarget);
-  if (mObservationTargets.Length() == 0) {
+  mObservationTargetSet.Remove(&aTarget);
+  if (mObservationTargets.IsEmpty()) {
     Disconnect();
   }
 }
@@ -275,11 +280,11 @@ void DOMIntersectionObserver::Disconnect() {
   }
 
   mConnected = false;
-  for (size_t i = 0; i < mObservationTargets.Length(); ++i) {
-    Element* target = mObservationTargets.ElementAt(i);
+  for (Element* target : mObservationTargets) {
     target->UnregisterIntersectionObserver(this);
   }
   mObservationTargets.Clear();
+  mObservationTargetSet.Clear();
   if (mDocument) {
     mDocument->RemoveIntersectionObserver(this);
   }
