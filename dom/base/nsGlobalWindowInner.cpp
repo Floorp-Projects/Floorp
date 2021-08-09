@@ -919,6 +919,7 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow,
       mHasSeenGamepadInput(false),
       mHintedWasLoading(false),
       mHasOpenedExternalProtocolFrame(false),
+      mStorageAllowedReasonCache(0),
       mSuspendDepth(0),
       mFreezeDepth(0),
 #ifdef DEBUG
@@ -7546,6 +7547,10 @@ void nsGlobalWindowInner::ForgetSharedWorker(SharedWorker* aSharedWorker) {
 }
 
 void nsGlobalWindowInner::StorageAccessPermissionGranted() {
+  // Invalidate cached StorageAllowed field so that calls to GetLocalStorage
+  // give us the updated localStorage object.
+  ClearStorageAllowedCache();
+
   PropagateStorageAccessPermissionGrantedToWorkers(*this);
 
   // If we have a partitioned localStorage, it's time to replace it with a real

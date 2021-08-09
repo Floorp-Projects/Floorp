@@ -67,7 +67,8 @@ static void GetCookieLifetimePolicyFromCookieJarSettings(
  * status.
  *
  * Used in the implementation of StorageAllowedForWindow,
- * StorageAllowedForChannel and StorageAllowedForServiceWorker.
+ * StorageAllowedForDocument, StorageAllowedForChannel and
+ * StorageAllowedForServiceWorker.
  */
 static StorageAccess InternalStorageAllowedCheck(
     nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aWindow, nsIURI* aURI,
@@ -179,6 +180,43 @@ static StorageAccess InternalStorageAllowedCheck(
   return StorageAccess::eDeny;
 }
 
+/**
+ * Wrapper around InternalStorageAllowedCheck which caches the check result on
+ * the inner window to improve performance. nsGlobalWindowInner is responsible
+ * for invalidating the cache state if storage access changes during window
+ * lifetime.
+ */
+static StorageAccess InternalStorageAllowedCheckCached(
+    nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aWindow, nsIURI* aURI,
+    nsIChannel* aChannel, nsICookieJarSettings* aCookieJarSettings,
+    uint32_t& aRejectedReason) {
+  // If enabled, check if we have already computed the storage access field
+  // for this window. This avoids repeated calls to
+  // InternalStorageAllowedCheck.
+  nsGlobalWindowInner* win = nullptr;
+  if (aWindow &&
+      StaticPrefs::privacy_antitracking_cacheStorageAllowedForWindow()) {
+    win = nsGlobalWindowInner::Cast(aWindow);
+
+    Maybe<StorageAccess> storageAccess =
+        win->GetStorageAllowedCache(aRejectedReason);
+    if (storageAccess.isSome()) {
+      return storageAccess.value();
+    }
+  }
+
+  StorageAccess result = InternalStorageAllowedCheck(
+      aPrincipal, aWindow, aURI, aChannel, aCookieJarSettings, aRejectedReason);
+  if (win) {
+    // Remember check result for the lifetime of the window. It's the windows
+    // responsibility to invalidate this field if storage access changes
+    // because a storage access permission is granted.
+    win->SetStorageAllowedCache(result, aRejectedReason);
+  }
+
+  return result;
+}
+
 static bool StorageDisabledByAntiTrackingInternal(
     nsPIDOMWindowInner* aWindow, nsIChannel* aChannel, nsIPrincipal* aPrincipal,
     nsIURI* aURI, nsICookieJarSettings* aCookieJarSettings,
@@ -223,9 +261,9 @@ StorageAccess StorageAllowedForWindow(nsPIDOMWindowInner* aWindow,
     // callee is able to deal with a null channel argument, and if passed null,
     // will only fail to notify the UI in case storage gets blocked.
     nsIChannel* channel = document->GetChannel();
-    return InternalStorageAllowedCheck(principal, aWindow, nullptr, channel,
-                                       document->CookieJarSettings(),
-                                       *aRejectedReason);
+    return InternalStorageAllowedCheckCached(
+        principal, aWindow, nullptr, channel, document->CookieJarSettings(),
+        *aRejectedReason);
   }
 
   // No document? Let's return a generic rejected reason.
@@ -243,7 +281,7 @@ StorageAccess StorageAllowedForDocument(const Document* aDoc) {
     nsIChannel* channel = aDoc->GetChannel();
 
     uint32_t rejectedReason = 0;
-    return InternalStorageAllowedCheck(
+    return InternalStorageAllowedCheckCached(
         principal, inner, nullptr, channel,
         const_cast<Document*>(aDoc)->CookieJarSettings(), rejectedReason);
   }
