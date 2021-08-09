@@ -189,14 +189,15 @@ already_AddRefed<ResizeObserver> ResizeObserver::Constructor(
 void ResizeObserver::Observe(Element& aTarget,
                              const ResizeObserverOptions& aOptions,
                              ErrorResult& aRv) {
+  if (MOZ_UNLIKELY(!mDocument)) {
+    return aRv.Throw(NS_ERROR_FAILURE);
+  }
+
   // NOTE(emilio): Per spec, this is supposed to happen on construction, but the
   // spec isn't particularly sane here, see
   // https://github.com/w3c/csswg-drafts/issues/4518
   if (mObservationList.isEmpty()) {
     MOZ_ASSERT(mObservationMap.IsEmpty());
-    if (MOZ_UNLIKELY(!mDocument)) {
-      return aRv.Throw(NS_ERROR_FAILURE);
-    }
     mDocument->AddResizeObserver(*this);
   }
 
@@ -229,7 +230,7 @@ void ResizeObserver::Observe(Element& aTarget,
   // Per the spec, we need to trigger notification in event loop that
   // contains ResizeObserver observe call even when resize/reflow does
   // not happen.
-  aTarget.OwnerDoc()->ScheduleResizeObserversNotification();
+  mDocument->ScheduleResizeObserversNotification();
 }
 
 void ResizeObserver::Unobserve(Element& aTarget, ErrorResult& aRv) {
