@@ -12,11 +12,7 @@ use neqo_common::{qdebug, qinfo, Datagram};
 
 /// The number of datagrams that are saved during the handshake when
 /// keys to decrypt them are not yet available.
-///
-/// This value exceeds what should be possible to send during the handshake.
-/// Neither endpoint should have enough congestion window to send this
-/// much before the handshake completes.
-const MAX_SAVED_DATAGRAMS: usize = 32;
+const MAX_SAVED_DATAGRAMS: usize = 4;
 
 pub struct SavedDatagram {
     /// The datagram.
