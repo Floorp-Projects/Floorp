@@ -310,6 +310,10 @@ double TelemetryProbesReporter::GetTotalPlayTimeInSeconds() const {
   return mTotalPlayTime.PeekTotal();
 }
 
+double TelemetryProbesReporter::GetVisibleVideoPlayTimeInSeconds() const {
+  return GetTotalPlayTimeInSeconds() - GetInvisibleVideoPlayTimeInSeconds();
+}
+
 double TelemetryProbesReporter::GetInvisibleVideoPlayTimeInSeconds() const {
   return mInvisibleVideoPlayTime.PeekTotal();
 }
