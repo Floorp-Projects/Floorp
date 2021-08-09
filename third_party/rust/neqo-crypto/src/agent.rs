@@ -496,6 +496,8 @@ impl SecretAgent {
     /// This should always panic rather than return an error.
     /// # Panics
     /// If any of the provided `protocols` are more than 255 bytes long.
+    ///
+    /// [RFC7301]: https://datatracker.ietf.org/doc/html/rfc7301
     pub fn set_alpn(&mut self, protocols: &[impl AsRef<str>]) -> Res<()> {
         // Validate and set length.
         let mut encoded_len = protocols.len();
