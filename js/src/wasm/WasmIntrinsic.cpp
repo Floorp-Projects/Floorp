@@ -88,6 +88,9 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
   // Initialize the compiler environment, choosing the best tier possible
   SharedCompileArgs compileArgs =
       CompileArgs::build(cx, ScriptedCaller(), featureOptions);
+  if (!compileArgs) {
+    return false;
+  }
   CompilerEnvironment compilerEnv(
       CompileMode::Once, IonAvailable(cx) ? Tier::Optimized : Tier::Baseline,
       OptimizedBackend::Ion, DebugEnabled::False);
@@ -103,6 +106,7 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
       !moduleEnv.imports.append(Import(std::move(emptyString),
                                        std::move(memoryString),
                                        DefinitionKind::Memory))) {
+    ReportOutOfMemory(cx);
     return false;
   }
   moduleEnv.memory = Some(MemoryDesc(Limits(0, Nothing(), sharedMemory)));
@@ -116,6 +120,7 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
     if (!intrinsic.funcType(&type) ||
         !moduleEnv.types.append(TypeDef(std::move(type))) ||
         !moduleEnv.typeIds.append(TypeIdDesc())) {
+      ReportOutOfMemory(cx);
       return false;
     }
   }
@@ -127,6 +132,7 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
     FuncDesc decl(&moduleEnv.types[funcIndex].funcType(),
                   &moduleEnv.typeIds[funcIndex], funcIndex);
     if (!moduleEnv.funcs.append(decl)) {
+      ReportOutOfMemory(cx);
       return false;
     }
     moduleEnv.declareFuncExported(funcIndex, true, false);
@@ -140,6 +146,7 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
     if (!exportString ||
         !moduleEnv.exports.append(Export(std::move(exportString), funcIndex,
                                          DefinitionKind::Function))) {
+      ReportOutOfMemory(cx);
       return false;
     }
   }
@@ -148,12 +155,14 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
   UniqueChars error;
   ModuleGenerator mg(*compileArgs, &moduleEnv, &compilerEnv, nullptr, &error);
   if (!mg.init(nullptr)) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
   // Prepare and compile function bodies
   Vector<Bytes, 1, SystemAllocPolicy> bodies;
   if (!bodies.reserve(ops.size())) {
+    ReportOutOfMemory(cx);
     return false;
   }
   for (uint32_t funcIndex = 0; funcIndex < ops.size(); funcIndex++) {
@@ -172,6 +181,7 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
                            bytecode.begin() + bytecode.length())) {
       // This must be an OOM and will be reported by the caller
       MOZ_ASSERT(!error);
+      ReportOutOfMemory(cx);
       return false;
     }
   }
@@ -180,6 +190,7 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
   if (!mg.finishFuncDefs()) {
     // This must be an OOM and will be reported by the caller
     MOZ_ASSERT(!error);
+    ReportOutOfMemory(cx);
     return false;
   }
 
@@ -187,6 +198,7 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
   SharedBytes bytecode = js_new<ShareableBytes>();
   SharedModule module = mg.finishModule(*bytecode, nullptr);
   if (!module) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
@@ -194,6 +206,7 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
   RootedObject proto(
       cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmModule));
   if (!proto) {
+    ReportOutOfMemory(cx);
     return false;
   }
   result.set(WasmModuleObject::create(cx, *module, proto));
