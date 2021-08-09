@@ -59,7 +59,7 @@ class BrowserToolbarIntegration(
             }
 
             onUrlClicked = {
-                toolbar.editMode()
+                fragment.edit()
                 false // Do not switch to edit mode
             }
 

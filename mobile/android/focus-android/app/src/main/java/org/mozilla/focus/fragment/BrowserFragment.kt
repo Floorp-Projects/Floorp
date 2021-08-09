@@ -547,7 +547,7 @@ class BrowserFragment :
         TelemetryWrapper.shareEvent()
     }
 
-    private fun edit() {
+    internal fun edit() {
         requireComponents.appStore.dispatch(
             AppAction.EditAction(tab.id)
         )
