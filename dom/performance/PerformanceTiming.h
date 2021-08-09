@@ -420,7 +420,7 @@ namespace ipc {
 
 template <>
 struct IPDLParamTraits<mozilla::dom::PerformanceTimingData> {
-  typedef mozilla::dom::PerformanceTimingData paramType;
+  using paramType = mozilla::dom::PerformanceTimingData;
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
                     const paramType& aParam) {
     WriteIPDLParam(aMsg, aActor, aParam.mServerTiming);
@@ -551,7 +551,7 @@ struct IPDLParamTraits<mozilla::dom::PerformanceTimingData> {
 
 template <>
 struct IPDLParamTraits<nsCOMPtr<nsIServerTiming>> {
-  typedef nsCOMPtr<nsIServerTiming> paramType;
+  using paramType = nsCOMPtr<nsIServerTiming>;
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
                     const paramType& aParam) {
     nsAutoCString name;
