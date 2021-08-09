@@ -446,7 +446,7 @@ static const JSFunctionSpec async_generator_methods[] = {
 
 bool GlobalObject::initAsyncIteratorProto(JSContext* cx,
                                           Handle<GlobalObject*> global) {
-  if (global->getReservedSlot(ASYNC_ITERATOR_PROTO).isObject()) {
+  if (global->hasBuiltinProto(ProtoKind::AsyncIteratorProto)) {
     return true;
   }
 
@@ -461,13 +461,13 @@ bool GlobalObject::initAsyncIteratorProto(JSContext* cx,
     return false;
   }
 
-  global->setReservedSlot(ASYNC_ITERATOR_PROTO, ObjectValue(*asyncIterProto));
+  global->initBuiltinProto(ProtoKind::AsyncIteratorProto, asyncIterProto);
   return true;
 }
 
 bool GlobalObject::initAsyncFromSyncIteratorProto(
     JSContext* cx, Handle<GlobalObject*> global) {
-  if (global->getReservedSlot(ASYNC_FROM_SYNC_ITERATOR_PROTO).isObject()) {
+  if (global->hasBuiltinProto(ProtoKind::AsyncFromSyncIteratorProto)) {
     return true;
   }
 
@@ -491,8 +491,8 @@ bool GlobalObject::initAsyncFromSyncIteratorProto(
     return false;
   }
 
-  global->setReservedSlot(ASYNC_FROM_SYNC_ITERATOR_PROTO,
-                          ObjectValue(*asyncFromSyncIterProto));
+  global->initBuiltinProto(ProtoKind::AsyncFromSyncIteratorProto,
+                           asyncFromSyncIterProto);
   return true;
 }
 
@@ -656,14 +656,15 @@ const JSClass AsyncIteratorHelperObject::class_ = {
 /* static */
 NativeObject* GlobalObject::getOrCreateAsyncIteratorHelperPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
-  return MaybeNativeObject(getOrCreateObject(
-      cx, global, ASYNC_ITERATOR_HELPER_PROTO, initAsyncIteratorHelperProto));
+  return MaybeNativeObject(
+      getOrCreateBuiltinProto(cx, global, ProtoKind::AsyncIteratorHelperProto,
+                              initAsyncIteratorHelperProto));
 }
 
 /* static */
 bool GlobalObject::initAsyncIteratorHelperProto(JSContext* cx,
                                                 Handle<GlobalObject*> global) {
-  if (global->getReservedSlot(ASYNC_ITERATOR_HELPER_PROTO).isObject()) {
+  if (global->hasBuiltinProto(ProtoKind::AsyncIteratorHelperProto)) {
     return true;
   }
 
@@ -684,8 +685,8 @@ bool GlobalObject::initAsyncIteratorHelperProto(JSContext* cx,
     return false;
   }
 
-  global->setReservedSlot(ASYNC_ITERATOR_HELPER_PROTO,
-                          ObjectValue(*asyncIteratorHelperProto));
+  global->initBuiltinProto(ProtoKind::AsyncIteratorHelperProto,
+                           asyncIteratorHelperProto);
   return true;
 }
 
