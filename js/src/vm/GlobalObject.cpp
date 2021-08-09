@@ -901,18 +901,13 @@ JSObject* GlobalObject::getOrCreateRealmKeyObject(
 RegExpStatics* GlobalObject::getRegExpStatics(JSContext* cx,
                                               Handle<GlobalObject*> global) {
   MOZ_ASSERT(cx);
-  RegExpStaticsObject* resObj = nullptr;
-  const Value& val = global->getReservedSlot(REGEXP_STATICS);
-  if (!val.isObject()) {
-    MOZ_ASSERT(val.isUndefined());
+  RegExpStaticsObject* resObj = global->data().regExpStatics;
+  if (!resObj) {
     resObj = RegExpStatics::create(cx);
     if (!resObj) {
       return nullptr;
     }
-
-    global->initReservedSlot(REGEXP_STATICS, ObjectValue(*resObj));
-  } else {
-    resObj = &val.toObject().as<RegExpStaticsObject>();
+    global->data().regExpStatics.init(resObj);
   }
   return resObj->regExpStatics();
 }
@@ -1144,4 +1139,5 @@ void GlobalObject::releaseData(JSFreeOp* fop) {
 
 void GlobalObjectData::trace(JSTracer* trc) {
   TraceEdge(trc, &emptyGlobalScope, "global-empty-scope");
+  TraceNullableEdge(trc, &regExpStatics, "global-regexp-statics");
 }

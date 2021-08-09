@@ -53,6 +53,7 @@ class GlobalScope;
 class GlobalLexicalEnvironmentObject;
 class PlainObject;
 class RegExpStatics;
+class RegExpStaticsObject;
 
 // Data attached to a GlobalObject. This is freed when clearing the Realm's
 // global_ only because this way we don't need to add a finalizer to all
@@ -67,6 +68,9 @@ class GlobalObjectData {
   GlobalObjectData() = default;
 
   HeapPtr<GlobalScope*> emptyGlobalScope;
+
+  // Global state for regular expressions.
+  HeapPtr<RegExpStaticsObject*> regExpStatics;
 
   void trace(JSTracer* trc);
 };
@@ -133,7 +137,6 @@ class GlobalObject : public NativeObject {
     EXPORT_ENTRY_PROTO,
     REQUESTED_MODULE_PROTO,
     MODULE_REQUEST_PROTO,
-    REGEXP_STATICS,
     INTRINSICS,
     FOR_OF_PIC_CHAIN,
     WINDOW_PROXY,
