@@ -136,7 +136,7 @@ SimpleTest.waitForFocus(async () => {
       is(target.value, test.result.before, `setUserInput("${test.input.before}") before ${tag} gets focus should set its value to "${test.result.before}"`);
     }
     if (target.value == previousValue) {
-      if (test.type === "date" || test.type === "time") {
+      if (test.type === "date" || test.type === "time" || test.type === "datetime-local") {
         todo_is(inputEvents.length, 0,
                 `No "input" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
       } else {
@@ -222,7 +222,7 @@ SimpleTest.waitForFocus(async () => {
       is(target.value, test.result.after, `setUserInput("${test.input.after}") after ${tag} gets focus should set its value to "${test.result.after}"`);
     }
     if (target.value == previousValue) {
-      if (test.type === "date" || test.type === "time") {
+      if (test.type === "date" || test.type === "time" || test.type === "datetime-local") {
         todo_is(inputEvents.length, 0,
                 `No "input" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
       } else {

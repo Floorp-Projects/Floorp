@@ -19,6 +19,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1288591
   <input id="date1" type="date" tabindex="0">
   <input id="date2" type="date" tabindex="-1">
   <input id="date3" type="date" tabindex="0">
+  <input id="datetime-local1" type="datetime-local" tabindex="0">
+  <input id="datetime-local2" type="datetime-local" tabindex="-1">
+  <input id="datetime-local3" type="datetime-local" tabindex="0">
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -52,15 +55,14 @@ function testTabindex(type) {
   is(document.activeElement, input1,
      "input element with tabindex=0 is focusable");
 
-  // Advance to next inner field
-  synthesizeKey("KEY_Tab");
-  is(document.activeElement, input1,
-     "input element with tabindex=0 is tabbable");
+  let fieldCount = type == "datetime-local" ? 6 : 3;
 
-  // Advance to next inner field
-  synthesizeKey("KEY_Tab");
-  is(document.activeElement, input1,
-     "input element with tabindex=0 is tabbable");
+  // Advance through inner fields.
+  for (let i = 0; i < fieldCount - 1; ++i) {
+    synthesizeKey("KEY_Tab");
+    is(document.activeElement, input1,
+      "input element with tabindex=0 is tabbable");
+  }
 
   // Advance to next element
   synthesizeKey("KEY_Tab");
@@ -85,10 +87,8 @@ function testTabindex(type) {
 }
 
 function test() {
-  let inputTypes = ["time", "date"];
-
-  for (let i = 0; i < inputTypes.length; i++) {
-    testTabindex(inputTypes[i]);
+  for (let inputType of ["time", "date", "datetime-local"]) {
+    testTabindex(inputType);
   }
 }
 
