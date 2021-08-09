@@ -140,10 +140,12 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         self.device.mkdir(path, parents=True, timeout=timeout)
 
     def updateTestPrefsFile(self):
+        # The base method will either be no-op (and return the existing
+        # remote path), or return a path to a new local file.
         testPrefsFile = xpcshell.XPCShellTestThread.updateTestPrefsFile(self)
         if testPrefsFile == self.rootPrefsFile:
             # The pref file is the shared one, which has been already pushed on the
-            # devide, and so there is nothing more to do here.
+            # device, and so there is nothing more to do here.
             return self.rootPrefsFile
 
         # Push the per-test prefs file in the remote temp dir.
@@ -498,7 +500,9 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         remotePrefsFile = posixpath.join(self.remoteTestRoot, "user.js")
         self.device.push(self.prefsFile, remotePrefsFile)
         self.device.chmod(remotePrefsFile)
-        os.remove(self.prefsFile)
+        # os.remove(self.prefsFile) is not called despite having pushed the
+        # file to the device, because the local file is relied upon by the
+        # updateTestPrefsFile method
         self.prefsFile = remotePrefsFile
         return prefs
 
