@@ -440,7 +440,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   // The time when the transaction was submitted to the Connection Manager
   TimeStamp mPendingTime;
-  TimeStamp mHTTPSRRQueryStart;
   TimeDuration mPendingDurationTime;
 
   uint64_t mTopBrowsingContextId{0};

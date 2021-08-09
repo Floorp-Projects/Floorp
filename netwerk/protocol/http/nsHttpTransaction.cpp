@@ -373,7 +373,6 @@ nsresult nsHttpTransaction::Init(
     if (target) {
       if (StaticPrefs::network_dns_force_waiting_https_rr()) {
         mCaps |= NS_HTTP_FORCE_WAIT_HTTP_RR;
-        mHTTPSRRQueryStart = TimeStamp::Now();
       }
 
       mResolver = new HTTPSRecordResolver(this);
@@ -3033,14 +3032,6 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
   // also use this value to indicate whether HTTPS RR is used or not.
   auto updateHTTPSSVCReceivedStage = MakeScopeExit([&] {
     mHTTPSSVCReceivedStage = receivedStage;
-
-    if (!mHTTPSRRQueryStart.IsNull()) {
-      AccumulateTimeDelta(Telemetry::HTTPS_RR_WAITING_TIME,
-                          HTTPS_RR_IS_USED(mHTTPSSVCReceivedStage)
-                              ? "with_https_rr"_ns
-                              : "no_https_rr"_ns,
-                          mHTTPSRRQueryStart, TimeStamp::Now());
-    }
 
     // In the case that an HTTPS RR is unavailable, we should call
     // ProcessPendingQ to make sure this transition to be processed soon.
