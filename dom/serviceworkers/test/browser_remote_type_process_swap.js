@@ -30,7 +30,7 @@ const FILE_URL = (() => {
   return Services.io.newFileURI(file).spec;
 })();
 
-const CROSS_ORIGIN = "http://example.com";
+const CROSS_ORIGIN = "https://example.com";
 const CROSS_ORIGIN_URL = SW_REGISTER_PAGE_URL.replace(ORIGIN, CROSS_ORIGIN);
 const CROSS_ORIGIN_REDIRECT_URL = `${TEST_ROOT}redirect.sjs?${CROSS_ORIGIN_URL}`;
 
