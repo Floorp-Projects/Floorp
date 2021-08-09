@@ -13,14 +13,14 @@
 struct txStylesheetAttr;
 class txStylesheetCompilerState;
 
-typedef nsresult (*HandleStartFn)(int32_t aNamespaceID, nsAtom* aLocalName,
-                                  nsAtom* aPrefix,
-                                  txStylesheetAttr* aAttributes,
-                                  int32_t aAttrCount,
+using HandleStartFn = nsresult (*)(int32_t aNamespaceID, nsAtom* aLocalName,
+                                   nsAtom* aPrefix,
+                                   txStylesheetAttr* aAttributes,
+                                   int32_t aAttrCount,
+                                   txStylesheetCompilerState& aState);
+using HandleEndFn = nsresult (*)(txStylesheetCompilerState& aState);
+using HandleTextFn = nsresult (*)(const nsAString& aStr,
                                   txStylesheetCompilerState& aState);
-typedef nsresult (*HandleEndFn)(txStylesheetCompilerState& aState);
-typedef nsresult (*HandleTextFn)(const nsAString& aStr,
-                                 txStylesheetCompilerState& aState);
 
 struct txElementHandler {
   int32_t mNamespaceID;

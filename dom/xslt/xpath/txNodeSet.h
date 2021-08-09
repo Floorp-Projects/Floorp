@@ -183,9 +183,10 @@ class txNodeSet : public txAExprResult {
     }
   }
 
-  typedef void (*transferOp)(txXPathNode* aDest, const txXPathNode* aStart,
+  using transferOp = void (*)(txXPathNode* aDest, const txXPathNode* aStart,
+                              const txXPathNode* aEnd);
+  using destroyOp = void (*)(const txXPathNode* aStart,
                              const txXPathNode* aEnd);
-  typedef void (*destroyOp)(const txXPathNode* aStart, const txXPathNode* aEnd);
   nsresult add(const txNodeSet& aNodes, transferOp aTransfer,
                destroyOp aDestroy);
 
