@@ -344,8 +344,11 @@ EventStates Element::IntrinsicState() const {
 }
 
 void Element::NotifyStateChange(EventStates aStates) {
-  Document* doc = GetComposedDoc();
-  if (doc) {
+  if (aStates.IsEmpty()) {
+    return;
+  }
+
+  if (Document* doc = GetComposedDoc()) {
     nsAutoScriptBlocker scriptBlocker;
     doc->ContentStateChanged(this, aStates);
   }
