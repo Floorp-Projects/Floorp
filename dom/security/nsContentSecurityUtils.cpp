@@ -405,6 +405,56 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   return FilenameTypeAndDetails(kOther, Nothing());
 }
 
+#ifdef NIGHTLY_BUILD
+// Crash String must be safe from a telemetry point of view.
+// This will be ensured when this function is used.
+void PossiblyCrash(const char* pref_suffix, const nsCString crash_string) {
+  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {
+    // We only crash in the parent (unfortunately) because it's
+    // the only place we can be sure that our only-crash-once
+    // pref-writing works.
+    return;
+  }
+
+  nsCString previous_crashes("security.crash_tracking.");
+  previous_crashes.Append(pref_suffix);
+  previous_crashes.Append(".prevCrashes");
+
+  nsCString max_crashes("security.crash_tracking.");
+  max_crashes.Append(pref_suffix);
+  max_crashes.Append(".maxCrashes");
+
+  int32_t numberOfPreviousCrashes = 0;
+  numberOfPreviousCrashes = Preferences::GetInt(previous_crashes.get(), 0);
+
+  int32_t maxAllowableCrashes = 0;
+  maxAllowableCrashes = Preferences::GetInt(max_crashes.get(), 0);
+
+  if (numberOfPreviousCrashes >= maxAllowableCrashes) {
+    return;
+  }
+
+  nsresult rv =
+      Preferences::SetInt(previous_crashes.get(), ++numberOfPreviousCrashes);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrefService> prefsCom = Preferences::GetService();
+  Preferences* prefs = static_cast<Preferences*>(prefsCom.get());
+
+  if (!prefs->AllowOffMainThreadSave()) {
+    // Do not crash if we can't save prefs off the main thread
+    return;
+  }
+
+  rv = prefs->SavePrefFileBlocking();
+  if (!NS_FAILED(rv)) {
+    MOZ_CRASH_UNSAFE_PRINTF("%s", crash_string.get());
+  }
+}
+#endif
+
 class EvalUsageNotificationRunnable final : public Runnable {
  public:
   EvalUsageNotificationRunnable(bool aIsSystemPrincipal,
