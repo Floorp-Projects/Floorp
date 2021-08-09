@@ -918,15 +918,13 @@ def provided_program(env_var, when=None):
 
 
 @template
-def sysroot_path(host_or_target, target_sysroot=None):
-    assert target_sysroot or host_or_target is target
+def sysroot_path(host_or_target):
     if host_or_target is host:
         host_or_target_str = "host"
         opt = "--with-host-sysroot"
         env = "HOST_SYSROOT"
         when = depends(host)(lambda h: h.kernel == "Linux")
-        # Only bootstrap a host sysroot when using a bootstrapped target sysroot
-        bootstrap_when = when & target_sysroot.bootstrapped
+        bootstrap_when = when
     else:
         assert host_or_target is target
         host_or_target_str = "target"
@@ -945,10 +943,7 @@ def sysroot_path(host_or_target, target_sysroot=None):
 
     sysroot_input = depends(opt, when=when)(lambda x: x)
     bootstrap_sysroot = depends(bootstrap_when, sysroot_input)(
-        # Only bootstrap when no flag was explicitly given (either --with or --without)
-        lambda bootstrap, input: bootstrap
-        and not input
-        and input.origin == "default"
+        lambda bootstrap, input: bootstrap and not input
     )
 
     @depends(
@@ -988,7 +983,7 @@ def system_lib_option(name, *args, **kwargs):
             )
 
 
-host_sysroot_path = sysroot_path(host, target_sysroot_path).path
+host_sysroot_path = sysroot_path(host).path
 target_sysroot_path = target_sysroot_path.path
 
 
