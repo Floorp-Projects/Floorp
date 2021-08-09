@@ -248,6 +248,7 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.androidx_arch_core_testing
+    testImplementation "org.mozilla.components:support-test:${AndroidComponents.VERSION}"
 
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version", {
         exclude group: 'com.android.support', module: 'support-annotations'
