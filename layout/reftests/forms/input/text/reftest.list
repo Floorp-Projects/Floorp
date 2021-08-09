@@ -10,3 +10,9 @@ fuzzy-if(skiaContent,0-1,0-500) needs-focus == select.html select-ref.html
 != line-height-2.5.html line-height-1.0.html
 == shadow-rules.html shadow-rules-ref.html
 != height-small-font.html height-small-font-notref.html
+
+# Autofill tests
+== autofill-blank.html autofill-preview-blank.html
+!= autofill.html autofill-blank.html
+!= autofill-preview.html autofill-preview-blank.html
+!= autofill.html autofill-preview.html
