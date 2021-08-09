@@ -298,6 +298,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
       TELEMETRY_EVENT_CATEGORY,
       UrlbarPrefs.get("quickSuggestEnabled")
     );
+
+    // Record the Nimbus "exposure" event. Note that `recordExposureEvent` will
+    // make sure only one event gets recorded even it is called multiple times
+    // in the same browser session.
+    NimbusFeatures.urlbar.recordExposureEvent();
+
     // QuickSuggest is only loaded by the UrlBar on it's first query, however
     // there is work it can preload when idle instead of starting it on user
     // input. Referencing it here will trigger its import and init.
