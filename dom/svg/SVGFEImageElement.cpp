@@ -9,7 +9,6 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/SVGFEImageElementBinding.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "mozilla/dom/UserActivation.h"
@@ -152,10 +151,6 @@ nsresult SVGFEImageElement::BindToTree(BindContext& aContext,
     nsContentUtils::AddScriptRunner(
         NewRunnableMethod("dom::SVGFEImageElement::MaybeLoadSVGImage", this,
                           &SVGFEImageElement::MaybeLoadSVGImage));
-  }
-
-  if (aContext.InComposedDoc()) {
-    aContext.OwnerDoc().SetUseCounter(eUseCounter_custom_feImage);
   }
 
   return rv;
