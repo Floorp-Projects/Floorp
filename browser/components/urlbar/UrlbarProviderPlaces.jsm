@@ -229,38 +229,37 @@ function makeActionUrl(type, params) {
 }
 
 /**
- * Convert from a nsIAutocompleteResult to a list of results.
+ * Converts an array of legacy match objects into UrlbarResults.
  * Note that at every call we get the full set of results, included the
  * previously returned ones, and new results may be inserted in the middle.
  * This means we could sort these wrongly, the muxer should take care of it.
  *
  * @param {UrlbarQueryContext} context the query context.
- * @param {object} acResult an nsIAutocompleteResult
+ * @param {array} matches The match objects.
  * @param {set} urls a Set containing all the found urls, used to discard
  *        already added results.
  * @returns {array} converted results
  */
-function convertLegacyAutocompleteResult(context, acResult, urls) {
+function convertLegacyMatches(context, matches, urls) {
   let results = [];
-  for (let i = 0; i < acResult.matchCount; ++i) {
+  for (let match of matches) {
     // First, let's check if we already added this result.
-    // nsIAutocompleteResult always contains all of the results, includes ones
+    // `matches` always contains all of the results, includes ones
     // we may have added already. This means we'll end up adding things in the
     // wrong order here, but that's a task for the UrlbarMuxer.
-    let url = acResult.getFinalCompleteValueAt(i);
+    let url = match.finalCompleteValue || match.value;
     if (urls.has(url)) {
       continue;
     }
     urls.add(url);
-    let style = acResult.getStyleAt(i);
     let result = makeUrlbarResult(context.tokens, {
       url,
-      // getImageAt returns an empty string if there is no icon.  Use undefined
+      // `match.icon` is an empty string if there is no icon. Use undefined
       // instead so that tests can be simplified by not including `icon: ""` in
       // all their payloads.
-      icon: acResult.getImageAt(i) || undefined,
-      style,
-      comment: acResult.getCommentAt(i),
+      icon: match.icon || undefined,
+      style: match.style,
+      comment: match.comment,
       firstToken: context.tokens[0],
     });
     // Should not happen, but better safe than sorry.
@@ -405,17 +404,13 @@ const MATCH_TYPE = {
 };
 
 /**
- * Manages a single instance of an autocomplete search.
+ * Manages a single instance of a Places search.
  *
- * The first three parameters all originate from the similarly named parameters
- * of nsIAutoCompleteSearch.startSearch().
- *
- * @param {UrlbarQueryContext} [queryContext]
- *        The query context, undefined for legacy consumers.
- * @param {nsIAutoCompleteObserver} autocompleteListener
- * @param {nsIAutoCompleteSearch} autocompleteSearch
+ * @param {UrlbarQueryContext} queryContext
+ * @param {function} listener Called as: `listener(matches, searchOngoing)`
+ * @param {PlacesProvider} provider
  */
-function Search(queryContext, autocompleteListener, autocompleteSearch) {
+function Search(queryContext, listener, provider) {
   // We want to store the original string for case sensitive searches.
   this._originalSearchString = queryContext.searchString;
   this._trimmedOriginalSearchString = queryContext.trimmedSearchString;
@@ -518,18 +513,9 @@ function Search(queryContext, autocompleteListener, autocompleteSearch) {
     this.setBehavior("javascript");
   }
 
-  this._listener = autocompleteListener;
-  this._autocompleteSearch = autocompleteSearch;
-
-  // Create a new result to add eventual matches.  Note we need a result
-  // regardless having matches.
-  let result = Cc["@mozilla.org/autocomplete/simple-result;1"].createInstance(
-    Ci.nsIAutoCompleteSimpleResult
-  );
-  result.setSearchString(queryContext.searchString);
-  // Will be set later, if needed.
-  result.setDefaultIndex(-1);
-  this._result = result;
+  this._listener = listener;
+  this._provider = provider;
+  this._matches = [];
 
   // These are used to avoid adding duplicate entries to the results.
   this._usedURLs = [];
@@ -657,7 +643,7 @@ Search.prototype = {
     // early. UrlbarProviderTokenAliasEngines will add engine results.
     let tokenAliasEngines = await UrlbarSearchUtils.tokenAliasEngines();
     if (this._trimmedOriginalSearchString == "@" && tokenAliasEngines.length) {
-      this._autocompleteSearch.finishSearch(true);
+      this._provider.finishSearch(true);
       return;
     }
 
@@ -683,7 +669,7 @@ Search.prototype = {
           this._trimmedOriginalSearchString.startsWith("@")) ||
         (this.hasBehavior("search") && this.hasBehavior("restrict"))
       ) {
-        this._autocompleteSearch.finishSearch(true);
+        this._provider.finishSearch(true);
         return;
       }
     }
@@ -919,16 +905,9 @@ Search.prototype = {
     }
     if (replace) {
       // Replacing an existing match from the previous search.
-      this._result.removeMatchAt(index);
+      this._matches.splice(index, 1);
     }
-    this._result.insertMatchAt(
-      index,
-      match.value,
-      match.comment,
-      match.icon,
-      match.style,
-      match.finalCompleteValue
-    );
+    this._matches.splice(index, 0, match);
     this._counts[match.type]++;
 
     this.notifyResult(true);
@@ -1359,19 +1338,11 @@ Search.prototype = {
         return;
       }
       this._notifyDelaysCount = 0;
-      let resultCode = this._result.matchCount
-        ? "RESULT_SUCCESS"
-        : "RESULT_NOMATCH";
-      if (searchOngoing) {
-        resultCode += "_ONGOING";
-      }
-      let result = this._result;
-      result.setSearchResult(Ci.nsIAutoCompleteResult[resultCode]);
-      this._listener.onSearchResult(this._autocompleteSearch, result);
+      this._listener(this._matches, searchOngoing);
       if (!searchOngoing) {
         // Break possible cycles.
         this._listener = null;
-        this._autocompleteSearch = null;
+        this._provider = null;
         this.stop();
       }
     };
@@ -1471,15 +1442,11 @@ class ProviderPlaces extends UrlbarProvider {
   startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
     let urls = new Set();
-    this._startLegacyQuery(queryContext, acResult => {
+    this._startLegacyQuery(queryContext, matches => {
       if (instance != this.queryInstance) {
         return;
       }
-      let results = convertLegacyAutocompleteResult(
-        queryContext,
-        acResult,
-        urls
-      );
+      let results = convertLegacyMatches(queryContext, matches, urls);
       for (let result of results) {
         addCallback(this, result);
       }
@@ -1537,20 +1504,11 @@ class ProviderPlaces extends UrlbarProvider {
 
   _startLegacyQuery(queryContext, callback) {
     let deferred = PromiseUtils.defer();
-    let listener = {
-      onSearchResult(_, result) {
-        let done =
-          [
-            Ci.nsIAutoCompleteResult.RESULT_IGNORED,
-            Ci.nsIAutoCompleteResult.RESULT_FAILURE,
-            Ci.nsIAutoCompleteResult.RESULT_NOMATCH,
-            Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
-          ].includes(result.searchResult) || result.errorDescription;
-        callback(result);
-        if (done) {
-          deferred.resolve();
-        }
-      },
+    let listener = (matches, searchOngoing) => {
+      callback(matches);
+      if (!searchOngoing) {
+        deferred.resolve();
+      }
     };
     this._startSearch(queryContext.searchString, listener, queryContext);
     this._deferred = deferred;
