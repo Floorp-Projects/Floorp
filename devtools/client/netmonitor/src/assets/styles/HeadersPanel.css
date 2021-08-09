@@ -149,6 +149,12 @@
   display: inline;
 }
 
+/* Cookies */
+
+.network-monitor .cookies-panel-container .accordion .properties-view tr.treeRow .treeLabelCell {
+  padding-inline-start: 0;
+}
+
 /* Summary tabpanel */
 
 .network-monitor .tabpanel-summary-container {
