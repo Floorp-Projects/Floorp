@@ -393,6 +393,10 @@ int ScreenGetterWayland::GetMonitorForWindow(nsWindow* aWindow) {
 }
 
 RefPtr<nsIScreen> ScreenGetterWayland::GetScreenForWindow(nsWindow* aWindow) {
+  if (mScreenList.IsEmpty()) {
+    return nullptr;
+  }
+
   int monitor = GetMonitorForWindow(aWindow);
   if (monitor < 0) {
     return nullptr;
