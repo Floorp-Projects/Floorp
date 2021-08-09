@@ -1135,9 +1135,12 @@ void GlobalObject::releaseData(JSFreeOp* fop) {
 
 void GlobalObjectData::trace(JSTracer* trc) {
   TraceEdge(trc, &emptyGlobalScope, "global-empty-scope");
+
   TraceNullableEdge(trc, &regExpStatics, "global-regexp-statics");
   TraceNullableEdge(trc, &intrinsicsHolder, "global-intrinsics-holder");
   TraceNullableEdge(trc, &forOfPICChain, "global-for-of-pic");
   TraceNullableEdge(trc, &sourceURLsHolder, "global-source-urls");
   TraceNullableEdge(trc, &realmKeyObject, "global-realm-key");
+
+  TraceNullableEdge(trc, &arrayShape, "global-array-shape");
 }
