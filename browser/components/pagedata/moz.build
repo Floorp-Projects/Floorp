@@ -12,6 +12,7 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 EXTRA_JS_MODULES.pagedata += [
+    "OpenGraphPageData.jsm",
     "PageDataCollector.jsm",
     "PageDataService.jsm",
     "SchemaOrgPageData.jsm",

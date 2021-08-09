@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  OpenGraphPageData: "resource:///modules/pagedata/OpenGraphPageData.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SchemaOrgPageData: "resource:///modules/pagedata/SchemaOrgPageData.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -42,7 +43,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * @returns {PageDataCollector[]}
  */
 function getCollectors(document) {
-  return [new SchemaOrgPageData(document)];
+  return [new SchemaOrgPageData(document), new OpenGraphPageData(document)];
 }
 
 /**
