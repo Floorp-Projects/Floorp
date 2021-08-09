@@ -5761,8 +5761,8 @@ var gCSSProperties = {
     applies_to_marker: true,
     applies_to_placeholder: true,
     applies_to_cue: true,
-    initial_values: ["weight style"],
-    other_values: ["none", "weight", "style"],
+    initial_values: ["weight style small-caps"],
+    other_values: ["none", "weight", "style", "small-caps"],
     invalid_values: [
       "weight none",
       "style none",
@@ -5770,6 +5770,8 @@ var gCSSProperties = {
       "weight 10px",
       "weight weight",
       "style style",
+      "small-caps none",
+      "small-caps small-caps",
     ],
   },
   "font-variant": {

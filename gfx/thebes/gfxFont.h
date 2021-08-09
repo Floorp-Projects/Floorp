@@ -103,7 +103,8 @@ struct gfxFontStyle {
   gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight, FontStretch aStretch,
                gfxFloat aSize, const FontSizeAdjust& aSizeAdjust,
                bool aSystemFont, bool aPrinterFont, bool aWeightSynthesis,
-               bool aStyleSynthesis, uint32_t aLanguageOverride);
+               bool aStyleSynthesis, bool aSmallCapsSynthesis,
+               uint32_t aLanguageOverride);
   // Features are composed of (1) features from style rules (2) features
   // from feature settings rules and (3) family-specific features.  (1) and
   // (3) are guaranteed to be mutually exclusive
@@ -198,6 +199,7 @@ struct gfxFontStyle {
   // Whether synthetic styles are allowed
   bool allowSyntheticWeight : 1;
   bool allowSyntheticStyle : 1;
+  bool allowSyntheticSmallCaps : 1;
 
   // some variant features require fallback which complicates the shaping
   // code, so set up a bool to indicate when shaping with fallback is needed

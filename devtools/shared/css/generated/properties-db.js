@@ -6393,7 +6393,9 @@ exports.CSS_PROPERTIES = {
     "values": [
       "inherit",
       "initial",
+      "none",
       "revert",
+      "small-caps",
       "style",
       "unset",
       "weight"
