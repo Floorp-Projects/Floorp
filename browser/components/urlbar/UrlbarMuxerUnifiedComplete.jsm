@@ -78,6 +78,11 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       // When you add state, update _copyState() as necessary.
     };
 
+    // If the heuristic is hidden, increment the available span.
+    if (UrlbarPrefs.get("experimental.hideHeuristic")) {
+      state.availableResultSpan++;
+    }
+
     // Do the first pass over all results to build some state.
     for (let result of context.results) {
       if (result.providerName == "UrlbarProviderQuickSuggest") {
