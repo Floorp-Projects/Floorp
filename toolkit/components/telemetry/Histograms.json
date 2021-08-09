@@ -13086,6 +13086,19 @@
     "bug_numbers": [1261955, 1127646, 1570634, 1567604, 1685399],
     "releaseChannelCollection": "opt-out"
   },
+  "VIDEO_VISIBLE_PLAY_TIME_MS" : {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "expires_in_version": "never",
+    "description": "Total time spent playing visible video in milliseconds. This reports the total play time for a video element whenever the decoder stops. (eg. pausing media, encountering an error, changing to a new resource, page goes to the bf-cached or page gets discarded)",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 7200000,
+    "n_buckets": 100,
+    "bug_numbers": [1723799],
+    "releaseChannelCollection": "opt-out"
+  },
   "VIDEO_HIDDEN_PLAY_TIME_MS" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
