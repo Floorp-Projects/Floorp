@@ -63,7 +63,7 @@ class Expr {
   /**
    * Returns the type or types of results this Expr return.
    */
-  typedef uint16_t ResultType;
+  using ResultType = uint16_t;
   enum {
     NODESET_RESULT = 0x01,
     BOOLEAN_RESULT = 0x02,
@@ -77,7 +77,7 @@ class Expr {
     return (getReturnType() & aType) != 0;
   }
 
-  typedef uint16_t ContextSensitivity;
+  using ContextSensitivity = uint16_t;
   enum {
     NO_CONTEXT = 0x00,
     NODE_CONTEXT = 0x01,
