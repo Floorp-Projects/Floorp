@@ -727,13 +727,13 @@ bool GlobalObject::getOrCreateEval(JSContext* cx, Handle<GlobalObject*> global,
   if (!getOrCreateObjectPrototype(cx, global)) {
     return false;
   }
-  eval.set(&global->getReservedSlot(EVAL).toObject());
+  eval.set(global->data().eval);
+  MOZ_ASSERT(eval);
   return true;
 }
 
 bool GlobalObject::valueIsEval(const Value& val) {
-  Value eval = getReservedSlot(EVAL);
-  return eval.isObject() && eval == val;
+  return val.isObject() && data().eval == &val.toObject();
 }
 
 /* static */
@@ -1140,6 +1140,7 @@ void GlobalObjectData::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &sourceURLsHolder, "global-source-urls");
   TraceNullableEdge(trc, &realmKeyObject, "global-realm-key");
   TraceNullableEdge(trc, &throwTypeError, "global-throw-type-error");
+  TraceNullableEdge(trc, &eval, "global-eval");
 
   TraceNullableEdge(trc, &arrayShape, "global-array-shape");
 }
