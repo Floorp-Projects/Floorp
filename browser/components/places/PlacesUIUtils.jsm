@@ -1418,7 +1418,9 @@ var PlacesUIUtils = {
       menupopup._view.destroyContextMenu();
     }
 
-    PlacesUIUtils.lastContextMenuTriggerNode = null;
+    if (menupopup.id == "placesContext") {
+      PlacesUIUtils.lastContextMenuTriggerNode = null;
+    }
   },
 
   openSelectionInTabs(event) {
