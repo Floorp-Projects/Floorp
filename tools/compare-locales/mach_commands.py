@@ -182,9 +182,9 @@ class CrossChannel(MachCommandBase):
         # string manipulation logic?
         if strings_path.name != "en-US":
             raise FailedCommandError("strings_path needs to be named `en-US`")
-        self.activate_virtualenv()
+        command_context.activate_virtualenv()
         # XXX pin python requirements
-        self.virtualenv_manager.install_pip_requirements(
+        command_context.virtualenv_manager.install_pip_requirements(
             Path(os.path.dirname(__file__)) / "requirements.in"
         )
         strings_path = strings_path.resolve()  # abspath
@@ -220,7 +220,7 @@ class CrossChannel(MachCommandBase):
 
         from mozxchannel import CrossChannelCreator, get_default_config
 
-        config = get_default_config(Path(self.topsrcdir), strings_path)
+        config = get_default_config(Path(command_context.topsrcdir), strings_path)
         ccc = CrossChannelCreator(config)
         status = 0
         changes = False
@@ -239,7 +239,7 @@ class CrossChannel(MachCommandBase):
                 ssh_key_file.chmod(0o600)
             # Set up firefoxtree for comm per bug 1659691 comment 22
             if os.environ.get("MOZ_AUTOMATION") and not HGRC_PATH.exists():
-                self._clone_hg_repo(VCT_URL, VCT_PATH)
+                self._clone_hg_repo(command_context, VCT_URL, VCT_PATH)
                 hgrc_content = [
                     "[extensions]",
                     f"firefoxtree = {FXTREE_PATH}",
@@ -254,16 +254,22 @@ class CrossChannel(MachCommandBase):
                         ]
                     )
                 HGRC_PATH.write_text("\n".join(hgrc_content))
-            if strings_path.exists() and self._check_outgoing(strings_path):
-                self._strip_outgoing(strings_path)
+            if strings_path.exists() and self._check_outgoing(
+                command_context, strings_path
+            ):
+                self._strip_outgoing(command_context, strings_path)
             # Clone strings + source repos, pull heads
             for repo_config in (config["strings"], *config["source"].values()):
                 if not repo_config["path"].exists():
-                    self._clone_hg_repo(repo_config["url"], str(repo_config["path"]))
+                    self._clone_hg_repo(
+                        command_context, repo_config["url"], str(repo_config["path"])
+                    )
                 for head in repo_config["heads"].keys():
                     command = ["hg", "--cwd", str(repo_config["path"]), "pull"]
                     command.append(head)
-                    status = self._retry_run_process(command, ensure_exit_code=False)
+                    status = self._retry_run_process(
+                        command_context, command, ensure_exit_code=False
+                    )
                     if status not in (0, 255):  # 255 on pull with no changes
                         raise RetryError(f"Failure on pull: status {status}!")
                     if repo_config.get("update_on_pull"):
@@ -277,35 +283,42 @@ class CrossChannel(MachCommandBase):
                             head,
                         ]
                         status = self._retry_run_process(
-                            command, ensure_exit_code=False
+                            command_context, command, ensure_exit_code=False
                         )
                         if status not in (0, 255):  # 255 on pull with no changes
                             raise RetryError(f"Failure on update: status {status}!")
                 self._check_hg_repo(
-                    repo_config["path"], heads=repo_config.get("heads", {}).keys()
+                    command_context,
+                    repo_config["path"],
+                    heads=repo_config.get("heads", {}).keys(),
                 )
         else:
-            self._check_hg_repo(strings_path)
+            self._check_hg_repo(command_context, strings_path)
             for repo_config in config.get("source", {}).values():
                 self._check_hg_repo(
-                    repo_config["path"], heads=repo_config.get("heads", {}).keys()
+                    command_context,
+                    repo_config["path"],
+                    heads=repo_config.get("heads", {}).keys(),
                 )
-            if self._check_outgoing(strings_path):
+            if self._check_outgoing(command_context, strings_path):
                 raise RetryError(f"check: Outgoing changes in {strings_path}!")
 
         if "create" in actions:
             try:
                 status = ccc.create_content()
                 changes = True
-                self._create_outgoing_patch(outgoing_path, strings_path)
+                self._create_outgoing_patch(
+                    command_context, outgoing_path, strings_path
+                )
             except CommandError as exc:
                 if exc.ret != 1:
                     raise RetryError(exc) from exc
-                self.log(logging.INFO, "create", {}, "No new strings.")
+                command_context.log(logging.INFO, "create", {}, "No new strings.")
 
         if "push" in actions:
             if changes:
                 self._retry_run_process(
+                    command_context,
                     [
                         "hg",
                         "--cwd",
@@ -318,12 +331,13 @@ class CrossChannel(MachCommandBase):
                     line_handler=print,
                 )
             else:
-                self.log(logging.INFO, "push", {}, "Skipping empty push.")
+                command_context.log(logging.INFO, "push", {}, "Skipping empty push.")
 
         return status
 
-    def _check_outgoing(self, strings_path):
+    def _check_outgoing(self, command_context, strings_path):
         status = self._retry_run_process(
+            command_context,
             ["hg", "--cwd", str(strings_path), "out", "-r", "."],
             ensure_exit_code=False,
         )
@@ -335,8 +349,9 @@ class CrossChannel(MachCommandBase):
             f"Outgoing check in {strings_path} returned unexpected {status}!"
         )
 
-    def _strip_outgoing(self, strings_path):
+    def _strip_outgoing(self, command_context, strings_path):
         self._retry_run_process(
+            command_context,
             [
                 "hg",
                 "--config",
@@ -349,7 +364,7 @@ class CrossChannel(MachCommandBase):
             ],
         )
 
-    def _create_outgoing_patch(self, path, strings_path):
+    def _create_outgoing_patch(self, command_context, path, strings_path):
         if not path:
             return
         if not path.parent.exists():
@@ -360,6 +375,7 @@ class CrossChannel(MachCommandBase):
                 fh.write(f"{line}\n")
 
             self._retry_run_process(
+                command_context,
                 [
                     "hg",
                     "--cwd",
@@ -373,21 +389,22 @@ class CrossChannel(MachCommandBase):
                 line_handler=writeln,
             )
 
-    def _retry_run_process(self, *args, error_msg=None, **kwargs):
+    def _retry_run_process(self, command_context, *args, error_msg=None, **kwargs):
         try:
-            return self.run_process(*args, **kwargs)
+            return command_context.run_process(*args, **kwargs)
         except Exception as exc:
             raise RetryError(error_msg or str(exc)) from exc
 
-    def _check_hg_repo(self, path, heads=None):
+    def _check_hg_repo(self, command_context, path, heads=None):
         if not (path.is_dir() and (path / ".hg").is_dir()):
             raise RetryError(f"{path} is not a Mercurial repository")
         if heads:
             for head in heads:
                 self._retry_run_process(
+                    command_context,
                     ["hg", "--cwd", str(path), "log", "-r", head],
                     error_msg=f"check: {path} has no head {head}!",
                 )
 
-    def _clone_hg_repo(self, url, path):
-        self._retry_run_process(["hg", "clone", url, str(path)])
+    def _clone_hg_repo(self, command_context, url, path):
+        self._retry_run_process(command_context, ["hg", "clone", url, str(path)])
