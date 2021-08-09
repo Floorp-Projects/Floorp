@@ -204,3 +204,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
         DEFINES["HAS_CONNECTX"] = True
 
 include("/tools/fuzzing/libfuzzer-config.mozbuild")
+
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DEFINES["MOZ_BUILD_APP_IS_BROWSER"] = True
