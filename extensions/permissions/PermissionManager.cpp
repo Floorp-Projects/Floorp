@@ -1564,8 +1564,10 @@ nsresult PermissionManager::AddInternal(
 
   // For private browsing only store permissions for the session. Except for
   // default permissions which are stored in-memory only and imported each
-  // startup.
-  if (aID != cIDPermissionIsDefault && aExpireType != EXPIRE_SESSION) {
+  // startup. We also allow setting persistent UKNOWN_ACTION, to support
+  // removing default private browsing permissions.
+  if (aID != cIDPermissionIsDefault && aPermission != UNKNOWN_ACTION &&
+      aExpireType != EXPIRE_SESSION) {
     uint32_t privateBrowsingId =
         nsScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID;
     nsresult rv = aPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
