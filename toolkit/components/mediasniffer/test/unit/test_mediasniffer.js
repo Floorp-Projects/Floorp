@@ -53,7 +53,7 @@ const tests = [
   },
   {
     contentType: "application/something",
-    expectedContentType: "application/something",
+    expectedContentType: "application/ogg",
     flags: Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS,
   },
 ];
