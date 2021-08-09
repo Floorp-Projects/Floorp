@@ -5,7 +5,6 @@
 package org.mozilla.focus.popup
 
 import android.content.Context
-import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.text.TextUtils
@@ -114,7 +113,7 @@ object PopupUtils {
         url: String,
         securityInfoIcon: ImageView
     ) {
-        identityState.setTextColor(Color.WHITE)
+        identityState.setTextColor(ContextCompat.getColor(context, R.color.primaryText))
 
         val inactiveColor = ContextCompat.getColor(context, R.color.colorTextInactive)
         val photonYellow = ContextCompat.getColor(context, R.color.photonYellow60)

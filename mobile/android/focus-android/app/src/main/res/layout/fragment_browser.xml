@@ -19,7 +19,7 @@
             android:id="@+id/status_bar_background"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:background="@drawable/animated_background" />
+            android:background="@drawable/background_gradient_dark" />
 
         <org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout
             app:viewsToHideWhenActivated="@array/viewsToHide"
@@ -44,7 +44,7 @@
                 android:id="@+id/crash_container"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@color/photonRed50"
+                android:background="@color/destructive"
                 android:visibility="gone"/>
 
             <include
@@ -102,7 +102,7 @@
     <FrameLayout
         android:id="@+id/popup_tint"
         android:visibility="gone"
-        android:background="@android:color/black"
+        android:background="@color/colorPrimary"
         android:alpha=".5"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
@@ -111,6 +111,6 @@
         android:id="@+id/video_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/black"
+        android:background="@color/colorPrimary"
         android:visibility="gone" />
 </FrameLayout>

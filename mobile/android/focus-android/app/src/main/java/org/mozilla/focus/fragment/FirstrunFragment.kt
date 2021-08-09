@@ -5,7 +5,6 @@
 package org.mozilla.focus.fragment
 
 import android.content.Context
-import android.graphics.drawable.TransitionDrawable
 import android.os.Bundle
 import android.transition.TransitionInflater
 import android.view.LayoutInflater
@@ -61,14 +60,6 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
         viewPager!!.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageSelected(position: Int) {
                 TelemetryWrapper.showFirstRunPageEvent(position)
-
-                val drawable = background!!.background as TransitionDrawable
-
-                if (position == adapter.count - 1) {
-                    drawable.startTransition(200)
-                } else {
-                    drawable.resetTransition()
-                }
 
                 viewPager!!.contentDescription = adapter.getPageAccessibilityDescription(position)
             }

@@ -8,7 +8,6 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.SharedPreferences
 import android.content.res.Configuration
-import android.graphics.drawable.TransitionDrawable
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.method.LinkMovementMethod
@@ -613,10 +612,8 @@ class UrlInputFragment :
         */
 
         if (toolbarBackgroundView != null) {
-            val transitionDrawable = toolbarBackgroundView?.background as TransitionDrawable
 
             if (reverse) {
-                transitionDrawable.reverseTransition(ANIMATION_DURATION)
                 toolbarBottomBorder?.visibility = View.VISIBLE
 
                 if (!isOverlay) {
@@ -624,7 +621,6 @@ class UrlInputFragment :
                     menuView?.visibility = View.VISIBLE
                 }
             } else {
-                transitionDrawable.startTransition(ANIMATION_DURATION)
                 toolbarBottomBorder?.visibility = View.GONE
             }
         }

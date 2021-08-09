@@ -82,7 +82,7 @@ class SessionNotificationService : Service() {
             .setVisibility(NotificationCompat.VISIBILITY_SECRET)
             .setShowWhen(false)
             .setLocalOnly(true)
-            .setColor(ContextCompat.getColor(this, R.color.colorErase))
+            .setColor(ContextCompat.getColor(this, R.color.accentBright))
             .addAction(
                 NotificationCompat.Action(
                     R.drawable.ic_notification,

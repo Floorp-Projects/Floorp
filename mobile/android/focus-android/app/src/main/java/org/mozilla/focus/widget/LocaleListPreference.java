@@ -149,7 +149,6 @@ public class LocaleListPreference extends ListPreference {
 
     public LocaleListPreference(Context context, AttributeSet attributes) {
         super(context, attributes);
-
     }
 
     public interface EntriesListener {

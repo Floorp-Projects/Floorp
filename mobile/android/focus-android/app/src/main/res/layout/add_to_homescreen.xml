@@ -27,13 +27,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:backgroundTint="@color/home_screen_dialog_bg_tint"
             android:inputType="text"
             android:paddingStart="10dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="@color/home_screen_dialog_text"
-            android:textColorHighlight="@color/colorAccent"
-            android:textColorHint="@color/home_screen_dialog_text"
+            android:textColor="@color/primaryText"
+            android:textColorHighlight="@color/accentBright"
             android:textCursorDrawable="@null" />
 
     </LinearLayout>
@@ -55,12 +53,14 @@
         <Button
             android:id="@+id/addtohomescreen_dialog_cancel"
             style="@style/ButtonStyle"
+            android:textColor="@color/accentBright"
             android:contentDescription="@string/dialog_addtohomescreen_action_cancel"
             android:text="@string/dialog_addtohomescreen_action_cancel"/>
 
         <Button
             android:id="@+id/addtohomescreen_dialog_add"
             style="@style/ButtonStyle"
+            android:textColor="@color/accentBright"
             android:contentDescription="@string/dialog_addtohomescreen_action_add"
             android:text="@string/dialog_addtohomescreen_action_add"/>
     </LinearLayout>
@@ -91,7 +91,7 @@
             android:layout_gravity="center_vertical"
             android:paddingStart="16dp"
             android:text="@string/dialog_addtohomescreen_tracking_protection2"
-            android:textColor="@color/home_screen_dialog_warning_text"
+            android:textColor="@color/secondaryText"
             android:textSize="14sp"
             android:fontFamily="@string/font_roboto_regular" />
     </LinearLayout>

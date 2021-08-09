@@ -59,7 +59,6 @@ import org.mozilla.focus.R
 import org.mozilla.focus.activity.InstallFirefoxActivity
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.browser.DisplayToolbar
-import org.mozilla.focus.browser.binding.BlockingThemeBinding
 import org.mozilla.focus.browser.binding.TabCountBinding
 import org.mozilla.focus.browser.integration.BrowserMenuController
 import org.mozilla.focus.browser.integration.BrowserToolbarIntegration
@@ -116,7 +115,6 @@ class BrowserFragment :
 
     private val toolbarIntegration = ViewBoundFeatureWrapper<BrowserToolbarIntegration>()
 
-    private val blockingThemeBinding = ViewBoundFeatureWrapper<BlockingThemeBinding>()
     private val tabCountBinding = ViewBoundFeatureWrapper<TabCountBinding>()
     private lateinit var trackingProtectionPanel: TrackingProtectionPanel
     /**
@@ -264,18 +262,6 @@ class BrowserFragment :
             ),
             owner = this,
             view = view
-        )
-
-        blockingThemeBinding.set(
-            BlockingThemeBinding(
-                components.store,
-                tab.id,
-                tab.isCustomTab(),
-                statusBar!!,
-                urlBar!!
-            ),
-            owner = this,
-            view = statusBar!!
         )
 
         customizeToolbar(view)

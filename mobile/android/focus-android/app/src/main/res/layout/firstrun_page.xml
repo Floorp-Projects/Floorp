@@ -17,7 +17,7 @@
         android:layout_marginBottom="4dp"
         android:elevation="4dp"
         cardview:cardCornerRadius="6dp"
-        cardview:cardBackgroundColor="#FFF9F9FA">
+        cardview:cardBackgroundColor="@color/primaryText">
 
         <LinearLayout
             android:layout_width="match_parent"

@@ -5,6 +5,7 @@
 package org.mozilla.focus.input
 
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteResult
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
@@ -31,15 +32,15 @@ class InputToolbarIntegration(
             indicators = emptyList()
             hint = fragment.getString(R.string.urlbar_hint)
             colors = toolbar.display.colors.copy(
-                hint = ContextCompat.getColor(toolbar.context, R.color.urlBarHintText),
-                text = 0xFFFFFFFF.toInt()
+                hint = ContextCompat.getColor(toolbar.context, R.color.photonLightGrey05),
+                text = ContextCompat.getColor(toolbar.context, R.color.primaryText)
             )
         }
         toolbar.edit.hint = fragment.getString(R.string.urlbar_hint)
         toolbar.private = true
         toolbar.edit.colors = toolbar.edit.colors.copy(
-            hint = ContextCompat.getColor(toolbar.context, R.color.urlBarHintText),
-            text = 0xFFFFFFFF.toInt()
+            hint = ContextCompat.getColor(toolbar.context, R.color.photonLightGrey05),
+            text = ContextCompat.getColor(toolbar.context, R.color.primaryText)
         )
         toolbar.setOnEditListener(object : Toolbar.OnEditListener {
             override fun onTextChanged(text: String) {
@@ -71,6 +72,16 @@ class InputToolbarIntegration(
                 delegate.noAutocompleteResult(text)
             }
         }
+
+        // Use the same background for display/edit modes.
+        val urlBackground = ResourcesCompat.getDrawable(
+            fragment.resources,
+            R.drawable.toolbar_url_background,
+            fragment.context?.theme
+        )
+
+        toolbar.display.setUrlBackground(urlBackground)
+        toolbar.edit.setUrlBackground(urlBackground)
     }
 
     override fun start() {

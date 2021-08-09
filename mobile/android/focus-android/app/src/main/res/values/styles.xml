@@ -6,17 +6,19 @@
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorAccent">@color/colorAccent_old</item>
 
         <item name="android:windowContentTransitions">true</item>
         <item name="popupMenuStyle">@style/PopupMenu</item>
         <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogTheme</item>
         <item name="disabled">@color/disabled</item>
+        <item name="destructive">@color/destructive</item>
 
         <!-- Use the same colors for both themes until light theme it will be implemented -->
-        <item name="primaryText">@color/primary_text</item>
-        <item name="colorControlNormal">@color/photonWhite</item>
-        <item name="android:textColorSecondary">@color/photonWhite</item>
+        <item name="primaryText">@color/primaryText</item>
+        <item name="secondaryText">@color/secondaryText</item>
+        <item name="colorControlNormal">@color/primaryText</item>
+        <item name="android:textColorSecondary">@color/secondaryText</item>
 
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
@@ -31,8 +33,8 @@
         <item name="android:listPreferredItemPaddingRight">@dimen/activity_horizontal_margin</item>
 
         <!-- Use the same colors for both themes until light theme it will be implemented -->
-        <item name="android:textColor">@color/photonWhite</item>
-        <item name="titleTextColor">@color/photonWhite</item>
+        <item name="android:textColor">@color/primaryText</item>
+        <item name="titleTextColor">@color/primaryText</item>
     </style>
 
     <style name="DialogTitleStyle" parent="TextAppearance.AppCompat.Title">
@@ -60,21 +62,21 @@
         <item name="android:windowTitleStyle">@style/DialogTitleStyle</item>
         <item name="dialogPreferredPadding">24dp</item>
         <item name="android:windowBackground">@drawable/dialog_background</item>
-        <item name="android:colorAccent">@color/colorAccent</item>
+        <item name="android:colorAccent">@color/accentBright</item>
     </style>
 
     <style name="ButtonStyle" parent="Base.Widget.AppCompat.ButtonBar.AlertDialog">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">@color/home_screen_dialog_button_text</item>
+        <item name="android:textColor">@color/accentBright</item>
         <item name="android:textSize">14sp</item>
         <item name="android:fontFamily">@string/font_roboto_medium</item>
     </style>
 
     <style name="SettingsTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
         <item name="android:textColorSecondary">@color/settings_summary_text</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorAccent">@color/accentBright</item>
         <item name="android:windowTitleStyle">@style/DialogTitleStyle</item>
         <item name="dialogPreferredPadding">24dp</item>
         <item name="actionButtonStyle">@style/SettingsActionButtonStyle</item>
@@ -115,12 +117,12 @@
     </style>
 
     <style name="Mozac.Browser.Menu" parent="">
-        <item name="cardBackgroundColor">@color/browser_menu_bg</item>
+        <item name="cardBackgroundColor">@color/menuBackground</item>
     </style>
 
     <!-- Add new style to be able to use the same color for both themes until light theme it will be implemented -->
     <style name="MenuItem" parent="@android:style/TextAppearance.Material.Menu">
-        <item name="android:textColor">@color/photonWhite</item>
+        <item name="android:textColor">@color/primaryText</item>
     </style>
 
     <style name="AppTheme.ContextMenuItem">
@@ -149,12 +151,12 @@
         <item name="android:textSize">16sp</item>
         <item name="android:fontFamily">@string/font_roboto_medium</item>
         <item name="android:textStyle">normal</item>
-        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textColor">@color/primaryText</item>
     </style>
 
 
     <style name="DoorHanger">
-        <item name="android:textColor">@color/snackbarTextColor</item>
+        <item name="android:textColor">@color/primaryText</item>
         <item name="android:textColorLink">@color/doorhanger_link</item>
     </style>
 
@@ -171,7 +173,7 @@
     </style>
 
     <style name="HintTextAppearance">
-        <item name="android:textColor">@color/colorTextInactive</item>
+        <item name="android:textColor">@color/secondaryText</item>
         <item name="android:textSize">9sp</item>
     </style>
 
@@ -235,7 +237,7 @@
     </style>
 
     <style name="SwitchTheme" parent="Theme.AppCompat.Light">
-        <item name="colorControlActivated">@color/colorAccent</item>
+        <item name="colorControlActivated">@color/accentBright</item>
     </style>
 
     <style name="Preference.Title" parent="Widget.MaterialComponents.TextView">

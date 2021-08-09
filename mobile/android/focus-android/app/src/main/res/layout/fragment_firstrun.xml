@@ -6,7 +6,7 @@
     android:id="@+id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/animated_background"
+    android:background="@drawable/background_gradient_dark"
     android:orientation="vertical"
     android:paddingTop="25dp">
 

@@ -4,7 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <org.mozilla.focus.browser.DisplayToolbar xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/appbar"
     android:layout_width="match_parent"
     android:layout_height="56dp"
@@ -15,7 +14,7 @@
         android:id="@+id/urlbar"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="@drawable/animated_background"
+        android:background="@drawable/background_gradient_dark"
         android:elevation="4dp"
         app:layout_scrollFlags="scroll|enterAlways|snap|exitUntilCollapsed"
         android:clipChildren="false">

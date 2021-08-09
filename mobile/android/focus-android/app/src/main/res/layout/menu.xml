@@ -7,13 +7,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="4dp"
-    app:cardElevation="4dp">
+    app:cardCornerRadius="8dp"
+    app:cardElevation="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/browser_menu_bg"
+        android:background="@color/menuBackground"
         android:orientation="vertical">
 
         <androidx.recyclerview.widget.RecyclerView
@@ -27,7 +27,7 @@
             android:id="@+id/branding"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#272727"
+            android:background="@color/menuBackground"
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:lines="1"
@@ -35,7 +35,7 @@
             android:paddingEnd="16dp"
             android:paddingStart="16dp"
             android:paddingTop="8dp"
-            android:textColor="#929292"
+            android:textColor="@color/primaryText"
             android:textSize="12sp"
             android:visibility="gone"
             tools:text="Powered by Firefox Focus" />

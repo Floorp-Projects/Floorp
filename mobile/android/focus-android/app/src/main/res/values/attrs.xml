@@ -4,7 +4,9 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <attr name="primaryText" format="reference" />
+    <attr name="secondaryText" format="reference" />
     <attr name="disabled" format="reference" />
+    <attr name="destructive" format="reference" />
 
    <declare-styleable name="ResizableKeyboardViewDelegate">
        <attr name="viewsToHideWhenActivated" format="reference" />

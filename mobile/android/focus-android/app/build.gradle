@@ -73,6 +73,7 @@ android {
         }
         nightly {
             initWith release
+            signingConfig signingConfigs.debug
         }
     }
     testOptions {
