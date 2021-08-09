@@ -288,6 +288,7 @@ void WorkerErrorReport::ReportError(
       init.mMessage = aReport->mMessage;
       init.mFilename = aReport->mFilename;
       init.mLineno = aReport->mLineNumber;
+      init.mColno = aReport->mColumnNumber;
       init.mError = aException;
     }
 
