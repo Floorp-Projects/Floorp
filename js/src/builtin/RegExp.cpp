@@ -1377,8 +1377,8 @@ static bool InterpretDollar(JSLinearString* matched, JSLinearString* string,
     return false;
   }
 
-  // ES 2021 Table 52
-  // https://tc39.es/ecma262/#table-45 (sic)
+  // ES 2021 Table 57: Replacement Text Symbol Substitutions
+  // https://tc39.es/ecma262/#table-replacement-text-symbol-substitutions
   char16_t c = currentDollar[1];
   if (IsAsciiDigit(c)) {
     /* $n, $nn */
@@ -1465,7 +1465,11 @@ static bool InterpretDollar(JSLinearString* matched, JSLinearString* string,
       out->init(string, 0, position);
       break;
     case '\'':
-      out->init(string, tailPos, string->length() - tailPos);
+      if (tailPos >= string->length()) {
+        out->initEmpty(matched);
+      } else {
+        out->init(string, tailPos, string->length() - tailPos);
+      }
       break;
   }
 
