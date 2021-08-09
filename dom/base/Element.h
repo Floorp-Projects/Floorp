@@ -705,19 +705,21 @@ class Element : public FragmentOrElement {
   // These will handle setting up script blockers when they notify, so no need
   // to do it in the callers unless desired.  States passed here must only be
   // those in EXTERNALLY_MANAGED_STATES.
-  virtual void AddStates(EventStates aStates) {
+  void AddStates(EventStates aStates) {
     MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
                "Should only be adding externally-managed states here");
+    EventStates old = mState;
     AddStatesSilently(aStates);
-    NotifyStateChange(aStates);
+    NotifyStateChange(old ^ mState);
   }
-  virtual void RemoveStates(EventStates aStates) {
+  void RemoveStates(EventStates aStates) {
     MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
                "Should only be removing externally-managed states here");
+    EventStates old = mState;
     RemoveStatesSilently(aStates);
-    NotifyStateChange(aStates);
+    NotifyStateChange(old ^ mState);
   }
-  virtual void ToggleStates(EventStates aStates, bool aNotify) {
+  void ToggleStates(EventStates aStates, bool aNotify) {
     MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
                "Should only be removing externally-managed states here");
     mState ^= aStates;
