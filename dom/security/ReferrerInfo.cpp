@@ -699,14 +699,28 @@ bool ReferrerInfo::ShouldIgnoreLessRestrictedPolicies(
     nsIHttpChannel* aChannel, const ReferrerPolicyEnum aPolicy) const {
   MOZ_ASSERT(aChannel);
 
-  if (!StaticPrefs::network_http_referer_disallowCrossSiteRelaxingDefault()) {
-    return false;
-  }
-
   // We only care about the less restricted policies.
   if (aPolicy != ReferrerPolicy::Unsafe_url &&
       aPolicy != ReferrerPolicy::No_referrer_when_downgrade &&
       aPolicy != ReferrerPolicy::Origin_when_cross_origin) {
+    return false;
+  }
+
+  bool isCrossSite = IsCrossSiteRequest(aChannel);
+
+  if (!StaticPrefs::network_http_referer_disallowCrossSiteRelaxingDefault()) {
+    // Log the warning message to console to inform that we will ignore
+    // less restricted policies for cross-site requests in the future.
+    if (isCrossSite) {
+      nsCOMPtr<nsIURI> uri;
+      nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+      NS_ENSURE_SUCCESS(rv, false);
+
+      AutoTArray<nsString, 1> params = {
+          NS_ConvertUTF8toUTF16(uri->GetSpecOrDefault())};
+      LogMessageToConsole(aChannel, "ReferrerPolicyDisallowRelaxingWarning",
+                          params);
+    }
     return false;
   }
 
@@ -720,7 +734,24 @@ bool ReferrerInfo::ShouldIgnoreLessRestrictedPolicies(
     return false;
   }
 
-  return IsCrossSiteRequest(aChannel);
+  if (isCrossSite) {
+    // Log the console message to say that the less restricted policy was
+    // ignored.
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, true);
+
+    uint32_t idx = static_cast<uint32_t>(aPolicy);
+
+    AutoTArray<nsString, 2> params = {
+        NS_ConvertUTF8toUTF16(
+            nsDependentCString(ReferrerPolicyValues::strings[idx].value)),
+        NS_ConvertUTF8toUTF16(uri->GetSpecOrDefault())};
+    LogMessageToConsole(aChannel, "ReferrerPolicyDisallowRelaxingMessage",
+                        params);
+  }
+
+  return isCrossSite;
 }
 
 void ReferrerInfo::LogMessageToConsole(
