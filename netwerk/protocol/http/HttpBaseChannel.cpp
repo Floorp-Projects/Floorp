@@ -5584,5 +5584,14 @@ NS_IMETHODIMP HttpBaseChannel::SetWaitForHTTPSSVCRecord() {
   return NS_OK;
 }
 
+bool HttpBaseChannel::Http3Allowed() const {
+  bool isDirectOrNoProxy =
+      mProxyInfo ? static_cast<nsProxyInfo*>(mProxyInfo.get())->IsDirect()
+                 : true;
+  return !mUpgradeProtocolCallback && isDirectOrNoProxy &&
+         !(mCaps & NS_HTTP_BE_CONSERVATIVE) && !LoadBeConservative() &&
+         LoadAllowHttp3();
+}
+
 }  // namespace net
 }  // namespace mozilla

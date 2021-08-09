@@ -381,9 +381,7 @@ nsresult TRRServiceChannel::BeginConnect() {
   // TODO: Bug 1622778 for using AltService in socket process.
   StoreAllowAltSvc(XRE_IsParentProcess() && LoadAllowAltSvc());
   bool http2Allowed = !gHttpHandler->IsHttp2Excluded(connInfo);
-  bool http3Allowed = !mUpgradeProtocolCallback && !mProxyInfo &&
-                      !(mCaps & NS_HTTP_BE_CONSERVATIVE) &&
-                      !LoadBeConservative();
+  bool http3Allowed = Http3Allowed();
 
   RefPtr<AltSvcMapping> mapping;
   if (!mConnectionInfo && LoadAllowAltSvc() &&  // per channel
