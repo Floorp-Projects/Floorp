@@ -16,6 +16,9 @@ interface mixin WindowOrWorkerGlobalScope {
   [Replaceable] readonly attribute USVString origin;
   readonly attribute boolean crossOriginIsolated;
 
+  [Throws, NeedsCallerType]
+  void reportError(any e);
+
   // base64 utility methods
   [Throws]
   DOMString btoa(DOMString btoa);

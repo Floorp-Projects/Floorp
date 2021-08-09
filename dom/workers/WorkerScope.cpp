@@ -279,6 +279,26 @@ nsISerialEventTarget* WorkerGlobalScopeBase::EventTargetFor(
   return mSerialEventTarget;
 }
 
+// See also AutoJSAPI::ReportException
+void WorkerGlobalScopeBase::ReportError(JSContext* aCx,
+                                        JS::Handle<JS::Value> aError,
+                                        CallerType, ErrorResult& aRv) {
+  JS::ErrorReportBuilder jsReport(aCx);
+  JS::ExceptionStack exnStack(aCx, aError, nullptr);
+  if (!jsReport.init(aCx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
+    return aRv.NoteJSContextException(aCx);
+  }
+
+  // Before invoking ReportError, put the exception back on the context,
+  // because it may want to put it in its error events and has no other way
+  // to get hold of it.  After we invoke ReportError, clear the exception on
+  // cx(), just in case ReportError didn't.
+  JS::SetPendingExceptionStack(aCx, exnStack);
+  mWorkerPrivate->ReportError(aCx, jsReport.toStringResult(),
+                              jsReport.report());
+  JS_ClearPendingException(aCx);
+}
+
 void WorkerGlobalScopeBase::Atob(const nsAString& aAtob, nsAString& aOut,
                                  ErrorResult& aRv) const {
   mWorkerPrivate->AssertIsOnWorkerThread();
