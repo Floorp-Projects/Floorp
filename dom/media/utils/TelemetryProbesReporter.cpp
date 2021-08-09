@@ -218,6 +218,15 @@ void TelemetryProbesReporter::ReportResultForVideo() {
   }
   key.AppendASCII(resolution);
 
+  auto visiblePlayTimeS = totalPlayTimeS - invisiblePlayTimeS;
+  LOG("VIDEO_VISIBLE_PLAY_TIME = %f, keys: '%s' and 'All'", visiblePlayTimeS,
+      key.get());
+  Telemetry::Accumulate(Telemetry::VIDEO_VISIBLE_PLAY_TIME_MS, key,
+                        SECONDS_TO_MS(visiblePlayTimeS));
+  // Also accumulate result in an "All" key.
+  Telemetry::Accumulate(Telemetry::VIDEO_VISIBLE_PLAY_TIME_MS, "All"_ns,
+                        SECONDS_TO_MS(visiblePlayTimeS));
+
   const uint32_t hiddenPercentage =
       lround(invisiblePlayTimeS / totalPlayTimeS * 100.0);
   Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE, key,
