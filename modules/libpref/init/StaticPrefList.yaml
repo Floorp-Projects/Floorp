@@ -6887,7 +6887,7 @@
 # a double colon, and return the regular style otherwise.
 - name: layout.css.computed-style.throw-on-invalid-pseudo
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # Are implicit tracks in computed grid templates serialized?
