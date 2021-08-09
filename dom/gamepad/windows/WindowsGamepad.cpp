@@ -151,7 +151,7 @@ class Gamepad {
 };
 
 // Drop this in favor of decltype when we require a new enough SDK.
-typedef void(WINAPI* XInputEnable_func)(BOOL);
+using XInputEnable_func = void(WINAPI*)(BOOL);
 
 // RAII class to wrap loading the XInput DLL
 class XInputLoader {
