@@ -508,6 +508,18 @@ class UrlbarInput {
       return;
     }
 
+    // Use the hidden heuristic if it exists and there's no selection.
+    if (
+      UrlbarPrefs.get("experimental.hideHeuristic") &&
+      !element &&
+      !isComposing &&
+      !oneOffParams?.engine &&
+      this._resultForCurrentValue?.heuristic
+    ) {
+      this.pickResult(this._resultForCurrentValue, event);
+      return;
+    }
+
     // We don't select a heuristic result when we're autofilling a token alias,
     // but we want pressing Enter to behave like the first result was selected.
     if (!result && this.value.startsWith("@")) {

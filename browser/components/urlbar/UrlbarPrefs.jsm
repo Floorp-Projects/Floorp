@@ -88,6 +88,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // focused.
   ["experimental.expandTextOnFocus", false],
 
+  // Whether the heuristic result is hidden.
+  ["experimental.hideHeuristic", false],
+
   // Whether the urlbar displays a permanent search button.
   ["experimental.searchButton", false],
 
