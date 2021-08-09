@@ -4,13 +4,14 @@
 
 package org.mozilla.fenix.historymetadata.controller
 
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.navigation.NavController
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
 import org.mozilla.fenix.home.HomeFragmentAction
@@ -67,7 +68,10 @@ class DefaultHistoryMetadataController(
     }
 
     override fun handleHistoryShowAllClicked() {
-        navController.nav(R.id.homeFragment, HomeFragmentDirections.actionGlobalHistoryFragment())
+        dismissSearchDialogIfDisplayed()
+        navController.navigate(
+            HomeFragmentDirections.actionGlobalHistoryFragment()
+        )
     }
 
     override fun handleToggleHistoryMetadataGroupExpanded(historyMetadataGroup: HistoryMetadataGroup) {
@@ -76,5 +80,12 @@ class DefaultHistoryMetadataController(
                 historyMetadataGroup
             )
         )
+    }
+
+    @VisibleForTesting(otherwise = PRIVATE)
+    fun dismissSearchDialogIfDisplayed() {
+        if (navController.currentDestination?.id == R.id.searchDialogFragment) {
+            navController.navigateUp()
+        }
     }
 }

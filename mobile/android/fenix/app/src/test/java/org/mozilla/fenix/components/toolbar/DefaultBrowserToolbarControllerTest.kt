@@ -223,25 +223,19 @@ class DefaultBrowserToolbarControllerTest {
         val controller = createController()
         controller.handleToolbarClick()
 
-        val expected = BrowserFragmentDirections.actionGlobalSearchDialog(
+        val homeDirections = BrowserFragmentDirections.actionGlobalHome()
+        val searchDialogDirections = BrowserFragmentDirections.actionGlobalSearchDialog(
             sessionId = "1"
         )
 
-        verify { metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)) }
-        verify { navController.navigate(expected, any<NavOptions>()) }
-    }
-
-    @Test
-    fun handleToolbarClick_useNewSearchExperience() {
-        val controller = createController()
-        controller.handleToolbarClick()
-
-        val expected = BrowserFragmentDirections.actionGlobalSearchDialog(
-            sessionId = "1"
-        )
-
-        verify { metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)) }
-        verify { navController.navigate(expected, any<NavOptions>()) }
+        verify {
+            metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER))
+        }
+        verify {
+            // shows the home screen "behind" the search dialog
+            navController.navigate(homeDirections)
+            navController.navigate(searchDialogDirections, any<NavOptions>())
+        }
     }
 
     @Test

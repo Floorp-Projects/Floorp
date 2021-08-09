@@ -66,4 +66,9 @@ object FeatureFlags {
      * type need to present.
      */
     val androidAutofill = Config.channel.isNightlyOrDebug || Config.channel.isBeta
+
+    /**
+     * Enables showing the home screen behind the search dialog
+     */
+    val showHomeBehindSearch = Config.channel.isNightlyOrDebug
 }

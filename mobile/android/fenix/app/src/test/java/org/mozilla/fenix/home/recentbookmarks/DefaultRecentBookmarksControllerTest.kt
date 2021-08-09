@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home.recentbookmarks
 
 import androidx.navigation.NavController
-import androidx.navigation.NavOptions
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -38,14 +37,13 @@ class DefaultRecentBookmarksControllerTest {
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxUnitFun = true)
+
     private lateinit var controller: DefaultRecentBookmarksController
 
     @Before
     fun setup() {
         every { activity.openToBrowserAndLoad(any(), any(), any()) } just Runs
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.homeFragment
-        }
+        every { navController.navigateUp() } returns true
 
         controller = spyk(
             DefaultRecentBookmarksController(
@@ -62,6 +60,10 @@ class DefaultRecentBookmarksControllerTest {
 
     @Test
     fun `WHEN a recently saved bookmark is clicked THEN the selected bookmark is opened`() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.homeFragment
+        }
+
         val bookmark = BookmarkNode(
             type = BookmarkNodeType.ITEM,
             guid = "guid#${Math.random() * 1000}",
@@ -76,19 +78,49 @@ class DefaultRecentBookmarksControllerTest {
         controller.handleBookmarkClicked(bookmark)
 
         verify {
+            controller.dismissSearchDialogIfDisplayed()
             activity.openToBrowserAndLoad(
                 searchTermOrURL = bookmark.url!!,
                 newTab = true,
                 from = BrowserDirection.FromHome
             )
         }
+        verify(exactly = 0) {
+            navController.navigateUp()
+        }
     }
 
     @Test
     fun `WHEN show all recently saved bookmark is clicked THEN the bookmarks root is opened`() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.homeFragment
+        }
+
         controller.handleShowAllBookmarksClicked()
 
         val directions = HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
-        verify { navController.navigate(directions, any<NavOptions>()) }
+        verify {
+            controller.dismissSearchDialogIfDisplayed()
+            navController.navigate(directions)
+        }
+        verify(exactly = 0) {
+            navController.navigateUp()
+        }
+    }
+
+    @Test
+    fun `WHEN show all is clicked from behind search dialog THEN open bookmarks root`() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.searchDialogFragment
+        }
+
+        controller.handleShowAllBookmarksClicked()
+
+        val directions = HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
+        verify {
+            controller.dismissSearchDialogIfDisplayed()
+            navController.navigateUp()
+            navController.navigate(directions)
+        }
     }
 }

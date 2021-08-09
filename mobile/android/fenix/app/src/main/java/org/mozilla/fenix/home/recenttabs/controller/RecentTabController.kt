@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.home.recenttabs.controller
 
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.navigation.NavController
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases.SelectTabUseCase
@@ -11,7 +13,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.inProgressMediaTab
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
 
@@ -45,7 +46,6 @@ class DefaultRecentTabsController(
 ) : RecentTabController {
 
     override fun handleRecentTabClicked(tabId: String) {
-
         if (tabId == store.state.inProgressMediaTab?.id) {
             metrics.track(Event.OpenInProgressMediaTab)
         } else {
@@ -57,10 +57,15 @@ class DefaultRecentTabsController(
     }
 
     override fun handleRecentTabShowAllClicked() {
+        dismissSearchDialogIfDisplayed()
         metrics.track(Event.ShowAllRecentTabs)
-        navController.nav(
-            R.id.homeFragment,
-            HomeFragmentDirections.actionGlobalTabsTrayFragment()
-        )
+        navController.navigate(HomeFragmentDirections.actionGlobalTabsTrayFragment())
+    }
+
+    @VisibleForTesting(otherwise = PRIVATE)
+    fun dismissSearchDialogIfDisplayed() {
+        if (navController.currentDestination?.id == R.id.searchDialogFragment) {
+            navController.navigateUp()
+        }
     }
 }

@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.ui.tabcounter.TabCounterMenu
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
@@ -91,8 +92,12 @@ class DefaultBrowserToolbarController(
 
     override fun handleToolbarClick() {
         metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER))
-        navController.nav(
-            R.id.browserFragment,
+        if (FeatureFlags.showHomeBehindSearch) {
+            navController.navigate(
+                BrowserFragmentDirections.actionGlobalHome()
+            )
+        }
+        navController.navigate(
             BrowserFragmentDirections.actionGlobalSearchDialog(
                 currentSession?.id
             ),

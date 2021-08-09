@@ -5,6 +5,7 @@
 package org.mozilla.fenix.historymetadata.controller
 
 import androidx.navigation.NavController
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
@@ -22,7 +23,6 @@ import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
@@ -43,10 +43,14 @@ class HistoryMetadataControllerTest {
     private val selectOrAddUseCase: SelectOrAddUseCase = mockk(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
 
-    private lateinit var controller: HistoryMetadataController
+    private lateinit var controller: DefaultHistoryMetadataController
 
     @Before
     fun setup() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.homeFragment
+        }
+
         controller = spyk(
             DefaultHistoryMetadataController(
                 activity = activity,
@@ -87,8 +91,8 @@ class HistoryMetadataControllerTest {
         controller.handleHistoryShowAllClicked()
 
         verify {
-            navController.nav(
-                R.id.homeFragment,
+            controller.dismissSearchDialogIfDisplayed()
+            navController.navigate(
                 HomeFragmentDirections.actionGlobalHistoryFragment()
             )
         }
