@@ -202,6 +202,8 @@ impl<Allocator: AtlasAllocator, TextureParameters> AllocatorList<Allocator, Text
     pub fn allocated_textures(&self) -> usize {
         self.units.len()
     }
+
+    pub fn size(&self) -> i32 { self.size }
 }
 
 impl<Allocator: AtlasAllocator, TextureParameters> AtlasAllocatorList<TextureParameters> 

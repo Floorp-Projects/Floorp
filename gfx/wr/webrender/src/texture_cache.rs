@@ -1530,13 +1530,17 @@ impl TextureCache {
     ) -> bool {
         let mut allowed_in_shared_cache = true;
 
-        // Anything larger than TEXTURE_REGION_DIMENSIONS goes in a standalone texture.
-        // TODO(gw): If we find pages that suffer from batch breaks in this
-        //           case, add support for storing these in a standalone
-        //           texture array.
-        if descriptor.size.width > TEXTURE_REGION_DIMENSIONS ||
-           descriptor.size.height > TEXTURE_REGION_DIMENSIONS
+        if matches!(descriptor.format, ImageFormat::RGBA8 | ImageFormat::BGRA8)
+            && filter == TextureFilter::Linear
         {
+            // Allow the maximum that can fit in the linear color texture's two column layout.
+            let max = self.shared_textures.color8_linear.size() / 2;
+            allowed_in_shared_cache = descriptor.size.width.max(descriptor.size.height) <= max;
+        } else if descriptor.size.width > TEXTURE_REGION_DIMENSIONS {
+            allowed_in_shared_cache = false;
+        }
+
+        if descriptor.size.height > TEXTURE_REGION_DIMENSIONS {
             allowed_in_shared_cache = false;
         }
 
