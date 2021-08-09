@@ -792,6 +792,13 @@ let tv = {
   // KASValidityTest_ECCEphemeralUnified_NOKC_ZZOnly_init.fax [EC]
   // <http://csrc.nist.gov/groups/STM/cavp/documents/keymgmt/kastestvectors.zip>
   ecdh_p256: {
+    pkcs8: util.hex2abv(
+      "308187020100301306072a8648ce3d020106082a8648ce3d030107046d30" +
+        "6b020101042086880a915c7de9140f5d06a936c3bcd0c192848bd551894d" +
+        "916a72d1540d2495a14403420004656492c9b86256b6d324c98ad554d466" +
+        "d80cfd8ade6ee841086f109c728ab3aa9b027586e77e7582a5ed59bdfc46" +
+        "89d66e37d71dbbabae00614b2d3e83b7bc01"
+    ),
     jwk_pub: {
       kty: "EC",
       crv: "P-256",
