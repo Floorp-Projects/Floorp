@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const EXAMPLE_URL = "http://example.com/browser/dom/workers/test/";
-
 /**
  * Add a tab with given `url`. Returns a promise
  * that will be resolved when the tab finished loading.
