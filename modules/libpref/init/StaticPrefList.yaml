@@ -10435,6 +10435,12 @@
   value: false
   mirror: always
 
+# Whether the storage allowed check should be cached on the inner window.
+- name: privacy.antitracking.cacheStorageAllowedForWindow
+  type: bool
+  value: true
+  mirror: always
+
 # Enable the heuristic to allow storage access for recent visited pages
 - name: privacy.restrict3rdpartystorage.heuristic.recently_visited
   type: bool
