@@ -30,7 +30,7 @@
  *  ]
  */
 
-typedef nsTArray<CopyableTArray<nsString> > policyTokens;
+using policyTokens = nsTArray<CopyableTArray<nsString>>;
 
 class PolicyTokenizer {
  public:
