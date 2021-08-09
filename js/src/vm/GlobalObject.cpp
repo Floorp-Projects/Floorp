@@ -661,26 +661,11 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx,
   Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
   MOZ_ASSERT(global->isUnqualifiedVarObj());
 
-  Rooted<GlobalLexicalEnvironmentObject*> lexical(
-      cx, GlobalLexicalEnvironmentObject::create(cx, global));
-  if (!lexical) {
-    return nullptr;
-  }
-
-  Rooted<GlobalScope*> emptyGlobalScope(
-      cx, GlobalScope::createEmpty(cx, ScopeKind::Global));
-  if (!emptyGlobalScope) {
-    return nullptr;
-  }
-
   {
     auto data = cx->make_unique<GlobalObjectData>();
     if (!data) {
       return nullptr;
     }
-    data->emptyGlobalScope.init(emptyGlobalScope);
-    data->lexicalEnvironment.init(lexical);
-
     // Note: it's important for the realm's global to be initialized at the
     // same time as the global's GlobalObjectData, because we free the global's
     // data when Realm::global_ is cleared.
@@ -688,6 +673,20 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx,
     InitReservedSlot(global, GLOBAL_DATA_SLOT, data.release(),
                      MemoryUse::GlobalObjectData);
   }
+
+  Rooted<GlobalLexicalEnvironmentObject*> lexical(
+      cx, GlobalLexicalEnvironmentObject::create(cx, global));
+  if (!lexical) {
+    return nullptr;
+  }
+  global->data().lexicalEnvironment.init(lexical);
+
+  Rooted<GlobalScope*> emptyGlobalScope(
+      cx, GlobalScope::createEmpty(cx, ScopeKind::Global));
+  if (!emptyGlobalScope) {
+    return nullptr;
+  }
+  global->data().emptyGlobalScope.init(emptyGlobalScope);
 
   if (!JSObject::setQualifiedVarObj(cx, global)) {
     return nullptr;
@@ -1162,9 +1161,10 @@ void GlobalObjectData::trace(JSTracer* trc) {
     TraceNullableEdge(trc, &proto, "global-builtin-proto");
   }
 
-  TraceEdge(trc, &emptyGlobalScope, "global-empty-scope");
+  TraceNullableEdge(trc, &emptyGlobalScope, "global-empty-scope");
 
   TraceNullableEdge(trc, &lexicalEnvironment, "global-lexical-env");
+  TraceNullableEdge(trc, &windowProxy, "global-window-proxy");
   TraceNullableEdge(trc, &regExpStatics, "global-regexp-statics");
   TraceNullableEdge(trc, &intrinsicsHolder, "global-intrinsics-holder");
   TraceNullableEdge(trc, &forOfPICChain, "global-for-of-pic");

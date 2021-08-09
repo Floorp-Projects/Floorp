@@ -116,6 +116,9 @@ class GlobalObjectData {
   // The lexical environment for global let/const/class bindings.
   HeapPtr<GlobalLexicalEnvironmentObject*> lexicalEnvironment;
 
+  // The WindowProxy associated with this global.
+  HeapPtr<JSObject*> windowProxy;
+
   // Global state for regular expressions.
   HeapPtr<RegExpStaticsObject*> regExpStatics;
 
@@ -155,7 +158,6 @@ class GlobalObjectData {
 class GlobalObject : public NativeObject {
   enum : unsigned {
     GLOBAL_DATA_SLOT = JSCLASS_GLOBAL_APPLICATION_SLOTS,
-    WINDOW_PROXY,
 
     // Total reserved-slot count for global objects.
     RESERVED_SLOTS
@@ -922,16 +924,10 @@ class GlobalObject : public NativeObject {
   static NativeObject* getOrCreateForOfPICObject(JSContext* cx,
                                                  Handle<GlobalObject*> global);
 
-  JSObject* windowProxy() const {
-    return &getReservedSlot(WINDOW_PROXY).toObject();
-  }
-  JSObject* maybeWindowProxy() const {
-    Value v = getReservedSlot(WINDOW_PROXY);
-    MOZ_ASSERT(v.isObject() || v.isUndefined());
-    return v.isObject() ? &v.toObject() : nullptr;
-  }
+  JSObject* maybeWindowProxy() const { return data().windowProxy; }
+
   void setWindowProxy(JSObject* windowProxy) {
-    setReservedSlot(WINDOW_PROXY, ObjectValue(*windowProxy));
+    data().windowProxy = windowProxy;
   }
 
   ArrayObject* getSourceURLsHolder() const { return data().sourceURLsHolder; }
