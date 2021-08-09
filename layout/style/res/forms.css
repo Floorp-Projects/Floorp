@@ -995,7 +995,7 @@ input:is([type=date], [type=time], [type=datetime-local]):is(:disabled, :read-on
   color: GrayText;
 }
 
-input:autofill {
+input:autofill, input:-moz-autofill-preview {
   filter: grayscale(21%) brightness(88%) contrast(161%) invert(10%) sepia(40%) saturate(206%);
 }
 
