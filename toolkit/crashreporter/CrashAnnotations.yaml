@@ -161,22 +161,6 @@ Breadcrumbs:
     timestamp, message, category, level, type and data in JSON format.
   type: string
 
-BreakpadReserveAddress:
-  description: >
-    Address of the buffer reserved by Breakpad.
-  type: string
-
-BreakpadReserveSize:
-  description: >
-    Size of the buffer reserved by Breakpad.
-  type: string
-
-Bug_1086977:
-  description: >
-    Mac-only annotation which should be present only if Firefox crashed when
-    loading a facebook plugin.
-  type: string
-
 BuildID:
   description: >
     Application build ID, the format is YYYYMMDDHHMMSS.
@@ -239,16 +223,6 @@ CoUnmarshalInterfaceResult:
 CPUMicrocodeVersion:
   description: >
     Version of the CPU microcode.
-  type: string
-
-CpuUsageFlashProcess1:
-  description: >
-    CPU usage of the first Adobe Flash plugin process.
-  type: string
-
-CpuUsageFlashProcess2:
-  description: >
-    CPU usage of the second Adobe Flash plugin process.
   type: string
 
 CrashAddressLikelyWrong:
@@ -324,24 +298,6 @@ ExperimentalFeatures:
   type: string
   ping: true
 
-FlashProcessDump:
-  description: >
-    Type of process the flash plugin is running in, can be either "Broker" or
-    "Sandbox".
-  type: string
-
-FramePoisonBase:
-  description: >
-    Base pointer of the memory area used for the poison value we place in freed
-    memory.
-  type: string
-
-FramePoisonSize:
-  description: >
-    Size of the memory area used for the poison value we place in freed
-    memory.
-  type: integer
-
 GetHGlobalFromStreamFailure:
   description: >
     Error returned when invoking GetHGlobalFromStreamFailure() during the
@@ -386,11 +342,6 @@ GraphicsDrawShader:
     See file names in gfx/wr/webrender/res/* for the possible values.
   type: string
 
-GraphicsSanityTest:
-  description: >
-    Annotation used in tests.
-  type: string
-
 GraphicsStartupTest:
   description: >
     Set to 1 by the graphics driver crash guard when it's activated.
@@ -428,11 +379,6 @@ PHCFreeStack:
     The allocation's free stack trace, if the crash involved a bad access
     of a special PHC allocation. Encoded as a comma-separated list of decimal
     addresses.
-  type: string
-
-HangMonitorDescription:
-  description: >
-    Name of the hang monitor that generated the crash.
   type: string
 
 HasDeviceTouchScreen:
@@ -678,37 +624,16 @@ Notes:
     Miscellaneous notes that can be appended to a crash.
   type: string
 
-nsAsyncShutdownComponent:
-  description: >
-    Holds the contents of the nsAsyncShutdown.js script
-  type: string
-
 OOMAllocationSize:
   description: >
     Size of the allocation that caused an out-of-memory condition.
   type: string
   ping: true
 
-PluginCpuUsage:
-  description: >
-    CPU usage of the plugin process.
-  type: string
-
 PluginFilename:
   description: >
     Plugin filename, only the process holding the plugin has this annotation.
   type: string
-
-PluginHang:
-  description: >
-    The presence of this annotation indicates that this crash was generated in
-    response to a plugin hanging.
-  type: boolean
-
-PluginHangUIDuration:
-  description: >
-    Duration in milliseconds of the plugin hang that caused this crash.
-  type: integer
 
 PluginName:
   description: >

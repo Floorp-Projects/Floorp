@@ -1340,18 +1340,10 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
     writer.Write(Annotation::EventLoopNestingLevel, eventloopNestingLevel);
   }
 
-#ifdef XP_WIN
-  if (gBreakpadReservedVM) {
-    writer.Write(Annotation::BreakpadReserveAddress,
-                 uintptr_t(gBreakpadReservedVM));
-    writer.Write(Annotation::BreakpadReserveSize, kReserveSize);
-  }
-
-#  ifdef HAS_DLL_BLOCKLIST
+#if defined(XP_WIN) && defined(HAS_DLL_BLOCKLIST)
   // HACK: The DLL blocklist code will manually write its annotations as JSON
   DllBlocklist_WriteNotes(writer);
-#  endif
-#endif  // XP_WIN
+#endif  // defined(XP_WIN) && defined(HAS_DLL_BLOCKLIST)
 
   WriteMozCrashReason(writer);
 

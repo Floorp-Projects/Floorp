@@ -79,7 +79,7 @@ function annotateCrashReport() {
     var crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
       Ci.nsICrashReporter
     );
-    crashReporter.annotateCrashReport("GraphicsSanityTest", "1");
+    crashReporter.annotateCrashReport("TestKey", "1");
   } catch (e) {}
 }
 
@@ -88,7 +88,7 @@ function removeCrashReportAnnotation(value) {
     var crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
       Ci.nsICrashReporter
     );
-    crashReporter.removeCrashReportAnnotation("GraphicsSanityTest");
+    crashReporter.removeCrashReportAnnotation("TestKey");
   } catch (e) {}
 }
 
