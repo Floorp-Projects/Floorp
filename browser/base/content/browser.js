@@ -6886,6 +6886,7 @@ const nodeToTooltipMap = {
   "appMenu-zoomReset-button2": "zoomReset-button.tooltip",
   "appMenu-zoomReduce-button": "zoomReduce-button.tooltip",
   "appMenu-zoomReduce-button2": "zoomReduce-button.tooltip",
+  "reader-mode-button": "reader-mode-button.tooltip",
   "reader-mode-button-icon": "reader-mode-button.tooltip",
   "print-button": "printButton.tooltip",
 };
@@ -6912,6 +6913,7 @@ const nodeToShortcutMap = {
   "appMenu-zoomReset-button2": "key_fullZoomReset",
   "appMenu-zoomReduce-button": "key_fullZoomReduce",
   "appMenu-zoomReduce-button2": "key_fullZoomReduce",
+  "reader-mode-button": "key_toggleReaderMode",
   "reader-mode-button-icon": "key_toggleReaderMode",
   "print-button": "printKb",
 };
