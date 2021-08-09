@@ -108,11 +108,8 @@ class UrlbarView {
   }
 
   get allowEmptySelection() {
-    return !(
-      this._queryContext &&
-      this._queryContext.results[0] &&
-      this._queryContext.results[0].heuristic
-    );
+    let { heuristicResult } = this._queryContext;
+    return !heuristicResult || !this._shouldShowHeuristic(heuristicResult);
   }
 
   get selectedRowIndex() {
@@ -651,10 +648,15 @@ class UrlbarView {
         // Select the heuristic result.  The heuristic may not be the first
         // result added, which is why we do this check here when each result is
         // added and not above.
-        this._selectElement(this._getFirstSelectableElement(), {
-          updateInput: false,
-          setAccessibleFocus: this.controller._userSelectionBehavior == "arrow",
-        });
+        if (this._shouldShowHeuristic(firstResult)) {
+          this._selectElement(this._getFirstSelectableElement(), {
+            updateInput: false,
+            setAccessibleFocus:
+              this.controller._userSelectionBehavior == "arrow",
+          });
+        } else {
+          this.input.setResultForCurrentValue(firstResult);
+        }
       } else if (
         firstResult.payload.providesSearchMode &&
         queryContext.trimmedSearchString != "@"
@@ -882,6 +884,16 @@ class UrlbarView {
     this.controller.notify(this.controller.NOTIFICATIONS.VIEW_OPEN);
   }
 
+  _shouldShowHeuristic(result) {
+    if (!result?.heuristic) {
+      throw new Error("A heuristic result must be given");
+    }
+    return (
+      !UrlbarPrefs.get("experimental.hideHeuristic") ||
+      result.type == UrlbarUtils.RESULT_TYPE.TIP
+    );
+  }
+
   /**
    * Whether a result is a search suggestion.
    * @param {UrlbarResult} result The result to examine.
@@ -956,6 +968,10 @@ class UrlbarView {
     // skip rows until we find one compatible with the result we want to apply.
     // If we couldn't find a compatible range, we'll just update.
     let results = queryContext.results;
+    if (results[0]?.heuristic && !this._shouldShowHeuristic(results[0])) {
+      // Exclude the heuristic.
+      results = results.slice(1);
+    }
     let rowIndex = 0;
     let resultIndex = 0;
     let visibleSpanCount = 0;
