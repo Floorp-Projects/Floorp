@@ -26,8 +26,8 @@ class EventTarget;
 
 class nsDeviceSensors : public nsIDeviceSensors,
                         public mozilla::hal::ISensorObserver {
-  typedef mozilla::dom::DeviceAccelerationInit DeviceAccelerationInit;
-  typedef mozilla::dom::DeviceRotationRateInit DeviceRotationRateInit;
+  using DeviceAccelerationInit = mozilla::dom::DeviceAccelerationInit;
+  using DeviceRotationRateInit = mozilla::dom::DeviceRotationRateInit;
 
  public:
   NS_DECL_ISUPPORTS
