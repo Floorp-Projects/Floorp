@@ -9,8 +9,10 @@ import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
+import kotlinx.android.synthetic.main.menu_item.view.*
 import org.mozilla.focus.R
+import org.mozilla.focus.utils.FeatureFlags
 import org.mozilla.focus.whatsnew.WhatsNew
 
 /**
@@ -23,8 +25,19 @@ class HomeMenuAdapter(
     private val listener: View.OnClickListener
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val items: List<MenuItem> = listOf(
-            MenuItem(R.id.whats_new, WhatsNewViewHolder.LAYOUT_ID, context.getString(R.string.menu_whats_new)),
+    private val optionalWhatsNew = if (FeatureFlags.isMvp) {
+        emptyList()
+    } else {
+        listOf(
+            MenuItem(
+                R.id.whats_new,
+                WhatsNewViewHolder.LAYOUT_ID,
+                context.getString(R.string.menu_whats_new)
+            ),
+        )
+    }
+
+    private val items: List<MenuItem> = optionalWhatsNew + listOf(
             MenuItem(R.id.help, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_help)),
             MenuItem(R.id.settings, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_settings))
     )
@@ -34,7 +47,7 @@ class HomeMenuAdapter(
 
         return when (viewType) {
             WhatsNewViewHolder.LAYOUT_ID -> WhatsNewViewHolder(view, listener)
-            MenuItemViewHolder.LAYOUT_ID -> MenuItemViewHolder(view as TextView, listener)
+            MenuItemViewHolder.LAYOUT_ID -> MenuItemViewHolder(view as ConstraintLayout, listener)
             else -> throw IllegalArgumentException("Unknown view type $viewType")
         }
     }
@@ -56,19 +69,30 @@ class HomeMenuAdapter(
  * ViewHolder implementation for regular menu items with just a label.
  */
 private class MenuItemViewHolder(
-    val labelView: TextView,
+    val containerView: ConstraintLayout,
     val listener: View.OnClickListener
-) : RecyclerView.ViewHolder(labelView) {
+) : RecyclerView.ViewHolder(containerView) {
 
     companion object {
         val LAYOUT_ID: Int = R.layout.menu_item
     }
 
     fun bind(item: MenuItem) {
-        labelView.id = item.id
-        labelView.text = item.label
-
-        labelView.setOnClickListener(listener)
+        val iconResourceId = if (item.id == R.id.help) {
+            R.drawable.ic_help
+        } else {
+            if (FeatureFlags.isMvp) {
+                R.drawable.ic_settings2
+            } else {
+                R.drawable.ic_settings
+            }
+        }
+        containerView.apply {
+            id = item.id
+            title.text = item.label
+            icon.setBackgroundResource(iconResourceId)
+            setOnClickListener(listener)
+        }
     }
 }
 

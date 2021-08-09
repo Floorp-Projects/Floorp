@@ -3,11 +3,116 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <color name="snackbarBackground">#2E255D</color>
     <color name="colorPoweredBy" tools:ignore="MissingDefaultResource">#271948</color>
     <!-- Browser Menu items color palette -->
     <color name="mvp_browser_menu_bg" tools:ignore="MissingDefaultResource">@color/photonInk80</color>
-    <color name="colorProgressGradientStart">#FF9059FF</color>
+
+    <color name="colorPrimary">#ff272727</color>
+    <color name="colorPrimaryDark">#6c3b6e</color>
+    <color name="colorAccent">@color/focusContrastPink</color>
+
+    <color name="focusContrastPink">#e452B9</color>
+
+    <color name="colorSettingsTint">#f9f9fa</color>
+    <color name="colorAccentSettings">@color/photonBlue50</color>
+
+    <color name="colorGradientStart">#a90742</color>
+    <color name="colorGradientCenter">#970772</color>
+    <color name="colorGradientEnd">#57076a</color>
+
+    <color name="colorProgressGradientStart">#FF9400FF</color>
     <color name="colorProgressGradientCenter">#FFFF4AA2</color>
-    <color name="colorProgressGradientEnd">#FFFFBD4F</color>
+    <color name="colorProgressGradientEnd">#FFFF1AD9</color>
+
+    <color name="colorInactiveGradientStart">#ff453440</color>
+    <color name="colorInactiveGradientCenter">#ff433446</color>
+    <color name="colorInactiveGradientEnd">#ff3b3445</color>
+
+    <color name="colorActiveGradientStart">#421c41</color>
+    <color name="colorActiveGradientCenter">#3e1c4d</color>
+    <color name="colorActiveGradientEnd">#271c44</color>
+
+    <color name="colorErase">@color/photonMagenta70</color>
+    <color name="colorErasePressed">@color/photonMagenta80</color>
+
+    <color name="colorMultitasking">@color/photonMagenta70</color>
+    <color name="colorMultitaskingPressed">@color/photonMagenta80</color>
+
+    <color name="colorSheetSessionBackground">#fff9f9fa</color>
+    <color name="colorSheetSessionBackgroundPressed">#ffededf0</color>
+
+    <color name="colorDotHighlight">@color/photonBlue40</color>
+
+    <color name="colorCrashAccent">@color/photonBlue40</color>
+
+    <color name="colorMenuBackground">#414141</color>
+    <color name="colorMenuBackgroundDark">#272727</color>
+
+    <color name="colorCursor">#ccffffff</color>
+
+    <color name="colorOverlay">#cc000000</color>
+
+    <color name="colorTextInactive">#80FFFFFF</color>
+    <color name="urlBarHintText">#ffbbbcc5</color>
+
+    <color name="snackbarBackground">#FF414146</color>
+    <color name="snackbarTextColor">#ffffffff</color>
+    <color name="snackbarActionText">@color/photonBlue50</color>
+
+    <color name="searchSuggestionsBackground">@color/photonInk80</color>
+
+    <color name="searchSuggestionPromptBackground">@color/photonInk80</color>
+    <color name="searchSuggestionPromptTitleColor">@color/photonGrey10</color>
+    <color name="searchSuggestionPromptSubtitleColor">#9e9fad</color>
+    <color name="searchSuggestionPromptBorderColor">#343751</color>
+    <color name="searchSuggestionPromptButtonTextColor">@color/focusContrastPink</color>
+
+    <color name="searchHintTextColor">#ffffffff</color>
+    <color name="searchHintBackgroundColor">@color/photonInk80</color>
+    <color name="urlBarInactiveBackgroundColor">#480f1126</color>
+
+    <color name="onboarding_indicator_default">#7FFFFFFF</color>
+    <color name="onboarding_indicator_selected">#FFFFFFFF</color>
+
+    <color name="dialogAccent">@color/focusContrastPink</color>
+
+    <color name="colorSession">@color/photonInk80</color>
+    <color name="colorActiveSession">#353852</color>
+    <color name="colorAction">@color/photonBlue50</color>
+
+    <color name="add_to_homescreen_text">#B3FFFFFF</color>
+    <color name="add_to_homescreen_icon_background">#4C0074</color>
+
+    <color name="firefoxInstallHint">@color/focusContrastPink</color>
+
+    <color name="preference_row_selected">#353852</color>
+    <color name="preference_row_disabled">#B3313131</color>
+
+    <color name="scrollbarThumb">#b2b2b2b2</color>
+
+    <color name="doorhanger_link">#FF2AA1FE</color>
+    <color name="placeholder_active_grey">#222222</color>
+
+    <color name="contextMenuTitleTextColor">#99F9F9FA</color>
+    <color name="contextMenuSeparatorBackground">#1AF9F9FA</color>
+
+    <!-- Browser Menu items color palette -->
+    <color name="browser_menu_bg">#2E255D</color>
+    <color name="browser_menu_blocking_switch_bg">#1Af9f9fa</color>
+    <color name="browser_menu_trackers_blocked_label">@android:color/white</color>
+    <color name="browser_menu_request_desktop_separator">#1Af9f9fa</color>
+    <color name="browser_menu_trackers_blocked_subtitle">@color/photonGrey10</color>
+
+    <color name="images_removal_warning_background_color">#353852</color>
+
+    <!-- Add to Home screen dialog color palette -->
+    <color name="home_screen_dialog_bg">@color/photonInk80</color>
+    <color name="home_screen_dialog_button_text">@color/focusContrastPink</color>
+    <color name="home_screen_dialog_bg_tint">@color/focusContrastPink</color>
+    <color name="home_screen_dialog_text">@color/photonGrey10</color>
+
+    <color name="home_screen_dialog_warning_bg">#353852</color>
+    <color name="home_screen_dialog_warning_text">#96f9f9fa</color>
+
+    <color name="settings_summary_text">#ffbbbcc5</color>
 </resources>

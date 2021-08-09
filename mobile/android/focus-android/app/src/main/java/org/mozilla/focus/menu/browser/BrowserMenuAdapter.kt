@@ -136,7 +136,7 @@ class BrowserMenuAdapter(
             items.add(
                 MenuItem.Default(
                     R.id.settings, resources.getString(R.string.menu_settings),
-                    R.drawable.ic_settings
+                    R.drawable.ic_settings2
                 )
             )
         }

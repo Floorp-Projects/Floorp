@@ -2,19 +2,31 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@id/whats_new"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true">
 
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icon"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:scaleType="centerInside"
+        android:layout_marginStart="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/title"
+        app:srcCompat="@drawable/ic_whats_new" />
+
     <TextView
+        android:id="@+id/title"
         android:layout_width="0dp"
         android:layout_height="48dp"
-        android:layout_weight="1"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:textSize="16sp"
@@ -22,15 +34,23 @@
         android:lines="1"
         android:ellipsize="end"
         android:text="@string/menu_whats_new"
-        style="@style/MenuItem"/>
+        app:layout_constraintStart_toEndOf="@id/icon"
+        app:layout_constraintTop_toTopOf="@id/icon"
+        app:layout_constraintEnd_toStartOf="@id/dot"
+        app:layout_constraintBottom_toBottomOf="@id/icon"
+        style="@android:style/TextAppearance.Material.Menu"/>
 
     <ImageView
         android:id="@+id/dot"
         android:layout_width="8dp"
         android:layout_height="8dp"
+        android:layout_gravity="center"
         android:layout_margin="16dp"
-        android:layout_gravity="center_vertical"
+        android:importantForAccessibility="no"
         android:src="@drawable/highlight_dot"
-        android:importantForAccessibility="no" />
+        app:layout_constraintStart_toEndOf="@id/title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/icon"
+        app:layout_constraintBottom_toBottomOf="@id/icon"/>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
