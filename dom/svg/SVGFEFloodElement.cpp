@@ -10,8 +10,6 @@
 #include "mozilla/dom/SVGFEFloodElementBinding.h"
 #include "nsColor.h"
 #include "nsIFrame.h"
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/BindContext.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFlood)
 
@@ -60,14 +58,6 @@ SVGFEFloodElement::IsAttributeMapped(const nsAtom* name) const {
 
   return FindAttributeDependence(name, map) ||
          SVGFEFloodElementBase::IsAttributeMapped(name);
-}
-
-nsresult SVGFEFloodElement::BindToTree(BindContext& aCtx, nsINode& aParent) {
-  if (aCtx.InComposedDoc()) {
-    aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feFlood);
-  }
-
-  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------
