@@ -84,6 +84,9 @@ class GlobalObjectData {
   // Realm-specific object that can be used as key in WeakMaps.
   HeapPtr<PlainObject*> realmKeyObject;
 
+  // Cached shape for new arrays with Array.prototype as prototype.
+  HeapPtr<Shape*> arrayShape;
+
   // Whether the |globalThis| property has been resolved on the global object.
   bool globalThisResolved = false;
 
@@ -153,7 +156,6 @@ class GlobalObject : public NativeObject {
     REQUESTED_MODULE_PROTO,
     MODULE_REQUEST_PROTO,
     WINDOW_PROXY,
-    ARRAY_SHAPE,
 
     /* Total reserved-slot count for global objects. */
     RESERVED_SLOTS
@@ -929,14 +931,10 @@ class GlobalObject : public NativeObject {
   }
 
   void setArrayShape(Shape* shape) {
-    MOZ_ASSERT(getReservedSlot(ARRAY_SHAPE).isUndefined());
-    initReservedSlot(ARRAY_SHAPE, PrivateGCThingValue(shape));
+    MOZ_ASSERT(!data().arrayShape);
+    data().arrayShape.init(shape);
   }
-  Shape* maybeArrayShape() const {
-    Value v = getReservedSlot(ARRAY_SHAPE);
-    MOZ_ASSERT(v.isUndefined() || v.isPrivateGCThing());
-    return v.isPrivateGCThing() ? v.toGCThing()->as<Shape>() : nullptr;
-  }
+  Shape* maybeArrayShape() const { return data().arrayShape; }
 
   // Returns an object that represents the realm, used by embedder.
   static JSObject* getOrCreateRealmKeyObject(JSContext* cx,
