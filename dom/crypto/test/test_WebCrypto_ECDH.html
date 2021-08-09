@@ -274,6 +274,25 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "PKCS8 import/export roundtrip with ECDH (P-256)",
+  function() {
+    var that = this;
+    var alg = { name: "ECDH",  namedCurve: "P-256" };
+
+    function doExportPriv(x) {
+      return crypto.subtle.exportKey("pkcs8", x);
+    }
+
+    crypto.subtle.importKey("pkcs8", tv.ecdh_p256.pkcs8, alg, true, ["deriveBits"])
+	  .then(doExportPriv, error(that))
+      .then(complete(that, function(x) {
+        return util.memcmp(x, tv.ecdh_p256.pkcs8);
+      }), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "Test that importing bad JWKs fails",
   function() {
     var that = this;
