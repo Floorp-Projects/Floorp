@@ -769,25 +769,15 @@ bool GlobalObject::initStandardClasses(JSContext* cx,
 /* static */
 bool GlobalObject::isRuntimeCodeGenEnabled(JSContext* cx, HandleString code,
                                            Handle<GlobalObject*> global) {
-  Value v = global->getReservedSlot(RUNTIME_CODEGEN_ENABLED);
-  if (v.isUndefined()) {
-    /*
-     * If there are callbacks, make sure that the CSP callback is installed
-     * and that it permits runtime code generation.
-     */
-    JSCSPEvalChecker allows =
-        cx->runtime()->securityCallbacks->contentSecurityPolicyAllows;
-    if (allows) {
-      return allows(cx, code);
-    }
-
-    // Let's cache the result only if the contentSecurityPolicyAllows callback
-    // is not set. In this way, contentSecurityPolicyAllows callback is executed
-    // each time, with the current HandleValue code.
-    v = JS::TrueValue();
-    global->setReservedSlot(RUNTIME_CODEGEN_ENABLED, v);
+  // If there are callbacks, make sure that the CSP callback is installed
+  // and that it permits runtime code generation.
+  JSCSPEvalChecker allows =
+      cx->runtime()->securityCallbacks->contentSecurityPolicyAllows;
+  if (allows) {
+    return allows(cx, code);
   }
-  return !v.isFalse();
+
+  return true;
 }
 
 /* static */
