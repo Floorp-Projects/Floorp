@@ -42,6 +42,8 @@ class SVGFEMergeElement : public SVGFEMergeElementBase {
   // nsIContent
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
+  virtual nsresult BindToTree(BindContext& aCtx, nsINode& aParent) override;
+
  protected:
   virtual StringAttributesInfo GetStringInfo() override;
 
