@@ -615,6 +615,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   Result<bool, nsresult> EnsureOpaqueResponseIsAllowedAfterSniff();
 
+  bool Http3Allowed() const;
+
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
 

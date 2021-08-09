@@ -5976,9 +5976,7 @@ nsresult nsHttpChannel::BeginConnect() {
   if (!LoadAllowHttp3()) {
     mCaps |= NS_HTTP_DISALLOW_HTTP3;
   }
-  bool http3Allowed = !mUpgradeProtocolCallback && !mProxyInfo &&
-                      !(mCaps & NS_HTTP_BE_CONSERVATIVE) &&
-                      !LoadBeConservative() && LoadAllowHttp3();
+  bool http3Allowed = Http3Allowed();
 
   RefPtr<AltSvcMapping> mapping;
   if (!mConnectionInfo && LoadAllowAltSvc() &&  // per channel
