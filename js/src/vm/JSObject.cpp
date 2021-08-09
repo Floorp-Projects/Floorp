@@ -3573,6 +3573,9 @@ void JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
     ArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info);
   } else if (is<SharedArrayBufferObject>()) {
     SharedArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info);
+  } else if (is<GlobalObject>()) {
+    info->objectsMallocHeapGlobalData +=
+        as<GlobalObject>().sizeOfData(mallocSizeOf);
   } else if (is<WeakCollectionObject>()) {
     info->objectsMallocHeapMisc +=
         as<WeakCollectionObject>().sizeOfExcludingThis(mallocSizeOf);

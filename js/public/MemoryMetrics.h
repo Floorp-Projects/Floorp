@@ -186,6 +186,7 @@ struct ClassInfo {
   MACRO(Objects, MallocHeap, objectsMallocHeapSlots)          \
   MACRO(Objects, MallocHeap, objectsMallocHeapElementsNormal) \
   MACRO(Objects, MallocHeap, objectsMallocHeapElementsAsmJS)  \
+  MACRO(Objects, MallocHeap, objectsMallocHeapGlobalData)     \
   MACRO(Objects, MallocHeap, objectsMallocHeapMisc)           \
   MACRO(Objects, NonHeap, objectsNonHeapElementsNormal)       \
   MACRO(Objects, NonHeap, objectsNonHeapElementsShared)       \

@@ -362,6 +362,10 @@ void Realm::sweepAfterMinorGC() {
 void Realm::traceWeakSavedStacks(JSTracer* trc) { savedStacks_.traceWeak(trc); }
 
 void Realm::traceWeakObjects(JSTracer* trc) {
+  // If the global is dead, free its GlobalObjectData.
+  if (zone_->isGCSweeping() && globalIsAboutToBeFinalized()) {
+    global_.unbarrieredGet()->releaseData(runtime_->defaultFreeOp());
+  }
   TraceWeakEdge(trc, &global_, "Realm::global_");
   TraceWeakEdge(trc, &lexicalEnv_, "Realm::lexicalEnv_");
 }
@@ -445,6 +449,7 @@ void Realm::purge() {
 }
 
 void Realm::clearTables() {
+  global_.unbarrieredGet()->releaseData(runtime_->defaultFreeOp());
   global_.set(nullptr);
   lexicalEnv_.set(nullptr);
 

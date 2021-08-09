@@ -208,8 +208,8 @@ bool JS::ObjectOpResult::reportError(JSContext* cx, HandleObject obj,
     if (ErrorTakesObjectArgument(code_)) {
       JSObject* unwrapped = js::CheckedUnwrapStatic(obj);
       const char* name = unwrapped ? unwrapped->getClass()->name : "Object";
-      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, code_,
-                               name, propName.get());
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, code_, name,
+                               propName.get());
       return false;
     }
 
@@ -1797,6 +1797,8 @@ JS_PUBLIC_API void JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global) {
   // Trace the realm for any GC things that should only stick around if we
   // know the global is live.
   globalRealm->traceGlobal(trc);
+
+  globalObj->traceData(trc);
 
   if (JSTraceOp trace = globalRealm->creationOptions().getTrace()) {
     trace(trc, global);
