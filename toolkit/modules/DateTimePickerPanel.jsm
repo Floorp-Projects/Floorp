@@ -29,6 +29,9 @@ var DateTimePickerPanel = class {
   }
 
   openPicker(type, rect, detail) {
+    if (type == "datetime-local") {
+      type = "date";
+    }
     this.type = type;
     this.pickerState = {};
     // TODO: Resize picker according to content zoom level

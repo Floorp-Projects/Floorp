@@ -974,15 +974,14 @@ async function runTest() { // eslint-disable-line complexity
 
       input = $_(20, "field17");
       restoreForm();
-      expectPopup();
+      waitForMenuChange(0);
       synthesizeKey("KEY_ArrowDown");
       break;
 
     case 411:
-      checkMenuEntries(["2016-10-21T10:10"]);
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("2016-10-21T10:10");
+      checkMenuEntries([]); // type=datetime-local with it's own control frame
+                            // does not have a drop down menu for now
+      checkForm("");
 
       addEntry("field1", "value1");
       break;
