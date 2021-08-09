@@ -9459,7 +9459,19 @@ void PresShell::DidDoReflow(bool aInterruptible) {
   }
 
   if (!mPresContext->HasPendingInterrupt()) {
-    mDocument->ScheduleResizeObserversNotification();
+    // The ResizeObserver object may exist in the outer documents (e.g. observe
+    // an element in the in-process iframe) or any other documents which can
+    // access |mDocument|, so we have to schedule the resize observers for all
+    // possible documents via browsing context tree.
+    if (RefPtr<BrowsingContext> bc = mDocument->GetBrowsingContext()) {
+      bc->Top()->PreOrderWalk([](BrowsingContext* aCur) {
+        // Use extant document because we only want to schedule the observer to
+        // its refresh driver and so don't need to ensure the content viewer.
+        if (const Document* doc = aCur->GetExtantDocument()) {
+          doc->ScheduleResizeObserversNotification();
+        }
+      });
+    }
   }
 
   if (StaticPrefs::layout_reflow_synthMouseMove()) {
