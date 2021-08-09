@@ -1177,6 +1177,18 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
   Telemetry::RecordEvent(eventType, mozilla::Some(fileNameTypeAndDetails.first),
                          extra);
 
+#ifdef NIGHTLY_BUILD
+  // Cause a crash (if we've never crashed before and we can ensure we won't do
+  // it again.)
+  // The details in the second arg, passed to UNSAFE_PRINTF, are also included in
+  // Event Telemetry and have received data review.
+  if (fileNameTypeAndDetails.second.isSome()) {
+    PossiblyCrash("js_load_1", NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value()));
+  } else {
+    PossiblyCrash("js_load_1", "(None)"_ns);
+  }
+#endif
+
   // Presently we are not enforcing any restrictions for the script filename,
   // we're only reporting Telemetry. In the future we will assert in debug
   // builds and return false to prevent execution in non-debug builds.
