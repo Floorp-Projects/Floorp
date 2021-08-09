@@ -7,6 +7,8 @@
 #include "mozilla/dom/SVGFETurbulenceElement.h"
 #include "mozilla/dom/SVGFETurbulenceElementBinding.h"
 #include "mozilla/SVGFilterInstance.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/BindContext.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FETurbulence)
 
@@ -151,6 +153,15 @@ bool SVGFETurbulenceElement::AttributeAffectsRendering(
            aAttribute == nsGkAtoms::numOctaves ||
            aAttribute == nsGkAtoms::type ||
            aAttribute == nsGkAtoms::stitchTiles));
+}
+
+nsresult SVGFETurbulenceElement::BindToTree(BindContext& aCtx,
+                                            nsINode& aParent) {
+  if (aCtx.InComposedDoc()) {
+    aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feTurbulence);
+  }
+
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------
