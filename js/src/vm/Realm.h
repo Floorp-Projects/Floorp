@@ -44,6 +44,7 @@ class JitRealm;
 
 class AutoRestoreRealmDebugMode;
 class GlobalObject;
+class GlobalObjectData;
 class GlobalLexicalEnvironmentObject;
 class MapObject;
 class NonSyntacticLexicalEnvironmentObject;

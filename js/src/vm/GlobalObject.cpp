@@ -650,10 +650,21 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx,
   if (!emptyGlobalScope) {
     return nullptr;
   }
-  global->setReservedSlot(EMPTY_GLOBAL_SCOPE,
-                          PrivateGCThingValue(emptyGlobalScope));
 
-  cx->realm()->initGlobal(*global, *lexical);
+  {
+    auto data = cx->make_unique<GlobalObjectData>();
+    if (!data) {
+      return nullptr;
+    }
+    data->emptyGlobalScope.init(emptyGlobalScope);
+
+    // Note: it's important for the realm's global to be initialized at the
+    // same time as the global's GlobalObjectData, because we free the global's
+    // data when Realm::global_ is cleared.
+    cx->realm()->initGlobal(*global, *lexical);
+    InitReservedSlot(global, GLOBAL_DATA_SLOT, data.release(),
+                     MemoryUse::GlobalObjectData);
+  }
 
   if (!JSObject::setQualifiedVarObj(cx, global)) {
     return nullptr;
@@ -709,9 +720,7 @@ GlobalLexicalEnvironmentObject& GlobalObject::lexicalEnvironment() const {
 }
 
 GlobalScope& GlobalObject::emptyGlobalScope() const {
-  const Value& v = getReservedSlot(EMPTY_GLOBAL_SCOPE);
-  MOZ_ASSERT(v.isPrivateGCThing() && v.traceKind() == JS::TraceKind::Scope);
-  return static_cast<Scope*>(v.toGCThing())->as<GlobalScope>();
+  return *data().emptyGlobalScope;
 }
 
 /* static */
@@ -1135,4 +1144,14 @@ JSObject* GlobalObject::createAsyncIteratorPrototype(
   JSObject* proto = &global->getPrototype(JSProto_AsyncIterator).toObject();
   global->setReservedSlot(ASYNC_ITERATOR_PROTO, ObjectValue(*proto));
   return proto;
+}
+
+void GlobalObject::releaseData(JSFreeOp* fop) {
+  GlobalObjectData* data = maybeData();
+  setReservedSlot(GLOBAL_DATA_SLOT, PrivateValue(nullptr));
+  fop->delete_(this, data, MemoryUse::GlobalObjectData);
+}
+
+void GlobalObjectData::trace(JSTracer* trc) {
+  TraceEdge(trc, &emptyGlobalScope, "global-empty-scope");
 }

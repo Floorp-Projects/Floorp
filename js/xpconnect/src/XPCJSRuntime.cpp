@@ -1689,6 +1689,12 @@ static void ReportClassStats(const ClassInfo& classInfo, const nsACString& path,
                  "asm.js array buffer elements allocated in the malloc heap.");
   }
 
+  if (classInfo.objectsMallocHeapGlobalData > 0) {
+    REPORT_BYTES(path + "objects/malloc-heap/global-data"_ns, KIND_HEAP,
+                 classInfo.objectsMallocHeapGlobalData,
+                 "Data for global objects.");
+  }
+
   if (classInfo.objectsMallocHeapMisc > 0) {
     REPORT_BYTES(path + "objects/malloc-heap/misc"_ns, KIND_HEAP,
                  classInfo.objectsMallocHeapMisc, "Miscellaneous object data.");
