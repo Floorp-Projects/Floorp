@@ -13,6 +13,7 @@
 #include "Logging.h"
 #include "ScaledFontBase.h"
 #include "SFNTData.h"
+#include "InlineTranslator.h"
 
 namespace mozilla {
 namespace gfx {
@@ -168,6 +169,40 @@ already_AddRefed<DrawTarget> Translator::CreateDrawTarget(
       GetReferenceDrawTarget()->CreateSimilarDrawTarget(aSize, aFormat);
   AddDrawTarget(aRefPtr, newDT);
   return newDT.forget();
+}
+
+void Translator::DrawDependentSurface(ReferencePtr aDrawTarget, uint64_t aKey,
+                                      const Rect& aRect) {
+  if (!mDependentSurfaces) {
+    return;
+  }
+
+  DrawTarget* dt = LookupDrawTarget(aDrawTarget);
+  if (!dt) {
+    return;
+  }
+
+  RefPtr<RecordedDependentSurface> recordedSurface =
+      mDependentSurfaces->Get(aKey);
+  if (!recordedSurface) {
+    return;
+  }
+
+  dt->PushClipRect(aRect);
+
+  // Construct a new translator, so we can recurse into translating this
+  // sub-recording into the same DT. Set an initial transform for the
+  // translator, so that all commands get moved into the rect we want to draw.
+  Matrix transform = dt->GetTransform();
+  transform.PreTranslate(aRect.TopLeft());
+  InlineTranslator translator(dt, nullptr);
+  translator.SetReferenceDrawTargetTransform(transform);
+
+  translator.SetDependentSurfaces(mDependentSurfaces);
+  translator.TranslateRecording((char*)recordedSurface->mRecording.mData,
+                                recordedSurface->mRecording.mLen);
+
+  dt->PopClip();
 }
 
 }  // namespace gfx

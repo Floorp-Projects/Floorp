@@ -706,14 +706,10 @@ class RecordedDrawSurface : public RecordedDrawingEvent<RecordedDrawSurface> {
 class RecordedDrawDependentSurface
     : public RecordedDrawingEvent<RecordedDrawDependentSurface> {
  public:
-  RecordedDrawDependentSurface(DrawTarget* aDT, uint64_t aId, const Rect& aDest,
-                               const DrawSurfaceOptions& aDSOptions,
-                               const DrawOptions& aOptions)
+  RecordedDrawDependentSurface(DrawTarget* aDT, uint64_t aId, const Rect& aDest)
       : RecordedDrawingEvent(DRAWDEPENDENTSURFACE, aDT),
         mId(aId),
-        mDest(aDest),
-        mDSOptions(aDSOptions),
-        mOptions(aOptions) {}
+        mDest(aDest) {}
 
   bool PlayEvent(Translator* aTranslator) const override;
 
@@ -731,8 +727,6 @@ class RecordedDrawDependentSurface
 
   uint64_t mId;
   Rect mDest;
-  DrawSurfaceOptions mDSOptions;
-  DrawOptions mOptions;
 };
 
 class RecordedDrawSurfaceWithShadow
@@ -2780,7 +2774,16 @@ inline bool RecordedSetTransform::PlayEvent(Translator* aTranslator) const {
     return false;
   }
 
-  dt->SetTransform(mTransform);
+  // If we're drawing to the reference DT, then we need to manually apply
+  // its initial transform, otherwise we'll just clobber it with only the
+  // the transform that was visible to the code doing the recording.
+  if (dt == aTranslator->GetReferenceDrawTarget()) {
+    dt->SetTransform(mTransform *
+                     aTranslator->GetReferenceDrawTargetTransform());
+  } else {
+    dt->SetTransform(mTransform);
+  }
+
   return true;
 }
 
@@ -2846,20 +2849,7 @@ inline void RecordedDrawSurface::OutputSimpleEventInfo(
 
 inline bool RecordedDrawDependentSurface::PlayEvent(
     Translator* aTranslator) const {
-  DrawTarget* dt = aTranslator->LookupDrawTarget(mDT);
-  if (!dt) {
-    return false;
-  }
-
-  // We still return true even if this fails, since dependent surfaces are
-  // used for cross-origin iframe drawing and can fail.
-  RefPtr<SourceSurface> surface = aTranslator->LookupExternalSurface(mId);
-  if (!surface) {
-    return true;
-  }
-
-  dt->DrawSurface(surface, mDest, Rect(Point(), Size(surface->GetSize())),
-                  mDSOptions, mOptions);
+  aTranslator->DrawDependentSurface(mDT, mId, mDest);
   return true;
 }
 
@@ -2868,8 +2858,6 @@ void RecordedDrawDependentSurface::Record(S& aStream) const {
   RecordedDrawingEvent::Record(aStream);
   WriteElement(aStream, mId);
   WriteElement(aStream, mDest);
-  WriteElement(aStream, mDSOptions);
-  WriteElement(aStream, mOptions);
 }
 
 template <class S>
@@ -2877,8 +2865,6 @@ RecordedDrawDependentSurface::RecordedDrawDependentSurface(S& aStream)
     : RecordedDrawingEvent(DRAWDEPENDENTSURFACE, aStream) {
   ReadElement(aStream, mId);
   ReadElement(aStream, mDest);
-  ReadDrawSurfaceOptions(aStream, mDSOptions);
-  ReadDrawOptions(aStream, mOptions);
 }
 
 inline void RecordedDrawDependentSurface::OutputSimpleEventInfo(
