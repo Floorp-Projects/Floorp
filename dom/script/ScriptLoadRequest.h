@@ -76,7 +76,7 @@ class ScriptFetchOptions {
 class ScriptLoadRequest
     : public PreloaderBase,
       private mozilla::LinkedListElement<ScriptLoadRequest> {
-  typedef LinkedListElement<ScriptLoadRequest> super;
+  using super = LinkedListElement<ScriptLoadRequest>;
 
   // Allow LinkedListElement<ScriptLoadRequest> to cast us to itself as needed.
   friend class mozilla::LinkedListElement<ScriptLoadRequest>;
@@ -291,11 +291,11 @@ class ScriptLoadRequest
                                    // mNonAsyncExternalScriptInsertedRequests
   bool mIsXSLT;                    // True if we live in mXSLTRequests.
   bool mInCompilingList;  // True if we are in mOffThreadCompilingRequests.
-  bool mIsCanceled;                // True if we have been explicitly canceled.
-  bool mWasCompiledOMT;  // True if the script has been compiled off main
-                         // thread.
-  bool mIsTracking;      // True if the script comes from a source on our
-                         // tracking protection list.
+  bool mIsCanceled;       // True if we have been explicitly canceled.
+  bool mWasCompiledOMT;   // True if the script has been compiled off main
+                          // thread.
+  bool mIsTracking;       // True if the script comes from a source on our
+                          // tracking protection list.
 
   RefPtr<ScriptFetchOptions> mFetchOptions;
 
@@ -347,7 +347,7 @@ class ScriptLoadRequest
 };
 
 class ScriptLoadRequestList : private mozilla::LinkedList<ScriptLoadRequest> {
-  typedef mozilla::LinkedList<ScriptLoadRequest> super;
+  using super = mozilla::LinkedList<ScriptLoadRequest>;
 
  public:
   ~ScriptLoadRequestList();
