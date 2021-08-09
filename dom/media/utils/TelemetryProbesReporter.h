@@ -45,6 +45,7 @@ class TelemetryProbesReporter final {
   void OnShutdown();
 
   double GetTotalPlayTimeInSeconds() const;
+  double GetVisibleVideoPlayTimeInSeconds() const;
   double GetInvisibleVideoPlayTimeInSeconds() const;
   double GetVideoDecodeSuspendedTimeInSeconds() const;
 
