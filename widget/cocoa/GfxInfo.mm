@@ -24,8 +24,6 @@
 
 #include "jsapi.h"
 
-#define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
-
 using namespace mozilla;
 using namespace mozilla::widget;
 

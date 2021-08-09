@@ -16,8 +16,6 @@
 
 #include "mozilla/Preferences.h"
 
-#define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
-
 namespace mozilla {
 namespace widget {
 

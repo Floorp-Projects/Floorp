@@ -15,7 +15,6 @@
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsAppRunner.h"
-#include "nsExceptionHandler.h"
 #include "mozilla/Bootstrap.h"
 #include "XREShellData.h"
 
