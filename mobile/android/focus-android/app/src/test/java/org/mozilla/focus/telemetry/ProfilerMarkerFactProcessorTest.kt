@@ -10,6 +10,8 @@ import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
+import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,8 +20,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
-import org.mozilla.focus.any
-import org.mozilla.focus.argumentCaptor
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
