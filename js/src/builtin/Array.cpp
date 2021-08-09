@@ -4044,12 +4044,10 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
     return;
   }
 
-  // Get the canonical Array constructor.
-  const Value& arrayCtorValue = cx->global()->getConstructor(JSProto_Array);
-  MOZ_ASSERT(arrayCtorValue.isObject(),
-             "The Array constructor is initialized iff Array.prototype is "
-             "initialized");
-  JSFunction* arrayCtor = &arrayCtorValue.toObject().as<JSFunction>();
+  // Get the canonical Array constructor. The Array constructor must be
+  // initialized if Array.prototype is initialized.
+  JSObject& arrayCtorObject = cx->global()->getConstructor(JSProto_Array);
+  JSFunction* arrayCtor = &arrayCtorObject.as<JSFunction>();
 
   // Shortcut returns below means Array[@@species] will never be
   // optimizable, set to disabled now, and clear it later when we succeed.

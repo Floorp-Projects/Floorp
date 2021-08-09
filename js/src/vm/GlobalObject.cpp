@@ -274,8 +274,7 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
   // for Function, which is a problem. So if Function is being resolved
   // before Object.prototype exists, we just resolve Object instead, since we
   // know that Function will also be resolved before we return.
-  if (key == JSProto_Function &&
-      global->getPrototype(JSProto_Object).isUndefined()) {
+  if (key == JSProto_Function && !global->hasPrototype(JSProto_Object)) {
     return resolveConstructor(cx, global, JSProto_Object,
                               IfClassIsDisabled::DoNothing);
   }
@@ -316,7 +315,7 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
       // criteria that protects entry into this function.
       MOZ_ASSERT(!global->isStandardClassResolved(key));
 
-      global->setPrototype(key, ObjectValue(*proto));
+      global->setPrototype(key, proto);
     }
   }
 
@@ -335,7 +334,7 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
       }
     }
 
-    global->setConstructor(key, ObjectValue(*ctor));
+    global->setConstructor(key, ctor);
   }
 
   if (const JSFunctionSpec* funs = clasp->specPrototypeFunctions()) {
@@ -403,9 +402,9 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
     }
 
     // Infallible operations that modify the global object.
-    global->setConstructor(key, ObjectValue(*ctor));
+    global->setConstructor(key, ctor);
     if (proto) {
-      global->setPrototype(key, ObjectValue(*proto));
+      global->setPrototype(key, proto);
     }
   }
 
@@ -476,7 +475,7 @@ const JSClass GlobalObject::OffThreadPlaceholderObject::class_ = {
     "off-thread-prototype-placeholder", JSCLASS_HAS_RESERVED_SLOTS(1)};
 
 /* static */ GlobalObject::OffThreadPlaceholderObject*
-GlobalObject::OffThreadPlaceholderObject::New(JSContext* cx, unsigned slot) {
+GlobalObject::OffThreadPlaceholderObject::New(JSContext* cx, JSProtoKey key) {
   Rooted<OffThreadPlaceholderObject*> placeholder(cx);
   placeholder =
       NewObjectWithGivenProto<OffThreadPlaceholderObject>(cx, nullptr);
@@ -484,7 +483,7 @@ GlobalObject::OffThreadPlaceholderObject::New(JSContext* cx, unsigned slot) {
     return nullptr;
   }
 
-  placeholder->setReservedSlot(SlotIndexOrProtoKindSlot, Int32Value(slot));
+  placeholder->setReservedSlot(ProtoKeyOrProtoKindSlot, Int32Value(key));
   return placeholder;
 }
 
@@ -497,14 +496,14 @@ GlobalObject::OffThreadPlaceholderObject::New(JSContext* cx, ProtoKind kind) {
     return nullptr;
   }
 
-  placeholder->setReservedSlot(SlotIndexOrProtoKindSlot,
+  placeholder->setReservedSlot(ProtoKeyOrProtoKindSlot,
                                Int32Value(-int32_t(kind)));
   return placeholder;
 }
 
 inline int32_t
-GlobalObject::OffThreadPlaceholderObject::getSlotIndexOrProtoKind() const {
-  return getReservedSlot(SlotIndexOrProtoKindSlot).toInt32();
+GlobalObject::OffThreadPlaceholderObject::getProtoKeyOrProtoKind() const {
+  return getReservedSlot(ProtoKeyOrProtoKindSlot).toInt32();
 }
 
 /* static */
@@ -523,7 +522,7 @@ bool GlobalObject::resolveOffThreadConstructor(JSContext* cx,
              key == JSProto_AsyncGeneratorFunction);
 
   Rooted<OffThreadPlaceholderObject*> placeholder(cx);
-  placeholder = OffThreadPlaceholderObject::New(cx, prototypeSlot(key));
+  placeholder = OffThreadPlaceholderObject::New(cx, key);
   if (!placeholder) {
     return false;
   }
@@ -533,8 +532,11 @@ bool GlobalObject::resolveOffThreadConstructor(JSContext* cx,
     return false;
   }
 
-  global->setPrototype(key, ObjectValue(*placeholder));
-  global->setConstructor(key, MagicValue(JS_OFF_THREAD_CONSTRUCTOR));
+  // Use the placeholder for both constructor and prototype. The constructor
+  // isn't used off-thread, but we need to initialize both at the same time to
+  // satisfy invariants.
+  global->setPrototype(key, placeholder);
+  global->setConstructor(key, placeholder);
   return true;
 }
 
@@ -563,9 +565,10 @@ JSObject* GlobalObject::createOffThreadBuiltinProto(
 
 JSObject* GlobalObject::getPrototypeForOffThreadPlaceholder(JSObject* obj) {
   auto placeholder = &obj->as<OffThreadPlaceholderObject>();
-  int32_t value = placeholder->getSlotIndexOrProtoKind();
+  int32_t value = placeholder->getProtoKeyOrProtoKind();
   if (value >= 0) {
-    return &getSlot(value).toObject();
+    MOZ_ASSERT(value < int32_t(JSProto_LIMIT));
+    return &getPrototype(JSProtoKey(value));
   }
   MOZ_ASSERT(-value < int32_t(ProtoKind::Limit));
   return &getBuiltinProto(ProtoKind(-value));
@@ -589,8 +592,8 @@ bool GlobalObject::initBuiltinConstructor(JSContext* cx,
     return false;
   }
 
-  global->setConstructor(key, ObjectValue(*ctor));
-  global->setPrototype(key, ObjectValue(*proto));
+  global->setConstructor(key, ctor);
+  global->setPrototype(key, proto);
   return true;
 }
 
@@ -1126,7 +1129,7 @@ JSObject* GlobalObject::createIteratorPrototype(JSContext* cx,
   if (!ensureConstructor(cx, global, JSProto_Iterator)) {
     return nullptr;
   }
-  JSObject* proto = &global->getPrototype(JSProto_Iterator).toObject();
+  JSObject* proto = &global->getPrototype(JSProto_Iterator);
   global->initBuiltinProto(ProtoKind::IteratorProto, proto);
   return proto;
 }
@@ -1142,7 +1145,7 @@ JSObject* GlobalObject::createAsyncIteratorPrototype(
   if (!ensureConstructor(cx, global, JSProto_AsyncIterator)) {
     return nullptr;
   }
-  JSObject* proto = &global->getPrototype(JSProto_AsyncIterator).toObject();
+  JSObject* proto = &global->getPrototype(JSProto_AsyncIterator);
   global->initBuiltinProto(ProtoKind::AsyncIteratorProto, proto);
   return proto;
 }
@@ -1154,6 +1157,12 @@ void GlobalObject::releaseData(JSFreeOp* fop) {
 }
 
 void GlobalObjectData::trace(JSTracer* trc) {
+  for (auto& ctorWithProto : builtinConstructors) {
+    TraceNullableEdge(trc, &ctorWithProto.constructor, "global-builtin-ctor");
+    TraceNullableEdge(trc, &ctorWithProto.prototype,
+                      "global-builtin-ctor-proto");
+  }
+
   for (auto& proto : builtinProtos) {
     TraceNullableEdge(trc, &proto, "global-builtin-proto");
   }

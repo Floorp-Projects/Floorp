@@ -4626,8 +4626,8 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
     return AttachDecision::NoAction;
   }
 
-  Value funProto = cx_->global()->getPrototype(JSProto_Function);
-  if (hasInstanceHolder != &funProto.toObject()) {
+  JSObject& funProto = cx_->global()->getPrototype(JSProto_Function);
+  if (hasInstanceHolder != &funProto) {
     trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
   }
