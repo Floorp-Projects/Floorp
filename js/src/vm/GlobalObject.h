@@ -75,6 +75,9 @@ class GlobalObjectData {
   // Functions and other top-level values for self-hosted code.
   HeapPtr<NativeObject*> intrinsicsHolder;
 
+  // Cache used to optimize certain for-of operations.
+  HeapPtr<NativeObject*> forOfPICChain;
+
   void trace(JSTracer* trc);
 };
 
@@ -140,7 +143,6 @@ class GlobalObject : public NativeObject {
     EXPORT_ENTRY_PROTO,
     REQUESTED_MODULE_PROTO,
     MODULE_REQUEST_PROTO,
-    FOR_OF_PIC_CHAIN,
     WINDOW_PROXY,
     GLOBAL_THIS_RESOLVED,
     SOURCE_URLS,
@@ -894,13 +896,7 @@ class GlobalObject : public NativeObject {
     return realm()->getDebuggers();
   }
 
-  inline NativeObject* getForOfPICObject() {
-    Value forOfPIC = getReservedSlot(FOR_OF_PIC_CHAIN);
-    if (forOfPIC.isUndefined()) {
-      return nullptr;
-    }
-    return &forOfPIC.toObject().as<NativeObject>();
-  }
+  inline NativeObject* getForOfPICObject() { return data().forOfPICChain; }
   static NativeObject* getOrCreateForOfPICObject(JSContext* cx,
                                                  Handle<GlobalObject*> global);
 
