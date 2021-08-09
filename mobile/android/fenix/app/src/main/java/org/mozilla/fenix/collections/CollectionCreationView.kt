@@ -19,12 +19,12 @@ import androidx.transition.AutoTransition
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.component_collection_creation.*
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.databinding.ComponentCollectionCreationBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.Tab
@@ -34,15 +34,19 @@ class CollectionCreationView(
     private val interactor: CollectionCreationInteractor
 ) : LayoutContainer {
 
-    override val containerView: View = LayoutInflater.from(container.context)
-        .inflate(R.layout.component_collection_creation, container, true)
+    private val binding = ComponentCollectionCreationBinding.inflate(
+        LayoutInflater.from(container.context),
+        container,
+        true
+    )
+    override val containerView: View = binding.root
 
     private val bottomBarView = CollectionCreationBottomBarView(
         interactor = interactor,
-        layout = bottom_button_bar_layout,
-        iconButton = bottom_bar_icon_button,
-        textView = bottom_bar_text,
-        saveButton = save_button
+        layout = binding.bottomButtonBarLayout,
+        iconButton = binding.bottomBarIconButton,
+        textView = binding.bottomBarText,
+        saveButton = binding.saveButton
     )
     private val collectionCreationTabListAdapter = CollectionCreationTabListAdapter(interactor)
     private val collectionSaveListAdapter = SaveCollectionListAdapter(interactor)
@@ -58,10 +62,10 @@ class CollectionCreationView(
 
     init {
         transition.duration = TRANSITION_DURATION
-        transition.excludeTarget(back_button, true)
+        transition.excludeTarget(binding.backButton, true)
 
-        name_collection_edittext.filters += InputFilter.LengthFilter(COLLECTION_NAME_MAX_LENGTH)
-        name_collection_edittext.setOnEditorActionListener { view, actionId, _ ->
+        binding.nameCollectionEdittext.filters += InputFilter.LengthFilter(COLLECTION_NAME_MAX_LENGTH)
+        binding.nameCollectionEdittext.setOnEditorActionListener { view, actionId, _ ->
             val text = view.text.toString()
             if (actionId == EditorInfo.IME_ACTION_DONE && text.isNotBlank()) {
                 when (step) {
@@ -75,13 +79,13 @@ class CollectionCreationView(
             false
         }
 
-        tab_list.run {
+        binding.tabList.run {
             adapter = collectionCreationTabListAdapter
             itemAnimator = null
             layoutManager = LinearLayoutManager(containerView.context, RecyclerView.VERTICAL, true)
         }
 
-        collections_list.run {
+        binding.collectionsList.run {
             adapter = collectionSaveListAdapter
             layoutManager = LinearLayoutManager(containerView.context, RecyclerView.VERTICAL, true)
         }
@@ -111,16 +115,16 @@ class CollectionCreationView(
     private fun updateForSelectTabs(state: CollectionCreationState) {
         containerView.context.components.analytics.metrics.track(Event.CollectionTabSelectOpened)
 
-        tab_list.isClickable = true
+        binding.tabList.isClickable = true
 
-        back_button.apply {
+        binding.backButton.apply {
             text = context.getString(R.string.create_collection_select_tabs)
             setOnClickListener {
                 interactor.onBackPressed(SaveCollectionStep.SelectTabs)
             }
         }
 
-        select_all_button.apply {
+        binding.selectAllButton.apply {
             val allSelected = state.selectedTabs.size == state.tabs.size
             text =
                 if (allSelected) context.getString(R.string.create_collection_deselect_all)
@@ -136,39 +140,39 @@ class CollectionCreationView(
             R.layout.component_collection_creation
         )
         collectionCreationTabListAdapter.updateData(state.tabs, state.selectedTabs)
-        selectTabsConstraints.applyTo(collection_constraint_layout)
+        selectTabsConstraints.applyTo(binding.collectionConstraintLayout)
     }
 
     private fun updateForSelectCollection() {
-        tab_list.isClickable = false
+        binding.tabList.isClickable = false
         selectCollectionConstraints.clone(
             containerView.context,
             R.layout.component_collection_creation_select_collection
         )
-        selectCollectionConstraints.applyTo(collection_constraint_layout)
+        selectCollectionConstraints.applyTo(binding.collectionConstraintLayout)
 
-        back_button.apply {
+        binding.backButton.apply {
             text = context.getString(R.string.create_collection_select_collection)
             setOnClickListener {
                 interactor.onBackPressed(SaveCollectionStep.SelectCollection)
             }
         }
-        TransitionManager.beginDelayedTransition(collection_constraint_layout, transition)
+        TransitionManager.beginDelayedTransition(binding.collectionConstraintLayout, transition)
     }
 
     private fun updateForNameCollection(state: CollectionCreationState) {
-        tab_list.isClickable = false
+        binding.tabList.isClickable = false
         nameCollectionConstraints.clone(
             containerView.context,
             R.layout.component_collection_creation_name_collection
         )
-        nameCollectionConstraints.applyTo(collection_constraint_layout)
+        nameCollectionConstraints.applyTo(binding.collectionConstraintLayout)
 
         collectionCreationTabListAdapter.updateData(state.selectedTabs.toList(), state.selectedTabs, true)
-        back_button.apply {
+        binding.backButton.apply {
             text = context.getString(R.string.create_collection_name_collection)
             setOnClickListener {
-                name_collection_edittext.hideKeyboard()
+                binding.nameCollectionEdittext.hideKeyboard()
                 val handler = Handler(Looper.getMainLooper())
                 handler.postDelayed(
                     {
@@ -179,19 +183,19 @@ class CollectionCreationView(
             }
         }
 
-        name_collection_edittext.showKeyboard()
+        binding.nameCollectionEdittext.showKeyboard()
 
-        name_collection_edittext.setText(
+        binding.nameCollectionEdittext.setText(
             containerView.context.getString(
                 R.string.create_collection_default_name,
                 state.defaultCollectionNumber
             )
         )
-        name_collection_edittext.setSelection(0, name_collection_edittext.text.length)
+        binding.nameCollectionEdittext.setSelection(0, binding.nameCollectionEdittext.text.length)
     }
 
     private fun updateForRenameCollection(state: CollectionCreationState) {
-        tab_list.isClickable = false
+        binding.tabList.isClickable = false
 
         state.selectedTabCollection?.let { tabCollection ->
             val publicSuffixList = containerView.context.components.publicSuffixList
@@ -210,14 +214,14 @@ class CollectionCreationView(
             containerView.context,
             R.layout.component_collection_creation_name_collection
         )
-        nameCollectionConstraints.applyTo(collection_constraint_layout)
-        name_collection_edittext.setText(state.selectedTabCollection?.title)
-        name_collection_edittext.setSelection(0, name_collection_edittext.text.length)
+        nameCollectionConstraints.applyTo(binding.collectionConstraintLayout)
+        binding.nameCollectionEdittext.setText(state.selectedTabCollection?.title)
+        binding.nameCollectionEdittext.setSelection(0, binding.nameCollectionEdittext.text.length)
 
-        back_button.apply {
+        binding.backButton.apply {
             text = context.getString(R.string.collection_rename)
             setOnClickListener {
-                name_collection_edittext.hideKeyboard()
+                binding.nameCollectionEdittext.hideKeyboard()
                 val handler = Handler(Looper.getMainLooper())
                 handler.postDelayed(
                     {
@@ -231,7 +235,7 @@ class CollectionCreationView(
             override fun onTransitionStart(transition: Transition) { /* noop */ }
 
             override fun onTransitionEnd(transition: Transition) {
-                name_collection_edittext.showKeyboard()
+                binding.nameCollectionEdittext.showKeyboard()
                 transition.removeListener(this)
             }
 
@@ -239,12 +243,12 @@ class CollectionCreationView(
             override fun onTransitionPause(transition: Transition) { /* noop */ }
             override fun onTransitionResume(transition: Transition) { /* noop */ }
         })
-        TransitionManager.beginDelayedTransition(collection_constraint_layout, transition)
+        TransitionManager.beginDelayedTransition(binding.collectionConstraintLayout, transition)
     }
 
     fun onResumed() {
         if (step == SaveCollectionStep.NameCollection || step == SaveCollectionStep.RenameCollection) {
-            name_collection_edittext.showKeyboard()
+            binding.nameCollectionEdittext.showKeyboard()
         }
     }
 

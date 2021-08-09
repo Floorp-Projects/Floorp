@@ -5,14 +5,13 @@
 package org.mozilla.fenix.collections
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isGone
 import androidx.core.view.isInvisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.collection_tab_list_row.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.CollectionTabListRowBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.home.Tab
@@ -26,11 +25,16 @@ class CollectionCreationTabListAdapter(
     private var selectedTabs: MutableSet<Tab> = mutableSetOf()
     private var hideCheckboxes = false
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(TabViewHolder.LAYOUT_ID, parent, false)
+    private lateinit var binding: CollectionTabListRowBinding
 
-        return TabViewHolder(view)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabViewHolder {
+        binding = CollectionTabListRowBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+
+        return TabViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: TabViewHolder, position: Int, payloads: MutableList<Any>) {
@@ -41,11 +45,11 @@ class CollectionCreationTabListAdapter(
                 is CheckChanged -> {
                     val checkChanged = payloads[0] as CheckChanged
                     if (checkChanged.shouldBeChecked) {
-                        holder.tab_selected_checkbox.isChecked = true
+                        binding.tabSelectedCheckbox.isChecked = true
                     } else if (checkChanged.shouldBeUnchecked) {
-                        holder.tab_selected_checkbox.isChecked = false
+                        binding.tabSelectedCheckbox.isChecked = false
                     }
-                    holder.tab_selected_checkbox.isGone = checkChanged.shouldHideCheckBox
+                    binding.tabSelectedCheckbox.isGone = checkChanged.shouldHideCheckBox
                 }
             }
         }
@@ -54,7 +58,7 @@ class CollectionCreationTabListAdapter(
     override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
         val tab = tabs[position]
         val isSelected = selectedTabs.contains(tab)
-        holder.tab_selected_checkbox.setOnCheckedChangeListener { _, isChecked ->
+        binding.tabSelectedCheckbox.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 selectedTabs.add(tab)
                 interactor.addTabToSelection(tab)
@@ -88,24 +92,24 @@ class CollectionCreationTabListAdapter(
     }
 }
 
-class TabViewHolder(view: View) : ViewHolder(view) {
+class TabViewHolder(private val binding: CollectionTabListRowBinding) : ViewHolder(binding.root) {
 
     init {
-        collection_item_tab.setOnClickListener {
-            tab_selected_checkbox.isChecked = !tab_selected_checkbox.isChecked
+        binding.collectionItemTab.setOnClickListener {
+            binding.tabSelectedCheckbox.isChecked = !binding.tabSelectedCheckbox.isChecked
         }
     }
 
     fun bind(tab: Tab, isSelected: Boolean, shouldHideCheckBox: Boolean) {
-        hostname.text = tab.hostname
-        tab_title.text = tab.title
-        tab_selected_checkbox.isInvisible = shouldHideCheckBox
+        binding.hostname.text = tab.hostname
+        binding.tabTitle.text = tab.title
+        binding.tabSelectedCheckbox.isInvisible = shouldHideCheckBox
         itemView.isClickable = !shouldHideCheckBox
-        if (tab_selected_checkbox.isChecked != isSelected) {
-            tab_selected_checkbox.isChecked = isSelected
+        if (binding.tabSelectedCheckbox.isChecked != isSelected) {
+            binding.tabSelectedCheckbox.isChecked = isSelected
         }
 
-        itemView.context.components.core.icons.loadIntoView(favicon_image, tab.url)
+        itemView.context.components.core.icons.loadIntoView(binding.faviconImage, tab.url)
     }
 
     companion object {
