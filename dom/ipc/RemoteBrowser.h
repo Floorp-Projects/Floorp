@@ -41,7 +41,7 @@ class OwnerShowInfo;
  */
 class RemoteBrowser : public nsISupports {
  public:
-  typedef mozilla::layers::LayersId LayersId;
+  using LayersId = mozilla::layers::LayersId;
 
   static RemoteBrowser* GetFrom(nsFrameLoader* aFrameLoader);
   static RemoteBrowser* GetFrom(nsIContent* aContent);

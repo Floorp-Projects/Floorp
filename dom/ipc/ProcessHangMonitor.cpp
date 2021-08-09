@@ -88,7 +88,7 @@ class HangMonitorChild : public PProcessHangMonitorChild,
 
   void Bind(Endpoint<PProcessHangMonitorChild>&& aEndpoint);
 
-  typedef ProcessHangMonitor::SlowScriptAction SlowScriptAction;
+  using SlowScriptAction = ProcessHangMonitor::SlowScriptAction;
   SlowScriptAction NotifySlowScript(nsIBrowserChild* aBrowserChild,
                                     const char* aFileName,
                                     const nsString& aAddonId,
