@@ -7125,7 +7125,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-07-24T15:13:29Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-08-05T15:14:20Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8264,7 +8264,7 @@ ftr
 // fujitsu : 2015-07-30 Fujitsu Limited
 fujitsu
 
-// fun : 2016-01-14 DotSpace Inc.
+// fun : 2016-01-14 Radix FZC
 fun
 
 // fund : 2014-03-20 Binky Moon, LLC
@@ -8522,7 +8522,7 @@ horse
 // hospital : 2016-10-20 Binky Moon, LLC
 hospital
 
-// host : 2014-04-17 DotHost Inc.
+// host : 2014-04-17 Radix FZC
 host
 
 // hosting : 2014-05-29 UNR Corp.
@@ -9239,7 +9239,7 @@ ong
 // onl : 2013-09-16 iRegistry GmbH
 onl
 
-// online : 2015-01-15 DotOnline Inc.
+// online : 2015-01-15 Radix FZC
 online
 
 // ooo : 2014-01-09 INFIBEAM AVENUES LIMITED
@@ -9395,7 +9395,7 @@ pramerica
 // praxi : 2013-12-05 Praxi S.p.A.
 praxi
 
-// press : 2014-04-03 DotPress Inc.
+// press : 2014-04-03 Radix FZC
 press
 
 // prime : 2015-06-25 Amazon Registry Services, Inc.
@@ -9758,7 +9758,7 @@ sina
 // singles : 2013-08-27 Binky Moon, LLC
 singles
 
-// site : 2015-01-15 DotSite Inc.
+// site : 2015-01-15 Radix FZC
 site
 
 // ski : 2015-04-09 Afilias Limited
@@ -9818,7 +9818,7 @@ soy
 // spa : 2019-09-19 Asia Spa and Wellness Promotion Council Limited
 spa
 
-// space : 2014-04-03 DotSpace Inc.
+// space : 2014-04-03 Radix FZC
 space
 
 // sport : 2017-11-16 Global Association of International Sports Federations (GAISF)
@@ -9857,7 +9857,7 @@ stockholm
 // storage : 2014-12-22 XYZ.COM LLC
 storage
 
-// store : 2015-04-09 DotStore Inc.
+// store : 2015-04-09 Radix FZC
 store
 
 // stream : 2016-01-08 dot Stream Limited
@@ -9947,7 +9947,7 @@ tdk
 // team : 2015-03-05 Binky Moon, LLC
 team
 
-// tech : 2015-01-30 Personals TLD Inc.
+// tech : 2015-01-30 Radix FZC
 tech
 
 // technology : 2013-09-13 Binky Moon, LLC
@@ -10091,7 +10091,7 @@ unicom
 // university : 2014-03-06 Binky Moon, LLC
 university
 
-// uno : 2013-09-11 DotSite Inc.
+// uno : 2013-09-11 Radix FZC
 uno
 
 // uol : 2014-05-01 UBN INTERNET LTDA.
@@ -10220,7 +10220,7 @@ webcam
 // weber : 2015-06-04 Saint-Gobain Weber SA
 weber
 
-// website : 2014-04-03 DotWebsite Inc.
+// website : 2014-04-03 Radix FZC
 website
 
 // wedding : 2014-04-24 Registry Services, LLC
@@ -12874,60 +12874,6 @@ pcloud.host
 // NYC.mn : http://www.information.nyc.mn
 // Submitted by Matthew Brown <mattbrown@nyc.mn>
 nyc.mn
-
-// NymNom : https://nymnom.com/
-// Submitted by NymNom <psl@nymnom.com>
-nom.ae
-nom.af
-nom.ai
-nom.al
-nym.by
-nom.bz
-nym.bz
-nom.cl
-nym.ec
-nom.gd
-nom.ge
-nom.gl
-nym.gr
-nom.gt
-nym.gy
-nym.hk
-nom.hn
-nym.ie
-nom.im
-nom.ke
-nym.kz
-nym.la
-nym.lc
-nom.li
-nym.li
-nym.lt
-nym.lu
-nom.lv
-nym.me
-nom.mk
-nym.mn
-nym.mx
-nom.nu
-nym.nz
-nym.pe
-nym.pt
-nom.pw
-nom.qa
-nym.ro
-nom.rs
-nom.si
-nym.sk
-nom.st
-nym.su
-nym.sx
-nom.tj
-nym.tw
-nom.ug
-nom.uy
-nom.vc
-nom.vg
 
 // Observable, Inc. : https://observablehq.com
 // Submitted by Mike Bostock <dns@observablehq.com>
