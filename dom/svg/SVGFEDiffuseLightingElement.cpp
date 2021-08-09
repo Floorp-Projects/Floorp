@@ -7,8 +7,6 @@
 #include "mozilla/dom/SVGFEDiffuseLightingElement.h"
 #include "mozilla/dom/SVGFEDiffuseLightingElementBinding.h"
 #include "mozilla/SVGFilterInstance.h"
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/BindContext.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEDiffuseLighting)
 
@@ -76,15 +74,6 @@ bool SVGFEDiffuseLightingElement::AttributeAffectsRendering(
              aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           aAttribute == nsGkAtoms::diffuseConstant);
-}
-
-nsresult SVGFEDiffuseLightingElement::BindToTree(BindContext& aCtx,
-                                                 nsINode& aParent) {
-  if (aCtx.InComposedDoc()) {
-    aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feDiffuseLighting);
-  }
-
-  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 }  // namespace dom

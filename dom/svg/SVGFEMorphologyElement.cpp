@@ -7,7 +7,6 @@
 #include "mozilla/dom/SVGFEMorphologyElement.h"
 #include "mozilla/dom/SVGFEMorphologyElementBinding.h"
 #include "mozilla/SVGFilterInstance.h"
-#include "mozilla/dom/BindContext.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEMorphology)
 
@@ -108,15 +107,6 @@ bool SVGFEMorphologyElement::AttributeAffectsRendering(
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::in || aAttribute == nsGkAtoms::radius ||
            aAttribute == nsGkAtoms::_operator));
-}
-
-nsresult SVGFEMorphologyElement::BindToTree(BindContext& aCtx,
-                                            nsINode& aParent) {
-  if (aCtx.InComposedDoc()) {
-    aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feMorphology);
-  }
-
-  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

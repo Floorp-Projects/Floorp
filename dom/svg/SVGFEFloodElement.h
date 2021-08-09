@@ -45,8 +45,6 @@ class SVGFEFloodElement : public SVGFEFloodElementBase {
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  virtual nsresult BindToTree(BindContext& aCtx, nsINode& aParent) override;
-
  protected:
   virtual bool ProducesSRGB() override { return true; }
 

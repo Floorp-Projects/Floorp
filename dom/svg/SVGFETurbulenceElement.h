@@ -48,8 +48,6 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-
   // WebIDL
   already_AddRefed<DOMSVGAnimatedNumber> BaseFrequencyX();
   already_AddRefed<DOMSVGAnimatedNumber> BaseFrequencyY();

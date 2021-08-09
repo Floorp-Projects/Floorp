@@ -8,8 +8,6 @@
 
 #include "DOMSVGAnimatedNumberList.h"
 #include "mozilla/dom/SVGFEColorMatrixElementBinding.h"
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/BindContext.h"
 
 #define NUM_ENTRIES_IN_4x5_MATRIX 20
 
@@ -106,15 +104,6 @@ bool SVGFEColorMatrixElement::AttributeAffectsRendering(
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::in || aAttribute == nsGkAtoms::type ||
            aAttribute == nsGkAtoms::values));
-}
-
-nsresult SVGFEColorMatrixElement::BindToTree(BindContext& aCtx,
-                                             nsINode& aParent) {
-  if (aCtx.InComposedDoc()) {
-    aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feColorMatrix);
-  }
-
-  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------
