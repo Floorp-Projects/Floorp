@@ -101,6 +101,7 @@
     <color name="browser_menu_trackers_blocked_subtitle">@color/photonGrey10</color>
 
     <color name="images_removal_warning_background_color">#353852</color>
+    <color name="colorPoweredBy">@color/photonLightGrey05</color>
 
     <!-- Add to Home screen dialog color palette -->
     <color name="home_screen_dialog_bg">@color/photonInk80</color>

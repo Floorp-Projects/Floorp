@@ -103,7 +103,7 @@
     </style>
 
     <style name="Mozac.Browser.Menu" parent="">
-        <item name="cardBackgroundColor">@color/mvp_browser_menu_bg</item>
+        <item name="cardBackgroundColor">@color/browser_menu_bg</item>
     </style>
 
     <!-- Add new style to be able to use the same color for both themes until light theme it will be implemented -->

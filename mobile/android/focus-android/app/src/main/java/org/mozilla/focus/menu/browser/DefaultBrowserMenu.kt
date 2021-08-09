@@ -4,11 +4,8 @@
 package org.mozilla.focus.menu.browser
 
 import android.content.Context
-import androidx.core.content.ContextCompat
-import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.WebExtensionBrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
-import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
@@ -127,26 +124,18 @@ class DefaultBrowserMenu(
             onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
         }
 
-        val openInApp = BrowserMenuHighlightableItem(
+        val openInApp = BrowserMenuImageText(
             label = context.getString(R.string.menu_open_with_a_browser2),
-            startImageResource = R.drawable.ic_help,
-            textColorResource = context.theme.resolveAttribute(R.attr.primaryText),
-            highlight = BrowserMenuHighlight.HighPriority(
-                backgroundTint = ContextCompat.getColor(context, R.color.mvp_browser_menu_bg),
-                canPropagate = false
-            )
+            imageResource = R.drawable.ic_open_in,
+            textColorResource = context.theme.resolveAttribute(R.attr.primaryText)
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
         }
 
-        val settings = BrowserMenuHighlightableItem(
+        val settings = BrowserMenuImageText(
             label = context.getString(R.string.menu_settings),
-            startImageResource = R.drawable.ic_settings2,
-            textColorResource = context.theme.resolveAttribute(R.attr.primaryText),
-            highlight = BrowserMenuHighlight.HighPriority(
-                backgroundTint = ContextCompat.getColor(context, R.color.mvp_browser_menu_bg),
-                canPropagate = false
-            )
+            imageResource = R.drawable.ic_settings2,
+            textColorResource = context.theme.resolveAttribute(R.attr.primaryText)
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.Settings)
         }

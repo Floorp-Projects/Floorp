@@ -3,9 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <color name="colorPoweredBy" tools:ignore="MissingDefaultResource">#271948</color>
-    <!-- Browser Menu items color palette -->
-    <color name="mvp_browser_menu_bg" tools:ignore="MissingDefaultResource">@color/photonInk80</color>
 
     <color name="colorPrimary">#ff272727</color>
     <color name="colorPrimaryDark">#6c3b6e</color>
@@ -97,13 +94,14 @@
     <color name="contextMenuSeparatorBackground">#1AF9F9FA</color>
 
     <!-- Browser Menu items color palette -->
-    <color name="browser_menu_bg">#2E255D</color>
+    <color name="browser_menu_bg">#342F6D</color>
     <color name="browser_menu_blocking_switch_bg">#1Af9f9fa</color>
     <color name="browser_menu_trackers_blocked_label">@android:color/white</color>
     <color name="browser_menu_request_desktop_separator">#1Af9f9fa</color>
     <color name="browser_menu_trackers_blocked_subtitle">@color/photonGrey10</color>
 
     <color name="images_removal_warning_background_color">#353852</color>
+    <color name="colorPoweredBy">#1D1133</color>
 
     <!-- Add to Home screen dialog color palette -->
     <color name="home_screen_dialog_bg">@color/photonInk80</color>
