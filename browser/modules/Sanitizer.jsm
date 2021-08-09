@@ -119,17 +119,12 @@ var Sanitizer = {
         inBrowserWindow: true,
       });
     } else {
-      let arg = {
-        needNativeUI: true,
-        QueryInterface: ChromeUtils.generateQI([]),
-      };
-      arg.wrappedJSObject = arg;
       Services.ww.openWindow(
         parentWindow,
         "chrome://browser/content/sanitize.xhtml",
         "Sanitize",
         "chrome,titlebar,dialog,centerscreen,modal",
-        arg
+        { needNativeUI: true }
       );
     }
   },
