@@ -2255,6 +2255,15 @@
   alias_set: none
   possibly_calls: true
 
+- name: ToHashableValue
+  operands:
+    input: Value
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  possibly_calls: true
+
 - name: HashNonGCThing
   operands:
     input: Value
@@ -2298,6 +2307,14 @@
   movable: false
   alias_set: none
 
+- name: HashValue
+  operands:
+    set: Object
+    input: Value
+  result_type: Int32
+  movable: false
+  alias_set: none
+
 - name: SetObjectHasNonBigInt
   operands:
     set: Object
@@ -2317,6 +2334,26 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: custom
+
+- name: SetObjectHasValue
+  operands:
+    set: Object
+    value: Value
+    hash: Int32
+  result_type: Boolean
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
+- name: SetObjectHasValueVMCall
+  operands:
+    set: Object
+    value: Value
+  result_type: Boolean
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  possibly_calls: true
 
 - name: WasmNeg
   gen_boilerplate: false
