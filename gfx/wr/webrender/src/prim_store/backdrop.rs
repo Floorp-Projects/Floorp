@@ -89,6 +89,7 @@ impl InternablePrimitive for Backdrop {
         _key: BackdropKey,
         data_handle: BackdropDataHandle,
         _prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::Backdrop {
             data_handle,
