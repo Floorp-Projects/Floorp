@@ -279,26 +279,26 @@ template <XDRMode mode>
     }
   }
 
-  enum class Kind : uint8_t {
+  enum Kind {
     Single,
     Vector,
     Map,
   };
 
-  uint8_t kind;
+  Kind kind;
   if (mode == XDR_ENCODE) {
     if (sharedData.isSingle()) {
-      kind = uint8_t(Kind::Single);
+      kind = Kind::Single;
     } else if (sharedData.isVector()) {
-      kind = uint8_t(Kind::Vector);
+      kind = Kind::Vector;
     } else {
       MOZ_ASSERT(sharedData.isMap());
-      kind = uint8_t(Kind::Map);
+      kind = Kind::Map;
     }
   }
-  MOZ_TRY(xdr->codeUint8(&kind));
+  MOZ_TRY(xdr->codeEnum32(&kind));
 
-  switch (Kind(kind)) {
+  switch (kind) {
     case Kind::Single: {
       RefPtr<SharedImmutableScriptData> ref;
       if (mode == XDR_ENCODE) {
@@ -379,6 +379,9 @@ template <XDRMode mode>
 
       break;
     }
+
+    default:
+      return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
   }
 
   return Ok();
