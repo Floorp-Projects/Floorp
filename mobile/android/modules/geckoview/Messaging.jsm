@@ -263,19 +263,24 @@ var EventDispatcher = {
       };
     }
 
-    if (aMsg.data.global) {
-      this.instance.dispatch(
-        aMsg.data.event,
-        aMsg.data.data,
-        callback,
-        callback
-      );
-      return;
-    }
+    try {
+      if (aMsg.data.global) {
+        this.instance.dispatch(
+          aMsg.data.event,
+          aMsg.data.data,
+          callback,
+          callback
+        );
+        return;
+      }
 
-    const win = aMsg.target.ownerGlobal;
-    const dispatcher = win.WindowEventDispatcher || this.for(win);
-    dispatcher.dispatch(aMsg.data.event, aMsg.data.data, callback, callback);
+      const win = aMsg.target.ownerGlobal;
+      const dispatcher = win.WindowEventDispatcher || this.for(win);
+      dispatcher.dispatch(aMsg.data.event, aMsg.data.data, callback, callback);
+    } catch (e) {
+      callback?.onError(`Error getting dispatcher: ${e}`);
+      throw e;
+    }
   },
 };
 
