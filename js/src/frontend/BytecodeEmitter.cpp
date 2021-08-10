@@ -9221,10 +9221,11 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         key->isKind(ParseNodeKind::StringExpr)) {
       //            [stack] CTOR? OBJ
 
+      auto keyAtom = key->as<NameNode>().atom();
+
       // emitClass took care of constructor already.
       if (type == ClassBody &&
-          key->as<NameNode>().atom() ==
-              TaggedParserAtomIndex::WellKnown::constructor() &&
+          keyAtom == TaggedParserAtomIndex::WellKnown::constructor() &&
           !propdef->as<ClassMethod>().isStatic()) {
         continue;
       }
@@ -9239,8 +9240,6 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         return false;
       }
 
-      auto keyAtom = key->as<NameNode>().atom();
-
       if (!pe.emitInit(accessorType, keyAtom)) {
         return false;
       }
@@ -9248,14 +9247,44 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       continue;
     }
 
-    if (key->isKind(ParseNodeKind::PrivateName) &&
-        !prop->as<ClassMethod>().isStatic()) {
+    if (key->isKind(ParseNodeKind::ComputedName)) {
+      //            [stack] CTOR? OBJ
+
+      if (!pe.prepareForComputedPropKey(Some(propdef->pn_pos.begin), kind)) {
+        //          [stack] CTOR? OBJ CTOR?
+        return false;
+      }
+      if (!emitTree(key->as<UnaryNode>().kid())) {
+        //          [stack] CTOR? OBJ CTOR? KEY
+        return false;
+      }
+      if (!pe.prepareForComputedPropValue()) {
+        //          [stack] CTOR? OBJ CTOR? KEY
+        return false;
+      }
+      if (!emitValue()) {
+        //          [stack] CTOR? OBJ CTOR? KEY VAL
+        return false;
+      }
+
+      if (!pe.emitInitIndexOrComputed(accessorType)) {
+        return false;
+      }
+
+      continue;
+    }
+
+    MOZ_ASSERT(key->isKind(ParseNodeKind::PrivateName));
+
+    auto* privateName = &key->as<NameNode>();
+
+    if (!prop->as<ClassMethod>().isStatic()) {
       MOZ_ASSERT(accessorType == AccessorType::None);
       if (!pe.prepareForPrivateMethod()) {
         //          [stack] CTOR? OBJ
         return false;
       }
-      NameOpEmitter noe(this, key->as<NameNode>().atom(),
+      NameOpEmitter noe(this, privateName->atom(),
                         NameOpEmitter::Kind::SimpleAssignment);
       if (!noe.prepareForRhs()) {
         //          [stack] CTOR? OBJ
@@ -9280,25 +9309,15 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       continue;
     }
 
-    MOZ_ASSERT(key->isKind(ParseNodeKind::ComputedName) ||
-               key->isKind(ParseNodeKind::PrivateName));
-
     //              [stack] CTOR? OBJ
 
     if (!pe.prepareForComputedPropKey(Some(propdef->pn_pos.begin), kind)) {
       //            [stack] CTOR? OBJ CTOR?
       return false;
     }
-    if (key->is<NameNode>()) {
-      if (!emitGetPrivateName(&key->as<NameNode>())) {
-        //          [stack] CTOR? OBJ CTOR? KEY
-        return false;
-      }
-    } else {
-      if (!emitTree(key->as<UnaryNode>().kid())) {
-        //          [stack] CTOR? OBJ CTOR? KEY
-        return false;
-      }
+    if (!emitGetPrivateName(privateName)) {
+      //            [stack] CTOR? OBJ CTOR? KEY
+      return false;
     }
     if (!pe.prepareForComputedPropValue()) {
       //            [stack] CTOR? OBJ CTOR? KEY
@@ -9313,9 +9332,8 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       return false;
     }
 
-    if (key->isKind(ParseNodeKind::PrivateName) &&
-        key->as<NameNode>().privateNameKind() == PrivateNameKind::Setter) {
-      if (!emitGetPrivateName(&key->as<NameNode>())) {
+    if (privateName->privateNameKind() == PrivateNameKind::Setter) {
+      if (!emitGetPrivateName(privateName)) {
         //          [stack] THIS NAME
         return false;
       }
