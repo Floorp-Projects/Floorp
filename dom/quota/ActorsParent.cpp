@@ -422,7 +422,7 @@ nsresult CreateCacheTables(mozIStorageConnection& aConnection) {
   return NS_OK;
 }
 
-nsresult InvalidateCache(mozIStorageConnection& aConnection) {
+OkOrErr InvalidateCache(mozIStorageConnection& aConnection) {
   AssertIsOnIOThread();
 
   static constexpr auto kDeleteCacheQuery = "DELETE FROM origin;"_ns;
@@ -430,23 +430,27 @@ nsresult InvalidateCache(mozIStorageConnection& aConnection) {
 
   QM_TRY(QM_OR_ELSE_WARN(
       // Expression.
-      ([&]() -> Result<Ok, nsresult> {
-        mozStorageTransaction transaction(&aConnection, false);
+      ([&]() -> OkOrErr {
+        mozStorageTransaction transaction(&aConnection,
+                                          /*aCommitOnComplete */ false);
 
-        QM_TRY(transaction.Start());
-        QM_TRY(aConnection.ExecuteSimpleSQL(kDeleteCacheQuery));
-        QM_TRY(aConnection.ExecuteSimpleSQL(kSetInvalidFlagQuery));
-        QM_TRY(transaction.Commit());
+        QM_TRY(QM_TO_RESULT(transaction.Start()));
+        QM_TRY(QM_TO_RESULT(aConnection.ExecuteSimpleSQL(kDeleteCacheQuery)));
+        QM_TRY(
+            QM_TO_RESULT(aConnection.ExecuteSimpleSQL(kSetInvalidFlagQuery)));
+        QM_TRY(QM_TO_RESULT(transaction.Commit()));
 
         return Ok{};
       }()),
       // Fallback.
-      ([&](const nsresult rv) -> Result<Ok, nsresult> {
-        QM_TRY(aConnection.ExecuteSimpleSQL(kSetInvalidFlagQuery));
+      ([&](const QMResult& rv) -> OkOrErr {
+        QM_TRY(
+            QM_TO_RESULT(aConnection.ExecuteSimpleSQL(kSetInvalidFlagQuery)));
 
         return Ok{};
       })));
-  return NS_OK;
+
+  return Ok{};
 }
 
 nsresult UpgradeCacheFrom1To2(mozIStorageConnection& aConnection) {
