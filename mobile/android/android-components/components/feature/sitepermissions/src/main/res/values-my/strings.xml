@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Title of a dialog for a notification permission request. -->
-    <string name="mozac_feature_sitepermissions_notification_title">%1$s အားအသိပေးချက်များကိုပေးပို့ရန်ခွင့်ပြုပါ။</string>
+    <string name="mozac_feature_sitepermissions_notification_title">%1$s အား အသိပေးချက်များကို ပေးပို့ရန် ခွင့်ပြုပါ။</string>
     <!-- Title of a dialog for a camera permission request. -->
     <string name="mozac_feature_sitepermissions_camera_title">သင့်ကင်မရာ အသုံးပြုရန် %1$s ကို ခွင့်ပေးပါမည်လား။</string>
     <!-- Title of a dialog for a microphone permission request. -->
@@ -31,4 +31,6 @@
     <string name="mozac_feature_sitepermissions_always_allow">အမြဲတမ်း</string>
     <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
     <string name="mozac_feature_sitepermissions_never_allow">ဘယ်တော့မှ</string>
+    <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">DRM ထိန်းချုပ်ထားသော အကြောင်းအရာများကို %1$s အား ဆောင်ရွက် ခွင့်ပြုမည်လား။</string>
 </resources>

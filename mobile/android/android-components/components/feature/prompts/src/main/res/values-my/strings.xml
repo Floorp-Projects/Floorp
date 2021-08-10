@@ -80,7 +80,29 @@
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">ဒီဇင်ဘာ</string>
 
+    <!-- Option in expanded select login prompt that links to login settings -->
+    <string name="mozac_feature_prompts_manage_logins">လော့အင် များ စီမံပါ</string>
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">အကြံပြု လော့အင် များ ကို ဖြန့်ချပါ</string>
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">အကြံပြု လော့အင်များ ကို ပြန်သိမ်းပါ</string>
+    <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
+    <string name="mozac_feature_prompts_saved_logins">အကြံပြုထားသော လော့အင်များ</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">ဤ ဆိုက် သို့ အချက်အလက်များ ပြန်ပို့မည်လား။</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">အချက်အလက် ပြန်ပို့ ရန်</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">ပယ်​ဖျက်ပါ</string>
+
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
     <string name="mozac_feature_prompts_select_credit_card">အကြွေးဝယ်ကဒ် ကိုရွေးပါ။</string>
-    </resources>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">အကြုံပြုထားသော အကြွေးဝယ်ကတ်များကို ဖြန့်ချပါ</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">အကြုံပြုထားသော အကြွေးဝယ်ကတ်များကို ပြန်သိမ်းပါ</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <string name="mozac_feature_prompts_manage_credit_cards">အကြွေးဝယ်ကတ်များကို စီမံပါ</string>
+</resources>

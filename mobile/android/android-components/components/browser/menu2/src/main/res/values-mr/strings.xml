@@ -2,4 +2,6 @@
 <resources>
     <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
     <string name="mozac_browser_menu2_button">मेनू</string>
-    </resources>
+    <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
+    <string name="mozac_browser_menu2_highlighted">ठळक</string>
+</resources>
