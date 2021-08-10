@@ -101,6 +101,10 @@
 #  include "mozilla/java/GeckoJavaSamplerNatives.h"
 #endif
 
+#if defined(GP_OS_darwin)
+#  include "nsCocoaFeatures.h"
+#endif
+
 // Win32 builds always have frame pointers, so FramePointerStackWalk() always
 // works.
 #if defined(GP_PLAT_x86_windows)
@@ -2687,7 +2691,27 @@ static PreRecordedMetaInformation PreRecordMetaInformation() {
           do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &res);
       !NS_FAILED(res) && http) {
     Unused << http->GetPlatform(info.mHttpPlatform);
-    Unused << http->GetOscpu(info.mHttpOscpu);
+
+#if defined(GP_OS_darwin)
+    // On Mac, the http "oscpu" is capped at 10.15, so we need to get the real
+    // OS version directly.
+    int major = 0;
+    int minor = 0;
+    int bugfix = 0;
+    nsCocoaFeatures::GetSystemVersion(major, minor, bugfix);
+    if (major != 0) {
+      info.mHttpOscpu.AppendLiteral("macOS ");
+      info.mHttpOscpu.AppendInt(major);
+      info.mHttpOscpu.AppendLiteral(".");
+      info.mHttpOscpu.AppendInt(minor);
+      info.mHttpOscpu.AppendLiteral(".");
+      info.mHttpOscpu.AppendInt(bugfix);
+    } else
+#endif
+    {
+      Unused << http->GetOscpu(info.mHttpOscpu);
+    }
+
     Unused << http->GetMisc(info.mHttpMisc);
   }
 
