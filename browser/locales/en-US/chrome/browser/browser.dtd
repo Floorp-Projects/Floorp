@@ -50,8 +50,6 @@ this container is a toolbar. This avoids double-speaking. -->
   -  downloads.label, but used in the Library panel. -->
 <!ENTITY libraryDownloads.label       "Downloads">
 
-<!ENTITY webDeveloperMenu.label       "Web Developer">
-
 <!ENTITY newNavigatorCmd.label        "New Window">
 <!ENTITY newPrivateWindow.label     "New Private Window">
 
