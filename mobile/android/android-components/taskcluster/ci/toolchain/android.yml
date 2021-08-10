@@ -55,4 +55,5 @@ linux64-android-gradle-dependencies:
         env:
             # TODO do no hardcode
             ANDROID_SDK_ROOT: /builds/worker/fetches/android-sdk-linux
-        max-run-time: 9600
+        max-run-time: 4000
+        retry-exit-status: [1]
