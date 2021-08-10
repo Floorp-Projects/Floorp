@@ -4529,6 +4529,12 @@ void LIRGenerator::visitCheckPrivateFieldCache(MCheckPrivateFieldCache* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitNewPrivateName(MNewPrivateName* ins) {
+  auto* lir = new (alloc()) LNewPrivateName();
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitInstanceOf(MInstanceOf* ins) {
   MDefinition* lhs = ins->lhs();
   MDefinition* rhs = ins->rhs();

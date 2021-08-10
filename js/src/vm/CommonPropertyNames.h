@@ -328,7 +328,6 @@
   MACRO_(NaN, NaN, "NaN")                                                      \
   MACRO_(NegativeInfinity, NegativeInfinity, "-Infinity")                      \
   MACRO_(new, new_, "new")                                                     \
-  MACRO_(NewPrivateName, NewPrivateName, "NewPrivateName")                     \
   MACRO_(next, next, "next")                                                   \
   MACRO_(NFC, NFC, "NFC")                                                      \
   MACRO_(NFD, NFD, "NFD")                                                      \

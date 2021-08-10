@@ -1545,6 +1545,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::In:
     case JSOp::HasOwn:
     case JSOp::CheckPrivateField:
+    case JSOp::NewPrivateName:
     case JSOp::SetRval:
     case JSOp::Instanceof:
     case JSOp::DebugLeaveLexicalEnv:

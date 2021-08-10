@@ -2615,6 +2615,15 @@ bool WarpBuilder::build_CheckPrivateField(BytecodeLocation loc) {
   return buildIC(loc, CacheKind::CheckPrivateField, {obj, id});
 }
 
+bool WarpBuilder::build_NewPrivateName(BytecodeLocation loc) {
+  PropertyName* name = loc.getPropertyName(script_);
+
+  auto* ins = MNewPrivateName::New(alloc(), name);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
 bool WarpBuilder::build_Instanceof(BytecodeLocation loc) {
   MDefinition* rhs = current->pop();
   MDefinition* obj = current->pop();

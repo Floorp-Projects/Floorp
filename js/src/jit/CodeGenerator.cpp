@@ -12340,6 +12340,13 @@ void CodeGenerator::visitCheckPrivateFieldCache(LCheckPrivateFieldCache* ins) {
   addIC(ins, allocateIC(cache));
 }
 
+void CodeGenerator::visitNewPrivateName(LNewPrivateName* ins) {
+  pushArg(ImmGCPtr(ins->mir()->name()));
+
+  using Fn = JS::Symbol* (*)(JSContext*, HandlePropertyName);
+  callVM<Fn, NewPrivateName>(ins);
+}
+
 void CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty* lir) {
   pushArg(ImmGCPtr(lir->mir()->name()));
   pushArg(ToValue(lir, LCallDeleteProperty::Value));

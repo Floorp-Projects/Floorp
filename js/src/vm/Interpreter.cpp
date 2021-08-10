@@ -2398,6 +2398,18 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(CheckPrivateField)
 
+    CASE(NewPrivateName) {
+      ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
+
+      auto* symbol = NewPrivateName(cx, name);
+      if (!symbol) {
+        goto error;
+      }
+
+      PUSH_SYMBOL(symbol);
+    }
+    END_CASE(NewPrivateName)
+
     CASE(Iter) {
       MOZ_ASSERT(REGS.stackDepth() >= 1);
       HandleValue val = REGS.stackHandleAt(-1);

@@ -10714,26 +10714,7 @@ static MOZ_ALWAYS_INLINE ParseNode* FindConstructor(JSContext* cx,
 
 bool BytecodeEmitter::emitNewPrivateName(TaggedParserAtomIndex bindingName,
                                          TaggedParserAtomIndex symbolName) {
-  // TODO: Add a new bytecode to create private names.
-  if (!emitAtomOp(JSOp::GetIntrinsic,
-                  TaggedParserAtomIndex::WellKnown::NewPrivateName())) {
-    //              [stack] HERITAGE NEWPRIVATENAME
-    return false;
-  }
-
-  // Push `undefined` as `this` parameter for call.
-  if (!emit1(JSOp::Undefined)) {
-    //              [stack] HERITAGE NEWPRIVATENAME UNDEFINED
-    return false;
-  }
-
-  if (!emitAtomOp(JSOp::String, symbolName)) {
-    //              [stack] HERITAGE NEWPRIVATENAME UNDEFINED NAME
-    return false;
-  }
-
-  int argc = 1;
-  if (!emitCall(JSOp::Call, argc)) {
+  if (!emitAtomOp(JSOp::NewPrivateName, symbolName)) {
     //              [stack] HERITAGE PRIVATENAME
     return false;
   }
