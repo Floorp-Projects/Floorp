@@ -9,7 +9,7 @@ description: Checking eval.prototype
 
 //CHECK#1
 if (eval.prototype !== undefined) {
-  $ERROR('#1: eval.prototype === undefined. Actual: ' + (eval.prototype));
+  throw new Test262Error('#1: eval.prototype === undefined. Actual: ' + (eval.prototype));
 }
 
 reportCompare(0, 0);

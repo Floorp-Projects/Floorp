@@ -12,7 +12,7 @@ description: Checking use isPrototypeOf
 
 //CHECK#1
 if (Array.prototype.isPrototypeOf(Array()) !== true) {
-  $ERROR('#1: Array.prototype.isPrototypeOf(Array()) === true. Actual: ' + (Array.prototype.isPrototypeOf(Array())));
+  throw new Test262Error('#1: Array.prototype.isPrototypeOf(Array()) === true. Actual: ' + (Array.prototype.isPrototypeOf(Array())));
 }
 
 reportCompare(0, 0);

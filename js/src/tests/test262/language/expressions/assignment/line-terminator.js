@@ -14,7 +14,7 @@ x
 true;
 
 if (x !== true) {
-  $ERROR('#6: (x\\u000A=\\u000Atrue) === true');
+  throw new Test262Error('#6: (x\\u000A=\\u000Atrue) === true');
 }
 
 reportCompare(0, 0);

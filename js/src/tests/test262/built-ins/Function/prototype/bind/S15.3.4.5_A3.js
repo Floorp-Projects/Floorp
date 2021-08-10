@@ -7,7 +7,7 @@ description: Function.prototype.bind must exist
 ---*/
 
 if (!('bind' in Function.prototype)) {
-  $ERROR('Function.prototype.bind is missing');
+  throw new Test262Error('Function.prototype.bind is missing');
 }
 
 reportCompare(0, 0);

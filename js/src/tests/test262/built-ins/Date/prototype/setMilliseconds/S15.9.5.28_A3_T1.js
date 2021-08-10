@@ -13,7 +13,7 @@ includes: [propertyHelper.js]
 var x = Date.prototype.setMilliseconds.length;
 verifyNotWritable(Date.prototype.setMilliseconds, "length", null, 1);
 if (Date.prototype.setMilliseconds.length !== x) {
-  $ERROR('#1: The Date.prototype.setMilliseconds.length has the attribute ReadOnly');
+  throw new Test262Error('#1: The Date.prototype.setMilliseconds.length has the attribute ReadOnly');
 }
 
 reportCompare(0, 0);

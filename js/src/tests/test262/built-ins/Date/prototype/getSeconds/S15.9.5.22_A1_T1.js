@@ -13,7 +13,7 @@ if (x === 1)
 else
   Date.prototype.getSeconds = 1;
 if (Date.prototype.getSeconds === x) {
-  $ERROR('#1: The Date.prototype.getSeconds has not the attribute ReadOnly');
+  throw new Test262Error('#1: The Date.prototype.getSeconds has not the attribute ReadOnly');
 }
 
 reportCompare(0, 0);

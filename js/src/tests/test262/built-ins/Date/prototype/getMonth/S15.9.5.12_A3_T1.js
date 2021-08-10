@@ -13,7 +13,7 @@ includes: [propertyHelper.js]
 var x = Date.prototype.getMonth.length;
 verifyNotWritable(Date.prototype.getMonth, "length", null, 1);
 if (Date.prototype.getMonth.length !== x) {
-  $ERROR('#1: The Date.prototype.getMonth.length has the attribute ReadOnly');
+  throw new Test262Error('#1: The Date.prototype.getMonth.length has the attribute ReadOnly');
 }
 
 reportCompare(0, 0);

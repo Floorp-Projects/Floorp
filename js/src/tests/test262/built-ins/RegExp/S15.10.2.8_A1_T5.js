@@ -16,7 +16,7 @@ var __executed = /[Jj]ava([Ss]cript)?(?=\:)/.test("rhino is JavaScript engine");
 
 //CHECK#1
 if (__executed) {
-	$ERROR('#1: /[Jj]ava([Ss]cript)?(?=\\:)/.test("rhino is JavaScript engine") === false');
+	throw new Test262Error('#1: /[Jj]ava([Ss]cript)?(?=\\:)/.test("rhino is JavaScript engine") === false');
 }
 
 reportCompare(0, 0);

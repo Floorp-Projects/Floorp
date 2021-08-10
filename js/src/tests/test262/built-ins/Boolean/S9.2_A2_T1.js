@@ -9,7 +9,7 @@ description: null convert to Boolean by explicit transformation
 
 // CHECK#1
 if (Boolean(null) !== false) {
-  $ERROR('#1: Boolean(null) === false. Actual: ' + (Boolean(null)));
+  throw new Test262Error('#1: Boolean(null) === false. Actual: ' + (Boolean(null)));
 }
 
 reportCompare(0, 0);

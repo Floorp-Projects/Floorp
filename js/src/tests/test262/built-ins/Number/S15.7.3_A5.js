@@ -8,7 +8,7 @@ description: Checking existence of the property "NEGATIVE_INFINITY"
 ---*/
 
 if (!Number.hasOwnProperty("NEGATIVE_INFINITY")) {
-  $ERROR('#1: The Number constructor has the property "NEGATIVE_INFINITY"');
+  throw new Test262Error('#1: The Number constructor has the property "NEGATIVE_INFINITY"');
 }
 
 reportCompare(0, 0);

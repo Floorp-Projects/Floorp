@@ -30,7 +30,7 @@ verifyNotEnumerable(arr, "property");
 verifyNotConfigurable(arr, "property");
 
 if (arr.length !== 0) {
-  $ERROR('Expected arr.length === 0, actually ' + arr.length);
+  throw new Test262Error('Expected arr.length === 0, actually ' + arr.length);
 }
 
 reportCompare(0, 0);

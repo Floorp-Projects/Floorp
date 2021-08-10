@@ -17,7 +17,7 @@ RegExp.prototype.indicator = 1;
 
 //CHECK#1
 if (__re.indicator !== 1) {
-	$ERROR('#1: __re = new RegExp; RegExp.prototype.indicator = 1; __re.indicator === 1. Actual: ' + (__re.indicator));
+	throw new Test262Error('#1: __re = new RegExp; RegExp.prototype.indicator = 1; __re.indicator === 1. Actual: ' + (__re.indicator));
 }
 
 reportCompare(0, 0);

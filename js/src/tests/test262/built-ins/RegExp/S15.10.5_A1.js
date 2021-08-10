@@ -9,7 +9,7 @@ description: Checking RegExp.length property
 
 //CHECK#1
 if (RegExp.length !== 2) {
-	$ERROR('#1: RegExp.length === 2. Actual: ' + (RegExp.length));
+	throw new Test262Error('#1: RegExp.length === 2. Actual: ' + (RegExp.length));
 }
 
 reportCompare(0, 0);

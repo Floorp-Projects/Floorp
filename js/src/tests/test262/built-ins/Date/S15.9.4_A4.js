@@ -11,7 +11,7 @@ description: Checking Function.prototype.isPrototypeOf(Date)
 
 //CHECK#1
 if (!(Function.prototype.isPrototypeOf(Date))) {
-  $ERROR('#1: the value of the internal [[Prototype]] property of the Date constructor is the Function prototype object.');
+  throw new Test262Error('#1: the value of the internal [[Prototype]] property of the Date constructor is the Function prototype object.');
 }
 
 reportCompare(0, 0);

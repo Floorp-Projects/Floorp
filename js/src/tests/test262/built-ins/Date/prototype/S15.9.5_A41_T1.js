@@ -8,7 +8,7 @@ description: The Date.prototype has the property "setUTCFullYear"
 ---*/
 
 if (Date.prototype.hasOwnProperty("setUTCFullYear") !== true) {
-  $ERROR('#1: The Date.prototype has the property "setUTCFullYear"');
+  throw new Test262Error('#1: The Date.prototype has the property "setUTCFullYear"');
 }
 
 reportCompare(0, 0);

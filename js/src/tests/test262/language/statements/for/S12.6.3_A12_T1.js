@@ -19,7 +19,7 @@ for(index=0; index<10; index+=1) {
 }
 
 if (__str!=="012345") {
-	$ERROR('#1:__str === "012345". Actual: __str ==='+__str  );
+	throw new Test262Error('#1:__str === "012345". Actual: __str ==='+__str  );
 }
 
 reportCompare(0, 0);

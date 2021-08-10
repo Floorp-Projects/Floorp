@@ -12,7 +12,7 @@ includes: [propertyHelper.js]
 var x = encodeURI.length;
 verifyNotWritable(encodeURI, "length", null, Infinity);
 if (encodeURI.length !== x) {
-  $ERROR('#1: x = encodeURI.length; encodeURI.length = Infinity; encodeURI.length === x. Actual: ' + (encodeURI.length));
+  throw new Test262Error('#1: x = encodeURI.length; encodeURI.length = Infinity; encodeURI.length === x. Actual: ' + (encodeURI.length));
 }
 
 reportCompare(0, 0);

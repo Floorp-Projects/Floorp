@@ -11,7 +11,7 @@ description: Checking if Math.log(+Infinity) equals to +Infinity
 var x = +Infinity;
 if (Math.log(x) !== +Infinity)
 {
-  $ERROR("#1: 'var x=+Infinity; Math.log(x) !== +Infinity'");
+  throw new Test262Error("#1: 'var x=+Infinity; Math.log(x) !== +Infinity'");
 }
 
 reportCompare(0, 0);

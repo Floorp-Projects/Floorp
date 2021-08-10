@@ -11,7 +11,7 @@ description: Checking use isPrototypeOf
 
 //CHECK#1
 if (Function.prototype.isPrototypeOf(Array) !== true) {
-  $ERROR('#1: Function.prototype.isPrototypeOf(Array) === true. Actual: ' + (Function.prototype.isPrototypeOf(Array)));
+  throw new Test262Error('#1: Function.prototype.isPrototypeOf(Array) === true. Actual: ' + (Function.prototype.isPrototypeOf(Array)));
 }
 
 reportCompare(0, 0);

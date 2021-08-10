@@ -9,7 +9,7 @@ description: parseFloat.length === 1
 
 //CHECK#1
 if (parseFloat.length !== 1) {
-  $ERROR('#1: parseFloat.length === 1. Actual: ' + (parseFloat.length));
+  throw new Test262Error('#1: parseFloat.length === 1. Actual: ' + (parseFloat.length));
 }
 
 reportCompare(0, 0);

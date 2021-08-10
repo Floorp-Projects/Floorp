@@ -13,7 +13,7 @@ includes: [propertyHelper.js]
 var x = Date.prototype.setUTCHours.length;
 verifyNotWritable(Date.prototype.setUTCHours, "length", null, 1);
 if (Date.prototype.setUTCHours.length !== x) {
-  $ERROR('#1: The Date.prototype.setUTCHours.length has the attribute ReadOnly');
+  throw new Test262Error('#1: The Date.prototype.setUTCHours.length has the attribute ReadOnly');
 }
 
 reportCompare(0, 0);

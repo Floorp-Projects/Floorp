@@ -9,7 +9,7 @@ description: Use real HORIZONTAL TAB
 
 //CHECK#1
 if ("	str	ing	" !== "\u0009str\u0009ing\u0009") {
-  $ERROR('#1: "	str	ing	" === "\\u0009str\\u0009ing\\u0009"');
+  throw new Test262Error('#1: "	str	ing	" === "\\u0009str\\u0009ing\\u0009"');
 }
 
 reportCompare(0, 0);

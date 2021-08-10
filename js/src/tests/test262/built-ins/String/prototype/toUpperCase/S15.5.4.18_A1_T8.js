@@ -10,7 +10,7 @@ description: Call toUpperCase() function of Infinity;
 Number.prototype.toUpperCase = String.prototype.toUpperCase;
 
 if (Infinity.toUpperCase() !== "INFINITY") {
-  $ERROR('#1: Number.prototype.toUpperCase = String.prototype.toUpperCase; Infinity.toUpperCase()=== "INFINITY". Actual: ' + Infinity.toUpperCase());
+  throw new Test262Error('#1: Number.prototype.toUpperCase = String.prototype.toUpperCase; Infinity.toUpperCase()=== "INFINITY". Actual: ' + Infinity.toUpperCase());
 }
 
 reportCompare(0, 0);

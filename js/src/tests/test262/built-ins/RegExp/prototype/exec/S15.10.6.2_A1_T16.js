@@ -11,7 +11,7 @@ description: RegExp is /undefined/ and call exec() without arguments
 
 var __re = /undefined/.exec()[0];
 if (__re !== "undefined") {
-	$ERROR('#1: /undefined/.exec()[0] === "undefined". Actual: ' + (__re));
+	throw new Test262Error('#1: /undefined/.exec()[0] === "undefined". Actual: ' + (__re));
 }
 
 reportCompare(0, 0);

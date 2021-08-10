@@ -12,15 +12,15 @@ var a = [0, 1, 2];
 a.splice(1, 2, 4);
 
 if (a.length !== 2) {
-  $ERROR("Expected a.length === 2, actually " + a.length);
+  throw new Test262Error("Expected a.length === 2, actually " + a.length);
 }
 
 if (a[0] !== 0) {
-  $ERROR("Expected a[0] === 0, actually " + a[0]);
+  throw new Test262Error("Expected a[0] === 0, actually " + a[0]);
 }
 
 if (a[1] !== 4) {
-  $ERROR("Expected a[1] === 4, actually " + a[1]);
+  throw new Test262Error("Expected a[1] === 4, actually " + a[1]);
 }
 
 reportCompare(0, 0);

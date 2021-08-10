@@ -11,7 +11,7 @@ description: "Check ((/(?:)/ instanceof RegExp) === true)"
 
 //CHECK#1
 if ((/(?:)/ instanceof RegExp) !== true) {
-  $ERROR('#1: (/(?:)/ instanceof RegExp) === true. Actual: ' + ((/(?:)/ instanceof RegExp)));
+  throw new Test262Error('#1: (/(?:)/ instanceof RegExp) === true. Actual: ' + ((/(?:)/ instanceof RegExp)));
 }
 
 reportCompare(0, 0);

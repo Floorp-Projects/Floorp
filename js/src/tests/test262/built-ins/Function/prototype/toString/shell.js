@@ -217,7 +217,7 @@ const assertNativeFunction = function(fn, special) {
   try {
     validateNativeFunctionSource(actual);
   } catch (unused) {
-    $ERROR('Conforms to NativeFunction Syntax: ' + JSON.stringify(actual) + (special ? ' (' + special + ')' : ''));
+    throw new Test262Error('Conforms to NativeFunction Syntax: ' + JSON.stringify(actual) + (special ? ' (' + special + ')' : ''));
   }
 };
 

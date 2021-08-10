@@ -16,7 +16,7 @@ var __executed = /Java(?!Script)([A-Z]\w*)/.test("using of Java language");
 
 //CHECK#1
 if (__executed) {
-	$ERROR('#1: /Java(?!Script)([A-Z]\\w*)/.test("using of Java language") === false');
+	throw new Test262Error('#1: /Java(?!Script)([A-Z]\\w*)/.test("using of Java language") === false');
 }
 
 reportCompare(0, 0);

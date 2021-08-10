@@ -20,7 +20,7 @@ Object.defineProperty(foo, 'prototype', {
 });
 if (foo.prototype !==
   Object.getOwnPropertyDescriptor(foo, 'prototype').value) {
-  $ERROR("A function.prototype's descriptor lies");
+  throw new Test262Error("A function.prototype's descriptor lies");
 }
 
 reportCompare(0, 0);
