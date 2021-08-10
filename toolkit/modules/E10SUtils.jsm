@@ -19,12 +19,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "useSeparateDataUriProcess",
-  "browser.tabs.remote.dataUriInDefaultWebProcess",
-  false
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "useSeparatePrivilegedAboutContentProcess",
   "browser.tabs.remote.separatePrivilegedContentProcess",
   false
@@ -620,74 +614,6 @@ var E10SUtils = {
         log.debug(`  validatedWebRemoteType() returning: ${remoteType}`);
         return remoteType;
     }
-  },
-
-  getRemoteTypeForPrincipal(
-    aPrincipal,
-    aOriginalURI,
-    aMultiProcess,
-    aRemoteSubframes,
-    aPreferredRemoteType = DEFAULT_REMOTE_TYPE,
-    aCurrentPrincipal,
-    aIsSubframe
-  ) {
-    if (!aMultiProcess) {
-      return NOT_REMOTE;
-    }
-
-    // We want to use the original URI for "about:" (except for "about:srcdoc"
-    // and "about:blank") and "chrome://" scheme, so that we can properly
-    // determine the remote type.
-    let useOriginalURI;
-    if (aOriginalURI.scheme == "about") {
-      useOriginalURI = !["about:srcdoc", "about:blank"].includes(
-        aOriginalURI.spec
-      );
-    } else {
-      useOriginalURI = aOriginalURI.scheme == "chrome";
-    }
-
-    if (!useOriginalURI) {
-      // We can't pick a process based on a system principal or expanded
-      // principal.
-      if (aPrincipal.isSystemPrincipal || aPrincipal.isExpandedPrincipal) {
-        throw Components.Exception("", Cr.NS_ERROR_UNEXPECTED);
-      }
-
-      // Null principals can be loaded in any remote process, but when
-      // using fission we add the option to force them into the default
-      // web process for better test coverage.
-      if (aPrincipal.isNullPrincipal) {
-        if (aOriginalURI.spec == "about:blank") {
-          useOriginalURI = true;
-        } else if (
-          (aRemoteSubframes && useSeparateDataUriProcess) ||
-          aPreferredRemoteType == NOT_REMOTE
-        ) {
-          return WEB_REMOTE_TYPE;
-        }
-        return aPreferredRemoteType;
-      }
-    }
-    // We might care about the currently loaded URI. Pull it out of our current
-    // principal. We never care about the current URI when working with a
-    // non-content principal.
-    let currentURI =
-      aCurrentPrincipal && aCurrentPrincipal.isContentPrincipal
-        ? Services.io.newURI(aCurrentPrincipal.spec)
-        : null;
-
-    return E10SUtils.getRemoteTypeForURIObject(
-      useOriginalURI ? aOriginalURI : Services.io.newURI(aPrincipal.spec),
-      aMultiProcess,
-      aRemoteSubframes,
-      aPreferredRemoteType,
-      currentURI,
-      aPrincipal,
-      aIsSubframe,
-      false, //aIsWorker
-      aPrincipal.originAttributes
-    );
   },
 
   getRemoteTypeForWorkerPrincipal(
