@@ -9,6 +9,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/intl/LocaleService.h"
 
 #include "nsNavHistory.h"
 
@@ -23,7 +24,6 @@
 #include "NotifyRankingChanged.h"
 
 #include "nsTArray.h"
-#include "nsCollationCID.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsPromiseFlatString.h"
@@ -3235,17 +3235,27 @@ nsresult nsNavHistory::UpdateFrecency(int64_t aPlaceId) {
   return NS_OK;
 }
 
-nsICollation* nsNavHistory::GetCollation() {
-  if (mCollation) return mCollation;
+const mozilla::intl::Collator* nsNavHistory::GetCollator() {
+  if (mCollator) {
+    return mCollator.get();
+  }
 
-  // collation
-  nsCOMPtr<nsICollationFactory> cfact =
-      do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID);
-  NS_ENSURE_TRUE(cfact, nullptr);
-  nsresult rv = cfact->CreateCollation(getter_AddRefs(mCollation));
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  auto result = mozilla::intl::LocaleService::TryCreateComponent<
+      mozilla::intl::Collator>();
+  NS_ENSURE_TRUE(result.isOk(), nullptr);
+  auto collator = result.unwrap();
 
-  return mCollation;
+  // Sort in a case-insensitive way, where "base" letters are considered
+  // equal, e.g: a = á, a = A, a ≠ b.
+  using mozilla::intl::Collator;
+  Collator::Options options{};
+  options.sensitivity = Collator::Sensitivity::Base;
+  auto optResult = collator->SetOptions(options);
+  NS_ENSURE_TRUE(optResult.isOk(), nullptr);
+
+  mCollator = UniquePtr<const Collator>(collator.release());
+
+  return mCollator.get();
 }
 
 nsIStringBundle* nsNavHistory::GetBundle() {
