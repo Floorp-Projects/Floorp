@@ -146,7 +146,7 @@ struct server_info_t {
   PLHashTable* host_tls11_table;
   PLHashTable* host_tls12_table;
   PLHashTable* host_tls13_table;
-  PLHashTable* host_rc4_table;
+  PLHashTable* host_3des_table;
   PLHashTable* host_failhandshake_table;
 };
 
@@ -245,7 +245,7 @@ void SignalShutdown() {
 // available flags
 enum {
   USE_SSL3 = 1 << 0,
-  USE_RC4 = 1 << 1,
+  USE_3DES = 1 << 1,
   FAIL_HANDSHAKE = 1 << 2,
   USE_TLS1 = 1 << 3,
   USE_TLS1_1 = 1 << 4,
@@ -306,8 +306,8 @@ bool ReadConnectRequest(server_info_t* server_info, relayBuffer& buffer,
     *flags |= USE_SSL3;
   }
 
-  if (PL_HashTableLookup(server_info->host_rc4_table, token)) {
-    *flags |= USE_RC4;
+  if (PL_HashTableLookup(server_info->host_3des_table, token)) {
+    *flags |= USE_3DES;
   }
 
   if (PL_HashTableLookup(server_info->host_tls1_table, token)) {
@@ -444,20 +444,13 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si,
     return false;
   }
 
-  if (flags & USE_RC4) {
+  if (flags & USE_3DES) {
     for (uint16_t i = 0; i < SSL_NumImplementedCiphers; ++i) {
       uint16_t cipher_id = SSL_ImplementedCiphers[i];
-      switch (cipher_id) {
-        case TLS_ECDHE_ECDSA_WITH_RC4_128_SHA:
-        case TLS_ECDHE_RSA_WITH_RC4_128_SHA:
-        case TLS_RSA_WITH_RC4_128_SHA:
-        case TLS_RSA_WITH_RC4_128_MD5:
-          SSL_CipherPrefSet(ssl_socket, cipher_id, true);
-          break;
-
-        default:
-          SSL_CipherPrefSet(ssl_socket, cipher_id, false);
-          break;
+      if (cipher_id == TLS_RSA_WITH_3DES_EDE_CBC_SHA) {
+        SSL_CipherPrefSet(ssl_socket, cipher_id, true);
+      } else {
+        SSL_CipherPrefSet(ssl_socket, cipher_id, false);
       }
     }
   }
@@ -772,7 +765,7 @@ void HandleConnection(void* data) {
                                              match_hostname, &match);
                 PL_HashTableEnumerateEntries(ci->server_info->host_tls13_table,
                                              match_hostname, &match);
-                PL_HashTableEnumerateEntries(ci->server_info->host_rc4_table,
+                PL_HashTableEnumerateEntries(ci->server_info->host_3des_table,
                                              match_hostname, &match);
                 PL_HashTableEnumerateEntries(
                     ci->server_info->host_failhandshake_table, match_hostname,
@@ -1043,8 +1036,8 @@ PLHashTable* get_tls13_table(server_info_t* server) {
   return server->host_tls13_table;
 }
 
-PLHashTable* get_rc4_table(server_info_t* server) {
-  return server->host_rc4_table;
+PLHashTable* get_3des_table(server_info_t* server) {
+  return server->host_3des_table;
 }
 
 PLHashTable* get_failhandshake_table(server_info_t* server) {
@@ -1260,11 +1253,11 @@ int processConfigLine(char* configLine) {
         return 1;
       }
 
-      server.host_rc4_table =
+      server.host_3des_table =
           PL_NewHashTable(0, PL_HashString, PL_CompareStrings,
                           PL_CompareStrings, nullptr, nullptr);
       ;
-      if (!server.host_rc4_table) {
+      if (!server.host_3des_table) {
         LOG_ERROR(("Internal, could not create hash table\n"));
         return 1;
       }
@@ -1412,8 +1405,8 @@ int processConfigLine(char* configLine) {
     return parseWeakCryptoConfig(keyword, _caret, get_tls13_table);
   }
 
-  if (!strcmp(keyword, "rc4")) {
-    return parseWeakCryptoConfig(keyword, _caret, get_rc4_table);
+  if (!strcmp(keyword, "3des")) {
+    return parseWeakCryptoConfig(keyword, _caret, get_3des_table);
   }
 
   if (!strcmp(keyword, "failHandshake")) {
@@ -1507,7 +1500,7 @@ int freeTLSHashItems(PLHashEntry* he, int i, void* arg) {
   return HT_ENUMERATE_REMOVE;
 }
 
-int freeRC4HashItems(PLHashEntry* he, int i, void* arg) {
+int free3DESHashItems(PLHashEntry* he, int i, void* arg) {
   delete[](char*) he->key;
   return HT_ENUMERATE_REMOVE;
 }
@@ -1662,10 +1655,10 @@ int main(int argc, char** argv) {
                                  nullptr);
     PL_HashTableEnumerateEntries(server.host_tls13_table, freeTLSHashItems,
                                  nullptr);
-    PL_HashTableEnumerateEntries(server.host_rc4_table, freeRC4HashItems,
+    PL_HashTableEnumerateEntries(server.host_3des_table, free3DESHashItems,
                                  nullptr);
     PL_HashTableEnumerateEntries(server.host_failhandshake_table,
-                                 freeRC4HashItems, nullptr);
+                                 free3DESHashItems, nullptr);
     PL_HashTableDestroy(server.host_cert_table);
     PL_HashTableDestroy(server.host_clientauth_table);
     PL_HashTableDestroy(server.host_redir_table);
@@ -1674,7 +1667,7 @@ int main(int argc, char** argv) {
     PL_HashTableDestroy(server.host_tls11_table);
     PL_HashTableDestroy(server.host_tls12_table);
     PL_HashTableDestroy(server.host_tls13_table);
-    PL_HashTableDestroy(server.host_rc4_table);
+    PL_HashTableDestroy(server.host_3des_table);
     PL_HashTableDestroy(server.host_failhandshake_table);
   }
 
