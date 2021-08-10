@@ -211,7 +211,13 @@ class WebDriverSession {
     this._connections.clear();
 
     // Destroy the dedicated MessageHandler instance if we created one.
-    this._messageHandler?.destroy();
+    if (this._messageHandler) {
+      this._messageHandler.off(
+        "message-handler-event",
+        this._onMessageHandlerEvent
+      );
+      this._messageHandler.destroy();
+    }
   }
 
   execute(module, command, params) {
@@ -241,6 +247,11 @@ class WebDriverSession {
       this._messageHandler = MessageHandlerRegistry.getOrCreateMessageHandler(
         this.id,
         RootMessageHandler.type
+      );
+      this._onMessageHandlerEvent = this._onMessageHandlerEvent.bind(this);
+      this._messageHandler.on(
+        "message-handler-event",
+        this._onMessageHandlerEvent
       );
     }
 
@@ -294,6 +305,13 @@ class WebDriverSession {
     const conn = new WebDriverBiDiConnection(webSocket, response._connection);
     conn.registerSession(this);
     this._connections.add(conn);
+  }
+
+  _onMessageHandlerEvent(eventName, messageHandlerEvent) {
+    const { method, params } = messageHandlerEvent;
+    this._connections.forEach(connection =>
+      connection.sendEvent(method, params)
+    );
   }
 
   // XPCOM
