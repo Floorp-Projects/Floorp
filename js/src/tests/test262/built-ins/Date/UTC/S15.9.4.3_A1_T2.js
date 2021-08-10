@@ -9,11 +9,11 @@ description: Checking absence of DontDelete attribute
 ---*/
 
 if (delete Date.UTC === false) {
-  $ERROR('#1: The Date.UTC property has not the attributes DontDelete');
+  throw new Test262Error('#1: The Date.UTC property has not the attributes DontDelete');
 }
 
 if (Date.hasOwnProperty('UTC')) {
-  $ERROR('#2: The Date.UTC property has not the attributes DontDelete');
+  throw new Test262Error('#2: The Date.UTC property has not the attributes DontDelete');
 }
 
 reportCompare(0, 0);

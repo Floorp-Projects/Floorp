@@ -14,7 +14,7 @@ var __executed = /ab|cd|ef/.test("AEKFCD");
 
 //CHECK#1
 if (__executed) {
-	$ERROR('#1: /ab|cd|ef/.test("AEKFCD") === false');
+	throw new Test262Error('#1: /ab|cd|ef/.test("AEKFCD") === false');
 }
 
 reportCompare(0, 0);

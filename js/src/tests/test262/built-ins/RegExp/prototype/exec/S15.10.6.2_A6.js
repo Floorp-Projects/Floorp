@@ -9,7 +9,7 @@ description: Checking RegExp.prototype.exec.prototype
 
 //CHECK#1
 if (RegExp.prototype.exec.prototype !== undefined) {
-  $ERROR('#1: RegExp.prototype.exec.prototype === undefined. Actual: ' + (RegExp.prototype.exec.prototype));
+  throw new Test262Error('#1: RegExp.prototype.exec.prototype === undefined. Actual: ' + (RegExp.prototype.exec.prototype));
 }
 
 reportCompare(0, 0);

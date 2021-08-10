@@ -14,7 +14,7 @@ if (x === 1)
 else
   Date.UTC = 1;
 if (Date.UTC === x) {
-  $ERROR('#1: The Date.UTC has not the attribute ReadOnly');
+  throw new Test262Error('#1: The Date.UTC has not the attribute ReadOnly');
 }
 
 reportCompare(0, 0);

@@ -12,7 +12,7 @@ description: Compare Number('1234.5678') with Number('1234')+(+('5678')*1e-4)
 
 // CHECK#1
 if (Number("1234.5678") !== Number("1234") + (+("5678") * 1e-4)) {
-  $ERROR('#1: Number("1234.5678") === Number("1234")+(+("5678")*1e-4)');
+  throw new Test262Error('#1: Number("1234.5678") === Number("1234")+(+("5678")*1e-4)');
 }
 
 reportCompare(0, 0);

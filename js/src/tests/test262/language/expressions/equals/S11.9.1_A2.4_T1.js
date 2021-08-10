@@ -10,13 +10,13 @@ description: Checking with "="
 //CHECK#1
 var x = 0; 
 if (((x = 1) == x) !== true) {
-  $ERROR('#1: var x = 0; ((x = 1) == x) === true');
+  throw new Test262Error('#1: var x = 0; ((x = 1) == x) === true');
 }
 
 //CHECK#2
 var x = 0; 
 if ((x == (x = 1)) !== false) {
-  $ERROR('#2: var x = 0; (x == (x = 1)) === false');
+  throw new Test262Error('#2: var x = 0; (x == (x = 1)) === false');
 }
 
 reportCompare(0, 0);

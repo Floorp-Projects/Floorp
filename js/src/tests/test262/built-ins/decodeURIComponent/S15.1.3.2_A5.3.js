@@ -12,7 +12,7 @@ includes: [propertyHelper.js]
 var x = decodeURIComponent.length;
 verifyNotWritable(decodeURIComponent, "length", null, Infinity);
 if (decodeURIComponent.length !== x) {
-  $ERROR('#1: x = decodeURIComponent.length; decodeURIComponent.length = Infinity; decodeURIComponent.length === x. Actual: ' + (decodeURIComponent.length));
+  throw new Test262Error('#1: x = decodeURIComponent.length; decodeURIComponent.length = Infinity; decodeURIComponent.length === x. Actual: ' + (decodeURIComponent.length));
 }
 
 reportCompare(0, 0);

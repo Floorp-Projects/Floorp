@@ -24,7 +24,7 @@ sequence.push(1);
 pReject();
 
 p.then(function() {
-  $ERROR("Should not be called -- Promise rejected.");
+  throw new Test262Error("Should not be called -- Promise rejected.");
 }, function() {
   sequence.push(3);
   assert.sameValue(sequence.length, 3);
@@ -34,7 +34,7 @@ p.then(function() {
 Promise.resolve().then(function() {
   // enqueue another then-handler
   p.then(function() {
-    $ERROR("Should not be called (2) -- Promise rejected.");
+    throw new Test262Error("Should not be called (2) -- Promise rejected.");
   }, function() {
     sequence.push(5);
     assert.sameValue(sequence.length, 5);

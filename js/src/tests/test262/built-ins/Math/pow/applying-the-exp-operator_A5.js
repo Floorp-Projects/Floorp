@@ -19,7 +19,7 @@ var basenum = 6;
 
 for (var i = 0; i < basenum; i++) {
   if (Math.pow(base[i], exponent) !== +Infinity) {
-    $ERROR("#1: Math.pow(" + base[i] + ", " + exponent + ") !== +Infinity");
+    throw new Test262Error("#1: Math.pow(" + base[i] + ", " + exponent + ") !== +Infinity");
   }
 }
 

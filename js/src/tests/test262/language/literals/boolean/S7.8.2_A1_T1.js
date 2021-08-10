@@ -9,7 +9,7 @@ description: "BooleanLiteral :: true"
 
 //CHECK#1
 if (Boolean(true) !== true) {
-  $ERROR('#1: Boolean(true) === true. Actual: Boolean(true) === ' + (Boolean(true)));
+  throw new Test262Error('#1: Boolean(true) === true. Actual: Boolean(true) === ' + (Boolean(true)));
 }
 
 reportCompare(0, 0);

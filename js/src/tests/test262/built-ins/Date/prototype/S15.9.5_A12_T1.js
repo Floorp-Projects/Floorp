@@ -8,7 +8,7 @@ description: The Date.prototype has the property "getMonth"
 ---*/
 
 if (Date.prototype.hasOwnProperty("getMonth") !== true) {
-  $ERROR('#1: The Date.prototype has the property "getMonth"');
+  throw new Test262Error('#1: The Date.prototype has the property "getMonth"');
 }
 
 reportCompare(0, 0);

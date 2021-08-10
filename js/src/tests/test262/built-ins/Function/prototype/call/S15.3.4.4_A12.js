@@ -11,7 +11,7 @@ description: >
 
 //CHECK#1
 if (Function.prototype.call.prototype !== undefined) {
-  $ERROR('#1: Function.prototype.call has not prototype property' + Function.prototype.call.prototype);
+  throw new Test262Error('#1: Function.prototype.call has not prototype property' + Function.prototype.call.prototype);
 }
 
 reportCompare(0, 0);

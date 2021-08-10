@@ -16,6 +16,6 @@ var x = new function f1() {
   return 1;
 };
 if (typeof(x.constructor) !== "function")
-  $ERROR('#1: typeof(x.constructor)!=="function"');
+  throw new Test262Error('#1: typeof(x.constructor)!=="function"');
 
 reportCompare(0, 0);

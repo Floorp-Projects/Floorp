@@ -11,7 +11,7 @@ description: If statement
 
 //CHECK#1
 if (eval("if (false) ;") !== undefined) {
-  $ERROR('#1: eval("if (false) ;") === undefined. Actual: ' + eval("if (false) ;"));
+  throw new Test262Error('#1: eval("if (false) ;") === undefined. Actual: ' + eval("if (false) ;"));
 }
 
 reportCompare(0, 0);

@@ -50,7 +50,7 @@ function assertRelativeDateMs(date, expectedMs) {
   var localOffset = date.getTimezoneOffset() * 60000;
 
   if (actualMs - localOffset !== expectedMs) {
-    $ERROR(
+    throw new Test262Error(
       'Expected ' + date + ' to be ' + expectedMs +
       ' milliseconds from the Unix epoch'
     );
@@ -1186,7 +1186,7 @@ const assertNativeFunction = function(fn, special) {
   try {
     validateNativeFunctionSource(actual);
   } catch (unused) {
-    $ERROR('Conforms to NativeFunction Syntax: ' + JSON.stringify(actual) + (special ? ' (' + special + ')' : ''));
+    throw new Test262Error('Conforms to NativeFunction Syntax: ' + JSON.stringify(actual) + (special ? ' (' + special + ')' : ''));
   }
 };
 
@@ -1205,7 +1205,7 @@ defines: [checkSequence, checkSettledPromises]
 function checkSequence(arr, message) {
   arr.forEach(function(e, i) {
     if (e !== (i+1)) {
-      $ERROR((message ? message : "Steps in unexpected sequence:") +
+      throw new Test262Error((message ? message : "Steps in unexpected sequence:") +
              " '" + arr.join(',') + "'");
     }
   });
@@ -1451,7 +1451,7 @@ defines: [setTimeout]
 //setTimeout is not available, hence this script was loaded
 if (Promise === undefined && this.setTimeout === undefined) {
   if(/\$DONE()/.test(code))
-    $ERROR("Async test capability is not supported in your test environment");
+    throw new Test262Error("Async test capability is not supported in your test environment");
 }
 
 if (Promise !== undefined && this.setTimeout === undefined) {

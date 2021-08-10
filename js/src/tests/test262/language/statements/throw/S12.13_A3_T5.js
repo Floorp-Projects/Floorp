@@ -14,7 +14,7 @@ try{
   throw ((a&&(!b))?"exception":" #1");
 }
 catch(e){
-  if (e!=="exception") $ERROR('#1: Exception ==="exception"(operaton ? , ). Actual:  Exception ==='+e  );
+  if (e!=="exception") throw new Test262Error('#1: Exception ==="exception"(operaton ? , ). Actual:  Exception ==='+e  );
 }
 
 reportCompare(0, 0);

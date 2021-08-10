@@ -9,12 +9,12 @@ description: Checking all combinations
 
 //CHECK#1
 if ((+0 != -0) !== false) {
-  $ERROR('#1: (+0 != -0) === false');
+  throw new Test262Error('#1: (+0 != -0) === false');
 }
 
 //CHECK#2
 if ((-0 != +0) !== false) {
-  $ERROR('#2: (-0 != +0) === false');
+  throw new Test262Error('#2: (-0 != +0) === false');
 }
 
 reportCompare(0, 0);

@@ -13,7 +13,7 @@ var __executed = /^..^e/.test("ab\ncde");
 
 //CHECK#1
 if (__executed) {
-	$ERROR('#1: /^..^e/.test("ab\\ncde") === false');
+	throw new Test262Error('#1: /^..^e/.test("ab\\ncde") === false');
 }
 
 reportCompare(0, 0);

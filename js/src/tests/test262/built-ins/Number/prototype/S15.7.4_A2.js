@@ -11,7 +11,7 @@ description: Checking Object.prototype.isPrototypeOf(Number.prototype)
 
 //CHECK#1
 if (!Object.prototype.isPrototypeOf(Number.prototype)) {
-  $ERROR('#1: Object prototype object is the prototype of Number prototype object');
+  throw new Test262Error('#1: Object prototype object is the prototype of Number prototype object');
 }
 
 reportCompare(0, 0);

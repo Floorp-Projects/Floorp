@@ -13,7 +13,7 @@ includes: [propertyHelper.js]
 var x = Date.prototype.getUTCFullYear.length;
 verifyNotWritable(Date.prototype.getUTCFullYear, "length", null, 1);
 if (Date.prototype.getUTCFullYear.length !== x) {
-  $ERROR('#1: The Date.prototype.getUTCFullYear.length has the attribute ReadOnly');
+  throw new Test262Error('#1: The Date.prototype.getUTCFullYear.length has the attribute ReadOnly');
 }
 
 reportCompare(0, 0);

@@ -17,7 +17,7 @@ lbl: for(var i in object){
 }
 
 if(!(result === 1)){
-  $ERROR("'break label' should break execution of labelled iteration statement");
+  throw new Test262Error("'break label' should break execution of labelled iteration statement");
 }
 
 reportCompare(0, 0);

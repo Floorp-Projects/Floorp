@@ -11,7 +11,7 @@ description: Compare RegExp.prototype.constructor with RegExp
 
 //CHECK#1
 if (RegExp.prototype.constructor !== RegExp) {
-	$ERROR('#1: RegExp.prototype.constructor === RegExp. Actual: ' + (RegExp.prototype.constructor));
+	throw new Test262Error('#1: RegExp.prototype.constructor === RegExp. Actual: ' + (RegExp.prototype.constructor));
 }
 
 reportCompare(0, 0);

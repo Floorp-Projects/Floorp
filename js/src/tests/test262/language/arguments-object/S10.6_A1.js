@@ -18,7 +18,7 @@ try{
   var x = f1();
 }
 catch(e){
-  $ERROR("#1: arguments doesn't exists");
+  throw new Test262Error("#1: arguments doesn't exists");
 }
 
 //CHECK#2
@@ -30,7 +30,7 @@ try{
   var x = f2();
 }
 catch(e){
-  $ERROR("#2: arguments doesn't exists");
+  throw new Test262Error("#2: arguments doesn't exists");
 }
 
 reportCompare(0, 0);

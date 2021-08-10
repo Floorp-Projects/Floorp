@@ -9,7 +9,7 @@ description: Checking encodeURI.prototype
 
 //CHECK#1
 if (encodeURI.prototype !== undefined) {
-  $ERROR('#1: encodeURI.prototype === undefined. Actual: ' + (encodeURI.prototype));
+  throw new Test262Error('#1: encodeURI.prototype === undefined. Actual: ' + (encodeURI.prototype));
 }
 
 reportCompare(0, 0);

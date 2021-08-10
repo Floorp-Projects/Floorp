@@ -11,7 +11,7 @@ description: Checking Object.prototype.isPrototypeOf(RegExp.prototype)
 
 //CHECK#1
 if (Object.prototype.isPrototypeOf(RegExp.prototype) !== true) {
-	$ERROR('#1: Object.prototype.isPrototypeOf(RegExp.prototype) === true');
+	throw new Test262Error('#1: Object.prototype.isPrototypeOf(RegExp.prototype) === true');
 }
 
 reportCompare(0, 0);

@@ -49,7 +49,7 @@ function P(executor) {
     callCount++;
     executor(() => {
       callCount++;
-      $ERROR();
+      throw new Test262Error();
     }, () => {
       callCount++;
       reject(new Test262Error('reject throws'));

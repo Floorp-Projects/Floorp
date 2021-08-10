@@ -13,17 +13,17 @@ description: >
 
 //CHECK#0
 if (!(Function.prototype.call.hasOwnProperty('length'))) {
-  $ERROR('#0: the Function.prototype.call has length property');
+  throw new Test262Error('#0: the Function.prototype.call has length property');
 }
 
 //CHECK#1
 if (!delete Function.prototype.call.length) {
-  $ERROR('#1: The Function.prototype.call.length property does not have the attributes DontDelete');
+  throw new Test262Error('#1: The Function.prototype.call.length property does not have the attributes DontDelete');
 }
 
 //CHECK#2
 if (Function.prototype.call.hasOwnProperty('length')) {
-  $ERROR('#2: The Function.prototype.call.length property does not have the attributes DontDelete');
+  throw new Test262Error('#2: The Function.prototype.call.length property does not have the attributes DontDelete');
 }
 
 reportCompare(0, 0);

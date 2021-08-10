@@ -31,7 +31,7 @@ for (var indexI = 0; indexI < interval.length; indexI++) {
 }
 
 if (result !== true) {
-  $ERROR('#1: If string.charAt(k+2) does not represent hexadecimal digits, throw URIError');
+  throw new Test262Error('#1: If string.charAt(k+2) does not represent hexadecimal digits, throw URIError');
 }
 
 reportCompare(0, 0);

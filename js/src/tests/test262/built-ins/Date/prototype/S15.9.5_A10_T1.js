@@ -8,7 +8,7 @@ description: The Date.prototype has the property "getFullYear"
 ---*/
 
 if (Date.prototype.hasOwnProperty("getFullYear") !== true) {
-  $ERROR('#1: The Date.prototype has the property "getFullYear"');
+  throw new Test262Error('#1: The Date.prototype has the property "getFullYear"');
 }
 
 reportCompare(0, 0);

@@ -17,12 +17,12 @@ arr.push(4);
 
 //CHECK#1
 if (n_obj !== arr) {
-  $ERROR('#1: When the Object constructor is called and if the value is an Object simply value returns.');
+  throw new Test262Error('#1: When the Object constructor is called and if the value is an Object simply value returns.');
 }
 
 //CHECK#2
 if (n_obj[3] !== 4) {
-  $ERROR('#2: When the Object constructor is called and if the value is an Object simply value returns.');
+  throw new Test262Error('#2: When the Object constructor is called and if the value is an Object simply value returns.');
 }
 
 reportCompare(0, 0);

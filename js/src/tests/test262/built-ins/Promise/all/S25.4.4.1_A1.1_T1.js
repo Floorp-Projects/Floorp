@@ -9,7 +9,7 @@ description: Promise.all is callable
 ---*/
 
 if ((typeof Promise.all) !== "function") {
-  $ERROR('Expected Promise.all to be a function');
+  throw new Test262Error('Expected Promise.all to be a function');
 }
 
 reportCompare(0, 0);

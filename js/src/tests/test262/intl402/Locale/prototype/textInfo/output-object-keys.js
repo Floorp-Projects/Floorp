@@ -25,4 +25,10 @@ verifyProperty(result, 'direction', {
   configurable: true
 });
 
+const direction = new Intl.Locale('en').textInfo.direction;
+assert(
+  direction === 'rtl' || direction === 'ltr',
+  'value of the `direction` property'
+);
+
 reportCompare(0, 0);

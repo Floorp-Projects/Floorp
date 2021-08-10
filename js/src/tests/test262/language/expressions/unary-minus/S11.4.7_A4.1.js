@@ -9,13 +9,13 @@ description: Checking NaN
 
 //CHECK#1
 if (isNaN(-NaN) !== true) {
-  $ERROR('#1: -NaN === Not-a-Number. Actual: ' + (-NaN));
+  throw new Test262Error('#1: -NaN === Not-a-Number. Actual: ' + (-NaN));
 }
 
 //CHECK#2
 var x = NaN; 
 if (isNaN(-x) != true) {
-  $ERROR('#2: var x = NaN; -x === Not-a-Number. Actual: ' + (-x));
+  throw new Test262Error('#2: var x = NaN; -x === Not-a-Number. Actual: ' + (-x));
 }
 
 reportCompare(0, 0);

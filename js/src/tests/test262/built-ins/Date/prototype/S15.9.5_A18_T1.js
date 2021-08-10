@@ -8,7 +8,7 @@ description: The Date.prototype has the property "getHours"
 ---*/
 
 if (Date.prototype.hasOwnProperty("getHours") !== true) {
-  $ERROR('#1: The Date.prototype has the property "getHours"');
+  throw new Test262Error('#1: The Date.prototype has the property "getHours"');
 }
 
 reportCompare(0, 0);

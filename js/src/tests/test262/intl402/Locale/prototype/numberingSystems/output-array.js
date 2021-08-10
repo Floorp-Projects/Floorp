@@ -14,5 +14,6 @@ features: [Intl.Locale,Intl.Locale-info]
 ---*/
 
 assert(Array.isArray(new Intl.Locale('en').numberingSystems));
+assert(new Intl.Locale('en').numberingSystems.length > 0, 'array has at least one element');
 
 reportCompare(0, 0);

@@ -8,7 +8,7 @@ description: The Date.prototype has the property "setMinutes"
 ---*/
 
 if (Date.prototype.hasOwnProperty("setMinutes") !== true) {
-  $ERROR('#1: The Date.prototype has the property "setMinutes"');
+  throw new Test262Error('#1: The Date.prototype has the property "setMinutes"');
 }
 
 reportCompare(0, 0);

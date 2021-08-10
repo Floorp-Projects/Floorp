@@ -9,7 +9,7 @@ description: Use real FORM FEED
 
 //CHECK#1
 if ("string" !== "\u000Cstr\u000Cing\u000C") {
-  $ERROR('#1: "string" === "\\u000Cstr\\u000Cing\\u000C"');
+  throw new Test262Error('#1: "string" === "\\u000Cstr\\u000Cing\\u000C"');
 }
 
 reportCompare(0, 0);

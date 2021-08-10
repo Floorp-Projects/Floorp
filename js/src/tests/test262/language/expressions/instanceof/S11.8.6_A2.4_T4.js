@@ -10,7 +10,7 @@ flags: [noStrict]
 
 //CHECK#1
 if ((OBJECT = Object, {}) instanceof OBJECT !== true) {
-  $ERROR('#1: (OBJECT = Object, {}) instanceof OBJECT !== true');
+  throw new Test262Error('#1: (OBJECT = Object, {}) instanceof OBJECT !== true');
 }
 
 reportCompare(0, 0);

@@ -9,7 +9,7 @@ description: Use NO-BREAK SPACE(\u00A0)
 
 // CHECK#1
 if (eval("'\u00A0str\u00A0ing\u00A0'") !== "\u00A0str\u00A0ing\u00A0") {
-  $ERROR('#1: eval("\'\\u00A0str\\u00A0ing\\u00A0\'") === "\\u00A0str\\u00A0ing\\u00A0"');
+  throw new Test262Error('#1: eval("\'\\u00A0str\\u00A0ing\\u00A0\'") === "\\u00A0str\\u00A0ing\\u00A0"');
 }
 
 reportCompare(0, 0);

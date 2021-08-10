@@ -9,12 +9,12 @@ description: Type(x) is Boolean
 
 // CHECK#1
 if ((new Boolean(true) >>> 0) !== 1) {
-  $ERROR('#1: (new Boolean(true) >>> 0) === 1. Actual: ' + ((new Boolean(true) >>> 0)));
+  throw new Test262Error('#1: (new Boolean(true) >>> 0) === 1. Actual: ' + ((new Boolean(true) >>> 0)));
 }
 
 // CHECK#2
 if ((false >>> 0) !== 0) {
-  $ERROR('#2: (false >>> 0) === 0. Actual: ' + ((false >>> 0)));
+  throw new Test262Error('#2: (false >>> 0) === 0. Actual: ' + ((false >>> 0)));
 }
 
 reportCompare(0, 0);

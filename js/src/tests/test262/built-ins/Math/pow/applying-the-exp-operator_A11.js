@@ -17,7 +17,7 @@ var exponentnum = 4;
 
 for (var i = 0; i < exponentnum; i++) {
   if (Math.pow(base, exponent[i]) !== +Infinity) {
-    $ERROR("#1: Math.pow(" + base + ", " + exponent[i] + ") !== +Infinity");
+    throw new Test262Error("#1: Math.pow(" + base + ", " + exponent[i] + ") !== +Infinity");
   }
 }
 

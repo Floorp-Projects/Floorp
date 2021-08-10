@@ -11,7 +11,7 @@ description: "\"\" is converted to Boolean by explicit transformation"
 
 // CHECK#1
 if (Boolean("") !== false) {
-  $ERROR('#1: Boolean("") === false. Actual: ' + (Boolean("")));
+  throw new Test262Error('#1: Boolean("") === false. Actual: ' + (Boolean("")));
 }
 
 reportCompare(0, 0);

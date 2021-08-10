@@ -21,7 +21,7 @@ function f1(){
 }
 
 if(!(f1() === 1)){
-  $ERROR("#1: Scope chain disturbed");
+  throw new Test262Error("#1: Scope chain disturbed");
 }
 
 reportCompare(0, 0);

@@ -13,7 +13,7 @@ includes: [propertyHelper.js]
 var x = Date.prototype.setHours.length;
 verifyNotWritable(Date.prototype.setHours, "length", null, 1);
 if (Date.prototype.setHours.length !== x) {
-  $ERROR('#1: The Date.prototype.setHours.length has the attribute ReadOnly');
+  throw new Test262Error('#1: The Date.prototype.setHours.length has the attribute ReadOnly');
 }
 
 reportCompare(0, 0);

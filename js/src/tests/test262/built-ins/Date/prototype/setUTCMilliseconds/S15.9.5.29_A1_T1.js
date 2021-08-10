@@ -15,7 +15,7 @@ if (x === 1)
 else
   Date.prototype.setUTCMilliseconds = 1;
 if (Date.prototype.setUTCMilliseconds === x) {
-  $ERROR('#1: The Date.prototype.setUTCMilliseconds has not the attribute ReadOnly');
+  throw new Test262Error('#1: The Date.prototype.setUTCMilliseconds has not the attribute ReadOnly');
 }
 
 reportCompare(0, 0);

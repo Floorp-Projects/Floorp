@@ -9,7 +9,7 @@ description: Use real VERTICAL TAB
 
 //CHECK#1
 if ("string" !== "\u000Bstr\u000Bing\u000B") {
-  $ERROR('#1: "string" === "\\u000Bstr\\u000Bing\\u000B"');
+  throw new Test262Error('#1: "string" === "\\u000Bstr\\u000Bing\\u000B"');
 }
 
 reportCompare(0, 0);

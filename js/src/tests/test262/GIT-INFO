@@ -1,20 +1,5 @@
-commit afe217b318df5f197e64b30a8b5a4b391c777359
-Author: jugglinmike <mike@mikepennisi.com>
-Date:   Thu Jul 15 08:49:12 2021 -0400
+commit 86e23998e37e2f1d8107afa51d7be355f3f65cca
+Author: Frank Tang <ftang@chromium.org>
+Date:   Thu Aug 5 15:57:57 2021 -0700
 
-    Add tests for "Class Static Init. Blocks" proposal (#2968)
-    
-    * Add tests for "Class Static Init. Blocks" proposal
-    
-    This proposal is currently at "stage 3" in TC39's standardization
-    process.
-    
-    * fixup! Add tests for "Class Static Init. Blocks" proposal
-    
-    * Correct identifier reference
-    
-    * Update tests for grammar
-    
-    * Update tests for identifiers
-    
-    * Add tests for scope derivation
+    Add more tests
