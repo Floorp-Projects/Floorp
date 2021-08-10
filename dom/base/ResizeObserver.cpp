@@ -48,9 +48,11 @@ static uint32_t GetNodeDepth(nsINode* aNode) {
 /**
  * Returns |aTarget|'s size in the form of gfx::Size (in pixels).
  * If the target is SVG, width and height are determined from bounding box.
+ *
+ * https://www.w3.org/TR/resize-observer-1/#calculate-box-size
  */
-static gfx::Size GetTargetSize(Element* aTarget,
-                               ResizeObserverBoxOptions aBox) {
+static gfx::Size CalculateBoxSize(Element* aTarget,
+                                  ResizeObserverBoxOptions aBox) {
   gfx::Size size;
   nsIFrame* frame = aTarget->GetPrimaryFrame();
 
@@ -155,7 +157,7 @@ void ResizeObservation::Unlink(RemoveFromObserver aRemoveFromObserver) {
 bool ResizeObservation::IsActive() const {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  const LogicalPixelSize size(wm, GetTargetSize(mTarget, mObservedBox));
+  const LogicalPixelSize size(wm, CalculateBoxSize(mTarget, mObservedBox));
   return mLastReportedSize != size;
 }
 
@@ -317,10 +319,10 @@ uint32_t ResizeObserver::BroadcastActiveObservations() {
     Element* target = observation->Target();
 
     gfx::Size borderBoxSize =
-        GetTargetSize(target, ResizeObserverBoxOptions::Border_box);
+        CalculateBoxSize(target, ResizeObserverBoxOptions::Border_box);
     gfx::Size contentBoxSize =
-        GetTargetSize(target, ResizeObserverBoxOptions::Content_box);
-    gfx::Size devicePixelContentBoxSize = GetTargetSize(
+        CalculateBoxSize(target, ResizeObserverBoxOptions::Content_box);
+    gfx::Size devicePixelContentBoxSize = CalculateBoxSize(
         target, ResizeObserverBoxOptions::Device_pixel_content_box);
     RefPtr<ResizeObserverEntry> entry =
         new ResizeObserverEntry(this, *target, borderBoxSize, contentBoxSize,
