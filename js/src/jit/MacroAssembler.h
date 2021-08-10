@@ -4667,6 +4667,41 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void iteratorClose(Register obj, Register temp1, Register temp2,
                      Register temp3);
 
+  void toHashableNonGCThing(ValueOperand value, ValueOperand result,
+                            FloatRegister tempFloat);
+
+ private:
+  void scrambleHashCode(Register result);
+
+ public:
+  void prepareHashNonGCThing(ValueOperand value, Register result,
+                             Register temp);
+
+ private:
+  enum class IsBigInt { No, Yes, Maybe };
+
+  /**
+   * Search for a value in a OrderedHashTable.
+   *
+   * When we jump to |found|, |entryTemp| holds the found hashtable entry.
+   */
+  template <typename OrderedHashTable>
+  void orderedHashTableLookup(Register setOrMapObj, ValueOperand value,
+                              Register hash, Register entryTemp, Register temp1,
+                              Register temp3, Register temp4, Register temp5,
+                              Label* found, IsBigInt isBigInt);
+
+  void setObjectHas(Register setObj, ValueOperand value, Register hash,
+                    Register result, Register temp1, Register temp2,
+                    Register temp3, Register temp4, IsBigInt isBigInt);
+
+ public:
+  void setObjectHasNonBigInt(Register setObj, ValueOperand value, Register hash,
+                             Register result, Register temp1, Register temp2) {
+    return setObjectHas(setObj, value, hash, result, temp1, temp2, InvalidReg,
+                        InvalidReg, IsBigInt::No);
+  }
+
   // Inline version of js_TypedArray_uint8_clamp_double.
   // This function clobbers the input register.
   void clampDoubleToUint8(FloatRegister input, Register output) PER_ARCH;
