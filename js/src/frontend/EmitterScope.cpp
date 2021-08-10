@@ -1007,7 +1007,7 @@ uint32_t EmitterScope::CountEnclosingCompilationEnvironments(
   return environments;
 }
 
-bool EmitterScope::lookupPrivate(BytecodeEmitter* bce,
+void EmitterScope::lookupPrivate(BytecodeEmitter* bce,
                                  TaggedParserAtomIndex name, NameLocation& loc,
                                  mozilla::Maybe<NameLocation>& brandLoc) {
   loc = lookup(bce, name);
@@ -1065,7 +1065,7 @@ bool EmitterScope::lookupPrivate(BytecodeEmitter* bce,
     } else {
       brandLoc = Nothing();
     }
-    return true;
+    return;
   }
 
   if (loc.bindingKind() == BindingKind::PrivateMethod) {
@@ -1085,7 +1085,6 @@ bool EmitterScope::lookupPrivate(BytecodeEmitter* bce,
   } else {
     brandLoc = Nothing();
   }
-  return true;
 }
 
 Maybe<NameLocation> EmitterScope::locationBoundInScope(

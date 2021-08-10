@@ -203,10 +203,10 @@ NameLocation BytecodeEmitter::lookupName(TaggedParserAtomIndex name) {
   return innermostEmitterScope()->lookup(this, name);
 }
 
-bool BytecodeEmitter::lookupPrivate(TaggedParserAtomIndex name,
+void BytecodeEmitter::lookupPrivate(TaggedParserAtomIndex name,
                                     NameLocation& loc,
                                     Maybe<NameLocation>& brandLoc) {
-  return innermostEmitterScope()->lookupPrivate(this, name, loc, brandLoc);
+  innermostEmitterScope()->lookupPrivate(this, name, loc, brandLoc);
 }
 
 Maybe<NameLocation> BytecodeEmitter::locationOfNameBoundInScope(
