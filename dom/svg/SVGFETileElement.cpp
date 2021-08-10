@@ -7,6 +7,8 @@
 #include "mozilla/dom/SVGFETileElement.h"
 #include "mozilla/dom/SVGFETileElementBinding.h"
 #include "mozilla/SVGFilterInstance.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/BindContext.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FETile)
 
@@ -60,6 +62,14 @@ bool SVGFETileElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 SVGElement::StringAttributesInfo SVGFETileElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
+}
+
+nsresult SVGFETileElement::BindToTree(BindContext& aCtx, nsINode& aParent) {
+  if (aCtx.InComposedDoc()) {
+    aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feTile);
+  }
+
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 }  // namespace dom

@@ -7,6 +7,8 @@
 #include "mozilla/dom/SVGFESpecularLightingElement.h"
 #include "mozilla/dom/SVGFESpecularLightingElementBinding.h"
 #include "mozilla/SVGFilterInstance.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/BindContext.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FESpecularLighting)
 
@@ -90,6 +92,15 @@ bool SVGFESpecularLightingElement::AttributeAffectsRendering(
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::specularConstant ||
            aAttribute == nsGkAtoms::specularExponent));
+}
+
+nsresult SVGFESpecularLightingElement::BindToTree(BindContext& aCtx,
+                                                  nsINode& aParent) {
+  if (aCtx.InComposedDoc()) {
+    aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feSpecularLighting);
+  }
+
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 }  // namespace dom

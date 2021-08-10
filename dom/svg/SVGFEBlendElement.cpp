@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/SVGFEBlendElement.h"
 #include "mozilla/dom/SVGFEBlendElementBinding.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/BindContext.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEBlend)
 
@@ -88,6 +90,14 @@ bool SVGFEBlendElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 void SVGFEBlendElement::GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) {
   aSources.AppendElement(SVGStringInfo(&mStringAttributes[IN1], this));
   aSources.AppendElement(SVGStringInfo(&mStringAttributes[IN2], this));
+}
+
+nsresult SVGFEBlendElement::BindToTree(BindContext& aCtx, nsINode& aParent) {
+  if (aCtx.InComposedDoc()) {
+    aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feBlend);
+  }
+
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------
