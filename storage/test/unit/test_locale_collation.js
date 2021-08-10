@@ -18,9 +18,6 @@ const DATA_BASENAME = "locale_collation.txt";
 // The test data from DATA_BASENAME is read into this array.
 var gStrings;
 
-// A collation created from the application's locale.  Used by localeCompare().
-var gLocaleCollation;
-
 // A connection to our in-memory UTF-16-encoded database.
 var gUtf16Conn;
 
@@ -133,27 +130,28 @@ function initTableWithStrings(aStrings, aConn) {
  * @return A function to use as a sorting callback.
  */
 function localeCompare(aCollation) {
-  var strength;
+  let sensitivity;
 
   switch (aCollation) {
     case "locale":
-      strength = Ci.nsICollation.kCollationCaseInSensitive;
+      sensitivity = "base";
       break;
     case "locale_case_sensitive":
-      strength = Ci.nsICollation.kCollationAccentInsenstive;
+      sensitivity = "case";
       break;
     case "locale_accent_sensitive":
-      strength = Ci.nsICollation.kCollationCaseInsensitiveAscii;
+      sensitivity = "accent";
       break;
     case "locale_case_accent_sensitive":
-      strength = Ci.nsICollation.kCollationCaseSensitive;
+      sensitivity = "variant";
       break;
     default:
       do_throw("Error in test: unknown collation '" + aCollation + "'");
       break;
   }
+  const collation = new Intl.Collator("en", { sensitivity });
   return function(aStr1, aStr2) {
-    return gLocaleCollation.compareString(strength, aStr1, aStr2);
+    return collation.compare(aStr1, aStr2);
   };
 }
 
@@ -237,11 +235,6 @@ function setup() {
 
   gUtf16Conn = createUtf16Database();
   initTableWithStrings(gStrings, gUtf16Conn);
-
-  let collFact = Cc["@mozilla.org/intl/collation-factory;1"].createInstance(
-    Ci.nsICollationFactory
-  );
-  gLocaleCollation = collFact.CreateCollation();
 }
 
 // Test Runs
