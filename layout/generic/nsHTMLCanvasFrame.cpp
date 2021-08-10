@@ -334,6 +334,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
     Matrix transform = Matrix::Translation(p.x, p.y);
     transform.PreScale(destGFXRect.Width() / canvasSizeInPx.width,
                        destGFXRect.Height() / canvasSizeInPx.height);
+    gfxContextMatrixAutoSaveRestore saveMatrix(aCtx);
 
     if (RefPtr<layers::Image> image = canvas->GetAsImage()) {
       RefPtr<gfx::SourceSurface> surface = image->GetAsSourceSurface();
@@ -341,7 +342,6 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         return;
       }
 
-      gfxContextMatrixAutoSaveRestore saveMatrix(aCtx);
       aCtx->Multiply(transform);
 
       gfx::IntSize size = surface->GetSize();
@@ -352,23 +352,28 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
       return;
     }
 
-    // This currently uses BasicLayerManager to re-use the code for extracting
-    // the current CanvasRenderer/Image and generating DrawTarget rendering
-    // commands for it.
-    // Ideally we'll factor out that code and use it directly soon.
-    RefPtr<BasicLayerManager> layerManager =
-        new BasicLayerManager(BasicLayerManager::BLM_OFFSCREEN);
-
-    layerManager->BeginTransactionWithTarget(aCtx);
-    RefPtr<Layer> layer =
-        BuildLayer(aBuilder, layerManager, ContainerLayerParameters());
-    if (!layer) {
-      layerManager->AbortTransaction();
+    RefPtr<CanvasRenderer> renderer = new CanvasRenderer();
+    if (!canvas->InitializeCanvasRenderer(aBuilder, renderer)) {
       return;
     }
+    renderer->FirePreTransactionCallback();
+    const auto snapshot = renderer->BorrowSnapshot();
+    if (!snapshot) return;
+    const auto& surface = snapshot->mSurf;
 
-    layerManager->SetRoot(layer);
-    layerManager->EndEmptyTransaction();
+    if (!renderer->YIsDown()) {
+      // y-flip
+      transform.PreTranslate(0.0f, canvasSizeInPx.height).PreScale(1.0f, -1.0f);
+    }
+    aCtx->Multiply(transform);
+
+    aCtx->GetDrawTarget()->FillRect(
+        Rect(0, 0, canvasSizeInPx.width, canvasSizeInPx.height),
+        SurfacePattern(surface, ExtendMode::CLAMP, Matrix(),
+                       nsLayoutUtils::GetSamplingFilterForFrame(f)));
+
+    renderer->FireDidTransactionCallback();
+    renderer->ResetDirty();
   }
 };
 
