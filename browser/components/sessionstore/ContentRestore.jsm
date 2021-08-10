@@ -218,6 +218,10 @@ ContentRestoreInternal.prototype = {
         let loadURIOptions = {
           triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
           loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
+          // Specify an override to force the load to finish in the current
+          // process, as tests rely on this behaviour for non-fission session
+          // restore.
+          remoteTypeOverride: Services.appinfo.remoteType,
         };
         webNavigation.loadURI("about:blank", loadURIOptions);
       }
