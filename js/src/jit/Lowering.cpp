@@ -5711,6 +5711,34 @@ void LIRGenerator::visitSetObjectHasValueVMCall(MSetObjectHasValueVMCall* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitMapObjectHasNonBigInt(MMapObjectHasNonBigInt* ins) {
+  auto* lir = new (alloc())
+      LMapObjectHasNonBigInt(useRegister(ins->map()), useBox(ins->value()),
+                             useRegister(ins->hash()), temp(), temp());
+  define(lir, ins);
+}
+
+void LIRGenerator::visitMapObjectHasBigInt(MMapObjectHasBigInt* ins) {
+  auto* lir = new (alloc()) LMapObjectHasBigInt(
+      useRegister(ins->map()), useBox(ins->value()), useRegister(ins->hash()),
+      temp(), temp(), temp(), temp());
+  define(lir, ins);
+}
+
+void LIRGenerator::visitMapObjectHasValue(MMapObjectHasValue* ins) {
+  auto* lir = new (alloc()) LMapObjectHasValue(
+      useRegister(ins->map()), useBox(ins->value()), useRegister(ins->hash()),
+      temp(), temp(), temp(), temp());
+  define(lir, ins);
+}
+
+void LIRGenerator::visitMapObjectHasValueVMCall(MMapObjectHasValueVMCall* ins) {
+  auto* lir = new (alloc()) LMapObjectHasValueVMCall(
+      useRegisterAtStart(ins->map()), useBoxAtStart(ins->value()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);
