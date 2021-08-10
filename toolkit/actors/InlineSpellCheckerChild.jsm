@@ -22,7 +22,7 @@ class InlineSpellCheckerChild extends JSWindowActorChild {
         break;
 
       case "InlineSpellChecker:replaceMisspelling":
-        InlineSpellCheckerContent.replaceMisspelling(msg.data.index);
+        InlineSpellCheckerContent.replaceMisspelling(msg.data.suggestion);
         break;
 
       case "InlineSpellChecker:toggleEnabled":
