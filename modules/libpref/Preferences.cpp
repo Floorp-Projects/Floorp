@@ -4636,8 +4636,6 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
     ,
     "aix.js"
 #  endif
-#elif defined(XP_BEOS)
-    "beos.js"
 #endif
   };
 
