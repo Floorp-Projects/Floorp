@@ -2220,14 +2220,14 @@ class Repackage(MachCommandBase):
     ):
         from mozbuild.repackaging.msix import repackage_msix
 
-        self._set_log_level(verbose)
+        command_context._set_log_level(verbose)
 
         template = os.path.join(
-            self.topsrcdir, "browser", "installer", "windows", "msix"
+            command_context.topsrcdir, "browser", "installer", "windows", "msix"
         )
         # Release (official) and Beta share branding.
         branding = os.path.join(
-            self.topsrcdir,
+            command_context.topsrcdir,
             "browser",
             "branding",
             channel if channel != "beta" else "official",
@@ -2245,7 +2245,7 @@ class Repackage(MachCommandBase):
             # Configure this run.
             force=True,
             verbose=verbose,
-            log=self.log,
+            log=command_context.log,
             output=output,
             makeappx=makeappx,
         )
@@ -2272,9 +2272,9 @@ class Repackage(MachCommandBase):
     def repackage_sign_msix(self, command_context, input, force=False, verbose=False):
         from mozbuild.repackaging.msix import sign_msix
 
-        self._set_log_level(verbose)
+        command_context._set_log_level(verbose)
 
-        sign_msix(input, force=force, log=self.log, verbose=verbose)
+        sign_msix(input, force=force, log=command_context.log, verbose=verbose)
 
         return 0
 
