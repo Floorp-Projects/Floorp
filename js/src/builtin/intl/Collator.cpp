@@ -9,6 +9,7 @@
 #include "builtin/intl/Collator.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/intl/Collator.h"
 #include "mozilla/Span.h"
 
 #include "jsapi.h"
@@ -23,10 +24,6 @@
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
-#include "unicode/ucol.h"
-#include "unicode/uenum.h"
-#include "unicode/uloc.h"
-#include "unicode/utypes.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"  // js::PlainObject
@@ -148,10 +145,9 @@ bool js::intl_Collator(JSContext* cx, unsigned argc, Value* vp) {
 void js::CollatorObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
-  if (UCollator* coll = obj->as<CollatorObject>().getCollator()) {
+  if (mozilla::intl::Collator* coll = obj->as<CollatorObject>().getCollator()) {
     intl::RemoveICUCellMemory(fop, obj, CollatorObject::EstimatedMemoryUse);
-
-    ucol_close(coll);
+    delete coll;
   }
 }
 
@@ -164,17 +160,9 @@ bool js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp) {
   if (!locale) {
     return false;
   }
-  UErrorCode status = U_ZERO_ERROR;
-  UEnumeration* values =
-      ucol_getKeywordValuesForLocale("co", locale.get(), false, &status);
-  if (U_FAILURE(status)) {
-    ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UEnumeration, uenum_close> toClose(values);
-
-  uint32_t count = uenum_count(values, &status);
-  if (U_FAILURE(status)) {
+  auto keywords =
+      mozilla::intl::Collator::GetBcp47KeywordValuesForLocale(locale.get());
+  if (keywords.isErr()) {
     ReportInternalError(cx);
     return false;
   }
@@ -190,30 +178,24 @@ bool js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  for (uint32_t i = 0; i < count; i++) {
-    const char* collation = uenum_next(values, nullptr, &status);
-    if (U_FAILURE(status)) {
+  for (auto result : keywords.unwrap()) {
+    if (result.isErr()) {
       ReportInternalError(cx);
       return false;
     }
+    mozilla::Span<const char> collation = result.unwrap();
 
     // Per ECMA-402, 10.2.3, we don't include standard and search:
     // "The values 'standard' and 'search' must not be used as elements in
     // any [[sortLocaleData]][locale].co and [[searchLocaleData]][locale].co
     // array."
-    if (StringsAreEqual(collation, "standard") ||
-        StringsAreEqual(collation, "search")) {
+    if (StringsAreEqual(collation.data(), "standard") ||
+        StringsAreEqual(collation.data(), "search")) {
       continue;
     }
 
-    // ICU returns old-style keyword values; map them to BCP 47 equivalents.
-    collation = uloc_toUnicodeLocaleType("co", collation);
-    if (!collation) {
-      ReportInternalError(cx);
-      return false;
-    }
-
-    JSString* jscollation = NewStringCopyZ<CanGC>(cx, collation);
+    JSString* jscollation =
+        NewStringCopyN<CanGC>(cx, collation.data(), collation.size());
     if (!jscollation) {
       return false;
     }
@@ -227,11 +209,11 @@ bool js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
- * Returns a new UCollator with the locale and collation options
+ * Returns a new mozilla::intl::Collator with the locale and collation options
  * of the given Collator.
  */
-static UCollator* NewUCollator(JSContext* cx,
-                               Handle<CollatorObject*> collator) {
+static mozilla::intl::Collator* NewIntlCollator(
+    JSContext* cx, Handle<CollatorObject*> collator) {
   RootedValue value(cx);
 
   RootedObject internals(cx, intl::GetInternalsObject(cx, collator));
@@ -247,14 +229,9 @@ static UCollator* NewUCollator(JSContext* cx,
     return nullptr;
   }
 
-  // UCollator options with default values.
-  UColAttributeValue uStrength = UCOL_DEFAULT;
-  UColAttributeValue uCaseLevel = UCOL_OFF;
-  UColAttributeValue uAlternate = UCOL_DEFAULT;
-  UColAttributeValue uNumeric = UCOL_OFF;
-  // Normalization is always on to meet the canonical equivalence requirement.
-  UColAttributeValue uNormalization = UCOL_ON;
-  UColAttributeValue uCaseFirst = UCOL_DEFAULT;
+  using mozilla::intl::Collator;
+
+  Collator::Options options{};
 
   if (!GetProperty(cx, internals, internals, cx->names().usage, &value)) {
     return nullptr;
@@ -310,15 +287,14 @@ static UCollator* NewUCollator(JSContext* cx,
       return nullptr;
     }
     if (StringEqualsLiteral(sensitivity, "base")) {
-      uStrength = UCOL_PRIMARY;
+      options.sensitivity = Collator::Sensitivity::Base;
     } else if (StringEqualsLiteral(sensitivity, "accent")) {
-      uStrength = UCOL_SECONDARY;
+      options.sensitivity = Collator::Sensitivity::Accent;
     } else if (StringEqualsLiteral(sensitivity, "case")) {
-      uStrength = UCOL_PRIMARY;
-      uCaseLevel = UCOL_ON;
+      options.sensitivity = Collator::Sensitivity::Case;
     } else {
       MOZ_ASSERT(StringEqualsLiteral(sensitivity, "variant"));
-      uStrength = UCOL_TERTIARY;
+      options.sensitivity = Collator::Sensitivity::Variant;
     }
   }
 
@@ -326,20 +302,13 @@ static UCollator* NewUCollator(JSContext* cx,
                    &value)) {
     return nullptr;
   }
-  // According to the ICU team, UCOL_SHIFTED causes punctuation to be
-  // ignored. Looking at Unicode Technical Report 35, Unicode Locale Data
-  // Markup Language, "shifted" causes whitespace and punctuation to be
-  // ignored - that's a bit more than asked for, but there's no way to get
-  // less.
-  if (value.toBoolean()) {
-    uAlternate = UCOL_SHIFTED;
-  }
+  options.ignorePunctuation = value.toBoolean();
 
   if (!GetProperty(cx, internals, internals, cx->names().numeric, &value)) {
     return nullptr;
   }
-  if (!value.isUndefined() && value.toBoolean()) {
-    uNumeric = UCOL_ON;
+  if (!value.isUndefined()) {
+    options.numeric = value.toBoolean();
   }
 
   if (!GetProperty(cx, internals, internals, cx->names().caseFirst, &value)) {
@@ -351,38 +320,32 @@ static UCollator* NewUCollator(JSContext* cx,
       return nullptr;
     }
     if (StringEqualsLiteral(caseFirst, "upper")) {
-      uCaseFirst = UCOL_UPPER_FIRST;
+      options.caseFirst = Collator::CaseFirst::Upper;
     } else if (StringEqualsLiteral(caseFirst, "lower")) {
-      uCaseFirst = UCOL_LOWER_FIRST;
+      options.caseFirst = Collator::CaseFirst::Lower;
     } else {
       MOZ_ASSERT(StringEqualsLiteral(caseFirst, "false"));
-      uCaseFirst = UCOL_OFF;
+      options.caseFirst = Collator::CaseFirst::False;
     }
   }
 
-  UErrorCode status = U_ZERO_ERROR;
-  UCollator* coll = ucol_open(IcuLocale(locale.get()), &status);
-  if (U_FAILURE(status)) {
-    ReportInternalError(cx);
+  auto collResult = Collator::TryCreate(IcuLocale(locale.get()));
+  if (collResult.isErr()) {
+    ReportInternalError(cx, collResult.unwrapErr());
+    return nullptr;
+  }
+  auto coll = collResult.unwrap();
+
+  auto optResult = coll->SetOptions(options);
+  if (optResult.isErr()) {
+    ReportInternalError(cx, optResult.unwrapErr());
     return nullptr;
   }
 
-  ucol_setAttribute(coll, UCOL_STRENGTH, uStrength, &status);
-  ucol_setAttribute(coll, UCOL_CASE_LEVEL, uCaseLevel, &status);
-  ucol_setAttribute(coll, UCOL_ALTERNATE_HANDLING, uAlternate, &status);
-  ucol_setAttribute(coll, UCOL_NUMERIC_COLLATION, uNumeric, &status);
-  ucol_setAttribute(coll, UCOL_NORMALIZATION_MODE, uNormalization, &status);
-  ucol_setAttribute(coll, UCOL_CASE_FIRST, uCaseFirst, &status);
-  if (U_FAILURE(status)) {
-    ucol_close(coll);
-    ReportInternalError(cx);
-    return nullptr;
-  }
-
-  return coll;
+  return coll.release();
 }
 
-static bool intl_CompareStrings(JSContext* cx, UCollator* coll,
+static bool intl_CompareStrings(JSContext* cx, mozilla::intl::Collator* coll,
                                 HandleString str1, HandleString str2,
                                 MutableHandleValue result) {
   MOZ_ASSERT(str1);
@@ -406,24 +369,7 @@ static bool intl_CompareStrings(JSContext* cx, UCollator* coll,
   mozilla::Range<const char16_t> chars1 = stableChars1.twoByteRange();
   mozilla::Range<const char16_t> chars2 = stableChars2.twoByteRange();
 
-  UCollationResult uresult =
-      ucol_strcoll(coll, chars1.begin().get(), chars1.length(),
-                   chars2.begin().get(), chars2.length());
-  int32_t res;
-  switch (uresult) {
-    case UCOL_LESS:
-      res = -1;
-      break;
-    case UCOL_EQUAL:
-      res = 0;
-      break;
-    case UCOL_GREATER:
-      res = 1;
-      break;
-    default:
-      MOZ_CRASH("ucol_strcoll returned bad UCollationResult");
-  }
-  result.setInt32(res);
+  result.setInt32(coll->CompareStrings(chars1, chars2));
   return true;
 }
 
@@ -437,10 +383,10 @@ bool js::intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<CollatorObject*> collator(cx,
                                    &args[0].toObject().as<CollatorObject>());
 
-  // Obtain a cached UCollator object.
-  UCollator* coll = collator->getCollator();
+  // Obtain a cached mozilla::intl::Collator object.
+  mozilla::intl::Collator* coll = collator->getCollator();
   if (!coll) {
-    coll = NewUCollator(cx, collator);
+    coll = NewIntlCollator(cx, collator);
     if (!coll) {
       return false;
     }
