@@ -6,11 +6,6 @@
   <panelview id="appMenu-mainView" class="PanelUI-subView"
              descriptionheightworkaround="true">
     <vbox class="panel-subview-body">
-      <toolbarbutton id="appMenu-more-button"
-                     class="subviewbutton subviewbutton-nav"
-                     label="&moreMenu.label;"
-                     closemenu="none"
-                     oncommand="PanelUI.showSubView('appMenu-moreView', this)"/>
       <toolbarbutton id="appMenu-developer-button"
                      class="subviewbutton subviewbutton-nav"
                      label="&webDeveloperMenu.label;"
@@ -405,20 +400,6 @@
       </vbox>
       <button id="PanelUI-panic-view-button"
               data-l10n-id="panic-button-forget-button"/>
-    </vbox>
-  </panelview>
-
-  <panelview id="appMenu-moreView" title="&moreMenu.label;" class="PanelUI-subView">
-    <vbox class="panel-subview-body">
-      <toolbarbutton id="appMenu-taskmanager-button"
-                     class="subviewbutton subviewbutton-iconic"
-                     data-l10n-id="appmenu-taskmanager"
-                     oncommand="switchToTabHavingURI('about:performance', true)"/>
-      <toolbarbutton id="appMenu-workoffline-button"
-                     class="subviewbutton"
-                     data-l10n-id="more-menu-go-offline"
-                     type="checkbox"
-                     command="cmd_toggleOfflineStatus"/>
     </vbox>
   </panelview>
 

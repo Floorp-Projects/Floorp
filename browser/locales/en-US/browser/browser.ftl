@@ -667,12 +667,6 @@ toolbar-settings-button =
      *[other] Open settings
   }
 
-## More items
-
-more-menu-go-offline =
-  .label = Work Offline
-  .accesskey = k
-
 ## EME notification panel
 
 eme-notifications-drm-content-playing = Some audio or video on this site uses DRM software, which may limit what { -brand-short-name } can let you do with it.

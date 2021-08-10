@@ -97,11 +97,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY customizeMenu.addMoreItems.label "Add More Items…">
 <!ENTITY customizeMenu.addMoreItems.accesskey "A">
 
-<!-- LOCALIZATION NOTE (moreMenu.label) This label is used in the new Photon
-    app (hamburger) menu. When clicked, it opens a subview that contains
-    secondary commands. -->
-<!ENTITY moreMenu.label "More">
-
 <!ENTITY contentSearchSubmit.tooltip  "Submit search">
 
 <!-- LOCALIZATION NOTE (searchInput.placeholder):
