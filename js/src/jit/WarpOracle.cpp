@@ -669,6 +669,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::ResumeKind:
       case JSOp::ThrowMsg:
       case JSOp::Try:
+      case JSOp::NewPrivateName:
         // Supported by WarpBuilder. Nothing to do.
         break;
 

@@ -6918,6 +6918,15 @@ class LCheckPrivateFieldCache
   }
 };
 
+class LNewPrivateName : public LCallInstructionHelper<1, 0, 0> {
+ public:
+  LIR_HEADER(NewPrivateName)
+
+  LNewPrivateName() : LCallInstructionHelper(classOpcode) {}
+
+  const MNewPrivateName* mir() const { return mir_->toNewPrivateName(); }
+};
+
 class LInstanceOfO : public LInstructionHelper<1, 2, 0> {
  public:
   LIR_HEADER(InstanceOfO)

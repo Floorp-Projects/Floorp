@@ -2139,6 +2139,9 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       case JSOp::CheckPrivateField:
         return write("HasPrivateField");
 
+      case JSOp::NewPrivateName:
+        return write("PRIVATENAME");
+
       case JSOp::CheckReturn:
         return write("RVAL");
 

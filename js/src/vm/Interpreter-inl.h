@@ -581,6 +581,11 @@ static MOZ_ALWAYS_INLINE bool CheckPrivateFieldOperation(JSContext* cx,
   return false;
 }
 
+static inline JS::Symbol* NewPrivateName(JSContext* cx,
+                                         HandlePropertyName name) {
+  return JS::Symbol::new_(cx, JS::SymbolCode::PrivateNameSymbol, name);
+}
+
 inline bool InitElemIncOperation(JSContext* cx, HandleArrayObject arr,
                                  uint32_t index, HandleValue val) {
   if (index == INT32_MAX) {

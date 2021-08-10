@@ -143,7 +143,10 @@ template <>
 struct TypeToDataType<JSAtom*> {
   static const DataType result = Type_Object;
 };
-
+template <>
+struct TypeToDataType<JS::Symbol*> {
+  static const DataType result = Type_Object;
+};
 template <>
 struct TypeToDataType<BigInt*> {
   static const DataType result = Type_Object;

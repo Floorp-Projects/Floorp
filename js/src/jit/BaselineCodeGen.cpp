@@ -3247,6 +3247,22 @@ bool BaselineCodeGen<Handler>::emit_CheckPrivateField() {
   return true;
 }
 
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_NewPrivateName() {
+  prepareVMCall();
+
+  pushScriptNameArg(R0.scratchReg(), R1.scratchReg());
+
+  using Fn = JS::Symbol* (*)(JSContext*, HandlePropertyName);
+  if (!callVM<Fn, NewPrivateName>()) {
+    return false;
+  }
+
+  masm.tagValue(JSVAL_TYPE_SYMBOL, ReturnReg, R0);
+  frame.push(R0);
+  return true;
+}
+
 template <>
 bool BaselineCompilerCodeGen::tryOptimizeGetGlobalName() {
   PropertyName* name = handler.script()->getName(handler.pc());
