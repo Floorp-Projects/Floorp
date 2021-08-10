@@ -10,7 +10,6 @@
 
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
-#include "nsCollationCID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsEmbedCID.h"
 #include "nsExceptionHandler.h"
