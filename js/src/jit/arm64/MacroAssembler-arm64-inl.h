@@ -418,14 +418,6 @@ void MacroAssembler::mul32(Register rhs, Register srcDest) {
   mul32(srcDest, rhs, srcDest, nullptr);
 }
 
-void MacroAssembler::mul32(Imm32 imm, Register srcDest) {
-  vixl::UseScratchRegisterScope temps(this);
-  const ARMRegister scratch32 = temps.AcquireW();
-
-  move32(imm, scratch32.asUnsized());
-  mul32(scratch32.asUnsized(), srcDest);
-}
-
 void MacroAssembler::mul32(Register src1, Register src2, Register dest,
                            Label* onOver) {
   if (onOver) {
@@ -977,24 +969,16 @@ void MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs,
 
 void MacroAssembler::branch64(Condition cond, const Address& lhs, Imm64 val,
                               Label* label) {
-  MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
+  MOZ_ASSERT(cond == Assembler::NotEqual,
              "other condition codes not supported");
 
   branchPtr(cond, lhs, ImmWord(val.value), label);
 }
 
 void MacroAssembler::branch64(Condition cond, const Address& lhs,
-                              Register64 rhs, Label* label) {
-  MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
-             "other condition codes not supported");
-
-  branchPtr(cond, lhs, rhs.reg, label);
-}
-
-void MacroAssembler::branch64(Condition cond, const Address& lhs,
                               const Address& rhs, Register scratch,
                               Label* label) {
-  MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
+  MOZ_ASSERT(cond == Assembler::NotEqual,
              "other condition codes not supported");
   MOZ_ASSERT(lhs.base != scratch);
   MOZ_ASSERT(rhs.base != scratch);

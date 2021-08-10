@@ -169,11 +169,6 @@ void MacroAssembler::mul32(Register rhs, Register srcDest) {
   as_mul(srcDest, srcDest, rhs);
 }
 
-void MacroAssembler::mul32(Imm32 imm, Register srcDest) {
-  move32(imm, SecondScratchReg);
-  mul32(SecondScratchReg, srcDest);
-}
-
 void MacroAssembler::mulFloat32(FloatRegister src, FloatRegister dest) {
   as_muls(dest, dest, src);
 }

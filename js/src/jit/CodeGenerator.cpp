@@ -66,7 +66,6 @@
 #include "vm/AsyncIteration.h"
 #include "vm/BuiltinObjectKind.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
-#include "vm/JSAtom.h"
 #include "vm/MatchPairs.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
@@ -9407,8 +9406,44 @@ void CodeGenerator::visitCompareBigInt(LCompareBigInt* lir) {
     notSameDigit = &compareDigit;
   }
 
-  masm.equalBigInts(left, right, temp1, temp2, temp3, output, notSameSign,
-                    notSameLength, notSameDigit);
+  // Jump to |notSameSign| when the sign aren't the same.
+  masm.load32(Address(left, BigInt::offsetOfFlags()), temp1);
+  masm.xor32(Address(right, BigInt::offsetOfFlags()), temp1);
+  masm.branchTest32(Assembler::NonZero, temp1, Imm32(BigInt::signBitMask()),
+                    notSameSign);
+
+  // Jump to |notSameLength| when the digits length is different.
+  masm.load32(Address(right, BigInt::offsetOfLength()), temp1);
+  masm.branch32(Assembler::NotEqual, Address(left, BigInt::offsetOfLength()),
+                temp1, notSameLength);
+
+  // Both BigInts have the same sign and the same number of digits. Loop over
+  // each digit, starting with the left-most one, and break from the loop when
+  // the first non-matching digit was found.
+
+  masm.loadBigIntDigits(left, temp2);
+  masm.loadBigIntDigits(right, temp3);
+
+  static_assert(sizeof(BigInt::Digit) == sizeof(void*),
+                "BigInt::Digit is pointer sized");
+
+  masm.computeEffectiveAddress(BaseIndex(temp2, temp1, ScalePointer), temp2);
+  masm.computeEffectiveAddress(BaseIndex(temp3, temp1, ScalePointer), temp3);
+
+  Label start, loop;
+  masm.jump(&start);
+  masm.bind(&loop);
+
+  masm.subPtr(Imm32(sizeof(BigInt::Digit)), temp2);
+  masm.subPtr(Imm32(sizeof(BigInt::Digit)), temp3);
+
+  masm.loadPtr(Address(temp3, 0), output);
+  masm.branchPtr(Assembler::NotEqual, Address(temp2, 0), output, notSameDigit);
+
+  masm.bind(&start);
+  masm.branchSub32(Assembler::NotSigned, Imm32(1), temp1, &loop);
+
+  // No different digits were found, both BigInts are equal to each other.
 
   Label done;
   masm.move32(Imm32(op == JSOp::Eq || op == JSOp::StrictEq || op == JSOp::Le ||
@@ -15368,253 +15403,6 @@ void CodeGenerator::visitBigIntAsUintN32(LBigIntAsUintN32* ins) {
   emitCreateBigInt(ins, Scalar::BigUint64, temp64, output, temp);
 
   masm.bind(&done);
-}
-
-void CodeGenerator::visitGuardNonGCThing(LGuardNonGCThing* ins) {
-  ValueOperand input = ToValue(ins, LGuardNonGCThing::Input);
-
-  Label bail;
-  masm.branchTestGCThing(Assembler::Equal, input, &bail);
-  bailoutFrom(&bail, ins->snapshot());
-}
-
-void CodeGenerator::visitToHashableNonGCThing(LToHashableNonGCThing* ins) {
-  ValueOperand input = ToValue(ins, LToHashableNonGCThing::Input);
-  FloatRegister tempFloat = ToFloatRegister(ins->tempFloat());
-  ValueOperand output = ToOutValue(ins);
-
-  masm.toHashableNonGCThing(input, output, tempFloat);
-}
-
-void CodeGenerator::visitToHashableString(LToHashableString* ins) {
-  Register input = ToRegister(ins->input());
-  Register output = ToRegister(ins->output());
-
-  using Fn = JSAtom* (*)(JSContext*, JSString*, PinningBehavior);
-  auto* ool = oolCallVM<Fn, js::AtomizeString>(
-      ins, ArgList(input, Imm32(DoNotPinAtom)), StoreRegisterTo(output));
-
-  masm.branchTest32(Assembler::Zero, Address(input, JSString::offsetOfFlags()),
-                    Imm32(JSString::ATOM_BIT), ool->entry());
-  masm.movePtr(input, output);
-  masm.bind(ool->rejoin());
-}
-
-void CodeGenerator::visitToHashableValue(LToHashableValue* ins) {
-  ValueOperand input = ToValue(ins, LToHashableValue::Input);
-  FloatRegister tempFloat = ToFloatRegister(ins->tempFloat());
-  ValueOperand output = ToOutValue(ins);
-
-  Register str = output.scratchReg();
-
-  using Fn = JSAtom* (*)(JSContext*, JSString*, PinningBehavior);
-  auto* ool = oolCallVM<Fn, js::AtomizeString>(
-      ins, ArgList(str, Imm32(DoNotPinAtom)), StoreRegisterTo(str));
-
-  masm.toHashableValue(input, output, tempFloat, ool->entry(), ool->rejoin());
-}
-
-void CodeGenerator::visitHashNonGCThing(LHashNonGCThing* ins) {
-  ValueOperand input = ToValue(ins, LHashNonGCThing::Input);
-  Register temp = ToRegister(ins->temp());
-  Register output = ToRegister(ins->output());
-
-  masm.prepareHashNonGCThing(input, output, temp);
-}
-
-void CodeGenerator::visitHashString(LHashString* ins) {
-  Register input = ToRegister(ins->input());
-  Register temp = ToRegister(ins->temp());
-  Register output = ToRegister(ins->output());
-
-  masm.prepareHashString(input, output, temp);
-}
-
-void CodeGenerator::visitHashSymbol(LHashSymbol* ins) {
-  Register input = ToRegister(ins->input());
-  Register output = ToRegister(ins->output());
-
-  masm.prepareHashSymbol(input, output);
-}
-
-void CodeGenerator::visitHashBigInt(LHashBigInt* ins) {
-  Register input = ToRegister(ins->input());
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
-  Register temp3 = ToRegister(ins->temp3());
-  Register output = ToRegister(ins->output());
-
-  masm.prepareHashBigInt(input, output, temp1, temp2, temp3);
-}
-
-void CodeGenerator::visitHashObject(LHashObject* ins) {
-  Register setObj = ToRegister(ins->setObject());
-  ValueOperand input = ToValue(ins, LHashObject::Input);
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
-  Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
-  Register output = ToRegister(ins->output());
-
-  masm.prepareHashObject(setObj, input, output, temp1, temp2, temp3, temp4);
-}
-
-void CodeGenerator::visitHashValue(LHashValue* ins) {
-  Register setObj = ToRegister(ins->setObject());
-  ValueOperand input = ToValue(ins, LHashValue::Input);
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
-  Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
-  Register output = ToRegister(ins->output());
-
-  masm.prepareHashValue(setObj, input, output, temp1, temp2, temp3, temp4);
-}
-
-void CodeGenerator::visitSetObjectHasNonBigInt(LSetObjectHasNonBigInt* ins) {
-  Register setObj = ToRegister(ins->setObject());
-  ValueOperand input = ToValue(ins, LSetObjectHasNonBigInt::Input);
-  Register hash = ToRegister(ins->hash());
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
-  Register output = ToRegister(ins->output());
-
-  masm.setObjectHasNonBigInt(setObj, input, hash, output, temp1, temp2);
-}
-
-void CodeGenerator::visitSetObjectHasBigInt(LSetObjectHasBigInt* ins) {
-  Register setObj = ToRegister(ins->setObject());
-  ValueOperand input = ToValue(ins, LSetObjectHasBigInt::Input);
-  Register hash = ToRegister(ins->hash());
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
-  Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
-  Register output = ToRegister(ins->output());
-
-  masm.setObjectHasBigInt(setObj, input, hash, output, temp1, temp2, temp3,
-                          temp4);
-}
-
-void CodeGenerator::visitSetObjectHasValue(LSetObjectHasValue* ins) {
-  Register setObj = ToRegister(ins->setObject());
-  ValueOperand input = ToValue(ins, LSetObjectHasValue::Input);
-  Register hash = ToRegister(ins->hash());
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
-  Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
-  Register output = ToRegister(ins->output());
-
-  masm.setObjectHasValue(setObj, input, hash, output, temp1, temp2, temp3,
-                         temp4);
-}
-
-void CodeGenerator::visitSetObjectHasValueVMCall(
-    LSetObjectHasValueVMCall* ins) {
-  pushArg(ToValue(ins, LSetObjectHasValueVMCall::Input));
-  pushArg(ToRegister(ins->setObject()));
-
-  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, bool*);
-  callVM<Fn, jit::SetObjectHas>(ins);
-}
-
-void CodeGenerator::visitMapObjectHasNonBigInt(LMapObjectHasNonBigInt* ins) {
-  Register mapObj = ToRegister(ins->mapObject());
-  ValueOperand input = ToValue(ins, LMapObjectHasNonBigInt::Input);
-  Register hash = ToRegister(ins->hash());
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
-  Register output = ToRegister(ins->output());
-
-  masm.mapObjectHasNonBigInt(mapObj, input, hash, output, temp1, temp2);
-}
-
-void CodeGenerator::visitMapObjectHasBigInt(LMapObjectHasBigInt* ins) {
-  Register mapObj = ToRegister(ins->mapObject());
-  ValueOperand input = ToValue(ins, LMapObjectHasBigInt::Input);
-  Register hash = ToRegister(ins->hash());
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
-  Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
-  Register output = ToRegister(ins->output());
-
-  masm.mapObjectHasBigInt(mapObj, input, hash, output, temp1, temp2, temp3,
-                          temp4);
-}
-
-void CodeGenerator::visitMapObjectHasValue(LMapObjectHasValue* ins) {
-  Register mapObj = ToRegister(ins->mapObject());
-  ValueOperand input = ToValue(ins, LMapObjectHasValue::Input);
-  Register hash = ToRegister(ins->hash());
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
-  Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
-  Register output = ToRegister(ins->output());
-
-  masm.mapObjectHasValue(mapObj, input, hash, output, temp1, temp2, temp3,
-                         temp4);
-}
-
-void CodeGenerator::visitMapObjectHasValueVMCall(
-    LMapObjectHasValueVMCall* ins) {
-  pushArg(ToValue(ins, LMapObjectHasValueVMCall::Input));
-  pushArg(ToRegister(ins->mapObject()));
-
-  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, bool*);
-  callVM<Fn, jit::MapObjectHas>(ins);
-}
-
-void CodeGenerator::visitMapObjectGetNonBigInt(LMapObjectGetNonBigInt* ins) {
-  Register mapObj = ToRegister(ins->mapObject());
-  ValueOperand input = ToValue(ins, LMapObjectGetNonBigInt::Input);
-  Register hash = ToRegister(ins->hash());
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
-  ValueOperand output = ToOutValue(ins);
-
-  masm.mapObjectGetNonBigInt(mapObj, input, hash, output, temp1, temp2,
-                             output.scratchReg());
-}
-
-void CodeGenerator::visitMapObjectGetBigInt(LMapObjectGetBigInt* ins) {
-  Register mapObj = ToRegister(ins->mapObject());
-  ValueOperand input = ToValue(ins, LMapObjectGetBigInt::Input);
-  Register hash = ToRegister(ins->hash());
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
-  Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
-  ValueOperand output = ToOutValue(ins);
-
-  masm.mapObjectGetBigInt(mapObj, input, hash, output, temp1, temp2, temp3,
-                          temp4, output.scratchReg());
-}
-
-void CodeGenerator::visitMapObjectGetValue(LMapObjectGetValue* ins) {
-  Register mapObj = ToRegister(ins->mapObject());
-  ValueOperand input = ToValue(ins, LMapObjectGetValue::Input);
-  Register hash = ToRegister(ins->hash());
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
-  Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
-  ValueOperand output = ToOutValue(ins);
-
-  masm.mapObjectGetValue(mapObj, input, hash, output, temp1, temp2, temp3,
-                         temp4, output.scratchReg());
-}
-
-void CodeGenerator::visitMapObjectGetValueVMCall(
-    LMapObjectGetValueVMCall* ins) {
-  pushArg(ToValue(ins, LMapObjectGetValueVMCall::Input));
-  pushArg(ToRegister(ins->mapObject()));
-
-  using Fn =
-      bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
-  callVM<Fn, jit::MapObjectGet>(ins);
 }
 
 template <size_t NumDefs>

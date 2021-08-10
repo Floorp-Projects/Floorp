@@ -8,7 +8,6 @@
 
 #include "ds/OrderedHashTable.h"
 #include "gc/FreeOp.h"
-#include "jit/InlinableNatives.h"
 #include "js/PropertyAndElement.h"  // JS_DefineFunctions
 #include "js/PropertySpec.h"
 #include "js/Utility.h"
@@ -407,8 +406,8 @@ const JSPropertySpec MapObject::properties[] = {
 
 // clang-format off
 const JSFunctionSpec MapObject::methods[] = {
-    JS_INLINABLE_FN("get", get, 1, 0, MapGet),
-    JS_INLINABLE_FN("has", has, 1, 0, MapHas),
+    JS_FN("get", get, 1, 0),
+    JS_FN("has", has, 1, 0),
     JS_FN("set", set, 2, 0),
     JS_FN("delete", delete_, 1, 0),
     JS_FN("keys", keys, 0, 0),
@@ -1192,7 +1191,7 @@ const JSPropertySpec SetObject::properties[] = {
 
 // clang-format off
 const JSFunctionSpec SetObject::methods[] = {
-    JS_INLINABLE_FN("has", has, 1, 0, SetHas),
+    JS_FN("has", has, 1, 0),
     JS_FN("add", add, 1, 0),
     JS_FN("delete", delete_, 1, 0),
     JS_FN("entries", entries, 0, 0),
