@@ -171,3 +171,51 @@ TEST(WinRemoteMessage, SendReceive)
   EXPECT_TRUE(NS_SUCCEEDED(workingDir->GetPath(arg)));
   EXPECT_STREQ(arg.get(), workingDirW);
 }
+
+TEST(WinRemoteMessage, NonNullTerminatedBuffer)
+{
+  // Reserve two pages and commit the first one
+  const uint32_t kPageSize = 4096;
+  UniquePtr<void, VirtualFreeDeleter> pages(
+      ::VirtualAlloc(nullptr, kPageSize * 2, MEM_RESERVE, PAGE_NOACCESS));
+  EXPECT_TRUE(pages);
+  EXPECT_TRUE(
+      ::VirtualAlloc(pages.get(), kPageSize, MEM_COMMIT, PAGE_READWRITE));
+
+  // Test strings with lengths between 0 and |kMaxBufferSize| bytes
+  const int kMaxBufferSize = 10;
+
+  // Set a string just before the boundary between the two pages.
+  uint8_t* bufferEnd = reinterpret_cast<uint8_t*>(pages.get()) + kPageSize;
+  memset(bufferEnd - kMaxBufferSize, '$', kMaxBufferSize);
+
+  nsCOMPtr<nsIFile> workingDir;
+  COPYDATASTRUCT copyData = {};
+  for (int i = 0; i < kMaxBufferSize; ++i) {
+    WinRemoteMessageReceiver receiver;
+
+    copyData.cbData = i;
+    copyData.lpData = bufferEnd - i;
+
+    copyData.dwData =
+        static_cast<ULONG_PTR>(WinRemoteMessageVersion::CommandLineOnly);
+    EXPECT_TRUE(NS_SUCCEEDED(receiver.Parse(&copyData)));
+    EXPECT_EQ(receiver.CommandLineRunner()->GetWorkingDirectory(
+                  getter_AddRefs(workingDir)),
+              NS_ERROR_NOT_INITIALIZED);
+
+    copyData.dwData = static_cast<ULONG_PTR>(
+        WinRemoteMessageVersion::CommandLineAndWorkingDir);
+    EXPECT_TRUE(NS_SUCCEEDED(receiver.Parse(&copyData)));
+    EXPECT_EQ(receiver.CommandLineRunner()->GetWorkingDirectory(
+                  getter_AddRefs(workingDir)),
+              NS_ERROR_NOT_INITIALIZED);
+
+    copyData.dwData = static_cast<ULONG_PTR>(
+        WinRemoteMessageVersion::CommandLineAndWorkingDirInUtf16);
+    EXPECT_TRUE(NS_SUCCEEDED(receiver.Parse(&copyData)));
+    EXPECT_EQ(receiver.CommandLineRunner()->GetWorkingDirectory(
+                  getter_AddRefs(workingDir)),
+              NS_ERROR_NOT_INITIALIZED);
+  }
+}
