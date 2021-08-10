@@ -50,8 +50,7 @@ GMPContentChild::AllocPGMPVideoEncoderChild() {
   return MakeAndAddRef<GMPVideoEncoderChild>(this);
 }
 
-already_AddRefed<PChromiumCDMChild> GMPContentChild::AllocPChromiumCDMChild(
-    const nsCString& aKeySystem) {
+already_AddRefed<PChromiumCDMChild> GMPContentChild::AllocPChromiumCDMChild() {
   return MakeAndAddRef<ChromiumCDMChild>(this);
 }
 
@@ -88,12 +87,12 @@ mozilla::ipc::IPCResult GMPContentChild::RecvPGMPVideoEncoderConstructor(
 }
 
 mozilla::ipc::IPCResult GMPContentChild::RecvPChromiumCDMConstructor(
-    PChromiumCDMChild* aActor, const nsCString& aKeySystem) {
+    PChromiumCDMChild* aActor) {
   ChromiumCDMChild* child = static_cast<ChromiumCDMChild*>(aActor);
   cdm::Host_10* host10 = child;
 
   void* cdm = nullptr;
-  GMPErr err = mGMPChild->GetAPI(CHROMIUM_CDM_API, host10, &cdm, aKeySystem);
+  GMPErr err = mGMPChild->GetAPI(CHROMIUM_CDM_API, host10, &cdm);
   if (err != GMPNoErr || !cdm) {
     NS_WARNING("GMPGetAPI call failed trying to get CDM.");
     return IPC_FAIL_NO_REASON(this);

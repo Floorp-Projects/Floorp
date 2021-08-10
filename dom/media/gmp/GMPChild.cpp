@@ -188,12 +188,12 @@ mozilla::ipc::IPCResult GMPChild::RecvProvideStorageId(
   return IPC_OK();
 }
 
-GMPErr GMPChild::GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
-                        const nsCString aKeySystem) {
+GMPErr GMPChild::GetAPI(const char* aAPIName, void* aHostAPI,
+                        void** aPluginAPI) {
   if (!mGMPLoader) {
     return GMPGenericErr;
   }
-  return mGMPLoader->GetAPI(aAPIName, aHostAPI, aPluginAPI, aKeySystem);
+  return mGMPLoader->GetAPI(aAPIName, aHostAPI, aPluginAPI);
 }
 
 mozilla::ipc::IPCResult GMPChild::RecvPreloadLibs(const nsCString& aLibs) {

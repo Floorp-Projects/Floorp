@@ -34,8 +34,7 @@ class GMPContentParent final : public PGMPContentParent, public GMPSharedMem {
   nsresult GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE);
   void VideoEncoderDestroyed(GMPVideoEncoderParent* aEncoder);
 
-  already_AddRefed<ChromiumCDMParent> GetChromiumCDM(
-      const nsCString& aKeySystem);
+  already_AddRefed<ChromiumCDMParent> GetChromiumCDM();
   void ChromiumCDMDestroyed(ChromiumCDMParent* aCDM);
 
   nsCOMPtr<nsISerialEventTarget> GMPEventTarget();

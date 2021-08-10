@@ -61,8 +61,8 @@ class ChromiumCDMAdapter : public gmp::GMPAdapter {
 
   // These are called in place of the corresponding GMP API functions.
   GMPErr GMPInit(const GMPPlatformAPI* aPlatformAPI) override;
-  GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
-                   const nsCString& aKeySystem) override;
+  GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI,
+                   void** aPluginAPI) override;
   void GMPShutdown() override;
 
   static bool Supports(int32_t aModuleVersion, int32_t aInterfaceVersion,
