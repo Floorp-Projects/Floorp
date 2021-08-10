@@ -336,15 +336,20 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
                        destGFXRect.Height() / canvasSizeInPx.height);
     gfxContextMatrixAutoSaveRestore saveMatrix(aCtx);
 
+    aCtx->SetMatrix(
+        gfxUtils::SnapTransformTranslation(aCtx->CurrentMatrix(), nullptr));
+
     if (RefPtr<layers::Image> image = canvas->GetAsImage()) {
       RefPtr<gfx::SourceSurface> surface = image->GetAsSourceSurface();
       if (!surface || !surface->IsValid()) {
         return;
       }
+      gfx::IntSize size = surface->GetSize();
 
+      transform = gfxUtils::SnapTransform(
+          transform, gfxRect(0, 0, size.width, size.height), nullptr);
       aCtx->Multiply(transform);
 
-      gfx::IntSize size = surface->GetSize();
       aCtx->GetDrawTarget()->FillRect(
           Rect(0, 0, size.width, size.height),
           SurfacePattern(surface, ExtendMode::CLAMP, Matrix(),
@@ -360,6 +365,10 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
     const auto snapshot = renderer->BorrowSnapshot();
     if (!snapshot) return;
     const auto& surface = snapshot->mSurf;
+
+    transform = gfxUtils::SnapTransform(
+        transform, gfxRect(0, 0, canvasSizeInPx.width, canvasSizeInPx.height),
+        nullptr);
 
     if (!renderer->YIsDown()) {
       // y-flip

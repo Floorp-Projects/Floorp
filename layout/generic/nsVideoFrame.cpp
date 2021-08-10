@@ -734,6 +734,11 @@ class nsDisplayVideo : public nsPaintedDisplayItem {
                        scaleToSize.height / size.Height());
 
     gfxContextMatrixAutoSaveRestore saveMatrix(aCtx);
+    aCtx->SetMatrix(
+        gfxUtils::SnapTransformTranslation(aCtx->CurrentMatrix(), nullptr));
+
+    transform = gfxUtils::SnapTransform(
+        transform, gfxRect(0, 0, size.width, size.height), nullptr);
     aCtx->Multiply(ThebesMatrix(transform));
 
     aCtx->GetDrawTarget()->FillRect(
