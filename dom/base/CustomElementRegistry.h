@@ -97,7 +97,7 @@ struct CustomElementData {
   // CustomElementData is only created on the element which is a custom element
   // or an upgrade candidate, so the state of an element without
   // CustomElementData is "uncustomized".
-  enum class State { eUndefined, eFailed, eCustom };
+  enum class State { eUndefined, eFailed, eCustom, ePrecustomized };
 
   explicit CustomElementData(nsAtom* aType);
   CustomElementData(nsAtom* aType, State aState);
