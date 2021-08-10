@@ -65,6 +65,18 @@ js::AutoRealm::AutoRealm(JSContext* cx, JS::Realm* target)
 
 js::AutoRealm::~AutoRealm() { cx_->leaveRealm(origin_); }
 
+js::AutoFunctionOrCurrentRealm::AutoFunctionOrCurrentRealm(JSContext* cx,
+                                                           HandleObject fun) {
+  JS::Realm* realm = JS::GetFunctionRealm(cx, fun);
+  if (!realm) {
+    cx->clearPendingException();
+    return;
+  }
+
+  // Enter the function's realm.
+  ar_.emplace(cx, realm);
+}
+
 js::AutoAllocInAtomsZone::AutoAllocInAtomsZone(JSContext* cx)
     : cx_(cx), origin_(cx->realm()) {
   cx_->enterAtomsZone();
