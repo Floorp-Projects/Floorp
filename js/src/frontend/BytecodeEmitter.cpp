@@ -9290,6 +9290,12 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       }
       NameOpEmitter noe(this, privateName->atom(),
                         NameOpEmitter::Kind::SimpleAssignment);
+
+      // Ensure the NameOp emitter doesn't push an environment onto the stack,
+      // because that would change the stack location of the home object.
+      MOZ_ASSERT(noe.loc().kind() == NameLocation::Kind::FrameSlot ||
+                 noe.loc().kind() == NameLocation::Kind::EnvironmentCoordinate);
+
       if (!noe.prepareForRhs()) {
         //          [stack] CTOR OBJ
         return false;
