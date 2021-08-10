@@ -240,11 +240,13 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
                              RefPtr<MediaTransportHandler> aTransportHandler,
                              DirectionType aDirection,
                              RefPtr<nsISerialEventTarget> aMainThread,
+                             RefPtr<AbstractThread> aCallThread,
                              RefPtr<nsISerialEventTarget> aStsThread,
                              RefPtr<MediaSessionConduit> aConduit)
     : mConduit(std::move(aConduit)),
       mDirection(aDirection),
       mMainThread(std::move(aMainThread)),
+      mCallThread(std::move(aCallThread)),
       mStsThread(aStsThread),
       mActive(false, "MediaPipeline::mActive"),
       mLevel(0),
@@ -790,11 +792,11 @@ class MediaPipelineTransmit::VideoFrameFeeder : public VideoConverterListener {
 MediaPipelineTransmit::MediaPipelineTransmit(
     const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
     RefPtr<nsISerialEventTarget> aMainThread,
-    RefPtr<nsISerialEventTarget> aStsThread, bool aIsVideo,
-    RefPtr<MediaSessionConduit> aConduit)
+    RefPtr<AbstractThread> aCallThread, RefPtr<nsISerialEventTarget> aStsThread,
+    bool aIsVideo, RefPtr<MediaSessionConduit> aConduit)
     : MediaPipeline(aPc, std::move(aTransportHandler), DirectionType::TRANSMIT,
-                    std::move(aMainThread), std::move(aStsThread),
-                    std::move(aConduit)),
+                    std::move(aMainThread), std::move(aCallThread),
+                    std::move(aStsThread), std::move(aConduit)),
       mWatchManager(this, AbstractThread::MainThread()),
       mIsVideo(aIsVideo),
       mListener(new PipelineListener(mConduit)),
@@ -1322,11 +1324,11 @@ class GenericReceiveListener : public MediaTrackListener {
 MediaPipelineReceive::MediaPipelineReceive(
     const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
     RefPtr<nsISerialEventTarget> aMainThread,
-    RefPtr<nsISerialEventTarget> aStsThread,
+    RefPtr<AbstractThread> aCallThread, RefPtr<nsISerialEventTarget> aStsThread,
     RefPtr<MediaSessionConduit> aConduit)
     : MediaPipeline(aPc, std::move(aTransportHandler), DirectionType::RECEIVE,
-                    std::move(aMainThread), std::move(aStsThread),
-                    std::move(aConduit)) {}
+                    std::move(aMainThread), std::move(aCallThread),
+                    std::move(aStsThread), std::move(aConduit)) {}
 
 MediaPipelineReceive::~MediaPipelineReceive() = default;
 
@@ -1509,12 +1511,13 @@ class MediaPipelineReceiveAudio::PipelineListener
 MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
     const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
     RefPtr<nsISerialEventTarget> aMainThread,
-    RefPtr<nsISerialEventTarget> aStsThread,
+    RefPtr<AbstractThread> aCallThread, RefPtr<nsISerialEventTarget> aStsThread,
     RefPtr<AudioSessionConduit> aConduit,
     const RefPtr<dom::MediaStreamTrack>& aTrack,
     const PrincipalHandle& aPrincipalHandle)
     : MediaPipelineReceive(aPc, std::move(aTransportHandler), aMainThread,
-                           std::move(aStsThread), std::move(aConduit)),
+                           std::move(aCallThread), std::move(aStsThread),
+                           std::move(aConduit)),
       mListener(aTrack ? new PipelineListener(std::move(aMainThread), aTrack,
                                               mConduit, aPrincipalHandle)
                        : nullptr),
@@ -1680,12 +1683,13 @@ class MediaPipelineReceiveVideo::PipelineRenderer
 MediaPipelineReceiveVideo::MediaPipelineReceiveVideo(
     const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
     RefPtr<nsISerialEventTarget> aMainThread,
-    RefPtr<nsISerialEventTarget> aStsThread,
+    RefPtr<AbstractThread> aCallThread, RefPtr<nsISerialEventTarget> aStsThread,
     RefPtr<VideoSessionConduit> aConduit,
     const RefPtr<dom::MediaStreamTrack>& aTrack,
     const PrincipalHandle& aPrincipalHandle)
     : MediaPipelineReceive(aPc, std::move(aTransportHandler), aMainThread,
-                           std::move(aStsThread), std::move(aConduit)),
+                           std::move(aCallThread), std::move(aStsThread),
+                           std::move(aConduit)),
       mRenderer(new PipelineRenderer(this)),
       mListener(aTrack ? new PipelineListener(std::move(aMainThread), aTrack,
                                               aPrincipalHandle)
