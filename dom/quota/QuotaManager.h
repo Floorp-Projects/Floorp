@@ -474,7 +474,7 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult MaybeCreateOrUpgradeStorage(mozIStorageConnection& aConnection);
 
-  Result<Ok, QMResult> MaybeRemoveLocalStorageArchiveTmpFile();
+  OkOrErr MaybeRemoveLocalStorageArchiveTmpFile();
 
   nsresult MaybeRemoveLocalStorageDataAndArchive(nsIFile& aLsArchiveFile);
 

@@ -55,14 +55,14 @@ class MOZ_MUST_USE_TYPE GenericErrorResult<QMResult> {
   operator nsresult() const { return mErrorValue.NSResult(); }
 };
 
-inline Result<Ok, QMResult> ToResult(const QMResult& aValue) {
+inline OkOrErr ToResult(const QMResult& aValue) {
   if (NS_FAILED(aValue.NSResult())) {
     return Err(aValue);
   }
   return Ok();
 }
 
-inline Result<Ok, QMResult> ToResult(QMResult&& aValue) {
+inline OkOrErr ToResult(QMResult&& aValue) {
   if (NS_FAILED(aValue.NSResult())) {
     return Err(std::move(aValue));
   }
