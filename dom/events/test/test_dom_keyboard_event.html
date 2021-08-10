@@ -138,6 +138,9 @@ function testInitializingUntrustedEvent()
     "Win", "Scroll"
   ];
 
+  const kIsInitKeyEventAvailable =
+    SpecialPowers.getBoolPref("dom.keyboardevent.init_key_event.enabled", false);
+
   for (var i = 0; i < kTests.length; i++) {
     var description = "testInitializingUntrustedEvent, Index: " + i + ", ";
     const kTest = kTests[i];
@@ -148,6 +151,9 @@ function testInitializingUntrustedEvent()
                           kTest.ctrlKey, kTest.altKey, kTest.shiftKey,
                           kTest.metaKey);
     } else {
+      if (!kIsInitKeyEventAvailable) {
+        continue;
+      }
       e.initKeyEvent(kTest.type, kTest.bubbles, kTest.cancelable, kTest.view,
                      kTest.ctrlKey, kTest.altKey, kTest.shiftKey, kTest.metaKey,
                      kTest.keyCode, kTest.charCode);
