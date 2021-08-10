@@ -11,7 +11,7 @@
 #include "nsTArray.h"
 #include "nsWeakReference.h"
 #include "MozLocaleBindings.h"
-
+#include "mozilla/intl/ICU4CGlue.h"
 #include "mozILocaleService.h"
 
 namespace mozilla {
@@ -172,6 +172,26 @@ class LocaleService final : public mozILocaleService,
                              const nsACString& aAvailable);
 
   bool IsServer();
+
+  /**
+   * Create a component from intl/components with the current app's locale. This
+   * is a convenience method for efficient string management with the app
+   * locale.
+   */
+  template <typename T, typename... Args>
+  static Result<UniquePtr<T>, ICUError> TryCreateComponent(Args... args) {
+    // 32 is somewhat arbitrary for the length, but it should fit common
+    // locales, but locales such as the following will be heap allocated:
+    //
+    //  "de-u-ca-gregory-fw-mon-hc-h23-co-phonebk-ka-noignore-kb-false-kc-
+    //    false-kf-false-kh-false-kk-false-kn-false-kr-space-ks-level1-kv-space-cf-
+    //    standard-cu-eur-ms-metric-nu-latn-lb-strict-lw-normal-ss-none-tz-atvie-em-
+    //    default-rg-atzzzz-sd-atat1-va-posix"
+    nsAutoCStringN<32> appLocale;
+    mozilla::intl::LocaleService::GetInstance()->GetAppLocaleAsBCP47(appLocale);
+
+    return T::TryCreate(appLocale.get(), args...);
+  }
 
  private:
   void NegotiateAppLocales(nsTArray<nsCString>& aRetVal);
