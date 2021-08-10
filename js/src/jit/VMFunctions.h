@@ -8,6 +8,7 @@
 #define jit_VMFunctions_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/HashFunctions.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -30,8 +31,10 @@ class GlobalObject;
 class InterpreterFrame;
 class LexicalScope;
 class ClassBodyScope;
+class MapObject;
 class NativeObject;
 class PropertyName;
+class SetObject;
 class Shape;
 class TypedArrayObject;
 class WithScope;
@@ -669,6 +672,11 @@ bool SetObjectHas(JSContext* cx, HandleObject obj, HandleValue key, bool* rval);
 bool MapObjectHas(JSContext* cx, HandleObject obj, HandleValue key, bool* rval);
 bool MapObjectGet(JSContext* cx, HandleObject obj, HandleValue key,
                   MutableHandleValue rval);
+
+void AssertSetObjectHash(JSContext* cx, SetObject* obj, const Value* value,
+                         mozilla::HashNumber actualHash);
+void AssertMapObjectHash(JSContext* cx, MapObject* obj, const Value* value,
+                         mozilla::HashNumber actualHash);
 
 // Functions used when JS_MASM_VERBOSE is enabled.
 void AssumeUnreachable(const char* output);

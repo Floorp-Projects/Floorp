@@ -151,6 +151,8 @@ class MapObject : public NativeObject {
     return getFixedSlotOffset(DataSlot);
   }
 
+  ValueMap* getData() { return maybePtrFromReservedSlot<ValueMap>(DataSlot); }
+
  private:
   static const ClassSpec classSpec_;
   static const JSClassOps classOps_;
@@ -160,8 +162,6 @@ class MapObject : public NativeObject {
   static const JSPropertySpec staticProperties[];
 
   static bool finishInit(JSContext* cx, HandleObject ctor, HandleObject proto);
-
-  ValueMap* getData() { return maybePtrFromReservedSlot<ValueMap>(DataSlot); }
 
   static ValueMap& extract(HandleObject o);
   static ValueMap& extract(const CallArgs& args);
@@ -281,6 +281,8 @@ class SetObject : public NativeObject {
     return getFixedSlotOffset(DataSlot);
   }
 
+  ValueSet* getData() { return maybePtrFromReservedSlot<ValueSet>(DataSlot); }
+
  private:
   static const ClassSpec classSpec_;
   static const JSClassOps classOps_;
@@ -290,8 +292,6 @@ class SetObject : public NativeObject {
   static const JSPropertySpec staticProperties[];
 
   static bool finishInit(JSContext* cx, HandleObject ctor, HandleObject proto);
-
-  ValueSet* getData() { return maybePtrFromReservedSlot<ValueSet>(DataSlot); }
 
   static ValueSet& extract(HandleObject o);
   static ValueSet& extract(const CallArgs& args);
