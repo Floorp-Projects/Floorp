@@ -112,6 +112,8 @@
   _(RegExpInstanceOptimizable)                     \
   _(GetFirstDollarIndex)                           \
                                                    \
+  _(SetHas)                                        \
+                                                   \
   _(String)                                        \
   _(StringToString)                                \
   _(StringValueOf)                                 \

@@ -7765,6 +7765,38 @@ AttachDecision CallIRGenerator::tryAttachBigIntAsUintN(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachSetHas(HandleFunction callee) {
+  // Ensure |this| is a SetObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<SetObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Need a single argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'has' native function.
+  emitNativeCalleeGuard(callee);
+
+  // Guard |this| is a SetObject.
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  writer.guardClass(objId, GuardClassKind::Set);
+
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+
+  writer.setHasResult(objId, argId);
+  writer.returnFromIC();
+
+  trackAttached("SetHas");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   if (!callee->isNativeWithoutJitEntry() || callee->native() != fun_call) {
     return AttachDecision::NoAction;
@@ -9021,6 +9053,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     // Boolean natives.
     case InlinableNative::Boolean:
       return tryAttachBoolean(callee);
+
+    // Set natives.
+    case InlinableNative::SetHas:
+      return tryAttachSetHas(callee);
 
     // Testing functions.
     case InlinableNative::TestBailout:
