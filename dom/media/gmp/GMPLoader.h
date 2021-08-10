@@ -11,7 +11,6 @@
 #include "prlink.h"
 #include "gmp-entrypoints.h"
 #include "mozilla/UniquePtr.h"
-#include "nsString.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"
@@ -37,11 +36,8 @@ class GMPAdapter {
 
   // These are called in place of the corresponding GMP API functions.
   virtual GMPErr GMPInit(const GMPPlatformAPI* aPlatformAPI) = 0;
-  // The `aKeySystem` arg is used to specify the key system when loading CDMs,
-  // and will be ignored by non-CDM GMPs. It is not part of the public GMP API
-  // Gecko exposes.
   virtual GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI,
-                           void** aPluginAPI, const nsCString& aKeySystem) = 0;
+                           void** aPluginAPI) = 0;
   virtual void GMPShutdown() = 0;
 };
 
@@ -59,11 +55,8 @@ class GMPLoader {
   bool Load(const char* aUTF8LibPath, uint32_t aLibPathLen,
             const GMPPlatformAPI* aPlatformAPI, GMPAdapter* aAdapter = nullptr);
 
-  // Retrieves an interface pointer from the GMP. If the GMP is loading a CDM,
-  // aKeySystem is passed to the CDM to allow for key system specific
-  // configuration by the CDM.
-  GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
-                const nsCString& aKeySystem);
+  // Retrieves an interface pointer from the GMP.
+  GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI);
 
   // Calls the GMPShutdown function exported by the GMP lib, and unloads the
   // plugin library.
