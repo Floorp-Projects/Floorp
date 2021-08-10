@@ -5,15 +5,16 @@
 
 #[cfg(target_os = "linux")]
 use audio_thread_priority::{promote_thread_to_real_time, RtPriorityThreadInfo};
-use audioipc::framing::{framed, Framed};
+use audioipc::codec::LengthDelimitedCodec;
+use audioipc::frame::{framed, Framed};
 use audioipc::messages::{
     CallbackReq, CallbackResp, ClientMessage, Device, DeviceCollectionReq, DeviceCollectionResp,
     DeviceInfo, RegisterDeviceCollectionChanged, ServerMessage, StreamCreate, StreamCreateParams,
     StreamInitParams, StreamParams,
 };
+use audioipc::platformhandle_passing::FramedWithPlatformHandles;
 use audioipc::rpc;
 use audioipc::shm::SharedMem;
-use audioipc::{codec::LengthDelimitedCodec, messages::SerializableHandle};
 use audioipc::{MessageStream, PlatformHandle};
 use cubeb_core as cubeb;
 use cubeb_core::ffi;
@@ -74,7 +75,7 @@ impl CubebDeviceCollectionManager {
         let mut servers = self.servers.lock().unwrap();
         server.borrow_mut().devtype.remove(devtype);
         if server.borrow().devtype.is_empty() {
-            servers.retain(|s| !Rc::ptr_eq(s, server));
+            servers.retain(|s| !Rc::ptr_eq(&s, server));
         }
         if servers.is_empty() {
             self.internal_register(context, false)?;
@@ -225,8 +226,10 @@ struct ServerStreamCallbacks {
     input_frame_size: u16,
     /// Size of output frame in bytes
     output_frame_size: u16,
-    /// Shared memory buffer for transporting audio data to/from client
-    shm: SharedMem,
+    /// Shared memory buffer for sending input data to client
+    input_shm: Option<SharedMem>,
+    /// Shared memory buffer for receiving output data from client
+    output_shm: Option<SharedMem>,
     /// RPC interface to callback server running in client
     rpc: rpc::ClientProxy<CallbackReq, CallbackResp>,
 }
@@ -241,9 +244,8 @@ impl ServerStreamCallbacks {
         );
 
         unsafe {
-            if self.input_frame_size != 0 {
-                self.shm
-                    .get_mut_slice(input.len())
+            if let Some(shm) = &mut self.input_shm {
+                shm.get_mut_slice(input.len())
                     .unwrap()
                     .copy_from_slice(input);
             }
@@ -264,8 +266,8 @@ impl ServerStreamCallbacks {
                     let nbytes = frames as usize * self.output_frame_size as usize;
                     trace!("Reslice output to {}", nbytes);
                     unsafe {
-                        if self.output_frame_size != 0 {
-                            output[..nbytes].copy_from_slice(self.shm.get_slice(nbytes).unwrap());
+                        if let Some(shm) = &self.output_shm {
+                            output[..nbytes].copy_from_slice(shm.get_slice(nbytes).unwrap());
                         }
                     }
                 }
@@ -321,7 +323,6 @@ fn get_shm_id() -> String {
 struct ServerStream {
     stream: Option<cubeb::Stream>,
     cbs: Box<ServerStreamCallbacks>,
-    shm_setup: Option<rpc::Response<CallbackResp>>,
 }
 
 impl Drop for ServerStream {
@@ -330,6 +331,8 @@ impl Drop for ServerStream {
         drop(self.stream.take());
     }
 }
+
+type StreamSlab = slab::Slab<ServerStream>;
 
 struct CubebServerCallbacks {
     rpc: rpc::ClientProxy<DeviceCollectionReq, DeviceCollectionResp>,
@@ -351,20 +354,21 @@ impl CubebServerCallbacks {
 }
 
 pub struct CubebServer {
-    callback_thread: current_thread::Handle,
-    streams: slab::Slab<ServerStream>,
+    handle: current_thread::Handle,
+    streams: StreamSlab,
     remote_pid: Option<u32>,
     cbs: Option<Rc<RefCell<CubebServerCallbacks>>>,
     devidmap: DevIdMap,
-    shm_area_size: usize,
 }
 
 impl rpc::Server for CubebServer {
     type Request = ServerMessage;
     type Response = ClientMessage;
     type Future = FutureResult<Self::Response, ()>;
-    type Transport =
-        Framed<audioipc::AsyncMessageStream, LengthDelimitedCodec<Self::Response, Self::Request>>;
+    type Transport = FramedWithPlatformHandles<
+        audioipc::AsyncMessageStream,
+        LengthDelimitedCodec<Self::Response, Self::Request>,
+    >;
 
     fn process(&mut self, req: Self::Request) -> Self::Future {
         if let ServerMessage::ClientConnect(pid) = req {
@@ -400,14 +404,13 @@ macro_rules! try_stream {
 }
 
 impl CubebServer {
-    pub fn new(callback_thread_handle: current_thread::Handle, shm_area_size: usize) -> Self {
+    pub fn new(handle: current_thread::Handle) -> Self {
         CubebServer {
-            callback_thread: callback_thread_handle,
-            streams: slab::Slab::<ServerStream>::new(),
+            handle,
+            streams: StreamSlab::new(),
             remote_pid: None,
             cbs: None,
             devidmap: DevIdMap::new(),
-            shm_area_size,
         }
     }
 
@@ -561,7 +564,7 @@ impl CubebServer {
                     // bind_client to the callback RPC handling thread.  This is
                     // done by spawning a future on `handle`.
                     let (tx, rx) = oneshot::channel();
-                    self.callback_thread
+                    self.handle
                         .spawn(futures::future::lazy(move || {
                             let handle = reactor::Handle::default();
                             let stream = ipc_server.into_tokio_ipc(&handle).unwrap();
@@ -572,19 +575,25 @@ impl CubebServer {
                         }))
                         .expect("Failed to spawn DeviceCollectionClient");
 
+                    // TODO: The lowest comms layer expects exactly 3 PlatformHandles, but we only
+                    // need one here.  Send some dummy handles over for the other side to discard.
+                    let (dummy1, dummy2) =
+                        MessageStream::anonymous_ipc_pair().expect("need dummy IPC pair");
                     if let Ok(rpc) = rx.wait() {
                         self.cbs = Some(Rc::new(RefCell::new(CubebServerCallbacks {
                             rpc,
                             devtype: cubeb::DeviceType::empty(),
                         })));
-                        let fd = RegisterDeviceCollectionChanged {
-                            platform_handle: SerializableHandle::new(
+                        let fds = RegisterDeviceCollectionChanged {
+                            platform_handles: [
                                 PlatformHandle::from(ipc_client),
-                                self.remote_pid.unwrap(),
-                            ),
+                                PlatformHandle::from(dummy1),
+                                PlatformHandle::from(dummy2),
+                            ],
+                            target_pid: self.remote_pid.unwrap(),
                         };
 
-                        ClientMessage::ContextSetupDeviceCollectionCallback(fd)
+                        ClientMessage::ContextSetupDeviceCollectionCallback(fds)
                     } else {
                         warn!("Failed to setup RPC client");
                         error(cubeb::Error::error())
@@ -672,14 +681,18 @@ impl CubebServer {
 
         let (ipc_server, ipc_client) = MessageStream::anonymous_ipc_pair()?;
         debug!("Created callback pair: {:?}-{:?}", ipc_server, ipc_client);
-        let shm = SharedMem::new(&get_shm_id(), self.shm_area_size)?;
+        let shm_id = get_shm_id();
+        let (input_shm, input_file) =
+            SharedMem::new(&format!("{}-input", shm_id), audioipc::SHM_AREA_SIZE)?;
+        let (output_shm, output_file) =
+            SharedMem::new(&format!("{}-output", shm_id), audioipc::SHM_AREA_SIZE)?;
 
         // This code is currently running on the Client/Server RPC
         // handling thread.  We need to move the registration of the
         // bind_client to the callback RPC handling thread.  This is
         // done by spawning a future on `handle`.
         let (tx, rx) = oneshot::channel();
-        self.callback_thread
+        self.handle
             .spawn(futures::future::lazy(move || {
                 let handle = reactor::Handle::default();
                 let stream = ipc_server.into_tokio_ipc(&handle).unwrap();
@@ -690,21 +703,21 @@ impl CubebServer {
             }))
             .expect("Failed to spawn CallbackClient");
 
-        let rpc = match rx.wait() {
+        let rpc: rpc::ClientProxy<CallbackReq, CallbackResp> = match rx.wait() {
             Ok(rpc) => rpc,
             Err(_) => bail!("Failed to create callback rpc."),
         };
 
-        let shm_handle = unsafe { shm.make_handle().unwrap() };
-        let shm_setup = Some(rpc.call(CallbackReq::SharedMem(
-            SerializableHandle::new(shm_handle, self.remote_pid.unwrap()),
-            self.shm_area_size,
-        )));
+        // TODO: The lowest comms layer expects exactly 3 PlatformHandles, so we always configure both sides of the shm.
+        // ServerStreamCallbacks only needs the active shm, so drop any unused shm now.
+        let input_shm = params.input_stream_params.and(Some(input_shm));
+        let output_shm = params.output_stream_params.and(Some(output_shm));
 
         let cbs = Box::new(ServerStreamCallbacks {
             input_frame_size,
             output_frame_size,
-            shm,
+            input_shm,
+            output_shm,
             rpc,
         });
 
@@ -712,18 +725,12 @@ impl CubebServer {
         let key = entry.key();
         debug!("Registering stream {:?}", key);
 
-        entry.insert(ServerStream {
-            stream: None,
-            shm_setup,
-            cbs,
-        });
+        entry.insert(ServerStream { stream: None, cbs });
 
         Ok(ClientMessage::StreamCreated(StreamCreate {
             token: key,
-            platform_handle: SerializableHandle::new(
-                PlatformHandle::from(ipc_client),
-                self.remote_pid.unwrap(),
-            ),
+            platform_handles: [PlatformHandle::from(ipc_client), input_file, output_file],
+            target_pid: self.remote_pid.unwrap(),
         }))
     }
 
@@ -757,9 +764,6 @@ impl CubebServer {
         let server_stream = &mut self.streams[stm_tok];
         assert!(size_of::<Box<ServerStreamCallbacks>>() == size_of::<usize>());
         let user_ptr = server_stream.cbs.as_ref() as *const ServerStreamCallbacks as *mut c_void;
-
-        // SharedMem setup message should've been processed by client by now.
-        server_stream.shm_setup.take().wait().unwrap();
 
         let stream = unsafe {
             let stream = context.stream_init(
