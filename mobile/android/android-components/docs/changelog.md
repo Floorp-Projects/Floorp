@@ -4,12 +4,19 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 92.0.0-SNAPSHOT (In Development)
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v91.0.0...main)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/139?closed=1)
+# 93.0.0-SNAPSHOT (In Development)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v92.0.0...main)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/140?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
+
+# 92.0.0
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v91.0.0...v92.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/139?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v92.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v92.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v92.0.0/.config.yml)
 
 * **browser-feature-awesomebar**:
   * 🌟️ Adds `CombinedHistorySuggestionProvider` that combines the results from `HistoryMetadataSuggestionProvider` and `HistoryStorageSuggestionProvider` so that if not enough metadata history results are available then storage history results are added to return the requested maxNumberOfSuggestions of awesomeBar suggestions.
