@@ -418,6 +418,14 @@ void MacroAssembler::mul32(Register rhs, Register srcDest) {
   mul32(srcDest, rhs, srcDest, nullptr);
 }
 
+void MacroAssembler::mul32(Imm32 imm, Register srcDest) {
+  vixl::UseScratchRegisterScope temps(this);
+  const ARMRegister scratch32 = temps.AcquireW();
+
+  move32(imm, scratch32.asUnsized());
+  mul32(scratch32.asUnsized(), srcDest);
+}
+
 void MacroAssembler::mul32(Register src1, Register src2, Register dest,
                            Label* onOver) {
   if (onOver) {

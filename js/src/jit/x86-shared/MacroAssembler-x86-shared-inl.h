@@ -193,6 +193,8 @@ void MacroAssembler::mul32(Register rhs, Register srcDest) {
   imull(rhs, srcDest);
 }
 
+void MacroAssembler::mul32(Imm32 imm, Register srcDest) { imull(imm, srcDest); }
+
 void MacroAssembler::mulFloat32(FloatRegister src, FloatRegister dest) {
   vmulss(src, dest, dest);
 }
