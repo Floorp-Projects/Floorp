@@ -2663,7 +2663,7 @@
 
 - name: MapHasResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     map: ObjId
@@ -2671,7 +2671,7 @@
 
 - name: MapHasNonGCThingResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 3
   args:
     map: ObjId
@@ -2679,7 +2679,7 @@
 
 - name: MapHasStringResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     map: ObjId
@@ -2687,7 +2687,7 @@
 
 - name: MapHasSymbolResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 3
   args:
     map: ObjId
@@ -2695,7 +2695,7 @@
 
 - name: MapHasBigIntResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 3
   args:
     map: ObjId
@@ -2703,7 +2703,7 @@
 
 - name: MapHasObjectResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 3
   args:
     map: ObjId

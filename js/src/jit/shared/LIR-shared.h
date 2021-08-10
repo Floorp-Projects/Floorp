@@ -9213,6 +9213,102 @@ class LSetObjectHasValueVMCall
   const LAllocation* setObject() { return getOperand(0); }
 };
 
+class LMapObjectHasNonBigInt : public LInstructionHelper<1, 2 + BOX_PIECES, 2> {
+ public:
+  LIR_HEADER(MapObjectHasNonBigInt)
+
+  LMapObjectHasNonBigInt(const LAllocation& mapObject,
+                         const LBoxAllocation& input, const LAllocation& hash,
+                         const LDefinition& temp1, const LDefinition& temp2)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, mapObject);
+    setBoxOperand(Input, input);
+    setOperand(Input + BOX_PIECES, hash);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  static constexpr size_t Input = 1;
+
+  const LAllocation* mapObject() { return getOperand(0); }
+  const LAllocation* hash() { return getOperand(Input + BOX_PIECES); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+};
+
+class LMapObjectHasBigInt : public LInstructionHelper<1, 2 + BOX_PIECES, 4> {
+ public:
+  LIR_HEADER(MapObjectHasBigInt)
+
+  LMapObjectHasBigInt(const LAllocation& mapObject, const LBoxAllocation& input,
+                      const LAllocation& hash, const LDefinition& temp1,
+                      const LDefinition& temp2, const LDefinition& temp3,
+                      const LDefinition& temp4)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, mapObject);
+    setBoxOperand(Input, input);
+    setOperand(Input + BOX_PIECES, hash);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+    setTemp(2, temp3);
+    setTemp(3, temp4);
+  }
+
+  static constexpr size_t Input = 1;
+
+  const LAllocation* mapObject() { return getOperand(0); }
+  const LAllocation* hash() { return getOperand(Input + BOX_PIECES); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+  const LDefinition* temp3() { return getTemp(2); }
+  const LDefinition* temp4() { return getTemp(3); }
+};
+
+class LMapObjectHasValue : public LInstructionHelper<1, 2 + BOX_PIECES, 4> {
+ public:
+  LIR_HEADER(MapObjectHasValue)
+
+  LMapObjectHasValue(const LAllocation& mapObject, const LBoxAllocation& input,
+                     const LAllocation& hash, const LDefinition& temp1,
+                     const LDefinition& temp2, const LDefinition& temp3,
+                     const LDefinition& temp4)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, mapObject);
+    setBoxOperand(Input, input);
+    setOperand(Input + BOX_PIECES, hash);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+    setTemp(2, temp3);
+    setTemp(3, temp4);
+  }
+
+  static constexpr size_t Input = 1;
+
+  const LAllocation* mapObject() { return getOperand(0); }
+  const LAllocation* hash() { return getOperand(Input + BOX_PIECES); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+  const LDefinition* temp3() { return getTemp(2); }
+  const LDefinition* temp4() { return getTemp(3); }
+};
+
+class LMapObjectHasValueVMCall
+    : public LCallInstructionHelper<1, 1 + BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(MapObjectHasValueVMCall)
+
+  LMapObjectHasValueVMCall(const LAllocation& mapObject,
+                           const LBoxAllocation& input)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, mapObject);
+    setBoxOperand(Input, input);
+  }
+
+  static constexpr size_t Input = 1;
+
+  const LAllocation* mapObject() { return getOperand(0); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
