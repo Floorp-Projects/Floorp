@@ -2271,6 +2271,14 @@
   congruent_to: if_operands_equal
   alias_set: none
 
+- name: HashSymbol
+  operands:
+    input: Symbol
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+
 - name: SetObjectHasNonBigInt
   operands:
     set: Object
