@@ -8,6 +8,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { ServiceRequest } = ChromeUtils.import(
+  "resource://gre/modules/ServiceRequest.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "AppConstants",
@@ -26,8 +29,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/network/network-link-service;1",
   "nsINetworkLinkService"
 );
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
 // See LOG_LEVELS in Console.jsm. Common examples: "all", "debug", "info", "warn", "error".
@@ -97,6 +98,56 @@ var Utils = {
   },
 
   /**
+   * A wrapper around `ServiceRequest` that behaves like `fetch()`.
+   * @param input a resource
+   * @param init request options
+   * @returns a Response object
+   */
+  async fetch(input, init = {}) {
+    return new Promise(function(resolve, reject) {
+      const request = new ServiceRequest();
+
+      request.onerror = () =>
+        reject(new TypeError("NetworkError: Network request failed"));
+      request.ontimeout = () =>
+        reject(new TypeError("Timeout: Network request failed"));
+      request.onabort = () => reject(new DOMException("Aborted", "AbortError"));
+      request.onload = () => {
+        // Parse raw response headers into `Headers` object.
+        const headers = new Headers();
+        const rawHeaders = request.getAllResponseHeaders();
+        rawHeaders
+          .trim()
+          .split(/[\r\n]+/)
+          .forEach(line => {
+            const parts = line.split(": ");
+            const header = parts.shift();
+            const value = parts.join(": ");
+            headers.set(header, value);
+          });
+
+        const responseAttributes = {
+          status: request.status,
+          statusText: request.statusText,
+          url: request.responseURL,
+          headers,
+        };
+        resolve(new Response(request.response, responseAttributes));
+      };
+
+      const { method = "GET", headers = {} } = init;
+
+      request.open(method, input, true);
+
+      for (const [name, value] of Object.entries(headers)) {
+        request.setRequestHeader(name, value);
+      }
+
+      request.send();
+    });
+  },
+
+  /**
    * Check if local data exist for the specified client.
    *
    * @param {RemoteSettingsClient} client
@@ -117,7 +168,7 @@ var Utils = {
    */
   async hasLocalDump(bucket, collection) {
     try {
-      await fetch(
+      await Utils.fetch(
         `resource://app/defaults/settings/${bucket}/${collection}.json`
       );
       return true;
@@ -138,7 +189,7 @@ var Utils = {
       if (!this._dumpStatsInitPromise) {
         this._dumpStatsInitPromise = (async () => {
           try {
-            let res = await fetch(
+            let res = await Utils.fetch(
               "resource://app/defaults/settings/last_modified.json"
             );
             this._dumpStats = await res.json();
@@ -155,7 +206,7 @@ var Utils = {
     let lastModified = this._dumpStats[identifier];
     if (lastModified === undefined) {
       try {
-        let res = await fetch(
+        let res = await Utils.fetch(
           `resource://app/defaults/settings/${bucket}/${collection}.json`
         );
         let records = (await res.json()).data;
@@ -213,7 +264,7 @@ var Utils = {
           .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
           .join("&");
     }
-    const response = await fetch(url);
+    const response = await Utils.fetch(url);
 
     if (response.status >= 500) {
       throw new Error(`Server error ${response.status} ${response.statusText}`);
