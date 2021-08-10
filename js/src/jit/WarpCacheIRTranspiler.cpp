@@ -3906,6 +3906,24 @@ bool WarpCacheIRTranspiler::emitSetHasNonGCThingResult(ObjOperandId setId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitSetHasStringResult(ObjOperandId setId,
+                                                   StringOperandId strId) {
+  MDefinition* set = getOperand(setId);
+  MDefinition* str = getOperand(strId);
+
+  auto* hashValue = MToHashableString::New(alloc(), str);
+  add(hashValue);
+
+  auto* hash = MHashString::New(alloc(), hashValue);
+  add(hash);
+
+  auto* ins = MSetObjectHasNonBigInt::New(alloc(), set, hashValue, hash);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitTruthyResult(OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
