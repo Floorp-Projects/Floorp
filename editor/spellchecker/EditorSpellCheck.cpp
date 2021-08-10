@@ -10,6 +10,7 @@
 #include "mozilla/EditorBase.h"   // for EditorBase
 #include "mozilla/HTMLEditor.h"   // for HTMLEditor
 #include "mozilla/dom/Element.h"  // for Element
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"
 #include "mozilla/intl/LocaleService.h"    // for retrieving app locale
@@ -446,6 +447,36 @@ EditorSpellCheck::CheckCurrentWord(const nsAString& aSuggestedWord,
   DeleteSuggestedWordList();
   return mSpellChecker->CheckWord(aSuggestedWord, aIsMisspelled,
                                   &mSuggestedWordList);
+}
+
+NS_IMETHODIMP
+EditorSpellCheck::Suggest(const nsAString& aSuggestedWord, uint32_t aCount,
+                          JSContext* aCx, Promise** aPromise) {
+  NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
+
+  nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!globalObject)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(globalObject, result);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  mSpellChecker->Suggest(aSuggestedWord, aCount)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [promise](const CopyableTArray<nsString>& aSuggestions) {
+            promise->MaybeResolve(aSuggestions);
+          },
+          [promise](nsresult aError) {
+            promise->MaybeReject(NS_ERROR_FAILURE);
+          });
+
+  promise.forget(aPromise);
+  return NS_OK;
 }
 
 RefPtr<CheckWordPromise> EditorSpellCheck::CheckCurrentWordsNoSuggest(

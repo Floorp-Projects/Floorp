@@ -33,6 +33,10 @@ class RemoteSpellcheckEngineParent : public PRemoteSpellcheckEngineParent {
       const nsString& aWord, bool* aIsMisspelled,
       nsTArray<nsString>* aSuggestions);
 
+  virtual mozilla::ipc::IPCResult RecvSuggest(const nsString& aWord,
+                                              uint32_t aCount,
+                                              SuggestResolver&& aResolve);
+
  private:
   RefPtr<mozSpellChecker> mSpellChecker;
 };

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for nsIEditorSpellChecfker.sugget</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div contenteditable id="en-US" lang="en-US">missspelled</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+add_task(async function() {
+  await new Promise(resolve => SimpleTest.waitForFocus(resolve));
+
+  let { onSpellCheck } =
+    SpecialPowers.Cu.import(
+      "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null);
+
+  let element = document.getElementById("en-US");
+  element.focus();
+
+  await new Promise(resolve => onSpellCheck(element, resolve));
+
+  let editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  let editor = editingSession.getEditorForWindow(window);
+  let spellchecker = SpecialPowers.Cu.createSpellChecker();
+  spellchecker.setFilterType(spellchecker.FILTERTYPE_NORMAL);
+  await new Promise(resolve => spellchecker.InitSpellChecker(editor, false, resolve));
+
+  let suggestions = await spellchecker.suggest("misspelled", 5);
+  is(suggestions.length, 0, "\"misspelled\" is correct word");
+
+  suggestions = await spellchecker.suggest("missspelled", 5);
+  is(suggestions.length, 5, "\"missspelled\" isn't correct word");
+});
+</script>
+</pre>
+</body>
+</html>
