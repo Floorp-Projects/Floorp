@@ -2882,7 +2882,7 @@ void nsGenericHTMLElement::SetInnerText(const nsAString& aValue) {
   mb.NodesAdded();
 }
 
-// https://html.spec.whatwg.org/commit-snapshots/b48bb2238269d90ea4f455a52cdf29505aff3df0/#dom-attachinternals
+// https://html.spec.whatwg.org/commit-snapshots/53bc3803433e1c817918b83e8a84f3db900031dd/#dom-attachinternals
 already_AddRefed<ElementInternals> nsGenericHTMLElement::AttachInternals(
     ErrorResult& aRv) {
   CustomElementData* ceData = GetCustomElementData();
@@ -2932,6 +2932,10 @@ already_AddRefed<ElementInternals> nsGenericHTMLElement::AttachInternals(
     return nullptr;
   }
 
+  // If this is not a custom element, i.e. ceData is nullptr, we are unable to
+  // find a definition and should return earlier above.
+  MOZ_ASSERT(ceData);
+
   // 5. If element's attached internals is true, then throw an
   //    "NotSupportedError" DOMException.
   if (ceData->HasAttachedInternals()) {
@@ -2941,10 +2945,19 @@ already_AddRefed<ElementInternals> nsGenericHTMLElement::AttachInternals(
     return nullptr;
   }
 
-  // 6. Set element's attached internals to true.
+  // 6. If element's custom element state is not "precustomized" or "custom",
+  //    then throw a "NotSupportedError" DOMException.
+  if (ceData->mState != CustomElementData::State::ePrecustomized &&
+      ceData->mState != CustomElementData::State::eCustom) {
+    aRv.ThrowNotSupportedError(
+        R"(Custom element state is not "precustomized" or "custom".)");
+    return nullptr;
+  }
+
+  // 7. Set element's attached internals to true.
   ceData->AttachedInternals();
 
-  // 7. Create a new ElementInternals instance targeting element, and return it.
+  // 8. Create a new ElementInternals instance targeting element, and return it.
   return MakeAndAddRef<ElementInternals>(this);
 }
 
