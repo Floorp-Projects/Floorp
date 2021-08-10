@@ -307,7 +307,9 @@ class RemoteSettingsClient extends EventEmitter {
   }
 
   httpClient() {
-    const api = new KintoHttpClient(Utils.SERVER_URL);
+    const api = new KintoHttpClient(Utils.SERVER_URL, {
+      fetchFunc: Utils.fetch, // Use fetch() wrapper.
+    });
     return api.bucket(this.bucketName).collection(this.collectionName);
   }
 
