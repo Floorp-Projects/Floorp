@@ -2477,10 +2477,6 @@ pref("dom.ipc.processCount.webLargeAllocation", 10);
 // Disable e10s for Gecko by default. This is overridden in firefox.js.
 pref("browser.tabs.remote.autostart", false);
 
-// Pref to control whether we put all data: uri's in the default
-// web process when running with fission.
-pref("browser.tabs.remote.dataUriInDefaultWebProcess", false);
-
 // This pref will cause assertions when a remoteType triggers a process switch
 // to a new remoteType it should not be able to trigger.
 pref("browser.tabs.remote.enforceRemoteTypeRestrictions", false);
@@ -2489,10 +2485,6 @@ pref("browser.tabs.remote.enforceRemoteTypeRestrictions", false);
 // for about: pages. This pref name did not age well: we will have multiple
 // types of privileged content processes, each with different privileges.
 pref("browser.tabs.remote.separatePrivilegedContentProcess", false);
-
-// Pref to control whether we use a separate privileged content process
-// for certain mozilla webpages (which are listed in the following pref).
-pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
 
 // The domains we will isolate into the Mozilla Content Process. Comma-separated
 // full domains: any subdomains of the domains listed will also be allowed.
