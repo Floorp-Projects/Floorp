@@ -90,8 +90,10 @@ nsLookAndFeel::nsLookAndFeel() {
       "notify::gtk-decoration-layout"_ns,
       // Text resolution affects system font and widget sizes.
       "notify::resolution"_ns,
-      // Affects mCaretBlinkTime
+      // These three Affect mCaretBlinkTime
+      "notify::gtk-cursor-blink"_ns,
       "notify::gtk-cursor-blink-time"_ns,
+      "notify::gtk-cursor-blink-timeout"_ns,
       // Affects SelectTextfieldsOnKeyFocus
       "notify::gtk-entry-select-on-focus"_ns,
       // Affects ScrollToClick
@@ -667,6 +669,10 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       EnsureInit();
       aResult = mCaretBlinkTime;
       break;
+    case IntID::CaretBlinkCount:
+      EnsureInit();
+      aResult = mCaretBlinkCount;
+      break;
     case IntID::CaretWidth:
       aResult = 1;
       break;
@@ -1231,11 +1237,28 @@ void nsLookAndFeel::EnsureInit() {
   g_object_get(settings, "gtk-enable-animations", &enableAnimations, nullptr);
   mPrefersReducedMotion = !enableAnimations;
 
-  gint blink_time;
+  gint blink_time = 0;     // In milliseconds
+  gint blink_timeout = 0;  // in seconds
   gboolean blink;
   g_object_get(settings, "gtk-cursor-blink-time", &blink_time,
-               "gtk-cursor-blink", &blink, nullptr);
-  mCaretBlinkTime = blink ? (int32_t)blink_time : 0;
+               "gtk-cursor-blink-timeout", &blink_timeout, "gtk-cursor-blink",
+               &blink, nullptr);
+  // From
+  // https://docs.gtk.org/gtk3/property.Settings.gtk-cursor-blink-timeout.html:
+  //
+  //     Setting this to zero has the same effect as setting
+  //     GtkSettings:gtk-cursor-blink to FALSE.
+  //
+  mCaretBlinkTime = blink && blink_timeout ? (int32_t)blink_time : 0;
+
+  if (mCaretBlinkTime) {
+    // blink_time * 2 because blink count is a full blink cycle.
+    mCaretBlinkCount =
+        std::max(1, int32_t(std::ceil(float(blink_timeout * 1000) /
+                                      (float(blink_time) * 2.0f))));
+  } else {
+    mCaretBlinkCount = -1;
+  }
 
   mCSDAvailable =
       nsWindow::GtkWindowDecoration() != nsWindow::GTK_DECORATION_NONE;
