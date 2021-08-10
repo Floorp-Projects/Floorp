@@ -101,9 +101,14 @@ GMPErr ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI) {
 }
 
 GMPErr ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName, void* aHostAPI,
-                                     void** aPluginAPI) {
-  GMP_LOG_DEBUG("ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p",
-                aAPIName, aHostAPI, aPluginAPI, this);
+                                     void** aPluginAPI,
+                                     const nsCString& aKeySystem) {
+  MOZ_ASSERT(aKeySystem.EqualsLiteral(EME_KEY_SYSTEM_WIDEVINE) ||
+                 aKeySystem.EqualsLiteral(EME_KEY_SYSTEM_CLEARKEY),
+             "Should not get an unrecognized key system. Why didn't it get "
+             "blocked by MediaKeySystemAccess?");
+  GMP_LOG_DEBUG("ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %s) this=0x%p",
+                aAPIName, aHostAPI, aPluginAPI, aKeySystem.get(), this);
   bool isCdm10 = !strcmp(aAPIName, CHROMIUM_CDM_API);
 
   if (!isCdm10) {
@@ -125,8 +130,7 @@ GMPErr ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName, void* aHostAPI,
   }
 
   const int version = cdm::ContentDecryptionModule_10::kVersion;
-  void* cdm = create(version, EME_KEY_SYSTEM_WIDEVINE,
-                     mozilla::ArrayLength(EME_KEY_SYSTEM_WIDEVINE) - 1,
+  void* cdm = create(version, aKeySystem.get(), aKeySystem.Length(),
                      &ChromiumCdmHost, aHostAPI);
   if (!cdm) {
     GMP_LOG_DEBUG(
