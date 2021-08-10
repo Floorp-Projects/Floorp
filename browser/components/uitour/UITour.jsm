@@ -150,7 +150,7 @@ var UITour = {
         widgetName: "panic-button",
       },
     ],
-    ["help", { query: "#appMenu-help-button" }],
+    ["help", { query: "#appMenu-help-button2" }],
     ["home", { query: "#home-button" }],
     [
       "logins",
