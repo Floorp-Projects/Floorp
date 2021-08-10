@@ -104,16 +104,6 @@ async function testFileAccessAllPlatforms() {
     });
   }
 
-  let sysExtDevDir = GetSystemExtensionsDevDir();
-  tests.push({
-    desc: "system extensions dev dir",
-    ok: true,
-    browser: webBrowser,
-    file: sysExtDevDir,
-    minLevel: 0,
-    func: readDir,
-  });
-
   let extensionsDir = GetProfileEntry("extensions");
   if (extensionsDir.exists() && extensionsDir.isDirectory()) {
     tests.push({

@@ -289,10 +289,6 @@ function GetSubdirFile(dir) {
   return newFile;
 }
 
-function GetSystemExtensionsDevDir() {
-  return Services.dirsvc.get("XRESysExtDev", Ci.nsIFile);
-}
-
 function GetPerUserExtensionDir() {
   return Services.dirsvc.get("XREUSysExt", Ci.nsIFile);
 }
