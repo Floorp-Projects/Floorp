@@ -5832,7 +5832,7 @@ nsresult QuotaManager::MaybeCreateOrUpgradeStorage(
   return NS_OK;
 }
 
-Result<Ok, QMResult> QuotaManager::MaybeRemoveLocalStorageArchiveTmpFile() {
+OkOrErr QuotaManager::MaybeRemoveLocalStorageArchiveTmpFile() {
   AssertIsOnIOThread();
 
   QM_TRY_INSPECT(

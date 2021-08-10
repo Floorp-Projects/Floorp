@@ -12,6 +12,8 @@
 
 using namespace mozilla;
 
+static_assert(std::is_same_v<OkOrErr, Result<Ok, QMResult>>);
+
 #ifdef QM_ERROR_STACKS_ENABLED
 TEST(DOM_Quota_QMResult, Construct_Default)
 {
@@ -71,10 +73,10 @@ TEST(DOM_Quota_QMResult, ToResult)
   // copy
   {
     const auto res = ToQMResult(NS_ERROR_FAILURE);
-    auto valOrErr = ToResult(res);
-    static_assert(std::is_same_v<decltype(valOrErr), Result<Ok, QMResult>>);
-    ASSERT_TRUE(valOrErr.isErr());
-    auto err = valOrErr.unwrapErr();
+    auto okOrErr = ToResult(res);
+    static_assert(std::is_same_v<decltype(okOrErr), OkOrErr>);
+    ASSERT_TRUE(okOrErr.isErr());
+    auto err = okOrErr.unwrapErr();
 #ifdef QM_ERROR_STACKS_ENABLED
     ASSERT_EQ(err.StackId(), 5u);
     ASSERT_EQ(err.FrameId(), 1u);
@@ -87,10 +89,10 @@ TEST(DOM_Quota_QMResult, ToResult)
   // move
   {
     auto res = ToQMResult(NS_ERROR_FAILURE);
-    auto valOrErr = ToResult(std::move(res));
-    static_assert(std::is_same_v<decltype(valOrErr), Result<Ok, QMResult>>);
-    ASSERT_TRUE(valOrErr.isErr());
-    auto err = valOrErr.unwrapErr();
+    auto okOrErr = ToResult(std::move(res));
+    static_assert(std::is_same_v<decltype(okOrErr), OkOrErr>);
+    ASSERT_TRUE(okOrErr.isErr());
+    auto err = okOrErr.unwrapErr();
 #ifdef QM_ERROR_STACKS_ENABLED
     ASSERT_EQ(err.StackId(), 6u);
     ASSERT_EQ(err.FrameId(), 1u);
@@ -103,8 +105,8 @@ TEST(DOM_Quota_QMResult, ToResult)
 
 TEST(DOM_Quota_QMResult, ErrorPropagation)
 {
-  Result<Ok, QMResult> valOrErr1 = ToResult(ToQMResult(NS_ERROR_FAILURE));
-  const auto& err1 = valOrErr1.inspectErr();
+  OkOrErr okOrErr1 = ToResult(ToQMResult(NS_ERROR_FAILURE));
+  const auto& err1 = okOrErr1.inspectErr();
 #ifdef QM_ERROR_STACKS_ENABLED
   ASSERT_EQ(err1.StackId(), 7u);
   ASSERT_EQ(err1.FrameId(), 1u);
@@ -113,8 +115,8 @@ TEST(DOM_Quota_QMResult, ErrorPropagation)
   ASSERT_EQ(err1, NS_ERROR_FAILURE);
 #endif
 
-  Result<Ok, QMResult> valOrErr2 = valOrErr1.propagateErr();
-  const auto& err2 = valOrErr2.inspectErr();
+  OkOrErr okOrErr2 = okOrErr1.propagateErr();
+  const auto& err2 = okOrErr2.inspectErr();
 #ifdef QM_ERROR_STACKS_ENABLED
   ASSERT_EQ(err2.StackId(), 7u);
   ASSERT_EQ(err2.FrameId(), 2u);
@@ -123,8 +125,8 @@ TEST(DOM_Quota_QMResult, ErrorPropagation)
   ASSERT_EQ(err2, NS_ERROR_FAILURE);
 #endif
 
-  Result<Ok, QMResult> valOrErr3 = valOrErr2.propagateErr();
-  const auto& err3 = valOrErr3.inspectErr();
+  OkOrErr okOrErr3 = okOrErr2.propagateErr();
+  const auto& err3 = okOrErr3.inspectErr();
 #ifdef QM_ERROR_STACKS_ENABLED
   ASSERT_EQ(err3.StackId(), 7u);
   ASSERT_EQ(err3.FrameId(), 3u);

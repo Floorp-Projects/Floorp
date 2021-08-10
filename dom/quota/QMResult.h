@@ -61,10 +61,12 @@ using QMResult = nsresult;
 
 inline QMResult ToQMResult(nsresult aValue) { return QMResult(aValue); }
 
-#ifdef QM_ERROR_STACKS_ENABLED
-inline Result<Ok, QMResult> ToResult(const QMResult& aValue);
+using OkOrErr = Result<Ok, QMResult>;
 
-inline Result<Ok, QMResult> ToResult(QMResult&& aValue);
+#ifdef QM_ERROR_STACKS_ENABLED
+inline OkOrErr ToResult(const QMResult& aValue);
+
+inline OkOrErr ToResult(QMResult&& aValue);
 #endif
 
 }  // namespace mozilla
