@@ -67,7 +67,7 @@ skip-if(gtkWidget) random-if(d2d) == chrome://reftest/content/native-theme/resiz
 skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html
 # skip-if(!winWidget) == scroll-thumb-minimum-size-theme.html scroll-thumb-minimum-size-theme-ref.html # Bug 512206
 
-fuzzy-if(useDrawSnapshot,1-1,3-3) == border-radius.html border-radius-ref.html
+== border-radius.html border-radius-ref.html
 
 == checkbox-dynamic-1.html checkbox-dynamic-1-ref.html
 

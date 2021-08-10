@@ -1905,7 +1905,7 @@ fuzzy-if(webrender,0-128,0-22) == 1151145-1.html 1151145-1-ref.html # bug 164652
 fuzzy-if(webrender,0-128,0-22) == 1155828-1.html 1155828-1-ref.html # bug 1646527 for WR fuzz
 fuzzy-if(skiaContent,0-7,0-84) == 1156129-1.html 1156129-1-ref.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1-ref.html
-fuzzy-if(Android,0-6,0-6) fuzzy-if(appleSilicon,0-1,0-7) fuzzy-if(useDrawSnapshot,1-1,16-16) == 1169331-1.html 1169331-1-ref.html
+fuzzy-if(Android,0-6,0-6) fuzzy-if(appleSilicon,0-1,0-7) == 1169331-1.html 1169331-1-ref.html
 fuzzy(0-3,0-110) random-if(winWidget||Android||gtkWidget) fails-if(!nativeThemePref) == 1174332-1.html 1174332-1-ref.html # bug 1312658, expected to fail w/ non-native theme because of bug 1699937
 == 1179078-1.html 1179078-1-ref.html
 == 1179288-1.html 1179288-1-ref.html
