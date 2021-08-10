@@ -95,15 +95,27 @@ function doKeyUnprivileged(key) {
     alwaysval = keycode;
   }
 
-  let dnEvent = document.createEvent("KeyboardEvent");
-  let prEvent = document.createEvent("KeyboardEvent");
-  let upEvent = document.createEvent("KeyboardEvent");
-
-  /* eslint-disable no-multi-spaces */
-  dnEvent.initKeyEvent("keydown",  true, true, null, false, false, false, false, alwaysval, 0);
-  prEvent.initKeyEvent("keypress", true, true, null, false, false, false, false, keycode, charcode);
-  upEvent.initKeyEvent("keyup",    true, true, null, false, false, false, false, alwaysval, 0);
-  /* eslint-enable no-multi-spaces */
+  const dnEvent = new KeyboardEvent("keydown", {
+    bubbles: true,
+    cancelable: true,
+    view: null,
+    keyCode: alwaysval,
+    charCode: 0,
+  });
+  const prEvent = new KeyboardEvent("keypress", {
+    bubbles: true,
+    cancelable: true,
+    view: null,
+    keyCode: keycode,
+    charCode: charcode,
+  });
+  const upEvent = new KeyboardEvent("keyup", {
+    bubbles: true,
+    cancelable: true,
+    view: null,
+    keyCode: alwaysval,
+    charCode: 0,
+  });
 
   input.dispatchEvent(dnEvent);
   input.dispatchEvent(prEvent);

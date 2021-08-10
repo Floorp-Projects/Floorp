@@ -25,19 +25,13 @@ const kTests = [
 ];
 
 function sendUntrustedKeyEvent(eventType, keyCode, target) {
-  var evt = document.createEvent("KeyboardEvent");
-  var canBubbleArg = true;
-  var cancelableArg = true;
-  var viewArg = document.defaultView;
-  var ctrlKeyArg = false;
-  var altKeyArg = false;
-  var shiftKeyArg = false;
-  var metaKeyArg = false;
-  var keyCodeArg = keyCode;
-  var charCodeArg = 0;
-  evt.initKeyEvent(eventType, canBubbleArg, cancelableArg, viewArg,
-                   ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
-                   keyCodeArg, charCodeArg);
+  var evt = new KeyboardEvent(eventType, {
+    bubbles: true,
+    cancelable: true,
+    view: document.defaultView,
+    keyCode,
+    charCode: 0,
+  });
   target.dispatchEvent(evt);
 }
 

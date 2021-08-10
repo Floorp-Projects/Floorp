@@ -67,19 +67,13 @@ function promiseFindResult(findbar, str = null) {
 function promiseEnterStringIntoFindField(findbar, str) {
   let promise = promiseFindResult(findbar, str);
   for (let i = 0; i < str.length; i++) {
-    let event = document.createEvent("KeyboardEvent");
-    event.initKeyEvent(
-      "keypress",
-      true,
-      true,
-      null,
-      false,
-      false,
-      false,
-      false,
-      0,
-      str.charCodeAt(i)
-    );
+    let event = new KeyboardEvent("keypress", {
+      bubbles: true,
+      cancelable: true,
+      view: null,
+      keyCode: 0,
+      charCode: str.charCodeAt(i),
+    });
     findbar._findField.dispatchEvent(event);
   }
   return promise;

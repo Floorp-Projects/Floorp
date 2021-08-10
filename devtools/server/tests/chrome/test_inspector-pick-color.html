@@ -52,9 +52,12 @@ window.onload = function() {
     info("Use the escape key to dismiss the eyedropper");
     const onPickCanceled = waitForEvent("color-pick-canceled");
 
-    const keyboardEvent = win.document.createEvent("KeyboardEvent");
-    keyboardEvent.initKeyEvent("keydown", true, true, win, false, false,
-                               false, false, 27, 0);
+    const keyboardEvent = new win.KeyboardEvent("keydown", {
+      bubbles: true,
+      cancelable: true,
+      view: win,
+      keyCode: 27
+    });
     win.document.dispatchEvent(keyboardEvent);
 
     await onPickCanceled;

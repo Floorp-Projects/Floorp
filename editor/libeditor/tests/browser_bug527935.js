@@ -45,20 +45,13 @@ add_task(async function() {
         newInput.setAttribute("name", "test");
         document.body.appendChild(newInput);
 
-        var event = document.createEvent("KeyboardEvent");
-
-        event.initKeyEvent(
-          "keypress",
-          true,
-          true,
-          null,
-          false,
-          false,
-          false,
-          false,
-          0,
-          "f".charCodeAt(0)
-        );
+        var event = new window.KeyboardEvent("keypress", {
+          bubbles: true,
+          cancelable: true,
+          view: null,
+          keyCode: 0,
+          charCode: "f".charCodeAt(0),
+        });
         newInput.value = "";
         newInput.focus();
         newInput.dispatchEvent(event);

@@ -42,9 +42,13 @@ addLoadEvent(function() {
           SimpleTest.executeSoon(runTextareaTest);
         });
       }, {once: true});
-    var keypress = document.createEvent("KeyboardEvent");
-    keypress.initKeyEvent("keypress", true, true, document.defaultView,
-                          false, false, false, false, 0, "a".charCodeAt(0));
+    var keypress = new KeyboardEvent("keypress", {
+      bubbles: true,
+      cancelable: true,
+      view: document.defaultView,
+      keyCode: 0,
+      charCode:"a".charCodeAt(0),
+    });
     input.dispatchEvent(keypress);
   });
 });
@@ -62,9 +66,13 @@ function runTextareaTest() {
         SimpleTest.executeSoon(runContentediableTest);
       });
     }, {once: true});
-  var keypress = document.createEvent("KeyboardEvent");
-  keypress.initKeyEvent("keypress", true, true, document.defaultView,
-                        false, false, false, false, 0, "b".charCodeAt(0));
+    var keypress = new KeyboardEvent("keypress", {
+      bubbles: true,
+      cancelable: true,
+      view: document.defaultView,
+      keyCode: 0,
+      charCode:"b".charCodeAt(0),
+    });
   textarea.dispatchEvent(keypress);
 }
 
@@ -81,9 +89,13 @@ function runContentediableTest() {
         SimpleTest.finish();
       });
     }, {once: true});
-  var keypress = document.createEvent("KeyboardEvent");
-  keypress.initKeyEvent("keypress", true, true, document.defaultView,
-                        false, false, false, false, 0, "c".charCodeAt(0));
+    var keypress = new KeyboardEvent("keypress", {
+      bubbles: true,
+      cancelable: true,
+      view: document.defaultView,
+      keyCode: 0,
+      charCode:"c".charCodeAt(0),
+    });
   div.dispatchEvent(keypress);
 }
 
