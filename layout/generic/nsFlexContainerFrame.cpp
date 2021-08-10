@@ -5557,10 +5557,12 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
     }
     FLEX_LOGV(" Cross size override: %d", aItem.CrossSize());
   }
-  if (sizeOverrides.mStyleBSize && aItem.HadMeasuringReflow()) {
-    // Because we are overriding the block-size, *and* we had an earlier
-    // "measuring" reflow, then this upcoming reflow needs to be treated as a
-    // resize. This sets relevant flags in ReflowInput::InitResizeFlags().
+  if (sizeOverrides.mStyleBSize) {
+    // We are overriding the block-size. For robustness, we always assume that
+    // this represents a block-axis resize for the frame. This may be
+    // conservative, but we do capture all the conditions in the block-axis
+    // (checked in NeedsFinalReflow()) that make this item require a final
+    // reflow. This sets relevant flags in ReflowInput::InitResizeFlags().
     aItem.Frame()->SetHasBSizeChange(true);
   }
 
