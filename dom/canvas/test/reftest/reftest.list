@@ -177,4 +177,4 @@ fuzzy-if(azureSkia,0-16,0-2) fuzzy-if(Android,0-3,0-40) fuzzy-if(/^Windows\x20NT
 skip-if(Android) == visible-occluded.html visible-occluded-ref.html
 
 == 1678909-1.html 1678909-1-ref.html
-
+== 1719886-1.html 1719886-1-ref.html
