@@ -103,9 +103,13 @@
       let promise = once(gFindBar, "find");
 
       // Put some text in the find box.
-      let event = document.createEvent("KeyboardEvent");
-      event.initKeyEvent("keypress", true, true, null, false, false,
-                         false, false, 0, query.charCodeAt(0));
+      let event = new KeyboardEvent("keypress", {
+        bubbles: true,
+        cancelable: true,
+        view: null,
+        keyCode: 0,
+        charCode: query.charCodeAt(0),
+      });
       gFindBar._findField.dispatchEvent(event);
 
       let e = await promise;

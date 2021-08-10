@@ -147,9 +147,13 @@
         if (waitForResult) {
           promise = promiseFindResult();
         }
-        let event = document.createEvent("KeyboardEvent");
-        event.initKeyEvent("keypress", true, true, null, false, false,
-                           false, false, 0, str.charCodeAt(i));
+        let event = new KeyboardEvent("keypress", {
+          bubbles: true,
+          cancelable: true,
+          view: null,
+          keyCode: 0,
+          charCode: str.charCodeAt(i),
+        });
         gFindBar._findField.dispatchEvent(event);
         if (waitForResult) {
           await promise;
@@ -243,11 +247,14 @@
 
     async function testQuickfind(tests) {
       await SpecialPowers.spawn(gBrowser, [], async function() {
-        let document = content.document;
-        let event = document.createEvent("KeyboardEvent");
-        event.initKeyEvent("keypress", true, true, null, false, false,
-                           false, false, 0, "/".charCodeAt(0));
-        document.documentElement.dispatchEvent(event);
+        let event = new content.window.KeyboardEvent("keypress", {
+          bubbles: true,
+          cancelable: true,
+          view: null,
+          keyCode: 0,
+          charCode: "/".charCodeAt(0),
+        });
+        content.document.documentElement.dispatchEvent(event);
       });
 
       ok(!gFindBar.hidden, "testQuickfind: failed to open findbar");

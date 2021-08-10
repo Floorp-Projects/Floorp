@@ -44,10 +44,15 @@ function dispatchClick(target, ctrl) {
 }
 
 function dispatchReturn(target, ctrl) {
-  var e = document.createEvent("KeyboardEvent");
-  e.initKeyEvent("keypress", true, true, window, ctrl, false,
-                 false, false, 13, 0);
-  target.dispatchEvent(e);                
+  var e = new KeyboardEvent("keypress", {
+    bubbles: true,
+    cancelable: true,
+    view: window,
+    ctrlKey: ctrl,
+    keyCode: 13,
+    charCode: 0,
+  });
+  target.dispatchEvent(e);
 }
 
 function dispatchDOMActivate(target) {

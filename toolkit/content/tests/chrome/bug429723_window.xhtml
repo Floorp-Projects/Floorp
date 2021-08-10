@@ -39,9 +39,13 @@
 
     function enterStringIntoFindField(aString) {
       for (var i=0; i < aString.length; i++) {
-        var event = document.createEvent("KeyboardEvent");
-        event.initKeyEvent("keypress", true, true, null, false, false,
-                           false, false, 0, aString.charCodeAt(i));
+        var event = new KeyboardEvent("keypress", {
+          bubbles: true,
+          cancelable: true,
+          view: null,
+          keyCode: 0,
+          charCode: aString.charCodeAt(i),
+        });
         gFindBar._findField.dispatchEvent(event);
       }
     }
@@ -64,9 +68,13 @@
         highlight.click();
 
       // Delete search term
-      var event = document.createEvent("KeyboardEvent");
-      event.initKeyEvent("keypress", true, true, null, false, false,
-                         false, false, KeyEvent.DOM_VK_BACK_SPACE, 0);
+      var event = new KeyboardEvent("keypress", {
+        bubbles: true,
+        cancelable: true,
+        view: null,
+        keyCode: KeyEvent.DOM_VK_BACK_SPACE,
+        charCode: 0,
+      });
       gFindBar._findField.dispatchEvent(event);
 
       var notRed = !findField.hasAttribute("status") ||
