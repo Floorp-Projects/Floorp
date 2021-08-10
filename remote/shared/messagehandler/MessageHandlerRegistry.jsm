@@ -11,6 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+
   Log: "chrome://remote/content/shared/Log.jsm",
   MessageHandlerInfo:
     "chrome://remote/content/shared/messagehandler/MessageHandlerInfo.jsm",
@@ -61,8 +63,10 @@ function getMessageHandlerClass(type) {
  *
  * Note: this is still created as a class, but exposed as a singleton.
  */
-class MessageHandlerRegistryClass {
+class MessageHandlerRegistryClass extends EventEmitter {
   constructor() {
+    super();
+
     /**
      * Map of all message handlers registered in this process.
      * Keys are based on session id, message handler type and message handler
@@ -75,6 +79,7 @@ class MessageHandlerRegistryClass {
     this._onMessageHandlerDestroyed = this._onMessageHandlerDestroyed.bind(
       this
     );
+    this._onMessageHandlerEvent = this._onMessageHandlerEvent.bind(this);
   }
 
   /**
@@ -154,6 +159,30 @@ class MessageHandlerRegistryClass {
     return messageHandler;
   }
 
+  /**
+   * Retrieve an already registered RootMessageHandler instance matching the
+   * provided sessionId.
+   *
+   * @param {String} sessionId
+   *     ID of the session the handler is used for.
+   * @return {RootMessageHandler}
+   *     A RootMessageHandler instance.
+   * @throws {Error}
+   *     If no root MessageHandler can be found for the provided session id.
+   */
+  getRootMessageHandler(sessionId) {
+    const rootMessageHandler = this.getExistingMessageHandler(
+      sessionId,
+      RootMessageHandler.type
+    );
+    if (!rootMessageHandler) {
+      throw new Error(
+        `Unable to find a root MessageHandler for session id ${sessionId}`
+      );
+    }
+    return rootMessageHandler;
+  }
+
   toString() {
     return `[object ${this.constructor.name}]`;
   }
@@ -182,6 +211,7 @@ class MessageHandlerRegistryClass {
       "message-handler-destroyed",
       this._onMessageHandlerDestroyed
     );
+    messageHandler.on("message-handler-event", this._onMessageHandlerEvent);
     return messageHandler;
   }
 
@@ -198,12 +228,19 @@ class MessageHandlerRegistryClass {
 
   // Event handlers
 
-  _onMessageHandlerDestroyed(evt, messageHandler) {
+  _onMessageHandlerDestroyed(eventName, messageHandler) {
     messageHandler.off(
       "message-handler-destroyed",
       this._onMessageHandlerDestroyed
     );
+    messageHandler.off("message-handler-event", this._onMessageHandlerEvent);
     this._unregisterMessageHandler(messageHandler);
+  }
+
+  _onMessageHandlerEvent(eventName, messageHandlerEvent) {
+    // The registry simply re-emits MessageHandler events so that consumers
+    // don't have to attach listeners to individual MessageHandler instances.
+    this.emit("message-handler-registry-event", messageHandlerEvent);
   }
 }
 

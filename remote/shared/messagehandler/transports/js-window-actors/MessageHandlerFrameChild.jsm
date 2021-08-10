@@ -26,6 +26,17 @@ class MessageHandlerFrameChild extends JSWindowActorChild {
   actorCreated() {
     this.type = WindowGlobalMessageHandler.type;
     this.context = this.manager.browsingContext;
+
+    this._onRegistryEvent = this._onRegistryEvent.bind(this);
+
+    // MessageHandlerFrameChild is responsible for forwarding events from
+    // WindowGlobalMessageHandler to the parent process.
+    // Such events are re-emitted on the MessageHandlerRegistry to avoid
+    // setting up listeners on individual MessageHandler instances.
+    MessageHandlerRegistry.on(
+      "message-handler-registry-event",
+      this._onRegistryEvent
+    );
   }
 
   receiveMessage(message) {
@@ -53,7 +64,31 @@ class MessageHandlerFrameChild extends JSWindowActorChild {
     );
   }
 
+  _onRegistryEvent(eventName, wrappedEvent) {
+    const { messageHandlerInfo, method, params } = wrappedEvent;
+    const { contextId, sessionId, type } = messageHandlerInfo;
+
+    // TODO: With a single MessageHandlerRegistry per process, we might receive
+    // events intended for other contexts. Consequently we have to filter out
+    // unrelevant events. Once Registry becomes context-specific (Bug 1722659)
+    // this filtering should be removed.
+    if (
+      type === this.type &&
+      contextId === WindowGlobalMessageHandler.getIdFromContext(this.context)
+    ) {
+      this.sendAsyncMessage("MessageHandlerFrameChild:messageHandlerEvent", {
+        method,
+        params,
+        sessionId,
+      });
+    }
+  }
+
   didDestroy() {
     MessageHandlerRegistry.contextDestroyed(this.context, this.type);
+    MessageHandlerRegistry.off(
+      "message-handler-registry-event",
+      this._onRegistryEvent
+    );
   }
 }
