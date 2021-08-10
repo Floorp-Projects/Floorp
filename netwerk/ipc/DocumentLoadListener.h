@@ -152,15 +152,15 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                            const TimeStamp& aAsyncOpenTime,
                            nsDOMNavigationTiming* aTiming,
                            Maybe<dom::ClientInfo>&& aInfo, bool aUrgentStart,
-                           base::ProcessId aPid, nsresult* aRv);
+                           dom::ContentParent* aContentParent, nsresult* aRv);
 
  public:
   RefPtr<OpenPromise> OpenDocument(
       nsDocShellLoadState* aLoadState, uint32_t aCacheKey,
       const Maybe<uint64_t>& aChannelId, const TimeStamp& aAsyncOpenTime,
       nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
-      Maybe<bool> aUriModified, Maybe<bool> aIsXFOError, base::ProcessId aPid,
-      nsresult* aRv);
+      Maybe<bool> aUriModified, Maybe<bool> aIsXFOError,
+      dom::ContentParent* aContentParent, nsresult* aRv);
 
   RefPtr<OpenPromise> OpenObject(
       nsDocShellLoadState* aLoadState, uint32_t aCacheKey,
@@ -168,8 +168,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
       nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
       uint64_t aInnerWindowId, nsLoadFlags aLoadFlags,
       nsContentPolicyType aContentPolicyType, bool aUrgentStart,
-      base::ProcessId aPid, ObjectUpgradeHandler* aObjectUpgradeHandler,
-      nsresult* aRv);
+      dom::ContentParent* aContentParent,
+      ObjectUpgradeHandler* aObjectUpgradeHandler, nsresult* aRv);
 
   // Creates a DocumentLoadListener entirely in the parent process and opens it,
   // and never needs a DocumentChannel to connect to an existing docshell.
@@ -262,7 +262,13 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
     return NS_OK;
   }
 
-  base::ProcessId OtherPid() const { return mOtherPid; }
+  // The content process corresponding to this DocumentLoadListener, or nullptr
+  // if connected to the parent process.
+  dom::ContentParent* GetContentParent() const { return mContentParent; }
+
+  // The process id of the content process that we are being called from
+  // or 0 initiated from a parent process load.
+  base::ProcessId OtherPid() const;
 
   [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter(
       base::ProcessId aChildProcessId);
@@ -302,7 +308,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // Initiates the switch from DocumentChannel to the real protocol-specific
   // channel, and ensures that RedirectToRealChannelFinished is called when
   // this is complete.
-  void TriggerRedirectToRealChannel(const Maybe<uint64_t>& aDestinationProcess);
+  void TriggerRedirectToRealChannel(
+      const Maybe<dom::ContentParent*>& aDestinationProcess);
 
   // Called once the content-process side on setting up a replacement
   // channel is complete. May wait for the new parent channel to
@@ -331,7 +338,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
       mozilla::ipc::Endpoint<extensions::PStreamFilterParent>;
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
   RedirectToRealChannel(uint32_t aRedirectFlags, uint32_t aLoadFlags,
-                        const Maybe<uint64_t>& aDestinationProcess,
+                        const Maybe<dom::ContentParent*>& aDestinationProcess,
                         nsTArray<ParentEndpoint>&& aStreamFilterEndpoints);
 
   // A helper for RedirectToRealChannel that handles the case where we started
@@ -546,9 +553,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   Maybe<nsCString> mRemoteTypeOverride;
 
-  // The process id of the content process that we are being called from
-  // or 0 initiated from a parent process load.
-  base::ProcessId mOtherPid = 0;
+  // The ContentParent which this channel is currently connected to, or nullptr
+  // if connected to the parent process.
+  RefPtr<dom::ContentParent> mContentParent;
 
   void RejectOpenPromise(nsresult aStatus, nsresult aLoadGroupStatus,
                          bool aSwitchedProcess, const char* aLocation) {
